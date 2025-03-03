@@ -616,22 +616,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     if (action.theme) {
       let themeToUse = action.theme === "<event>" ? event.currentTarget.value : this.props.initialTheme || action.theme;
       this.props.setActiveTheme(themeToUse);
-      if (props.content.tiles?.category?.type === "wallpaper") {
-        const theme = themeToUse.split("-")?.[1];
-        let actionWallpaper = {
-          ...props.content.tiles.category.action
-        };
-        actionWallpaper.data.actions.forEach(async wpAction => {
-          if (wpAction.data.pref.name?.includes("dark")) {
-            wpAction.data.pref.value = `dark-${theme}`;
-          } else {
-            wpAction.data.pref.value = `light-${theme}`;
-          }
-          _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.handleUserAction(actionWallpaper);
-        });
-      } else {
-        window.AWSelectTheme(themeToUse);
-      }
+      window.AWSelectTheme(themeToUse);
     }
     if (action.picker) {
       let options = props.content.tiles.data;
@@ -1152,10 +1137,11 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       size,
       marginBlock,
       marginInline,
-      label
+      label,
+      background
     } = this.props.content.dismiss_button;
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-      className: "dismiss-button",
+      className: `dismiss-button ${background ? "with-background" : ""}`,
       onClick: this.props.handleAction,
       value: "dismiss_button",
       "data-l10n-id": label?.string_id || "spotlight-dialog-close-button",
@@ -1867,6 +1853,7 @@ const SubmenuButtonInner = ({
   handleAction
 }) => {
   const ref = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
+  const [isSubmenuExpanded, setIsSubmenuExpanded] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const isPrimary = content.submenu_button?.style === "primary";
   const onCommand = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(event => {
     let {
@@ -1910,11 +1897,13 @@ const SubmenuButtonInner = ({
       menupopup.addEventListener("popupshowing", event => {
         if (event.target === menupopup && event.target.anchorNode) {
           event.target.anchorNode.toggleAttribute("open", true);
+          setIsSubmenuExpanded(true);
         }
       });
       menupopup.addEventListener("popuphiding", event => {
         if (event.target === menupopup && event.target.anchorNode) {
           event.target.anchorNode.toggleAttribute("open", false);
+          setIsSubmenuExpanded(false);
         }
       });
       menupopup.listenersRegistered = true;
@@ -1931,7 +1920,9 @@ const SubmenuButtonInner = ({
     className: `submenu-button ${isPrimary ? "primary" : "secondary"}`,
     value: "submenu_button",
     onClick: onClick,
-    ref: ref
+    ref: ref,
+    "aria-haspopup": "menu",
+    "aria-expanded": isSubmenuExpanded
   }));
 };
 
@@ -2073,7 +2064,9 @@ const ContentTiles = props => {
   const renderContentTile = (tile, index = 0) => {
     const isExpanded = expandedTileIndex === index;
     const {
-      header
+      header,
+      title,
+      subtitle
     } = tile;
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       key: index,
@@ -2097,7 +2090,19 @@ const ContentTiles = props => {
       className: "header-subtitle"
     }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: "arrow-icon"
-    })), isExpanded || !header ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    })), (title || subtitle) && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+      className: "tile-title-container",
+      id: `tile-title-container-${index}`
+    }, title && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
+      text: title
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", {
+      className: "tile-title",
+      id: `content-tile-title-${index}`
+    })), subtitle && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
+      text: subtitle
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", {
+      className: "tile-subtitle"
+    }))), isExpanded || !header ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: "tile-content",
       id: `tile-content-${index}`
     }, tile.type === "addons-picker" && tile.data && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_AddonsPicker__WEBPACK_IMPORTED_MODULE_2__.AddonsPicker, {
@@ -2327,8 +2332,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-// This component was formerly "Themes" and continues to support theme and
-// wallpaper pickers.
+// This component was formerly "Themes" and continues to support theme
 const SingleSelect = ({
   activeSingleSelect,
   activeTheme,

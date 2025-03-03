@@ -39,7 +39,7 @@ DEFINES["WASM_RT_SKIP_SIGNAL_RECOVERY"] = 1
 DEFINES["WASM_RT_TRAP_HANDLER"] = "moz_wasm2c_trap_handler"
 
 # Don't limit the nested call depth
-DEFINES["WASM_RT_USE_STACK_DEPTH_COUNT"] = 0
+DEFINES["WASM_RT_NONCONFORMING_UNCHECKED_STACK_EXHAUSTION"] = 1
 
 # Configure the wasm runtime to invoke a callback when a Wasm memory growth
 # fails inside the sandbox. This information is used to annotate crash reports.

@@ -628,6 +628,14 @@
     <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Jak data používáme</string>
     <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
     <string name="onboarding_marketing_positive_button" tools:ignore="UnusedResources">Potvrdit a začít prohlížet</string>
+
+    <!-- Marketing onboarding page title variant. “One last thing” refers to the final step or action in the onboarding process that we’re asking users to take before they can start using the browser. -->
+    <string name="onboarding_marketing_title_1" tools:ignore="UnusedResources">Jen jedna poslední věc</string>
+    <!-- Marketing onboarding page body variant. 'Firefox' is intentionally hardcoded. -->
+    <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">Podělte se s marketingovými partnery Mozilly o to, jak jste Firefox objevili a že ho používáte. Tyto údaje nejsou nikdy prodávány.</string>
+    <!-- Marketing onboarding page button label variant. Button to confirm choice and start browsing. -->
+    <string name="onboarding_marketing_positive_button_1" tools:ignore="UnusedResources">Souhlasit a začít prohlížet</string>
+
     <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
     <string name="onboarding_customize_toolbar_title" tools:ignore="UnusedResources">Vyberte si umístění nástrojové lišty</string>
     <!-- Onboarding sub header for toolbar selection card, used by Nimbus experiments. -->
@@ -863,6 +871,16 @@
     <string name="preferences_show_nonsponsored_suggestions">Návrhy od aplikace %1$s</string>
     <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
     <string name="preferences_show_nonsponsored_suggestions_summary">Získat návrhy z webu související s vaším vyhledáváním</string>
+    <!-- Preference for link sharing -->
+    <string name="preferences_link_sharing">Sdílení odkazu</string>
+    <!-- Title for the link sharing toggle. %1$s is replaced by the brand name (e.g. Firefox).  -->
+    <string name="link_sharing_toggle_title">Zahrnout odkaz na stažení aplikace %1$s při sdílení na WhatsAppu</string>
+    <!-- Body for the link sharing toggle.  %1$s is replaced by the brand name (e.g. Firefox).  -->
+    <string name="link_sharing_toggle_body">Pozvěte své přátele, aby vyzkoušeli rychlejší a bezpečnější procházení s aplikací %1$s pokaždé, když budete sdílet odkaz skrze WhatsApp.</string>
+    <!--Snackbar message shown when user shares a link -->
+    <string name="link_shared_snackbar_message">Odkaz sdílen</string>
+    <!-- Snackbar action label shown when user shares a link  -->
+    <string name="link_shared_snackbar_action">Nastavení</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Otevírat odkazy v aplikacích</string>
 
@@ -1777,6 +1795,11 @@
     <!-- Text for the button to connect another device -->
     <string name="sync_add_new_device_connect_button">Připojit další zařízení…</string>
 
+    <!-- A message template for the shared link with a footer. %1$s is the shared link, %2$s is the app name (e.g. Firefox) and %3$s is a download link for the app. -->
+    <string name="sent_from_firefox_template" tools:ignore="UnusedResources">%1$s\n\nOdesláno z aplikace %2$s 🦊 Zkuste mobilní prohlížeč: %3$s</string>
+    <!-- A short message template for the shared link with a footer. %1$s is the shared link, %2$s is the app name (e.g. Firefox) and %3$s is a download link for the app. -->
+    <string name="sent_from_firefox_template_short" tools:ignore="UnusedResources">%1$s\n\nOdesláno z aplikace %2$s 🦊 %3$s</string>
+
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Zavřít anonymní panely</string>
@@ -2096,6 +2119,9 @@
     Enhanced tracking protection exception preference icon for ETP settings. -->
     <string name="preference_etp_exceptions_icon_description">Ikona nastavení výjimek z rozšířené ochrany proti sledování</string>
 
+    <!-- DNS Over HTTPS (DoH) -->
+    <!-- Preference title for DNS over HTTPS settings -->
+    <string name="preference_doh_title">DNS skrze HTTPS</string>
     <!-- Used as text for the link in `preference_doh_title`, points to documentation about "DNS over HTTPS" -->
     <string name="preference_doh_learn_more">Zjistit více</string>
 
@@ -2106,8 +2132,25 @@
     <!-- Content description for the "Info" button -->
     <string name="preference_doh_info_description">Info</string>
 
+    <!-- Content description for the "Add Site" button -->
+    <string name="preference_doh_add_site_description">Přidat stránku</string>
+
     <!-- Title displayed for "Default Protection" option under "DNS over HTTPS" -->
     <string name="preference_doh_default_protection">Výchozí ochrana</string>
+
+    <!-- Summary displayed for "Default Protection" option under "DNS over HTTPS". %1$s is the name of the application (e.g. Fenix). -->
+    <string name="preference_doh_default_protection_summary">%1$s rozhoduje o tom, kdy se použije zabezpečený systém DNS k ochraně vašeho soukromí.</string>
+    <!-- Bullet point 1 for "Default Protection" information page under "DNS over HTTPS" -->
+    <string name="preference_doh_default_protection_info_1">Použije se poskytovatel, kterého jste si vybrali</string>
+    <!-- Bullet point 2 for "Default Protection" information page under "DNS over HTTPS" -->
+    <string name="preference_doh_default_protection_info_2">Pokud se zabezpečeným DNS nastane problém, použije se výchozí překladač DNS</string>
+    <!-- Bullet point 3 for "Default Protection" information page under "DNS over HTTPS". %1$s is replaced by a link using `preference_doh_learn_more` at text ("Learn More"). -->
+    <string name="preference_doh_default_protection_info_3">Použije se místní poskytovatel, pokud je to možné. %1$s</string>
+    <!-- Bullet point 4 for "Default Protection" information page under "DNS over HTTPS" -->
+    <string name="preference_doh_default_protection_info_4">Vypne se, když je aktivní VPN, rodičovská kontrola nebo podnikové zásady</string>
+
+    <!-- Title displayed for "Increased Protection" option under "DNS over HTTPS" -->
+    <string name="preference_doh_increased_protection">Zvýšená ochrana</string>
 
     <!-- Error text displayed for provider textfield under "DNS over HTTPS" if the URL is invalid -->
     <string name="preference_doh_provider_custom_dialog_error_invalid">Neplatná URL</string>

@@ -11,6 +11,7 @@ const {
 } = require("resource://devtools/client/shared/vendor/react.js");
 const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const ToolboxProvider = require("resource://devtools/client/framework/store-provider.js");
 const Message = createFactory(
   require("resource://devtools/client/webconsole/components/Output/Message.js")
 );
@@ -199,24 +200,28 @@ function NetworkEventMessage({
       {
         className: "network-info network-monitor",
       },
-      createElement(TabboxPanel, {
-        connector,
-        activeTabId: networkMessageActiveTabId,
-        request: networkMessageUpdate,
-        sourceMapURLService: serviceContainer.sourceMapURLService,
-        openLink: serviceContainer.openLink,
-        selectTab: tabId => {
-          dispatch(actions.selectNetworkMessageTab(tabId));
-        },
-        openNetworkDetails: enabled => {
-          if (!enabled) {
-            dispatch(actions.messageClose(id));
-          }
-        },
-        hideToggleButton: true,
-        showMessagesView: false,
-        targetSearchResult: null,
-      })
+      createElement(
+        ToolboxProvider,
+        { store: serviceContainer.getToolboxStore() },
+        createElement(TabboxPanel, {
+          connector,
+          activeTabId: networkMessageActiveTabId,
+          request: networkMessageUpdate,
+          sourceMapURLService: serviceContainer.sourceMapURLService,
+          openLink: serviceContainer.openLink,
+          selectTab: tabId => {
+            dispatch(actions.selectNetworkMessageTab(tabId));
+          },
+          openNetworkDetails: enabled => {
+            if (!enabled) {
+              dispatch(actions.messageClose(id));
+            }
+          },
+          hideToggleButton: true,
+          showMessagesView: false,
+          targetSearchResult: null,
+        })
+      )
     );
 
   const request = { url, method };

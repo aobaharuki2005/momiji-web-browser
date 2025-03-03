@@ -98,9 +98,11 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
 import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppAction.ShareAction
 import org.mozilla.fenix.components.appstate.OrientationMode
 import org.mozilla.fenix.components.metrics.BreadcrumbsRecorder
 import org.mozilla.fenix.components.metrics.GrowthDataWorker
+import org.mozilla.fenix.components.metrics.MarketingAttributionService
 import org.mozilla.fenix.components.metrics.fonts.FontEnumerationWorker
 import org.mozilla.fenix.crashes.CrashReporterBinding
 import org.mozilla.fenix.crashes.UnsubmittedCrashDialog
@@ -350,6 +352,13 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             hasUserBeenOnboarded = components.fenixOnboarding.userHasBeenOnboarded(),
             isLauncherIntent = intent.toSafeIntent().isLauncherIntent,
         )
+
+        // This is a temporary solution to determine if we should show the marketing onboarding card.
+        if (shouldShowOnboarding) {
+            lifecycleScope.launch(IO) {
+                MarketingAttributionService(applicationContext).start()
+            }
+        }
 
         SplashScreenManager(
             splashScreenOperation = if (FxNimbus.features.splashScreen.value().offTrainOnboarding) {
@@ -621,6 +630,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             message = "onResume()",
         )
 
+        BiometricAuthenticationManager.biometricAuthenticationNeededInfo.shouldShowAuthenticationPrompt =
+            true
+        BiometricAuthenticationManager.biometricAuthenticationNeededInfo.authenticationStatus =
+            AuthenticationStatus.NOT_AUTHENTICATED
+
         lifecycleScope.launch(IO) {
             try {
                 if (settings().showContileFeature) {
@@ -648,6 +662,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             if (NotificationManagerCompat.from(applicationContext).areNotificationsEnabled()) {
                 ReEngagementNotificationWorker.setReEngagementNotificationIfNeeded(applicationContext)
                 MessageNotificationWorker.setMessageNotificationWorker(applicationContext)
+            }
+
+            if (components.core.sentFromFirefoxManager.shouldShowSnackbar) {
+                components.appStore.dispatch(ShareAction.ShareToWhatsApp)
             }
         }
 
@@ -768,6 +786,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         components.core.pocketStoriesService.stopPeriodicSponsoredContentsRefresh()
         privateNotificationObserver?.stop()
         components.notificationsDelegate.unBindActivity(this)
+        MarketingAttributionService(applicationContext).stop()
 
         val activityStartedWithLink = startupPathProvider.startupPathForActivity == StartupPathProvider.StartupPath.VIEW
         if (this !is ExternalAppBrowserActivity && !activityStartedWithLink) {

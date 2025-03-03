@@ -45,10 +45,18 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FxAccountsStorageManagerCanStoreField:
     "resource://gre/modules/FxAccountsStorage.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  SelectableProfileService:
-    "resource:///modules/profiles/SelectableProfileService.sys.mjs",
   Weave: "resource://services-sync/main.sys.mjs",
   WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
+});
+ChromeUtils.defineLazyGetter(lazy, "SelectableProfileService", () => {
+  try {
+    // Only available in Firefox.
+    return ChromeUtils.importESModule(
+      "resource:///modules/profiles/SelectableProfileService.sys.mjs"
+    ).SelectableProfileService;
+  } catch (ex) {
+    return null;
+  }
 });
 ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.importESModule(
@@ -90,12 +98,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "browserProfilesEnabled",
-  "browser.profiles.enabled",
-  false
-);
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "allowSyncMerge",
@@ -293,7 +295,7 @@ FxAccountsWebChannel.prototype = {
         {
           let response = { command, messageId: message.messageId };
           // If browser profiles are not enabled, then we use the old merge sync dialog
-          if (!lazy.browserProfilesEnabled) {
+          if (!lazy.SelectableProfileService?.isEnabled) {
             response.data = { ok: this._helpers.shouldAllowRelink(data.email) };
             this._channel.send(response, sendingContext);
             break;
@@ -338,23 +340,11 @@ FxAccountsWebChannel.prototype = {
         break;
       case COMMAND_PAIR_PREFERENCES:
         if (lazy.pairingEnabled) {
-          let window = browser.ownerGlobal;
-          // We should close the FxA tab after we open our pref page
-          let selectedTab = window.gBrowser.selectedTab;
-          window.switchToTabHavingURI(
+          let win = browser.ownerGlobal;
+          win.openTrustedLinkIn(
             "about:preferences?action=pair#sync",
-            true,
-            {
-              ignoreQueryString: true,
-              replaceQueryString: true,
-              adoptIntoActiveWindow: true,
-              ignoreFragment: "whenComparing",
-              triggeringPrincipal:
-                Services.scriptSecurityManager.getSystemPrincipal(),
-            }
+            "current"
           );
-          // close the tab
-          window.gBrowser.removeTab(selectedTab);
         }
         break;
       case COMMAND_FIREFOX_VIEW:
@@ -1224,7 +1214,7 @@ FxAccountsWebChannelHelpers.prototype = {
   ) {
     let variant;
 
-    if (!lazy.browserProfilesEnabled) {
+    if (!lazy.SelectableProfileService?.isEnabled) {
       // Old merge dialog
       variant = "old-merge";
     } else if (isAccountLoggedIntoAnotherProfile) {

@@ -112,6 +112,7 @@ pub fn set_crash_ping_metrics(
         }
         environment {
             experimental_features: (string_list ',') = "ExperimentalFeatures"
+            nimbus_enrollments: (string_list ',') = "NimbusEnrollments"
             headless_mode: bool = "HeadlessMode"
             uptime: seconds = "UptimeTS"
         }
@@ -151,7 +152,9 @@ fn glean_datetime(datetime: time::OffsetDateTime) -> ::glean::Datetime {
 }
 
 fn convert_async_shutdown_timeout(value: &serde_json::Value) -> anyhow::Result<serde_json::Value> {
-    let mut ret = value.as_object().context("expected object")?.clone();
+    // The JSON value is stored as a string, so we need to deserialize it.
+    let mut ret: serde_json::Map<String, serde_json::Value> =
+        serde_json::from_str(value.as_str().context("expected string")?)?;
     if let Some(conditions) = ret.get_mut("conditions") {
         if !conditions.is_string() {
             *conditions = serde_json::to_string(conditions)

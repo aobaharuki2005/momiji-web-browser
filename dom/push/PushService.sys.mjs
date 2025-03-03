@@ -4,6 +4,7 @@
 
 import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { ChromePushSubscription } from "./ChromePushSubscription.sys.mjs";
 
 const lazy = {};
 
@@ -661,7 +662,11 @@ export var PushService = {
     if (!record) {
       return;
     }
-    lazy.gPushNotifier.notifySubscriptionChange(record.scope, record.principal);
+    lazy.gPushNotifier.notifySubscriptionChange(
+      record.scope,
+      record.principal,
+      new ChromePushSubscription(record.toSubscription())
+    );
   },
 
   /**
@@ -1492,6 +1497,9 @@ export var PushService = {
         this._notifySubscriptionChangeObservers(record);
       }
       if (!record.isExpired()) {
+        if (!record.systemRecord) {
+          Glean.webPush.unsubscribedByClearingData.add();
+        }
         // Only unregister active registrations, since we already told the
         // server about expired ones.
         this._backgroundUnregister(

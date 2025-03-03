@@ -141,7 +141,6 @@ export class UrlbarInput {
       "nsIObserver",
       "nsISupportsWeakReference",
     ]);
-    this._addObservers();
 
     // This exists only for tests.
     this._enableAutofillPlaceholder = true;
@@ -294,7 +293,7 @@ export class UrlbarInput {
       observer.observe(this.textbox.parentNode);
     }
 
-    this.updateLayoutBreakout();
+    this.#updateLayoutBreakout();
 
     this._initCopyCutController();
     this._initPasteAndGo();
@@ -855,12 +854,7 @@ export class UrlbarInput {
       result: selectedResult || this._resultForCurrentValue || null,
     });
 
-    let isValidUrl = false;
-    try {
-      new URL(url);
-      isValidUrl = true;
-    } catch (ex) {}
-    if (isValidUrl) {
+    if (URL.canParse(url)) {
       // Annotate if the untrimmed value contained a scheme, to later potentially
       // be upgraded by schemeless HTTPS-First.
       openParams.schemelessInput = this.#getSchemelessInput(
@@ -1298,8 +1292,6 @@ export class UrlbarInput {
         break;
       }
       case lazy.UrlbarUtils.RESULT_TYPE.TIP: {
-        let scalarName = `${result.payload.type}-picked`;
-        Glean.urlbar.tips[scalarName].add(1);
         if (url) {
           break;
         }
@@ -2113,7 +2105,7 @@ export class UrlbarInput {
     return state;
   }
 
-  async updateLayoutBreakout() {
+  async #updateLayoutBreakout() {
     if (!this.#allowBreakout) {
       return;
     }
@@ -2123,7 +2115,7 @@ export class UrlbarInput {
       this.window.addEventListener(
         "fullscreen",
         () => {
-          this.updateLayoutBreakout();
+          this.#updateLayoutBreakout();
         },
         { once: true }
       );
@@ -2280,17 +2272,27 @@ export class UrlbarInput {
   observe(subject, topic, data) {
     switch (topic) {
       case lazy.SearchUtils.TOPIC_ENGINE_MODIFIED: {
+        let engine = subject.QueryInterface(Ci.nsISearchEngine);
         switch (data) {
           case lazy.SearchUtils.MODIFIED_TYPE.CHANGED:
           case lazy.SearchUtils.MODIFIED_TYPE.REMOVED: {
             let searchMode = this.searchMode;
-            let engine = subject.QueryInterface(Ci.nsISearchEngine);
             if (searchMode?.engineName == engine.name) {
               // Exit search mode if the current search mode engine was removed.
               this.searchMode = searchMode;
             }
             break;
           }
+          case lazy.SearchUtils.MODIFIED_TYPE.DEFAULT:
+            if (!this.isPrivate) {
+              this._updatePlaceholder(engine.name);
+            }
+            break;
+          case lazy.SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE:
+            if (this.isPrivate) {
+              this._updatePlaceholder(engine.name);
+            }
+            break;
         }
         break;
       }
@@ -2464,7 +2466,7 @@ export class UrlbarInput {
       this.#breakoutBlockerCount--;
     }
     if (this.#breakoutBlockerCount === 0) {
-      this.updateLayoutBreakout();
+      this.#updateLayoutBreakout();
     }
   }
 
@@ -2849,9 +2851,8 @@ export class UrlbarInput {
         return result.payload.url;
       }
 
-      try {
-        uri = Services.io.newURI(this._untrimmedValue);
-      } catch (ex) {
+      uri = URL.parse(this._untrimmedValue)?.URI;
+      if (!uri) {
         return selectedVal;
       }
     }
@@ -2887,10 +2888,11 @@ export class UrlbarInput {
     // Unless decodeURLsOnCopy is set. Do not encode data: URIs.
     if (!lazy.UrlbarPrefs.get("decodeURLsOnCopy") && !uri.schemeIs("data")) {
       try {
-        new URL(selectedVal);
-        // Use encodeURI instead of URL.href because we don't want
-        // trailing slash.
-        selectedVal = encodeURI(selectedVal);
+        if (URL.canParse(selectedVal)) {
+          // Use encodeURI instead of URL.href because we don't want
+          // trailing slash.
+          selectedVal = encodeURI(selectedVal);
+        }
       } catch (ex) {
         // URL is invalid. Return original selected value.
       }
@@ -3165,11 +3167,6 @@ export class UrlbarInput {
 
     this.view.close({ elementPicked: true });
 
-    if (result.type == lazy.UrlbarUtils.RESULT_TYPE.TIP) {
-      let scalarName = `${result.payload.type}-help`;
-      Glean.urlbar.tips[scalarName].add(1);
-    }
-
     this._loadURL(
       url,
       event,
@@ -3425,10 +3422,9 @@ export class UrlbarInput {
       return null;
     }
     let strippedURI = null;
-    let uri = null;
 
     // Error check occurs during isClipboardURIValid
-    uri = Services.io.newURI(copyString);
+    let uri = Services.io.newURI(copyString);
     try {
       strippedURI = lazy.QueryStringStripper.stripForCopyOrShare(uri);
     } catch (e) {
@@ -3452,14 +3448,8 @@ export class UrlbarInput {
     if (!copyString) {
       return false;
     }
-    // throws if the selected string is not a valid URI
-    try {
-      Services.io.newURI(copyString);
-    } catch (e) {
-      return false;
-    }
 
-    return true;
+    return URL.canParse(copyString);
   }
 
   /**
@@ -3754,11 +3744,10 @@ export class UrlbarInput {
     let { engineName, source, isGeneralPurposeEngine } = searchMode || {};
 
     // As an optimization, bail if the given search mode is null but search mode
-    // is already inactive.  Otherwise browser_preferences_usage.js fails due to
+    // is already inactive. Otherwise, browser_preferences_usage.js fails due to
     // accessing the browser.urlbar.placeholderName pref (via the call to
-    // BrowserSearch.initPlaceHolder below) too many times.  That test does not
-    // enter search mode, but it triggers many calls to this method with a null
-    // search mode, via setURI.
+    // initPlaceHolder below) too many times. That test does not enter search mode,
+    // but it triggers many calls to this method with a null search mode, via setURI.
     if (!engineName && !source && !this.hasAttribute("searchmode")) {
       return;
     }
@@ -3773,7 +3762,7 @@ export class UrlbarInput {
         // This will throw before DOMContentLoaded in
         // PrivateBrowsingUtils.privacyContextFromWindow because
         // aWindow.docShell is null.
-        this.window.BrowserSearch.initPlaceHolder(true);
+        this.initPlaceHolder(true);
       } catch (ex) {}
       this.removeAttribute("searchmode");
       return;
@@ -3813,6 +3802,147 @@ export class UrlbarInput {
     }
 
     this.searchModeSwitcher?.onSearchModeChanged();
+  }
+
+  /**
+   * Initializes the urlbar placeholder to the pre-saved engine name. We do this
+   * via a preference, to avoid needing to synchronously init the search service.
+   *
+   * This should be called around the time of DOMContentLoaded, so that it is
+   * initialized quickly before the user sees anything.
+   *
+   * Note: If the preference doesn't exist, we don't do anything as the default
+   * placeholder is a string which doesn't have the engine name; however, this
+   * can be overridden using the `force` parameter.
+   *
+   * @param {boolean} force If true and the preference doesn't exist, the
+   *                        placeholder will be set to the default version
+   *                        without an engine name ("Search or enter address").
+   */
+  initPlaceHolder(force = false) {
+    let prefName =
+      "browser.urlbar.placeholderName" + (this.isPrivate ? ".private" : "");
+    let engineName = Services.prefs.getStringPref(prefName, "");
+    if (engineName || force) {
+      // We can do this directly, since we know we're at DOMContentLoaded.
+      this._setPlaceholder(engineName);
+    }
+  }
+
+  /**
+   * Asynchronously changes the urlbar placeholder to the name of the default
+   * engine according to the search service when it is initialized.
+   *
+   * This should be called around the time of MozAfterPaint. Since the
+   * placeholder was already initialized to the pre-saved engine name by
+   * initPlaceHolder when this is called, the update is delayed to avoid
+   * confusing the user.
+   */
+  async delayedStartupInit() {
+    // Only delay if requested, and we're not displaying text in the URL bar
+    // currently.
+    if (!this.value) {
+      // Delays changing the URL Bar placeholder and Unified Search Button icon
+      // until the user is not going to be seeing it, e.g. when there is a value
+      // entered in the bar, or if there is a tab switch to a tab which has a url
+      // loaded. We delay the update until the user is out of search mode since
+      // an alternative placeholder is used in search mode.
+      let updateListener = () => {
+        if (this.value && !this.searchMode) {
+          // By the time the user has switched, they may have changed the engine
+          // again, so we need to call this function again but with the
+          // new engine name.
+          // No need to await for this to finish, we're in a listener here anyway.
+          this.searchModeSwitcher.updateSearchIcon();
+          this._updatePlaceholderFromDefaultEngine();
+          this.removeEventListener("input", updateListener);
+          this.window.gBrowser.tabContainer.removeEventListener(
+            "TabSelect",
+            updateListener
+          );
+        }
+      };
+
+      this.addEventListener("input", updateListener);
+      this.window.gBrowser.tabContainer.addEventListener(
+        "TabSelect",
+        updateListener
+      );
+    } else {
+      await this._updatePlaceholderFromDefaultEngine();
+    }
+
+    // If we haven't finished initializing, ensure the placeholder
+    // preference is set for the next startup.
+    lazy.SearchUIUtils.updatePlaceholderNamePreference(
+      await this._getDefaultSearchEngine(),
+      this.isPrivate
+    );
+
+    this._addObservers();
+  }
+
+  /**
+   * Returns a Promise that resolves with default search engine.
+   *
+   * @returns {Promise<nsISearchEngine>}
+   */
+  _getDefaultSearchEngine() {
+    return this.isPrivate
+      ? Services.search.getDefaultPrivate()
+      : Services.search.getDefault();
+  }
+
+  /**
+   * This is a wrapper around '_updatePlaceholder' that uses the appropriate
+   * default engine to get the engine name.
+   */
+  async _updatePlaceholderFromDefaultEngine() {
+    const defaultEngine = await this._getDefaultSearchEngine();
+    this._updatePlaceholder(defaultEngine.name);
+  }
+
+  /**
+   * Updates the URLBar placeholder for the specified engine, delaying the
+   * update if required.
+   *
+   * Note: The engine name will only be displayed for application-provided
+   * engines, as we know they should have short names.
+   *
+   * @param {string}  engineName     The search engine name to use for the update.
+   */
+  _updatePlaceholder(engineName) {
+    if (!engineName) {
+      throw new Error("Expected an engineName to be specified");
+    }
+
+    if (this.searchMode) {
+      return;
+    }
+
+    const engine = Services.search.getEngineByName(engineName);
+    if (!engine.isAppProvided) {
+      // Set the engine name to an empty string for non-default engines, which'll
+      // make sure we display the default placeholder string.
+      engineName = "";
+    }
+
+    this._setPlaceholder(engineName);
+  }
+
+  /**
+   * Sets the URLBar placeholder to either something based on the engine name,
+   * or the default placeholder.
+   *
+   * @param {string} name
+   * The name of the engine or an empty string to use the default placeholder.
+   */
+  _setPlaceholder(name) {
+    this.document.l10n.setAttributes(
+      this.inputField,
+      name ? "urlbar-placeholder-with-name" : "urlbar-placeholder",
+      name ? { name } : undefined
+    );
   }
 
   /**
@@ -4698,7 +4828,7 @@ export class UrlbarInput {
   // onCustomizeEnd.
   _on_aftercustomization() {
     this.decrementBreakoutBlockerCount();
-    this.updateLayoutBreakout();
+    this.#updateLayoutBreakout();
     this._initCopyCutController();
     this._initPasteAndGo();
     this._initStripOnShare();
@@ -4708,7 +4838,7 @@ export class UrlbarInput {
     if (this.#breakoutBlockerCount) {
       return;
     }
-    this.updateLayoutBreakout();
+    this.#updateLayoutBreakout();
   }
 
   // CustomizableUI might unbind and bind us again, which makes us lose the
@@ -4854,7 +4984,7 @@ function getDroppableData(event) {
   }
   // The URL bar automatically handles inputs with newline characters,
   // so we can get away with treating text/x-moz-url flavours as text/plain.
-  if (links.length && links[0].url) {
+  if (links[0]?.url) {
     event.preventDefault();
     let href = links[0].url;
     if (lazy.UrlbarUtils.stripUnsafeProtocolOnPaste(href) != href) {
@@ -4864,13 +4994,13 @@ function getDroppableData(event) {
       return null;
     }
 
-    try {
-      // If this throws, checkLoadURStrWithPrincipal would also throw,
-      // as that's what it does with things that don't pass the IO
-      // service's newURI constructor without fixup. It's conceivable we
-      // may want to relax this check in the future (so e.g. www.foo.com
-      // gets fixed up), but not right now.
-      let url = new URL(href);
+    // If this fails, checkLoadURIStrWithPrincipal would also fail,
+    // as that's what it does with things that don't pass the IO
+    // service's newURI constructor without fixup. It's conceivable we
+    // may want to relax this check in the future (so e.g. www.foo.com
+    // gets fixed up), but not right now.
+    let url = URL.parse(href);
+    if (url) {
       // If we succeed, try to pass security checks. If this works, return the
       // URL object. If the *security checks* fail, return null.
       try {
@@ -4885,9 +5015,8 @@ function getDroppableData(event) {
       } catch (ex) {
         return null;
       }
-    } catch (ex) {
-      // We couldn't make a URL out of this. Continue on, and return text below.
     }
+    // We couldn't make a URL out of this. Continue on, and return text below.
   }
   // Handle as text.
   return event.dataTransfer.getData("text/plain");
@@ -5090,17 +5219,18 @@ class AddSearchEngineHelper {
   }
 
   /**
-   * Invoked by browser when the list of available engines changes.
+   * Invoked by OpenSearchManager when the list of available engines changes.
    *
-   * @param {object} browser The invoking browser.
+   * @param {object} browser The current browser.
+   * @param {object} engines The updated list of available engines.
    */
-  setEnginesFromBrowser(browser) {
+  setEnginesFromBrowser(browser, engines) {
     this.browsingContext = browser.browsingContext;
     // Make a copy of the array for state comparison.
-    let engines = browser.engines?.slice() || [];
+    engines = engines.slice();
     if (!this._sameEngines(this.engines, engines)) {
       this.engines = engines;
-      this.shortcutButtons.updateWebEngines(engines);
+      this.shortcutButtons.updateWebEngines();
     }
   }
 

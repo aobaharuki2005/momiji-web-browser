@@ -49,6 +49,9 @@ var gExceptionPaths = [
 
   // toolkit/components/pdfjs/content/build/pdf.js
   "resource://pdf.js/web/images/",
+  // This file is only loaded in using a dynamic import in pdf.js in case wasm
+  // is not available.
+  "resource://pdf.js/web/wasm/openjpeg_nowasm_fallback.js",
 
   // Exclude the form autofill path that has been moved out of the extensions to
   // toolkit, see bug 1691821.
@@ -378,9 +381,6 @@ const ignorableAllowlist = new Set([
   // The following files are outside of the omni.ja file, so we only catch them
   // when testing on a non-packaged build.
 
-  // toolkit/mozapps/extensions/nsBlocklistService.js
-  "resource://app/blocklist.xml",
-
   // dom/media/gmp/GMPParent.cpp
   "resource://gre/gmp-clearkey/0.1/manifest.json",
 ]);
@@ -494,8 +494,15 @@ function parseManifest(manifestUri) {
             Services.io.newURI(argv[0]).specIgnoringRef
           );
         }
-      } else if (type == "category" && gInterestingCategories.has(argv[0])) {
-        gReferencesFromCode.set(argv[2], null);
+      } else if (type == "category") {
+        if (gInterestingCategories.has(argv[0])) {
+          gReferencesFromCode.set(argv[2], null);
+        } else if (argv[1].startsWith("resource://")) {
+          // Assume that any resource paths immediately after the category name
+          // are for use with BrowserUtils.callModulesFromCategory (rather than
+          // having to hardcode a list of categories in this test).
+          gReferencesFromCode.set(argv[1], null);
+        }
       } else if (type == "resource") {
         trackResourcePrefix(argv[0]);
       } else if (type == "component") {

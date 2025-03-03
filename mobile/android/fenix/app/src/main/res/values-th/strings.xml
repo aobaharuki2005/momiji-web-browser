@@ -617,6 +617,14 @@
     <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">เราใช้ข้อมูลอย่างไร</string>
     <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
     <string name="onboarding_marketing_positive_button" tools:ignore="UnusedResources">ยืนยันและเริ่มเรียกดู</string>
+
+    <!-- Marketing onboarding page title variant. “One last thing” refers to the final step or action in the onboarding process that we’re asking users to take before they can start using the browser. -->
+    <string name="onboarding_marketing_title_1" tools:ignore="UnusedResources">ขั้นตอนสุดท้าย</string>
+    <!-- Marketing onboarding page body variant. 'Firefox' is intentionally hardcoded. -->
+    <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">แบ่งปันว่าคุณค้นพบ Firefox ได้อย่างไร และคุณใช้มันอย่างไรกับพันธมิตรด้านการตลาดของ Mozilla โดยข้อมูลนี้จะไม่ถูกนำไปขาย</string>
+    <!-- Marketing onboarding page button label variant. Button to confirm choice and start browsing. -->
+    <string name="onboarding_marketing_positive_button_1" tools:ignore="UnusedResources">ยอมรับและเริ่มการเรียกดู</string>
+
     <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
     <string name="onboarding_customize_toolbar_title" tools:ignore="UnusedResources">เลือกตำแหน่งแถบเครื่องมือ</string>
     <!-- Onboarding sub header for toolbar selection card, used by Nimbus experiments. -->
@@ -857,6 +865,16 @@
     <string name="preferences_show_nonsponsored_suggestions">คำแนะนำจาก %1$s</string>
     <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
     <string name="preferences_show_nonsponsored_suggestions_summary">รับคำแนะนำจากเว็บที่เกี่ยวข้องกับการค้นหาของคุณ</string>
+    <!-- Preference for link sharing -->
+    <string name="preferences_link_sharing">การแบ่งปันลิงก์</string>
+    <!-- Title for the link sharing toggle. %1$s is replaced by the brand name (e.g. Firefox).  -->
+    <string name="link_sharing_toggle_title">รวมลิงก์ดาวน์โหลด %1$s ไว้บนข้อความที่แบ่งปันทาง WhatsApp</string>
+    <!-- Body for the link sharing toggle.  %1$s is replaced by the brand name (e.g. Firefox).  -->
+    <string name="link_sharing_toggle_body">เชิญเพื่อนของคุณมาลองเรียกดูเว็บอย่างรวดเร็วและปลอดภัยยิ่งขึ้นด้วย %1$s ได้ทุกครั้งที่คุณแบ่งปันลิงก์ทาง WhatsApp</string>
+    <!--Snackbar message shown when user shares a link -->
+    <string name="link_shared_snackbar_message">แบ่งปันลิงก์แล้ว</string>
+    <!-- Snackbar action label shown when user shares a link  -->
+    <string name="link_shared_snackbar_action">จัดการการตั้งค่า</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">เปิดลิงก์ในแอป</string>
 
@@ -1757,6 +1775,11 @@
     <string name="sync_add_new_device_learn_button">เรียนรู้เกี่ยวกับการส่งแท็บ…</string>
     <!-- Text for the button to connect another device -->
     <string name="sync_add_new_device_connect_button">เชื่อมต่ออุปกรณ์อื่น…</string>
+
+    <!-- A message template for the shared link with a footer. %1$s is the shared link, %2$s is the app name (e.g. Firefox) and %3$s is a download link for the app. -->
+    <string name="sent_from_firefox_template" tools:ignore="UnusedResources">%1$s\n\nส่งจาก %2$s 🦊 ลองใช้เบราว์เซอร์มือถือ: %3$s</string>
+    <!-- A short message template for the shared link with a footer. %1$s is the shared link, %2$s is the app name (e.g. Firefox) and %3$s is a download link for the app. -->
+    <string name="sent_from_firefox_template_short" tools:ignore="UnusedResources">%1$s\n\nส่งจาก %2$s 🦊 %3$s</string>
 
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->

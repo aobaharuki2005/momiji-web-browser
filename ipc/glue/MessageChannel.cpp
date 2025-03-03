@@ -950,7 +950,6 @@ bool MessageChannel::ShouldDeferMessage(const Message& aMsg) {
 class IPCFlowMarker : public BaseMarkerType<IPCFlowMarker> {
  public:
   static constexpr const char* Name = "IPCFlowMarker";
-  static constexpr const char* Description = "";
 
   using MS = MarkerSchema;
   static constexpr MS::PayloadField PayloadFields[] = {
@@ -2212,7 +2211,11 @@ void MessageChannel::AddProfilerMarker(const IPC::Message& aMessage,
                                        MessageDirection aDirection) {
   mMonitor->AssertCurrentThreadOwns();
 
-  if (profiler_feature_active(ProfilerFeature::Flows)) {
+  if (profiler_feature_active(ProfilerFeature::Flows) &&
+      // If one of the profiler mutexes is locked on this thread, don't
+      // record markers, because we don't want to expose profiler IPCs due to
+      // the profiler itself, and also to avoid possible re-entrancy issues.
+      !profiler_is_locked_on_current_thread()) {
     if (aDirection == MessageDirection::eSending) {
       auto flow = Flow::Global(aMessage.seqno() ^
                                LossyNarrowChannelId(mMessageChannelId));

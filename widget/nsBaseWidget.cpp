@@ -1204,12 +1204,12 @@ class DispatchInputOnControllerThread : public Runnable {
   const APZOnly mAPZOnly;
 };
 
-void nsBaseWidget::DispatchTouchInput(MultiTouchInput& aInput,
-                                      uint16_t aInputSource) {
+void nsBaseWidget::DispatchTouchInput(MultiTouchInput& aInput) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aInputSource ==
+  MOZ_ASSERT(aInput.mInputSource ==
                  mozilla::dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH ||
-             aInputSource == mozilla::dom::MouseEvent_Binding::MOZ_SOURCE_PEN);
+             aInput.mInputSource ==
+                 mozilla::dom::MouseEvent_Binding::MOZ_SOURCE_PEN);
   if (mAPZC) {
     MOZ_ASSERT(APZThreadUtils::IsControllerThread());
 
@@ -1218,10 +1218,10 @@ void nsBaseWidget::DispatchTouchInput(MultiTouchInput& aInput,
       return;
     }
 
-    WidgetTouchEvent event = aInput.ToWidgetEvent(this, aInputSource);
+    WidgetTouchEvent event = aInput.ToWidgetEvent(this);
     ProcessUntransformedAPZEvent(&event, result);
   } else {
-    WidgetTouchEvent event = aInput.ToWidgetEvent(this, aInputSource);
+    WidgetTouchEvent event = aInput.ToWidgetEvent(this);
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -1443,6 +1443,7 @@ already_AddRefed<WebRenderLayerManager> nsBaseWidget::CreateCompositorSession(
       options.SetAllowSoftwareWebRenderOGL(
           gfx::gfxVars::AllowSoftwareWebRenderOGL());
     }
+    options.SetAllowNativeCompositor(WidgetTypeSupportsNativeCompositing());
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID

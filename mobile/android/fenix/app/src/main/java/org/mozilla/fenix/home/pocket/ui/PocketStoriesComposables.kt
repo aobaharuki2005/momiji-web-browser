@@ -60,8 +60,6 @@ import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.ContentRecommendation
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
-import mozilla.components.service.pocket.PocketStory.PocketSponsoredStoryCaps
-import mozilla.components.service.pocket.PocketStory.PocketSponsoredStoryShim
 import mozilla.components.service.pocket.PocketStory.SponsoredContent
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ClickableSubstringLink
@@ -75,6 +73,7 @@ import org.mozilla.fenix.compose.SelectableChipColors
 import org.mozilla.fenix.compose.TabSubtitleWithInterdot
 import org.mozilla.fenix.compose.ext.onShown
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.home.fake.FakeHomepagePreview
 import org.mozilla.fenix.home.pocket.POCKET_STORIES_DEFAULT_CATEGORY_NAME
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
@@ -363,7 +362,7 @@ fun ContentRecommendation(
  * @param onDiscoverMoreClicked Callback for when the user taps an element which contains an
  */
 @OptIn(ExperimentalComposeUiApi::class)
-@Suppress("LongMethod")
+@Suppress("CyclomaticComplexMethod", "LongMethod")
 @Composable
 fun PocketStories(
     @PreviewParameter(PocketStoryProvider::class) stories: List<PocketStory>,
@@ -495,14 +494,44 @@ fun PocketStories(
                             }
 
                             is SponsoredContent -> {
-                                SponsoredContent(
-                                    sponsoredContent = story,
-                                    backgroundColor = backgroundColor,
+                                val screenBounds = Rect()
+                                    .apply { LocalView.current.getWindowVisibleDisplayFrame(this) }
+                                    .apply {
+                                        // Check if this is in a preview because `settings()` breaks previews
+                                        if (!inComposePreview) {
+                                            val verticalOffset = LocalContext.current.resources.getDimensionPixelSize(
+                                                R.dimen.browser_toolbar_height,
+                                            )
+
+                                            if (LocalContext.current.settings().shouldUseBottomToolbar) {
+                                                bottom -= verticalOffset
+                                            } else {
+                                                top += verticalOffset
+                                            }
+                                        }
+                                    }
+
+                                Box(
+                                    modifier = Modifier.onShown(
+                                        threshold = 0.5f,
+                                        onVisible = {
+                                            onStoryShown(
+                                                story,
+                                                Triple(rowIndex, columnIndex, stories.indexOf(story)),
+                                            )
+                                        },
+                                        screenBounds = screenBounds,
+                                    ),
                                 ) {
-                                    onStoryClicked(
-                                        story,
-                                        Triple(rowIndex, columnIndex, stories.indexOf(story)),
-                                    )
+                                    SponsoredContent(
+                                        sponsoredContent = story,
+                                        backgroundColor = backgroundColor,
+                                    ) {
+                                        onStoryClicked(
+                                            story,
+                                            Triple(rowIndex, columnIndex, stories.indexOf(story)),
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -670,7 +699,7 @@ private fun PocketStoriesComposablesPreview() {
         Box(Modifier.background(FirefoxTheme.colors.layer2)) {
             Column {
                 PocketStories(
-                    stories = getFakePocketStories(8),
+                    stories = FakeHomepagePreview.pocketStories(limit = 8),
                     contentPadding = 0.dp,
                     onStoryShown = { _, _ -> },
                     onStoryClicked = { _, _ -> },
@@ -696,59 +725,6 @@ private fun PocketStoriesComposablesPreview() {
 }
 
 private class PocketStoryProvider : PreviewParameterProvider<PocketStory> {
-    override val values = getFakePocketStories(7).asSequence()
+    override val values = FakeHomepagePreview.pocketStories(limit = 7).asSequence()
     override val count = 8
-}
-
-internal fun getFakePocketStories(limit: Int = 1): List<PocketStory> {
-    return mutableListOf<PocketStory>().apply {
-        for (index in 0 until limit) {
-            when {
-                (index % 3 == 0) -> add(
-                    ContentRecommendation(
-                        corpusItemId = "corpusItemId$index",
-                        scheduledCorpusItemId = "scheduledCorpusItemId$index",
-                        url = "https://story$index.com",
-                        title = "Recommendation - This is a ${"very ".repeat(index)} long title",
-                        excerpt = "Excerpt",
-                        topic = null,
-                        publisher = "Publisher",
-                        isTimeSensitive = false,
-                        imageUrl = "",
-                        tileId = index.toLong(),
-                        receivedRank = index,
-                        recommendedAt = index.toLong(),
-                        impressions = index.toLong(),
-                    ),
-                )
-                (index % 2 == 0) -> add(
-                    PocketRecommendedStory(
-                        title = "Story - This is a ${"very ".repeat(index)} long title",
-                        publisher = "Publisher",
-                        url = "https://story$index.com",
-                        imageUrl = "",
-                        timeToRead = index,
-                        category = "Category #$index",
-                        timesShown = index.toLong(),
-                    ),
-                )
-                else -> add(
-                    PocketSponsoredStory(
-                        id = index,
-                        title = "This is a ${"very ".repeat(index)} long title",
-                        url = "https://sponsored-story$index.com",
-                        imageUrl = "",
-                        sponsor = "Mozilla",
-                        shim = PocketSponsoredStoryShim("", ""),
-                        priority = index,
-                        caps = PocketSponsoredStoryCaps(
-                            flightCount = index,
-                            flightPeriod = index * 2,
-                            lifetimeCount = index * 3,
-                        ),
-                    ),
-                )
-            }
-        }
-    }
 }

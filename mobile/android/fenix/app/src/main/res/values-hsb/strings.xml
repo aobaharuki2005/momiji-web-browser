@@ -618,6 +618,14 @@
     <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Kak daty wužiwamy</string>
     <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
     <string name="onboarding_marketing_positive_button" tools:ignore="UnusedResources">Wobkrućić a přehladować</string>
+
+    <!-- Marketing onboarding page title variant. “One last thing” refers to the final step or action in the onboarding process that we’re asking users to take before they can start using the browser. -->
+    <string name="onboarding_marketing_title_1" tools:ignore="UnusedResources">Jedna poslednja wěc</string>
+    <!-- Marketing onboarding page body variant. 'Firefox' is intentionally hardcoded. -->
+    <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">Zdźělće našim marketingowym partneram Mozilla, kak sće Firefox wotkrył a zo jón wužiwaće. Tute daty so ženje njepředawaja.</string>
+    <!-- Marketing onboarding page button label variant. Button to confirm choice and start browsing. -->
+    <string name="onboarding_marketing_positive_button_1" tools:ignore="UnusedResources">Zwolić a přehladowanje započeć</string>
+
     <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
     <string name="onboarding_customize_toolbar_title" tools:ignore="UnusedResources">Wubjerće poziciju za symbolowu lajstu</string>
     <!-- Onboarding sub header for toolbar selection card, used by Nimbus experiments. -->
@@ -856,6 +864,16 @@
     <string name="preferences_show_nonsponsored_suggestions">Namjety wot %1$s</string>
     <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
     <string name="preferences_show_nonsponsored_suggestions_summary">Wobstarajće sej namjety z weba nastupajo waše pytanje</string>
+    <!-- Preference for link sharing -->
+    <string name="preferences_link_sharing">Dźělenje wotkazow</string>
+    <!-- Title for the link sharing toggle. %1$s is replaced by the brand name (e.g. Firefox).  -->
+    <string name="link_sharing_toggle_title">Sćehnjenski wotkaz %1$s zapřijeć, kotryž so na WhatsApp dźěli</string>
+    <!-- Body for the link sharing toggle.  %1$s is replaced by the brand name (e.g. Firefox).  -->
+    <string name="link_sharing_toggle_body">Přeprošće swojich přećelow, zo byšće spěšniše, wěsćiše přehladowanje z %1$s spytał, kóždy raž, hdyž wotkaz na WhatsApp dźěliće.</string>
+    <!--Snackbar message shown when user shares a link -->
+    <string name="link_shared_snackbar_message">Wotkaz dźěleny</string>
+    <!-- Snackbar action label shown when user shares a link  -->
+    <string name="link_shared_snackbar_action">Nastajenja rjadować</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Wotkazy w nałoženjach wočinić</string>
 
@@ -1763,6 +1781,11 @@
     <string name="sync_add_new_device_learn_button">Wjace wo słanju rajtarkow zhonić…</string>
     <!-- Text for the button to connect another device -->
     <string name="sync_add_new_device_connect_button">Dalši grat zwjazać…</string>
+
+    <!-- A message template for the shared link with a footer. %1$s is the shared link, %2$s is the app name (e.g. Firefox) and %3$s is a download link for the app. -->
+    <string name="sent_from_firefox_template" tools:ignore="UnusedResources">%1$s\n\nPřez %2$s pósłany 🦊 Spytajće mobilny wobhladowak: %3$s</string>
+    <!-- A short message template for the shared link with a footer. %1$s is the shared link, %2$s is the app name (e.g. Firefox) and %3$s is a download link for the app. -->
+    <string name="sent_from_firefox_template_short" tools:ignore="UnusedResources">%1$s\n\nPřez %2$s pósłany 🦊 %3$s</string>
 
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->

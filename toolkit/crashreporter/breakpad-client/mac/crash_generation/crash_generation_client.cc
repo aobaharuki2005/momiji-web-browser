@@ -32,6 +32,11 @@
 #include "mac/crash_generation/crash_generation_server.h"
 #include "common/mac/MachIPC.h"
 
+#include <pthread.h>
+#include <servers/bootstrap.h>
+#include <os/lock.h>
+#include <libkern/OSAtomic.h>
+
 namespace google_breakpad {
 
 bool CrashGenerationClient::RequestDumpForException(
@@ -40,6 +45,12 @@ bool CrashGenerationClient::RequestDumpForException(
     int64_t exception_subcode,
     mach_port_t crashing_thread,
     mach_port_t crashing_task) {
+  // This ensures that the client is fully initialized, we'll never leave this
+  // loop unless sender_ is a valid pointer we can access.
+  if (!WaitForInitialization()) {
+    return false;
+  }
+
   // The server will send a message to this port indicating that it
   // has finished its work.
   ReceivePort acknowledge_port;
@@ -58,7 +69,7 @@ bool CrashGenerationClient::RequestDumpForException(
 
   message.SetData(&info, sizeof(info));
 
-  kern_return_t result = sender_.SendMessage(message, MACH_MSG_TIMEOUT_NONE);
+  kern_return_t result = sender_->SendMessage(message, MACH_MSG_TIMEOUT_NONE);
   if (result != KERN_SUCCESS)
     return false;
 
@@ -69,6 +80,118 @@ bool CrashGenerationClient::RequestDumpForException(
                                            MACH_MSG_TIMEOUT_NONE);
 
   return result == KERN_SUCCESS;
+}
+
+// static
+void* CrashGenerationClient::AsynchronousInitializationThread(void* arg) {
+  CrashGenerationClient* client = reinterpret_cast<CrashGenerationClient*>(arg);
+  client->Initialization();
+  return nullptr;
+}
+
+void CrashGenerationClient::Initialization() {
+  assert(state_ == State::Uninitialized);
+  mach_port_t task_bootstrap_port = 0;
+  kern_return_t rv = task_get_bootstrap_port(mach_task_self(),
+                                             &task_bootstrap_port);
+
+  if (rv != KERN_SUCCESS) {
+    if (__builtin_available(macOS 10.12, *)) {
+      os_unfair_lock_lock(&sync_.mUnfairLock);
+    } else {
+      OSSpinLockLock(&sync_.mSpinLock);
+    }
+    state_ = State::Failed;
+    if (__builtin_available(macOS 10.12, *)) {
+      os_unfair_lock_unlock(&sync_.mUnfairLock);
+    } else {
+      OSSpinLockUnlock(&sync_.mSpinLock);
+    }
+    return;
+  }
+
+  while (true) {
+    mach_port_t send_port;
+    rv = bootstrap_look_up(task_bootstrap_port, mach_port_name_.c_str(),
+                           &send_port);
+
+    if (rv == KERN_SUCCESS) {
+      if (__builtin_available(macOS 10.12, *)) {
+        os_unfair_lock_lock(&sync_.mUnfairLock);
+      } else {
+        OSSpinLockLock(&sync_.mSpinLock);
+      }
+      state_ = State::Initialized;
+      sender_ = std::make_unique<MachPortSender>(send_port);
+      if (__builtin_available(macOS 10.12, *)) {
+        os_unfair_lock_unlock(&sync_.mUnfairLock);
+      } else {
+        OSSpinLockUnlock(&sync_.mSpinLock);
+      }
+      return;
+    } else if (rv == BOOTSTRAP_UNKNOWN_SERVICE) {
+      struct timespec delay = {
+        .tv_sec = 0,
+        .tv_nsec = 10 * 1000 * 1000, // 10ms
+      };
+
+      nanosleep(&delay, nullptr);
+    } else {
+      if (__builtin_available(macOS 10.12, *)) {
+        os_unfair_lock_lock(&sync_.mUnfairLock);
+      } else {
+        OSSpinLockLock(&sync_.mSpinLock);
+      }
+      state_ = State::Failed;
+      if (__builtin_available(macOS 10.12, *)) {
+        os_unfair_lock_unlock(&sync_.mUnfairLock);
+      } else {
+        OSSpinLockUnlock(&sync_.mSpinLock);
+      }
+      return;
+    }
+  }
+}
+
+void CrashGenerationClient::AsynchronousInitialization() {
+  pthread_t thread;
+  int rv = pthread_create(&thread, nullptr, AsynchronousInitializationThread, this);
+
+  if (rv < 0) {
+    state_ = State::Failed;
+  }
+
+  pthread_detach(thread);
+}
+
+bool CrashGenerationClient::WaitForInitialization() {
+  while (true) {
+    if (__builtin_available(macOS 10.12, *)) {
+      while (!os_unfair_lock_trylock(&sync_.mUnfairLock)) {
+        // We can't wait here as we may be in the exception handler, so spin
+        // instead until we get the lock.
+      }
+    } else {
+      while (!OSSpinLockTry(&sync_.mSpinLock)) {
+      }
+    }
+
+    State state = state_;
+    if (__builtin_available(macOS 10.12, *)) {
+      os_unfair_lock_unlock(&sync_.mUnfairLock);
+    } else {
+      OSSpinLockUnlock(&sync_.mSpinLock);
+    }
+
+    switch (state) {
+      case Initializing:
+        continue;
+      case Initialized:
+        return true;
+      default:
+        return false;
+    }
+  }
 }
 
 }  // namespace google_breakpad

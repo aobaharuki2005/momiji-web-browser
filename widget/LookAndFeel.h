@@ -136,6 +136,9 @@ class LookAndFeel {
     /* Whether Windows mica effect is enabled and available */
     WindowsMica,
 
+    /* Whether Windows mica effect is enabled and available on popups */
+    WindowsMicaPopups,
+
     /*
      * A Boolean value to determine whether the macOS Big Sur-specific
      * theming should be used.
@@ -546,10 +549,14 @@ class LookAndFeel {
    */
   static bool GetEchoPassword();
 
-  /**
-   * Whether we should be drawing in the titlebar by default.
-   */
+  /** Whether we should be drawing in the titlebar by default. */
   static bool DrawInTitlebar();
+
+  static int32_t CaretBlinkCount() {
+    return GetInt(IntID::CaretBlinkCount, -1);
+  }
+
+  static int32_t CaretBlinkTime() { return GetInt(IntID::CaretBlinkTime, 500); }
 
   enum class TitlebarAction {
     None,

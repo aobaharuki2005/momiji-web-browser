@@ -15,6 +15,7 @@ import android.view.accessibility.AccessibilityManager
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.lifecycle.LifecycleOwner
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.concept.engine.Engine.HttpsOnlyMode
 import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingMode
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
@@ -619,6 +620,17 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         }
     }
 
+    var whatsappLinkSharingEnabled by lazyFeatureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_link_sharing),
+        featureFlag = true,
+        default = { FxNimbus.features.sentFromFirefox.value().enabled },
+    )
+
+    var linkSharingSettingsSnackbarShown by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_link_sharing_settings_snackbar),
+        default = false,
+    )
+
     /**
      * Get the display string for the current open links in apps setting
      */
@@ -1081,6 +1093,22 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_show_search_suggestions_in_private),
         default = false,
     )
+
+    /**
+     * Indicates if the user have enabled trending search in search suggestions.
+     */
+    @VisibleForTesting
+    internal var trendingSearchSuggestionsEnabled by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_show_trending_search_suggestions),
+        default = true,
+    )
+
+    /**
+     * Returns true if trending searches should be shown to the user.
+     */
+    fun shouldShowTrendingSearchSuggestions(isPrivate: Boolean, searchEngine: SearchEngine?) =
+        trendingSearchSuggestionsEnabled && isTrendingSearchesVisible &&
+            searchEngine?.trendingUrl != null && (!isPrivate || shouldShowSearchSuggestionsInPrivate)
 
     var showSearchSuggestionsInPrivateOnboardingFinished by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_show_search_suggestions_in_private_onboarding),
@@ -1695,9 +1723,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if Merino content recommendations should be shown.
      */
-    var showContentRecommendations by booleanPreference(
+    var showContentRecommendations by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_pocket_content_recommendations),
-        default = FeatureFlags.MERINO_CONTENT_RECOMMENDATIONS,
+        default = { FxNimbus.features.merinoRecommendations.value().enabled },
+        featureFlag = true,
     )
 
     /**
@@ -1777,6 +1806,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             false
         }
     }
+
+    /**
+     * Indicates if the marketing onboarding card should be shown to the user.
+     */
+    var shouldShowMarketingOnboarding by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_should_show_marketing_onboarding),
+        default = true,
+    )
 
     val feltPrivateBrowsingEnabled by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_should_enable_felt_privacy),
@@ -1906,9 +1943,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if the Compose Homepage is enabled.
      */
-    var enableComposeHomepage by booleanPreference(
+    var enableComposeHomepage by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_enable_compose_homepage),
-        default = FeatureFlags.COMPOSE_HOMEPAGE,
+        default = { FxNimbus.features.composeHomepage.value().enabled },
+        featureFlag = true,
     )
 
     /**
@@ -1934,6 +1972,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var enableUnifiedTrustPanel by booleanPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_enable_unified_trust_panel),
         default = FeatureFlags.UNIFIED_TRUST_PANEL,
+    )
+
+    /**
+     * Indicates if Trending Searches is enabled.
+     */
+    var isTrendingSearchesVisible by lazyFeatureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_enable_trending_searches),
+        default = { FxNimbus.features.trendingSearches.value().enabled },
+        featureFlag = true,
     )
 
     /**
@@ -2276,5 +2323,18 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         key = appContext.getPreferenceKey(R.string.pref_key_use_new_bookmarks_ui),
         default = { FxNimbus.features.bookmarks.value().newComposeUi },
         featureFlag = true,
+    )
+
+    var lastSavedInFolderGuid by stringPreference(
+        key = appContext.getPreferenceKey(R.string.pref_last_folder_saved_in),
+        default = "",
+    )
+
+    /**
+     * Indicates whether or not to show the entry point for the DNS over HTTPS settings
+     */
+    val showDohEntryPoint by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_doh_settings_enabled),
+        default = false,
     )
 }

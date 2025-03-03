@@ -135,7 +135,7 @@ namespace mozilla {
     nsCString entraSuccessLabel;
     
     if ([ssoCookiesDict objectForKey:@"device_headers"]) {
-        [allHeaders addObject:[ssoCookiesDict objectforKey:@"device_headers"]];
+        [allHeaders addObject:[ssoCookiesDict objectForKey:@"device_headers"]];
     } else {
         MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
                 ("SSORequestDelegate::didCompleteWithAuthorization: "

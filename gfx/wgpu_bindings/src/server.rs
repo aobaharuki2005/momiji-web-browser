@@ -125,7 +125,7 @@ pub extern "C" fn wgpu_server_new(owner: *mut c_void, use_dxc: bool) -> *mut Glo
             "Selecting backends based on dom.webgpu.wgpu-backend pref: {:?}",
             backends_pref
         );
-        wgc::instance::parse_backends_from_comma_list(&backends_pref)
+        wgt::Backends::from_comma_list(&backends_pref)
     };
 
     let mut instance_flags = wgt::InstanceFlags::from_build_config().with_env();
@@ -137,6 +137,7 @@ pub extern "C" fn wgpu_server_new(owner: *mut c_void, use_dxc: bool) -> *mut Glo
         wgt::Dx12Compiler::DynamicDxc {
             dxc_path: "dxcompiler.dll".into(),
             dxil_path: "dxil.dll".into(),
+            max_shader_model: wgt::DxcShaderModel::V6_6
         }
     } else {
         wgt::Dx12Compiler::Fxc
@@ -147,8 +148,16 @@ pub extern "C" fn wgpu_server_new(owner: *mut c_void, use_dxc: bool) -> *mut Glo
         &wgt::InstanceDescriptor {
             backends,
             flags: instance_flags,
-            dx12_shader_compiler,
-            gles_minor_version: wgt::Gles3MinorVersion::Automatic,
+            backend_options: wgt::BackendOptions {
+                gl: wgt::GlBackendOptions {
+                    gles_minor_version: wgt::Gles3MinorVersion::Automatic,
+                    fence_behavior: wgt::GlFenceBehavior::Normal,
+                },
+                dx12: wgt::Dx12BackendOptions {
+                    shader_compiler: dx12_shader_compiler,
+                },
+                noop: wgt::NoopBackendOptions { enable: false },
+            },
         },
     );
     let global = Global { global, owner };
@@ -178,9 +187,9 @@ pub extern "C" fn wgpu_server_device_poll(
     force_wait: bool,
 ) {
     let maintain = if force_wait {
-        wgt::Maintain::Wait
+        wgt::PollType::Wait
     } else {
-        wgt::Maintain::Poll
+        wgt::PollType::Poll
     };
     global.device_poll(device_id, maintain).unwrap();
 }
@@ -369,7 +378,7 @@ pub unsafe extern "C" fn wgpu_server_adapter_pack_info(
             let info = AdapterInformation {
                 id,
                 limits: restrict_limits(global.adapter_limits(id)),
-                features: global.adapter_features(id),
+                features: global.adapter_features(id).features_webgpu,
                 name,
                 vendor,
                 device,
@@ -410,9 +419,7 @@ pub unsafe extern "C" fn wgpu_server_adapter_request_device(
 
         path
     });
-    let trace_path = trace_string
-        .as_ref()
-        .map(|string| std::path::Path::new(string.as_str()));
+    let trace_path = trace_string.as_deref();
     // TODO: in https://github.com/gfx-rs/wgpu/pull/3626/files#diff-033343814319f5a6bd781494692ea626f06f6c3acc0753a12c867b53a646c34eR97
     // which introduced the queue id parameter, the queue id is also the device id. I don't know how applicable this is to
     // other situations (this one in particular).
@@ -1269,13 +1276,18 @@ pub extern "C" fn wgpu_vkimage_create_with_dma_buf(
 
 #[no_mangle]
 #[cfg(not(any(target_os = "macos", target_os = "ios")))]
-pub unsafe extern "C" fn wgpu_vkimage_delete(
+pub unsafe extern "C" fn wgpu_vkimage_destroy(
     global: &Global,
     device_id: id::DeviceId,
-    handle: *mut VkImageHandle,
+    handle: &VkImageHandle,
 ) {
-    let handle = Box::from_raw(handle);
     handle.destroy(global, device_id);
+}
+
+#[no_mangle]
+#[cfg(not(any(target_os = "macos", target_os = "ios")))]
+pub unsafe extern "C" fn wgpu_vkimage_delete(handle: *mut VkImageHandle) {
+    let _ = Box::from_raw(handle);
 }
 
 #[no_mangle]
@@ -1792,7 +1804,7 @@ impl Global {
             sample_count: desc.sample_count,
             dimension: desc.dimension,
             format: desc.format,
-            usage: wgh::TextureUses::COPY_DST | wgh::TextureUses::COLOR_TARGET,
+            usage: wgt::TextureUses::COPY_DST | wgt::TextureUses::COLOR_TARGET,
             memory_flags: wgh::MemoryFlags::empty(),
             view_formats: vec![],
         };
