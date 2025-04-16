@@ -42,6 +42,41 @@ enum {
 enum { NSUserNotificationActivationTypeAdditionalActionClicked = 4 };
 #endif
 
+@protocol FakeNSUserNotification <NSObject>
+@property(copy) NSString* title;
+@property(copy) NSString* subtitle;
+@property(copy) NSString* informativeText;
+@property(copy) NSString* actionButtonTitle;
+@property(copy) NSDictionary* userInfo;
+@property(copy) NSDate* deliveryDate;
+@property(copy) NSTimeZone* deliveryTimeZone;
+@property(copy) NSMutableArray* additionalActions;
+@property(copy) NSDateComponents* deliveryRepeatInterval;
+@property(copy) NSUserNotificationAction* additionalActivationAction;
+@property(readonly) NSDate* actualDeliveryDate;
+@property(readonly, getter=isPresented) BOOL presented;
+@property(readonly, getter=isRemote) BOOL remote;
+@property(copy) NSString* soundName;
+@property BOOL hasActionButton;
+@property(readonly) NSUserNotificationActivationType activationType;
+@property(copy) NSString* otherButtonTitle;
+@property(copy) NSImage* contentImage;
+@end
+
+@protocol FakeNSUserNotificationCenter <NSObject>
++ (id<FakeNSUserNotificationCenter>)defaultUserNotificationCenter;
+@property(assign) id<NSUserNotificationCenterDelegate> delegate;
+@property(copy) NSArray* scheduledNotifications;
+- (void)scheduleNotification:(id<FakeNSUserNotification>)notification;
+- (void)removeScheduledNotification:(id<FakeNSUserNotification>)notification;
+@property(readonly) NSArray* deliveredNotifications;
+- (void)deliverNotification:(id<FakeNSUserNotification>)notification;
+- (void)removeDeliveredNotification:(id<FakeNSUserNotification>)notification;
+- (void)removeAllDeliveredNotifications;
+- (void)_removeAllDisplayedNotifications;
+- (void)_removeDisplayedNotification:(id<FakeNSUserNotification>)notification;
+@end
+
 @interface mozNotificationCenterDelegate
     : NSObject <NSUserNotificationCenterDelegate> {
   OSXNotificationCenter* mOSXNC;
@@ -58,12 +93,12 @@ enum { NSUserNotificationActivationTypeAdditionalActionClicked = 4 };
   return self;
 }
 
-- (void)userNotificationCenter:(NSUserNotificationCenter*)center
-        didDeliverNotification:(NSUserNotification*)notification {
+- (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
+        didDeliverNotification:(id<FakeNSUserNotification>)notification {
 }
 
-- (void)userNotificationCenter:(NSUserNotificationCenter*)center
-       didActivateNotification:(NSUserNotification*)notification {
+- (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
+       didActivateNotification:(id<FakeNSUserNotification>)notification {
   unsigned long long additionalActionIndex = ULLONG_MAX;
   if ([notification respondsToSelector:@selector(_alternateActionIndex)]) {
     NSNumber* alternateActionIndex =
@@ -71,19 +106,20 @@ enum { NSUserNotificationActivationTypeAdditionalActionClicked = 4 };
     additionalActionIndex = [alternateActionIndex unsignedLongLongValue];
   }
   mOSXNC->OnActivate([[notification userInfo] valueForKey:@"name"],
-                     notification.activationType, additionalActionIndex);
+                     notification.activationType, additionalActionIndex,
+                     notification.additionalActivationAction);
 }
 
-- (BOOL)userNotificationCenter:(NSUserNotificationCenter*)center
-     shouldPresentNotification:(NSUserNotification*)notification {
+- (BOOL)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
+     shouldPresentNotification:(id<FakeNSUserNotification>)notification {
   return YES;
 }
 
 // This is an undocumented method that we need for parity with Safari.
 // Apple bug #15440664.
-- (void)userNotificationCenter:(NSUserNotificationCenter*)center
+- (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
     didRemoveDeliveredNotifications:(NSArray*)notifications {
-  for (NSUserNotification* notification in notifications) {
+  for (id<FakeNSUserNotification> notification in notifications) {
     NSString* name = [[notification userInfo] valueForKey:@"name"];
     mOSXNC->CloseAlertCocoaString(name);
   }
@@ -91,8 +127,8 @@ enum { NSUserNotificationActivationTypeAdditionalActionClicked = 4 };
 
 // This is an undocumented method that we need to be notified if a user clicks
 // the close button.
-- (void)userNotificationCenter:(NSUserNotificationCenter*)center
-               didDismissAlert:(NSUserNotification*)notification {
+- (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
+               didDismissAlert:(id<FakeNSUserNotification>)notification {
   NSString* name = [[notification userInfo] valueForKey:@"name"];
   mOSXNC->CloseAlertCocoaString(name);
 }
@@ -112,24 +148,27 @@ class OSXNotificationInfo final : public nsISupports {
 
  public:
   NS_DECL_ISUPPORTS
-  OSXNotificationInfo(NSString* name, nsIObserver* observer,
-                      const nsAString& alertCookie);
+  OSXNotificationInfo(NSString* name, nsIAlertNotification* aAlertNotification,
+                      nsIObserver* observer, const nsAString& alertCookie);
 
   NSString* mName;
+  nsCOMPtr<nsIAlertNotification> mAlertNotification;
   nsCOMPtr<nsIObserver> mObserver;
   nsString mCookie;
   RefPtr<nsICancelable> mIconRequest;
-  NSUserNotification* mPendingNotification;
+  id<FakeNSUserNotification> mPendingNotification;
 };
 
 NS_IMPL_ISUPPORTS0(OSXNotificationInfo)
 
-OSXNotificationInfo::OSXNotificationInfo(NSString* name, nsIObserver* observer,
-                                         const nsAString& alertCookie) {
+OSXNotificationInfo::OSXNotificationInfo(
+    NSString* name, nsIAlertNotification* aAlertNotification,
+    nsIObserver* observer, const nsAString& alertCookie) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   NS_ASSERTION(name, "Cannot create OSXNotificationInfo without a name!");
   mName = [name retain];
+  mAlertNotification = aAlertNotification;
   mObserver = observer;
   mCookie = alertCookie;
   mPendingNotification = nil;
@@ -146,7 +185,7 @@ OSXNotificationInfo::~OSXNotificationInfo() {
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
-static NSUserNotificationCenter* GetNotificationCenter() {
+static id<FakeNSUserNotificationCenter> GetNotificationCenter() {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   Class c = NSClassFromString(@"NSUserNotificationCenter");
@@ -227,7 +266,7 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
   }
 
   Class unClass = NSClassFromString(@"NSUserNotification");
-  NSUserNotification* notification = [[unClass alloc] init];
+  id<FakeNSUserNotification> notification = [[unClass alloc] init];
 
   nsAutoString title;
   nsresult rv = aAlert->GetTitle(title);
@@ -301,6 +340,28 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
                                  forKey:@"_alternateActionButtonTitles"];
     }
   }
+
+  nsTArray<RefPtr<nsIAlertAction>> actions;
+  MOZ_TRY(aAlert->GetActions(actions));
+
+  NSMutableArray* additionalActions = [[NSMutableArray alloc] init];
+  for (const RefPtr<nsIAlertAction>& action : actions) {
+    nsAutoString actionName;
+    MOZ_TRY(action->GetAction(actionName));
+
+    nsAutoString actionTitle;
+    MOZ_TRY(action->GetTitle(actionTitle));
+
+    NSString* actionNameNS = nsCocoaUtils::ToNSString(actionName);
+    NSString* actionTitleNS = nsCocoaUtils::ToNSString(actionTitle);
+    NSUserNotificationAction* notificationAction =
+        [NSUserNotificationAction actionWithIdentifier:actionNameNS
+                                                 title:actionTitleNS];
+    [additionalActions addObject:notificationAction];
+  }
+  notification.additionalActions = additionalActions;
+  [additionalActions release];
+
   nsAutoString name;
   rv = aAlert->GetName(name);
   // Don't let an alert name be more than MAX_NOTIFICATION_NAME_LEN characters.
@@ -324,7 +385,7 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
   NS_ENSURE_SUCCESS(rv, rv);
 
   OSXNotificationInfo* osxni =
-      new OSXNotificationInfo(alertName, aAlertListener, cookie);
+      new OSXNotificationInfo(alertName, aAlert, aAlertListener, cookie);
 
   // Show the favicon if supported on this version of OS X.
   if (aIconSize > 0 &&
@@ -388,10 +449,11 @@ void OSXNotificationCenter::CloseAlertCocoaString(NSString* aAlertName) {
   }
 
   NSArray* notifications = [GetNotificationCenter() deliveredNotifications];
-  for (NSUserNotification* notification in notifications) {
+  for (id<FakeNSUserNotification> notification in notifications) {
     NSString* name = [[notification userInfo] valueForKey:@"name"];
     if ([name isEqualToString:aAlertName]) {
       [GetNotificationCenter() removeDeliveredNotification:notification];
+      [GetNotificationCenter() _removeDisplayedNotification:notification];
       break;
     }
   }
@@ -417,7 +479,8 @@ void OSXNotificationCenter::CloseAlertCocoaString(NSString* aAlertName) {
 
 void OSXNotificationCenter::OnActivate(
     NSString* aAlertName, NSUserNotificationActivationType aActivationType,
-    unsigned long long aAdditionalActionIndex) {
+    unsigned long long aAdditionalActionIndex,
+    NSUserNotificationAction* aAdditionalActivationAction) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (!aAlertName) {
@@ -431,6 +494,17 @@ void OSXNotificationCenter::OnActivate(
         switch ((int)aActivationType) {
           case NSUserNotificationActivationTypeAdditionalActionClicked:
           case NSUserNotificationActivationTypeActionButtonClicked:
+            if (aAdditionalActivationAction) {
+              nsAutoString actionName;
+              nsCocoaUtils::GetStringForNSString(
+                  aAdditionalActivationAction.identifier, actionName);
+              nsCOMPtr<nsIAlertAction> action;
+              osxni->mAlertNotification->GetAction(actionName,
+                                                   getter_AddRefs(action));
+              osxni->mObserver->Observe(action, "alertclickcallback",
+                                        osxni->mCookie.get());
+              break;
+            }
             switch (aAdditionalActionIndex) {
               case OSXNotificationActionDisable:
                 osxni->mObserver->Observe(nullptr, "alertdisablecallback",

@@ -692,6 +692,21 @@ const AVAILABLE_SHIMS = [
     onlyIfDFPIActive: true,
   },
   {
+    id: "MessengerLogin",
+    platform: "desktop",
+    name: "Messenger Login",
+    bug: "1934814",
+    needsShimHelpers: ["checkFacebookLoginStatus"],
+    contentScripts: [
+      {
+        js: "messengerLogin.js",
+        matches: ["*://www.messenger.com/*"],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
     id: "MicrosoftLogin",
     platform: "desktop",
     name: "Microsoft Login",
@@ -903,6 +918,20 @@ const AVAILABLE_SHIMS = [
     onlyIfDFPIActive: true,
   },
   {
+    id: "StackOverflowLogin",
+    platform: "all",
+    name: "StackOverflow Login",
+    bug: "1949491",
+    contentScripts: [
+      {
+        js: "stackoverflow-login.js",
+        matches: ["*://stackoverflow.com/*"],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
     id: "emeraude.my.salesforce.com",
     platform: "all",
     name: "Salesforce IndexedDB Script Access",
@@ -964,6 +993,15 @@ const AVAILABLE_SHIMS = [
     isSmartblockEmbedShim: true,
     onlyIfBlockedByETP: true,
     unblocksOnOptIn: ["*://www.tiktok.com/*"],
+  },
+  {
+    id: "FingerpringJSBotd",
+    platform: "all",
+    name: "FingerprintJS Bot Detection",
+    bug: "1925995",
+    file: "botd.mjs",
+    matches: ["*://openfpcdn.io/botd/v1"],
+    onlyIfBlockedByETP: true,
   },
 ];
 

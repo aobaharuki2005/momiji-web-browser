@@ -94,6 +94,10 @@ let ecmaGlobals = [
   "String",
   "Symbol",
   "SyntaxError",
+  {
+    name: "Temporal",
+    nightly: true,
+  },
   "TypeError",
   "Uint16Array",
   "Uint32Array",
@@ -152,7 +156,7 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "CountQueuingStrategy",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  "CookieStore",
+  { name: "CookieStore", nightly: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "Crypto",
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -374,15 +378,17 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "PromiseRejectionEvent",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "PushEvent" },
+  "PushEvent",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "PushManager" },
+  "PushManager",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "PushMessageData" },
+  "PushMessageData",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "PushSubscription" },
+  "PushSubscription",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "PushSubscriptionOptions" },
+  "PushSubscriptionChangeEvent",
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  "PushSubscriptionOptions",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "ReadableByteStreamController",
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -506,7 +512,7 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "console",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  "cookieStore",
+  { name: "cookieStore", nightly: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "onactivate",
   // IMPORTANT: Do not change this list without review from a DOM peer!

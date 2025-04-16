@@ -15,7 +15,7 @@ pub const HTTP3_UNI_STREAM_TYPE_CONTROL: u64 = 0x0;
 
 /// The local control stream, responsible for encoding frames and sending them
 #[derive(Debug)]
-pub(crate) struct ControlStreamLocal {
+pub struct ControlStreamLocal {
     stream: BufferedStream,
     /// `stream_id`s of outstanding request streams
     outstanding_priority_update: VecDeque<StreamId>,
@@ -92,7 +92,7 @@ impl ControlStreamLocal {
 
     /// Create a control stream.
     pub fn create(&mut self, conn: &mut Connection) -> Res<()> {
-        qtrace!([self], "Create a control stream.");
+        qtrace!("[{self}] Create a control stream");
         self.stream.init(conn.stream_create(StreamType::UniDi)?);
         self.stream
             .buffer(&[u8::try_from(HTTP3_UNI_STREAM_TYPE_CONTROL).unwrap()]);

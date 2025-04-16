@@ -132,8 +132,7 @@ class TransactionBuilder final {
 
   void ClearDisplayList(Epoch aEpoch, wr::WrPipelineId aPipeline);
 
-  void GenerateFrame(const VsyncId& aVsyncId, bool aPresent,
-                     wr::RenderReasons aReasons);
+  void GenerateFrame(const VsyncId& aVsyncId, wr::RenderReasons aReasons);
 
   void InvalidateRenderedFrame(wr::RenderReasons aReasons);
 
@@ -537,6 +536,7 @@ struct MOZ_STACK_CLASS StackingContextParams : public WrStackingContextParams {
             nullptr,
             nullptr,
             nullptr,
+            nullptr,
             wr::TransformStyle::Flat,
             wr::WrReferenceFrameKind::Transform,
             false,
@@ -595,7 +595,7 @@ class DisplayListBuilder final {
 
   Maybe<wr::WrSpatialId> PushStackingContext(
       const StackingContextParams& aParams, const wr::LayoutRect& aBounds,
-      const wr::RasterSpace& aRasterSpace, const wr::SnapshotInfo* aSnapshot);
+      const wr::RasterSpace& aRasterSpace);
   void PopStackingContext(bool aIsReferenceFrame);
 
   wr::WrClipChainId DefineClipChain(const nsTArray<wr::WrClipId>& aClips,

@@ -1454,6 +1454,26 @@ void nsNativeThemeCocoa::DrawDisclosureButton(CGContextRef cgContext,
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
+void nsNativeThemeCocoa::DrawFocusOutline(CGContextRef cgContext, const HIRect& inBoxRect) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  HIThemeFrameDrawInfo fdi;
+  fdi.version = 0;
+  fdi.kind = kHIThemeFrameTextFieldSquare;
+  fdi.state = kThemeStateActive;
+  fdi.isFocused = TRUE;
+
+#if DRAW_IN_FRAME_DEBUG
+  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
+  CGContextFillRect(cgContext, inBoxRect);
+#endif
+
+  HIThemeDrawFrame(&inBoxRect, &fdi, cgContext, HITHEME_ORIENTATION);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+
+}
+
 typedef void (*RenderHIThemeControlFunction)(CGContextRef cgContext,
                                              const HIRect& aRenderRect,
                                              void* aData);
@@ -1773,6 +1793,7 @@ void nsNativeThemeCocoa::DrawSpinButton(CGContextRef cgContext,
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
+
 
 MOZ_RUNINIT static const CellRenderSettings progressSettings[2][2] = {
     // Vertical progress bar.
@@ -2480,6 +2501,9 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
           ButtonParams{ComputeControlParams(aFrame, elementState),
                        ButtonType::eRegularPushButton}));
 
+    case StyleAppearance::FocusOutline:
+      return Some(WidgetInfo::FocusOutline());
+
     case StyleAppearance::MozMacHelpButton:
       return Some(WidgetInfo::Button(
           ButtonParams{ComputeControlParams(aFrame, elementState),
@@ -2825,6 +2849,10 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo,
           DrawSpinButton(cgContext, macRect, SpinButton::eDown, params);
           break;
         }
+        case Widget::eFocusOutline: {
+          DrawFocusOutline(cgContext, macRect);
+          break;
+        }
         case Widget::eSegment: {
           SegmentParams params = aWidgetInfo.Params<SegmentParams>();
           DrawSegment(cgContext, macRect, params);
@@ -2986,6 +3014,7 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio:
     case StyleAppearance::Button:
+    case StyleAppearance::FocusOutline:
     case StyleAppearance::MozMacHelpButton:
     case StyleAppearance::MozMacDisclosureButtonOpen:
     case StyleAppearance::MozMacDisclosureButtonClosed:
@@ -3367,6 +3396,31 @@ LayoutDeviceIntSize nsNativeThemeCocoa::GetMinimumWidgetSize(
   NS_OBJC_END_TRY_BLOCK_RETURN(LayoutDeviceIntSize());
 }
 
+bool nsNativeThemeCocoa::WidgetAttributeChangeRequiresRepaint(
+    StyleAppearance aAppearance, nsAtom* aAttribute) {
+  // Some widget types just never change state.
+  switch (aAppearance) {
+    case StyleAppearance::MozWindowTitlebar:
+    case StyleAppearance::Statusbar:
+    case StyleAppearance::Tooltip:
+    case StyleAppearance::Tabpanels:
+    case StyleAppearance::Tabpanel:
+    case StyleAppearance::Menupopup:
+    case StyleAppearance::Progresschunk:
+    case StyleAppearance::ProgressBar:
+    case StyleAppearance::Meter:
+    case StyleAppearance::Meterchunk:
+    case StyleAppearance::MozMacVibrancyLight:
+    case StyleAppearance::MozMacVibrancyDark:
+    case StyleAppearance::MozMacVibrantTitlebarLight:
+    case StyleAppearance::MozMacVibrantTitlebarDark:
+      return false;
+    default:
+      break;
+  }
+  return Theme::WidgetAttributeChangeRequiresRepaint(aAppearance, aAttribute);
+}
+
 NS_IMETHODIMP
 nsNativeThemeCocoa::ThemeChanged() {
   // This is unimplemented because we don't care if gecko changes its theme
@@ -3436,6 +3490,9 @@ bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext,
 
     case StyleAppearance::Range:
       return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
+
+    case StyleAppearance::FocusOutline:
+      return true;
 
     case StyleAppearance::MozMacVibrancyLight:
     case StyleAppearance::MozMacVibrancyDark:

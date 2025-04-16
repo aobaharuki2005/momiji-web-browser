@@ -38,7 +38,7 @@
 #include "mozilla/widget/WidgetMessageUtils.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/RelativeLuminanceUtils.h"
-#include "mozilla/Telemetry.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/TelemetryScalarEnums.h"
 #include "mozilla/Try.h"
 
@@ -151,6 +151,7 @@ static const char sIntPrefs[][45] = {
     "ui.chosenMenuItemsShouldBlink",
     "ui.windowsAccentColorInTitlebar",
     "ui.windowsMica",
+    "ui.windowsMicaPopups",
     "ui.macGraphiteTheme",
     "ui.macLionTheme",
     "ui.macYosemiteTheme",
@@ -566,38 +567,6 @@ nsXPLookAndFeel::~nsXPLookAndFeel() {
   sInstance = nullptr;
 }
 
-static bool IsSpecialColor(LookAndFeel::ColorID aID, nscolor aColor) {
-  using ColorID = LookAndFeel::ColorID;
-
-  if (aColor == NS_SAME_AS_FOREGROUND_COLOR) {
-    return true;
-  }
-
-  switch (aID) {
-    case ColorID::IMESelectedRawTextBackground:
-    case ColorID::IMESelectedConvertedTextBackground:
-    case ColorID::IMERawInputBackground:
-    case ColorID::IMEConvertedTextBackground:
-    case ColorID::IMESelectedRawTextForeground:
-    case ColorID::IMESelectedConvertedTextForeground:
-    case ColorID::IMERawInputForeground:
-    case ColorID::IMEConvertedTextForeground:
-    case ColorID::IMERawInputUnderline:
-    case ColorID::IMEConvertedTextUnderline:
-    case ColorID::IMESelectedRawTextUnderline:
-    case ColorID::IMESelectedConvertedTextUnderline:
-    case ColorID::SpellCheckerUnderline:
-      return NS_IS_SELECTION_SPECIAL_COLOR(aColor);
-    default:
-      break;
-  }
-  /*
-   * In GetColor(), every color that is not a special color is color
-   * corrected. Use false to make other colors color corrected.
-   */
-  return false;
-}
-
 nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
                                                   ColorScheme aScheme) {
   if (aScheme == ColorScheme::Dark) {
@@ -786,7 +755,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
 
     case ColorID::MozEventreerow:
     case ColorID::MozOddtreerow:
-    case ColorID::MozDialog:  // --in-content-box-background
+    case ColorID::MozDialog:  // --background-color-box
       color = NS_RGB(35, 34, 43);
       break;
     case ColorID::Windowtext:  // --in-content-page-color
@@ -1052,19 +1021,6 @@ Maybe<nscolor> nsXPLookAndFeel::GetUncachedColor(ColorID aID,
     return Some(r);
   }
   if (NS_SUCCEEDED(NativeGetColor(aID, aScheme, r))) {
-    if (gfxPlatform::GetCMSMode() == CMSMode::All && !IsSpecialColor(aID, r)) {
-      qcms_transform* transform = gfxPlatform::GetCMSInverseRGBTransform();
-      if (transform) {
-        uint8_t color[4];
-        color[0] = NS_GET_R(r);
-        color[1] = NS_GET_G(r);
-        color[2] = NS_GET_B(r);
-        color[3] = NS_GET_A(r);
-        qcms_transform_data(transform, color, color, 1);
-        r = NS_RGBA(color[0], color[1], color[2], color[3]);
-      }
-    }
-
     return Some(r);
   }
   return Nothing();

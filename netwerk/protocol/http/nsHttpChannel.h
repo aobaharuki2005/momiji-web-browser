@@ -331,9 +331,10 @@ class nsHttpChannel final : public HttpBaseChannel,
   [[nodiscard]] nsresult DispatchTransaction(
       HttpTransactionShell* aTransWithStickyConn);
   [[nodiscard]] nsresult CallOnStartRequest();
-  [[nodiscard]] nsresult ProcessResponse();
-  void AsyncContinueProcessResponse();
-  [[nodiscard]] nsresult ContinueProcessResponse1();
+  [[nodiscard]] nsresult ProcessResponse(nsHttpConnectionInfo* aConnInfo);
+  void AsyncContinueProcessResponse(nsHttpConnectionInfo* aConnInfo);
+  [[nodiscard]] nsresult ContinueProcessResponse1(
+      nsHttpConnectionInfo* aConnInfo);
   [[nodiscard]] nsresult ContinueProcessResponse2(nsresult);
   nsresult HandleOverrideResponse();
 
@@ -343,7 +344,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   [[nodiscard]] nsresult ContinueProcessResponse4(nsresult);
   [[nodiscard]] nsresult ProcessNormal();
   [[nodiscard]] nsresult ContinueProcessNormal(nsresult);
-  void ProcessAltService();
+  void ProcessAltService(nsHttpConnectionInfo* aTransConnInfo = nullptr);
   bool ShouldBypassProcessNotModified();
   [[nodiscard]] nsresult ProcessNotModified(
       const std::function<nsresult(nsHttpChannel*, nsresult)>&

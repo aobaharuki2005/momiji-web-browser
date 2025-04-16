@@ -61,6 +61,9 @@ object SupportUtils {
         SMARTBLOCK("smartblock-enhanced-tracking-protection"),
         SPONSOR_PRIVACY("sponsor-privacy"),
         HTTPS_ONLY_MODE("https-only-mode-firefox-android"),
+        DNS_OVER_HTTPS("https-only-mode-firefox-android"), // FIXME
+        DNS_OVER_HTTPS_LOCAL_PROVIDER("https-only-mode-firefox-android"), // FIXME
+        DNS_OVER_HTTPS_NETWORK("https-only-mode-firefox-android"), // FIXME
         UNSIGNED_ADDONS("unsigned-addons"),
         REVIEW_QUALITY_CHECK("review_checker_mobile"),
         FX_SUGGEST("search-suggestions-firefox"),
@@ -77,7 +80,7 @@ object SupportUtils {
     enum class MozillaPage(internal val path: String) {
         PRIVATE_NOTICE("privacy/firefox/"),
         MANIFESTO("about/manifesto/"),
-        TERMS_OF_SERVICE("about/legal/terms/services/"),
+        TERMS_OF_SERVICE("about/legal/terms/firefox/"),
     }
 
     /**

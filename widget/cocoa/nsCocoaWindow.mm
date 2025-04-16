@@ -917,8 +917,8 @@ WindowRenderer* nsCocoaWindow::GetWindowRenderer() {
 TransparencyMode nsCocoaWindow::GetTransparencyMode() {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  return !mWindow || mWindow.isOpaque ? TransparencyMode::Opaque
-                                      : TransparencyMode::Transparent;
+  return mWindow.isOpaque ? TransparencyMode::Opaque
+                          : TransparencyMode::Transparent;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(TransparencyMode::Opaque);
 }
@@ -954,7 +954,7 @@ void nsCocoaWindow::ConstrainPosition(DesktopIntPoint& aPoint) {
     return;
   }
 
-  nsIntRect screenBounds;
+  DesktopIntRect screenRect;
 
   int32_t width, height;
 
@@ -972,24 +972,14 @@ void nsCocoaWindow::ConstrainPosition(DesktopIntPoint& aPoint) {
                              getter_AddRefs(screen));
 
     if (screen) {
-      screen->GetRectDisplayPix(&(screenBounds.x), &(screenBounds.y),
-                                &(screenBounds.width), &(screenBounds.height));
+      screenRect = screen->GetRectDisplayPix();
     }
   }
 
-  if (aPoint.x < screenBounds.x) {
-    aPoint.x = screenBounds.x;
-  } else if (aPoint.x >= screenBounds.x + screenBounds.width - width) {
-    aPoint.x = screenBounds.x + screenBounds.width - width;
-  }
-
-  if (aPoint.y < screenBounds.y) {
-    aPoint.y = screenBounds.y;
-  } else if (aPoint.y >= screenBounds.y + screenBounds.height - height) {
-    aPoint.y = screenBounds.y + screenBounds.height - height;
-  }
+  aPoint = ConstrainPositionToBounds(aPoint, {width, height}, screenRect);
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
+
 }
 
 void nsCocoaWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
@@ -1568,6 +1558,10 @@ void nsCocoaWindow::ProcessTransitions() {
   }
 
   mInProcessTransitions = true;
+  if (mProcessTransitionsPending) {
+    mProcessTransitionsPending->Cancel();
+    mProcessTransitionsPending = nullptr;
+  }
 
   // Start a loop that will continue as long as we have transitions to process
   // and we aren't waiting on an asynchronous transition to complete. Any
@@ -1748,6 +1742,10 @@ void nsCocoaWindow::CancelAllTransitions() {
   // ProcessTransitions().
   mTransitionCurrent.reset();
   mIsTransitionCurrentAdded = false;
+  if (mProcessTransitionsPending) {
+    mProcessTransitionsPending->Cancel();
+    mProcessTransitionsPending = nullptr;
+  }
   std::queue<TransitionType>().swap(mTransitionsPending);
 }
 
@@ -1773,9 +1771,11 @@ void nsCocoaWindow::FinishCurrentTransitionIfMatching(
     // ProcessTransitions on the next event loop. Doing this will ensure that
     // any async native transition methods we call (like toggleFullScreen) will
     // succeed.
-    if (!mTransitionsPending.empty()) {
-      NS_DispatchToCurrentThread(NewRunnableMethod(
-          "FinishCurrentTransition", this, &nsCocoaWindow::ProcessTransitions));
+    if (!mTransitionsPending.empty() && !mProcessTransitionsPending) {
+      mProcessTransitionsPending = NS_NewCancelableRunnableFunction(
+          "ProcessTransitionsPending",
+          [self = RefPtr{this}] { self->ProcessTransitions(); });
+      NS_DispatchToCurrentThread(mProcessTransitionsPending);
     }
   }
 }
@@ -1992,9 +1992,8 @@ CGFloat nsCocoaWindow::BackingScaleFactor() {
 void nsCocoaWindow::BackingScaleFactorChanged() {
   CGFloat newScale = GetBackingScaleFactor(mWindow);
 
-  // ignore notification if it hasn't really changed (or maybe we have
-  // disabled HiDPI mode via prefs)
-  if (mBackingScaleFactor == newScale) {
+  // Ignore notification if it hasn't really changed
+  if (BackingScaleFactor() == newScale) {
     return;
   }
 
@@ -2202,7 +2201,9 @@ void nsCocoaWindow::SetMenuBar(RefPtr<nsMenuBarX>&& aMenuBar) {
   if (mMenuBar && ((!gSomeMenuBarPainted &&
                     nsMenuUtilsX::GetHiddenWindowMenuBar() == mMenuBar) ||
                    mWindow.isMainWindow)) {
-    mMenuBar->Paint();
+    // We do an async paint in order to prevent crashes when macOS is actively
+    // enumerating the menu items in `NSApp.mainMenu`.
+    mMenuBar->PaintAsync();
   }
 }
 
@@ -2679,7 +2680,9 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
   NS_ASSERTION(geckoWidget, "Window delegate not returning a gecko widget!");
 
   if (nsMenuBarX* geckoMenuBar = geckoWidget->GetMenuBar()) {
-    geckoMenuBar->Paint();
+    // We do an async paint in order to prevent crashes when macOS is actively
+    // enumerating the menu items in `NSApp.mainMenu`.
+    geckoMenuBar->PaintAsync();
   } else {
     // sometimes we don't have a native application menu early in launching
     if (!sApplicationMenu) {
@@ -2796,13 +2799,7 @@ void nsCocoaWindow::CocoaWindowDidResize() {
   // receive a windowDidChangeScreen notification, as we will receive this
   // even if Cocoa was already treating the zero-size window as having
   // Retina backing scale.
-  NSWindow* window = (NSWindow*)[aNotification object];
-  if ([window respondsToSelector:@selector(backingScaleFactor)]) {
-    if (GetBackingScaleFactor(window) != mGeckoWindow->BackingScaleFactor()) {
-      mGeckoWindow->BackingScaleFactorChanged();
-    }
-  }
-
+  mGeckoWindow->BackingScaleFactorChanged();
   mGeckoWindow->ReportMoveEvent();
 }
 
@@ -2934,9 +2931,9 @@ void nsCocoaWindow::CocoaWindowDidResize() {
   RefPtr<nsMenuBarX> hiddenWindowMenuBar =
       nsMenuUtilsX::GetHiddenWindowMenuBar();
   if (hiddenWindowMenuBar) {
-    // printf("painting hidden window menu bar due to window losing main
-    // status\n");
-    hiddenWindowMenuBar->Paint();
+    // We do an async paint in order to prevent crashes when macOS is actively
+    // enumerating the menu items in `NSApp.mainMenu`.
+    hiddenWindowMenuBar->PaintAsync();
   }
 
   NSWindow* window = [aNotification object];
@@ -3026,15 +3023,7 @@ void nsCocoaWindow::CocoaWindowDidResize() {
 - (void)windowDidChangeBackingProperties:(NSNotification*)aNotification {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
-  NSWindow* window = (NSWindow*)[aNotification object];
-
-  if ([window respondsToSelector:@selector(backingScaleFactor)]) {
-    CGFloat oldFactor = [[[aNotification userInfo]
-        objectForKey:@"NSBackingPropertyOldScaleFactorKey"] doubleValue];
-    if (window.backingScaleFactor != oldFactor) {
-      mGeckoWindow->BackingScaleFactorChanged();
-    }
-  }
+  mGeckoWindow->BackingScaleFactorChanged();
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
@@ -3280,6 +3269,7 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
   mState = nil;
   mDisabledNeedsDisplay = NO;
   mTrackingArea = nil;
+  mViewWithTrackingArea = nil;
   mDirtyRect = NSZeroRect;
   mBeingShown = NO;
   mDrawTitle = NO;
@@ -3509,11 +3499,13 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 }
 
 - (void)removeTrackingArea {
-  if (mTrackingArea) {
-    [self.trackingAreaView removeTrackingArea:mTrackingArea];
-    [mTrackingArea release];
-    mTrackingArea = nil;
-  }
+  [mViewWithTrackingArea removeTrackingArea:mTrackingArea];
+
+  [mTrackingArea release];
+  mTrackingArea = nil;
+
+  [mViewWithTrackingArea release];
+  mViewWithTrackingArea = nil;
 }
 
 - (void)createTrackingArea {
@@ -3521,11 +3513,13 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   const NSTrackingAreaOptions options =
       NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved |
       NSTrackingActiveAlways | NSTrackingInVisibleRect;
-  mTrackingArea = [[NSTrackingArea alloc] initWithRect:[mViewWithTrackingArea bounds]
-                                               options:options
-                                                 owner:self
-                                              userInfo:nil];
+  mTrackingArea =
+      [[NSTrackingArea alloc] initWithRect:[mViewWithTrackingArea bounds]
+                                   options:options
+                                     owner:self
+                                  userInfo:nil];
   [mViewWithTrackingArea addTrackingArea:mTrackingArea];
+
 }
 
 - (void)mouseEntered:(NSEvent*)aEvent {

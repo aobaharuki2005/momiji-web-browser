@@ -14,7 +14,7 @@ pub(crate) enum DirectiveKind {
     /// An [`enable_extension`].
     Enable,
     /// A [`language_extension`].
-    Requires
+    Requires,
 }
 
 impl DirectiveKind {
@@ -32,6 +32,7 @@ impl DirectiveKind {
         })
     }
 }
+
 impl crate::diagnostic_filter::Severity {
     #[cfg(feature = "wgsl-in")]
     pub(crate) fn report_wgsl_parse_diag<'a>(
@@ -45,7 +46,6 @@ impl crate::diagnostic_filter::Severity {
         })
     }
 }
-
 
 #[cfg(test)]
 mod test {

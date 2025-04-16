@@ -945,12 +945,11 @@ struct KeyConversionData {
 
 static const KeyConversionData gKeyConversions[] = {
 
-#define KEYCODE_ENTRY(aStr, aCode) \
-  { #aStr, sizeof(#aStr) - 1, NS_##aStr, aCode }
+#define KEYCODE_ENTRY(aStr, aCode) {#aStr, sizeof(#aStr) - 1, NS_##aStr, aCode}
 
 // Some keycodes may have different name in KeyboardEvent from its key name.
 #define KEYCODE_ENTRY2(aStr, aNSName, aCode) \
-  { #aStr, sizeof(#aStr) - 1, NS_##aNSName, aCode }
+  {#aStr, sizeof(#aStr) - 1, NS_##aNSName, aCode}
 
     KEYCODE_ENTRY(VK_CANCEL, 0x001B),
     KEYCODE_ENTRY(VK_DELETE, NSDeleteFunctionKey),
@@ -1439,6 +1438,19 @@ nsresult nsCocoaUtils::GetScreenCapturePermissionState(
         continue;
       }
 
+      // macOS versions 12.2 (Monterey) or later have a status indicator when the
+      // microphone is in use (an orange dot). This is implemented as a window
+      // owned by the window server process. The permission check logic queries
+      // window server for all windows and assumes it has the required permission
+      // if it can read any window name that is at dock or normal level.
+      // The StatusIndicator window is an exception and needs to be skipped
+      // because it is owned by window server process and therefore when querying
+      // the window server, the name is always readable.
+      if (kCFCompareEqualTo ==
+          CFStringCompare(windowName, CFSTR("StatusIndicator"), 0)) {
+        continue;
+      }
+
       CFNumberRef windowLayerRef = reinterpret_cast<CFNumberRef>(
           CFDictionaryGetValue(windowDict, kCGWindowLayer));
       int32_t windowLayer;
@@ -1463,8 +1475,8 @@ nsresult nsCocoaUtils::GetScreenCapturePermissionState(
     return NS_OK;
   }
 
-   LOG("GetScreenCapturePermissionState(): nothing to do, not on 10.15+");
-   return NS_ERROR_NOT_IMPLEMENTED;
+  LOG("GetScreenCapturePermissionState(): nothing to do, not on 10.15+");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult nsCocoaUtils::RequestVideoCapturePermission(

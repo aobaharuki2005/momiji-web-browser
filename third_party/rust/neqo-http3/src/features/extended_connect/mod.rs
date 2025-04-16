@@ -82,7 +82,7 @@ impl ExtendedConnectType {
 impl From<ExtendedConnectType> for HSettingType {
     fn from(_type: ExtendedConnectType) -> Self {
         // This will change when we have more features using ExtendedConnectType.
-        HSettingType::EnableWebTransport
+        Self::EnableWebTransport
     }
 }
 

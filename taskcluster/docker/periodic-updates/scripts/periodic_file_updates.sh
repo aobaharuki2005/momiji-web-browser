@@ -456,6 +456,17 @@ function compare_remote_settings_files {
       done
     fi
     # NOTE: The downloaded data is not validated. xpcshell should be used for that.
+    
+    # bug 1959683: remote settings update can add untracked search-config-icons
+    # It is not safe to take these (see https://bugzilla.mozilla.org/show_bug.cgi?id=1873448)
+    # If they are around as untracked files when `arc diff` runs, that command will fail.
+    # (We explicitly don't want to use `arc diff --allow-untracked` to avoid accidentally
+    # missing files from other updates - we'd rather the job fail.)
+    if [ "${USE_GIT}" == "true" ]; then
+      ${GIT} -C "${TOPSRCDIR}" clean -f -d services/settings/dumps/main/search-config-icons
+    else
+      ${HG} --cwd "${TOPSRCDIR}" purge services/settings/dumps/main/search-config-icons
+    fi
   done
 
   echo "INFO: diffing old/new remote settings dumps..."
@@ -471,7 +482,7 @@ function compare_remote_settings_files {
 
 # Helper for compare_remote_settings_files to download attachments from remote settings.
 # The format and location is documented at:
-# https://firefox-source-docs.mozilla.org/services/common/services/RemoteSettings.html#packaging-attachments
+# https://firefox-source-docs.mozilla.org/services/settings/index.html#services-packaging-attachments
 function update_remote_settings_attachment() {
   local bucket=$1
   local collection=$2

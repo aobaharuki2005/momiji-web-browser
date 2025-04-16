@@ -206,7 +206,7 @@ h6 {
 }
 
 /* stylelint-disable-next-line media-query-no-invalid */
-@media (-moz-bool-pref: "layout.css.h1-in-section-ua-styles.enabled") {
+@media -moz-pref("layout.css.h1-in-section-ua-styles.enabled") {
   :is(article, aside, nav, section)
   h1 {
     margin-block: 0.83em;
@@ -745,10 +745,11 @@ audio[controls] {
   transform: translate(0) !important;
 }
 
-video > .caption-box {
+video > .caption-box:-moz-native-anonymous {
   width: 100%;
   height: 100%;
   position: relative;
+  pointer-events: none;
 }
 
 /**

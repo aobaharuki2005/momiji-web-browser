@@ -287,9 +287,9 @@ void TransactionBuilder::ClearDisplayList(Epoch aEpoch,
   wr_transaction_clear_display_list(mTxn, aEpoch, aPipelineId);
 }
 
-void TransactionBuilder::GenerateFrame(const VsyncId& aVsyncId, bool aPresent,
+void TransactionBuilder::GenerateFrame(const VsyncId& aVsyncId,
                                        wr::RenderReasons aReasons) {
-  wr_transaction_generate_frame(mTxn, aVsyncId.mId, aPresent, aReasons);
+  wr_transaction_generate_frame(mTxn, aVsyncId.mId, aReasons);
 }
 
 void TransactionBuilder::InvalidateRenderedFrame(wr::RenderReasons aReasons) {
@@ -1222,7 +1222,7 @@ void DisplayListBuilder::End(layers::DisplayListData& aOutTransaction) {
 
 Maybe<wr::WrSpatialId> DisplayListBuilder::PushStackingContext(
     const wr::StackingContextParams& aParams, const wr::LayoutRect& aBounds,
-    const wr::RasterSpace& aRasterSpace, const wr::SnapshotInfo* aSnapshot) {
+    const wr::RasterSpace& aRasterSpace) {
   MOZ_ASSERT(mClipChainLeaf.isNothing(),
              "Non-empty leaf from clip chain given, but not used with SC!");
 
@@ -1236,7 +1236,7 @@ Maybe<wr::WrSpatialId> DisplayListBuilder::PushStackingContext(
       mWrState, aBounds, mCurrentSpaceAndClipChain.space, &aParams,
       aParams.mTransformPtr, aParams.mFilters.Elements(),
       aParams.mFilters.Length(), aParams.mFilterDatas.Elements(),
-      aParams.mFilterDatas.Length(), aRasterSpace, aSnapshot);
+      aParams.mFilterDatas.Length(), aRasterSpace);
 
   return spatialId.id != 0 ? Some(spatialId) : Nothing();
 }

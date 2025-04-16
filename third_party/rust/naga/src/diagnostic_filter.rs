@@ -201,7 +201,7 @@ impl IntoIterator for DiagnosticFilterMap {
 /// An error returned by [`DiagnosticFilterMap::add`] when it encounters conflicting rules.
 #[cfg(feature = "wgsl-in")]
 #[derive(Clone, Debug)]
-pub struct ConflictingDiagnosticRuleError {
+pub(crate) struct ConflictingDiagnosticRuleError {
     pub triggering_rule_spans: [Span; 2],
 }
 

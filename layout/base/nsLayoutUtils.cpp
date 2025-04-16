@@ -1265,22 +1265,22 @@ SideBits nsLayoutUtils::GetSideBitsForFixedPositionContent(
     const nsStylePosition* position = aFixedPosFrame->StylePosition();
     if (!position
              ->GetAnchorResolvedInset(eSideRight, StylePositionProperty::Fixed)
-             .IsAuto()) {
+             ->IsAuto()) {
       sides |= SideBits::eRight;
     }
     if (!position
              ->GetAnchorResolvedInset(eSideLeft, StylePositionProperty::Fixed)
-             .IsAuto()) {
+             ->IsAuto()) {
       sides |= SideBits::eLeft;
     }
     if (!position
              ->GetAnchorResolvedInset(eSideBottom, StylePositionProperty::Fixed)
-             .IsAuto()) {
+             ->IsAuto()) {
       sides |= SideBits::eBottom;
     }
     if (!position
              ->GetAnchorResolvedInset(eSideTop, StylePositionProperty::Fixed)
-             .IsAuto()) {
+             ->IsAuto()) {
       sides |= SideBits::eTop;
     }
   }
@@ -8311,8 +8311,10 @@ CSSSize nsLayoutUtils::CalculateBoundingCompositionSize(
   if (!rootPresContext) {
     rootPresContext = presContext->GetRootPresContext();
   }
+
+  const bool isPopupRoot = aFrame->HasAnyStateBits(NS_FRAME_IN_POPUP);
   PresShell* rootPresShell = nullptr;
-  if (rootPresContext) {
+  if (rootPresContext && !isPopupRoot) {
     rootPresShell = rootPresContext->PresShell();
     if (nsIFrame* rootFrame = rootPresShell->GetRootFrame()) {
       ParentLayerRect compBounds;
@@ -8346,7 +8348,9 @@ CSSSize nsLayoutUtils::CalculateBoundingCompositionSize(
 
   // Adjust composition size for the size of scroll bars.
   nsIFrame* rootRootScrollContainerFrame =
-      rootPresShell ? rootPresShell->GetRootScrollContainerFrame() : nullptr;
+      rootPresShell && !isPopupRoot
+          ? rootPresShell->GetRootScrollContainerFrame()
+          : nullptr;
   nsMargin scrollbarMargins = ScrollbarAreaToExcludeFromCompositionBoundsFor(
       rootRootScrollContainerFrame);
   LayoutDeviceMargin margins = LayoutDeviceMargin::FromAppUnits(

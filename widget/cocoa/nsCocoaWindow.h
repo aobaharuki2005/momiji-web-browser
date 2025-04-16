@@ -109,6 +109,7 @@ enum class NativeKeyBindingsType : uint8_t;
 @end
 
 @interface NSWindow (Undocumented)
+
 - (NSDictionary*)shadowParameters;
 - (BOOL)bottomCornerRounded;
 // Present in the same form on OS X since at least OS X 10.5.
