@@ -694,6 +694,34 @@ const POLICIES_TESTS = [
   {
     policies: {
       UserMessaging: {
+        SkipTermsOfUse: false,
+        Locked: false,
+      },
+    },
+    unlockedPrefs: {
+      "datareporting.policy.dataSubmissionPolicyAcceptedVersion": 0,
+      "datareporting.policy.dataSubmissionPolicyNotifiedTime": "0",
+    },
+  },
+
+  {
+    policies: {
+      UserMessaging: {
+        SkipTermsOfUse: true,
+        Locked: true,
+      },
+    },
+    lockedPrefs: {
+      "datareporting.policy.dataSubmissionPolicyAcceptedVersion": 999,
+      // "datareporting.policy.dataSubmissionPolicyNotifiedTime" is a string of
+      // the timestamp at which the policy was set, this is tested in
+      // browser/components/enterprisepolicies/tests/browser/browser_policy_usermessaging.js
+    },
+  },
+
+  {
+    policies: {
+      UserMessaging: {
         ExtensionRecommendations: false,
         Locked: false,
       },
@@ -871,6 +899,9 @@ const POLICIES_TESTS = [
         TLS_RSA_WITH_AES_128_CBC_SHA: false,
         TLS_RSA_WITH_AES_256_CBC_SHA: false,
         TLS_RSA_WITH_3DES_EDE_CBC_SHA: false,
+        TLS_CHACHA20_POLY1305_SHA256: false,
+        TLS_AES_128_GCM_SHA256: false,
+        TLS_AES_256_GCM_SHA384: false,
       },
     },
     lockedPrefs: {
@@ -891,6 +922,9 @@ const POLICIES_TESTS = [
       "security.ssl3.rsa_aes_128_sha": true,
       "security.ssl3.rsa_aes_256_sha": true,
       "security.ssl3.deprecated.rsa_des_ede3_sha": true,
+      "security.tls13.chacha20_poly1305_sha256": true,
+      "security.tls13.aes_128_gcm_sha256": true,
+      "security.tls13.aes_256_gcm_sha384": true,
     },
   },
 
@@ -914,6 +948,9 @@ const POLICIES_TESTS = [
         TLS_RSA_WITH_AES_128_CBC_SHA: true,
         TLS_RSA_WITH_AES_256_CBC_SHA: true,
         TLS_RSA_WITH_3DES_EDE_CBC_SHA: true,
+        TLS_CHACHA20_POLY1305_SHA256: true,
+        TLS_AES_128_GCM_SHA256: true,
+        TLS_AES_256_GCM_SHA384: true,
       },
     },
     lockedPrefs: {
@@ -934,6 +971,9 @@ const POLICIES_TESTS = [
       "security.ssl3.rsa_aes_128_sha": false,
       "security.ssl3.rsa_aes_256_sha": false,
       "security.ssl3.deprecated.rsa_des_ede3_sha": false,
+      "security.tls13.chacha20_poly1305_sha256": false,
+      "security.tls13.aes_128_gcm_sha256": false,
+      "security.tls13.aes_256_gcm_sha384": false,
     },
   },
 

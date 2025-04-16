@@ -142,29 +142,6 @@ void nsHttpTransaction::SetClassOfService(ClassOfService cos) {
   }
 }
 
-class ReleaseOnSocketThread final : public mozilla::Runnable {
- public:
-  explicit ReleaseOnSocketThread(nsTArray<nsCOMPtr<nsISupports>>&& aDoomed)
-      : Runnable("ReleaseOnSocketThread"), mDoomed(std::move(aDoomed)) {}
-
-  NS_IMETHOD
-  Run() override {
-    mDoomed.Clear();
-    return NS_OK;
-  }
-
-  void Dispatch() {
-    nsCOMPtr<nsIEventTarget> sts =
-        do_GetService("@mozilla.org/network/socket-transport-service;1");
-    Unused << sts->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
-  }
-
- private:
-  virtual ~ReleaseOnSocketThread() = default;
-
-  nsTArray<nsCOMPtr<nsISupports>> mDoomed;
-};
-
 nsHttpTransaction::~nsHttpTransaction() {
   LOG(("Destroying nsHttpTransaction @%p\n", this));
 
@@ -189,17 +166,6 @@ nsHttpTransaction::~nsHttpTransaction() {
   delete mResponseHead;
   delete mChunkedDecoder;
   ReleaseBlockingTransaction();
-
-  nsTArray<nsCOMPtr<nsISupports>> arrayToRelease;
-  if (mConnection) {
-    arrayToRelease.AppendElement(mConnection.forget());
-  }
-
-  if (!arrayToRelease.IsEmpty()) {
-    RefPtr<ReleaseOnSocketThread> r =
-        new ReleaseOnSocketThread(std::move(arrayToRelease));
-    r->Dispatch();
-  }
 }
 
 nsresult nsHttpTransaction::Init(
@@ -251,6 +217,7 @@ nsresult nsHttpTransaction::Init(
   if (NS_FAILED(rv)) return rv;
 
   mConnInfo = cinfo;
+  mFinalizedConnInfo = cinfo;
   mCallbacks = callbacks;
   mConsumerTarget = target;
   mCaps = caps;
@@ -472,11 +439,17 @@ void nsHttpTransaction::SetH2WSConnRefTaken() {
   }
 }
 
-UniquePtr<nsHttpResponseHead> nsHttpTransaction::TakeResponseHead() {
+UniquePtr<nsHttpResponseHead> nsHttpTransaction::TakeResponseHeadAndConnInfo(
+    nsHttpConnectionInfo** aOut) {
   MOZ_ASSERT(!mResponseHeadTaken, "TakeResponseHead called 2x");
 
   // Lock TakeResponseHead() against main thread
   MutexAutoLock lock(mLock);
+
+  if (aOut) {
+    RefPtr<nsHttpConnectionInfo> connInfo = mFinalizedConnInfo;
+    connInfo.forget(aOut);
+  }
 
   mResponseHeadTaken = true;
 
@@ -557,6 +530,7 @@ void nsHttpTransaction::OnActivated() {
 
   mActivated = true;
   gHttpHandler->ConnMgr()->AddActiveTransaction(this);
+  FinalizeConnInfo();
 }
 
 void nsHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor** cb) {
@@ -1193,7 +1167,7 @@ void nsHttpTransaction::PrepareConnInfoForRetry(nsresult aReason) {
   RefPtr<nsHttpConnectionInfo> failedConnInfo = mConnInfo->Clone();
   mConnInfo = nullptr;
   bool echConfigUsed =
-      gHttpHandler->EchConfigEnabled(failedConnInfo->IsHttp3()) &&
+      nsHttpHandler::EchConfigEnabled(failedConnInfo->IsHttp3()) &&
       !failedConnInfo->GetEchConfig().IsEmpty();
 
   if (mFastFallbackTriggered) {
@@ -1861,6 +1835,14 @@ static inline void RemoveAlternateServiceUsedHeader(
     DebugOnly<nsresult> rv =
         aRequestHead->SetHeader(nsHttp::Alternate_Service_Used, "0"_ns);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
+}
+
+void nsHttpTransaction::FinalizeConnInfo() {
+  RefPtr<nsHttpConnectionInfo> cloned = mConnInfo->Clone();
+  {
+    MutexAutoLock lock(mLock);
+    mFinalizedConnInfo.swap(cloned);
   }
 }
 
@@ -2994,6 +2976,10 @@ class DeleteHttpTransaction : public Runnable {
 void nsHttpTransaction::DeleteSelfOnConsumerThread() {
   LOG(("nsHttpTransaction::DeleteSelfOnConsumerThread [this=%p]\n", this));
 
+  if (mConnection && OnSocketThread()) {
+    mConnection = nullptr;
+  }
+
   bool val;
   if (!mConsumerTarget ||
       (NS_SUCCEEDED(mConsumerTarget->IsOnCurrentThread(&val)) && val)) {
@@ -3552,7 +3538,7 @@ void nsHttpTransaction::OnFastFallbackTimer() {
     return;
   }
 
-  bool echConfigUsed = gHttpHandler->EchConfigEnabled(mConnInfo->IsHttp3()) &&
+  bool echConfigUsed = nsHttpHandler::EchConfigEnabled(mConnInfo->IsHttp3()) &&
                        !mConnInfo->GetEchConfig().IsEmpty();
   mBackupConnInfo = PrepareFastFallbackConnInfo(echConfigUsed);
   if (!mBackupConnInfo) {

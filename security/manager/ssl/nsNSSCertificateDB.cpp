@@ -44,6 +44,10 @@
 #include "secerr.h"
 #include "ssl.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/java/ClientAuthCertificateManagerWrappers.h"
+#endif
+
 #ifdef XP_WIN
 #  include <winsock.h>  // for ntohl
 #endif
@@ -153,6 +157,7 @@ nsresult nsNSSCertificateDB::FindCertByDBKey(const nsACString& aDBKey,
   reader += issuerLen;
   MOZ_ASSERT(reader == decoded.EndReading());
 
+  AutoSearchingForClientAuthCertificates _;
   cert.reset(CERT_FindCertByIssuerAndSN(CERT_GetDefaultCertDB(), &issuerSN));
   return NS_OK;
 }
@@ -1185,8 +1190,6 @@ NS_IMETHODIMP nsNSSCertificateDB::AsPKCS7Blob(
 
 NS_IMETHODIMP
 nsNSSCertificateDB::GetCerts(nsTArray<RefPtr<nsIX509Cert>>& _retval) {
-  AutoSearchingForClientAuthCertificates _;
-
   nsresult rv = BlockUntilLoadableCertsLoaded();
   if (NS_FAILED(rv)) {
     return rv;
@@ -1198,6 +1201,7 @@ nsNSSCertificateDB::GetCerts(nsTArray<RefPtr<nsIX509Cert>>& _retval) {
   }
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
+  AutoSearchingForClientAuthCertificates _;
   UniqueCERTCertList certList(PK11_ListCerts(PK11CertListUnique, ctx));
   if (!certList) {
     return NS_ERROR_FAILURE;
@@ -1434,4 +1438,31 @@ nsNSSCertificateDB::ClearOCSPCache() {
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_FAILURE);
   certVerifier->ClearOCSPCache();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSCertificateDB::GetAndroidCertificateFromAlias(
+    const nsAString& aAlias, /*out*/ nsIX509Cert** aResult) {
+  *aResult = nullptr;
+#ifndef MOZ_WIDGET_ANDROID
+  return NS_ERROR_NOT_AVAILABLE;
+#else
+  if (!jni::IsAvailable()) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("JNI not available"));
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  jni::String::LocalRef alias = jni::StringParam(aAlias);
+  jni::ByteArray::LocalRef certificateBytes =
+      java::ClientAuthCertificateManager::GetCertificateFromAlias(alias);
+  if (!certificateBytes) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  nsTArray<uint8_t> certificateByteArray(
+      certificateBytes->GetElements().Elements(), certificateBytes->Length());
+  nsCOMPtr<nsIX509Cert> certificate(
+      new nsNSSCertificate(std::move(certificateByteArray)));
+  certificate.forget(aResult);
+  return NS_OK;
+#endif  // MOZ_WIDGET_ANDROID
 }

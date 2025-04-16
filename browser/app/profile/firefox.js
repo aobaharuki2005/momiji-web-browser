@@ -210,7 +210,7 @@ pref("app.update.langpack.enabled", true);
 // This feature is also affected by
 // `app.update.multiSessionInstallLockout.timeoutMs`, which is in the branding
 // section.
-pref("app.update.multiSessionInstallLockout.enabled", true);
+pref("app.update.multiSessionInstallLockout.enabled", false);
 
 #if defined(MOZ_BACKGROUNDTASKS)
   // The amount of time, in seconds, before background tasks time out and exit.
@@ -248,7 +248,6 @@ pref("lightweightThemes.getMoreURL", "https://addons.mozilla.org/%LOCALE%/firefo
 // UI tour experience.
 pref("browser.uitour.enabled", true);
 pref("browser.uitour.loglevel", "Error");
-pref("browser.uitour.requireSecure", true);
 pref("browser.uitour.url", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/tour/");
 // How long to show a Hearbeat survey (two hours, in seconds)
 pref("browser.uitour.surveyDuration", 7200);
@@ -540,6 +539,15 @@ pref("browser.urlbar.quicksuggest.contextualOptIn.secondReshowAfterPeriodDays", 
 // Period until reshow the Firefox Suggest contextual opt-in result when third dismissed.
 pref("browser.urlbar.quicksuggest.contextualOptIn.thirdReshowAfterPeriodDays", 60);
 
+// Number of impression for the Firefox Suggest contextual opt-in result.
+pref("browser.urlbar.quicksuggest.contextualOptIn.impressionCount", 0);
+
+// Limit for impression to dismiss the Firefox Suggest contextual opt-in result.
+pref("browser.urlbar.quicksuggest.contextualOptIn.impressionLimit", 20);
+
+// Days until dismiss the Firefox Suggest contextual opt-in result after first impression.
+pref("browser.urlbar.quicksuggest.contextualOptIn.impressionDaysLimit", 5);
+
 // Whether the quick suggest feature in the urlbar is enabled.
 pref("browser.urlbar.quicksuggest.enabled", false);
 
@@ -827,9 +835,8 @@ pref("browser.search.widget.removeAfterDaysUnused", 120);
 // capped at 100.
 pref("browser.search.totalSearches", 0);
 
-// Enable new experimental shopping features. This is solely intended as a
-// rollout/"emergency stop" button - it will go away once the feature has
-// rolled out. There will be separate controls for user opt-in/opt-out.
+// Enables the Review Checker feature in the Shopping sidebar.
+// There are separate controls for user opt-in/opt-out.
 pref("browser.shopping.experience2023.enabled", false);
 
 // Ternary int-valued pref indicating if the user has opted into the new
@@ -872,24 +879,19 @@ pref("browser.shopping.experience2023.autoOpen.enabled", false);
 // Opens the shopping sidebar automatically when viewing a PDP.
 pref("browser.shopping.experience2023.autoOpen.userEnabled", true);
 
-// Close the shopping sidebar automatically when viewing an unsupported site.
-pref("browser.shopping.experience2023.autoClose.userEnabled", true);
-
 // Number of times the sidebar has been closed in a session
 pref("browser.shopping.experience2023.sidebarClosedCount", 0);
 
 // When conditions are met, shows a prompt on the shopping sidebar asking users if they want to disable auto-open behavior
 pref("browser.shopping.experience2023.showKeepSidebarClosedMessage", true);
 
-// Integrates the Review Checker shopping feature into the global sidebar
-// shoppingSidebar pref should be opposite of this to disable
+// Integrates the Review Checker feature into the global sidebar.
+// `enabled` pref should be opposite of this to disable
 // the custom shopping sidebar.
 pref("browser.shopping.experience2023.integratedSidebar", false);
 
-// Enables showing the Review Checker in the Shopping sidebar.
-// integratedSidebar pref should be opposite of this to disable
-// the Review Checker sidebar panel.
-pref("browser.shopping.experience2023.shoppingSidebar", true);
+// Adds the Review Checker tool to the sidebar if the integratedSidebar pref is enabled.
+pref("sidebar.newTool.migration.reviewchecker", '{"visibilityPref": "browser.shopping.experience2023.integratedSidebar"}');
 
 // If true, users have already seen a card in the Review Checker sidebar panel
 // notifying users of the feature's new location and asking if they want to
@@ -1056,11 +1058,16 @@ pref("browser.tabs.groups.enabled", true);
 pref("browser.tabs.groups.enabled", false);
 #endif
 pref("browser.tabs.groups.smart.enabled", false);
+pref("browser.tabs.groups.smart.optin", false);
 
-pref("browser.tabs.groups.dragOverDelayMS", 240);
-pref("browser.tabs.dragdrop.moveOverThresholdPercent", 80);
+pref("browser.tabs.dragDrop.createGroup.delayMS", 240);
+pref("browser.tabs.dragDrop.expandGroup.delayMS", 350);
+pref("browser.tabs.dragDrop.selectTab.delayMS", 350);
+pref("browser.tabs.dragDrop.moveOverThresholdPercent", 80);
 
 pref("browser.tabs.firefox-view.logLevel", "Warn");
+
+pref("browser.tabs.groups.smart.userEnabled", true);
 
 // allow_eval_* is enabled on Firefox Desktop only at this
 // point in time
@@ -1511,10 +1518,6 @@ pref("breakpad.reportURL", "https://crash-stats.mozilla.org/report/index/");
 pref("toolkit.datacollection.infoURL",
      "https://www.mozilla.org/legal/privacy/firefox.html");
 
-// URL for "Learn More" for Crash Reporter
-pref("toolkit.crashreporter.infoURL",
-     "https://www.mozilla.org/legal/privacy/firefox.html#crash-reporter");
-
 // base URL for web-based support pages
 pref("app.support.baseURL", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/");
 
@@ -1832,6 +1835,11 @@ pref("browser.newtabpage.activity-stream.newtabWallpapers.v2.enabled", true);
 pref("browser.newtabpage.activity-stream.newtabWallpapers.customColor.enabled", false);
 pref("browser.newtabpage.activity-stream.newtabWallpapers.customWallpaper.enabled", false);
 
+// Utility preferences for custom wallpaper upload
+pref("browser.newtabpage.activity-stream.newtabWallpapers.customWallpaper.uuid", "");
+pref("browser.newtabpage.activity-stream.newtabWallpapers.customWallpaper.fileSize", 0);
+pref("browser.newtabpage.activity-stream.newtabWallpapers.customWallpaper.fileSize.enabled", false);
+
 // Current new tab page background images.
 pref("browser.newtabpage.activity-stream.newtabWallpapers.wallpaper", "");
 
@@ -1934,6 +1942,9 @@ pref("browser.newtabpage.activity-stream.discoverystream.spocMessageVariant", ""
 
 pref("browser.newtabpage.activity-stream.discoverystream.sendToPocket.enabled", true);
 
+// Pref enabling content reporting
+pref("browser.newtabpage.activity-stream.discoverystream.reportContent.enabled", false);
+
 // List of regions that do not get stories, regardless of locale-list-config.
 pref("browser.newtabpage.activity-stream.discoverystream.region-stories-block", "");
 // List of locales that get stories, regardless of region-stories-config.
@@ -1969,6 +1980,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.sections.region-content
 
 pref("browser.newtabpage.activity-stream.discoverystream.sections.cards.enabled", true);
 pref("browser.newtabpage.activity-stream.discoverystream.sections.personalization.inferred.enabled", false);
+pref("browser.newtabpage.activity-stream.discoverystream.sections.personalization.inferred.user.enabled", true);
 
 pref("browser.newtabpage.activity-stream.discoverystream.sections.interestPicker.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.sections.interestPicker.visibleSections", "");
@@ -2079,6 +2091,8 @@ pref("pdfjs.handleOctetStream", true);
 // Is the sidebar positioned ahead of the content browser
 pref("sidebar.position_start", true);
 pref("sidebar.revamp", false);
+// Should the sidebar launcher default to visible or not with horizontal tabs
+pref("sidebar.revamp.defaultLauncherVisible", true);
 // This is nightly only for now, as we need to address bug 1933527 and bug 1934039.
 #ifdef NIGHTLY_BUILD
 pref("sidebar.revamp.round-content-area", true);
@@ -2088,14 +2102,17 @@ pref("sidebar.revamp.round-content-area", false);
 pref("sidebar.animation.enabled", true);
 pref("sidebar.animation.duration-ms", 200);
 pref("sidebar.animation.expand-on-hover.duration-ms", 400);
-pref("sidebar.main.tools", "aichat,syncedtabs,history");
+// This pref is used to store user customized tools in the sidebar launcher and shouldn't be changed.
+// See https://firefox-source-docs.mozilla.org/browser/components/sidebar/docs/index.html for ways
+// you can introduce a new tool to the sidebar launcher.
+pref("sidebar.main.tools", "");
 pref("sidebar.verticalTabs", false);
 pref("sidebar.visibility", "always-show");
 // Sidebar UI state is stored per-window via session restore. Use this pref
 // as a backup to restore the sidebar UI state when a user has PPB mode on
 // or has history cleared on browser close.
 pref("sidebar.backupState", "{}");
-pref("sidebar.expandOnHover", false);
+pref("sidebar.expandOnHover", true);
 pref("sidebar.old-sidebar.has-used", false);
 pref("sidebar.new-sidebar.has-used", false);
 
@@ -2112,6 +2129,11 @@ pref("browser.ml.chat.shortcuts", true);
 pref("browser.ml.chat.shortcuts.custom", true);
 pref("browser.ml.chat.shortcuts.longPress", 60000);
 pref("browser.ml.chat.sidebar", true);
+
+pref("browser.ml.linkPreview.allowedLanguages", "en");
+pref("browser.ml.linkPreview.enabled", false);
+pref("browser.ml.linkPreview.outputSentences", 3);
+pref("browser.ml.linkPreview.blockListEnabled", true);
 
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);
@@ -2362,7 +2384,7 @@ pref("browser.contentblocking.reject-and-isolate-cookies.preferences.ui.enabled"
 //     "btp": BTP enabled
 //     "-btp": BTP disabled
 // One value from each section must be included in the browser.contentblocking.features.strict pref.
-pref("browser.contentblocking.features.strict", "tp,tpPrivate,cookieBehavior5,cookieBehaviorPBM5,cm,fp,stp,emailTP,emailTPPrivate,lvl2,rp,rpTop,ocsp,qps,qpsPBM,fpp,fppPrivate,3pcd,btp");
+pref("browser.contentblocking.features.strict", "tp,tpPrivate,cookieBehavior5,cookieBehaviorPBM5,cm,fp,stp,emailTP,emailTPPrivate,lvl2,rp,rpTop,ocsp,qps,qpsPBM,fpp,fppPrivate,btp");
 
 // Hide the "Change Block List" link for trackers/tracking content in the custom
 // Content Blocking/ETP panel. By default, it will not be visible. There is also
@@ -2524,8 +2546,12 @@ pref("browser.tabs.unloadTabInContextMenu", false);
 #endif
 
 // Whether unloaded tabs (either from session restore or because
-// they are explicitly unloaded) are faded out in the tab bar
+// they are explicitly unloaded) are faded out in the tab bar.
 pref("browser.tabs.fadeOutUnloadedTabs", false);
+
+// Whether tabs that have been explicitly unloaded
+// are faded out in the tab bar.
+pref("browser.tabs.fadeOutExplicitlyUnloadedTabs", false);
 
 // If true, unprivileged extensions may use experimental APIs on
 // nightly and developer edition.

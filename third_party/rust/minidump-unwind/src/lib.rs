@@ -28,7 +28,7 @@ pub use crate::symbols::*;
 pub use crate::system_info::*;
 
 #[derive(Clone, Copy)]
-pub struct GetCallerFrameArgs<'a, P> {
+struct GetCallerFrameArgs<'a, P> {
     callee_frame: &'a StackFrame,
     grand_callee_frame: Option<&'a StackFrame>,
     stack_memory: UnifiedMemory<'a, 'a>,

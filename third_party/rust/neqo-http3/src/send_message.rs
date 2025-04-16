@@ -102,7 +102,7 @@ impl MessageState {
 }
 
 #[derive(Debug)]
-pub(crate) struct SendMessage {
+pub struct SendMessage {
     state: MessageState,
     message_type: MessageType,
     stream_type: Http3StreamType,

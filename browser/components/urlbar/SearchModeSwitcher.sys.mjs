@@ -5,10 +5,11 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  OpenSearchManager: "resource:///modules/OpenSearchManager.sys.mjs",
+  OpenSearchManager:
+    "moz-src:///browser/components/search/OpenSearchManager.sys.mjs",
   PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  SearchUIUtils: "resource:///modules/SearchUIUtils.sys.mjs",
+  SearchUIUtils: "moz-src:///browser/components/search/SearchUIUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
@@ -81,19 +82,13 @@ export class SearchModeSwitcher {
 
     await this.#buildSearchModeList(this.#input.window);
 
-    if (anchor.getAttribute("open") == "true") {
-      lazy.PanelMultiView.hidePopup(this.#popup);
-      return;
-    }
-
-    this.#input.view.hideTemporarily();
+    this.#input.view.close({ showFocusBorder: false });
 
     this.#popup.addEventListener(
       "popuphidden",
       () => {
         anchor.removeAttribute("open");
         anchor.setAttribute("aria-expanded", false);
-        this.#input.view.restoreVisibility();
       },
       { once: true }
     );
@@ -222,7 +217,11 @@ export class SearchModeSwitcher {
 
     switch (topic) {
       case "browser-search-engine-modified": {
-        if (data === "engine-default" || data === "engine-default-private") {
+        if (
+          data === "engine-default" ||
+          data === "engine-default-private" ||
+          data === "engine-icon-changed"
+        ) {
           this.updateSearchIcon();
         }
         break;

@@ -803,17 +803,6 @@ void nsCocoaWindow::Show(bool aState) {
     }
 
     if (mWindowType == WindowType::Popup) {
-      if (!nsCocoaFeatures::OnMojaveOrLater()) {
-        // If a popup window is shown after being hidden, it needs to be "reset"
-        // for it to receive any mouse events aside from mouse-moved events
-        // (because it was removed from the "window cache" when it was hidden
-        // -- see below).  Setting the window number to -1 and then back to its
-        // original value seems to accomplish this.  The idea was "borrowed"
-        // from the Java Embedding Plugin. This is fixed on macOS 10.14+.
-        NSInteger windowNumber = [mWindow windowNumber];
-        [mWindow _setWindowNumber:-1];
-        [mWindow _setWindowNumber:windowNumber];
-      }
       // For reasons that aren't yet clear, calls to [NSWindow orderFront:] or
       // [NSWindow makeKeyAndOrderFront:] can sometimes trigger "Error (1000)
       // creating CGSWindow", which in turn triggers an internal inconsistency
@@ -889,21 +878,6 @@ void nsCocoaWindow::Show(bool aState) {
       [nativeParentWindow removeChildWindow:mWindow];
     }
 
-    if (!nsCocoaFeatures::OnMojaveOrLater()) {
-        // Unless it's explicitly removed from NSApp's "window cache", a popup
-        // window will keep receiving mouse-moved events even after it's been
-        // "ordered out" (instead of the browser window that was underneath it,
-        // until you click on that window).  This is bmo bug 378645, but it's
-        // surely an Apple bug.  The "window cache" is an undocumented
-        // subsystem, all of whose methods are included in the NSWindowCache
-        // category of the NSApplication class (in header files generated using
-        // class-dump). This workaround was "borrowed" from the Java Embedding
-        // Plugin (which uses it for a different purpose). This is fixed on
-        // macOS 10.14+.
-        if (mWindowType == WindowType::Popup) {
-          [NSApp _removeWindowFromCache:mWindow];
-        }
-    }
     [mWindow orderOut:nil];
     // If our popup window is a non-native context menu, tell the OS (and
     // other programs) that a menu has closed.
@@ -1653,7 +1627,6 @@ void nsCocoaWindow::ProcessTransitions() {
 
       case TransitionType::EmulatedFullscreen: {
         if (!mInFullScreenMode) {
-          NSDisableScreenUpdates();
           mSuppressSizeModeEvents = true;
           // The order here matters. When we exit full screen mode, we need to
           // show the Dock first, otherwise the newly-created window won't have
@@ -1661,7 +1634,6 @@ void nsCocoaWindow::ProcessTransitions() {
           nsCocoaUtils::HideOSChromeOnScreen(true);
           nsBaseWidget::InfallibleMakeFullScreen(true);
           mSuppressSizeModeEvents = false;
-          NSEnableScreenUpdates();
           UpdateFullscreenState(true, false);
         }
         break;
@@ -1685,7 +1657,6 @@ void nsCocoaWindow::ProcessTransitions() {
             [mWindow toggleFullScreen:nil];
             continue;
           } else {
-            NSDisableScreenUpdates();
             mSuppressSizeModeEvents = true;
             // The order here matters. When we exit full screen mode, we need to
             // show the Dock first, otherwise the newly-created window won't
@@ -1693,7 +1664,6 @@ void nsCocoaWindow::ProcessTransitions() {
             nsCocoaUtils::HideOSChromeOnScreen(false);
             nsBaseWidget::InfallibleMakeFullScreen(false);
             mSuppressSizeModeEvents = false;
-            NSEnableScreenUpdates();
             UpdateFullscreenState(false, false);
           }
         } else if (mWindow.zoomed) {
@@ -2229,7 +2199,7 @@ void nsCocoaWindow::SetMenuBar(RefPtr<nsMenuBarX>&& aMenuBar) {
                    mWindow.isMainWindow)) {
     // We do an async paint in order to prevent crashes when macOS is actively
     // enumerating the menu items in `NSApp.mainMenu`.
-    mMenuBar->PaintAsync();
+    mMenuBar->PaintAsyncIfNeeded();
   }
 }
 
@@ -2708,7 +2678,7 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
   if (nsMenuBarX* geckoMenuBar = geckoWidget->GetMenuBar()) {
     // We do an async paint in order to prevent crashes when macOS is actively
     // enumerating the menu items in `NSApp.mainMenu`.
-    geckoMenuBar->PaintAsync();
+    geckoMenuBar->PaintAsyncIfNeeded();
   } else {
     // sometimes we don't have a native application menu early in launching
     if (!sApplicationMenu) {
@@ -2959,7 +2929,7 @@ void nsCocoaWindow::CocoaWindowDidResize() {
   if (hiddenWindowMenuBar) {
     // We do an async paint in order to prevent crashes when macOS is actively
     // enumerating the menu items in `NSApp.mainMenu`.
-    hiddenWindowMenuBar->PaintAsync();
+    hiddenWindowMenuBar->PaintAsyncIfNeeded();
   }
 
   NSWindow* window = [aNotification object];

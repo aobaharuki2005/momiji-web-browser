@@ -408,14 +408,30 @@ const MultiStageAboutWelcome = props => {
     const isLastScreen = currentScreen === screens[screens.length - 1];
     const totalNumberOfScreens = screens.length;
     const isSingleScreen = totalNumberOfScreens === 1;
-    const setActiveMultiSelect = valueOrFn => setActiveMultiSelects(prevState => ({
-      ...prevState,
-      [currentScreen.id]: typeof valueOrFn === "function" ? valueOrFn(prevState[currentScreen.id]) : valueOrFn
-    }));
-    const setScreenMultiSelects = valueOrFn => setMultiSelects(prevState => ({
-      ...prevState,
-      [currentScreen.id]: typeof valueOrFn === "function" ? valueOrFn(prevState[currentScreen.id]) : valueOrFn
-    }));
+    const setActiveMultiSelect = (valueOrFn, multiSelectId) => {
+      setActiveMultiSelects(prevState => {
+        const currentScreenSelections = prevState[currentScreen.id] || {};
+        return {
+          ...prevState,
+          [currentScreen.id]: {
+            ...currentScreenSelections,
+            [multiSelectId]: typeof valueOrFn === "function" ? valueOrFn(currentScreenSelections[multiSelectId]) : valueOrFn
+          }
+        };
+      });
+    };
+    const setScreenMultiSelects = (valueOrFn, multiSelectId) => {
+      setMultiSelects(prevState => {
+        const currentMultiSelects = prevState[currentScreen.id] || {};
+        return {
+          ...prevState,
+          [currentScreen.id]: {
+            ...currentMultiSelects,
+            [multiSelectId]: typeof valueOrFn === "function" ? valueOrFn(currentMultiSelects[multiSelectId]) : valueOrFn
+          }
+        };
+      });
+    };
     const setActiveSingleSelect = valueOrFn => setActiveSingleSelects(prevState => ({
       ...prevState,
       [currentScreen.id]: typeof valueOrFn === "function" ? valueOrFn(prevState[currentScreen.id]) : valueOrFn
@@ -468,7 +484,20 @@ const SecondaryCTA = props => {
   if (isSplitButton) {
     className += " split-button-container";
   }
-  const isDisabled = react__WEBPACK_IMPORTED_MODULE_0___default().useCallback(disabledValue => disabledValue === "hasActiveMultiSelect" ? !(props.activeMultiSelect?.length > 0) : disabledValue, [props.activeMultiSelect?.length]);
+  const isDisabled = react__WEBPACK_IMPORTED_MODULE_0___default().useCallback(disabledValue => {
+    if (disabledValue === "hasActiveMultiSelect") {
+      if (!props.activeMultiSelect) {
+        return true;
+      }
+      for (const key in props.activeMultiSelect) {
+        if (props.activeMultiSelect[key]?.length > 0) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return disabledValue;
+  }, [props.activeMultiSelect]);
   if (isTextLink) {
     buttonStyling += " text-link";
   }
@@ -680,18 +709,21 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     // Note, this order is only guaranteed if action.data has the
     // `orderedExecution` flag set to true.
     let multiSelectActions = [];
-    const processTile = tile => {
-      if (tile?.type === "multiselect" && Array.isArray(tile.data)) {
-        for (const checkbox of tile.data) {
-          let checkboxAction;
-          if (props.activeMultiSelect?.includes(checkbox.id)) {
-            checkboxAction = checkbox.checkedAction ?? checkbox.action;
-          } else {
-            checkboxAction = checkbox.uncheckedAction;
-          }
-          if (checkboxAction) {
-            multiSelectActions.push(checkboxAction);
-          }
+    const processTile = (tile, tileIndex) => {
+      if (tile?.type !== "multiselect" || !Array.isArray(tile.data)) {
+        return;
+      }
+      const multiSelectId = `tile-${tileIndex}`;
+      const activeSelections = props.activeMultiSelect[multiSelectId] || [];
+      for (const checkbox of tile.data) {
+        let checkboxAction;
+        if (activeSelections.includes(checkbox.id)) {
+          checkboxAction = checkbox.checkedAction ?? checkbox.action;
+        } else {
+          checkboxAction = checkbox.uncheckedAction;
+        }
+        if (checkboxAction) {
+          multiSelectActions.push(checkboxAction);
         }
       }
     };
@@ -703,15 +735,16 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
         props.content.tiles.forEach(processTile);
       } else {
         // Handle case where tiles is a single tile object
-        processTile(props.content.tiles);
+        processTile(props.content.tiles, 0);
       }
     }
 
     // Prepend the collected multi-select actions to the CTA's actions array
     action.data.actions.unshift(...multiSelectActions);
-
-    // Send telemetry with selected checkbox ids
-    _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, props.activeMultiSelect, "SELECT_CHECKBOX");
+    for (const value of Object.values(props.activeMultiSelect)) {
+      // Send telemetry with selected checkbox ids
+      _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, value.flat(), "SELECT_CHECKBOX");
+    }
   }
   render() {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_3__.MultiStageProtonScreen, {
@@ -976,7 +1009,22 @@ const ProtonScreenActionButtons = props => {
 
   // If we have a multi-select screen, we want to disable the primary button
   // until the user has selected at least one item.
-  const isPrimaryDisabled = primaryDisabledValue => primaryDisabledValue === "hasActiveMultiSelect" ? !(activeMultiSelect?.length > 0) : primaryDisabledValue;
+  const isPrimaryDisabled = primaryDisabledValue => {
+    if (primaryDisabledValue === "hasActiveMultiSelect") {
+      if (!activeMultiSelect) {
+        return true;
+      }
+
+      // Check if there's at least one selection in any of the multiselects
+      for (const selectKey in activeMultiSelect) {
+        if (activeMultiSelect[selectKey]?.length > 0) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return primaryDisabledValue;
+  };
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: `action-buttons ${content.additional_button ? "additional-cta-container" : ""}`,
     flow: content.additional_button?.flow,
@@ -2033,12 +2081,13 @@ const ContentTiles = props => {
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     // Run once when ContentTiles mounts to prefill activeMultiSelect
     if (!props.activeMultiSelect) {
-      const newActiveMultiSelect = [];
       const tilesArray = Array.isArray(tiles) ? tiles : [tiles];
-      tilesArray.forEach(tile => {
+      tilesArray.forEach((tile, index) => {
         if (tile.type !== "multiselect" || !tile.data) {
           return;
         }
+        const multiSelectId = `tile-${index}`;
+        const newActiveMultiSelect = [];
         tile.data.forEach(({
           id,
           defaultValue
@@ -2047,8 +2096,10 @@ const ContentTiles = props => {
             newActiveMultiSelect.push(id);
           }
         });
+        if (newActiveMultiSelect.length) {
+          props.setActiveMultiSelect(newActiveMultiSelect, multiSelectId);
+        }
       });
-      props.setActiveMultiSelect(newActiveMultiSelect);
     }
   }, [tiles]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -2061,6 +2112,12 @@ const ContentTiles = props => {
     setTilesHeaderExpanded(prev => !prev);
     _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_9__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, "content_tiles_header");
   };
+  function getTileMultiSelects(screenMultiSelects, index) {
+    return screenMultiSelects?.[`tile-${index}`];
+  }
+  function getTileActiveMultiSelect(activeMultiSelect, index) {
+    return activeMultiSelect?.[`tile-${index}`];
+  }
   const renderContentTile = (tile, index = 0) => {
     const isExpanded = expandedTileIndex === index;
     const {
@@ -2111,7 +2168,8 @@ const ContentTiles = props => {
       },
       installedAddons: props.installedAddons,
       message_id: props.messageId,
-      handleAction: props.handleAction
+      handleAction: props.handleAction,
+      layout: content.position
     }), ["theme", "single-select"].includes(tile.type) && tile.data && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SingleSelect__WEBPACK_IMPORTED_MODULE_3__.SingleSelect, {
       content: {
         tiles: tile
@@ -2127,10 +2185,11 @@ const ContentTiles = props => {
       content: {
         tiles: tile
       },
-      screenMultiSelects: props.screenMultiSelects,
+      screenMultiSelects: getTileMultiSelects(props.screenMultiSelects, index),
       setScreenMultiSelects: props.setScreenMultiSelects,
-      activeMultiSelect: props.activeMultiSelect,
-      setActiveMultiSelect: props.setActiveMultiSelect
+      activeMultiSelect: getTileActiveMultiSelect(props.activeMultiSelect, index),
+      setActiveMultiSelect: props.setActiveMultiSelect,
+      multiSelectId: `tile-${index}`
     }), tile.type === "migration-wizard" && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_EmbeddedMigrationWizard__WEBPACK_IMPORTED_MODULE_6__.EmbeddedMigrationWizard, {
       handleAction: props.handleAction,
       content: {
@@ -2243,7 +2302,8 @@ const InstallButton = props => {
 const AddonsPicker = props => {
   const {
     content,
-    installedAddons
+    installedAddons,
+    layout
   } = props;
   if (!content) {
     return null;
@@ -2271,6 +2331,16 @@ const AddonsPicker = props => {
     });
     _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.AboutWelcomeUtils.sendActionTelemetry(message_id, source_id);
   }
+  function handleAuthorClick(event, authorId) {
+    event.stopPropagation();
+    _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_1__.AboutWelcomeUtils.handleUserAction({
+      type: "OPEN_URL",
+      data: {
+        args: `https://addons.mozilla.org/firefox/user/${authorId}/`,
+        where: "tab"
+      }
+    });
+  }
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "addons-picker-container"
   }, content.tiles.data.map(({
@@ -2279,6 +2349,7 @@ const AddonsPicker = props => {
     type,
     description,
     icon,
+    author,
     install_label,
     install_complete_label
   }, index) => addonName ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
@@ -2291,7 +2362,43 @@ const AddonsPicker = props => {
     src: icon,
     role: "presentation",
     alt: ""
+  })), layout === "split" ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "addon-rows-container"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "addon-row"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "addon-author-details"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__.Localized, {
+    text: addonName
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "addon-title"
+  })), author && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "addon-author"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__.Localized, {
+    text: author.byLine
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
+    className: "addon-by-line"
+  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    href: "#",
+    onClick: e => {
+      handleAuthorClick(e, author.id);
+    },
+    className: "author-link"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, author.name)))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(InstallButton, {
+    key: id,
+    addonId: id,
+    handleAction: handleAction,
+    index: index,
+    installedAddons: installedAddons,
+    install_label: install_label,
+    install_complete_label: install_complete_label
   })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "addon-row"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__.Localized, {
+    text: description
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "addon-description"
+  })))) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "addon-details"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__.Localized, {
     text: addonName
@@ -2309,7 +2416,7 @@ const AddonsPicker = props => {
     installedAddons: installedAddons,
     install_label: install_label,
     install_complete_label: install_complete_label
-  })) : null));
+  }))) : null));
 };
 
 /***/ }),
@@ -2550,11 +2657,14 @@ const MultiSelect = ({
   screenMultiSelects,
   setScreenMultiSelects,
   activeMultiSelect,
-  setActiveMultiSelect
+  setActiveMultiSelect,
+  multiSelectId
 }) => {
   const {
-    data
+    data,
+    multiSelectItemDesign
   } = content.tiles;
+  const isPicker = multiSelectItemDesign === "picker";
   const refs = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)({});
   const handleChange = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => {
     const newActiveMultiSelect = [];
@@ -2563,8 +2673,8 @@ const MultiSelect = ({
         newActiveMultiSelect.push(key);
       }
     });
-    setActiveMultiSelect(newActiveMultiSelect);
-  }, [setActiveMultiSelect]);
+    setActiveMultiSelect(newActiveMultiSelect, multiSelectId);
+  }, [setActiveMultiSelect, multiSelectId]);
   const items = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
     function getOrderedIds() {
       if (screenMultiSelects) {
@@ -2576,13 +2686,54 @@ const MultiSelect = ({
       })).sort((a, b) => b.rank - a.rank).map(({
         id
       }) => id);
-      setScreenMultiSelects(orderedIds);
+      setScreenMultiSelects(orderedIds, multiSelectId);
       return orderedIds;
     }
     return getOrderedIds().map(id => data.find(item => item.id === id));
   }, [] // eslint-disable-line react-hooks/exhaustive-deps
   );
   const containerStyle = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getValidStyle(content.tiles.style, MULTI_SELECT_STYLES, true), [content.tiles.style]);
+  const PickerIcon = ({
+    emoji,
+    bgColor,
+    isChecked
+  }) => {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
+      className: `picker-icon ${isChecked ? "picker-checked" : ""}`,
+      style: {
+        ...(!isChecked && bgColor && {
+          backgroundColor: bgColor
+        })
+      }
+    }, !isChecked && emoji ? emoji : "");
+  };
+
+  // This handles interaction for when the user is clicking on or keyboard-interacting
+  // with the container element when using the picker design. It is required
+  // for appropriate accessibility.
+  const handleCheckboxContainerInteraction = e => {
+    if (!isPicker) {
+      return;
+    }
+    if (e.type === "keydown") {
+      // Prevent scroll on space presses
+      if (e.key === " ") {
+        e.preventDefault();
+      }
+
+      // Only handle space and enter keypresses
+      if (e.key !== " " && e.key !== "Enter") {
+        return;
+      }
+    }
+    const container = e.currentTarget;
+    // Manually flip the hidden checkbox since handleChange relies on it
+    const checkbox = container.querySelector('input[type="checkbox"]');
+    checkbox.checked = !checkbox.checked;
+
+    // Manually call handleChange to update the multiselect state
+    handleChange();
+  };
 
   // When screen renders for first time, update state
   // with checkbox ids that has defaultvalue true
@@ -2597,12 +2748,12 @@ const MultiSelect = ({
           newActiveMultiSelect.push(id);
         }
       });
-      setActiveMultiSelect(newActiveMultiSelect);
+      setActiveMultiSelect(newActiveMultiSelect, multiSelectId);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "multi-select-container",
+    className: `multi-select-container ${multiSelectItemDesign || ""}`,
     style: containerStyle,
     role: items.some(({
       type,
@@ -2620,11 +2771,18 @@ const MultiSelect = ({
     icon,
     type = "checkbox",
     group,
-    style
+    style,
+    pickerEmoji,
+    pickerEmojiBackgroundColor
   }) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     key: id + label,
     className: "checkbox-container multi-select-item",
-    style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getValidStyle(style, MULTI_SELECT_STYLES)
+    style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getValidStyle(style, MULTI_SELECT_STYLES),
+    tabIndex: isPicker ? "0" : null,
+    onClick: isPicker ? handleCheckboxContainerInteraction : null,
+    onKeyDown: isPicker ? handleCheckboxContainerInteraction : null,
+    role: isPicker ? "checkbox" : null,
+    "aria-checked": isPicker ? activeMultiSelect?.includes(id) : null
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
     type: type // checkbox or radio
     ,
@@ -2635,7 +2793,12 @@ const MultiSelect = ({
     style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getValidStyle(icon?.style, MULTI_SELECT_ICON_STYLES),
     onChange: handleChange,
     ref: el => refs.current[id] = el,
-    "aria-describedby": description ? `${id}-description` : null
+    "aria-describedby": description ? `${id}-description` : null,
+    tabIndex: isPicker ? "-1" : "0"
+  }), isPicker && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PickerIcon, {
+    emoji: pickerEmoji,
+    bgColor: pickerEmojiBackgroundColor,
+    isChecked: activeMultiSelect?.includes(id)
   }), label ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: label
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", {

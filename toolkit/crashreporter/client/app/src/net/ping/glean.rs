@@ -111,9 +111,8 @@ pub fn set_crash_ping_metrics(
             user32_loaded_before: bool = "User32BeforeBlocklist"
         }
         environment {
-            experimental_features: (string_list ',') = "ExperimentalFeatures"
-            nimbus_enrollments: (string_list ',') = "NimbusEnrollments"
             headless_mode: bool = "HeadlessMode"
+            nimbus_enrollments: (string_list ',') = "NimbusEnrollments"
             uptime: seconds = "UptimeTS"
         }
         memory {
@@ -187,7 +186,7 @@ fn convert_stack_traces(value: &serde_json::Value) -> anyhow::Result<serde_json:
         "error": value["status"].as_str().and_then(|v| (v != "OK").then_some(v)),
         "crash_type": value["crash_info"]["type"],
         "crash_address": value["crash_info"]["address"],
-        "crash_thread": value["crass_info"]["crashing_thread"],
+        "crash_thread": value["crash_info"]["crashing_thread"],
         "main_module": value["main_module"],
         "modules": value["modules"].as_array().map(|modules| {
             modules.iter().map(|m| serde_json::json! {{

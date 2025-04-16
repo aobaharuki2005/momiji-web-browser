@@ -109,12 +109,6 @@ enum class NativeKeyBindingsType : uint8_t;
 @end
 
 @interface NSWindow (Undocumented)
-// If a window has been explicitly removed from the "window cache" (to
-// deactivate it), it's sometimes necessary to "reset" it to reactivate it
-// (and put it back in the "window cache").  One way to do this, which Apple
-// often uses, is to set the "window number" to '-1' and then back to its
-// original value.
-- (void)_setWindowNumber:(NSInteger)aNumber;
 
 - (NSDictionary*)shadowParameters;
 - (BOOL)bottomCornerRounded;

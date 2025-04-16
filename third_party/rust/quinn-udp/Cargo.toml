@@ -83,7 +83,6 @@ default = [
     "log",
 ]
 direct-log = ["dep:log"]
-fast-apple-datapath = []
 log = ["tracing/log"]
 
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies.socket2]

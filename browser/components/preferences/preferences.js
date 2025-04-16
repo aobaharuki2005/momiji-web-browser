@@ -428,7 +428,7 @@ function search(aQuery, aAttribute) {
   }
 }
 
-async function spotlight(subcategory, category) {
+function spotlight(subcategory, category) {
   let highlightedElements = document.querySelectorAll(".spotlight");
   if (highlightedElements.length) {
     for (let element of highlightedElements) {
@@ -440,44 +440,17 @@ async function spotlight(subcategory, category) {
   }
 }
 
-async function scrollAndHighlight(subcategory) {
+function scrollAndHighlight(subcategory) {
   let element = document.querySelector(`[data-subcategory="${subcategory}"]`);
   if (!element) {
     return;
   }
-  let header = getClosestDisplayedHeader(element);
 
-  scrollContentTo(header);
-  element.classList.add("spotlight");
-}
-
-/**
- * If there is no visible second level header it will return first level header,
- * otherwise return second level header.
- * @returns {Element} - The closest displayed header.
- */
-function getClosestDisplayedHeader(element) {
-  let header = element.closest("groupbox");
-  let searchHeader = header.querySelector(".search-header");
-  if (
-    searchHeader &&
-    searchHeader.hidden &&
-    header.previousElementSibling.classList.contains("subcategory")
-  ) {
-    header = header.previousElementSibling;
-  }
-  return header;
-}
-
-function scrollContentTo(element) {
-  const STICKY_CONTAINER_HEIGHT =
-    document.querySelector(".sticky-container").clientHeight;
-  let mainContent = document.querySelector(".main-content");
-  let top = element.getBoundingClientRect().top - STICKY_CONTAINER_HEIGHT;
-  mainContent.scroll({
-    top,
+  element.scrollIntoView({
     behavior: "smooth",
+    block: "center",
   });
+  element.classList.add("spotlight");
 }
 
 function friendlyPrefCategoryNameToInternalName(aName) {
@@ -611,7 +584,7 @@ async function ensureScrollPadding() {
   let stickyContainer = document.querySelector(".sticky-container");
   let height = await window.browsingContext.topChromeWindow
     .promiseDocumentFlushed(() => stickyContainer.clientHeight)
-    .catch(() => Cu.reportError); // Can reject if the window goes away.
+    .catch(console.error); // Can reject if the window goes away.
 
   // Make it a bit more, to ensure focus rectangles etc. don't get cut off.
   // This being 8px causes us to end up with 90px if the policies container
@@ -626,6 +599,6 @@ async function ensureScrollPadding() {
 function maybeDisplayPoliciesNotice() {
   if (Services.policies.status == Services.policies.ACTIVE) {
     document.getElementById("policies-container").removeAttribute("hidden");
-    ensureScrollPadding();
   }
+  ensureScrollPadding();
 }

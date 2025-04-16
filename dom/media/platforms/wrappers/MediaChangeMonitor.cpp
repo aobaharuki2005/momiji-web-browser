@@ -16,6 +16,7 @@
 #include "MediaInfo.h"
 #include "PDMFactory.h"
 #include "VPXDecoder.h"
+#include "nsPrintfCString.h"
 #ifdef MOZ_AV1
 #  include "AOMDecoder.h"
 #endif
@@ -30,6 +31,9 @@ extern LazyLogModule gMediaDecoderLog;
 
 #define LOG(x, ...) \
   MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, (x, ##__VA_ARGS__))
+
+#define LOGV(x, ...) \
+  MOZ_LOG(gMediaDecoderLog, LogLevel::Verbose, (x, ##__VA_ARGS__))
 
 // Gets the pixel aspect ratio from the decoded video size and the rendered
 // size.
@@ -57,6 +61,11 @@ inline gfx::IntSize ApplyPixelAspectRatio(double aPixelAspectRatio,
   return gfx::IntSize(static_cast<int32_t>(width), aImage.Height());
 }
 
+static bool IsBeingProfiledOrLogEnabled() {
+  return MOZ_LOG_TEST(gMediaDecoderLog, LogLevel::Info) ||
+         profiler_thread_is_being_profiled_for_markers();
+}
+
 // H264ChangeMonitor is used to ensure that only AVCC or AnnexB is fed to the
 // underlying MediaDataDecoder. The H264ChangeMonitor allows playback of content
 // where the SPS NAL may not be provided in the init segment (e.g. AVC3 or Annex
@@ -69,6 +78,14 @@ class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
       : mCurrentConfig(aInfo), mFullParsing(aFullParsing) {
     if (CanBeInstantiated()) {
       UpdateConfigFromExtraData(aInfo.mExtraData);
+      auto avcc = AVCCConfig::Parse(mCurrentConfig.mExtraData);
+      if (avcc.isOk() && avcc.unwrap().NALUSize() != 4) {
+        // `CheckForChange()` will use `AnnexB::ConvertSampleToAVCC()` to change
+        // NAL units into 4-byte.
+        // `AVCDecoderConfigurationRecord.lengthSizeMinusOne` in the config
+        // should be modified too.
+        mCurrentConfig.mExtraData->ReplaceElementAt(4, 0xfc | 3);
+      }
     }
   }
 
@@ -128,9 +145,13 @@ class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
     mPreviousExtraData = aSample->mExtraData;
     UpdateConfigFromExtraData(extra_data);
 
-    PROFILER_MARKER_TEXT("H264 Stream Change", MEDIA_PLAYBACK, {},
-                         "H264ChangeMonitor::CheckForChange has detected a "
-                         "change in the stream and will request a new decoder");
+    if (IsBeingProfiledOrLogEnabled()) {
+      nsPrintfCString msg(
+          "H264ChangeMonitor::CheckForChange has detected a "
+          "change in the stream and will request a new decoder");
+      LOG("%s", msg.get());
+      PROFILER_MARKER_TEXT("H264 Stream Change", MEDIA_PLAYBACK, {}, msg);
+    }
     return NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
   }
 
@@ -236,8 +257,6 @@ class HEVCChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
             : nullptr;
     // Sample doesn't contain any SPS and we already have SPS, do nothing.
     auto curConfig = HVCCConfig::Parse(mCurrentConfig.mExtraData);
-    LOG("current config: %s",
-        curConfig.isOk() ? curConfig.inspect().ToString().get() : "invalid");
     if ((!extraData || extraData->IsEmpty()) && curConfig.unwrap().HasSPS()) {
       return NS_OK;
     }
@@ -249,7 +268,9 @@ class HEVCChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
       return NS_OK;
     }
     const HVCCConfig newConfig = rv.unwrap();
-    LOG("new config: %s", newConfig.ToString().get());
+    LOGV("Current config: %s, new config: %s",
+         curConfig.isOk() ? curConfig.inspect().ToString().get() : "invalid",
+         newConfig.ToString().get());
 
     if (!newConfig.HasSPS() && !curConfig.unwrap().HasSPS()) {
       // We don't have inband data and the original config didn't contain a SPS.
@@ -264,11 +285,13 @@ class HEVCChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
     }
     UpdateConfigFromExtraData(extraData);
 
-    nsPrintfCString msg(
-        "HEVCChangeMonitor::CheckForChange has detected a change in the stream "
-        "and will request a new decoder");
-    LOG("%s", msg.get());
-    PROFILER_MARKER_TEXT("HEVC Stream Change", MEDIA_PLAYBACK, {}, msg);
+    if (IsBeingProfiledOrLogEnabled()) {
+      nsPrintfCString msg(
+          "HEVCChangeMonitor::CheckForChange has detected a change in the "
+          "stream and will request a new decoder");
+      LOG("%s", msg.get());
+      PROFILER_MARKER_TEXT("HEVC Stream Change", MEDIA_PLAYBACK, {}, msg);
+    }
     return NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
   }
 

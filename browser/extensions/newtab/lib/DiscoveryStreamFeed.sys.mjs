@@ -453,9 +453,12 @@ export class DiscoveryStreamFeed {
 
     try {
       // Make sure the requested endpoint is allowed
-      const allowed = this.store
-        .getState()
-        .Prefs.values[PREF_ENDPOINTS].split(",");
+      const allowed =
+        this.store
+          .getState()
+          .Prefs.values[PREF_ENDPOINTS].split(",")
+          .map(item => item.trim())
+          .filter(item => item) || [];
       if (!allowed.some(prefix => endpoint.startsWith(prefix))) {
         throw new Error(`Not one of allowed prefixes (${allowed})`);
       }
@@ -1181,11 +1184,16 @@ export class DiscoveryStreamFeed {
         const headers = new Headers();
         headers.append("content-type", "application/json");
 
-        const spocsResponse = await this.fetchFromEndpoint(endpoint, {
-          method: "POST",
-          headers,
-          body: JSON.stringify(body),
-        });
+        let spocsResponse;
+        try {
+          spocsResponse = await this.fetchFromEndpoint(endpoint, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(body),
+          });
+        } catch (error) {
+          console.error("Error trying to load spocs feeds:", error);
+        }
 
         if (spocsResponse) {
           const fetchTimestamp = Date.now();

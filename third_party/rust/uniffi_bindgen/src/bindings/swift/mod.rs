@@ -43,7 +43,7 @@ pub mod test;
 
 /// The Swift bindings generated from a [`crate::ComponentInterface`].
 ///
-pub struct Bindings {
+struct Bindings {
     /// The contents of the generated `.swift` file, as a string.
     library: String,
     /// The contents of the generated `.h` file, as a string.

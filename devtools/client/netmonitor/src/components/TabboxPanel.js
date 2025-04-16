@@ -7,8 +7,8 @@
 const {
   Component,
   createFactory,
-} = require("resource://devtools/client/shared/vendor/react.js");
-const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+} = require("resource://devtools/client/shared/vendor/react.mjs");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.mjs");
 const {
   connect,
 } = require("resource://devtools/client/shared/vendor/react-redux.js");
@@ -27,7 +27,9 @@ const Tabbar = createFactory(
   require("resource://devtools/client/shared/components/tabs/TabBar.js")
 );
 const TabPanel = createFactory(
-  require("resource://devtools/client/shared/components/tabs/Tabs.js").TabPanel
+  ChromeUtils.importESModule(
+    "resource://devtools/client/shared/components/tabs/Tabs.mjs"
+  ).TabPanel
 );
 const CookiesPanel = createFactory(
   require("resource://devtools/client/netmonitor/src/components/request-details/CookiesPanel.js")
@@ -86,7 +88,7 @@ class TabboxPanel extends Component {
       targetSearchResult: PropTypes.object,
       defaultRawResponse: PropTypes.bool,
       setDefaultRawResponse: PropTypes.func,
-      isOverridden: PropTypes.bool.isRequired,
+      isOverridden: PropTypes.bool,
       overriddenUrl: PropTypes.string,
     };
   }
@@ -262,18 +264,23 @@ class TabboxPanel extends Component {
   }
 }
 
-module.exports = connect(
-  (state, props) => {
-    const overriddenUrl = getOverriddenUrl(
-      state,
-      props.request.urlDetails?.url
-    );
-    return {
-      isOverridden: !!overriddenUrl,
-      overriddenUrl,
-    };
-  },
-  {},
-  undefined,
-  { storeKey: "toolbox-store" }
-)(TabboxPanel);
+module.exports = {
+  ConnectedTabboxPanel: connect(
+    (state, props) => {
+      const overriddenUrl = getOverriddenUrl(
+        state,
+        props.request.urlDetails?.url
+      );
+      return {
+        isOverridden: !!overriddenUrl,
+        overriddenUrl,
+      };
+    },
+    {},
+    undefined,
+    { storeKey: "toolbox-store" }
+  )(TabboxPanel),
+  // Export the non-connected variant of the component for the browser console
+  // which might not have toolbox store available.
+  TabboxPanel,
+};

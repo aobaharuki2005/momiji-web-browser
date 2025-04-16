@@ -12,6 +12,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/dom/nsCSPContext.h"
+#include "mozilla/dom/NavigatorLogin.h"
 #include "mozilla/glean/AntitrackingMetrics.h"
 #include "mozilla/glean/NetwerkMetrics.h"
 #include "mozilla/glean/NetwerkProtocolHttpMetrics.h"
@@ -1451,7 +1452,7 @@ void nsHttpChannel::SpeculativeConnect() {
       mCaps & (NS_HTTP_DISALLOW_SPDY | NS_HTTP_TRR_MODE_MASK |
                NS_HTTP_DISABLE_IPV4 | NS_HTTP_DISABLE_IPV6 |
                NS_HTTP_DISALLOW_HTTP3 | NS_HTTP_REFRESH_DNS),
-      gHttpHandler->EchConfigEnabled() && httpsRRAllowed);
+      nsHttpHandler::EchConfigEnabled() && httpsRRAllowed);
 }
 
 void nsHttpChannel::DoNotifyListenerCleanup() {
@@ -2535,7 +2536,7 @@ void nsHttpChannel::ProcessAltService(nsHttpConnectionInfo* aTransConnInfo) {
                                originAttributes, aTransConnInfo);
 }
 
-nsresult nsHttpChannel::ProcessResponse() {
+nsresult nsHttpChannel::ProcessResponse(nsHttpConnectionInfo* aConnInfo) {
   uint32_t httpStatus = mResponseHead->Status();
 
   LOG(("nsHttpChannel::ProcessResponse [this=%p httpStatus=%u]\n", this,
@@ -2690,12 +2691,13 @@ nsresult nsHttpChannel::ProcessResponse() {
   // notify "http-on-examine-response" observers
   gHttpHandler->OnExamineResponse(this);
 
-  return ContinueProcessResponse1();
+  return ContinueProcessResponse1(aConnInfo);
 }
 
-void nsHttpChannel::AsyncContinueProcessResponse() {
+void nsHttpChannel::AsyncContinueProcessResponse(
+    nsHttpConnectionInfo* aConnInfo) {
   nsresult rv;
-  rv = ContinueProcessResponse1();
+  rv = ContinueProcessResponse1(aConnInfo);
   if (NS_FAILED(rv)) {
     // A synchronous failure here would normally be passed as the return
     // value from OnStartRequest, which would in turn cancel the request.
@@ -2705,15 +2707,16 @@ void nsHttpChannel::AsyncContinueProcessResponse() {
   }
 }
 
-nsresult nsHttpChannel::ContinueProcessResponse1() {
+nsresult nsHttpChannel::ContinueProcessResponse1(
+    nsHttpConnectionInfo* aConnInfo) {
   MOZ_ASSERT(!mCallOnResume, "How did that happen?");
   nsresult rv = NS_OK;
 
   if (mSuspendCount) {
     LOG(("Waiting until resume to finish processing response [this=%p]\n",
          this));
-    mCallOnResume = [](nsHttpChannel* self) {
-      self->AsyncContinueProcessResponse();
+    mCallOnResume = [connInfo = RefPtr{aConnInfo}](nsHttpChannel* self) {
+      self->AsyncContinueProcessResponse(connInfo);
       return NS_OK;
     };
     return NS_OK;
@@ -2747,8 +2750,7 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
     }
 
     if ((httpStatus < 500) && (httpStatus != 421)) {
-      RefPtr<nsHttpConnectionInfo> connInfo = mTransaction->GetConnInfo();
-      ProcessAltService(connInfo);
+      ProcessAltService(aConnInfo);
     }
   }
 
@@ -5994,6 +5996,32 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
     }
   }
 
+  // if we have a Set-Login header, we should try to handle it here
+  nsAutoCString setLogin;
+  if (NS_SUCCEEDED(mResponseHead->GetHeader(nsHttp::Set_Login, setLogin))) {
+    bool isDocument = mLoadInfo->GetExternalContentPolicyType() ==
+                      ExtContentPolicy::TYPE_DOCUMENT;
+    if (isDocument) {
+      auto ssm = nsContentUtils::GetSecurityManager();
+      if (ssm) {
+        nsCOMPtr<nsIPrincipal> documentPrincipal;
+        nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
+            this, getter_AddRefs(documentPrincipal));
+        dom::NavigatorLogin::SetLoginStatus(documentPrincipal, setLogin);
+      }
+    } else {
+      bool inThirdPartyContext = mLoadInfo->GetIsInThirdPartyContext();
+      nsIPrincipal* loadingPrincipal = mLoadInfo->GetLoadingPrincipal();
+      if (loadingPrincipal) {
+        bool isSameOriginToLoadingPrincipal =
+            loadingPrincipal->IsSameOrigin(mURI);
+        if (!inThirdPartyContext && isSameOriginToLoadingPrincipal) {
+          dom::NavigatorLogin::SetLoginStatus(loadingPrincipal, setLogin);
+        }
+      }
+    }
+  }
+
   if (NS_WARN_IF(!mRedirectURI)) {
     LOG(("Invalid redirect URI after performaing query string stripping"));
     return NS_ERROR_FAILURE;
@@ -7005,7 +7033,7 @@ nsresult nsHttpChannel::BeginConnect() {
       wtconSettings->GetDedicated(&dedicated);
       if (dedicated) {
         connInfo->SetWebTransportId(
-            gHttpHandler->ConnMgr()->GenerateNewWebTransportId());
+            nsHttpConnectionInfo::GenerateNewWebTransportId());
       }
     } else {
       connInfo = new nsHttpConnectionInfo(host, port, ""_ns, mUsername,
@@ -8051,11 +8079,15 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
     // mTransactionPump doesn't hit OnInputStreamReady and call this until
     // all of the response headers have been acquired, so we can take
     // ownership of them from the transaction.
-    mResponseHead = mTransaction->TakeResponseHead();
+    RefPtr<nsHttpConnectionInfo> connInfo;
+    mResponseHead =
+        mTransaction->TakeResponseHeadAndConnInfo(getter_AddRefs(connInfo));
     mSupportsHTTP3 = mTransaction->GetSupportsHTTP3();
     // the response head may be null if the transaction was cancelled.  in
     // which case we just need to call OnStartRequest/OnStopRequest.
-    if (mResponseHead) return ProcessResponse();
+    if (mResponseHead) {
+      return ProcessResponse(connInfo);
+    }
 
     NS_WARNING("No response head in OnStartRequest");
   }
@@ -11238,6 +11270,17 @@ void nsHttpChannel::PerformBackgroundCacheRevalidationNow() {
                              mCallbacks, loadFlags);
   if (NS_FAILED(rv)) {
     LOG(("  failed to created the channel, rv=0x%08x",
+         static_cast<uint32_t>(rv)));
+    return;
+  }
+
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(validatingChannel));
+  MOZ_ASSERT(httpChannel);
+  nsCOMPtr<nsIHttpHeaderVisitor> visitor =
+      new CopyNonDefaultHeaderVisitor(httpChannel);
+  rv = VisitNonDefaultRequestHeaders(visitor);
+  if (NS_FAILED(rv)) {
+    LOG(("failed to copy headers to the validating channel, rv=0x%08x",
          static_cast<uint32_t>(rv)));
     return;
   }

@@ -181,8 +181,7 @@ const MESSAGES = () => {
       },
       targeting:
         "(region in ['CA', 'US']) && isFxASignedIn && previousSessionEnd && !willShowDefaultPrompt && !activeNotifications && userPrefs.cfrFeatures && !(sync || {}).mobileDevices",
-      skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+      skip_in_tests: "it's not tested in automation",
     },
     {
       id: "DESKTOP_TO_MOBILE_ADOPTION_SIGNED_INTO_ACCOUNT_EU",
@@ -282,8 +281,7 @@ const MESSAGES = () => {
       },
       targeting:
         "(locale in ['de', 'en-CA', 'en-GB', 'en-US', 'fr']) && (region in ['DE', 'FR', 'GB']) && isFxASignedIn && previousSessionEnd && !willShowDefaultPrompt && !activeNotifications && userPrefs.cfrFeatures && !(sync || {}).mobileDevices",
-      skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+      skip_in_tests: "it's not tested in automation",
     },
     // Appears the first time a user uses the "save and close" action on a tab group,
     // anchored to the alltabs-button. Will only show if at least an hour has passed
@@ -337,15 +335,14 @@ const MESSAGES = () => {
         ],
       },
       targeting:
-        "('browser.tabs.groups.enabled' | preferenceValue) && (!messageImpressions.CREATE_TAB_GROUP_ONBOARDING_CALLOUT[messageImpressions.CREATE_TAB_GROUP_ONBOARDING_CALLOUT | length - 1] || messageImpressions.CREATE_TAB_GROUP_ONBOARDING_CALLOUT[messageImpressions.CREATE_TAB_GROUP_ONBOARDING_CALLOUT | length - 1] < currentDate|date - 3600000) && alltabsButtonAreaType != null",
+        "('browser.tabs.groups.enabled' | preferenceValue) && userPrefs.cfrFeatures && (!messageImpressions.CREATE_TAB_GROUP_ONBOARDING_CALLOUT[messageImpressions.CREATE_TAB_GROUP_ONBOARDING_CALLOUT | length - 1] || messageImpressions.CREATE_TAB_GROUP_ONBOARDING_CALLOUT[messageImpressions.CREATE_TAB_GROUP_ONBOARDING_CALLOUT | length - 1] < currentDate|date - 3600000) && alltabsButtonAreaType != null",
       trigger: {
         id: "tabGroupSaved",
       },
       frequency: {
         lifetime: 1,
       },
-      skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+      skip_in_tests: "it's not tested in automation",
     },
     // Appears the first time a user uses the "save and close" action on a tab group,
     // if the alltabs-button has been removed. Anchored to the urlbar. Will only show
@@ -401,15 +398,14 @@ const MESSAGES = () => {
         ],
       },
       targeting:
-        "('browser.tabs.groups.enabled' | preferenceValue) && (!messageImpressions.CREATE_TAB_GROUP_ONBOARDING_CALLOUT[messageImpressions.CREATE_TAB_GROUP_ONBOARDING_CALLOUT | length - 1] || messageImpressions.CREATE_TAB_GROUP_ONBOARDING_CALLOUT[messageImpressions.CREATE_TAB_GROUP_ONBOARDING_CALLOUT | length - 1] < currentDate|date - 3600000) && alltabsButtonAreaType == null",
+        "('browser.tabs.groups.enabled' | preferenceValue) && userPrefs.cfrFeatures && (!messageImpressions.CREATE_TAB_GROUP_ONBOARDING_CALLOUT[messageImpressions.CREATE_TAB_GROUP_ONBOARDING_CALLOUT | length - 1] || messageImpressions.CREATE_TAB_GROUP_ONBOARDING_CALLOUT[messageImpressions.CREATE_TAB_GROUP_ONBOARDING_CALLOUT | length - 1] < currentDate|date - 3600000) && alltabsButtonAreaType == null",
       trigger: {
         id: "tabGroupSaved",
       },
       frequency: {
         lifetime: 1,
       },
-      skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+      skip_in_tests: "it's not tested in automation",
     },
     // Appears the first time a user creates a tab group, after clicking the "Done"
     // button. Anchored to the alltabs-button. Will only show if the SAVE_TAB_GROUP
@@ -464,15 +460,14 @@ const MESSAGES = () => {
         ],
       },
       targeting:
-        "('browser.tabs.groups.enabled' | preferenceValue) && (!messageImpressions.SAVE_TAB_GROUP_ONBOARDING_CALLOUT[messageImpressions.SAVE_TAB_GROUP_ONBOARDING_CALLOUT | length - 1] || messageImpressions.SAVE_TAB_GROUP_ONBOARDING_CALLOUT[messageImpressions.SAVE_TAB_GROUP_ONBOARDING_CALLOUT | length - 1] < currentDate|date - 3600000) && alltabsButtonAreaType != null",
+        "('browser.tabs.groups.enabled' | preferenceValue) && userPrefs.cfrFeatures && (!messageImpressions.SAVE_TAB_GROUP_ONBOARDING_CALLOUT[messageImpressions.SAVE_TAB_GROUP_ONBOARDING_CALLOUT | length - 1] || messageImpressions.SAVE_TAB_GROUP_ONBOARDING_CALLOUT[messageImpressions.SAVE_TAB_GROUP_ONBOARDING_CALLOUT | length - 1] < currentDate|date - 3600000) && alltabsButtonAreaType != null",
       trigger: {
         id: "tabGroupCreated",
       },
       frequency: {
         lifetime: 1,
       },
-      skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+      skip_in_tests: "it's not tested in automation",
     },
     // Appears the first time a user creates a tab group, after clicking the "Done"
     // button, if the alltabs-button has been removed. Anchored to the urlbar. Will
@@ -528,292 +523,138 @@ const MESSAGES = () => {
         ],
       },
       targeting:
-        "('browser.tabs.groups.enabled' | preferenceValue) && (!messageImpressions.SAVE_TAB_GROUP_ONBOARDING_CALLOUT[messageImpressions.SAVE_TAB_GROUP_ONBOARDING_CALLOUT | length - 1] || messageImpressions.SAVE_TAB_GROUP_ONBOARDING_CALLOUT[messageImpressions.SAVE_TAB_GROUP_ONBOARDING_CALLOUT | length - 1] < currentDate|date - 3600000) && alltabsButtonAreaType == null",
+        "('browser.tabs.groups.enabled' | preferenceValue) && userPrefs.cfrFeatures && (!messageImpressions.SAVE_TAB_GROUP_ONBOARDING_CALLOUT[messageImpressions.SAVE_TAB_GROUP_ONBOARDING_CALLOUT | length - 1] || messageImpressions.SAVE_TAB_GROUP_ONBOARDING_CALLOUT[messageImpressions.SAVE_TAB_GROUP_ONBOARDING_CALLOUT | length - 1] < currentDate|date - 3600000) && alltabsButtonAreaType == null",
       trigger: {
         id: "tabGroupCreated",
       },
       frequency: {
         lifetime: 1,
       },
-      skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+      skip_in_tests: "it's not tested in automation",
     },
+    // Appears after a browser restart if Session Restore is disabled, to direct
+    // users to tab groups that were saved automatically. Anchored to the alltabs-button.
     {
-      id: "FAKESPOT_CALLOUT_OPTED_OUT_SURVEY",
+      id: "SESSION_RESTORE_TAB_GROUP_CALLOUT",
       template: "feature_callout",
+      groups: [],
       content: {
-        id: "FAKESPOT_CALLOUT_OPTED_OUT_SURVEY",
+        id: "SESSION_RESTORE_TAB_GROUP_CALLOUT",
         template: "multistage",
         backdrop: "transparent",
         transitions: false,
-        disableHistoryUpdates: true,
-        tour_pref_name:
-          "messaging-system-action.fakespot-opted-out-survey.progress",
-        tour_pref_default_value:
-          '{"screen":"FAKESPOT_CALLOUT_OPTED_OUT_SURVEY_1","complete":false}',
         screens: [
           {
-            id: "FAKESPOT_CALLOUT_OPTED_OUT_SURVEY_1",
-            force_hide_steps_indicator: true,
+            id: "SESSION_RESTORE_TAB_GROUP_CALLOUT_ALLTABS_BUTTON",
             anchors: [
               {
-                selector: "#shopping-sidebar-button",
+                selector: "#alltabs-button",
                 panel_position: {
                   anchor_attachment: "bottomcenter",
                   callout_attachment: "topright",
                 },
-                no_open_on_anchor: true,
-                arrow_width: "22.62742",
               },
             ],
             content: {
               position: "callout",
-              layout: "survey",
-              width: "332px",
-              padding: "20",
-              title: {
-                string_id: "shopping-survey-headline",
-              },
-              title_logo: {
-                imageURL: "chrome://branding/content/about-logo.png",
-              },
-              secondary_button: {
-                label: {
-                  string_id: "shopping-survey-submit-button-label",
-                },
-                style: "primary",
-                action: {
-                  type: "MULTI_ACTION",
-                  collectSelect: true,
-                  data: {
-                    actions: [
-                      {
-                        type: "SET_PREF",
-                        data: {
-                          pref: {
-                            name: "messaging-system-action.fakespot-opted-out-survey.progress",
-                            value:
-                              '{"screen":"FAKESPOT_CALLOUT_OPTED_OUT_SURVEY_2","complete":false}',
-                          },
-                        },
-                      },
-                    ],
-                  },
-                },
-                disabled: "hasActiveMultiSelect",
-              },
-              dismiss_button: {
-                action: {
-                  type: "MULTI_ACTION",
-                  collectSelect: true,
-                  data: {
-                    actions: [
-                      {
-                        type: "BLOCK_MESSAGE",
-                        data: {
-                          id: "FAKESPOT_CALLOUT_OPTED_OUT_SURVEY",
-                        },
-                      },
-                      {
-                        type: "SET_PREF",
-                        data: {
-                          pref: {
-                            name: "messaging-system-action.fakespot-opted-out-survey.progress",
-                          },
-                        },
-                      },
-                    ],
-                  },
-                  dismiss: true,
-                },
-                label: {
-                  string_id: "shopping-onboarding-dialog-close-button",
-                },
-                size: "small",
-              },
-              tiles: {
-                type: "multiselect",
-                style: {
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                },
-                label: {
-                  string_id: "shopping-survey-opted-out-multiselect-label",
-                },
-                data: [
-                  {
-                    id: "fakespot-opted-out-survey-hard-to-understand",
-                    type: "checkbox",
-                    defaultValue: false,
-                    label: {
-                      string_id: "shopping-survey-opted-out-hard-to-understand",
-                    },
-                    icon: {
-                      style: {
-                        marginInline: "2px 8px",
-                      },
-                    },
-                    group: "checkboxes",
-                    randomize: true,
-                  },
-                  {
-                    id: "fakespot-opted-out-survey-too-slow",
-                    type: "checkbox",
-                    defaultValue: false,
-                    label: {
-                      string_id: "shopping-survey-opted-out-too-slow",
-                    },
-                    icon: {
-                      style: {
-                        marginInline: "2px 8px",
-                      },
-                    },
-                    group: "checkboxes",
-                    randomize: true,
-                  },
-                  {
-                    id: "fakespot-opted-out-survey-not-accurate",
-                    type: "checkbox",
-                    defaultValue: false,
-                    label: {
-                      string_id: "shopping-survey-opted-out-not-accurate",
-                    },
-                    icon: {
-                      style: {
-                        marginInline: "2px 8px",
-                      },
-                    },
-                    group: "checkboxes",
-                    randomize: true,
-                  },
-                  {
-                    id: "fakespot-opted-out-survey-not-helpful",
-                    type: "checkbox",
-                    defaultValue: false,
-                    label: {
-                      string_id: "shopping-survey-opted-out-not-helpful",
-                    },
-                    icon: {
-                      style: {
-                        marginInline: "2px 8px",
-                      },
-                    },
-                    group: "checkboxes",
-                    randomize: true,
-                  },
-                  {
-                    id: "fakespot-opted-out-survey-check-reviews-myself",
-                    type: "checkbox",
-                    defaultValue: false,
-                    label: {
-                      string_id: "shopping-survey-opted-out-check-myself",
-                    },
-                    icon: {
-                      style: {
-                        marginInline: "2px 8px",
-                      },
-                    },
-                    group: "checkboxes",
-                    randomize: true,
-                  },
-                  {
-                    id: "fakespot-opted-out-survey-other",
-                    type: "checkbox",
-                    defaultValue: false,
-                    label: {
-                      string_id: "shopping-survey-opted-out-other",
-                    },
-                    icon: {
-                      style: {
-                        marginInline: "2px 8px",
-                      },
-                    },
-                    group: "checkboxes",
-                  },
-                ],
-              },
-            },
-          },
-          {
-            id: "FAKESPOT_CALLOUT_OPTED_OUT_SURVEY_2",
-            force_hide_steps_indicator: true,
-            anchors: [
-              {
-                selector: "#shopping-sidebar-button",
-                panel_position: {
-                  anchor_attachment: "bottomcenter",
-                  callout_attachment: "topright",
-                },
-                no_open_on_anchor: true,
-                arrow_width: "22.62742",
-              },
-            ],
-            content: {
-              layout: "inline",
-              position: "callout",
-              title: {
-                string_id: "shopping-survey-thanks-title",
-              },
+              padding: 16,
+              width: "330px",
               title_logo: {
                 imageURL:
-                  "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/706c7a85-cf23-442e-8a92-7ebc7f537375.svg",
+                  "chrome://browser/content/asrouter/assets/smiling-fox-icon.svg",
+                width: "24px",
+                height: "24px",
+                marginInline: "0 16px",
+                alignment: "top",
               },
-              dismiss_button: {
+              title: {
+                string_id: "tab-groups-onboarding-session-restore-title",
+              },
+              primary_button: {
+                label: {
+                  string_id: "tab-groups-onboarding-dismiss",
+                },
                 action: {
-                  type: "SET_PREF",
-                  data: {
-                    pref: {
-                      name: "messaging-system-action.fakespot-opted-out-survey.progress",
-                    },
-                  },
                   dismiss: true,
                 },
-                label: {
-                  string_id: "shopping-onboarding-dialog-close-button",
-                },
-                size: "small",
               },
-              page_event_listeners: [
-                {
-                  params: {
-                    type: "timeout",
-                    options: {
-                      once: true,
-                      interval: 20000,
-                    },
-                  },
-                  action: {
-                    dismiss: true,
-                  },
-                },
-                {
-                  params: {
-                    type: "tourend",
-                    options: {
-                      once: true,
-                    },
-                  },
-                  action: {
-                    type: "BLOCK_MESSAGE",
-                    data: {
-                      id: "FAKESPOT_CALLOUT_OPTED_OUT_SURVEY",
-                    },
-                  },
-                },
-              ],
             },
           },
         ],
       },
-      priority: 2,
       targeting:
-        "'browser.shopping.experience2023.optedIn' | preferenceValue == 2 && !'browser.shopping.experience2023.active' | preferenceValue && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features' | preferenceValue != false && !'browser.shopping.experience2023.integratedSidebar' | preferenceValue",
+        "('browser.tabs.groups.enabled' | preferenceValue) && userPrefs.cfrFeatures && previousSessionEnd && ('browser.startup.page' | preferenceValue != 3) && savedTabGroups >= 1 && alltabsButtonAreaType != null",
       trigger: {
-        id: "preferenceObserver",
-        params: ["browser.shopping.experience2023.optedIn"],
+        id: "defaultBrowserCheck",
       },
-      skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+      priority: 2,
+      frequency: {
+        lifetime: 1,
+      },
+      skip_in_tests: "not tested in automation",
+    },
+    // Appears after a browser restart if Session Restore is disabled, to direct
+    // users to tab groups that were saved automatically, for users who have
+    // removed the alltabs button. Anchored to the urlbar.
+    {
+      id: "SESSION_RESTORE_TAB_GROUP_CALLOUT",
+      template: "feature_callout",
+      groups: [],
+      content: {
+        id: "SESSION_RESTORE_TAB_GROUP_CALLOUT",
+        template: "multistage",
+        backdrop: "transparent",
+        transitions: false,
+        screens: [
+          {
+            id: "SESSION_RESTORE_TAB_GROUP_CALLOUT_URLBAR",
+            anchors: [
+              {
+                selector: ".urlbar-input-box",
+                panel_position: {
+                  anchor_attachment: "bottomcenter",
+                  callout_attachment: "topcenter",
+                },
+              },
+            ],
+            content: {
+              position: "callout",
+              padding: 16,
+              width: "330px",
+              title_logo: {
+                imageURL:
+                  "chrome://browser/content/asrouter/assets/smiling-fox-icon.svg",
+                width: "24px",
+                height: "24px",
+                marginInline: "0 16px",
+                alignment: "top",
+              },
+              title: {
+                string_id:
+                  "tab-groups-onboarding-saved-groups-no-alltabs-button-title-2",
+              },
+              primary_button: {
+                label: {
+                  string_id: "tab-groups-onboarding-dismiss",
+                },
+                action: {
+                  dismiss: true,
+                },
+              },
+            },
+          },
+        ],
+      },
+      targeting:
+        "('browser.tabs.groups.enabled' | preferenceValue) && userPrefs.cfrFeatures && previousSessionEnd && ('browser.startup.page' | preferenceValue != 3) && savedTabGroups >= 1 && alltabsButtonAreaType == null",
+      trigger: {
+        id: "defaultBrowserCheck",
+      },
+      priority: 2,
+      frequency: {
+        lifetime: 1,
+      },
+      skip_in_tests: "not tested in automation",
     },
     {
       id: "ADDONS_STAFF_PICK_PT_2",
@@ -1464,7 +1305,7 @@ const MESSAGES = () => {
       trigger: { id: "shoppingProductPageWithSidebarClosed" },
       frequency: { lifetime: 1 },
       skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+        "it's not tested in automation and might pop up unexpectedly during review checker tests",
     },
     {
       // "Callout 3" in the Fakespot Figma spec, but
@@ -1632,7 +1473,7 @@ const MESSAGES = () => {
         lifetime: 3,
       },
       skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+        "it's not tested in automation and might pop up unexpectedly during review checker tests",
     },
     {
       // "Callout 3" in the Review Checker Integrated Sidebar Migration Figma spec
@@ -1654,7 +1495,7 @@ const MESSAGES = () => {
             anchors: [
               {
                 selector:
-                  "#sidebar-main:not([positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
+                  "#sidebar-main:not([sidebar-positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
                 panel_position: {
                   anchor_attachment: "rightcenter",
                   callout_attachment: "topleft",
@@ -1663,7 +1504,7 @@ const MESSAGES = () => {
               },
               {
                 selector:
-                  "#sidebar-main[positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
+                  "#sidebar-main[sidebar-positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
                 panel_position: {
                   anchor_attachment: "leftcenter",
                   callout_attachment: "topright",
@@ -1675,7 +1516,7 @@ const MESSAGES = () => {
               position: "callout",
               width: "401px",
               title: {
-                string_id: "shopping-opt-in-integrated-headline",
+                string_id: "shopping-callout-opt-in-integrated-headline",
                 fontSize: "20px",
                 letterSpacing: "0",
               },
@@ -1729,8 +1570,9 @@ const MESSAGES = () => {
               dismiss_button: {
                 action: { dismiss: true },
                 size: "small",
-                marginBlock: "28px 0",
+                marginBlock: "20px 0",
                 marginInline: "0 28px",
+                background: true,
               },
               secondary_button: {
                 label: {
@@ -1776,10 +1618,8 @@ const MESSAGES = () => {
                   {
                     type: "action",
                     label: {
-                      raw: {
-                        string_id:
-                          "shopping-callout-not-opted-in-integrated-reminder-do-not-show",
-                      },
+                      string_id:
+                        "shopping-callout-not-opted-in-integrated-reminder-do-not-show",
                     },
                     action: {
                       type: "SET_PREF",
@@ -1796,10 +1636,8 @@ const MESSAGES = () => {
                   {
                     type: "action",
                     label: {
-                      raw: {
-                        string_id:
-                          "shopping-callout-not-opted-in-integrated-reminder-show-fewer",
-                      },
+                      string_id:
+                        "shopping-callout-not-opted-in-integrated-reminder-show-fewer",
                     },
                     action: {
                       type: "MULTI_ACTION",
@@ -1836,10 +1674,8 @@ const MESSAGES = () => {
                   {
                     type: "action",
                     label: {
-                      raw: {
-                        string_id:
-                          "shopping-callout-not-opted-in-integrated-reminder-manage-settings",
-                      },
+                      string_id:
+                        "shopping-callout-not-opted-in-integrated-reminder-manage-settings",
                     },
                     action: {
                       type: "OPEN_ABOUT_PAGE",
@@ -1887,7 +1723,7 @@ const MESSAGES = () => {
         lifetime: 3,
       },
       skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+        "it's not tested in automation and might pop up unexpectedly during review checker tests",
     },
     {
       // "Callout 3" in the Review Checker Integrated Sidebar Migration Figma spec
@@ -1909,7 +1745,25 @@ const MESSAGES = () => {
             anchors: [
               {
                 selector:
-                  "#sidebar-main:not([positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
+                  "#sidebar-main:not([sidebar-positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar'].tools-overflow",
+                panel_position: {
+                  anchor_attachment: "topcenter",
+                  callout_attachment: "bottomleft",
+                },
+                no_open_on_anchor: true,
+              },
+              {
+                selector:
+                  "#sidebar-main[sidebar-positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar'].tools-overflow",
+                panel_position: {
+                  anchor_attachment: "topcenter",
+                  callout_attachment: "bottomright",
+                },
+                no_open_on_anchor: true,
+              },
+              {
+                selector:
+                  "#sidebar-main:not([sidebar-positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
                 panel_position: {
                   anchor_attachment: "rightcenter",
                   callout_attachment: "bottomleft",
@@ -1918,7 +1772,7 @@ const MESSAGES = () => {
               },
               {
                 selector:
-                  "#sidebar-main[positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
+                  "#sidebar-main[sidebar-positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
                 panel_position: {
                   anchor_attachment: "leftcenter",
                   callout_attachment: "bottomright",
@@ -1930,7 +1784,7 @@ const MESSAGES = () => {
               position: "callout",
               width: "401px",
               title: {
-                string_id: "shopping-opt-in-integrated-headline",
+                string_id: "shopping-callout-opt-in-integrated-headline",
                 fontSize: "20px",
                 letterSpacing: "0",
               },
@@ -1984,8 +1838,9 @@ const MESSAGES = () => {
               dismiss_button: {
                 action: { dismiss: true },
                 size: "small",
-                marginBlock: "28px 0",
+                marginBlock: "20px 0",
                 marginInline: "0 28px",
+                background: true,
               },
               secondary_button: {
                 label: {
@@ -2031,10 +1886,8 @@ const MESSAGES = () => {
                   {
                     type: "action",
                     label: {
-                      raw: {
-                        string_id:
-                          "shopping-callout-not-opted-in-integrated-reminder-do-not-show",
-                      },
+                      string_id:
+                        "shopping-callout-not-opted-in-integrated-reminder-do-not-show",
                     },
                     action: {
                       type: "SET_PREF",
@@ -2051,10 +1904,8 @@ const MESSAGES = () => {
                   {
                     type: "action",
                     label: {
-                      raw: {
-                        string_id:
-                          "shopping-callout-not-opted-in-integrated-reminder-show-fewer",
-                      },
+                      string_id:
+                        "shopping-callout-not-opted-in-integrated-reminder-show-fewer",
                     },
                     action: {
                       type: "MULTI_ACTION",
@@ -2091,10 +1942,8 @@ const MESSAGES = () => {
                   {
                     type: "action",
                     label: {
-                      raw: {
-                        string_id:
-                          "shopping-callout-not-opted-in-integrated-reminder-manage-settings",
-                      },
+                      string_id:
+                        "shopping-callout-not-opted-in-integrated-reminder-manage-settings",
                     },
                     action: {
                       type: "OPEN_ABOUT_PAGE",
@@ -2142,7 +1991,7 @@ const MESSAGES = () => {
         lifetime: 3,
       },
       skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+        "it's not tested in automation and might pop up unexpectedly during review checker tests",
     },
     {
       // "Callout 4" in the Fakespot Figma spec, for rediscoverability experiment 2.
@@ -2220,7 +2069,7 @@ const MESSAGES = () => {
       },
       frequency: { lifetime: 1 },
       skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+        "it's not tested in automation and might pop up unexpectedly during review checker tests",
     },
     {
       // "Callout 5" in the Fakespot Figma spec, for rediscoverability experiment 2.
@@ -2298,7 +2147,7 @@ const MESSAGES = () => {
       },
       frequency: { lifetime: 1 },
       skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+        "it's not tested in automation and might pop up unexpectedly during review checker tests",
     },
 
     // cookie banner reduction onboarding
@@ -2393,7 +2242,7 @@ const MESSAGES = () => {
             anchors: [
               {
                 selector:
-                  "#sidebar-main:not([positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
+                  "#sidebar-main:not([sidebar-positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
                 panel_position: {
                   anchor_attachment: "rightcenter",
                   callout_attachment: "topleft",
@@ -2402,7 +2251,7 @@ const MESSAGES = () => {
               },
               {
                 selector:
-                  "#sidebar-main[positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
+                  "#sidebar-main[sidebar-positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
                 panel_position: {
                   anchor_attachment: "leftcenter",
                   callout_attachment: "topright",
@@ -2414,12 +2263,11 @@ const MESSAGES = () => {
               position: "callout",
               width: "401px",
               title: {
-                string_id:
-                  "shopping-integrated-callout-disabled-auto-open-title",
+                string_id: "shopping-integrated-callout-sidebar-closed-title",
               },
               subtitle: {
                 string_id:
-                  "shopping-integrated-callout-disabled-auto-open-subtitle",
+                  "shopping-integrated-callout-sidebar-closed-subtitle",
                 letterSpacing: "0",
               },
               logo: {
@@ -2430,8 +2278,9 @@ const MESSAGES = () => {
               dismiss_button: {
                 action: { dismiss: true },
                 size: "small",
-                marginBlock: "28px 0",
+                marginBlock: "20px 0",
                 marginInline: "0 28px",
+                background: true,
               },
             },
           },
@@ -2443,7 +2292,7 @@ const MESSAGES = () => {
       trigger: { id: "reviewCheckerSidebarClosedCallout" },
       frequency: { lifetime: 1 },
       skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+        "it's not tested in automation and might pop up unexpectedly during review checker tests",
     },
     {
       // "Callout 4A" in the Reivew Checker Sidebar Migration Figma spec
@@ -2464,7 +2313,25 @@ const MESSAGES = () => {
             anchors: [
               {
                 selector:
-                  "#sidebar-main:not([positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
+                  "#sidebar-main:not([sidebar-positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar'].tools-overflow",
+                panel_position: {
+                  anchor_attachment: "topcenter",
+                  callout_attachment: "bottomleft",
+                },
+                no_open_on_anchor: true,
+              },
+              {
+                selector:
+                  "#sidebar-main[sidebar-positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar'].tools-overflow",
+                panel_position: {
+                  anchor_attachment: "topcenter",
+                  callout_attachment: "bottomright",
+                },
+                no_open_on_anchor: true,
+              },
+              {
+                selector:
+                  "#sidebar-main:not([sidebar-positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
                 panel_position: {
                   anchor_attachment: "rightcenter",
                   callout_attachment: "bottomleft",
@@ -2473,7 +2340,7 @@ const MESSAGES = () => {
               },
               {
                 selector:
-                  "#sidebar-main[positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
+                  "#sidebar-main[sidebar-positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
                 panel_position: {
                   anchor_attachment: "leftcenter",
                   callout_attachment: "bottomright",
@@ -2485,12 +2352,11 @@ const MESSAGES = () => {
               position: "callout",
               width: "401px",
               title: {
-                string_id:
-                  "shopping-integrated-callout-disabled-auto-open-title",
+                string_id: "shopping-integrated-callout-sidebar-closed-title",
               },
               subtitle: {
                 string_id:
-                  "shopping-integrated-callout-disabled-auto-open-subtitle",
+                  "shopping-integrated-callout-sidebar-closed-subtitle",
                 letterSpacing: "0",
               },
               logo: {
@@ -2501,8 +2367,9 @@ const MESSAGES = () => {
               dismiss_button: {
                 action: { dismiss: true },
                 size: "small",
-                marginBlock: "28px 0",
+                marginBlock: "20px 0",
                 marginInline: "0 28px",
+                background: true,
               },
             },
           },
@@ -2510,11 +2377,11 @@ const MESSAGES = () => {
       },
       priority: 1,
       // Auto-open feature flag is enabled; User disabled auto-open behavior; User is opted in; Has not opted out of CFRs; integrated sidebar is enabled; new sidebar is active; Sidebar is visible; Callout 6 has not been shown within 24 hrs;
-      targeting: `'browser.shopping.experience2023.autoOpen.enabled' | preferenceValue && !'browser.shopping.experience2023.autoOpen.userEnabled' | preferenceValue && 'browser.shopping.experience2023.optedIn' | preferenceValue == 1 && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features' | preferenceValue && 'browser.shopping.experience2023.integratedSidebar' | preferenceValue && 'sidebar.revamp' | preferenceValue && 'sidebar.verticalTabs' | preferenceValue && !(((currentDate|date - messageImpressions.REVIEW_CHECKER_SIDEBAR_CLOSED[messageImpressions.REVIEW_CHECKER_SIDEBAR_CLOSED | length - 1]) / 3600000) < 24)`,
+      targeting: `'browser.shopping.experience2023.autoOpen.enabled' | preferenceValue && !'browser.shopping.experience2023.autoOpen.userEnabled' | preferenceValue && 'browser.shopping.experience2023.optedIn' | preferenceValue == 1 && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features' | preferenceValue && 'browser.shopping.experience2023.integratedSidebar' | preferenceValue && 'sidebar.revamp' | preferenceValue && isSidebarVisible && 'sidebar.verticalTabs' | preferenceValue && !(((currentDate|date - messageImpressions.REVIEW_CHECKER_SIDEBAR_CLOSED[messageImpressions.REVIEW_CHECKER_SIDEBAR_CLOSED | length - 1]) / 3600000) < 24)`,
       trigger: { id: "reviewCheckerSidebarClosedCallout" },
       frequency: { lifetime: 1 },
       skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+        "it's not tested in automation and might pop up unexpectedly during review checker tests",
     },
     {
       // "Callout 4B" in the Review Checker Sidebar Migration Figma spec
@@ -2545,12 +2412,11 @@ const MESSAGES = () => {
               position: "callout",
               width: "401px",
               title: {
-                string_id:
-                  "shopping-integrated-callout-disabled-auto-open-title",
+                string_id: "shopping-integrated-callout-sidebar-closed-title",
               },
               subtitle: {
                 string_id:
-                  "shopping-integrated-callout-no-logo-disabled-auto-open-subtitle",
+                  "shopping-integrated-callout-no-logo-sidebar-closed-subtitle",
                 letterSpacing: "0",
               },
               dismiss_button: {
@@ -2563,13 +2429,13 @@ const MESSAGES = () => {
       },
       priority: 1,
       // Auto-open feature flag is enabled; User disabled auto-open behavior; User is opted in; Has not opted out of CFRs; integrated sidebar is enabled; new sidebar is active; Sidebar is not visible; Callout 6 has not shown within 24 hrs;
-      targeting: `'browser.shopping.experience2023.autoOpen.enabled' | preferenceValue == true && 'browser.shopping.experience2023.autoOpen.userEnabled' | preferenceValue == false && 'browser.shopping.experience2023.optedIn' | preferenceValue == 1 && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features' | preferenceValue != false && 'browser.shopping.experience2023.integratedSidebar' | preferenceValue == true && 'sidebar.revamp' | preferenceValue == true && !isSidebarVisible && !(((currentDate|date - messageImpressions.REVIEW_CHECKER_SIDEBAR_CLOSED[messageImpressions.REVIEW_CHECKER_SIDEBAR_CLOSED | length - 1]) / 3600000) < 24)`,
+      targeting: `'browser.shopping.experience2023.autoOpen.enabled' | preferenceValue == true && 'browser.shopping.experience2023.autoOpen.userEnabled' | preferenceValue == false && 'browser.shopping.experience2023.optedIn' | preferenceValue == 1 && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features' | preferenceValue != false && 'browser.shopping.experience2023.integratedSidebar' | preferenceValue && 'sidebar.revamp' | preferenceValue && !isSidebarVisible && !(((currentDate|date - messageImpressions.REVIEW_CHECKER_SIDEBAR_CLOSED[messageImpressions.REVIEW_CHECKER_SIDEBAR_CLOSED | length - 1]) / 3600000) < 24)`,
       trigger: {
-        id: "sidebarButtonClicked",
+        id: "reviewCheckerSidebarClosedCallout",
       },
       frequency: { lifetime: 1 },
       skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+        "it's not tested in automation and might pop up unexpectedly during review checker tests",
     },
     {
       // "Callout 5" in the Review Checker Sidebar Migration Figma spec
@@ -2589,7 +2455,7 @@ const MESSAGES = () => {
             anchors: [
               {
                 selector:
-                  "#sidebar-main:not([positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
+                  "#sidebar-main:not([sidebar-positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
                 panel_position: {
                   anchor_attachment: "rightcenter",
                   callout_attachment: "topleft",
@@ -2598,7 +2464,7 @@ const MESSAGES = () => {
               },
               {
                 selector:
-                  "#sidebar-main[positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
+                  "#sidebar-main[sidebar-positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
                 panel_position: {
                   anchor_attachment: "leftcenter",
                   callout_attachment: "topright",
@@ -2624,8 +2490,9 @@ const MESSAGES = () => {
               dismiss_button: {
                 action: { dismiss: true },
                 size: "small",
-                marginBlock: "28px 0",
+                marginBlock: "20px 0",
                 marginInline: "0 28px",
+                background: true,
               },
             },
           },
@@ -2640,7 +2507,7 @@ const MESSAGES = () => {
       },
       frequency: { lifetime: 1 },
       skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+        "it's not tested in automation and might pop up unexpectedly during review checker tests",
     },
     {
       // "Callout 5" in the Review Checker Sidebar Migration Figma spec
@@ -2660,7 +2527,25 @@ const MESSAGES = () => {
             anchors: [
               {
                 selector:
-                  "#sidebar-main:not([positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
+                  "#sidebar-main:not([sidebar-positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar'].tools-overflow",
+                panel_position: {
+                  anchor_attachment: "topcenter",
+                  callout_attachment: "bottomleft",
+                },
+                no_open_on_anchor: true,
+              },
+              {
+                selector:
+                  "#sidebar-main[sidebar-positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar'].tools-overflow",
+                panel_position: {
+                  anchor_attachment: "topcenter",
+                  callout_attachment: "bottomright",
+                },
+                no_open_on_anchor: true,
+              },
+              {
+                selector:
+                  "#sidebar-main:not([sidebar-positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
                 panel_position: {
                   anchor_attachment: "rightcenter",
                   callout_attachment: "bottomleft",
@@ -2669,7 +2554,7 @@ const MESSAGES = () => {
               },
               {
                 selector:
-                  "#sidebar-main[positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
+                  "#sidebar-main[sidebar-positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
                 panel_position: {
                   anchor_attachment: "leftcenter",
                   callout_attachment: "bottomright",
@@ -2695,8 +2580,9 @@ const MESSAGES = () => {
               dismiss_button: {
                 action: { dismiss: true },
                 size: "small",
-                marginBlock: "28px 0",
+                marginBlock: "20px 0",
                 marginInline: "0 28px",
+                background: true,
               },
             },
           },
@@ -2711,7 +2597,7 @@ const MESSAGES = () => {
       },
       frequency: { lifetime: 1 },
       skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+        "it's not tested in automation and might pop up unexpectedly during review checker tests",
     },
     {
       // "Callout 6" in the Review Checker Figma spec
@@ -2731,7 +2617,7 @@ const MESSAGES = () => {
             anchors: [
               {
                 selector:
-                  "#sidebar-main:not([positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
+                  "#sidebar-main:not([sidebar-positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
                 panel_position: {
                   anchor_attachment: "rightcenter",
                   callout_attachment: "topleft",
@@ -2740,7 +2626,7 @@ const MESSAGES = () => {
               },
               {
                 selector:
-                  "#sidebar-main[positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
+                  "#sidebar-main[sidebar-positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
                 panel_position: {
                   anchor_attachment: "leftcenter",
                   callout_attachment: "topright",
@@ -2767,8 +2653,9 @@ const MESSAGES = () => {
               dismiss_button: {
                 action: { dismiss: true },
                 size: "small",
-                marginBlock: "28px 0",
+                marginBlock: "20px 0",
                 marginInline: "0 28px",
+                background: true,
               },
             },
           },
@@ -2776,13 +2663,13 @@ const MESSAGES = () => {
       },
       priority: 1,
       // Has not opted out of CFRs; Review Checker integrated sidebar is enabled; sidebar revamp is enabled; user is opted in to review checker; Using horizontal tabs; Neither Callout 4A or 4B has shown within 24 hrs;
-      targeting: `'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features' | preferenceValue && 'browser.shopping.experience2023.integratedSidebar' | preferenceValue && 'sidebar.revamp' | preferenceValue && 'browser.shopping.experience2023.optedIn' | preferenceValue == 1 && isReviewCheckerInSidebarClosed && !'sidebar.verticalTabs' | preferenceValue && !(((currentDate|date - messageImpressions.REVIEW_CHECKER_EXPAND_COLLAPSE_DISABLED_AUTO_OPEN[messageImpressions.REVIEW_CHECKER_EXPAND_COLLAPSE_DISABLED_AUTO_OPEN | length - 1]) / 3600000) < 24) && !(((currentDate|date - messageImpressions.REVIEW_CHECKER_SHOW_HIDE_DISABLED_AUTO_OPEN[messageImpressions.REVIEW_CHECKER_SHOW_HIDE_DISABLED_AUTO_OPEN | length - 1]) / 3600000) < 24)`,
+      targeting: `'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features' | preferenceValue && 'browser.shopping.experience2023.integratedSidebar' | preferenceValue && 'sidebar.revamp' | preferenceValue && 'browser.shopping.experience2023.optedIn' | preferenceValue == 1 && isReviewCheckerInSidebarClosed && isSidebarVisible && !'sidebar.verticalTabs' | preferenceValue && !(((currentDate|date - messageImpressions.REVIEW_CHECKER_EXPAND_COLLAPSE_DISABLED_AUTO_OPEN[messageImpressions.REVIEW_CHECKER_EXPAND_COLLAPSE_DISABLED_AUTO_OPEN | length - 1]) / 3600000) < 24) && !(((currentDate|date - messageImpressions.REVIEW_CHECKER_SHOW_HIDE_DISABLED_AUTO_OPEN[messageImpressions.REVIEW_CHECKER_SHOW_HIDE_DISABLED_AUTO_OPEN | length - 1]) / 3600000) < 24)`,
       trigger: {
         id: "reviewCheckerSidebarClosedCallout",
       },
       frequency: { lifetime: 1 },
       skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+        "it's not tested in automation and might pop up unexpectedly during review checker tests",
     },
     {
       // "Callout 6" in the Review Checker Figma spec
@@ -2802,7 +2689,25 @@ const MESSAGES = () => {
             anchors: [
               {
                 selector:
-                  "#sidebar-main:not([positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
+                  "#sidebar-main:not([sidebar-positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar'].tools-overflow",
+                panel_position: {
+                  anchor_attachment: "topcenter",
+                  callout_attachment: "bottomleft",
+                },
+                no_open_on_anchor: true,
+              },
+              {
+                selector:
+                  "#sidebar-main[sidebar-positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar'].tools-overflow",
+                panel_position: {
+                  anchor_attachment: "topcenter",
+                  callout_attachment: "bottomright",
+                },
+                no_open_on_anchor: true,
+              },
+              {
+                selector:
+                  "#sidebar-main:not([sidebar-positionend]) > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
                 panel_position: {
                   anchor_attachment: "rightcenter",
                   callout_attachment: "bottomleft",
@@ -2811,7 +2716,7 @@ const MESSAGES = () => {
               },
               {
                 selector:
-                  "#sidebar-main[positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
+                  "#sidebar-main[sidebar-positionend] > sidebar-main::%shadow% .tools-and-extensions::%shadow% moz-button[view='viewReviewCheckerSidebar']",
                 panel_position: {
                   anchor_attachment: "leftcenter",
                   callout_attachment: "bottomright",
@@ -2838,8 +2743,9 @@ const MESSAGES = () => {
               dismiss_button: {
                 action: { dismiss: true },
                 size: "small",
-                marginBlock: "28px 0",
+                marginBlock: "20px 0",
                 marginInline: "0 28px",
+                background: true,
               },
             },
           },
@@ -2847,13 +2753,13 @@ const MESSAGES = () => {
       },
       priority: 1,
       // Has not opted out of CFRs; Review Checker integrated sidebar is enabled; sidebar revamp is enabled; user is opted in to review checker; Vertical tabs is enabled; Neither callout 4A or 4B has shown within 24 hrs;
-      targeting: `'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features' | preferenceValue && 'browser.shopping.experience2023.integratedSidebar' | preferenceValue && 'sidebar.revamp' | preferenceValue && 'browser.shopping.experience2023.optedIn' | preferenceValue == 1 && isReviewCheckerInSidebarClosed && 'sidebar.verticalTabs' | preferenceValue && !(((currentDate|date - messageImpressions.REVIEW_CHECKER_EXPAND_COLLAPSE_DISABLED_AUTO_OPEN[messageImpressions.REVIEW_CHECKER_EXPAND_COLLAPSE_DISABLED_AUTO_OPEN | length - 1]) / 3600000) < 24) && !(((currentDate|date - messageImpressions.REVIEW_CHECKER_SHOW_HIDE_DISABLED_AUTO_OPEN[messageImpressions.REVIEW_CHECKER_SHOW_HIDE_DISABLED_AUTO_OPEN | length - 1]) / 3600000) < 24)`,
+      targeting: `'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features' | preferenceValue && 'browser.shopping.experience2023.integratedSidebar' | preferenceValue && 'sidebar.revamp' | preferenceValue && 'browser.shopping.experience2023.optedIn' | preferenceValue == 1 && isSidebarVisible && isReviewCheckerInSidebarClosed && 'sidebar.verticalTabs' | preferenceValue && !(((currentDate|date - messageImpressions.REVIEW_CHECKER_EXPAND_COLLAPSE_DISABLED_AUTO_OPEN[messageImpressions.REVIEW_CHECKER_EXPAND_COLLAPSE_DISABLED_AUTO_OPEN | length - 1]) / 3600000) < 24) && !(((currentDate|date - messageImpressions.REVIEW_CHECKER_SHOW_HIDE_DISABLED_AUTO_OPEN[messageImpressions.REVIEW_CHECKER_SHOW_HIDE_DISABLED_AUTO_OPEN | length - 1]) / 3600000) < 24)`,
       trigger: {
         id: "reviewCheckerSidebarClosedCallout",
       },
       frequency: { lifetime: 1 },
       skip_in_tests:
-        "not tested in automation and might pop up unexpectedly during review checker tests",
+        "it's not tested in automation and might pop up unexpectedly during review checker tests",
     },
     {
       id: "FX_VIEW_DISCOVERABILITY_ALL_USERS",
@@ -3007,7 +2913,7 @@ const MESSAGES = () => {
       frequency: {
         lifetime: 1,
       },
-      skip_in_tests: "not tested in automation",
+      skip_in_tests: "it's not tested in automation",
       targeting:
         "!isMajorUpgrade && !willShowDefaultPrompt && !activeNotifications && previousSessionEnd && fxViewButtonAreaType != null && tabsClosedCount >= 5 && (currentDate|date - profileAgeCreated|date) / 86400000 >= 7 && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features' | preferenceValue != false",
       trigger: {

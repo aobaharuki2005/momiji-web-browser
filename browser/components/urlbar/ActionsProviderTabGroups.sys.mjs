@@ -10,9 +10,9 @@ import {
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
+  TabMetrics: "moz-src:///browser/components/tabbrowser/TabMetrics.sys.mjs",
 });
 
 const MIN_SEARCH_PREF = "tabGroups.minSearchLength";
@@ -27,7 +27,7 @@ class ProviderTabGroups extends ActionsProvider {
 
   isActive(queryContext) {
     return (
-      lazy.NimbusFeatures.tabGroups.getVariable("enabled") &&
+      Services.prefs.getBoolPref("browser.tabs.groups.enabled") &&
       !queryContext.searchMode &&
       queryContext.trimmedSearchString.length < 50 &&
       queryContext.trimmedSearchString.length >=
@@ -72,7 +72,13 @@ class ProviderTabGroups extends ActionsProvider {
             l10nId: "urlbar-result-action-open-saved-tabgroup",
             l10nArgs: { group: savedGroup.name },
             onPick: (_queryContext, _controller) => {
-              let group = lazy.SessionStore.openSavedTabGroup(savedGroup.id);
+              let group = lazy.SessionStore.openSavedTabGroup(
+                savedGroup.id,
+                window,
+                {
+                  source: lazy.TabMetrics.METRIC_SOURCE.SUGGEST,
+                }
+              );
               this.#switchToGroup(group);
             },
             color: savedGroup.color,

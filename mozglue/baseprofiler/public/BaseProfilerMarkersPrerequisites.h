@@ -40,6 +40,13 @@ enum class StackCaptureOptions {
 #include <utility>
 #include <vector>
 
+// The header <X11/X.h> defines "None" as a macro that expands to "0L".
+// This is terrible because we have an enum variant named "None" too in this
+// file. To work around this, we undefine the macro "None".
+#ifdef None
+#  undef None
+#endif
+
 namespace mozilla {
 
 // Return a NotNull<const CHAR*> pointing at the literal empty string `""`.
@@ -1023,6 +1030,14 @@ inline void StreamPayload<ProfilerString8View>(
     const ProfilerString8View& aPayload) {
   aWriter.StringProperty(aKey, aPayload);
 }
+
+template <>
+inline void StreamPayload<Flow>(baseprofiler::SpliceableJSONWriter& aWriter,
+                                const Span<const char> aKey,
+                                const Flow& aPayload) {
+  aWriter.FlowProperty(aKey, aPayload);
+}
+
 }  // namespace detail
 
 // This helper class is used by MarkerTypes that want to support the general

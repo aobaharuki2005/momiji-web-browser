@@ -43,6 +43,8 @@ prefs = [
 
 ["browser_1933485_tab_groups_history.js"]
 
+["browser_1953801_tab_groups_history_close_other.js"]
+
 ["browser_aboutPrivateBrowsing.js"]
 
 ["browser_aboutSessionRestore.js"]
@@ -315,6 +317,8 @@ tags = "os_integration"
 ["browser_tab_groups_restore_closed_in_closed_window.js"]
 
 ["browser_tab_groups_restore_closed_in_open_window.js"]
+
+["browser_tab_groups_restore_closed_many_tabs.js"]
 
 ["browser_tab_groups_restore_multiple.js"]
 

@@ -652,13 +652,16 @@ void Theme::PaintRadioControl(PaintBackendData& aPaintData,
   }
 
   if (aState.HasState(ElementState::CHECKED)) {
+    // See bug 1951930 and bug 1941755 for some discussion on this chunk of
+    // code.
+    const CSSCoord kOuterBorderWidth = 1.0f;
+    const CSSCoord kInnerBorderWidth = 2.0f;
     LayoutDeviceRect rect(aRect);
-    // Make the inner white dot take ~half of the checkbox (snapped to device
-    // pixels).
-    rect.Deflate(std::max(LayoutDeviceIntCoord(1),
-                          (LayoutDeviceCoord(rect.width) * 0.25f).Truncated()));
-    PaintStrokedCircle(aPaintData, rect, checkColor, sTransparent, 0,
-                       aDpiRatio);
+    auto width = LayoutDeviceCoord(
+        ThemeDrawing::SnapBorderWidth(kOuterBorderWidth, aDpiRatio));
+    rect.Deflate(width);
+    PaintStrokedCircle(aPaintData, rect, backgroundColor, checkColor,
+                       kInnerBorderWidth, aDpiRatio);
   }
 
   if (aState.HasState(ElementState::FOCUSRING)) {
@@ -1168,7 +1171,6 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
     case StyleAppearance::Listbox:
       PaintListbox(aPaintData, devPxRect, elementState, colors, dpiRatio);
       break;
-    case StyleAppearance::MenulistButton:
     case StyleAppearance::Menulist:
       PaintMenulist(aPaintData, devPxRect, elementState, colors, dpiRatio);
       break;
@@ -1412,9 +1414,9 @@ LayoutDeviceIntMargin Theme::GetWidgetBorder(nsDeviceContext* aContext,
     case StyleAppearance::PasswordInput:
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
-    case StyleAppearance::MenulistButton:
     case StyleAppearance::Button:
     case StyleAppearance::Toolbarbutton:
+    case StyleAppearance::ProgressBar:
       // Return the border size from the UA sheet, even though what we paint
       // doesn't actually match that. We know this is the UA sheet border
       // because we disable native theming when different border widths are
@@ -1472,7 +1474,6 @@ bool Theme::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
     case StyleAppearance::PasswordInput:
       outlineOffset = -kTextFieldBorderWidth;
       break;
-    case StyleAppearance::MenulistButton:
     case StyleAppearance::Menulist:
     case StyleAppearance::Button:
     case StyleAppearance::Toolbarbutton:
@@ -1625,7 +1626,6 @@ bool Theme::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame,
     case StyleAppearance::Toolbarbutton:
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
-    case StyleAppearance::MenulistButton:
     case StyleAppearance::NumberInput:
     case StyleAppearance::PasswordInput:
     case StyleAppearance::MozMenulistArrowButton:

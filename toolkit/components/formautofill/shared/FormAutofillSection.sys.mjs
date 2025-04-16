@@ -372,6 +372,15 @@ export class FormAutofillSection {
     );
   }
 
+  onFilledOnFieldsUpdate(filledResult) {
+    lazy.AutofillTelemetry.recordFormInteractionEvent(
+      "filled_on_fields_update",
+      this.flowId,
+      this.fieldDetails,
+      filledResult
+    );
+  }
+
   onFilledModified(elementId) {
     const fieldDetail = this.getFieldDetailByElementId(elementId);
     lazy.AutofillTelemetry.recordFormInteractionEvent(
@@ -444,7 +453,10 @@ export class FormAutofillAddressSection extends FormAutofillSection {
     const country = lazy.FormAutofillUtils.identifyCountryCode(
       record.country || record["country-name"]
     );
-    if (!lazy.FormAutofill.isAutofillAddressesAvailableInCountry(country)) {
+    if (
+      country &&
+      !lazy.FormAutofill.isAutofillAddressesAvailableInCountry(country)
+    ) {
       // We don't want to save data in the wrong fields due to not having proper
       // heuristic regexes in countries we don't yet support.
       this.log.warn(
@@ -642,20 +654,19 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
       reauth = false;
     }
     let string;
-    let errorMessage;
+    let errorResult = 0;
     try {
       string = await lazy.OSKeyStore.decrypt(cipherText, reauth);
-      errorMessage = "NO_ERROR";
     } catch (e) {
+      errorResult = e.result;
       if (e.result != Cr.NS_ERROR_ABORT) {
         throw e;
       }
       this.log.warn("User canceled encryption login");
-      errorMessage = e.result;
     } finally {
       Glean.creditcard.osKeystoreDecrypt.record({
-        isDecryptSuccess: errorMessage === "NO_ERROR",
-        errorMessage,
+        isDecryptSuccess: errorResult === 0,
+        errorResult,
         trigger: "autofill",
       });
     }

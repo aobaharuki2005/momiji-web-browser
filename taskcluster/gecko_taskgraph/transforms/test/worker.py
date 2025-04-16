@@ -18,32 +18,22 @@ WINDOWS_WORKER_TYPES = {
     "windows10-64": {  # source-test
         "virtual": "t-win10-64",
         "virtual-with-gpu": "t-win10-64-gpu-s",
-        "hardware": "t-win10-64-1803-hw",
+        "hardware": "win10-64-2009-hw",
     },
     "windows10-64-shippable-qr": {
         "virtual": "t-win10-64",
         "virtual-with-gpu": "t-win10-64-gpu-s",
-        "hardware": "t-win10-64-1803-hw",
-    },
-    "windows11-64-2009-hw-ref-shippable": {
-        "virtual": "win11-64-2009-hw-ref",
-        "virtual-with-gpu": "win11-64-2009-hw-ref",
-        "hardware": "win11-64-2009-hw-ref",
-    },
-    "windows11-64-2009-hw-ref": {
-        "virtual": "win11-64-2009-hw-ref",
-        "virtual-with-gpu": "win11-64-2009-hw-ref",
-        "hardware": "win11-64-2009-hw-ref",
+        "hardware": "win10-64-2009-hw",
     },
     "windows10-64-2009-qr": {
         "virtual": "win10-64-2009",
         "virtual-with-gpu": "win10-64-2009-gpu",
-        "hardware": "t-win10-64-1803-hw",
+        "hardware": "win10-64-2009-hw",
     },
     "windows10-64-2009-shippable-qr": {
         "virtual": "win10-64-2009",
         "virtual-with-gpu": "win10-64-2009-gpu",
-        "hardware": "t-win10-64-1803-hw",
+        "hardware": "win10-64-2009-hw",
     },
     "windows11-32-2009-mingwclang-qr": {
         "virtual": "win11-64-2009",
@@ -162,8 +152,9 @@ MACOSX_WORKER_TYPES = {
     "macosx1470-64": "t-osx-1400-r8",
     "macosx1100-64": "t-osx-1100-m1",
     "macosx1400-64": "t-osx-1400-m2",
+    "macosx1500-64": "t-osx-1500-m4",
     "macosx1100-aarch64": "t-osx-1100-m1",
-    "macosx1400-aarch64": "t-osx-1400-m2",
+    "macosx1500-aarch64": "t-osx-1500-m4",
 }
 
 transforms = TransformSequence()
@@ -192,6 +183,8 @@ def set_worker_type(config, tasks):
             task["worker-type"] = MACOSX_WORKER_TYPES["macosx1400-64"]
         elif test_platform.startswith("macosx1400-aarch64"):
             task["worker-type"] = MACOSX_WORKER_TYPES["macosx1400-aarch64"]
+        elif test_platform.startswith("macosx1500-aarch64"):
+            task["worker-type"] = MACOSX_WORKER_TYPES["macosx1500-aarch64"]
         elif test_platform.startswith("win"):
             # figure out what platform the job needs to run on
             if task["virtualization"] == "hardware":

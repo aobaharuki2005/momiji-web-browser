@@ -177,6 +177,7 @@ treeherder:
         'Boot': 'Bootstrap'
         'Attr-L10n': 'Build Attribution'
         'android-l10n': 'Import strings from android-l10n repo'
+        'update-test': 'Test updates to release from older firefox versions'
 
         # The below symbols are from firefox-android (fenix/focus/android-components)
         'buildconfig': 'Make sure the content of .buildconfig.yml matches what gradle knows about its projects'
@@ -898,6 +899,11 @@ workers:
             os: windows
             worker-type: 'gecko-{alias}'
         win11-64-2009(-hw-ref):
+            provisioner: releng-hardware
+            implementation: generic-worker
+            os: windows
+            worker-type: '{alias}'
+        win10-64-2009-hw:
             provisioner: releng-hardware
             implementation: generic-worker
             os: windows

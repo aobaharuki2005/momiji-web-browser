@@ -149,24 +149,30 @@ void CSP_ApplyMetaCSPToDoc(mozilla::dom::Document& aDoc,
     return;
   }
 
-  // Make the <meta> policy in browser.xhtml toggleable.
-  if (nsIURI* uri = aDoc.GetDocumentURI();
-      uri->SchemeIs("chrome") &&
-      !StaticPrefs::security_browser_xhtml_csp_enabled()) {
+  // CSPs delivered via a <meta> tag can not be report-only.
+  bool reportOnly = false;
+
+  if (nsIURI* uri = aDoc.GetDocumentURI(); uri->SchemeIs("chrome")) {
     nsAutoCString spec;
     uri->GetSpec(spec);
     if (spec.EqualsLiteral("chrome://browser/content/browser.xhtml")) {
-      return;
+      // Make the <meta> policy in browser.xhtml toggleable.
+      if (!StaticPrefs::security_browser_xhtml_csp_enabled()) {
+        return;
+      }
+
+      // Make the policy report-only to be able to collect telemetry.
+      if (StaticPrefs::security_browser_xhtml_csp_report_only()) {
+        reportOnly = true;
+      }
     }
   }
 
   // Multiple CSPs (delivered through either header of meta tag) need to
   // be joined together, see:
   // https://w3c.github.io/webappsec/specs/content-security-policy/#delivery-html-meta-element
-  nsresult rv =
-      csp->AppendPolicy(policyStr,
-                        false,  // csp via meta tag can not be report only
-                        true);  // delivered through the meta tag
+  nsresult rv = csp->AppendPolicy(policyStr, reportOnly,
+                                  true);  // delivered through the meta tag
   NS_ENSURE_SUCCESS_VOID(rv);
   if (nsPIDOMWindowInner* inner = aDoc.GetInnerWindow()) {
     inner->SetCsp(csp);
@@ -1079,6 +1085,24 @@ void nsCSPTrustedTypesDirectivePolicyName::toString(nsAString& aOutStr) const {
   aOutStr.Append(mName);
 }
 
+/* =============== nsCSPTrustedTypesDirectiveInvalidToken =============== */
+
+nsCSPTrustedTypesDirectiveInvalidToken::nsCSPTrustedTypesDirectiveInvalidToken(
+    const nsAString& aInvalidToken)
+    : mInvalidToken{aInvalidToken} {}
+
+bool nsCSPTrustedTypesDirectiveInvalidToken::visit(
+    nsCSPSrcVisitor* aVisitor) const {
+  MOZ_ASSERT_UNREACHABLE(
+      "Should only be called for other overloads of this method.");
+  return false;
+}
+
+void nsCSPTrustedTypesDirectiveInvalidToken::toString(
+    nsAString& aOutStr) const {
+  aOutStr.Append(mInvalidToken);
+}
+
 /* ===== nsCSPDirective ====================== */
 
 nsCSPDirective::nsCSPDirective(CSPDirective aDirective) {
@@ -1358,6 +1382,17 @@ bool nsCSPDirective::allowsAllInlineBehavior(CSPDirective aDir) const {
   return allowAll;
 }
 
+void nsCSPDirective::getTrustedTypesDirectiveExpressions(
+    nsTArray<nsString>& outExpressions) const {
+  MOZ_ASSERT(mDirective == nsIContentSecurityPolicy::TRUSTED_TYPES_DIRECTIVE);
+  MOZ_ASSERT(outExpressions.IsEmpty());
+  for (uint32_t i = 0; i < mSrcs.Length(); i++) {
+    nsAutoString expression;
+    mSrcs[i]->toString(expression);
+    outExpressions.AppendElement(expression);
+  }
+}
+
 static constexpr auto kWildcard = u"*"_ns;
 
 bool nsCSPDirective::ShouldCreateViolationForNewTrustedTypesPolicy(
@@ -1392,6 +1427,48 @@ bool nsCSPDirective::ShouldCreateViolationForNewTrustedTypesPolicy(
   }
 
   return false;
+}
+
+bool nsCSPDirective::ShouldCreateViolationForNewTrustedTypesPolicy(
+    const nsTArray<nsString>& aTrustedTypesDirectiveExpressions,
+    const nsAString& aPolicyName,
+    const nsTArray<nsString>& aCreatedPolicyNames) {
+  MOZ_ASSERT(!aTrustedTypesDirectiveExpressions.IsEmpty());
+
+  bool allowDuplicates = false;
+  bool policyNameAllowed = false;
+  for (auto& expression : aTrustedTypesDirectiveExpressions) {
+    if (CSP_IsKeyword(expression, CSP_NONE)) {
+      MOZ_ASSERT(aTrustedTypesDirectiveExpressions.Length() == 1);
+      // tt-keyword 'none' found. We immediately know we shoud create a
+      // violation.
+      return true;
+    }
+    if (CSP_IsKeyword(expression, CSP_ALLOW_DUPLICATES)) {
+      // tt-keyword 'allow-duplicates' found. If the policy name is allowed, we
+      // immediately know we shouldn't create a violation.
+      if (policyNameAllowed) {
+        return false;
+      }
+      // Otherwise, remember that duplicates are allowed and continue checking
+      // whether the policy name is allowed.
+      allowDuplicates = true;
+      continue;
+    }
+    if (expression.Equals(kWildcard) || expression.Equals(aPolicyName)) {
+      // tt-wildcard or matching name found. If we allow duplicate policy names,
+      // or are not creating such a duplicate then we immediately know we
+      // shouldn't create a violation.
+      if (allowDuplicates || !aCreatedPolicyNames.Contains(aPolicyName)) {
+        return false;
+      }
+      // Otherwise, remember that the policyName is allowed and continue
+      // checking whether duplicates are allowed.
+      policyNameAllowed = true;
+    }
+  }
+  MOZ_ASSERT(!policyNameAllowed || !allowDuplicates);
+  return true;
 }
 
 void nsCSPDirective::toString(nsAString& outStr) const {
@@ -1861,6 +1938,16 @@ bool nsCSPPolicy::allowsAllInlineBehavior(CSPDirective aDir) const {
   }
 
   return directive->allowsAllInlineBehavior(aDir);
+}
+
+void nsCSPPolicy::getTrustedTypesDirectiveExpressions(
+    nsTArray<nsString>& outExpressions) const {
+  MOZ_ASSERT(outExpressions.IsEmpty());
+  for (const auto* directive : mDirectives) {
+    if (directive->equals(nsIContentSecurityPolicy::TRUSTED_TYPES_DIRECTIVE)) {
+      directive->getTrustedTypesDirectiveExpressions(outExpressions);
+    }
+  }
 }
 
 bool nsCSPPolicy::ShouldCreateViolationForNewTrustedTypesPolicy(

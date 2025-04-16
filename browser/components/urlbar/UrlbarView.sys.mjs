@@ -19,6 +19,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/UrlbarProviderGlobalActions.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
+  UrlbarProviderQuickSuggestContextualOptIn:
+    "resource:///modules/UrlbarProviderQuickSuggestContextualOptIn.sys.mjs",
   UrlbarProviderRecentSearches:
     "resource:///modules/UrlbarProviderRecentSearches.sys.mjs",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
@@ -40,8 +42,6 @@ XPCOMUtils.defineLazyServiceGetter(
 const SELECTABLE_ELEMENT_SELECTOR = "[role=button], [selectable]";
 const KEYBOARD_SELECTABLE_ELEMENT_SELECTOR =
   "[role=button]:not([keyboard-inaccessible]), [selectable]";
-
-const ZERO_PREFIX_HISTOGRAM_DWELL_TIME = "FX_URLBAR_ZERO_PREFIX_DWELL_TIME_MS";
 
 const RESULT_MENU_COMMANDS = {
   DISMISS: "dismiss",
@@ -506,23 +506,6 @@ export class UrlbarView {
   }
 
   /**
-   * Hide the popup that shows the Urlbar results. The popup is still
-   * considered "open", this will not trigger abandonment telemetry
-   * but will not be shown to the user.
-   */
-  hideTemporarily() {
-    this.panel.toggleAttribute("hide-temporarily", true);
-  }
-
-  /**
-   * Show the Urlbar results popup after being hidden by
-   * `hideTemporarily`
-   */
-  restoreVisibility() {
-    this.panel.toggleAttribute("hide-temporarily", false);
-  }
-
-  /**
    * Closes the view, cancelling the query if necessary.
    *
    * @param {object} options Options object
@@ -532,6 +515,8 @@ export class UrlbarView {
    *   True if the Urlbar focus border should be shown after the view is closed.
    */
   close({ elementPicked = false, showFocusBorder = true } = {}) {
+    const isShowingZeroPrefix =
+      this.#queryContext && !this.#queryContext.searchString;
     this.controller.cancelQuery();
     // We do not show the focus border when an element is picked because we'd
     // flash it just before the input is blurred. The focus border is removed
@@ -586,13 +571,12 @@ export class UrlbarView {
       this.#blobUrlsByResultUrl.clear();
     }
 
-    if (this.#isShowingZeroPrefix) {
+    if (isShowingZeroPrefix) {
       if (elementPicked) {
         Glean.urlbarZeroprefix.engagement.add(1);
       } else {
         Glean.urlbarZeroprefix.abandonment.add(1);
       }
-      this.#setIsShowingZeroPrefix(false);
     }
   }
 
@@ -749,9 +733,10 @@ export class UrlbarView {
       this.clear();
     }
 
-    // Now that the view has finished updating for this query, call
-    // `#setIsShowingZeroPrefix()`.
-    this.#setIsShowingZeroPrefix(!queryContext.searchString);
+    // Now that the view has finished updating for this query, record the exposure.
+    if (!queryContext.searchString) {
+      Glean.urlbarZeroprefix.exposure.add(1);
+    }
 
     // If the query returned results, we're done.
     if (this.#queryUpdatedResults) {
@@ -1090,7 +1075,6 @@ export class UrlbarView {
   #resultMenuCommands;
   #rows;
   #rawSelectedElement;
-  #zeroPrefixStopwatchInstance = null;
 
   /**
    * #rawSelectedElement may be disconnected from the DOM (e.g. it was remove()d)
@@ -1786,7 +1770,7 @@ export class UrlbarView {
       item.appendChild(item._content);
       // Clear previously set attributes and classes that may refer to a
       // different result type.
-      for (const attribute of item.attributes) {
+      for (const attribute of [...item.attributes]) {
         if (!item._sharedAttributes.has(attribute.name)) {
           item.removeAttribute(attribute.name);
         }
@@ -3192,33 +3176,6 @@ export class UrlbarView {
     return idArgs;
   }
 
-  get #isShowingZeroPrefix() {
-    return !!this.#zeroPrefixStopwatchInstance;
-  }
-
-  #setIsShowingZeroPrefix(isShowing) {
-    if (!!isShowing == !!this.#zeroPrefixStopwatchInstance) {
-      return;
-    }
-
-    if (!isShowing) {
-      TelemetryStopwatch.finish(
-        ZERO_PREFIX_HISTOGRAM_DWELL_TIME,
-        this.#zeroPrefixStopwatchInstance
-      );
-      this.#zeroPrefixStopwatchInstance = null;
-      return;
-    }
-
-    this.#zeroPrefixStopwatchInstance = {};
-    TelemetryStopwatch.start(
-      ZERO_PREFIX_HISTOGRAM_DWELL_TIME,
-      this.#zeroPrefixStopwatchInstance
-    );
-
-    Glean.urlbarZeroprefix.exposure.add(1);
-  }
-
   /**
    * @param {UrlbarResult} result
    *   The result to get menu commands for.
@@ -3401,9 +3358,15 @@ export class UrlbarView {
       // Update result action text.
       if (localSearchMode) {
         // Update the result action text for a local one-off.
+        const messageIDs = {
+          actions: "urlbar-result-action-search-actions",
+          bookmarks: "urlbar-result-action-search-bookmarks",
+          history: "urlbar-result-action-search-history",
+          tabs: "urlbar-result-action-search-tabs",
+        };
         let name = lazy.UrlbarUtils.getResultSourceName(localSearchMode.source);
         this.#l10nCache.setElementL10n(action, {
-          id: `urlbar-result-action-search-${name}`,
+          id: messageIDs[name],
         });
         if (result.heuristic) {
           item.setAttribute("source", name);
@@ -3660,9 +3623,17 @@ class QueryContextCache {
       // doesn't necessarily imply top sites since there are other queries that
       // use it too, like search mode. If any result is from the top-sites
       // provider, assume the context is top sites.
+      // However, if contextual opt-in message is shown, disable the cache. The
+      // message might hide when beginning of query, this cache will be shown
+      // for a moment.
       if (
         queryContext.results?.some(
           r => r.providerName == lazy.UrlbarProviderTopSites.name
+        ) &&
+        !queryContext.results.some(
+          r =>
+            r.providerName ==
+            lazy.UrlbarProviderQuickSuggestContextualOptIn.name
         )
       ) {
         this.#topSitesContext = queryContext;

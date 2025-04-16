@@ -15,7 +15,6 @@
 #include "chrome/common/process_watcher.h"
 #ifdef XP_DARWIN
 #  include <mach/mach_traps.h>
-#  include "SharedMemory.h"
 #  include "base/rand_util.h"
 #  include "chrome/common/mach_ipc_mac.h"
 #  include "mozilla/StaticPrefs_media.h"
@@ -1121,7 +1120,8 @@ Result<Ok, LaunchError> BaseProcessLauncher::DoSetup() {
   geckoargs::sParentPid.Put(static_cast<uint64_t>(base::GetCurrentProcId()),
                             mChildArgs);
 
-  if (!CrashReporter::IsDummy() && CrashReporter::GetEnabled()) {
+  if (!CrashReporter::IsDummy() && CrashReporter::GetEnabled() &&
+      mProcessType != GeckoProcessType_ForkServer) {
 #if defined(MOZ_WIDGET_COCOA) || defined(XP_WIN)
     geckoargs::sCrashReporter.Put(CrashReporter::GetChildNotificationPipe(),
                                   mChildArgs);
@@ -1310,6 +1310,12 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
   mChildArgs.mArgs.push_back(mChildIDString);
 
   mChildArgs.mArgs.push_back(ChildProcessType());
+
+#  ifdef MOZ_ENABLE_FORKSERVER
+  MOZ_ASSERT(mProcessType != GeckoProcessType_ForkServer ||
+                 mChildArgs.mFiles.size() == 1,
+             "The ForkServer only expects a single FD argument");
+#  endif
 
 #  if !defined(MOZ_WIDGET_ANDROID)
   // Add any files which need to be transferred to fds_to_remap.

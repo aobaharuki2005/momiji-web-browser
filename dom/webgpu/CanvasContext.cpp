@@ -9,6 +9,7 @@
 #include "LayerUserData.h"
 #include "nsDisplayList.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CanvasRenderer.h"
@@ -137,7 +138,7 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aConfig) {
       !gfx::gfxVars::AllowSoftwareWebRenderD3D11()) {
     mUseExternalTextureInSwapChain = false;
   }
-#elif defined(MOZ_WIDGET_GTK)
+#elif defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
   // When DMABufDevice is not enabled, disable external texture in swap chain.
   const auto& modifiers = gfx::gfxVars::DMABufModifiersARGB();
   if (modifiers.IsEmpty()) {
@@ -177,8 +178,6 @@ void CanvasContext::Unconfigure() {
 }
 
 NS_IMETHODIMP CanvasContext::SetDimensions(int32_t aWidth, int32_t aHeight) {
-  aWidth = std::max(1, aWidth);
-  aHeight = std::max(1, aHeight);
   const auto newSize = gfx::IntSize{aWidth, aHeight};
   if (newSize == mCanvasSize) return NS_OK;  // No-op no-change resizes.
 
@@ -346,8 +345,9 @@ bool CanvasContext::GetIsOpaque() {
 
 already_AddRefed<gfx::SourceSurface> CanvasContext::GetSurfaceSnapshot(
     gfxAlphaType* aOutAlphaType) {
+  const bool isOpaque = GetIsOpaque();
   gfx::SurfaceFormat snapshotFormat = mGfxFormat;
-  if (GetIsOpaque()) {
+  if (isOpaque) {
     if (aOutAlphaType) {
       *aOutAlphaType = gfxAlphaType::Opaque;
     }
@@ -376,11 +376,32 @@ already_AddRefed<gfx::SourceSurface> CanvasContext::GetSurfaceSnapshot(
   // The parent side needs to create a command encoder which will be submitted
   // and dropped right away so we create and release an encoder ID here.
   RawId encoderId = ffi::wgpu_client_make_encoder_id(mBridge->GetClient());
-  RefPtr<gfx::SourceSurface> snapshot =
+  RefPtr<gfx::DataSourceSurface> snapshot =
       cm->GetSnapshot(cm->Id(), mBridge->Id(), mRemoteTextureOwnerId,
                       Some(encoderId), snapshotFormat, /* aPremultiply */ false,
                       /* aYFlip */ false);
   ffi::wgpu_client_free_command_encoder_id(mBridge->GetClient(), encoderId);
+  if (!snapshot) {
+    return nullptr;
+  }
+
+  // Clear alpha channel to 0xFF / 1.0 for opaque contexts.
+  // https://www.w3.org/TR/webgpu/#abstract-opdef-get-a-copy-of-the-image-contents-of-a-context
+  if (isOpaque) {
+    gfx::DataSourceSurface::ScopedMap map(snapshot,
+                                          gfx::DataSourceSurface::WRITE);
+    if (!map.IsMapped()) {
+      return nullptr;
+    }
+
+    for (int32_t y = 0; y < snapshot->GetSize().height; y++) {
+      for (int32_t x = 0; x < snapshot->GetSize().width; x++) {
+        uint8_t* const pixel = map.GetData() + y * map.GetStride() + x * 4;
+        pixel[3] = 0xFF;
+      }
+    }
+  }
+
   return snapshot.forget();
 }
 

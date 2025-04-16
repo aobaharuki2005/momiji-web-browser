@@ -41,7 +41,7 @@ impl From<CloseType> for SessionCloseReason {
     }
 }
 
-pub trait ExtendedConnectEvents: Debug {
+pub(crate) trait ExtendedConnectEvents: Debug {
     fn session_start(
         &self,
         connect_type: ExtendedConnectType,
@@ -61,7 +61,7 @@ pub trait ExtendedConnectEvents: Debug {
 }
 
 #[derive(Debug, PartialEq, Copy, Clone, Eq)]
-pub enum ExtendedConnectType {
+pub(crate) enum ExtendedConnectType {
     WebTransport,
 }
 
@@ -82,7 +82,7 @@ impl ExtendedConnectType {
 impl From<ExtendedConnectType> for HSettingType {
     fn from(_type: ExtendedConnectType) -> Self {
         // This will change when we have more features using ExtendedConnectType.
-        HSettingType::EnableWebTransport
+        Self::EnableWebTransport
     }
 }
 

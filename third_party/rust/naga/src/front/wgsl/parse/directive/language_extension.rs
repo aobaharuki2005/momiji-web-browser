@@ -16,16 +16,16 @@ pub enum LanguageExtension {
 
 impl LanguageExtension {
     const READONLY_AND_READWRITE_STORAGE_TEXTURES: &'static str =
-    "readonly_and_readwrite_storage_textures";
+        "readonly_and_readwrite_storage_textures";
     const PACKED4X8_INTEGER_DOT_PRODUCT: &'static str = "packed_4x8_integer_dot_product";
     const UNRESTRICTED_POINTER_PARAMETERS: &'static str = "unrestricted_pointer_parameters";
     const POINTER_COMPOSITE_ACCESS: &'static str = "pointer_composite_access";
-    
+
     /// Convert from a sentinel word in WGSL into its associated [`LanguageExtension`], if possible.
     pub fn from_ident(s: &str) -> Option<Self> {
         Some(match s {
             Self::READONLY_AND_READWRITE_STORAGE_TEXTURES => Self::Unimplemented(
-            UnimplementedLanguageExtension::ReadOnlyAndReadWriteStorageTextures,
+                UnimplementedLanguageExtension::ReadOnlyAndReadWriteStorageTextures,
             ),
             Self::PACKED4X8_INTEGER_DOT_PRODUCT => {
                 Self::Unimplemented(UnimplementedLanguageExtension::Packed4x8IntegerDotProduct)
@@ -39,24 +39,24 @@ impl LanguageExtension {
             _ => return None,
         })
     }
-    
+
     /// Maps this [`LanguageExtension`] into the sentinel word associated with it in WGSL.
     pub const fn to_ident(self) -> &'static str {
-    match self {
-        Self::Implemented(kind) => kind.to_ident(),
-        Self::Unimplemented(kind) => match kind {
-            UnimplementedLanguageExtension::ReadOnlyAndReadWriteStorageTextures => {
-                Self::READONLY_AND_READWRITE_STORAGE_TEXTURES
-            }
-            UnimplementedLanguageExtension::Packed4x8IntegerDotProduct => {
-                Self::PACKED4X8_INTEGER_DOT_PRODUCT
-            }
-            UnimplementedLanguageExtension::UnrestrictedPointerParameters => {
-                Self::UNRESTRICTED_POINTER_PARAMETERS
-            }
-        },
+        match self {
+            Self::Implemented(kind) => kind.to_ident(),
+            Self::Unimplemented(kind) => match kind {
+                UnimplementedLanguageExtension::ReadOnlyAndReadWriteStorageTextures => {
+                    Self::READONLY_AND_READWRITE_STORAGE_TEXTURES
+                }
+                UnimplementedLanguageExtension::Packed4x8IntegerDotProduct => {
+                    Self::PACKED4X8_INTEGER_DOT_PRODUCT
+                }
+                UnimplementedLanguageExtension::UnrestrictedPointerParameters => {
+                    Self::UNRESTRICTED_POINTER_PARAMETERS
+                }
+            },
+        }
     }
-}
 }
 
 /// A variant of [`LanguageExtension::Implemented`].
@@ -68,17 +68,17 @@ pub enum ImplementedLanguageExtension {
 impl ImplementedLanguageExtension {
     /// Returns slice of all variants of [`ImplementedLanguageExtension`].
     pub const fn all() -> &'static [Self] {
-    Self::VARIANTS
-}
-
-/// Maps this [`ImplementedLanguageExtension`] into the sentinel word associated with it in WGSL.
-pub const fn to_ident(self) -> &'static str {
-match self {
-    ImplementedLanguageExtension::PointerCompositeAccess => {
-        LanguageExtension::POINTER_COMPOSITE_ACCESS
+        Self::VARIANTS
     }
-}
-}
+
+    /// Maps this [`ImplementedLanguageExtension`] into the sentinel word associated with it in WGSL.
+    pub const fn to_ident(self) -> &'static str {
+        match self {
+            ImplementedLanguageExtension::PointerCompositeAccess => {
+                LanguageExtension::POINTER_COMPOSITE_ACCESS
+            }
+        }
+    }
 }
 
 /// A variant of [`LanguageExtension::Unimplemented`].

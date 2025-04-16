@@ -40,7 +40,7 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_gfx.h"
-#include "mozilla/Telemetry.h"
+#include "mozilla/glean/GfxMetrics.h"
 #include "mozilla/gfx/2D.h"
 
 #include <unistd.h>
@@ -517,7 +517,7 @@ nsresult gfxMacPlatformFontList::InitFontListForPlatform() {
   // Here, we need to wait until it has finished its work.
   gfxPlatformMac::WaitForFontRegistration();
 
-  Telemetry::AutoTimer<Telemetry::MAC_INITFONTLIST_TOTAL> timer;
+  auto timer = glean::fontlist::dwritefont_delayedinit_total.Measure();
 
   InitSystemFontNames();
 

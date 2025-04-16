@@ -433,7 +433,7 @@ pub enum Http3StreamType {
 
 #[must_use]
 #[derive(Default, PartialEq, Eq, Debug)]
-pub enum ReceiveOutput {
+enum ReceiveOutput {
     #[default]
     NoOutput,
     ControlFrames(Vec<HFrame>),
@@ -441,11 +441,11 @@ pub enum ReceiveOutput {
     NewStream(NewStreamType),
 }
 
-pub trait Stream: Debug {
+trait Stream: Debug {
     fn stream_type(&self) -> Http3StreamType;
 }
 
-pub trait RecvStream: Stream {
+trait RecvStream: Stream {
     /// The stream reads data from the corresponding quic stream and returns `ReceiveOutput`.
     /// The function also returns true as the second parameter if the stream is done and
     /// could be forgotten, i.e. removed from all records.
@@ -485,7 +485,7 @@ pub trait RecvStream: Stream {
     }
 }
 
-pub trait HttpRecvStream: RecvStream {
+trait HttpRecvStream: RecvStream {
     /// This function is similar to the receive function and has the same output, i.e.
     /// a `ReceiveOutput` enum and bool. The bool is true if the stream is completely done
     /// and can be forgotten, i.e. removed from all records.
@@ -540,12 +540,12 @@ impl Http3StreamInfo {
     }
 }
 
-pub trait RecvStreamEvents: Debug {
+trait RecvStreamEvents: Debug {
     fn data_readable(&self, _stream_info: Http3StreamInfo) {}
     fn recv_closed(&self, _stream_info: Http3StreamInfo, _close_type: CloseType) {}
 }
 
-pub trait HttpRecvStreamEvents: RecvStreamEvents {
+trait HttpRecvStreamEvents: RecvStreamEvents {
     fn header_ready(
         &self,
         stream_info: Http3StreamInfo,
@@ -556,7 +556,7 @@ pub trait HttpRecvStreamEvents: RecvStreamEvents {
     fn extended_connect_new_session(&self, _stream_id: StreamId, _headers: Vec<Header>) {}
 }
 
-pub trait SendStream: Stream {
+trait SendStream: Stream {
     /// # Errors
     ///
     /// Error may occur during sending data, e.g. protocol error, etc.
@@ -607,7 +607,7 @@ pub trait SendStream: Stream {
     }
 }
 
-pub trait HttpSendStream: SendStream {
+trait HttpSendStream: SendStream {
     /// This function is used to supply headers to a http message. The
     /// function is used for request headers, response headers, 1xx response and
     /// trailers.
@@ -619,7 +619,7 @@ pub trait HttpSendStream: SendStream {
     fn set_new_listener(&mut self, _conn_events: Box<dyn SendStreamEvents>) {}
 }
 
-pub trait SendStreamEvents: Debug {
+trait SendStreamEvents: Debug {
     fn send_closed(&self, _stream_info: Http3StreamInfo, _close_type: CloseType) {}
     fn data_writable(&self, _stream_info: Http3StreamInfo) {}
 }
@@ -631,7 +631,7 @@ pub trait SendStreamEvents: Debug {
 ///                  that do not close the complete connection, e.g. unallowed headers.
 ///   `Done` - the stream was closed without an error.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum CloseType {
+enum CloseType {
     ResetApp(AppError),
     ResetRemote(AppError),
     LocalError(AppError),
