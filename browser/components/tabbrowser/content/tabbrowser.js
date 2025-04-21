@@ -457,6 +457,21 @@
         openWindowInfo = window.arguments[11];
       }
 
+      let extraOptions;
+      if (window.arguments?.[1] instanceof Ci.nsIPropertyBag2) {
+        extraOptions = window.arguments[1];
+      }
+
+      // If our opener provided a remoteType which was responsible for creating
+      // this pop-up window, we'll fall back to using that remote type when no
+      // other remote type is available.
+      let triggeringRemoteType;
+      if (extraOptions?.hasKey("triggeringRemoteType")) {
+        triggeringRemoteType = extraOptions.getPropertyAsACString(
+          "triggeringRemoteType"
+        );
+      }
+
       let tabArgument = gBrowserInit.getTabToAdopt();
 
       // If we have a tab argument with browser, we use its remoteType. Otherwise,
@@ -484,7 +499,7 @@
       } else if (openWindowInfo) {
         userContextId = openWindowInfo.originAttributes.userContextId;
         if (openWindowInfo.isRemote) {
-          remoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
+          remoteType = triggeringRemoteType ?? E10SUtils.DEFAULT_REMOTE_TYPE;
         } else {
           remoteType = E10SUtils.NOT_REMOTE;
         }
@@ -503,7 +518,7 @@
             uriToLoad,
             gMultiProcessBrowser,
             gFissionBrowser,
-            E10SUtils.DEFAULT_REMOTE_TYPE,
+            triggeringRemoteType ?? E10SUtils.DEFAULT_REMOTE_TYPE,
             null,
             oa
           );
@@ -513,6 +528,13 @@
           // initialization. We can't delay setting up the browser here, as that
           // would mean that `gBrowser.selectedBrowser` might not always exist,
           // which is the current assumption.
+
+          if (Cu.isInAutomation) {
+            ChromeUtils.releaseAssert(
+              !triggeringRemoteType,
+              "Unexpected triggeringRemoteType with no uriToLoad"
+            );
+          }
 
           // In this case we default to the privileged about process as that's
           // the best guess we can make, and we'll likely need it eventually.
@@ -2756,6 +2778,7 @@
           initialBrowsingContextGroupId,
           openWindowInfo,
           skipLoad,
+          triggeringRemoteType,
         }));
 
         if (focusUrlBar) {
@@ -3318,8 +3341,15 @@
         initialBrowsingContextGroupId,
         openWindowInfo,
         skipLoad,
+        triggeringRemoteType,
       }
     ) {
+      // If we don't have a preferred remote type (or it is `NOT_REMOTE`), and
+      // we have a remote triggering remote type, use that instead.
+      if (!preferredRemoteType && triggeringRemoteType) {
+        preferredRemoteType = triggeringRemoteType;
+      }
+
       // If we don't have a preferred remote type, and we have a remote
       // opener, use the opener's remote type.
       if (!preferredRemoteType && openerBrowser) {
@@ -4249,7 +4279,7 @@
       this.removeTabs(tabsToRemove, aParams);
     }
 
-    removeMultiSelectedTabs() {
+    removeMultiSelectedTabs({ telemetrySource } = {}) {
       let selectedTabs = this.selectedTabs;
       if (
         !this.warnAboutClosingTabs(
@@ -4260,7 +4290,7 @@
         return;
       }
 
-      this.removeTabs(selectedTabs);
+      this.removeTabs(selectedTabs, { telemetrySource });
     }
 
     /**
@@ -4304,6 +4334,7 @@
         skipPermitUnload,
         skipRemoves,
         skipSessionStore,
+        telemetrySource,
       }
     ) {
       // Note: if you change any of the unload algorithm, consider also
@@ -4386,6 +4417,7 @@
             prewarmed: true,
             skipPermitUnload,
             skipSessionStore,
+            telemetrySource,
           });
         }
       }
@@ -4507,6 +4539,7 @@
         skipPermitUnload = false,
         skipSessionStore = false,
         skipGroupCheck = false,
+        telemetrySource,
       } = {}
     ) {
       // When 'closeWindowWithLastTab' pref is enabled, closing all tabs
@@ -4553,6 +4586,7 @@
             skipPermitUnload,
             skipRemoves: false,
             skipSessionStore,
+            telemetrySource,
           });
 
         // Wait for all the beforeunload events to have been processed by content processes.
@@ -4613,6 +4647,7 @@
         closeWindowWithLastTab,
         prewarmed,
         skipSessionStore,
+        telemetrySource,
       } = {}
     ) {
       if (UserInteraction.running("browser.tabs.opening", window)) {
@@ -4650,6 +4685,7 @@
           closeWindowWithLastTab,
           prewarmed,
           skipSessionStore,
+          telemetrySource,
         })
       ) {
         Glean.browserTabclose.timeAnim.cancel(aTab._closeTimeAnimTimerId);
@@ -4737,6 +4773,7 @@
         skipPermitUnload,
         prewarmed,
         skipSessionStore = false,
+        telemetrySource,
       } = {}
     ) {
       if (aTab.closing || this._windowIsClosing) {
@@ -4884,7 +4921,7 @@
       // inspect the tab that's about to close.
       let evt = new CustomEvent("TabClose", {
         bubbles: true,
-        detail: { adoptedBy: adoptedByTab, skipSessionStore },
+        detail: { adoptedBy: adoptedByTab, skipSessionStore, telemetrySource },
       });
       aTab.dispatchEvent(evt);
 
@@ -6400,13 +6437,17 @@
      *          The new index of the tab
      */
     duplicateTab(aTab, aRestoreTabImmediately, aOptions) {
-      return SessionStore.duplicateTab(
+      let newTab = SessionStore.duplicateTab(
         window,
         aTab,
         0,
         aRestoreTabImmediately,
         aOptions
       );
+      if (aTab.group) {
+        Glean.tabgroup.tabInteractions.duplicate.add();
+      }
+      return newTab;
     }
 
     /**
@@ -9108,6 +9149,9 @@ var TabContextMenu = {
     let newIndex = this.contextTabs.at(-1)._tPos + 1;
     for (let tab of this.contextTabs) {
       let newTab = SessionStore.duplicateTab(window, tab);
+      if (tab.group) {
+        Glean.tabgroup.tabInteractions.duplicate.add();
+      }
       gBrowser.moveTabTo(newTab, { tabIndex: newIndex++ });
     }
   },
@@ -9175,9 +9219,14 @@ var TabContextMenu = {
 
   closeContextTabs() {
     if (this.contextTab.multiselected) {
-      gBrowser.removeMultiSelectedTabs();
+      gBrowser.removeMultiSelectedTabs({
+        telemetrySource: gBrowser.TabMetrics.METRIC_SOURCE.TAB_STRIP,
+      });
     } else {
-      gBrowser.removeTab(this.contextTab, { animate: true });
+      gBrowser.removeTab(this.contextTab, {
+        animate: true,
+        telemetrySource: gBrowser.TabMetrics.METRIC_SOURCE.TAB_STRIP,
+      });
     }
   },
 
