@@ -202,7 +202,7 @@ fn get_glyph_metrics(
 }
 
 #[link(name = "ApplicationServices", kind = "framework")]
-extern {
+extern "C" {
     static kCTFontVariationAxisIdentifierKey: CFStringRef;
     static kCTFontVariationAxisNameKey: CFStringRef;
     static kCTFontVariationAxisMinimumValueKey: CFStringRef;

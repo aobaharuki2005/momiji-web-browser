@@ -275,6 +275,7 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateBiPlanarSurface(
   if (!surfaceRef) {
     return nullptr;
   }
+
   SetIOSurfaceCommonProperties(surfaceRef, aColorSpace, aTransferFunction);
 
   RefPtr<MacIOSurface> ioSurface =

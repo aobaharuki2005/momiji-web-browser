@@ -40,7 +40,7 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_gfx.h"
-#include "mozilla/Telemetry.h"
+#include "mozilla/glean/GfxMetrics.h"
 #include "mozilla/gfx/2D.h"
 
 #include <unistd.h>
@@ -65,44 +65,44 @@ constexpr nsLiteralCString kDeprecatedFontFamilies[] = {
     // Dot-prefixed font families are supposed to be hidden from the
     // user-visible
     // font list anyhow, so we don't need to add them here.
-      ".Al Bayan PUA"_ns,
-      ".Al Nile PUA"_ns,
-      ".Al Tarikh PUA"_ns,
-      ".Apple Color Emoji UI"_ns,
-      ".Apple SD Gothic NeoI"_ns,
-      ".Aqua Kana"_ns,
-      ".Arial Hebrew Desk Interface"_ns,
-      ".Baghdad PUA"_ns,
-      ".Beirut PUA"_ns,
-      ".Damascus PUA"_ns,
-      ".DecoType Naskh PUA"_ns,
-      ".Diwan Kufi PUA"_ns,
-      ".Farah PUA"_ns,
-      ".Geeza Pro Interface"_ns,
-      ".Geeza Pro PUA"_ns,
-      ".Helvetica LT MM"_ns,
-      ".Hiragino Kaku Gothic Interface"_ns,
-      ".Hiragino Sans GB Interface"_ns,
-      ".Keyboard"_ns,
-      ".KufiStandardGK PUA"_ns,
-      ".LastResort"_ns,
-      ".Lucida Grande UI"_ns,
-      ".Muna PUA"_ns,
-      ".Nadeem PUA"_ns,
-      ".New York"_ns,
-      ".Noto Nastaliq Urdu UI"_ns,
-      ".PingFang HK"_ns,
-      ".PingFang SC"_ns,
-      ".PingFang TC"_ns,
-      ".Sana PUA"_ns,
-      ".Savoye LET CC."_ns,
-      ".SF Arabic"_ns,
-      ".SF Compact Rounded"_ns,
-      ".SF Compact"_ns,
-      ".SF NS Mono"_ns,
-      ".SF NS Rounded"_ns,
-      ".SF NS"_ns,
-      ".Times LT MM"_ns,
+    //  ".Al Bayan PUA"_ns,
+    //  ".Al Nile PUA"_ns,
+    //  ".Al Tarikh PUA"_ns,
+    //  ".Apple Color Emoji UI"_ns,
+    //  ".Apple SD Gothic NeoI"_ns,
+    //  ".Aqua Kana"_ns,
+    //  ".Arial Hebrew Desk Interface"_ns,
+    //  ".Baghdad PUA"_ns,
+    //  ".Beirut PUA"_ns,
+    //  ".Damascus PUA"_ns,
+    //  ".DecoType Naskh PUA"_ns,
+    //  ".Diwan Kufi PUA"_ns,
+    //  ".Farah PUA"_ns,
+    //  ".Geeza Pro Interface"_ns,
+    //  ".Geeza Pro PUA"_ns,
+    //  ".Helvetica LT MM"_ns,
+    //  ".Hiragino Kaku Gothic Interface"_ns,
+    //  ".Hiragino Sans GB Interface"_ns,
+    //  ".Keyboard"_ns,
+    //  ".KufiStandardGK PUA"_ns,
+    //  ".LastResort"_ns,
+    //  ".Lucida Grande UI"_ns,
+    //  ".Muna PUA"_ns,
+    //  ".Nadeem PUA"_ns,
+    //  ".New York"_ns,
+    //  ".Noto Nastaliq Urdu UI"_ns,
+    //  ".PingFang HK"_ns,
+    //  ".PingFang SC"_ns,
+    //  ".PingFang TC"_ns,
+    //  ".Sana PUA"_ns,
+    //  ".Savoye LET CC."_ns,
+    //  ".SF Arabic"_ns,
+    //  ".SF Compact Rounded"_ns,
+    //  ".SF Compact"_ns,
+    //  ".SF NS Mono"_ns,
+    //  ".SF NS Rounded"_ns,
+    //  ".SF NS"_ns,
+    //  ".Times LT MM"_ns,
     "Hiragino Kaku Gothic Pro"_ns,
     "Hiragino Kaku Gothic ProN"_ns,
     "Hiragino Kaku Gothic Std"_ns,
@@ -517,7 +517,7 @@ nsresult gfxMacPlatformFontList::InitFontListForPlatform() {
   // Here, we need to wait until it has finished its work.
   gfxPlatformMac::WaitForFontRegistration();
 
-  Telemetry::AutoTimer<Telemetry::MAC_INITFONTLIST_TOTAL> timer;
+  auto timer = glean::fontlist::dwritefont_delayedinit_total.Measure();
 
   InitSystemFontNames();
 
@@ -733,7 +733,7 @@ void gfxMacPlatformFontList::InitSingleFaceList() {
     nsAutoCString key(Substring(familyName, colon + 1));
     ToLowerCase(key);
     gfxFontFamily* family = mFontFamilies.GetWeak(key);
-    if (!family) {
+    if (!family || family->IsHidden()) {
       continue;
     }
     family->FindStyleVariations();

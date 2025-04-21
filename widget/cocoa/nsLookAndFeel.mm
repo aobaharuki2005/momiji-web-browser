@@ -377,14 +377,14 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       color =
           GetColorFromNSColor([NSColor.controlAlternatingRowBackgroundColors objectAtIndex:1]);
       break;
-    case ColorID::MozNativehyperlinktext:
+    case ColorID::Linktext:
       if (@available(macOS 10.10, *))
         color = GetColorFromNSColor(NSColor.linkColor);
       else
         // There appears to be no available system defined color. HARDCODING to the appropriate color.
         aColor = NS_RGB(0x14, 0x4F, 0xAE);
       break;
-    case ColorID::MozNativevisitedhyperlinktext:
+    case ColorID::Visitedtext:
       if (@available(macOS 10.10, *))
         color = GetColorFromNSColor(NSColor.systemPurpleColor);
       else {
