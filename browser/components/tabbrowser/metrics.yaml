@@ -79,6 +79,23 @@ browser.engagement:
         type: quantity
     expires: never
 
+  tab_unload_to_reload:
+    type: timing_distribution
+    description: >
+      How long (sec) a tab had been unloaded until it was reloaded.
+
+      This metric was generated to correspond to the Legacy Telemetry
+      exponential histogram TAB_UNLOAD_TO_RELOAD.
+    time_unit: second
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1715858
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1715858
+    notification_emails:
+      - tkikuchi@mozilla.com
+    expires: never
+    telemetry_mirror: TAB_UNLOAD_TO_RELOAD
+
 browser.ui.interaction:
   all_tabs_panel_dragstart_tab_event_count:
     type: counter
@@ -358,8 +375,10 @@ tabgroup:
       - sthompson@mozilla.com
     bugs:
       - https://bugzil.la/1938405
+      - https://bugzil.la/1960360
     data_reviews:
       - https://bugzil.la/1938405
+      - https://bugzil.la/1960360
     data_sensitivity:
       - interaction
     labels:
@@ -370,7 +389,42 @@ tabgroup:
       - close_tabstrip
       - close_tabmenu
       - reorder
+      - remove_same_window
+      - remove_other_window
+      - remove_new_window
     expires: never
+
+  group_interactions:
+    type: labeled_counter
+    description: >
+      Records interactions with tab groups: expand/collapse; rename, change
+      color; save/reopen/delete; ungroup tabs; open from tab menu/recent/
+      Awesomebar; move to another window
+    notification_emails:
+      - dao@mozilla.com
+      - jswinarton@mozilla.com
+      - sthompson@mozilla.com
+    bugs:
+      - https://bugzil.la/1938401
+    data_reviews:
+      - https://bugzil.la/1938401
+    data_sensitivity:
+      - interaction
+    labels:
+      - expand
+      - collapse
+      - rename
+      - change_color
+      - save
+      - reopen
+      - open_tabmenu
+      - open_recent
+      - open_suggest
+      - delete
+      - ungroup
+      - move_window
+    expires: never
+
 
   smart_tab_optin:
     type: event
@@ -403,8 +457,10 @@ tabgroup:
       - vbaungally@mozilla.com
     bugs:
       - https://bugzil.la/1949010
+      - https://bugzil.la/1961641
     data_reviews:
       - https://bugzil.la/1949010
+      - https://bugzil.la/1961641
     data_sensitivity:
       - interaction
     extra_keys:
@@ -433,6 +489,9 @@ tabgroup:
         type: string
       id:
         description: The ID of the created tab group
+        type: string
+      label_reason:
+        description: Whether the model suggested no label due to low probability or dissimilar tabs
         type: string
     expires: never
     no_lint:

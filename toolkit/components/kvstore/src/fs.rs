@@ -4,15 +4,9 @@
 
 use std::{borrow::Borrow, io, path::PathBuf};
 
-//alex's shim from crashreporter
-// Shim until min rust version 1.74 which allows std::io::Error::other
-fn error_other<E>(error: E) -> std::io::Error
-where
-    E: Into<Box<dyn std::error::Error + Send + Sync>>,
-{
-    std::io::Error::new(std::io::ErrorKind::Other, error)
-}
-
+/// A representation of a path as a wide character sequence that can
+/// contain unpaired surrogates.
+///
 /// A [`WidePathBuf`] can be created from an [`nsstring::nsAString`],
 /// and copied into an `[nsstring::nsString]`, without re-encoding.
 /// Unlike `ns{A}String`, [`WidePathBuf`] implements the built-in
@@ -26,12 +20,12 @@ impl WidePathBuf {
     pub fn new(wide: impl AsRef<[u16]>) -> Self {
         Self(wide.as_ref().into())
     }
-    
+
     /// Returns the wide character sequence in this [`WidePathBuf`].
     pub fn as_wide(&self) -> &[u16] {
         &self.0
     }
-    
+
     /// Returns the canonical, absolute form of a path, normalizing
     /// `/./` and `/../` components, symbolic links, and
     /// {drive, directory}-relative paths.
@@ -55,7 +49,7 @@ impl WidePathBuf {
                 ffi::{CStr, CString, OsString},
                 os::unix::prelude::*,
             };
-            let path = CString::new(String::from_utf16(&*self.0).map_err(error_other)?)?;
+            let path = CString::new(String::from_utf16(&*self.0).map_err(io::Error::other)?)?;
             let mut bytes = [0 as libc::c_char; libc::PATH_MAX as usize];
             let ptr = unsafe { libc::realpath(path.as_ptr(), bytes[..].as_mut_ptr()) };
             if ptr.is_null() {
@@ -72,12 +66,12 @@ impl WidePathBuf {
 // `String` or `str`.
 impl<T> PartialEq<T> for WidePathBuf
 where
-T: Borrow<str>,
+    T: Borrow<str>,
 {
     fn eq(&self, other: &T) -> bool {
         other
-        .borrow()
-        .encode_utf16()
-        .eq(self.as_wide().iter().copied())
+            .borrow()
+            .encode_utf16()
+            .eq(self.as_wide().iter().copied())
     }
 }

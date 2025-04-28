@@ -100,7 +100,7 @@ bool LoadOSClientCertsModule();
  *        same as where all of the other gecko libraries live.
  * @return true if the module was successfully loaded, false otherwise.
  */
-bool LoadIPCClientCertsModule();
+bool LoadIPCClientCertsModule(const nsCString& dir);
 
 /**
  * Unloads the loadable roots module and os client certs module, if loaded.

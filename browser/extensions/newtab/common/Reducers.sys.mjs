@@ -106,6 +106,7 @@ export const INITIAL_STATE = {
       visible: false,
       data: {},
     },
+    sectionPersonalization: {},
   },
   // Messages received from ASRouter to render in newtab
   Messages: {
@@ -894,17 +895,43 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
       return {
         ...prevState,
         showBlockSectionConfirmation: true,
-        sectionData: action.data,
+        sectionPersonalization: action.data,
       };
-    case at.REPORT_OPEN:
+    case at.REPORT_AD_OPEN:
       return {
         ...prevState,
         report: {
           ...prevState.report,
+          card_type: action.data?.card_type,
+          position: action.data?.position,
+          placement_id: action.data?.placement_id,
+          reporting_url: action.data?.reporting_url,
+          url: action.data?.url,
+          visible: true,
+        },
+      };
+    case at.REPORT_CONTENT_OPEN:
+      return {
+        ...prevState,
+        report: {
+          ...prevState.report,
+          card_type: action.data?.card_type,
+          corpus_item_id: action.data?.corpus_item_id,
+          is_section_followed: action.data?.is_section_followed,
+          received_rank: action.data?.received_rank,
+          recommended_at: action.data?.recommended_at,
+          scheduled_corpus_item_id: action.data?.scheduled_corpus_item_id,
+          section_position: action.data?.section_position,
+          section: action.data?.section,
+          title: action.data?.title,
+          topic: action.data?.topic,
+          url: action.data?.url,
           visible: true,
         },
       };
     case at.REPORT_CLOSE:
+    case at.REPORT_AD_SUBMIT:
+    case at.REPORT_CONTENT_SUBMIT:
       return {
         ...prevState,
         report: {
@@ -912,6 +939,8 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
           visible: false,
         },
       };
+    case at.SECTION_PERSONALIZATION_UPDATE:
+      return { ...prevState, sectionPersonalization: action.data };
     default:
       return prevState;
   }

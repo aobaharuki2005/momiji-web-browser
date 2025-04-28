@@ -836,8 +836,6 @@
   <string name="preferences_override_account_server">Sérsniðinn netþjónn fyrir Mozilla-aðganga</string>
   <!-- Preference to override the Sync token server -->
   <string name="preferences_override_sync_tokenserver">Sérsniðinn samstillingarþjónn</string>
-  <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
-  <string name="toast_override_account_sync_server_done">Mozilla-reikningi / samstillingarþjóni hefur verið breytt. Slekk á forritinu til að innleiða breytingar…</string>
   <!-- Preference category for account information -->
   <string name="preferences_category_account">Reikningur</string>
   <!-- Preference for changing where the AddressBar is positioned -->
@@ -1203,9 +1201,9 @@
   -->
   <string name="preference_gestures_website_pull_to_refresh">Dragðu til að endurlesa</string>
   <!-- Preference for using the dynamic toolbar -->
-  <string name="preference_gestures_dynamic_toolbar">Skrunaðu til að fela verkfæraslána</string>
+  <string name="preference_gestures_dynamic_toolbar">Skrunaðu til að fela verkfærastikuna</string>
   <!-- Preference for showing the opened tabs by swiping up on the toolbar -->
-  <string name="preference_gestures_swipe_toolbar_show_tabs">Strjúka verkfæraslánni upp til að opna flipa</string>
+  <string name="preference_gestures_swipe_toolbar_show_tabs">Strjúktu verkfærastikunni upp til að opna flipa</string>
   <!-- Preference for using the dynamic toolbars -->
   <string name="preference_gestures_dynamic_toolbar_2">Skrunaðu til að fela veffangastiku og verkfærastiku</string>
   <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
@@ -1223,7 +1221,7 @@
   <!-- Option in library to open Desktop Bookmarks "menu" page -->
   <string name="library_desktop_bookmarks_menu">Bókarmerkja valmynd</string>
   <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
-  <string name="library_desktop_bookmarks_toolbar">Bókamerkjaslá</string>
+  <string name="library_desktop_bookmarks_toolbar">Bókamerkjastika</string>
   <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
   <string name="library_desktop_bookmarks_unfiled">Önnur bókamerki</string>
   <!-- Option in Library to open History page -->
@@ -1529,9 +1527,9 @@
   <!-- Text to indicate that a download has failed to download. -->
   <string name="download_item_status_failed" tools:ignore="UnusedResources">Niðurhal mistókst</string>
   <!-- Placeholder text to indicate that users can use the search bar to search for a download. -->
-  <string name="download_search_placeholder" tools:ignore="UnusedResources">Leita í sóttum skrám</string>
+  <string name="download_search_placeholder">Leita í sóttum skrám</string>
   <!-- Text to indicate that no downloads match the search query. -->
-  <string name="download_search_no_results_found" tools:ignore="UnusedResources">Engar niðurstöður fundust</string>
+  <string name="download_search_no_results_found">Engar niðurstöður fundust</string>
   <!-- Text for the "Select all" button, which selects all downloaded items in the downloads list. -->
   <string name="download_select_all_items">Velja allt</string>
   <!--
@@ -2284,7 +2282,7 @@
   -->
   <string name="preference_etp_exceptions_icon_description">Tákn fyrir undantekningartilvik varðandi auka rakningarvernd</string>
   <!--
-    DNS Over HTTPS (DoH)
+    DNS over HTTPS (DoH)
 
     Preference title for DNS over HTTPS settings
   -->
@@ -3199,6 +3197,8 @@
   <string name="protection_panel_no_trackers_blocked">Engir rekjarar fundust</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings">Friðhelgi og öryggisstillingar</string>
+  <!-- Title text for the protection panel permissions section. -->
+  <string name="protection_panel_permissions_title">Heimildir</string>
   <!--
     Text for displaying the total number of trackers blocked in the trackers blocked panel.
     %d is a placeholder for the number of trackers blocked.

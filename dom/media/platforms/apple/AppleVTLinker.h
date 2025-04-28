@@ -14,6 +14,7 @@ extern "C" {
 }
 
 #include "nscore.h"
+#include "AppleUtils.h"
 
 namespace mozilla {
 

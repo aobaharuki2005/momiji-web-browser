@@ -190,6 +190,13 @@
         "always-show"
       );
 
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        "_sidebarPositionStart",
+        "sidebar.position_start",
+        true
+      );
+
       if (gMultiProcessBrowser) {
         this.tabbox.tabpanels.setAttribute("async", "true");
       }
@@ -861,7 +868,7 @@
           : event.screenY - window.screenY,
         scrollPos:
           this.verticalMode && tab.pinned
-            ? this.verticalPinnedTabsContainer.scrollTop
+            ? this.verticalPinnedTabsContainer.scrollPosition
             : this.arrowScrollbox.scrollPosition,
         screenX: event.screenX,
         screenY: event.screenY,
@@ -1385,7 +1392,10 @@
         let crossAxisPos = this.verticalMode ? event.screenX : event.screenY;
         let crossAxisStart, crossAxisEnd;
         if (this.verticalMode) {
-          if (RTL_UI) {
+          if (
+            (RTL_UI && this._sidebarPositionStart) ||
+            (!RTL_UI && !this._sidebarPositionStart)
+          ) {
             crossAxisStart = window.screenX + rect.right - 1.5 * rect.width;
             crossAxisEnd = window.screenX;
           } else {
@@ -2229,7 +2239,7 @@
       let translateX = screenX - dragData.screenX;
       let translateY = screenY - dragData.screenY;
       translateY +=
-        this.verticalPinnedTabsContainer.scrollTop - dragData.scrollPos;
+        this.verticalPinnedTabsContainer.scrollPosition - dragData.scrollPos;
       let firstBoundX = firstTabInRow.screenX - firstMovingTabScreenX;
       let firstBoundY = firstTabInRow.screenY - firstMovingTabScreenY;
       let lastBoundX =
@@ -2417,7 +2427,7 @@
           this.arrowScrollbox.scrollbox[scrollDirection] - dragData.scrollPos;
       } else if (isPinned && this.verticalMode) {
         translate +=
-          this.verticalPinnedTabsContainer.scrollTop - dragData.scrollPos;
+          this.verticalPinnedTabsContainer.scrollPosition - dragData.scrollPos;
       }
       // Constrain the range over which the moving tabs can move:
       // - for pinned tabs, between the first and last pinned tab

@@ -144,7 +144,7 @@ class nsWindow final : public nsBaseWidget,
   NS_INLINE_DECL_REFCOUNTING_INHERITED(nsWindow, nsBaseWidget)
   MOZ_DECLARE_REFCOUNTED_TYPENAME(nsWindow)
 
-  explicit nsWindow(bool aIsChildWindow = false);
+  nsWindow();
 
   void SendAnAPZEvent(mozilla::InputData& aEvent);
 
@@ -230,6 +230,7 @@ class nsWindow final : public nsBaseWidget,
   [[nodiscard]] nsresult GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
   LayoutDeviceIntRect GetClientBounds() override;
   LayoutDeviceIntPoint GetClientOffset() override;
+  LayoutDeviceIntSize GetSize() const;
   void SetCursor(const Cursor&) override;
   bool PrepareForFullscreenTransition(nsISupports** aData) override;
   void PerformFullscreenTransition(FullscreenTransitionStage aStage,
@@ -246,8 +247,7 @@ class nsWindow final : public nsBaseWidget,
   nsresult SetTitle(const nsAString& aTitle) override;
   void SetIcon(const nsAString& aIconSpec) override;
   LayoutDeviceIntPoint WidgetToScreenOffset() override;
-  LayoutDeviceIntSize ClientToWindowSize(
-      const LayoutDeviceIntSize& aClientSize) override;
+  LayoutDeviceIntMargin NormalSizeModeClientToWindowMargin() override;
   nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                          nsEventStatus& aStatus) override;
   void EnableDragDrop(bool aEnable) override;
@@ -294,7 +294,7 @@ class nsWindow final : public nsBaseWidget,
   InputContext GetInputContext() override;
   TextEventDispatcherListener* GetNativeTextEventDispatcherListener() override;
   void SetTransparencyMode(TransparencyMode aMode) override;
-  TransparencyMode GetTransparencyMode() override;
+  TransparencyMode GetTransparencyMode() override { return mTransparencyMode; }
   void SetCustomTitlebar(bool) override;
   void SetResizeMargin(mozilla::LayoutDeviceIntCoord aResizeMargin) override;
   void UpdateWindowDraggingRegion(
@@ -340,6 +340,8 @@ class nsWindow final : public nsBaseWidget,
   void SetBigIcon(HICON aIcon);
   void SetSmallIconNoData();
   void SetBigIconNoData();
+
+  void UpdateMicaBackdrop(bool aForce = false);
 
   static void SetIsRestoringSession(const bool aIsRestoringSession) {
     sIsRestoringSession = aIsRestoringSession;
@@ -552,7 +554,6 @@ class nsWindow final : public nsBaseWidget,
   bool UpdateNonClientMargins(bool aReflowWindow = true);
   void UpdateDarkModeToolbar();
   void ResetLayout();
-  nsAutoRegion ComputeNonClientHRGN();
   HWND GetOwnerWnd() const { return ::GetWindow(mWnd, GW_OWNER); }
   bool IsOwnerForegroundWindow() const {
     HWND owner = GetOwnerWnd();
@@ -605,12 +606,16 @@ class nsWindow final : public nsBaseWidget,
   bool OnGesture(WPARAM wParam, LPARAM lParam);
   bool OnTouch(WPARAM wParam, LPARAM lParam);
   bool OnHotKey(WPARAM wParam, LPARAM lParam);
-  bool OnPaint(uint32_t aNestingLevel);
+  bool OnPaint();
   void OnWindowPosChanging(WINDOWPOS* info);
   void OnWindowPosChanged(WINDOWPOS* wp);
   void OnSysColorChanged();
   void OnDPIChanged(int32_t x, int32_t y, int32_t width, int32_t height);
   bool OnPointerEvents(UINT msg, WPARAM wParam, LPARAM lParam);
+  bool OnPenPointerEvents(uint32_t aPointerId, UINT aMsg, WPARAM aWParam,
+                          LPARAM aLParam);
+  bool OnTouchPointerEvents(uint32_t aPointerId, UINT aMsg, WPARAM aWParam,
+                            LPARAM aLParam);
 
   /**
    * Function that registers when the user has been active (used for detecting
@@ -632,14 +637,6 @@ class nsWindow final : public nsBaseWidget,
       mozilla::Maybe<POINT> aEventPoint = mozilla::Nothing());
   static bool DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam,
                              LPARAM inLParam, LRESULT* outResult);
-
-  /**
-   * Window transparency helpers
-   */
-  void SetWindowTranslucencyInner(TransparencyMode aMode);
-  TransparencyMode GetWindowTranslucencyInner() const {
-    return mTransparencyMode;
-  }
   bool IsSimulatedClientArea(int32_t clientX, int32_t clientY);
   bool IsWindowButton(int32_t hitTestResult);
 
@@ -648,6 +645,9 @@ class nsWindow final : public nsBaseWidget,
   LayoutDeviceIntRegion GetOpaqueRegionForTesting() const override {
     return mOpaqueRegion;
   }
+  // Gets the translucent region, in client coordinates.
+  LayoutDeviceIntRegion GetTranslucentRegion();
+  void MaybeInvalidateTranslucentRegion();
 
   void SetColorScheme(const mozilla::Maybe<mozilla::ColorScheme>&) override;
   void SetMicaBackdrop(bool) override;
@@ -841,11 +841,15 @@ class nsWindow final : public nsBaseWidget,
 
   // Draggable titlebar region maintained by UpdateWindowDraggingRegion
   LayoutDeviceIntRegion mDraggableRegion;
-  // Opaque region maintained by UpdateOpaqueRegion
+  // Opaque region maintained by UpdateOpaqueRegion (relative to the client
+  // area).
   LayoutDeviceIntRegion mOpaqueRegion;
 
   // Graphics
   LayoutDeviceIntRect mLastPaintBounds;
+  // The region of the window we know is cleared to transparent already,
+  // in client coords.
+  LayoutDeviceIntRegion mClearedRegion;
 
   ResizeState mResizeState = NOT_RESIZING;
 
@@ -870,11 +874,11 @@ class nsWindow final : public nsBaseWidget,
   // Whether we're in the process of sending a WM_SETTEXT ourselves
   bool mSendingSetText = false;
 
-  // Whether we were created as a child window (aka ChildWindow) or not.
-  bool mIsChildWindow : 1;
-
   // Whether we're a PIP window.
   bool mPIPWindow : 1;
+
+  // Whether we are asked to render a mica backdrop.
+  bool mMicaBackdrop : 1;
 
   int32_t mCachedHitTestResult = 0;
 
@@ -932,10 +936,6 @@ class nsWindow final : public nsBaseWidget,
       mWindowBtnRect;
 
   mozilla::DataMutex<Desktop> mDesktopId;
-
-  // If set, indicates the non-client-area region must be cleared to black on
-  // next paint.
-  bool mNeedsNCAreaClear = false;
 
   friend class nsWindowGfx;
 

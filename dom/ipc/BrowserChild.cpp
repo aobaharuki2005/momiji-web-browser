@@ -285,6 +285,7 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mTriedBrowserInit(false),
       mHasValidInnerSize(false),
       mDestroyed(false),
+      mInAndroidPipMode(false),
       mIsTopLevel(aIsTopLevel),
       mIsTransparent(false),
       mIPCOpen(false),
@@ -1254,6 +1255,21 @@ mozilla::ipc::IPCResult BrowserChild::RecvKeyboardHeightChanged(
     presContext->UpdateKeyboardHeight(aHeight);
   }
 #endif
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BrowserChild::RecvAndroidPipModeChanged(bool aPipMode) {
+  if (mInAndroidPipMode == aPipMode) {
+    return IPC_OK();
+  }
+  mInAndroidPipMode = aPipMode;
+  if (RefPtr<Document> document = GetTopLevelDocument()) {
+    nsContentUtils::DispatchEventOnlyToChrome(
+        document, document,
+        aPipMode ? u"MozAndroidPipModeEntered"_ns
+                 : u"MozAndroidPipModeExited"_ns,
+        CanBubble::eYes, Cancelable::eNo, /* DefaultAction */ nullptr);
+  }
   return IPC_OK();
 }
 
@@ -3550,8 +3566,7 @@ nsresult BrowserChild::CanCancelContentJS(
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> currentURI = entry->GetURI();
-  if (!currentURI->SchemeIs("http") && !currentURI->SchemeIs("https") &&
-      !currentURI->SchemeIs("file")) {
+  if (!net::SchemeIsHttpOrHttps(currentURI) && !currentURI->SchemeIs("file")) {
     // Only cancel content JS for http(s) and file URIs. Other URIs are probably
     // internal and we should just let them run to completion.
     return NS_OK;

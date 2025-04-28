@@ -1815,7 +1815,7 @@ bool WebGLContext::ValidateAndInitFB(const WebGLFramebuffer* const fb,
 
 void WebGLContext::DoBindFB(const WebGLFramebuffer* const fb,
                             const GLenum target) const {
-  const GLenum driverFB = fb ? fb->mGLName : mDefaultFB->mFB;
+  const GLenum driverFB = fb ? fb->mGLName : (mDefaultFB ? mDefaultFB->mFB : 0);
   gl->fBindFramebuffer(target, driverFB);
 }
 

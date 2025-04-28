@@ -1889,6 +1889,19 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun `onPipModeChanged sets same enabled value`() {
+        whenever(geckoSession.compositorController).thenReturn(mock())
+        val engineSession = GeckoEngineSession(
+            mock(),
+            geckoSessionProvider = geckoSessionProvider,
+        )
+        engineSession.onPipModeChanged(true)
+        verify(geckoSession.compositorController).onPipModeChanged(true)
+        engineSession.onPipModeChanged(false)
+        verify(geckoSession.compositorController).onPipModeChanged(false)
+    }
+
+    @Test
     fun unsupportedSettings() {
         val settings = GeckoEngineSession(
             runtime,
@@ -2637,6 +2650,39 @@ class GeckoEngineSessionTest {
             )
         }
         ruleResult.complete(json)
+        shadowOf(getMainLooper()).idle()
+
+        assertTrue(onResultCalled)
+        assertFalse(onExceptionCalled)
+    }
+
+    @Test
+    fun `sendMoreWebCompatInfo should correctly process a GV response`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val testInfo = JSONObject().apply {
+            put("reason", "test-reason")
+            put("description", "test-description")
+            put("endpointUrl", "https://webcompat.com/issues/new")
+            put("reportUrl", "https://example.com")
+        }
+
+        val ruleResult = GeckoResult<Void>()
+        whenever(geckoSession.sendMoreWebCompatInfo(any())).thenReturn(ruleResult)
+
+        engineSession.sendMoreWebCompatInfo(
+            info = testInfo,
+            onResult = {
+                onResultCalled = true
+            },
+            onException = {
+                onExceptionCalled = true
+            },
+        )
+
+        ruleResult.complete(null)
         shadowOf(getMainLooper()).idle()
 
         assertTrue(onResultCalled)

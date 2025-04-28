@@ -12,6 +12,7 @@ use crate::std::{fs::File, path::Path, process::Child};
 use anyhow::Context;
 use std::io::Read;
 
+
 // Shim until min rust version 1.74 which allows std::io::Error::other
 fn error_other<E>(error: E) -> std::io::Error
 where
@@ -19,6 +20,7 @@ where
 {
     std::io::Error::new(std::io::ErrorKind::Other, error)
 }
+
 
 #[cfg(mock)]
 use crate::std::mock::{mock_key, MockKey};

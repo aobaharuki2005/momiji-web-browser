@@ -1775,20 +1775,15 @@ bool LoadUserModuleFromXul(const char* moduleName,
   return true;
 }
 
-extern "C" {
-// Extern function to call ipcclientcerts module C_GetFunctionList.
-// NSS calls it to obtain the list of functions comprising this module.
-// ppFunctionList must be a valid pointer.
-CK_RV IPCCC_GetFunctionList(CK_FUNCTION_LIST_PTR_PTR ppFunctionList);
-}  // extern "C"
-
-bool LoadIPCClientCertsModule() {
+bool LoadIPCClientCertsModule(const nsCString& dir) {
   // The IPC client certs module needs to be able to call back into gecko to be
   // able to communicate with the parent process over IPC. This is achieved by
-  // calling the external to Rust module functions DoSign and DoFindObjects.
-
-  if (!LoadUserModuleFromXul(kIPCClientCertsModuleName.get(),
-                             IPCCC_GetFunctionList)) {
+  // serializing the addresses of the relevant functions and passing them as an
+  // extra string parameter that will be available when C_Initialize is called
+  // on IPC client certs.
+  nsPrintfCString addrs("%p,%p", DoFindObjects, DoSign);
+  if (!LoadUserModuleAt(kIPCClientCertsModuleName.get(), "ipcclientcerts", dir,
+                        addrs.get())) {
     return false;
   }
   RunOnShutdown(
@@ -1811,12 +1806,6 @@ CK_RV OSClientCerts_C_GetFunctionList(CK_FUNCTION_LIST_PTR_PTR ppFunctionList);
 }  // extern "C"
 
 bool LoadOSClientCertsModule() {
-#ifdef MOZ_WIDGET_COCOA
-  // osclientcerts requires macOS 10.14 or later
-  if (!nsCocoaFeatures::OnMojaveOrLater()) {
-    return false;
-  }
-#endif
 // Corresponds to Rust cfg(any(
 //  target_os = "macos",
 //  target_os = "ios",

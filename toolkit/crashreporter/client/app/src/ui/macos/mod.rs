@@ -1162,7 +1162,7 @@ fn render_element(
                 }
                 {
                     let container = tv.textContainer();
-                    if macos_kernel_major_version() > Ok(MACOS_KERNEL_MAJOR_VERSION_LION) {
+                        if macos_kernel_major_version() > Ok(MACOS_KERNEL_MAJOR_VERSION_LION) {
                         container.setSize_(cocoa::NSSize {
                             width: f64::MAX,
                             height: f64::MAX,

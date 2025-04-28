@@ -373,7 +373,9 @@ partial interface Document {
 //  Mozilla extensions of various sorts
 partial interface Document {
   // @deprecated We are going to remove these (bug 1584269).
+  [Pref="dom.events.script_execute.enabled"]
   attribute EventHandler onbeforescriptexecute;
+  [Pref="dom.events.script_execute.enabled"]
   attribute EventHandler onafterscriptexecute;
 
   // Creates a new XUL element regardless of the document's default type.
@@ -382,6 +384,12 @@ partial interface Document {
   // Wether the document was loaded using a nsXULPrototypeDocument.
   [ChromeOnly]
   readonly attribute boolean loadedFromPrototype;
+
+  // Whether we're in android's Picture-in-Picture mode.
+  // Top level document only (for now, if we want to deal with iframes, please
+  // also fix bug 1959448 while at it).
+  [Func="Document::CallerIsSystemPrincipalOrWebCompatAddon"]
+  readonly attribute boolean inAndroidPipMode;
 
   // The principal to use for the storage area of this document
   [ChromeOnly]
@@ -551,7 +559,7 @@ partial interface Document {
 // webcompat extension the ability to request the storage access for a given
 // third party.
 partial interface Document {
-  [Func="Document::CallerCanAccessPrivilegeSSA", NewObject]
+  [Func="Document::CallerIsSystemPrincipalOrWebCompatAddon", NewObject]
   Promise<undefined> requestStorageAccessForOrigin(DOMString thirdPartyOrigin, optional boolean requireUserInteraction = true);
 };
 
@@ -752,3 +760,9 @@ partial interface Document {
 
 // https://github.com/w3c/csswg-drafts/pull/10767 for the name divergence in the spec
 callback ViewTransitionUpdateCallback = Promise<any> ();
+
+// https://wicg.github.io/sanitizer-api/#sanitizer-api
+partial interface Document {
+  [Throws, Pref="dom.security.sanitizer.enabled"]
+  static Document parseHTML(DOMString html, optional SetHTMLOptions options = {});
+};

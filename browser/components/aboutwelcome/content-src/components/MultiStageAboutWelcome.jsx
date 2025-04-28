@@ -327,6 +327,13 @@ export const MultiStageAboutWelcome = props => {
               }
               installedAddons={installedAddons}
               setInstalledAddons={setInstalledAddons}
+              addonId={props.addonId}
+              addonType={props.addonType}
+              addonName={props.addonName}
+              addonURL={props.addonURL}
+              addonIconURL={props.addonIconURL}
+              themeScreenshots={props.themeScreenshots}
+              isRtamo={currentScreen.content.isRtamo}
             />
           ) : null;
         })}
@@ -394,6 +401,7 @@ export const SecondaryCTA = props => {
       </Localized>
       <Localized text={props.content[targetElement].label}>
         <button
+          id="secondary_button"
           className={buttonStyling}
           value={targetElement}
           disabled={isDisabled(props.content.secondary_button?.disabled)}
@@ -510,21 +518,29 @@ export class WelcomeScreen extends React.PureComponent {
 
     let actionResult;
     if (["OPEN_URL", "SHOW_FIREFOX_ACCOUNTS"].includes(action.type)) {
-      actionResult = this.handleOpenURL(
-        action,
-        props.flowParams,
-        props.UTMTerm
-      );
+      this.handleOpenURL(action, props.flowParams, props.UTMTerm);
     } else if (action.type) {
-      actionResult = action.needsAwait
-        ? await AboutWelcomeUtils.handleUserAction(action)
-        : AboutWelcomeUtils.handleUserAction(action);
+      let actionPromise = AboutWelcomeUtils.handleUserAction(action);
+      if (action.needsAwait) {
+        actionResult = await actionPromise;
+      }
       if (action.type === "FXA_SIGNIN_FLOW") {
         AboutWelcomeUtils.sendActionTelemetry(
           props.messageId,
           actionResult ? "sign_in" : "sign_in_cancel",
           "FXA_SIGNIN_FLOW"
         );
+      }
+
+      if (action.type === "INSTALL_ADDON_FROM_URL") {
+        const url = props.addonURL;
+        if (!action.data) {
+          return;
+        }
+        // Set add-on url in action.data.url property from JSON
+        action.data = { ...action.data, url };
+
+        AboutWelcomeUtils.handleUserAction(action);
       }
       // Wait until migration closes to complete the action
       const hasMigrate = a =>
@@ -581,6 +597,15 @@ export class WelcomeScreen extends React.PureComponent {
 
     if (shouldDoBehavior(action.navigate)) {
       props.navigate();
+    }
+
+    // Used by FeatureCallout to advance screens by re-rendering the whole
+    // wrapper, updating anchor, page_event_listeners, etc. `navigate` only
+    // updates the inner content. Only implemented by FeatureCallout.
+    if (action.advance_screens) {
+      if (shouldDoBehavior(action.advance_screens.behavior ?? true)) {
+        window.AWAdvanceScreens?.(action.advance_screens);
+      }
     }
 
     if (shouldDoBehavior(action.dismiss)) {
@@ -692,6 +717,13 @@ export class WelcomeScreen extends React.PureComponent {
         forceHideStepsIndicator={this.props.forceHideStepsIndicator}
         ariaRole={this.props.ariaRole}
         aboveButtonStepsIndicator={this.props.aboveButtonStepsIndicator}
+        addonId={this.props.addonId}
+        addonType={this.props.addonType}
+        addonName={this.props.addonName}
+        addonURL={this.props.addonURL}
+        addonIconURL={this.props.addonIconURL}
+        themeScreenshots={this.props.themeScreenshots}
+        isRtamo={this.props.content.isRtamo}
       />
     );
   }

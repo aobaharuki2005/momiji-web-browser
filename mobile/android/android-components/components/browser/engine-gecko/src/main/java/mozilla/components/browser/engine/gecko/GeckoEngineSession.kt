@@ -609,6 +609,13 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.onPipModeChanged].
+     */
+    override fun onPipModeChanged(enabled: Boolean) {
+        geckoSession.compositorController.onPipModeChanged(enabled)
+    }
+
+    /**
      * See [EngineSession.checkForFormData].
      */
     override fun checkForFormData(adjustPriority: Boolean) {
@@ -679,6 +686,27 @@ class GeckoEngineSession(
             },
             { throwable ->
                 logger.error("Getting web compat info failed.", throwable)
+                onException(throwable)
+                GeckoResult()
+            },
+        )
+    }
+
+    /**
+     * See [EngineSession.sendMoreWebCompatInfo].
+     */
+    override fun sendMoreWebCompatInfo(
+        info: JSONObject,
+        onResult: () -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        geckoSession.sendMoreWebCompatInfo(info).then(
+            {
+                onResult()
+                GeckoResult<Void>()
+            },
+            { throwable ->
+                logger.error("Sending more web compat info failed.", throwable)
                 onException(throwable)
                 GeckoResult()
             },

@@ -113,7 +113,8 @@ xpcshell:
                     .*-asan.*/opt: 4
                     .*-ccov.*: 8
                     .*-tsan(-qr)?/opt: 10
-                    android-em-7.*: 2
+                    android.*/debug: 10
+                    android.*/opt: 5
                     macosx.*: 2
                     linux1804-64.*/opt: 2
                     default: 4
@@ -163,6 +164,12 @@ xpcshell:
                     - linux64-fix-stacks
                     - linux-python-dbusmock
                     - linux64-2204-dbus-python
+                linux2404.*:
+                    - linux64-node
+                    - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
+                    - linux-python-dbusmock
+                    - linux64-2404-dbus-python
                 macosx.*:
                     - macosx64-node
                     - macosx64-minidump-stackwalk

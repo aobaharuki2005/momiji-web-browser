@@ -639,6 +639,9 @@ export let BrowserUsageTelemetry = {
       case "TabGroupSaved":
         this._onTabGroupSave(event);
         break;
+      case "TabGroupUngroup":
+        this._onTabGroupUngroup(event);
+        break;
 
       case "unload":
         this._unregisterWindow(event.target);
@@ -1198,6 +1201,7 @@ export let BrowserUsageTelemetry = {
     win.addEventListener("TabGroupCollapse", this);
     win.addEventListener("TabGroupExpand", this);
     win.addEventListener("TabGroupSaved", this);
+    win.addEventListener("TabGroupUngroup", this);
 
     win.gBrowser.tabContainer.addEventListener(TAB_RESTORING_TOPIC, this);
     win.gBrowser.addTabsProgressListener(URICountListener);
@@ -1220,6 +1224,7 @@ export let BrowserUsageTelemetry = {
     win.removeEventListener("TabGroupCollapse", this);
     win.removeEventListener("TabGroupExpand", this);
     win.removeEventListener("TabGroupSaved", this);
+    win.removeEventListener("TabGroupUngroup", this);
 
     win.defaultView.gBrowser.tabContainer.removeEventListener(
       TAB_RESTORING_TOPIC,
@@ -1303,10 +1308,16 @@ export let BrowserUsageTelemetry = {
   },
 
   _onTabGroupSave(event) {
+    const { isUserTriggered } = event.detail;
+
     Glean.tabgroup.save.record({
-      user_triggered: event.detail.isUserTriggered,
+      user_triggered: isUserTriggered,
       id: event.target.id,
     });
+
+    if (isUserTriggered) {
+      Glean.tabgroup.groupInteractions.save.add(1);
+    }
 
     this._onTabGroupChange();
   },
@@ -1314,6 +1325,16 @@ export let BrowserUsageTelemetry = {
   _onTabGroupChange() {
     this._onTabGroupChangeTask.disarm();
     this._onTabGroupChangeTask.arm();
+  },
+
+  /**
+   * @param {CustomEvent} event `TabGroupUngroup` event
+   */
+  _onTabGroupUngroup(event) {
+    const { isUserTriggered } = event.detail;
+    if (isUserTriggered) {
+      Glean.tabgroup.groupInteractions.ungroup.add(1);
+    }
   },
 
   /**
@@ -1419,6 +1440,7 @@ export let BrowserUsageTelemetry = {
         id: event.target.id,
         source: telemetrySource,
       });
+      Glean.tabgroup.groupInteractions.delete.add(1);
     }
   },
 
@@ -1481,6 +1503,10 @@ export let BrowserUsageTelemetry = {
       previousTabState.tabIndex != currentTabState.tabIndex
     ) {
       Glean.tabgroup.tabInteractions.reorder.add();
+    }
+
+    if (previousTabState.tabGroupId && !currentTabState.tabGroupId) {
+      Glean.tabgroup.tabInteractions.remove_same_window.add();
     }
   },
 
@@ -1545,7 +1571,7 @@ export let BrowserUsageTelemetry = {
       tabCount !== undefined &&
       currentTime > this._lastRecordTabCount + MINIMUM_TAB_COUNT_INTERVAL_MS
     ) {
-      Services.telemetry.getHistogramById("TAB_COUNT").add(tabCount);
+      Glean.browserEngagement.tabCount.accumulateSingleSample(tabCount);
       this._lastRecordTabCount = currentTime;
     }
 
@@ -1554,9 +1580,9 @@ export let BrowserUsageTelemetry = {
       currentTime >
         this._lastRecordLoadedTabCount + MINIMUM_TAB_COUNT_INTERVAL_MS
     ) {
-      Services.telemetry
-        .getHistogramById("LOADED_TAB_COUNT")
-        .add(loadedTabCount);
+      Glean.browserEngagement.loadedTabCount.accumulateSingleSample(
+        loadedTabCount
+      );
       this._lastRecordLoadedTabCount = currentTime;
     }
   },
@@ -1582,17 +1608,7 @@ export let BrowserUsageTelemetry = {
 
   // Reports the number of Firefox profiles on this machine to telemetry.
   async reportProfileCount() {
-    if (
-      AppConstants.platform != "win" ||
-      !AppConstants.MOZ_TELEMETRY_REPORTING
-    ) {
-      // This is currently a windows-only feature.
-      // Also, this function writes directly to disk, without using the usual
-      // telemetry recording functions. So we excplicitly check if telemetry
-      // reporting was disabled at compile time, and we do not do anything in
-      // case.
-      return;
-    }
+    // Note: this is currently a windows-only feature.
 
     // To report only as much data as we need, we will bucket our values.
     // Rather than the raw value, we will report the greatest value in the list

@@ -482,6 +482,23 @@ const AVAILABLE_SHIMS = [
     name: "Google Publisher Tags",
     bug: "1713685",
     file: "google-publisher-tags.js",
+    notHosts: [
+      "13wham.com",
+      "wpde.com",
+      "krcrtv.com",
+      "nbcmontana.com",
+      "idahonews.com",
+      "wgme.com",
+      "wtov9.com",
+      "news3lv.com",
+      "devuploads.com",
+      "wjla.com",
+      "komonews.com",
+      "fox11online.com",
+      "cbs6albany.com",
+      "okcfox.co",
+      "turnto10.com",
+    ],
     matches: [
       "*://www.googletagservices.com/tag/js/gpt.js*",
       "*://pagead2.googlesyndication.com/tag/js/gpt.js*",
@@ -701,6 +718,23 @@ const AVAILABLE_SHIMS = [
       {
         js: "messengerLogin.js",
         matches: ["*://www.messenger.com/*"],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
+    id: "MicrosoftIcon",
+    name: "Microsoft Account Icon",
+    bug: "1728111",
+    contentScripts: [
+      {
+        js: "microsoftAccountIcon.js",
+        matches: [
+          "*://*.microsoft.com/*",
+          "*://*.bing.com/*",
+          "*://m365.cloud.microsoft/*",
+        ],
         runAt: "document_start",
       },
     ],
@@ -932,6 +966,34 @@ const AVAILABLE_SHIMS = [
     onlyIfDFPIActive: true,
   },
   {
+    id: "JiraZendeskSupport",
+    platform: "all",
+    name: "Jira Zendesk Support",
+    bug: "1774592",
+    contentScripts: [
+      {
+        js: "jira-zendesk-support.js",
+        matches: ["*://*.atlassian.net/*"],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
+    id: "ZendeskAsanaSupport",
+    platform: "all",
+    name: "Zendesk Asana Support",
+    bug: "1774567",
+    contentScripts: [
+      {
+        js: "zendesk-asana-support.js",
+        matches: ["*://*.zendesk.com/*"],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
     id: "emeraude.my.salesforce.com",
     platform: "all",
     name: "Salesforce IndexedDB Script Access",
@@ -1051,6 +1113,19 @@ const AVAILABLE_SHIMS = [
       "*://abs.twimg.com/*",
       "*://abs-0.twimg.com/*",
     ],
+  },
+  {
+    id: "AliExpressInternationalization",
+    name: "AliExpress Internationalization",
+    bug: "1912228",
+    contentScripts: [
+      {
+        js: "aliexpress-language.js",
+        matches: ["*://*.aliexpress.us/*"],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
   },
 ];
 

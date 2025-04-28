@@ -119,9 +119,7 @@ AwakeTimeStamp AwakeTimeStamp::Now() {
 #else
     return AwakeTimeStamp(clock_gettime_nsec_np(CLOCK_UPTIME_RAW) / kNSperUS);
 #endif
-
 }
-
 AwakeTimeStamp AwakeTimeStamp::NowLoRes() { return Now(); }
 
 #elif defined(XP_WIN)

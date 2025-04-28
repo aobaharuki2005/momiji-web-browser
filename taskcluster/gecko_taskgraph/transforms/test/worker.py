@@ -152,7 +152,6 @@ MACOSX_WORKER_TYPES = {
     "macosx1470-64": "t-osx-1400-r8",
     "macosx1100-64": "t-osx-1100-m1",
     "macosx1400-64": "t-osx-1400-m2",
-    "macosx1500-64": "t-osx-1500-m4",
     "macosx1100-aarch64": "t-osx-1100-m1",
     "macosx1500-aarch64": "t-osx-1500-m4",
 }
@@ -217,7 +216,9 @@ def set_worker_type(config, tasks):
                     task["mozharness"]["extra-options"].append("--requires-gpu")
 
             # now we have the right platform set the worker type accordingly
-            if task["instance-size"].startswith("large"):
+            if task["instance-size"].startswith("large") and test_platform.startswith(
+                "windows11-"
+            ):
                 task["worker-type"] = "win11-64-24h2-large"
             else:
                 task["worker-type"] = win_worker_type_platform[task["virtualization"]]

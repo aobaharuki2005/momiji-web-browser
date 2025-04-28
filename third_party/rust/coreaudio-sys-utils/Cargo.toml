@@ -33,8 +33,8 @@ version = "0.8"
 [dependencies.coreaudio-sys]
 version = "0.2.14"
 features = [
-"audio_unit",
-"core_audio",
-"io_kit_audio",
+    "audio_unit",
+    "core_audio",
+    "io_kit_audio",
 ]
 default-features = false

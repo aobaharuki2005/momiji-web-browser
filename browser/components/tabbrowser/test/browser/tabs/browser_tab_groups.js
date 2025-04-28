@@ -2,6 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const { ASRouterTriggerListeners } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/ASRouterTriggerListeners.sys.mjs"
+);
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 const { TabStateFlusher } = ChromeUtils.importESModule(
   "resource:///modules/sessionstore/TabStateFlusher.sys.mjs"
 );
@@ -507,6 +513,12 @@ add_task(async function test_tabGroupMoveToNewWindow() {
 });
 
 add_task(async function test_TabGroupEvents() {
+  const triggerHandler = sinon.stub();
+  const tabGroupCollapsedTrigger =
+    ASRouterTriggerListeners.get("tabGroupCollapsed");
+  tabGroupCollapsedTrigger.uninit();
+  tabGroupCollapsedTrigger.init(triggerHandler);
+
   let tab1 = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let tab2 = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let group;
@@ -539,6 +551,7 @@ add_task(async function test_TabGroupEvents() {
   let groupCollapsed = BrowserTestUtils.waitForEvent(group, "TabGroupCollapse");
   group.collapsed = true;
   await groupCollapsed;
+  Assert.ok(triggerHandler.calledOnce, "Called once after tab group collapsed");
 
   let groupExpanded = BrowserTestUtils.waitForEvent(group, "TabGroupExpand");
   group.collapsed = false;
@@ -564,6 +577,7 @@ add_task(async function test_TabGroupEvents() {
 
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
+  tabGroupCollapsedTrigger.uninit();
 });
 
 add_task(async function test_moveTabGroup() {
@@ -829,6 +843,11 @@ add_task(async function test_tabGroupContextMenuMoveTabToNewGroup() {
 
   Assert.ok(tab.group, "tab is in group");
   Assert.equal(tab.group.label, "", "tab group label is empty");
+  Assert.equal(
+    gBrowser.selectedTab.group?.id,
+    tab.group.id,
+    "A tab in the group is selected"
+  );
 
   await removeTabGroup(tab.group);
 });
@@ -1678,6 +1697,12 @@ add_task(async function test_tabsContainNoTabGroups() {
  * Tests behavior of the group management panel.
  */
 add_task(async function test_tabGroupCreatePanel() {
+  const triggerHandler = sinon.stub();
+  const tabGroupCreatedTrigger =
+    ASRouterTriggerListeners.get("tabGroupCreated");
+  tabGroupCreatedTrigger.uninit();
+  tabGroupCreatedTrigger.init(triggerHandler);
+
   let tabgroupEditor = document.getElementById("tab-group-editor");
   let tabgroupPanel = tabgroupEditor.panel;
   let nameField = tabgroupPanel.querySelector("#tab-group-name");
@@ -1716,7 +1741,15 @@ add_task(async function test_tabGroupCreatePanel() {
 
   info("New group should be removed after hitting Cancel");
   let panelHidden = BrowserTestUtils.waitForPopupEvent(tabgroupPanel, "hidden");
-  tabgroupPanel.querySelector("#tab-group-editor-button-cancel").click();
+  let cancelButton = tabgroupPanel.querySelector(
+    "#tab-group-editor-button-cancel"
+  );
+  if (AppConstants.platform == "macosx") {
+    cancelButton.click();
+  } else {
+    cancelButton.focus();
+    EventUtils.synthesizeKey("VK_RETURN");
+  }
   await panelHidden;
   Assert.ok(!tab.group, "Tab is ungrouped after hitting Cancel");
 
@@ -1763,8 +1796,14 @@ add_task(async function test_tabGroupCreatePanel() {
     "Panel should be dismissed after clicking Create and new group should remain"
   );
   panelHidden = BrowserTestUtils.waitForPopupEvent(tabgroupPanel, "hidden");
+  let done = BrowserTestUtils.waitForEvent(
+    tabgroupEditor,
+    "TabGroupCreateDone"
+  );
   tabgroupPanel.querySelector("#tab-group-editor-button-create").click();
   await panelHidden;
+  await done;
+  Assert.ok(triggerHandler.called, "Called after tab group created");
   Assert.equal(tabgroupPanel.state, "closed", "Tabgroup edit panel is closed");
   Assert.equal(group.label, "Shopping");
   Assert.equal(group.color, "red");
@@ -1812,6 +1851,7 @@ add_task(async function test_tabGroupCreatePanel() {
     EventUtils.synthesizeKey("VK_RETURN");
   }
   await Promise.all([panelHidden, removePromise]);
+  tabGroupCreatedTrigger.uninit();
 });
 
 async function createTabGroupAndOpenEditPanel(tabs = [], label = "") {
@@ -1996,6 +2036,11 @@ add_task(async function test_saveDisabledForUnimportantGroup() {
 });
 
 add_task(async function test_saveAndCloseGroup() {
+  const triggerHandler = sinon.stub();
+  const tabGroupSavedTrigger = ASRouterTriggerListeners.get("tabGroupSaved");
+  tabGroupSavedTrigger.uninit();
+  tabGroupSavedTrigger.init(triggerHandler);
+
   let tab = await addTab("about:mozilla");
   let { tabgroupEditor, group } = await createTabGroupAndOpenEditPanel(
     [tab],
@@ -2017,6 +2062,7 @@ add_task(async function test_saveAndCloseGroup() {
   saveAndCloseGroupButton.click();
   await Promise.all(events);
 
+  Assert.ok(triggerHandler.calledOnce, "Called once after tab group saved");
   Assert.ok(
     !gBrowser.getTabGroupById(group.id),
     "Group was removed from browser"
@@ -2026,6 +2072,7 @@ add_task(async function test_saveAndCloseGroup() {
   SessionStore.forgetSavedTabGroup(group.id);
 
   BrowserTestUtils.removeTab(tab);
+  tabGroupSavedTrigger.uninit();
 });
 
 add_task(async function test_saveAndCloseGroupViaMiddleClick() {
