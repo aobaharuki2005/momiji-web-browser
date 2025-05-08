@@ -152,6 +152,7 @@ MACOSX_WORKER_TYPES = {
     "macosx1470-64": "t-osx-1400-r8",
     "macosx1100-64": "t-osx-1100-m1",
     "macosx1400-64": "t-osx-1400-m2",
+    "macosx1500-64": "t-osx-1500-m4",
     "macosx1100-aarch64": "t-osx-1100-m1",
     "macosx1500-aarch64": "t-osx-1500-m4",
 }
@@ -174,16 +175,14 @@ def set_worker_type(config, tasks):
             task["worker-type"] = MACOSX_WORKER_TYPES["macosx1015-64"]
         elif test_platform.startswith("macosx1470-64"):
             task["worker-type"] = MACOSX_WORKER_TYPES["macosx1470-64"]
-        elif test_platform.startswith("macosx1100-64"):
-            task["worker-type"] = MACOSX_WORKER_TYPES["macosx1100-64"]
-        elif test_platform.startswith("macosx1100-aarch64"):
-            task["worker-type"] = MACOSX_WORKER_TYPES["macosx1100-aarch64"]
         elif test_platform.startswith("macosx1400-64"):
             task["worker-type"] = MACOSX_WORKER_TYPES["macosx1400-64"]
         elif test_platform.startswith("macosx1400-aarch64"):
             task["worker-type"] = MACOSX_WORKER_TYPES["macosx1400-aarch64"]
         elif test_platform.startswith("macosx1500-aarch64"):
             task["worker-type"] = MACOSX_WORKER_TYPES["macosx1500-aarch64"]
+        elif test_platform.startswith("macosx1500-64"):
+            task["worker-type"] = MACOSX_WORKER_TYPES["macosx1500-64"]
         elif test_platform.startswith("win"):
             # figure out what platform the job needs to run on
             if task["virtualization"] == "hardware":
@@ -239,7 +238,7 @@ def set_worker_type(config, tasks):
                 task["worker-type"] = "t-bitbar-gw-perf-s24"
         elif test_platform.startswith("android-hw-a55"):
             if task["suite"] != "raptor":
-                task["worker-type"] = "t-bitbar-gw-unit-a55"
+                task["worker-type"] = "t-lambda-perf-a55"
             else:
                 task["worker-type"] = "t-bitbar-gw-perf-a55"
         elif test_platform.startswith("android-em-7.0-x86"):

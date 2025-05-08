@@ -452,6 +452,11 @@ pref("browser.urlbar.scotchBonnet.enableOverride", true);
 pref("browser.urlbar.scotchBonnet.enableOverride", false);
 #endif
 
+// Once Perplexity has entered search mode at least once,
+// we no longer show the Perplexity onboarding callout.
+// This pref will be set to true when perplexity search mode is detected.
+pref("browser.urlbar.perplexity.hasBeenInSearchMode", false);
+
 // Whether or not Unified Search Button is shown always.
 pref("browser.urlbar.unifiedSearchButton.always", false);
 
@@ -1041,9 +1046,12 @@ pref("browser.tabs.groups.smart.enabled", true);
 pref("browser.tabs.groups.smart.enabled", false);
 #endif
 
-// KMEANS_WITH_ANCHOR or NEAREST_NEIGHBOR
+// KMEANS_WITH_ANCHOR or NEAREST_NEIGHBOR or LOGISTIC_REGRESSION
 pref("browser.tabs.groups.smart.suggestOtherTabsMethod", "NEAREST_NEIGHBOR");
-
+pref("browser.tabs.groups.smart.topicModelRevision", "latest");
+pref("browser.tabs.groups.smart.embeddingModelRevision", "latest");
+// value should be <= 1000 to be correctly converted (275 -> 0.275)
+pref("browser.tabs.groups.smart.nearestNeighborThresholdInt", 275);
 pref("browser.tabs.groups.smart.optin", false);
 
 pref("browser.tabs.dragDrop.createGroup.delayMS", 240);

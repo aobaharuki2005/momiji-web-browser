@@ -3254,8 +3254,12 @@ void BrowsingContext::SetGeolocationServiceOverride(
       mGeolocationServiceOverride->Init();
     }
     mGeolocationServiceOverride->Update(aGeolocationOverride.Value());
-  } else {
-    mGeolocationServiceOverride = nullptr;
+  } else if (RefPtr<nsGeolocationService> serviceOverride =
+                 mGeolocationServiceOverride.forget()) {
+    // Create an original service and move the locators.
+    RefPtr<nsGeolocationService> service =
+        nsGeolocationService::GetGeolocationService();
+    serviceOverride->MoveLocators(service);
   }
 }
 
