@@ -2369,6 +2369,10 @@ nsresult UnsetExceptionHandler() {
   dumpSafetyLock = nullptr;
 
   std::set_terminate(oldTerminateHandler);
+  if (gCrashHelperClient) {
+    crash_helper_shutdown(gCrashHelperClient);
+    gCrashHelperClient = nullptr;
+  }
 
   return NS_OK;
 }
