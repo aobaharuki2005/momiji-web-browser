@@ -897,8 +897,15 @@ bool GLContext::InitImpl() {
         maxTexSize = 4096;
         maxCubeSize = 512;
       } else if (mVendor == GLVendor::NVIDIA) {
-        // See bug 879656.  8192 fails, 8191 works.
-        maxTexSize = 8191;
+        if (nsCocoaFeatures::OnMountainLionOrLater()) {
+          // See bug 879656.  8192 fails, 8191 works.
+          mMaxTextureSize = std::min(mMaxTextureSize, 8191);
+          mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 8191);
+        } else {
+          // See bug 877949.
+          mMaxTextureSize = std::min(mMaxTextureSize, 4096);
+          mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 4096);
+        }
       }
     } else {
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1544446
