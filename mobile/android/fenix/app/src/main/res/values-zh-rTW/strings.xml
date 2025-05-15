@@ -114,11 +114,11 @@
 
     Text for the title displayed in the contextual feature recommendation popup promoting the navigation bar.
   -->
-  <string name="navbar_cfr_title">使用新的導航列，上網更快更方便</string>
+  <string name="navbar_cfr_title" moz:removedIn="140" tools:ignore="UnusedResources">使用新的導航列，上網更快更方便</string>
   <!-- Text for the message displayed in the contextual feature recommendation popup promoting the navigation bar. -->
-  <string name="navbar_cfr_message_2">瀏覽網頁時，這一列會自動隱藏，讓您有更多空間可瀏覽內容。</string>
+  <string name="navbar_cfr_message_2" moz:removedIn="140" tools:ignore="UnusedResources">瀏覽網頁時，這一列會自動隱藏，讓您有更多空間可瀏覽內容。</string>
   <!-- Text for the message displayed for the popup promoting the long press of navigation in the navigation bar. -->
-  <string name="navbar_navigation_buttons_cfr_message">長按箭頭，即可跳到此分頁紀錄中的其他頁面。</string>
+  <string name="navbar_navigation_buttons_cfr_message" moz:removedIn="140" tools:ignore="UnusedResources">長按箭頭，即可跳到此分頁紀錄中的其他頁面。</string>
   <!--
     Address bar swipe "contextual feature recommendation" (CFR)
 
@@ -629,7 +629,7 @@
   <!-- Terms of service sub header label. -->
   <string name="onboarding_terms_of_service_sub_header_2">又快又安全地上網</string>
   <!-- Terms of service onboarding page continue button label. -->
-  <string name="onboarding_term_of_service_agree_and_continue_button_label">同意並繼續</string>
+  <string name="onboarding_term_of_service_agree_and_continue_button_label" moz:removedIn="140" tools:ignore="UnusedResources">同意並繼續</string>
   <!-- Line one of the terms of service onboarding page. %1$s is replaced by an active link, using onboarding_term_of_service_line_one_link_text_2 as text (“Firefox Terms of Use”). -->
   <string name="onboarding_term_of_service_line_one_2">若繼續，代表您同意 %1$s。</string>
   <!-- Used as text for the link in onboarding_term_of_service_line_one_2. -->
@@ -1203,7 +1203,7 @@
   <!-- Preference for showing the opened tabs by swiping up on the toolbar -->
   <string name="preference_gestures_swipe_toolbar_show_tabs">向上滑動工具列來開新分頁</string>
   <!-- Preference for using the dynamic toolbars -->
-  <string name="preference_gestures_dynamic_toolbar_2">滑動即可隱藏網址列與工具列</string>
+  <string name="preference_gestures_dynamic_toolbar_2" moz:removedIn="140" tools:ignore="UnusedResources">滑動即可隱藏網址列與工具列</string>
   <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
   <string name="preference_gestures_swipe_toolbar_switch_tabs_2">橫向滑動網址列來切換分頁</string>
   <!--
@@ -1479,12 +1479,33 @@
   <string name="download_multi_select_title">已選擇 %1$d 個下載的檔案</string>
   <!-- Text for the button to remove a single download item -->
   <string name="download_delete_item_1">移除</string>
+  <!-- Title for the dialog that is shown when there is not enough storage space to download a file. -->
+  <string name="download_file_has_not_enough_storage_dialog_title">空間不足</string>
+  <!--
+    Message for the dialog that is shown when there is not enough storage space to download a file.
+    %s is the name of the file to download.
+  -->
+  <string name="download_file_has_not_enough_storage_dialog_message">此裝置空間不足，無法下載 &lt;b&gt;%s&lt;/b&gt;。</string>
+  <!--
+    Text for the confirm button in the dialog that is shown when there is not enough storage space to download a file.
+    This button will navigate the user to the device's storage management settings.
+  -->
+  <string name="download_file_has_not_enough_storage_dialog_confirm_button_text">管理檔案</string>
+  <!--
+    Text for the cancel button in the dialog that is shown when there is not enough storage space to download a file.
+    This button will dismiss the dialog.
+  -->
+  <string name="download_file_has_not_enough_storage_dialog_cancel_button_text">取消</string>
   <!-- Text for the button to delete a single downloaded file item -->
   <string name="download_delete_item">刪除</string>
   <!-- Content description for the toolbar "Navigate back" button -->
   <string name="download_navigate_back_description">瀏覽上一頁</string>
   <!-- Content description for the toolbar "Navigate up" button -->
   <string name="download_navigate_up_description" moz:removedIn="139" tools:ignore="UnusedResources">瀏覽上一頁</string>
+  <!-- Content description for the toolbar back button while searching the downloads -->
+  <string name="download_close_search_description">返回並結束搜尋</string>
+  <!-- Content description for the search bar clear text button on the downloads screen -->
+  <string name="download_clear_search_description">清除</string>
   <!-- Text for the button to share the download URL -->
   <string name="download_share_url">分享網址</string>
   <!-- Text for the button to share the download file -->

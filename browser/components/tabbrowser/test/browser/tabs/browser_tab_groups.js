@@ -67,22 +67,31 @@ add_task(async function test_tabGroupCreateAndAddTabAtPosition() {
 
 add_task(async function test_pinned() {
   let tab1 = BrowserTestUtils.addTab(gBrowser, "about:blank");
-  gBrowser.pinTab(tab1);
-  let group = gBrowser.addTabGroup([tab1]);
-  Assert.ok(
-    !group,
-    "addTabGroup shouldn't create a group when only supplied with pinned tabs"
-  );
-
   let tab2 = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  gBrowser.pinTab(tab1);
+  gBrowser.pinTab(tab2);
+  Assert.ok(tab1.pinned, "Tab1 is pinned");
+  Assert.ok(tab2.pinned, "Tab2 is pinned");
+  let group = gBrowser.addTabGroup([tab1, tab2]);
+  Assert.equal(
+    group.tabs.length,
+    2,
+    "addTabGroup creates a group when only supplied with pinned tabs"
+  );
+  Assert.ok(!tab1.pinned, "Tab1 is no longer pinned");
+  Assert.ok(!tab2.pinned, "Tab2 is no longer pinned");
+  group.ungroupTabs();
+  gBrowser.pinTab(tab1);
+  Assert.ok(tab1.pinned, "Tab1 is pinned again");
+
   group = gBrowser.addTabGroup([tab1, tab2]);
   Assert.ok(
     group,
     "addTabGroup should create a group when supplied with both pinned and non-pinned tabs"
   );
 
-  Assert.equal(group.tabs.length, 1, "group has only the non-pinned tab");
-  Assert.equal(group.tabs[0], tab2, "tab2 is in group");
+  Assert.equal(group.tabs.length, 2, "group contains both tabs");
+  Assert.ok(!tab1.pinned, "tab1 is no longer pinned");
 
   BrowserTestUtils.removeTab(tab1);
   await removeTabGroup(group);
@@ -1166,6 +1175,32 @@ add_task(async function test_tabGroupContextMenuMoveTabToGroupNewGroup() {
 
   await removeTabGroup(otherGroup);
   await removeTabGroup(tab.group);
+});
+
+/**
+ * Ensure group is positioned correctly when a pinned tab is grouped
+ */
+add_task(async function test_tabGroupContextMenuMovePinnedTabToNewGroup() {
+  let pinnedTab = await addTab("about:blank");
+  let pinnedUngroupedTab = await addTab("about:blank");
+  gBrowser.pinTab(pinnedTab);
+  gBrowser.pinTab(pinnedUngroupedTab);
+  await waitForAndAcceptGroupPanel(
+    async () =>
+      await withTabMenu(pinnedTab, async (_, moveTabToGroupItem) => {
+        moveTabToGroupItem
+          .querySelector("#context_moveTabToGroupNewGroup")
+          .click();
+      })
+  );
+  Assert.ok(!pinnedTab.pinned, "first pinned tab is no longer pinned");
+  Assert.ok(pinnedTab.group, "first pinned tab is grouped");
+  Assert.ok(
+    pinnedTab._tPos > pinnedUngroupedTab._tPos,
+    "pinned tab's group appears after the list of pinned tabs"
+  );
+  await removeTabGroup(pinnedTab.group);
+  BrowserTestUtils.removeTab(pinnedUngroupedTab);
 });
 
 /*

@@ -181,6 +181,22 @@ export class ChromeProfileMigrator extends MigratorBase {
     return false;
   }
 
+  /**
+   * For Chrome on Windows, we show a specialized flow for importing passwords
+   * from a CSV file.
+   *
+   * @returns {boolean}
+   */
+  get showsManualPasswordImport() {
+    // We show the CSV workflow on Windows, but _only_ in English locales, until
+    // bug 1965231 is closed.
+    return (
+      AppConstants.platform == "win" &&
+      this.constructor.key == "chrome" &&
+      Services.locale.appLocaleAsBCP47.startsWith("en")
+    );
+  }
+
   _keychainServiceName = "Chrome Safe Storage";
 
   _keychainAccountName = "Chrome";
@@ -240,9 +256,16 @@ export class ChromeProfileMigrator extends MigratorBase {
         ];
         if (lazy.ChromeMigrationUtils.supportsLoginsForPlatform) {
           possibleResourcePromises.push(
-            this._GetPasswordsResource(profileFolder),
-            this._GetPaymentMethodsResource(profileFolder)
+            this._GetPasswordsResource(profileFolder)
           );
+
+          // We no longer support importing payment methods from Chrome on
+          // Windows.
+          if (AppConstants.platform != "win") {
+            possibleResourcePromises.push(
+              this._GetPaymentMethodsResource(profileFolder)
+            );
+          }
         }
 
         // Some of these Promises might reject due to things like database

@@ -2437,6 +2437,16 @@
   value: true
   mirror: always
 
+- name: docshell.shistory.sameDocumentNavigationOverridesLoadType
+  type: bool
+  value: @IS_NOT_NIGHTLY_BUILD@
+  mirror: always
+
+- name: docshell.shistory.sameDocumentNavigationOverridesLoadType.forceDisable
+  type: String
+  value: ""
+  mirror: never
+
 #---------------------------------------------------------------------------
 # Prefs starting with "dom."
 #---------------------------------------------------------------------------
@@ -13353,6 +13363,12 @@
 - name: network.proxy.dhcp_wpad_timeout_sec
   type: AtomicFloat
   value: 5.0
+  mirror: always
+
+# When true, we only allow one outstanding GetPacFromDHCP runnable
+- name: network.proxy.dhcp_wpad_only_one_outstanding
+  type: RelaxedAtomicBool
+  value: true
   mirror: always
 
 # Allow CookieJarSettings to be unblocked for channels without a document.
