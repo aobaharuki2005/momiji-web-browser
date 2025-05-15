@@ -203,36 +203,26 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateBiPlanarSurface(
 
   if (aChromaSubsampling == ChromaSubsampling::HALF_WIDTH_AND_HEIGHT) {
     // 4:2:0 subsampling.
-    if (nsCocoaFeatures::OnMountainLionOrLater()) {
-      if (aColorDepth == ColorDepth::COLOR_8) {
-        if (aColorRange == ColorRange::LIMITED) {
-            AddDictionaryInt(
-                props, kIOSurfacePixelFormat,
-                (uint32_t)kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange);
-          } else {
-            AddDictionaryInt(
-                props, kIOSurfacePixelFormat,
-                (uint32_t)kCVPixelFormatType_420YpCbCr8BiPlanarFullRange);
-          }
+    if (aColorDepth == ColorDepth::COLOR_8) {
+      if (aColorRange == ColorRange::LIMITED) {
+        AddDictionaryInt(
+            props, kIOSurfacePixelFormat,
+            (uint32_t)kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange);
       } else {
-          if (aColorRange == ColorRange::LIMITED) {
-            AddDictionaryInt(
-                props, kIOSurfacePixelFormat,
-                (uint32_t)kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange);
-          } else {
-            AddDictionaryInt(
-                props, kIOSurfacePixelFormat,
-                (uint32_t)kCVPixelFormatType_420YpCbCr10BiPlanarFullRange);
-          }
+        AddDictionaryInt(
+            props, kIOSurfacePixelFormat,
+            (uint32_t)kCVPixelFormatType_420YpCbCr8BiPlanarFullRange);
       }
     } else {
-        if (aColorRange == ColorRange::LIMITED) {
-          AddDictionaryInt(props, kIOSurfacePixelFormat,
-                           (uint32_t)kCVPixelFormatType_422YpCbCr8_yuvs);
-        } else {
-          AddDictionaryInt(props, kIOSurfacePixelFormat,
-                           (uint32_t)kCVPixelFormatType_422YpCbCr8FullRange);
-        }
+      if (aColorRange == ColorRange::LIMITED) {
+        AddDictionaryInt(
+            props, kIOSurfacePixelFormat,
+            (uint32_t)kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange);
+      } else {
+        AddDictionaryInt(
+            props, kIOSurfacePixelFormat,
+            (uint32_t)kCVPixelFormatType_420YpCbCr10BiPlanarFullRange);
+      }
     }
   } else {
     // 4:2:2 subsampling. We can only handle 10-bit color.
@@ -567,18 +557,10 @@ ColorDepth MacIOSurface::GetColorDepth() const {
         case ColorDepth::COLOR_8:
           switch (aColorRange) {
             case ColorRange::LIMITED:
-              if(nsCocoaFeatures::OnMountainLionOrLater()) {
-                return Some(kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange);
-              } else {
-                return Some(kCVPixelFormatType_422YpCbCr8_yuvs);
-              }
+              return Some(kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange);
             case ColorRange::FULL:
-              if(nsCocoaFeatures::OnMountainLionOrLater()) {
-                return Some(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange);
-              } else {
-                return Some(kCVPixelFormatType_422YpCbCr8FullRange);
-              }
-            }
+              return Some(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange);
+          }
           break;
         case ColorDepth::COLOR_10:
         case ColorDepth::COLOR_12:
