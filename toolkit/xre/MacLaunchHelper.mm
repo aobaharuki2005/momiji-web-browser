@@ -88,7 +88,7 @@ void LaunchMacAppWithBundle(NSString* aBundlePath, NSArray* aArguments) {
       NSError *error=nil;
       [[NSWorkspace sharedWorkspace] launchApplicationAtURL:[NSBundle mainBundle].bundleURL
                                                     options:NSWorkspaceLaunchAsync|NSWorkspaceLaunchNewInstance
-                                              configuration:@{NSWorkspaceLaunchConfigurationArguments:aArguments}
+                                              configuration:@{NSWorkspaceLaunchConfigurationArguments:aArguments, NSWorkspaceLaunchConfigurationEnvironment:[[NSProcessInfo processInfo] environment]}
                                                       error:&error];
 
       }
