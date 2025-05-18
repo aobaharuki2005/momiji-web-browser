@@ -1481,7 +1481,7 @@
   -->
   <string name="download_multi_select_title">%1$d selezionâts</string>
   <!-- Text for the button to remove a single download item -->
-  <string name="download_delete_item_1">Gjave</string>
+  <string name="download_delete_item_1" moz:removedIn="138" tools:ignore="UnusedResources">Gjave</string>
   <!-- Text for the button to delete a single downloaded file item -->
   <string name="download_delete_item">Elimine</string>
   <!-- Text for the button to share the download URL -->
@@ -2288,8 +2288,6 @@
   <string name="preference_doh_summary">Il sisteme di risoluzion dai nons di domini (DNS) sore HTTPS al invie lis richiestis pai nons di domini a traviers di une conession cifrade, furnint un DNS sigûr e fasint in mût che al sedi plui dificil scuvierzi i sîts web che tu stâs par visitâ. %1$s</string>
   <!-- Used as text for the link in `preference_doh_title`, points to documentation about "DNS over HTTPS" -->
   <string name="preference_doh_learn_more">Plui informazions</string>
-  <!-- Content description for the toolbar "Navigate up" button -->
-  <string name="preference_doh_up_description">Navighe in sù</string>
   <!-- Content description for the "Exceptions" button -->
   <string name="preference_doh_exceptions_description">Ecezions</string>
   <!-- Content description for the "Info" button -->

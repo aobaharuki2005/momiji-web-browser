@@ -19,8 +19,12 @@ add_task(async function tabsGroups_move_onMoved() {
         browser.tabGroups.onCreated.addListener(group => {
           browser.test.sendMessage("created", group);
         });
-        browser.tabGroups.onRemoved.addListener(group => {
-          browser.test.sendMessage("removed", group);
+        browser.tabGroups.onRemoved.addListener((group, removeInfo) => {
+          let removed = { gid: group.id };
+          if (removeInfo.isWindowClosing) {
+            removed.isWindowClosing = true;
+          }
+          browser.test.sendMessage("removed", removed);
         });
         browser.tabGroups.onMoved.addListener(moved => {
           browser.test.sendMessage("moved", moved);
@@ -86,23 +90,19 @@ add_task(async function tabsGroups_move_onMoved() {
   await ext.awaitMessage("done");
   is(group.tabs[0], gBrowser.tabs[0], "Using same index 0 doesn't move.");
 
-  info("Create a large second group, and try to move in the middle of it.");
+  info("Create a large second group, and remove tabs in order.");
   let group4 = gBrowser.addTabGroup(gBrowser.tabs.slice(5));
   let created4 = await ext.awaitMessage("created");
   let gid4 = getExtTabGroupIdForInternalTabGroupId(group4.id);
   is(created4.id, gid4, "Correct group 4 created event.");
-
-  ext.sendMessage(gid, { index: 8 });
-  await Promise.all([ext.awaitMessage("done"), ext.awaitMessage("moved")]);
-  is(group.tabs[1], gBrowser.tabs[4], "Moved before the whole group instead.");
 
   for (let tab of tabs) {
     BrowserTestUtils.removeTab(tab);
   }
   let removed1 = await ext.awaitMessage("removed");
   let removed4 = await ext.awaitMessage("removed");
-  is(removed1.id, gid, "Correct group 1 removed event.");
-  is(removed4.id, gid4, "Correct group 4 removed event.");
+  Assert.deepEqual(removed1, { gid }, "Correct group 1 removed event.");
+  Assert.deepEqual(removed4, { gid: gid4 }, "Correct group 4 removed event.");
 
   info("Test moving a group from a non-private to a private window.");
   let win2 = await BrowserTestUtils.openNewBrowserWindow({ private: true });
@@ -116,6 +116,12 @@ add_task(async function tabsGroups_move_onMoved() {
   let error = await ext.awaitMessage("error");
   is(error, "Can't move groups between private and non-private windows");
   await BrowserTestUtils.closeWindow(win2);
+  let removed2 = await ext.awaitMessage("removed");
+  Assert.deepEqual(
+    removed2,
+    { gid: gid2, isWindowClosing: true },
+    "onRemoved for closed window containing group 2"
+  );
 
   info("Test moving a group to another window.");
   let win3 = await BrowserTestUtils.openNewBrowserWindow();
@@ -143,13 +149,13 @@ add_task(async function tabsGroups_move_onMoved() {
   is(created5.id, gid5, "Correct group 5 create event.");
   win3.gBrowser.removeTabGroup(group5);
   let removed5 = await ext.awaitMessage("removed");
-  is(removed5.id, gid5, "Correct group 5 removed event.");
+  Assert.deepEqual(removed5, { gid: gid5 }, "Correct group 5 removed event.");
 
   await BrowserTestUtils.closeWindow(win3);
   let group3b = gBrowser.getTabGroupById(group3.id);
   BrowserTestUtils.removeTab(group3b.tabs[0]);
   let removed3 = await ext.awaitMessage("removed");
-  is(removed3.id, gid3, "Correct group 3 removed event.");
+  Assert.deepEqual(removed3, { gid: gid3 }, "Correct group 3 removed event.");
 
   await ext.unload();
 });
