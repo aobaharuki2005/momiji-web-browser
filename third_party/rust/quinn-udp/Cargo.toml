@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.71"
 name = "quinn-udp"
-version = "0.5.10"
+version = "0.5.12"
 build = "build.rs"
 autolib = false
 autobins = false
@@ -24,14 +24,22 @@ description = "UDP sockets with ECN information for the QUIC transport protocol"
 readme = false
 keywords = ["quic"]
 categories = [
-    "network-programming",
-    "asynchronous",
+"network-programming",
+"asynchronous",
 ]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/quinn-rs/quinn"
 
 [package.metadata.docs.rs]
 all-features = true
+
+[features]
+default = [
+"tracing",
+"log",
+]
+direct-log = ["dep:log"]
+log = ["tracing/log"]
 
 [lib]
 name = "quinn_udp"
@@ -68,22 +76,14 @@ default-features = false
 [dev-dependencies.tokio]
 version = "1.28.1"
 features = [
-    "sync",
-    "rt",
-    "rt-multi-thread",
-    "net",
+"sync",
+"rt",
+"rt-multi-thread",
+"net",
 ]
 
 [build-dependencies.cfg_aliases]
 version = "0.2"
-
-[features]
-default = [
-    "tracing",
-    "log",
-]
-direct-log = ["dep:log"]
-log = ["tracing/log"]
 
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies.socket2]
 version = "0.5"
@@ -94,7 +94,7 @@ version = "1.19"
 [target."cfg(windows)".dependencies.windows-sys]
 version = ">=0.52, <=0.59"
 features = [
-    "Win32_Foundation",
-    "Win32_System_IO",
-    "Win32_Networking_WinSock",
+"Win32_Foundation",
+"Win32_System_IO",
+"Win32_Networking_WinSock",
 ]

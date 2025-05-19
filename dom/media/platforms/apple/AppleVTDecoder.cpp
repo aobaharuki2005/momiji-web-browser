@@ -253,15 +253,13 @@ void AppleVTDecoder::ProcessDecode(MediaRawData* aSample) {
 
 void AppleVTDecoder::ProcessShutdown() {
   if (mSession) {
-    LOG("%s: cleaning up session %p", __func__, mSession);
+    LOG("%s: cleaning up session", __func__);
     VTDecompressionSessionInvalidate(mSession);
-    CFRelease(mSession);
-    mSession = nullptr;
+    mSession.Reset();
   }
   if (mFormat) {
-    LOG("%s: releasing format %p", __func__, mFormat);
-    CFRelease(mFormat);
-    mFormat = nullptr;
+    LOG("%s: releasing format", __func__);
+    mFormat.Reset();
   }
 }
 
@@ -595,7 +593,7 @@ nsresult AppleVTDecoder::WaitForAsynchronousFrames() {
 MediaResult AppleVTDecoder::InitializeSession() {
   OSStatus rv;
 
-  AutoCFRelease<CFDictionaryRef> extensions = CreateDecoderExtensions();
+  AutoCFRelease<CFDictionaryRef> extensions(CreateDecoderExtensions());
   CMVideoCodecType streamType;
   if (mStreamType == StreamType::H264) {
     streamType = kCMVideoCodecType_H264;
@@ -609,25 +607,25 @@ MediaResult AppleVTDecoder::InitializeSession() {
 
   rv = CMVideoFormatDescriptionCreate(
       kCFAllocatorDefault, streamType, AssertedCast<int32_t>(mPictureWidth),
-      AssertedCast<int32_t>(mPictureHeight), extensions, &mFormat);
+      AssertedCast<int32_t>(mPictureHeight), extensions, mFormat.Receive());
   if (rv != noErr) {
     return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                        RESULT_DETAIL("Couldn't create format description!"));
   }
 
   // Contruct video decoder selection spec.
-  AutoCFRelease<CFDictionaryRef> spec = CreateDecoderSpecification();
+  AutoCFRelease<CFDictionaryRef> spec(CreateDecoderSpecification());
 
   // Contruct output configuration.
-  AutoCFRelease<CFDictionaryRef> outputConfiguration =
-      CreateOutputConfiguration();
+  AutoCFRelease<CFDictionaryRef> outputConfiguration(
+      CreateOutputConfiguration());
 
   VTDecompressionOutputCallbackRecord cb = {PlatformCallback, this};
   rv =
       VTDecompressionSessionCreate(kCFAllocatorDefault, mFormat,
                                    spec,  // Video decoder selection.
                                    outputConfiguration,  // Output video format.
-                                   &cb, &mSession);
+                                   &cb, mSession.Receive());
 
   if (rv != noErr) {
     LOG("AppleVTDecoder: VTDecompressionSessionCreate failed: %d", rv);

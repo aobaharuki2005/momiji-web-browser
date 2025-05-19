@@ -35,7 +35,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_layout.h"
-#include "mozilla/Telemetry.h"
 #include "gfxSVGGlyphs.h"
 #include "gfx2DGlue.h"
 
@@ -1834,7 +1833,7 @@ void gfxFontFamily::FindFontForChar(GlobalFontMatch* aMatchData) {
 
       fe = e;
       distance = WeightStyleStretchDistance(fe, aMatchData->mStyle);
-      if (aMatchData->mPresentation != eFontPresentation::Any) {
+      if (aMatchData->mPresentation != FontPresentation::Any) {
         RefPtr<gfxFont> font = fe->FindOrMakeFont(&aMatchData->mStyle);
         if (!font) {
           continue;
@@ -1889,7 +1888,7 @@ void gfxFontFamily::SearchAllFontsForChar(GlobalFontMatch* aMatchData) {
     gfxFontEntry* fe = mAvailableFonts[i];
     if (fe && fe->HasCharacter(aMatchData->mCh)) {
       float distance = WeightStyleStretchDistance(fe, aMatchData->mStyle);
-      if (aMatchData->mPresentation != eFontPresentation::Any) {
+      if (aMatchData->mPresentation != FontPresentation::Any) {
         RefPtr<gfxFont> font = fe->FindOrMakeFont(&aMatchData->mStyle);
         if (!font) {
           continue;

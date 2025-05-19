@@ -929,18 +929,18 @@ nsresult nsBaseWidget::MakeFullScreen(bool aFullScreen) {
 }
 
 nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
-    nsBaseWidget* aWidget, gfxContext* aTarget, BufferMode aDoubleBuffering)
+    nsBaseWidget* aWidget, gfxContext* aTarget)
     : mWidget(aWidget) {
   WindowRenderer* renderer = mWidget->GetWindowRenderer();
   if (renderer->AsFallback()) {
     mRenderer = renderer->AsFallback();
-    mRenderer->SetTarget(aTarget, aDoubleBuffering);
+    mRenderer->SetTarget(aTarget);
   }
 }
 
 nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup() {
   if (mRenderer) {
-    mRenderer->SetTarget(nullptr, mozilla::layers::BufferMode::BUFFER_NONE);
+    mRenderer->SetTarget(nullptr);
   }
 }
 
