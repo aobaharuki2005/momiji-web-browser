@@ -166,9 +166,21 @@ export const AboutNewTab = {
         // might not yet have refreshed the addon database cache yet, in which
         // case the addonPolicy will be null. In that case, we'll wait for the
         // database to be ready before proceeding.
+        //
+        // We don't always just wait for the databaseReady Promise to resolve
+        // in order to avoid regressing newtab render times by needlessly
+        // going back to the event loop.
         await lazy.AddonManagerPrivate.databaseReady;
+        addonPolicy = WebExtensionPolicy.getByID(BUILTIN_ADDON_ID);
+      }
+
+      if (!addonPolicy) {
+        // Something's gone very wrong here, and we should collect telemetry
+        // about it.
+        Glean.newtab.addonReadySuccess.set(false);
       } else {
         await addonPolicy.readyPromise;
+        Glean.newtab.addonReadySuccess.set(true);
       }
     } else {
       // We may have had the built-in addon installed in the past. Since the
@@ -177,7 +189,18 @@ export const AboutNewTab = {
       this.uninstallAddon();
     }
 
-    this.activityStream = new lazy.ActivityStream();
+    try {
+      this.activityStream = new lazy.ActivityStream();
+      Glean.newtab.activityStreamCtorSuccess.set(true);
+    } catch (error) {
+      // Send Activity Stream loading failure telemetry
+      // This probe will help to monitor if ActivityStream failure has crossed
+      // a threshold and send alert. See Bug 1965278
+      Glean.newtab.activityStreamCtorSuccess.set(false);
+      console.error(error);
+      throw error;
+    }
+
     try {
       this.activityStream.init();
       this._subscribeToActivityStream();

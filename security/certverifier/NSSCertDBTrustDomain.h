@@ -102,11 +102,6 @@ bool LoadOSClientCertsModule();
  */
 bool LoadIPCClientCertsModule(const nsCString& dir);
 
-/**
- * Unloads the loadable roots module and os client certs module, if loaded.
- */
-void UnloadUserModules();
-
 nsresult DefaultServerNicknameForCert(const CERTCertificate* cert,
                                       /*out*/ nsCString& nickname);
 

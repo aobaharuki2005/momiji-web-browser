@@ -506,7 +506,6 @@ void WebrtcVideoConduit::OnControlConfigChange() {
        rtpRtcpConfig != mControl.mConfiguredRecvRtpRtcpConfig)) {
     mControl.mConfiguredRecvCodecs = codecConfigList;
     mControl.mConfiguredRecvRtpRtcpConfig = rtpRtcpConfig;
-
     webrtc::VideoReceiveStreamInterface::Config::Rtp newRtp(
         mRecvStreamConfig.rtp);
     MOZ_ASSERT(newRtp == mRecvStreamConfig.rtp);
@@ -800,6 +799,7 @@ void WebrtcVideoConduit::OnControlConfigChange() {
         newRtp.payload_name = codecConfig->mName;
         newRtp.payload_type = codecConfig->mType;
         newRtp.rtcp_mode = rtpRtcpConfig->GetRtcpMode();
+        newRtp.extmap_allow_mixed = rtpRtcpConfig->GetExtmapAllowMixed();
         newRtp.max_packet_size = kVideoMtu;
         newRtp.rtx.payload_type = codecConfig->RtxPayloadTypeIsSet()
                                       ? codecConfig->mRTXPayloadType
@@ -1528,6 +1528,14 @@ void WebrtcVideoConduit::DeliverPacket(rtc::CopyOnWriteBuffer packet,
 void WebrtcVideoConduit::OnRtpReceived(webrtc::RtpPacketReceived&& aPacket,
                                        webrtc::RTPHeader&& aHeader) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
+
+  // We should only be handling packets on this conduit if we are set to receive them.
+  if (!mControl.mReceiving) {
+    // TODO: Create profiler marker for this and/or less noisy logging.
+    // CSFLogInfo(LOGTAG, "VideoConduit %p: Discarding packet SEQ# %u SSRC %u as not configured to receive.",
+    //   this, aPacket.SequenceNumber(), aHeader.ssrc);
+    return;
+  }
 
   mRemoteSendSSRC = aHeader.ssrc;
 

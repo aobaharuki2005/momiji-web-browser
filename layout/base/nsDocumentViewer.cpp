@@ -3275,13 +3275,13 @@ bool nsDocumentViewer::ShouldAttachToTopLevel() {
 #ifdef XP_MACOSX
   return false;
 #else
-#  ifdef DEBUG
+#ifdef DEBUG
   nsIWidgetListener* parentListener = mParentWidget->GetWidgetListener();
   MOZ_ASSERT(!parentListener || !parentListener->GetView(),
              "Expect a top level widget");
-#  endif
-  return true;
 #endif
+#endif
+  return true;
 }
 
 //------------------------------------------------------------

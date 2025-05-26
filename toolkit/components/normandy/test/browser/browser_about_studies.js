@@ -6,11 +6,8 @@ const { PreferenceExperiments } = ChromeUtils.importESModule(
 const { RecipeRunner } = ChromeUtils.importESModule(
   "resource://normandy/lib/RecipeRunner.sys.mjs"
 );
-const { ExperimentFakes } = ChromeUtils.importESModule(
+const { NimbusTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/NimbusTestUtils.sys.mjs"
-);
-const { ExperimentManager } = ChromeUtils.importESModule(
-  "resource://nimbus/lib/ExperimentManager.sys.mjs"
 );
 const { ExperimentAPI } = ChromeUtils.importESModule(
   "resource://nimbus/ExperimentAPI.sys.mjs"
@@ -646,11 +643,10 @@ decorate_task(
 );
 
 add_task(async function test_nimbus_about_studies_experiment() {
-  const recipe = ExperimentFakes.recipe("about-studies-foo");
-  await ExperimentManager.enroll(recipe);
-  const activeBranchSlug = ExperimentAPI.getActiveBranch({
-    slug: recipe.slug,
-  })?.slug;
+  const recipe = NimbusTestUtils.factories.recipe("about-studies-foo");
+  const {
+    branch: { slug: activeBranchSlug },
+  } = await ExperimentAPI.manager.enroll(recipe, "test");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:studies", activeBranchSlug },
     async browser => {
@@ -681,7 +677,7 @@ add_task(async function test_nimbus_about_studies_experiment() {
       );
     }
   );
-  ExperimentManager.unenroll(recipe.slug);
+  await ExperimentAPI.manager.unenroll(recipe.slug);
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:studies", activeBranchSlug },
     async browser => {
@@ -713,18 +709,20 @@ add_task(async function test_nimbus_about_studies_experiment() {
     }
   );
   // Cleanup for multiple test runs
-  ExperimentManager.store._deleteForTests(recipe.slug);
-  Assert.equal(ExperimentManager.store.getAll().length, 0, "Cleanup done");
+  ExperimentAPI.manager.store._deleteForTests(recipe.slug);
+  Assert.equal(ExperimentAPI.manager.store.getAll().length, 0, "Cleanup done");
 });
 
 add_task(async function test_nimbus_about_studies_rollout() {
-  let recipe = ExperimentFakes.recipe("test_nimbus_about_studies_rollout");
+  let recipe = NimbusTestUtils.factories.recipe(
+    "test_nimbus_about_studies_rollout"
+  );
   let rollout = {
     ...recipe,
     branches: [recipe.branches[0]],
     isRollout: true,
   };
-  await ExperimentManager.enroll(rollout);
+  await ExperimentAPI.manager.enroll(rollout, "test");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:studies" },
     async browser => {
@@ -779,7 +777,7 @@ add_task(async function test_nimbus_about_studies_rollout() {
     }
   );
   // Cleanup for multiple test runs
-  ExperimentManager.store._deleteForTests(rollout.slug);
+  ExperimentAPI.manager.store._deleteForTests(rollout.slug);
   Services.prefs.clearUserPref("nimbus.debug");
 });
 
@@ -802,7 +800,7 @@ add_task(async function test_forceEnroll() {
   let sandbox = sinon.createSandbox();
 
   // This simulates a succesful enrollment
-  let stub = sandbox.stub(RemoteSettingsExperimentLoader, "optInToExperiment");
+  let stub = sandbox.stub(ExperimentAPI, "optInToExperiment");
 
   await BrowserTestUtils.withNewTab(
     {
@@ -863,14 +861,16 @@ add_task(async function test_forceEnroll() {
 
   add_task(async function test_inactive_rollouts_under_completed_studies() {
     // Adds an active experiment and rollout
-    const experiment = ExperimentFakes.recipe("my-testing-experiment");
-    const rollout = ExperimentFakes.recipe("my-testing-rollout", {
+    const experiment = NimbusTestUtils.factories.recipe(
+      "my-testing-experiment"
+    );
+    const rollout = NimbusTestUtils.factories.recipe("my-testing-rollout", {
       isRollout: true,
     });
 
     // Enrolls in the experiment and rollout
-    await ExperimentManager.enroll(experiment);
-    await ExperimentManager.enroll(rollout);
+    await ExperimentAPI.manager.enroll(experiment, "test");
+    await ExperimentAPI.manager.enroll(rollout, "test");
 
     // Checks about:studies to ensure they are both in the active section
     await BrowserTestUtils.withNewTab(
@@ -907,8 +907,8 @@ add_task(async function test_forceEnroll() {
     );
 
     // Unenrolls from the experiment and rollout
-    ExperimentManager.unenroll(experiment.slug);
-    ExperimentManager.unenroll(rollout.slug);
+    await ExperimentAPI.manager.unenroll(experiment.slug);
+    await ExperimentAPI.manager.unenroll(rollout.slug);
 
     // Checks about:studies to ensure they are both in the inactive section
     await BrowserTestUtils.withNewTab(
@@ -945,8 +945,8 @@ add_task(async function test_forceEnroll() {
     );
 
     // Cleanup for multiple test runs
-    ExperimentManager.store._deleteForTests(experiment.slug);
-    ExperimentManager.store._deleteForTests(rollout.slug);
+    ExperimentAPI.manager.store._deleteForTests(experiment.slug);
+    ExperimentAPI.manager.store._deleteForTests(rollout.slug);
   });
 
   sandbox.restore();

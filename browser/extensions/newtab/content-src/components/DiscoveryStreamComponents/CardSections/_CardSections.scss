@@ -1,8 +1,25 @@
+// Bug 1964453: Some styles here may appear duplicative — due to @includes and media queries, certain rules are intentionally overwritten rather than relying on cascade behavior.
+
 @mixin section-card-small {
   grid-row: span 1;
   grid-column: span 1;
   padding: var(--space-large);
 
+  &.refined-cards.ds-card.sections-card-ui {
+    height: fit-content;
+  }
+
+  &.refined-cards {
+    .ds-card-link {
+      padding: var(--space-xsmall) var(--space-small);
+      flex-grow: 0;
+    }
+
+    .img-wrapper {
+      width: 110px;
+      height: 117px;
+    }
+  }
 
   &.ds-card.sections-card-ui {
     padding: unset;
@@ -19,7 +36,6 @@
     align-items: center;
     gap: var(--space-medium);
     padding: var(--space-large);
-
   }
 
   .img-wrapper {
@@ -44,7 +60,7 @@
   }
 
   &:not(.placeholder) {
-    .img-wrapper>.ds-image.img>img {
+    .img-wrapper > .ds-image.img > img {
       width: 100%;
       border-radius: var(--border-radius-medium) var(--border-radius-medium);
     }
@@ -73,8 +89,36 @@
   .card-stp-button-position-wrapper {
     inset-inline-end: 10px;
   }
-}
 
+  &.refined-cards {
+    .sections-card-footer {
+      max-width: 120px;
+    }
+
+    .card-stp-button-hover-background {
+      background: transparent;
+    }
+
+    .card-stp-button-position-wrapper {
+      // context menu should match the padding for the parent
+      inset-inline-end: var(--space-large);
+      inset-block-end: var(--space-large);
+    }
+
+    &:hover,
+    &:active,
+    &:focus-visible,
+    &.active {
+      .card-stp-thumbs-buttons-wrapper {
+        display: block;
+      }
+
+      .source-wrapper .source {
+        display: none;
+      }
+    }
+  }
+}
 
 @mixin section-card-medium {
   grid-row: span 2;
@@ -83,6 +127,27 @@
   padding: 0;
   align-items: initial;
   gap: initial;
+
+  &.refined-cards.ds-card.sections-card-ui {
+    height: unset;
+  }
+
+  // .refined-medium-card only appears if refinedCardsLayout.enabled pref is set to true
+  &.refined-cards {
+    .ds-card-link {
+      padding: unset;
+      flex-grow: 1;
+    }
+
+    .img-wrapper {
+      width: 100%;
+      height: 172px;
+    }
+  }
+
+  .card-stp-button-hover-background {
+    background: transparent;
+  }
 
   .card-stp-button-position-wrapper {
     inset-inline-end: 10px;
@@ -109,7 +174,7 @@
   }
 
   &:not(.placeholder) {
-    .img-wrapper>.ds-image.img>img {
+    .img-wrapper > .ds-image.img > img {
       border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
     }
   }
@@ -118,10 +183,12 @@
     padding: var(--space-medium) var(--space-large);
 
     .info-wrap {
+      flex-grow: initial;
+
       .title {
         -webkit-line-clamp: 3;
-        font-size: var(--font-size-root);
         margin-block: 0 var(--space-small);
+        font-size: var(--font-size-root);
       }
 
       .excerpt {
@@ -129,9 +196,37 @@
         -webkit-line-clamp: 3;
       }
     }
+
+    .sections-card-footer {
+      margin-top: auto;
+    }
+  }
+
+  &.refined-cards {
+    .sections-card-footer {
+      max-width: 230px;
+
+      .source-wrapper {
+        max-width: 175px;
+      }
+    }
+
+    .card-stp-button-position-wrapper {
+      // context menu should match the padding for the parent
+      inset-inline-end: var(--space-large);
+      inset-block-end: var(--space-medium);
+    }
+
+    &:hover,
+    &:active,
+    &:focus-visible,
+    &.active {
+      .source-wrapper .source {
+        display: block;
+      }
+    }
   }
 }
-
 
 // DS Large Card
 @mixin section-card-large {
@@ -139,8 +234,8 @@
   grid-column: span 2;
 
   &.ds-card.sections-card-ui {
-    @media ($break-point-layout-variant <= width < $break-point-widest ),
-      (min-width: $break-point-sections-variant ) {
+    @media ($break-point-layout-variant <= width < $break-point-widest),
+      (min-width: $break-point-sections-variant) {
       align-content: flex-start;
 
       .ds-card-link {
@@ -151,11 +246,14 @@
 
       .img-wrapper {
         width: 265px;
+        height: 100%;
       }
 
       .ds-image.img {
         // Square ratio
         aspect-ratio: 1/1;
+        width: 100%;
+        height: 100%;
 
         img {
           border-radius: var(--border-radius-medium);
@@ -182,6 +280,32 @@
 
       .card-stp-button-hover-background {
         inset-inline-start: 0;
+      }
+    }
+  }
+
+  &.refined-cards {
+    .sections-card-footer {
+      max-width: 225px;
+
+      .source-wrapper {
+        max-width: 170px;
+      }
+    }
+
+    .card-stp-button-hover-background {
+      background: transparent;
+    }
+
+    .card-stp-button-position-wrapper {
+      // context menu should match the padding for the parent
+      inset-inline-end: var(--space-xxlarge);
+      inset-block-end: var(--space-xxlarge);
+    }
+
+    &:hover {
+      .source-wrapper .source {
+        display: block;
       }
     }
   }
@@ -302,6 +426,7 @@
 
 .ds-section-wrapper {
   padding-inline: 0;
+  position: relative;
 
   .ds-section {
     padding-block-end: var(--space-medium);
@@ -336,10 +461,6 @@
       color: var(--newtab-contextual-text-primary-color);
       margin-block: var(--space-xsmall) 0;
       font-size: var(--font-size-root);
-
-      @media (min-width: $break-point-widest) {
-        font-size: 1rem // 16px
-      }
     }
   }
 
@@ -372,7 +493,7 @@
     }
 
     &.following:hover {
-      .section-button-following-text  {
+      .section-button-following-text {
         display: none;
       }
 
@@ -487,7 +608,6 @@
       }
     }
   }
-
 
   @media (min-width: $break-point-sections-variant) {
     grid-template-columns: repeat(4, 300px);

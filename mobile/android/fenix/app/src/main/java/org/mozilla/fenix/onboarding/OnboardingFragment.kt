@@ -19,9 +19,10 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
-import mozilla.components.concept.engine.webextension.InstallationMethod
+import kotlinx.coroutines.launch
 import mozilla.components.service.nimbus.evalJexlSafe
 import mozilla.components.service.nimbus.messaging.use
 import mozilla.components.support.base.log.logger.Logger
@@ -30,6 +31,7 @@ import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.components.initializeGlean
 import org.mozilla.fenix.components.lazyStore
@@ -45,13 +47,10 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.onboarding.store.DefaultOnboardingPreferencesRepository
-import org.mozilla.fenix.onboarding.store.OnboardingAction.OnboardingAddOnsAction
-import org.mozilla.fenix.onboarding.store.OnboardingAddonStatus
 import org.mozilla.fenix.onboarding.store.OnboardingPreferencesMiddleware
 import org.mozilla.fenix.onboarding.store.OnboardingStore
 import org.mozilla.fenix.onboarding.view.Caption
 import org.mozilla.fenix.onboarding.view.ManagePrivacyPreferencesDialogFragment
-import org.mozilla.fenix.onboarding.view.OnboardingAddOn
 import org.mozilla.fenix.onboarding.view.OnboardingPageUiData
 import org.mozilla.fenix.onboarding.view.OnboardingScreen
 import org.mozilla.fenix.onboarding.view.sequencePosition
@@ -119,7 +118,7 @@ class OnboardingFragment : Fragment() {
         super.onCreate(savedInstanceState)
         val context = requireContext()
         if (pagesToDisplay.isEmpty()) {
-            /* do not continue if there's no onboarding pages to display */
+            // do not continue if there's no onboarding pages to display
             onFinish(null)
         }
 
@@ -251,15 +250,8 @@ class OnboardingFragment : Fragment() {
                     pagesToDisplay.sequencePosition(OnboardingPageUiData.Type.ADD_SEARCH_WIDGET),
                 )
             },
-            onAddOnsButtonClick = {
-                telemetryRecorder.onAddOnsButtonClick(
-                    pagesToDisplay.telemetrySequenceId(),
-                    pagesToDisplay.sequencePosition(OnboardingPageUiData.Type.ADD_ONS),
-                )
-            },
             onFinish = {
                 onFinish(it)
-                disableNavBarCFRForNewUser()
                 enableSearchBarCFRForNewUser()
             },
             onImpression = {
@@ -275,7 +267,6 @@ class OnboardingFragment : Fragment() {
                 )
             },
             onboardingStore = onboardingStore,
-            onInstallAddOnButtonClick = { installUrl -> installAddon(installUrl) },
             termsOfServiceEventHandler = termsOfServiceEventHandler,
             onCustomizeToolbarClick = {
                 telemetryRecorder.onSelectToolbarPlacementClick(
@@ -313,40 +304,8 @@ class OnboardingFragment : Fragment() {
         )
     }
 
-    private fun installAddon(addOn: OnboardingAddOn) {
-        onboardingStore.dispatch(
-            OnboardingAddOnsAction.UpdateStatus(
-                addOnId = addOn.id,
-                status = OnboardingAddonStatus.INSTALLING,
-            ),
-        )
-        requireComponents.addonManager.installAddon(
-            url = addOn.installUrl,
-            installationMethod = InstallationMethod.ONBOARDING,
-            onSuccess = { addon ->
-                logger.info("Extension installed successfully")
-                telemetryRecorder.onAddOnInstalled(addon.id)
-                onboardingStore.dispatch(
-                    OnboardingAddOnsAction.UpdateStatus(
-                        addOnId = addOn.id,
-                        status = OnboardingAddonStatus.INSTALLED,
-                    ),
-                )
-            },
-            onError = { e ->
-                logger.error("Unable to install extension", e)
-                onboardingStore.dispatch(
-                    OnboardingAddOnsAction.UpdateStatus(
-                        addOn.id,
-                        status = OnboardingAddonStatus.NOT_INSTALLED,
-                    ),
-                )
-            },
-        )
-    }
-
     private fun onFinish(onboardingPageUiData: OnboardingPageUiData?) {
-        /* onboarding page UI data can be null if there was no pages to display */
+        // onboarding page UI data can be null if there was no pages to display
         if (onboardingPageUiData != null) {
             val sequenceId = pagesToDisplay.telemetrySequenceId()
             val sequencePosition = pagesToDisplay.sequencePosition(onboardingPageUiData.type)
@@ -360,12 +319,15 @@ class OnboardingFragment : Fragment() {
         requireComponents.fenixOnboarding.finish()
 
         val settings = requireContext().settings()
-        initializeGlean(
-            requireContext().applicationContext,
-            logger,
-            settings.isTelemetryEnabled,
-            requireComponents.core.client,
-        )
+        viewLifecycleOwner.lifecycleScope.launch {
+            initializeGlean(
+                requireContext().applicationContext,
+                logger,
+                settings.isTelemetryEnabled,
+                requireComponents.core.client,
+            )
+        }
+
         if (!settings.isTelemetryEnabled) {
             Pings.onboardingOptOut.setEnabled(true)
             Pings.onboardingOptOut.submit()
@@ -383,10 +345,6 @@ class OnboardingFragment : Fragment() {
             id = R.id.onboardingFragment,
             directions = OnboardingFragmentDirections.actionHome(),
         )
-    }
-
-    private fun disableNavBarCFRForNewUser() {
-        requireContext().settings().shouldShowNavigationBarCFR = false
     }
 
     private fun enableSearchBarCFRForNewUser() {
@@ -429,6 +387,7 @@ class OnboardingFragment : Fragment() {
                 showDefaultBrowserPage,
                 showNotificationPage,
                 showAddWidgetPage,
+                requireContext().isTabStripEnabled().not(),
                 jexlConditions,
             ) { condition -> jexlHelper.evalJexlSafe(condition) }
         }

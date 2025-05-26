@@ -1826,7 +1826,7 @@ class InlineOptionsBrowser extends HTMLElement {
       } else {
         // browser custom element does opt-in the delayConnectedCallback
         // behavior (see connectedCallback in the custom element definition
-        // from browser-custom-element.js) and so calling browser.loadURI
+        // from browser-custom-element.mjs) and so calling browser.loadURI
         // would fail if the about:addons document is not yet fully loaded.
         Promise.race([
           promiseEvent("DOMContentLoaded", document),
@@ -2318,10 +2318,11 @@ class AddonDetails extends HTMLElement {
       addon.type !== "sitepermission";
 
     // Set the add-on for the mlmodel details.
-    this.mlModelDetails = this.querySelector("addon-mlmodel-details");
-    this.mlModelDetails.addon = addon.type == "mlmodel" ? addon : null;
-    this.querySelector(".addon-detail-mlmodel").hidden =
-      addon.type != "mlmodel";
+    if (addon.type == "mlmodel") {
+      this.mlModelDetails = this.querySelector("addon-mlmodel-details");
+      this.mlModelDetails.setAddon(addon);
+      this.querySelector(".addon-detail-mlmodel").hidden = false;
+    }
 
     // Set the add-on for the preferences section.
     this.inlineOptions = this.querySelector("inline-options-browser");
@@ -2877,6 +2878,21 @@ class AddonCard extends HTMLElement {
       this.details.update();
     }
 
+    if (addon.type == "mlmodel") {
+      this.optionsButton.hidden = this.expanded;
+      const mlmodelHeaderAdditions = this.card.querySelector(
+        "mlmodel-card-header-additions"
+      );
+      mlmodelHeaderAdditions.setAddon(addon);
+      mlmodelHeaderAdditions.expanded = this.expanded;
+
+      const mlmodelListAdditions = this.card.querySelector(
+        "mlmodel-card-list-additions"
+      );
+      mlmodelListAdditions.setAddon(addon);
+      mlmodelListAdditions.expanded = this.expanded;
+    }
+
     this.sendEvent("update");
   }
 
@@ -2969,7 +2985,6 @@ class AddonCard extends HTMLElement {
     if (addon.type != "extension" && addon.type != "sitepermission") {
       this.card.querySelector(".extension-enable-button").remove();
     }
-
     let nameContainer = this.card.querySelector(".addon-name-container");
     let headingLevel = this.expanded ? "h1" : "h3";
     let nameHeading = document.createElement(headingLevel);

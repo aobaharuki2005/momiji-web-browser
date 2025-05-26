@@ -14,6 +14,7 @@
 #include "mozilla/RefPtr.h"
 
 #define GTEST_HAS_RTTI 0
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
 #include "CodecConfig.h"
@@ -23,6 +24,8 @@
 #include "jsep/JsepTrack.h"
 #include "jsep/JsepSession.h"
 #include "jsep/JsepSessionImpl.h"
+
+using testing::UnorderedElementsAre;
 
 namespace mozilla {
 MOZ_RUNINIT static std::string kAEqualsCandidate("a=candidate:");
@@ -1163,12 +1166,12 @@ class JsepSessionTest : public JsepSessionTestBase,
     }
 
    private:
-    typedef size_t Level;
-    typedef std::string TransportId;
-    typedef std::string Mid;
-    typedef std::string Candidate;
-    typedef std::string Address;
-    typedef uint16_t Port;
+    using Level = size_t;
+    using TransportId = std::string;
+    using Mid = std::string;
+    using Candidate = std::string;
+    using Address = std::string;
+    using Port = uint16_t;
     // Default candidates are put into the m-line, c-line, and rtcp
     // attribute for endpoints that don't support ICE.
     std::map<TransportId, std::map<ComponentType, std::pair<Address, Port>>>
@@ -1505,6 +1508,20 @@ class JsepSessionTest : public JsepSessionTestBase,
     }
   }
 
+ protected:
+  bool ExtmapAllowMixed(const JsepSessionImpl& aSession) {
+    if (aSession.mCurrentLocalDescription) {
+      return aSession.mCurrentLocalDescription->GetAttributeList().HasAttribute(
+          SdpAttribute::kExtmapAllowMixedAttribute);
+    }
+    if (aSession.mPendingLocalDescription) {
+      return aSession.mPendingLocalDescription->GetAttributeList().HasAttribute(
+          SdpAttribute::kExtmapAllowMixedAttribute);
+    }
+    return false;
+  }
+
+ private:
   std::string mLastError;
   SdpHelper mSdpHelper;
 
@@ -4958,55 +4975,65 @@ TEST_F(JsepSessionTest, TestUniqueReceivePayloadTypes) {
 
   ASSERT_FALSE(IsNull(offerTransceivers[0].mRecvTrack));
   ASSERT_TRUE(offerTransceivers[0].mRecvTrack.GetNegotiatedDetails());
-  ASSERT_EQ(
-      0U,
-      offerTransceivers[0].mRecvTrack.GetUniqueReceivePayloadTypes().size());
+  ASSERT_THAT(offerTransceivers[0].mRecvTrack.GetUniqueReceivePayloadTypes(),
+              UnorderedElementsAre());
+  ASSERT_THAT(offerTransceivers[0].mRecvTrack.GetDuplicateReceivePayloadTypes(),
+              UnorderedElementsAre(0, 8, 9, 101, 109));
 
   ASSERT_FALSE(IsNull(offerTransceivers[1].mRecvTrack));
   ASSERT_TRUE(offerTransceivers[1].mRecvTrack.GetNegotiatedDetails());
-  ASSERT_EQ(
-      0U,
-      offerTransceivers[1].mRecvTrack.GetUniqueReceivePayloadTypes().size());
+  ASSERT_THAT(offerTransceivers[1].mRecvTrack.GetUniqueReceivePayloadTypes(),
+              UnorderedElementsAre());
+  ASSERT_THAT(offerTransceivers[1].mRecvTrack.GetDuplicateReceivePayloadTypes(),
+              UnorderedElementsAre(0, 8, 9, 101, 109));
 
-  // First video transceiver is the only one receiving, so gets unique pts.
   ASSERT_FALSE(IsNull(offerTransceivers[2].mRecvTrack));
   ASSERT_TRUE(offerTransceivers[2].mRecvTrack.GetNegotiatedDetails());
-  ASSERT_NE(
-      0U,
-      offerTransceivers[2].mRecvTrack.GetUniqueReceivePayloadTypes().size());
+  ASSERT_THAT(offerTransceivers[2].mRecvTrack.GetUniqueReceivePayloadTypes(),
+              UnorderedElementsAre());
+  ASSERT_THAT(offerTransceivers[2].mRecvTrack.GetDuplicateReceivePayloadTypes(),
+              UnorderedElementsAre(97, 99, 103, 105, 120, 121, 122, 123, 126));
 
-  // First video transceiver is not receiving, so does not get unique pts.
   ASSERT_TRUE(IsNull(offerTransceivers[3].mRecvTrack));
   ASSERT_TRUE(offerTransceivers[3].mRecvTrack.GetNegotiatedDetails());
-  ASSERT_EQ(
-      0U,
-      offerTransceivers[3].mRecvTrack.GetUniqueReceivePayloadTypes().size());
+  ASSERT_THAT(offerTransceivers[3].mRecvTrack.GetUniqueReceivePayloadTypes(),
+              UnorderedElementsAre());
+  ASSERT_THAT(offerTransceivers[3].mRecvTrack.GetDuplicateReceivePayloadTypes(),
+              UnorderedElementsAre(97, 99, 103, 105, 120, 121, 122, 123, 126));
 
   ASSERT_FALSE(IsNull(answerTransceivers[0].mRecvTrack));
   ASSERT_TRUE(answerTransceivers[0].mRecvTrack.GetNegotiatedDetails());
-  ASSERT_EQ(
-      0U,
-      answerTransceivers[0].mRecvTrack.GetUniqueReceivePayloadTypes().size());
+  ASSERT_THAT(answerTransceivers[0].mRecvTrack.GetUniqueReceivePayloadTypes(),
+              UnorderedElementsAre());
+  ASSERT_THAT(
+      answerTransceivers[0].mRecvTrack.GetDuplicateReceivePayloadTypes(),
+      UnorderedElementsAre(0, 8, 9, 101, 109));
 
   ASSERT_FALSE(IsNull(answerTransceivers[1].mRecvTrack));
   ASSERT_TRUE(answerTransceivers[1].mRecvTrack.GetNegotiatedDetails());
-  ASSERT_EQ(
-      0U,
-      answerTransceivers[1].mRecvTrack.GetUniqueReceivePayloadTypes().size());
+  ASSERT_THAT(answerTransceivers[1].mRecvTrack.GetUniqueReceivePayloadTypes(),
+              UnorderedElementsAre());
+  ASSERT_THAT(
+      answerTransceivers[1].mRecvTrack.GetDuplicateReceivePayloadTypes(),
+      UnorderedElementsAre(0, 8, 9, 101, 109));
 
   // Answerer is receiving two video streams with the same payload types.
   // Neither recv track should have unique pts.
   ASSERT_FALSE(IsNull(answerTransceivers[2].mRecvTrack));
   ASSERT_TRUE(answerTransceivers[2].mRecvTrack.GetNegotiatedDetails());
-  ASSERT_EQ(
-      0U,
-      answerTransceivers[2].mRecvTrack.GetUniqueReceivePayloadTypes().size());
+  ASSERT_THAT(answerTransceivers[2].mRecvTrack.GetUniqueReceivePayloadTypes(),
+              UnorderedElementsAre());
+  ASSERT_THAT(
+      answerTransceivers[2].mRecvTrack.GetDuplicateReceivePayloadTypes(),
+      UnorderedElementsAre(97, 99, 103, 105, 120, 121, 122, 123, 126));
 
   ASSERT_FALSE(IsNull(answerTransceivers[3].mRecvTrack));
   ASSERT_TRUE(answerTransceivers[3].mRecvTrack.GetNegotiatedDetails());
-  ASSERT_EQ(
-      0U,
-      answerTransceivers[3].mRecvTrack.GetUniqueReceivePayloadTypes().size());
+  ASSERT_THAT(answerTransceivers[3].mRecvTrack.GetUniqueReceivePayloadTypes(),
+              UnorderedElementsAre());
+  ASSERT_THAT(
+      answerTransceivers[3].mRecvTrack.GetDuplicateReceivePayloadTypes(),
+      UnorderedElementsAre(97, 99, 103, 105, 120, 121, 122, 123, 126));
 }
 
 TEST_F(JsepSessionTest, UnknownFingerprintAlgorithm) {
@@ -7774,4 +7801,58 @@ TEST_F(JsepSessionTest, TestBundleSupportWithZeroPort) {
     ASSERT_TRUE(offerTransceiver.mSendTrack.GetActive());
   }
 }
+
+TEST_F(JsepSessionTest, ExtmapAllowMixedTrueWhenPrensentAtSessionLevel) {
+  AddTracks(*mSessionOff, "audio,video,datachannel");
+  AddTracks(*mSessionAns, "audio,video,datachannel");
+  std::string offer;
+  mSessionOff->CreateOffer(JsepOfferOptions(), &offer);
+
+  // Remove extmap-allow-mixed from the media level
+  ReplaceAll("a=extmap-allow-mixed\r\n", "", &offer);
+
+  // Add extmap-allow-mixed to the session level
+  Replace("m=audio", "a=extmap-allow-mixed\r\nm=audio", &offer);
+
+  mSessionOff->SetLocalDescription(kJsepSdpOffer, offer);
+  mSessionAns->SetRemoteDescription(kJsepSdpOffer, offer);
+
+  std::string answer;
+  mSessionAns->CreateAnswer(JsepAnswerOptions(), &answer);
+
+  mSessionOff->SetRemoteDescription(kJsepSdpAnswer, answer);
+  mSessionAns->SetLocalDescription(kJsepSdpAnswer, answer);
+
+  ASSERT_TRUE(ExtmapAllowMixed(*mSessionOff));
+  ASSERT_TRUE(ExtmapAllowMixed(*mSessionAns));
+
+  mSessionAns->ForEachTransceiver([](JsepTransceiver& aTransceiver) {
+    if (aTransceiver.mSendTrack.GetMediaType()) {
+      ASSERT_TRUE(aTransceiver.mSendTrack.GetNegotiatedDetails()
+                      ->GetRtpRtcpConfig()
+                      .GetExtmapAllowMixed());
+    }
+  });
+}
+
+TEST_F(JsepSessionTest, ExtmapAllowMixedCheckDoNotDefaultToSessionLevel) {
+  AddTracks(*mSessionOff, "audio,video,datachannel");
+  AddTracks(*mSessionAns, "audio,video,datachannel");
+
+  std::string offer;
+  mSessionOff->CreateOffer(JsepOfferOptions(), &offer);
+
+  mSessionOff->SetLocalDescription(kJsepSdpOffer, offer);
+  mSessionAns->SetRemoteDescription(kJsepSdpOffer, offer);
+
+  std::string answer;
+  mSessionAns->CreateAnswer(JsepAnswerOptions(), &answer);
+
+  mSessionOff->SetRemoteDescription(kJsepSdpAnswer, answer);
+  mSessionAns->SetLocalDescription(kJsepSdpAnswer, answer);
+
+  ASSERT_FALSE(ExtmapAllowMixed(*mSessionOff));
+  ASSERT_FALSE(ExtmapAllowMixed(*mSessionAns));
+}
+
 }  // namespace mozilla

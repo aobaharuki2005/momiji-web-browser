@@ -40,6 +40,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/SelectionMovementUtils.h"
+#include "mozilla/ServoStyleConsts.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -353,7 +354,8 @@ bool nsIFrame::CheckAndClearDisplayListState() {
 }
 
 bool nsIFrame::IsVisibleConsideringAncestors(uint32_t aFlags) const {
-  if (!StyleVisibility()->IsVisible()) {
+  if (!StyleVisibility()->IsVisible() ||
+      HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
     return false;
   }
 
@@ -538,9 +540,9 @@ static bool IsFontSizeInflationContainer(nsIFrame* aFrame,
   nsIContent* content = aFrame->GetContent();
   if (content && content->IsInNativeAnonymousSubtree()) {
     // Native anonymous content shouldn't be a font inflation root,
-    // except for the canvas custom content container.
-    nsCanvasFrame* canvas = aFrame->PresShell()->GetCanvasFrame();
-    return canvas && canvas->GetCustomContentContainer() == content;
+    // except for the custom content container.
+    return content ==
+           aFrame->PresContext()->Document()->GetCustomContentContainer();
   }
 
   LayoutFrameType frameType = aFrame->Type();
@@ -795,6 +797,23 @@ void nsIFrame::HandlePrimaryFrameStyleChange(ComputedStyle* aOldStyle) {
     }
   }
 
+  bool handleAnchorPosAnchorNameChange =
+      oldDisp ? oldDisp->mAnchorName != disp->mAnchorName
+              : disp->HasAnchorName();
+  if (handleAnchorPosAnchorNameChange &&
+      !HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
+    // TODO: Add invalidation.
+    // TODO: Only remove/add the necessary names below.
+    if (oldDisp && oldDisp->HasAnchorName()) {
+      for (auto& name : oldDisp->mAnchorName.AsSpan()) {
+        PresShell()->RemoveAnchorPosAnchor(name.AsAtom(), this);
+      }
+    }
+    for (auto& name : disp->mAnchorName.AsSpan()) {
+      PresShell()->AddAnchorPosAnchor(name.AsAtom(), this);
+    }
+  }
+
   const auto cv = disp->ContentVisibility(*this);
   if (!oldDisp || oldDisp->ContentVisibility(*this) != cv) {
     if (cv == StyleContentVisibility::Auto) {
@@ -869,6 +888,12 @@ void nsIFrame::Destroy(DestroyContext& aContext) {
     // AnimationsWithDestroyedFrame only lives during the restyling process.
     if (adf) {
       adf->Put(mContent, mComputedStyle);
+    }
+  }
+
+  if (HasAnchorPosName()) {
+    for (auto& name : disp->mAnchorName.AsSpan()) {
+      PresShell()->RemoveAnchorPosAnchor(name.AsAtom(), this);
     }
   }
 
@@ -3357,6 +3382,12 @@ void nsIFrame::BuildDisplayListForStackingContext(
       (DisplayPortUtils::IsFixedPosFrameInDisplayPort(this) ||
        BuilderHasScrolledClip(aBuilder));
 
+  // Root gets handled in
+  // ScrollContainerFrame::MaybeCreateTopLayerAndWrapRootItems.
+  const bool capturedByViewTransition =
+      HasAnyStateBits(NS_FRAME_CAPTURED_IN_VIEW_TRANSITION) &&
+      !style.IsRootElementStyle();
+
   nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
       aBuilder, this, visibleRect, dirtyRect, isTransformed);
 
@@ -3459,6 +3490,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
                                                           usingFilter);
     nsDisplayListBuilder::AutoInEventsOnly inEventsSetter(
         aBuilder, opacityItemForEventsOnly);
+    nsDisplayListBuilder::AutoEnterViewTransitionCapture
+        inViewTransitionCaptureSetter(aBuilder, capturedByViewTransition);
 
     // If we have a mask, compute a clip to bound the masked content.
     // This is necessary in case the content moves with an ancestor
@@ -3639,8 +3672,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
   }
 
   // FIXME: Ensure this is the right place to do this.
-  if (HasAnyStateBits(NS_FRAME_CAPTURED_IN_VIEW_TRANSITION) &&
-      StaticPrefs::dom_viewTransitions_live_capture()) {
+  if (capturedByViewTransition) {
     resultList.AppendNewToTop<nsDisplayViewTransitionCapture>(
         aBuilder, this, &resultList, containerItemASR, /* aIsRoot = */ false);
     createdContainer = true;
@@ -6494,6 +6526,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
       nscoord stretchBSize = nsLayoutUtils::ComputeStretchBSize(
           aCBSize.BSize(aWM), aMargin.BSize(aWM), aBorderPadding.BSize(aWM),
           stylePos->mBoxSizing);
+      // Note(dshin): This allocates.
       return AnchorResolvedSizeHelper::LengthPercentage(
           LengthPercentage::FromAppUnits(stretchBSize));
     }
@@ -7342,10 +7375,8 @@ void nsIFrame::DidReflow(nsPresContext* aPresContext,
 void nsIFrame::FinishReflowWithAbsoluteFrames(nsPresContext* aPresContext,
                                               ReflowOutput& aDesiredSize,
                                               const ReflowInput& aReflowInput,
-                                              nsReflowStatus& aStatus,
-                                              bool aConstrainBSize) {
-  ReflowAbsoluteFrames(aPresContext, aDesiredSize, aReflowInput, aStatus,
-                       aConstrainBSize);
+                                              nsReflowStatus& aStatus) {
+  ReflowAbsoluteFrames(aPresContext, aDesiredSize, aReflowInput, aStatus);
 
   FinishAndStoreOverflow(&aDesiredSize, aReflowInput.mStyleDisplay);
 }
@@ -7353,8 +7384,7 @@ void nsIFrame::FinishReflowWithAbsoluteFrames(nsPresContext* aPresContext,
 void nsIFrame::ReflowAbsoluteFrames(nsPresContext* aPresContext,
                                     ReflowOutput& aDesiredSize,
                                     const ReflowInput& aReflowInput,
-                                    nsReflowStatus& aStatus,
-                                    bool aConstrainBSize) {
+                                    nsReflowStatus& aStatus) {
   if (HasAbsolutelyPositionedChildren()) {
     nsAbsoluteContainingBlock* absoluteContainer = GetAbsoluteContainingBlock();
 
@@ -7373,10 +7403,8 @@ void nsIFrame::ReflowAbsoluteFrames(nsPresContext* aPresContext,
 
     nsRect containingBlock(0, 0, containingBlockWidth, containingBlockHeight);
     AbsPosReflowFlags flags =
-        AbsPosReflowFlags::CBWidthAndHeightChanged;  // XXX could be optimized
-    if (aConstrainBSize) {
-      flags |= AbsPosReflowFlags::ConstrainHeight;
-    }
+        AbsPosReflowFlags::CBWidthAndHeightChanged |  // XXX could be optimized
+        AbsPosReflowFlags::ConstrainHeight;
     absoluteContainer->Reflow(container, aPresContext, aReflowInput, aStatus,
                               containingBlock, flags,
                               &aDesiredSize.mOverflowAreas);
@@ -8646,6 +8674,13 @@ nsIFrame* nsIFrame::GetContainingBlock(
     f = f->GetParent();
   }
   return f;
+}
+
+nsIFrame* nsIFrame::FindAnchorPosAnchor(const nsAtom* aAnchorSpec) const {
+  if (!StyleDisplay()->IsAbsolutelyPositionedStyle()) {
+    return nullptr;
+  }
+  return PresShell()->GetAnchorPosAnchor(aAnchorSpec);
 }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -11948,10 +11983,10 @@ nsRect nsIFrame::GetCompositorHitTestArea(nsDisplayListBuilder* aBuilder) {
 CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
     nsDisplayListBuilder* aBuilder) {
   CompositorHitTestInfo result = CompositorHitTestInvisibleToHit;
-
-  if (aBuilder->IsInsidePointerEventsNoneDoc()) {
+  if (aBuilder->IsInsidePointerEventsNoneDoc() ||
+      aBuilder->IsInViewTransitionCapture()) {
     // Somewhere up the parent document chain is a subdocument with pointer-
-    // events:none set on it.
+    // events:none set on it, or we're getting captured in a view transition.
     return result;
   }
   if (!GetParent()) {

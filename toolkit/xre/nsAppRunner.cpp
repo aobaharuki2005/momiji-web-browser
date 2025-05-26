@@ -755,10 +755,6 @@ nsIXULRuntime::ContentWin32kLockdownState GetLiveWin32kLockdownState() {
   mozilla::EnsureWin32kInitialized();
   gfxPlatform::GetPlatform();
 
-  if (gSafeMode) {
-    return nsIXULRuntime::ContentWin32kLockdownState::DisabledBySafeMode;
-  }
-
   if (EnvHasValue("MOZ_ENABLE_WIN32K")) {
     return nsIXULRuntime::ContentWin32kLockdownState::DisabledByEnvVar;
   }
@@ -4507,6 +4503,12 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
     *aExitFlag = true;
     return 0;
   }
+
+#  ifdef MOZ_WIDGET_GTK
+  if (XRE_IsParentProcess()) {
+    widget::RegisterHostApp();
+  }
+#  endif
 #endif
 
   rv = XRE_InitCommandLine(gArgc, gArgv);

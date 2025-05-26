@@ -122,6 +122,7 @@ class WebCompatReporterSubmissionMiddleware(
     private fun setTabAntiTrackingMetrics(antiTracking: WebCompatInfoDto.WebCompatAntiTrackingDto) {
         BrokenSiteReportTabInfoAntitracking.blockList.set(antiTracking.blockList)
         BrokenSiteReportTabInfoAntitracking.btpHasPurgedSite.set(antiTracking.btpHasPurgedSite)
+        BrokenSiteReportTabInfoAntitracking.etpCategory.set(antiTracking.etpCategory)
         BrokenSiteReportTabInfoAntitracking.hasMixedActiveContentBlocked.set(
             antiTracking.hasMixedActiveContentBlocked,
         )
@@ -224,7 +225,7 @@ class WebCompatReporterSubmissionMiddleware(
 
     private fun setReasonMetrics(reason: WebCompatReporterState.BrokenSiteReason?) {
         reason?.let {
-            BrokenSiteReport.breakageCategory.set(reason.name)
+            BrokenSiteReport.breakageCategory.set(reason.name.lowercase())
         }
     }
 

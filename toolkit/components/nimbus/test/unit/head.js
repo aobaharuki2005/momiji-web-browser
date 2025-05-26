@@ -12,10 +12,9 @@ const {
   ExperimentAPI,
   NimbusFeatures,
 } = ChromeUtils.importESModule("resource://nimbus/ExperimentAPI.sys.mjs");
-const { ExperimentFakes, ExperimentTestUtils, NimbusTestUtils } =
-  ChromeUtils.importESModule(
-    "resource://testing-common/NimbusTestUtils.sys.mjs"
-  );
+const { NimbusTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/NimbusTestUtils.sys.mjs"
+);
 
 ChromeUtils.defineESModuleGetters(this, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
@@ -27,10 +26,6 @@ NimbusTestUtils.init(this);
 add_setup(function () {
   do_get_profile();
 });
-
-function assertEmptyStore(store) {
-  NimbusTestUtils.assert.storeIsEmpty(store);
-}
 
 /**
  * Assert the manager has no active pref observers.
@@ -47,9 +42,9 @@ function assertNoObservers(manager) {
     "There should be no active pref observers"
   );
   Assert.equal(
-    manager._prefFlips._prefs.size,
+    manager._prefFlips._registeredPrefCount,
     0,
-    "There should be no prefFlips feature observers"
+    "There should be no prefFlips pref observers"
   );
 }
 

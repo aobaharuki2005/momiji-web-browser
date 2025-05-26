@@ -21,6 +21,7 @@ internal fun bookmarksReducer(state: BookmarksState, action: BookmarksAction) = 
     is BookmarksLoaded -> state.copy(
         currentFolder = action.folder,
         bookmarkItems = action.bookmarkItems.sortedWith(state.sortOrder.comparator),
+        isLoading = false,
     )
     is RecursiveSelectionCountLoaded -> state.copy(recursiveSelectedCount = action.count)
     is BookmarkLongClicked -> state.toggleSelectionOf(action.item)
@@ -242,6 +243,7 @@ private fun BookmarksState.handleSortMenuAction(action: BookmarksListMenuAction.
         BookmarksListMenuAction.SortMenu.SortMenuDismissed -> copy(
             sortMenuShown = false,
         )
+        BookmarksListMenuAction.SortMenu.CustomSortClicked -> copy(sortOrder = BookmarksListSortOrder.Positional)
         BookmarksListMenuAction.SortMenu.NewestClicked -> copy(
             sortOrder = BookmarksListSortOrder.Created(true),
         )
@@ -316,6 +318,7 @@ private fun BookmarksState.handleListMenuAction(action: BookmarksListMenuAction)
                 destination = currentFolder.guid,
             ),
         )
+        is BookmarksListMenuAction.SelectAll -> copy(selectedItems = bookmarkItems)
         is BookmarksListMenuAction.SortMenu -> handleSortMenuAction(action)
         else -> this
     }.let { updatedState ->

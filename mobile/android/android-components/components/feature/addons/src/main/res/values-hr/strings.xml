@@ -49,7 +49,7 @@
   <!-- Description for declarativeNetRequest permission. -->
   <string name="mozac_feature_addons_permissions_declarative_net_request_description">Blokiraj sadržaj na svim stranicama</string>
   <!-- Description for declarativeNetRequestFeedback permission. -->
-  <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Pročitaj svoju povijest pretraživanja</string>
+  <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Pročitaj svoju povijest pregledavanja</string>
   <!-- Description for downloads permission. -->
   <string name="mozac_feature_addons_permissions_downloads_description">Preuzmi datoteke i pročitaj i promijeni povijest preuzimanja preglednika</string>
   <!-- Description for downloads_open permission. -->
@@ -82,6 +82,10 @@
   <string name="mozac_feature_addons_permissions_user_scripts_description">Dozvoli neprovjerenim skriptama trećih strana pristup tvojim podacima</string>
   <!-- Description for devtools permission. -->
   <string name="mozac_feature_addons_permissions_devtools_description">Proširi alate za razvojne programere za pristup podacima u otvorenim karticama</string>
+  <!-- Description for text button that expands the list of domain permissions -->
+  <string name="mozac_feature_addons_permissions_show_all_sites">Prikaži sve stranice</string>
+  <!-- Description for text button that hides the majority of the list of domain permissions -->
+  <string name="mozac_feature_addons_permissions_show_fewer_sites">Prikaži manje stranica</string>
   <!-- The version on of add-on. -->
   <string name="mozac_feature_addons_version">Verzija</string>
   <!-- The author of an add-on. -->

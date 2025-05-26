@@ -200,9 +200,7 @@ function assertExpectedPrefValues(pref, branch, expected, visible, msg) {
 add_setup(function setup() {
   Services.fog.initializeFOG();
 
-  registerCleanupFunction(
-    ExperimentTestUtils.addTestFeatures(...PREF_FEATURES)
-  );
+  registerCleanupFunction(NimbusTestUtils.addTestFeatures(...PREF_FEATURES));
 });
 
 async function setupTest({ ...args } = {}) {
@@ -213,11 +211,11 @@ async function setupTest({ ...args } = {}) {
 
   return {
     ...ctx,
-    cleanup() {
+    async cleanup() {
       removePrefObservers(ctx.manager);
       assertNoObservers(ctx.manager);
 
-      baseCleanup();
+      await baseCleanup();
     },
   };
 }
@@ -305,7 +303,7 @@ add_task(async function test_enroll_setPref_rolloutsAndExperiments() {
     for (const enrollmentKind of enrollOrder) {
       const isRollout = enrollmentKind === ROLLOUT;
       cleanupFns[enrollmentKind] =
-        await ExperimentFakes.enrollWithFeatureConfig(configs[enrollmentKind], {
+        await NimbusTestUtils.enrollWithFeatureConfig(configs[enrollmentKind], {
           manager,
           isRollout,
         });
@@ -333,7 +331,7 @@ add_task(async function test_enroll_setPref_rolloutsAndExperiments() {
       i++;
     }
 
-    cleanup();
+    await cleanup();
     Services.prefs.deleteBranch(pref);
   }
 
@@ -1287,27 +1285,28 @@ add_task(async function test_restorePrefs_experimentAndRollout() {
     {
       const manager = NimbusTestUtils.stubs.manager();
 
+      await manager.store.init();
       await manager.onStartup();
 
-      assertEmptyStore(manager.store);
+      await NimbusTestUtils.assert.storeIsEmpty(manager.store);
 
       for (const [enrollmentKind, config] of Object.entries(configs)) {
-        await ExperimentFakes.enrollWithFeatureConfig(config, {
+        await NimbusTestUtils.enrollWithFeatureConfig(config, {
           manager,
           isRollout: enrollmentKind === ROLLOUT,
         });
       }
+
+      storePath = await NimbusTestUtils.saveStore(manager.store);
+
+      removePrefObservers(manager);
+      assertNoObservers(manager);
 
       // User branch prefs persist through restart, so we only want to delete
       // the prefs if we changed the default branch.
       if (branch === "default") {
         Services.prefs.deleteBranch(pref);
       }
-
-      removePrefObservers(manager);
-      assertNoObservers(manager);
-
-      storePath = await NimbusTestUtils.saveStore(manager.store);
     }
 
     // Restore the default branch value as it was before "restarting".
@@ -1357,7 +1356,7 @@ add_task(async function test_restorePrefs_experimentAndRollout() {
 
     let i = 1;
     for (const enrollmentKind of unenrollOrder) {
-      manager.unenroll(slugs[enrollmentKind]);
+      await manager.unenroll(slugs[enrollmentKind]);
 
       assertExpectedPrefValues(
         pref,
@@ -1370,8 +1369,9 @@ add_task(async function test_restorePrefs_experimentAndRollout() {
       i++;
     }
 
+    await cleanup();
+
     Services.prefs.deleteBranch(pref);
-    cleanup();
   }
 
   {
@@ -1702,13 +1702,6 @@ add_task(async function test_prefChange() {
     expectedUser = null,
   }) {
     Services.fog.testResetFOG();
-    Services.fog.applyServerKnobsConfig(
-      JSON.stringify({
-        metrics_enabled: {
-          "nimbus_events.enrollment_status": true,
-        },
-      })
-    );
     Services.telemetry.snapshotEvents(
       Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
       /* clear = */ true
@@ -1719,6 +1712,7 @@ add_task(async function test_prefChange() {
     const cleanupFunctions = {};
     const slugs = {};
 
+    await manager.store.init();
     await manager.onStartup();
 
     setPrefs(pref, { defaultBranchValue, userBranchValue });
@@ -1727,7 +1721,7 @@ add_task(async function test_prefChange() {
     for (const [enrollmentKind, config] of Object.entries(configs)) {
       const isRollout = enrollmentKind === ROLLOUT;
       cleanupFunctions[enrollmentKind] =
-        await ExperimentFakes.enrollWithFeatureConfig(config, {
+        await NimbusTestUtils.enrollWithFeatureConfig(config, {
           manager,
           isRollout,
         });
@@ -1883,7 +1877,7 @@ add_task(async function test_prefChange() {
     }
 
     Services.prefs.deleteBranch(pref);
-    cleanup();
+    await cleanup();
   }
 
   {
@@ -2310,38 +2304,31 @@ add_task(async function test_deleteBranch() {
 
   const cleanupFunctions = [];
   cleanupFunctions.push(
-    await ExperimentFakes.enrollWithFeatureConfig(CONFIGS[USER][EXPERIMENT], {
+    await NimbusTestUtils.enrollWithFeatureConfig(CONFIGS[USER][EXPERIMENT], {
       manager,
     }),
-    await ExperimentFakes.enrollWithFeatureConfig(CONFIGS[USER][ROLLOUT], {
+    await NimbusTestUtils.enrollWithFeatureConfig(CONFIGS[USER][ROLLOUT], {
       manager,
       isRollout: true,
     }),
-    await ExperimentFakes.enrollWithFeatureConfig(
+    await NimbusTestUtils.enrollWithFeatureConfig(
       CONFIGS[DEFAULT][EXPERIMENT],
       { manager }
     ),
-    await ExperimentFakes.enrollWithFeatureConfig(CONFIGS[DEFAULT][ROLLOUT], {
+    await NimbusTestUtils.enrollWithFeatureConfig(CONFIGS[DEFAULT][ROLLOUT], {
       manager,
       isRollout: true,
     })
-  );
-
-  Services.prefs.deleteBranch(PREFS[USER]);
-  Services.prefs.deleteBranch(PREFS[DEFAULT]);
-
-  // deleteBranch does not trigger pref observers!
-  Assert.equal(
-    manager.store.getAll().length,
-    4,
-    "nsIPrefBranch::deleteBranch does not trigger unenrollment"
   );
 
   for (const cleanupFn of cleanupFunctions) {
     cleanupFn();
   }
 
-  cleanup();
+  Services.prefs.deleteBranch(PREFS[USER]);
+  Services.prefs.deleteBranch(PREFS[DEFAULT]);
+
+  await cleanup();
 });
 
 add_task(async function test_clearUserPref() {
@@ -2396,7 +2383,7 @@ add_task(async function test_clearUserPref() {
     for (const [enrollmentKind, config] of Object.entries(configs)) {
       const isRollout = enrollmentKind === ROLLOUT;
       cleanupFns.push(
-        await ExperimentFakes.enrollWithFeatureConfig(config, {
+        await NimbusTestUtils.enrollWithFeatureConfig(config, {
           manager,
           isRollout,
         })
@@ -2456,7 +2443,7 @@ add_task(async function test_clearUserPref() {
     }
 
     Services.prefs.deleteBranch(pref);
-    cleanup();
+    await cleanup();
   }
 
   {
@@ -2632,7 +2619,7 @@ add_task(async function test_prefChanged_noPrefSet() {
 
   for (const prefBranch of [USER, DEFAULT]) {
     const feature = featureFactory(prefBranch);
-    const cleanupFeature = ExperimentTestUtils.addTestFeatures(feature);
+    const cleanupFeature = NimbusTestUtils.addTestFeatures(feature);
 
     for (const branch of [USER, DEFAULT]) {
       for (const defaultBranchValue of [null, DEFAULT_VALUE]) {
@@ -2642,7 +2629,7 @@ add_task(async function test_prefChanged_noPrefSet() {
             setPrefs(pref, { defaultBranchValue, userBranchValue });
 
             const doEnrollmentCleanup =
-              await ExperimentFakes.enrollWithFeatureConfig(config, {
+              await NimbusTestUtils.enrollWithFeatureConfig(config, {
                 manager,
                 isRollout,
               });
@@ -2690,7 +2677,7 @@ add_task(async function test_prefChanged_noPrefSet() {
             }
 
             doEnrollmentCleanup();
-            cleanup();
+            await cleanup();
 
             Services.prefs.deleteBranch(pref);
           }
@@ -2820,7 +2807,7 @@ add_task(async function test_restorePrefs_manifestChanged() {
     expectedUser = null,
   }) {
     const feature = featureFactory(branch);
-    const cleanupFeatures = ExperimentTestUtils.addTestFeatures(feature);
+    const cleanupFeatures = NimbusTestUtils.addTestFeatures(feature);
 
     setPrefs(pref, { defaultBranchValue, userBranchValue });
 
@@ -2832,13 +2819,14 @@ add_task(async function test_restorePrefs_manifestChanged() {
     {
       const manager = NimbusTestUtils.stubs.manager();
 
+      await manager.store.init();
       await manager.onStartup();
 
-      assertEmptyStore(manager.store);
+      await NimbusTestUtils.assert.storeIsEmpty(manager.store);
 
       for (const [enrollmentKind, config] of Object.entries(configs)) {
         const isRollout = enrollmentKind === ROLLOUT;
-        await ExperimentFakes.enrollWithFeatureConfig(config, {
+        await NimbusTestUtils.enrollWithFeatureConfig(config, {
           manager,
           isRollout,
         });
@@ -2861,12 +2849,12 @@ add_task(async function test_restorePrefs_manifestChanged() {
         userPref = PrefUtils.getPref(pref, { branch });
       }
 
+      storePath = await NimbusTestUtils.saveStore(manager.store);
+
       removePrefObservers(manager);
       assertNoObservers(manager);
 
       Services.prefs.deleteBranch(pref);
-
-      storePath = await NimbusTestUtils.saveStore(manager.store);
     }
 
     // Restore the default branch value as it was before "restarting".
@@ -3009,10 +2997,10 @@ add_task(async function test_restorePrefs_manifestChanged() {
 
     for (const enrollmentKind of expectedEnrollments) {
       const slug = slugs[enrollmentKind];
-      manager.unenroll(slug);
+      await manager.unenroll(slug);
     }
 
-    cleanup();
+    await cleanup();
     Services.prefs.deleteBranch(pref);
 
     if (operation !== REMOVE_FEATURE) {
@@ -3183,7 +3171,7 @@ add_task(async function test_nested_prefs_enroll_both() {
     },
   });
 
-  const cleanupFeature = ExperimentTestUtils.addTestFeatures(feature);
+  const cleanupFeature = NimbusTestUtils.addTestFeatures(feature);
 
   async function doTest(enrollmentOrder) {
     PrefUtils.setPref("nimbus.test-only.nested", false, { branch: DEFAULT });
@@ -3191,38 +3179,22 @@ add_task(async function test_nested_prefs_enroll_both() {
       branch: DEFAULT,
     });
 
-    const rollout = ExperimentFakes.recipe("nested-rollout", {
-      isRollout: true,
-      branches: [
-        {
-          ...ExperimentFakes.recipe.branches[0],
-          features: [
-            {
-              featureId: feature.featureId,
-              value: {
-                enabled: true,
-              },
-            },
-          ],
-        },
-      ],
-    });
+    const rollout = NimbusTestUtils.factories.recipe.withFeatureConfig(
+      "nested-rollout",
+      {
+        featureId: feature.featureId,
+        value: { enabled: true },
+      },
+      { isRollout: true }
+    );
 
-    const experiment = ExperimentFakes.recipe("nested-experiment", {
-      branches: [
-        {
-          ...ExperimentFakes.recipe.branches[0],
-          features: [
-            {
-              featureId: feature.featureId,
-              value: {
-                setting: "custom",
-              },
-            },
-          ],
-        },
-      ],
-    });
+    const experiment = NimbusTestUtils.factories.recipe.withFeatureConfig(
+      "nested-experiment",
+      {
+        featureId: feature.featureId,
+        value: { setting: "custom" },
+      }
+    );
 
     const { manager, cleanup } = await setupTest();
 
@@ -3262,7 +3234,7 @@ add_task(async function test_nested_prefs_enroll_both() {
       "after enrollment"
     );
 
-    manager.unenroll(experiment.slug);
+    await manager.unenroll(experiment.slug);
 
     {
       const enrollments = manager.store
@@ -3292,9 +3264,9 @@ add_task(async function test_nested_prefs_enroll_both() {
       "After experiment unenrollment"
     );
 
-    manager.unenroll(rollout.slug);
+    await manager.unenroll(rollout.slug);
 
-    cleanup();
+    await cleanup();
   }
 
   info(
@@ -3354,7 +3326,7 @@ const TYPED_FEATURE = new ExperimentFeature("test-typed-prefs", {
 });
 
 add_task(async function test_setPref_types() {
-  const featureCleanup = ExperimentTestUtils.addTestFeatures(TYPED_FEATURE);
+  const featureCleanup = NimbusTestUtils.addTestFeatures(TYPED_FEATURE);
 
   const { manager, cleanup } = await setupTest();
 
@@ -3366,7 +3338,7 @@ add_task(async function test_setPref_types() {
     quux: ["corge"],
   };
 
-  const experimentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+  const experimentCleanup = await NimbusTestUtils.enrollWithFeatureConfig(
     {
       featureId: TYPED_FEATURE.featureId,
       value: {
@@ -3418,11 +3390,11 @@ add_task(async function test_setPref_types() {
 
   experimentCleanup();
   featureCleanup();
-  cleanup();
+  await cleanup();
 });
 
 add_task(async function test_setPref_types_restore() {
-  const featureCleanup = ExperimentTestUtils.addTestFeatures(TYPED_FEATURE);
+  const featureCleanup = NimbusTestUtils.addTestFeatures(TYPED_FEATURE);
 
   const json = {
     foo: "foo",
@@ -3436,10 +3408,11 @@ add_task(async function test_setPref_types_restore() {
   {
     const manager = NimbusTestUtils.stubs.manager();
 
+    await manager.store.init();
     await manager.onStartup();
-    assertEmptyStore(manager.store);
+    await NimbusTestUtils.assert.storeIsEmpty(manager.store);
 
-    await ExperimentFakes.enrollWithFeatureConfig(
+    await NimbusTestUtils.enrollWithFeatureConfig(
       {
         featureId: TYPED_FEATURE.featureId,
         value: {
@@ -3452,14 +3425,14 @@ add_task(async function test_setPref_types_restore() {
       { manager }
     );
 
-    for (const varDef of Object.values(TYPED_FEATURE.manifest.variables)) {
-      Services.prefs.deleteBranch(varDef.setPref.pref);
-    }
+    storePath = await NimbusTestUtils.saveStore(manager.store);
 
     removePrefObservers(manager);
     assertNoObservers(manager);
 
-    storePath = await NimbusTestUtils.saveStore(manager.store);
+    for (const varDef of Object.values(TYPED_FEATURE.manifest.variables)) {
+      Services.prefs.deleteBranch(varDef.setPref.pref);
+    }
   }
 
   const { manager, cleanup } = await setupTest({ storePath });
@@ -3503,8 +3476,8 @@ add_task(async function test_setPref_types_restore() {
   const enrollment = manager.store.getExperimentForFeature(
     TYPED_FEATURE.featureId
   );
-  manager.unenroll(enrollment.slug);
+  await manager.unenroll(enrollment.slug);
 
-  cleanup();
+  await cleanup();
   featureCleanup();
 });

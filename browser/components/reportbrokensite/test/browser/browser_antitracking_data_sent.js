@@ -29,7 +29,7 @@ add_task(async function testSendButton() {
   await blockedPromise;
 
   await testSend(tab, AppMenu(win), {
-    breakageCategory: "adblockers",
+    breakageCategory: "adblocker",
     description: "another test description",
     antitracking: {
       blockList: "strict",
@@ -38,6 +38,7 @@ add_task(async function testSendButton() {
       hasMixedActiveContentBlocked: true,
       hasMixedDisplayContentBlocked: true,
       btpHasPurgedSite: false,
+      etpCategory: "strict",
     },
     frameworks: {
       fastclick: true,
@@ -66,6 +67,7 @@ add_task(async function testSendingMoreInfo() {
       hasMixedActiveContentBlocked: true,
       hasMixedDisplayContentBlocked: true,
       btpHasPurgedSite: false,
+      etpCategory: "strict",
     },
     frameworks: { fastclick: true, mobify: true, marfeel: true },
     consoleLog: [

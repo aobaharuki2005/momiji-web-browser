@@ -93,6 +93,7 @@ if CONFIG["MOZ_APPLEMEDIA"]:
     UNIFIED_SOURCES += [
         "apple/AppleATDecoder.cpp",
         "apple/AppleCMLinker.cpp",
+        "apple/AppleCVLinker.cpp",
         "apple/AppleDecoderModule.cpp",
         "apple/AppleEncoderModule.cpp",
         'apple/AppleUtils.cpp',

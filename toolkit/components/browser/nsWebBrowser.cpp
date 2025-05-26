@@ -941,15 +941,13 @@ nsWebBrowser::SetPositionAndSize(int32_t aX, int32_t aY, int32_t aCX,
   int32_t doc_x = aX;
   int32_t doc_y = aY;
 
-  // If there is an internal widget we need to make the docShell coordinates
-  // relative to the internal widget rather than the calling app's parent.
   // We also need to resize our widget then.
+  // Now reposition/ resize the doc
   if (mInternalWidget) {
     doc_x = doc_y = 0;
     mInternalWidget->Resize(aX, aY, aCX, aCY,
                             !!(aFlags & nsIBaseWindow::eRepaint));
   }
-  // Now reposition/ resize the doc
   NS_ENSURE_SUCCESS(
       mDocShell->SetPositionAndSize(doc_x, doc_y, aCX, aCY, aFlags),
       NS_ERROR_FAILURE);
@@ -977,7 +975,6 @@ nsWebBrowser::GetPositionAndSize(int32_t* aX, int32_t* aY, int32_t* aCX,
     }
     return NS_OK;
   }
-
   // Can directly return this as it is the
   // same interface, thus same returns.
   return mDocShell->GetPositionAndSize(aX, aY, aCX, aCY);
@@ -1055,7 +1052,6 @@ nsWebBrowser::GetEnabled(bool* aEnabled) {
     *aEnabled = mInternalWidget->IsEnabled();
     return NS_OK;
   }
-
   return NS_ERROR_FAILURE;
 }
 
@@ -1178,6 +1174,7 @@ bool nsWebBrowser::PaintWindow(nsIWidget* aWidget,
   }
   return false;
 }
+
 
 void nsWebBrowser::FocusActivate(uint64_t aActionId) {
   if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {

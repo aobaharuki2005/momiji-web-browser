@@ -1554,14 +1554,35 @@ const MESSAGES = () => [
     groups: [],
   },
   {
+    id: "NEWTAB_PERSONALIZATION_MESSAGE",
+    template: "newtab_message",
+    content: {
+      messageType: "PersonalizedCard",
+      position: 1,
+      cardTitle: "Personalized Just for You!",
+      cardMessage:
+        "We’re customizing your feed to show content that matters to you, while ensuring your privacy is always respected.",
+      ctaText: "Manage your settings",
+      linkText: "Learn how we protect and manage data",
+    },
+    trigger: {
+      id: "newtabMessageCheck",
+    },
+    groups: [],
+  },
+  {
     id: "UNIVERSAL_INFOBAR_WITH_EMBEDDED_LINKS",
     content: {
       text: [
-        "Read the release notes ",
         {
-          raw: "here. ",
+          string_id: "existing-user-tou-update",
+        },
+        " - Read the release notes ",
+        {
+          raw: "here",
           href: "https://www.mozilla.org/en-US/firefox/releases/",
         },
+        ". ",
         {
           string_id: "cookie-banner-blocker-onboarding-learn-more",
           href: "https://mozilla.org/privacy/firefox/?v=product",

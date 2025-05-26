@@ -1390,8 +1390,8 @@ nsresult nsCocoaUtils::GetScreenCapturePermissionState(
     // names if the calling application has been authorized to record the
     // screen. We use the window name, window level, and owning PID as
     // heuristics to determine if we have screen recording permission.
-    AutoCFRelease<CFArrayRef> windowArray =
-        CGWindowListCopyWindowInfo(kCGWindowListOptionAll, kCGNullWindowID);
+    AutoCFTypeRef<CFArrayRef> windowArray(
+        CGWindowListCopyWindowInfo(kCGWindowListOptionAll, kCGNullWindowID));
     if (!windowArray) {
       LOG("GetScreenCapturePermissionState() ERROR: got NULL window info list");
       return NS_ERROR_UNEXPECTED;
@@ -1595,8 +1595,8 @@ void nsCocoaUtils::ResolveAudioCapturePromises(bool aGranted) {
 //
 nsresult nsCocoaUtils::MaybeRequestScreenCapturePermission() {
   LOG("MaybeRequestScreenCapturePermission()");
-  AutoCFRelease<CGImageRef> image =
-      CGDisplayCreateImageForRect(kCGDirectMainDisplay, CGRectMake(0, 0, 1, 1));
+  AutoCFTypeRef<CGImageRef> image(CGDisplayCreateImageForRect(
+      kCGDirectMainDisplay, CGRectMake(0, 0, 1, 1)));
   return NS_OK;
 }
 
@@ -1752,25 +1752,23 @@ NSString* nsCocoaUtils::GetTitleForURLFromPasteboardItem(
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
-void nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem(
-    nsITransferable* aTransferable, const nsCString& aFlavor,
-    NSPasteboardItem* aItem) {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+already_AddRefed<nsISupports> nsCocoaUtils::GetDataFromPasteboardItem(
+    const nsACString& aFlavor, NSPasteboardItem* aItem) {
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if (!aTransferable || !aItem) {
-    return;
+  if (!aItem) {
+    return nullptr;
   }
 
   MOZ_LOG(gCocoaUtilsLog, LogLevel::Info,
-          ("nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem: looking "
-           "for pasteboard data of "
-           "type %s\n",
-           aFlavor.get()));
+          ("nsCocoaUtils::GetDataFromPasteboardItem: looking for pasteboard "
+           "data of type %s\n",
+           PromiseFlatCString(aFlavor).get()));
 
   if (aFlavor.EqualsLiteral(kFileMime)) {
     NSString* filePath = nsCocoaUtils::GetFilePathFromPasteboardItem(aItem);
     if (!filePath) {
-      return;
+      return nullptr;
     }
 
     unsigned int stringLength = [filePath length];
@@ -1778,7 +1776,7 @@ void nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem(
         (stringLength + 1) * sizeof(char16_t);  // in bytes
     char16_t* clipboardDataPtr = (char16_t*)malloc(dataLength);
     if (!clipboardDataPtr) {
-      return;
+      return nullptr;
     }
 
     [filePath getCharacters:reinterpret_cast<unichar*>(clipboardDataPtr)];
@@ -1789,11 +1787,10 @@ void nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem(
                                   getter_AddRefs(file));
     free(clipboardDataPtr);
     if (NS_FAILED(rv)) {
-      return;
+      return nullptr;
     }
 
-    aTransferable->SetTransferData(aFlavor.get(), file);
-    return;
+    return file.forget();
   }
 
   if (aFlavor.EqualsLiteral(kCustomTypesMime)) {
@@ -1802,17 +1799,17 @@ void nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem(
                                    arrayWithObject:kMozCustomTypesPboardType]];
     if (!availableType ||
         !nsCocoaUtils::IsValidPasteboardType(availableType, false)) {
-      return;
+      return nullptr;
     }
     NSData* pasteboardData = [aItem dataForType:availableType];
     if (!pasteboardData) {
-      return;
+      return nullptr;
     }
 
     unsigned int dataLength = [pasteboardData length];
     void* clipboardDataPtr = malloc(dataLength);
     if (!clipboardDataPtr) {
-      return;
+      return nullptr;
     }
     [pasteboardData getBytes:clipboardDataPtr length:dataLength];
 
@@ -1821,9 +1818,8 @@ void nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem(
         aFlavor, clipboardDataPtr, dataLength,
         getter_AddRefs(genericDataWrapper));
 
-    aTransferable->SetTransferData(aFlavor.get(), genericDataWrapper);
     free(clipboardDataPtr);
-    return;
+    return genericDataWrapper.forget();
   }
 
   NSString* pString = nil;
@@ -1863,7 +1859,7 @@ void nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem(
     unsigned int dataLength = [stringData length];
     void* clipboardDataPtr = malloc(dataLength);
     if (!clipboardDataPtr) {
-      return;
+      return nullptr;
     }
     [stringData getBytes:clipboardDataPtr length:dataLength];
 
@@ -1886,9 +1882,8 @@ void nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem(
     nsPrimitiveHelpers::CreatePrimitiveForData(
         aFlavor, clipboardDataPtrNoBOM, dataLength,
         getter_AddRefs(genericDataWrapper));
-    aTransferable->SetTransferData(aFlavor.get(), genericDataWrapper);
     free(clipboardDataPtr);
-    return;
+    return genericDataWrapper.forget();
   }
 
   // We have never supported this on Mac OS X, we should someday. Normally
@@ -1901,6 +1896,29 @@ void nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem(
 
   }
   */
+
+  return nullptr;
+
+  NS_OBJC_END_TRY_BLOCK_RETURN(nullptr);
+}
+
+void nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem(
+    nsITransferable* aTransferable, const nsCString& aFlavor,
+    NSPasteboardItem* aItem) {
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+
+  if (!aTransferable || !aItem) {
+    return;
+  }
+
+  MOZ_LOG(gCocoaUtilsLog, LogLevel::Info,
+          ("nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem: looking "
+           "for pasteboard data of type %s\n",
+           aFlavor.get()));
+
+  if (nsCOMPtr<nsISupports> data = GetDataFromPasteboardItem(aFlavor, aItem)) {
+    aTransferable->SetTransferData(aFlavor.get(), data);
+  }
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }

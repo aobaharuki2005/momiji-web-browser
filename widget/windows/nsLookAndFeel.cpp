@@ -402,7 +402,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::Fieldtext:
       idx = mHighContrastOn ? COLOR_BTNTEXT : COLOR_WINDOWTEXT;
       break;
-    case ColorID::MozEventreerow:
     case ColorID::MozOddtreerow:
     case ColorID::MozSidebar:
     case ColorID::MozCombobox:
@@ -557,7 +556,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = WinUtils::MicaPopupsEnabled();
       break;
     case IntID::AlertNotificationOrigin:
-      aResult = NS_ALERT_TOP;
+      aResult = 0;
       if (intl::LocaleService::GetInstance()->IsAppLocaleRTL()) {
         // If the task bar is right-to-left, move the origin to the left
         aResult |= NS_ALERT_LEFT;

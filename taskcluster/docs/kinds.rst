@@ -11,6 +11,11 @@ users or automated tests.  This is more restrictive than most definitions of
 "build" in a Mozilla context: it does not include tasks that run build-like
 actions for static analysis or to produce instrumented artifacts.
 
+build-extensions
+----------------
+
+Builds Firefox extensions with `mach build`.
+
 build-fat-aar
 -------------
 
@@ -559,6 +564,10 @@ repackage-deb-l10n
 ------------------
 These repackage tasks take the signed langpacks (.xpi) binaries and puts them in Debian packages.
 
+repackage-rpm
+----------------
+These repackage tasks take signed Firefox Linux binaries and puts them in RPM packages.
+
 repackage-flatpak
 -----------------
 These repackage tasks take signed Firefox Linux binaries and langpacks, and builds a flatpak.
@@ -881,3 +890,11 @@ Run baseline profile generation for Android on Firebase TestLab.
 update
 ------------
 Run tests to see if the executable can be updated to the latest release.
+
+run-macrobenchmark-firebase
+---------------------------
+Run Macrobenchmark for Android on Firebase TestLab.
+
+instrumented-build-macrobenchmark-apk
+-------------------------------------
+Generate instrumented apks used to run Macrobenchmark for Android apps.

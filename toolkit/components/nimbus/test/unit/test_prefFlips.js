@@ -85,7 +85,11 @@ function cleanupPrefs(prefs) {
 
 function checkExpectedPrefs(prefs) {
   for (const [name, value] of Object.entries(prefs)) {
-    Assert.equal(PrefUtils.getPref(name), value);
+    Assert.equal(
+      PrefUtils.getPref(name),
+      value,
+      `Pref ${name} has correct value`
+    );
   }
 }
 
@@ -127,10 +131,7 @@ add_setup(function setup() {
   Services.telemetry.clearEvents();
 
   registerCleanupFunction(
-    ExperimentTestUtils.addTestFeatures(
-      PREF_FEATURES[USER],
-      PREF_FEATURES[DEFAULT]
-    )
+    NimbusTestUtils.addTestFeatures(PREF_FEATURES[USER], PREF_FEATURES[DEFAULT])
   );
 });
 
@@ -142,9 +143,9 @@ async function setupTest({ ...args } = {}) {
 
   return {
     ...ctx,
-    cleanup() {
+    async cleanup() {
       assertNoObservers(ctx.manager);
-      baseCleanup();
+      await baseCleanup();
     },
   };
 }
@@ -432,7 +433,7 @@ add_task(async function test_prefFlips() {
     );
 
     info("Enrolling...");
-    const cleanupExperiment = await ExperimentFakes.enrollWithFeatureConfig(
+    const cleanupExperiment = await NimbusTestUtils.enrollWithFeatureConfig(
       {
         featureId: FEATURE_ID,
         value: featureValue,
@@ -500,565 +501,358 @@ add_task(async function test_prefFlips() {
       Services.prefs.deleteBranch(prefName);
     }
 
-    cleanup();
+    await cleanup();
   }
 });
 
 add_task(async function test_prefFlips_unenrollment() {
-  const PREF = "nimbus.test-only.foo";
-  const PREF2 = "nimbus.test-only.bar";
+  const PREF_FOO = "nimbus.test-only.foo";
+  const PREF_BAR = "nimbus.test-only.bar";
 
-  const PREF_FLIPS_USER_1 = "pref-flips-user-1";
-  const PREF_FLIPS_USER_2 = "pref-flips-user-2";
-  const PREF_FLIPS_USER_MULTI = "pref-flips-user-multi";
+  const SLUG_1 = "slug-1";
+  const SLUG_2 = "slug-2";
+  const SLUG_3 = "slug-3";
 
-  const PREF_FLIPS_DEFAULT_1 = "pref-flips-default-1";
-  const PREF_FLIPS_DEFAULT_2 = "pref-flips-default-2";
-  const PREF_FLIPS_DEFAULT_MULTI = "pref-flips-default-multi";
-
-  const SET_PREF_USER_1 = "set-pref-user-1";
-  const SET_PREF_USER_2 = "set-pref-user-2";
-
-  const SET_PREF_DEFAULT_1 = "set-pref-default-1";
-  const SET_PREF_DEFAULT_2 = "set-pref-default-2";
-
-  const FEATURE_CONFIGS = {
-    [PREF_FLIPS_USER_1]: {
-      featureId: FEATURE_ID,
-      value: {
-        prefs: {
-          [PREF]: {
-            branch: USER,
-            value: PREF_FLIPS_USER_1,
-          },
-        },
-      },
-    },
-    [PREF_FLIPS_USER_2]: {
-      featureId: FEATURE_ID,
-      value: {
-        prefs: {
-          [PREF]: {
-            branch: USER,
-            value: PREF_FLIPS_USER_2,
-          },
-        },
-      },
-    },
-    [PREF_FLIPS_USER_MULTI]: {
-      featureId: FEATURE_ID,
-      value: {
-        prefs: {
-          [PREF]: {
-            branch: USER,
-            value: PREF_FLIPS_USER_MULTI,
-          },
-          [PREF2]: {
-            branch: USER,
-            value: PREF_FLIPS_USER_MULTI,
-          },
-        },
-      },
-    },
-    [PREF_FLIPS_DEFAULT_1]: {
-      featureId: FEATURE_ID,
-      value: {
-        prefs: {
-          [PREF]: {
-            branch: DEFAULT,
-            value: PREF_FLIPS_DEFAULT_1,
-          },
-        },
-      },
-    },
-    [PREF_FLIPS_DEFAULT_2]: {
-      featureId: FEATURE_ID,
-      value: {
-        prefs: {
-          [PREF]: {
-            branch: DEFAULT,
-            value: PREF_FLIPS_DEFAULT_2,
-          },
-        },
-      },
-    },
-    [PREF_FLIPS_DEFAULT_MULTI]: {
-      featureId: FEATURE_ID,
-      value: {
-        prefs: {
-          [PREF]: {
-            branch: DEFAULT,
-            value: PREF_FLIPS_DEFAULT_MULTI,
-          },
-          [PREF2]: {
-            branch: DEFAULT,
-            value: PREF_FLIPS_DEFAULT_MULTI,
-          },
-        },
-      },
-    },
-    [SET_PREF_USER_1]: {
-      featureId: PREF_FEATURES[USER].featureId,
-      value: {
-        foo: SET_PREF_USER_1,
-      },
-    },
-    [SET_PREF_USER_2]: {
-      featureId: PREF_FEATURES[USER].featureId,
-      value: {
-        foo: SET_PREF_USER_2,
-      },
-    },
-    [SET_PREF_DEFAULT_1]: {
-      featureId: PREF_FEATURES[DEFAULT].featureId,
-      value: {
-        foo: SET_PREF_DEFAULT_1,
-      },
-    },
-    [SET_PREF_DEFAULT_2]: {
-      featureId: PREF_FEATURES[DEFAULT].featureId,
-      value: {
-        foo: SET_PREF_DEFAULT_2,
-      },
-    },
-  };
+  const EXPERIMENT_VALUE = "experiment-value";
 
   const TEST_CASES = [
     // Single enrollment case (experiments)
     {
       name: "set pref on the user branch with a prefFlips experiment and change that pref on the user branch",
-      enrollmentOrder: [{ slug: PREF_FLIPS_USER_1 }],
-      setPrefsAfter: { [PREF]: { userBranchValue: USER_VALUE } },
-      expectedUnenrollments: [{ slug: PREF_FLIPS_USER_1 }],
-      expectedPrefs: { [PREF]: USER_VALUE },
+      enrollmentOrder: [
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER } },
+          },
+        },
+      ],
+      setPrefsAfter: { [PREF_FOO]: { userBranchValue: USER_VALUE } },
+      expectedUnenrollments: [SLUG_1],
+      expectedPrefs: { [PREF_FOO]: USER_VALUE },
     },
     {
       name: "set pref on the user branch with a prefFlips experiment and change that pref on the default branch",
-      enrollmentOrder: [{ slug: PREF_FLIPS_USER_1 }],
-      setPrefsAfter: { [PREF]: { defaultBranchValue: DEFAULT_VALUE } },
-      expectedEnrollments: [{ slug: PREF_FLIPS_USER_1 }],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1 },
+      enrollmentOrder: [
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER } },
+          },
+        },
+      ],
+      setPrefsAfter: { [PREF_FOO]: { defaultBranchValue: DEFAULT_VALUE } },
+      expectedEnrollments: [SLUG_1],
+      expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
     },
     {
       name: "set pref on the default branch with a prefFlips experiment and change that pref on the user branch",
-      enrollmentOrder: [{ slug: PREF_FLIPS_USER_1 }],
-      setPrefsAfter: { [PREF]: { userBranchValue: USER_VALUE } },
-      expectedUnenrollments: [{ slug: PREF_FLIPS_USER_1 }],
+      enrollmentOrder: [
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT } },
+          },
+        },
+      ],
+      setPrefsAfter: { [PREF_FOO]: { userBranchValue: USER_VALUE } },
+      expectedUnenrollments: [SLUG_1],
+      expectedPrefs: { [PREF_FOO]: USER_VALUE },
     },
     {
       name: "set pref on the default branch with a prefFlips experiment and change that pref on the default branch",
-      enrollmentOrder: [{ slug: PREF_FLIPS_USER_1 }],
-      setPrefsAfter: { [PREF]: { defaultBranchValue: DEFAULT_VALUE } },
-      expectedEnrollments: [{ slug: PREF_FLIPS_USER_1 }],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1 },
+      enrollmentOrder: [
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT } },
+          },
+        },
+      ],
+      setPrefsAfter: { [PREF_FOO]: { defaultBranchValue: DEFAULT_VALUE } },
+      expectedUnenrollments: [SLUG_1],
+      expectedPrefs: { [PREF_FOO]: DEFAULT_VALUE },
     },
     // Single enrollment case, multiple prefs being reset
     {
       name: "set prefs on the user branch with a prefFlips experiment and change one pref on the user branch",
-      setPrefsBefore: { [PREF]: { userBranchValue: SET_BEFORE_VALUE } },
-      enrollmentOrder: [{ slug: PREF_FLIPS_USER_MULTI }],
-      setPrefsAfter: { [PREF2]: { userBranchValue: USER_VALUE } },
-      expectedUnenrollments: [{ slug: PREF_FLIPS_USER_MULTI }],
-      expectedPrefs: { [PREF]: SET_BEFORE_VALUE, [PREF2]: USER_VALUE },
+      setPrefsBefore: { [PREF_FOO]: { userBranchValue: SET_BEFORE_VALUE } },
+      enrollmentOrder: [
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER },
+              [PREF_BAR]: { value: EXPERIMENT_VALUE, branch: USER },
+            },
+          },
+        },
+      ],
+      setPrefsAfter: { [PREF_BAR]: { userBranchValue: USER_VALUE } },
+      expectedUnenrollments: [SLUG_1],
+      expectedPrefs: { [PREF_FOO]: SET_BEFORE_VALUE, [PREF_BAR]: USER_VALUE },
     },
     {
       name: "set prefs on the user branch with a prefFlips experiment and change one pref on the default branch",
-      setPrefsBefore: { [PREF]: { userBranchValue: SET_BEFORE_VALUE } },
-      enrollmentOrder: [{ slug: PREF_FLIPS_USER_MULTI }],
-      setPrefsAfter: { [PREF2]: { defaultBranchValue: DEFAULT_VALUE } },
-      expectedEnrollments: [{ slug: PREF_FLIPS_USER_MULTI }],
+      setPrefsBefore: { [PREF_FOO]: { userBranchValue: SET_BEFORE_VALUE } },
+      enrollmentOrder: [
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER },
+              [PREF_BAR]: { value: EXPERIMENT_VALUE, branch: USER },
+            },
+          },
+        },
+      ],
+      setPrefsAfter: { [PREF_BAR]: { defaultBranchValue: DEFAULT_VALUE } },
+      expectedEnrollments: [SLUG_1],
       expectedPrefs: {
-        [PREF]: PREF_FLIPS_USER_MULTI,
-        [PREF2]: PREF_FLIPS_USER_MULTI,
+        [PREF_FOO]: EXPERIMENT_VALUE,
+        [PREF_BAR]: EXPERIMENT_VALUE,
       },
     },
     {
       name: "set prefs on the default branch with a prefFlips experiment and change one pref on the user branch",
-      setPrefsBefore: { [PREF]: { defaultBranchValue: SET_BEFORE_VALUE } },
-      enrollmentOrder: [{ slug: PREF_FLIPS_DEFAULT_MULTI }],
-      setPrefsAfter: { [PREF2]: { userBranchValue: USER_VALUE } },
-      expectedUnenrollments: [{ slug: PREF_FLIPS_DEFAULT_MULTI }],
-      expectedPrefs: { [PREF]: SET_BEFORE_VALUE, [PREF2]: USER_VALUE },
+      setPrefsBefore: { [PREF_FOO]: { defaultBranchValue: SET_BEFORE_VALUE } },
+      enrollmentOrder: [
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT },
+              [PREF_BAR]: { value: EXPERIMENT_VALUE, branch: DEFAULT },
+            },
+          },
+        },
+      ],
+      setPrefsAfter: { [PREF_BAR]: { userBranchValue: USER_VALUE } },
+      expectedUnenrollments: [SLUG_1],
+      expectedPrefs: { [PREF_FOO]: SET_BEFORE_VALUE, [PREF_BAR]: USER_VALUE },
     },
     {
       name: "set prefs on the default branch with a prefFlips experiment and change one pref on the default branch",
-      setPrefsBefore: { [PREF]: { defaultBranchValue: SET_BEFORE_VALUE } },
-      enrollmentOrder: [{ slug: PREF_FLIPS_DEFAULT_MULTI }],
-      setPrefsAfter: { [PREF2]: { defaultBranchValue: DEFAULT_VALUE } },
-      expectedUnenrollments: [{ slug: PREF_FLIPS_DEFAULT_MULTI }],
-      expectedPrefs: { [PREF]: SET_BEFORE_VALUE, [PREF2]: DEFAULT_VALUE },
+      setPrefsBefore: { [PREF_FOO]: { defaultBranchValue: SET_BEFORE_VALUE } },
+      enrollmentOrder: [
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT },
+              [PREF_BAR]: { value: EXPERIMENT_VALUE, branch: DEFAULT },
+            },
+          },
+        },
+      ],
+      setPrefsAfter: { [PREF_BAR]: { defaultBranchValue: DEFAULT_VALUE } },
+      expectedUnenrollments: [SLUG_1],
+      expectedPrefs: {
+        [PREF_FOO]: SET_BEFORE_VALUE,
+        [PREF_BAR]: DEFAULT_VALUE,
+      },
     },
     // Multiple enrollment cases
-    // * change pref that would be controlled by a rollout while an experiment is active
+    // - test that we leave enrollments that do not conflict with the set pref
     {
-      name: "set pref on the user branch with a prefFlips experiment and rollout and then change rollout pref on the user branch",
-      setPrefsBefore: { [PREF]: { userBranchValue: SET_BEFORE_VALUE } },
+      name: "set pref on the user branch with two prefFlips experiments and then change a pref controlled by only one experiment on the user branch",
+      setPrefsBefore: { [PREF_FOO]: { userBranchValue: SET_BEFORE_VALUE } },
       enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1 },
-        // The rollout won't set any prefs because there is an active experiment.
-        { slug: PREF_FLIPS_DEFAULT_MULTI, isRollout: true },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER } },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER },
+              [PREF_BAR]: { value: EXPERIMENT_VALUE, branch: USER },
+            },
+          },
+        },
       ],
-      setPrefsAfter: { [PREF2]: { userBranchValue: USER_VALUE } },
-      expectedEnrollments: [
-        { slug: PREF_FLIPS_USER_1 },
-        // The rollout won't unenroll because the pref flipper doesn't know
-        // about its prefs while the experiment is active.
-        { slug: PREF_FLIPS_DEFAULT_MULTI, isRollout: true },
-      ],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1, [PREF2]: USER_VALUE },
+      setPrefsAfter: { [PREF_BAR]: { userBranchValue: USER_VALUE } },
+      expectedEnrollments: [SLUG_1],
+      expectedUnenrollments: [SLUG_2],
+      expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE, [PREF_BAR]: USER_VALUE },
     },
     {
-      name: "set pref on the user branch with a prefFlips experiment and rollout and then change rollout pref on the default branch",
-      setPrefsBefore: { [PREF]: { userBranchValue: SET_BEFORE_VALUE } },
+      name: "set pref on the user branch two prefFlips experiments and then change a pref controlled by only one experiment on the default branch",
+      setPrefsBefore: { [PREF_FOO]: { userBranchValue: SET_BEFORE_VALUE } },
       enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_DEFAULT_MULTI, isRollout: true },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER } },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER },
+              [PREF_BAR]: { value: EXPERIMENT_VALUE, branch: USER },
+            },
+          },
+        },
       ],
-      setPrefsAfter: { [PREF2]: { defaultBranchValue: DEFAULT_VALUE } },
-      expectedEnrollments: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_DEFAULT_MULTI, isRollout: true },
+      setPrefsAfter: { [PREF_BAR]: { defaultBranchValue: DEFAULT_VALUE } },
+      expectedEnrollments: [SLUG_1, SLUG_2],
+      expectedPrefs: {
+        [PREF_FOO]: EXPERIMENT_VALUE,
+        [PREF_BAR]: EXPERIMENT_VALUE,
+      },
+    },
+    // - test that we unenroll from all conflicting experiments
+    {
+      name: "set pref on the default branch with two prefFlips experiments and then change that pref on the user branch",
+      setPrefsBefore: { [PREF_FOO]: { defaultBranchValue: SET_BEFORE_VALUE } },
+      enrollmentOrder: [
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT } },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT } },
+          },
+        },
       ],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1, [PREF2]: DEFAULT_VALUE },
+      setPrefsAfter: { [PREF_FOO]: { userBranchValue: USER_VALUE } },
+      expectedUnenrollments: [SLUG_1, SLUG_2],
+      expectedPrefs: { [PREF_FOO]: USER_VALUE },
     },
     {
-      name: "set pref on the default branch with a prefFlips experiment and rollout and then change rollout pref on the user branch",
-      setPrefsBefore: { [PREF]: { defaultBranchValue: SET_BEFORE_VALUE } },
+      name: "set pref on the default branch with two prefFlips experiments and then change that pref on the default branch",
+      setPrefsBefore: { [PREF_FOO]: { defaultBranchValue: SET_BEFORE_VALUE } },
       enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_DEFAULT_MULTI, isRollout: true },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT } },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT } },
+          },
+        },
       ],
-      setPrefsAfter: { [PREF2]: { userBranchValue: USER_VALUE } },
-      expectedEnrollments: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_DEFAULT_MULTI, isRollout: true },
+      setPrefsAfter: { [PREF_FOO]: { defaultBranchValue: DEFAULT_VALUE } },
+      expectedUnenrollments: [SLUG_1, SLUG_2],
+      expectedPrefs: { [PREF_FOO]: DEFAULT_VALUE },
+    },
+    // - test we unenroll when the experiments conflict with eachother.
+    {
+      name: "set pref on the user branch with two experiments with conflicting values",
+      enrollmentOrder: [
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: SLUG_1, branch: USER } },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: SLUG_2, branch: USER } },
+          },
+        },
       ],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1, [PREF2]: USER_VALUE },
+      expectedEnrollments: [SLUG_1],
+      expectedUnenrollments: [SLUG_2],
+      expectedPrefs: { [PREF_FOO]: SLUG_1 },
     },
     {
-      name: "set pref on the default branch with a prefFlips experiment and rollout and then change rollout pref on the default branch",
-      setPrefsBefore: { [PREF]: { defaultBranchValue: SET_BEFORE_VALUE } },
+      name: "set pref on the default branch with two experiments with conflicting values",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_DEFAULT_MULTI, isRollout: true },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: SLUG_1, branch: DEFAULT } },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: SLUG_2, branch: DEFAULT } },
+          },
+        },
       ],
-      setPrefsAfter: { [PREF2]: { defaultBranchValue: DEFAULT_VALUE } },
-      expectedEnrollments: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_DEFAULT_MULTI, isRollout: true },
-      ],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1, [PREF2]: DEFAULT_VALUE },
-    },
-    // * prefFlips experiment (user) -> prefFlips rollout (user)
-    {
-      name: "set pref on the user branch with an experiment and then a rollout",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_USER_2, isRollout: true },
-      ],
-      expectedEnrollments: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_USER_2, isRollout: true },
-      ],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1 },
+      expectedEnrollments: [SLUG_1],
+      expectedUnenrollments: [SLUG_2],
+      expectedPrefs: { [PREF_FOO]: SLUG_1 },
     },
     {
-      name: "set pref on the user branch with an experiment and then a rollout, then change that pref on the user branch",
+      name: "set pref on the user branch with an experiment and set it on the default branch with another",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_USER_2, isRollout: true },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER } },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT } },
+          },
+        },
       ],
-      setPrefsAfter: { [PREF]: { userBranchValue: USER_VALUE } },
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_USER_2, isRollout: true },
-      ],
-      expectedPrefs: { [PREF]: USER_VALUE },
+      expectedEnrollments: [SLUG_1],
+      expectedUnenrollments: [SLUG_2],
+      expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
     },
     {
-      name: "set pref on the user branch with an experiment and then a rollout, then change that pref on the default branch",
+      name: "set pref on the default branch with an experiment and set it on the user branch with another",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_USER_2, isRollout: true },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT } },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER } },
+          },
+        },
       ],
-      setPrefsAfter: { [PREF]: { defaultBranchvalue: DEFAULT_VALUE } },
-      expectedEnrollments: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_USER_2, isRollout: true },
-      ],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1 },
-    },
-    // * prefFlips rollout (user) -> prefFlips experiment (user)
-    {
-      name: "set pref on the user branch with a rollout and then an experiment",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_2 },
-      ],
-      expectedEnrollments: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_2 },
-      ],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_2 },
-    },
-    {
-      name: "set pref on the user branch with a rollout and then an experiment, then change that pref on the user branch",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_2 },
-      ],
-      setPrefsAfter: { [PREF]: { userBranchValue: USER_VALUE } },
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_2 },
-      ],
-      expectedPrefs: { [PREF]: USER_VALUE },
-    },
-    {
-      name: "set pref on the user branch with a rollout and then an experiment, then change that pref on the default branch",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_2 },
-      ],
-      setPrefsAfter: { [PREF]: { defaultBranchValue: DEFAULT_VALUE } },
-      expectedEnrollments: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_2 },
-      ],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_2 },
-    },
-    // * prefFlips experiment (user) -> prefFlips rollout (default)
-    {
-      name: "set pref on the user branch with an experiment and on the default branch with a rollout",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-      ],
-      expectedEnrollments: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-      ],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1 },
-    },
-    {
-      name: "set pref on the user branch with an experiment and on the default branch with a rollout, then change that pref on the user branch",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-      ],
-      setPrefsAfter: { [PREF]: { userBranchValue: USER_VALUE } },
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-      ],
-      expectedPrefs: { [PREF]: USER_VALUE },
-    },
-    {
-      name: "set pref on the user branch with an experiment and on the default branch with a rollout, then change that pref on the default branch",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-      ],
-      setPrefsAfter: { [PREF]: { defaultBranchValue: DEFAULT_VALUE } },
-      expectedEnrollments: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-      ],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1 },
-    },
-    // * prefFlips rollout (user) -> prefFlips experiment (default)
-    {
-      name: "set pref on the user branch with a rollout and on the default branch with an experiment",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_1 },
-      ],
-      expectedEnrollments: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_1 },
-      ],
-      expectedPrefs: { [PREF]: PREF_FLIPS_DEFAULT_1 },
-    },
-    {
-      name: "set pref on the user branch with a rollout and on the default branch with an experiment, then change that pref on the user branch",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_1 },
-      ],
-      setPrefsAfter: { [PREF]: { userBranchValue: USER_VALUE } },
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_1 },
-      ],
-      expectedPrefs: { [PREF]: USER_VALUE },
-    },
-    {
-      name: "set pref on the user branch with a rollout and on the default branch with an experiment, then change that pref on the default branch",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_1 },
-      ],
-      setPrefsAfter: { [PREF]: { defaultBranchValue: DEFAULT_VALUE } },
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_1 },
-      ],
-      expectedPrefs: { [PREF]: DEFAULT_VALUE },
-    },
-    // * prefFlips experiment (default) -> prefFlips rollout (user)
-    {
-      name: "set pref on the default branch with an experiment and on the user branch with a rollout",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-      ],
-      expectedEnrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-      ],
-      expectedPrefs: { [PREF]: PREF_FLIPS_DEFAULT_1 },
-    },
-    {
-      name: "set pref on the default branch with an experiment and on the user branch with a rollout, then change that pref on the user branch",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-      ],
-      setPrefsAfter: { [PREF]: { userBranchValue: USER_VALUE } },
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-      ],
-      expectedPrefs: { [PREF]: USER_VALUE },
-    },
-    {
-      name: "set pref on the default branch with an experiment and on the user branch with a rollout, then change that pref on the default branch",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-      ],
-      setPrefsAfter: { [PREF]: { defaultBranchValue: DEFAULT_VALUE } },
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-      ],
-      expectedPrefs: { [PREF]: DEFAULT_VALUE },
-    },
-    // * prefFlips rollout (default) -> prefFlips experiment (user)
-    {
-      name: "set pref on the default branch with a rollout and on the user branch with an experiment",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_1 },
-      ],
-      expectedEnrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_1 },
-      ],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1 },
-    },
-    {
-      name: "set pref on the default branch with a rollout and on the user branch with an experiment, then change that pref on the user branch",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_1 },
-      ],
-      setPrefsAfter: { [PREF]: { userBranchValue: USER_VALUE } },
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_1 },
-      ],
-      expectedPrefs: { [PREF]: USER_VALUE },
-    },
-    {
-      name: "set pref on the default branch with a rollout and on the user branch with an experiment, then change that pref on the default branch",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_1 },
-      ],
-      setPrefsAfter: { [PREF]: { defaultBranchValue: DEFAULT_VALUE } },
-      expectedEnrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_1 },
-      ],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1 },
-    },
-    // * prefFlips experiment (default) -> prefFlips rollout (default)
-    {
-      name: "set pref on the default branch with an experiment and then a rollout",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_DEFAULT_2, isRollout: true },
-      ],
-      expectedEnrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_DEFAULT_2, isRollout: true },
-      ],
-      expectedPrefs: { [PREF]: PREF_FLIPS_DEFAULT_1 },
-    },
-    {
-      name: "set pref on the default branch with an experiment and then a rollout, then change that pref on the user branch",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_DEFAULT_2, isRollout: true },
-      ],
-      setPrefsAfter: { [PREF]: { userBranchValue: USER_VALUE } },
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_DEFAULT_2, isRollout: true },
-      ],
-      expectedPrefs: { [PREF]: USER_VALUE },
-    },
-    {
-      name: "set pref on the default branch with an experiment and then a rollout, then change that pref on the default branch",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_DEFAULT_2, isRollout: true },
-      ],
-      setPrefsAfter: { [PREF]: { defaultBranchValue: DEFAULT_VALUE } },
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_DEFAULT_2, isRollout: true },
-      ],
-      expectedPrefs: { [PREF]: DEFAULT_VALUE },
-    },
-    // * prefFlips rollout (default) -> prefFlips experiment (default)
-    {
-      name: "set pref on the default branch with a rollout and then an experiment",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_2 },
-      ],
-      expectedEnrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_2 },
-      ],
-    },
-    {
-      name: "set pref on the default branch with a rollout and then an experiment, then change that pref on the user branch",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_2 },
-      ],
-      setPrefsAfter: { [PREF]: { userBranchValue: USER_VALUE } },
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_2 },
-      ],
-      expectedPrefs: { [PREF]: USER_VALUE },
-    },
-    {
-      name: "set pref on the default branch with a rollout and then an experiment, then change that pref on the default branch",
-      enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_2 },
-      ],
-      setPrefsAfter: { [PREF]: { defaultBranchValue: DEFAULT_VALUE } },
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_2 },
-      ],
-      expectedPrefs: { [PREF]: DEFAULT_VALUE },
+      expectedEnrollments: [SLUG_1],
+      expectedUnenrollments: [SLUG_2],
+      expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
     },
 
     // Multiple enrollment cases (prefFlips -> setPref)
@@ -1067,433 +861,691 @@ add_task(async function test_prefFlips_unenrollment() {
     // for the same pref because that configuration is prohibited by
     // gen_feature_manifests.py
 
-    // NB: prefFlip experiments/rollouts will stay enrolled over setPref
-    // experiment/rollouts, no matter the enrollment order.
-
-    // NB: If there is a prefFlips experiment/rollout controlling a pref and the
-    // client would enroll in a setPref experiment for that same pref, the
-    // setPref experiment will not be enrolled.
-
-    // * prefFlip experiment -> setPref experiment
-
-    // TODO: These need to be rewritten
+    // * prefFlip experiments -> setPref experiment
     {
-      name: "enroll in a prefFlips experiment on the user branch and then a setPref experiment on the user branch",
-      enrollmentOrder: [{ slug: PREF_FLIPS_USER_1 }, { slug: SET_PREF_USER_1 }],
-      expectedEnrollments: [{ slug: SET_PREF_USER_1 }],
-      expectedUnenrollments: [{ slug: PREF_FLIPS_USER_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_USER_1 },
-    },
-    {
-      name: "enroll in a prefFlips experiment on the user branch and then a setPref experiment on the default branch",
+      name: "enroll in prefFlips experiments on the user branch and then a setPref experiment on the user branch",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: SET_PREF_DEFAULT_1 },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER } },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER } },
+          },
+        },
+        {
+          slug: SLUG_3,
+          featureId: PREF_FEATURES[USER].featureId,
+          value: {
+            foo: EXPERIMENT_VALUE,
+          },
+        },
       ],
-      expectedUnenrollments: [{ slug: PREF_FLIPS_USER_1 }],
-      expectedEnrollments: [{ slug: SET_PREF_DEFAULT_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_DEFAULT_1 },
+      expectedEnrollments: [SLUG_3],
+      expectedUnenrollments: [SLUG_1, SLUG_2],
+      expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
     },
     {
-      name: "enroll in a prefFlips experiment on the default branch and then a setPref experiment on the user branch",
+      name: "enroll in prefFlips experiments on the default branch and then a setPref experiment on the user branch",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: SET_PREF_USER_1 },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT } },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT } },
+          },
+        },
+        {
+          slug: SLUG_3,
+          featureId: PREF_FEATURES[USER].featureId,
+          value: {
+            foo: EXPERIMENT_VALUE,
+          },
+        },
       ],
-      expectedUnenrollments: [{ slug: PREF_FLIPS_DEFAULT_1 }],
-      expectedEnrollments: [{ slug: SET_PREF_USER_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_USER_1 },
+      expectedEnrollments: [SLUG_3],
+      expectedUnenrollments: [SLUG_1, SLUG_2],
+      expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
     },
     {
-      name: "enroll in a prefFlips experiment on the default branch and then a setPref experiment on the default branch",
+      name: "enroll in prefFlips experiments on the user branch and then a setPref experiment on the default branch",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: SET_PREF_DEFAULT_1 },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER } },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER } },
+          },
+        },
+        {
+          slug: SLUG_3,
+          featureId: PREF_FEATURES[DEFAULT].featureId,
+          value: {
+            foo: EXPERIMENT_VALUE,
+          },
+        },
       ],
-      expectedUnenrollments: [{ slug: PREF_FLIPS_DEFAULT_1 }],
-      expectedEnrollments: [{ slug: SET_PREF_DEFAULT_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_DEFAULT_1 },
+      expectedEnrollments: [SLUG_3],
+      expectedUnenrollments: [SLUG_1, SLUG_2],
+      expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
     },
-
-    // * prefFlip experiment -> prefFlip rollout -> setPref experiment
     {
-      name: "enroll in a prefFlips experiment on the user branch and rollout on the user branch and then a setPref experiment on the user branch",
+      name: "enroll in prefFlips experiments on the default branch and then a setPref experiment on the default branch",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_USER_2, isRollout: true },
-        { slug: SET_PREF_USER_1 },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT } },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT } },
+          },
+        },
+        {
+          slug: SLUG_3,
+          featureId: PREF_FEATURES[DEFAULT].featureId,
+          value: {
+            foo: EXPERIMENT_VALUE,
+          },
+        },
       ],
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_USER_2, isRollout: true },
-      ],
-      expectedEnrollments: [{ slug: SET_PREF_USER_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_USER_1 },
+      expectedEnrollments: [SLUG_3],
+      expectedUnenrollments: [SLUG_1, SLUG_2],
+      expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
     },
     {
-      name: "enroll in a prefFlips experiment on the user branch and rollout on the user branch and then a setPref experiment on the default branch",
+      name: "enroll in prefFlip experiment on the user branch and then a setPref experiment on the user branch and unenroll to check if original values are restored (no original value)",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_USER_2, isRollout: true },
-        { slug: SET_PREF_DEFAULT_1 },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: SLUG_1, branch: USER },
+            },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: PREF_FEATURES[USER].featureId,
+          value: {
+            foo: SLUG_2,
+          },
+        },
       ],
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_USER_2, isRollout: true },
-      ],
-      expectedEnrollments: [{ slug: SET_PREF_DEFAULT_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_DEFAULT_1 },
+      expectedEnrollments: [SLUG_2],
+      expectedUnenrollments: [SLUG_1],
+      unenrollmentOrder: [SLUG_2],
+      expectedPrefs: {
+        [PREF_FOO]: null,
+      },
     },
     {
-      name: "enroll in a prefFlips experiment on the user branch and rollout on the default branch and then a setPref experiment on the user branch",
+      name: "enroll in prefFlip experiment on the user branch and then a setPref experiment on the default branch and unenroll to check if original values are restored (no original value)",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: SET_PREF_USER_1 },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: SLUG_1, branch: USER },
+            },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: PREF_FEATURES[DEFAULT].featureId,
+          value: {
+            foo: SLUG_2,
+          },
+        },
       ],
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-      ],
-      expectedEnrollments: [{ slug: SET_PREF_USER_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_USER_1 },
+      expectedEnrollments: [SLUG_2],
+      expectedUnenrollments: [SLUG_1],
+      unenrollmentOrder: [SLUG_2],
+      expectedPrefs: {
+        [PREF_FOO]: SLUG_2, // we can't clear the default branch
+      },
     },
     {
-      name: "enroll in a prefFlips experiment on the user branch and rollout on the default branch and then a setPref experiment on the default branch",
+      name: "enroll in prefFlip experiment on the default branch and then a setPref experiment on the user branch and unenroll to check if original values are restored (no original value)",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: SET_PREF_DEFAULT_1 },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: SLUG_1, branch: USER },
+            },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: PREF_FEATURES[USER].featureId,
+          value: {
+            foo: SLUG_2,
+          },
+        },
       ],
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-      ],
-      expectedEnrollments: [{ slug: SET_PREF_DEFAULT_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_DEFAULT_1 },
+      expectedEnrollments: [SLUG_2],
+      expectedUnenrollments: [SLUG_1],
+      unenrollmentOrder: [SLUG_2],
+      expectedPrefs: {
+        [PREF_FOO]: null,
+      },
     },
     {
-      name: "enroll in a prefFlips experiment on the default branch and rollout on the user branch and then a setPref experiment on the user branch",
+      name: "enroll in prefFlip experiment on the default branch and then a setPref experiment on the default branch and unenroll to check if original values are restored (no original value)",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: SET_PREF_USER_1 },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: SLUG_1, branch: USER },
+            },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: PREF_FEATURES[DEFAULT].featureId,
+          value: {
+            foo: SLUG_2,
+          },
+        },
       ],
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-      ],
-      expectedEnrollments: [{ slug: SET_PREF_USER_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_USER_1 },
+      expectedEnrollments: [SLUG_2],
+      expectedUnenrollments: [SLUG_1],
+      unenrollmentOrder: [SLUG_2],
+      expectedPrefs: {
+        [PREF_FOO]: SLUG_2,
+      },
     },
     {
-      name: "enroll in a prefFlips experiment on the default branch and rollout on the user branch and then a setPref experiment on the default branch",
+      name: "enroll in prefFlip experiment on the user branch and then a setPref experiment on the user branch and unenroll to check if original values are restored",
+      setPrefsBefore: { [PREF_FOO]: { userBranchValue: SET_BEFORE_VALUE } },
       enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: SET_PREF_DEFAULT_1 },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: SLUG_1, branch: USER },
+            },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: PREF_FEATURES[USER].featureId,
+          value: {
+            foo: SLUG_2,
+          },
+        },
       ],
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-      ],
-      expectedEnrollments: [{ slug: SET_PREF_DEFAULT_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_DEFAULT_1 },
+      expectedEnrollments: [SLUG_2],
+      expectedUnenrollments: [SLUG_1],
+      unenrollmentOrder: [SLUG_2],
+      expectedPrefs: {
+        [PREF_FOO]: SET_BEFORE_VALUE,
+      },
     },
     {
-      name: "enroll in a prefFlips experiment on the default branch and rollout on the default branch and then a setPref experiment on the user branch",
+      name: "enroll in prefFlip experiment on the user branch and then a setPref experiment on the default branch and unenroll to check if original values are restored",
+      setPrefsBefore: { [PREF_FOO]: { defaultBranchValue: SET_BEFORE_VALUE } },
       enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_DEFAULT_2, isRollout: true },
-        { slug: SET_PREF_USER_1 },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: SLUG_1, branch: USER },
+            },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: PREF_FEATURES[DEFAULT].featureId,
+          value: {
+            foo: SLUG_2,
+          },
+        },
       ],
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_DEFAULT_2, isRollout: true },
-      ],
-      expectedEnrollments: [{ slug: SET_PREF_USER_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_USER_1 },
+      expectedEnrollments: [SLUG_2],
+      expectedUnenrollments: [SLUG_1],
+      unenrollmentOrder: [SLUG_2],
+      expectedPrefs: {
+        [PREF_FOO]: SET_BEFORE_VALUE,
+      },
     },
     {
-      name: "enroll in a prefFlips experiment on the default branch and rollout on the default branch and then a setPref experiment on the default branch",
+      name: "enroll in prefFlip experiment on the default branch and then a setPref experiment on the user branch and unenroll to check if original values are restored",
+      setPrefsBefore: { [PREF_FOO]: { defaultBranchValue: SET_BEFORE_VALUE } },
       enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_DEFAULT_2, isRollout: true },
-        { slug: SET_PREF_DEFAULT_1 },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: SLUG_1, branch: USER },
+            },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: PREF_FEATURES[USER].featureId,
+          value: {
+            foo: SLUG_2,
+          },
+        },
       ],
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: PREF_FLIPS_DEFAULT_2, isRollout: true },
-      ],
-      expectedEnrollments: [{ slug: SET_PREF_DEFAULT_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_DEFAULT_1 },
+      expectedEnrollments: [SLUG_2],
+      expectedUnenrollments: [SLUG_1],
+      unenrollmentOrder: [SLUG_2],
+      expectedPrefs: {
+        [PREF_FOO]: SET_BEFORE_VALUE,
+      },
     },
-
-    // * prefFlip rollout -> prefFlip experiment -> setPref experiment
     {
-      name: "enroll in a prefFlips rollout on the user branch and experiment on the user branch and then a setPref experiment on the user branch",
+      name: "enroll in prefFlip experiment on the default branch and then a setPref experiment on the default branch and unenroll to check if original values are restored",
+      setPrefsBefore: { [PREF_FOO]: { defaultBranchValue: SET_BEFORE_VALUE } },
       enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_2 },
-        { slug: SET_PREF_USER_1 },
+        {
+          slug: SLUG_1,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: SLUG_1, branch: USER },
+            },
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: PREF_FEATURES[DEFAULT].featureId,
+          value: {
+            foo: SLUG_2,
+          },
+        },
       ],
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_2 },
-      ],
-      expectedEnrollments: [{ slug: SET_PREF_USER_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_USER_1 },
+      expectedEnrollments: [SLUG_2],
+      expectedUnenrollments: [SLUG_1],
+      unenrollmentOrder: [SLUG_2],
+      expectedPrefs: {
+        [PREF_FOO]: SET_BEFORE_VALUE,
+      },
     },
+    // * setPref experiment, rollout -> prefFlips experiment
     {
-      name: "enroll in a prefFlips rollout on the user branch and experiment on the user branch and then a setPref experiment on the default branch",
+      name: "enroll in a setPref experiment and rollout on the user branch then a prefFlips experiment on the user branch",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_2 },
-        { slug: SET_PREF_DEFAULT_1 },
+        {
+          slug: SLUG_1,
+          featureId: PREF_FEATURES[USER].featureId,
+          value: {
+            foo: EXPERIMENT_VALUE,
+          },
+        },
+        {
+          slug: SLUG_2,
+          isRollout: true,
+          featureId: PREF_FEATURES[USER].featureId,
+          value: {
+            foo: EXPERIMENT_VALUE,
+          },
+        },
+        {
+          slug: SLUG_3,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER } },
+          },
+        },
       ],
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_2 },
-      ],
-      expectedEnrollments: [{ slug: SET_PREF_DEFAULT_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_DEFAULT_1 },
+      expectedEnrollments: [SLUG_3],
+      expectedUnenrollments: [SLUG_1, SLUG_2],
+      expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
     },
     {
-      name: "enroll in a prefFlips rollout on the user branch and experiment on the default branch and then a setPref experiment on the user branch",
+      name: "enroll in a setPref experiment and rollout on the user branch then a prefFlips experiment on the default branch",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_2 },
-        { slug: SET_PREF_USER_1 },
+        {
+          slug: SLUG_1,
+          featureId: PREF_FEATURES[USER].featureId,
+          value: {
+            foo: EXPERIMENT_VALUE,
+          },
+        },
+        {
+          slug: SLUG_2,
+          isRollout: true,
+          featureId: PREF_FEATURES[USER].featureId,
+          value: {
+            foo: EXPERIMENT_VALUE,
+          },
+        },
+        {
+          slug: SLUG_3,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT } },
+          },
+        },
       ],
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_2 },
-      ],
-      expectedEnrollments: [{ slug: SET_PREF_USER_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_USER_1 },
+      expectedEnrollments: [SLUG_3],
+      expectedUnenrollments: [SLUG_1, SLUG_2],
+      expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
     },
     {
-      name: "enroll in a prefFlips rollout on the user branch and experiment on the default branch and then a setPref experiment on the default branch",
+      name: "enroll in a setPref experiment and rollout on the default branch then a prefFlips experiment on the user branch",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_1 },
-        { slug: SET_PREF_DEFAULT_1 },
+        {
+          slug: SLUG_1,
+          featureId: PREF_FEATURES[DEFAULT].featureId,
+          value: {
+            foo: EXPERIMENT_VALUE,
+          },
+        },
+        {
+          slug: SLUG_2,
+          isRollout: true,
+          featureId: PREF_FEATURES[DEFAULT].featureId,
+          value: {
+            foo: EXPERIMENT_VALUE,
+          },
+        },
+        {
+          slug: SLUG_3,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER } },
+          },
+        },
       ],
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_USER_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_1 },
-      ],
-      expectedEnrollments: [{ slug: SET_PREF_DEFAULT_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_DEFAULT_1 },
+      expectedEnrollments: [SLUG_3],
+      expectedUnenrollments: [SLUG_1, SLUG_2],
+      expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
     },
     {
-      name: "enroll in a prefFlips rollout on the default branch and experiment on the user branch and then a setPref experiment on the user branch",
+      name: "enroll in a setPref experiment and rollout on the default branch then a prefFlips experiment on the default branch",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: SET_PREF_USER_1 },
+        {
+          slug: SLUG_1,
+          featureId: PREF_FEATURES[DEFAULT].featureId,
+          value: {
+            foo: EXPERIMENT_VALUE,
+          },
+        },
+        {
+          slug: SLUG_2,
+          isRollout: true,
+          featureId: PREF_FEATURES[DEFAULT].featureId,
+          value: {
+            foo: EXPERIMENT_VALUE,
+          },
+        },
+        {
+          slug: SLUG_3,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: { [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT } },
+          },
+        },
       ],
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_1 },
-      ],
-      expectedEnrollments: [{ slug: SET_PREF_USER_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_USER_1 },
+      expectedEnrollments: [SLUG_3],
+      expectedUnenrollments: [SLUG_1, SLUG_2],
+      expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
     },
     {
-      name: "enroll in a prefFlips rollout on the default branch and experiment on the user branch and then a setPref experiment on the default branch",
+      name: "enroll in a setPref experiment on the user branch and a prefFlips experiment on the user branch and unenroll to check if original values are restored (no original value)",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_1 },
-        { slug: SET_PREF_DEFAULT_1 },
+        {
+          slug: SLUG_1,
+          featureId: PREF_FEATURES[USER].featureId,
+          value: {
+            foo: SLUG_1,
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: SLUG_2, branch: USER },
+            },
+          },
+        },
       ],
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_USER_1 },
-      ],
-      expectedEnrollments: [{ slug: SET_PREF_DEFAULT_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_DEFAULT_1 },
+      expectedEnrollments: [SLUG_2],
+      expectedUnenrollments: [SLUG_1],
+      unenrollmentOrder: [SLUG_2],
+      expectedPrefs: {
+        [PREF_FOO]: null, // we can't clear the default branch
+      },
     },
     {
-      name: "enroll in a prefFlips rollout on the default branch and experiment on the default branch and then a setPref experiment on the user branch",
+      name: "enroll in a setPref experiment on the user branch and a prefFlips experiment on the default branch and unenroll to check if original values are restored (no original value)",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_2 },
-        { slug: SET_PREF_USER_1 },
+        {
+          slug: SLUG_1,
+          featureId: PREF_FEATURES[USER].featureId,
+          value: {
+            foo: SLUG_1,
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: SLUG_2, branch: DEFAULT },
+            },
+          },
+        },
       ],
-      expectedUnnrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_2 },
-      ],
-      expectedEnrollments: [{ slug: SET_PREF_USER_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_USER_1 },
+      expectedEnrollments: [SLUG_2],
+      expectedUnenrollments: [SLUG_1],
+      unenrollmentOrder: [SLUG_2],
+      expectedPrefs: {
+        [PREF_FOO]: SLUG_2, // Cannot clear the default branch
+      },
     },
     {
-      name: "enroll in a prefFlips rollout on the default branch and experiment on the default branch and then a setPref experiment on the default branch",
+      name: "enroll in a setPref experiment on the default branch and a prefFlips experiment on the user branch and unenroll to check if original values are restored (no original value)",
       enrollmentOrder: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_2 },
-        { slug: SET_PREF_DEFAULT_1 },
+        {
+          slug: SLUG_1,
+          featureId: PREF_FEATURES[DEFAULT].featureId,
+          value: {
+            foo: SLUG_1,
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: SLUG_2, branch: USER },
+            },
+          },
+        },
       ],
-      expectedUnenrollments: [
-        { slug: PREF_FLIPS_DEFAULT_1, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_2 },
-      ],
-      expectedEnrollments: [{ slug: SET_PREF_DEFAULT_1 }],
-      expectedPrefs: { [PREF]: SET_PREF_DEFAULT_1 },
-    },
-    // Multiple enrollment cases (setPref -> prefFlips)
-    // * setPref experiment -> prefFLip experiment:
-    {
-      name: "enroll in a setPref experiment on the user branch and then a prefFlip experiment on the user branch",
-      enrollmentOrder: [{ slug: SET_PREF_USER_1 }, { slug: PREF_FLIPS_USER_1 }],
-      expectedUnenrollments: [{ slug: SET_PREF_USER_1 }],
-      expectedEnrollments: [{ slug: PREF_FLIPS_USER_1 }],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1 },
+      expectedEnrollments: [SLUG_2],
+      expectedUnenrollments: [SLUG_1],
+      unenrollmentOrder: [SLUG_2],
+      expectedPrefs: {
+        [PREF_FOO]: SLUG_1, // cannot clear the default branch
+      },
     },
     {
-      name: "enroll in a setPref experiment on the user branch and then a prefFlip experiment on the default branch",
+      name: "enroll in a setPref experiment on the default branch and a prefFlips experiment on the default branch and unenroll to check if original values are restored (no original value)",
       enrollmentOrder: [
-        { slug: SET_PREF_USER_1 },
-        { slug: PREF_FLIPS_DEFAULT_1 },
+        {
+          slug: SLUG_1,
+          featureId: PREF_FEATURES[DEFAULT].featureId,
+          value: {
+            foo: SLUG_1,
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: SLUG_2, branch: DEFAULT },
+            },
+          },
+        },
       ],
-      expectedUnenrollments: [{ slug: SET_PREF_USER_1 }],
-      expectedEnrollments: [{ slug: PREF_FLIPS_DEFAULT_1 }],
-      expectedPrefs: { [PREF]: PREF_FLIPS_DEFAULT_1 },
+      expectedEnrollments: [SLUG_2],
+      expectedUnenrollments: [SLUG_1],
+      unenrollmentOrder: [SLUG_2],
+      expectedPrefs: {
+        [PREF_FOO]: SLUG_2, // cannot clear the default branch
+      },
     },
     {
-      name: "enroll in a setPref experiment on the default branch and then a prefFlip experiment on the user branch",
+      name: "enroll in a setPref experiment on the user branch and a prefFlips experiment on the user branch and unenroll to check if original values are restored",
+      setPrefsBefore: {
+        [PREF_FOO]: { userBranchValue: SET_BEFORE_VALUE },
+      },
       enrollmentOrder: [
-        { slug: SET_PREF_DEFAULT_1 },
-        { slug: PREF_FLIPS_USER_1 },
+        {
+          slug: SLUG_1,
+          featureId: PREF_FEATURES[USER].featureId,
+          value: {
+            foo: EXPERIMENT_VALUE,
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER },
+            },
+          },
+        },
       ],
-      expectedUnenrollments: [{ slug: SET_PREF_DEFAULT_1 }],
-      expectedEnrollments: [{ slug: PREF_FLIPS_USER_1 }],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1 },
+      expectedEnrollments: [SLUG_2],
+      expectedUnenrollments: [SLUG_1],
+      unenrollmentOrder: [SLUG_2],
+      expectedPrefs: {
+        [PREF_FOO]: SET_BEFORE_VALUE,
+      },
     },
     {
-      name: "enroll in a setPref experiment on the default branch and then a prefFlip experiment on the default branch",
+      name: "enroll in a setPref experiment on the user branch and a prefFlips experiment on the default branch and unenroll to check if original values are restored",
+      setPrefsBefore: {
+        [PREF_FOO]: { userBranchValue: SET_BEFORE_VALUE },
+      },
       enrollmentOrder: [
-        { slug: SET_PREF_DEFAULT_1 },
-        { slug: PREF_FLIPS_DEFAULT_1 },
+        {
+          slug: SLUG_1,
+          featureId: PREF_FEATURES[USER].featureId,
+          value: {
+            foo: EXPERIMENT_VALUE,
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT },
+            },
+          },
+        },
       ],
-      expectedUnenrollments: [{ slug: SET_PREF_DEFAULT_1 }],
-      expectedEnrollments: [{ slug: PREF_FLIPS_DEFAULT_1 }],
-      expectedPrefs: { [PREF]: PREF_FLIPS_DEFAULT_1 },
-    },
-    // * setPref experiment -> setPref rollout -> prefFlip experiment
-    {
-      name: "enroll in a setPref experiment and rollout on the user branch and then a prefFlips experiment on the user branch",
-      enrollmentOrder: [
-        { slug: SET_PREF_USER_1 },
-        { slug: SET_PREF_USER_2, isRollout: true },
-        { slug: PREF_FLIPS_USER_1 },
-      ],
-      expectedUnenrollments: [
-        { slug: SET_PREF_USER_1 },
-        { slug: SET_PREF_USER_2, isRollout: true },
-      ],
-      expectedEnrollments: [{ slug: PREF_FLIPS_USER_1 }],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1 },
-    },
-    {
-      name: "enroll in a setPref experiment and rollout on the user branch and then a prefFlips experiment on the default branch",
-      enrollmentOrder: [
-        { slug: SET_PREF_USER_1 },
-        { slug: SET_PREF_USER_2, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_1 },
-      ],
-      expectedUnenrollments: [
-        { slug: SET_PREF_USER_1 },
-        { slug: SET_PREF_USER_2, isRollout: true },
-      ],
-      expectedEnrollments: [{ slug: PREF_FLIPS_DEFAULT_1 }],
-      expectedPrefs: { [PREF]: PREF_FLIPS_DEFAULT_1 },
+      expectedEnrollments: [SLUG_2],
+      expectedUnenrollments: [SLUG_1],
+      unenrollmentOrder: [SLUG_2],
+      expectedPrefs: {
+        [PREF_FOO]: SET_BEFORE_VALUE,
+      },
     },
     {
-      name: "enroll in a setPref experiment and rollout on the default branch and then a prefFlips experiment on the user branch",
+      name: "enroll in a setPref experiment on the default branch and a prefFlips experiment on the user branch and unenroll to check if original values are restored",
+      setPrefsBefore: {
+        [PREF_FOO]: { defaultBranchValue: SET_BEFORE_VALUE },
+      },
       enrollmentOrder: [
-        { slug: SET_PREF_DEFAULT_1 },
-        { slug: SET_PREF_DEFAULT_2, isRollout: true },
-        { slug: PREF_FLIPS_USER_1 },
+        {
+          slug: SLUG_1,
+          featureId: PREF_FEATURES[DEFAULT].featureId,
+          value: {
+            foo: EXPERIMENT_VALUE,
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: USER },
+            },
+          },
+        },
       ],
-      expectedUnenrollments: [
-        { slug: SET_PREF_DEFAULT_1 },
-        { slug: SET_PREF_DEFAULT_2, isRollout: true },
-      ],
-      expectedEnrollments: [{ slug: PREF_FLIPS_USER_1 }],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1 },
+      expectedEnrollments: [SLUG_2],
+      expectedUnenrollments: [SLUG_1],
+      unenrollmentOrder: [SLUG_2],
+      expectedPrefs: {
+        [PREF_FOO]: SET_BEFORE_VALUE,
+      },
     },
     {
-      name: "enroll in a setPref experiment and rollout on the default branch and then a prefFlips experiment on the default branch",
+      name: "enroll in a setPref experiment on the default branch and a prefFlips experiment on the default branch and unenroll to check if original values are restored",
+      setPrefsBefore: {
+        [PREF_FOO]: { defaultBranchValue: SET_BEFORE_VALUE },
+      },
       enrollmentOrder: [
-        { slug: SET_PREF_DEFAULT_1 },
-        { slug: SET_PREF_DEFAULT_2, isRollout: true },
-        { slug: PREF_FLIPS_DEFAULT_1 },
+        {
+          slug: SLUG_1,
+          featureId: PREF_FEATURES[DEFAULT].featureId,
+          value: {
+            foo: EXPERIMENT_VALUE,
+          },
+        },
+        {
+          slug: SLUG_2,
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_FOO]: { value: EXPERIMENT_VALUE, branch: DEFAULT },
+            },
+          },
+        },
       ],
-      expectedUnenrollments: [
-        { slug: SET_PREF_DEFAULT_1 },
-        { slug: SET_PREF_DEFAULT_2, isRollout: true },
-      ],
-      expectedEnrollments: [{ slug: PREF_FLIPS_DEFAULT_1 }],
-      expectedPrefs: { [PREF]: PREF_FLIPS_DEFAULT_1 },
-    },
-    // * setPref rollout -> setPref experiment -> prefFlip experiment
-    {
-      name: "enroll in a setPref rollout on the user branch and experiment on the user branch and then a prefFlip experiment on the user branch",
-      enrollmentOrder: [
-        { slug: SET_PREF_USER_1, isRollout: true },
-        { slug: SET_PREF_USER_2 },
-        { slug: PREF_FLIPS_USER_1 },
-      ],
-      expectedUnenrollments: [
-        { slug: SET_PREF_USER_1, isRollout: true },
-        { slug: SET_PREF_USER_2 },
-      ],
-      expectedEnrollments: [{ slug: PREF_FLIPS_USER_1 }],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1 },
-    },
-    {
-      name: "enroll in a setPref rollout on the user branch and experiment on the user branch and then a prefFlip experiment on the default branch",
-      enrollmentOrder: [
-        { slug: SET_PREF_USER_1, isRollout: true },
-        { slug: SET_PREF_USER_2 },
-        { slug: PREF_FLIPS_DEFAULT_1 },
-      ],
-      expectedUnenrollments: [
-        { slug: SET_PREF_USER_1, isRollout: true },
-        { slug: SET_PREF_USER_2 },
-      ],
-      expectedEnrollments: [{ slug: PREF_FLIPS_DEFAULT_1 }],
-      expectedPrefs: { [PREF]: PREF_FLIPS_DEFAULT_1 },
-    },
-    {
-      name: "enroll in a setPref rollout on the default branch and experiment on the user branch and then a prefFlip experiment on the user branch",
-      enrollmentOrder: [
-        { slug: SET_PREF_DEFAULT_1, isRollout: true },
-        { slug: SET_PREF_DEFAULT_2 },
-        { slug: PREF_FLIPS_USER_1 },
-      ],
-      expectedUnenrollments: [
-        { slug: SET_PREF_DEFAULT_1, isRollout: true },
-        { slug: SET_PREF_DEFAULT_2 },
-      ],
-      expectedEnrollments: [{ slug: PREF_FLIPS_USER_1 }],
-      expectedPrefs: { [PREF]: PREF_FLIPS_USER_1 },
-    },
-    {
-      name: "enroll in a setPref rollout on the default branch and experiment on the user branch and then a prefFlip experiment on the default branch",
-      enrollmentOrder: [
-        { slug: SET_PREF_DEFAULT_1, isRollout: true },
-        { slug: SET_PREF_DEFAULT_2 },
-        { slug: PREF_FLIPS_DEFAULT_1 },
-      ],
-      expectedUnenrollments: [
-        { slug: SET_PREF_DEFAULT_1, isRollout: true },
-        { slug: SET_PREF_DEFAULT_2 },
-      ],
-      expectedEnrollments: [{ slug: PREF_FLIPS_DEFAULT_1 }],
-      expectedPrefs: { [PREF]: PREF_FLIPS_DEFAULT_1 },
+      expectedEnrollments: [SLUG_2],
+      expectedUnenrollments: [SLUG_1],
+      unenrollmentOrder: [SLUG_2],
+      expectedPrefs: {
+        [PREF_FOO]: SET_BEFORE_VALUE,
+      },
     },
   ];
 
@@ -1514,6 +1566,9 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedEnrollments = [],
       // The expected inactive enrollments after all enrollments have finished.
       expectedUnenrollments = [],
+      // The slugs to unenroll from after enrolling and settings prefs but
+      // before checking pref values.
+      unenrollmentOrder,
       // Prefs to check after enrollment. They will be checked on the user
       // branch.
       expectedPrefs,
@@ -1525,9 +1580,13 @@ add_task(async function test_prefFlips_unenrollment() {
     const { manager, cleanup } = await setupTest();
 
     info("Enrolling...");
-    for (const { slug, isRollout = false } of enrollmentOrder) {
-      await ExperimentFakes.enrollWithFeatureConfig(FEATURE_CONFIGS[slug], {
-        slug: `${slug}-${isRollout ? "rollout" : "experiment"}`,
+    for (const {
+      slug,
+      isRollout = false,
+      ...featureConfig
+    } of enrollmentOrder) {
+      await NimbusTestUtils.enrollWithFeatureConfig(featureConfig, {
+        slug,
         manager,
         isRollout,
       });
@@ -1537,27 +1596,29 @@ add_task(async function test_prefFlips_unenrollment() {
     setPrefs(setPrefsAfter);
 
     info("Checking expected enrollments...");
-    for (const { slug, isRollout = false } of expectedEnrollments) {
-      const computedSlug = `${slug}-${isRollout ? "rollout" : "experiment"}`;
-      const enrollment = manager.store.get(computedSlug);
+    for (const slug of expectedEnrollments) {
+      const enrollment = manager.store.get(slug);
 
       Assert.ok(
         enrollment !== null && typeof enrollment !== "undefined",
-        `An enrollment for ${computedSlug} should exist`
+        `An enrollment for ${slug} should exist`
       );
       Assert.ok(enrollment.active, `It should still be active`);
     }
 
     info("Checking expected unenrollments...");
-    for (const { slug, isRollout = false } of expectedUnenrollments) {
-      const computedSlug = `${slug}-${isRollout ? "rollout" : "experiment"}`;
-      const enrollment = manager.store.get(computedSlug);
+    for (const slug of expectedUnenrollments) {
+      const enrollment = manager.store.get(slug);
 
-      Assert.ok(
-        enrollment !== null,
-        `An enrollment for ${computedSlug} should exist`
-      );
+      Assert.ok(!!enrollment, `An enrollment for ${slug} should exist`);
       Assert.ok(!enrollment.active, "It should no longer be active");
+    }
+
+    if (unenrollmentOrder) {
+      info("Unenrolling from specific experiments before checking prefs...");
+      for (const slug of unenrollmentOrder ?? []) {
+        await manager.unenroll(slug);
+      }
     }
 
     if (expectedPrefs) {
@@ -1566,17 +1627,18 @@ add_task(async function test_prefFlips_unenrollment() {
     }
 
     info("Unenrolling from active experiments...");
-    for (const { slug, isRollout = false } of expectedEnrollments) {
-      const computedSlug = `${slug}-${isRollout ? "rollout" : "experiment"}`;
-      info(`Unenrolling from ${computedSlug}\n`);
-      manager.unenroll(computedSlug);
+    for (const slug of expectedEnrollments) {
+      if (!(unenrollmentOrder ?? []).includes(slug)) {
+        info(`Unenrolling from ${slug}\n`);
+        await manager.unenroll(slug);
+      }
     }
 
     info("Cleaning up prefs...");
-    Services.prefs.deleteBranch(PREF);
-    Services.prefs.deleteBranch(PREF2);
+    Services.prefs.deleteBranch(PREF_FOO);
+    Services.prefs.deleteBranch(PREF_BAR);
 
-    cleanup();
+    await cleanup();
   }
 });
 
@@ -1646,7 +1708,8 @@ add_task(async function test_prefFlip_setPref_restore() {
     {
       name: "enroll in setPref on default branch and prefFlips on default branch",
       enrollmentOrder: [SET_PREF_DEFAULT, PREF_FLIPS_DEFAULT],
-      expectedPrefs: { [PREF]: { defaultBranchValue: SET_PREF_DEFAULT } },
+      // We can't clear the default branch
+      expectedPrefs: { [PREF]: { defaultBranchValue: PREF_FLIPS_DEFAULT } },
     },
     // - prefFlips first
     {
@@ -1667,6 +1730,7 @@ add_task(async function test_prefFlip_setPref_restore() {
     {
       name: "enroll in prefFlips on default branch and setPref on default branch",
       enrollmentOrder: [PREF_FLIPS_DEFAULT, SET_PREF_DEFAULT],
+      // We can't clear the default branch
       expectedPrefs: { [PREF]: { defaultBranchValue: SET_PREF_DEFAULT } },
     },
     // 2. User branch prefs set beforehand.
@@ -1706,7 +1770,7 @@ add_task(async function test_prefFlip_setPref_restore() {
       expectedPrefs: {
         [PREF]: {
           userBranchValue: USER_VALUE,
-          defaultBranchValue: SET_PREF_DEFAULT,
+          defaultBranchValue: PREF_FLIPS_DEFAULT, // We can't clear the default branch
         },
       },
     },
@@ -1746,7 +1810,7 @@ add_task(async function test_prefFlip_setPref_restore() {
       expectedPrefs: {
         [PREF]: {
           userBranchValue: USER_VALUE,
-          defaultBranchValue: SET_PREF_DEFAULT,
+          defaultBranchValue: SET_PREF_DEFAULT, // We can't clear the default branch
         },
       },
     },
@@ -1942,14 +2006,6 @@ add_task(async function test_prefFlip_setPref_restore() {
   ];
 
   for (const [i, { name, ...testCase }] of TEST_CASES.entries()) {
-    Services.fog.applyServerKnobsConfig(
-      JSON.stringify({
-        metrics_enabled: {
-          "nimbus_events.enrollment_status": true,
-        },
-      })
-    );
-
     info(`Running test case ${i}: ${name}`);
 
     const { setPrefsBefore = {}, enrollmentOrder, expectedPrefs } = testCase;
@@ -1961,7 +2017,7 @@ add_task(async function test_prefFlip_setPref_restore() {
 
     info("Enrolling...");
     for (const slug of enrollmentOrder) {
-      await ExperimentFakes.enrollWithFeatureConfig(FEATURE_CONFIGS[slug], {
+      await NimbusTestUtils.enrollWithFeatureConfig(FEATURE_CONFIGS[slug], {
         manager,
         slug,
       });
@@ -2044,12 +2100,12 @@ add_task(async function test_prefFlip_setPref_restore() {
     );
 
     info("Unenrolling...");
-    manager.unenroll(enrollmentOrder[1]);
+    await manager.unenroll(enrollmentOrder[1]);
 
     info("Checking expected prefs...");
     checkExpectedPrefBranches(expectedPrefs);
 
-    cleanup();
+    await cleanup();
 
     info("Cleaning up prefs...");
     Services.prefs.deleteBranch(PREF);
@@ -2057,30 +2113,20 @@ add_task(async function test_prefFlip_setPref_restore() {
 });
 
 add_task(async function test_prefFlips_cacheOriginalValues() {
-  const recipe = ExperimentFakes.recipe("prefFlips-test", {
-    bucketConfig: {
-      ...ExperimentFakes.recipe.bucketConfig,
-      count: 1000,
-    },
-    branches: [
-      {
-        ...ExperimentFakes.recipe.branches[0],
-        features: [
-          {
-            featureId: FEATURE_ID,
-            value: {
-              prefs: {
-                "test.pref.please.ignore": {
-                  branch: "user",
-                  value: "test-value",
-                },
-              },
-            },
+  const recipe = NimbusTestUtils.factories.recipe.withFeatureConfig(
+    "prefFlips-test",
+    {
+      featureId: FEATURE_ID,
+      value: {
+        prefs: {
+          "test.pref.please.ignore": {
+            branch: "user",
+            value: "test-value",
           },
-        ],
+        },
       },
-    ],
-  });
+    }
+  );
 
   const { manager, cleanup } = await setupTest();
 
@@ -2094,8 +2140,19 @@ add_task(async function test_prefFlips_cacheOriginalValues() {
     },
   });
 
-  // Force the store to save to disk
-  const storePath = await NimbusTestUtils.saveStore(manager.store);
+  const storePath = manager.store._store.path;
+
+  // We are intentionally *not* forcing a save -- we are only flushing a pending
+  // save to disk.
+  {
+    const jsonFile = manager.store._store;
+    if (jsonFile._saver.isRunning) {
+      await jsonFile._saver._runningPromise;
+    } else if (jsonFile._saver.isArmed) {
+      jsonFile._saver.disarm();
+      await jsonFile._save();
+    }
+  }
 
   const storeContents = await IOUtils.readJSON(storePath);
 
@@ -2118,40 +2175,30 @@ add_task(async function test_prefFlips_cacheOriginalValues() {
     "originalValues cached on serialized enrollment"
   );
 
-  manager.unenroll(recipe.slug);
+  await manager.unenroll(recipe.slug);
   Assert.ok(
     !Services.prefs.prefHasUserValue("test.pref.please.ignore"),
     "pref unset after unenrollment"
   );
 
-  cleanup();
+  await cleanup();
 });
 
 add_task(async function test_prefFlips_restore_unenroll() {
-  const recipe = ExperimentFakes.recipe("prefFlips-test", {
-    bucketConfig: {
-      ...ExperimentFakes.recipe.bucketConfig,
-      count: 1000,
-    },
-    branches: [
-      {
-        ...ExperimentFakes.recipe.branches[0],
-        features: [
-          {
-            featureId: FEATURE_ID,
-            value: {
-              prefs: {
-                "test.pref.please.ignore": {
-                  branch: "user",
-                  value: "test-value",
-                },
-              },
-            },
+  const recipe = NimbusTestUtils.factories.recipe.withFeatureConfig(
+    "prefFlips-test",
+    {
+      featureId: FEATURE_ID,
+      value: {
+        prefs: {
+          "test.pref.please.ignore": {
+            branch: "user",
+            value: "test-value",
           },
-        ],
+        },
       },
-    ],
-  });
+    }
+  );
 
   // Set up a previous ExperimentStore on disk.
   let storePath;
@@ -2175,7 +2222,7 @@ add_task(async function test_prefFlips_restore_unenroll() {
       lastSeen: new Date().toJSON(),
     };
 
-    const store = ExperimentFakes.store();
+    const store = NimbusTestUtils.stubs.store();
     await store.init();
     store.set(enrollment.slug, enrollment);
     storePath = await NimbusTestUtils.saveStore(store);
@@ -2193,17 +2240,17 @@ add_task(async function test_prefFlips_restore_unenroll() {
   Assert.equal(activeEnrollment.slug, recipe.slug, "enrollment restored");
 
   Assert.equal(
-    manager._prefFlips._prefs.get("test.pref.please.ignore").originalValue,
+    manager._prefFlips._getOriginalValue("test.pref.please.ignore", "user"),
     null
   );
 
-  manager.unenroll(recipe.slug);
+  await manager.unenroll(recipe.slug);
   Assert.ok(
     !Services.prefs.prefHasUserValue("test.pref.please.ignore"),
     "pref unset after unenrollment"
   );
 
-  cleanup();
+  await cleanup();
 });
 
 add_task(async function test_prefFlips_failed() {
@@ -2211,30 +2258,20 @@ add_task(async function test_prefFlips_failed() {
 
   Services.prefs.getDefaultBranch(null).setStringPref(PREF, "test-value");
 
-  const recipe = ExperimentFakes.recipe("prefFlips-test", {
-    branches: [
-      {
-        ...ExperimentFakes.recipe.branches[0],
-        features: [
-          {
-            featureId: FEATURE_ID,
-            value: {
-              prefs: {
-                [PREF]: { branch: "user", value: 123 },
-              },
-            },
-          },
-        ],
+  const recipe = NimbusTestUtils.factories.recipe.withFeatureConfig(
+    "prefFlips-test",
+    {
+      featureId: FEATURE_ID,
+      value: {
+        prefs: {
+          [PREF]: { branch: "user", value: 123 },
+        },
       },
-    ],
-    bucketConfig: {
-      ...ExperimentFakes.recipe.bucketConfig,
-      count: 1000,
-    },
-  });
+    }
+  );
 
   const { manager, cleanup } = await setupTest();
-  await manager.enroll(recipe);
+  await manager.enroll(recipe, "test");
 
   const enrollment = manager.store.get(recipe.slug);
   Assert.ok(!enrollment.active, "Experiment should not be active");
@@ -2277,7 +2314,7 @@ add_task(async function test_prefFlips_failed() {
 
   Services.prefs.deleteBranch(PREF);
 
-  cleanup();
+  await cleanup();
 });
 
 add_task(async function test_prefFlips_failed_multiple_prefs() {
@@ -2286,34 +2323,24 @@ add_task(async function test_prefFlips_failed_multiple_prefs() {
 
   Services.prefs.getDefaultBranch(null).setStringPref(BAD_PREF, "test-value");
 
-  const recipe = ExperimentFakes.recipe("prefFlips-test", {
-    branches: [
-      {
-        ...ExperimentFakes.recipe.branches[0],
-        features: [
-          {
-            featureId: FEATURE_ID,
-            value: {
-              prefs: {
-                [GOOD_PREF]: { branch: USER, value: 123 },
-                [BAD_PREF]: { branch: USER, value: 123 },
-              },
-            },
-          },
-        ],
+  const recipe = NimbusTestUtils.factories.recipe.withFeatureConfig(
+    "prefFlips-test",
+    {
+      featureId: FEATURE_ID,
+      value: {
+        prefs: {
+          [GOOD_PREF]: { branch: USER, value: 123 },
+          [BAD_PREF]: { branch: USER, value: 123 },
+        },
       },
-    ],
-    bucketConfig: {
-      ...ExperimentFakes.recipe.bucketConfig,
-      count: 1000,
-    },
-  });
+    }
+  );
 
   const { sandbox, manager, cleanup } = await setupTest();
 
   const setPrefSpy = sandbox.spy(PrefUtils, "setPref");
 
-  await manager.enroll(recipe);
+  await manager.enroll(recipe, "test");
 
   const enrollment = manager.store.get(recipe.slug);
   Assert.ok(!enrollment.active, "Experiment should not be active");
@@ -2352,7 +2379,7 @@ add_task(async function test_prefFlips_failed_multiple_prefs() {
   Services.prefs.deleteBranch(GOOD_PREF);
   Services.prefs.deleteBranch(BAD_PREF);
 
-  cleanup();
+  await cleanup();
 });
 
 add_task(async function test_prefFlips_failed_experiment_and_rollout_1() {
@@ -2378,8 +2405,8 @@ add_task(async function test_prefFlips_failed_experiment_and_rollout_1() {
         [PREFS[ROLLOUT]]: { defaultBranchValue: BOGUS_VALUE },
       },
       enrollmentOrder: [EXPERIMENT, ROLLOUT],
-      expectedEnrollments: [EXPERIMENT, ROLLOUT],
-      expectedUnenrollments: [],
+      expectedEnrollments: [EXPERIMENT],
+      expectedUnenrollments: [ROLLOUT],
       expectedPrefs: {
         [PREFS[EXPERIMENT]]: VALUES[EXPERIMENT],
         [PREFS[ROLLOUT]]: BOGUS_VALUE,
@@ -2424,7 +2451,7 @@ add_task(async function test_prefFlips_failed_experiment_and_rollout_1() {
 
     info("Enrolling...");
     for (const slug of enrollmentOrder) {
-      await ExperimentFakes.enrollWithFeatureConfig(
+      await NimbusTestUtils.enrollWithFeatureConfig(
         {
           featureId: FEATURE_ID,
           value: FEATURE_VALUES[slug],
@@ -2454,17 +2481,17 @@ add_task(async function test_prefFlips_failed_experiment_and_rollout_1() {
 
     info("Unenrolling...");
     if (expectedEnrollments.includes(ROLLOUT)) {
-      manager.unenroll(ROLLOUT);
+      await manager.unenroll(ROLLOUT);
     }
     if (expectedEnrollments.includes(EXPERIMENT)) {
-      manager.unenroll(EXPERIMENT);
+      await manager.unenroll(EXPERIMENT);
     }
 
     info("Cleaning up...");
     Services.prefs.deleteBranch(PREFS[ROLLOUT]);
     Services.prefs.deleteBranch(PREFS[EXPERIMENT]);
 
-    cleanup();
+    await cleanup();
   }
 });
 
@@ -2537,7 +2564,7 @@ add_task(async function test_prefFlips_failed_experiment_and_rollout_2() {
 
     info("Enrolling...");
     for (const slug of enrollmentOrder) {
-      await ExperimentFakes.enrollWithFeatureConfig(
+      await NimbusTestUtils.enrollWithFeatureConfig(
         {
           featureId: FEATURE_ID,
           value: FEATURE_VALUES[slug],
@@ -2567,17 +2594,17 @@ add_task(async function test_prefFlips_failed_experiment_and_rollout_2() {
 
     info("Unenrolling...");
     if (expectedEnrollments.includes(ROLLOUT)) {
-      manager.unenroll(ROLLOUT);
+      await manager.unenroll(ROLLOUT);
     }
     if (expectedEnrollments.includes(EXPERIMENT)) {
-      manager.unenroll(EXPERIMENT);
+      await manager.unenroll(EXPERIMENT);
     }
 
     info("Cleaning up...");
     Services.prefs.deleteBranch(PREFS[ROLLOUT]);
     Services.prefs.deleteBranch(PREFS[EXPERIMENT]);
 
-    cleanup();
+    await cleanup();
   }
 });
 
@@ -2587,7 +2614,7 @@ add_task(async function test_prefFlips_update_failure() {
   PrefUtils.setPref("pref.one", "default-value", { branch: DEFAULT });
   PrefUtils.setPref("pref.two", "default-value", { branch: DEFAULT });
 
-  const cleanupExperiment = await ExperimentFakes.enrollWithFeatureConfig(
+  const cleanupExperiment = await NimbusTestUtils.enrollWithFeatureConfig(
     {
       featureId: FEATURE_ID,
       value: {
@@ -2603,7 +2630,7 @@ add_task(async function test_prefFlips_update_failure() {
   Assert.equal(Services.prefs.getStringPref("pref.one"), "one");
   Assert.equal(Services.prefs.getStringPref("pref.two"), "two");
 
-  await ExperimentFakes.enrollWithFeatureConfig(
+  await NimbusTestUtils.enrollWithFeatureConfig(
     {
       featureId: FEATURE_ID,
       value: {
@@ -2626,42 +2653,299 @@ add_task(async function test_prefFlips_update_failure() {
   Assert.equal(Services.prefs.getStringPref("pref.one"), "one");
   Assert.equal(Services.prefs.getStringPref("pref.two"), "two");
 
+  cleanupExperiment();
+
   Services.prefs.deleteBranch("pref.one");
   Services.prefs.deleteBranch("pref.two");
 
-  cleanupExperiment();
-  cleanup();
+  await cleanup();
+});
+
+add_task(async function test_prefFlips_restore() {
+  let storePath;
+
+  const PREF_1 = "pref.one";
+  const PREF_2 = "pref.two";
+  const PREF_3 = "pref.three";
+  const PREF_4 = "pref.FOUR";
+
+  {
+    const store = NimbusTestUtils.stubs.store();
+    await store.init();
+
+    store.addEnrollment(
+      NimbusTestUtils.factories.rollout.withFeatureConfig(
+        "rollout-1",
+        {
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_1]: { branch: USER, value: PREF_1 },
+            },
+          },
+        },
+        {
+          prefFlips: {
+            originalValues: {
+              [PREF_1]: null,
+            },
+          },
+        }
+      )
+    );
+
+    store.addEnrollment(
+      NimbusTestUtils.factories.rollout.withFeatureConfig(
+        "rollout-2",
+        {
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_2]: { branch: USER, value: PREF_2 },
+            },
+          },
+        },
+        {
+          prefFlips: {
+            originalValues: {
+              [PREF_2]: "original-pref-2-value",
+            },
+          },
+        }
+      )
+    );
+
+    store.addEnrollment(
+      NimbusTestUtils.factories.rollout.withFeatureConfig(
+        "rollout-3",
+        {
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_3]: { branch: DEFAULT, value: PREF_3 },
+            },
+          },
+        },
+        {
+          prefFlips: {
+            originalValues: {
+              [PREF_3]: null,
+            },
+          },
+        }
+      )
+    );
+
+    store.addEnrollment(
+      NimbusTestUtils.factories.rollout.withFeatureConfig(
+        "rollout-4",
+        {
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF_4]: { branch: DEFAULT, value: PREF_4 },
+            },
+          },
+        },
+        {
+          prefFlips: {
+            originalValues: {
+              [PREF_4]: "original-pref-4-value",
+            },
+          },
+        }
+      )
+    );
+
+    storePath = await NimbusTestUtils.saveStore(store);
+  }
+
+  const { manager, cleanup } = await setupTest({ storePath });
+
+  Assert.ok(manager.store.get("rollout-1").active, "rollout-1 is active");
+  Assert.ok(manager.store.get("rollout-2").active, "rollout-2 is active");
+  Assert.ok(manager.store.get("rollout-3").active, "rollout-3 is active");
+  Assert.ok(manager.store.get("rollout-4").active, "rollout-4 is active");
+
+  Assert.equal(
+    Services.prefs.getStringPref(PREF_1),
+    PREF_1,
+    `${PREF_1} has the correct value`
+  );
+  Assert.equal(
+    Services.prefs.getStringPref(PREF_2),
+    PREF_2,
+    `${PREF_2} has the correct value`
+  );
+  Assert.equal(
+    Services.prefs.getStringPref(PREF_3),
+    PREF_3,
+    `${PREF_3} has the correct value`
+  );
+  Assert.equal(
+    Services.prefs.getStringPref(PREF_4),
+    PREF_4,
+    `${PREF_4} has the correct value`
+  );
+
+  await NimbusTestUtils.cleanupManager(
+    ["rollout-1", "rollout-2", "rollout-3", "rollout-4"],
+    { manager }
+  );
+
+  Assert.equal(
+    PrefUtils.getPref(PREF_1),
+    null,
+    `${PREF_1} has the correct value after unenrollment`
+  );
+  Assert.equal(
+    PrefUtils.getPref(PREF_2),
+    "original-pref-2-value",
+    `${PREF_2} has the correct value after unenrollment`
+  );
+  Assert.equal(
+    PrefUtils.getPref(PREF_3),
+    PREF_3,
+    `${PREF_3} has the correct value after unenrollment (can't reset default branch)`
+  );
+  Assert.equal(
+    PrefUtils.getPref(PREF_4),
+    "original-pref-4-value",
+    `${PREF_4} has the correct value`
+  );
+
+  await cleanup();
+});
+
+add_task(async function test_prefFlips_restore_failure_conflict() {
+  let storePath;
+
+  const PREF = "pref.foo.bar";
+  {
+    const store = NimbusTestUtils.stubs.store();
+    await store.init();
+
+    store.addEnrollment(
+      NimbusTestUtils.factories.rollout.withFeatureConfig(
+        "rollout-1",
+        {
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF]: { branch: USER, value: "correct-value" },
+            },
+          },
+        },
+        {
+          prefFlips: {
+            originalValues: {
+              [PREF]: null,
+            },
+          },
+        }
+      )
+    );
+
+    store.addEnrollment(
+      NimbusTestUtils.factories.rollout.withFeatureConfig(
+        "rollout-2",
+        {
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF]: { branch: USER, value: "incorrect-value" },
+            },
+          },
+        },
+        {
+          prefFlips: {
+            originalValues: {
+              [PREF]: null,
+            },
+          },
+        }
+      )
+    );
+
+    store.addEnrollment(
+      NimbusTestUtils.factories.rollout.withFeatureConfig(
+        "rollout-3",
+        {
+          featureId: FEATURE_ID,
+          value: {
+            prefs: {
+              [PREF]: { branch: DEFAULT, value: "correct-value" },
+            },
+          },
+        },
+        {
+          prefFlips: {
+            originalValues: {
+              [PREF]: null,
+            },
+          },
+        }
+      )
+    );
+
+    storePath = await NimbusTestUtils.saveStore(store);
+  }
+
+  const { manager, cleanup } = await setupTest({ storePath });
+
+  Assert.ok(manager.store.get("rollout-1").active, "rollout-1 is active");
+  Assert.ok(!manager.store.get("rollout-2").active, "rollout-2 is not active");
+  Assert.equal(
+    manager.store.get("rollout-2").unenrollReason,
+    "prefFlips-failed"
+  );
+  Assert.ok(!manager.store.get("rollout-3").active, "rollout-3 is not active");
+  Assert.equal(
+    manager.store.get("rollout-3").unenrollReason,
+    "prefFlips-failed"
+  );
+
+  Assert.equal(
+    PrefUtils.getPref(PREF),
+    "correct-value",
+    `${PREF} has the correct value`
+  );
+
+  await NimbusTestUtils.cleanupManager(["rollout-1"], { manager });
+
+  Assert.equal(
+    PrefUtils.getPref(PREF),
+    null,
+    `${PREF} has the correct value after unenrollment`
+  );
+
+  await cleanup();
 });
 
 // Test the case where an experiment sets a default branch pref, but the user
 // changed their user.js between restarts.
-add_task(async function test_prefFlips_restore_failure() {
-  const PREF = "foo.bar.baz";
+add_task(async function test_prefFlips_restore_failure_wrong_type() {
+  const PREF_1 = "foo.bar.baz";
+  const PREF_2 = "qux.quux.corge.grault";
 
-  const recipe = ExperimentFakes.recipe("prefFlips-test", {
-    branches: [
-      {
-        ...ExperimentFakes.recipe.branches[0],
-        features: [
-          {
-            featureId: FEATURE_ID,
-            value: {
-              prefs: {
-                [PREF]: {
-                  branch: DEFAULT,
-                  value: "recipe-value",
-                },
-              },
-            },
+  const recipe = NimbusTestUtils.factories.recipe.withFeatureConfig(
+    "prefFlips-test",
+    {
+      featureId: FEATURE_ID,
+      value: {
+        prefs: {
+          [PREF_1]: {
+            branch: DEFAULT,
+            value: "recipe-value",
           },
-        ],
+          [PREF_2]: {
+            branch: USER,
+            value: "recipe-value",
+          },
+        },
       },
-    ],
-    bucketConfig: {
-      ...ExperimentFakes.recipe.bucketConfig,
-      count: 1000,
-    },
-  });
+    }
+  );
 
   let storePath;
   {
@@ -2678,19 +2962,20 @@ add_task(async function test_prefFlips_restore_failure() {
       source: "rs-loader",
       prefFlips: {
         originalValues: {
-          [PREF]: "original-value",
+          [PREF_1]: "original-value",
+          [PREF_2]: "original-value",
         },
       },
       lastSeen: new Date().toJSON(),
     };
 
-    const store = ExperimentFakes.store();
+    const store = NimbusTestUtils.stubs.store();
     await store.init();
     store.set(prevEnrollment.slug, prevEnrollment);
     storePath = await NimbusTestUtils.saveStore(store);
   }
 
-  Services.prefs.setIntPref(PREF, 123);
+  Services.prefs.setIntPref(PREF_1, 123);
 
   const { manager, cleanup } = await setupTest({ storePath });
 
@@ -2700,41 +2985,41 @@ add_task(async function test_prefFlips_restore_failure() {
   Assert.equal(enrollment.unenrollReason, "prefFlips-failed");
 
   Assert.ok(
-    !Services.prefs.prefHasDefaultValue(PREF),
-    "pref has no default value"
+    !Services.prefs.prefHasDefaultValue(PREF_1),
+    `${PREF_1} has no default value`
   );
-  Assert.equal(Services.prefs.getIntPref(PREF), 123, "pref value unchanged");
+  Assert.ok(
+    !Services.prefs.prefHasDefaultValue(PREF_2),
+    `${PREF_2} has no default value`
+  );
+  Assert.equal(
+    Services.prefs.getIntPref(PREF_1),
+    123,
+    `${PREF_1} value unchanged`
+  );
+  Assert.ok(!Services.prefs.prefHasUserValue(PREF_2), `${PREF_2} has no value`);
 
-  Services.prefs.deleteBranch(PREF);
-  cleanup();
+  Services.prefs.deleteBranch(PREF_1);
+  Services.prefs.deleteBranch(PREF_2);
+  await cleanup();
 });
 
 add_task(
   async function test_prefFlips_reenroll_set_default_branch_wrong_type() {
     const PREF = "test.pref.please.ignore";
 
-    const recipe = ExperimentFakes.recipe("invalid", {
-      isRollout: true,
-      bucketConfig: {
-        ...ExperimentFakes.recipe.bucketConfig,
-        count: 1000,
-      },
-      branches: [
-        {
-          ...ExperimentFakes.recipe.branches[0],
-          features: [
-            {
-              featureId: FEATURE_ID,
-              value: {
-                prefs: {
-                  [PREF]: { value: 123, branch: DEFAULT },
-                },
-              },
-            },
-          ],
+    const recipe = NimbusTestUtils.factories.recipe.withFeatureConfig(
+      "prefFlips-test",
+      {
+        featureId: FEATURE_ID,
+        value: {
+          prefs: {
+            [PREF]: { value: 123, branch: DEFAULT },
+          },
         },
-      ],
-    });
+      },
+      { isRollout: true }
+    );
 
     const { manager, cleanup } = await setupTest();
 
@@ -2755,6 +3040,6 @@ add_task(
 
     Services.prefs.deleteBranch(PREF);
 
-    cleanup();
+    await cleanup();
   }
 );

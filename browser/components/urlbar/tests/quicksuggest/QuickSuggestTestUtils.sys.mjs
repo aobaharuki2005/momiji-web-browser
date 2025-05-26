@@ -8,17 +8,19 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AmpSuggestions: "resource:///modules/urlbar/private/AmpSuggestions.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
-  ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
-  ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
+  NimbusTestUtils: "resource://testing-common/NimbusTestUtils.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettingsServer:
     "resource://testing-common/RemoteSettingsServer.sys.mjs",
-  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
-  Suggestion: "resource://gre/modules/RustSuggest.sys.mjs",
+  SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
+  Suggestion:
+    "moz-src:///toolkit/components/uniffi-bindgen-gecko-js/components/generated/RustSuggest.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
+  YelpSubjectType:
+    "moz-src:///toolkit/components/uniffi-bindgen-gecko-js/components/generated/RustSuggest.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
@@ -198,8 +200,8 @@ class _QuickSuggestTestUtils {
   } = {}) {
     this.#log("ensureQuickSuggestInit", "Started");
 
-    this.#log("ensureQuickSuggestInit", "Awaiting ExperimentManager.onStartup");
-    await lazy.ExperimentManager.onStartup();
+    this.#log("ensureQuickSuggestInit", "Awaiting ExperimentAPI.init");
+    const initializedExperimentAPI = await lazy.ExperimentAPI.init();
 
     this.#log("ensureQuickSuggestInit", "Awaiting ExperimentAPI.ready");
     await lazy.ExperimentAPI.ready();
@@ -225,14 +227,17 @@ class _QuickSuggestTestUtils {
     await this.#remoteSettingsServer.start();
     this.#log("ensureQuickSuggestInit", "Remote settings server started");
 
-    // Init Suggest and set prefs. Do this after setting up remote settings
+    // Init Suggest and force the region to US and the locale to en-US, which
+    // will cause Suggest to be enabled along with all suggestion types that are
+    // enabled in the US by default. Do this after setting up remote settings
     // because the Rust backend will immediately try to sync.
     this.#log(
       "ensureQuickSuggestInit",
       "Calling QuickSuggest.init() and setting prefs"
     );
-    await lazy.QuickSuggest.init();
-    prefs.push(["quicksuggest.enabled", true]);
+    await lazy.QuickSuggest.init({ region: "US", locale: "en-US" });
+
+    // Set prefs requested by the caller.
     for (let [name, value] of prefs) {
       lazy.UrlbarPrefs.set(name, value);
     }
@@ -260,6 +265,12 @@ class _QuickSuggestTestUtils {
       if (!cleanupCalled) {
         cleanupCalled = true;
         await this.#uninitQuickSuggest(prefs, !!merinoSuggestions);
+
+        if (initializedExperimentAPI) {
+          // Only reset if we're in an xpcshell-test and actually initialized
+          // the ExperimentAPI.
+          lazy.ExperimentAPI._resetForTests();
+        }
       }
     };
     this.registerCleanupFunction?.(cleanup);
@@ -647,32 +658,24 @@ class _QuickSuggestTestUtils {
     min_keyword_length = undefined,
     score = 0.29,
   } = {}) {
-    let [maxLen, maxWordCount] = keywords.reduce(
-      ([len, wordCount], kw) => [
-        Math.max(len, kw.length),
-        Math.max(wordCount, kw.split(/\s+/).filter(s => !!s).length),
-      ],
-      [0, 0]
-    );
     return {
       type: "weather",
       attachment: {
         keywords,
         min_keyword_length,
         score,
-        max_keyword_length: maxLen,
-        max_keyword_word_count: maxWordCount,
       },
     };
   }
 
   /**
-   * Returns a remote settings geonames record populated with some cities.
+   * Returns remote settings records containing geonames populated with some
+   * cities.
    *
-   * @returns {object}
-   *   A geonames record for storing in remote settings.
+   * @returns {Array}
+   *   One or more geonames records for storing in remote settings.
    */
-  geonamesRecord() {
+  geonamesRecords() {
     let geonames = [
       // Waterloo, AL
       {
@@ -682,11 +685,9 @@ class _QuickSuggestTestUtils {
         longitude: "-88.0642",
         feature_class: "P",
         feature_code: "PPL",
-        country_code: "US",
-        admin1_code: "AL",
+        country: "US",
+        admin1: "AL",
         population: 200,
-        alternate_names: ["waterloo"],
-        alternate_names_2: [{ name: "waterloo" }],
       },
       // AL
       {
@@ -696,14 +697,9 @@ class _QuickSuggestTestUtils {
         longitude: "-86.75026",
         feature_class: "A",
         feature_code: "ADM1",
-        country_code: "US",
-        admin1_code: "AL",
+        country: "US",
+        admin1: "AL",
         population: 4530315,
-        alternate_names: ["al", "alabama"],
-        alternate_names_2: [
-          { name: "alabama" },
-          { name: "al", iso_language: "abbr" },
-        ],
       },
       // Waterloo, IA
       {
@@ -713,11 +709,9 @@ class _QuickSuggestTestUtils {
         longitude: "-92.34296",
         feature_class: "P",
         feature_code: "PPLA2",
-        country_code: "US",
-        admin1_code: "IA",
+        country: "US",
+        admin1: "IA",
         population: 68460,
-        alternate_names: ["waterloo"],
-        alternate_names_2: [{ name: "waterloo" }],
       },
       // IA
       {
@@ -727,14 +721,9 @@ class _QuickSuggestTestUtils {
         longitude: "-93.50049",
         feature_class: "A",
         feature_code: "ADM1",
-        country_code: "US",
-        admin1_code: "IA",
+        country: "US",
+        admin1: "IA",
         population: 2955010,
-        alternate_names: ["ia", "iowa"],
-        alternate_names_2: [
-          { name: "iowa" },
-          { name: "ia", iso_language: "abbr" },
-        ],
       },
       // Made-up cities with the same name in the US and CA. The CA city has a
       // larger population.
@@ -745,11 +734,9 @@ class _QuickSuggestTestUtils {
         longitude: "-97.92977",
         feature_class: "P",
         feature_code: "PPL",
-        country_code: "US",
-        admin1_code: "IA",
+        country: "US",
+        admin1: "IA",
         population: 1,
-        alternate_names: ["us ca city"],
-        alternate_names_2: [{ name: "us ca city" }],
       },
       {
         id: 101,
@@ -758,11 +745,9 @@ class _QuickSuggestTestUtils {
         longitude: "-73.58781",
         feature_class: "P",
         feature_code: "PPL",
-        country_code: "CA",
-        admin1_code: "08",
+        country: "CA",
+        admin1: "08",
         population: 2,
-        alternate_names: ["us ca city"],
-        alternate_names_2: [{ name: "us ca city" }],
       },
       // Made-up cities that are only ~1.5 km apart.
       {
@@ -772,11 +757,9 @@ class _QuickSuggestTestUtils {
         longitude: "-84.39",
         feature_class: "P",
         feature_code: "PPL",
-        country_code: "US",
-        admin1_code: "GA",
+        country: "US",
+        admin1: "GA",
         population: 1,
-        alternate_names: ["twin city a"],
-        alternate_names_2: [{ name: "twin city a" }],
       },
       {
         id: 103,
@@ -785,11 +768,9 @@ class _QuickSuggestTestUtils {
         longitude: "-84.4",
         feature_class: "P",
         feature_code: "PPL",
-        country_code: "US",
-        admin1_code: "GA",
+        country: "US",
+        admin1: "GA",
         population: 2,
-        alternate_names: ["twin city b"],
-        alternate_names_2: [{ name: "twin city b" }],
       },
       {
         id: 1850147,
@@ -798,33 +779,42 @@ class _QuickSuggestTestUtils {
         longitude: "139.69171",
         feature_class: "P",
         feature_code: "PPLC",
-        country_code: "JP",
-        admin1_code: "Tokyo-to",
+        country: "JP",
+        admin1: "Tokyo-to",
         population: 8336599,
-        alternate_names: ["tokyo"],
-        alternate_names_2: [{ name: "tokyo" }],
       },
     ];
-    let [maxLen, maxWordCount] = geonames.reduce(
-      ([len, wordCount], geoname) => [
-        Math.max(len, ...geoname.alternate_names.map(n => n.length)),
-        Math.max(
-          wordCount,
-          ...geoname.alternate_names.map(
-            n => n.split(/\s+/).filter(s => !!s).length
-          )
-        ),
-      ],
-      [0, 0]
-    );
-    return {
-      type: "geonames",
-      attachment: {
-        geonames,
-        max_alternate_name_length: maxLen,
-        max_alternate_name_word_count: maxWordCount,
+
+    return [
+      {
+        type: "geonames-2",
+        attachment: geonames,
       },
-    };
+    ];
+  }
+
+  /**
+   * Returns remote settings records containing geonames alternates (alternate
+   * names) populated with some names.
+   *
+   * @returns {Array}
+   *   One or more geonames alternates records for storing in remote settings.
+   */
+  geonamesAlternatesRecords() {
+    return [
+      {
+        type: "geonames-alternates",
+        attachment: [
+          {
+            language: "abbr",
+            alternates_by_geoname_id: [
+              [2, ["AL"]],
+              [4, ["IA"]],
+            ],
+          },
+        ],
+      },
+    ];
   }
 
   /**
@@ -945,7 +935,8 @@ class _QuickSuggestTestUtils {
    */
   yelpResult({
     url,
-    title,
+    title = undefined,
+    titleL10n = undefined,
     source = "rust",
     provider = "Yelp",
     isTopPick = false,
@@ -954,7 +945,7 @@ class _QuickSuggestTestUtils {
     suggestedIndex = 0,
     isSuggestedIndexRelativeToGroup = true,
     originalUrl = undefined,
-    displayUrl = undefined,
+    suggestedType = lazy.YelpSubjectType.SERVICE,
   }) {
     const utmParameters = "&utm_medium=partner&utm_source=mozilla";
 
@@ -962,13 +953,6 @@ class _QuickSuggestTestUtils {
     originalUrl = new URL(originalUrl);
     originalUrl.searchParams.delete("find_loc");
     originalUrl = originalUrl.toString();
-
-    displayUrl =
-      (displayUrl ??
-        url
-          .replace(/^https:\/\/www[.]/, "")
-          .replace("%20", " ")
-          .replace("%2C", ",")) + utmParameters;
 
     url += utmParameters;
 
@@ -992,7 +976,7 @@ class _QuickSuggestTestUtils {
         url,
         originalUrl,
         title,
-        displayUrl,
+        titleL10n,
         icon: null,
         isSponsored: true,
       },
@@ -1007,6 +991,7 @@ class _QuickSuggestTestUtils {
         0.2, // score
         false, // hasLocationSign
         false, // subjectExactMatch
+        suggestedType, // subjectType
         "find_loc" // locationParam
       );
     }
@@ -1332,7 +1317,7 @@ class _QuickSuggestTestUtils {
     await lazy.ExperimentAPI.ready();
 
     let doExperimentCleanup =
-      await lazy.ExperimentFakes.enrollWithFeatureConfig({
+      await lazy.NimbusTestUtils.enrollWithFeatureConfig({
         enabled: true,
         featureId: "urlbar",
         value: valueOverrides,
@@ -1340,7 +1325,7 @@ class _QuickSuggestTestUtils {
 
     return async () => {
       this.#log("enrollExperiment.cleanup", "Awaiting experiment cleanup");
-      doExperimentCleanup();
+      await doExperimentCleanup();
     };
   }
 

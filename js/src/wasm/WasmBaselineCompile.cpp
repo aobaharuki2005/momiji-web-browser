@@ -7253,8 +7253,47 @@ void BaseCompiler::emitPreBarrier(RegPtr valueAddr) {
   masm.bind(&skipBarrier);
 }
 
-bool BaseCompiler::emitPostBarrierImprecise(const Maybe<RegRef>& object,
-                                            RegPtr valueAddr, RegRef value) {
+bool BaseCompiler::emitPostBarrierWholeCell(RegRef object, RegRef value,
+                                            RegPtr temp) {
+  // We must force a sync before the guard so that locals are in a consistent
+  // location for whether or not the post-barrier call is taken.
+  sync();
+
+  // Emit guards to skip the post-barrier call if it is not needed.
+  Label skipBarrier;
+  EmitWasmPostBarrierGuard(masm, mozilla::Some(object), temp, value,
+                           &skipBarrier);
+
+#ifdef RABALDR_PIN_INSTANCE
+  Register instance(InstanceReg);
+#else
+  Register instance(temp);
+  fr.loadInstancePtr(instance);
+#endif
+  CheckWholeCellLastElementCache(masm, instance, object, temp, &skipBarrier);
+
+  movePtr(RegPtr(object), temp);
+
+  // Push `object` and `value` to preserve them across the call.
+  pushRef(object);
+  pushRef(value);
+
+  pushPtr(temp);
+  if (!emitInstanceCall(SASigPostBarrierWholeCell)) {
+    return false;
+  }
+
+  // Restore `object` and `value`.
+  popRef(value);
+  popRef(object);
+
+  masm.bind(&skipBarrier);
+  return true;
+}
+
+bool BaseCompiler::emitPostBarrierEdgeImprecise(const Maybe<RegRef>& object,
+                                                RegPtr valueAddr,
+                                                RegRef value) {
   // We must force a sync before the guard so that locals are in a consistent
   // location for whether or not the post-barrier call is taken.
   sync();
@@ -7275,7 +7314,7 @@ bool BaseCompiler::emitPostBarrierImprecise(const Maybe<RegRef>& object,
   // instance area, and we are careful so that the GC will not run while the
   // post-barrier call is active, so push a uintptr_t value.
   pushPtr(valueAddr);
-  if (!emitInstanceCall(SASigPostBarrier)) {
+  if (!emitInstanceCall(SASigPostBarrierEdge)) {
     return false;
   }
 
@@ -7289,9 +7328,9 @@ bool BaseCompiler::emitPostBarrierImprecise(const Maybe<RegRef>& object,
   return true;
 }
 
-bool BaseCompiler::emitPostBarrierPrecise(const Maybe<RegRef>& object,
-                                          RegPtr valueAddr, RegRef prevValue,
-                                          RegRef value) {
+bool BaseCompiler::emitPostBarrierEdgePrecise(const Maybe<RegRef>& object,
+                                              RegPtr valueAddr,
+                                              RegRef prevValue, RegRef value) {
   // Push `object` and `value` to preserve them across the call.
   if (object) {
     pushRef(*object);
@@ -7301,7 +7340,7 @@ bool BaseCompiler::emitPostBarrierPrecise(const Maybe<RegRef>& object,
   // Push the arguments and call the precise post-barrier
   pushPtr(valueAddr);
   pushRef(prevValue);
-  if (!emitInstanceCall(SASigPostBarrierPrecise)) {
+  if (!emitInstanceCall(SASigPostBarrierEdgePrecise)) {
     return false;
   }
 
@@ -7335,10 +7374,17 @@ bool BaseCompiler::emitBarrieredStore(const Maybe<RegRef>& object,
   masm.storePtr(value, Address(valueAddr, 0));
 
   // The post-barrier preserves object and value.
-  if (postBarrierKind == PostBarrierKind::Precise) {
-    return emitPostBarrierPrecise(object, valueAddr, prevValue, value);
+  if (postBarrierKind == PostBarrierKind::Imprecise) {
+    return emitPostBarrierEdgeImprecise(object, valueAddr, value);
   }
-  return emitPostBarrierImprecise(object, valueAddr, value);
+  if (postBarrierKind == PostBarrierKind::Precise) {
+    return emitPostBarrierEdgePrecise(object, valueAddr, prevValue, value);
+  }
+  if (postBarrierKind == PostBarrierKind::WholeCell) {
+    // valueAddr is reused as a temp register.
+    return emitPostBarrierWholeCell(object.value(), value, valueAddr);
+  }
+  MOZ_CRASH("unknown barrier kind");
 }
 
 void BaseCompiler::emitBarrieredClear(RegPtr valueAddr) {
@@ -7413,8 +7459,8 @@ void BaseCompiler::SignalNullCheck::emitTrapSite(BaseCompiler* bc,
                                                  FaultingCodeOffset fco,
                                                  TrapMachineInsn tmi) {
   MacroAssembler& masm = bc->masm;
-  masm.append(wasm::Trap::NullPointerDereference,
-              wasm::TrapSite(tmi, fco, bc->trapSiteDesc()));
+  masm.append(wasm::Trap::NullPointerDereference, tmi, fco.get(),
+              bc->trapSiteDesc());
 }
 
 template <typename NullCheckPolicy>
@@ -7616,7 +7662,7 @@ bool BaseCompiler::emitGcStructSet(RegRef object, RegPtr areaBase,
 
   // emitBarrieredStore preserves object and value
   if (!emitBarrieredStore(Some(object), valueAddr, value.ref(), preBarrierKind,
-                          PostBarrierKind::Imprecise)) {
+                          PostBarrierKind::WholeCell)) {
     return false;
   }
   freeRef(value.ref());

@@ -10,6 +10,7 @@ import androidx.test.filters.SdkSuppress
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SkipLeaks
@@ -397,16 +398,13 @@ class SettingsSearchTest : TestSetup() {
             typeCustomEngineDetails(customSearchEngine.title, customSearchEngine.badTemplateUrl)
             saveNewSearchEngine()
             verifyInvalidTemplateSearchStringFormatError()
-            typeCustomEngineDetails(customSearchEngine.title, customSearchEngine.typoUrl)
-            saveNewSearchEngine()
-            verifyErrorConnectingToSearchString(customSearchEngine.title)
             typeCustomEngineDetails(customSearchEngine.title, customSearchEngine.goodUrl)
             typeSearchEngineSuggestionString(customSearchEngine.badTemplateUrl)
             saveNewSearchEngine()
             verifyInvalidTemplateSearchStringFormatError()
-            typeSearchEngineSuggestionString(customSearchEngine.typoUrl)
+            typeCustomEngineDetails(customSearchEngine.title, customSearchEngine.typoUrl)
             saveNewSearchEngine()
-            verifyErrorConnectingToSearchString(customSearchEngine.title)
+            verifyEngineListContains(customSearchEngine.title, shouldExist = true)
         }
     }
 
@@ -508,10 +506,9 @@ class SettingsSearchTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/464420
     // Tests the "Don't allow" option from private mode search suggestions onboarding dialog
     @Test
-    @SkipLeaks(reasons = ["https://bugzilla.mozilla.org/show_bug.cgi?id=1959107"])
     fun doNotAllowSearchSuggestionsInPrivateBrowsingTest() {
         homeScreen {
-            togglePrivateBrowsingModeOnOff()
+            togglePrivateBrowsingModeOnOff(composeTestRule = activityTestRule)
         }.openSearch {
             typeSearch("mozilla")
             verifyAllowSuggestionsInPrivateModeDialog()
@@ -523,10 +520,9 @@ class SettingsSearchTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1957063
     // Tests the "Allow" option from private mode search suggestions onboarding dialog
     @Test
-    @SkipLeaks(reasons = ["https://bugzilla.mozilla.org/show_bug.cgi?id=1959107"])
     fun allowSearchSuggestionsInPrivateBrowsingTest() {
         homeScreen {
-            togglePrivateBrowsingModeOnOff()
+            togglePrivateBrowsingModeOnOff(composeTestRule = activityTestRule)
         }.openSearch {
             typeSearch("mozilla")
             verifyAllowSuggestionsInPrivateModeDialog()
@@ -643,6 +639,7 @@ class SettingsSearchTest : TestSetup() {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2203334
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1967956")
     @Test
     fun verifyManageSearchShortcutsSettingsItemsTest() {
         homeScreen {
@@ -666,6 +663,7 @@ class SettingsSearchTest : TestSetup() {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2203340
+    @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1965451")
     @SmokeTest
     @Test
     fun verifySearchShortcutChangesAreReflectedInSearchSelectorMenuTest() {

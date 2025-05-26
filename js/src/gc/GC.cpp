@@ -610,6 +610,7 @@ const char gc::ZealModeHelpText[] =
 "    1:  (RootsChange) Collect when roots are added or removed\n"
 "    2:  (Alloc) Collect when every N allocations (default: 100)\n"
 "    4:  (VerifierPre) Verify pre write barriers between instructions\n"
+"    5:  (VerifierPost) Verify post write barriers after minor GC\n"
 "    6:  (YieldBeforeRootMarking) Incremental GC in two slices that yields\n"
 "        before root marking\n"
 "    7:  (GenerationalGC) Collect the nursery every N nursery allocations\n"
@@ -661,9 +662,9 @@ static constexpr EnumSet<ZealMode> IncrementalSliceZealModes =
 
 // The set of zeal modes that trigger GC periodically.
 static constexpr EnumSet<ZealMode> PeriodicGCZealModes =
-    IncrementalSliceZealModes + EnumSet<ZealMode>{ZealMode::Alloc,
-                                                  ZealMode::GenerationalGC,
-                                                  ZealMode::Compact};
+    IncrementalSliceZealModes +
+    EnumSet<ZealMode>{ZealMode::Alloc, ZealMode::VerifierPost,
+                      ZealMode::GenerationalGC, ZealMode::Compact};
 
 // The set of zeal modes that are mutually exclusive. All of these trigger GC
 // except VerifierPre.
@@ -2404,6 +2405,10 @@ void GCRuntime::sweepZones(JS::GCContext* gcx, bool destroyingRuntime) {
 
   assertBackgroundSweepingFinished();
 
+  // Host destroy callbacks can access the store buffer, e.g. when resizing hash
+  // tables containing nursery pointers.
+  AutoLockStoreBuffer lock(rt);
+
   // Sweep zones following the atoms zone.
   MOZ_ASSERT(zones()[0]->isAtomsZone());
   Zone** read = zones().begin() + 1;
@@ -3301,6 +3306,11 @@ void GCRuntime::clearTestMarkQueue() {
 
 size_t GCRuntime::testMarkQueuePos() const { return queuePos; }
 
+size_t GCRuntime::testMarkQueueRemaining() const {
+  MOZ_ASSERT(queuePos <= testMarkQueue.length());
+  return testMarkQueue.length() - queuePos;
+}
+
 #endif
 
 GCRuntime::MarkQueueProgress GCRuntime::processTestMarkQueue() {
@@ -3426,6 +3436,10 @@ GCRuntime::MarkQueueProgress GCRuntime::processTestMarkQueue() {
       }
     }
   }
+
+  // Once the queue is complete, do not force a mark color (since the next time
+  // the queue is processed, it should not be forcing one.)
+  queueMarkColor.reset();
 #endif
 
   return QueueComplete;
@@ -5190,7 +5204,8 @@ void GCRuntime::runDebugGC() {
     return;
   }
 
-  if (hasZealMode(ZealMode::GenerationalGC)) {
+  if (hasZealMode(ZealMode::VerifierPost) ||
+      hasZealMode(ZealMode::GenerationalGC)) {
     return minorGC(JS::GCReason::DEBUG_GC);
   }
 

@@ -367,7 +367,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       }
     case ColorID::MozColheader:
     case ColorID::MozColheaderhover:
-    case ColorID::MozEventreerow:
       // Background color of even list rows.
       color =
           GetColorFromNSColor([NSColor.controlAlternatingRowBackgroundColors objectAtIndex:0]);

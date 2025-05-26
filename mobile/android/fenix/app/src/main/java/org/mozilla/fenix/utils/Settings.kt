@@ -21,7 +21,6 @@ import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingMode
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
-import mozilla.components.feature.top.sites.TopSitesProvider
 import mozilla.components.support.ktx.android.content.PreferencesHolder
 import mozilla.components.support.ktx.android.content.booleanPreference
 import mozilla.components.support.ktx.android.content.floatPreference
@@ -41,10 +40,11 @@ import org.mozilla.fenix.components.settings.counterPreference
 import org.mozilla.fenix.components.settings.featureFlagPreference
 import org.mozilla.fenix.components.settings.lazyFeatureFlagPreference
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
-import org.mozilla.fenix.components.toolbar.navbar.shouldAddNavigationBar
 import org.mozilla.fenix.debugsettings.addresses.SharedPrefsAddressesDebugLocalesRepository
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.home.pocket.ContentRecommendationsFeatureHelper
+import org.mozilla.fenix.home.topsites.TopSitesConfigConstants.TOP_SITES_MAX_COUNT
 import org.mozilla.fenix.nimbus.CookieBannersSection
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.nimbus.HomeScreenSection
@@ -96,21 +96,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
          * The minimum number a search groups should contain.
          */
         @VisibleForTesting
-        internal var SEARCH_GROUP_MINIMUM_SITES: Int = 2
-
-        // The maximum number of top sites to display.
-        const val TOP_SITES_MAX_COUNT = 16
-
-        /**
-         * Only fetch top sites from the [TopSitesProvider] when the number of default and
-         * pinned sites are below this maximum threshold.
-         */
-        const val TOP_SITES_PROVIDER_MAX_THRESHOLD = 8
-
-        /**
-         * Number of top sites to take from the [TopSitesProvider].
-         */
-        const val TOP_SITES_PROVIDER_LIMIT = 2
+        internal var searchGroupMinimumSites: Int = 2
 
         /**
          * Minimum number of days between Set as default Browser prompt displays in home page.
@@ -345,14 +331,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false,
     )
 
-    var privateBrowsingLockedEnabled by booleanPreference(
+    var privateBrowsingLockedEnabled by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_private_browsing_locked_enabled),
-        default = false,
-    )
-
-    var isPrivateScreenBlocked by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_private_screen_locked),
-        default = false,
+        featureFlag = FeatureFlags.privateBrowsingLock,
+        default = { false },
     )
 
     var shouldReturnToBrowser by booleanPreference(
@@ -1247,6 +1229,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true,
     )
 
+    var shouldShowLockPbmBanner by lazyFeatureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_should_show_lock_pbm_banner),
+        featureFlag = FeatureFlags.privateBrowsingLock,
+        default = { true },
+    )
+
     var shouldShowInactiveTabsOnboardingPopup by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_should_show_inactive_tabs_popup),
         default = true,
@@ -1445,7 +1433,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         return when (openLinksInExternalApp) {
             appContext.getString(R.string.pref_key_open_links_in_apps_always) -> true
             appContext.getString(R.string.pref_key_open_links_in_apps_ask) -> true
-            /* Some applications will not work if custom tab never open links in apps, return true if it's custom tab */
+            // Some applications will not work if custom tab never open links in apps, return true if it's custom tab
             appContext.getString(R.string.pref_key_open_links_in_apps_never) -> isCustomTab
             else -> false
         }
@@ -1741,7 +1729,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var showPocketRecommendationsFeature by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_pocket_homescreen_recommendations),
-        featureFlag = FeatureFlags.isPocketRecommendationsFeatureEnabled(appContext),
+        featureFlag = ContentRecommendationsFeatureHelper.isPocketRecommendationsFeatureEnabled(appContext),
         default = { homescreenSections[HomeScreenSection.POCKET] == true },
     )
 
@@ -1751,7 +1739,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     val showPocketSponsoredStories by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_pocket_sponsored_stories),
         default = { homescreenSections[HomeScreenSection.POCKET_SPONSORED_STORIES] == true },
-        featureFlag = FeatureFlags.isPocketSponsoredStoriesFeatureEnabled(appContext),
+        featureFlag = ContentRecommendationsFeatureHelper.isPocketSponsoredStoriesFeatureEnabled(appContext),
     )
 
     /**
@@ -1778,7 +1766,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var showContentRecommendations by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_pocket_content_recommendations),
         default = { FxNimbus.features.merinoRecommendations.value().enabled },
-        featureFlag = true,
+        featureFlag = ContentRecommendationsFeatureHelper.isContentRecommendationsFeatureEnabled(appContext),
     )
 
     /**
@@ -1892,27 +1880,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Indicates if the navigation bar CFR should be displayed to the user.
-     */
-    var shouldShowNavigationBarCFR by booleanPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_should_navbar_cfr),
-        default = true,
-    )
-
-    /**
      * Indicates if the search bar CFR should be displayed to the user.
      */
     var shouldShowSearchBarCFR by booleanPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_should_searchbar_cfr),
         default = false,
-    )
-
-    /**
-     * Indicates Navigation Bar's Navigation buttons CFR should be displayed to the user.
-     */
-    var shouldShowNavigationButtonsCFR by booleanPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_toolbar_navigation_cfr),
-        default = true,
     )
 
     /**
@@ -2009,14 +1981,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Indicates if the Compose Top Sites are enabled.
-     */
-    var enableComposeTopSites by booleanPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_enable_compose_top_sites),
-        default = FeatureFlags.COMPOSE_TOP_SITES,
-    )
-
-    /**
      * Indicates if the Compose Homepage is enabled.
      */
     var enableComposeHomepage by lazyFeatureFlagPreference(
@@ -2037,9 +2001,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if the Homepage as a New Tab is enabled.
      */
-    var enableHomepageAsNewTab by booleanPreference(
+    var enableHomepageAsNewTab by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_enable_homepage_as_new_tab),
-        default = FeatureFlags.HOMEPAGE_AS_NEW_TAB,
+        default = { FxNimbus.features.homepageAsNewTab.value().enabled },
+        featureFlag = true,
     )
 
     /**
@@ -2192,34 +2157,20 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      * Returns the height of the bottom toolbar.
      *
      * The bottom toolbar can consist of:
-     *  - a navigation bar.
-     *  - a combination of a navigation and address bar.
-     *  - a combination of a navigation and address bar & a microsurvey.
      *  - a combination of address bar & a microsurvey.
      *  - be absent.
-     *
-     *  @param context to be used for [shouldAddNavigationBar] function
      */
-    fun getBottomToolbarHeight(context: Context): Int {
-        val isNavbarVisible = context.shouldAddNavigationBar()
+    fun getBottomToolbarHeight(): Int {
         val isMicrosurveyEnabled = shouldShowMicrosurveyPrompt
         val isToolbarAtBottom = toolbarPosition == ToolbarPosition.BOTTOM
 
-        val navbarHeight = appContext.resources.getDimensionPixelSize(R.dimen.browser_navbar_height)
         val microsurveyHeight =
             appContext.resources.getDimensionPixelSize(R.dimen.browser_microsurvey_height)
         val toolbarHeight =
             appContext.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
 
         return when {
-            isNavbarVisible && isMicrosurveyEnabled && isToolbarAtBottom ->
-                navbarHeight + microsurveyHeight + toolbarHeight
-
-            isNavbarVisible && isMicrosurveyEnabled -> navbarHeight + microsurveyHeight
-            isNavbarVisible && isToolbarAtBottom -> navbarHeight + toolbarHeight
             isMicrosurveyEnabled && isToolbarAtBottom -> microsurveyHeight + toolbarHeight
-
-            isNavbarVisible -> navbarHeight
             isMicrosurveyEnabled -> microsurveyHeight
             isToolbarAtBottom -> toolbarHeight
 
@@ -2252,28 +2203,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      * a combination of a navigation and microsurvey prompt, or be absent.
      */
     fun getBottomToolbarContainerHeight(): Int {
-        val isNavBarEnabled = navigationToolbarEnabled
         val isMicrosurveyEnabled = shouldShowMicrosurveyPrompt
-        val navbarHeight = appContext.resources.getDimensionPixelSize(R.dimen.browser_navbar_height)
         val microsurveyHeight =
             appContext.resources.getDimensionPixelSize(R.dimen.browser_microsurvey_height)
 
         return when {
-            isNavBarEnabled && isMicrosurveyEnabled -> navbarHeight + microsurveyHeight
-            isNavBarEnabled -> navbarHeight
             isMicrosurveyEnabled -> microsurveyHeight
             else -> 0
         }
     }
-
-    /**
-     * Indicates if the user is shown the new navigation toolbar.
-     */
-    var navigationToolbarEnabled by lazyFeatureFlagPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_toolbar_show_navigation_toolbar),
-        default = { FxNimbus.features.navigationToolbar.value().enabled },
-        featureFlag = true,
-    )
 
     /**
      * Indicates if the microsurvey feature is enabled.
@@ -2410,12 +2348,18 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false,
     )
 
+    var loginsListSortOrder by stringPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_logins_list_sort_order),
+        default = "",
+    )
+
     /**
      * Indicates whether or not to show the entry point for the DNS over HTTPS settings
      */
-    val showDohEntryPoint by booleanPreference(
+    val showDohEntryPoint by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_doh_settings_enabled),
-        default = false,
+        default = { FxNimbus.features.doh.value().showUi },
+        featureFlag = true,
     )
 
     /**

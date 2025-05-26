@@ -175,9 +175,9 @@
   <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons -->
   <string name="mozac_feature_addons_updater_notification_title">%1$s ورۊ رسۊوی نۊ داره</string>
   <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions -->
-  <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d موجوزا نۊ ن اخو</string>
+  <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d موجوزا نۊ ن الن اخو</string>
   <!-- The content of the notification displayed when an add-on needs a new permission -->
-  <string name="mozac_feature_addons_updater_notification_content_singular">ی موجوز نۊ اخو</string>
+  <string name="mozac_feature_addons_updater_notification_content_singular">ی موجوز نۊ الن اخو</string>
   <!-- Name of the "notification channel" used for displaying a notification for updating an extension. See https://developer.android.com/training/notify-user/channels -->
   <string name="mozac_feature_addons_updater_notification_channel_2">ورۊ رسۊوی وردنی</string>
   <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
@@ -216,6 +216,10 @@
   <string name="mozac_feature_addons_extension_failed_to_install_not_signed_error">ای وردنی نتره بپۊره چیناکه تاییڌ نوابیڌه.</string>
   <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
   <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s نتره بپۊره چیناکه وا %2$s %3$s ساز نیاره.</string>
+  <!-- Text shown when attempting to install a (hard) blocked add-on. %1$s is the add-on name. %2$s is the app name. -->
+  <string name="mozac_feature_addons_blocklisted_2">%1$s خت مشی یل Mozilla ن زؽر پا انه وو نتره و ری %2$s بپۊره.</string>
+  <!-- Text shown when attempting to install an add-on that is soft-blocked. %1$s is the add-on name. %2$s is the app name. -->
+  <string name="mozac_feature_addons_soft_blocked_1">%1$s خت مشی یل Mozilla ن زؽر پا انه وو نتره و ری %2$s بپۊره.</string>
   <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_successfully_enabled">%1$s و خۊوی فعال وابی</string>
   <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

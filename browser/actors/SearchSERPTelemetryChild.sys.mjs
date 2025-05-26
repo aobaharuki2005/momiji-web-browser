@@ -8,7 +8,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
-  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+  SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
@@ -1520,7 +1520,6 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
         }
         this.sendAsyncMessage("SearchTelemetry:Action", {
           target: info.target,
-          url: info.url,
           action: info.action,
         });
       };

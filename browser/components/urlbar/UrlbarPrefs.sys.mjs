@@ -100,6 +100,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // 0 - never resolve; 1 - use heuristics (default); 2 - always resolve
   ["dnsResolveSingleWordsAfterSearch", 0],
 
+  // If Suggest is disabled before these seconds from a search, then send a
+  // disable event.
+  ["events.disableSuggest.maxSecondsFromLastSearch", 300],
+
   // Whether we expand the font size when when the urlbar is
   // focused.
   ["experimental.expandTextOnFocus", false],
@@ -324,6 +328,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // the interval used by the desktop remote settings client.
   ["quicksuggest.rustIngestIntervalSeconds", 60 * 60 * 24],
 
+  // Which Suggest settings to show in the settings UI. See
+  // `QuickSuggest.SETTINGS_UI` for values.
+  ["quicksuggest.settingsUi", 0],
+
   // We only show recent searches within the past 3 days by default.
   // Stored as a string as some code handle timestamp sized int's.
   ["recentsearches.expirationMs", (1000 * 60 * 60 * 24 * 3).toString()],
@@ -358,7 +366,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // A short-circuit pref to enable all the features that are part of a
   // grouped release.
-  ["scotchBonnet.enableOverride", false],
+  ["scotchBonnet.enableOverride", true],
 
   // Allow searchmode to be persisted as the user navigates the
   // search host.
@@ -374,6 +382,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Feature gate pref for secondary actions being shown in the urlbar.
   ["secondaryActions.featureGate", false],
+
+  // Maximum number of actions shown.
+  ["secondaryActions.maxActionsShown", 3],
 
   // Alternative switch to tab implementation using secondaryActions.
   ["secondaryActions.switchToTab", false],
@@ -484,6 +495,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // How old history results have to be to be deduplicated.
   ["deduplication.thresholdDays", 0],
 
+  // semanticHistory search query minLength threshold to be enabled.
+  ["suggest.semanticHistory.minLength", 5],
+
   // When using switch to tabs, if set to true this will move the tab into the
   // active window.
   ["switchTabs.adoptIntoActiveWindow", false],
@@ -564,6 +578,11 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether Yelp suggestions should be shown as top picks. This is a fallback
   // pref for the `yelpSuggestPriority` Nimbus variable.
   ["yelp.priority", false],
+
+  // Whether to distinguish service type subjects. If true, we show special
+  // titile for the suggestion. This is a fallback pref for the
+  // `yelpServiceResultDistinction` Nimbus variable.
+  ["yelp.serviceResultDistinction", false],
 
   // The number of times the user has clicked the "Show less frequently" command
   // for Yelp suggestions.
@@ -717,6 +736,10 @@ function makeResultGroups({ showSearchSuggestionsFirst }) {
           {
             availableSpan: 3,
             group: lazy.UrlbarUtils.RESULT_GROUP.INPUT_HISTORY,
+          },
+          {
+            availableSpan: 2,
+            group: lazy.UrlbarUtils.RESULT_GROUP.HISTORY_SEMANTIC,
           },
           {
             flexChildren: true,

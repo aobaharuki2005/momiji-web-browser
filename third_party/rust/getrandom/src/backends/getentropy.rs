@@ -16,6 +16,7 @@ pub use crate::util::{inner_u32, inner_u64};
 mod util_libc;
 type GetEntropyFn = unsafe extern "C" fn(*mut u8, libc::size_t) -> libc::c_int;
 
+#[inline]
 pub fn fill_inner(dest: &mut [MaybeUninit<u8>]) -> Result<(), Error> {
     static GETENTROPY: Weak = unsafe { Weak::new("getentropy\0") };
     if let Some(fptr) = GETENTROPY.ptr() {

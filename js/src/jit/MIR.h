@@ -6642,10 +6642,14 @@ class MStringReplace : public MTernaryInstruction,
 };
 
 class MLambda : public MBinaryInstruction, public SingleObjectPolicy::Data {
-  MLambda(MDefinition* envChain, MConstant* cst)
-      : MBinaryInstruction(classOpcode, envChain, cst) {
+  MLambda(MDefinition* envChain, MConstant* cst, gc::Heap initialHeap)
+      : MBinaryInstruction(classOpcode, envChain, cst),
+        initialHeap_(initialHeap) {
     setResultType(MIRType::Object);
   }
+
+  // Heap where the lambda should be allocated.
+  gc::Heap initialHeap_;
 
  public:
   INSTRUCTION_HEADER(Lambda)
@@ -6656,6 +6660,8 @@ class MLambda : public MBinaryInstruction, public SingleObjectPolicy::Data {
   JSFunction* templateFunction() const {
     return &functionOperand()->toObject().as<JSFunction>();
   }
+
+  gc::Heap initialHeap() const { return initialHeap_; }
 
   [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
@@ -8822,18 +8828,22 @@ class MPostWriteElementBarrier
 
 class MNewCallObject : public MUnaryInstruction,
                        public SingleObjectPolicy::Data {
+  gc::Heap initialHeap_;
+
  public:
   INSTRUCTION_HEADER(NewCallObject)
   TRIVIAL_NEW_WRAPPERS
 
-  explicit MNewCallObject(MConstant* templateObj)
-      : MUnaryInstruction(classOpcode, templateObj) {
+  explicit MNewCallObject(MConstant* templateObj, gc::Heap initialHeap)
+      : MUnaryInstruction(classOpcode, templateObj), initialHeap_(initialHeap) {
     setResultType(MIRType::Object);
   }
 
   CallObject* templateObject() const {
     return &getOperand(0)->toConstant()->toObject().as<CallObject>();
   }
+  gc::Heap initialHeap() const { return initialHeap_; }
+
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   [[nodiscard]] bool writeRecoverData(

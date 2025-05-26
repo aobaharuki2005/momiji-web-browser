@@ -25,6 +25,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PipelineOptions: "chrome://global/content/ml/EngineProcess.sys.mjs",
   DEFAULT_ENGINE_ID: "chrome://global/content/ml/EngineProcess.sys.mjs",
   DEFAULT_MODELS: "chrome://global/content/ml/EngineProcess.sys.mjs",
+  WASM_BACKENDS: "chrome://global/content/ml/EngineProcess.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "console", () => {
@@ -225,10 +226,6 @@ export class MLEngineChild extends JSProcessActorChild {
     return this.sendQuery("MLEngine:GetModelFile", config);
   }
 
-  getInferenceProcessInfo() {
-    return this.sendQuery("MLEngine:GetInferenceProcessInfo");
-  }
-
   /**
    * Removes an engine by its ID. Optionally shuts down if no engines remain.
    *
@@ -336,11 +333,6 @@ class EngineDispatcher {
    * @returns {Promise<Engine>}
    */
   async initializeInferenceEngine(pipelineOptions, notificationsCallback) {
-    // Create the inference engine given the wasm runtime and the options.
-    const wasm = await this.mlEngineChild.getWasmArrayBuffer(
-      pipelineOptions.backend
-    );
-
     let remoteSettingsOptions = await this.mlEngineChild.getInferenceOptions(
       this.#featureId,
       this.#taskName,
@@ -365,16 +357,21 @@ class EngineDispatcher {
     }
 
     lazy.console.debug("Inference engine options:", mergedOptions);
-
     this.pipelineOptions = mergedOptions;
+
+    // load the wasm if required.
+    let wasm = null;
+    if (lazy.WASM_BACKENDS.includes(pipelineOptions.backend || "onnx")) {
+      wasm = await this.mlEngineChild.getWasmArrayBuffer(
+        pipelineOptions.backend
+      );
+    }
 
     return InferenceEngine.create({
       wasm,
       pipelineOptions: mergedOptions,
       notificationsCallback,
       getModelFileFn: this.mlEngineChild.getModelFile.bind(this.mlEngineChild),
-      getInferenceProcessInfoFn:
-        this.mlEngineChild.getInferenceProcessInfo.bind(this.mlEngineChild),
     });
   }
 
@@ -607,6 +604,10 @@ class EngineDispatcher {
  * @param {string} config.modelHubRootUrl - root url of the model hub. When not provided, uses the default from prefs.
  * @param {string} config.modelHubUrlTemplate - url template of the model hub. When not provided, uses the default from prefs.
  * @param {?function(object):Promise<[string, object]>} config.getModelFileFn - A function that actually retrieves the model and headers.
+ * @param {string} config.modelId - The model id
+ * @param {string} config.featureId - The feature id
+ * @param {string} config.modelRevision - The model revision - defaults to latest if not set.
+ * @param {string} config.sessionId - Shared across the same session.
  * @returns {Promise} A promise that resolves to a Meta object containing the URL, response headers,
  * and model path.
  */
@@ -617,6 +618,10 @@ async function getModelFile({
   getModelFileFn,
   modelHubRootUrl,
   modelHubUrlTemplate,
+  modelId,
+  featureId,
+  modelRevision,
+  sessionId,
 }) {
   const [data, headers] = await getModelFileFn({
     engineId: engineId || lazy.DEFAULT_ENGINE_ID,
@@ -624,6 +629,10 @@ async function getModelFile({
     url,
     rootUrl: modelHubRootUrl || lazy.MODEL_HUB_ROOT_URL,
     urlTemplate: modelHubUrlTemplate || lazy.MODEL_HUB_URL_TEMPLATE,
+    modelId,
+    featureId,
+    modelRevision,
+    sessionId,
   });
   return new lazy.BasePromiseWorker.Meta([url, headers, data], {});
 }
@@ -643,7 +652,6 @@ class InferenceEngine {
    * @param {PipelineOptions} config.pipelineOptions
    * @param {?function(ProgressAndStatusCallbackParams):void} config.notificationsCallback The callback to call for updating about notifications such as dowload progress status.
    * @param {?function(object):Promise<[string, object]>} config.getModelFileFn - A function that actually retrieves the model and headers.
-   * @param {?function(object):Promise<object>} config.getInferenceProcessInfoFn - A function to get inference process info
    * @returns {InferenceEngine}
    */
   static async create({
@@ -651,7 +659,6 @@ class InferenceEngine {
     pipelineOptions,
     notificationsCallback, // eslint-disable-line no-unused-vars
     getModelFileFn,
-    getInferenceProcessInfoFn,
   }) {
     // Check for the numThreads value. If it's not set, use the best value for the platform, which is the number of physical cores
     pipelineOptions.numThreads =
@@ -662,7 +669,7 @@ class InferenceEngine {
       "chrome://global/content/ml/MLEngine.worker.mjs",
       { type: "module" },
       {
-        getModelFile: async url =>
+        getModelFile: async (url, sessionId = "") =>
           getModelFile({
             engineId: pipelineOptions.engineId,
             url,
@@ -670,8 +677,11 @@ class InferenceEngine {
             getModelFileFn,
             modelHubRootUrl: pipelineOptions.modelHubRootUrl,
             modelHubUrlTemplate: pipelineOptions.modelHubUrlTemplate,
+            modelId: pipelineOptions.modelId,
+            featureId: pipelineOptions.featureId,
+            modelRevision: pipelineOptions.modelRevision,
+            sessionId,
           }),
-        getInferenceProcessInfo: getInferenceProcessInfoFn,
         onInferenceProgress: notificationsCallback,
       }
     );

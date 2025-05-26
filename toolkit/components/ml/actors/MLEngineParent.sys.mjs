@@ -28,8 +28,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   ModelHub: "chrome://global/content/ml/ModelHub.sys.mjs",
-  getInferenceProcessInfo: "chrome://global/content/ml/Utils.sys.mjs",
   Progress: "chrome://global/content/ml/Utils.sys.mjs",
+  isAddonEngineId: "chrome://global/content/ml/Utils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -126,12 +126,13 @@ export class MLEngineParent extends JSProcessActorParent {
    * - 2 => Transformers < 3.1
    * - 3 => Transformers < 3.4
    * - 4 => Transformers >= 3.4.0
+   * - 5 => Transformers >= 3.5.1
    *
    * wllama:
    * - 3 => wllama 2.x
    */
   static WASM_MAJOR_VERSION = {
-    onnx: 4,
+    onnx: 5,
     wllama: 3,
   };
 
@@ -304,9 +305,6 @@ export class MLEngineParent extends JSProcessActorParent {
       case "MLEngine:GetModelFile":
         return this.getModelFile(message.data);
 
-      case "MLEngine:GetInferenceProcessInfo":
-        return lazy.getInferenceProcessInfo();
-
       case "MLEngine:DestroyEngineProcess":
         if (this.processKeepAlive) {
           ChromeUtils.addProfilerMarker(
@@ -390,9 +388,23 @@ export class MLEngineParent extends JSProcessActorParent {
    * the model hub root or an absolute URL.
    * @param {string} config.urlTemplate - The URL of the model file to fetch. Can be a path relative to
    * the model hub root or an absolute URL.
+   * @param {string} config.featureId - The engine id.
+   * @param {string} config.modelRevision - The model revision.
+   * @param {string} config.modelId - The model id
+   * @param {string} config.sessionId - Shared across the same model download session.
    * @returns {Promise<[string, object]>} The file local path and headers
    */
-  async getModelFile({ engineId, taskName, url, rootUrl, urlTemplate }) {
+  async getModelFile({
+    engineId,
+    taskName,
+    url,
+    rootUrl,
+    urlTemplate,
+    featureId,
+    modelRevision,
+    modelId,
+    sessionId,
+  }) {
     // Create the model hub instance if needed
     if (!this.modelHub) {
       lazy.console.debug("Creating model hub instance");
@@ -422,6 +434,10 @@ export class MLEngineParent extends JSProcessActorParent {
       modelHubRootUrl: rootUrl,
       modelHubUrlTemplate: urlTemplate,
       progressCallback: this.notificationsCallback?.bind(this),
+      featureId,
+      modelRevision,
+      modelId,
+      sessionId,
     });
 
     // Keep the latest revision for each task, model
@@ -819,7 +835,7 @@ class MLEngine {
    * @returns {string}
    */
   getGleanLabel() {
-    if (this.engineId.startsWith("ML-ENGINE-")) {
+    if (lazy.isAddonEngineId(this.engineId)) {
       return "webextension";
     }
     return this.engineId;

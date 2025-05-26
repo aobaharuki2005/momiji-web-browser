@@ -40,6 +40,9 @@ CFStringRef AppleVTLinker::skPropMaxFrameDelayCount = nullptr;
 CFStringRef AppleVTLinker::skPropCompRealTime = nullptr;
 CFStringRef AppleVTLinker::skPropCompKeyForceFrame = nullptr;
 CFStringRef AppleVTLinker::skPropCompProfileLevel = nullptr;
+CFStringRef AppleVTLinker::skPropCompColorPrimaries = nullptr;
+CFStringRef AppleVTLinker::skPropCompYCbCrMatrix = nullptr;
+CFStringRef AppleVTLinker::skPropCompTransferFunction = nullptr;
 
 #define LINK_FUNC(func) typeof(func) func;
 #include "AppleVTFunctions.h"
@@ -122,6 +125,13 @@ AppleVTLinker::Link()
     GetIOConst("kVTCompressionPropertyKey_RealTime");
   skPropCompKeyForceFrame =
     GetIOConst("kVTEncodeFrameOptionKey_ForceKeyFrame");
+
+  skPropCompColorPrimaries =
+    GetIOConst("kVTCompressionPropertyKey_ColorPrimaries");
+  skPropCompYCbCrMatrix =
+    GetIOConst("kVTCompressionPropertyKey_YCbCrMatrix");
+  skPropCompTransferFunction = 
+    GetIOConst("kVTCompressionPropertyKey_TransferFunction");
 
   skPropCompProfileLevel =
     GetIOConst("kVTCompressionPropertyKey_ProfileLevel");

@@ -10,12 +10,7 @@
 #include "MainThreadUtils.h"
 #include "nsDebug.h"
 
-#ifdef PR_LOGGING
-PRLogModuleInfo* GetAppleMediaLog();
-#define LOG(...) PR_LOG(GetAppleMediaLog(), PR_LOG_DEBUG, (__VA_ARGS__))
-#else
-#define LOG(...)
-#endif
+#define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {
 
@@ -81,5 +76,5 @@ AppleCMLinker::Unlink()
     sLink = nullptr;
   }
 }
-
 } // namespace mozilla
+#undef LOG
