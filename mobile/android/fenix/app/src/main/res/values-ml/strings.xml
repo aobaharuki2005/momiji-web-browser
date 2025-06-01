@@ -375,7 +375,7 @@
   <!-- Browser menu description that describes the various save related menu items inside of the save sub-menu -->
   <string name="browser_menu_save_description">അടയാളക്കുറിപ്പുവയ്ക്കുക, കുറുക്കുവഴി, ആമുഖം, ശേഖരം, പീ.ഡീ.എഫ.</string>
   <!-- Browser menu label that bookmarks the currently visited page -->
-  <string name="browser_menu_bookmark_this_page">ഈ താള്‍ അടയാളപ്പെടുത്തുക</string>
+  <string name="browser_menu_bookmark_this_page" moz:removedIn="141" tools:ignore="UnusedResources">ഈ താള്‍ അടയാളപ്പെടുത്തുക</string>
   <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
   <string name="browser_menu_edit_bookmark">അടയാളക്കുറിപ്പ് തിരുത്തുക</string>
   <!-- Browser menu label that the saves the currently visited page as a PDF -->
@@ -570,37 +570,37 @@
     Onboarding header for the add-ons card used by Nimbus experiments. Nimbus experiments do not support string placeholders.
     Note: The word "Firefox" should NOT be translated
   -->
-  <string name="onboarding_add_on_header" tools:ignore="BrandUsage,UnusedResources">വിപുലീകരണങ്ങൾ കൊണ്ടു് താങ്ങളുടെ ഫയർഫോക്സു് സ്വന്തമാക്കുക</string>
+  <string name="onboarding_add_on_header" moz:removedIn="140" tools:ignore="BrandUsage,UnusedResources">വിപുലീകരണങ്ങൾ കൊണ്ടു് താങ്ങളുടെ ഫയർഫോക്സു് സ്വന്തമാക്കുക</string>
   <!-- Onboarding add-ons card, for checking more add-ons on, used by Nimbus experiments. -->
-  <string name="onboarding_add_on_explore_more_extensions_2">കൂടുതൽ വിപുലീകരണങ്ങൾ കാണുക</string>
+  <string name="onboarding_add_on_explore_more_extensions_2" moz:removedIn="140" tools:ignore="UnusedResources">കൂടുതൽ വിപുലീകരണങ്ങൾ കാണുക</string>
   <!-- Onboarding add-ons card, button for start browsing, used by Nimbus experiments. -->
-  <string name="onboarding_add_on_start_browsing_button_2">തിരയുകാൻ തുടങ്ങുക</string>
+  <string name="onboarding_add_on_start_browsing_button_2" moz:removedIn="140" tools:ignore="UnusedResources">തിരയുകാൻ തുടങ്ങുക</string>
   <!-- Ublock name for the onboarding add-ons card, used by Nimbus experiments. Note: The word "Ublock Origin" is a brand name should NOT be translated -->
-  <string name="onboarding_add_on_ublock_name" tools:ignore="UnusedResources">യുബ്ലോക്കു് ഓരിജിൻ</string>
+  <string name="onboarding_add_on_ublock_name" moz:removedIn="140" tools:ignore="UnusedResources">യുബ്ലോക്കു് ഓരിജിൻ</string>
   <!-- Ublock description for the onboarding add-ons card, used by Nimbus experiments. -->
-  <string name="onboarding_add_on_ublock_description" tools:ignore="UnusedResources">പരസ്യങ്ങൾ നല്ലോണം തടയുക.</string>
+  <string name="onboarding_add_on_ublock_description" moz:removedIn="140" tools:ignore="UnusedResources">പരസ്യങ്ങൾ നല്ലോണം തടയുക.</string>
   <!-- Privacy Badger name for the onboarding add-ons card, used by Nimbus experiments. Note: The word "Privacy Badger" is a brand name should NOT be translated -->
-  <string name="onboarding_add_on_privacy_badger_name" tools:ignore="UnusedResources">പ്രിവസി ബാജർ</string>
+  <string name="onboarding_add_on_privacy_badger_name" moz:removedIn="140" tools:ignore="UnusedResources">പ്രിവസി ബാജർ</string>
   <!-- Search by Image name for the onboarding add-ons card, used by Nimbus experiments. Note: The word "Search by Image" is a brand name should NOT be translated -->
-  <string name="onboarding_add_on_search_by_image_name" tools:ignore="UnusedResources">ചിത്രം കൊണ്ടു് തിരയുക</string>
+  <string name="onboarding_add_on_search_by_image_name" moz:removedIn="140" tools:ignore="UnusedResources">ചിത്രം കൊണ്ടു് തിരയുക</string>
   <!-- Search by Image description for the onboarding add-ons card, used by Nimbus experiments. -->
-  <string name="onboarding_add_on_search_by_image_description" tools:ignore="UnusedResources">ഒരു രസകരമായ ചിത്രം കണ്ടിട്ടു് അതുനെപറ്റി കൂടുകൽ അറിയുക.</string>
+  <string name="onboarding_add_on_search_by_image_description" moz:removedIn="140" tools:ignore="UnusedResources">ഒരു രസകരമായ ചിത്രം കണ്ടിട്ടു് അതുനെപറ്റി കൂടുകൽ അറിയുക.</string>
   <!-- Dark Reader name for the onboarding add-ons card, used by Nimbus experiments. Note: The word "Dark Reader" is a brand name should NOT be translated -->
-  <string name="onboarding_add_on_dark_reader_name" tools:ignore="UnusedResources">ഡാർക്കു് റീടർ</string>
+  <string name="onboarding_add_on_dark_reader_name" moz:removedIn="140" tools:ignore="UnusedResources">ഡാർക്കു് റീടർ</string>
   <!-- Privacy Badger description for the onboarding add-ons card, used by Nimbus experiments. -->
-  <string name="onboarding_add_on_dark_reader_description" tools:ignore="UnusedResources">ജംഗമവലക്കുള്ള ഇഷ്ടാനുസൃത ഇരുണ്ടരീതി.</string>
+  <string name="onboarding_add_on_dark_reader_description" moz:removedIn="140" tools:ignore="UnusedResources">ജംഗമവലക്കുള്ള ഇഷ്ടാനുസൃത ഇരുണ്ടരീതി.</string>
   <!-- Label for the number of reviews for an add-on. %1$s is the formatted number of reviews e.g. "1,234", "12,345", "123,456". -->
-  <string name="onboarding_add_on_reviews_label">അവലോകനങ്ങൾ: %1$s</string>
+  <string name="onboarding_add_on_reviews_label" moz:removedIn="140" tools:ignore="UnusedResources">അവലോകനങ്ങൾ: %1$s</string>
   <!-- Content description for the add-on icon. -->
-  <string name="onboarding_add_on_icon_content_description">ആഡ്-ഓൺ അടയാളം</string>
+  <string name="onboarding_add_on_icon_content_description" moz:removedIn="140" tools:ignore="UnusedResources">ആഡ്-ഓൺ അടയാളം</string>
   <!-- Content description for the an installed add-on icon. -->
-  <string name="onboarding_installed_add_on_icon_content_description">സ്ഥാപിച്ച ആഡ്-ഓൺ അടയാളം</string>
+  <string name="onboarding_installed_add_on_icon_content_description" moz:removedIn="140" tools:ignore="UnusedResources">സ്ഥാപിച്ച ആഡ്-ഓൺ അടയാളം</string>
   <!-- Content description for the an installing add-on icon. -->
-  <string name="onboarding_installing_add_on_icon_content_description">ആഡ് ഓൺ അടയാളം സ്ഥാപിക്കുന്നു</string>
+  <string name="onboarding_installing_add_on_icon_content_description" moz:removedIn="140" tools:ignore="UnusedResources">ആഡ് ഓൺ അടയാളം സ്ഥാപിക്കുന്നു</string>
   <!-- Content description for the add add-on button. -->
-  <string name="onboarding_add_on_add_button_content_description">ആഡ്-ഓൺ ബട്ടൺ ചേർക്കുക</string>
+  <string name="onboarding_add_on_add_button_content_description" moz:removedIn="140" tools:ignore="UnusedResources">ആഡ്-ഓൺ ബട്ടൺ ചേർക്കുക</string>
   <!-- Content description for the star rating group. %1$s is the rating. -->
-  <string name="onboarding_add_on_star_rating_content_description">5-ൽ %1$s-ആയി സ്ഥാനക്രമിച്ചതു്</string>
+  <string name="onboarding_add_on_star_rating_content_description" moz:removedIn="140" tools:ignore="UnusedResources">5-ൽ %1$s-ആയി സ്ഥാനക്രമിച്ചതു്</string>
   <!-- Title for the privacy preferences dialog shown during onboarding. Note: The word "Firefox" should NOT be translated. -->
   <string name="onboarding_preferences_dialog_title" tools:ignore="BrandUsage">ഫയർഫോക്സു് മെച്ചപ്പെടുത്താൻ ഞങ്ങളെ സഹായിക്കുക</string>
   <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
@@ -1444,13 +1444,13 @@
   <!-- Text for the snackbar to confirm that a single download item has been removed. %1$s is the name of the download item. -->
   <string name="download_delete_single_item_snackbar_2">“%1$s”-നെ മായ്ചു</string>
   <!-- Text for the snackbar to confirm that downloads are in progress. -->
-  <string name="download_in_progress_snackbar" tools:ignore="UnusedResources">ഇറക്കിവയ്ക്കൽ നടപ്പിലാണു്…</string>
+  <string name="download_in_progress_snackbar">ഇറക്കിവയ്ക്കൽ നടപ്പിലാണു്…</string>
   <!-- Text for the snackbar action button to view in progress download details. -->
-  <string name="download_in_progress_snackbar_action_details" tools:ignore="UnusedResources">വിശദാംശങ്ങൾ</string>
+  <string name="download_in_progress_snackbar_action_details">വിശദാംശങ്ങൾ</string>
   <!-- Text for the snackbar to confirm that a download has completed. -->
-  <string name="download_completed_snackbar" tools:ignore="UnusedResources">ഇറക്കിവയ്ക്കൽ കഴിഞ്ഞു</string>
+  <string name="download_completed_snackbar">ഇറക്കിവയ്ക്കൽ കഴിഞ്ഞു</string>
   <!-- Text for the snackbar action button to open a completed download. -->
-  <string name="download_completed_snackbar_action_open" tools:ignore="UnusedResources">തുറക്കുക</string>
+  <string name="download_completed_snackbar_action_open">തുറക്കുക</string>
   <!-- Text for the snackbar action button to undo deleting a download. -->
   <string name="download_undo_delete_snackbar_action">പഴയപടിയാക്കുക</string>
   <!-- Text shown when no download exists -->
@@ -1531,7 +1531,7 @@
   <!-- Text to indicate that the download speed of an in progress download is being calculated. -->
   <string name="download_item_download_speed_pending" tools:ignore="UnusedResources">ഒഴിഞ്ഞിരിക്കുന്നതു്</string>
   <!-- Text to indicate that a download has failed to download. -->
-  <string name="download_item_status_failed" tools:ignore="UnusedResources">ഇറക്കിവയ്ക്കൽ തോറ്റു</string>
+  <string name="download_item_status_failed">ഇറക്കിവയ്ക്കൽ തോറ്റു</string>
   <!-- Placeholder text to indicate that users can use the search bar to search for a download. -->
   <string name="download_search_placeholder">ഇറക്കിവച്ചതിലു് തിരയുക</string>
   <!-- Text to indicate that no downloads match the search query. -->

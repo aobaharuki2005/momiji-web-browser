@@ -16,8 +16,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
+  ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
+  ProfilesDatastoreService:
+    "moz-src:///toolkit/profile/ProfilesDatastoreService.sys.mjs",
   RemoteSettingsExperimentLoader:
     "resource://nimbus/lib/RemoteSettingsExperimentLoader.sys.mjs",
+  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
@@ -131,7 +135,7 @@ export const NimbusTestUtils = {
      * @param {object} store
      *        The `ExperimentStore`.
      */
-    storeIsEmpty(store) {
+    async storeIsEmpty(store) {
       NimbusTestUtils.Assert.deepEqual(
         store
           .getAll()
@@ -156,6 +160,8 @@ export const NimbusTestUtils = {
       );
 
       NimbusTestUtils.cleanupStorePrefCache();
+
+      await NimbusTestUtils.cleanupEnrollmentDatabase();
     },
   },
 
@@ -188,6 +194,7 @@ export const NimbusTestUtils = {
               value: { testInt: 123, enabled: true },
             },
           ],
+          firefoxLabsTitle: null,
         },
         source: "NimbusTestUtils",
         isEnrollmentPaused: true,
@@ -198,6 +205,14 @@ export const NimbusTestUtils = {
         featureIds: props?.branch?.features?.map(f => f.featureId) ?? [
           "testFeature",
         ],
+        isRollout: false,
+        isFirefoxLabsOptIn: false,
+        firefoxLabsTitle: null,
+        firefoxLabsDescription: null,
+        firefoxLabsDescriptionLinks: null,
+        firefoxLabsGroup: null,
+        requiresRestart: false,
+        localizations: null,
         ...props,
       };
     },
@@ -253,6 +268,13 @@ export const NimbusTestUtils = {
         ],
         targeting: "true",
         isRollout: false,
+        isFirefoxLabsOptIn: false,
+        firefoxLabsTitle: null,
+        firefoxLabsDescription: null,
+        firefoxLabsDescriptionLinks: null,
+        firefoxLabsGroup: null,
+        requiresRestart: false,
+        localizations: null,
         ...props,
       };
     },
@@ -382,7 +404,57 @@ export const NimbusTestUtils = {
       await experimentManager.unenroll(slug);
     }
 
-    NimbusTestUtils.assert.storeIsEmpty(experimentManager.store);
+    await NimbusTestUtils.assert.storeIsEmpty(experimentManager.store);
+  },
+
+  async cleanupEnrollmentDatabase() {
+    if (
+      !Services.prefs.getBoolPref(
+        "nimbus.profilesdatastoreservice.enabled",
+        false
+      )
+    ) {
+      // We are in an xpcshell test that has not initialized the
+      // ProfilesDatastoreService.
+      //
+      // TODO(bug 1967779): require the ProfilesDatastoreService to be initialized
+      // and remove this check.
+      return;
+    }
+
+    const profileId = ExperimentAPI.profileId;
+
+    const conn = await lazy.ProfilesDatastoreService.getConnection();
+
+    const activeSlugs = await conn
+      .execute(
+        `
+        SELECT
+          slug
+        FROM NimbusEnrollments
+        WHERE
+          profileId = :profileId AND
+          active = true;
+      `,
+        { profileId }
+      )
+      .then(rows => rows.map(row => row.getResultByName("slug")));
+
+    NimbusTestUtils.Assert.deepEqual(
+      activeSlugs,
+      [],
+      `No active slugs in NimbusEnrollments for ${profileId}`
+    );
+
+    await conn.execute(
+      `
+        DELETE FROM NimbusEnrollments
+        WHERE
+          profileId = :profileId AND
+          active = false;
+      `,
+      { profileId }
+    );
   },
 
   /**
@@ -446,15 +518,9 @@ export const NimbusTestUtils = {
 
     experimentManager.store._syncToChildren({ flush: true });
 
-    return function doEnrollmentCleanup() {
-      // TODO(bug 1956082): This is an async method that we are not awaiting.
-      //
-      // Only browser tests and tests that otherwise have manually enabled the
-      // ProfilesDatastoreService need to await the result.
-      const promise = experimentManager.unenroll(enrollment.slug);
+    return async function doEnrollmentCleanup() {
+      await experimentManager.unenroll(enrollment.slug);
       experimentManager.store._deleteForTests(enrollment.slug);
-
-      return promise;
     };
   },
 
@@ -670,6 +736,9 @@ export const NimbusTestUtils = {
           Services.fog.testResetFOG();
           Services.telemetry.clearEvents();
         }
+
+        // Remove all migration state.
+        Services.prefs.deleteBranch("nimbus.migrations.");
       },
     };
 
@@ -739,6 +808,80 @@ export const NimbusTestUtils = {
       experiment,
       `Experiment ${experiment.slug} not valid`
     );
+  },
+
+  /**
+   * Wait for the given slugs to be the only active enrollments in the
+   * NimbusEnrollments table.
+   *
+   * @param {string[]} expectedSlugs The slugs of the only active enrollmetns we
+   * expect.
+   */
+  async waitForActiveEnrollments(expectedSlugs) {
+    const profileId = ExperimentAPI.profileId;
+
+    await lazy.TestUtils.waitForCondition(async () => {
+      const conn = await lazy.ProfilesDatastoreService.getConnection();
+      const slugs = await conn
+        .execute(
+          `
+            SELECT
+              slug
+            FROM NimbusEnrollments
+            WHERE
+              active = true AND
+              profileId = :profileId;
+          `,
+          { profileId }
+        )
+        .then(rows => rows.map(row => row.getResultByName("slug")));
+
+      return lazy.ObjectUtils.deepEqual(slugs.sort(), expectedSlugs.sort());
+    }, `Waiting for enrollments of ${expectedSlugs} to sync to database`);
+  },
+
+  async waitForInactiveEnrollment(slug) {
+    const profileId = ExperimentAPI.profileId;
+
+    await lazy.TestUtils.waitForCondition(async () => {
+      const conn = await lazy.ProfilesDatastoreService.getConnection();
+      const result = await conn.execute(
+        `
+            SELECT
+              active
+            FROM NimbusEnrollments
+            WHERE
+              slug = :slug AND
+              profileId = :profileId;
+          `,
+        { profileId, slug }
+      );
+
+      return result.length === 1 && !result[0].getResultByName("active");
+    }, `Waiting for ${slug} enrollment to exist and be inactive`);
+  },
+
+  async waitForAllUnenrollments() {
+    const profileId = ExperimentAPI.profileId;
+
+    await lazy.TestUtils.waitForCondition(async () => {
+      const conn = await lazy.ProfilesDatastoreService.getConnection();
+      const slugs = await conn
+        .execute(
+          `
+            SELECT
+              slug
+            FROM NimbusEnrollments
+            WHERE
+              active = true AND
+              profileId = :profileId;
+          `,
+          { profileId }
+        )
+        .then(rows => rows.map(row => row.getResultByName("slug")));
+
+      return slugs.length === 0;
+    }, "Waiting for unenrollments to sync to database");
   },
 };
 
@@ -823,6 +966,7 @@ Object.defineProperties(NimbusTestUtils.factories.recipe, {
               value: { testInt: 123, enabled: true },
             },
           ],
+          firefoxLabsTitle: null,
         },
         {
           slug: "treatment",
@@ -833,6 +977,7 @@ Object.defineProperties(NimbusTestUtils.factories.recipe, {
               value: { testInt: 123, enabled: true },
             },
           ],
+          firefoxLabsTitle: null,
         },
       ];
     },
@@ -859,6 +1004,7 @@ Object.defineProperties(NimbusTestUtils.factories.recipe, {
                 value,
               },
             ],
+            firefoxLabsTitle: null,
           },
         ],
         ...props,

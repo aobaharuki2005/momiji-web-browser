@@ -5,6 +5,7 @@
 package org.mozilla.fenix.onboarding
 
 import android.annotation.SuppressLint
+import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.IntentFilter
 import android.content.pm.ActivityInfo
@@ -59,7 +60,7 @@ import org.mozilla.fenix.onboarding.view.toPageUiData
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.canShowAddSearchWidgetPrompt
-import org.mozilla.fenix.utils.showAddSearchWidgetPrompt
+import org.mozilla.fenix.utils.maybeShowAddSearchWidgetPrompt
 
 /**
  * Fragment displaying the onboarding flow.
@@ -81,7 +82,7 @@ class OnboardingFragment : Fragment() {
             pagesToDisplay(
                 showDefaultBrowserPage = isNotDefaultBrowser(this) && !isDefaultBrowserPromptSupported(),
                 showNotificationPage = canShowNotificationPage(),
-                showAddWidgetPage = canShowAddSearchWidgetPrompt(),
+                showAddWidgetPage = canShowAddSearchWidgetPrompt(AppWidgetManager.getInstance(activity)),
             ).toMutableList()
         }
     }
@@ -242,7 +243,7 @@ class OnboardingFragment : Fragment() {
                     pagesToDisplay.telemetrySequenceId(),
                     pagesToDisplay.sequencePosition(OnboardingPageUiData.Type.ADD_SEARCH_WIDGET),
                 )
-                showAddSearchWidgetPrompt(requireActivity())
+                maybeShowAddSearchWidgetPrompt(requireActivity())
             },
             onSkipFirefoxWidgetClick = {
                 telemetryRecorder.onSkipAddWidgetClick(

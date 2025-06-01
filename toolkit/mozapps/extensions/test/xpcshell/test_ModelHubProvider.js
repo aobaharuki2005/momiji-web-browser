@@ -14,7 +14,8 @@ ChromeUtils.defineESModuleGetters(this, {
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1");
 AddonTestUtils.init(this);
 
-const MODELHUBPROVIDER_PREF = "browser.ml.modelHubProvider";
+const LOCAL_MODEL_MANAGEMENT_ENABLED_PREF =
+  "extensions.htmlaboutaddons.local_model_management";
 
 function ensureBrowserDelayedStartupFinished() {
   // ModelHubProvider does not register itself until the application startup
@@ -28,7 +29,7 @@ add_setup(async () => {
 
 add_task(
   {
-    pref_set: [[MODELHUBPROVIDER_PREF, false]],
+    pref_set: [[LOCAL_MODEL_MANAGEMENT_ENABLED_PREF, false]],
   },
   async function test_modelhub_provider_disabled() {
     ensureBrowserDelayedStartupFinished();
@@ -41,7 +42,7 @@ add_task(
 
 add_task(
   {
-    pref_set: [[MODELHUBPROVIDER_PREF, true]],
+    pref_set: [[LOCAL_MODEL_MANAGEMENT_ENABLED_PREF, true]],
   },
   async function test_modelhub_provider_enabled() {
     ensureBrowserDelayedStartupFinished();
@@ -54,7 +55,7 @@ add_task(
 
 add_task(
   {
-    pref_set: [[MODELHUBPROVIDER_PREF, true]],
+    pref_set: [[LOCAL_MODEL_MANAGEMENT_ENABLED_PREF, true]],
   },
   async function test_modelhub_provider_addon_wrappers() {
     let sandbox = sinon.createSandbox();
@@ -109,11 +110,11 @@ add_task(
       "https://huggingface.co/org2/model-mock-2/",
     ];
 
-    const listModelsStub = sinon
+    const listModelsStub = sandbox
       .stub(ModelHubProvider.modelHub, "listModels")
       .resolves(mockModels);
 
-    const listFilesStub = sinon
+    const listFilesStub = sandbox
       .stub(ModelHubProvider.modelHub, "listFiles")
       .onFirstCall()
       .resolves(mockListFilesResult)
@@ -127,11 +128,11 @@ add_task(
         },
       });
 
-    const getOwnerIcon = sinon
+    const getOwnerIcon = sandbox
       .stub(ModelHubProvider.modelHub, "getOwnerIcon")
       .resolves("chrome://mozapps/skin/extensions/extensionGeneric.svg");
 
-    const deleteModels = sinon
+    const deleteModels = sandbox
       .stub(ModelHubProvider.modelHub, "deleteModels")
       .resolves();
 
@@ -349,5 +350,85 @@ add_task(
         "Got the expected addon ids listed in usedByAddonIds"
       );
     }
+  }
+);
+
+add_task(
+  {
+    pref_set: [[LOCAL_MODEL_MANAGEMENT_ENABLED_PREF, true]],
+  },
+  async function test_modelhub_resets_cache_on_refresh() {
+    let sandbox = sinon.createSandbox();
+    ModelHubProvider.clearAddonCache();
+
+    const mockModels = [
+      {
+        name: "model-hub.mozilla.org/org1/model-mock-1",
+        revision: "mockRevision1",
+        engineIds: [],
+      },
+      {
+        name: "huggingface.co/org2/model-mock-2",
+        revision: "mockRevision2",
+        engineIds: [],
+      },
+    ];
+
+    const mockListFilesResult = {
+      metadata: {
+        totalSize: 2048,
+        lastUsed: new Date("2023-10-01T12:00:00Z"),
+        updateDate: 0,
+        engineIds: ["about-inference", "non-existing-feature"],
+      },
+    };
+
+    sandbox
+      .stub(ModelHubProvider.modelHub, "listModels")
+      .onFirstCall()
+      .resolves(mockModels)
+      .onSecondCall()
+      .resolves([]);
+
+    sandbox
+      .stub(ModelHubProvider.modelHub, "listFiles")
+      .onFirstCall()
+      .resolves(mockListFilesResult)
+      .onSecondCall()
+      .resolves({
+        metadata: {
+          ...mockListFilesResult.metadata,
+          // Setting engineIds to undefined to confirm that it is
+          // going to be set it to an empty array.
+          engineIds: undefined,
+        },
+      });
+
+    sandbox
+      .stub(ModelHubProvider.modelHub, "getOwnerIcon")
+      .resolves("chrome://mozapps/skin/extensions/extensionGeneric.svg");
+
+    sandbox.stub(ModelHubProvider.modelHub, "deleteModels").resolves();
+
+    // First call to the provider should populate the cache with the models
+    // returned by `listModels()`.
+    let modelWrappers = await AddonManager.getAddonsByTypes(["mlmodel"]);
+    Assert.equal(
+      modelWrappers.length,
+      mockModels.length,
+      "Got the expected number of model AddonWrapper instances"
+    );
+
+    // Second call should clear the cache before adding the models from the
+    // `ModelHub`. In this case, `listModels()` will return an empty array so
+    // we should expect no model wrapper.
+    modelWrappers = await AddonManager.getAddonsByTypes(["mlmodel"]);
+    Assert.equal(
+      modelWrappers.length,
+      0,
+      "Got the expected number of model AddonWrapper instances after refresh"
+    );
+
+    sandbox.restore();
   }
 );

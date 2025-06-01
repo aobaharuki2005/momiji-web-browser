@@ -388,6 +388,14 @@ class GCRuntime {
                    uint32_t* nextScheduled);
   void setZeal(uint8_t zeal, uint32_t frequency);
   void unsetZeal(uint8_t zeal);
+  // Note that currently, different modes cannot have different frequencies.
+  struct ZealSetting {
+    uint8_t mode;
+    uint32_t frequency;
+  };
+  using ZealSettings = js::Vector<ZealSetting, 0, SystemAllocPolicy>;
+  bool parseZeal(const char* str, size_t len, ZealSettings* zeal,
+                 bool* invalid);
   bool parseAndSetZeal(const char* str);
   void setNextScheduled(uint32_t count);
   void verifyPreBarriers();
@@ -603,6 +611,7 @@ class GCRuntime {
   bool isVerifyPreBarriersEnabled() const { return verifyPreData.refNoCheck(); }
   bool shouldYieldForZeal(ZealMode mode);
   void verifyPostBarriers(AutoHeapSession& session);
+  void checkHeapBeforeMinorGC(AutoHeapSession& session);
 #else
   bool isVerifyPreBarriersEnabled() const { return false; }
 #endif

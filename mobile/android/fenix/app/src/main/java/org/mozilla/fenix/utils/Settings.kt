@@ -5,6 +5,7 @@
 package org.mozilla.fenix.utils
 
 import android.accessibilityservice.AccessibilityServiceInfo.CAPABILITY_CAN_PERFORM_GESTURES
+import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
@@ -333,7 +334,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     var privateBrowsingLockedEnabled by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_private_browsing_locked_enabled),
-        featureFlag = FeatureFlags.privateBrowsingLock,
+        featureFlag = FxNimbus.features.privateBrowsingLock.value().enabled,
         default = { false },
     )
 
@@ -1231,7 +1232,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     var shouldShowLockPbmBanner by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_should_show_lock_pbm_banner),
-        featureFlag = FeatureFlags.privateBrowsingLock,
+        featureFlag = FxNimbus.features.privateBrowsingLock.value().enabled,
         default = { true },
     )
 
@@ -2462,7 +2463,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var showSetupChecklist by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_setup_checklist_complete),
-        default = { FxNimbus.features.setupChecklist.value().enabled },
+        default = {
+            FxNimbus.features.setupChecklist.value().enabled &&
+                    canShowAddSearchWidgetPrompt(AppWidgetManager.getInstance(appContext))
+        },
         featureFlag = true,
     )
 }

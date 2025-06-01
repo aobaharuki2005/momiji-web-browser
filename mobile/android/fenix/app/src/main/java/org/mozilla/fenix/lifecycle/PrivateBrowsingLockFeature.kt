@@ -41,6 +41,14 @@ interface PrivateBrowsingLockStorage {
      * @param listener A lambda that receives the new boolean value when it changes.
      */
     fun addFeatureStateListener(listener: (Boolean) -> Unit)
+
+    /**
+     * Starts observing shared preferences for changes in the feature flag.
+     *
+     * NB: some devices may garbage collect preference listeners very aggressively,
+     * so this method should be invoked each time the feature becomes active.
+     */
+    fun startObservingSharedPrefs()
 }
 
 /**
@@ -60,15 +68,15 @@ class DefaultPrivateBrowsingLockStorage(
         }
     }
 
-    init {
-        preferences.registerOnSharedPreferenceChangeListener(onFeatureStateChanged)
-    }
-
     override val isFeatureEnabled: Boolean
         get() = preferences.getBoolean(privateBrowsingLockPrefKey, false)
 
     override fun addFeatureStateListener(listener: (Boolean) -> Unit) {
         this.listener = listener
+    }
+
+    override fun startObservingSharedPrefs() {
+        preferences.registerOnSharedPreferenceChangeListener(onFeatureStateChanged)
     }
 }
 
@@ -82,7 +90,6 @@ class PrivateBrowsingLockFeature(
     private val storage: PrivateBrowsingLockStorage,
 ) : DefaultLifecycleObserver {
     private var browserStoreScope: CoroutineScope? = null
-    private var appStoreScope: CoroutineScope? = null
     private var isFeatureEnabled = false
 
     init {
@@ -144,10 +151,7 @@ class PrivateBrowsingLockFeature(
 
     private fun stop() {
         browserStoreScope?.cancel()
-        appStoreScope?.cancel()
-
         browserStoreScope = null
-        appStoreScope = null
 
         appStore.dispatch(
             PrivateBrowsingLockAction.UpdatePrivateBrowsingLock(
@@ -182,6 +186,11 @@ class PrivateBrowsingLockFeature(
         if (owner is Activity && !owner.isChangingConfigurations) {
             maybeLockPrivateModeOnStop()
         }
+    }
+
+    override fun onResume(owner: LifecycleOwner) {
+        super.onResume(owner)
+        storage.startObservingSharedPrefs()
     }
 
     private fun maybeLockPrivateModeOnStop() {

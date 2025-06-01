@@ -13,6 +13,8 @@ ChromeUtils.defineESModuleGetters(
     TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
     OPFS: "chrome://global/content/ml/OPFS.sys.mjs",
     FEATURES: "chrome://global/content/ml/EngineProcess.sys.mjs",
+    PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+    DownloadUtils: "resource://gre/modules/DownloadUtils.sys.mjs",
   },
   ES_MODULES_OPTIONS
 );
@@ -1082,4 +1084,77 @@ export function featureEngineIdToFluentId(engineId) {
 export function generateUUID() {
   lazy.console.debug("generating uuid");
   return crypto.randomUUID();
+}
+
+/**
+ * Checks if we are in private browsing mode
+ *
+ * @returns {boolean} True if we are in private browsing mode
+ */
+export function isPrivateBrowsing() {
+  const win = Services.wm.getMostRecentBrowserWindow() ?? null;
+  return lazy.PrivateBrowsingUtils.isWindowPrivate(win);
+}
+
+/**
+ * Helpers used to collect telemetry related to the mlmodel management UI
+ * (used by about:addons)
+ */
+
+function baseRecordData(modelAddonWrapper) {
+  const { usedByAddonIds, usedByFirefoxFeatures, model, version } =
+    modelAddonWrapper;
+  return {
+    extension_ids: usedByAddonIds.join(","),
+    feature_ids: usedByFirefoxFeatures.join(","),
+    model,
+    version,
+  };
+}
+
+export function recordRemoveConfirmationTelemetry(modelAddonWrapper, confirm) {
+  Glean.modelManagement.removeConfirmation.record({
+    ...baseRecordData(modelAddonWrapper),
+    action: confirm ? "remove" : "cancel",
+  });
+}
+
+export function recordListItemManageTelemetry(modelAddonWrapper) {
+  Glean.modelManagement.listItemManage.record({
+    ...baseRecordData(modelAddonWrapper),
+  });
+}
+
+function convertDateToHours(date) {
+  const now = Date.now();
+  return Math.floor((now - date.getTime()) / 1000 / 60 / 60); // hours
+}
+
+export function recordRemoveInitiatedTelemetry(modelAddonWrapper, source) {
+  const { lastUsed, updateDate, totalSize } = modelAddonWrapper;
+  Glean.modelManagement.removeInitiated.record({
+    ...baseRecordData(modelAddonWrapper),
+    source,
+    size: lazy.DownloadUtils.getTransferTotal(totalSize),
+    last_used: convertDateToHours(lastUsed),
+    last_install: convertDateToHours(updateDate),
+  });
+}
+
+export function recordExtensionModelLinkTelemetry(modelAddonWrapper) {
+  Glean.modelManagement.extensionModelLink.record({
+    ...baseRecordData(modelAddonWrapper),
+  });
+}
+
+export function recordListViewTelemetry(qty) {
+  Glean.modelManagement.listView.record({
+    models: qty,
+  });
+}
+
+export function recordDetailsViewTelemetry(modelAddonWrapper) {
+  Glean.modelManagement.detailsView.record({
+    ...baseRecordData(modelAddonWrapper),
+  });
 }
