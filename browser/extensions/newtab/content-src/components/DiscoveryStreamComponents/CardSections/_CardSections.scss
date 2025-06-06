@@ -6,7 +6,11 @@
   padding: var(--space-large);
 
   &.refined-cards.ds-card.sections-card-ui {
-    height: fit-content;
+    box-shadow: var(--box-shadow-card);
+
+    &:hover {
+      box-shadow: var(--box-shadow-card-hover);
+    }
   }
 
   &.refined-cards {
@@ -19,6 +23,66 @@
       width: 110px;
       height: 117px;
     }
+
+    .meta {
+      padding-inline: 0;
+      padding-block: 0 var(--space-xsmall);
+      min-height: 125px;
+
+      .info-wrap {
+        flex-grow: 1
+      }
+
+      .sections-card-footer {
+        max-width: 114px;
+        min-height: unset;
+        position: initial;
+        margin-block-start: auto;
+
+        .source {
+          word-break: normal;
+          width: 114px;
+        }
+      }
+    }
+
+    .card-stp-button-hover-background {
+      background: transparent;
+    }
+
+    .card-stp-button-position-wrapper {
+      // context menu should match the padding for the parent
+      inset-inline-end: var(--space-large);
+      inset-block-end: var(--space-small);
+
+    }
+
+    .context-menu-position-container .context-menu-button {
+      height: 32px;
+      width: 32px;
+    }
+
+    .card-stp-thumbs-buttons-wrapper {
+      .card-stp-thumbs-buttons {
+        gap: var(--space-small);
+      }
+    }
+
+
+    &:hover,
+    &:active,
+    &:focus-visible,
+    &.active {
+      .card-stp-thumbs-buttons-wrapper {
+        visibility: visible;
+      }
+
+      .meta {
+        .source-wrapper .source {
+          display: none;
+        }
+      }
+    }
   }
 
   &.ds-card.sections-card-ui {
@@ -26,7 +90,7 @@
   }
 
   .card-stp-thumbs-buttons-wrapper {
-    display: none;
+    visibility: hidden;
   }
 
   .ds-card-link {
@@ -90,34 +154,6 @@
     inset-inline-end: 10px;
   }
 
-  &.refined-cards {
-    .sections-card-footer {
-      max-width: 120px;
-    }
-
-    .card-stp-button-hover-background {
-      background: transparent;
-    }
-
-    .card-stp-button-position-wrapper {
-      // context menu should match the padding for the parent
-      inset-inline-end: var(--space-large);
-      inset-block-end: var(--space-large);
-    }
-
-    &:hover,
-    &:active,
-    &:focus-visible,
-    &.active {
-      .card-stp-thumbs-buttons-wrapper {
-        display: block;
-      }
-
-      .source-wrapper .source {
-        display: none;
-      }
-    }
-  }
 }
 
 @mixin section-card-medium {
@@ -130,9 +166,13 @@
 
   &.refined-cards.ds-card.sections-card-ui {
     height: unset;
+    box-shadow: var(--box-shadow-card);
+
+    &:hover {
+      box-shadow: var(--box-shadow-card-hover);
+    }
   }
 
-  // .refined-medium-card only appears if refinedCardsLayout.enabled pref is set to true
   &.refined-cards {
     .ds-card-link {
       padding: unset;
@@ -143,10 +183,63 @@
       width: 100%;
       height: 172px;
     }
-  }
 
-  .card-stp-button-hover-background {
-    background: transparent;
+    .meta {
+      padding: var(--space-small) var(--space-large);
+      min-height: unset;
+
+      .info-wrap {
+        flex-grow: initial;
+      }
+
+      .sections-card-footer {
+        max-width: 225px;
+        inset-inline-end: initial;
+        inset-block-end: initial;
+        min-height: 28px;
+
+        .source-wrapper {
+          max-width: 175px;
+        }
+      }
+
+      &:has(.story-footer .story-sponsored-label) {
+        .sections-card-footer {
+          display: none;
+        }
+
+        .story-footer {
+          margin-block: auto 0;
+
+        }
+      }
+    }
+
+    .context-menu-position-container .context-menu-button {
+      height: 32px;
+      width: 32px;
+    }
+
+    .card-stp-button-position-wrapper {
+      // context menu should match the padding for the parent
+      inset-inline-end: var(--space-large);
+      inset-block-end: var(--space-small);
+    }
+
+    .card-stp-button-hover-background {
+      background: transparent; }
+
+    &:hover,
+    &:active,
+    &:focus-visible,
+    &.active {
+      .meta {
+        .source-wrapper .source {
+          display: block;
+        }
+      }
+    }
+
   }
 
   .card-stp-button-position-wrapper {
@@ -184,6 +277,7 @@
 
     .info-wrap {
       flex-grow: initial;
+      // flex-grow: 1;/
 
       .title {
         -webkit-line-clamp: 3;
@@ -201,40 +295,61 @@
       margin-top: auto;
     }
   }
-
-  &.refined-cards {
-    .sections-card-footer {
-      max-width: 230px;
-
-      .source-wrapper {
-        max-width: 175px;
-      }
-    }
-
-    .card-stp-button-position-wrapper {
-      // context menu should match the padding for the parent
-      inset-inline-end: var(--space-large);
-      inset-block-end: var(--space-medium);
-    }
-
-    &:hover,
-    &:active,
-    &:focus-visible,
-    &.active {
-      .source-wrapper .source {
-        display: block;
-      }
-    }
-  }
 }
 
-// DS Large Card
 @mixin section-card-large {
   grid-row: span 2;
   grid-column: span 2;
 
+  &.refined-cards.ds-card.sections-card-ui {
+    box-shadow: var(--box-shadow-card);
+
+    @media ($break-point-layout-variant <=width < $break-point-widest),
+      (min-width: $break-point-sections-variant) {
+      .ds-card-link {
+        gap: var(--space-small);
+        padding: var(--space-small);
+      }
+
+      .meta {
+        padding: var(--space-large) var(--space-small) 0;
+        color: var(--newtab-text-primary-color);
+
+        .info-wrap .excerpt {
+          color: var(--text-color-deemphasized);
+        }
+
+        .sections-card-footer {
+          max-width: 260px;
+
+          .source-wrapper {
+            max-width: 175px;
+          }
+        }
+      }
+
+      .card-stp-button-position-wrapper {
+        inset-inline-end: var(--space-xlarge);
+        inset-block-end: var(--space-small);
+      }
+
+      &:hover,
+      &:active,
+      &:focus-visible,
+      &.active {
+        .meta .source-wrapper .source {
+          display: block;
+        }
+      }
+    }
+
+    &:hover {
+      box-shadow: var(--box-shadow-card-hover);
+    }
+  }
+
   &.ds-card.sections-card-ui {
-    @media ($break-point-layout-variant <= width < $break-point-widest),
+    @media ($break-point-layout-variant <=width < $break-point-widest),
       (min-width: $break-point-sections-variant) {
       align-content: flex-start;
 
@@ -250,7 +365,6 @@
       }
 
       .ds-image.img {
-        // Square ratio
         aspect-ratio: 1/1;
         width: 100%;
         height: 100%;
@@ -262,7 +376,6 @@
 
       .meta {
         padding: 0;
-        // match height of image for large cards
         min-height: 220px;
 
         .title {
@@ -276,36 +389,15 @@
           -webkit-line-clamp: 4;
           font-size: var(--font-size-root);
         }
+
+        .sections-card-footer {
+          margin-top: auto;
+        }
       }
 
       .card-stp-button-hover-background {
+        background: transparent;
         inset-inline-start: 0;
-      }
-    }
-  }
-
-  &.refined-cards {
-    .sections-card-footer {
-      max-width: 225px;
-
-      .source-wrapper {
-        max-width: 170px;
-      }
-    }
-
-    .card-stp-button-hover-background {
-      background: transparent;
-    }
-
-    .card-stp-button-position-wrapper {
-      // context menu should match the padding for the parent
-      inset-inline-end: var(--space-xxlarge);
-      inset-block-end: var(--space-xxlarge);
-    }
-
-    &:hover {
-      .source-wrapper .source {
-        display: block;
       }
     }
   }

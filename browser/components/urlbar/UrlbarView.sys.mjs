@@ -2221,6 +2221,9 @@ export class UrlbarView {
       this.#l10nCache.setElementL10n(bottom, result.payload.bottomTextL10n);
     } else {
       this.#l10nCache.removeElementL10n(bottom);
+      if (result.payload.bottomText) {
+        bottom.textContent = result.payload.bottomText;
+      }
     }
   }
 
@@ -2395,8 +2398,6 @@ export class UrlbarView {
           return { id: "urlbar-group-addon" };
         case "mdn":
           return { id: "urlbar-group-mdn" };
-        case "pocket":
-          return { id: "urlbar-group-pocket" };
         case "yelp":
           return { id: "urlbar-group-local" };
       }
@@ -2763,6 +2764,13 @@ export class UrlbarView {
       return;
     }
 
+    // Firefox 140 temporary fix for localized weather suggestions
+    if (result.payload.titleHtml) {
+      // eslint-disable-next-line no-unsanitized/property
+      titleNode.innerHTML = result.payload.titleHtml;
+      return;
+    }
+
     // TODO: `text` is intended only for WebExtensions. We should remove it and
     // the WebExtensions urlbar API since we're no longer using it.
     if (result.payload.text) {
@@ -3063,9 +3071,6 @@ export class UrlbarView {
         }
         if (lazy.UrlbarPrefs.get("mdn.featureGate")) {
           idArgs.push({ id: "urlbar-group-mdn" });
-        }
-        if (lazy.UrlbarPrefs.get("pocketFeatureGate")) {
-          idArgs.push({ id: "urlbar-group-pocket" });
         }
         if (lazy.UrlbarPrefs.get("yelpFeatureGate")) {
           idArgs.push({ id: "urlbar-group-local" });

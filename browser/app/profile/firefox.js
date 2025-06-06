@@ -730,13 +730,6 @@ pref("browser.urlbar.suggest.fakespot", true);
 // the suggestion. 0 means the min length should be taken from Nimbus.
 pref("browser.urlbar.addons.minKeywordLength", 0);
 
-// Feature gate pref for Pocket suggestions in the urlbar.
-pref("browser.urlbar.pocket.featureGate", false);
-
-// If `browser.urlbar.pocket.featureGate` is true, this controls whether Pocket
-// suggestions are turned on.
-pref("browser.urlbar.suggest.pocket", true);
-
 // Enable creating and editing user defined search engines.
 pref("browser.urlbar.update2.engineAliasRefresh", true);
 
@@ -1812,10 +1805,6 @@ pref("browser.newtabpage.activity-stream.newtabLayouts.variant-b", true);
 
 pref("browser.newtabpage.activity-stream.newtabShortcuts.refresh", true);
 
-// Sponsored checkboxes placement experiment
-pref("browser.newtabpage.activity-stream.showSponsoredCheckboxes", false);
-pref("browser.newtabpage.activity-stream.sponsoredCheckboxes.group", false);
-
 // Activity Stream prefs that control to which page to redirect
 #ifndef RELEASE_OR_BETA
   pref("browser.newtabpage.activity-stream.debug", false);
@@ -1988,7 +1977,8 @@ pref("browser.newtabpage.activity-stream.discoverystream.thumbsUpDown.locale-thu
   pref("browser.newtabpage.activity-stream.telemetry.privatePing.enabled", false);
 #endif
 // Redacts content interaction ids from original New Tab ping once data processing migrated to the Newtab_content private ping
-  pref("browser.newtabpage.activity-stream.telemetry.privatePing.redactNewtabPing.enabled", false);
+pref("browser.newtabpage.activity-stream.telemetry.privatePing.redactNewtabPing.enabled", false);
+pref("browser.newtabpage.activity-stream.telemetry.privatePing.maxSubmissionDelayMs", 5000);
 
   // Include differentialy private inferred New Tab interests with New Tab content Ping. Only used when user has enabled personalization.
 pref("browser.newtabpage.activity-stream.telemetry.privatePing.inferredInterests.enabled", false);

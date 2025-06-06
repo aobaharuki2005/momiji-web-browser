@@ -196,7 +196,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
    */
   mozilla::ipc::IPCResult RecvSnapshotExternalCanvas(uint64_t aSyncId,
                                                      uint32_t aManagerId,
-                                                     int32_t aCanvasId);
+                                                     ActorId aCanvasId);
 
   /**
    * Resolves the given sync-id from the recording stream to a snapshot from
@@ -325,6 +325,19 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   already_AddRefed<gfx::DataSourceSurface> WaitForSurface(uintptr_t aId);
 
   static void Shutdown();
+
+  void AddExportSurface(gfx::ReferencePtr aRefPtr,
+                        gfx::SourceSurface* aSurface) {
+    mExportSurfaces.InsertOrUpdate(aRefPtr, RefPtr{aSurface});
+  }
+
+  void RemoveExportSurface(gfx::ReferencePtr aRefPtr) {
+    mExportSurfaces.Remove(aRefPtr);
+  }
+
+  gfx::SourceSurface* LookupExportSurface(gfx::ReferencePtr aRefPtr) {
+    return mExportSurfaces.GetWeak(aRefPtr);
+  }
 
  private:
   ~CanvasTranslator();
@@ -575,6 +588,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   Mutex mCanvasTranslatorEventsLock;
   RefPtr<nsIRunnable> mCanvasTranslatorEventsRunnable;
   std::deque<UniquePtr<CanvasTranslatorEvent>> mPendingCanvasTranslatorEvents;
+
+  nsRefPtrHashtable<nsPtrHashKey<void>, gfx::SourceSurface> mExportSurfaces;
 };
 
 }  // namespace layers

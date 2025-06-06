@@ -53,7 +53,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "longPress",
-  "browser.ml.linkPreview.longPress"
+  "browser.ml.linkPreview.longPress",
+  null,
+  (_pref, _old, val) => LinkPreview.onLongPressPrefChange(val)
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -80,7 +82,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "onboardingHoverLinkMs",
   "browser.ml.linkPreview.onboardingHoverLinkMs",
-  500
+  1000
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -122,12 +124,16 @@ XPCOMUtils.defineLazyPreferenceGetter(
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "shift",
-  "browser.ml.linkPreview.shift"
+  "browser.ml.linkPreview.shift",
+  null,
+  (_pref, _old, val) => LinkPreview.onShiftPrefChange(val)
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "shiftAlt",
-  "browser.ml.linkPreview.shiftAlt"
+  "browser.ml.linkPreview.shiftAlt",
+  null,
+  (_pref, _old, val) => LinkPreview.onShiftAltPrefChange(val)
 );
 
 export const LinkPreview = {
@@ -140,6 +146,24 @@ export const LinkPreview = {
   recentTyping: 0,
   _windowStates: new Map(),
   linkPreviewPanelId: "link-preview-panel",
+
+  /**
+   * Gets the context value for the current tab.
+   * For about: pages, returns the URI's filePath (e.g., "home", "newtab", "preferences").
+   * For regular webpages, returns undefined.
+   *
+   * @param {Window} win - The browser window context.
+   * @returns {string|undefined} The tab context value or undefined if not an about: page.
+   * @private
+   */
+  _getTabContextValue(win) {
+    const uri = win.gBrowser.selectedBrowser.currentURI;
+    // Check if uri exists, scheme is 'about', and filePath is a truthy string
+    if (uri?.scheme === "about" && uri.filePath) {
+      return uri.filePath;
+    }
+    return undefined;
+  },
 
   get canShowKeyPoints() {
     return this._isRegionSupported();
@@ -182,6 +206,42 @@ export const LinkPreview = {
   },
 
   /**
+   * Handles the preference change for the 'shift' key activation.
+   *
+   * @param {boolean} enabled - The new state of the shift key preference.
+   */
+  onShiftPrefChange(enabled) {
+    Glean.genaiLinkpreview.prefChanged.record({ enabled, pref: "shift" });
+    this._updateShortcutMetric();
+  },
+
+  /**
+   * Handles the preference change for the 'shift+alt' key activation.
+   *
+   * @param {boolean} enabled - The new state of the shift+alt key preference.
+   */
+  onShiftAltPrefChange(enabled) {
+    Glean.genaiLinkpreview.prefChanged.record({
+      enabled,
+      pref: "shift_alt",
+    });
+    this._updateShortcutMetric();
+  },
+
+  /**
+   * Handles the preference change for the long press activation.
+   *
+   * @param {boolean} enabled - The new state of the long press preference.
+   */
+  onLongPressPrefChange(enabled) {
+    Glean.genaiLinkpreview.prefChanged.record({
+      enabled,
+      pref: "long_press",
+    });
+    this._updateShortcutMetric();
+  },
+
+  /**
    * Handles the preference change for enabling/disabling Link Preview.
    * It adds or removes event listeners for all tracked windows based on the new preference value.
    *
@@ -199,7 +259,10 @@ export const LinkPreview = {
     }
 
     Glean.genaiLinkpreview.enabled.set(enabled);
-    Glean.genaiLinkpreview.labsCheckbox.record({ enabled });
+    Glean.genaiLinkpreview.prefChanged.record({
+      enabled,
+      pref: "link_previews",
+    });
 
     this.handleNimbusPrefs();
   },
@@ -235,6 +298,11 @@ export const LinkPreview = {
     Glean.genaiLinkpreview.cardAiConsent.record({
       option: optin ? "continue" : "cancel",
     });
+    Glean.genaiLinkpreview.prefChanged.record({
+      enabled: optin,
+      pref: "key_points",
+    });
+    Glean.genaiLinkpreview.aiOptin.set(optin);
   },
 
   /**
@@ -245,7 +313,10 @@ export const LinkPreview = {
    */
   onCollapsedPref(collapsed) {
     this.updateCardProperty("collapsed", collapsed);
-    Glean.genaiLinkpreview.keyPointsToggle.record({ expand: !collapsed });
+    Glean.genaiLinkpreview.keyPointsToggle.record({
+      expand: !collapsed,
+    });
+    Glean.genaiLinkpreview.keyPoints.set(!collapsed);
   },
 
   /**
@@ -253,7 +324,7 @@ export const LinkPreview = {
    */
   handleNimbusPrefs() {
     // For those who turned on via labs with enabled setPref variable, persist
-    // the pref and allow using shift-alt matching labs copy.
+    // the pref and allow using shift_alt matching labs copy.
     if (
       lazy.NimbusFeatures.linkPreviews.getVariable("enabled") &&
       lazy.labs == LABS_STATE.NOT_ENROLLED
@@ -312,7 +383,10 @@ export const LinkPreview = {
     // Access getters for side effects of observing pref changes
     lazy.collapsed;
     lazy.enabled;
+    lazy.longPress;
     lazy.optin;
+    lazy.shift;
+    lazy.shiftAlt;
 
     this._windowStates.set(win, {});
     if (!win.customElements.get("link-preview-card")) {
@@ -334,7 +408,10 @@ export const LinkPreview = {
       this._addEventListeners(win);
     }
 
+    Glean.genaiLinkpreview.aiOptin.set(lazy.optin);
     Glean.genaiLinkpreview.enabled.set(lazy.enabled);
+    Glean.genaiLinkpreview.keyPoints.set(!lazy.collapsed);
+    this._updateShortcutMetric();
   },
 
   /**
@@ -418,7 +495,7 @@ export const LinkPreview = {
     const win = event.currentTarget;
 
     // Track regular typing to suppress keyboard previews.
-    if (event.key.length == 1) {
+    if (event.key.length == 1 || ["Enter", "Tab"].includes(event.key)) {
       this.recentTyping = Date.now();
     }
 
@@ -434,7 +511,7 @@ export const LinkPreview = {
     }
     // Handle shift with alt if preference is set.
     else if (event.altKey && lazy.shiftAlt) {
-      this.keyboardComboActive = "shift-alt";
+      this.keyboardComboActive = "shift_alt";
     }
     // New presses or releases can result in desired combo for previewing.
     this._maybeLinkPreview(win);
@@ -507,26 +584,39 @@ export const LinkPreview = {
    * @param {string} url - The URL of the link to be previewed.
    */
   async renderOnboardingPanel(win, url) {
+    // Short-circuit if onboarding is no longer eligible - prevents race condition
+    // where onboarding might start rendering after showOnboarding status has changed
+    if (!this.showOnboarding) {
+      return;
+    }
+
     // Append the current time to onboarding times.
     Services.prefs.setStringPref("browser.ml.linkPreview.onboardingTimes", [
       ...lazy.onboardingTimes,
       Date.now(),
     ]);
 
-    // Telemetry for onboarding card view
-    Glean.genaiLinkpreview.onboardingCard.record({ action: "view" });
-
-    // Now show the preview as an "onboarding" source
-    const panel = this.initOrResetPreviewPanel(win, "onboarding");
-
     const doc = win.document;
     const onboardingCard = doc.createElement("link-preview-card-onboarding");
     onboardingCard.style.width = "100%";
+    onboardingCard.onboardingType = lazy.longPress ? "longPress" : "shiftKey";
+
+    // Telemetry for onboarding card view
+    Glean.genaiLinkpreview.onboardingCard.record({
+      action: "view",
+      type: onboardingCard.onboardingType,
+    });
+
+    // Now show the preview as an "onboarding" source
+    const panel = this.initOrResetPreviewPanel(win, "onboarding");
+    panel.onboardingType = onboardingCard.onboardingType;
+
     onboardingCard.addEventListener(
       "LinkPreviewCard:onboardingComplete",
       () => {
         Glean.genaiLinkpreview.onboardingCard.record({
           action: "try_it_now",
+          type: onboardingCard.onboardingType,
         });
         this.renderLinkPreviewPanel(win, url, "onboarding");
       }
@@ -588,10 +678,13 @@ export const LinkPreview = {
         if (panel.cardType === "onboarding") {
           Glean.genaiLinkpreview.onboardingCard.record({
             action: "close",
+            type: panel.onboardingType,
           });
         } else if (panel.cardType === "linkpreview") {
+          const tabValue = this._getTabContextValue(win);
           Glean.genaiLinkpreview.cardClose.record({
             duration: Date.now() - panel.openTime,
+            tab: tabValue,
           });
         }
       });
@@ -610,10 +703,18 @@ export const LinkPreview = {
       return;
     }
 
-    // Check for the start of a long primary button press on a link.
+    // Check for the start of a long unmodified primary button press on a link.
     const win = event.currentTarget;
     const stateObject = this._windowStates.get(win);
-    if (event.type == "mousedown" && !event.button && stateObject.overLink) {
+    if (
+      event.type == "mousedown" &&
+      !event.button &&
+      !event.altKey &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.shiftKey &&
+      stateObject.overLink
+    ) {
       // Detect events to cancel the long press.
       win.addEventListener("dragstart", this, true);
       win.addEventListener("mouseup", this, true);
@@ -621,7 +722,7 @@ export const LinkPreview = {
       // Show preview after a delay if not cancelled.
       const timer = win.setTimeout(() => {
         this.cancelLongPress();
-        this.renderLinkPreviewPanel(win, stateObject.overLink, "longpress");
+        this.renderLinkPreviewPanel(win, stateObject.overLink, "long_press");
       }, lazy.longPressMs);
 
       // Provide a way to clean up.
@@ -826,18 +927,29 @@ export const LinkPreview = {
       panel.style.setProperty("opacity", "0");
     }
 
+    // Get tab context value for telemetry
+    const tabValue = this._getTabContextValue(win);
+
     // Reuse or initialize panel.
     if (panel && panel.previewUrl == url) {
       if (panel.state == "closed") {
         panel.openPopupNearMouse();
-        Glean.genaiLinkpreview.start.record({ cached: true, source });
+        Glean.genaiLinkpreview.start.record({
+          cached: true,
+          source,
+          tab: tabValue,
+        });
       }
       return;
     }
     panel = this.initOrResetPreviewPanel(win, "linkpreview");
     panel.previewUrl = url;
 
-    Glean.genaiLinkpreview.start.record({ cached: false, source });
+    Glean.genaiLinkpreview.start.record({
+      cached: false,
+      source,
+      tab: tabValue,
+    });
 
     // TODO we want to immediately add a card as a placeholder to have UI be
     // more responsive while we wait on fetching page data.
@@ -855,6 +967,7 @@ export const LinkPreview = {
       outcome: pageData.error?.result ?? "success",
       sitename: !!pageData.article.siteName,
       skipped,
+      tab: tabValue,
       time: Date.now() - fetchTime,
       title: !!pageData.meta.title,
     });
@@ -866,12 +979,20 @@ export const LinkPreview = {
     panel.append(ogCard);
     ogCard.addEventListener("LinkPreviewCard:dismiss", event => {
       panel.hidePopup();
-      Glean.genaiLinkpreview.cardLink.record({ source: event.detail });
+      Glean.genaiLinkpreview.cardLink.record({
+        key_points: !lazy.collapsed,
+        source: event.detail,
+        tab: tabValue,
+      });
     });
 
     ogCard.addEventListener("LinkPreviewCard:retry", _event => {
       this._handleKeyPointsGenerationEvent(ogCard, "retry");
-      Glean.genaiLinkpreview.cardLink.record({ source: "retry" });
+      Glean.genaiLinkpreview.cardLink.record({
+        key_points: !lazy.collapsed,
+        source: "retry",
+        tab: tabValue,
+      });
     });
 
     ogCard.addEventListener("LinkPreviewCard:generate", _event => {
@@ -922,5 +1043,25 @@ export const LinkPreview = {
   async handleContextMenuClick(url, nsContextMenu) {
     let win = nsContextMenu.browser.ownerGlobal;
     this.renderLinkPreviewPanel(win, url, "context");
+  },
+
+  /**
+   * Updates the Glean metric for active shortcuts.
+   * This metric is a comma-separated string of active shortcut types.
+   *
+   * @private
+   */
+  _updateShortcutMetric() {
+    const activeShortcuts = [];
+    if (lazy.shift) {
+      activeShortcuts.push("shift");
+    }
+    if (lazy.shiftAlt) {
+      activeShortcuts.push("shift_alt");
+    }
+    if (lazy.longPress) {
+      activeShortcuts.push("long_press");
+    }
+    Glean.genaiLinkpreview.shortcut.set(activeShortcuts.join(","));
   },
 };
