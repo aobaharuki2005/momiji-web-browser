@@ -226,6 +226,10 @@
   <string name="browser_menu_extensions_banner_learn_more">Saiba mais</string>
   <!-- Browser menu button that opens the extensions manager -->
   <string name="browser_menu_manage_extensions">Gerenciar extensões</string>
+  <!-- Browser menu group that contains additional settings in collapsed state -->
+  <string name="browser_menu_more_settings">Mais</string>
+  <!-- Browser menu group that contains additional settings in expanded state -->
+  <string name="browser_menu_less_settings">Menos</string>
   <!-- Content description (not visible, for screen readers etc.): Section heading for recommended extensions. -->
   <string name="browser_menu_recommended_section_content_description">Extensões recomendadas</string>
   <!--
@@ -239,6 +243,8 @@
   <string name="browser_menu_extensions_disabled_description">Desativado temporariamente</string>
   <!-- The description of the browser menu appears when the user hasn't installed any extensions. -->
   <string name="browser_menu_no_extensions_installed_description">Nenhuma extensão ativada</string>
+  <!-- The description of the browser menu appears when the user hasn't installed any extensions and there are recommended extensions. -->
+  <string name="browser_menu_try_a_recommended_extension_description">Experimente uma extensão recomendada</string>
   <!-- Browser menu button that opens account settings -->
   <string name="browser_menu_account_settings">Informações da conta</string>
   <!-- Browser menu button that sends a user to help articles -->
@@ -366,6 +372,8 @@
   <string name="browser_menu_save_description">Adicionar favorito, atalho, tela inicial, coleção, PDF</string>
   <!-- Browser menu label that bookmarks the currently visited page -->
   <string name="browser_menu_bookmark_this_page" moz:removedIn="141" tools:ignore="UnusedResources">Adicionar aos favoritos</string>
+  <!-- Browser menu label that bookmarks the currently visited page -->
+  <string name="browser_menu_bookmark_this_page_2">Adicionar aos favoritos</string>
   <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
   <string name="browser_menu_edit_bookmark">Editar favorito</string>
   <!-- Browser menu label that the saves the currently visited page as a PDF -->
@@ -385,6 +393,8 @@
     %1$s is the name of the language that page was translated to (e.g. English).
   -->
   <string name="browser_menu_translated_to">Traduzido para %1$s</string>
+  <!-- Browser menu label that is displayed when the current page has been translated by the translation feature. -->
+  <string name="browser_menu_translated">Traduzido</string>
   <!-- Browser menu label for the print feature -->
   <string name="browser_menu_print">Imprimir…</string>
   <!--
@@ -477,19 +487,19 @@
 
     Home onboarding dialog welcome screen title text.
   -->
-  <string name="onboarding_home_welcome_title_2">Boas-vindas a uma internet mais pessoal</string>
+  <string name="onboarding_home_welcome_title_2" moz:removedIn="141" tools:ignore="UnusedResources">Boas-vindas a uma internet mais pessoal</string>
   <!-- Home onboarding dialog welcome screen description text. -->
-  <string name="onboarding_home_welcome_description">Mais cores. Melhor privacidade. Mesmo compromisso com pessoas acima de lucros.</string>
+  <string name="onboarding_home_welcome_description" moz:removedIn="141" tools:ignore="UnusedResources">Mais cores. Melhor privacidade. Mesmo compromisso com pessoas acima de lucros.</string>
   <!-- Home onboarding dialog sign into sync screen title text. -->
-  <string name="onboarding_home_sync_title_3">Mudar de tela está mais fácil do que nunca</string>
+  <string name="onboarding_home_sync_title_3" moz:removedIn="141" tools:ignore="UnusedResources">Mudar de tela está mais fácil do que nunca</string>
   <!-- Home onboarding dialog sign into sync screen description text. -->
-  <string name="onboarding_home_sync_description">Continue agora de onde parou, com abas de outros dispositivos na sua tela inicial.</string>
+  <string name="onboarding_home_sync_description" moz:removedIn="141" tools:ignore="UnusedResources">Continue agora de onde parou, com abas de outros dispositivos na sua tela inicial.</string>
   <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
-  <string name="onboarding_home_get_started_button">Introdução</string>
+  <string name="onboarding_home_get_started_button" moz:removedIn="141" tools:ignore="UnusedResources">Introdução</string>
   <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
-  <string name="onboarding_home_sign_in_button">Entrar</string>
+  <string name="onboarding_home_sign_in_button" moz:removedIn="141" tools:ignore="UnusedResources">Entrar</string>
   <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
-  <string name="onboarding_home_skip_button">Pular</string>
+  <string name="onboarding_home_skip_button" moz:removedIn="141" tools:ignore="UnusedResources">Pular</string>
   <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
   <string name="sync_cfr_message">Suas abas estão sendo sincronizadas! Continue de onde parou em outro dispositivo.</string>
   <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
@@ -581,7 +591,7 @@
   <!-- Privacy Badger description for the onboarding add-ons card, used by Nimbus experiments. -->
   <string name="onboarding_add_on_privacy_badger_description" moz:removedIn="140" tools:ignore="UnusedResources">Uma preciosidade contra rastreamento. Bloqueia elementos de rastreamento invisíveis e anúncios que espionam você.</string>
   <!-- Search by Image name for the onboarding add-ons card, used by Nimbus experiments. Note: The word "Search by Image" is a brand name should NOT be translated -->
-  <string name="onboarding_add_on_search_by_image_name" moz:removedIn="140" tools:ignore="UnusedResources">Search by Image</string>
+  <string name="onboarding_add_on_search_by_image_name" moz:removedIn="140" tools:ignore="UnusedResources">Pesquisar por imagem</string>
   <!-- Search by Image description for the onboarding add-ons card, used by Nimbus experiments. -->
   <string name="onboarding_add_on_search_by_image_description" moz:removedIn="140" tools:ignore="UnusedResources">Encontrou uma foto ou imagem interessante? Saiba mais sobre ela.</string>
   <!-- Dark Reader name for the onboarding add-ons card, used by Nimbus experiments. Note: The word "Dark Reader" is a brand name should NOT be translated -->
@@ -1551,7 +1561,7 @@
   <!-- Alert dialog confirmation before deleting multiple download items, this is the negative action. -->
   <string name="download_delete_multi_select_dialog_cancel">Cancelar</string>
   <!-- Text for the header of in progress downloads -->
-  <string name="download_header_in_progress" tools:ignore="UnusedResources">Em andamento</string>
+  <string name="download_header_in_progress">Em andamento</string>
   <!--
     Time period headers for downloads
 
@@ -1572,13 +1582,34 @@
     %2$s is the total size of the downloaded file.
     %3$s is the amount of time remaining to complete the download.
   -->
-  <string name="download_item_in_progress_description" tools:ignore="UnusedResources">%1$s / %2$s • falta %3$s</string>
+  <string name="download_item_in_progress_description" moz:removedIn="141" tools:ignore="UnusedResources">%1$s / %2$s • falta %3$s</string>
+  <!--
+    Description of an in progress download item, displayed in the downloads list when the download time remaining is known.
+    %1$s is the current file size that has been downloaded.
+    %2$s is the total size of the downloaded file.
+    %3$s is the amount of time remaining to complete the download.
+  -->
+  <string name="download_item_in_progress_description_2">%1$s / %2$s • em %3$s.</string>
+  <!--
+    Description of an in progress download item, displayed in the downloads list when the download time remaining is unknown.
+    %1$s is the current file size that has been downloaded.
+    %2$s is the total size of the downloaded file.
+  -->
+  <string name="download_item_in_progress_description_pending">%1$s / %2$s • pendente</string>
+  <!--
+    Description of a paused download item, displayed in the downloads list.
+    %1$s is the current file size that has been downloaded.
+    %2$s is the total size of the downloaded file.
+  -->
+  <string name="download_item_paused_description">%1$s / %2$s • pausado</string>
   <!-- Text to indicate that an in progress download is paused. -->
-  <string name="download_item_status_paused" tools:ignore="UnusedResources">pausado</string>
+  <string name="download_item_status_paused" moz:removedIn="141" tools:ignore="UnusedResources">pausado</string>
   <!-- Text to indicate that the download speed of an in progress download is being calculated. -->
-  <string name="download_item_download_speed_pending" tools:ignore="UnusedResources">pendente</string>
+  <string name="download_item_download_speed_pending" moz:removedIn="141" tools:ignore="UnusedResources">pendente</string>
   <!-- Text to indicate that a download has failed to download. -->
   <string name="download_item_status_failed">Falha ao baixar arquivo</string>
+  <!-- Text for the snackbar action button to view failed download details. -->
+  <string name="download_failed_snackbar_action_details">Detalhes</string>
   <!-- Placeholder text to indicate that users can use the search bar to search for a download. -->
   <string name="download_search_placeholder">Pesquisar nos arquivos baixados</string>
   <!-- Text to indicate that no downloads match the search query. -->
@@ -1889,6 +1920,10 @@
   <string name="studies_on">Ativado</string>
   <!-- Summary of studies data on quit preference if it is set to off -->
   <string name="studies_off">Desativado</string>
+  <!-- Toggle if desktop site is turned on -->
+  <string name="browser_feature_desktop_site_on">Ativado</string>
+  <!-- Toggle if desktop site is turned off -->
+  <string name="browser_feature_desktop_site_off">Desativado</string>
   <!-- Category header of a preference that allows a user to alter settings related to web permissions. -->
   <string name="preferences_category_permissions">Permissões</string>
   <!-- Category header of a preference that allows a user to alter settings related to web content. -->
@@ -2931,9 +2966,9 @@
   <!-- Header text for a section on the home screen. -->
   <string name="pocket_stories_header_2">Histórias</string>
   <!-- Header text for a section on the home screen. -->
-  <string name="pocket_stories_categories_header">Histórias por tópico</string>
+  <string name="pocket_stories_categories_header" moz:removedIn="141" tools:ignore="UnusedResources">Histórias por tópico</string>
   <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
-  <string name="pocket_stories_placeholder_text">Descubra mais</string>
+  <string name="pocket_stories_placeholder_text" moz:removedIn="141" tools:ignore="UnusedResources">Descubra mais</string>
   <!-- Title of an app feature. Smaller than a heading. %s is "Pocket". -->
   <string name="pocket_stories_feature_title_2" moz:removedIn="140" tools:ignore="UnusedResources">Com tecnologia %s.</string>
   <!-- Caption for describing a certain feature. %s is a link using pocket_stories_feature_learn_more as text, which will load an url in a new tab when clicked. -->
@@ -3650,4 +3685,18 @@
   <string name="private_tab_cfr_negative">Não, obrigado</string>
   <!-- Positive button text for the contextual feature recommendation (CFR) enabling screen lock for private tabs -->
   <string name="private_tab_cfr_positive">Bloquear abas</string>
+  <!--
+    Review prompt
+
+    Title for a prompt asking the user about their experience using the app. %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="review_prompt_pre_prompt_header">O que você acha do %1$s?</string>
+  <!-- Label for a button negatively rating the user's experience with the app -->
+  <string name="review_prompt_negative_button">Estou tendo problemas</string>
+  <!-- Label for a button positively rating the user's experience with the app -->
+  <string name="review_prompt_positive_button">É excelente!</string>
+  <!-- Label for a button proceeding to rate the app on Google Play Store. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="review_prompt_rate_button">Avalie o %1$s na Play Store</string>
+  <!-- Title for a prompt asking the user send us feedback. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="review_prompt_feedback_header">Lamentamos que esteja com problemas. Diga como podemos melhorar o %1$s.</string>
 </resources>

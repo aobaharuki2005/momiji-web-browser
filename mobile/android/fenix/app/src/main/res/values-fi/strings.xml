@@ -487,19 +487,19 @@
 
     Home onboarding dialog welcome screen title text.
   -->
-  <string name="onboarding_home_welcome_title_2">Tervetuloa entistä henkilökohtaisempaan internetiin</string>
+  <string name="onboarding_home_welcome_title_2" moz:removedIn="141" tools:ignore="UnusedResources">Tervetuloa entistä henkilökohtaisempaan internetiin</string>
   <!-- Home onboarding dialog welcome screen description text. -->
-  <string name="onboarding_home_welcome_description">Lisää värejä. Parempi yksityisyys. Ihmisiin sitoutumisen priorisointi liikevoittojen edelle.</string>
+  <string name="onboarding_home_welcome_description" moz:removedIn="141" tools:ignore="UnusedResources">Lisää värejä. Parempi yksityisyys. Ihmisiin sitoutumisen priorisointi liikevoittojen edelle.</string>
   <!-- Home onboarding dialog sign into sync screen title text. -->
-  <string name="onboarding_home_sync_title_3">Näyttöjen vaihtaminen on helpompaa kuin koskaan</string>
+  <string name="onboarding_home_sync_title_3" moz:removedIn="141" tools:ignore="UnusedResources">Näyttöjen vaihtaminen on helpompaa kuin koskaan</string>
   <!-- Home onboarding dialog sign into sync screen description text. -->
-  <string name="onboarding_home_sync_description">Jatka siitä, mihin jäit muiden laitteidesi välilehdillä.</string>
+  <string name="onboarding_home_sync_description" moz:removedIn="141" tools:ignore="UnusedResources">Jatka siitä, mihin jäit muiden laitteidesi välilehdillä.</string>
   <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
-  <string name="onboarding_home_get_started_button">Aloitetaan</string>
+  <string name="onboarding_home_get_started_button" moz:removedIn="141" tools:ignore="UnusedResources">Aloitetaan</string>
   <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
-  <string name="onboarding_home_sign_in_button">Kirjaudu sisään</string>
+  <string name="onboarding_home_sign_in_button" moz:removedIn="141" tools:ignore="UnusedResources">Kirjaudu sisään</string>
   <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
-  <string name="onboarding_home_skip_button">Ohita</string>
+  <string name="onboarding_home_skip_button" moz:removedIn="141" tools:ignore="UnusedResources">Ohita</string>
   <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
   <string name="sync_cfr_message">Välilehtiäsi synkronoidaan! Jatka siitä, mihin jäit toisella laitteellasi.</string>
   <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
@@ -1547,7 +1547,7 @@
   <!-- Alert dialog confirmation before deleting multiple download items, this is the negative action. -->
   <string name="download_delete_multi_select_dialog_cancel">Peruuta</string>
   <!-- Text for the header of in progress downloads -->
-  <string name="download_header_in_progress" tools:ignore="UnusedResources">Käynnissä</string>
+  <string name="download_header_in_progress">Käynnissä</string>
   <!--
     Time period headers for downloads
 
@@ -1568,11 +1568,11 @@
     %2$s is the total size of the downloaded file.
     %3$s is the amount of time remaining to complete the download.
   -->
-  <string name="download_item_in_progress_description" tools:ignore="UnusedResources">%1$s / %2$s • %3$s jäljellä</string>
+  <string name="download_item_in_progress_description" moz:removedIn="141" tools:ignore="UnusedResources">%1$s / %2$s • %3$s jäljellä</string>
   <!-- Text to indicate that an in progress download is paused. -->
-  <string name="download_item_status_paused" tools:ignore="UnusedResources">keskeytetty</string>
+  <string name="download_item_status_paused" moz:removedIn="141" tools:ignore="UnusedResources">keskeytetty</string>
   <!-- Text to indicate that the download speed of an in progress download is being calculated. -->
-  <string name="download_item_download_speed_pending" tools:ignore="UnusedResources">odottaa</string>
+  <string name="download_item_download_speed_pending" moz:removedIn="141" tools:ignore="UnusedResources">odottaa</string>
   <!-- Text to indicate that a download has failed to download. -->
   <string name="download_item_status_failed">Lataus epäonnistui</string>
   <!-- Text for the snackbar action button to view failed download details. -->
@@ -2933,9 +2933,9 @@
   <!-- Header text for a section on the home screen. -->
   <string name="pocket_stories_header_2">Tarinat</string>
   <!-- Header text for a section on the home screen. -->
-  <string name="pocket_stories_categories_header">Tarinoita aiheittain</string>
+  <string name="pocket_stories_categories_header" moz:removedIn="141" tools:ignore="UnusedResources">Tarinoita aiheittain</string>
   <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
-  <string name="pocket_stories_placeholder_text">Löydä lisää</string>
+  <string name="pocket_stories_placeholder_text" moz:removedIn="141" tools:ignore="UnusedResources">Löydä lisää</string>
   <!-- Title of an app feature. Smaller than a heading. %s is "Pocket". -->
   <string name="pocket_stories_feature_title_2" moz:removedIn="140" tools:ignore="UnusedResources">Mahdollistajana %s.</string>
   <!-- Caption for describing a certain feature. %s is a link using pocket_stories_feature_learn_more as text, which will load an url in a new tab when clicked. -->
