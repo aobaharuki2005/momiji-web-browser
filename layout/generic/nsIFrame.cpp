@@ -5476,11 +5476,12 @@ struct MOZ_STACK_CLASS FrameContentRange {
 };
 
 static bool IsRelevantBlockFrame(const nsIFrame* aFrame) {
-  if (!aFrame->IsBlockOutside()) {
+  if (!aFrame->IsBlockOutside() && !aFrame->IsTableCaption()) {
     return false;
   }
   if (aFrame->GetContent() &&
-      aFrame->GetContent()->IsInNativeAnonymousSubtree()) {
+      aFrame->GetContent()->IsInNativeAnonymousSubtree() &&
+      !aFrame->GetContent()->HasBeenInUAWidget()) {
     // This helps skipping things like scrollbar parts.
     return false;
   }
