@@ -78,7 +78,7 @@ index 0bec3eb765..55415845ad 100644
     * Fills the membervariable _captureCapabilities with capabilites for the
     * given device name.
 diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index 43a6a7f832..f59c34f8b2 100644
+index c9d277d69d..eef2302589 100644
 --- a/modules/video_capture/video_capture.h
 +++ b/modules/video_capture/video_capture.h
 @@ -74,7 +74,8 @@ class VideoCaptureModule : public RefCountInterface {

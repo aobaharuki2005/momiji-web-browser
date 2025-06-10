@@ -91,7 +91,7 @@ index 6d322652cc..e4d11e4677 100644
  
  }  // namespace voe
 diff --git a/audio/channel_receive.h b/audio/channel_receive.h
-index 72eb3fa9fc..fc5fa28d9d 100644
+index 2d1850789c..60994cb986 100644
 --- a/audio/channel_receive.h
 +++ b/audio/channel_receive.h
 @@ -38,6 +38,7 @@
@@ -102,7 +102,7 @@ index 72eb3fa9fc..fc5fa28d9d 100644
  
  // TODO(solenberg, nisse): This file contains a few NOLINT marks, to silence
  // warnings about use of unsigned short.
-@@ -189,7 +190,8 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
+@@ -185,7 +186,8 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
      std::optional<AudioCodecPairId> codec_pair_id,
      rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
      const webrtc::CryptoOptions& crypto_options,
@@ -147,7 +147,7 @@ index 3bfb35297f..20c91982c1 100644
    return ss.str();
  }
 diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 84a5818dd6..40a142e2fb 100644
+index 4512935792..0aff8636f8 100644
 --- a/call/video_receive_stream.h
 +++ b/call/video_receive_stream.h
 @@ -22,6 +22,7 @@

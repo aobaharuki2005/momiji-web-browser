@@ -502,7 +502,7 @@ index 768ba0b19e..2d2cc89b08 100644
  #include "api/units/time_delta.h"
  #include "call/audio_sender.h"
 diff --git a/call/video_send_stream.h b/call/video_send_stream.h
-index 166a8b849d..d32191088a 100644
+index 1c0a3bcd3f..ddd09481c7 100644
 --- a/call/video_send_stream.h
 +++ b/call/video_send_stream.h
 @@ -23,7 +23,7 @@
@@ -701,10 +701,10 @@ index 4e03543eda..80b8ced167 100644
  
  rtc_library("rtc_audio_video") {
 diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index 243d762041..d53c618a72 100644
+index 51f67ef931..772eb957b7 100644
 --- a/media/base/media_channel.h
 +++ b/media/base/media_channel.h
-@@ -68,10 +68,6 @@ class Timing;
+@@ -64,10 +64,6 @@
  
  namespace webrtc {
  class VideoFrame;

@@ -95,7 +95,7 @@ VideoCaptureImpl::~VideoCaptureImpl() {
 }
 
 void VideoCaptureImpl::RegisterCaptureDataCallback(
-    rtc::VideoSinkInterface<VideoFrame>* dataCallBack) {
+    VideoSinkInterface<VideoFrame>* dataCallBack) {
   MutexLock lock(&api_lock_);
   RTC_DCHECK(!_rawDataCallBack);
   _dataCallBacks.insert(dataCallBack);
