@@ -415,7 +415,7 @@ index dd5744218f..ced44047aa 100644
  
  bool RtpExtension::IsSupportedForVideo(absl::string_view uri) {
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 6fc35e6c0f..7e7d8e720b 100644
+index ef855475e9..552d20122a 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -20,6 +20,7 @@ rtc_library("call_interfaces") {
@@ -731,7 +731,7 @@ index 1f21ab969c..df7e86bf03 100644
  
  }  // namespace webrtc
 diff --git a/modules/desktop_capture/win/screen_capture_utils.cc b/modules/desktop_capture/win/screen_capture_utils.cc
-index 3745e9cba5..f68cfb94c1 100644
+index 30120db3f4..082807f4f5 100644
 --- a/modules/desktop_capture/win/screen_capture_utils.cc
 +++ b/modules/desktop_capture/win/screen_capture_utils.cc
 @@ -52,7 +52,7 @@ bool GetScreenList(DesktopCapturer::SourceList* screens,
@@ -741,7 +741,7 @@ index 3745e9cba5..f68cfb94c1 100644
 -    screens->push_back({device_index, std::string()});
 +    screens->push_back({device_index, 0, std::string()});
      if (device_names) {
-       device_names->push_back(rtc::ToUtf8(device.DeviceName));
+       device_names->push_back(webrtc::ToUtf8(device.DeviceName));
      }
 diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
 index d7ba03d335..5fa32af69b 100644
@@ -1531,7 +1531,7 @@ index 752caa0d0d..7bf00ae0e1 100644
    const bool enable_svc_for_simulcast_;
    std::optional<SimulcastToSvcConverter> simulcast_to_svc_converter_;
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 344962feb8..286ed159eb 100644
+index 9b25d54cae..53aafcfc7f 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -441,6 +441,12 @@ rtc_library("logging") {
@@ -1548,10 +1548,10 @@ index 344962feb8..286ed159eb 100644
      # Dependency on chromium's logging (in //base).
      deps += [ "//base" ]
 diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
-index 9ed652be0b..c0239c8d44 100644
+index 42dbe6a3e1..c2e6150048 100644
 --- a/rtc_base/logging.cc
 +++ b/rtc_base/logging.cc
-@@ -44,6 +44,7 @@ static const int kMaxLogLineSize = 1024 - 60;
+@@ -48,6 +48,7 @@ static const int kMaxLogLineSize = 1024 - 60;
  #include "absl/base/attributes.h"
  #include "absl/strings/string_view.h"
  #include "api/units/timestamp.h"
@@ -1559,7 +1559,7 @@ index 9ed652be0b..c0239c8d44 100644
  #include "rtc_base/checks.h"
  #include "rtc_base/platform_thread_types.h"
  #include "rtc_base/string_encode.h"
-@@ -54,6 +55,24 @@ static const int kMaxLogLineSize = 1024 - 60;
+@@ -58,6 +59,24 @@ static const int kMaxLogLineSize = 1024 - 60;
  #include "rtc_base/time_utils.h"
  
  namespace webrtc {
@@ -1584,7 +1584,7 @@ index 9ed652be0b..c0239c8d44 100644
  namespace {
  
  // By default, release builds don't log, debug builds at info level
-@@ -114,7 +133,7 @@ std::string LogLineRef::DefaultLogLine() const {
+@@ -118,7 +137,7 @@ std::string LogLineRef::DefaultLogLine() const {
  // LogMessage
  /////////////////////////////////////////////////////////////////////////////
  
