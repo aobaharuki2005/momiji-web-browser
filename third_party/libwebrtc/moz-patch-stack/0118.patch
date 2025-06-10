@@ -13,7 +13,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7017edc7cfc880bb1
  4 files changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/.gn b/.gn
-index 72c42e9202..fe7020cb97 100644
+index 391eadb382..940244f9af 100644
 --- a/.gn
 +++ b/.gn
 @@ -18,7 +18,7 @@ script_executable = "python3"
@@ -28,7 +28,7 @@ index 72c42e9202..fe7020cb97 100644
 @@ -36,7 +36,7 @@ no_check_targets = [
  # to force additional review for new uses of exec_script, which is strongly
  # discouraged except for gypi_to_gn calls.
- exec_script_whitelist = build_dotfile_settings.exec_script_whitelist +
+ exec_script_allowlist = build_dotfile_settings.exec_script_allowlist +
 -                        [ "//build_overrides/build.gni" ]
 +                        [ "//libwebrtc/build_overrides/build.gni" ]
  
