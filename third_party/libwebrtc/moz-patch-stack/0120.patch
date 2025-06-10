@@ -151,7 +151,7 @@ index 91b8d3195c..8d66ee1abb 100644
  
  if (rtc_include_tests) {
 diff --git a/api/audio_codecs/BUILD.gn b/api/audio_codecs/BUILD.gn
-index 0da1fe4fed..dd636fd158 100644
+index 492a44aa2f..3b41660148 100644
 --- a/api/audio_codecs/BUILD.gn
 +++ b/api/audio_codecs/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -271,7 +271,7 @@ index 4692207be7..9bf7a34a1b 100644
  
  rtc_source_set("scalability_mode") {
 diff --git a/audio/BUILD.gn b/audio/BUILD.gn
-index 412d51e288..e15971e8af 100644
+index 702a8d839d..6fd0767fb8 100644
 --- a/audio/BUILD.gn
 +++ b/audio/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -470,7 +470,7 @@ index c87d3b2f9a..a4a5889301 100644
  
  group("logging") {
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 3b5bf148dc..d404cd381b 100644
+index d3eae0bec5..f4f93964bd 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -6,7 +6,7 @@
@@ -659,7 +659,7 @@ index 3cc2a19a91..819aeee3e4 100644
  
  if (rtc_build_libsrtp) {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 392bf9dc29..c4dee40e3d 100644
+index 4d56177712..bf2e95fa1e 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -9,8 +9,8 @@

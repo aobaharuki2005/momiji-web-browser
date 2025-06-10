@@ -415,7 +415,7 @@ index dd5744218f..ced44047aa 100644
  
  bool RtpExtension::IsSupportedForVideo(absl::string_view uri) {
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index ef855475e9..552d20122a 100644
+index 073b4099e6..38e61ef56f 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -20,6 +20,7 @@ rtc_library("call_interfaces") {
@@ -1531,7 +1531,7 @@ index 752caa0d0d..7bf00ae0e1 100644
    const bool enable_svc_for_simulcast_;
    std::optional<SimulcastToSvcConverter> simulcast_to_svc_converter_;
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 9b25d54cae..53aafcfc7f 100644
+index 2628df7d6a..5f8abe188b 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -441,6 +441,12 @@ rtc_library("logging") {
@@ -1548,7 +1548,7 @@ index 9b25d54cae..53aafcfc7f 100644
      # Dependency on chromium's logging (in //base).
      deps += [ "//base" ]
 diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
-index 7e8d3c7973..283bcb82cf 100644
+index 1a07e9641e..de97fe9446 100644
 --- a/rtc_base/logging.cc
 +++ b/rtc_base/logging.cc
 @@ -48,6 +48,7 @@ static const int kMaxLogLineSize = 1024 - 60;

@@ -38,7 +38,7 @@ index b76be4dde7..ca6e5b3122 100644
        ]
        # Added when we removed deps in other places to avoid building
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index d404cd381b..a9c2fb44bd 100644
+index f4f93964bd..86e49b210e 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -12,12 +12,10 @@ import("../webrtc.gni")
@@ -102,7 +102,7 @@ index d404cd381b..a9c2fb44bd 100644
  
  rtc_library("rtc_simulcast_encoder_adapter") {
    visibility = [ "*" ]
-@@ -745,6 +743,12 @@ rtc_library("rtc_audio_video") {
+@@ -744,6 +742,12 @@ rtc_library("rtc_audio_video") {
      "engine/webrtc_voice_engine.cc",
      "engine/webrtc_voice_engine.h",
    ]
@@ -116,10 +116,10 @@ index d404cd381b..a9c2fb44bd 100644
    public_configs = []
    if (!build_with_chromium) {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index c4dee40e3d..783daf90a6 100644
+index bf2e95fa1e..7f0e4a1638 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
-@@ -1512,29 +1512,32 @@ rtc_source_set("ssl_header") {
+@@ -1502,29 +1502,32 @@ rtc_source_set("ssl_header") {
  }
  
  rtc_source_set("digest") {
@@ -172,7 +172,7 @@ index c4dee40e3d..783daf90a6 100644
    visibility = [ "*" ]
    sources = [
      "crypto_random.cc",
-@@ -1555,6 +1558,7 @@ rtc_library("crypto_random") {
+@@ -1545,6 +1548,7 @@ rtc_library("crypto_random") {
      configs += [ "..:external_ssl_library" ]
    }
  }

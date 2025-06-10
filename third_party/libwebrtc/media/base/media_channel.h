@@ -85,7 +85,7 @@ static std::string ToStringIfSet(const char* key, const std::optional<T>& val) {
   if (val) {
     str = key;
     str += ": ";
-    str += val ? rtc::ToString(*val) : "";
+    str += val ? absl::StrCat(*val) : "";
     str += ", ";
   }
   return str;
@@ -857,9 +857,9 @@ struct MediaChannelParameters {
   virtual std::map<std::string, std::string> ToStringMap() const {
     return {{"codecs", VectorToString(codecs)},
             {"extensions", VectorToString(extensions)},
-            {"rtcp", "{reduced_size:" + rtc::ToString(rtcp.reduced_size) +
+            {"rtcp", "{reduced_size:" + absl::StrCat(rtcp.reduced_size) +
                          ", remote_estimate:" +
-                         rtc::ToString(rtcp.remote_estimate) + "}"}};
+                         absl::StrCat(rtcp.remote_estimate) + "}"}};
   }
 };
 
@@ -870,7 +870,7 @@ struct SenderParameters : MediaChannelParameters {
  protected:
   std::map<std::string, std::string> ToStringMap() const override {
     auto params = MediaChannelParameters::ToStringMap();
-    params["max_bandwidth_bps"] = rtc::ToString(max_bandwidth_bps);
+    params["max_bandwidth_bps"] = absl::StrCat(max_bandwidth_bps);
     params["mid"] = (mid.empty() ? "<not set>" : mid);
     params["extmap-allow-mixed"] = extmap_allow_mixed ? "true" : "false";
     return params;

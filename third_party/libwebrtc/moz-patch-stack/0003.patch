@@ -9,7 +9,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3d5503acf9a4b22e0
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
-index 283bcb82cf..a0570d87a7 100644
+index de97fe9446..4e0b9ac800 100644
 --- a/rtc_base/logging.cc
 +++ b/rtc_base/logging.cc
 @@ -279,8 +279,8 @@ void LogMessage::LogTimestamps(bool on) {
