@@ -813,7 +813,7 @@ features:
         description: >
           Uses search configuration from remote servers .
         type: Boolean
-        default: false
+        default: true
   same-document-navigation-overrides-load-type:
     description: Control whether the same document navigation overrides the load type.
     variables:
