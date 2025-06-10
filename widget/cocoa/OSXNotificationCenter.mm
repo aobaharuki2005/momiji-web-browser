@@ -336,24 +336,25 @@ OSXNotificationCenter::ShowAlert(nsIAlertNotification* aAlert,
   nsTArray<RefPtr<nsIAlertAction>> actions;
   MOZ_TRY(aAlert->GetActions(actions));
 
-  NSMutableArray* additionalActions = [[NSMutableArray alloc] init];
-  for (const RefPtr<nsIAlertAction>& action : actions) {
-    nsAutoString actionName;
-    MOZ_TRY(action->GetAction(actionName));
+  if(@available(macOS 10.10, *)) {
+    NSMutableArray* additionalActions = [[NSMutableArray alloc] init];
+    for (const RefPtr<nsIAlertAction>& action : actions) {
+      nsAutoString actionName;
+      MOZ_TRY(action->GetAction(actionName));
 
-    nsAutoString actionTitle;
-    MOZ_TRY(action->GetTitle(actionTitle));
+      nsAutoString actionTitle;
+      MOZ_TRY(action->GetTitle(actionTitle));
 
-    NSString* actionNameNS = nsCocoaUtils::ToNSString(actionName);
-    NSString* actionTitleNS = nsCocoaUtils::ToNSString(actionTitle);
-    NSUserNotificationAction* notificationAction =
-        [NSUserNotificationAction actionWithIdentifier:actionNameNS
-                                                 title:actionTitleNS];
-    [additionalActions addObject:notificationAction];
+      NSString* actionNameNS = nsCocoaUtils::ToNSString(actionName);
+      NSString* actionTitleNS = nsCocoaUtils::ToNSString(actionTitle);
+      NSUserNotificationAction* notificationAction =
+          [NSUserNotificationAction actionWithIdentifier:actionNameNS
+                                                   title:actionTitleNS];
+      [additionalActions addObject:notificationAction];
+    }
+    notification.additionalActions = additionalActions;
+    [additionalActions release];
   }
-  notification.additionalActions = additionalActions;
-  [additionalActions release];
-
   nsAutoString name;
   rv = aAlert->GetName(name);
   // Don't let an alert name be more than MAX_NOTIFICATION_NAME_LEN characters.
