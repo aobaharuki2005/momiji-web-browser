@@ -284,8 +284,18 @@ def safe_extract(tar, path=".", *, numeric_owner=False):
             validate_tar_member(member, path)
             yield member
 
+    # Once all our platforms are using Python 3.12 or newer, we can
+    # remove the conditionality of the filter argument and always
+    # include it.  Currently I see:
+    # ubuntu 20.04 - Python 3.8.10 (probably no longer regularly used)
+    #        22.04 - Python 3.10.12
+    #        24.04 - Python 3.12.3
+    # macOS Sequoia 15.3.2 - Python 3.9.6 (the real issue)
     tar.extractall(
-        path, members=_files(tar, path), numeric_owner=numeric_owner, filter="tar"
+        path,
+        members=_files(tar, path),
+        numeric_owner=numeric_owner,
+        **({} if sys.version_info < (3, 12) else dict(filter="tar")),
     )
 
 
