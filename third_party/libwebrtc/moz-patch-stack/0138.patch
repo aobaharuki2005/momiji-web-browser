@@ -89,7 +89,7 @@ index 11f2e9eaa2..0fa8e30ba2 100644
    if (!io_surface) {
      return nullptr;
    }
-@@ -42,18 +43,50 @@ std::unique_ptr<DesktopFrameIOSurface> DesktopFrameIOSurface::Wrap(
+@@ -42,18 +43,50 @@
      return nullptr;
    }
  

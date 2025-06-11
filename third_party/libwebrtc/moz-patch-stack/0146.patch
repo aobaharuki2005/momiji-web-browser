@@ -31,7 +31,7 @@ index c1b4db19f6..442648676c 100644
      return handle_count_ == kMaximumStreamCount;
    }
  
-@@ -41,9 +39,9 @@ class API_AVAILABLE(macos(14.0)) SckPickerProxy {
+@@ -41,9 +39,9 @@ bool AtCapacity() const {
    }
  
    ABSL_MUST_USE_RESULT std::optional<DesktopCapturer::SourceId>
@@ -44,7 +44,7 @@ index c1b4db19f6..442648676c 100644
        return std::nullopt;
      }
      if (handle_count_ == 0) {
-@@ -58,25 +56,26 @@ class API_AVAILABLE(macos(14.0)) SckPickerProxy {
+@@ -58,25 +56,26 @@ bool AtCapacity() const {
    }
  
    void RelinquishSourceId(DesktopCapturer::SourceId source) {
@@ -117,7 +117,7 @@ index a664c013bc..7b3814645e 100644
    // Prep for implementing DelegatedSourceListController interface, for now used
    // by Start(). Triggers SCContentSharingPicker. Runs on the caller's thread.
    void EnsureVisible();
-@@ -218,15 +220,6 @@ ScreenCapturerSck::ScreenCapturerSck(const DesktopCaptureOptions& options,
+@@ -218,15 +220,6 @@ friend void AbslStringify(Sink& sink,
      : api_checker_(SequenceChecker::kDetached),
        capture_options_(options),
        picker_modes_(modes) {
@@ -133,7 +133,7 @@ index a664c013bc..7b3814645e 100644
    helper_ = [[SckHelper alloc] initWithCapturer:this];
  }
  
-@@ -322,9 +315,25 @@ void ScreenCapturerSck::CaptureFrame() {
+@@ -322,9 +315,25 @@ friend void AbslStringify(Sink& sink,
    }
  }
  
@@ -159,7 +159,7 @@ index a664c013bc..7b3814645e 100644
    if (picker_handle_) {
      if (!picker_handle_registered_) {
        picker_handle_registered_ = true;
-@@ -433,15 +442,14 @@ void ScreenCapturerSck::NotifyCaptureStopped(SCStream* stream) {
+@@ -433,15 +442,14 @@ friend void AbslStringify(Sink& sink,
  bool ScreenCapturerSck::GetSourceList(SourceList* sources) {
    RTC_DCHECK_RUN_ON(&api_checker_);
    sources->clear();
@@ -177,7 +177,7 @@ index a664c013bc..7b3814645e 100644
    if (capture_options_.allow_sck_system_picker()) {
      return true;
    }
-@@ -526,9 +534,9 @@ void ScreenCapturerSck::StartWithFilter(SCContentFilter* __strong filter) {
+@@ -526,9 +534,9 @@ friend void AbslStringify(Sink& sink,
    config.colorSpaceName = kCGColorSpaceSRGB;
    config.showsCursor = capture_options_.prefer_cursor_embedded();
    config.captureResolution = SCCaptureResolutionNominal;
@@ -190,7 +190,7 @@ index a664c013bc..7b3814645e 100644
  
    {
      MutexLock lock(&latest_frame_lock_);
-@@ -770,9 +778,8 @@ std::unique_ptr<DesktopCapturer> CreateGenericCapturerSck(
+@@ -770,9 +778,8 @@ bool GenericCapturerSckWithPickerAvailable() {
    if (@available(macOS 14.0, *)) {
      if (options.allow_sck_system_picker()) {
        return std::make_unique<ScreenCapturerSck>(

@@ -34,7 +34,7 @@ index 1bc70cfce3..ecd818ee91 100644
    // Called by SckHelper when shareable content is returned by ScreenCaptureKit.
    // `content` will be nil if an error occurred. May run on an arbitrary thread.
    void OnShareableContentCreated(SCShareableContent* content, NSError* error);
-@@ -214,6 +217,15 @@ void ScreenCapturerSck::CaptureFrame() {
+@@ -214,6 +217,15 @@ class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final
    }
  }
  
@@ -50,7 +50,7 @@ index 1bc70cfce3..ecd818ee91 100644
  bool ScreenCapturerSck::SelectSource(SourceId id) {
    RTC_LOG(LS_INFO) << "ScreenCapturerSck " << this << " SelectSource(id=" << id
                     << ").";
-@@ -471,6 +483,25 @@ std::unique_ptr<DesktopCapturer> CreateScreenCapturerSck(
+@@ -471,6 +483,25 @@ - (void)onShareableContentCreated:(SCShareableContent*)content
    }
  }
  

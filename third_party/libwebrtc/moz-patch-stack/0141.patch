@@ -45,7 +45,7 @@ index 080ab23395..e77c6b1745 100644
    // Currently selected display, or 0 if the full desktop is selected. This
    // capturer does not support full-desktop capture, and will fall back to the
    // first display.
-@@ -311,12 +318,15 @@ void ScreenCapturerSck::OnShareableContentCreated(SCShareableContent* content,
+@@ -311,12 +318,15 @@ class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final
    SCContentFilter* filter =
        [[SCContentFilter alloc] initWithDisplay:captured_display
                                excludingWindows:@[]];
@@ -63,7 +63,7 @@ index 080ab23395..e77c6b1745 100644
    config.captureResolution = SCCaptureResolutionNominal;
    config.minimumFrameInterval = max_frame_rate_ > 0 ?
        CMTimeMake(1, static_cast<int32_t>(max_frame_rate_)) :
-@@ -325,9 +335,18 @@ void ScreenCapturerSck::OnShareableContentCreated(SCShareableContent* content,
+@@ -325,9 +335,18 @@ class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final
    {
      MutexLock lock(&latest_frame_lock_);
      latest_frame_dpi_ = filter.pointPixelScale * kStandardDPI;
@@ -83,7 +83,7 @@ index 080ab23395..e77c6b1745 100644
    if (stream_) {
      RTC_LOG(LS_INFO) << "ScreenCapturerSck " << this
                       << " Updating stream configuration to size="
-@@ -351,6 +370,7 @@ void ScreenCapturerSck::OnShareableContentCreated(SCShareableContent* content,
+@@ -351,6 +370,7 @@ class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final
                             error:&add_stream_output_error];
      if (!add_stream_output_result) {
        stream_ = nil;

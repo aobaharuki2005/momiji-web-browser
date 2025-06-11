@@ -56,7 +56,7 @@ index ecd818ee91..080ab23395 100644
  };
  
  ScreenCapturerSck::ScreenCapturerSck(const DesktopCaptureOptions& options)
-@@ -193,6 +200,7 @@ void ScreenCapturerSck::CaptureFrame() {
+@@ -193,6 +200,7 @@ class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final
    }
  
    std::unique_ptr<DesktopFrame> frame;
@@ -64,7 +64,7 @@ index ecd818ee91..080ab23395 100644
    {
      MutexLock lock(&latest_frame_lock_);
      if (latest_frame_) {
-@@ -203,6 +211,12 @@ void ScreenCapturerSck::CaptureFrame() {
+@@ -203,6 +211,12 @@ class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final
          frame_is_dirty_ = false;
        }
      }
@@ -77,7 +77,7 @@ index ecd818ee91..080ab23395 100644
    }
  
    if (frame) {
-@@ -311,6 +325,7 @@ void ScreenCapturerSck::OnShareableContentCreated(SCShareableContent* content,
+@@ -311,6 +325,7 @@ class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final
    {
      MutexLock lock(&latest_frame_lock_);
      latest_frame_dpi_ = filter.pointPixelScale * kStandardDPI;
@@ -85,7 +85,7 @@ index ecd818ee91..080ab23395 100644
    }
  
    if (stream_) {
-@@ -360,19 +375,80 @@ void ScreenCapturerSck::OnShareableContentCreated(SCShareableContent* content,
+@@ -360,19 +375,80 @@ class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final
  }
  
  void ScreenCapturerSck::OnNewIOSurface(IOSurfaceRef io_surface,
@@ -171,7 +171,7 @@ index ecd818ee91..080ab23395 100644
    std::unique_ptr<SharedDesktopFrame> frame =
        SharedDesktopFrame::Wrap(std::move(desktop_frame_io_surface));
  
-@@ -387,29 +463,20 @@ void ScreenCapturerSck::OnNewIOSurface(IOSurfaceRef io_surface,
+@@ -387,29 +463,20 @@ class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final
    }
  
    if (!dirty) {
@@ -205,7 +205,7 @@ index ecd818ee91..080ab23395 100644
        if (!CGRectIsEmpty(rect)) {
          dirty = true;
          break;
-@@ -417,8 +484,14 @@ void ScreenCapturerSck::OnNewIOSurface(IOSurfaceRef io_surface,
+@@ -417,8 +484,14 @@ class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final
      }
    }
  
@@ -221,7 +221,7 @@ index ecd818ee91..080ab23395 100644
      frame->set_dpi(DesktopVector(latest_frame_dpi_, latest_frame_dpi_));
      frame->set_may_contain_cursor(capture_options_.prefer_cursor_embedded());
  
-@@ -527,7 +600,7 @@ std::unique_ptr<DesktopCapturer> CreateScreenCapturerSck(
+@@ -527,7 +600,7 @@ - (void)stream:(SCStream*)stream
  
    webrtc::MutexLock lock(&_capturer_lock);
    if (_capturer) {

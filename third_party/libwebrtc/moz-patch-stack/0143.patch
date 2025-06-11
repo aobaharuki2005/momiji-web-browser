@@ -361,7 +361,7 @@ index 264a0a8f8b..f180d3bc62 100644
  #include "sdk/objc/helpers/scoped_cftyperef.h"
  
  using webrtc::DesktopFrameIOSurface;
-@@ -34,7 +36,9 @@ class ScreenCapturerSck;
+@@ -34,7 +36,9 @@
  // Also, the `SCContentFilter` fields `contentRect` and `pointPixelScale` were
  // introduced in macOS 14.
  API_AVAILABLE(macos(14.0))
@@ -399,7 +399,7 @@ index 264a0a8f8b..f180d3bc62 100644
  
    // Called after a SCStreamDelegate stop notification.
    void NotifyCaptureStopped(SCStream* stream);
-@@ -102,10 +116,22 @@ class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final
+@@ -102,10 +116,22 @@ void StartWithFilter(SCContentFilter* filter)
    // Callback for returning captured frames, or errors, to the caller.
    Callback* callback_ RTC_GUARDED_BY(api_checker_) = nullptr;
  
@@ -422,7 +422,7 @@ index 264a0a8f8b..f180d3bc62 100644
    // Signals that a permanent error occurred. This may be set on any thread, and
    // is read by CaptureFrame() which runs on the caller's thread.
    std::atomic<bool> permanent_error_ = false;
-@@ -153,12 +179,60 @@ class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final
+@@ -153,12 +179,60 @@ void StartWithFilter(SCContentFilter* filter)
        RTC_GUARDED_BY(latest_frame_lock_);
  };
  
@@ -486,7 +486,7 @@ index 264a0a8f8b..f180d3bc62 100644
  ScreenCapturerSck::~ScreenCapturerSck() {
    RTC_DCHECK_RUN_ON(&api_checker_);
    RTC_LOG(LS_INFO) << "ScreenCapturerSck " << this << " destroyed.";
-@@ -172,6 +246,10 @@ void ScreenCapturerSck::Start(DesktopCapturer::Callback* callback) {
+@@ -172,6 +246,10 @@ void StartWithFilter(SCContentFilter* filter)
    callback_ = callback;
    desktop_config_ =
        capture_options_.configuration_monitor()->desktop_configuration();
@@ -497,7 +497,7 @@ index 264a0a8f8b..f180d3bc62 100644
    StartOrReconfigureCapturer();
  }
  
-@@ -244,6 +322,105 @@ void ScreenCapturerSck::CaptureFrame() {
+@@ -244,6 +322,105 @@ void StartWithFilter(SCContentFilter* filter)
    }
  }
  
@@ -603,7 +603,7 @@ index 264a0a8f8b..f180d3bc62 100644
  void ScreenCapturerSck::NotifyCaptureStopped(SCStream* stream) {
    MutexLock lock(&lock_);
    if (stream_ != stream) {
-@@ -253,8 +430,22 @@ void ScreenCapturerSck::NotifyCaptureStopped(SCStream* stream) {
+@@ -253,8 +430,22 @@ void StartWithFilter(SCContentFilter* filter)
    permanent_error_ = true;
  }
  
@@ -626,7 +626,7 @@ index 264a0a8f8b..f180d3bc62 100644
    RTC_LOG(LS_INFO) << "ScreenCapturerSck " << this << " SelectSource(id=" << id
                     << ").";
    bool stream_started = false;
-@@ -528,6 +719,14 @@ void ScreenCapturerSck::OnNewIOSurface(IOSurfaceRef io_surface,
+@@ -528,6 +719,14 @@ void StartWithFilter(SCContentFilter* filter)
  }
  
  void ScreenCapturerSck::StartOrReconfigureCapturer() {
@@ -641,7 +641,7 @@ index 264a0a8f8b..f180d3bc62 100644
    RTC_LOG(LS_INFO) << "ScreenCapturerSck " << this << " " << __func__ << ".";
    // The copy is needed to avoid capturing `this` in the Objective-C block.
    // Accessing `helper_` inside the block is equivalent to `this->helper_` and
-@@ -558,6 +757,27 @@ std::unique_ptr<DesktopCapturer> CreateScreenCapturerSck(
+@@ -558,6 +757,27 @@ bool ScreenCapturerSckAvailable() {
    return nullptr;
  }
  
@@ -669,7 +669,7 @@ index 264a0a8f8b..f180d3bc62 100644
  }  // namespace webrtc
  
  @implementation SckHelper {
-@@ -602,6 +822,36 @@ std::unique_ptr<DesktopCapturer> CreateScreenCapturerSck(
+@@ -602,6 +822,36 @@ - (void)userDidStopStream:(SCStream*)stream NS_SWIFT_NAME(userDidStopStream(_:))
    }
  }
  
