@@ -38,8 +38,12 @@ extern uint32_t MIRTypeToABIResultSize(jit::MIRType);
 namespace jit {
 
 class MWasmNullConstant : public MNullaryInstruction {
+  mozilla::Maybe<wasm::RefTypeHierarchy> hierarchy_;
+
   explicit MWasmNullConstant(wasm::MaybeRefType type)
-      : MNullaryInstruction(classOpcode) {
+      : MNullaryInstruction(classOpcode),
+        hierarchy_(type.isSome() ? mozilla::Some(type.value().hierarchy())
+                                 : mozilla::Nothing()) {
     setResultType(MIRType::WasmAnyRef);
     setMovable();
     if (type.isSome()) {
@@ -51,9 +55,14 @@ class MWasmNullConstant : public MNullaryInstruction {
   INSTRUCTION_HEADER(WasmNullConstant)
   TRIVIAL_NEW_WRAPPERS
 
+  mozilla::Maybe<wasm::RefTypeHierarchy> hierarchy() const {
+    return hierarchy_;
+  }
+
   HashNumber valueHash() const override;
   bool congruentTo(const MDefinition* ins) const override {
-    return ins->isWasmNullConstant() && wasmRefType() == ins->wasmRefType();
+    return ins->isWasmNullConstant() &&
+           hierarchy() == ins->toWasmNullConstant()->hierarchy();
   }
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
@@ -2474,6 +2483,7 @@ class MWasmLoadField : public MBinaryInstruction, public NoTypePolicy::Data {
   MWideningOp wideningOp_;
   AliasSet aliases_;
   wasm::MaybeTrapSiteDesc maybeTrap_;
+  mozilla::Maybe<wasm::RefTypeHierarchy> hierarchy_;
 
   MWasmLoadField(MDefinition* base, MDefinition* keepAlive, size_t offset,
                  mozilla::Maybe<uint32_t> structFieldIndex, MIRType type,
@@ -2485,7 +2495,8 @@ class MWasmLoadField : public MBinaryInstruction, public NoTypePolicy::Data {
         structFieldIndex_(structFieldIndex),
         wideningOp_(wideningOp),
         aliases_(aliases),
-        maybeTrap_(std::move(maybeTrap)) {
+        maybeTrap_(std::move(maybeTrap)),
+        hierarchy_(maybeRefType.hierarchy()) {
     MOZ_ASSERT(offset <= INT32_MAX);
     // "if you want to widen the value when it is loaded, the destination type
     // must be Int32".
@@ -2523,6 +2534,9 @@ class MWasmLoadField : public MBinaryInstruction, public NoTypePolicy::Data {
   MWideningOp wideningOp() const { return wideningOp_; }
   AliasSet getAliasSet() const override { return aliases_; }
   wasm::MaybeTrapSiteDesc maybeTrap() const { return maybeTrap_; }
+  mozilla::Maybe<wasm::RefTypeHierarchy> hierarchy() const {
+    return hierarchy_;
+  }
 
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isWasmLoadField()) {
@@ -2534,7 +2548,7 @@ class MWasmLoadField : public MBinaryInstruction, public NoTypePolicy::Data {
            structFieldIndex() == other->structFieldIndex() &&
            wideningOp() == other->wideningOp() &&
            getAliasSet().flags() == other->getAliasSet().flags() &&
-           wasmRefType() == other->wasmRefType();
+           hierarchy() == other->hierarchy();
   }
 
 #ifdef JS_JITSPEW

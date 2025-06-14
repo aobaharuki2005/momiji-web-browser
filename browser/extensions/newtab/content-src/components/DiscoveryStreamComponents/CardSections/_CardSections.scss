@@ -15,7 +15,7 @@
 
   &.refined-cards {
     .ds-card-link {
-      padding: var(--space-xsmall) var(--space-small);
+      padding: var(--space-small);
       flex-grow: 0;
     }
 
@@ -25,9 +25,8 @@
     }
 
     .meta {
-      padding-inline: 0;
-      padding-block: 0 var(--space-xsmall);
-      min-height: 125px;
+      padding: 0;
+      min-height: 117px;
 
       .info-wrap {
         flex-grow: 1
@@ -52,9 +51,8 @@
 
     .card-stp-button-position-wrapper {
       // context menu should match the padding for the parent
-      inset-inline-end: var(--space-large);
+      inset-inline-end: var(--space-small);
       inset-block-end: var(--space-small);
-
     }
 
     .context-menu-position-container .context-menu-button {
@@ -137,7 +135,7 @@
 
     .info-wrap .title {
       font-size: var(--font-size-small);
-      margin-block: var(--space-xsmall) 0;
+      margin-block: 0;
       -webkit-line-clamp: 4;
     }
 
@@ -185,11 +183,17 @@
 
     .img-wrapper {
       width: 100%;
-      height: 172px;
+      height: 160px;
+    }
+
+    &.ds-spoc-rectangle {
+      .img-wrapper {
+        height: 250px;
+      }
     }
 
     .meta {
-      padding: var(--space-small) var(--space-large);
+      padding: var(--space-large) var(--space-large) var(--space-small);
       min-height: unset;
 
       .info-wrap {
@@ -311,12 +315,12 @@
     @media ($break-point-layout-variant <=width < $break-point-widest),
       (min-width: $break-point-sections-variant) {
       .ds-card-link {
-        gap: var(--space-small);
-        padding: var(--space-small);
+        gap: var(--space-large);
+        padding: var(--space-large);
       }
 
       .meta {
-        padding: var(--space-large) var(--space-small) 0;
+        padding: 0;
         color: var(--newtab-text-primary-color);
 
         .info-wrap .excerpt {
@@ -324,17 +328,17 @@
         }
 
         .sections-card-footer {
-          max-width: 260px;
+          max-width: 334px;
 
           .source-wrapper {
-            max-width: 175px;
+            max-width: 245px;
           }
         }
       }
 
       .card-stp-button-position-wrapper {
-        inset-inline-end: var(--space-xlarge);
-        inset-block-end: var(--space-small);
+        inset-inline-end: var(--space-large);
+        inset-block-end: var(--space-large);
       }
 
       &:hover,
@@ -356,16 +360,18 @@
     @media ($break-point-layout-variant <=width < $break-point-widest),
       (min-width: $break-point-sections-variant) {
       align-content: flex-start;
+      justify-content: center;
 
       .ds-card-link {
         flex-direction: row;
         gap: var(--space-xlarge);
         padding: var(--space-xxlarge);
+        flex-grow: 0;
       }
 
       .img-wrapper {
-        width: 265px;
-        height: 100%;
+        width: 190px;
+        height: 250px;
       }
 
       .ds-image.img {
