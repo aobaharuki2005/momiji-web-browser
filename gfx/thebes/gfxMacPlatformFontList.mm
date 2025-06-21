@@ -421,14 +421,14 @@ static NSString* GetRealFamilyName(NSFont* aFont) {
         psName = @"LucidaGrande";
   }
 
-  AutoCFRelease<CGFontRef> cgFont =
-      CGFontCreateWithFontName(CFStringRef(psName));
+  AutoCFTypeRef<CGFontRef> cgFont(
+      CGFontCreateWithFontName(CFStringRef(psName)));
   if (!cgFont) {
     return [aFont familyName];
   }
 
-  AutoCFRelease<CTFontRef> ctFont =
-      CTFontCreateWithGraphicsFont(cgFont, 0.0, nullptr, nullptr);
+  AutoCFTypeRef<CTFontRef> ctFont(
+      CTFontCreateWithGraphicsFont(cgFont, 0.0, nullptr, nullptr));
   if (!ctFont) {
     return [aFont familyName];
   }
@@ -534,8 +534,8 @@ nsresult gfxMacPlatformFontList::InitFontListForPlatform() {
 
     // We're not a content process, so get the available fonts directly
     // from Core Text.
-    AutoCFRelease<CFArrayRef> familyNames =
-        CTFontManagerCopyAvailableFontFamilyNames();
+    AutoCFTypeRef<CFArrayRef> familyNames(
+        CTFontManagerCopyAvailableFontFamilyNames());
     for (NSString* familyName in (NSArray*)(CFArrayRef)familyNames) {
       AddFamily((CFStringRef)familyName);
     }
@@ -610,8 +610,8 @@ void gfxMacPlatformFontList::InitSharedFontListForPlatform() {
       firstTime = false;
     }
 
-    AutoCFRelease<CFArrayRef> familyNames =
-        CTFontManagerCopyAvailableFontFamilyNames();
+    AutoCFTypeRef<CFArrayRef> familyNames(
+        CTFontManagerCopyAvailableFontFamilyNames());
     nsTArray<fontlist::Family::InitData> families;
     families.SetCapacity(CFArrayGetCount(familyNames)
 #if USE_DEPRECATED_FONT_FAMILY_NAMES

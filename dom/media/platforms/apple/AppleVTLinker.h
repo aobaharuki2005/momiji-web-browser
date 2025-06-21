@@ -48,6 +48,9 @@ public:
   static CFStringRef skPropSpeedOverQuality;
   static CFStringRef skPropExpFrameRate;
   static CFStringRef skPropCompRealTime;
+  static CFStringRef skPropCompColorPrimaries;
+  static CFStringRef skPropCompYCbCrMatrix;
+  static CFStringRef skPropCompTransferFunction;
 
   static CFStringRef skPropCompProfileLevel;
 private:

@@ -217,16 +217,16 @@ PlatformCallback(void* decompressionOutputRefCon,
   AppleVDADecoder* decoder =
     static_cast<AppleVDADecoder*>(decompressionOutputRefCon);
 
-  AutoCFRelease<CFNumberRef> ptsref =
-    (CFNumberRef)CFDictionaryGetValue(frameInfo, CFSTR("FRAME_PTS"));
-  AutoCFRelease<CFNumberRef> dtsref =
-    (CFNumberRef)CFDictionaryGetValue(frameInfo, CFSTR("FRAME_DTS"));
-  AutoCFRelease<CFNumberRef> durref =
-    (CFNumberRef)CFDictionaryGetValue(frameInfo, CFSTR("FRAME_DURATION"));
-  AutoCFRelease<CFNumberRef> boref =
-    (CFNumberRef)CFDictionaryGetValue(frameInfo, CFSTR("FRAME_OFFSET"));
-  AutoCFRelease<CFNumberRef> kfref =
-    (CFNumberRef)CFDictionaryGetValue(frameInfo, CFSTR("FRAME_KEYFRAME"));
+  AutoCFTypeRef<CFNumberRef> ptsref(
+    (CFNumberRef)CFDictionaryGetValue(frameInfo, CFSTR("FRAME_PTS")));
+  AutoCFTypeRef<CFNumberRef> dtsref(
+    (CFNumberRef)CFDictionaryGetValue(frameInfo, CFSTR("FRAME_DTS")));
+  AutoCFTypeRef<CFNumberRef> durref(
+    (CFNumberRef)CFDictionaryGetValue(frameInfo, CFSTR("FRAME_DURATION")));
+  AutoCFTypeRef<CFNumberRef> boref(
+    (CFNumberRef)CFDictionaryGetValue(frameInfo, CFSTR("FRAME_OFFSET")));
+  AutoCFTypeRef<CFNumberRef> kfref(
+    (CFNumberRef)CFDictionaryGetValue(frameInfo, CFSTR("FRAME_KEYFRAME")));
 
   int64_t dts;
   int64_t pts;
@@ -450,34 +450,34 @@ void
 AppleVDADecoder::ProcessDecode(MediaRawData* aSample)
 {
 
-  AutoCFRelease<CFDataRef> block =
-    CFDataCreate(kCFAllocatorDefault, aSample->Data(), aSample->Size());
+  AutoCFTypeRef<CFDataRef> block(
+    CFDataCreate(kCFAllocatorDefault, aSample->Data(), aSample->Size()));
   if (!block) {
     NS_ERROR("Couldn't create CFData");
     return;
   }
 
-  AutoCFRelease<CFNumberRef> pts =
+  AutoCFTypeRef<CFNumberRef> pts(
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt64Type,
-                   &aSample->mTime);
-  AutoCFRelease<CFNumberRef> dts =
+                   &aSample->mTime));
+  AutoCFTypeRef<CFNumberRef> dts(
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt64Type,
-                   &aSample->mTimecode);
-  AutoCFRelease<CFNumberRef> duration =
+                   &aSample->mTimecode));
+  AutoCFTypeRef<CFNumberRef> duration(
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt64Type,
-                   &aSample->mDuration);
-  AutoCFRelease<CFNumberRef> byte_offset =
+                   &aSample->mDuration));
+  AutoCFTypeRef<CFNumberRef> byte_offset(
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt64Type,
-                   &aSample->mOffset);
+                   &aSample->mOffset));
   char keyframe = aSample->mKeyframe ? 1 : 0;
-  AutoCFRelease<CFNumberRef> cfkeyframe =
+  AutoCFTypeRef<CFNumberRef> cfkeyframe(
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt8Type,
-                   &keyframe);
+                   &keyframe));
 
   const void* keys[] = { CFSTR("FRAME_PTS"),
                          CFSTR("FRAME_DTS"),
@@ -492,13 +492,13 @@ AppleVDADecoder::ProcessDecode(MediaRawData* aSample)
   static_assert(std::size(keys) == std::size(values),
                 "Non matching keys/values array size");
 
-  AutoCFRelease<CFDictionaryRef> frameInfo =
+  AutoCFTypeRef<CFDictionaryRef> frameInfo( 
     CFDictionaryCreate(kCFAllocatorDefault,
                        keys,
                        values,
                        std::size(keys),
                        &kCFTypeDictionaryKeyCallBacks,
-                       &kCFTypeDictionaryValueCallBacks);
+                       &kCFTypeDictionaryValueCallBacks));
 
   OSStatus rv = VDADecoderDecode(mDecoder,
                                  0,
@@ -518,11 +518,11 @@ AppleVDADecoder::InitializeSession()
 {
   OSStatus rv;
 
-  AutoCFRelease<CFDictionaryRef> decoderConfig =
-    CreateDecoderSpecification();
+  AutoCFTypeRef<CFDictionaryRef> decoderConfig(
+    CreateDecoderSpecification());
 
-  AutoCFRelease<CFDictionaryRef> outputConfiguration =
-    CreateOutputConfiguration();
+  AutoCFTypeRef<CFDictionaryRef> outputConfiguration(
+    CreateOutputConfiguration());
 
   rv =
     VDADecoderCreate(decoderConfig,
@@ -551,22 +551,22 @@ AppleVDADecoder::CreateDecoderSpecification()
   int extrasize = mExtraData->Length();
 
   OSType format = 'avc1';
-  AutoCFRelease<CFNumberRef> avc_width  =
+  AutoCFTypeRef<CFNumberRef> avc_width(
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt32Type,
-                   &mPictureWidth);
-  AutoCFRelease<CFNumberRef> avc_height =
+                   &mPictureWidth));
+  AutoCFTypeRef<CFNumberRef> avc_height(
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt32Type,
-                   &mPictureHeight);
-  AutoCFRelease<CFNumberRef> avc_format =
+                   &mPictureHeight));
+  AutoCFTypeRef<CFNumberRef> avc_format(
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt32Type,
-                   &format);
-  AutoCFRelease<CFDataRef> avc_data =
+                   &format));
+  AutoCFTypeRef<CFDataRef> avc_data(
     CFDataCreate(kCFAllocatorDefault,
                  extradata,
-                 extrasize);
+                 extrasize));
 
   const void* decoderKeys[] = { AppleVDALinker::skPropWidth,
                                 AppleVDALinker::skPropHeight,
@@ -594,10 +594,10 @@ AppleVDADecoder::CreateOutputConfiguration()
     // Output format type:
     SInt32 PixelFormatTypeValue =
       kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
-    AutoCFRelease<CFNumberRef> PixelFormatTypeNumber =
+    AutoCFTypeRef<CFNumberRef> PixelFormatTypeNumber(
       CFNumberCreate(kCFAllocatorDefault,
                      kCFNumberSInt32Type,
-                     &PixelFormatTypeValue);
+                     &PixelFormatTypeValue));
     const void* outputKeys[] = { kCVPixelBufferPixelFormatTypeKey };
     const void* outputValues[] = { PixelFormatTypeNumber };
     static_assert(std::size(outputKeys) == std::size(outputValues),
@@ -614,10 +614,10 @@ AppleVDADecoder::CreateOutputConfiguration()
 #ifndef MOZ_WIDGET_UIKIT
   // Output format type:
   OSType PixelFormatTypeValue = kCVPixelFormatType_422YpCbCr8;
-  AutoCFRelease<CFNumberRef> PixelFormatTypeNumber =
+  AutoCFTypeRef<CFNumberRef> PixelFormatTypeNumber(
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt32Type,
-                   &PixelFormatTypeValue);
+                   &PixelFormatTypeValue));
   // Construct IOSurface Properties
   const void* IOSurfaceKeys[] = {kIOSurfaceIsGlobal};
   const void* IOSurfaceValues[] = {kCFBooleanTrue};
@@ -626,13 +626,13 @@ AppleVDADecoder::CreateOutputConfiguration()
                 "Non matching keys/values array size");
 
   // Contruct output configuration.
-  AutoCFRelease<CFDictionaryRef> IOSurfaceProperties =
+  AutoCFTypeRef<CFDictionaryRef> IOSurfaceProperties(
     CFDictionaryCreate(kCFAllocatorDefault,
                        IOSurfaceKeys,
                        IOSurfaceValues,
                        std::size(IOSurfaceKeys),
                        &kCFTypeDictionaryKeyCallBacks,
-                       &kCFTypeDictionaryValueCallBacks);
+                       &kCFTypeDictionaryValueCallBacks));
 
   const void* outputKeys[] = { kCVPixelBufferIOSurfacePropertiesKey,
                                kCVPixelBufferPixelFormatTypeKey,

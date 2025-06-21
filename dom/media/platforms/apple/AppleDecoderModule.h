@@ -39,6 +39,7 @@ class AppleDecoderModule : public PlatformDecoderModule {
   static void Init();
 
   static bool sIsCoreMediaAvailable;
+  static bool sIsCoreVideoAvailable;
   static bool sIsVDAAvailable;
   static bool sIsVTAvailable;
 

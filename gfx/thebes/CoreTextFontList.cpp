@@ -338,7 +338,7 @@ CGFontRef CTFontEntry::CreateOrCopyFontRef() {
       CrashReporter::Annotation::FontName, mName);
 
   // Create a new CGFont; caller will own the only reference to it.
-  AutoCFRelease<CFStringRef> psname = CreateCFStringForString(mName);
+  AutoCFTypeRef<CFStringRef> psname(CreateCFStringForString(mName));
   if (!psname) {
     return nullptr;
   }
@@ -376,7 +376,7 @@ class FontTableRec {
 
 hb_blob_t* CTFontEntry::GetFontTable(uint32_t aTag) {
   mLock.ReadLock();
-  AutoCFRelease<CGFontRef> fontRef = CreateOrCopyFontRef();
+  AutoCFTypeRef<CGFontRef> fontRef(CreateOrCopyFontRef());
   mLock.ReadUnlock();
   if (!fontRef) {
     return nullptr;
@@ -409,11 +409,11 @@ bool CTFontEntry::HasFontTable(uint32_t aTableTag) {
 
   AutoWriteLock lock(mLock);
   if (mAvailableTables.Count() == 0) {
-    AutoCFRelease<CGFontRef> fontRef = CreateOrCopyFontRef();
+    AutoCFTypeRef<CGFontRef> fontRef(CreateOrCopyFontRef());
     if (!fontRef) {
       return false;
     }
-    AutoCFRelease<CFArrayRef> tags = ::CGFontCopyTableTags(fontRef);
+    AutoCFTypeRef<CFArrayRef> tags(::CGFontCopyTableTags(fontRef));
     if (!tags) {
       return false;
     }
@@ -506,10 +506,10 @@ bool CTFontEntry::SupportsOpenTypeFeature(Script aScript,
     CrashReporter::AutoRecordAnnotation autoFontName(
         CrashReporter::Annotation::FontName, FamilyName());
 
-    AutoCFRelease<CTFontRef> ctFont =
-        CTFontCreateWithGraphicsFont(cgFont, 0.0, nullptr, nullptr);
+    AutoCFTypeRef<CTFontRef> ctFont(
+        CTFontCreateWithGraphicsFont(cgFont, 0.0, nullptr, nullptr));
     if (ctFont) {
-      AutoCFRelease<CFArrayRef> features = CTFontCopyFeatures(ctFont);
+      AutoCFTypeRef<CFArrayRef> features(CTFontCopyFeatures(ctFont));
       if (features) {
         mHasAATSmallCaps = CheckForAATSmallCaps(features);
       }
@@ -527,14 +527,14 @@ void CTFontEntry::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 
 static CTFontDescriptorRef CreateDescriptorForFamily(
     const nsACString& aFamilyName, bool aNormalized) {
-  AutoCFRelease<CFStringRef> family = CreateCFStringForString(aFamilyName);
+  AutoCFTypeRef<CFStringRef> family(CreateCFStringForString(aFamilyName));
   const void* values[] = {family};
   const void* keys[] = {kCTFontFamilyNameAttribute};
-  AutoCFRelease<CFDictionaryRef> attributes = CFDictionaryCreate(
+  AutoCFTypeRef<CFDictionaryRef> attributes(CFDictionaryCreate(
       kCFAllocatorDefault, keys, values, 1, &kCFTypeDictionaryKeyCallBacks,
-      &kCFTypeDictionaryValueCallBacks);
+      &kCFTypeDictionaryValueCallBacks));
 
-  // Not AutoCFRelease, because we might return it.
+  // Not AutoCFTypeRef, because we might return it.
   CTFontDescriptorRef descriptor =
       CTFontDescriptorCreateWithAttributes(attributes);
 
@@ -551,12 +551,12 @@ static CTFontDescriptorRef CreateDescriptorForFamily(
 }
 
 void CTFontFamily::LocalizedName(nsACString& aLocalizedName) {
-  AutoCFRelease<CTFontDescriptorRef> descriptor =
-      CreateDescriptorForFamily(mName, true);
+  AutoCFTypeRef<CTFontDescriptorRef> descriptor(
+      CreateDescriptorForFamily(mName, true));
   if (descriptor) {
-    AutoCFRelease<CFStringRef> name =
+    AutoCFTypeRef<CFStringRef> name(
         static_cast<CFStringRef>(CTFontDescriptorCopyLocalizedAttribute(
-            descriptor, kCTFontFamilyNameAttribute, nullptr));
+            descriptor, kCTFontFamilyNameAttribute, nullptr)));
     if (name) {
       nsAutoString localized;
       GetStringForCFString(name, localized);
@@ -651,15 +651,15 @@ static inline FontStretch CoreTextWidthToCSSStretch(CGFloat aCTWidth) {
 }
 
 void CTFontFamily::AddFace(CTFontDescriptorRef aFace) {
-  AutoCFRelease<CFStringRef> psname =
-      (CFStringRef)CTFontDescriptorCopyAttribute(aFace, kCTFontNameAttribute);
-  AutoCFRelease<CFStringRef> facename =
+  AutoCFTypeRef<CFStringRef> psname(
+      (CFStringRef)CTFontDescriptorCopyAttribute(aFace, kCTFontNameAttribute));
+  AutoCFTypeRef<CFStringRef> facename(
       (CFStringRef)CTFontDescriptorCopyAttribute(aFace,
-                                                 kCTFontStyleNameAttribute);
+                                                 kCTFontStyleNameAttribute));
 
-  AutoCFRelease<CFDictionaryRef> traitsDict =
+  AutoCFTypeRef<CFDictionaryRef> traitsDict(
       (CFDictionaryRef)CTFontDescriptorCopyAttribute(aFace,
-                                                     kCTFontTraitsAttribute);
+                                                     kCTFontTraitsAttribute));
   CFNumberRef weight =
       (CFNumberRef)CFDictionaryGetValue(traitsDict, kCTFontWeightTrait);
   CFNumberRef width =
@@ -748,7 +748,7 @@ void CTFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
     MOZ_ASSERT(gfxPlatform::HasVariationFontSupport());
 
     auto addToFamily = [&](CTFontRef aFont) MOZ_REQUIRES(mLock) {
-      AutoCFRelease<CFStringRef> psName = CTFontCopyPostScriptName(aFont);
+      AutoCFTypeRef<CFStringRef> psName(CTFontCopyPostScriptName(aFont));
       nsAutoString nameUTF16;
       nsAutoCString nameUTF8;
       GetStringForCFString(psName, nameUTF16);
@@ -771,8 +771,8 @@ void CTFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
     addToFamily(mForSystemFont);
 
     // See if there is a corresponding italic face, and add it to the family.
-    AutoCFRelease<CTFontRef> italicFont = CTFontCreateCopyWithSymbolicTraits(
-        mForSystemFont, 0.0, nullptr, kCTFontTraitItalic, kCTFontTraitItalic);
+    AutoCFTypeRef<CTFontRef> italicFont(CTFontCreateCopyWithSymbolicTraits(
+        mForSystemFont, 0.0, nullptr, kCTFontTraitItalic, kCTFontTraitItalic));
     if (italicFont != mForSystemFont) {
       addToFamily(italicFont);
     }
@@ -806,10 +806,10 @@ void CTFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
     MOZ_POP_THREAD_SAFETY;
   };
 
-  AutoCFRelease<CTFontDescriptorRef> descriptor =
-      CreateDescriptorForFamily(mName, false);
-  AutoCFRelease<CFArrayRef> faces =
-      CTFontDescriptorCreateMatchingFontDescriptors(descriptor, nullptr);
+  AutoCFTypeRef<CTFontDescriptorRef> descriptor(
+      CreateDescriptorForFamily(mName, false));
+  AutoCFTypeRef<CFArrayRef> faces(
+      CTFontDescriptorCreateMatchingFontDescriptors(descriptor, nullptr));
 
   if (faces) {
     Context context{this};
@@ -898,21 +898,21 @@ void CoreTextFontList::AddFamily(CFStringRef aFamily) {
 /* static */
 void CoreTextFontList::ActivateFontsFromDir(
     const nsACString& aDir, nsTHashSet<nsCStringHashKey>* aLoadedFamilies) {
-  AutoCFRelease<CFURLRef> directory = CFURLCreateFromFileSystemRepresentation(
+  AutoCFTypeRef<CFURLRef> directory(CFURLCreateFromFileSystemRepresentation(
       kCFAllocatorDefault, (const UInt8*)nsPromiseFlatCString(aDir).get(),
-      aDir.Length(), true);
+      aDir.Length(), true));
   if (!directory) {
     return;
   }
-  AutoCFRelease<CFURLEnumeratorRef> enumerator =
+  AutoCFTypeRef<CFURLEnumeratorRef> enumerator(
       CFURLEnumeratorCreateForDirectoryURL(kCFAllocatorDefault, directory,
                                            kCFURLEnumeratorDefaultBehavior,
-                                           nullptr);
+                                           nullptr));
   if (!enumerator) {
     return;
   }
-  AutoCFRelease<CFMutableArrayRef> urls =
-      CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+  AutoCFTypeRef<CFMutableArrayRef> urls(
+      CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks));
   if (!urls) {
     return;
   }
@@ -929,16 +929,16 @@ void CoreTextFontList::ActivateFontsFromDir(
     if (!aLoadedFamilies) {
       continue;
     }
-    AutoCFRelease<CFArrayRef> descriptors =
-        CTFontManagerCreateFontDescriptorsFromURL(url);
+    AutoCFTypeRef<CFArrayRef> descriptors(
+        CTFontManagerCreateFontDescriptorsFromURL(url));
     if (!descriptors || !CFArrayGetCount(descriptors)) {
       continue;
     }
     CTFontDescriptorRef desc =
         (CTFontDescriptorRef)CFArrayGetValueAtIndex(descriptors, 0);
-    AutoCFRelease<CFStringRef> name =
+    AutoCFTypeRef<CFStringRef> name(
         (CFStringRef)CTFontDescriptorCopyAttribute(desc,
-                                                   kCTFontFamilyNameAttribute);
+                                                   kCTFontFamilyNameAttribute));
     nsAutoCString key;
     key.SetLength((CFStringGetLength(name) + 1) * 3);
     if (CFStringGetCString(name, key.BeginWriting(), key.Length(),
@@ -1056,11 +1056,11 @@ gfxFontEntry* CoreTextFontList::PlatformGlobalFontFallback(
     mDefaultFont = CTFontCreateWithName(CFSTR("LucidaGrande"), 12.f, NULL);
   }
 
-  AutoCFRelease<CTFontRef> fallback =
-      CTFontCreateForString(mDefaultFont, str, CFRangeMake(0, length));
+  AutoCFTypeRef<CTFontRef> fallback(
+      CTFontCreateForString(mDefaultFont, str, CFRangeMake(0, length)));
 
   if (fallback) {
-    AutoCFRelease<CFStringRef> familyNameRef = CTFontCopyFamilyName(fallback);
+    AutoCFTypeRef<CFStringRef> familyNameRef(CTFontCopyFamilyName(fallback));
 
     if (familyNameRef &&
         CFStringCompare(familyNameRef, CFSTR("LastResort"),
@@ -1141,13 +1141,13 @@ gfxFontEntry* CoreTextFontList::LookupLocalFont(
   CrashReporter::AutoRecordAnnotation autoFontName(
       CrashReporter::Annotation::FontName, aFontName);
 
-  AutoCFRelease<CFStringRef> faceName = CreateCFStringForString(aFontName);
+  AutoCFTypeRef<CFStringRef> faceName(CreateCFStringForString(aFontName));
   if (!faceName) {
     return nullptr;
   }
 
   // lookup face based on postscript or full name
-  AutoCFRelease<CGFontRef> fontRef = CGFontCreateWithFontName(faceName);
+  AutoCFTypeRef<CGFontRef> fontRef(CGFontCreateWithFontName(faceName));
   if (!fontRef) {
     return nullptr;
   }
@@ -1158,12 +1158,12 @@ gfxFontEntry* CoreTextFontList::LookupLocalFont(
   // is allowed to be used.
 
   // CGFontRef doesn't offer a family-name API, so we go via a CTFontRef.
-  AutoCFRelease<CTFontRef> ctFont =
-      CTFontCreateWithGraphicsFont(fontRef, 0.0, nullptr, nullptr);
+  AutoCFTypeRef<CTFontRef> ctFont(
+      CTFontCreateWithGraphicsFont(fontRef, 0.0, nullptr, nullptr));
   if (!ctFont) {
     return nullptr;
   }
-  AutoCFRelease<CFStringRef> name = CTFontCopyFamilyName(ctFont);
+  AutoCFTypeRef<CFStringRef> name(CTFontCopyFamilyName(ctFont));
   // Convert the family name to a key suitable for font-list lookup (8-bit,
   // lowercased).
   nsAutoCString key;
@@ -1219,9 +1219,9 @@ gfxFontEntry* CoreTextFontList::MakePlatformFont(const nsACString& aFontName,
   CrashReporter::AutoRecordAnnotation autoFontName(
       CrashReporter::Annotation::FontName, aFontName);
 
-  AutoCFRelease<CGDataProviderRef> provider =
-      ::CGDataProviderCreateWithData(nullptr, aFontData, aLength, &ReleaseData);
-  AutoCFRelease<CGFontRef> fontRef = ::CGFontCreateWithDataProvider(provider);
+  AutoCFTypeRef<CGDataProviderRef> provider(
+      ::CGDataProviderCreateWithData(nullptr, aFontData, aLength, &ReleaseData));
+  AutoCFTypeRef<CGFontRef> fontRef(::CGFontCreateWithDataProvider(provider));
   if (!fontRef) {
     return nullptr;
   }
@@ -1306,16 +1306,16 @@ void CTFontInfo::LoadFontFamilyData(const nsACString& aFamilyName) {
   RecursiveMutexAutoLock lock(mLock);
 
   // family name ==> CTFontDescriptor
-  AutoCFRelease<CFStringRef> family = CreateCFStringForString(aFamilyName);
+  AutoCFTypeRef<CFStringRef> family(CreateCFStringForString(aFamilyName));
 
-  AutoCFRelease<CFMutableDictionaryRef> attr =
+  AutoCFTypeRef<CFMutableDictionaryRef> attr(
       CFDictionaryCreateMutable(NULL, 0, &kCFTypeDictionaryKeyCallBacks,
-                                &kCFTypeDictionaryValueCallBacks);
+                                &kCFTypeDictionaryValueCallBacks));
   CFDictionaryAddValue(attr, kCTFontFamilyNameAttribute, family);
-  AutoCFRelease<CTFontDescriptorRef> fd =
-      CTFontDescriptorCreateWithAttributes(attr);
-  AutoCFRelease<CFArrayRef> matchingFonts =
-      CTFontDescriptorCreateMatchingFontDescriptors(fd, NULL);
+  AutoCFTypeRef<CTFontDescriptorRef> fd(
+      CTFontDescriptorCreateWithAttributes(attr));
+  AutoCFTypeRef<CFArrayRef> matchingFonts(
+      CTFontDescriptorCreateMatchingFontDescriptors(fd, NULL));
   if (!matchingFonts) {
     return;
   }
@@ -1340,8 +1340,8 @@ void CTFontInfo::LoadFontFamilyData(const nsACString& aFamilyName) {
     }
     prevFace = faceDesc;
 
-    AutoCFRelease<CTFontRef> fontRef =
-        CTFontCreateWithFontDescriptor(faceDesc, 0.0, nullptr);
+    AutoCFTypeRef<CTFontRef> fontRef(
+        CTFontCreateWithFontDescriptor(faceDesc, 0.0, nullptr));
     if (!fontRef) {
       NS_WARNING("failed to create a CTFontRef");
       continue;
@@ -1349,9 +1349,9 @@ void CTFontInfo::LoadFontFamilyData(const nsACString& aFamilyName) {
 
     if (mLoadCmaps) {
       // face name
-      AutoCFRelease<CFStringRef> faceName =
+      AutoCFTypeRef<CFStringRef> faceName(
           (CFStringRef)CTFontDescriptorCopyAttribute(faceDesc,
-                                                     kCTFontNameAttribute);
+                                                     kCTFontNameAttribute));
 
       AutoTArray<UniChar, 1024> buffer;
       CFIndex len = CFStringGetLength(faceName);
@@ -1363,8 +1363,8 @@ void CTFontInfo::LoadFontFamilyData(const nsACString& aFamilyName) {
 
       // load the cmap data
       FontFaceData fontData;
-      AutoCFRelease<CFDataRef> cmapTable = CTFontCopyTable(
-          fontRef, kCTFontTableCmap, kCTFontTableOptionNoOptions);
+      AutoCFTypeRef<CFDataRef> cmapTable(CTFontCopyTable(
+          fontRef, kCTFontTableCmap, kCTFontTableOptionNoOptions));
 
       if (cmapTable) {
         const uint8_t* cmapData = (const uint8_t*)CFDataGetBytePtr(cmapTable);
@@ -1385,8 +1385,8 @@ void CTFontInfo::LoadFontFamilyData(const nsACString& aFamilyName) {
     }
 
     if (mLoadOtherNames && hasOtherFamilyNames) {
-      AutoCFRelease<CFDataRef> nameTable = CTFontCopyTable(
-          fontRef, kCTFontTableName, kCTFontTableOptionNoOptions);
+      AutoCFTypeRef<CFDataRef> nameTable(CTFontCopyTable(
+          fontRef, kCTFontTableName, kCTFontTableOptionNoOptions));
 
       if (nameTable) {
         const char* nameData = (const char*)CFDataGetBytePtr(nameTable);
@@ -1432,15 +1432,15 @@ gfxFontEntry* CoreTextFontList::CreateFontEntry(
 void CoreTextFontList::AddFaceInitData(
     CTFontDescriptorRef aFontDesc, nsTArray<fontlist::Face::InitData>& aFaces,
     bool aLoadCmaps) {
-  AutoCFRelease<CFStringRef> psname =
+  AutoCFTypeRef<CFStringRef> psname(
       (CFStringRef)CTFontDescriptorCopyAttribute(aFontDesc,
-                                                 kCTFontNameAttribute);
-  AutoCFRelease<CFStringRef> facename =
+                                                 kCTFontNameAttribute));
+  AutoCFTypeRef<CFStringRef> facename(
       (CFStringRef)CTFontDescriptorCopyAttribute(aFontDesc,
-                                                 kCTFontStyleNameAttribute);
-  AutoCFRelease<CFDictionaryRef> traitsDict =
+                                                 kCTFontStyleNameAttribute));
+  AutoCFTypeRef<CFDictionaryRef> traitsDict(
       (CFDictionaryRef)CTFontDescriptorCopyAttribute(aFontDesc,
-                                                     kCTFontTraitsAttribute);
+                                                     kCTFontTraitsAttribute));
 
   CFNumberRef weight =
       (CFNumberRef)CFDictionaryGetValue(traitsDict, kCTFontWeightTrait);
@@ -1482,11 +1482,11 @@ void CoreTextFontList::AddFaceInitData(
 
   RefPtr<gfxCharacterMap> charmap;
   if (aLoadCmaps) {
-    AutoCFRelease<CGFontRef> font =
-        CGFontCreateWithFontName(CFStringRef(psname));
+    AutoCFTypeRef<CGFontRef> font(
+        CGFontCreateWithFontName(CFStringRef(psname)));
     if (font) {
       uint32_t kCMAP = TRUETYPE_TAG('c', 'm', 'a', 'p');
-      AutoCFRelease<CFDataRef> data = CGFontCopyTableForTag(font, kCMAP);
+      AutoCFTypeRef<CFDataRef> data(CGFontCopyTableForTag(font, kCMAP));
       if (data) {
         uint32_t offset;
         charmap = new gfxCharacterMap();
@@ -1538,10 +1538,10 @@ void CoreTextFontList::GetFacesInitDataForFamily(
                                       context->mLoadCmaps);
   };
 
-  AutoCFRelease<CTFontDescriptorRef> descriptor =
-      CreateDescriptorForFamily(name, false);
-  AutoCFRelease<CFArrayRef> faces =
-      CTFontDescriptorCreateMatchingFontDescriptors(descriptor, nullptr);
+  AutoCFTypeRef<CTFontDescriptorRef> descriptor(
+      CreateDescriptorForFamily(name, false));
+  AutoCFTypeRef<CFArrayRef> faces(
+      CTFontDescriptorCreateMatchingFontDescriptors(descriptor, nullptr));
 
   if (faces) {
     Context context{aFaces, aLoadCmaps};
@@ -1601,9 +1601,9 @@ void CoreTextFontList::ReadFaceNamesForFamily(
 FontFamily CoreTextFontList::GetDefaultFontForPlatform(
     nsPresContext* aPresContext, const gfxFontStyle* aStyle,
     nsAtom* aLanguage) {
-  AutoCFRelease<CTFontRef> font = CTFontCreateUIFontForLanguage(
-      kCTFontUIFontUser, 0.0, nullptr);  // TODO: language
-  AutoCFRelease<CFStringRef> name = CTFontCopyFamilyName(font);
+  AutoCFTypeRef<CTFontRef> font(CTFontCreateUIFontForLanguage(
+      kCTFontUIFontUser, 0.0, nullptr));  // TODO: language
+  AutoCFTypeRef<CFStringRef> name(CTFontCopyFamilyName(font));
 
   nsAutoString familyName;
   GetStringForCFString(name, familyName);

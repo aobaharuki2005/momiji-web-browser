@@ -24,8 +24,8 @@ description = "UDP sockets with ECN information for the QUIC transport protocol"
 readme = false
 keywords = ["quic"]
 categories = [
-"network-programming",
-"asynchronous",
+    "network-programming",
+    "asynchronous",
 ]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/quinn-rs/quinn"
@@ -35,8 +35,8 @@ all-features = true
 
 [features]
 default = [
-"tracing",
-"log",
+    "tracing",
+    "log",
 ]
 direct-log = ["dep:log"]
 log = ["tracing/log"]
@@ -76,10 +76,10 @@ default-features = false
 [dev-dependencies.tokio]
 version = "1.28.1"
 features = [
-"sync",
-"rt",
-"rt-multi-thread",
-"net",
+    "sync",
+    "rt",
+    "rt-multi-thread",
+    "net",
 ]
 
 [build-dependencies.cfg_aliases]
@@ -94,7 +94,7 @@ version = "1.19"
 [target."cfg(windows)".dependencies.windows-sys]
 version = ">=0.52, <=0.59"
 features = [
-"Win32_Foundation",
-"Win32_System_IO",
-"Win32_Networking_WinSock",
+    "Win32_Foundation",
+    "Win32_System_IO",
+    "Win32_Networking_WinSock",
 ]
