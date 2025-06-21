@@ -155,7 +155,7 @@
   <!-- Shortcut action to open new private tab -->
   <string name="home_screen_shortcut_open_new_private_tab_2">പുതിയ സ്വകാര്യ ടാബ്</string>
   <!-- Shortcut action to open Passwords screen -->
-  <string name="home_screen_shortcut_passwords">രഹസ്യവാക്കുകൾ</string>
+  <string name="home_screen_shortcut_passwords">ഒളിവാക്കുകൾ</string>
   <!--
     Recent Tabs
 
@@ -209,21 +209,21 @@
     Browser menu banner header text for extensions onboarding.
     %s is the name of the app (for example "Firefox").
   -->
-  <string name="browser_menu_extensions_banner_onboarding_header">%s താങ്ങളുടേതാക്കുക</string>
+  <string name="browser_menu_extensions_banner_onboarding_header" moz:removedIn="141" tools:ignore="UnusedResources">%s താങ്ങളുടേതാക്കുക</string>
   <!-- Browser menu banner header text for extensions onboarding when all installed extensions have been disabled. -->
   <string name="browser_menu_disabled_extensions_banner_onboarding_header">നിങ്ങൾ വിപുലീകരണങ്ങൾ സ്ഥാപിച്ചിരിക്കുന്നു, പക്ഷേ പ്രവർത്തനക്ഷമമാക്കിയിട്ടില്ല</string>
   <!--
     Browser menu banner body text for extensions onboarding.
     %s is the name of the app (for example "Firefox").
   -->
-  <string name="browser_menu_extensions_banner_onboarding_body">വിപുലീകരണങ്ങൾ താങ്ങളുടെ തിരയലിനെ സമനിലയിലാക്കുന്നു, %s എങ്ങനെ കാണുകയും പ്രവർത്തിക്കുകയും ചെയ്യുന്നു എന്നതു് മാറ്റുന്നതു് മുതൽ സ്വകാര്യതയും സുരക്ഷയും വർദ്ധിപ്പിക്കുന്നതു് വരെ.</string>
+  <string name="browser_menu_extensions_banner_onboarding_body" moz:removedIn="141" tools:ignore="UnusedResources">വിപുലീകരണങ്ങൾ താങ്ങളുടെ തിരയലിനെ സമനിലയിലാക്കുന്നു, %s എങ്ങനെ കാണുകയും പ്രവർത്തിക്കുകയും ചെയ്യുന്നു എന്നതു് മാറ്റുന്നതു് മുതൽ സ്വകാര്യതയും സുരക്ഷയും വർദ്ധിപ്പിക്കുന്നതു് വരെ.</string>
   <!--
     Browser menu banner body text for extensions onboarding when all installed extensions have been disabled.
     %s is the label of the button that opens the extension manager (for example "Manage extensions").
   -->
-  <string name="browser_menu_disabled_extensions_banner_onboarding_body">വിപുലീകരണങ്ങൾ ഉപയോഗിക്കുന്നതിനു് ക്രമീകരണങ്ങളിൽ അല്ലെങ്കിൽ ചുവടെയുള്ള \"%s\" തിരഞ്ഞെടുത്തു് അതിനു് പ്രവർത്തനക്ഷമമാക്കുക.</string>
+  <string name="browser_menu_disabled_extensions_banner_onboarding_body" moz:removedIn="141" tools:ignore="UnusedResources">വിപുലീകരണങ്ങൾ ഉപയോഗിക്കുന്നതിനു് ക്രമീകരണങ്ങളിൽ അല്ലെങ്കിൽ ചുവടെയുള്ള \"%s\" തിരഞ്ഞെടുത്തു് അതിനു് പ്രവർത്തനക്ഷമമാക്കുക.</string>
   <!-- Browser menu banner link text for learning more about extensions -->
-  <string name="browser_menu_extensions_banner_learn_more">കൂടുതലറിയുക</string>
+  <string name="browser_menu_extensions_banner_learn_more" moz:removedIn="141" tools:ignore="UnusedResources">കൂടുതലറിയുക</string>
   <!-- Browser menu button that opens the extensions manager -->
   <string name="browser_menu_manage_extensions">വിപുലീകരണങ്ങൾ കൈകാര്യം ചെയ്യുക</string>
   <!-- Browser menu group that contains additional settings in collapsed state -->
@@ -231,7 +231,7 @@
   <!-- Browser menu group that contains additional settings in expanded state -->
   <string name="browser_menu_less_settings">കുറച്ചു്</string>
   <!-- Content description (not visible, for screen readers etc.): Section heading for recommended extensions. -->
-  <string name="browser_menu_recommended_section_content_description">ശുപാർശപെട്ട വിപുലീകരണങ്ങൾ</string>
+  <string name="browser_menu_recommended_section_content_description" moz:removedIn="141" tools:ignore="UnusedResources">ശുപാർശപെട്ട വിപുലീകരണങ്ങൾ</string>
   <!--
     Content description (not visible, for screen readers etc.): Label for plus icon used to add extension.
     %1$s is the name of the extension (for example: ClearURLs).
@@ -264,9 +264,9 @@
   <!-- Browser menu toggle that adds a PWA of the site on the device home screen. -->
   <string name="browser_menu_add_app_to_homescreen">പ്രയോഗയന്ത്രാംശത്തിനു് ആമുഖതാളിലേക്കു് ചേർക്കുക</string>
   <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
-  <string name="browser_menu_add_to_homescreen_2">ആമുഖതാളിലേക്കു് ചേർക്കുക…</string>
+  <string name="browser_menu_add_to_homescreen_2" moz:removedIn="141" tools:ignore="UnusedResources">ആമുഖതാളിലേക്കു് ചേർക്കുക…</string>
   <!-- Browser menu toggle that adds a PWA of the site on the device home screen. -->
-  <string name="browser_menu_add_app_to_homescreen_2">പ്രയോഗയന്ത്രാംശത്തിനു് ആമുഖതാളിലേക്കു് ചേർക്കുക…</string>
+  <string name="browser_menu_add_app_to_homescreen_2" moz:removedIn="141" tools:ignore="UnusedResources">പ്രയോഗയന്ത്രാംശത്തിനു് ആമുഖതാളിലേക്കു് ചേർക്കുക…</string>
   <!-- Text for notifying users that Xiaomi devices require additional permissions to add to home screen -->
   <string name="browser_menu_add_to_homescreen_xiaomi">Xiaomi ഉപകരണങ്ങൾക്കു് ആമുഖപ്രതലത്തിലേക്കു് കുറുക്കുവഴികൾ ചേർക്കാൻ കൂടുതൽ അനുമതികൾ വേണ്ടപ്പെടും. ദയവായി താങ്ങളുടെ ക്രമീകരണങ്ങളിൽ നോക്കുക.</string>
   <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
@@ -274,17 +274,17 @@
   <!-- Browser menu button that opens the find in page menu -->
   <string name="browser_menu_find_in_page">താളിൽ കണ്ടെത്തുക</string>
   <!-- Browser menu button that opens the find in page menu -->
-  <string name="browser_menu_find_in_page_2">താളിൽ കണ്ടെത്തുക…</string>
+  <string name="browser_menu_find_in_page_2" moz:removedIn="141" tools:ignore="UnusedResources">താളിൽ കണ്ടെത്തുക…</string>
   <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
   <string name="browser_menu_translations">താളിനു് തർജ്ജമചെയ്യുക</string>
   <!-- Browser menu button that saves the current tab to a collection -->
-  <string name="browser_menu_save_to_collection">ശേഖരത്തിലേക്ക് കരുതിവയ്ക്കുക…</string>
+  <string name="browser_menu_save_to_collection" moz:removedIn="141" tools:ignore="UnusedResources">ശേഖരത്തിലേക്ക് കരുതിവയ്ക്കുക…</string>
   <!-- Browser menu button that saves the current tab to a collection -->
   <string name="browser_menu_save_to_collection_2">ശേഖരത്തിലേക്ക് കരുതിവയ്ക്കുക</string>
   <!-- Browser menu button that open a share menu to share the current site -->
   <string name="browser_menu_share">പങ്കിടുക</string>
   <!-- Browser menu button that open a share menu to share the current site -->
-  <string name="browser_menu_share_2">പങ്കിടുക…</string>
+  <string name="browser_menu_share_2" moz:removedIn="141" tools:ignore="UnusedResources">പങ്കിടുക…</string>
   <!--
     Browser menu button shown in custom tabs that opens the current tab in Fenix
     %1$s is the name of the app (for example "Firefox").
@@ -319,7 +319,9 @@
   <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
   <string name="browser_menu_sign_in">പ്രവേശിക്കൽ ചെയ്യുക</string>
   <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
-  <string name="browser_menu_sign_in_caption">രഹസ്യവാക്കുകളും ടാബുകളും എന്നിവയും മറ്റും സമന്വയിപ്പിക്കുക</string>
+  <string name="browser_menu_sign_in_caption" moz:removedIn="141" tools:ignore="UnusedResources">ഒളിവാക്കുകളും ടാബുകളും എന്നിവയും മറ്റും സമന്വയിപ്പിക്കുക</string>
+  <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
+  <string name="browser_menu_sign_in_caption_2">അടയാളക്കുറിപ്പുകളും ഒളിവാക്കുകളും ടാബുകളും എന്നിവയും മറ്റും സമന്വയിപ്പിക്കുക</string>
   <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
   <string name="browser_menu_sign_back_in_to_sync">സമന്വയിപ്പിക്കാനായി പ്രവേശിക്കൽ ചെയ്യുക</string>
   <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
@@ -327,20 +329,20 @@
   <!-- Browser menu label that creates a private tab -->
   <string name="browser_menu_new_private_tab">പുതിയ സ്വകാര്യ ടാബ്</string>
   <!-- Browser menu label that navigates to the Password screen -->
-  <string name="browser_menu_passwords">രഹസ്യവാക്കുകൾ</string>
+  <string name="browser_menu_passwords">ഒളിവാക്കുകൾ</string>
   <!--
     Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
     %1$s is the name of the app (for example "Firefox").
   -->
   <string name="browser_menu_new_in_firefox">%1$s -ൽ പുതിയതു്</string>
   <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
-  <string name="browser_menu_switch_to_desktop_site">ഉപരിഫലക സൈറ്റിലേക്ക് മാറുക</string>
+  <string name="browser_menu_switch_to_desktop_site" moz:removedIn="141" tools:ignore="UnusedResources">ഉപരിഫലക സൈറ്റിലേക്ക് മാറുക</string>
   <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
   <string name="browser_menu_switch_to_mobile_site">മൊപൈൽ സൈറ്റിലേക്കു് മാറുക</string>
   <!-- Browser menu label that navigates to the page tools sub-menu -->
-  <string name="browser_menu_tools">ഉപകരണങ്ങള്‍</string>
+  <string name="browser_menu_tools" moz:removedIn="141" tools:ignore="UnusedResources">ഉപകരണങ്ങള്‍</string>
   <!-- Content description (not visible, for screen readers etc.): Back button for all menu redesign sub-menu -->
-  <string name="browser_menu_back_button_content_description">പ്രധാന കുറിപ്പടിക്കട്ടയിലേക്കു് മടങ്ങുക</string>
+  <string name="browser_menu_back_button_content_description" moz:removedIn="141" tools:ignore="UnusedResources">പ്രധാന കുറിപ്പടിക്കട്ടയിലേക്കു് മടങ്ങുക</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
   <string name="browser_main_menu_handlebar_content_description">പ്രധാന കുറിപ്പടി താളു് അടയ്ക്കുക</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
@@ -356,20 +358,20 @@
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar custom tab menu. -->
   <string name="browser_custom_tab_menu_handlebar_content_description">ഇഷ്ടാനുസൃത ടാബുകുറിപ്പടി താളു് അടയ്ക്കുക</string>
   <!-- Browser menu description that describes the various tools related menu items inside of the tools sub-menu when the "Report broken site" feature is available -->
-  <string name="browser_menu_tools_description_with_translate_with_report_site_2">വായന കാഴ്ച, വിവർത്തനം, തകർന്ന വെബ്സ്ഥാനത്തിനെ കുറിച്ചു് വിവരം അറിയിക്കുക,അച്ചടിപ്പു്, പങ്കിയൽ, പ്രയോഗം തുറക്കുക</string>
+  <string name="browser_menu_tools_description_with_translate_with_report_site_2" moz:removedIn="141" tools:ignore="UnusedResources">വായന കാഴ്ച, വിവർത്തനം, തകർന്ന വെബ്സ്ഥാനത്തിനെ കുറിച്ചു് വിവരം അറിയിക്കുക,അച്ചടിപ്പു്, പങ്കിയൽ, പ്രയോഗം തുറക്കുക</string>
   <!-- Browser menu description that describes the various tools related menu items inside of the tools sub-menu -->
-  <string name="browser_menu_tools_description_with_translate_without_report_site">വായന കാഴ്ച, വിവർത്തനം, അച്ചടിപ്പു്, പങ്കിയൽ, പ്രയോഗം തുറക്കുക</string>
+  <string name="browser_menu_tools_description_with_translate_without_report_site" moz:removedIn="141" tools:ignore="UnusedResources">വായന കാഴ്ച, വിവർത്തനം, അച്ചടിപ്പു്, പങ്കിയൽ, പ്രയോഗം തുറക്കുക</string>
   <!-- Browser menu description that describes the various tools related menu items inside of the tools sub-menu when the "Report broken site" feature is available -->
-  <string name="browser_menu_tools_description_with_report_site_2">വായന കാഴ്ച, തകർന്ന വെബ്സ്ഥാനത്തിനെ കുറിച്ചു് വിവരം അറിയിക്കുക,അച്ചടിപ്പു്, പങ്കിയൽ, പ്രയോഗം തുറക്കുക</string>
+  <string name="browser_menu_tools_description_with_report_site_2" moz:removedIn="141" tools:ignore="UnusedResources">വായന കാഴ്ച, തകർന്ന വെബ്സ്ഥാനത്തിനെ കുറിച്ചു് വിവരം അറിയിക്കുക,അച്ചടിപ്പു്, പങ്കിയൽ, പ്രയോഗം തുറക്കുക</string>
   <!-- Browser menu description that describes the various tools related menu items inside of the tools sub-menu -->
-  <string name="browser_menu_tools_description_without_report_site">വായന കാഴ്ച, അച്ചടിപ്പു്, പങ്കിയൽ, പ്രയോഗം തുറക്കുക</string>
+  <string name="browser_menu_tools_description_without_report_site" moz:removedIn="141" tools:ignore="UnusedResources">വായന കാഴ്ച, അച്ചടിപ്പു്, പങ്കിയൽ, പ്രയോഗം തുറക്കുക</string>
   <!--
     Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
     bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen
   -->
-  <string name="browser_menu_save">കരുതിവയ്ക്കുക</string>
+  <string name="browser_menu_save" moz:removedIn="141" tools:ignore="UnusedResources">കരുതിവയ്ക്കുക</string>
   <!-- Browser menu description that describes the various save related menu items inside of the save sub-menu -->
-  <string name="browser_menu_save_description">അടയാളക്കുറിപ്പുവയ്ക്കുക, കുറുക്കുവഴി, ആമുഖം, ശേഖരം, പീ.ഡീ.എഫ.</string>
+  <string name="browser_menu_save_description" moz:removedIn="141" tools:ignore="UnusedResources">അടയാളക്കുറിപ്പുവയ്ക്കുക, കുറുക്കുവഴി, ആമുഖം, ശേഖരം, പീ.ഡീ.എഫ.</string>
   <!-- Browser menu label that bookmarks the currently visited page -->
   <string name="browser_menu_bookmark_this_page" moz:removedIn="141" tools:ignore="UnusedResources">ഈ താള്‍ അടയാളപ്പെടുത്തുക</string>
   <!-- Browser menu label that bookmarks the currently visited page -->
@@ -377,17 +379,23 @@
   <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
   <string name="browser_menu_edit_bookmark">അടയാളക്കുറിപ്പ് തിരുത്തുക</string>
   <!-- Browser menu label that the saves the currently visited page as a PDF -->
-  <string name="browser_menu_save_as_pdf">PDF ആയി കരുതിവയ്ക്കുക…</string>
+  <string name="browser_menu_save_as_pdf" moz:removedIn="141" tools:ignore="UnusedResources">PDF ആയി കരുതിവയ്ക്കുക…</string>
+  <!-- Browser menu label that the saves the currently visited page as a PDF -->
+  <string name="browser_menu_save_as_pdf_2">പീ.ഡീ.എഫ ആയി കരുതിവയ്ക്കുക</string>
   <!-- Browser menu label for turning ON reader view of the current visited page -->
-  <string name="browser_menu_turn_on_reader_view">വായനാകാഴ്ച തുടങ്ങുക</string>
+  <string name="browser_menu_turn_on_reader_view" moz:removedIn="141" tools:ignore="UnusedResources">വായനാകാഴ്ച തുടങ്ങുക</string>
   <!-- Browser menu label for turning OFF reader view of the current visited page -->
-  <string name="browser_menu_turn_off_reader_view">വായനാകാഴ്ച അണക്കുക</string>
+  <string name="browser_menu_turn_off_reader_view" moz:removedIn="141" tools:ignore="UnusedResources">വായനാകാഴ്ച അണക്കുക</string>
   <!-- Browser menu button that reopens a private tab as a regular tab -->
-  <string name="browser_menu_open_in_normal_tab">സ്വകാര്യമല്ലാത്ത ടാബിലേക്കു് നീക്കുക</string>
+  <string name="browser_menu_open_in_normal_tab" moz:removedIn="141" tools:ignore="UnusedResources">സ്വകാര്യമല്ലാത്ത ടാബിലേക്കു് നീക്കുക</string>
   <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
-  <string name="browser_menu_translate_page">ഈ താളിന്റെ വിവർത്തനം ചെയ്യുക…</string>
+  <string name="browser_menu_translate_page" moz:removedIn="141" tools:ignore="UnusedResources">ഈ താളിന്റെ വിവർത്തനം ചെയ്യുക…</string>
+  <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
+  <string name="browser_menu_translate_page_2">താളിന്റെ വിവൎത്തനം ചെയ്യുക</string>
   <!-- Browser menu label for navigating to the Web Compat Reporter feature, which provides users the ability to send bug reports for broken sites. -->
   <string name="browser_menu_webcompat_reporter">പൊട്ടിയ സൈറ്റിന്റെ വിവരം അറിയിക്കുക…</string>
+  <!-- Browser menu label for navigating to the Web Compat Reporter feature, which provides users the ability to send bug reports for broken sites. -->
+  <string name="browser_menu_webcompat_reporter_2">തകൎന്ന സൈറ്റിന്റെ വിവരം അറിയിക്കുക</string>
   <!--
     Browser menu label that is displayed when the current page has been translated by the translation feature.
     %1$s is the name of the language that page was translated to (e.g. English).
@@ -396,12 +404,23 @@
   <!-- Browser menu label that is displayed when the current page has been translated by the translation feature. -->
   <string name="browser_menu_translated">വിവൎത്തിക്കപ്പെട്ട</string>
   <!-- Browser menu label for the print feature -->
-  <string name="browser_menu_print">അച്ചടിപ്പിക്കുക…</string>
+  <string name="browser_menu_print" moz:removedIn="141" tools:ignore="UnusedResources">അച്ചടിപ്പിക്കുക…</string>
+  <!-- Browser menu label for the print feature -->
+  <string name="browser_menu_print_2">അച്ചടിപ്പിക്കുക</string>
   <!--
     Browser menu label for the Delete browsing data on quit feature.
     %1$s is the name of the app (for example "Firefox").
   -->
   <string name="browser_menu_delete_browsing_data_on_quit">%1$s-ൽ നിന്നു് പുറത്തുകടക്കുക</string>
+  <!--
+    Content description for a banner within the menu which prompt the user to make this app their default browser.
+    %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="browser_menu_default_banner_title">%1$s-നെ തനിമട്ടാക്കുക</string>
+  <!-- Label text within the set as default banner -->
+  <string name="browser_menu_default_banner_subtitle">ഞൊടികൾ മാത്രമെടുക്കും. എപ്പോഴെങ്കിലും മാറ്റാം.</string>
+  <!-- Content description for the button that dismisses the set as default banner in the menu -->
+  <string name="browser_menu_default_banner_dismiss">കളയുക</string>
   <!--
     Menu "contextual feature recommendation" (CFR)
 
@@ -520,7 +539,7 @@
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">കൂടുതൽ തെരഞ്ഞെടുപ്പുകൾതോടു് സുരക്ഷിതമായി തിരയുക</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_3">ഞങ്ങളുടെ ലാഭേച്ഛയില്ലാത്ത അന്വേഷിയന്ത്രം താങ്ങളെ വെബിലുടനീളം രഹസ്യമായി പിന്തുടരുന്നതിൽ നിന്ന് കമ്പനികളെ തടയാൻ സഹായിക്കുന്നു.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_3">ഞങ്ങളുടെ ലാഭേച്ഛയില്ലാത്ത അന്വേഷിയന്ത്രം താങ്ങളെ വെബിലുടനീളം ഒളിമായി പിന്തുടരുന്നതിൽ നിന്ന് കമ്പനികളെ തടയാൻ സഹായിക്കുന്നു.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">ലാഭേച്ഛയില്ലാത്ത ഒരു അന്വേഷിയന്ത്രം തിരഞ്ഞെടുത്ത് 100 ദശലക്ഷത്തിലധികം ആൾക്കാർ അവരുടെ സ്വകാര്യത സംരക്ഷിക്കുന്നു.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
@@ -535,7 +554,7 @@
     Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
     Note: The word "Firefox" should NOT be translated
   -->
-  <string name="juno_onboarding_sign_in_description_3" tools:ignore="BrandUsage">താങ്ങൾ സമന്വയിപ്പിച്ചിരിക്കുമ്പോഴു് ഫയർഫോക്സു് താങ്ങളുടെ രഹസ്യവാക്കുകളും അടയാളക്കുറിപ്പുകളും മറ്റും രൂപമാറ്റി വയ്ക്കാരുണ്ടു്.</string>
+  <string name="juno_onboarding_sign_in_description_3" tools:ignore="BrandUsage">താങ്ങൾ സമന്വയിപ്പിച്ചിരിക്കുമ്പോഴു് ഫയർഫോക്സു് താങ്ങളുടെ ഒളിവാക്കുകളും അടയാളക്കുറിപ്പുകളും മറ്റും രൂപമാറ്റി വയ്ക്കാരുണ്ടു്.</string>
   <!-- Text for the button to sign in to sync on the device -->
   <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">പ്രവേശിക്കുക</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -827,7 +846,7 @@
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">ഇച്ഛാനുസൃതമാക്കുക</string>
   <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2">ടാബുകളും അടയാളക്കുറിപ്പുകളും രഹസ്യവാക്കുകളും മറ്റും സമന്വയിപ്പിക്കാൻ പ്രവേശിക്കുക.</string>
+  <string name="preferences_sign_in_description_2">ടാബുകളും അടയാളക്കുറിപ്പുകളും ഒളിവാക്കുകളും മറ്റും സമന്വയിപ്പിക്കാൻ പ്രവേശിക്കുക.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">മോസില്ല അക്കൗണ്ട്</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1051,7 +1070,7 @@
   -->
   <string name="preferences_manage_account">അക്കൗണ്ട് കൈകാര്യം ചെയ്യുക</string>
   <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
-  <string name="preferences_manage_account_summary">രഹസ്യവാക്കു് മാറ്റുക, ദത്തശേഖരണം നിയന്ത്രിക്കുക, അല്ലെങ്കിൽ താങ്ങളുടെ അക്കൗണ്ടു് മായ്ക്കുക</string>
+  <string name="preferences_manage_account_summary">ഒളിവാക്കു് മാറ്റുക, ദത്തശേഖരണം നിയന്ത്രിക്കുക, അല്ലെങ്കിൽ താങ്ങളുടെ അക്കൗണ്ടു് മായ്ക്കുക</string>
   <!-- Preference for triggering sync -->
   <string name="preferences_sync_now">ഇപ്പോൾ സമന്വയിപ്പിക്കുക</string>
   <!-- Preference category for sync -->
@@ -1061,7 +1080,7 @@
   <!-- Preference for syncing bookmarks -->
   <string name="preferences_sync_bookmarks">അടയാളക്കുറിപ്പുകള്‍</string>
   <!-- Preference for syncing passwords -->
-  <string name="preferences_sync_logins_2">രഹസ്യവാക്കുകൾ</string>
+  <string name="preferences_sync_logins_2">ഒളിവാക്കുകൾ</string>
   <!-- Preference for syncing tabs -->
   <string name="preferences_sync_tabs_2">തുറന്നിരിക്കുന്ന ടാബുകൾ</string>
   <!-- Preference for signing out -->
@@ -1479,7 +1498,16 @@
   <string name="download_navigate_up_description" moz:removedIn="139" tools:ignore="UnusedResources">മുകളിലേക്ക് ചെല്ലുക</string>
   <!-- Content description for the toolbar back button while searching the downloads -->
   <string name="download_close_search_description">തിരിച്ചുപ്പോയിയിട്ടു് തിരയൽ അടയ്ക്കുക</string>
-  <!-- Content description for the search bar clear text button on the downloads screen -->
+  <!--
+    Content description for the search bar clear text button on the downloads screen
+
+    Content description for pause action button on the downloads screen
+  -->
+  <string name="download_pause_action">തല്ക്കാലത്തേക്കു് നിൎത്തുക</string>
+  <!-- Content description for resume action button on the downloads screen -->
+  <string name="download_resume_action">തുടരുക</string>
+  <!-- Content description for retry download action button on the downloads screen -->
+  <string name="download_retry_action">വീണ്ടും ശ്രമിയ്ക്കുക</string>
   <string name="download_clear_search_description">വെടിപ്പാക്കുക</string>
   <!-- Text for the button to share the download URL -->
   <string name="download_share_url">കണ്ണി പങ്കിടുക</string>
@@ -2404,9 +2432,9 @@
   <!-- Describes the add to homescreen functionality -->
   <string name="add_to_homescreen_description_2">പെട്ടെന്ന് ലഭ്യമാവാനും ഒരു ആപ്പ്-പോലുള്ള അനുഭവത്തോടെ വേഗത്തിൽ പരതുകാൻ ഈ വെബ്സ്ഥാനത്തിനു് താങ്കളുടെ ഫോണിന്റെ പൂമുഖത്തേക്ക് എളുപ്പത്തിൽ ചേർക്കാവുന്നതാണ്.</string>
   <!-- Preference for managing the settings for logins and passwords in Fenix -->
-  <string name="preferences_passwords_logins_and_passwords_2">രഹസ്യവാക്കുകൾ</string>
+  <string name="preferences_passwords_logins_and_passwords_2">ഒളിവാക്കുകൾ</string>
   <!-- Preference for managing the saving of logins and passwords in Fenix -->
-  <string name="preferences_passwords_save_logins_2">കരുതിവച്ച രഹസ്യവാക്കുകൾ</string>
+  <string name="preferences_passwords_save_logins_2">കരുതിവച്ച ഒളിവാക്കുകൾ</string>
   <!-- Preference option for asking to save passwords in Fenix -->
   <string name="preferences_passwords_save_logins_ask_to_save">സൂക്ഷിക്കാൻ ആവശ്യപ്പെടുക</string>
   <!-- Preference option for never saving passwords in Fenix -->
@@ -2414,33 +2442,33 @@
   <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
   <string name="preferences_passwords_autofill2">%1$s-ൽ തന്നെതാന്നെ പൂരിപ്പിക്കുക</string>
   <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
-  <string name="preferences_passwords_autofill_description">%1$s ഉപയോഗിക്കുമ്പോഴു് രഹസ്യവാക്കുകളും ഉപയോക്തൃപ്പേരുകളും പൂരിപ്പിച്ചിട്ടു് കരുതിവയ്ക്കുക.</string>
+  <string name="preferences_passwords_autofill_description">%1$s ഉപയോഗിക്കുമ്പോഴു് ഒളിവാക്കുകളും ഉപയോക്തൃപ്പേരുകളും പൂരിപ്പിച്ചിട്ടു് കരുതിവയ്ക്കുക.</string>
   <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
   <string name="preferences_android_autofill">മറ്റു് പ്രയോഗങ്ങളിൽ തന്നെതാനെ പൂരിപ്പിക്കുക</string>
   <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
-  <string name="preferences_android_autofill_description">താങ്ങളുടെ ഉപകരണത്തിലെ മറ്റ് പ്രയോഗങ്ങളിൽ ഉപയോക്തൃനാമങ്ങളും രഹസ്യവാക്കുകളും പൂരിപ്പിക്കുക.</string>
+  <string name="preferences_android_autofill_description">താങ്ങളുടെ ഉപകരണത്തിലെ മറ്റ് പ്രയോഗങ്ങളിൽ ഉപയോക്തൃനാമങ്ങളും ഒളിവാക്കുകളും പൂരിപ്പിക്കുക.</string>
   <!-- Preference option for adding a password -->
-  <string name="preferences_logins_add_login_2">രഹസ്യവാക്കു് ചേർക്കുക</string>
+  <string name="preferences_logins_add_login_2">ഒളിവാക്കു് ചേർക്കുക</string>
   <!-- Preference for syncing saved passwords in Fenix -->
-  <string name="preferences_passwords_sync_logins_2">രഹസ്യവാക്കുകൾ സമന്വയിപ്പിക്കുക</string>
+  <string name="preferences_passwords_sync_logins_2">ഒളിവാക്കുകൾ സമന്വയിപ്പിക്കുക</string>
   <!-- Preference for syncing saved passwords in Fenix, when not signed in -->
-  <string name="preferences_passwords_sync_logins_across_devices_2">ഉപകരണങ്ങൾ കുറുകെ രഹസ്യവാക്കുകൾ സമന്വയിപ്പിക്കുക</string>
+  <string name="preferences_passwords_sync_logins_across_devices_2">ഉപകരണങ്ങൾ കുറുകെ ഒളിവാക്കുകൾ സമന്വയിപ്പിക്കുക</string>
   <!-- Preference to access list of saved passwords -->
-  <string name="preferences_passwords_saved_logins_2">കരുതിവച്ച രഹസ്യവാക്കുകൾ</string>
+  <string name="preferences_passwords_saved_logins_2">കരുതിവച്ച ഒളിവാക്കുകൾ</string>
   <!-- Description of empty list of saved passwords. %s is the name of the app (for example "Firefox"). -->
-  <string name="preferences_passwords_saved_logins_description_empty_text_2">താങ്ങൾ കരുതിവയ്ക്കുന്ന അല്ലെങ്കിൽ %s-ലേക്ക് സമന്വയിപ്പിക്കുന്ന രഹസ്യവാക്കുകൾ ഇവിടെ പട്ടികപ്പെടും. താങ്ങൾ കരുതിവയ്ക്കുന്ന എല്ലാ രഹസ്യവാക്കുകളും രൂപമാറ്റം ചെയ്തിട്ടേ വയ്ക്കും.</string>
+  <string name="preferences_passwords_saved_logins_description_empty_text_2">താങ്ങൾ കരുതിവയ്ക്കുന്ന അല്ലെങ്കിൽ %s-ലേക്ക് സമന്വയിപ്പിക്കുന്ന ഒളിവാക്കുകൾ ഇവിടെ പട്ടികപ്പെടും. താങ്ങൾ കരുതിവയ്ക്കുന്ന എല്ലാ ഒളിവാക്കുകളും രൂപമാറ്റം ചെയ്തിട്ടേ വയ്ക്കും.</string>
   <!-- Clickable text for opening an external link for more information about Sync. -->
   <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">സമന്വയത്തെപറ്റി കൂടുതലറിയുക</string>
   <!-- Preference to access list of login exceptions that we never save logins for -->
   <string name="preferences_passwords_exceptions">വിട്ടുവീഴ്ചകള്‍</string>
   <!-- Empty description of list of login exceptions that we never save passwords for. %s is the name of the app (for example "Firefox"). -->
-  <string name="preferences_passwords_exceptions_description_empty_2">ഇവിടെ കൊടുത്തിരിക്കുന്ന സൈറ്റുകളുടെ രഹസ്യവാക്കുകൾ %s കരുതിവയ്ക്കത്തില്ല.</string>
+  <string name="preferences_passwords_exceptions_description_empty_2">ഇവിടെ കൊടുത്തിരിക്കുന്ന സൈറ്റുകളുടെ ഒളിവാക്കുകൾ %s കരുതിവയ്ക്കത്തില്ല.</string>
   <!-- Description of list of login exceptions that we never save passwords for. %s is the name of the app (for example "Firefox"). -->
-  <string name="preferences_passwords_exceptions_description_2">ഇവിടെ കൊടുത്തിരിക്കുന്ന സൈറ്റുകളുടെ രഹസ്യവാക്കുകൾ %s കരുതിവയ്ക്കത്തില്ല.</string>
+  <string name="preferences_passwords_exceptions_description_2">ഇവിടെ കൊടുത്തിരിക്കുന്ന സൈറ്റുകളുടെ ഒളിവാക്കുകൾ %s കരുതിവയ്ക്കത്തില്ല.</string>
   <!-- Text on button to remove all saved login exceptions -->
   <string name="preferences_passwords_exceptions_remove_all">എല്ലാ ഒഴിവാക്കലുകളും മായ്ക്കുക</string>
   <!-- Hint for search box in passwords list -->
-  <string name="preferences_passwords_saved_logins_search_2">രഹസ്യവാക്കുകൾ തിരയുക</string>
+  <string name="preferences_passwords_saved_logins_search_2">ഒളിവാക്കുകൾ തിരയുക</string>
   <!-- Content description for the logins navigation bar back button -->
   <string name="logins_navigate_back_button_content_description">തിരിച്ചു്</string>
   <!-- The header for the site that a login is for -->
@@ -2448,15 +2476,15 @@
   <!-- The header for the username for a login -->
   <string name="preferences_passwords_saved_logins_username">ഉപയോക്തൃനാമം</string>
   <!-- The header for the password for a login -->
-  <string name="preferences_passwords_saved_logins_password">രഹസ്യവാക്ക്</string>
+  <string name="preferences_passwords_saved_logins_password">ഒളിവാക്ക്</string>
   <!-- Shown in snackbar to tell user that the password has been copied -->
-  <string name="logins_password_copied">പകർത്തൽപെട്ടിയിലോട്ടു് രഹസ്യവാക്ക് പകര്‍ത്തി</string>
+  <string name="logins_password_copied">പകർത്തൽപെട്ടിയിലോട്ടു് ഒളിവാക്ക് പകര്‍ത്തി</string>
   <!-- Shown in snackbar to tell user that the username has been copied -->
   <string name="logins_username_copied">ഉപയോക്തൃനാമം പകർത്തൽപെട്ടിയിലോട്ടു് പകർത്തി</string>
   <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins -->
-  <string name="saved_logins_copy_password">രഹസ്യവാക്ക് പകര്‍ത്തുക</string>
+  <string name="saved_logins_copy_password">ഒളിവാക്ക് പകര്‍ത്തുക</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login -->
-  <string name="saved_logins_clear_password">രഹസ്യവാക്കു് മായ്ക്കുക</string>
+  <string name="saved_logins_clear_password">ഒളിവാക്കു് മായ്ക്കുക</string>
   <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
   <string name="saved_login_copy_username">ഉപയോക്തൃനാമം പകര്‍ത്തുക</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
@@ -2466,13 +2494,13 @@
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">അന്വേഷിയിൽ വെബ്സ്ഥാനം തുറക്കുക</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
-  <string name="saved_login_reveal_password">രഹസ്യവാക്ക് കാണിക്കുക</string>
+  <string name="saved_login_reveal_password">ഒളിവാക്ക് കാണിക്കുക</string>
   <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
-  <string name="saved_login_hide_password">രഹസ്യവാക്ക് മറയ്ക്കുക</string>
+  <string name="saved_login_hide_password">ഒളിവാക്ക് മറയ്ക്കുക</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-  <string name="logins_biometric_prompt_message_2">കരുതിവച്ച രഹസ്യവാക്കുകൾ കാണാൻ പൂട്ടുതുറക്കുക</string>
+  <string name="logins_biometric_prompt_message_2">കരുതിവച്ച ഒളിവാക്കുകൾ കാണാൻ പൂട്ടുതുറക്കുക</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
-  <string name="logins_warning_dialog_title_2">താങ്ങളുടെ കരുതിവച്ച രഹസ്യവാക്കുകൾ സുരക്ഷിതമാക്കുക</string>
+  <string name="logins_warning_dialog_title_2">താങ്ങളുടെ കരുതിവച്ച ഒളിവാക്കുകൾ സുരക്ഷിതമാക്കുക</string>
   <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_later">പിന്നീട്</string>
   <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -2488,7 +2516,7 @@
   <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
   <string name="saved_logins_sort_strategy_last_used">അവസാനം ഉപയോഗിച്ചത്</string>
   <!-- Content description (not visible, for screen readers etc.) -->
-  <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">രഹസ്യവാക്കു് കുറിപ്പടി അടുക്കുക</string>
+  <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">ഒളിവാക്കു് കുറിപ്പടി അടുക്കുക</string>
   <!--
     Autofill
 
@@ -2558,7 +2586,7 @@
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="credit_cards_warning_dialog_title_2">താങ്ങളുടെ കരുതിവച്ച പണമടക്കൽ മുറകളെ സുരക്ഷിതമാക്കുക</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
-  <string name="credit_cards_warning_dialog_message_3">താങ്ങളുടെ കരുതിവച്ച പണമടക്കൽമുറകളെ മറ്റാരും ഉപയോഗിക്കാതിരിക്കാൻ ഒരു ഉപകരണപ്പൂട്ടക്രമം, പിൻ അല്ലെങ്കിൽ രഹസ്യവാക്കു് സജ്ജമാക്കുക.</string>
+  <string name="credit_cards_warning_dialog_message_3">താങ്ങളുടെ കരുതിവച്ച പണമടക്കൽമുറകളെ മറ്റാരും ഉപയോഗിക്കാതിരിക്കാൻ ഒരു ഉപകരണപ്പൂട്ടക്രമം, പിൻ അല്ലെങ്കിൽ ഒളിവാക്കു് സജ്ജമാക്കുക.</string>
   <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
   <string name="credit_cards_warning_dialog_set_up_now">ഇപ്പോൾ സജ്ജമാക്കുക</string>
   <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -2689,27 +2717,27 @@
   <!-- Login overflow menu edit button -->
   <string name="login_menu_edit_button">തിരുത്തുക</string>
   <!-- Message in delete confirmation dialog for password -->
-  <string name="login_deletion_confirmation_2">താങ്ങൾക്കു് ഉറപ്പായിട്ടു് ഈ രഹസ്യവാക്കു് മായ്ക്കണോ?</string>
+  <string name="login_deletion_confirmation_2">താങ്ങൾക്കു് ഉറപ്പായിട്ടു് ഈ ഒളിവാക്കു് മായ്ക്കണോ?</string>
   <!-- Positive action of a dialog asking to delete -->
   <string name="dialog_delete_positive">നീക്കം ചെയ്യുക</string>
   <!-- Negative action of a dialog asking to delete login -->
   <string name="dialog_delete_negative">റദ്ദാക്കുക</string>
   <!-- The saved password options menu description. -->
-  <string name="login_options_menu_2">രഹസ്യവാക്കു് സാധ്യതകൾ</string>
+  <string name="login_options_menu_2">ഒളിവാക്കു് സാധ്യതകൾ</string>
   <!-- The editable text field for a website address. -->
   <string name="saved_login_hostname_description_3">വെബ്സ്ഥാന വിലാസത്തിനുള്ള ഒരു തിരുത്താനാകുന്ന പാഠതലം.</string>
   <!-- The editable text field for a username. -->
   <string name="saved_login_username_description_3">ഉപയോക്തൃപ്പേരിനുള്ള ഒരു തിരുത്താനാകുന്ന പാഠതലം.</string>
   <!-- The editable text field for a login's password. -->
-  <string name="saved_login_password_description_2">രഹസ്യവാക്കിനുള്ള ഒരു തിരുത്താനാകുന്ന പാഠതലം.</string>
+  <string name="saved_login_password_description_2">ഒളിവാക്കിനുള്ള ഒരു തിരുത്താനാകുന്ന പാഠതലം.</string>
   <!-- The button description to save changes to an edited password. -->
   <string name="save_changes_to_login_2">മാറ്റങ്ങൾ കരുതിവയ്ക്കുക.</string>
   <!-- The page title for editing a saved password. -->
-  <string name="edit_2">രഹസ്യവാക്കു് തിരുത്തുക</string>
+  <string name="edit_2">ഒളിവാക്കു് തിരുത്തുക</string>
   <!-- The page title for adding new password. -->
-  <string name="add_login_2">രഹസ്യവാക്കു് ചേർക്കുക</string>
+  <string name="add_login_2">ഒളിവാക്കു് ചേർക്കുക</string>
   <!-- Error text displayed underneath the password field when it is in an error case. -->
-  <string name="saved_login_password_required_2">രഹസ്യവാക്കു് ഇടുക</string>
+  <string name="saved_login_password_required_2">ഒളിവാക്കു് ഇടുക</string>
   <!-- The error message in add login view when username field is blank. -->
   <string name="saved_login_username_required_2">ഉപയോക്തൃപ്പേരു് ഇടുക</string>
   <!-- The error message in add login view when hostname field is blank. -->
@@ -3513,4 +3541,12 @@
     Title for a prompt asking the user about their experience using the app. %1$s is the name of the app (for example "Firefox").
   -->
   <string name="review_prompt_pre_prompt_header">%1$s-നെ പറ്റി താങ്ങൾക്കു് എന്തഭിപ്രായമുണ്ടു് ?</string>
+  <!-- Label for a button negatively rating the user's experience with the app -->
+  <string name="review_prompt_negative_button">ഇതിൽ എന്തോ കുഴപ്പവുണ്ടു്</string>
+  <!-- Label for a button positively rating the user's experience with the app -->
+  <string name="review_prompt_positive_button">ഇതു അടിപൊളിയാണു്</string>
+  <!-- Title for a prompt asking the user send us feedback. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="review_prompt_feedback_header">താങ്ങൾക്കു് കുഴപ്പങ്ങൾ നേരിടുന്നതിലു് ഞങ്ങളെ പൊറുക്കണം. %1$s എങ്ങനെ മെച്ചപ്പെടുത്താമെന്നു് ഞങ്ങളെ അറിയിച്ചാൽ വളരെ നന്ദി.</string>
+  <!-- Label for a button opening a feedback forum -->
+  <string name="review_prompt_feedback_button">പ്രതികരണം നൽകുക</string>
 </resources>
