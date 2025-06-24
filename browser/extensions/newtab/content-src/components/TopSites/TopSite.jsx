@@ -366,6 +366,9 @@ export class TopSiteLink extends React.PureComponent {
             title={title}
             onFocus={this.props.onFocus}
           >
+            {shortcutsRefresh && link.isPinned && (
+              <div className="icon icon-pin-small" />
+            )}
             <div className="tile" aria-hidden={true}>
               <div
                 className={
@@ -385,9 +388,6 @@ export class TopSiteLink extends React.PureComponent {
                   />
                 )}
               </div>
-              {shortcutsRefresh && link.isPinned && (
-                <div className="icon icon-pin-small" />
-              )}
               {!shortcutsRefresh && link.searchTopSite && (
                 <div className="top-site-icon search-topsite" />
               )}
@@ -952,7 +952,7 @@ export class _TopSiteList extends React.PureComponent {
       // tile for the about:home startup cache.
       if (
         !link ||
-        (props.App.isForStartupCache.App && isSponsored(link)) ||
+        (props.App.isForStartupCache.TopSites && isSponsored(link)) ||
         topSites[i]?.isAddButton
       ) {
         if (link) {

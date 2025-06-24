@@ -89,6 +89,7 @@ if CONFIG["MOZ_APPLEMEDIA"]:
     EXPORTS += [
         "apple/AppleDecoderModule.h",
         "apple/AppleEncoderModule.h",
+        "apple/AppleUtils.h",
     ]
     UNIFIED_SOURCES += [
         "apple/AppleATDecoder.cpp",

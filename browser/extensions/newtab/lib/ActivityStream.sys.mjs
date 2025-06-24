@@ -40,6 +40,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   TelemetryFeed: "resource://newtab/lib/TelemetryFeed.sys.mjs",
   TopSitesFeed: "resource://newtab/lib/TopSitesFeed.sys.mjs",
   TopStoriesFeed: "resource://newtab/lib/TopStoriesFeed.sys.mjs",
+  TrendingSearchFeed: "resource://newtab/lib/TrendingSearchFeed.sys.mjs",
   WallpaperFeed: "resource://newtab/lib/WallpaperFeed.sys.mjs",
   WeatherFeed: "resource://newtab/lib/WeatherFeed.sys.mjs",
 });
@@ -92,6 +93,8 @@ const REGION_SECTIONS_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.sections.region-content-config";
 const LOCALE_SECTIONS_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.sections.locale-content-config";
+
+const BROWSER_URLBAR_PLACEHOLDERNAME = "browser.urlbar.placeholderName";
 
 export function csvPrefHasValue(stringPrefName, value) {
   if (typeof stringPrefName !== "string") {
@@ -193,7 +196,7 @@ export const PREFS_CONFIG = new Map([
           api_key_pref: "extensions.pocket.oAuthConsumerKey",
           // Use the opposite value as what default value the feed would have used
           hidden: !PREFS_CONFIG.get("feeds.system.topstories").getValue(args),
-          provider_icon: "chrome://global/skin/icons/pocket.svg",
+          provider_icon: "chrome://global/skin/icons/help.svg",
           provider_name: "Pocket",
           read_more_endpoint:
             "https://getpocket.com/explore/trending?src=fx_new_tab",
@@ -289,22 +292,6 @@ export const PREFS_CONFIG = new Map([
     {
       title:
         "Use AdsFeed.sys.mjs to fetch/cache/serve Mozilla Ad Routing Service (MARS) unified ads ",
-      value: false,
-    },
-  ],
-  [
-    "unifiedAds.adsFeed.tiles.enabled",
-    {
-      title:
-        "Use AdsFeed.sys.mjs to fetch/cache/serve sponsored top sites tiles",
-      value: false,
-    },
-  ],
-  [
-    "unifiedAds.adsFeed.spocs.enabled",
-    {
-      title:
-        "Use AdsFeed.sys.mjs to fetch/cache/serve sponsored content in recommended stories",
       value: false,
     },
   ],
@@ -485,14 +472,6 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "section.highlights.includePocket",
-    {
-      title:
-        "Boolean flag that decides whether or not to show saved Pocket stories in highlights.",
-      value: true,
-    },
-  ],
-  [
     "section.highlights.includeDownloads",
     {
       title:
@@ -606,20 +585,6 @@ export const PREFS_CONFIG = new Map([
     "newtabAdSize.mediumRectangle",
     {
       title: "Boolean flag to turn the medium (MREC) ad size on and off",
-      value: false,
-    },
-  ],
-  [
-    "newtabLayouts.variant-a",
-    {
-      title: "Boolean flag to turn layout variant A on and off",
-      value: false,
-    },
-  ],
-  [
-    "newtabLayouts.variant-b",
-    {
-      title: "Boolean flag to turn layout variant B on and off",
       value: false,
     },
   ],
@@ -830,6 +795,36 @@ export const PREFS_CONFIG = new Map([
     {
       title: "Currently set wallpaper",
       value: "",
+    },
+  ],
+  [
+    "trendingSearch.enabled",
+    {
+      title: "Enables the trending search widget",
+      value: true,
+    },
+  ],
+  [
+    "trendingSearch.variant",
+    {
+      title: "Determines the layout variant for the trending search widget",
+      value: "",
+    },
+  ],
+  [
+    "system.trendingSearch.enabled",
+    {
+      title: "Enables the trending search experiment in Nimbus",
+      value: false,
+    },
+  ],
+  [
+    "trendingSearch.defaultSearchEngine",
+    {
+      title: "Placeholder the trending search experiment in Nimbus",
+      getValue: () => {
+        return Services.prefs.getCharPref(BROWSER_URLBAR_PLACEHOLDERNAME, "");
+      },
     },
   ],
   [
@@ -1156,7 +1151,7 @@ export const PREFS_CONFIG = new Map([
   [
     "discoverystream.publisherFavicon.enabled",
     {
-      title: "Enables publihser favicons on recommended stories",
+      title: "Enables publisher favicons on recommended stories",
       value: false,
     },
   ],
@@ -1379,6 +1374,12 @@ const FEEDS_DATA = [
     title: "Handles fetching and triggering ASRouter messages in newtab",
     value: true,
   },
+  {
+    name: "trendingseachfeed",
+    factory: () => new lazy.TrendingSearchFeed(),
+    title: "Handles fetching the google trending search API",
+    value: true,
+  },
 ];
 
 const FEEDS_CONFIG = new Map();
@@ -1403,6 +1404,15 @@ export class ActivityStream {
     this._updateDynamicPrefs();
     this._defaultPrefs.init();
     Services.obs.addObserver(this, "intl:app-locales-changed");
+    Services.obs.addObserver(this, "browser-search-engine-modified");
+
+    // Bug 1969587: Because our pref system does not support async getValue(),
+    // we mirror the value of the BROWSER_URLBAR_PLACEHOLDERNAME pref into
+    // `trendingSearch.defaultEngine` using a lazily evaluated sync fallback.
+    //
+    // In some cases, BROWSER_URLBAR_PLACEHOLDERNAME is read before it's been set,
+    // so we also observe it and update our mirrored value when it changes initially.
+    Services.prefs.addObserver(BROWSER_URLBAR_PLACEHOLDERNAME, this);
 
     // Look for outdated user pref values that might have been accidentally
     // persisted when restoring the original pref value at the end of an
@@ -1480,6 +1490,8 @@ export class ActivityStream {
 
     Services.obs.removeObserver(this, "intl:app-locales-changed");
 
+    Services.prefs.removeObserver(BROWSER_URLBAR_PLACEHOLDERNAME, this);
+
     this.store.uninit();
     this.initialized = false;
   }
@@ -1532,8 +1544,15 @@ export class ActivityStream {
     }
   }
 
-  observe(subject, topic) {
+  observe(subject, topic, data) {
+    // Custom logic for BROWSER_URLBAR_PLACEHOLDERNAME
+    if (topic === "nsPref:changed" && data === BROWSER_URLBAR_PLACEHOLDERNAME) {
+      this._updateDynamicPrefs();
+      return;
+    }
+
     switch (topic) {
+      case "browser-search-engine-modified":
       case "intl:app-locales-changed":
       case lazy.Region.REGION_TOPIC:
         this._updateDynamicPrefs();

@@ -63,18 +63,6 @@ class MenuTelemetryMiddleware(
                 ),
             )
 
-            MenuAction.SaveMenuClicked -> Events.browserMenuAction.record(
-                Events.BrowserMenuActionExtra(
-                    item = "save_submenu",
-                ),
-            )
-
-            MenuAction.ToolsMenuClicked -> Events.browserMenuAction.record(
-                Events.BrowserMenuActionExtra(
-                    item = "tools_submenu",
-                ),
-            )
-
             MenuAction.Navigate.AddToHomeScreen -> Events.browserMenuAction.record(
                 Events.BrowserMenuActionExtra(
                     item = "add_to_homescreen",
@@ -111,18 +99,6 @@ class MenuTelemetryMiddleware(
                 Events.browserMenuAction.record(Events.BrowserMenuActionExtra(item = "sync_account"))
                 AppMenu.signIntoSync.add()
             }
-
-            MenuAction.Navigate.NewTab -> Events.browserMenuAction.record(
-                Events.BrowserMenuActionExtra(
-                    item = "new_tab",
-                ),
-            )
-
-            MenuAction.Navigate.NewPrivateTab -> Events.browserMenuAction.record(
-                Events.BrowserMenuActionExtra(
-                    item = "new_private_tab",
-                ),
-            )
 
             MenuAction.OpenInApp -> Events.browserMenuAction.record(
                 Events.BrowserMenuActionExtra(
@@ -288,6 +264,8 @@ class MenuTelemetryMiddleware(
             is MenuAction.Navigate.Back,
             is MenuAction.Navigate.Forward,
             is MenuAction.Navigate.Reload,
+            is MenuAction.Navigate.Stop,
+            is MenuAction.Navigate.InstalledAddonDetails,
             -> Unit
         }
     }

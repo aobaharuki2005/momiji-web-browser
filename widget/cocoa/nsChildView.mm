@@ -826,8 +826,9 @@ void nsChildView::UpdateFullscreen(bool aFullscreen) {
 nsresult nsChildView::SynthesizeNativeKeyEvent(
     int32_t aNativeKeyboardLayout, int32_t aNativeKeyCode,
     uint32_t aModifierFlags, const nsAString& aCharacters,
-    const nsAString& aUnmodifiedCharacters, nsIObserver* aObserver) {
-  AutoObserverNotifier notifier(aObserver, "keyevent");
+    const nsAString& aUnmodifiedCharacters,
+    nsISynthesizedEventCallback* aCallback) {
+  AutoSynthesizedEventCallbackNotifier notifier(aCallback); 
   return mTextInputHandler->SynthesizeNativeKeyEvent(
       aNativeKeyboardLayout, aNativeKeyCode, aModifierFlags, aCharacters,
       aUnmodifiedCharacters);
@@ -836,10 +837,10 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(
 nsresult nsChildView::SynthesizeNativeMouseEvent(
     LayoutDeviceIntPoint aPoint, NativeMouseMessage aNativeMessage,
     MouseButton aButton, nsIWidget::Modifiers aModifierFlags,
-    nsIObserver* aObserver) {
+    nsISynthesizedEventCallback* aCallback) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  AutoObserverNotifier notifier(aObserver, "mouseevent");
+  AutoSynthesizedEventCallbackNotifier notifier(aCallback); 
 
   NSPoint pt =
       nsCocoaUtils::DevPixelsToCocoaPoints(aPoint, BackingScaleFactor());
@@ -941,10 +942,10 @@ nsresult nsChildView::SynthesizeNativeMouseEvent(
 nsresult nsChildView::SynthesizeNativeMouseScrollEvent(
     mozilla::LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
     double aDeltaX, double aDeltaY, double aDeltaZ, uint32_t aModifierFlags,
-    uint32_t aAdditionalFlags, nsIObserver* aObserver) {
+    uint32_t aAdditionalFlags, nsISynthesizedEventCallback* aCallback) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  AutoObserverNotifier notifier(aObserver, "mousescrollevent");
+  AutoSynthesizedEventCallbackNotifier notifier(aCallback); 
 
   NSPoint pt =
       nsCocoaUtils::DevPixelsToCocoaPoints(aPoint, BackingScaleFactor());
@@ -998,10 +999,10 @@ nsresult nsChildView::SynthesizeNativeMouseScrollEvent(
 nsresult nsChildView::SynthesizeNativeTouchPoint(
     uint32_t aPointerId, TouchPointerState aPointerState,
     mozilla::LayoutDeviceIntPoint aPoint, double aPointerPressure,
-    uint32_t aPointerOrientation, nsIObserver* aObserver) {
+    uint32_t aPointerOrientation, nsISynthesizedEventCallback* aCallback) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  AutoObserverNotifier notifier(aObserver, "touchpoint");
+  AutoSynthesizedEventCallbackNotifier notifier(aCallback); 
 
   MOZ_ASSERT(NS_IsMainThread());
   if (aPointerState == TOUCH_HOVER) {
@@ -3217,6 +3218,7 @@ static void DrawTopLeftCornerMask(CGContextRef aCtx, int aRadius) {
 
   EventMessage msg = aEnter ? eMouseEnterIntoWidget : eMouseExitFromWidget;
   WidgetMouseEvent event(true, msg, mGeckoChild, WidgetMouseEvent::eReal);
+  [self convertCocoaMouseEvent:aEvent toGeckoEvent:&event];
   event.mRefPoint = mGeckoChild->CocoaPointsToDevPixels(localEventLocation);
   if (event.mMessage == eMouseExitFromWidget) {
     event.mExitFrom = Some(aExitFrom);

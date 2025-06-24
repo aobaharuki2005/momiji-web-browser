@@ -5,11 +5,9 @@
 ### Firefox Home / New Tab strings for about:home / about:newtab.
 
 newtab-page-title = New Tab
-newtab-settings-button =
-    .title = Customize your New Tab page
-newtab-personalize-settings-icon-label =
-    .title = Personalize New Tab
-    .aria-label = Settings
+newtab-customize-panel-icon-button =
+    .title = Customize this page
+newtab-customize-panel-icon-button-label = Customize
 newtab-settings-dialog-label =
     .aria-label = Settings
 newtab-logo-and-wordmark =
@@ -107,9 +105,6 @@ newtab-menu-dismiss = Dismiss
 newtab-menu-pin = Pin
 newtab-menu-unpin = Unpin
 newtab-menu-delete-history = Delete from History
-newtab-menu-save-to-pocket = Save to { -pocket-brand-name }
-newtab-menu-delete-pocket = Delete from { -pocket-brand-name }
-newtab-menu-archive-pocket = Archive in { -pocket-brand-name }
 newtab-menu-show-privacy-info = Our sponsors & your privacy
 newtab-menu-about-fakespot = About { -fakespot-brand-name }
 # Report is a verb (i.e. report issue with the content).
@@ -269,6 +264,9 @@ newtab-custom-pocket-show-recent-saves = Show recent saves
 newtab-custom-weather-toggle =
   .label = Weather
   .description = Today’s forecast at a glance
+newtab-custom-trending-search-toggle =
+  .label = Trending searches
+  .description = Popular and frequently searched topics
 newtab-custom-close-button = Close
 newtab-custom-settings = Manage more settings
 
@@ -521,3 +519,14 @@ newtab-report-cancel = Cancel
 newtab-report-submit = Submit
 newtab-toast-thanks-for-reporting =
     .message = Thank you for reporting this.
+
+## Strings for trending searches
+
+# "Trending on Google" refers to the trending topics coming from Google Search, usually seen when a user is focused on the search bar
+newtab-trending-searches-trending-on-google = Trending on Google
+newtab-trending-searches-show-trending =
+    .title = Show trending searches
+newtab-trending-searches-hide-trending =
+    .title = Hide trending searches
+newtab-trending-searches-learn-more = Learn more
+newtab-trending-searches-dismiss = Hide trending searches

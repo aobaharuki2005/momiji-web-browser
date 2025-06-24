@@ -21,6 +21,9 @@
 using namespace mozilla;
 
 #define MAX_NOTIFICATION_NAME_LEN 5000
+
+static constexpr nsLiteralString kActionSuffix = u"-moz"_ns;
+
 #if !defined(MAC_OS_X_VERSION_10_8) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8)
 @protocol NSUserNotificationCenterDelegate
 @end
@@ -99,14 +102,8 @@ enum { NSUserNotificationActivationTypeAdditionalActionClicked = 4 };
 
 - (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
        didActivateNotification:(id<FakeNSUserNotification>)notification {
-  unsigned long long additionalActionIndex = ULLONG_MAX;
-  if ([notification respondsToSelector:@selector(_alternateActionIndex)]) {
-    NSNumber* alternateActionIndex =
-        [(NSObject*)notification valueForKey:@"_alternateActionIndex"];
-    additionalActionIndex = [alternateActionIndex unsignedLongLongValue];
-  }
   mOSXNC->OnActivate([[notification userInfo] valueForKey:@"name"],
-                     notification.activationType, additionalActionIndex,
+                     notification.activationType, 
                      notification.additionalActivationAction);
 }
 
@@ -470,7 +467,6 @@ void OSXNotificationCenter::CloseAlertCocoaString(NSString* aAlertName) {
 
 void OSXNotificationCenter::OnActivate(
     NSString* aAlertName, NSUserNotificationActivationType aActivationType,
-    unsigned long long aAdditionalActionIndex,
     NSUserNotificationAction* aAdditionalActivationAction) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
@@ -483,34 +479,34 @@ void OSXNotificationCenter::OnActivate(
     if ([aAlertName isEqualToString:osxni->mName]) {
       if (osxni->mObserver) {
         switch ((int)aActivationType) {
-          case NSUserNotificationActivationTypeAdditionalActionClicked:
-          case NSUserNotificationActivationTypeActionButtonClicked:
-            if (aAdditionalActivationAction) {
-              nsAutoString actionName;
-              nsCocoaUtils::GetStringForNSString(
-                  aAdditionalActivationAction.identifier, actionName);
-              nsCOMPtr<nsIAlertAction> action;
-              osxni->mAlertNotification->GetAction(actionName,
-                                                   getter_AddRefs(action));
-              osxni->mObserver->Observe(action, "alertclickcallback",
+          case NSUserNotificationActivationTypeAdditionalActionClicked: {
+            MOZ_ASSERT(aAdditionalActivationAction);
+            nsAutoString actionName;
+            nsCocoaUtils::GetStringForNSString(
+                aAdditionalActivationAction.identifier, actionName);
+
+            if (actionName == kAlertActionDisable) {
+              osxni->mObserver->Observe(nullptr, "alertdisablecallback",
                                         osxni->mCookie.get());
               break;
             }
-            switch (aAdditionalActionIndex) {
-              case OSXNotificationActionDisable:
-                osxni->mObserver->Observe(nullptr, "alertdisablecallback",
-                                          osxni->mCookie.get());
-                break;
-              case OSXNotificationActionSettings:
-                osxni->mObserver->Observe(nullptr, "alertsettingscallback",
-                                          osxni->mCookie.get());
-                break;
-              default:
-                NS_WARNING(
-                    "Unknown NSUserNotification additional action clicked");
-                break;
+            if (actionName == kAlertActionSettings) {
+              osxni->mObserver->Observe(nullptr, "alertsettingscallback",
+                                        osxni->mCookie.get());
+              break;
             }
+
+            // Trim the suffix
+            actionName.Truncate(actionName.Length() - kActionSuffix.Length());
+
+            nsCOMPtr<nsIAlertAction> action;
+            osxni->mAlertNotification->GetAction(actionName,
+                                                 getter_AddRefs(action));
+            osxni->mObserver->Observe(action, "alertclickcallback",
+                                      osxni->mCookie.get());
             break;
+          }
+          case NSUserNotificationActivationTypeActionButtonClicked:
           default:
             osxni->mObserver->Observe(nullptr, "alertclickcallback",
                                       osxni->mCookie.get());
@@ -600,6 +596,16 @@ OSXNotificationCenter::OnImageReady(nsISupports* aUserData,
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
+}
+
+NS_IMETHODIMP
+OSXNotificationCenter::GetHistory(nsTArray<nsString>& aResult) {
+  // NSUserNotificationCenter doesn't support this, blocked by the migration to
+  // UNUserNotificationCenter which has
+  // getDeliveredNotificationsWithCompletionHandler
+  // https://developer.apple.com/documentation/usernotifications/unusernotificationcenter/getdeliverednotifications(completionhandler:)?language=objc
+  // See bug 1971395.
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // nsIAlertsDoNotDisturb

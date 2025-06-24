@@ -2518,10 +2518,10 @@ void nsCocoaWindow::SetCustomTitlebar(bool aState) {
 NS_IMETHODIMP nsCocoaWindow::SynthesizeNativeMouseEvent(
     LayoutDeviceIntPoint aPoint, NativeMouseMessage aNativeMessage,
     MouseButton aButton, nsIWidget::Modifiers aModifierFlags,
-    nsIObserver* aObserver) {
+    nsISynthesizedEventCallback* aCallback) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  AutoObserverNotifier notifier(aObserver, "mouseevent");
+  AutoSynthesizedEventCallbackNotifier notifier(aCallback);
   if (mPopupContentView) {
     return mPopupContentView->SynthesizeNativeMouseEvent(
         aPoint, aNativeMessage, aButton, aModifierFlags, nullptr);
@@ -2535,10 +2535,10 @@ NS_IMETHODIMP nsCocoaWindow::SynthesizeNativeMouseEvent(
 NS_IMETHODIMP nsCocoaWindow::SynthesizeNativeMouseScrollEvent(
     LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage, double aDeltaX,
     double aDeltaY, double aDeltaZ, uint32_t aModifierFlags,
-    uint32_t aAdditionalFlags, nsIObserver* aObserver) {
+    uint32_t aAdditionalFlags, nsISynthesizedEventCallback* aCallback) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  AutoObserverNotifier notifier(aObserver, "mousescrollevent");
+  AutoSynthesizedEventCallbackNotifier notifier(aCallback);
   if (mPopupContentView) {
     // Pass nullptr as the observer so that the AutoObserverNotification in
     // nsChildView::SynthesizeNativeMouseScrollEvent will be ignored.

@@ -51,20 +51,20 @@
 
     &.inset-block-start {
       inset-block-end: 100%;
-      margin-bottom: var(--space-xlarge);
+      margin-block-end: var(--space-xlarge);
 
       &::after {
-        inset-block-end: -12px;
+        inset-block-end: calc(var(--space-medium) * -1);
         transform: rotate(45deg);
       }
     }
 
     &.inset-block-end {
       inset-block-start: 100%;
-      margin-top: var(--space-xlarge);
+      margin-block-start: var(--space-xlarge);
 
       &::after {
-        inset-block-start: -12px;
+        inset-block-start: calc(var(--space-medium) * -1);
         transform: rotate(225deg);
       }
     }
@@ -73,7 +73,7 @@
       inset-inline-end: calc(var(--space-xxlarge) * -1);
 
       &::after {
-        inset-inline-end: calc(var(--space-xxlarge) - 12px);
+        inset-inline-end: calc(var(--space-xxlarge) - var(--space-medium));
       }
     }
 
@@ -81,13 +81,13 @@
       inset-inline-start: calc(var(--space-xxlarge) * -1);
 
       &::after {
-        inset-inline-start: calc(var(--space-xxlarge) - 12px);
+        inset-inline-start: calc(var(--space-xxlarge) - var(--space-medium));
       }
     }
 
     p {
       font-size: var(--font-size-small);
-      font-weight: normal;
+      font-weight: var(--font-weight);
       margin: var(--space-large) 0;
       flex-grow: 1;
     }

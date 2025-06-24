@@ -2172,7 +2172,7 @@ void nsContainerFrame::ReparentFloatsForInlineChild(nsIFrame* aOurLineContainer,
   }
 }
 
-bool nsContainerFrame::ResolvedOrientationIsVertical() {
+bool nsContainerFrame::ResolvedOrientationIsVertical() const {
   StyleOrient orient = StyleDisplay()->mOrient;
   switch (orient) {
     case StyleOrient::Horizontal:
@@ -2195,18 +2195,18 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
     const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
     ComputeSizeFlags aFlags) {
   const nsStylePosition* stylePos = StylePosition();
-  const auto positionProperty = StyleDisplay()->mPosition;
+  const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
   const auto styleISize =
       aSizeOverrides.mStyleISize
           ? AnchorResolvedSizeHelper::Overridden(*aSizeOverrides.mStyleISize)
-          : stylePos->ISize(aWM, positionProperty);
+          : stylePos->ISize(aWM, anchorResolutionParams.mPosition);
 
   // TODO(dholbert): if styleBSize is 'stretch' here, we should probably
   // resolve it like we do in nsIFrame::ComputeSize. See bug 1937275.
   const auto styleBSize =
       aSizeOverrides.mStyleBSize
           ? AnchorResolvedSizeHelper::Overridden(*aSizeOverrides.mStyleBSize)
-          : stylePos->BSize(aWM, positionProperty);
+          : stylePos->BSize(aWM, anchorResolutionParams.mPosition);
   const auto& aspectRatio =
       aSizeOverrides.mAspectRatio ? *aSizeOverrides.mAspectRatio : aAspectRatio;
 
@@ -2245,7 +2245,9 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
                                              aBorderPadding.ISize(aWM) -
                                              boxSizingAdjust.ISize(aWM);
 
-  nscoord iSize, minISize, maxISize, bSize, minBSize, maxBSize;
+  // We don't expect these intial values of iSize/bSize to be used, but this
+  // silences a GCC warning about them being uninitialized.
+  nscoord minISize, maxISize, minBSize, maxBSize, iSize = 0, bSize = 0;
   enum class FillCB {
     // No stretching or clamping in the relevant axis.
     No,
@@ -2311,7 +2313,8 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   // algorithm.)
   const bool isFlexItemInlineAxisMainAxis =
       flexItemMainAxis && *flexItemMainAxis == LogicalAxis::Inline;
-  const auto maxISizeCoord = stylePos->MaxISize(aWM, positionProperty);
+  const auto maxISizeCoord =
+      stylePos->MaxISize(aWM, anchorResolutionParams.mPosition);
   if (!maxISizeCoord->IsNone() && !isFlexItemInlineAxisMainAxis) {
     maxISize =
         ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
@@ -2322,7 +2325,8 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
     maxISize = nscoord_MAX;
   }
 
-  const auto minISizeCoord = stylePos->MinISize(aWM, positionProperty);
+  const auto minISizeCoord =
+      stylePos->MinISize(aWM, anchorResolutionParams.mPosition);
   if (!minISizeCoord->IsAuto() && !isFlexItemInlineAxisMainAxis) {
     minISize =
         ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
@@ -2373,7 +2377,8 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   // algorithm.)
   const bool isFlexItemBlockAxisMainAxis =
       flexItemMainAxis && *flexItemMainAxis == LogicalAxis::Block;
-  const auto maxBSizeCoord = stylePos->MaxBSize(aWM, positionProperty);
+  const auto maxBSizeCoord =
+      stylePos->MaxBSize(aWM, anchorResolutionParams.mPosition);
   if (!nsLayoutUtils::IsAutoBSize(*maxBSizeCoord, aCBSize.BSize(aWM)) &&
       !isFlexItemBlockAxisMainAxis) {
     maxBSize = nsLayoutUtils::ComputeBSizeValueHandlingStretch(
@@ -2383,7 +2388,8 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
     maxBSize = nscoord_MAX;
   }
 
-  const auto minBSizeCoord = stylePos->MinBSize(aWM, positionProperty);
+  const auto minBSizeCoord =
+      stylePos->MinBSize(aWM, anchorResolutionParams.mPosition);
   if (!nsLayoutUtils::IsAutoBSize(*minBSizeCoord, aCBSize.BSize(aWM)) &&
       !isFlexItemBlockAxisMainAxis) {
     minBSize = nsLayoutUtils::ComputeBSizeValueHandlingStretch(

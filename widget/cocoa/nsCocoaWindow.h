@@ -300,15 +300,15 @@ class nsCocoaWindow final : public nsBaseWidget {
   void SetCustomTitlebar(bool) override;
   void UpdateThemeGeometries(
       const nsTArray<ThemeGeometry>& aThemeGeometries) override;
-  nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
-                                      NativeMouseMessage aNativeMessage,
-                                      mozilla::MouseButton aButton,
-                                      nsIWidget::Modifiers aModifierFlags,
-                                      nsIObserver* aObserver) override;
+  nsresult SynthesizeNativeMouseEvent(
+        LayoutDeviceIntPoint aPoint, NativeMouseMessage aNativeMessage,
+        mozilla::MouseButton aButton, nsIWidget::Modifiers aModifierFlags,
+        nsISynthesizedEventCallback* aCallback) override;
   nsresult SynthesizeNativeMouseScrollEvent(
       LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage, double aDeltaX,
       double aDeltaY, double aDeltaZ, uint32_t aModifierFlags,
-      uint32_t aAdditionalFlags, nsIObserver* aObserver) override;
+      uint32_t aAdditionalFlags,
+      nsISynthesizedEventCallback* aCallback) override;
   void LockAspectRatio(bool aShouldLock) override;
 
   void DispatchSizeModeEvent();

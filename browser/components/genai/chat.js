@@ -7,8 +7,6 @@ const { topChromeWindow } = window.browsingContext;
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   GenAI: "resource:///modules/GenAI.sys.mjs",
-  LightweightThemeConsumer:
-    "resource://gre/modules/LightweightThemeConsumer.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
 });
@@ -162,12 +160,13 @@ function request(url = lazy.providerPref) {
 
 function renderChat() {
   const browser = document.createXULElement("browser");
+  const browserContainer = document.getElementById("browser-container");
   browser.setAttribute("disableglobalhistory", "true");
   browser.setAttribute("maychangeremoteness", "true");
   browser.setAttribute("nodefaultsrc", "true");
   browser.setAttribute("remote", "true");
   browser.setAttribute("type", "content");
-  return document.body.appendChild(browser);
+  return browserContainer.appendChild(browser);
 }
 
 async function renderProviders() {
@@ -334,7 +333,6 @@ addEventListener("change", handleChange);
 // Expose a promise for loading and rendering the chat browser element
 var browserPromise = new Promise((resolve, reject) => {
   addEventListener("load", async () => {
-    new lazy.LightweightThemeConsumer(document);
     try {
       node.chat = renderChat();
       node.provider = await renderProviders();
@@ -346,6 +344,17 @@ var browserPromise = new Promise((resolve, reject) => {
           provider: lazy.GenAI.getProviderId(),
         });
       });
+      document
+        .getElementById("summarize-button")
+        .addEventListener("click", async () => {
+          const badgeKey = "browser.ml.chat.page.footerBadge";
+          const newBadgePref = Services.prefs.getBoolPref(badgeKey);
+
+          if (newBadgePref) {
+            Services.prefs.setBoolPref(badgeKey, false);
+          }
+          await summarizeCurrentPage();
+        });
     } catch (ex) {
       console.error("Failed to render on load", ex);
       reject(ex);
@@ -576,4 +585,21 @@ function showOnboarding(length) {
       }
     },
   });
+}
+
+async function summarizeCurrentPage() {
+  let browser = topChromeWindow.gBrowser.selectedBrowser;
+  let actor = browser.browsingContext.currentWindowContext.getActor("GenAI");
+  let articleTextContent = await actor.sendQuery("GetReadableText");
+
+  await lazy.GenAI.addAskChatItems(
+    browser,
+    { contentType: "page", selection: articleTextContent },
+    (promptObj, context) => {
+      if (promptObj.id === "summarize") {
+        lazy.GenAI.handleAskChat(promptObj, context);
+      }
+    },
+    "footer"
+  );
 }

@@ -100,17 +100,6 @@ bool Device::IsLost() const {
 
 bool Device::IsBridgeAlive() const { return mBridge && mBridge->CanSend(); }
 
-// Generate an error on the Device timeline for this device.
-//
-// aMessage is interpreted as UTF-8.
-void Device::GenerateValidationError(const nsCString& aMessage) {
-  if (!IsBridgeAlive()) {
-    return;  // Just drop it?
-  }
-  mBridge->SendGenerateError(Some(mId), dom::GPUErrorFilter::Validation,
-                             aMessage);
-}
-
 void Device::TrackBuffer(Buffer* aBuffer) { mTrackedBuffers.Insert(aBuffer); }
 
 void Device::UntrackBuffer(Buffer* aBuffer) { mTrackedBuffers.Remove(aBuffer); }
@@ -1041,8 +1030,8 @@ already_AddRefed<dom::Promise> Device::CreateRenderPipelineAsync(
 already_AddRefed<Texture> Device::InitSwapChain(
     const dom::GPUCanvasConfiguration* const aConfig,
     const layers::RemoteTextureOwnerId aOwnerId,
-    bool aUseExternalTextureInSwapChain, gfx::SurfaceFormat aFormat,
-    gfx::IntSize aCanvasSize) {
+    mozilla::Span<RawId const> aBufferIds, bool aUseExternalTextureInSwapChain,
+    gfx::SurfaceFormat aFormat, gfx::IntSize aCanvasSize) {
   MOZ_ASSERT(aConfig);
 
   if (!mBridge->CanSend()) {
@@ -1057,10 +1046,9 @@ already_AddRefed<Texture> Device::InitSwapChain(
   }
 
   const layers::RGBDescriptor rgbDesc(aCanvasSize, aFormat);
-  // buffer count doesn't matter much, will be created on demand
-  const size_t maxBufferCount = 10;
-  mBridge->DeviceCreateSwapChain(mId, rgbDesc, maxBufferCount, aOwnerId,
-                                 aUseExternalTextureInSwapChain);
+
+  mBridge->SendDeviceCreateSwapChain(mId, mQueue->mId, rgbDesc, aBufferIds,
+                                     aOwnerId, aUseExternalTextureInSwapChain);
 
   // TODO: `mColorSpace`: <https://bugzilla.mozilla.org/show_bug.cgi?id=1846608>
   // TODO: `mAlphaMode`: <https://bugzilla.mozilla.org/show_bug.cgi?id=1846605>

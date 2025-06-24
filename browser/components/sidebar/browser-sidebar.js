@@ -328,7 +328,7 @@ var SidebarController = {
     }
 
     this._pinnedTabsContainer = document.getElementById(
-      "vertical-pinned-tabs-container"
+      "pinned-tabs-container"
     );
     this._pinnedTabsItemsWrapper =
       this._pinnedTabsContainer.shadowRoot.querySelector(
@@ -348,6 +348,7 @@ var SidebarController = {
     this._switcherPanel = document.getElementById("sidebarMenu-popup");
     this._switcherTarget = document.getElementById("sidebar-switcher-target");
     this._switcherArrow = document.getElementById("sidebar-switcher-arrow");
+    this._openPopupsCount = 0;
     if (
       Services.prefs.getBoolPref(
         "browser.tabs.allow_transparent_browser",
@@ -380,7 +381,7 @@ var SidebarController = {
       this._handleLauncherResize(entry)
     );
 
-    if (this.sidebarRevampEnabled) {
+    if (this.sidebarRevampEnabled && !BrowserHandler.kiosk) {
       if (!customElements.get("sidebar-main")) {
         ChromeUtils.importESModule(
           "chrome://browser/content/sidebar/sidebar-main.mjs",
@@ -1189,6 +1190,7 @@ var SidebarController = {
     }
     this._ongoingAnimations = animations;
     this.sidebarContainer.toggleAttribute("sidebar-ongoing-animations", true);
+    this.sidebarMain.toggleAttribute("sidebar-ongoing-animations", true);
     this._box.toggleAttribute("sidebar-ongoing-animations", true);
     tabbox.toggleAttribute("sidebar-ongoing-animations", true);
     await Promise.allSettled(animations.map(a => a.finished));
@@ -1319,41 +1321,22 @@ var SidebarController = {
       // Nothing to do.
       return;
     }
-    this._pinnedTabsResizeObserver = new ResizeObserver(([entry]) => {
+    this._pinnedTabsResizeObserver = new ResizeObserver(() => {
       if (this.isPinnedTabsDragging) {
         this._state.pinnedTabsDragActive = true;
       }
-      if (
-        (entry.contentBoxSize[0].blockSize ===
-          this._state.expandedPinnedTabsHeight &&
-          this._state.launcherExpanded) ||
-        (entry.contentBoxSize[0].blockSize ===
-          this._state.collapsedPinnedTabsHeight &&
-          !this._state.launcherExpanded)
-      ) {
-        // condition already met, no need to re-update
-        return;
-      }
-      this._state.pinnedTabsHeight = entry.contentBoxSize[0].blockSize;
     });
 
     this._itemsWrapperResizeObserver = new ResizeObserver(async () => {
       await window.promiseDocumentFlushed(() => {
         // Adjust pinned tabs container height if needed
-        let itemsWrapperHeight = window.windowUtils.getBoundsWithoutFlushing(
-          this._pinnedTabsItemsWrapper
-        ).height;
         requestAnimationFrame(() => {
-          if (this._state.pinnedTabsHeight > itemsWrapperHeight) {
-            this._state.pinnedTabsHeight = itemsWrapperHeight;
-            if (this._state.launcherExpanded) {
-              this._state.expandedPinnedTabsHeight =
-                this._state.pinnedTabsHeight;
-            } else {
-              this._state.collapsedPinnedTabsHeight =
-                this._state.pinnedTabsHeight;
-            }
+          // If we are currently moving tabs, don't resize
+          if (this._pinnedTabsContainer.hasAttribute("dragActive")) {
+            return;
           }
+
+          this.updatePinnedTabsHeightOnResize();
         });
       });
     });
@@ -1403,6 +1386,20 @@ var SidebarController = {
     let sidebar = this.sidebars.get(commandID);
     if (typeof sidebar?.onload === "function") {
       sidebar.onload();
+    }
+  },
+
+  updatePinnedTabsHeightOnResize() {
+    let itemsWrapperHeight = window.windowUtils.getBoundsWithoutFlushing(
+      this._pinnedTabsItemsWrapper
+    ).height;
+    if (this._state.pinnedTabsHeight > itemsWrapperHeight) {
+      this._state.pinnedTabsHeight = itemsWrapperHeight;
+      if (this._state.launcherExpanded) {
+        this._state.expandedPinnedTabsHeight = this._state.pinnedTabsHeight;
+      } else {
+        this._state.collapsedPinnedTabsHeight = this._state.pinnedTabsHeight;
+      }
     }
   },
 
@@ -1997,9 +1994,9 @@ var SidebarController = {
       !this.verticalTabsEnabled &&
       this.sidebarRevampVisibility == "hide-sidebar"
     ) {
-      // the sidebar.visibility pref didn't change so updateVisbility hasn't
-      // been called; we need to call it here to un-expand the launcher
-      this._state.updateVisibility(undefined, false);
+      // the sidebar.visibility pref didn't change so launcherExpanded hasn't
+      // been updated; we need to set it here to un-expand the launcher
+      this._state.launcherExpanded = false;
     }
   },
 
@@ -2076,19 +2073,30 @@ var SidebarController = {
       case "popupshown":
         /* Temporarily remove MousePosTracker listener when a context menu is open */
         if (e.composedTarget.id !== "tab-preview-panel") {
+          this._openPopupsCount++;
           MousePosTracker.removeListener(this);
         }
         break;
       case "popuphidden":
         if (e.composedTarget.id !== "tab-preview-panel") {
-          if (this._state.launcherExpanded) {
-            if (this._animationEnabled && !window.gReduceMotion) {
-              this._animateSidebarMain();
+          if (this._openPopupsCount < 2) {
+            let isHovered;
+            MousePosTracker._callListener({
+              onMouseEnter: () => (isHovered = true),
+              onMouseLeave: () => (isHovered = false),
+              getMouseTargetRect: () => this.getMouseTargetRect(),
+            });
+            // Collapse sidebar after context menu is closed if needed
+            if (this._state.launcherExpanded && !isHovered) {
+              if (this._animationEnabled && !window.gReduceMotion) {
+                this._animateSidebarMain();
+              }
+              this._state.launcherExpanded = false;
+              await this.waitUntilStable();
             }
-            this._state.launcherExpanded = false;
+            MousePosTracker.addListener(this);
           }
-          await this.waitUntilStable();
-          MousePosTracker.addListener(this);
+          this._openPopupsCount--;
         }
         break;
       default:
@@ -2112,6 +2120,10 @@ var SidebarController = {
       }
       document.addEventListener("popupshown", this);
       document.addEventListener("popuphidden", this);
+      // Reset user-preferred height
+      this.sidebarMain.buttonGroup.style.height = this._state.launcherExpanded
+        ? ""
+        : "0";
     } else {
       MousePosTracker.removeListener(this);
       if (!this.mouseOverTask?.isFinalized) {
@@ -2119,6 +2131,22 @@ var SidebarController = {
       }
       document.removeEventListener("popupshown", this);
       document.removeEventListener("popuphidden", this);
+      // Add back user-preferred height if defined
+      if (
+        this._state.launcherExpanded &&
+        this._state.expandedToolsHeight !== undefined &&
+        this.sidebarMain.buttonGroup
+      ) {
+        this.sidebarMain.buttonGroup.style.height =
+          this._state.expandedToolsHeight;
+      } else if (
+        !this._state.launcherExpanded &&
+        this._state.collapsedToolsHeight !== undefined &&
+        this.sidebarMain.buttonGroup
+      ) {
+        this.sidebarMain.buttonGroup.style.height =
+          this._state.collapsedToolsHeight;
+      }
     }
 
     document.documentElement.toggleAttribute(
@@ -2294,6 +2322,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
       } else {
         SidebarController._disablePinnedTabsDragging();
       }
+      SidebarController._state.updatePinnedTabsHeight();
+      SidebarController._state.updateToolsHeight();
     }
   }
 );

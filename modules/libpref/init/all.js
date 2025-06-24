@@ -73,10 +73,6 @@ pref("general.useragent.compatMode.firefox", false);
 
 pref("general.config.obscure_value", 13); // for MCD .cfg files
 
-#ifndef MOZ_BUILD_APP_IS_BROWSER
-pref("general.warnOnAboutConfig", true);
-#endif
-
 // Whether middle button click with a modifier key starts to autoscroll or
 // does nothing.
 pref("general.autoscroll.prevent_to_start.shiftKey", true); // Shift
@@ -245,11 +241,13 @@ pref("media.videocontrols.keyboard-tab-to-all-controls", true);
     pref("media.peerconnection.sdp.alternate_parse_mode", "parallel");
     pref("media.peerconnection.sdp.strict_success", false);
     pref("media.navigator.video.red_ulpfec_enabled", true);
+    pref("media.peerconnection.sctp.use_dcsctp", true);
   #else
     pref("media.peerconnection.sdp.parser", "sipcc");
     pref("media.peerconnection.sdp.alternate_parse_mode", "never");
     pref("media.peerconnection.sdp.strict_success", false);
     pref("media.navigator.video.red_ulpfec_enabled", true);
+    pref("media.peerconnection.sctp.use_dcsctp", false);
   #endif
 
   pref("media.peerconnection.sdp.disable_stereo_fmtp", false);
@@ -321,6 +319,8 @@ pref("media.videocontrols.keyboard-tab-to-all-controls", true);
   // 770 = DTLS 1.0, 771 = DTLS 1.2, 772 = DTLS 1.3
   pref("media.peerconnection.dtls.version.min", 771);
   pref("media.peerconnection.dtls.version.max", 772);
+
+  pref("media.peerconnection.sctp.default_max_streams", 2048);
 
 #if defined(XP_MACOSX)
   pref("media.getusermedia.audio.processing.platform.enabled", true);
@@ -724,11 +724,6 @@ pref("browser.fixup.fallback-to-https", true);
 // encounter a printer for the first time, but only a subset of prefs will be
 // used in this case.  See nsPrintSettingsService::InitPrintSettingsFromPrefs
 // for the restrictions on which prefs can act as defaults.
-
-// Whether we directly use the system print dialog to collect the user's print
-// settings rather than using the tab-modal print preview dialog.
-// Note: `print.always_print_silent` overrides this.
-pref("print.prefer_system_dialog", false);
 
 // Print/Preview Shrink-To-Fit won't shrink below 20% for text-ish documents.
 pref("print.shrink-to-fit.scale-limit-percent", 20);
@@ -1218,11 +1213,7 @@ pref("network.http.network-changed.timeout", 5);
 
 // The maximum number of current global half open sockets allowable
 // when starting a new speculative connection.
-#ifdef ANDROID
-  pref("network.http.speculative-parallel-limit", 6);
-#else
-  pref("network.http.speculative-parallel-limit", 20);
-#endif
+pref("network.http.speculative-parallel-limit", 20);
 
 // Whether or not to block requests for non head js/css items (e.g. media)
 // while those elements load.
@@ -1795,6 +1786,10 @@ pref("extensions.install_origins.enabled", false);
 pref("extensions.browser_style_mv3.supported", false);
 pref("extensions.browser_style_mv3.same_as_mv2", false);
 
+// If set to true, browser.cookies.set() will throw exceptions if the cookie is
+// invalid. Otherwise, a warning message will be shown in the console.
+pref("extensions.cookie.rejectWhenInvalid", false);
+
 // Experimental Inference API
 pref("extensions.ml.enabled", true);
 
@@ -2095,12 +2090,12 @@ pref("font.size.monospace.x-math", 13);
   pref("font.name-list.monospace.he", "Fixed Miriam Transparent, Miriam Fixed, Rod, Consolas, Courier New");
   pref("font.name-list.cursive.he", "Guttman Yad, Ktav, Arial");
 
-  pref("font.name-list.serif.ja", "Yu Mincho, MS PMincho, MS Mincho, Meiryo, Yu Gothic, MS PGothic, MS Gothic");
-  pref("font.name-list.sans-serif.ja", "Meiryo, Yu Gothic, MS PGothic, MS Gothic, Yu Mincho, MS PMincho, MS Mincho");
-  pref("font.name-list.monospace.ja", "MS Gothic, MS Mincho, Meiryo, Yu Gothic, Yu Mincho, MS PGothic, MS PMincho");
+  pref("font.name-list.serif.ja", "Noto Serif JP, Noto Serif CJK JP, Yu Mincho, MS PMincho, MS Mincho, Meiryo, Yu Gothic, MS PGothic, MS Gothic");
+  pref("font.name-list.sans-serif.ja", "Noto Sans JP, Noto Sans CJK JP, Meiryo, Yu Gothic, MS PGothic, MS Gothic");
+  pref("font.name-list.monospace.ja", "BIZ UDGothic, MS Gothic, MS Mincho, Meiryo, Yu Gothic, Yu Mincho");
 
-  pref("font.name-list.serif.ko", "Batang, Gulim");
-  pref("font.name-list.sans-serif.ko", "Malgun Gothic, Gulim");
+  pref("font.name-list.serif.ko", "Noto Serif KR, Noto Serif CJK KR, Batang, Gulim");
+  pref("font.name-list.sans-serif.ko", "Noto Sans KR, Noto Sans CJK KR, Malgun Gothic, Gulim");
   pref("font.name-list.monospace.ko", "GulimChe");
   pref("font.name-list.cursive.ko", "Gungsuh");
 
@@ -2124,22 +2119,26 @@ pref("font.size.monospace.x-math", 13);
   pref("font.name-list.monospace.x-western", "Consolas");
   pref("font.name-list.cursive.x-western", "Comic Sans MS");
 
-  pref("font.name-list.serif.zh-CN", "SimSun, MS Song, SimSun-ExtB");
-  pref("font.name-list.sans-serif.zh-CN", "Microsoft YaHei, SimHei");
-  pref("font.name-list.monospace.zh-CN", "SimSun, MS Song, SimSun-ExtB");
+  pref("font.name-list.serif.zh-CN", "Noto Serif SC, Noto Serif CJK SC, SimSun, MS Song, SimSun-ExtB");
+  pref("font.name-list.sans-serif.zh-CN", "Noto Sans SC, Noto Sans CJK SC, Microsoft YaHei, SimHei");
+  pref("font.name-list.monospace.zh-CN", "NSimSun, SimSun, MS Song, SimSun-ExtB");
   pref("font.name-list.cursive.zh-CN", "KaiTi, KaiTi_GB2312");
 
   // Per Taiwanese users' demand. They don't want to use TC fonts for
   // rendering Latin letters. (bug 88579)
-  pref("font.name-list.serif.zh-TW", "Times New Roman, PMingLiu, MingLiU, MingLiU-ExtB");
-  pref("font.name-list.sans-serif.zh-TW", "Arial, Microsoft JhengHei, PMingLiU, MingLiU, MingLiU-ExtB");
+  // Updated (bug 1957317) to prefer Noto fonts; the Latin glyphs in these are pretty reasonable,
+  // so list them ahead of the Latin fonts that were used to override Latin in older CJK fonts.
+  pref("font.name-list.serif.zh-TW", "Noto Serif TC, Noto Serif CJK TC, Times New Roman, PMingLiu, MingLiU, MingLiU-ExtB");
+  pref("font.name-list.sans-serif.zh-TW", "Noto Sans TC, Noto Sans CJK TC, Arial, Microsoft JhengHei, PMingLiU, MingLiU, MingLiU-ExtB");
   pref("font.name-list.monospace.zh-TW", "MingLiU, MingLiU-ExtB");
   pref("font.name-list.cursive.zh-TW", "DFKai-SB");
 
   // hkscsm3u.ttf (HKSCS-2001) :  http://www.microsoft.com/hk/hkscs
   // Hong Kong users have the same demand about glyphs for Latin letters (bug 88579)
-  pref("font.name-list.serif.zh-HK", "Times New Roman, MingLiu_HKSCS, Ming(for ISO10646), MingLiU, MingLiU_HKSCS-ExtB, Microsoft JhengHei");
-  pref("font.name-list.sans-serif.zh-HK", "Arial, MingLiU_HKSCS, Ming(for ISO10646), MingLiU, MingLiU_HKSCS-ExtB, Microsoft JhengHei");
+  // Updated (bug 1957317) to prefer Noto fonts; the Latin glyphs in these are pretty reasonable,
+  // so list them ahead of the Latin fonts that were used to override Latin in older CJK fonts.
+  pref("font.name-list.serif.zh-HK", "Noto Serif HK, Noto Serif CJK HK, Times New Roman, MingLiu_HKSCS, Ming(for ISO10646), MingLiU, MingLiU_HKSCS-ExtB, Microsoft JhengHei");
+  pref("font.name-list.sans-serif.zh-HK", "Noto Sans HK, Noto Sans CJK HK, Arial, MingLiU_HKSCS, Ming(for ISO10646), MingLiU, MingLiU_HKSCS-ExtB, Microsoft JhengHei");
   pref("font.name-list.monospace.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU, MingLiU_HKSCS-ExtB, Microsoft JhengHei");
   pref("font.name-list.cursive.zh-HK", "DFKai-SB");
 
@@ -2967,10 +2966,12 @@ pref("font.size.monospace.x-math", 13);
   pref("font.name-list.serif.x-unicode", "Charis SIL Compact, Noto Serif, Droid Serif");
   pref("font.name-list.sans-serif.x-unicode", "Roboto, Google Sans, Droid Sans");
   pref("font.name-list.monospace.x-unicode", "Droid Sans Mono");
+  pref("font.name-list.cursive.x-unicode", "Dancing Script");
 
   pref("font.name-list.serif.x-western", "Charis SIL Compact, Noto Serif, Droid Serif");
   pref("font.name-list.sans-serif.x-western", "Roboto, Google Sans, Droid Sans");
   pref("font.name-list.monospace.x-western", "Droid Sans Mono");
+  pref("font.name-list.cursive.x-western", "Dancing Script");
 
   pref("font.name-list.serif.zh-CN", "Charis SIL Compact, Noto Serif CJK SC, Noto Serif, Droid Serif, Droid Sans Fallback");
   pref("font.name-list.sans-serif.zh-CN", "Roboto, Google Sans, Droid Sans, Noto Sans SC, Noto Sans CJK SC, SEC CJK SC, Droid Sans Fallback");
@@ -3322,9 +3323,11 @@ pref("urlclassifier.features.emailtracking.datacollection.blocklistTables", "bas
 pref("urlclassifier.features.emailtracking.datacollection.allowlistTables", "mozstd-trackwhite-digest256");
 pref("urlclassifier.features.consentmanager.annotate.blocklistTables", "consent-manager-track-digest256");
 pref("urlclassifier.features.consentmanager.annotate.allowlistTables", "mozstd-trackwhite-digest256");
+pref("urlclassifier.features.antifraud.annotate.blocklistTables", "anti-fraud-track-digest256");
+pref("urlclassifier.features.antifraud.annotate.allowlistTables", "mozstd-trackwhite-digest256");
 
 // These tables will never trigger a gethash call.
-pref("urlclassifier.disallow_completions", "goog-downloadwhite-digest256,base-track-digest256,mozstd-trackwhite-digest256,content-track-digest256,mozplugin-block-digest256,mozplugin2-block-digest256,ads-track-digest256,social-track-digest256,analytics-track-digest256,base-fingerprinting-track-digest256,content-fingerprinting-track-digest256,base-cryptomining-track-digest256,content-cryptomining-track-digest256,fanboyannoyance-ads-digest256,fanboysocial-ads-digest256,easylist-ads-digest256,easyprivacy-ads-digest256,adguard-ads-digest256,social-tracking-protection-digest256,social-tracking-protection-facebook-digest256,social-tracking-protection-linkedin-digest256,social-tracking-protection-twitter-digest256,base-email-track-digest256,content-email-track-digest256,consent-manager-track-digest256");
+pref("urlclassifier.disallow_completions", "goog-downloadwhite-digest256,base-track-digest256,mozstd-trackwhite-digest256,content-track-digest256,mozplugin-block-digest256,mozplugin2-block-digest256,ads-track-digest256,social-track-digest256,analytics-track-digest256,base-fingerprinting-track-digest256,content-fingerprinting-track-digest256,base-cryptomining-track-digest256,content-cryptomining-track-digest256,fanboyannoyance-ads-digest256,fanboysocial-ads-digest256,easylist-ads-digest256,easyprivacy-ads-digest256,adguard-ads-digest256,social-tracking-protection-digest256,social-tracking-protection-facebook-digest256,social-tracking-protection-linkedin-digest256,social-tracking-protection-twitter-digest256,base-email-track-digest256,content-email-track-digest256,consent-manager-track-digest256,anti-fraud-track-digest256");
 
 // Workaround for Google Recaptcha
 pref("urlclassifier.trackingAnnotationSkipURLs", "");
@@ -3399,7 +3402,7 @@ pref("browser.safebrowsing.reportPhishURL", "https://%LOCALE%.phish-report.mozil
 
 // Mozilla Safe Browsing provider (for tracking protection and plugin blocking)
 pref("browser.safebrowsing.provider.mozilla.pver", "2.2");
-pref("browser.safebrowsing.provider.mozilla.lists", "base-track-digest256,mozstd-trackwhite-digest256,google-trackwhite-digest256,content-track-digest256,mozplugin-block-digest256,mozplugin2-block-digest256,ads-track-digest256,social-track-digest256,analytics-track-digest256,base-fingerprinting-track-digest256,content-fingerprinting-track-digest256,base-cryptomining-track-digest256,content-cryptomining-track-digest256,fanboyannoyance-ads-digest256,fanboysocial-ads-digest256,easylist-ads-digest256,easyprivacy-ads-digest256,adguard-ads-digest256,social-tracking-protection-digest256,social-tracking-protection-facebook-digest256,social-tracking-protection-linkedin-digest256,social-tracking-protection-twitter-digest256,base-email-track-digest256,content-email-track-digest256,consent-manager-track-digest256");
+pref("browser.safebrowsing.provider.mozilla.lists", "base-track-digest256,mozstd-trackwhite-digest256,google-trackwhite-digest256,content-track-digest256,mozplugin-block-digest256,mozplugin2-block-digest256,ads-track-digest256,social-track-digest256,analytics-track-digest256,base-fingerprinting-track-digest256,content-fingerprinting-track-digest256,base-cryptomining-track-digest256,content-cryptomining-track-digest256,fanboyannoyance-ads-digest256,fanboysocial-ads-digest256,easylist-ads-digest256,easyprivacy-ads-digest256,adguard-ads-digest256,social-tracking-protection-digest256,social-tracking-protection-facebook-digest256,social-tracking-protection-linkedin-digest256,social-tracking-protection-twitter-digest256,base-email-track-digest256,content-email-track-digest256,consent-manager-track-digest256,anti-fraud-track-digest256");
 pref("browser.safebrowsing.provider.mozilla.updateURL", "moz-sbrs:://antitracking");
 pref("browser.safebrowsing.provider.mozilla.gethashURL", "https://shavar.services.mozilla.com/gethash?client=SAFEBROWSING_ID&appver=%MAJOR_VERSION%&pver=2.2");
 // Set to a date in the past to force immediate download in new profiles.
@@ -3872,11 +3875,10 @@ pref("services.common.log.logger.tokenserverclient", "Debug");
   // Port to start Marionette server on.
   pref("marionette.port", 2828);
 
-  // Defines the protocols that will be active for the Remote Agent.
-  // 1: WebDriver BiDi
-  // 2: CDP (Chrome DevTools Protocol)
-  // 3: WebDriver BiDi + CDP
-  pref("remote.active-protocols", 1);
+  // Wait logic for WebDriver:ElementClick in case navigation occurs.
+  // (Fallback behavior for Selenium clients)
+  pref("marionette.navigate-after-click.enabled", true);
+  pref("marionette.navigate-after-click.timeout", 50);
 
   // Enable WebDriver BiDi experimental commands and events.
   #if defined(NIGHTLY_BUILD)
@@ -3905,7 +3907,7 @@ pref("services.common.log.logger.tokenserverclient", "Debug");
   pref("remote.retry-on-abort", true);
 
   // Enable the NavigationManager using parent process WebProgress listeners
-  pref("remote.experimental-parent-navigation.enabled", false);
+  pref("remote.parent-navigation.enabled", true);
 #endif
 
 // Enable the JSON View tool (an inspector for application/json documents).
@@ -4011,8 +4013,8 @@ pref("extensions.formautofill.addresses.capture.enabled", true);
 #endif
 pref("extensions.formautofill.addresses.ignoreAutocompleteOff", true);
 // Supported countries need to follow ISO 3166-1 to align with "browser.search.region"
-pref("extensions.formautofill.addresses.supportedCountries", "US,CA,FR,DE");
-pref("extensions.formautofill.creditCards.supported", "detect");
+pref("extensions.formautofill.addresses.supportedCountries", "US,CA,GB,FR,DE");
+pref("extensions.formautofill.creditCards.supported", "on");
 pref("extensions.formautofill.creditCards.enabled", true);
 pref("extensions.formautofill.creditCards.ignoreAutocompleteOff", true);
 

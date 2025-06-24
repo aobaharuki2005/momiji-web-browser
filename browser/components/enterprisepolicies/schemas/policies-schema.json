@@ -291,6 +291,14 @@
                 }
               }
             },
+            "Download": {
+              "type": "object",
+              "properties": {
+                "Enabled": {
+                  "type": "boolean"
+                }
+              }
+            },
             "DragAndDrop": {
               "type": "object",
               "properties": {
@@ -638,6 +646,10 @@
           "items": {
             "type": "origin"
           }
+        },
+        "Category": {
+          "type": "string",
+          "enum": ["standard", "strict"]
         }
       }
     },

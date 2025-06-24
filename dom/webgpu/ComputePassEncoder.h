@@ -47,6 +47,7 @@ class ComputePassEncoder final : public ObjectBase,
       mPass;
   // keep all the used objects alive while the pass is recorded
   nsTArray<RefPtr<const BindGroup>> mUsedBindGroups;
+  nsTArray<RefPtr<const Buffer>> mUsedBuffers;
   nsTArray<RefPtr<const ComputePipeline>> mUsedPipelines;
 
   // programmable pass encoder
@@ -56,6 +57,8 @@ class ComputePassEncoder final : public ObjectBase,
                     uint64_t aDynamicOffsetsLength);
 
  public:
+  void Invalidate() { mValid = false; }
+
   void SetBindGroup(uint32_t aSlot, BindGroup* const aBindGroup,
                     const dom::Sequence<uint32_t>& aDynamicOffsets,
                     ErrorResult& aRv);

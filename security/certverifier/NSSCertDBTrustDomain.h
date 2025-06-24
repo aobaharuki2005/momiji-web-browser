@@ -100,7 +100,7 @@ bool LoadOSClientCertsModule();
  *        same as where all of the other gecko libraries live.
  * @return true if the module was successfully loaded, false otherwise.
  */
-bool LoadIPCClientCertsModule(const nsCString& dir);
+bool LoadIPCClientCertsModule();
 
 nsresult DefaultServerNicknameForCert(const CERTCertificate* cert,
                                       /*out*/ nsCString& nickname);

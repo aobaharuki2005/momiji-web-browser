@@ -61,7 +61,7 @@ class ProfilesDatastoreServiceClass {
   async createTables() {
     // TODO: (Bug 1902320) Handle exceptions on connection opening
     let currentVersion = await this.#connection.getSchemaVersion();
-    if (currentVersion == 3) {
+    if (currentVersion == 5) {
       return;
     }
 
@@ -124,8 +124,34 @@ class ProfilesDatastoreServiceClass {
     }
 
     if (currentVersion < 3) {
-      await this.#connection.execute("DELETE FROM NimbusEnrollments;");
+      await this.#connection.executeTransaction(async () => {
+        await this.#connection.execute("DELETE FROM NimbusEnrollments;");
+      });
       await this.#connection.setSchemaVersion(3);
+    }
+
+    if (currentVersion < 4) {
+      await this.#connection.executeTransaction(async () => {
+        await this.#connection.execute("DELETE FROM NimbusEnrollments;");
+      });
+      await this.#connection.setSchemaVersion(4);
+    }
+
+    if (currentVersion < 5) {
+      await this.#connection.executeTransaction(async () => {
+        const createHeartbeatTable = `
+            CREATE TABLE IF NOT EXISTS "Heartbeats" (
+              id              INTEGER NOT NULL,
+              recipeId        TEXT NOT NULL UNIQUE,
+              lastShown       INTEGER,
+              lastInteraction	INTEGER,
+              PRIMARY KEY(id)
+            );`;
+
+        await this.#connection.execute(createHeartbeatTable);
+      });
+
+      await this.#connection.setSchemaVersion(5);
     }
   }
 
@@ -367,10 +393,7 @@ class ProfilesDatastoreServiceClass {
     // If we are not running in a named nsIToolkitProfile, the datastore path
     // should be in the profile directory. This is true in a local build or a
     // CI test build, for example.
-    if (
-      !this.#profileService.currentProfile &&
-      !this.#profileService.groupProfile
-    ) {
+    if (!this.#profileService.currentProfile) {
       return PathUtils.join(
         ProfilesDatastoreServiceClass.getDirectory("ProfD").path,
         `${this.#storeID}.sqlite`

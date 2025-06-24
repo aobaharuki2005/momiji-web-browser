@@ -2759,6 +2759,7 @@ export class ExtensionData {
    *                             localized strings for various elements of a
    *                             permission dialog.
    */
+  // eslint-disable-next-line complexity
   static formatPermissionStrings(
     {
       addon,

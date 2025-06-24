@@ -45,7 +45,9 @@ import org.mozilla.fenix.crashes.SettingsCrashReportCache
 import org.mozilla.fenix.datastore.pocketStoriesSelectedCategoriesDataStore
 import org.mozilla.fenix.distributions.DefaultDistributionBrowserStoreProvider
 import org.mozilla.fenix.distributions.DefaultDistributionProviderChecker
+import org.mozilla.fenix.distributions.DefaultDistributionSettings
 import org.mozilla.fenix.distributions.DistributionIdManager
+import org.mozilla.fenix.distributions.LegacyDistributionProviderChecker
 import org.mozilla.fenix.ext.asRecentTabs
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.filterState
@@ -212,8 +214,15 @@ class Components(private val context: Context) {
 
     val reviewPromptController by lazyMonitored {
         ReviewPromptController(
-            manager = ReviewManagerFactory.create(context),
+            playStoreReviewPromptController = playStoreReviewPromptController,
             reviewSettings = FenixReviewSettings(settings),
+        )
+    }
+
+    val playStoreReviewPromptController by lazyMonitored {
+        PlayStoreReviewPromptController(
+            manager = ReviewManagerFactory.create(context),
+            numberOfAppLaunches = { settings.numberOfAppLaunches },
         )
     }
 
@@ -317,6 +326,8 @@ class Components(private val context: Context) {
             context = context,
             browserStoreProvider = DefaultDistributionBrowserStoreProvider(core.store),
             distributionProviderChecker = DefaultDistributionProviderChecker(context),
+            legacyDistributionProviderChecker = LegacyDistributionProviderChecker(context),
+            distributionSettings = DefaultDistributionSettings(settings),
         )
     }
 }
