@@ -2429,8 +2429,10 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   //this call will ensure the GL context
   //will round our corners as we want, but at a cost
   //see comments about superview in nscocoawindow
-  mPixelHostingView.layer.cornerRadius=6.0f;
-  mPixelHostingView.layer.masksToBounds=YES;
+  if([self isCoveringTitlebar]) {
+    mPixelHostingView.layer.cornerRadius=6.0f;
+    mPixelHostingView.layer.masksToBounds=YES;
+  }
   if (mUsingOMTCompositor) {
     // Make sure the window's "drawRect" buffer does not interfere with our
     // OpenGL drawing's rounded corners.
