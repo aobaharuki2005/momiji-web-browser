@@ -480,30 +480,32 @@ void OSXNotificationCenter::OnActivate(
       if (osxni->mObserver) {
         switch ((int)aActivationType) {
           case NSUserNotificationActivationTypeAdditionalActionClicked: {
-            MOZ_ASSERT(aAdditionalActivationAction);
-            nsAutoString actionName;
-            nsCocoaUtils::GetStringForNSString(
-                aAdditionalActivationAction.identifier, actionName);
+            if(@available(macOS 10.10, *)) { 
+              MOZ_ASSERT(aAdditionalActivationAction);
+              nsAutoString actionName;
+              nsCocoaUtils::GetStringForNSString(
+                  aAdditionalActivationAction.identifier, actionName);
 
-            if (actionName == kAlertActionDisable) {
-              osxni->mObserver->Observe(nullptr, "alertdisablecallback",
+              if (actionName == kAlertActionDisable) {
+                osxni->mObserver->Observe(nullptr, "alertdisablecallback",
+                                          osxni->mCookie.get());
+                break;
+              }
+              if (actionName == kAlertActionSettings) {
+                osxni->mObserver->Observe(nullptr, "alertsettingscallback",
+                                          osxni->mCookie.get());
+                break;
+              }
+
+              // Trim the suffix
+              actionName.Truncate(actionName.Length() - kActionSuffix.Length());
+
+              nsCOMPtr<nsIAlertAction> action;
+              osxni->mAlertNotification->GetAction(actionName,
+                                                   getter_AddRefs(action));
+              osxni->mObserver->Observe(action, "alertclickcallback",
                                         osxni->mCookie.get());
-              break;
             }
-            if (actionName == kAlertActionSettings) {
-              osxni->mObserver->Observe(nullptr, "alertsettingscallback",
-                                        osxni->mCookie.get());
-              break;
-            }
-
-            // Trim the suffix
-            actionName.Truncate(actionName.Length() - kActionSuffix.Length());
-
-            nsCOMPtr<nsIAlertAction> action;
-            osxni->mAlertNotification->GetAction(actionName,
-                                                 getter_AddRefs(action));
-            osxni->mObserver->Observe(action, "alertclickcallback",
-                                      osxni->mCookie.get());
             break;
           }
           case NSUserNotificationActivationTypeActionButtonClicked:
