@@ -485,16 +485,18 @@ void OSXNotificationCenter::OnActivate(
         switch ((int)aActivationType) {
           case NSUserNotificationActivationTypeAdditionalActionClicked:
           case NSUserNotificationActivationTypeActionButtonClicked:
-            if (aAdditionalActivationAction) {
-              nsAutoString actionName;
-              nsCocoaUtils::GetStringForNSString(
-                  aAdditionalActivationAction.identifier, actionName);
-              nsCOMPtr<nsIAlertAction> action;
-              osxni->mAlertNotification->GetAction(actionName,
-                                                   getter_AddRefs(action));
-              osxni->mObserver->Observe(action, "alertclickcallback",
-                                        osxni->mCookie.get());
-              break;
+            if (@available(macOS 10.10, *)) {
+              if (aAdditionalActivationAction) {
+                nsAutoString actionName;
+                nsCocoaUtils::GetStringForNSString(
+                    aAdditionalActivationAction.identifier, actionName);
+                nsCOMPtr<nsIAlertAction> action;
+                osxni->mAlertNotification->GetAction(actionName,
+                                                     getter_AddRefs(action));
+                osxni->mObserver->Observe(action, "alertclickcallback",
+                                          osxni->mCookie.get());
+                break;
+              }
             }
             switch (aAdditionalActionIndex) {
               case OSXNotificationActionDisable:
