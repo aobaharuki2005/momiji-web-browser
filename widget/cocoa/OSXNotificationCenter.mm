@@ -105,9 +105,15 @@ enum { NSUserNotificationActivationTypeAdditionalActionClicked = 4 };
         [(NSObject*)notification valueForKey:@"_alternateActionIndex"];
     additionalActionIndex = [alternateActionIndex unsignedLongLongValue];
   }
-  mOSXNC->OnActivate([[notification userInfo] valueForKey:@"name"],
-                     notification.activationType, additionalActionIndex,
-                     notification.additionalActivationAction);
+  if(@available(macOS 10.10, *)) {
+    mOSXNC->OnActivate([[notification userInfo] valueForKey:@"name"],
+                       notification.activationType, additionalActionIndex,
+                       notification.additionalActivationAction);
+  } else {
+    mOSXNC->OnActivate([[notification userInfo] valueForKey:@"name"],
+                       notification.activationType, additionalActionIndex,
+                       NULL);
+  }
 }
 
 - (BOOL)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
@@ -485,18 +491,16 @@ void OSXNotificationCenter::OnActivate(
         switch ((int)aActivationType) {
           case NSUserNotificationActivationTypeAdditionalActionClicked:
           case NSUserNotificationActivationTypeActionButtonClicked:
-            if (@available(macOS 10.10, *)) {
-              if (aAdditionalActivationAction) {
-                nsAutoString actionName;
-                nsCocoaUtils::GetStringForNSString(
-                    aAdditionalActivationAction.identifier, actionName);
-                nsCOMPtr<nsIAlertAction> action;
-                osxni->mAlertNotification->GetAction(actionName,
-                                                     getter_AddRefs(action));
-                osxni->mObserver->Observe(action, "alertclickcallback",
-                                          osxni->mCookie.get());
-                break;
-              }
+            if (aAdditionalActivationAction) {
+              nsAutoString actionName;
+              nsCocoaUtils::GetStringForNSString(
+                  aAdditionalActivationAction.identifier, actionName);
+              nsCOMPtr<nsIAlertAction> action;
+              osxni->mAlertNotification->GetAction(actionName,
+                                                   getter_AddRefs(action));
+              osxni->mObserver->Observe(action, "alertclickcallback",
+                                        osxni->mCookie.get());
+              break;
             }
             switch (aAdditionalActionIndex) {
               case OSXNotificationActionDisable:
