@@ -11,9 +11,9 @@
   -->
   <string name="content_description_menu">Mais opções</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_private_browsing_button">Ativar navegação privativa</string>
+  <string name="content_description_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Ativar navegação privativa</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_disable_private_browsing_button">Desativar navegação privativa</string>
+  <string name="content_description_disable_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Desativar navegação privativa</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
   <string name="content_description_private_browsing">Navegação privativa</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
@@ -518,7 +518,7 @@
   <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
   <string name="onboarding_home_skip_button" moz:removedIn="141" tools:ignore="UnusedResources">Pular</string>
   <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
-  <string name="sync_cfr_message">Suas abas estão sendo sincronizadas! Continue de onde parou em outro dispositivo.</string>
+  <string name="sync_cfr_message" moz:removedIn="142" tools:ignore="UnusedResources">Suas abas estão sendo sincronizadas! Continue de onde parou em outro dispositivo.</string>
   <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
   <string name="onboarding_home_content_description_close_button">Fechar</string>
   <!--
@@ -859,6 +859,8 @@
   <string name="preferences_category_account">Conta</string>
   <!-- Preference for changing where the AddressBar is positioned -->
   <string name="preferences_toolbar_2">Local da barra de endereços</string>
+  <!-- Preference for changing toolbar layout -->
+  <string name="preferences_toolbar_layout">Formato da barra de ferramentas</string>
   <!-- Preference for changing default theme to dark or light mode -->
   <string name="preferences_theme">Tema</string>
   <!-- Preference for customizing the home screen -->
@@ -943,7 +945,7 @@
   <string name="preferences_external_download_manager" tools:ignore="UnusedResources" moz:removedIn="141">Gerenciador de downloads externo</string>
   <!-- Preference title for choosing an app to handle downloads -->
   <string name="preferences_choose_app_for_downloads">Gerenciar downloads com outro aplicativo</string>
-  <!-- Title for the setting to automatically clean up downloaded files. %s is the brand of the phone (for example: Samsung). -->
+  <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
   <string name="preferences_downloads_settings_clean_up_files_title">Excluir do %s e do dispositivo</string>
   <!-- Summary for the setting to automatically clean up downloaded files -->
   <string name="preferences_downloads_settings_clean_up_files_summary">Remover arquivos do gerenciador de downloads também remove do seu dispositivo</string>
@@ -1279,6 +1281,10 @@
   <string name="preference_top_toolbar">No alto</string>
   <!-- Preference for using bottom toolbar -->
   <string name="preference_bottom_toolbar">Embaixo</string>
+  <!-- Preference for using simple toolbar -->
+  <string name="preference_simple_toolbar">Simples</string>
+  <!-- Preference for using expanded toolbar -->
+  <string name="preference_expanded_toolbar">Expandida</string>
   <!--
     Theme Preferences
 
@@ -1647,17 +1653,27 @@
   -->
   <string name="download_item_in_progress_description_2">%1$s / %2$s • em %3$s.</string>
   <!--
-    Description of an in progress download item, displayed in the downloads list when the download time remaining is unknown.
+    Description of an in progress download item, displayed in the downloads list when the estimated download time remaining is still being calculated.
     %1$s is the current file size that has been downloaded.
     %2$s is the total size of the downloaded file.
   -->
   <string name="download_item_in_progress_description_pending">%1$s / %2$s • pendente</string>
+  <!--
+    Description of an in progress download item, displayed in the downloads list when the total download size is unknown. This results in the estimated download time remaining to be unknown also.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_in_progress_description_unknown_total_size">%1$s • tempo desconhecido</string>
   <!--
     Description of a paused download item, displayed in the downloads list.
     %1$s is the current file size that has been downloaded.
     %2$s is the total size of the downloaded file.
   -->
   <string name="download_item_paused_description">%1$s / %2$s • pausado</string>
+  <!--
+    Description of a paused download item, displayed in the downloads list when the total download size is unknown.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_paused_description_unknown_total_size">%1$s • pausado</string>
   <!-- Text to indicate that an in progress download is paused. -->
   <string name="download_item_status_paused" moz:removedIn="141" tools:ignore="UnusedResources">pausado</string>
   <!-- Text to indicate that the download speed of an in progress download is being calculated. -->
@@ -1762,12 +1778,20 @@
   <string name="tab_crash_restore">Restaurar aba</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title">%s precisou reiniciar</string>
+  <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_title">Você tem um relatório de falha não enviado, relacionado a falhas sendo investigadas. Ao enviar, nos ajuda a melhorar o %1$s. Se fechar esta notificação, o relatório será desconsiderado.</string>
+  <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crashes_requested_by_devs_dialog_title">Você tem relatórios de falha não enviados (%1$d), relacionados a falhas sendo investigadas. Ao enviar, nos ajuda a melhorar o %2$s. Se fechar esta notificação, esses relatórios serão desconsiderados.</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Enviar relatórios de falhas automaticamente</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Fechar</string>
+  <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Não mostrar novamente</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Enviar relatório de falha</string>
+  <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
+  <string name="unsubmitted_crash_requested_by_devs_learn_more">Saiba mais</string>
   <!--
     Bookmarks
 
@@ -2627,6 +2651,14 @@
   <string name="saved_login_clear_username">Limpar nome de usuário</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">Limpar nome de servidor</string>
+  <!-- Content description, used by tools like screenreaders, for the 3 dots button that shows commands related to the currently displayed login (edit, delete). -->
+  <string name="login_detail_menu_button_content_description">Menu de detalhes da conta</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the login detail view. -->
+  <string name="login_details_navigate_back_button_content_description">Voltar à página anterior</string>
+  <!-- Edit text for the login detail menu edit button -->
+  <string name="login_detail_menu_edit_button">Editar</string>
+  <!-- Delete text for the login detail menu delete button -->
+  <string name="login_detail_menu_delete_button">Excluir</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Abrir site no navegador</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->

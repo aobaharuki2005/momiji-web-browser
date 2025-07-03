@@ -11,9 +11,9 @@
   -->
   <string name="content_description_menu">കൂടുതൽ ഐച്ഛികങ്ങൾ</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_private_browsing_button">സ്വകാര്യ തിരയൽ സജ്ജമാക്കുക</string>
+  <string name="content_description_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">സ്വകാര്യ തിരയൽ സജ്ജമാക്കുക</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_disable_private_browsing_button">സ്വകാര്യ തിരയൽ നിർജ്ജീവമാക്കുക</string>
+  <string name="content_description_disable_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">സ്വകാര്യ തിരയൽ നിർജ്ജീവമാക്കുക</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
   <string name="content_description_private_browsing">സ്വകാര്യ തിരയൽ</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
@@ -518,7 +518,7 @@
   <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
   <string name="onboarding_home_skip_button" moz:removedIn="141" tools:ignore="UnusedResources">ഒഴിവാക്കുക</string>
   <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
-  <string name="sync_cfr_message">താങ്ങളുടെ ടാബുകൾ സമന്വയിപ്പിക്കുന്നു! താങ്ങളുടെ മറ്റു് ഉപകരണത്തിൽ നിർത്തിയിടത്തു് നിന്നു് വീണ്ടും തുടങ്ങുക.</string>
+  <string name="sync_cfr_message" moz:removedIn="142" tools:ignore="UnusedResources">താങ്ങളുടെ ടാബുകൾ സമന്വയിപ്പിക്കുന്നു! താങ്ങളുടെ മറ്റു് ഉപകരണത്തിൽ നിർത്തിയിടത്തു് നിന്നു് വീണ്ടും തുടങ്ങുക.</string>
   <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
   <string name="onboarding_home_content_description_close_button">അടയ്ക്കുക</string>
   <!--
@@ -904,6 +904,8 @@
   <string name="preferences_open_links_in_apps_never">ഒരിക്കലുമില്ല</string>
   <!-- Preference for open download with an external download manager app -->
   <string name="preferences_external_download_manager" tools:ignore="UnusedResources" moz:removedIn="141">ബാഹ്യ ഇറക്കിവയ്ക്കൽ മാനേജർ</string>
+  <!-- Preference for downloads -->
+  <string name="preferences_downloads">ഇറക്കിവയ്ക്കലുകൾ</string>
   <!-- Message to indicate users that we are quitting the application to apply the changes -->
   <string name="quit_application">മാറ്റങ്ങൾ പ്രാവർത്തികമാക്കാൻ പ്രയോഗത്തിൽ നിന്നും പുറത്തുകടക്കുന്നു…</string>
   <!-- Preference for extensions -->
@@ -1043,6 +1045,12 @@
   <string name="alternative_app_icon_option_momo">മോമോ</string>
   <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
   <string name="alternative_app_icon_option_momo_subtitle">ഇതു് @heyheymomodraws ആണു് ഉണ്ടാക്കിയതു്</string>
+  <!-- Title for the "Solid colors" group of alternative app icon variants in the icon picker screen. This group contains icons with flat, uniform color backgrounds. -->
+  <string name="alternative_app_icon_group_solid_colors">കടും നിറങ്ങൾ</string>
+  <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
+  <string name="alternative_app_icon_group_gradients">നിറച്ചരുമാനം</string>
+  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_other">മറ്റുള്ളവ</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1552,7 +1560,7 @@
   -->
   <string name="download_item_in_progress_description_2">%1$s / %2$s • %3$s-ൽ</string>
   <!--
-    Description of an in progress download item, displayed in the downloads list when the download time remaining is unknown.
+    Description of an in progress download item, displayed in the downloads list when the estimated download time remaining is still being calculated.
     %1$s is the current file size that has been downloaded.
     %2$s is the total size of the downloaded file.
   -->
@@ -1669,8 +1677,12 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">തകർച്ച വിവരങ്ങൾ തന്നെതാന്നെ അയയ്ക്കുക</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">അടയ്ക്കുക</string>
+  <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">ഇനി ഒരിക്കലും കാണിയ്ക്കരുത്</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">തകരാറിനെപ്പറ്റിയുള്ള അറിയിപ്പ് അയയ്ക്കുക</string>
+  <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
+  <string name="unsubmitted_crash_requested_by_devs_learn_more">കൂടുതലറിയുക</string>
   <!--
     Bookmarks
 

@@ -11,9 +11,9 @@
   -->
   <string name="content_description_menu">Περισσότερες επιλογές</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_private_browsing_button">Ενεργοποίηση ιδιωτικής περιήγησης</string>
+  <string name="content_description_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Ενεργοποίηση ιδιωτικής περιήγησης</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_disable_private_browsing_button">Απενεργοποίηση ιδιωτικής περιήγησης</string>
+  <string name="content_description_disable_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Απενεργοποίηση ιδιωτικής περιήγησης</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
   <string name="content_description_private_browsing">Ιδιωτική περιήγηση</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
@@ -518,7 +518,7 @@
   <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
   <string name="onboarding_home_skip_button" moz:removedIn="141" tools:ignore="UnusedResources">Παράλειψη</string>
   <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
-  <string name="sync_cfr_message">Οι καρτέλες σας συγχρονίζονται! Συνεχίστε από εκεί που σταματήσατε στην άλλη συσκευή σας.</string>
+  <string name="sync_cfr_message" moz:removedIn="142" tools:ignore="UnusedResources">Οι καρτέλες σας συγχρονίζονται! Συνεχίστε από εκεί που σταματήσατε στην άλλη συσκευή σας.</string>
   <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
   <string name="onboarding_home_content_description_close_button">Κλείσιμο</string>
   <!--
@@ -859,6 +859,8 @@
   <string name="preferences_category_account">Λογαριασμός</string>
   <!-- Preference for changing where the AddressBar is positioned -->
   <string name="preferences_toolbar_2">Τοποθεσία γραμμής διευθύνσεων</string>
+  <!-- Preference for changing toolbar layout -->
+  <string name="preferences_toolbar_layout">Διάταξη γραμμής εργαλείων</string>
   <!-- Preference for changing default theme to dark or light mode -->
   <string name="preferences_theme">Θέμα</string>
   <!-- Preference for customizing the home screen -->
@@ -943,7 +945,7 @@
   <string name="preferences_external_download_manager" tools:ignore="UnusedResources" moz:removedIn="141">Εξωτερική διαχείριση λήψεων</string>
   <!-- Preference title for choosing an app to handle downloads -->
   <string name="preferences_choose_app_for_downloads">Διαχείριση λήψεων με άλλη εφαρμογή</string>
-  <!-- Title for the setting to automatically clean up downloaded files. %s is the brand of the phone (for example: Samsung). -->
+  <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
   <string name="preferences_downloads_settings_clean_up_files_title">Διαγραφή από το %s και τη συσκευή</string>
   <!-- Summary for the setting to automatically clean up downloaded files -->
   <string name="preferences_downloads_settings_clean_up_files_summary">Η διαγραφή των αρχείων από την εφαρμογή διαχείρισης λήψεών σας θα τα διαγράψει και από τη συσκευή σας</string>
@@ -1279,6 +1281,10 @@
   <string name="preference_top_toolbar">Πάνω</string>
   <!-- Preference for using bottom toolbar -->
   <string name="preference_bottom_toolbar">Κάτω</string>
+  <!-- Preference for using simple toolbar -->
+  <string name="preference_simple_toolbar">Απλή</string>
+  <!-- Preference for using expanded toolbar -->
+  <string name="preference_expanded_toolbar">Ανεπτυγμένη</string>
   <!--
     Theme Preferences
 
@@ -1647,17 +1653,27 @@
   -->
   <string name="download_item_in_progress_description_2">%1$s / %2$s • σε %3$s.</string>
   <!--
-    Description of an in progress download item, displayed in the downloads list when the download time remaining is unknown.
+    Description of an in progress download item, displayed in the downloads list when the estimated download time remaining is still being calculated.
     %1$s is the current file size that has been downloaded.
     %2$s is the total size of the downloaded file.
   -->
   <string name="download_item_in_progress_description_pending">%1$s / %2$s • σε εκκρεμότητα</string>
+  <!--
+    Description of an in progress download item, displayed in the downloads list when the total download size is unknown. This results in the estimated download time remaining to be unknown also.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_in_progress_description_unknown_total_size">%1$s • άγνωστος χρόνος</string>
   <!--
     Description of a paused download item, displayed in the downloads list.
     %1$s is the current file size that has been downloaded.
     %2$s is the total size of the downloaded file.
   -->
   <string name="download_item_paused_description">%1$s / %2$s • σε παύση</string>
+  <!--
+    Description of a paused download item, displayed in the downloads list when the total download size is unknown.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_paused_description_unknown_total_size">%1$s • σε παύση</string>
   <!-- Text to indicate that an in progress download is paused. -->
   <string name="download_item_status_paused" moz:removedIn="141" tools:ignore="UnusedResources">σε παύση</string>
   <!-- Text to indicate that the download speed of an in progress download is being calculated. -->
@@ -1781,7 +1797,7 @@
 
     Confirmation message for a dialog confirming if the user wants to delete the selected folder
   -->
-  <string name="bookmark_delete_folder_confirmation_dialog">Θέλετε σίγουρα να διαγράψετε αυτό το φάκελο;</string>
+  <string name="bookmark_delete_folder_confirmation_dialog">Θέλετε σίγουρα να διαγράψετε αυτόν τον φάκελο;</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items. -->
   <string name="bookmark_delete_folders_confirmation_dialog">Θέλετε σίγουρα να διαγράψετε τα επιλεγμένα στοιχεία;</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. %s is the name of the app (for example "Firefox"). -->
@@ -2340,7 +2356,7 @@
   <!-- Preference for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict">Αυστηρή</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-  <string name="preference_enhanced_tracking_protection_strict_description_4">Ισχυρότερη προστασία από καταγραφή και καλύτερες επιδόσεις, αλλά ορισμένοι ιστότοποι ενδέχεται να μη λειτουργούν σωστά.</string>
+  <string name="preference_enhanced_tracking_protection_strict_description_4">Ισχυρότερη προστασία από καταγραφή και καλύτερες επιδόσεις, αλλά ορισμένοι ιστότοποι ενδέχεται να μην λειτουργούν σωστά.</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Τι αποκλείει η αυστηρή προστασία από καταγραφή</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -2582,7 +2598,7 @@
   <!-- Preference option for asking to save passwords in Fenix -->
   <string name="preferences_passwords_save_logins_ask_to_save">Να γίνεται ερώτηση για αποθήκευση</string>
   <!-- Preference option for never saving passwords in Fenix -->
-  <string name="preferences_passwords_save_logins_never_save">Να μη γίνεται ποτέ αποθήκευση</string>
+  <string name="preferences_passwords_save_logins_never_save">Να μην γίνεται ποτέ αποθήκευση</string>
   <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
   <string name="preferences_passwords_autofill2">Αυτόματη συμπλήρωση στο %1$s</string>
   <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
@@ -2635,6 +2651,14 @@
   <string name="saved_login_clear_username">Εκκαθάριση ονόματος χρήστη</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">Απαλοιφή ονόματος κεντρικού υπολογιστή</string>
+  <!-- Content description, used by tools like screenreaders, for the 3 dots button that shows commands related to the currently displayed login (edit, delete). -->
+  <string name="login_detail_menu_button_content_description">Μενού λεπτομερειών σύνδεσης</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the login detail view. -->
+  <string name="login_details_navigate_back_button_content_description">Πλοήγηση προς τα πίσω</string>
+  <!-- Edit text for the login detail menu edit button -->
+  <string name="login_detail_menu_edit_button">Επεξεργασία</string>
+  <!-- Delete text for the login detail menu delete button -->
+  <string name="login_detail_menu_delete_button">Διαγραφή</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Άνοιγμα σελίδας στο πρόγραμμα περιήγησης</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -2816,9 +2840,9 @@
   <!-- Text shown when a user leaves the search string field empty -->
   <string name="search_add_custom_engine_error_empty_search_string">Εισαγάγετε νήμα αναζήτησης</string>
   <!-- Text shown when a user leaves out the required template string -->
-  <string name="search_add_custom_engine_error_missing_template">Βεβαιωθείτε ότι το νήμα αναζήτησης συμφωνεί με την μορφή του παραδείγματος</string>
+  <string name="search_add_custom_engine_error_missing_template">Βεβαιωθείτε ότι το νήμα αναζήτησης συμφωνεί με τη μορφή του παραδείγματος</string>
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Σφάλμα σύνδεσης στο “%s”</string>
+  <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Σφάλμα σύνδεσης στο «%s»</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_success_message">Δημιουργήθηκε to %s</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
@@ -3126,7 +3150,7 @@
   <!-- The title of the warning card informs the user that a translation could not be completed. -->
   <string name="translation_error_could_not_translate_warning_text">Προέκυψε πρόβλημα με τη μετάφραση. Δοκιμάστε ξανά.</string>
   <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
-  <string name="translation_error_could_not_load_languages_warning_text">Αδυναμία φόρτωσης γλωσσών. Ελέγξτε τη σύνδεσή σας στο διαδίκτυο και δοκιμάστε ξανά.</string>
+  <string name="translation_error_could_not_load_languages_warning_text">Δεν ήταν δυνατή η φόρτωση των γλωσσών. Ελέγξτε τη σύνδεσή σας στο διαδίκτυο και δοκιμάστε ξανά.</string>
   <!-- The title of the warning card informs the user that a language is not supported. %1$s is the name of the language that is not supported. -->
   <string name="translation_error_language_not_supported_warning_text">Δυστυχώς, δεν υποστηρίζουμε ακόμα τα %1$s.</string>
   <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
@@ -3151,7 +3175,7 @@
   <!-- Toggle switch label that allows a user to set if they would like to never be offered a translation of the given language. %1$s is the language name, for example, "Spanish". -->
   <string name="translation_option_bottom_sheet_never_translate_in_language">Ποτέ μετάφραση για τα %1$s</string>
   <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
-  <string name="translation_option_bottom_sheet_never_translate_site">Να μη μεταφράζεται ποτέ αυτός ο ιστότοπος</string>
+  <string name="translation_option_bottom_sheet_never_translate_site">Να μην μεταφράζεται ποτέ αυτός ο ιστότοπος</string>
   <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
   <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Παρακάμπτει όλες τις άλλες ρυθμίσεις</string>
   <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
@@ -3179,7 +3203,7 @@
   <!-- Button text for the button that will take the user to the automatic translations settings dialog. On the automatic translations settings dialog, the user can set if translations should occur automatically for a given language. -->
   <string name="translation_settings_automatic_translation">Αυτόματη μετάφραση</string>
   <!-- Button text for the button that will take the user to the never translate these sites dialog. On the never translate these sites dialog, the user can set if translations should never occur on certain websites. -->
-  <string name="translation_settings_automatic_never_translate_sites">Να μη μεταφράζονται ποτέ αυτοί οι ιστότοποι</string>
+  <string name="translation_settings_automatic_never_translate_sites">Να μην μεταφράζονται ποτέ αυτοί οι ιστότοποι</string>
   <!-- Button text for the button that will take the user to the download languages dialog. On the download languages dialog, the user can manage which languages they would like to download for translations. -->
   <string name="translation_settings_download_language">Λήψη γλωσσών</string>
   <!--
@@ -3205,7 +3229,7 @@
   <!-- Preference option for always translate. Radio button summary text. %1$s is the name of the app (for example "Firefox"). -->
   <string name="automatic_translation_option_always_translate_summary_preference">Το %1$s θα μεταφράζει αυτόματα αυτήν τη γλώσσα κατά τη φόρτωση των σελίδων.</string>
   <!-- Preference option for never translate. Radio button title text. -->
-  <string name="automatic_translation_option_never_translate_title_preference">Να μη γίνεται ποτέ μετάφραση</string>
+  <string name="automatic_translation_option_never_translate_title_preference">Να μην γίνεται ποτέ μετάφραση</string>
   <!-- Preference option for never translate. Radio button summary text. %1$s is the name of the app (for example "Firefox"). -->
   <string name="automatic_translation_option_never_translate_summary_preference">Το %1$s δεν θα προτείνει ποτέ τη μετάφραση ιστοτόπων σε αυτήν τη γλώσσα.</string>
   <!--
@@ -3213,9 +3237,9 @@
 
     Title of the never translate site preference screen that will appear on the toolbar.
   -->
-  <string name="never_translate_site_toolbar_title_preference">Να μη μεταφράζονται ποτέ αυτοί οι ιστότοποι</string>
+  <string name="never_translate_site_toolbar_title_preference">Να μην μεταφράζονται ποτέ αυτοί οι ιστότοποι</string>
   <!-- Screen header presenting the never translate site preference feature. It will appear under the toolbar. -->
-  <string name="never_translate_site_header_preference">Για να προσθέσετε νέο ιστότοπο: Επισκεφτείτε τον και επιλέξτε «Να μη μεταφράζεται ποτέ αυτός ο ιστότοπος» από το μενού μετάφρασης.</string>
+  <string name="never_translate_site_header_preference">Για να προσθέσετε έναν νέο ιστότοπο: Επισκεφθείτε τον και επιλέξτε «Να μην μεταφράζεται ποτέ αυτός ο ιστότοπος» από το μενού μετάφρασης.</string>
   <!--
     Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
     %1$s is web site url (for example:"wikipedia.com")

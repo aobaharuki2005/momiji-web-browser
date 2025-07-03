@@ -1474,7 +1474,7 @@ newtabTrendingSearchWidget:
       type: boolean
       setPref:
         branch: user
-        pref: browser.newtabpage.activity-stream.trendingSearch.enabled
+        pref: browser.newtabpage.activity-stream.system.trendingSearch.enabled
       description: Enables the refined cards layout for newtab
     variant:
       type: string
@@ -1482,6 +1482,18 @@ newtabTrendingSearchWidget:
         branch: user
         pref: browser.newtabpage.activity-stream.trendingSearch.variant
       description: Determines the layout variant for the trending search widget
+
+newtabPublisherFavicons:
+  description: Enabled publihser favicons on cards in newtab
+  owner: nbarrett@mozilla.com
+  hasExposure: false
+  variables:
+    enabled:
+      type: boolean
+      setPref:
+        branch: user
+        pref: browser.newtabpage.activity-stream.discoverystream.publisherFavicon.enabled
+      description: Enables publisher favicons on cards in newtab
 
 pocketNewtab:
   description: The Pocket section in newtab
@@ -4496,6 +4508,9 @@ chatbot:
   owner: elee@mozilla.com
   hasExposure: false
   variables:
+    badgeSidebar:
+      type: boolean
+      description: Show badge on chatbot sidebar tool on enrollment
     minVersion:
       type: string
       description: Minimum Firefox version to apply prefs

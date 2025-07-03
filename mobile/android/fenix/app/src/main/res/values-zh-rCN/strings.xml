@@ -11,9 +11,9 @@
   -->
   <string name="content_description_menu">更多选项</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_private_browsing_button">启用隐私浏览模式</string>
+  <string name="content_description_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">启用隐私浏览模式</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_disable_private_browsing_button">禁用隐私浏览模式</string>
+  <string name="content_description_disable_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">禁用隐私浏览模式</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
   <string name="content_description_private_browsing">隐私浏览</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
@@ -518,7 +518,7 @@
   <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
   <string name="onboarding_home_skip_button" moz:removedIn="141" tools:ignore="UnusedResources">跳过</string>
   <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
-  <string name="sync_cfr_message">标签页正在同步！您可在另一设备上继续浏览。</string>
+  <string name="sync_cfr_message" moz:removedIn="142" tools:ignore="UnusedResources">标签页正在同步！您可在另一设备上继续浏览。</string>
   <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
   <string name="onboarding_home_content_description_close_button">关闭</string>
   <!--
@@ -859,6 +859,8 @@
   <string name="preferences_category_account">账户</string>
   <!-- Preference for changing where the AddressBar is positioned -->
   <string name="preferences_toolbar_2">地址栏位置</string>
+  <!-- Preference for changing toolbar layout -->
+  <string name="preferences_toolbar_layout">工具栏布局</string>
   <!-- Preference for changing default theme to dark or light mode -->
   <string name="preferences_theme">主题</string>
   <!-- Preference for customizing the home screen -->
@@ -943,7 +945,7 @@
   <string name="preferences_external_download_manager" tools:ignore="UnusedResources" moz:removedIn="141">外部下载管理器</string>
   <!-- Preference title for choosing an app to handle downloads -->
   <string name="preferences_choose_app_for_downloads">通过其他应用管理下载</string>
-  <!-- Title for the setting to automatically clean up downloaded files. %s is the brand of the phone (for example: Samsung). -->
+  <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
   <string name="preferences_downloads_settings_clean_up_files_title">从 %s 和设备删除</string>
   <!-- Summary for the setting to automatically clean up downloaded files -->
   <string name="preferences_downloads_settings_clean_up_files_summary">将文件从下载管理器移除后，也会将其从设备移除</string>
@@ -1279,6 +1281,10 @@
   <string name="preference_top_toolbar">顶部</string>
   <!-- Preference for using bottom toolbar -->
   <string name="preference_bottom_toolbar">底部</string>
+  <!-- Preference for using simple toolbar -->
+  <string name="preference_simple_toolbar">简单</string>
+  <!-- Preference for using expanded toolbar -->
+  <string name="preference_expanded_toolbar">展开</string>
   <!--
     Theme Preferences
 
@@ -1647,17 +1653,27 @@
   -->
   <string name="download_item_in_progress_description_2">%1$s / %2$s • 剩余 %3$s。</string>
   <!--
-    Description of an in progress download item, displayed in the downloads list when the download time remaining is unknown.
+    Description of an in progress download item, displayed in the downloads list when the estimated download time remaining is still being calculated.
     %1$s is the current file size that has been downloaded.
     %2$s is the total size of the downloaded file.
   -->
   <string name="download_item_in_progress_description_pending">%1$s / %2$s • 测算中</string>
+  <!--
+    Description of an in progress download item, displayed in the downloads list when the total download size is unknown. This results in the estimated download time remaining to be unknown also.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_in_progress_description_unknown_total_size">%1$s • 剩余时间未知</string>
   <!--
     Description of a paused download item, displayed in the downloads list.
     %1$s is the current file size that has been downloaded.
     %2$s is the total size of the downloaded file.
   -->
   <string name="download_item_paused_description">%1$s / %2$s • 已暂停</string>
+  <!--
+    Description of a paused download item, displayed in the downloads list when the total download size is unknown.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_paused_description_unknown_total_size">%1$s • 已暂停</string>
   <!-- Text to indicate that an in progress download is paused. -->
   <string name="download_item_status_paused" moz:removedIn="141" tools:ignore="UnusedResources">已暂停</string>
   <!-- Text to indicate that the download speed of an in progress download is being calculated. -->
@@ -1762,12 +1778,20 @@
   <string name="tab_crash_restore">恢复标签页</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title">%s 需要重新启动</string>
+  <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_title">您有一份未发送的崩溃报告与调查中的崩溃问题相关，发送这部分报告可帮助我们改进 %1$s。关闭此通知将忽略这部分报告。</string>
+  <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crashes_requested_by_devs_dialog_title">您有 %1$d 份未发送的崩溃报告与调查中的崩溃问题相关，发送这部分报告可帮助我们改进 %2$s。关闭此通知将忽略这部分报告。</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">自动发送崩溃报告</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">关闭</string>
+  <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">不再显示</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">发送崩溃报告</string>
+  <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
+  <string name="unsubmitted_crash_requested_by_devs_learn_more">详细了解</string>
   <!--
     Bookmarks
 
@@ -2627,6 +2651,12 @@
   <string name="saved_login_clear_username">清除用户名</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">清除主机名</string>
+  <!-- Content description, used by tools like screenreaders, for the 3 dots button that shows commands related to the currently displayed login (edit, delete). -->
+  <string name="login_detail_menu_button_content_description">登录详细信息菜单</string>
+  <!-- Edit text for the login detail menu edit button -->
+  <string name="login_detail_menu_edit_button">编辑</string>
+  <!-- Delete text for the login detail menu delete button -->
+  <string name="login_detail_menu_delete_button">删除</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">在浏览器中打开网站</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -2990,7 +3020,7 @@
     Search suggestions title for trending search suggestions.
     %s is a placeholder for the name of the search engine providing the trending search suggestions.
   -->
-  <string name="trending_searches_header_2">%s 热门搜索</string>
+  <string name="trending_searches_header_2">%s\u200a热门搜索</string>
   <!-- Title for search suggestions when Google is the default search suggestion engine. -->
   <string name="google_search_engine_suggestion_header">Google 搜索</string>
   <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. %s is default search engine name. -->

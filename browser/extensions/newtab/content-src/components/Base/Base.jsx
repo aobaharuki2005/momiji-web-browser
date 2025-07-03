@@ -392,6 +392,13 @@ export class BaseContent extends React.PureComponent {
           "--newtab-wallpaper-color",
           "transparent"
         );
+
+        // Based on the current colorMode, add the corresponding dark/light CSS classes
+        if (this.state.colorMode) {
+          this.setState(prevState => ({
+            wallpaperTheme: prevState.colorMode,
+          }));
+        }
       } catch (e) {}
 
       return;
@@ -472,7 +479,7 @@ export class BaseContent extends React.PureComponent {
           ac.DiscoveryStreamUserEvent({
             event: "FEATURE_HIGHLIGHT_OPEN",
             source: "FEATURE_HIGHLIGHT",
-            value: "FEATURE_DOWNLOAD_MOBILE_PROMO",
+            value: { feature: "FEATURE_DOWNLOAD_MOBILE_PROMO" },
           })
         );
       }

@@ -11,9 +11,9 @@
   -->
   <string name="content_description_menu">Tùy chọn khác</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_private_browsing_button">Bật duyệt web riêng tư</string>
+  <string name="content_description_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Bật duyệt web riêng tư</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_disable_private_browsing_button">Tắt duyệt web riêng tư</string>
+  <string name="content_description_disable_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Tắt duyệt web riêng tư</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
   <string name="content_description_private_browsing">Duyệt web riêng tư</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
@@ -518,7 +518,7 @@
   <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
   <string name="onboarding_home_skip_button" moz:removedIn="141" tools:ignore="UnusedResources">Bỏ qua</string>
   <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
-  <string name="sync_cfr_message">Các thẻ của bạn đang đồng bộ hóa! Tiếp tục nơi bạn đã dừng lại trên thiết bị khác của mình.</string>
+  <string name="sync_cfr_message" moz:removedIn="142" tools:ignore="UnusedResources">Các thẻ của bạn đang đồng bộ hóa! Tiếp tục nơi bạn đã dừng lại trên thiết bị khác của mình.</string>
   <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
   <string name="onboarding_home_content_description_close_button">Đóng</string>
   <!--
@@ -859,6 +859,8 @@
   <string name="preferences_category_account">Tài khoản</string>
   <!-- Preference for changing where the AddressBar is positioned -->
   <string name="preferences_toolbar_2">Vị trí thanh địa chỉ</string>
+  <!-- Preference for changing toolbar layout -->
+  <string name="preferences_toolbar_layout">Bố cục thanh công cụ</string>
   <!-- Preference for changing default theme to dark or light mode -->
   <string name="preferences_theme">Chủ đề</string>
   <!-- Preference for customizing the home screen -->
@@ -941,6 +943,14 @@
   <string name="preferences_open_links_in_apps_never">Không bao giờ</string>
   <!-- Preference for open download with an external download manager app -->
   <string name="preferences_external_download_manager" tools:ignore="UnusedResources" moz:removedIn="141">Trình quản lý tải xuống bên ngoài</string>
+  <!-- Preference title for choosing an app to handle downloads -->
+  <string name="preferences_choose_app_for_downloads">Quản lý tải xuống bằng ứng dụng khác</string>
+  <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
+  <string name="preferences_downloads_settings_clean_up_files_title">Xóa khỏi %s và thiết bị</string>
+  <!-- Summary for the setting to automatically clean up downloaded files -->
+  <string name="preferences_downloads_settings_clean_up_files_summary">Xóa tập tin khỏi trình quản lý tải xuống của bạn và cũng xóa chúng khỏi thiết bị của bạn</string>
+  <!-- Preference for downloads -->
+  <string name="preferences_downloads">Tải xuống</string>
   <!-- Preference for enabling gecko engine logs -->
   <string name="preferences_enable_gecko_logs">Bật nhật ký Gecko</string>
   <!-- Message to indicate users that we are quitting the application to apply the changes -->
@@ -1106,6 +1116,12 @@
   <string name="alternative_app_icon_option_momo">Momo</string>
   <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
   <string name="alternative_app_icon_option_momo_subtitle">Được tạo bởi @heyheymomodraws</string>
+  <!-- Title for the "Solid colors" group of alternative app icon variants in the icon picker screen. This group contains icons with flat, uniform color backgrounds. -->
+  <string name="alternative_app_icon_group_solid_colors">Màu</string>
+  <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
+  <string name="alternative_app_icon_group_gradients">Gradient</string>
+  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_other">Khác</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1265,6 +1281,10 @@
   <string name="preference_top_toolbar">Phía trên</string>
   <!-- Preference for using bottom toolbar -->
   <string name="preference_bottom_toolbar">Phía dưới</string>
+  <!-- Preference for using simple toolbar -->
+  <string name="preference_simple_toolbar">Đơn giản</string>
+  <!-- Preference for using expanded toolbar -->
+  <string name="preference_expanded_toolbar">Mở rộng</string>
   <!--
     Theme Preferences
 
@@ -1633,17 +1653,27 @@
   -->
   <string name="download_item_in_progress_description_2">%1$s / %2$s • trong %3$s.</string>
   <!--
-    Description of an in progress download item, displayed in the downloads list when the download time remaining is unknown.
+    Description of an in progress download item, displayed in the downloads list when the estimated download time remaining is still being calculated.
     %1$s is the current file size that has been downloaded.
     %2$s is the total size of the downloaded file.
   -->
   <string name="download_item_in_progress_description_pending">%1$s / %2$s • đang đợi</string>
+  <!--
+    Description of an in progress download item, displayed in the downloads list when the total download size is unknown. This results in the estimated download time remaining to be unknown also.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_in_progress_description_unknown_total_size">%1$s • thời gian không xác định</string>
   <!--
     Description of a paused download item, displayed in the downloads list.
     %1$s is the current file size that has been downloaded.
     %2$s is the total size of the downloaded file.
   -->
   <string name="download_item_paused_description">%1$s / %2$s • đã tạm dừng</string>
+  <!--
+    Description of a paused download item, displayed in the downloads list when the total download size is unknown.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_paused_description_unknown_total_size">%1$s • đã tạm dừng</string>
   <!-- Text to indicate that an in progress download is paused. -->
   <string name="download_item_status_paused" moz:removedIn="141" tools:ignore="UnusedResources">đã tạm dừng</string>
   <!-- Text to indicate that the download speed of an in progress download is being calculated. -->
@@ -1748,12 +1778,20 @@
   <string name="tab_crash_restore">Khôi phục thẻ</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title">%s cần được khởi động lại</string>
+  <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_title">Bạn có báo cáo sự cố chưa gửi liên quan đến sự cố đang được điều tra. Gửi báo cáo sẽ giúp chúng tôi cải thiện %1$s. Đóng thông báo này sẽ bỏ qua báo cáo này.</string>
+  <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crashes_requested_by_devs_dialog_title">Bạn có các báo cáo sự cố chưa gửi (%1$d) liên quan đến các sự cố đang được điều tra. Gửi chúng sẽ giúp chúng tôi cải thiện %2$s. Đóng thông báo này sẽ bỏ qua các báo cáo này.</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Tự động gửi báo cáo sự cố</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Đóng</string>
+  <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Đừng hiển thị lại điều này</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Gửi báo cáo sự cố</string>
+  <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
+  <string name="unsubmitted_crash_requested_by_devs_learn_more">Tìm hiểu thêm</string>
   <!--
     Bookmarks
 
@@ -2613,6 +2651,14 @@
   <string name="saved_login_clear_username">Xóa tên người dùng</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">Xóa tên máy chủ</string>
+  <!-- Content description, used by tools like screenreaders, for the 3 dots button that shows commands related to the currently displayed login (edit, delete). -->
+  <string name="login_detail_menu_button_content_description">Menu chi tiết đăng nhập</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the login detail view. -->
+  <string name="login_details_navigate_back_button_content_description">Điều hướng quay lại</string>
+  <!-- Edit text for the login detail menu edit button -->
+  <string name="login_detail_menu_edit_button">Chỉnh sửa</string>
+  <!-- Delete text for the login detail menu delete button -->
+  <string name="login_detail_menu_delete_button">Xóa</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Mở trang web trong trình duyệt</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->

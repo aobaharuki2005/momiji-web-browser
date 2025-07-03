@@ -34,101 +34,6 @@ class InfoBarNotification {
   }
 
   /**
-   * Ensure a hidden container of <a data-l10n-name> templates exists, and
-   * inject the request links using hrefs from message.content.linkUrls.
-   */
-  _ensureLinkTemplatesFor(doc, names) {
-    let container = doc.getElementById("infobar-link-templates");
-    // We inject a hidden <div> of <a data-l10n-name> templates into the
-    // document because Fluent’s DOM-overlay scans the page for those
-    // placeholders.
-    if (!container) {
-      container = doc.createElement("div");
-      container.id = "infobar-link-templates";
-      container.hidden = true;
-      doc.body.appendChild(container);
-    }
-
-    const linkUrls = this.message.content.linkUrls || {};
-    for (let name of names) {
-      if (!container.querySelector(`a[data-l10n-name="${name}"]`)) {
-        const a = doc.createElement("a");
-        a.dataset.l10nName = name;
-        a.href = linkUrls[name];
-        container.appendChild(a);
-      }
-    }
-  }
-
-  /**
-   * Async helper to render a Fluent string. If the translation contains `<a
-   * data-l10n-name>`, it will parse and inject the associated link contained
-   * in the message.
-   */
-  async _buildMessageFragment(doc, browser, stringId, args) {
-    // Get the raw HTML translation
-    const html = await lazy.RemoteL10n.formatLocalizableText({
-      string_id: stringId,
-      ...(args && { args }),
-    });
-
-    // If no inline anchors, just return a span
-    if (!html.includes('data-l10n-name="')) {
-      return lazy.RemoteL10n.createElement(doc, "span", {
-        content: { string_id: stringId, ...(args && { args }) },
-      });
-    }
-
-    // Otherwise parse it and set up a fragment
-    const temp = new DOMParser().parseFromString(html, "text/html").body;
-    const frag = doc.createDocumentFragment();
-
-    // Prepare <a data-l10n-name> templates
-    const names = [...temp.querySelectorAll("a[data-l10n-name]")].map(
-      a => a.dataset.l10nName
-    );
-    this._ensureLinkTemplatesFor(doc, names);
-
-    // Import each node and wire up any anchors it contains
-    for (const node of temp.childNodes) {
-      // Nodes from DOMParser belong to a different document, so importNode()
-      // clones them into our target doc
-      const importedNode = doc.importNode(node, true);
-
-      if (importedNode.nodeType === Node.ELEMENT_NODE) {
-        // collect this node if it's an anchor, and all child anchors
-        const anchors = [];
-        if (importedNode.matches("a[data-l10n-name]")) {
-          anchors.push(importedNode);
-        }
-        anchors.push(...importedNode.querySelectorAll("a[data-l10n-name]"));
-
-        for (const a of anchors) {
-          const name = a.dataset.l10nName;
-          const template = doc
-            .getElementById("infobar-link-templates")
-            .querySelector(`a[data-l10n-name="${name}"]`);
-          if (!template) {
-            continue;
-          }
-          a.href = template.href;
-          a.addEventListener("click", e => {
-            e.preventDefault();
-            lazy.SpecialMessageActions.handleAction(
-              { type: "OPEN_URL", data: { args: a.href, where: "tab" } },
-              browser
-            );
-          });
-        }
-      }
-
-      frag.appendChild(importedNode);
-    }
-
-    return frag;
-  }
-
-  /**
    * Show the infobar notification and send an impression ping
    *
    * @param {object} browser Browser reference for the currently selected tab
@@ -146,12 +51,10 @@ class InfoBarNotification {
 
     let priority = content.priority || notificationContainer.PRIORITY_SYSTEM;
 
-    let labelNode = await this.formatMessageConfig(doc, browser, content.text);
-
     this.notification = await notificationContainer.appendNotification(
       this.message.id,
       {
-        label: labelNode,
+        label: this.formatMessageConfig(doc, browser, content.text),
         image: content.icon || "chrome://branding/content/icon64.png",
         priority,
         eventCallback: this.infobarCallback,
@@ -171,68 +74,56 @@ class InfoBarNotification {
 
     if (content.type === TYPES.UNIVERSAL) {
       InfoBar._universalInfobars.push({
-        box: browser.ownerGlobal.gNotificationBox,
+        box: notificationContainer,
         notification: this.notification,
       });
     }
   }
 
-  _createLinkNode(doc, browser, { href, where = "tab", string_id, args, raw }) {
-    const a = doc.createElement("a");
-    a.href = href;
-    a.addEventListener("click", e => {
-      e.preventDefault();
-      lazy.SpecialMessageActions.handleAction(
-        { type: "OPEN_URL", data: { args: a.href, where } },
-        browser
-      );
-    });
-
-    if (string_id) {
-      // wrap a localized span inside
-      const span = lazy.RemoteL10n.createElement(doc, "span", {
-        content: { string_id, ...(args && { args }) },
-      });
-      a.appendChild(span);
-    } else {
-      a.textContent = raw || "";
-    }
-
-    return a;
-  }
-
-  async formatMessageConfig(doc, browser, content) {
+  formatMessageConfig(doc, browser, content) {
     const frag = doc.createDocumentFragment();
     const parts = Array.isArray(content) ? content : [content];
-
     for (const part of parts) {
-      if (!part) {
-        continue;
-      }
-      if (part.href) {
-        frag.appendChild(this._createLinkNode(doc, browser, part));
-        continue;
-      }
-
-      if (part.string_id) {
-        const subFrag = await this._buildMessageFragment(
-          doc,
-          browser,
-          part.string_id,
-          part.args
-        );
-        frag.appendChild(subFrag);
-        continue;
-      }
-
+      let node;
       if (typeof part === "string") {
-        frag.appendChild(doc.createTextNode(part));
-        continue;
+        node = doc.createTextNode(part);
+        // Handle embedded link
+      } else if (part.href) {
+        const a = doc.createElement("a");
+        a.href = part.href;
+        a.addEventListener("click", e => {
+          e.preventDefault();
+          lazy.SpecialMessageActions.handleAction(
+            { type: "OPEN_URL", data: { args: a.href, where: part.where } },
+            browser
+          );
+        });
+
+        if (part.string_id) {
+          const l10n = lazy.RemoteL10n.createElement(doc, "span", {
+            content: {
+              string_id: part.string_id,
+              ...(part.args && { args: part.args }),
+            },
+          });
+          a.appendChild(l10n);
+        } else {
+          a.textContent = part.raw || "";
+        }
+        node = a;
+      } else if (part.string_id) {
+        node = lazy.RemoteL10n.createElement(doc, "span", {
+          content: {
+            string_id: part.string_id,
+            ...(part.args && { args: part.args }),
+          },
+        });
+      } else {
+        const text = part.raw !== null ? part.raw : String(part);
+        node = doc.createTextNode(text);
       }
 
-      if (part.raw && typeof part.raw === "string") {
-        frag.appendChild(doc.createTextNode(part.raw));
-      }
+      frag.appendChild(node);
     }
 
     return frag;
@@ -310,18 +201,30 @@ class InfoBarNotification {
   }
 
   removeUniversalInfobars() {
+    // Remove the new window observer
     try {
       Services.obs.removeObserver(InfoBar, "domwindowopened");
     } catch (error) {
       console.error(
-        "Error removing domwindowopened observer on InfoBar:",
+        "Error removing domwindowopened observer on InfoBar: ",
         error
       );
     }
+    // Remove the universal infobar
     InfoBar._universalInfobars.forEach(({ box, notification }) => {
-      box.removeNotification(notification);
+      try {
+        if (box && notification) {
+          box.removeNotification(notification);
+        }
+      } catch (error) {
+        console.error("Failed to remove notification: ", error);
+      }
     });
     InfoBar._universalInfobars = [];
+
+    if (InfoBar._activeInfobar?.message.content.type === TYPES.UNIVERSAL) {
+      InfoBar._activeInfobar = null;
+    }
   }
 
   sendUserEventTelemetry(event) {
@@ -368,9 +271,9 @@ export const InfoBar = {
       return null;
     }
 
+    const isUniversal = message.content.type === TYPES.UNIVERSAL;
     // Check if this is the first instance of a universal infobar
-    const isFirstUniversal =
-      !universalInNewWin && message.content.type === TYPES.UNIVERSAL;
+    const isFirstUniversal = !universalInNewWin && isUniversal;
     const win = browser?.ownerGlobal;
 
     if (!win || lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
@@ -387,6 +290,7 @@ export const InfoBar = {
     } else {
       await notification.showNotification(browser);
     }
+
     if (!universalInNewWin) {
       this._activeInfobar = { message, dispatch };
       // If the window closes before the user interacts with the active infobar,
@@ -394,7 +298,20 @@ export const InfoBar = {
       win.addEventListener(
         "unload",
         () => {
-          if (InfoBar._activeInfobar?.message === message) {
+          // Remove this window’s stale entry
+          InfoBar._universalInfobars = InfoBar._universalInfobars.filter(
+            ({ box }) => box.ownerGlobal !== win
+          );
+
+          if (isUniversal) {
+            // If there’s still at least one live universal infobar,
+            // make it the active infobar; otherwise clear the active infobar
+            const nextEntry = InfoBar._universalInfobars.find(
+              ({ box }) => !box.ownerGlobal?.closed
+            );
+            InfoBar._activeInfobar = nextEntry ? { message, dispatch } : null;
+          } else {
+            // Non-universal always clears on unload
             InfoBar._activeInfobar = null;
           }
         },
@@ -406,25 +323,36 @@ export const InfoBar = {
   },
 
   observe(aSubject, aTopic) {
-    const { message, dispatch } = this._activeInfobar;
-    if (
-      aTopic !== "domwindowopened" ||
-      message?.content.type !== TYPES.UNIVERSAL
-    ) {
+    if (aTopic !== "domwindowopened") {
       return;
     }
-    if (aSubject.document.readyState === "complete") {
-      let browser = aSubject.gBrowser.selectedBrowser;
-      this.showInfoBarMessage(browser, message, dispatch, true);
-    } else {
-      aSubject.addEventListener(
-        "load",
-        () => {
-          let browser = aSubject.gBrowser.selectedBrowser;
-          this.showInfoBarMessage(browser, message, dispatch, true);
-        },
-        { once: true }
+    const win = aSubject;
+
+    if (win.closed || lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
+      return;
+    }
+
+    const { message, dispatch } = this._activeInfobar || {};
+    if (!message || message.content.type !== TYPES.UNIVERSAL) {
+      return;
+    }
+
+    const onWindowReady = () => {
+      if (!win.gBrowser || win.closed) {
+        return;
+      }
+      this.showInfoBarMessage(
+        win.gBrowser.selectedBrowser,
+        message,
+        dispatch,
+        true
       );
+    };
+
+    if (win.document?.readyState === "complete") {
+      onWindowReady();
+    } else {
+      win.addEventListener("load", onWindowReady, { once: true });
     }
   },
 };

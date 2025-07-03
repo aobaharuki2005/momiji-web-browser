@@ -11,9 +11,9 @@
   -->
   <string name="content_description_menu">Plus d’options</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_private_browsing_button">Activer la navigation privée</string>
+  <string name="content_description_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Activer la navigation privée</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_disable_private_browsing_button">Désactiver la navigation privée</string>
+  <string name="content_description_disable_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">Désactiver la navigation privée</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
   <string name="content_description_private_browsing">Navigation privée</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
@@ -518,7 +518,7 @@
   <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
   <string name="onboarding_home_skip_button" moz:removedIn="141" tools:ignore="UnusedResources">Ignorer</string>
   <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
-  <string name="sync_cfr_message">Vos onglets sont synchronisés ! Reprenez là vous en étiez sur votre autre appareil.</string>
+  <string name="sync_cfr_message" moz:removedIn="142" tools:ignore="UnusedResources">Vos onglets sont synchronisés ! Reprenez là vous en étiez sur votre autre appareil.</string>
   <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
   <string name="onboarding_home_content_description_close_button">Fermer</string>
   <!--
@@ -859,6 +859,8 @@
   <string name="preferences_category_account">Compte</string>
   <!-- Preference for changing where the AddressBar is positioned -->
   <string name="preferences_toolbar_2">Emplacement de la barre d’adresse</string>
+  <!-- Preference for changing toolbar layout -->
+  <string name="preferences_toolbar_layout">Disposition de la barre d’outils</string>
   <!-- Preference for changing default theme to dark or light mode -->
   <string name="preferences_theme">Thème</string>
   <!-- Preference for customizing the home screen -->
@@ -941,6 +943,14 @@
   <string name="preferences_open_links_in_apps_never">Jamais</string>
   <!-- Preference for open download with an external download manager app -->
   <string name="preferences_external_download_manager" tools:ignore="UnusedResources" moz:removedIn="141">Gestionnaire de téléchargement externe</string>
+  <!-- Preference title for choosing an app to handle downloads -->
+  <string name="preferences_choose_app_for_downloads">Gérer les téléchargements avec une autre application</string>
+  <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
+  <string name="preferences_downloads_settings_clean_up_files_title">Supprimer de %s et de l’appareil</string>
+  <!-- Summary for the setting to automatically clean up downloaded files -->
+  <string name="preferences_downloads_settings_clean_up_files_summary">Supprimer les fichiers du gestionnaire de téléchargement les supprime également de votre appareil</string>
+  <!-- Preference for downloads -->
+  <string name="preferences_downloads">Téléchargements</string>
   <!-- Preference for enabling gecko engine logs -->
   <string name="preferences_enable_gecko_logs">Activer les journaux de Gecko</string>
   <!-- Message to indicate users that we are quitting the application to apply the changes -->
@@ -1106,6 +1116,12 @@
   <string name="alternative_app_icon_option_momo">Momo</string>
   <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
   <string name="alternative_app_icon_option_momo_subtitle">Créé par @heyheymomodraws</string>
+  <!-- Title for the "Solid colors" group of alternative app icon variants in the icon picker screen. This group contains icons with flat, uniform color backgrounds. -->
+  <string name="alternative_app_icon_group_solid_colors">Couleurs unies</string>
+  <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
+  <string name="alternative_app_icon_group_gradients">Fond en dégradé</string>
+  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_other">Autre</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1265,6 +1281,10 @@
   <string name="preference_top_toolbar">En haut</string>
   <!-- Preference for using bottom toolbar -->
   <string name="preference_bottom_toolbar">En bas</string>
+  <!-- Preference for using simple toolbar -->
+  <string name="preference_simple_toolbar">Simple</string>
+  <!-- Preference for using expanded toolbar -->
+  <string name="preference_expanded_toolbar">Développée</string>
   <!--
     Theme Preferences
 
@@ -1633,17 +1653,27 @@
   -->
   <string name="download_item_in_progress_description_2">%1$s / %2$s • dans %3$s.</string>
   <!--
-    Description of an in progress download item, displayed in the downloads list when the download time remaining is unknown.
+    Description of an in progress download item, displayed in the downloads list when the estimated download time remaining is still being calculated.
     %1$s is the current file size that has been downloaded.
     %2$s is the total size of the downloaded file.
   -->
   <string name="download_item_in_progress_description_pending">%1$s / %2$s • en attente</string>
+  <!--
+    Description of an in progress download item, displayed in the downloads list when the total download size is unknown. This results in the estimated download time remaining to be unknown also.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_in_progress_description_unknown_total_size">%1$s • durée indéterminée</string>
   <!--
     Description of a paused download item, displayed in the downloads list.
     %1$s is the current file size that has been downloaded.
     %2$s is the total size of the downloaded file.
   -->
   <string name="download_item_paused_description">%1$s / %2$s • mis en pause</string>
+  <!--
+    Description of a paused download item, displayed in the downloads list when the total download size is unknown.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_paused_description_unknown_total_size">%1$s • en pause</string>
   <!-- Text to indicate that an in progress download is paused. -->
   <string name="download_item_status_paused" moz:removedIn="141" tools:ignore="UnusedResources">en pause</string>
   <!-- Text to indicate that the download speed of an in progress download is being calculated. -->
@@ -1752,8 +1782,12 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Envoyer automatiquement les rapports de plantage</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Fermer</string>
+  <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Ne plus afficher ce message</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Envoyer le rapport de plantage</string>
+  <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
+  <string name="unsubmitted_crash_requested_by_devs_learn_more">En savoir plus</string>
   <!--
     Bookmarks
 
@@ -2613,6 +2647,12 @@
   <string name="saved_login_clear_username">Effacer le nom d’utilisateur</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">Effacer le nom d’hôte</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the login detail view. -->
+  <string name="login_details_navigate_back_button_content_description">Précédent</string>
+  <!-- Edit text for the login detail menu edit button -->
+  <string name="login_detail_menu_edit_button">Modifier</string>
+  <!-- Delete text for the login detail menu delete button -->
+  <string name="login_detail_menu_delete_button">Supprimer</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Ouvrir le site dans le navigateur</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->

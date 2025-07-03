@@ -11,9 +11,9 @@
   -->
   <string name="content_description_menu">אפשרויות נוספות</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_private_browsing_button">הפעלת גלישה פרטית</string>
+  <string name="content_description_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">הפעלת גלישה פרטית</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-  <string name="content_description_disable_private_browsing_button">השבתת גלישה פרטית</string>
+  <string name="content_description_disable_private_browsing_button" moz:removedIn="142" tools:ignore="UnusedResources">השבתת גלישה פרטית</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
   <string name="content_description_private_browsing">גלישה פרטית</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
@@ -516,7 +516,7 @@
   <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
   <string name="onboarding_home_skip_button" moz:removedIn="141" tools:ignore="UnusedResources">דילוג</string>
   <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
-  <string name="sync_cfr_message">הלשוניות שלך מסתנכרנות! אפשר להמשיך מאיפה שהפסקת משאר המכשירים שלך.</string>
+  <string name="sync_cfr_message" moz:removedIn="142" tools:ignore="UnusedResources">הלשוניות שלך מסתנכרנות! אפשר להמשיך מאיפה שהפסקת משאר המכשירים שלך.</string>
   <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
   <string name="onboarding_home_content_description_close_button">סגירה</string>
   <!--
@@ -857,6 +857,8 @@
   <string name="preferences_category_account">חשבון</string>
   <!-- Preference for changing where the AddressBar is positioned -->
   <string name="preferences_toolbar_2">מיקום שורת הכתובת</string>
+  <!-- Preference for changing toolbar layout -->
+  <string name="preferences_toolbar_layout">פריסת סרגל כלים</string>
   <!-- Preference for changing default theme to dark or light mode -->
   <string name="preferences_theme">ערכת נושא</string>
   <!-- Preference for customizing the home screen -->
@@ -941,7 +943,7 @@
   <string name="preferences_external_download_manager" tools:ignore="UnusedResources" moz:removedIn="141">מנהל הורדות חיצוני</string>
   <!-- Preference title for choosing an app to handle downloads -->
   <string name="preferences_choose_app_for_downloads">ניהול הורדות באמצעות יישומון אחר</string>
-  <!-- Title for the setting to automatically clean up downloaded files. %s is the brand of the phone (for example: Samsung). -->
+  <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
   <string name="preferences_downloads_settings_clean_up_files_title">מחיקה מ־%s ומהמכשיר</string>
   <!-- Summary for the setting to automatically clean up downloaded files -->
   <string name="preferences_downloads_settings_clean_up_files_summary">הסרת קבצים ממנהל ההורדות שלך מסירה אותם גם מהמכשיר שלך</string>
@@ -1277,6 +1279,10 @@
   <string name="preference_top_toolbar">למעלה</string>
   <!-- Preference for using bottom toolbar -->
   <string name="preference_bottom_toolbar">למטה</string>
+  <!-- Preference for using simple toolbar -->
+  <string name="preference_simple_toolbar">פשוט</string>
+  <!-- Preference for using expanded toolbar -->
+  <string name="preference_expanded_toolbar">מורחב</string>
   <!--
     Theme Preferences
 
@@ -1645,17 +1651,27 @@
   -->
   <string name="download_item_in_progress_description_2">%1$s / %2$s • עוד %3$s.</string>
   <!--
-    Description of an in progress download item, displayed in the downloads list when the download time remaining is unknown.
+    Description of an in progress download item, displayed in the downloads list when the estimated download time remaining is still being calculated.
     %1$s is the current file size that has been downloaded.
     %2$s is the total size of the downloaded file.
   -->
   <string name="download_item_in_progress_description_pending">%1$s / %2$s • בהמתנה</string>
+  <!--
+    Description of an in progress download item, displayed in the downloads list when the total download size is unknown. This results in the estimated download time remaining to be unknown also.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_in_progress_description_unknown_total_size">‏%1$s • זמן לא ידוע</string>
   <!--
     Description of a paused download item, displayed in the downloads list.
     %1$s is the current file size that has been downloaded.
     %2$s is the total size of the downloaded file.
   -->
   <string name="download_item_paused_description">%1$s / %2$s • מושהה</string>
+  <!--
+    Description of a paused download item, displayed in the downloads list when the total download size is unknown.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_paused_description_unknown_total_size">‏%1$s • מושהה</string>
   <!-- Text to indicate that an in progress download is paused. -->
   <string name="download_item_status_paused" moz:removedIn="141" tools:ignore="UnusedResources">מושהה</string>
   <!-- Text to indicate that the download speed of an in progress download is being calculated. -->
@@ -2631,6 +2647,14 @@
   <string name="saved_login_clear_username">ניקוי שם משתמש</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">ניקוי שם מארח</string>
+  <!-- Content description, used by tools like screenreaders, for the 3 dots button that shows commands related to the currently displayed login (edit, delete). -->
+  <string name="login_detail_menu_button_content_description">תפריט פרטי הכניסה</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the login detail view. -->
+  <string name="login_details_navigate_back_button_content_description">ניווט אחורה</string>
+  <!-- Edit text for the login detail menu edit button -->
+  <string name="login_detail_menu_edit_button">עריכה</string>
+  <!-- Delete text for the login detail menu delete button -->
+  <string name="login_detail_menu_delete_button">מחיקה</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">פתיחת אתר בדפדפן</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
