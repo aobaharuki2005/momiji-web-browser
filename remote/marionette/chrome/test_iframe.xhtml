@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?csp default-src 'none' ?>
 
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,11 +14,10 @@
   <head>
     <title>iframe</title>
     <link rel="stylesheet" href="chrome://global/skin/global.css" />
-    <link rel="stylesheet" href="chrome://marionette-chrome/content/style.css" />
   </head>
 
   <body>
-    <div id="types" class="flex-column">
+    <div id="types" style="display: flex; flex-direction: column">
       <input id="textInput" size="6" value="test" label="input" />
       <input type="checkbox" id="testBox" label="box" />
     </div>

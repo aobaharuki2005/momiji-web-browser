@@ -2,26 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
-import sys
-
 from marionette_driver.by import By
 from marionette_driver.errors import NoSuchElementException
 from marionette_driver.marionette import WebElement
 
 from marionette_harness import MarionetteTestCase, parameterized, WindowManagerMixin
 
-# add this directory to the path
-sys.path.append(os.path.dirname(__file__))
 
-from chrome_handler_mixin import ChromeHandlerMixin
-
-
-PAGE_XHTML = "test.xhtml"
-PAGE_XUL = "test_xul.xhtml"
+PAGE_XHTML = "chrome://remote/content/marionette/test.xhtml"
+PAGE_XUL = "chrome://remote/content/marionette/test_xul.xhtml"
 
 
-class TestElementIDChrome(ChromeHandlerMixin, WindowManagerMixin, MarionetteTestCase):
+class TestElementIDChrome(WindowManagerMixin, MarionetteTestCase):
     def setUp(self):
         super(TestElementIDChrome, self).setUp()
 
@@ -35,7 +27,7 @@ class TestElementIDChrome(ChromeHandlerMixin, WindowManagerMixin, MarionetteTest
     @parameterized("XUL", PAGE_XUL)
     @parameterized("XHTML", PAGE_XHTML)
     def test_id_identical_for_the_same_element(self, chrome_url):
-        win = self.open_chrome_window(self.chrome_base_url + chrome_url)
+        win = self.open_chrome_window(chrome_url)
         self.marionette.switch_to_window(win)
 
         found_el = self.marionette.find_element(By.ID, "textInput")
@@ -47,7 +39,7 @@ class TestElementIDChrome(ChromeHandlerMixin, WindowManagerMixin, MarionetteTest
     @parameterized("XUL", PAGE_XUL)
     @parameterized("XHTML", PAGE_XHTML)
     def test_id_unique_per_session(self, chrome_url):
-        win = self.open_chrome_window(self.chrome_base_url + chrome_url)
+        win = self.open_chrome_window(chrome_url)
         self.marionette.switch_to_window(win)
 
         found_el = self.marionette.find_element(By.ID, "textInput")
@@ -67,7 +59,7 @@ class TestElementIDChrome(ChromeHandlerMixin, WindowManagerMixin, MarionetteTest
     def test_id_no_such_element_in_another_chrome_window(self, chrome_url):
         original_handle = self.marionette.current_window_handle
 
-        win = self.open_chrome_window(self.chrome_base_url + chrome_url)
+        win = self.open_chrome_window(chrome_url)
         self.marionette.switch_to_window(win)
 
         found_el = self.marionette.find_element(By.ID, "textInput")
@@ -83,7 +75,7 @@ class TestElementIDChrome(ChromeHandlerMixin, WindowManagerMixin, MarionetteTest
     def test_id_removed_when_chrome_window_is_closed(self, chrome_url):
         original_handle = self.marionette.current_window_handle
 
-        win = self.open_chrome_window(self.chrome_base_url + chrome_url)
+        win = self.open_chrome_window(chrome_url)
         self.marionette.switch_to_window(win)
 
         found_el = self.marionette.find_element(By.ID, "textInput")

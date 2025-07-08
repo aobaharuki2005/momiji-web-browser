@@ -2,25 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
-import sys
-
 from marionette_driver.by import By
 from marionette_driver.errors import NoSuchElementException
 from marionette_driver.marionette import WebElement, WEB_ELEMENT_KEY
+
 from marionette_harness import MarionetteTestCase, parameterized, WindowManagerMixin
 
-# add this directory to the path
-sys.path.append(os.path.dirname(__file__))
 
-from chrome_handler_mixin import ChromeHandlerMixin
-
-
-PAGE_XHTML = "test.xhtml"
-PAGE_XUL = "test_xul.xhtml"
+PAGE_XHTML = "chrome://remote/content/marionette/test.xhtml"
+PAGE_XUL = "chrome://remote/content/marionette/test_xul.xhtml"
 
 
-class TestElementsChrome(ChromeHandlerMixin, WindowManagerMixin, MarionetteTestCase):
+class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
     def setUp(self):
         super(TestElementsChrome, self).setUp()
 
@@ -34,7 +27,7 @@ class TestElementsChrome(ChromeHandlerMixin, WindowManagerMixin, MarionetteTestC
     @parameterized("XUL", PAGE_XUL)
     @parameterized("XHTML", PAGE_XHTML)
     def test_id(self, chrome_url):
-        win = self.open_chrome_window(self.chrome_base_url + chrome_url)
+        win = self.open_chrome_window(chrome_url)
         self.marionette.switch_to_window(win)
 
         el = self.marionette.execute_script(
@@ -48,7 +41,7 @@ class TestElementsChrome(ChromeHandlerMixin, WindowManagerMixin, MarionetteTestC
     @parameterized("XUL", PAGE_XUL)
     @parameterized("XHTML", PAGE_XHTML)
     def test_that_we_can_find_elements_from_css_selectors(self, chrome_url):
-        win = self.open_chrome_window(self.chrome_base_url + chrome_url)
+        win = self.open_chrome_window(chrome_url)
         self.marionette.switch_to_window(win)
 
         el = self.marionette.execute_script(
@@ -62,7 +55,7 @@ class TestElementsChrome(ChromeHandlerMixin, WindowManagerMixin, MarionetteTestC
     @parameterized("XUL", PAGE_XUL)
     @parameterized("XHTML", PAGE_XHTML)
     def test_child_element(self, chrome_url):
-        win = self.open_chrome_window(self.chrome_base_url + chrome_url)
+        win = self.open_chrome_window(chrome_url)
         self.marionette.switch_to_window(win)
 
         el = self.marionette.find_element(By.ID, "button")
@@ -75,7 +68,7 @@ class TestElementsChrome(ChromeHandlerMixin, WindowManagerMixin, MarionetteTestC
     @parameterized("XUL", PAGE_XUL)
     @parameterized("XHTML", PAGE_XHTML)
     def test_child_elements(self, chrome_url):
-        win = self.open_chrome_window(self.chrome_base_url + chrome_url)
+        win = self.open_chrome_window(chrome_url)
         self.marionette.switch_to_window(win)
 
         el = self.marionette.find_element(By.ID, "button")
@@ -86,7 +79,7 @@ class TestElementsChrome(ChromeHandlerMixin, WindowManagerMixin, MarionetteTestC
     @parameterized("XUL", PAGE_XUL)
     @parameterized("XHTML", PAGE_XHTML)
     def test_tag_name(self, chrome_url):
-        win = self.open_chrome_window(self.chrome_base_url + chrome_url)
+        win = self.open_chrome_window(chrome_url)
         self.marionette.switch_to_window(win)
 
         el = self.marionette.execute_script(
@@ -101,7 +94,7 @@ class TestElementsChrome(ChromeHandlerMixin, WindowManagerMixin, MarionetteTestC
     @parameterized("XUL", PAGE_XUL)
     @parameterized("XHTML", PAGE_XHTML)
     def test_class_name(self, chrome_url):
-        win = self.open_chrome_window(self.chrome_base_url + chrome_url)
+        win = self.open_chrome_window(chrome_url)
         self.marionette.switch_to_window(win)
 
         el = self.marionette.execute_script(
@@ -115,7 +108,7 @@ class TestElementsChrome(ChromeHandlerMixin, WindowManagerMixin, MarionetteTestC
     @parameterized("XUL", PAGE_XUL)
     @parameterized("XHTML", PAGE_XHTML)
     def test_xpath(self, chrome_url):
-        win = self.open_chrome_window(self.chrome_base_url + chrome_url)
+        win = self.open_chrome_window(chrome_url)
         self.marionette.switch_to_window(win)
 
         el = self.marionette.execute_script(
@@ -129,7 +122,7 @@ class TestElementsChrome(ChromeHandlerMixin, WindowManagerMixin, MarionetteTestC
     @parameterized("XUL", PAGE_XUL)
     @parameterized("XHTML", PAGE_XHTML)
     def test_not_found(self, chrome_url):
-        win = self.open_chrome_window(self.chrome_base_url + chrome_url)
+        win = self.open_chrome_window(chrome_url)
         self.marionette.switch_to_window(win)
 
         self.assertRaises(
@@ -142,7 +135,7 @@ class TestElementsChrome(ChromeHandlerMixin, WindowManagerMixin, MarionetteTestC
     @parameterized("XUL", PAGE_XUL)
     @parameterized("XHTML", PAGE_XHTML)
     def test_timeout(self, chrome_url):
-        win = self.open_chrome_window(self.chrome_base_url + chrome_url)
+        win = self.open_chrome_window(chrome_url)
         self.marionette.switch_to_window(win)
 
         self.assertRaises(

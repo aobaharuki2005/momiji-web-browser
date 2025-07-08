@@ -343,8 +343,14 @@ Object.defineProperty(GeckoDriver.prototype, "context", {
   },
 
   set(context) {
-    if (context === lazy.Context.Chrome) {
-      lazy.assert.hasSystemAccess();
+    if (
+      context === lazy.Context.Chrome &&
+      !lazy.RemoteAgent.allowSystemAccess
+    ) {
+      throw new lazy.error.UnsupportedOperationError(
+        `System access is required to switch to ${lazy.Context.Chrome} scope. ` +
+          `Start ${lazy.AppInfo.name} with "-remote-allow-system-access" to enable it.`
+      );
     }
 
     this._context = lazy.Context.fromString(context);
@@ -789,94 +795,6 @@ GeckoDriver.prototype.observe = async function (subject, topic) {
  */
 GeckoDriver.prototype.getSessionCapabilities = function () {
   return { capabilities: this.currentSession.capabilities };
-};
-
-/**
- * Register a chrome protocol handler for a directory containing XHTML or XUL
- * files, allowing them to be loaded via the chrome:// protocol.
- *
- * @param {obj} cmd
- * @param {string} cmd.parameters.manifestPath
- *     The base manifest path for the entries. URL values are resolved
- *     relative to this path.
- * @param {Array<Array<string, string, string>>} cmd.parameters.entries
- *     An array of arrays, each containing a registry entry (type, namespace,
- *     path, options) as it would appar in a chrome.manifest file. Only the
- *     following entry types are currently accepted:
- *
- *         - "content" A URL entry. Must be a 3-element array.
- *         - "override" A URL override entry. Must be a 3-element array.
- *         - "locale" A locale package entry. Must be a 4-element array.
- *
- * @returns {string} id
- *     The identifier for the registered chrome protocol handler.
- *
- * @throws {InvalidArgumentError}
- *     If <var>id</var> is not a string.
- * @throws {UnknownError}
- *     If there is no such registered chrome protocol handler.
- */
-GeckoDriver.prototype.registerChromeHandler = function (cmd) {
-  const manifestPath = lazy.assert.string(
-    cmd.parameters.manifestPath,
-    lazy.pprint`Expected "path" to be a string, got ${cmd.parameters.manifestPath}`
-  );
-
-  const entries = lazy.assert.array(
-    cmd.parameters.entries,
-    lazy.pprint`Expected "entries" to be an array, got ${cmd.parameters.entries}`
-  );
-  entries.forEach(entry => {
-    const [type, namespace, directory, options] = lazy.assert.array(
-      entry,
-      lazy.pprint`Expected values of "entries" to be an array, got ${entries}`
-    );
-    lazy.assert.string(
-      type,
-      lazy.pprint`Expected "type" of entry to be a string, got ${type}`
-    );
-    lazy.assert.string(
-      namespace,
-      lazy.pprint`Expected "namespace" of entry to be a string, got ${namespace}`
-    );
-    lazy.assert.string(
-      directory,
-      lazy.pprint`Expected "directory" of entry to be a string, got ${directory}`
-    );
-    if (options !== undefined) {
-      lazy.assert.string(
-        options,
-        lazy.pprint`Expected "options" of entry to be a string, got ${options}`
-      );
-    }
-  });
-
-  lazy.assert.hasSystemAccess();
-
-  return this.currentSession.registerChromeHandler(manifestPath, entries);
-};
-
-/**
- * Unregister a previously registered chrome protocol handler.
- *
- * @param {obj} cmd
- * @param {string} cmd.parameters.id
- *     The identifier returned when the chrome handler was registered.
- *
- * @throws {InvalidArgumentError}
- *     If <var>id</var> is not a string.
- * @throws {UnknownError}
- *     If there is no such registered chrome protocol handler.
- */
-GeckoDriver.prototype.unregisterChromeHandler = function (cmd) {
-  const id = lazy.assert.string(
-    cmd.parameters.id,
-    lazy.pprint`Expected "id" to be a string, got ${cmd.parameters.id}`
-  );
-
-  lazy.assert.hasSystemAccess();
-
-  this.currentSession.unregisterChromeHandler(id);
 };
 
 /**
@@ -3893,10 +3811,6 @@ GeckoDriver.prototype.commands = {
   "Marionette:GetScreenOrientation": GeckoDriver.prototype.getScreenOrientation,
   "Marionette:GetWindowType": GeckoDriver.prototype.getWindowType,
   "Marionette:Quit": GeckoDriver.prototype.quit,
-  "Marionette:RegisterChromeHandler":
-    GeckoDriver.prototype.registerChromeHandler,
-  "Marionette:UnregisterChromeHandler":
-    GeckoDriver.prototype.unregisterChromeHandler,
   "Marionette:SetContext": GeckoDriver.prototype.setContext,
   "Marionette:SetScreenOrientation": GeckoDriver.prototype.setScreenOrientation,
 
