@@ -493,6 +493,12 @@ newtab-custom-wallpaper-title = Custom wallpapers are here
 newtab-custom-wallpaper-subtitle = Upload your own wallpaper or pick a custom color to make { -brand-product-name } yours.
 newtab-custom-wallpaper-cta = Try it
 
+## Alternative strings for custom wallpaper highlight
+
+newtab-custom-wallpaper-alt-title = Your browser. Your wallpaper
+newtab-custom-wallpaper-alt-subtitle = Pick a wallpaper or color to match your mood.
+newtab-custom-wallpaper-alt-cta = Try it now
+
 ## Strings for download mobile highlight
 
 newtab-download-mobile-highlight-title = Download { -brand-product-name } for mobile
