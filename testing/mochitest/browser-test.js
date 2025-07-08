@@ -1006,6 +1006,8 @@ Tester.prototype = {
         );
       }
 
+      this.PromiseTestUtils.assertNoUncaughtRejections();
+
       // Note the test run time
       let name = this.currentTest.path;
       name = name.slice(name.lastIndexOf("/") + 1);
