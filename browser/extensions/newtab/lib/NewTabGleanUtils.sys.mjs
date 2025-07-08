@@ -62,7 +62,7 @@ export const NewTabGleanUtils = {
         for (const [pingName, pingConfig] of Object.entries(data.pings)) {
           await this.registerPingIfNeeded({
             name: pingName,
-            ...pingConfig,
+            ...this.convertToCamelCase(pingConfig),
           });
         }
       }
@@ -275,5 +275,14 @@ export const NewTabGleanUtils = {
       }
     }
     return camel;
+  },
+
+  // Convert all properties in an object from snake_case to camelCase
+  convertToCamelCase(obj) {
+    const result = {};
+    for (const [key, value] of Object.entries(obj)) {
+      result[this.dottedSnakeToCamel(key)] = value;
+    }
+    return result;
   },
 };
