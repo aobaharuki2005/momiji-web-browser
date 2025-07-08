@@ -2,6 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
+import sys
+
 from marionette_driver import By
 from marionette_driver.errors import (
     InvalidArgumentException,
@@ -9,24 +12,28 @@ from marionette_driver.errors import (
     UnknownException,
 )
 from marionette_driver.localization import L10n
-
 from marionette_harness import MarionetteTestCase
 
+# add this directory to the path
+sys.path.append(os.path.dirname(__file__))
 
-class TestL10n(MarionetteTestCase):
+from chrome_handler_mixin import ChromeHandlerMixin
+
+
+class TestL10n(ChromeHandlerMixin, MarionetteTestCase):
     def setUp(self):
         super(TestL10n, self).setUp()
 
         self.l10n = L10n(self.marionette)
 
     def test_localize_entity(self):
-        dtds = ["chrome://remote/content/marionette/test_dialog.dtd"]
+        dtds = [self.chrome_base_url + "test_dialog.dtd"]
         value = self.l10n.localize_entity(dtds, "testDialog.title")
 
         self.assertEqual(value, "Test Dialog")
 
     def test_localize_entity_invalid_arguments(self):
-        dtds = ["chrome://remote/content/marionette/test_dialog.dtd"]
+        dtds = [self.chrome_base_url + "test_dialog.dtd"]
 
         self.assertRaises(
             NoSuchElementException, self.l10n.localize_entity, dtds, "notExistent"
@@ -39,7 +46,7 @@ class TestL10n(MarionetteTestCase):
         )
 
     def test_localize_property(self):
-        properties = ["chrome://remote/content/marionette/test_dialog.properties"]
+        properties = [self.chrome_base_url + "test_dialog.properties"]
 
         value = self.l10n.localize_property(properties, "testDialog.title")
         self.assertEqual(value, "Test Dialog")
