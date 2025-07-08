@@ -67,6 +67,10 @@ function assertDisableTelemetry(expectedExtraList) {
   assertGleanTelemetry("disable", expectedExtraList);
 }
 
+function assertBounceTelemetry(expectedExtraList) {
+  assertGleanTelemetry("bounce", expectedExtraList);
+}
+
 function assertGleanTelemetry(telemetryName, expectedExtraList) {
   const camelName = telemetryName.replaceAll(/_(.)/g, (match, p1) =>
     p1.toUpperCase()
@@ -439,6 +443,7 @@ async function setup() {
       "services.settings.last_etag",
       "browser.urlbar.recentsearches.lastDefaultChanged",
       "browser.search.totalSearches",
+      "browser.urlbar.events.bounce.maxSecondsFromLastSearch",
     ];
     prefs.forEach(pref => Services.prefs.clearUserPref(pref));
     await SpecialPowers.popPrefEnv();
