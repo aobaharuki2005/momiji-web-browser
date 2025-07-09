@@ -168,8 +168,7 @@ bool ValidateCookieDomain(nsIPrincipal* aPrincipal, const nsAString& aName,
   return true;
 }
 
-bool ValidateCookiePath(const nsAString& aPath, nsAString& retPath,
-                        Promise* aPromise) {
+bool ValidateCookiePath(const nsAString& aPath, Promise* aPromise) {
   MOZ_ASSERT(aPromise);
 
   if (!aPath.IsEmpty() && aPath[0] != '/') {
@@ -177,18 +176,12 @@ bool ValidateCookiePath(const nsAString& aPath, nsAString& retPath,
     return false;
   }
 
-  nsString path(aPath);
-  if (path.IsEmpty() || path[path.Length() - 1] != '/') {
-    path.Append('/');
-  }
-
-  if (path.Length() > 1024) {
+  if (aPath.Length() > 1024) {
     aPromise->MaybeRejectWithTypeError(
         "Cookie domain size cannot be greater than 1024 bytes");
     return false;
   }
 
-  retPath.Assign(path);
   return true;
 }
 
@@ -415,13 +408,13 @@ already_AddRefed<Promise> CookieStore::Set(const CookieInit& aOptions,
           return;
         }
 
-        nsString path;
-        if (!ValidateCookiePath(aOptions.mPath, path, promise)) {
+        if (!ValidateCookiePath(aOptions.mPath, promise)) {
           return;
         }
 
         if (!ValidateCookieNamePrefix(aOptions.mName, aOptions.mValue,
-                                      aOptions.mDomain, path, promise)) {
+                                      aOptions.mDomain, aOptions.mPath,
+                                      promise)) {
           return;
         }
 
@@ -462,11 +455,12 @@ already_AddRefed<Promise> CookieStore::Set(const CookieInit& aOptions,
                 mozilla::WrapNotNull(cookieURI.get()),
                 cookiePrincipal->OriginAttributesRef(), thirdPartyContext,
                 partitionForeign, usingStorageAccess, isOn3PCBExceptionList,
-                nsString(aOptions.mName), nsString(aOptions.mValue),
+                aOptions.mName, aOptions.mValue,
                 // If expires is not set, it's a session cookie.
                 aOptions.mExpires.IsNull(), ComputeExpiry(aOptions),
-                aOptions.mDomain, path, SameSiteToConst(aOptions.mSameSite),
-                aOptions.mPartitioned, operationID);
+                aOptions.mDomain, aOptions.mPath,
+                SameSiteToConst(aOptions.mSameSite), aOptions.mPartitioned,
+                operationID);
         if (NS_WARN_IF(!ipcPromise)) {
           promise->MaybeResolveWithUndefined();
           return;
@@ -529,13 +523,12 @@ already_AddRefed<Promise> CookieStore::Delete(
           return;
         }
 
-        nsString path;
-        if (!ValidateCookiePath(aOptions.mPath, path, promise)) {
+        if (!ValidateCookiePath(aOptions.mPath, promise)) {
           return;
         }
 
         if (!ValidateCookieNamePrefix(aOptions.mName, u""_ns, aOptions.mDomain,
-                                      path, promise)) {
+                                      aOptions.mPath, promise)) {
           return;
         }
 
@@ -575,7 +568,7 @@ already_AddRefed<Promise> CookieStore::Delete(
                 mozilla::WrapNotNull(cookieURI.get()),
                 cookiePrincipal->OriginAttributesRef(), thirdPartyContext,
                 partitionForeign, usingStorageAccess, isOn3PCBExceptionList,
-                nsString(aOptions.mName), nsString(aOptions.mDomain), path,
+                aOptions.mName, aOptions.mDomain, aOptions.mPath,
                 aOptions.mPartitioned, operationID);
         if (NS_WARN_IF(!ipcPromise)) {
           promise->MaybeResolveWithUndefined();
@@ -779,8 +772,8 @@ already_AddRefed<Promise> CookieStore::GetInternal(
                     ? Some(partitionedCookiePrincipal->OriginAttributesRef())
                     : Nothing(),
                 thirdPartyContext, partitionForeign, usingStorageAccess,
-                isOn3PCBExceptionList, aOptions.mName.WasPassed(),
-                nsString(name), path, aOnlyTheFirstMatch);
+                isOn3PCBExceptionList, aOptions.mName.WasPassed(), name, path,
+                aOnlyTheFirstMatch);
         if (NS_WARN_IF(!ipcPromise)) {
           promise->MaybeResolveWithUndefined();
           return;
