@@ -10793,6 +10793,18 @@
 #endif
   mirror: always
 
+# Is support for CSS Typed Object Model API enabled?
+#
+# Note that this feature is experimental and under active development.
+# Enabling this pref will only expose some interfaces that are already
+# implemented and is intended solely to enable WPT coverage during
+# incremental development.
+- name: layout.css.typed-om.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether frame visibility tracking is enabled globally.
 - name: layout.framevisibility.enabled
   type: bool
