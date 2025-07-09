@@ -98,9 +98,6 @@ NS_QUERYFRAME_HEAD(nsMenuPopupFrame)
   NS_QUERYFRAME_ENTRY(nsMenuPopupFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
-//
-// nsMenuPopupFrame ctor
-//
 nsMenuPopupFrame::nsMenuPopupFrame(ComputedStyle* aStyle,
                                    nsPresContext* aPresContext)
     : nsBlockFrame(aStyle, aPresContext, kClassID) {}
@@ -122,15 +119,15 @@ static nsIWidget::InputRegion ComputeInputRegion(const ComputedStyle& aStyle,
 }
 
 bool nsMenuPopupFrame::ShouldCreateWidgetUpfront() const {
-  if (mPopupType != PopupType::Menu) {
-    // Any panel with a type attribute, such as the autocomplete popup, is
-    // always generated right away.
-    return mContent->AsElement()->HasAttr(nsGkAtoms::type);
-  }
-
-  // Generate the widget up-front if the parent menu is a <menulist> unless its
-  // sizetopopup is set to "none".
-  return ShouldExpandToInflowParentOrAnchor();
+  // Create a widget upfront for panels that never hide frames for their
+  // contents (like web extension popups). These, for now, need to create the
+  // widgets upfront, so that the frames inside the popup don't get "reparented"
+  // in the widget tree.
+  //
+  // TODO(emilio, bug 1976324): Try to somehow remove this special-case, web-ext
+  // panel needs it to compute the "natural" bounds of their contents before
+  // showing the popup, but that seems like it could be tweaked.
+  return mContent->AsElement()->HasAttr(nsGkAtoms::neverhidden);
 }
 
 void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -164,11 +161,6 @@ void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     }
   }
 
-  // To improve performance, create the widget for the popup if needed. Popups
-  // such as menus will create their widgets later when the popup opens.
-  //
-  // FIXME(emilio): Doing this up-front for all menupopups causes a bunch of
-  // assertions, while it's supposed to be just an optimization.
   if (!ourView->HasWidget() && ShouldCreateWidgetUpfront()) {
     CreateWidgetForView(ourView);
   }
