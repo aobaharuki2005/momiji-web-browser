@@ -260,11 +260,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     }
 
     private fun initTranslationsUpdates(context: Context, view: View) {
-        // Do not add translation page action if device doesn't have large window
-        if (!isLargeWindow()) {
-            return
-        }
-
         if (!FxNimbus.features.translations.value().mainFlowToolbarEnabled) return
 
         translationsBinding.set(
@@ -272,6 +267,14 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 browserStore = context.components.core.store,
                 browserScreenStore = browserScreenStore,
                 appStore = context.components.appStore,
+                onTranslationStatusUpdate = {
+                    translationsAvailable = it.isTranslationPossible
+
+                    if (!it.isTranslateProcessing) {
+                        requireComponents.appStore.dispatch(SnackbarAction.SnackbarDismissed)
+                    }
+                },
+                onShowTranslationsDialog = browserToolbarInteractor::onTranslationsButtonClicked,
                 navController = findNavController(),
             ),
             owner = this,
