@@ -522,6 +522,7 @@ WEBIDL_FILES = [
     "CSSStyleDeclaration.webidl",
     "CSSStyleRule.webidl",
     "CSSStyleSheet.webidl",
+    "CSSStyleValue.webidl",
     "CSSSupportsRule.webidl",
     "CSSTransition.webidl",
     "CustomElementRegistry.webidl",
