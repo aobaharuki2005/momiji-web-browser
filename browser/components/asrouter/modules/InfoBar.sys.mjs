@@ -157,7 +157,7 @@ class InfoBarNotification {
         eventCallback: this.infobarCallback,
       },
       content.buttons.map(b => this.formatButtonConfig(b)),
-      false,
+      true, // Disables clickjacking protections
       content.dismissable
     );
     // If InfoBar is universal, only record an impression for the first
