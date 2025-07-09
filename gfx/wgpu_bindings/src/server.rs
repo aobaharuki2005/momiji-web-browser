@@ -2153,7 +2153,7 @@ impl Global {
 
                     error_buf.init(
                         ErrMsg {
-                            message: format!("Shader module creation failed: {message}"),
+                            message: format!("Shader module creation failed: {message}").into(),
                             r#type: err.webgpu_error_type(),
                         },
                         device_id,
@@ -2259,7 +2259,13 @@ impl Global {
                 }
             }
             DeviceAction::Error { message, r#type } => {
-                error_buf.init(ErrMsg { message, r#type }, device_id);
+                error_buf.init(
+                    ErrMsg {
+                        message: message.into(),
+                        r#type,
+                    },
+                    device_id,
+                );
             }
             DeviceAction::PushErrorScope(filter) => {
                 unsafe {
