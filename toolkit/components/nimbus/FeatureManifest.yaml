@@ -93,6 +93,14 @@ nimbusStore:
       setPref:
         branch: user
         pref: nimbus.profilesdatastoreservice.read.enabled
+    dbSyncEnabled:
+      type: boolean
+      description: >
+        If enabled, the RemoteSettingsExperimentLoader will trigger
+        unenrollments for experiments that are unenrolled in other profiles.
+      setPref:
+        branch: user
+        pref: nimbus.profilesdatastoreservice.sync.enabled
 
 search:
   description: Search service related features.

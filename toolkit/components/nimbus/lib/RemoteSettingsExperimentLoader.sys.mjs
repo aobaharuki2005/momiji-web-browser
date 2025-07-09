@@ -14,6 +14,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
+  NimbusEnrollments: "resource://nimbus/lib/Enrollments.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   NimbusTelemetry: "resource://nimbus/lib/Telemetry.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
@@ -105,6 +106,7 @@ export const MatchStatus = Object.freeze({
   NO_MATCH: "NO_MATCH",
   TARGETING_ONLY: "TARGETING_ONLY",
   TARGETING_AND_BUCKETING: "TARGETING_AND_BUCKETING",
+  UNENROLLED_IN_ANOTHER_PROFILE: "UNENROLLED_IN_ANOTHER_PROFILE",
 });
 
 export const CheckRecipeResult = {
@@ -396,10 +398,19 @@ export class RemoteSettingsExperimentLoader {
       await this.getRecipesFromAllCollections({ forceSync, trigger });
 
     if (!loadingError) {
+      const unenrolledExperimentSlugs = lazy.NimbusEnrollments
+        .syncEnrollmentsEnabled
+        ? await lazy.NimbusEnrollments.loadUnenrolledExperimentSlugsFromOtherProfiles()
+        : undefined;
+
       const enrollmentsCtx = new EnrollmentsContext(
         this.manager,
         recipeValidator,
-        { validationEnabled, shouldCheckTargeting: true }
+        {
+          validationEnabled,
+          shouldCheckTargeting: true,
+          unenrolledExperimentSlugs,
+        }
       );
 
       const { existingEnrollments, recipes } =
@@ -811,7 +822,11 @@ export class EnrollmentsContext {
   constructor(
     manager,
     recipeValidator,
-    { validationEnabled = true, shouldCheckTargeting = true } = {}
+    {
+      validationEnabled = true,
+      shouldCheckTargeting = true,
+      unenrolledExperimentSlugs,
+    } = {}
   ) {
     this.manager = manager;
     this.recipeValidator = recipeValidator;
@@ -819,6 +834,7 @@ export class EnrollmentsContext {
     this.validationEnabled = validationEnabled;
     this.validatorCache = {};
     this.shouldCheckTargeting = shouldCheckTargeting;
+    this.unenrolledExperimentSlugs = unenrolledExperimentSlugs;
     this.matches = 0;
 
     this.locale = Services.locale.appLocaleAsBCP47;
@@ -912,6 +928,10 @@ export class EnrollmentsContext {
     if (!(await this.manager.isInBucketAllocation(recipe.bucketConfig))) {
       lazy.log.debug(`${recipe.slug} did not match bucket sampling`);
       return CheckRecipeResult.Ok(MatchStatus.TARGETING_ONLY);
+    }
+
+    if (!recipe.isRollout && this.unenrolledExperimentSlugs?.has(recipe.slug)) {
+      return CheckRecipeResult.Ok(MatchStatus.UNENROLLED_IN_ANOTHER_PROFILE);
     }
 
     return CheckRecipeResult.Ok(MatchStatus.TARGETING_AND_BUCKETING);

@@ -54,6 +54,10 @@ export const UnenrollmentCause = {
           reason = UnenrollReason.BUCKETING;
           break;
 
+        case lazy.MatchStatus.UNENROLLED_IN_ANOTHER_PROFILE:
+          reason = UnenrollReason.UNENROLLED_IN_ANOTHER_PROFILE;
+          break;
+
         // TARGETING_AND_BUCKETING cannot cause unenrollment.
       }
     } else {
@@ -330,6 +334,14 @@ export class ExperimentManager {
           slug: recipe.slug,
           status: EnrollmentStatus.NOT_ENROLLED,
           reason: EnrollmentStatusReason.NOT_SELECTED,
+        });
+        break;
+
+      case lazy.MatchStatus.UNENROLLED_IN_ANOTHER_PROFILE:
+        lazy.NimbusTelemetry.recordEnrollmentStatus({
+          slug: recipe.slug,
+          status: EnrollmentStatus.NOT_ENROLLED,
+          reason: EnrollmentStatusReason.UNENROLLED_IN_ANOTHER_PROFILE,
         });
         break;
 
@@ -779,6 +791,13 @@ export class ExperimentManager {
         return false;
       }
 
+      if (result.status === lazy.MatchStatus.UNENROLLED_IN_ANOTHER_PROFILE) {
+        this._unenroll(
+          enrollment,
+          UnenrollmentCause.fromCheckRecipeResult(result)
+        );
+      }
+
       if (result.status === lazy.MatchStatus.TARGETING_AND_BUCKETING) {
         lazy.NimbusTelemetry.recordEnrollmentStatus({
           slug: enrollment.slug,
@@ -881,7 +900,7 @@ export class ExperimentManager {
 
     this._unsetEnrollmentPrefs(enrollment, cause, { duringRestore });
 
-    lazy.log.debug(`Recipe unenrolled: ${slug}`);
+    lazy.log.debug(`Recipe unenrolled: ${slug} (${cause.reason})`);
   }
 
   /**
