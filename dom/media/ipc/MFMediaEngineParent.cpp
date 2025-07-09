@@ -363,7 +363,7 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvInitMediaEngine(
 }
 
 HRESULT MFMediaEngineParent::SetMediaInfo(const MediaInfoIPDL& aInfo,
-                                          bool aIsEncrytpedCustomInit) {
+                                          bool aIsEncryptedCustomInit) {
   AssertOnManagerThread();
   MOZ_ASSERT(mIsCreatedMediaEngine, "Hasn't created media engine?");
   MOZ_ASSERT(!mMediaSource);
@@ -379,21 +379,21 @@ HRESULT MFMediaEngineParent::SetMediaInfo(const MediaInfoIPDL& aInfo,
   // Create media source and set it to the media engine.
   NS_ENSURE_TRUE(SUCCEEDED(MakeAndInitialize<MFMediaSource>(
                      &mMediaSource, aInfo.audioInfo(), aInfo.videoInfo(),
-                     mManagerThread, aIsEncrytpedCustomInit)),
+                     mManagerThread, aIsEncryptedCustomInit)),
                  IPC_OK());
 
-  const bool isEncryted = mMediaSource->IsEncrypted();
+  const bool isEncrypted = mMediaSource->IsEncrypted();
   ENGINE_MARKER("MFMediaEngineParent,CreatedMediaSource");
   nsPrintfCString message(
       "Created the media source, audio=%s, video=%s, encrypted-audio=%s, "
-      "encrypted-video=%s, aIsEncrytpedCustomInit=%d, isEncrypted=%d",
+      "encrypted-video=%s, aIsEncryptedCustomInit=%d, isEncrypted=%d",
       aInfo.audioInfo() ? aInfo.audioInfo()->mMimeType.BeginReading() : "none",
       aInfo.videoInfo() ? aInfo.videoInfo()->mMimeType.BeginReading() : "none",
       aInfo.audioInfo() && aInfo.audioInfo()->mCrypto.IsEncrypted() ? "yes"
                                                                     : "no",
       aInfo.videoInfo() && aInfo.videoInfo()->mCrypto.IsEncrypted() ? "yes"
                                                                     : "no",
-      aIsEncrytpedCustomInit, isEncryted);
+      aIsEncryptedCustomInit, isEncrypted);
   LOG("%s", message.get());
 
   if (aInfo.videoInfo()) {
@@ -402,7 +402,7 @@ HRESULT MFMediaEngineParent::SetMediaInfo(const MediaInfoIPDL& aInfo,
     RETURN_IF_FAILED(mediaEngineEx->EnableWindowlessSwapchainMode(true));
     LOG("Enabled dcomp swap chain mode");
     ENGINE_MARKER("MFMediaEngineParent,EnabledSwapChain");
-    if (isEncryted) {
+    if (isEncrypted) {
       // Microsoft recommends to disable low latency with DRM.
       RETURN_IF_FAILED(mediaEngineEx->SetRealTimeMode(false));
       LOG("Turned off the real time mode for encrypted playback");
@@ -414,12 +414,12 @@ HRESULT MFMediaEngineParent::SetMediaInfo(const MediaInfoIPDL& aInfo,
   errorExit.release();
 
 #ifdef MOZ_WMF_CDM
-  if (isEncryted && !mContentProtectionManager) {
+  if (isEncrypted && !mContentProtectionManager) {
     // We will set the source later when the CDM proxy is ready.
     return S_OK;
   }
 
-  if (isEncryted && mContentProtectionManager) {
+  if (isEncrypted && mContentProtectionManager) {
     auto* proxy = mContentProtectionManager->GetCDMProxy();
     MOZ_ASSERT(proxy);
     mMediaSource->SetCDMProxy(proxy);
