@@ -12,9 +12,11 @@
 
 #include "CounterStyleManager.h"
 #include "LayoutLogging.h"
-#include "mozilla/dom/HTMLInputElement.h"
+#include "PresShell.h"
+#include "StickyScrollContainer.h"
 #include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/WritingModes.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "nsBlockFrame.h"
 #include "nsFlexContainerFrame.h"
 #include "nsFontInflationData.h"
@@ -24,15 +26,13 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
-#include "nsImageFrame.h"
 #include "nsIPercentBSizeObserver.h"
+#include "nsImageFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsLineBox.h"
 #include "nsPresContext.h"
 #include "nsStyleConsts.h"
 #include "nsTableFrame.h"
-#include "PresShell.h"
-#include "StickyScrollContainer.h"
 
 using namespace mozilla;
 using namespace mozilla::css;

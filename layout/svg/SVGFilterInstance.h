@@ -7,11 +7,11 @@
 #ifndef LAYOUT_SVG_SVGFILTERINSTANCE_H_
 #define LAYOUT_SVG_SVGFILTERINSTANCE_H_
 
-#include "gfxMatrix.h"
-#include "gfxRect.h"
 #include "SVGAnimatedNumber.h"
 #include "SVGAnimatedNumberPair.h"
 #include "SVGFilters.h"
+#include "gfxMatrix.h"
+#include "gfxRect.h"
 #include "mozilla/ServoStyleConsts.h"
 
 namespace mozilla {

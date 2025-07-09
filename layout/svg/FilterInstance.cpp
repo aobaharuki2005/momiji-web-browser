@@ -11,28 +11,27 @@
 #include "mozilla/UniquePtr.h"
 
 // Keep others in (case-insensitive) order:
+#include "CSSFilterInstance.h"
 #include "FilterSupport.h"
 #include "ImgDrawResult.h"
 #include "SVGContentUtils.h"
+#include "SVGIntegrationUtils.h"
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
-
 #include "gfxUtils.h"
+#include "mozilla/ISVGDisplayableFrame.h"
+#include "mozilla/SVGFilterInstance.h"
+#include "mozilla/SVGObserverUtils.h"
+#include "mozilla/SVGUtils.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/gfx/Filters.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/PatternHelpers.h"
-#include "mozilla/ISVGDisplayableFrame.h"
-#include "mozilla/StaticPrefs_gfx.h"
-#include "mozilla/SVGFilterInstance.h"
-#include "mozilla/SVGObserverUtils.h"
-#include "mozilla/SVGUtils.h"
-#include "mozilla/dom/Document.h"
 #include "nsLayoutUtils.h"
-#include "CSSFilterInstance.h"
-#include "SVGIntegrationUtils.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::gfx;

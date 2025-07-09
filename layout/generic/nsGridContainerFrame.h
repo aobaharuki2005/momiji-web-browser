@@ -10,9 +10,9 @@
 #define nsGridContainerFrame_h___
 
 #include "mozilla/CSSOrderAwareFrameIterator.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/IntrinsicISizesCache.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/HashTable.h"
 #include "nsAtomHashKeys.h"
 #include "nsContainerFrame.h"
 #include "nsILineIterator.h"

@@ -5,11 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsGfxButtonControlFrame.h"
-#include "nsIFormControl.h"
-#include "nsGkAtoms.h"
+
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsContentUtils.h"
+#include "nsGkAtoms.h"
+#include "nsIFormControl.h"
 #include "nsTextNode.h"
 
 using namespace mozilla;

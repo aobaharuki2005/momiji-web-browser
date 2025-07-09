@@ -5,8 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PopupQueue.h"
-#include "mozilla/dom/Element.h"
+
 #include "mozilla/StaticPtr.h"
+#include "mozilla/dom/Element.h"
 #include "nsThreadUtils.h"
 
 using namespace mozilla;

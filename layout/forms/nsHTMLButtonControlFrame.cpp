@@ -6,17 +6,18 @@
 
 #include "nsHTMLButtonControlFrame.h"
 
+#include <algorithm>
+
 #include "mozilla/Baseline.h"
 #include "mozilla/PresShell.h"
-#include "nsIFrameInlines.h"
-#include "nsContainerFrame.h"
-#include "nsPresContextInlines.h"
-#include "nsPresContext.h"
-#include "nsLayoutUtils.h"
-#include "nsGkAtoms.h"
-#include "nsDisplayList.h"
 #include "nsCSSRendering.h"
-#include <algorithm>
+#include "nsContainerFrame.h"
+#include "nsDisplayList.h"
+#include "nsGkAtoms.h"
+#include "nsIFrameInlines.h"
+#include "nsLayoutUtils.h"
+#include "nsPresContext.h"
+#include "nsPresContextInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::image;

@@ -10,6 +10,8 @@
 // include math.h to pick up definition of M_ maths defines e.g. M_PI
 #include <math.h>
 
+#include <algorithm>
+
 #include "DrawMode.h"
 #include "ImgDrawResult.h"
 #include "gfx2DGlue.h"
@@ -17,15 +19,14 @@
 #include "gfxPoint.h"
 #include "gfxRect.h"
 #include "mozilla/gfx/Rect.h"
+#include "nsCOMPtr.h"
 #include "nsChangeHint.h"
 #include "nsColor.h"
-#include "nsCOMPtr.h"
 #include "nsID.h"
 #include "nsIFrame.h"
 #include "nsISupports.h"
 #include "nsMathUtils.h"
 #include "nsStyleStruct.h"
-#include <algorithm>
 
 class gfxContext;
 class nsFrameList;

@@ -8,8 +8,8 @@
 #ifndef mozilla_dom_InspectorUtils_h
 #define mozilla_dom_InspectorUtils_h
 
-#include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/InspectorUtilsBinding.h"
 #include "nsLayoutUtils.h"
 
 class nsAtom;

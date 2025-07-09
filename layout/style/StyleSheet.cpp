@@ -5,11 +5,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/StyleSheet.h"
+
+#include "mozAutoDocUpdate.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ComputedStyleInlines.h"
+#include "mozilla/NullPrincipal.h"
+#include "mozilla/ServoBindings.h"
+#include "mozilla/ServoCSSRuleList.h"
+#include "mozilla/ServoStyleSet.h"
+#include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/ErrorReporter.h"
 #include "mozilla/css/GroupRule.h"
+#include "mozilla/css/SheetLoadData.h"
 #include "mozilla/dom/CSSImportRule.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/Element.h"
@@ -19,15 +28,6 @@
 #include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/ShadowRootBinding.h"
-#include "mozilla/NullPrincipal.h"
-#include "mozilla/ServoBindings.h"
-#include "mozilla/ServoCSSRuleList.h"
-#include "mozilla/ServoStyleSet.h"
-#include "mozilla/StaticPrefs_layout.h"
-#include "mozilla/StyleSheetInlines.h"
-#include "mozilla/css/SheetLoadData.h"
-
-#include "mozAutoDocUpdate.h"
 
 namespace mozilla {
 

@@ -12,12 +12,12 @@
 #ifndef nsBlockFrame_h___
 #define nsBlockFrame_h___
 
+#include "mozilla/IntrinsicISizesCache.h"
+#include "nsCSSPseudoElements.h"
 #include "nsContainerFrame.h"
+#include "nsFloatManager.h"
 #include "nsHTMLParts.h"
 #include "nsLineBox.h"
-#include "nsCSSPseudoElements.h"
-#include "nsFloatManager.h"
-#include "mozilla/IntrinsicISizesCache.h"
 
 enum class LineReflowStatus {
   // The line was completely reflowed and fit in available width, and we should

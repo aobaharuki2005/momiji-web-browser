@@ -9,16 +9,17 @@
 #ifndef mozilla_ServoStyleConstsInlines_h
 #define mozilla_ServoStyleConstsInlines_h
 
-#include "mozilla/ServoStyleConsts.h"
+#include <new>
+#include <type_traits>
+
+#include "MainThreadUtils.h"
 #include "mozilla/AspectRatio.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/ServoStyleConsts.h"
 #include "mozilla/URLExtraData.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "nsGkAtoms.h"
-#include "MainThreadUtils.h"
 #include "nsNetUtil.h"
-#include <type_traits>
-#include <new>
 
 // TODO(emilio): there are quite a few other implementations scattered around
 // that should move here.

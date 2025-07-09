@@ -14,18 +14,18 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CORSMode.h"
-#include "mozilla/css/StylePreloadKind.h"
-#include "mozilla/dom/LinkStyle.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SharedSubResourceCache.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/css/StylePreloadKind.h"
+#include "mozilla/dom/LinkStyle.h"
 #include "nsCompatibility.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsRefPtrHashtable.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "nsTObserverArray.h"
 #include "nsURIHashKey.h"
-#include "nsRefPtrHashtable.h"
 
 class nsICSSLoaderObserver;
 class nsIConsoleReportCollector;

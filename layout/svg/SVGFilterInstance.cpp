@@ -8,6 +8,9 @@
 #include "SVGFilterInstance.h"
 
 // Keep others in (case-insensitive) order:
+#include "FilterSupport.h"
+#include "SVGFilterFrame.h"
+#include "gfx2DGlue.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "mozilla/ISVGDisplayableFrame.h"
@@ -15,12 +18,9 @@
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGUtils.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/dom/SVGFilterElement.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGUnitTypesBinding.h"
-#include "mozilla/dom/SVGFilterElement.h"
-#include "SVGFilterFrame.h"
-#include "FilterSupport.h"
-#include "gfx2DGlue.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::dom::SVGUnitTypes_Binding;

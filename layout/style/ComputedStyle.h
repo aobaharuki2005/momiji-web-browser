@@ -17,7 +17,6 @@
 #include "mozilla/ServoStyleConsts.h"
 #include "nsCSSPseudoElements.h"
 #include "nsColor.h"
-
 #include "nsStyleStructFwd.h"
 
 enum nsChangeHint : uint32_t;

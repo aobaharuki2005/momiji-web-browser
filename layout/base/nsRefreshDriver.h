@@ -12,24 +12,23 @@
 #ifndef nsRefreshDriver_h_
 #define nsRefreshDriver_h_
 
+#include "GeckoProfiler.h"  // for ProfileChunkedBuffer
+#include "LayersTypes.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/FlushType.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RenderingPhase.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
-#include "nsTObserverArray.h"
-#include "nsTArray.h"
-#include "nsTHashSet.h"
+#include "mozilla/layers/TransactionIdAllocator.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsRefreshObservers.h"
+#include "nsTArray.h"
+#include "nsTHashSet.h"
+#include "nsTObserverArray.h"
 #include "nsThreadUtils.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/layers/TransactionIdAllocator.h"
-#include "LayersTypes.h"
-
-#include "GeckoProfiler.h"  // for ProfileChunkedBuffer
 
 class nsPresContext;
 

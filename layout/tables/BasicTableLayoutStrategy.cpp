@@ -13,13 +13,13 @@
 
 #include <algorithm>
 
-#include "nsTableFrame.h"
-#include "nsTableColFrame.h"
-#include "nsTableCellFrame.h"
-#include "nsLayoutUtils.h"
-#include "nsGkAtoms.h"
 #include "SpanningCellSorter.h"
+#include "nsGkAtoms.h"
 #include "nsIContent.h"
+#include "nsLayoutUtils.h"
+#include "nsTableCellFrame.h"
+#include "nsTableColFrame.h"
+#include "nsTableFrame.h"
 
 using namespace mozilla;
 using namespace mozilla::layout;

@@ -6,30 +6,26 @@
 
 #include "nsLayoutDebuggingTools.h"
 
-#include "nsIDocShell.h"
-#include "nsPIDOMWindow.h"
-#include "nsIDocumentViewer.h"
-#include "nsIPrintSettings.h"
-#include "nsIPrintSettingsService.h"
-
-#include "nsAtom.h"
-
-#include "nsIContent.h"
-
-#include "nsCounterManager.h"
-#include "nsCSSFrameConstructor.h"
-#include "nsDisplayList.h"
-#include "nsLayoutUtils.h"
-#include "nsViewManager.h"
-#include "nsIFrame.h"
 #include "RetainedDisplayListBuilder.h"
-
+#include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TreeIterator.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/PresShell.h"
+#include "nsAtom.h"
+#include "nsCSSFrameConstructor.h"
+#include "nsCounterManager.h"
+#include "nsDisplayList.h"
+#include "nsIContent.h"
+#include "nsIDocShell.h"
+#include "nsIDocumentViewer.h"
+#include "nsIFrame.h"
+#include "nsIPrintSettings.h"
+#include "nsIPrintSettingsService.h"
+#include "nsLayoutUtils.h"
+#include "nsPIDOMWindow.h"
+#include "nsViewManager.h"
 
 using namespace mozilla;
 using mozilla::dom::Document;

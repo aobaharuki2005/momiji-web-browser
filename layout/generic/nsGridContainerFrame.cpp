@@ -8,23 +8,25 @@
 
 #include "nsGridContainerFrame.h"
 
-#include <functional>
 #include <stdlib.h>  // for div()
+
+#include <functional>
 #include <type_traits>
+
 #include "fmt/format.h"
 #include "gfxContext.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Baseline.h"
-#include "mozilla/ComputedStyle.h"
 #include "mozilla/CSSAlignUtils.h"
-#include "mozilla/dom/Grid.h"
-#include "mozilla/dom/GridBinding.h"
+#include "mozilla/ComputedStyle.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h"  // for PodZero
 #include "mozilla/PresShell.h"
 #include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/dom/Grid.h"
+#include "mozilla/dom/GridBinding.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"

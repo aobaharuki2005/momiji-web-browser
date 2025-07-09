@@ -9,17 +9,17 @@
 
 // Keep others in (case-insensitive) order:
 #include "gfxContext.h"
-#include "nsDisplayList.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsLayoutUtils.h"
-#include "nsObjectLoadingContent.h"
-#include "nsSubDocumentFrame.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/SVGUtils.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SVGSVGElement.h"
+#include "nsDisplayList.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsLayoutUtils.h"
+#include "nsObjectLoadingContent.h"
+#include "nsSubDocumentFrame.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::gfx;

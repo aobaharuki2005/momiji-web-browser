@@ -6,14 +6,14 @@
 
 #include "nsColorControlFrame.h"
 
+#include "mozilla/PresShell.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/HTMLInputElement.h"
+#include "nsCSSPseudoElements.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
-#include "nsCSSPseudoElements.h"
 #include "nsGkAtoms.h"
 #include "nsIFormControl.h"
-#include "mozilla/PresShell.h"
-#include "mozilla/dom/HTMLInputElement.h"
-#include "mozilla/dom/Document.h"
 
 using namespace mozilla;
 using mozilla::dom::CallerType;

@@ -8,6 +8,7 @@
 #define mozilla_BindgenUniquePtr_h
 
 #include <memory>
+
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {

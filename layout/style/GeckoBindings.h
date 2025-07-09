@@ -11,15 +11,15 @@
 
 #include <stdint.h>
 
-#include "mozilla/ServoTypes.h"
+#include "COLRFonts.h"
+#include "mozilla/EffectCompositor.h"
+#include "mozilla/PreferenceSheet.h"
 #include "mozilla/ServoBindingTypes.h"
+#include "mozilla/ServoTypes.h"
 #include "mozilla/css/DocumentMatchingFunction.h"
 #include "mozilla/css/SheetLoadData.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/EffectCompositor.h"
-#include "mozilla/PreferenceSheet.h"
 #include "nsStyleStruct.h"
-#include "COLRFonts.h"
 
 class nsAtom;
 class nsIURI;

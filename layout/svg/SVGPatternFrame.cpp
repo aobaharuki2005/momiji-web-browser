@@ -9,6 +9,7 @@
 
 // Keep others in (case-insensitive) order:
 #include "AutoReferenceChainGuard.h"
+#include "SVGAnimatedTransformList.h"
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxMatrix.h"
@@ -26,7 +27,6 @@
 #include "mozilla/gfx/2D.h"
 #include "nsGkAtoms.h"
 #include "nsIFrameInlines.h"
-#include "SVGAnimatedTransformList.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::dom::SVGUnitTypes_Binding;

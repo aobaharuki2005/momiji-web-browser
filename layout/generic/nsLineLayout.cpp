@@ -8,10 +8,12 @@
 
 #include "nsLineLayout.h"
 
-#include "mozilla/ComputedStyle.h"
-#include "mozilla/SVGTextFrame.h"
+#include <algorithm>
 
 #include "LayoutLogging.h"
+#include "RubyUtils.h"
+#include "mozilla/ComputedStyle.h"
+#include "mozilla/SVGTextFrame.h"
 #include "nsBidiPresUtils.h"
 #include "nsBlockFrame.h"
 #include "nsContainerFrame.h"
@@ -26,8 +28,6 @@
 #include "nsStyleConsts.h"
 #include "nsStyleStructInlines.h"
 #include "nsTextFrame.h"
-#include "RubyUtils.h"
-#include <algorithm>
 
 #ifdef DEBUG
 #  undef NOISY_INLINEDIR_ALIGN

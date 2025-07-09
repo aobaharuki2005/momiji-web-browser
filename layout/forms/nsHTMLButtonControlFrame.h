@@ -7,8 +7,8 @@
 #ifndef nsHTMLButtonControlFrame_h___
 #define nsHTMLButtonControlFrame_h___
 
-#include "nsContainerFrame.h"
 #include "nsCSSRenderingBorders.h"
+#include "nsContainerFrame.h"
 
 class gfxContext;
 class nsPresContext;

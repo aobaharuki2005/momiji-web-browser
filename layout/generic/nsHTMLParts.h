@@ -9,9 +9,9 @@
 #ifndef nsHTMLParts_h___
 #define nsHTMLParts_h___
 
-#include "nscore.h"
 #include "nsFrameState.h"
 #include "nsISupports.h"
+#include "nscore.h"
 
 class nsAtom;
 class nsCheckboxRadioFrame;

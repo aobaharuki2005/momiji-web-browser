@@ -7,9 +7,8 @@
 #ifndef mozilla_CSSStyleRule_h
 #define mozilla_CSSStyleRule_h
 
-#include "mozilla/css/GroupRule.h"
 #include "mozilla/ServoBindingTypes.h"
-
+#include "mozilla/css/GroupRule.h"
 #include "nsDOMCSSDeclaration.h"
 
 namespace mozilla {

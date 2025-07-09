@@ -9,9 +9,9 @@
 
 #include <ostream>
 
-#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/EnumSet.h"
+#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "nsRect.h"
 #include "nsStyleStruct.h"
 

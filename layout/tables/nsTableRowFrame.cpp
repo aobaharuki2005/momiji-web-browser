@@ -5,25 +5,26 @@
 
 #include "nsTableRowFrame.h"
 
+#include <algorithm>
+
 #include "mozilla/Baseline.h"
+#include "mozilla/ComputedStyle.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
-#include "nsTableRowGroupFrame.h"
-#include "nsPresContext.h"
-#include "mozilla/ComputedStyle.h"
 #include "mozilla/StaticPrefs_layout.h"
-#include "nsStyleConsts.h"
+#include "nsCSSRendering.h"
+#include "nsDisplayList.h"
+#include "nsHTMLParts.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
-#include "nsTableFrame.h"
+#include "nsPresContext.h"
+#include "nsStyleConsts.h"
 #include "nsTableCellFrame.h"
-#include "nsCSSRendering.h"
-#include "nsHTMLParts.h"
-#include "nsTableColGroupFrame.h"
 #include "nsTableColFrame.h"
-#include "nsDisplayList.h"
-#include <algorithm>
+#include "nsTableColGroupFrame.h"
+#include "nsTableFrame.h"
+#include "nsTableRowGroupFrame.h"
 
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"

@@ -4,21 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsNameSpaceManager.h"
-#include "nsGkAtoms.h"
-#include "nsTreeUtils.h"
 #include "nsTreeContentView.h"
+
 #include "ChildIterator.h"
-#include "nsError.h"
-#include "nsXULSortService.h"
-#include "nsTreeBodyFrame.h"
-#include "nsTreeColumns.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TreeContentViewBinding.h"
 #include "mozilla/dom/XULTreeElement.h"
+#include "nsError.h"
+#include "nsGkAtoms.h"
+#include "nsNameSpaceManager.h"
 #include "nsServiceManagerUtils.h"
-#include "mozilla/dom/Document.h"
+#include "nsTreeBodyFrame.h"
+#include "nsTreeColumns.h"
+#include "nsTreeUtils.h"
+#include "nsXULSortService.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

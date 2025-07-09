@@ -10,42 +10,40 @@
  */
 
 #include "nsStyleStruct.h"
-#include "nsStyleStructInlines.h"
-#include "nsStyleConsts.h"
-#include "nsString.h"
-#include "nsPresContext.h"
-#include "nsIWidget.h"
-#include "nsCRTGlue.h"
-#include "nsCSSProps.h"
-#include "nsDeviceContext.h"
-#include "nsStyleUtil.h"
-#include "nsIURIMutator.h"
 
-#include "nsCOMPtr.h"
+#include <algorithm>
 
-#include "nsBidiUtils.h"
-#include "nsLayoutUtils.h"
-
-#include "imgIRequest.h"
-#include "imgIContainer.h"
 #include "CounterStyleManager.h"
-
-#include "mozilla/dom/AnimationEffectBinding.h"    // for PlaybackDirection
-#include "mozilla/dom/BaseKeyframeTypesBinding.h"  // for CompositeOperation
-#include "mozilla/dom/DocGroup.h"
+#include "ImageLoader.h"
+#include "imgIContainer.h"
+#include "imgIRequest.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/GeckoBindings.h"
+#include "mozilla/Likely.h"
 #include "mozilla/PreferenceSheet.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPresData.h"
-#include "mozilla/Likely.h"
-#include "nsIURI.h"
+#include "mozilla/dom/AnimationEffectBinding.h"    // for PlaybackDirection
+#include "mozilla/dom/BaseKeyframeTypesBinding.h"  // for CompositeOperation
+#include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
-#include <algorithm>
-#include "ImageLoader.h"
-#include "mozilla/StaticPrefs_layout.h"
+#include "nsBidiUtils.h"
+#include "nsCOMPtr.h"
+#include "nsCRTGlue.h"
+#include "nsCSSProps.h"
+#include "nsDeviceContext.h"
+#include "nsIURI.h"
+#include "nsIURIMutator.h"
+#include "nsIWidget.h"
+#include "nsLayoutUtils.h"
+#include "nsPresContext.h"
+#include "nsString.h"
+#include "nsStyleConsts.h"
+#include "nsStyleStructInlines.h"
+#include "nsStyleUtil.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

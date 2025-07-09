@@ -7,22 +7,23 @@
 /* rendering object for CSS :first-letter pseudo-element */
 
 #include "nsFirstLetterFrame.h"
-#include "nsPresContext.h"
-#include "nsPresContextInlines.h"
+
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "nsCSSFrameConstructor.h"
+#include "nsFrameManager.h"
+#include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsLayoutUtils.h"
 #include "nsLineLayout.h"
-#include "nsGkAtoms.h"
-#include "nsFrameManager.h"
 #include "nsPlaceholderFrame.h"
+#include "nsPresContext.h"
+#include "nsPresContextInlines.h"
 #include "nsTextFrame.h"
-#include "nsCSSFrameConstructor.h"
 
 using namespace mozilla;
 using namespace mozilla::layout;

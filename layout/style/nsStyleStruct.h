@@ -12,26 +12,27 @@
 #ifndef nsStyleStruct_h___
 #define nsStyleStruct_h___
 
+#include <cstddef>  // offsetof()
+
+#include "CounterStyleManager.h"
+#include "UniqueOrNonOwningPtr.h"
+#include "X11UndefineNone.h"
+#include "imgIContainer.h"
+#include "imgRequestProxy.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowButtonType.h"
-#include "UniqueOrNonOwningPtr.h"
+#include "nsChangeHint.h"
 #include "nsColor.h"
 #include "nsCoord.h"
-#include "nsMargin.h"
 #include "nsFont.h"
+#include "nsMargin.h"
 #include "nsStyleAutoArray.h"
 #include "nsStyleConsts.h"
-#include "nsChangeHint.h"
 #include "nsTArray.h"
-#include "imgIContainer.h"
-#include "imgRequestProxy.h"
-#include "CounterStyleManager.h"
-#include <cstddef>  // offsetof()
-#include "X11UndefineNone.h"
 
 class nsIFrame;
 class nsIURI;

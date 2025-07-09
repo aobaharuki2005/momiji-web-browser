@@ -15,23 +15,24 @@
 #ifndef mozilla_ServoStyleConstsForwards_h
 #  define mozilla_ServoStyleConstsForwards_h
 
-#  include "nsColor.h"
-#  include "nsCoord.h"
-#  include "mozilla/AtomArray.h"
-#  include "mozilla/IntegerRange.h"
-#  include "mozilla/Span.h"
-#  include "Units.h"
-#  include "mozilla/gfx/Types.h"
-#  include "mozilla/CORSMode.h"
-#  include "mozilla/MemoryReporting.h"
-#  include "mozilla/ServoTypes.h"
-#  include "mozilla/ServoBindingTypes.h"
-#  include "mozilla/Vector.h"
-#  include "nsCSSPropertyID.h"
-#  include "nsCompatibility.h"
-#  include "nsIURI.h"
-#  include "mozilla/image/Resolution.h"
 #  include <atomic>
+
+#  include "Units.h"
+#  include "mozilla/AtomArray.h"
+#  include "mozilla/CORSMode.h"
+#  include "mozilla/IntegerRange.h"
+#  include "mozilla/MemoryReporting.h"
+#  include "mozilla/ServoBindingTypes.h"
+#  include "mozilla/ServoTypes.h"
+#  include "mozilla/Span.h"
+#  include "mozilla/Vector.h"
+#  include "mozilla/gfx/Types.h"
+#  include "mozilla/image/Resolution.h"
+#  include "nsCSSPropertyID.h"
+#  include "nsColor.h"
+#  include "nsCompatibility.h"
+#  include "nsCoord.h"
+#  include "nsIURI.h"
 
 struct RawServoAnimationValueTable;
 

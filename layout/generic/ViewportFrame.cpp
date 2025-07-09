@@ -11,19 +11,19 @@
 
 #include "mozilla/ViewportFrame.h"
 
+#include "MobileViewportManager.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ScrollContainerFrame.h"
-#include "nsGkAtoms.h"
 #include "mozilla/dom/ViewTransition.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsCanvasFrame.h"
+#include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
-#include "nsSubDocumentFrame.h"
 #include "nsPlaceholderFrame.h"
-#include "MobileViewportManager.h"
+#include "nsSubDocumentFrame.h"
 
 using namespace mozilla;
 

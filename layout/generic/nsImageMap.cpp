@@ -8,22 +8,22 @@
 
 #include "nsImageMap.h"
 
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"  // for Event
 #include "mozilla/dom/HTMLAreaElement.h"
 #include "mozilla/gfx/PathHelpers.h"
-#include "mozilla/UniquePtr.h"
-#include "nsString.h"
-#include "nsReadableUtils.h"
-#include "nsPresContext.h"
-#include "nsNameSpaceManager.h"
-#include "nsGkAtoms.h"
-#include "nsImageFrame.h"
+#include "nsContentUtils.h"
 #include "nsCoord.h"
+#include "nsGkAtoms.h"
 #include "nsIContentInlines.h"
 #include "nsIScriptError.h"
-#include "nsContentUtils.h"
+#include "nsImageFrame.h"
 #include "nsLayoutUtils.h"
+#include "nsNameSpaceManager.h"
+#include "nsPresContext.h"
+#include "nsReadableUtils.h"
+#include "nsString.h"
 
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"

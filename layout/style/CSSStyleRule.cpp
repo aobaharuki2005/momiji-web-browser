@@ -5,15 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/CSSStyleRule.h"
-#include "mozilla/dom/CSSStyleRuleBinding.h"
 
 #include "mozilla/CSSEnabledState.h"
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/PseudoStyleType.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/dom/CSSStyleRuleBinding.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsCSSPseudoElements.h"
-
 #include "nsISupports.h"
 
 namespace mozilla::dom {

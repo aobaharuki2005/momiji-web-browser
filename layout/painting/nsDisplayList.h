@@ -13,6 +13,9 @@
 #ifndef NSDISPLAYLIST_H_
 #define NSDISPLAYLIST_H_
 
+#include <algorithm>
+#include <unordered_set>
+
 #include "DisplayItemClipChain.h"
 #include "DisplayListClipState.h"
 #include "FrameMetrics.h"
@@ -44,6 +47,8 @@
 #include "nsAutoLayoutPhase.h"
 #include "nsCOMPtr.h"
 #include "nsCSSRenderingBorders.h"
+#include "nsCaret.h"
+#include "nsClassHashtable.h"
 #include "nsContainerFrame.h"
 #include "nsDisplayItemTypes.h"
 #include "nsDisplayListInvalidation.h"
@@ -51,13 +56,8 @@
 #include "nsPresArena.h"
 #include "nsRect.h"
 #include "nsRegion.h"
-#include "nsClassHashtable.h"
-#include "nsTHashSet.h"
 #include "nsTHashMap.h"
-#include "nsCaret.h"
-
-#include <algorithm>
-#include <unordered_set>
+#include "nsTHashSet.h"
 
 // XXX Includes that could be avoided by moving function implementations to the
 // cpp file.

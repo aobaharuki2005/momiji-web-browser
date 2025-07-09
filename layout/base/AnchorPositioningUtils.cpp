@@ -6,17 +6,17 @@
 
 #include "AnchorPositioningUtils.h"
 
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/PresShell.h"
 #include "nsCanvasFrame.h"
 #include "nsContainerFrame.h"
-#include "nsLayoutUtils.h"
-#include "nsPlaceholderFrame.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsINode.h"
+#include "nsLayoutUtils.h"
+#include "nsPlaceholderFrame.h"
 #include "nsTArray.h"
 
 namespace mozilla {

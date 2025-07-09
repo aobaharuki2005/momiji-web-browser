@@ -11,21 +11,21 @@
 #ifndef nsXULPopupManager_h__
 #define nsXULPopupManager_h__
 
-#include "mozilla/Logging.h"
-#include "nsHashtablesFwd.h"
-#include "nsIContent.h"
-#include "nsIRollupListener.h"
-#include "nsIDOMEventListener.h"
 #include "Units.h"
-#include "nsPoint.h"
-#include "nsCOMPtr.h"
-#include "nsTArray.h"
-#include "nsIObserver.h"
-#include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FunctionRef.h"
+#include "mozilla/Logging.h"
 #include "mozilla/widget/InitData.h"
 #include "mozilla/widget/NativeMenu.h"
+#include "nsCOMPtr.h"
+#include "nsHashtablesFwd.h"
+#include "nsIContent.h"
+#include "nsIDOMEventListener.h"
+#include "nsIObserver.h"
+#include "nsIRollupListener.h"
+#include "nsPoint.h"
+#include "nsTArray.h"
+#include "nsThreadUtils.h"
 
 // XXX Avoid including this here by moving function bodies to the cpp file.
 #include "mozilla/dom/Element.h"

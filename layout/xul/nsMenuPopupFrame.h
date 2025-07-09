@@ -11,19 +11,17 @@
 #ifndef nsMenuPopupFrame_h__
 #define nsMenuPopupFrame_h__
 
+#include "Units.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/gfx/Types.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/gfx/Types.h"
 #include "nsAtom.h"
+#include "nsBlockFrame.h"
 #include "nsCOMPtr.h"
+#include "nsExpirationState.h"
 #include "nsIDOMEventListener.h"
 #include "nsXULPopupManager.h"
-#include "nsExpirationState.h"
-
-#include "nsBlockFrame.h"
-
-#include "Units.h"
 
 class nsIWidget;
 

@@ -46,41 +46,41 @@
    At the moment we're midway through this process, so you will see inlined
    functions and member variables in this file.  -dwh */
 
-#include <algorithm>
 #include <stdio.h>
+
+#include <algorithm>
 
 #include "FrameProperties.h"
 #include "LayoutConstants.h"
+#include "Visibility.h"
 #include "mozilla/AspectRatio.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Baseline.h"
+#include "mozilla/ComputedStyle.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ReflowInput.h"
 #include "mozilla/RelativeTo.h"
 #include "mozilla/Result.h"
 #include "mozilla/SmallPointerArray.h"
 #include "mozilla/ToString.h"
 #include "mozilla/WritingModes.h"
-#include "nsDirection.h"
-#include "nsFrameList.h"
-#include "nsFrameState.h"
-#include "mozilla/ReflowInput.h"
-#include "nsIContent.h"
-#include "nsITheme.h"
-#include "nsQueryFrame.h"
-#include "mozilla/ComputedStyle.h"
-#include "nsStyleStruct.h"
-#include "Visibility.h"
-#include "nsChangeHint.h"
-#include "mozilla/EnumSet.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/CompositorHitTestInfo.h"
 #include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/intl/UnicodeProperties.h"
+#include "nsChangeHint.h"
+#include "nsDirection.h"
 #include "nsDisplayItemTypes.h"
+#include "nsFrameList.h"
+#include "nsFrameState.h"
+#include "nsIContent.h"
+#include "nsITheme.h"
 #include "nsPresContext.h"
+#include "nsQueryFrame.h"
+#include "nsStyleStruct.h"
 #include "nsTHashSet.h"
 
 #ifdef ACCESSIBILITY

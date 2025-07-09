@@ -11,18 +11,17 @@
 
 #include "nsAbsoluteContainingBlock.h"
 
-#include "nsAtomicContainerFrame.h"
-#include "nsContainerFrame.h"
-#include "nsGkAtoms.h"
 #include "mozilla/CSSAlignUtils.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ReflowInput.h"
+#include "mozilla/Sprintf.h"
+#include "nsAtomicContainerFrame.h"
+#include "nsCSSFrameConstructor.h"
+#include "nsContainerFrame.h"
+#include "nsGkAtoms.h"
+#include "nsGridContainerFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsPresContext.h"
-#include "nsCSSFrameConstructor.h"
-#include "nsGridContainerFrame.h"
-
-#include "mozilla/Sprintf.h"
 
 #ifdef DEBUG
 #  include "nsBlockFrame.h"

@@ -8,11 +8,11 @@
 #define nsComboboxControlFrame_h___
 
 #include "mozilla/Attributes.h"
-#include "nsIAnonymousContentCreator.h"
-#include "nsISelectControlFrame.h"
-#include "nsIRollupListener.h"
-#include "nsThreadUtils.h"
 #include "nsHTMLButtonControlFrame.h"
+#include "nsIAnonymousContentCreator.h"
+#include "nsIRollupListener.h"
+#include "nsISelectControlFrame.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 class PresShell;

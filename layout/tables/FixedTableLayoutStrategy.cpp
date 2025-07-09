@@ -11,13 +11,14 @@
 
 #include "FixedTableLayoutStrategy.h"
 
+#include <algorithm>
+
+#include "WritingModes.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
-#include "nsTableFrame.h"
-#include "nsTableColFrame.h"
 #include "nsTableCellFrame.h"
-#include "WritingModes.h"
-#include <algorithm>
+#include "nsTableColFrame.h"
+#include "nsTableFrame.h"
 
 using namespace mozilla;
 

@@ -12,8 +12,8 @@
 
 #include "gfxContext.h"
 #include "mozilla/Baseline.h"
-#include "mozilla/ComputedStyle.h"
 #include "mozilla/CSSOrderAwareFrameIterator.h"
+#include "mozilla/ComputedStyle.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_layout.h"

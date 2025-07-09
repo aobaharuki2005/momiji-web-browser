@@ -6,12 +6,12 @@
 
 /* some layout debugging functions that ought to live in nsFrame.cpp */
 
-#include "nsAttrValue.h"
-#include "nsIFrame.h"
-#include "nsDisplayList.h"
-#include "nsPrintfCString.h"
-
 #include <stdio.h>
+
+#include "nsAttrValue.h"
+#include "nsDisplayList.h"
+#include "nsIFrame.h"
+#include "nsPrintfCString.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
