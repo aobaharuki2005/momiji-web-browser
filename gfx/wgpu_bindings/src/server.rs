@@ -1272,10 +1272,7 @@ extern "C" {
         usage: wgt::TextureUsages,
     );
     #[allow(dead_code)]
-    fn wgpu_server_get_shared_texture_handle(
-        param: *mut c_void,
-        id: id::TextureId,
-    ) -> *mut c_void;
+    fn wgpu_server_get_shared_texture_handle(param: *mut c_void, id: id::TextureId) -> *mut c_void;
     #[allow(improper_ctypes)]
     #[allow(dead_code)]
     #[cfg(target_os = "linux")]
@@ -1981,9 +1978,7 @@ impl Global {
                 }
 
                 let use_shared_texture = if let Some(id) = swap_chain_id {
-                    unsafe {
-                        wgpu_server_use_shared_texture_for_swap_chain(self.webgpu_parent, id)
-                    }
+                    unsafe { wgpu_server_use_shared_texture_for_swap_chain(self.webgpu_parent, id) }
                 } else {
                     false
                 };
