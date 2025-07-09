@@ -1370,19 +1370,28 @@ nsDefaultCommandLineHandler.prototype = {
   },
 
   /**
+   * Returns when the signal is sent to the relevant notification handler, either:
+   * 1. The service worker via nsINotificationHandler for a web notification, or
+   * 2. SpecialMessageActions for a Messaging-System-invoked one
+   *
    * @param {nsICommandLine} cmdLine
-   * @param {string} tag
+   * @param {string} notificationId
    * @param {string} notificationData
    * @param {nsIWindowsAlertsService} alertService
    */
-  async handleNotificationImpl(cmdLine, tag, notificationData, alertService) {
-    let { tagWasHandled } = await alertService.handleWindowsTag(tag);
+  async handleNotificationImpl(
+    cmdLine,
+    notificationId,
+    notificationData,
+    alertService
+  ) {
+    let { tagWasHandled } = await alertService.handleWindowsTag(notificationId);
 
     try {
       notificationData = JSON.parse(notificationData);
     } catch (e) {
       console.error(
-        `Failed to parse (notificationData=${notificationData}) for Windows notification (tag=${tag})`
+        `Failed to parse (notificationData=${notificationData}) for Windows notification (id=${notificationId})`
       );
     }
 
@@ -1395,7 +1404,7 @@ nsDefaultCommandLineHandler.prototype = {
         opaqueRelaunchData = JSON.parse(notificationData.opaqueRelaunchData);
       } catch (e) {
         console.error(
-          `Failed to parse (opaqueRelaunchData=${notificationData.opaqueRelaunchData}) for Windows notification (tag=${tag})`
+          `Failed to parse (opaqueRelaunchData=${notificationData.opaqueRelaunchData}) for Windows notification (id=${notificationId})`
         );
       }
     }
@@ -1414,54 +1423,46 @@ nsDefaultCommandLineHandler.prototype = {
     // previous builds after browser updates, as such notification would
     // still have the old field.
     let origin = notificationData?.origin ?? notificationData?.launchUrl;
+    let action = notificationData?.action;
 
-    if (!tagWasHandled && origin && !opaqueRelaunchData) {
-      let originPrincipal =
-        Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
-      // Unprivileged Web Notifications contain a launch URL and are
-      // handled slightly differently than privileged notifications with
-      // actions. If the tag was not handled, then the notification was
-      // from a prior instance of the application and we need to handle
-      // fallback behavior.
-      let { uri, principal } = resolveURIInternal(
-        cmdLine,
-        // TODO(krosylight): We should handle origin suffix to open the
-        // relevant container. See bug 1945501.
-        originPrincipal.originNoSuffix
-      );
-      if (cmdLine.state != Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
-        // Try to find an existing window and load our URI into the current
-        // tab, new tab, or new window as prefs determine.
-        try {
-          handURIToExistingBrowser(
-            uri,
-            Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW,
-            cmdLine,
-            false,
-            principal
-          );
-          return;
-        } catch (e) {}
-      }
-
-      if (shouldLoadURI(uri)) {
-        openBrowserWindow(cmdLine, principal, [uri.spec]);
-      }
-    } else if (cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
-      // No URL provided, but notification was interacted with while the
-      // application was closed. Fall back to opening the browser without url.
+    if (cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
+      // Get a browser window where we can open a tab. Having a browser
+      // window here helps:
+      //
+      // 1. Earlier loading without having to wait for service worker
+      // 2. Makes sure a browser window loads even if no service worker exists
+      //    or the worker decides to not open anything
+      //
+      // instead of making user to wait on the initial navigator:blank.
       winForAction = openBrowserWindow(cmdLine, lazy.gSystemPrincipal);
       await lazy.BrowserUtils.promiseObserved(
         "browser-delayed-startup-finished",
         subject => subject == winForAction
       );
-    } else {
-      // Relaunch in private windows only if we're in perma-private mode.
-      let allowPrivate = lazy.PrivateBrowsingUtils.permanentPrivateBrowsing;
-      winForAction = lazy.BrowserWindowTracker.getTopWindow({
-        private: allowPrivate,
-      });
     }
+
+    if (!tagWasHandled && origin && !opaqueRelaunchData) {
+      let originPrincipal =
+        Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
+
+      const handler = Cc["@mozilla.org/notification-handler;1"].getService(
+        Ci.nsINotificationHandler
+      );
+
+      await handler.respondOnClick(
+        originPrincipal,
+        notificationId,
+        action,
+        /* aAutoClosed */ true
+      );
+      return;
+    }
+
+    // Relaunch in private windows only if we're in perma-private mode.
+    let allowPrivate = lazy.PrivateBrowsingUtils.permanentPrivateBrowsing;
+    winForAction = lazy.BrowserWindowTracker.getTopWindow({
+      private: allowPrivate,
+    });
 
     // Note: at time of writing `opaqueRelaunchData` was only used by the
     // Messaging System; if present it could be inferred that the message
