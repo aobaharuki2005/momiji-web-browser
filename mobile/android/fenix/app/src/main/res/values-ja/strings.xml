@@ -64,6 +64,8 @@
   -->
   <string name="private_browsing_placeholder_description_2" moz:removedIn="141" tools:ignore="UnusedResources">%1$s のプライベートタブを閉じるかアプリを終了すると、その検索履歴と閲覧履歴が消去されます。これは、ウェブサイトやインターネットサービスプロバイダーに対して匿名でアクセスしているわけではありません。この機能は、この端末を使用する他者に対してオンライン上のプライベートな行動を隠すものです。</string>
   <string name="private_browsing_common_myths">プライベートブラウジングについての誤解</string>
+  <!-- Text to be announced by the accessibility service to inform the user that the private browsing mode is currently active. -->
+  <string name="private_browsing_a11y_session_announcement">プライベートブラウジングセッション</string>
   <!--
     True Private Browsing Mode
 
@@ -343,6 +345,10 @@
   <string name="browser_menu_back_button_content_description" moz:removedIn="141" tools:ignore="UnusedResources">メインメニューに戻る</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
   <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">メインメニューシートを閉じます</string>
+  <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
+  <string name="browser_close_main_menu_handlebar_content_description">メニューを閉じる</string>
+  <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
+  <string name="browser_main_menu_content_description_navigation_header">ナビゲーション</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">ヘルプ</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
@@ -419,6 +425,10 @@
   <string name="browser_menu_default_banner_subtitle">すぐに完了。いつでも変更できます。</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">閉じる</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
+  <string name="browser_menu_default_banner_dismiss_promotion">宣伝を閉じる</string>
+  <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
+  <string name="browser_menu_recommended_extensions_content_description">詳細情報</string>
   <!--
     Menu "contextual feature recommendation" (CFR)
 
@@ -1744,6 +1754,8 @@
   <string name="webcompat_reporter_success_snackbar_text">レポートが送信されました</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text">閉じる</string>
+  <!-- Placeholder text for the description field to prompt the user on what they should type. -->
+  <string name="webcompat_reporter_problem_description_placeholder_text">何が起こったのか、本来は何が起こるべきだったのかをご記入ください。</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -1790,6 +1802,10 @@
   <string name="tab_crash_restore">タブを復元</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title">%s を再起動しました</string>
+  <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_title">調査中のクラッシュと関連する未送信のクラッシュレポートが 1 件あります。レポートを送信すると %1$s の改善に役立てられます。この通知を閉じると、このレポートが無視されます。</string>
+  <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crashes_requested_by_devs_dialog_title">調査中のクラッシュと関連する未送信のクラッシュレポート (%1$d 件) があります。レポートを送信すると %2$s の改善に役立てられます。この通知を閉じると、このレポートが無視されます。</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">クラッシュレポートを自動的に送信する</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -2671,6 +2687,10 @@
   <string name="add_login_navigate_back_button_content_description">前のページへ戻る</string>
   <!-- Content description, used by tools like screenreaders, to press on the save new login button. -->
   <string name="add_login_save_new_login_button_content_description">新しいログイン情報を保存します</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the edit login view. -->
+  <string name="edit_login_navigate_back_button_content_description">前のページへ戻る</string>
+  <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
+  <string name="edit_login_button_content_description">ログイン情報を編集</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">サイトをブラウザーで開く</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -2964,6 +2984,12 @@
   <string name="synced_tabs_expand_group">同期したタブのグループを展開します</string>
   <!-- Content description for collapsing a group of synced tabs. -->
   <string name="synced_tabs_collapse_group">同期したタブのグループを折りたたみます</string>
+  <!--
+    Top Sites
+
+    Title text displayed for the shortcuts home screen section.
+  -->
+  <string name="homepage_shortcuts_title">ショートカット</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">ショートカット数の上限に達しました</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->

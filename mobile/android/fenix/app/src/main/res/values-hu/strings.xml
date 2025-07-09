@@ -64,6 +64,8 @@
   -->
   <string name="private_browsing_placeholder_description_2" moz:removedIn="141" tools:ignore="UnusedResources">A %1$s törli a keresési és böngészési előzményeit a privát lapokból, ha bezárja őket vagy kilép az alkalmazásból. Ugyan ez nem teszi névtelenné a weboldalak vagy a szolgáltatója felé, könnyebbé teszi, hogy bizalmasan kezelje az online tevékenységét, és más ne tudjon róla, aki ezt az eszközt használja.</string>
   <string name="private_browsing_common_myths">Gyakori tévhitek a privát böngészésről</string>
+  <!-- Text to be announced by the accessibility service to inform the user that the private browsing mode is currently active. -->
+  <string name="private_browsing_a11y_session_announcement">Privát böngészési munkamenet</string>
   <!--
     True Private Browsing Mode
 
@@ -343,6 +345,10 @@
   <string name="browser_menu_back_button_content_description" moz:removedIn="141" tools:ignore="UnusedResources">Vissza a főmenübe</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
   <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">Fő menülap bezárása</string>
+  <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
+  <string name="browser_close_main_menu_handlebar_content_description">Menü bezárása</string>
+  <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
+  <string name="browser_main_menu_content_description_navigation_header">Navigáció</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">Súgó</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
@@ -419,6 +425,10 @@
   <string name="browser_menu_default_banner_subtitle">Másodperceket vesz igénybe. Bármikor módosíthatja.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Eltüntetés</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
+  <string name="browser_menu_default_banner_dismiss_promotion">Promóció eltüntetése</string>
+  <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
+  <string name="browser_menu_recommended_extensions_content_description">További információk</string>
   <!--
     Menu "contextual feature recommendation" (CFR)
 
@@ -1230,6 +1240,8 @@
   <string name="exceptions_empty_message_learn_more_link">További tudnivalók</string>
   <!-- Preference switch for usage and technical data collection -->
   <string name="preference_usage_data_2">Műszaki és interakciós adatok küldése</string>
+  <!-- Preference switch for usage and technical learn more link in new compose -->
+  <string name="preference_usage_data_learn_more_2">Tudjon meg többet a műszaki adatokról</string>
   <!-- Preference switch for usage and technical learn more link -->
   <string name="preference_usage_data_learn_more" tools:ignore="UnusedResources" moz:removedIn="141">További tudnivalók</string>
   <!-- Preference description for marketing data collection. Note: The words "Firefox" should NOT be translated -->
@@ -1242,6 +1254,16 @@
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Összeomlás-jelentések automatikus elküldése</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Ez segít diagnosztizálni és megoldani a böngésző problémáit. A jelentések személyes vagy bizalmas adatokat tartalmazhatnak.</string>
+  <!-- Text for sumo link to learn more about crash reports in data collection screen -->
+  <string name="preferences_crashes_learn_more">Tudjon meg többet a összeomlás-jelentésekről</string>
+  <!-- Title Headers for data collection settings screen -->
+  <string name="crash_reports_data_category">Összeomlás-jelentések</string>
+  <string name="usage_data_category">Használati adatok</string>
+  <string name="studies_data_category">Tanulmányok</string>
+  <string name="technical_data_category">Műszaki adatok</string>
+  <string name="crash_reporting_description">Az összeomlás-jelentések lehetővé teszik számunkra, hogy diagnosztizáljuk és megoldjuk a böngészőhibákat. A jelentések személyes vagy bizalmas adatokat tartalmazhatnak.</string>
+  <!-- Section title for campaign measurement in data collections screen -->
+  <string name="preferences_marketing_data_title">Kampánymérés</string>
   <!-- Preference switch for campaign measurement data (marketing data) collection -->
   <string name="preferences_marketing_data_2">Kampány mérési adatai</string>
   <!--
@@ -1732,6 +1754,8 @@
   <string name="webcompat_reporter_success_snackbar_text">A jelentés elküldve</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text">Bezárás</string>
+  <!-- Placeholder text for the description field to prompt the user on what they should type. -->
+  <string name="webcompat_reporter_problem_description_placeholder_text">Mi történt? Minek kellett volna történnie?</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -2651,6 +2675,22 @@
   <string name="saved_login_clear_username">Felhasználónév törlése</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">Gépnév törlése</string>
+  <!-- Content description, used by tools like screenreaders, for the 3 dots button that shows commands related to the currently displayed login (edit, delete). -->
+  <string name="login_detail_menu_button_content_description">Bejelentkezés részletei menü</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the login detail view. -->
+  <string name="login_details_navigate_back_button_content_description">Navigálás visszafelé</string>
+  <!-- Edit text for the login detail menu edit button -->
+  <string name="login_detail_menu_edit_button">Szerkesztés</string>
+  <!-- Delete text for the login detail menu delete button -->
+  <string name="login_detail_menu_delete_button">Törlés</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the add login view. -->
+  <string name="add_login_navigate_back_button_content_description">Navigálás visszafelé</string>
+  <!-- Content description, used by tools like screenreaders, to press on the save new login button. -->
+  <string name="add_login_save_new_login_button_content_description">Új bejelentkezés mentése</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the edit login view. -->
+  <string name="edit_login_navigate_back_button_content_description">Navigálás visszafelé</string>
+  <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
+  <string name="edit_login_button_content_description">Bejelentkezés szerkesztése</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Oldal megnyitása böngészőben</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -2944,6 +2984,12 @@
   <string name="synced_tabs_expand_group">Szinkronizált lapok csoportjának kibontása</string>
   <!-- Content description for collapsing a group of synced tabs. -->
   <string name="synced_tabs_collapse_group">Szinkronizált lapok csoportjának összecsukása</string>
+  <!--
+    Top Sites
+
+    Title text displayed for the shortcuts home screen section.
+  -->
+  <string name="homepage_shortcuts_title">Gyorsbillentyűk</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Az indítóikonok korlátja elérve</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->

@@ -345,6 +345,8 @@
   <string name="browser_menu_back_button_content_description" moz:removedIn="141" tools:ignore="UnusedResources">Nazaj na glavni meni</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
   <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">Zapri glavni meni</string>
+  <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
+  <string name="browser_close_main_menu_handlebar_content_description">Zapri meni</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">Pomoč</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
@@ -421,6 +423,8 @@
   <string name="browser_menu_default_banner_subtitle">Vzame vam sekundo. Kadarkoli lahko spremenite.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Skrij</string>
+  <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
+  <string name="browser_menu_recommended_extensions_content_description">Več informacij</string>
   <!--
     Menu "contextual feature recommendation" (CFR)
 
@@ -2972,6 +2976,12 @@
   <string name="synced_tabs_expand_group">Razširi skupino sinhroniziranih zavihkov</string>
   <!-- Content description for collapsing a group of synced tabs. -->
   <string name="synced_tabs_collapse_group">Strni skupino sinhroniziranih zavihkov</string>
+  <!--
+    Top Sites
+
+    Title text displayed for the shortcuts home screen section.
+  -->
+  <string name="homepage_shortcuts_title">Bližnjice</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Doseženo je največje število bližnjic</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->

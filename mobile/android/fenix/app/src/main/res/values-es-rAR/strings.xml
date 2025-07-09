@@ -2989,7 +2989,7 @@
 
     Title text displayed for the shortcuts home screen section.
   -->
-  <string name="homepage_shortcuts_title">Atajos</string>
+  <string name="homepage_shortcuts_title">Accesos directos</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Alcanzaste el límite para atajos</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
