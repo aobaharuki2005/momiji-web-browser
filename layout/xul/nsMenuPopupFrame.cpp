@@ -1772,9 +1772,18 @@ Maybe<nsRect> nsMenuPopupFrame::GetConstraintRect(
   // Determine the available screen space. It will be reduced by the OS chrome
   // such as menubars. It addition, for content shells, it will be the area of
   // the content rather than the screen.
-  // In Wayland we can't use the screen rect because we can't know absolute
-  // window position.
-  if (!IS_WAYLAND_DISPLAY()) {
+  if (IS_WAYLAND_DISPLAY()) {
+    // In Wayland we can't use the screen rect, because we can't know the
+    // absolute window position. MoveToRect usually deals with this, but we
+    // can't use it unconditionally. Tooltips are presumed small enough, and
+    // they can open basically at any time with any other open menu, so we
+    // constrain them to the window area, see bug 1941237.
+    // TODO(emilio, stransky): Do we want to constrain other popups to the
+    // window area, if the window is big enough or maximized?
+    if (mPopupType == PopupType::Tooltip) {
+      AddConstraint(aRootScreenRect);
+    }
+  } else {
     const DesktopToLayoutDeviceScale scale =
         pc->DeviceContext()->GetDesktopToDeviceScale();
     // For content shells, get the screen where the root frame is located. This
