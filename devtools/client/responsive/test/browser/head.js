@@ -197,7 +197,11 @@ function addRDMTask(rdmURL, rdmTask, options) {
 
 async function spawnViewportTask(ui, args, task) {
   // Await a reflow after the task.
-  const result = await ContentTask.spawn(ui.getViewportBrowser(), args, task);
+  const result = await SpecialPowers.spawn(
+    ui.getViewportBrowser(),
+    [args],
+    task
+  );
   await promiseContentReflow(ui);
   return result;
 }
