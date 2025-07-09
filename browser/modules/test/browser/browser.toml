@@ -5,6 +5,8 @@ prefs = [
   "telemetry.number_of_site_origin.min_interval=0",
 ]
 
+["browser_BrowserDOMWindow_openURI.js"]
+
 ["browser_BrowserWindowTracker.js"]
 
 ["browser_EveryWindow.js"]

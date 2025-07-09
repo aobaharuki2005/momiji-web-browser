@@ -12,6 +12,7 @@ let lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
+  TaskbarTabsUtils: "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -72,8 +73,12 @@ export class BrowserDOMWindow {
   ) {
     let win, needToFocusWin;
 
-    // try the current window.  if we're in a popup, fall back on the most recent browser window
-    if (this.win.toolbar.visible) {
+    // try the current window. if we're in a popup or a taskbar tab, fall
+    // back on the most recent browser window
+    if (
+      this.win.toolbar.visible &&
+      !lazy.TaskbarTabsUtils.isTaskbarTabWindow(this.win)
+    ) {
       win = this.win;
     } else {
       win = BrowserWindowTracker.getTopWindow({ private: aIsPrivate });
