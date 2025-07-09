@@ -110,6 +110,16 @@ bool HasHostPrefix(const nsAString& aString) {
                           nsCaseInsensitiveStringComparator);
 }
 
+bool HasHttpPrefix(const nsAString& aString) {
+  return StringBeginsWith(aString, u"__Http-"_ns,
+                          nsCaseInsensitiveStringComparator);
+}
+
+bool HasHostHttpPrefix(const nsAString& aString) {
+  return StringBeginsWith(aString, u"__HostHttp-"_ns,
+                          nsCaseInsensitiveStringComparator);
+}
+
 bool ValidateCookieDomain(nsIPrincipal* aPrincipal, const nsAString& aName,
                           const nsAString& aDomain, Promise* aPromise) {
   MOZ_ASSERT(aPromise);
@@ -190,9 +200,16 @@ bool ValidateCookieNamePrefix(const nsAString& aName, const nsAString& aValue,
                               const nsAString& aPath, Promise* aPromise) {
   MOZ_ASSERT(aPromise);
 
-  if (aName.IsEmpty() && (HasHostPrefix(aValue) || HasSecurePrefix(aValue))) {
+  if (aName.IsEmpty() && (HasHostPrefix(aValue) || HasHostHttpPrefix(aValue) ||
+                          HasHttpPrefix(aValue) || HasSecurePrefix(aValue))) {
     aPromise->MaybeRejectWithTypeError(
         "Nameless cookies should not begin with special prefixes");
+    return false;
+  }
+
+  if (HasHttpPrefix(aName) || HasHostHttpPrefix(aName)) {
+    aPromise->MaybeRejectWithTypeError(
+        "Cookie name should not begin with special prefixes");
     return false;
   }
 
