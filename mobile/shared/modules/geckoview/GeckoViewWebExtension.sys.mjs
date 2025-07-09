@@ -1116,7 +1116,7 @@ export var GeckoViewWebExtension = {
       };
       aAddon.findUpdates(
         listener,
-        lazy.AddonManager.UPDATE_WHEN_USER_REQUESTED
+        lazy.AddonManager.UPDATE_WHEN_PERIODIC_UPDATE
       );
     });
   },
