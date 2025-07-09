@@ -1488,7 +1488,7 @@ add_task(async function test_updateRecipes_secure() {
     {
       experiments: [],
       secureExperiments: [multiFeatureRecipe],
-      shouldEnroll: [],
+      shouldEnroll: [multiFeatureRecipe],
     },
   ];
 
@@ -1510,12 +1510,14 @@ add_task(async function test_updateRecipes_secure() {
 
     const enrolledSlugs = manager.onRecipe
       .getCalls()
-      .map(call => call.args[0].slug);
+      .map(call => call.args[0].slug)
+      .sort();
 
-    Assert.equal(
-      manager.onRecipe.callCount,
-      shouldEnroll.length,
-      `Should enroll in expected number of recipes (enrolled in ${enrolledSlugs})`
+    const shouldEnrollSlugs = shouldEnroll.map(r => r.slug).sort();
+    Assert.deepEqual(
+      shouldEnrollSlugs,
+      enrolledSlugs,
+      `Should enroll in expected number of recipes`
     );
 
     for (const expectedRecipe of shouldEnroll) {

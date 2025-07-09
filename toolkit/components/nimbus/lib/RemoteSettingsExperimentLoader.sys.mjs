@@ -58,13 +58,18 @@ const SECURE_EXPERIMENTS_COLLECTION = "secureExperiments";
 const IS_MAIN_PROCESS =
   Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
 
+const SECURE_FEATURE_IDS = new Set(["prefFlips", "newtabTrainhopAddon"]);
 const RS_COLLECTION_OPTIONS = {
   [EXPERIMENTS_COLLECTION]: {
-    disallowedFeatureIds: ["prefFlips", "newtabTrainhopAddon"],
+    // None of these features can be present to accept an experiment from the
+    // experiments collection.
+    disallowedFeatureIds: SECURE_FEATURE_IDS,
   },
 
   [SECURE_EXPERIMENTS_COLLECTION]: {
-    allowedFeatureIds: ["prefFlips", "newtabTrainhopAddon"],
+    // One of these features *must* be present to accept an experiment from the
+    // secure experiments collection.
+    requiredFeatureIds: SECURE_FEATURE_IDS,
   },
 };
 
@@ -508,10 +513,10 @@ export class RemoteSettingsExperimentLoader {
    *        The RemoteSettings client that will be used to fetch recipes.
    * @param {boolean} options.forceSync
    *        Force the RemoteSettings client to sync the collection before retrieving recipes.
-   * @param {string[] | null} options.allowedFeatureIds
-   *        If non-null, any recipe that uses a feature ID not in this list will
-   *        be rejected.
-   * @param {string[]} options.disallowedFeatureIds
+   * @param {Set<string> | undefined} options.requiredFeatureIds
+   *        If non-null, a recipe must include at least one feature in this set
+   *        or it will be rejected.
+   * @param {Set<string> | undefined} options.disallowedFeatureIds
    *        If a recipe uses any features in this list, it will be rejected.
    *
    * @returns {object[] | null}
@@ -522,8 +527,8 @@ export class RemoteSettingsExperimentLoader {
   async getRecipesFromCollection({
     client,
     forceSync = false,
-    allowedFeatureIds = null,
-    disallowedFeatureIds = [],
+    requiredFeatureIds = undefined,
+    disallowedFeatureIds = undefined,
   } = {}) {
     let recipes;
     try {
@@ -554,21 +559,24 @@ export class RemoteSettingsExperimentLoader {
     }
 
     return recipes.filter(recipe => {
-      for (const featureId of recipe.featureIds) {
-        if (allowedFeatureIds !== null) {
-          if (!allowedFeatureIds.includes(featureId)) {
+      if (
+        requiredFeatureIds &&
+        !recipe.featureIds.some(featureId => requiredFeatureIds.has(featureId))
+      ) {
+        lazy.log.warn(
+          `Recipe ${recipe.slug} not returned from collection ${client.collectionName} because it does not contain at least one required feature ID.`
+        );
+        return false;
+      }
+
+      if (disallowedFeatureIds) {
+        for (const featureId of recipe.featureIds) {
+          if (disallowedFeatureIds.has(featureId)) {
             lazy.log.warn(
               `Recipe ${recipe.slug} not returned from collection ${client.collectionName} because it contains feature ${featureId}, which is disallowed for that collection.`
             );
             return false;
           }
-        }
-
-        if (disallowedFeatureIds.includes(featureId)) {
-          lazy.log.warn(
-            `Recipe ${recipe.slug} not returned from collection ${client.collectionName} because it contains feature ${featureId}, which is disallowed for that collection.`
-          );
-          return false;
         }
       }
 
