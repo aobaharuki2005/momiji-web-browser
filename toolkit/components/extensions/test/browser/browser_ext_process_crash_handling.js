@@ -130,6 +130,7 @@ add_task(async function test_ExtensionProcessCrashObserver() {
   );
 
   info("Verify ExtensionProcessCrashObserver after extension process crash");
+  Assert.ok(Number.isInteger(currentProcessChildID), "correct type");
   Assert.equal(
     ExtensionProcessCrashObserver.lastCrashedProcessChildID,
     currentProcessChildID,

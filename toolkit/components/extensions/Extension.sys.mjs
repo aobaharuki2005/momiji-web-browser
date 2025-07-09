@@ -799,7 +799,7 @@ export var ExtensionProcessCrashObserver = {
   },
 
   observe(subject, topic, data) {
-    let childID = data;
+    let childID = parseInt(data, 10);
     switch (topic) {
       case "geckoview-initial-foreground":
         this._appInForeground = true;
