@@ -60,44 +60,17 @@ class Font extends PureComponent {
       return null;
     }
 
-    const { isFontFaceRuleExpanded } = this.state;
-
     // Cut the rule text in 3 parts: the selector, the declarations, the closing brace.
     // This way we can collapse the declarations by default and display an expander icon
     // to expand them again.
     const leading = ruleText.substring(0, ruleText.indexOf("{") + 1);
-
+    const body = ruleText.substring(
+      ruleText.indexOf("{") + 1,
+      ruleText.lastIndexOf("}")
+    );
     const trailing = ruleText.substring(ruleText.lastIndexOf("}"));
 
-    let body;
-    if (isFontFaceRuleExpanded) {
-      const ruleBodyText = ruleText
-        .substring(ruleText.indexOf("{") + 1, ruleText.lastIndexOf("}"))
-        .trim();
-
-      const indent = "  ";
-      body = "\n";
-      const lexer = new InspectorCSSParser(ruleBodyText);
-      let token;
-      let isNewLine = true;
-      while ((token = lexer.nextToken())) {
-        if (isNewLine) {
-          // If we just added a new line, ignore any whitespace as we'll handle the
-          // indentation ourselves.
-          if (token.tokenType === "WhiteSpace") {
-            continue;
-          }
-          body += indent;
-          isNewLine = false;
-        }
-
-        body += token.text;
-        if (token.tokenType === "Semicolon") {
-          body += "\n";
-          isNewLine = true;
-        }
-      }
-    }
+    const { isFontFaceRuleExpanded } = this.state;
 
     return dom.pre(
       {
