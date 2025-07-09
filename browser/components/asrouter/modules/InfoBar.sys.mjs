@@ -130,9 +130,11 @@ class InfoBarNotification {
   }
 
   /**
-   * Show the infobar notification and send an impression ping
+   * Displays the infobar notification in the specified browser and sends an impression ping.
+   * Formats the message and buttons, and appends the notification.
+   * For universal infobars, only records an impression for the first instance.
    *
-   * @param {object} browser Browser reference for the currently selected tab
+   * @param {object} browser - The browser reference for the currently selected tab.
    */
   async showNotification(browser) {
     let { content } = this.message;
@@ -161,7 +163,7 @@ class InfoBarNotification {
       true, // Disables clickjacking protections
       content.dismissable
     );
-    // If InfoBar is universal, only record an impression for the first
+    // If the infobar is universal, only record an impression for the first
     // instance.
     if (
       content.type !== TYPES.UNIVERSAL ||
@@ -170,7 +172,7 @@ class InfoBarNotification {
       this.addImpression();
     }
 
-    // Only add if universal infobar is still active. Prevents race condition
+    // Only add if the universal infobar is still active. Prevents race condition
     // where a notification could add itself after removeUniversalInfobars().
     if (
       content.type === TYPES.UNIVERSAL &&
@@ -268,7 +270,7 @@ class InfoBarNotification {
    * @param {Element} notificationBox - The `<notification-message>` element representing the infobar.
    * @param {Object} btnDescription - An object describing the button, includes the label, the action with an optional dismiss property, and primary button styling.
    * @param {Element} target - The <button> DOM element that was clicked.
-   * @returns {boolean} Returns `false` to dismiss the infobar or `true` to keep it open.
+   * @returns {boolean} `true` to keep the infobar open, `false` to dismiss it.
    */
   buttonCallback(notificationBox, btnDescription, target) {
     this.dispatchUserAction(
@@ -281,13 +283,8 @@ class InfoBarNotification {
       : "CLICK_SECONDARY_BUTTON";
     this.sendUserEventTelemetry(eventName);
 
-    // Prevent dismissal if dismiss property is set to 'false'
-    if (btnDescription.action?.dismiss === false) {
-      return true;
-    }
-
-    // Default, dismisses the Infobar
-    return false;
+    // Prevents infobar dismissal when dismiss is explicitly set to `false`
+    return btnDescription.action?.dismiss === false;
   }
 
   dispatchUserAction(action, selectedBrowser) {
@@ -295,7 +292,11 @@ class InfoBarNotification {
   }
 
   /**
-   * Called when interacting with the toolbar (but not through the buttons)
+   * Handles infobar events triggered by the notification interactions (excluding button clicks).
+   * Cleans up the notification and active infobar state when the infobar is removed or dismissed.
+   * If the removed infobar is universal, ensures all universal infobars and related observers are also removed.
+   *
+   * @param {string} eventType - The type of event (e.g., "removed").
    */
   infobarCallback(eventType) {
     const wasUniversal =
@@ -315,6 +316,11 @@ class InfoBarNotification {
     }
   }
 
+  /**
+   * Removes all active universal infobars from each window.
+   * Unregisters the observer for new windows, clears the tracking array, and resets the
+   * active infobar state.
+   */
   removeUniversalInfobars() {
     // Remove the new window observer
     try {
@@ -371,9 +377,41 @@ export const InfoBar = {
     FTL_FILES.forEach(path => win.MozXULElement.insertFTLIfNeeded(path));
   },
 
+  /**
+   * Helper to check the window's state and whether it's a
+   * private browsing window, a popup or a taskbar tab.
+   *
+   * @returns {boolean} `true` if the window is valid for showing an infobar.
+   */
+  isValidInfobarWindow(win) {
+    if (!win || win.closed) {
+      return false;
+    }
+    if (lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
+      return false;
+    }
+    if (!win.toolbar?.visible) {
+      // Popups don't have a visible toolbar
+      return false;
+    }
+    if (win.document.documentElement.hasAttribute("taskbartab")) {
+      return false;
+    }
+    return true;
+  },
+
+  /**
+   * Displays the universal infobar in all open, fully loaded browser windows.
+   *
+   * @param {InfoBarNotification} notification - The notification instance to display.
+   */
   async showNotificationAllWindows(notification) {
     for (let win of Services.wm.getEnumerator("navigator:browser")) {
-      if (!win.gBrowser || win.document?.readyState !== "complete") {
+      if (
+        !win.gBrowser ||
+        win.document?.readyState !== "complete" ||
+        !this.isValidInfobarWindow(win)
+      ) {
         continue;
       }
       this.maybeLoadCustomElement(win);
@@ -383,9 +421,21 @@ export const InfoBar = {
     }
   },
 
+  /**
+   * Displays an infobar notification in the specified browser window.
+   * For the first universal infobar, shows the notification in all open browser windows
+   * and sets up an observer to handle new windows.
+   * For non-universal, displays the notification only in the given window.
+   *
+   * @param {object} browser - The browser reference for the currently selected tab.
+   * @param {object} message - The message object describing the infobar content.
+   * @param {function} dispatch - The dispatch function for actions.
+   * @param {boolean} universalInNewWin - `True` if this is a universal infobar for a new window.
+   * @returns {Promise<InfoBarNotification|null>} The notification instance, or null if not shown.
+   */
   async showInfoBarMessage(browser, message, dispatch, universalInNewWin) {
     const win = browser?.ownerGlobal;
-    if (!win || lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
+    if (!this.isValidInfobarWindow(win)) {
       return null;
     }
     const isUniversal = message.content.type === TYPES.UNIVERSAL;
@@ -441,13 +491,21 @@ export const InfoBar = {
     return notification;
   },
 
+  /**
+   * Observer callback fired when a new window is opened.
+   * If the topic is "domwindowopened" and the window is a valid target,
+   * the universal infobar will be shown in the new window once loaded.
+   *
+   * @param {Window} aSubject - The newly opened window.
+   * @param {string} aTopic - The topic of the observer notification.
+   */
   observe(aSubject, aTopic) {
     if (aTopic !== "domwindowopened") {
       return;
     }
     const win = aSubject;
 
-    if (win.closed || lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
+    if (!this.isValidInfobarWindow(win)) {
       return;
     }
 
