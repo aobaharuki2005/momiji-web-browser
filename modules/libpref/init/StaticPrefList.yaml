@@ -5790,6 +5790,12 @@
   value: true
   mirror: always
 
+# Whether to block the shadowing of known document properties.
+- name: dom.document.name_getter_prevent_shadowing.enabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "editor"
 #---------------------------------------------------------------------------
