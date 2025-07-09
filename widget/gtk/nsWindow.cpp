@@ -1957,10 +1957,10 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
         // popups are adjacent.
         return false;
       }
-      if (popup->mPopupType == PopupType::Panel &&
-          popup->WaylandPopupIsFirst() &&
-          popup->WaylandPopupFitsToplevelWindow(/* aMove */ true)) {
-        // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/1986
+      if (popup->WaylandPopupFitsToplevelWindow()) {
+        // Avoid move-to-rect if our requested rect fits the toplevel.
+        // This serves as an optimization, but also as a workaround for
+        // https://gitlab.gnome.org/GNOME/gtk/-/issues/1986
         //
         // PopupType::Panel types are used for extension popups which may be
         // resized. If such popup uses move-to-rect, we need to hide it before
@@ -2241,8 +2241,8 @@ void nsWindow::WaylandPopupSetDirectPosition() {
   }
 }
 
-bool nsWindow::WaylandPopupFitsToplevelWindow(bool aMove) {
-  LOG("nsWindow::WaylandPopupFitsToplevelWindow() move %d", aMove);
+bool nsWindow::WaylandPopupFitsToplevelWindow() {
+  LOG("nsWindow::WaylandPopupFitsToplevelWindow()");
 
   GtkWindow* parent = gtk_window_get_transient_for(GTK_WINDOW(mShell));
   GtkWindow* tmp = parent;
@@ -2250,8 +2250,7 @@ bool nsWindow::WaylandPopupFitsToplevelWindow(bool aMove) {
     parent = tmp;
   }
   GdkWindow* toplevelGdkWindow = gtk_widget_get_window(GTK_WIDGET(parent));
-  if (!toplevelGdkWindow) {
-    NS_WARNING("Toplevel widget without GdkWindow?");
+  if (NS_WARN_IF(!toplevelGdkWindow)) {
     return false;
   }
 
@@ -2261,14 +2260,11 @@ bool nsWindow::WaylandPopupFitsToplevelWindow(bool aMove) {
 
   GdkRectangle requestedRect = DevicePixelsToGdkRectRoundOut(
       LayoutDeviceIntRect(mLastMoveRequest, mLastSizeRequest));
-  GdkPoint topLeft =
-      aMove ? mPopupPosition : GdkPoint{requestedRect.x, requestedRect.y};
-  LOG("  popup topleft %d, %d size %d x %d", topLeft.x, topLeft.y,
+  LOG("  popup topleft %d, %d size %d x %d", requestedRect.x, requestedRect.y,
       requestedRect.width, requestedRect.height);
-  int fits = topLeft.x >= 0 && topLeft.y >= 0 &&
-             topLeft.x + requestedRect.width <= parentWidth &&
-             topLeft.y + requestedRect.height <= parentHeight;
-
+  bool fits = requestedRect.x >= 0 && requestedRect.y >= 0 &&
+              requestedRect.x + requestedRect.width <= parentWidth &&
+              requestedRect.y + requestedRect.height <= parentHeight;
   LOG("  fits %d", fits);
   return fits;
 }
@@ -2325,7 +2321,7 @@ void nsWindow::NativeMoveResizeWaylandPopup(bool aMove, bool aResize) {
     gtk_window_resize(GTK_WINDOW(mShell), rect.width, rect.height);
   }
 
-  if (!aMove && WaylandPopupFitsToplevelWindow(aMove)) {
+  if (!aMove && WaylandPopupFitsToplevelWindow()) {
     // Popup position has not been changed and its position/size fits
     // parent window so no need to reposition the window.
     LOG("  fits parent window size, just resize\n");
