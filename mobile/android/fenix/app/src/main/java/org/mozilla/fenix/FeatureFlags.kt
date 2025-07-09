@@ -60,4 +60,9 @@ object FeatureFlags {
      * Determines whether to show live downloads in progress in the UI.
      */
     val showLiveDownloads = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables the custom review pre-prompt.
+     */
+    val customReviewPromptEnabled = Config.channel.isNightlyOrDebug
 }
