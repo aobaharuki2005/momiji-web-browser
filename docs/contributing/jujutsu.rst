@@ -42,10 +42,10 @@ To get up and running with a fresh checkout, run the following commands
    "trunk()" = "main@origin"
    "immutable_heads()" = '''
    builtin_immutable_heads()
-   | remote_bookmarks('autoland')
-   | remote_bookmarks('beta')
-   | remote_bookmarks('esr')
-   | remote_bookmarks('release')
+   | remote_bookmarks(exact:'autoland')
+   | remote_bookmarks(exact:'beta')
+   | remote_bookmarks(regex:'^esr\d+$')
+   | remote_bookmarks(exact:'release')
    '''
    </edit>
 
