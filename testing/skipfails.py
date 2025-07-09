@@ -34,6 +34,11 @@ from manifestparser import ManifestParser
 from manifestparser.toml import add_skip_if, alphabetize_toml_str, sort_paths
 from mozci.task import Optional, TestTask
 from mozci.util.taskcluster import get_task
+from wpt_path_utils import (
+    WPT_META0,
+    WPT_META0_CLASSIC,
+    parse_wpt_path,
+)
 
 from taskcluster.exceptions import TaskclusterRestFailure
 
@@ -92,15 +97,6 @@ TEST = "test"
 TEST_TYPES = [EQEQ, NOTEQ]
 TOTAL_DURATION = "duration_total"
 TOTAL_RUNS = "runs_total"
-WP = "testing/web-platform/"
-WPT0 = WP + "tests/infrastructure"
-WPT_META0 = WP + "tests/infrastructure/metadata"
-WPT_META0_CLASSIC = WP + "meta/infrastructure"
-WPT1 = WP + "tests"
-WPT_META1 = WPT1.replace("tests", "meta")
-WPT2 = WP + "mozilla/tests"
-WPT_META2 = WPT2.replace("tests", "meta")
-WPT_MOZILLA = "/_mozilla"
 
 
 class Mock:
@@ -1677,25 +1673,6 @@ class Skipfails:
             except Fault:
                 pass  # Fault expected: Failed to fetch key 9372091 from network storage: The specified key does not exist.
 
-    def get_wpt_path_meta(self, shortpath: str):
-        if shortpath.startswith(WPT0):
-            path = shortpath
-            meta = shortpath.replace(WPT0, WPT_META0, 1)
-        elif shortpath.startswith(WPT1):
-            path = shortpath
-            meta = shortpath.replace(WPT1, WPT_META1, 1)
-        elif shortpath.startswith(WPT2):
-            path = shortpath
-            meta = shortpath.replace(WPT2, WPT_META2, 1)
-        elif shortpath.startswith(WPT_MOZILLA):
-            shortpath = shortpath[len(WPT_MOZILLA) :]
-            path = WPT2 + shortpath
-            meta = WPT_META2 + shortpath
-        else:
-            path = WPT1 + shortpath
-            meta = WPT_META1 + shortpath
-        return (path, meta)
-
     def wpt_paths(
         self, shortpath: str
     ) -> tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
@@ -1707,35 +1684,8 @@ class Skipfails:
         query is the test file query paramters (or None)
         anyjs is the html test file as reported by mozci (or None)
         """
-        query: Optional[str] = None
-        anyjs: Optional[str] = None
-        i = shortpath.find("?")
-        if i > 0:
-            query = shortpath[i:]
-            shortpath = shortpath[0:i]
-        path, manifest = self.get_wpt_path_meta(shortpath)
-        failure_type = not self.isdir(path)
-        if failure_type:
-            i = path.find(".any.")
-            if i > 0:
-                anyjs = path  # orig path
-                manifest = manifest.replace(path[i:], ".any.js")
-                path = path[0:i] + ".any.js"
-            else:
-                i = path.find(".window.")
-                if i > 0:
-                    anyjs = path  # orig path
-                    manifest = manifest.replace(path[i:], ".window.js")
-                    path = path[0:i] + ".window.js"
-                else:
-                    i = path.find(".worker.")
-                    if i > 0:
-                        anyjs = path  # orig path
-                        manifest = manifest.replace(path[i:], ".worker.js")
-                        path = path[0:i] + ".worker.js"
-            manifest += ".ini"
-        manifest_classic = ""
-        if manifest.startswith(WPT_META0):
+        path, manifest, query, anyjs = parse_wpt_path(shortpath, self.isdir)
+        if manifest and manifest.startswith(WPT_META0):
             manifest_classic = manifest.replace(WPT_META0, WPT_META0_CLASSIC, 1)
             if self.exists(manifest_classic):
                 if self.exists(manifest):
@@ -1747,7 +1697,10 @@ class Skipfails:
                         f"Using the classic {manifest_classic} manifest as the metadata manifest {manifest} does not exist"
                     )
                     manifest = manifest_classic
-        if not self.exists(path):
+
+        self.vinfo(f"wpt_paths::{path},{manifest}")
+
+        if path and not self.exists(path):
             return (None, None, None, None)
         return (path, manifest, query, anyjs)
 

@@ -11,6 +11,7 @@ import re
 from typing import Literal, Optional, TypedDict
 
 import requests
+from wpt_path_utils import resolve_wpt_path
 
 USER_AGENT = "mach-intermittent-failures/1.0"
 
@@ -87,7 +88,10 @@ class IntermittentFailuresFetcher:
                         r" ([^\s]+\/?\.[a-z0-9-A-Z]+) \|", bug["summary"]
                     )
                     if match:
-                        result["test_path"] = match[0]
+                        test_path = match[0]
+                        if test_path.startswith("/"):
+                            test_path = resolve_wpt_path(test_path)
+                        result["test_path"] = test_path
 
                 results.append(result)
 
