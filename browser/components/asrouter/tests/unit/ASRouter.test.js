@@ -52,6 +52,8 @@ describe("ASRouter", () => {
   let ASRouterTargeting;
   let gBrowser;
   let screenImpressions;
+  let multiProfileMessageImpressions;
+  let multiProfileMessageBlocklist;
 
   function setMessageProviderPref(value) {
     sandbox.stub(ASRouterPreferences, "providers").get(() => value);
@@ -80,6 +82,12 @@ describe("ASRouter", () => {
       storage: {
         get: getStub,
         set: sandbox.stub().returns(Promise.resolve()),
+        getSharedMessageImpressions: sandbox
+          .stub()
+          .resolves(multiProfileMessageImpressions),
+        getSharedMessageBlocklist: sandbox
+          .stub()
+          .resolves(multiProfileMessageBlocklist),
       },
       sendTelemetry: sandbox.stub().resolves(),
       clearChildMessages: sandbox.stub().resolves(),
@@ -106,6 +114,8 @@ describe("ASRouter", () => {
     groupImpressions = {};
     previousSessionEnd = 100;
     screenImpressions = {};
+    multiProfileMessageImpressions = {};
+    multiProfileMessageBlocklist = [];
     sandbox = sinon.createSandbox();
     ASRouterTargeting = {
       isMatch: sandbox.stub(),
@@ -544,6 +554,89 @@ describe("ASRouter", () => {
           },
         ]);
       });
+    });
+
+    it("should load shared message impressions and blocklist when selectable profiles are enabled", async () => {
+      const testMultiProfileImpressions = { msg1: [123, 456] };
+      const testMultiProfileBlocklist = ["blocked1", "blocked2"];
+      const getSharedMessageImpressions = sandbox
+        .stub()
+        .resolves(testMultiProfileImpressions);
+      const getSharedMessageBlocklist = sandbox
+        .stub()
+        .resolves(testMultiProfileBlocklist);
+
+      sandbox
+        .stub(ASRouterTargeting.Environment, "canCreateSelectableProfiles")
+        .value(true);
+      sandbox
+        .stub(ASRouterTargeting.Environment, "hasSelectableProfiles")
+        .value(true);
+
+      Router = new _ASRouter();
+      const getStub = sandbox.stub();
+
+      const testInitParams = {
+        storage: {
+          get: getStub,
+          set: sandbox.stub().returns(Promise.resolve()),
+          getSharedMessageImpressions,
+          getSharedMessageBlocklist,
+        },
+      };
+
+      await Router.init(testInitParams);
+
+      assert.calledOnce(getSharedMessageImpressions);
+      assert.calledOnce(getSharedMessageBlocklist);
+      assert.deepEqual(
+        Router.state.multiProfileMessageImpressions,
+        testMultiProfileImpressions
+      );
+      assert.deepEqual(
+        Router.state.multiProfileMessageBlocklist,
+        testMultiProfileBlocklist
+      );
+    });
+
+    it("should not load shared data when selectable profiles are disabled", async () => {
+      const getSharedMessageImpressions = sandbox.stub();
+      const getSharedMessageBlocklist = sandbox.stub();
+
+      sandbox
+        .stub(ASRouterTargeting.Environment, "canCreateSelectableProfiles")
+        .value(false);
+      sandbox
+        .stub(ASRouterTargeting.Environment, "hasSelectableProfiles")
+        .value(false);
+
+      Router = new _ASRouter();
+      const getStub = sandbox.stub();
+
+      const testInitParams = {
+        storage: {
+          get: getStub,
+          set: sandbox.stub().returns(Promise.resolve()),
+          getSharedMessageImpressions,
+          getSharedMessageBlocklist,
+        },
+      };
+
+      await Router.init(testInitParams);
+
+      assert.notCalled(getSharedMessageImpressions);
+      assert.notCalled(getSharedMessageBlocklist);
+    });
+
+    it("should add observer for multiprofile data updates", async () => {
+      sandbox.spy(global.Services.obs, "addObserver");
+      await createRouterAndInit();
+
+      assert.calledWithExactly(
+        global.Services.obs.addObserver,
+        Router._updateMultiprofileData,
+        "sps-profiles-updated"
+      );
     });
   });
 
@@ -1465,6 +1558,16 @@ describe("ASRouter", () => {
       // Grab the last call as #uninit() also involves multiple calls of `Services.prefs.removeObserver`.
       const call = global.Services.prefs.removeObserver.lastCall;
       assert.calledWithExactly(call, USE_REMOTE_L10N_PREF, Router);
+    });
+    it("should remove observer for multiprofile data updates", () => {
+      sandbox.spy(global.Services.obs, "removeObserver");
+      Router.uninit();
+
+      assert.calledWithExactly(
+        global.Services.obs.removeObserver,
+        Router._updateMultiprofileData,
+        "sps-profiles-updated"
+      );
     });
   });
 
@@ -2906,6 +3009,33 @@ describe("ASRouter", () => {
         2: [],
         3: [0, 1, 2],
       });
+    });
+  });
+
+  describe("#_updateMultiprofileData", () => {
+    it("should update multiprofile data from storage", async () => {
+      const testImpressions = { test_msg: [111, 222] };
+      const testBlocklist = ["blocked_msg"];
+
+      Router._storage.getSharedMessageImpressions = sandbox
+        .stub()
+        .resolves(testImpressions);
+      Router._storage.getSharedMessageBlocklist = sandbox
+        .stub()
+        .resolves(testBlocklist);
+
+      await Router._updateMultiprofileData();
+
+      assert.calledOnce(Router._storage.getSharedMessageImpressions);
+      assert.calledOnce(Router._storage.getSharedMessageBlocklist);
+      assert.deepEqual(
+        Router.state.multiProfileMessageImpressions,
+        testImpressions
+      );
+      assert.deepEqual(
+        Router.state.multiProfileMessageBlocklist,
+        testBlocklist
+      );
     });
   });
 });

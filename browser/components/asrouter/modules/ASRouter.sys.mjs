@@ -115,6 +115,8 @@ const TOPIC_EXPERIMENT_ENROLLMENT_CHANGED = "nimbus:enrollments-updated";
 const USE_REMOTE_L10N_PREF =
   "browser.newtabpage.activity-stream.asrouter.useRemoteL10n";
 
+const MULTIPROFILE_DATA_UPDATED = "sps-profiles-updated";
+
 // Reach for the pbNewtab feature will be added in bug 1755401
 const NO_REACH_EVENT_GROUPS = ["pbNewtab"];
 
@@ -706,6 +708,7 @@ export class _ASRouter {
     this._onExperimentEnrollmentsUpdated =
       this._onExperimentEnrollmentsUpdated.bind(this);
     this.forcePBWindow = this.forcePBWindow.bind(this);
+    this._updateMultiprofileData = this._updateMultiprofileData.bind(this);
     this.messagesEnabledInAutomation = [];
   }
 
@@ -1105,11 +1108,26 @@ export class _ASRouter {
     const previousSessionEnd =
       (await this._storage.get("previousSessionEnd")) || 0;
 
+    let multiProfileMessageImpressions = {};
+    let multiProfileMessageBlocklist = [];
+
+    if (
+      lazy.ASRouterTargeting.Environment.canCreateSelectableProfiles ||
+      lazy.ASRouterTargeting.Environment.hasSelectableProfiles
+    ) {
+      multiProfileMessageImpressions =
+        (await this._storage.getSharedMessageImpressions()) || {};
+      multiProfileMessageBlocklist =
+        (await this._storage.getSharedMessageBlocklist()) || [];
+    }
+
     await this.setState({
       messageBlockList,
       groupImpressions,
       messageImpressions,
       screenImpressions,
+      multiProfileMessageImpressions,
+      multiProfileMessageBlocklist,
       previousSessionEnd,
       ...(lazy.ASRouterPreferences.specialConditions || {}),
       initialized: false,
@@ -1123,6 +1141,10 @@ export class _ASRouter {
     Services.obs.addObserver(
       this._onExperimentEnrollmentsUpdated,
       TOPIC_EXPERIMENT_ENROLLMENT_CHANGED
+    );
+    Services.obs.addObserver(
+      this._updateMultiprofileData,
+      MULTIPROFILE_DATA_UPDATED
     );
     Services.prefs.addObserver(USE_REMOTE_L10N_PREF, this);
     // sets .initialized to true and resolves .waitForInitialized promise
@@ -1155,6 +1177,10 @@ export class _ASRouter {
     Services.obs.removeObserver(
       this._onExperimentEnrollmentsUpdated,
       TOPIC_EXPERIMENT_ENROLLMENT_CHANGED
+    );
+    Services.obs.removeObserver(
+      this._updateMultiprofileData,
+      MULTIPROFILE_DATA_UPDATED
     );
     Services.prefs.removeObserver(USE_REMOTE_L10N_PREF, this);
     // If we added any CFR recommendations, they need to be removed
@@ -1211,6 +1237,22 @@ export class _ASRouter {
         PanelTestProvider: lazy.PanelTestProvider,
       };
     }
+  }
+
+  async _updateMultiprofileData() {
+    // wait to ensure storage has been initialized before accessing _storage
+    if (!this.initialized) {
+      await this.waitForInitialized;
+    }
+    const multiProfileMessageImpressions =
+      (await this._storage.getSharedMessageImpressions()) || {};
+    const multiProfileMessageBlocklist =
+      (await this._storage.getSharedMessageBlocklist()) || [];
+
+    this.setState({
+      multiProfileMessageImpressions,
+      multiProfileMessageBlocklist,
+    });
   }
 
   /**
