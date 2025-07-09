@@ -70,6 +70,7 @@ import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.maybeShowAddSearchWidgetPrompt
 import org.mozilla.fenix.wallpapers.Wallpaper
 import org.mozilla.fenix.wallpapers.WallpaperState
+import java.lang.ref.WeakReference
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 /**
@@ -197,11 +198,47 @@ interface SessionControlController {
      * @see [SetupChecklistInteractor.onRemoveChecklistButtonClicked]
      */
     fun onRemoveChecklistButtonClicked()
+
+    /**
+     * Registers a [SessionControlControllerCallback] to handle callbacks that are implemented in the UI layer.
+     */
+    fun registerCallback(callback: SessionControlControllerCallback)
+
+    /**
+     * Unregisters the callback is typically called as part of cleaning up.
+     */
+    fun unregisterCallback()
+}
+
+/**
+ * Interface for [SessionControlController] callbacks that are implemented in the UI.
+ */
+interface SessionControlControllerCallback {
+
+    /**
+     * Callback to register the [TabCollectionStorage.Observer].
+     */
+    fun registerCollectionStorageObserver()
+
+    /**
+     * Callback to remove collection with undo snack bar.
+     */
+    fun removeCollectionWithUndo(tabCollection: TabCollection)
+
+    /**
+     * Callback to show undo snack bar for top site.
+     */
+    fun showUndoSnackbarForTopSite(topSite: TopSite)
+
+    /**
+     * Callback to show tab tray.
+     */
+    fun showTabTray()
 }
 
 @Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 class DefaultSessionControlController(
-    private val activity: HomeActivity,
+    private val activityRef: WeakReference<HomeActivity>,
     private val settings: Settings,
     private val engine: Engine,
     private val messageController: MessageController,
@@ -214,14 +251,25 @@ class DefaultSessionControlController(
     private val topSitesUseCases: TopSitesUseCases,
     private val marsUseCases: MARSUseCases,
     private val appStore: AppStore,
-    private val navController: NavController,
+    private val navControllerRef: WeakReference<NavController>,
     private val viewLifecycleScope: CoroutineScope,
     private val tabManagementFeatureHelper: TabManagementFeatureHelper = DefaultTabManagementFeatureHelper,
-    private val registerCollectionStorageObserver: () -> Unit,
-    private val removeCollectionWithUndo: (tabCollection: TabCollection) -> Unit,
-    private val showUndoSnackbarForTopSite: (topSite: TopSite) -> Unit,
-    private val showTabTray: () -> Unit,
 ) : SessionControlController {
+
+    private var callback: SessionControlControllerCallback? = null
+    private val activity: HomeActivity
+        get() = requireNotNull(activityRef.get())
+
+    private val navController: NavController
+        get() = requireNotNull(navControllerRef.get())
+
+    override fun registerCallback(callback: SessionControlControllerCallback) {
+        this.callback = callback
+    }
+
+    override fun unregisterCallback() {
+        this.callback = null
+    }
 
     override fun handleCollectionAddTabTapped(collection: TabCollection) {
         Collections.addTabButton.record(NoExtras())
@@ -263,7 +311,7 @@ class DefaultSessionControlController(
             },
         )
 
-        showTabTray()
+        callback?.showTabTray()
         Collections.allTabsRestored.record(NoExtras())
     }
 
@@ -280,7 +328,7 @@ class DefaultSessionControlController(
             }
 
         if (updatedCollection?.tabs?.size == 1) {
-            removeCollectionWithUndo(collection)
+            callback?.removeCollectionWithUndo(collection)
         } else {
             viewLifecycleScope.launch {
                 tabCollectionStorage.removeTabFromCollection(collection, tab)
@@ -297,7 +345,7 @@ class DefaultSessionControlController(
     }
 
     override fun handleDeleteCollectionTapped(collection: TabCollection) {
-        removeCollectionWithUndo(collection)
+        callback?.removeCollectionWithUndo(collection)
         Collections.removed.record(NoExtras())
     }
 
@@ -405,7 +453,7 @@ class DefaultSessionControlController(
             }
         }
 
-        showUndoSnackbarForTopSite(topSite)
+        callback?.showUndoSnackbarForTopSite(topSite)
     }
 
     override fun handleRenameCollectionTapped(collection: TabCollection) {
@@ -603,7 +651,7 @@ class DefaultSessionControlController(
         if (navController.currentDestination?.id == R.id.collectionCreationFragment) return
 
         // Only register the observer right before moving to collection creation
-        registerCollectionStorageObserver()
+        callback?.registerCollectionStorageObserver()
 
         val tabIds = store.state
             .getNormalOrPrivateTabs(private = activity.browsingModeManager.mode.isPrivate)

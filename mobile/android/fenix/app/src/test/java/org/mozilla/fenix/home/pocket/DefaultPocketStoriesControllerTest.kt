@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.pocket
 
 import androidx.navigation.NavController
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -40,6 +41,7 @@ import org.mozilla.fenix.home.mars.MARSUseCases
 import org.mozilla.fenix.home.pocket.controller.DefaultPocketStoriesController
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
+import java.lang.ref.WeakReference
 
 @RunWith(RobolectricTestRunner::class) // For gleanTestRule
 class DefaultPocketStoriesControllerTest {
@@ -519,7 +521,7 @@ class DefaultPocketStoriesControllerTest {
             assertEquals("2x3", data?.entries?.first { it.key == "position" }?.value)
             assertEquals("3", data?.entries?.first { it.key == "times_shown" }?.value)
 
-            verify {
+            coVerify {
                 navController.navigate(R.id.browserFragment)
                 fenixBrowserUseCases.loadUrlOrSearch(
                     searchTermOrURL = sponsoredContent.url,
@@ -570,7 +572,7 @@ class DefaultPocketStoriesControllerTest {
     private fun createController(
         appStore: AppStore = AppStore(),
     ) = DefaultPocketStoriesController(
-        navController = navController,
+        navControllerRef = WeakReference(navController),
         appStore = appStore,
         settings = settings,
         fenixBrowserUseCases = fenixBrowserUseCases,

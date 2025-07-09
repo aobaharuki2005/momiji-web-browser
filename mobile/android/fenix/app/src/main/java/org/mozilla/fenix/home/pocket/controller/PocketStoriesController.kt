@@ -25,6 +25,7 @@ import org.mozilla.fenix.home.mars.MARSUseCases
 import org.mozilla.fenix.home.pocket.PocketImpression
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.utils.Settings
+import java.lang.ref.WeakReference
 
 private const val POCKET_CATEGORIES_SELECTED_AT_A_TIME_COUNT = 8
 
@@ -68,7 +69,7 @@ interface PocketStoriesController {
 /**
  * Default behavior for handling all user interactions with the Pocket recommended stories feature.
  *
- * @param navController [NavController] used for navigation.
+ * @param navControllerRef [NavController] used for navigation.
  * @param appStore [AppStore] from which to read the current Pocket recommendations and dispatch new actions on.
  * @param settings [Settings] used to check the application shared preferences.
  * @param fenixBrowserUseCases [FenixBrowserUseCases] used to open the story when clicked.
@@ -77,13 +78,17 @@ interface PocketStoriesController {
  * @param viewLifecycleScope The [CoroutineScope] to use for launching coroutines.
  */
 internal class DefaultPocketStoriesController(
-    private val navController: NavController,
+    private val navControllerRef: WeakReference<NavController>,
     private val appStore: AppStore,
     private val settings: Settings,
     private val fenixBrowserUseCases: FenixBrowserUseCases,
     private val marsUseCases: MARSUseCases,
     private val viewLifecycleScope: CoroutineScope,
 ) : PocketStoriesController {
+
+    private val navController: NavController
+        get() = requireNotNull(navControllerRef.get())
+
     override fun handleStoryShown(
         storyShown: PocketStory,
         storyPosition: Triple<Int, Int, Int>,

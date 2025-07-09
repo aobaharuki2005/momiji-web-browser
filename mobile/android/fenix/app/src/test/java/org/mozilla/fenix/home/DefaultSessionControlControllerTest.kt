@@ -69,6 +69,7 @@ import org.mozilla.fenix.home.bookmarks.Bookmark
 import org.mozilla.fenix.home.mars.MARSUseCases
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
+import org.mozilla.fenix.home.sessioncontrol.SessionControlControllerCallback
 import org.mozilla.fenix.messaging.MessageController
 import org.mozilla.fenix.onboarding.WallpaperOnboardingDialogFragment.Companion.THUMBNAILS_SELECTION_COUNT
 import org.mozilla.fenix.settings.SupportUtils
@@ -79,6 +80,7 @@ import org.mozilla.fenix.wallpapers.Wallpaper
 import org.mozilla.fenix.wallpapers.WallpaperState
 import org.robolectric.RobolectricTestRunner
 import java.io.File
+import java.lang.ref.WeakReference
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 @RunWith(RobolectricTestRunner::class) // For gleanTestRule
@@ -1561,7 +1563,7 @@ class DefaultSessionControlControllerTest {
         showUndoSnackbarForTopSite: (topSite: TopSite) -> Unit = { },
     ): DefaultSessionControlController {
         return DefaultSessionControlController(
-            activity = activity,
+            activityRef = WeakReference(activity),
             settings = settings,
             engine = engine,
             store = store,
@@ -1574,12 +1576,8 @@ class DefaultSessionControlControllerTest {
             topSitesUseCases = topSitesUseCases,
             marsUseCases = marsUseCases,
             appStore = appStore,
-            navController = navController,
+            navControllerRef = WeakReference(navController),
             viewLifecycleScope = scope,
-            registerCollectionStorageObserver = registerCollectionStorageObserver,
-            removeCollectionWithUndo = removeCollectionWithUndo,
-            showUndoSnackbarForTopSite = showUndoSnackbarForTopSite,
-            showTabTray = showTabTray,
             tabManagementFeatureHelper = object : TabManagementFeatureHelper {
                 override val enhancementsEnabledNightly: Boolean
                     get() = false
@@ -1590,7 +1588,25 @@ class DefaultSessionControlControllerTest {
                 override val enhancementsEnabled: Boolean
                     get() = false
             },
-        )
+        ).apply {
+            registerCallback(object : SessionControlControllerCallback {
+                override fun registerCollectionStorageObserver() {
+                    registerCollectionStorageObserver()
+                }
+
+                override fun removeCollectionWithUndo(tabCollection: TabCollection) {
+                    removeCollectionWithUndo(tabCollection)
+                }
+
+                override fun showUndoSnackbarForTopSite(topSite: TopSite) {
+                    showUndoSnackbarForTopSite(topSite)
+                }
+
+                override fun showTabTray() {
+                    showTabTray()
+                }
+            })
+        }
     }
 
     private fun makeFakeRemoteWallpapers(size: Int, hasError: Boolean): List<Wallpaper> {
