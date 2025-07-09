@@ -10,7 +10,10 @@ add_setup(async function () {
       ["signon.rememberSignons", true],
     ],
   });
-  registerCleanupFunction(LoginTestUtils.clearData);
+  registerCleanupFunction(() => {
+    LoginTestUtils.clearData();
+    Services.prefs.clearUserPref("sidebar.new-sidebar.has-used");
+  });
 });
 
 add_task(async function test_notification_is_only_shown_in_triggered_window() {
@@ -41,13 +44,19 @@ add_task(async function test_notification_is_only_shown_in_triggered_window() {
     "moz-button[data-l10n-id=login-item-cancel-button]"
   );
   cancelButton.buttonEl.click();
-  await checkNotificationAndTelemetry(megalist, "discard-changes");
+  const notifMsgBar = await checkNotificationAndTelemetry(
+    megalist,
+    "discard-changes"
+  );
   ok(true, "Got discard changes notification");
 
   await ensureNoNotifications(megalistNewWindow, "discard-changes");
 
   SidebarController.hide();
   win.SidebarController.hide();
+  notifMsgBar.shadowRoot
+    .querySelector("moz-button[type='destructive']")
+    .click();
 
   await BrowserTestUtils.closeWindow(win);
 });

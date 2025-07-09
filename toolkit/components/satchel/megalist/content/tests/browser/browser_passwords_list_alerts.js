@@ -10,17 +10,16 @@ add_setup(async function () {
       ["signon.rememberSignons", true],
     ],
   });
-  registerCleanupFunction(LoginTestUtils.clearData);
+  registerCleanupFunction(() => {
+    LoginTestUtils.clearData();
+    Services.prefs.clearUserPref("sidebar.new-sidebar.has-used");
+  });
 });
 
-async function close_sidebar(megalist) {
+function close_sidebar() {
   LoginTestUtils.clearData();
   info("Closing the sidebar");
   SidebarController.hide();
-  const notifMsgBar = await waitForNotification(megalist, "discard-changes");
-  notifMsgBar.shadowRoot
-    .querySelector("moz-button[type='destructive']")
-    .click();
 }
 
 function testNotificationInteractionTelemetry(notificationId) {
@@ -67,7 +66,7 @@ add_task(async function test_breached_origin_alert() {
   );
   testNotificationInteractionTelemetry("breached_origin_warning");
 
-  await close_sidebar(megalist);
+  close_sidebar();
 
   await Services.fog.testFlushAllChildren();
   Services.fog.testResetFOG();
@@ -112,7 +111,7 @@ add_task(async function test_no_username_alert() {
 
   testNotificationInteractionTelemetry("no_username_warning");
 
-  await close_sidebar(megalist);
+  close_sidebar();
 
   await Services.fog.testFlushAllChildren();
   Services.fog.testResetFOG();
@@ -153,7 +152,7 @@ add_task(async function test_vulnerable_password_alert() {
   );
 
   testNotificationInteractionTelemetry("vulnerable_password_warning");
-  await close_sidebar(megalist);
+  close_sidebar();
 
   await Services.fog.testFlushAllChildren();
   Services.fog.testResetFOG();

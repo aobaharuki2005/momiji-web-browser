@@ -184,8 +184,8 @@ export class LoginDataSource extends DataSourceBase {
       this.#header.executeUpdateLogin = login => this.#updateLogin(login);
       this.#header.executeDeleteLogin = login => this.#deleteLogin(login);
       this.#header.executeDiscardChanges = options => this.#cancelEdit(options);
-      this.#header.executeConfirmDiscardChanges = options =>
-        this.#discardChangesConfirmed(options);
+      this.#header.executeConfirmDiscardChanges = () =>
+        this.discardChangesConfirmed();
 
       this.#exportPasswordsStrings = {
         OSReauthMessage: strings.exportPasswordsOSReauthMessage,
@@ -733,24 +733,8 @@ export class LoginDataSource extends DataSourceBase {
     }
   }
 
-  #cancelEdit(options = {}) {
-    this.setNotification({
-      id: "discard-changes",
-      fromSidebar: options.fromSidebar,
-      passwordIndex: options.passwordIndex,
-    });
-  }
-
-  #discardChangesConfirmed(options = {}) {
-    if (options.fromSidebar) {
-      const { BrowserWindowTracker } = ChromeUtils.importESModule(
-        "resource:///modules/BrowserWindowTracker.sys.mjs"
-      );
-      const window = BrowserWindowTracker.getTopWindow();
-      window.SidebarController.hide();
-    } else {
-      this.discardChangesConfirmed();
-    }
+  #cancelEdit() {
+    this.setNotification({ id: "discard-changes" });
   }
 
   #handleLoginStorageErrors(origin, error) {

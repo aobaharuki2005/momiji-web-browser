@@ -289,11 +289,7 @@ class NotificationMessageBar extends MozLitElement {
         dataL10nId: "contextual-manager-passwords-discard-changes-close-button",
         onClick: () => {
           this.messageHandler("Cancel", {}, this.notification.passwordIndex);
-          this.messageHandler("ConfirmDiscardChanges", {
-            value: {
-              fromSidebar: this.notification.fromSidebar,
-            },
-          });
+          this.messageHandler("ConfirmDiscardChanges");
         },
       },
       secondaryAction: {

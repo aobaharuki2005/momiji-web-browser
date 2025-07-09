@@ -1824,6 +1824,9 @@ var SidebarController = {
    */
   _show(commandID) {
     return new Promise(resolve => {
+      const willShowEvent = new CustomEvent("SidebarWillShow");
+      this.browser.contentWindow?.dispatchEvent(willShowEvent);
+
       this._state.panelOpen = true;
       if (this.sidebarRevampEnabled) {
         this._box.dispatchEvent(

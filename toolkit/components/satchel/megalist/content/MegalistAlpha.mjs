@@ -51,13 +51,18 @@ export class MegalistAlpha extends MozLitElement {
     this.inputChangeTimeout = null;
     this.viewMode = VIEW_MODES.LIST;
     this.selectedRecord = null;
+    this.sidebarHiding = false;
 
     window.addEventListener("MessageFromViewModel", ev =>
       this.#onMessageFromViewModel(ev)
     );
-    window.addEventListener("SidebarWillHide", ev =>
-      this.#onSidebarWillHide(ev)
-    );
+    window.addEventListener("SidebarWillShow", () => {
+      this.sidebarHiding = false;
+    });
+    window.addEventListener("SidebarWillHide", ev => {
+      this.sidebarHiding = true;
+      this.#onSidebarWillHide(ev);
+    });
   }
 
   static get properties() {
@@ -70,6 +75,24 @@ export class MegalistAlpha extends MozLitElement {
       displayMode: { type: String },
       viewMode: { type: String },
     };
+  }
+
+  updated(changedProperties) {
+    if (changedProperties.has("viewMode")) {
+      const oldViewMode = changedProperties.get("viewMode");
+      if (oldViewMode == VIEW_MODES.EDIT && this.viewMode === VIEW_MODES.LIST) {
+        // If we are switching from EDIT to LIST mode when `sidebarHiding` is true,
+        // we need to hide the sidebar because we blocked it from hiding
+        // previously when the user was editing a password.
+        if (this.sidebarHiding) {
+          const { BrowserWindowTracker } = ChromeUtils.importESModule(
+            "resource:///modules/BrowserWindowTracker.sys.mjs"
+          );
+          const window = BrowserWindowTracker.getTopWindow();
+          window.SidebarController.hide();
+        }
+      }
+    }
   }
 
   connectedCallback() {
@@ -136,23 +159,24 @@ export class MegalistAlpha extends MozLitElement {
     this.#recordToolbarAction(gleanAction, "toolbar");
   }
 
-  #hasPendingChange(loginForm) {
+  #hasPendingEditChange(loginFromForm) {
     return !lazy.LoginHelper.doLoginsMatch(
       {
         username: this.selectedRecord.username.value,
         password: this.selectedRecord.password.value,
         origin: this.selectedRecord.origin.href,
       },
-      loginForm,
+      loginFromForm,
       {}
     );
   }
 
-  #onCancelLoginForm(loginForm) {
-    if (this.viewMode == VIEW_MODES.EDIT && this.#hasPendingChange(loginForm)) {
-      this.#sendCommand("DiscardChanges", {
-        value: { passwordIndex: this.selectedRecord.password.lineIndex },
-      });
+  #onCancelLoginForm(loginFromForm) {
+    if (
+      this.viewMode == VIEW_MODES.EDIT &&
+      this.#hasPendingEditChange(loginFromForm)
+    ) {
+      this.#sendCommand("DiscardChanges");
       return;
     }
 
@@ -164,7 +188,7 @@ export class MegalistAlpha extends MozLitElement {
     if (this.viewMode == VIEW_MODES.ADD) {
       this.#sendCommand("AddLogin", { value: loginForm });
     } else if (this.viewMode == VIEW_MODES.EDIT) {
-      if (!this.#hasPendingChange(loginForm)) {
+      if (!this.#hasPendingEditChange(loginForm)) {
         this.viewMode = VIEW_MODES.LIST;
         return;
       }
@@ -294,16 +318,18 @@ export class MegalistAlpha extends MozLitElement {
   #onSidebarWillHide(e) {
     // Prevent hiding the sidebar if a password is being edited and show a
     // message asking to confirm if the user wants to discard their changes.
-    const shouldShowDiscardChangesPrompt =
-      this.viewMode === VIEW_MODES.EDIT &&
-      (!this.notification || this.notification?.id === "discard-changes") &&
-      !this.notification?.fromSidebar;
+    if (this.viewMode != VIEW_MODES.EDIT) {
+      return;
+    }
 
-    if (shouldShowDiscardChangesPrompt) {
-      const passwordIndex = this.selectedRecord.password.lineIndex;
-      this.#sendCommand("DiscardChanges", {
-        value: { fromSidebar: true, passwordIndex },
-      });
+    const loginForm = this.shadowRoot.querySelector("login-form");
+    const loginFromForm = {
+      origin: loginForm.originValue || loginForm.originField.input.value,
+      username: loginForm.usernameField.input.value.trim(),
+      password: loginForm.passwordField.value,
+    };
+    if (this.#hasPendingEditChange(loginFromForm)) {
+      this.#sendCommand("DiscardChanges");
       e.preventDefault();
     }
   }
@@ -532,7 +558,7 @@ export class MegalistAlpha extends MozLitElement {
       case VIEW_MODES.ADD:
         return html` <login-form
           .onClose=${() => this.#onCancelLoginForm()}
-          .onSaveClick=${loginForm => this.#onSaveLoginForm(loginForm)}
+          .onSaveClick=${loginFromForm => this.#onSaveLoginForm(loginFromForm)}
         >
         </login-form>`;
       case VIEW_MODES.EDIT:
@@ -547,8 +573,8 @@ export class MegalistAlpha extends MozLitElement {
               this.selectedRecord.password.concealed,
               this.selectedRecord.password.lineIndex
             )}
-          .onClose=${loginForm => this.#onCancelLoginForm(loginForm)}
-          .onSaveClick=${loginForm => this.#onSaveLoginForm(loginForm)}
+          .onClose=${loginFromForm => this.#onCancelLoginForm(loginFromForm)}
+          .onSaveClick=${loginFromForm => this.#onSaveLoginForm(loginFromForm)}
           .onDeleteClick=${() => {
             const login = {
               origin: this.selectedRecord.origin,

@@ -85,12 +85,12 @@ export class LoginForm extends MozLitElement {
   onCancel(e) {
     e.preventDefault();
 
-    const loginForm = {
+    const loginFromForm = {
       origin: this.originValue || this.originField.input.value,
       username: this.usernameField.input.value.trim(),
       password: this.passwordField.value,
     };
-    this.onClose(loginForm);
+    this.onClose(loginFromForm);
   }
 
   onSubmit(e) {
@@ -100,12 +100,12 @@ export class LoginForm extends MozLitElement {
       return;
     }
 
-    const loginForm = {
+    const loginFromForm = {
       origin: this.originValue || this.originField.input.value,
       username: this.usernameField.input.value.trim(),
       password: this.passwordField.value,
     };
-    this.onSaveClick(loginForm);
+    this.onSaveClick(loginFromForm);
   }
 
   #isFormValid() {
