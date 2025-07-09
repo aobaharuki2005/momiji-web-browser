@@ -127,7 +127,6 @@ test_description_schema = Schema(
                 "large-noscratch",
                 "xlarge",
                 "xlarge-noscratch",
-                "large-dw",
             ),
         ),
         # type of virtualization or hardware required by test.
