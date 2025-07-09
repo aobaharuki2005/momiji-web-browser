@@ -9,6 +9,7 @@
 #include "XULButtonElement.h"
 #include "XULPopupElement.h"
 #include "mozilla/dom/XULPopupElement.h"
+#include "nsExpirationTracker.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsIFrameInlines.h"
@@ -83,10 +84,6 @@ extern mozilla::LazyLogModule gWidgetPopupLog;
 #  define LOG_WAYLAND(...)
 #endif
 
-// NS_NewMenuPopupFrame
-//
-// Wrapper for creating a new menu popup container
-//
 nsIFrame* NS_NewMenuPopupFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
       nsMenuPopupFrame(aStyle, aPresShell->GetPresContext());
@@ -97,6 +94,32 @@ NS_IMPL_FRAMEARENA_HELPERS(nsMenuPopupFrame)
 NS_QUERYFRAME_HEAD(nsMenuPopupFrame)
   NS_QUERYFRAME_ENTRY(nsMenuPopupFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
+
+// Three generations of 5000ms (so 15s to get rid of all the closed popups).
+class PopupExpirationTracker final
+    : public nsExpirationTracker<nsMenuPopupFrame, 3> {
+  static StaticAutoPtr<PopupExpirationTracker> sInstance;
+
+  void NotifyExpired(nsMenuPopupFrame* aPopup) override {
+    // printf_stderr("PopupExpirationTracker::NotifyExpired(%s)\n",
+    //               aPopup->ListTag().get());
+    RemoveObject(aPopup);
+    aPopup->DestroyWidgetIfNeeded();
+  }
+
+ public:
+  PopupExpirationTracker()
+      : nsExpirationTracker(5000 /* ms */, "PopupExpirationTracker") {}
+  static PopupExpirationTracker* Get() { return sInstance.get(); }
+  static PopupExpirationTracker& GetOrCreate() {
+    if (!sInstance) {
+      sInstance = new PopupExpirationTracker();
+      ClearOnShutdown(&sInstance);
+    }
+    return *sInstance;
+  }
+};
+StaticAutoPtr<PopupExpirationTracker> PopupExpirationTracker::sInstance;
 
 nsMenuPopupFrame::nsMenuPopupFrame(ComputedStyle* aStyle,
                                    nsPresContext* aPresContext)
@@ -118,7 +141,7 @@ static nsIWidget::InputRegion ComputeInputRegion(const ComputedStyle& aStyle,
               .Truncated()};
 }
 
-bool nsMenuPopupFrame::ShouldCreateWidgetUpfront() const {
+bool nsMenuPopupFrame::ShouldHaveWidgetWhenHidden() const {
   // Create a widget upfront for panels that never hide frames for their
   // contents (like web extension popups). These, for now, need to create the
   // widgets upfront, so that the frames inside the popup don't get "reparented"
@@ -161,7 +184,7 @@ void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     }
   }
 
-  if (!ourView->HasWidget() && ShouldCreateWidgetUpfront()) {
+  if (!ourView->HasWidget() && ShouldHaveWidgetWhenHidden()) {
     CreateWidgetForView(ourView);
   }
 
@@ -222,6 +245,9 @@ widget::PopupLevel nsMenuPopupFrame::GetPopupLevel(bool aIsNoAutoHide) const {
 }
 
 void nsMenuPopupFrame::PrepareWidget(bool aForceRecreate) {
+  if (mExpirationState.IsTracked()) {
+    PopupExpirationTracker::Get()->RemoveObject(this);
+  }
   nsView* ourView = GetView();
   if (auto* widget = GetWidget()) {
     nsCOMPtr<nsIWidget> parent = ComputeParentWidget();
@@ -1037,6 +1063,9 @@ void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState,
 
   if (auto* widget = GetWidget()) {
     widget->ClearCachedWebrenderResources();
+    if (!aFromFrameDestruction && !ShouldHaveWidgetWhenHidden()) {
+      PopupExpirationTracker::GetOrCreate().AddObject(this);
+    }
   }
 
   nsView* view = GetView();
@@ -2126,6 +2155,10 @@ void nsMenuPopupFrame::Destroy(DestroyContext& aContext) {
   HidePopup(/* aDeselectMenu = */ false, ePopupClosed,
             /* aFromFrameDestruction = */ true);
 
+  if (mExpirationState.IsTracked()) {
+    PopupExpirationTracker::Get()->RemoveObject(this);
+  }
+
   if (RefPtr<nsXULPopupManager> pm = nsXULPopupManager::GetInstance()) {
     pm->PopupDestroyed(this);
   }
@@ -2166,6 +2199,16 @@ nsMargin nsMenuPopupFrame::GetMargin() const {
     margin.right -= mExtraMargin.x;
   }
   return margin;
+}
+
+void nsMenuPopupFrame::DestroyWidgetIfNeeded() {
+  if (IsVisibleOrShowing()) {
+    MOZ_ASSERT_UNREACHABLE("Shouldn't be tracked while visible");
+    return;
+  }
+  if (auto* view = GetView()) {
+    view->DestroyWidget();
+  }
 }
 
 void nsMenuPopupFrame::MoveTo(const CSSPoint& aPos, bool aUpdateAttrs,
