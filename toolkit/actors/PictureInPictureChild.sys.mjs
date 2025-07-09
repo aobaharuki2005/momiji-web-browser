@@ -2844,7 +2844,7 @@ class PictureInPictureChildVideoWrapper {
     const addonPolicy = WebExtensionPolicy.getByID(
       "pictureinpicture@mozilla.org"
     );
-    let wrapperScriptUrl = new URL(videoWrapperScriptPath, addonPolicy.baseURL);
+    let wrapperScriptUrl = addonPolicy.getURL(videoWrapperScriptPath);
     let originatingWin = video.ownerGlobal;
     let originatingDoc = video.ownerDocument;
 
