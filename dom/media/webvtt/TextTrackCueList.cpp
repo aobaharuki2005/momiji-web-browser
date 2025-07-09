@@ -79,20 +79,12 @@ void TextTrackCueList::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv) {
     aRv.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
     return;
   }
-  mList.RemoveElement(&aCue);
+  RemoveCue(aCue);
 }
 
 void TextTrackCueList::RemoveCue(TextTrackCue& aCue) {
   mList.RemoveElement(&aCue);
 }
-
-void TextTrackCueList::RemoveCueAt(uint32_t aIndex) {
-  if (aIndex < mList.Length()) {
-    mList.RemoveElementAt(aIndex);
-  }
-}
-
-void TextTrackCueList::RemoveAll() { mList.Clear(); }
 
 void TextTrackCueList::GetArray(nsTArray<RefPtr<TextTrackCue>>& aCues) {
   aCues = mList.Clone();
