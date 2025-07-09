@@ -524,15 +524,17 @@ bool ScreenGetterGtk::AddScreenHDRAsync(unsigned int aMonitor) {
   mWaylandMonitors.AppendElement(new WaylandMonitor(this, aMonitor, wlOutput));
   return true;
 }
+#endif
 
 void ScreenGetterGtk::Finish() {
+#ifdef MOZ_WAYLAND
   LOG_SCREEN("ScreenGetterGtk::Finish() [%p]", this);
   for (auto& monitor : mWaylandMonitors) {
     monitor->Finish();
     monitor = nullptr;
   }
-}
 #endif
+}
 
 RefPtr<Screen> ScreenHelperGTK::GetScreenForWindow(nsWindow* aWindow) {
   LOG_SCREEN("GetScreenForWindow() [%p]", aWindow);
