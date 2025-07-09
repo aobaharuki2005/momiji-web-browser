@@ -296,19 +296,8 @@ static RangeBehaviour GetRangeBehaviour(
   const RangeBoundary& otherSideExistingBoundaryInDOM =
       aIsSetStart ? aRange->EndRef() : aRange->StartRef();
 
-  auto ComparePoints = [aAllowCrossShadowBoundary](
-                           const RawRangeBoundary& aBoundary1,
-                           const RawRangeBoundary& aBoundary2) {
-    if (aAllowCrossShadowBoundary == AllowRangeCrossShadowBoundary::Yes) {
-      return nsContentUtils::ComparePoints<TreeKind::Flat>(aBoundary1,
-                                                           aBoundary2);
-    }
-    return nsContentUtils::ComparePoints<TreeKind::ShadowIncludingDOM>(
-        aBoundary1, aBoundary2);
-  };
-
-  auto CompareFlatTreeBoundaries = [&aNewBoundaryInFlat, aIsSetStart, &aRange,
-                                    &ComparePoints]() {
+  auto CompareFlatTreeBoundaries = [&aNewBoundaryInFlat, aIsSetStart,
+                                    &aRange]() {
     MOZ_ASSERT(aRange->GetCrossShadowBoundaryRange());
     MOZ_ASSERT(aNewBoundaryInFlat.isSome() &&
                aNewBoundaryInFlat->IsSetAndValid());
@@ -317,10 +306,10 @@ static RangeBehaviour GetRangeBehaviour(
                     : aRange->GetCrossShadowBoundaryRange()->StartRef();
     const Maybe<int32_t> withCrossShadowBoundaryOrder =
         aIsSetStart
-            ? ComparePoints(
+            ? nsContentUtils::ComparePoints<TreeKind::Flat>(
                   aNewBoundaryInFlat.ref(),
                   otherSideExistingCrossShadowBoundaryBoundaryInFlat.AsRaw())
-            : ComparePoints(
+            : nsContentUtils::ComparePoints<TreeKind::Flat>(
                   otherSideExistingCrossShadowBoundaryBoundaryInFlat.AsRaw(),
                   aNewBoundaryInFlat.ref());
     if (withCrossShadowBoundaryOrder && *withCrossShadowBoundaryOrder != 1) {
@@ -337,10 +326,11 @@ static RangeBehaviour GetRangeBehaviour(
 
   // Both boundaries are in the same root, now check for their position
   const Maybe<int32_t> order =
-      aIsSetStart ? ComparePoints(aNewBoundaryInDOM,
-                                  otherSideExistingBoundaryInDOM.AsRaw())
-                  : ComparePoints(otherSideExistingBoundaryInDOM.AsRaw(),
-                                  aNewBoundaryInDOM);
+      aIsSetStart
+          ? nsContentUtils::ComparePoints<TreeKind::ShadowIncludingDOM>(
+                aNewBoundaryInDOM, otherSideExistingBoundaryInDOM.AsRaw())
+          : nsContentUtils::ComparePoints<TreeKind::ShadowIncludingDOM>(
+                otherSideExistingBoundaryInDOM.AsRaw(), aNewBoundaryInDOM);
 
   if (order) {
     if (*order != 1) {
