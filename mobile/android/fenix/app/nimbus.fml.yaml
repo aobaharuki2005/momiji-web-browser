@@ -918,6 +918,22 @@ features:
         type: Boolean
         default: false
 
+  address-sync:
+    description: Turns on address sync.
+    variables:
+      enabled:
+        description: >
+          Whether or not to turn on address sync.
+        type: Boolean
+        default: false
+    defaults:
+      - channel: nightly
+        value:
+          enabled: false
+      - channel: developer
+        value:
+          enabled: true
+
 types:
   objects:
     GleanServerKnobsConfiguration:
