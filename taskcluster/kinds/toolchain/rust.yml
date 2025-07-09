@@ -4,7 +4,7 @@
 ---
 task-defaults:
     description: "rust repack"
-    worker-type: b-linux-gcp
+    worker-type: b-linux-amd
     worker:
         max-run-time: 7200
     run:
@@ -100,7 +100,7 @@ linux64-rust-1.86:
 # build environment. See the rust fetch's comments for more details.
 linux64-rust-1.81-dev:
     description: "build rust from source"
-    worker-type: b-linux-large-gcp
+    worker-type: b-linux-large-amd
     treeherder:
         symbol: TL(rust-dev)
     worker:
@@ -329,7 +329,7 @@ linux64-rust-nightly-dev:
     attributes:
         cached_task: false
     description: "build rust from source"
-    worker-type: b-linux-large-gcp
+    worker-type: b-linux-large-amd
     treeherder:
         symbol: TL(rust-dev-nightly)
     worker:
