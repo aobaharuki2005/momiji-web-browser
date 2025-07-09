@@ -3078,9 +3078,9 @@ checksum = "c4a1e36c821dbe04574f602848a19f742f4fb3c98d40449f11bcad18d6b17421"
 
 [[package]]
 name = "hyper"
-version = "0.14.24"
+version = "0.14.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e011372fa0b68db8350aa7a248930ecc7839bf46d8485577d69f117a75f164c"
+checksum = "41dfc780fdec9373c01bae43289ea34c972e40ee3c9f6b3c8801a35f35586ce7"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -3093,7 +3093,7 @@ dependencies = [
  "httpdate",
  "itoa",
  "pin-project-lite",
- "socket2 0.4.999",
+ "socket2",
  "tokio",
  "tower-service",
  "tracing",
@@ -3958,7 +3958,7 @@ dependencies = [
  "dns-parser",
  "gecko-profiler",
  "log",
- "socket2 0.4.999",
+ "socket2",
  "uuid",
 ]
 
@@ -5479,7 +5479,7 @@ dependencies = [
  "libc",
  "log",
  "once_cell",
- "socket2 0.5.7",
+ "socket2",
  "windows-sys",
 ]
 
@@ -6200,13 +6200,6 @@ checksum = "b7c388c1b5e93756d0c740965c41e8822f866621d41acbdf6336a6a168f8840c"
 
 [[package]]
 name = "socket2"
-version = "0.4.999"
-dependencies = [
- "socket2 0.5.7",
-]
-
-[[package]]
-name = "socket2"
 version = "0.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ce305eb0b4296696835b71df73eb912e0f1ffd2556a501fcede6e0c50349191c"
@@ -6729,7 +6722,7 @@ dependencies = [
  "libc",
  "mio",
  "pin-project-lite",
- "socket2 0.5.7",
+ "socket2",
  "tokio-macros",
  "windows-sys",
 ]
