@@ -80,6 +80,11 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             isChecked = context.settings().useNewBookmarks
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_address_sync).apply {
+            isVisible = Config.channel.isNightlyOrDebug
+            isChecked = context.settings().isAddressSyncEnabled
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
 
         requirePreference<SwitchPreference>(R.string.pref_key_enable_compose_logins).apply {
             isChecked = context.settings().enableComposeLogins

@@ -1766,6 +1766,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true,
     )
 
+    /**
+     * Address Sync feature.
+     */
+    var isAddressSyncEnabled by featureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_enable_address_sync),
+        default = false,
+        featureFlag = isAddressFeatureEnabled(appContext),
+    )
+
     var addressFeature by featureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_show_address_feature),
         default = true,
