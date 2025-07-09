@@ -530,24 +530,62 @@ void nsTimerImpl::CancelImpl(bool aClearITimer) {
 
 nsresult nsTimerImpl::SetDelay(uint32_t aDelay) {
   MutexAutoLock lock(mMutex);
-  if (GetCallback().is<UnknownCallback>() && !IsRepeating()) {
-    // This may happen if someone tries to re-use a one-shot timer
-    // by re-setting delay instead of reinitializing the timer.
-    NS_ERROR(
-        "nsITimer->SetDelay() called when the "
-        "one-shot timer is not set up.");
-    return NS_ERROR_NOT_INITIALIZED;
-  }
 
-  // Note: SetDelay needs to maintain the same mTimerSeq #.
-  // Otherwise we might end up to not reschedule a REPEATING timer if we
-  // happen to get here while the firing event is in flight.
+  // Discourage inappropriate use of SetDelay on ONE_SHOT timers.
+  if (!IsRepeating()) {
+    if (GetCallback().is<UnknownCallback>()) {
+      // This may happen if someone tries to re-use a ONE_SHOT timer
+      // by re-setting delay instead of reinitializing the timer.
+      NS_ERROR(
+          "nsITimer->SetDelay() called when the "
+          "one-shot timer is not set up.");
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+#ifdef DEBUG
+    bool onTargetThread = mEventTarget && mEventTarget->IsOnCurrentThread();
+    if (!onTargetThread) {
+      NS_WARNING(
+          "nsITimer->SetDelay() on a ONE_SHOT timer should only be called from "
+          "the target thread!");
+    }
+#endif
+    if (mFiring) {
+      // In case of a timer event being executed on a different thread, we
+      // just lost the race and we treat it like UnknownCallback. For same-
+      // thread timers this cannot happen unless we do SetDelay on our self
+      // in our payload, which is forbidden.
+#ifdef DEBUG
+      if (onTargetThread) {
+        NS_ERROR(
+            "nsITimer->SetDelay() while firing will not re-schedule a ONE_SHOT "
+            "timer. Please re-initialize.");
+      }
+#endif
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+  }
 
   bool reAdd = false;
   reAdd = NS_SUCCEEDED(gThreadWrapper.RemoveTimer(this, lock));
 
   mDelay = TimeDuration::FromMilliseconds(aDelay);
   mTimeout = TimeStamp::Now() + mDelay;
+
+  // For REPEATING timers SetDelay needs to maintain the same mTimerSeq #.
+  // Otherwise we might end up to not reschedule a REPEATING timer if we
+  // happen to get here while the firing event is in flight or even in
+  // execution on a different thread.
+
+  if (!IsRepeating()) {
+    // We were either still in the TimerThread or our ONE_SHOT event is in
+    // flight, given the above checks. In both cases our payload did not yet
+    // run and we need to increase the sequence in order to prevent Fire from
+    // running our payload now on the old mTimerSeq # and we need to reschedule
+    // the timer for later.
+    MOZ_ASSERT(!mFiring && !GetCallback().is<UnknownCallback>());
+    mTimerSeq = ++sLastTimerSeq;
+    reAdd = true;
+  }
 
   if (reAdd) {
     gThreadWrapper.AddTimer(this, lock);
