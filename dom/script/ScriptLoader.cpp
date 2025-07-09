@@ -2625,10 +2625,6 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
     aOptions->setMutedErrors(!subsumes);
   }
 
-  if (aRequest->IsModuleRequest()) {
-    aOptions->setHideScriptFromDebugger(true);
-  }
-
   aOptions->setDeferDebugMetadata(true);
 
   aOptions->borrowBuffer = true;
