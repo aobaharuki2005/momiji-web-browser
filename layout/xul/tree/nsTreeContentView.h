@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
+#include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsITreeSelection.h"
 #include "nsITreeView.h"
