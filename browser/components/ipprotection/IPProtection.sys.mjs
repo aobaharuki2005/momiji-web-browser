@@ -44,9 +44,9 @@ class IPProtectionWidget {
    * Creates the widget if the feature is enabled and
    * the widget has not already been created.
    *
-   * @param {Window} window - new browser window.
+   * @param {Window} _window - new browser window.
    */
-  init(window) {
+  init(_window) {
     if (!this.isEnabled) {
       return;
     }
@@ -54,8 +54,6 @@ class IPProtectionWidget {
     if (!this.#created) {
       this.#createWidget();
     }
-
-    lazy.IPProtectionPanel.loadCustomElements(window);
   }
 
   /**
@@ -63,6 +61,7 @@ class IPProtectionWidget {
    */
   uninit() {
     this.#destroyWidget();
+    this.#panels = new WeakMap();
     this.#destroyed = true;
   }
 
@@ -140,14 +139,16 @@ class IPProtectionWidget {
   }
 
   /**
-   * Remove all panels.
+   * Remove all panels content, but maintains state for if the widget is
+   * re-enabled in the same window.
+   *
+   * Panels will only be removed from the WeakMap if their window is closed.
    */
   #destroyPanels() {
     let panels = ChromeUtils.nondeterministicGetWeakMapKeys(this.#panels);
     for (let panel of panels) {
       this.#panels.get(panel).destroy();
     }
-    this.#panels = new WeakMap();
   }
 
   /**
@@ -198,8 +199,10 @@ class IPProtectionWidget {
    */
   #onBeforeCreated(doc) {
     let { ownerGlobal } = doc;
-    let panel = new lazy.IPProtectionPanel(ownerGlobal);
-    this.#panels.set(ownerGlobal, panel);
+    if (!this.#panels.has(ownerGlobal)) {
+      let panel = new lazy.IPProtectionPanel(ownerGlobal);
+      this.#panels.set(ownerGlobal, panel);
+    }
   }
 
   /**
