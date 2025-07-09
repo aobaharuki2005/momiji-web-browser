@@ -1922,13 +1922,7 @@ impl Global {
 
                 // Don't trust the graphics driver with buffer sizes larger than our conservative max buffer size.
                 if shmem_allocation_failed || desc.size > MAX_BUFFER_SIZE {
-                    error_buf.init(
-                        ErrMsg {
-                            message: "Out of memory".into(),
-                            r#type: ErrorType::OutOfMemory,
-                        },
-                        device_id,
-                    );
+                    error_buf.init(ErrMsg::oom(), device_id);
                     self.create_buffer_error(Some(buffer_id), &desc);
                     return;
                 }
@@ -1964,13 +1958,7 @@ impl Global {
                     || desc.size.depth_or_array_layers > max
                 {
                     self.create_texture_error(Some(id), &desc);
-                    error_buf.init(
-                        ErrMsg {
-                            message: "Out of memory".into(),
-                            r#type: ErrorType::OutOfMemory,
-                        },
-                        device_id,
-                    );
+                    error_buf.init(ErrMsg::oom(), device_id);
                     return;
                 }
 

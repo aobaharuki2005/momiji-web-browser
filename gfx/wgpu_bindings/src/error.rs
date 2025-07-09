@@ -167,6 +167,15 @@ pub(crate) struct ErrMsg {
     pub(crate) r#type: ErrorType,
 }
 
+impl ErrMsg {
+    pub fn oom() -> Self {
+        Self {
+            message: "Out of memory".into(),
+            r#type: ErrorType::OutOfMemory,
+        }
+    }
+}
+
 impl Display for ErrMsg {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let Self { message, r#type: _ } = self;
