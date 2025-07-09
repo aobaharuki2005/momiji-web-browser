@@ -10,6 +10,7 @@
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsTHashSet.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
@@ -64,6 +65,9 @@ class TextTrackCueList final : public nsISupports, public nsWrapperCache {
   // A sorted list of TextTrackCues sorted by earliest start time. If the start
   // times are equal then it will be sorted by end time, earliest first.
   nsTArray<RefPtr<TextTrackCue>> mList;
+
+  // Utilized for rapid cue existence verification.
+  nsTHashSet<TextTrackCue*> mCueSet;
 };
 
 }  // namespace dom
