@@ -21,6 +21,7 @@ import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.translationsRobot
 
+@Ignore("Bugzilla issue: https://bugzilla.mozilla.org/show_bug.cgi?id=1976470")
 class TranslationsTest : TestSetup() {
     @get:Rule
     val composeTestRule =
