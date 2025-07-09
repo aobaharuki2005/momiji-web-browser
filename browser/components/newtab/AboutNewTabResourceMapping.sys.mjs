@@ -13,16 +13,19 @@ export const TRAINHOP_XPI_BASE_URL_PREF =
   "browser.newtabpage.trainhopAddon.xpiBaseURL";
 export const TRAINHOP_XPI_VERSION_PREF =
   "browser.newtabpage.trainhopAddon.version";
-export const TRAINHOP_SCHEDULED_UPDATE_STATE_PREF =
+export const TRAINHOP_SCHEDULED_UPDATE_STATE_DELAY_PREF =
+  "browser.newtabpage.trainhopAddon.scheduledUpdateState.delay";
+export const TRAINHOP_SCHEDULED_UPDATE_STATE_TIMEOUT_PREF =
   "browser.newtabpage.trainhopAddon.scheduledUpdateState.timeout";
 
 const lazy = XPCOMUtils.declareLazy({
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AddonSettings: "resource://gre/modules/addons/AddonSettings.sys.mjs",
   AboutHomeStartupCache: "resource:///modules/AboutHomeStartupCache.sys.mjs",
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
+  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   NewTabGleanUtils: "resource://newtab/lib/NewTabGleanUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
-  requestIdleCallback: "resource://gre/modules/Timer.sys.mjs",
 
   resProto: {
     service: "@mozilla.org/network/protocol;1?name=resource",
@@ -37,12 +40,15 @@ const lazy = XPCOMUtils.declareLazy({
     iid: Ci.nsIAboutModule,
   },
 
-  // NOTE: this timeout is used to customize the scheduled call
-  // to updateTrainhopAddonState. It is ignored if not set to a
-  // positive numeric value, and it is meant to be set for testing,
-  // debugging or QA verification.
+  // NOTE: the following timeout and delay prefs are used to customize the
+  // DeferredTask that calls updateTrainhopAddonState, and they are meant to
+  // be set for testing, debugging or QA verification.
+  trainhopAddonScheduledUpdateDelay: {
+    pref: TRAINHOP_SCHEDULED_UPDATE_STATE_DELAY_PREF,
+    default: 5000,
+  },
   trainhopAddonScheduledUpdateTimeout: {
-    pref: TRAINHOP_SCHEDULED_UPDATE_STATE_PREF,
+    pref: TRAINHOP_SCHEDULED_UPDATE_STATE_TIMEOUT_PREF,
     default: -1,
   },
   trainhopAddonXPIBaseURL: {
@@ -75,6 +81,7 @@ export var AboutNewTabResourceMapping = {
   _addonVersion: null,
   _addonListener: null,
   _builtinVersion: null,
+  _updateAddonStateDeferredTask: null,
 
   /**
    * This should be called early on in the lifetime of the browser, before any
@@ -307,11 +314,41 @@ export var AboutNewTabResourceMapping = {
   },
 
   scheduleUpdateTrainhopAddonState() {
-    const options =
-      lazy.trainhopAddonScheduledUpdateTimeout > 0
-        ? { timeout: lazy.trainhopAddonScheduledUpdateTimeout }
-        : {};
-    lazy.requestIdleCallback(() => this.updateTrainhopAddonState(), options);
+    if (!this._updateAddonStateDeferredTask) {
+      this.logger.debug("creating _updateAddonStateDeferredTask");
+      const delayMs = lazy.trainhopAddonScheduledUpdateDelay;
+      const idleTimeoutMs = lazy.trainhopAddonScheduledUpdateTimeout;
+      this._updateAddonStateDeferredTask = new lazy.DeferredTask(
+        async () => {
+          const isPastShutdownConfirmed =
+            Services.startup.isInOrBeyondShutdownPhase(
+              Ci.nsIAppStartup.SHUTDOWN_PHASE_APPSHUTDOWNCONFIRMED
+            );
+          if (isPastShutdownConfirmed) {
+            this.logger.debug(
+              "updateAddonStateDeferredTask cancelled after appShutdownConfirmed barrier"
+            );
+            return;
+          }
+          this.logger.debug("_updateAddonStateDeferredTask running");
+          await this.updateTrainhopAddonState().catch(e => {
+            this.logger.warn("updateAddonStateDeferredTask failure", e);
+          });
+          this.logger.debug("_updateAddonStateDeferredTask completed");
+        },
+        delayMs,
+        idleTimeoutMs
+      );
+      lazy.AsyncShutdown.appShutdownConfirmed.addBlocker(
+        `${TRAINHOP_NIMBUS_FEATURE_ID} scheduleUpdateTrainhopAddonState shutting down`,
+        () => this._updateAddonStateDeferredTask.finalize()
+      );
+      lazy.NimbusFeatures[TRAINHOP_NIMBUS_FEATURE_ID].onUpdate(() =>
+        this._updateAddonStateDeferredTask.arm()
+      );
+    }
+    this.logger.debug("re-arming _updateAddonStateDeferredTask");
+    this._updateAddonStateDeferredTask.arm();
   },
 
   /**
