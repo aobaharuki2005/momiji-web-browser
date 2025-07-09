@@ -204,9 +204,14 @@ export let ContentSearch = {
       "engineName",
       "searchString",
       "healthReportKey",
+      "searchPurpose",
     ]);
     let engine = Services.search.getEngineByName(data.engineName);
-    let submission = engine.getSubmission(data.searchString, "");
+    let submission = engine.getSubmission(
+      data.searchString,
+      "",
+      data.searchPurpose
+    );
     let win = browser.ownerGlobal;
     if (!win) {
       // The browser may have been closed between the time its content sent the

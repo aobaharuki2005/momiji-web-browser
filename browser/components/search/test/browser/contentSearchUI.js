@@ -8,5 +8,6 @@ var input = document.querySelector("input");
 var gController = new ContentSearchUIController(
   input,
   input.parentNode,
+  "test",
   "test"
 );

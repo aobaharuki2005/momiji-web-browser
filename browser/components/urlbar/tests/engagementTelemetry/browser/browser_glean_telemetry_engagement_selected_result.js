@@ -903,7 +903,8 @@ add_task(async function selected_result_action() {
 add_task(async function selected_result_semantic() {
   const historyUrl = "https://www.example.com/semantic/";
   let defaultEngine = await Services.search.getDefault();
-  const searchUrl = defaultEngine.getSubmission("semantic", null).uri.spec;
+  const searchUrl = defaultEngine.getSubmission("semantic", null, "keyword").uri
+    .spec;
   await doTestWithSemantic(
     [
       {

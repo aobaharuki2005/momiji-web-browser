@@ -317,10 +317,9 @@ export var UrlbarUtils = {
       return { url, postData, mayInheritPrincipal };
     }
 
-    /** @type {nsISearchEngine} */
     let engine = await Services.search.getEngineByAlias(keyword);
     if (engine) {
-      let submission = engine.getSubmission(param, null);
+      let submission = engine.getSubmission(param, null, "keyword");
       return {
         url: submission.uri.spec,
         postData: submission.postData,

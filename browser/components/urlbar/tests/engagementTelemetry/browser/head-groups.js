@@ -336,7 +336,8 @@ async function doSemanticHistoryTest({ trigger, assert }) {
 
 async function doSerpHistoryTest({ trigger, assert }) {
   let defaultEngine = await Services.search.getDefault();
-  const searchUrl = defaultEngine.getSubmission("serp history", null).uri.spec;
+  const searchUrl = defaultEngine.getSubmission("serp history", null, "keyword")
+    .uri.spec;
 
   await doTest(async () => {
     await PlacesTestUtils.addVisits(searchUrl);
@@ -351,7 +352,8 @@ async function doSerpHistoryTest({ trigger, assert }) {
 
 async function doTabSerpHistoryTest({ trigger, assert }) {
   let defaultEngine = await Services.search.getDefault();
-  const searchUrl = defaultEngine.getSubmission("serp history", null).uri.spec;
+  const searchUrl = defaultEngine.getSubmission("serp history", null, "keyword")
+    .uri.spec;
   let visited = PlacesTestUtils.waitForNotification("page-visited", visits =>
     visits.some(({ url }) => url == searchUrl)
   );
