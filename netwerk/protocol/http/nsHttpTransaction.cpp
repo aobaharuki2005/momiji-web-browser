@@ -3665,6 +3665,16 @@ void nsHttpTransaction::RemoveConnection() {
   mConnection = nullptr;
 }
 
+nsILoadInfo::IPAddressSpace nsHttpTransaction::GetTargetIPAddressSpace() {
+  nsILoadInfo::IPAddressSpace retVal;
+  {
+    MutexAutoLock lock(mLock);
+    retVal = mTargetIpAddressSpace;
+  }
+
+  return retVal;
+}
+
 bool nsHttpTransaction::AllowedToConnectToIpAddressSpace(
     nsILoadInfo::IPAddressSpace aTargetIpAddressSpace) {
   // skip checks if LNA feature is disabled
@@ -3701,6 +3711,12 @@ bool nsHttpTransaction::AllowedToConnectToIpAddressSpace(
   }
 
   return true;
+}
+
+void nsHttpTransaction::SetTargetIpAddressSpace(
+    nsILoadInfo::IPAddressSpace aTargetIpAddressSpace) {
+  mozilla::MutexAutoLock lock(mLock);
+  mTargetIpAddressSpace = aTargetIpAddressSpace;
 }
 
 }  // namespace mozilla::net

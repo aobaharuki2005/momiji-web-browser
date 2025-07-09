@@ -515,6 +515,9 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   bool AllowedToConnectToIpAddressSpace(
       nsILoadInfo::IPAddressSpace aTargetIpAddressSpace) override;
 
+  void SetTargetIpAddressSpace(
+      nsILoadInfo::IPAddressSpace aTargetIpAddressSpace);
+
  private:
   bool mSubmittedRatePacing{false};
   bool mPassedRatePacing{false};
@@ -541,6 +544,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   TransactionObserverFunc mTransactionObserver;
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
+  nsILoadInfo::IPAddressSpace mTargetIpAddressSpace{
+      nsILoadInfo::IPAddressSpace::Unknown};
   bool mResolvedByTRR{false};
   Atomic<nsIRequest::TRRMode, Relaxed> mEffectiveTRRMode{
       nsIRequest::TRR_DEFAULT_MODE};
