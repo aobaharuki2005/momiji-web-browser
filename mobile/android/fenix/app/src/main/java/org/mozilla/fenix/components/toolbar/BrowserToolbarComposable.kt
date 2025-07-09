@@ -30,7 +30,6 @@ import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.thumbnails.BrowserThumbnails
 import mozilla.components.compose.base.Divider
-import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.base.theme.localAcornColors
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarState
@@ -49,6 +48,7 @@ import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.toolbar.ToolbarPosition.BOTTOM
 import org.mozilla.fenix.components.toolbar.ToolbarPosition.TOP
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -114,20 +114,20 @@ class BrowserToolbarComposable(
             onDispose { toolbarController.stop() }
         }
 
-        AcornTheme {
-            val acornColors = AcornTheme.colors
-            val customTheme = remember(customColors, acornColors) {
-                acornColors.copy(
+        FirefoxTheme {
+            val firefoxColors = FirefoxTheme.colors
+            val customTheme = remember(customColors, firefoxColors) {
+                firefoxColors.copy(
                     // Toolbar background
-                    layer1 = customColors.value?.toolbarColor?.let { Color(it) } ?: acornColors.layer1,
+                    layer1 = customColors.value?.toolbarColor?.let { Color(it) } ?: firefoxColors.layer1,
                     // Page origin background
-                    layer3 = customColors.value?.toolbarColor?.let { Color(it) } ?: acornColors.layer3,
+                    layer3 = customColors.value?.toolbarColor?.let { Color(it) } ?: firefoxColors.layer3,
                     // All text but the title
-                    textPrimary = customColors.value?.readableColor?.let { Color(it) } ?: acornColors.textPrimary,
+                    textPrimary = customColors.value?.readableColor?.let { Color(it) } ?: firefoxColors.textPrimary,
                     // Title
-                    textSecondary = customColors.value?.readableColor?.let { Color(it) } ?: acornColors.textSecondary,
+                    textSecondary = customColors.value?.readableColor?.let { Color(it) } ?: firefoxColors.textSecondary,
                     // All icons tint
-                    iconPrimary = customColors.value?.readableColor?.let { Color(it) } ?: acornColors.iconPrimary,
+                    iconPrimary = customColors.value?.readableColor?.let { Color(it) } ?: firefoxColors.iconPrimary,
                 )
             }
 
