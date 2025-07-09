@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.button.PrimaryButton
 import mozilla.components.compose.base.button.TextButton
+import mozilla.components.compose.base.utils.getAttr
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.isLargeWindow
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -79,11 +81,7 @@ private fun Header() {
         modifier = Modifier.padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_pbm_firefox_logo),
-            contentDescription = null, // decorative only.
-            modifier = Modifier.padding(32.dp),
-        )
+        Logo()
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -93,6 +91,28 @@ private fun Header() {
             textAlign = TextAlign.Center,
             style = FirefoxTheme.typography.headline6,
             maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun Logo() {
+    Row(
+        modifier = Modifier
+            .padding(32.dp)
+            .height(60.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Image(
+            modifier = Modifier.padding(end = 14.dp),
+            painter = painterResource(getAttr(R.attr.fenixWordmarkLogo)),
+            contentDescription = null,
+        )
+
+        Image(
+            modifier = Modifier.height(28.dp),
+            painter = painterResource(getAttr(R.attr.fenixWordmarkText)),
+            contentDescription = stringResource(R.string.app_name),
         )
     }
 }
