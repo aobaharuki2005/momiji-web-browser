@@ -1163,7 +1163,7 @@ class HomeFragment : Fragment() {
         // We only want this observer live just before we navigate away to the collection creation screen
         requireComponents.core.tabCollectionStorage.unregister(collectionStorageObserver)
 
-        if (FeatureFlags.customReviewPromptEnabled) {
+        if (FeatureFlags.CUSTOM_REVIEW_PROMPT_ENABLED) {
             requireComponents.appStore.dispatch(CheckIfEligibleForReviewPrompt)
         } else {
             lifecycleScope.launch(IO) {

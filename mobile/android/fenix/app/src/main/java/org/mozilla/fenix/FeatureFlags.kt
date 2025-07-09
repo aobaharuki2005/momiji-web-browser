@@ -64,5 +64,5 @@ object FeatureFlags {
     /**
      * Enables the custom review pre-prompt.
      */
-    val customReviewPromptEnabled = Config.channel.isNightlyOrDebug
+    const val CUSTOM_REVIEW_PROMPT_ENABLED = true
 }
