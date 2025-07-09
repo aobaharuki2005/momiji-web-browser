@@ -6309,8 +6309,24 @@ void PresShell::ClearApproximatelyVisibleFramesList(
   mApproximatelyVisibleFrames.Clear();
 }
 
+// aRect is relative to aFrame
+// aPreserve3DRect is set upon entering a preserve3d context and it doesn't
+// change, it stays relative to the root frame in the preserve3d context. Any
+// frame that is in a preserve3d context ignores aRect but takes aPreserve3DRect
+// and transforms it from the root of the preserve3d context to itself
+// (nsDisplayTransform::UntransformRect does this by default), and passes the
+// result down as aRect (leaving aPreserve3DRect untouched). Additionally, we
+// descend into every frame inside the preserve3d context (we skip the rect
+// intersection test). Any frame that is not in a preserve3d context just uses
+// aRect and doesn't need to know about any of this, even if it's parent frame
+// is in the preserve3d context. Any frame that is extend3d (ie has preserve3d
+// transform style) but not combines3d (ie its either transformed or backface
+// visibility hidden and its parent has preserve3d style) forms the root of a
+// preserve3d context. And any frame that is combines3d is in a preserve3d
+// context.
 void PresShell::MarkFramesInSubtreeApproximatelyVisible(
-    nsIFrame* aFrame, const nsRect& aRect, bool aRemoveOnly /* = false */) {
+    nsIFrame* aFrame, const nsRect& aRect, const nsRect& aPreserve3DRect,
+    bool aRemoveOnly /* = false */) {
   MOZ_DIAGNOSTIC_ASSERT(aFrame, "aFrame arg should be a valid frame pointer");
   MOZ_ASSERT(aFrame->PresShell() == this, "wrong presshell");
 
@@ -6384,8 +6400,6 @@ void PresShell::MarkFramesInSubtreeApproximatelyVisible(
     rect = scrollFrame->ExpandRectToNearlyVisible(rect);
   }
 
-  bool preserves3DChildren = aFrame->Extend3DContext();
-
   for (const auto& [list, listID] : aFrame->ChildLists()) {
     for (nsIFrame* child : list) {
       // Note: This assert should be trivially satisfied, just by virtue of how
@@ -6393,25 +6407,38 @@ void PresShell::MarkFramesInSubtreeApproximatelyVisible(
       // sentinel which should terminate the loop).  But we do somehow get
       // crash reports inside this loop that suggest `child` is null...
       MOZ_DIAGNOSTIC_ASSERT(child, "shouldn't have null values in child lists");
+
+      const bool extend3DContext = child->Extend3DContext();
+      const bool combines3DTransformWithAncestors =
+          (extend3DContext || child->IsTransformed()) &&
+          child->Combines3DTransformWithAncestors();
+
       nsRect r = rect - child->GetPosition();
-      if (!r.IntersectRect(r, child->InkOverflowRect())) {
-        continue;
-      }
-      if (child->IsTransformed()) {
-        // for children of a preserve3d element we just pass down the same dirty
-        // rect
-        if (!preserves3DChildren ||
-            !child->Combines3DTransformWithAncestors()) {
-          const nsRect overflow = child->InkOverflowRectRelativeToSelf();
-          nsRect out;
-          if (nsDisplayTransform::UntransformRect(r, overflow, child, &out)) {
-            r = out;
-          } else {
-            r.SetEmpty();
-          }
+      if (!combines3DTransformWithAncestors) {
+        if (!r.IntersectRect(r, child->InkOverflowRect())) {
+          continue;
         }
       }
-      MarkFramesInSubtreeApproximatelyVisible(child, r, aRemoveOnly);
+
+      nsRect newPreserve3DRect = aPreserve3DRect;
+      if (extend3DContext && !combines3DTransformWithAncestors) {
+        newPreserve3DRect = r;
+      }
+
+      if (child->IsTransformed()) {
+        if (combines3DTransformWithAncestors) {
+          r = newPreserve3DRect;
+        }
+        const nsRect overflow = child->InkOverflowRectRelativeToSelf();
+        nsRect out;
+        if (nsDisplayTransform::UntransformRect(r, overflow, child, &out)) {
+          r = out;
+        } else {
+          r.SetEmpty();
+        }
+      }
+      MarkFramesInSubtreeApproximatelyVisible(child, r, newPreserve3DRect,
+                                              aRemoveOnly);
     }
   }
 }
@@ -6452,7 +6479,7 @@ void PresShell::RebuildApproximateFrameVisibility(
     vis = vis.Intersect(visibleRect.valueOr(nsRect()));
   }
 
-  MarkFramesInSubtreeApproximatelyVisible(rootFrame, vis, aRemoveOnly);
+  MarkFramesInSubtreeApproximatelyVisible(rootFrame, vis, vis, aRemoveOnly);
 
   DecApproximateVisibleCount(oldApproximatelyVisibleFrames);
 }
