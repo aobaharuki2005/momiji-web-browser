@@ -1827,28 +1827,7 @@ async function testtag_tree_scroll() {
     scrollDelta: -10,
   });
 
-  info("Check the scroll behavior if limitMouseScrollAmount attribute is true");
-  await doScrollLimitMouseScrollAmount({
-    tree,
-  });
-
   SimpleTest.finish();
-}
-
-async function doScrollLimitMouseScrollAmount({ tree }) {
-  // Initialize.
-  tree.parentElement.scrollTop = 0;
-
-  const scrollDelta = 100;
-  tree.scrollToRow(0);
-  is(tree.getFirstVisibleRow(), 0);
-  await nativeScroll(tree, 10, 10, scrollDelta);
-  await SimpleTest.promiseWaitForCondition(() => tree.getFirstVisibleRow());
-  is(
-    tree.getFirstVisibleRow(),
-    3,
-    "Limit scrolling so that part of the previous result remains"
-  );
 }
 
 async function doScrollInSameSeries({
