@@ -48,7 +48,7 @@ class DefaultBrowsingModeManagerTest {
 
     @Test
     fun `WHEN mode is set THEN modeDidChange and updateAppState callbacks are invoked and last known mode setting is set`() {
-        val manager = buildBrowsingModeManger()
+        val manager = buildBrowsingModeManager()
 
         verify(exactly = 0) {
             modeDidChange.invoke(any())
@@ -76,7 +76,7 @@ class DefaultBrowsingModeManagerTest {
 
     @Test
     fun `WHEN mode is set THEN it should be returned from get`() {
-        val manager = buildBrowsingModeManger()
+        val manager = buildBrowsingModeManager()
 
         assertEquals(BrowsingMode.Normal, manager.mode)
 
@@ -102,7 +102,7 @@ class DefaultBrowsingModeManagerTest {
                 ),
             ),
         )
-        val manager = buildBrowsingModeManger(store = browserStore)
+        val manager = buildBrowsingModeManager(store = browserStore)
 
         assertEquals(BrowsingMode.Private, manager.mode)
     }
@@ -111,7 +111,7 @@ class DefaultBrowsingModeManagerTest {
     fun `GIVEN last known mode is private mode and no tabs persisted WHEN browsing mode manager is initialized THEN set browsing mode to normal`() {
         every { settings.lastKnownMode } returns BrowsingMode.Private
 
-        val manager = buildBrowsingModeManger()
+        val manager = buildBrowsingModeManager()
 
         assertEquals(BrowsingMode.Normal, manager.mode)
     }
@@ -120,7 +120,7 @@ class DefaultBrowsingModeManagerTest {
     fun `GIVEN last known mode is normal mode WHEN browsing mode manager is initialized THEN set browsing mode to normal`() {
         every { settings.lastKnownMode } returns BrowsingMode.Normal
 
-        val manager = buildBrowsingModeManger()
+        val manager = buildBrowsingModeManager()
 
         assertEquals(BrowsingMode.Normal, manager.mode)
     }
@@ -130,7 +130,7 @@ class DefaultBrowsingModeManagerTest {
         val intent = Intent()
         intent.putExtra(PRIVATE_BROWSING_MODE, true)
 
-        val manager = buildBrowsingModeManger(intent = intent)
+        val manager = buildBrowsingModeManager(intent = intent)
 
         assertEquals(BrowsingMode.Private, manager.mode)
     }
@@ -140,7 +140,7 @@ class DefaultBrowsingModeManagerTest {
         val intent = Intent()
         intent.putExtra(PRIVATE_BROWSING_MODE, true)
 
-        val manager = buildBrowsingModeManger()
+        val manager = buildBrowsingModeManager()
 
         assertEquals(BrowsingMode.Normal, manager.mode)
 
@@ -158,7 +158,7 @@ class DefaultBrowsingModeManagerTest {
                 ),
             ),
         )
-        val manager = buildBrowsingModeManger(store = browserStore)
+        val manager = buildBrowsingModeManager(store = browserStore)
 
         assertEquals(BrowsingMode.Normal, manager.mode)
 
@@ -173,7 +173,7 @@ class DefaultBrowsingModeManagerTest {
     fun `GIVEN browsing mode is not set by intent and private mode and no tabs persisted WHEN update mode is called THEN set browsing mode to normal`() {
         every { settings.lastKnownMode } returns BrowsingMode.Private
 
-        val manager = buildBrowsingModeManger()
+        val manager = buildBrowsingModeManager()
 
         assertEquals(BrowsingMode.Normal, manager.mode)
 
@@ -186,7 +186,7 @@ class DefaultBrowsingModeManagerTest {
     fun `GIVEN last known mode is normal mode WHEN update mode is called THEN set browsing mode to normal`() {
         every { settings.lastKnownMode } returns BrowsingMode.Normal
 
-        val manager = buildBrowsingModeManger()
+        val manager = buildBrowsingModeManager()
 
         assertEquals(BrowsingMode.Normal, manager.mode)
 
@@ -195,7 +195,7 @@ class DefaultBrowsingModeManagerTest {
         assertEquals(BrowsingMode.Normal, manager.mode)
     }
 
-    private fun buildBrowsingModeManger(
+    private fun buildBrowsingModeManager(
         intent: Intent? = null,
         store: BrowserStore = BrowserStore(),
     ): BrowsingModeManager {
