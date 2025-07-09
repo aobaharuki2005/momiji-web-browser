@@ -169,6 +169,8 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_dbg-ember-original-variable-mapping-notifications.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
+["browser_dbg-es-module.js"]
+
 ["browser_dbg-es-module-worker.js"]
 
 ["browser_dbg-eval-throw.js"]
