@@ -1947,14 +1947,6 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
   &[viewId="PanelUI-profiler"] {
     --panel-width: 319px;
   }
-
-  /* Override themes for the Pocket panel, because the Pocket
-   panel currently only supports dark and light themes. */
-  @media not (prefers-color-scheme: dark) {
-    &[viewId="PanelUI-savetopocket"] {
-      --arrowpanel-background: #fbfbfb;
-    }
-  }
 }
 
 :where(#PanelUI-profiler) :is(description, label) {
