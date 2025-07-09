@@ -27,7 +27,7 @@ class ScreenHelperGTK final : public ScreenManager::Helper {
   static gint GetGTKMonitorScaleFactor(gint aMonitorNum = 0);
   static RefPtr<widget::Screen> GetScreenForWindow(nsWindow* aWindow);
 
-  static void RequestRefreshScreens();
+  static void RequestRefreshScreens(bool aInitialRefresh = false);
   static int GetLastSerial() { return gLastSerial; }
 
  private:

@@ -173,7 +173,7 @@ class ScreenGetterGtk final {
  public:
   NS_INLINE_DECL_REFCOUNTING(ScreenGetterGtk)
 
-  explicit ScreenGetterGtk(int aSerial);
+  explicit ScreenGetterGtk(int aSerial, bool aHDRInfoOnly);
   void AddScreen(RefPtr<Screen> aScreen);
   bool AddScreenHDRAsync(unsigned int aMonitor);
   void Finish();
@@ -188,6 +188,7 @@ class ScreenGetterGtk final {
 #endif
   int mSerial = 0;
   unsigned int mMonitorNum = 0;
+  bool mHDRInfoOnly = false;
 };
 
 #ifdef MOZ_WAYLAND
@@ -577,26 +578,43 @@ void ScreenGetterGtk::AddScreen(RefPtr<Screen> aScreen) {
   mScreenList.AppendElement(std::move(aScreen));
   MOZ_DIAGNOSTIC_ASSERT(mScreenList.Length() <= mMonitorNum);
 
-  if (mScreenList.Length() == mMonitorNum) {
-    if (mSerial != ScreenHelperGTK::GetLastSerial()) {
-      MOZ_DIAGNOSTIC_ASSERT(mSerial <= ScreenHelperGTK::GetLastSerial());
-      LOG_SCREEN(
-          "ScreenGetterGtk::AddScreen() [%p]: rejected, old wrong serial %d "
-          "latest "
-          "%d",
-          this, mSerial, ScreenHelperGTK::GetLastSerial());
+  // We're waiting for all screens to fill in
+  if (mScreenList.Length() < mMonitorNum) {
+    return;
+  }
+
+  if (mSerial != ScreenHelperGTK::GetLastSerial()) {
+    MOZ_DIAGNOSTIC_ASSERT(mSerial <= ScreenHelperGTK::GetLastSerial());
+    LOG_SCREEN(
+        "ScreenGetterGtk::AddScreen() [%p]: rejected, old wrong serial %d "
+        "latest "
+        "%d",
+        this, mSerial, ScreenHelperGTK::GetLastSerial());
+    return;
+  }
+
+  // Check if any screen supports HDR.
+  if (mHDRInfoOnly) {
+    bool supportsHDR = false;
+    for (const auto& screen : mScreenList) {
+      supportsHDR |= screen->GetIsHDR();
+    }
+    if (!supportsHDR) {
       return;
     }
-
-    LOG_SCREEN("ScreenGetterGtk::AddScreen() [%p]: Set screens, serial %d ",
-               this, mSerial);
-    ScreenManager::Refresh(std::move(mScreenList));
   }
+
+  LOG_SCREEN(
+      "ScreenGetterGtk::AddScreen() [%p]: Set screens, serial %d HDR only %d",
+      this, mSerial, mHDRInfoOnly);
+
+  ScreenManager::Refresh(std::move(mScreenList));
 }
 
-ScreenGetterGtk::ScreenGetterGtk(int aSerial)
+ScreenGetterGtk::ScreenGetterGtk(int aSerial, bool aHDRInfoOnly)
     : mSerial(aSerial),
-      mMonitorNum(gdk_screen_get_n_monitors(gdk_screen_get_default())) {
+      mMonitorNum(gdk_screen_get_n_monitors(gdk_screen_get_default())),
+      mHDRInfoOnly(aHDRInfoOnly) {
   LOG_SCREEN("ScreenGetterGtk()::ScreenGetterGtk() [%p] monitor num %d", this,
              mMonitorNum);
 #ifdef MOZ_WAYLAND
@@ -622,7 +640,7 @@ ScreenGetterGtk::~ScreenGetterGtk() {
   LOG_SCREEN("ScreenGetterGtk::~ScreenGetterGtk() [%p]", this);
 }
 
-void ScreenHelperGTK::RequestRefreshScreens() {
+void ScreenHelperGTK::RequestRefreshScreens(bool aInitialRefresh) {
   LOG_SCREEN("ScreenHelperGTK::RequestRefreshScreens");
 
   gLastSerial++;
@@ -630,7 +648,8 @@ void ScreenHelperGTK::RequestRefreshScreens() {
   if (gLastScreenGetter) {
     gLastScreenGetter->Finish();
   }
-  gLastScreenGetter = new ScreenGetterGtk(gLastSerial);
+  gLastScreenGetter =
+      new ScreenGetterGtk(gLastSerial, /* aHDRInfoOnly */ aInitialRefresh);
 }
 
 gint ScreenHelperGTK::GetGTKMonitorScaleFactor(gint aMonitor) {
@@ -704,7 +723,21 @@ ScreenHelperGTK::ScreenHelperGTK() {
 #ifdef MOZ_X11
   gdk_window_add_filter(sRootWindow, root_window_event_filter, this);
 #endif
-  RequestRefreshScreens();
+
+  // Get initial screen list without async HDR info to have something
+  // to paint to.
+  AutoTArray<RefPtr<Screen>, 4> screenList;
+  gint numScreens = gdk_screen_get_n_monitors(defaultScreen);
+  for (gint i = 0; i < numScreens; i++) {
+    screenList.AppendElement(MakeScreenGtk(i, /* aIsHDR */ false));
+  }
+  ScreenManager::Refresh(std::move(screenList));
+
+#ifdef MOZ_WAYLAND
+  if (GdkIsWaylandDisplay() && WaylandDisplayGet()->IsHDREnabled()) {
+    RequestRefreshScreens(/* aInitialRefresh */ true);
+  }
+#endif
 }
 
 int ScreenHelperGTK::GetMonitorCount() {
