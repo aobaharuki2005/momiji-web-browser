@@ -323,7 +323,7 @@ add_task(async function test_reenroll_quickly() {
           firefoxLabsGroup: "group",
           requiresRestart: false,
         }
-      )
+      ),
     ],
   });
 
