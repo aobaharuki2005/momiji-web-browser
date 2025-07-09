@@ -2777,7 +2777,7 @@ networkingSendOnDataFinished:
       setPref:
         branch: default
         pref: "network.send_OnDataFinished"
-    sendOnDataFinshedFromInputStreamPump:
+    sendOnDataFinishedFromInputStreamPump:
       description: Whether we can send OnDataFinished to the content process from InputStreamPump
       type: boolean
       setPref:
