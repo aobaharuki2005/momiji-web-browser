@@ -47,3 +47,30 @@ add_task(async function click_toolbar_button() {
   EventUtils.synthesizeKey("KEY_Escape");
   await panelHiddenPromise;
 });
+
+/**
+ * Tests that sending IPProtection:Close closes the panel.
+ */
+add_task(async function test_close_panel() {
+  let button = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
+  let panelView = PanelMultiView.getViewNode(
+    document,
+    lazy.IPProtectionWidget.PANEL_ID
+  );
+
+  let panelShownPromise = waitForPanelEvent(document, "popupshown");
+  // Open the panel
+  button.click();
+  await panelShownPromise;
+
+  // Close the panel
+  let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
+
+  panelView.dispatchEvent(
+    new CustomEvent("IPProtection:Close", { bubbles: true })
+  );
+
+  await panelHiddenPromise;
+
+  Assert.ok(!BrowserTestUtils.isVisible(panelView), "Panel should be closed");
+});

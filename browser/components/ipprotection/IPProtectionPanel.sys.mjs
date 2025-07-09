@@ -165,6 +165,17 @@ export class IPProtectionPanel {
   }
 
   /**
+   * Close the containing panel popup.
+   */
+  close() {
+    let panelParent = this.panel?.closest("panel");
+    if (!panelParent) {
+      return;
+    }
+    panelParent.hidePopup();
+  }
+
+  /**
    * Resets the state of the panel, removes listeners and disables updates.
    */
   destroy() {
@@ -177,15 +188,19 @@ export class IPProtectionPanel {
 
   #addPanelListeners(doc) {
     doc.addEventListener("IPProtection:Init", this.handleEvent);
+    doc.addEventListener("IPProtection:Close", this.handleEvent);
   }
 
   #removePanelListeners(doc) {
     doc.removeEventListener("IPProtection:Init", this.handleEvent);
+    doc.removeEventListener("IPProtection:Close", this.handleEvent);
   }
 
   #handleEvent(event) {
     if (event.type == "IPProtection:Init") {
       this.updateState();
+    } else if (event.type == "IPProtection:Close") {
+      this.close();
     }
   }
 }
