@@ -1977,7 +1977,7 @@ void nsContentSecurityUtils::AssertChromePageHasCSP(Document* aDocument) {
     return;
   }
 
-  // TODO These are injecting scripts so it cannot be blocked without
+  // Bug 1963356: These are injecting scripts so it cannot be blocked without
   // further coordination.
   if (StringBeginsWith(spec, "chrome://remote/content/marionette/"_ns)) {
     return;
