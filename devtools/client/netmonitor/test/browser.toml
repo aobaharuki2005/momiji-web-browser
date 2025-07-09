@@ -516,6 +516,7 @@ skip-if = [
 ]
 
 ["browser_net_statistics-edge-case.js"]
+skip-if = ["true"] # Bug 1975131
 
 ["browser_net_status-bar-transferred-size.js"]
 
