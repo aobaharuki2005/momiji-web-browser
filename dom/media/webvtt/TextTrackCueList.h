@@ -54,7 +54,7 @@ class TextTrackCueList final : public nsISupports, public nsWrapperCache {
   void SetCuesInactive();
 
   void NotifyCueUpdated(TextTrackCue* aCue);
-  bool IsCueExist(TextTrackCue* aCue);
+  bool IsCueExist(TextTrackCue* aCue) const;
   nsTArray<RefPtr<TextTrackCue>>& GetCuesArray();
 
  private:

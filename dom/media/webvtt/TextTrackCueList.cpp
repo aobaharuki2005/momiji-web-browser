@@ -105,11 +105,8 @@ void TextTrackCueList::NotifyCueUpdated(TextTrackCue* aCue) {
   }
 }
 
-bool TextTrackCueList::IsCueExist(TextTrackCue* aCue) {
-  if (aCue && mCueSet.Contains(aCue)) {
-    return true;
-  }
-  return false;
+bool TextTrackCueList::IsCueExist(TextTrackCue* aCue) const {
+  return aCue && mCueSet.Contains(aCue);
 }
 
 nsTArray<RefPtr<TextTrackCue>>& TextTrackCueList::GetCuesArray() {
