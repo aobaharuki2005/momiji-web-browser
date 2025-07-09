@@ -515,9 +515,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   bool AllowedToConnectToIpAddressSpace(
       nsILoadInfo::IPAddressSpace aTargetIpAddressSpace) override;
 
-  void SetTargetIpAddressSpace(
-      nsILoadInfo::IPAddressSpace aTargetIpAddressSpace);
-
  private:
   bool mSubmittedRatePacing{false};
   bool mPassedRatePacing{false};

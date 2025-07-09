@@ -660,7 +660,6 @@ nsresult nsHttpConnection::AddTransaction(nsAHttpTransaction* httpTransaction,
     // this is a httptransaction object, being dispatched into a H2 session
     // ensure it does not violate local network access.
     NetAddr peerAddr;
-
     if (NS_SUCCEEDED(GetPeerAddr(&peerAddr)) &&
         !httpTrans->AllowedToConnectToIpAddressSpace(
             peerAddr.GetIpAddressSpace())) {

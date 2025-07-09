@@ -3681,6 +3681,16 @@ bool nsHttpTransaction::AllowedToConnectToIpAddressSpace(
   if (!StaticPrefs::network_lna_enabled()) {
     return true;
   }
+
+  // store targetIpAddress space which is required later by nsHttpChannel for
+  // permission prompts
+  {
+    mozilla::MutexAutoLock lock(mLock);
+    if (mTargetIpAddressSpace == nsILoadInfo::Unknown) {
+      mTargetIpAddressSpace = aTargetIpAddressSpace;
+    }
+  }
+
   // Deny access to a request moving to a more private addresspsace.
   // Specifically,
   // 1. local host resources cannot be accessed from Private or Public
@@ -3711,12 +3721,6 @@ bool nsHttpTransaction::AllowedToConnectToIpAddressSpace(
   }
 
   return true;
-}
-
-void nsHttpTransaction::SetTargetIpAddressSpace(
-    nsILoadInfo::IPAddressSpace aTargetIpAddressSpace) {
-  mozilla::MutexAutoLock lock(mLock);
-  mTargetIpAddressSpace = aTargetIpAddressSpace;
 }
 
 }  // namespace mozilla::net
