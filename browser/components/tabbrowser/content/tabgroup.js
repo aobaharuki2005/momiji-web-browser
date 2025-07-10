@@ -83,6 +83,8 @@
       this.#labelElement.container = gBrowser.tabContainer;
       this.#labelElement.group = this;
 
+      this.#labelElement.addEventListener("mouseenter", this);
+      this.#labelElement.addEventListener("mouseleave", this);
       this.#labelElement.addEventListener("contextmenu", e => {
         e.preventDefault();
         gBrowser.tabGroupMenu.openEditModal(this);
@@ -396,6 +398,28 @@
           ? Glean.tabgroup.groupInteractions.collapse
           : Glean.tabgroup.groupInteractions.expand;
         interactionMetric.add(1);
+      }
+    }
+
+    /**
+     * @param {PointerEvent} event
+     */
+    on_mouseenter(event) {
+      if (event.target === this.#labelElement) {
+        this.#labelElement.dispatchEvent(
+          new CustomEvent("TabGroupLabelHoverStart", { bubbles: true })
+        );
+      }
+    }
+
+    /**
+     * @param {PointerEvent} event
+     */
+    on_mouseleave(event) {
+      if (event.target === this.#labelElement) {
+        this.#labelElement.dispatchEvent(
+          new CustomEvent("TabGroupLabelHoverEnd", { bubbles: true })
+        );
       }
     }
 

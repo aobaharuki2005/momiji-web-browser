@@ -517,6 +517,8 @@ tags = "vertical-tabs"
 ["browser_tab_group_menu.js"]
 tags = "vertical-tabs"
 
+["browser_tab_group_preview.js"]
+
 ["browser_tab_groups.js"]
 support-files = ["file_new_tab_page.html"]
 tags = "vertical-tabs"
