@@ -726,9 +726,9 @@ class WalkerActor extends Actor {
    * If the given NodeActor only has a single text node as a child with a text
    * content small enough to be inlined, return that child's NodeActor.
    *
-   * @param NodeActor node
+   * @param Element rawNode
    */
-  inlineTextChild({ rawNode }) {
+  inlineTextChild(rawNode) {
     // Quick checks to prevent creating a new walker if possible.
     if (
       isMarkerPseudoElement(rawNode) ||
@@ -2278,7 +2278,7 @@ class WalkerActor extends Actor {
         mutation.removed = removedActors;
         mutation.added = addedActors;
 
-        const inlineTextChild = this.inlineTextChild(targetActor);
+        const inlineTextChild = this.inlineTextChild(targetActor.rawNode);
         if (inlineTextChild) {
           mutation.inlineTextChild = inlineTextChild.form();
         }
@@ -2315,7 +2315,7 @@ class WalkerActor extends Actor {
       return;
     }
 
-    const inlineTextChild = this.inlineTextChild(parentActor);
+    const inlineTextChild = this.inlineTextChild(parentActor.rawNode);
     this.queueMutation({
       type: "inlineTextChild",
       target: parentActor.actorID,
