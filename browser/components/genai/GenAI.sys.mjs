@@ -659,29 +659,47 @@ export const GenAI = {
    * Build prompts menu to ask chat for context menu.
    *
    * @param {MozMenu} menu element to update
-   * @param {nsContextMenu} nsContextMenu helpers for context menu
+   * @param {object} contextMenu object containing utility and states for building the context menu
    */
-  async buildAskChatMenu(menu, nsContextMenu) {
-    nsContextMenu.showItem(menu, false);
+  async buildAskChatMenu(menu, contextMenu) {
+    const {
+      browser,
+      selectionInfo,
+      showItem,
+      source,
+      contextTabs = null,
+    } = contextMenu;
+
+    showItem(menu, false);
     // Page feature can be shown without provider unless disabled via menu
     // or revamp sidebar excludes chatbot
     const isPageFeatureAllowed =
       lazy.chatPage &&
       lazy.chatMenu &&
       (!lazy.sidebarRevamp || lazy.sidebarTools.includes("aichat"));
-    // Return early to prevent showing menu if neither original chatbot feature
-    // requiring provider nor new page feature
-    if (!this.canShowChatEntrypoint && !isPageFeatureAllowed) {
+    // Return early if:
+    // Neither original chatbot feature requiring provider nor new page feature
+    // or In a tab/tool context menu the page feature is disabled
+    // or the context is invalid (e.g. the tab is not fully loaded for page summary)
+    // or selected multi-tabs
+    if (
+      (!this.canShowChatEntrypoint && !isPageFeatureAllowed) ||
+      (source !== "page" && !isPageFeatureAllowed) ||
+      (!selectionInfo && !browser.browsingContext) ||
+      (source === "tab" && contextTabs?.length > 1)
+    ) {
       return;
     }
     const provider = this.chatProviders.get(lazy.chatProvider)?.name;
     const doc = menu.ownerDocument;
     if (provider) {
-      doc.l10n.setAttributes(menu, "genai-menu-ask-provider", { provider });
+      doc.l10n.setAttributes(menu, "genai-menu-ask-provider-2", { provider });
     } else {
       doc.l10n.setAttributes(
         menu,
-        lazy.chatProvider ? "genai-menu-ask-generic" : "genai-menu-no-provider"
+        lazy.chatProvider
+          ? "genai-menu-ask-generic-2"
+          : "genai-menu-no-provider-2"
       );
     }
     menu.menupopup?.remove();
@@ -689,14 +707,14 @@ export const GenAI = {
     // Determine if we have selection or should use page content
     const context = {
       contentType: "selection",
-      selection: nsContextMenu.selectionInfo.fullText ?? "",
+      selection: selectionInfo?.fullText ?? "",
     };
     if (lazy.chatPage && !context.selection) {
       // Get page content for prompts when no selection
-      await this.addPageContext(nsContextMenu.browser, context);
+      await this.addPageContext(browser, context);
     }
     await this.addAskChatItems(
-      nsContextMenu.browser,
+      browser,
       context,
       promptObj => {
         const item = menu.appendItem(promptObj.label);
@@ -705,7 +723,7 @@ export const GenAI = {
         }
         return item;
       },
-      "page",
+      source,
       item => {
         // Currently only summarize page shows a badge, so remove when clicked
         if (item.hasAttribute("badge")) {
@@ -731,7 +749,7 @@ export const GenAI = {
         );
       }
       openItem.addEventListener("command", () => {
-        const window = nsContextMenu.browser.ownerGlobal;
+        const window = browser.ownerGlobal;
         window.SidebarController.show("viewGenaiChatSidebar");
         Glean.genaiChatbot.contextmenuChoose.record({
           provider: this.getProviderId(),
@@ -758,7 +776,38 @@ export const GenAI = {
       }
     });
 
-    nsContextMenu.showItem(menu, true);
+    showItem(menu, true);
+  },
+
+  /**
+   *
+   * Build the buildAskChatMenu item for the tab context menu
+   *
+   * @param {MozMenu} menu the tab menu to update
+   * @param {object} tabContextMenu the tab context menu instance
+   * @returns {promise} resolve when the menu item is configured
+   */
+  async buildTabMenu(menu, tabContextMenu) {
+    const { contextTab, contextTabs } = tabContextMenu;
+
+    const browser = contextTab?.linkedBrowser;
+    await this.buildAskChatMenu(menu, {
+      browser,
+      selectionInfo: null,
+      showItem: (item, shouldShow) => this.showItem(item, shouldShow),
+      source: "tab",
+      contextTabs,
+    });
+  },
+
+  /**
+   * Toggle the visibility of the chatbot menu item
+   *
+   * @param {MozMenu} item the chatbot menu item element
+   * @param {boolean} shouldShow whether to show or hide the item
+   */
+  showItem(item, shouldShow) {
+    item.hidden = !shouldShow;
   },
 
   /**

@@ -911,10 +911,12 @@ export class nsContextMenu {
 
     this.showAndFormatSearchContextItem();
     this.showTranslateSelectionItem();
-    lazy.GenAI.buildAskChatMenu(
-      document.getElementById("context-ask-chat"),
-      this
-    );
+    lazy.GenAI.buildAskChatMenu(document.getElementById("context-ask-chat"), {
+      browser: this.browser,
+      selectionInfo: this.selectionInfo,
+      showItem: this.showItem.bind(this),
+      source: "page",
+    });
 
     // srcdoc cannot be opened separately due to concerns about web
     // content with about:srcdoc in location bar masquerading as trusted
