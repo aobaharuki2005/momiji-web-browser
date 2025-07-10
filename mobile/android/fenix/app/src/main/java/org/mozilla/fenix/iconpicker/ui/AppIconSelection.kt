@@ -29,6 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
@@ -42,6 +43,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 private val ListItemHeight = 56.dp
 private val AppIconSize = 40.dp
 private val AppIconBorderWidth = 1.dp
+private val AppIconCornerRadius = 4.dp
 private val GroupHeaderHeight = 36.dp
 private val GroupHeaderPaddingStart = 72.dp
 private val GroupSpacerHeight = 8.dp
@@ -127,29 +129,50 @@ private fun AppIconOption(
     }
 }
 
+/**
+ * Renders a preview of the app’s launcher icon similarly to how it will drawn by the users's launcher.
+ */
 @Composable
-private fun AppIcon(appIcon: SettingsAppIcon) {
-    val shape = RoundedCornerShape(4.dp)
+fun AppIcon(
+    appIcon: SettingsAppIcon,
+    iconSize: Dp = AppIconSize,
+    borderWidth: Dp = AppIconBorderWidth,
+    cornerRadius: Dp = AppIconCornerRadius,
+) {
+    val roundedShape = RoundedCornerShape(cornerRadius)
 
     Box(
         modifier = Modifier
-            .size(AppIconSize)
-            .clip(shape)
-            .border(AppIconBorderWidth, FirefoxTheme.colors.borderPrimary, shape),
+            .size(iconSize)
+            .border(
+                width = borderWidth,
+                color = FirefoxTheme.colors.borderPrimary,
+                shape = roundedShape,
+            ),
     ) {
         when (val background = appIcon.activityAlias.iconBackground) {
             is IconBackground.Color -> {
                 Box(
                     modifier = Modifier
-                        .size(AppIconSize)
+                        .size(iconSize)
+                        // Spacing the background by the border width to avoid spilling background
+                        // pixels into parent rounded corvers border.
+                        .padding(borderWidth)
+                        .clip(roundedShape)
                         .background(colorResource(id = background.colorResId)),
                 )
             }
+
             is IconBackground.Drawable -> {
                 Image(
                     painter = painterResource(id = background.drawableResId),
                     contentDescription = null,
-                    modifier = Modifier.size(AppIconSize),
+                    modifier = Modifier
+                        .size(iconSize)
+                        // Spacing the background by the border width to avoid spilling background
+                        // pixels into parent rounded corvers border.
+                        .padding(borderWidth)
+                        .clip(roundedShape),
                 )
             }
         }
@@ -157,7 +180,7 @@ private fun AppIcon(appIcon: SettingsAppIcon) {
         Image(
             painter = painterResource(id = appIcon.activityAlias.iconForegroundId),
             contentDescription = null,
-            modifier = Modifier.size(AppIconSize),
+            modifier = Modifier.size(iconSize),
         )
     }
 }

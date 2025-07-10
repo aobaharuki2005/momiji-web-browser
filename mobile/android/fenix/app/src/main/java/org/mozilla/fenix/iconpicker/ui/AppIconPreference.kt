@@ -6,41 +6,31 @@ package org.mozilla.fenix.iconpicker.ui
 
 import android.content.Context
 import android.util.AttributeSet
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import org.mozilla.fenix.R
-import org.mozilla.fenix.iconpicker.IconBackground
 import org.mozilla.fenix.iconpicker.SettingsAppIcon
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private val PreferencePadding = 16.dp
 private val IconSize = 40.dp
-private val IconBorderWidth = 1.dp
 
 /**
  * User preference showing the currently selected icon and enables the user to navigate to the app icon selection view.
@@ -81,7 +71,10 @@ private fun SelectAppIcon(
             .padding(PreferencePadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AppIcon(appIcon)
+        AppIcon(
+            appIcon = appIcon,
+            iconSize = IconSize,
+        )
 
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -100,54 +93,6 @@ private fun SelectAppIcon(
                 color = FirefoxTheme.colors.textPrimary,
             )
         }
-    }
-}
-
-@Composable
-private fun AppIcon(appIcon: SettingsAppIcon) {
-    val roundedShape = RoundedCornerShape(4.dp)
-
-    Box(
-        modifier = Modifier
-            .size(IconSize)
-            .border(
-                width = IconBorderWidth,
-                color = FirefoxTheme.colors.borderPrimary,
-                shape = roundedShape,
-            ),
-    ) {
-        when (val background = appIcon.activityAlias.iconBackground) {
-            is IconBackground.Color -> {
-                Box(
-                    modifier = Modifier
-                        .size(IconSize)
-                        // Spacing the background by the border width to avoid spilling background
-                        // pixels into parent rounded corvers border.
-                        .padding(IconBorderWidth)
-                        .clip(roundedShape)
-                        .background(colorResource(id = background.colorResId)),
-                )
-            }
-
-            is IconBackground.Drawable -> {
-                Image(
-                    painter = painterResource(id = background.drawableResId),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(IconSize)
-                        // Spacing the background by the border width to avoid spilling background
-                        // pixels into parent rounded corvers border.
-                        .padding(IconBorderWidth)
-                        .clip(roundedShape),
-                )
-            }
-        }
-
-        Image(
-            painter = painterResource(id = appIcon.activityAlias.iconForegroundId),
-            contentDescription = null,
-            modifier = Modifier.size(IconSize),
-        )
     }
 }
 
