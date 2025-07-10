@@ -423,7 +423,7 @@
 
 /* Result menu button */
 
-.urlbarView-button-menu {
+.urlbarView-button-result-menu {
   background-image: url("chrome://global/skin/icons/more.svg");
   background-color: var(--button-background-color);
 
@@ -456,7 +456,7 @@
 
 /* Button with label, e.g. tip button */
 
-.urlbarView-button:not(:empty):not(.urlbarView-button-menu) {
+.urlbarView-button:not(:empty):not(.urlbarView-button-result-menu) {
   border-radius: var(--toolbarbutton-border-radius);
   padding: 0.5em 1em;
   margin-inline-end: 1.4em;

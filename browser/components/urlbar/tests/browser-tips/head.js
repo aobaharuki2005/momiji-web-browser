@@ -329,7 +329,7 @@ async function doUpdateTest({
     Assert.ok(button.test(actualButton), "Button regexp");
   }
 
-  Assert.ok(element._buttons.has("menu"), "Tip has a menu button");
+  Assert.ok(element._buttons.has("result-menu"), "Tip has a menu button");
 
   // Pick the tip and wait for the action.
   let values = await Promise.all([awaitCallback(), pickTip()]);
@@ -473,7 +473,7 @@ function checkIntervention({
       Assert.ok(button.test(actualButton), "Button regexp");
     }
 
-    let menuButton = element._buttons.get("menu");
+    let menuButton = element._buttons.get("result-menu");
     Assert.ok(menuButton, "Menu button exists");
     Assert.ok(BrowserTestUtils.isVisible(menuButton), "Menu button is visible");
 

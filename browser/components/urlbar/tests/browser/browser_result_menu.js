@@ -28,7 +28,7 @@ add_task(async function test_history() {
   EventUtils.synthesizeKey("KEY_Tab");
   isnot(
     UrlbarTestUtils.getSelectedElement(window),
-    UrlbarTestUtils.getButtonForResultIndex(window, "menu", resultIndex),
+    UrlbarTestUtils.getButtonForResultIndex(window, "result-menu", resultIndex),
     "Tab key skips over menu button with resultMenu.keyboardAccessible pref set to false"
   );
   info(
@@ -44,7 +44,7 @@ add_task(async function test_history() {
   EventUtils.synthesizeKey("KEY_Tab");
   is(
     UrlbarTestUtils.getSelectedElement(window),
-    UrlbarTestUtils.getButtonForResultIndex(window, "menu", resultIndex),
+    UrlbarTestUtils.getButtonForResultIndex(window, "result-menu", resultIndex),
     "Tab key doesn't skip over menu button with resultMenu.keyboardAccessible pref reset to true"
   );
 
