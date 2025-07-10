@@ -569,7 +569,6 @@ pub fn create_webrender_instance(
         is_software,
         low_quality_pinch_zoom: options.low_quality_pinch_zoom,
         max_shared_surface_size: options.max_shared_surface_size,
-        enable_dithering: options.enable_dithering,
     };
     info!("WR {:?}", config);
 

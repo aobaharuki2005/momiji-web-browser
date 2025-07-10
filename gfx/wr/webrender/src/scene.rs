@@ -332,7 +332,6 @@ impl BuiltScene {
                 is_software: false,
                 low_quality_pinch_zoom: false,
                 max_shared_surface_size: 2048,
-                enable_dithering: false,
             },
         }
     }
