@@ -167,13 +167,15 @@ static bool SendCacheDomainRequestToAllContentProcesses(
  */
 static bool MustBeGenericAccessible(nsIContent* aContent,
                                     DocAccessible* aDocument) {
-  if (aContent->IsInNativeAnonymousSubtree() || aContent->IsSVGElement()) {
+  if (aContent->IsInNativeAnonymousSubtree() || aContent->IsSVGElement() ||
+      aContent == aDocument->DocumentNode()->GetRootElement()) {
     // We should not force create accs for anonymous content.
     // This is an issue for inputs, which have an intermediate
     // container with relevant overflow styling between the input
     // and its internal input content.
     // We should also avoid this for SVG elements (ie. `<foreignobject>`s
     // which have default overflow:hidden styling).
+    // We should avoid this for the document root.
     return false;
   }
   nsIFrame* frame = aContent->GetPrimaryFrame();

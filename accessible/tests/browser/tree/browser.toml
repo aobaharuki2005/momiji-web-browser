@@ -46,3 +46,5 @@ skip-if = [
 ["browser_test_nsIAccessibleDocument_URL.js"]
 
 ["browser_view_transition.js"]
+
+["browser_root_element.js"]
