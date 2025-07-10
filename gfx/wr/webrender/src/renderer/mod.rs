@@ -71,14 +71,14 @@ use glyph_rasterizer::GlyphFormat;
 use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{ScalingInstance, SvgFilterInstance, SVGFEFilterInstance, CopyInstance, PrimitiveInstanceData};
-use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance};
+use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, ZBufferId};
 use crate::internal_types::{TextureSource, TextureSourceExternal, TextureCacheCategory, FrameId, FrameVec};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::internal_types::DebugOutput;
 use crate::internal_types::{CacheTextureId, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
 use crate::internal_types::{TextureCacheAllocInfo, TextureCacheAllocationKind, TextureUpdateList};
 use crate::internal_types::{RenderTargetInfo, Swizzle, DeferredResolveIndex};
-use crate::picture::ResolvedSurfaceTexture;
+use crate::picture::{ResolvedSurfaceTexture, TileId};
 use crate::prim_store::DeferredResolve;
 use crate::profiler::{self, GpuProfileTag, TransactionProfile};
 use crate::profiler::{Profiler, add_event_marker, add_text_marker, thread_is_being_profiled};
@@ -281,6 +281,32 @@ struct OcclusionItemKey {
 struct SwapChainLayer {
     occlusion: occlusion::FrontToBackBuilder<OcclusionItemKey>,
     clear_tiles: Vec<occlusion::Item<OcclusionItemKey>>,
+}
+
+// Store rects state of tile used for compositing with layer compositor
+struct CompositeTileState {
+    pub local_rect: PictureRect,
+    pub local_valid_rect: PictureRect,
+    pub device_clip_rect: DeviceRect,
+    pub z_id: ZBufferId,
+    pub device_tile_box: DeviceRect,
+    pub visible_rects: Vec<DeviceRect>,
+}
+
+impl CompositeTileState {
+    pub fn same_state(&self, other: &CompositeTileState) -> bool {
+        self.local_rect == other.local_rect &&
+        self.local_valid_rect == other.local_valid_rect &&
+        self.device_clip_rect == other.device_clip_rect &&
+        self.z_id == other.z_id &&
+        self.device_tile_box == other.device_tile_box
+    }
+}
+
+/// The list of tiles and rects used for compositing to a frame with layer compositor
+struct LayerCompositorFrameState {
+    tile_states: FastHashMap<TileId, CompositeTileState>,
+    pub rects_without_id: Vec<DeviceRect>,
 }
 
 /// The clear color used for the texture cache when the debug display is enabled.
@@ -917,6 +943,9 @@ pub struct Renderer {
 
     /// Hold a next ResultMsg that will be handled by update().
     pending_result_msg: Option<ResultMsg>,
+
+    /// Hold previous frame compositing state with layer compositor.
+    layer_compositor_frame_state_in_prev_frame: Option<LayerCompositorFrameState>,
 }
 
 #[derive(Debug)]
@@ -3584,7 +3613,11 @@ impl Renderer {
         let cap = composite_state.tiles.len();
         let mut segment_builder = SegmentBuilder::new();
         let mut tile_index_to_layer_index = vec![None; composite_state.tiles.len()];
-        let mut use_external_composite = false;
+        let mut full_render_occlusion = occlusion::FrontToBackBuilder::with_capacity(cap, cap);
+        let mut layer_compositor_frame_state = LayerCompositorFrameState{
+            tile_states: FastHashMap::default(),
+            rects_without_id: Vec::new(),
+        };
 
         // Calculate layers with full device rect
 
@@ -3612,6 +3645,27 @@ impl Renderer {
                 &tile.local_rect,
                 tile.transform_index
             );
+
+            if let Some(ref _compositor) = self.compositor_config.layer_compositor() {
+                match tile.tile_id {
+                    Some(tile_id) => {
+                        layer_compositor_frame_state.
+                            tile_states
+                            .insert(
+                            tile_id,
+                            CompositeTileState {
+                                local_rect: tile.local_rect,
+                                local_valid_rect: tile.local_valid_rect,
+                                device_clip_rect: tile.device_clip_rect,
+                                z_id: tile.z_id,
+                                device_tile_box: device_tile_box,
+                                visible_rects: Vec::new(),
+                            },
+                        );
+                    }
+                    None => {}
+                }
+            }
 
             // Simple compositor needs the valid rect in device space to match clip rect
             let device_valid_rect = composite_state
@@ -3668,6 +3722,18 @@ impl Renderer {
                 }
             };
 
+            if let Some(ref _compositor) = self.compositor_config.layer_compositor() {
+                if let CompositeTileSurface::ExternalSurface { .. } = tile.surface {
+                    assert!(tile.tile_id.is_none());
+                    // ExternalSurface is not promoted to external composite.
+                    if let CompositorSurfaceUsage::Content = usage {
+                        layer_compositor_frame_state.rects_without_id.push(rect);
+                    }
+                } else {
+                    assert!(tile.tile_id.is_some());
+                }
+            }
+
             // Determine whether we need a new layer, and if so, what kind
             let new_layer_kind = match input_layers.last() {
                 Some(curr_layer) => {
@@ -3712,7 +3778,6 @@ impl Renderer {
                         )
                     }
                     CompositorSurfaceUsage::External { .. } => {
-                        use_external_composite = true;
                         let rect = composite_state.get_device_rect(
                             &tile.local_rect,
                             tile.transform_index
@@ -3739,6 +3804,48 @@ impl Renderer {
                 })
             }
             tile_index_to_layer_index[idx] = Some(input_layers.len() - 1);
+
+            // Caluclate actual visible tile's rects
+
+            match tile.kind {
+                TileKind::Opaque | TileKind::Alpha => {
+                    let is_opaque = tile.kind != TileKind::Alpha;
+
+                    match tile.clip_index {
+                        Some(clip_index) => {
+                            let clip = composite_state.get_compositor_clip(clip_index);
+
+                            // TODO(gw): Make segment builder generic on unit to avoid casts below.
+                            segment_builder.initialize(
+                                rect.cast_unit(),
+                                None,
+                                rect.cast_unit(),
+                            );
+                            segment_builder.push_clip_rect(
+                                clip.rect.cast_unit(),
+                                Some(clip.radius),
+                                ClipMode::Clip,
+                            );
+                            segment_builder.build(|segment| {
+                                let key = OcclusionItemKey { tile_index: idx, needs_mask: segment.has_mask };
+
+                                full_render_occlusion.add(
+                                    &segment.rect.cast_unit(),
+                                    is_opaque && !segment.has_mask,
+                                    key,
+                                );
+                            });
+                        }
+                        None => {
+                            full_render_occlusion.add(&rect, is_opaque, OcclusionItemKey {
+                                tile_index: idx,
+                                needs_mask: false,
+                            });
+                        }
+                    }
+                }
+                TileKind::Clear => {}
+            }
         }
 
         assert_eq!(swapchain_layers.len(), input_layers.len());
@@ -3794,63 +3901,128 @@ impl Renderer {
 
         assert_eq!(swapchain_layers.len(), input_layers.len());
 
-        // Recalculate dirty rect if external composite is used with layer compositor
+        // Recalculate dirty rect for layer compositor
         if let Some(ref _compositor) = self.compositor_config.layer_compositor() {
-            if partial_present_mode.is_some() && use_external_composite {
-                let mut combined_dirty_rect = DeviceRect::zero();
-                let fb_rect = DeviceRect::from_size(frame_device_size.to_f32());
+            // Set visible rests of current frame to each tile's CompositeTileState.
+            for item in full_render_occlusion
+            .opaque_items()
+            .iter()
+            .chain(full_render_occlusion.alpha_items().iter()) {
+                let tile = &composite_state.tiles[item.key.tile_index];
+                match tile.tile_id {
+                    Some(tile_id) => {
+                        if let Some(tile_state) = layer_compositor_frame_state.tile_states.get_mut(&tile_id) {
+                            tile_state.visible_rects.push(item.rectangle);
+                        } else {
+                            unreachable!();
+                        }
+                    }
+                    None => {}
+                }
+            }
 
-                // Work out how many dirty rects WR produced, and if that's more than
-                // what the device supports.
-                for (idx, tile) in composite_state.tiles.iter().enumerate() {
+            let can_use_partial_present =
+                !self.force_redraw && !full_render &&
+                self.layer_compositor_frame_state_in_prev_frame.is_some();
+
+            if can_use_partial_present {
+                let mut combined_dirty_rect = DeviceRect::zero();
+
+                for tile in composite_state.tiles.iter() {
                     if tile.kind == TileKind::Clear {
                         continue;
                     }
 
-                    let layer_index = match tile_index_to_layer_index[idx] {
-                        None => {
-                            continue;
+                    if tile.tile_id.is_none() {
+                        match tile.surface {
+                            CompositeTileSurface::ExternalSurface { .. } => {}
+                            CompositeTileSurface::Texture { .. }  |
+                            CompositeTileSurface::Color { .. } |
+                            CompositeTileSurface::Clear => {
+                                unreachable!();
+                            },
                         }
-                        Some(layer_index) => layer_index,
-                    };
-
-                    let layer = &mut input_layers[layer_index];
-                    // Skip compositing external images
-                    match layer.usage {
-                        CompositorSurfaceUsage::Content | CompositorSurfaceUsage::DebugOverlay => {}
-                        CompositorSurfaceUsage::External { .. } => {
-                            match tile.surface {
-                                CompositeTileSurface::ExternalSurface { .. } => {}
-                                CompositeTileSurface::Texture { .. }  |
-                                CompositeTileSurface::Color { .. } |
-                                CompositeTileSurface::Clear => {
-                                    unreachable!();
-                                },
-                            }
-                            continue;
-                        }
+                        continue;
                     }
 
-                    let dirty_rect = composite_state.get_device_rect(
-                        &tile.local_dirty_rect,
-                        tile.transform_index,
-                    );
+                    assert!(tile.tile_id.is_some());
 
-                    // In pathological cases where a tile is extremely zoomed, it
-                    // may end up with device coords outside the range of an i32,
-                    // so clamp it to the frame buffer rect here, before it gets
-                    // casted to an i32 rect below.
-                    if let Some(dirty_rect) = dirty_rect.intersection(&fb_rect) {
-                        combined_dirty_rect = combined_dirty_rect.union(&dirty_rect);
+                    let tiles_exists_in_prev_frame =
+                        self.layer_compositor_frame_state_in_prev_frame
+                        .as_ref()
+                        .unwrap()
+                        .tile_states
+                        .contains_key(&tile.tile_id.unwrap());
+                    let tile_id = tile.tile_id.unwrap();
+                    let tile_state = layer_compositor_frame_state.tile_states.get(&tile_id).unwrap();
+
+                    if tiles_exists_in_prev_frame {
+                        let prev_tile_state = self.layer_compositor_frame_state_in_prev_frame
+                            .as_ref()
+                            .unwrap()
+                            .tile_states
+                            .get(&tile_id)
+                            .unwrap();
+
+                        if tile_state.same_state(prev_tile_state) {
+                            // Case that tile is same state in previous frame and current frame.
+                            // Intersection of tile's dirty rect and tile's visible rects are actual dirty rects.
+                            let dirty_rect = composite_state.get_device_rect(
+                                &tile.local_dirty_rect,
+                                tile.transform_index,
+                            );
+                            for rect in tile_state.visible_rects.iter()  {
+                                let visible_dirty_rect = rect.intersection(&dirty_rect);
+                                if visible_dirty_rect.is_some() {
+                                    combined_dirty_rect = combined_dirty_rect.union(&visible_dirty_rect.unwrap());
+                                }
+                            }
+                        } else {
+                            // If tile is rendered in previous frame, but its state is different,
+                            // both visible rects in previous frame and current frame are dirty rects.
+                            for rect in tile_state.visible_rects
+                                .iter()
+                                .chain(prev_tile_state.visible_rects.iter())  {
+                                combined_dirty_rect = combined_dirty_rect.union(&rect);
+                            }
+                        }
+                    } else {
+                        // If tile is not rendered in previous frame, its all visible rects are dirty rects.
+                        for rect in &tile_state.visible_rects {
+                            combined_dirty_rect = combined_dirty_rect.union(&rect);
+                        }
                     }
                 }
 
-                let combined_dirty_rect = combined_dirty_rect.round();
-                // layer compositor does not expect to draw previsou partial present regtions
+                // Case that tile is rendered in pervious frame, but not in current frame.
+                for (tile_id, tile_state) in self.layer_compositor_frame_state_in_prev_frame
+                    .as_ref()
+                    .unwrap()
+                    .tile_states
+                    .iter() {
+                    if !layer_compositor_frame_state.tile_states.contains_key(&tile_id) {
+                        for rect in tile_state.visible_rects.iter()  {
+                            combined_dirty_rect = combined_dirty_rect.union(&rect);
+                        }
+                    }
+                }
+
+                // Case that ExternalSurface is not promoted to external composite.
+                for rect in layer_compositor_frame_state
+                    .rects_without_id
+                    .iter()
+                    .chain(self.layer_compositor_frame_state_in_prev_frame.as_ref().unwrap().rects_without_id.iter())  {
+                    combined_dirty_rect = combined_dirty_rect.union(&rect);
+                }
+
                 partial_present_mode = Some(PartialPresentMode::Single {
                     dirty_rect: combined_dirty_rect,
                 });
+            } else {
+                partial_present_mode = None;
             }
+
+            self.layer_compositor_frame_state_in_prev_frame = Some(layer_compositor_frame_state);
         }
 
         // Check tiles handling with partial_present_mode
@@ -4863,8 +5035,6 @@ impl Renderer {
                     self.buffer_damage_tracker.push_dirty_rect(&fb_rect.to_f32());
                 }
             }
-
-            self.force_redraw = false;
         }
 
         partial_present_mode
@@ -5234,6 +5404,7 @@ impl Renderer {
             self.device.delete_texture(gpu_buffer_texture_i);
         }
 
+        self.force_redraw = false;
         frame.has_been_rendered = true;
     }
 

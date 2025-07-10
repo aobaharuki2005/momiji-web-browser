@@ -597,6 +597,7 @@ impl PrimitiveDependencyInfo {
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Ord, Eq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Hash)]
 pub struct TileId(pub usize);
 
 /// Uniquely identifies a tile within a picture cache slice
@@ -5883,6 +5884,7 @@ impl PicturePrimitive {
                             z_id: tile.z_id,
                             transform_index: tile_cache.transform_index,
                             clip_index: tile_cache.compositor_clip,
+                            tile_id: Some(tile.id),
                         };
 
                         sub_slice.composite_tiles.push(composite_tile);
