@@ -104,8 +104,8 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
             ? aFrame->IntrinsicBSizeOffsets().BorderPadding()
             : 0;
     const nscoord cellBSize = nsIFrame::ComputeBSizeValueAsPercentageBasis(
-        *stylePos->BSize(aWM, anchorResolutionParams.mPosition),
-        *stylePos->MinBSize(aWM, anchorResolutionParams.mPosition),
+        *stylePos->BSize(aWM, anchorResolutionParams),
+        *stylePos->MinBSize(aWM, anchorResolutionParams),
         *stylePos->MaxBSize(aWM, anchorResolutionParams.mPosition), cbBSize,
         contentEdgeToBoxSizingBSize);
 
@@ -137,7 +137,7 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
   float prefPercent = 0.0f;
   bool hasSpecifiedISize = false;
 
-  const auto iSize = stylePos->ISize(aWM, anchorResolutionParams.mPosition);
+  const auto iSize = stylePos->ISize(aWM, anchorResolutionParams);
   // NOTE: We're ignoring calc() units with both lengths and percentages here,
   // for lack of a sensible idea for what to do with them.  This means calc()
   // with percentages is basically handled like 'auto' for table cells and
@@ -196,10 +196,10 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
   if (maxISize->ConvertsToLength() || nsIFrame::ToExtremumLength(*maxISize)) {
     nscoord c =
         aFrame
-            ->ComputeISizeValue(
-                aRenderingContext, aWM, zeroSize, zeroSize, 0, *maxISize,
-                *stylePos->BSize(aWM, anchorResolutionParams.mPosition),
-                aFrame->GetAspectRatio())
+            ->ComputeISizeValue(aRenderingContext, aWM, zeroSize, zeroSize, 0,
+                                *maxISize,
+                                *stylePos->BSize(aWM, anchorResolutionParams),
+                                aFrame->GetAspectRatio())
             .mISize;
     minCoord = std::min(c, minCoord);
     prefCoord = std::min(c, prefCoord);
@@ -210,7 +210,7 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
     }
   }
 
-  auto minISize = stylePos->MinISize(aWM, anchorResolutionParams.mPosition);
+  auto minISize = stylePos->MinISize(aWM, anchorResolutionParams);
   if (nsIFrame::ToExtremumLength(*maxISize)) {
     if (!aIsCell || minISize->BehavesLikeStretchOnInlineAxis()) {
       minISize = AnchorResolvedSizeHelper::Zero();
@@ -224,10 +224,10 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
   if (minISize->ConvertsToLength() || nsIFrame::ToExtremumLength(*minISize)) {
     nscoord c =
         aFrame
-            ->ComputeISizeValue(
-                aRenderingContext, aWM, zeroSize, zeroSize, 0, *minISize,
-                *stylePos->BSize(aWM, anchorResolutionParams.mPosition),
-                aFrame->GetAspectRatio())
+            ->ComputeISizeValue(aRenderingContext, aWM, zeroSize, zeroSize, 0,
+                                *minISize,
+                                *stylePos->BSize(aWM, anchorResolutionParams),
+                                aFrame->GetAspectRatio())
             .mISize;
     minCoord = std::max(c, minCoord);
     prefCoord = std::max(c, prefCoord);

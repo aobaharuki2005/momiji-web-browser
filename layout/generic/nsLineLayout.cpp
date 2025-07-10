@@ -667,14 +667,14 @@ static bool IsPercentageAware(const nsIFrame* aFrame, WritingMode aWM) {
   // Note that borders can't be aware of percentages
 
   const nsStylePosition* pos = aFrame->StylePosition();
-  const auto iSize = pos->ISize(aWM, anchorResolutionParams.mPosition);
+  const auto iSize = pos->ISize(aWM, anchorResolutionParams);
   const auto anchorOffsetResolutionParams =
       AnchorPosOffsetResolutionParams::UseCBFrameSize(anchorResolutionParams);
   if ((nsStylePosition::ISizeDependsOnContainer(iSize) && !iSize->IsAuto()) ||
       nsStylePosition::MaxISizeDependsOnContainer(
           pos->MaxISize(aWM, anchorResolutionParams.mPosition)) ||
       nsStylePosition::MinISizeDependsOnContainer(
-          pos->MinISize(aWM, anchorResolutionParams.mPosition)) ||
+          pos->MinISize(aWM, anchorResolutionParams)) ||
       pos->GetAnchorResolvedInset(LogicalSide::IStart, aWM,
                                   anchorOffsetResolutionParams)
           ->HasPercent() ||
@@ -707,8 +707,7 @@ static bool IsPercentageAware(const nsIFrame* aFrame, WritingMode aWM) {
     nsIFrame* f = const_cast<nsIFrame*>(aFrame);
     if (f->GetAspectRatio() &&
         // Some percents are treated like 'auto', so check != coord
-        !pos->BSize(aWM, anchorResolutionParams.mPosition)
-             ->ConvertsToLength()) {
+        !pos->BSize(aWM, anchorResolutionParams)->ConvertsToLength()) {
       const IntrinsicSize& intrinsicSize = f->GetIntrinsicSize();
       if (!intrinsicSize.width && !intrinsicSize.height) {
         return true;

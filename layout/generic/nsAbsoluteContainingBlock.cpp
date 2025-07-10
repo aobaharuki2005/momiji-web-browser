@@ -313,9 +313,9 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // Note that borders never depend on the parent isize.
     // XXX All of the enumerated values except -moz-available are ok too.
     if (nsStylePosition::ISizeDependsOnContainer(
-            pos->ISize(wm, anchorResolutionParams.mPosition)) ||
+            pos->ISize(wm, anchorResolutionParams)) ||
         nsStylePosition::MinISizeDependsOnContainer(
-            pos->MinISize(wm, anchorResolutionParams.mPosition)) ||
+            pos->MinISize(wm, anchorResolutionParams)) ||
         nsStylePosition::MaxISizeDependsOnContainer(
             pos->MaxISize(wm, anchorResolutionParams.mPosition)) ||
         !IsFixedPaddingSize(padding->mPadding.GetIStart(wm)) ||
@@ -343,7 +343,7 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     //
     // FIXME(emilio): Should the BSize(wm).IsAuto() check also for the extremum
     // lengths?
-    const auto bSize = pos->BSize(wm, anchorResolutionParams.mPosition);
+    const auto bSize = pos->BSize(wm, anchorResolutionParams);
     const auto anchorOffsetResolutionParams =
         AnchorPosOffsetResolutionParams::UseCBFrameSize(anchorResolutionParams);
     if ((nsStylePosition::BSizeDependsOnContainer(bSize) &&
@@ -355,7 +355,7 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
                                         anchorOffsetResolutionParams)
                 ->IsAuto())) ||
         nsStylePosition::MinBSizeDependsOnContainer(
-            pos->MinBSize(wm, anchorResolutionParams.mPosition)) ||
+            pos->MinBSize(wm, anchorResolutionParams)) ||
         nsStylePosition::MaxBSizeDependsOnContainer(
             pos->MaxBSize(wm, anchorResolutionParams.mPosition)) ||
         !IsFixedPaddingSize(padding->mPadding.GetBStart(wm)) ||
