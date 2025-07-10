@@ -12,7 +12,6 @@ apt-get update && apt-get install ubuntu-dbgsym-keyring
 cat > /etc/apt/sources.list.d/ddebs.list <<EOF
 deb http://ddebs.ubuntu.com noble main restricted universe multiverse
 deb http://ddebs.ubuntu.com noble-updates main restricted universe multiverse
-deb http://ddebs.ubuntu.com noble-proposed main restricted universe multiverse
 EOF
 
 # To speed up docker image build times as well as number of network/disk I/O
