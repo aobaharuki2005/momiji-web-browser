@@ -14,6 +14,7 @@
 #include "XULPopupElement.h"
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
