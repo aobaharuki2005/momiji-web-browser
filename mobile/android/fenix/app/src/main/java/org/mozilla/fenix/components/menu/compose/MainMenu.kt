@@ -44,10 +44,14 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CollectionInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.collectionInfo
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
@@ -312,6 +316,17 @@ private fun ExtensionsMenuItem(
         MenuItem(
             label = stringResource(id = R.string.browser_menu_extensions),
             description = extensionsMenuItemDescription,
+            stateDescription = if (
+                isExtensionsProcessDisabled ||
+                allWebExtensionsDisabled ||
+                extensionsMenuItemDescription == null
+            ) {
+                ""
+            } else if (isExtensionsExpanded) {
+                "Expanded"
+            } else {
+                "Collapsed"
+            },
             beforeIconPainter = if (isExtensionsProcessDisabled && isPrivate) {
                 painterResource(id = R.drawable.mozac_ic_extension_warning_private_24)
             } else if (isExtensionsProcessDisabled) {
@@ -477,22 +492,23 @@ private fun ToolsAndActionsMenuGroup(
         }
 
         if (isBookmarked) {
-                MenuItem(
-                    label = stringResource(id = R.string.browser_menu_edit_bookmark),
-                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_bookmark_fill_24),
-                    state = MenuItemState.ACTIVE,
-                    onClick = onEditBookmarkButtonClick,
-                )
-            } else {
-                MenuItem(
-                    label = stringResource(id = R.string.browser_menu_bookmark_this_page_2),
-                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_bookmark_24),
-                    onClick = onBookmarkPageMenuClick,
-                )
-            }
+            MenuItem(
+                label = stringResource(id = R.string.browser_menu_edit_bookmark),
+                beforeIconPainter = painterResource(id = R.drawable.mozac_ic_bookmark_fill_24),
+                state = MenuItemState.ACTIVE,
+                onClick = onEditBookmarkButtonClick,
+            )
+        } else {
+            MenuItem(
+                label = stringResource(id = R.string.browser_menu_bookmark_this_page_2),
+                beforeIconPainter = painterResource(id = R.drawable.mozac_ic_bookmark_24),
+                onClick = onBookmarkPageMenuClick,
+            )
+        }
 
             MenuItem(
                 label = stringResource(id = labelId),
+                stateDescription = badgeText,
                 beforeIconPainter = painterResource(id = R.drawable.mozac_ic_device_mobile_24),
                 state = menuItemState,
                 onClick = onSwitchToDesktopSiteMenuClick,
@@ -548,6 +564,11 @@ private fun MoreMenuButtonGroup(
         } else {
             stringResource(id = R.string.browser_menu_more_settings)
         },
+        stateDescription = if (moreMenuExpanded) {
+            "Expanded"
+        } else {
+            "Collapsed"
+        },
         beforeIconPainter = painterResource(id = R.drawable.mozac_ic_ellipsis_horizontal_24),
         onClick = onMoreMenuClick,
     ) {
@@ -598,7 +619,13 @@ private fun LibraryMenuGroup(
     Row(
         Modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Min),
+            .height(IntrinsicSize.Min)
+            .semantics {
+                this.collectionInfo = CollectionInfo(
+                    rowCount = 1,
+                    columnCount = 4,
+                )
+            },
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -609,6 +636,7 @@ private fun LibraryMenuGroup(
             iconRes = R.drawable.mozac_ic_history_24,
             labelRes = R.string.library_history,
             shape = leftShape,
+            index = 0,
             onClick = onHistoryMenuClick,
         )
 
@@ -621,6 +649,7 @@ private fun LibraryMenuGroup(
             iconRes = R.drawable.mozac_ic_bookmark_tray_fill_24,
             labelRes = R.string.library_bookmarks,
             shape = middleShape,
+            index = 1,
             onClick = onBookmarksMenuClick,
         )
 
@@ -633,6 +662,7 @@ private fun LibraryMenuGroup(
             iconRes = R.drawable.mozac_ic_download_24,
             labelRes = R.string.library_downloads,
             shape = middleShape,
+            index = 2,
             onClick = onDownloadsMenuClick,
         )
 
@@ -645,6 +675,7 @@ private fun LibraryMenuGroup(
             iconRes = R.drawable.mozac_ic_login_24,
             labelRes = R.string.browser_menu_passwords,
             shape = rightShape,
+            index = 3,
             onClick = onPasswordsMenuClick,
         )
     }
@@ -820,10 +851,16 @@ private fun AddonsMenuItems(
     onIconClick: (Addon) -> Unit,
 ) {
     Column(
-        modifier = Modifier.padding(top = 2.dp),
+        modifier = Modifier.padding(top = 2.dp)
+            .semantics {
+                collectionInfo = CollectionInfo(
+                    rowCount = availableAddons.size,
+                    columnCount = 1,
+                )
+            },
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        for (addon in availableAddons) {
+        for ((index, addon) in availableAddons.withIndex()) {
             val description = stringResource(
                 R.string.browser_menu_extension_plus_icon_content_description_2,
                 addon.displayName(LocalContext.current),
@@ -835,6 +872,7 @@ private fun AddonsMenuItems(
                 iconPainter = iconPainter ?: painterResource(id = R.drawable.mozac_ic_plus_24),
                 iconDescription = if (iconPainter != null) addon.summary(LocalContext.current) else description,
                 showDivider = true,
+                index = index,
                 onClick = { onClick(addon) },
                 onIconClick = { onIconClick(addon) },
             )
@@ -850,7 +888,14 @@ private fun WebExtensionMenuItems(
     onSettingsClick: (Addon) -> Unit,
 ) {
     Column(
-        modifier = Modifier.padding(top = 2.dp),
+        modifier = Modifier
+            .padding(top = 2.dp)
+            .semantics {
+                collectionInfo = CollectionInfo(
+                    rowCount = availableAddons.size,
+                    columnCount = 1,
+                )
+            },
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         for (webExtensionMenuItem in webExtensionMenuItems) {
@@ -891,6 +936,7 @@ private fun MoreExtensionsMenuItem(
             ) { onClick.invoke() }
             .clearAndSetSemantics {
                 role = Role.Button
+                contentDescription = label
             }
             .wrapContentSize()
             .clip(shape = RoundedCornerShape(4.dp))
