@@ -19,6 +19,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/gfx/PathSkia.h"
+#include "mozilla/gfx/Scale.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/RemoteTextureMap.h"
@@ -29,6 +30,7 @@
 
 #include "GLContext.h"
 #include "WebGLContext.h"
+#include "WebGL2Context.h"
 #include "WebGLChild.h"
 #include "WebGLBuffer.h"
 #include "WebGLFramebuffer.h"
@@ -632,13 +634,15 @@ void SharedContextWebgl::SetBlendState(CompositionOp aOp,
 
 // Ensure the WebGL framebuffer is set to the current target.
 bool SharedContextWebgl::SetTarget(DrawTargetWebgl* aDT,
-                                   const RefPtr<TextureHandle>& aHandle) {
+                                   const RefPtr<TextureHandle>& aHandle,
+                                   const IntSize& aViewportSize) {
   if (!mWebgl || mWebgl->IsContextLost()) {
     return false;
   }
   if (aDT != mCurrentTarget || mTargetHandle != aHandle) {
     mCurrentTarget = aDT;
     mTargetHandle = aHandle;
+    IntRect bounds;
     if (aHandle) {
       if (!mTargetFramebuffer) {
         mTargetFramebuffer = mWebgl->CreateFramebuffer();
@@ -651,14 +655,15 @@ bool SharedContextWebgl::SetTarget(DrawTargetWebgl* aDT,
                                 LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_TEXTURE_2D,
                                 attachInfo);
 
-      IntRect bounds = aHandle->GetBounds();
-      mViewportSize = bounds.Size();
-      mWebgl->Viewport(bounds.x, bounds.y, bounds.width, bounds.height);
+      bounds = aHandle->GetBounds();
     } else if (aDT) {
       mWebgl->BindFramebuffer(LOCAL_GL_FRAMEBUFFER, aDT->mFramebuffer);
-      mViewportSize = aDT->GetSize();
-      mWebgl->Viewport(0, 0, mViewportSize.width, mViewportSize.height);
+      bounds = aDT->GetRect();
     }
+    mViewportSize = !aViewportSize.IsEmpty() ? Min(aViewportSize, bounds.Size())
+                                             : bounds.Size();
+    mWebgl->Viewport(bounds.x, bounds.y, mViewportSize.width,
+                     mViewportSize.height);
   }
   return true;
 }
@@ -873,11 +878,16 @@ bool DrawTargetWebgl::SetSimpleClipRect() {
 // Installs the Skia clip rectangle, if applicable, onto the shared WebGL
 // context as well as sets the WebGL framebuffer to the current target.
 bool DrawTargetWebgl::PrepareContext(bool aClipped,
-                                     const RefPtr<TextureHandle>& aHandle) {
+                                     const RefPtr<TextureHandle>& aHandle,
+                                     const IntSize& aViewportSize) {
   if (!aClipped || aHandle) {
     // If no clipping requested, just set the clip rect to the viewport.
     mSharedContext->SetClipRect(
-        aHandle ? IntRect(IntPoint(), aHandle->GetSize()) : GetRect());
+        aHandle
+            ? IntRect(IntPoint(), !aViewportSize.IsEmpty()
+                                      ? Min(aHandle->GetSize(), aViewportSize)
+                                      : aHandle->GetSize())
+            : GetRect());
     mSharedContext->SetNoClipMask();
     // Ensure the clip gets reset if clipping is later requested for the target.
     mRefreshClipState = true;
@@ -890,7 +900,7 @@ bool DrawTargetWebgl::PrepareContext(bool aClipped,
     mClipChanged = false;
     mRefreshClipState = false;
   }
-  return mSharedContext->SetTarget(this, aHandle);
+  return mSharedContext->SetTarget(this, aHandle, aViewportSize);
 }
 
 void SharedContextWebgl::RestoreCurrentTarget(
@@ -901,12 +911,10 @@ void SharedContextWebgl::RestoreCurrentTarget(
   mWebgl->BindFramebuffer(
       LOCAL_GL_FRAMEBUFFER,
       mTargetHandle ? mTargetFramebuffer : mCurrentTarget->mFramebuffer);
-  if (mTargetHandle) {
-    IntRect bounds = mTargetHandle->GetBounds();
-    mWebgl->Viewport(bounds.x, bounds.y, bounds.width, bounds.height);
-  } else {
-    mWebgl->Viewport(0, 0, mViewportSize.width, mViewportSize.height);
-  }
+  IntPoint offset =
+      mTargetHandle ? mTargetHandle->GetBounds().TopLeft() : IntPoint(0, 0);
+  mWebgl->Viewport(offset.x, offset.y, mViewportSize.width,
+                   mViewportSize.height);
   if (aClipMask) {
     SetClipMask(aClipMask);
   }
@@ -1386,6 +1394,12 @@ void SharedContextWebgl::ResetPathVertexBuffer() {
 #define BLUR_ACCEL_RADIUS(sigma) (int(ceil(1.5 * (sigma))) * 2)
 #define BLUR_ACCEL_RADIUS_MAX (3 * BLUR_ACCEL_SIGMA_MAX)
 
+// Threshold for when to downscale blur inputs.
+#define BLUR_ACCEL_DOWNSCALE_SIGMA 20
+#define BLUR_ACCEL_DOWNSCALE_SIZE 32
+// How much to downscale blur inputs.
+#define BLUR_ACCEL_DOWNSCALE_ITERS 2
+
 // Attempts to create all shaders and resources to be used for drawing commands.
 // Returns whether or not this succeeded.
 bool SharedContextWebgl::CreateShaders() {
@@ -1736,8 +1750,8 @@ void SharedContextWebgl::EnableScissor(const IntRect& aRect) {
   }
 }
 
-void SharedContextWebgl::DisableScissor() {
-  if (mTargetHandle) {
+void SharedContextWebgl::DisableScissor(bool aForce) {
+  if (!aForce && mTargetHandle) {
     EnableScissor(IntRect(IntPoint(), mViewportSize));
     return;
   }
@@ -2319,7 +2333,8 @@ void SharedContextWebgl::ClearRenderTex(BackingTexture* aBacking) {
 }
 
 void SharedContextWebgl::BindScratchFramebuffer(TextureHandle* aHandle,
-                                                bool aInit) {
+                                                bool aInit,
+                                                const IntSize& aViewportSize) {
   BackingTexture* backing = aHandle->GetBackingTexture();
   if (aInit) {
     InitRenderTex(backing);
@@ -2336,6 +2351,9 @@ void SharedContextWebgl::BindScratchFramebuffer(TextureHandle* aHandle,
   mWebgl->FramebufferAttach(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
                             LOCAL_GL_TEXTURE_2D, attachInfo);
   IntRect bounds = aHandle->GetBounds();
+  if (!aViewportSize.IsEmpty()) {
+    bounds.SizeTo(Min(bounds.Size(), aViewportSize));
+  }
   mWebgl->Viewport(bounds.x, bounds.y, bounds.width, bounds.height);
 
   if (aInit) {
@@ -2982,7 +3000,7 @@ bool SharedContextWebgl::DrawRectAccel(
 
 // Provides a single pass of a separable blur.
 bool SharedContextWebgl::BlurRectPass(
-    const Rect& aDestRect, float aSigma, bool aHorizontal,
+    const Rect& aDestRect, const Point& aSigma, bool aHorizontal,
     const RefPtr<SourceSurface>& aSurface, const IntRect& aSourceRect,
     const DrawOptions& aOptions, Maybe<DeviceColor> aMaskColor,
     RefPtr<TextureHandle>* aHandle, RefPtr<TextureHandle>* aTargetHandle,
@@ -3065,16 +3083,16 @@ bool SharedContextWebgl::BlurRectPass(
   }
 
   IntSize viewportSize = mViewportSize;
-  int blurRadius = BLUR_ACCEL_RADIUS(aSigma);
+  IntSize blurRadius(BLUR_ACCEL_RADIUS(aSigma.x), BLUR_ACCEL_RADIUS(aSigma.y));
   bool needTarget = !!aTargetHandle;
   if (needTarget) {
     // For the initial horizontal pass, and also for the second pass of filters,
     // we need to render to a temporary framebuffer that has been inflated to
     // accommodate blurred pixels in the margins.
-    IntSize targetSize(int(ceil(aDestRect.width)) + blurRadius * 2,
-                       aHorizontal
-                           ? texSize.height
-                           : int(ceil(aDestRect.height)) + blurRadius * 2);
+    IntSize targetSize(
+        int(ceil(aDestRect.width)) + blurRadius.width * 2,
+        aHorizontal ? texSize.height
+                    : int(ceil(aDestRect.height)) + blurRadius.height * 2);
     viewportSize = targetSize;
     // If sourcing from a texture handle as input, be careful not to render to
     // a handle with the same exact backing texture, which is not allowed in
@@ -3085,9 +3103,9 @@ bool SharedContextWebgl::BlurRectPass(
             : (handle ? handle->GetBackingTexture() : nullptr);
     // Blur filters need to render to a color target, whereas shadows will only
     // sample alpha.
-    RefPtr<TextureHandle> targetHandle = AllocateTextureHandle(
-        aFilter ? SurfaceFormat::B8G8R8A8 : SurfaceFormat::A8, targetSize, true,
-        true, avoid);
+    RefPtr<TextureHandle> targetHandle =
+        AllocateTextureHandle(aFilter ? handle->GetFormat() : SurfaceFormat::A8,
+                              targetSize, true, true, avoid);
     if (!targetHandle) {
       MOZ_ASSERT(false);
       return false;
@@ -3095,7 +3113,7 @@ bool SharedContextWebgl::BlurRectPass(
 
     *aTargetHandle = targetHandle;
 
-    BindScratchFramebuffer(targetHandle, true);
+    BindScratchFramebuffer(targetHandle, true, targetSize);
 
     SetBlendState(CompositionOp::OP_OVER);
   } else {
@@ -3130,7 +3148,7 @@ bool SharedContextWebgl::BlurRectPass(
     // If doing a final composite, then render to the requested rectangle,
     // inflated for the blurred margin pixels.
     xformRect = aDestRect;
-    xformRect.Inflate(blurRadius);
+    xformRect.Inflate(Size(blurRadius));
   }
   Array<float, 4> xformData = {xformRect.width, xformRect.height, xformRect.x,
                                xformRect.y};
@@ -3201,7 +3219,7 @@ bool SharedContextWebgl::BlurRectPass(
   MaybeUniformData(LOCAL_GL_FLOAT_VEC4, mBlurProgramTexBounds, texBounds,
                    mBlurProgramUniformState.mTexBounds);
 
-  Array<float, 1> sigmaData = {aSigma};
+  Array<float, 1> sigmaData = {aHorizontal ? aSigma.x : aSigma.y};
   MaybeUniformData(LOCAL_GL_FLOAT, mBlurProgramSigma, sigmaData,
                    mBlurProgramUniformState.mSigma);
 
@@ -3230,11 +3248,11 @@ bool SharedContextWebgl::BlurRectPass(
 
 // Utility function to schedule multiple blur passes of a separable blur.
 bool SharedContextWebgl::BlurRectAccel(
-    const Rect& aDestRect, float aSigma, const RefPtr<SourceSurface>& aSurface,
-    const IntRect& aSourceRect, const DrawOptions& aOptions,
-    Maybe<DeviceColor> aMaskColor, RefPtr<TextureHandle>* aHandle,
-    RefPtr<TextureHandle>* aTargetHandle, RefPtr<TextureHandle>* aResultHandle,
-    bool aFilter) {
+    const Rect& aDestRect, const Point& aSigma,
+    const RefPtr<SourceSurface>& aSurface, const IntRect& aSourceRect,
+    const DrawOptions& aOptions, Maybe<DeviceColor> aMaskColor,
+    RefPtr<TextureHandle>* aHandle, RefPtr<TextureHandle>* aTargetHandle,
+    RefPtr<TextureHandle>* aResultHandle, bool aFilter) {
   RefPtr<TextureHandle> targetHandle =
       aTargetHandle ? aTargetHandle->get() : nullptr;
   if (targetHandle && targetHandle->IsValid() &&
@@ -3260,31 +3278,185 @@ bool SharedContextWebgl::BlurRectAccel(
   return false;
 }
 
+// Halves the dimensions of a blur input texture for sufficiently large blurs
+// where scaling won't significantly impact resultant blur quality.
+already_AddRefed<SourceSurface> SharedContextWebgl::DownscaleBlurInput(
+    SourceSurface* aSurface, const IntRect& aSourceRect, int aIters) {
+  if (std::max(aSourceRect.width, aSourceRect.height) <= 1) {
+    return nullptr;
+  }
+  RefPtr<TextureHandle> fullHandle;
+  // First check if the source surface is actually a texture.
+  if (RefPtr<WebGLTexture> fullTex =
+          GetCompatibleSnapshot(aSurface, &fullHandle)) {
+    IntRect sourceRect = aSourceRect;
+    for (int i = 0; i < aIters; ++i) {
+      IntSize halfSize = (sourceRect.Size() + IntSize(1, 1)) / 2;
+      // Allocate a half-size texture for the downscale target.
+      RefPtr<TextureHandle> halfHandle = AllocateTextureHandle(
+          aSurface->GetFormat(), halfSize, true, true,
+          fullHandle ? fullHandle->GetBackingTexture() : nullptr);
+      if (!halfHandle) {
+        break;
+      }
+
+      // Set up the read framebuffer for the full-size texture.
+      if (!mScratchFramebuffer) {
+        mScratchFramebuffer = mWebgl->CreateFramebuffer();
+      }
+      mWebgl->BindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, mScratchFramebuffer);
+      webgl::FbAttachInfo readInfo;
+      readInfo.tex = fullTex;
+      mWebgl->FramebufferAttach(LOCAL_GL_READ_FRAMEBUFFER,
+                                LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_TEXTURE_2D,
+                                readInfo);
+      // Set up the draw framebuffer for the half-size texture.
+      if (!mTargetFramebuffer) {
+        mTargetFramebuffer = mWebgl->CreateFramebuffer();
+      }
+      BackingTexture* halfBacking = halfHandle->GetBackingTexture();
+      if (!halfBacking->IsInitialized()) {
+        BindAndInitRenderTex(halfBacking->GetWebGLTexture(),
+                             halfBacking->GetFormat(), halfBacking->GetSize());
+        halfBacking->MarkInitialized();
+      }
+      mWebgl->BindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, mTargetFramebuffer);
+      webgl::FbAttachInfo drawInfo;
+      drawInfo.tex = halfBacking->GetWebGLTexture();
+      mWebgl->FramebufferAttach(LOCAL_GL_DRAW_FRAMEBUFFER,
+                                LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_TEXTURE_2D,
+                                drawInfo);
+
+      DisableScissor(true);
+
+      // Do a linear-scaled blit from the full-size to the half-size texutre.
+      IntRect fullBounds = sourceRect;
+      if (fullHandle) {
+        fullBounds += fullHandle->GetBounds().TopLeft();
+      }
+      IntRect halfBounds = halfHandle->GetBounds();
+      static_cast<WebGL2Context*>(mWebgl.get())
+          ->BlitFramebuffer(fullBounds.x, fullBounds.y, fullBounds.XMost(),
+                            fullBounds.YMost(), halfBounds.x, halfBounds.y,
+                            halfBounds.XMost(), halfBounds.YMost(),
+                            LOCAL_GL_COLOR_BUFFER_BIT, LOCAL_GL_LINEAR);
+
+      fullHandle = halfHandle;
+      fullTex = halfBacking->GetWebGLTexture();
+      sourceRect = IntRect(IntPoint(), halfBounds.Size());
+    }
+    RestoreCurrentTarget();
+    if (fullHandle) {
+      if (sourceRect.IsEqualEdges(aSourceRect)) {
+        return nullptr;
+      }
+      // Wrap the half-size texture with a surface.
+      RefPtr<SourceSurfaceWebgl> surface = new SourceSurfaceWebgl(this);
+      surface->SetHandle(fullHandle);
+      return surface.forget();
+    }
+  }
+
+  IntSize scaleFactor(1, 1);
+  for (int i = 0; i < aIters; ++i) {
+    if ((2 << i) <= aSourceRect.width) {
+      scaleFactor.width *= 2;
+    }
+    if ((2 << i) <= aSourceRect.height) {
+      scaleFactor.height *= 2;
+    }
+  }
+  IntSize scaleSize =
+      (aSourceRect.Size() + scaleFactor - IntSize(1, 1)) / scaleFactor;
+  if (RefPtr<DataSourceSurface> fullData = aSurface->GetDataSurface()) {
+    // If the full-size source surface is not actually a texture, downscale it
+    // with a software filter as it will still improve upload performance while
+    // reducing the final blur cost.
+    if (RefPtr<DataSourceSurface> scaleData = Factory::CreateDataSourceSurface(
+            scaleSize, aSurface->GetFormat(), false)) {
+      DataSourceSurface::ScopedMap srcMap(fullData, DataSourceSurface::READ);
+      DataSourceSurface::ScopedMap dstMap(scaleData, DataSourceSurface::WRITE);
+      if (srcMap.IsMapped() && dstMap.IsMapped()) {
+        if (Scale(srcMap.GetData() + aSourceRect.y * srcMap.GetStride() +
+                      aSourceRect.x * BytesPerPixel(aSurface->GetFormat()),
+                  srcMap.GetStride(), aSourceRect.width, aSourceRect.height,
+                  dstMap.GetData(), dstMap.GetStride(), scaleSize.width,
+                  scaleSize.height, aSurface->GetFormat())) {
+          return scaleData.forget();
+        }
+      }
+    }
+  }
+  return nullptr;
+}
+
 // Blurs a surface and draws the result at the specified offset.
 bool DrawTargetWebgl::BlurSurface(float aSigma, SourceSurface* aSurface,
                                   const IntRect& aSourceRect,
                                   const Point& aDest,
-                                  const DrawOptions& aOptions) {
+                                  const DrawOptions& aOptions,
+                                  const DeviceColor& aColor) {
+  Maybe<DeviceColor> maskColor =
+      aSurface->GetFormat() == SurfaceFormat::A8 ? Some(aColor) : Nothing();
   if (aSigma >= 0.0f && aSigma <= BLUR_ACCEL_SIGMA_MAX &&
       ShouldAccelPath(aOptions, nullptr)) {
     int blurRadius = BLUR_ACCEL_RADIUS(aSigma);
     IntRect sourceRect =
         aSourceRect.IsEmpty() ? aSurface->GetRect() : aSourceRect;
     if (blurRadius <= 0) {
-      DrawSurface(aSurface, Rect(aDest, Size(sourceRect.Size())),
-                  Rect(sourceRect), DrawSurfaceOptions(), aOptions);
-      return true;
+      SurfacePattern maskPattern(aSurface, ExtendMode::CLAMP,
+                                 Matrix::Translation(aDest));
+      if (!sourceRect.IsEqualEdges(aSurface->GetRect())) {
+        maskPattern.mSamplingRect = sourceRect;
+      }
+      return DrawRect(Rect(aDest, Size(sourceRect.Size())), maskPattern,
+                      aOptions, maskColor);
+    }
+    // For large blurs, attempt to downscale the input texture so that
+    // the blur radius can also be reduced to help performance.
+    if (aSigma >= BLUR_ACCEL_DOWNSCALE_SIGMA &&
+        std::max(sourceRect.width, sourceRect.height) >=
+            BLUR_ACCEL_DOWNSCALE_SIZE) {
+      if (RefPtr<SourceSurface> scaleSurf = mSharedContext->DownscaleBlurInput(
+              aSurface, sourceRect, BLUR_ACCEL_DOWNSCALE_ITERS)) {
+        // Approximate the large blur with a smaller blur that scales the sigma
+        // proportionally to the surface size.
+        IntSize scaleSize = scaleSurf->GetSize();
+        Point scale(float(sourceRect.width) / float(scaleSize.width),
+                    float(sourceRect.height) / float(scaleSize.height));
+        RefPtr<TextureHandle> resultHandle;
+        if (mSharedContext->BlurRectAccel(
+                Rect(scaleSurf->GetRect()),
+                Point(aSigma / scale.x, aSigma / scale.y), scaleSurf,
+                scaleSurf->GetRect(), DrawOptions(), Nothing(), nullptr,
+                nullptr, &resultHandle, true) &&
+            resultHandle) {
+          IntSize blurMargin = (resultHandle->GetSize() - scaleSize) / 2;
+          Point blurOrigin = aDest - Point(blurMargin.width * scale.x,
+                                           blurMargin.height * scale.y);
+          SurfacePattern blurPattern(
+              nullptr, ExtendMode::CLAMP,
+              Matrix::Scaling(scale.x, scale.y).PostTranslate(blurOrigin));
+          return mSharedContext->DrawRectAccel(
+              Rect(blurOrigin,
+                   Size(resultHandle->GetSize()) * Size(scale.x, scale.y)),
+              blurPattern,
+              DrawOptions(aOptions.mAlpha, aOptions.mCompositionOp,
+                          AntialiasMode::DEFAULT),
+              maskColor, &resultHandle, true, true, true);
+        }
+      }
     }
     if (mTransform.IsTranslation()) {
       return mSharedContext->BlurRectAccel(
           Rect(aDest + mTransform.GetTranslation(), Size(sourceRect.Size())),
-          aSigma, aSurface, sourceRect, aOptions, Nothing(), nullptr, nullptr,
-          nullptr, true);
+          Point(aSigma, aSigma), aSurface, sourceRect, aOptions, maskColor,
+          nullptr, nullptr, nullptr, true);
     }
     RefPtr<TextureHandle> resultHandle;
     if (mSharedContext->BlurRectAccel(
-            Rect(Point(0, 0), Size(sourceRect.Size())), aSigma, aSurface,
-            sourceRect, DrawOptions(), Nothing(), nullptr, nullptr,
+            Rect(Point(0, 0), Size(sourceRect.Size())), Point(aSigma, aSigma),
+            aSurface, sourceRect, DrawOptions(), Nothing(), nullptr, nullptr,
             &resultHandle, true) &&
         resultHandle) {
       IntSize blurMargin = (resultHandle->GetSize() - sourceRect.Size()) / 2;
@@ -3293,28 +3465,47 @@ bool DrawTargetWebgl::BlurSurface(float aSigma, SourceSurface* aSurface,
                                  Matrix::Translation(blurOrigin));
       return mSharedContext->DrawRectAccel(
           Rect(blurOrigin, Size(resultHandle->GetSize())), blurPattern,
-          aOptions, Nothing(), &resultHandle, true, true, true);
+          aOptions, maskColor, &resultHandle, true, true, true);
     }
   }
   return false;
 }
 
+static inline int RoundToFactor(int aDim, int aFactor) {
+  // If the size is either greater than the factor or not power-of-two, round it
+  // up to the round factor.
+  int mask = aFactor - 1;
+  return aDim > 1 && (aDim > mask || (aDim & (aDim - 1)))
+             ? (aDim + mask) & ~mask
+             : aDim;
+}
+
 already_AddRefed<TextureHandle> SharedContextWebgl::ResolveFilterInputAccel(
     DrawTargetWebgl* aDT, const Path* aPath, const Pattern& aPattern,
     const IntRect& aSourceRect, const Matrix& aDestTransform,
-    const DrawOptions& aOptions, const StrokeOptions* aStrokeOptions) {
+    const DrawOptions& aOptions, const StrokeOptions* aStrokeOptions,
+    SurfaceFormat aFormat) {
   if (!SupportsDrawOptions(aOptions)) {
     return nullptr;
   }
   if (IsContextLost()) {
     return nullptr;
   }
+  // Round size to account for potential mipping from blur filters.
+  int roundFactor = 2 << BLUR_ACCEL_DOWNSCALE_ITERS;
+  IntSize roundSize =
+      std::max(aSourceRect.width, aSourceRect.height) >=
+              BLUR_ACCEL_DOWNSCALE_SIZE
+          ? IntSize(RoundToFactor(aSourceRect.width, roundFactor),
+                    RoundToFactor(aSourceRect.height, roundFactor))
+          : aSourceRect.Size();
   RefPtr<TextureHandle> handle =
-      AllocateTextureHandle(SurfaceFormat::B8G8R8A8, aSourceRect.Size());
+      AllocateTextureHandle(aFormat, roundSize, true, true);
   if (!handle) {
     return nullptr;
   }
-  IntRect targetBounds = handle->GetBounds();
+
+  IntRect targetBounds(handle->GetBounds());
   BackingTexture* targetBacking = handle->GetBackingTexture();
   InitRenderTex(targetBacking);
   if (!aDT->PrepareContext(false, handle)) {
@@ -3329,15 +3520,16 @@ already_AddRefed<TextureHandle> SharedContextWebgl::ResolveFilterInputAccel(
 
   const SkPath& skiaPath = static_cast<const PathSkia*>(aPath)->GetPath();
   SkRect skiaRect = SkRect::MakeEmpty();
-  // Draw the path as a simple rectangle with a supported pattern when possible.
+  // Draw the path as a simple rectangle with a supported pattern when
+  // possible.
   if (skiaPath.isRect(&skiaRect)) {
     RectDouble rect = SkRectToRectDouble(skiaRect);
     RectDouble xformRect = aDT->TransformDouble(rect);
     if (aPattern.GetType() == PatternType::COLOR) {
       if (Maybe<Rect> clipped = aDT->RectClippedToViewport(xformRect)) {
-        // If the pattern is transform-invariant and the rect clips to the
-        // viewport, just clip drawing to the viewport to avoid transform
-        // issues.
+        // If the pattern is transform-invariant and the rect clips to
+        // the viewport, just clip drawing to the viewport to avoid
+        // transform issues.
         if (DrawRectAccel(*clipped, aPattern, aOptions, Nothing(), nullptr,
                           false, false, true)) {
           return handle.forget();
@@ -3374,10 +3566,10 @@ already_AddRefed<TextureHandle> SharedContextWebgl::ResolveFilterInputAccel(
 already_AddRefed<SourceSurfaceWebgl> DrawTargetWebgl::ResolveFilterInputAccel(
     const Path* aPath, const Pattern& aPattern, const IntRect& aSourceRect,
     const Matrix& aDestTransform, const DrawOptions& aOptions,
-    const StrokeOptions* aStrokeOptions) {
+    const StrokeOptions* aStrokeOptions, SurfaceFormat aFormat) {
   if (RefPtr<TextureHandle> handle = mSharedContext->ResolveFilterInputAccel(
           this, aPath, aPattern, aSourceRect, aDestTransform, aOptions,
-          aStrokeOptions)) {
+          aStrokeOptions, aFormat)) {
     RefPtr<SourceSurfaceWebgl> surface = new SourceSurfaceWebgl(mSharedContext);
     surface->SetHandle(handle);
     return surface.forget();
@@ -4246,8 +4438,9 @@ bool SharedContextWebgl::DrawPathAccel(
       aShadow ? SamplingFilter::GOOD : GetSamplingFilter(aPattern);
   if (handle && handle->IsValid()) {
     if (accelShadow) {
-      return BlurRectAccel(quantBounds, aShadow->mSigma, nullptr, IntRect(),
-                           aOptions, shadowColor, nullptr, &handle);
+      return BlurRectAccel(quantBounds, Point(aShadow->mSigma, aShadow->mSigma),
+                           nullptr, IntRect(), aOptions, shadowColor, nullptr,
+                           &handle);
     }
 
     // If the entry has a valid texture handle still, use it. However, the
@@ -4457,8 +4650,9 @@ bool SharedContextWebgl::DrawPathAccel(
       if (RefPtr<TextureHandle> inputHandle =
               similarEntry->GetSecondaryHandle().get()) {
         if (inputHandle->IsValid() &&
-            BlurRectAccel(quantBounds, aShadow->mSigma, nullptr, IntRect(),
-                          aOptions, shadowColor, &inputHandle, &handle)) {
+            BlurRectAccel(quantBounds, Point(aShadow->mSigma, aShadow->mSigma),
+                          nullptr, IntRect(), aOptions, shadowColor,
+                          &inputHandle, &handle)) {
           if (entry) {
             entry->Link(handle);
             entry->SetSecondaryHandle(WeakPtr(inputHandle));
@@ -4523,9 +4717,10 @@ bool SharedContextWebgl::DrawPathAccel(
             oldTarget->PrepareContext(!oldHandle, oldHandle)) {
           RefPtr<TextureHandle> inputHandle;
           // Generate the accelerated shadow from the software surface.
-          if (BlurRectAccel(quantBounds, aShadow->mSigma, pathSurface,
-                            IntRect(), aOptions, shadowColor, &inputHandle,
-                            &handle)) {
+          if (BlurRectAccel(quantBounds,
+                            Point(aShadow->mSigma, aShadow->mSigma),
+                            pathSurface, IntRect(), aOptions, shadowColor,
+                            &inputHandle, &handle)) {
             if (entry) {
               entry->Link(handle);
               entry->SetSecondaryHandle(WeakPtr(inputHandle));

@@ -41,18 +41,32 @@ already_AddRefed<FilterNodeWebgl> FilterNodeWebgl::Create(FilterType aType) {
   return filter.forget();
 }
 
-void FilterNodeWebgl::SetInput(uint32_t aIndex, SourceSurface* aSurface) {
+void FilterNodeWebgl::ReserveInputIndex(uint32_t aIndex) {
   if (mInputSurfaces.size() <= aIndex) {
     mInputSurfaces.resize(aIndex + 1);
   }
   if (mInputFilters.size() <= aIndex) {
     mInputFilters.resize(aIndex + 1);
   }
+}
+
+void FilterNodeWebgl::SetInputAccel(uint32_t aIndex, SourceSurface* aSurface) {
+  ReserveInputIndex(aIndex);
   mInputSurfaces[aIndex] = aSurface;
   mInputFilters[aIndex] = nullptr;
+}
+
+void FilterNodeWebgl::SetInputSoftware(uint32_t aIndex,
+                                       SourceSurface* aSurface) {
   if (mSoftwareFilter) {
     mSoftwareFilter->SetInput(aIndex, aSurface);
   }
+  mInputMask |= (1 << aIndex);
+}
+
+void FilterNodeWebgl::SetInput(uint32_t aIndex, SourceSurface* aSurface) {
+  SetInputAccel(aIndex, aSurface);
+  SetInputSoftware(aIndex, aSurface);
 }
 
 void FilterNodeWebgl::SetInput(uint32_t aIndex, FilterNode* aFilter) {
@@ -61,12 +75,7 @@ void FilterNodeWebgl::SetInput(uint32_t aIndex, FilterNode* aFilter) {
     return;
   }
 
-  if (mInputFilters.size() <= aIndex) {
-    mInputFilters.resize(aIndex + 1);
-  }
-  if (mInputSurfaces.size() <= aIndex) {
-    mInputSurfaces.resize(aIndex + 1);
-  }
+  ReserveInputIndex(aIndex);
   auto* webglFilter = static_cast<FilterNodeWebgl*>(aFilter);
   mInputFilters[aIndex] = webglFilter;
   mInputSurfaces[aIndex] = nullptr;
@@ -224,7 +233,7 @@ void FilterNodeWebgl::ResolveAllInputs(DrawTargetWebgl* aDT) {
   }
 }
 
-int32_t FilterNodeCropWebgl::InputIndex(uint32_t aInputEnumIndex) {
+int32_t FilterNodeCropWebgl::InputIndex(uint32_t aInputEnumIndex) const {
   switch (aInputEnumIndex) {
     case IN_CROP_IN:
       return 0;
@@ -270,7 +279,7 @@ void FilterNodeCropWebgl::Draw(DrawTargetWebgl* aDT, const Rect& aSourceRect,
   }
 }
 
-int32_t FilterNodeTransformWebgl::InputIndex(uint32_t aInputEnumIndex) {
+int32_t FilterNodeTransformWebgl::InputIndex(uint32_t aInputEnumIndex) const {
   switch (aInputEnumIndex) {
     case IN_TRANSFORM_IN:
       return 0;
@@ -395,24 +404,53 @@ FilterNodeDeferInputWebgl::FilterNodeDeferInputWebgl(
 
 void FilterNodeDeferInputWebgl::ResolveInputs(DrawTargetWebgl* aDT,
                                               bool aAccel) {
-  if (!mInputSurfaces.empty()) {
-    return;
+  uint32_t inputIdx = InputIndex(IN_TRANSFORM_IN);
+  bool hasAccel = false;
+  if (inputIdx < NumberOfSetInputs() && mInputSurfaces[inputIdx]) {
+    if (aAccel || (mInputMask & (1 << inputIdx))) {
+      return;
+    }
+    hasAccel = true;
   }
   RefPtr<SourceSurface> surface;
+  SurfaceFormat format = SurfaceFormat::B8G8R8A8;
+  static const ColorPattern maskPattern(DeviceColor(1, 1, 1, 1));
+  const Pattern* pattern = mPattern.GetPattern();
   if (aAccel) {
+    // If using acceleration on a color pattern, attempt to blur solely on the
+    // alpha values to significantly reduce data churn, as the color will only
+    // vary linearly with alpha over the input surface. The color will be
+    // incorporated on the final mask draw.
+    if (mPattern.GetPattern()->GetType() == PatternType::COLOR) {
+      format = SurfaceFormat::A8;
+      pattern = &maskPattern;
+    }
     surface = aDT->ResolveFilterInputAccel(
-        mPath, *mPattern.GetPattern(), mSourceRect, mDestTransform, mOptions,
-        mStrokeOptions.ptrOr(nullptr));
+        mPath, *pattern, mSourceRect, mDestTransform, mOptions,
+        mStrokeOptions.ptrOr(nullptr), format);
   }
   if (!surface) {
     surface = aDT->mSkia->ResolveFilterInput(
-        mPath, *mPattern.GetPattern(), mSourceRect, mDestTransform, mOptions,
-        mStrokeOptions.ptrOr(nullptr));
+        mPath, *pattern, mSourceRect, mDestTransform, mOptions,
+        mStrokeOptions.ptrOr(nullptr), format);
   }
-  SetInput(InputIndex(IN_TRANSFORM_IN), surface);
+  if (hasAccel) {
+    SetInputSoftware(inputIdx, surface);
+  } else if (surface && surface->GetFormat() == SurfaceFormat::A8) {
+    SetInputAccel(inputIdx, surface);
+  } else {
+    SetInput(inputIdx, surface);
+  }
 }
 
-int32_t FilterNodeGaussianBlurWebgl::InputIndex(uint32_t aInputEnumIndex) {
+DeviceColor FilterNodeDeferInputWebgl::GetColor() const {
+  return mPattern.GetPattern()->GetType() == PatternType::COLOR
+             ? static_cast<const ColorPattern*>(mPattern.GetPattern())->mColor
+             : DeviceColor(1, 1, 1, 1);
+}
+
+int32_t FilterNodeGaussianBlurWebgl::InputIndex(
+    uint32_t aInputEnumIndex) const {
   switch (aInputEnumIndex) {
     case IN_GAUSSIAN_BLUR_IN:
       return 0;
@@ -448,6 +486,10 @@ void FilterNodeGaussianBlurWebgl::Draw(DrawTargetWebgl* aDT,
             mInputFilters[inputIdx] ? mInputFilters[inputIdx]->DrawChild(
                                           aDT, aSourceRect, &surfaceOffset)
                                     : mInputSurfaces[inputIdx]) {
+      DeviceColor color =
+          surface->GetFormat() == SurfaceFormat::A8 && mInputFilters[inputIdx]
+              ? mInputFilters[inputIdx]->GetColor()
+              : DeviceColor(1, 1, 1, 1);
       aDT->PushClipRect(Rect(aDestPoint, aSourceRect.Size()));
       IntRect surfRect =
           RoundedOut(Rect(surface->GetRect())
@@ -456,7 +498,7 @@ void FilterNodeGaussianBlurWebgl::Draw(DrawTargetWebgl* aDT,
           Point(surfRect.TopLeft() + surfaceOffset) - aSourceRect.TopLeft();
       success = surfRect.IsEmpty() ||
                 aDT->BlurSurface(mStdDeviation, surface, surfRect,
-                                 aDestPoint + destOffset, aOptions);
+                                 aDestPoint + destOffset, aOptions, color);
       aDT->PopClip();
     }
     if (!success) {

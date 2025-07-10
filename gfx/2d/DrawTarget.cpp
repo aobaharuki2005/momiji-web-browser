@@ -356,13 +356,11 @@ void DrawTarget::DrawShadow(const Path* aPath, const Pattern& aPattern,
 already_AddRefed<SourceSurface> DrawTarget::ResolveFilterInput(
     const Path* aPath, const Pattern& aPattern, const IntRect& aSourceRect,
     const Matrix& aDestTransform, const DrawOptions& aOptions,
-    const StrokeOptions* aStrokeOptions) {
-  if (!CanCreateSimilarDrawTarget(aSourceRect.Size(),
-                                  SurfaceFormat::B8G8R8A8)) {
+    const StrokeOptions* aStrokeOptions, SurfaceFormat aFormat) {
+  if (!CanCreateSimilarDrawTarget(aSourceRect.Size(), aFormat)) {
     return nullptr;
   }
-  RefPtr<DrawTarget> dt =
-      CreateSimilarDrawTarget(aSourceRect.Size(), SurfaceFormat::B8G8R8A8);
+  RefPtr<DrawTarget> dt = CreateSimilarDrawTarget(aSourceRect.Size(), aFormat);
   if (dt) {
     // See bug 1524554.
     dt->ClearRect(Rect());

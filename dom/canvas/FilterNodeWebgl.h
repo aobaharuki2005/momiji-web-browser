@@ -28,6 +28,9 @@ class FilterNodeWebgl : public FilterNode {
 
   FilterBackend GetBackendType() override { return FILTER_BACKEND_WEBGL; }
 
+  void ReserveInputIndex(uint32_t aIndex);
+  void SetInputAccel(uint32_t aIndex, SourceSurface* aSurface);
+  void SetInputSoftware(uint32_t aIndex, SourceSurface* aSurface);
   void SetInput(uint32_t aIndex, SourceSurface* aSurface) override;
   void SetInput(uint32_t aIndex, FilterNode* aFilter) override;
   void SetAttribute(uint32_t aIndex, bool) override;
@@ -54,6 +57,7 @@ class FilterNodeWebgl : public FilterNode {
   virtual already_AddRefed<SourceSurface> DrawChild(
       DrawTargetWebgl* aDT, const Rect& aSourceRect,
       IntPoint* aSurfaceOffset = nullptr);
+  virtual DeviceColor GetColor() const { return DeviceColor(1, 1, 1, 1); }
 
   virtual void ResolveInputs(DrawTargetWebgl* aDT, bool aAccel) {}
 
@@ -62,6 +66,7 @@ class FilterNodeWebgl : public FilterNode {
  protected:
   std::vector<RefPtr<FilterNodeWebgl>> mInputFilters;
   std::vector<RefPtr<SourceSurface>> mInputSurfaces;
+  uint32_t mInputMask = 0;
   FilterType mType;
   RefPtr<FilterNodeSoftware> mSoftwareFilter;
 
@@ -71,11 +76,11 @@ class FilterNodeWebgl : public FilterNode {
 
   static already_AddRefed<FilterNodeWebgl> Create(FilterType aType);
 
-  size_t NumberOfSetInputs() {
+  size_t NumberOfSetInputs() const {
     return std::max(mInputSurfaces.size(), mInputFilters.size());
   }
 
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) { return -1; }
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) const { return -1; }
 
   IntRect MapInputRectToSource(uint32_t aInputEnumIndex, const IntRect& aRect,
                                const IntRect& aMax, FilterNode* aSourceNode);
@@ -95,7 +100,7 @@ class FilterNodeCropWebgl : public FilterNodeWebgl {
  private:
   IntRect mCropRect;
 
-  int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  int32_t InputIndex(uint32_t aInputEnumIndex) const override;
 };
 
 class FilterNodeTransformWebgl : public FilterNodeWebgl {
@@ -117,7 +122,7 @@ class FilterNodeTransformWebgl : public FilterNodeWebgl {
   Matrix mMatrix;
   SamplingFilter mSamplingFilter = SamplingFilter::GOOD;
 
-  int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  int32_t InputIndex(uint32_t aInputEnumIndex) const override;
 };
 
 class FilterNodeDeferInputWebgl : public FilterNodeTransformWebgl {
@@ -129,6 +134,8 @@ class FilterNodeDeferInputWebgl : public FilterNodeTransformWebgl {
                             const StrokeOptions* aStrokeOptions);
 
   void ResolveInputs(DrawTargetWebgl* aDT, bool aAccel) override;
+
+  DeviceColor GetColor() const override;
 
  private:
   RefPtr<Path> mPath;
@@ -154,7 +161,7 @@ class FilterNodeGaussianBlurWebgl : public FilterNodeWebgl {
  private:
   float mStdDeviation = 0;
 
-  int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  int32_t InputIndex(uint32_t aInputEnumIndex) const override;
 };
 
 }  // namespace mozilla::gfx
