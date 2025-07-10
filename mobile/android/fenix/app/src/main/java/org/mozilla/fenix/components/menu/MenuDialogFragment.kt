@@ -289,7 +289,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                         if (args.accesspoint == MenuAccessPoint.External) {
                             context.getString(R.string.browser_custom_tab_menu_handlebar_content_description)
                         } else {
-                            context.getString(R.string.browser_close_main_menu_handlebar_content_description)
+                            context.getString(R.string.browser_main_menu_handlebar_content_description)
                         },
                     )
                 }
@@ -477,7 +477,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                         when (route) {
                             Route.MainMenu -> {
                                 handlebarContentDescription =
-                                    context.getString(R.string.browser_close_main_menu_handlebar_content_description)
+                                    context.getString(R.string.browser_main_menu_handlebar_content_description)
 
                                 val account by syncStore.observeAsState(initialValue = null) { state -> state.account }
                                 val accountState by syncStore.observeAsState(initialValue = NotAuthenticated) { state ->

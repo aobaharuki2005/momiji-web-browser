@@ -22,12 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.CollectionItemInfo
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.collectionItemInfo
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -42,7 +36,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param labelRes String resource ID for the label text.
  * @param state The state of the menu item to display.
  * @param shape The [RoundedCornerShape] to clip the background into.
- * @param index The index of the item within the row.
  * @param onClick Invoked when the user taps this item.
  */
 @Composable
@@ -52,27 +45,13 @@ fun LibraryMenuItem(
     @StringRes labelRes: Int,
     state: MenuItemState = MenuItemState.ENABLED,
     shape: RoundedCornerShape = RoundedCornerShape(4.dp),
-    index: Int = 0,
     onClick: () -> Unit,
 ) {
-    val contentDescription = stringResource(labelRes)
-
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
-            .clickable(enabled = state != MenuItemState.DISABLED, onClick = onClick)
-            .clearAndSetSemantics {
-                collectionItemInfo =
-                    CollectionItemInfo(
-                        rowIndex = 0,
-                        rowSpan = 1,
-                        columnIndex = index,
-                        columnSpan = 1,
-                    )
-                this.contentDescription = contentDescription
-                role = Role.Button
-            },
+            .clickable(enabled = state != MenuItemState.DISABLED, onClick = onClick),
         color = FirefoxTheme.colors.layer3,
         shape = shape,
     ) {
@@ -82,7 +61,7 @@ fun LibraryMenuItem(
         ) {
             Icon(
                 painter = painterResource(iconRes),
-                contentDescription = null,
+                contentDescription = stringResource(labelRes),
                 tint = FirefoxTheme.colors.iconPrimary,
             )
             Spacer(Modifier.height(4.dp))
