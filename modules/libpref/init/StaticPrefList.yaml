@@ -5475,7 +5475,7 @@
 # This is based on https://github.com/mfreed7/shadow-dom-selection
 - name: dom.shadowdom.selection_across_boundary.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Mimic Chrome's window.getSelection().toString() behaviour
