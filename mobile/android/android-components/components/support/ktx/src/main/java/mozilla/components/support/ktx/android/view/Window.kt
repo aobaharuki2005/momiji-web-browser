@@ -103,31 +103,29 @@ fun Window.setNavigationBarDividerColorCompat(@ColorInt color: Int?) {
  * This only works on Android 13 and above. On older versions calling this will result in no-op.
  */
 fun Window.setupPersistentInsets() {
-    if (SDK_INT >= VERSION_CODES.TIRAMISU) {
-        WindowCompat.setDecorFitsSystemWindows(this, false)
+    WindowCompat.setDecorFitsSystemWindows(this, false)
 
-        val rootView = decorView.findViewById<View>(android.R.id.content)
-        val persistentInsetsTypes = systemBars() or displayCutout()
+    val rootView = decorView.findViewById<View>(android.R.id.content)
+    val persistentInsetsTypes = systemBars() or displayCutout()
 
-        ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, windowInsets ->
-            val isInImmersiveMode = attributes.flags and WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS != 0
-            val persistentInsets = when (isInImmersiveMode) {
-                true -> {
-                    // If we are in immersive mode we need to reset current paddings and avoid setting others.
-                    Insets.of(0, 0, 0, 0)
-                }
-                false -> windowInsets.getInsets(persistentInsetsTypes)
+    ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, windowInsets ->
+        val isInImmersiveMode = attributes.flags and WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS != 0
+        val persistentInsets = when (isInImmersiveMode) {
+            true -> {
+                // If we are in immersive mode we need to reset current paddings and avoid setting others.
+                Insets.of(0, 0, 0, 0)
             }
-
-            rootView.setPadding(
-                persistentInsets.left,
-                persistentInsets.top,
-                persistentInsets.right,
-                persistentInsets.bottom,
-            )
-
-            // Pass window insets further to allow below listeners also know when there is a change.
-            return@setOnApplyWindowInsetsListener windowInsets
+            false -> windowInsets.getInsets(persistentInsetsTypes)
         }
+
+        rootView.setPadding(
+            persistentInsets.left,
+            persistentInsets.top,
+            persistentInsets.right,
+            persistentInsets.bottom,
+        )
+
+        // Pass window insets further to allow below listeners also know when there is a change.
+        return@setOnApplyWindowInsetsListener windowInsets
     }
 }
