@@ -27,6 +27,7 @@ void CTVerifyResult::Reset() {
   sctsFromUnknownLogs = 0;
   sctsWithInvalidSignatures = 0;
   sctsWithInvalidTimestamps = 0;
+  sctsWithDistrustedTimestamps = 0;
   embeddedSCTs = 0;
   sctsFromTLSHandshake = 0;
   sctsFromOCSP = 0;

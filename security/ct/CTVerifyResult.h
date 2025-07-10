@@ -66,6 +66,9 @@ class CTVerifyResult {
   size_t sctsWithInvalidSignatures;
   // The number of SCTs encountered with timestamps in the future.
   size_t sctsWithInvalidTimestamps;
+  // The number of SCTs encountered with timestamps past a root's distrust
+  // after date.
+  size_t sctsWithDistrustedTimestamps;
 
   // The number of SCTs that were embedded in the certificate.
   size_t embeddedSCTs;

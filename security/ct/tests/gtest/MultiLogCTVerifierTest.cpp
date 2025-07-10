@@ -82,7 +82,7 @@ class MultiLogCTVerifierTest : public ::testing::Test {
     ASSERT_EQ(Success,
               mVerifier.Verify(InputForBuffer(cert), InputForBuffer(issuerSPKI),
                                InputForBuffer(sctList), Input(), Input(), mNow,
-                               result));
+                               Nothing(), result));
     CheckForSingleValidSCTInResult(result, SCTOrigin::Embedded);
   }
 
@@ -153,9 +153,9 @@ TEST_F(MultiLogCTVerifierTest, VerifiesSCTFromOCSP) {
   EncodeSCTListForTesting(InputForBuffer(sct), sctList);
 
   CTVerifyResult result;
-  ASSERT_EQ(Success,
-            mVerifier.Verify(InputForBuffer(mTestCert), Input(), Input(),
-                             InputForBuffer(sctList), Input(), mNow, result));
+  ASSERT_EQ(Success, mVerifier.Verify(InputForBuffer(mTestCert), Input(),
+                                      Input(), InputForBuffer(sctList), Input(),
+                                      mNow, Nothing(), result));
 
   CheckForSingleValidSCTInResult(result, SCTOrigin::OCSPResponse);
 }
@@ -166,9 +166,9 @@ TEST_F(MultiLogCTVerifierTest, VerifiesSCTFromTLS) {
   EncodeSCTListForTesting(InputForBuffer(sct), sctList);
 
   CTVerifyResult result;
-  ASSERT_EQ(Success,
-            mVerifier.Verify(InputForBuffer(mTestCert), Input(), Input(),
-                             Input(), InputForBuffer(sctList), mNow, result));
+  ASSERT_EQ(Success, mVerifier.Verify(InputForBuffer(mTestCert), Input(),
+                                      Input(), Input(), InputForBuffer(sctList),
+                                      mNow, Nothing(), result));
 
   CheckForSingleValidSCTInResult(result, SCTOrigin::TLSExtension);
 }
@@ -179,9 +179,10 @@ TEST_F(MultiLogCTVerifierTest, VerifiesSCTFromMultipleSources) {
   EncodeSCTListForTesting(InputForBuffer(sct), sctList);
 
   CTVerifyResult result;
-  ASSERT_EQ(Success, mVerifier.Verify(InputForBuffer(mTestCert), Input(),
-                                      Input(), InputForBuffer(sctList),
-                                      InputForBuffer(sctList), mNow, result));
+  ASSERT_EQ(Success,
+            mVerifier.Verify(InputForBuffer(mTestCert), Input(), Input(),
+                             InputForBuffer(sctList), InputForBuffer(sctList),
+                             mNow, Nothing(), result));
 
   // The result should contain verified SCTs from TLS and OCSP origins.
   size_t embeddedCount = 0;
@@ -211,9 +212,9 @@ TEST_F(MultiLogCTVerifierTest, IdentifiesSCTFromUnknownLog) {
   GetSCTListWithInvalidLogID(sctList);
 
   CTVerifyResult result;
-  ASSERT_EQ(Success,
-            mVerifier.Verify(InputForBuffer(mTestCert), Input(), Input(),
-                             Input(), InputForBuffer(sctList), mNow, result));
+  ASSERT_EQ(Success, mVerifier.Verify(InputForBuffer(mTestCert), Input(),
+                                      Input(), Input(), InputForBuffer(sctList),
+                                      mNow, Nothing(), result));
 
   EXPECT_EQ(0U, result.decodingErrors);
   EXPECT_EQ(0U, result.verifiedScts.size());
@@ -233,15 +234,46 @@ TEST_F(MultiLogCTVerifierTest, IdentifiesSCTFromDisqualifiedLog) {
   EncodeSCTListForTesting(InputForBuffer(sct), sctList);
 
   CTVerifyResult result;
-  ASSERT_EQ(Success,
-            verifier.Verify(InputForBuffer(mTestCert), Input(), Input(),
-                            Input(), InputForBuffer(sctList), mNow, result));
+  ASSERT_EQ(Success, verifier.Verify(InputForBuffer(mTestCert), Input(),
+                                     Input(), Input(), InputForBuffer(sctList),
+                                     mNow, Nothing(), result));
 
   EXPECT_EQ(0U, result.decodingErrors);
   ASSERT_EQ(1U, result.verifiedScts.size());
   EXPECT_EQ(CTLogState::Retired, result.verifiedScts[0].logState);
   EXPECT_EQ(retiredTime, result.verifiedScts[0].logTimestamp);
   EXPECT_EQ(mLogOperatorID, result.verifiedScts[0].logOperatorId);
+}
+
+TEST_F(MultiLogCTVerifierTest, VerifiesSCTFromBeforeDistrust) {
+  Buffer sct(GetTestSignedCertificateTimestamp());
+  Buffer sctList;
+  EncodeSCTListForTesting(InputForBuffer(sct), sctList);
+
+  CTVerifyResult result;
+  ASSERT_EQ(Success, mVerifier.Verify(InputForBuffer(mTestCert), Input(),
+                                      Input(), Input(), InputForBuffer(sctList),
+                                      mNow, Some(mNow), result));
+
+  EXPECT_EQ(0U, result.decodingErrors);
+  EXPECT_EQ(1U, result.verifiedScts.size());
+  EXPECT_EQ(0U, result.sctsWithDistrustedTimestamps);
+}
+
+TEST_F(MultiLogCTVerifierTest, IdentifiesSCTFromAfterDistrust) {
+  Buffer sct(GetTestSignedCertificateTimestamp());
+  Buffer sctList;
+  EncodeSCTListForTesting(InputForBuffer(sct), sctList);
+
+  CTVerifyResult result;
+  ASSERT_EQ(Success,
+            mVerifier.Verify(InputForBuffer(mTestCert), Input(), Input(),
+                             Input(), InputForBuffer(sctList), mNow,
+                             Some(TimeFromEpochInSeconds(100)), result));
+
+  EXPECT_EQ(0U, result.decodingErrors);
+  EXPECT_EQ(0U, result.verifiedScts.size());
+  EXPECT_EQ(1U, result.sctsWithDistrustedTimestamps);
 }
 
 }  // namespace ct
