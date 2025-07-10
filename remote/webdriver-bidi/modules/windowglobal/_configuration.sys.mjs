@@ -18,6 +18,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  */
 class _ConfigurationModule extends WindowGlobalBiDiModule {
   #geolocationConfiguration;
+  #localeOverride;
   #preloadScripts;
   #resolveBlockerPromise;
   #viewportConfiguration;
@@ -25,7 +26,8 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
   constructor(messageHandler) {
     super(messageHandler);
 
-    this.#geolocationConfiguration = null;
+    this.#geolocationConfiguration = undefined;
+    this.#localeOverride = null;
     this.#preloadScripts = new Set();
     this.#viewportConfiguration = new Map();
 
@@ -56,7 +58,8 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
       if (
         this.#preloadScripts.size === 0 &&
         this.#viewportConfiguration.size === 0 &&
-        this.#geolocationConfiguration === null
+        this.#geolocationConfiguration === undefined &&
+        this.#localeOverride === null
       ) {
         this.#onConfigurationComplete(window);
         return;
@@ -77,7 +80,7 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
       // bug 1958942.
       window.document.documentElement.getBoundingClientRect();
 
-      if (this.#geolocationConfiguration !== null) {
+      if (this.#geolocationConfiguration !== undefined) {
         await this.messageHandler.handleCommand({
           moduleName: "emulation",
           commandName: "_setGeolocationOverride",
@@ -87,6 +90,20 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
           },
           params: {
             coordinates: this.#geolocationConfiguration,
+          },
+        });
+      }
+
+      if (this.#localeOverride !== null) {
+        await this.messageHandler.forwardCommand({
+          moduleName: "emulation",
+          commandName: "_setLocaleForBrowsingContext",
+          destination: {
+            type: lazy.RootMessageHandler.type,
+          },
+          params: {
+            context: this.messageHandler.context,
+            locale: this.#localeOverride,
           },
         });
       }
@@ -144,9 +161,10 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
       }
     }
 
-    // Geolocation and viewport overrides apply only to top-level traversables.
+    // Geolocation, locale and viewport overrides apply only to top-level traversables.
     if (
       (category === "geolocation-override" ||
+        category === "locale-override" ||
         category === "viewport-overrides") &&
       !this.messageHandler.context.parent
     ) {
@@ -155,18 +173,27 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
           continue;
         }
 
-        if (category === "geolocation-override") {
-          this.#geolocationConfiguration = value;
-        } else {
-          if (value.viewport !== undefined) {
-            this.#viewportConfiguration.set("viewport", value.viewport);
+        switch (category) {
+          case "geolocation-override": {
+            this.#geolocationConfiguration = value;
+            break;
           }
+          case "locale-override": {
+            this.#localeOverride = value;
+            break;
+          }
+          case "viewport-overrides": {
+            if (value.viewport !== undefined) {
+              this.#viewportConfiguration.set("viewport", value.viewport);
+            }
 
-          if (value.devicePixelRatio !== undefined) {
-            this.#viewportConfiguration.set(
-              "devicePixelRatio",
-              value.devicePixelRatio
-            );
+            if (value.devicePixelRatio !== undefined) {
+              this.#viewportConfiguration.set(
+                "devicePixelRatio",
+                value.devicePixelRatio
+              );
+            }
+            break;
           }
         }
       }
