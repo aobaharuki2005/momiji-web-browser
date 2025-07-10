@@ -17,7 +17,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
-import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
 
@@ -69,7 +68,7 @@ class OpenRecentlyClosedIntentProcessorTest {
 
         assertTrue(processor.process(intent, navController, out, settings))
 
-        verify { navController.nav(null, NavGraphDirections.actionGlobalRecentlyClosed()) }
+        verify { navController.navigate(NavGraphDirections.actionGlobalRecentlyClosed(), null) }
         verify { out wasNot Called }
     }
 

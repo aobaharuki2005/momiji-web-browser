@@ -29,7 +29,6 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
 import org.mozilla.fenix.components.AppStore
-import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixGleanTestRule
 import org.mozilla.fenix.tabstray.TabManagementFeatureHelper
@@ -81,9 +80,9 @@ class TabCounterViewTest {
         assertNotNull(StartOnHome.openTabsTray.testGetValue())
 
         verify {
-            navController.nav(
-                R.id.homeFragment,
+            navController.navigate(
                 NavGraphDirections.actionGlobalTabsTrayFragment(),
+                null,
             )
         }
     }

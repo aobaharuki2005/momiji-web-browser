@@ -7,7 +7,6 @@ package org.mozilla.fenix.browser
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.mockk.mockkStatic
 import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ReaderState
@@ -37,7 +36,6 @@ import org.mozilla.fenix.browser.store.BrowserScreenAction.PageTranslationStatus
 import org.mozilla.fenix.browser.store.BrowserScreenStore
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction.SnackbarAction
-import org.mozilla.fenix.ext.nav
 
 @RunWith(AndroidJUnit4::class)
 class TranslationsBindingTest {
@@ -256,19 +254,17 @@ class TranslationsBindingTest {
         )
         binding.start()
 
-        mockkStatic(NavController::nav) {
-            browserStore.dispatch(
-                TranslationsAction.TranslateOfferAction(
-                    tabId = tab.id,
-                    isOfferTranslate = true,
-                ),
-            ).joinBlocking()
+        browserStore.dispatch(
+            TranslationsAction.TranslateOfferAction(
+                tabId = tab.id,
+                isOfferTranslate = true,
+            ),
+        ).joinBlocking()
 
-            verify(onShowTranslationsDialog, never()).invoke()
-            verify(binding).recordTranslationStartTelemetry()
-            verify(appStore, atLeast(1)).dispatch(SnackbarAction.SnackbarDismissed)
-            verify(navController).navigate(expectedNavigation)
-        }
+        verify(onShowTranslationsDialog, never()).invoke()
+        verify(binding).recordTranslationStartTelemetry()
+        verify(appStore, atLeast(1)).dispatch(SnackbarAction.SnackbarDismissed)
+        verify(navController).navigate(expectedNavigation)
     }
 
     @Test

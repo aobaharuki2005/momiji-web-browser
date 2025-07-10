@@ -17,7 +17,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.MetricsUtils
-import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
 
@@ -53,8 +52,7 @@ class AssistIntentProcessorTest {
         }
 
         verify {
-            navController.nav(
-                null,
+            navController.navigate(
                 NavGraphDirections.actionGlobalSearchDialog(
                     sessionId = null,
                     searchAccessPoint = MetricsUtils.Source.NONE,
@@ -76,12 +74,15 @@ class AssistIntentProcessorTest {
         AssistIntentProcessor().process(intent, navController, out, settings)
 
         verify {
-            navController.nav(
-                null,
+            navController.navigate(
                 NavGraphDirections.actionGlobalHome(
+                    sessionToDelete = null,
+                    sessionToStartSearchFor = null,
+                    scrollToCollection = false,
                     focusOnAddressBar = true,
                     searchAccessPoint = MetricsUtils.Source.NONE,
                 ),
+                null,
             )
         }
 

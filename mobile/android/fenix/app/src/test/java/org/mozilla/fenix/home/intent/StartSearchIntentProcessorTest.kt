@@ -22,7 +22,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.MetricsUtils
-import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.helpers.FenixGleanTestRule
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
@@ -72,8 +71,7 @@ class StartSearchIntentProcessorTest {
         assertEquals(null, recordedEvents.single().extra)
 
         verify {
-            navController.nav(
-                null,
+            navController.navigate(
                 NavGraphDirections.actionGlobalSearchDialog(
                     sessionId = null,
                     searchAccessPoint = MetricsUtils.Source.WIDGET,
@@ -98,12 +96,12 @@ class StartSearchIntentProcessorTest {
         assertEquals(null, recordedEvents.single().extra)
 
         verify {
-            navController.nav(
-                null,
+            navController.navigate(
                 NavGraphDirections.actionGlobalHome(
                     focusOnAddressBar = true,
                     searchAccessPoint = MetricsUtils.Source.WIDGET,
                 ),
+                null,
             )
         }
         verify { out.removeExtra(HomeActivity.OPEN_TO_SEARCH) }

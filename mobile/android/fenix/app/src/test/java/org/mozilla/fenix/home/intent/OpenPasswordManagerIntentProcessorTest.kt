@@ -17,7 +17,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
-import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.shortcut.PasswordManagerIntentProcessor
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
@@ -72,7 +71,7 @@ class OpenPasswordManagerIntentProcessorTest {
 
         assertTrue(processor.process(intent, navController, out, settings))
 
-        verify { navController.nav(null, NavGraphDirections.actionGlobalSavedLoginsAuthFragment()) }
+        verify { navController.navigate(NavGraphDirections.actionGlobalSavedLoginsAuthFragment(), null) }
         verify { out.removeExtra(HomeActivity.OPEN_PASSWORD_MANAGER) }
     }
 
