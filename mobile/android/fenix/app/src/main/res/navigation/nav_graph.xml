@@ -193,6 +193,9 @@
     <action
         android:id="@+id/action_global_customReviewPromptDialogFragment"
         app:destination="@id/customReviewPromptDialogFragment" />
+    <action
+        android:id="@+id/action_global_to_installedAddonDetailsFragment"
+        app:destination="@id/installedAddonDetailsFragment" />
 
     <dialog
         android:id="@+id/tabsTrayFragment"

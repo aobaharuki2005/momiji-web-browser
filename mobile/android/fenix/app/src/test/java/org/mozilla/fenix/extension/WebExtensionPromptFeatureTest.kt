@@ -4,7 +4,9 @@
 
 package org.mozilla.fenix.extension
 
+import android.widget.TextView
 import androidx.core.view.isVisible
+import androidx.navigation.NavController
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -16,7 +18,6 @@ import mozilla.components.browser.state.state.extension.WebExtensionPromptReques
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.webextension.WebExtensionInstallException
 import mozilla.components.feature.addons.Addon
-import mozilla.components.feature.addons.ui.PermissionsDialogFragment
 import mozilla.components.support.ktx.android.content.appVersionName
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
@@ -27,8 +28,11 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.spy
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
+import org.mozilla.fenix.addons.AddonsManagementFragmentDirections
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.LinkTextView
 import org.robolectric.RobolectricTestRunner
@@ -40,6 +44,7 @@ class WebExtensionPromptFeatureTest {
     private lateinit var store: BrowserStore
 
     private val onLinkClicked: (String, Boolean) -> Unit = spyk()
+    private val navController: NavController = mockk(relaxed = true)
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
@@ -53,6 +58,7 @@ class WebExtensionPromptFeatureTest {
                 context = testContext,
                 fragmentManager = mockk(relaxed = true),
                 onLinkClicked = onLinkClicked,
+                navController = navController,
                 addonManager = mockk(relaxed = true),
             ),
         )
@@ -436,25 +442,40 @@ class WebExtensionPromptFeatureTest {
     @Test
     fun `WHEN clicking Learn More on the Permissions Dialog THEN open the correct SUMO page in a custom tab`() {
         val addon: Addon = mockk(relaxed = true)
+        val fragment = spy(
+            webExtensionPromptFeature.showPermissionDialog(
+                addon = addon,
+                promptRequest = mockk(),
+                forOptionalPermissions = false,
+                permissions = emptyList(),
+                origins = emptyList(),
+                dataCollectionPermissions = emptyList(),
+            ),
+        )
+        doReturn(testContext).`when`(fragment)?.requireContext()
+
+        val dialog = fragment?.onCreateDialog(null)
+        dialog?.findViewById<TextView>(R.id.learn_more_link)?.performClick()
 
         val expectedUrl = SupportUtils.getSumoURLForTopic(
             testContext,
             SupportUtils.SumoTopic.EXTENSION_PERMISSIONS,
         )
-
-        val dialog = PermissionsDialogFragment.newInstance(
-            addon = addon,
-            forOptionalPermissions = false,
-            permissions = listOf("tabs"),
-            origins = emptyList(),
-            dataCollectionPermissions = emptyList(),
-            onLearnMoreClicked = {
-                onLinkClicked(expectedUrl, false)
-            },
-        )
-
-        dialog.onLearnMoreClicked?.invoke()
-
         verify { onLinkClicked(expectedUrl, false) }
+    }
+
+    @Test
+    fun `WHEN clicking the link in the description THEN navigates to the add-on detail view`() {
+        val addon: Addon = mockk(relaxed = true)
+        val fragment = spy(webExtensionPromptFeature.showPostInstallationDialog(addon = addon))
+
+        // Simulate a click to the link in the description.
+        fragment?.onExtensionSettingsLinkClicked?.invoke(addon)
+
+        verify {
+            navController.navigate(
+                AddonsManagementFragmentDirections.actionGlobalToInstalledAddonDetailsFragment(addon),
+            )
+        }
     }
 }

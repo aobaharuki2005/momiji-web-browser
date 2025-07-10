@@ -140,8 +140,8 @@ class SettingsSubMenuAddonsManagerRobot {
             Log.i(TAG, "verifyAddonInstallCompletedPrompt: Started try #$i")
             try {
                 assertUIObjectExists(
-                    itemContainingText("$addonName has been added to $appName"),
-                    itemContainingText("Access $addonName from the $appName menu."),
+                    itemContainingText("$addonName was added"),
+                    itemContainingText("Update permissions and data preferences any time in the extension settings."),
                     itemContainingText("OK"),
                     waitingTime = waitingTimeLong,
                 )
