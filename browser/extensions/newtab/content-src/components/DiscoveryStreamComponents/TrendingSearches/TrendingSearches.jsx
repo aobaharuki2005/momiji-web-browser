@@ -23,8 +23,8 @@ function TrendingSearches() {
   let resultRef = useRef([]);
 
   const TRENDING_SEARCH_CONTEXT_MENU_OPTIONS = [
-    "TrendingSearchLearnMore",
     "TrendingSearchDismiss",
+    "TrendingSearchLearnMore",
   ];
 
   function onArrowClick() {
@@ -131,7 +131,7 @@ function TrendingSearches() {
               onClick={onArrowClick}
               className={`icon icon-arrowhead-up`}
               type="icon ghost"
-              data-l10n-id={`newtab-trending-searches-${collapsed ? "hide" : "show"}-trending`}
+              data-l10n-id={`newtab-trending-searches-${collapsed ? "show" : "hide"}-trending`}
             ></moz-button>
           </div>
         </div>

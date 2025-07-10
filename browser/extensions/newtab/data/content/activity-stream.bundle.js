@@ -4950,7 +4950,7 @@ function TrendingSearches() {
   } = TrendingSearch;
   const variant = prefs[PREF_TRENDING_VARIANT];
   let resultRef = (0,external_React_namespaceObject.useRef)([]);
-  const TRENDING_SEARCH_CONTEXT_MENU_OPTIONS = ["TrendingSearchLearnMore", "TrendingSearchDismiss"];
+  const TRENDING_SEARCH_CONTEXT_MENU_OPTIONS = ["TrendingSearchDismiss", "TrendingSearchLearnMore"];
   function onArrowClick() {
     dispatch(actionCreators.AlsoToMain({
       type: actionTypes.TRENDING_SEARCH_TOGGLE_COLLAPSE,
@@ -5041,7 +5041,7 @@ function TrendingSearches() {
       onClick: onArrowClick,
       className: `icon icon-arrowhead-up`,
       type: "icon ghost",
-      "data-l10n-id": `newtab-trending-searches-${collapsed ? "hide" : "show"}-trending`
+      "data-l10n-id": `newtab-trending-searches-${collapsed ? "show" : "hide"}-trending`
     }))), !collapsed && /*#__PURE__*/external_React_default().createElement("ul", {
       className: "trending-searches-list"
     }, suggestions.map((result, index) => {

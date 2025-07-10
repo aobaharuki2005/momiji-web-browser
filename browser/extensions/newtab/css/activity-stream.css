@@ -9092,6 +9092,9 @@ main section {
 .fixed-search .trending-searches-pill-wrapper {
   display: none;
 }
+.trending-searches-pill-wrapper.hover-only .close-open-trending-searches {
+  display: none;
+}
 @media (prefers-reduced-motion: no-preference) {
   .trending-searches-pill-wrapper.hover-only {
     max-height: 0;
@@ -9124,41 +9127,42 @@ main section {
   overflow: hidden;
 }
 .trending-searches-pill-wrapper .trending-search-item {
+  max-width: 24ch;
+  height: min-content;
+}
+.trending-searches-pill-wrapper .trending-search-item a {
+  text-decoration: none;
+  font-size: var(--font-size-root);
   background-color: var(--background-color-canvas);
   outline: var(--border-width) solid var(--table-row-background-color-alternate);
   border-radius: var(--border-radius-circle);
   color: var(--newtab-contextual-text-primary-color);
   padding: var(--space-small) var(--space-medium);
   white-space: nowrap;
-  height: min-content;
   margin: var(--space-xsmall);
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 24ch;
+  display: block;
 }
-.trending-searches-pill-wrapper .trending-search-item a {
-  text-decoration: none;
-  font-size: var(--font-size-root);
-  color: var(--newtab-contextual-text-primary-color);
-}
-.trending-searches-pill-wrapper .trending-search-item a:focus {
-  outline: none;
-}
-.trending-searches-pill-wrapper .trending-search-item:hover {
+.trending-searches-pill-wrapper .trending-search-item a:hover {
   background-color: var(--newtab-button-static-hover-background);
   cursor: pointer;
 }
-.trending-searches-pill-wrapper .trending-search-item:hover:active {
+.trending-searches-pill-wrapper .trending-search-item a:hover:active {
   background-color: var(--newtab-button-static-active-background);
 }
-.trending-searches-pill-wrapper .trending-search-item:focus-within {
+.trending-searches-pill-wrapper .trending-search-item a:focus-within {
   outline: var(--focus-outline);
 }
 
+.ds-column-grid .trending-searches-list-view {
+  width: 296px;
+}
 .ds-section-grid .trending-searches-list-view {
   order: 1;
   grid-row: span 2;
   grid-column: span 1;
+  width: 100%;
 }
 @media (min-width: 1122px) and (max-width: 1390px) {
   .ds-section-grid .trending-searches-list-view ~ .col-3-small {
@@ -9191,16 +9195,6 @@ main section {
   padding-inline: var(--space-small);
   margin-block: 0;
 }
-.trending-searches-list-view:not(.placeholder) .trending-searches-list-item {
-  padding: var(--space-medium) var(--space-small);
-  border-radius: var(--border-radius-medium);
-}
-.trending-searches-list-view:not(.placeholder) .trending-searches-list-item:hover {
-  background-color: var(--newtab-background-color);
-}
-.trending-searches-list-view:not(.placeholder) .trending-searches-list-item:focus-within {
-  outline: var(--focus-outline);
-}
 .trending-searches-list-view:not(.placeholder) .trending-searches-list-item .trending-icon-wrapper {
   display: flex;
   align-items: center;
@@ -9217,17 +9211,22 @@ main section {
   color: var(--newtab-contextual-text-secondary-color);
 }
 .trending-searches-list-view:not(.placeholder) .trending-searches-list-item a {
+  border-radius: var(--border-radius-medium);
   color: var(--newtab-text-primary-color);
-  text-decoration: none;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  display: -webkit-box;
-  word-break: break-word;
+  display: block;
+  max-width: 100%;
+  padding: var(--space-medium) var(--space-small);
   overflow: hidden;
+  text-decoration: none;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: break-word;
+}
+.trending-searches-list-view:not(.placeholder) .trending-searches-list-item a:hover {
+  background-color: var(--newtab-background-color);
 }
 .trending-searches-list-view:not(.placeholder) .trending-searches-list-item a:focus {
-  outline: none;
+  outline: var(--focus-outline);
 }
 .trending-searches-list-view:not(.placeholder) .trending-searches-list-item a:has(.trending-icon) {
   display: flex;
