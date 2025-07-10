@@ -1892,6 +1892,14 @@ export class UrlbarInput {
     }
   }
 
+  /**
+   * Opens a search page if the value is non-empty, otherwise opens the
+   * search engine homepage (searchform).
+   *
+   * @param {string} value
+   * @param {object} options
+   * @param {nsISearchEngine} options.searchEngine
+   */
   openEngineHomePage(value, { searchEngine }) {
     if (!searchEngine) {
       console.warn("No searchEngine parameter");
@@ -1901,11 +1909,7 @@ export class UrlbarInput {
     let trimmedValue = value.trim();
     let url;
     if (trimmedValue) {
-      url = searchEngine.getSubmission(
-        trimmedValue,
-        null,
-        "search-mode-switcher"
-      ).uri.spec;
+      url = searchEngine.getSubmission(trimmedValue, null).uri.spec;
       // TODO: record SAP telemetry, see Bug 1961789.
     } else {
       url = searchEngine.searchForm;
