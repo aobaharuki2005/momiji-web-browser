@@ -141,16 +141,29 @@ static nsIWidget::InputRegion ComputeInputRegion(const ComputedStyle& aStyle,
               .Truncated()};
 }
 
+bool nsMenuPopupFrame::IsDragPopup() const {
+  return !mInContentShell && mPopupType == PopupType::Panel &&
+         mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                            nsGkAtoms::drag, eIgnoreCase);
+}
+
 bool nsMenuPopupFrame::ShouldHaveWidgetWhenHidden() const {
-  // Create a widget upfront for panels that never hide frames for their
-  // contents (like web extension popups). These, for now, need to create the
-  // widgets upfront, so that the frames inside the popup don't get "reparented"
-  // in the widget tree.
-  //
-  // TODO(emilio, bug 1976324): Try to somehow remove this special-case, web-ext
-  // panel needs it to compute the "natural" bounds of their contents before
-  // showing the popup, but that seems like it could be tweaked.
-  return mContent->AsElement()->HasAttr(nsGkAtoms::neverhidden);
+  if (mContent->AsElement()->HasAttr(nsGkAtoms::neverhidden)) {
+    // Create a widget upfront for panels that never hide frames for their
+    // contents (like web extension popups). These, for now, need to create the
+    // widgets upfront, so that the frames inside the popup don't get
+    // "reparented" in the widget tree.
+    //
+    // TODO(emilio, bug 1976324): Try to somehow remove this special-case,
+    // web-ext panel needs it to compute the "natural" bounds of their contents
+    // before showing the popup, but that seems like it could be tweaked.
+    return true;
+  }
+  if (IsDragPopup()) {
+    // Create widgets upfront for the drag popup for now, see bug 1976623.
+    return true;
+  }
+  return false;
 }
 
 void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -302,15 +315,7 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
   widgetData.mBorderStyle = widget::BorderStyle::Default;
   widgetData.mClipSiblings = true;
   widgetData.mPopupHint = mPopupType;
-
-  if (!mInContentShell) {
-    // A drag popup may be used for non-static translucent drag feedback
-    if (mPopupType == PopupType::Panel &&
-        mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                           nsGkAtoms::drag, eIgnoreCase)) {
-      widgetData.mIsDragPopup = true;
-    }
-  }
+  widgetData.mIsDragPopup = IsDragPopup();
 
   const bool remote = HasRemoteContent();
 
