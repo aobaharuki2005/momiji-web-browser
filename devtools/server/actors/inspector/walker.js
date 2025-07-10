@@ -1176,8 +1176,16 @@ class WalkerActor extends Actor {
     // For now, only return each node once, since the frontend doesn't have a way to
     // highlight each result individually (This would change if we fix Bug 1976634).
     const seenNodes = new Set();
-    for (const result of results) {
-      seenNodes.add(result.node);
+    for (const { node } of results) {
+      const isInlinedTextNode =
+        node.nodeType === Node.TEXT_NODE &&
+        node.parentElement &&
+        this.inlineTextChild(node.parentElement);
+
+      // If this is a text node that will be inlined in its parent element, let's directly
+      // return the parent element already so we don't get multiple results for the same
+      // Markup view tree node.
+      seenNodes.add(isInlinedTextNode ? node.parentElement : node);
     }
 
     const nodeList = new NodeListActor(this, Array.from(seenNodes));
