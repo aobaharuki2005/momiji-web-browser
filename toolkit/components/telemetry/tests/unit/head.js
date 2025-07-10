@@ -538,6 +538,11 @@ function maybeUnlockAppUpdateChannelPref() {
   }
 }
 
+function getDateInSeconds(date) {
+  const MS_IN_SEC = 1000;
+  return Math.floor(date / MS_IN_SEC);
+}
+
 if (runningInParent) {
   // Set logging preferences for all the tests.
   Services.prefs.setCharPref("toolkit.telemetry.log.level", "Trace");

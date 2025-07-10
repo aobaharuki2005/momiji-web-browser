@@ -90,13 +90,12 @@ add_setup(async function test_setup() {
   // Don't bypass the terms of use notification in this test, we'll
   // fake it.
   Services.prefs.setBoolPref(TOU_BYPASS_NOTIFICATION_PREF, false);
-
+  await Services.fog.testResetFOG();
   TelemetryReportingPolicy.setup();
 });
 
 add_setup(skipIfNotBrowser(), async () => {
   const { cleanup } = await NimbusTestUtils.setupTest();
-
   registerCleanupFunction(cleanup);
 });
 
@@ -228,6 +227,25 @@ async function doOneModalFlow(version) {
     TelemetryReportingPolicy.testUserHasAcceptedTOU(),
     true,
     "After interaction, the state should be accepted."
+  );
+
+  const metricVersion = await Glean.termsofuse.version.testGetValue();
+  Assert.equal(
+    metricVersion,
+    version,
+    `Glean.termsofuse.version is ${metricVersion} and matches expected ${version}`
+  );
+
+  const rawDate = await Glean.termsofuse.date.testGetValue();
+  // Compare only seconds
+  const metricSec = getDateInSeconds(rawDate);
+  const expectedSec = getDateInSeconds(
+    Services.prefs.getStringPref(TOU_ACCEPTED_DATE_PREF)
+  );
+  Assert.equal(
+    metricSec,
+    expectedSec,
+    `Glean.termsofuse.date (in seconds) is ${metricSec} and matches expected ${expectedSec}`
   );
 
   await doCleanup();
@@ -388,5 +406,35 @@ add_task(
     await doCleanup();
 
     sinon.restore();
+  }
+);
+
+add_task(
+  skipIfNotBrowser(),
+  async function test_startup_records_tou_telemetry_if_prefs_already_set() {
+    const timestamp = Date.now();
+    const version = 999;
+
+    Services.prefs.setStringPref(TOU_ACCEPTED_DATE_PREF, timestamp.toString());
+    Services.prefs.setIntPref(TOU_ACCEPTED_VERSION_PREF, version);
+
+    TelemetryReportingPolicy.reset();
+
+    const metricVersion = await Glean.termsofuse.version.testGetValue();
+    Assert.equal(
+      metricVersion,
+      version,
+      `Glean.termsofuse.version is ${metricVersion} and matches expected ${version}`
+    );
+
+    // Compare only seconds
+    const rawDate = await Glean.termsofuse.date.testGetValue();
+    const metricSec = getDateInSeconds(rawDate);
+    const expectedSec = getDateInSeconds(timestamp);
+    Assert.equal(
+      metricSec,
+      expectedSec,
+      `Glean.termsofuse.date (in seconds) is ${metricSec} and matches expected ${expectedSec}`
+    );
   }
 );

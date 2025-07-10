@@ -32,6 +32,7 @@ const RELEASE_DATES = TelemetryReportingPolicy.fullOnTrainReleaseDates;
 const GENERIC_TOU_TIMESTAMP = 1745000000000;
 const ORIGINAL_CHANNEL = TelemetryUtils.getUpdateChannel();
 const DEFAULT_BRANCH = Services.prefs.getDefaultBranch("");
+const MIGRATED_TOU_VERSION = 4;
 
 const skipIfNotBrowser = () => ({
   skip_if: () => AppConstants.MOZ_BUILD_APP != "browser",
@@ -69,7 +70,7 @@ function setupLegacyAndRolloutPrefs({
   }
 }
 
-function checkLegacyAndRolloutPrefsAfterSuccessfulMigration(
+async function checkPrefsAndTelemetryValuesAfterSuccessfulMigration(
   expectedAcceptedDate
 ) {
   // We started the default version as 4 to distinguish it from version numbers
@@ -131,14 +132,32 @@ function checkLegacyAndRolloutPrefsAfterSuccessfulMigration(
     ),
     "Legacy minimum policy version should be cleared"
   );
+
   Assert.equal(
     Services.prefs.getBoolPref(TOU_PREF_MIGRATION_CHECK, false),
     true,
     "Pref migration complete pref set to true"
   );
+
+  const metricVersion = await Glean.termsofuse.version.testGetValue();
+  Assert.equal(
+    metricVersion,
+    MIGRATED_TOU_VERSION,
+    `Glean.termsofuse.version is ${metricVersion} and matches expected ${MIGRATED_TOU_VERSION}`
+  );
+
+  const rawMetricDate = await Glean.termsofuse.date.testGetValue();
+  // Compare only seconds
+  const metricSec = getDateInSeconds(rawMetricDate);
+  const expectedSec = getDateInSeconds(expectedAcceptedDate);
+  Assert.equal(
+    metricSec,
+    expectedSec,
+    `Glean.termsofuse.date (in seconds) is ${metricSec} and matches expected ${expectedSec}`
+  );
 }
 
-function resetPrefs() {
+async function resetState() {
   const legacyDataReportingPrefs = [
     TelemetryUtils.Preferences.AcceptedPolicyVersion,
     TelemetryUtils.Preferences.AcceptedPolicyDate,
@@ -189,6 +208,8 @@ add_setup(async function test_setup() {
     false
   );
   Services.prefs.setBoolPref(TOU_BYPASS_NOTIFICATION_PREF, false);
+  do_get_profile();
+  Services.fog.initializeFOG();
   TelemetryReportingPolicy.setup();
 });
 
@@ -211,7 +232,7 @@ add_task(
     });
 
     await runMigrationFlow();
-    checkLegacyAndRolloutPrefsAfterSuccessfulMigration(timestamp);
+    await checkPrefsAndTelemetryValuesAfterSuccessfulMigration(timestamp);
 
     Assert.equal(
       Services.prefs.getIntPref(TOU_ACCEPTED_VERSION_PREF),
@@ -224,7 +245,7 @@ add_task(
       "Nimbus experiment - migrated TOU date"
     );
 
-    resetPrefs();
+    await resetState();
   }
 );
 
@@ -252,7 +273,7 @@ add_task(
       );
 
       await runMigrationFlow();
-      checkLegacyAndRolloutPrefsAfterSuccessfulMigration(timestamp);
+      await checkPrefsAndTelemetryValuesAfterSuccessfulMigration(timestamp);
 
       Assert.equal(
         Services.prefs.getIntPref(TOU_ACCEPTED_VERSION_PREF),
@@ -265,7 +286,7 @@ add_task(
         `${channel} partial on-train rollout - migrated TOU date`
       );
 
-      resetPrefs();
+      await resetState();
     }
   }
 );
@@ -299,7 +320,7 @@ add_task(
     );
 
     await runMigrationFlow();
-    checkLegacyAndRolloutPrefsAfterSuccessfulMigration(timestamp);
+    await checkPrefsAndTelemetryValuesAfterSuccessfulMigration(timestamp);
 
     Assert.equal(
       Services.prefs.getIntPref(TOU_ACCEPTED_VERSION_PREF),
@@ -312,7 +333,7 @@ add_task(
       "Nightly full rollout - migrated TOU date"
     );
 
-    resetPrefs();
+    await resetState();
   }
 );
 
@@ -345,7 +366,7 @@ add_task(
     );
 
     await runMigrationFlow();
-    checkLegacyAndRolloutPrefsAfterSuccessfulMigration(timestamp);
+    await checkPrefsAndTelemetryValuesAfterSuccessfulMigration(timestamp);
 
     Assert.equal(
       Services.prefs.getIntPref(TOU_ACCEPTED_VERSION_PREF),
@@ -358,7 +379,7 @@ add_task(
       "Beta full rollout - migrated TOU date"
     );
 
-    resetPrefs();
+    await resetState();
   }
 );
 
@@ -391,7 +412,7 @@ add_task(
     );
 
     await runMigrationFlow();
-    checkLegacyAndRolloutPrefsAfterSuccessfulMigration(timestamp);
+    await checkPrefsAndTelemetryValuesAfterSuccessfulMigration(timestamp);
 
     Assert.equal(
       Services.prefs.getIntPref(TOU_ACCEPTED_VERSION_PREF),
@@ -404,7 +425,7 @@ add_task(
       "Release full rollout - migrated TOU date"
     );
 
-    resetPrefs();
+    await resetState();
   }
 );
 
@@ -422,7 +443,7 @@ add_task(
       "Legacy flow and TOU flow skipped when both bypass prefs are set"
     );
 
-    resetPrefs();
+    await resetState();
   }
 );
 
@@ -455,7 +476,7 @@ add_task(
       "When preonboarding disabled, acceptedVersion stays unset"
     );
 
-    resetPrefs();
+    await resetState();
     Services.prefs.clearUserPref(TOU_PREONBOARDING_ENABLED_PREF);
   }
 );
@@ -477,9 +498,9 @@ add_task(
     Services.prefs.setBoolPref(TOU_PREONBOARDING_ENABLED_PREF, false);
 
     await runMigrationFlow();
-    checkLegacyAndRolloutPrefsAfterSuccessfulMigration(timestamp);
+    await checkPrefsAndTelemetryValuesAfterSuccessfulMigration(timestamp);
 
-    resetPrefs();
+    await resetState();
     Services.prefs.clearUserPref(TOU_PREONBOARDING_ENABLED_PREF);
   }
 );
@@ -520,9 +541,11 @@ add_task(
       "termsofuse.bypassNotification should be updated to true when legacy bypassNotification is true"
     );
 
-    checkLegacyAndRolloutPrefsAfterSuccessfulMigration(GENERIC_TOU_TIMESTAMP);
+    await checkPrefsAndTelemetryValuesAfterSuccessfulMigration(
+      GENERIC_TOU_TIMESTAMP
+    );
 
-    resetPrefs();
+    await resetState();
   }
 );
 
@@ -565,7 +588,7 @@ add_task(
       "termsofuse.bypassNotification must stay false when legacy bypassNotification is false"
     );
 
-    resetPrefs();
+    await resetState();
   }
 );
 
@@ -605,7 +628,7 @@ add_task(
       "If user accepted legacy datareporting flow, hasUserAcceptedCurrentTOU should be false"
     );
 
-    resetPrefs();
+    await resetState();
   }
 );
 
@@ -647,7 +670,7 @@ add_task(
     );
 
     showStub.restore();
-    resetPrefs();
+    await resetState();
   }
 );
 
@@ -684,6 +707,6 @@ add_task(
       "Legacy data reporting flow should not show once TOU is accepted via migration"
     );
 
-    resetPrefs();
+    await resetState();
   }
 );

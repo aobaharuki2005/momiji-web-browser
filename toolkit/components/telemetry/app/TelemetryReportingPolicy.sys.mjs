@@ -711,6 +711,15 @@ var TelemetryReportingPolicyImpl = {
     // Migrate the data choices infobar, if needed.
     this._migratePreferences();
 
+    // Update TOU metrics with current state so that its sent in the next
+    // metrics ping even if the values don't change.
+    this._recordTOUDateTelemetry();
+    this._recordTOUVersionTelemetry();
+
+    // Watch for TOU pref changes so our metrics always stay in sync.
+    Services.prefs.addObserver(TOU_ACCEPTED_DATE_PREF, this);
+    Services.prefs.addObserver(TOU_ACCEPTED_VERSION_PREF, this);
+
     // Add the event observers.
     Services.obs.addObserver(this, "sessionstore-windows-restored");
   },
@@ -731,6 +740,8 @@ var TelemetryReportingPolicyImpl = {
    */
   _detachObservers() {
     Services.obs.removeObserver(this, "sessionstore-windows-restored");
+    Services.prefs.removeObserver(TOU_ACCEPTED_DATE_PREF, this);
+    Services.prefs.removeObserver(TOU_ACCEPTED_VERSION_PREF, this);
   },
 
   /**
@@ -890,6 +901,30 @@ var TelemetryReportingPolicyImpl = {
     lazy.TelemetrySend.notifyCanUpload();
   },
 
+  _recordTOUDateTelemetry() {
+    const date = this.termsOfUseAcceptedDate;
+    let formattedDate;
+    try {
+      // only set the ping if date is a real Date
+      if (date instanceof Date) {
+        //  PRTime/microseconds expected
+        formattedDate = date.getTime() * 1000;
+        Glean.termsofuse.date.set(formattedDate);
+      }
+    } catch (e) {
+      this._log.error("Failed to record TOU Glean metrics", e);
+    }
+  },
+
+  _recordTOUVersionTelemetry() {
+    const version = this.termsOfUseAcceptedVersion;
+    try {
+      Glean.termsofuse.version.set(version);
+    } catch (e) {
+      this._log.error("Failed to record TOU Version Glean metric", e);
+    }
+  },
+
   /**
    * Record date and the version of the accepted policy.
    */
@@ -992,9 +1027,17 @@ var TelemetryReportingPolicyImpl = {
     });
   },
 
-  observe(aSubject, aTopic) {
+  observe(aSubject, aTopic, aData) {
     if (aTopic == "sessionstore-windows-restored") {
       this._delayedSetup();
+    }
+    if (aTopic === "nsPref:changed") {
+      if (aData === TOU_ACCEPTED_DATE_PREF) {
+        this._recordTOUDateTelemetry();
+      }
+      if (aData === TOU_ACCEPTED_VERSION_PREF) {
+        this._recordTOUVersionTelemetry();
+      }
     }
   },
 
