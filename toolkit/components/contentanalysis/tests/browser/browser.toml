@@ -80,6 +80,9 @@ support-files = [
   "!/dom/events/test/browser_dragdrop_inner.html",
   "!/dom/events/test/browser_dragdrop_outer.html",
 ]
+skip-if = [
+  "os == 'win' && os_version == '11.26100' && opt", # Bug 1922273
+]
 
 ["browser_content_analysis_dnd_shadow.js"]
 support-files = [
