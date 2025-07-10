@@ -803,6 +803,8 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
         browserWebExtensionMenuItems: List<WebExtensionMenuItem>,
     ): String? {
         return when {
+            args.accesspoint == MenuAccessPoint.Home -> null
+
             isExtensionsProcessDisabled -> {
                 requireContext().getString(R.string.browser_menu_extensions_disabled_description)
             }

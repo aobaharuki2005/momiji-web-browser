@@ -78,7 +78,7 @@ fun LibraryMenuItem(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 12.dp),
         ) {
             Icon(
                 painter = painterResource(iconRes),

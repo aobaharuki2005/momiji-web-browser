@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -87,12 +86,12 @@ internal fun MenuNavHeader(
                     Color.Transparent
                 },
             )
-            .padding(horizontal = 8.dp, vertical = 12.dp)
+            .padding(horizontal = 4.dp, vertical = 12.dp)
             .verticalScroll(rememberScrollState())
             .semantics(mergeDescendants = true) {
                 contentDescription = navigationHeaderContentDescription
             },
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.Top,
     ) {
         MenuNavItem(
@@ -148,7 +147,6 @@ private fun MenuNavItem(
 ) {
     Column(
         modifier = Modifier
-            .width(64.dp)
             .fillMaxHeight()
             .combinedClickable(
                 interactionSource = null,
