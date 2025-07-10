@@ -819,6 +819,7 @@ public class GeckoAppShell {
           "notifyAlertListener",
           name,
           "alertclickcallback",
+          String.class,
           action);
     }
   }
