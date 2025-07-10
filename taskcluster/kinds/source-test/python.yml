@@ -71,6 +71,7 @@ fog:
     when:
         files-changed:
             - 'toolkit/components/glean/**'
+            - 'browser/config/version.txt'
 
 mach:
     description: python/mach unit tests
