@@ -118,6 +118,7 @@ add_task(async function test_edit_profile_custom_avatar() {
         );
 
         await editProfileCard.updateComplete;
+        await new Promise(resolve => content.requestAnimationFrame(resolve));
 
         EventUtils.synthesizeMouseAtCenter(
           editProfileCard.avatarSelectorLink,
@@ -125,10 +126,15 @@ add_task(async function test_edit_profile_custom_avatar() {
           content
         );
 
+        const avatarSelector = editProfileCard.avatarSelector;
+
         Assert.ok(
-          ContentTaskUtils.isVisible(editProfileCard.avatarSelector),
+          ContentTaskUtils.isVisible(avatarSelector),
           "Should be showing the profile avatar selector"
         );
+
+        avatarSelector.state = "custom";
+        await avatarSelector.updateComplete;
       });
     }
   );
@@ -184,14 +190,15 @@ add_task(async function test_edit_profile_custom_avatar_upload() {
           );
 
           await editProfileCard.updateComplete;
-
-          const avatarSelector = editProfileCard.avatarSelector;
+          await new Promise(resolve => content.requestAnimationFrame(resolve));
 
           EventUtils.synthesizeMouseAtCenter(
             editProfileCard.avatarSelectorLink,
             {},
             content
           );
+
+          const avatarSelector = editProfileCard.avatarSelector;
 
           Assert.ok(
             ContentTaskUtils.isVisible(avatarSelector),
@@ -310,6 +317,7 @@ add_task(async function test_avatar_selector_tabs() {
         );
 
         await editProfileCard.updateComplete;
+        await new Promise(resolve => content.requestAnimationFrame(resolve));
 
         EventUtils.synthesizeMouseAtCenter(
           editProfileCard.avatarSelectorLink,
@@ -318,7 +326,28 @@ add_task(async function test_avatar_selector_tabs() {
         );
 
         const avatarSelector = editProfileCard.avatarSelector;
+
+        await ContentTaskUtils.waitForCondition(
+          () => ContentTaskUtils.isVisible(avatarSelector),
+          "Waiting for avatar selector to become visible"
+        );
         await avatarSelector.updateComplete;
+
+        // Wait for all Lit microtask queue updates to complete so we don't run into race condition issues
+        await new Promise(resolve => content.requestAnimationFrame(resolve));
+
+        const buttonGroup =
+          avatarSelector.shadowRoot.querySelector(".button-group");
+        Assert.ok(buttonGroup, "Tab section should exist");
+
+        const iconTab = buttonGroup.querySelector(
+          '[data-l10n-id="avatar-selector-icon-tab"]'
+        );
+        const customTab = buttonGroup.querySelector(
+          '[data-l10n-id="avatar-selector-custom-tab"]'
+        );
+        Assert.ok(iconTab, "Icon tab should exist");
+        Assert.ok(customTab, "Custom tab should exist");
 
         // Verify Icon is default
         Assert.equal(
@@ -337,12 +366,10 @@ add_task(async function test_avatar_selector_tabs() {
           "Custom tab should be inactive by default"
         );
 
-        EventUtils.synthesizeMouseAtCenter(
-          avatarSelector.customTabButton,
-          {},
-          content
-        );
+        info("Clicking custom tab");
+        EventUtils.synthesizeMouseAtCenter(customTab, {}, content);
         await avatarSelector.updateComplete;
+
         Assert.equal(
           avatarSelector.view,
           "custom",
@@ -359,12 +386,10 @@ add_task(async function test_avatar_selector_tabs() {
           "Icon tab should be inactive"
         );
 
-        EventUtils.synthesizeMouseAtCenter(
-          avatarSelector.iconTabButton,
-          {},
-          content
-        );
+        info("Clicking icon tab");
+        EventUtils.synthesizeMouseAtCenter(iconTab, {}, content);
         await avatarSelector.updateComplete;
+
         Assert.equal(
           avatarSelector.view,
           "icon",
