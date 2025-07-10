@@ -240,6 +240,9 @@ class ReportBrokenSiteHelper {
     await this.click(triggerMenuItem);
     await shownPromise;
     await focusPromise;
+    await BrowserTestUtils.waitForCondition(
+      () => this.URLInput.selectionStart === 0
+    );
   }
 
   async #assertClickAndViewChanges(button, view, newView, newFocus) {
