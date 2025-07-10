@@ -1172,10 +1172,15 @@ class WalkerActor extends Actor {
    */
   search(query) {
     const results = this.walkerSearch.search(query);
-    const nodeList = new NodeListActor(
-      this,
-      results.map(r => r.node)
-    );
+
+    // For now, only return each node once, since the frontend doesn't have a way to
+    // highlight each result individually (This would change if we fix Bug 1976634).
+    const seenNodes = new Set();
+    for (const result of results) {
+      seenNodes.add(result.node);
+    }
+
+    const nodeList = new NodeListActor(this, Array.from(seenNodes));
 
     return {
       list: nodeList,
