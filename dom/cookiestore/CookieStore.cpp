@@ -16,6 +16,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/net/CookieCommons.h"
+#include "mozilla/net/CookiePrefixes.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/StorageAccess.h"
 #include "nsICookie.h"
@@ -100,26 +101,6 @@ bool ValidateCookieNameAndValue(const nsAString& aName, const nsAString& aValue,
   return true;
 }
 
-bool HasSecurePrefix(const nsAString& aString) {
-  return StringBeginsWith(aString, u"__Secure-"_ns,
-                          nsCaseInsensitiveStringComparator);
-}
-
-bool HasHostPrefix(const nsAString& aString) {
-  return StringBeginsWith(aString, u"__Host-"_ns,
-                          nsCaseInsensitiveStringComparator);
-}
-
-bool HasHttpPrefix(const nsAString& aString) {
-  return StringBeginsWith(aString, u"__Http-"_ns,
-                          nsCaseInsensitiveStringComparator);
-}
-
-bool HasHostHttpPrefix(const nsAString& aString) {
-  return StringBeginsWith(aString, u"__HostHttp-"_ns,
-                          nsCaseInsensitiveStringComparator);
-}
-
 bool ValidateCookieDomain(nsIPrincipal* aPrincipal, const nsAString& aName,
                           const nsAString& aDomain, Promise* aPromise) {
   MOZ_ASSERT(aPromise);
@@ -137,7 +118,7 @@ bool ValidateCookieDomain(nsIPrincipal* aPrincipal, const nsAString& aName,
   }
 
   // If the name has a __Host- prefix, then aDomain must be empty.
-  if (HasHostPrefix(aName) && !aDomain.IsEmpty()) {
+  if (CookiePrefixes::Has(CookiePrefixes::eHost, aName) && !aDomain.IsEmpty()) {
     aPromise->MaybeRejectWithTypeError(
         "Cookie domain is not allowed for cookies with a __Host- prefix");
     return false;
@@ -193,20 +174,24 @@ bool ValidateCookieNamePrefix(const nsAString& aName, const nsAString& aValue,
                               const nsAString& aPath, Promise* aPromise) {
   MOZ_ASSERT(aPromise);
 
-  if (aName.IsEmpty() && (HasHostPrefix(aValue) || HasHostHttpPrefix(aValue) ||
-                          HasHttpPrefix(aValue) || HasSecurePrefix(aValue))) {
+  if (aName.IsEmpty() &&
+      (CookiePrefixes::Has(CookiePrefixes::eHost, aValue) ||
+       CookiePrefixes::Has(CookiePrefixes::eHostHttp, aValue) ||
+       CookiePrefixes::Has(CookiePrefixes::eHttp, aValue) ||
+       CookiePrefixes::Has(CookiePrefixes::eSecure, aValue))) {
     aPromise->MaybeRejectWithTypeError(
         "Nameless cookies should not begin with special prefixes");
     return false;
   }
 
-  if (HasHttpPrefix(aName) || HasHostHttpPrefix(aName)) {
+  if (CookiePrefixes::Has(CookiePrefixes::eHttp, aName) ||
+      CookiePrefixes::Has(CookiePrefixes::eHostHttp, aName)) {
     aPromise->MaybeRejectWithTypeError(
         "Cookie name should not begin with special prefixes");
     return false;
   }
 
-  if (!HasHostPrefix(aName)) {
+  if (!CookiePrefixes::Has(CookiePrefixes::eHost, aName)) {
     return true;
   }
 
