@@ -2288,29 +2288,28 @@ inline bool nsStylePosition::MaxBSizeDependsOnContainer(
 }
 
 inline bool nsStyleMargin::HasBlockAxisAuto(
-    mozilla::WritingMode aWM, mozilla::StylePositionProperty aPosition) const {
-  return GetMargin(mozilla::LogicalSide::BStart, aWM, aPosition)->IsAuto() ||
-         GetMargin(mozilla::LogicalSide::BEnd, aWM, aPosition)->IsAuto();
+    mozilla::WritingMode aWM, const AnchorPosResolutionParams& aParams) const {
+  return GetMargin(mozilla::LogicalSide::BStart, aWM, aParams)->IsAuto() ||
+         GetMargin(mozilla::LogicalSide::BEnd, aWM, aParams)->IsAuto();
 }
 
 inline bool nsStyleMargin::HasInlineAxisAuto(
-    mozilla::WritingMode aWM, mozilla::StylePositionProperty aPosition) const {
-  return GetMargin(mozilla::LogicalSide::IStart, aWM, aPosition)->IsAuto() ||
-         GetMargin(mozilla::LogicalSide::IEnd, aWM, aPosition)->IsAuto();
+    mozilla::WritingMode aWM, const AnchorPosResolutionParams& aParams) const {
+  return GetMargin(mozilla::LogicalSide::IStart, aWM, aParams)->IsAuto() ||
+         GetMargin(mozilla::LogicalSide::IEnd, aWM, aParams)->IsAuto();
 }
 
 inline bool nsStyleMargin::HasAuto(
     mozilla::LogicalAxis aAxis, mozilla::WritingMode aWM,
-    mozilla::StylePositionProperty aPosition) const {
-  return aAxis == mozilla::LogicalAxis::Inline
-             ? HasInlineAxisAuto(aWM, aPosition)
-             : HasBlockAxisAuto(aWM, aPosition);
+    const AnchorPosResolutionParams& aParams) const {
+  return aAxis == mozilla::LogicalAxis::Inline ? HasInlineAxisAuto(aWM, aParams)
+                                               : HasBlockAxisAuto(aWM, aParams);
 }
 
 inline AnchorResolvedMargin nsStyleMargin::GetMargin(
     mozilla::LogicalSide aSide, mozilla::WritingMode aWM,
-    mozilla::StylePositionProperty aPosition) const {
-  return GetMargin(aWM.PhysicalSide(aSide), aPosition);
+    const AnchorPosResolutionParams& aParams) const {
+  return GetMargin(aWM.PhysicalSide(aSide), aParams);
 }
 
 inline mozilla::StyleAlignFlags nsStylePosition::UsedSelfAlignment(

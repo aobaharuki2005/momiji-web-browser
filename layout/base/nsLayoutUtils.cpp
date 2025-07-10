@@ -3455,8 +3455,7 @@ struct BoxToRect : public nsLayoutUtils::BoxCallback {
         const auto anchorResolutionParams =
             AnchorPosResolutionParams::From(aFrame);
         for (const Side side : AllPhysicalSides()) {
-          if (styleMargin->GetMargin(side, anchorResolutionParams.mPosition)
-                  ->IsAuto()) {
+          if (styleMargin->GetMargin(side, anchorResolutionParams)->IsAuto()) {
             usedMargin.Side(side) = 0;
           }
         }

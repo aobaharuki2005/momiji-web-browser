@@ -1261,10 +1261,10 @@ void ReflowInput::CalculateBorderPaddingMargin(
     const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
     const nscoord start = nsLayoutUtils::ComputeCBDependentValue(
         aContainingBlockSize,
-        mStyleMargin->GetMargin(startSide, anchorResolutionParams.mPosition));
+        mStyleMargin->GetMargin(startSide, anchorResolutionParams));
     const nscoord end = nsLayoutUtils::ComputeCBDependentValue(
         aContainingBlockSize,
-        mStyleMargin->GetMargin(endSide, anchorResolutionParams.mPosition));
+        mStyleMargin->GetMargin(endSide, anchorResolutionParams));
     marginStartEnd = start + end;
   }
 
@@ -1903,11 +1903,11 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
         borderPadding.IStartEnd(cbwm) - computedSize.ISize(cbwm);
     marginIStartIsAuto = mStyleMargin
                              ->GetMargin(LogicalSide::IStart, cbwm,
-                                         StylePositionProperty::Absolute)
+                                         anchorResolutionParams.mBaseParams)
                              ->IsAuto();
     marginIEndIsAuto = mStyleMargin
                            ->GetMargin(LogicalSide::IEnd, cbwm,
-                                       StylePositionProperty::Absolute)
+                                       anchorResolutionParams.mBaseParams)
                            ->IsAuto();
     ComputeAbsPosInlineAutoMargin(availMarginSpace, cbwm, marginIStartIsAuto,
                                   marginIEndIsAuto, margin, offsets);
@@ -1953,11 +1953,11 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
     nscoord availMarginSpace = autoBSize - computedSize.BSize(cbwm);
     marginBStartIsAuto = mStyleMargin
                              ->GetMargin(LogicalSide::BStart, cbwm,
-                                         StylePositionProperty::Absolute)
+                                         anchorResolutionParams.mBaseParams)
                              ->IsAuto();
     marginBEndIsAuto = mStyleMargin
                            ->GetMargin(LogicalSide::BEnd, cbwm,
-                                       StylePositionProperty::Absolute)
+                                       anchorResolutionParams.mBaseParams)
                            ->IsAuto();
 
     ComputeAbsPosBlockAutoMargin(availMarginSpace, cbwm, marginBStartIsAuto,
@@ -2728,13 +2728,11 @@ void ReflowInput::CalculateBlockSideMargins() {
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
   // The css2 spec clearly defines how block elements should behave
   // in section 10.3.3.
-  bool isAutoStartMargin = mStyleMargin
-                               ->GetMargin(LogicalSide::IStart, cbWM,
-                                           anchorResolutionParams.mPosition)
-                               ->IsAuto();
+  bool isAutoStartMargin =
+      mStyleMargin->GetMargin(LogicalSide::IStart, cbWM, anchorResolutionParams)
+          ->IsAuto();
   bool isAutoEndMargin =
-      mStyleMargin
-          ->GetMargin(LogicalSide::IEnd, cbWM, anchorResolutionParams.mPosition)
+      mStyleMargin->GetMargin(LogicalSide::IEnd, cbWM, anchorResolutionParams)
           ->IsAuto();
   if (!isAutoStartMargin && !isAutoEndMargin) {
     // Neither margin is 'auto' so we're over constrained. Use the
@@ -2966,8 +2964,8 @@ bool SizeComputationInput::ComputeMargin(WritingMode aCBWM,
     const auto anchorResolutionParams = AnchorPosResolutionParams::From(mFrame);
     for (const LogicalSide side : LogicalSides::All) {
       m.Side(side, aCBWM) = nsLayoutUtils::ComputeCBDependentValue(
-          aPercentBasis, styleMargin->GetMargin(
-                             side, aCBWM, anchorResolutionParams.mPosition));
+          aPercentBasis,
+          styleMargin->GetMargin(side, aCBWM, anchorResolutionParams));
     }
     SetComputedLogicalMargin(aCBWM, m);
   } else {
