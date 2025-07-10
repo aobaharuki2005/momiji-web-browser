@@ -197,8 +197,8 @@ def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
         "OS_TARGET": oses[input_vars["target_os"]],
         "TARGET_CPU": cpus.get(input_vars["target_cpu"], input_vars["target_cpu"]),
     }
-    if "use_x11" in input_vars:
-        mozbuild_args["MOZ_X11"] = "1" if input_vars["use_x11"] else None
+    if "ozone_platform_x11" in input_vars:
+        mozbuild_args["MOZ_X11"] = "1" if input_vars["ozone_platform_x11"] else None
 
     gn_out["mozbuild_args"] = mozbuild_args
     all_deps = find_deps(gn_result["targets"], gn_target)
@@ -821,12 +821,12 @@ def main():
                     "target_os": target_os,
                 }
                 if target_os == "linux":
-                    for use_x11 in (True, False):
-                        vars["use_x11"] = use_x11
+                    for enable_x11 in (True, False):
+                        vars["ozone_platform_x11"] = enable_x11
                         vars_set.append(vars.copy())
                 else:
                     if target_os == "openbsd":
-                        vars["use_x11"] = True
+                        vars["ozone_platform_x11"] = True
                     vars_set.append(vars)
 
     gn_configs = []
