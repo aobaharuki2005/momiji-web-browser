@@ -34,7 +34,6 @@ import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.storage.sync.TabEntry
-import mozilla.components.compose.base.Divider
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.tabstray.TabsTrayAction
@@ -222,8 +221,6 @@ fun TabsTray(
                 },
             )
         }
-
-        Divider()
 
         Box(modifier = Modifier.fillMaxSize()) {
             HorizontalPager(

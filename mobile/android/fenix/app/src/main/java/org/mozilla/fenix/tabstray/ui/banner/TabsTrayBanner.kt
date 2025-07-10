@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.tabstray.ui.banner
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,12 +13,18 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -28,11 +33,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -41,7 +47,6 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.menu.DropdownMenu
 import mozilla.components.compose.base.menu.MenuItem
-import mozilla.components.ui.tabcounter.TabCounter
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Banner
 import org.mozilla.fenix.compose.BottomSheetHandle
@@ -56,9 +61,11 @@ import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.math.max
 
 private val ICON_SIZE = 24.dp
-private const val MAX_WIDTH_TAB_ROW_PERCENT = 0.5f
+private const val MAX_WIDTH_TAB_ROW_PERCENT = 0.85f
 private const val BOTTOM_SHEET_HANDLE_WIDTH_PERCENT = 0.1f
 private const val TAB_COUNT_SHOW_CFR = 6
+private const val ROW_HEIGHT_DP = 48
+private const val TAB_INDICATOR_ROUNDED_CORNER_DP = 100
 
 /**
  * Top-level UI for displaying the banner in [TabsTray].
@@ -237,11 +244,10 @@ private fun TabPageBanner(
     onTabPageIndicatorClicked: (Page) -> Unit,
     onDismissClick: () -> Unit,
 ) {
-    val selectedColor = FirefoxTheme.colors.iconActive
-    val inactiveColor = FirefoxTheme.colors.iconPrimaryInactive
+    val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant
     var showMenu by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
+    Column {
         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.bottom_sheet_handle_top_margin)))
 
         BottomSheetHandle(
@@ -256,7 +262,7 @@ private fun TabPageBanner(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(80.dp),
+                .height(ROW_HEIGHT_DP.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             TabRow(
@@ -264,63 +270,73 @@ private fun TabPageBanner(
                 modifier = Modifier
                     .fillMaxWidth(MAX_WIDTH_TAB_ROW_PERCENT)
                     .fillMaxHeight(),
-                containerColor = Color.Transparent,
-                contentColor = selectedColor,
+                contentColor = MaterialTheme.colorScheme.primary,
                 divider = {},
-            ) {
-                Tab(
-                    selected = selectedPage == Page.NormalTabs,
-                    onClick = { onTabPageIndicatorClicked(Page.NormalTabs) },
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .testTag(TabsTrayTestTag.NORMAL_TABS_PAGE_BUTTON),
-                    selectedContentColor = selectedColor,
-                    unselectedContentColor = inactiveColor,
-                ) {
-                    TabCounter(
-                        tabCount = normalTabCount,
-                        textColor = LocalContentColor.current,
-                        iconColor = LocalContentColor.current,
+                indicator = { tabPositions ->
+                    TabRowDefaults.PrimaryIndicator(
+                        modifier = Modifier
+                            .tabIndicatorOffset(tabPositions[selectedPage.ordinal]),
+                        shape = RoundedCornerShape(
+                            topStart = TAB_INDICATOR_ROUNDED_CORNER_DP.dp,
+                            topEnd = TAB_INDICATOR_ROUNDED_CORNER_DP.dp,
+                        ),
                     )
-                }
+                },
+            ) {
+                val privateTabDescription = stringResource(
+                    id = R.string.tabs_header_private_tabs_counter_title,
+                    privateTabCount.toString(),
+                )
+                val normalTabDescription = stringResource(
+                    id = R.string.tabs_header_normal_tabs_counter_title,
+                    normalTabCount.toString(),
+                )
+                val syncedTabDescription = stringResource(
+                    id = R.string.tabs_header_synced_tabs_counter_title,
+                    syncedTabCount.toString(),
+                )
 
                 Tab(
                     selected = selectedPage == Page.PrivateTabs,
                     onClick = { onTabPageIndicatorClicked(Page.PrivateTabs) },
                     modifier = Modifier
-                        .fillMaxHeight()
-                        .testTag(TabsTrayTestTag.PRIVATE_TABS_PAGE_BUTTON),
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_private_browsing),
-                            contentDescription = stringResource(
-                                id = R.string.tabs_header_private_tabs_counter_title,
-                                privateTabCount.toString(),
-                            ),
-                        )
-                    },
-                    selectedContentColor = selectedColor,
+                        .testTag(TabsTrayTestTag.PRIVATE_TABS_PAGE_BUTTON)
+                        .semantics {
+                            contentDescription = privateTabDescription
+                        }
+                        .height(ROW_HEIGHT_DP.dp),
                     unselectedContentColor = inactiveColor,
-                )
+                ) {
+                    Text(text = stringResource(id = R.string.tabs_header_private_tabs_title))
+                }
+
+                Tab(
+                    selected = selectedPage == Page.NormalTabs,
+                    onClick = { onTabPageIndicatorClicked(Page.NormalTabs) },
+                    modifier = Modifier
+                        .testTag(TabsTrayTestTag.NORMAL_TABS_PAGE_BUTTON)
+                        .semantics {
+                            contentDescription = normalTabDescription
+                        }
+                        .height(ROW_HEIGHT_DP.dp),
+                    unselectedContentColor = inactiveColor,
+                ) {
+                    Text(text = stringResource(R.string.tabs_header_normal_tabs_title))
+                }
 
                 Tab(
                     selected = selectedPage == Page.SyncedTabs,
                     onClick = { onTabPageIndicatorClicked(Page.SyncedTabs) },
                     modifier = Modifier
-                        .fillMaxHeight()
-                        .testTag(TabsTrayTestTag.SYNCED_TABS_PAGE_BUTTON),
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_synced_tabs),
-                            contentDescription = stringResource(
-                                id = R.string.tabs_header_synced_tabs_counter_title,
-                                syncedTabCount.toString(),
-                            ),
-                        )
-                    },
-                    selectedContentColor = selectedColor,
+                        .testTag(TabsTrayTestTag.SYNCED_TABS_PAGE_BUTTON)
+                        .semantics {
+                            contentDescription = syncedTabDescription
+                        }
+                        .height(ROW_HEIGHT_DP.dp),
                     unselectedContentColor = inactiveColor,
-                )
+                ) {
+                    Text(text = stringResource(id = R.string.tabs_header_synced_tabs_title))
+                }
             }
 
             Spacer(modifier = Modifier.weight(1.0f))
@@ -342,7 +358,7 @@ private fun TabPageBanner(
                 Icon(
                     painter = painterResource(R.drawable.ic_menu),
                     contentDescription = stringResource(id = R.string.open_tabs_menu),
-                    tint = FirefoxTheme.colors.iconPrimary,
+                    tint = MaterialTheme.colorScheme.secondary,
                 )
             }
         }
@@ -358,6 +374,7 @@ private fun TabPageBanner(
  * @param onSaveToCollectionsClick Invoked when the user clicks on the save to collection button.
  * @param onShareSelectedTabs Invoked when the user clicks on the share button.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Suppress("LongMethod")
 @Composable
 private fun MultiSelectBanner(
@@ -374,80 +391,81 @@ private fun MultiSelectBanner(
         }
     }
     val buttonTint = if (buttonsEnabled) {
-        FirefoxTheme.colors.iconOnColor
+        MaterialTheme.colorScheme.onSurface
     } else {
-        FirefoxTheme.colors.iconOnColorDisabled
+        MaterialTheme.colorScheme.secondary
     }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(88.dp)
-            .background(color = FirefoxTheme.colors.layerAccent),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(onClick = onExitSelectModeClick) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_close),
-                contentDescription = stringResource(id = R.string.tab_tray_close_multiselect_content_description),
-                tint = FirefoxTheme.colors.iconOnColor,
+    TopAppBar(
+        title = {
+            Text(
+                text = if (selectedTabCount == 0) {
+                    stringResource(R.string.tab_tray_multi_select_title_empty)
+                } else {
+                    stringResource(R.string.tab_tray_multi_select_title, selectedTabCount)
+                },
+                modifier = Modifier.testTag(TabsTrayTestTag.SELECTION_COUNTER),
+                style = FirefoxTheme.typography.headline6,
             )
-        }
+        },
+        navigationIcon = {
+            IconButton(onClick = onExitSelectModeClick) {
+                Icon(
+                    painter = painterResource(id = R.drawable.mozac_ic_back_24),
+                    contentDescription = stringResource(id = R.string.tab_tray_close_multiselect_content_description),
+                )
+            }
+        },
+        actions = {
+            IconButton(
+                onClick = onSaveToCollectionsClick,
+                modifier = Modifier.testTag(TabsTrayTestTag.COLLECTIONS_BUTTON),
+                enabled = buttonsEnabled,
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_tab_collection),
+                    contentDescription = stringResource(
+                        id = R.string.tab_tray_collection_button_multiselect_content_description,
+                    ),
+                )
+            }
 
-        Text(
-            text = stringResource(R.string.tab_tray_multi_select_title, selectedTabCount),
-            modifier = Modifier.testTag(TabsTrayTestTag.SELECTION_COUNTER),
-            style = FirefoxTheme.typography.headline6,
-            color = FirefoxTheme.colors.textOnColorPrimary,
-        )
+            IconButton(
+                onClick = onShareSelectedTabs,
+                enabled = buttonsEnabled,
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_share),
+                    contentDescription = stringResource(
+                        id = R.string.tab_tray_multiselect_share_content_description,
+                    ),
+                )
+            }
 
-        Spacer(modifier = Modifier.weight(1.0f))
+            IconButton(
+                onClick = { showMenu = true },
+                enabled = buttonsEnabled,
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_menu),
+                    contentDescription = stringResource(
+                        id = R.string.tab_tray_multiselect_menu_content_description,
+                    ),
+                )
 
-        IconButton(
-            onClick = onSaveToCollectionsClick,
-            modifier = Modifier.testTag(TabsTrayTestTag.COLLECTIONS_BUTTON),
-            enabled = buttonsEnabled,
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_tab_collection),
-                contentDescription = stringResource(
-                    id = R.string.tab_tray_collection_button_multiselect_content_description,
-                ),
-                tint = buttonTint,
-            )
-        }
-
-        IconButton(
-            onClick = onShareSelectedTabs,
-            enabled = buttonsEnabled,
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_share),
-                contentDescription = stringResource(
-                    id = R.string.tab_tray_multiselect_share_content_description,
-                ),
-                tint = buttonTint,
-            )
-        }
-
-        IconButton(
-            onClick = { showMenu = true },
-            enabled = buttonsEnabled,
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_menu),
-                contentDescription = stringResource(id = R.string.tab_tray_multiselect_menu_content_description),
-                tint = buttonTint,
-            )
-
-            DropdownMenu(
-                menuItems = menuItems,
-                expanded = showMenu,
-                offset = DpOffset(x = 0.dp, y = -ICON_SIZE),
-                onDismissRequest = { showMenu = false },
-            )
-        }
-    }
+                DropdownMenu(
+                    menuItems = menuItems,
+                    expanded = showMenu,
+                    offset = DpOffset(x = 0.dp, y = -ICON_SIZE),
+                    onDismissRequest = { showMenu = false },
+                )
+            }
+        },
+        expandedHeight = ROW_HEIGHT_DP.dp,
+        colors = TopAppBarDefaults.topAppBarColors(
+            actionIconContentColor = buttonTint,
+        ),
+    )
 }
 
 @PreviewLightDark
