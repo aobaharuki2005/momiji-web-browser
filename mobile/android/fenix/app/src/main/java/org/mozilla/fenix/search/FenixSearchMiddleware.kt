@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.AwesomeBarAction
+import mozilla.components.browser.state.search.DefaultSearchEngineProvider
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction
@@ -42,6 +43,7 @@ import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.TABS_SEARCH_ENGINE_ID
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.telemetryName
 import org.mozilla.fenix.nimbus.FxNimbus
@@ -56,6 +58,8 @@ import org.mozilla.fenix.search.SearchFragmentAction.SuggestionClicked
 import org.mozilla.fenix.search.SearchFragmentAction.SuggestionSelected
 import org.mozilla.fenix.search.SearchFragmentAction.UpdateQuery
 import org.mozilla.fenix.search.SearchFragmentStore.Environment
+import org.mozilla.fenix.search.awesomebar.DefaultSuggestionIconProvider
+import org.mozilla.fenix.search.awesomebar.DefaultSuggestionsStringsProvider
 import org.mozilla.fenix.search.awesomebar.SearchSuggestionsProvidersBuilder
 import org.mozilla.fenix.search.awesomebar.toSearchProviderState
 import org.mozilla.fenix.utils.Settings
@@ -271,12 +275,17 @@ class FenixSearchMiddleware(
         val environment = environment ?: return null
 
         return SearchSuggestionsProvidersBuilder(
-            context = environment.context,
+            components = environment.context.components,
             browsingModeManager = environment.browsingModeManager,
             includeSelectedTab = store.state.tabId == null,
             loadUrlUseCase = loadUrlUseCase(store),
             searchUseCase = searchUseCase(store),
             selectTabUseCase = selectTabUseCase(),
+            suggestionsStringsProvider = DefaultSuggestionsStringsProvider(
+                environment.context,
+                DefaultSearchEngineProvider(environment.context.components.core.store),
+            ),
+            suggestionIconProvider = DefaultSuggestionIconProvider(environment.context),
             onSearchEngineShortcutSelected = ::handleSearchEngineSuggestionClicked,
             onSearchEngineSuggestionSelected = ::handleSearchEngineSuggestionClicked,
             onSearchEngineSettingsClicked = { handleClickSearchEngineSettings() },
