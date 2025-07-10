@@ -2200,8 +2200,8 @@ inline AnchorResolvedSize nsStylePosition::MinISize(
 }
 
 inline AnchorResolvedMaxSize nsStylePosition::MaxISize(
-    WritingMode aWM, mozilla::StylePositionProperty aProp) const {
-  return aWM.IsVertical() ? GetMaxHeight(aProp) : GetMaxWidth(aProp);
+    WritingMode aWM, const AnchorPosResolutionParams& aParams) const {
+  return aWM.IsVertical() ? GetMaxHeight(aParams) : GetMaxWidth(aParams);
 }
 
 inline AnchorResolvedSize nsStylePosition::BSize(
@@ -2215,8 +2215,8 @@ inline AnchorResolvedSize nsStylePosition::MinBSize(
 }
 
 inline AnchorResolvedMaxSize nsStylePosition::MaxBSize(
-    WritingMode aWM, mozilla::StylePositionProperty aProp) const {
-  return aWM.IsVertical() ? GetMaxWidth(aProp) : GetMaxHeight(aProp);
+    WritingMode aWM, const AnchorPosResolutionParams& aParams) const {
+  return aWM.IsVertical() ? GetMaxWidth(aParams) : GetMaxHeight(aParams);
 }
 
 inline AnchorResolvedSize nsStylePosition::Size(
@@ -2235,9 +2235,9 @@ inline AnchorResolvedSize nsStylePosition::MinSize(
 
 inline AnchorResolvedMaxSize nsStylePosition::MaxSize(
     mozilla::LogicalAxis aAxis, mozilla::WritingMode aWM,
-    mozilla::StylePositionProperty aProp) const {
-  return aAxis == mozilla::LogicalAxis::Inline ? MaxISize(aWM, aProp)
-                                               : MaxBSize(aWM, aProp);
+    const AnchorPosResolutionParams& aParams) const {
+  return aAxis == mozilla::LogicalAxis::Inline ? MaxISize(aWM, aParams)
+                                               : MaxBSize(aWM, aParams);
 }
 
 inline bool nsStylePosition::ISizeDependsOnContainer(

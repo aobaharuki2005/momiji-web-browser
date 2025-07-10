@@ -317,7 +317,7 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
         nsStylePosition::MinISizeDependsOnContainer(
             pos->MinISize(wm, anchorResolutionParams)) ||
         nsStylePosition::MaxISizeDependsOnContainer(
-            pos->MaxISize(wm, anchorResolutionParams.mPosition)) ||
+            pos->MaxISize(wm, anchorResolutionParams)) ||
         !IsFixedPaddingSize(padding->mPadding.GetIStart(wm)) ||
         !IsFixedPaddingSize(padding->mPadding.GetIEnd(wm))) {
       return true;
@@ -357,7 +357,7 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
         nsStylePosition::MinBSizeDependsOnContainer(
             pos->MinBSize(wm, anchorResolutionParams)) ||
         nsStylePosition::MaxBSizeDependsOnContainer(
-            pos->MaxBSize(wm, anchorResolutionParams.mPosition)) ||
+            pos->MaxBSize(wm, anchorResolutionParams)) ||
         !IsFixedPaddingSize(padding->mPadding.GetBStart(wm)) ||
         !IsFixedPaddingSize(padding->mPadding.GetBEnd(wm))) {
       return true;

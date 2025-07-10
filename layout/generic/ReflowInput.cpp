@@ -216,8 +216,8 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
         if (aFixed) {
           *aFixed = true;
         }
-      } else if (auto maxSize = nsLayoutUtils::GetAbsoluteSize(*pos->MaxISize(
-                     mWritingMode, anchorResolutionParams.mPosition))) {
+      } else if (auto maxSize = nsLayoutUtils::GetAbsoluteSize(
+                     *pos->MaxISize(mWritingMode, anchorResolutionParams))) {
         limit = maxSize.value();
       }
       if (limit != NS_UNCONSTRAINEDSIZE) {
@@ -490,8 +490,8 @@ void ReflowInput::Init(nsPresContext* aPresContext,
     const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
     const auto bSizeCoord =
         mStylePosition->BSize(mWritingMode, anchorResolutionParams);
-    const auto maxBSizeCoord = mStylePosition->MaxBSize(
-        mWritingMode, anchorResolutionParams.mPosition);
+    const auto maxBSizeCoord =
+        mStylePosition->MaxBSize(mWritingMode, anchorResolutionParams);
     if ((!bSizeCoord->BehavesLikeInitialValueOnBlockAxis() ||
          !maxBSizeCoord->BehavesLikeInitialValueOnBlockAxis()) &&
         // Don't set NS_FRAME_IN_CONSTRAINED_BSIZE on body or html elements.
@@ -508,7 +508,7 @@ void ReflowInput::Init(nsPresContext* aPresContext,
         const auto bSizeCoord =
             stylePos->BSize(mWritingMode, containingBlkAnchorResolutionParams);
         const auto& maxBSizeCoord = stylePos->MaxBSize(
-            mWritingMode, containingBlkAnchorResolutionParams.mPosition);
+            mWritingMode, containingBlkAnchorResolutionParams);
         if ((bSizeCoord->IsLengthPercentage() && !bSizeCoord->HasPercent()) ||
             (maxBSizeCoord->IsLengthPercentage() &&
              !maxBSizeCoord->HasPercent())) {
@@ -756,8 +756,8 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
       mStylePosition->BSize(wm, anchorResolutionParams.mBaseParams);
   const auto minBSize =
       mStylePosition->MinBSize(wm, anchorResolutionParams.mBaseParams);
-  const auto maxBSize = mStylePosition->MaxBSize(
-      wm, anchorResolutionParams.mBaseParams.mPosition);
+  const auto maxBSize =
+      mStylePosition->MaxBSize(wm, anchorResolutionParams.mBaseParams);
   // XXX Should we really need to null check mCBReflowInput?  (We do for
   // at least nsBoxFrame).
   if (mFrame->HasBSizeChange()) {
@@ -3027,11 +3027,9 @@ void ReflowInput::ComputeMinMaxValues(const LogicalSize& aCBSize) {
 
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
   const auto minISize = mStylePosition->MinISize(wm, anchorResolutionParams);
-  const auto maxISize =
-      mStylePosition->MaxISize(wm, anchorResolutionParams.mPosition);
+  const auto maxISize = mStylePosition->MaxISize(wm, anchorResolutionParams);
   const auto minBSize = mStylePosition->MinBSize(wm, anchorResolutionParams);
-  const auto maxBSize =
-      mStylePosition->MaxBSize(wm, anchorResolutionParams.mPosition);
+  const auto maxBSize = mStylePosition->MaxBSize(wm, anchorResolutionParams);
 
   LogicalSize minWidgetSize(wm);
   if (mIsThemed) {

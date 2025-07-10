@@ -644,9 +644,8 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
         ToLengthWithFallback(*pos.GetMinWidth(anchorResolutionParams),
                              *pos.GetMinHeight(anchorResolutionParams));
     nsSize maxSize = ToLengthWithFallback(
-        *pos.GetMaxWidth(anchorResolutionParams.mPosition),
-        *pos.GetMaxHeight(anchorResolutionParams.mPosition),
-        NS_UNCONSTRAINEDSIZE);
+        *pos.GetMaxWidth(anchorResolutionParams),
+        *pos.GetMaxHeight(anchorResolutionParams), NS_UNCONSTRAINEDSIZE);
     nsSize prefSize(ToLengthWithFallback(*pos.GetWidth(anchorResolutionParams),
                                          curSize.width),
                     ToLengthWithFallback(*pos.GetHeight(anchorResolutionParams),

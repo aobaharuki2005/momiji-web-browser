@@ -1587,7 +1587,7 @@ nscoord nsFlexContainerFrame::PartiallyResolveAutoMinSize(
   const auto mainStyleSize = aItemReflowInput.mStylePosition->Size(
       aAxisTracker.MainAxis(), cbWM, anchorResolutionParams);
   const auto maxMainStyleSize = aItemReflowInput.mStylePosition->MaxSize(
-      aAxisTracker.MainAxis(), cbWM, anchorResolutionParams.mPosition);
+      aAxisTracker.MainAxis(), cbWM, anchorResolutionParams);
   const auto boxSizingAdjust =
       aItemReflowInput.mStylePosition->mBoxSizing == StyleBoxSizing::Border
           ? aFlexItem.BorderPadding().Size(cbWM)

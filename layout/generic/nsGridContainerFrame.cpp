@@ -381,8 +381,7 @@ struct RepeatTrackSizingInput {
     }
 
     nscoord& max = mMax.Size(aAxis, aWM);
-    const auto styleMaxSize =
-        pos->MaxSize(aAxis, aWM, anchorResolutionParams.mPosition);
+    const auto styleMaxSize = pos->MaxSize(aAxis, aWM, anchorResolutionParams);
     if (styleMaxSize->ConvertsToLength()) {
       max = std::max(min, adjustForBoxSizing(styleMaxSize->ToLength()));
     } else if (styleMaxSize->HasPercent() &&
@@ -391,8 +390,8 @@ struct RepeatTrackSizingInput {
           min, adjustForBoxSizing(
                    styleMaxSize->AsLengthPercentage().Resolve(cbSizeInAxis)));
     } else if (aAspectRatio && styleMaxSize->BehavesLikeInitialValue(aAxis)) {
-      const auto styleRDMaxSize = pos->MaxSize(
-          GetOrthogonalAxis(aAxis), aWM, anchorResolutionParams.mPosition);
+      const auto styleRDMaxSize =
+          pos->MaxSize(GetOrthogonalAxis(aAxis), aWM, anchorResolutionParams);
       if (Maybe<nscoord> resolvedMaxSize = ComputeTransferredSize(
               styleRDMaxSize, aAxis, aWM, aAspectRatio, boxSizingAdjustment,
               aContainingBlockSize)) {
@@ -1041,7 +1040,7 @@ struct nsGridContainerFrame::GridItemInfo {
                           IsDependentOnContainerSize(*stylePos->MinBSize(
                               aContainerWM, anchorResolutionParams)) ||
                           IsDependentOnContainerSize(*stylePos->MaxBSize(
-                              aContainerWM, anchorResolutionParams.mPosition));
+                              aContainerWM, anchorResolutionParams));
 
     return isItemAutoSize;
   }
