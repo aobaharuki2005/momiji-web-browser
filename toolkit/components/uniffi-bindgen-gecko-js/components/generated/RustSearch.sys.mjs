@@ -1190,6 +1190,7 @@ export class SearchEngineDefinition {
             charset, 
             classification, 
             identifier, 
+            isNewUntil, 
             name, 
             optional, 
             partnerCode, 
@@ -1202,6 +1203,7 @@ export class SearchEngineDefinition {
             charset: undefined, 
             classification: undefined, 
             identifier: undefined, 
+            isNewUntil: undefined, 
             name: undefined, 
             optional: undefined, 
             partnerCode: undefined, 
@@ -1240,6 +1242,14 @@ export class SearchEngineDefinition {
         } catch (e) {
             if (e instanceof UniFFITypeError) {
                 e.addItemDescriptionPart("identifier");
+            }
+            throw e;
+        }
+        try {
+            FfiConverterOptionalString.checkType(isNewUntil)
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart("isNewUntil");
             }
             throw e;
         }
@@ -1322,6 +1332,11 @@ export class SearchEngineDefinition {
          */
         this.identifier = identifier;
         /**
+         * Indicates the date until which the engine variant or subvariant is considered new
+         * (format: YYYY-MM-DD).
+         */
+        this.isNewUntil = isNewUntil;
+        /**
          * The user visible name of the search engine.
          */
         this.name = name;
@@ -1366,6 +1381,7 @@ export class SearchEngineDefinition {
             && this.charset == other.charset
             && this.classification == other.classification
             && this.identifier == other.identifier
+            && this.isNewUntil == other.isNewUntil
             && this.name == other.name
             && this.optional == other.optional
             && this.partnerCode == other.partnerCode
@@ -1385,6 +1401,7 @@ export class FfiConverterTypeSearchEngineDefinition extends FfiConverterArrayBuf
             charset: FfiConverterString.read(dataStream),
             classification: FfiConverterTypeSearchEngineClassification.read(dataStream),
             identifier: FfiConverterString.read(dataStream),
+            isNewUntil: FfiConverterOptionalString.read(dataStream),
             name: FfiConverterString.read(dataStream),
             optional: FfiConverterBoolean.read(dataStream),
             partnerCode: FfiConverterString.read(dataStream),
@@ -1399,6 +1416,7 @@ export class FfiConverterTypeSearchEngineDefinition extends FfiConverterArrayBuf
         FfiConverterString.write(dataStream, value.charset);
         FfiConverterTypeSearchEngineClassification.write(dataStream, value.classification);
         FfiConverterString.write(dataStream, value.identifier);
+        FfiConverterOptionalString.write(dataStream, value.isNewUntil);
         FfiConverterString.write(dataStream, value.name);
         FfiConverterBoolean.write(dataStream, value.optional);
         FfiConverterString.write(dataStream, value.partnerCode);
@@ -1414,6 +1432,7 @@ export class FfiConverterTypeSearchEngineDefinition extends FfiConverterArrayBuf
         totalSize += FfiConverterString.computeSize(value.charset);
         totalSize += FfiConverterTypeSearchEngineClassification.computeSize(value.classification);
         totalSize += FfiConverterString.computeSize(value.identifier);
+        totalSize += FfiConverterOptionalString.computeSize(value.isNewUntil);
         totalSize += FfiConverterString.computeSize(value.name);
         totalSize += FfiConverterBoolean.computeSize(value.optional);
         totalSize += FfiConverterString.computeSize(value.partnerCode);
@@ -1458,6 +1477,14 @@ export class FfiConverterTypeSearchEngineDefinition extends FfiConverterArrayBuf
         } catch (e) {
             if (e instanceof UniFFITypeError) {
                 e.addItemDescriptionPart(".identifier");
+            }
+            throw e;
+        }
+        try {
+            FfiConverterOptionalString.checkType(value.isNewUntil);
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart(".isNewUntil");
             }
             throw e;
         }
