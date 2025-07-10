@@ -68,6 +68,7 @@ pub struct FrameBuilderConfig {
     pub is_software: bool,
     pub low_quality_pinch_zoom: bool,
     pub max_shared_surface_size: i32,
+    pub enable_dithering: bool,
 }
 
 /// A set of common / global resources that are retained between

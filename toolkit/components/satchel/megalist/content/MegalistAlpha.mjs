@@ -666,6 +666,9 @@ export class MegalistAlpha extends MozLitElement {
     return html`
       <moz-button
         @click=${this.#openMenu}
+        @mousedown=${e => {
+          e.stopPropagation();
+        }}
         type="icon ghost"
         iconSrc="chrome://global/skin/icons/more.svg"
         aria-expanded="false"

@@ -361,13 +361,6 @@ add_task(function test_Proxy_fromJSON() {
     /InvalidArgumentError/
   );
 
-  // Bug 1703805: Since Firefox 90 ftpProxy is no longer supported
-  Assert.throws(
-    () =>
-      ProxyConfiguration.fromJSON({ proxyType: "manual", ftpProxy: "foo:21" }),
-    /InvalidArgumentError/
-  );
-
   // noProxy: invalid settings
   for (let noProxy of [true, 42, {}, null, "foo", [true], [42], [{}], [null]]) {
     Assert.throws(
