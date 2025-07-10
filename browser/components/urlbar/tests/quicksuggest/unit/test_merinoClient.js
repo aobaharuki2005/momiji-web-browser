@@ -10,6 +10,7 @@ ChromeUtils.defineESModuleGetters(this, {
   MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   NimbusTestUtils: "resource://testing-common/NimbusTestUtils.sys.mjs",
+  ObliviousHTTP: "resource://gre/modules/ObliviousHTTP.sys.mjs",
 });
 
 // Set the `merino.timeoutMs` pref to a large value so that the client will not
@@ -698,6 +699,85 @@ add_task(async function nimbus() {
   });
 
   UrlbarPrefs.set("merino.endpointURL", originalEndpointURL);
+});
+
+// OHTTP should be used when `client.allowOhttp` is true and the Merino OHTTP
+// prefs are defined.
+add_task(async function ohttp() {
+  // Stub the `ObliviousHTTP` functions.
+  let sandbox = sinon.createSandbox();
+  sandbox.stub(ObliviousHTTP, "getOHTTPConfig").resolves({});
+  sandbox.stub(ObliviousHTTP, "ohttpRequest").resolves({
+    status: 200,
+    json: async () => [],
+  });
+
+  // Try all combinations of URLs and `allowOhttp`. OHTTP should be used only
+  // when both URLs are defined and `allowOhttp` is true.
+  for (let configUrl of ["", "https://example.com/config"]) {
+    for (let relayUrl of ["", "https://example.com/relay"]) {
+      for (let allowOhttp of [false, true]) {
+        UrlbarPrefs.set("merino.ohttpConfigURL", configUrl);
+        UrlbarPrefs.set("merino.ohttpRelayURL", relayUrl);
+
+        let client = new MerinoClient("ohttp client", { allowOhttp });
+        await client.fetch({ query: "test" });
+
+        let shouldUseOhttp = configUrl && relayUrl && allowOhttp;
+        let expectedCallCount = shouldUseOhttp ? 1 : 0;
+
+        Assert.equal(
+          ObliviousHTTP.getOHTTPConfig.callCount,
+          expectedCallCount,
+          "getOHTTPConfig should have been called the expected number of times"
+        );
+        Assert.equal(
+          ObliviousHTTP.ohttpRequest.callCount,
+          expectedCallCount,
+          "ohttpRequest should have been called the expected number of times"
+        );
+      }
+    }
+  }
+
+  sandbox.restore();
+});
+
+// If the client uses OHTTP but can't get an OHTTP config, it should return an
+// empty suggestions array.
+add_task(async function ohttp_noConfig() {
+  // Stub the `ObliviousHTTP` functions so that `getOHTTPConfig` returns null.
+  let sandbox = sinon.createSandbox();
+  sandbox.stub(ObliviousHTTP, "getOHTTPConfig").resolves(null);
+  sandbox.stub(ObliviousHTTP, "ohttpRequest").resolves({
+    status: 200,
+    json: async () => [],
+  });
+
+  UrlbarPrefs.set("merino.ohttpConfigURL", "https://example.com/config");
+  UrlbarPrefs.set("merino.ohttpRelayURL", "https://example.com/relay");
+
+  let client = new MerinoClient("ohttp client", { allowOhttp: true });
+  let suggestions = await client.fetch({ query: "test" });
+
+  Assert.equal(
+    ObliviousHTTP.getOHTTPConfig.callCount,
+    1,
+    "getOHTTPConfig should have been called once"
+  );
+  Assert.equal(
+    ObliviousHTTP.ohttpRequest.callCount,
+    0,
+    "ohttpRequest should not have been called"
+  );
+
+  Assert.deepEqual(
+    suggestions,
+    [],
+    "The client should have returned an empty suggestions array"
+  );
+
+  sandbox.restore();
 });
 
 async function fetchAndCheckSuggestions({

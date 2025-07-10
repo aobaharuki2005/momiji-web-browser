@@ -321,6 +321,16 @@ urlbar:
       description: >-
         The Merino endpoint URL, not including parameters. An empty string will
         cause Firefox not to fetch from Merino.
+    merinoOhttpConfigURL:
+      type: string
+      fallbackPref: browser.urlbar.merino.ohttpConfigURL
+      description: >-
+        OHTTP config URL for Merino requests.
+    merinoOhttpRelayURL:
+      type: string
+      fallbackPref: browser.urlbar.merino.ohttpRelayURL
+      description: >-
+        OHTTP relay URL for Merino requests.
     merinoProviders:
       type: string
       fallbackPref: browser.urlbar.merino.providers

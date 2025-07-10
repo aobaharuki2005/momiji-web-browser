@@ -193,6 +193,12 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // The Merino endpoint URL, not including parameters.
   ["merino.endpointURL", "https://merino.services.mozilla.com/api/v1/suggest"],
 
+  // OHTTP config URL for Merino requests.
+  ["merino.ohttpConfigURL", ""],
+
+  // OHTTP relay URL for Merino requests.
+  ["merino.ohttpRelayURL", ""],
+
   // Comma-separated list of providers to request from Merino
   ["merino.providers", ""],
 
