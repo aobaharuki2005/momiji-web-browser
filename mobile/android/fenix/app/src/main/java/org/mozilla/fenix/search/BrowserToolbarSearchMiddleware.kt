@@ -22,6 +22,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.AutocompleteProvidersUpdated
+import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.HintUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchActionsStartUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.UrlSuggestionAutocompleted
@@ -51,6 +52,7 @@ import org.mozilla.fenix.components.appstate.AppAction.UpdateSearchBeingActiveSt
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.TABS_SEARCH_ENGINE_ID
+import org.mozilla.fenix.ext.toolbarHintRes
 import org.mozilla.fenix.home.toolbar.HomeToolbarEnvironment
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSelectorClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSelectorItemClicked
@@ -174,6 +176,16 @@ class BrowserToolbarSearchMiddleware(
     ) {
         updateSearchSelectorMenu(store, searchEngine, browserStore.state.search.searchEngineShortcuts)
         updateAutocompleteProviders(store, searchEngine)
+        updateToolbarHint(store, searchEngine)
+    }
+
+    private fun updateToolbarHint(
+        store: Store<BrowserToolbarState, BrowserToolbarAction>,
+        engine: SearchEngine?,
+    ) {
+        val defaultEngine = browserStore.state.search.selectedOrDefaultSearchEngine
+        val hintRes = engine.toolbarHintRes(defaultEngine)
+        store.dispatch(HintUpdated(hintRes))
     }
 
     /**

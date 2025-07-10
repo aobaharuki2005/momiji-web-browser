@@ -5,6 +5,7 @@
 package mozilla.components.compose.browser.toolbar.store
 
 import androidx.annotation.IntRange
+import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.Color
 import mozilla.components.compose.browser.toolbar.R
 import mozilla.components.compose.browser.toolbar.concept.Action
@@ -126,6 +127,7 @@ sealed class ProgressBarGravity {
  */
 data class EditState(
     val query: String = "",
+    @param:StringRes val hint: Int = R.string.mozac_browser_toolbar_search_hint,
     val showQueryAsPreselected: Boolean = false,
     val autocompleteProviders: List<AutocompleteProvider> = emptyList(),
     val editActionsStart: List<Action> = emptyList(),
