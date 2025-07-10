@@ -51,6 +51,8 @@ skip-if = ["verify"] # See https://bugzilla.mozilla.org/show_bug.cgi?id=1975803#
 
 ["browser_js_locale.js"]
 
+["browser_navigator_online.js"]
+
 ["browser_rfp_canvasplaceholder_pdfjs.js"]
 support-files = ["file_pdf.pdf"]
 
