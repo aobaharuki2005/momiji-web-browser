@@ -132,7 +132,7 @@ class RangeBoundaryBase {
         aTreeKind == TreeKind::DOM || aTreeKind == TreeKind::Flat,
         "Only TreeKind::DOM and TreeKind::Flat are valid at the moment.");
     if (mRef) {
-      NS_WARNING_ASSERTION(GetParentNode(mRef) == mParent,
+      NS_WARNING_ASSERTION(IsValidParent(mParent, mRef),
                            "Initializing RangeBoundary with invalid value");
     } else {
       mOffset.emplace(0);
@@ -161,7 +161,7 @@ class RangeBoundaryBase {
       NS_WARNING_ASSERTION(mRef || aOffset == 0,
                            "Constructing RangeBoundary with invalid value");
     }
-    NS_WARNING_ASSERTION(!mRef || GetParentNode(mRef) == mParent,
+    NS_WARNING_ASSERTION(!mRef || IsValidParent(mParent, mRef),
                          "Constructing RangeBoundary with invalid value");
   }
 
@@ -425,7 +425,7 @@ class RangeBoundaryBase {
   void DetermineOffsetFromReference() const {
     MOZ_ASSERT(mParent);
     MOZ_ASSERT(mRef);
-    MOZ_ASSERT(GetParentNode(mRef) == mParent);
+    MOZ_ASSERT(IsValidParent(mParent, mRef));
     MOZ_ASSERT(mIsMutationObserved);
     MOZ_ASSERT(mOffset.isNothing());
 
@@ -476,18 +476,30 @@ class RangeBoundaryBase {
           return nullptr;
         }
       }
+
+      if (const auto* shadowRoot = aNode->GetShadowRoot()) {
+        return shadowRoot->GetFirstChild();
+      }
     }
     return aNode->GetFirstChild();
   }
 
-  const RawParentType* GetParentNode(const nsIContent* aNode) const {
-    MOZ_ASSERT(aNode);
+  bool IsValidParent(const nsINode* aParent, const nsIContent* aChild) const {
+    MOZ_ASSERT(aParent);
+    MOZ_ASSERT(aChild);
     if (mTreeKind == TreeKind::Flat) {
-      if (const auto* slot = aNode->GetAssignedSlot()) {
-        return slot;
+      if (const auto* slot = aChild->GetAssignedSlot()) {
+        return slot == aParent;
+      }
+
+      if (const auto* shadowRoot =
+              dom::ShadowRoot::FromNodeOrNull(aChild->GetParent())) {
+        if (shadowRoot->GetHost() == aParent) {
+          return true;
+        }
       }
     }
-    return aNode->GetParentNode();
+    return aChild->GetParentNode() == aParent;
   }
 
   uint32_t GetLength(const nsINode* aNode) const {
@@ -498,6 +510,10 @@ class RangeBoundaryBase {
         if (!assignedNodes.IsEmpty()) {
           return assignedNodes.Length();
         }
+      }
+
+      if (const auto* shadowRoot = aNode->GetShadowRoot()) {
+        return shadowRoot->Length();
       }
     }
     return aNode->Length();
@@ -519,6 +535,9 @@ class RangeBoundaryBase {
         if (!assignedNodes.IsEmpty()) {
           return RawRefType::FromNode(assignedNodes.LastElement());
         }
+      }
+      if (const auto* shadowRoot = aParent->GetShadowRoot()) {
+        return shadowRoot->GetLastChild();
       }
     }
     return aParent->GetLastChild();
@@ -586,7 +605,7 @@ class RangeBoundaryBase {
       // XXX mRef refers previous sibling of pointing child.  Therefore, it
       //     seems odd that this becomes invalid due to its removal.  Should we
       //     change RangeBoundaryBase to refer child at offset directly?
-      return GetParentNode(Ref()) == GetContainer() && !Ref()->IsBeingRemoved();
+      return IsValidParent(GetContainer(), Ref()) && !Ref()->IsBeingRemoved();
     }
 
     MOZ_ASSERT(mOffset.isSome());
