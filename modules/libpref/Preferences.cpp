@@ -6116,6 +6116,7 @@ static const PrefListEntry sRestrictFromWebContentProcesses[] = {
     PREF_LIST_ENTRY("identity.fxaccounts.lastSignedInUserHash"),
     PREF_LIST_ENTRY("print_printer"),
     PREF_LIST_ENTRY("services."),
+    PREF_LIST_ENTRY("termsofuse."),
 
     // Remove UUIDs
     PREF_LIST_ENTRY("app.normandy.user_id"),

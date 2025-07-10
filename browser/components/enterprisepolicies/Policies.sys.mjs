@@ -2652,14 +2652,8 @@ export var Policies = {
   SkipTermsOfUse: {
     onBeforeAddons(manager, param) {
       if (param) {
-        setAndLockPref(
-          "datareporting.policy.dataSubmissionPolicyAcceptedVersion",
-          999
-        );
-        setAndLockPref(
-          "datareporting.policy.dataSubmissionPolicyNotifiedTime",
-          Date.now().toString()
-        );
+        setAndLockPref("termsofuse.acceptedVersion", 999);
+        setAndLockPref("termsofuse.acceptedDate", Date.now().toString());
       }
     },
   },

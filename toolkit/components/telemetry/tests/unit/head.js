@@ -527,6 +527,17 @@ function setEmptyPrefWatchlist() {
   );
 }
 
+// macOS has the app.update.channel pref locked. Check if it needs to be
+// unlocked before proceeding with the test.
+function maybeUnlockAppUpdateChannelPref() {
+  if (Services.prefs.getDefaultBranch("").prefIsLocked("app.update.channel")) {
+    Services.prefs.getDefaultBranch("").unlockPref("app.update.channel");
+    registerCleanupFunction(() => {
+      Services.prefs.getDefaultBranch("").lockPref("app.update.channel");
+    });
+  }
+}
+
 if (runningInParent) {
   // Set logging preferences for all the tests.
   Services.prefs.setCharPref("toolkit.telemetry.log.level", "Trace");
