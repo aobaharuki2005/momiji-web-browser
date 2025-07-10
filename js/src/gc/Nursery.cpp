@@ -1212,8 +1212,12 @@ void js::Nursery::printProfileHeader() {
 void js::Nursery::printProfileDurations(const ProfileDurations& times,
                                         Sprinter& sprinter) {
   for (auto time : times) {
-    int64_t micros = int64_t(time.ToMicroseconds());
-    sprinter.printf(" %6" PRIi64, micros);
+    double micros = time.ToMicroseconds();
+    if (micros < 0.001 || micros >= 1.0) {
+      sprinter.printf(" %6ld", std::lround(micros));
+    } else {
+      sprinter.printf(" %6.3f", micros);
+    }
   }
 
   sprinter.put("\n");
