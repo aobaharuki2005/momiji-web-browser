@@ -72,6 +72,7 @@ class CustomizationFragment : PreferenceFragmentCompat() {
         // if tab strip is enabled, swipe toolbar to switch tabs should not be enabled so the
         // preference is not shown
         setupGesturesCategory(isSwipeToolbarToSwitchTabsVisible = !tabletAndTabStripEnabled)
+        setupAppIconCategory()
     }
 
     private fun setupRadioGroups() {
@@ -171,6 +172,12 @@ class CustomizationFragment : PreferenceFragmentCompat() {
             isChecked = context.settings().isSwipeToolbarToSwitchTabsEnabled
             isVisible = isSwipeToolbarToSwitchTabsVisible
             onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+    }
+
+    private fun setupAppIconCategory() {
+        requirePreference<PreferenceCategory>(R.string.pref_key_customization_category_app_icon).apply {
+           isVisible = FeatureFlags.alternativeAppIconFeatureEnabled
         }
     }
 

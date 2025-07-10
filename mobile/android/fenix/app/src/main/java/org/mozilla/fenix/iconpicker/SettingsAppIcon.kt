@@ -27,7 +27,7 @@ data class SettingsAppIcon(
      */
     companion object {
 
-        private val appDefault = SettingsAppIcon(
+        val appDefault = SettingsAppIcon(
             activityAlias = ActivityAlias.AppDefault,
             titleId = R.string.alternative_app_icon_option_default,
         )
