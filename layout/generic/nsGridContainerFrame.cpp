@@ -10728,8 +10728,13 @@ bool nsGridContainerFrame::GridItemShouldStretch(const nsIFrame* aChild,
   const auto alignment = (aAxis == LogicalAxis::Inline) == !isOrthogonal
                              ? pos->UsedJustifySelf(Style())._0
                              : pos->UsedAlignSelf(Style())._0;
-  return alignment == StyleAlignFlags::NORMAL ||
-         alignment == StyleAlignFlags::STRETCH;
+  // An item with 'normal' alignment that is a replaced frame should use its
+  // natural size, and not fill the grid area.
+  // https://drafts.csswg.org/css-grid-2/#grid-item-sizing
+  if (MOZ_LIKELY(alignment == StyleAlignFlags::NORMAL)) {
+    return !aChild->HasReplacedSizing();
+  }
+  return alignment == StyleAlignFlags::STRETCH;
 }
 
 bool nsGridContainerFrame::ShouldInhibitSubgridDueToIFC(
