@@ -140,6 +140,10 @@ fun AppIcon(
     cornerRadius: Dp = AppIconCornerRadius,
 ) {
     val roundedShape = RoundedCornerShape(cornerRadius)
+    // Spacing the background to make up for inconsistency between box and background clippings.
+    // If unchanged, the background will spill over the border; if adjusted by the border width,
+    // the background won't exactly reach the border. Pixel hunting.
+    val backgroundPadding = borderWidth / 2
 
     Box(
         modifier = Modifier
@@ -148,17 +152,15 @@ fun AppIcon(
                 width = borderWidth,
                 color = FirefoxTheme.colors.borderPrimary,
                 shape = roundedShape,
-            ),
+            )
+            .padding(backgroundPadding)
+            .clip(roundedShape),
     ) {
         when (val background = appIcon.activityAlias.iconBackground) {
             is IconBackground.Color -> {
                 Box(
                     modifier = Modifier
                         .size(iconSize)
-                        // Spacing the background by the border width to avoid spilling background
-                        // pixels into parent rounded corvers border.
-                        .padding(borderWidth)
-                        .clip(roundedShape)
                         .background(colorResource(id = background.colorResId)),
                 )
             }
@@ -167,12 +169,7 @@ fun AppIcon(
                 Image(
                     painter = painterResource(id = background.drawableResId),
                     contentDescription = null,
-                    modifier = Modifier
-                        .size(iconSize)
-                        // Spacing the background by the border width to avoid spilling background
-                        // pixels into parent rounded corvers border.
-                        .padding(borderWidth)
-                        .clip(roundedShape),
+                    modifier = Modifier.size(iconSize),
                 )
             }
         }
