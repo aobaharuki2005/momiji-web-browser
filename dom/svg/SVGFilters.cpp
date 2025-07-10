@@ -370,7 +370,7 @@ LightType SVGFELightingElement::ComputeLightAttributes(
 }
 
 bool SVGFELightingElement::AddLightingAttributes(
-    mozilla::gfx::DiffuseLightingAttributes* aAttributes,
+    mozilla::gfx::LightingAttributes* aAttributes,
     SVGFilterInstance* aInstance) {
   const auto* frame = GetPrimaryFrame();
   if (!frame) {
