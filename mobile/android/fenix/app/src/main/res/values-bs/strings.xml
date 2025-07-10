@@ -345,6 +345,10 @@
   <string name="browser_menu_back_button_content_description" moz:removedIn="141" tools:ignore="UnusedResources">Povratak na glavni meni</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
   <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">Zatvorite glavni meni</string>
+  <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
+  <string name="browser_close_main_menu_handlebar_content_description">Zatvori meni</string>
+  <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
+  <string name="browser_main_menu_content_description_navigation_header">Navigacija</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">Pomoć</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
@@ -421,6 +425,10 @@
   <string name="browser_menu_default_banner_subtitle">Traje samo nekoliko sekundi. Promijenite bilo kada.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Odbaci</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
+  <string name="browser_menu_default_banner_dismiss_promotion">Odbaci promociju</string>
+  <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
+  <string name="browser_menu_recommended_extensions_content_description">Više informacija</string>
   <!--
     Menu "contextual feature recommendation" (CFR)
 
@@ -1746,6 +1754,8 @@
   <string name="webcompat_reporter_success_snackbar_text">Vaš izvještaj je poslan</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text">Zatvori</string>
+  <!-- Placeholder text for the description field to prompt the user on what they should type. -->
+  <string name="webcompat_reporter_problem_description_placeholder_text">Šta se desilo? Šta je trebalo da se desi?</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -2974,6 +2984,12 @@
   <string name="synced_tabs_expand_group">Proširi grupu sinhronizovanih tabova</string>
   <!-- Content description for collapsing a group of synced tabs. -->
   <string name="synced_tabs_collapse_group">Sažmi grupu sinhroniziranih tabova</string>
+  <!--
+    Top Sites
+
+    Title text displayed for the shortcuts home screen section.
+  -->
+  <string name="homepage_shortcuts_title">Prečice</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Dostignuto je ograničenje prečice</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->

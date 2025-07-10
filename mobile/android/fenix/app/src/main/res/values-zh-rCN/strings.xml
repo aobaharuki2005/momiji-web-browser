@@ -345,6 +345,10 @@
   <string name="browser_menu_back_button_content_description" moz:removedIn="141" tools:ignore="UnusedResources">回到主菜单</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
   <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">关闭主菜单表单</string>
+  <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
+  <string name="browser_close_main_menu_handlebar_content_description">关闭菜单</string>
+  <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
+  <string name="browser_main_menu_content_description_navigation_header">导航</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">帮助</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
@@ -373,9 +377,9 @@
   <!-- Browser menu description that describes the various save related menu items inside of the save sub-menu -->
   <string name="browser_menu_save_description" moz:removedIn="141" tools:ignore="UnusedResources">添加书签、快捷方式、主页、收藏集、PDF</string>
   <!-- Browser menu label that bookmarks the currently visited page -->
-  <string name="browser_menu_bookmark_this_page" moz:removedIn="141" tools:ignore="UnusedResources">将此页面加入书签</string>
+  <string name="browser_menu_bookmark_this_page" moz:removedIn="141" tools:ignore="UnusedResources">为此页面添加书签</string>
   <!-- Browser menu label that bookmarks the currently visited page -->
-  <string name="browser_menu_bookmark_this_page_2">将页面加入书签</string>
+  <string name="browser_menu_bookmark_this_page_2">为页面添加书签</string>
   <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
   <string name="browser_menu_edit_bookmark">编辑书签</string>
   <!-- Browser menu label that the saves the currently visited page as a PDF -->
@@ -421,6 +425,8 @@
   <string name="browser_menu_default_banner_subtitle">只需几秒钟，以后随时可以更改。</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">知道了</string>
+  <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
+  <string name="browser_menu_recommended_extensions_content_description">更多信息</string>
   <!--
     Menu "contextual feature recommendation" (CFR)
 
@@ -2974,6 +2980,12 @@
   <string name="synced_tabs_expand_group">展开同步的标签页组</string>
   <!-- Content description for collapsing a group of synced tabs. -->
   <string name="synced_tabs_collapse_group">折叠同步的标签页组</string>
+  <!--
+    Top Sites
+
+    Title text displayed for the shortcuts home screen section.
+  -->
+  <string name="homepage_shortcuts_title">快捷方式</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">超出快捷方式限制</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->

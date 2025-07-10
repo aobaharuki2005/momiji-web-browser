@@ -64,6 +64,8 @@
   -->
   <string name="private_browsing_placeholder_description_2" moz:removedIn="141" tools:ignore="UnusedResources">ئەپنى تاقىغان تياكى چېكىنگەندە %1$s شەخسىي بەتكۈچلەردىن ئىزدەش ۋە زىيارەت تارىخىڭىزنى تازىلايدۇ. گەرچە بۇ سىزنى تور بېكەت ياكى ئىنتېرنېت مۇلازىمەت تەمىنلىگۈچىڭىزگە نىسبەتەن ئاتسىز قىلمىسىمۇ ئەمما توردا نېمە ئىش قىلغانلىقىڭىزنى مەزكۇر ئۈسكۈنىنى ئىشلىتىدىغان باشقا كىشىلەردىن سىر تۇرۇشنى ئاسانلاشتۇرىدۇ.</string>
   <string name="private_browsing_common_myths">شەخسىيەت زىيارىتى ھەققىدە كۆپ ئۇچرايدىغان قاراشلار</string>
+  <!-- Text to be announced by the accessibility service to inform the user that the private browsing mode is currently active. -->
+  <string name="private_browsing_a11y_session_announcement">شەخسىي زىيارەت سۆزلەشكۈ</string>
   <!--
     True Private Browsing Mode
 
@@ -343,6 +345,10 @@
   <string name="browser_menu_back_button_content_description" moz:removedIn="141" tools:ignore="UnusedResources">ئاساسىي تىزىملىككە قايت</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
   <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">ئاساسىي تىزىملىك جەدۋىلىنى تاقايدۇ</string>
+  <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
+  <string name="browser_close_main_menu_handlebar_content_description">تىزىملىكنى ياپ</string>
+  <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
+  <string name="browser_main_menu_content_description_navigation_header">يولباشچى</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">ياردەم</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
@@ -419,6 +425,10 @@
   <string name="browser_menu_default_banner_subtitle">بىر قانچە سېكۇنت كېتىدۇ. خالىغان ۋاقىتتا ئۆزگەرتكىلى بولىدۇ.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">بولدىلا</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
+  <string name="browser_menu_default_banner_dismiss_promotion">تەشۋىقاتقا پەرۋا قىلما</string>
+  <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
+  <string name="browser_menu_recommended_extensions_content_description">تەپسىلاتى</string>
   <!--
     Menu "contextual feature recommendation" (CFR)
 
@@ -1230,6 +1240,8 @@
   <string name="exceptions_empty_message_learn_more_link">تەپسىلاتى</string>
   <!-- Preference switch for usage and technical data collection -->
   <string name="preference_usage_data_2">تېخنىكىلىق ۋە تەسىرلىشىش سانلىق مەلۇماتىنى يوللايدۇ</string>
+  <!-- Preference switch for usage and technical learn more link in new compose -->
+  <string name="preference_usage_data_learn_more_2">تېخنىكىلىق سانلىق مەلۇمات ھەققىدىكى مول بىلىم</string>
   <!-- Preference switch for usage and technical learn more link -->
   <string name="preference_usage_data_learn_more" tools:ignore="UnusedResources" moz:removedIn="141">تەپسىلاتى</string>
   <!-- Preference description for marketing data collection. Note: The words "Firefox" should NOT be translated -->
@@ -1242,6 +1254,16 @@
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">يىمىرىلىش دوكلاتىنى ئۆزلۈكىدىن يوللايدۇ</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">بۇ توركۆرگۈگە دىياگنوز قويۇپ ۋە مەسىلىنى ئوڭشىشىمىزغا ياردەم بېرىدۇ. دوكلات شەخسىي ياكى سەزگۈر ئۇچۇرلارنى ئۆز ئىچىگە ئېلىشى مۇمكىن.</string>
+  <!-- Text for sumo link to learn more about crash reports in data collection screen -->
+  <string name="preferences_crashes_learn_more">يىمىرىلىش دوكلاتى ھەققىدىكى تەپسىلات</string>
+  <!-- Title Headers for data collection settings screen -->
+  <string name="crash_reports_data_category">يىمىرىلىش دوكلاتى</string>
+  <string name="usage_data_category">ئىشلىتىش سانلىق مەلۇماتى</string>
+  <string name="studies_data_category">تەتقىقات</string>
+  <string name="technical_data_category">تېخنىكىلىق سانلىق مەلۇمات</string>
+  <string name="crash_reporting_description">يىمىرىلىش دوكلاتى توركۆرگۈگە دىياگنوز قۇيۇپ ۋە ئۇنى ئوڭشاشقا يول قويىدۇ. دوكلات شەخسىي ياكى سەزگۈر ئۇچۇرلارنى ئۆز ئىچىگە ئېلىشى مۇمكىن.</string>
+  <!-- Section title for campaign measurement in data collections screen -->
+  <string name="preferences_marketing_data_title">پائالىيەت ئۆلچىمى</string>
   <!-- Preference switch for campaign measurement data (marketing data) collection -->
   <string name="preferences_marketing_data_2">پائالىيەت ئۆلچەم سانلىق مەلۇماتى</string>
   <!--
@@ -1732,6 +1754,8 @@
   <string name="webcompat_reporter_success_snackbar_text">دوكلاتىڭىز ئەۋەتىلگەن</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text">تاقا</string>
+  <!-- Placeholder text for the description field to prompt the user on what they should type. -->
+  <string name="webcompat_reporter_problem_description_placeholder_text">نېمە ئىش بولدى؟ نېمە ئىش بولۇشى كېرەك ئىدى؟</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -2659,6 +2683,14 @@
   <string name="login_detail_menu_edit_button">تەھرىر</string>
   <!-- Delete text for the login detail menu delete button -->
   <string name="login_detail_menu_delete_button">ئۆچۈر</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the add login view. -->
+  <string name="add_login_navigate_back_button_content_description">كەينىگە قايت</string>
+  <!-- Content description, used by tools like screenreaders, to press on the save new login button. -->
+  <string name="add_login_save_new_login_button_content_description">يېڭى تىزىمغا كىرىشنى ساقلا</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the edit login view. -->
+  <string name="edit_login_navigate_back_button_content_description">كەينىگە قايت</string>
+  <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
+  <string name="edit_login_button_content_description">تىزىمغا كىرىش تەھرىر</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">تور بېكەتنى توركۆرگۈدە ئاچىدۇ</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -2952,6 +2984,12 @@
   <string name="synced_tabs_expand_group">قەدەمداشلانغان بەتكۈچ گۇرۇپپىسىنى يايىدۇ</string>
   <!-- Content description for collapsing a group of synced tabs. -->
   <string name="synced_tabs_collapse_group">قەدەمداشلانغان بەتكۈچ گۇرۇپپىسىنى يىغىدۇ</string>
+  <!--
+    Top Sites
+
+    Title text displayed for the shortcuts home screen section.
+  -->
+  <string name="homepage_shortcuts_title">تېزلەتمە</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">تېزلەتمە چېكىگە يەتتى</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
