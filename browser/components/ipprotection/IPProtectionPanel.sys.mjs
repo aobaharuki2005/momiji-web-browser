@@ -33,7 +33,10 @@ export class IPProtectionPanel {
     );
   }
 
-  state = {};
+  // TODO: Add logic for determining sign-in state once we have details about the proxy - Bug 1976094
+  state = {
+    isSignedIn: true,
+  };
   panel = null;
 
   /**

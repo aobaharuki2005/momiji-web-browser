@@ -21,3 +21,19 @@
 #upgrade-vpn-button {
   align-self: end;
 }
+
+#signed-out-vpn-content {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-medium) var(--space-large) var(--space-small);
+}
+
+#sign-in-vpn {
+  align-self: end;
+}
+
+@media (prefers-color-scheme: dark) {
+  #signed-out-vpn-img {
+    content: url("chrome://browser/content/ipprotection/assets/ipprotection-darkmode.svg");
+  }
+}

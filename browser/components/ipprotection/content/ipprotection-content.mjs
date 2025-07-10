@@ -5,6 +5,9 @@
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
 
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/ipprotection/ipprotection-signedout.mjs";
+
 export default class IPProtectionContentElement extends MozLitElement {
   static queries = {
     upgradeEl: "#upgrade-vpn-content",
@@ -33,8 +36,11 @@ export default class IPProtectionContentElement extends MozLitElement {
     // TODO: Handle click of Upgrade button - Bug 1975317
   }
 
-  contentTemplate() {
+  mainContentTemplate() {
     // TODO: Update support-page with new SUMO link for Mozilla VPN - Bug 1975474
+    if (!this.state.isSignedIn) {
+      return html` <ipprotection-signedout></ipprotection-signedout> `;
+    }
     return html`
       <div id="upgrade-vpn-content">
         <h2 id="upgrade-vpn-title" data-l10n-id="upgrade-vpn-title"></h2>
@@ -56,13 +62,13 @@ export default class IPProtectionContentElement extends MozLitElement {
   }
 
   render() {
-    // TODO: Conditionally render subviews within #ipprotection-content-wrapper - Bug 1973813, Bug 1973815
+    // TODO: Conditionally render post-upgrade subview within #ipprotection-content-wrapper - Bug 1973813
     return html`
       <link
         rel="stylesheet"
         href="chrome://browser/content/ipprotection/ipprotection-content.css"
       />
-      <div id="ipprotection-content-wrapper">${this.contentTemplate()}</div>
+      <div id="ipprotection-content-wrapper">${this.mainContentTemplate()}</div>
     `;
   }
 }

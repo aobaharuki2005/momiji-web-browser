@@ -13,10 +13,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 /**
- * Tests that the ip protection main panel view has the correct content.
+ * Tests that the ip protection signed out panel subview has the correct content.
  */
-add_task(async function test_main_content() {
+add_task(async function test_signed_out_content() {
   let button = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
+
   let panelView = PanelMultiView.getViewNode(
     document,
     lazy.IPProtectionWidget.PANEL_ID
@@ -29,7 +30,7 @@ add_task(async function test_main_content() {
 
   let content = panelView.querySelector(lazy.IPProtectionPanel.CONTENT_TAGNAME);
 
-  content.state.isSignedIn = true;
+  content.state.isSignedIn = false;
   content.requestUpdate();
   await content.updateComplete;
 
@@ -37,19 +38,21 @@ add_task(async function test_main_content() {
     BrowserTestUtils.isVisible(content),
     "ipprotection content component should be present"
   );
-  Assert.ok(content.upgradeEl, "Upgrade vpn element should be present");
-  Assert.ok(
-    content.upgradeEl.querySelector("#upgrade-vpn-title"),
-    "Upgrade vpn title should be present"
+
+  let signedOutElement = content.shadowRoot.querySelector(
+    "ipprotection-signedout"
   );
-  Assert.ok(
-    content.upgradeEl.querySelector("#upgrade-vpn-paragraph"),
-    "Upgrade vpn paragraph should be present"
+  let signedOutContent = signedOutElement.shadowRoot;
+  let signedOutImg = signedOutContent.querySelector("#signed-out-vpn-img");
+  let signedOutTitle = signedOutContent.querySelector(
+    "#signed-out-vpn-message"
   );
-  Assert.ok(
-    content.upgradeEl.querySelector("#upgrade-vpn-button"),
-    "Upgrade vpn button should be present"
-  );
+  let signedOutButton = signedOutContent.querySelector("#sign-in-vpn");
+
+  Assert.ok(signedOutContent, "Signed out content should be visible");
+  Assert.ok(signedOutImg, "Signed out image should be visible");
+  Assert.ok(signedOutTitle, "Signed out title should be visible");
+  Assert.ok(signedOutButton, "Signed out button should be visible");
 
   // Close the panel
   let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
