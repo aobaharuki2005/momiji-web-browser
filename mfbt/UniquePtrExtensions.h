@@ -110,8 +110,6 @@ struct FileHandleHelper {
 #endif
   }
 
-  MOZ_IMPLICIT constexpr FileHandleHelper() : mHandle(kInvalidHandle) {}
-
   MOZ_IMPLICIT constexpr FileHandleHelper(std::nullptr_t)
       : mHandle(kInvalidHandle) {}
 
@@ -169,9 +167,8 @@ struct FileHandleDeleter {
 struct MachPortHelper {
   MOZ_IMPLICIT MachPortHelper(mach_port_t aPort) : mPort(aPort) {}
 
-  MOZ_IMPLICIT constexpr MachPortHelper() : mPort(MACH_PORT_NULL) {}
-
-  MOZ_IMPLICIT constexpr MachPortHelper(std::nullptr_t) : MachPortHelper() {}
+  MOZ_IMPLICIT constexpr MachPortHelper(std::nullptr_t)
+      : mPort(MACH_PORT_NULL) {}
 
   bool operator!=(std::nullptr_t) const { return mPort != MACH_PORT_NULL; }
 
@@ -289,7 +286,7 @@ class MOZ_TEMPORARY_CLASS UniquePtrGetterTransfers {
   using Receiver = typename detail::ReceiverType<T, D>::Type;
 
   explicit UniquePtrGetterTransfers(Ptr& p)
-      : mPtr(p), mReceiver(typename Ptr::pointer(nullptr)) {}
+      : mPtr(p), mReceiver(typename Ptr::Pointer(nullptr)) {}
   ~UniquePtrGetterTransfers() { mPtr.reset(mReceiver); }
 
   operator Receiver*() { return &mReceiver; }
