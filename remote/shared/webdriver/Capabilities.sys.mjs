@@ -373,11 +373,6 @@ export class ProxyConfiguration {
         break;
 
       case "manual":
-        if (typeof json.ftpProxy != "undefined") {
-          throw new lazy.error.InvalidArgumentError(
-            "Since Firefox 90 'ftpProxy' is no longer supported"
-          );
-        }
         if (typeof json.httpProxy != "undefined") {
           [p.httpProxy, p.httpProxyPort] = fromHost("http", json.httpProxy);
         }
