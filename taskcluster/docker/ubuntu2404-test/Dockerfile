@@ -5,12 +5,11 @@ RUN     mkdir -p /artifacts
 
 # We need to declare all potentially cache volumes as caches. Also,
 # making high I/O paths volumes increase I/O throughput because of
-# overlayfs slowness.
+# AUFS slowness.
 VOLUME  /builds/worker/.task-cache/npm
 VOLUME  /builds/worker/.task-cache/pip
 VOLUME  /builds/worker/.task-cache/uv
 VOLUME  /builds/worker/checkouts
-VOLUME  /builds/worker/fetches
 VOLUME  /builds/worker/tooltool-cache
 VOLUME  /builds/worker/workspace
 

@@ -72,17 +72,11 @@ maybe_start_pulse() {
 
         SOCKET="$XDG_RUNTIME_DIR/pipewire-0"
         attempts=10
-        sleep_time=0.1
         while [ ! -S "$SOCKET" ] && [ $attempts -gt 0 ]; do
-            sleep $sleep_time
-            sleep_time=$((sleep_time * 2))
+            sleep 0.1
             attempts=$((attempts - 1))
         done
-        if [ ! -S "$SOCKET" ]; then
-            ps auxf || :
-            echo "error: no pipewire socket, retrying the task" >&2
-            exit 4
-        fi
+        [ -S "$SOCKET" ] || exit 1
 
         wireplumber &
         pw_pids+=($!)
@@ -244,16 +238,11 @@ if $NEED_WINDOW_MANAGER; then
     # credit card numbers.
     eval `echo '' | /usr/bin/gnome-keyring-daemon -r -d --unlock --components=secrets`
 
-    mount || :
-    df -h || :
-
     # Wait for gnome-shell to start up
-    retry_count=10
+    retry_count=5
     while ! dbus-send --print-reply=literal --session --dest=org.gnome.Shell --type=method_call /org/gnome/Shell org.freedesktop.DBus.Properties.Get string:org.gnome.Shell string:OverviewActive; do
-      ps auxf || :
       if [ $retry_count = 0 ]; then
-        echo "gnome-shell still not up, retrying the task" >&2
-        exit 4
+        fail "gnome-shell still not up, giving up"
       fi
       retry_count=$((retry_count - 1))
       sleep 5
@@ -266,7 +255,7 @@ if $NEED_WINDOW_MANAGER; then
       dbus-send --session --dest=org.gnome.Shell --type=method_call /org/gnome/Shell org.freedesktop.DBus.Properties.Set string:org.gnome.Shell string:OverviewActive variant:boolean:false
       sleep 2
       if dbus-send --print-reply=literal --session --dest=org.gnome.Shell --type=method_call /org/gnome/Shell org.freedesktop.DBus.Properties.Get string:org.gnome.Shell string:OverviewActive | grep true; then
-        echo "gnome-shell didn't get out of overview, retrying the task" >&2
+        echo "gnome-shell didn't get out of overview, retry"
         exit 4
       fi
     fi
