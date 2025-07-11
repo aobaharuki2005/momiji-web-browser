@@ -9242,3 +9242,10 @@ main section {
   border-radius: var(--border-radius-medium);
   object-fit: contain;
 }
+.trending-searches-list-view.last-item .trending-searches-context-menu .context-menu {
+  margin-block-start: var(--space-large);
+  margin-inline-end: var(--space-large);
+  margin-inline-start: auto;
+  inset-inline-end: 0;
+  inset-inline-start: auto;
+}
