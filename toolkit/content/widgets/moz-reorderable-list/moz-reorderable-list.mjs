@@ -84,7 +84,6 @@ export default class MozReorderableList extends MozLitElement {
   firstUpdated() {
     super.firstUpdated();
     this.getItems();
-    this.addDraggableAttribute();
   }
 
   connectedCallback() {
@@ -106,40 +105,32 @@ export default class MozReorderableList extends MozLitElement {
     for (const mutation of mutationList) {
       if (mutation.addedNodes.length || mutation.removedNodes.length) {
         needsUpdate = true;
-      }
-
-      for (const addedNode of mutation.addedNodes) {
-        if (addedNode.nodeType === Node.ELEMENT_NODE) {
-          this.addDraggableAttribute(addedNode);
-        }
+        break;
       }
     }
 
     if (needsUpdate) {
-      this.getItems();
+      // Defer re-querying for items until the next paint to ensure any
+      // asynchronously rendered (i.e. Lit-based) elements are in the DOM.
+      requestAnimationFrame(() => {
+        this.getItems();
+      });
     }
   }
 
   /**
-   * Add the draggable attribute to all items that match the selector.
-   *
-   * @see getItems for information about the root parameter.
+   * Add the draggable attribute non-XUL elements.
    */
-  addDraggableAttribute(root) {
-    let items = root
-      ? this.getAssignedElementsBySelector(this.itemSelector, root)
-      : this.#items;
-    for (const item of items) {
-      // Unlike XUL elements, HTML elements are not draggable by default.
-      // So we need to set the draggable attribute on all items that match the selector.
-      if (!this.isXULElement(item)) {
-        item.draggable = true;
-      }
+  addDraggableAttribute(item) {
+    // Unlike XUL elements, HTML elements are not draggable by default.
+    // So we need to set the draggable attribute on all items that match the selector.
+    if (!this.isXULElement(item)) {
+      item.draggable = true;
     }
   }
 
   onDragStart(event) {
-    let draggedElement = event.target.closest(this.itemSelector);
+    let draggedElement = this.getTargetItemFromEvent(event);
     if (!draggedElement) {
       return;
     }
@@ -199,7 +190,9 @@ export default class MozReorderableList extends MozLitElement {
   }
 
   onDragLeave(event) {
-    if (!event.target.matches(this.itemSelector)) {
+    let path = event.composedPath();
+    let draggedEl = path.find(el => el.matches?.(this.itemSelector));
+    if (!draggedEl) {
       return;
     }
     let target = event.relatedTarget;
@@ -307,13 +300,17 @@ export default class MozReorderableList extends MozLitElement {
   }
 
   /**
-   * Returns all draggable items based on the itemSelector
+   * Returns all draggable items based on the itemSelector. Adds reorderable
+   * indices and ensures elements are draggable.
    *
    * @see getAssignedElementsBySelector for parameters
    */
   getItems() {
     let items = this.getAssignedElementsBySelector(this.itemSelector);
-    items.forEach((item, i) => (item[REORDER_PROP] = i));
+    items.forEach((item, i) => {
+      item[REORDER_PROP] = i;
+      this.addDraggableAttribute(item);
+    });
     this.#items = items;
   }
 
@@ -332,14 +329,26 @@ export default class MozReorderableList extends MozLitElement {
       root = [root];
     }
 
-    return root.reduce((acc, item) => {
-      if (item.matches(selector)) {
-        acc.push(item);
-      } else {
-        acc.push(...item.querySelectorAll(selector));
-      }
-      return acc;
-    }, []);
+    const collectEls = items => {
+      return items.flatMap(item => {
+        if (item.matches(selector)) {
+          return item;
+        }
+
+        let nestedEls =
+          item.shadowRoot?.querySelectorAll(selector) ??
+          item.querySelectorAll(selector);
+        if (nestedEls.length) {
+          return [...nestedEls];
+        }
+
+        let nextEls =
+          item.localName == "slot" ? item.assignedElements() : item.children;
+        return collectEls([...(nextEls ?? [])]);
+      });
+    };
+
+    return collectEls(root);
   }
 
   /**
@@ -381,8 +390,9 @@ export default class MozReorderableList extends MozLitElement {
    * target
    */
   getTargetItemFromEvent(event) {
-    const target = event.target;
-    const targetItem = target.closest(this.itemSelector);
+    const targetItem =
+      event.target.closest(this.itemSelector) ||
+      event.originalTarget.closest(this.itemSelector);
     return targetItem;
   }
 

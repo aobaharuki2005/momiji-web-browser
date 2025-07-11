@@ -17,6 +17,7 @@
   <body>
     <p id="display"></p>
     <div id="content">
+      <!-- Basic example -->
       <moz-reorderable-list itemselector="ul > li">
         <ul>
           <li><button>1 Apple</button></li>
@@ -25,7 +26,41 @@
           <li><button>4 Grape</button></li>
         </ul>
       </moz-reorderable-list>
+
+      <!-- Shadow DOM example -->
+      <moz-reorderable-list itemselector="#grabme" class="shadow-selector">
+        <ul>
+          <li><shadow-dom-test index="1"></shadow-dom-test></li>
+          <li><shadow-dom-test index="2"></shadow-dom-test></li>
+          <li><shadow-dom-test index="3"></shadow-dom-test></li>
+          <li><shadow-dom-test index="4"></shadow-dom-test></li>
+        </ul>
+      </moz-reorderable-list>
     </div>
+    <script>
+      customElements.define(
+        "shadow-dom-test",
+        class extends HTMLElement {
+          static get observedAttributes() {
+            return ["index"];
+          }
+
+          constructor() {
+            super();
+            this.attachShadow({ mode: "open" });
+            this.shadowRoot.innerHTML = `
+            <div style="background-color: gray;" id="grabme" tabindex="0">
+              <p>this example uses shadow DOM</p>
+            </div>
+          `;
+          }
+
+          attributeChangedCallback(_, __, index) {
+            this.textContent = `${this.textContent} ${index}`;
+          }
+        }
+      );
+    </script>
     <script class="testbody" type="application/javascript">
       // Returns a promise that resolves when the reorder event is fired.
       function reorderEvent(listElement) {
@@ -65,6 +100,12 @@
           );
         }
       }
+
+      // Wait for the custom element used in tests to be added to
+      // CustomElementRegistry before proceeding.
+      add_setup(async function setup() {
+        await customElements.whenDefined("shadow-dom-test");
+      });
 
       // Test if moz-reorderable-list and its slot content is rendered
       add_task(async function testMozMozReorderableListSlot() {
@@ -139,6 +180,8 @@
         await new Promise(resolve => resolve());
         const listItems = mozReorderableList.querySelectorAll("ul > li");
 
+        // moz-reorderable-list waits for next frame to handle async element rendering.
+        await new Promise(resolve => requestAnimationFrame(resolve));
         is(
           listItems[3].getAttribute("draggable"),
           "true",
@@ -188,6 +231,47 @@
         is(
           targetElement,
           listItems[2],
+          "targetElement should be the item after the focused item"
+        );
+        is(position, 0, "position should be after the targetElement");
+      });
+
+      add_task(async function testSelectorInShadowDOM() {
+        let shadowDomList = document.querySelector(".shadow-selector");
+        let shadowHosts = shadowDomList.querySelectorAll("shadow-dom-test");
+        let shadowItems = [...shadowHosts].map(host =>
+          host.shadowRoot.querySelector("#grabme")
+        );
+
+        shadowItems.forEach(item =>
+          ok(
+            item.draggable,
+            "items nested in shadow DOM are marked as draggable."
+          )
+        );
+
+        // Verify reordering via keyboard events as using the EventUtils helpers
+        // throws when dragging elements in the shadow DOM.
+        let firstItem = shadowItems[0];
+        let keydownPromise = new Promise(resolve => {
+          firstItem.addEventListener("keydown", resolve, { once: true });
+        });
+
+        firstItem.focus();
+        synthesizeKey("KEY_ArrowDown", { shiftKey: true, ctrlKey: true });
+        let event = await keydownPromise;
+        let result = shadowDomList.evaluateKeyDownEvent(event);
+        ok(result, "keydown event should have been a reorder event");
+
+        let { draggedElement, targetElement, position } = result;
+        is(
+          draggedElement,
+          firstItem,
+          "draggedElement should be the item that is focused"
+        );
+        is(
+          targetElement,
+          shadowItems[1],
           "targetElement should be the item after the focused item"
         );
         is(position, 0, "position should be after the targetElement");
