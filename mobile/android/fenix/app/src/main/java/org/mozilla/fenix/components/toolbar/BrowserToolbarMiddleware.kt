@@ -17,8 +17,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.action.ShareResourceAction
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.content.ShareResourceState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.browser.toolbar.concept.Action
@@ -531,20 +533,28 @@ class BrowserToolbarMiddleware(
 
             is ShareClicked -> runWithinEnvironment {
                 val selectedTab = browserStore.state.selectedTab ?: return
-
-                navController.nav(
-                    R.id.browserFragment,
-                    BrowserFragmentDirections.actionGlobalShareFragment(
-                        sessionId = selectedTab.id,
-                        data = arrayOf(
-                            ShareData(
-                                url = selectedTab.content.url,
-                                title = selectedTab.content.title,
-                            ),
+                if (selectedTab.content.url.isContentUrl()) {
+                    browserStore.dispatch(
+                        ShareResourceAction.AddShareAction(
+                            selectedTab.id,
+                            ShareResourceState.LocalResource(selectedTab.content.url),
                         ),
-                        showPage = true,
-                    ),
-                )
+                    )
+                } else {
+                    navController.nav(
+                        R.id.browserFragment,
+                        BrowserFragmentDirections.actionGlobalShareFragment(
+                            sessionId = selectedTab.id,
+                            data = arrayOf(
+                                ShareData(
+                                    url = selectedTab.content.url,
+                                    title = selectedTab.content.title,
+                                ),
+                            ),
+                            showPage = true,
+                        ),
+                    )
+                }
             }
 
             else -> next(action)
