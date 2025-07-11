@@ -11,11 +11,15 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.IBinder
+import android.text.SpannableStringBuilder
+import android.text.Spanned
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.edit
+import androidx.core.text.HtmlCompat
+import androidx.core.text.toSpanned
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.Data
@@ -47,7 +51,6 @@ import mozilla.components.support.ktx.android.notification.ChannelData
 import mozilla.components.support.ktx.android.notification.ensureNotificationChannelExists
 import mozilla.components.support.utils.PendingIntentUtils
 import mozilla.components.support.webextensions.WebExtensionSupport
-import java.lang.Exception
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
@@ -118,17 +121,17 @@ interface AddonUpdater {
         /**
          * The addon is not part of the installed list.
          */
-        object NotInstalled : Status()
+        data object NotInstalled : Status()
 
         /**
          * The addon was successfully updated.
          */
-        object SuccessfullyUpdated : Status()
+        data object SuccessfullyUpdated : Status()
 
         /**
          * The addon has not been updated since the last update.
          */
-        object NoUpdateAvailable : Status()
+        data object NoUpdateAvailable : Status()
 
         /**
          * An error has happened while trying to update.
@@ -245,7 +248,12 @@ class DefaultAddonUpdater(
         } else {
             // We create the Android notification here.
             val notificationId = NotificationHandlerService.getNotificationId(applicationContext, extension.id)
-            val notification = createNotification(extension, allPermissions, notificationId)
+            val notification = createNotification(
+                extension,
+                allPermissions,
+                newDataCollectionPermissions,
+                notificationId,
+            )
             notificationsDelegate.notify(notificationId = notificationId, notification = notification)
             // Abort the current update flow. A new update flow might be initiated when the user grants the new
             // permissions via the system notification.
@@ -300,6 +308,7 @@ class DefaultAddonUpdater(
     internal fun createNotification(
         extension: WebExtension,
         newPermissions: List<String>,
+        newDataCollectionPermissions: List<String>,
         notificationId: Int,
     ): Notification {
         val channel = ChannelData(
@@ -308,17 +317,16 @@ class DefaultAddonUpdater(
             NotificationManagerCompat.IMPORTANCE_LOW,
         )
         val channelId = ensureNotificationChannelExists(applicationContext, channel)
-        val text = createContentText(newPermissions)
 
         logger.info("Created update notification for add-on ${extension.id}")
         return NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(iconsR.drawable.mozac_ic_extension_24)
             .setContentTitle(getNotificationTitle(extension))
-            .setContentText(text)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setStyle(
-                NotificationCompat.BigTextStyle()
-                    .bigText(text),
+                NotificationCompat
+                    .BigTextStyle()
+                    .bigText(createContentText(newPermissions, newDataCollectionPermissions)),
             )
             .setContentIntent(createContentIntent())
             .addAction(createAllowAction(extension, notificationId))
@@ -329,27 +337,66 @@ class DefaultAddonUpdater(
 
     private fun getNotificationTitle(extension: WebExtension): String {
         return applicationContext.getString(
-            R.string.mozac_feature_addons_updater_notification_title,
+            R.string.mozac_feature_addons_updater_notification_title_2,
             extension.getMetadata()?.name,
         )
     }
 
     @VisibleForTesting
-    internal fun createContentText(newPermissions: List<String>): String {
-        val validNewPermissions = Addon.localizePermissions(newPermissions, applicationContext)
+    internal fun createContentText(permissions: List<String>, dataCollectionPermissions: List<String>): Spanned {
+        val hasPermissions = permissions.isNotEmpty()
+        val hasDataCollectionPermissions = dataCollectionPermissions.isNotEmpty()
 
-        val string = if (validNewPermissions.size == 1) {
-            R.string.mozac_feature_addons_updater_notification_content_singular
-        } else {
-            R.string.mozac_feature_addons_updater_notification_content
-        }
-        val contentText = applicationContext.getString(string, validNewPermissions.size)
-        var permissionIndex = 1
-        val permissionsText =
-            validNewPermissions.joinToString(separator = "\n") {
-                "${permissionIndex++}-$it"
+        val intro = applicationContext.getString(R.string.mozac_feature_addons_updater_notification_short_intro)
+        val builder = SpannableStringBuilder(HtmlCompat.fromHtml("$intro<br>", HtmlCompat.FROM_HTML_MODE_COMPACT))
+
+        if (hasPermissions) {
+            val localizedPermissions = Addon.localizePermissions(permissions, applicationContext, forUpdate = true)
+            var permissionsText = applicationContext.getString(
+                R.string.mozac_feature_addons_updater_notification_heading_permissions,
+                localizedPermissions.joinToString(" "),
+            )
+            // When we have data collection permissions, we need to truncate the content of this section
+            // so that the data collection permissions section can also be displayed in the notification.
+            permissionsText = maybeAbbreviate(permissionsText, hasDataCollectionPermissions)
+
+            builder.append(HtmlCompat.fromHtml(permissionsText, HtmlCompat.FROM_HTML_MODE_COMPACT))
+
+            if (hasDataCollectionPermissions) {
+                builder.append(HtmlCompat.fromHtml("<br>", HtmlCompat.FROM_HTML_MODE_COMPACT))
             }
-        return "$contentText:\n $permissionsText"
+        }
+
+        if (hasDataCollectionPermissions) {
+            val localizedPermissions = Addon.localizeDataCollectionPermissions(
+                dataCollectionPermissions,
+                applicationContext,
+            )
+            var permissionsText = applicationContext.getString(
+                R.string.mozac_feature_addons_updater_notification_heading_data_collection_permissions,
+                Addon.formatLocalizedDataCollectionPermissions(localizedPermissions),
+            )
+            // When we have permissions, we need to truncate the content of this section so that the
+            // permissions section can also be displayed above (along with this one).
+            permissionsText = maybeAbbreviate(permissionsText, hasPermissions)
+
+            builder.append(HtmlCompat.fromHtml(permissionsText, HtmlCompat.FROM_HTML_MODE_COMPACT))
+        }
+
+        return builder.toSpanned()
+    }
+
+    private fun maybeAbbreviate(text: String, saveSpaceForOtherSection: Boolean): String {
+        // We take up to NARROW_MAX_LENGTH characters when we need to save some space for the other section in the
+        // notification. Otherwise, we still truncate the text because Android system notifications cannot be too tall,
+        // and we need to account for the short intro text.
+        val maxLength = if (saveSpaceForOtherSection) { NARROW_MAX_LENGTH } else { WIDE_MAX_LENGTH }
+
+        var result = text
+        if (result.length > maxLength) {
+            result = result.take(maxLength - 1).plus(Typography.ellipsis)
+        }
+        return result
     }
 
     private fun createContentIntent(): PendingIntent {
@@ -384,7 +431,7 @@ class DefaultAddonUpdater(
         )
 
         val allowText =
-            applicationContext.getString(R.string.mozac_feature_addons_updater_notification_allow_button)
+            applicationContext.getString(R.string.mozac_feature_addons_updater_notification_update_button)
 
         return NotificationCompat.Action.Builder(
             iconsR.drawable.mozac_ic_extension_24,
@@ -403,8 +450,7 @@ class DefaultAddonUpdater(
             PendingIntentUtils.defaultFlags,
         )
 
-        val denyText =
-            applicationContext.getString(R.string.mozac_feature_addons_updater_notification_deny_button)
+        val denyText = applicationContext.getString(R.string.mozac_feature_addons_updater_notification_cancel_button)
 
         return NotificationCompat.Action.Builder(
             iconsR.drawable.mozac_ic_extension_24,
@@ -446,6 +492,12 @@ class DefaultAddonUpdater(
         @VisibleForTesting
         internal const val WORK_TAG_IMMEDIATE =
             "mozilla.components.feature.addons.update.addonUpdater.immediateWork"
+
+        @VisibleForTesting
+        internal const val NARROW_MAX_LENGTH = 160
+
+        @VisibleForTesting
+        internal const val WIDE_MAX_LENGTH = 320
     }
 
     /**

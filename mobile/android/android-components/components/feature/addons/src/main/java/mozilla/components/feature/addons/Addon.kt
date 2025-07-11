@@ -339,10 +339,7 @@ data class Addon(
          */
         @Suppress("MaxLineLength")
         val permissionToTranslation = mapOf(
-            "privacy" to R.string.mozac_feature_addons_permissions_privacy_description,
             "<all_urls>" to R.string.mozac_feature_addons_permissions_all_urls_description,
-            "tabs" to R.string.mozac_feature_addons_permissions_tabs_description,
-            "webNavigation" to R.string.mozac_feature_addons_permissions_web_navigation_description,
             "bookmarks" to R.string.mozac_feature_addons_permissions_bookmarks_description,
             "browserSettings" to R.string.mozac_feature_addons_permissions_browser_setting_description,
             "browsingData" to R.string.mozac_feature_addons_permissions_browser_data_description,
@@ -350,6 +347,7 @@ data class Addon(
             "clipboardWrite" to R.string.mozac_feature_addons_permissions_clipboard_write_description,
             "declarativeNetRequest" to R.string.mozac_feature_addons_permissions_declarative_net_request_description,
             "declarativeNetRequestFeedback" to R.string.mozac_feature_addons_permissions_declarative_net_request_feedback_description,
+            "devtools" to R.string.mozac_feature_addons_permissions_devtools_description,
             "downloads" to R.string.mozac_feature_addons_permissions_downloads_description,
             "downloads.open" to R.string.mozac_feature_addons_permissions_downloads_open_description,
             "find" to R.string.mozac_feature_addons_permissions_find_description,
@@ -359,13 +357,49 @@ data class Addon(
             "nativeMessaging" to R.string.mozac_feature_addons_permissions_native_messaging_description,
             "notifications" to R.string.mozac_feature_addons_permissions_notifications_description,
             "pkcs11" to R.string.mozac_feature_addons_permissions_pkcs11_description,
+            "privacy" to R.string.mozac_feature_addons_permissions_privacy_description,
             "proxy" to R.string.mozac_feature_addons_permissions_proxy_description,
             "sessions" to R.string.mozac_feature_addons_permissions_sessions_description,
             "tabHide" to R.string.mozac_feature_addons_permissions_tab_hide_description,
+            "tabs" to R.string.mozac_feature_addons_permissions_tabs_description,
             "topSites" to R.string.mozac_feature_addons_permissions_top_sites_description,
             "trialML" to R.string.mozac_feature_addons_permissions_trial_ml_description,
             "userScripts" to R.string.mozac_feature_addons_permissions_user_scripts_description,
-            "devtools" to R.string.mozac_feature_addons_permissions_devtools_description,
+            "webNavigation" to R.string.mozac_feature_addons_permissions_web_navigation_description,
+        )
+
+        /**
+         * A map of permissions to translation string ids used in the system notification (for updates).
+         */
+        @Suppress("MaxLineLength")
+        val permissionToTranslationForUpdate = mapOf(
+            "<all_urls>" to R.string.mozac_feature_addons_permissions_all_urls_description_for_update,
+            "bookmarks" to R.string.mozac_feature_addons_permissions_bookmarks_description_for_update,
+            "browserSettings" to R.string.mozac_feature_addons_permissions_browser_settings_description_for_update,
+            "browsingData" to R.string.mozac_feature_addons_permissions_browsing_data_description_for_update,
+            "clipboardRead" to R.string.mozac_feature_addons_permissions_clipboard_read_description_for_update,
+            "clipboardWrite" to R.string.mozac_feature_addons_permissions_clipboard_write_description_for_update,
+            "declarativeNetRequest" to R.string.mozac_feature_addons_permissions_declarative_net_request_description_for_update,
+            "declarativeNetRequestFeedback" to R.string.mozac_feature_addons_permissions_declarative_net_request_feedback_description_for_update,
+            "devtools" to R.string.mozac_feature_addons_permissions_devtools_description_for_update,
+            "downloads" to R.string.mozac_feature_addons_permissions_downloads_description_for_update,
+            "downloads.open" to R.string.mozac_feature_addons_permissions_downloads_open_description_for_update,
+            "find" to R.string.mozac_feature_addons_permissions_find_description_for_update,
+            "geolocation" to R.string.mozac_feature_addons_permissions_geolocation_description_for_update,
+            "history" to R.string.mozac_feature_addons_permissions_history_description_for_update,
+            "management" to R.string.mozac_feature_addons_permissions_management_description_for_update,
+            "nativeMessaging" to R.string.mozac_feature_addons_permissions_native_messaging_description_for_update,
+            "notifications" to R.string.mozac_feature_addons_permissions_notifications_description_for_update,
+            "pkcs11" to R.string.mozac_feature_addons_permissions_pkcs11_description_for_update,
+            "privacy" to R.string.mozac_feature_addons_permissions_privacy_description_for_update,
+            "proxy" to R.string.mozac_feature_addons_permissions_proxy_description_for_update,
+            "sessions" to R.string.mozac_feature_addons_permissions_sessions_description_for_update,
+            "tabHide" to R.string.mozac_feature_addons_permissions_tab_hide_description_for_update,
+            "tabs" to R.string.mozac_feature_addons_permissions_tabs_description_for_update,
+            "topSites" to R.string.mozac_feature_addons_permissions_top_sites_description_for_update,
+            "trialML" to R.string.mozac_feature_addons_permissions_trial_ml_description_for_update,
+            "userScripts" to R.string.mozac_feature_addons_permissions_user_scripts_description_for_update,
+            "webNavigation" to R.string.mozac_feature_addons_permissions_web_navigation_description_for_update,
         )
 
         /**
@@ -412,21 +446,24 @@ data class Addon(
          * Takes a list of [permissions] and returns a list of id resources per each item.
          * @param permissions The list of permissions to be localized. Valid permissions can be found in
          * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#API_permissions
+         * @param context The application context used to access the string resources.
+         * @param forUpdate Optional - When set to `true`, this method will return localized permissions for the update
+         * flow.
          */
-        fun localizePermissions(permissions: List<String>, context: Context): List<String> {
+        fun localizePermissions(permissions: List<String>, context: Context, forUpdate: Boolean = false): List<String> {
             var localizedUrlAccessPermissions = emptyList<String>()
             val requireAllUrlsAccess = permissions.contains("<all_urls>")
             val notFoundPermissions = mutableListOf<String>()
 
+            val translationMap = if (forUpdate) { permissionToTranslationForUpdate } else { permissionToTranslation }
             val localizedNormalPermissions = permissions.mapNotNull {
-                val id = permissionToTranslation[it]
+                val id = translationMap[it]
                 if (id == null) notFoundPermissions.add(it)
                 id
             }.map { context.getString(it) }
 
             if (!requireAllUrlsAccess && notFoundPermissions.isNotEmpty()) {
-                localizedUrlAccessPermissions =
-                    localizedURLAccessPermissions(context, notFoundPermissions)
+                localizedUrlAccessPermissions = localizeURLAccessPermissions(context, notFoundPermissions, forUpdate)
             }
 
             return localizedNormalPermissions + localizedUrlAccessPermissions
@@ -533,7 +570,7 @@ data class Addon(
 
             if (!allUrlAccessPermissionFound && notFoundPermissions.isNotEmpty()) {
                 notFoundPermissions.mapNotNullTo(localizedURLAccessPermissions) { permission ->
-                    when (val localizedResourceId = localizeURLAccessPermission(permission.name)) {
+                    when (val localizedResourceId = getStringIdForHostPermission(permission.name)) {
                         null -> {
                             // Hide if we can't find a string resource to localize the permission
                             null
@@ -668,31 +705,32 @@ data class Addon(
             return updatedAt
         }
 
-        internal fun localizedURLAccessPermissions(
+        internal fun localizeURLAccessPermissions(
             context: Context,
             accessPermissions: List<String>,
+            forUpdate: Boolean = false,
         ): List<String> {
             val localizedSiteAccessPermissions = mutableListOf<String>()
             val permissionsToTranslations = mutableMapOf<String, Int>()
 
             accessPermissions.forEach { permission ->
-                val id = localizeURLAccessPermission(permission)
+                val id = getStringIdForHostPermission(permission, forUpdate)
                 if (id != null) {
                     permissionsToTranslations[permission] = id
                 }
             }
 
             if (permissionsToTranslations.values.any { it.isAllURLsPermission() }) {
-                localizedSiteAccessPermissions.add(
-                    context.getString(R.string.mozac_feature_addons_permissions_all_urls_description),
-                )
+                val stringId = if (forUpdate) {
+                    R.string.mozac_feature_addons_permissions_all_urls_description_for_update
+                } else {
+                    R.string.mozac_feature_addons_permissions_all_urls_description
+                }
+                localizedSiteAccessPermissions.add(context.getString(stringId))
             } else {
-                formatURLAccessPermission(
-                    permissionsToTranslations,
-                    localizedSiteAccessPermissions,
-                    context,
-                )
+                formatURLAccessPermission(permissionsToTranslations, localizedSiteAccessPermissions, context, forUpdate)
             }
+
             return localizedSiteAccessPermissions
         }
 
@@ -701,8 +739,9 @@ data class Addon(
             permissionsToTranslations: MutableMap<String, Int>,
             localizedSiteAccessPermissions: MutableList<String>,
             context: Context,
+            forUpdate: Boolean = false,
         ) {
-            val maxShownPermissionsEntries = 4
+            val maxShownPermissionsEntries = if (forUpdate) { 2 } else { 4 }
             fun addExtraEntriesIfNeeded(
                 count: Int,
                 oneExtraPermission: Int,
@@ -712,12 +751,7 @@ data class Addon(
                 if (collapsedPermissions == 1) {
                     localizedSiteAccessPermissions.add(context.getString(oneExtraPermission))
                 } else {
-                    localizedSiteAccessPermissions.add(
-                        context.getString(
-                            multiplePermissions,
-                            collapsedPermissions,
-                        ),
-                    )
+                    localizedSiteAccessPermissions.add(context.getString(multiplePermissions, collapsedPermissions))
                 }
             }
 
@@ -745,39 +779,61 @@ data class Addon(
             // If we have [maxPermissionsEntries] or fewer permissions, display them all, otherwise we
             // display the first [maxPermissionsEntries] followed by an item that says "...plus N others"
             if (domainCount > maxShownPermissionsEntries) {
-                val onePermission =
+                val onePermission = if (forUpdate) {
+                    R.string.mozac_feature_addons_permissions_one_extra_domain_description_for_update
+                } else {
                     R.string.mozac_feature_addons_permissions_one_extra_domain_description
-                val multiplePermissions =
+                }
+                val multiplePermissions = if (forUpdate) {
+                    R.string.mozac_feature_addons_permissions_extra_domains_description_plural_for_update
+                } else {
                     R.string.mozac_feature_addons_permissions_extra_domains_description_plural
+                }
                 addExtraEntriesIfNeeded(domainCount, onePermission, multiplePermissions)
             }
             if (siteCount > maxShownPermissionsEntries) {
-                val onePermission =
+                val onePermission = if (forUpdate) {
+                    R.string.mozac_feature_addons_permissions_one_extra_site_description_for_update
+                } else {
                     R.string.mozac_feature_addons_permissions_one_extra_site_description
-                val multiplePermissions =
+                }
+                val multiplePermissions = if (forUpdate) {
+                    R.string.mozac_feature_addons_permissions_extra_sites_description_for_update
+                } else {
                     R.string.mozac_feature_addons_permissions_extra_sites_description
+                }
                 addExtraEntriesIfNeeded(siteCount, onePermission, multiplePermissions)
             }
         }
 
         private fun Int.isSiteAccessPermission(): Boolean {
-            return this == R.string.mozac_feature_addons_permissions_one_site_description
+            return listOf(
+                R.string.mozac_feature_addons_permissions_one_site_description,
+                R.string.mozac_feature_addons_permissions_one_site_description_for_update,
+            ).contains(this)
         }
 
         private fun Int.isDomainAccessPermission(): Boolean {
-            return this == R.string.mozac_feature_addons_permissions_sites_in_domain_description
+            return listOf(
+                R.string.mozac_feature_addons_permissions_sites_in_domain_description,
+                R.string.mozac_feature_addons_permissions_sites_in_domain_description_for_update,
+            ).contains(this)
         }
 
         private fun Int.isAllURLsPermission(): Boolean {
-            return this == R.string.mozac_feature_addons_permissions_all_urls_description
+            return listOf(
+                R.string.mozac_feature_addons_permissions_all_urls_description,
+                R.string.mozac_feature_addons_permissions_all_urls_description_for_update,
+            ).contains(this)
         }
 
         /**
          * Check if a permission is considered [Int.isAllURLsPermission] based on the name
          */
         fun Permission.isAllURLsPermission(): Boolean {
-            return permissionToTranslation[name]?.isAllURLsPermission()
-                ?: (localizeURLAccessPermission(name)?.isAllURLsPermission() == true)
+            return permissionToTranslation[name]?.isAllURLsPermission() == true ||
+                permissionToTranslationForUpdate[name]?.isAllURLsPermission() == true ||
+                getStringIdForHostPermission(name)?.isAllURLsPermission() == true
         }
 
         /**
@@ -787,7 +843,7 @@ data class Addon(
          */
         fun permissionsListContainsAllUrls(permissions: List<String>): Boolean =
             permissions.any {
-                localizeURLAccessPermission(it)?.isAllURLsPermission() == true
+                getStringIdForHostPermission(it)?.isAllURLsPermission() == true
             }
 
         /**
@@ -855,18 +911,34 @@ data class Addon(
             return Result.success(HostPermissions(allUrls, wildcards, sites))
         }
 
-        internal fun localizeURLAccessPermission(urlAccess: String): Int? {
+        internal fun getStringIdForHostPermission(urlAccess: String, forUpdate: Boolean = false): Int? {
             val uri = urlAccess.toUri()
             val host = (uri.host ?: "").trim()
             val path = (uri.path ?: "").trim()
 
             return when {
                 host == "*" || urlAccess == "<all_urls>" -> {
-                    R.string.mozac_feature_addons_permissions_all_urls_description
+                    if (forUpdate) {
+                        R.string.mozac_feature_addons_permissions_all_urls_description_for_update
+                    } else {
+                        R.string.mozac_feature_addons_permissions_all_urls_description
+                    }
                 }
                 host.isEmpty() || path.isEmpty() -> null
-                host.startsWith(prefix = "*.") -> R.string.mozac_feature_addons_permissions_sites_in_domain_description
-                else -> R.string.mozac_feature_addons_permissions_one_site_description
+                host.startsWith(prefix = "*.") -> {
+                    if (forUpdate) {
+                        R.string.mozac_feature_addons_permissions_sites_in_domain_description_for_update
+                    } else {
+                        R.string.mozac_feature_addons_permissions_sites_in_domain_description
+                    }
+                }
+                else -> {
+                    if (forUpdate) {
+                        R.string.mozac_feature_addons_permissions_one_site_description_for_update
+                    } else {
+                        R.string.mozac_feature_addons_permissions_one_site_description
+                    }
+                }
             }
         }
 
