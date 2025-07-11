@@ -344,7 +344,8 @@ SessionHistoryInfo::SharedState::~SharedState() {
     mParent
         .RefPtr<SHEntrySharedParentState>::~RefPtr<SHEntrySharedParentState>();
   } else {
-    mChild.UniquePtr<SHEntrySharedState>::~UniquePtr<SHEntrySharedState>();
+    mChild.UniquePtr<SHEntrySharedState>::~unique_ptr<
+        SHEntrySharedState, DefaultDelete<SHEntrySharedState>>();
   }
 }
 

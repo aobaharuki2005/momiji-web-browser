@@ -31,8 +31,6 @@ class nsIReferrerInfo;
 struct HTTPSFirstDowngradeData;
 namespace mozilla {
 class OriginAttributes;
-template <typename, class>
-class UniquePtr;
 namespace dom {
 class FormData;
 class DocShellLoadStateInit;
