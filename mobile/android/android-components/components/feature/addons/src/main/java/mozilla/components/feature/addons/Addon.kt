@@ -742,16 +742,11 @@ data class Addon(
             forUpdate: Boolean = false,
         ) {
             val maxShownPermissionsEntries = if (forUpdate) { 2 } else { 4 }
-            fun addExtraEntriesIfNeeded(
-                count: Int,
-                oneExtraPermission: Int,
-                multiplePermissions: Int,
-            ) {
-                val collapsedPermissions = count - maxShownPermissionsEntries
+            fun addExtraEntriesIfNeeded(collapsedPermissions: Int, oneExtraPermission: Int, multiplePermissions: Int) {
                 if (collapsedPermissions == 1) {
                     localizedSiteAccessPermissions.add(context.getString(oneExtraPermission))
                 } else {
-                    localizedSiteAccessPermissions.add(context.getString(multiplePermissions, collapsedPermissions))
+                    localizedSiteAccessPermissions.add(context.getString(multiplePermissions))
                 }
             }
 
@@ -782,27 +777,27 @@ data class Addon(
                 val onePermission = if (forUpdate) {
                     R.string.mozac_feature_addons_permissions_one_extra_domain_description_for_update
                 } else {
-                    R.string.mozac_feature_addons_permissions_one_extra_domain_description
+                    R.string.mozac_feature_addons_permissions_one_extra_domain_description_2
                 }
                 val multiplePermissions = if (forUpdate) {
                     R.string.mozac_feature_addons_permissions_extra_domains_description_plural_for_update
                 } else {
-                    R.string.mozac_feature_addons_permissions_extra_domains_description_plural
+                    R.string.mozac_feature_addons_permissions_extra_domains_description_plural_2
                 }
-                addExtraEntriesIfNeeded(domainCount, onePermission, multiplePermissions)
+                addExtraEntriesIfNeeded(domainCount - maxShownPermissionsEntries, onePermission, multiplePermissions)
             }
             if (siteCount > maxShownPermissionsEntries) {
                 val onePermission = if (forUpdate) {
                     R.string.mozac_feature_addons_permissions_one_extra_site_description_for_update
                 } else {
-                    R.string.mozac_feature_addons_permissions_one_extra_site_description
+                    R.string.mozac_feature_addons_permissions_one_extra_site_description_2
                 }
                 val multiplePermissions = if (forUpdate) {
                     R.string.mozac_feature_addons_permissions_extra_sites_description_for_update
                 } else {
-                    R.string.mozac_feature_addons_permissions_extra_sites_description
+                    R.string.mozac_feature_addons_permissions_extra_sites_description_2
                 }
-                addExtraEntriesIfNeeded(siteCount, onePermission, multiplePermissions)
+                addExtraEntriesIfNeeded(siteCount - maxShownPermissionsEntries, onePermission, multiplePermissions)
             }
         }
 

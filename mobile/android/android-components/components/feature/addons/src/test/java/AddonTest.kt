@@ -288,7 +288,7 @@ class AddonTest {
     fun `localizeURLAccessPermissions - must collapse host permissions`() {
         var expectedString = listOf("youtube.com", "youtube-nocookie.com", "vimeo.com", "google.co.ao").map {
             testContext.getString(R.string.mozac_feature_addons_permissions_sites_in_domain_description, it)
-        } + testContext.getString(R.string.mozac_feature_addons_permissions_one_extra_domain_description)
+        } + testContext.getString(R.string.mozac_feature_addons_permissions_one_extra_domain_description_2)
 
         var permissions = listOf(
             "webRequest",
@@ -306,7 +306,7 @@ class AddonTest {
 
         expectedString = listOf("youtube.com", "youtube-nocookie.com", "vimeo.com", "google.co.ao").map {
             testContext.getString(R.string.mozac_feature_addons_permissions_sites_in_domain_description, it)
-        } + testContext.getString(R.string.mozac_feature_addons_permissions_extra_domains_description_plural, 2)
+        } + testContext.getString(R.string.mozac_feature_addons_permissions_extra_domains_description_plural_2)
 
         permissions = listOf(
             "webRequest",
@@ -334,7 +334,7 @@ class AddonTest {
 
         expectedString = listOf("www.youtube.com", "www.youtube-nocookie.com", "www.vimeo.com", "mozilla.org").map {
             testContext.getString(R.string.mozac_feature_addons_permissions_one_site_description, it)
-        } + testContext.getString(R.string.mozac_feature_addons_permissions_one_extra_site_description)
+        } + testContext.getString(R.string.mozac_feature_addons_permissions_one_extra_site_description_2)
 
         result = Addon.localizeURLAccessPermissions(testContext, permissions)
 
@@ -353,7 +353,7 @@ class AddonTest {
 
         expectedString = listOf("www.youtube.com", "www.youtube-nocookie.com", "www.vimeo.com", "mozilla.org").map {
             testContext.getString(R.string.mozac_feature_addons_permissions_one_site_description, it)
-        } + testContext.getString(R.string.mozac_feature_addons_permissions_extra_sites_description, 2)
+        } + testContext.getString(R.string.mozac_feature_addons_permissions_extra_sites_description_2)
 
         result = Addon.localizeURLAccessPermissions(testContext, permissions)
 
