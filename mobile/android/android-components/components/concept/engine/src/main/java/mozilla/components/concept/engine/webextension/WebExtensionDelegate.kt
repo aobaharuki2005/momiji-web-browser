@@ -146,16 +146,17 @@ interface WebExtensionDelegate {
      * new version. This requires user interaction as the updated extension will not be installed,
      * until the user grants the new permissions.
      *
-     * @param current The current [WebExtension].
-     * @param updated The update [WebExtension] that requires extra permissions.
-     * @param newPermissions Contains a list of all the new permissions.
-     * @param onPermissionsGranted A callback to indicate if the new permissions from the [updated] extension
-     * are granted or not.
+     * @param extension The new version of the [WebExtension] being updated.
+     * @param newPermissions Contains a list of all the new required permissions.
+     * @param newOrigins Contains a list of all the new required origins.
+     * @param newDataCollectionPermissions Contains a list of all the new required data collection permissions.
+     * @param onPermissionsGranted A callback to indicate if the new permissions are granted or not.
      */
     fun onUpdatePermissionRequest(
-        current: WebExtension,
-        updated: WebExtension,
+        extension: WebExtension,
         newPermissions: List<String>,
+        newOrigins: List<String>,
+        newDataCollectionPermissions: List<String>,
         onPermissionsGranted: ((Boolean) -> Unit),
     ) = Unit
 

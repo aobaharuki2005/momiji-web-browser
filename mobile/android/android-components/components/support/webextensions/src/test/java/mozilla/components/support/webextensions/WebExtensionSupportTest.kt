@@ -860,13 +860,13 @@ class WebExtensionSupportTest {
         WebExtensionSupport.initialize(
             runtime = engine,
             store = store,
-            onUpdatePermissionRequest = { _, _, _, _ ->
+            onUpdatePermissionRequest = { _, _, _, _, _ ->
                 executed = true
             },
         )
 
         verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
-        delegateCaptor.value.onUpdatePermissionRequest(mock(), mock(), mock(), mock())
+        delegateCaptor.value.onUpdatePermissionRequest(mock(), mock(), mock(), mock(), mock())
         assertTrue(executed)
     }
 

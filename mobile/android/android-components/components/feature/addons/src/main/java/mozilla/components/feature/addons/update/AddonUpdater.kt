@@ -81,17 +81,18 @@ interface AddonUpdater {
      * new version. This requires user interaction as the updated extension will not be installed,
      * until the user grants the new permissions.
      *
-     * @param current The current [WebExtension].
-     * @param updated The updated [WebExtension] that requires extra permissions.
-     * @param newPermissions Contains a list of all the new permissions.
-     * @param onPermissionsGranted A callback to indicate if the new permissions from the [updated] extension
-     * are granted or not.
+     * @param extension The new version of the [WebExtension] being updated.
+     * @param newPermissions Contains a list of all the new required permissions.
+     * @param newOrigins Contains a list of all the new required origins.
+     * @param newDataCollectionPermissions Contains a list of all the new required data collection permissions.
+     * @param onPermissionsGranted A callback to indicate if the new permissions are granted or not.
      */
     fun onUpdatePermissionRequest(
-        current: WebExtension,
-        updated: WebExtension,
+        extension: WebExtension,
         newPermissions: List<String>,
-        onPermissionsGranted: ((Boolean) -> Unit),
+        newOrigins: List<String>,
+        newDataCollectionPermissions: List<String>,
+        onPermissionsGranted: (Boolean) -> Unit,
     )
 
     /**
@@ -219,27 +220,32 @@ class DefaultAddonUpdater(
      *     them). At this point, the update is applied.
      */
     override fun onUpdatePermissionRequest(
-        current: WebExtension,
-        updated: WebExtension,
+        extension: WebExtension,
         newPermissions: List<String>,
+        newOrigins: List<String>,
+        newDataCollectionPermissions: List<String>,
         onPermissionsGranted: (Boolean) -> Unit,
     ) {
-        logger.info("onUpdatePermissionRequest ${updated.id}")
+        logger.info("onUpdatePermissionRequest ${extension.id}")
 
-        val shouldGrantWithoutPrompt = Addon.localizePermissions(newPermissions, applicationContext).isEmpty()
+        // This has been added to keep backward compatibility for now. Previously, this was done in the caller.
+        val allPermissions = newPermissions + newOrigins
+        val shouldGrantWithoutPrompt =
+            Addon.localizePermissions(allPermissions, applicationContext).isEmpty() &&
+                Addon.localizeDataCollectionPermissions(newDataCollectionPermissions, applicationContext).isEmpty()
         val shouldNotPrompt =
-            updateStatusStorage.isPreviouslyAllowed(applicationContext, updated.id) || shouldGrantWithoutPrompt
+            updateStatusStorage.isPreviouslyAllowed(applicationContext, extension.id) || shouldGrantWithoutPrompt
         logger.debug("onUpdatePermissionRequest shouldNotPrompt=$shouldNotPrompt")
 
         if (shouldNotPrompt) {
             // Update has been completed at this point, so we can clear the storage data for this update, and proceed
             // with the update itself.
-            updateStatusStorage.markAsUnallowed(applicationContext, updated.id)
+            updateStatusStorage.markAsUnallowed(applicationContext, extension.id)
             onPermissionsGranted(true)
         } else {
             // We create the Android notification here.
-            val notificationId = NotificationHandlerService.getNotificationId(applicationContext, updated.id)
-            val notification = createNotification(updated, newPermissions, notificationId)
+            val notificationId = NotificationHandlerService.getNotificationId(applicationContext, extension.id)
+            val notification = createNotification(extension, allPermissions, notificationId)
             notificationsDelegate.notify(notificationId = notificationId, notification = notification)
             // Abort the current update flow. A new update flow might be initiated when the user grants the new
             // permissions via the system notification.

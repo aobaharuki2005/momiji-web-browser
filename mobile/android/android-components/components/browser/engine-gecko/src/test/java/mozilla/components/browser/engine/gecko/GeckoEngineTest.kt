@@ -109,9 +109,6 @@ import org.mozilla.geckoview.WebExtension as GeckoWebExtension
 
 typealias GeckoInstallException = org.mozilla.geckoview.WebExtension.InstallException
 
-// TODO: Bug 1965002 - Remove this @Suppress when A-C starts to use the new
-// `onUpdatePrompt()` signature.
-@Suppress("DEPRECATION")
 @RunWith(AndroidJUnit4::class)
 class GeckoEngineTest {
 
@@ -1666,10 +1663,10 @@ class GeckoEngineTest {
         val webExtensionController: WebExtensionController = mock()
         whenever(runtime.webExtensionController).thenReturn(webExtensionController)
 
-        val currentExtension = mockNativeWebExtension("test", "uri")
-        val updatedExtension = mockNativeWebExtension("testUpdated", "uri")
-        val updatedPermissions = arrayOf("p1", "p2")
-        val hostPermissions = arrayOf("p3", "p4")
+        val extension = mockNativeWebExtension("test", "uri")
+        val permissions = arrayOf("p1", "p2")
+        val origins = arrayOf("p3", "p4")
+        val dataCollectionPermissions = arrayOf("p5")
         val webExtensionsDelegate: WebExtensionDelegate = mock()
         val engine = GeckoEngine(context, runtime = runtime)
         engine.registerWebExtensionDelegate(webExtensionsDelegate)
@@ -1678,28 +1675,24 @@ class GeckoEngineTest {
         verify(webExtensionController).promptDelegate = geckoDelegateCaptor.capture()
 
         val result = geckoDelegateCaptor.value.onUpdatePrompt(
-            currentExtension,
-            updatedExtension,
-            updatedPermissions,
-            hostPermissions,
+            extension,
+            permissions,
+            origins,
+            dataCollectionPermissions,
         )
         assertNotNull(result)
 
-        val currentExtensionCaptor = argumentCaptor<WebExtension>()
-        val updatedExtensionCaptor = argumentCaptor<WebExtension>()
+        val extensionCaptor = argumentCaptor<WebExtension>()
         val onPermissionsGrantedCaptor = argumentCaptor<((Boolean) -> Unit)>()
         verify(webExtensionsDelegate).onUpdatePermissionRequest(
-            currentExtensionCaptor.capture(),
-            updatedExtensionCaptor.capture(),
-            eq(updatedPermissions.toList() + hostPermissions.toList()),
+            extensionCaptor.capture(),
+            eq(permissions.toList()),
+            eq(origins.toList()),
+            eq(dataCollectionPermissions.toList()),
             onPermissionsGrantedCaptor.capture(),
         )
-        val current =
-            currentExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
-        assertEquals(currentExtension, current.nativeExtension)
-        val updated =
-            updatedExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
-        assertEquals(updatedExtension, updated.nativeExtension)
+        val ext = extensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+        assertEquals(extension, ext.nativeExtension)
 
         onPermissionsGrantedCaptor.value.invoke(true)
         assertEquals(GeckoResult.allow(), result)
@@ -1711,9 +1704,8 @@ class GeckoEngineTest {
         val webExtensionController: WebExtensionController = mock()
         whenever(runtime.webExtensionController).thenReturn(webExtensionController)
 
-        val currentExtension = mockNativeWebExtension("test", "uri")
-        val updatedExtension = mockNativeWebExtension("testUpdated", "uri")
-        val updatedPermissions = arrayOf("p1", "p2")
+        val extension = mockNativeWebExtension("testUpdated", "uri")
+        val permissions = arrayOf("p1", "p2")
         val webExtensionsDelegate: WebExtensionDelegate = mock()
         val engine = GeckoEngine(context, runtime = runtime)
         engine.registerWebExtensionDelegate(webExtensionsDelegate)
@@ -1722,28 +1714,24 @@ class GeckoEngineTest {
         verify(webExtensionController).promptDelegate = geckoDelegateCaptor.capture()
 
         val result = geckoDelegateCaptor.value.onUpdatePrompt(
-            currentExtension,
-            updatedExtension,
-            updatedPermissions,
+            extension,
+            permissions,
+            emptyArray(),
             emptyArray(),
         )
         assertNotNull(result)
 
-        val currentExtensionCaptor = argumentCaptor<WebExtension>()
-        val updatedExtensionCaptor = argumentCaptor<WebExtension>()
+        val extensionCaptor = argumentCaptor<WebExtension>()
         val onPermissionsGrantedCaptor = argumentCaptor<((Boolean) -> Unit)>()
         verify(webExtensionsDelegate).onUpdatePermissionRequest(
-            currentExtensionCaptor.capture(),
-            updatedExtensionCaptor.capture(),
-            eq(updatedPermissions.toList()),
+            extensionCaptor.capture(),
+            eq(permissions.toList()),
+            eq(emptyList()),
+            eq(emptyList()),
             onPermissionsGrantedCaptor.capture(),
         )
-        val current =
-            currentExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
-        assertEquals(currentExtension, current.nativeExtension)
-        val updated =
-            updatedExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
-        assertEquals(updatedExtension, updated.nativeExtension)
+        val ext = extensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+        assertEquals(extension, ext.nativeExtension)
 
         onPermissionsGrantedCaptor.value.invoke(true)
         assertEquals(GeckoResult.allow(), result)

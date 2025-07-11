@@ -393,18 +393,17 @@ class GeckoEngine(
             }
 
             override fun onUpdatePrompt(
-                current: org.mozilla.geckoview.WebExtension,
-                updated: org.mozilla.geckoview.WebExtension,
+                extension: org.mozilla.geckoview.WebExtension,
                 newPermissions: Array<out String>,
                 newOrigins: Array<out String>,
+                newDataCollectionPermissions: Array<out String>,
             ): GeckoResult<AllowOrDeny>? {
                 val result = GeckoResult<AllowOrDeny>()
                 webExtensionDelegate.onUpdatePermissionRequest(
-                    GeckoWebExtension(current, runtime),
-                    GeckoWebExtension(updated, runtime),
-                    // We pass both permissions and origins as a single list of
-                    // permissions to be shown to the user.
-                    newPermissions.toList() + newOrigins.toList(),
+                    GeckoWebExtension(extension, runtime),
+                    newPermissions.toList(),
+                    newOrigins.toList(),
+                    newDataCollectionPermissions.toList(),
                 ) { allow ->
                     if (allow) result.complete(AllowOrDeny.ALLOW) else result.complete(AllowOrDeny.DENY)
                 }

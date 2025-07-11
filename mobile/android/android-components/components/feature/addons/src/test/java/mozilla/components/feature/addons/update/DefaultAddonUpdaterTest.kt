@@ -132,20 +132,18 @@ class DefaultAddonUpdaterTest {
             ),
         )
 
-        val currentExt: WebExtension = mock()
-        val updatedExt: WebExtension = mock()
-        whenever(currentExt.id).thenReturn("addonId")
-        whenever(updatedExt.id).thenReturn("addonId")
-        val notificationId = NotificationHandlerService.getNotificationId(context, updatedExt.id)
+        val ext: WebExtension = mock()
+        whenever(ext.id).thenReturn("addonId")
+        val notificationId = NotificationHandlerService.getNotificationId(context, ext.id)
 
         val notification: Notification = mock()
         val newPermissions = listOf("privacy")
 
-        doReturn(notification).`when`(updater).createNotification(updatedExt, newPermissions, notificationId)
+        doReturn(notification).`when`(updater).createNotification(ext, newPermissions, notificationId)
 
         updater.updateStatusStorage.clear(context)
 
-        updater.onUpdatePermissionRequest(currentExt, updatedExt, newPermissions) {
+        updater.onUpdatePermissionRequest(ext, newPermissions, emptyList(), emptyList()) {
             allowedPreviously = it
         }
 
@@ -175,23 +173,21 @@ class DefaultAddonUpdaterTest {
             context,
             notificationsDelegate = mock(),
         )
-        val currentExt: WebExtension = mock()
-        val updatedExt: WebExtension = mock()
-        whenever(currentExt.id).thenReturn("addonId")
-        whenever(updatedExt.id).thenReturn("addonId")
+        val ext: WebExtension = mock()
+        whenever(ext.id).thenReturn("addonId")
 
         updater.updateStatusStorage.clear(context)
 
-        updater.onUpdatePermissionRequest(currentExt, updatedExt, listOf("normandyAddonStudy")) {
+        updater.onUpdatePermissionRequest(ext, listOf("normandyAddonStudy"), emptyList(), emptyList()) {
             allowedPreviously = it
         }
 
         assertTrue(allowedPreviously)
 
-        val notificationId = NotificationHandlerService.getNotificationId(context, currentExt.id)
+        val notificationId = NotificationHandlerService.getNotificationId(context, ext.id)
 
         assertFalse(isNotificationVisible(notificationId))
-        assertFalse(updater.updateStatusStorage.isPreviouslyAllowed(testContext, currentExt.id))
+        assertFalse(updater.updateStatusStorage.isPreviouslyAllowed(testContext, ext.id))
 
         updater.updateStatusStorage.clear(context)
     }
@@ -230,26 +226,24 @@ class DefaultAddonUpdaterTest {
             context,
             notificationsDelegate = mock(),
         )
-        val currentExt: WebExtension = mock()
-        val updatedExt: WebExtension = mock()
-        whenever(currentExt.id).thenReturn("addonId")
-        whenever(updatedExt.id).thenReturn("addonId")
+        val ext: WebExtension = mock()
+        whenever(ext.id).thenReturn("addonId")
 
         updater.updateStatusStorage.clear(context)
 
         var allowedPreviously = false
 
-        updater.updateStatusStorage.markAsAllowed(context, currentExt.id)
-        updater.onUpdatePermissionRequest(currentExt, updatedExt, emptyList()) {
+        updater.updateStatusStorage.markAsAllowed(context, ext.id)
+        updater.onUpdatePermissionRequest(ext, emptyList(), emptyList(), emptyList()) {
             allowedPreviously = it
         }
 
         assertTrue(allowedPreviously)
 
-        val notificationId = NotificationHandlerService.getNotificationId(context, currentExt.id)
+        val notificationId = NotificationHandlerService.getNotificationId(context, ext.id)
 
         assertFalse(isNotificationVisible(notificationId))
-        assertFalse(updater.updateStatusStorage.isPreviouslyAllowed(testContext, currentExt.id))
+        assertFalse(updater.updateStatusStorage.isPreviouslyAllowed(testContext, ext.id))
         updater.updateStatusStorage.clear(context)
     }
 
