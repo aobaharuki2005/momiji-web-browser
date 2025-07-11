@@ -679,7 +679,7 @@ class BrowsingContextModule extends RootBiDiModule {
       }
       case "tab": {
         // The window to open the new tab in.
-        let window = Services.wm.getMostRecentWindow(null);
+        let window = Services.wm.getMostRecentBrowserWindow();
 
         let referenceTab;
         if (referenceContext !== null) {
