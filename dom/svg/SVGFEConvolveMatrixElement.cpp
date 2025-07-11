@@ -161,8 +161,7 @@ FilterPrimitiveDescription SVGFEConvolveMatrixElement::GetPrimitiveDescription(
     targetY = orderY / 2;
   }
 
-  if (orderX > NS_SVG_OFFSCREEN_MAX_DIMENSION ||
-      orderY > NS_SVG_OFFSCREEN_MAX_DIMENSION)
+  if (orderX > kReasonableSurfaceSize || orderY > kReasonableSurfaceSize)
     return failureDescription;
 
   float divisor;

@@ -761,10 +761,8 @@ IntSize SVGUtils::ConvertToSurfaceSize(const gfxSize& aSize,
                       surfaceSize.height != ceil(aSize.height);
 
   if (!Factory::AllowedSurfaceSize(surfaceSize)) {
-    surfaceSize.width =
-        std::min(NS_SVG_OFFSCREEN_MAX_DIMENSION, surfaceSize.width);
-    surfaceSize.height =
-        std::min(NS_SVG_OFFSCREEN_MAX_DIMENSION, surfaceSize.height);
+    surfaceSize.width = std::min(kReasonableSurfaceSize, surfaceSize.width);
+    surfaceSize.height = std::min(kReasonableSurfaceSize, surfaceSize.height);
     *aResultOverflows = true;
   }
 

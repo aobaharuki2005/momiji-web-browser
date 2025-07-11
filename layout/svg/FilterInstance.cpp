@@ -1706,6 +1706,10 @@ nsresult FilterInstance::BuildPrimitivesForFilter(
 static void UpdateNeededBounds(const nsIntRegion& aRegion, nsIntRect& aBounds) {
   aBounds = aRegion.GetBounds();
 
+  if (aBounds.IsEmpty()) {
+    return;
+  }
+
   bool overflow;
   IntSize surfaceSize =
       SVGUtils::ConvertToSurfaceSize(SizeDouble(aBounds.Size()), &overflow);
