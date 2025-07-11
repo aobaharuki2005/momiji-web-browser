@@ -3,11 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { html, ifDefined } from "../vendor/lit.all.mjs";
-import "./moz-box-group.mjs";
+import { GROUP_TYPES } from "./moz-box-group.mjs";
 
 export default {
   title: "UI Widgets/Box Group",
   component: "moz-box-group",
+  argTypes: {
+    type: {
+      options: Object.keys(GROUP_TYPES),
+      mapping: GROUP_TYPES,
+      control: "select",
+    },
+  },
   parameters: {
     status: "in-development",
     fluent: `
@@ -28,19 +35,48 @@ moz-box-toggle-action =
   .aria-label = Toggle I'm a box item
 moz-box-more-action =
   .title = More options, I'm a box item
-
+moz-box-item-reorderable-1 =
+  .label = I'm box item number 1
+moz-box-item-reorderable-2 =
+  .label = I'm box item number 2
+moz-box-item-reorderable-3 =
+  .label = I'm box item number 3
+moz-box-item-reorderable-4 =
+  .label = I'm box item number 4
+moz-box-item-reorderable-5 =
+  .label = I'm box item number 5
     `,
   },
 };
 
-const Template = ({ type }) => html`
-  <style>
-    .delete {
-      margin-top: var(--space-medium);
-    }
-  </style>
-  <moz-box-group type=${ifDefined(type)}>
-    <moz-box-item data-l10n-id="moz-box-item">
+function getInnerElements(type) {
+  if (type == GROUP_TYPES.reorderable) {
+    return reorderableElements();
+  }
+  return basicElements();
+}
+
+function reorderableElements() {
+  return Array.from({ length: 5 }).map((_, i) => {
+    return html`<moz-box-item
+      data-l10n-id=${`moz-box-item-reorderable-${i + 1}`}
+    >
+      <moz-button
+        iconsrc="chrome://global/skin/icons/edit-outline.svg"
+        data-l10n-id="moz-box-edit-action"
+        slot="actions-start"
+      ></moz-button>
+      <moz-toggle
+        slot="actions"
+        pressed
+        data-l10n-id="moz-box-toggle-action"
+      ></moz-toggle>
+    </moz-box-item>`;
+  });
+}
+
+function basicElements() {
+  return html`<moz-box-item data-l10n-id="moz-box-item">
       <moz-button
         iconsrc="chrome://global/skin/icons/edit-outline.svg"
         data-l10n-id="moz-box-edit-action"
@@ -73,7 +109,17 @@ const Template = ({ type }) => html`
         slot="actions-start"
       ></moz-button>
     </moz-box-item>
-    <moz-box-button data-l10n-id="moz-box-button-2"></moz-box-button>
+    <moz-box-button data-l10n-id="moz-box-button-2"></moz-box-button>`;
+}
+
+const Template = ({ type }) => html`
+  <style>
+    .delete {
+      margin-top: var(--space-medium);
+    }
+  </style>
+  <moz-box-group type=${ifDefined(type)}>
+    ${getInnerElements(type)}
   </moz-box-group>
   ${type == "list"
     ? html`<moz-button class="delete" @click=${appendItem}>
@@ -100,9 +146,16 @@ const appendItem = event => {
 };
 
 export const Default = Template.bind({});
-Default.args = {};
+Default.args = {
+  type: "default",
+};
 
 export const List = Template.bind({});
 List.args = {
   type: "list",
+};
+
+export const Reorderable = Template.bind({});
+Reorderable.args = {
+  type: "reorderable",
 };

@@ -4,6 +4,7 @@
 
 import { html } from "../vendor/lit.all.mjs";
 import { MozBoxBase } from "../lit-utils.mjs";
+import { GROUP_TYPES } from "chrome://global/content/elements/moz-box-group.mjs";
 
 const DIRECTION_RIGHT = "Right";
 const DIRECTION_LEFT = "Left";
@@ -43,6 +44,7 @@ export default class MozBoxItem extends MozBoxBase {
     defaultSlotEl: "slot:not([name])",
     actionsStartSlotEl: "slot[name=actions-start]",
     actionsSlotEl: "slot[name=actions]",
+    handleEl: ".handle",
   };
 
   constructor() {
@@ -56,25 +58,30 @@ export default class MozBoxItem extends MozBoxBase {
   }
 
   handleKeydown(event) {
+    let isHandleEvent = event.originalTarget === this.handleEl;
+
     if (
+      !isHandleEvent &&
       event.target?.slot !== "actions" &&
       event.target?.slot !== "actions-start"
     ) {
       return;
     }
 
+    let target = isHandleEvent ? event.originalTarget : event.target;
+
     let directions = this.getNavigationDirections();
     switch (event.key) {
       case directions.FORWARD:
       case `Arrow${directions.FORWARD}`: {
-        let nextIndex = this.#actionEls.indexOf(event.target) + 1;
+        let nextIndex = this.#actionEls.indexOf(target) + 1;
         let nextEl = this.#actionEls[nextIndex];
         nextEl?.focus();
         break;
       }
       case directions.BACKWARD:
       case `Arrow${directions.BACKWARD}`: {
-        let prevIndex = this.#actionEls.indexOf(event.target) - 1;
+        let prevIndex = this.#actionEls.indexOf(target) - 1;
         let prevEl = this.#actionEls[prevIndex];
         prevEl?.focus();
         break;
@@ -101,21 +108,23 @@ export default class MozBoxItem extends MozBoxBase {
       let actionEls = this.actionsSlotEl.assignedElements();
       let lastActions = actionEls.length
         ? actionEls
-        : this.actionsStartSlotEl.assignedElements();
-      let lastAction = lastActions?.[lastActions.length - 1];
+        : this.actionsStartSlotEl?.assignedElements();
+      let lastAction = lastActions?.[lastActions.length - 1] ?? this.handleEl;
       lastAction?.focus();
     } else {
       let firstAction =
-        this.actionsStartSlotEl.assignedElements()?.[0] ??
+        this.handleEl ??
+        this.actionsStartSlotEl?.assignedElements()?.[0] ??
         this.actionsSlotEl.assignedElements()?.[0];
       firstAction?.focus();
     }
   }
 
   getActionEls() {
-    let startActions = this.actionsStartSlotEl.assignedElements();
+    let handleEl = this.handleEl ? [this.handleEl] : [];
+    let startActions = this.actionsStartSlotEl?.assignedElements() ?? [];
     let endActions = this.actionsSlotEl.assignedElements();
-    this.#actionEls = [...startActions, ...endActions];
+    this.#actionEls = [...handleEl, ...startActions, ...endActions];
   }
 
   stylesTemplate() {
@@ -144,6 +153,9 @@ export default class MozBoxItem extends MozBoxBase {
     return html`
       ${this.stylesTemplate()}
       <div class="box-container">
+        ${this.parentElement?.type == GROUP_TYPES.reorderable
+          ? html`<span tabindex="0" class="handle"></span>`
+          : ""}
         ${this.slotTemplate("actions-start")}
         <div class="box-content">
           ${this.label ? super.textTemplate() : html`<slot></slot>`}

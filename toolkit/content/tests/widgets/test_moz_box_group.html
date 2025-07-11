@@ -475,6 +475,78 @@
 
         await SpecialPowers.popPrefEnv();
       });
+
+      add_task(async function testMozBoxGroupReorderable() {
+        let reorderableTemplate = html`<moz-box-group type="reorderable-list">
+          <moz-box-item label="item 1"></moz-box-item>
+          <moz-box-item label="item 2"></moz-box-item>
+          <moz-box-item label="item 3"></moz-box-item>
+        </moz-box-group>`;
+        let {
+          children: [boxGroup],
+        } = await testHelpers.renderTemplate(reorderableTemplate);
+        let boxItems = boxGroup.querySelectorAll("moz-box-item");
+        let [item1, item2, item3] = boxItems;
+
+        async function moveItem(item, direction) {
+          let handle = item.handleEl;
+          let keydown = BrowserTestUtils.waitForEvent(handle, "keydown");
+          handle.focus();
+          synthesizeKey(
+            `KEY_Arrow${direction.charAt(0).toUpperCase() + direction.slice(1)}`,
+            { shiftKey: true, ctrlKey: true }
+          );
+          await keydown;
+          await boxGroup.updateComplete;
+        }
+
+        ok(
+          boxGroup.reorderableList,
+          "Box group renders a moz-reorderable-list."
+        );
+
+        is(
+          boxGroup.querySelector("moz-box-item:nth-of-type(2)"),
+          item2,
+          "item2 starts in the second position."
+        );
+        is(
+          boxGroup.querySelector("moz-box-item:nth-of-type(3)"),
+          item3,
+          "item3 starts after item2 in the third position."
+        );
+
+        await moveItem(item3, "up");
+
+        is(
+          boxGroup.querySelector("moz-box-item:nth-of-type(2)"),
+          item3,
+          "item3 has been reordered to the second position."
+        );
+        is(
+          boxGroup.querySelector("moz-box-item:nth-of-type(3)"),
+          item2,
+          "item2 has been reordered to the third position."
+        );
+
+        await moveItem(item1, "down");
+
+        is(
+          boxGroup.querySelector("moz-box-item:nth-of-type(1)"),
+          item3,
+          "item3 has been reordered to the first position."
+        );
+        is(
+          boxGroup.querySelector("moz-box-item:nth-of-type(2)"),
+          item1,
+          "item1 has been reordered to the second position."
+        );
+        is(
+          boxGroup.querySelector("moz-box-item:nth-of-type(3)"),
+          item2,
+          "item2 is still in the third position."
+        );
+      });
     </script>
   </head>
   <body>
