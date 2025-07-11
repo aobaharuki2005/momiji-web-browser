@@ -30,6 +30,7 @@ remote.jar:
   content/marionette/web-reference.sys.mjs (web-reference.sys.mjs)
   content/marionette/webauthn.sys.mjs (webauthn.sys.mjs)
 #ifdef ENABLE_TESTS
+  content/marionette/reftest-chrome/reftest.css (reftest-chrome/reftest.css)
   content/marionette/reftest-chrome/reftest.js (reftest-chrome/reftest.js)
   content/marionette/reftest-chrome/reftest.xhtml (reftest-chrome/reftest.xhtml)
 #ifdef MOZ_CODE_COVERAGE
