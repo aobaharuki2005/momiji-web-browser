@@ -6229,15 +6229,6 @@ bool BaselineInterpreterCodeGen::emitAfterYieldDebugInstrumentation(Register scr
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_AfterYield() {
-  if (!emit_JumpTarget()) {
-    return false;
-  }
-
-  return emitAfterYieldDebugInstrumentation( R0.scratchReg());
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emitDebugAfterYield() {
   frame.assertSyncedStack();
   masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
@@ -6688,6 +6679,24 @@ bool BaselineInterpreterCodeGen::emit_JumpTarget() {
                                scratch2);
   masm.storePtr(scratch2, frame.addressOfInterpreterICEntry());
   return true;
+}
+
+template <>
+bool BaselineCompilerCodeGen::emit_AfterYield() {
+  if (!emit_JumpTarget()) {
+    return false;
+  }
+
+  return emitAfterYieldDebugInstrumentation( R0.scratchReg());
+}
+
+template <>
+bool BaselineInterpreterCodeGen::emit_AfterYield() {
+  if (!emit_JumpTarget()) {
+    return false;
+  }
+
+  return emitAfterYieldDebugInstrumentation( R0.scratchReg());
 }
 
 template <typename Handler>
