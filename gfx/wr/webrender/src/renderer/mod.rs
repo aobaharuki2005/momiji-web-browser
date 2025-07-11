@@ -4939,6 +4939,12 @@ impl Renderer {
         draw_target_dimensions: DeviceIntSize,
         results: &mut RenderResults,
     ) -> Option<PartialPresentMode> {
+
+        if let Some(ref _compositor) = self.compositor_config.layer_compositor() {
+            // Calculate dirty rects of layer compositor in composite_simple()
+            return None;
+        }
+
         let mut partial_present_mode = None;
 
         let (max_partial_present_rects, draw_previous_partial_present_regions) = match self.current_compositor_kind {
@@ -4953,7 +4959,7 @@ impl Renderer {
                 (max_partial_present_rects, draw_previous_partial_present_regions)
             }
             CompositorKind::Layer { .. } => {
-                (1, false)
+                unreachable!();
             }
         };
 
