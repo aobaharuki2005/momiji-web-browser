@@ -454,10 +454,6 @@ class WorkerPrivate final
 
   void ClearTimeout(int32_t aId, Timeout::Reason aReason);
 
-  MOZ_CAN_RUN_SCRIPT bool RunExpiredTimeouts(JSContext* aCx);
-
-  bool RescheduleTimeoutTimer(JSContext* aCx);
-
   void UpdateContextOptionsInternal(JSContext* aCx,
                                     const JS::ContextOptions& aContextOptions);
 
@@ -1340,11 +1336,7 @@ class WorkerPrivate final
 
   void NotifyWorkerRefs(WorkerStatus aStatus);
 
-  bool HasActiveWorkerRefs() {
-    auto data = mWorkerThreadAccessible.Access();
-    return !(data->mChildWorkers.IsEmpty() && data->mTimeouts.IsEmpty() &&
-             data->mWorkerRefs.IsEmpty());
-  }
+  bool HasActiveWorkerRefs();
 
   friend class WorkerEventTarget;
 
@@ -1387,8 +1379,6 @@ class WorkerPrivate final
   class EventTarget;
   friend class EventTarget;
   friend class AutoSyncLoopHolder;
-
-  struct TimeoutInfo;
 
   class MemoryReporter;
   friend class MemoryReporter;
@@ -1548,10 +1538,6 @@ class WorkerPrivate final
     // our static assert
     nsTArray<WorkerPrivate*> mChildWorkers;
     nsTObserverArray<WorkerRef*> mWorkerRefs;
-    nsTArray<UniquePtr<TimeoutInfo>> mTimeouts;
-
-    nsCOMPtr<nsITimer> mTimer;
-    nsCOMPtr<nsITimerCallback> mTimerRunnable;
 
     nsCOMPtr<nsITimer> mPeriodicGCTimer;
     nsCOMPtr<nsITimer> mIdleGCTimer;
@@ -1589,20 +1575,6 @@ class WorkerPrivate final
     uint32_t mNonblockingCCBackgroundActorCount;
 
     uint32_t mErrorHandlerRecursionCount;
-    int32_t mNextTimeoutId;
-
-    // Tracks the current setTimeout/setInterval nesting level.
-    // When there isn't a TimeoutHandler on the stack, this will be 0.
-    // Whenever setTimeout/setInterval are called, a new TimeoutInfo will be
-    // created with a nesting level one more than the current nesting level,
-    // saturating at the kClampTimeoutNestingLevel.
-    //
-    // When RunExpiredTimeouts is run, it sets this value to the
-    // TimeoutInfo::mNestingLevel for the duration of
-    // the WorkerScriptTimeoutHandler::Call which will explicitly trigger a
-    // microtask checkpoint so that any immediately-resolved promises will
-    // still see the nesting level.
-    uint32_t mCurrentTimerNestingLevel;
 
     bool mFrozen;
 
@@ -1612,7 +1584,6 @@ class WorkerPrivate final
     // cleared after processing the debugger runnables.
     bool mDebuggerInterruptRequested;
 
-    bool mTimerRunning;
     bool mRunningExpiredTimeouts;
     bool mPeriodicGCTimerRunning;
     bool mIdleGCTimerRunning;
