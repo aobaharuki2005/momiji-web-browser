@@ -7,6 +7,7 @@
 UNIFIED_SOURCES += [
     "TestCSPParser.cpp",
     "TestFilenameEvalParser.cpp",
+    "TestIntegrityPolicy.cpp",
     "TestSecureContext.cpp",
     "TestSmartCrashTrimmer.cpp",
 ]
