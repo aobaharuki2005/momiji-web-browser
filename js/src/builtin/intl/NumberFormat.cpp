@@ -54,7 +54,6 @@ using namespace js;
 using mozilla::AssertedCast;
 
 using js::intl::DateTimeFormatOptions;
-using js::intl::FieldType;
 
 const JSClassOps NumberFormatObject::classOps_ = {
     nullptr,                       // addProperty
@@ -315,27 +314,11 @@ static constexpr size_t MaxUnitLength() {
 }
 
 static UniqueChars NumberFormatLocale(JSContext* cx, HandleObject internals) {
-  RootedValue value(cx);
-  if (!GetProperty(cx, internals, internals, cx->names().locale, &value)) {
-    return nullptr;
-  }
-
   // ICU expects numberingSystem as a Unicode locale extensions on locale.
-
-  mozilla::intl::Locale tag;
-  {
-    Rooted<JSLinearString*> locale(cx, value.toString()->ensureLinear(cx));
-    if (!locale) {
-      return nullptr;
-    }
-
-    if (!intl::ParseLocale(cx, locale, tag)) {
-      return nullptr;
-    }
-  }
 
   JS::RootedVector<intl::UnicodeExtensionKeyword> keywords(cx);
 
+  RootedValue value(cx);
   if (!GetProperty(cx, internals, internals, cx->names().numberingSystem,
                    &value)) {
     return nullptr;
@@ -352,20 +335,7 @@ static UniqueChars NumberFormatLocale(JSContext* cx, HandleObject internals) {
     }
   }
 
-  // |ApplyUnicodeExtensionToTag| applies the new keywords to the front of
-  // the Unicode extension subtag. We're then relying on ICU to follow RFC
-  // 6067, which states that any trailing keywords using the same key
-  // should be ignored.
-  if (!intl::ApplyUnicodeExtensionToTag(cx, tag, keywords)) {
-    return nullptr;
-  }
-
-  intl::FormatBuffer<char> buffer(cx);
-  if (auto result = tag.ToString(buffer); result.isErr()) {
-    intl::ReportInternalError(cx, result.unwrapErr());
-    return nullptr;
-  }
-  return buffer.extractStringZ();
+  return intl::FormatLocale(cx, internals, keywords);
 }
 
 struct NumberFormatOptions : public mozilla::intl::NumberRangeFormatOptions {
