@@ -142,3 +142,6 @@ y7nETYS4BD4QUOoxpp9RSVXXv9LixrSTAQGa1h2fUFg= 119 GlobalSign Root E46
 /naWVzhVdz43qV561NnMlsMBV8FdMXZbqbFXBOGueP0= 144 Certum Trusted Root CA
 /+lD15NCS098RAwcPWSNU2PzS4Lch6p6nxGPxd7hAfE= 145 CommScope Public Trust RSA Root-02
 wKb03GOiS/3PVO8qaggqCnLeNYA+L/X/Unrl2HIG39U= 146 ePKI Root Certification Authority
+BsCNfa/YdpcesRJP5n+EfsDHoVjT6lPL6UDi6peR9MM= 147 TrustAsia TLS RSA Root CA
+GTFE9DHg/dt0BxfU3pJqVxEziEtDYNMOJykTy+ZgzkE= 148 SwissSign RSA TLS Root CA 2022 - 1
+wAdrnvBTH7GmVtZ8Tr6XzV26pB70RZiswkiYeMkthxE= 149 TrustAsia TLS ECC Root CA
