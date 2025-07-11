@@ -4723,6 +4723,11 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: once
 
+- name: dom.workers.timeoutmanager
+  type: bool
+  value: true
+  mirror: once
+
 - name: dom.workers.serialized-sab-access
   type: RelaxedAtomicBool
   value: false
