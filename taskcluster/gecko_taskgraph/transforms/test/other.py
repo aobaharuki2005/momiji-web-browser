@@ -747,6 +747,8 @@ def handle_tier(config, tasks):
                 "windows11-32-24h2/debug",
                 "windows11-32-24h2/opt",
                 "windows11-32-24h2-shippable/opt",
+                "windows11-64-24h2-hw-ref/opt",
+                "windows11-64-24h2-hw-ref-shippable/opt",
                 "windows11-64-24h2/opt",
                 "windows11-64-24h2/debug",
                 "windows11-64-24h2-shippable/opt",
