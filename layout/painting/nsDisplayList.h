@@ -276,17 +276,6 @@ class nsDisplayTableItem;
 
 class RetainedDisplayList;
 
-// Bits to track the state of items inside a single stacking context.
-enum class StackingContextBits : uint8_t {
-  // True if we processed a display item that has a blend mode attached.
-  // We do this so we can insert a nsDisplayBlendContainer in the parent
-  // stacking context.
-  ContainsMixBlendMode = 1 << 0,
-  // Similar, but for backdrop-filter.
-  ContainsBackdropFilter = 1 << 1,
-};
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(StackingContextBits);
-
 /**
  * This manages a display list and is passed as a parameter to
  * nsIFrame::BuildDisplayList.
@@ -303,7 +292,7 @@ class nsDisplayListBuilder {
    *
    * Since some transforms maybe singular, passing visible rects or
    * the dirty rect level by level from parent to children may get a
-   * wrong result, being different from the result of applying with
+   * wrong result, being different from the result of appling with
    * effective transform directly.
    *
    * nsIFrame::BuildDisplayListForStackingContext() uses
@@ -1509,29 +1498,20 @@ class nsDisplayListBuilder {
                                     : mWindowOpaqueRegion;
   }
 
-  StackingContextBits GetStackingContextBits() const {
-    return mStackingContextBits;
+  /**
+   * mContainsBlendMode is true if we processed a display item that
+   * has a blend mode attached. We do this so we can insert a
+   * nsDisplayBlendContainer in the parent stacking context.
+   */
+  void SetContainsBlendMode(bool aContainsBlendMode) {
+    mContainsBlendMode = aContainsBlendMode;
   }
-  void SetStackingContextBits(StackingContextBits aBits) {
-    mStackingContextBits = aBits;
+  bool ContainsBlendMode() const { return mContainsBlendMode; }
+
+  void SetContainsBackdropFilter(bool aContainsBackdropFilter) {
+    mContainsBackdropFilter = aContainsBackdropFilter;
   }
-  void AddStackingContextBits(StackingContextBits aBits) {
-    mStackingContextBits |= aBits;
-  }
-  void ClearStackingContextBits(StackingContextBits aBits) {
-    mStackingContextBits &= ~aBits;
-  }
-  void ClearStackingContextBits() {
-    mStackingContextBits = StackingContextBits(0);
-  }
-  bool ContainsBlendMode() const {
-    return bool(mStackingContextBits &
-                StackingContextBits::ContainsMixBlendMode);
-  }
-  bool ContainsBackdropFilter() const {
-    return bool(mStackingContextBits &
-                StackingContextBits::ContainsBackdropFilter);
-  }
+  bool ContainsBackdropFilter() const { return mContainsBackdropFilter; }
 
   DisplayListClipState& ClipState() { return mClipState; }
   const ActiveScrolledRoot* CurrentActiveScrolledRoot() {
@@ -1922,7 +1902,8 @@ class nsDisplayListBuilder {
 
   uint32_t mNumActiveScrollframesEncountered = 0;
 
-  StackingContextBits mStackingContextBits{0};
+  bool mContainsBlendMode;
+  bool mContainsBackdropFilter;
   bool mIsBuildingScrollbar;
   bool mCurrentScrollbarWillHaveLayer;
   bool mBuildCaret;
