@@ -11417,7 +11417,9 @@ function FollowSectionButtonHighlight({
     dispatch(actionCreators.DiscoveryStreamUserEvent({
       event: "FEATURE_HIGHLIGHT_DISMISS",
       source: "FEATURE_HIGHLIGHT",
-      value: FEATURE_ID
+      value: {
+        feature: FEATURE_ID
+      }
     }));
     handleDismiss();
     handleBlock();
@@ -11429,7 +11431,9 @@ function FollowSectionButtonHighlight({
       dispatch(actionCreators.DiscoveryStreamUserEvent({
         event: "FEATURE_HIGHLIGHT_IMPRESSION",
         source: "FEATURE_HIGHLIGHT",
-        value: FEATURE_ID
+        value: {
+          feature: FEATURE_ID
+        }
       }));
     }
   }, [dispatch, isIntersecting]);

@@ -886,6 +886,12 @@ export class TelemetryFeed {
         // Note that Feature Highlight CLICK events are covered via newtab.tooltipClick Glean event
         const { feature } = action.data.value ?? {};
 
+        if (!feature) {
+          throw new Error(
+            `Feature ID parameter is missing from ${action.data?.event}`
+          );
+        }
+
         if (action.data.event === "FEATURE_HIGHLIGHT_DISMISS") {
           Glean.newtab.featureHighlightDismiss.record({
             newtab_visit_id: session.session_id,
