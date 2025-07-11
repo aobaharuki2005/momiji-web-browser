@@ -133,32 +133,25 @@ const nsINode* Gecko_GetFlattenedTreeParentNode(const nsINode* aNode) {
   return aNode->GetFlattenedTreeParentNodeForStyle();
 }
 
-const Element* Gecko_GetBeforeOrAfterPseudo(const Element* aElement,
-                                            bool aIsBefore) {
-  MOZ_ASSERT(aElement);
-  MOZ_ASSERT(aElement->HasProperties());
-
-  return aIsBefore ? nsLayoutUtils::GetBeforePseudo(aElement)
-                   : nsLayoutUtils::GetAfterPseudo(aElement);
-}
-
-const Element* Gecko_GetMarkerPseudo(const Element* aElement) {
-  MOZ_ASSERT(aElement);
-  MOZ_ASSERT(aElement->HasProperties());
-
-  return nsLayoutUtils::GetMarkerPseudo(aElement);
-}
-
-nsTArray<nsIContent*>* Gecko_GetAnonymousContentForElement(
-    const Element* aElement) {
-  nsIAnonymousContentCreator* ac = do_QueryFrame(aElement->GetPrimaryFrame());
-  if (!ac) {
-    return nullptr;
+void Gecko_GetAnonymousContentForElement(const Element* aElement,
+                                         nsTArray<nsIContent*>* aArray) {
+  MOZ_ASSERT(aElement->MayHaveAnonymousChildren());
+  const bool hasProps = aElement->HasProperties();
+  if (hasProps) {
+    if (auto* marker = nsLayoutUtils::GetMarkerPseudo(aElement)) {
+      aArray->AppendElement(marker);
+    }
+    if (auto* before = nsLayoutUtils::GetBeforePseudo(aElement)) {
+      aArray->AppendElement(before);
+    }
   }
-
-  auto* array = new nsTArray<nsIContent*>();
-  nsContentUtils::AppendNativeAnonymousChildren(aElement, *array, 0);
-  return array;
+  nsContentUtils::AppendNativeAnonymousChildren(
+      aElement, *aArray, nsIContent::eSkipDocumentLevelNativeAnonymousContent);
+  if (hasProps) {
+    if (auto* after = nsLayoutUtils::GetAfterPseudo(aElement)) {
+      aArray->AppendElement(after);
+    }
+  }
 }
 
 void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* aAnonContent) {
