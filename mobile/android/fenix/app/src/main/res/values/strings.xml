@@ -197,7 +197,7 @@
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_manage_extensions">Manage extensions</string>
     <!-- Browser menu group that contains additional settings in collapsed state-->
-    <string name="browser_menu_more_settings">More</string>"
+    <string name="browser_menu_more_settings">More</string>
     <!-- Browser menu group that contains additional settings in expanded state-->
     <string name="browser_menu_less_settings">Less</string>
     <!-- Content description (not visible, for screen readers etc.): Section heading for recommended extensions.-->
