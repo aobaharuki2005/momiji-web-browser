@@ -118,6 +118,12 @@ export class TaskbarTabsWindowManager {
 
     lazy.WinTaskbar.setGroupIdForWindow(win, aId);
     win.focus();
+
+    win.gBrowser.tabs.forEach(tab => {
+      const browser = win.gBrowser.getBrowserForTab(tab);
+      browser.browsingContext.displayMode = "minimal-ui";
+    });
+
     return win;
   }
 
@@ -213,9 +219,10 @@ export class TaskbarTabsWindowManager {
         }
       }
 
+      let newTab;
       if (win) {
         // Set this tab to the last tab position of the window.
-        win.gBrowser.adoptTab(tab, {
+        newTab = win.gBrowser.adoptTab(tab, {
           tabIndex: win.gBrowser.openTabs.length,
           selectTab: true,
         });
@@ -224,9 +231,13 @@ export class TaskbarTabsWindowManager {
           "No originating or existing browser window found, ejecting into newly created window."
         );
         win = await lazy.BrowserWindowTracker.promiseOpenWindow({ args: tab });
+        newTab = win.gBrowser.tabs[0];
       }
 
       win.focus();
+
+      let browser = win.gBrowser.getBrowserForTab(newTab);
+      browser.browsingContext.displayMode = "browser";
 
       this.#tabOriginMap.delete(tabId);
     }
