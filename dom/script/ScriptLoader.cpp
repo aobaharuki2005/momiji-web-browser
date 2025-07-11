@@ -43,7 +43,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/JSExecutionUtils.h"  // mozilla::dom::Compile, mozilla::dom::InstantiateStencil, mozilla::dom::EvaluationExceptionToNSResult
 #include "mozilla/dom/PolicyContainer.h"
-#include "mozilla/dom/ScriptDecoding.h"    // mozilla::dom::ScriptDecoding
+#include "mozilla/dom/ScriptDecoding.h"  // mozilla::dom::ScriptDecoding
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/dom/WindowContext.h"

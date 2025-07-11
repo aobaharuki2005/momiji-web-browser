@@ -6790,7 +6790,8 @@ void nsContentUtils::TriggerLinkClick(
     }
 
     nsCOMPtr<nsIPrincipal> triggeringPrincipal = aContent->NodePrincipal();
-    nsCOMPtr<nsIPolicyContainer> policyContainer = aContent->GetPolicyContainer();
+    nsCOMPtr<nsIPolicyContainer> policyContainer =
+        aContent->GetPolicyContainer();
 
     // Sanitize fileNames containing null characters by replacing them with
     // underscores.
