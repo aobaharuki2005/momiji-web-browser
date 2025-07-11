@@ -1669,12 +1669,20 @@ export class DiscoveryStreamFeed {
     }
     const headers = new Headers();
     headers.append("content-type", "application/json");
+    const marsOhttpEnabled = Services.prefs.getBoolPref(
+      "browser.newtabpage.activity-stream.unifiedAds.ohttp.enabled",
+      false
+    );
 
-    await this.fetchFromEndpoint(endpoint, {
-      method: "DELETE",
-      headers,
-      body: JSON.stringify(body),
-    });
+    await this.fetchFromEndpoint(
+      endpoint,
+      {
+        method: "DELETE",
+        headers,
+        body: JSON.stringify(body),
+      },
+      marsOhttpEnabled
+    );
   }
 
   observe(subject, topic, data) {
