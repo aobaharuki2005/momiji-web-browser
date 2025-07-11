@@ -2859,7 +2859,6 @@ bool CompilationStencil::delazifySelfHostedFunction(
   ScopeIndex scopeLimit = (range.limit < scriptData.size())
                               ? getOutermostScope(range.limit)
                               : ScopeIndex(scopeData.size());
-  Rooted<JSAtom*> jitCacheKey(cx, name);
 
   // Prepare to instantiate by allocating the output arrays. We also set a base
   // index to avoid allocations in most cases.
@@ -2940,6 +2939,8 @@ bool CompilationStencil::delazifySelfHostedFunction(
   }
 
   if (JS::Prefs::experimental_self_hosted_cache()) {
+    Rooted<JSRuntime::JitCacheKey> jitCacheKey(cx, name, script->isDebuggee());
+
     // We eagerly baseline-compile self-hosted functions, and cache their
     // JitCode for reuse across the runtime. If the cache already contains an
     // entry for this function, update the JitScript. If not, compile it now and
