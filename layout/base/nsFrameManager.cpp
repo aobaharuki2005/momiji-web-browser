@@ -178,7 +178,16 @@ void nsFrameManager::CaptureFrameState(nsIFrame* aFrame,
       // Make sure to walk through placeholders as needed, so that we
       // save state for out-of-flows which may not be our descendants
       // themselves but whose placeholders are our descendants.
-      CaptureFrameState(nsPlaceholderFrame::GetRealFrameFor(child), aState);
+      nsIFrame* realChild = nsPlaceholderFrame::GetRealFrameFor(child);
+      // GetRealFrameFor should theoretically never return null here (and its
+      // helper has an assertion to enforce this); but we've got known fuzzer
+      // testcases where it does return null (in non-debug builds that make it
+      // past the aforementioned assertion) due to weird situations with
+      // out-of-flows and fragmentation. We handle that unexpected situation by
+      // silently skipping this frame, rather than crashing.
+      if (MOZ_LIKELY(realChild)) {
+        CaptureFrameState(realChild, aState);
+      }
     }
   }
 }
