@@ -63,7 +63,9 @@ module.exports = logTest(
 
         // A feature mask of 0x1C000000 will enable only
         // the GC perfstats counters.
-        await commands.perfStats.start(0x1c_00_00_00);
+        if (context.options.browser === "firefox") {
+          await commands.perfStats.start(0x1c_00_00_00);
+        }
 
         await commands.js.runAndWait(`
         this.benchmarkClient.start()
@@ -104,8 +106,11 @@ module.exports = logTest(
         }
         await stopMeasurements();
 
-        let perfStatsResults = await commands.perfStats.collect();
-        await commands.perfStats.stop();
+        let perfStatsResults = undefined;
+        if (context.options.browser === "firefox") {
+          perfStatsResults = await commands.perfStats.collect();
+          await commands.perfStats.stop();
+        }
 
         let internal_data = await commands.js.run(
           `return this.benchmarkClient._measuredValuesList;`
@@ -128,8 +133,11 @@ module.exports = logTest(
         commands.measure.addObject({
           s3: data,
           s3_internal: internal_data,
-          perfstats: perfStatsResults,
+          ...(perfStatsResults !== undefined && {
+            perfstats: perfStatsResults,
+          }),
         });
+
         return true;
       });
     }
