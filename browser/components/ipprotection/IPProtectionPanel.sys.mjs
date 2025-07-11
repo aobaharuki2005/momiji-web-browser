@@ -33,10 +33,20 @@ export class IPProtectionPanel {
     );
   }
 
-  // TODO: Add logic for determining sign-in state once we have details about the proxy - Bug 1976094
-  state = {
-    isSignedIn: true,
-  };
+  /**
+   * @typedef {object} State
+   * @property {boolean} isProtectionEnabled
+   *  True if IP Protection via the proxy is enabled
+   * @property {Date} protectionEnabledSince
+   *  The timestamp in milliseconds since IP Protection was enabled
+   * @property {boolean} isSignedIn
+   *  True if signed in to account
+   */
+
+  /**
+   * @type {State}
+   */
+  state = {};
   panel = null;
 
   /**
@@ -61,6 +71,14 @@ export class IPProtectionPanel {
    */
   constructor(_window) {
     this.handleEvent = this.#handleEvent.bind(this);
+
+    // TODO: let proxy assign our starting values (Bug 1976021)
+    this.state = {
+      // TODO: Add logic for determining sign-in state once we have details about the proxy - Bug 1976094
+      isSignedIn: true,
+      isProtectionEnabled: false,
+      protectionEnabledSince: null,
+    };
   }
 
   /**
@@ -99,7 +117,14 @@ export class IPProtectionPanel {
     }
 
     panelEl.state = state;
+    panelEl.requestUpdate();
   }
+
+  // TODO: actually connect to proxy, hardcode for now (Bug 1976021)
+  #startProxy() {}
+
+  // TODO: actually disconnect from proxy, hardcode for now (Bug 1976021)
+  #stopProxy() {}
 
   /**
    * Updates the visibility of the panel components before they will shown.
@@ -192,11 +217,15 @@ export class IPProtectionPanel {
   #addPanelListeners(doc) {
     doc.addEventListener("IPProtection:Init", this.handleEvent);
     doc.addEventListener("IPProtection:Close", this.handleEvent);
+    doc.addEventListener("IPProtection:UserEnable", this.handleEvent);
+    doc.addEventListener("IPProtection:UserDisable", this.handleEvent);
   }
 
   #removePanelListeners(doc) {
     doc.removeEventListener("IPProtection:Init", this.handleEvent);
     doc.removeEventListener("IPProtection:Close", this.handleEvent);
+    doc.removeEventListener("IPProtection:UserEnable", this.handleEvent);
+    doc.removeEventListener("IPProtection:UserDisable", this.handleEvent);
   }
 
   #handleEvent(event) {
@@ -204,6 +233,10 @@ export class IPProtectionPanel {
       this.updateState();
     } else if (event.type == "IPProtection:Close") {
       this.close();
+    } else if (event.type == "IPProtection:UserEnable") {
+      this.#startProxy();
+    } else if (event.type == "IPProtection:UserDisable") {
+      this.#stopProxy();
     }
   }
 }

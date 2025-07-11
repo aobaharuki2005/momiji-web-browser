@@ -7,9 +7,16 @@ import { html } from "chrome://global/content/vendor/lit.all.mjs";
 
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/ipprotection/ipprotection-signedout.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://global/content/elements/moz-toggle.mjs";
+
+const DEFAULT_TIME_CONNECTED = "00:00:00";
 
 export default class IPProtectionContentElement extends MozLitElement {
   static queries = {
+    statusCardEl: "#status-card",
+    connectionTitleEl: "#connection-title",
+    connectionToggleEl: "#connection-toggle",
     upgradeEl: "#upgrade-vpn-content",
   };
 
@@ -32,8 +39,54 @@ export default class IPProtectionContentElement extends MozLitElement {
     super.disconnectedCallback();
   }
 
+  handleToggleConnect(event) {
+    let isEnabled = event.target.pressed;
+
+    if (isEnabled) {
+      this.dispatchEvent(
+        new CustomEvent("IPProtection:UserEnable", { bubbles: true })
+      );
+    } else {
+      this.dispatchEvent(
+        new CustomEvent("IPProtection:UserDisable", { bubbles: true })
+      );
+    }
+  }
+
   handleUpgrade() {
     // TODO: Handle click of Upgrade button - Bug 1975317
+  }
+
+  statusCardTemplate() {
+    const isEnabledClass = this.state.isProtectionEnabled ? "is-enabled" : "";
+    const statusCardL10nId = this.state.isProtectionEnabled
+      ? "ipprotection-connection-status-on"
+      : "ipprotection-connection-status-off";
+
+    // TODO: update timer and its starting value according to the protectionEnabledSince property (Bug 1972460)
+    const timeConnected = DEFAULT_TIME_CONNECTED;
+
+    return html` <div id="status-card" class=${isEnabledClass}>
+      <div id="connection-wrapper">
+        <span id="connection-icon" class=${isEnabledClass}></span>
+        <span id="connection-details-and-toggle">
+          <div id="connection-details">
+            <h3 id="connection-title" data-l10n-id=${statusCardL10nId}></h3>
+            <span id="connection-time" class="text-deemphasized"
+              >${timeConnected}</span
+            >
+          </div>
+          <div>
+            <!--TODO: add an aria label to the toggle (Bug 1976721)-->
+            <moz-toggle
+              id="connection-toggle"
+              @click=${this.handleToggleConnect}
+              ?pressed=${this.state.isProtectionEnabled}
+            ></moz-toggle>
+          </div>
+        </span>
+      </div>
+    </div>`;
   }
 
   mainContentTemplate() {
@@ -42,6 +95,7 @@ export default class IPProtectionContentElement extends MozLitElement {
       return html` <ipprotection-signedout></ipprotection-signedout> `;
     }
     return html`
+      ${this.statusCardTemplate()}
       <div id="upgrade-vpn-content">
         <h2 id="upgrade-vpn-title" data-l10n-id="upgrade-vpn-title"></h2>
         <p id="upgrade-vpn-paragraph" data-l10n-id="upgrade-vpn-paragraph">
