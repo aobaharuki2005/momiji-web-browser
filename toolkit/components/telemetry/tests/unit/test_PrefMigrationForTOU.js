@@ -624,7 +624,7 @@ add_task(
     );
 
     Assert.ok(
-      !TelemetryReportingPolicy.testUserHasAcceptedTOU(),
+      !TelemetryReportingPolicy.userHasAcceptedTOU(),
       "If user accepted legacy datareporting flow, hasUserAcceptedCurrentTOU should be false"
     );
 
@@ -698,7 +698,7 @@ add_task(
     await runMigrationFlow();
 
     Assert.ok(
-      TelemetryReportingPolicy.testUserHasAcceptedTOU(),
+      TelemetryReportingPolicy.userHasAcceptedTOU(),
       "TOU prefs migrated from legacy rollout"
     );
 

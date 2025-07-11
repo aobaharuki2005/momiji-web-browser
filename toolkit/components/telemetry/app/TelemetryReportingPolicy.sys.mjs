@@ -187,9 +187,9 @@ export var TelemetryReportingPolicy = {
   },
 
   /**
-   * Test only method, used to check if user has accepted the TOU in tests.
+   * Used to check if user has accepted the TOU.
    */
-  testUserHasAcceptedTOU() {
+  userHasAcceptedTOU() {
     return TelemetryReportingPolicyImpl.hasUserAcceptedCurrentTOU;
   },
 

@@ -197,7 +197,7 @@ async function doOneModalFlow(version) {
   Assert.equal(displayStub.callCount, 1, "showModal is invoked");
 
   Assert.equal(
-    TelemetryReportingPolicy.testUserHasAcceptedTOU(),
+    TelemetryReportingPolicy.userHasAcceptedTOU(),
     false,
     "Before interaction, the user should be reported as not having accepted"
   );
@@ -224,7 +224,7 @@ async function doOneModalFlow(version) {
   );
 
   Assert.equal(
-    TelemetryReportingPolicy.testUserHasAcceptedTOU(),
+    TelemetryReportingPolicy.userHasAcceptedTOU(),
     true,
     "After interaction, the state should be accepted."
   );
