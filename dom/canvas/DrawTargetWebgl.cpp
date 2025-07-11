@@ -1751,10 +1751,11 @@ bool SharedContextWebgl::CreateShaders() {
   return true;
 }
 
-void SharedContextWebgl::EnableScissor(const IntRect& aRect) {
+void SharedContextWebgl::EnableScissor(const IntRect& aRect, bool aForce) {
   // Only update scissor state if it actually changes.
-  IntRect rect =
-      mTargetHandle ? aRect + mTargetHandle->GetBounds().TopLeft() : aRect;
+  IntRect rect = !aForce && mTargetHandle
+                     ? aRect + mTargetHandle->GetBounds().TopLeft()
+                     : aRect;
   if (!mLastScissor.IsEqualEdges(rect)) {
     mLastScissor = rect;
     mWebgl->Scissor(rect.x, rect.y, rect.width, rect.height);
@@ -2388,7 +2389,7 @@ void SharedContextWebgl::BindScratchFramebuffer(TextureHandle* aHandle,
   mWebgl->Viewport(bounds.x, bounds.y, bounds.width, bounds.height);
 
   if (aInit) {
-    EnableScissor(bounds);
+    EnableScissor(bounds, true);
     ClearRenderTex(backing);
   }
 }
@@ -3551,13 +3552,12 @@ already_AddRefed<TextureHandle> SharedContextWebgl::ResolveFilterInputAccel(
     return nullptr;
   }
 
-  IntRect targetBounds(handle->GetBounds());
   BackingTexture* targetBacking = handle->GetBackingTexture();
   InitRenderTex(targetBacking);
   if (!aDT->PrepareContext(false, handle)) {
     return nullptr;
   }
-  EnableScissor(targetBounds);
+  DisableScissor();
   ClearRenderTex(targetBacking);
 
   AutoRestoreTransform restore(aDT);
@@ -4733,6 +4733,7 @@ bool SharedContextWebgl::DrawPathAccel(
     // targets when drawing the path, so back up the old target.
     DrawTargetWebgl* oldTarget = mCurrentTarget;
     RefPtr<TextureHandle> oldHandle = mTargetHandle;
+    IntSize oldViewport = mViewportSize;
     {
       RefPtr<const Path> path;
       if (!aPathXform || (color && !aStrokeOptions)) {
@@ -4794,8 +4795,9 @@ bool SharedContextWebgl::DrawPathAccel(
     RefPtr<SourceSurface> pathSurface = pathDT->Snapshot();
     // If the target changed, try to restore it.
     if (pathSurface &&
-        ((mCurrentTarget == oldTarget && mTargetHandle == oldHandle) ||
-         oldTarget->PrepareContext(!oldHandle, oldHandle))) {
+        ((mCurrentTarget == oldTarget && mTargetHandle == oldHandle &&
+          mViewportSize == oldViewport) ||
+         oldTarget->PrepareContext(!oldHandle, oldHandle, oldViewport))) {
       SurfacePattern pathPattern(pathSurface, ExtendMode::CLAMP,
                                  Matrix::Translation(quantBounds.TopLeft()),
                                  filter);

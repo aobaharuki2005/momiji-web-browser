@@ -301,7 +301,7 @@ class SharedContextWebgl : public mozilla::RefCounted<SharedContextWebgl>,
 
   bool SupportsPattern(const Pattern& aPattern);
 
-  void EnableScissor(const IntRect& aRect);
+  void EnableScissor(const IntRect& aRect, bool aForce = false);
   void DisableScissor(bool aForce = false);
 
   void SetTexFilter(WebGLTexture* aTex, bool aFilter);
