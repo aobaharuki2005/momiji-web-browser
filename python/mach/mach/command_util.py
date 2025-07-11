@@ -163,6 +163,7 @@ MACH_COMMANDS = {
     "newtab": MachCommandReference("browser/extensions/newtab/mach_commands.py"),
     "node": MachCommandReference("tools/mach_commands.py"),
     "npm": MachCommandReference("tools/mach_commands.py"),
+    "nss-uplift": MachCommandReference("security/mach_commands.py"),
     "package": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
     "package-multi-locale": MachCommandReference(
         "python/mozbuild/mozbuild/mach_commands.py"
