@@ -29,23 +29,6 @@ const TILE_STYLES = [
   "paddingInline",
 ];
 
-const CONTAINER_STYLES = [
-  "padding",
-  "margin",
-  "marginBlock",
-  "marginInline",
-  "paddingBlock",
-  "paddingInline",
-  "flexDirection",
-  "flexWrap",
-  "flexFlow",
-  "flexGrow",
-  "flexShrink",
-  "justifyContent",
-  "alignItems",
-  "gap",
-];
-
 export const ContentTiles = props => {
   const { content } = props;
   const [expandedTileIndex, setExpandedTileIndex] = useState(null);
@@ -113,7 +96,7 @@ export const ContentTiles = props => {
       <div
         key={index}
         className={`content-tile ${header ? "has-header" : ""}`}
-        style={AboutWelcomeUtils.getTileStyle(tile, TILE_STYLES)}
+        style={AboutWelcomeUtils.getValidStyle(tile.style, TILE_STYLES)}
       >
         {header?.title && (
           <button
@@ -224,13 +207,7 @@ export const ContentTiles = props => {
   const renderContentTiles = () => {
     if (Array.isArray(tiles)) {
       return (
-        <div
-          id="content-tiles-container"
-          style={AboutWelcomeUtils.getValidStyle(
-            content?.contentTilesContainer?.style,
-            CONTAINER_STYLES
-          )}
-        >
+        <div id="content-tiles-container">
           {tiles.map((tile, index) => renderContentTile(tile, index))}
         </div>
       );
