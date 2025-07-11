@@ -126,9 +126,11 @@
   MACRO_(dayOfYear, "dayOfYear")                                               \
   MACRO_(dayPeriod, "dayPeriod")                                               \
   MACRO_(days, "days")                                                         \
+  MACRO_(daysDisplay, "daysDisplay")                                           \
   MACRO_(daysInMonth, "daysInMonth")                                           \
   MACRO_(daysInWeek, "daysInWeek")                                             \
   MACRO_(daysInYear, "daysInYear")                                             \
+  MACRO_(daysStyle, "daysStyle")                                               \
   MACRO_(debugger, "debugger")                                                 \
   MACRO_(decimal, "decimal")                                                   \
   MACRO_(decodeURI, "decodeURI")                                               \
@@ -225,6 +227,7 @@
   MACRO_(forEach, "forEach")                                                   \
   MACRO_(format, "format")                                                     \
   MACRO_(fraction, "fraction")                                                 \
+  MACRO_(fractionalDigits, "fractionalDigits")                                 \
   MACRO_(fractionalSecond, "fractionalSecond")                                 \
   MACRO_(fractionalSecondDigits, "fractionalSecondDigits")                     \
   MACRO_(frame, "frame")                                                       \
@@ -286,6 +289,8 @@
   MACRO_(hour12, "hour12")                                                     \
   MACRO_(hourCycle, "hourCycle")                                               \
   MACRO_(hours, "hours")                                                       \
+  MACRO_(hoursDisplay, "hoursDisplay")                                         \
+  MACRO_(hoursStyle, "hoursStyle")                                             \
   MACRO2(id, "id")                                                             \
   MACRO2(if_, "if")                                                            \
   MACRO_(ignoreCase, "ignoreCase")                                             \
@@ -396,8 +401,12 @@
   MACRO_(meta, "meta")                                                         \
   MACRO_(microsecond, "microsecond")                                           \
   MACRO_(microseconds, "microseconds")                                         \
+  MACRO_(microsecondsDisplay, "microsecondsDisplay")                           \
+  MACRO_(microsecondsStyle, "microsecondsStyle")                               \
   MACRO_(millisecond, "millisecond")                                           \
   MACRO_(milliseconds, "milliseconds")                                         \
+  MACRO_(millisecondsDisplay, "millisecondsDisplay")                           \
+  MACRO_(millisecondsStyle, "millisecondsStyle")                               \
   MACRO_(minColumn, "minColumn")                                               \
   MACRO_(minDays, "minDays")                                                   \
   MACRO_(minimum, "minimum")                                                   \
@@ -409,6 +418,8 @@
   MACRO_(minusSign, "minusSign")                                               \
   MACRO_(minute, "minute")                                                     \
   MACRO_(minutes, "minutes")                                                   \
+  MACRO_(minutesDisplay, "minutesDisplay")                                     \
+  MACRO_(minutesStyle, "minutesStyle")                                         \
   MACRO_(missingArguments, "missingArguments")                                 \
   MACRO_(mode, "mode")                                                         \
   MACRO_(module, "module")                                                     \
@@ -419,7 +430,9 @@
   MACRO_(monthCode, "monthCode")                                               \
   MACRO_(monthDayFromFields, "monthDayFromFields")                             \
   MACRO_(months, "months")                                                     \
+  MACRO_(monthsDisplay, "monthsDisplay")                                       \
   MACRO_(monthsInYear, "monthsInYear")                                         \
+  MACRO_(monthsStyle, "monthsStyle")                                           \
   MACRO_(multiline, "multiline")                                               \
   MACRO_(mutable_, "mutable")                                                  \
   MACRO_(name, "name")                                                         \
@@ -427,6 +440,8 @@
   MACRO_(NaN, "NaN")                                                           \
   MACRO_(nanosecond, "nanosecond")                                             \
   MACRO_(nanoseconds, "nanoseconds")                                           \
+  MACRO_(nanosecondsDisplay, "nanosecondsDisplay")                             \
+  MACRO_(nanosecondsStyle, "nanosecondsStyle")                                 \
   MACRO_(NegativeInfinity_, "-Infinity")                                       \
   MACRO_(new_, "new")                                                          \
   MACRO_(next, "next")                                                         \
@@ -535,6 +550,8 @@
   MACRO_(scripts, "scripts")                                                   \
   MACRO_(second, "second")                                                     \
   MACRO_(seconds, "seconds")                                                   \
+  MACRO_(secondsDisplay, "secondsDisplay")                                     \
+  MACRO_(secondsStyle, "secondsStyle")                                         \
   MACRO_(self_hosted_, "self-hosted")                                          \
   MACRO_(sensitivity, "sensitivity")                                           \
   MACRO_(set, "set")                                                           \
@@ -667,6 +684,8 @@
   MACRO_(weekend, "weekend")                                                   \
   MACRO_(weekOfYear, "weekOfYear")                                             \
   MACRO_(weeks, "weeks")                                                       \
+  MACRO_(weeksDisplay, "weeksDisplay")                                         \
+  MACRO_(weeksStyle, "weeksStyle")                                             \
   MACRO_(while_, "while")                                                      \
   MACRO_(with, "with")                                                         \
   MACRO_(written, "written")                                                   \
@@ -680,6 +699,8 @@
   MACRO_(yearName, "yearName")                                                 \
   MACRO_(yearOfWeek, "yearOfWeek")                                             \
   MACRO_(years, "years")                                                       \
+  MACRO_(yearsDisplay, "yearsDisplay")                                         \
+  MACRO_(yearsStyle, "yearsStyle")                                             \
   MACRO_(yield, "yield")                                                       \
   MACRO_(zero, "zero")                                                         \
   MACRO_(zip, "zip")                                                           \

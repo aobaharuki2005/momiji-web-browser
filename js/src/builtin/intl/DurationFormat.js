@@ -1243,58 +1243,6 @@ function PartitionDurationFormatPattern(
 }
 
 /**
- * Intl.DurationFormat.prototype.format ( durationLike )
- */
-function Intl_DurationFormat_format(durationLike) {
-  // Step 1.
-  var df = this;
-
-  // Step 2.
-  if (!IsObject(df) || (df = intl_GuardToDurationFormat(df)) === null) {
-    return callFunction(
-      intl_CallDurationFormatMethodIfWrapped,
-      this,
-      durationLike,
-      "Intl_DurationFormat_format"
-    );
-  }
-
-  // Step 3.
-  var duration = ToTemporalDuration(durationLike);
-
-  // Steps 4-7.
-  return PartitionDurationFormatPattern(
-    df,
-    duration,
-    /* formatToParts = */ false
-  );
-}
-
-/**
- * Intl.DurationFormat.prototype.formatToParts ( durationLike )
- */
-function Intl_DurationFormat_formatToParts(durationLike) {
-  // Step 1.
-  var df = this;
-
-  // Step 2.
-  if (!IsObject(df) || (df = intl_GuardToDurationFormat(df)) === null) {
-    return callFunction(
-      intl_CallDurationFormatMethodIfWrapped,
-      this,
-      durationLike,
-      "Intl_DurationFormat_formatToParts"
-    );
-  }
-
-  // Step 3.
-  var duration = ToTemporalDuration(durationLike);
-
-  // Steps 4-8.
-  return PartitionDurationFormatPattern(df, duration, /* formatToParts = */ true);
-}
-
-/**
  * Returns the resolved options for a DurationFormat object.
  */
 function Intl_DurationFormat_resolvedOptions() {
