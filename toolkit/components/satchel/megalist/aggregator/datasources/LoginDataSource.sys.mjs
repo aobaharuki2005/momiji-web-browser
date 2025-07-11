@@ -445,13 +445,15 @@ export class LoginDataSource extends DataSourceBase {
 
         this.#recordLoginsUpdate("import");
       } catch (e) {
-        this.setNotification({
-          id: "import-error",
-          url: IMPORT_FILE_SUPPORT_URL,
-          commands: {
-            onRetry: "Import",
-          },
-        });
+        if (e.result !== Cr.NS_ERROR_ABORT) {
+          this.setNotification({
+            id: "import-error",
+            url: IMPORT_FILE_SUPPORT_URL,
+            commands: {
+              onRetry: "Import",
+            },
+          });
+        }
       }
     }
   }
