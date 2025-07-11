@@ -20,10 +20,9 @@ class ReorderableDemo extends LitElement {
   static properties = {
     items: { type: Array, state: true },
     itemSelector: { type: String },
-    focusableSelector: { type: String },
   };
 
-  // Chosing not to use Shadow DOM here for demo purposes.
+  // Choosing not to use Shadow DOM here for demo purposes.
   createRenderRoot() {
     return this;
   }
@@ -92,7 +91,6 @@ class ReorderableDemo extends LitElement {
       </style>
       <moz-reorderable-list
         itemselector=${this.itemSelector}
-        focusableselector=${this.focusableSelector}
         @reorder=${this.handleReorder}
       >
         <ul>
@@ -109,7 +107,7 @@ class ReorderableDemo extends LitElement {
 }
 customElements.define("reorderable-demo", ReorderableDemo);
 
-const Template = ({ itemSelector, focusableSelector }) => html`
+const Template = ({ itemSelector }) => html`
   <style>
     ul {
       padding: 0;
@@ -124,14 +122,10 @@ const Template = ({ itemSelector, focusableSelector }) => html`
       background-color: #eee;
     }
   </style>
-  <reorderable-demo
-    .itemSelector=${itemSelector}
-    .focusableSelector=${focusableSelector}
-  ></reorderable-demo>
+  <reorderable-demo .itemSelector=${itemSelector}></reorderable-demo>
 `;
 
 export const ReorderableList = Template.bind({});
 ReorderableList.args = {
   itemSelector: "li",
-  focusableSelector: "li > button",
 };
