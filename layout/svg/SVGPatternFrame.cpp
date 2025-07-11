@@ -194,7 +194,7 @@ static nsresult GetTargetGeometry(gfxRect* aBBox,
 
   // Sanity check
   if (IncludeBBoxScale(aViewBox, aPatternContentUnits, aPatternUnits) &&
-      (aBBox->Width() <= 0 || aBBox->Height() <= 0)) {
+      aBBox->IsEmpty()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -326,7 +326,7 @@ already_AddRefed<SourceSurface> SVGPatternFrame::PaintPattern(
   // box for the pattern tile.
   gfxRect bbox =
       GetPatternRect(patternUnits, callerBBox, aContextMatrix, aSource);
-  if (bbox.Width() <= 0.0 || bbox.Height() <= 0.0) {
+  if (bbox.IsEmpty()) {
     return nullptr;
   }
 
