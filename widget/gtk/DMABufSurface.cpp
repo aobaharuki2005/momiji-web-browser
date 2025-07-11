@@ -138,7 +138,7 @@ static const std::string FormatEGLError(EGLint err) {
 
 MOZ_RUNINIT static RefPtr<GLContext> sSnapshotContext;
 static StaticMutex sSnapshotContextMutex MOZ_UNANNOTATED;
-static Atomic<int> gNewSurfaceUID(1);
+static Atomic<int> gNewSurfaceUID(getpid());
 
 // We should release all resources allocated by SnapshotGLContext before
 // ReturnSnapshotGLContext() call. Otherwise DMABufSurface references
