@@ -65,7 +65,7 @@ tags = "remote-settings blocklist psm"
 # FIPS still works on Linux, so this test doesn't make any sense there.
 # FIPS still works on Windows, but running the test to ensure that it does not
 # break with a non-ASCII profile path.
-run-if = ["os != 'android'"]
+skip-if = ["os == 'android' && android_version == '24' && processor == 'x86_64'"]
 
 ["test_certDB_export_pkcs12.js"]
 
@@ -272,10 +272,11 @@ run-sequentially = "hardcoded ports"
 ["test_sdr.js"]
 
 ["test_sdr_preexisting.js"]
-run-if = ["os != 'android'"] # Not relevant to Android. See the comment in the test.
+# Not relevant to Android. See the comment in the test.
 
 ["test_sdr_preexisting_with_password.js"]
-run-if = ["os != 'android'"] # Not relevant to Android. See the comment in the test.
+# Not relevant to Android. See the comment in the test.
+skip-if = ["os == 'android' && android_version == '24' && processor == 'x86_64'"]
 
 ["test_self_signed_certs.js"]
 

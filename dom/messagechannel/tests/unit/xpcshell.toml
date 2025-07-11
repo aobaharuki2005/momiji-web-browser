@@ -1,6 +1,6 @@
 [DEFAULT]
 head =  ""
 support-files = ["chromeWorker_messageChannel.js"]
-run-if = ["os != 'android'"]
+skip-if = ["os == 'android' && android_version == '24' && processor == 'x86_64'"]
 
 ["test_messageChannel.js"]
