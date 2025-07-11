@@ -2212,8 +2212,8 @@ static void AtomicExchange(MacroAssembler& masm,
                            const T& mem, Register value, Register valueTemp,
                            Register offsetTemp, Register maskTemp,
                            Register output) {
-  ScratchRegisterScope scratch(masm);
   UseScratchRegisterScope temps(&masm);
+  Register scratch = temps.Acquire();
   Register scratch2 = temps.Acquire();
   bool signExtend = Scalar::isSignedIntType(type);
   unsigned nbytes = Scalar::byteSize(type);
@@ -2295,18 +2295,16 @@ static void AtomicExchange(MacroAssembler& masm,
   switch (nbytes) {
     case 1:
       if (signExtend) {
-        masm.slliw(output, output, 32 - 8);
-        masm.sraiw(output, output, 32 - 8);
+        masm.SignExtendByte(output, output);
       } else {
-        masm.andi(valueTemp, value, 0xff);
+        masm.andi(output, output, 0xff);
       }
       break;
     case 2:
       if (signExtend) {
-        masm.slliw(output, output, 32 - 16);
-        masm.sraiw(output, output, 32 - 16);
+        masm.SignExtendShort(output, output);
       } else {
-        masm.ma_and(valueTemp, value, Imm32(0xffff));
+        masm.ma_and(output, Imm32(0xffff));
       }
       break;
   }
