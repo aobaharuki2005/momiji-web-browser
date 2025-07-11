@@ -45,6 +45,7 @@
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
+using namespace js::intl;
 
 static constexpr auto durationUnits = std::array{
     temporal::TemporalUnit::Year,        temporal::TemporalUnit::Month,
@@ -128,14 +129,13 @@ void js::DurationFormatObject::finalize(JS::GCContext* gcx, JSObject* obj) {
 
   for (auto unit : durationUnits) {
     if (auto* nf = durationFormat->getNumberFormat(unit)) {
-      intl::RemoveICUCellMemory(gcx, obj,
-                                NumberFormatObject::EstimatedMemoryUse);
+      RemoveICUCellMemory(gcx, obj, NumberFormatObject::EstimatedMemoryUse);
       delete nf;
     }
   }
 
   if (auto* lf = durationFormat->getListFormat()) {
-    intl::RemoveICUCellMemory(gcx, obj, ListFormatObject::EstimatedMemoryUse);
+    RemoveICUCellMemory(gcx, obj, ListFormatObject::EstimatedMemoryUse);
     delete lf;
   }
 }
@@ -168,9 +168,9 @@ static bool DurationFormat(JSContext* cx, unsigned argc, Value* vp) {
   HandleValue options = args.get(1);
 
   // Steps 3-28.
-  if (!intl::InitializeObject(cx, durationFormat,
-                              cx->names().InitializeDurationFormat, locales,
-                              options)) {
+  if (!InitializeObject(cx, durationFormat,
+                        cx->names().InitializeDurationFormat, locales,
+                        options)) {
     return false;
   }
 
@@ -189,7 +189,7 @@ static JSLinearString* GetTimeSeparator(JSContext* cx,
     return nullptr;
   }
 
-  UniqueChars locale = intl::EncodeLocale(cx, value.toString());
+  UniqueChars locale = EncodeLocale(cx, value.toString());
   if (!locale) {
     return nullptr;
   }
@@ -204,12 +204,12 @@ static JSLinearString* GetTimeSeparator(JSContext* cx,
     return nullptr;
   }
 
-  intl::FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> separator(cx);
+  FormatBuffer<char16_t, INITIAL_CHAR_BUFFER_SIZE> separator(cx);
   auto result = mozilla::intl::DateTimeFormat::GetTimeSeparator(
       mozilla::MakeStringSpan(locale.get()),
       mozilla::MakeStringSpan(numberingSystem.get()), separator);
   if (result.isErr()) {
-    intl::ReportInternalError(cx, result.unwrapErr());
+    ReportInternalError(cx, result.unwrapErr());
     return nullptr;
   }
   return separator.toString(cx);
@@ -495,7 +495,7 @@ static UniqueChars NewDurationNumberFormatLocale(JSContext* cx,
     }
   }
 
-  return intl::FormatLocale(cx, internals, keywords);
+  return FormatLocale(cx, internals, keywords);
 }
 
 /**
@@ -512,7 +512,7 @@ static mozilla::intl::NumberFormat* NewDurationNumberFormat(
 
   auto result = mozilla::intl::NumberFormat::TryCreate(locale.get(), options);
   if (result.isErr()) {
-    intl::ReportInternalError(cx, result.unwrapErr());
+    ReportInternalError(cx, result.unwrapErr());
     return nullptr;
   }
   return result.unwrap().release();
@@ -828,8 +828,7 @@ static mozilla::intl::NumberFormat* GetOrCreateNumericFormatter(
   }
   durationFormat->setNumberFormat(unit, nf);
 
-  intl::AddICUCellMemory(durationFormat,
-                         NumberFormatObject::EstimatedMemoryUse);
+  AddICUCellMemory(durationFormat, NumberFormatObject::EstimatedMemoryUse);
   return nf;
 }
 
@@ -897,8 +896,7 @@ static mozilla::intl::NumberFormat* GetOrCreateNumberFormat(
   }
   durationFormat->setNumberFormat(unit, nf);
 
-  intl::AddICUCellMemory(durationFormat,
-                         NumberFormatObject::EstimatedMemoryUse);
+  AddICUCellMemory(durationFormat, NumberFormatObject::EstimatedMemoryUse);
   return nf;
 }
 
@@ -906,9 +904,9 @@ static JSLinearString* FormatDurationValueToString(
     JSContext* cx, mozilla::intl::NumberFormat* nf,
     const DurationValue& value) {
   if (value.isDecimal()) {
-    return intl::FormatNumber(cx, nf, std::string_view{value});
+    return FormatNumber(cx, nf, std::string_view{value});
   }
-  return intl::FormatNumber(cx, nf, value.number);
+  return FormatNumber(cx, nf, value.number);
 }
 
 static ArrayObject* FormatDurationValueToParts(JSContext* cx,
@@ -916,10 +914,10 @@ static ArrayObject* FormatDurationValueToParts(JSContext* cx,
                                                const DurationValue& value,
                                                temporal::TemporalUnit unit) {
   if (value.isDecimal()) {
-    return intl::FormatNumberToParts(cx, nf, std::string_view{value},
-                                     PartUnitName(unit));
+    return FormatNumberToParts(cx, nf, std::string_view{value},
+                               PartUnitName(unit));
   }
-  return intl::FormatNumberToParts(cx, nf, value.number, PartUnitName(unit));
+  return FormatNumberToParts(cx, nf, value.number, PartUnitName(unit));
 }
 
 static bool FormatDurationValue(JSContext* cx, mozilla::intl::NumberFormat* nf,
@@ -1222,7 +1220,7 @@ static bool FormatNumericUnits(JSContext* cx,
 
 static mozilla::intl::ListFormat* NewDurationListFormat(
     JSContext* cx, Handle<DurationFormatObject*> durationFormat) {
-  Rooted<JSObject*> internals(cx, intl::GetInternalsObject(cx, durationFormat));
+  Rooted<JSObject*> internals(cx, GetInternalsObject(cx, durationFormat));
   if (!internals) {
     return nullptr;
   }
@@ -1232,7 +1230,7 @@ static mozilla::intl::ListFormat* NewDurationListFormat(
     return nullptr;
   }
 
-  UniqueChars locale = intl::EncodeLocale(cx, value.toString());
+  UniqueChars locale = EncodeLocale(cx, value.toString());
   if (!locale) {
     return nullptr;
   }
@@ -1265,7 +1263,7 @@ static mozilla::intl::ListFormat* NewDurationListFormat(
   auto result = mozilla::intl::ListFormat::TryCreate(
       mozilla::MakeStringSpan(locale.get()), options);
   if (result.isErr()) {
-    js::intl::ReportInternalError(cx, result.unwrapErr());
+    ReportInternalError(cx, result.unwrapErr());
     return nullptr;
   }
   return result.unwrap().release();
@@ -1285,7 +1283,7 @@ static mozilla::intl::ListFormat* GetOrCreateListFormat(
   }
   durationFormat->setListFormat(lf);
 
-  intl::AddICUCellMemory(durationFormat, ListFormatObject::EstimatedMemoryUse);
+  AddICUCellMemory(durationFormat, ListFormatObject::EstimatedMemoryUse);
   return lf;
 }
 
@@ -1373,7 +1371,7 @@ static bool ListFormatParts(
     }
   }
 
-  intl::FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> buffer(cx);
+  FormatBuffer<char16_t, INITIAL_CHAR_BUFFER_SIZE> buffer(cx);
   mozilla::intl::ListFormat::PartVector partVector{};
 
   // Step 9.
@@ -1381,7 +1379,7 @@ static bool ListFormatParts(
                           ? lf->FormatToParts(stringList, buffer, partVector)
                           : lf->Format(stringList, buffer);
   if (formatResult.isErr()) {
-    intl::ReportInternalError(cx, formatResult.unwrapErr());
+    ReportInternalError(cx, formatResult.unwrapErr());
     return false;
   }
 
