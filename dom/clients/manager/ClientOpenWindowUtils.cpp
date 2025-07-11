@@ -39,6 +39,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/nsCSPContext.h"
+#include "mozilla/dom/PolicyContainer.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 
 #ifdef MOZ_GECKOVIEW
@@ -204,7 +205,7 @@ struct ClientOpenWindowArgsParsed {
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsIURI> baseURI;
   nsCOMPtr<nsIPrincipal> principal;
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  nsCOMPtr<nsIPolicyContainer> policyContainer;
   RefPtr<ThreadsafeContentParentHandle> originContent;
 };
 
@@ -247,8 +248,8 @@ static Result<Ok, nsresult> OpenNewWindow(
   args->AppendElement(nullptr);                   // 7: originStoragePrincipal
   args->AppendElement(aArgsValidated.principal);  // 8: triggeringPrincipal
   args->AppendElement(nsFalse);                   // 9: allowInheritPrincipal
-  args->AppendElement(aArgsValidated.csp);        // 10: csp
-  args->AppendElement(aOpenWindowInfo);           // 11: nsOpenWindowInfo
+  args->AppendElement(aArgsValidated.policyContainer);  // 10: policyContainer
+  args->AppendElement(aOpenWindowInfo);                 // 11: nsOpenWindowInfo
 
   nsCOMPtr<nsIWindowWatcher> ww = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
   nsCString features = "chrome,all,dialog=no"_ns;
@@ -314,7 +315,7 @@ bool OpenWindow(const ClientOpenWindowArgsParsed& aArgsValidated,
   nsresult rv = bwin->CreateContentWindow(
       nullptr, aOpenInfo, nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW,
       nsIBrowserDOMWindow::OPEN_NEW, aArgsValidated.principal,
-      aArgsValidated.csp, aBC);
+      aArgsValidated.policyContainer, aBC);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.ThrowTypeError("Unable to open window");
     return false;
@@ -480,14 +481,17 @@ RefPtr<ClientOpPromise> ClientOpenWindow(
   MOZ_DIAGNOSTIC_ASSERT(principal);
 
   nsCOMPtr<nsIContentSecurityPolicy> csp;
+  nsCOMPtr<PolicyContainer> policyContainer;
   if (aArgs.cspInfo().isSome()) {
     csp = CSPInfoToCSP(aArgs.cspInfo().ref(), nullptr);
+    policyContainer = new PolicyContainer();
+    PolicyContainer::Cast(policyContainer)->SetCSP(csp);
   }
   ClientOpenWindowArgsParsed argsValidated{
       .uri = uri,
       .baseURI = baseURI,
       .principal = principal,
-      .csp = csp,
+      .policyContainer = policyContainer,
       .originContent = aOriginContent,
   };
 

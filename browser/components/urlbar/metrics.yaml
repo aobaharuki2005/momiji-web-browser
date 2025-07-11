@@ -1522,3 +1522,21 @@ urlbar.unifiedsearchbutton:
       - fx-search-telemetry@mozilla.com
     expires: never
     telemetry_mirror: URLBAR_UNIFIEDSEARCHBUTTON_PICKED
+
+urlbar.merino:
+  latency_by_response_status:
+    type: labeled_timing_distribution
+    description: >
+      Duration from when the client sends a request to Merino to when the client
+      receives a response, labeled by response status code. Labels are dynamic.
+      For non-OHTTP requests, labels are simply the numeric status code, e.g.,
+      "200". For OHTTP requests, labels are `${status}_ohttp`, e.g., "200_ohttp".
+    time_unit: millisecond
+    bugs:
+      - https://bugzil.la/1971448
+    data_reviews:
+      - https://bugzil.la/1971448
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - disco-team@mozilla.com
+    expires: never

@@ -6790,7 +6790,8 @@ void nsContentUtils::TriggerLinkClick(
     }
 
     nsCOMPtr<nsIPrincipal> triggeringPrincipal = aContent->NodePrincipal();
-    nsCOMPtr<nsIContentSecurityPolicy> csp = aContent->GetCsp();
+    nsCOMPtr<nsIPolicyContainer> policyContainer =
+        aContent->GetPolicyContainer();
 
     // Sanitize fileNames containing null characters by replacing them with
     // underscores.
@@ -6801,7 +6802,7 @@ void nsContentUtils::TriggerLinkClick(
     docShell->OnLinkClick(
         aContent, aLinkURI, fileName.IsVoid() ? aTargetSpec : u""_ns, fileName,
         nullptr, nullptr, UserActivation::IsHandlingUserInput(),
-        aUserInvolvement, triggeringPrincipal, csp);
+        aUserInvolvement, triggeringPrincipal, policyContainer);
   }
 }
 

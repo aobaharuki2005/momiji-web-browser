@@ -218,25 +218,26 @@ document.addEventListener(
           gContextMenu.addSearchFieldAsEngine().catch(console.error);
           break;
         case "context-searchselect": {
-          let { searchTerms, usePrivate, principal, csp } = event.target;
+          let { searchTerms, usePrivate, principal, policyContainer } =
+            event.target;
           SearchUIUtils.loadSearchFromContext(
             window,
             searchTerms,
             usePrivate,
             principal,
-            csp,
+            policyContainer,
             event
           );
           break;
         }
         case "context-searchselect-private": {
-          let { searchTerms, principal, csp } = event.target;
+          let { searchTerms, principal, policyContainer } = event.target;
           SearchUIUtils.loadSearchFromContext(
             window,
             searchTerms,
             true,
             principal,
-            csp,
+            policyContainer,
             event
           );
           break;

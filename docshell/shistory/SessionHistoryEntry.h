@@ -47,17 +47,18 @@ class SessionHistoryInfo {
   SessionHistoryInfo(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal,
                      nsIPrincipal* aPrincipalToInherit,
                      nsIPrincipal* aPartitionedPrincipalToInherit,
-                     nsIContentSecurityPolicy* aCsp,
+                     nsIPolicyContainer* aPolicyContainer,
                      const nsACString& aContentType);
   SessionHistoryInfo(nsIChannel* aChannel, uint32_t aLoadType,
                      nsIPrincipal* aPartitionedPrincipalToInherit,
-                     nsIContentSecurityPolicy* aCsp);
+                     nsIPolicyContainer* aPolicyContainer);
 
   void Reset(nsIURI* aURI, const nsID& aDocShellID, bool aDynamicCreation,
              nsIPrincipal* aTriggeringPrincipal,
              nsIPrincipal* aPrincipalToInherit,
              nsIPrincipal* aPartitionedPrincipalToInherit,
-             nsIContentSecurityPolicy* aCsp, const nsACString& aContentType);
+             nsIPolicyContainer* aPolicyContainer,
+             const nsACString& aContentType);
 
   bool operator==(const SessionHistoryInfo& aInfo) const {
     return false;  // FIXME
@@ -143,7 +144,7 @@ class SessionHistoryInfo {
   nsIPrincipal* GetPartitionedPrincipalToInherit() const;
   void SetPartitionedPrincipalToInherit(nsIPrincipal* aPrincipal);
 
-  nsIContentSecurityPolicy* GetCsp() const;
+  nsIPolicyContainer* GetPolicyContainer() const;
 
   uint32_t GetCacheKey() const;
   void SetCacheKey(uint32_t aCacheKey);
@@ -218,7 +219,7 @@ class SessionHistoryInfo {
     static SharedState Create(nsIPrincipal* aTriggeringPrincipal,
                               nsIPrincipal* aPrincipalToInherit,
                               nsIPrincipal* aPartitionedPrincipalToInherit,
-                              nsIContentSecurityPolicy* aCsp,
+                              nsIPolicyContainer* aPolicyContainer,
                               const nsACString& aContentType);
 
    private:

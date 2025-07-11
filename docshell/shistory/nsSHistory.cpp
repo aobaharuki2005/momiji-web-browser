@@ -2498,8 +2498,9 @@ void nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
       aFrameEntry->GetTriggeringPrincipal();
   loadState->SetTriggeringPrincipal(triggeringPrincipal);
   loadState->SetFirstParty(false);
-  nsCOMPtr<nsIContentSecurityPolicy> csp = aFrameEntry->GetCsp();
-  loadState->SetCsp(csp);
+  nsCOMPtr<nsIPolicyContainer> policyContainer =
+      aFrameEntry->GetPolicyContainer();
+  loadState->SetPolicyContainer(policyContainer);
 
   loadResult->mLoadState = std::move(loadState);
 }

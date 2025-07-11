@@ -1205,7 +1205,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
       dom::DataTransfer* aDataTransfer, bool* aAllowEmptyDataTransfer,
       dom::Selection** aSelection,
       dom::RemoteDragStartData** aRemoteDragStartData, nsIContent** aTargetNode,
-      nsIPrincipal** aPrincipal, nsIContentSecurityPolicy** aCsp,
+      nsIPrincipal** aPrincipal, nsIPolicyContainer** aPolicyContainer,
       nsICookieJarSettings** aCookieJarSettings);
 
   /*
@@ -1226,12 +1226,15 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    *                      from browser chrome or OS.
    */
   MOZ_CAN_RUN_SCRIPT
-  bool DoDefaultDragStart(
-      nsPresContext* aPresContext, WidgetDragEvent* aDragEvent,
-      dom::DataTransfer* aDataTransfer, bool aAllowEmptyDataTransfer,
-      nsIContent* aDragTarget, dom::Selection* aSelection,
-      dom::RemoteDragStartData* aDragStartData, nsIPrincipal* aPrincipal,
-      nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings);
+  bool DoDefaultDragStart(nsPresContext* aPresContext,
+                          WidgetDragEvent* aDragEvent,
+                          dom::DataTransfer* aDataTransfer,
+                          bool aAllowEmptyDataTransfer, nsIContent* aDragTarget,
+                          dom::Selection* aSelection,
+                          dom::RemoteDragStartData* aDragStartData,
+                          nsIPrincipal* aPrincipal,
+                          nsIPolicyContainer* aPolicyContainer,
+                          nsICookieJarSettings* aCookieJarSettings);
 
   /**
    * Set the fields of aEvent to reflect the mouse position and modifier keys

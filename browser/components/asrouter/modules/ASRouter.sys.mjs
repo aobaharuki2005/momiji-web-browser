@@ -2225,7 +2225,6 @@ export class _ASRouter {
             private: true,
             triggeringPrincipal:
               Services.scriptSecurityManager.getSystemPrincipal({}),
-            csp: null,
             resolveOnContentBrowserCreated,
             opener: "devtools",
           }

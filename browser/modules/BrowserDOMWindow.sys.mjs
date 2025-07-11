@@ -67,7 +67,7 @@ export class BrowserDOMWindow {
     aOpenerBrowser = null,
     aTriggeringPrincipal = null,
     aName = "",
-    aCsp = null,
+    aPolicyContainer = null,
     aSkipLoad = false,
     aWhere = undefined
   ) {
@@ -120,7 +120,7 @@ export class BrowserDOMWindow {
       openWindowInfo: aOpenWindowInfo,
       openerBrowser: aOpenerBrowser,
       name: aName,
-      csp: aCsp,
+      policyContainer: aPolicyContainer,
       skipLoad: aSkipLoad,
     });
     let browser = win.gBrowser.getBrowserForTab(tab);
@@ -138,7 +138,7 @@ export class BrowserDOMWindow {
     aWhere,
     aFlags,
     aTriggeringPrincipal,
-    aCsp
+    aPolicyContainer
   ) {
     return this.getContentWindowOrOpenURI(
       null,
@@ -146,12 +146,19 @@ export class BrowserDOMWindow {
       aWhere,
       aFlags,
       aTriggeringPrincipal,
-      aCsp,
+      aPolicyContainer,
       true
     );
   }
 
-  openURI(aURI, aOpenWindowInfo, aWhere, aFlags, aTriggeringPrincipal, aCsp) {
+  openURI(
+    aURI,
+    aOpenWindowInfo,
+    aWhere,
+    aFlags,
+    aTriggeringPrincipal,
+    aPolicyContainer
+  ) {
     if (!aURI) {
       console.error("openURI should only be called with a valid URI");
       throw Components.Exception("", Cr.NS_ERROR_FAILURE);
@@ -162,7 +169,7 @@ export class BrowserDOMWindow {
       aWhere,
       aFlags,
       aTriggeringPrincipal,
-      aCsp,
+      aPolicyContainer,
       false
     );
   }
@@ -173,7 +180,7 @@ export class BrowserDOMWindow {
     aWhere,
     aFlags,
     aTriggeringPrincipal,
-    aCsp,
+    aPolicyContainer,
     aSkipLoad
   ) {
     var browsingContext = null;
@@ -278,7 +285,7 @@ export class BrowserDOMWindow {
             null,
             aTriggeringPrincipal,
             null,
-            aCsp,
+            aPolicyContainer,
             aOpenWindowInfo
           );
           // At this point, the new browser window is just starting to load, and
@@ -316,7 +323,7 @@ export class BrowserDOMWindow {
           aOpenWindowInfo?.parent?.top.embedderElement,
           aTriggeringPrincipal,
           "",
-          aCsp,
+          aPolicyContainer,
           aSkipLoad,
           aWhere
         );
@@ -351,7 +358,7 @@ export class BrowserDOMWindow {
           // should be addressed in bug 1815509.
           this.win.gBrowser.fixupAndLoadURIString(aURI.spec, {
             triggeringPrincipal: aTriggeringPrincipal,
-            csp: aCsp,
+            policyContainer: aPolicyContainer,
             loadFlags,
             referrerInfo,
           });
@@ -430,7 +437,7 @@ export class BrowserDOMWindow {
       aParams.openerBrowser,
       aParams.triggeringPrincipal,
       aName,
-      aParams.csp,
+      aParams.policyContainer,
       aSkipLoad,
       aWhere
     );

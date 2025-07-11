@@ -35,6 +35,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTargetBinding.h"
+#include "mozilla/dom/PolicyContainer.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/ScriptLoader.h"
@@ -1048,7 +1049,8 @@ nsresult EventListenerManager::SetEventHandler(nsAtom* aName,
     }
 
     // Perform CSP check
-    nsCOMPtr<nsIContentSecurityPolicy> csp = doc->GetCsp();
+    nsCOMPtr<nsIContentSecurityPolicy> csp =
+        PolicyContainer::GetCSP(doc->GetPolicyContainer());
     uint32_t lineNum = 0;
     JS::ColumnNumberOneOrigin columnNum;
 

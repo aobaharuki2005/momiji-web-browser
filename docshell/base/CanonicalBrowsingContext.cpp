@@ -618,9 +618,10 @@ CanonicalBrowsingContext::ReplaceLoadingSessionHistoryEntryForLoad(
   MOZ_ASSERT(aInfo);
   MOZ_ASSERT(aNewChannel);
 
-  SessionHistoryInfo newInfo = SessionHistoryInfo(
-      aNewChannel, aInfo->mInfo.LoadType(),
-      aInfo->mInfo.GetPartitionedPrincipalToInherit(), aInfo->mInfo.GetCsp());
+  SessionHistoryInfo newInfo =
+      SessionHistoryInfo(aNewChannel, aInfo->mInfo.LoadType(),
+                         aInfo->mInfo.GetPartitionedPrincipalToInherit(),
+                         aInfo->mInfo.GetPolicyContainer());
 
   for (size_t i = 0; i < mLoadingEntries.Length(); ++i) {
     if (mLoadingEntries[i].mLoadId == aInfo->mLoadId) {

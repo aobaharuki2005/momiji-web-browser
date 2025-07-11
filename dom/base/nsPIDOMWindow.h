@@ -32,6 +32,7 @@ class nsICSSDeclaration;
 class nsIDocShell;
 class nsIDocShellTreeOwner;
 class nsDocShellLoadState;
+class nsIPolicyContainer;
 class nsIPrincipal;
 class nsIRunnable;
 class nsIScriptTimeoutHandler;
@@ -368,9 +369,10 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   mozilla::Maybe<mozilla::dom::ClientState> GetClientState() const;
   mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor> GetController() const;
 
-  void SetCsp(nsIContentSecurityPolicy* aCsp);
+  void SetPolicyContainer(nsIPolicyContainer* aPolicyContainer);
+  nsIPolicyContainer* GetPolicyContainer();
+
   void SetPreloadCsp(nsIContentSecurityPolicy* aPreloadCsp);
-  nsIContentSecurityPolicy* GetCsp();
 
   void NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope);
 
@@ -895,9 +897,9 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   }
 
   // Set the window up with an about:blank document with the given principal and
-  // potentially a CSP and a COEP.
+  // potentially a policyContainer and a COEP.
   virtual void SetInitialPrincipal(
-      nsIPrincipal* aNewWindowPrincipal, nsIContentSecurityPolicy* aCSP,
+      nsIPrincipal* aNewWindowPrincipal, nsIPolicyContainer* aPolicyContainer,
       const mozilla::Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>& aCoep) = 0;
 
   // Returns an object containing the window's state.  This also suspends

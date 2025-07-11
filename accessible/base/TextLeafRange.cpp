@@ -634,9 +634,37 @@ static bool IsLineBreakContinuation(nsTextFrame* aContinuation) {
   return AreFramesOnDifferentLines(aContinuation, prev);
 }
 
+static bool IsCaretValid(TextLeafPoint aPoint) {
+  Accessible* acc = aPoint.mAcc;
+  if (!acc->IsHyperText()) {
+    acc = acc->Parent();
+  }
+  if (!(acc->State() & states::EDITABLE)) {
+    return true;
+  }
+  // The caret is within editable content.
+  Accessible* focus = FocusMgr() ? FocusMgr()->FocusedAccessible() : nullptr;
+  if (!focus) {
+    return false;
+  }
+  // If the focus isn't an editor, the caret can't be inside an editor. This
+  // can happen, for example, when a text input is the last element in a
+  // container and a user clicks in the empty area at the end of the container.
+  // In this case, the caret is actually at the end of the container outside the
+  // input. This can also happen if there is an empty area in a container before
+  // an input and a user clicks there. TextLeafPoint can't represent either of
+  // these cases and it's generally not useful. We must not normalize this to
+  // the nearest leaf because this would put the caret inside an editor which
+  // isn't focused. Instead, we pretend there is no caret. See bug 1950748 for
+  // more details.
+  return focus->State() & states::EDITABLE;
+}
+
 /*** TextLeafPoint ***/
 
 TextLeafPoint::TextLeafPoint(Accessible* aAcc, int32_t aOffset) {
+  MOZ_ASSERT(aOffset >= 0 ||
+             aOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT);
   if (!aAcc) {
     // Construct an invalid point.
     mAcc = nullptr;
@@ -646,8 +674,7 @@ TextLeafPoint::TextLeafPoint(Accessible* aAcc, int32_t aOffset) {
 
   // Even though an OuterDoc contains a document, we treat it as a leaf because
   // we don't want to move into another document.
-  if (aOffset != nsIAccessibleText::TEXT_OFFSET_CARET && !aAcc->IsOuterDoc() &&
-      aAcc->HasChildren()) {
+  if (!aAcc->IsOuterDoc() && aAcc->HasChildren()) {
     // Find a leaf. This might not necessarily be a TextLeafAccessible; it
     // could be an empty container.
     auto GetChild = [&aOffset](Accessible* acc) -> Accessible* {
@@ -1076,6 +1103,9 @@ TextLeafPoint TextLeafPoint::GetCaret(Accessible* aAcc) {
           "Got HyperText CaretOffset but ToTextLeafPoint failed");
       return point;
     }
+    if (!IsCaretValid(point)) {
+      return TextLeafPoint();
+    }
     nsIFrame* frame = ht->GetFrame();
     RefPtr<nsFrameSelection> sel = frame ? frame->GetFrameSelection() : nullptr;
     if (sel && sel->GetHint() == CaretAssociationHint::Before) {
@@ -1112,6 +1142,9 @@ TextLeafPoint TextLeafPoint::GetCaret(Accessible* aAcc) {
     return TextLeafPoint();
   }
   TextLeafPoint point = ht->ToTextLeafPoint(htOffset);
+  if (!IsCaretValid(point)) {
+    return TextLeafPoint();
+  }
   point.mIsEndOfLineInsertionPoint = remoteDoc->IsCaretAtEndOfLine();
   return point;
 }

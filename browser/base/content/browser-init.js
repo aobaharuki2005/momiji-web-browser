@@ -725,7 +725,7 @@ var gBrowserInit = {
               window.arguments[8] ||
               Services.scriptSecurityManager.getSystemPrincipal(),
             allowInheritPrincipal: window.arguments[9],
-            csp: window.arguments[10],
+            policyContainer: window.arguments[10],
             fromExternal: true,
           });
         } catch (e) {}
@@ -739,7 +739,7 @@ var gBrowserInit = {
         //                 [7]: originStoragePrincipal (nsIPrincipal)
         //                 [8]: triggeringPrincipal (nsIPrincipal)
         //                 [9]: allowInheritPrincipal (bool)
-        //                 [10]: csp (nsIContentSecurityPolicy)
+        //                 [10]: policyContainer (nsIPolicyContainer)
         //                 [11]: nsOpenWindowInfo
         let userContextId =
           window.arguments[5] != undefined
@@ -810,7 +810,7 @@ var gBrowserInit = {
             // TODO fix allowInheritPrincipal to default to false.
             // Default to true unless explicitly set to false because of bug 1475201.
             allowInheritPrincipal: window.arguments[9] !== false,
-            csp: window.arguments[10],
+            policyContainer: window.arguments[10],
             forceAboutBlankViewerInCurrent: !!window.arguments[6],
             forceAllowDataURI,
             hasValidUserGestureActivation,

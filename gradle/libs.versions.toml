@@ -1,7 +1,7 @@
 [versions]
 # AGP
-android-gradle-plugin = "8.11.0" # Keep lint version in sync
-lint = "31.11.0"
+android-gradle-plugin = "8.11.1" # Keep lint version in sync
+lint = "31.11.1"
 
 python-envs-plugin = "0.0.31"
 maven-ant-tasks = "2.1.3"
@@ -104,7 +104,7 @@ robolectric = "4.14.1"
 adjust = "5.4.1"
 okhttp = "4.12.0"
 okio = "3.15.0"
-sentry = "8.16.0"
+sentry = "8.17.0"
 
 commons-exec = "1.3"
 tomlj = "1.1.0"

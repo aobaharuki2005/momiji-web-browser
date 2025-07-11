@@ -1613,19 +1613,17 @@ ssl:
     description: >
       Verification status of Signed Certificate Timestamps received (0=Decoding
       error, 1=Valid SCT, 2=SCT from unknown log, 3=Invalid SCT signature, 4=SCT
-      timestamp is in the future, 5=Valid SCT from a disqualified log)
-
-      This metric was generated to correspond to the Legacy Telemetry enumerated
-      histogram SSL_SCTS_VERIFICATION_STATUS.
+      timestamp is in the future, 5=Valid SCT from a disqualified log 6=SCT
+      timestamp is after the root's distrustAfter time).
     range_min: 0
     range_max: 10
     bucket_count: 11
     histogram_type: linear
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1293231
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1953221
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1293231
     notification_emails:
       - seceng-telemetry@mozilla.com
     expires: never
-    telemetry_mirror: SSL_SCTS_VERIFICATION_STATUS

@@ -43,6 +43,13 @@ class ThreeDotMenuMainRobotCompose(private val composeTestRule: ComposeTestRule)
 
     fun verifyHomeMainMenuItems() {
         Log.i(TAG, "verifyHomeMainMenuItems: Trying to verify the main menu items on the home page.")
+        composeTestRule.backButton().assertIsDisplayed()
+        composeTestRule.forwardButton().assertIsDisplayed()
+        composeTestRule.refreshButton().assertIsDisplayed()
+        composeTestRule.shareButton().assertIsDisplayed()
+
+        verifyMakeFirefoxYourDefaultBrowserPromotionBanner()
+
         composeTestRule.customizeHomeButton().assertIsDisplayed()
         composeTestRule.extensionsButton().assertIsDisplayed()
 
@@ -135,12 +142,6 @@ class ThreeDotMenuMainRobotCompose(private val composeTestRule: ComposeTestRule)
         Log.i(TAG, "clickSwitchToDesktopSiteButton: Clicked the \"Switch to desktop site\" button.")
     }
 
-    fun clickSwitchToMobileSiteButton() {
-        Log.i(TAG, "clickSwitchToMobileSiteButton: Trying to click the \"Switch to mobile site\" button.")
-        composeTestRule.mobileSiteButton().performClick()
-        Log.i(TAG, "clickSwitchToMobileSiteButton: Clicked the \"Switch to mobile site\" button.")
-    }
-
     fun verifyOpenInAppButtonIsEnabled(appName: String = "", isEnabled: Boolean) {
         Log.i(
             TAG,
@@ -218,6 +219,18 @@ class ThreeDotMenuMainRobotCompose(private val composeTestRule: ComposeTestRule)
         Log.i(TAG, "clickQuitFirefoxButton: Trying to click the \"Quit $appName\" button from the new main menu design.")
         composeTestRule.quitFirefoxButton().performClick()
         Log.i(TAG, "clickQuitFirefoxButton: Clicked the \"Quit $appName\" button from the new main menu design.")
+    }
+
+    fun verifyTranslatePageButton() {
+        Log.i(TAG, "verifyTranslatePageButton: Trying to verify that the \"Translate page\" button exists.")
+        composeTestRule.translatePageButton().assertIsDisplayed()
+        Log.i(TAG, "verifyTranslatePageButton: Verified that the \"Translate page\" button exists.")
+    }
+
+    fun verifyMakeFirefoxYourDefaultBrowserPromotionBanner() {
+        composeTestRule.onNodeWithText(getStringResource(R.string.browser_menu_default_banner_title, appName)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(getStringResource(R.string.browser_menu_default_banner_subtitle)).assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.browser_menu_default_banner_dismiss_promotion)).assertIsDisplayed()
     }
 
     class Transition(private val composeTestRule: ComposeTestRule) {
@@ -521,8 +534,6 @@ private fun ComposeTestRule.saveMenuButton() = onNodeWithTag("mainMenu.save")
 private fun ComposeTestRule.bookmarkPageButton() = onNodeWithContentDescription(getStringResource(R.string.browser_menu_bookmark_this_page_2))
 
 private fun ComposeTestRule.desktopSiteButton() = onNodeWithContentDescription(getStringResource(R.string.browser_menu_desktop_site), substring = true)
-
-private fun ComposeTestRule.mobileSiteButton() = onNodeWithContentDescription(getStringResource(R.string.browser_menu_switch_to_mobile_site))
 
 private fun ComposeTestRule.enabledDesktopSiteButton() = onNodeWithTag(DESKTOP_SITE_ON)
 

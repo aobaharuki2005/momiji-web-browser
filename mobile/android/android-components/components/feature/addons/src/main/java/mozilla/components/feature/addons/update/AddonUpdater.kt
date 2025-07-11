@@ -519,19 +519,26 @@ class DefaultAddonUpdater(
         }
 
         fun clear(context: Context) {
-            val settings = getSharedPreferences(context)
-            settings.edit { clear() }
+            getSettings(context).edit { clear() }
+        }
+
+        @VisibleForTesting
+        internal fun getData(context: Context): MutableSet<String> {
+            val data = requireNotNull(getSettings(context).getStringSet(KEY_ALLOWED_SET, mutableSetOf()))
+            // We must return a mutable copy of the allowed set because we want to persist it on disk, and changes to
+            // this allowed set can only be detected when a new set is passed to `setData()`.
+            return data.toMutableSet()
         }
 
         private fun getSettings(context: Context) = getSharedPreferences(context)
 
         private fun setData(context: Context, allowSet: MutableSet<String>) {
-            getSettings(context).edit { putStringSet(KEY_ALLOWED_SET, allowSet) }
-        }
+            // Get rid of the old allowed set, if it still exists.
+            if (getSettings(context).contains(OLD_KEY_ALLOWED_SET)) {
+                clear(context)
+            }
 
-        private fun getData(context: Context): MutableSet<String> {
-            val settings = getSharedPreferences(context)
-            return requireNotNull(settings.getStringSet(KEY_ALLOWED_SET, mutableSetOf()))
+            getSettings(context).edit { putStringSet(KEY_ALLOWED_SET, allowSet) }
         }
 
         private fun getSharedPreferences(context: Context): SharedPreferences {
@@ -539,10 +546,10 @@ class DefaultAddonUpdater(
         }
 
         companion object {
-            private const val PREFERENCE_FILE =
+            internal const val PREFERENCE_FILE =
                 "mozilla.components.feature.addons.update.addons_updates_status_preference"
-            private const val KEY_ALLOWED_SET =
-                "mozilla.components.feature.addons.update.KEY_ALLOWED_SET"
+            internal const val OLD_KEY_ALLOWED_SET = "mozilla.components.feature.addons.update.KEY_ALLOWED_SET"
+            internal const val KEY_ALLOWED_SET = "mozilla.components.feature.addons.update.KEY_ALLOWED_SET_2"
         }
     }
 

@@ -34,6 +34,7 @@
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/WindowOrWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/nsCSPUtils.h"
+#include "mozilla/dom/PolicyContainer.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 
 #include "nsContentUtils.h"
@@ -493,7 +494,7 @@ MOZ_CAN_RUN_SCRIPT inline const nsAString* GetTrustedTypesCompliantString(
   RequireTrustedTypesForDirectiveState requireTrustedTypesForDirectiveState =
       RequireTrustedTypesForDirectiveState::NONE;
   if (piDOMWindowInner) {
-    csp = piDOMWindowInner->GetCsp();
+    csp = PolicyContainer::GetCSP(piDOMWindowInner->GetPolicyContainer());
     if (!csp) {
       return GetAsString(aInput);
     }

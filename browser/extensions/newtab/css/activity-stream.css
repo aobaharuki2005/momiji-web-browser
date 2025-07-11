@@ -856,6 +856,9 @@ main section {
 .darkWallpaper .top-site-outer:not(:hover, :active, .active) {
   color-scheme: dark;
 }
+.top-site-outer .tile {
+  color-scheme: initial;
+}
 .top-site-outer.active .context-menu-button {
   opacity: 1;
   background-color: var(--newtab-button-active-background);
@@ -9238,4 +9241,11 @@ main section {
   margin-inline: 0 var(--space-medium);
   border-radius: var(--border-radius-medium);
   object-fit: contain;
+}
+.trending-searches-list-view.last-item .trending-searches-context-menu .context-menu {
+  margin-block-start: var(--space-large);
+  margin-inline-end: var(--space-large);
+  margin-inline-start: auto;
+  inset-inline-end: 0;
+  inset-inline-start: auto;
 }

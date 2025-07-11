@@ -4950,6 +4950,7 @@ function TrendingSearches() {
   } = TrendingSearch;
   const variant = prefs[PREF_TRENDING_VARIANT];
   let resultRef = (0,external_React_namespaceObject.useRef)([]);
+  let contextMenuHost = (0,external_React_namespaceObject.useRef)(null);
   const TRENDING_SEARCH_CONTEXT_MENU_OPTIONS = ["TrendingSearchDismiss", "TrendingSearchLearnMore"];
   function onArrowClick() {
     dispatch(actionCreators.AlsoToMain({
@@ -4968,9 +4969,36 @@ function TrendingSearches() {
       }
     }));
   }
+
+  // If the window is small, the context menu in variant B will move closer to the card
+  // so that it doesn't cut off
+  const handleContextMenuShow = () => {
+    const host = contextMenuHost.current;
+    const isRTL = document.dir === "rtl"; // returns true if page language is right-to-left
+    const checkRect = host.getBoundingClientRect();
+    const maxBounds = 200;
+
+    // Adds the class of "last-item" if the card is near the edge of the window
+    const checkBounds = isRTL ? checkRect.left <= maxBounds : window.innerWidth - checkRect.right <= maxBounds;
+    if (checkBounds) {
+      host.classList.add("last-item");
+    }
+  };
+  const handleContextMenuUpdate = () => {
+    const host = contextMenuHost.current;
+    if (!host) {
+      return;
+    }
+    host.classList.remove("last-item");
+  };
   const toggleContextMenu = isKeyBoard => {
     setShowContextMenu(!showContextMenu);
     setIsKeyboardAccess(isKeyBoard);
+    if (!showContextMenu) {
+      handleContextMenuShow();
+    } else {
+      handleContextMenuUpdate();
+    }
   };
   function onContextMenuClick(e) {
     e.preventDefault();
@@ -5061,6 +5089,7 @@ function TrendingSearches() {
     return /*#__PURE__*/external_React_default().createElement("div", {
       ref: el => {
         ref.current = [el];
+        contextMenuHost.current = el;
       },
       className: "trending-searches-list-view"
     }, /*#__PURE__*/external_React_default().createElement("div", {
@@ -12743,7 +12772,7 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
     if (getIndex === -1) {
       return; // prevents errors if wallpaper index isn't found when navigating with arrow keys
     }
-    const isRTL = document.dir === "rtl"; // returns true is page language is right-to-left
+    const isRTL = document.dir === "rtl"; // returns true if page language is right-to-left
     let eventKey = event.key;
     if (eventKey === "ArrowRight" || eventKey === "ArrowLeft") {
       if (isRTL) {

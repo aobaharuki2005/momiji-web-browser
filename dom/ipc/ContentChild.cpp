@@ -891,9 +891,9 @@ static nsresult GetCreateWindowParams(nsIOpenWindowInfo* aOpenWindowInfo,
                                       bool aForceNoReferrer,
                                       nsIReferrerInfo** aReferrerInfo,
                                       nsIPrincipal** aTriggeringPrincipal,
-                                      nsIContentSecurityPolicy** aCsp) {
-  if (!aTriggeringPrincipal || !aCsp) {
-    NS_ERROR("aTriggeringPrincipal || aCsp is null");
+                                      nsIPolicyContainer** aPolicyContainer) {
+  if (!aTriggeringPrincipal || !aPolicyContainer) {
+    NS_ERROR("aTriggeringPrincipal || aPolicyContainer is null");
     return NS_ERROR_FAILURE;
   }
 
@@ -928,9 +928,9 @@ static nsresult GetCreateWindowParams(nsIOpenWindowInfo* aOpenWindowInfo,
   nsCOMPtr<Document> doc = opener->GetDoc();
   NS_ADDREF(*aTriggeringPrincipal = doc->NodePrincipal());
 
-  nsCOMPtr<nsIContentSecurityPolicy> csp = doc->GetCsp();
-  if (csp) {
-    csp.forget(aCsp);
+  nsCOMPtr<nsIPolicyContainer> policyContainer = doc->GetPolicyContainer();
+  if (policyContainer) {
+    policyContainer.forget(aPolicyContainer);
   }
 
   nsCOMPtr<nsIURI> baseURI = doc->GetDocBaseURI();
@@ -1004,12 +1004,12 @@ nsresult ContentChild::ProvideWindowCommon(
         aForceNoOpener && StaticPrefs::dom_noopener_newprocess_enabled();
     if (loadInDifferentProcess) {
       nsCOMPtr<nsIPrincipal> triggeringPrincipal;
-      nsCOMPtr<nsIContentSecurityPolicy> csp;
+      nsCOMPtr<nsIPolicyContainer> policyContainer;
       nsCOMPtr<nsIReferrerInfo> referrerInfo;
       rv = GetCreateWindowParams(aOpenWindowInfo, aLoadState, aForceNoReferrer,
                                  getter_AddRefs(referrerInfo),
                                  getter_AddRefs(triggeringPrincipal),
-                                 getter_AddRefs(csp));
+                                 getter_AddRefs(policyContainer));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1043,7 +1043,7 @@ nsresult ContentChild::ProvideWindowCommon(
       Unused << SendCreateWindowInDifferentProcess(
           aTabOpener, parent, aChromeFlags, aCalledFromJS,
           aOpenWindowInfo->GetIsTopLevelCreatedByWebContent(), aURI, features,
-          aModifiers, name, triggeringPrincipal, csp, referrerInfo,
+          aModifiers, name, triggeringPrincipal, policyContainer, referrerInfo,
           aOpenWindowInfo->GetOriginAttributes(), hasValidUserGestureActivation,
           textDirectiveUserActivation);
 
@@ -1239,12 +1239,12 @@ nsresult ContentChild::ProvideWindowCommon(
 
   // Send down the request to open the window.
   nsCOMPtr<nsIPrincipal> triggeringPrincipal;
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  nsCOMPtr<nsIPolicyContainer> policyContainer;
   nsCOMPtr<nsIReferrerInfo> referrerInfo;
   rv = GetCreateWindowParams(aOpenWindowInfo, aLoadState, aForceNoReferrer,
                              getter_AddRefs(referrerInfo),
                              getter_AddRefs(triggeringPrincipal),
-                             getter_AddRefs(csp));
+                             getter_AddRefs(policyContainer));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1254,7 +1254,7 @@ nsresult ContentChild::ProvideWindowCommon(
       aOpenWindowInfo->GetIsForPrinting(),
       aOpenWindowInfo->GetIsForWindowDotPrint(),
       aOpenWindowInfo->GetIsTopLevelCreatedByWebContent(), aURI, features,
-      aModifiers, triggeringPrincipal, csp, referrerInfo,
+      aModifiers, triggeringPrincipal, policyContainer, referrerInfo,
       aOpenWindowInfo->GetOriginAttributes(),
       aLoadState ? aLoadState->HasValidUserGestureActivation() : false,
       aLoadState ? aLoadState->GetTextDirectiveUserActivation() : false,

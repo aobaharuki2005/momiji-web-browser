@@ -450,24 +450,36 @@ export class MerinoClient {
       relayUrl = lazy.UrlbarPrefs.get("merinoOhttpRelayURL");
     }
 
-    if (!configUrl || !relayUrl) {
-      // no OHTTP
-      return await fetch(url, { signal });
+    let useOhttp = configUrl && relayUrl;
+
+    let response;
+    let startMs = Cu.now();
+    if (!useOhttp) {
+      response = await fetch(url, { signal });
+    } else {
+      let config = await lazy.ObliviousHTTP.getOHTTPConfig(configUrl);
+      if (!config) {
+        this.logger.error("Couldn't get OHTTP config");
+        return null;
+      }
+
+      this.logger.debug("Sending request using OHTTP", { url });
+      response = await lazy.ObliviousHTTP.ohttpRequest(relayUrl, config, url, {
+        signal,
+        headers: {},
+      });
     }
 
-    // OHTTP
-    let config = await lazy.ObliviousHTTP.getOHTTPConfig(configUrl);
-    if (!config) {
-      this.logger.error("Couldn't get OHTTP config");
-      return null;
+    let elapsedMs = Cu.now() - startMs;
+    let label = response.status.toString();
+    if (useOhttp) {
+      label += "_ohttp";
     }
+    Glean.urlbarMerino.latencyByResponseStatus[label].accumulateSamples([
+      elapsedMs,
+    ]);
 
-    this.logger.debug("Sending request using OHTTP", { url });
-
-    return await lazy.ObliviousHTTP.ohttpRequest(relayUrl, config, url, {
-      signal,
-      headers: {},
-    });
+    return response;
   }
 
   static _test_disableCache = false;

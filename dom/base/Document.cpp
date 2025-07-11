@@ -219,6 +219,7 @@
 #include "mozilla/dom/PageTransitionEventBinding.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/dom/PolicyContainer.h"
 #include "mozilla/dom/PostMessageEvent.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/Promise.h"
@@ -3688,10 +3689,16 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   // Not calling it here results in the mSelfURI being the current mSelfURI and
   // not the previous which breaks said inheritance.
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1793560#ch-8
-  nsCOMPtr<nsIContentSecurityPolicy> cspToInherit = loadInfo->GetCspToInherit();
+  nsCOMPtr<nsIPolicyContainer> policyContainer =
+      loadInfo->GetPolicyContainerToInherit();
+  nsCOMPtr<nsIContentSecurityPolicy> cspToInherit =
+      PolicyContainer::GetCSP(policyContainer);
   if (cspToInherit) {
     cspToInherit->EnsureIPCPoliciesRead();
   }
+
+  rv = InitPolicyContainer(aChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = InitCSP(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3756,15 +3763,6 @@ void Document::SetLoadedAsData(bool aLoadedAsData,
   }
 }
 
-nsIContentSecurityPolicy* Document::GetCsp() const { return mCSP; }
-
-void Document::SetCsp(nsIContentSecurityPolicy* aCSP) {
-  mCSP = aCSP;
-  mHasPolicyWithRequireTrustedTypesForDirective =
-      aCSP && aCSP->GetRequireTrustedTypesForDirectiveState() !=
-                  RequireTrustedTypesForDirectiveState::NONE;
-}
-
 nsIContentSecurityPolicy* Document::GetPreloadCsp() const {
   return mPreloadCSP;
 }
@@ -3776,12 +3774,13 @@ void Document::SetPreloadCsp(nsIContentSecurityPolicy* aPreloadCSP) {
 void Document::GetCspJSON(nsString& aJSON) {
   aJSON.Truncate();
 
-  if (!mCSP) {
+  nsIContentSecurityPolicy* csp = PolicyContainer::GetCSP(mPolicyContainer);
+  if (!csp) {
     dom::CSPPolicies jsonPolicies;
     jsonPolicies.ToJSON(aJSON);
     return;
   }
-  mCSP->ToJSON(aJSON);
+  csp->ToJSON(aJSON);
 }
 
 void Document::SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages) {
@@ -3802,13 +3801,14 @@ void Document::SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages) {
 void Document::ApplySettingsFromCSP(bool aSpeculative) {
   nsresult rv = NS_OK;
   if (!aSpeculative) {
+    nsIContentSecurityPolicy* csp = PolicyContainer::GetCSP(mPolicyContainer);
     // 1) apply settings from regular CSP
-    if (mCSP) {
+    if (csp) {
       // Set up 'block-all-mixed-content' if not already inherited
       // from the parent context or set by any other CSP.
       if (!mBlockAllMixedContent) {
         bool block = false;
-        rv = mCSP->GetBlockAllMixedContent(&block);
+        rv = csp->GetBlockAllMixedContent(&block);
         NS_ENSURE_SUCCESS_VOID(rv);
         mBlockAllMixedContent = block;
       }
@@ -3820,7 +3820,7 @@ void Document::ApplySettingsFromCSP(bool aSpeculative) {
       // from the parent context or set by any other CSP.
       if (!mUpgradeInsecureRequests) {
         bool upgrade = false;
-        rv = mCSP->GetUpgradeInsecureRequests(&upgrade);
+        rv = csp->GetUpgradeInsecureRequests(&upgrade);
         NS_ENSURE_SUCCESS_VOID(rv);
         mUpgradeInsecureRequests = upgrade;
       }
@@ -3853,9 +3853,39 @@ void Document::ApplySettingsFromCSP(bool aSpeculative) {
   }
 }
 
+nsresult Document::InitPolicyContainer(nsIChannel* aChannel) {
+  bool shouldInherit = CSP_ShouldResponseInheritCSP(aChannel);
+  if (shouldInherit) {
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    nsCOMPtr<nsIPolicyContainer> policyContainer =
+        loadInfo->GetPolicyContainerToInherit();
+    mPolicyContainer = PolicyContainer::Cast(policyContainer);
+  }
+
+  if (!mPolicyContainer) {
+    mPolicyContainer = new PolicyContainer();
+  }
+
+  return NS_OK;
+}
+
+void Document::SetPolicyContainer(nsIPolicyContainer* aPolicyContainer) {
+  mPolicyContainer = PolicyContainer::Cast(aPolicyContainer);
+  nsIContentSecurityPolicy* csp = PolicyContainer::GetCSP(mPolicyContainer);
+  mHasPolicyWithRequireTrustedTypesForDirective =
+      csp && csp->GetRequireTrustedTypesForDirectiveState() !=
+                 RequireTrustedTypesForDirectiveState::NONE;
+}
+
+nsIPolicyContainer* Document::GetPolicyContainer() const {
+  return mPolicyContainer;
+}
+
 nsresult Document::InitCSP(nsIChannel* aChannel) {
   MOZ_ASSERT(!mScriptGlobalObject,
              "CSP must be initialized before mScriptGlobalObject is set!");
+  MOZ_ASSERT(mPolicyContainer,
+             "Policy container must be initialized before CSP!");
 
   // If this is a data document - no need to set CSP.
   if (mLoadedAsData) {
@@ -3872,34 +3902,26 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
     return NS_OK;
   }
 
-  MOZ_ASSERT(!mCSP, "where did mCSP get set if not here?");
-
-  // If there is a CSP that needs to be inherited from whatever
-  // global is considered the client of the document fetch then
-  // we query it here from the loadinfo in case the newly created
-  // document needs to inherit the CSP. See:
-  // https://w3c.github.io/webappsec-csp/#initialize-document-csp
-  bool inheritedCSP = CSP_ShouldResponseInheritCSP(aChannel);
-  if (inheritedCSP) {
-    mCSP = loadInfo->GetCspToInherit();
-  }
+  nsIContentSecurityPolicy* csp = PolicyContainer::GetCSP(mPolicyContainer);
+  bool inheritedCSP = !!csp;
 
   // If there is no CSP to inherit, then we create a new CSP here so
   // that history entries always have the right reference in case a
   // Meta CSP gets dynamically added after the history entry has
   // already been created.
-  if (!mCSP) {
-    mCSP = new nsCSPContext();
+  if (!csp) {
+    csp = new nsCSPContext();
+    mPolicyContainer->SetCSP(csp);
     mHasPolicyWithRequireTrustedTypesForDirective = false;
   } else {
     mHasPolicyWithRequireTrustedTypesForDirective =
-        mCSP->GetRequireTrustedTypesForDirectiveState() !=
+        csp->GetRequireTrustedTypesForDirectiveState() !=
         RequireTrustedTypesForDirectiveState::NONE;
   }
 
   // Always overwrite the requesting context of the CSP so that any new
   // 'self' keyword added to an inherited CSP translates correctly.
-  nsresult rv = mCSP->SetRequestContextWithDocument(this);
+  nsresult rv = csp->SetRequestContextWithDocument(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3947,21 +3969,21 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
 
   // ----- if the doc is an addon, apply its CSP.
   if (addonPolicy) {
-    mCSP->AppendPolicy(addonPolicy->BaseCSP(), false, false);
+    csp->AppendPolicy(addonPolicy->BaseCSP(), false, false);
 
-    mCSP->AppendPolicy(addonPolicy->ExtensionPageCSP(), false, false);
+    csp->AppendPolicy(addonPolicy->ExtensionPageCSP(), false, false);
   }
 
   // ----- if there's a full-strength CSP header, apply it.
   if (!cspHeaderValue.IsEmpty()) {
     mHasCSPDeliveredThroughHeader = true;
-    rv = CSP_AppendCSPFromHeader(mCSP, cspHeaderValue, false);
+    rv = CSP_AppendCSPFromHeader(csp, cspHeaderValue, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // ----- if there's a report-only CSP header, apply it.
   if (!cspROHeaderValue.IsEmpty()) {
-    rv = CSP_AppendCSPFromHeader(mCSP, cspROHeaderValue, true);
+    rv = CSP_AppendCSPFromHeader(csp, cspROHeaderValue, true);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -3971,7 +3993,7 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
   // directive, intersect the CSP sandbox flags with the existing flags. This
   // corresponds to the _least_ permissive policy.
   uint32_t cspSandboxFlags = SANDBOXED_NONE;
-  rv = mCSP->GetCSPSandboxFlags(&cspSandboxFlags);
+  rv = csp->GetCSPSandboxFlags(&cspSandboxFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Probably the iframe sandbox attribute already caused the creation of a
@@ -3999,9 +4021,13 @@ nsresult Document::InitIntegrityPolicy(nsIChannel* aChannel) {
   MOZ_ASSERT(!mScriptGlobalObject,
              "Integrity Policy must be initialized before mScriptGlobalObject "
              "is set!");
+  MOZ_ASSERT(mPolicyContainer,
+             "Policy container must be initialized before IntegrityPolicy!");
 
-  MOZ_ASSERT(!mIntegrityPolicy,
-             "where did mIntegrityPolicy get set if not here?");
+  if (mPolicyContainer->IntegrityPolicy()) {
+    // We inherited the integrity policy.
+    return NS_OK;
+  }
 
   nsAutoCString headerValue, headerROValue;
   nsCOMPtr<nsIHttpChannel> httpChannel;
@@ -4018,8 +4044,13 @@ nsresult Document::InitIntegrityPolicy(nsIChannel* aChannel) {
                                              headerROValue);
   }
 
-  return IntegrityPolicy::ParseHeaders(headerValue, headerROValue,
-                                       getter_AddRefs(mIntegrityPolicy));
+  RefPtr<IntegrityPolicy> integrityPolicy;
+  rv = IntegrityPolicy::ParseHeaders(headerValue, headerROValue,
+                                     getter_AddRefs(integrityPolicy));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mPolicyContainer->SetIntegrityPolicy(integrityPolicy);
+  return NS_OK;
 }
 
 static FeaturePolicy* GetFeaturePolicyFromElement(Element* aElement) {
@@ -8262,8 +8293,9 @@ void Document::SetScriptGlobalObject(
   // Now that we know what our window is, we can flush the CSP errors to the
   // Web Console. We are flushing all messages that occurred and were stored in
   // the queue prior to this point.
-  if (mCSP) {
-    static_cast<nsCSPContext*>(mCSP.get())->flushConsoleMessages();
+  if (nsIContentSecurityPolicy* csp =
+          PolicyContainer::GetCSP(mPolicyContainer)) {
+    nsCSPContext::Cast(csp)->flushConsoleMessages();
   }
 
   nsCOMPtr<nsIHttpChannelInternal> internalChannel =
@@ -12683,7 +12715,7 @@ nsresult Document::CloneDocHelper(Document* clone) const {
           mTiming->CloneNavigationTime(nsDocShell::Cast(clone->GetDocShell()));
       clone->SetNavigationTiming(timing);
     }
-    clone->SetCsp(mCSP);
+    clone->SetPolicyContainer(mPolicyContainer);
   }
 
   // Now ensure that our clone has the same URI, base URI, and principal as us.

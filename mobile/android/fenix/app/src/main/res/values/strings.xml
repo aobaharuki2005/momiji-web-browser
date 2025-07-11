@@ -197,7 +197,7 @@
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_manage_extensions">Manage extensions</string>
     <!-- Browser menu group that contains additional settings in collapsed state-->
-    <string name="browser_menu_more_settings">More</string>"
+    <string name="browser_menu_more_settings">More</string>
     <!-- Browser menu group that contains additional settings in expanded state-->
     <string name="browser_menu_less_settings">Less</string>
     <!-- Content description (not visible, for screen readers etc.): Section heading for recommended extensions.-->
@@ -300,7 +300,7 @@
     <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
     <string name="browser_menu_switch_to_desktop_site"  moz:removedIn="141" tools:ignore="UnusedResources">Switch to desktop site</string>
     <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-    <string name="browser_menu_switch_to_mobile_site">Switch to mobile site</string>
+    <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">Switch to mobile site</string>
     <!-- Browser menu label that navigates to the page tools sub-menu -->
     <string name="browser_menu_tools" moz:removedIn="141" tools:ignore="UnusedResources">Tools</string>
     <!-- Content description (not visible, for screen readers etc.): Back button for all menu redesign sub-menu -->

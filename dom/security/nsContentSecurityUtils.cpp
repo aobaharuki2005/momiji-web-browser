@@ -13,6 +13,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/PolicyContainer.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIChannel.h"
@@ -1759,7 +1760,8 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
     return;
   }
 
-  nsCSPContext* csp = static_cast<nsCSPContext*>(aDocument->GetCsp());
+  nsCSPContext* csp = nsCSPContext::Cast(
+      PolicyContainer::GetCSP(aDocument->GetPolicyContainer()));
   bool foundDefaultSrc = false;
   uint32_t policyCount = 0;
   if (csp) {
@@ -1914,7 +1916,8 @@ void nsContentSecurityUtils::AssertChromePageHasCSP(Document* aDocument) {
   nsAutoCString spec;
   documentURI->GetSpec(spec);
 
-  nsCOMPtr<nsIContentSecurityPolicy> csp = aDocument->GetCsp();
+  nsCOMPtr<nsIContentSecurityPolicy> csp =
+      PolicyContainer::GetCSP(aDocument->GetPolicyContainer());
   uint32_t count = 0;
   if (csp) {
     static_cast<nsCSPContext*>(csp.get())->GetPolicyCount(&count);

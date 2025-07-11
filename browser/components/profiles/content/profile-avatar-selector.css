@@ -41,18 +41,26 @@
 #avatars::part(inputs) {
   flex-direction: row;
   flex-wrap: wrap;
-  gap: var(--space-xsmall);
-  width: 253px;
+  gap: var(--space-xxsmall);
+  width: 100%;
+  justify-content: center;
 }
 
 .avatar-button::part(button) {
   --button-icon-fill: transparent;
   --button-icon-stroke: currentColor;
-  --icon-size-default: 20px;
+
+  /* Scale up 16x16 icon (12x12 + 4x4 padding) to 24px for normal display size */
+  --icon-size-default: 24px;
 }
 
 #avatar-selector {
-  width: 285px;
+  width: 317px;
+}
+
+#upload-text {
+  color: var(--link-color);
+  text-decoration: underline;
 }
 
 #content {

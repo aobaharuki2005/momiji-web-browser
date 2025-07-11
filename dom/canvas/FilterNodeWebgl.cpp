@@ -175,6 +175,9 @@ IntRect FilterNodeWebgl::MapRectToSource(const IntRect& aRect,
                                          const IntRect& aMax,
                                          FilterNode* aSourceNode) {
   if (mSoftwareFilter) {
+    if (aSourceNode && aSourceNode->GetBackendType() == FILTER_BACKEND_WEBGL) {
+      aSourceNode = static_cast<FilterNodeWebgl*>(aSourceNode)->mSoftwareFilter;
+    }
     return mSoftwareFilter->MapRectToSource(aRect, aMax, aSourceNode);
   }
   return aMax;

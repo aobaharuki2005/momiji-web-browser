@@ -91,9 +91,10 @@ export class ClickHandlerChild extends JSWindowActorChild {
     let [href, node, principal] =
       lazy.BrowserUtils.hrefAndLinkNodeForClickEvent(event);
 
-    let csp = ownerDoc.csp;
-    if (csp) {
-      csp = lazy.E10SUtils.serializeCSP(csp);
+    let policyContainer = ownerDoc.policyContainer;
+    if (policyContainer) {
+      policyContainer =
+        lazy.E10SUtils.serializePolicyContainer(policyContainer);
     }
 
     let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(
@@ -114,7 +115,7 @@ export class ClickHandlerChild extends JSWindowActorChild {
       altKey: event.altKey,
       href: null,
       title: null,
-      csp,
+      policyContainer,
       referrerInfo,
     };
 

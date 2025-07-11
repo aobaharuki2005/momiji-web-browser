@@ -249,6 +249,9 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
 
   OCSPFetchStatus GetOCSPFetchStatus() { return mOCSPFetchStatus; }
   IssuerSources GetIssuerSources() { return mIssuerSources; }
+  Maybe<mozilla::pkix::Time> GetDistrustAfterTime() {
+    return mDistrustAfterTime;
+  }
 
  private:
   Result CheckCRLite(
@@ -329,6 +332,7 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
 
   OCSPFetchStatus mOCSPFetchStatus;
   IssuerSources mIssuerSources;
+  Maybe<mozilla::pkix::Time> mDistrustAfterTime;
 };
 
 }  // namespace psm

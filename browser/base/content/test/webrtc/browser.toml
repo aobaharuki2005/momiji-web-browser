@@ -94,6 +94,7 @@ https_first_disabled = true
 skip-if = [
   "os == 'linux'", # Bug 1775945
   "os == 'win' && !debug", # Bug 1775945
+  "os == 'mac' && os_version == '10.15' && processor == 'x86_64'", # Bug 1974591
 ]
 
 ["browser_devices_get_user_media_screen.js"]

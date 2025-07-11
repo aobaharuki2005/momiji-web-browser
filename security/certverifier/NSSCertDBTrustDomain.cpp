@@ -1258,9 +1258,10 @@ Result NSSCertDBTrustDomain::VerifyAndMaybeCacheEncodedOCSPResponse(
   return rv;
 }
 
-nsresult isDistrustedCertificateChain(
+nsresult IsDistrustedCertificateChain(
     const nsTArray<nsTArray<uint8_t>>& certArray,
-    const SECTrustType certDBTrustType, bool& isDistrusted) {
+    const SECTrustType certDBTrustType, bool& isDistrusted,
+    Maybe<mozilla::pkix::Time>& distrustAfterTimeOut) {
   if (certArray.Length() == 0) {
     return NS_ERROR_FAILURE;
   }
@@ -1352,6 +1353,7 @@ nsresult isDistrustedCertificateChain(
 
   Time distrustAfterTime =
       mozilla::pkix::TimeFromEpochInSeconds(distrustAfter / PR_USEC_PER_SEC);
+  distrustAfterTimeOut.emplace(distrustAfterTime);
   if (endEntityNotBefore <= distrustAfterTime) {
     isDistrusted = false;
   }
@@ -1410,8 +1412,8 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& reversedDERArray,
   // the NotAfter value of the parent when the root is a builtin.
   if (mIsBuiltChainRootBuiltInRoot) {
     bool isDistrusted;
-    nsrv =
-        isDistrustedCertificateChain(certArray, mCertDBTrustType, isDistrusted);
+    nsrv = IsDistrustedCertificateChain(certArray, mCertDBTrustType,
+                                        isDistrusted, mDistrustAfterTime);
     if (NS_FAILED(nsrv)) {
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }
@@ -1610,6 +1612,7 @@ void NSSCertDBTrustDomain::ResetAccumulatedState() {
   mSawDistrustedCAByPolicyError = false;
   mIsBuiltChainRootBuiltInRoot = false;
   mIssuerSources.clear();
+  mDistrustAfterTime.reset();
 }
 
 static Input SECItemToInput(const UniqueSECItem& item) {
