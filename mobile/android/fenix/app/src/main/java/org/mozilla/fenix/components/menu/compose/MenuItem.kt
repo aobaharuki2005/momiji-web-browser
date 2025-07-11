@@ -257,7 +257,7 @@ internal fun WebExtensionMenuItem(
                 if (!badgeText.isNullOrEmpty()) {
                     Badge(
                         badgeText = badgeText,
-                        badgeBackgroundColor = FirefoxTheme.colors.layerSearch,
+                        badgeBackgroundColor = FirefoxTheme.colors.layer2,
                     )
                 }
 

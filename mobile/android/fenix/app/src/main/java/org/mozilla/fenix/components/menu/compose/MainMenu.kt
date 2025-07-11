@@ -365,7 +365,7 @@ private fun ExtensionsMenuItem(
             Row(
                 modifier = Modifier
                     .background(
-                        color = FirefoxTheme.colors.layerSearch,
+                        color = FirefoxTheme.colors.layer2,
                         shape = RoundedCornerShape(16.dp),
                     )
                     .padding(start = leftPadding, top = 2.dp, bottom = 2.dp, end = 2.dp),
@@ -491,7 +491,7 @@ private fun ToolsAndActionsMenuGroup(
             menuItemState = if (isPdf) MenuItemState.DISABLED else MenuItemState.ACTIVE
         } else {
             badgeText = stringResource(id = R.string.browser_feature_desktop_site_off)
-            badgeBackgroundColor = FirefoxTheme.colors.layerSearch
+            badgeBackgroundColor = FirefoxTheme.colors.layer2
             menuItemState = if (isPdf) MenuItemState.DISABLED else MenuItemState.ENABLED
         }
 
@@ -586,7 +586,7 @@ private fun MoreMenuButtonGroup(
         Row(
             modifier = Modifier
                 .background(
-                    color = FirefoxTheme.colors.layerSearch,
+                    color = FirefoxTheme.colors.layer2,
                     shape = RoundedCornerShape(16.dp),
                 )
                 .padding(2.dp),
