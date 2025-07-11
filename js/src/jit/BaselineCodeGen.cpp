@@ -6289,10 +6289,10 @@ bool BaselineCodeGen<Handler>::emitEnterGeneratorCode(Register script,
   masm.storePtr(scratch, icScriptAddr);
 
   Label noBaselineScript;
-  // Frames with shared bytecode need the interpreterScript pointer
-  if (handler.realmIndependentJitcode()) {
-    masm.storePtr(script, frame.addressOfInterpreterScript());
-  }
+  // Needed if running in interpreter or if generator is realm-independent,
+  // but it's faster to set it than to check every time
+  masm.storePtr(script, frame.addressOfInterpreterScript());
+
   masm.loadJitScript(script, scratch);
   masm.loadPtr(Address(scratch, JitScript::offsetOfBaselineScript()), scratch);
   masm.branchPtr(Assembler::BelowOrEqual, scratch,
@@ -6309,11 +6309,8 @@ bool BaselineCodeGen<Handler>::emitEnterGeneratorCode(Register script,
   masm.bind(&noBaselineScript);
 
   // Initialize interpreter frame fields.
-  Address flagsAddr(FramePointer, BaselineFrame::reverseOffsetOfFlags());
-  Address scriptAddr(FramePointer,
-                     BaselineFrame::reverseOffsetOfInterpreterScript());
-  masm.or32(Imm32(BaselineFrame::RUNNING_IN_INTERPRETER), flagsAddr);
-  masm.storePtr(script, scriptAddr);
+  masm.or32(Imm32(BaselineFrame::RUNNING_IN_INTERPRETER), frame.addressOfFlags());
+  // interpreterScript_ is set above
 
   // Initialize pc and jump to it.
   emitInterpJumpToResumeEntry(script, resumeIndex, scratch);
@@ -6685,6 +6682,10 @@ template <>
 bool BaselineCompilerCodeGen::emit_AfterYield() {
   if (!emit_JumpTarget()) {
     return false;
+  }
+
+  if (handler.realmIndependentJitcode()) {
+    masm.or32(Imm32(BaselineFrame::Flags::REALM_INDEPENDENT), frame.addressOfFlags());
   }
 
   return emitAfterYieldDebugInstrumentation( R0.scratchReg());
