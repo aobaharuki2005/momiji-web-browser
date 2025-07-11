@@ -526,7 +526,7 @@ private fun ToolsAndActionsMenuGroup(
             },
             label = stringResource(id = labelId),
             stateDescription = badgeText,
-            beforeIconPainter = painterResource(id = R.drawable.mozac_ic_device_mobile_24),
+            beforeIconPainter = painterResource(id = R.drawable.mozac_ic_device_desktop_24),
             state = menuItemState,
             onClick = onSwitchToDesktopSiteMenuClick,
         ) {
