@@ -34,6 +34,8 @@
     <string name="no_private_tabs_description">Your private tabs will be shown here.</string>
     <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d selected</string>
+    <!-- Tab tray multi select title in app bar when no tabs are selected -->
+    <string name="tab_tray_multi_select_title_empty">Select tabs</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
     <string name="tab_tray_add_new_collection">Add new collection</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
@@ -1333,12 +1335,21 @@
     <string name="studies_learn_more">Learn more</string>
 
     <!-- Sessions -->
+    <!-- Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs -->
+    <string name="tabs_header_normal_tabs_counter_title">Normal Tabs Open: %1$s. Tap to switch tabs.</string>
     <!-- Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs -->
     <string name="tabs_header_private_tabs_counter_title">Private Tabs Open: %1$s. Tap to switch tabs.</string>
     <!-- Title for the list of tabs in the synced tabs used by a11y services
     The %1$s will be replaced by the number of opened synced tabs -->
     <string name="tabs_header_synced_tabs_counter_title">Synced Tabs Open: %1$s. Tap to switch tabs.</string>
+    <!-- Text for the tabs header private tabs -->
+    <string name="tabs_header_private_tabs_title">Private</string>
+    <!-- Text for the tabs header normal tabs -->
+    <string name="tabs_header_normal_tabs_title">Tabs</string>
+    <!-- Text for the tabs header synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Sync</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Add tab</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->

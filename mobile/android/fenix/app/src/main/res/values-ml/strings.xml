@@ -343,6 +343,10 @@
   <string name="browser_menu_back_button_content_description" moz:removedIn="141" tools:ignore="UnusedResources">പ്രധാന കുറിപ്പടിക്കട്ടയിലേക്കു് മടങ്ങുക</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
   <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">പ്രധാന കുറിപ്പടി താളു് അടയ്ക്കുക</string>
+  <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
+  <string name="browser_close_main_menu_handlebar_content_description">കുറിപ്പടി അടയ്ക്കുക</string>
+  <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
+  <string name="browser_main_menu_content_description_navigation_header">വഴികാട്ടൽവ്യവസ്ഥ</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">തുണ</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
@@ -419,6 +423,8 @@
   <string name="browser_menu_default_banner_subtitle">ഞൊടികൾ മാത്രമെടുക്കും. എപ്പോഴെങ്കിലും മാറ്റാം.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">കളയുക</string>
+  <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
+  <string name="browser_menu_recommended_extensions_content_description">കൂടുതൽ വിവരങ്ങൾ</string>
   <!--
     Menu "contextual feature recommendation" (CFR)
 
@@ -912,6 +918,8 @@
   <string name="preferences_downloads_settings_clean_up_files_title">%s-ൽ നിന്നും ഉപകരണത്തിൽനിന്നും മായ്ക്കുക</string>
   <!-- Preference for downloads -->
   <string name="preferences_downloads">ഇറക്കിവയ്ക്കലുകൾ</string>
+  <!-- Preference for enabling gecko engine logs -->
+  <string name="preferences_enable_gecko_logs">ഗെക്കോ കുറികൾ പ്രവർത്തനക്ഷമമാക്കുക</string>
   <!-- Message to indicate users that we are quitting the application to apply the changes -->
   <string name="quit_application">മാറ്റങ്ങൾ പ്രാവർത്തികമാക്കാൻ പ്രയോഗത്തിൽ നിന്നും പുറത്തുകടക്കുന്നു…</string>
   <!-- Preference for extensions -->
@@ -958,6 +966,8 @@
   <string name="customize_addon_collection_hint">ശേഖരത്തിന്റെ പേര്</string>
   <!-- Hint displayed on input field for custom collection user ID -->
   <string name="customize_addon_collection_user_hint">ശേഖരണ ഉടമ (ഉപയോക്തൃ ഐഡി)</string>
+  <!-- Toast shown after confirming the custom extension collection configuration -->
+  <string name="toast_customize_extension_collection_done">വിപുലീകരണപ്പിരിവു പുതുച്ചു. മാറ്റങ്ങൾ നടപ്പിലാക്കാൻ പ്രയോഗത്തിൽനിന്നു പുറത്തുകടക്കുന്നു…</string>
   <!--
     Customize Home
 
@@ -1640,7 +1650,9 @@
   -->
   <string name="webcompat_reporter_screen_title">പൊട്ടിയ സൈറ്റിന്റെ വിവരം അറിയിക്കുക</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description">എല്ലാവൎക്കുമായി %1$s-നെ മെച്ചപ്പെടുത്താൻ സഹായിക്കുക. മോസില്ല ഉദ്യോഗസ്ഥന്മാർ താങ്ങൾ അയയ്ക്കുന്ന വിവരങ്ങൾ വെബ്സ്ഥാനക്കുഴപ്പങ്ങളെ പരിഹരിക്കാൻ ഉപയോഗിക്കുന്നു.</string>
+  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">എല്ലാവൎക്കുമായി %1$s-നെ മെച്ചപ്പെടുത്താൻ സഹായിക്കുക. മോസില്ല ഉദ്യോഗസ്ഥന്മാർ താങ്ങൾ അയയ്ക്കുന്ന വിവരങ്ങൾ വെബ്സ്ഥാനക്കുഴപ്പങ്ങളെ പരിഹരിക്കാൻ ഉപയോഗിക്കുന്നു.</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">കൂടുതലറിയുക</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">യുആര്‍എല്‍</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1648,7 +1660,9 @@
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">എന്താണു് തകൎന്നപോയതു്?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason">കാരണം തിരഞ്ഞെടുക്കുക</string>
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">കാരണം തിരഞ്ഞെടുക്കുക</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">കാരണം നല്കുക</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">ഒരു കാരണം തിരഞ്ഞെടുക്കുക</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -2151,6 +2165,8 @@
   <string name="preference_accessibility_text_size_summary">വെബ്സൈറ്റുകളിലെ അക്ഷരങ്ങൾ വലുതോ ചെറുതോ ആക്കുക</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">ഫോണ്ട് വലുപ്പം</string>
+  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
+  <string name="a11y_preference_accessibility_font_size_percentage">%d %%.</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">ഫോണ്ടിന്റെ വലുപ്പത്തിന്റെ യാന്ത്രിക ക്രമീകരണം</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -3234,10 +3250,18 @@
   <string name="protection_panel_banner_protected_description">താങ്ങൾ സംരക്ഷിക്കപ്പെട്ടിരിക്കുന്നു. ഞങ്ങൾ എന്തെങ്കിലും കണ്ടെത്തിയാൽ താങ്ങളെ അറിയിക്കാം.</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">മെച്ചപ്പെടുത്തിയ പിന്തുടർച്ച സംരക്ഷണം</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned on -->
+  <string name="protection_panel_etp_toggle_on">തുടങ്ങിവച്ചതു്</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned off -->
+  <string name="protection_panel_etp_toggle_off">അണച്ചതു്</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
-  <string name="protection_panel_etp_toggle_enabled_description">ഈ വെബ്സ്ഥാനത്തിൽ എന്തെങ്കിലും തകരാറുണ്ടെന്നു് തോന്നുന്നുണ്ടെങ്കിൽ പരിരക്ഷകളെ അണച്ചു് നോക്കൂ.</string>
+  <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">ഈ വെബ്സ്ഥാനത്തിൽ എന്തെങ്കിലും തകരാറുണ്ടെന്നു് തോന്നുന്നുണ്ടെങ്കിൽ പരിരക്ഷകളെ അണച്ചു് നോക്കൂ.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description_2">ഈ വെബ്ബിടത്തിൽ എന്തെങ്കിലും തകരാറുണ്ടെന്നു തോന്നുന്നുണ്ടെങ്കിൽ പരിരക്ഷകളെ അണച്ചു നോക്കൂ.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
-  <string name="protection_panel_etp_toggle_disabled_description">സംരക്ഷണങ്ങൾ അണച്ചിരിക്കുന്നു. അവയെ വീണ്ടും തുടങ്ങിവയ്ക്കുന്നതിലാണു് ബുദ്ധി.</string>
+  <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">സംരക്ഷണങ്ങൾ അണച്ചിരിക്കുന്നു. അവയെ വീണ്ടും തുടങ്ങിവയ്ക്കുന്നതിലാണു് ബുദ്ധി.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
+  <string name="protection_panel_etp_toggle_disabled_description_2">പിന്തുടൎച്ച പരിരക്ഷണം തുടങ്ങിവയ്ക്കുന്നതു ശുപാൎശചെയ്യപ്പെട്ടതാണു്.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3246,7 +3270,7 @@
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">പിന്തുടർച്ചയന്ത്രങ്ങൾ കണ്ടെത്താൻ കഴിഞ്ഞില്ല</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
-  <string name="protection_panel_privacy_and_security_settings">സ്വകാര്യതയും സുരക്ഷ ക്രമീകരണങ്ങൾ</string>
+  <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">സ്വകാര്യതയും സുരക്ഷ ക്രമീകരണങ്ങൾ</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">അനുമതികൾ</string>
   <!--
@@ -3441,6 +3465,14 @@
   <string name="debug_drawer_current_region_label">നിലവിലെ ഇടം</string>
   <!-- The text field label for overriding current region. -->
   <string name="debug_drawer_override_current_region_label">നിലവിലെ പ്രദേശം അസാധുവാക്കുക</string>
+  <!--
+    Add-ons debug tools
+
+    The description of the Add-ons Tools in the Debug Drawer
+  -->
+  <string name="debug_drawer_addons_tools_title">ആഡ്-ഓൺ കരുകൾ</string>
+  <!-- The title of the button used to check for add-on updates. -->
+  <string name="addons_debug_tools_check_for_updates_button">പുതുക്കലുകൾക്കായി നോക്കുക</string>
   <!--
     Messages explaining how to exit fullscreen mode
 

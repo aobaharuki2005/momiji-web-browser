@@ -1572,9 +1572,16 @@ bool MissingEnvironmentKey::initFromEnvironmentIter(JSContext* cx,
     ++copy;
   }
 
-  // The global object should have an environment object even if we don't find
-  // anything else.
-  MOZ_ASSERT(env);
+  // In general, we should find an environment object for the global etc even
+  // if we don't find anything else.
+  //
+  // In certain situation where OOM and too much recursion happens and the
+  // debugger is trying to recover from it, we might not find anything, and in
+  // that case, there's nothing we can do. (see bug 1976630).
+  if (!env) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
 
   if (!gc::GetOrCreateUniqueId(env, &nearestEnvId_)) {
     ReportOutOfMemory(cx);

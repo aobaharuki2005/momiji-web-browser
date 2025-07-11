@@ -4,6 +4,7 @@
 
 package mozilla.components.compose.browser.toolbar.store
 
+import androidx.annotation.StringRes
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin
 import mozilla.components.concept.toolbar.AutocompleteProvider
 import mozilla.components.lib.state.Action
@@ -144,4 +145,9 @@ sealed class BrowserEditToolbarAction : BrowserToolbarAction {
      * @property actions The new list of [ToolbarAction]s.
      */
     data class SearchActionsEndUpdated(val actions: List<ToolbarAction>) : BrowserEditToolbarAction()
+
+    /**
+     * Update the placeholder hint resource ID in edit mode.
+     */
+    data class HintUpdated(@param:StringRes val hint: Int) : BrowserEditToolbarAction()
 }

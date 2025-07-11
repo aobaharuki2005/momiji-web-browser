@@ -1253,13 +1253,13 @@
   -->
   <string name="webcompat_reporter_screen_title">Пријавите неисправан сајт</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description">Помозите да %1$s буде бољи за све. Mozilla-ини радници користе податке које шаљете да реше проблеме на сајту.</string>
+  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Помозите да %1$s буде бољи за све. Mozilla-ини радници користе податке које шаљете да реше проблеме на сајту.</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">Адреса</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
   <string name="webcompat_reporter_url_error_invalid">Унесите важећу адресу</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason">Изаберите разлог</string>
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Изаберите разлог</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">Опишите проблем (опционо)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->

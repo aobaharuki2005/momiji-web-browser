@@ -5,7 +5,9 @@
 package org.mozilla.fenix.search.awesomebar
 
 import android.content.Context
+import mozilla.components.browser.state.search.DefaultSearchEngineProvider
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.search.SearchFragmentState
 
 /**
@@ -27,11 +29,16 @@ class AwesomeBarView(
 ) {
     private val suggestionsProvidersBuilder by lazy(LazyThreadSafetyMode.NONE) {
         SearchSuggestionsProvidersBuilder(
-            context = context,
+            components = context.components,
             includeSelectedTab = includeSelectedTab,
             loadUrlUseCase = AwesomeBarLoadUrlUseCase(interactor),
             searchUseCase = AwesomeBarSearchUseCase(interactor),
             selectTabUseCase = AwesomeBarSelectTabUseCase(interactor),
+            suggestionsStringsProvider = DefaultSuggestionsStringsProvider(
+                context,
+                DefaultSearchEngineProvider(context.components.core.store),
+            ),
+            suggestionIconProvider = DefaultSuggestionIconProvider(context),
             onSearchEngineShortcutSelected = interactor::onSearchShortcutEngineSelected,
             onSearchEngineSuggestionSelected = interactor::onSearchEngineSuggestionSelected,
             onSearchEngineSettingsClicked = interactor::onClickSearchEngineSettings,

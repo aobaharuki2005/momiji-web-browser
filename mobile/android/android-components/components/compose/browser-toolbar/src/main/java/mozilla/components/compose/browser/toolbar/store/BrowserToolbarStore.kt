@@ -132,5 +132,8 @@ private fun reduce(state: BrowserToolbarState, action: BrowserToolbarAction): Br
             // Expected to be handled in middlewares set by integrators.
             state
         }
+
+        is BrowserEditToolbarAction.HintUpdated ->
+            state.copy(editState = state.editState.copy(hint = action.hint))
     }
 }

@@ -1115,83 +1115,6 @@
     <issue
         id="NoStaticMocking"
         message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        mockkStatic(&quot;org.mozilla.fenix.ext.ContextKt&quot;)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/search/awesomebar/SearchSuggestionsProvidersBuilderTest.kt"
-            line="60"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        mockkStatic(&quot;mozilla.components.support.ktx.android.content.ContextKt&quot;)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/search/awesomebar/SearchSuggestionsProvidersBuilderTest.kt"
-            line="61"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;unmockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        unmockkStatic(&quot;org.mozilla.fenix.ext.ContextKt&quot;)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/search/awesomebar/SearchSuggestionsProvidersBuilderTest.kt"
-            line="93"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;unmockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        unmockkStatic(&quot;mozilla.components.support.ktx.android.content.ContextKt&quot;)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/search/awesomebar/SearchSuggestionsProvidersBuilderTest.kt"
-            line="94"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        mockkStatic(&quot;mozilla.components.browser.state.state.SearchStateKt&quot;) {"
-        errorLine2="        ^">
-        <location
-            file="src/test/java/org/mozilla/fenix/search/awesomebar/SearchSuggestionsProvidersBuilderTest.kt"
-            line="1242"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        mockkStatic(&quot;mozilla.components.browser.state.state.SearchStateKt&quot;) {"
-        errorLine2="        ^">
-        <location
-            file="src/test/java/org/mozilla/fenix/search/awesomebar/SearchSuggestionsProvidersBuilderTest.kt"
-            line="1265"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        mockkStatic(&quot;mozilla.components.browser.state.state.SearchStateKt&quot;) {"
-        errorLine2="        ^">
-        <location
-            file="src/test/java/org/mozilla/fenix/search/awesomebar/SearchSuggestionsProvidersBuilderTest.kt"
-            line="1286"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
         errorLine1="        mockkStatic(&quot;org.mozilla.fenix.ext.ContextKt&quot;) {"
         errorLine2="        ^">
         <location
@@ -3815,28 +3738,6 @@
         <location
             file="src/test/java/org/mozilla/fenix/search/SearchDialogControllerTest.kt"
             line="112"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoObjectMocking"
-        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
-        errorLine1="        mockkObject(SearchSuggestionsProvidersBuilder.Companion)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/search/awesomebar/SearchSuggestionsProvidersBuilderTest.kt"
-            line="62"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoObjectMocking"
-        message="Usage of MockK&apos;s &apos;unmockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
-        errorLine1="        unmockkObject(SearchSuggestionsProvidersBuilder.Companion)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/search/awesomebar/SearchSuggestionsProvidersBuilderTest.kt"
-            line="95"
             column="9"/>
     </issue>
 

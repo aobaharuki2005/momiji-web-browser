@@ -51,14 +51,17 @@ private const val TEXT_SIZE = 15f
 private const val TEXT_HIGHLIGHT_COLOR = "#5C592ACB"
 private const val AUTOCOMPLETE_QUERY_THREADS = 3
 private const val AUTOCOMPLETE_THREADS_FACTORY_NAME = "EditToolbar"
+private const val LETTER_SPACING_SP = 0.5f
 
 /**
  * Sub-component of the [BrowserEditToolbar] responsible for displaying a text field that is
  * capable of inline autocompletion.
  */
 @Composable
+@Suppress("LongMethod")
 internal fun InlineAutocompleteTextField(
     query: String,
+    hint: String,
     showQueryAsPreselected: Boolean,
     autocompleteProviders: List<AutocompleteProvider>,
     modifier: Modifier = Modifier,
@@ -138,7 +141,14 @@ internal fun InlineAutocompleteTextField(
                 background = backgroundDrawable
                 autoCompleteBackgroundColor = autocompletedTextColor
                 setTextColor(textColor.toArgb())
+                this.hint = hint
                 setHintTextColor(hintColor.toArgb())
+
+                // Used to match the same style that is used for Compose texts to ensure a smooth transition
+                letterSpacing = TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_SP,
+                    LETTER_SPACING_SP, context.resources.displayMetrics,
+                    ) / textSize
 
                 updateText(query)
                 if (showQueryAsPreselected && query.isNotBlank()) {
@@ -161,6 +171,10 @@ internal fun InlineAutocompleteTextField(
             if (query != it.originalText) {
                 it.updateText(query)
                 it.refreshAutocompleteSuggestions()
+            }
+            if (it.hint != hint) {
+                it.hint = hint
+                it.setHintTextColor(hintColor.toArgb())
             }
         },
     )
@@ -281,6 +295,7 @@ private fun InlineAutocompleteEditText.updateText(newText: String) {
 private fun BrowserEditToolbarPreview() {
     InlineAutocompleteTextField(
         query = "http://www.mozilla.org",
+        hint = "",
         showQueryAsPreselected = false,
         autocompleteProviders = emptyList(),
     )

@@ -6,6 +6,7 @@ package mozilla.components.compose.browser.toolbar
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin
@@ -42,6 +43,7 @@ fun BrowserToolbar(
             autocompleteProviders = uiState.editState.autocompleteProviders,
             editActionsStart = uiState.editState.editActionsStart,
             editActionsEnd = uiState.editState.editActionsEnd,
+            hint = stringResource(uiState.editState.hint),
             onUrlCommitted = { text -> store.dispatch(CommitUrl(text)) },
             onUrlEdit = { text -> store.dispatch(SearchQueryUpdated(text)) },
             onUrlSuggestionAutocompleted = { store.dispatch(UrlSuggestionAutocompleted(it)) },

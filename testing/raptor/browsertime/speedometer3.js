@@ -61,6 +61,10 @@ module.exports = logTest(
         await commands.measure.start(url);
         await startMeasurements(context, commands);
 
+        // A feature mask of 0x1C000000 will enable only
+        // the GC perfstats counters.
+        await commands.perfStats.start(0x1c_00_00_00);
+
         await commands.js.runAndWait(`
         this.benchmarkClient.start()
     `);
@@ -100,6 +104,9 @@ module.exports = logTest(
         }
         await stopMeasurements();
 
+        let perfStatsResults = await commands.perfStats.collect();
+        await commands.perfStats.stop();
+
         let internal_data = await commands.js.run(
           `return this.benchmarkClient._measuredValuesList;`
         );
@@ -118,7 +125,11 @@ module.exports = logTest(
     `);
         context.log.info("Value of summarized benchmark data: ", data);
 
-        commands.measure.addObject({ s3: data, s3_internal: internal_data });
+        commands.measure.addObject({
+          s3: data,
+          s3_internal: internal_data,
+          perfstats: perfStatsResults,
+        });
         return true;
       });
     }

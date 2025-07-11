@@ -18,7 +18,6 @@ import org.mozilla.fenix.browser.store.BrowserScreenAction.ClosingLastPrivateTab
 import org.mozilla.fenix.browser.store.BrowserScreenAction.EnvironmentCleared
 import org.mozilla.fenix.browser.store.BrowserScreenAction.EnvironmentRehydrated
 import org.mozilla.fenix.browser.store.BrowserScreenStore.Environment
-import org.mozilla.fenix.components.toolbar.BrowserToolbarMiddleware
 import org.mozilla.fenix.theme.ThemeManager
 
 /**
@@ -102,7 +101,7 @@ class BrowserScreenMiddleware(
     }
 
     /**
-     * Static functionalities of the [BrowserToolbarMiddleware].
+     * Static functionalities of the [BrowserScreenMiddleware].
      */
     companion object {
         @VisibleForTesting

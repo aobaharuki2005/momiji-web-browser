@@ -173,8 +173,6 @@ skip-if = [
 
 ["test_minlength_attribute.html"]
 
-["test_mozistextfield.html"]
-
 ["test_novalidate_attribute.html"]
 
 ["test_option_disabled.html"]

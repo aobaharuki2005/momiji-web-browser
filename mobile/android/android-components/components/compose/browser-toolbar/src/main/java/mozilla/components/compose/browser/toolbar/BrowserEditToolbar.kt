@@ -16,6 +16,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -67,6 +68,7 @@ private val ROUNDED_CORNER_SHAPE = RoundedCornerShape(8.dp)
 @Suppress("LongMethod")
 fun BrowserEditToolbar(
     query: String,
+    hint: String,
     showQueryAsPreselected: Boolean = false,
     autocompleteProviders: List<AutocompleteProvider> = emptyList(),
     useComposeTextField: Boolean = false,
@@ -91,6 +93,12 @@ fun BrowserEditToolbar(
                 value = query,
                 onValueChange = { value ->
                     onUrlEdit(value)
+                },
+                placeholder = {
+                    Text(
+                        text = hint,
+                        color = AcornTheme.colors.textSecondary,
+                    )
                 },
                 colors = TextFieldDefaults.colors(
                     focusedTextColor = AcornTheme.colors.textPrimary,
@@ -144,6 +152,7 @@ fun BrowserEditToolbar(
 
             InlineAutocompleteTextField(
                 query = query,
+                hint = hint,
                 showQueryAsPreselected = showQueryAsPreselected,
                 autocompleteProviders = autocompleteProviders,
                 modifier = Modifier.weight(1f),
@@ -196,6 +205,7 @@ private fun BrowserEditToolbarPreview() {
     AcornTheme {
         BrowserEditToolbar(
             query = "http://www.mozilla.org",
+            hint = "Search or enter address",
             autocompleteProviders = emptyList(),
             useComposeTextField = true,
             editActionsStart = listOf(

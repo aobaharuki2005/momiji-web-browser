@@ -1215,6 +1215,41 @@ onboarding_opt_out:
           branchSlug:
             type: string
 
+termsofuse:
+  version:
+    type: quantity
+    description: >
+      The version of the Terms of Use the user accepted.
+    unit: version
+    lifetime: application
+    send_in_pings:
+      - metrics
+    notification_emails:
+      - mviar@mozilla.com
+      - omc@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1971184
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1974150
+    expires: never
+
+  date:
+    type: datetime
+    description: >
+      The timestamp when the user accepted the Terms of Use.
+    time_unit: millisecond
+    lifetime: application
+    send_in_pings:
+      - metrics
+    notification_emails:
+      - mviar@mozilla.com
+      - omc@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1971184
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1974150
+    expires: never
+
 third.party.modules:
   blocked_modules:
     type: string_list
