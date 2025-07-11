@@ -2743,7 +2743,8 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
   switch (target->getKind()) {
     case ParseNodeKind::ArrayExpr:
     case ParseNodeKind::ObjectExpr:
-      if (!emitDestructuringOps(&target->as<ListNode>(), flav)) {
+      if (!emitDestructuringOps(&target->as<ListNode>(), flav,
+                                SelfHostedIter::Deny)) {
         return false;
       }
       // emitDestructuringOps leaves the assigned (to-be-destructured) value on
@@ -2845,9 +2846,8 @@ JSOp BytecodeEmitter::getIterCallOp(JSOp callOp,
 }
 
 bool BytecodeEmitter::emitIteratorNext(
-    const Maybe<uint32_t>& callSourceCoordOffset,
-    IteratorKind iterKind /* = IteratorKind::Sync */,
-    SelfHostedIter selfHostedIter /* = SelfHostedIter::Deny */) {
+    const Maybe<uint32_t>& callSourceCoordOffset, IteratorKind iterKind,
+    SelfHostedIter selfHostedIter) {
   MOZ_ASSERT(selfHostedIter != SelfHostedIter::Deny ||
                  emitterMode != BytecodeEmitter::SelfHosting,
              ".next() iteration is prohibited in self-hosted code because it"
@@ -2876,11 +2876,10 @@ bool BytecodeEmitter::emitIteratorNext(
   return true;
 }
 
-bool BytecodeEmitter::emitIteratorCloseInScope(
-    EmitterScope& currentScope,
-    IteratorKind iterKind /* = IteratorKind::Sync */,
-    CompletionKind completionKind /* = CompletionKind::Normal */,
-    SelfHostedIter selfHostedIter /* = SelfHostedIter::Deny */) {
+bool BytecodeEmitter::emitIteratorCloseInScope(EmitterScope& currentScope,
+                                               IteratorKind iterKind,
+                                               CompletionKind completionKind,
+                                               SelfHostedIter selfHostedIter) {
   MOZ_ASSERT(selfHostedIter != SelfHostedIter::Deny ||
                  emitterMode != BytecodeEmitter::SelfHosting,
              ".close() on iterators is prohibited in self-hosted code because "
@@ -3166,10 +3165,8 @@ bool BytecodeEmitter::emitInitializer(ParseNode* initializer,
 }
 
 bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
-                                                DestructuringFlavor flav) {
-  MOZ_ASSERT(getSelfHostedIterFor(pattern) == SelfHostedIter::Deny,
-             "array destructuring is prohibited in self-hosted code because it"
-             "can run user-modifiable iteration code");
+                                                DestructuringFlavor flav,
+                                                SelfHostedIter selfHostedIter) {
   MOZ_ASSERT(pattern->isKind(ParseNodeKind::ArrayExpr));
   MOZ_ASSERT(bytecodeSection().stackDepth() != 0);
 
@@ -3432,7 +3429,7 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
     }
   }
 
-  if (!emitIterator(SelfHostedIter::Deny)) {
+  if (!emitIterator(selfHostedIter)) {
     //              [stack] ... OBJ NEXT ITER
     return false;
   }
@@ -3449,7 +3446,8 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
       return false;
     }
 
-    if (!emitIteratorCloseInInnermostScope()) {
+    if (!emitIteratorCloseInInnermostScope(
+            IteratorKind::Sync, CompletionKind::Normal, selfHostedIter)) {
       //            [stack] ... OBJ
       return false;
     }
@@ -3643,7 +3641,8 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
       //            [stack] ... OBJ NEXT ITER LREF* NEXT
       return false;
     }
-    if (!emitIteratorNext(Some(pattern->pn_pos.begin))) {
+    if (!emitIteratorNext(Some(pattern->pn_pos.begin), IteratorKind::Sync,
+                          selfHostedIter)) {
       //            [stack] ... OBJ NEXT ITER LREF* RESULT
       return false;
     }
@@ -3759,7 +3758,8 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
     //              [stack] ... OBJ ITER
     return false;
   }
-  if (!emitIteratorCloseInInnermostScope()) {
+  if (!emitIteratorCloseInInnermostScope(
+          IteratorKind::Sync, CompletionKind::Normal, selfHostedIter)) {
     //              [stack] ... OBJ
     return false;
   }
@@ -4091,9 +4091,10 @@ bool BytecodeEmitter::emitDestructuringObjRestExclusionSet(
 }
 
 bool BytecodeEmitter::emitDestructuringOps(ListNode* pattern,
-                                           DestructuringFlavor flav) {
+                                           DestructuringFlavor flav,
+                                           SelfHostedIter selfHostedIter) {
   if (pattern->isKind(ParseNodeKind::ArrayExpr)) {
-    return emitDestructuringOpsArray(pattern, flav);
+    return emitDestructuringOpsArray(pattern, flav, selfHostedIter);
   }
   return emitDestructuringOpsObject(pattern, flav);
 }
@@ -4189,7 +4190,8 @@ bool BytecodeEmitter::emitDeclarationList(ListNode* declList) {
       }
 
       if (!emitDestructuringOps(&pattern->as<ListNode>(),
-                                DestructuringFlavor::Declaration)) {
+                                DestructuringFlavor::Declaration,
+                                getSelfHostedIterFor(initializer))) {
         return false;
       }
 
@@ -4633,12 +4635,16 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
       }
       break;
     case ParseNodeKind::ArrayExpr:
-    case ParseNodeKind::ObjectExpr:
+    case ParseNodeKind::ObjectExpr: {
+      auto selfHostedIter =
+          rhs ? getSelfHostedIterFor(rhs) : SelfHostedIter::Deny;
       if (!emitDestructuringOps(&lhs->as<ListNode>(),
-                                DestructuringFlavor::Assignment)) {
+                                DestructuringFlavor::Assignment,
+                                selfHostedIter)) {
         return false;
       }
       break;
+    }
     default:
       MOZ_ASSERT(0);
   }
@@ -4974,7 +4980,8 @@ bool BytecodeEmitter::emitCatch(BinaryNode* catchClause) {
       case ParseNodeKind::ArrayExpr:
       case ParseNodeKind::ObjectExpr:
         if (!emitDestructuringOps(&param->as<ListNode>(),
-                                  DestructuringFlavor::Declaration)) {
+                                  DestructuringFlavor::Declaration,
+                                  SelfHostedIter::Deny)) {
           return false;
         }
         if (!emit1(JSOp::Pop)) {
@@ -5842,7 +5849,8 @@ bool BytecodeEmitter::emitInitializeForInOrOfTarget(TernaryNode* forHead) {
   MOZ_ASSERT(target->isKind(ParseNodeKind::ArrayExpr) ||
              target->isKind(ParseNodeKind::ObjectExpr));
   return emitDestructuringOps(&target->as<ListNode>(),
-                              DestructuringFlavor::Declaration);
+                              DestructuringFlavor::Declaration,
+                              SelfHostedIter::Deny);
 }
 
 bool BytecodeEmitter::emitForOf(ForNode* forOfLoop,
@@ -6913,7 +6921,8 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //
     // If the iterator does not have a "throw" method, it calls IteratorClose
     // and then throws a TypeError.
-    if (!emitIteratorCloseInInnermostScope(iterKind, CompletionKind::Normal)) {
+    if (!emitIteratorCloseInInnermostScope(iterKind, CompletionKind::Normal,
+                                           SelfHostedIter::Deny)) {
       //            [stack] NEXT ITER RECEIVED ITER
       return false;
     }
@@ -11751,7 +11760,8 @@ bool BytecodeEmitter::emitFunctionFormalParameters(ParamsBodyNode* paramsBody) {
       //            [stack] ARG
 
       if (!this->emitDestructuringOps(&bindingElement->as<ListNode>(),
-                                      DestructuringFlavor::Declaration)) {
+                                      DestructuringFlavor::Declaration,
+                                      SelfHostedIter::Deny)) {
         //          [stack] ARG
         return false;
       }
