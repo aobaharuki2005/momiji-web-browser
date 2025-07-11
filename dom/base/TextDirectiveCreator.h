@@ -50,7 +50,7 @@ class TextDirectiveCreator {
       Document* aDocument, AbstractRange* aInputRange,
       const TimeoutWatchdog* aWatchdog);
 
-  virtual ~TextDirectiveCreator() = default;
+  virtual ~TextDirectiveCreator();
 
  protected:
   TextDirectiveCreator(Document* aDocument, AbstractRange* aRange,
@@ -231,6 +231,8 @@ class TextDirectiveCreator {
 
   NotNull<RefPtr<Document>> mDocument;
   NotNull<RefPtr<AbstractRange>> mRange;
+
+  NotNull<RefPtr<nsFind>> mFinder;
 
   /**
    * The watchdog ensures that the algorithm exits after a defined time

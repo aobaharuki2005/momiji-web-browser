@@ -10,6 +10,7 @@
 #include "TextDirectiveUtil.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/ResultVariant.h"
+#include "nsFind.h"
 #include "nsINode.h"
 #include "nsRange.h"
 #include "Document.h"
@@ -21,7 +22,14 @@ TextDirectiveCreator::TextDirectiveCreator(Document* aDocument,
                                            const TimeoutWatchdog* aWatchdog)
     : mDocument(WrapNotNull(aDocument)),
       mRange(WrapNotNull(aRange)),
-      mWatchdog(aWatchdog) {}
+      mFinder(WrapNotNull(new nsFind())),
+      mWatchdog(aWatchdog) {
+  mFinder->SetNodeIndexCache(&mNodeIndexCache);
+}
+
+TextDirectiveCreator::~TextDirectiveCreator() {
+  mFinder->SetNodeIndexCache(nullptr);
+}
 
 /* static */
 mozilla::Result<nsCString, ErrorResult>
@@ -406,7 +414,7 @@ TextDirectiveCreator::FindAllMatchingRanges(const nsString& aSearchQuery,
       return matchingRanges;
     }
     RefPtr<AbstractRange> searchResult = TextDirectiveUtil::FindStringInRange(
-        searchStart, aSearchEnd, aSearchQuery, true, true, &mNodeIndexCache);
+        mFinder, searchStart, aSearchEnd, aSearchQuery, true, true);
     if (!searchResult || searchResult->Collapsed()) {
       break;
     }

@@ -71,19 +71,18 @@ Result<nsString, ErrorResult> TextDirectiveUtil::RangeContentAsString(
 }
 
 /* static */ RefPtr<nsRange> TextDirectiveUtil::FindStringInRange(
-    const RangeBoundary& aSearchStart, const RangeBoundary& aSearchEnd,
-    const nsAString& aQuery, bool aWordStartBounded, bool aWordEndBounded,
-    nsContentUtils::NodeIndexCache* aCache) {
+    nsFind* aFinder, const RangeBoundary& aSearchStart,
+    const RangeBoundary& aSearchEnd, const nsAString& aQuery,
+    bool aWordStartBounded, bool aWordEndBounded) {
+  MOZ_DIAGNOSTIC_ASSERT(aFinder);
   TEXT_FRAGMENT_LOG("query='{}', wordStartBounded='{}', wordEndBounded='{}'.\n",
                     NS_ConvertUTF16toUTF8(aQuery), aWordStartBounded,
                     aWordEndBounded);
-  RefPtr<nsFind> finder = new nsFind();
-  finder->SetWordStartBounded(aWordStartBounded);
-  finder->SetWordEndBounded(aWordEndBounded);
-  finder->SetCaseSensitive(false);
-  finder->SetNodeIndexCache(aCache);
+  aFinder->SetWordStartBounded(aWordStartBounded);
+  aFinder->SetWordEndBounded(aWordEndBounded);
+  aFinder->SetCaseSensitive(false);
   RefPtr<nsRange> result =
-      finder->FindFromRangeBoundaries(aQuery, aSearchStart, aSearchEnd);
+      aFinder->FindFromRangeBoundaries(aQuery, aSearchStart, aSearchEnd);
   if (!result || result->Collapsed()) {
     TEXT_FRAGMENT_LOG("Did not find query '{}'", NS_ConvertUTF16toUTF8(aQuery));
   } else {

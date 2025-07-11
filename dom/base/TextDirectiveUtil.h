@@ -19,6 +19,7 @@
 
 class nsIURI;
 class nsINode;
+class nsFind;
 class nsRange;
 struct TextDirective;
 
@@ -59,12 +60,14 @@ class TextDirectiveUtil final {
   /**
    * @brief Finds the search query in the given search range.
    *
-   * This is a thin wrapper around `nsFind`.
+   * This function parametrizes the `nsFind` instance.
    */
-  static RefPtr<nsRange> FindStringInRange(
-      const RangeBoundary& aSearchStart, const RangeBoundary& aSearchEnd,
-      const nsAString& aQuery, bool aWordStartBounded, bool aWordEndBounded,
-      nsContentUtils::NodeIndexCache* aCache = nullptr);
+  static RefPtr<nsRange> FindStringInRange(nsFind* aFinder,
+                                           const RangeBoundary& aSearchStart,
+                                           const RangeBoundary& aSearchEnd,
+                                           const nsAString& aQuery,
+                                           bool aWordStartBounded,
+                                           bool aWordEndBounded);
 
   /**
    * @brief Tests if there is whitespace at the given position.
