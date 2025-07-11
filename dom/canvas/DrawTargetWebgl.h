@@ -213,6 +213,8 @@ class SharedContextWebgl : public mozilla::RefCounted<SharedContextWebgl>,
   CompositionOp mLastCompositionOp = CompositionOp::OP_SOURCE;
   // The constant blend color used for the blending operation.
   Maybe<DeviceColor> mLastBlendColor;
+  // The blend stage of the current blending operation.
+  uint8_t mLastBlendStage = 0;
 
   // The cached scissor state. Operations that rely on scissor state should
   // take care to enable or disable the cached scissor state as necessary.
@@ -259,7 +261,10 @@ class SharedContextWebgl : public mozilla::RefCounted<SharedContextWebgl>,
 
   void BlendFunc(GLenum aSrcFactor, GLenum aDstFactor);
   void SetBlendState(CompositionOp aOp,
-                     const Maybe<DeviceColor>& aColor = Nothing());
+                     const Maybe<DeviceColor>& aColor = Nothing(),
+                     uint8_t aStage = 0);
+  uint8_t RequiresMultiStageBlend(const DrawOptions& aOptions,
+                                  DrawTargetWebgl* aDT = nullptr);
 
   void SetClipRect(const Rect& aClipRect);
   void SetClipRect(const IntRect& aClipRect) { SetClipRect(Rect(aClipRect)); }
@@ -342,7 +347,8 @@ class SharedContextWebgl : public mozilla::RefCounted<SharedContextWebgl>,
                      bool aAccelOnly = false, bool aForceUpdate = false,
                      const StrokeOptions* aStrokeOptions = nullptr,
                      const PathVertexRange* aVertexRange = nullptr,
-                     const Matrix* aRectXform = nullptr);
+                     const Matrix* aRectXform = nullptr,
+                     uint8_t aBlendStage = 0);
   bool BlurRectPass(const Rect& aDestRect, const Point& aSigma,
                     bool aHorizontal, const RefPtr<SourceSurface>& aSurface,
                     const IntRect& aSourceRect,
