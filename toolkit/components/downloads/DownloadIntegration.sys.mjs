@@ -351,7 +351,7 @@ export var DownloadIntegration = {
     let directoryPath = null;
     let prefValue = Services.prefs.getIntPref(
       "browser.screenshots.folderList",
-      4
+      1
     );
 
     switch (prefValue) {
@@ -372,9 +372,6 @@ export var DownloadIntegration = {
         } catch {
           directoryPath = await this.getSystemDownloadsDirectory();
         }
-        break;
-      case 4: // Fallback to preferred downloads
-        directoryPath = this.getPreferredDownloadsDirectory();
         break;
       default:
         directoryPath = await this.getSystemDownloadsDirectory();
