@@ -1629,29 +1629,6 @@ static bool intrinsic_CopyDataPropertiesOrGetOwnKeys(JSContext* cx,
       cx, from, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, args.rval());
 }
 
-static bool intrinsic_ToBigInt(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  BigInt* res = ToBigInt(cx, args[0]);
-  if (!res) {
-    return false;
-  }
-  args.rval().setBigInt(res);
-  return true;
-}
-
-static bool intrinsic_NumberToBigInt(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].isNumber());
-  BigInt* res = NumberToBigInt(cx, args[0].toNumber());
-  if (!res) {
-    return false;
-  }
-  args.rval().setBigInt(res);
-  return true;
-}
-
 static bool intrinsic_NewWrapForValidIterator(JSContext* cx, unsigned argc,
                                               Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -1791,128 +1768,6 @@ static bool intrinsic_newList(JSContext* cx, unsigned argc, js::Value* vp) {
   args.rval().setObject(*list);
   return true;
 }
-
-#ifdef JS_HAS_INTL_API
-static bool intrinsic_ToTemporalDuration(JSContext* cx, unsigned argc,
-                                         js::Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-
-  using namespace temporal;
-
-  Duration duration;
-  if (!ToTemporalDuration(cx, args.get(0), &duration)) {
-    return false;
-  }
-
-  // Normalize -0 to +0 by adding zero.
-  duration.years += +0.0;
-  duration.months += +0.0;
-  duration.weeks += +0.0;
-  duration.days += +0.0;
-  duration.hours += +0.0;
-  duration.minutes += +0.0;
-  duration.seconds += +0.0;
-  duration.milliseconds += +0.0;
-  duration.microseconds += +0.0;
-  duration.nanoseconds += +0.0;
-
-  // Create a new plain object to ensure there are no observable calls to
-  // `Temporal.Duration.prototype` getters.
-
-  Rooted<IdValueVector> properties(cx, cx);
-  if (!properties.emplaceBack(NameToId(cx->names().years),
-                              NumberValue(duration.years))) {
-    return false;
-  }
-  if (!properties.emplaceBack(NameToId(cx->names().months),
-                              NumberValue(duration.months))) {
-    return false;
-  }
-  if (!properties.emplaceBack(NameToId(cx->names().weeks),
-                              NumberValue(duration.weeks))) {
-    return false;
-  }
-  if (!properties.emplaceBack(NameToId(cx->names().days),
-                              NumberValue(duration.days))) {
-    return false;
-  }
-  if (!properties.emplaceBack(NameToId(cx->names().hours),
-                              NumberValue(duration.hours))) {
-    return false;
-  }
-  if (!properties.emplaceBack(NameToId(cx->names().minutes),
-                              NumberValue(duration.minutes))) {
-    return false;
-  }
-  if (!properties.emplaceBack(NameToId(cx->names().seconds),
-                              NumberValue(duration.seconds))) {
-    return false;
-  }
-  if (!properties.emplaceBack(NameToId(cx->names().milliseconds),
-                              NumberValue(duration.milliseconds))) {
-    return false;
-  }
-  if (!properties.emplaceBack(NameToId(cx->names().microseconds),
-                              NumberValue(duration.microseconds))) {
-    return false;
-  }
-  if (!properties.emplaceBack(NameToId(cx->names().nanoseconds),
-                              NumberValue(duration.nanoseconds))) {
-    return false;
-  }
-
-  auto* result = NewPlainObjectWithUniqueNames(cx, properties);
-  if (!result) {
-    return false;
-  }
-
-  args.rval().setObject(*result);
-  return true;
-}
-
-#  ifdef DEBUG
-static bool intrinsic_IsValidDuration(JSContext* cx, unsigned argc,
-                                      js::Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].isObject());
-  MOZ_ASSERT(args[0].toObject().is<PlainObject>());
-
-  using namespace temporal;
-
-  // |obj| was created from |intrinsic_ToTemporalDuration|, so all duration
-  // properties are present and number values.
-
-  auto* obj = &args[0].toObject().as<PlainObject>();
-
-  auto assignFromOwnNumberProperty = [&](PropertyName* name, double* target) {
-    Value val;
-    bool found;
-    MOZ_ALWAYS_TRUE(GetOwnPropertyPure(cx, obj, NameToId(name), &val, &found));
-    MOZ_ASSERT(found, "unexpected missing duration property");
-    MOZ_ASSERT(val.isNumber(), "unexpected non-Number duration property");
-
-    *target = val.toNumber();
-  };
-
-  Duration duration{};
-  assignFromOwnNumberProperty(cx->names().years, &duration.years);
-  assignFromOwnNumberProperty(cx->names().months, &duration.months);
-  assignFromOwnNumberProperty(cx->names().weeks, &duration.weeks);
-  assignFromOwnNumberProperty(cx->names().days, &duration.days);
-  assignFromOwnNumberProperty(cx->names().hours, &duration.hours);
-  assignFromOwnNumberProperty(cx->names().minutes, &duration.minutes);
-  assignFromOwnNumberProperty(cx->names().seconds, &duration.seconds);
-  assignFromOwnNumberProperty(cx->names().milliseconds, &duration.milliseconds);
-  assignFromOwnNumberProperty(cx->names().microseconds, &duration.microseconds);
-  assignFromOwnNumberProperty(cx->names().nanoseconds, &duration.nanoseconds);
-
-  args.rval().setBoolean(IsValidDuration(duration));
-  return true;
-}
-#  endif
-#endif
 
 static const JSFunctionSpec intrinsic_functions[] = {
     // Intrinsic helper functions
@@ -2095,11 +1950,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("IsTypedArrayConstructor",
                     intrinsic_IsTypedArrayConstructor, 1, 0,
                     IntrinsicIsTypedArrayConstructor),
-#ifdef JS_HAS_INTL_API
-#  ifdef DEBUG
-    JS_FN("IsValidDuration", intrinsic_IsValidDuration, 1, 0),
-#  endif
-#endif
     JS_INLINABLE_FN("NewArrayIterator", intrinsic_NewArrayIterator, 0, 0,
                     IntrinsicNewArrayIterator),
     JS_FN("NewAsyncIteratorHelper", intrinsic_NewAsyncIteratorHelper, 0, 0),
@@ -2114,7 +1964,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     IntrinsicNewStringIterator),
     JS_FN("NewWrapForValidIterator", intrinsic_NewWrapForValidIterator, 0, 0),
     JS_FN("NoPrivateGetter", intrinsic_NoPrivateGetter, 1, 0),
-    JS_FN("NumberToBigInt", intrinsic_NumberToBigInt, 1, 0),
     JS_FN("PossiblyWrappedTypedArrayHasDetachedBuffer",
           intrinsic_PossiblyWrappedTypedArrayHasDetachedBuffer, 1, 0),
     JS_FN("PossiblyWrappedTypedArrayHasImmutableBuffer",
@@ -2157,15 +2006,11 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ThrowInternalError", intrinsic_ThrowInternalError, 4, 0),
     JS_FN("ThrowRangeError", intrinsic_ThrowRangeError, 4, 0),
     JS_FN("ThrowTypeError", intrinsic_ThrowTypeError, 4, 0),
-    JS_FN("ToBigInt", intrinsic_ToBigInt, 1, 0),
     JS_INLINABLE_FN("ToInteger", intrinsic_ToInteger, 1, 0, IntrinsicToInteger),
     JS_INLINABLE_FN("ToLength", intrinsic_ToLength, 1, 0, IntrinsicToLength),
     JS_INLINABLE_FN("ToObject", intrinsic_ToObject, 1, 0, IntrinsicToObject),
     JS_FN("ToPropertyKey", intrinsic_ToPropertyKey, 1, 0),
     JS_FN("ToSource", intrinsic_ToSource, 1, 0),
-#ifdef JS_HAS_INTL_API
-    JS_FN("ToTemporalDuration", intrinsic_ToTemporalDuration, 1, 0),
-#endif
     JS_FN("TypedArrayBitwiseSlice", intrinsic_TypedArrayBitwiseSlice, 4, 0),
     JS_FN("TypedArrayBuffer", intrinsic_TypedArrayBuffer, 1, 0),
     JS_INLINABLE_FN("TypedArrayByteOffset", intrinsic_TypedArrayByteOffset, 1,
@@ -2236,7 +2081,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_FormatRelativeTime", intl_FormatRelativeTime, 4, 0),
     JS_FN("intl_GetCalendarInfo", intl_GetCalendarInfo, 1, 0),
     JS_FN("intl_GetPluralCategories", intl_GetPluralCategories, 1, 0),
-    JS_FN("intl_GetTimeSeparator", intl_GetTimeSeparator, 2, 0),
     JS_INLINABLE_FN("intl_GuardToCollator",
                     intrinsic_GuardToBuiltin<CollatorObject>, 1, 0,
                     IntlGuardToCollator),
@@ -2319,7 +2163,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("std_Math_floor", math_floor, 1, 0, MathFloor),
     JS_INLINABLE_FN("std_Math_max", math_max, 2, 0, MathMax),
     JS_INLINABLE_FN("std_Math_min", math_min, 2, 0, MathMin),
-    JS_INLINABLE_FN("std_Math_sign", math_sign, 1, 0, MathSign),
     JS_INLINABLE_FN("std_Math_trunc", math_trunc, 1, 0, MathTrunc),
     JS_INLINABLE_FN("std_Object_create", obj_create, 2, 0, ObjectCreate),
     JS_INLINABLE_FN("std_Object_isPrototypeOf", obj_isPrototypeOf, 1, 0,

@@ -32,14 +32,6 @@ class DurationFormatObject : public NativeObject {
 };
 
 /**
- * Returns the time separator string for the given locale and numbering system.
- *
- * Usage: separator = intl_GetTimeSeparator(locale, numberingSystem)
- */
-[[nodiscard]] extern bool intl_GetTimeSeparator(JSContext* cx, unsigned argc,
-                                                Value* vp);
-
-/**
  * `toLocaleString` implementation for Temporal.Duration objects.
  */
 [[nodiscard]] extern bool TemporalDurationToLocaleString(

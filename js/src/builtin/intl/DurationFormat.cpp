@@ -136,40 +136,6 @@ static bool DurationFormat(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-bool js::intl_GetTimeSeparator(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  MOZ_ASSERT(args[0].isString());
-  MOZ_ASSERT(args[1].isString());
-
-  UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
-  if (!locale) {
-    return false;
-  }
-
-  UniqueChars numberingSystem = EncodeAscii(cx, args[1].toString());
-  if (!numberingSystem) {
-    return false;
-  }
-
-  intl::FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> separator(cx);
-  auto result = mozilla::intl::DateTimeFormat::GetTimeSeparator(
-      mozilla::MakeStringSpan(locale.get()),
-      mozilla::MakeStringSpan(numberingSystem.get()), separator);
-  if (result.isErr()) {
-    intl::ReportInternalError(cx, result.unwrapErr());
-    return false;
-  }
-
-  JSString* str = separator.toString(cx);
-  if (!str) {
-    return false;
-  }
-
-  args.rval().setString(str);
-  return true;
-}
-
 /**
  * Returns the time separator string for the given locale and numbering system.
  */
