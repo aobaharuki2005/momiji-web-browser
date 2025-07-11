@@ -35,18 +35,12 @@ export const TaskbarTabsPageAction = {
    * @param {DOMWindow} aWindow - The browser window.
    */
   init(aWindow) {
-    let taskbarTabsEnabled = lazy.TaskbarTabsUtils.isEnabled();
     let isPopupWindow = !aWindow.toolbar.visible;
     // WARNING: If we ever enable private browsing in Taskbar Tabs, we need to
     // revisit pin code which assumes we're not in a private context.
     let isPrivate = lazy.PrivateBrowsingUtils.isWindowPrivate(aWindow);
 
-    if (
-      !taskbarTabsEnabled ||
-      isPopupWindow ||
-      isPrivate ||
-      AppConstants.platform != "win"
-    ) {
+    if (isPopupWindow || isPrivate || AppConstants.platform != "win") {
       lazy.logConsole.info("Not initializing Taskbar Tabs Page Action.");
       return;
     }
@@ -133,7 +127,8 @@ export const TaskbarTabsPageAction = {
  * @param {Element} aElement - The element that makes up the page action.
  */
 function initVisibilityChanges(aWindow, aElement) {
-  const shouldHide = aLocation => !aLocation.scheme.startsWith("http");
+  const shouldHide = aLocation =>
+    !(aLocation.scheme.startsWith("http") && lazy.TaskbarTabsUtils.isEnabled());
   aElement.hidden = shouldHide(aWindow.gBrowser.currentURI);
 
   aWindow.gBrowser.addProgressListener({
@@ -142,5 +137,9 @@ function initVisibilityChanges(aWindow, aElement) {
         aElement.hidden = shouldHide(aLocation);
       }
     },
+  });
+
+  Services.prefs.addObserver("browser.taskbarTabs.enabled", function () {
+    aElement.hidden = shouldHide(aWindow.gBrowser.currentURI);
   });
 }
