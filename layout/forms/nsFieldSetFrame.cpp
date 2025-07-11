@@ -415,7 +415,7 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
     LogicalSize legendAvailSize = availSize.ConvertTo(legendWM, wm);
     ComputeSizeFlags sizeFlags;
     if (legend->StylePosition()
-            ->ISize(wm, AnchorPosResolutionParams::From(legend))
+            ->ISize(wm, legend->StyleDisplay()->mPosition)
             ->IsAuto()) {
       sizeFlags = ComputeSizeFlag::ShrinkWrap;
     }

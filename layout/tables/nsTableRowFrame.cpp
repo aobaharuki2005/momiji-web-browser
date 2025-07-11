@@ -475,8 +475,7 @@ nscoord nsTableRowFrame::CalcBSize(const ReflowInput& aReflowInput) {
 
   WritingMode wm = aReflowInput.GetWritingMode();
   const nsStylePosition* position = StylePosition();
-  const auto bsizeStyleCoord =
-      position->BSize(wm, AnchorPosResolutionParams::From(this));
+  const auto bsizeStyleCoord = position->BSize(wm, StyleDisplay()->mPosition);
   if (bsizeStyleCoord->ConvertsToLength()) {
     SetFixedBSize(bsizeStyleCoord->ToLength());
   } else if (bsizeStyleCoord->ConvertsToPercentage()) {
@@ -561,7 +560,7 @@ nscoord nsTableRowFrame::CalcCellActualBSize(nsTableCellFrame* aCellFrame,
   int32_t rowSpan = GetTableFrame()->GetEffectiveRowSpan(*aCellFrame);
 
   const auto bsizeStyleCoord =
-      position->BSize(aWM, AnchorPosResolutionParams::From(aCellFrame));
+      position->BSize(aWM, aCellFrame->StyleDisplay()->mPosition);
   if (bsizeStyleCoord->ConvertsToLength()) {
     // In quirks mode, table cell bsize should always be border-box.
     // https://quirks.spec.whatwg.org/#the-table-cell-height-box-sizing-quirk
@@ -1289,7 +1288,7 @@ void nsTableRowFrame::InitHasCellWithStyleBSize(nsTableFrame* aTableFrame) {
        cellFrame = cellFrame->GetNextCell()) {
     // Ignore row-spanning cells
     const auto cellBSize = cellFrame->StylePosition()->BSize(
-        wm, AnchorPosResolutionParams::From(cellFrame));
+        wm, cellFrame->StyleDisplay()->mPosition);
     if (aTableFrame->GetEffectiveRowSpan(*cellFrame) == 1 &&
         !cellBSize->IsAuto() &&
         /* calc() with both percentages and lengths treated like 'auto' */

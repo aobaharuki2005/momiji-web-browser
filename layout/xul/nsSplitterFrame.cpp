@@ -640,16 +640,18 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
     const auto& pos = *childBox->StylePosition();
     const auto anchorResolutionParams =
         AnchorPosResolutionParams::From(childBox);
-    nsSize minSize =
-        ToLengthWithFallback(*pos.GetMinWidth(anchorResolutionParams),
-                             *pos.GetMinHeight(anchorResolutionParams));
+    nsSize minSize = ToLengthWithFallback(
+        *pos.GetMinWidth(anchorResolutionParams.mPosition),
+        *pos.GetMinHeight(anchorResolutionParams.mPosition));
     nsSize maxSize = ToLengthWithFallback(
-        *pos.GetMaxWidth(anchorResolutionParams),
-        *pos.GetMaxHeight(anchorResolutionParams), NS_UNCONSTRAINEDSIZE);
-    nsSize prefSize(ToLengthWithFallback(*pos.GetWidth(anchorResolutionParams),
-                                         curSize.width),
-                    ToLengthWithFallback(*pos.GetHeight(anchorResolutionParams),
-                                         curSize.height));
+        *pos.GetMaxWidth(anchorResolutionParams.mPosition),
+        *pos.GetMaxHeight(anchorResolutionParams.mPosition),
+        NS_UNCONSTRAINEDSIZE);
+    nsSize prefSize(
+        ToLengthWithFallback(*pos.GetWidth(anchorResolutionParams.mPosition),
+                             curSize.width),
+        ToLengthWithFallback(*pos.GetHeight(anchorResolutionParams.mPosition),
+                             curSize.height));
 
     maxSize.width = std::max(maxSize.width, minSize.width);
     maxSize.height = std::max(maxSize.height, minSize.height);

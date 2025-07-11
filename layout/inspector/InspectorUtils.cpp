@@ -1032,8 +1032,10 @@ static bool FrameHasSpecifiedSize(const nsIFrame* aFrame) {
   const nsStylePosition* stylePos = aFrame->StylePosition();
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(aFrame);
 
-  return stylePos->ISize(wm, anchorResolutionParams)->IsLengthPercentage() ||
-         stylePos->BSize(wm, anchorResolutionParams)->IsLengthPercentage();
+  return stylePos->ISize(wm, anchorResolutionParams.mPosition)
+             ->IsLengthPercentage() ||
+         stylePos->BSize(wm, anchorResolutionParams.mPosition)
+             ->IsLengthPercentage();
 }
 
 static bool IsFrameOutsideOfAncestor(const nsIFrame* aFrame,

@@ -317,12 +317,12 @@ void BrokenImageIcon::Notify(imgIRequest* aRequest, int32_t aType,
 // This is used by nsImageFrame::ImageFrameTypeFor and should not be used for
 // layout decisions.
 static bool HaveSpecifiedSize(const nsStylePosition* aStylePosition,
-                              const AnchorPosResolutionParams& aParams) {
+                              StylePositionProperty aProp) {
   // check the width and height values in the reflow input's style struct
   // - if width and height are specified as either coord or percentage, then
   //   the size of the image frame is constrained
-  return aStylePosition->GetWidth(aParams)->IsLengthPercentage() &&
-         aStylePosition->GetHeight(aParams)->IsLengthPercentage();
+  return aStylePosition->GetWidth(aProp)->IsLengthPercentage() &&
+         aStylePosition->GetHeight(aProp)->IsLengthPercentage();
 }
 
 template <typename SizeOrMaxSize>
@@ -361,12 +361,14 @@ static bool SizeDependsOnIntrinsicSize(const ReflowInput& aReflowInput) {
   // don't need to check them.
   //
   // Flex item's min-[width|height]:auto resolution depends on intrinsic size.
-  return !position.GetHeight(anchorResolutionParams)->ConvertsToLength() ||
-         !position.GetWidth(anchorResolutionParams)->ConvertsToLength() ||
+  return !position.GetHeight(anchorResolutionParams.mPosition)
+              ->ConvertsToLength() ||
+         !position.GetWidth(anchorResolutionParams.mPosition)
+              ->ConvertsToLength() ||
          DependsOnIntrinsicSize(
-             *position.MinISize(wm, anchorResolutionParams)) ||
+             *position.MinISize(wm, anchorResolutionParams.mPosition)) ||
          DependsOnIntrinsicSize(
-             *position.MaxISize(wm, anchorResolutionParams)) ||
+             *position.MaxISize(wm, anchorResolutionParams.mPosition)) ||
          aReflowInput.mFrame->IsFlexItem();
 }
 
@@ -771,8 +773,7 @@ void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
     // Increase load priority further if intrinsic size might be important for
     // layout.
-    if (!HaveSpecifiedSize(StylePosition(),
-                           AnchorPosResolutionParams::From(this))) {
+    if (!HaveSpecifiedSize(StylePosition(), StyleDisplay()->mPosition)) {
       categoryToBoostPriority |= imgIRequest::CATEGORY_SIZE_QUERY;
     }
 
@@ -1157,7 +1158,7 @@ auto nsImageFrame::ImageFrameTypeFor(const Element& aElement,
   // HaveSpecifiedSize changes...
   if (aElement.OwnerDoc()->GetCompatibilityMode() == eCompatibility_NavQuirks &&
       HaveSpecifiedSize(aStyle.StylePosition(),
-                        {nullptr, aStyle.StyleDisplay()->mPosition})) {
+                        aStyle.StyleDisplay()->mPosition)) {
     return ImageFrameType::ForElementRequest;
   }
 
@@ -2965,7 +2966,7 @@ static bool IsInAutoWidthTableCellForQuirk(nsIFrame* aFrame) {
     nsIFrame* grandAncestor = static_cast<nsIFrame*>(ancestor->GetParent());
     return grandAncestor &&
            grandAncestor->StylePosition()
-               ->GetWidth(AnchorPosResolutionParams::From(grandAncestor))
+               ->GetWidth(grandAncestor->StyleDisplay()->mPosition)
                ->IsAuto();
   }
   return false;

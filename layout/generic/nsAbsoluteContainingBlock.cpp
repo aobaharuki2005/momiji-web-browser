@@ -313,11 +313,11 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // Note that borders never depend on the parent isize.
     // XXX All of the enumerated values except -moz-available are ok too.
     if (nsStylePosition::ISizeDependsOnContainer(
-            pos->ISize(wm, anchorResolutionParams)) ||
+            pos->ISize(wm, anchorResolutionParams.mPosition)) ||
         nsStylePosition::MinISizeDependsOnContainer(
-            pos->MinISize(wm, anchorResolutionParams)) ||
+            pos->MinISize(wm, anchorResolutionParams.mPosition)) ||
         nsStylePosition::MaxISizeDependsOnContainer(
-            pos->MaxISize(wm, anchorResolutionParams)) ||
+            pos->MaxISize(wm, anchorResolutionParams.mPosition)) ||
         !IsFixedPaddingSize(padding->mPadding.GetIStart(wm)) ||
         !IsFixedPaddingSize(padding->mPadding.GetIEnd(wm))) {
       return true;
@@ -326,10 +326,10 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // See if f's position might have changed. If we're RTL then the
     // rules are slightly different. We'll assume percentage or auto
     // margins will always induce a dependency on the size
-    if (!IsFixedMarginSize(margin->GetMargin(LogicalSide::IStart, wm,
-                                             anchorResolutionParams)) ||
-        !IsFixedMarginSize(
-            margin->GetMargin(LogicalSide::IEnd, wm, anchorResolutionParams))) {
+    if (!IsFixedMarginSize(margin->GetMargin(
+            LogicalSide::IStart, wm, anchorResolutionParams.mPosition)) ||
+        !IsFixedMarginSize(margin->GetMargin(
+            LogicalSide::IEnd, wm, anchorResolutionParams.mPosition))) {
       return true;
     }
   }
@@ -343,7 +343,7 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     //
     // FIXME(emilio): Should the BSize(wm).IsAuto() check also for the extremum
     // lengths?
-    const auto bSize = pos->BSize(wm, anchorResolutionParams);
+    const auto bSize = pos->BSize(wm, anchorResolutionParams.mPosition);
     const auto anchorOffsetResolutionParams =
         AnchorPosOffsetResolutionParams::UseCBFrameSize(anchorResolutionParams);
     if ((nsStylePosition::BSizeDependsOnContainer(bSize) &&
@@ -355,19 +355,19 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
                                         anchorOffsetResolutionParams)
                 ->IsAuto())) ||
         nsStylePosition::MinBSizeDependsOnContainer(
-            pos->MinBSize(wm, anchorResolutionParams)) ||
+            pos->MinBSize(wm, anchorResolutionParams.mPosition)) ||
         nsStylePosition::MaxBSizeDependsOnContainer(
-            pos->MaxBSize(wm, anchorResolutionParams)) ||
+            pos->MaxBSize(wm, anchorResolutionParams.mPosition)) ||
         !IsFixedPaddingSize(padding->mPadding.GetBStart(wm)) ||
         !IsFixedPaddingSize(padding->mPadding.GetBEnd(wm))) {
       return true;
     }
 
     // See if f's position might have changed.
-    if (!IsFixedMarginSize(margin->GetMargin(LogicalSide::BStart, wm,
-                                             anchorResolutionParams)) ||
-        !IsFixedMarginSize(
-            margin->GetMargin(LogicalSide::BEnd, wm, anchorResolutionParams))) {
+    if (!IsFixedMarginSize(margin->GetMargin(
+            LogicalSide::BStart, wm, anchorResolutionParams.mPosition)) ||
+        !IsFixedMarginSize(margin->GetMargin(
+            LogicalSide::BEnd, wm, anchorResolutionParams.mPosition))) {
       return true;
     }
   }
@@ -787,20 +787,24 @@ void nsAbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
     ReflowInput::ComputeAbsPosInlineAutoMargin(
         availMarginSpace, outerWM,
         styleMargin
-            ->GetMargin(LogicalSide::IStart, outerWM, anchorResolutionParams)
+            ->GetMargin(LogicalSide::IStart, outerWM,
+                        anchorResolutionParams.mPosition)
             ->IsAuto(),
         styleMargin
-            ->GetMargin(LogicalSide::IEnd, outerWM, anchorResolutionParams)
+            ->GetMargin(LogicalSide::IEnd, outerWM,
+                        anchorResolutionParams.mPosition)
             ->IsAuto(),
         aMargin, aOffsets);
   } else {
     ReflowInput::ComputeAbsPosBlockAutoMargin(
         availMarginSpace, outerWM,
         styleMargin
-            ->GetMargin(LogicalSide::BStart, outerWM, anchorResolutionParams)
+            ->GetMargin(LogicalSide::BStart, outerWM,
+                        anchorResolutionParams.mPosition)
             ->IsAuto(),
         styleMargin
-            ->GetMargin(LogicalSide::BEnd, outerWM, anchorResolutionParams)
+            ->GetMargin(LogicalSide::BEnd, outerWM,
+                        anchorResolutionParams.mPosition)
             ->IsAuto(),
         aMargin, aOffsets);
   }
@@ -812,10 +816,11 @@ void nsAbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
       aKidReflowInput.mFrame->GetProperty(nsIFrame::UsedMarginProperty());
   // InitOffsets should've created a UsedMarginProperty for us, if any margin is
   // auto.
-  MOZ_ASSERT_IF(
-      styleMargin->HasInlineAxisAuto(outerWM, anchorResolutionParams) ||
-          styleMargin->HasBlockAxisAuto(outerWM, anchorResolutionParams),
-      propValue);
+  MOZ_ASSERT_IF(styleMargin->HasInlineAxisAuto(
+                    outerWM, anchorResolutionParams.mPosition) ||
+                    styleMargin->HasBlockAxisAuto(
+                        outerWM, anchorResolutionParams.mPosition),
+                propValue);
   if (propValue) {
     *propValue = aMargin.GetPhysicalMargin(outerWM);
   }

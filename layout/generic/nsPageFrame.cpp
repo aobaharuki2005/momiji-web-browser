@@ -127,7 +127,8 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
       AnchorPosResolutionParams::From(&kidReflowInput);
   if (mPD->mPrintSettings->GetHonorPageRuleMargins()) {
     for (const auto side : mozilla::AllPhysicalSides()) {
-      if (!kidReflowInput.mStyleMargin->GetMargin(side, anchorResolutionParams)
+      if (!kidReflowInput.mStyleMargin
+               ->GetMargin(side, anchorResolutionParams.mPosition)
                ->IsAuto()) {
         // Computed margins are already in the coordinate space of the content,
         // do not scale.

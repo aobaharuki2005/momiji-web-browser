@@ -842,7 +842,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
       const auto* styleMargin = aFrame->StyleMargin();
       const auto anchorResolutionParams =
           AnchorPosResolutionParams::From(aFrame);
-      if (styleMargin->HasBlockAxisAuto(wm, anchorResolutionParams)) {
+      if (styleMargin->HasBlockAxisAuto(wm, anchorResolutionParams.mPosition)) {
         return false;
       }
     }

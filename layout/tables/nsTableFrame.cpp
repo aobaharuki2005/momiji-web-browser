@@ -1468,7 +1468,7 @@ bool nsTableFrame::AncestorsHaveStyleBSize(
         LayoutFrameType::TableRow == frameType ||
         LayoutFrameType::TableRowGroup == frameType) {
       const auto bsize =
-          rs->mStylePosition->BSize(wm, AnchorPosResolutionParams::From(rs));
+          rs->mStylePosition->BSize(wm, rs->mStyleDisplay->mPosition);
       // calc() with both lengths and percentages treated like 'auto' on
       // internal table elements
       if (!bsize->IsAuto() && !bsize->HasLengthAndPercentage()) {
@@ -1476,7 +1476,7 @@ bool nsTableFrame::AncestorsHaveStyleBSize(
       }
     } else if (LayoutFrameType::Table == frameType) {
       // we reached the containing table, so always return
-      return !rs->mStylePosition->BSize(wm, AnchorPosResolutionParams::From(rs))
+      return !rs->mStylePosition->BSize(wm, rs->mStyleDisplay->mPosition)
                   ->IsAuto();
     }
   }
@@ -1498,7 +1498,7 @@ void nsTableFrame::CheckRequestSpecialBSizeReflow(
            aReflowInput.ComputedBSize() ||  // no computed bsize
        0 == aReflowInput.ComputedBSize()) &&
       aReflowInput.mStylePosition
-          ->BSize(wm, AnchorPosResolutionParams::From(&aReflowInput))
+          ->BSize(wm, aReflowInput.mStyleDisplay->mPosition)
           ->ConvertsToPercentage() &&  // pct bsize
       nsTableFrame::AncestorsHaveStyleBSize(*aReflowInput.mParentReflowInput)) {
     nsTableFrame::RequestSpecialBSizeReflow(aReflowInput);
@@ -3463,8 +3463,7 @@ nsTableFrame* nsTableFrame::GetTableFrame(nsIFrame* aFrame) {
 }
 
 bool nsTableFrame::IsAutoBSize(WritingMode aWM) {
-  const auto bsize =
-      StylePosition()->BSize(aWM, AnchorPosResolutionParams::From(this));
+  const auto bsize = StylePosition()->BSize(aWM, StyleDisplay()->mPosition);
   if (bsize->IsAuto()) {
     return true;
   }
@@ -3494,8 +3493,8 @@ bool nsTableFrame::IsAutoLayout() {
   // and tables with inline size set to 'max-content' must be
   // auto-layout (at least as long as
   // FixedTableLayoutStrategy::GetPrefISize returns nscoord_MAX)
-  const auto iSize = StylePosition()->ISize(
-      GetWritingMode(), AnchorPosResolutionParams::From(this));
+  const auto iSize =
+      StylePosition()->ISize(GetWritingMode(), StyleDisplay()->mPosition);
   return iSize->IsAuto() || iSize->IsMaxContent();
 }
 
@@ -3641,17 +3640,17 @@ bool nsTableFrame::ColumnHasCellSpacingBefore(int32_t aColIndex) const {
   // Note: percentages and calc(%) are intentionally not considered.
   if (const auto* col = fif->GetColFrame(aColIndex)) {
     const auto anchorResolutionParams = AnchorPosResolutionParams::From(col);
-    const auto iSize =
-        col->StylePosition()->ISize(GetWritingMode(), anchorResolutionParams);
+    const auto iSize = col->StylePosition()->ISize(
+        GetWritingMode(), anchorResolutionParams.mPosition);
     if (iSize->ConvertsToLength() && iSize->ToLength() > 0) {
       const auto maxISize = col->StylePosition()->MaxISize(
-          GetWritingMode(), anchorResolutionParams);
+          GetWritingMode(), anchorResolutionParams.mPosition);
       if (!maxISize->ConvertsToLength() || maxISize->ToLength() > 0) {
         return true;
       }
     }
     const auto minISize = col->StylePosition()->MinISize(
-        GetWritingMode(), anchorResolutionParams);
+        GetWritingMode(), anchorResolutionParams.mPosition);
     if (minISize->ConvertsToLength() && minISize->ToLength() > 0) {
       return true;
     }

@@ -4081,9 +4081,10 @@ bool nsBlockFrame::IsSelfEmpty() {
   WritingMode wm = GetWritingMode();
   const nsStylePosition* position = StylePosition();
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
-  const auto bSize = position->BSize(wm, anchorResolutionParams);
+  const auto bSize = position->BSize(wm, anchorResolutionParams.mPosition);
 
-  if (IsNonAutoNonZeroBSize(*position->MinBSize(wm, anchorResolutionParams)) ||
+  if (IsNonAutoNonZeroBSize(
+          *position->MinBSize(wm, anchorResolutionParams.mPosition)) ||
       IsNonAutoNonZeroBSize(*bSize)) {
     return false;
   }
@@ -8616,7 +8617,7 @@ nsBlockFrame::FloatAvoidingISizeToClear nsBlockFrame::ISizeToClearPastFloats(
 
   nscoord marginISize = computedMargin.IStartEnd(wm);
   const auto iSize = reflowInput.mStylePosition->ISize(
-      wm, AnchorPosResolutionParams::From(&reflowInput));
+      wm, reflowInput.mStyleDisplay->mPosition);
   if (marginISize < 0 &&
       (iSize->IsAuto() || iSize->BehavesLikeStretchOnInlineAxis())) {
     // If we get here, floatAvoidingBlock has a negative amount of inline-axis
