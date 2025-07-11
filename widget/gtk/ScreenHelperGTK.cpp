@@ -406,7 +406,9 @@ static const struct wp_image_description_info_v1_listener
 
 void WaylandMonitor::ImageDescriptionDone() {
   LOG_SCREEN("WaylandMonitor()[%p] ImageDescriptionDone", this);
-  mScreenGetter->AddScreen(MakeScreenGtk(mMonitor, mIsHDR));
+  if (mScreenGetter) {
+    mScreenGetter->AddScreen(MakeScreenGtk(mMonitor, mIsHDR));
+  }
 }
 
 void WaylandMonitor::ImageDescriptionReady() {
