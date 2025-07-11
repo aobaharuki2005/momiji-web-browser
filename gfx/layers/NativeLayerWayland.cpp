@@ -545,7 +545,7 @@ RefPtr<WaylandBuffer> NativeLayerRootWayland::BorrowExternalBuffer(
     }
   }
 
-  wl_buffer* wlbuffer = waylandBuffer->CreateAndTakeWLBuffer();
+  wl_buffer* wlbuffer = waylandBuffer->CreateWlBuffer();
   if (!wlbuffer) {
     return nullptr;
   }
