@@ -159,6 +159,30 @@ export default class MozReorderableList extends MozLitElement {
       draggedElement,
     });
 
+    // In privileged documents, use a canvas element combined with the
+    // drawWindow API to create a more accurate drag image. This is especially
+    // useful when dragging composite custom elements.
+    if (window.document.nodePrincipal?.isSystemPrincipal) {
+      let rect = this.getBounds(draggedElement);
+      let scale = window.devicePixelRatio || 1;
+
+      let canvas = document.createElement("canvas");
+      canvas.width = rect.width * scale;
+      canvas.height = rect.height * scale;
+
+      let context = canvas.getContext("2d");
+      context.scale(scale, scale);
+      context.drawWindow(
+        window,
+        rect.left,
+        rect.top,
+        rect.width,
+        rect.height,
+        "rgb(255,255,255)"
+      );
+      event.dataTransfer.setDragImage(canvas, 0, 0);
+    }
+
     // XUL elements need dataTransfer values to be set for drag and drop to work.
     if (this.isXULElement(draggedElement)) {
       let documentId = draggedElement.ownerDocument.documentElement.id;
