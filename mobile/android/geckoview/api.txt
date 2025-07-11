@@ -2927,7 +2927,8 @@ package org.mozilla.geckoview {
     method @Nullable default public GeckoResult<WebExtension.PermissionPromptResponse> onInstallPromptRequest(@NonNull WebExtension, @NonNull String[], @NonNull String[], @NonNull String[]);
     method @Deprecated @DeprecationSchedule(id="web-extension-on-optional-prompt",version=144) @Nullable default public GeckoResult<AllowOrDeny> onOptionalPrompt(@NonNull WebExtension, @NonNull String[], @NonNull String[]);
     method @Nullable default public GeckoResult<AllowOrDeny> onOptionalPrompt(@NonNull WebExtension, @NonNull String[], @NonNull String[], @NonNull String[]);
-    method @Nullable default public GeckoResult<AllowOrDeny> onUpdatePrompt(@NonNull WebExtension, @NonNull WebExtension, @NonNull String[], @NonNull String[]);
+    method @Deprecated @DeprecationSchedule(id="web-extension-on-update-prompt",version=144) @Nullable default public GeckoResult<AllowOrDeny> onUpdatePrompt(@NonNull WebExtension, @NonNull WebExtension, @NonNull String[], @NonNull String[]);
+    method @Nullable default public GeckoResult<AllowOrDeny> onUpdatePrompt(@NonNull WebExtension, @NonNull String[], @NonNull String[], @NonNull String[]);
   }
 
   @AnyThread public abstract class WebMessage {

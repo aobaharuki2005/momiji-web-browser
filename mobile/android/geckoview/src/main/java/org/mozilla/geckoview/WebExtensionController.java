@@ -299,6 +299,8 @@ public class WebExtensionController {
      * Called whenever an updated extension has new permissions. This is intended as an opportunity
      * for the app to prompt the user for the new permissions required by this extension.
      *
+     * @deprecated Use onUpdatePrompt(WebExtension, String[], String[], String[]) to account for
+     *     data collection permissions.
      * @param currentlyInstalled The {@link WebExtension} that is currently installed.
      * @param updatedExtension The {@link WebExtension} that will replace the previous extension.
      * @param newPermissions The new permissions that are needed.
@@ -308,11 +310,34 @@ public class WebExtensionController {
      *     not be update. A null value will be interpreted as {@link AllowOrDeny#DENY DENY}.
      */
     @Nullable
+    @Deprecated
+    @DeprecationSchedule(id = "web-extension-on-update-prompt", version = 144)
     default GeckoResult<AllowOrDeny> onUpdatePrompt(
         @NonNull final WebExtension currentlyInstalled,
         @NonNull final WebExtension updatedExtension,
         @NonNull final String[] newPermissions,
         @NonNull final String[] newOrigins) {
+      return null;
+    }
+
+    /**
+     * Called whenever an updated extension has new permissions. This is intended as an opportunity
+     * for the app to prompt the user for the new permissions required by this extension.
+     *
+     * @param extension The {@link WebExtension} being updated.
+     * @param newPermissions The new permissions that are needed.
+     * @param newOrigins The new origins that are needed.
+     * @param newDataCollectionPermissions The new data collection permissions that are needed.
+     * @return A {@link GeckoResult} that completes to either {@link AllowOrDeny#ALLOW ALLOW} if
+     *     this extension should be update or {@link AllowOrDeny#DENY DENY} if this extension should
+     *     not be update. A null value will be interpreted as {@link AllowOrDeny#DENY DENY}.
+     */
+    @Nullable
+    default GeckoResult<AllowOrDeny> onUpdatePrompt(
+        @NonNull final WebExtension extension,
+        @NonNull final String[] newPermissions,
+        @NonNull final String[] newOrigins,
+        @NonNull final String[] newDataCollectionPermissions) {
       return null;
     }
 
@@ -1328,9 +1353,21 @@ public class WebExtensionController {
       return;
     }
 
-    final GeckoResult<AllowOrDeny> promptResponse =
+    // TODO - Bug 1974744: remove the first call when we remove the deprecated
+    // `onUpdatePrompt` method since this has been done to preserve backward
+    // compatibility.
+    GeckoResult<AllowOrDeny> promptResponse =
         mPromptDelegate.onUpdatePrompt(
             currentExtension, updatedExtension, newPermissions, newOrigins);
+
+    if (promptResponse == null) {
+      final String[] newDataCollectionPermissions =
+          message.getStringArray("newDataCollectionPermissions");
+      promptResponse =
+          mPromptDelegate.onUpdatePrompt(
+              updatedExtension, newPermissions, newOrigins, newDataCollectionPermissions);
+    }
+
     if (promptResponse == null) {
       return;
     }

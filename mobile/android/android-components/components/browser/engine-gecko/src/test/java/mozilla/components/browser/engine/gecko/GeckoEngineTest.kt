@@ -109,6 +109,9 @@ import org.mozilla.geckoview.WebExtension as GeckoWebExtension
 
 typealias GeckoInstallException = org.mozilla.geckoview.WebExtension.InstallException
 
+// TODO: Bug 1965002 - Remove this @Suppress when A-C starts to use the new
+// `onUpdatePrompt()` signature.
+@Suppress("DEPRECATION")
 @RunWith(AndroidJUnit4::class)
 class GeckoEngineTest {
 
