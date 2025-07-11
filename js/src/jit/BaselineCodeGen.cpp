@@ -6197,19 +6197,15 @@ bool BaselineCodeGen<Handler>::emit_Await() {
 }
 
 template <>
-template <typename F>
-bool BaselineCompilerCodeGen::emitAfterYieldDebugInstrumentation(
-    const F& ifDebuggee, Register) {
+bool BaselineCompilerCodeGen::emitAfterYieldDebugInstrumentation(Register) {
   if (handler.compileDebugInstrumentation()) {
-    return ifDebuggee();
+    return emitDebugAfterYield();
   }
   return true;
 }
 
 template <>
-template <typename F>
-bool BaselineInterpreterCodeGen::emitAfterYieldDebugInstrumentation(
-    const F& ifDebuggee, Register scratch) {
+bool BaselineInterpreterCodeGen::emitAfterYieldDebugInstrumentation(Register scratch) {
   // Note that we can't use emitDebugInstrumentation here because the frame's
   // DEBUGGEE flag hasn't been initialized yet.
 
@@ -6224,7 +6220,7 @@ bool BaselineInterpreterCodeGen::emitAfterYieldDebugInstrumentation(
                     Address(scratch, Realm::offsetOfDebugModeBits()),
                     Imm32(Realm::debugModeIsDebuggeeBit()), &done);
 
-  if (!ifDebuggee()) {
+  if (!emitDebugAfterYield()) {
     return false;
   }
 
@@ -6238,23 +6234,21 @@ bool BaselineCodeGen<Handler>::emit_AfterYield() {
     return false;
   }
 
-  auto ifDebuggee = [this]() {
-    frame.assertSyncedStack();
-    masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
-    prepareVMCall();
-    pushArg(R0.scratchReg());
-
-    const RetAddrEntry::Kind kind = RetAddrEntry::Kind::DebugAfterYield;
-
-    using Fn = bool (*)(JSContext*, BaselineFrame*);
-    if (!callVM<Fn, jit::DebugAfterYield>(kind)) {
-      return false;
-    }
-
-    return true;
-  };
-  return emitAfterYieldDebugInstrumentation(ifDebuggee, R0.scratchReg());
+  return emitAfterYieldDebugInstrumentation( R0.scratchReg());
 }
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emitDebugAfterYield() {
+  frame.assertSyncedStack();
+  masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
+  prepareVMCall();
+  pushArg(R0.scratchReg());
+
+  const RetAddrEntry::Kind kind = RetAddrEntry::Kind::DebugAfterYield;
+
+  using Fn = bool (*)(JSContext*, BaselineFrame*);
+  return callVM<Fn, jit::DebugAfterYield>(kind);
+};
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_FinalYieldRval() {
