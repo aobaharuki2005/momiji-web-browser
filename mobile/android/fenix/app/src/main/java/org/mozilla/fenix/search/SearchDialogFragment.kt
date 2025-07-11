@@ -85,7 +85,6 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.VoiceSearch
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
@@ -181,7 +180,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (context?.isTabStripEnabled() == true) {
+        if (context?.settings()?.isTabStripEnabled == true) {
             setStyle(STYLE_NO_TITLE, R.style.SearchDialogStyleTabStrip)
         } else {
             setStyle(STYLE_NO_TITLE, R.style.SearchDialogStyle)

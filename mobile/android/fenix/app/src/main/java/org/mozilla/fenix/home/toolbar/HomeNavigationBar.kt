@@ -58,6 +58,7 @@ class HomeNavigationBar(
                     browserStore = browserStore,
                     clipboard = context.components.clipboardHandler,
                     useCases = context.components.useCases,
+                    settings = settings,
                 ),
             ),
         )
