@@ -506,6 +506,7 @@ mozilla::ipc::IPCResult GPUParent::RecvUpdateVar(const GfxVarUpdate& aUpdate) {
               NS_NewRunnableFunction(
                   "GPUParent::RecvUpdateVar",
                   []() {
+                    WMFDecoderModule::Init();
                     NS_DispatchToMainThread(NS_NewRunnableFunction(
                         "GPUParent::UpdateMediaCodecsSupported",
                         [supported = media::MCSInfo::GetSupportFromFactory(
