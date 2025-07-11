@@ -396,6 +396,9 @@ already_AddRefed<BindGroupLayout> Device::CreateBindGroupLayout(
           break;
       }
     }
+    if (entry.mExternalTexture.WasPassed()) {
+      e.ty = ffi::WGPURawBindingType_ExternalTexture;
+    }
     entries.AppendElement(e);
   }
 

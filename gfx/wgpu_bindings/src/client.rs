@@ -201,6 +201,7 @@ pub enum RawBindingType {
     ReadonlyStorageTexture,
     WriteonlyStorageTexture,
     ReadWriteStorageTexture,
+    ExternalTexture,
 }
 
 #[repr(C)]
@@ -1480,6 +1481,7 @@ pub unsafe extern "C" fn wgpu_client_create_bind_group_layout(
                     view_dimension: *entry.view_dimension.unwrap(),
                     format: *entry.storage_texture_format.unwrap(),
                 },
+                RawBindingType::ExternalTexture => wgt::BindingType::ExternalTexture,
             },
         });
     }
