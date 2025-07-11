@@ -118,7 +118,6 @@ import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlControllerCallback
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
-import org.mozilla.fenix.home.sessioncontrol.SessionControlView
 import org.mozilla.fenix.home.store.HomepageState
 import org.mozilla.fenix.home.toolbar.DefaultToolbarController
 import org.mozilla.fenix.home.toolbar.FenixHomeToolbar
@@ -230,8 +229,6 @@ class HomeFragment : Fragment() {
     private var _sessionControlInteractor: SessionControlInteractor? = null
     private val sessionControlInteractor: SessionControlInteractor
         get() = _sessionControlInteractor!!
-
-    private var sessionControlView: SessionControlView? = null
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var nullableToolbarView: FenixHomeToolbar? = null
@@ -564,11 +561,6 @@ class HomeFragment : Fragment() {
         } else {
             binding.homepageView.isVisible = false
             binding.sessionControlRecyclerView.isVisible = true
-            sessionControlView = SessionControlView(
-                interactor = sessionControlInteractor,
-            )
-
-            updateSessionControlView()
         }
 
         disableAppBarDragging()
@@ -806,26 +798,6 @@ class HomeFragment : Fragment() {
         )
     }
 
-    /**
-     * The [SessionControlView] is forced to update with our current state when we call
-     * [HomeFragment.onCreateView] in order to be able to draw everything at once with the current
-     * data in our store. The [View.consumeFrom] coroutine dispatch
-     * doesn't get run right away which means that we won't draw on the first layout pass.
-     */
-    private fun updateSessionControlView() {
-        if (browsingModeManager.mode == BrowsingMode.Private) {
-            binding.root.consumeFrom(requireContext().components.appStore, viewLifecycleOwner) {
-                sessionControlView?.update(it)
-            }
-        } else {
-            sessionControlView?.update(requireContext().components.appStore.state)
-
-            binding.root.consumeFrom(requireContext().components.appStore, viewLifecycleOwner) {
-                sessionControlView?.update(it, shouldReportMetrics = true)
-            }
-        }
-    }
-
     private fun disableAppBarDragging() {
         if (binding.homeAppBar.layoutParams != null) {
             val appBarLayoutParams = binding.homeAppBar.layoutParams as CoordinatorLayout.LayoutParams
@@ -1012,12 +984,20 @@ class HomeFragment : Fragment() {
     }
 
     private fun onFirstHomepageFrameDrawn() {
-        with(requireContext().components.settings) {
+        val components = requireContext().components
+        val appStore = components.appStore
+        val appState = appStore.state
+
+        with(components.settings) {
             if (showWallpaperOnboardingDialog()) {
                 sessionControlInteractor.showWallpapersOnboardingDialog(
-                    requireContext().components.appStore.state.wallpaperState,
+                    appState.wallpaperState,
                 )
             }
+        }
+
+        if (!appStore.state.mode.isPrivate) {
+            sessionControlInteractor.reportSessionMetrics(state = appState)
         }
 
         // We want some parts of the home screen UI to be rendered first if they are
@@ -1025,9 +1005,7 @@ class HomeFragment : Fragment() {
         // For this reason, we wait for the home screen recycler view to finish it's
         // layout and post an update for when it's best for non-visible parts of the
         // home screen to render itself.
-        requireContext().components.appStore.dispatch(
-            AppAction.UpdateFirstFrameDrawn(true),
-        )
+        appStore.dispatch(AppAction.UpdateFirstFrameDrawn(drawn = true))
     }
 
     private fun initTabStrip() {
@@ -1106,7 +1084,6 @@ class HomeFragment : Fragment() {
         _sessionControlController = null
 
         _sessionControlInteractor = null
-        sessionControlView = null
         _bottomToolbarContainerView = null
         awesomeBarComposable = null
         _binding = null
