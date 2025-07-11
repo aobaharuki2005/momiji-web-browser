@@ -274,6 +274,22 @@ function CardSection({
                 verticalPosition="inset-block-center"
                 position="arrow-inline-start"
                 dispatch={dispatch}
+                feature="FEATURE_FOLLOW_SECTION_BUTTON"
+              />
+            </MessageWrapper>
+          )}
+        {!anySectionsFollowed &&
+          sectionPosition === 1 &&
+          shouldShowOMCHighlight(
+            messageData,
+            "FollowSectionButtonAltHighlight"
+          ) && (
+            <MessageWrapper dispatch={dispatch}>
+              <FollowSectionButtonHighlight
+                verticalPosition="inset-block-center"
+                position="arrow-inline-start"
+                dispatch={dispatch}
+                feature="FEATURE_ALT_FOLLOW_SECTION_BUTTON"
               />
             </MessageWrapper>
           )}

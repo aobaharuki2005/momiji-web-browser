@@ -6,8 +6,6 @@ import { actionCreators as ac } from "common/Actions.mjs";
 import { FeatureHighlight } from "./FeatureHighlight";
 import React, { useCallback, useEffect } from "react";
 
-const FEATURE_ID = "FEATURE_FOLLOW_SECTION_BUTTON";
-
 export function FollowSectionButtonHighlight({
   arrowPosition,
   position,
@@ -16,7 +14,10 @@ export function FollowSectionButtonHighlight({
   handleDismiss,
   handleBlock,
   isIntersecting,
+  feature,
 }) {
+  const FEATURE_ID = feature;
+
   const onDismiss = useCallback(() => {
     // This event is emitted manually because the feature may be triggered outside the OMC flow,
     // and may not be captured by the messaging-system’s automatic reporting.
@@ -30,7 +31,7 @@ export function FollowSectionButtonHighlight({
 
     handleDismiss();
     handleBlock();
-  }, [dispatch, handleDismiss, handleBlock]);
+  }, [dispatch, FEATURE_ID, handleDismiss, handleBlock]);
 
   useEffect(() => {
     if (isIntersecting) {
@@ -44,7 +45,7 @@ export function FollowSectionButtonHighlight({
         })
       );
     }
-  }, [dispatch, isIntersecting]);
+  }, [dispatch, FEATURE_ID, isIntersecting]);
 
   return (
     <div className="follow-section-button-highlight">

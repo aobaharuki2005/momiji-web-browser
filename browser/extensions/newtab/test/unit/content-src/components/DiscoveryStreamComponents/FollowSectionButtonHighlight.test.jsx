@@ -25,6 +25,7 @@ describe("Discovery Stream <FollowSectionButtonHighlight>", () => {
         arrowPosition="arrow-inline-start"
         verticalPosition="inset-block-center"
         position="inset-inline-end"
+        feature="FEATURE_FOLLOW_SECTION_BUTTON"
       />
     );
   });
