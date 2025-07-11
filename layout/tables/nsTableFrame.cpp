@@ -3645,7 +3645,7 @@ bool nsTableFrame::ColumnHasCellSpacingBefore(int32_t aColIndex) const {
         col->StylePosition()->ISize(GetWritingMode(), anchorResolutionParams);
     if (iSize->ConvertsToLength() && iSize->ToLength() > 0) {
       const auto maxISize = col->StylePosition()->MaxISize(
-          GetWritingMode(), anchorResolutionParams.mPosition);
+          GetWritingMode(), anchorResolutionParams);
       if (!maxISize->ConvertsToLength() || maxISize->ToLength() > 0) {
         return true;
       }

@@ -672,7 +672,7 @@ static bool IsPercentageAware(const nsIFrame* aFrame, WritingMode aWM) {
       AnchorPosOffsetResolutionParams::UseCBFrameSize(anchorResolutionParams);
   if ((nsStylePosition::ISizeDependsOnContainer(iSize) && !iSize->IsAuto()) ||
       nsStylePosition::MaxISizeDependsOnContainer(
-          pos->MaxISize(aWM, anchorResolutionParams.mPosition)) ||
+          pos->MaxISize(aWM, anchorResolutionParams)) ||
       nsStylePosition::MinISizeDependsOnContainer(
           pos->MinISize(aWM, anchorResolutionParams)) ||
       pos->GetAnchorResolvedInset(LogicalSide::IStart, aWM,

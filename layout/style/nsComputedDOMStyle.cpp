@@ -1789,15 +1789,15 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetWidth() {
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMaxHeight() {
   auto val = MakeRefPtr<nsROCSSPrimitiveValue>();
-  SetValueToMaxSize(val,
-                    StylePosition()->GetMaxHeight(StyleDisplay()->mPosition));
+  SetValueToMaxSize(val, StylePosition()->GetMaxHeight(
+                             AnchorPosResolutionParams::From(this)));
   return val.forget();
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMaxWidth() {
   auto val = MakeRefPtr<nsROCSSPrimitiveValue>();
-  SetValueToMaxSize(val,
-                    StylePosition()->GetMaxWidth(StyleDisplay()->mPosition));
+  SetValueToMaxSize(
+      val, StylePosition()->GetMaxWidth(AnchorPosResolutionParams::From(this)));
   return val.forget();
 }
 
