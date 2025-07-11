@@ -2293,7 +2293,8 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
     // 'auto' inline-size for grid-level box - apply 'stretch' as needed:
     auto cbSize = aCBSize.ISize(aWM);
     if (cbSize != NS_UNCONSTRAINEDSIZE) {
-      if (!StyleMargin()->HasInlineAxisAuto(aWM, StyleDisplay()->mPosition)) {
+      if (!StyleMargin()->HasInlineAxisAuto(
+              aWM, AnchorPosResolutionParams::From(this))) {
         auto inlineAxisAlignment =
             isOrthogonal ? stylePos->UsedAlignSelf(GetParent()->Style())._0
                          : stylePos->UsedJustifySelf(GetParent()->Style())._0;
@@ -2357,7 +2358,8 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
     // 'auto' block-size for grid-level box - apply 'stretch' as needed:
     auto cbSize = aCBSize.BSize(aWM);
     if (cbSize != NS_UNCONSTRAINEDSIZE) {
-      if (!StyleMargin()->HasBlockAxisAuto(aWM, StyleDisplay()->mPosition)) {
+      if (!StyleMargin()->HasBlockAxisAuto(
+              aWM, AnchorPosResolutionParams::From(this))) {
         auto blockAxisAlignment =
             !isOrthogonal ? stylePos->UsedAlignSelf(GetParent()->Style())._0
                           : stylePos->UsedJustifySelf(GetParent()->Style())._0;

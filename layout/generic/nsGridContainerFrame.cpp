@@ -10709,7 +10709,7 @@ bool nsGridContainerFrame::GridItemShouldStretch(const nsIFrame* aChild,
 
   const auto wm = aChild->GetWritingMode();
   if (aChild->StyleMargin()->HasAuto(aAxis, wm,
-                                     aChild->StyleDisplay()->mPosition)) {
+                                     AnchorPosResolutionParams::From(aChild))) {
     // Per https://drafts.csswg.org/css-grid-2/#auto-margins, any 'auto' margin
     // in an axis disables the alignment property in that axis.
     return false;
