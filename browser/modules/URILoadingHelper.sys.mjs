@@ -71,7 +71,7 @@ function openInWindow(url, params, sourceWindow) {
     originPrincipal,
     originStoragePrincipal,
     triggeringPrincipal,
-    csp,
+    policyContainer,
     resolveOnContentBrowserCreated,
   } = params;
   let features = "chrome,dialog=no,all";
@@ -153,7 +153,7 @@ function openInWindow(url, params, sourceWindow) {
   sa.appendElement(originStoragePrincipal);
   sa.appendElement(triggeringPrincipal);
   sa.appendElement(null); // allowInheritPrincipal
-  sa.appendElement(csp);
+  sa.appendElement(policyContainer);
 
   let win;
 
@@ -256,7 +256,7 @@ function openInCurrentTab(targetBrowser, url, uriObj, params) {
 
   let {
     triggeringPrincipal,
-    csp,
+    policyContainer,
     referrerInfo,
     postData,
     userContextId,
@@ -268,7 +268,7 @@ function openInCurrentTab(targetBrowser, url, uriObj, params) {
 
   targetBrowser.fixupAndLoadURIString(url, {
     triggeringPrincipal,
-    csp,
+    policyContainer,
     loadFlags,
     referrerInfo,
     postData,
@@ -391,8 +391,8 @@ export const URILoadingHelper = {
    *                  Storage principal to pass to docshell for the load.
    * @param {string}  params.triggeringRemoteType
    *                  The remoteType triggering this load.
-   * @param {nsIContentSecurityPolicy} params.csp
-   *                  The CSP that should apply to the load.
+   * @param {nsIPolicyContainer} params.policyContainer
+   *                  The policyContainer that should apply to the load.
    * @param {boolean} params.hasValidUserGestureActivation
    *                  Indicates if a valid user gesture caused this load. This
    *                  informs e.g. popup blocker decisions.
@@ -438,7 +438,7 @@ export const URILoadingHelper = {
       originPrincipal,
       originStoragePrincipal,
       triggeringRemoteType,
-      csp,
+      policyContainer,
       resolveOnNewTabCreated,
       resolveOnContentBrowserCreated,
       globalHistoryOptions,
@@ -584,7 +584,7 @@ export const URILoadingHelper = {
           triggeringPrincipal,
           allowInheritPrincipal,
           triggeringRemoteType,
-          csp,
+          policyContainer,
           forceAllowDataURI,
           focusUrlBar,
           openerBrowser: params.openerBrowser,

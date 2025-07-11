@@ -1293,7 +1293,7 @@ function HandleAppCommandEvent(evt) {
   evt.preventDefault();
 }
 
-function loadOneOrMoreURIs(aURIString, aTriggeringPrincipal, aCsp) {
+function loadOneOrMoreURIs(aURIString, aTriggeringPrincipal, aPolicyContainer) {
   // we're not a browser window, pass the URI string to a new browser window
   if (window.location.href != AppConstants.BROWSER_CHROME_URL) {
     window.openDialog(
@@ -1312,7 +1312,7 @@ function loadOneOrMoreURIs(aURIString, aTriggeringPrincipal, aCsp) {
       inBackground: false,
       replace: true,
       triggeringPrincipal: aTriggeringPrincipal,
-      csp: aCsp,
+      policyContainer: aPolicyContainer,
     });
   } catch (e) {}
 }
@@ -3488,7 +3488,7 @@ function handleLinkClick(event, href, linkNode) {
     originPrincipal: doc.nodePrincipal,
     originStoragePrincipal: doc.effectiveStoragePrincipal,
     triggeringPrincipal: doc.nodePrincipal,
-    csp: doc.csp,
+    policyContainer: doc.policyContainer,
     frameID,
   };
 
@@ -3551,7 +3551,7 @@ function middleMousePaste(event) {
         ignoreButton: true,
         allowInheritPrincipal: data.mayInheritPrincipal,
         triggeringPrincipal: gBrowser.selectedBrowser.contentPrincipal,
-        csp: gBrowser.selectedBrowser.csp,
+        policyContainer: gBrowser.selectedBrowser.policyContainer,
       });
     }
   });

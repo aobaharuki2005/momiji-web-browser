@@ -60,7 +60,7 @@ interface nsIBrowser : nsISupports
 
   readonly attribute nsIPrincipal contentPrincipal;
   readonly attribute nsIPrincipal contentPartitionedPrincipal;
-  readonly attribute nsIContentSecurityPolicy csp;
+  readonly attribute nsIPolicyContainer policyContainer;
   readonly attribute nsIReferrerInfo referrerInfo;
 
   /**

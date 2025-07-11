@@ -615,7 +615,7 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
 
     nsCOMPtr<nsIPolicyContainer> policyContainer = doc->GetPolicyContainer();
     if (policyContainer) {
-      NS_IF_ADDREF(*aPolicyContainer = policyContainer);
+      policyContainer.forget(aPolicyContainer);
     }
 
     nsCOMPtr<nsICookieJarSettings> cookieJarSettings = doc->CookieJarSettings();

@@ -385,7 +385,7 @@ async function doSearch(searchTerm, cmdLine) {
     lazy.PrivateBrowsingUtils.isInTemporaryAutoStartMode ||
       lazy.PrivateBrowsingUtils.isWindowPrivate(win),
     lazy.gSystemPrincipal,
-    win.gBrowser.selectedBrowser.csp
+    win.gBrowser.selectedBrowser.policyContainer
   ).catch(console.error);
 }
 

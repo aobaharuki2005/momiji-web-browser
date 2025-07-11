@@ -1859,7 +1859,7 @@
         tabGroup,
         targetTab,
         triggeringPrincipal,
-        csp,
+        policyContainer,
         userContextId,
         fromExternal,
       } = {}
@@ -1932,7 +1932,7 @@
             loadFlags,
             postData: postDatas && postDatas[0],
             triggeringPrincipal,
-            csp,
+            policyContainer,
           });
         } catch (e) {
           // Ignore failure in case a URI is wrong, so we can continue
@@ -1948,7 +1948,7 @@
           userContextId,
           triggeringPrincipal,
           bulkOrderedOpen: multiple,
-          csp,
+          policyContainer,
           fromExternal,
           tabGroup,
         };
@@ -1971,7 +1971,7 @@
           userContextId,
           triggeringPrincipal,
           bulkOrderedOpen: true,
-          csp,
+          policyContainer,
           fromExternal,
           tabGroup,
         };
@@ -2701,7 +2701,7 @@
         tabGroup,
         triggeringPrincipal,
         userContextId,
-        csp,
+        policyContainer,
         skipLoad = createLazyBrowser,
         insertTab = true,
         globalHistoryOptions,
@@ -2891,7 +2891,7 @@
           referrerInfo,
           charset,
           postData,
-          csp,
+          policyContainer,
           globalHistoryOptions,
           triggeringRemoteType,
           schemelessInput,
@@ -3473,7 +3473,7 @@
         referrerInfo,
         charset,
         postData,
-        csp,
+        policyContainer,
         globalHistoryOptions,
         triggeringRemoteType,
         schemelessInput,
@@ -3539,7 +3539,7 @@
             referrerInfo,
             charset,
             postData,
-            csp,
+            policyContainer,
             globalHistoryOptions,
             triggeringRemoteType,
             schemelessInput,

@@ -247,7 +247,9 @@ export class nsContextMenu {
       this.ownerDoc = this.target.ownerDocument;
     }
 
-    this.csp = lazy.E10SUtils.deserializeCSP(context.csp);
+    this.policyContainer = lazy.E10SUtils.deserializePolicyContainer(
+      context.policyContainer
+    );
 
     if (this.contentData) {
       this.browser = this.contentData.browser;
@@ -1451,7 +1453,7 @@ export class nsContextMenu {
       originStoragePrincipal: this.storagePrincipal,
       triggeringPrincipal: this.principal,
       triggeringRemoteType: this.remoteType,
-      csp: this.csp,
+      policyContainer: this.policyContainer,
       frameID: this.contentData.frameID,
       hasValidUserGestureActivation: true,
     };
@@ -1548,7 +1550,7 @@ export class nsContextMenu {
     this.window.openLinkIn(this.contentData.docLocation, "tab", {
       charset: this.contentData.charSet,
       triggeringPrincipal: this.browser.contentPrincipal,
-      csp: this.browser.csp,
+      policyContainer: this.browser.policyContainer,
       referrerInfo: this.contentData.frameReferrerInfo,
     });
   }
@@ -1564,7 +1566,7 @@ export class nsContextMenu {
     this.window.openLinkIn(this.contentData.docLocation, "window", {
       charset: this.contentData.charSet,
       triggeringPrincipal: this.browser.contentPrincipal,
-      csp: this.browser.csp,
+      policyContainer: this.browser.policyContainer,
       referrerInfo: this.contentData.frameReferrerInfo,
     });
   }
@@ -1685,7 +1687,7 @@ export class nsContextMenu {
       referrerInfo: this.contentData.referrerInfo,
       triggeringPrincipal: this.principal,
       triggeringRemoteType: this.remoteType,
-      csp: this.csp,
+      policyContainer: this.policyContainer,
     });
   }
 
@@ -1740,7 +1742,7 @@ export class nsContextMenu {
         forceAllowDataURI: true,
         triggeringPrincipal: this.principal,
         triggeringRemoteType: this.remoteType,
-        csp: this.csp,
+        policyContainer: this.policyContainer,
       });
     }
   }
@@ -1806,7 +1808,7 @@ export class nsContextMenu {
       forceAllowDataURI: true,
       triggeringPrincipal: this.principal,
       triggeringRemoteType: this.remoteType,
-      csp: this.csp,
+      policyContainer: this.policyContainer,
     });
   }
 
@@ -2781,7 +2783,8 @@ export class nsContextMenu {
     // Store searchTerms in context menu item so we know what to search onclick
     menuItem.searchTerms = menuItemPrivate.searchTerms = selectedText;
     menuItem.principal = menuItemPrivate.principal = this.principal;
-    menuItem.csp = menuItemPrivate.csp = this.csp;
+    menuItem.policyContainer = menuItemPrivate.policyContainer =
+      this.policyContainer;
 
     // Copied to alert.js' prefillAlertInfo().
     // If the JS character after our truncation point is a trail surrogate,

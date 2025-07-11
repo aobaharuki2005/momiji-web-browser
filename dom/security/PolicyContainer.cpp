@@ -147,6 +147,12 @@ void PolicyContainer::InitFromOther(PolicyContainer* aOther) {
   }
 }
 
+NS_IMETHODIMP PolicyContainer::InitFromCSP(nsIContentSecurityPolicy* aCSP) {
+  SetCSP(aCSP);
+
+  return NS_OK;
+}
+
 bool PolicyContainer::Equals(const PolicyContainer* aContainer,
                              const PolicyContainer* aOtherContainer) {
   // Do a quick pointer check first, also checks if both are null.
@@ -202,6 +208,12 @@ nsIIntegrityPolicy* PolicyContainer::GetIntegrityPolicy(
     return nullptr;
   }
   return PolicyContainer::Cast(aPolicyContainer)->IntegrityPolicy();
+}
+
+NS_IMETHODIMP PolicyContainer::GetCsp(nsIContentSecurityPolicy** aCsp) {
+  nsCOMPtr<nsIContentSecurityPolicy> csp = mCSP;
+  csp.forget(aCsp);
+  return NS_OK;
 }
 
 NS_IMPL_CLASSINFO(PolicyContainer, nullptr, 0, NS_IPOLICYCONTAINER_IID)

@@ -36,6 +36,7 @@ class PolicyContainer : public nsIPolicyContainer {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISERIALIZABLE
+  NS_DECL_NSIPOLICYCONTAINER
 
   PolicyContainer() = default;
 

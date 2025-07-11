@@ -1379,7 +1379,8 @@
         let replace = isTab(targetTab);
         let newIndex = this.#getDropIndex(event);
         let urls = links.map(link => link.url);
-        let csp = Services.droppedLinkHandler.getCsp(event);
+        let policyContainer =
+          Services.droppedLinkHandler.getPolicyContainer(event);
         let triggeringPrincipal =
           Services.droppedLinkHandler.getTriggeringPrincipal(event);
 
@@ -1409,7 +1410,7 @@
             tabGroup,
             userContextId,
             triggeringPrincipal,
-            csp,
+            policyContainer,
           });
         })();
       }

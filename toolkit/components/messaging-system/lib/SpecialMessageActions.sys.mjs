@@ -287,7 +287,6 @@ export const SpecialMessageActions = {
         triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
           {}
         ),
-        csp: null,
         resolveOnContentBrowserCreated: resolve,
         forceForeground: true,
       });
@@ -558,7 +557,6 @@ export const SpecialMessageActions = {
             private: false,
             triggeringPrincipal:
               Services.scriptSecurityManager.createNullPrincipal({}),
-            csp: null,
           }
         );
         break;
@@ -658,7 +656,6 @@ export const SpecialMessageActions = {
           private: false,
           triggeringPrincipal:
             Services.scriptSecurityManager.createNullPrincipal({}),
-          csp: null,
         });
         break;
       case "FXA_SIGNIN_FLOW":

@@ -918,7 +918,9 @@ export class ContextMenuChild extends JSWindowActorChild {
     context.target = node;
     context.targetIdentifier = lazy.ContentDOMReference.get(node);
 
-    context.csp = lazy.E10SUtils.serializeCSP(context.target.ownerDocument.csp);
+    context.policyContainer = lazy.E10SUtils.serializePolicyContainer(
+      context.target.ownerDocument.policyContainer
+    );
 
     // Check if we are in the PDF Viewer.
     context.inPDFViewer =

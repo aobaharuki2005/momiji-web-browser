@@ -264,7 +264,6 @@ var BrowserCommands = {
           inBackground: loadInBackground,
           triggeringPrincipal:
             Services.scriptSecurityManager.getSystemPrincipal(),
-          csp: null,
         });
         if (!loadInBackground) {
           if (isBlankPageURL(homePage)) {
