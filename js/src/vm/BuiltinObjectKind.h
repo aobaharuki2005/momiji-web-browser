@@ -29,6 +29,7 @@ class GlobalObject;
 enum class BuiltinObjectKind : uint8_t {
   // Built-in constructors.
   Array,
+  ListFormat,
   Map,
   Promise,
   RegExp,

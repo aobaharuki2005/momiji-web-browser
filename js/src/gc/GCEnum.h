@@ -154,7 +154,6 @@ enum class GCAbortReason {
   _(DebuggerOnStepHandler)                 \
   _(DebuggerOnPopHandler)                  \
   _(ICUObject)                             \
-  _(IntlOptions)                           \
   _(FinalizationRegistryRecordVector)      \
   _(FinalizationRegistryRegistrations)     \
   _(FinalizationRecordVector)              \

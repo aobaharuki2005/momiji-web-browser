@@ -155,13 +155,30 @@ void js::RelativeTimeFormatObject::finalize(JS::GCContext* gcx, JSObject* obj) {
  */
 static mozilla::intl::RelativeTimeFormat* NewRelativeTimeFormatter(
     JSContext* cx, Handle<RelativeTimeFormatObject*> relativeTimeFormat) {
-  RootedValue value(cx);
   RootedObject internals(cx, intl::GetInternalsObject(cx, relativeTimeFormat));
   if (!internals) {
     return nullptr;
   }
 
+  RootedValue value(cx);
+
+  if (!GetProperty(cx, internals, internals, cx->names().locale, &value)) {
+    return nullptr;
+  }
+
   // ICU expects numberingSystem as a Unicode locale extensions on locale.
+
+  mozilla::intl::Locale tag;
+  {
+    Rooted<JSLinearString*> locale(cx, value.toString()->ensureLinear(cx));
+    if (!locale) {
+      return nullptr;
+    }
+
+    if (!intl::ParseLocale(cx, locale, tag)) {
+      return nullptr;
+    }
+  }
 
   JS::RootedVector<intl::UnicodeExtensionKeyword> keywords(cx);
 
@@ -181,7 +198,21 @@ static mozilla::intl::RelativeTimeFormat* NewRelativeTimeFormatter(
     }
   }
 
-  UniqueChars locale = intl::FormatLocale(cx, internals, keywords);
+  // |ApplyUnicodeExtensionToTag| applies the new keywords to the front of the
+  // Unicode extension subtag. We're then relying on ICU to follow RFC 6067,
+  // which states that any trailing keywords using the same key should be
+  // ignored.
+  if (!intl::ApplyUnicodeExtensionToTag(cx, tag, keywords)) {
+    return nullptr;
+  }
+
+  intl::FormatBuffer<char> buffer(cx);
+  if (auto result = tag.ToString(buffer); result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
+    return nullptr;
+  }
+
+  UniqueChars locale = buffer.extractStringZ();
   if (!locale) {
     return nullptr;
   }
@@ -287,7 +318,7 @@ bool js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  intl::RelativeTimeFormatUnit jsUnitType;
+  intl::FieldType jsUnitType;
   using FormatUnit = mozilla::intl::RelativeTimeFormat::FormatUnit;
   FormatUnit relTimeUnit;
   {
