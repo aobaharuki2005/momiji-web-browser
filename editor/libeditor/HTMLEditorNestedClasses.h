@@ -1389,116 +1389,7 @@ HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner final {
       const HTMLEditor& aHTMLEditor, nsRange& aRangeToDelete,
       const Element& aEditingHost, ComputeRangeFor aComputeRangeFor) const;
 
-  class MOZ_STACK_CLASS AutoInclusiveAncestorBlockElementsJoiner final {
-   public:
-    AutoInclusiveAncestorBlockElementsJoiner() = delete;
-    AutoInclusiveAncestorBlockElementsJoiner(
-        nsIContent& aInclusiveDescendantOfLeftBlockElement,
-        nsIContent& aInclusiveDescendantOfRightBlockElement)
-        : mInclusiveDescendantOfLeftBlockElement(
-              aInclusiveDescendantOfLeftBlockElement),
-          mInclusiveDescendantOfRightBlockElement(
-              aInclusiveDescendantOfRightBlockElement),
-          mCanJoinBlocks(false),
-          mFallbackToDeleteLeafContent(false) {}
-
-    [[nodiscard]] bool IsSet() const {
-      return mLeftBlockElement && mRightBlockElement;
-    }
-    [[nodiscard]] bool IsSameBlockElement() const {
-      return mLeftBlockElement && mLeftBlockElement == mRightBlockElement;
-    }
-
-    /**
-     * Prepare for joining inclusive ancestor block elements.  When this
-     * returns false, the deletion should be canceled.
-     */
-    [[nodiscard]] Result<bool, nsresult> Prepare(const HTMLEditor& aHTMLEditor,
-                                                 const Element& aEditingHost);
-
-    /**
-     * When this returns true, this can join the blocks with `Run()`.
-     */
-    [[nodiscard]] bool CanJoinBlocks() const { return mCanJoinBlocks; }
-
-    /**
-     * When this returns true, `Run()` must return "ignored" so that
-     * caller can skip calling `Run()`.  This is available only when
-     * `CanJoinBlocks()` returns `true`.
-     * TODO: This should be merged into `CanJoinBlocks()` in the future.
-     */
-    [[nodiscard]] bool ShouldDeleteLeafContentInstead() const {
-      MOZ_ASSERT(CanJoinBlocks());
-      return mFallbackToDeleteLeafContent;
-    }
-
-    /**
-     * ComputeRangesToDelete() extends aRangeToDelete includes the element
-     * boundaries between joining blocks.  If they won't be joined, this
-     * collapses the range to aCaretPoint.
-     */
-    [[nodiscard]] nsresult ComputeRangeToDelete(
-        const HTMLEditor& aHTMLEditor, const EditorDOMPoint& aCaretPoint,
-        nsRange& aRangeToDelete) const;
-
-    /**
-     * Join inclusive ancestor block elements which are found by preceding
-     * Prepare() call.
-     * The right element is always joined to the left element.
-     * If the elements are the same type and not nested within each other,
-     * JoinEditableNodesWithTransaction() is called (example, joining two
-     * list items together into one).
-     * If the elements are not the same type, or one is a descendant of the
-     * other, we instead destroy the right block placing its children into
-     * left block.
-     */
-    [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<DeleteRangeResult, nsresult> Run(
-        HTMLEditor& aHTMLEditor, const Element& aEditingHost);
-
-   private:
-    /**
-     * This method returns true when
-     * `MergeFirstLineOfRightBlockElementIntoDescendantLeftBlockElement()`,
-     * `MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement()` and
-     * `MergeFirstLineOfRightBlockElementIntoLeftBlockElement()` handle it
-     * with the `if` block of the main lambda of them.
-     */
-    [[nodiscard]] bool CanMergeLeftAndRightBlockElements() const {
-      if (!IsSet()) {
-        return false;
-      }
-      // `MergeFirstLineOfRightBlockElementIntoDescendantLeftBlockElement()`
-      if (mPointContainingTheOtherBlockElement.GetContainer() ==
-          mRightBlockElement) {
-        return mNewListElementTagNameOfRightListElement.isSome();
-      }
-      // `MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement()`
-      if (mPointContainingTheOtherBlockElement.GetContainer() ==
-          mLeftBlockElement) {
-        return mNewListElementTagNameOfRightListElement.isSome() &&
-               mRightBlockElement->GetChildCount();
-      }
-      MOZ_ASSERT(!mPointContainingTheOtherBlockElement.IsSet());
-      // `MergeFirstLineOfRightBlockElementIntoLeftBlockElement()`
-      return mNewListElementTagNameOfRightListElement.isSome() ||
-             (mLeftBlockElement->NodeInfo()->NameAtom() ==
-                  mRightBlockElement->NodeInfo()->NameAtom() &&
-              EditorUtils::GetComputedWhiteSpaceStyles(*mLeftBlockElement) ==
-                  EditorUtils::GetComputedWhiteSpaceStyles(
-                      *mRightBlockElement));
-    }
-
-    OwningNonNull<nsIContent> mInclusiveDescendantOfLeftBlockElement;
-    OwningNonNull<nsIContent> mInclusiveDescendantOfRightBlockElement;
-    RefPtr<Element> mLeftBlockElement;
-    RefPtr<Element> mRightBlockElement;
-    Maybe<nsAtom*> mNewListElementTagNameOfRightListElement;
-    EditorDOMPoint mPointContainingTheOtherBlockElement;
-    RefPtr<dom::HTMLBRElement> mPrecedingInvisibleBRElement;
-    bool mCanJoinBlocks;
-    bool mFallbackToDeleteLeafContent;
-  };  // HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
-      // AutoInclusiveAncestorBlockElementsJoiner
+  class MOZ_STACK_CLASS AutoInclusiveAncestorBlockElementsJoiner;
 
   enum class Mode {
     NotInitialized,
@@ -1530,6 +1421,119 @@ HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner final {
   RefPtr<dom::HTMLBRElement> mBRElement;
   EditorDOMPointInText mPreformattedLineBreak;
   Mode mMode = Mode::NotInitialized;
+};
+
+/**
+ * Actually handle joining inclusive ancestor block elements.
+ */
+class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler::
+    AutoBlockElementsJoiner::AutoInclusiveAncestorBlockElementsJoiner final {
+ public:
+  AutoInclusiveAncestorBlockElementsJoiner() = delete;
+  AutoInclusiveAncestorBlockElementsJoiner(
+      nsIContent& aInclusiveDescendantOfLeftBlockElement,
+      nsIContent& aInclusiveDescendantOfRightBlockElement)
+      : mInclusiveDescendantOfLeftBlockElement(
+            aInclusiveDescendantOfLeftBlockElement),
+        mInclusiveDescendantOfRightBlockElement(
+            aInclusiveDescendantOfRightBlockElement),
+        mCanJoinBlocks(false),
+        mFallbackToDeleteLeafContent(false) {}
+
+  [[nodiscard]] bool IsSet() const {
+    return mLeftBlockElement && mRightBlockElement;
+  }
+  [[nodiscard]] bool IsSameBlockElement() const {
+    return mLeftBlockElement && mLeftBlockElement == mRightBlockElement;
+  }
+
+  /**
+   * Prepare for joining inclusive ancestor block elements.  When this
+   * returns false, the deletion should be canceled.
+   */
+  [[nodiscard]] Result<bool, nsresult> Prepare(const HTMLEditor& aHTMLEditor,
+                                               const Element& aEditingHost);
+
+  /**
+   * When this returns true, this can join the blocks with `Run()`.
+   */
+  [[nodiscard]] bool CanJoinBlocks() const { return mCanJoinBlocks; }
+
+  /**
+   * When this returns true, `Run()` must return "ignored" so that
+   * caller can skip calling `Run()`.  This is available only when
+   * `CanJoinBlocks()` returns `true`.
+   * TODO: This should be merged into `CanJoinBlocks()` in the future.
+   */
+  [[nodiscard]] bool ShouldDeleteLeafContentInstead() const {
+    MOZ_ASSERT(CanJoinBlocks());
+    return mFallbackToDeleteLeafContent;
+  }
+
+  /**
+   * ComputeRangesToDelete() extends aRangeToDelete includes the element
+   * boundaries between joining blocks.  If they won't be joined, this
+   * collapses the range to aCaretPoint.
+   */
+  [[nodiscard]] nsresult ComputeRangeToDelete(const HTMLEditor& aHTMLEditor,
+                                              const EditorDOMPoint& aCaretPoint,
+                                              nsRange& aRangeToDelete) const;
+
+  /**
+   * Join inclusive ancestor block elements which are found by preceding
+   * Prepare() call.
+   * The right element is always joined to the left element.
+   * If the elements are the same type and not nested within each other,
+   * JoinEditableNodesWithTransaction() is called (example, joining two
+   * list items together into one).
+   * If the elements are not the same type, or one is a descendant of the
+   * other, we instead destroy the right block placing its children into
+   * left block.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<DeleteRangeResult, nsresult> Run(
+      HTMLEditor& aHTMLEditor, const Element& aEditingHost);
+
+ private:
+  /**
+   * This method returns true when
+   * `MergeFirstLineOfRightBlockElementIntoDescendantLeftBlockElement()`,
+   * `MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement()` and
+   * `MergeFirstLineOfRightBlockElementIntoLeftBlockElement()` handle it
+   * with the `if` block of the main lambda of them.
+   */
+  [[nodiscard]] bool CanMergeLeftAndRightBlockElements() const {
+    if (!IsSet()) {
+      return false;
+    }
+    // `MergeFirstLineOfRightBlockElementIntoDescendantLeftBlockElement()`
+    if (mPointContainingTheOtherBlockElement.GetContainer() ==
+        mRightBlockElement) {
+      return mNewListElementTagNameOfRightListElement.isSome();
+    }
+    // `MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement()`
+    if (mPointContainingTheOtherBlockElement.GetContainer() ==
+        mLeftBlockElement) {
+      return mNewListElementTagNameOfRightListElement.isSome() &&
+             mRightBlockElement->GetChildCount();
+    }
+    MOZ_ASSERT(!mPointContainingTheOtherBlockElement.IsSet());
+    // `MergeFirstLineOfRightBlockElementIntoLeftBlockElement()`
+    return mNewListElementTagNameOfRightListElement.isSome() ||
+           (mLeftBlockElement->NodeInfo()->NameAtom() ==
+                mRightBlockElement->NodeInfo()->NameAtom() &&
+            EditorUtils::GetComputedWhiteSpaceStyles(*mLeftBlockElement) ==
+                EditorUtils::GetComputedWhiteSpaceStyles(*mRightBlockElement));
+  }
+
+  OwningNonNull<nsIContent> mInclusiveDescendantOfLeftBlockElement;
+  OwningNonNull<nsIContent> mInclusiveDescendantOfRightBlockElement;
+  RefPtr<Element> mLeftBlockElement;
+  RefPtr<Element> mRightBlockElement;
+  Maybe<nsAtom*> mNewListElementTagNameOfRightListElement;
+  EditorDOMPoint mPointContainingTheOtherBlockElement;
+  RefPtr<dom::HTMLBRElement> mPrecedingInvisibleBRElement;
+  bool mCanJoinBlocks;
+  bool mFallbackToDeleteLeafContent;
 };
 
 /**
