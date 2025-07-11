@@ -2762,11 +2762,9 @@ nsresult DocumentLoadListener::DoOnStartRequest(nsIRequest* aRequest) {
     // Not every browsing context has a BounceTrackingState. It's also null when
     // the feature is disabled.
     if (bounceTrackingState) {
-      DebugOnly<nsresult> rv =
-          bounceTrackingState->OnDocumentStartRequest(mChannel);
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "BounceTrackingState::OnDocumentStartRequest failed.");
+      // Don't warn when OnDocumentStartRequest fails until bug 1894936 is
+      // fixed, because it fails frequently because of that.
+      Unused << bounceTrackingState->OnDocumentStartRequest(mChannel);
 
       DynamicFpiNavigationHeuristic::MaybeGrantStorageAccess(loadingContext,
                                                              mChannel);
