@@ -859,15 +859,6 @@ class HomeFragment : Fragment() {
             initTabStrip()
         }
 
-        PrivateBrowsingButtonView(
-            button = binding.privateBrowsingButton,
-            showPrivateBrowsingButton = !requireContext().settings().enableHomepageAsNewTab,
-            browsingModeManager = browsingModeManager,
-        ) { newMode ->
-            sessionControlInteractor.onPrivateModeButtonClicked(newMode)
-            Homepage.privateModeIconTapped.record(NoExtras())
-        }
-
         consumeFrom(requireComponents.core.store) {
             toolbarView.updateTabCounter(it)
         }
@@ -1296,7 +1287,6 @@ class HomeFragment : Fragment() {
         }
 
         binding.wordmarkText.imageTintList = tintColor
-        binding.privateBrowsingButton.buttonTintList = tintColor
     }
 
     private fun observeWallpaperUpdates() {
