@@ -494,6 +494,7 @@ bool WaylandSurface::MapLocked(const WaylandSurfaceLock& aProofOfLock,
     LOGWAYLAND("    Failed - can't create sub-surface!");
     return false;
   }
+  mSubsurfaceDesync = aSubsurfaceDesync;
   if (aSubsurfaceDesync) {
     wl_subsurface_set_desync(mSubsurface);
   }
@@ -637,9 +638,12 @@ void WaylandSurface::Commit(WaylandSurfaceLock* aProofOfLock, bool aForceCommit,
   if (mSurface && (aForceCommit || mSurfaceNeedsCommit)) {
     LOGVERBOSE(
         "WaylandSurface::Commit() needs commit %d, force commit %d flush %d",
-        mSurfaceNeedsCommit, aForceCommit, aForceDisplayFlush);
+        !!mSurfaceNeedsCommit, aForceCommit, aForceDisplayFlush);
     mSurfaceNeedsCommit = false;
     wl_surface_commit(mSurface);
+    if (!mSubsurfaceDesync && mParent) {
+      mParent->ForceCommit();
+    }
     if (aForceDisplayFlush) {
       wl_display_flush(WaylandDisplayGet()->GetDisplay());
     }

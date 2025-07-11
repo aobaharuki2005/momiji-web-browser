@@ -261,6 +261,8 @@ class WaylandSurface final {
 
   void AssertCurrentThreadOwnsMutex();
 
+  void ForceCommit() { mSurfaceNeedsCommit = true; }
+
  private:
   ~WaylandSurface();
 
@@ -331,7 +333,13 @@ class WaylandSurface final {
 
   // wl_surface setup/states
   wl_surface* mSurface = nullptr;
-  bool mSurfaceNeedsCommit = false;
+  mozilla::Atomic<bool, mozilla::Relaxed> mSurfaceNeedsCommit{false};
+
+  // When subsurface is desynced, we need to commit to parent surface
+  // to see the change in subsurface (this one).
+  // In such case we set mSurfaceNeedsCommit to parent for it.
+  bool mSubsurfaceDesync = true;
+
   wl_subsurface* mSubsurface = nullptr;
   gfx::IntPoint mSubsurfacePosition{-1, -1};
 
