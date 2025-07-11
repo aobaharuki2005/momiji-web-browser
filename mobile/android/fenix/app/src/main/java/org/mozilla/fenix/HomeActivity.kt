@@ -527,7 +527,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         components.core.requestInterceptor.setNavigationController(navHost.navController)
 
         supportFragmentManager.registerFragmentLifecycleCallbacks(
-            StatusBarColorManager(themeManager, this),
+            StatusBarColorManager(themeManager, this, settings().isTabStripEnabled),
             true,
         )
 

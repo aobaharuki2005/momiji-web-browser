@@ -163,7 +163,6 @@ import org.mozilla.fenix.browser.store.BrowserScreenMiddleware
 import org.mozilla.fenix.browser.store.BrowserScreenStore
 import org.mozilla.fenix.browser.store.BrowserScreenStore.Environment
 import org.mozilla.fenix.browser.tabstrip.TabStrip
-import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.FenixAutocompletePrompt
 import org.mozilla.fenix.components.FenixSuggestStrongPasswordPrompt
@@ -1101,7 +1100,6 @@ abstract class BaseBrowserFragment :
 
         crashContentIntegration.set(
             feature = CrashContentIntegration(
-                context = context,
                 browserStore = requireComponents.core.store,
                 appStore = requireComponents.appStore,
                 toolbar = browserToolbarView,
@@ -1266,7 +1264,7 @@ abstract class BaseBrowserFragment :
 
         initializeEngineView(
             topToolbarHeight = context.settings().getTopToolbarHeight(
-                includeTabStrip = customTabSessionId == null && context.isTabStripEnabled(),
+                includeTabStrip = customTabSessionId == null && context.settings().isTabStripEnabled,
             ),
             bottomToolbarHeight = bottomToolbarHeight,
         )
@@ -1976,7 +1974,7 @@ abstract class BaseBrowserFragment :
         if (fullScreenFeature.get()?.isFullScreen == true) return 0 to 0
 
         val topToolbarHeight = context.settings().getTopToolbarHeight(
-            includeTabStrip = customTabSessionId == null && context.isTabStripEnabled(),
+            includeTabStrip = customTabSessionId == null && context.settings().isTabStripEnabled,
         )
         val bottomToolbarHeight = context.settings().getBottomToolbarHeight()
 
@@ -2178,7 +2176,10 @@ abstract class BaseBrowserFragment :
             (activity as? HomeActivity)?.let { homeActivity ->
                 // ExternalAppBrowserActivity exclusively handles it's own theming unless in private mode.
                 if (homeActivity !is ExternalAppBrowserActivity || homeActivity.browsingModeManager.mode.isPrivate) {
-                    homeActivity.themeManager.applyStatusBarTheme(homeActivity, homeActivity.isTabStripEnabled())
+                    homeActivity.themeManager.applyStatusBarTheme(
+                        homeActivity,
+                        requireContext().settings().isTabStripEnabled,
+                    )
                 }
             }
             collapseBrowserView()
@@ -2246,7 +2247,7 @@ abstract class BaseBrowserFragment :
         val isFullscreen = fullScreenFeature.get()?.isFullScreen == true
         val shouldToolbarsBeHidden = isFullscreen || !webAppToolbarShouldBeVisible
         val topToolbarHeight = requireContext().settings().getTopToolbarHeight(
-            includeTabStrip = customTabSessionId == null && requireContext().isTabStripEnabled(),
+            includeTabStrip = customTabSessionId == null && requireContext().settings().isTabStripEnabled,
         )
         val bottomToolbarHeight = requireContext().settings().getBottomToolbarHeight()
 

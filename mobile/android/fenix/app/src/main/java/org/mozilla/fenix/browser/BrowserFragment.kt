@@ -36,7 +36,6 @@ import org.mozilla.fenix.GleanMetrics.AddressToolbar
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.store.BrowserScreenAction.ReaderModeStatusUpdated
-import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.appstate.AppAction.SnackbarAction
 import org.mozilla.fenix.components.toolbar.BrowserToolbarComposable
@@ -86,7 +85,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         val context = requireContext()
         val components = context.components
 
-        if (!context.isTabStripEnabled() && context.settings().isSwipeToolbarToSwitchTabsEnabled) {
+        if (!context.settings().isTabStripEnabled && context.settings().isSwipeToolbarToSwitchTabsEnabled) {
             binding.gestureLayout.addGestureListener(
                 ToolbarGestureHandler(
                     activity = requireActivity(),
@@ -160,7 +159,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private fun initSharePageAction(context: Context) {
         // Only adding share page action if tab strip is disabled.
-        if (!context.isTabStripEnabled() && isLargeWindow()) {
+        if (!context.settings().isTabStripEnabled && isLargeWindow()) {
             val sharePageAction = BrowserToolbar.createShareBrowserAction(
                 context = context,
             ) {

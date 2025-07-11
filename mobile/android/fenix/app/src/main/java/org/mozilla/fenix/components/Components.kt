@@ -34,7 +34,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.autofill.AutofillConfirmActivity
 import org.mozilla.fenix.autofill.AutofillSearchActivity
 import org.mozilla.fenix.autofill.AutofillUnlockActivity
-import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.setup.checklist.SetupChecklistState
@@ -301,7 +300,7 @@ class Components(private val context: Context) {
             checklistItems = getSetupChecklistCollection(
                 settings = settings,
                 collection = type,
-                tabStripEnabled = context.isTabStripEnabled(),
+                tabStripEnabled = settings.isTabStripEnabled,
             ),
         )
     } else {

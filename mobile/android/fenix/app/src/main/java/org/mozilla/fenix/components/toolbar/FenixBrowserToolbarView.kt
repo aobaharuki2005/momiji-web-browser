@@ -14,7 +14,6 @@ import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.concept.toolbar.ScrollableToolbar
 import mozilla.components.ui.widgets.behavior.EngineViewScrollingBehavior
 import mozilla.components.ui.widgets.behavior.ViewPosition
-import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -137,5 +136,5 @@ abstract class FenixBrowserToolbarView(
         }
     }
 
-    protected fun shouldShowTabStrip() = customTabSession == null && context.isTabStripEnabled()
+    protected fun shouldShowTabStrip() = customTabSession == null && settings.isTabStripEnabled
 }

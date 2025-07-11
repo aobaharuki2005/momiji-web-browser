@@ -38,7 +38,6 @@ import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.AddressToolbar
 import org.mozilla.fenix.GleanMetrics.CookieBanners
 import org.mozilla.fenix.R
-import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.Settings
@@ -81,7 +80,7 @@ class BrowserToolbarCFRPresenter(
     fun start() {
         @Suppress("ComplexCondition")
         if (!isPrivate && !settings.hasShownTabSwipeCFR &&
-            !context.isTabStripEnabled() && settings.isSwipeToolbarToSwitchTabsEnabled
+            !settings.isTabStripEnabled && settings.isSwipeToolbarToSwitchTabsEnabled
         ) {
             scope = browserStore.flowScoped { flow ->
                 flow
