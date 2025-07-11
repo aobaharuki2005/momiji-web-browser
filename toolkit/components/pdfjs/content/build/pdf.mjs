@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.4
- * pdfjsBuild = 2e0f1ec51
+ * pdfjsVersion = 5.3.77
+ * pdfjsBuild = 85b67f19b
  */
 
 ;// ./src/shared/util.js
@@ -2000,7 +2000,6 @@ class AnnotationEditorUIManager {
   #translationTimeoutId = null;
   #container = null;
   #viewer = null;
-  #viewerAlert = null;
   #updateModeCapability = null;
   static TRANSLATE_SMALL = 1;
   static TRANSLATE_BIG = 10;
@@ -2062,11 +2061,10 @@ class AnnotationEditorUIManager {
       checker: arrowChecker
     }]]));
   }
-  constructor(container, viewer, viewerAlert, altTextManager, signatureManager, eventBus, pdfDocument, pageColors, highlightColors, enableHighlightFloatingButton, enableUpdatedAddImage, enableNewAltTextWhenAddingImage, mlManager, editorUndoBar, supportsPinchToZoom) {
+  constructor(container, viewer, altTextManager, signatureManager, eventBus, pdfDocument, pageColors, highlightColors, enableHighlightFloatingButton, enableUpdatedAddImage, enableNewAltTextWhenAddingImage, mlManager, editorUndoBar, supportsPinchToZoom) {
     const signal = this._signal = this.#abortController.signal;
     this.#container = container;
     this.#viewer = viewer;
-    this.#viewerAlert = viewerAlert;
     this.#altTextManager = altTextManager;
     this.#signatureManager = signatureManager;
     this._eventBus = eventBus;
@@ -2345,18 +2343,6 @@ class AnnotationEditorUIManager {
   addToAnnotationStorage(editor) {
     if (!editor.isEmpty() && this.#annotationStorage && !this.#annotationStorage.has(editor.id)) {
       this.#annotationStorage.setValue(editor.id, editor);
-    }
-  }
-  a11yAlert(messageId, args = null) {
-    const viewerAlert = this.#viewerAlert;
-    if (!viewerAlert) {
-      return;
-    }
-    viewerAlert.setAttribute("data-l10n-id", messageId);
-    if (args) {
-      viewerAlert.setAttribute("data-l10n-args", JSON.stringify(args));
-    } else {
-      viewerAlert.removeAttribute("data-l10n-args");
     }
   }
   #selectionChange() {
@@ -2746,7 +2732,7 @@ class AnnotationEditorUIManager {
   removeLayer(layer) {
     this.#allLayers.delete(layer.pageIndex);
   }
-  async updateMode(mode, editId = null, isFromKeyboard = false, mustEnterInEditMode = false) {
+  async updateMode(mode, editId = null, isFromKeyboard = false) {
     if (this.#mode === mode) {
       return;
     }
@@ -2785,9 +2771,7 @@ class AnnotationEditorUIManager {
     for (const editor of this.#allEditors.values()) {
       if (editor.annotationElementId === editId || editor.id === editId) {
         this.setSelected(editor);
-        if (mustEnterInEditMode) {
-          editor.enterInEditMode();
-        }
+        editor.enterInEditMode();
       } else {
         editor.unselect();
       }
@@ -2986,10 +2970,6 @@ class AnnotationEditorUIManager {
     });
   }
   setSelected(editor) {
-    this.updateToolbar({
-      mode: editor.mode,
-      editId: editor.id
-    });
     this.#currentDrawingSession?.commitOrRemove();
     for (const ed of this.#selectedEditors) {
       if (ed !== editor) {
@@ -3919,7 +3899,6 @@ class AnnotationEditor {
     this._willKeepAspectRatio = false;
     this._initialOptions.isCentered = parameters.isCentered;
     this._structTreeParentId = null;
-    this.annotationElementId = parameters.annotationElementId || null;
     const {
       rotation,
       rawDims: {
@@ -3941,9 +3920,6 @@ class AnnotationEditor {
   }
   get editorType() {
     return Object.getPrototypeOf(this).constructor._type;
-  }
-  get mode() {
-    return Object.getPrototypeOf(this).constructor._editorType;
   }
   static get isDrawer() {
     return false;
@@ -4079,9 +4055,6 @@ class AnnotationEditor {
     }
   }
   commit() {
-    if (!this.isInEditMode()) {
-      return;
-    }
     this.addToAnnotationStorage();
   }
   addToAnnotationStorage() {
@@ -4920,8 +4893,7 @@ class AnnotationEditor {
     const editor = new this.prototype.constructor({
       parent,
       id: parent.getNextId(),
-      uiManager,
-      annotationElementId: data.annotationElementId
+      uiManager
     });
     editor.rotation = data.rotation;
     editor.#accessibilityData = data.accessibilityData;
@@ -10369,7 +10341,7 @@ function getDocument(src = {}) {
   }
   const docParams = {
     docId,
-    apiVersion: "5.4.4",
+    apiVersion: "5.3.77",
     data,
     password,
     disableAutoFetch,
@@ -10429,7 +10401,7 @@ function getDocument(src = {}) {
         throw new Error("Worker was destroyed");
       }
       const messageHandler = new MessageHandler(docId, workerId, worker.port);
-      const transport = new WorkerTransport(messageHandler, task, networkStream, transportParams, transportFactory, enableHWA);
+      const transport = new WorkerTransport(messageHandler, task, networkStream, transportParams, transportFactory);
       task._transport = transport;
       messageHandler.send("Ready", null);
     });
@@ -10707,7 +10679,6 @@ class PDFPageProxy {
   }
   render({
     canvasContext,
-    canvas = canvasContext.canvas,
     viewport,
     intent = "display",
     annotationMode = AnnotationMode.ENABLE,
@@ -10774,7 +10745,7 @@ class PDFPageProxy {
     const internalRenderTask = new InternalRenderTask({
       callback: complete,
       params: {
-        canvas,
+        canvasContext,
         viewport,
         transform,
         background
@@ -10788,8 +10759,7 @@ class PDFPageProxy {
       filterFactory: this._transport.filterFactory,
       useRequestAnimationFrame: !intentPrint,
       pdfBug: this._pdfBug,
-      pageColors,
-      enableHWA: this._transport.enableHWA
+      pageColors
     });
     (intentState.renderTasks ||= new Set()).add(internalRenderTask);
     const renderTask = internalRenderTask.task;
@@ -11226,7 +11196,7 @@ class WorkerTransport {
   #pagePromises = new Map();
   #pageRefCache = new Map();
   #passwordCapability = null;
-  constructor(messageHandler, loadingTask, networkStream, params, factory, enableHWA) {
+  constructor(messageHandler, loadingTask, networkStream, params, factory) {
     this.messageHandler = messageHandler;
     this.loadingTask = loadingTask;
     this.commonObjs = new PDFObjects();
@@ -11247,7 +11217,6 @@ class WorkerTransport {
     this._fullReader = null;
     this._lastProgress = null;
     this.downloadInfoCapability = Promise.withResolvers();
-    this.enableHWA = enableHWA;
     this.setupMessageHandler();
   }
   #cacheSimpleMethod(name, data = null) {
@@ -11779,8 +11748,7 @@ class InternalRenderTask {
     filterFactory,
     useRequestAnimationFrame = false,
     pdfBug = false,
-    pageColors = null,
-    enableHWA = false
+    pageColors = null
   }) {
     this.callback = callback;
     this.params = params;
@@ -11805,8 +11773,7 @@ class InternalRenderTask {
     this._continueBound = this._continue.bind(this);
     this._scheduleNextBound = this._scheduleNext.bind(this);
     this._nextBound = this._next.bind(this);
-    this._canvas = params.canvas;
-    this._enableHWA = enableHWA;
+    this._canvas = params.canvasContext.canvas;
   }
   get completed() {
     return this.capability.promise.catch(function () {});
@@ -11830,14 +11797,11 @@ class InternalRenderTask {
       this.stepper.nextBreakPoint = this.stepper.getNextBreakPoint();
     }
     const {
+      canvasContext,
       viewport,
       transform,
       background
     } = this.params;
-    const canvasContext = this._canvas.getContext("2d", {
-      alpha: false,
-      willReadFrequently: !this._enableHWA
-    });
     this.gfx = new CanvasGraphics(canvasContext, this.commonObjs, this.objs, this.canvasFactory, this.filterFactory, {
       optionalContentConfig
     }, this.annotationCanvasMap, this.pageColors);
@@ -11911,8 +11875,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "5.4.4";
-const build = "2e0f1ec51";
+const version = "5.3.77";
+const build = "85b67f19b";
 
 ;// ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -12690,8 +12654,7 @@ class AnnotationElement {
         parentRect: data.rect,
         borderStyle: 0,
         id: `popup_${data.id}`,
-        rotation: data.rotation,
-        noRotate: true
+        rotation: data.rotation
       },
       parent: this.parent,
       elements: [this]
@@ -12790,8 +12753,7 @@ class AnnotationElement {
       this.linkService.eventBus?.dispatch("switchannotationeditormode", {
         source: this,
         mode,
-        editId,
-        mustEnterInEditMode: true
+        editId
       });
     });
   }
@@ -13903,7 +13865,7 @@ class PopupAnnotationElement extends AnnotationElement {
       container: this.container,
       color: this.data.color,
       titleObj: this.data.titleObj,
-      modificationDate: this.data.modificationDate || this.data.creationDate,
+      modificationDate: this.data.modificationDate,
       contentsObj: this.data.contentsObj,
       richText: this.data.richText,
       rect: this.data.rect,
@@ -13993,19 +13955,16 @@ class PopupElement {
     }
     const header = document.createElement("span");
     header.className = "header";
-    if (this.#titleObj?.str) {
-      const title = document.createElement("span");
-      title.className = "title";
-      header.append(title);
-      ({
-        dir: title.dir,
-        str: title.textContent
-      } = this.#titleObj);
-    }
+    const title = document.createElement("h1");
+    header.append(title);
+    ({
+      dir: title.dir,
+      str: title.textContent
+    } = this.#titleObj);
     popup.append(header);
     if (this.#dateObj) {
       const modificationDate = document.createElement("time");
-      modificationDate.className = "popupDate";
+      modificationDate.classList.add("popupDate");
       modificationDate.setAttribute("data-l10n-id", "pdfjs-annotation-date-time-string");
       modificationDate.setAttribute("data-l10n-args", JSON.stringify({
         dateObj: this.#dateObj.valueOf()
@@ -14990,9 +14949,6 @@ class FreeTextEditor extends AnnotationEditor {
     });
     this.#color = params.color || FreeTextEditor._defaultColor || AnnotationEditor._defaultLineColor;
     this.#fontSize = params.fontSize || FreeTextEditor._defaultFontSize;
-    if (!this.annotationElementId) {
-      this._uiManager.a11yAlert("pdfjs-editor-freetext-added-alert");
-    }
   }
   static initialize(l10n, uiManager) {
     AnnotationEditor.initialize(l10n, uiManager);
@@ -15468,7 +15424,6 @@ class FreeTextEditor extends AnnotationEditor {
         pageIndex: pageNumber - 1,
         rect: rect.slice(0),
         rotation,
-        annotationElementId: id,
         id,
         deleted: false,
         popupRef
@@ -15478,6 +15433,7 @@ class FreeTextEditor extends AnnotationEditor {
     editor.#fontSize = data.fontSize;
     editor.#color = Util.makeHexColor(...data.color);
     editor.#content = FreeTextEditor.#deserializeContent(data.value);
+    editor.annotationElementId = data.id || null;
     editor._initialData = initialData;
     return editor;
   }
@@ -16518,9 +16474,6 @@ class HighlightEditor extends AnnotationEditor {
       this.#addToDrawLayer();
       this.rotate(this.rotation);
     }
-    if (!this.annotationElementId) {
-      this._uiManager.a11yAlert("pdfjs-editor-highlight-added-alert");
-    }
   }
   get telemetryInitialData() {
     return {
@@ -17130,7 +17083,6 @@ class HighlightEditor extends AnnotationEditor {
         pageIndex: pageNumber - 1,
         rect: rect.slice(0),
         rotation,
-        annotationElementId: id,
         id,
         deleted: false,
         popupRef
@@ -17163,7 +17115,6 @@ class HighlightEditor extends AnnotationEditor {
         pageIndex: pageNumber - 1,
         rect: rect.slice(0),
         rotation,
-        annotationElementId: id,
         id,
         deleted: false,
         popupRef
@@ -17181,6 +17132,7 @@ class HighlightEditor extends AnnotationEditor {
     if (inkLists) {
       editor.#thickness = data.thickness;
     }
+    editor.annotationElementId = data.id || null;
     editor._initialData = initialData;
     const [pageWidth, pageHeight] = editor.pageDimensions;
     const [pageX, pageY] = editor.pageTranslation;
@@ -17354,9 +17306,6 @@ class DrawingEditor extends AnnotationEditor {
   }) {
     this.#drawOutlines = drawOutlines;
     this._drawingOptions ||= drawingOptions;
-    if (!this.annotationElementId) {
-      this._uiManager.a11yAlert(`pdfjs-editor-${this.editorType}-added-alert`);
-    }
     if (drawId >= 0) {
       this._drawId = drawId;
       this.parent.drawLayer.finalizeDraw(drawId, drawOutlines.defaultProperties);
@@ -18681,13 +18630,13 @@ class InkEditor extends DrawingEditor {
         pageIndex: pageNumber - 1,
         rect: rect.slice(0),
         rotation,
-        annotationElementId: id,
         id,
         deleted: false,
         popupRef
       };
     }
     const editor = await super.deserialize(data, parent, uiManager);
+    editor.annotationElementId = data.id || null;
     editor._initialData = initialData;
     return editor;
   }
@@ -20144,9 +20093,6 @@ class StampEditor extends AnnotationEditor {
     if (this.#bitmapFileName) {
       this.div.setAttribute("aria-description", this.#bitmapFileName);
     }
-    if (!this.annotationElementId) {
-      this._uiManager.a11yAlert("pdfjs-editor-stamp-added-alert");
-    }
   }
   copyCanvas(maxDataDimension, maxPreviewDimension, createImageData = false) {
     if (!maxDataDimension) {
@@ -20344,7 +20290,6 @@ class StampEditor extends AnnotationEditor {
         pageIndex: pageNumber - 1,
         rect: rect.slice(0),
         rotation,
-        annotationElementId: id,
         id,
         deleted: false,
         accessibilityData: {
@@ -20380,6 +20325,7 @@ class StampEditor extends AnnotationEditor {
     const [parentWidth, parentHeight] = editor.pageDimensions;
     editor.width = (rect[2] - rect[0]) / parentWidth;
     editor.height = (rect[3] - rect[1]) / parentHeight;
+    editor.annotationElementId = data.id || null;
     if (accessibilityData) {
       editor.altTextData = accessibilityData;
     }
