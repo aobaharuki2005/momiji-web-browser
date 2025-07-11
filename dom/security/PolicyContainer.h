@@ -48,6 +48,10 @@ class PolicyContainer : public nsIPolicyContainer {
     return static_cast<const PolicyContainer*>(aPolicyContainer);
   }
 
+  static PolicyContainer* Cast(nsIPolicyContainer* aPolicyContainer) {
+    return static_cast<PolicyContainer*>(aPolicyContainer);
+  }
+
   // == CSP ==
   nsIContentSecurityPolicy* CSP() const;
   void SetCSP(nsIContentSecurityPolicy* aPolicy);
