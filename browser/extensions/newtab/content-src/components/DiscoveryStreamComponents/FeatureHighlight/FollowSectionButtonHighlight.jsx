@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { actionCreators as ac } from "common/Actions.mjs";
 import { FeatureHighlight } from "./FeatureHighlight";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback } from "react";
 
 export function FollowSectionButtonHighlight({
   arrowPosition,
@@ -13,39 +12,12 @@ export function FollowSectionButtonHighlight({
   dispatch,
   handleDismiss,
   handleBlock,
-  isIntersecting,
   feature,
 }) {
-  const FEATURE_ID = feature;
-
   const onDismiss = useCallback(() => {
-    // This event is emitted manually because the feature may be triggered outside the OMC flow,
-    // and may not be captured by the messaging-system’s automatic reporting.
-    dispatch(
-      ac.DiscoveryStreamUserEvent({
-        event: "FEATURE_HIGHLIGHT_DISMISS",
-        source: "FEATURE_HIGHLIGHT",
-        value: { feature: FEATURE_ID },
-      })
-    );
-
     handleDismiss();
     handleBlock();
-  }, [dispatch, FEATURE_ID, handleDismiss, handleBlock]);
-
-  useEffect(() => {
-    if (isIntersecting) {
-      // This event is emitted manually because the feature may be triggered outside the OMC flow,
-      // and may not be captured by the messaging-system’s automatic reporting.
-      dispatch(
-        ac.DiscoveryStreamUserEvent({
-          event: "FEATURE_HIGHLIGHT_IMPRESSION",
-          source: "FEATURE_HIGHLIGHT",
-          value: { feature: FEATURE_ID },
-        })
-      );
-    }
-  }, [dispatch, FEATURE_ID, isIntersecting]);
+  }, [handleDismiss, handleBlock]);
 
   return (
     <div className="follow-section-button-highlight">
@@ -53,7 +25,7 @@ export function FollowSectionButtonHighlight({
         position={position}
         arrowPosition={arrowPosition}
         verticalPosition={verticalPosition}
-        feature={FEATURE_ID}
+        feature={feature}
         dispatch={dispatch}
         message={
           <div className="follow-section-button-highlight-content">
