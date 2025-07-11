@@ -499,6 +499,9 @@ void RangeBasedTextDirectiveCreator::FindStartMatchCommonSubstringLengths(
     const nsTArray<RefPtr<AbstractRange>>& aMatchRanges) {
   size_t loopCounter = 0;
   for (const auto& range : aMatchRanges) {
+    if (mWatchdog && mWatchdog->IsDone()) {
+      return;
+    }
     ++loopCounter;
     TEXT_FRAGMENT_LOG(
         "Computing common prefix substring length for start match {}.",
@@ -527,6 +530,9 @@ void RangeBasedTextDirectiveCreator::FindEndMatchCommonSubstringLengths(
     const nsTArray<RefPtr<AbstractRange>>& aMatchRanges) {
   size_t loopCounter = 0;
   for (const auto& range : aMatchRanges) {
+    if (mWatchdog && mWatchdog->IsDone()) {
+      return;
+    }
     ++loopCounter;
     TEXT_FRAGMENT_LOG("Computing common end substring length for end match {}.",
                       loopCounter);
