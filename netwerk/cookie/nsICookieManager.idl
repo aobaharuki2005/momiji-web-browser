@@ -148,7 +148,7 @@ interface nsICookieManager : nsISupports
 
   /**
    * Similar to the previous method but without validation as a blocker.
-   * This method is a temporary thing. See bug XXX.
+   * This method is a temporary thing. See bug 1976197.
    */
   [implicit_jscontext]
   nsICookieValidation addForAddOn(in AUTF8String aHost,

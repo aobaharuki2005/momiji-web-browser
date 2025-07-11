@@ -250,29 +250,6 @@ function redoChange(inspector) {
 }
 
 /**
- * Get the selector-search input box from the inspector panel
- * @return {DOMNode}
- */
-function getSelectorSearchBox(inspector) {
-  return inspector.panelWin.document.getElementById("inspector-searchbox");
-}
-
-/**
- * Using the inspector panel's selector search box, search for a given selector.
- * The selector input string will be entered in the input field and the <ENTER>
- * keypress will be simulated.
- * This function won't wait for any events and is not async. It's up to callers
- * to subscribe to events and react accordingly.
- */
-function searchUsingSelectorSearch(selector, inspector) {
-  info('Entering "' + selector + '" into the selector-search input field');
-  const field = getSelectorSearchBox(inspector);
-  field.focus();
-  field.value = selector;
-  EventUtils.sendKey("return", inspector.panelWin);
-}
-
-/**
  * Check to see if the inspector menu items for editing are disabled.
  * Things like Edit As HTML, Delete Node, etc.
  * @param {NodeFront} nodeFront

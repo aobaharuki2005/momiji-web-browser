@@ -1170,3 +1170,35 @@ async function setProperty(
   }
   await onPopupClosed;
 }
+
+/**
+ * Return the markup view search input
+ *
+ * @param {Inspector} inspector
+ * @returns {Element}
+ */
+function getMarkupViewSearchInput(inspector) {
+  return inspector.panelWin.document.getElementById("inspector-searchbox");
+}
+
+/**
+ * Using the inspector panel's selector search box, search for a given selector.
+ * The selector input string will be entered in the input field and the <ENTER>
+ * keypress will be simulated.
+ */
+async function searchInMarkupView(inspector, search) {
+  info(`Entering "${search}" into the markup view search field`);
+  const inspectorSearchboxEl = getMarkupViewSearchInput(inspector);
+  inspectorSearchboxEl.focus();
+  inspectorSearchboxEl.value = search;
+
+  const onNewNodeFront = inspector.selection.once("new-node-front");
+  const onSearchResult = inspector.search.once("search-result");
+  EventUtils.sendKey("return", inspector.panelWin);
+
+  info("Wait for search-result");
+  await onSearchResult;
+
+  info("Wait for new node being selected");
+  await onNewNodeFront;
+}

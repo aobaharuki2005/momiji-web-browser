@@ -297,7 +297,7 @@ async function expectTabThroughResults(options = { reverse: false }) {
     if (
       UrlbarTestUtils.getButtonForResultIndex(
         window,
-        "menu",
+        "result-menu",
         UrlbarTestUtils.getSelectedRowIndex(window)
       )
     ) {

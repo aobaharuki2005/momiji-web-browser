@@ -28,6 +28,11 @@ add_task(async function test_main_content() {
   await panelShownPromise;
 
   let content = panelView.querySelector(lazy.IPProtectionPanel.CONTENT_TAGNAME);
+
+  content.state.isSignedIn = true;
+  content.requestUpdate();
+  await content.updateComplete;
+
   Assert.ok(
     BrowserTestUtils.isVisible(content),
     "ipprotection content component should be present"

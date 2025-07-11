@@ -355,11 +355,6 @@ class WalkerSearch {
           node,
           type,
         });
-
-        // For now, just do one result per node since the frontend
-        // doesn't have a way to highlight each result individually
-        // yet.
-        break;
       }
     }
 

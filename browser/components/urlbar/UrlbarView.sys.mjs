@@ -1646,7 +1646,8 @@ export class UrlbarView {
 
     if (this.#getResultMenuCommands(result)) {
       this.#addRowButton(item, {
-        name: "menu",
+        name: "result-menu",
+        classList: ["urlbarView-button-menu"],
         l10n: {
           id: result.showFeedbackMenu
             ? "urlbar-result-menu-button-feedback"
@@ -1661,11 +1662,18 @@ export class UrlbarView {
     }
   }
 
-  #addRowButton(item, { name, command, l10n, url, attributes }) {
+  #addRowButton(
+    item,
+    { name, command, l10n, url, attributes, classList = [] }
+  ) {
     let button = this.#createElement("span");
     this.#setDynamicAttributes(button, attributes);
     button.id = `${item.id}-button-${name}`;
-    button.classList.add("urlbarView-button", "urlbarView-button-" + name);
+    button.classList.add(
+      "urlbarView-button",
+      "urlbarView-button-" + name,
+      ...classList
+    );
     button.setAttribute("role", "button");
     button.dataset.name = name;
     if (l10n) {

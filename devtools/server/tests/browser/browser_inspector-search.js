@@ -101,15 +101,30 @@ add_task(async function () {
         {
           desc: "Search for tag with one result.",
           search: "body",
-          expected: [{ node: inspectee.body, type: "tag" }],
+          expected: [
+            { node: inspectee.body, type: "xpath" },
+            { node: inspectee.body, type: "tag" },
+          ],
         },
         {
           desc: "Search for tag with multiple results",
           search: "h2",
           expected: [
-            { node: inspectee.querySelectorAll("h2")[0], type: "tag" },
-            { node: inspectee.querySelectorAll("h2")[1], type: "tag" },
-            { node: inspectee.querySelectorAll("h2")[2], type: "tag" },
+            {
+              node: inspectee.querySelector("h2:nth-of-type(1)"),
+              type: "selector",
+            },
+            { node: inspectee.querySelector("h2:nth-of-type(1)"), type: "tag" },
+            {
+              node: inspectee.querySelector("h2:nth-of-type(2)"),
+              type: "selector",
+            },
+            { node: inspectee.querySelector("h2:nth-of-type(2)"), type: "tag" },
+            {
+              node: inspectee.querySelector("h2:nth-of-type(3)"),
+              type: "selector",
+            },
+            { node: inspectee.querySelector("h2:nth-of-type(3)"), type: "tag" },
           ],
         },
         {
@@ -157,6 +172,7 @@ add_task(async function () {
           desc: "Search with multiple matches in a single tag expecting a single result",
           search: "💩",
           expected: [
+            { node: inspectee.getElementById("💩"), type: "attributeName" },
             { node: inspectee.getElementById("💩"), type: "attributeValue" },
           ],
         },
@@ -234,6 +250,7 @@ add_task(async function () {
           desc: "Search that has tag and text results",
           search: "h1",
           expected: [
+            { node: inspectee.querySelector("h1"), type: "selector" },
             { node: inspectee.querySelector("h1"), type: "tag" },
             {
               node: inspectee.querySelector("h1 + p").childNodes[0],
@@ -386,9 +403,21 @@ add_task(async function () {
 
       info("Testing search before and after a mutation.");
       const expected = [
-        { node: inspectee.querySelectorAll("h3")[0], type: "tag" },
-        { node: inspectee.querySelectorAll("h3")[1], type: "tag" },
-        { node: inspectee.querySelectorAll("h3")[2], type: "tag" },
+        {
+          node: inspectee.querySelector("h3:nth-of-type(1)"),
+          type: "selector",
+        },
+        { node: inspectee.querySelector("h3:nth-of-type(1)"), type: "tag" },
+        {
+          node: inspectee.querySelector("h3:nth-of-type(2)"),
+          type: "selector",
+        },
+        { node: inspectee.querySelector("h3:nth-of-type(2)"), type: "tag" },
+        {
+          node: inspectee.querySelector("h3:nth-of-type(3)"),
+          type: "selector",
+        },
+        { node: inspectee.querySelector("h3:nth-of-type(3)"), type: "tag" },
       ];
 
       results = walkerSearch.search("h3");
@@ -410,7 +439,7 @@ add_task(async function () {
       results = walkerSearch.search("h3");
       assertSearchResults(
         results,
-        [expected[1], expected[2]],
+        [expected[2], expected[3], expected[4], expected[5]],
         "Results are updated after removal"
       );
 
@@ -429,8 +458,10 @@ add_task(async function () {
         results,
         [
           { node: inspectee.body, type: "attributeName" },
-          expected[1],
           expected[2],
+          expected[3],
+          expected[4],
+          expected[5],
         ],
         "Results are updated after addition"
       );
@@ -447,8 +478,8 @@ add_task(async function () {
           subtree: true,
         });
         inspectee.body.removeAttribute("h3");
-        expected[1].node.remove();
         expected[2].node.remove();
+        expected[4].node.remove();
       });
 
       results = walkerSearch.search("h3");

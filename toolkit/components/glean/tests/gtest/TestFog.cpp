@@ -12,6 +12,7 @@
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/TimeStamp.h"
+#include "../../bindings/private/Common.h"
 
 #include "nsTArray.h"
 
@@ -716,3 +717,16 @@ TEST_F(FOGFixture, TestRustInGTest) { Rust_TestRustInGTest(); }
 
 extern "C" void Rust_TestJogfile();
 TEST_F(FOGFixture, TestJogfile) { Rust_TestJogfile(); }
+
+TEST_F(FOGFixture, IsCamelCaseWorks) {
+  ASSERT_TRUE(IsCamelCase(u"someName"_ns));
+  ASSERT_TRUE(IsCamelCase(u"s1234"_ns));
+  ASSERT_TRUE(IsCamelCase(u"some"_ns));
+
+  ASSERT_FALSE(IsCamelCase(u""_ns));
+  ASSERT_FALSE(IsCamelCase(u"SomeName"_ns));
+  ASSERT_FALSE(IsCamelCase(u"some_name"_ns));
+  ASSERT_FALSE(IsCamelCase(u"SOMENAME"_ns));
+  ASSERT_FALSE(IsCamelCase(u"1234"_ns));
+  ASSERT_FALSE(IsCamelCase(u"some#Name"_ns));
+}

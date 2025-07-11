@@ -22,7 +22,7 @@ add_task(async function () {
   // node, and only the parents up to the ROOT are known, and its direct
   // children.
   info("searching for the innermost child: <em>");
-  await searchFor("em", inspector);
+  await searchInMarkupView(inspector, "em");
 
   container = await getContainerForSelector("em", inspector);
   ok(container, "The <em> tag is now imported in the markup-view");
@@ -47,7 +47,7 @@ add_task(async function () {
 
   info("searching for other nodes too");
   for (const node of ["span", "li", "ul"]) {
-    await searchFor(node, inspector);
+    await searchInMarkupView(inspector, node);
 
     nodeFront = await getNodeFront(node, inspector);
     is(
@@ -61,7 +61,7 @@ add_task(async function () {
     checkHighlightedSearchResults(inspector, [node, node]);
   }
 
-  await searchFor("BUTT", inspector);
+  await searchInMarkupView(inspector, "BUTT");
   is(
     inspector.selection.nodeFront,
     await getNodeFront(".Buttons", inspector),
@@ -70,7 +70,7 @@ add_task(async function () {
   // Selected node markup: <section class="Buttons">
   checkHighlightedSearchResults(inspector, ["Butt"]);
 
-  await searchFor("BUT", inspector);
+  await searchInMarkupView(inspector, "BUT");
   is(
     inspector.selection.nodeFront,
     await getNodeFront(".Buttons", inspector),
@@ -122,7 +122,7 @@ add_task(async function () {
 
   checkHighlightedSearchResults(inspector, []);
 
-  await searchFor("TALLTOPMATCH", inspector);
+  await searchInMarkupView(inspector, "TALLTOPMATCH");
   const talltopNodeFront = await getNodeFront("section.talltop", inspector);
   const talltopNodeFrontChildren =
     await inspector.walker.children(talltopNodeFront);
@@ -133,7 +133,7 @@ add_task(async function () {
   );
   checkHighlightedSearchResults(inspector, ["TALLTOPMATCH"]);
 
-  await searchFor("TALLBOTTOMMATCH", inspector);
+  await searchInMarkupView(inspector, "TALLBOTTOMMATCH");
   const tallbottomNodeFront = await getNodeFront(
     "section.tallbottom",
     inspector
@@ -147,7 +147,7 @@ add_task(async function () {
   );
   checkHighlightedSearchResults(inspector, ["TALLBOTTOMMATCH"]);
 
-  await searchFor("OVERFLOWSMATCH", inspector);
+  await searchInMarkupView(inspector, "OVERFLOWSMATCH");
   const overflowsNodeFront = await getNodeFront("section.overflows", inspector);
   const overflowsNodeFrontChildren =
     await inspector.walker.children(overflowsNodeFront);
@@ -179,7 +179,7 @@ add_task(async function () {
     "section#cropped-attribute container is not into view before searching for a match in its attributes"
   );
 
-  await searchFor("croppedvalue", inspector);
+  await searchInMarkupView(inspector, "croppedvalue");
   is(
     inspector.selection.nodeFront,
     await getNodeFront("section#cropped-attribute", inspector),
@@ -216,17 +216,8 @@ add_task(async function () {
   );
 });
 
-async function searchFor(selector, inspector) {
-  const onNewNodeFront = inspector.selection.once("new-node-front");
-
-  searchUsingSelectorSearch(selector, inspector);
-
-  await onNewNodeFront;
-  await inspector.once("inspector-updated");
-}
-
 function checkHighlightedSearchResults(inspector, expectedHighlights) {
-  const searchInputValue = getSelectorSearchBox(inspector).value;
+  const searchInputValue = getMarkupViewSearchInput(inspector).value;
 
   info(`Checking highlights for "${searchInputValue}" search`);
   const devtoolsHighlights = [

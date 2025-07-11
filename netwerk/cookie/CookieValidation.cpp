@@ -6,6 +6,7 @@
 #include "CookieValidation.h"
 #include "CookieLogging.h"
 #include "CookieService.h"
+#include "CookiePrefixes.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/StaticPrefs_network.h"
 
@@ -14,65 +15,6 @@ constexpr uint32_t kMaxBytesPerDomain = 1024;
 constexpr uint32_t kMaxBytesPerPath = 1024;
 
 using namespace mozilla::net;
-
-namespace {
-
-struct CookiePrefix {
-  nsCString mPrefix;
-  std::function<bool(const CookieStruct&, bool)> mCallback;
-};
-
-MOZ_RUNINIT CookiePrefix gCookiePrefixes[] = {
-    {"__Secure-"_ns,
-     [](const CookieStruct& aCookieData, bool aSecureRequest) -> bool {
-       // If a cookie's name begins with a case-sensitive match for the string
-       // __Secure-, then the cookie will have been set with a Secure attribute.
-       return aSecureRequest && aCookieData.isSecure();
-     }},
-
-    {"__Host-"_ns,
-     [](const CookieStruct& aCookieData, bool aSecureRequest) -> bool {
-       // If a cookie's name begins with a case-sensitive match for the string
-       // __Host-, then the cookie will have been set with a Secure attribute, a
-       // Path attribute with a value of /, and no Domain attribute.
-       return aSecureRequest && aCookieData.isSecure() &&
-              aCookieData.host()[0] != '.' &&
-              aCookieData.path().EqualsLiteral("/");
-     }},
-
-    {"__Http-"_ns,
-     [](const CookieStruct& aCookieData, bool aSecureRequest) -> bool {
-       // If a cookie's name begins with a case-sensitive match for the string
-       // __Http-, then the cookie will have been set with a Secure attribute,
-       // and an HttpOnly attribute.
-       return aSecureRequest && aCookieData.isSecure() &&
-              aCookieData.isHttpOnly();
-     }},
-
-    {"__HostHttp-"_ns,
-     [](const CookieStruct& aCookieData, bool aSecureRequest) -> bool {
-       // If a cookie's name begins with a case-sensitive match for the string
-       // __HostHttp-, then the cookie will have been set with a Secure
-       // attribute, an HttpOnly attribute, a Path attribute with a value of /,
-       // and no Domain attribute.
-       return aSecureRequest && aCookieData.isSecure() &&
-              aCookieData.isHttpOnly() && aCookieData.host()[0] != '.' &&
-              aCookieData.path().EqualsLiteral("/");
-     }},
-};
-
-CookiePrefix* FindCookiePrefix(const nsACString& aString) {
-  for (CookiePrefix& prefix : gCookiePrefixes) {
-    if (StringBeginsWith(aString, prefix.mPrefix,
-                         nsCaseInsensitiveCStringComparator)) {
-      return &prefix;
-    }
-  }
-
-  return nullptr;
-}
-
-}  // namespace
 
 NS_IMPL_ISUPPORTS(CookieValidation, nsICookieValidation)
 
@@ -151,7 +93,8 @@ void CookieValidation::ValidateInternal() {
   }
 
   // If a cookie is nameless, then its value must not start with a known prefix.
-  if (mCookieData.name().IsEmpty() && !!FindCookiePrefix(mCookieData.value())) {
+  if (mCookieData.name().IsEmpty() &&
+      CookiePrefixes::Has(mCookieData.value())) {
     mResult = eRejectedInvalidPrefix;
     return;
   }
@@ -212,7 +155,7 @@ void CookieValidation::ValidateForHostInternal(nsIURI* aHostURI,
   // explicit domain attributes result in a host that starts with a dot, and if
   // the host doesn't start with a dot it correctly matches the true
   // host.
-  if (!CheckPrefixes(mCookieData, potentiallyTrustworthy)) {
+  if (!CookiePrefixes::Check(mCookieData, potentiallyTrustworthy)) {
     mResult = eRejectedInvalidPrefix;
     return;
   }
@@ -332,22 +275,6 @@ bool CookieValidation::CheckDomain(const CookieStruct& aCookieData,
    * it breaks sites (IE doesn't enforce it), so we don't perform this check.
    */
   return false;
-}
-
-// CheckPrefixes
-//
-// Reject cookies whose name starts with the magic prefixes from
-// https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis
-// if they do not meet the criteria required by the prefix.
-bool CookieValidation::CheckPrefixes(const CookieStruct& aCookieData,
-                                     bool aSecureRequest) {
-  CookiePrefix* prefix = FindCookiePrefix(aCookieData.name());
-  if (!prefix) {
-    // not one of the magic prefixes: carry on
-    return true;
-  }
-
-  return prefix->mCallback(aCookieData, aSecureRequest);
 }
 
 void CookieValidation::RetrieveErrorLogData(uint32_t* aFlags,

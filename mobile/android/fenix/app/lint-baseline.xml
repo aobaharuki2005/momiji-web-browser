@@ -316,7 +316,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="404"
+            line="420"
             column="9"/>
     </issue>
 
@@ -327,7 +327,7 @@
         errorLine2="            ^">
         <location
             file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="405"
+            line="421"
             column="13"/>
     </issue>
 
@@ -338,7 +338,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="439"
+            line="455"
             column="9"/>
     </issue>
 
@@ -349,7 +349,7 @@
         errorLine2="            ^">
         <location
             file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="440"
+            line="456"
             column="13"/>
     </issue>
 
@@ -360,7 +360,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="476"
+            line="475"
             column="9"/>
     </issue>
 
@@ -371,7 +371,18 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="492"
+            line="491"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="        mockkStatic(NavController::nav) {"
+        errorLine2="        ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="518"
             column="9"/>
     </issue>
 
@@ -382,7 +393,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="506"
+            line="522"
             column="9"/>
     </issue>
 
@@ -393,7 +404,7 @@
         errorLine2="            ^">
         <location
             file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="507"
+            line="523"
             column="13"/>
     </issue>
 
@@ -404,17 +415,6 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="519"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        mockkStatic(Context::settings) {"
-        errorLine2="        ^">
-        <location
-            file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
             line="548"
             column="9"/>
     </issue>
@@ -422,11 +422,11 @@
     <issue
         id="NoStaticMocking"
         message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        mockkStatic(NavController::nav) {"
+        errorLine1="        mockkStatic(Context::settings) {"
         errorLine2="        ^">
         <location
-            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="549"
+            file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="564"
             column="9"/>
     </issue>
 
@@ -437,7 +437,7 @@
         errorLine2="            ^">
         <location
             file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="549"
+            line="565"
             column="13"/>
     </issue>
 
@@ -446,20 +446,20 @@
         message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
         errorLine1="        mockkStatic(Context::settings) {"
         errorLine2="        ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="771"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="            mockkStatic(NavController::nav) {"
+        errorLine2="            ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
             line="772"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            mockkStatic(NavController::nav) {"
-        errorLine2="            ^">
-        <location
-            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="773"
             column="13"/>
     </issue>
 
@@ -470,7 +470,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="818"
+            line="817"
             column="9"/>
     </issue>
 
@@ -481,7 +481,7 @@
         errorLine2="            ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="819"
+            line="818"
             column="13"/>
     </issue>
 
@@ -492,7 +492,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1314"
+            line="1313"
             column="9"/>
     </issue>
 
@@ -503,7 +503,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1331"
+            line="1330"
             column="9"/>
     </issue>
 
@@ -514,7 +514,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1356"
+            line="1355"
             column="9"/>
     </issue>
 
@@ -525,7 +525,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1390"
+            line="1389"
             column="9"/>
     </issue>
 
@@ -536,7 +536,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1424"
+            line="1423"
             column="9"/>
     </issue>
 
@@ -547,7 +547,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1481"
+            line="1480"
             column="9"/>
     </issue>
 
@@ -668,7 +668,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/test/java/org/mozilla/fenix/home/DefaultSessionControlControllerTest.kt"
-            line="742"
+            line="743"
             column="13"/>
     </issue>
 
@@ -679,7 +679,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/test/java/org/mozilla/fenix/home/DefaultSessionControlControllerTest.kt"
-            line="758"
+            line="759"
             column="13"/>
     </issue>
 
@@ -690,7 +690,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/test/java/org/mozilla/fenix/home/DefaultSessionControlControllerTest.kt"
-            line="780"
+            line="781"
             column="13"/>
     </issue>
 
@@ -701,7 +701,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/test/java/org/mozilla/fenix/home/DefaultSessionControlControllerTest.kt"
-            line="788"
+            line="789"
             column="13"/>
     </issue>
 
@@ -712,249 +712,7 @@
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/test/java/org/mozilla/fenix/home/DefaultSessionControlControllerTest.kt"
-            line="1608"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            mockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="275"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;unmockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            unmockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="282"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            mockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="307"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;unmockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            unmockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="316"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            mockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="460"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;unmockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            unmockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="475"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            mockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="490"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;unmockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            unmockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="501"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            mockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="521"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;unmockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            unmockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="530"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            mockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="550"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;unmockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            unmockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="559"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            mockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="571"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;unmockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            unmockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="580"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            mockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="592"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;unmockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            unmockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="601"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            mockkStatic(&quot;org.mozilla.fenix.ext.BrowserStateKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="999"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;unmockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            unmockkStatic(&quot;org.mozilla.fenix.ext.BrowserStateKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="1009"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            mockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="1126"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;unmockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            unmockkStatic(&quot;mozilla.components.browser.state.selector.SelectorsKt&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="1142"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        mockkStatic(&quot;org.mozilla.fenix.collections.CollectionsDialogKt&quot;)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="1240"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;unmockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        unmockkStatic(&quot;org.mozilla.fenix.collections.CollectionsDialogKt&quot;)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/tabstray/DefaultTabsTrayControllerTest.kt"
-            line="1253"
+            line="1518"
             column="9"/>
     </issue>
 
@@ -1306,7 +1064,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/search/SearchFragmentStoreTest.kt"
-            line="84"
+            line="86"
             column="9"/>
     </issue>
 
@@ -1317,7 +1075,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/search/SearchFragmentStoreTest.kt"
-            line="609"
+            line="611"
             column="9"/>
     </issue>
 
@@ -2048,6 +1806,28 @@
     </issue>
 
     <issue
+        id="InflateParams"
+        message="Avoid passing `null` as the view root (needed to resolve layout parameters on the inflated layout&apos;s root element)"
+        errorLine1="                .inflate(R.layout.crash_extension_dialog, null, false)"
+        errorLine2="                                                          ~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/addons/ExtensionsProcessDisabledForegroundController.kt"
+            line="80"
+            column="59"/>
+    </issue>
+
+    <issue
+        id="InflateParams"
+        message="Avoid passing `null` as the view root (needed to resolve layout parameters on the inflated layout&apos;s root element)"
+        errorLine1="                val layout = getLayoutInflater().inflate(R.layout.delete_history_time_range_dialog, null)"
+        errorLine2="                                                                                                    ~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/library/history/HistoryFragment.kt"
+            line="702"
+            column="101"/>
+    </issue>
+
+    <issue
         id="IntentFilterUniqueDataAttributes"
         message="Consider splitting data tag into multiple tags with individual attributes to avoid confusion"
         errorLine1="                &lt;data android:scheme=&quot;${deepLinkScheme}&quot;"
@@ -2692,7 +2472,7 @@
         errorLine2="                                              ~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/components/appstate/AppStoreReducer.kt"
-            line="80"
+            line="81"
             column="47"/>
     </issue>
 
@@ -2782,6 +2562,17 @@
             file="src/main/java/org/mozilla/fenix/exceptions/trackingprotection/TrackingProtectionExceptionsView.kt"
             line="25"
             column="14"/>
+    </issue>
+
+    <issue
+        id="ConfigurationScreenWidthHeight"
+        message="Using Configuration.screenWidthDp instead of LocalWindowInfo.current.containerSize"
+        errorLine1="    val screenWidth = configuration.screenWidthDp.dp"
+        errorLine2="                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/home/pocket/ui/PocketStoriesComposables.kt"
+            line="362"
+            column="23"/>
     </issue>
 
     <issue
@@ -3079,28 +2870,6 @@
             file="src/main/res/layout/quicksettings_protections_panel.xml"
             line="18"
             column="6"/>
-    </issue>
-
-    <issue
-        id="AutoboxingStateCreation"
-        message="Prefer `mutableFloatStateOf` instead of `mutableStateOf`"
-        errorLine1="    var debugDrawerFabOffsetX by remember { mutableStateOf(INITIAL_FAB_OFFSET_X) }"
-        errorLine2="                                            ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/fenix/debugsettings/ui/DebugOverlay.kt"
-            line="82"
-            column="45"/>
-    </issue>
-
-    <issue
-        id="AutoboxingStateCreation"
-        message="Prefer `mutableFloatStateOf` instead of `mutableStateOf`"
-        errorLine1="    var debugDrawerFabOffsetY by remember { mutableStateOf(INITIAL_FAB_OFFSET_Y) }"
-        errorLine2="                                            ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/fenix/debugsettings/ui/DebugOverlay.kt"
-            line="83"
-            column="45"/>
     </issue>
 
     <issue
@@ -3524,7 +3293,7 @@
         errorLine2="                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values-vi/strings.xml"
-            line="3645"
+            line="3665"
             column="62"/>
     </issue>
 
@@ -3616,7 +3385,7 @@
         errorLine2="                ^">
         <location
             file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
-            line="400"
+            line="402"
             column="17"/>
     </issue>
 
@@ -3627,7 +3396,7 @@
         errorLine2="                                                         ^">
         <location
             file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
-            line="400"
+            line="402"
             column="58"/>
     </issue>
 
@@ -3638,7 +3407,7 @@
         errorLine2="                ^">
         <location
             file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
-            line="410"
+            line="412"
             column="17"/>
     </issue>
 
@@ -3649,7 +3418,7 @@
         errorLine2="                                                         ^">
         <location
             file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
-            line="410"
+            line="412"
             column="58"/>
     </issue>
 
@@ -3660,7 +3429,7 @@
         errorLine2="                ^">
         <location
             file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
-            line="416"
+            line="418"
             column="17"/>
     </issue>
 
@@ -3671,7 +3440,7 @@
         errorLine2="                                                         ^">
         <location
             file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
-            line="416"
+            line="418"
             column="58"/>
     </issue>
 
@@ -3902,7 +3671,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/browser/store/BrowserScreenMiddlewareTest.kt"
-            line="50"
+            line="56"
             column="9"/>
     </issue>
 
@@ -3913,7 +3682,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/browser/store/BrowserScreenMiddlewareTest.kt"
-            line="98"
+            line="100"
             column="9"/>
     </issue>
 

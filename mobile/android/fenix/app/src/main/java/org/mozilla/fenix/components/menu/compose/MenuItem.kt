@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CollectionItemInfo
@@ -39,11 +40,13 @@ import androidx.compose.ui.semantics.collectionItemInfo
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.Divider
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.menu.MenuDialogTestTag.WEB_EXTENSION_ITEM
 import org.mozilla.fenix.compose.list.IconListItem
 import org.mozilla.fenix.compose.list.ImageListItem
 import org.mozilla.fenix.compose.list.TextListItem
@@ -221,11 +224,13 @@ internal fun WebExtensionMenuItem(
         iconPainter = iconPainter,
         enabled = enabled == true,
         onClick = onClick,
-        modifier = Modifier.clickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = LocalIndication.current,
-            enabled = enabled == true,
-        ) { onClick?.invoke() }
+        modifier = Modifier
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = LocalIndication.current,
+                enabled = enabled == true,
+            ) { onClick?.invoke() }
+            .testTag(WEB_EXTENSION_ITEM)
             .clearAndSetSemantics {
                 role = Role.Button
                 contentDescription = label
@@ -236,6 +241,7 @@ internal fun WebExtensionMenuItem(
                         columnIndex = 0,
                         columnSpan = 1,
                     )
+                testTagsAsResourceId = true
             }
             .wrapContentSize()
             .clip(shape = ROUNDED_CORNER_SHAPE)

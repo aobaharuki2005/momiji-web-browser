@@ -332,7 +332,7 @@ const uint32_t kSpotLightFocusIndex = 6;
 const uint32_t kSpotLightLimitingConeAngleIndex = 7;
 const uint32_t kSpotLightNumAttributes = 8;
 
-struct DiffuseLightingAttributes {
+struct LightingAttributes {
   LightType mLightType;
   ImplicitlyCopyableFloatArray mLightValues;
   float mSurfaceScale;
@@ -341,7 +341,7 @@ struct DiffuseLightingAttributes {
   float mLightingConstant;
   float mSpecularExponent;
 
-  bool operator==(const DiffuseLightingAttributes& aOther) const {
+  bool operator==(const LightingAttributes& aOther) const {
     return mLightType == aOther.mLightType &&
            mLightValues == aOther.mLightValues &&
            mSurfaceScale == aOther.mSurfaceScale &&
@@ -350,7 +350,9 @@ struct DiffuseLightingAttributes {
   }
 };
 
-struct SpecularLightingAttributes : public DiffuseLightingAttributes {};
+struct DiffuseLightingAttributes : public LightingAttributes {};
+
+struct SpecularLightingAttributes : public LightingAttributes {};
 
 enum class ColorSpace { SRGB, LinearRGB, Max };
 

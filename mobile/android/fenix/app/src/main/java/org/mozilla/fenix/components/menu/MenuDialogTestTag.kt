@@ -17,4 +17,5 @@ internal object MenuDialogTestTag {
 
     const val RECOMMENDED_ADDON_ITEM = "recommended.addon.item"
     const val RECOMMENDED_ADDON_ITEM_TITLE = "$RECOMMENDED_ADDON_ITEM.title"
+    const val WEB_EXTENSION_ITEM = "webExtension.item"
 }
