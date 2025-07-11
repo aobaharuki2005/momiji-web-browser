@@ -1565,7 +1565,7 @@
   -->
   <string name="webcompat_reporter_screen_title">Danevelliñ ul lec\'hienn torret</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description">Sikourit da wellaat %1$s evit an holl. Implijidi Mozilla a c’hall arverañ ar roadennoù a gasit evit kempenn kudennoù al lec’hiennoù.</string>
+  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Sikourit da wellaat %1$s evit an holl. Implijidi Mozilla a c’hall arverañ ar roadennoù a gasit evit kempenn kudennoù al lec’hiennoù.</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1573,7 +1573,7 @@
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">Petra eo ar gudenn?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason">Dibab an abeg</string>
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Dibab an abeg</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Dibabit un abeg mar plij</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -3097,7 +3097,7 @@
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">N’eo bet kavet heulier ebet</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
-  <string name="protection_panel_privacy_and_security_settings">Arventennoù evit ho puhez prevez ha diogelroez</string>
+  <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Arventennoù evit ho puhez prevez ha diogelroez</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">Aotreoù</string>
   <!--

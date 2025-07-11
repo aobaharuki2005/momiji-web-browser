@@ -1383,7 +1383,7 @@
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
   <string name="webcompat_reporter_url_error_invalid">Ji kerema xwe re URLeke derbasdar binivîse</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason">Sedemê hilbijêre</string>
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Sedemê hilbijêre</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">Pirsgirêkê diyar bike (vebijarkî)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->

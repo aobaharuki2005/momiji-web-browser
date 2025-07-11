@@ -875,6 +875,8 @@
   <string name="preferences_theme">Tema</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">Páxina de inicio</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">Icona da aplicación</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Xestos</string>
   <!-- Preference for settings related to visual options -->
@@ -1308,6 +1310,12 @@
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Expandida</string>
   <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">Selecciona a icona da aplicación</string>
+  <!--
     Theme Preferences
 
     Preference for using light theme
@@ -1731,7 +1739,11 @@
   -->
   <string name="webcompat_reporter_screen_title">Informar dun sitio roto</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description">Axuda a que %1$s sexa mellor para todos. Os empregados de Mozilla usan a información que envías para solucionar os problemas do sitio web.</string>
+  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Axuda a que %1$s sexa mellor para todos. Os empregados de Mozilla usan a información que envías para solucionar os problemas do sitio web.</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description_2">O teu informe axúdanos a comprender e solucionar problemas en %1$s para que sexa mellor para todos. Máis información</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">Máis información</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1739,7 +1751,9 @@
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">Que está roto?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason">Escolle un motivo</string>
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Escolle un motivo</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">Escolle un motivo</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Por favor, escolle un motivo</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -1803,9 +1817,9 @@
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title">%s tivo que reiniciar</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_requested_by_devs_dialog_title">Tes un informe de fallo sen enviar relacionado cos accidentes que se están investigando. Envialo axudaranos a mellorar %1$s. Ao pechar esta notificación, ignorarase este informe.</string>
+  <string name="unsubmitted_crash_requested_by_devs_dialog_title">Tes un informe de quebra sen enviar relacionado coas quebras que se están investigando. Envialo axudaranos a mellorar %1$s. Ao pechar esta notificación, ignorarase este informe.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crashes_requested_by_devs_dialog_title">Tes informes de fallos sen enviar (%1$d) relacionados cos fallos que se están investigando. Envialos axudaranos a mellorar %2$s. Ao pechar esta notificación, ignoraranse estes informes.</string>
+  <string name="unsubmitted_crashes_requested_by_devs_dialog_title">Tes informes de quebras sen enviar (%1$d) relacionados coas quebras que se están investigando. Envialos axudaranos a mellorar %2$s. Ao pechar esta notificación, ignoraranse estes informes.</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Enviar informes de quebras de xeito automático</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -2250,6 +2264,8 @@
   <string name="preference_accessibility_text_size_summary">Facer que o texto dos sitios web sexa máis grande ou máis pequeno</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">Tamaño de letra</string>
+  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
+  <string name="a11y_preference_accessibility_font_size_percentage">%d %%.</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">Tamaño automático da letra</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -2508,27 +2524,27 @@
   <!-- Bullet point 1 for "Default Protection" information page under "DNS over HTTPS" -->
   <string name="preference_doh_default_protection_info_1">Usa o provedor que selecciones</string>
   <!-- Bullet point 2 for "Default Protection" information page under "DNS over HTTPS" -->
-  <string name="preference_doh_default_protection_info_2">Use o seu resolvedor de DNS predeterminado se hai un problema co provedor de DNS seguro</string>
+  <string name="preference_doh_default_protection_info_2">Usa o teu resolvedor de DNS predeterminado se hai un problema co provedor de DNS seguro</string>
   <!-- Bullet point 3 for "Default Protection" information page under "DNS over HTTPS". %1$s is replaced by a link using `preference_doh_learn_more` at text ("Learn More"). -->
-  <string name="preference_doh_default_protection_info_3">Use un provedor local, se é posible. %1$s</string>
+  <string name="preference_doh_default_protection_info_3">Usa un provedor local, se é posible. %1$s</string>
   <!-- Bullet point 4 for "Default Protection" information page under "DNS over HTTPS" -->
   <string name="preference_doh_default_protection_info_4">Desactivar cando a VPN, o control parental ou as políticas empresariais estean activas</string>
   <!-- Bullet point 5 for "Default Protection" information page under "DNS over HTTPS". %1$s is the name of the application (e.g. Fenix). %2$s is replaced by a link using `preference_doh_learn_more` at text ("Learn More"). -->
-  <string name="preference_doh_default_protection_info_5">Desactiva cando unha rede lle di a %1$s que non debería usar DNS seguro. %2$s</string>
+  <string name="preference_doh_default_protection_info_5">Desactivar cando unha rede lle di a %1$s que non debería usar DNS seguro. %2$s</string>
   <!-- Title displayed for "Increased Protection" option under "DNS over HTTPS" -->
   <string name="preference_doh_increased_protection">Protección aumentada</string>
   <!-- Summary displayed for "Increased Protection" option under "DNS over HTTPS" -->
-  <string name="preference_doh_increased_protection_summary">Vostede controla cando usar o DNS seguro e escolle o seu provedor.</string>
+  <string name="preference_doh_increased_protection_summary">Controlas cando usar o DNS seguro e escolles o teu provedor.</string>
   <!-- Bullet point 1 for "Increased Protection" information page under "DNS over HTTPS" -->
   <string name="preference_doh_increased_protection_info_1">Usa o provedor que selecciones</string>
   <!-- Bullet point 2 for "Increased Protection" information page under "DNS over HTTPS" -->
-  <string name="preference_doh_increased_protection_info_2">Use só o seu resolvedor de DNS predeterminado se hai un problema co DNS seguro</string>
+  <string name="preference_doh_increased_protection_info_2">Usat só o teu resolvedor de DNS predeterminado se hai un problema co DNS seguro</string>
   <!-- Title displayed for "Max Protection" option under "DNS over HTTPS" -->
   <string name="preference_doh_max_protection">Protección máxima</string>
   <!-- Summary displayed for "Max Protection" option under "DNS over HTTPS". %1$s is the name of the application (e.g. Fenix). -->
-  <string name="preference_doh_max_protection_summary">%1$s sempre usará DNS seguro. Verás unha advertencia de risco de seguranza antes de usar o DNS do teu sistema.</string>
+  <string name="preference_doh_max_protection_summary">%1$s sempre usará DNS seguro. Verás unha advertencia de risco de seguranza antes de que usemos o DNS do teu sistema.</string>
   <!-- Bullet point 1 for "Max Protection" information page under "DNS over HTTPS" -->
-  <string name="preference_doh_max_protection_info_1">Use só o provedor que seleccione</string>
+  <string name="preference_doh_max_protection_info_1">Usar só o provedor que selecciones</string>
   <!-- Bullet point 2 for "Max Protection" information page under "DNS over HTTPS" -->
   <string name="preference_doh_max_protection_info_2">Avisar sempre se o DNS seguro non está dispoñible</string>
   <!-- Bullet point 3 for "Max Protection" information page under "DNS over HTTPS" -->
@@ -2536,7 +2552,7 @@
   <!-- Title displayed for "Off" option under "DNS over HTTPS" -->
   <string name="preference_doh_off">Desactivado</string>
   <!-- Summary displayed for "Off" option under "DNS over HTTPS" -->
-  <string name="preference_doh_off_summary">Use o seu resolvedor de DNS predeterminado</string>
+  <string name="preference_doh_off_summary">Usar o teu resolvedor de DNS predeterminado</string>
   <!-- Text displayed above provider dropdown under "DNS over HTTPS" -->
   <string name="preference_doh_choose_provider">Escoller provedor</string>
   <!-- Text displayed for "Default provider" under "DNS over HTTPS" providers -->
@@ -3405,10 +3421,18 @@
   <string name="protection_panel_banner_protected_description">Estás protexido. Se detectamos algo, avisarémoste.</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">Protección mellorada contra o rastrexo</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned on -->
+  <string name="protection_panel_etp_toggle_on">Activado</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned off -->
+  <string name="protection_panel_etp_toggle_off">Desactivado</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
-  <string name="protection_panel_etp_toggle_enabled_description">Se algo parece que non funciona neste sitio, proba a desactivar as proteccións.</string>
+  <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Se algo parece que non funciona neste sitio, proba a desactivar as proteccións.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description_2">Se algo parece que non funciona neste sitio, tenta desactivalo.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
-  <string name="protection_panel_etp_toggle_disabled_description">As proteccións están DESACTIVADAS. Suxerímosche activalas de novo.</string>
+  <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">As proteccións están DESACTIVADAS. Suxerímosche activalas de novo.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
+  <string name="protection_panel_etp_toggle_disabled_description_2">Recoméndase activar a protección de rastrexo.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3417,14 +3441,16 @@
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">Non se atoparon rastrexadores</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
-  <string name="protection_panel_privacy_and_security_settings">Configuración de privacidade e seguridade</string>
+  <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Axustes de privacidade e seguridade</string>
+  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
+  <string name="protection_panel_privacy_and_security_settings_2">Configuración de privacidade</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">Permisos</string>
   <!--
     Text for displaying the total number of trackers blocked in the trackers blocked panel.
     %d is a placeholder for the number of trackers blocked.
   -->
-  <string name="trackers_blocked_panel_total_num_trackers_blocked">Rastreadores bloqueados: %d</string>
+  <string name="trackers_blocked_panel_total_num_trackers_blocked">Rastrexadores bloqueados: %d</string>
   <!--
     Text for displaying the number of trackers blocked for a specific tracker category in the trackers blocked panel.
     %s is a placeholder for the name of the tracker category.
@@ -3435,7 +3461,7 @@
     Description text for a dialog confirming whether the user wants to delete all data for current site.
     %s is a placeholder for the base domain of website.
   -->
-  <string name="clear_site_data_dialog_description"><![CDATA[Se eliminas as cookies e os datos do sitio para <b>%s</b>, é posible que peches a sesión dos sitios web e borres os carros da compra.]]></string>
+  <string name="clear_site_data_dialog_description"><![CDATA[Se eliminas as cookies e os datos do sitio para <b>%s</b>, é posible que peches a sesión dos sitios web e borres os carriños da compra.]]></string>
   <!-- Button text on the clear site data dialog to allow users to confirm they wish to clear the site data. -->
   <string name="clear_site_data_dialog_positive_button_text">Borrar</string>
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
@@ -3588,7 +3614,7 @@
   <!-- The title of the header for the section for managing addresses. -->
   <string name="debug_drawer_addresses_management_header">Xestionar enderezos</string>
   <!-- The title of the button in the debug drawer for adding a new address. -->
-  <string name="debug_drawer_add_new_address">Engade un novo enderezo para a rexión seleccionada</string>
+  <string name="debug_drawer_add_new_address">Engadir un novo enderezo para a localización seleccionada</string>
   <!-- The title of the button for deleting in the debug drawer all addresses. -->
   <string name="debug_drawer_delete_all_addresses">Elimina todos os enderezos</string>
   <!--
@@ -3614,7 +3640,7 @@
   -->
   <string name="debug_drawer_region_tools_title">Ferramentas da rexión</string>
   <!-- The description of the Region tools in the Debug Drawer -->
-  <string name="debug_drawer_regin_tools_description">Invalida temporalmente os valores da rexión de orixe e actual para a proba.</string>
+  <string name="debug_drawer_regin_tools_description">Sobrescribe temporalmente os valores da rexión de orixe e actual para a proba.</string>
   <!-- The text label for displaying home region. -->
   <string name="debug_drawer_home_region_label">Rexión de orixe</string>
   <!-- The text label for displaying current region. -->
@@ -3627,6 +3653,14 @@
   <string name="debug_drawer_override_region">Substituír a rexión inicial e a actual</string>
   <!-- The title of the button for overriding home region permanently. -->
   <string name="debug_drawer_override_home_region_permanently">Substituír a rexión de orixe permanentemente</string>
+  <!--
+    Add-ons debug tools
+
+    The description of the Add-ons Tools in the Debug Drawer
+  -->
+  <string name="debug_drawer_addons_tools_title">Ferramentas complementarias</string>
+  <!-- The title of the button used to check for add-on updates. -->
+  <string name="addons_debug_tools_check_for_updates_button">Buscar actualizacións</string>
   <!--
     Messages explaining how to exit fullscreen mode
 
@@ -3712,17 +3746,17 @@
   -->
   <string name="setup_checklist_subtitle_6_steps_initial_state">Completa os 6 pasos para configurar %1$s para obter a mellor experiencia de navegación.</string>
   <!-- Subtitle for a setup checklist with 6 steps when the first task is completed. -->
-  <string name="setup_checklist_subtitle_6_steps_first_step">Gran comezo! Completaches 1 de cada 6 pasos.</string>
+  <string name="setup_checklist_subtitle_6_steps_first_step">Gran comezo! Completaches 1 dos 6 pasos.</string>
   <!-- Subtitle for the setup checklist when the second task is completed. -->
-  <string name="setup_checklist_subtitle_6_steps_second_step">Completaches 2 de 6 pasos. Gran avance!</string>
+  <string name="setup_checklist_subtitle_6_steps_second_step">Completaches 2 dos 6 pasos. Gran avance!</string>
   <!-- Subtitle for a setup checklist with 6 steps when three of the tasks are completed. -->
-  <string name="setup_checklist_subtitle_6_steps_third_step">Estás a medio camiño! Tres pasos rematados e 3 para rematar.</string>
+  <string name="setup_checklist_subtitle_6_steps_third_step">Estás a medio camiño! Tres pasos rematados e 3 restantes.</string>
   <!-- Subtitle for a setup checklist with 6 steps when the fourth task is completed. -->
-  <string name="setup_checklist_subtitle_6_steps_fourth_step">Tes 4 pasos. Só quedan 2 máis!</string>
+  <string name="setup_checklist_subtitle_6_steps_fourth_step">Xa completaches 4 pasos. Só che quedan 2 máis!</string>
   <!-- Subtitle for a setup checklist with 6 steps when the fifth task is completed. -->
-  <string name="setup_checklist_subtitle_6_steps_fifth_step">Xa case alí! Estás a só 1 paso da meta.</string>
+  <string name="setup_checklist_subtitle_6_steps_fifth_step">Xa case estás! Só che queda 1 paso para a meta.</string>
   <!-- Subtitle for a setup checklist with 6 steps completed state. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="setup_checklist_subtitle_6_steps_completed_state">Completaches os 6 pasos de configuración. Goza da velocidade, privacidade e seguridade de %1$s.</string>
+  <string name="setup_checklist_subtitle_6_steps_completed_state">Completaches os 6 pasos da configuración. Goza da velocidade, privacidade e seguridade de %1$s.</string>
   <!--
     ===== Setup checklist feature: Subtitles for 5 steps (Large screen devices don't support toolbar placement) =====
 
@@ -3730,15 +3764,15 @@
   -->
   <string name="setup_checklist_subtitle_5_steps_initial_state">Completa os 5 pasos para configurar %1$s para obter a mellor experiencia de navegación.</string>
   <!-- Subtitle for a setup checklist with 5 steps when the first task is completed. -->
-  <string name="setup_checklist_subtitle_5_steps_first_step">Gran comezo! Completaches 1 de cada 5 pasos.</string>
+  <string name="setup_checklist_subtitle_5_steps_first_step">Gran comezo! Completaches 1 dos 5 pasos.</string>
   <!-- Subtitle for the setup checklist when the second task is completed. -->
-  <string name="setup_checklist_subtitle_5_steps_second_step">Completaches 2 de cada 5 pasos. Gran avance!</string>
+  <string name="setup_checklist_subtitle_5_steps_second_step">Completaches 2 dos 5 pasos. Gran avance!</string>
   <!-- Subtitle for a setup checklist with 5 steps when three of the tasks are completed. -->
-  <string name="setup_checklist_subtitle_5_steps_third_step">Estás a medio camiño! Tres pasos rematados e faltan 2.</string>
+  <string name="setup_checklist_subtitle_5_steps_third_step">Estás a medio camiño! Tres pasos rematados e 2 restantes.</string>
   <!-- Subtitle for a setup checklist with 5 steps when the fifth task is completed. -->
-  <string name="setup_checklist_subtitle_5_steps_fourth_step">Xa case alí! Estás a só 1 paso da meta.</string>
+  <string name="setup_checklist_subtitle_5_steps_fourth_step">Xa case remataches! Estás a só 1 paso da meta.</string>
   <!-- Subtitle for a setup checklist with 5 steps completed state. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="setup_checklist_subtitle_5_steps_completed_state">Completaches os 5 pasos de configuración. Goza da velocidade, privacidade e seguridade de %1$s.</string>
+  <string name="setup_checklist_subtitle_5_steps_completed_state">Completaches os 5 pasos da configuración. Goza da velocidade, privacidade e seguridade de %1$s.</string>
   <!--
     ===== Setup checklist feature: Task titles =====
 
@@ -3760,7 +3794,7 @@
 
     The title of the 'essentials' group in the setup checklist. %1$s is the name of the app (for example "Firefox").
   -->
-  <string name="setup_checklist_group_essentials">%1$s elementos esenciais</string>
+  <string name="setup_checklist_group_essentials">Esenciais de %1$s</string>
   <!-- The title of the 'customize' group in the setup checklist. %1$s is the name of the app (for example "Firefox"). -->
   <string name="setup_checklist_group_customize">Personaliza o teu %1$s</string>
   <!-- The title of the 'helpful tools' group in the setup checklist -->
@@ -3776,9 +3810,9 @@
 
     Accessibility description for a check mark on a completed task
   -->
-  <string name="a11y_completed_task_description">Tarefas rematadas</string>
+  <string name="a11y_completed_task_description">Tarefa rematada</string>
   <!-- Accessibility description for the task icon -->
-  <string name="a11y_task_icon_description">Icona de tarefa</string>
+  <string name="a11y_task_icon_description">Icona da tarefa</string>
   <!--
     Private browsing mode authentication screen
 
@@ -3790,11 +3824,11 @@
   <!-- Title text instructing the user to unlock private tabs -->
   <string name="pbm_authentication_unlock_private_tabs">Desbloquear pestanas privadas</string>
   <!-- Authentication prompt title to enable the private tabs mode -->
-  <string name="pbm_authentication_enable_lock">Activa o bloqueo da pantalla das pestanas privadas</string>
+  <string name="pbm_authentication_enable_lock">Activar o bloqueo da pantalla das pestanas privadas</string>
   <!-- Authentication prompt title to disable the private tabs mode -->
-  <string name="pbm_authentication_disable_lock">Desactiva o bloqueo da pantalla das pestanas privadas</string>
+  <string name="pbm_authentication_disable_lock">Desactivar o bloqueo da pantalla das pestanas privadas</string>
   <!-- Label for a preference shown when the device supports screen lock (e.g., PIN, pattern, or password) but the user has not set one up. -->
-  <string name="pbm_authentication_lock_device_feature_disabled">Configura o bloqueo da pantalla para ocultar as pestanas</string>
+  <string name="pbm_authentication_lock_device_feature_disabled">Configurar o bloqueo da pantalla para ocultar as pestanas</string>
   <!-- Title text for the contextual feature recommendation (CFR) suggesting the user enable a screen lock to protect private tabs -->
   <string name="private_tab_cfr_title">Usar o bloqueo da pantalla para ocultar as pestanas privadas?</string>
   <!-- Negative button text for the contextual feature recommendation (CFR) dismissing the screen lock suggestion -->
@@ -3812,11 +3846,11 @@
   <!-- Label for a button positively rating the user's experience with the app -->
   <string name="review_prompt_positive_button">É xenial!</string>
   <!-- Title for a prompt asking the user to rate the app on Google Play Store. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="review_prompt_rate_header">Grazas por amar a %1$s. Tes un segundo para difundir o amor cunha valoración?</string>
+  <string name="review_prompt_rate_header">Grazas por amar %1$s. Tes un segundo para difundir o amor cunha valoración?</string>
   <!-- Label for a button proceeding to rate the app on Google Play Store. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="review_prompt_rate_button">Valora %1$s en Play Store</string>
+  <string name="review_prompt_rate_button">Valora %1$s na Play Store</string>
   <!-- Title for a prompt asking the user send us feedback. %1$s is the name of the app (for example "Firefox"). -->
   <string name="review_prompt_feedback_header">Lamentamos que teñas problemas. Indícanos como podemos mellorar %1$s.</string>
   <!-- Label for a button opening a feedback forum -->
-  <string name="review_prompt_feedback_button">Deixe comentarios</string>
+  <string name="review_prompt_feedback_button">Deixar a opinión</string>
 </resources>

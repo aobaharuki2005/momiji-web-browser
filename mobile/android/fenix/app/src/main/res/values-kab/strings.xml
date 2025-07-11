@@ -64,6 +64,8 @@
   -->
   <string name="private_browsing_placeholder_description_2" moz:removedIn="141" tools:ignore="UnusedResources">%1$s iseffeḍ amazray-ik n unadi d tunigin seg waccaren n tunigin tusligin mi ara tent-tmeḍleḍ neɣ mi ara teffɣeḍ seg usnas. Ɣas wama aya ur yettarra ara d udrig deg yismal web neɣ deg usaǧǧaw-ik n unekcum Internet, aya ad k-yeǧǧ ad tḥarzeḍ tabaḍnit n urmud-ik srid i wid yesseqdacen ibenk-ik.</string>
   <string name="private_browsing_common_myths">Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara</string>
+  <!-- Text to be announced by the accessibility service to inform the user that the private browsing mode is currently active. -->
+  <string name="private_browsing_a11y_session_announcement">Tiɣimit n tunigin tusligt</string>
   <!--
     True Private Browsing Mode
 
@@ -339,6 +341,10 @@
   <string name="browser_menu_back_button_content_description" moz:removedIn="141" tools:ignore="UnusedResources">Uɣal ɣer wumuɣ agejdan</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
   <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">Mdel tiferkit n wumuɣ agejdan</string>
+  <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
+  <string name="browser_close_main_menu_handlebar_content_description">Mdel umuɣ</string>
+  <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
+  <string name="browser_main_menu_content_description_navigation_header">Tunigin</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">Tallalt</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
@@ -408,6 +414,8 @@
   <string name="browser_menu_delete_browsing_data_on_quit">Ffeɣ si %1$s</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Zgel</string>
+  <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
+  <string name="browser_menu_recommended_extensions_content_description">Ugar n telɣut</string>
   <!--
     Menu "contextual feature recommendation" (CFR)
 
@@ -848,6 +856,8 @@
   <string name="preferences_category_account">Amiḍan</string>
   <!-- Preference for changing where the AddressBar is positioned -->
   <string name="preferences_toolbar_2">Adig n ufeggag n tansa</string>
+  <!-- Preference for changing toolbar layout -->
+  <string name="preferences_toolbar_layout">Aseflu n afeggag n yifecka…</string>
   <!-- Preference for changing default theme to dark or light mode -->
   <string name="preferences_theme">Asentel</string>
   <!-- Preference for customizing the home screen -->
@@ -930,6 +940,8 @@
   <string name="preferences_open_links_in_apps_never">Weṛǧin</string>
   <!-- Preference for open download with an external download manager app -->
   <string name="preferences_external_download_manager" tools:ignore="UnusedResources" moz:removedIn="141">Amsefrak n usader azɣaray</string>
+  <!-- Preference for downloads -->
+  <string name="preferences_downloads">Isadaren</string>
   <!-- Preference for enabling gecko engine logs -->
   <string name="preferences_enable_gecko_logs">Rmed iɣmisen n Gecko</string>
   <!-- Message to indicate users that we are quitting the application to apply the changes -->
@@ -958,6 +970,20 @@
   <string name="addons_permissions_allow_for_all_sites_subtitle">Ma yella tumneḍ asiɣzef-a, tzemreḍ ad as-tmuddeḍ tisirag i yal asmel web.</string>
   <!-- The text shown when an extension does not require permissions -->
   <string name="addons_does_not_require_permissions">Asiɣzef ur yesri kra n tsiregt.</string>
+  <!-- The description of data collection permissions listed in the addon's permissions screen.  %1$s is a formatted list of permissions. -->
+  <string name="addons_permissions_required_data_collection_description" moz:removedIn="141" tools:ignore="UnusedResources">Aneflay yenna-d asiɣzef-a ileqqeḍ: %1$s.</string>
+  <!-- The description of data collection permissions listed in the addon's permissions screen.  %1$s is a formatted list of permissions. -->
+  <string name="addons_permissions_required_data_collection_description_2">Aneflay yenna-d asiɣzef-a ileqqeḍ: %1$s</string>
+  <!-- The description of the "none" data collection permission, when the extension doesn't collect anything according to the developer. -->
+  <string name="addons_permissions_none_required_data_collection_description">Aneflay yenna-d asiɣzef-a ur yeḥwaǧ ara alqaḍ n yisefka.</string>
+  <!-- The title of the required permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_required_permissions">Yesra tisirag:</string>
+  <!-- The title of the optional permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_optional_permissions">Tisirag tifrayanin:</string>
+  <!-- The title of the required data collection permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_required_data_collection">Yesra alqaḍ n yisefka:</string>
+  <!-- The title of the optional data collection permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_optional_data_collection">Alqaḍ n yisefka axetṛan:</string>
   <!--
     Add-on Preferences
 
@@ -989,6 +1015,8 @@
   <string name="customize_toggle_recently_visited">Yemmẓer melmi kan</string>
   <!-- Title for the customize home screen section with Pocket. -->
   <string name="customize_toggle_pocket_2" tools:ignore="UnusedResources" moz:removedIn="140">Tiqsiḍin i ijebbden lwelha</string>
+  <!-- Title for the customize home screen section with Pocket. -->
+  <string name="customize_toggle_pocket_3">Imagraden</string>
   <!-- Summary for the customize home screen section with Pocket. %s is "Pocket". -->
   <string name="customize_toggle_pocket_summary" tools:ignore="UnusedResources" moz:removedIn="140">Imagraden yellan ddaw leɛnaya n %s</string>
   <!-- Title for the customize home screen section with sponsored Pocket stories. -->
@@ -1077,6 +1105,8 @@
   <string name="alternative_app_icon_option_momo">Momo</string>
   <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
   <string name="alternative_app_icon_option_momo_subtitle">Yettwarna sɣur @heyheymomodraws</string>
+  <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
+  <string name="alternative_app_icon_group_gradients">Tafesna n yini</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1631,7 +1661,7 @@
   -->
   <string name="webcompat_reporter_screen_title">Cegger asmel yerẓen</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description">Allel ad nerr %1$s igerrez i yal yiwen. Ixaddamen n Mozilla sseqdacen talɣut ara ak-n-aznen i ferru n wuguren n usmel web.</string>
+  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Allel ad nerr %1$s igerrez i yal yiwen. Ixaddamen n Mozilla sseqdacen talɣut ara ak-n-aznen i ferru n wuguren n usmel web.</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1639,7 +1669,9 @@
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">D acu i yerẓen?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason">Fren ssebba</string>
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Fren ssebba</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">Fren tazɣint</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Ma ulac aɣilif, fren ssebba</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -2140,6 +2172,8 @@
   <string name="preference_accessibility_text_size_summary">Semɣer neɣ senɣes teɣzi n uḍris n yismal web</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">Tuɣzi n tesefsit</string>
+  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
+  <string name="a11y_preference_accessibility_font_size_percentage">%d %%.</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">Teɣzi tawurmant n tsefsit</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -2551,6 +2585,18 @@
   <string name="saved_login_clear_username">Sfeḍ isem n useqdac</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">Sfeḍ asenneftaɣ</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the login detail view. -->
+  <string name="login_details_navigate_back_button_content_description">Tunigin tudfirt</string>
+  <!-- Edit text for the login detail menu edit button -->
+  <string name="login_detail_menu_edit_button">Ẓreg</string>
+  <!-- Delete text for the login detail menu delete button -->
+  <string name="login_detail_menu_delete_button">Kkes</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the add login view. -->
+  <string name="add_login_navigate_back_button_content_description">Tunigin tudfirt</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the edit login view. -->
+  <string name="edit_login_navigate_back_button_content_description">Tunigin tudfirt</string>
+  <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
+  <string name="edit_login_button_content_description">Ẓreg inekcam</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Ldi asmel deg iminig</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -2844,6 +2890,12 @@
   <string name="synced_tabs_expand_group">Snerni agraw n waccaren yemtawan</string>
   <!-- Content description for collapsing a group of synced tabs. -->
   <string name="synced_tabs_collapse_group">Semẓi agraw n waccaren yemtawan</string>
+  <!--
+    Top Sites
+
+    Title text displayed for the shortcuts home screen section.
+  -->
+  <string name="homepage_shortcuts_title">Inegzumen</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Amḍan adday n yinegzumen yewweḍ</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -2934,6 +2986,8 @@
     Header text for a section on the home screen.
   -->
   <string name="pocket_stories_header_1" tools:ignore="UnusedResources" moz:removedIn="140">Tiqsiḍin i ijebbden lwelha</string>
+  <!-- Header text for a section on the home screen. -->
+  <string name="pocket_stories_header_2">Imagraden</string>
   <!-- Header text for a section on the home screen. -->
   <string name="pocket_stories_categories_header" moz:removedIn="141" tools:ignore="UnusedResources">Smizzwer s usentel</string>
   <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
@@ -3252,10 +3306,16 @@
   <string name="protection_panel_banner_protected_description">Tettummestneḍ. Ma yella ncukk deg kra, ad ak-d-nini.</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">Ammesten mgal aḍfaṛ yettwaseǧhed</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned on -->
+  <string name="protection_panel_etp_toggle_on">Yermed</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned off -->
+  <string name="protection_panel_etp_toggle_off">Yensa</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
-  <string name="protection_panel_etp_toggle_enabled_description">Ma yella wayen ur nteddu ara ɣef usmel-a, εreḍ ad tsenseḍ ammesten.</string>
+  <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Ma yella wayen ur nteddu ara ɣef usmel-a, εreḍ ad tsenseḍ ammesten.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description_2">Ma yella wayen ur nteddu ara ɣef usmel-a, εreḍ ad tsenseḍ tamahilt-a.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
-  <string name="protection_panel_etp_toggle_disabled_description">Ammesten yensa. Ad nsumer ad t-tremdeḍ.</string>
+  <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Ammesten yensa. Ad nsumer ad t-tremdeḍ.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3264,7 +3324,9 @@
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">Ulac ineḍfaren i yettwafen</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
-  <string name="protection_panel_privacy_and_security_settings">Iɣewwaren n tbaḍnit d tɣellist</string>
+  <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Iɣewwaren n tbaḍnit d tɣellist</string>
+  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
+  <string name="protection_panel_privacy_and_security_settings_2">Iɣewwaren n tbaḍnit</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">Tisirag</string>
   <!--
@@ -3472,6 +3534,8 @@
   <string name="debug_drawer_override_region">Ɛeddi i tmurt tagejdant tamirant</string>
   <!-- The title of the button for overriding home region permanently. -->
   <string name="debug_drawer_override_home_region_permanently">Ɛeddi tamurt tagejdant i lebda</string>
+  <!-- The title of the button used to check for add-on updates. -->
+  <string name="addons_debug_tools_check_for_updates_button">Nadi ileqman</string>
   <!--
     Messages explaining how to exit fullscreen mode
 
@@ -3636,4 +3700,6 @@
   <string name="review_prompt_pre_prompt_header">Acu i tenniḍ ɣef %1$s?</string>
   <!-- Label for a button positively rating the user's experience with the app -->
   <string name="review_prompt_positive_button">Igerrez!</string>
+  <!-- Label for a button opening a feedback forum -->
+  <string name="review_prompt_feedback_button">Efk-d tikti-k</string>
 </resources>

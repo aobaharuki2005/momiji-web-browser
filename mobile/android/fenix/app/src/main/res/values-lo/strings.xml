@@ -1545,7 +1545,7 @@
   -->
   <string name="webcompat_reporter_screen_title">ລາຍງານເວັບໄຊທີ່ມີບັນຫາ</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description">ຊ່ວຍເຮັດໃຫ້ %1$s ດີຂຶ້ນສຳລັບທຸກຄົນ. ພະນັກງານ Mozilla ໃຊ້ຂໍ້ມູນທີ່ທ່ານສົ່ງເພື່ອແກ້ໄຂບັນຫາເວັບໄຊທ໌.</string>
+  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">ຊ່ວຍເຮັດໃຫ້ %1$s ດີຂຶ້ນສຳລັບທຸກຄົນ. ພະນັກງານ Mozilla ໃຊ້ຂໍ້ມູນທີ່ທ່ານສົ່ງເພື່ອແກ້ໄຂບັນຫາເວັບໄຊທ໌.</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1553,7 +1553,7 @@
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">ບັນຫາແມ່ນຫຍັງ?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason">ເລືອກເຫດຜົນ</string>
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">ເລືອກເຫດຜົນ</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">ກະລຸນາເລືອກເຫດຜົນ</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -2783,7 +2783,7 @@
   <!-- Additional information for the dialog used by the translations feature to confirm deleting all languages file. %1$s is the name of the app (for example "Firefox"). -->
   <string name="delete_language_all_languages_file_dialog_message">ຖ້າທ່ານລຶບທຸກພາສາ, %1$s ຈະດາວໂຫຼດບາງພາສາໃສ່ແຄດຂອງທ່ານເມື່ອທ່ານແປ.</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
-  <string name="protection_panel_privacy_and_security_settings">ການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວ ແລະ ຄວາມປອດໄພ</string>
+  <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">ການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວ ແລະ ຄວາມປອດໄພ</string>
   <!-- The title of the button for deleting in the debug drawer all addresses. -->
   <string name="debug_drawer_delete_all_addresses">ລຶບທີ່ຢູ່ທັງໝົດ</string>
   <!-- TextField Design System Component -->

@@ -1731,7 +1731,11 @@
   -->
   <string name="webcompat_reporter_screen_title">گوزارش خراوی وبگه</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description">و بؽڌر وابیڌن %1$s سی پوی هیاری کۊنین. کارکونووݩ Mozilla دووسمندیایی ک افشنین ن سی رفع موشکلا وبگه و کار اگرن.</string>
+  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">و بؽڌر وابیڌن %1$s سی پوی هیاری کۊنین. کارکونووݩ Mozilla دووسمندیایی ک افشنین ن سی رفع موشکلا وبگه و کار اگرن.</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description_2">گوزارش ایسا، ایما ن هیاری اده تا موشکلا %1$s ن بفئمیم وو هل کۊنیم تا هو ن سی پوی بؽڌر کۊنیم. دووسمندیا قلوه</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">قلوه دووسته بۊین</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">نشۊوی اینترنتی</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1739,7 +1743,9 @@
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">چ موشکلی پؽش ٱووڌه؟</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason">پسند دلیل</string>
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">پسند دلیل</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">پسند ی دلیل</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">ی دلیل ن پسند کۊنین</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -2250,6 +2256,8 @@
   <string name="preference_accessibility_text_size_summary">هؽل ن من وبگه یل گفتر یا کۊچیر تر کۊنین</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">هندا فونت</string>
+  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
+  <string name="a11y_preference_accessibility_font_size_percentage">%d %%.</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">هندا فونت خوتکار</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -3405,10 +3413,18 @@
   <string name="protection_panel_banner_protected_description">ایسا زفت ابۊین. ٱر چیه ن بوینیم، و ایسا وارسۊوی اکۊنیم.</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">زفت وابیڌن پؽش رئڌه جلاو رڌجۊری</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned on -->
+  <string name="protection_panel_etp_toggle_on">رۊشن</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned off -->
+  <string name="protection_panel_etp_toggle_off">کۊر</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
-  <string name="protection_panel_etp_toggle_enabled_description">ٱر منی چیه من ای وبگه خراو هڌ، قپ ریت کۊنین زفت وابیڌنا ن کۊر کۊنین.</string>
+  <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">ٱر منی چیه من ای وبگه خراو هڌ، قپ ریت کۊنین زفت وابیڌنا ن کۊر کۊنین.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description_2">ٱر منی چیه من ای وبگه خراو هڌ، قپ ریت کۊنین هو ن کۊر کۊنین.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
-  <string name="protection_panel_etp_toggle_disabled_description">زفت وابیڌنا کۊر هڌن. پؽشنهاڌ اکۊنیم هونووݩ ن دووارته فعال کۊنین.</string>
+  <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">زفت وابیڌنا کۊر هڌن. پؽشنهاڌ اکۊنیم هونووݩ ن دووارته فعال کۊنین.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
+  <string name="protection_panel_etp_toggle_disabled_description_2">فعال کردن زفت وابیڌن ری و ری رڌجۊری پؽشنهاڌ ابۊ.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3417,7 +3433,9 @@
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">رڌجۊری نجوست</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
-  <string name="protection_panel_privacy_and_security_settings">سامووا هریم سیخومی وو ٱمنیت</string>
+  <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">سامووا هریم سیخومی وو ٱمنیت</string>
+  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
+  <string name="protection_panel_privacy_and_security_settings_2">سامووا هریم سیخومی</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">موجوزا</string>
   <!--
@@ -3627,6 +3645,14 @@
   <string name="debug_drawer_override_region">نیڌه گرؽڌن وولات سکویی و هووه</string>
   <!-- The title of the button for overriding home region permanently. -->
   <string name="debug_drawer_override_home_region_permanently">ز نۊ هؽل کردن همیشیی جاگه هووه ای</string>
+  <!--
+    Add-ons debug tools
+
+    The description of the Add-ons Tools in the Debug Drawer
+  -->
+  <string name="debug_drawer_addons_tools_title">ٱوزارا وردنی یل</string>
+  <!-- The title of the button used to check for add-on updates. -->
+  <string name="addons_debug_tools_check_for_updates_button">واجۊری سی ورۊ رسۊوی</string>
   <!--
     Messages explaining how to exit fullscreen mode
 

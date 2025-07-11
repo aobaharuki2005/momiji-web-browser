@@ -1212,7 +1212,7 @@
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
   <string name="webcompat_reporter_url_error_invalid">براہ مہربانی ٹھیک URL درج کرو۔</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason">وجہ چݨو</string>
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">وجہ چݨو</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">مسئلہ دی وضاحت کرو (اختیاری)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
