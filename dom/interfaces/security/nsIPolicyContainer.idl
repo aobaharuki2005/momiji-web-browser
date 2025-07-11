@@ -1,0 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISerializable.idl"
+
+// Purposefully empty interface. We don't modify policies in JS, we just
+// pass them around. We could, in theory, just use
+// `class PolicyContainer : public nsISerializable` but that would make
+// nsIPolicyContainer uses in IDL files harder to search. Also, if we
+// ever need to add stuff, we won't have to change multiple files.
+[scriptable, builtinclass, uuid(c9da865e-c3d7-4aa1-a271-0f571f013c30)]
+interface nsIPolicyContainer : nsISerializable {};
