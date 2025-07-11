@@ -1094,4 +1094,66 @@ describe("MultiStageAboutWelcomeProton module", () => {
       );
     });
   });
+
+  describe("Custom content tiles container styles", () => {
+    const SCREEN_PROP = {
+      content: {
+        title: "test title",
+        contentTilesContainer: {
+          style: {
+            flexDirection: "row",
+            marginBlock: "16px",
+            // disallowed style
+            backgroundColor: "blue",
+          },
+        },
+        tiles: [
+          {
+            type: "multiselect",
+            title: {
+              raw: "Text 1",
+            },
+            data: [
+              {
+                id: "checkbox-1",
+                defaultValue: false,
+                label: {
+                  raw: "Checkbox",
+                },
+              },
+            ],
+          },
+          {
+            type: "multiselect",
+            title: {
+              raw: "Text 2",
+            },
+            data: [
+              {
+                id: "checkbox-1",
+                defaultValue: false,
+                label: {
+                  raw: "Checkbox",
+                },
+              },
+            ],
+          },
+        ],
+      },
+      setScreenMultiSelects: sinon.stub(),
+      setActiveMultiSelect: sinon.stub(),
+    };
+
+    it("should render container with custom styles", async () => {
+      const wrapper = mount(
+        <MultiStageProtonScreen {...SCREEN_PROP} activeMultiSelect={{}} />
+      );
+      assert.ok(wrapper.exists());
+      const expectedStyles = "flex-direction: row; margin-block: 16px;";
+      assert.strictEqual(
+        wrapper.find("#content-tiles-container").getDOMNode().style.cssText,
+        expectedStyles
+      );
+    });
+  });
 });
