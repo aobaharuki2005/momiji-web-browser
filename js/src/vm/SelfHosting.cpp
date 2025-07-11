@@ -1652,14 +1652,6 @@ static bool intrinsic_NumberToBigInt(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool intrinsic_BigIntToNumber(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].isBigInt());
-  args.rval().setNumber(BigInt::numberValue(args[0].toBigInt()));
-  return true;
-}
-
 static bool intrinsic_NewWrapForValidIterator(JSContext* cx, unsigned argc,
                                               Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -1808,12 +1800,6 @@ static bool intrinsic_ToTemporalDuration(JSContext* cx, unsigned argc,
 
   using namespace temporal;
 
-  // Return |null| if Temporal is disabled.
-  if (!JS::Prefs::experimental_temporal()) {
-    args.rval().setNull();
-    return true;
-  }
-
   Duration duration;
   if (!ToTemporalDuration(cx, args.get(0), &duration)) {
     return false;
@@ -1884,6 +1870,48 @@ static bool intrinsic_ToTemporalDuration(JSContext* cx, unsigned argc,
   args.rval().setObject(*result);
   return true;
 }
+
+#  ifdef DEBUG
+static bool intrinsic_IsValidDuration(JSContext* cx, unsigned argc,
+                                      js::Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  MOZ_ASSERT(args[0].isObject());
+  MOZ_ASSERT(args[0].toObject().is<PlainObject>());
+
+  using namespace temporal;
+
+  // |obj| was created from |intrinsic_ToTemporalDuration|, so all duration
+  // properties are present and number values.
+
+  auto* obj = &args[0].toObject().as<PlainObject>();
+
+  auto assignFromOwnNumberProperty = [&](PropertyName* name, double* target) {
+    Value val;
+    bool found;
+    MOZ_ALWAYS_TRUE(GetOwnPropertyPure(cx, obj, NameToId(name), &val, &found));
+    MOZ_ASSERT(found, "unexpected missing duration property");
+    MOZ_ASSERT(val.isNumber(), "unexpected non-Number duration property");
+
+    *target = val.toNumber();
+  };
+
+  Duration duration{};
+  assignFromOwnNumberProperty(cx->names().years, &duration.years);
+  assignFromOwnNumberProperty(cx->names().months, &duration.months);
+  assignFromOwnNumberProperty(cx->names().weeks, &duration.weeks);
+  assignFromOwnNumberProperty(cx->names().days, &duration.days);
+  assignFromOwnNumberProperty(cx->names().hours, &duration.hours);
+  assignFromOwnNumberProperty(cx->names().minutes, &duration.minutes);
+  assignFromOwnNumberProperty(cx->names().seconds, &duration.seconds);
+  assignFromOwnNumberProperty(cx->names().milliseconds, &duration.milliseconds);
+  assignFromOwnNumberProperty(cx->names().microseconds, &duration.microseconds);
+  assignFromOwnNumberProperty(cx->names().nanoseconds, &duration.nanoseconds);
+
+  args.rval().setBoolean(IsValidDuration(duration));
+  return true;
+}
+#  endif
 #endif
 
 static const JSFunctionSpec intrinsic_functions[] = {
@@ -1892,7 +1920,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     intrinsic_ArrayIteratorPrototypeOptimizable, 0, 0,
                     IntrinsicArrayIteratorPrototypeOptimizable),
     JS_FN("AssertionFailed", intrinsic_AssertionFailed, 1, 0),
-    JS_FN("BigIntToNumber", intrinsic_BigIntToNumber, 1, 0),
     JS_FN("CallArrayIteratorMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<ArrayIteratorObject>>, 2, 0),
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
@@ -2068,6 +2095,11 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("IsTypedArrayConstructor",
                     intrinsic_IsTypedArrayConstructor, 1, 0,
                     IntrinsicIsTypedArrayConstructor),
+#ifdef JS_HAS_INTL_API
+#  ifdef DEBUG
+    JS_FN("IsValidDuration", intrinsic_IsValidDuration, 1, 0),
+#  endif
+#endif
     JS_INLINABLE_FN("NewArrayIterator", intrinsic_NewArrayIterator, 0, 0,
                     IntrinsicNewArrayIterator),
     JS_FN("NewAsyncIteratorHelper", intrinsic_NewAsyncIteratorHelper, 0, 0),
