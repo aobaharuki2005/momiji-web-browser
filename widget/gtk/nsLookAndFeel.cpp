@@ -1120,7 +1120,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       break;
     case IntID::GTKThemeFamily: {
       EnsureInit();
-      aResult = int32_t(EffectiveTheme().mFamily);
+      aResult = int32_t(mSystemTheme.mFamily);
       break;
     }
     case IntID::UseAccessibilityTheme:
