@@ -8,13 +8,14 @@ import "./moz-reorderable-list.mjs";
 
 const DEFAULT = "Default";
 const SHADOW_DOM = "Shadow DOM";
+const DRAG_SELECTOR = "Drag selector";
 
 export default {
   title: "UI Widgets/Reorderable List",
   component: "moz-reorderable-list",
   argTypes: {
     demoType: {
-      options: [DEFAULT, SHADOW_DOM],
+      options: [DEFAULT, SHADOW_DOM, DRAG_SELECTOR],
       control: { type: "select" },
     },
   },
@@ -88,10 +89,20 @@ class ReorderableDemo extends LitElement {
     this.items = nextItems;
     await this.updateComplete;
     let movedItem = this.querySelectorAll("li")[adjustedTargetIndex];
-    let focusableEl =
-      movedItem.shadowRoot?.querySelector(this.selectors.itemSelector) ??
-      movedItem.firstElementChild;
+    let focusableEl = this.getFocusableEl(movedItem);
     focusableEl?.focus();
+  }
+
+  getFocusableEl(item) {
+    if (this.type == DRAG_SELECTOR) {
+      return item.querySelector(this.selectors.dragSelector);
+    }
+
+    // Look for shadow DOM first, fallback to firstElementChild
+    return (
+      item.shadowRoot?.querySelector(this.selectors.itemSelector) ??
+      item.firstElementChild
+    );
   }
 
   handleReorder(e) {
@@ -118,6 +129,8 @@ class ReorderableDemo extends LitElement {
         return { itemSelector: "li" };
       case SHADOW_DOM:
         return { itemSelector: "#shadowed" };
+      case DRAG_SELECTOR:
+        return { itemSelector: "li", dragSelector: ".handle" };
       default:
         return {};
     }
@@ -126,12 +139,17 @@ class ReorderableDemo extends LitElement {
   contentTemplate(item) {
     if (this.type == DEFAULT) {
       return html`<button>${item}</button>`;
+    } else if (this.type == DRAG_SELECTOR) {
+      return html`<div class="draggable">
+        <div class="handle" tabindex="0"></div>
+        <span>${item}</span>
+      </div>`;
     }
     return html`<shadow-demo item=${item}></shadow-demo>`;
   }
 
   render() {
-    let { itemSelector } = this.selectors;
+    let { itemSelector, dragSelector } = this.selectors;
     return html`
       <style>
         ul {
@@ -143,9 +161,29 @@ class ReorderableDemo extends LitElement {
         li {
           list-style: none;
         }
+        .handle {
+          width: var(--button-size-icon);
+          height: var(--button-size-icon);
+          cursor: pointer;
+          background-image: url("chrome://global/skin/icons/more.svg");
+          background-position: center;
+          background-repeat: no-repeat;
+          border-radius: var(--button-border-radius);
+          -moz-context-properties: fill;
+          fill: currentColor;
+        }
+        .draggable {
+          border: var(--border-width) solid var(--border-color);
+          border-radius: var(--border-radius-small);
+          background-color: var(--background-color-box);
+          display: flex;
+          align-items: center;
+          gap: var(--space-small);
+        }
       </style>
       <moz-reorderable-list
         itemselector=${ifDefined(itemSelector)}
+        dragselector=${ifDefined(dragSelector)}
         @reorder=${this.handleReorder}
         @keydown=${this.handleKeydown}
       >
@@ -173,4 +211,9 @@ Default.args = {
 export const ShadowDOM = Template.bind({});
 ShadowDOM.args = {
   demoType: SHADOW_DOM,
+};
+
+export const DragSelector = Template.bind({});
+DragSelector.args = {
+  demoType: DRAG_SELECTOR,
 };

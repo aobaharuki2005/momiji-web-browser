@@ -36,8 +36,11 @@ const REORDER_PROP = "__mozReorderableIndex";
  *   sufficient.
  *
  * @tagname moz-reorderable-list
- * @property {string} itemSelector - Selector for elements that should be
- *   reorderable.
+ * @property {string} itemSelector
+ *   Selector for elements that should be reorderable.
+ * @property {string} dragSelector
+ *   Selector used when only part of the reorderable element should be draggable,
+ *   e.g. we use a button or an icon as a "handle" to drag the element.
  * @fires reorder - Fired when an item is dropped in a new position.
  * @fires dragstarted - Fired when an item is dragged.
  * @fires dragended - Fired when an item is dropped.
@@ -50,6 +53,7 @@ export default class MozReorderableList extends MozLitElement {
 
   static properties = {
     itemSelector: { type: String },
+    dragSelector: { type: String },
   };
 
   #draggedElement = null;
@@ -121,11 +125,20 @@ export default class MozReorderableList extends MozLitElement {
   /**
    * Add the draggable attribute non-XUL elements.
    */
-  addDraggableAttribute(item) {
-    // Unlike XUL elements, HTML elements are not draggable by default.
-    // So we need to set the draggable attribute on all items that match the selector.
-    if (!this.isXULElement(item)) {
-      item.draggable = true;
+  addDraggableAttribute(items) {
+    let draggableItems = items;
+    if (this.dragSelector) {
+      draggableItems = this.getAssignedElementsBySelector(
+        this.dragSelector,
+        items
+      );
+    }
+    for (const item of draggableItems) {
+      // Unlike XUL elements, HTML elements are not draggable by default.
+      // So we need to set the draggable attribute on all items that match the selector.
+      if (!this.isXULElement(item)) {
+        item.draggable = true;
+      }
     }
   }
 
@@ -307,9 +320,9 @@ export default class MozReorderableList extends MozLitElement {
    */
   getItems() {
     let items = this.getAssignedElementsBySelector(this.itemSelector);
+    this.addDraggableAttribute(items);
     items.forEach((item, i) => {
       item[REORDER_PROP] = i;
-      this.addDraggableAttribute(item);
     });
     this.#items = items;
   }
