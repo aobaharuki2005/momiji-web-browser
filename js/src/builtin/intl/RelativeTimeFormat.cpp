@@ -287,7 +287,7 @@ bool js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  intl::FieldType jsUnitType;
+  intl::RelativeTimeFormatUnit jsUnitType;
   using FormatUnit = mozilla::intl::RelativeTimeFormat::FormatUnit;
   FormatUnit relTimeUnit;
   {
