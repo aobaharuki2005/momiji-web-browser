@@ -193,11 +193,7 @@ internal fun Homepage(
                                     RecentSyncedTab(
                                         tab = syncedTab,
                                         backgroundColor = cardBackgroundColor,
-                                        buttonBackgroundColor = if (syncedTab != null) {
-                                            buttonBackgroundColor
-                                        } else {
-                                            FirefoxTheme.colors.layer3
-                                        },
+                                        buttonBackgroundColor = buttonBackgroundColor,
                                         buttonTextColor = buttonTextColor,
                                         onRecentSyncedTabClick = interactor::onRecentSyncedTabClicked,
                                         onSeeAllSyncedTabsButtonClick = interactor::onSyncedTabShowAllClicked,
