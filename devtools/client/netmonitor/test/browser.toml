@@ -507,16 +507,13 @@ skip-if = [
 ["browser_net_stacktraces-visibility.js"]
 
 ["browser_net_statistics-01.js"]
-skip-if = ["true"] # Bug 1975120
 
 ["browser_net_statistics-02.js"]
 skip-if = [
-  "true", # Bug 1767655
   "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && opt && a11y_checks", # Bug 1767655
 ]
 
 ["browser_net_statistics-edge-case.js"]
-skip-if = ["true"] # Bug 1975131
 
 ["browser_net_status-bar-transferred-size.js"]
 
