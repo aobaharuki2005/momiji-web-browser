@@ -192,6 +192,27 @@ struct DurationValue {
   explicit DurationValue() = default;
   explicit DurationValue(double number) : number(number) {}
 
+  bool isNegative() const {
+    return mozilla::IsNegative(number) || decimal[0] == '-';
+  }
+
+  auto abs() const {
+    // Return unchanged if not negative.
+    if (!isNegative()) {
+      return *this;
+    }
+
+    // Call |std::abs| for non-decimal values.
+    if (!isDecimal()) {
+      return DurationValue{std::abs(number)};
+    }
+
+    // Copy decimal strings without the leading '-' sign character.
+    auto result = DurationValue{};
+    std::copy(std::next(decimal), std::end(decimal), result.decimal);
+    return result;
+  }
+
   // |number| is active by default unless |decimal| is used.
   bool isDecimal() const { return decimal[0] != '\0'; }
 
@@ -673,7 +694,7 @@ static auto ComputeFractionalDigits(const temporal::Duration& duration,
  */
 static mozilla::UniquePtr<mozilla::intl::NumberFormat> DurationNumericFormatter(
     JSContext* cx, temporal::TemporalUnit unit, const char* locale,
-    Handle<JSObject*> internals, bool signDisplayed) {
+    Handle<JSObject*> internals) {
   Rooted<Value> value(cx);
 
   // FormatNumericHours, step 1. (Not applicable in our implementation.)
@@ -710,13 +731,9 @@ static mozilla::UniquePtr<mozilla::intl::NumberFormat> DurationNumericFormatter(
     options.mMinIntegerDigits = mozilla::Some(2);
   }
 
-  // FormatNumericHours, step 8.
-  // FormatNumericMinutes, step 9.
-  // FormatNumericSeconds, step 9.
-  if (!signDisplayed) {
-    options.mSignDisplay =
-        mozilla::intl::NumberFormatOptions::SignDisplay::Never;
-  }
+  // FormatNumericHours, step 8. (Not applicable in our implementation.)
+  // FormatNumericMinutes, step 9. (Not applicable in our implementation.)
+  // FormatNumericSeconds, step 9. (Not applicable in our implementation.)
 
   // FormatNumericHours, step 9.
   // FormatNumericMinutes, step 10.
@@ -796,16 +813,15 @@ static bool FormatDurationValue(JSContext* cx, mozilla::intl::NumberFormat* nf,
  */
 static bool FormatNumericHoursOrMinutesOrSeconds(
     JSContext* cx, temporal::TemporalUnit unit, const char* locale,
-    Handle<JSObject*> internals, const DurationValue& value, bool signDisplayed,
-    bool formatToParts, MutableHandle<Value> result) {
+    Handle<JSObject*> internals, const DurationValue& value, bool formatToParts,
+    MutableHandle<Value> result) {
   MOZ_ASSERT(temporal::TemporalUnit::Hour <= unit &&
              unit <= temporal::TemporalUnit::Second);
 
   // FormatNumericHours, steps 1-10.
   // FormatNumericMinutes, steps 1-11.
   // FormatNumericSeconds, steps 1-15.
-  auto nf =
-      DurationNumericFormatter(cx, unit, locale, internals, signDisplayed);
+  auto nf = DurationNumericFormatter(cx, unit, locale, internals);
   if (!nf) {
     return false;
   }
@@ -918,15 +934,19 @@ static bool FormatNumericUnits(JSContext* cx, const char* locale,
   // Step 16.
   if (hoursFormatted) {
     // Step 16.a.
-    if (signDisplayed && hoursValue.isZero() &&
-        temporal::DurationSign(duration) < 0) {
-      hoursValue = DurationValue{-0.0};
+    if (signDisplayed) {
+      if (hoursValue.isZero() && temporal::DurationSign(duration) < 0) {
+        hoursValue = DurationValue{-0.0};
+      }
+    } else {
+      // Use the absolute value to avoid changing number-format sign display.
+      hoursValue = hoursValue.abs();
     }
 
     // Step 16.b.
-    if (!FormatNumericHoursOrMinutesOrSeconds(
-            cx, TemporalUnit::Hour, locale, internals, hoursValue,
-            signDisplayed, formatToParts, &value)) {
+    if (!FormatNumericHoursOrMinutesOrSeconds(cx, TemporalUnit::Hour, locale,
+                                              internals, hoursValue,
+                                              formatToParts, &value)) {
       return false;
     }
 
@@ -940,15 +960,19 @@ static bool FormatNumericUnits(JSContext* cx, const char* locale,
   // Step 17.
   if (minutesFormatted) {
     // Step 17.a.
-    if (signDisplayed && minutesValue.isZero() &&
-        temporal::DurationSign(duration) < 0) {
-      minutesValue = DurationValue{-0.0};
+    if (signDisplayed) {
+      if (minutesValue.isZero() && temporal::DurationSign(duration) < 0) {
+        minutesValue = DurationValue{-0.0};
+      }
+    } else {
+      // Use the absolute value to avoid changing number-format sign display.
+      minutesValue = minutesValue.abs();
     }
 
     // Step 17.b.
-    if (!FormatNumericHoursOrMinutesOrSeconds(
-            cx, TemporalUnit::Minute, locale, internals, minutesValue,
-            signDisplayed, formatToParts, &value)) {
+    if (!FormatNumericHoursOrMinutesOrSeconds(cx, TemporalUnit::Minute, locale,
+                                              internals, minutesValue,
+                                              formatToParts, &value)) {
       return false;
     }
 
@@ -962,9 +986,13 @@ static bool FormatNumericUnits(JSContext* cx, const char* locale,
   // Step 18.
   if (secondsFormatted) {
     // Step 18.a.
-    if (!FormatNumericHoursOrMinutesOrSeconds(
-            cx, TemporalUnit::Second, locale, internals, secondsValue,
-            signDisplayed, formatToParts, &value)) {
+    if (!signDisplayed) {
+      // Use the absolute value to avoid changing number-format sign display.
+      secondsValue = secondsValue.abs();
+    }
+    if (!FormatNumericHoursOrMinutesOrSeconds(cx, TemporalUnit::Second, locale,
+                                              internals, secondsValue,
+                                              formatToParts, &value)) {
       return false;
     }
 
@@ -1448,8 +1476,8 @@ static bool PartitionDurationFormatPattern(
           value = DurationValue{-0.0};
         }
       } else {
-        options.mSignDisplay =
-            mozilla::intl::NumberFormatOptions::SignDisplay::Never;
+        // Use the absolute value to avoid changing number-format sign display.
+        value = value.abs();
       }
 
       // Steps 4.h.iii.4-6.
