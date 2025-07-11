@@ -328,7 +328,6 @@ class DefaultAddonUpdater(
                     .BigTextStyle()
                     .bigText(createContentText(newPermissions, newDataCollectionPermissions)),
             )
-            .setContentIntent(createContentIntent())
             .addAction(createAllowAction(extension, notificationId))
             .addAction(createDenyAction(extension, notificationId))
             .setAutoCancel(true)
@@ -397,19 +396,6 @@ class DefaultAddonUpdater(
             result = result.take(maxLength - 1).plus(Typography.ellipsis)
         }
         return result
-    }
-
-    private fun createContentIntent(): PendingIntent {
-        val intent =
-            applicationContext.packageManager.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            } ?: throw IllegalStateException("Package has no launcher intent")
-        return PendingIntent.getActivity(
-            applicationContext,
-            0,
-            intent,
-            PendingIntentUtils.defaultFlags or PendingIntent.FLAG_UPDATE_CURRENT,
-        )
     }
 
     @VisibleForTesting
