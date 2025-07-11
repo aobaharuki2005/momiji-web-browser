@@ -637,6 +637,8 @@ static bool IsLineBreakContinuation(nsTextFrame* aContinuation) {
 /*** TextLeafPoint ***/
 
 TextLeafPoint::TextLeafPoint(Accessible* aAcc, int32_t aOffset) {
+  MOZ_ASSERT(aOffset >= 0 ||
+             aOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT);
   if (!aAcc) {
     // Construct an invalid point.
     mAcc = nullptr;
@@ -646,8 +648,7 @@ TextLeafPoint::TextLeafPoint(Accessible* aAcc, int32_t aOffset) {
 
   // Even though an OuterDoc contains a document, we treat it as a leaf because
   // we don't want to move into another document.
-  if (aOffset != nsIAccessibleText::TEXT_OFFSET_CARET && !aAcc->IsOuterDoc() &&
-      aAcc->HasChildren()) {
+  if (!aAcc->IsOuterDoc() && aAcc->HasChildren()) {
     // Find a leaf. This might not necessarily be a TextLeafAccessible; it
     // could be an empty container.
     auto GetChild = [&aOffset](Accessible* acc) -> Accessible* {
