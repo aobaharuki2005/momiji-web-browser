@@ -3642,14 +3642,16 @@ class MOZ_RAII AutoContainsBlendModeCapturer {
   explicit AutoContainsBlendModeCapturer(nsDisplayListBuilder& aBuilder)
       : mBuilder(aBuilder),
         mSavedContainsBlendMode(aBuilder.ContainsBlendMode()) {
-    mBuilder.SetContainsBlendMode(false);
+    mBuilder.ClearStackingContextBits(
+        StackingContextBits::ContainsMixBlendMode);
   }
 
   bool CaptureContainsBlendMode() {
     // "Capture" the flag by extracting and clearing the ContainsBlendMode flag
     // on the builder.
-    bool capturedBlendMode = mBuilder.ContainsBlendMode();
-    mBuilder.SetContainsBlendMode(false);
+    const bool capturedBlendMode = mBuilder.ContainsBlendMode();
+    mBuilder.ClearStackingContextBits(
+        StackingContextBits::ContainsMixBlendMode);
     return capturedBlendMode;
   }
 
@@ -3661,8 +3663,13 @@ class MOZ_RAII AutoContainsBlendModeCapturer {
     // mode. In that case, we set the flag on the DL builder so that we restore
     // state to what it would have been without this RAII class on the stack.
     bool uncapturedContainsBlendMode = mBuilder.ContainsBlendMode();
-    mBuilder.SetContainsBlendMode(mSavedContainsBlendMode ||
-                                  uncapturedContainsBlendMode);
+    if (mSavedContainsBlendMode || uncapturedContainsBlendMode) {
+      mBuilder.SetStackingContextBits(
+          StackingContextBits::ContainsMixBlendMode);
+    } else {
+      mBuilder.ClearStackingContextBits(
+          StackingContextBits::ContainsMixBlendMode);
+    }
   }
 };
 
