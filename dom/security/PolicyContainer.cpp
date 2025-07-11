@@ -127,6 +127,51 @@ void PolicyContainer::FromArgs(const mozilla::ipc::PolicyContainerArgs& aArgs,
   policy.forget(aPolicy);
 }
 
+void PolicyContainer::InitFromOther(PolicyContainer* aOther) {
+  if (!aOther) {
+    return;
+  }
+
+  if (aOther->mCSP) {
+    RefPtr<nsCSPContext> csp = new nsCSPContext();
+    csp = new nsCSPContext();
+    csp->InitFromOther(nsCSPContext::Cast(aOther->mCSP));
+    mCSP = csp;
+  }
+
+  if (aOther->mIntegrityPolicy) {
+    RefPtr<dom::IntegrityPolicy> integrityPolicy = new dom::IntegrityPolicy();
+    integrityPolicy->InitFromOther(
+        IntegrityPolicy::Cast(aOther->mIntegrityPolicy));
+    mIntegrityPolicy = integrityPolicy;
+  }
+}
+
+bool PolicyContainer::Equals(const PolicyContainer* aContainer,
+                             const PolicyContainer* aOtherContainer) {
+  // Do a quick pointer check first, also checks if both are null.
+  if (aContainer == aOtherContainer) {
+    return true;
+  }
+
+  // We checked if they were null above, so make sure one of them is not null.
+  if (!aContainer || !aOtherContainer) {
+    return false;
+  }
+
+  if (!nsCSPContext::Equals(aContainer->mCSP, aOtherContainer->mCSP)) {
+    return false;
+  }
+
+  if (!IntegrityPolicy::Equals(
+          IntegrityPolicy::Cast(aContainer->mIntegrityPolicy),
+          IntegrityPolicy::Cast(aOtherContainer->mIntegrityPolicy))) {
+    return false;
+  }
+
+  return true;
+}
+
 // == CSP ==
 void PolicyContainer::SetCSP(nsIContentSecurityPolicy* aPolicy) {
   mCSP = aPolicy;

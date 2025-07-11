@@ -107,6 +107,7 @@
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/PointerEventHandler.h"
+#include "mozilla/dom/PolicyContainer.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Sanitizer.h"
 #include "mozilla/dom/SVGElement.h"
@@ -1700,12 +1701,15 @@ already_AddRefed<nsIPrincipal> Element::CreateDevtoolsPrincipal() {
   RefPtr<ExpandedPrincipal> dtPrincipal = ExpandedPrincipal::Create(
       allowList, NodePrincipal()->OriginAttributesRef());
 
-  if (nsIContentSecurityPolicy* csp = GetCsp()) {
-    RefPtr<nsCSPContext> dtCsp = new nsCSPContext();
-    dtCsp->InitFromOther(static_cast<nsCSPContext*>(csp));
-    dtCsp->SetSkipAllowInlineStyleCheck(true);
+  if (nsIPolicyContainer* policyContainer = GetPolicyContainer()) {
+    if (nsIContentSecurityPolicy* csp =
+            PolicyContainer::Cast(policyContainer)->CSP()) {
+      RefPtr<nsCSPContext> dtCsp = new nsCSPContext();
+      dtCsp->InitFromOther(static_cast<nsCSPContext*>(csp));
+      dtCsp->SetSkipAllowInlineStyleCheck(true);
 
-    dtPrincipal->SetCsp(dtCsp);
+      dtPrincipal->SetCsp(dtCsp);
+    }
   }
 
   return dtPrincipal.forget();

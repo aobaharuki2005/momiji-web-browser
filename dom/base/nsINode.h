@@ -51,6 +51,7 @@ class nsIHTMLCollection;
 class nsMultiMutationObserver;
 class nsINode;
 class nsINodeList;
+class nsIPolicyContainer;
 class nsIPrincipal;
 class nsIURI;
 class nsNodeSupportsWeakRefTearoff;
@@ -1130,9 +1131,9 @@ class nsINode : public mozilla::dom::EventTarget {
   }
 
   /**
-   * Return the CSP of this node's document, if any.
+   * Return the Policy Container of this node's document, if any.
    */
-  nsIContentSecurityPolicy* GetCsp() const;
+  nsIPolicyContainer* GetPolicyContainer() const;
 
   /**
    * Get the parent nsIContent for this node.

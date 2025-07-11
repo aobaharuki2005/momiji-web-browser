@@ -59,6 +59,8 @@ class IntegrityPolicy : public nsIIntegrityPolicy {
   static void FromArgs(const mozilla::ipc::IntegrityPolicyArgs& aArgs,
                        IntegrityPolicy** aPolicy);
 
+  void InitFromOther(IntegrityPolicy* aOther);
+
   static IntegrityPolicy* Cast(nsIIntegrityPolicy* aPolicy) {
     return static_cast<IntegrityPolicy*>(aPolicy);
   }

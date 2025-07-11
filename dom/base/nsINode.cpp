@@ -49,6 +49,7 @@
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/MutationObservers.h"
+#include "mozilla/dom/PolicyContainer.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/SVGUseElement.h"
@@ -301,8 +302,8 @@ void* nsINode::TakeProperty(const nsAtom* aPropertyName, nsresult* aStatus) {
   return OwnerDoc()->PropertyTable().TakeProperty(this, aPropertyName, aStatus);
 }
 
-nsIContentSecurityPolicy* nsINode::GetCsp() const {
-  return OwnerDoc()->GetCsp();
+nsIPolicyContainer* nsINode::GetPolicyContainer() const {
+  return OwnerDoc()->GetPolicyContainer();
 }
 
 nsINode::nsSlots* nsINode::CreateSlots() { return new nsSlots(); }

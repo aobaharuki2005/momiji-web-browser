@@ -39,6 +39,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/PolicyContainer.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 #include "mozilla/glean/DomSecurityMetrics.h"
 #include "mozilla/Components.h"
@@ -716,7 +717,10 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
             ("  schemelessInput: %d\n", aLoadInfo->GetSchemelessInput()));
 
     // Log CSPrequestPrincipal
-    nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadInfo->GetCsp();
+    nsCOMPtr<nsIPolicyContainer> policyContainer =
+        aLoadInfo->GetPolicyContainer();
+    nsCOMPtr<nsIContentSecurityPolicy> csp =
+        PolicyContainer::GetCSP(policyContainer);
     MOZ_LOG(sCSMLog, LogLevel::Debug, ("  CSP:"));
     if (csp) {
       nsAutoString parsedPolicyStr;

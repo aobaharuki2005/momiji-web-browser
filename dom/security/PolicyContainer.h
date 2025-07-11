@@ -10,6 +10,8 @@
 #include "nsIPolicyContainer.h"
 
 #include "nsCOMPtr.h"
+#include "nsIContentSecurityPolicy.h"
+#include "nsIIntegrityPolicy.h"
 
 namespace mozilla::ipc {
 class PolicyContainerArgs;
@@ -43,6 +45,8 @@ class PolicyContainer : public nsIPolicyContainer {
                        mozilla::dom::Document* aRequestingDocument,
                        PolicyContainer** aPolicy);
 
+  void InitFromOther(PolicyContainer* aOther);
+
   static const PolicyContainer* Cast(
       const nsIPolicyContainer* aPolicyContainer) {
     return static_cast<const PolicyContainer*>(aPolicyContainer);
@@ -51,6 +55,9 @@ class PolicyContainer : public nsIPolicyContainer {
   static PolicyContainer* Cast(nsIPolicyContainer* aPolicyContainer) {
     return static_cast<PolicyContainer*>(aPolicyContainer);
   }
+
+  static bool Equals(const PolicyContainer* aContainer,
+                     const PolicyContainer* aOtherContainer);
 
   // == CSP ==
   nsIContentSecurityPolicy* CSP() const;

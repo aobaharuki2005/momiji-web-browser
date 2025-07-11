@@ -31,6 +31,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/dom/TrustedTypesConstants.h"
+#include "mozilla/dom/PolicyContainer.h"
 #include "mozilla/StaticPrefs_security.h"
 
 using namespace mozilla;
@@ -143,7 +144,8 @@ void CSP_ApplyMetaCSPToDoc(mozilla::dom::Document& aDoc,
     return;
   }
 
-  nsCOMPtr<nsIContentSecurityPolicy> csp = aDoc.GetCsp();
+  nsCOMPtr<nsIContentSecurityPolicy> csp =
+      PolicyContainer::GetCSP(aDoc.GetPolicyContainer());
   if (!csp) {
     MOZ_ASSERT(false, "how come there is no CSP");
     return;
@@ -165,7 +167,12 @@ void CSP_ApplyMetaCSPToDoc(mozilla::dom::Document& aDoc,
       true);  // delivered through the meta tag
   NS_ENSURE_SUCCESS_VOID(rv);
   if (nsPIDOMWindowInner* inner = aDoc.GetInnerWindow()) {
-    inner->SetCsp(csp);
+    if (nsIPolicyContainer* policyContainer = inner->GetPolicyContainer()) {
+      inner->SetPolicyContainer(policyContainer);
+    } else {
+      RefPtr<PolicyContainer> newPolicyContainer = new PolicyContainer();
+      inner->SetPolicyContainer(newPolicyContainer);
+    }
   }
   aDoc.ApplySettingsFromCSP(false);
 }

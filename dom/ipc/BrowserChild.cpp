@@ -2127,7 +2127,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvNormalPriorityRealTouchMoveEvent(
 mozilla::ipc::IPCResult BrowserChild::RecvRealDragEvent(
     const WidgetDragEvent& aEvent, const uint32_t& aDragAction,
     const uint32_t& aDropEffect, nsIPrincipal* aPrincipal,
-    nsIContentSecurityPolicy* aCsp) {
+    nsIPolicyContainer* aPolicyContainer) {
   WidgetDragEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
 
@@ -2141,7 +2141,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealDragEvent(
   if (dragSession) {
     dragSession->SetDragAction(aDragAction);
     dragSession->SetTriggeringPrincipal(aPrincipal);
-    dragSession->SetCsp(aCsp);
+    dragSession->SetPolicyContainer(aPolicyContainer);
     RefPtr<DataTransfer> initialDataTransfer = dragSession->GetDataTransfer();
     if (initialDataTransfer) {
       initialDataTransfer->SetDropEffectInt(aDropEffect);
@@ -2289,7 +2289,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvEndDragSession(
 
 mozilla::ipc::IPCResult BrowserChild::RecvStoreDropTargetAndDelayEndDragSession(
     const LayoutDeviceIntPoint& aPt, uint32_t aDropEffect, uint32_t aDragAction,
-    nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp) {
+    nsIPrincipal* aPrincipal, nsIPolicyContainer* aPolicyContainer) {
   // cf. RecvRealDragEvent
   nsCOMPtr<nsIDragSession> dragSession = GetDragSession();
   MOZ_ASSERT(dragSession);
@@ -2300,7 +2300,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvStoreDropTargetAndDelayEndDragSession(
       static_cast<int>(aPt.y), aDropEffect, aDragAction);
   dragSession->SetDragAction(aDragAction);
   dragSession->SetTriggeringPrincipal(aPrincipal);
-  dragSession->SetCsp(aCsp);
+  dragSession->SetPolicyContainer(aPolicyContainer);
   RefPtr<DataTransfer> initialDataTransfer = dragSession->GetDataTransfer();
   if (initialDataTransfer) {
     initialDataTransfer->SetDropEffectInt(aDropEffect);
@@ -4007,7 +4007,7 @@ NS_IMETHODIMP BrowserChild::OnLocationChange(nsIWebProgress* aWebProgress,
     locationChangeData->contentPrincipal() = document->NodePrincipal();
     locationChangeData->contentPartitionedPrincipal() =
         document->PartitionedPrincipal();
-    locationChangeData->csp() = document->GetCsp();
+    locationChangeData->policyContainer() = document->GetPolicyContainer();
     locationChangeData->referrerInfo() = document->ReferrerInfo();
     locationChangeData->isSyntheticDocument() = document->IsSyntheticDocument();
 

@@ -65,7 +65,7 @@ class MOZ_STACK_CLASS DragDataProducer {
                    nsIContent* aSelectionTargetNode, bool aIsAltKeyPressed);
   nsresult Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
                    Selection** aSelection, nsIContent** aDragNode,
-                   nsIContentSecurityPolicy** aCsp,
+                   nsIPolicyContainer** aPolicyContainer,
                    nsICookieJarSettings** aCookieJarSettings);
 
  private:
@@ -110,7 +110,7 @@ nsresult nsContentAreaDragDrop::GetDragData(
     nsPIDOMWindowOuter* aWindow, nsIContent* aTarget,
     nsIContent* aSelectionTargetNode, bool aIsAltKeyPressed,
     DataTransfer* aDataTransfer, bool* aCanDrag, Selection** aSelection,
-    nsIContent** aDragNode, nsIContentSecurityPolicy** aCsp,
+    nsIContent** aDragNode, nsIPolicyContainer** aPolicyContainer,
     nsICookieJarSettings** aCookieJarSettings) {
   NS_ENSURE_TRUE(aSelectionTargetNode, NS_ERROR_INVALID_ARG);
 
@@ -118,8 +118,8 @@ nsresult nsContentAreaDragDrop::GetDragData(
 
   DragDataProducer provider(aWindow, aTarget, aSelectionTargetNode,
                             aIsAltKeyPressed);
-  return provider.Produce(aDataTransfer, aCanDrag, aSelection, aDragNode, aCsp,
-                          aCookieJarSettings);
+  return provider.Produce(aDataTransfer, aCanDrag, aSelection, aDragNode,
+                          aPolicyContainer, aCookieJarSettings);
 }
 
 NS_IMPL_ISUPPORTS(nsContentAreaDragDropDataProvider, nsIFlavorDataProvider)
@@ -388,7 +388,7 @@ nsresult DragDataProducer::GetImageData(imgIContainer* aImage,
 nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
                                    Selection** aSelection,
                                    nsIContent** aDragNode,
-                                   nsIContentSecurityPolicy** aCsp,
+                                   nsIPolicyContainer** aPolicyContainer,
                                    nsICookieJarSettings** aCookieJarSettings) {
   MOZ_ASSERT(aCanDrag && aSelection && aDataTransfer && aDragNode,
              "null pointer passed to Produce");
@@ -613,9 +613,9 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
     nsCOMPtr<Document> doc = mWindow->GetDoc();
     NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIContentSecurityPolicy> csp = doc->GetCsp();
-    if (csp) {
-      NS_IF_ADDREF(*aCsp = csp);
+    nsCOMPtr<nsIPolicyContainer> policyContainer = doc->GetPolicyContainer();
+    if (policyContainer) {
+      NS_IF_ADDREF(*aPolicyContainer = policyContainer);
     }
 
     nsCOMPtr<nsICookieJarSettings> cookieJarSettings = doc->CookieJarSettings();

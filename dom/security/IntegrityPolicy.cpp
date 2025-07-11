@@ -355,6 +355,20 @@ void IntegrityPolicy::FromArgs(const mozilla::ipc::IntegrityPolicyArgs& aArgs,
   policy.forget(aPolicy);
 }
 
+void IntegrityPolicy::InitFromOther(IntegrityPolicy* aOther) {
+  if (!aOther) {
+    return;
+  }
+
+  if (aOther->mEnforcement) {
+    mEnforcement.emplace(Entry(*aOther->mEnforcement));
+  }
+
+  if (aOther->mReportOnly) {
+    mReportOnly.emplace(Entry(*aOther->mReportOnly));
+  }
+}
+
 bool IntegrityPolicy::Equals(const IntegrityPolicy* aPolicy,
                              const IntegrityPolicy* aOtherPolicy) {
   // Do a quick pointer check first, also checks if both are null.

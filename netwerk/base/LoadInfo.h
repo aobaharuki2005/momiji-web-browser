@@ -25,6 +25,7 @@
 
 class nsDocShell;
 class nsICookieJarSettings;
+class nsIPolicyContainer;
 class nsINode;
 class nsPIDOMWindowOuter;
 
@@ -197,9 +198,8 @@ class LoadInfo final : public nsILoadInfo {
   // into that CSP. Any subresource loads within that document
   // subesquently will receive the correct CSP by querying
   // loadinfo->GetCsp() from that point on.
-  void SetCSPToInherit(nsIContentSecurityPolicy* aCspToInherit) {
-    mCspToInherit = aCspToInherit;
-  }
+  void SetPolicyContainerToInherit(
+      nsIPolicyContainer* aPolicyContainerToInherit);
 
   bool HasIsThirdPartyContextToTopWindowSet() {
     return mIsThirdPartyContextToTopWindow.isSome();
@@ -228,7 +228,7 @@ class LoadInfo final : public nsILoadInfo {
       nsIPrincipal* aLoadingPrincipal, nsIPrincipal* aTriggeringPrincipal,
       nsIPrincipal* aPrincipalToInherit, nsIPrincipal* aTopLevelPrincipal,
       nsIURI* aResultPrincipalURI, nsICookieJarSettings* aCookieJarSettings,
-      nsIContentSecurityPolicy* aCspToInherit,
+      nsIPolicyContainer* aPolicyContainerToInherit,
       const nsACString& aTriggeringRemoteType,
       const nsID& aSandboxedNullPrincipalID,
       const Maybe<mozilla::dom::ClientInfo>& aClientInfo,
@@ -332,7 +332,7 @@ class LoadInfo final : public nsILoadInfo {
   nsCOMPtr<nsIURI> mChannelCreationOriginalURI;
   nsCOMPtr<nsICSPEventListener> mCSPEventListener;
   nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
-  nsCOMPtr<nsIContentSecurityPolicy> mCspToInherit;
+  nsCOMPtr<nsIPolicyContainer> mPolicyContainerToInherit;
   Maybe<dom::FeaturePolicyInfo> mContainerFeaturePolicyInfo;
   nsCString mTriggeringRemoteType;
   nsID mSandboxedNullPrincipalID;

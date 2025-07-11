@@ -550,7 +550,7 @@ class ContentParent final : public PContentParent,
       const bool& aForWindowDotPrint, const bool& aTopLevelCreatedByWebContent,
       nsIURI* aURIToLoad, const nsACString& aFeatures,
       const UserActivation::Modifiers& aModifiers,
-      nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
+      nsIPrincipal* aTriggeringPrincipal, nsIPolicyContainer* aPolicyContainer,
       nsIReferrerInfo* aReferrerInfo, const OriginAttributes& aOriginAttributes,
       bool aUserActivation, bool aTextDirectiveUserActivation,
       CreateWindowResolver&& aResolve);
@@ -561,7 +561,7 @@ class ContentParent final : public PContentParent,
       const bool& aTopLevelCreatedByWebContent, nsIURI* aURIToLoad,
       const nsACString& aFeatures, const UserActivation::Modifiers& aModifiers,
       const nsAString& aName, nsIPrincipal* aTriggeringPrincipal,
-      nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo,
+      nsIPolicyContainer* aPolicyContainer, nsIReferrerInfo* aReferrerInfo,
       const OriginAttributes& aOriginAttributes, bool aUserActivation,
       bool aTextDirectiveUserActivation);
 
@@ -784,7 +784,7 @@ class ContentParent final : public PContentParent,
       nsresult& aResult, nsCOMPtr<nsIRemoteTab>& aNewRemoteTab,
       bool* aWindowIsNew, int32_t& aOpenLocation,
       nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo* aReferrerInfo,
-      bool aLoadUri, nsIContentSecurityPolicy* aCsp,
+      bool aLoadUri, nsIPolicyContainer* aPolicyContainer,
       const OriginAttributes& aOriginAttributes, bool aUserActivation,
       bool aTextDirectiveUserActivation);
 

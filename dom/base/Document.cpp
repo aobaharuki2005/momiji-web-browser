@@ -3689,7 +3689,10 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   // Not calling it here results in the mSelfURI being the current mSelfURI and
   // not the previous which breaks said inheritance.
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1793560#ch-8
-  nsCOMPtr<nsIContentSecurityPolicy> cspToInherit = loadInfo->GetCspToInherit();
+  nsCOMPtr<nsIPolicyContainer> policyContainer =
+      loadInfo->GetPolicyContainerToInherit();
+  nsCOMPtr<nsIContentSecurityPolicy> cspToInherit =
+      PolicyContainer::GetCSP(policyContainer);
   if (cspToInherit) {
     cspToInherit->EnsureIPCPoliciesRead();
   }
@@ -3758,15 +3761,6 @@ void Document::SetLoadedAsData(bool aLoadedAsData,
       }
     }
   }
-}
-
-nsIContentSecurityPolicy* Document::GetCsp() const {
-  // TODO(fkilic): remove
-  return nullptr;
-}
-
-void Document::SetCsp(nsIContentSecurityPolicy* aCSP) {
-  // TODO(fkilic): remove
 }
 
 nsIContentSecurityPolicy* Document::GetPreloadCsp() const {
@@ -3860,10 +3854,12 @@ void Document::ApplySettingsFromCSP(bool aSpeculative) {
 }
 
 nsresult Document::InitPolicyContainer(nsIChannel* aChannel) {
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   bool shouldInherit = CSP_ShouldResponseInheritCSP(aChannel);
   if (shouldInherit) {
-    // TODO(fkilic): mPolicyContainer = loadInfo->GetPolicyContainerToInherit();
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    nsCOMPtr<nsIPolicyContainer> policyContainer =
+        loadInfo->GetPolicyContainerToInherit();
+    mPolicyContainer = PolicyContainer::Cast(policyContainer);
   }
 
   if (!mPolicyContainer) {
@@ -3879,6 +3875,10 @@ void Document::SetPolicyContainer(nsIPolicyContainer* aPolicyContainer) {
   mHasPolicyWithRequireTrustedTypesForDirective =
       csp && csp->GetRequireTrustedTypesForDirectiveState() !=
                  RequireTrustedTypesForDirectiveState::NONE;
+}
+
+nsIPolicyContainer* Document::GetPolicyContainer() const {
+  return mPolicyContainer;
 }
 
 nsresult Document::InitCSP(nsIChannel* aChannel) {
@@ -4024,7 +4024,7 @@ nsresult Document::InitIntegrityPolicy(nsIChannel* aChannel) {
   MOZ_ASSERT(mPolicyContainer,
              "Policy container must be initialized before IntegrityPolicy!");
 
-    if (mPolicyContainer->IntegrityPolicy()) {
+  if (mPolicyContainer->IntegrityPolicy()) {
     // We inherited the integrity policy.
     return NS_OK;
   }
@@ -4046,7 +4046,7 @@ nsresult Document::InitIntegrityPolicy(nsIChannel* aChannel) {
 
   RefPtr<IntegrityPolicy> integrityPolicy;
   rv = IntegrityPolicy::ParseHeaders(headerValue, headerROValue,
-                                       getter_AddRefs(integrityPolicy));
+                                     getter_AddRefs(integrityPolicy));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mPolicyContainer->SetIntegrityPolicy(integrityPolicy);
@@ -8293,7 +8293,8 @@ void Document::SetScriptGlobalObject(
   // Now that we know what our window is, we can flush the CSP errors to the
   // Web Console. We are flushing all messages that occurred and were stored in
   // the queue prior to this point.
-  if (nsIContentSecurityPolicy* csp = PolicyContainer::GetCSP(mPolicyContainer) {
+  if (nsIContentSecurityPolicy* csp =
+          PolicyContainer::GetCSP(mPolicyContainer)) {
     nsCSPContext::Cast(csp)->flushConsoleMessages();
   }
 
@@ -12714,8 +12715,7 @@ nsresult Document::CloneDocHelper(Document* clone) const {
           mTiming->CloneNavigationTime(nsDocShell::Cast(clone->GetDocShell()));
       clone->SetNavigationTiming(timing);
     }
-    nsIContentSecurityPolicy* csp = PolicyContainer::GetCSP(mPolicyContainer);
-    clone->SetCsp(csp);
+    clone->SetPolicyContainer(mPolicyContainer);
   }
 
   // Now ensure that our clone has the same URI, base URI, and principal as us.

@@ -48,6 +48,7 @@
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceStorageWorker.h"
+#include "mozilla/dom/PolicyContainer.h"
 #include "mozilla/dom/PromiseDebugging.h"
 #include "mozilla/dom/PRemoteWorkerDebuggerParent.h"
 #include "mozilla/dom/ReferrerInfo.h"
@@ -1491,8 +1492,10 @@ void WorkerPrivate::StoreCSPOnClient() {
   auto data = mWorkerThreadAccessible.Access();
   MOZ_ASSERT(data->mScope);
   if (mLoadInfo.mCSPContext) {
-    data->mScope->MutableClientSourceRef().SetCspInfo(
-        mLoadInfo.mCSPContext->CSPInfo());
+    mozilla::ipc::PolicyContainerArgs policyContainerArgs;
+    policyContainerArgs.csp() = Some(mLoadInfo.mCSPContext->CSPInfo());
+    data->mScope->MutableClientSourceRef().SetPolicyContainerArgs(
+        policyContainerArgs);
   }
 }
 

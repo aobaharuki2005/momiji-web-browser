@@ -780,10 +780,6 @@ class Document : public nsINode,
    * available yet, hence we sync CSP of document and Client when the
    * Client becomes available within nsGlobalWindowInner::EnsureClientSource().
    */
-  // TODO(fkilic): Remove the next two lines
-  nsIContentSecurityPolicy* GetCsp() const;
-  void SetCsp(nsIContentSecurityPolicy* aCSP);
-
   nsIContentSecurityPolicy* GetPreloadCsp() const;
   void SetPreloadCsp(nsIContentSecurityPolicy* aPreloadCSP);
 
@@ -794,10 +790,7 @@ class Document : public nsINode,
    */
   void ApplySettingsFromCSP(bool aSpeculative);
 
-  // TODO(fkilic): Remove the next line
-  IntegrityPolicy* GetIntegrityPolicy() const { return nullptr; }
-
-  PolicyContainer* GetPolicyContainer() const;
+  nsIPolicyContainer* GetPolicyContainer() const;
   void SetPolicyContainer(nsIPolicyContainer* aPolicyContainer);
 
   already_AddRefed<nsIParser> CreatorParserOrNull() {

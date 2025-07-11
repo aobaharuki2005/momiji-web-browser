@@ -11,6 +11,7 @@
 #include "mozilla/ExpandedPrincipal.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/PolicyContainer.h"
 #include "mozilla/intl/MozLocaleBindings.h"
 #include "mozilla/intl/oxilangtag_ffi_generated.h"
 #include "nsCSSProps.h"
@@ -354,10 +355,11 @@ bool nsStyleUtil::CSPAllowsInlineStyle(
                                   ->OverridesCSP(aDocument->NodePrincipal())) {
     nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(aTriggeringPrincipal);
     if (ep) {
+      // Bug 1548468: Move CSP off ExpandedPrincipal
       csp = ep->GetCsp();
     }
   } else {
-    csp = aDocument->GetCsp();
+    csp = PolicyContainer::GetCSP(aDocument->GetPolicyContainer());
   }
 
   if (!csp) {

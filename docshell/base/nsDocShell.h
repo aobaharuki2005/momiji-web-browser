@@ -65,6 +65,7 @@ class nsIDocShellTreeOwner;
 class nsIDocumentViewer;
 class nsIHttpChannel;
 class nsIMutableArray;
+class nsIPolicyContainer;
 class nsIPrompt;
 class nsIStringBundle;
 class nsIURIFixup;
@@ -224,11 +225,11 @@ class nsDocShell final : public nsDocLoader,
    * @param aHeadersDataStream ??? (only used for plugins)
    * @param aTriggeringPrincipal, if not passed explicitly we fall back to
    *        the document's principal.
-   * @param aCsp, the CSP to be used for the load, that is the CSP of the
-   *        entity responsible for causing the load to occur. Most likely
-   *        this is the CSP of the document that started the load. In case
-   *        aCsp was not passed explicitly we fall back to using
-   *        aContent's document's CSP if that document holds any.
+   * @param aPolicyContainer, the policyContainer to be used for the load, that
+   * is the policyContainer of the entity responsible for causing the load to
+   * occur. Most likely this is the policyContainer of the document that started
+   * the load. In case aPolicyContainer was not passed explicitly we fall back
+   * to using aContent's document's policyContainer if that document holds any.
    */
   MOZ_CAN_RUN_SCRIPT
   nsresult OnLinkClick(nsIContent* aContent, nsIURI* aURI,
@@ -238,7 +239,7 @@ class nsDocShell final : public nsDocLoader,
                        bool aIsUserTriggered,
                        mozilla::dom::UserNavigationInvolvement aUserInvolvement,
                        nsIPrincipal* aTriggeringPrincipal,
-                       nsIContentSecurityPolicy* aCsp);
+                       nsIPolicyContainer* aPolicyContainer);
   /**
    * Process a click on a link.
    *
@@ -575,10 +576,11 @@ class nsDocShell final : public nsDocLoader,
 
   // aPrincipal can be passed in if the caller wants. If null is
   // passed in, the about:blank principal will end up being used.
-  // aCSP, if any, will be used for the new about:blank load.
+  // aPolicyContainer, if any, will be used for the new about:blank load.
   nsresult CreateAboutBlankDocumentViewer(
       nsIPrincipal* aPrincipal, nsIPrincipal* aPartitionedPrincipal,
-      nsIContentSecurityPolicy* aCSP, nsIURI* aBaseURI, bool aIsInitialDocument,
+      nsIPolicyContainer* aPolicyContainer, nsIURI* aBaseURI,
+      bool aIsInitialDocument,
       const mozilla::Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>& aCOEP =
           mozilla::Nothing(),
       bool aTryToSaveOldPresentation = true, bool aCheckPermitUnload = true,
@@ -609,22 +611,22 @@ class nsDocShell final : public nsDocLoader,
   // children will be cloned onto the new entry. This should be
   // used when we aren't actually changing the document while adding
   // the new session history entry.
-  // aCsp is the CSP to be used for the load. That is *not* the CSP
-  // that will be applied to subresource loads within that document
-  // but the CSP for the document load itself. E.g. if that CSP
-  // includes upgrade-insecure-requests, then the new top-level load
-  // will be upgraded to HTTPS.
+  // aPolicyContainer is the policyContainer to be used for the load. That is
+  // *not* the policyContainer that will be applied to subresource loads within
+  // that document but the policyContainer for the document load itself. E.g. if
+  // that policyContainer's CSP includes upgrade-insecure-requests, then the new
+  // top-level load will be upgraded to HTTPS.
   nsresult AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
                                nsIPrincipal* aTriggeringPrincipal,
                                nsIPrincipal* aPrincipalToInherit,
                                nsIPrincipal* aPartitionedPrincipalToInherit,
-                               nsIContentSecurityPolicy* aCsp,
+                               nsIPolicyContainer* aPolicyContainer,
                                bool aCloneChildren, nsISHEntry** aNewEntry);
 
   void UpdateActiveEntry(
       bool aReplace, const mozilla::Maybe<nsPoint>& aPreviousScrollPos,
       nsIURI* aURI, nsIURI* aOriginalURI, nsIReferrerInfo* aReferrerInfo,
-      nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
+      nsIPrincipal* aTriggeringPrincipal, nsIPolicyContainer* aPolicyContainer,
       const nsAString& aTitle, bool aScrollRestorationIsManual,
       nsIStructuredCloneContainer* aData, bool aURIWasModified);
 
@@ -729,16 +731,16 @@ class nsDocShell final : public nsDocLoader,
   // present, the owner should be gotten from it.
   // If OnNewURI calls AddToSessionHistory, it will pass its
   // aCloneSHChildren argument as aCloneChildren.
-  // aCsp is the CSP to be used for the load. That is *not* the CSP
-  // that will be applied to subresource loads within that document
-  // but the CSP for the document load itself. E.g. if that CSP
-  // includes upgrade-insecure-requests, then the new top-level load
-  // will be upgraded to HTTPS.
+  // aPolicyContainer is the policyContainer to be used for the load. That is
+  // *not* the policyContainer that will be applied to subresource loads within
+  // that document but the policyContainer for the document load itself. E.g. if
+  // that policyContainer's CSP includes upgrade-insecure-requests, then the new
+  // top-level load will be upgraded to HTTPS.
   bool OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
                 nsIPrincipal* aTriggeringPrincipal,
                 nsIPrincipal* aPrincipalToInherit,
                 nsIPrincipal* aPartitionedPrincipalToInherit,
-                nsIContentSecurityPolicy* aCsp, bool aAddToGlobalHistory,
+                nsIPolicyContainer* aPolicyContainer, bool aAddToGlobalHistory,
                 bool aCloneSHChildren);
 
  public:

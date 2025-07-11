@@ -280,7 +280,7 @@ class nsDragSession : public nsBaseDragSession, public nsIObserver {
   // nsIDragSession
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD InvokeDragSession(
       nsIWidget* aWidget, nsINode* aDOMNode, nsIPrincipal* aPrincipal,
-      nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings,
+      nsIPolicyContainer* aPolicyContainer, nsICookieJarSettings* aCookieJarSettings,
       nsIArray* anArrayTransferables, uint32_t aActionType,
       nsContentPolicyType aContentPolicyType) override;
 
