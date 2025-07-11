@@ -56,6 +56,7 @@ import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode.Normal
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode.Private
+import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.UseCases
 import org.mozilla.fenix.components.menu.MenuAccessPoint
@@ -74,7 +75,6 @@ import org.mozilla.fenix.search.ext.searchEngineShortcuts
 import org.mozilla.fenix.tabstray.DefaultTabManagementFeatureHelper
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.tabstray.TabManagementFeatureHelper
-import org.mozilla.fenix.utils.Settings
 import mozilla.components.lib.state.Action as MVIAction
 import mozilla.components.ui.icons.R as iconsR
 
@@ -103,7 +103,6 @@ internal sealed class PageOriginInteractions : BrowserToolbarEvent {
  * @param browserStore [BrowserStore] to sync from.
  * @param clipboard [ClipboardHandler] to use for reading from device's clipboard.
  * @param useCases [UseCases] helping this integrate with other features of the applications.
- * @param settings [Settings] for accessing user preferences.
  * @param tabManagementFeatureHelper Feature flag helper for the tab management UI.
  */
 class BrowserToolbarMiddleware(
@@ -111,7 +110,6 @@ class BrowserToolbarMiddleware(
     private val browserStore: BrowserStore,
     private val clipboard: ClipboardHandler,
     private val useCases: UseCases,
-    private val settings: Settings,
     private val tabManagementFeatureHelper: TabManagementFeatureHelper = DefaultTabManagementFeatureHelper,
 ) : Middleware<BrowserToolbarState, BrowserToolbarAction> {
     @VisibleForTesting
@@ -323,7 +321,7 @@ class BrowserToolbarMiddleware(
 
         return listOf(
             HomeToolbarActionConfig(HomeToolbarAction.TabCounter) {
-                !settings.isTabStripEnabled &&
+                !environment.context.isTabStripEnabled() &&
                         environment.context.settings().shouldUseSimpleToolbar
             },
             HomeToolbarActionConfig(HomeToolbarAction.Menu) {

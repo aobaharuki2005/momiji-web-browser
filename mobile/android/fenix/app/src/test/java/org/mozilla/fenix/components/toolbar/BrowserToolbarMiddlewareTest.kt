@@ -185,7 +185,6 @@ class BrowserToolbarMiddlewareTest {
     private val settings: Settings = mockk(relaxed = true) {
         every { shouldUseBottomToolbar } returns true
         every { shouldUseSimpleToolbar } returns true
-        every { isTabStripEnabled } returns false
     }
     private val tabId = "test"
     private val tab: TabSessionState = mockk(relaxed = true) {

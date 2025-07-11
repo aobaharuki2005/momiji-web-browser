@@ -10,7 +10,9 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.spyk
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -25,11 +27,14 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.After
 import org.junit.Assert.assertNotNull
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.ext.isLargeWindow
 import org.mozilla.fenix.helpers.FenixGleanTestRule
 import org.mozilla.fenix.utils.Settings
@@ -42,6 +47,18 @@ class BrowserToolbarCFRPresenterTest {
 
     @get:Rule
     val gleanTestRule = FenixGleanTestRule(testContext)
+
+    @Before
+    fun setup() {
+        mockkStatic("org.mozilla.fenix.ext.ContextKt")
+        mockkStatic(Context::isTabStripEnabled)
+    }
+
+    @After
+    fun teardown() {
+        unmockkStatic("org.mozilla.fenix.ext.ContextKt")
+        unmockkStatic(Context::isTabStripEnabled)
+    }
 
     @Test
     fun `GIVEN the cookie banners handling CFR should be shown for a custom tab WHEN the custom tab is fully loaded THEN the TCP CFR is shown`() {
@@ -89,16 +106,19 @@ class BrowserToolbarCFRPresenterTest {
     fun `GIVEN the Tab Swipe CFR should be shown WHEN in Normal mode THEN the Tab Swipe CFR is shown once`() {
         val normalTab = createTab(url = "", private = false)
         val browserStore = createBrowserStore(tab = normalTab, selectedTabId = normalTab.id)
+        val context: Context = mockk {
+            every { isTabStripEnabled() } returns false
+        }
         val settings: Settings = mockk(relaxed = true) {
             every { shouldShowCookieBannersCFR } returns false
             every { shouldUseCookieBannerPrivateMode } returns false
             every { shouldShowTabSwipeCFR } returns true
             every { isSwipeToolbarToSwitchTabsEnabled } returns true
             every { hasShownTabSwipeCFR } returns false
-            every { isTabStripEnabled } returns false
         }
 
         val presenter = createPresenterThatShowsCFRs(
+            context = context,
             browserStore = browserStore,
             settings = settings,
             isPrivate = false,
@@ -115,16 +135,19 @@ class BrowserToolbarCFRPresenterTest {
     fun `GIVEN tab strip is enabled WHEN in Normal mode THEN the Tab Swipe CFR is not shown`() {
         val normalTab = createTab(url = "", private = false)
         val browserStore = createBrowserStore(tab = normalTab, selectedTabId = normalTab.id)
+        val context: Context = mockk {
+            every { isTabStripEnabled() } returns true
+        }
         val settings: Settings = mockk(relaxed = true) {
             every { shouldShowCookieBannersCFR } returns false
             every { shouldUseCookieBannerPrivateMode } returns false
             every { shouldShowTabSwipeCFR } returns true
             every { isSwipeToolbarToSwitchTabsEnabled } returns true
             every { hasShownTabSwipeCFR } returns false
-            every { isTabStripEnabled } returns true
         }
 
         val presenter = createPresenterThatShowsCFRs(
+            context = context,
             browserStore = browserStore,
             settings = settings,
             isPrivate = false,
@@ -141,6 +164,9 @@ class BrowserToolbarCFRPresenterTest {
     fun `GIVEN swipe toolbar to change tabs is disabled WHEN in Normal mode THEN the Tab Swipe CFR is not shown`() {
         val normalTab = createTab(url = "", private = false)
         val browserStore = createBrowserStore(tab = normalTab, selectedTabId = normalTab.id)
+        val context: Context = mockk {
+            every { isTabStripEnabled() } returns false
+        }
         val settings: Settings = mockk(relaxed = true) {
             every { shouldShowCookieBannersCFR } returns false
             every { shouldUseCookieBannerPrivateMode } returns false
@@ -150,6 +176,7 @@ class BrowserToolbarCFRPresenterTest {
         }
 
         val presenter = createPresenterThatShowsCFRs(
+            context = context,
             browserStore = browserStore,
             settings = settings,
             isPrivate = false,

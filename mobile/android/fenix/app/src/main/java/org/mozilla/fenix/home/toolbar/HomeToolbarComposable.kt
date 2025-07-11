@@ -38,6 +38,7 @@ import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
 import mozilla.components.support.ktx.android.view.ImeInsetsSynchronizer
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
+import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.toolbar.ToolbarPosition.BOTTOM
@@ -90,7 +91,7 @@ internal class HomeToolbarComposable(
         id = R.id.composable_toolbar
 
         setContent {
-            val shouldShowTabStrip: Boolean = remember { settings.isTabStripEnabled }
+            val shouldShowTabStrip: Boolean = remember { context.isTabStripEnabled() }
 
             FirefoxTheme {
                 Column {
@@ -173,7 +174,7 @@ internal class HomeToolbarComposable(
         if (!settings.shouldUseBottomToolbar) {
             homeBinding.homeAppBar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                 topMargin = context.resources.getDimensionPixelSize(R.dimen.home_fragment_top_toolbar_header_margin) +
-                    when (settings.isTabStripEnabled) {
+                    when (context.isTabStripEnabled()) {
                         true -> context.resources.getDimensionPixelSize(R.dimen.tab_strip_height)
                         false -> 0
                     }
@@ -207,7 +208,6 @@ internal class HomeToolbarComposable(
                     browserStore = browserStore,
                     clipboard = context.components.clipboardHandler,
                     useCases = context.components.useCases,
-                    settings = settings,
                 ),
                 BrowserToolbarSearchMiddleware(
                     appStore = appStore,

@@ -87,6 +87,7 @@ import org.mozilla.fenix.biometricauthentication.BiometricAuthenticationManager
 import org.mozilla.fenix.biometricauthentication.NavigationOrigin
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.tabstrip.TabStrip
+import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.appstate.AppAction
@@ -903,7 +904,7 @@ class HomeFragment : Fragment() {
         )
 
         toolbarView.build(requireComponents.core.store.state)
-        if (requireContext().settings().isTabStripEnabled) {
+        if (requireContext().isTabStripEnabled()) {
             initTabStrip()
         }
 

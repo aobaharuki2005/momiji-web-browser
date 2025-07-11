@@ -129,7 +129,6 @@ class HomeToolbarViewTest {
         every { context.settings().shouldShowHistorySuggestions } returns true
         every { context.settings().shouldShowBookmarkSuggestions } returns true
         every { context.settings().shouldAutocompleteInAwesomebar } returns false
-        every { context.settings().isTabStripEnabled } returns false
         val view = buildToolbarView(false)
 
         view.update(defaultState.copy(searchTerms = "search terms"))
@@ -144,7 +143,6 @@ class HomeToolbarViewTest {
         every { context.settings().showUnifiedSearchFeature } returns true
         every { context.settings().shouldShowHistorySuggestions } returns true
         every { context.settings().shouldShowBookmarkSuggestions } returns true
-        every { context.settings().isTabStripEnabled } returns false
         val view = buildToolbarView(false)
 
         view.update(defaultState)
@@ -429,7 +427,6 @@ class HomeToolbarViewTest {
     fun `GIVEN autocomplete disabled WHEN the toolbar view is initialized THEN create an autocomplete with disabled functionality`() {
         val settings: Settings = mockk {
             every { shouldAutocompleteInAwesomebar } returns false
-            every { isTabStripEnabled } returns false
         }
         val toolbarView = buildToolbarView(true, settings)
 
@@ -442,7 +439,6 @@ class HomeToolbarViewTest {
     fun `GIVEN autocomplete enabled WHEN the toolbar view is initialized THEN create an autocomplete with enabled functionality`() {
         val settings: Settings = mockk {
             every { shouldAutocompleteInAwesomebar } returns true
-            every { isTabStripEnabled } returns false
         }
         val toolbarView = buildToolbarView(true, settings)
 

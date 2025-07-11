@@ -84,6 +84,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode.Normal
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode.Private
 import org.mozilla.fenix.browser.store.BrowserScreenAction
 import org.mozilla.fenix.browser.store.BrowserScreenStore
+import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.NimbusComponents
 import org.mozilla.fenix.components.UseCases
@@ -687,10 +688,10 @@ class BrowserToolbarMiddleware(
 
         return listOf(
             ToolbarActionConfig(ToolbarAction.NewTab) {
-                !settings.isTabStripEnabled && settings.shouldUseSimpleToolbar
+                !environment.context.isTabStripEnabled() && settings.shouldUseSimpleToolbar
             },
             ToolbarActionConfig(ToolbarAction.TabCounter) {
-                !settings.isTabStripEnabled && settings.shouldUseSimpleToolbar
+                !environment.context.isTabStripEnabled() && settings.shouldUseSimpleToolbar
             },
             ToolbarActionConfig(ToolbarAction.Menu) { settings.shouldUseSimpleToolbar },
         ).filter { config ->
