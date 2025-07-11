@@ -739,6 +739,8 @@ void DBusMenuBar::OnNameOwnerChanged() {
     return;
   }
 
+  gdkWin = gdk_window_get_toplevel(gdkWin);
+
 #  ifdef MOZ_WAYLAND
   if (auto* display = widget::WaylandDisplayGet()) {
     if (!StaticPrefs::widget_gtk_global_menu_wayland_enabled()) {
