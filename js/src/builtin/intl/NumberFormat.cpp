@@ -807,6 +807,8 @@ static mozilla::intl::NumberRangeFormat* GetOrCreateNumberRangeFormat(
   return nrf;
 }
 
+using FieldType = js::ImmutableTenuredPtr<PropertyName*> JSAtomState::*;
+
 static FieldType GetFieldTypeForNumberPartType(
     mozilla::intl::NumberPartType type) {
   switch (type) {
@@ -866,12 +868,13 @@ static FieldType GetFieldTypeForNumberPartSource(
 }
 
 enum class DisplayNumberPartSource : bool { No, Yes };
+enum class DisplayLiteralUnit : bool { No, Yes };
 
-static bool FormattedNumberToParts(JSContext* cx, HandleString str,
-                                   const mozilla::intl::NumberPartVector& parts,
-                                   DisplayNumberPartSource displaySource,
-                                   FieldType unitType,
-                                   MutableHandleValue result) {
+static ArrayObject* FormattedNumberToParts(
+    JSContext* cx, HandleString str,
+    const mozilla::intl::NumberPartVector& parts,
+    DisplayNumberPartSource displaySource,
+    DisplayLiteralUnit displayLiteralUnit, FieldType unitType) {
   size_t lastEndIndex = 0;
 
   RootedObject singlePart(cx);
@@ -880,7 +883,7 @@ static bool FormattedNumberToParts(JSContext* cx, HandleString str,
   Rooted<ArrayObject*> partsArray(
       cx, NewDenseFullyAllocatedArray(cx, parts.length()));
   if (!partsArray) {
-    return false;
+    return nullptr;
   }
   partsArray->ensureDenseInitializedLength(0, parts.length());
 
@@ -893,23 +896,23 @@ static bool FormattedNumberToParts(JSContext* cx, HandleString str,
 
     singlePart = NewPlainObject(cx);
     if (!singlePart) {
-      return false;
+      return nullptr;
     }
 
     propVal.setString(cx->names().*type);
     if (!DefineDataProperty(cx, singlePart, cx->names().type, propVal)) {
-      return false;
+      return nullptr;
     }
 
     JSLinearString* partSubstr =
         NewDependentString(cx, str, lastEndIndex, endIndex - lastEndIndex);
     if (!partSubstr) {
-      return false;
+      return nullptr;
     }
 
     propVal.setString(partSubstr);
     if (!DefineDataProperty(cx, singlePart, cx->names().value, propVal)) {
-      return false;
+      return nullptr;
     }
 
     if (displaySource == DisplayNumberPartSource::Yes) {
@@ -917,14 +920,16 @@ static bool FormattedNumberToParts(JSContext* cx, HandleString str,
 
       propVal.setString(cx->names().*source);
       if (!DefineDataProperty(cx, singlePart, cx->names().source, propVal)) {
-        return false;
+        return nullptr;
       }
     }
 
-    if (unitType != nullptr && type != &JSAtomState::literal) {
+    if (unitType != nullptr &&
+        (type != &JSAtomState::literal ||
+         displayLiteralUnit == DisplayLiteralUnit::Yes)) {
       propVal.setString(cx->names().*unitType);
       if (!DefineDataProperty(cx, singlePart, cx->names().unit, propVal)) {
-        return false;
+        return nullptr;
       }
     }
 
@@ -937,16 +942,22 @@ static bool FormattedNumberToParts(JSContext* cx, HandleString str,
   MOZ_ASSERT(lastEndIndex == str->length(),
              "result array must partition the entire string");
 
-  result.setObject(*partsArray);
-  return true;
+  return partsArray;
 }
 
 bool js::intl::FormattedRelativeTimeToParts(
     JSContext* cx, HandleString str,
-    const mozilla::intl::NumberPartVector& parts, FieldType relativeTimeUnit,
-    MutableHandleValue result) {
-  return FormattedNumberToParts(cx, str, parts, DisplayNumberPartSource::No,
-                                relativeTimeUnit, result);
+    const mozilla::intl::NumberPartVector& parts,
+    RelativeTimeFormatUnit relativeTimeUnit, MutableHandleValue result) {
+  auto* array =
+      FormattedNumberToParts(cx, str, parts, DisplayNumberPartSource::No,
+                             DisplayLiteralUnit::No, relativeTimeUnit);
+  if (!array) {
+    return false;
+  }
+
+  result.setObject(*array);
+  return true;
 }
 
 // Return true if the string starts with "0[bBoOxX]", possibly skipping over
@@ -1090,7 +1101,7 @@ static bool NumberPart(JSContext* cx, JSLinearString* str,
   return true;
 }
 
-static JSString* FormattedResultToString(
+static JSLinearString* FormattedResultToString(
     JSContext* cx,
     mozilla::Result<std::u16string_view, mozilla::intl::ICUError>& result) {
   if (result.isErr()) {
@@ -1189,8 +1200,15 @@ bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (formatToParts) {
-    return FormattedNumberToParts(cx, str, parts, DisplayNumberPartSource::No,
-                                  nullptr, args.rval());
+    auto* array =
+        FormattedNumberToParts(cx, str, parts, DisplayNumberPartSource::No,
+                               DisplayLiteralUnit::No, nullptr);
+    if (!array) {
+      return false;
+    }
+
+    args.rval().setObject(*array);
+    return true;
   }
 
   args.rval().setString(str);
@@ -1370,10 +1388,56 @@ bool js::intl_FormatNumberRange(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (formatToParts) {
-    return FormattedNumberToParts(cx, str, parts, DisplayNumberPartSource::Yes,
-                                  nullptr, args.rval());
+    auto* array =
+        FormattedNumberToParts(cx, str, parts, DisplayNumberPartSource::Yes,
+                               DisplayLiteralUnit::No, nullptr);
+    if (!array) {
+      return false;
+    }
+
+    args.rval().setObject(*array);
+    return true;
   }
 
   args.rval().setString(str);
   return true;
+}
+
+JSLinearString* js::intl::FormatNumber(
+    JSContext* cx, mozilla::intl::NumberFormat* numberFormat, double x) {
+  auto result = numberFormat->format(x);
+  return FormattedResultToString(cx, result);
+}
+
+JSLinearString* js::intl::FormatNumber(
+    JSContext* cx, mozilla::intl::NumberFormat* numberFormat,
+    std::string_view x) {
+  auto result = numberFormat->format(x);
+  return FormattedResultToString(cx, result);
+}
+
+ArrayObject* js::intl::FormatNumberToParts(
+    JSContext* cx, mozilla::intl::NumberFormat* numberFormat, double x,
+    NumberFormatUnit unit) {
+  mozilla::intl::NumberPartVector parts;
+  auto result = numberFormat->formatToParts(x, parts);
+  Rooted<JSLinearString*> str(cx, FormattedResultToString(cx, result));
+  if (!str) {
+    return nullptr;
+  }
+  return FormattedNumberToParts(cx, str, parts, DisplayNumberPartSource::No,
+                                DisplayLiteralUnit::Yes, unit);
+}
+
+ArrayObject* js::intl::FormatNumberToParts(
+    JSContext* cx, mozilla::intl::NumberFormat* numberFormat,
+    std::string_view x, NumberFormatUnit unit) {
+  mozilla::intl::NumberPartVector parts;
+  auto result = numberFormat->formatToParts(x, parts);
+  Rooted<JSLinearString*> str(cx, FormattedResultToString(cx, result));
+  if (!str) {
+    return nullptr;
+  }
+  return FormattedNumberToParts(cx, str, parts, DisplayNumberPartSource::No,
+                                DisplayLiteralUnit::Yes, unit);
 }
