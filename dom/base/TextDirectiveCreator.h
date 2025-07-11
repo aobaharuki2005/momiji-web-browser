@@ -204,6 +204,21 @@ class TextDirectiveCreator {
       const nsTArray<uint32_t>& aFirstExtendedToWordBoundaries,
       const nsTArray<uint32_t>& aSecondExtendedToWordBoundaries);
 
+  // The maximum length of the context terms around the target range.
+  // If a context term is longer, it will be truncated to this length.
+  // If -- which seems highly unlikely -- there is another match for the target
+  // range which happens to have a context term with the same content, it will
+  // essentially be ignored:
+  // The common length would be equal to this value, also the maximum common
+  // length extended to the word boundary. Therefore, the algorithm could not
+  // find a candidate which exceeds this length, therefore ignoring it
+  // altogether.
+  //
+  // If -- even more unlikely -- this condition would happen for _every_ context
+  // term, the algorithm would determine that it cannot create a text
+  // directive for the target range because it would be ambiguous.
+  static constexpr uint32_t kMaxContextTermLength = 1024;
+
   nsString mPrefixContent;
   nsString mPrefixFoldCaseContent;
   nsTArray<uint32_t> mPrefixWordBeginDistances;

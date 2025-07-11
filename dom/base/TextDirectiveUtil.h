@@ -495,20 +495,12 @@ void LogCommonSubstringLengths(const char* aFunc,
 template <TextScanDirection direction>
 /*static*/ nsTArray<uint32_t> TextDirectiveUtil::ComputeWordBoundaryDistances(
     const nsAString& aString) {
-  // Limit the amount of words to look out for.
-  // If it's not possible to create a text directive because 32 words in _all_
-  // directions are equal, it's reasonable to say that it's not possible to
-  // create a text directive at all. Without this limit, this algorithm could
-  // blow up for extremely large text nodes, such as opening a text file with
-  // megabytes of text.
-  constexpr uint32_t kMaxWordCount = 32;
-  AutoTArray<uint32_t, kMaxWordCount> wordBoundaryDistances;
+  AutoTArray<uint32_t, 32> wordBoundaryDistances;
   uint32_t pos =
       direction == TextScanDirection::Left ? aString.Length() - 1 : 0;
 
   // This loop relies on underflowing `pos` when going left as stop condition.
-  while (pos < aString.Length() &&
-         wordBoundaryDistances.Length() < kMaxWordCount) {
+  while (pos < aString.Length()) {
     auto [wordBegin, wordEnd] = intl::WordBreaker::FindWord(aString, pos);
     if constexpr (direction == TextScanDirection::Left) {
       wordBoundaryDistances.AppendElement(aString.Length() - wordBegin);
