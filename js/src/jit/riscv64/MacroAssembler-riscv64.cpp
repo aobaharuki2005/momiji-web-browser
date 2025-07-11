@@ -2637,7 +2637,7 @@ static void AtomicFetchOp(MacroAssembler& masm,
       masm.andi(valueTemp, valueTemp, 0xff);
       break;
     case 2:
-      masm.andi(valueTemp, valueTemp, 0xffff);
+      masm.ma_and(valueTemp, Imm32(0xffff));
       break;
   }
 
@@ -4116,8 +4116,8 @@ static void CompareExchange(MacroAssembler& masm,
         masm.SignExtendShort(valueTemp, oldval);
         masm.SignExtendShort(output, output);
       } else {
-        masm.andi(valueTemp, oldval, 0xffff);
-        masm.andi(output, output, 0xffff);
+        masm.ma_and(valueTemp, oldval, Imm32(0xffff));
+        masm.ma_and(output, Imm32(0xffff));
       }
       break;
   }
