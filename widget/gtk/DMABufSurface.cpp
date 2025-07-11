@@ -138,7 +138,7 @@ static const std::string FormatEGLError(EGLint err) {
 
 MOZ_RUNINIT static RefPtr<GLContext> sSnapshotContext;
 static StaticMutex sSnapshotContextMutex MOZ_UNANNOTATED;
-static Atomic<int> gNewSurfaceUID(getpid());
+static Atomic<int> gNewSurfaceUID(1);
 
 // We should release all resources allocated by SnapshotGLContext before
 // ReturnSnapshotGLContext() call. Otherwise DMABufSurface references
@@ -376,11 +376,9 @@ DMABufSurface::DMABufSurface(SurfaceType aSurfaceType)
       mPID(0),
       mCanRecycle(true),
       mSurfaceLock("DMABufSurface") {
-  MOZ_COUNT_CTOR(DMABufSurface);
 }
 
 DMABufSurface::~DMABufSurface() {
-  MOZ_COUNT_DTOR(DMABufSurface);
   FenceDelete();
   GlobalRefRelease();
   GlobalRefCountDelete();
@@ -641,10 +639,7 @@ DMABufSurfaceRGBA::DMABufSurfaceRGBA()
       mTexture(0),
       mBufferModifier(DRM_FORMAT_MOD_INVALID) {}
 
-DMABufSurfaceRGBA::~DMABufSurfaceRGBA() {
-  LOGDMABUF("DMABufSurfaceRGBA::~DMABufSurfaceRGBA() UID %d", mUID);
-  ReleaseSurface();
-}
+DMABufSurfaceRGBA::~DMABufSurfaceRGBA() { ReleaseSurface(); }
 
 bool DMABufSurfaceRGBA::OpenFileDescriptorForPlane(
     DMABufDeviceLock* aDeviceLock, int aPlane) {
@@ -1135,8 +1130,6 @@ void DMABufSurfaceRGBA::ReleaseTextures() {
 }
 
 void DMABufSurfaceRGBA::ReleaseSurface() {
-  LOGDMABUF("DMABufSurfaceRGBA::ReleaseSurface() UID %d", mUID);
-
   MOZ_ASSERT(!IsMapped(), "We can't release mapped buffer!");
 
   ReleaseTextures();
@@ -1445,10 +1438,7 @@ DMABufSurfaceYUV::DMABufSurfaceYUV()
   }
 }
 
-DMABufSurfaceYUV::~DMABufSurfaceYUV() {
-  LOGDMABUF("DMABufSurfaceYUV::~DMABufSurfaceYUV() UID %d", mUID);
-  ReleaseSurface();
-}
+DMABufSurfaceYUV::~DMABufSurfaceYUV() { ReleaseSurface(); }
 
 bool DMABufSurfaceYUV::OpenFileDescriptorForPlane(DMABufDeviceLock* aDeviceLock,
                                                   int aPlane) {
