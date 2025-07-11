@@ -1283,8 +1283,8 @@ void nsSubDocumentFrame::SubdocumentIntrinsicSizeOrRatioChanged() {
   const nsStylePosition* pos = StylePosition();
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
   bool dependsOnIntrinsics =
-      !pos->GetWidth(anchorResolutionParams.mPosition)->ConvertsToLength() ||
-      !pos->GetHeight(anchorResolutionParams.mPosition)->ConvertsToLength();
+      !pos->GetWidth(anchorResolutionParams)->ConvertsToLength() ||
+      !pos->GetHeight(anchorResolutionParams)->ConvertsToLength();
 
   if (dependsOnIntrinsics || pos->mObjectFit != StyleObjectFit::Fill) {
     auto dirtyHint = dependsOnIntrinsics

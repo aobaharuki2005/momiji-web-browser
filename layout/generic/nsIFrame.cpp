@@ -2480,16 +2480,16 @@ bool nsIFrame::CanBeDynamicReflowRoot() const {
   // FIXME: Other flex and grid cases?
   const auto& pos = *StylePosition();
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
-  const auto width = pos.GetWidth(anchorResolutionParams.mPosition);
-  const auto height = pos.GetHeight(anchorResolutionParams.mPosition);
+  const auto width = pos.GetWidth(anchorResolutionParams);
+  const auto height = pos.GetHeight(anchorResolutionParams);
   if (!width->IsLengthPercentage() || width->HasPercent() ||
       !height->IsLengthPercentage() || height->HasPercent() ||
-      IsIntrinsicKeyword(*pos.GetMinWidth(anchorResolutionParams.mPosition)) ||
+      IsIntrinsicKeyword(*pos.GetMinWidth(anchorResolutionParams)) ||
       IsIntrinsicKeyword(*pos.GetMaxWidth(anchorResolutionParams.mPosition)) ||
-      IsIntrinsicKeyword(*pos.GetMinHeight(anchorResolutionParams.mPosition)) ||
+      IsIntrinsicKeyword(*pos.GetMinHeight(anchorResolutionParams)) ||
       IsIntrinsicKeyword(*pos.GetMaxHeight(anchorResolutionParams.mPosition)) ||
-      ((pos.GetMinWidth(anchorResolutionParams.mPosition)->IsAuto() ||
-        pos.GetMinHeight(anchorResolutionParams.mPosition)->IsAuto()) &&
+      ((pos.GetMinWidth(anchorResolutionParams)->IsAuto() ||
+        pos.GetMinHeight(anchorResolutionParams)->IsAuto()) &&
        IsFlexOrGridItem())) {
     return false;
   }
@@ -6542,14 +6542,14 @@ AspectRatio nsIFrame::GetAspectRatio() const {
 AspectRatio nsIFrame::GetIntrinsicRatio() const { return AspectRatio(); }
 
 static bool ShouldApplyAutomaticMinimumOnInlineAxis(
-    WritingMode aWM, const nsStyleDisplay* aDisplay,
+    WritingMode aWM, bool aIsScrollableOverflow,
+    const AnchorPosResolutionParams& aParams,
     const nsStylePosition* aPosition) {
   // Apply the automatic minimum size for aspect ratio:
   // Note: The replaced elements shouldn't be here, so we only check the scroll
   // container.
   // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
-  return !aDisplay->IsScrollableOverflow() &&
-         aPosition->MinISize(aWM, aDisplay->mPosition)->IsAuto();
+  return !aIsScrollableOverflow && aPosition->MinISize(aWM, aParams)->IsAuto();
 }
 
 /* virtual */
@@ -6582,7 +6582,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   const auto styleISize =
       aSizeOverrides.mStyleISize
           ? AnchorResolvedSizeHelper::Overridden(*aSizeOverrides.mStyleISize)
-          : stylePos->ISize(aWM, anchorResolutionParams.mPosition);
+          : stylePos->ISize(aWM, anchorResolutionParams);
   // For bsize, we consider overrides *and then* we resolve 'stretch' to a
   // nscoord value, for convenience (so that we can assume that either
   // isAutoBSize is true, or styleBSize is of type LengthPercentage()).
@@ -6590,7 +6590,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     auto styleBSizeConsideringOverrides =
         (aSizeOverrides.mStyleBSize)
             ? AnchorResolvedSizeHelper::Overridden(*aSizeOverrides.mStyleBSize)
-            : stylePos->BSize(aWM, anchorResolutionParams.mPosition);
+            : stylePos->BSize(aWM, anchorResolutionParams);
     if (styleBSizeConsideringOverrides->BehavesLikeStretchOnBlockAxis() &&
         aCBSize.BSize(aWM) != NS_UNCONSTRAINEDSIZE) {
       // We've got a 'stretch' BSize; resolve it to a length:
@@ -6736,8 +6736,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   // generating the flex items. So here we make the code more general for both
   // definite cross size and indefinite cross size.
   const bool isDefiniteISize = styleISize->IsLengthPercentage();
-  const auto minBSizeCoord =
-      stylePos->MinBSize(aWM, anchorResolutionParams.mPosition);
+  const auto minBSizeCoord = stylePos->MinBSize(aWM, anchorResolutionParams);
   const auto maxBSizeCoord =
       stylePos->MaxBSize(aWM, anchorResolutionParams.mPosition);
   const bool isAutoMinBSize =
@@ -6803,8 +6802,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
       aRenderingContext, Some(aCBSize.ConvertTo(GetWritingMode(), aWM)),
       Some(LogicalSize(aWM, NS_UNCONSTRAINEDSIZE, bSizeAsPercentageBasis)
                .ConvertTo(GetWritingMode(), aWM)));
-  const auto minISizeCoord =
-      stylePos->MinISize(aWM, anchorResolutionParams.mPosition);
+  const auto minISizeCoord = stylePos->MinISize(aWM, anchorResolutionParams);
   nscoord minISize;
   if (!minISizeCoord->IsAuto() && !shouldIgnoreMinMaxISize) {
     minISize =
@@ -6831,7 +6829,9 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
       minISize = std::min(minISize, maxMinISize);
     }
   } else if (aspectRatioUsage == AspectRatioUsage::ToComputeISize &&
-             ShouldApplyAutomaticMinimumOnInlineAxis(aWM, disp, stylePos)) {
+             ShouldApplyAutomaticMinimumOnInlineAxis(
+                 aWM, disp->IsScrollableOverflow(), anchorResolutionParams,
+                 stylePos)) {
     // This means we successfully applied aspect-ratio and now need to check
     // if we need to apply the automatic content-based minimum size:
     // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
@@ -7042,7 +7042,7 @@ LogicalSize nsIFrame::ComputeAutoSize(
   const auto styleISize =
       aSizeOverrides.mStyleISize
           ? AnchorResolvedSizeHelper::Overridden(*aSizeOverrides.mStyleISize)
-          : StylePosition()->ISize(aWM, anchorResolutionParams.mPosition);
+          : StylePosition()->ISize(aWM, anchorResolutionParams);
   if (styleISize->IsAuto()) {
     nscoord availBased = nsLayoutUtils::ComputeStretchContentBoxISize(
         aAvailableISize, aMargin.ISize(aWM), aBorderPadding.ISize(aWM));
@@ -7050,12 +7050,12 @@ LogicalSize nsIFrame::ComputeAutoSize(
     const auto styleBSize =
         aSizeOverrides.mStyleBSize
             ? AnchorResolvedSizeHelper::Overridden(*aSizeOverrides.mStyleBSize)
-            : stylePos->BSize(aWM, anchorResolutionParams.mPosition);
+            : stylePos->BSize(aWM, anchorResolutionParams);
     const LogicalSize contentEdgeToBoxSizing =
         stylePos->mBoxSizing == StyleBoxSizing::Border ? aBorderPadding
                                                        : LogicalSize(aWM);
     const nscoord bSize = ComputeBSizeValueAsPercentageBasis(
-        *styleBSize, *stylePos->MinBSize(aWM, anchorResolutionParams.mPosition),
+        *styleBSize, *stylePos->MinBSize(aWM, anchorResolutionParams),
         *stylePos->MaxBSize(aWM, anchorResolutionParams.mPosition),
         aCBSize.BSize(aWM), contentEdgeToBoxSizing.BSize(aWM));
     const IntrinsicSizeInput input(
@@ -7097,11 +7097,11 @@ LogicalSize nsIFrame::ComputeAbsolutePosAutoSize(
   const auto& styleISize =
       aSizeOverrides.mStyleISize
           ? AnchorResolvedSizeHelper::Overridden(*aSizeOverrides.mStyleISize)
-          : stylePos->ISize(aWM, anchorResolutionParams.mBaseParams.mPosition);
+          : stylePos->ISize(aWM, anchorResolutionParams.mBaseParams);
   const auto& styleBSize =
       aSizeOverrides.mStyleBSize
           ? AnchorResolvedSizeHelper::Overridden(*aSizeOverrides.mStyleBSize)
-          : stylePos->BSize(aWM, anchorResolutionParams.mBaseParams.mPosition);
+          : stylePos->BSize(aWM, anchorResolutionParams.mBaseParams);
   const auto iStartOffsetIsAuto =
       stylePos
           ->GetAnchorResolvedInset(LogicalSide::IStart, aWM,
@@ -7202,8 +7202,7 @@ LogicalSize nsIFrame::ComputeAbsolutePosAutoSize(
               ? StyleSize::LengthPercentage(
                     StyleLengthPercentage::FromAppUnits(result.BSize(aWM)))
               : *styleBSize,
-          *stylePos->MinBSize(aWM,
-                              anchorResolutionParams.mBaseParams.mPosition),
+          *stylePos->MinBSize(aWM, anchorResolutionParams.mBaseParams),
           *stylePos->MaxBSize(aWM,
                               anchorResolutionParams.mBaseParams.mPosition),
           aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM));
@@ -7347,7 +7346,7 @@ nsIFrame::ISizeComputationResult nsIFrame::ComputeISizeValue(
   const auto* stylePos = StylePosition();
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
   const nscoord bSize = ComputeBSizeValueAsPercentageBasis(
-      aStyleBSize, *stylePos->MinBSize(aWM, anchorResolutionParams.mPosition),
+      aStyleBSize, *stylePos->MinBSize(aWM, anchorResolutionParams),
       *stylePos->MaxBSize(aWM, anchorResolutionParams.mPosition),
       aCBSize.BSize(aWM), aContentEdgeToBoxSizing.BSize(aWM));
   const IntrinsicSizeInput input(
@@ -7448,7 +7447,8 @@ void nsIFrame::DidReflow(nsPresContext* aPresContext,
   // bsize but can fabricate one when the cell bsize is known.
   if (aReflowInput && aReflowInput->mPercentBSizeObserver && !GetPrevInFlow()) {
     const auto bsize = aReflowInput->mStylePosition->BSize(
-        aReflowInput->GetWritingMode(), aReflowInput->mStyleDisplay->mPosition);
+        aReflowInput->GetWritingMode(),
+        AnchorPosResolutionParams::From(aReflowInput));
     if (bsize->HasPercent()) {
       aReflowInput->mPercentBSizeObserver->NotifyPercentBSize(*aReflowInput);
     }

@@ -4088,8 +4088,7 @@ static Maybe<nscoord> GetPercentBSize(const LengthPercentage& aSize,
   WritingMode wm = f->GetWritingMode();
   const nsStylePosition* pos = f->StylePosition();
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(f);
-  Maybe<nscoord> bSize =
-      GetBSize(pos->BSize(wm, anchorResolutionParams.mPosition));
+  Maybe<nscoord> bSize = GetBSize(pos->BSize(wm, anchorResolutionParams));
   if (!bSize) {
     LayoutFrameType fType = f->Type();
     if (fType != LayoutFrameType::Viewport &&
@@ -4119,7 +4118,7 @@ static Maybe<nscoord> GetPercentBSize(const LengthPercentage& aSize,
   }
 
   if (Maybe<nscoord> minBSize =
-          GetBSize(pos->MinBSize(wm, anchorResolutionParams.mPosition))) {
+          GetBSize(pos->MinBSize(wm, anchorResolutionParams))) {
     if (*minBSize > *bSize) {
       *bSize = *minBSize;
     }
@@ -4631,9 +4630,9 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
   const bool isInlineAxis = aAxis == ourInlineAxis;
 
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(aFrame);
-  auto styleMinISize =
-      horizontalAxis ? stylePos->GetMinWidth(anchorResolutionParams.mPosition)
-                     : stylePos->GetMinHeight(anchorResolutionParams.mPosition);
+  auto styleMinISize = horizontalAxis
+                           ? stylePos->GetMinWidth(anchorResolutionParams)
+                           : stylePos->GetMinHeight(anchorResolutionParams);
   auto styleISize = [&]() {
     if (aFlags & MIN_INTRINSIC_ISIZE) {
       return AnchorResolvedSizeHelper::Overridden(*styleMinISize);
@@ -4642,9 +4641,8 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
         isInlineAxis ? aSizeOverrides.mStyleISize : aSizeOverrides.mStyleBSize;
     return styleISizeOverride
                ? AnchorResolvedSizeHelper::Overridden(*styleISizeOverride)
-               : (horizontalAxis
-                      ? stylePos->GetWidth(anchorResolutionParams.mPosition)
-                      : stylePos->GetHeight(anchorResolutionParams.mPosition));
+               : (horizontalAxis ? stylePos->GetWidth(anchorResolutionParams)
+                                 : stylePos->GetHeight(anchorResolutionParams));
   }();
   MOZ_ASSERT(!(aFlags & MIN_INTRINSIC_ISIZE) || styleISize->IsAuto() ||
                  nsIFrame::ToExtremumLength(*styleISize),
@@ -4709,12 +4707,11 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
   auto styleBSize =
       styleBSizeOverride
           ? AnchorResolvedSizeHelper::Overridden(*styleBSizeOverride)
-          : (horizontalAxis
-                 ? stylePos->GetHeight(anchorResolutionParams.mPosition)
-                 : stylePos->GetWidth(anchorResolutionParams.mPosition));
-  auto styleMinBSize =
-      horizontalAxis ? stylePos->GetMinHeight(anchorResolutionParams.mPosition)
-                     : stylePos->GetMinWidth(anchorResolutionParams.mPosition);
+          : (horizontalAxis ? stylePos->GetHeight(anchorResolutionParams)
+                            : stylePos->GetWidth(anchorResolutionParams));
+  auto styleMinBSize = horizontalAxis
+                           ? stylePos->GetMinHeight(anchorResolutionParams)
+                           : stylePos->GetMinWidth(anchorResolutionParams);
   auto styleMaxBSize =
       horizontalAxis ? stylePos->GetMaxHeight(anchorResolutionParams.mPosition)
                      : stylePos->GetMaxWidth(anchorResolutionParams.mPosition);
@@ -5002,8 +4999,8 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
   const nsStylePosition* const stylePos = aFrame->StylePosition();
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(aFrame);
   auto size = aAxis == PhysicalAxis::Horizontal
-                  ? stylePos->GetMinWidth(anchorResolutionParams.mPosition)
-                  : stylePos->GetMinHeight(anchorResolutionParams.mPosition);
+                  ? stylePos->GetMinWidth(anchorResolutionParams)
+                  : stylePos->GetMinHeight(anchorResolutionParams);
   auto maxSize = aAxis == PhysicalAxis::Horizontal
                      ? stylePos->GetMaxWidth(anchorResolutionParams.mPosition)
                      : stylePos->GetMaxHeight(anchorResolutionParams.mPosition);
@@ -5031,8 +5028,8 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
       fixedMinSize.emplace(0);
     } else {
       size = aAxis == PhysicalAxis::Horizontal
-                 ? stylePos->GetWidth(anchorResolutionParams.mPosition)
-                 : stylePos->GetHeight(anchorResolutionParams.mPosition);
+                 ? stylePos->GetWidth(anchorResolutionParams)
+                 : stylePos->GetHeight(anchorResolutionParams);
       // This is same as above: keywords should behaves as property's initial
       // values in block axis.
       if (aAxis != ourInlineAxis &&
@@ -7951,9 +7948,9 @@ float nsLayoutUtils::FontSizeInflationInner(const nsIFrame* aFrame,
       WritingMode wm = f->GetWritingMode();
       const auto anchorResolutionParams = AnchorPosResolutionParams::From(f);
       const auto stylePosISize =
-          f->StylePosition()->ISize(wm, anchorResolutionParams.mPosition);
+          f->StylePosition()->ISize(wm, anchorResolutionParams);
       const auto stylePosBSize =
-          f->StylePosition()->BSize(wm, anchorResolutionParams.mPosition);
+          f->StylePosition()->BSize(wm, anchorResolutionParams);
       if (!stylePosISize->IsAuto() ||
           !stylePosBSize->BehavesLikeInitialValueOnBlockAxis()) {
         return 1.0;
