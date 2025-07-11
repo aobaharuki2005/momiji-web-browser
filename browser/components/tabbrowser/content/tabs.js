@@ -42,8 +42,6 @@
       this.addEventListener("TabShow", this);
       this.addEventListener("TabHoverStart", this);
       this.addEventListener("TabHoverEnd", this);
-      this.addEventListener("TabGroupLabelHoverStart", this);
-      this.addEventListener("TabGroupLabelHoverEnd", this);
       this.addEventListener("TabGroupExpand", this);
       this.addEventListener("TabGroupCollapse", this);
       this.addEventListener("TabGroupCreate", this);
@@ -282,28 +280,6 @@
 
     on_TabHoverEnd(event) {
       this.previewPanel?.deactivate(event.target);
-    }
-
-    on_TabGroupLabelHoverStart(event) {
-      // TODO bug1976283 gate this behaviour on a feature flag
-
-      if (!this.tabGroupPreviewPanel) {
-        const TabGroupHoverPreviewPanel = ChromeUtils.importESModule(
-          "chrome://browser/content/tabbrowser/tabgroup-hover-preview.mjs"
-        ).default;
-        this.tabGroupPreviewPanel = new TabGroupHoverPreviewPanel(
-          document.getElementById("tabgroup-preview-panel")
-        );
-      }
-      this.tabGroupPreviewPanel.activate(event.target);
-    }
-
-    on_TabGroupLabelHoverEnd(event) {
-      // TODO bug1971237: determine a more appropriate value for this delay
-      // and consider making it adjustable
-      setTimeout(() => {
-        this.tabGroupPreviewPanel?.deactivate(event.target);
-      }, 50);
     }
 
     on_TabGroupExpand() {
