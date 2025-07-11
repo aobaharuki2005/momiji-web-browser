@@ -28,6 +28,8 @@ using namespace mozilla::gfx;
 
 namespace mozilla {
 
+static const uint32_t MAX_PRIMITIVES_PER_FILTER = 256;
+
 SVGFilterInstance::SVGFilterInstance(
     const StyleFilter& aFilter, SVGFilterFrame* aFilterFrame,
     nsIContent* aTargetContent, const UserSpaceMetrics& aMetrics,
@@ -338,6 +340,10 @@ nsresult SVGFilterInstance::BuildPrimitives(
     if (auto* primitive = SVGFilterPrimitiveElement::FromNode(child)) {
       primitives.AppendElement(primitive);
     }
+  }
+
+  if (primitives.Length() > MAX_PRIMITIVES_PER_FILTER) {
+    return NS_ERROR_FAILURE;
   }
 
   // Maps source image name to source index.
