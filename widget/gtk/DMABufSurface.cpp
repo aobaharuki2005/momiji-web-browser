@@ -56,14 +56,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/gfx/gfxVars.h"
 
-/*
-TODO:
-  - DRM device selection:
-    https://lists.freedesktop.org/archives/wayland-devel/2018-November/039660.html
-  - Use uint64_t mBufferModifiers / mGbmBufferObject for RGBA
-  - Remove file descriptors open/close?
-*/
-
 /* C++ / C typecast macros for special EGL handle values */
 #if defined(__cplusplus)
 #  define EGL_CAST(type, value) (static_cast<type>(value))
@@ -138,7 +130,7 @@ static const std::string FormatEGLError(EGLint err) {
 
 MOZ_RUNINIT static RefPtr<GLContext> sSnapshotContext;
 static StaticMutex sSnapshotContextMutex MOZ_UNANNOTATED;
-static Atomic<int> gNewSurfaceUID(1);
+MOZ_RUNINIT static Atomic<int> gNewSurfaceUID(getpid());
 
 // We should release all resources allocated by SnapshotGLContext before
 // ReturnSnapshotGLContext() call. Otherwise DMABufSurface references
