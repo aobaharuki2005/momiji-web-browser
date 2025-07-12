@@ -98,6 +98,7 @@ class CollectionTest : TestSetup() {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/343422
+    @Ignore("Disabled: https://bugzilla.mozilla.org/show_bug.cgi?id=1976888")
     @SmokeTest
     @Test
     fun verifyExpandedCollectionItemsTest() {
