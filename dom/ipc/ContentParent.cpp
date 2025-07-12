@@ -1658,10 +1658,7 @@ bool ContentParent::ShutDownProcess(ShutDownMethod aMethod) {
           SetMainThreadQoSPriority(nsIThread::QOS_PRIORITY_NORMAL);
         }
 
-        // Send a high priority announcement first. If this fails, SendShutdown
-        // will also fail.
-        Unused << SendShutdownConfirmedHP();
-        // Send the definite message with normal priority.
+        // Send the shutdown message with normal priority.
         if (SendShutdown()) {
           MaybeLogBlockShutdownDiagnostics(
               this, "ShutDownProcess: Sent shutdown message.", __FILE__,

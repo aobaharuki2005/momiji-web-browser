@@ -2947,17 +2947,6 @@ void ContentChild::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure) {
   ProcessChild::QuickExit();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvShutdownConfirmedHP() {
-  ProcessChild::AppendToIPCShutdownStateAnnotation(
-      "RecvShutdownConfirmedHP entry"_ns);
-
-  // Bug 1755376: If we see "RecvShutdownConfirmedHP entry" often in
-  // bug IPCError_ShutDownKill we might want to anticipate
-  // ShutdownPhase::AppShutdownConfirmed to start here.
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentChild::RecvShutdown() {
   ProcessChild::AppendToIPCShutdownStateAnnotation("RecvShutdown entry"_ns);
 
