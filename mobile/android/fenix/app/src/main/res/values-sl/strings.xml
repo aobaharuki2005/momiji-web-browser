@@ -1725,7 +1725,7 @@
   -->
   <string name="webcompat_reporter_screen_title">Prijavi nedelujočo stran</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description">Pomagajte izboljšati %1$s za vse. S pomočjo podatkov, ki jih pošljete, Mozillini zaposleni odpravljajo težave s spletnimi mesti.</string>
+  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Pomagajte izboljšati %1$s za vse. S pomočjo podatkov, ki jih pošljete, Mozillini zaposleni odpravljajo težave s spletnimi mesti.</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">Spletni naslov</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1733,7 +1733,7 @@
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">Kaj je narobe?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason">Izberite razlog</string>
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Izberite razlog</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Izberite razlog</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -3398,9 +3398,9 @@
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">Izboljšana zaščita pred sledenjem</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
-  <string name="protection_panel_etp_toggle_enabled_description">Če je videti, da spletno mesto ne deluje pravilno, poskusite izklopiti zaščite.</string>
+  <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Če je videti, da spletno mesto ne deluje pravilno, poskusite izklopiti zaščite.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
-  <string name="protection_panel_etp_toggle_disabled_description">Zaščite so IZKLOPLJENE. Predlagamo, da jih znova vklopite.</string>
+  <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Zaščite so IZKLOPLJENE. Predlagamo, da jih znova vklopite.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3409,7 +3409,7 @@
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">Ni najdenih sledilcev</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
-  <string name="protection_panel_privacy_and_security_settings">Nastavitve za zasebnost in varnost</string>
+  <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Nastavitve za zasebnost in varnost</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">Dovoljenja</string>
   <!--

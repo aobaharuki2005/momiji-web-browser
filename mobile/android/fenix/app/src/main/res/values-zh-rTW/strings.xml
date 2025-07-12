@@ -1731,7 +1731,11 @@
   -->
   <string name="webcompat_reporter_screen_title">回報網站問題</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description">請幫助讓 %1$s 能對每個人都變得更好。Mozilla 的員工會使用您傳送的資訊來修復網站問題。</string>
+  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">請幫助讓 %1$s 能對每個人都變得更好。Mozilla 的員工會使用您傳送的資訊來修復網站問題。</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description_2">您的回報內容可幫助我們了解與修正 %1$s 的問題，讓所有使用者都能獲得改進。了解更多資訊</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">更多資訊</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">網址</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1739,7 +1743,9 @@
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">哪個部分故障了？</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason">選擇原因</string>
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">選擇原因</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">選擇原因</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">請選擇原因</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -2250,6 +2256,8 @@
   <string name="preference_accessibility_text_size_summary">放大或縮小網站上的文字</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">字型大小</string>
+  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
+  <string name="a11y_preference_accessibility_font_size_percentage">%d %%。</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">自動調整字體大小</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -3405,10 +3413,16 @@
   <string name="protection_panel_banner_protected_description">您已受到保護，若我們發現某些不安全的地方會再通知您。</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">加強型追蹤保護</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned on -->
+  <string name="protection_panel_etp_toggle_on">開啟</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned off -->
+  <string name="protection_panel_etp_toggle_off">關閉</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
-  <string name="protection_panel_etp_toggle_enabled_description">若此網站功能異常，可嘗試關閉保護。</string>
+  <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">若此網站功能異常，可嘗試關閉保護。</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description_2">若此網站功能異常，可嘗試關閉此功能。</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
-  <string name="protection_panel_etp_toggle_disabled_description">已關閉保護，建議您重新開啟。</string>
+  <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">已關閉保護，建議您重新開啟。</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3417,7 +3431,7 @@
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">找不到追蹤器</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
-  <string name="protection_panel_privacy_and_security_settings">隱私權與安全性設定</string>
+  <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">隱私權與安全性設定</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">權限</string>
   <!--

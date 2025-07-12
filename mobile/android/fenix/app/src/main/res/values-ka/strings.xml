@@ -345,6 +345,10 @@
   <string name="browser_menu_back_button_content_description" moz:removedIn="141" tools:ignore="UnusedResources">მთავარ მენიუზე დაბრუნება</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
   <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">მთავარი მენიუს ფურცლის დახურვა</string>
+  <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
+  <string name="browser_close_main_menu_handlebar_content_description">მენიუს დახურვა</string>
+  <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
+  <string name="browser_main_menu_content_description_navigation_header">გადაადგილება</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">დახმარება</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
@@ -421,6 +425,10 @@
   <string name="browser_menu_default_banner_subtitle">რამდენიმე წამს გასტანს. შეცვლით ნებისმიერ დროს.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">აცილება</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
+  <string name="browser_menu_default_banner_dismiss_promotion">დამკვეთისგან მოწოდებულის არიდება</string>
+  <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
+  <string name="browser_menu_recommended_extensions_content_description">დამატებით</string>
   <!--
     Menu "contextual feature recommendation" (CFR)
 
@@ -1723,7 +1731,7 @@
   -->
   <string name="webcompat_reporter_screen_title">არეული საიტის მოხსენება</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description">დაგვეხმარეთ, განვავითაროთ %1$s ყველასთვის. Mozilla-ს თანამშრომლები თქვენ მიერ გამოგზავნილ მონაცემებს იყენებენ ვებსაიტთან დაკავშირებული ხარვეზების მოსაგვარებლად.</string>
+  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">დაგვეხმარეთ, განვავითაროთ %1$s ყველასთვის. Mozilla-ს თანამშრომლები თქვენ მიერ გამოგზავნილ მონაცემებს იყენებენ ვებსაიტთან დაკავშირებული ხარვეზების მოსაგვარებლად.</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">ბმული</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1731,7 +1739,7 @@
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">რა დაზიანდა?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason">მიზეზის არჩევა</string>
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">მიზეზის არჩევა</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">გთხოვთ მიუთითოთ მიზეზი</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -1746,6 +1754,8 @@
   <string name="webcompat_reporter_success_snackbar_text">თქვენი მოხსენება გაიგზავნა</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text">დახურვა</string>
+  <!-- Placeholder text for the description field to prompt the user on what they should type. -->
+  <string name="webcompat_reporter_problem_description_placeholder_text">რა მოხდა? რა უნდა მომხდარიყო?</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -2974,6 +2984,12 @@
   <string name="synced_tabs_expand_group">დასინქ. ჩანართების გაშლა</string>
   <!-- Content description for collapsing a group of synced tabs. -->
   <string name="synced_tabs_collapse_group">დასინქ. ჩანართები აკეცვა</string>
+  <!--
+    Top Sites
+
+    Title text displayed for the shortcuts home screen section.
+  -->
+  <string name="homepage_shortcuts_title">მალსახმობები</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">მალსახმობების ზღვარი მიღწეულია</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -3390,9 +3406,9 @@
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">თვალთვალისგან გაძლიერებული დაცვა</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
-  <string name="protection_panel_etp_toggle_enabled_description">თუ საიტზე რამე გაუმართავად ჩანს, სინჯეთ გამორთვა.</string>
+  <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">თუ საიტზე რამე გაუმართავად ჩანს, სინჯეთ გამორთვა.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
-  <string name="protection_panel_etp_toggle_disabled_description">დაცვა გამორთულია. გირჩევთ ისევ ჩართოთ.</string>
+  <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">დაცვა გამორთულია. გირჩევთ ისევ ჩართოთ.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3401,7 +3417,7 @@
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">მეთვალყურეები არაა ნაპოვნი</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
-  <string name="protection_panel_privacy_and_security_settings">პირადულობისა და უსაფრთხოების პარამეტრები</string>
+  <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">პირადულობისა და უსაფრთხოების პარამეტრები</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">ნებართვები</string>
   <!--

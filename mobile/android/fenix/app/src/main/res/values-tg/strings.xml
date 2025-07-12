@@ -1731,7 +1731,9 @@
   -->
   <string name="webcompat_reporter_screen_title">Гузориш дар бораи сомонаи вайроншуда</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description">Кумак кунед, ки «%1$s» барои ҳамаи мо беҳтар шавад. Кормандони «Mozilla» маълумотеро, ки шумо ирсол мекунед, барои ислоҳ кардани мушкилиҳои сомона истифода мебаранд.</string>
+  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Кумак кунед, ки «%1$s» барои ҳамаи мо беҳтар шавад. Кормандони «Mozilla» маълумотеро, ки шумо ирсол мекунед, барои ислоҳ кардани мушкилиҳои сомона истифода мебаранд.</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">Маълумоти бештар</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">Нишонии URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1739,7 +1741,9 @@
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">Чӣ вайрон шудааст?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason">Сабаберо интихоб намоед</string>
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Сабаберо интихоб намоед</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">Сабаберо интихоб намоед</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Лутфан, сабаберо интихоб намоед</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -2250,6 +2254,8 @@
   <string name="preference_accessibility_text_size_summary">Калонтар ё хурдтар кардани матн дар сомонаҳо</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">Андозаи ҳуруф</string>
+  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
+  <string name="a11y_preference_accessibility_font_size_percentage">%d %%.</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">Андозагирии худкори ҳуруф</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -3405,10 +3411,16 @@
   <string name="protection_panel_banner_protected_description">Мо шуморо муҳофизат кардем. Агар ягон чизеро пайдо кунем, мо ба шумо хабар медиҳем.</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">Муҳофизати такмилёфта аз пайгирӣ</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned on -->
+  <string name="protection_panel_etp_toggle_on">Фаъол</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned off -->
+  <string name="protection_panel_etp_toggle_off">Ғайрифаъол</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
-  <string name="protection_panel_etp_toggle_enabled_description">Агар ягон чиз дар ин сомона вайрон бошад, кӯшиш кунед, ки воситаи муҳофизатро хомӯш намоед.</string>
+  <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Агар ягон чиз дар ин сомона вайрон бошад, кӯшиш кунед, ки воситаи муҳофизатро хомӯш намоед.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description_2">Агар ягон чиз дар ин сомона вайрон бошад, кӯшиш кунед, ки онро хомӯш намоед.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
-  <string name="protection_panel_etp_toggle_disabled_description">Воситаи муҳофизат ХОМӮШ АСТ. Мо тавсия медиҳем, ки шумо онро аз нав фаъол созед.</string>
+  <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Воситаи муҳофизат ХОМӮШ АСТ. Мо тавсия медиҳем, ки шумо онро аз нав фаъол созед.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3417,7 +3429,9 @@
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">Ягон васоити пайгирӣ ёфт нашуд</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
-  <string name="protection_panel_privacy_and_security_settings">Танзимоти махфият ва амният</string>
+  <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Танзимоти махфият ва амният</string>
+  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
+  <string name="protection_panel_privacy_and_security_settings_2">Танзимоти махфият</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">Иҷозатҳо</string>
   <!--
@@ -3627,6 +3641,14 @@
   <string name="debug_drawer_override_region">Иваз кардани минтақаи хонагӣ ва ҷорӣ</string>
   <!-- The title of the button for overriding home region permanently. -->
   <string name="debug_drawer_override_home_region_permanently">Ба таври доимӣ иваз кардани минтақаи хонагӣ</string>
+  <!--
+    Add-ons debug tools
+
+    The description of the Add-ons Tools in the Debug Drawer
+  -->
+  <string name="debug_drawer_addons_tools_title">Абзорҳои ҷузъҳои иловагӣ</string>
+  <!-- The title of the button used to check for add-on updates. -->
+  <string name="addons_debug_tools_check_for_updates_button">Санҷиши навсозиҳо</string>
   <!--
     Messages explaining how to exit fullscreen mode
 

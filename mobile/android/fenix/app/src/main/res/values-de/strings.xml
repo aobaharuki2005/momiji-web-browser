@@ -875,6 +875,8 @@
   <string name="preferences_theme">Theme</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">Startseite</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">App-Symbol</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Gesten</string>
   <!-- Preference for settings related to visual options -->
@@ -1308,6 +1310,12 @@
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Ausgeklappt</string>
   <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">App-Symbol auswählen</string>
+  <!--
     Theme Preferences
 
     Preference for using light theme
@@ -1731,7 +1739,11 @@
   -->
   <string name="webcompat_reporter_screen_title">Problem mit Website melden</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description">Helfen Sie, %1$s für alle besser zu machen. Mitarbeiter von Mozilla verwenden die von Ihnen gesendeten Informationen, um Probleme mit Websites zu beheben.</string>
+  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Helfen Sie, %1$s für alle besser zu machen. Mitarbeiter von Mozilla verwenden die von Ihnen gesendeten Informationen, um Probleme mit Websites zu beheben.</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description_2">Ihr Bericht hilft uns, Probleme mit %1$s zu verstehen und zu beheben, um ihn für alle zu verbessern. Weitere Informationen</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">Weitere Informationen</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1739,7 +1751,9 @@
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">Was funktioniert nicht?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason">Grund auswählen</string>
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Grund auswählen</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">Wählen Sie einen Grund</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Bitte wählen Sie einen Grund</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -2250,6 +2264,8 @@
   <string name="preference_accessibility_text_size_summary">Text auf Websites vergrößern oder verkleinern</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">Schriftgröße</string>
+  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
+  <string name="a11y_preference_accessibility_font_size_percentage">%d %%.</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">Automatische Schriftgrößenanpassung</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -3405,10 +3421,18 @@
   <string name="protection_panel_banner_protected_description">Sie sind geschützt. Wenn wir etwas entdecken, sagen wir es Ihnen.</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">Verbesserter Tracking-Schutz</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned on -->
+  <string name="protection_panel_etp_toggle_on">Ein</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned off -->
+  <string name="protection_panel_etp_toggle_off">Aus</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
-  <string name="protection_panel_etp_toggle_enabled_description">Wenn etwas auf dieser Website beschädigt aussieht, versuchen Sie, die Schutzmaßnahmen zu deaktivieren.</string>
+  <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Wenn etwas auf dieser Website beschädigt aussieht, versuchen Sie, die Schutzmaßnahmen zu deaktivieren.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description_2">Wenn etwas auf dieser Website beschädigt aussieht, deaktivieren Sie ihn.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
-  <string name="protection_panel_etp_toggle_disabled_description">Der Schutz ist DEAKTIVIERT. Wir empfehlen Ihnen, ihn wieder zu aktivieren.</string>
+  <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Der Schutz ist DEAKTIVIERT. Wir empfehlen Ihnen, ihn wieder zu aktivieren.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
+  <string name="protection_panel_etp_toggle_disabled_description_2">Es wird empfohlen, den Schutz vor Aktivitätenverfolgung zu aktivieren.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3417,7 +3441,9 @@
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">Keine Tracker gefunden</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
-  <string name="protection_panel_privacy_and_security_settings">Einstellungen zu Datenschutz und Sicherheit</string>
+  <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Einstellungen zu Datenschutz und Sicherheit</string>
+  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
+  <string name="protection_panel_privacy_and_security_settings_2">Datenschutzeinstellungen</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">Berechtigungen</string>
   <!--
@@ -3627,6 +3653,14 @@
   <string name="debug_drawer_override_region">Heimat- und aktuelle Region überschreiben</string>
   <!-- The title of the button for overriding home region permanently. -->
   <string name="debug_drawer_override_home_region_permanently">Heimatregion dauerhaft überschreiben</string>
+  <!--
+    Add-ons debug tools
+
+    The description of the Add-ons Tools in the Debug Drawer
+  -->
+  <string name="debug_drawer_addons_tools_title">Add-on-Werkzeuge</string>
+  <!-- The title of the button used to check for add-on updates. -->
+  <string name="addons_debug_tools_check_for_updates_button">Nach Updates suchen</string>
   <!--
     Messages explaining how to exit fullscreen mode
 

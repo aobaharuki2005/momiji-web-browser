@@ -1731,7 +1731,9 @@
   -->
   <string name="webcompat_reporter_screen_title">Rapporter problem med ein nettstad</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description">Bidra til å gjere %1$s betre for alle. Mozilla-tilsette brukar informasjonen du sender til å fikse problem med nettstaden.</string>
+  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Bidra til å gjere %1$s betre for alle. Mozilla-tilsette brukar informasjonen du sender til å fikse problem med nettstaden.</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">Les meir</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1739,7 +1741,9 @@
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">Kva er øydelagt?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason">Vel grunn</string>
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Vel grunn</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">Vel ein grunn</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Vel ein grunn</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -2250,6 +2254,8 @@
   <string name="preference_accessibility_text_size_summary">Gjer tekst på nettstadar større eller mindre</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">Skriftstorleik</string>
+  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
+  <string name="a11y_preference_accessibility_font_size_percentage">%d %%.</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">Automatisk skriftstorleik</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -3405,10 +3411,16 @@
   <string name="protection_panel_banner_protected_description">Du er verna. Om vi oppdagar noko seier vi ifrå.</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">Utvida sporingsvern</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned on -->
+  <string name="protection_panel_etp_toggle_on">På</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned off -->
+  <string name="protection_panel_etp_toggle_off">Av</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
-  <string name="protection_panel_etp_toggle_enabled_description">Viss noko ser øydelagt ut på denne nettstaden, prøv å slå av vernet.</string>
+  <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Viss noko ser øydelagt ut på denne nettstaden, prøv å slå av vernet.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description_2">Om noko ser øydelagt ut på nettstaden, prøv å slå det av.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
-  <string name="protection_panel_etp_toggle_disabled_description">Vern er AV. Vi føreslår att du slår det på igjen.</string>
+  <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Vern er AV. Vi føreslår att du slår det på igjen.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3417,7 +3429,7 @@
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">Fann ingen sporarar</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
-  <string name="protection_panel_privacy_and_security_settings">Personvern- og sikkerheitsinnstillingar</string>
+  <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Personvern- og sikkerheitsinnstillingar</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">Løyve</string>
   <!--
@@ -3627,6 +3639,8 @@
   <string name="debug_drawer_override_region">Overstyr heime- og gjeldande region</string>
   <!-- The title of the button for overriding home region permanently. -->
   <string name="debug_drawer_override_home_region_permanently">Overstyr heimeregion permanent</string>
+  <!-- The title of the button used to check for add-on updates. -->
+  <string name="addons_debug_tools_check_for_updates_button">Sjå etter oppdateringar</string>
   <!--
     Messages explaining how to exit fullscreen mode
 
