@@ -120,6 +120,13 @@ const MULTIPROFILE_DATA_UPDATED = "sps-profiles-updated";
 // Reach for the pbNewtab feature will be added in bug 1755401
 const NO_REACH_EVENT_GROUPS = ["pbNewtab"];
 
+// Profile scope values to show a message with multi-profile feature
+const PROFILE_MESSAGE_SCOPE = {
+  NONE: "",
+  SINGLE: "single",
+  SHARED: "shared",
+};
+
 export const MessageLoaderUtils = {
   STARTPAGE_VERSION,
   REMOTE_LOADER_CACHE_KEY: "RemoteLoaderCache",
@@ -1353,6 +1360,29 @@ export class _ASRouter {
     return this.setState({ messageBlockList: [] });
   }
 
+  hasValidProfileScope(message) {
+    // Return early if a message doesn't need profile scope check
+    if (
+      !message.profileScope ||
+      message.profileScope === PROFILE_MESSAGE_SCOPE.NONE
+    ) {
+      return true;
+    }
+    const { state } = this;
+    // For single profile scope filter out message which is in
+    // profileMessageImpression and not in indexedDb message impressions
+    // that means message is seen by a user in one of the profiles
+    if (
+      message.profileScope === PROFILE_MESSAGE_SCOPE.SINGLE &&
+      message.id in state.multiProfileMessageImpressions &&
+      (!(message.id in state.messageImpressions) ||
+        state.messageImpressions[message.id]?.length === 0)
+    ) {
+      return false;
+    }
+    return true;
+  }
+
   isUnblockedMessage(message) {
     const { state } = this;
     return (
@@ -1614,7 +1644,25 @@ export class _ASRouter {
           );
         }
 
-        return { messageImpressions, groupImpressions };
+        let { multiProfileMessageImpressions } = state;
+
+        if (
+          message.profileScope === PROFILE_MESSAGE_SCOPE.SINGLE &&
+          lazy.ASRouterTargeting.Environment.canCreateSelectableProfiles
+        ) {
+          multiProfileMessageImpressions = this._addImpressionForItem(
+            state.multiProfileMessageImpressions,
+            message,
+            "multiProfileMessageImpressions",
+            time
+          );
+        }
+
+        return {
+          messageImpressions,
+          groupImpressions,
+          multiProfileMessageImpressions,
+        };
       });
     }
     return Promise.resolve();
@@ -1635,7 +1683,15 @@ export class _ASRouter {
         impressions[item.id]
       );
 
-      this._storage.set(impressionsString, impressions);
+      if (impressionsString === "multiProfileMessageImpressions") {
+        // Update shared db impressions for a message
+        this._storage.setSharedMessageImpressions(
+          item.id,
+          impressions[item.id]
+        );
+      } else {
+        this._storage.set(impressionsString, impressions);
+      }
     }
     return impressions;
   }
@@ -1799,6 +1855,14 @@ export class _ASRouter {
           lazy.ASRouterPreferences.console.debug(
             m.id,
             " filtered by triggerId"
+          );
+          return false;
+        }
+        // Show message after checking it's  profile scope.
+        if (!this.hasValidProfileScope(m)) {
+          lazy.ASRouterPreferences.console.debug(
+            m.id,
+            " filtered because of invalid multi profile scope"
           );
           return false;
         }

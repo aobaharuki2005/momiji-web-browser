@@ -197,6 +197,7 @@ describe("ASRouter", () => {
     ASRouterPreferences.specialConditions = {
       someCondition: true,
     };
+    sandbox.stub(ASRouterPreferences, "_maybeSetMessagingProfileID").resolves();
     sandbox.spy(ASRouterPreferences, "init");
     sandbox.spy(ASRouterPreferences, "uninit");
     sandbox.spy(ASRouterPreferences, "addListener");
@@ -3012,30 +3013,209 @@ describe("ASRouter", () => {
     });
   });
 
-  describe("#_updateMultiprofileData", () => {
-    it("should update multiprofile data from storage", async () => {
-      const testImpressions = { test_msg: [111, 222] };
-      const testBlocklist = ["blocked_msg"];
+  describe("multiprofile messages", () => {
+    describe("#_updateMultiprofileData", () => {
+      it("should update multiprofile data from storage", async () => {
+        const testImpressions = { test_msg: [111, 222] };
+        const testBlocklist = ["blocked_msg"];
 
-      Router._storage.getSharedMessageImpressions = sandbox
-        .stub()
-        .resolves(testImpressions);
-      Router._storage.getSharedMessageBlocklist = sandbox
-        .stub()
-        .resolves(testBlocklist);
+        Router._storage.getSharedMessageImpressions = sandbox
+          .stub()
+          .resolves(testImpressions);
+        Router._storage.getSharedMessageBlocklist = sandbox
+          .stub()
+          .resolves(testBlocklist);
 
-      await Router._updateMultiprofileData();
+        await Router._updateMultiprofileData();
 
-      assert.calledOnce(Router._storage.getSharedMessageImpressions);
-      assert.calledOnce(Router._storage.getSharedMessageBlocklist);
-      assert.deepEqual(
-        Router.state.multiProfileMessageImpressions,
-        testImpressions
-      );
-      assert.deepEqual(
-        Router.state.multiProfileMessageBlocklist,
-        testBlocklist
-      );
+        assert.calledOnce(Router._storage.getSharedMessageImpressions);
+        assert.calledOnce(Router._storage.getSharedMessageBlocklist);
+        assert.deepEqual(
+          Router.state.multiProfileMessageImpressions,
+          testImpressions
+        );
+        assert.deepEqual(
+          Router.state.multiProfileMessageBlocklist,
+          testBlocklist
+        );
+      });
+    });
+
+    describe("multiprofile #addImpression", () => {
+      beforeEach(() => {
+        Router._storage.setSharedMessageImpressions = sandbox.stub();
+      });
+      describe("addImpression when multiprofile is enabled", () => {
+        beforeEach(() => {
+          sandbox
+            .stub(ASRouterTargeting.Environment, "canCreateSelectableProfiles")
+            .value(true);
+        });
+        it("should add impression data when profileScope is set", async () => {
+          const message = {
+            id: "foo",
+            provider: "bar",
+            frequency: { lifetime: 3 },
+            profileScope: "single",
+          };
+          await Router.addImpression(message);
+          assert.deepEqual(
+            Router.state.multiProfileMessageImpressions.foo,
+            [0],
+            "foo message shared multiprofile impressions"
+          );
+          assert.deepEqual(
+            Router.state.messageImpressions.foo,
+            [0],
+            "foo message impressions"
+          );
+        });
+        it("should not add profileImpressions when profileScope is not set", async () => {
+          const message = {
+            id: "foo",
+            provider: "bar",
+            frequency: { lifetime: 3 },
+          };
+          await Router.addImpression(message);
+          assert.deepEqual(
+            Router.state.multiProfileMessageImpressions.foo,
+            undefined,
+            "foo message shared multiprofile impressions"
+          );
+          assert.deepEqual(
+            Router.state.messageImpressions.foo,
+            [0],
+            "foo message impressions"
+          );
+        });
+      });
+      describe("addImpression when multiprofile is not enabled", () => {
+        it("should not add shared multiprofile impression even when profileScope is set", async () => {
+          sandbox
+            .stub(ASRouterTargeting.Environment, "canCreateSelectableProfiles")
+            .value(false);
+
+          const message = {
+            id: "foo",
+            provider: "bar",
+            frequency: { lifetime: 3 },
+            profileScope: "single",
+          };
+          await Router.addImpression(message);
+          assert.deepEqual(
+            Router.state.multiProfileMessageImpressions.foo,
+            undefined,
+            "foo message shared multiprofile impressions"
+          );
+          assert.deepEqual(
+            Router.state.messageImpressions.foo,
+            [0],
+            "foo message impressions"
+          );
+        });
+      });
+    });
+
+    describe("multiprofile #hasValidProfileScope", () => {
+      it("should not filter messages when profile scope not set", async () => {
+        const message1 = {
+          id: "foo",
+          provider: "cfr",
+          groups: [],
+        };
+        const result = await Router.hasValidProfileScope(message1);
+        assert.isTrue(result);
+      });
+      it("should not filter when profile scope set and has both message and shared profile impression", async () => {
+        const message1 = {
+          id: "foo",
+          provider: "cfr",
+          profileScope: "single",
+          groups: [],
+        };
+        await Router.setState(() => ({
+          messages: [message1],
+          multiProfileMessageImpressions: { foo: [111, 222] },
+          messageImpressions: { foo: [111, 222] },
+        }));
+
+        const result = await Router.hasValidProfileScope(message1);
+        assert.isTrue(result);
+      });
+      it("should filter when profile scope set and has just shared profile impression", async () => {
+        const message1 = {
+          id: "foo",
+          provider: "cfr",
+          profileScope: "single",
+          groups: [],
+        };
+        await Router.setState(() => ({
+          messages: [message1],
+          multiProfileMessageImpressions: { foo: [111, 222] },
+        }));
+
+        const result = await Router.hasValidProfileScope(message1);
+        assert.isFalse(result);
+      });
+    });
+
+    describe("multiprofile #handleMessageRequest", () => {
+      beforeEach(async () => {
+        await Router.setState(() => ({
+          providers: [{ id: "cfr" }],
+        }));
+
+        sandbox.stub(Router, "shouldShowMessagesToProfile").returns(true);
+      });
+      it("should hide message when not a valid multi profile scope", async () => {
+        await Router.setState(() => ({
+          messages: [
+            { id: "foo", provider: "cfr", profileScope: "single", groups: [] },
+          ],
+          multiProfileMessageImpressions: { foo: [111, 222] },
+          messageImpressions: {},
+        }));
+        const result = await Router.handleMessageRequest({ provider: "cfr" });
+        assert.isNull(result);
+        assert.notCalled(ASRouterTargeting.findMatchingMessage);
+      });
+
+      it("should show message for valid multi profile scope", async () => {
+        const message1 = {
+          id: "foo",
+          provider: "cfr",
+          profileScope: "single",
+          groups: [],
+        };
+        await Router.setState(() => ({
+          messages: [message1],
+          multiProfileMessageImpressions: { foo: [111, 222] },
+          messageImpressions: { foo: [111, 222] },
+        }));
+
+        await Router.handleMessageRequest({ provider: "cfr" });
+        assert.calledWithMatch(ASRouterTargeting.findMatchingMessage, {
+          messages: [
+            { id: "foo", provider: "cfr", groups: [], profileScope: "single" },
+          ],
+        });
+      });
+
+      it("should show messages when profile scope is not set", async () => {
+        await Router.setState(() => ({
+          messages: [
+            { id: "foo", provider: "cfr", profileScope: "", groups: [] },
+          ],
+          messageImpressions: { foo: [111, 222] },
+        }));
+
+        await Router.handleMessageRequest({ provider: "cfr" });
+        assert.calledWithMatch(ASRouterTargeting.findMatchingMessage, {
+          messages: [
+            { id: "foo", provider: "cfr", groups: [], profileScope: "" },
+          ],
+        });
+      });
     });
   });
 });

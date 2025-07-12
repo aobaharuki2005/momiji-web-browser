@@ -1616,6 +1616,53 @@ const MESSAGES = () => [
       lifetime: 100,
     },
   },
+  {
+    id: "TEST_PROFILE_SPOTLIGHT",
+    groups: [],
+    targeting: "canCreateSelectableProfiles",
+    trigger: {
+      id: "defaultBrowserCheck",
+    },
+    template: "spotlight",
+    profileScope: "single",
+    priority: 2,
+    frequency: {
+      lifetime: 100,
+    },
+    content: {
+      template: "multistage",
+      modal: "tab",
+      screens: [
+        {
+          id: "SCREEN_1",
+          content: {
+            logo: {
+              imageURL:
+                "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/a3c640c8-7594-4bb2-bc18-8b4744f3aaf2.gif",
+            },
+            title: {
+              raw: "Firefox profiles Test Message",
+            },
+            subtitle: {
+              raw: "Profiles keep you organized.",
+            },
+            dismiss_button: {
+              action: {
+                dismiss: true,
+              },
+            },
+            secondary_button: {
+              label: "Close",
+              action: {
+                dismiss: true,
+              },
+            },
+          },
+        },
+      ],
+      transitions: true,
+    },
+  },
 ];
 
 export const PanelTestProvider = {
