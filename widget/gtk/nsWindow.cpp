@@ -1957,7 +1957,8 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
         // popups are adjacent.
         return false;
       }
-      if (popup->WaylandPopupFitsToplevelWindow()) {
+      if (popup->WaylandPopupIsFirst() &&
+          popup->WaylandPopupFitsToplevelWindow()) {
         // Avoid move-to-rect if our requested rect fits the toplevel.
         // This serves as an optimization, but also as a workaround for
         // https://gitlab.gnome.org/GNOME/gtk/-/issues/1986
@@ -1973,6 +1974,7 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
         // Use it for first popups only due to another mutter bug
         // https://gitlab.gnome.org/GNOME/gtk/-/issues/5089
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1784873
+        // And so that we can move-to-rect nested popups, see below.
         return false;
       }
       if (!popup->WaylandPopupIsFirst() &&
