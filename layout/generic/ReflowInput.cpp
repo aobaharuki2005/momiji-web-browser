@@ -211,18 +211,18 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
       const auto anchorResolutionParams =
           AnchorPosResolutionParams::From(aFrame);
       if (auto size = nsLayoutUtils::GetAbsoluteSize(
-              *pos->ISize(mWritingMode, anchorResolutionParams))) {
+              *pos->ISize(mWritingMode, anchorResolutionParams.mPosition))) {
         limit = size.value();
         if (aFixed) {
           *aFixed = true;
         }
-      } else if (auto maxSize = nsLayoutUtils::GetAbsoluteSize(
-                     *pos->MaxISize(mWritingMode, anchorResolutionParams))) {
+      } else if (auto maxSize = nsLayoutUtils::GetAbsoluteSize(*pos->MaxISize(
+                     mWritingMode, anchorResolutionParams.mPosition))) {
         limit = maxSize.value();
       }
       if (limit != NS_UNCONSTRAINEDSIZE) {
-        if (auto minSize = nsLayoutUtils::GetAbsoluteSize(
-                *pos->MinISize(mWritingMode, anchorResolutionParams))) {
+        if (auto minSize = nsLayoutUtils::GetAbsoluteSize(*pos->MinISize(
+                mWritingMode, anchorResolutionParams.mPosition))) {
           limit = std::max(limit, minSize.value());
         }
       }
@@ -355,7 +355,7 @@ nscoord SizeComputationInput::ComputeISizeValue(
                           contentEdgeToBoxSizing, boxSizingToMarginEdgeISize,
                           aSize,
                           *mFrame->StylePosition()->BSize(
-                              wm, AnchorPosResolutionParams::From(mFrame)),
+                              wm, mFrame->StyleDisplay()->mPosition),
                           mFrame->GetAspectRatio())
       .mISize;
 }
@@ -489,9 +489,9 @@ void ReflowInput::Init(nsPresContext* aPresContext,
   } else {
     const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
     const auto bSizeCoord =
-        mStylePosition->BSize(mWritingMode, anchorResolutionParams);
-    const auto maxBSizeCoord =
-        mStylePosition->MaxBSize(mWritingMode, anchorResolutionParams);
+        mStylePosition->BSize(mWritingMode, anchorResolutionParams.mPosition);
+    const auto maxBSizeCoord = mStylePosition->MaxBSize(
+        mWritingMode, anchorResolutionParams.mPosition);
     if ((!bSizeCoord->BehavesLikeInitialValueOnBlockAxis() ||
          !maxBSizeCoord->BehavesLikeInitialValueOnBlockAxis()) &&
         // Don't set NS_FRAME_IN_CONSTRAINED_BSIZE on body or html elements.
@@ -503,12 +503,12 @@ void ReflowInput::Init(nsPresContext* aPresContext,
       nsIFrame* containingBlk = mFrame;
       while (containingBlk) {
         const nsStylePosition* stylePos = containingBlk->StylePosition();
-        const auto containingBlkAnchorResolutionParams =
-            AnchorPosResolutionParams::From(containingBlk);
+        const auto containingBlkPositionProperty =
+            containingBlk->StyleDisplay()->mPosition;
         const auto bSizeCoord =
-            stylePos->BSize(mWritingMode, containingBlkAnchorResolutionParams);
-        const auto& maxBSizeCoord = stylePos->MaxBSize(
-            mWritingMode, containingBlkAnchorResolutionParams);
+            stylePos->BSize(mWritingMode, containingBlkPositionProperty);
+        const auto& maxBSizeCoord =
+            stylePos->MaxBSize(mWritingMode, containingBlkPositionProperty);
         if ((bSizeCoord->IsLengthPercentage() && !bSizeCoord->HasPercent()) ||
             (maxBSizeCoord->IsLengthPercentage() &&
              !maxBSizeCoord->HasPercent())) {
@@ -541,8 +541,7 @@ void ReflowInput::Init(nsPresContext* aPresContext,
     // with auto-height it's the inline-size, so that they can add
     // columns in the container's block direction
     if (type == LayoutFrameType::ColumnSet &&
-        mStylePosition
-            ->ISize(mWritingMode, AnchorPosResolutionParams::From(this))
+        mStylePosition->ISize(mWritingMode, mStyleDisplay->mPosition)
             ->IsAuto()) {
       SetComputedISize(NS_UNCONSTRAINEDSIZE, ResetResizeFlags::No);
     } else {
@@ -753,11 +752,11 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
           AnchorPosResolutionParams::From(this));
 
   const auto bSize =
-      mStylePosition->BSize(wm, anchorResolutionParams.mBaseParams);
-  const auto minBSize =
-      mStylePosition->MinBSize(wm, anchorResolutionParams.mBaseParams);
-  const auto maxBSize =
-      mStylePosition->MaxBSize(wm, anchorResolutionParams.mBaseParams);
+      mStylePosition->BSize(wm, anchorResolutionParams.mBaseParams.mPosition);
+  const auto minBSize = mStylePosition->MinBSize(
+      wm, anchorResolutionParams.mBaseParams.mPosition);
+  const auto maxBSize = mStylePosition->MaxBSize(
+      wm, anchorResolutionParams.mBaseParams.mPosition);
   // XXX Should we really need to null check mCBReflowInput?  (We do for
   // at least nsBoxFrame).
   if (mFrame->HasBSizeChange()) {
@@ -929,8 +928,7 @@ bool ReflowInput::ShouldApplyAutomaticMinimumOnBlockAxis() const {
   MOZ_ASSERT(!mFrame->HasReplacedSizing());
   return mFlags.mIsBSizeSetByAspectRatio &&
          !mStyleDisplay->IsScrollableOverflow() &&
-         mStylePosition
-             ->MinBSize(GetWritingMode(), AnchorPosResolutionParams::From(this))
+         mStylePosition->MinBSize(GetWritingMode(), mStyleDisplay->mPosition)
              ->IsAuto();
 }
 
@@ -1263,10 +1261,10 @@ void ReflowInput::CalculateBorderPaddingMargin(
     const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
     const nscoord start = nsLayoutUtils::ComputeCBDependentValue(
         aContainingBlockSize,
-        mStyleMargin->GetMargin(startSide, anchorResolutionParams));
+        mStyleMargin->GetMargin(startSide, anchorResolutionParams.mPosition));
     const nscoord end = nsLayoutUtils::ComputeCBDependentValue(
         aContainingBlockSize,
-        mStyleMargin->GetMargin(endSide, anchorResolutionParams));
+        mStyleMargin->GetMargin(endSide, anchorResolutionParams.mPosition));
     marginStartEnd = start + end;
   }
 
@@ -1364,7 +1362,8 @@ void ReflowInput::CalculateHypotheticalPosition(
   WritingMode wm = containingBlock->GetWritingMode();
 
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
-  const auto styleISize = mStylePosition->ISize(wm, anchorResolutionParams);
+  const auto styleISize =
+      mStylePosition->ISize(wm, anchorResolutionParams.mPosition);
   bool isAutoISize = styleISize->IsAuto();
   Maybe<nsSize> intrinsicSize;
   if (mFlags.mIsReplaced && isAutoISize) {
@@ -1418,7 +1417,7 @@ void ReflowInput::CalculateHypotheticalPosition(
                   LogicalSize(wm, contentEdgeToBoxSizingISize,
                               contentEdgeToBoxSizingBSize),
                   boxSizingToMarginEdgeISize, *styleISize,
-                  *mStylePosition->BSize(wm, anchorResolutionParams),
+                  *mStylePosition->BSize(wm, anchorResolutionParams.mPosition),
                   mFrame->GetAspectRatio())
               .mISize;
       boxISize.emplace(contentISize + contentEdgeToBoxSizingISize +
@@ -1616,7 +1615,8 @@ void ReflowInput::CalculateHypotheticalPosition(
                                  &insideBoxSizing, &outsideBoxSizing);
 
     nscoord boxBSize;
-    const auto styleBSize = mStylePosition->BSize(wm, anchorResolutionParams);
+    const auto styleBSize =
+        mStylePosition->BSize(wm, anchorResolutionParams.mPosition);
     const bool isAutoBSize =
         nsLayoutUtils::IsAutoBSize(*styleBSize, blockContentSize.BSize(wm));
     if (isAutoBSize) {
@@ -1855,7 +1855,7 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
   const LogicalMargin borderPadding = ComputedLogicalBorderPadding(cbwm);
 
   bool iSizeIsAuto =
-      mStylePosition->ISize(cbwm, anchorResolutionParams.mBaseParams)->IsAuto();
+      mStylePosition->ISize(cbwm, mStyleDisplay->mPosition)->IsAuto();
   bool marginIStartIsAuto = false;
   bool marginIEndIsAuto = false;
   bool marginBStartIsAuto = false;
@@ -1903,19 +1903,18 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
         borderPadding.IStartEnd(cbwm) - computedSize.ISize(cbwm);
     marginIStartIsAuto = mStyleMargin
                              ->GetMargin(LogicalSide::IStart, cbwm,
-                                         anchorResolutionParams.mBaseParams)
+                                         StylePositionProperty::Absolute)
                              ->IsAuto();
     marginIEndIsAuto = mStyleMargin
                            ->GetMargin(LogicalSide::IEnd, cbwm,
-                                       anchorResolutionParams.mBaseParams)
+                                       StylePositionProperty::Absolute)
                            ->IsAuto();
     ComputeAbsPosInlineAutoMargin(availMarginSpace, cbwm, marginIStartIsAuto,
                                   marginIEndIsAuto, margin, offsets);
   }
 
-  bool bSizeIsAuto =
-      mStylePosition->BSize(cbwm, anchorResolutionParams.mBaseParams)
-          ->BehavesLikeInitialValueOnBlockAxis();
+  bool bSizeIsAuto = mStylePosition->BSize(cbwm, mStyleDisplay->mPosition)
+                         ->BehavesLikeInitialValueOnBlockAxis();
   if (bStartIsAuto) {
     // solve for block-start
     if (bSizeIsAuto) {
@@ -1954,11 +1953,11 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
     nscoord availMarginSpace = autoBSize - computedSize.BSize(cbwm);
     marginBStartIsAuto = mStyleMargin
                              ->GetMargin(LogicalSide::BStart, cbwm,
-                                         anchorResolutionParams.mBaseParams)
+                                         StylePositionProperty::Absolute)
                              ->IsAuto();
     marginBEndIsAuto = mStyleMargin
                            ->GetMargin(LogicalSide::BEnd, cbwm,
-                                       anchorResolutionParams.mBaseParams)
+                                       StylePositionProperty::Absolute)
                            ->IsAuto();
 
     ComputeAbsPosBlockAutoMargin(availMarginSpace, cbwm, marginBStartIsAuto,
@@ -2172,12 +2171,13 @@ LogicalSize ReflowInput::ComputeContainingBlockRectangle(
     if (!wm.IsVertical() && NS_UNCONSTRAINEDSIZE == cbSize.BSize(wm)) {
       if (eCompatibility_NavQuirks == aPresContext->CompatibilityMode() &&
           !aContainingBlockRI->mFrame->IsFlexOrGridItem() &&
-          (IsQuirky(*mStylePosition->GetHeight(anchorResolutionParams)) ||
+          (IsQuirky(
+               *mStylePosition->GetHeight(anchorResolutionParams.mPosition)) ||
            (mFrame->IsTableWrapperFrame() &&
             IsQuirky(*mFrame->PrincipalChildList()
                           .FirstChild()
                           ->StylePosition()
-                          ->GetHeight(anchorResolutionParams))))) {
+                          ->GetHeight(anchorResolutionParams.mPosition))))) {
         cbSize.BSize(wm) = CalcQuirkContainingBlockHeight(aContainingBlockRI);
       }
     }
@@ -2254,8 +2254,7 @@ void ReflowInput::InitConstraints(
                 mComputeSizeFlags, aBorder, aPadding, mStyleDisplay);
 
     // For calculating the size of this box, we use its own writing mode
-    const auto blockSize =
-        mStylePosition->BSize(wm, AnchorPosResolutionParams::From(this));
+    const auto blockSize = mStylePosition->BSize(wm, mStyleDisplay->mPosition);
     bool isAutoBSize = blockSize->BehavesLikeInitialValueOnBlockAxis();
 
     // Check for a percentage based block size and a containing block
@@ -2326,7 +2325,7 @@ void ReflowInput::InitConstraints(
       // Calculate the computed isize
       bool rowOrRowGroup = false;
       const auto inlineSize =
-          mStylePosition->ISize(wm, AnchorPosResolutionParams::From(this));
+          mStylePosition->ISize(wm, mStyleDisplay->mPosition);
       bool isAutoISize = inlineSize->IsAuto();
       if ((StyleDisplay::TableRow == mStyleDisplay->mDisplay) ||
           (StyleDisplay::TableRowGroup == mStyleDisplay->mDisplay)) {
@@ -2729,11 +2728,13 @@ void ReflowInput::CalculateBlockSideMargins() {
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
   // The css2 spec clearly defines how block elements should behave
   // in section 10.3.3.
-  bool isAutoStartMargin =
-      mStyleMargin->GetMargin(LogicalSide::IStart, cbWM, anchorResolutionParams)
-          ->IsAuto();
+  bool isAutoStartMargin = mStyleMargin
+                               ->GetMargin(LogicalSide::IStart, cbWM,
+                                           anchorResolutionParams.mPosition)
+                               ->IsAuto();
   bool isAutoEndMargin =
-      mStyleMargin->GetMargin(LogicalSide::IEnd, cbWM, anchorResolutionParams)
+      mStyleMargin
+          ->GetMargin(LogicalSide::IEnd, cbWM, anchorResolutionParams.mPosition)
           ->IsAuto();
   if (!isAutoStartMargin && !isAutoEndMargin) {
     // Neither margin is 'auto' so we're over constrained. Use the
@@ -2965,8 +2966,8 @@ bool SizeComputationInput::ComputeMargin(WritingMode aCBWM,
     const auto anchorResolutionParams = AnchorPosResolutionParams::From(mFrame);
     for (const LogicalSide side : LogicalSides::All) {
       m.Side(side, aCBWM) = nsLayoutUtils::ComputeCBDependentValue(
-          aPercentBasis,
-          styleMargin->GetMargin(side, aCBWM, anchorResolutionParams));
+          aPercentBasis, styleMargin->GetMargin(
+                             side, aCBWM, anchorResolutionParams.mPosition));
     }
     SetComputedLogicalMargin(aCBWM, m);
   } else {
@@ -3026,10 +3027,14 @@ void ReflowInput::ComputeMinMaxValues(const LogicalSize& aCBSize) {
   WritingMode wm = GetWritingMode();
 
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
-  const auto minISize = mStylePosition->MinISize(wm, anchorResolutionParams);
-  const auto maxISize = mStylePosition->MaxISize(wm, anchorResolutionParams);
-  const auto minBSize = mStylePosition->MinBSize(wm, anchorResolutionParams);
-  const auto maxBSize = mStylePosition->MaxBSize(wm, anchorResolutionParams);
+  const auto minISize =
+      mStylePosition->MinISize(wm, anchorResolutionParams.mPosition);
+  const auto maxISize =
+      mStylePosition->MaxISize(wm, anchorResolutionParams.mPosition);
+  const auto minBSize =
+      mStylePosition->MinBSize(wm, anchorResolutionParams.mPosition);
+  const auto maxBSize =
+      mStylePosition->MaxBSize(wm, anchorResolutionParams.mPosition);
 
   LogicalSize minWidgetSize(wm);
   if (mIsThemed) {

@@ -608,7 +608,7 @@ nscoord nsRangeFrame::IntrinsicISize(const IntrinsicSizeInput& aInput,
   if (aType == IntrinsicISizeType::MinISize) {
     const auto* pos = StylePosition();
     auto wm = GetWritingMode();
-    const auto iSize = pos->ISize(wm, AnchorPosResolutionParams::From(this));
+    const auto iSize = pos->ISize(wm, StyleDisplay()->mPosition);
     if (iSize->HasPercent()) {
       // https://drafts.csswg.org/css-sizing-3/#percentage-sizing
       // https://drafts.csswg.org/css-sizing-3/#min-content-zero

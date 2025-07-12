@@ -1873,8 +1873,12 @@ struct AnchorPosInfo {
   const nsIFrame* mContainingBlock;
 };
 
-static nsIFrame* GetAnchorOf(const nsIFrame* aPositioned,
-                             const nsAtom* aAnchorName) {
+static Maybe<AnchorPosInfo> GetAnchorPosRect(const nsIFrame* aPositioned,
+                                             const nsAtom* aAnchorName,
+                                             bool aCBRectIsvalid) {
+  if (!aPositioned) {
+    return Nothing{};
+  }
   const auto* presShell = aPositioned->PresShell();
   MOZ_ASSERT(presShell, "No PresShell for frame?");
 
@@ -1884,21 +1888,11 @@ static nsIFrame* GetAnchorOf(const nsIFrame* aPositioned,
     if (!stylePos->mPositionAnchor.IsIdent()) {
       // No valid anchor specified, bail.
       // TODO(dshin): Implicit anchor should be looked at here.
-      return nullptr;
+      return Nothing{};
     }
     anchorName = stylePos->mPositionAnchor.AsIdent().AsAtom();
   }
-  return presShell->GetAnchorPosAnchor(anchorName, aPositioned);
-}
-
-static Maybe<AnchorPosInfo> GetAnchorPosRect(const nsIFrame* aPositioned,
-                                             const nsAtom* aAnchorName,
-                                             bool aCBRectIsvalid) {
-  if (!aPositioned) {
-    return Nothing{};
-  }
-
-  const auto* anchor = GetAnchorOf(aPositioned, aAnchorName);
+  const auto* anchor = presShell->GetAnchorPosAnchor(anchorName, aPositioned);
   if (!anchor) {
     return Nothing{};
   }
@@ -2028,47 +2022,10 @@ bool Gecko_GetAnchorPosOffset(
   return true;
 }
 
-bool Gecko_GetAnchorPosSize(const AnchorPosResolutionParams* aParams,
-                            const nsAtom* aAnchorName,
-                            mozilla::StylePhysicalAxis aPropAxis,
-                            mozilla::StyleAnchorSizeKeyword aAnchorSizeKeyword,
-                            mozilla::Length* aOut) {
-  if (!aParams || !aParams->mFrame) {
-    return false;
-  }
-  const auto* positioned = aParams->mFrame;
-  const auto* anchor = GetAnchorOf(positioned, aAnchorName);
-  if (!anchor) {
-    return false;
-  }
-  const auto* containingBlock = positioned->GetParent();
-  const auto l = [&]() {
-    switch (aAnchorSizeKeyword) {
-      case mozilla::StyleAnchorSizeKeyword::None:
-        switch (aPropAxis) {
-          case mozilla::StylePhysicalAxis::Horizontal:
-            return anchor->GetSize().Width();
-          case mozilla::StylePhysicalAxis::Vertical:
-            return anchor->GetSize().Height();
-        }
-        MOZ_ASSERT_UNREACHABLE("Unexpected physical axis.");
-        return anchor->GetSize().Width();
-      case mozilla::StyleAnchorSizeKeyword::Width:
-        return anchor->GetSize().Width();
-      case mozilla::StyleAnchorSizeKeyword::Height:
-        return anchor->GetSize().Height();
-      case mozilla::StyleAnchorSizeKeyword::Inline:
-        return anchor->ISize(containingBlock->GetWritingMode());
-      case mozilla::StyleAnchorSizeKeyword::Block:
-        return anchor->BSize(containingBlock->GetWritingMode());
-      case mozilla::StyleAnchorSizeKeyword::SelfInline:
-        return anchor->ISize(positioned->GetWritingMode());
-      case mozilla::StyleAnchorSizeKeyword::SelfBlock:
-        return anchor->BSize(positioned->GetWritingMode());
-    }
-    MOZ_ASSERT_UNREACHABLE("Unhandled anchor size keyword.");
-    return anchor->GetSize().Width();
-  }();
-  *aOut = Length::FromPixels(CSSPixel::FromAppUnits(l));
-  return true;
+bool Gecko_GetAnchorPosSize(
+    const AnchorPosResolutionParams* /*aParams*/, const nsAtom* /*aAnchorName*/,
+    mozilla::StylePhysicalAxis /*aPropAxis*/,
+    mozilla::StyleAnchorSizeKeyword /*aAnchorSizeKeyword*/,
+    mozilla::Length* /*aOut*/) {
+  return false;
 }

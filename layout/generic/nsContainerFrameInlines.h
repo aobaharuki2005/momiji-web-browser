@@ -52,7 +52,8 @@ void nsContainerFrame::DoInlineIntrinsicISize(ISizeData* aData,
         // clamp negative calc() to 0
         std::max(stylePadding->mPadding.Get(startSide).Resolve(0), 0) +
         styleBorder->GetComputedBorderWidth(startSide) +
-        GetMargin(styleMargin->GetMargin(startSide, anchorResolutionParams));
+        GetMargin(styleMargin->GetMargin(startSide,
+                                         anchorResolutionParams.mPosition));
     if (MOZ_LIKELY(sliceBreak)) {
       aData->mCurrentLine += startPBM;
     } else {
@@ -64,7 +65,8 @@ void nsContainerFrame::DoInlineIntrinsicISize(ISizeData* aData,
       // clamp negative calc() to 0
       std::max(stylePadding->mPadding.Get(endSide).Resolve(0), 0) +
       styleBorder->GetComputedBorderWidth(endSide) +
-      GetMargin(styleMargin->GetMargin(endSide, anchorResolutionParams));
+      GetMargin(
+          styleMargin->GetMargin(endSide, anchorResolutionParams.mPosition));
   if (MOZ_UNLIKELY(!sliceBreak)) {
     clonePBM += endPBM;
     aData->mCurrentLine += clonePBM;
