@@ -90,6 +90,15 @@ WaylandShmPool::~WaylandShmPool() {
 
 WaylandBuffer::WaylandBuffer(const LayoutDeviceIntSize& aSize) : mSize(aSize) {}
 
+bool WaylandBuffer::IsAttached() const {
+  for (const auto& transaction : mBufferTransactions) {
+    if (!transaction->IsFinished()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 BufferTransaction* WaylandBuffer::GetTransaction() {
   for (const auto& transaction : mBufferTransactions) {
     if (transaction->IsFinished()) {
@@ -358,7 +367,7 @@ wl_buffer* BufferTransaction::BufferBorrowLocked(
 }
 
 void BufferTransaction::BufferDetachCallback() {
-  LOGWAYLAND("BufferTransaction::BufferDetach() [%p] ", this);
+  LOGWAYLAND("BufferTransaction::BufferDetach() [%p] ", (void*)mBuffer);
   WaylandSurfaceLock lock(mSurface);
   if (mBufferState != BufferState::WaitingForDelete) {
     mBufferState = BufferState::Detached;
@@ -366,7 +375,7 @@ void BufferTransaction::BufferDetachCallback() {
 }
 
 void BufferTransaction::BufferDeleteCallback() {
-  LOGWAYLAND("BufferTransaction::DeleteCallback() [%p] ", this);
+  LOGWAYLAND("BufferTransaction::DeleteCallback() [%p] ", (void*)mBuffer);
   WaylandSurfaceLock lock(mSurface);
   mBufferState = BufferState::Deleted;
   DeleteLocked(lock);
@@ -374,6 +383,7 @@ void BufferTransaction::BufferDeleteCallback() {
 
 void BufferTransaction::WlBufferDeleteLocked(
     const WaylandSurfaceLock& aSurfaceLock) {
+  LOGWAYLAND("BufferTransaction::WlBufferDeleteLocked() [%p] ", (void*)mBuffer);
   if (mIsExternalBuffer) {
     wl_proxy_set_user_data((wl_proxy*)mWLBuffer, nullptr);
     mWLBuffer = nullptr;

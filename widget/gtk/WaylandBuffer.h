@@ -62,10 +62,7 @@ class WaylandBuffer {
     return aSize == mSize;
   }
 
-  bool IsAttached() const { return mIsAttachedToCompositor; }
-  void SetAttachedLocked(const WaylandSurfaceLock& aSurfaceLock) {
-    mIsAttachedToCompositor = true;
-  }
+  bool IsAttached() const;
 
   BufferTransaction* GetTransaction();
   void RemoveTransaction(RefPtr<BufferTransaction> aTransaction);
@@ -90,10 +87,6 @@ class WaylandBuffer {
   wl_buffer* mExternalWlBuffer = nullptr;
 
   AutoTArray<RefPtr<BufferTransaction>, 3> mBufferTransactions;
-
-  // Indicates that wl_buffer is actively used by Wayland compositor.
-  // We can't delete such wl_buffer.
-  mozilla::Atomic<bool, mozilla::Relaxed> mIsAttachedToCompositor{false};
 
   LayoutDeviceIntSize mSize;
 
