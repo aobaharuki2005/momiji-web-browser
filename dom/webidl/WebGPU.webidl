@@ -597,7 +597,9 @@ dictionary GPUBindGroupDescriptor
     required sequence<GPUBindGroupEntry> entries;
 };
 
-typedef (GPUSampler or GPUTextureView or GPUBufferBinding) GPUBindingResource;
+typedef (GPUSampler or
+         GPUTextureView or
+         GPUBufferBinding) GPUBindingResource;
 
 dictionary GPUBindGroupEntry {
     required GPUIndex32 binding;
