@@ -875,6 +875,8 @@
   <string name="preferences_theme">Thema</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">Startpagina</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">App-pictogram</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Bewegingen</string>
   <!-- Preference for settings related to visual options -->
@@ -1308,6 +1310,12 @@
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Uitgevouwen</string>
   <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">App-pictogram selecteren</string>
+  <!--
     Theme Preferences
 
     Preference for using light theme
@@ -1470,8 +1478,6 @@
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Meer info</string>
   <!--
-    Sessions
-
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->

@@ -873,6 +873,8 @@
   <string name="preferences_theme">ערכת נושא</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">מסך הבית</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">סמל היישומון</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">מחוות</string>
   <!-- Preference for settings related to visual options -->
@@ -1306,6 +1308,12 @@
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">מורחב</string>
   <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">בחירת סמל היישומון</string>
+  <!--
     Theme Preferences
 
     Preference for using light theme
@@ -1468,8 +1476,6 @@
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">מידע נוסף</string>
   <!--
-    Sessions
-
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
