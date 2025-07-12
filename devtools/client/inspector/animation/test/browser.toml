@@ -115,7 +115,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 
 ["browser_animation_keyframes-graph_computed-value-path_easing-hint.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-skip-if = ["verify && opt"]
 
 ["browser_animation_keyframes-graph_keyframe-marker-rtl.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled

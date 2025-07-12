@@ -322,6 +322,4 @@ skip-if = [
 ["browser_webextension_descriptor.js"]
 
 ["browser_webextension_dropdown.js"]
-skip-if = [
-  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && opt && a11y_checks", # Bug 1781498
-]
+skip-if = ["os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && opt && a11y_checks"] # Bug 1781498

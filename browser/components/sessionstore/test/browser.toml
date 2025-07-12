@@ -50,11 +50,6 @@ prefs = [
 ["browser_aboutRestartrequired_noRestore.js"]
 
 ["browser_aboutSessionRestore.js"]
-skip-if = [
-  "verify && debug && os == 'win'",
-  "os == 'mac' && os_version == '10.15' && processor == 'x86_64' && debug && verify",
-  "os == 'mac' && os_version == '11.20' && arch == 'aarch64' && debug && verify",
-]
 
 ["browser_async_duplicate_tab.js"]
 support-files = ["file_async_duplicate_tab.html"]
@@ -94,7 +89,6 @@ tags = "os_integration"
 
 ["browser_backup_recovery.js"]
 https_first_disabled = true
-skip-if = ["os == 'linux' && os_version == '18.04' && processor == 'x86_64' && debug && verify"]
 tags = "os_integration"
 
 ["browser_bfcache_telemetry.js"]
@@ -130,7 +124,6 @@ skip-if = ["os == 'linux' && os_version == '18.04' && processor == 'x86_64' && o
 ["browser_crashedTabs.js"]
 https_first_disabled = true
 run-if = ["crashreporter"]
-skip-if = ["verify"]
 
 ["browser_docshell_uuid_consistency.js"]
 
@@ -155,7 +148,6 @@ tags = "os_integration"
 https_first_disabled = true
 
 ["browser_formdata.js"]
-skip-if = ["verify && debug"]
 
 ["browser_formdata_cc.js"]
 skip-if = ["asan"] # test runs too long
@@ -183,10 +175,7 @@ https_first_disabled = true
 ["browser_ignore_updates_crashed_tabs.js"]
 https_first_disabled = true
 run-if = ["crashreporter"]
-skip-if = [
-  "asan",
-  "os == 'win' && verify", # bug 1709907
-]
+skip-if = ["asan"]
 
 ["browser_label_and_icon.js"]
 https_first_disabled = true
@@ -211,7 +200,6 @@ tags = "os_integration"
 ["browser_multiple_select_after_load.js"]
 
 ["browser_newtab_userTypedValue.js"]
-skip-if = ["verify && debug"]
 
 ["browser_not_collect_when_idle.js"]
 
@@ -368,8 +356,6 @@ run-if = ["crashreporter"]
 skip-if = [
   "asan",
   "tsan",
-  "os == 'mac' && os_version == '10.15' && processor == 'x86_64' && debug && verify",
-  "os == 'mac' && os_version == '11.20' && arch == 'aarch64' && debug && verify",
 ]
 
 ["browser_urlbarSearchMode.js"]

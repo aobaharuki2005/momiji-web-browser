@@ -25,9 +25,7 @@ support-files = [
 ["browser_passwords_multiple_windows.js"]
 
 ["browser_passwords_primary_password.js"]
-skip-if = [
-	"tsan" # Bug 1949014
-]
+skip-if = ["tsan"] # Bug 1949014
 
 ["browser_passwords_remove_all_notification.js"]
 
@@ -37,8 +35,8 @@ skip-if = [
 
 ["browser_passwords_update_login.js"]
 skip-if = [
-	"os == 'win' && debug", # Can not test OsAuth on debug builds
-	"os == 'mac' && debug", # Can not test OsAuth on debug builds
+  "os == 'win' && debug", # Can not test OsAuth on debug builds
+  "os == 'mac' && debug", # Can not test OsAuth on debug builds
 ]
 
 ["browser_viewmodel.js"]

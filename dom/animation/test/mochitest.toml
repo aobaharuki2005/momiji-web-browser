@@ -63,9 +63,9 @@ support-files = [
   "mozilla/empty.html",
 ]
 skip-if = [
-  "os == 'android' && debug", #Bug 1784931
-  "os == 'linux' && tsan", #Bug 1784931
-  "display == 'wayland' && os_version == '22.04' && debug",  # Bug 1856969
+  "os == 'android' && debug", # Bug 1784931
+  "os == 'linux' && tsan", # Bug 1784931
+  "display == 'wayland' && os_version == '22.04' && debug", # Bug 1856969
   "http3",
   "http2",
 ]
@@ -97,7 +97,7 @@ skip-if = ["xorigin"]
 ["style/test_interpolation-from-interpolatematrix-to-none.html"]
 
 ["style/test_missing-keyframe-on-compositor.html"]
-skip-if = ["fission && xorigin"]  # Bug 1716403 - New fission platform triage
+skip-if = ["fission && xorigin"] # Bug 1716403 - New fission platform triage
 
 ["style/test_missing-keyframe.html"]
 

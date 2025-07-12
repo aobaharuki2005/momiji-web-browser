@@ -4,10 +4,7 @@
 support-files = ["mac_desktop_image.py"]
 run-if = ["os == 'mac'"]
 tags = "os_integration"
-skip-if = [
-  "verify",
-  "os == 'mac' && os_version == '14.70' && processor == 'x86_64'", # Bug 1869703
-]
+skip-if = ["os == 'mac' && os_version == '14.70' && processor == 'x86_64'"] # Bug 1869703
 
 ["browser_420786.js"]
 run-if = ["os == 'linux'"]
@@ -25,7 +22,7 @@ support-files = [
 skip-if = [
   "os == 'win'",
   "ccov",
-  "tsan", #Bug 1429950 , Bug 1583315, Bug 1696109, Bug 1701449
+  "tsan", # Bug 1429950, Bug 1583315, Bug 1696109, Bug 1701449
 ]
 tags = "os_integration"
 
@@ -37,7 +34,7 @@ support-files = [
 skip-if = [
   "os == 'win'",
   "ccov",
-  "tsan", #Bug 1429950 , Bug 1583315, Bug 1696109, Bug 1701449
+  "tsan", # Bug 1429950, Bug 1583315, Bug 1696109, Bug 1701449
 ]
 
 ["browser_headless_screenshot_3.js"]
@@ -48,7 +45,7 @@ support-files = [
 skip-if = [
   "os == 'win'",
   "ccov",
-  "tsan", #Bug 1429950 , Bug 1583315, Bug 1696109, Bug 1701449
+  "tsan", # Bug 1429950, Bug 1583315, Bug 1696109, Bug 1701449
 ]
 
 ["browser_headless_screenshot_4.js"]
@@ -59,7 +56,7 @@ support-files = [
 skip-if = [
   "os == 'win'",
   "ccov",
-  "tsan", #Bug 1429950 , Bug 1583315, Bug 1696109, Bug 1701449
+  "tsan", # Bug 1429950, Bug 1583315, Bug 1696109, Bug 1701449
 ]
 
 ["browser_headless_screenshot_cross_origin.js"]
@@ -71,7 +68,7 @@ support-files = [
 skip-if = [
   "os == 'win'",
   "ccov",
-  "tsan", #Bug 1429950 , Bug 1583315, Bug 1696109, Bug 1701449
+  "tsan", # Bug 1429950, Bug 1583315, Bug 1696109, Bug 1701449
 ]
 
 ["browser_headless_screenshot_redirect.js"]
@@ -84,7 +81,7 @@ support-files = [
 skip-if = [
   "os == 'win'",
   "ccov",
-  "tsan", #Bug 1429950 , Bug 1583315, Bug 1696109, Bug 1701449
+  "tsan", # Bug 1429950, Bug 1583315, Bug 1696109, Bug 1701449
 ]
 
 ["browser_pinning.js"]

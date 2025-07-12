@@ -27,7 +27,6 @@ skip-if = ["debug"] # disabled until bug 1961939 is fixed.
 
 ["browser_shims.js"]
 https_first_disabled = true
-skip-if = ["verify"]
 
 ["browser_smartblockembeds.js"]
 skip-if = [

@@ -93,7 +93,6 @@ tags = "devtools webextensions"
 ["browser_in_rdm_pane.js"]
 
 ["browser_many_toggles.js"]
-skip-if = ["verify"] # Too many exceptions happening on test teardown
 
 ["browser_max_touchpoints.js"]
 

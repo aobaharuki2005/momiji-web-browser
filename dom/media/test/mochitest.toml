@@ -770,9 +770,10 @@ tags = "cloneelementvisually"
 
 ["test_cloneElementVisually_resource_change.html"]
 skip-if = [
-  "os == 'linux' && !(debug || asan || tsan)",  # Bug 1559308 - lower frequency intermittent
-  "os == 'mac' && os_version == '14.70' && processor == 'x86_64'",  # Bug 1909908
-  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'",  # Bug 1909908
+  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && opt", # Bug 1559308 - lower frequency intermittent
+  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && ccov", # Bug 1559308 - lower frequency intermittent
+  "os == 'mac' && os_version == '14.70' && processor == 'x86_64'", # Bug 1909908
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1909908
 ]
 tags = "cloneelementvisually os_integration"
 
@@ -883,9 +884,7 @@ tags = "capturestream"
 skip-if = ["true"] # bug 1021673
 
 ["test_seamless_looping.html"]
-skip-if = [
-  "apple_catalina && debug", # Bug 1796318
-]
+skip-if = ["apple_catalina && debug"] # Bug 1796318
 
 ["test_seamless_looping_cancel_looping_future_frames.html"]
 
