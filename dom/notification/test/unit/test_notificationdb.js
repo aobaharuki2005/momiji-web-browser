@@ -1,105 +1,170 @@
 "use strict";
 
-/**
- * @import {NotificationDB} from "../../NotificationDB.sys.mjs"
- * @type {NotificationDB}
- */
-let db;
-
-/** @type {NotificationDB} */
-let memoryDb;
-
-add_setup(async function run_test() {
+function run_test() {
   do_get_profile();
+  startNotificationDB();
+  run_next_test();
+}
 
-  db = ChromeUtils.importESModule(
-    "moz-src:///dom/notification/NotificationDB.sys.mjs"
-  ).db;
+// Get one notification, none exists
+add_test(function test_get_none() {
+  let requestID = 0;
+  let msgReply = "Notification:GetAll:Return:OK";
+  let msgHandler = function (message) {
+    Assert.equal(requestID, message.data.requestID);
+    Assert.equal(0, message.data.notifications.length);
+  };
 
-  let { MemoryNotificationDB } = ChromeUtils.importESModule(
-    "moz-src:///dom/notification/MemoryNotificationDB.sys.mjs"
-  );
-  memoryDb = new MemoryNotificationDB();
+  addAndSend("Notification:GetAll", msgReply, msgHandler, {
+    origin: systemNotification.origin,
+    requestID,
+  });
+});
+
+// Store one notification
+add_test(function test_send_one() {
+  let requestID = 1;
+  let msgReply = "Notification:Save:Return:OK";
+  let msgHandler = function (message) {
+    Assert.equal(requestID, message.data.requestID);
+  };
+
+  addAndSend("Notification:Save", msgReply, msgHandler, {
+    origin: systemNotification.origin,
+    notification: systemNotification,
+    requestID,
+  });
+});
+
+// Get one notification, one exists
+add_test(function test_get_one() {
+  let requestID = 2;
+  let msgReply = "Notification:GetAll:Return:OK";
+  let msgHandler = function (message) {
+    Assert.equal(requestID, message.data.requestID);
+    Assert.equal(1, message.data.notifications.length);
+    // compare the content
+    compareNotification(systemNotification, message.data.notifications[0]);
+  };
+
+  addAndSend("Notification:GetAll", msgReply, msgHandler, {
+    origin: systemNotification.origin,
+    requestID,
+  });
+});
+
+// Delete one notification
+add_test(function test_delete_one() {
+  let requestID = 3;
+  let msgReply = "Notification:Delete:Return:OK";
+  let msgHandler = function (message) {
+    Assert.equal(requestID, message.data.requestID);
+  };
+
+  addAndSend("Notification:Delete", msgReply, msgHandler, {
+    origin: systemNotification.origin,
+    id: systemNotification.id,
+    requestID,
+  });
 });
 
 // Get one notification, none exists
-add_task(async function test_get_none() {
-  let notifications = await db.queueTask("getall", {
+add_test(function test_get_none_again() {
+  let requestID = 4;
+  let msgReply = "Notification:GetAll:Return:OK";
+  let msgHandler = function (message) {
+    Assert.equal(requestID, message.data.requestID);
+    Assert.equal(0, message.data.notifications.length);
+  };
+
+  addAndSend("Notification:GetAll", msgReply, msgHandler, {
     origin: systemNotification.origin,
+    requestID,
   });
-
-  Assert.equal(0, notifications.length);
-});
-
-add_task(async function test_send_and_get_one() {
-  // Store one notification
-  await db.queueTask("save", {
-    origin: systemNotification.origin,
-    notification: systemNotification,
-  });
-
-  // Get one notification, one exists
-  let notifications = await db.queueTask("getall", {
-    origin: systemNotification.origin,
-  });
-
-  Assert.equal(1, notifications.length);
-  // compare the content
-  compareNotification(systemNotification, notifications[0]);
-});
-
-add_task(async function test_delete_one_get_none_again() {
-  // Delete one notification
-  await db.queueTask("delete", {
-    origin: systemNotification.origin,
-    id: systemNotification.id,
-  });
-
-  // Get one notification, none exists
-  let notifications = await db.queueTask("getall", {
-    origin: systemNotification.origin,
-  });
-  Assert.equal(0, notifications.length);
 });
 
 // Delete one notification that do not exists anymore
-add_task(async function test_delete_one_nonexistent() {
-  await db.queueTask("delete", {
+add_test(function test_delete_one_nonexistent() {
+  let requestID = 5;
+  let msgReply = "Notification:Delete:Return:OK";
+  let msgHandler = function (message) {
+    Assert.equal(requestID, message.data.requestID);
+  };
+
+  addAndSend("Notification:Delete", msgReply, msgHandler, {
     origin: systemNotification.origin,
     id: systemNotification.id,
+    requestID,
   });
 });
 
 // Store two notifications with the same id
-add_task(async function test_send_two_get_one() {
-  await db.queueTask("save", {
-    origin: systemNotification.origin,
-    notification: systemNotification,
-  });
+add_test(function test_send_two_get_one() {
+  let requestID = 6;
+  let calls = 0;
 
-  await db.queueTask("save", {
-    origin: systemNotification.origin,
-    notification: systemNotification,
-  });
+  let msgGetReply = "Notification:GetAll:Return:OK";
+  let msgGetHandler = function (message) {
+    Assert.equal(requestID + 2, message.data.requestID);
+    Assert.equal(1, message.data.notifications.length);
+    // compare the content
+    compareNotification(systemNotification, message.data.notifications[0]);
+  };
 
-  let notifications = await db.queueTask("getall", {
-    origin: systemNotification.origin,
-  });
-  Assert.equal(1, notifications.length);
-  // compare the content
-  compareNotification(systemNotification, notifications[0]);
+  let msgSaveReply = "Notification:Save:Return:OK";
+  let msgSaveHandler = function () {
+    calls += 1;
+    if (calls === 2) {
+      addAndSend("Notification:GetAll", msgGetReply, msgGetHandler, {
+        origin: systemNotification.origin,
+        requestID: requestID + 2,
+      });
+    }
+  };
+
+  addAndSend(
+    "Notification:Save",
+    msgSaveReply,
+    msgSaveHandler,
+    {
+      origin: systemNotification.origin,
+      notification: systemNotification,
+      requestID,
+    },
+    false
+  );
+
+  addAndSend(
+    "Notification:Save",
+    msgSaveReply,
+    msgSaveHandler,
+    {
+      origin: systemNotification.origin,
+      notification: systemNotification,
+      requestID: requestID + 1,
+    },
+    false
+  );
 });
 
 // Delete previous notification
-add_task(async function test_delete_previous() {
-  await db.queueTask("delete", {
+add_test(function test_delete_previous() {
+  let requestID = 8;
+  let msgReply = "Notification:Delete:Return:OK";
+  let msgHandler = function (message) {
+    Assert.equal(requestID, message.data.requestID);
+  };
+
+  addAndSend("Notification:Delete", msgReply, msgHandler, {
     origin: systemNotification.origin,
     id: systemNotification.id,
+    requestID,
   });
 });
 
 // Store two notifications from same origin with the same tag
-add_task(async function test_send_two_get_one() {
+add_test(function test_send_two_get_one() {
+  let requestID = 10;
   let tag = "voicemail";
 
   let systemNotification1 = getNotificationObject(
@@ -113,34 +178,79 @@ add_task(async function test_send_two_get_one() {
     tag
   );
 
-  await db.queueTask("save", {
-    origin: systemNotification1.origin,
-    notification: systemNotification1,
-  });
+  let msgGetReply = "Notification:GetAll:Return:OK";
+  let msgGetNotifHandler = {
+    receiveMessage(message) {
+      if (message.name === msgGetReply) {
+        Services.cpmm.removeMessageListener(msgGetReply, msgGetNotifHandler);
+        let notifications = message.data.notifications;
+        // same tag, so replaced
+        Assert.equal(1, notifications.length);
+        // compare the content
+        compareNotification(systemNotification2, notifications[0]);
+        run_next_test();
+      }
+    },
+  };
 
-  await db.queueTask("save", {
-    origin: systemNotification2.origin,
-    notification: systemNotification2,
-  });
+  Services.cpmm.addMessageListener(msgGetReply, msgGetNotifHandler);
 
-  let notifications = await db.queueTask("getall", {
-    origin: systemNotification1.origin,
-  });
-  Assert.equal(1, notifications.length);
-  // compare the content
-  compareNotification(systemNotification2, notifications[0]);
+  let msgSaveReply = "Notification:Save:Return:OK";
+  let msgSaveCalls = 0;
+  let msgSaveHandler = function (message) {
+    msgSaveCalls++;
+    // Once both request have been sent, trigger getall
+    if (msgSaveCalls === 2) {
+      Services.cpmm.sendAsyncMessage("Notification:GetAll", {
+        origin: systemNotification1.origin,
+        requestID: message.data.requestID + 2, // 12, 13
+      });
+    }
+  };
+
+  addAndSend(
+    "Notification:Save",
+    msgSaveReply,
+    msgSaveHandler,
+    {
+      origin: systemNotification1.origin,
+      notification: systemNotification1,
+      requestID, // 10
+    },
+    false
+  );
+
+  addAndSend(
+    "Notification:Save",
+    msgSaveReply,
+    msgSaveHandler,
+    {
+      origin: systemNotification2.origin,
+      notification: systemNotification2,
+      requestID: requestID + 1, // 11
+    },
+    false
+  );
 });
 
 // Delete previous notification
-add_task(async function test_delete_previous() {
-  await db.queueTask("delete", {
+add_test(function test_delete_previous() {
+  let requestID = 15;
+  let msgReply = "Notification:Delete:Return:OK";
+  let msgHandler = function (message) {
+    Assert.equal(requestID, message.data.requestID);
+  };
+
+  addAndSend("Notification:Delete", msgReply, msgHandler, {
     origin: systemNotification.origin,
     id: "{8ef9a628-f0f4-44b4-820d-c117573c33e3}",
+    requestID,
   });
 });
 
 // Store two notifications from two origins with the same tag
-add_task(async function test_send_two_get_two() {
+add_test(function test_send_two_get_two() {
+  let requestID = 20;
   let tag = "voicemail";
 
   let systemNotification1 = systemNotification;
@@ -149,45 +259,87 @@ add_task(async function test_send_two_get_two() {
   let calendarNotification2 = calendarNotification;
   calendarNotification2.tag = tag;
 
-  await db.queueTask("save", {
+  let msgGetReply = "Notification:GetAll:Return:OK";
+  let msgGetCalls = 0;
+  let msgGetHandler = {
+    receiveMessage(message) {
+      if (message.name === msgGetReply) {
+        msgGetCalls++;
+        let notifications = message.data.notifications;
+
+        // one notification per origin
+        Assert.equal(1, notifications.length);
+
+        // first call should be system notification
+        if (msgGetCalls === 1) {
+          compareNotification(systemNotification1, notifications[0]);
+        }
+
+        // second and last call should be calendar notification
+        if (msgGetCalls === 2) {
+          Services.cpmm.removeMessageListener(msgGetReply, msgGetHandler);
+          compareNotification(calendarNotification2, notifications[0]);
+          run_next_test();
+        }
+      }
+    },
+  };
+  Services.cpmm.addMessageListener(msgGetReply, msgGetHandler);
+
+  let msgSaveReply = "Notification:Save:Return:OK";
+  let msgSaveCalls = 0;
+  let msgSaveHandler = {
+    receiveMessage(message) {
+      if (message.name === msgSaveReply) {
+        msgSaveCalls++;
+        if (msgSaveCalls === 2) {
+          Services.cpmm.removeMessageListener(msgSaveReply, msgSaveHandler);
+
+          // Trigger getall for each origin
+          Services.cpmm.sendAsyncMessage("Notification:GetAll", {
+            origin: systemNotification1.origin,
+            requestID: message.data.requestID + 1, // 22
+          });
+
+          Services.cpmm.sendAsyncMessage("Notification:GetAll", {
+            origin: calendarNotification2.origin,
+            requestID: message.data.requestID + 2, // 23
+          });
+        }
+      }
+    },
+  };
+  Services.cpmm.addMessageListener(msgSaveReply, msgSaveHandler);
+
+  Services.cpmm.sendAsyncMessage("Notification:Save", {
     origin: systemNotification1.origin,
     notification: systemNotification1,
+    requestID, // 20
   });
 
-  await db.queueTask("save", {
+  Services.cpmm.sendAsyncMessage("Notification:Save", {
     origin: calendarNotification2.origin,
     notification: calendarNotification2,
+    requestID: requestID + 1, // 21
   });
-
-  // Trigger getall for each origin
-  let notifications = await db.queueTask("getall", {
-    origin: systemNotification1.origin,
-  });
-
-  // one notification per origin
-  Assert.equal(1, notifications.length);
-  // first call should be system notification
-  compareNotification(systemNotification1, notifications[0]);
-
-  notifications = await db.queueTask("getall", {
-    origin: calendarNotification2.origin,
-  });
-
-  // one notification per origin
-  Assert.equal(1, notifications.length);
-  // second and last call should be calendar notification
-  compareNotification(calendarNotification2, notifications[0]);
 });
 
 // Cleanup previous notification
-add_task(async function test_delete_previous() {
-  await db.queueTask("delete", {
+add_test(function test_delete_previous() {
+  let requestID = 25;
+  let msgReply = "Notification:Delete:Return:OK";
+  let msgHandler = function (message) {
+    Assert.equal(requestID, message.data.requestID);
+  };
+
+  addAndSend("Notification:Delete", msgReply, msgHandler, {
     origin: systemNotification.origin,
     id: "{2bc883bf-2809-4432-b0f4-f54e10372764}",
+    requestID,
   });
 });
 
-add_task(async function test_notification_onDiskPersistence() {
+add_test(function test_notification_onDiskPersistence() {
   let verifyDisk = async function (expectedId) {
     const NOTIFICATION_STORE_PATH = PathUtils.join(
       PathUtils.profileDir,
@@ -207,11 +359,18 @@ add_task(async function test_notification_onDiskPersistence() {
     true /* scope */
   );
 
-  await db.queueTask("save", {
-    origin: persistedNotification.origin,
-    notification: persistedNotification,
-  });
-  Assert.ok(await verifyDisk(persistedNotification.id));
+  addAndSend(
+    "Notification:Save",
+    "Notification:Save:Return:OK",
+    async () => {
+      Assert.ok(await verifyDisk(persistedNotification.id));
+    },
+    {
+      origin: persistedNotification.origin,
+      notification: persistedNotification,
+      requestID: 2,
+    }
+  );
 
   let nonPersistedNotification = getNotificationObject(
     systemNotification.origin,
@@ -220,30 +379,50 @@ add_task(async function test_notification_onDiskPersistence() {
     true /* scope */
   );
 
-  await memoryDb.queueTask("save", {
-    origin: nonPersistedNotification.origin,
-    notification: nonPersistedNotification,
-  });
+  addAndSend(
+    "MemoryNotification:Save",
+    "MemoryNotification:Save:Return:OK",
+    async () => {
+      // memoryonly notification must not exist on disk.
+      Assert.ok(!(await verifyDisk(nonPersistedNotification.id)));
+    },
+    {
+      origin: nonPersistedNotification.origin,
+      notification: nonPersistedNotification,
+      requestID: 3,
+    }
+  );
 
-  // memoryonly notification must not exist on disk.
-  Assert.ok(!(await verifyDisk(nonPersistedNotification.id)));
-
-  let verifyMemory = function (notifications, expectedId) {
-    return notifications.some(notification => {
+  let verifyMemory = function (message, expectedId) {
+    return message.data.notifications.some(notification => {
       return notification.id == expectedId;
     });
   };
 
-  let notifications = await db.queueTask("getall", {
-    origin: persistedNotification.origin,
-    scope: persistedNotification.origin,
-  });
-  Assert.ok(verifyMemory(notifications, persistedNotification.id));
+  addAndSend(
+    "Notification:GetAll",
+    "Notification:GetAll:Return:OK",
+    message => {
+      Assert.ok(verifyMemory(message, persistedNotification.id));
+    },
+    {
+      origin: persistedNotification.origin,
+      scope: persistedNotification.origin,
+      requestID: 4,
+    }
+  );
 
-  notifications = await memoryDb.queueTask("getall", {
-    origin: persistedNotification.origin,
-    scope: persistedNotification.origin,
-  });
-  // memoryonly notification must exist in-memory
-  Assert.ok(verifyMemory(notifications, nonPersistedNotification.id));
+  addAndSend(
+    "MemoryNotification:GetAll",
+    "MemoryNotification:GetAll:Return:OK",
+    message => {
+      // memoryonly notification must exist in-memory
+      Assert.ok(verifyMemory(message, nonPersistedNotification.id));
+    },
+    {
+      origin: persistedNotification.origin,
+      scope: persistedNotification.origin,
+      requestID: 5,
+    }
+  );
 });
