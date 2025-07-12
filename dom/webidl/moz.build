@@ -881,6 +881,7 @@ WEBIDL_FILES = [
     "StreamFilter.webidl",
     "StreamFilterDataEvent.webidl",
     "StructuredCloneTester.webidl",
+    "StylePropertyMapReadOnly.webidl",
     "StyleSheet.webidl",
     "StyleSheetList.webidl",
     "SubtleCrypto.webidl",
