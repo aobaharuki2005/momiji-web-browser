@@ -551,11 +551,7 @@ class HomeFragment : Fragment() {
             listenForMicrosurveyMessage(requireContext())
         }
 
-        if (requireContext().settings().enableComposeHomepage) {
-            initComposeHomepage()
-        } else {
-            binding.homepageView.isVisible = false
-        }
+        initComposeHomepage()
 
         FxNimbus.features.homescreen.recordExposure()
 
@@ -905,8 +901,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun initComposeHomepage() {
-        binding.homepageView.isVisible = true
-
         binding.homepageView.apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
 
