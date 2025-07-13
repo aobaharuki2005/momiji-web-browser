@@ -564,7 +564,6 @@ class HomeFragment : Fragment() {
             binding.homepageView.isVisible = false
             binding.sessionControlRecyclerView.isVisible = true
             sessionControlView = SessionControlView(
-                containerView = binding.sessionControlRecyclerView,
                 interactor = sessionControlInteractor,
             )
 
