@@ -78,7 +78,6 @@ class AssistIntentProcessorTest {
                 NavGraphDirections.actionGlobalHome(
                     sessionToDelete = null,
                     sessionToStartSearchFor = null,
-                    scrollToCollection = false,
                     focusOnAddressBar = true,
                     searchAccessPoint = MetricsUtils.Source.NONE,
                 ),
