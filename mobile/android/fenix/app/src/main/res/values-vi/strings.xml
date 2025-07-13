@@ -64,6 +64,8 @@
   -->
   <string name="private_browsing_placeholder_description_2" moz:removedIn="141" tools:ignore="UnusedResources">%1$s xóa lịch sử tìm kiếm và duyệt web của bạn khỏi các thẻ riêng tư khi bạn đóng chúng hoặc thoát khỏi ứng dụng. Mặc dù điều này không làm cho bạn ẩn danh với các trang web hoặc nhà cung cấp dịch vụ internet của bạn, nhưng nó giúp bạn dễ dàng giữ những gì bạn làm trực tuyến riêng tư với bất kỳ ai khác sử dụng thiết bị này.</string>
   <string name="private_browsing_common_myths">Những lầm tưởng phổ biến về duyệt web riêng tư</string>
+  <!-- Text to be announced by the accessibility service to inform the user that the private browsing mode is currently active. -->
+  <string name="private_browsing_a11y_session_announcement">Phiên duyệt web riêng tư</string>
   <!--
     True Private Browsing Mode
 
@@ -343,6 +345,10 @@
   <string name="browser_menu_back_button_content_description" moz:removedIn="141" tools:ignore="UnusedResources">Quay lại menu chính</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
   <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">Đóng bảng menu chính</string>
+  <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
+  <string name="browser_close_main_menu_handlebar_content_description">Đóng menu</string>
+  <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
+  <string name="browser_main_menu_content_description_navigation_header">Điều hướng</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">Trợ giúp</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
@@ -419,6 +425,10 @@
   <string name="browser_menu_default_banner_subtitle">Chỉ mất vài giây. Có thể thay đổi bất cứ lúc nào.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Bỏ qua</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
+  <string name="browser_menu_default_banner_dismiss_promotion">Bỏ qua quảng cáo</string>
+  <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
+  <string name="browser_menu_recommended_extensions_content_description">Thông tin thêm</string>
   <!--
     Menu "contextual feature recommendation" (CFR)
 
@@ -1230,6 +1240,8 @@
   <string name="exceptions_empty_message_learn_more_link">Tìm hiểu thêm</string>
   <!-- Preference switch for usage and technical data collection -->
   <string name="preference_usage_data_2">Gửi dữ liệu kỹ thuật và tương tác</string>
+  <!-- Preference switch for usage and technical learn more link in new compose -->
+  <string name="preference_usage_data_learn_more_2">Tìm hiểu thêm về dữ liệu kỹ thuật</string>
   <!-- Preference switch for usage and technical learn more link -->
   <string name="preference_usage_data_learn_more" tools:ignore="UnusedResources" moz:removedIn="141">Tìm hiểu thêm</string>
   <!-- Preference description for marketing data collection. Note: The words "Firefox" should NOT be translated -->
@@ -1242,6 +1254,16 @@
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Tự động gửi báo cáo sự cố</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Điều này giúp chúng tôi chẩn đoán và khắc phục sự cố với trình duyệt. Báo cáo có thể bao gồm dữ liệu cá nhân hoặc nhạy cảm.</string>
+  <!-- Text for sumo link to learn more about crash reports in data collection screen -->
+  <string name="preferences_crashes_learn_more">Tìm hiểu thêm về báo cáo sự cố</string>
+  <!-- Title Headers for data collection settings screen -->
+  <string name="crash_reports_data_category">Trình báo cáo lỗi</string>
+  <string name="usage_data_category">Dữ liệu sử dụng</string>
+  <string name="studies_data_category">Nghiên cứu</string>
+  <string name="technical_data_category">Dữ liệu kỹ thuật</string>
+  <string name="crash_reporting_description">Báo cáo sự cố cho phép chúng tôi chẩn đoán và khắc phục sự cố với trình duyệt. Báo cáo có thể bao gồm dữ liệu cá nhân hoặc dữ liệu nhạy cảm.</string>
+  <!-- Section title for campaign measurement in data collections screen -->
+  <string name="preferences_marketing_data_title">Đo lường chiến dịch</string>
   <!-- Preference switch for campaign measurement data (marketing data) collection -->
   <string name="preferences_marketing_data_2">Dữ liệu đo lường chiến dịch</string>
   <!--
@@ -1709,7 +1731,7 @@
   -->
   <string name="webcompat_reporter_screen_title">Báo cáo trang web bị hỏng</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description">Giúp %1$s tốt hơn cho mọi người. Nhân viên Mozilla sử dụng thông tin bạn gửi để khắc phục sự cố trang web.</string>
+  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Giúp %1$s tốt hơn cho mọi người. Nhân viên Mozilla sử dụng thông tin bạn gửi để khắc phục sự cố trang web.</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1717,7 +1739,7 @@
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">Cái gì bị hỏng?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason">Chọn lý do</string>
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Chọn lý do</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Hãy chọn một nguyên nhân</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -1732,6 +1754,8 @@
   <string name="webcompat_reporter_success_snackbar_text">Báo cáo của bạn đã được gửi</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text">Đóng</string>
+  <!-- Placeholder text for the description field to prompt the user on what they should type. -->
+  <string name="webcompat_reporter_problem_description_placeholder_text">Chuyện gì đã xảy ra? Chuyện gì đáng lẽ phải xảy ra?</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -2659,6 +2683,14 @@
   <string name="login_detail_menu_edit_button">Chỉnh sửa</string>
   <!-- Delete text for the login detail menu delete button -->
   <string name="login_detail_menu_delete_button">Xóa</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the add login view. -->
+  <string name="add_login_navigate_back_button_content_description">Điều hướng quay lại</string>
+  <!-- Content description, used by tools like screenreaders, to press on the save new login button. -->
+  <string name="add_login_save_new_login_button_content_description">Lưu thông tin đăng nhập mới</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the edit login view. -->
+  <string name="edit_login_navigate_back_button_content_description">Điều hướng quay lại</string>
+  <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
+  <string name="edit_login_button_content_description">Chỉnh sửa thông tin đăng nhập</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Mở trang web trong trình duyệt</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -2952,6 +2984,12 @@
   <string name="synced_tabs_expand_group">Mở rộng nhóm thẻ đã đồng bộ hóa</string>
   <!-- Content description for collapsing a group of synced tabs. -->
   <string name="synced_tabs_collapse_group">Thu gọn nhóm thẻ đã đồng bộ hóa</string>
+  <!--
+    Top Sites
+
+    Title text displayed for the shortcuts home screen section.
+  -->
+  <string name="homepage_shortcuts_title">Lối tắt</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Đã đạt đến giới hạn lối tắt</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -3368,9 +3406,9 @@
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">Trình chống theo dõi nâng cao</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
-  <string name="protection_panel_etp_toggle_enabled_description">Nếu có gì đó bị hỏng trên trang web này, hãy thử tắt trình chống.</string>
+  <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Nếu có gì đó bị hỏng trên trang web này, hãy thử tắt trình chống.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
-  <string name="protection_panel_etp_toggle_disabled_description">Trình chống đã TẮT. Chúng tôi khuyên bạn nên bật lại.</string>
+  <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Trình chống đã TẮT. Chúng tôi khuyên bạn nên bật lại.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3379,7 +3417,7 @@
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">Không tìm thấy trình theo dõi</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
-  <string name="protection_panel_privacy_and_security_settings">Cài đặt quyền riêng tư và bảo mật</string>
+  <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Cài đặt quyền riêng tư và bảo mật</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">Quyền hạn</string>
   <!--

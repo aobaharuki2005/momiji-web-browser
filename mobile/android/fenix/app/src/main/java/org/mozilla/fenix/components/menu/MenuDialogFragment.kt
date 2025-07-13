@@ -429,10 +429,10 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
 
                     val contentState: Route by remember { mutableStateOf(initRoute) }
 
-                    var shouldShowDefaultBrowserBanner by
-                    remember { mutableStateOf(settings.shouldShowDefaultBrowserBanner) }
+                    var shouldShowMenuBanner by
+                    remember { mutableStateOf(settings.shouldShowMenuBanner) }
 
-                    var showBanner = shouldShowDefaultBrowserBanner && !defaultBrowser
+                    var showBanner = shouldShowMenuBanner && !defaultBrowser
 
                     BackHandler {
                         this@MenuDialogFragment.dismissAllowingStateLoss()
@@ -551,13 +551,14 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                         store.dispatch(MenuAction.FindInPage)
                                     },
                                     onBannerClick = {
+                                        store.dispatch(MenuAction.MenuBanner)
                                         (context as? Activity)?.openSetDefaultBrowserOption()
                                         showBanner = false
-                                        shouldShowDefaultBrowserBanner = false
+                                        shouldShowMenuBanner = false
                                     },
                                     onBannerDismiss = {
-                                        settings.shouldShowDefaultBrowserBanner = false
-                                        shouldShowDefaultBrowserBanner = false
+                                        store.dispatch(MenuAction.DismissMenuBanner)
+                                        shouldShowMenuBanner = false
                                     },
                                     onExtensionsMenuClick = {
                                         if (allWebExtensionsDisabled || isExtensionsProcessDisabled) {

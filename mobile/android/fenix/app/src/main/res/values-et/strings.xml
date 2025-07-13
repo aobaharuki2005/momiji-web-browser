@@ -965,7 +965,7 @@
   -->
   <string name="webcompat_reporter_screen_title">Katkisest saidist teavitamine</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description">Aita muuta %1$s kõigi jaoks paremaks. Mozilla töötajad kasutavad sinu saadetud teavet veebisaidi probleemide lahendamiseks.</string>
+  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Aita muuta %1$s kõigi jaoks paremaks. Mozilla töötajad kasutavad sinu saadetud teavet veebisaidi probleemide lahendamiseks.</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -973,7 +973,7 @@
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">Mis on katki?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason">Vali põhjus</string>
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Vali põhjus</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Palun vali põhjus</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
