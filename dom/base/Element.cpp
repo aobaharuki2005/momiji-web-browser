@@ -113,6 +113,7 @@
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/dom/StylePropertyMapReadOnly.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/dom/TrustedHTML.h"
 #include "mozilla/dom/TrustedTypesConstants.h"
@@ -5347,6 +5348,16 @@ void Element::GetHTML(const GetHTMLOptions& aOptions, nsAString& aResult) {
         this, true, aResult, aOptions.mSerializableShadowRoots,
         aOptions.mShadowRoots);
   }
+}
+
+StylePropertyMapReadOnly* Element::ComputedStyleMap() {
+  nsDOMSlots* slots = DOMSlots();
+
+  if (!slots->mComputedStyleMap) {
+    slots->mComputedStyleMap = MakeRefPtr<StylePropertyMapReadOnly>(this);
+  }
+
+  return slots->mComputedStyleMap;
 }
 
 bool Element::Translate() const {

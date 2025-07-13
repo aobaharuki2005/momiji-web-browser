@@ -140,6 +140,7 @@ class PopoverData;
 class Promise;
 class Sanitizer;
 class ShadowRoot;
+class StylePropertyMapReadOnly;
 class TrustedHTMLOrString;
 class UnrestrictedDoubleOrKeyframeAnimationOptions;
 template <typename T>
@@ -1716,6 +1717,8 @@ class Element : public FragmentOrElement {
                              ErrorResult& aError);
 
   void GetHTML(const GetHTMLOptions& aOptions, nsAString& aResult);
+
+  StylePropertyMapReadOnly* ComputedStyleMap();
 
   //----------------------------------------
 

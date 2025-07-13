@@ -70,4 +70,9 @@ nsTArray<RefPtr<CSSStyleValue>> StylePropertyMapReadOnly::GetValueAtIndex(
 
 // end of StylePropertyMapReadOnly Web IDL implementation
 
+size_t StylePropertyMapReadOnly::SizeOfIncludingThis(
+    MallocSizeOf aMallocSizeOf) const {
+  return aMallocSizeOf(this);
+}
+
 }  // namespace mozilla::dom
