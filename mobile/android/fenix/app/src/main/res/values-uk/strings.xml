@@ -34,6 +34,8 @@
   <string name="no_private_tabs_description">Тут зʼявлятимуться ваші приватні вкладки.</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">Вибрано %1$d</string>
+  <!-- Tab tray multi select title in app bar when no tabs are selected -->
+  <string name="tab_tray_multi_select_title_empty">Виберіть вкладки</string>
   <!-- Label of button in create collection dialog for creating a new collection -->
   <string name="tab_tray_add_new_collection">Додати нову збірку</string>
   <!-- Label of editable text in create collection dialog for naming a new collection -->
@@ -875,6 +877,8 @@
   <string name="preferences_theme">Тема</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">Домівка</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">Піктограма програми</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Жести</string>
   <!-- Preference for settings related to visual options -->
@@ -1308,6 +1312,12 @@
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Розширена</string>
   <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">Виберіть піктограму програми</string>
+  <!--
     Theme Preferences
 
     Preference for using light theme
@@ -1470,6 +1480,13 @@
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Докладніше</string>
   <!--
+    Sessions
+
+    Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs
+  -->
+  <string name="tabs_header_normal_tabs_counter_title">Відкриті звичайні вкладки: %1$s. Торкніться, щоб перемкнути.</string>
+  <!--
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
@@ -1479,6 +1496,12 @@
     The %1$s will be replaced by the number of opened synced tabs
   -->
   <string name="tabs_header_synced_tabs_counter_title">Відкриті синхронізовані вкладки: %1$s. Торкніться, щоб перемкнути вкладку.</string>
+  <!-- Text for the tabs header private tabs -->
+  <string name="tabs_header_private_tabs_title">Приватні</string>
+  <!-- Text for the tabs header normal tabs -->
+  <string name="tabs_header_normal_tabs_title">Вкладки</string>
+  <!-- Text for the tabs header synced tabs -->
+  <string name="tabs_header_synced_tabs_title">Синхронізовані</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Додати вкладку</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1730,6 +1753,10 @@
   <string name="webcompat_reporter_screen_title">Повідомити про пошкоджений сайт</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Допоможіть зробити %1$s кращим для всіх. Співробітники Mozilla використовують інформацію, яку ви надсилаєте, для усунення проблем з вебсайтами.</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description_2">Ваш звіт допомагає нам проаналізувати й усунути проблеми в %1$s, щоб зробити його кращим для всіх. Докладніше</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">Докладніше</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1738,6 +1765,8 @@
   <string name="webcompat_reporter_label_whats_broken_2">Що не так?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Виберіть причину</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">Виберіть причину</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Виберіть причину</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -2248,6 +2277,8 @@
   <string name="preference_accessibility_text_size_summary">Зміна розміру тексту на вебсайтах</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">Розмір шрифту</string>
+  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
+  <string name="a11y_preference_accessibility_font_size_percentage">%d %%.</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">Автоматичний розмір шрифту</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -2379,6 +2410,10 @@
   <string name="preference_enhanced_tracking_protection_strict">Надійний</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">Кращий захист від стеження і швидкодія, але деякі сайти можуть працювати неправильно.</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">Дозволити %1$s автоматично застосовувати винятки для запобігання збоям у роботі вебсайтів.</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">Також автоматично застосовувати винятки, необхідні для виправлення лише незначних проблем та забезпечення доступності зручних функцій.</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Що блокується надійним рівнем захисту від стеження</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -3403,10 +3438,18 @@
   <string name="protection_panel_banner_protected_description">Ви захищені. Якщо ми щось помітимо, то повідомимо вас.</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">Розширений захист від стеження</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned on -->
+  <string name="protection_panel_etp_toggle_on">Увімкнено</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned off -->
+  <string name="protection_panel_etp_toggle_off">Вимкнено</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
   <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Якщо на цьому сайті щось не працює, спробуйте вимкнути захист.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description_2">Якщо на цьому сайті щось не працює, спробуйте вимкнути захист.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
   <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Захист ВИМКНЕНО. Ми пропонуємо ввімкнути його знову.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
+  <string name="protection_panel_etp_toggle_disabled_description_2">Рекомендовано ввімкнути захист від відстеження.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3416,6 +3459,8 @@
   <string name="protection_panel_no_trackers_blocked">Стеження не виявлено</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Налаштування приватності та безпеки</string>
+  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
+  <string name="protection_panel_privacy_and_security_settings_2">Налаштування приватності</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">Дозволи</string>
   <!--
@@ -3625,6 +3670,14 @@
   <string name="debug_drawer_override_region">Перевизначення домашнього та поточного регіону</string>
   <!-- The title of the button for overriding home region permanently. -->
   <string name="debug_drawer_override_home_region_permanently">Перевизначати домашній регіон завжди</string>
+  <!--
+    Add-ons debug tools
+
+    The description of the Add-ons Tools in the Debug Drawer
+  -->
+  <string name="debug_drawer_addons_tools_title">Інструменти додатків</string>
+  <!-- The title of the button used to check for add-on updates. -->
+  <string name="addons_debug_tools_check_for_updates_button">Перевірити оновлення</string>
   <!--
     Messages explaining how to exit fullscreen mode
 

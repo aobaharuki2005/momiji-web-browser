@@ -463,20 +463,28 @@
     %1$s will be replaced by a link using onboarding_first_screen_terms_of_use_link as text
   -->
   <string name="onboarding_first_screen_terms_of_use_text" moz:removedIn="141" tools:ignore="UnusedResources">ਜਾਰੀ ਰੱਖ ਕੇ ਤੁਸੀਂ %1$s ਨਾਲ ਸਹਿਮਤ ਹੁੰਦੇ ਹੋ</string>
+  <!-- %1$s will be replaced by a link using onboarding_first_screen_terms_of_use_link as text -->
+  <string name="onboarding_first_screen_terms_of_use_text_2" tools:ignore="UnusedResources">ਜਾਰੀ ਰੱਖ ਕੇ ਤੁਸੀਂ %1$s ਨਾਲ ਸਹਿਮਤ ਹੁੰਦੇ ਹੋ।</string>
   <!--
     New Onboarding flow first screen 'terms of use link'
 
     Text for the link used in onboarding_first_screen_terms_of_use_text
   -->
   <string name="onboarding_first_screen_terms_of_use_link" moz:removedIn="141" tools:ignore="BrandUsage">Firefox ਵਰਤਣ ਦੀਆਂ ਸ਼ਰਤਾਂ ਹਨ।</string>
+  <!-- Text for the link used in onboarding_first_screen_terms_of_use_text -->
+  <string name="onboarding_first_screen_terms_of_use_link_2" tools:ignore="BrandUsage">Firefox ਵਰਤਣ ਲਈ ਸ਼ਰਤਾਂ</string>
   <!--
     New Onboarding flow first screen 'privacy notice' text
 
     %1$s will be replaced by a link using onboarding_first_screen_privacy_notice_link as text
   -->
   <string name="onboarding_first_screen_privacy_notice_text" moz:removedIn="141" tools:ignore="BrandUsage">Firefox ਤੁਹਾਡੀ ਪਰਦੇਦਾਰੀ ਦੀ ਪਰਵਾਹ ਕਰਦਾ ਹੈ। ਸਾਡੀ %1$s ਬਾਰੇ ਹੋਰ ਜਾਣੋ</string>
+  <!-- %1$s will be replaced by a link using onboarding_first_screen_privacy_notice_link as text -->
+  <string name="onboarding_first_screen_privacy_notice_text_2" tools:ignore="BrandUsage">Firefox ਤੁਹਾਡੀ ਪਰਦੇਦਾਰੀ ਦੀ ਪਰਵਾਹ ਕਰਦਾ ਹੈ। ਸਾਡੀ %1$s ਬਾਰੇ ਹੋਰ ਜਾਣੋ।</string>
   <!-- Text for the link used in onboarding_first_screen_privacy_notice_text -->
   <string name="onboarding_first_screen_privacy_notice_link" moz:removedIn="141" tools:ignore="UnusedResources">ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ।</string>
+  <!-- Text for the link used in onboarding_first_screen_privacy_notice_text -->
+  <string name="onboarding_first_screen_privacy_notice_link_2">ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ</string>
   <!-- New Onboarding flow first screen button label -->
   <string name="onboarding_first_screen_button_agree_and_continue" moz:removedIn="140" tools:ignore="UnusedResources">ਸਹਿਮਤ ਅਤੇ ਜਾਰੀ ਰੱਖੋ</string>
   <!-- New Onboarding flow first screen button label -->

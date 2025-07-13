@@ -1497,11 +1497,11 @@
   -->
   <string name="tabs_header_synced_tabs_counter_title">Pestañas sincronizadas abiertas: %1$s. Tocá para cambiar de pestaña.</string>
   <!-- Text for the tabs header private tabs -->
-  <string name="tabs_header_private_tabs_title">Privado</string>
+  <string name="tabs_header_private_tabs_title">Privadas\u0020</string>
   <!-- Text for the tabs header normal tabs -->
   <string name="tabs_header_normal_tabs_title">Pestañas</string>
   <!-- Text for the tabs header synced tabs -->
-  <string name="tabs_header_synced_tabs_title">Sync</string>
+  <string name="tabs_header_synced_tabs_title">Sincronizadas</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Agregar pestaña</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->

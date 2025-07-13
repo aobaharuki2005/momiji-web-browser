@@ -2410,6 +2410,10 @@
   <string name="preference_enhanced_tracking_protection_strict">Severa</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">Una prutezzione più forte contr’à u spiunagiu è perfurmenze piu rapide, ma certi siti ponu ùn micca funziunà currettamente.</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">Permette à %1$s d’appiecà autumaticamente l’eccezzioni richieste per evità l’interruzzioni maiò di u situ web.</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">Appiecà dinù autumaticamente l’eccezzioni chì sò solu richieste per currege i prublemi minò è rende dispunibule funzioni di cumudità.</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Ciò chì hè bluccatu da a prutezzione severa contr’à u spiunagiu</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->

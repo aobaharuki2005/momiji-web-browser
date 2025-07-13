@@ -34,6 +34,8 @@
   <string name="no_private_tabs_description">プライベートタブがここに表示されます。</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d 個選択</string>
+  <!-- Tab tray multi select title in app bar when no tabs are selected -->
+  <string name="tab_tray_multi_select_title_empty">タブを選択</string>
   <!-- Label of button in create collection dialog for creating a new collection -->
   <string name="tab_tray_add_new_collection">新しいコレクションを追加</string>
   <!-- Label of editable text in create collection dialog for naming a new collection -->
@@ -875,6 +877,8 @@
   <string name="preferences_theme">テーマ</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">ホームページ</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">アプリのアイコン</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">ジェスチャー</string>
   <!-- Preference for settings related to visual options -->
@@ -1308,6 +1312,12 @@
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">展開表示</string>
   <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">アプリアイコンを選択</string>
+  <!--
     Theme Preferences
 
     Preference for using light theme
@@ -1470,6 +1480,13 @@
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">詳細情報</string>
   <!--
+    Sessions
+
+    Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs
+  -->
+  <string name="tabs_header_normal_tabs_counter_title">通常の開いているタブ: %1$s 個。タップしてタブを切り替えます。</string>
+  <!--
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
@@ -1479,6 +1496,12 @@
     The %1$s will be replaced by the number of opened synced tabs
   -->
   <string name="tabs_header_synced_tabs_counter_title">同期した開いているタブ: %1$s 個。タップしてタブを切り替えます。</string>
+  <!-- Text for the tabs header private tabs -->
+  <string name="tabs_header_private_tabs_title">プライベート</string>
+  <!-- Text for the tabs header normal tabs -->
+  <string name="tabs_header_normal_tabs_title">タブ</string>
+  <!-- Text for the tabs header synced tabs -->
+  <string name="tabs_header_synced_tabs_title">同期</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">タブを追加</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1730,6 +1753,10 @@
   <string name="webcompat_reporter_screen_title">動作しないサイトを報告</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">%1$s をすべての人にとってより良いものにするためにご協力ください。Mozilla の担当者が、送信された情報を使用してウェブサイトの問題を解決します。</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description_2">ご報告は、%1$s の問題を理解して解決し、すべての人にとって製品をより良くするために役立ちます。詳細情報</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">詳細情報</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1738,6 +1765,8 @@
   <string name="webcompat_reporter_label_whats_broken_2">何が動作しませんか？</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">不具合の対象を選んでください</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">理由を選択してください</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">不具合の対象を選んでください</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -2248,6 +2277,8 @@
   <string name="preference_accessibility_text_size_summary">ウェブサイト上のテキストを拡大または縮小します</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">フォントサイズ</string>
+  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
+  <string name="a11y_preference_accessibility_font_size_percentage">%d %%。</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">フォントサイズを自動調整</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -2379,6 +2410,10 @@
   <string name="preference_enhanced_tracking_protection_strict">厳格</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">トラッキング防止を強力にし、パフォーマンスを高速化します。ただし、一部のサイトが正常に機能しなくなる可能性があります。</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">ウェブサイトの重大な問題を回避するために必要な例外を %1$s が自動的に適用できるようにします。</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">また、軽微な問題を修正し、便利な機能を提供するために必要な例外も自動的に適用します。</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">厳格なトラッキング防止でブロックされるもの</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -3403,10 +3438,18 @@
   <string name="protection_panel_banner_protected_description">現在保護されています。何か問題があればお知らせします。</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">強化型トラッキング防止</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned on -->
+  <string name="protection_panel_etp_toggle_on">オン</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned off -->
+  <string name="protection_panel_etp_toggle_off">オフ</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
   <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">このサイトでの動作がおかしい場合は、保護機能をオフにしてみてください。</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description_2">このサイトでの動作がおかしい場合は、オフにしてみてください。</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
   <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">保護機能がオフになっています。再度オンにすることをおすすめします。</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
+  <string name="protection_panel_etp_toggle_disabled_description_2">追跡防止をオンにすることをお勧めします。</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3416,6 +3459,8 @@
   <string name="protection_panel_no_trackers_blocked">トラッカーが見つかりませんでした</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">プライバシーとセキュリティの設定</string>
+  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
+  <string name="protection_panel_privacy_and_security_settings_2">プライバシー設定</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">許可設定</string>
   <!--
@@ -3625,6 +3670,14 @@
   <string name="debug_drawer_override_region">ホームと現在のリージョンを上書き</string>
   <!-- The title of the button for overriding home region permanently. -->
   <string name="debug_drawer_override_home_region_permanently">ホームリージョンを上書きする</string>
+  <!--
+    Add-ons debug tools
+
+    The description of the Add-ons Tools in the Debug Drawer
+  -->
+  <string name="debug_drawer_addons_tools_title">アドオンツール</string>
+  <!-- The title of the button used to check for add-on updates. -->
+  <string name="addons_debug_tools_check_for_updates_button">更新を確認</string>
   <!--
     Messages explaining how to exit fullscreen mode
 
