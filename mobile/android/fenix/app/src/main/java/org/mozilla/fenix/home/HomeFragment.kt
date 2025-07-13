@@ -38,7 +38,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.appbar.AppBarLayout
-import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.flow.Flow
@@ -47,9 +46,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import mozilla.components.browser.state.selector.normalTabs
-import mozilla.components.browser.state.selector.privateTabs
-import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
@@ -912,7 +908,6 @@ class HomeFragment : Fragment() {
 
         consumeFrom(requireComponents.core.store) {
             toolbarView.updateTabCounter(it)
-            showCollectionsPlaceholder(it)
         }
 
         requireComponents.appStore.state.wasLastTabClosedPrivate?.also {
@@ -1280,18 +1275,6 @@ class HomeFragment : Fragment() {
                 ),
             )
         }
-    }
-
-    private fun showCollectionsPlaceholder(browserState: BrowserState) {
-        val tabCount = if (browsingModeManager.mode.isPrivate) {
-            browserState.privateTabs.size
-        } else {
-            browserState.normalTabs.size
-        }
-
-        // The add_tabs_to_collections_button is added at runtime. We need to search for it in the same way.
-        sessionControlView?.view?.findViewById<MaterialButton>(R.id.add_tabs_to_collections_button)
-            ?.isVisible = tabCount > 0
     }
 
     @VisibleForTesting
