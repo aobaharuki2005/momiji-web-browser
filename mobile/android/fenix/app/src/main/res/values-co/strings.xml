@@ -34,6 +34,8 @@
   <string name="no_private_tabs_description">E vostre unghjette private seranu affissate quì.</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d selezziunatu(i)</string>
+  <!-- Tab tray multi select title in app bar when no tabs are selected -->
+  <string name="tab_tray_multi_select_title_empty">Selezziunà unghjette</string>
   <!-- Label of button in create collection dialog for creating a new collection -->
   <string name="tab_tray_add_new_collection">Creà una nova cullezzione</string>
   <!-- Label of editable text in create collection dialog for naming a new collection -->
@@ -875,6 +877,8 @@
   <string name="preferences_theme">Tema</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">Pagina d’accolta</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">Icona di l’appiecazione</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Mosse</string>
   <!-- Preference for settings related to visual options -->
@@ -1308,6 +1312,12 @@
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Allargatu</string>
   <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">Selezziunà l’icona di l’appiecazione</string>
+  <!--
     Theme Preferences
 
     Preference for using light theme
@@ -1472,6 +1482,11 @@
   <!--
     Sessions
 
+    Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs
+  -->
+  <string name="tabs_header_normal_tabs_counter_title">Unghjette nurmale aperte : %1$s. Picchichjà per cambià d’unghjetta.</string>
+  <!--
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
@@ -1481,6 +1496,12 @@
     The %1$s will be replaced by the number of opened synced tabs
   -->
   <string name="tabs_header_synced_tabs_counter_title">Unghjette sincrunizate aperte : %1$s. Picchichjà per cambià d’unghjetta.</string>
+  <!-- Text for the tabs header private tabs -->
+  <string name="tabs_header_private_tabs_title">Private</string>
+  <!-- Text for the tabs header normal tabs -->
+  <string name="tabs_header_normal_tabs_title">Unghjette</string>
+  <!-- Text for the tabs header synced tabs -->
+  <string name="tabs_header_synced_tabs_title">Sincrunizazione</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Aghjunghje un’unghjetta</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->

@@ -34,6 +34,8 @@
   <string name="no_private_tabs_description">Your private tabs will be shown here.</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d selected</string>
+  <!-- Tab tray multi select title in app bar when no tabs are selected -->
+  <string name="tab_tray_multi_select_title_empty">Select tabs</string>
   <!-- Label of button in create collection dialog for creating a new collection -->
   <string name="tab_tray_add_new_collection">Add new collection</string>
   <!-- Label of editable text in create collection dialog for naming a new collection -->
@@ -64,6 +66,8 @@
   -->
   <string name="private_browsing_placeholder_description_2" moz:removedIn="141" tools:ignore="UnusedResources">%1$s clears your search and browsing history from private tabs when you close them or quit the app. While this doesn’t make you anonymous to websites or your internet service provider, it makes it easier to keep what you do online private from anyone else who uses this device.</string>
   <string name="private_browsing_common_myths">Common myths about private browsing</string>
+  <!-- Text to be announced by the accessibility service to inform the user that the private browsing mode is currently active. -->
+  <string name="private_browsing_a11y_session_announcement">Private browsing session</string>
   <!--
     True Private Browsing Mode
 
@@ -343,6 +347,10 @@
   <string name="browser_menu_back_button_content_description" moz:removedIn="141" tools:ignore="UnusedResources">Back to main menu</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
   <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">Close main menu sheet</string>
+  <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
+  <string name="browser_close_main_menu_handlebar_content_description">Close menu</string>
+  <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
+  <string name="browser_main_menu_content_description_navigation_header">Navigation</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">Help</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
@@ -419,6 +427,10 @@
   <string name="browser_menu_default_banner_subtitle">Takes seconds. Change anytime.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Dismiss</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
+  <string name="browser_menu_default_banner_dismiss_promotion">Dismiss promotion</string>
+  <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
+  <string name="browser_menu_recommended_extensions_content_description">More info</string>
   <!--
     Menu "contextual feature recommendation" (CFR)
 
@@ -865,6 +877,8 @@
   <string name="preferences_theme">Theme</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">Homepage</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">App icon</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Gestures</string>
   <!-- Preference for settings related to visual options -->
@@ -1230,6 +1244,8 @@
   <string name="exceptions_empty_message_learn_more_link">Learn more</string>
   <!-- Preference switch for usage and technical data collection -->
   <string name="preference_usage_data_2">Send technical and interaction data</string>
+  <!-- Preference switch for usage and technical learn more link in new compose -->
+  <string name="preference_usage_data_learn_more_2">Learn more about technical data</string>
   <!-- Preference switch for usage and technical learn more link -->
   <string name="preference_usage_data_learn_more" tools:ignore="UnusedResources" moz:removedIn="141">Learn more</string>
   <!-- Preference description for marketing data collection. Note: The words "Firefox" should NOT be translated -->
@@ -1242,6 +1258,16 @@
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Automatically send crash reports</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">This helps us diagnose and fix issues with the browser. Reports may include personal or sensitive data.</string>
+  <!-- Text for sumo link to learn more about crash reports in data collection screen -->
+  <string name="preferences_crashes_learn_more">Learn more about crash reports</string>
+  <!-- Title Headers for data collection settings screen -->
+  <string name="crash_reports_data_category">Crash Reports</string>
+  <string name="usage_data_category">Usage data</string>
+  <string name="studies_data_category">Studies</string>
+  <string name="technical_data_category">Technical Data</string>
+  <string name="crash_reporting_description">Crash reports allow us to diagnose and fix issues with the browser. Reports may include personal or sensitive data.</string>
+  <!-- Section title for campaign measurement in data collections screen -->
+  <string name="preferences_marketing_data_title">Campaign measurement</string>
   <!-- Preference switch for campaign measurement data (marketing data) collection -->
   <string name="preferences_marketing_data_2">Campaign measurement data</string>
   <!--
@@ -1448,8 +1474,6 @@
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Learn more</string>
   <!--
-    Sessions
-
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
