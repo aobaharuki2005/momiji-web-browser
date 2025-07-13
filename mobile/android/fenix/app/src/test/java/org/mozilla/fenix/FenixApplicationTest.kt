@@ -75,6 +75,8 @@ class FenixApplicationTest {
         browsersCache = mockk(relaxed = true)
         mozillaProductDetector = mockk(relaxed = true)
         browserStore = BrowserStore()
+
+        every { testContext.components.core } returns mockk(relaxed = true)
         every { testContext.components.distributionIdManager } returns DistributionIdManager(
             context = testContext,
             browserStoreProvider = DefaultDistributionBrowserStoreProvider(browserStore),

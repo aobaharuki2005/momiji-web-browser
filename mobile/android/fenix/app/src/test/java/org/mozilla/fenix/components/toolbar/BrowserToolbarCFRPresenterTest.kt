@@ -98,7 +98,7 @@ class BrowserToolbarCFRPresenterTest {
             every { isTabStripEnabled } returns false
         }
 
-        val presenter = createPresenterThatShowsCFRs(
+        val presenter = createPresenter(
             browserStore = browserStore,
             settings = settings,
             isPrivate = false,
@@ -124,7 +124,7 @@ class BrowserToolbarCFRPresenterTest {
             every { isTabStripEnabled } returns true
         }
 
-        val presenter = createPresenterThatShowsCFRs(
+        val presenter = createPresenter(
             browserStore = browserStore,
             settings = settings,
             isPrivate = false,
@@ -149,7 +149,7 @@ class BrowserToolbarCFRPresenterTest {
             every { hasShownTabSwipeCFR } returns false
         }
 
-        val presenter = createPresenterThatShowsCFRs(
+        val presenter = createPresenter(
             browserStore = browserStore,
             settings = settings,
             isPrivate = false,
@@ -163,28 +163,11 @@ class BrowserToolbarCFRPresenterTest {
     }
 
     /**
-     * Creates and return a [spyk] of a [BrowserToolbarCFRPresenter] that can handle actually showing CFRs.
-     */
-    private fun createPresenterThatShowsCFRs(
-        context: Context = mockk {
-            every { isLargeWindow() } returns false
-        },
-        anchor: View = mockk(),
-        browserStore: BrowserStore = mockk(),
-        settings: Settings = mockk {
-            every { openTabsCount } returns 5
-        },
-        toolbar: BrowserToolbar = mockk(),
-        isPrivate: Boolean = false,
-        sessionId: String? = null,
-    ) = spyk(createPresenter(context, anchor, browserStore, settings, toolbar, sessionId, isPrivate))
-
-    /**
      * Create and return a [BrowserToolbarCFRPresenter] with all constructor properties mocked by default.
-     * Calls to show a CFR will fail. If this behavior is needed to work use [createPresenterThatShowsCFRs].
      */
     private fun createPresenter(
         context: Context = mockk {
+            every { isLargeWindow() } returns false
             every { getColor(any()) } returns 0
         },
         anchor: View = mockk(relaxed = true),
@@ -196,6 +179,7 @@ class BrowserToolbarCFRPresenterTest {
             every { hasShownTabSwipeCFR } returns false
         },
         toolbar: BrowserToolbar = mockk {
+            every { findViewById<View>(R.id.mozac_browser_toolbar_background) } returns anchor
             every { findViewById<View>(R.id.mozac_browser_toolbar_site_info_indicator) } returns anchor
             every { findViewById<View>(R.id.mozac_browser_toolbar_page_actions) } returns anchor
             every { findViewById<View>(R.id.mozac_browser_toolbar_navigation_actions) } returns anchor
@@ -211,7 +195,10 @@ class BrowserToolbarCFRPresenterTest {
             customTabId = sessionId,
             isPrivate = isPrivate,
         ),
-    )
+    ) {
+        every { showCookieBannersCFR() } just Runs
+        every { showTabSwipeCFR() } just Runs
+    }
 
     private fun createBrowserStore(
         tab: TabSessionState? = null,
