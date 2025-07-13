@@ -1,5 +1,5 @@
 let { MemoryNotificationDB } = ChromeUtils.importESModule(
-  "moz-src:///dom/notification/MemoryNotificationDB.sys.mjs"
+  "resource://gre/modules/MemoryNotificationDB.sys.mjs"
 );
 
 add_task(async function test_delete_all() {
