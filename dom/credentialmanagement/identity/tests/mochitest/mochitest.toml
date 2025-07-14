@@ -54,6 +54,8 @@ support-files = [
   "server_continue_on_override_idtoken.sjs",
   "server_continue_on_reject_accounts.sjs",
   "server_continue_on_reject_idtoken.sjs",
+  "server_is_auto_selected_accounts.sjs",
+  "server_is_auto_selected_idtoken.sjs",
   "web-identity-multiple-config",
   "web-identity-multiple-config^headers^",
 ]
@@ -83,6 +85,8 @@ support-files = [
 ["test_idtoken_error.html"]
 
 ["test_idtoken_redirect.html"]
+
+["test_is_auto_selected.html"]
 
 ["test_login_hint_filter.html"]
 

@@ -543,7 +543,7 @@ RefPtr<GetIPCIdentityCredentialPromise> CreateCredentialDuringDiscovery(
               if (reauthenticatingAccount.isSome()) {
                 return GetAccountPromise::CreateAndResolve(
                     std::make_tuple(aManifest,
-                                    reauthenticatingAccount.extract()),
+                                    reauthenticatingAccount.extract(), true),
                     __func__);
               }
             }
@@ -563,12 +563,13 @@ RefPtr<GetIPCIdentityCredentialPromise> CreateCredentialDuringDiscovery(
           GetCurrentSerialEventTarget(), __func__,
           [argumentPrincipal, aProvider, relyingParty](
               const std::tuple<IdentityProviderAPIConfig,
-                               IdentityProviderAccount>& promiseResult) {
+                               IdentityProviderAccount, const bool>& promiseResult) {
             IdentityProviderAPIConfig currentManifest;
             IdentityProviderAccount account;
-            std::tie(currentManifest, account) = promiseResult;
+            bool isAutoSelected;
+            std::tie(currentManifest, account, isAutoSelected) = promiseResult;
             return FetchToken(argumentPrincipal, relyingParty, aProvider,
-                              currentManifest, account);
+                              currentManifest, account, isAutoSelected);
           },
           [](nsresult error) {
             return GetTokenPromise::CreateAndReject(error, __func__);
@@ -778,7 +779,9 @@ RefPtr<GetTokenPromise> FetchToken(
     nsIPrincipal* aPrincipal, WebIdentityParent* aRelyingParty,
     const IdentityProviderRequestOptions& aProvider,
     const IdentityProviderAPIConfig& aManifest,
-    const IdentityProviderAccount& aAccount) {
+    const IdentityProviderAccount& aAccount,
+    const bool isAutoSelected
+  ) {
   MOZ_ASSERT(XRE_IsParentProcess());
   // Build the URL
   nsCOMPtr<nsIURI> baseURI;
@@ -807,7 +810,8 @@ RefPtr<GetTokenPromise> FetchToken(
     bodyValue.Set("nonce"_ns, aProvider.mNonce.Value());
   }
   bodyValue.Set("disclosure_text_shown"_ns, "false"_ns);
-  bodyValue.Set("is_auto_selected"_ns, "false"_ns);
+  nsCString serializedIsAutoSelected = isAutoSelected ? "true"_ns : "false"_ns;
+  bodyValue.Set("is_auto_selected"_ns, serializedIsAutoSelected);
   nsAutoCString bodyCString;
   bodyValue.Serialize(bodyCString, true);
 
@@ -1184,7 +1188,7 @@ RefPtr<GetAccountPromise> PromptUserToSelectAccount(
         }
         const IdentityProviderAccount& resolved =
             aAccounts.mAccounts.Value().ElementAt(result);
-        resultPromise->Resolve(std::make_tuple(aManifest, resolved), __func__);
+        resultPromise->Resolve(std::make_tuple(aManifest, resolved, false), __func__);
       },
       [resultPromise](JSContext*, JS::Handle<JS::Value> aValue, ErrorResult&) {
         resultPromise->Reject(

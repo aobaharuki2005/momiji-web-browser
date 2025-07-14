@@ -8,6 +8,7 @@
 let test_path = "/tests/dom/credentialmanagement/identity/tests/mochitest";
 
 async function setupTest(testName, idp_origin = "https://example.net") {
+  await clearIdentityCredentialStorage();
   let idp_api = idp_origin + test_path;
   ok(
     window.location.pathname.includes(testName),
@@ -20,4 +21,14 @@ async function setupTest(testName, idp_origin = "https://example.net") {
   window.open(`${idp_api}/helper_set_cookie.html`, "_blank");
   await focusPromise;
   return fetchPromise;
+}
+
+async function clearIdentityCredentialStorage() {
+  // Clear the storage before running test
+  return SpecialPowers.spawnChrome([], () => {
+    let icStorageService = Cc[
+      "@mozilla.org/browser/identity-credential-storage-service;1"
+    ].getService(Ci.nsIIdentityCredentialStorageService);
+    icStorageService.clear();
+  });
 }
