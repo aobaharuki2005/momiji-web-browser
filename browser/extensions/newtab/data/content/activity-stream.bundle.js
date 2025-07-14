@@ -301,6 +301,13 @@ for (const type of [
   "WEATHER_UPDATE",
   "WEBEXT_CLICK",
   "WEBEXT_DISMISS",
+  "WIDGETS_LISTS_SET",
+  "WIDGETS_LISTS_UPDATE",
+  "WIDGETS_TIMER_END",
+  "WIDGETS_TIMER_PAUSE",
+  "WIDGETS_TIMER_RESET",
+  "WIDGETS_TIMER_SET_DURATION",
+  "WIDGETS_TIMER_START",
 ]) {
   actionTypes[type] = type;
 }
@@ -7817,6 +7824,17 @@ const INITIAL_STATE = {
     suggestions: [],
     collapsed: false,
   },
+  // Widgets
+  ListsWidget: {},
+  TimerWidget: {
+    // Timer duration set by user
+    duration: 0,
+    // Time that the timer was started
+    startTime: null,
+    // Calculated when a user pauses the timer
+    remaining: 0,
+    isRunning: false,
+  },
 };
 
 function App(prevState = INITIAL_STATE.App, action) {
@@ -8715,6 +8733,50 @@ function TrendingSearch(prevState = INITIAL_STATE.TrendingSearch, action) {
   }
 }
 
+function TimerWidget(prevState = INITIAL_STATE.TimerWidget, action) {
+  switch (action.type) {
+    case actionTypes.WIDGETS_TIMER_SET:
+      return { ...action.data };
+    case actionTypes.WIDGETS_TIMER_SET_DURATION:
+      return {
+        ...prevState,
+        duration: action.data,
+        remaining: action.data,
+      };
+    case actionTypes.WIDGETS_TIMER_START:
+      return { ...prevState, startTime: Date.now(), isRunning: true };
+    case actionTypes.WIDGETS_TIMER_PAUSE:
+      if (prevState.isRunning) {
+        const elapsed = Date.now() - prevState.startTime;
+        return {
+          ...prevState,
+          remaining: prevState.duration - elapsed,
+          isRunning: false,
+          startTime: null,
+        };
+      }
+      break;
+    case actionTypes.WIDGETS_TIMER_RESET:
+      return {
+        ...prevState,
+        isRunning: false,
+        startTime: null,
+        remaining: prevState.duration,
+      };
+    default:
+      return prevState;
+  }
+}
+
+function ListsWidget(prevState = INITIAL_STATE.ListsWidget, action) {
+  switch (action.type) {
+    case actionTypes.WIDGETS_LISTS_UPDATE:
+      return action.data;
+    default:
+      return prevState;
+  }
+}
+
 const reducers = {
   TopSites,
   App,
@@ -8729,6 +8791,8 @@ const reducers = {
   InferredPersonalization,
   DiscoveryStream,
   Search,
+  TimerWidget,
+  ListsWidget,
   TrendingSearch,
   Wallpapers,
   Weather,
