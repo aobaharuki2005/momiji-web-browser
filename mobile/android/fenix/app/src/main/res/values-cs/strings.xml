@@ -1480,6 +1480,13 @@
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Zjistit více</string>
   <!--
+    Sessions
+
+    Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs
+  -->
+  <string name="tabs_header_normal_tabs_counter_title">Normální otevřené panely: %1$s. Klepnutím přepnete panely.</string>
+  <!--
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
@@ -1746,6 +1753,8 @@
   <string name="webcompat_reporter_screen_title">Nahlásit nefunkční stránku</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Pomozte zlepšit %1$s pro všechny. Zaměstnanci Mozilly používají vámi zaslané informace k řešení problémů s webovými stránkami.</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description_2">Vaše hlášení nám pomůže porozumět chybám v aplikaci %1$s a opravit je tak, aby byl pro všechny co nejlepší. Zjistit více</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Zjistit více</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -2401,6 +2410,10 @@
   <string name="preference_enhanced_tracking_protection_strict">Přísná</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">Silnější ochrana, která zlepšuje rychlost načítání stránek. Může ale omezit jejich fungování.</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">Povolit aplikaci %1$s automaticky aplikovat výjimky potřebné k zabránění rozsáhlému rozbití webových stránek.</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">Automaticky také aplikovat výjimky, které jsou potřeba jen k opravě menších problémů a zpřístupnění komfortních funkcí.</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Co blokuje přísné nastavení ochrany proti sledování</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -2695,6 +2708,8 @@
   <string name="saved_login_clear_username">Vymazat uživatelské jméno</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">Vymazat adresu serveru</string>
+  <!-- Content description, used by tools like screenreaders, for the 3 dots button that shows commands related to the currently displayed login (edit, delete). -->
+  <string name="login_detail_menu_button_content_description">Nabídka detailů pro přihlášení</string>
   <!-- Content description, used by tools like screenreaders, to go back and exit the login detail view. -->
   <string name="login_details_navigate_back_button_content_description">Návrat zpět</string>
   <!-- Edit text for the login detail menu edit button -->

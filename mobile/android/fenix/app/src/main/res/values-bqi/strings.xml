@@ -34,6 +34,8 @@
   <string name="no_private_tabs_description">بلگه یل سیخومی ایسا من ایچو نشووݩ داڌه ابۊن.</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d بلگه پسند وابی</string>
+  <!-- Tab tray multi select title in app bar when no tabs are selected -->
+  <string name="tab_tray_multi_select_title_empty">پسند بلگه یل</string>
   <!-- Label of button in create collection dialog for creating a new collection -->
   <string name="tab_tray_add_new_collection">ٱووردن کتن نۊ</string>
   <!-- Label of editable text in create collection dialog for naming a new collection -->
@@ -1478,6 +1480,13 @@
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">قلوه دووسته بۊین</string>
   <!--
+    Sessions
+
+    Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs
+  -->
+  <string name="tabs_header_normal_tabs_counter_title">بلگه یل مئمۊلی واز: %1$s. سی آشت بلگه یل بزنین ریس.</string>
+  <!--
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
@@ -1487,6 +1496,12 @@
     The %1$s will be replaced by the number of opened synced tabs
   -->
   <string name="tabs_header_synced_tabs_counter_title">بلگه یل هوم گوم وابیڌه واز: %1$s. سی جا گورویی بلگه یل بزنین ریس.</string>
+  <!-- Text for the tabs header private tabs -->
+  <string name="tabs_header_private_tabs_title">سیخومی</string>
+  <!-- Text for the tabs header normal tabs -->
+  <string name="tabs_header_normal_tabs_title">بلگه یل</string>
+  <!-- Text for the tabs header synced tabs -->
+  <string name="tabs_header_synced_tabs_title">هوم گوم کردن</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">ٱووردن بلگه</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -2395,6 +2410,10 @@
   <string name="preference_enhanced_tracking_protection_strict">سخت گرووه</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">زفت وابیڌن ز رڌجۊرا زۊردار تر وو کارایی زیتر ، ٱما ی قرد ز وبگه یل گاشڌ و خۊوی کار نکونن.</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">بهلین %1$s و جۊر خوتکار استسنایل لازوم ن سی جلاوگری ز خراوی بیشتر وبگه یل ائمال کونه.\u0020</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">هومچیناکو استسنایلی ن ک تینا سی رفع موشکلا خراوی وو من دسرس ناهاڌن ویژیی یل رفاهی لازوم هڌن، و جۊر خوتکار ائمال کۊنین.</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">اۊ چیه ک و دست زفت وابیڌن رڌجۊری سخت گرووه مسدۊد وابیڌه</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->

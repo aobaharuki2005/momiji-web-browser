@@ -34,6 +34,8 @@
   <string name="no_private_tabs_description">നിങ്ങളുടെ സ്വകാര്യ ടാബുകൾ ഇവിടെ കാണിക്കും.</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d തിരഞ്ഞെടുത്തിരിക്കുന്നു</string>
+  <!-- Tab tray multi select title in app bar when no tabs are selected -->
+  <string name="tab_tray_multi_select_title_empty">ടാബുകൾ തിരഞ്ഞെടുക്കുക</string>
   <!-- Label of button in create collection dialog for creating a new collection -->
   <string name="tab_tray_add_new_collection">പുതിയ ശേഖരം ചേർക്കുക</string>
   <!-- Label of editable text in create collection dialog for naming a new collection -->
@@ -64,6 +66,8 @@
   -->
   <string name="private_browsing_placeholder_description_2" moz:removedIn="141" tools:ignore="UnusedResources">%1$s നിങ്ങളുടെ തിരയലും ബ്രൗസിംഗ് ചരിത്രവും സ്വകാര്യ ടാബുകൾ അടയ്ക്കുമ്പോൾ അല്ലെങ്കിൽ അപ്ലിക്കേഷനിൽ നിന്ന് പുറത്തുകടക്കുമ്പോൾ അവ മായ്‌ക്കുന്നു. ഇത് നിങ്ങളെ വെബ്‌സൈറ്റുകളിലേക്കോ ഇൻറർനെറ്റ് സേവന ദാതാവിലേക്കോ അജ്ഞാതനാക്കില്ലെങ്കിലും, ഈ ഉപകരണം ഉപയോഗിക്കുന്ന മറ്റെതൊരാളിൽ നിന്നും നിങ്ങൾ ഓൺലൈനിൽ ചെയ്യുന്നത് സ്വകാര്യമായി സൂക്ഷിക്കുന്നത് എളുപ്പമാക്കുന്നു.</string>
   <string name="private_browsing_common_myths">സ്വകാര്യ തിരച്ചിലിനെക്കുറിച്ചുള്ള പൊതുവായ തെറ്റിദ്ധാരണങ്ങൾ</string>
+  <!-- Text to be announced by the accessibility service to inform the user that the private browsing mode is currently active. -->
+  <string name="private_browsing_a11y_session_announcement">സ്വകാര്യ തിരച്ചിൽ നേരം</string>
   <!--
     True Private Browsing Mode
 
@@ -313,7 +317,7 @@
   <!-- Button shown on the home page that opens the Customize home settings -->
   <string name="browser_menu_customize_home_1">ആമുഖത്താൾ ഇഷ്ടാനുസൃതമാക്കുക</string>
   <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
-  <string name="browser_menu_sign_in">പ്രവേശിക്കൽ ചെയ്യുക</string>
+  <string name="browser_menu_sign_in">പ്രവേശിക്കുക</string>
   <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
   <string name="browser_menu_sign_in_caption" moz:removedIn="141" tools:ignore="UnusedResources">ഒളിവാക്കുകളും ടാബുകളും എന്നിവയും മറ്റും സമന്വയിപ്പിക്കുക</string>
   <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
@@ -321,7 +325,7 @@
   <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
   <string name="browser_menu_sign_in_caption_3">ഒളിവാക്കുകളും അടയാളക്കുറിപ്പുകളും എന്നിവയും മറ്റും സമന്വയിപ്പിക്കുക</string>
   <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
-  <string name="browser_menu_sign_back_in_to_sync">സമന്വയിപ്പിക്കാനായി പ്രവേശിക്കൽ ചെയ്യുക</string>
+  <string name="browser_menu_sign_back_in_to_sync">സമന്വയിപ്പിക്കാനായി പ്രവേശിക്കുക</string>
   <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
   <string name="browser_menu_syncing_paused_caption">സമന്വയിപ്പിക്കൽ താൽക്കാലികമായി നിർത്തി</string>
   <!-- Browser menu label that creates a private tab -->
@@ -847,6 +851,8 @@
   <string name="preferences_theme">കെട്ടും മട്ടും</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">ആമുഖം</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">പ്രയോഗയടയാളം</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">ആംഗ്യങ്ങൾ</string>
   <!-- Preference for settings related to visual options -->
@@ -1227,11 +1233,17 @@
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">വലുതാക്കിയതു്</string>
   <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">പ്രയോഗ അടയാളം തിരഞ്ഞെടുക്കുക</string>
+  <!--
     Theme Preferences
 
     Preference for using light theme
   -->
-  <string name="preference_light_theme">ഇളം</string>
+  <string name="preference_light_theme">തെളിച്ചം</string>
   <!-- Preference for using dark theme -->
   <string name="preference_dark_theme">ഇരുണ്ടത്</string>
   <!-- Preference for using using dark or light theme automatically set by battery -->
@@ -1389,6 +1401,13 @@
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">കൂടുതലറിയുക</string>
   <!--
+    Sessions
+
+    Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs
+  -->
+  <string name="tabs_header_normal_tabs_counter_title">തുറന്നിരിപ്പുണ്ട സാധാരണ ടാബുകൾ: %1$s. ടാബുമാറാൻ ഞെക്കുക.</string>
+  <!--
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
@@ -1398,6 +1417,12 @@
     The %1$s will be replaced by the number of opened synced tabs
   -->
   <string name="tabs_header_synced_tabs_counter_title">തുറന്നിരിക്കുന്ന സമന്വയിപ്പിച്ച ടാബുകൾ: %1$s. ടാബുകൾ മാറാൻ അമർത്തുക.</string>
+  <!-- Text for the tabs header private tabs -->
+  <string name="tabs_header_private_tabs_title">സ്വകാര്യം</string>
+  <!-- Text for the tabs header normal tabs -->
+  <string name="tabs_header_normal_tabs_title">ടാബുകള്‍</string>
+  <!-- Text for the tabs header synced tabs -->
+  <string name="tabs_header_synced_tabs_title">സമന്വയം</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">ടാബ് ചേര്‍ക്കുക</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1844,7 +1869,7 @@
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
   <string name="bookmark_empty_list_guest_description">താങ്ങൾ തിരയുമ്പോഴു് സൈറ്റുകളെ കരുതിവയ്ക്കുക. മറ്റു് സമന്വയിപ്പിച്ച ഉപകരണങ്ങളിൽ നിന്നു് അടയാളക്കുറിപ്പുകൾ പിടിച്ചുകൊണ്ടുവരാനായി പ്രവേശിക്കുക.</string>
   <!-- Text for the button to navigate to sync authentication -->
-  <string name="bookmark_empty_list_guest_cta">സമന്വയിപ്പിക്കാനായി പ്രവേശിക്കൽ ചെയ്യുക</string>
+  <string name="bookmark_empty_list_guest_cta">സമന്വയിപ്പിക്കാനായി പ്രവേശിക്കുക</string>
   <!-- Description for the bookmark list empty state when you're signed into sync. -->
   <string name="bookmark_empty_list_authenticated_description">താങ്ങൾ തിരയുമ്പോഴു് സൈറ്റുകളെ കരുതിവയ്ക്കുക. മറ്റു് സമന്വയിപ്പിച്ച ഉപകരണങ്ങളിൽ നിന്നു് അടയാളക്കുറിപ്പുകൾ ഞങ്ങൾ കൊണ്ടുവരാം.</string>
   <!-- Description for the bookmark list empty state when you're in an empty folder. -->
@@ -2530,7 +2555,7 @@
   <!-- Hint for search box in passwords list -->
   <string name="preferences_passwords_saved_logins_search_2">ഒളിവാക്കുകൾ തിരയുക</string>
   <!-- Content description for the logins navigation bar back button -->
-  <string name="logins_navigate_back_button_content_description">തിരിച്ചു്</string>
+  <string name="logins_navigate_back_button_content_description">പിന്നോട്ട്</string>
   <!-- The header for the site that a login is for -->
   <string name="preferences_passwords_saved_logins_site">സൈറ്റ്‌</string>
   <!-- The header for the username for a login -->
@@ -3269,6 +3294,8 @@
   <string name="protection_panel_no_trackers_blocked">പിന്തുടർച്ചയന്ത്രങ്ങൾ കണ്ടെത്താൻ കഴിഞ്ഞില്ല</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">സ്വകാര്യതയും സുരക്ഷ ക്രമീകരണങ്ങൾ</string>
+  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
+  <string name="protection_panel_privacy_and_security_settings_2">സ്വകാര്യത ക്രമീകരണങ്ങൾ</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">അനുമതികൾ</string>
   <!--
