@@ -29,6 +29,7 @@ async def test_enabled(client):
     assert not client.find_text(UNSUPPORTED_TEXT)
 
 
+@pytest.mark.skip_platforms("android")  # currently works on Android; see bz1924441#c7
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client):

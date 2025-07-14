@@ -3,7 +3,7 @@ import asyncio
 import pytest
 from webdriver.error import StaleElementReferenceException
 
-URL = "https://www.exploretock.com/city/san-antonio/search?city=San%20Antonio&date=2024-10-22&latlng=29.4241219%2C-98.4936282&size=2&time=18%3A00&type=DINE_IN_EXPERIENCES"
+URL = "https://www.exploretock.com/city/san-antonio/search"
 MOBILE_MAP_BUTTON_CSS = "#maincontent .AvailabilitySearchResults button"
 GOOD_MSG = "Attempted to load a Vector Map, but failed. Falling back to Raster."
 BAD_MSG = "blocked a worker script (worker-src) at blob:https://www.exploretock.com/"

@@ -11,7 +11,9 @@ UNSUPPORTED_CSS = "a[href*='google.com/chrome']"
 
 async def login(client, credentials):
     await client.navigate(URL, wait="none")
-    client.await_css(USERNAME_CSS, is_displayed=True).send_keys(credentials["username"])
+    client.await_css(USERNAME_CSS, is_displayed=True, timeout=60).send_keys(
+        credentials["username"]
+    )
     client.await_css(PASSWORD_CSS, is_displayed=True).send_keys(credentials["password"])
     client.await_css(LOGIN_CSS, is_displayed=True).click()
 

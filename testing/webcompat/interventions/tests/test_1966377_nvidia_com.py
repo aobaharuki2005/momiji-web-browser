@@ -8,12 +8,14 @@ async def is_content_offscreen(client):
     return client.execute_script("return document.body.scrollWidth > window.innerWidth")
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.with_interventions
 async def test_enabled(client):
     assert not await is_content_offscreen(client)
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client):
