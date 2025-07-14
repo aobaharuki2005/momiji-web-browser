@@ -1769,7 +1769,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetHeight() {
                               adjustedValues.TopBottom());
   }
   auto val = MakeRefPtr<nsROCSSPrimitiveValue>();
-  SetValueToSize(val, StylePosition()->GetHeight(StyleDisplay()->mPosition));
+  SetValueToSize(
+      val, StylePosition()->GetHeight(AnchorPosResolutionParams::From(this)));
   return val.forget();
 }
 
@@ -1781,7 +1782,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetWidth() {
                               adjustedValues.LeftRight());
   }
   auto val = MakeRefPtr<nsROCSSPrimitiveValue>();
-  SetValueToSize(val, StylePosition()->GetWidth(StyleDisplay()->mPosition));
+  SetValueToSize(
+      val, StylePosition()->GetWidth(AnchorPosResolutionParams::From(this)));
   return val.forget();
 }
 
@@ -1837,7 +1839,8 @@ bool nsComputedDOMStyle::ShouldHonorMinSizeAutoInAxis(PhysicalAxis aAxis) {
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMinHeight() {
   auto val = MakeRefPtr<nsROCSSPrimitiveValue>();
-  auto minHeight = StylePosition()->GetMinHeight(StyleDisplay()->mPosition);
+  auto minHeight =
+      StylePosition()->GetMinHeight(AnchorPosResolutionParams::From(this));
 
   if (minHeight->IsAuto() &&
       !ShouldHonorMinSizeAutoInAxis(PhysicalAxis::Vertical)) {
@@ -1851,7 +1854,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMinHeight() {
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMinWidth() {
   auto val = MakeRefPtr<nsROCSSPrimitiveValue>();
 
-  auto minWidth = StylePosition()->GetMinWidth(StyleDisplay()->mPosition);
+  auto minWidth =
+      StylePosition()->GetMinWidth(AnchorPosResolutionParams::From(this));
 
   if (minWidth->IsAuto() &&
       !ShouldHonorMinSizeAutoInAxis(PhysicalAxis::Horizontal)) {

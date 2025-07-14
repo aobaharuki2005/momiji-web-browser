@@ -2203,14 +2203,14 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   const auto styleISize =
       aSizeOverrides.mStyleISize
           ? AnchorResolvedSizeHelper::Overridden(*aSizeOverrides.mStyleISize)
-          : stylePos->ISize(aWM, anchorResolutionParams.mPosition);
+          : stylePos->ISize(aWM, anchorResolutionParams);
 
   // TODO(dholbert): if styleBSize is 'stretch' here, we should probably
   // resolve it like we do in nsIFrame::ComputeSize. See bug 1937275.
   const auto styleBSize =
       aSizeOverrides.mStyleBSize
           ? AnchorResolvedSizeHelper::Overridden(*aSizeOverrides.mStyleBSize)
-          : stylePos->BSize(aWM, anchorResolutionParams.mPosition);
+          : stylePos->BSize(aWM, anchorResolutionParams);
   const auto& aspectRatio =
       aSizeOverrides.mAspectRatio ? *aSizeOverrides.mAspectRatio : aAspectRatio;
 
@@ -2330,8 +2330,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
     maxISize = nscoord_MAX;
   }
 
-  const auto minISizeCoord =
-      stylePos->MinISize(aWM, anchorResolutionParams.mPosition);
+  const auto minISizeCoord = stylePos->MinISize(aWM, anchorResolutionParams);
   if (!minISizeCoord->IsAuto() && !isFlexItemInlineAxisMainAxis) {
     minISize =
         ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
@@ -2394,8 +2393,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
     maxBSize = nscoord_MAX;
   }
 
-  const auto minBSizeCoord =
-      stylePos->MinBSize(aWM, anchorResolutionParams.mPosition);
+  const auto minBSizeCoord = stylePos->MinBSize(aWM, anchorResolutionParams);
   if (!nsLayoutUtils::IsAutoBSize(*minBSizeCoord, aCBSize.BSize(aWM)) &&
       !isFlexItemBlockAxisMainAxis) {
     minBSize = nsLayoutUtils::ComputeBSizeValueHandlingStretch(
