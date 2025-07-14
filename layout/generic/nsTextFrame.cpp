@@ -1914,8 +1914,8 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
         //
         // 1. Any of margin/border/padding separating the two typographic
         //    character units in the inline axis is non-zero.
-        const auto margin = ctx->StyleMargin()->GetMargin(
-            aSide, anchorResolutionParams.mPosition);
+        const auto margin =
+            ctx->StyleMargin()->GetMargin(aSide, anchorResolutionParams);
         if (!margin->ConvertsToLength() ||
             margin->AsLengthPercentage().ToLength() != 0) {
           return true;

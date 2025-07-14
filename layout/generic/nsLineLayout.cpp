@@ -630,9 +630,9 @@ static bool HasPercentageUnitSide(const StyleRect<T>& aSides) {
 }
 
 static bool HasPercentageUnitMargin(const nsStyleMargin& aStyleMargin,
-                                    StylePositionProperty aProp) {
+                                    const AnchorPosResolutionParams& aParams) {
   for (const auto side : AllPhysicalSides()) {
-    if (aStyleMargin.GetMargin(side, aProp)->HasPercent()) {
+    if (aStyleMargin.GetMargin(side, aParams)->HasPercent()) {
       return true;
     }
   }
@@ -655,7 +655,7 @@ static bool IsPercentageAware(const nsIFrame* aFrame, WritingMode aWM) {
 
   const nsStyleMargin* margin = aFrame->StyleMargin();
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(aFrame);
-  if (HasPercentageUnitMargin(*margin, anchorResolutionParams.mPosition)) {
+  if (HasPercentageUnitMargin(*margin, anchorResolutionParams)) {
     return true;
   }
 

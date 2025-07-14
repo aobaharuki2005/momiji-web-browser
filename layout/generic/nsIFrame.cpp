@@ -6415,18 +6415,18 @@ static nsIFrame::IntrinsicSizeOffsetData IntrinsicSizeOffsets(
   const auto* styleMargin = aFrame->StyleMargin();
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(aFrame);
   if (verticalAxis) {
+    result.margin +=
+        ResolveMargin(styleMargin->GetMargin(eSideTop, anchorResolutionParams),
+                      aPercentageBasis);
     result.margin += ResolveMargin(
-        styleMargin->GetMargin(eSideTop, anchorResolutionParams.mPosition),
-        aPercentageBasis);
-    result.margin += ResolveMargin(
-        styleMargin->GetMargin(eSideBottom, anchorResolutionParams.mPosition),
+        styleMargin->GetMargin(eSideBottom, anchorResolutionParams),
         aPercentageBasis);
   } else {
+    result.margin +=
+        ResolveMargin(styleMargin->GetMargin(eSideLeft, anchorResolutionParams),
+                      aPercentageBasis);
     result.margin += ResolveMargin(
-        styleMargin->GetMargin(eSideLeft, anchorResolutionParams.mPosition),
-        aPercentageBasis);
-    result.margin += ResolveMargin(
-        styleMargin->GetMargin(eSideRight, anchorResolutionParams.mPosition),
+        styleMargin->GetMargin(eSideRight, anchorResolutionParams),
         aPercentageBasis);
   }
 
@@ -6645,8 +6645,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     bool isStretchAligned = false;
     bool mayUseAspectRatio = aspectRatio && !isAutoBSize;
     if (!aFlags.contains(ComputeSizeFlag::ShrinkWrap) &&
-        !StyleMargin()->HasInlineAxisAuto(aWM,
-                                          anchorResolutionParams.mPosition) &&
+        !StyleMargin()->HasInlineAxisAuto(aWM, anchorResolutionParams) &&
         !alignCB->IsMasonry(isOrthogonal ? LogicalAxis::Block
                                          : LogicalAxis::Inline)) {
       auto inlineAxisAlignment =
@@ -6859,8 +6858,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
       bool isStretchAligned = false;
       bool mayUseAspectRatio =
           aspectRatio && result.ISize(aWM) != NS_UNCONSTRAINEDSIZE;
-      if (!StyleMargin()->HasBlockAxisAuto(aWM,
-                                           anchorResolutionParams.mPosition)) {
+      if (!StyleMargin()->HasBlockAxisAuto(aWM, anchorResolutionParams)) {
         auto blockAxisAlignment =
             isOrthogonal ? StylePosition()->UsedJustifySelf(alignCB->Style())._0
                          : StylePosition()->UsedAlignSelf(alignCB->Style())._0;

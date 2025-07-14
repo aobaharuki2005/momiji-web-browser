@@ -75,22 +75,18 @@ nscoord CSSAlignUtils::AlignJustifySelf(const StyleAlignFlags& aAlignment,
     // don't need to do anything special to avoid expanding them.)
     hasAutoMarginStart = hasAutoMarginEnd = false;
   } else if (aAxis == LogicalAxis::Block) {
-    hasAutoMarginStart = styleMargin
-                             ->GetMargin(LogicalSide::BStart, wm,
-                                         anchorResolutionParams.mPosition)
-                             ->IsAuto();
+    hasAutoMarginStart =
+        styleMargin->GetMargin(LogicalSide::BStart, wm, anchorResolutionParams)
+            ->IsAuto();
     hasAutoMarginEnd =
-        styleMargin
-            ->GetMargin(LogicalSide::BEnd, wm, anchorResolutionParams.mPosition)
+        styleMargin->GetMargin(LogicalSide::BEnd, wm, anchorResolutionParams)
             ->IsAuto();
   } else { /* aAxis == LogicalAxis::Inline */
-    hasAutoMarginStart = styleMargin
-                             ->GetMargin(LogicalSide::IStart, wm,
-                                         anchorResolutionParams.mPosition)
-                             ->IsAuto();
+    hasAutoMarginStart =
+        styleMargin->GetMargin(LogicalSide::IStart, wm, anchorResolutionParams)
+            ->IsAuto();
     hasAutoMarginEnd =
-        styleMargin
-            ->GetMargin(LogicalSide::IEnd, wm, anchorResolutionParams.mPosition)
+        styleMargin->GetMargin(LogicalSide::IEnd, wm, anchorResolutionParams)
             ->IsAuto();
   }
 
