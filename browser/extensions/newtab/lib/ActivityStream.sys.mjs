@@ -865,6 +865,34 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "widgets.lists.enabled",
+    {
+      title: "Enables the to-do lists widget",
+      value: true,
+    },
+  ],
+  [
+    "widgets.system.lists.enabled",
+    {
+      title: "Enables the to-do lists widget experiment in Nimbus",
+      value: false,
+    },
+  ],
+  [
+    "widgets.focusTimer.enabled",
+    {
+      title: "Enables the focus timer widget",
+      value: true,
+    },
+  ],
+  [
+    "widgets.system.focusTimer.enabled",
+    {
+      title: "Enables the focus timer widget experiment in Nimbus",
+      value: false,
+    },
+  ],
+  [
     "improvesearch.noDefaultSearchTile",
     {
       title: "Remove tiles that are the same as the default search",
