@@ -832,6 +832,9 @@ class HomeScreenRobot {
             Log.i(TAG, "expandCollection: Trying to click collection with title: $title")
             composeTestRule.onNodeWithText(title).performClick()
             Log.i(TAG, "expandCollection: Clicked collection with title: $title")
+            Log.i(TAG, "expandCollection: Waiting for compose test rule to be idle")
+            composeTestRule.waitForIdle()
+            Log.i(TAG, "expandCollection: Waited for compose test rule to be idle")
 
             CollectionRobot().interact()
             return CollectionRobot.Transition()

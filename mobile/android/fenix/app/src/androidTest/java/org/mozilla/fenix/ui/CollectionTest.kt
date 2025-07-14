@@ -98,7 +98,6 @@ class CollectionTest : TestSetup() {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/343422
-    @Ignore("Disabled: https://bugzilla.mozilla.org/show_bug.cgi?id=1976888")
     @SmokeTest
     @Test
     fun verifyExpandedCollectionItemsTest() {
@@ -127,7 +126,7 @@ class CollectionTest : TestSetup() {
             verifyTabSavedInCollection(composeTestRule, webPage.title, false)
             verifyShareCollectionButtonIsVisible(composeTestRule, false)
             verifyCollectionMenuIsVisible(false, composeTestRule)
-            verifyCollectionTabUrl(false, webPageUrl)
+            verifyCollectionTabUrl(composeTestRule, false, webPageUrl)
             verifyCollectionItemRemoveButtonIsVisible(webPage.title, false)
         }
 
@@ -135,7 +134,7 @@ class CollectionTest : TestSetup() {
             verifyCollectionIsDisplayed(composeTestRule, collectionName)
         }.expandCollection(composeTestRule, collectionName) {
             verifyTabSavedInCollection(composeTestRule, webPage.title)
-            verifyCollectionTabUrl(true, webPageUrl)
+            verifyCollectionTabUrl(composeTestRule, true, webPageUrl)
             verifyShareCollectionButtonIsVisible(composeTestRule, true)
             verifyCollectionMenuIsVisible(true, composeTestRule)
             verifyCollectionItemRemoveButtonIsVisible(webPage.title, true)
@@ -145,7 +144,7 @@ class CollectionTest : TestSetup() {
             verifyTabSavedInCollection(composeTestRule, webPage.title, false)
             verifyShareCollectionButtonIsVisible(composeTestRule, false)
             verifyCollectionMenuIsVisible(false, composeTestRule)
-            verifyCollectionTabUrl(false, webPageUrl)
+            verifyCollectionTabUrl(composeTestRule, false, webPageUrl)
             verifyCollectionItemRemoveButtonIsVisible(webPage.title, false)
         }
     }
