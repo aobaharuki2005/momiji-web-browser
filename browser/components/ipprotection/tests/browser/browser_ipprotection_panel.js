@@ -49,6 +49,46 @@ add_task(async function click_toolbar_button() {
 });
 
 /**
+ * Tests that the panel also loads the custom elements in a new window.
+ */
+add_task(async function test_panel_in_new_window() {
+  let newWindow = await BrowserTestUtils.openNewBrowserWindow();
+
+  let button = newWindow.document.getElementById(
+    lazy.IPProtectionWidget.WIDGET_ID
+  );
+  let panelView = PanelMultiView.getViewNode(
+    newWindow.document,
+    lazy.IPProtectionWidget.PANEL_ID
+  );
+
+  let panelShownPromise = waitForPanelEvent(newWindow.document, "popupshown");
+  // Open the panel
+  button.click();
+  await panelShownPromise;
+
+  let header = panelView.querySelector(lazy.IPProtectionPanel.HEADER_TAGNAME);
+  Assert.ok(
+    BrowserTestUtils.isVisible(header),
+    "ipprotection-header component should be present"
+  );
+
+  let component = panelView.querySelector(
+    lazy.IPProtectionPanel.CONTENT_TAGNAME
+  );
+  Assert.ok(
+    BrowserTestUtils.isVisible(component),
+    "ipprotection-content component should be present"
+  );
+
+  // Close the panel
+  let panelHiddenPromise = waitForPanelEvent(newWindow.document, "popuphidden");
+  EventUtils.synthesizeKey("KEY_Escape", undefined, newWindow);
+  await panelHiddenPromise;
+  await BrowserTestUtils.closeWindow(newWindow);
+});
+
+/**
  * Tests that sending IPProtection:Close closes the panel.
  */
 add_task(async function test_close_panel() {

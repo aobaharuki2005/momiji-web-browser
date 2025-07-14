@@ -48,6 +48,7 @@ export class IPProtectionPanel {
    */
   state = {};
   panel = null;
+  header = null;
 
   /**
    * Check the state of the enclosing panel to see if
@@ -66,10 +67,10 @@ export class IPProtectionPanel {
    *
    * Inserts the panel component customElements registry script.
    *
-   * @param {Window} _window
+   * @param {Window} window
    *   Window containing the panelView to manage.
    */
-  constructor(_window) {
+  constructor(window) {
     this.handleEvent = this.#handleEvent.bind(this);
 
     // TODO: let proxy assign our starting values (Bug 1976021)
@@ -79,6 +80,10 @@ export class IPProtectionPanel {
       isProtectionEnabled: false,
       protectionEnabledSince: null,
     };
+
+    if (window) {
+      IPProtectionPanel.loadCustomElements(window);
+    }
   }
 
   /**
@@ -137,11 +142,14 @@ export class IPProtectionPanel {
    *   The panelView element from the CustomizableUI widget callback.
    */
   showing(panelView) {
+    if (!this.header) {
+      this.#createHeader(panelView);
+    }
+
     if (this.panel) {
       this.updateState();
     } else {
       this.#createPanel(panelView);
-      this.#createHeader(panelView);
     }
   }
 
@@ -188,6 +196,7 @@ export class IPProtectionPanel {
       IPProtectionPanel.HEADER_TAGNAME
     );
     headerEl.titleId = IPProtectionPanel.TITLE_L10N_ID;
+    this.header = headerEl;
 
     headerRootEl.appendChild(headerEl);
   }
@@ -204,14 +213,18 @@ export class IPProtectionPanel {
   }
 
   /**
-   * Resets the state of the panel, removes listeners and disables updates.
+   * Remove added elements and listeners.
    */
   destroy() {
+    if (this.header) {
+      this.header.remove();
+      this.header = null;
+    }
     if (this.panel) {
       this.panel.remove();
       this.#removePanelListeners(this.panel.ownerDocument);
+      this.panel = null;
     }
-    this.state = {};
   }
 
   #addPanelListeners(doc) {
