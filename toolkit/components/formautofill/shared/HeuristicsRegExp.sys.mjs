@@ -665,8 +665,8 @@ export const HeuristicsRegExp = {
       "address-line2":
         "address|line" +
         "|house|building|apartment|floor" +    // de-DE
-        "|apartamento|" +    // pt
-        "|adresse" +      // fr-FR
+        "|apartamento" +    // pt
+        "|adresse|maison|bâtiment|immeuble|appartement|étage" +      // fr-FR
         "|indirizzo" +    // it-IT
         "|地址" +         // zh-CN
         "|주소" +         // ko-KR
