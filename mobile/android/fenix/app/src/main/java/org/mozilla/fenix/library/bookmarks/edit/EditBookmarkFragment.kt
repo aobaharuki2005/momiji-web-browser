@@ -154,7 +154,6 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark), MenuProv
                                             rootTitles = composeRootTitles(lifecycleHolder.context),
                                         ) ?: ""
                                     },
-                                    showUrlCopiedSnackbar = { },
                                     getBrowsingMode = {
                                         lifecycleHolder.homeActivity.browsingModeManager.mode
                                     },
