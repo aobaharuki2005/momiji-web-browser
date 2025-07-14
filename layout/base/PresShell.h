@@ -751,8 +751,34 @@ class PresShell final : public nsStubDocumentObserver,
   // https://drafts.csswg.org/css-anchor-position-1/#target
   nsIFrame* GetAnchorPosAnchor(const nsAtom* aName,
                                const nsIFrame* aPositionedFrame) const;
-  void AddAnchorPosAnchor(const nsAtom* aName, nsIFrame* aFrame);
-  void RemoveAnchorPosAnchor(const nsAtom* aName, nsIFrame* aFrame);
+
+  /**
+   * When frame tree is reconstructed, we need to avoid ordering the frames
+   * while they may not be part of the same child list.
+   */
+  inline void AddAnchorPosAnchor(const nsAtom* aName, nsIFrame* aFrame) {
+    MOZ_ASSERT(aName);
+    mLazyAnchorPosAnchorChanges.AppendElement(
+        AnchorPosAnchorChange{RefPtr<const nsAtom>(aName), aFrame, false});
+  }
+
+  /**
+   * When frame tree is reconstructed, we need to avoid ordering the frames
+   * while they may not be part of the same child list.
+   */
+  inline void RemoveAnchorPosAnchor(const nsAtom* aName, nsIFrame* aFrame) {
+    MOZ_ASSERT(aName);
+    mLazyAnchorPosAnchorChanges.AppendElement(
+        AnchorPosAnchorChange{RefPtr<const nsAtom>(aName), aFrame, true});
+    ;
+  }
+
+  /**
+   * When frame is about to be destroyed, we need to remove all references to it
+   * without delay.
+   */
+  void RemoveAnchorPosAnchorNow(const RefPtr<const nsAtom>& aName,
+                                nsIFrame* aFrame);
 
 #ifdef MOZ_REFLOW_PERF
   void DumpReflows();
@@ -1807,6 +1833,12 @@ class PresShell final : public nsStubDocumentObserver,
    * modifier state from the web apps point of view.
    */
   static Modifiers GetCurrentModifiers() { return sCurrentModifiers; }
+
+  inline void AssertNoAnchorPosAnchorChanges() const {
+    MOZ_ASSERT(mLazyAnchorPosAnchorChanges.IsEmpty());
+  }
+
+  void MergeAnchorPosAnchorChanges();
 
  private:
   ~PresShell();
@@ -3196,6 +3228,13 @@ class PresShell final : public nsStubDocumentObserver,
   nsTHashSet<WeakFrame*> mWeakFrames;
 
   nsTHashMap<RefPtr<const nsAtom>, nsTArray<nsIFrame*>> mAnchorPosAnchors;
+
+  struct AnchorPosAnchorChange {
+    RefPtr<const nsAtom> mName;
+    nsIFrame* mFrame;
+    bool mIsRemoval;
+  };
+  nsTArray<AnchorPosAnchorChange> mLazyAnchorPosAnchorChanges;
 
   // Reflow roots that need to be reflowed.
   DepthOrderedFrameList mDirtyRoots;

@@ -887,7 +887,7 @@ void nsIFrame::Destroy(DestroyContext& aContext) {
 
   if (HasAnchorPosName()) {
     for (auto& name : disp->mAnchorName.AsSpan()) {
-      PresShell()->RemoveAnchorPosAnchor(name.AsAtom(), this);
+      PresShell()->RemoveAnchorPosAnchorNow(name.AsAtom(), this);
     }
   }
 
