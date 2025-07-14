@@ -2218,6 +2218,13 @@
         isTabGroupLabel(tab) ? tab.parentElement : tab
       );
       let { movingTabs } = tab._dragData;
+      // Vertical tabs live under the #sidebar-main element which gets animated and has a
+      // transform style property, making it the containing block for all its descendants.
+      // Position:absolute elements need to account for this when updating position using
+      // other measurements whose origin is the viewport or documentElement's 0,0
+      let movingTabsOffsetX = window.windowUtils.getBoundsWithoutFlushing(
+        tab.offsetParent
+      ).x;
 
       let movingTabsIndex = movingTabs.findIndex(t => t._tPos == tab._tPos);
       // Update moving tabs absolute position based on original dragged tab position
@@ -2238,21 +2245,24 @@
             // Vertical tab groups require more precise positioning, hence 2.5 to center the mouse
             movingTab.style.top = event.clientY - rect.height * 2.5 + "px";
           } else {
-            movingTab.style.left = rect.left + "px";
+            movingTab.style.left = rect.left - movingTabsOffsetX + "px";
             movingTab.style.height = rect.height + "px";
           }
         } else if (isGrid) {
           movingTab.style.top = rect.top - rect.height + "px";
-          movingTab.style.left = rect.left + position + "px";
+          movingTab.style.left =
+            rect.left - movingTabsOffsetX + position + "px";
           position += rect.width;
         } else if (this.verticalMode) {
           movingTab.style.top = rect.top + position - rect.height + "px";
           position += rect.height;
         } else if (this.#rtlMode) {
-          movingTab.style.left = rect.left - position + "px";
+          movingTab.style.left =
+            rect.left - movingTabsOffsetX - position + "px";
           position -= rect.width;
         } else {
-          movingTab.style.left = rect.left + position + "px";
+          movingTab.style.left =
+            rect.left - movingTabsOffsetX + position + "px";
           position += rect.width;
         }
       }
@@ -2273,10 +2283,12 @@
           movingTab.style.top = rect.top + position + "px";
           position -= rect.height;
         } else if (this.#rtlMode) {
-          movingTab.style.left = rect.left - position + "px";
+          movingTab.style.left =
+            rect.left - movingTabsOffsetX - position + "px";
           position += rect.width;
         } else {
-          movingTab.style.left = rect.left + position + "px";
+          movingTab.style.left =
+            rect.left - movingTabsOffsetX + position + "px";
           position -= rect.width;
         }
       }
