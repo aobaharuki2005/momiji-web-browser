@@ -62,6 +62,9 @@ export default class IPProtectionContentElement extends MozLitElement {
     const statusCardL10nId = this.state.isProtectionEnabled
       ? "ipprotection-connection-status-on"
       : "ipprotection-connection-status-off";
+    const toggleL10nId = this.state.isProtectionEnabled
+      ? "ipprotection-toggle-active"
+      : "ipprotection-toggle-inactive";
 
     // TODO: update timer and its starting value according to the protectionEnabledSince property (Bug 1972460)
     const timeConnected = DEFAULT_TIME_CONNECTED;
@@ -77,9 +80,9 @@ export default class IPProtectionContentElement extends MozLitElement {
             >
           </div>
           <div>
-            <!--TODO: add an aria label to the toggle (Bug 1976721)-->
             <moz-toggle
               id="connection-toggle"
+              data-l10n-id=${toggleL10nId}
               @click=${this.handleToggleConnect}
               ?pressed=${this.state.isProtectionEnabled}
             ></moz-toggle>
