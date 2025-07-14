@@ -111,7 +111,7 @@ class DownloadUIStoreTest {
     }
 
     @Test
-    fun `WHEN all items are visible and all items selected for removal THEN all items are selected`() {
+    fun `WHEN all items are visible and all items are selected for removal THEN all completed download items are selected`() {
         val inProgressFileItem = fileItem(status = FileItem.Status.Downloading(progress = 0.5f))
         val pausedFileItem = fileItem(status = FileItem.Status.Paused(progress = 0.5f))
         val failedFileItem = fileItem(status = FileItem.Status.Failed)
@@ -134,12 +134,7 @@ class DownloadUIStoreTest {
             items = listOf(
                 fileItem1, fileItem2, inProgressFileItem, pausedFileItem, failedFileItem, initiatedFileItem,
             ),
-            mode = DownloadUIState.Mode.Editing(
-                setOf(
-                    fileItem1, fileItem2, inProgressFileItem, pausedFileItem, failedFileItem,
-                    initiatedFileItem,
-                ),
-            ),
+            mode = DownloadUIState.Mode.Editing(selectedItems = setOf(fileItem1, fileItem2)),
             pendingDeletionIds = emptySet(),
         )
 
