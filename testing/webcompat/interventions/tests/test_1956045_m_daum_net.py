@@ -47,12 +47,5 @@ async def does_menu_slide_back(client):
 @pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.with_interventions
-async def test_enabled(client):
+async def test_regression(client):
     assert not await does_menu_slide_back(client)
-
-
-@pytest.mark.skip_platforms("android")
-@pytest.mark.asyncio
-@pytest.mark.without_interventions
-async def test_disabled(client):
-    assert await does_menu_slide_back(client)
