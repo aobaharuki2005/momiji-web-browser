@@ -1225,6 +1225,20 @@ nsresult LinkAccount(nsIPrincipal* aPrincipal, const nsCString& aAccountId,
 
   // Mark as logged in and return
   icStorageService->SetState(aPrincipal, idpPrincipal, aAccountId, true, true);
+
+  nsCOMPtr<nsIPermissionManager> permissionManager =
+      components::PermissionManager::Service();
+
+  if (NS_WARN_IF(!permissionManager)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsCString idpOrigin;
+  error = idpPrincipal->GetOrigin(idpOrigin);
+  NS_ENSURE_SUCCESS(error, error);
+
+  permissionManager->AddFromPrincipal(aPrincipal, "credential-allow-silent-access^"_ns + idpOrigin, nsIPermissionManager::ALLOW_ACTION, nsIPermissionManager::EXPIRE_SESSION, 0);
+  permissionManager->AddFromPrincipal(aPrincipal, "credential-allow-silent-access"_ns, nsIPermissionManager::ALLOW_ACTION, nsIPermissionManager::EXPIRE_SESSION, 0);
   return NS_OK;
 }
 
