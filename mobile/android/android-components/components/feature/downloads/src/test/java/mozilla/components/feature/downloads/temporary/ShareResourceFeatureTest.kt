@@ -5,7 +5,6 @@
 package mozilla.components.feature.downloads.temporary
 
 import android.content.Context
-import android.webkit.MimeTypeMap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.ShareResourceAction
@@ -40,7 +39,6 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.Shadows.shadowOf
 import java.io.File
 import java.nio.charset.StandardCharsets
 
@@ -293,7 +291,6 @@ class ShareResourceFeatureTest {
         val shareFeature = ShareResourceFeature(context, mock(), null, mock(), dispatcher)
         val gifStream = (GIF_HEADER + "testImage").byteInputStream(StandardCharsets.UTF_8)
         // Add the gif mapping to a by default empty shadow of MimeTypeMap.
-        shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("gif", "image/gif")
 
         val result = shareFeature.getFileExtension(mock(), gifStream)
 
@@ -307,7 +304,6 @@ class ShareResourceFeatureTest {
             set(CONTENT_TYPE, "image/gif")
         }
         // Add the gif mapping to a by default empty shadow of MimeTypeMap.
-        shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("gif", "image/gif")
 
         val result = shareFeature.getFileExtension(gifHeaders, mock())
 
