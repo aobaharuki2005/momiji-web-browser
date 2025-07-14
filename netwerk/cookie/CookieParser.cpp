@@ -648,8 +648,9 @@ static void RecordPartitionedTelemetry(const CookieStruct& aCookieData,
   }
 }
 
-// processes a single cookie, and returns true if there are more cookies
-// to be processed
+// Main entry point for cookie parsing. Parses a single cookie string
+// (from either document.cookie or a Set-Cookie header) and populates
+// the internal CookieStruct data.
 void CookieParser::Parse(const nsACString& aBaseDomain, bool aRequireHostMatch,
                          CookieStatus aStatus, nsCString& aCookieHeader,
                          const nsACString& aDateHeader, bool aFromHttp,
