@@ -3136,9 +3136,7 @@ struct nsGridContainerFrame::Tracks {
   nscoord ResolveSize(const LineRange& aRange) const {
     MOZ_ASSERT(mCanResolveLineRangeSize);
     MOZ_ASSERT(aRange.Extent() > 0, "grid items cover at least one track");
-    nscoord pos, size;
-    aRange.ToPositionAndLength(mSizes, &pos, &size);
-    return size;
+    return aRange.ToLength(mSizes);
   }
 
 #ifdef DEBUG
@@ -6028,8 +6026,7 @@ static nscoord ContentContribution(const GridItemInfo& aGridItem,
           }
           MOZ_ASSERT(originalItem, "huh?");
           const auto& range = originalItem->mArea.LineRangeForAxis(subgridAxis);
-          nscoord pos, sz;
-          range.ToPositionAndLength(uts->mSizes[subgridAxis], &pos, &sz);
+          const nscoord sz = range.ToLength(uts->mSizes[subgridAxis]);
           if (childWM.IsOrthogonalTo(subgridFrame->GetWritingMode())) {
             availBSize = sz;
             cbSize.BSize(childWM) = sz;
