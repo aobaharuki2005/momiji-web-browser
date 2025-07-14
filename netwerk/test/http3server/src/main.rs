@@ -5,7 +5,7 @@
 // except according to those terms.
 
 use base64::prelude::*;
-use neqo_bin::server::{HttpServer, ServerRunner};
+use neqo_bin::server::{HttpServer, Runner};
 use neqo_common::{event::Provider, qdebug, qtrace, Datagram, Header};
 use neqo_crypto::{generate_ech_keys, init_db, AllowZeroRtt, AntiReplay};
 use neqo_http3::{
@@ -14,7 +14,7 @@ use neqo_http3::{
 };
 use neqo_transport::server::ConnectionRef;
 use neqo_transport::{
-    ConnectionEvent, ConnectionParameters, Output, RandomConnectionIdGenerator, StreamType,
+    ConnectionEvent, ConnectionParameters, OutputBatch, RandomConnectionIdGenerator, StreamType,
 };
 use std::env;
 
@@ -152,7 +152,8 @@ impl Http3TestServer {
                 }
             }
         }
-        self.connections_to_close.retain(|expires, _| *expires >= now);
+        self.connections_to_close
+            .retain(|expires, _| *expires >= now);
     }
 
     fn maybe_create_wt_stream(&mut self) {
@@ -183,8 +184,13 @@ impl Http3TestServer {
 }
 
 impl HttpServer for Http3TestServer {
-    fn process(&mut self, dgram: Option<Datagram<&mut [u8]>>, now: Instant) -> Output {
-        let output = self.server.process(dgram, now);
+    fn process_multiple(
+        &mut self,
+        dgram: Option<Datagram<&mut [u8]>>,
+        now: Instant,
+        max_datagrams: std::num::NonZeroUsize,
+    ) -> OutputBatch {
+        let output = self.server.process_multiple(dgram, now, max_datagrams);
 
         let output = if self.sessions_to_close.is_empty() && self.connections_to_close.is_empty() {
             output
@@ -194,9 +200,9 @@ impl HttpServer for Http3TestServer {
             const MIN_INTERVAL: Duration = Duration::from_millis(100);
 
             match output {
-                Output::None => Output::Callback(MIN_INTERVAL),
-                o @ Output::Datagram(_) => o,
-                Output::Callback(d) => Output::Callback(min(d, MIN_INTERVAL)),
+                OutputBatch::None => OutputBatch::Callback(MIN_INTERVAL),
+                o @ OutputBatch::DatagramBatch(_) => o,
+                OutputBatch::Callback(d) => OutputBatch::Callback(min(d, MIN_INTERVAL)),
             }
         };
 
@@ -265,9 +271,7 @@ impl HttpServer for Http3TestServer {
                                     .stream_reset_send(Error::HttpVersionFallback.code())
                                     .unwrap();
                             } else if path == "/EarlyResponse" {
-                                stream
-                                    .stream_stop_sending(Error::HttpNoError.code())
-                                    .unwrap();
+                                stream.stream_stop_sending(Error::HttpNone.code()).unwrap();
                             } else if path == "/RequestRejected" {
                                 stream
                                     .stream_stop_sending(Error::HttpRequestRejected.code())
@@ -431,7 +435,10 @@ impl HttpServer for Http3TestServer {
                                             Header::new("cache-control", "no-cache"),
                                             Header::new("content-type", "text/plain"),
                                             Header::new("content-length", 100.to_string()),
-                                            Header::new("alt-svc", format!("h3={}", alt_svc.value())),
+                                            Header::new(
+                                                "alt-svc",
+                                                format!("h3={}", alt_svc.value()),
+                                            ),
                                         ])
                                         .unwrap();
                                     self.new_response(stream, vec![b'a'; 100]);
@@ -699,8 +706,13 @@ impl ::std::fmt::Display for Server {
 }
 
 impl HttpServer for Server {
-    fn process(&mut self, dgram: Option<Datagram<&mut [u8]>>, now: Instant) -> Output {
-        self.0.process(dgram, now)
+    fn process_multiple(
+        &mut self,
+        dgram: Option<Datagram<&mut [u8]>>,
+        now: Instant,
+        max_datagrams: std::num::NonZeroUsize,
+    ) -> OutputBatch {
+        self.0.process_multiple(dgram, now, max_datagrams)
     }
 
     fn process_events(&mut self, _now: Instant) {
@@ -935,8 +947,13 @@ impl Http3ProxyServer {
 }
 
 impl HttpServer for Http3ProxyServer {
-    fn process(&mut self, dgram: Option<Datagram<&mut [u8]>>, now: Instant) -> Output {
-        let output = self.server.process(dgram, now);
+    fn process_multiple(
+        &mut self,
+        dgram: Option<Datagram<&mut [u8]>>,
+        now: Instant,
+        max_datagrams: std::num::NonZeroUsize,
+    ) -> OutputBatch {
+        let output = self.server.process_multiple(dgram, now, max_datagrams);
 
         #[cfg(not(target_os = "android"))]
         let output = if self.response_to_send.is_empty() {
@@ -947,9 +964,9 @@ impl HttpServer for Http3ProxyServer {
             const MIN_INTERVAL: Duration = Duration::from_millis(100);
 
             match output {
-                Output::None => Output::Callback(MIN_INTERVAL),
-                o @ Output::Datagram(_) => o,
-                Output::Callback(d) => Output::Callback(min(d, MIN_INTERVAL)),
+                OutputBatch::None => OutputBatch::Callback(MIN_INTERVAL),
+                o @ OutputBatch::DatagramBatch(_) => o,
+                OutputBatch::Callback(d) => OutputBatch::Callback(min(d, MIN_INTERVAL)),
             }
         };
 
@@ -1064,8 +1081,13 @@ impl ::std::fmt::Display for NonRespondingServer {
 }
 
 impl HttpServer for NonRespondingServer {
-    fn process(&mut self, _dgram: Option<Datagram<&mut [u8]>>, _now: Instant) -> Output {
-        Output::None
+    fn process_multiple(
+        &mut self,
+        _dgram: Option<Datagram<&mut [u8]>>,
+        _now: Instant,
+        _max_datagrams: std::num::NonZeroUsize,
+    ) -> OutputBatch {
+        OutputBatch::None
     }
 
     fn process_events(&mut self, _now: Instant) {}
@@ -1085,7 +1107,7 @@ enum ServerType {
 fn new_runner(
     server_type: ServerType,
     port: u16,
-) -> Result<(SocketAddr, Option<Vec<u8>>, ServerRunner), io::Error> {
+) -> Result<(SocketAddr, Option<Vec<u8>>, Runner), io::Error> {
     let mut ech_config = None;
     let addr: SocketAddr = if cfg!(target_os = "windows") {
         format!("127.0.0.1:{}", port).parse().unwrap()
@@ -1199,7 +1221,7 @@ fn new_runner(
     Ok((
         local_addr,
         ech_config,
-        ServerRunner::new(Box::new(Instant::now), server, vec![(local_addr, socket)]),
+        Runner::new(Box::new(Instant::now), server, vec![(local_addr, socket)]),
     ))
 }
 

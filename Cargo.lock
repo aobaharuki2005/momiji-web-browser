@@ -4617,9 +4617,9 @@ dependencies = [
 
 [[package]]
 name = "mtu"
-version = "0.2.6"
+version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c30d3771729ec4349aae3b1a7c0b6b4a1500459e60b1fda95fe0657c3711574"
+checksum = "3e3124fb16267c5a77ce8cd015bcb5bb3f8aab28ec32d89d65f6a31c5c1306a0"
 dependencies = [
  "bindgen",
  "cfg_aliases",
@@ -4663,8 +4663,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-bin"
-version = "0.13.4"
-source = "git+https://github.com/mozilla/neqo?tag=v0.13.4#c3179d9f363bf92a908d90e4240b315b9ff72516"
+version = "0.14.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.14.1#531cb0b6c21d27ff1ccec5502ecc346a6a922d71"
 dependencies = [
  "clap",
  "clap-verbosity-flag",
@@ -4679,14 +4679,15 @@ dependencies = [
  "qlog",
  "quinn-udp",
  "regex",
+ "rustc-hash 2.1.1",
  "tokio",
  "url",
 ]
 
 [[package]]
 name = "neqo-common"
-version = "0.13.4"
-source = "git+https://github.com/mozilla/neqo?tag=v0.13.4#c3179d9f363bf92a908d90e4240b315b9ff72516"
+version = "0.14.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.14.1#531cb0b6c21d27ff1ccec5502ecc346a6a922d71"
 dependencies = [
  "enum-map",
  "env_logger",
@@ -4698,8 +4699,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.13.4"
-source = "git+https://github.com/mozilla/neqo?tag=v0.13.4#c3179d9f363bf92a908d90e4240b315b9ff72516"
+version = "0.14.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.14.1#531cb0b6c21d27ff1ccec5502ecc346a6a922d71"
 dependencies = [
  "bindgen",
  "enum-map",
@@ -4715,8 +4716,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.13.4"
-source = "git+https://github.com/mozilla/neqo?tag=v0.13.4#c3179d9f363bf92a908d90e4240b315b9ff72516"
+version = "0.14.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.14.1#531cb0b6c21d27ff1ccec5502ecc346a6a922d71"
 dependencies = [
  "enumset",
  "log",
@@ -4725,6 +4726,7 @@ dependencies = [
  "neqo-qpack",
  "neqo-transport",
  "qlog",
+ "rustc-hash 2.1.1",
  "sfv",
  "strum",
  "url",
@@ -4732,20 +4734,21 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.13.4"
-source = "git+https://github.com/mozilla/neqo?tag=v0.13.4#c3179d9f363bf92a908d90e4240b315b9ff72516"
+version = "0.14.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.14.1#531cb0b6c21d27ff1ccec5502ecc346a6a922d71"
 dependencies = [
  "log",
  "neqo-common",
  "neqo-transport",
  "qlog",
+ "rustc-hash 2.1.1",
  "static_assertions",
 ]
 
 [[package]]
 name = "neqo-transport"
-version = "0.13.4"
-source = "git+https://github.com/mozilla/neqo?tag=v0.13.4#c3179d9f363bf92a908d90e4240b315b9ff72516"
+version = "0.14.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.14.1#531cb0b6c21d27ff1ccec5502ecc346a6a922d71"
 dependencies = [
  "enum-map",
  "enumset",
@@ -4755,6 +4758,7 @@ dependencies = [
  "neqo-common",
  "neqo-crypto",
  "qlog",
+ "rustc-hash 2.1.1",
  "smallvec",
  "static_assertions",
  "strum",
@@ -4762,13 +4766,15 @@ dependencies = [
 
 [[package]]
 name = "neqo-udp"
-version = "0.13.4"
-source = "git+https://github.com/mozilla/neqo?tag=v0.13.4#c3179d9f363bf92a908d90e4240b315b9ff72516"
+version = "0.14.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.14.1#531cb0b6c21d27ff1ccec5502ecc346a6a922d71"
 dependencies = [
  "cfg_aliases",
+ "libc",
  "log",
  "neqo-common",
  "quinn-udp",
+ "windows",
 ]
 
 [[package]]
@@ -5471,9 +5477,9 @@ dependencies = [
 
 [[package]]
 name = "quinn-udp"
-version = "0.5.12"
+version = "0.5.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee4e529991f949c5e25755532370b8af5d114acae52326361d68d47af64aa842"
+checksum = "fcebb1209ee276352ef14ff8732e24cc2b02bbac986cd74a4c81bcb2f9881970"
 dependencies = [
  "cfg_aliases",
  "libc",

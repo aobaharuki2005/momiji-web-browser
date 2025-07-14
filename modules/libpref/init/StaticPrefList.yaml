@@ -14998,6 +14998,15 @@
   mirror: always
   rust: true
 
+# Maximum number of UDP segments in a single UDP GSO send. Noop if
+# network.http.http3.use_nspr_for_io is true.
+- name: network.http.http3.max_gso_segments
+  type: RelaxedAtomicUint32
+  # Current industry standard. Likely worth tuning.
+  value: 10
+  mirror: always
+  rust: true
+
 - name: network.http.http3.enable_qlog
   type: RelaxedAtomicBool
   value: false
