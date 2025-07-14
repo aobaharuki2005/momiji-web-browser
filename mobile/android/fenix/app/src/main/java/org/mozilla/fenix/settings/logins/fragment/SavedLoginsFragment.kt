@@ -43,8 +43,6 @@ import org.mozilla.fenix.SecureFragment
 import org.mozilla.fenix.biometricauthentication.AuthenticationStatus
 import org.mozilla.fenix.biometricauthentication.BiometricAuthenticationManager
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.compose.snackbar.Snackbar
-import org.mozilla.fenix.compose.snackbar.SnackbarState
 import org.mozilla.fenix.databinding.FragmentSavedLoginsBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideToolbar
@@ -190,16 +188,6 @@ class SavedLoginsFragment : SecureFragment(), MenuProvider {
                                         )
                                     },
                                     clipboardManager = requireActivity().getSystemService(),
-                                    showUsernameCopiedSnackbar = {
-                                        showSnackBarWithText(
-                                            lifecycleHolder.context.getString(R.string.logins_username_copied),
-                                        )
-                                    },
-                                    showPasswordCopiedSnackbar = {
-                                        showSnackBarWithText(
-                                            lifecycleHolder.context.getString(R.string.logins_password_copied),
-                                        )
-                                    },
                                 ),
                             ),
                             lifecycleHolder = lifecycleHolder,
@@ -443,17 +431,5 @@ class SavedLoginsFragment : SecureFragment(), MenuProvider {
 
     private fun setSecureContentVisibility(isVisible: Boolean) {
         binding.savedLoginsLayout.isVisible = isVisible
-    }
-
-    private fun showSnackBarWithText(text: String) {
-        view?.let {
-            Snackbar.make(
-                snackBarParentView = it,
-                snackbarState = SnackbarState(
-                    message = text,
-                    duration = SnackbarState.Duration.Preset.Short,
-                ),
-            ).show()
-        }
     }
 }

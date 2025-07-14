@@ -32,8 +32,6 @@ class LoginsMiddlewareTest {
     private lateinit var clipboardManager: ClipboardManager
     private lateinit var navController: NavController
     private lateinit var exitLogins: () -> Unit
-    private lateinit var showUsernameCopiedSnackbar: () -> Unit
-    private lateinit var showPasswordCopiedSnackbar: () -> Unit
     private lateinit var openTab: (String, Boolean) -> Unit
     private lateinit var persistLoginsSortOrder: suspend (LoginsSortOrder) -> Unit
 
@@ -54,8 +52,6 @@ class LoginsMiddlewareTest {
         exitLogins = { }
         openTab = { _, _ -> }
         persistLoginsSortOrder = { }
-        showUsernameCopiedSnackbar = { }
-        showPasswordCopiedSnackbar = { }
     }
 
     @Test
@@ -196,8 +192,6 @@ class LoginsMiddlewareTest {
         ioDispatcher = coroutineRule.testDispatcher,
         persistLoginsSortOrder = persistLoginsSortOrder,
         clipboardManager = clipboardManager,
-        showUsernameCopiedSnackbar = showUsernameCopiedSnackbar,
-        showPasswordCopiedSnackbar = showPasswordCopiedSnackbar,
     )
 
     private fun LoginsMiddleware.makeStore(

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +36,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.IconButton
 import mozilla.components.compose.base.menu.DropdownMenu
@@ -45,12 +49,16 @@ import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.list.TextListItem
+import org.mozilla.fenix.compose.snackbar.AcornSnackbarHostState
+import org.mozilla.fenix.compose.snackbar.SnackbarHost
+import org.mozilla.fenix.compose.snackbar.SnackbarState
 import org.mozilla.fenix.theme.FirefoxTheme
 
 @Composable
 internal fun LoginDetailsScreen(store: LoginsStore) {
     val state by store.observeAsState(store.state) { it }
     val detailState = state.loginsLoginDetailState ?: return
+    val snackbarHostState = remember { AcornSnackbarHostState() }
 
     Scaffold(
         topBar = {
@@ -61,6 +69,12 @@ internal fun LoginDetailsScreen(store: LoginsStore) {
             )
         },
         containerColor = FirefoxTheme.colors.layer1,
+        snackbarHost = {
+            SnackbarHost(
+                snackbarHostState = snackbarHostState,
+                modifier = Modifier.imePadding(),
+            )
+        },
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -70,9 +84,17 @@ internal fun LoginDetailsScreen(store: LoginsStore) {
             Spacer(modifier = Modifier.height(FirefoxTheme.layout.space.static200))
             LoginDetailsUrl(store = store, url = detailState.login.url)
             Spacer(modifier = Modifier.height(8.dp))
-            LoginDetailsUsername(store = store, username = detailState.login.username)
+            LoginDetailsUsername(
+                store = store,
+                snackbarHostState = snackbarHostState,
+                username = detailState.login.username,
+            )
             Spacer(modifier = Modifier.height(8.dp))
-            LoginDetailsPassword(store = store, password = detailState.login.password)
+            LoginDetailsPassword(
+                store = store,
+                snackbarHostState = snackbarHostState,
+                password = detailState.login.password,
+            )
         }
     }
 }
@@ -196,7 +218,14 @@ private fun LoginDetailsUrl(store: LoginsStore, url: String) {
 }
 
 @Composable
-private fun LoginDetailsUsername(store: LoginsStore, username: String) {
+private fun LoginDetailsUsername(
+    store: LoginsStore,
+    snackbarHostState: AcornSnackbarHostState,
+    username: String,
+) {
+    val usernameSnackbarText = stringResource(R.string.logins_username_copied)
+    val coroutineScope = rememberCoroutineScope()
+
     Text(
         text = stringResource(R.string.preferences_passwords_saved_logins_username),
         style = TextFieldStyle.default().labelStyle,
@@ -216,13 +245,26 @@ private fun LoginDetailsUsername(store: LoginsStore, username: String) {
             .wrapContentHeight(),
         iconPainter = painterResource(R.drawable.ic_copy),
         iconDescription = stringResource(R.string.saved_login_copy_username),
-        onIconClick = { store.dispatch(DetailLoginAction.CopyUsernameClicked(username)) },
+        onIconClick = {
+            store.dispatch(DetailLoginAction.CopyUsernameClicked(username))
+            showTextCopiedSnackbar(
+                message = usernameSnackbarText,
+                coroutineScope = coroutineScope,
+                snackbarHostState = snackbarHostState,
+            )
+        },
     )
 }
 
 @Composable
-private fun LoginDetailsPassword(store: LoginsStore, password: String) {
+private fun LoginDetailsPassword(
+    store: LoginsStore,
+    snackbarHostState: AcornSnackbarHostState,
+    password: String,
+) {
     var isPasswordVisible by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val passwordSnackbarText = stringResource(R.string.logins_password_copied)
 
     Text(
         text = stringResource(R.string.preferences_passwords_saved_logins_password),
@@ -258,7 +300,14 @@ private fun LoginDetailsPassword(store: LoginsStore, password: String) {
             modifier = Modifier
                 .padding(horizontal = FirefoxTheme.layout.space.static50)
                 .size(48.dp),
-            onClick = { store.dispatch(DetailLoginAction.CopyPasswordClicked(password)) },
+            onClick = {
+                store.dispatch(DetailLoginAction.CopyPasswordClicked(password))
+                showTextCopiedSnackbar(
+                    message = passwordSnackbarText,
+                    coroutineScope = coroutineScope,
+                    snackbarHostState = snackbarHostState,
+                )
+            },
             contentDescription = stringResource(R.string.saved_logins_copy_password),
         ) {
             Icon(
@@ -267,6 +316,20 @@ private fun LoginDetailsPassword(store: LoginsStore, password: String) {
                 tint = AcornTheme.colors.textPrimary,
             )
         }
+    }
+}
+
+private fun showTextCopiedSnackbar(
+    message: String,
+    coroutineScope: CoroutineScope,
+    snackbarHostState: AcornSnackbarHostState,
+) {
+    coroutineScope.launch {
+        snackbarHostState.showSnackbar(
+            snackbarState = SnackbarState(
+                message = message,
+            ),
+        )
     }
 }
 
