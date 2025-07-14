@@ -124,6 +124,7 @@ private fun LoginsList(store: LoginsStore) {
             )
         },
         containerColor = FirefoxTheme.colors.layer1,
+        contentWindowInsets = WindowInsets(0.dp),
     ) { paddingValues ->
 
         if (state.searchText.isNullOrEmpty() && state.loginItems.isEmpty()) {
@@ -131,35 +132,36 @@ private fun LoginsList(store: LoginsStore) {
             return@Scaffold
         }
 
-        LazyColumn(
-            modifier = Modifier
-                .padding(paddingValues)
-                .padding(vertical = 16.dp)
-                .semantics {
-                    collectionInfo =
-                        CollectionInfo(rowCount = state.loginItems.size, columnCount = 1)
-                },
-        ) {
-            itemsIndexed(state.loginItems) { _, item ->
+        Column(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f, false)
+                    .padding(paddingValues)
+                    .padding(vertical = 16.dp)
+                    .semantics {
+                        collectionInfo =
+                            CollectionInfo(rowCount = state.loginItems.size, columnCount = 1)
+                    },
+            ) {
+                itemsIndexed(state.loginItems) { _, item ->
 
-                if (state.isGuidToDelete(item.guid)) {
-                    return@itemsIndexed
+                    if (state.isGuidToDelete(item.guid)) {
+                        return@itemsIndexed
+                    }
+
+                    SelectableFaviconListItem(
+                        label = item.url.trimmed(),
+                        url = item.url,
+                        isSelected = false,
+                        onClick = { store.dispatch(LoginClicked(item)) },
+                        description = item.username.trimmed(),
+                    )
                 }
-
-                SelectableFaviconListItem(
-                    label = item.url.trimmed(),
-                    url = item.url,
-                    isSelected = false,
-                    onClick = { store.dispatch(LoginClicked(item)) },
-                    description = item.username.trimmed(),
-                )
             }
 
-            item {
-                AddPasswordItem(
-                    onAddPasswordClicked = { store.dispatch(AddLoginAction.InitAdd) },
-                )
-            }
+            AddPasswordItem(
+                onAddPasswordClicked = { store.dispatch(AddLoginAction.InitAdd) },
+            )
         }
     }
 }
