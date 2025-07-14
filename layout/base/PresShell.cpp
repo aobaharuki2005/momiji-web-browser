@@ -1789,8 +1789,6 @@ nsresult PresShell::Initialize() {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  mPresContext->PresShell()->AssertNoAnchorPosAnchorChanges();
-
   if (Element* root = mDocument->GetRootElement()) {
     {
       nsAutoCauseReflowNotifier reflowNotifier(this);
@@ -1864,8 +1862,6 @@ nsresult PresShell::Initialize() {
   if (!mPaintingSuppressed) {
     mShouldUnsuppressPainting = true;
   }
-
-  mPresContext->PresShell()->MergeAnchorPosAnchorChanges();
 
   return NS_OK;  // XXX this needs to be real. MMP
 }
@@ -4523,6 +4519,7 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
 
   // Per our API contract, hold a strong ref to ourselves until we return.
   RefPtr<PresShell> kungFuDeathGrip = this;
+
   /**
    * VERY IMPORTANT: If you add some sort of new flushing to this
    * method, make sure to add the relevant SetNeedLayoutFlush or
@@ -4843,7 +4840,6 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::ContentWillBeRemoved(
   // Notify the ESM that the content has been removed, so that
   // it can clean up any state related to the content.
 
-  AssertNoAnchorPosAnchorChanges();
   mPresContext->EventStateManager()->ContentRemoved(mDocument, aChild);
 
   nsAutoCauseReflowNotifier crNotifier(this);
@@ -4863,7 +4859,6 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::ContentWillBeRemoved(
   // display: contents / display: none, because we'd have cleared all the style
   // data from there.
   mPresContext->RestyleManager()->ContentWillBeRemoved(aChild);
-  MergeAnchorPosAnchorChanges();
 }
 
 void PresShell::NotifyCounterStylesAreDirty() {
@@ -10991,7 +10986,6 @@ bool PresShell::ProcessReflowCommands(bool aInterruptible) {
       printf("ProcessReflowCommands: begin incremental reflow\n");
     }
 #endif
-    AssertNoAnchorPosAnchorChanges();
 
     // If reflow is interruptible, then make a note of our deadline.
     const PRIntervalTime deadline =
@@ -11024,8 +11018,6 @@ bool PresShell::ProcessReflowCommands(bool aInterruptible) {
       // past our deadline, or we're interrupted.
     } while (!interrupted && !mDirtyRoots.IsEmpty() &&
              (!aInterruptible || PR_IntervalNow() < deadline));
-
-    MergeAnchorPosAnchorChanges();
 
     interrupted = !mDirtyRoots.IsEmpty();
 
@@ -12025,8 +12017,6 @@ nsIFrame* PresShell::GetAbsoluteContainingBlock(nsIFrame* aFrame) {
 nsIFrame* PresShell::GetAnchorPosAnchor(
     const nsAtom* aName, const nsIFrame* aPositionedFrame) const {
   MOZ_ASSERT(aName);
-  MOZ_ASSERT(mLazyAnchorPosAnchorChanges.IsEmpty());
-
   if (const auto& entry = mAnchorPosAnchors.Lookup(aName)) {
     return AnchorPositioningUtils::FindFirstAcceptableAnchor(aPositionedFrame,
                                                              entry.Data());
@@ -12035,10 +12025,41 @@ nsIFrame* PresShell::GetAnchorPosAnchor(
   return nullptr;
 }
 
-static void RemoveAnchorPosAnchorFromOrderedCache(
-    const RefPtr<const nsAtom>& aName, nsIFrame* aFrame,
-    nsTHashMap<RefPtr<const nsAtom>, nsTArray<nsIFrame*>>& aAnchorPosAnchors) {
-  auto entry = aAnchorPosAnchors.Lookup(aName);
+void PresShell::AddAnchorPosAnchor(const nsAtom* aName, nsIFrame* aFrame) {
+  MOZ_ASSERT(aName);
+
+  auto& entry = mAnchorPosAnchors.LookupOrInsertWith(
+      aName, []() { return nsTArray<nsIFrame*>(); });
+
+  if (entry.IsEmpty()) {
+    entry.AppendElement(aFrame);
+    return;
+  }
+
+  struct FrameTreeComparator {
+    nsIFrame* mFrame;
+
+    int32_t operator()(nsIFrame* aOther) const {
+      return nsLayoutUtils::CompareTreePosition(aOther, mFrame, nullptr);
+    }
+  };
+
+  FrameTreeComparator cmp{aFrame};
+
+  size_t matchOrInsertionIdx = entry.Length();
+  // If the same element is already in the array,
+  // someone forgot to call RemoveAnchorPosAnchor.
+  if (BinarySearchIf(entry, 0, entry.Length(), cmp, &matchOrInsertionIdx)) {
+    MOZ_ASSERT_UNREACHABLE("Anchor added already");
+    return;
+  }
+
+  *entry.InsertElementAt(matchOrInsertionIdx) = aFrame;
+}
+
+void PresShell::RemoveAnchorPosAnchor(const nsAtom* aName, nsIFrame* aFrame) {
+  MOZ_ASSERT(aName);
+  auto entry = mAnchorPosAnchors.Lookup(aName);
   if (!entry) {
     return;  // Nothing to remove.
   }
@@ -12048,65 +12069,11 @@ static void RemoveAnchorPosAnchorFromOrderedCache(
   // XXX: Once the implementation is more complete,
   // we should probably assert here that anchorArray
   // is not empty and aFrame is in it.
-  MOZ_ASSERT(!anchorArray.IsEmpty());
 
   anchorArray.RemoveElement(aFrame);
   if (anchorArray.IsEmpty()) {
     entry.Remove();
   }
-}
-
-void PresShell::RemoveAnchorPosAnchorNow(const RefPtr<const nsAtom>& aName,
-                                         nsIFrame* aFrame) {
-  // nsCSSFrameConstructor will destroy, remove and add frames back,
-  // in no particular order during reflow. Removing the elements from
-  // mLazyAnchorPosAnchorChanges here is necessary and for performance
-  // reasons it would be an advantage to not let mLazyAnchorPosAnchorChanges
-  // grow too much.
-  mLazyAnchorPosAnchorChanges.RemoveElementsBy(
-      [&](const AnchorPosAnchorChange& change) {
-        return change.mFrame == aFrame;
-      });
-
-  RemoveAnchorPosAnchorFromOrderedCache(aName, aFrame, mAnchorPosAnchors);
-}
-
-void PresShell::MergeAnchorPosAnchorChanges() {
-  for (const auto& [name, frame, isRemoval] : mLazyAnchorPosAnchorChanges) {
-    if (isRemoval) {
-      RemoveAnchorPosAnchorFromOrderedCache(name, frame, mAnchorPosAnchors);
-    } else {
-      auto& entry = mAnchorPosAnchors.LookupOrInsertWith(
-          name, []() { return nsTArray<nsIFrame*>(); });
-
-      if (entry.IsEmpty()) {
-        entry.AppendElement(frame);
-        continue;
-      }
-
-      struct FrameTreeComparator {
-        nsIFrame* mFrame;
-
-        int32_t operator()(nsIFrame* aOther) const {
-          return nsLayoutUtils::CompareTreePosition(mFrame, aOther, nullptr);
-        }
-      };
-
-      FrameTreeComparator cmp{frame};
-
-      size_t matchOrInsertionIdx = entry.Length();
-      // If the same element is already in the array,
-      // someone forgot to call RemoveAnchorPosAnchor.
-      if (BinarySearchIf(entry, 0, entry.Length(), cmp, &matchOrInsertionIdx)) {
-        MOZ_ASSERT_UNREACHABLE("Anchor added already");
-        continue;
-      }
-
-      *entry.InsertElementAt(matchOrInsertionIdx) = frame;
-    }
-  }
-
-  mLazyAnchorPosAnchorChanges.Clear();
 }
 
 void PresShell::ActivenessMaybeChanged() {
