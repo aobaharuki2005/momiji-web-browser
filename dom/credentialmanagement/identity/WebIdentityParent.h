@@ -89,9 +89,9 @@ using GetIdentityAssertionPromise =
                nsresult, true>;
 using GetTokenPromise =
     MozPromise<std::tuple<nsCString, nsCString, const bool>, nsresult, true>;
-using GetAccountPromise =
-    MozPromise<std::tuple<IdentityProviderAPIConfig, IdentityProviderAccount, const bool>,
-               nsresult, true>;
+using GetAccountPromise = MozPromise<
+    std::tuple<IdentityProviderAPIConfig, IdentityProviderAccount, const bool>,
+    nsresult, true>;
 using GetMetadataPromise =
     MozPromise<IdentityProviderClientMetadata, nsresult, true>;
 
@@ -230,8 +230,7 @@ RefPtr<GetTokenPromise> FetchToken(
     nsIPrincipal* aPrincipal, WebIdentityParent* aRelyingParty,
     const IdentityProviderRequestOptions& aProvider,
     const IdentityProviderAPIConfig& aManifest,
-    const IdentityProviderAccount& aAccount,
-    const bool aIsAutoSelected);
+    const IdentityProviderAccount& aAccount, const bool aIsAutoSelected);
 
 // Show the user a dialog to select what identity provider they would like
 // to try to log in with.

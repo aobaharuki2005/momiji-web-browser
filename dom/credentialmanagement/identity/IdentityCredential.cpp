@@ -56,9 +56,7 @@ void IdentityCredential::GetToken(nsACString& aToken) const {
 void IdentityCredential::SetToken(const nsACString& aToken) {
   mToken.Assign(aToken);
 }
-bool IdentityCredential::IsAutoSelected() const {
-  return mIsAutoSelected;
-}
+bool IdentityCredential::IsAutoSelected() const { return mIsAutoSelected; }
 void IdentityCredential::GetConfigURL(nsACString& aConfigURL) const {
   aConfigURL.Assign(mConfigURL);
 }

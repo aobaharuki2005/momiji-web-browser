@@ -561,9 +561,10 @@ RefPtr<GetIPCIdentityCredentialPromise> CreateCredentialDuringDiscovery(
           })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [argumentPrincipal, aProvider, relyingParty](
-              const std::tuple<IdentityProviderAPIConfig,
-                               IdentityProviderAccount, const bool>& promiseResult) {
+          [argumentPrincipal, aProvider,
+           relyingParty](const std::tuple<IdentityProviderAPIConfig,
+                                          IdentityProviderAccount, const bool>&
+                             promiseResult) {
             IdentityProviderAPIConfig currentManifest;
             IdentityProviderAccount account;
             bool isAutoSelected;
@@ -577,7 +578,8 @@ RefPtr<GetIPCIdentityCredentialPromise> CreateCredentialDuringDiscovery(
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [argumentPrincipal,
-           aProvider](const std::tuple<nsCString, nsCString, const bool>& promiseResult) {
+           aProvider](const std::tuple<nsCString, nsCString, const bool>&
+                          promiseResult) {
             nsCString token;
             nsCString accountId;
             bool isAutoSelected;
@@ -782,9 +784,7 @@ RefPtr<GetTokenPromise> FetchToken(
     nsIPrincipal* aPrincipal, WebIdentityParent* aRelyingParty,
     const IdentityProviderRequestOptions& aProvider,
     const IdentityProviderAPIConfig& aManifest,
-    const IdentityProviderAccount& aAccount,
-    const bool isAutoSelected
-  ) {
+    const IdentityProviderAccount& aAccount, const bool isAutoSelected) {
   MOZ_ASSERT(XRE_IsParentProcess());
   // Build the URL
   nsCOMPtr<nsIURI> baseURI;
@@ -823,13 +823,14 @@ RefPtr<GetTokenPromise> FetchToken(
                                                   aPrincipal)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [aAccount, idpURI,
-           relyingParty, isAutoSelected](const IdentityAssertionResponse& response) {
+          [aAccount, idpURI, relyingParty,
+           isAutoSelected](const IdentityAssertionResponse& response) {
             // If we were provided a token, resolve with it.
             if (response.mToken.WasPassed()) {
               return GetTokenPromise::CreateAndResolve(
                   std::make_tuple(response.mToken.Value(),
-                                  NS_ConvertUTF16toUTF8(aAccount.mId), isAutoSelected),
+                                  NS_ConvertUTF16toUTF8(aAccount.mId),
+                                  isAutoSelected),
                   __func__);
             }
             // If we don't have a continuation window to open at this stage,
@@ -889,11 +890,13 @@ RefPtr<GetTokenPromise> AuthorizationPopupForToken(
             std::tie(token, overridingAccountId) = promiseResult;
             if (overridingAccountId.isSome()) {
               return GetTokenPromise::CreateAndResolve(
-                  std::make_tuple(token, overridingAccountId.value(), isAutoSelected),
+                  std::make_tuple(token, overridingAccountId.value(),
+                                  isAutoSelected),
                   __func__);
             }
             return GetTokenPromise::CreateAndResolve(
-                std::make_tuple(token, NS_ConvertUTF16toUTF8(aAccount.mId), isAutoSelected),
+                std::make_tuple(token, NS_ConvertUTF16toUTF8(aAccount.mId),
+                                isAutoSelected),
                 __func__);
           },
           [](nsresult rv) {
@@ -1191,7 +1194,8 @@ RefPtr<GetAccountPromise> PromptUserToSelectAccount(
         }
         const IdentityProviderAccount& resolved =
             aAccounts.mAccounts.Value().ElementAt(result);
-        resultPromise->Resolve(std::make_tuple(aManifest, resolved, false), __func__);
+        resultPromise->Resolve(std::make_tuple(aManifest, resolved, false),
+                               __func__);
       },
       [resultPromise](JSContext*, JS::Handle<JS::Value> aValue, ErrorResult&) {
         resultPromise->Reject(
@@ -1240,8 +1244,14 @@ nsresult LinkAccount(nsIPrincipal* aPrincipal, const nsCString& aAccountId,
   error = idpPrincipal->GetOrigin(idpOrigin);
   NS_ENSURE_SUCCESS(error, error);
 
-  permissionManager->AddFromPrincipal(aPrincipal, "credential-allow-silent-access^"_ns + idpOrigin, nsIPermissionManager::ALLOW_ACTION, nsIPermissionManager::EXPIRE_SESSION, 0);
-  permissionManager->AddFromPrincipal(aPrincipal, "credential-allow-silent-access"_ns, nsIPermissionManager::ALLOW_ACTION, nsIPermissionManager::EXPIRE_SESSION, 0);
+  permissionManager->AddFromPrincipal(
+      aPrincipal, "credential-allow-silent-access^"_ns + idpOrigin,
+      nsIPermissionManager::ALLOW_ACTION, nsIPermissionManager::EXPIRE_SESSION,
+      0);
+  permissionManager->AddFromPrincipal(aPrincipal,
+                                      "credential-allow-silent-access"_ns,
+                                      nsIPermissionManager::ALLOW_ACTION,
+                                      nsIPermissionManager::EXPIRE_SESSION, 0);
   return NS_OK;
 }
 
