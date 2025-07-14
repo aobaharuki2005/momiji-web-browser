@@ -7916,10 +7916,10 @@ LogicalSize nsGridContainerFrame::GridReflowInput::PercentageBasisFor(
   if (StaticPrefs::layout_css_grid_multi_pass_track_sizing_enabled()) {
     // Get row size and column size for the grid area occupied by aGridItem.
     const nscoord colSize = mCols.mCanResolveLineRangeSize
-                                ? aGridItem.mArea.mCols.ToLength(mCols.mSizes)
+                                ? mCols.ResolveSize(aGridItem.mArea.mCols)
                                 : NS_UNCONSTRAINEDSIZE;
     const nscoord rowSize = mRows.mCanResolveLineRangeSize
-                                ? aGridItem.mArea.mRows.ToLength(mRows.mSizes)
+                                ? mRows.ResolveSize(aGridItem.mArea.mRows)
                                 : NS_UNCONSTRAINEDSIZE;
     return !wm.IsOrthogonalTo(mWM) ? LogicalSize(wm, colSize, rowSize)
                                    : LogicalSize(wm, rowSize, colSize);
@@ -7932,7 +7932,7 @@ LogicalSize nsGridContainerFrame::GridReflowInput::PercentageBasisFor(
     return LogicalSize(wm, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   }
   MOZ_ASSERT(!mRows.mCanResolveLineRangeSize);
-  nscoord colSize = aGridItem.mArea.mCols.ToLength(mCols.mSizes);
+  nscoord colSize = mCols.ResolveSize(aGridItem.mArea.mCols);
   nscoord rowSize = NS_UNCONSTRAINEDSIZE;
   return !wm.IsOrthogonalTo(mWM) ? LogicalSize(wm, colSize, rowSize)
                                  : LogicalSize(wm, rowSize, colSize);
