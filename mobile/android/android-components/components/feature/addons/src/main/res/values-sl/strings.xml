@@ -122,6 +122,30 @@
   <string name="mozac_feature_addons_permissions_data_collection_websiteActivity_short_description">dejavnost spletnih strani</string>
   <!-- Short description for the websiteContent data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_websiteContent_short_description">vsebino spletnih strani</string>
+  <!-- Long description for the authenticationInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_authenticationInfo_long_description">deljenje podatkov za overjanje z razvijalcem razširitve</string>
+  <!-- Long description for the bookmarksInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_bookmarksInfo_long_description">deljenje podatkov o zaznamkih z razvijalcem razširitve</string>
+  <!-- Long description for the browsingActivity data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_browsingActivity_long_description">deljenje dejavnosti brskanja z razvijalcem razširitve</string>
+  <!-- Long description for the financialAndPaymentInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_financialAndPaymentInfo_long_description">deljenje finančnih podatkov in podatkov o plačilih z razvijalcem razširitve</string>
+  <!-- Long description for the healthInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_healthInfo_long_description">deljenje zdravstvenih podatkov z razvijalcem razširitve</string>
+  <!-- Long description for the locationInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_locationInfo_long_description">deljenje podatkov o lokaciji z razvijalcem razširitve</string>
+  <!-- Long description for the personalCommunications data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_personalCommunications_long_description">deljenje osebnih sporočil z razvijalcem razširitve</string>
+  <!-- Long description for the personallyIdentifyingInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_personallyIdentifyingInfo_long_description">deljenje prepoznavnih osebnih podatkov z razvijalcem razširitve</string>
+  <!-- Long description for the searchTerms data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_searchTerms_long_description">deljenje iskalnih poizvedb z razvijalcem razširitve</string>
+  <!-- Long description for the technicalAndInteraction data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_technicalAndInteraction_long_description">Deli tehnične in interakcijske podatke z razvijalcem razširitve</string>
+  <!-- Long description for the websiteActivity data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_websiteActivity_long_description">deljenje dejavnosti spletnih strani z razvijalcem razširitve</string>
+  <!-- Long description for the websiteContent data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_websiteContent_long_description">deljenje vsebine spletnih strani z razvijalcem razširitve</string>
   <!-- The version on of add-on. -->
   <string name="mozac_feature_addons_version">Različica</string>
   <!-- The author of an add-on. -->
