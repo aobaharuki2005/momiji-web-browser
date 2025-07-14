@@ -430,13 +430,17 @@ export class LoginDataSource extends DataSourceBase {
     if (result != Ci.nsIFilePicker.returnCancel) {
       try {
         const summary = await LoginCSVImport.importFromCSV(path);
-        const counts = { added: 0, modified: 0 };
+        const counts = { added: 0, modified: 0, no_change: 0, error: 0 };
 
         for (const item of summary) {
-          if (item.result in counts) {
-            counts[item.result] += 1;
+          const type = item.result;
+          if (type.includes("error")) {
+            counts.error++;
+          } else {
+            counts[type]++;
           }
         }
+
         this.setNotification({
           id: "import-success",
           l10nArgs: counts,

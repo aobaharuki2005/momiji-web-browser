@@ -112,7 +112,7 @@ class NotificationMessageBar extends MozLitElement {
       onDismiss: this.#handleDismiss,
       messageHandler: this.messageHandler,
       dataL10nId: "contextual-manager-passwords-import-success-heading",
-      messageL10nId: "contextual-manager-passwords-import-success-message",
+      messageL10nId: "contextual-manager-passwords-import-success-message-2",
       messageL10nArgs: this.notification.l10nArgs,
       type: "success",
       link: {
