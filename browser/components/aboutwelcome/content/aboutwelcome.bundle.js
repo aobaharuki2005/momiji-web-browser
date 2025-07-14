@@ -119,16 +119,6 @@ const AboutWelcomeUtils = {
         return obj;
       }, {});
   },
-  getTileStyle(tile, validStyle) {
-    const preferredTileStyle = tile?.style;
-    const legacyTileStyle = tile?.tiles?.style ?? null;
-
-    return this.getValidStyle(
-      preferredTileStyle ?? legacyTileStyle,
-      validStyle,
-      true
-    );
-  },
 };
 
 
@@ -2197,7 +2187,6 @@ __webpack_require__.r(__webpack_exports__);
 
 const HEADER_STYLES = ["backgroundColor", "border", "padding", "margin", "width", "height"];
 const TILE_STYLES = ["marginBlock", "marginInline", "paddingBlock", "paddingInline"];
-const CONTAINER_STYLES = ["padding", "margin", "marginBlock", "marginInline", "paddingBlock", "paddingInline", "flexDirection", "flexWrap", "flexFlow", "flexGrow", "flexShrink", "justifyContent", "alignItems", "gap"];
 const ContentTiles = props => {
   const {
     content
@@ -2263,7 +2252,7 @@ const ContentTiles = props => {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       key: index,
       className: `content-tile ${header ? "has-header" : ""}`,
-      style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_9__.AboutWelcomeUtils.getTileStyle(tile, TILE_STYLES)
+      style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_9__.AboutWelcomeUtils.getValidStyle(tile.style, TILE_STYLES)
     }, header?.title && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
       className: "tile-header secondary",
       onClick: () => toggleTile(index, tile),
@@ -2342,8 +2331,7 @@ const ContentTiles = props => {
   const renderContentTiles = () => {
     if (Array.isArray(tiles)) {
       return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-        id: "content-tiles-container",
-        style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_9__.AboutWelcomeUtils.getValidStyle(content?.contentTilesContainer?.style, CONTAINER_STYLES)
+        id: "content-tiles-container"
       }, tiles.map((tile, index) => renderContentTile(tile, index)));
     }
     // If tiles is not an array render the tile alone without a container
@@ -2871,7 +2859,7 @@ const MultiSelect = ({
     return getOrderedIds().map(id => data.find(item => item.id === id));
   }, [] // eslint-disable-line react-hooks/exhaustive-deps
   );
-  const containerStyle = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getTileStyle(content.tiles, MULTI_SELECT_STYLES), [content.tiles]);
+  const containerStyle = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getValidStyle(content.tiles.style, MULTI_SELECT_STYLES, true), [content.tiles.style]);
   const PickerIcon = ({
     emoji,
     bgColor,
@@ -3410,7 +3398,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
 /* harmony import */ var _components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4);
-function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */

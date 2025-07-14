@@ -446,26 +446,6 @@ div#feature-callout.hidden {
 #feature-callout .screen[pos=callout] .welcome-text .inline-icon-container[alignment=bottom] {
   align-items: end;
 }
-#feature-callout .screen[pos=callout] #content-tiles-container {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-}
-#feature-callout .screen[pos=callout] #content-tiles-container .content-tile .content-title-container {
-  margin-block: inherit;
-}
-#feature-callout .screen[pos=callout] #content-tiles-container .content-tile .multi-select-container {
-  padding: 12px 0 0;
-}
-#feature-callout .screen[pos=callout] #content-tiles-container .content-tile:not(:last-child) {
-  margin-block: 0 20px;
-}
-#feature-callout .screen[pos=callout] #content-tiles-container .tile-title {
-  font-size: 0.813em;
-}
-#feature-callout .screen[pos=callout] #content-tiles-container .tile-title-container {
-  margin-block: initial;
-}
 #feature-callout .screen[pos=callout] .multi-select-container {
   margin: 0;
   font-size: 0.813em;
