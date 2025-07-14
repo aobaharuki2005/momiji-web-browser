@@ -26,25 +26,6 @@ class TestL10n(ChromeHandlerMixin, MarionetteTestCase):
 
         self.l10n = L10n(self.marionette)
 
-    def test_localize_entity(self):
-        dtds = [self.chrome_base_url + "test_dialog.dtd"]
-        value = self.l10n.localize_entity(dtds, "testDialog.title")
-
-        self.assertEqual(value, "Test Dialog")
-
-    def test_localize_entity_invalid_arguments(self):
-        dtds = [self.chrome_base_url + "test_dialog.dtd"]
-
-        self.assertRaises(
-            NoSuchElementException, self.l10n.localize_entity, dtds, "notExistent"
-        )
-        self.assertRaises(
-            InvalidArgumentException, self.l10n.localize_entity, dtds[0], "notExistent"
-        )
-        self.assertRaises(
-            InvalidArgumentException, self.l10n.localize_entity, dtds, True
-        )
-
     def test_localize_property(self):
         properties = [self.chrome_base_url + "test_dialog.properties"]
 

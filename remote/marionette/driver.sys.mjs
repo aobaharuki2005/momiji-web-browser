@@ -3397,38 +3397,6 @@ GeckoDriver.prototype.uninstallAddon = function (cmd) {
 };
 
 /**
- * Retrieve the localized string for the specified entity id.
- *
- * Example:
- *     localizeEntity(["chrome://branding/locale/brand.dtd"], "brandShortName")
- *
- * @param {object} cmd
- * @param {Array.<string>} cmd.parameters.urls
- *     Array of .dtd URLs.
- * @param {string} cmd.parameters.id
- *     The ID of the entity to retrieve the localized string for.
- *
- * @returns {string}
- *     The localized string for the requested entity.
- */
-GeckoDriver.prototype.localizeEntity = function (cmd) {
-  let { urls, id } = cmd.parameters;
-
-  if (!Array.isArray(urls)) {
-    throw new lazy.error.InvalidArgumentError(
-      "Value of `urls` should be of type 'Array'"
-    );
-  }
-  if (typeof id != "string") {
-    throw new lazy.error.InvalidArgumentError(
-      "Value of `id` should be of type 'string'"
-    );
-  }
-
-  return lazy.l10n.localizeEntity(urls, id);
-};
-
-/**
  * Retrieve the localized string for the specified property id.
  *
  * Example:
@@ -3905,7 +3873,6 @@ GeckoDriver.prototype.commands = {
   "Addon:Uninstall": GeckoDriver.prototype.uninstallAddon,
 
   // L10n service
-  "L10n:LocalizeEntity": GeckoDriver.prototype.localizeEntity,
   "L10n:LocalizeProperty": GeckoDriver.prototype.localizeProperty,
 
   // Reftest service
