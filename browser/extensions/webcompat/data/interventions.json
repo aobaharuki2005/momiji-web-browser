@@ -4426,6 +4426,23 @@
       }
     ]
   },
+  "1975951": {
+    "label": "www.dell.com",
+    "bugs": {
+      "1975951": {
+        "issue": "broken-images",
+        "matches": ["*://www.dell.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "not_platforms": ["mac"],
+        "content_scripts": {
+          "css": ["bug1975951-www.dell.com-reveal-product-images.css"]
+        }
+      }
+    ]
+  },
   "1975953": {
     "label": "envios.mercadolibre.com.ar",
     "bugs": {
