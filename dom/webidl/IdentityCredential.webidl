@@ -14,6 +14,8 @@ interface IdentityCredential : Credential {
  [Throws]
  static Promise<undefined> disconnect(optional IdentityCredentialDisconnectOptions options = {});
  readonly attribute UTF8String? token;
+ readonly attribute boolean isAutoSelected;
+ readonly attribute UTF8String configURL;
 };
 
 enum IdentityCredentialRequestOptionsMode {

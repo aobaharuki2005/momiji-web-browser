@@ -30,6 +30,8 @@
         "is_auto_selected should be false on first request");
       is(cred.id, "1234", "Correct id on the credential");
       is(cred.type, "identity", "Correct type on the credential");
+      is(cred.isAutoSelected, false, "Correct isAutoSelected on the credential");
+      is(cred.configURL, "https://example.net/tests/dom/credentialmanagement/identity/tests/mochitest/server_manifest.sjs", "Correct configURL on credential");
       info("Testing auto-reauth - is_auto_selected should be true");
       return navigator.credentials.get({
         identity: {
@@ -48,6 +50,8 @@
         "is_auto_selected should be true on second request");
       is(cred.id, "1234", "Correct id on the auto-reauth credential");
       is(cred.type, "identity", "Correct type on the auto-reauth credential");
+      is(cred.isAutoSelected, true, "Correct isAutoSelected on the credential");
+      is(cred.configURL, "https://example.net/tests/dom/credentialmanagement/identity/tests/mochitest/server_manifest.sjs", "Correct configURL on the credential");
     }).catch((err) => {
       info("Error: " + err);
       ok(false, "Must not have an error: " + err.message);

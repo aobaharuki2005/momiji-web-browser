@@ -27,6 +27,8 @@ struct IPCIdentityCredential
 {
   nsString id;
   nsCString? token;
+  bool isAutoSelected;
+  nsCString configURL;
 };
 
 

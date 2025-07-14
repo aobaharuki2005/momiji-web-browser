@@ -88,9 +88,9 @@ using GetIdentityAssertionPromise =
     MozPromise<std::tuple<IdentityAssertionResponse, IdentityProviderAccount>,
                nsresult, true>;
 using GetTokenPromise =
-    MozPromise<std::tuple<nsCString, nsCString>, nsresult, true>;
+    MozPromise<std::tuple<nsCString, nsCString, const bool>, nsresult, true>;
 using GetAccountPromise =
-    MozPromise<std::tuple<IdentityProviderAPIConfig, IdentityProviderAccount, bool>,
+    MozPromise<std::tuple<IdentityProviderAPIConfig, IdentityProviderAccount, const bool>,
                nsresult, true>;
 using GetMetadataPromise =
     MozPromise<IdentityProviderClientMetadata, nsresult, true>;
@@ -299,7 +299,7 @@ RefPtr<MozPromise<bool, nsresult, true>> DisconnectInMainProcess(
 
 RefPtr<GetTokenPromise> AuthorizationPopupForToken(
     nsIURI* aContinueURI, WebIdentityParent* aRelyingParty,
-    const IdentityProviderAccount& aAccount);
+    const IdentityProviderAccount& aAccount, const bool isAutoSelected);
 
 }  // namespace identity
 
