@@ -2485,9 +2485,9 @@ bool nsIFrame::CanBeDynamicReflowRoot() const {
   if (!width->IsLengthPercentage() || width->HasPercent() ||
       !height->IsLengthPercentage() || height->HasPercent() ||
       IsIntrinsicKeyword(*pos.GetMinWidth(anchorResolutionParams)) ||
-      IsIntrinsicKeyword(*pos.GetMaxWidth(anchorResolutionParams.mPosition)) ||
+      IsIntrinsicKeyword(*pos.GetMaxWidth(anchorResolutionParams)) ||
       IsIntrinsicKeyword(*pos.GetMinHeight(anchorResolutionParams)) ||
-      IsIntrinsicKeyword(*pos.GetMaxHeight(anchorResolutionParams.mPosition)) ||
+      IsIntrinsicKeyword(*pos.GetMaxHeight(anchorResolutionParams)) ||
       ((pos.GetMinWidth(anchorResolutionParams)->IsAuto() ||
         pos.GetMinHeight(anchorResolutionParams)->IsAuto()) &&
        IsFlexOrGridItem())) {
@@ -6717,8 +6717,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   // definite cross size and indefinite cross size.
   const bool isDefiniteISize = styleISize->IsLengthPercentage();
   const auto minBSizeCoord = stylePos->MinBSize(aWM, anchorResolutionParams);
-  const auto maxBSizeCoord =
-      stylePos->MaxBSize(aWM, anchorResolutionParams.mPosition);
+  const auto maxBSizeCoord = stylePos->MaxBSize(aWM, anchorResolutionParams);
   const bool isAutoMinBSize =
       nsLayoutUtils::IsAutoBSize(*minBSizeCoord, aCBSize.BSize(aWM));
   const bool isAutoMaxBSize =
@@ -6763,8 +6762,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   // sizing properties in that axis.
   const bool shouldIgnoreMinMaxISize =
       isFlexItemInlineAxisMainAxis || isSubgriddedInInlineAxis;
-  const auto maxISizeCoord =
-      stylePos->MaxISize(aWM, anchorResolutionParams.mPosition);
+  const auto maxISizeCoord = stylePos->MaxISize(aWM, anchorResolutionParams);
   nscoord maxISize = NS_UNCONSTRAINEDSIZE;
   if (!maxISizeCoord->IsNone() && !shouldIgnoreMinMaxISize) {
     maxISize =
@@ -7036,8 +7034,8 @@ LogicalSize nsIFrame::ComputeAutoSize(
                                                        : LogicalSize(aWM);
     const nscoord bSize = ComputeBSizeValueAsPercentageBasis(
         *styleBSize, *stylePos->MinBSize(aWM, anchorResolutionParams),
-        *stylePos->MaxBSize(aWM, anchorResolutionParams.mPosition),
-        aCBSize.BSize(aWM), contentEdgeToBoxSizing.BSize(aWM));
+        *stylePos->MaxBSize(aWM, anchorResolutionParams), aCBSize.BSize(aWM),
+        contentEdgeToBoxSizing.BSize(aWM));
     const IntrinsicSizeInput input(
         aRenderingContext, Some(aCBSize.ConvertTo(GetWritingMode(), aWM)),
         Some(LogicalSize(aWM, NS_UNCONSTRAINEDSIZE, bSize)
@@ -7183,8 +7181,7 @@ LogicalSize nsIFrame::ComputeAbsolutePosAutoSize(
                     StyleLengthPercentage::FromAppUnits(result.BSize(aWM)))
               : *styleBSize,
           *stylePos->MinBSize(aWM, anchorResolutionParams.mBaseParams),
-          *stylePos->MaxBSize(aWM,
-                              anchorResolutionParams.mBaseParams.mPosition),
+          *stylePos->MaxBSize(aWM, anchorResolutionParams.mBaseParams),
           aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM));
 
       const IntrinsicSizeInput input(
@@ -7327,8 +7324,8 @@ nsIFrame::ISizeComputationResult nsIFrame::ComputeISizeValue(
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
   const nscoord bSize = ComputeBSizeValueAsPercentageBasis(
       aStyleBSize, *stylePos->MinBSize(aWM, anchorResolutionParams),
-      *stylePos->MaxBSize(aWM, anchorResolutionParams.mPosition),
-      aCBSize.BSize(aWM), aContentEdgeToBoxSizing.BSize(aWM));
+      *stylePos->MaxBSize(aWM, anchorResolutionParams), aCBSize.BSize(aWM),
+      aContentEdgeToBoxSizing.BSize(aWM));
   const IntrinsicSizeInput input(
       aRenderingContext, Some(aCBSize.ConvertTo(GetWritingMode(), aWM)),
       Some(LogicalSize(aWM, NS_UNCONSTRAINEDSIZE, bSize)

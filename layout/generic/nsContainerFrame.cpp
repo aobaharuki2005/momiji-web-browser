@@ -2318,8 +2318,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   // algorithm.)
   const bool isFlexItemInlineAxisMainAxis =
       flexItemMainAxis && *flexItemMainAxis == LogicalAxis::Inline;
-  const auto maxISizeCoord =
-      stylePos->MaxISize(aWM, anchorResolutionParams.mPosition);
+  const auto maxISizeCoord = stylePos->MaxISize(aWM, anchorResolutionParams);
   if (!maxISizeCoord->IsNone() && !isFlexItemInlineAxisMainAxis) {
     maxISize =
         ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
@@ -2382,8 +2381,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   // algorithm.)
   const bool isFlexItemBlockAxisMainAxis =
       flexItemMainAxis && *flexItemMainAxis == LogicalAxis::Block;
-  const auto maxBSizeCoord =
-      stylePos->MaxBSize(aWM, anchorResolutionParams.mPosition);
+  const auto maxBSizeCoord = stylePos->MaxBSize(aWM, anchorResolutionParams);
   if (!nsLayoutUtils::IsAutoBSize(*maxBSizeCoord, aCBSize.BSize(aWM)) &&
       !isFlexItemBlockAxisMainAxis) {
     maxBSize = nsLayoutUtils::ComputeBSizeValueHandlingStretch(

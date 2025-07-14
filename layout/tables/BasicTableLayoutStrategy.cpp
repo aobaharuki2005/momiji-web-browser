@@ -106,7 +106,7 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
     const nscoord cellBSize = nsIFrame::ComputeBSizeValueAsPercentageBasis(
         *stylePos->BSize(aWM, anchorResolutionParams),
         *stylePos->MinBSize(aWM, anchorResolutionParams),
-        *stylePos->MaxBSize(aWM, anchorResolutionParams.mPosition), cbBSize,
+        *stylePos->MaxBSize(aWM, anchorResolutionParams), cbBSize,
         contentEdgeToBoxSizingBSize);
 
     const IntrinsicSizeInput input(
@@ -180,7 +180,7 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
     }
   }
 
-  auto maxISize = stylePos->MaxISize(aWM, anchorResolutionParams.mPosition);
+  auto maxISize = stylePos->MaxISize(aWM, anchorResolutionParams);
   if (nsIFrame::ToExtremumLength(*maxISize)) {
     if (!aIsCell || maxISize->BehavesLikeStretchOnInlineAxis()) {
       maxISize = AnchorResolvedMaxSizeHelper::None();

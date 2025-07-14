@@ -366,7 +366,7 @@ static bool SizeDependsOnIntrinsicSize(const ReflowInput& aReflowInput) {
          DependsOnIntrinsicSize(
              *position.MinISize(wm, anchorResolutionParams)) ||
          DependsOnIntrinsicSize(
-             *position.MaxISize(wm, anchorResolutionParams.mPosition)) ||
+             *position.MaxISize(wm, anchorResolutionParams)) ||
          aReflowInput.mFrame->IsFlexItem();
 }
 
