@@ -136,6 +136,8 @@ const PREF_VISIBLE_SECTIONS =
 const PREF_PRIVATE_PING_ENABLED = "telemetry.privatePing.enabled";
 const PREF_SURFACE_ID = "telemetry.surfaceId";
 
+const PREF_WIDGET_LISTS_ENABLED = "widgets.lists.enabled";
+
 let getHardcodedLayout;
 
 export class DiscoveryStreamFeed {
@@ -807,6 +809,10 @@ export class DiscoveryStreamFeed {
     const sponsoredCollectionsEnabled =
       this.store.getState().Prefs.values[PREF_COLLECTIONS_ENABLED];
 
+    // TODO: Add all pref logic
+    const widgetsEnabled =
+      this.store.getState().Prefs.values[PREF_WIDGET_LISTS_ENABLED];
+
     const pocketConfig = this.store.getState().Prefs.values?.pocketConfig || {};
     const onboardingExperience =
       this.isBff && pocketConfig.onboardingExperience;
@@ -946,6 +952,7 @@ export class DiscoveryStreamFeed {
         ? spocMessageVariant
         : "",
       pocketStoriesHeadlineId: pocketConfig.pocketStoriesHeadlineId,
+      widgetsEnabled,
     });
 
     sendUpdate({
@@ -3180,6 +3187,7 @@ getHardcodedLayout = ({
   ctaButtonVariant = "",
   spocMessageVariant = "",
   pocketStoriesHeadlineId = "newtab-section-header-stories",
+  widgetsEnabled = false,
 }) => ({
   lastUpdate: Date.now(),
   spocs: {
@@ -3214,6 +3222,13 @@ getHardcodedLayout = ({
             : {}),
           properties: {},
         },
+        ...(widgetsEnabled
+          ? [
+              {
+                type: "Widgets",
+              },
+            ]
+          : []),
         ...(sponsoredCollectionsEnabled
           ? [
               {

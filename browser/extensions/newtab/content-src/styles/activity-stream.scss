@@ -167,6 +167,11 @@ input {
 @import '../components/ModalOverlay/ModalOverlay';
 @import '../components/Notifications/Notifications';
 
+// Widget Components
+@import '../components/Widgets/Widgets';
+@import '../components/Widgets/Lists/Lists';
+@import '../components/Widgets/FocusTimer/FocusTimer';
+
 // Discovery Stream Components
 @import '../components/DiscoveryStreamComponents/CardGrid/CardGrid';
 @import '../components/DiscoveryStreamComponents/CardSections/CardSections';

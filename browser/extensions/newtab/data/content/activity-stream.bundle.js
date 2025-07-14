@@ -10833,6 +10833,7 @@ const selectLayoutRender = ({ state = {}, prefs = {} }) => {
     "SectionTitle",
     "Signup",
     "Navigation",
+    "Widgets",
     "CardGrid",
     "CollectionCardGrid",
     "HorizontalRule",
@@ -12039,10 +12040,57 @@ function CardSections({
   }, sectionsToRender);
 }
 
+;// CONCATENATED MODULE: ./content-src/components/Widgets/Lists/Lists.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+
+function Lists() {
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    className: "lists"
+  }, "Lists Widget");
+}
+
+;// CONCATENATED MODULE: ./content-src/components/Widgets/FocusTimer/FocusTimer.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+
+function FocusTimer() {
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    className: "focus-timer"
+  }, "FocusTimer Widget");
+}
+
+;// CONCATENATED MODULE: ./content-src/components/Widgets/Widgets.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+
+
+const PREF_WIDGETS_LISTS_ENABLED = "widgets.lists.enabled";
+const PREF_WIDGETS_SYSTEM_LISTS_ENABLED = "widgets.system.lists.enabled";
+const PREF_WIDGETS_TIMER_ENABLED = "widgets.focusTimer.enabled";
+const PREF_WIDGETS_SYSTEM_TIMER_ENABLED = "widgets.system.focusTimer.enabled";
+function Widgets() {
+  const prefs = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Prefs.values);
+  const listsEnabled = prefs[PREF_WIDGETS_SYSTEM_LISTS_ENABLED] && prefs[PREF_WIDGETS_LISTS_ENABLED];
+  const timerEnabled = prefs[PREF_WIDGETS_SYSTEM_TIMER_ENABLED] && prefs[PREF_WIDGETS_TIMER_ENABLED];
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    className: "widgets-container"
+  }, listsEnabled && /*#__PURE__*/external_React_default().createElement(Lists, null), timerEnabled && /*#__PURE__*/external_React_default().createElement(FocusTimer, null));
+}
+
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamBase/DiscoveryStreamBase.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -12243,6 +12291,8 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
         return /*#__PURE__*/external_React_default().createElement(PrivacyLink, {
           properties: component.properties
         });
+      case "Widgets":
+        return /*#__PURE__*/external_React_default().createElement(Widgets, null);
       default:
         return /*#__PURE__*/external_React_default().createElement("div", null, component.type);
     }
@@ -12309,6 +12359,7 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
 
     // Extract TopSites to render before the rest and Message to use for header
     const topSites = extractComponent("TopSites");
+    const widgets = extractComponent("Widgets");
     const sponsoredCollection = extractComponent("CollectionCardGrid");
     const message = extractComponent("Message") || {
       header: {
@@ -12349,6 +12400,10 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
       width: 12,
       components: [topSites],
       sectionType: "topsites"
+    }]), widgets && this.renderLayout([{
+      width: 12,
+      components: [widgets],
+      sectionType: "widgets"
     }]), sponsoredCollection && this.renderLayout([{
       width: 12,
       components: [sponsoredCollection]
@@ -12382,9 +12437,9 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
     const styles = [];
     let [data] = layoutRender;
     // Add helper class for topsites
-    const topsitesClass = data.sectionType ? "ds-layout-topsites" : "";
+    const sectionClass = data.sectionType ? `ds-layout-${data.sectionType}` : "";
     return /*#__PURE__*/external_React_default().createElement("div", {
-      className: `discovery-stream ds-layout ${topsitesClass}`
+      className: `discovery-stream ds-layout ${sectionClass}`
     }, layoutRender.map((row, rowIndex) => /*#__PURE__*/external_React_default().createElement("div", {
       key: `row-${rowIndex}`,
       className: `ds-column ds-column-${row.width}`
