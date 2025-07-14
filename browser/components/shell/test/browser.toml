@@ -12,9 +12,6 @@ run-if = ["os == 'linux'"]
 ["browser_633221.js"]
 run-if = ["os == 'linux'"]
 
-["browser_createWindowsShortcut.js"]
-run-if = ["os == 'win'"]
-
 ["browser_doesAppNeedPin.js"]
 
 ["browser_headless_screenshot_1.js"]

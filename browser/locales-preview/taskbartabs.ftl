@@ -17,10 +17,3 @@ taskbar-tab-urlbar-button-open =
                      via a heuristic, or simply be the hostname of the
                      site.
 taskbar-tab-shortcut-description = { $name } Web App
-
-# This string is used as the name of the folder that contains Taskbar
-# Tabs. Don't use any characters that can't go in a folder name, or
-# they will be replaced by underscores. (This generally means to not
-# use: '<' '>' ':' '"' '/' '\' '|' '?' '*' . All other characters
-# should be fine.)
-taskbar-tab-shortcut-folder = { -brand-short-name } Web Apps
