@@ -875,6 +875,8 @@
   <string name="preferences_theme">佈景主題</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">首頁</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">應用程式圖示</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">手勢</string>
   <!-- Preference for settings related to visual options -->
@@ -1308,6 +1310,12 @@
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">展開</string>
   <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">選擇應用程式圖示</string>
+  <!--
     Theme Preferences
 
     Preference for using light theme
@@ -1470,8 +1478,6 @@
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">了解更多</string>
   <!--
-    Sessions
-
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
@@ -3423,6 +3429,8 @@
   <string name="protection_panel_etp_toggle_enabled_description_2">若此網站功能異常，可嘗試關閉此功能。</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
   <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">已關閉保護，建議您重新開啟。</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
+  <string name="protection_panel_etp_toggle_disabled_description_2">建議開啟追蹤保護功能。</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3432,6 +3440,8 @@
   <string name="protection_panel_no_trackers_blocked">找不到追蹤器</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">隱私權與安全性設定</string>
+  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
+  <string name="protection_panel_privacy_and_security_settings_2">隱私權設定</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">權限</string>
   <!--
@@ -3641,6 +3651,14 @@
   <string name="debug_drawer_override_region">覆蓋原始與目前地區</string>
   <!-- The title of the button for overriding home region permanently. -->
   <string name="debug_drawer_override_home_region_permanently">永久覆蓋原始地區</string>
+  <!--
+    Add-ons debug tools
+
+    The description of the Add-ons Tools in the Debug Drawer
+  -->
+  <string name="debug_drawer_addons_tools_title">附加元件工具</string>
+  <!-- The title of the button used to check for add-on updates. -->
+  <string name="addons_debug_tools_check_for_updates_button">檢查更新</string>
   <!--
     Messages explaining how to exit fullscreen mode
 

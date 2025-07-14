@@ -34,6 +34,8 @@
   <string name="no_private_tabs_description">Dei private fanene dine vil visast her.</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d valde</string>
+  <!-- Tab tray multi select title in app bar when no tabs are selected -->
+  <string name="tab_tray_multi_select_title_empty">Vel faner</string>
   <!-- Label of button in create collection dialog for creating a new collection -->
   <string name="tab_tray_add_new_collection">Legg til ny samling</string>
   <!-- Label of editable text in create collection dialog for naming a new collection -->
@@ -875,6 +877,8 @@
   <string name="preferences_theme">Tema</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">Startside</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">App-ikon</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Rørsler</string>
   <!-- Preference for settings related to visual options -->
@@ -1308,6 +1312,12 @@
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Utvida</string>
   <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">Vel app-ikon</string>
+  <!--
     Theme Preferences
 
     Preference for using light theme
@@ -1472,6 +1482,11 @@
   <!--
     Sessions
 
+    Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs
+  -->
+  <string name="tabs_header_normal_tabs_counter_title">Vanlege faner opne: %1$s. Trykk for å byte fane.</string>
+  <!--
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
@@ -1481,6 +1496,12 @@
     The %1$s will be replaced by the number of opened synced tabs
   -->
   <string name="tabs_header_synced_tabs_counter_title">Synkroniserte faner opne: %1$s. Trykk for å byte fane.</string>
+  <!-- Text for the tabs header private tabs -->
+  <string name="tabs_header_private_tabs_title">Privat</string>
+  <!-- Text for the tabs header normal tabs -->
+  <string name="tabs_header_normal_tabs_title">Faner</string>
+  <!-- Text for the tabs header synced tabs -->
+  <string name="tabs_header_synced_tabs_title">Synkroniser</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Legg til fane</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1732,6 +1753,8 @@
   <string name="webcompat_reporter_screen_title">Rapporter problem med ein nettstad</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Bidra til å gjere %1$s betre for alle. Mozilla-tilsette brukar informasjonen du sender til å fikse problem med nettstaden.</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description_2">Rapporten din hjelper oss med å forstå og fikse problem i %1$s for å gjere det betre for alle. Les meir</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Les meir</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -2387,6 +2410,10 @@
   <string name="preference_enhanced_tracking_protection_strict">Streng</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">Sterkare sporingsvern og raskare yting, men nokre nettstadar fungerer kanskje ikkje slik dei skal.</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">Tillat at %1$s automatisk brukar unntak som er påkravd for å unngå større nettstadfeil.</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">Bruk også unntak automatisk som berre er nødvendige for å fikse mindre problem og gjere praktiske funksjonar tilgjengelege.</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Kva er blokkert av strengt sporingsvern?</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -3421,6 +3448,8 @@
   <string name="protection_panel_etp_toggle_enabled_description_2">Om noko ser øydelagt ut på nettstaden, prøv å slå det av.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
   <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Vern er AV. Vi føreslår att du slår det på igjen.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
+  <string name="protection_panel_etp_toggle_disabled_description_2">Det er tilrådd å aktivere sporingsvern.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3430,6 +3459,8 @@
   <string name="protection_panel_no_trackers_blocked">Fann ingen sporarar</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Personvern- og sikkerheitsinnstillingar</string>
+  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
+  <string name="protection_panel_privacy_and_security_settings_2">Personverninnstillingar</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">Løyve</string>
   <!--
@@ -3639,6 +3670,12 @@
   <string name="debug_drawer_override_region">Overstyr heime- og gjeldande region</string>
   <!-- The title of the button for overriding home region permanently. -->
   <string name="debug_drawer_override_home_region_permanently">Overstyr heimeregion permanent</string>
+  <!--
+    Add-ons debug tools
+
+    The description of the Add-ons Tools in the Debug Drawer
+  -->
+  <string name="debug_drawer_addons_tools_title">Verktøy for tillegg</string>
   <!-- The title of the button used to check for add-on updates. -->
   <string name="addons_debug_tools_check_for_updates_button">Sjå etter oppdateringar</string>
   <!--

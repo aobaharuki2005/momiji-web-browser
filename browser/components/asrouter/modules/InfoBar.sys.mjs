@@ -157,6 +157,7 @@ class InfoBarNotification {
         image: content.icon || "chrome://branding/content/icon64.png",
         priority,
         eventCallback: this.infobarCallback,
+        style: content.style || {},
       },
       content.buttons.map(b => this.formatButtonConfig(b)),
       true, // Disables clickjacking protections

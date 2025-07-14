@@ -34,6 +34,8 @@
   <string name="no_private_tabs_description">Bydd eich tabiau preifat i’w gweld yma.</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d wedi’u dewis</string>
+  <!-- Tab tray multi select title in app bar when no tabs are selected -->
+  <string name="tab_tray_multi_select_title_empty">Dewis tabiau</string>
   <!-- Label of button in create collection dialog for creating a new collection -->
   <string name="tab_tray_add_new_collection">Ychwanegu casgliad newydd</string>
   <!-- Label of editable text in create collection dialog for naming a new collection -->
@@ -426,7 +428,7 @@
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Cau</string>
   <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
-  <string name="browser_menu_default_banner_dismiss_promotion">Diystyru dyrchafiad</string>
+  <string name="browser_menu_default_banner_dismiss_promotion">Cau\'r hyrwyddo</string>
   <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
   <string name="browser_menu_recommended_extensions_content_description">Rhagor o wybodaeth</string>
   <!--
@@ -1314,7 +1316,7 @@
 
     Title for the preference that lets the user pick a new app icon
   -->
-  <string name="preference_select_app_icon_title">Dewiswch Eicon App</string>
+  <string name="preference_select_app_icon_title">Dewiswch Eicon Ap</string>
   <!--
     Theme Preferences
 
@@ -1480,6 +1482,11 @@
   <!--
     Sessions
 
+    Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs
+  -->
+  <string name="tabs_header_normal_tabs_counter_title">Tabiau Arferol ar Agor: %1$s. Tapiwch i newid tabiau.</string>
+  <!--
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
@@ -1489,6 +1496,12 @@
     The %1$s will be replaced by the number of opened synced tabs
   -->
   <string name="tabs_header_synced_tabs_counter_title">Tabiau wedi\'u Cydweddu ac ar Agor: %1$s. Tapiwch i newid tab.</string>
+  <!-- Text for the tabs header private tabs -->
+  <string name="tabs_header_private_tabs_title">Preifat</string>
+  <!-- Text for the tabs header normal tabs -->
+  <string name="tabs_header_normal_tabs_title">Tabiau</string>
+  <!-- Text for the tabs header synced tabs -->
+  <string name="tabs_header_synced_tabs_title">Sync</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Ychwanegu tab</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1741,9 +1754,9 @@
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Helpwch i wneud %1$s yn well i bawb. Mae gweithwyr Mozilla yn defnyddio\'r wybodaeth rydych chi\'n ei hanfon i ddatrys problemau gwefannau.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description_2">Mae eich adroddiad yn ein helpu i ddeall a thrwsio problemau yn %1$s i\'w wneud yn well i bawb. Dysgwch fwy</string>
+  <string name="webcompat_reporter_description_2">Mae eich adroddiad yn ein helpu i ddeall a thrwsio materion yn %1$s i\'w wneud yn well i bawb. Darllen rhagor</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
-  <string name="webcompat_reporter_learn_more">Dysgu rhagor</string>
+  <string name="webcompat_reporter_learn_more">Darllen rhagor</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1753,7 +1766,7 @@
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Dewiswch reswm</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
-  <string name="webcompat_reporter_choose_reason_2">Dewiswch reswm</string>
+  <string name="webcompat_reporter_choose_reason_2">Dewis rheswm</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Dewiswch reswm</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -2397,6 +2410,10 @@
   <string name="preference_enhanced_tracking_protection_strict">Llym</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">Diogelwch tracio cryfach a pherfformiad cyflymach, ond efallai na fydd rhai gwefannau’n gweithio’n iawn.</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">Caniatáu i %1$s osod yr eithriadau sydd eu hangen yn awtomatig er mwyn osgoi torri gwefan fawr.</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">Hefyd, gosod eithriadau\'n awtomatig sydd dim ond eu hangen i drwsio mân faterion a sicrhau bod nodweddion cyfleustra ar gael.</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Beth sydd wedi’i rwystro gan ddiogelu tracio llym</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -3428,11 +3445,11 @@
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
   <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Os yw rhywbeth yn edrych wedi torri ar y wefan hon, ceisiwch ddiffodd eich diogelwch.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
-  <string name="protection_panel_etp_toggle_enabled_description_2">Os yw rhywbeth yn edrych wedi torri ar y wefan hon, ceisiwch ei ddiffodd.</string>
+  <string name="protection_panel_etp_toggle_enabled_description_2">Os yw rhywbeth yn edrych fel ei fod wedi torri ar y wefan hon, ceisiwch ei ddiffodd.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
   <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Mae\'r mesurau diogelwch wedi\'u DIFFODD. Rydym yn awgrymu eu troi yn ôl ymlaen.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
-  <string name="protection_panel_etp_toggle_disabled_description_2">Argymhellir troi amddiffyniad olrhain ymlaen.</string>
+  <string name="protection_panel_etp_toggle_disabled_description_2">Argymhellwn i chi droi diogelwch rhag tracio ymlaen.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.

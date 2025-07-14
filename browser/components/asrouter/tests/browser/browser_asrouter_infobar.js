@@ -654,3 +654,147 @@ add_task(async function test_buildMessageFragment_withoutInlineAnchors() {
   await BrowserTestUtils.waitForCondition(() => !InfoBar._activeInfobar);
   sinon.restore();
 });
+
+add_task(async function test_configurable_background_color() {
+  const win = BrowserWindowTracker.getTopWindow();
+  const browser = win.gBrowser.selectedBrowser;
+  const box = win.gNotificationBox;
+
+  // Pick an arbitrary color string that supports and light and dark mode
+  const customBg = "light-dark(rgb(255, 255, 255), rgb(0, 0, 0))";
+
+  // Build a minimal “infobar” message with the style override
+  const msg = {
+    id: "TEST_CONFIG_BG",
+    content: {
+      type: "global",
+      priority: box.PRIORITY_INFO_LOW,
+      text: "BG Test",
+      buttons: [{ label: "Close", action: { type: "CANCEL" } }],
+      style: {
+        "background-color": customBg,
+      },
+    },
+  };
+
+  let dispatch = sinon.stub();
+  let infobar = await InfoBar.showInfoBarMessage(browser, msg, dispatch);
+  Assert.ok(infobar.notification, "Got a notification");
+
+  let node = infobar.notification;
+  let bg = browser.ownerGlobal
+    .getComputedStyle(node)
+    .getPropertyValue("background-color");
+
+  // Confirm either light or dark mode background was applied
+  Assert.ok(
+    bg === "rgb(255, 255, 255)" || bg === "rgb(0, 0, 0)",
+    `background-color was applied (${bg})`
+  );
+
+  // Cleanup
+  infobar.notification.closeButton.click();
+  await BrowserTestUtils.waitForCondition(() => !InfoBar._activeInfobar);
+});
+
+add_task(async function test_configurable_font_size() {
+  const win = BrowserWindowTracker.getTopWindow();
+  const browser = win.gBrowser.selectedBrowser;
+  const box = win.gNotificationBox;
+  const customSize = "24px";
+
+  const msg = {
+    id: "TEST_CONFIG_FS",
+    content: {
+      type: "global",
+      priority: box.PRIORITY_INFO_LOW,
+      text: "FS Test",
+      buttons: [{ label: "Close", action: { type: "CANCEL" } }],
+      style: {
+        "font-size": customSize,
+      },
+    },
+  };
+
+  let dispatch = sinon.stub();
+  let infobar = await InfoBar.showInfoBarMessage(browser, msg, dispatch);
+  Assert.ok(infobar.notification, "Got a notification");
+
+  let node = infobar.notification;
+  let fs = browser.ownerGlobal
+    .getComputedStyle(node)
+    .getPropertyValue("font-size");
+
+  Assert.equal(fs, customSize, `font-size was applied (${fs})`);
+
+  // Cleanup
+  infobar.notification.closeButton.click();
+  await BrowserTestUtils.waitForCondition(() => !InfoBar._activeInfobar);
+});
+
+add_task(async function test_infobar_css_background_fallback_var() {
+  const win = BrowserWindowTracker.getTopWindow();
+  const browser = win.gBrowser.selectedBrowser;
+  const dispatch = sinon.stub();
+
+  // Show an infobar so its shadowRoot + stylesheet are initialized
+  let infobar = await InfoBar.showInfoBarMessage(
+    browser,
+    {
+      id: "TEST_BG_FALLBACK",
+      content: {
+        type: "global",
+        style: {
+          "background-color": "light-dark(white, black)",
+        },
+        text: "CSS fallback test",
+        buttons: [{ label: "Close", action: { type: "CANCEL" } }],
+      },
+    },
+    dispatch
+  );
+  Assert.ok(infobar.notification, "Got a notification");
+
+  const link = infobar.notification.renderRoot.querySelector(
+    'link[href$="/elements/infobar.css"]'
+  );
+  Assert.ok(link, "Found the infobar.css link in shadowRoot");
+  const { sheet } = link;
+  Assert.ok(sheet, "infobar.css stylesheet loaded");
+
+  // Look for @media not (prefers-contrast) > :host(.infobar) rule
+  let found = false;
+  for (const rule of sheet.cssRules) {
+    if (
+      CSSMediaRule.isInstance(rule) &&
+      rule.conditionText.trim() === "not (prefers-contrast)"
+    ) {
+      for (const inner of rule.cssRules) {
+        if (inner.selectorText === ":host(.infobar)") {
+          const bg = inner.style.getPropertyValue("background-color");
+          if (
+            bg.includes(
+              "--info-bar-background-color-configurable, var(--info-bar-background-color)"
+            )
+          ) {
+            found = true;
+          }
+          break;
+        }
+      }
+      break;
+    }
+  }
+
+  Assert.ok(
+    found,
+    "infobar.css uses fallback `var(--info-bar-background-color-configurable, var(--info-bar-background-color))` in not(prefers-contrast)"
+  );
+
+  // Cleanup
+  infobar.notification.closeButton.click();
+  await BrowserTestUtils.waitForCondition(
+    () => !InfoBar._activeInfobar,
+    "Wait for infobar to close"
+  );
+});
