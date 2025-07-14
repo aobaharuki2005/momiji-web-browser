@@ -55,60 +55,48 @@ const COMMAND_LINE_ACTIVATE = "profiles-activate";
 
 const gSupportsBadging = "nsIMacDockSupport" in Ci || "nsIWinTaskbar" in Ci;
 
-function loadBuiltInAvatarImage(uri, channel) {
-  return new Promise((resolve, reject) => {
-    let imageTools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
-    let imageContainer;
-    let observer = imageTools.createScriptedObserver({
-      sizeAvailable() {
-        resolve(imageContainer);
-        imageContainer = null;
-      },
-    });
+class ChannelListener {
+  #request = null;
+  #imageListener = null;
+  #rejector = null;
 
-    imageTools.decodeImageFromChannelAsync(
-      uri,
-      channel,
-      (image, status) => {
-        if (!Components.isSuccessCode(status)) {
-          reject(new Components.Exception("Image loading failed", status));
-        } else {
-          imageContainer = image;
-        }
-      },
-      observer
-    );
-  });
-}
+  constructor(rejector) {
+    this.#rejector = rejector;
+  }
 
-async function getCustomAvatarImageType(blob, channel) {
-  let octets = await new Promise((resolve, reject) => {
-    let reader = new FileReader();
-    reader.addEventListener("load", () => {
-      resolve(Array.from(reader.result).map(c => c.charCodeAt(0)));
-    });
-    reader.addEventListener("error", reject);
-    reader.readAsBinaryString(blob);
-  });
+  setImageListener(imageListener) {
+    this.#imageListener = imageListener;
+    if (this.#request) {
+      this.#imageListener.onStartRequest(this.#request);
+    }
+  }
 
-  let sniffer = Cc["@mozilla.org/image/loader;1"].createInstance(
-    Ci.nsIContentSniffer
-  );
-  let type = sniffer.getMIMETypeFromContent(channel, octets, octets.length);
+  onStartRequest(request) {
+    this.#request = request;
+    if (this.#imageListener) {
+      this.#imageListener.onStartRequest(request);
+    }
+  }
 
-  return type;
-}
+  onStopRequest(request, status) {
+    if (this.#imageListener) {
+      this.#imageListener.onStopRequest(request, status);
+    }
 
-async function loadCustomAvatarImage(profile, channel) {
-  let blob = await profile.getAvatarFile();
+    if (!Components.isSuccessCode(status)) {
+      this.#rejector(new Components.Exception("Image loading failed", status));
+    }
 
-  const imageTools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
-  let type = await getCustomAvatarImageType(blob, channel);
+    this.#imageListener = null;
+    this.#rejector = null;
+    this.#request = null;
+  }
 
-  let buffer = await blob.arrayBuffer();
-  const image = imageTools.decodeImageFromArrayBuffer(buffer, type);
-
-  return image;
+  onDataAvailable(request, inputStream, offset, count) {
+    if (this.#imageListener) {
+      this.#imageListener.onDataAvailable(request, inputStream, offset, count);
+    }
+  }
 }
 
 async function loadImage(profile) {
@@ -130,11 +118,37 @@ async function loadImage(profile) {
     Ci.nsIContentPolicy.TYPE_IMAGE
   );
 
-  if (profile.hasCustomAvatar) {
-    return loadCustomAvatarImage(profile, channel);
-  }
+  return new Promise((resolve, reject) => {
+    let imageTools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
 
-  return loadBuiltInAvatarImage(uri, channel);
+    // Despite the docs it is fine to pass null here, we then just get a global loader.
+    let imageLoader = imageTools.getImgLoaderForDocument(null);
+    let observer = imageTools.createScriptedObserver({
+      decodeComplete() {
+        request.cancel(Cr.NS_BINDING_ABORTED);
+        resolve(request.image);
+      },
+    });
+
+    let channelListener = new ChannelListener(reject);
+    channel.asyncOpen(channelListener);
+
+    let streamListener = {};
+    let request = imageLoader.loadImageWithChannelXPCOM(
+      channel,
+      observer,
+      null,
+      streamListener
+    );
+    // Force image decoding to start when the container is available.
+    request.startDecoding(Ci.imgIContainer.FLAG_ASYNC_NOTIFY);
+
+    // If the request is coming from the cache then there will be no listener
+    // and the channel will have been automatically cancelled.
+    if (streamListener.value) {
+      channelListener.setImageListener(streamListener.value);
+    }
+  });
 }
 
 /**
