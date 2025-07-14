@@ -320,8 +320,7 @@ WrFiltersStatus FilterInstance::BuildWebRenderFiltersImpl(
       wr::FilterOp filterOp = {wr::FilterOp::Tag::ComponentTransfer};
       wr::WrFilterData filterData;
       aWrFilters.values.AppendElement(nsTArray<float>());
-      nsTArray<float>* values =
-          &aWrFilters.values[aWrFilters.values.Length() - 1];
+      nsTArray<float>* values = &aWrFilters.values.LastElement();
       values->SetCapacity(numValues);
 
       filterData.funcR_type = FuncTypeToWr(attributes.mTypes[0]);
@@ -363,7 +362,7 @@ WrFiltersStatus FilterInstance::BuildWebRenderFiltersImpl(
       return WrFiltersStatus::BLOB_FALLBACK;
     }
 
-    if (filterIsNoop && aWrFilters.filters.Length() > 0 &&
+    if (filterIsNoop && !aWrFilters.filters.IsEmpty() &&
         (aWrFilters.filters.LastElement().tag ==
              wr::FilterOp::Tag::SrgbToLinear ||
          aWrFilters.filters.LastElement().tag ==
@@ -642,7 +641,7 @@ static WrFiltersStatus WrFilterOpSVGFEComponentTransfer(
     }
   }
   aWrFilters.values.AppendElement(nsTArray<float>());
-  nsTArray<float>& values = aWrFilters.values[aWrFilters.values.Length() - 1];
+  nsTArray<float>& values = aWrFilters.values.LastElement();
   values.SetCapacity(stops * 4);
 
   // Set the FilterData funcs for whether or not to interpolate the values
@@ -687,7 +686,7 @@ static WrFiltersStatus WrFilterOpSVGFEComponentTransfer(
   for (size_t c = 0; c < 4; c++) {
     auto f = aAttributes.mTypes[c];
     // Check if there's no data (we have crashtests for this).
-    if (aAttributes.mValues[c].Length() < 1 &&
+    if (aAttributes.mValues[c].IsEmpty() &&
         f != SVG_FECOMPONENTTRANSFER_SAME_AS_R) {
       f = SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY;
     }
@@ -1646,17 +1645,16 @@ nsresult FilterInstance::BuildPrimitives(
 
   uint32_t filterIndex = 0;
 
-  for (uint32_t i = 0; i < aFilterChain.Length(); i++) {
-    if (aFilterChain[i].IsUrl() && aFilterFrames.IsEmpty()) {
+  for (const auto& filter : aFilterChain) {
+    if (filter.IsUrl() && aFilterFrames.IsEmpty()) {
       return NS_ERROR_FAILURE;
     }
-    auto* filterFrame =
-        aFilterChain[i].IsUrl() ? aFilterFrames[filterIndex++] : nullptr;
+    auto* filterFrame = filter.IsUrl() ? aFilterFrames[filterIndex++] : nullptr;
     bool inputIsTainted = primitiveDescriptions.IsEmpty()
                               ? aFilterInputIsTainted
                               : primitiveDescriptions.LastElement().IsTainted();
-    nsresult rv = BuildPrimitivesForFilter(
-        aFilterChain[i], filterFrame, inputIsTainted, primitiveDescriptions);
+    nsresult rv = BuildPrimitivesForFilter(filter, filterFrame, inputIsTainted,
+                                           primitiveDescriptions);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1946,12 +1944,11 @@ nsRect FilterInstance::ComputeSourceNeededRect() {
 }
 
 nsIntRect FilterInstance::OutputFilterSpaceBounds() const {
-  uint32_t numPrimitives = mFilterDescription.mPrimitives.Length();
-  if (numPrimitives <= 0) {
+  if (mFilterDescription.mPrimitives.IsEmpty()) {
     return nsIntRect();
   }
 
-  return mFilterDescription.mPrimitives[numPrimitives - 1].PrimitiveSubregion();
+  return mFilterDescription.mPrimitives.LastElement().PrimitiveSubregion();
 }
 
 nsIntRect FilterInstance::FrameSpaceToFilterSpace(const nsRect* aRect) const {
