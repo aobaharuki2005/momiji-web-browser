@@ -86,8 +86,10 @@ dictionary IdentityProviderAPIConfig {
 // https://w3c-fedid.github.io/FedCM/#dictdef-identityprovideraccount
 dictionary IdentityProviderAccount {
   required USVString id;
-  required USVString name;
-  required USVString email;
+  USVString name;
+  USVString email;
+  USVString tel;
+  USVString username;
   USVString given_name;
   USVString picture;
   sequence<USVString> approved_clients;
