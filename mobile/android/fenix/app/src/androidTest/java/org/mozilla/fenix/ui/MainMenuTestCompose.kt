@@ -583,18 +583,6 @@ class MainMenuTestCompose : TestSetup() {
         }
     }
 
-    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080171
-    @Test
-    fun verifyTheHomePageCustomizeHomepageMainMenuItemTest() {
-        homeScreen {
-        }.openThreeDotMenu(composeTestRule) {
-        }.clickCustomizeHomepageButton {
-            verifyHomePageView()
-        }.goBackToHomeScreen {
-            verifyHomeWordmark()
-        }
-    }
-
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080121
     @Test
     fun verifyTheBrowserViewMainMenuCFRTest() {

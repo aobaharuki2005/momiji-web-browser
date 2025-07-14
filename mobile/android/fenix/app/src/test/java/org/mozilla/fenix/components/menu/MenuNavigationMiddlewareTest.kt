@@ -240,19 +240,6 @@ class MenuNavigationMiddlewareTest {
     }
 
     @Test
-    fun `WHEN navigate to customize homepage action is dispatched THEN navigate to homepage settings`() = runTest {
-        val store = createStore()
-        store.dispatch(MenuAction.Navigate.CustomizeHomepage).join()
-
-        verify {
-            navController.navigate(
-                MenuDialogFragmentDirections.actionGlobalHomeSettingsFragment(),
-                null,
-            )
-        }
-    }
-
-    @Test
     fun `WHEN navigate to release notes action is dispatched THEN navigate to SUMO topic`() = runTest {
         var params: BrowserNavigationParams? = null
         val store = createStore(

@@ -147,11 +147,6 @@ class MenuNavigationMiddleware(
                     MenuDialogFragmentDirections.actionMenuDialogFragmentToLoginsListFragment(),
                 )
 
-                is MenuAction.Navigate.CustomizeHomepage -> navController.nav(
-                    R.id.menuDialogFragment,
-                    MenuDialogFragmentDirections.actionGlobalHomeSettingsFragment(),
-                )
-
                 is MenuAction.Navigate.ReleaseNotes -> openToBrowser(
                     BrowserNavigationParams(url = SupportUtils.WHATS_NEW_URL),
                 )

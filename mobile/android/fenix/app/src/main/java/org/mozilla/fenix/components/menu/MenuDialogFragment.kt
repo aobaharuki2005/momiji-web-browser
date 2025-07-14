@@ -619,9 +619,6 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                             store.dispatch(MenuAction.Navigate.Passwords)
                                         }
                                     },
-                                    onCustomizeHomepageMenuClick = {
-                                        store.dispatch(MenuAction.Navigate.CustomizeHomepage)
-                                    },
                                     onCustomizeReaderViewMenuClick = {
                                         store.dispatch(MenuAction.CustomizeReaderView)
                                     },

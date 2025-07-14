@@ -50,7 +50,6 @@ class ThreeDotMenuMainRobotCompose(private val composeTestRule: ComposeTestRule)
 
         verifyMakeFirefoxYourDefaultBrowserPromotionBanner()
 
-        composeTestRule.customizeHomeButton().assertIsDisplayed()
         composeTestRule.extensionsButton().assertIsDisplayed()
 
         composeTestRule.bookmarksButton().assertIsDisplayed()
@@ -429,15 +428,6 @@ class ThreeDotMenuMainRobotCompose(private val composeTestRule: ComposeTestRule)
             return ShareOverlayRobot.Transition()
         }
 
-        fun clickCustomizeHomepageButton(interact: SettingsSubMenuHomepageRobot.() -> Unit): SettingsSubMenuHomepageRobot.Transition {
-            Log.i(TAG, "clickCustomizeHomepageButton: Trying to click the \"Customize homepage\" button")
-            composeTestRule.customizeHomeButton().performClick()
-            Log.i(TAG, "clickCustomizeHomepageButton: Clicked the \"Customize homepage\" button")
-
-            SettingsSubMenuHomepageRobot().interact()
-            return SettingsSubMenuHomepageRobot.Transition()
-        }
-
         fun clickOutsideTheMainMenu(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             Log.i(TAG, "clickOutsideTheMainMenu: Trying to click outside the main menu.")
             itemWithResId("$packageName:id/touch_outside").clickTopLeft()
@@ -496,8 +486,6 @@ private fun ComposeTestRule.refreshButton() = onNodeWithText("Refresh")
 private fun ComposeTestRule.shareButton() = onNodeWithText("Share")
 
 private fun ComposeTestRule.signInButton() = onNodeWithContentDescription("Sign in Sync passwords, bookmarks, and more")
-
-private fun ComposeTestRule.customizeHomeButton() = onNodeWithContentDescription(getStringResource(R.string.browser_menu_customize_home_1))
 
 private fun ComposeTestRule.settingsButton() = onNodeWithContentDescription("Settings")
 
