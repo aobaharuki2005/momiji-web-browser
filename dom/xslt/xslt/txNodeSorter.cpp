@@ -74,6 +74,10 @@ nsresult txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
     if (aLangExpr) {
       rv = aLangExpr->evaluateToString(aContext, lang);
       NS_ENSURE_SUCCESS(rv, rv);
+    } else if (aContext->getContextNode()
+                   .OwnerDoc()
+                   ->ShouldResistFingerprinting(RFPTarget::JSLocale)) {
+      CopyUTF8toUTF16(nsRFPService::GetSpoofedJSLocale(), lang);
     }
 
     // Case-order
