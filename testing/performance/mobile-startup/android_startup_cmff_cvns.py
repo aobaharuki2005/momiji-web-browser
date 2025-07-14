@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import re
-import statistics
 import sys
 import time
 from datetime import datetime
@@ -125,8 +124,7 @@ class Startup_test:
         print(f"{self.test_name}: {str(test_measurements)}")
         # Bug 1934023 - create way to pass median and still have replicates available
         # Bug 1971336 Remove the .mean metric once we have a sufficient data redundancy
-        measurements[f"{self.test_name}.mean"] = [statistics.mean(test_measurements)]
-        measurements[self.test_name] = test_measurements
+        measurements[f"{self.test_name}.mean"] = test_measurements
         return measurements
 
     def get_measurement(self, test_name, stdout):
