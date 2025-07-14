@@ -10,9 +10,7 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.spyk
-import io.mockk.unmockkStatic
 import io.mockk.verify
 import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.action.TabListAction
@@ -24,7 +22,6 @@ import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.state.recover.TabState
-import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.session.SessionUseCases
@@ -75,7 +72,6 @@ import org.mozilla.fenix.onboarding.WallpaperOnboardingDialogFragment.Companion.
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.tabstray.TabManagementFeatureHelper
 import org.mozilla.fenix.utils.Settings
-import org.mozilla.fenix.utils.maybeShowAddSearchWidgetPrompt
 import org.mozilla.fenix.wallpapers.Wallpaper
 import org.mozilla.fenix.wallpapers.WallpaperState
 import org.robolectric.RobolectricTestRunner
@@ -135,9 +131,11 @@ class DefaultSessionControlControllerTest {
 
     private lateinit var store: BrowserStore
     private val appState: AppState = mockk(relaxed = true)
+    private var showAddSearchWidgetPromptCalled = false
 
     @Before
     fun setup() {
+        showAddSearchWidgetPromptCalled = false
         store = BrowserStore(
             BrowserState(
                 search = SearchState(
@@ -741,25 +739,17 @@ class DefaultSessionControlControllerTest {
 
         every { controller.getAvailableSearchEngines() } returns listOf(googleSearchEngine)
 
-        try {
-            mockkStatic("mozilla.components.browser.state.state.SearchStateKt")
+        controller.handleSelectTopSite(topSite, position = 0)
 
-            every { any<SearchState>().selectedOrDefaultSearchEngine } returns googleSearchEngine
+        assertNotNull(Events.performedSearch.testGetValue())
 
-            controller.handleSelectTopSite(topSite, position = 0)
+        assertNotNull(TopSites.openDefault.testGetValue())
+        assertEquals(1, TopSites.openDefault.testGetValue()!!.size)
+        assertNull(TopSites.openDefault.testGetValue()!!.single().extra)
 
-            assertNotNull(Events.performedSearch.testGetValue())
-
-            assertNotNull(TopSites.openDefault.testGetValue())
-            assertEquals(1, TopSites.openDefault.testGetValue()!!.size)
-            assertNull(TopSites.openDefault.testGetValue()!!.single().extra)
-
-            assertNotNull(TopSites.openGoogleSearchAttribution.testGetValue())
-            assertEquals(1, TopSites.openGoogleSearchAttribution.testGetValue()!!.size)
-            assertNull(TopSites.openGoogleSearchAttribution.testGetValue()!!.single().extra)
-        } finally {
-            unmockkStatic("mozilla.components.browser.state.state.SearchStateKt")
-        }
+        assertNotNull(TopSites.openGoogleSearchAttribution.testGetValue())
+        assertEquals(1, TopSites.openGoogleSearchAttribution.testGetValue()!!.size)
+        assertNull(TopSites.openGoogleSearchAttribution.testGetValue()!!.single().extra)
     }
 
     @Test
@@ -779,17 +769,9 @@ class DefaultSessionControlControllerTest {
             duckDuckGoSearchEngine,
         )
 
-        try {
-            mockkStatic("mozilla.components.browser.state.state.SearchStateKt")
+        controller.handleSelectTopSite(topSite, position = 0)
 
-            every { any<SearchState>().selectedOrDefaultSearchEngine } returns googleSearchEngine
-
-            controller.handleSelectTopSite(topSite, position = 0)
-
-            assertNotNull(Events.performedSearch.testGetValue())
-        } finally {
-            unmockkStatic("mozilla.components.browser.state.state.SearchStateKt")
-        }
+        assertNotNull(Events.performedSearch.testGetValue())
     }
 
     @Test
@@ -1515,17 +1497,14 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun `WHEN install search widget task THEN navigationActionFor calls the add search widget prompt`() {
+        assertFalse("flag is false at test start", showAddSearchWidgetPromptCalled)
         val controller = createController()
         val task = mockk<ChecklistItem.Task>()
-        mockkStatic("org.mozilla.fenix.utils.AddSearchWidgetPromptKt")
-        every { maybeShowAddSearchWidgetPrompt(activity) } just Runs
         every { task.type } returns ChecklistItem.Task.Type.INSTALL_SEARCH_WIDGET
 
         controller.navigationActionFor(task)
 
-        verify {
-            maybeShowAddSearchWidgetPrompt(activity)
-        }
+        assertTrue("showAddSearchWidgetPrompt should have been called", showAddSearchWidgetPromptCalled)
     }
 
     @Test
@@ -1588,6 +1567,7 @@ class DefaultSessionControlControllerTest {
                 override val enhancementsEnabled: Boolean
                     get() = false
             },
+            showAddSearchWidgetPrompt = { showAddSearchWidgetPromptCalled = true },
         ).apply {
             registerCallback(object : SessionControlControllerCallback {
                 override fun registerCollectionStorageObserver() {

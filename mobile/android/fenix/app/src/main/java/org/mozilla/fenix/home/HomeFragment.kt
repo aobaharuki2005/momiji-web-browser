@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home
 
 import android.annotation.SuppressLint
+import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
@@ -137,6 +138,7 @@ import org.mozilla.fenix.microsurvey.ui.ext.MicrosurveyUIData
 import org.mozilla.fenix.microsurvey.ui.ext.toMicrosurveyUIData
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.onboarding.HomeScreenPopupManager
+import org.mozilla.fenix.onboarding.WidgetPinnedReceiver
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.reviewprompt.ReviewPromptState
@@ -152,6 +154,7 @@ import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.tabstray.TabsTrayAccessPoint
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.allowUndo
+import org.mozilla.fenix.utils.showAddSearchWidgetPromptIfSupported
 import org.mozilla.fenix.wallpapers.Wallpaper
 import java.lang.ref.WeakReference
 import org.mozilla.fenix.GleanMetrics.TabStrip as TabStripMetrics
@@ -462,6 +465,7 @@ class HomeFragment : Fragment() {
             appStore = components.appStore,
             navControllerRef = WeakReference(findNavController()),
             viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
+            showAddSearchWidgetPrompt = ::showAddSearchWidgetPrompt,
         ).apply {
             registerCallback(
                 object : SessionControlControllerCallback {
@@ -1200,6 +1204,31 @@ class HomeFragment : Fragment() {
                         BrowsingMode.Private -> Page.PrivateTabs
                     },
                 ),
+            )
+        }
+    }
+
+    /**
+     * Shows a prompt to add a search widget to the home screen if supported by the device.
+     *
+     * This function should be called when the fragment's view is active (e.g., in response
+     * to a user interaction). It launches a coroutine within the [viewLifecycleOwner]'s
+     * [androidx.lifecycle.LifecycleCoroutineScope] to display the widget prompt using
+     * [showAddSearchWidgetPromptIfSupported].
+     *
+     * The actual display logic, including handling success and failure callbacks, is managed by
+     * [showAddSearchWidgetPromptIfSupported].
+     */
+    private fun showAddSearchWidgetPrompt() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val currentPackageName = requireActivity().packageName
+            val currentWidgetManager = AppWidgetManager.getInstance(requireContext())
+            val currentAddWidgetSuccessCallback = WidgetPinnedReceiver.getPendingIntent(requireContext())
+
+            showAddSearchWidgetPromptIfSupported(
+                packageName = currentPackageName,
+                appWidgetManager = currentWidgetManager,
+                successCallback = currentAddWidgetSuccessCallback,
             )
         }
     }

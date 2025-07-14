@@ -67,7 +67,6 @@ import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.tabstray.DefaultTabManagementFeatureHelper
 import org.mozilla.fenix.tabstray.TabManagementFeatureHelper
 import org.mozilla.fenix.utils.Settings
-import org.mozilla.fenix.utils.maybeShowAddSearchWidgetPrompt
 import org.mozilla.fenix.wallpapers.Wallpaper
 import org.mozilla.fenix.wallpapers.WallpaperState
 import java.lang.ref.WeakReference
@@ -254,6 +253,7 @@ class DefaultSessionControlController(
     private val navControllerRef: WeakReference<NavController>,
     private val viewLifecycleScope: CoroutineScope,
     private val tabManagementFeatureHelper: TabManagementFeatureHelper = DefaultTabManagementFeatureHelper,
+    private val showAddSearchWidgetPrompt: () -> Unit,
 ) : SessionControlController {
 
     private var callback: SessionControlControllerCallback? = null
@@ -726,7 +726,7 @@ class DefaultSessionControlController(
         ChecklistItem.Task.Type.CHANGE_TOOLBAR_PLACEMENT ->
             navigateTo(HomeFragmentDirections.actionGlobalCustomizationFragment())
 
-        ChecklistItem.Task.Type.INSTALL_SEARCH_WIDGET -> maybeShowAddSearchWidgetPrompt(activity)
+        ChecklistItem.Task.Type.INSTALL_SEARCH_WIDGET -> showAddSearchWidgetPrompt()
 
         ChecklistItem.Task.Type.EXPLORE_EXTENSION ->
             navigateTo(HomeFragmentDirections.actionGlobalAddonsManagementFragment())
