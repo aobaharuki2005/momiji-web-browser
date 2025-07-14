@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.browser.toolbar.NavigationBar
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarState
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
@@ -28,6 +27,7 @@ import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -72,7 +72,7 @@ class HomeNavigationBar(
 
         val uiState by store.observeAsState(initialValue = store.state) { it }
 
-        AcornTheme {
+        FirefoxTheme {
             NavigationBar(
                 actions = uiState.displayState.navigationActions,
                 shouldShowDivider = showDivider,
