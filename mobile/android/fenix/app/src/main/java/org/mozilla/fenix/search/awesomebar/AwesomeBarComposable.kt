@@ -32,6 +32,7 @@ import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.browser.awesomebar.AwesomeBar
 import mozilla.components.compose.browser.awesomebar.AwesomeBarDefaults
 import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
+import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ToggleEditMode
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.lib.state.ext.observeAsComposableState
@@ -84,6 +85,7 @@ class AwesomeBarComposable(
      * that will show search suggestions whenever the users edits the current query in the toolbar.
      */
     @OptIn(ExperimentalLayoutApi::class) // for WindowInsets.isImeVisible
+    @Suppress("LongMethod")
     @Composable
     fun SearchSuggestions() {
         val isSearchActive = appStore.observeAsComposableState { it.isSearchActive }.value
@@ -96,6 +98,19 @@ class AwesomeBarComposable(
                 }
             }
         }
+        val shouldShowClipboardBar by remember(
+            state.showClipboardSuggestions,
+            state.query,
+            state.clipboardHasUrl,
+            state.showSearchShortcuts,
+        ) {
+            derivedStateOf {
+                state.showClipboardSuggestions &&
+                        state.query.isEmpty() &&
+                        state.clipboardHasUrl &&
+                        !state.showSearchShortcuts
+            }
+        }
         val focusManager = LocalFocusManager.current
         val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -104,6 +119,9 @@ class AwesomeBarComposable(
                 appStore.dispatch(UpdateSearchBeingActiveState(false))
                 focusManager.clearFocus()
                 keyboardController?.hide()
+            } else {
+                val hasUrl = components.clipboardHandler.containsURL()
+                searchStore.dispatch(SearchFragmentAction.UpdateClipboardHasUrl(hasUrl))
             }
         }
 
@@ -113,7 +131,20 @@ class AwesomeBarComposable(
             browserStore.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true))
         }
 
-        if (isSearchActive && state.shouldShowSearchSuggestions) {
+        if (isSearchActive && shouldShowClipboardBar) {
+            val url = components.clipboardHandler.extractURL()
+
+            ClipboardSuggestionBar(
+                shouldUseBottomToolbar = components.settings.shouldUseBottomToolbar,
+                onClick = {
+                    url?.let {
+                        toolbarStore.dispatch(
+                            SearchQueryUpdated(query = url, showAsPreselected = false),
+                        )
+                    }
+                },
+            )
+        } else if (isSearchActive && state.shouldShowSearchSuggestions) {
             Box(
                 modifier = modifier
                     .background(AcornTheme.colors.layer1)
