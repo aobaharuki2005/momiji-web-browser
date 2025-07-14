@@ -254,7 +254,7 @@ static inline void MOZ_CrashSequence(void* aAddress, intptr_t aLine) {
       "str %1,[%0];\n"  // Write the line number to the crashing address
       :                 // no output registers
       : "r"(aAddress), "r"(aLine));
-#  elif defined(__riscv) && (__riscv_xlen == 64)
+#  elif (defined(__riscv) && (__riscv_xlen == 64)) || defined(__mips64)
   asm volatile(
       "sd %1,0(%0);\n"  // Write the line number to the crashing address
       :                 // no output registers
