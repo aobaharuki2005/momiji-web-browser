@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat.getColor
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
@@ -36,6 +37,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.google.android.material.appbar.AppBarLayout
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -557,6 +559,8 @@ class HomeFragment : Fragment() {
 
         initComposeHomepage()
 
+        disableAppBarDragging()
+
         FxNimbus.features.homescreen.recordExposure()
 
         // DO NOT MOVE ANYTHING BELOW THIS addMarker CALL!
@@ -790,6 +794,22 @@ class HomeFragment : Fragment() {
         )
     }
 
+    private fun disableAppBarDragging() {
+        if (binding.homeAppBar.layoutParams != null) {
+            val appBarLayoutParams = binding.homeAppBar.layoutParams as CoordinatorLayout.LayoutParams
+            val appBarBehavior = AppBarLayout.Behavior()
+            appBarBehavior.setDragCallback(
+                object : AppBarLayout.Behavior.DragCallback() {
+                    override fun canDrag(appBarLayout: AppBarLayout): Boolean {
+                        return false
+                    }
+                },
+            )
+            appBarLayoutParams.behavior = appBarBehavior
+        }
+        binding.homeAppBar.setExpanded(true)
+    }
+
     @Suppress("LongMethod", "ComplexMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         // DO NOT ADD ANYTHING ABOVE THIS getProfilerTime CALL!
@@ -905,6 +925,8 @@ class HomeFragment : Fragment() {
     }
 
     private fun initComposeHomepage() {
+        binding.homeAppBarContent.isVisible = false
+
         binding.homepageView.apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
 
