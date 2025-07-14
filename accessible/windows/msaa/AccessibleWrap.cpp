@@ -117,7 +117,8 @@ void AccessibleWrap::UpdateSystemCaretFor(LocalAccessible* aAccessible) {
   HyperTextAccessible* text = aAccessible->AsHyperText();
   if (!text) return;
 
-  auto [caretRect, widget] = text->GetCaretRect();
+  nsIWidget* widget = nullptr;
+  LayoutDeviceIntRect caretRect = text->GetCaretRect(&widget);
 
   if (!widget) {
     return;

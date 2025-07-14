@@ -4,20 +4,26 @@
 
 "use strict";
 
-async function getCaretRect(docAcc, id) {
-  const acc = findAccessibleChildByID(docAcc, id, [nsIAccessibleText]);
-  const caretX = {};
-  const caretY = {};
-  const caretW = {};
-  const caretH = {};
-  acc.getCaretRect(caretX, caretY, caretW, caretH);
-  info(
-    `Caret bounds: ${[caretX.value, caretY.value, caretW.value, caretH.value]}`
-  );
-  return [caretX.value, caretY.value, caretW.value, caretH.value];
+async function getCaretRect(browser, id) {
+  // The caret rect can only be queried on LocalAccessible. On Windows, we do
+  // send it across processes with caret events, but this currently can't be
+  // queried outside of the event, nor with XPCOM.
+  const [x, y, w, h] = await invokeContentTask(browser, [id], contentId => {
+    const node = content.document.getElementById(contentId);
+    const contentAcc = content.CommonUtils.accService.getAccessibleFor(node);
+    contentAcc.QueryInterface(Ci.nsIAccessibleText);
+    const caretX = {};
+    const caretY = {};
+    const caretW = {};
+    const caretH = {};
+    contentAcc.getCaretRect(caretX, caretY, caretW, caretH);
+    return [caretX.value, caretY.value, caretW.value, caretH.value];
+  });
+  info(`Caret bounds: ${x}, ${y}, ${w}, ${h}`);
+  return [x, y, w, h];
 }
 
-async function testCaretRect(browser, docAcc, id, offset, atLineEnd = false) {
+async function testCaretRect(browser, docAcc, id, offset) {
   const acc = findAccessibleChildByID(docAcc, id, [nsIAccessibleText]);
   is(acc.caretOffset, offset, `Caret at offset ${offset}`);
   const charX = {};
@@ -26,11 +32,7 @@ async function testCaretRect(browser, docAcc, id, offset, atLineEnd = false) {
   const charH = {};
   const atEnd = offset == acc.characterCount;
   const empty = offset == 0 && atEnd;
-  let queryOffset = atEnd && !empty ? offset - 1 : offset;
-  const atEndInNewLine = atEnd && acc.getCharacterAtOffset(queryOffset) == "\n";
-  if (atEndInNewLine) {
-    queryOffset--;
-  }
+  const queryOffset = atEnd && !empty ? offset - 1 : offset;
   acc.getCharacterExtents(
     queryOffset,
     charX,
@@ -42,26 +44,14 @@ async function testCaretRect(browser, docAcc, id, offset, atLineEnd = false) {
   info(
     `Character ${queryOffset} bounds: ${charX.value}, ${charY.value}, ${charW.value}, ${charH.value}`
   );
-  const [caretX, caretY, caretW, caretH] = await getCaretRect(docAcc, id);
-
-  if (atEndInNewLine) {
-    Assert.lessOrEqual(caretX, charX.value, "Caret x before character x");
-  } else if (atEnd || atLineEnd) {
+  const [caretX, caretY, caretW, caretH] = await getCaretRect(browser, id);
+  if (atEnd) {
     Assert.greater(caretX, charX.value, "Caret x after last character x");
   } else {
     is(caretX, charX.value, "Caret x same as character x");
   }
-
-  if (atEndInNewLine) {
-    Assert.greater(caretY, charY.value, "Caret y below character y");
-  } else if (atLineEnd) {
-    Assert.less(caretY, charY.value, "Caret y above start line character.");
-  } else {
-    is(caretY, charY.value, "Caret y same as character y");
-  }
-
-  ok(caretW, "Caret width is greater than 0");
-
+  is(caretY, charY.value, "Caret y same as character y");
+  is(caretW, 1, "Caret width is 1");
   if (!empty) {
     is(caretH, charH.value, "Caret height same as character height");
   }
@@ -147,98 +137,4 @@ addAccessibleTask(
     await SpecialPowers.popPrefEnv();
   },
   { chrome: true, topLevel: true }
-);
-
-/**
- * Test the caret rect in multiline content.
- */
-addAccessibleTask(
-  `<style>
-    @font-face {
-      font-family: Ahem;
-      src: url(${CURRENT_CONTENT_DIR}e10s/fonts/Ahem.sjs);
-    }
-   textarea {
-      font: 10px/10px Ahem;
-    }
-  </style>
-  <textarea id="textarea" rows="6" cols="2">123456789</textarea>
-  `,
-  async function testMultiline(browser, docAcc) {
-    async function moveCaret(key) {
-      let caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, "textarea");
-      if (key) {
-        EventUtils.synthesizeKey(key);
-      } else {
-        // If no key is provided, just focus the textarea.
-        findAccessibleChildByID(docAcc, "textarea").takeFocus();
-      }
-
-      let evt = await caretMoved;
-      evt.QueryInterface(nsIAccessibleCaretMoveEvent);
-      return [evt.caretOffset, evt.isAtEndOfLine];
-    }
-
-    info("Focusing textarea");
-    let [offset, isAtLineEnd] = await moveCaret();
-    is(offset, 0, "Caret at offset 0");
-    is(isAtLineEnd, false, "Caret not at end of line");
-    testCaretRect(browser, docAcc, "textarea", offset, isAtLineEnd);
-
-    info("Moving caret right");
-    [offset, isAtLineEnd] = await moveCaret("KEY_ArrowRight");
-    is(offset, 1, "Caret at offset 1");
-    is(isAtLineEnd, false, "Caret not at end of line");
-    testCaretRect(browser, docAcc, "textarea", offset, isAtLineEnd);
-
-    info("Moving caret right again");
-    [offset, isAtLineEnd] = await moveCaret("KEY_ArrowRight");
-    is(offset, 2, "Caret at offset 2");
-    is(isAtLineEnd, false, "Caret not at end of line");
-    testCaretRect(browser, docAcc, "textarea", offset, isAtLineEnd);
-
-    info("Moving caret right again again");
-    [offset, isAtLineEnd] = await moveCaret("KEY_ArrowRight");
-    is(offset, 3, "Caret at offset 3");
-    is(isAtLineEnd, true, "Caret at end of line");
-    testCaretRect(browser, docAcc, "textarea", offset, isAtLineEnd);
-
-    info("Moving caret right stays at same offset, but on new line");
-    [offset, isAtLineEnd] = await moveCaret("KEY_ArrowRight");
-    is(offset, 3, "Caret at offset 3");
-    is(isAtLineEnd, false, "Caret not at end of line");
-    testCaretRect(browser, docAcc, "textarea", offset, isAtLineEnd);
-
-    info("Moving caret right in second line");
-    [offset, isAtLineEnd] = await moveCaret("KEY_ArrowRight");
-    is(offset, 4, "Caret at offset 4");
-    is(isAtLineEnd, false, "Caret not at end of line");
-    testCaretRect(browser, docAcc, "textarea", offset, isAtLineEnd);
-
-    info("Pressing enter and breaking line");
-    [offset, isAtLineEnd] = await moveCaret("KEY_Enter");
-    is(offset, 5, "Caret at offset 5");
-    is(isAtLineEnd, false, "Caret not at end of line");
-    testCaretRect(browser, docAcc, "textarea", offset, isAtLineEnd);
-
-    info("Move caret to end of previous line");
-    [offset, isAtLineEnd] = await moveCaret("KEY_ArrowLeft");
-    is(offset, 4, "Caret at offset 4");
-    is(isAtLineEnd, false, "Caret at end line break");
-    testCaretRect(browser, docAcc, "textarea", offset, isAtLineEnd);
-
-    info("Move caret to end of text");
-    [offset, isAtLineEnd] = await moveCaret("KEY_PageDown", {
-      metaKey: AppConstants.platform == "macosx",
-    });
-    is(offset, 10, "Caret at offset 10");
-    is(isAtLineEnd, false, "Caret at end line break");
-    testCaretRect(browser, docAcc, "textarea", offset, isAtLineEnd);
-
-    info("Pressing enter and creating a new line");
-    [offset, isAtLineEnd] = await moveCaret("KEY_Enter");
-    is(offset, 11, "Caret at offset 11");
-    is(isAtLineEnd, false, "Caret not at end of line");
-    testCaretRect(browser, docAcc, "textarea", offset, isAtLineEnd);
-  }
 );

@@ -254,8 +254,12 @@ xpcAccessibleHyperText::GetCaretRect(int32_t* aX, int32_t* aY, int32_t* aWidth,
   if (!mIntl) {
     return NS_ERROR_FAILURE;
   }
+  if (mIntl->IsRemote()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
-  auto [rect, _] = Intl()->GetCaretRect();
+  nsIWidget* widget;
+  LayoutDeviceIntRect rect = IntlLocal()->GetCaretRect(&widget);
   rect.GetRect(aX, aY, aWidth, aHeight);
   return NS_OK;
 }

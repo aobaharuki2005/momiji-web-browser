@@ -609,20 +609,18 @@ int32_t HyperTextAccessible::CaretOffset() const {
   return DOMPointToOffset(focusNode, focusOffset);
 }
 
-std::pair<LayoutDeviceIntRect, nsIWidget*> HyperTextAccessible::GetCaretRect() {
+LayoutDeviceIntRect HyperTextAccessible::GetCaretRect(nsIWidget** aWidget) {
+  *aWidget = nullptr;
+
   RefPtr<nsCaret> caret = mDoc->PresShellPtr()->GetCaret();
-  NS_ENSURE_TRUE(caret, {});
+  NS_ENSURE_TRUE(caret, LayoutDeviceIntRect());
 
   bool isVisible = caret->IsVisible();
-  if (!isVisible) {
-    return {};
-  }
+  if (!isVisible) return LayoutDeviceIntRect();
 
   nsRect rect;
   nsIFrame* frame = caret->GetGeometry(&rect);
-  if (!frame || rect.IsEmpty()) {
-    return {};
-  }
+  if (!frame || rect.IsEmpty()) return LayoutDeviceIntRect();
 
   PresShell* presShell = mDoc->PresShellPtr();
   // Transform rect to be relative to the root frame.
@@ -654,22 +652,16 @@ std::pair<LayoutDeviceIntRect, nsIWidget*> HyperTextAccessible::GetCaretRect() {
     // the DOM node contaning the caret might be focused, but the Accessible
     // might not be; e.g. due to an autocomplete popup suggestion having a11y
     // focus.
-    return {};
+    return LayoutDeviceIntRect();
   }
-
-  // Vertically align the caret to the top of the line.
-  TextLeafPoint caretPoint = TextLeafPoint::GetCaret(this);
-  if (caretPoint.mIsEndOfLineInsertionPoint) {
-    caretPoint =
-        caretPoint.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious);
-  }
-
-  LayoutDeviceIntRect charRect = caretPoint.CharBounds();
+  LayoutDeviceIntRect charRect = CharBounds(
+      caretOffset, nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE);
   if (!charRect.IsEmpty()) {
     caretRect.SetTopEdge(charRect.Y());
   }
 
-  return {caretRect, frame->GetNearestWidget()};
+  *aWidget = frame->GetNearestWidget();
+  return caretRect;
 }
 
 bool HyperTextAccessible::RemoveFromSelection(int32_t aSelectionNum) {

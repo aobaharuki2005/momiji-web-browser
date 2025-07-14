@@ -272,8 +272,6 @@ class DocAccessibleParent : public RemoteAccessible,
 
   bool IsCaretAtEndOfLine() const { return mIsCaretAtEndOfLine; }
 
-  mozilla::LayoutDeviceIntRect& GetCachedCaretRect() { return mCaretRect; }
-
   virtual void SelectionRanges(nsTArray<TextRange>* aRanges) const override;
 
   virtual Accessible* FocusedChild() override;
@@ -378,7 +376,6 @@ class DocAccessibleParent : public RemoteAccessible,
   uint64_t mCaretId;
   int32_t mCaretOffset;
   bool mIsCaretAtEndOfLine;
-  LayoutDeviceIntRect mCaretRect;
   nsTArray<TextRangeData> mTextSelections;
 
   static uint64_t sMaxDocID;
