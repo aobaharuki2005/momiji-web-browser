@@ -202,4 +202,8 @@ bool nsIFrame::ContentIsEditable() const {
   return mContent && mContent->IsEditable();
 }
 
+inline bool nsIFrame::HasAnchorPosReference() const {
+  return IsAbsolutelyPositioned() && Style()->HasAnchorPosReference();
+}
+
 #endif

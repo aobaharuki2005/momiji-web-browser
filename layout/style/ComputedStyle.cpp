@@ -427,4 +427,29 @@ void ComputedStyle::DumpMatchedRules() const {
 }
 #endif
 
+bool ComputedStyle::HasAnchorPosReference() const {
+  const auto* pos = StylePosition();
+  if (pos->mPositionAnchor.IsIdent()) {
+    // Short circuit if there's a default anchor defined, even if
+    // it may not end up being referenced.
+    return true;
+  }
+
+  // Now check if any property that can use anchor() or anchor-size()
+  // does use any. Note that it's valid to specify e.g. left: anchor(left);
+  // but without specifying position-anchor, in which case the function
+  // makes no anchor reference.
+  return pos->mOffset.Any([](const StyleInset& aInset) {
+    return aInset.HasAnchorPositioningFunction();
+  }) || pos->mWidth.HasAnchorPositioningFunction() ||
+         pos->mHeight.HasAnchorPositioningFunction() ||
+         pos->mMinHeight.HasAnchorPositioningFunction() ||
+         pos->mMinHeight.HasAnchorPositioningFunction() ||
+         pos->mMaxHeight.HasAnchorPositioningFunction() ||
+         pos->mMaxHeight.HasAnchorPositioningFunction() ||
+         StyleMargin()->mMargin.Any([](const ::mozilla::StyleMargin& aMargin) {
+           return aMargin.HasAnchorPositioningFunction();
+         });
+}
+
 }  // namespace mozilla

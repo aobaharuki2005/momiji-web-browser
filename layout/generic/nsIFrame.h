@@ -4760,6 +4760,9 @@ class nsIFrame : public nsQueryFrame {
   // multi-column ancestor or not.
   inline bool IsColumnSpanInMulticolSubtree() const;
 
+  // Returns true if this frame makes any reference to anchors.
+  inline bool HasAnchorPosReference() const;
+
   /**
    * Returns the vertical-align value to be used for layout, if it is one
    * of the enumerated values.  If this is an SVG text frame, it returns a value

@@ -193,6 +193,8 @@ class ComputedStyle {
     return bool(Flags() & Flag::IS_IN_OPACITY_ZERO_SUBTREE);
   }
 
+  bool HasAnchorPosReference() const;
+
   ComputedStyle* GetCachedInheritingAnonBoxStyle(
       PseudoStyleType aPseudoType) const {
     MOZ_ASSERT(PseudoStyle::IsInheritingAnonBox(aPseudoType));
