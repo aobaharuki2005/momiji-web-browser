@@ -43,7 +43,7 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
 }
 
 inline void EmitBaselineCallVM(TrampolinePtr target, MacroAssembler& masm) {
-  masm.push(FrameDescriptor(FrameType::BaselineStub));
+  masm.pushFrameDescriptor(FrameType::BaselineStub);
   masm.call(target);
 }
 
