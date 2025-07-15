@@ -45,6 +45,10 @@ moz-box-item-reorderable-4 =
   .label = I'm box item number 4
 moz-box-item-reorderable-5 =
   .label = I'm box item number 5
+moz-box-item-header =
+  .label = I'm a header box item
+moz-box-button-footer =
+  .label = I'm a footer box button
     `,
   },
 };
@@ -112,14 +116,26 @@ function basicElements() {
     <moz-box-button data-l10n-id="moz-box-button-2"></moz-box-button>`;
 }
 
-const Template = ({ type }) => html`
+const Template = ({ type, hasHeader, hasFooter }) => html`
   <style>
     .delete {
       margin-top: var(--space-medium);
     }
   </style>
   <moz-box-group type=${ifDefined(type)}>
+    ${hasHeader
+      ? html`<moz-box-item
+          slot="header"
+          data-l10n-id="moz-box-item-header"
+        ></moz-box-item>`
+      : ""}
     ${getInnerElements(type)}
+    ${hasFooter
+      ? html`<moz-box-button
+          slot="footer"
+          data-l10n-id="moz-box-button-footer"
+        ></moz-box-button>`
+      : ""}
   </moz-box-group>
   ${type == "list"
     ? html`<moz-button class="delete" @click=${appendItem}>
@@ -148,14 +164,25 @@ const appendItem = event => {
 export const Default = Template.bind({});
 Default.args = {
   type: "default",
+  hasHeader: false,
+  hasFooter: false,
 };
 
 export const List = Template.bind({});
 List.args = {
+  ...Default.args,
   type: "list",
 };
 
 export const Reorderable = Template.bind({});
 Reorderable.args = {
+  ...Default.args,
   type: "reorderable",
+};
+
+export const ListWithHeaderAndFooter = Template.bind({});
+ListWithHeaderAndFooter.args = {
+  ...List.args,
+  hasHeader: true,
+  hasFooter: true,
 };

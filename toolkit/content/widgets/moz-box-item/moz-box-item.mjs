@@ -103,6 +103,14 @@ export default class MozBoxItem extends MozBoxBase {
     return document.dir === "rtl";
   }
 
+  get isDraggable() {
+    return (
+      this.parentElement?.type == GROUP_TYPES.reorderable &&
+      this.slot != "header" &&
+      this.slot != "footer"
+    );
+  }
+
   focus(event) {
     if (event?.key == "Up" || event?.key == "ArrowUp") {
       let actionEls = this.actionsSlotEl.assignedElements();
@@ -153,7 +161,7 @@ export default class MozBoxItem extends MozBoxBase {
     return html`
       ${this.stylesTemplate()}
       <div class="box-container">
-        ${this.parentElement?.type == GROUP_TYPES.reorderable
+        ${this.isDraggable
           ? html`<span tabindex="0" class="handle"></span>`
           : ""}
         ${this.slotTemplate("actions-start")}

@@ -35,7 +35,7 @@
           children: [boxGroup],
         } = await testHelpers.renderTemplate();
         let [boxItem, boxButton] = boxGroup.shadowRoot
-          .querySelector("slot")
+          .querySelector("slot:not([name])")
           .assignedElements();
 
         const normalizePx = pxVal => Math.round(parseFloat(pxVal));
@@ -111,10 +111,12 @@
 
       add_task(async function testMozBoxGroupList() {
         let listTemplate = html`<moz-box-group type="list">
+          <moz-box-item label="header" slot="header"></moz-box-item>
           <moz-box-item label="item"></moz-box-item>
           <moz-box-item label="item 2"></moz-box-item>
           <moz-box-item label="item 3"></moz-box-item>
           <moz-box-button label="button"></moz-box-button>
+          <moz-box-item label="footer" slot="footer"></moz-box-item>
         </moz-box-group>`;
         let {
           children: [boxGroup],
@@ -137,9 +139,27 @@
           "Box group renders an li for each slotted moz-box-* element."
         );
 
+        let [listHeader] = boxGroup.shadowRoot
+          .querySelector('slot[name="header"]')
+          .assignedElements();
+        is(listHeader, boxEls[0], "List header is the first box element");
+
+        let [listFooter] = boxGroup.shadowRoot
+          .querySelector('slot[name="footer"]')
+          .assignedElements();
+        is(
+          listFooter,
+          boxEls[boxEls.length - 1],
+          "List footer is the last box element"
+        );
+
         listItems.forEach((item, i) => {
           let element = item.querySelector("slot").assignedElements()[0];
-          is(element, boxEls[i], "Each moz-box-* element is wrapped in an li.");
+          is(
+            element,
+            boxGroup.listItems[i],
+            "Each moz-box-* element is wrapped in an li."
+          );
         });
 
         let slotChanged = BrowserTestUtils.waitForEvent(
@@ -172,6 +192,7 @@
             Focus me!
           </moz-button>
           <moz-box-group>
+            <moz-box-item label="header" slot="header"></moz-box-item>
             <moz-box-item label="item">
               <moz-button
                 class="first-button"
@@ -187,14 +208,16 @@
             </moz-box-item>
             <moz-box-link label="link"></moz-box-link>
             <moz-box-button label="button"></moz-box-button>
+            <moz-box-button label="footer" slot="footer"></moz-box-button>
           </moz-box-group>
           <moz-button tabindex="0">Focus me too!</moz-button>`;
         let {
           children: [beforeButton, boxGroup, afterButton],
         } = await testHelpers.renderTemplate(keyboardTemplate);
-        let [boxItem, boxLink, boxButton] = boxGroup.querySelectorAll(
-          "moz-box-item, moz-box-button, moz-box-link"
-        );
+        let [, boxItem, boxLink, boxButton, footerButton] =
+          boxGroup.querySelectorAll(
+            "moz-box-item, moz-box-button, moz-box-link"
+          );
 
         async function keyboardNavigate(direction) {
           let keyCode = `KEY_Arrow${
@@ -274,8 +297,22 @@
         synthesizeKey("KEY_Tab", {});
         is(
           document.activeElement,
+          footerButton,
+          "Focus moves to the footer moz-box-button element."
+        );
+
+        synthesizeKey("KEY_Tab", {});
+        is(
+          document.activeElement,
           afterButton,
           "Focus moves out of the group after hitting tab."
+        );
+
+        synthesizeKey("KEY_Tab", { shiftKey: true });
+        is(
+          document.activeElement,
+          footerButton,
+          "Focus moves back to the moz-box-button element."
         );
 
         synthesizeKey("KEY_Tab", { shiftKey: true });
@@ -377,15 +414,36 @@
         synthesizeKey("KEY_Tab", {});
         is(
           document.activeElement,
+          footerButton,
+          "Other list items are not tabbable, so focus moves to the footer button."
+        );
+
+        synthesizeKey("KEY_Tab", {});
+        is(
+          document.activeElement,
           afterButton,
-          "Other list items are not tabbable, so focus moves out of the group."
+          "Focus moves out of the group."
+        );
+
+        synthesizeKey("KEY_Tab", { shiftKey: true });
+        is(
+          document.activeElement,
+          footerButton,
+          "Focus moves to the last element in the group."
+        );
+
+        await keyboardNavigate("up");
+        is(
+          document.activeElement,
+          footerButton,
+          "Focus stays on the last element in the group."
         );
 
         synthesizeKey("KEY_Tab", { shiftKey: true });
         is(
           document.activeElement,
           boxButton,
-          "Focus moves to the last element in the group."
+          "Focus moves to the last element in the list."
         );
 
         await keyboardNavigate("up");
@@ -481,15 +539,19 @@
           <moz-box-item label="item 1"></moz-box-item>
           <moz-box-item label="item 2"></moz-box-item>
           <moz-box-item label="item 3"></moz-box-item>
+          <moz-box-item label="footer" slot="footer"></moz-box-item>
         </moz-box-group>`;
         let {
           children: [boxGroup],
         } = await testHelpers.renderTemplate(reorderableTemplate);
         let boxItems = boxGroup.querySelectorAll("moz-box-item");
-        let [item1, item2, item3] = boxItems;
+        let [item1, item2, item3, footer] = boxItems;
 
         async function moveItem(item, direction) {
           let handle = item.handleEl;
+          if (!handle) {
+            return;
+          }
           let keydown = BrowserTestUtils.waitForEvent(handle, "keydown");
           handle.focus();
           synthesizeKey(
@@ -545,6 +607,28 @@
           boxGroup.querySelector("moz-box-item:nth-of-type(3)"),
           item2,
           "item2 is still in the third position."
+        );
+
+        await moveItem(item2, "down");
+
+        is(
+          boxGroup.querySelector("moz-box-item:nth-of-type(3)"),
+          item2,
+          "item2 is still in the third position."
+        );
+
+        is(
+          boxGroup.querySelector("moz-box-item:nth-of-type(4)"),
+          footer,
+          "footer is in the forth position."
+        );
+
+        await moveItem(footer, "up");
+
+        is(
+          boxGroup.querySelector("moz-box-item:nth-of-type(4)"),
+          footer,
+          "footer is still in the forth position."
         );
       });
     </script>

@@ -144,7 +144,7 @@ export default class MozBoxGroup extends MozLitElement {
 
   updateItems() {
     let boxElements = this.querySelectorAll(
-      "moz-box-item, moz-box-button, moz-box-link"
+      ":is(moz-box-item, moz-box-button, moz-box-link):not([slot='header'], [slot='footer'])"
     );
     this.listItems = Array.from(boxElements);
   }
@@ -155,7 +155,9 @@ export default class MozBoxGroup extends MozLitElement {
         rel="stylesheet"
         href="chrome://global/content/elements/moz-box-group.css"
       />
+      <slot name="header"></slot>
       ${this.contentTemplate()}
+      <slot name="footer"></slot>
     `;
   }
 
