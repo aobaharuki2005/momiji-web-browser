@@ -423,11 +423,14 @@ static Result<Ok, nsCString> IsSupported(
                            aCodecSpecific.is<H264Specific>() &&
                            aCodecSpecific.as<H264Specific>().mProfile ==
                                H264_PROFILE::H264_PROFILE_HIGH;
+  // This is an empirically safe limit.
   bool isFrameSizeGreaterThan4K =
       aFrameSize.width > 3840 || aFrameSize.height > 2160;
 
-  // TODO: Check if this limit applies to other HW encoders.
-  if (aFactory.mProvider == MFTEncoder::Factory::Provider::HW_AMD &&
+  // For Intel and AMD hardware encoders, initializing the H.264 High profile
+  // with large frame sizes such as 7680×4320 may cause SetOutputType to fail or
+  // prevent the encoder from producing output.
+  if (aFactory.mProvider != MFTEncoder::Factory::Provider::SW &&
       isH264HighProfile && isFrameSizeGreaterThan4K) {
     return Err(nsFmtCString(
         FMT_STRING(
