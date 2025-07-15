@@ -986,7 +986,7 @@ HRESULT MFTEncoder::Drain(nsTArray<OutputSample>& aOutput) {
       [[fallthrough]];  // To collect and return outputs.
     case DrainState::DRAINING:
       // Collect remaining outputs.
-      while (mOutputs.Length() == 0 && mDrainState != DrainState::DRAINED) {
+      while (mDrainState != DrainState::DRAINED) {
         if (mEventSource.IsSync()) {
           // Step 8 in
           // https://docs.microsoft.com/en-us/windows/win32/medfound/basic-mft-processing-model#process-data
