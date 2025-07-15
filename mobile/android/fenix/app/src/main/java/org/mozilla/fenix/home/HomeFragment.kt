@@ -1061,6 +1061,7 @@ class HomeFragment : Fragment() {
         super.onDestroyView()
 
         nullableToolbarView = null
+        homeNavigationBar = null
 
         _sessionControlController?.unregisterCallback()
         _sessionControlController = null

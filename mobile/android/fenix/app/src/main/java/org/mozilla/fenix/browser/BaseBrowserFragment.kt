@@ -2281,6 +2281,7 @@ abstract class BaseBrowserFragment :
 
         _bottomToolbarContainerView = null
         _browserToolbarView = null
+        browserNavigationBar = null
         _browserToolbarInteractor = null
         _binding = null
     }
