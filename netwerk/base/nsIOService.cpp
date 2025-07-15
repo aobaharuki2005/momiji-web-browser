@@ -47,8 +47,10 @@
 #include "mozilla/Services.h"
 #include "mozilla/net/DNS.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "mozilla/net/CacheControlParser.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/NeckoParent.h"
+#include "mozilla/dom/ChromeUtilsBinding.h"
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/nsHTTPSOnlyUtils.h"
@@ -2485,6 +2487,53 @@ bool nsIOService::GetFallbackDomain(const nsACString& aDomain,
     return true;
   }
   return false;
+}
+
+NS_IMETHODIMP
+nsIOService::ParseCacheControlHeader(const nsACString& aCacheControlHeader,
+                                     JSContext* cx,
+                                     JS::MutableHandle<JS::Value> _retval) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mozilla::dom::HTTPCacheControlParseResult result;
+  CacheControlParser parser(aCacheControlHeader);
+
+  bool didParseValue = false;
+
+  uint32_t maxAge = 0;
+  didParseValue = parser.MaxAge(&maxAge);
+  if (didParseValue) {
+    result.mMaxAge = maxAge;
+  }
+
+  uint32_t maxStale = 0;
+  didParseValue = parser.MaxStale(&maxStale);
+  if (didParseValue) {
+    result.mMaxStale = maxStale;
+  }
+
+  uint32_t minFresh = 0;
+  didParseValue = parser.MaxStale(&minFresh);
+  if (didParseValue) {
+    result.mMinFresh = minFresh;
+  }
+
+  uint32_t staleWhileRevalidate = 0;
+  didParseValue = parser.StaleWhileRevalidate(&staleWhileRevalidate);
+  if (didParseValue) {
+    result.mStaleWhileRevalidate = staleWhileRevalidate;
+  }
+
+  result.mNoCache = parser.NoCache();
+  result.mNoStore = parser.NoStore();
+  result.mPublic = parser.Public();
+  result.mPrivate = parser.Private();
+  result.mImmutable = parser.Immutable();
+
+  if (!ToJSValue(cx, result, _retval)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
 }
 
 }  // namespace net
