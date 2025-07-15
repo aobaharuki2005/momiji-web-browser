@@ -79,7 +79,7 @@ EncodeSupportSet CanCreateWMFEncoder(
 }
 
 static already_AddRefed<MediaByteBuffer> ParseH264Parameters(
-    nsTArray<uint8_t>& aHeader, const bool aAsAnnexB) {
+    const nsTArray<uint8_t>& aHeader, const bool aAsAnnexB) {
   size_t length = aHeader.Length();
   auto annexB = MakeRefPtr<MediaByteBuffer>(length);
   PodCopy(annexB->Elements(), aHeader.Elements(), length);

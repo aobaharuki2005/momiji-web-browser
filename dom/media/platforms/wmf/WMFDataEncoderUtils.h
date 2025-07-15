@@ -36,7 +36,7 @@ media::EncodeSupportSet CanCreateWMFEncoder(
     const EncoderConfig::CodecSpecific& aCodecSpecific);
 
 already_AddRefed<MediaByteBuffer> ParseH264Parameters(
-    nsTArray<uint8_t>& aHeader, const bool aAsAnnexB);
+    const nsTArray<uint8_t>& aHeader, const bool aAsAnnexB);
 uint32_t GetProfile(H264_PROFILE aProfileLevel);
 
 already_AddRefed<IMFMediaType> CreateInputType(EncoderConfig& aConfig);
