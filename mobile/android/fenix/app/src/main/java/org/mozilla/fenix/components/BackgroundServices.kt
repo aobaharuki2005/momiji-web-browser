@@ -48,7 +48,7 @@ import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.utils.RunWhenReadyQueue
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.GleanMetrics.Metrics.clientAssociation
+import org.mozilla.fenix.GleanMetrics.ClientAssociation
 import org.mozilla.fenix.GleanMetrics.Pings.fxAccounts
 import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.R
@@ -274,7 +274,7 @@ internal class TelemetryMiddleware : Middleware<SyncState, SyncAction> {
         next(action)
         val accountUid = context.store.state.account?.uid
         if (prevState.account?.uid != accountUid && accountUid != null) {
-            clientAssociation.set(accountUid)
+            ClientAssociation.uid.set(accountUid)
             fxAccounts.submit()
         }
     }
