@@ -51,7 +51,7 @@ RefPtr<EncodePromise> WMFMediaDataEncoder::Drain() {
   WMF_ENC_LOGD("Drain");
   return InvokeAsync(
       mTaskQueue, __func__, [self = RefPtr<WMFMediaDataEncoder>(this)]() {
-        nsTArray<RefPtr<IMFSample>> outputs;
+        nsTArray<MFTEncoder::OutputSample> outputs;
         return SUCCEEDED(self->mEncoder->Drain(outputs))
                    ? self->ProcessOutputSamples(std::move(outputs))
                    : EncodePromise::CreateAndReject(
@@ -124,7 +124,7 @@ RefPtr<InitPromise> WMFMediaDataEncoder::ProcessInit() {
   }
 
   mEncoder = std::move(encoder);
-  FillConfigData();
+  InitializeConfigData();
   return InitPromise::CreateAndResolve(TrackInfo::TrackType::kVideoTrack,
                                        __func__);
 }
@@ -158,7 +158,7 @@ HRESULT WMFMediaDataEncoder::InitMFTEncoder(RefPtr<MFTEncoder>& aEncoder) {
   return S_OK;
 }
 
-void WMFMediaDataEncoder::FillConfigData() {
+void WMFMediaDataEncoder::InitializeConfigData() {
   AssertOnTaskQueue();
   MOZ_ASSERT(mEncoder);
 
@@ -173,8 +173,19 @@ void WMFMediaDataEncoder::FillConfigData() {
   }
 
   nsTArray<UINT8> header = r.unwrap();
+  SetConfigData(header);
+}
+
+void WMFMediaDataEncoder::SetConfigData(const nsTArray<UINT8>& aHeader) {
+  AssertOnTaskQueue();
+  MOZ_ASSERT(mEncoder);
+
+  if (mConfig.mCodec != CodecType::H264) {
+    return;
+  }
+
   mConfigData =
-      header.Length() > 0 ? ParseH264Parameters(header, IsAnnexB()) : nullptr;
+      aHeader.Length() > 0 ? ParseH264Parameters(aHeader, IsAnnexB()) : nullptr;
   WMF_ENC_LOGD("ConfigData has been updated to %zu bytes",
                mConfigData ? mConfigData->Length() : 0);
 }
@@ -201,7 +212,7 @@ RefPtr<EncodePromise> WMFMediaDataEncoder::ProcessEncode(
         __func__);
   }
 
-  nsTArray<RefPtr<IMFSample>> outputs = mEncoder->TakeOutput();
+  nsTArray<MFTEncoder::OutputSample> outputs = mEncoder->TakeOutput();
 
   return ProcessOutputSamples(std::move(outputs));
 }
@@ -302,13 +313,13 @@ already_AddRefed<IMFSample> WMFMediaDataEncoder::ConvertToNV12InputSample(
 }
 
 RefPtr<EncodePromise> WMFMediaDataEncoder::ProcessOutputSamples(
-    nsTArray<RefPtr<IMFSample>>&& aSamples) {
+    nsTArray<MFTEncoder::OutputSample>&& aSamples) {
   EncodedData frames;
 
   WMF_ENC_LOGD("ProcessOutputSamples: %zu frames", aSamples.Length());
 
-  for (auto sample : aSamples) {
-    RefPtr<MediaRawData> frame = IMFSampleToMediaData(sample);
+  for (MFTEncoder::OutputSample& sample : aSamples) {
+    RefPtr<MediaRawData> frame = OutputSampleToMediaData(sample);
     if (frame) {
       frames.AppendElement(std::move(frame));
     } else {
@@ -318,28 +329,28 @@ RefPtr<EncodePromise> WMFMediaDataEncoder::ProcessOutputSamples(
   return EncodePromise::CreateAndResolve(std::move(frames), __func__);
 }
 
-already_AddRefed<MediaRawData> WMFMediaDataEncoder::IMFSampleToMediaData(
-    RefPtr<IMFSample>& aSample) {
+already_AddRefed<MediaRawData> WMFMediaDataEncoder::OutputSampleToMediaData(
+    MFTEncoder::OutputSample& aSample) {
   AssertOnTaskQueue();
-  MOZ_ASSERT(aSample);
+  MOZ_ASSERT(aSample.mSample);
 
   RefPtr<IMFMediaBuffer> buffer;
-  HRESULT hr = aSample->GetBufferByIndex(0, getter_AddRefs(buffer));
+  HRESULT hr = aSample.mSample->GetBufferByIndex(0, getter_AddRefs(buffer));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   LockBuffer lockBuffer(buffer);
   NS_ENSURE_TRUE(SUCCEEDED(lockBuffer.Result()), nullptr);
 
   LONGLONG time = 0;
-  hr = aSample->GetSampleTime(&time);
+  hr = aSample.mSample->GetSampleTime(&time);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   LONGLONG duration = 0;
-  hr = aSample->GetSampleDuration(&duration);
+  hr = aSample.mSample->GetSampleDuration(&duration);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-  bool isKeyframe =
-      MFGetAttributeUINT32(aSample, MFSampleExtension_CleanPoint, false);
+  bool isKeyframe = MFGetAttributeUINT32(aSample.mSample,
+                                         MFSampleExtension_CleanPoint, false);
 
   auto frame = MakeRefPtr<MediaRawData>();
 
@@ -348,6 +359,10 @@ already_AddRefed<MediaRawData> WMFMediaDataEncoder::IMFSampleToMediaData(
     auto maybeId =
         H264::ExtractSVCTemporalId(lockBuffer.Data(), lockBuffer.Length());
     frame->mTemporalLayerId = Some(maybeId.unwrapOr(0));
+  }
+
+  if (!aSample.mHeader.IsEmpty()) {
+    SetConfigData(aSample.mHeader);
   }
 
   if (!WriteFrameData(frame, lockBuffer, isKeyframe)) {

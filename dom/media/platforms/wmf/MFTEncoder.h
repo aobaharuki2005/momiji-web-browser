@@ -29,6 +29,11 @@ class MFTEncoder final {
     RefPtr<IMFSample> mSample{};
     bool mKeyFrameRequested = false;
   };
+  using MPEGHeader = nsTArray<UINT8>;
+  struct OutputSample {
+    RefPtr<IMFSample> mSample{};
+    MPEGHeader mHeader;
+  };
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFTEncoder)
 
   enum class HWPreference {
@@ -49,10 +54,11 @@ class MFTEncoder final {
 
   HRESULT CreateInputSample(RefPtr<IMFSample>* aSample, size_t aSize);
   HRESULT PushInput(const InputSample& aInput);
-  nsTArray<RefPtr<IMFSample>> TakeOutput();
-  HRESULT Drain(nsTArray<RefPtr<IMFSample>>& aOutput);
 
-  Result<nsTArray<UINT8>, HRESULT> GetMPEGSequenceHeader();
+  nsTArray<OutputSample> TakeOutput();
+  HRESULT Drain(nsTArray<OutputSample>& aOutput);
+
+  Result<MPEGHeader, HRESULT> GetMPEGSequenceHeader();
 
   static nsCString GetFriendlyName(const GUID& aSubtype);
 
@@ -144,6 +150,7 @@ class MFTEncoder final {
   HRESULT SendMFTMessage(MFT_MESSAGE_TYPE aMsg, ULONG_PTR aData);
 
   HRESULT ProcessEvents();
+  HRESULT ProcessEventsInternal();
   HRESULT ProcessInput();
   HRESULT ProcessOutput();
 
@@ -171,7 +178,10 @@ class MFTEncoder final {
   DrainState mDrainState = DrainState::DRAINABLE;
 
   std::deque<InputSample> mPendingInputs;
-  nsTArray<RefPtr<IMFSample>> mOutputs;
+  nsTArray<OutputSample> mOutputs;
+  // Holds a temporary MPEGSequenceHeader to be attached to the first output
+  // packet after format renegotiation.
+  MPEGHeader mOutputHeader;
 
   EventSource mEventSource;
 };

@@ -831,7 +831,7 @@ HRESULT MFTEncoder::ProcessInput() {
   return mEventSource.QueueSyncMFTEvent(evType);
 }
 
-HRESULT MFTEncoder::ProcessEvents() {
+HRESULT MFTEncoder::ProcessEventsInternal() {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
 
@@ -869,6 +869,30 @@ HRESULT MFTEncoder::ProcessEvents() {
       MFT_ENC_LOGE("failed to get event: %s", ErrorMessage(hr).get());
       return hr;
   }
+}
+
+HRESULT MFTEncoder::ProcessEvents() {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+  MOZ_ASSERT(mEncoder);
+
+  HRESULT hr = ProcessEventsInternal();
+  if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
+    auto r = GetMPEGSequenceHeader();
+    if (r.isErr()) {
+      MFT_ENC_LOGE("GetMPEGSequenceHeader failed: %s",
+                   ErrorMessage(r.unwrapErr()).get());
+      return r.unwrapErr();
+    }
+    mOutputHeader = r.unwrap();
+    MFT_ENC_LOGD("MPEG sequence header length: %zu. Try getting output again",
+                 mOutputHeader.Length());
+    // Try to get output again after output format negotiation.
+    if (mEventSource.IsSync()) {
+      mEventSource.QueueSyncMFTEvent(METransformHaveOutput);
+    }
+    return ProcessEventsInternal();
+  }
+  return hr;
 }
 
 HRESULT MFTEncoder::ProcessOutput() {
@@ -921,7 +945,10 @@ HRESULT MFTEncoder::ProcessOutput() {
     return hr;
   }
 
-  mOutputs.AppendElement(output.pSample);
+  mOutputs.AppendElement(OutputSample{.mSample = output.pSample});
+  if (!mOutputHeader.IsEmpty()) {
+    mOutputs.LastElement().mHeader = std::move(mOutputHeader);
+  }
   if (mOutputStreamProvidesSample) {
     // Release MFT provided sample.
     output.pSample->Release();
@@ -931,11 +958,11 @@ HRESULT MFTEncoder::ProcessOutput() {
   return S_OK;
 }
 
-nsTArray<RefPtr<IMFSample>> MFTEncoder::TakeOutput() {
+nsTArray<MFTEncoder::OutputSample> MFTEncoder::TakeOutput() {
   return std::move(mOutputs);
 }
 
-HRESULT MFTEncoder::Drain(nsTArray<RefPtr<IMFSample>>& aOutput) {
+HRESULT MFTEncoder::Drain(nsTArray<OutputSample>& aOutput) {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
   MOZ_ASSERT(aOutput.Length() == 0);
