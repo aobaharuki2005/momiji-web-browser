@@ -2146,7 +2146,7 @@
       This function updates the position and widths of elements affected by this layout shift
       when the tab is first selected to be dragged.
     */
-    #updateTabStylesOnDrag(tab, event) {
+    #updateTabStylesOnDrag(tab) {
       let isPinned = tab.pinned;
       let numPinned = gBrowser.pinnedTabCount;
       let allTabs = this.ariaFocusableItems;
@@ -2218,19 +2218,22 @@
         movingTab.setAttribute("dragtarget", "");
         if (isTabGroupLabel(tab)) {
           if (this.verticalMode) {
-            // Vertical tab groups require more precise positioning, hence 2.5 to center the mouse
-            movingTab.style.top = event.clientY - rect.height * 2.5 + "px";
+            movingTab.style.top = rect.top - unpinnedRect.top + "px";
           } else {
             movingTab.style.left = rect.left - movingTabsOffsetX + "px";
             movingTab.style.height = rect.height + "px";
           }
         } else if (isGrid) {
-          movingTab.style.top = rect.top - rect.height + "px";
+          movingTab.style.top = rect.top - pinnedRect.top + "px";
           movingTab.style.left =
             rect.left - movingTabsOffsetX + position + "px";
           position += rect.width;
         } else if (this.verticalMode) {
-          movingTab.style.top = rect.top + position - rect.height + "px";
+          movingTab.style.top =
+            rect.top -
+            (isPinned ? pinnedRect.top : unpinnedRect.top) +
+            position +
+            "px";
           position += rect.height;
         } else if (this.#rtlMode) {
           movingTab.style.left =
@@ -2244,8 +2247,7 @@
       }
       // Reset position so we can next handle moving tabs before the dragged tab
       if (this.verticalMode) {
-        // Minus rect.height * 2 since above we are minusing rect.height to center mouse
-        position = 0 - rect.height * 2;
+        position = 0 - rect.height;
       } else if (this.#rtlMode) {
         position = 0 + rect.width;
       } else {
@@ -2256,7 +2258,11 @@
         movingTab.style.width = rect.width + "px";
         movingTab.setAttribute("dragtarget", "");
         if (this.verticalMode) {
-          movingTab.style.top = rect.top + position + "px";
+          movingTab.style.top =
+            rect.top -
+            (isPinned ? pinnedRect.top : unpinnedRect.top) +
+            position +
+            "px";
           position -= rect.height;
         } else if (this.#rtlMode) {
           movingTab.style.left =
@@ -2610,6 +2616,16 @@
       // Constrain the range over which the moving tabs can move between the first and last tab
       let firstBound = firstTab[screenAxis] - firstMovingTabScreen;
       let lastBound = endEdge(lastTab) - lastMovingTabScreen;
+
+      // Center the tab under the cursor if the tab is not under the cursor while dragging
+      if (
+        screen < draggedTab[screenAxis] + translate ||
+        screen > endEdge(draggedTab) + translate
+      ) {
+        translate =
+          screen - draggedTab[screenAxis] - bounds(draggedTab)[size] / 2;
+      }
+
       translate = Math.min(Math.max(translate, firstBound), lastBound);
 
       for (let item of movingTabs) {
