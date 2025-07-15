@@ -622,6 +622,8 @@ support-files = [
 
 ["browser_speculative_connect_not_with_client_cert.js"]
 
+["browser_splitbutton.js"]
+
 ["browser_stop.js"]
 
 ["browser_stopSearchOnSelection.js"]

@@ -2188,6 +2188,21 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
             url: {
               type: "string",
             },
+            command: {
+              type: "string",
+            },
+            menu: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  l10n: L10N_SCHEMA,
+                  name: {
+                    type: "string",
+                  },
+                },
+              },
+            },
           },
         },
       },
