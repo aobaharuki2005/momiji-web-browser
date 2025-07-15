@@ -4845,11 +4845,6 @@ main section {
     display: inline-block;
   }
 }
-@media (min-width: 866px) {
-  .has-sections-grid .ds-outer-wrapper-breakpoint-override .ds-layout-topsites .hide-for-narrow {
-    display: inline-block;
-  }
-}
 
 .has-sections-grid .ds-outer-wrapper-breakpoint-override main {
   width: auto;

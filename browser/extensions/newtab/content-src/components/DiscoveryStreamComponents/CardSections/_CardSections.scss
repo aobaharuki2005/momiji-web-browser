@@ -433,18 +433,6 @@
         display: inline-block;
       }
     }
-
-  }
-
-  // Note this breakpoint doesn't use set the same default width (746px).
-  // The sections layout uses a different $break-point-layout-variant
-  // but not $break-point-large. This rule below maintains
-  // the topsites layout to stack two rows x four tiles
-  // when the sections grid changes to a two column layout
-  @media (min-width: $break-point-large) {
-    .ds-layout-topsites .hide-for-narrow {
-      display: inline-block;
-    }
   }
 }
 
