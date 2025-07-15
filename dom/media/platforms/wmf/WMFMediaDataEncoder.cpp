@@ -195,17 +195,7 @@ RefPtr<EncodePromise> WMFMediaDataEncoder::ProcessEncode(
         __func__);
   }
 
-  nsTArray<RefPtr<IMFSample>> outputs;
-  HRESULT hr = mEncoder->TakeOutput(outputs);
-  if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
-    FillConfigData();
-  } else if (FAILED(hr)) {
-    WMF_ENC_LOGE("failed to process output");
-    return EncodePromise::CreateAndReject(
-        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                    RESULT_DETAIL("Failed to process output.")),
-        __func__);
-  }
+  nsTArray<RefPtr<IMFSample>> outputs = mEncoder->TakeOutput();
 
   return ProcessOutputSamples(std::move(outputs));
 }

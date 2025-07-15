@@ -927,10 +927,8 @@ HRESULT MFTEncoder::ProcessOutput() {
   return S_OK;
 }
 
-HRESULT MFTEncoder::TakeOutput(nsTArray<RefPtr<IMFSample>>& aOutput) {
-  MOZ_ASSERT(aOutput.Length() == 0);
-  aOutput.SwapElements(mOutputs);
-  return S_OK;
+nsTArray<RefPtr<IMFSample>> MFTEncoder::TakeOutput() {
+  return std::move(mOutputs);
 }
 
 HRESULT MFTEncoder::Drain(nsTArray<RefPtr<IMFSample>>& aOutput) {

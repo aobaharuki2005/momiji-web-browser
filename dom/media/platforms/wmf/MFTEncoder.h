@@ -49,7 +49,7 @@ class MFTEncoder final {
 
   HRESULT CreateInputSample(RefPtr<IMFSample>* aSample, size_t aSize);
   HRESULT PushInput(const InputSample& aInput);
-  HRESULT TakeOutput(nsTArray<RefPtr<IMFSample>>& aOutput);
+  nsTArray<RefPtr<IMFSample>> TakeOutput();
   HRESULT Drain(nsTArray<RefPtr<IMFSample>>& aOutput);
 
   HRESULT GetMPEGSequenceHeader(nsTArray<UINT8>& aHeader);
