@@ -340,7 +340,7 @@
   <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
   <string name="browser_menu_switch_to_desktop_site" moz:removedIn="141" tools:ignore="UnusedResources">K websedłoju za desktop</string>
   <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site">K mobilnemu sedłoju</string>
+  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">K mobilnemu sedłoju</string>
   <!-- Browser menu label that navigates to the page tools sub-menu -->
   <string name="browser_menu_tools" moz:removedIn="141" tools:ignore="UnusedResources">Rědy</string>
   <!-- Content description (not visible, for screen readers etc.): Back button for all menu redesign sub-menu -->
@@ -879,6 +879,8 @@
   <string name="preferences_home_2">Startowy bok</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">Nałožeński symbol</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Pokazanje rědki rejtarikow</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Gesty</string>
   <!-- Preference for settings related to visual options -->
@@ -1311,6 +1313,8 @@
   <string name="preference_simple_toolbar">Jadnory</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Rozłožony</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">Adresowe pólo musy górjejce byś, gaž se rědka rejtarikow pokazujo.</string>
   <!--
     App icon Preferences
 
@@ -1329,6 +1333,12 @@
   <string name="preference_auto_battery_theme">Pó zažarjeńskich nastajenjach baterije</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Na rědowu drastwu źiwaś</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Rědku rejtarikow pokazaś</string>
   <!--
     Gestures Preferences
 
