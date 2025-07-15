@@ -35,6 +35,12 @@ DEFINE_CODECAPI_GUID(AVEncAdaptiveMode, "4419b185-da1f-4f53-bc76-097d0c1efb1e",
 #define MFT_ENC_LOGE(arg, ...)                        \
   MOZ_LOG(mozilla::sPEMLog, mozilla::LogLevel::Error, \
           ("MFTEncoder(0x%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define MFT_ENC_LOGW(arg, ...)                          \
+  MOZ_LOG(mozilla::sPEMLog, mozilla::LogLevel::Warning, \
+          ("MFTEncoder(0x%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define MFT_ENC_LOGV(arg, ...)                          \
+  MOZ_LOG(mozilla::sPEMLog, mozilla::LogLevel::Verbose, \
+          ("MFTEncoder(0x%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 #define MFT_ENC_SLOGD(arg, ...)                       \
   MOZ_LOG(mozilla::sPEMLog, mozilla::LogLevel::Debug, \
           ("MFTEncoder::%s: " arg, __func__, ##__VA_ARGS__))
@@ -110,12 +116,18 @@ static const char* ErrorStr(HRESULT hr) {
       return "TRANSFORM_PROCESSING";
     case MF_E_TRANSFORM_ASYNC_LOCKED:
       return "TRANSFORM_ASYNC_LOCKED";
+    case MF_E_TRANSFORM_NEED_MORE_INPUT:
+      return "TRANSFORM_NEED_MORE_INPUT";
     case MF_E_TRANSFORM_TYPE_NOT_SET:
       return "TRANSFORM_TYPE_NO_SET";
     case MF_E_UNSUPPORTED_D3D_TYPE:
       return "UNSUPPORTED_D3D_TYPE";
     case E_INVALIDARG:
       return "INVALIDARG";
+    case MF_E_MULTIPLE_SUBSCRIBERS:
+      return "MULTIPLE_SUBSCRIBERS";
+    case MF_E_NO_EVENTS_AVAILABLE:
+      return "NO_EVENTS_AVAILABLE";
     case MF_E_NO_SAMPLE_DURATION:
       return "NO_SAMPLE_DURATION";
     case MF_E_NO_SAMPLE_TIMESTAMP:
@@ -601,6 +613,8 @@ HRESULT MFTEncoder::GetStreamIDs() {
     MFT_ENC_LOGE("failed to get stream IDs: %s", ErrorMessage(hr).get());
     return hr;
   }
+  MFT_ENC_LOGD("input stream ID: %lu, output stream ID: %lu", mInputStreamID,
+               mOutputStreamID);
   return S_OK;
 }
 
@@ -826,6 +840,7 @@ HRESULT MFTEncoder::ProcessEvents() {
     }
 
     MediaEventType evType = event.unwrap();
+    MFT_ENC_LOGV("processing event: %s", MediaEventTypeStr(evType));
     switch (evType) {
       case METransformNeedInput:
         ++mNumNeedInput;
@@ -872,7 +887,7 @@ HRESULT MFTEncoder::ProcessOutput() {
   DWORD status = 0;
   HRESULT hr = mEncoder->ProcessOutput(0, 1, &output, &status);
   if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
-    MFT_ENC_LOGD("output stream change");
+    MFT_ENC_LOGW("output stream change");
     if (output.dwStatus & MFT_OUTPUT_DATA_BUFFER_FORMAT_CHANGE) {
       // Follow the instructions in Microsoft doc:
       // https://docs.microsoft.com/en-us/windows/win32/medfound/handling-stream-changes#output-type
@@ -881,6 +896,8 @@ HRESULT MFTEncoder::ProcessOutput() {
           mEncoder->GetOutputAvailableType(mOutputStreamID, 0, &outputType));
       MFT_RETURN_IF_FAILED(
           mEncoder->SetOutputType(mOutputStreamID, outputType, 0));
+      MFT_ENC_LOGW("stream format has been re-negotiated for output stream %lu",
+                   mOutputStreamID);
     }
     return MF_E_TRANSFORM_STREAM_CHANGE;
   }
@@ -1041,6 +1058,8 @@ bool MFTEncoder::EventSource::IsOnCurrentThread() {
 #undef MFT_ENC_SLOGE
 #undef MFT_ENC_SLOGD
 #undef MFT_ENC_LOGE
+#undef MFT_ENC_LOGW
+#undef MFT_ENC_LOGV
 #undef MFT_ENC_LOGD
 #undef MFT_RETURN_IF_FAILED
 #undef MFT_RETURN_IF_FAILED_S
