@@ -694,6 +694,11 @@ impl ResourceCache {
             flags,
         );
 
+        // TODO: This is a workaround for bug 1975123 which affects (some flavors of)
+        // Windows with ANGLE. It would be much better to let small snapshots be
+        // stored in texture atlases.
+        let force_standalone_texture = true;
+
         // Allocate space in the texture cache, but don't supply
         // and CPU-side data to be uploaded.
         let user_data = [0.0; 4];
@@ -709,6 +714,7 @@ impl ResourceCache {
             render_task.uv_rect_kind(),
             Eviction::Manual,
             TargetShader::Default,
+            force_standalone_texture,
         );
 
         // Get the allocation details in the texture cache, and store
@@ -1504,6 +1510,7 @@ impl ResourceCache {
                             UvRectKind::Rect,
                             Eviction::Auto,
                             TargetShader::Text,
+                            false,
                         );
                         GlyphCacheEntry::Cached(CachedGlyphInfo {
                             texture_cache_handle,
@@ -1547,6 +1554,7 @@ impl ResourceCache {
                 UvRectKind::Rect,
                 Eviction::Manual,
                 TargetShader::Default,
+                false,
             );
         }
 
@@ -1664,6 +1672,7 @@ impl ResourceCache {
                     UvRectKind::Rect,
                     eviction,
                     TargetShader::Default,
+                    false,
                 );
             }
         }
