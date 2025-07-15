@@ -100,12 +100,6 @@ class CSSFilterInstance {
                  const nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs);
 
   /**
-   * Converts an nscolor to a Color, suitable for use as a
-   * FilterPrimitiveDescription attribute.
-   */
-  sRGBColor ToAttributeColor(nscolor aColor);
-
-  /**
    * Converts a blur radius in frame space to filter space.
    */
   Size BlurRadiusToFilterSpace(nscoord aRadiusInFrameSpace);
