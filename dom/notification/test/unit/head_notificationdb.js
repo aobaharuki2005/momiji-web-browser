@@ -29,33 +29,7 @@ var calendarNotification = getNotificationObject(
   "{d8d11299-a58e-429b-9a9a-57c562982fbf}"
 );
 
-// Helper to start the NotificationDB
-function startNotificationDB() {
-  ChromeUtils.importESModule(
-    "moz-src:///dom/notification/MemoryNotificationDB.sys.mjs"
-  );
-  ChromeUtils.importESModule(
-    "moz-src:///dom/notification/NotificationDB.sys.mjs"
-  );
-}
-
-// Helper function to add a listener, send message and treat the reply
-async function addAndSend(msg, reply, callback, payload) {
-  const { promise, resolve, reject } = Promise.withResolvers();
-  let handler = {
-    receiveMessage(message) {
-      if (message.name === reply) {
-        Services.cpmm.removeMessageListener(reply, handler);
-        Promise.resolve(callback(message)).then(resolve, reject);
-      }
-    },
-  };
-  Services.cpmm.addMessageListener(reply, handler);
-  Services.cpmm.sendAsyncMessage(msg, payload);
-  return promise;
-}
-
-// helper fonction, comparing two notifications
+// helper function, comparing two notifications
 function compareNotification(notif1, notif2) {
   // retrieved notification should be the second one sent
   for (let prop in notif1) {
