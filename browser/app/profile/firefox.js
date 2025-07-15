@@ -3039,7 +3039,6 @@ pref("devtools.netmonitor.msg.visibleColumns",
 );
 pref("devtools.netmonitor.msg.displayed-messages.limit", 500);
 
-pref("devtools.netmonitor.response.ui.limit", 10240);
 pref("devtools.netmonitor.ui.default-raw-response", false);
 
 // Save request/response bodies yes/no.
