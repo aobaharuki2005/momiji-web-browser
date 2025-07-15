@@ -5945,7 +5945,7 @@
       "resource://gre/modules/MediaUtils.sys.mjs": [
         "mobile/shared/modules/geckoview/MediaUtils.sys.mjs"
       ],
-      "resource://gre/modules/MemoryNotificationDB.sys.mjs": [
+      "moz-src:///dom/notification/MemoryNotificationDB.sys.mjs": [
         "dom/notification/MemoryNotificationDB.sys.mjs"
       ],
       "resource://gre/modules/MessageManagerProxy.sys.mjs": [
@@ -5969,7 +5969,7 @@
       "resource://gre/modules/NewTabUtils.sys.mjs": [
         "toolkit/modules/NewTabUtils.sys.mjs"
       ],
-      "resource://gre/modules/NotificationDB.sys.mjs": [
+      "moz-src:///dom/notification/NotificationDB.sys.mjs": [
         "dom/notification/NotificationDB.sys.mjs"
       ],
       "resource://gre/modules/OSCrypto_win.sys.mjs": [
