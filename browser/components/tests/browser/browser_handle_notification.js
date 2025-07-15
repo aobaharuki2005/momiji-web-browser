@@ -133,7 +133,7 @@ add_task(async function test_basic_initial_load() {
 
   // If not let's wait for one
   if (!newTab) {
-    newTab = await BrowserTestUtils.waitForNewTab(
+    newTab = await BrowserTestUtils.waitForLocationChange(
       newWin.gBrowser,
       "https://example.com/"
     );
