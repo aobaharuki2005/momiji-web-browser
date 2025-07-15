@@ -317,16 +317,13 @@ class HomeFragment : Fragment() {
             }
         }
 
-        if (!requireContext().settings().shouldUseSimpleToolbar) {
-            homeNavigationBar = HomeNavigationBar(
-                context = requireContext(),
-                lifecycleOwner = this,
-                container = binding.navigationBarContainer,
-                appStore = components.appStore,
-                browserStore = store,
-                settings = requireContext().settings(),
-            )
-        }
+        homeNavigationBar = HomeNavigationBar(
+            context = requireContext(),
+            lifecycleOwner = this,
+            container = binding.navigationBarContainer,
+            appStore = components.appStore,
+            browserStore = store,
+        )
 
         if (requireContext().settings().isExperimentationEnabled) {
             messagingFeatureHomescreen.set(

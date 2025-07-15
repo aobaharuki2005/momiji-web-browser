@@ -7,16 +7,12 @@ package org.mozilla.fenix.home.toolbar
 import android.app.ActionBar.LayoutParams
 import android.content.Context
 import android.view.ViewGroup
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
@@ -28,7 +24,6 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.utils.Settings
 
 /**
  * A wrapper over the [NavigationBar] composable that provides enhanced customization and
@@ -39,7 +34,6 @@ import org.mozilla.fenix.utils.Settings
  * @param container [ViewGroup] which will serve as parent of this View.
  * @param appStore [AppStore] to sync from.
  * @param browserStore [BrowserStore] used for observing the browsing details.
- * @param settings [Settings] object to get the toolbar position and other settings.
  */
 class HomeNavigationBar(
     private val context: Context,
@@ -47,7 +41,6 @@ class HomeNavigationBar(
     private val container: ViewGroup,
     private val appStore: AppStore,
     private val browserStore: BrowserStore,
-    private val settings: Settings,
 ) : FenixHomeToolbar {
     val store = StoreProvider.get(lifecycleOwner) {
         BrowserToolbarStore(
@@ -58,7 +51,6 @@ class HomeNavigationBar(
                     browserStore = browserStore,
                     clipboard = context.components.clipboardHandler,
                     useCases = context.components.useCases,
-                    settings = settings,
                 ),
             ),
         )
@@ -66,29 +58,22 @@ class HomeNavigationBar(
 
     @Composable
     private fun DefaultNavigationBarContent(showDivider: Boolean) {
-        if (settings.shouldUseSimpleToolbar) {
-            return
-        }
-
         val uiState by store.observeAsState(initialValue = store.state) { it }
 
-        FirefoxTheme {
-            NavigationBar(
-                actions = uiState.displayState.navigationActions,
-                shouldShowDivider = showDivider,
-                onInteraction = { store.dispatch(it) },
-            )
+        if (uiState.displayState.navigationActions.isNotEmpty()) {
+            FirefoxTheme {
+                NavigationBar(
+                    actions = uiState.displayState.navigationActions,
+                    shouldShowDivider = showDivider,
+                    onInteraction = { store.dispatch(it) },
+                )
+            }
         }
     }
 
     override val layout = ComposeView(context).apply {
         setContent {
-            if (settings.shouldUseSimpleToolbar) {
-                // empty spacer to be added
-                Spacer(modifier = Modifier.height(0.dp))
-            } else {
-                DefaultNavigationBarContent(showDivider = true)
-            }
+            DefaultNavigationBarContent(showDivider = true)
         }
     }.apply {
         container.addView(

@@ -1311,7 +1311,7 @@ abstract class BaseBrowserFragment :
             )
         }
 
-        browserNavigationBar = if (context?.settings()?.shouldUseSimpleToolbar == false) {
+        browserNavigationBar =
              BrowserNavigationBar(
                 context = activity,
                 lifecycleOwner = this,
@@ -1323,9 +1323,6 @@ abstract class BaseBrowserFragment :
                 settings = activity.settings(),
                 customTabSession = customTabSessionId?.let { store.state.findCustomTab(it) },
             )
-        } else {
-           null
-        }
 
         return BrowserToolbarComposable(
             activity = activity,

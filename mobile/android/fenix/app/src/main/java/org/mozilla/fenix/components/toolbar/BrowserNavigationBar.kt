@@ -133,12 +133,14 @@ class BrowserNavigationBar(
     private fun DefaultNavigationBarContent(showDivider: Boolean) {
         val uiState by store.observeAsState(initialValue = store.state) { it }
 
-        FirefoxTheme {
-            NavigationBar(
-                actions = uiState.displayState.navigationActions,
-                shouldShowDivider = showDivider,
-                onInteraction = { store.dispatch(it) },
-            )
+        if (uiState.displayState.navigationActions.isNotEmpty()) {
+            FirefoxTheme {
+                NavigationBar(
+                    actions = uiState.displayState.navigationActions,
+                    shouldShowDivider = showDivider,
+                    onInteraction = { store.dispatch(it) },
+                )
+            }
         }
     }
 }

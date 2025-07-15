@@ -207,7 +207,6 @@ internal class HomeToolbarComposable(
                     browserStore = browserStore,
                     clipboard = context.components.clipboardHandler,
                     useCases = context.components.useCases,
-                    settings = settings,
                 ),
                 BrowserToolbarSearchMiddleware(
                     appStore = appStore,
