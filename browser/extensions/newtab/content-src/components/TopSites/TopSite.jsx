@@ -368,9 +368,9 @@ export class TopSiteLink extends React.PureComponent {
             onClick={onClick}
             draggable={true}
             data-is-sponsored-link={!!link.sponsored_tile_id}
-            title={title}
             onFocus={this.props.onFocus}
             {...(isAddButton && { ...addButtonTitlel10n })}
+            {...(!isAddButton && { title })}
           >
             {shortcutsRefresh && link.isPinned && (
               <div className="icon icon-pin-small" />
