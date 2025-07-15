@@ -1900,6 +1900,13 @@ already_AddRefed<AccAttributes> TextLeafPoint::GetTextAttributesLocalAcc(
   MOZ_ASSERT(acc->IsText());
   // TextAttrsMgr wants a HyperTextAccessible.
   LocalAccessible* parent = acc->LocalParent();
+  if (!parent) {
+    // This should only happen if a client query occurs after a hide event is
+    // queued for acc and after acc is detached from the document, but before
+    // the event is fired and thus before acc is shut down.
+    MOZ_ASSERT(!acc->IsInDocument());
+    return nullptr;
+  }
   HyperTextAccessible* hyperAcc = parent->AsHyperText();
   MOZ_ASSERT(hyperAcc);
   RefPtr<AccAttributes> attributes = new AccAttributes();
