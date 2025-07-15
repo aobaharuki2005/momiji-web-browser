@@ -1734,7 +1734,7 @@ class Skipfails:
                     n += 2
                     anyjs[section] = True
                 section = line[1:-1]
-                if section in anyjs and not anyjs[section]:
+                if section and anyjs and section in anyjs and not anyjs[section]:
                     disabled_key = False
                 else:
                     section = None  # ignore section we are not interested in
@@ -1781,18 +1781,19 @@ class Skipfails:
             i += 2
             n += 2
             anyjs[section] = True
-        for section in anyjs:
-            if not anyjs[section]:
-                if i > 0 and i - 1 < n and lines[i - 1] != "":
-                    lines.append("")  # blank line before condition
-                    i += 1
-                    n += 1
-                lines.append("[" + section + "]")
-                lines.append(disabled)
-                lines.append(condition)
-                lines.append("")  # blank line after condition
-                i += 4
-                n += 4
+        if anyjs:
+            for section in anyjs:
+                if not anyjs[section]:
+                    if i > 0 and i - 1 < n and lines[i - 1] != "":
+                        lines.append("")  # blank line before condition
+                        i += 1
+                        n += 1
+                    lines.append("[" + section + "]")
+                    lines.append(disabled)
+                    lines.append(condition)
+                    lines.append("")  # blank line after condition
+                    i += 4
+                    n += 4
         manifest_str = "\n".join(lines) + "\n"
         return manifest_str, additional_comment
 
