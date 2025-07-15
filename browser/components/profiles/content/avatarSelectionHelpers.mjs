@@ -172,18 +172,18 @@ export class Region {
         break;
       }
       default: {
-        if (this.width < newDiameter) {
-          // Move both the left and the right half of the difference
-          let diff = newDiameter - this.width;
-          let halfDiff = Math.floor(diff / 2);
-          this.left = this.left + halfDiff;
-          this.right = this.right - halfDiff;
-        } else if (this.height > newDiameter) {
-          // Move both the top and the bottom half of the difference
-          let diff = newDiameter - this.height;
-          let halfDiff = Math.floor(diff / 2);
-          this.top = this.left + halfDiff;
-          this.bottom = this.right - halfDiff;
+        newDiameter = Math.max(this.width, this.height);
+        if (this.left === 0) {
+          this.right = newDiameter;
+        }
+        if (this.right === this.#viewDimensions.width) {
+          this.left = this.right - newDiameter;
+        }
+        if (this.top === 0) {
+          this.bottom = newDiameter;
+        }
+        if (this.bottom === this.#viewDimensions.height) {
+          this.top = this.bottom - newDiameter;
         }
       }
     }
@@ -226,6 +226,19 @@ export class Region {
 
   get radius() {
     return Math.floor(this.width / 2);
+  }
+
+  get x1() {
+    return this.#x1;
+  }
+  get x2() {
+    return this.#x2;
+  }
+  get y1() {
+    return this.#y1;
+  }
+  get y2() {
+    return this.#y2;
   }
 }
 

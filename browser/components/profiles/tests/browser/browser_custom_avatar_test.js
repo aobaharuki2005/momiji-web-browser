@@ -602,3 +602,252 @@ add_task(async function test_edit_profile_custom_avatar_crop() {
 
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function test_edit_profile_custom_avatar_keyboard_crop() {
+  if (!AppConstants.MOZ_SELECTABLE_PROFILES) {
+    // `mochitest-browser` suite `add_task` does not yet support
+    // `properties.skip_if`.
+    ok(true, "Skipping because !AppConstants.MOZ_SELECTABLE_PROFILES");
+    return;
+  }
+  const profile = await setup();
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.profiles.updated-avatar-selector", true]],
+  });
+
+  const avatarWidth = 100;
+  const avatarHeight = 100;
+
+  const mockAvatarFile = await createAvatarFile(avatarWidth, avatarHeight);
+
+  const MockFilePicker = SpecialPowers.MockFilePicker;
+  MockFilePicker.init(window.browsingContext);
+  MockFilePicker.setFiles([mockAvatarFile]);
+  MockFilePicker.returnValue = MockFilePicker.returnOK;
+
+  let curProfile = await SelectableProfileService.getProfile(profile.id);
+  await curProfile.setAvatar("star");
+  Assert.ok(
+    !curProfile.hasCustomAvatar,
+    "Current profile does not have a custom avatar"
+  );
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:editprofile",
+    },
+    async browser => {
+      const customAvatarData = await SpecialPowers.spawn(
+        browser,
+        [],
+        async () => {
+          function assertAvatarRegionDimensions(
+            actualDimensions,
+            expectedDimensions
+          ) {
+            is(
+              actualDimensions.top,
+              expectedDimensions.top,
+              "Top dimension is correct"
+            );
+            is(
+              actualDimensions.left,
+              expectedDimensions.left,
+              "Left dimension is correct"
+            );
+            is(
+              actualDimensions.bottom,
+              expectedDimensions.bottom,
+              "Bottom dimension is correct"
+            );
+            is(
+              actualDimensions.right,
+              expectedDimensions.right,
+              "Right dimension is correct"
+            );
+          }
+
+          let editProfileCard =
+            content.document.querySelector("edit-profile-card").wrappedJSObject;
+
+          await ContentTaskUtils.waitForCondition(
+            () => editProfileCard.initialized,
+            "Waiting for edit-profile-card to be initialized"
+          );
+
+          await editProfileCard.updateComplete;
+
+          const avatarSelector = editProfileCard.avatarSelector;
+
+          EventUtils.synthesizeMouseAtCenter(
+            editProfileCard.avatarSelectorLink,
+            {},
+            content
+          );
+
+          Assert.ok(
+            ContentTaskUtils.isVisible(avatarSelector),
+            "Should be showing the profile avatar selector"
+          );
+
+          EventUtils.synthesizeMouseAtCenter(
+            avatarSelector.customTabButton,
+            {},
+            content
+          );
+          await avatarSelector.updateComplete;
+
+          await ContentTaskUtils.waitForCondition(
+            () => ContentTaskUtils.isVisible(avatarSelector.input),
+            "Waiting for avatar selector input to be visible"
+          );
+
+          const inputReceived = new Promise(resolve =>
+            avatarSelector.input.addEventListener(
+              "input",
+              event => {
+                resolve(event.target.files[0].name);
+              },
+              { once: true }
+            )
+          );
+
+          EventUtils.synthesizeMouseAtCenter(avatarSelector.input, {}, content);
+
+          await inputReceived;
+
+          await ContentTaskUtils.waitForCondition(
+            () => ContentTaskUtils.isVisible(avatarSelector.saveButton),
+            "Waiting for avatar selector save button to be visible"
+          );
+
+          await ContentTaskUtils.waitForCondition(
+            () => avatarSelector.customAvatarImage?.complete,
+            "Waiting for avatar selector image to load"
+          );
+
+          await avatarSelector.updateComplete;
+
+          const initialDimensions = avatarSelector.avatarRegion.dimensions;
+
+          // Move top left mover
+          avatarSelector.topLeftMover.focus();
+          EventUtils.synthesizeKey("ArrowRight", { repeat: 20 }, content);
+          EventUtils.synthesizeKey("ArrowDown", { repeat: 20 }, content);
+          EventUtils.synthesizeKey("ArrowLeft", { repeat: 10 }, content);
+          EventUtils.synthesizeKey("ArrowUp", { repeat: 10 }, content);
+
+          // Move top right mover
+          avatarSelector.topRightMover.focus();
+          EventUtils.synthesizeKey("ArrowLeft", { repeat: 20 }, content);
+          EventUtils.synthesizeKey("ArrowDown", { repeat: 20 }, content);
+          EventUtils.synthesizeKey("ArrowRight", { repeat: 10 }, content);
+          EventUtils.synthesizeKey("ArrowUp", { repeat: 10 }, content);
+
+          // Move bottom right mover
+          avatarSelector.bottomRightMover.focus();
+          EventUtils.synthesizeKey("ArrowLeft", { repeat: 20 }, content);
+          EventUtils.synthesizeKey("ArrowUp", { repeat: 20 }, content);
+          EventUtils.synthesizeKey("ArrowRight", { repeat: 10 }, content);
+          EventUtils.synthesizeKey("ArrowDown", { repeat: 10 }, content);
+
+          // Move bottom left mover
+          avatarSelector.bottomLeftMover.focus();
+          EventUtils.synthesizeKey("ArrowRight", { repeat: 20 }, content);
+          EventUtils.synthesizeKey("ArrowUp", { repeat: 20 }, content);
+          EventUtils.synthesizeKey("ArrowLeft", { repeat: 10 }, content);
+          EventUtils.synthesizeKey("ArrowDown", { repeat: 10 }, content);
+
+          const expected = {
+            left: initialDimensions.left + 40,
+            top: initialDimensions.top + 40,
+            right: initialDimensions.right - 40,
+            bottom: initialDimensions.bottom - 40,
+          };
+          // Check that initial position is correct
+          assertAvatarRegionDimensions(
+            avatarSelector.avatarRegion.dimensions,
+            expected
+          );
+
+          avatarSelector.highlight.focus();
+
+          EventUtils.synthesizeKey("ArrowRight", { repeat: 20 }, content);
+          expected.left += 20;
+          expected.right += 20;
+          assertAvatarRegionDimensions(
+            avatarSelector.avatarRegion.dimensions,
+            expected
+          );
+
+          EventUtils.synthesizeKey("ArrowUp", { repeat: 20 }, content);
+          expected.top -= 20;
+          expected.bottom -= 20;
+          assertAvatarRegionDimensions(
+            avatarSelector.avatarRegion.dimensions,
+            expected
+          );
+
+          EventUtils.synthesizeKey("ArrowLeft", { repeat: 20 }, content);
+          expected.left -= 20;
+          expected.right -= 20;
+          assertAvatarRegionDimensions(
+            avatarSelector.avatarRegion.dimensions,
+            expected
+          );
+
+          EventUtils.synthesizeKey("ArrowDown", { repeat: 20 }, content);
+          expected.top += 20;
+          expected.bottom += 20;
+          assertAvatarRegionDimensions(
+            avatarSelector.avatarRegion.dimensions,
+            expected
+          );
+
+          let region = avatarSelector.avatarRegion.dimensions;
+          let cropClientHeight =
+            avatarSelector.customAvatarCropArea.clientHeight;
+          let cropClientWidth = avatarSelector.customAvatarCropArea.clientWidth;
+
+          EventUtils.synthesizeMouseAtCenter(
+            avatarSelector.saveButton,
+            {},
+            content
+          );
+
+          // Sometimes the async message takes a bit longer to arrive.
+          await new Promise(resolve => content.setTimeout(resolve, 500));
+
+          return { region, cropClientHeight, cropClientWidth };
+        }
+      );
+
+      curProfile = await SelectableProfileService.getProfile(profile.id);
+      Assert.ok(
+        curProfile.hasCustomAvatar,
+        "Current profile has a custom avatar image"
+      );
+
+      let { region, cropClientHeight, cropClientWidth } = customAvatarData;
+      const scale =
+        avatarWidth <= avatarHeight
+          ? avatarWidth / cropClientWidth
+          : avatarHeight / cropClientHeight;
+
+      const expectedWidth =
+        2 * Math.round(region.radius * scale * window.devicePixelRatio);
+
+      await verifyCustomAvatarImage(
+        curProfile.getAvatarPath(),
+        expectedWidth,
+        expectedWidth
+      );
+    }
+  );
+
+  MockFilePicker.cleanup();
+
+  await SpecialPowers.popPrefEnv();
+});

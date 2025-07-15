@@ -17,6 +17,8 @@ const STATES = {
   RESIZING: "resizing",
 };
 
+const SCROLL_BY_EDGE = 20;
+
 /**
  * Element used for displaying an avatar on the about:editprofile and about:newprofile pages.
  */
@@ -77,6 +79,7 @@ export class ProfileAvatarSelector extends MozLitElement {
     window.addEventListener("pointerdown", this);
     window.addEventListener("pointermove", this);
     window.addEventListener("pointerup", this);
+    window.addEventListener("keydown", this);
     document.documentElement.classList.add("disable-text-selection");
   }
 
@@ -84,6 +87,7 @@ export class ProfileAvatarSelector extends MozLitElement {
     window.removeEventListener("pointerdown", this);
     window.removeEventListener("pointermove", this);
     window.removeEventListener("pointerup", this);
+    window.removeEventListener("keydown", this);
     document.documentElement.classList.remove("disable-text-selection");
   }
 
@@ -402,10 +406,10 @@ export class ProfileAvatarSelector extends MozLitElement {
   }
 
   setInitialAvatarSelection() {
-    let diameter = Math.min(
-      this.viewDimensions.width,
-      this.viewDimensions.height
-    );
+    // Make initial size a little smaller than the view so the movers aren't
+    // behind the scrollbar
+    let diameter =
+      Math.min(this.viewDimensions.width, this.viewDimensions.height) - 20;
 
     let left =
       Math.floor(this.viewDimensions.width / 2) - Math.floor(diameter / 2);
@@ -449,6 +453,9 @@ export class ProfileAvatarSelector extends MozLitElement {
         break;
       case "pointerup":
         this.handlePointerUp(event);
+        break;
+      case "keydown":
+        this.handleKeyDown(event);
         break;
     }
   }
@@ -530,8 +537,11 @@ export class ProfileAvatarSelector extends MozLitElement {
         );
         break;
       }
+      default:
+        return;
     }
 
+    this.scrollIfByEdge(x, y);
     this.drawSelectionContainer();
   }
 
@@ -539,6 +549,274 @@ export class ProfileAvatarSelector extends MozLitElement {
     this.state = STATES.SELECTED;
     this.#moverId = "";
     this.avatarRegion.sortCoords();
+  }
+
+  handleKeyDown(event) {
+    switch (event.key) {
+      case "ArrowLeft":
+        this.handleArrowLeftKeyDown(event);
+        break;
+      case "ArrowUp":
+        this.handleArrowUpKeyDown(event);
+        break;
+      case "ArrowRight":
+        this.handleArrowRightKeyDown(event);
+        break;
+      case "ArrowDown":
+        this.handleArrowDownKeyDown(event);
+        break;
+      case "Tab":
+        return;
+      default:
+        event.preventDefault();
+        return;
+    }
+    event.preventDefault();
+    this.drawSelectionContainer();
+  }
+
+  handleArrowLeftKeyDown(event) {
+    let targetId = event.originalTarget.id;
+    switch (targetId) {
+      case "highlight":
+        this.avatarRegion.left -= 1;
+        this.avatarRegion.right -= 1;
+
+        this.scrollIfByEdge(
+          this.avatarRegion.left,
+          this.viewDimensions.height / 2
+        );
+        break;
+      case "mover-topLeft":
+        this.avatarRegion.left -= 1;
+        this.avatarRegion.top -= 1;
+
+        this.scrollIfByEdge(this.avatarRegion.left, this.avatarRegion.top);
+        break;
+      case "mover-bottomLeft":
+        this.avatarRegion.left -= 1;
+        this.avatarRegion.bottom += 1;
+
+        this.scrollIfByEdge(this.avatarRegion.left, this.avatarRegion.bottom);
+        break;
+      case "mover-topRight":
+        this.avatarRegion.right -= 1;
+        this.avatarRegion.top += 1;
+
+        if (
+          this.avatarRegion.x1 >= this.avatarRegion.x2 ||
+          this.avatarRegion.y1 >= this.avatarRegion.y2
+        ) {
+          this.avatarRegion.sortCoords();
+          this.bottomLeftMover.focus({ focusVisible: true });
+        }
+        break;
+      case "mover-bottomRight":
+        this.avatarRegion.right -= 1;
+        this.avatarRegion.bottom -= 1;
+
+        if (
+          this.avatarRegion.x1 >= this.avatarRegion.x2 ||
+          this.avatarRegion.y1 >= this.avatarRegion.y2
+        ) {
+          this.avatarRegion.sortCoords();
+          this.topLeftMover.focus({ focusVisible: true });
+        }
+        break;
+      default:
+        return;
+    }
+
+    this.avatarRegion.forceSquare(targetId);
+  }
+
+  handleArrowUpKeyDown(event) {
+    let targetId = event.originalTarget.id;
+    switch (targetId) {
+      case "highlight":
+        this.avatarRegion.top -= 1;
+        this.avatarRegion.bottom -= 1;
+
+        this.scrollIfByEdge(
+          this.viewDimensions.width / 2,
+          this.avatarRegion.top
+        );
+        break;
+      case "mover-topLeft":
+        this.avatarRegion.left -= 1;
+        this.avatarRegion.top -= 1;
+
+        this.scrollIfByEdge(this.avatarRegion.left, this.avatarRegion.top);
+        break;
+      case "mover-bottomLeft":
+        this.avatarRegion.left += 1;
+        this.avatarRegion.bottom -= 1;
+
+        if (
+          this.avatarRegion.x1 >= this.avatarRegion.x2 ||
+          this.avatarRegion.y1 >= this.avatarRegion.y2
+        ) {
+          this.avatarRegion.sortCoords();
+          this.topRightMover.focus({ focusVisible: true });
+        }
+        break;
+      case "mover-topRight":
+        this.avatarRegion.right += 1;
+        this.avatarRegion.top -= 1;
+
+        this.scrollIfByEdge(this.avatarRegion.right, this.avatarRegion.top);
+        break;
+      case "mover-bottomRight":
+        this.avatarRegion.right -= 1;
+        this.avatarRegion.bottom -= 1;
+
+        if (
+          this.avatarRegion.x1 >= this.avatarRegion.x2 ||
+          this.avatarRegion.y1 >= this.avatarRegion.y2
+        ) {
+          this.avatarRegion.sortCoords();
+          this.topLeftMover.focus({ focusVisible: true });
+        }
+        break;
+      default:
+        return;
+    }
+
+    this.avatarRegion.forceSquare(targetId);
+  }
+
+  handleArrowRightKeyDown(event) {
+    let targetId = event.originalTarget.id;
+    switch (targetId) {
+      case "highlight":
+        this.avatarRegion.left += 1;
+        this.avatarRegion.right += 1;
+
+        this.scrollIfByEdge(
+          this.avatarRegion.right,
+          this.viewDimensions.height / 2
+        );
+        break;
+      case "mover-topLeft":
+        this.avatarRegion.left += 1;
+        this.avatarRegion.top += 1;
+
+        if (
+          this.avatarRegion.x1 >= this.avatarRegion.x2 ||
+          this.avatarRegion.y1 >= this.avatarRegion.y2
+        ) {
+          this.avatarRegion.sortCoords();
+          this.bottomRightMover.focus({ focusVisible: true });
+        }
+        break;
+      case "mover-bottomLeft":
+        this.avatarRegion.left += 1;
+        this.avatarRegion.bottom -= 1;
+
+        if (
+          this.avatarRegion.x1 >= this.avatarRegion.x2 ||
+          this.avatarRegion.y1 >= this.avatarRegion.y2
+        ) {
+          this.avatarRegion.sortCoords();
+          this.topRightMover.focus({ focusVisible: true });
+        }
+        break;
+      case "mover-topRight":
+        this.avatarRegion.right += 1;
+        this.avatarRegion.top -= 1;
+
+        this.scrollIfByEdge(this.avatarRegion.right, this.avatarRegion.top);
+        break;
+      case "mover-bottomRight":
+        this.avatarRegion.right += 1;
+        this.avatarRegion.bottom += 1;
+
+        this.scrollIfByEdge(this.avatarRegion.right, this.avatarRegion.bottom);
+        break;
+      default:
+        return;
+    }
+
+    this.avatarRegion.forceSquare(targetId);
+  }
+
+  handleArrowDownKeyDown(event) {
+    let targetId = event.originalTarget.id;
+    switch (targetId) {
+      case "highlight":
+        this.avatarRegion.top += 1;
+        this.avatarRegion.bottom += 1;
+
+        this.scrollIfByEdge(
+          this.viewDimensions.width / 2,
+          this.avatarRegion.bottom
+        );
+        break;
+      case "mover-topLeft":
+        this.avatarRegion.left += 1;
+        this.avatarRegion.top += 1;
+
+        if (
+          this.avatarRegion.x1 >= this.avatarRegion.x2 ||
+          this.avatarRegion.y1 >= this.avatarRegion.y2
+        ) {
+          this.avatarRegion.sortCoords();
+          this.bottomRightMover.focus({ focusVisible: true });
+        }
+        break;
+      case "mover-bottomLeft":
+        this.avatarRegion.left -= 1;
+        this.avatarRegion.bottom += 1;
+
+        this.scrollIfByEdge(this.avatarRegion.left, this.avatarRegion.bottom);
+        break;
+      case "mover-topRight":
+        this.avatarRegion.right -= 1;
+        this.avatarRegion.top += 1;
+
+        if (
+          this.avatarRegion.x1 >= this.avatarRegion.x2 ||
+          this.avatarRegion.y1 >= this.avatarRegion.y2
+        ) {
+          this.avatarRegion.sortCoords();
+          this.bottomLeftMover.focus({ focusVisible: true });
+        }
+        break;
+      case "mover-bottomRight":
+        this.avatarRegion.right += 1;
+        this.avatarRegion.bottom += 1;
+
+        this.scrollIfByEdge(this.avatarRegion.right, this.avatarRegion.bottom);
+        break;
+      default:
+        return;
+    }
+
+    this.avatarRegion.forceSquare(targetId);
+  }
+
+  scrollIfByEdge(viewX, viewY) {
+    const { width, height } = this.viewDimensions.dimensions;
+
+    if (viewY <= SCROLL_BY_EDGE) {
+      // Scroll up
+      this.scrollView(0, -(SCROLL_BY_EDGE - viewY));
+    } else if (height - viewY < SCROLL_BY_EDGE) {
+      // Scroll down
+      this.scrollView(0, SCROLL_BY_EDGE - (height - viewY));
+    }
+
+    if (viewX <= SCROLL_BY_EDGE) {
+      // Scroll left
+      this.scrollView(-(SCROLL_BY_EDGE - viewX), 0);
+    } else if (width - viewX <= SCROLL_BY_EDGE) {
+      // Scroll right
+      this.scrollView(SCROLL_BY_EDGE - (width - viewX), 0);
+    }
+  }
+
+  scrollView(x, y) {
+    this.customAvatarCropArea.scrollBy(x, y);
   }
 
   handleFileUpload(event) {

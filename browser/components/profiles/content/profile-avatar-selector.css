@@ -9,10 +9,9 @@
   --profiles-high-layer: 2;
 
   --mover-size: 24px;
-  --mover-offset: -12px;
+  --mover-offset: -8px;
 
   --avatar-selection-width: 100%;
-  --avatar-selection-height: 194px;
 }
 
 .button-group {
@@ -92,13 +91,17 @@
 .custom-avatar-crop-area {
   position: relative;
   width: var(--avatar-selection-width);
-  height: var(--avatar-selection-height);
+  aspect-ratio: 1 / 1;
 }
 
 .custom-avatar-upload-area {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+
+  &:focus-within {
+    outline: 1px auto;
+  }
 }
 
 .custom-avatar-crop-area {
@@ -153,18 +156,24 @@
   cursor: move;
   position: relative;
   pointer-events: auto;
-  z-index: var(--profiles-low-layer);
+  z-index: var(--profiles-high-layer);
   inset: 0;
+
+  border-radius: var(--border-radius-circle);
+  outline-offset: var(--focus-outline-offset);
 }
 
 #highlight-background {
   width: 100%;
   height: 100%;
-  outline: 326px solid rgba(0, 0, 0, 0.7);
+  outline: 355px solid rgba(0, 0, 0, 0.7);
   border-radius: var(--border-radius-circle);
 
   border: 2px dashed rgba(255, 255, 255, 0.8);
   box-sizing: border-box;
+
+  position: relative;
+  z-index: -1;
 
   pointer-events: none;
 }
