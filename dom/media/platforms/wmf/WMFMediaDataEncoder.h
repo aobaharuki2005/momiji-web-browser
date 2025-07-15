@@ -74,7 +74,7 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
       RefPtr<const VideoData>&& aData);
 
   RefPtr<EncodePromise> ProcessOutputSamples(
-      nsTArray<RefPtr<IMFSample>>& aSamples);
+      nsTArray<RefPtr<IMFSample>>&& aSamples);
   already_AddRefed<MediaRawData> IMFSampleToMediaData(
       RefPtr<IMFSample>& aSample);
 

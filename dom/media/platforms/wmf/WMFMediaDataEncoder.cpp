@@ -49,14 +49,14 @@ RefPtr<EncodePromise> WMFMediaDataEncoder::Encode(const MediaData* aSample) {
 }
 RefPtr<EncodePromise> WMFMediaDataEncoder::Drain() {
   WMF_ENC_LOGD("Drain");
-  return InvokeAsync(mTaskQueue, __func__,
-                     [self = RefPtr<WMFMediaDataEncoder>(this)]() {
-                       nsTArray<RefPtr<IMFSample>> outputs;
-                       return SUCCEEDED(self->mEncoder->Drain(outputs))
-                                  ? self->ProcessOutputSamples(outputs)
-                                  : EncodePromise::CreateAndReject(
-                                        NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
-                     });
+  return InvokeAsync(
+      mTaskQueue, __func__, [self = RefPtr<WMFMediaDataEncoder>(this)]() {
+        nsTArray<RefPtr<IMFSample>> outputs;
+        return SUCCEEDED(self->mEncoder->Drain(outputs))
+                   ? self->ProcessOutputSamples(std::move(outputs))
+                   : EncodePromise::CreateAndReject(
+                         NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+      });
 }
 RefPtr<ShutdownPromise> WMFMediaDataEncoder::Shutdown() {
   WMF_ENC_LOGD("Shutdown");
@@ -207,7 +207,7 @@ RefPtr<EncodePromise> WMFMediaDataEncoder::ProcessEncode(
         __func__);
   }
 
-  return ProcessOutputSamples(outputs);
+  return ProcessOutputSamples(std::move(outputs));
 }
 
 already_AddRefed<IMFSample> WMFMediaDataEncoder::ConvertToNV12InputSample(
@@ -306,7 +306,7 @@ already_AddRefed<IMFSample> WMFMediaDataEncoder::ConvertToNV12InputSample(
 }
 
 RefPtr<EncodePromise> WMFMediaDataEncoder::ProcessOutputSamples(
-    nsTArray<RefPtr<IMFSample>>& aSamples) {
+    nsTArray<RefPtr<IMFSample>>&& aSamples) {
   EncodedData frames;
 
   WMF_ENC_LOGD("ProcessOutputSamples: %zu frames", aSamples.Length());
@@ -319,7 +319,6 @@ RefPtr<EncodePromise> WMFMediaDataEncoder::ProcessOutputSamples(
       WMF_ENC_LOGE("failed to convert output frame");
     }
   }
-  aSamples.Clear();
   return EncodePromise::CreateAndResolve(std::move(frames), __func__);
 }
 
