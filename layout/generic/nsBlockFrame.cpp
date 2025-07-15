@@ -2397,10 +2397,6 @@ nscoord nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
 void nsBlockFrame::AlignContent(BlockReflowState& aState,
                                 ReflowOutput& aMetrics,
                                 nscoord aBEndEdgeOfChildren) {
-  if (!StaticPrefs::layout_css_align_content_blocks_enabled()) {
-    return;
-  }
-
   StyleAlignFlags alignment = StylePosition()->mAlignContent.primary;
   alignment &= ~StyleAlignFlags::FLAG_BITS;
 

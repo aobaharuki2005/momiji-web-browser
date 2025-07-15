@@ -9663,13 +9663,6 @@
   mirror: always
   rust: true
 
-# Whether to respect align-content on blocks.
-- name: layout.css.align-content.blocks.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Whether content-box and stroke-box are enabled for transform-box.
 - name: layout.css.transform-box-content-stroke.enabled
   type: RelaxedAtomicBool
