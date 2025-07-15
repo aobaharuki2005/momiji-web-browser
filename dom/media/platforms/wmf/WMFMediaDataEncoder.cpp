@@ -159,12 +159,15 @@ HRESULT WMFMediaDataEncoder::InitMFTEncoder(RefPtr<MFTEncoder>& aEncoder) {
 }
 
 void WMFMediaDataEncoder::FillConfigData() {
-  nsTArray<UINT8> header;
-  NS_ENSURE_TRUE_VOID(SUCCEEDED(mEncoder->GetMPEGSequenceHeader(header)));
+  AssertOnTaskQueue();
+  MOZ_ASSERT(mEncoder);
 
   if (mConfig.mCodec != CodecType::H264) {
     return;
   }
+
+  nsTArray<UINT8> header;
+  NS_ENSURE_TRUE_VOID(SUCCEEDED(mEncoder->GetMPEGSequenceHeader(header)));
 
   mConfigData =
       header.Length() > 0 ? ParseH264Parameters(header, IsAnnexB()) : nullptr;
