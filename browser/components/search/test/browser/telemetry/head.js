@@ -310,7 +310,7 @@ function assertSERPTelemetry(expectedEvents) {
     let impressionId = expectedEvent.impression.impression_id;
     let expectedEngagements = expectedEvent.engagements;
     if (expectedEngagements) {
-      let recorded = idToEngagements.get(impressionId);
+      let recorded = idToEngagements.get(impressionId) ?? [];
       Assert.deepEqual(
         recorded,
         expectedEngagements,
@@ -696,10 +696,14 @@ async function initSinglePageAppTest() {
         default: true,
       },
     ],
-    isSPA: true,
-    defaultPageQueryParam: {
-      key: "page",
-      value: "web",
+    pageTypeParam: {
+      enableSPAHandling: true,
+      keys: ["page"],
+      pageTypes: [
+        { name: "web", values: ["web"], enabled: true, isDefault: true },
+        { name: "shopping", values: ["shopping"], enabled: true },
+        { name: "images", values: ["images"], enabled: false },
+      ],
     },
   };
 
