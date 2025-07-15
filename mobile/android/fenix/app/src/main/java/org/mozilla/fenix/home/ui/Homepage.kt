@@ -168,7 +168,9 @@ internal fun Homepage(
                             Spacer(modifier = Modifier.height(32.dp))
 
                             SearchBar(
-                                modifier = Modifier.graphicsLayer { this.alpha = alpha },
+                                modifier = Modifier
+                                    .padding(horizontal = horizontalMargin)
+                                    .graphicsLayer { this.alpha = alpha },
                                 onClick = interactor::onNavigateSearch,
                             )
                         }
@@ -490,9 +492,9 @@ private fun HomepagePreview() {
                     showPocketStories = true,
                     showCollections = true,
                     showHeader = false,
+                    showSearchBar = true,
                     searchBarEnabled = false,
                     firstFrameDrawn = true,
-                    showSearchBar = true,
                     setupChecklistState = null,
                     topSiteColors = TopSiteColors.colors(),
                     cardBackgroundColor = WallpaperState.default.cardBackgroundColor,
