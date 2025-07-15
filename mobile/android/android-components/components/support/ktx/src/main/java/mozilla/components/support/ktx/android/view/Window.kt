@@ -12,7 +12,7 @@ import android.view.WindowManager
 import androidx.annotation.ColorInt
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsCompat.Type.displayCutout
 import androidx.core.view.WindowInsetsCompat.Type.systemBars
 import androidx.core.view.WindowInsetsControllerCompat
@@ -100,11 +100,10 @@ fun Window.setNavigationBarDividerColorCompat(@ColorInt color: Int?) {
  * This results in keeping the same behavior for such insets while allowing to separately control the behavior
  * for other dynamic insets.
  *
- * This only works on Android 13 and above. On older versions calling this will result in no-op.
+ * @param consumeInsets if true, returns [WindowInsetsCompat.CONSUMED] to notify so other listeners do not
+ * consume them as well.
  */
-fun Window.setupPersistentInsets() {
-    WindowCompat.setDecorFitsSystemWindows(this, false)
-
+fun Window.setupPersistentInsets(consumeInsets: Boolean = false) {
     val rootView = decorView.findViewById<View>(android.R.id.content)
     val persistentInsetsTypes = systemBars() or displayCutout()
 
@@ -115,6 +114,7 @@ fun Window.setupPersistentInsets() {
                 // If we are in immersive mode we need to reset current paddings and avoid setting others.
                 Insets.of(0, 0, 0, 0)
             }
+
             false -> windowInsets.getInsets(persistentInsetsTypes)
         }
 
@@ -126,6 +126,10 @@ fun Window.setupPersistentInsets() {
         )
 
         // Pass window insets further to allow below listeners also know when there is a change.
-        return@setOnApplyWindowInsetsListener windowInsets
+        if (consumeInsets) {
+            WindowInsetsCompat.CONSUMED
+        } else {
+            windowInsets
+        }
     }
 }
