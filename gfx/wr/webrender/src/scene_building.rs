@@ -2398,30 +2398,27 @@ impl<'a> SceneBuilder<'a> {
         // are handled by doing partial reads of the picture cache tiles during rendering.
         if flags.contains(StackingContextFlags::IS_BLEND_CONTAINER) {
             // Check if we're inside a stacking context hierarchy with an existing surface
-            match self.sc_stack.last() {
-                Some(_) => {
-                    // If we are already inside a stacking context hierarchy with a surface, then we
-                    // need to do the normal isolate of this blend container as a regular surface
+            if !self.sc_stack.is_empty() {
+                // If we are already inside a stacking context hierarchy with a surface, then we
+                // need to do the normal isolate of this blend container as a regular surface
+                blit_reason |= BlitReason::ISOLATE;
+                is_redundant = false;
+            } else {
+                // If the current slice is empty, then we can just mark the slice as
+                // atomic (so that compositor surfaces don't get promoted within it)
+                // and use that slice as the backing surface for the blend container
+                if self.tile_cache_builder.is_current_slice_empty() &&
+                   self.spatial_tree.is_root_coord_system(spatial_node_index) &&
+                   !self.clip_tree_builder.clip_node_has_complex_clips(clip_node_id, &self.interners)
+                {
+                    self.add_tile_cache_barrier_if_needed(SliceFlags::IS_ATOMIC);
+                    self.tile_cache_builder.make_current_slice_atomic();
+                } else {
+                    // If the slice wasn't empty, we need to isolate a separate surface
+                    // to ensure that the content already in the slice is not used as
+                    // an input to the mix-blend composite
                     blit_reason |= BlitReason::ISOLATE;
                     is_redundant = false;
-                }
-                None => {
-                    // If the current slice is empty, then we can just mark the slice as
-                    // atomic (so that compositor surfaces don't get promoted within it)
-                    // and use that slice as the backing surface for the blend container
-                    if self.tile_cache_builder.is_current_slice_empty() &&
-                       self.spatial_tree.is_root_coord_system(spatial_node_index) &&
-                       !self.clip_tree_builder.clip_node_has_complex_clips(clip_node_id, &self.interners)
-                    {
-                        self.add_tile_cache_barrier_if_needed(SliceFlags::IS_ATOMIC);
-                        self.tile_cache_builder.make_current_slice_atomic();
-                    } else {
-                        // If the slice wasn't empty, we need to isolate a separate surface
-                        // to ensure that the content already in the slice is not used as
-                        // an input to the mix-blend composite
-                        blit_reason |= BlitReason::ISOLATE;
-                        is_redundant = false;
-                    }
                 }
             }
         }
