@@ -1559,10 +1559,6 @@ JS_PUBLIC_API void JS_SetNativeStackQuota(
   SetNativeStackSize(cx, JS::StackForTrustedScript, trustedScriptStackSize);
   SetNativeStackSize(cx, JS::StackForUntrustedScript, untrustedScriptStackSize);
 
-  if (cx->runtime()->isMainRuntime()) {
-    js::gc::MapStack(systemCodeStackSize);
-  }
-
   cx->initJitStackLimit();
 }
 
