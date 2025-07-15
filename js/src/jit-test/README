@@ -79,13 +79,18 @@ The general format in EBNF is:
     cookie    ::= "|jit-test|"
     item      ::= flag | attribute
 
-    flag      ::= "slow" | "allow-oom" | "valgrind" | "tz-pacific" |
-                  "--" switch
+    flag      ::= "slow" | "heavy" | "allow-oom" | "allow-unhandlable-oom" |
+                  "allow-overrecursed" | "valgrind" | "tz-pacific" | "module" |
+                  "crash" | "test-also=" values | "test-join=" values |
+                  "--" switch | "-P" pref
 
     attribute ::= name ":" value
-    name      ::= "error" | "exitstatus"
+    name      ::= "error" | "exitstatus" | "thread-count" | "include" |
+                  "local-include" | "skip-if" | "skip-variant-if"
     value     ::= <string>
+    values    ::= <whitespace-separated-strings>
     switch    ::= <string>
+    pref      ::= <string>
 
 The metaline may appear anywhere in the first line of the file: this allows it
 to be placed inside any kind of comment.
