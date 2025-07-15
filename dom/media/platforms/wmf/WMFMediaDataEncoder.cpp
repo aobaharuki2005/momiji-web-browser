@@ -166,11 +166,17 @@ void WMFMediaDataEncoder::FillConfigData() {
     return;
   }
 
-  nsTArray<UINT8> header;
-  NS_ENSURE_TRUE_VOID(SUCCEEDED(mEncoder->GetMPEGSequenceHeader(header)));
+  auto r = mEncoder->GetMPEGSequenceHeader();
+  if (r.isErr()) {
+    WMF_ENC_LOGE("GetMPEGSequenceHeader failed");
+    return;
+  }
 
+  nsTArray<UINT8> header = r.unwrap();
   mConfigData =
       header.Length() > 0 ? ParseH264Parameters(header, IsAnnexB()) : nullptr;
+  WMF_ENC_LOGD("ConfigData has been updated to %zu bytes",
+               mConfigData ? mConfigData->Length() : 0);
 }
 
 RefPtr<EncodePromise> WMFMediaDataEncoder::ProcessEncode(

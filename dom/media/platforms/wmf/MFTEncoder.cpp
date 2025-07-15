@@ -95,6 +95,10 @@ DEFINE_CODECAPI_GUID(AVEncAdaptiveMode, "4419b185-da1f-4f53-bc76-097d0c1efb1e",
     }                                                                      \
   } while (false)
 
+#undef MFT_RETURN_ERROR_IF_FAILED
+#define MFT_RETURN_ERROR_IF_FAILED(x) \
+  MFT_RETURN_ERROR_IF_FAILED_IMPL(x, MFT_ENC_LOGE)
+
 #undef MFT_RETURN_ERROR_IF_FAILED_S
 #define MFT_RETURN_ERROR_IF_FAILED_S(x) \
   MFT_RETURN_ERROR_IF_FAILED_IMPL(x, MFT_ENC_SLOGE)
@@ -968,32 +972,34 @@ HRESULT MFTEncoder::Drain(nsTArray<RefPtr<IMFSample>>& aOutput) {
   }
 }
 
-HRESULT MFTEncoder::GetMPEGSequenceHeader(nsTArray<UINT8>& aHeader) {
+Result<nsTArray<UINT8>, HRESULT> MFTEncoder::GetMPEGSequenceHeader() {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
-  MOZ_ASSERT(aHeader.Length() == 0);
 
   RefPtr<IMFMediaType> outputType;
-  MFT_RETURN_IF_FAILED(mEncoder->GetOutputCurrentType(
+  MFT_RETURN_ERROR_IF_FAILED(mEncoder->GetOutputCurrentType(
       mOutputStreamID, getter_AddRefs(outputType)));
   UINT32 length = 0;
   HRESULT hr = outputType->GetBlobSize(MF_MT_MPEG_SEQUENCE_HEADER, &length);
-  if (hr == MF_E_ATTRIBUTENOTFOUND || length == 0) {
-    return S_OK;
-  }
-  if (FAILED(hr)) {
+  if (hr == MF_E_ATTRIBUTENOTFOUND) {
+    return nsTArray<UINT8>();
+  } else if (FAILED(hr)) {
     MFT_ENC_LOGE("GetBlobSize MF_MT_MPEG_SEQUENCE_HEADER error: %s",
                  ErrorMessage(hr).get());
-    return hr;
+    return Err(hr);
+  } else if (length == 0) {
+    MFT_ENC_LOGD("GetBlobSize MF_MT_MPEG_SEQUENCE_HEADER: no header");
+    return nsTArray<UINT8>();
   }
   MFT_ENC_LOGD("GetBlobSize MF_MT_MPEG_SEQUENCE_HEADER: %u", length);
 
-  aHeader.SetCapacity(length);
-  hr = outputType->GetBlob(MF_MT_MPEG_SEQUENCE_HEADER, aHeader.Elements(),
+  nsTArray<UINT8> header;
+  header.SetCapacity(length);
+  hr = outputType->GetBlob(MF_MT_MPEG_SEQUENCE_HEADER, header.Elements(),
                            length, nullptr);
-  aHeader.SetLength(SUCCEEDED(hr) ? length : 0);
+  header.SetLength(SUCCEEDED(hr) ? length : 0);
 
-  return hr;
+  return header;
 }
 
 void MFTEncoder::SetDrainState(DrainState aState) {
@@ -1063,6 +1069,7 @@ bool MFTEncoder::EventSource::IsOnCurrentThread() {
 #undef MFT_RETURN_IF_FAILED_S
 #undef MFT_RETURN_VALUE_IF_FAILED
 #undef MFT_RETURN_VALUE_IF_FAILED_S
+#undef MFT_RETURN_ERROR_IF_FAILED
 #undef MFT_RETURN_ERROR_IF_FAILED_S
 #undef MFT_RETURN_IF_FAILED_IMPL
 #undef MFT_RETURN_VALUE_IF_FAILED_IMPL

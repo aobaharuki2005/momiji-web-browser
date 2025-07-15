@@ -52,7 +52,7 @@ class MFTEncoder final {
   nsTArray<RefPtr<IMFSample>> TakeOutput();
   HRESULT Drain(nsTArray<RefPtr<IMFSample>>& aOutput);
 
-  HRESULT GetMPEGSequenceHeader(nsTArray<UINT8>& aHeader);
+  Result<nsTArray<UINT8>, HRESULT> GetMPEGSequenceHeader();
 
   static nsCString GetFriendlyName(const GUID& aSubtype);
 
