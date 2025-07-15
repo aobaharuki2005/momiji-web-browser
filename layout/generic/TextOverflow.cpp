@@ -838,8 +838,7 @@ bool TextOverflow::CanHaveOverflowMarkers(nsBlockFrame* aBlockFrame,
 
   // Skip the combobox anonymous block because it would clip the drop-down
   // arrow. The inner label inherits 'text-overflow' and does the right thing.
-  if (aBlockFrame->GetParent() &&
-      aBlockFrame->GetParent()->IsComboboxControlFrame()) {
+  if (aBlockFrame->IsComboboxControlFrame()) {
     return false;
   }
 

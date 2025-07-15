@@ -2961,11 +2961,9 @@ void nsFlexContainerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   // (or a blockified version thereof, to not hit bug 456484).
   if (displayInside == StyleDisplayInside::Flow) {
     MOZ_ASSERT(StyleDisplay()->mDisplay == StyleDisplay::Block);
-    MOZ_ASSERT(Style()->GetPseudoType() == PseudoStyleType::buttonContent ||
-                   Style()->GetPseudoType() == PseudoStyleType::scrolledContent,
+    MOZ_ASSERT(Style()->GetPseudoType() == PseudoStyleType::scrolledContent,
                "The only way a nsFlexContainerFrame can have 'display:block' "
-               "should be if it's the inner part of a scrollable or button "
-               "element");
+               "should be if it's the inner part of a scrollable element");
     displayInside = GetParent()->StyleDisplay()->DisplayInside();
   }
 

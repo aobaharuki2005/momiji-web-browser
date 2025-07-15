@@ -1396,7 +1396,7 @@ BaselineSharingGroup ScrollContainerFrame::GetDefaultBaselineSharingGroup()
 
 nscoord ScrollContainerFrame::SynthesizeFallbackBaseline(
     mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
-  // Marign-end even for central baselines.
+  // Margin-end even for central baselines.
   if (aWM.IsLineInverted()) {
     return -GetLogicalUsedMargin(aWM).BStart(aWM);
   }
