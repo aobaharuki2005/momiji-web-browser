@@ -329,11 +329,13 @@ private fun BookmarksList(
             }
         },
         floatingActionButton = {
-            FloatingActionButton(
-                icon = painterResource(R.drawable.mozac_ic_search_24),
-                contentDescription = stringResource(R.string.bookmark_search_button_content_description),
-                onClick = { store.dispatch(SearchClicked) },
-            )
+            if (!state.isLoading && state.emptyListState() == null) {
+                FloatingActionButton(
+                    icon = painterResource(R.drawable.mozac_ic_search_24),
+                    contentDescription = stringResource(R.string.bookmark_search_button_content_description),
+                    onClick = { store.dispatch(SearchClicked) },
+                )
+            }
         },
         topBar = {
             Box {
