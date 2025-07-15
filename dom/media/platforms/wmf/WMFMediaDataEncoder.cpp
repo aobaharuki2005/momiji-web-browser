@@ -373,7 +373,7 @@ already_AddRefed<MediaRawData> WMFMediaDataEncoder::OutputSampleToMediaData(
   frame->mDuration = media::TimeUnit::FromMicroseconds(HNsToUsecs(duration));
   frame->mKeyframe = isKeyframe;
 
-  WMF_ENC_LOGD("IMGSampleToMediaData: ts=%s", frame->mTime.ToString().get());
+  WMF_ENC_LOGD("converted MediaData: ts=%s", frame->mTime.ToString().get());
 
   return frame.forget();
 }
