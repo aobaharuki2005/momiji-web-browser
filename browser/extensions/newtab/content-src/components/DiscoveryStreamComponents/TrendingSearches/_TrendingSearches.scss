@@ -139,6 +139,11 @@
       justify-content: space-between;
     }
 
+    .trending-searches-context-menu-wrapper {
+      opacity: 0;
+      transition: opacity;
+    }
+
     .trending-searches-context-menu {
       position: relative;
     }
@@ -216,5 +221,13 @@
     margin-inline-start: auto;
     inset-inline-end: 0;
     inset-inline-start: auto;
+  }
+
+  &:focus-within,
+  &:hover {
+    .trending-searches-context-menu-wrapper {
+      opacity: 1;
+      transition-duration: 0.3s;
+    }
   }
 }

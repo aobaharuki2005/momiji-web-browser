@@ -9195,6 +9195,10 @@ main section {
   align-items: center;
   justify-content: space-between;
 }
+.trending-searches-list-view:not(.placeholder) .trending-searches-context-menu-wrapper {
+  opacity: 0;
+  transition: opacity;
+}
 .trending-searches-list-view:not(.placeholder) .trending-searches-context-menu {
   position: relative;
 }
@@ -9257,4 +9261,8 @@ main section {
   margin-inline-start: auto;
   inset-inline-end: 0;
   inset-inline-start: auto;
+}
+.trending-searches-list-view:focus-within .trending-searches-context-menu-wrapper, .trending-searches-list-view:hover .trending-searches-context-menu-wrapper {
+  opacity: 1;
+  transition-duration: 0.3s;
 }
