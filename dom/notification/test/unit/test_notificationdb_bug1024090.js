@@ -1,18 +1,17 @@
 "use strict";
 
-function run_test() {
+add_setup(async function run_test() {
   do_get_profile();
-  run_next_test();
-}
+});
 
 // For bug 1024090: test edge case of notificationstore.json
-add_test(function test_bug1024090_purge() {
+add_task(async function test_bug1024090_purge() {
   const NOTIFICATION_STORE_PATH = PathUtils.join(
     PathUtils.profileDir,
     "notificationstore"
   );
   let cleanup = IOUtils.remove(NOTIFICATION_STORE_PATH, { recursive: true });
-  cleanup
+  await cleanup
     .then(
       function onSuccess() {
         ok(true, "Notification database cleaned.");
@@ -24,19 +23,18 @@ add_test(function test_bug1024090_purge() {
     .then(function next() {
       info("Cleanup steps completed: " + NOTIFICATION_STORE_PATH);
       startNotificationDB();
-      run_next_test();
     });
 });
 
 // Store one notification
-add_test(function test_bug1024090_send_one() {
+add_task(async function test_bug1024090_send_one() {
   let requestID = 1;
   let msgReply = "Notification:Save:Return:OK";
   let msgHandler = function (message) {
     equal(requestID, message.data.requestID, "Checking requestID");
   };
 
-  addAndSend("Notification:Save", msgReply, msgHandler, {
+  await addAndSend("Notification:Save", msgReply, msgHandler, {
     origin: systemNotification.origin,
     notification: systemNotification,
     requestID,
@@ -44,7 +42,7 @@ add_test(function test_bug1024090_send_one() {
 });
 
 // Get one notification, one exists
-add_test(function test_bug1024090_get_one() {
+add_task(async function test_bug1024090_get_one() {
   let requestID = 2;
   let msgReply = "Notification:GetAll:Return:OK";
   let msgHandler = function (message) {
@@ -52,7 +50,7 @@ add_test(function test_bug1024090_get_one() {
     equal(1, message.data.notifications.length, "One notification stored");
   };
 
-  addAndSend("Notification:GetAll", msgReply, msgHandler, {
+  await addAndSend("Notification:GetAll", msgReply, msgHandler, {
     origin: systemNotification.origin,
     requestID,
   });
