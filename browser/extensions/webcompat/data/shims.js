@@ -272,6 +272,15 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "AmazonAdSystem",
+    platform: "all",
+    name: "Amazon Ad System",
+    bug: "1977375",
+    file: "empty-shim.txt",
+    matches: ["*://aax.amazon-adsystem.com/e/dtb/bid/*/prebid*"],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "BmAuth",
     platform: "all",
     name: "BmAuth by 9c9media",
