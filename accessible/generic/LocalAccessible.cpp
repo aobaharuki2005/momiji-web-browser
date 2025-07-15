@@ -1068,14 +1068,9 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
     }
     case nsIAccessibleEvent::EVENT_FOCUS: {
       LayoutDeviceIntRect rect;
-      // The caret rect is only used on Windows, so just pass an empty rect on
-      // other platforms.
-#ifdef XP_WIN
       if (HyperTextAccessible* text = target->AsHyperText()) {
-        nsIWidget* widget = nullptr;
-        rect = text->GetCaretRect(&widget);
+        rect = text->GetCaretRect().first;
       }
-#endif
       PlatformFocusEvent(target, rect);
       break;
     }
