@@ -292,6 +292,8 @@ support-files = "window_panel_focus.xhtml"
 
 ["test_popup_tree.xhtml"]
 
+["test_popup_triggerEvent.xhtml"]
+
 ["test_popuphidden.xhtml"]
 
 ["test_popupincontent.xhtml"]
