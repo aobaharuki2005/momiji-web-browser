@@ -108,7 +108,9 @@ class FilterNodeLightingD2D1 : public FilterNodeRenderRectD2D1 {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeLightingD2D1, override)
   FilterNodeLightingD2D1(ID2D1DeviceContext* aDC, FilterType aType);
 
+  void SetAttribute(uint32_t aIndex, const Float aValue) override;
   void SetAttribute(uint32_t aIndex, const IntRect& aValue) override;
+  void SetAttribute(uint32_t aIndex, const DeviceColor& aValue) override;
 
   ID2D1Effect* InputEffect() override;
 

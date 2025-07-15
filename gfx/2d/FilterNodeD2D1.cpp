@@ -586,11 +586,19 @@ static bool IsTransferFilterType(FilterType aType) {
   }
 }
 
-static bool IsLightingFilterType(FilterType aType) {
+static bool IsDiffuseLightingFilterType(FilterType aType) {
   switch (aType) {
     case FilterType::POINT_DIFFUSE:
     case FilterType::SPOT_DIFFUSE:
     case FilterType::DISTANT_DIFFUSE:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static bool IsSpecularLightingFilterType(FilterType aType) {
+  switch (aType) {
     case FilterType::POINT_SPECULAR:
     case FilterType::SPOT_SPECULAR:
     case FilterType::DISTANT_SPECULAR:
@@ -598,6 +606,11 @@ static bool IsLightingFilterType(FilterType aType) {
     default:
       return false;
   }
+}
+
+static bool IsLightingFilterType(FilterType aType) {
+  return IsDiffuseLightingFilterType(aType) ||
+         IsSpecularLightingFilterType(aType);
 }
 
 static bool HasUnboundedOutputRegion(FilterType aType) {
@@ -829,13 +842,9 @@ void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const DeviceColor& aValue) {
   UINT32 input = GetD2D1PropForAttribute(mType, aIndex);
   MOZ_ASSERT(input < mEffect->GetPropertyCount());
 
-  if (IsLightingFilterType(mType)) {
-    mEffect->SetValue(input, D2D1::Vector3F(aValue.r, aValue.g, aValue.b));
-  } else {
-    mEffect->SetValue(input,
-                      D2D1::Vector4F(aValue.r * aValue.a, aValue.g * aValue.a,
-                                     aValue.b * aValue.a, aValue.a));
-  }
+  mEffect->SetValue(input,
+                    D2D1::Vector4F(aValue.r * aValue.a, aValue.g * aValue.a,
+                                   aValue.b * aValue.a, aValue.a));
 }
 
 void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Rect& aValue) {
@@ -989,6 +998,70 @@ void FilterNodeLightingD2D1::UpdateChain() {
   mExtendInputEffect->SetInputEffect(0, inputEffect);
 }
 
+void FilterNodeLightingD2D1::SetAttribute(uint32_t aIndex, Float aValue) {
+  UINT32 input = GetD2D1PropForAttribute(mType, aIndex);
+  MOZ_ASSERT(input < mEffect->GetPropertyCount());
+
+  // Ranges taken from
+  // https://learn.microsoft.com/en-us/windows/win32/direct2d/diffuse-lighting
+  // https://learn.microsoft.com/en-us/windows/win32/direct2d/specular-lighting
+
+  if ((mType == FilterType::DISTANT_DIFFUSE &&
+       (aIndex == ATT_DISTANT_DIFFUSE_AZIMUTH ||
+        aIndex == ATT_DISTANT_DIFFUSE_ELEVATION)) ||
+      (mType == FilterType::DISTANT_SPECULAR &&
+       (aIndex == ATT_DISTANT_SPECULAR_AZIMUTH ||
+        aIndex == ATT_DISTANT_SPECULAR_ELEVATION))) {
+    // D2D requires an angle between 0 and 360.
+    if (aValue < 0) {
+      aValue = std::fmod(aValue, 360.f) + 360.f;
+    } else if (aValue > 360.f) {
+      aValue = std::fmod(aValue, 360.f);
+    }
+  }
+
+  if ((mType == FilterType::SPOT_DIFFUSE &&
+       aIndex == ATT_SPOT_DIFFUSE_LIMITING_CONE_ANGLE) ||
+      (mType == FilterType::SPOT_SPECULAR &&
+       aIndex == ATT_SPOT_SPECULAR_LIMITING_CONE_ANGLE)) {
+    // On input limitingConeAngle is between -90 and 90, and in practice D2D
+    // deals with that as desired, but the D2D documentation says the angle
+    // must be between 0 and 90, so since it doesn't change behavior
+    // we just conform give D2D an angle between 0 and 90.
+    if (aValue < 0.f) {
+      aValue = -aValue;
+    }
+  }
+
+  if ((mType == FilterType::SPOT_DIFFUSE && aIndex == ATT_SPOT_DIFFUSE_FOCUS) ||
+      (mType == FilterType::SPOT_SPECULAR &&
+       aIndex == ATT_SPOT_SPECULAR_FOCUS)) {
+    aValue = std::clamp(aValue, 0.0f, 200.0f);
+  }
+
+  if (IsDiffuseLightingFilterType(mType) &&
+      aIndex == ATT_DIFFUSE_LIGHTING_DIFFUSE_CONSTANT) {
+    aValue = std::clamp(aValue, 0.0f, 10000.0f);
+  }
+
+  if (IsSpecularLightingFilterType(mType)) {
+    if (aIndex == ATT_SPECULAR_LIGHTING_SPECULAR_CONSTANT) {
+      aValue = std::clamp(aValue, 0.0f, 10000.0f);
+    }
+    if (aIndex == ATT_SPECULAR_LIGHTING_SPECULAR_EXPONENT) {
+      // In practice this is the SVG valid range anyway so we'd
+      // never be called with values outside this range.
+      aValue = std::clamp(aValue, 1.0f, 128.0f);
+    }
+  }
+
+  if (aIndex == ATT_LIGHTING_SURFACE_SCALE) {
+    aValue = std::clamp(aValue, 0.0f, 10000.0f);
+  }
+
+  mEffect->SetValue(input, aValue);
+}
+
 void FilterNodeLightingD2D1::SetAttribute(uint32_t aIndex,
                                           const IntRect& aValue) {
   if (aIndex != ATT_LIGHTING_RENDER_RECT) {
@@ -999,6 +1072,14 @@ void FilterNodeLightingD2D1::SetAttribute(uint32_t aIndex,
   mRenderRect = aValue;
 
   UpdateRenderRect();
+}
+
+void FilterNodeLightingD2D1::SetAttribute(uint32_t aIndex,
+                                          const DeviceColor& aValue) {
+  UINT32 input = GetD2D1PropForAttribute(mType, aIndex);
+  MOZ_ASSERT(input < mEffect->GetPropertyCount());
+
+  mEffect->SetValue(input, D2D1::Vector3F(aValue.r, aValue.g, aValue.b));
 }
 
 FilterNodeConvolveD2D1::FilterNodeConvolveD2D1(ID2D1DeviceContext* aDC)
