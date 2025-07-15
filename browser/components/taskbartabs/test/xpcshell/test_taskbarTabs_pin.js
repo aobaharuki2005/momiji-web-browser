@@ -42,13 +42,19 @@ let mockFaviconService = {
   defaultFavicon: {},
 };
 
+let faviconService = Cc[
+  "@mozilla.org/browser/favicon-service;1"
+].createInstance(Ci.nsIFaviconService);
+
 sinon.stub(mockFaviconService, "getFaviconForPage").callsFake(async () => {
   if (faviconThrows) {
     return null;
   }
-  return { uri: kFaviconUri };
+  return { dataURI: kFaviconUri };
 });
-sinon.stub(mockFaviconService, "defaultFavicon").value(kFaviconUri);
+sinon
+  .stub(mockFaviconService, "defaultFavicon")
+  .value(faviconService.defaultFavicon);
 
 // Favicons are written to the profile directory, ensure it exists.
 do_get_profile();

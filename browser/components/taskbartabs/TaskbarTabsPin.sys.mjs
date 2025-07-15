@@ -89,9 +89,9 @@ async function createTaskbarIconFromFavicon(aTaskbarTab) {
 
   let imgContainer;
   if (favicon) {
-    lazy.logConsole.debug(`Using favicon at URI ${favicon.uri.spec}.`);
+    lazy.logConsole.debug(`Using favicon at URI ${favicon.dataURI.spec}.`);
     try {
-      imgContainer = await getImageFromUri(favicon.uri);
+      imgContainer = await getImageFromUri(favicon.dataURI);
     } catch (e) {
       lazy.logConsole.error(
         `${e.message}, falling through to default favicon.`
@@ -124,6 +124,14 @@ async function createTaskbarIconFromFavicon(aTaskbarTab) {
  * @returns {Promise<imgIContainer>} Resolves to an image container.
  */
 async function getImageFromUri(aUri) {
+  // Creating the Taskbar Tabs icon should not result in a network request, so
+  // limit channels to `chrome` and in-memory `data` URIs.
+  if (!(aUri.scheme === "data" || aUri.scheme === "chrome")) {
+    throw new Error(
+      `Scheme "${aUri.scheme}" is not supported for creating a Taskbar Tab icon`
+    );
+  }
+
   const channel = Services.io.newChannelFromURI(
     aUri,
     null,
@@ -133,30 +141,33 @@ async function getImageFromUri(aUri) {
     Ci.nsIContentPolicy.TYPE_IMAGE
   );
 
-  return await new Promise((resolve, reject) => {
-    const imgTools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
-    let imageContainer;
+  const imgTools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
 
-    let observer = imgTools.createScriptedObserver({
-      sizeAvailable() {
-        resolve(imageContainer);
-        imageContainer = null;
-      },
-    });
-
-    imgTools.decodeImageFromChannelAsync(
-      aUri,
-      channel,
-      (img, status) => {
-        if (!Components.isSuccessCode(status)) {
-          reject(new Error(`Error retrieving image from URI ${aUri.spec}`));
-        } else {
-          imageContainer = img;
-        }
-      },
-      observer
-    );
+  let decodePromise = Promise.withResolvers();
+  let observer = imgTools.createScriptedObserver({
+    sizeAvailable() {
+      decodePromise.resolve();
+    },
   });
+
+  let imgPromise = Promise.withResolvers();
+  imgTools.decodeImageFromChannelAsync(
+    aUri,
+    channel,
+    (img, status) => {
+      if (!Components.isSuccessCode(status)) {
+        imgPromise.reject(
+          new Error(`Error retrieving image from URI ${aUri.spec}`)
+        );
+      } else {
+        imgPromise.resolve(img);
+      }
+    },
+    observer
+  );
+
+  let [img] = await Promise.all([imgPromise.promise, decodePromise.promise]);
+  return img;
 }
 
 /**

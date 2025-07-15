@@ -37,8 +37,6 @@ export const TaskbarTabsPageAction = {
   init(aWindow) {
     let taskbarTabsEnabled = lazy.TaskbarTabsUtils.isEnabled();
     let isPopupWindow = !aWindow.toolbar.visible;
-    // WARNING: If we ever enable private browsing in Taskbar Tabs, we need to
-    // revisit pin code which assumes we're not in a private context.
     let isPrivate = lazy.PrivateBrowsingUtils.isWindowPrivate(aWindow);
 
     if (
