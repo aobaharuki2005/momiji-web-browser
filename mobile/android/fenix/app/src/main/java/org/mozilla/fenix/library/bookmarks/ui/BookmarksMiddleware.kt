@@ -42,6 +42,7 @@ private const val WARN_OPEN_ALL_SIZE = 15
  * one or more bookmarks
  * @param showTabsTray Invoked after opening tabs from menus.
  * @param resolveFolderTitle Invoked to lookup user-friendly bookmark titles.
+ * @param showUrlCopiedSnackbar Invoked when a bookmark url is copied.
  * @param getBrowsingMode Invoked when retrieving the app's current [BrowsingMode].
  * @param openTab Invoked when opening a tab when a bookmark is clicked.
  * @param saveBookmarkSortOrder Invoked to persist the new sort order.
@@ -62,6 +63,7 @@ internal class BookmarksMiddleware(
     private val shareBookmarks: (List<BookmarkItem.Bookmark>) -> Unit = {},
     private val showTabsTray: (isPrivateMode: Boolean) -> Unit,
     private val resolveFolderTitle: (BookmarkNode) -> String,
+    private val showUrlCopiedSnackbar: () -> Unit,
     private val getBrowsingMode: () -> BrowsingMode,
     private val openTab: (url: String, openInNewTab: Boolean) -> Unit,
     private val saveBookmarkSortOrder: suspend (BookmarksListSortOrder) -> Unit,
@@ -497,6 +499,7 @@ internal class BookmarksMiddleware(
             is BookmarksListMenuAction.Bookmark.CopyClicked -> {
                 val urlClipData = ClipData.newPlainText(bookmark.url, bookmark.url)
                 clipboardManager?.setPrimaryClip(urlClipData)
+                showUrlCopiedSnackbar()
             }
 
             is BookmarksListMenuAction.Bookmark.ShareClicked -> {

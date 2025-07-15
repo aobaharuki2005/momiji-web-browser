@@ -505,6 +505,21 @@ class SnackbarBindingTest {
     }
 
     @Test
+    fun `WHEN the current URL is copied to clipboard THEN display a snackbar`() {
+        val binding = buildSnackbarBinding()
+        binding.start()
+
+        appStore.dispatch(URLCopiedToClipboard)
+        waitForStoreToSettle()
+
+        verify(snackbarDelegate).show(
+            text = testContext.getString(R.string.browser_toolbar_url_copied_to_clipboard_snackbar),
+            duration = LENGTH_LONG,
+        )
+        assertEquals(SnackbarState.None, appStore.state.snackbarState)
+    }
+
+    @Test
     fun `WHEN download is failed THEN display a snackbar`() {
         val snackbarAction = argumentCaptor<((v: View) -> Unit)>()
         val binding = buildSnackbarBinding()

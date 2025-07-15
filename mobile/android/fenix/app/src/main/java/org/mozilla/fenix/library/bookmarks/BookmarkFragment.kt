@@ -206,6 +206,9 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                                             rootTitles = composeRootTitles(lifecycleHolder.context),
                                         ) ?: ""
                                     },
+                                    showUrlCopiedSnackbar = {
+                                        showSnackBarWithText(resources.getString(R.string.url_copied))
+                                    },
                                     getBrowsingMode = {
                                         lifecycleHolder.homeActivity.browsingModeManager.mode
                                     },
