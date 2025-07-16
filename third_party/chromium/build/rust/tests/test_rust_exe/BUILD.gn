@@ -8,10 +8,10 @@ rust_executable("test_rust_exe") {
   crate_root = "main.rs"
   sources = [ "main.rs" ]
   deps = [
-    "//chromium/build/rust/tests/test_mixed_source_set:test_mixed_source_set_rs",
+    "//chromium/build/rust/tests/test_mixed_static_library:test_mixed_static_library_rs",
     "//chromium/build/rust/tests/test_proc_macro_crate",
     "//chromium/build/rust/tests/test_rlib_crate",
-    "//chromium/build/rust/tests/test_rust_source_set",
-    "//chromium/build/rust/tests/test_rust_source_set_non_standard_arrangement",
+    "//chromium/build/rust/tests/test_rust_static_library",
+    "//chromium/build/rust/tests/test_rust_static_library_non_standard_arrangement",
   ]
 }

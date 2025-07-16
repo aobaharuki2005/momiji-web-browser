@@ -1,5 +1,5 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 1 Jul 2025 18:07:09 -0500
+Date: Tue, 1 Jul 2025 18:13:10 -0500
 Subject: Bug 1775143 - pt14 - (mirror) 58f47eacaf10 r=ng
 
 Search third_party/libwebrtc/build for current_cpu, removing
@@ -239,7 +239,7 @@ index ab17b2c1b..01605a2eb 100644
    } else {
      assert(false, "Need android libgcc support for your target arch.")
 diff --git a/config/android/rules.gni b/config/android/rules.gni
-index e5de9222d..08feb9c6d 100644
+index 4f11ddc42..cd98cd9af 100644
 --- a/config/android/rules.gni
 +++ b/config/android/rules.gni
 @@ -703,11 +703,11 @@ if (enable_java_templates) {
@@ -258,7 +258,7 @@ index e5de9222d..08feb9c6d 100644
      } else {
        assert(false, "Unsupported CPU family")
 diff --git a/config/arm.gni b/config/arm.gni
-index b3267c86b..59708c4f4 100644
+index c66667ce7..9bfb13384 100644
 --- a/config/arm.gni
 +++ b/config/arm.gni
 @@ -4,11 +4,11 @@
@@ -333,7 +333,7 @@ index 5431d03dc..2c0e57589 100644
    }
  }
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 4d86abc51..44298f4f0 100644
+index b38e736db..634177e18 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -24,14 +24,14 @@ import("//chromium/build/toolchain/rbe.gni")
@@ -402,7 +402,7 @@ index 4d86abc51..44298f4f0 100644
        ldflags += [ "-march=$arm_arch" ]
      }
    }
-@@ -891,14 +891,14 @@ config("compiler_cpu_abi") {
+@@ -898,14 +898,14 @@ config("compiler_cpu_abi") {
    if ((is_posix && !is_apple) || is_fuchsia) {
      # CPU architecture. We may or may not be doing a cross compile now, so for
      # simplicity we always explicitly set the architecture.
@@ -419,7 +419,7 @@ index 4d86abc51..44298f4f0 100644
        cflags += [ "-m32" ]
        ldflags += [ "-m32" ]
        if (!is_nacl) {
-@@ -907,7 +907,7 @@ config("compiler_cpu_abi") {
+@@ -914,7 +914,7 @@ config("compiler_cpu_abi") {
            "-msse2",
          ]
        }
@@ -428,7 +428,7 @@ index 4d86abc51..44298f4f0 100644
        if (is_clang && !is_android && !is_nacl) {
          cflags += [ "--target=arm-linux-gnueabihf" ]
          ldflags += [ "--target=arm-linux-gnueabihf" ]
-@@ -921,7 +921,7 @@ config("compiler_cpu_abi") {
+@@ -928,7 +928,7 @@ config("compiler_cpu_abi") {
        if (arm_tune != "") {
          cflags += [ "-mtune=$arm_tune" ]
        }
@@ -437,7 +437,7 @@ index 4d86abc51..44298f4f0 100644
        if (is_clang && !is_android && !is_nacl && !is_fuchsia) {
          cflags += [ "--target=aarch64-linux-gnu" ]
          ldflags += [ "--target=aarch64-linux-gnu" ]
-@@ -930,7 +930,7 @@ config("compiler_cpu_abi") {
+@@ -937,7 +937,7 @@ config("compiler_cpu_abi") {
          # Outline atomics crash on Exynos 9810. http://crbug.com/1272795
          cflags += [ "-mno-outline-atomics" ]
        }
@@ -446,7 +446,7 @@ index 4d86abc51..44298f4f0 100644
        ldflags += [ "-Wl,--hash-style=sysv" ]
        if (custom_toolchain == "") {
          if (is_clang) {
-@@ -1015,7 +1015,7 @@ config("compiler_cpu_abi") {
+@@ -1022,7 +1022,7 @@ config("compiler_cpu_abi") {
        }
  
        cflags += [ "-m${mips_float_abi}-float" ]
@@ -455,7 +455,7 @@ index 4d86abc51..44298f4f0 100644
        ldflags += [ "-Wl,--hash-style=sysv" ]
        if (custom_toolchain == "") {
          if (is_clang) {
-@@ -1060,7 +1060,7 @@ config("compiler_cpu_abi") {
+@@ -1067,7 +1067,7 @@ config("compiler_cpu_abi") {
        }
  
        cflags += [ "-m${mips_float_abi}-float" ]
@@ -464,7 +464,7 @@ index 4d86abc51..44298f4f0 100644
        cflags += [ "-D__SANE_USERSPACE_TYPES__" ]
        ldflags += [ "-Wl,--hash-style=sysv" ]
        if (custom_toolchain == "") {
-@@ -1124,7 +1124,7 @@ config("compiler_cpu_abi") {
+@@ -1131,7 +1131,7 @@ config("compiler_cpu_abi") {
            "-Wa,-march=loongson3a",
          ]
        }
@@ -473,7 +473,7 @@ index 4d86abc51..44298f4f0 100644
        ldflags += [ "-Wl,--hash-style=sysv" ]
        if (custom_toolchain == "") {
          if (is_clang) {
-@@ -1162,7 +1162,7 @@ config("compiler_cpu_abi") {
+@@ -1169,7 +1169,7 @@ config("compiler_cpu_abi") {
          ]
          ldflags += [ "-mips64r2" ]
        }
@@ -482,7 +482,7 @@ index 4d86abc51..44298f4f0 100644
        if (current_os == "aix") {
          cflags += [ "-maix64" ]
          ldflags += [ "-maix64" ]
-@@ -1170,7 +1170,7 @@ config("compiler_cpu_abi") {
+@@ -1177,7 +1177,7 @@ config("compiler_cpu_abi") {
          cflags += [ "-m64" ]
          ldflags += [ "-m64" ]
        }
@@ -491,7 +491,7 @@ index 4d86abc51..44298f4f0 100644
        cflags += [ "-m64" ]
        ldflags += [ "-m64" ]
      }
-@@ -1191,7 +1191,7 @@ config("compiler_codegen") {
+@@ -1198,7 +1198,7 @@ config("compiler_codegen") {
      configs += [ "//chromium/build/config/nacl:compiler_codegen" ]
    }
  
@@ -500,7 +500,7 @@ index 4d86abc51..44298f4f0 100644
      # On arm64 disable outlining for Android. See crbug.com/931297 for more
      # information.
      cflags += [ "-mno-outline" ]
-@@ -1330,7 +1330,7 @@ config("rustc_revision") {
+@@ -1337,7 +1337,7 @@ config("rustc_revision") {
  }
  
  config("compiler_arm_fpu") {
@@ -509,7 +509,7 @@ index 4d86abc51..44298f4f0 100644
      cflags = [ "-mfpu=$arm_fpu" ]
      if (!arm_use_thumb) {
        cflags += [ "-marm" ]
-@@ -1340,14 +1340,14 @@ config("compiler_arm_fpu") {
+@@ -1347,14 +1347,14 @@ config("compiler_arm_fpu") {
  }
  
  config("compiler_arm_thumb") {
@@ -526,7 +526,7 @@ index 4d86abc51..44298f4f0 100644
      # arm is normally the default mode for clang, but on chromeos a wrapper
      # is used to pass -mthumb, and therefor change the default.
      cflags = [ "-marm" ]
-@@ -1454,7 +1454,7 @@ config("default_warnings") {
+@@ -1461,7 +1461,7 @@ config("default_warnings") {
  
      # Suppress warnings about ABI changes on ARM (Clang doesn't give this
      # warning).
@@ -535,7 +535,7 @@ index 4d86abc51..44298f4f0 100644
        cflags += [ "-Wno-psabi" ]
      }
  
-@@ -1626,9 +1626,9 @@ config("chromium_code") {
+@@ -1641,9 +1641,9 @@ config("chromium_code") {
        "__STDC_FORMAT_MACROS",
      ]
  
@@ -548,7 +548,7 @@ index 4d86abc51..44298f4f0 100644
        # Non-chromium code is not guaranteed to compile cleanly with
        # _FORTIFY_SOURCE. Also, fortified build may fail when optimizations are
        # disabled, so only do that for Release build.
-@@ -1911,9 +1911,9 @@ config("no_incompatible_pointer_warnings") {
+@@ -1926,9 +1926,9 @@ config("no_incompatible_pointer_warnings") {
    cflags = []
    if (is_clang) {
      cflags += [ "-Wno-incompatible-pointer-types" ]
@@ -560,7 +560,7 @@ index 4d86abc51..44298f4f0 100644
      cflags += [ "-w" ]
    }
  }
-@@ -1967,7 +1967,7 @@ if (is_win) {
+@@ -1982,7 +1982,7 @@ if (is_win) {
    if (is_android) {
      # TODO(jdduke) Re-enable on mips after resolving linking
      # issues with libc++ (crbug.com/456380).
@@ -569,7 +569,7 @@ index 4d86abc51..44298f4f0 100644
        common_optimize_on_ldflags += [
          # Warn in case of text relocations.
          "-Wl,--warn-shared-textrel",
-@@ -2018,7 +2018,7 @@ config("default_stack_frames") {
+@@ -2033,7 +2033,7 @@ config("default_stack_frames") {
        # Omit frame pointers for leaf functions on x86, otherwise building libyuv
        # gives clang's register allocator issues, see llvm.org/PR15798 /
        # crbug.com/233709
@@ -578,7 +578,7 @@ index 4d86abc51..44298f4f0 100644
          cflags += [ "-momit-leaf-frame-pointer" ]
        }
      } else {
-@@ -2380,12 +2380,12 @@ config("symbols") {
+@@ -2395,12 +2395,12 @@ config("symbols") {
      # DWARF info may be corrupt; offsets in a range list entry are in different
      # sections" there.  Maybe just a bug in nacl_switch_32.S.
      _enable_gdb_index =
@@ -1511,7 +1511,7 @@ index 643e12841..3010cb7a0 100644
    }
  }
 diff --git a/toolchain/gcc_toolchain.gni b/toolchain/gcc_toolchain.gni
-index 1ef33e2e0..d8ce35f34 100644
+index 19f72175d..c83b1c8c4 100644
 --- a/toolchain/gcc_toolchain.gni
 +++ b/toolchain/gcc_toolchain.gni
 @@ -128,8 +128,8 @@ template("gcc_toolchain") {

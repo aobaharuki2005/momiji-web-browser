@@ -16,7 +16,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3a785d486d97fc9cb
  5 files changed, 10 insertions(+), 10 deletions(-)
 
 diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
-index 125c36bb8..e3fb50173 100644
+index b66b3ffc5..a1e89b030 100644
 --- a/config/BUILDCONFIG.gn
 +++ b/config/BUILDCONFIG.gn
 @@ -241,8 +241,8 @@ if (target_os == "android") {
