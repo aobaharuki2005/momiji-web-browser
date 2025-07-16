@@ -1599,7 +1599,7 @@ static const CompilationStencil* DelazifyCanonicalScriptedFunctionImpl(
     return cached;
   }
 
-  ScriptStencilRef script{context, scriptIndex};
+  ScriptStencilRef script{*stencils, context, scriptIndex};
   const ScriptStencilExtra& extra = script.scriptExtra();
 
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
@@ -1635,7 +1635,7 @@ static const CompilationStencil* DelazifyCanonicalScriptedFunctionImpl(
   // information from the CompilationStencil context and the ref-counted
   // ScriptSource, which are both GC-free.
   JS_HAZ_NON_GC_POINTER CompilationInput input(options);
-  input.initFromStencil(context, scriptIndex, ss);
+  input.initFromStencil(*stencils, context, scriptIndex, ss);
 
   const CompilationStencil* borrow;
   if (!CompileLazyFunctionToStencilMaybeInstantiate(

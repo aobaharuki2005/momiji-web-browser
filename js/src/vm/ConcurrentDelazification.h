@@ -32,6 +32,9 @@ class FrontendContext;
 // ScriptIndex.
 struct DelazifyStrategy {
   using ScriptIndex = frontend::ScriptIndex;
+  using InitialStencilAndDelazifications =
+      frontend::InitialStencilAndDelazifications;
+
   virtual ~DelazifyStrategy() = default;
 
   // Returns true if no more functions should be delazified. Note, this does not
@@ -61,6 +64,7 @@ struct DelazifyStrategy {
   //  - top-level script, when starting the off-thread delazification.
   //  - functions added by `add` and delazified by `DelazificationContext`.
   [[nodiscard]] bool add(FrontendContext* fc,
+                         const InitialStencilAndDelazifications& stencils,
                          const frontend::CompilationStencil& stencil,
                          ScriptIndex index);
 };

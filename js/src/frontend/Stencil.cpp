@@ -1630,7 +1630,7 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
   }
 
   for (size_t i = 0; i < length; i++) {
-    ScriptStencilRef inner{lazy.context_,
+    ScriptStencilRef inner{lazy.stencils_, lazy.context_,
                            lazy.context_.gcThingData[i + offset].toFunction()};
     gcThingsData[i] = TaggedScriptThingIndex(ScriptIndex(i));
     new (mozilla::KnownNotNull, &scriptData[i]) ScriptStencil();

@@ -27,10 +27,11 @@
 using namespace js;
 
 bool DelazifyStrategy::add(FrontendContext* fc,
+                           const InitialStencilAndDelazifications& stencils,
                            const frontend::CompilationStencil& stencil,
                            ScriptIndex index) {
   using namespace js::frontend;
-  ScriptStencilRef scriptRef{stencil, index};
+  ScriptStencilRef scriptRef{stencils, stencil, index};
 
   // Only functions with bytecode are allowed to be added.
   MOZ_ASSERT(!scriptRef.scriptData().isGhost());
@@ -48,7 +49,7 @@ bool DelazifyStrategy::add(FrontendContext* fc,
     }
 
     ScriptIndex innerScriptIndex = index.toFunction();
-    ScriptStencilRef innerScriptRef{stencil, innerScriptIndex};
+    ScriptStencilRef innerScriptRef{stencils, stencil, innerScriptIndex};
     if (innerScriptRef.scriptData().isGhost() ||
         !innerScriptRef.scriptData().functionFlags.isInterpreted()) {
       continue;
@@ -56,7 +57,7 @@ bool DelazifyStrategy::add(FrontendContext* fc,
     if (innerScriptRef.scriptData().hasSharedData()) {
       // The top-level parse decided to eagerly parse this function, thus we
       // should visit its inner function the same way.
-      if (!add(fc, stencil, innerScriptIndex)) {
+      if (!add(fc, stencils, stencil, innerScriptIndex)) {
         return false;
       }
       continue;
@@ -195,7 +196,7 @@ bool DelazificationContext::init(
   // Queue functions from the top-level to be delazify.
   BorrowingCompilationStencil borrow(merger_.getResult());
   ScriptIndex topLevel{0};
-  return strategy_->add(&fc_, borrow, topLevel);
+  return strategy_->add(&fc_, *stencils, borrow, topLevel);
 }
 
 bool DelazificationContext::delazify() {
@@ -254,7 +255,7 @@ bool DelazificationContext::delazify() {
 
     {
       BorrowingCompilationStencil borrow(merger_.getResult());
-      if (!strategy_->add(&fc_, borrow, scriptIndex)) {
+      if (!strategy_->add(&fc_, *stencils_, borrow, scriptIndex)) {
         strategy_->clear();
         return false;
       }
