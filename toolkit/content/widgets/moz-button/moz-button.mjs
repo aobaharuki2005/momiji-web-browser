@@ -117,6 +117,7 @@ class MenuController {
  * @property {string} ariaExpandedAttribute - Internal, map aria-expanded attribute to the ariaExpanded JS property.
  * @property {string} hasVisibleLabel - Internal, tracks whether or not the button has a visible label.
  * @property {boolean} attention - Show a dot notification on the button if true.
+ * @property {boolean} parentDisabled - When the parent of this component is disabled.
  * @property {string} iconPosition - The icon's position relative to the button label.
  *   Options: start, end.
  * @property {string} menuId - A CSS selector string that identifies the associated menu element controlled by the button.
@@ -153,6 +154,7 @@ export default class MozButton extends MozLitElement {
     attention: { type: Boolean },
     iconPosition: { type: String, reflect: true },
     menuId: { type: String, reflect: true },
+    parentDisabled: { type: Boolean },
   };
 
   static queries = {
@@ -170,6 +172,7 @@ export default class MozButton extends MozLitElement {
     this.attention = false;
     this.iconPosition = "start";
     this.menuId = "";
+    this.parentDisabled = undefined;
   }
 
   willUpdate(changedProperties) {
@@ -217,7 +220,7 @@ export default class MozButton extends MozLitElement {
         href="chrome://global/content/elements/moz-button.css"
       />
       <button
-        ?disabled=${this.disabled}
+        ?disabled=${this.disabled || this.parentDisabled}
         title=${ifDefined(this.title || this.tooltipText)}
         aria-label=${ifDefined(this.ariaLabel)}
         aria-expanded=${ifDefined(this.ariaExpanded)}

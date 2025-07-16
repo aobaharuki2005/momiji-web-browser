@@ -376,7 +376,45 @@
           "Clicking on button's padding must send a click event"
         );
       });
-
+      add_task(async function testButtonDisable() {
+        const mozButton = document.querySelector("moz-button");
+        const nestedButton = mozButton.shadowRoot.querySelector("button");
+        is(
+          nestedButton.disabled,
+          false,
+          "Nested button is NOT disabled by default"
+        );
+        mozButton.disabled = true;
+        await mozButton.updateComplete;
+        is(
+          nestedButton.disabled,
+          true,
+          "Nested button is disabled after moz-button disabled is set"
+        );
+        mozButton.parentDisabled = false;
+        await mozButton.updateComplete;
+        is(
+          nestedButton.disabled,
+          true,
+          "Nested button is still disabled even if moz-button parentDisabled is set to false"
+        );
+        mozButton.disabled = false;
+        mozButton.parentDisabled = true;
+        await mozButton.updateComplete;
+        is(
+          nestedButton.disabled,
+          true,
+          "Nested button is still disabled when moz-button parentDisabled is set to true but disabled is set to false"
+        );
+        mozButton.disabled = false;
+        mozButton.parentDisabled = false;
+        await mozButton.updateComplete;
+        is(
+          nestedButton.disabled,
+          false,
+          "Button is NOT disabled when parentDisabled and disabled are both false"
+        );
+      });
       add_task(async function testMenuButton() {
         const PANEL_LIST_ID = "panel-list";
         let menuButton = document.querySelector(".four");
