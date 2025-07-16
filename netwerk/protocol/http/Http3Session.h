@@ -396,6 +396,7 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   // is only used in Http3Session::ProcessOutput. Using raw pointer here to
   // improve performance.
   nsIUDPSocket* mSocket;
+  uint32_t mTrrStreams = 0;
 };
 
 }  // namespace mozilla::net
