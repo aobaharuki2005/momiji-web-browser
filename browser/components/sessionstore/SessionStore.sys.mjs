@@ -1249,6 +1249,9 @@ var SessionStoreInternal = {
     }
 
     TelemetryTimestamps.add("sessionRestoreInitialized");
+    Glean.sessionRestore.startupTimeline.sessionRestoreInitialized.set(
+      Services.telemetry.msSinceProcessStart()
+    );
     OBSERVING.forEach(function (aTopic) {
       Services.obs.addObserver(this, aTopic, true);
     }, this);
@@ -2069,6 +2072,9 @@ var SessionStoreInternal = {
           this._deferredAllWindowsRestored.resolve();
         } else {
           TelemetryTimestamps.add("sessionRestoreRestoring");
+          Glean.sessionRestore.startupTimeline.sessionRestoreRestoring.set(
+            Services.telemetry.msSinceProcessStart()
+          );
           this._restoreCount = aInitialState.windows
             ? aInitialState.windows.length
             : 0;
