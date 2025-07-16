@@ -77,6 +77,7 @@
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/CloseWatcher.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/CSPViolationData.h"
@@ -115,6 +116,7 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/StylePropertyMapReadOnly.h"
 #include "mozilla/dom/Text.h"
+#include "mozilla/dom/TreeIterator.h"
 #include "mozilla/dom/TrustedHTML.h"
 #include "mozilla/dom/TrustedTypesConstants.h"
 #include "mozilla/dom/TrustedTypeUtils.h"
@@ -2131,11 +2133,10 @@ void Element::GetExplicitlySetAttrElements(
 }
 
 void Element::GetElementsWithGrid(nsTArray<RefPtr<Element>>& aElements) {
-  nsINode* cur = this;
-  while (cur) {
+  dom::TreeIterator<dom::StyleChildrenIterator> iter(*this);
+  while (nsIContent* cur = iter.GetCurrent()) {
     if (cur->IsElement()) {
       Element* elem = cur->AsElement();
-
       if (elem->GetPrimaryFrame()) {
         // See if this has a GridContainerFrame. Use the same method that
         // nsGridContainerFrame uses, which deals with some edge cases.
@@ -2148,14 +2149,14 @@ void Element::GetElementsWithGrid(nsTArray<RefPtr<Element>>& aElements) {
       // Only allow the traversal to go through the children if the element
       // does have a display.
       if (elem->HasServoData()) {
-        cur = cur->GetNextNode(this);
+        iter.GetNext();
         continue;
       }
     }
 
     // Either this isn't an element, or it has `display: none`.
     // Continue with the traversal but ignore all the children.
-    cur = cur->GetNextNonChildNode(this);
+    iter.GetNextSkippingChildren();
   }
 }
 
