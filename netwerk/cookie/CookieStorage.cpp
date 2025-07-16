@@ -531,6 +531,7 @@ void CookieStorage::NotifyChanged(nsISupports* aSubject,
 bool CookieStorage::RemoveCookiesFromBackUntilUnderLimit(
     nsTArray<CookieListIter>& aCookieListIter, Cookie* aCookie,
     const nsACString& aBaseDomain, nsCOMPtr<nsIArray>& aPurgedList) {
+
   MOZ_ASSERT(aCookie);
   auto it = aCookieListIter.rbegin();
   while (it != aCookieListIter.rend()) {

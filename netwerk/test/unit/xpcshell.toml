@@ -527,6 +527,8 @@ skip-if = ["os == 'win' && os_version == '11.26100' && processor == 'x86_64' && 
 
 ["test_cookies_async_failure.js"]
 
+["test_cookies_chips_purge_crash.js"]
+
 ["test_cookies_partition_counting.js"]
 
 ["test_cookies_partition_migration.js"]
