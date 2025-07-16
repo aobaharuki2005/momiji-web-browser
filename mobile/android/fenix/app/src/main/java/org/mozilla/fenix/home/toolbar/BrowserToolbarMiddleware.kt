@@ -58,6 +58,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode.Normal
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode.Private
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.UseCases
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
 import org.mozilla.fenix.components.appstate.OrientationMode
 import org.mozilla.fenix.components.menu.MenuAccessPoint
 import org.mozilla.fenix.ext.nav
@@ -208,6 +209,7 @@ class BrowserToolbarMiddleware(
             }
 
             is OriginClicked -> {
+                appStore.dispatch(SearchStarted())
                 context.store.dispatch(ToggleEditMode(true))
             }
             is PasteFromClipboardClicked -> {
@@ -252,10 +254,10 @@ class BrowserToolbarMiddleware(
     private fun observeSearchStateUpdates(store: Store<BrowserToolbarState, BrowserToolbarAction>) {
         syncCurrentSearchEngineJob?.cancel()
         syncCurrentSearchEngineJob = appStore.observeWhileActive {
-            distinctUntilChangedBy { it.selectedSearchEngine?.shortcutSearchEngine }
+            distinctUntilChangedBy { it.searchState.selectedSearchEngine?.searchEngine }
                 .collect {
-                    it.selectedSearchEngine?.let {
-                        updateStartPageActions(store, it.shortcutSearchEngine)
+                    it.searchState.selectedSearchEngine?.let {
+                        updateStartPageActions(store, it.searchEngine)
                     }
                 }
         }
@@ -266,7 +268,7 @@ class BrowserToolbarMiddleware(
                 .collect {
                     updateStartPageActions(
                         store = store,
-                        selectedSearchEngine = appStore.state.selectedSearchEngine?.shortcutSearchEngine
+                        selectedSearchEngine = appStore.state.searchState.selectedSearchEngine?.searchEngine
                             ?: it.search.selectedOrDefaultSearchEngine,
                     )
                 }

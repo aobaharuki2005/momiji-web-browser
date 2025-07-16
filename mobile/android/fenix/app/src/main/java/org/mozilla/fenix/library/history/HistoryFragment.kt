@@ -493,9 +493,9 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
             it.id == HISTORY_SEARCH_ENGINE_ID
         }
         historySearchEngine?.let {
-            appStore.dispatch(AppAction.SearchEngineSelected(it, false))
+            appStore.dispatch(AppAction.SearchAction.SearchEngineSelected(it, false))
         }
-        appStore.dispatch(AppAction.UpdateSearchBeingActiveState(true))
+        appStore.dispatch(AppAction.SearchAction.SearchStarted())
     }
 
     private fun handleOpenHistoryInPrivateTabsMultiSelectMenuItem() {

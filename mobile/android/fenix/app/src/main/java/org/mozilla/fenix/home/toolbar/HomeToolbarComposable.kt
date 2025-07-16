@@ -40,6 +40,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
 import org.mozilla.fenix.components.toolbar.ToolbarPosition.BOTTOM
 import org.mozilla.fenix.components.toolbar.ToolbarPosition.TOP
 import org.mozilla.fenix.databinding.FragmentHomeBinding
@@ -183,6 +184,7 @@ internal class HomeToolbarComposable(
 
     private fun configureStartingInSearchMode() {
         if (!directToSearchConfig.startSearch) return
+        appStore.dispatch(SearchStarted())
         store.dispatch(ToggleEditMode(true))
 
         if (directToSearchConfig.sessionId != null) {

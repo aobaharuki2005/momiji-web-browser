@@ -21,7 +21,10 @@ import org.mozilla.fenix.components.appstate.AppAction.AddNonFatalCrash
 import org.mozilla.fenix.components.appstate.AppAction.RemoveAllNonFatalCrashes
 import org.mozilla.fenix.components.appstate.AppAction.RemoveNonFatalCrash
 import org.mozilla.fenix.components.appstate.AppAction.UpdateInactiveExpanded
+import org.mozilla.fenix.components.appstate.search.SearchState
+import org.mozilla.fenix.components.appstate.search.SelectedSearchEngine
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState
+import org.mozilla.fenix.components.metrics.MetricsUtils
 
 class AppStoreReducerTest {
     @Test
@@ -83,55 +86,58 @@ class AppStoreReducerTest {
     }
 
     @Test
-    fun `WHEN search in progress state changes THEN update state to reflect it`() {
+    fun `WHEN a new search is started THEN update state to reflect it`() {
         val initialState = AppState()
 
-        assertFalse(initialState.isSearchActive)
+        assertFalse(initialState.searchState.isSearchActive)
 
         var updatedState = AppStoreReducer.reduce(
             initialState,
-            AppAction.UpdateSearchBeingActiveState(isSearchActive = true),
+            AppAction.SearchAction.SearchStarted(
+                tabId = "test",
+                source = MetricsUtils.Source.ACTION,
+            ),
         )
 
-        assertTrue(updatedState.isSearchActive)
-
-        updatedState = AppStoreReducer.reduce(
-            initialState,
-            AppAction.UpdateSearchBeingActiveState(isSearchActive = false),
-        )
-
-        assertFalse(updatedState.isSearchActive)
+        assertTrue(updatedState.searchState.isSearchActive)
+        assertEquals(updatedState.searchState.sourceTabId, "test")
+        assertEquals(updatedState.searchState.searchAccessPoint, MetricsUtils.Source.ACTION)
     }
 
     @Test
-    fun `WHEN search is aborted THEN reset the user selected search engine`() {
+    fun `WHEN search is aborted THEN reset the search related state`() {
         val initialState = AppState(
-            selectedSearchEngine = mockk(),
+            searchState = SearchState.EMPTY.copy(
+                selectedSearchEngine = mockk(),
+            ),
         )
 
         val updatedState = AppStoreReducer.reduce(
             initialState,
-            AppAction.UpdateSearchBeingActiveState(isSearchActive = false),
+            AppAction.SearchAction.SearchEnded,
         )
 
-        assertNull(updatedState.selectedSearchEngine)
+        assertFalse(updatedState.searchState.isSearchActive)
+        assertNull(updatedState.searchState.selectedSearchEngine)
+        assertNull(updatedState.searchState.sourceTabId)
+        assertEquals(updatedState.searchState.searchAccessPoint, MetricsUtils.Source.NONE)
     }
 
     @Test
     fun `WHEN a new search engine is selected THEN update state to reflect it`() {
         val initialState = AppState()
 
-        assertNull(initialState.selectedSearchEngine)
+        assertNull(initialState.searchState.selectedSearchEngine)
 
         val newSearchEngineSelection: SearchEngine = mockk()
         val updatedState = AppStoreReducer.reduce(
             initialState,
-            AppAction.SearchEngineSelected(newSearchEngineSelection, true),
+            AppAction.SearchAction.SearchEngineSelected(newSearchEngineSelection, true),
         )
 
         assertEquals(
             SelectedSearchEngine(newSearchEngineSelection, true),
-            updatedState.selectedSearchEngine,
+            updatedState.searchState.selectedSearchEngine,
         )
     }
 

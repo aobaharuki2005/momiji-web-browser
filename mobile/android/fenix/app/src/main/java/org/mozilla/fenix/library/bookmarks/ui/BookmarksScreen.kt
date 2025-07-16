@@ -296,12 +296,12 @@ private fun BookmarksList(
         when (state.isSearching) {
             true -> {
                 bookmarksSearchEngine?.let {
-                    appStore.dispatch(AppAction.SearchEngineSelected(it, false))
+                    appStore.dispatch(AppAction.SearchAction.SearchEngineSelected(it, false))
                 }
-                appStore.dispatch(AppAction.UpdateSearchBeingActiveState(true))
+                appStore.dispatch(AppAction.SearchAction.SearchStarted())
             }
             false -> {
-                appStore.dispatch(AppAction.UpdateSearchBeingActiveState(false))
+                appStore.dispatch(AppAction.SearchAction.SearchEnded)
                 toolbarStore.dispatch(BrowserEditToolbarAction.SearchQueryUpdated(""))
                 focusManager.clearFocus()
                 keyboardController?.hide()

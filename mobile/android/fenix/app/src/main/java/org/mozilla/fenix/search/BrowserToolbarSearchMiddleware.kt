@@ -47,8 +47,9 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
-import org.mozilla.fenix.components.appstate.AppAction.SearchEngineSelected
-import org.mozilla.fenix.components.appstate.AppAction.UpdateSearchBeingActiveState
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEngineSelected
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.TABS_SEARCH_ENGINE_ID
@@ -144,7 +145,7 @@ class BrowserToolbarSearchMiddleware(
             is SearchSettingsItemClicked -> {
                 context.store.dispatch(ToggleEditMode(false))
                 context.store.dispatch(SearchQueryUpdated(""))
-                appStore.dispatch(UpdateSearchBeingActiveState(false))
+                appStore.dispatch(SearchEnded)
                 browserStore.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true))
                 environment?.navController?.navigate(
                     BrowserFragmentDirections.actionGlobalSearchEngineFragment(),
@@ -153,6 +154,7 @@ class BrowserToolbarSearchMiddleware(
 
             is SearchSelectorItemClicked -> {
                 appStore.dispatch(SearchEngineSelected(action.searchEngine, true))
+                appStore.dispatch(SearchStarted())
                 if (!context.store.state.isEditMode()) {
                     context.store.dispatch(ToggleEditMode(true))
                 }
@@ -254,10 +256,10 @@ class BrowserToolbarSearchMiddleware(
     private fun syncCurrentSearchEngine(store: Store<BrowserToolbarState, BrowserToolbarAction>) {
         syncCurrentSearchEngineJob?.cancel()
         syncCurrentSearchEngineJob = appStore.observeWhileActive {
-            distinctUntilChangedBy { it.selectedSearchEngine?.shortcutSearchEngine }
+            distinctUntilChangedBy { it.searchState.selectedSearchEngine?.searchEngine }
                 .collect {
-                    it.selectedSearchEngine?.let {
-                        refreshConfigurationAfterSearchEngineChange(store, it.shortcutSearchEngine)
+                    it.searchState.selectedSearchEngine?.let {
+                        refreshConfigurationAfterSearchEngineChange(store, it.searchEngine)
                     }
                 }
         }
@@ -277,7 +279,7 @@ class BrowserToolbarSearchMiddleware(
     }
 
     private fun reconcileSelectedEngine(): SearchEngine? =
-        appStore.state.selectedSearchEngine?.shortcutSearchEngine
+        appStore.state.searchState.selectedSearchEngine?.searchEngine
             ?: browserStore.state.search.selectedOrDefaultSearchEngine
 
     private inline fun <S : State, A : MVIAction> Store<S, A>.observeWhileActive(

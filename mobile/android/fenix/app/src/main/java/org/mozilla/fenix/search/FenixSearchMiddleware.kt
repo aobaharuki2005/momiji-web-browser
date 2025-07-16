@@ -38,7 +38,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.NimbusComponents
 import org.mozilla.fenix.components.UseCases
-import org.mozilla.fenix.components.appstate.AppAction.SearchEngineSelected
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEngineSelected
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
@@ -192,12 +192,12 @@ class FenixSearchMiddleware(
     private fun observeSearchEngineSelection(store: Store<SearchFragmentState, SearchFragmentAction>) {
         observeSearchEnginesChangeJob?.cancel()
         observeSearchEnginesChangeJob = appStore.observeWhileActive {
-            distinctUntilChangedBy { it.selectedSearchEngine?.shortcutSearchEngine }
+            distinctUntilChangedBy { it.searchState.selectedSearchEngine?.searchEngine }
                 .collect {
-                    it.selectedSearchEngine?.let {
+                    it.searchState.selectedSearchEngine?.let {
                         when (it.isUserSelected) {
-                            true -> handleSearchShortcutEngineSelectedByUser(store, it.shortcutSearchEngine)
-                            false -> handleSearchShortcutEngineSelected(store, it.shortcutSearchEngine)
+                            true -> handleSearchShortcutEngineSelectedByUser(store, it.searchEngine)
+                            false -> handleSearchShortcutEngineSelected(store, it.searchEngine)
                         }
                     }
                 }

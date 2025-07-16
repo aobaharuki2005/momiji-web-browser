@@ -24,7 +24,7 @@ import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.ext.flow
 import org.mozilla.fenix.components.AppStore
-import org.mozilla.fenix.components.appstate.AppAction.UpdateSearchBeingActiveState
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.home.toolbar.HomeToolbarEnvironment
 import mozilla.components.lib.state.Action as MVIAction
 
@@ -50,7 +50,7 @@ class BrowserToolbarSearchStatusSyncMiddleware(
         if (action is EnvironmentRehydrated) {
             environment = action.environment as? HomeToolbarEnvironment
 
-            if (appStore.state.isSearchActive) {
+            if (appStore.state.searchState.isSearchActive) {
                 syncSearchActive(context.store)
             }
         }
@@ -61,18 +61,20 @@ class BrowserToolbarSearchStatusSyncMiddleware(
         if (action is ToggleEditMode) {
             when (action.editMode) {
                 true -> syncSearchActive(context.store)
-                false -> syncSearchActiveJob?.cancel()
+                false -> {
+                    syncSearchActiveJob?.cancel()
+                    appStore.dispatch(SearchEnded)
+                }
             }
-            appStore.dispatch(UpdateSearchBeingActiveState(isSearchActive = action.editMode))
         }
     }
 
     private fun syncSearchActive(store: Store<BrowserToolbarState, BrowserToolbarAction>) {
         syncSearchActiveJob?.cancel()
         syncSearchActiveJob = appStore.observeWhileActive {
-            distinctUntilChangedBy { it.isSearchActive }
+            distinctUntilChangedBy { it.searchState.isSearchActive }
                 .collect {
-                    if (!it.isSearchActive) {
+                    if (!it.searchState.isSearchActive) {
                         store.dispatch(ToggleEditMode(false))
                     }
                 }

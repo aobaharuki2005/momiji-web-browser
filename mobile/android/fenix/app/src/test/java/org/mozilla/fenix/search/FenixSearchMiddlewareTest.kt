@@ -52,7 +52,7 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.NimbusComponents
 import org.mozilla.fenix.components.UseCases
 import org.mozilla.fenix.components.appstate.AppState
-import org.mozilla.fenix.components.appstate.SelectedSearchEngine
+import org.mozilla.fenix.components.appstate.search.SelectedSearchEngine
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.telemetryName
@@ -72,6 +72,7 @@ import org.mozilla.fenix.search.awesomebar.SearchSuggestionsProvidersBuilder
 import org.mozilla.fenix.search.fixtures.EMPTY_SEARCH_FRAGMENT_STATE
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
+import org.mozilla.fenix.components.appstate.search.SearchState as AppSearchState
 
 @RunWith(RobolectricTestRunner::class)
 class FenixSearchMiddlewareTest {
@@ -265,7 +266,9 @@ class FenixSearchMiddlewareTest {
         )
         val appStore = AppStore(
             AppState(
-                selectedSearchEngine = SelectedSearchEngine(newSearchEngineSelection, true),
+                searchState = AppSearchState.EMPTY.copy(
+                    selectedSearchEngine = SelectedSearchEngine(newSearchEngineSelection, true),
+                ),
             ),
         )
         val (middleware, store) = buildMiddlewareAndAddToSearchStore(appStore = appStore)

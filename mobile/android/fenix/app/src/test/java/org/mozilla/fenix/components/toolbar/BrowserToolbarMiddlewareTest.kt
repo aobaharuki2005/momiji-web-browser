@@ -116,9 +116,9 @@ import org.mozilla.fenix.components.NimbusComponents
 import org.mozilla.fenix.components.UseCases
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.CurrentTabClosed
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.components.appstate.AppAction.SnackbarAction.SnackbarDismissed
 import org.mozilla.fenix.components.appstate.AppAction.URLCopiedToClipboard
-import org.mozilla.fenix.components.appstate.AppAction.UpdateSearchBeingActiveState
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.OrientationMode.Landscape
 import org.mozilla.fenix.components.appstate.OrientationMode.Portrait
@@ -204,12 +204,12 @@ class BrowserToolbarMiddlewareTest {
     private val bookmarksStorage: BookmarksStorage = mockk(relaxed = true)
 
     @Test
-    fun `WHEN initializing the toolbar THEN update state to display mode`() = runTestOnMain {
+    fun `WHEN initializing the toolbar THEN reset app search state`() = runTestOnMain {
         val middleware = buildMiddleware(appStore = appStore)
 
         val toolbarStore = buildStore(middleware)
 
-        verify { appStore.dispatch(UpdateSearchBeingActiveState(false)) }
+        verify { appStore.dispatch(SearchEnded) }
     }
 
     @Test

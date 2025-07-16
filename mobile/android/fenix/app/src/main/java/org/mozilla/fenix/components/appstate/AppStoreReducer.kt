@@ -11,6 +11,7 @@ import org.mozilla.fenix.components.appstate.privatebrowsinglock.PrivateBrowsing
 import org.mozilla.fenix.components.appstate.readerview.ReaderViewStateReducer
 import org.mozilla.fenix.components.appstate.recommendations.ContentRecommendationsReducer
 import org.mozilla.fenix.components.appstate.reducer.FindInPageStateReducer
+import org.mozilla.fenix.components.appstate.search.SearchStateReducer
 import org.mozilla.fenix.components.appstate.setup.checklist.SetupChecklistReducer
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarState
 import org.mozilla.fenix.components.appstate.snackbar.SnackbarStateReducer
@@ -151,21 +152,6 @@ internal object AppStoreReducer {
             wasLastTabClosedPrivate = action.private,
         )
 
-        is AppAction.UpdateSearchBeingActiveState -> state.copy(
-            isSearchActive = action.isSearchActive,
-            selectedSearchEngine = when (action.isSearchActive) {
-                true -> state.selectedSearchEngine
-                false -> null
-            },
-        )
-
-        is AppAction.SearchEngineSelected -> state.copy(
-            selectedSearchEngine = SelectedSearchEngine(
-                shortcutSearchEngine = action.searchEngine,
-                isUserSelected = action.isUserSelected,
-            ),
-        )
-
         is AppAction.TranslationsAction.TranslationStarted -> state.copy(
             snackbarState = SnackbarState.TranslationInProgress(sessionId = action.sessionId),
         )
@@ -260,6 +246,8 @@ internal object AppStoreReducer {
         is AppAction.PrivateBrowsingLockAction -> PrivateBrowsingLockReducer.reduce(state, action)
 
         is AppAction.ReviewPromptAction -> ReviewPromptReducer.reduce(state, action)
+
+        is AppAction.SearchAction -> SearchStateReducer.reduce(state, action)
     }
 }
 

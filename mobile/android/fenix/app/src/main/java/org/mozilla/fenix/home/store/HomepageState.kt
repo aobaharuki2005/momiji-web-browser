@@ -158,7 +158,7 @@ internal sealed class HomepageState {
                     Private(
                         showHeader = settings.showHomepageHeader,
                         firstFrameDrawn = firstFrameDrawn,
-                        isSearchInProgress = isSearchActive,
+                        isSearchInProgress = searchState.isSearchActive,
                         bottomSpacerHeight = getBottomSpace(),
                     )
                 } else {
@@ -200,7 +200,7 @@ internal sealed class HomepageState {
                         buttonBackgroundColor = wallpaperState.buttonBackgroundColor,
                         buttonTextColor = wallpaperState.buttonTextColor,
                         bottomSpacerHeight = getBottomSpace(),
-                        isSearchInProgress = isSearchActive,
+                        isSearchInProgress = searchState.isSearchActive,
                     )
                 }
             }
@@ -226,6 +226,6 @@ private fun getBottomSpace(): Dp {
  * search bar's visibility.
  */
 private fun shouldShowSearchBar(appState: AppState) =
-    !appState.isSearchActive
+    !appState.searchState.isSearchActive
 
 private val HOME_APP_BAR_HEIGHT = 48.dp

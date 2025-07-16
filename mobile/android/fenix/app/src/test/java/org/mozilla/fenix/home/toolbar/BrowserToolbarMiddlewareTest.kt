@@ -76,11 +76,13 @@ import org.mozilla.fenix.browser.browsingmode.SimpleBrowsingModeManager
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.UseCases
 import org.mozilla.fenix.components.appstate.AppAction
-import org.mozilla.fenix.components.appstate.AppAction.SearchEngineSelected
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEngineSelected
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.OrientationMode.Landscape
 import org.mozilla.fenix.components.appstate.OrientationMode.Portrait
-import org.mozilla.fenix.components.appstate.SelectedSearchEngine
+import org.mozilla.fenix.components.appstate.search.SearchState
+import org.mozilla.fenix.components.appstate.search.SelectedSearchEngine
 import org.mozilla.fenix.components.menu.MenuAccessPoint
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
@@ -538,6 +540,9 @@ class BrowserToolbarMiddlewareTest {
     fun `GIVEN in normal browsing mode WHEN the page origin is clicked THEN start the search UX for normal browsing`() {
         val browsingModeManager = SimpleBrowsingModeManager(Normal)
         val navController: NavController = mockk(relaxed = true)
+        val appStore: AppStore = mockk(relaxed = true) {
+            every { state } returns mockk<AppState>(relaxed = true)
+        }
         val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
         val toolbarStore = buildStore(
             middleware = middleware,
@@ -547,6 +552,7 @@ class BrowserToolbarMiddlewareTest {
 
         toolbarStore.dispatch(toolbarStore.state.displayState.pageOrigin.onClick as BrowserToolbarAction)
 
+        verify { appStore.dispatch(SearchStarted()) }
         assertTrue(toolbarStore.state.isEditMode())
     }
 
@@ -554,6 +560,9 @@ class BrowserToolbarMiddlewareTest {
     fun `GIVEN in private browsing mode WHEN the page origin is clicked THEN start the search UX for private browsing`() {
         val browsingModeManager = SimpleBrowsingModeManager(Private)
         val navController: NavController = mockk(relaxed = true)
+        val appStore: AppStore = mockk(relaxed = true) {
+            every { state } returns mockk<AppState>(relaxed = true)
+        }
         val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
         val toolbarStore = buildStore(
             middleware = middleware,
@@ -563,6 +572,7 @@ class BrowserToolbarMiddlewareTest {
 
         toolbarStore.dispatch(toolbarStore.state.displayState.pageOrigin.onClick as BrowserToolbarAction)
 
+        verify { appStore.dispatch(SearchStarted()) }
         assertTrue(toolbarStore.state.isEditMode())
     }
 
@@ -666,16 +676,18 @@ class BrowserToolbarMiddlewareTest {
         val otherSearchEngine = SearchEngine("other", "Other", mock(), type = APPLICATION)
         val appStore = AppStore(
             initialState = AppState(
-                selectedSearchEngine = SelectedSearchEngine(selectedSearchEngine, true),
+                searchState = SearchState.EMPTY.copy(
+                    selectedSearchEngine = SelectedSearchEngine(selectedSearchEngine, true),
+                ),
             ),
         )
-        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
+        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk(), mockk())
         val toolbarStore = buildStore(middleware)
 
         browserStore.dispatch(ApplicationSearchEnginesLoaded(listOf(otherSearchEngine))).joinBlocking()
 
         assertNotEquals(
-            appStore.state.selectedSearchEngine?.shortcutSearchEngine,
+            appStore.state.searchState.selectedSearchEngine?.searchEngine,
             browserStore.state.search.selectedOrDefaultSearchEngine,
         )
         assertSearchSelectorEquals(

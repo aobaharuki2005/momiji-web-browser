@@ -50,9 +50,9 @@ import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.appstate.AppAction
-import org.mozilla.fenix.components.appstate.AppAction.UpdateSearchBeingActiveState
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.components.appstate.AppState
-import org.mozilla.fenix.components.appstate.SelectedSearchEngine
+import org.mozilla.fenix.components.appstate.search.SelectedSearchEngine
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.TABS_SEARCH_ENGINE_ID
@@ -67,6 +67,7 @@ import org.mozilla.fenix.search.fixtures.buildExpectedSearchSelector
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import org.mozilla.fenix.components.appstate.search.SearchState as AppSearchState
 
 @RunWith(RobolectricTestRunner::class)
 class BrowserToolbarSearchMiddlewareTest {
@@ -131,9 +132,7 @@ class BrowserToolbarSearchMiddlewareTest {
 
         assertFalse(store.state.isEditMode())
         assertEquals("", store.state.editState.query)
-        captorMiddleware.assertLastAction(UpdateSearchBeingActiveState::class) {
-            assertFalse(it.isSearchActive)
-        }
+        captorMiddleware.assertLastAction(SearchEnded::class) {}
         verify { browserStore.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true)) }
         verify {
             navController.navigate(
@@ -352,7 +351,9 @@ class BrowserToolbarSearchMiddlewareTest {
         val selectedSearchEngine = fakeSearchState().applicationSearchEngines.first().copy(id = "test")
         val appStore = AppStore(
             AppState(
-                selectedSearchEngine = SelectedSearchEngine(selectedSearchEngine, true),
+                searchState = AppSearchState.EMPTY.copy(
+                    selectedSearchEngine = SelectedSearchEngine(selectedSearchEngine, true),
+                ),
             ),
         )
         val browserStore = BrowserStore()

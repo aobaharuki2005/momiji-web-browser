@@ -14,6 +14,7 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
 import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
@@ -25,7 +26,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.components.AppStore
-import org.mozilla.fenix.components.appstate.AppAction.UpdateSearchBeingActiveState
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
 import org.mozilla.fenix.helpers.lifecycle.TestLifecycleOwner
 import org.mozilla.fenix.home.toolbar.HomeToolbarEnvironment
 import org.robolectric.RobolectricTestRunner
@@ -49,16 +51,17 @@ class BrowserToolbarSearchStatusSyncMiddlewareTest {
     }
 
     @Test
-    fun `WHEN the toolbar cycles between edit and display mode THEN synchronize the corresponding search active state in the application state`() {
+    fun `WHEN the toolbar exits search mode THEN synchronize search being ended for the application`() {
         val (_, toolbarStore) = buildMiddlewareAndAddToSearchStore()
         assertFalse(toolbarStore.state.isEditMode())
-        assertFalse(appStore.state.isSearchActive)
+        assertFalse(appStore.state.searchState.isSearchActive)
 
+        appStore.dispatch(SearchStarted())
         toolbarStore.dispatch(ToggleEditMode(true))
-        assertTrue(appStore.state.isSearchActive)
+        assertTrue(appStore.state.searchState.isSearchActive)
 
         toolbarStore.dispatch(ToggleEditMode(false))
-        assertFalse(appStore.state.isSearchActive)
+        assertFalse(appStore.state.searchState.isSearchActive)
     }
 
     @Test
@@ -66,19 +69,21 @@ class BrowserToolbarSearchStatusSyncMiddlewareTest {
         Dispatchers.setMain(StandardTestDispatcher())
 
         val (_, toolbarStore) = buildMiddlewareAndAddToSearchStore()
+        appStore.dispatch(SearchStarted())
         toolbarStore.dispatch(ToggleEditMode(true))
         testScheduler.advanceUntilIdle()
+        toolbarStore.waitUntilIdle()
         assertTrue(toolbarStore.state.isEditMode())
-        assertTrue(appStore.state.isSearchActive)
+        assertTrue(appStore.state.searchState.isSearchActive)
 
-        appStore.dispatch(UpdateSearchBeingActiveState(false)).joinBlocking()
+        appStore.dispatch(SearchEnded).joinBlocking()
         testScheduler.advanceUntilIdle()
-        assertFalse(appStore.state.isSearchActive)
+        assertFalse(appStore.state.searchState.isSearchActive)
         assertFalse(toolbarStore.state.isEditMode())
 
-        appStore.dispatch(UpdateSearchBeingActiveState(true)).joinBlocking()
+        appStore.dispatch(SearchStarted()).joinBlocking()
         testScheduler.advanceUntilIdle()
-        assertTrue(appStore.state.isSearchActive)
+        assertTrue(appStore.state.searchState.isSearchActive)
         assertFalse(toolbarStore.state.isEditMode())
     }
 

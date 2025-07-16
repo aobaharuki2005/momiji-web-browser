@@ -8,7 +8,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Test
 import org.mozilla.fenix.components.AppStore
-import org.mozilla.fenix.components.appstate.AppAction.UpdateSearchBeingActiveState
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 
 class DefaultHomeSearchControllerTest {
     @Test
@@ -18,6 +18,6 @@ class DefaultHomeSearchControllerTest {
 
         controller.handleHomeContentFocusedWhileSearchIsActive()
 
-        verify { appStore.dispatch(UpdateSearchBeingActiveState(false)) }
+        verify { appStore.dispatch(SearchEnded) }
     }
 }

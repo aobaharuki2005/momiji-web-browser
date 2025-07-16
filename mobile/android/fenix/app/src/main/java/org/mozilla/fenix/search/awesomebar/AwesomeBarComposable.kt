@@ -40,7 +40,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.components.appstate.AppAction.UpdateSearchBeingActiveState
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.search.BrowserStoreToFenixSearchMapperMiddleware
 import org.mozilla.fenix.search.BrowserToolbarToFenixSearchMapperMiddleware
@@ -88,7 +87,7 @@ class AwesomeBarComposable(
     @Suppress("LongMethod")
     @Composable
     fun SearchSuggestions() {
-        val isSearchActive = appStore.observeAsComposableState { it.isSearchActive }.value
+        val isSearchActive = appStore.observeAsComposableState { it.searchState.isSearchActive }.value
         val state = searchStore.observeAsComposableState { it }.value
         val orientation by remember(state.searchSuggestionsOrientedAtBottom) {
             derivedStateOf {
@@ -116,7 +115,6 @@ class AwesomeBarComposable(
 
         LaunchedEffect(isSearchActive) {
             if (!isSearchActive) {
-                appStore.dispatch(UpdateSearchBeingActiveState(false))
                 focusManager.clearFocus()
                 keyboardController?.hide()
             } else {
