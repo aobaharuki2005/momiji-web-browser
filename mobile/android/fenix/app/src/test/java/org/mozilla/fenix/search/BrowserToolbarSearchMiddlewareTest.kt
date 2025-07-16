@@ -52,6 +52,7 @@ import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.UpdateSearchBeingActiveState
 import org.mozilla.fenix.components.appstate.AppState
+import org.mozilla.fenix.components.appstate.SelectedSearchEngine
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.TABS_SEARCH_ENGINE_ID
@@ -340,6 +341,30 @@ class BrowserToolbarSearchMiddlewareTest {
 
         assertSearchSelectorEquals(
             expectedSearchSelector(newSearchEngines[0], newSearchEngines),
+            store.state.editState.editActionsStart[0] as SearchSelectorAction,
+        )
+    }
+
+    @Test
+    fun `GIVEN a search engine is already selected WHEN the search engines are updated in BrowserStore THEN don't change the selected search engine`() {
+        Dispatchers.setMain(Handler(Looper.getMainLooper()).asCoroutineDispatcher())
+
+        val selectedSearchEngine = fakeSearchState().applicationSearchEngines.first().copy(id = "test")
+        val appStore = AppStore(
+            AppState(
+                selectedSearchEngine = SelectedSearchEngine(selectedSearchEngine, true),
+            ),
+        )
+        val browserStore = BrowserStore()
+        val (_, store) = buildMiddlewareAndAddToStore(appStore, browserStore)
+        store.dispatch(ToggleEditMode(true))
+        val newSearchEngines = fakeSearchState().applicationSearchEngines
+
+        browserStore.dispatch(ApplicationSearchEnginesLoaded(newSearchEngines)).joinBlocking()
+        shadowOf(Looper.getMainLooper()).idle() // wait for observing and processing the search engines update
+
+        assertSearchSelectorEquals(
+            expectedSearchSelector(selectedSearchEngine, newSearchEngines),
             store.state.editState.editActionsStart[0] as SearchSelectorAction,
         )
     }

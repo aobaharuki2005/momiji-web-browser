@@ -127,8 +127,7 @@ class BrowserToolbarSearchMiddleware(
                 if (action.editMode) {
                     refreshConfigurationAfterSearchEngineChange(
                         store = context.store,
-                        searchEngine = appStore.state.selectedSearchEngine?.shortcutSearchEngine
-                            ?: browserStore.state.search.selectedOrDefaultSearchEngine,
+                        searchEngine = reconcileSelectedEngine(),
                     )
                     syncCurrentSearchEngine(context.store)
                     syncAvailableEngines(context.store)
@@ -153,10 +152,10 @@ class BrowserToolbarSearchMiddleware(
             }
 
             is SearchSelectorItemClicked -> {
+                appStore.dispatch(SearchEngineSelected(action.searchEngine, true))
                 if (!context.store.state.isEditMode()) {
                     context.store.dispatch(ToggleEditMode(true))
                 }
-                appStore.dispatch(SearchEngineSelected(action.searchEngine, true))
                 refreshConfigurationAfterSearchEngineChange(context.store, action.searchEngine)
             }
 
@@ -271,11 +270,15 @@ class BrowserToolbarSearchMiddleware(
                 .collect {
                     refreshConfigurationAfterSearchEngineChange(
                         store = store,
-                        searchEngine = it.search.selectedOrDefaultSearchEngine,
+                        searchEngine = reconcileSelectedEngine(),
                     )
                 }
         }
     }
+
+    private fun reconcileSelectedEngine(): SearchEngine? =
+        appStore.state.selectedSearchEngine?.shortcutSearchEngine
+            ?: browserStore.state.search.selectedOrDefaultSearchEngine
 
     private inline fun <S : State, A : MVIAction> Store<S, A>.observeWhileActive(
         crossinline observe: suspend (Flow<S>.() -> Unit),

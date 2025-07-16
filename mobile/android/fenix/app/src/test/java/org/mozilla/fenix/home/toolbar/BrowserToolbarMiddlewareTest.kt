@@ -21,12 +21,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.setMain
+import mozilla.components.browser.state.action.SearchAction.ApplicationSearchEnginesLoaded
 import mozilla.components.browser.state.action.TabListAction.AddTabAction
 import mozilla.components.browser.state.action.TabListAction.RemoveTabAction
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.search.SearchEngine.Type.APPLICATION
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.browser.toolbar.concept.Action.ActionButton
 import mozilla.components.compose.browser.toolbar.concept.Action.ActionButtonRes
@@ -55,6 +57,7 @@ import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.utils.ClipboardHandler
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -77,6 +80,7 @@ import org.mozilla.fenix.components.appstate.AppAction.SearchEngineSelected
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.OrientationMode.Landscape
 import org.mozilla.fenix.components.appstate.OrientationMode.Portrait
+import org.mozilla.fenix.components.appstate.SelectedSearchEngine
 import org.mozilla.fenix.components.menu.MenuAccessPoint
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
@@ -650,6 +654,32 @@ class BrowserToolbarMiddlewareTest {
 
         assertSearchSelectorEquals(
             expectedSearchSelector(newSearchEngine),
+            toolbarStore.state.displayState.pageActionsStart[0] as SearchSelectorAction,
+        )
+    }
+
+    @Test
+    fun `GIVEN a search engine is already selected WHEN the search engine configuration changes THEN don't change the selected search engine`() {
+        Dispatchers.setMain(Handler(Looper.getMainLooper()).asCoroutineDispatcher())
+
+        val selectedSearchEngine = SearchEngine("test", "Test", mock(), type = APPLICATION)
+        val otherSearchEngine = SearchEngine("other", "Other", mock(), type = APPLICATION)
+        val appStore = AppStore(
+            initialState = AppState(
+                selectedSearchEngine = SelectedSearchEngine(selectedSearchEngine, true),
+            ),
+        )
+        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
+        val toolbarStore = buildStore(middleware)
+
+        browserStore.dispatch(ApplicationSearchEnginesLoaded(listOf(otherSearchEngine))).joinBlocking()
+
+        assertNotEquals(
+            appStore.state.selectedSearchEngine?.shortcutSearchEngine,
+            browserStore.state.search.selectedOrDefaultSearchEngine,
+        )
+        assertSearchSelectorEquals(
+            expectedSearchSelector(selectedSearchEngine),
             toolbarStore.state.displayState.pageActionsStart[0] as SearchSelectorAction,
         )
     }

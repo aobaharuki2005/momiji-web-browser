@@ -264,7 +264,11 @@ class BrowserToolbarMiddleware(
         observeBrowserSearchStateJob = browserStore.observeWhileActive {
             distinctUntilChangedBy { it.search.searchEngineShortcuts }
                 .collect {
-                    updateStartPageActions(store, it.search.selectedOrDefaultSearchEngine)
+                    updateStartPageActions(
+                        store = store,
+                        selectedSearchEngine = appStore.state.selectedSearchEngine?.shortcutSearchEngine
+                            ?: it.search.selectedOrDefaultSearchEngine,
+                    )
                 }
         }
     }
