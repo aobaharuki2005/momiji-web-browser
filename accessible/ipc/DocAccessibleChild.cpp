@@ -385,40 +385,6 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvScrollToPoint(
   return IPC_OK();
 }
 
-LayoutDeviceIntRect DocAccessibleChild::GetCaretRectFor(const uint64_t& aID) {
-  LocalAccessible* target;
-
-  if (aID) {
-    target = reinterpret_cast<LocalAccessible*>(aID);
-  } else {
-    target = mDoc;
-  }
-
-  MOZ_ASSERT(target);
-
-  HyperTextAccessible* text = target->AsHyperText();
-  if (!text) {
-    return LayoutDeviceIntRect();
-  }
-
-  return text->GetCaretRect().first;
-}
-
-bool DocAccessibleChild::SendFocusEvent(const uint64_t& aID) {
-  return PDocAccessibleChild::SendFocusEvent(aID, GetCaretRectFor(aID));
-}
-
-bool DocAccessibleChild::SendCaretMoveEvent(const uint64_t& aID,
-                                            const int32_t& aOffset,
-                                            const bool& aIsSelectionCollapsed,
-                                            const bool& aIsAtEndOfLine,
-                                            const int32_t& aGranularity,
-                                            bool aFromUser) {
-  return PDocAccessibleChild::SendCaretMoveEvent(
-      aID, GetCaretRectFor(aID), aOffset, aIsSelectionCollapsed, aIsAtEndOfLine,
-      aGranularity, aFromUser);
-}
-
 #if !defined(XP_WIN)
 mozilla::ipc::IPCResult DocAccessibleChild::RecvAnnounce(
     const uint64_t& aID, const nsAString& aAnnouncement,

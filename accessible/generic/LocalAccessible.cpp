@@ -867,6 +867,15 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
     if (ipcDoc) {
       uint64_t id = aEvent->GetAccessible()->ID();
 
+      auto getCaretRect = [aEvent] {
+        HyperTextAccessible* ht = aEvent->GetAccessible()->AsHyperText();
+        if (ht) {
+          auto [rect, widget] = ht->GetCaretRect();
+          return rect;
+        }
+        return LayoutDeviceIntRect();
+      };
+
       switch (aEvent->GetEventType()) {
         case nsIAccessibleEvent::EVENT_SHOW:
           ipcDoc->ShowEvent(downcast_accEvent(aEvent));
@@ -913,9 +922,9 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
         case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED: {
           AccCaretMoveEvent* event = downcast_accEvent(aEvent);
           ipcDoc->SendCaretMoveEvent(
-              id, event->GetCaretOffset(), event->IsSelectionCollapsed(),
-              event->IsAtEndOfLine(), event->GetGranularity(),
-              event->IsFromUserInput());
+              id, getCaretRect(), event->GetCaretOffset(),
+              event->IsSelectionCollapsed(), event->IsAtEndOfLine(),
+              event->GetGranularity(), event->IsFromUserInput());
           break;
         }
         case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
@@ -936,7 +945,7 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
           break;
         }
         case nsIAccessibleEvent::EVENT_FOCUS:
-          ipcDoc->SendFocusEvent(id);
+          ipcDoc->SendFocusEvent(id, getCaretRect());
           break;
         case nsIAccessibleEvent::EVENT_SCROLLING_END:
         case nsIAccessibleEvent::EVENT_SCROLLING: {
