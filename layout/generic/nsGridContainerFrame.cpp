@@ -2744,43 +2744,45 @@ struct nsGridContainerFrame::Tracks {
   }
 
   void InitializePlan(TrackSizingPhase aPhase, TrackPlan& aTrackPlan) const {
-    for (size_t i = 0, len = aTrackPlan.Length(); i < len; ++i) {
-      auto& plan = aTrackPlan[i];
-      const auto& sz = mSizes[i];
-      plan.mBase = StartSizeInDistribution(aPhase, sz);
+    MOZ_ASSERT(aTrackPlan.Length() == mSizes.Length());
+    auto plan = aTrackPlan.begin();
+    auto sz = mSizes.begin();
+    for (; plan != aTrackPlan.end() && sz != mSizes.end(); plan++, sz++) {
+      plan->mBase = StartSizeInDistribution(aPhase, *sz);
       MOZ_ASSERT(aPhase == TrackSizingPhase::MaxContentMaximums ||
-                     !(sz.mState & TrackSize::eInfinitelyGrowable),
+                     !(sz->mState & TrackSize::eInfinitelyGrowable),
                  "forgot to reset the eInfinitelyGrowable bit?");
-      plan.mState = sz.mState;
+      plan->mState = sz->mState;
     }
   }
 
   void CopyPlanToSize(TrackSizingPhase aPhase, const TrackPlan& aTrackPlan,
                       bool aNeedInfinitelyGrowableFlag) {
-    for (size_t i = 0, len = mSizes.Length(); i < len; ++i) {
-      const auto& plan = aTrackPlan[i];
-      MOZ_ASSERT(plan.mBase >= 0);
-      auto& sz = mSizes[i];
+    MOZ_ASSERT(aTrackPlan.Length() == mSizes.Length());
+    auto plan = aTrackPlan.begin();
+    auto sz = mSizes.begin();
+    for (; plan != aTrackPlan.end() && sz != mSizes.end(); plan++, sz++) {
+      MOZ_ASSERT(plan->mBase >= 0);
       switch (aPhase) {
         case TrackSizingPhase::IntrinsicMinimums:
         case TrackSizingPhase::ContentBasedMinimums:
         case TrackSizingPhase::MaxContentMinimums:
-          sz.mBase = plan.mBase;
+          sz->mBase = plan->mBase;
           break;
         case TrackSizingPhase::IntrinsicMaximums:
-          if (plan.mState & TrackSize::eModified) {
-            if (sz.mLimit == NS_UNCONSTRAINEDSIZE &&
+          if (plan->mState & TrackSize::eModified) {
+            if (sz->mLimit == NS_UNCONSTRAINEDSIZE &&
                 aNeedInfinitelyGrowableFlag) {
-              sz.mState |= TrackSize::eInfinitelyGrowable;
+              sz->mState |= TrackSize::eInfinitelyGrowable;
             }
-            sz.mLimit = plan.mBase;
+            sz->mLimit = plan->mBase;
           }
           break;
         case TrackSizingPhase::MaxContentMaximums:
-          if (plan.mState & TrackSize::eModified) {
-            sz.mLimit = plan.mBase;
+          if (plan->mState & TrackSize::eModified) {
+            sz->mLimit = plan->mBase;
           }
-          sz.mState &= ~TrackSize::eInfinitelyGrowable;
+          sz->mState &= ~TrackSize::eInfinitelyGrowable;
           break;
       }
     }
@@ -3063,8 +3065,7 @@ struct nsGridContainerFrame::Tracks {
       // divisable the remainder is added to the leading tracks.
       while (space > 0 && numGrowable) {
         nscoord spacePerTrack = std::max<nscoord>(space / numGrowable, 1);
-        for (uint32_t i = 0; i < numTracks && space > 0; ++i) {
-          TrackSize& sz = mSizes[i];
+        for (TrackSize& sz : mSizes) {
           if (sz.mBase == sz.mLimit) {
             continue;
           }
@@ -3076,6 +3077,9 @@ struct nsGridContainerFrame::Tracks {
           } else {
             space -= spacePerTrack;
             sz.mBase = newBase;
+          }
+          if (space <= 0) {
+            break;
           }
         }
       }
