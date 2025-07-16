@@ -42,11 +42,11 @@ _ANDROID_TO_CHROMIUM_LANGUAGE_MAP = {
     'no': 'nb',  # 'no' is not a real language. http://crbug.com/920960
 }
 
-_ALL_RESOURCE_TYPES = {
+ALL_RESOURCE_TYPES = {
     'anim', 'animator', 'array', 'attr', 'bool', 'color', 'dimen', 'drawable',
     'font', 'fraction', 'id', 'integer', 'interpolator', 'layout', 'macro',
-    'menu', 'mipmap', 'plurals', 'raw', 'string', 'style', 'styleable',
-    'transition', 'xml'
+    'menu', 'mipmap', 'overlayable', 'plurals', 'raw', 'string', 'style',
+    'styleable', 'transition', 'xml'
 }
 
 AAPT_IGNORE_PATTERN = ':'.join([
@@ -589,8 +589,8 @@ def CreateRJavaFiles(srcjar_dir,
       else:
         all_resources[entry_key] = entry
         all_resources_by_type[entry.resource_type].append(entry)
-        assert entry.resource_type in _ALL_RESOURCE_TYPES, (
-            'Unknown resource type: %s, add to _ALL_RESOURCE_TYPES!' %
+        assert entry.resource_type in ALL_RESOURCE_TYPES, (
+            'Unknown resource type: %s, add to ALL_RESOURCE_TYPES!' %
             entry.resource_type)
 
   if custom_root_package_name:
@@ -599,7 +599,7 @@ def CreateRJavaFiles(srcjar_dir,
   else:
     # Create a unique name using srcjar_out. Underscores are added to ensure
     # no reserved keywords are used for directory names.
-    root_r_java_package = re.sub('[^\w\.]', '', srcjar_out.replace('/', '._'))
+    root_r_java_package = re.sub(r'[^\w\.]', '', srcjar_out.replace('/', '._'))
 
   root_r_java_dir = os.path.join(srcjar_dir, *root_r_java_package.split('.'))
   build_utils.MakeDirectory(root_r_java_dir)
@@ -666,7 +666,7 @@ public final class R {
 
   return template.render(
       package=package,
-      resource_types=sorted(_ALL_RESOURCE_TYPES),
+      resource_types=sorted(ALL_RESOURCE_TYPES),
       root_package=root_r_java_package,
       has_on_resources_loaded=rjava_build_options.has_on_resources_loaded)
 
@@ -778,7 +778,7 @@ packageIdTransform);
                       lstrip_blocks=True)
   return template.render(
       package=package,
-      resource_types=sorted(_ALL_RESOURCE_TYPES),
+      resource_types=sorted(ALL_RESOURCE_TYPES),
       has_on_resources_loaded=rjava_build_options.has_on_resources_loaded,
       fake_on_resources_loaded=rjava_build_options.fake_on_resources_loaded,
       final_resources=final_resources_by_type,
@@ -966,12 +966,12 @@ def ParseAndroidResourceStringsFromXml(xml_data):
   result = {}
 
   # Find <resources> start tag and extract namespaces from it.
-  m = re.search('<resources([^>]*)>', xml_data, re.MULTILINE)
+  m = re.search(r'<resources([^>]*)>', xml_data, re.MULTILINE)
   if not m:
     raise Exception('<resources> start tag expected: ' + xml_data)
   input_data = xml_data[m.end():]
   resource_attrs = m.group(1)
-  re_namespace = re.compile('\s*(xmlns:(\w+)="([^"]+)")')
+  re_namespace = re.compile(r'\s*(xmlns:(\w+)="([^"]+)")')
   namespaces = {}
   while resource_attrs:
     m = re_namespace.match(resource_attrs)
@@ -981,8 +981,9 @@ def ParseAndroidResourceStringsFromXml(xml_data):
     resource_attrs = resource_attrs[m.end(1):]
 
   # Find each string element now.
-  re_string_element_start = re.compile('<string ([^>]* )?name="([^">]+)"[^>]*>')
-  re_string_element_end = re.compile('</string>')
+  re_string_element_start = re.compile(
+      r'<string ([^>]* )?name="([^">]+)"[^>]*>')
+  re_string_element_end = re.compile(r'</string>')
   while input_data:
     m = re_string_element_start.search(input_data)
     if not m:

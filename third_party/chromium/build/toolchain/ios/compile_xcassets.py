@@ -23,6 +23,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import zipfile
 
 # Pattern matching a section header in the output of actool.
 SECTION_HEADER = re.compile('^/\\* ([^ ]*) \\*/$')
@@ -78,6 +79,11 @@ def FilterCompilerOutput(compiler_output, relative_paths):
   current_section = None
   data_in_section = False
   for line in compiler_output.splitlines():
+    # TODO:(crbug.com/348008793): Ignore Dark and Tintable App Icon unassigned
+    # children warning when building with Xcode 15
+    if 'The app icon set "AppIcon" has 2 unassigned children' in line:
+      continue
+
     match = SECTION_HEADER.search(line)
     if match is not None:
       data_in_section = False
@@ -95,8 +101,8 @@ def FilterCompilerOutput(compiler_output, relative_paths):
 
 
 def CompileAssetCatalog(output, platform, target_environment, product_type,
-                        min_deployment_target, inputs, compress_pngs,
-                        partial_info_plist):
+                        min_deployment_target, possibly_zipped_inputs,
+                        compress_pngs, partial_info_plist, temporary_dir):
   """Compile the .xcassets bundles to an asset catalog using actool.
 
   Args:
@@ -104,9 +110,10 @@ def CompileAssetCatalog(output, platform, target_environment, product_type,
     platform: the targeted platform
     product_type: the bundle type
     min_deployment_target: minimum deployment target
-    inputs: list of absolute paths to .xcassets bundles
+    possibly_zipped_inputs: list of absolute paths to .xcassets bundles or zips
     compress_pngs: whether to enable compression of pngs
     partial_info_plist: path to partial Info.plist to generate
+    temporary_dir: path to directory for storing temp data
   """
   command = [
       'xcrun',
@@ -160,6 +167,25 @@ def CompileAssetCatalog(output, platform, target_environment, product_type,
           '--ui-framework-family',
           'uikit',
       ])
+
+  # Unzip any input zipfiles to a temporary directory.
+  inputs = []
+  for relative_path in possibly_zipped_inputs:
+    if os.path.isfile(relative_path) and zipfile.is_zipfile(relative_path):
+      catalog_name = os.path.basename(relative_path)
+      unzip_path = os.path.join(temporary_dir, os.path.dirname(relative_path))
+      with zipfile.ZipFile(relative_path) as z:
+        invalid_files = [
+            x for x in z.namelist()
+            if '..' in x or not x.startswith(catalog_name)
+        ]
+        if invalid_files:
+          sys.stderr.write('Invalid files in zip: %s' % invalid_files)
+          sys.exit(1)
+        z.extractall(unzip_path)
+      inputs.append(os.path.join(unzip_path, catalog_name))
+    else:
+      inputs.append(relative_path)
 
   # Scan the input directories for the presence of asset catalog types that
   # require special treatment, and if so, add them to the actool command-line.
@@ -284,9 +310,11 @@ def Main():
     else:
       shutil.rmtree(args.output)
 
-  CompileAssetCatalog(args.output, args.platform, args.target_environment,
-                      args.product_type, args.minimum_deployment_target,
-                      args.inputs, args.compress_pngs, args.partial_info_plist)
+  with tempfile.TemporaryDirectory() as temporary_dir:
+    CompileAssetCatalog(args.output, args.platform, args.target_environment,
+                        args.product_type, args.minimum_deployment_target,
+                        args.inputs, args.compress_pngs,
+                        args.partial_info_plist, temporary_dir)
 
 
 if __name__ == '__main__':

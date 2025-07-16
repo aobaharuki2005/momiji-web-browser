@@ -2,11 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import difflib
 import os
+import pathlib
 import sys
 
-import difflib
 from util import build_utils
+import action_helpers  # build_utils adds //build to sys.path.
 
 
 def _SkipOmitted(line):
@@ -47,6 +49,8 @@ def _GenerateDiffWithOnlyAdditons(expected_path, actual_data):
   return ''.join(filtered_diff)
 
 
+_REBASELINE_PROGUARD = os.environ.get('REBASELINE_PROGUARD', '0') != '0'
+
 def _DiffFileContents(expected_path, actual_data):
   """Check file contents for equality and return the diff or None."""
   # Remove all trailing whitespace and add it explicitly in the end.
@@ -57,6 +61,11 @@ def _DiffFileContents(expected_path, actual_data):
   ]
 
   if expected_lines == actual_lines:
+    return None
+
+  if _REBASELINE_PROGUARD:
+    pathlib.Path(expected_path).write_text('\n'.join(actual_lines))
+    print(f'Updated {expected_path}')
     return None
 
   expected_path = os.path.relpath(expected_path, build_utils.DIR_SOURCE_ROOT)
@@ -93,10 +102,9 @@ def AddCommandLineFlags(parser):
                      action='store_true',
                      help='Verify the expectation and exit.')
 
-
 def CheckExpectations(actual_data, options, custom_msg=''):
   if options.actual_file:
-    with build_utils.AtomicOutput(options.actual_file) as f:
+    with action_helpers.atomic_output(options.actual_file) as f:
       f.write(actual_data.encode('utf8'))
   if options.expected_file_base:
     actual_data = _GenerateDiffWithOnlyAdditons(options.expected_file_base,
@@ -106,6 +114,8 @@ def CheckExpectations(actual_data, options, custom_msg=''):
   if not diff_text:
     fail_msg = ''
   else:
+    # The space before the `patch` command is intentional, as it causes the line
+    # to not be saved in bash history for most configurations.
     fail_msg = """
 Expectations need updating:
 https://chromium.googlesource.com/chromium/src/+/HEAD/chrome/android/expectations/README.md
@@ -121,6 +131,9 @@ To update expectations, run:
 {}
 END_DIFF
 ############ END ############
+
+If you are running this locally, you can `export REBASELINE_PROGUARD=1` to
+automatically apply this patch.
 """.format(custom_msg, diff_text)
 
     sys.stderr.write(fail_msg)

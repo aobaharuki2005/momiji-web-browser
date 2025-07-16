@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//chromium/build/config/chromecast_build.gni")
+import("//chromium/build/config/cast.gni")
 import("//chromium/build/config/features.gni")
 
 declare_args() {

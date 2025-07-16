@@ -18,8 +18,8 @@ from google.protobuf import text_format  # pylint: disable=import-error
 
 from devil.android import apk_helper
 from devil.android import device_utils
-from devil.android import settings
 from devil.android.sdk import adb_wrapper
+from devil.android.sdk import version_codes
 from devil.android.tools import system_app
 from devil.utils import cmd_helper
 from devil.utils import timeout_retry
@@ -27,6 +27,8 @@ from py_utils import tempfile_ext
 from pylib import constants
 from pylib.local.emulator import ini
 from pylib.local.emulator.proto import avd_pb2
+
+from lib.proto import exception_recorder
 
 # A common root directory to store the CIPD packages for creating or starting
 # the emulator instance, e.g. emulator binary, system images, AVDs.
@@ -42,8 +44,6 @@ _PACKAGES_ALL = object()
 # These files are used as backing files for corresponding qcow2 images.
 _BACKING_FILES = ('system.img', 'vendor.img')
 
-_DEFAULT_JAVA_HOME = os.path.join(constants.DIR_SOURCE_ROOT, 'third_party',
-                                  'jdk', 'current')
 _DEFAULT_AVDMANAGER_PATH = os.path.join(constants.ANDROID_SDK_ROOT,
                                         'cmdline-tools', 'latest', 'bin',
                                         'avdmanager')
@@ -100,6 +100,9 @@ def _Load(avd_proto_path):
     avd_proto_path: path to a textpb file containing an Avd message.
   """
   with open(avd_proto_path) as avd_proto_file:
+    # python generated codes are simplified since Protobuf v3.20.0 and cause
+    # pylint error. See https://github.com/protocolbuffers/protobuf/issues/9730
+    # pylint: disable=no-member
     return text_format.Merge(avd_proto_file.read(), avd_pb2.Avd())
 
 
@@ -172,7 +175,7 @@ class _AvdManagerAgent:
         'AVDMANAGER_OPTS':
         '-Dcom.android.sdkmanager.toolsdir=%s' % fake_tools_dir,
         'JAVA_HOME':
-        _DEFAULT_JAVA_HOME,
+        constants.JAVA_HOME,
     })
 
   def Create(self, avd_name, system_image, force=False):
@@ -332,6 +335,14 @@ class AvdConfig:
     This defines how to configure the AVD at creation.
     """
     return self._config.avd_settings
+
+  @property
+  def avd_launch_settings(self):
+    """The AvdLaunchSettings in the avd proto file.
+
+    This defines AVD setting during launch time.
+    """
+    return self._config.avd_launch_settings
 
   @property
   def avd_name(self):
@@ -534,10 +545,11 @@ class AvdConfig:
       # Installing privileged apks requires modifying the system
       # image.
       writable_system = bool(privileged_apk_tuples)
+      gpu_mode = self.avd_launch_settings.gpu_mode or _DEFAULT_GPU_MODE
       instance.Start(ensure_system_settings=False,
                      read_only=False,
                      writable_system=writable_system,
-                     gpu_mode=_DEFAULT_GPU_MODE,
+                     gpu_mode=gpu_mode,
                      debug_tags=debug_tags)
 
       assert instance.device is not None, '`instance.device` not initialized.'
@@ -546,7 +558,9 @@ class AvdConfig:
       # https://bit.ly/3agmjcM).
       # Wait for this step to complete since it can take a while for old OSs
       # like M, otherwise the avd may have "Encryption Unsuccessful" error.
-      instance.device.WaitUntilFullyBooted(decrypt=True, timeout=180, retries=0)
+      instance.device.WaitUntilFullyBooted(decrypt=True, timeout=360, retries=0)
+      logging.info('The build fingerprint of the system is %r',
+                   instance.device.build_fingerprint)
 
       if additional_apks:
         for apk in additional_apks:
@@ -564,16 +578,25 @@ class AvdConfig:
           logging.info('The version for package %r on the device is %r',
                        package_name, package_version)
 
-      # Always disable the network to prevent built-in system apps from
-      # updating themselves, which could take over package manager and
-      # cause shell command timeout.
-      logging.info('Disabling the network.')
-      settings.ConfigureContentSettings(instance.device,
-                                        settings.NETWORK_DISABLED_SETTINGS)
+      # Skip Marshmallow as svc commands fail on this version.
+      if instance.device.build_version_sdk != 23:
+        # Always disable the network to prevent built-in system apps from
+        # updating themselves, which could take over package manager and
+        # cause shell command timeout.
+        # Use svc as this also works on the images with build type "user", and
+        # does not require a reboot or broadcast compared to setting the
+        # airplane_mode_on in "settings/global".
+        logging.info('Disabling the network.')
+        instance.device.RunShellCommand(['svc', 'wifi', 'disable'],
+                                        as_root=True,
+                                        check_return=True)
+        instance.device.RunShellCommand(['svc', 'data', 'disable'],
+                                        as_root=True,
+                                        check_return=True)
 
       if snapshot:
-        # Reboot so that changes like disabling network can take effect.
-        instance.device.Reboot()
+        logging.info('Wait additional 60 secs before saving snapshot for AVD')
+        time.sleep(60)
         instance.SaveSnapshot()
 
       instance.Stop()
@@ -821,7 +844,7 @@ class AvdConfig:
         for line in cmd_helper.IterCmdOutputLines(ensure_cmd):
           logging.info('    %s', line)
       except subprocess.CalledProcessError as e:
-        # avd.py is executed with python2.
+        exception_recorder.register(e)
         # pylint: disable=W0707
         raise AvdException('Failed to install CIPD packages: %s' % str(e),
                            command=ensure_cmd)
@@ -867,8 +890,11 @@ class AvdConfig:
       with ini.update_ini_file(config_path) as config_contents:
         config_contents.update(properties)
 
-    # Create qt config file to disable adb warning when launched in window mode.
+    # Create qt config file to disable certain warnings when launched in window.
     with ini.update_ini_file(self._qt_config_path) as config_contents:
+      # Disable nested virtualization warning.
+      config_contents['General'] = {'showNestedWarning': 'false'}
+      # Disable adb warning.
       config_contents['set'] = {'autoFindAdb': 'false'}
 
   def _Initialize(self):
@@ -941,10 +967,13 @@ class _AvdInstance:
             read_only=True,
             window=False,
             writable_system=False,
-            gpu_mode=_DEFAULT_GPU_MODE,
+            gpu_mode=None,
             wipe_data=False,
             debug_tags=None,
-            require_fast_start=False):
+            disk_size=None,
+            enable_network=False,
+            require_fast_start=False,
+            retries=0):
     """Starts the emulator running an instance of the given AVD.
 
     Note when ensure_system_settings is True, the program will wait until the
@@ -985,8 +1014,21 @@ class _AvdInstance:
           self.GetSnapshotName(),
       ]
 
+      avd_type = self._avd_name.split('_')[1]
+      logging.info('Emulator Type: %s', avd_type)
+
+      if avd_type in ('car', '32'):
+        logging.info('Auto, Tablet emulator will start slow')
+        is_slow_start = True
+
       if wipe_data:
         emulator_cmd.append('-wipe-data')
+      if disk_size:
+        emulator_cmd.extend(['-partition-size', str(disk_size)])
+      elif not require_fast_start:
+        # This emulator is being run locally, ensure it has a large enough disk.
+        emulator_cmd.extend(['-partition-size', '12000'])
+
       if read_only:
         emulator_cmd.append('-read-only')
       if writable_system:
@@ -997,21 +1039,23 @@ class _AvdInstance:
       #    EGL display". See the code in https://bit.ly/3ruiMlB as an example
       #    to setup the DISPLAY env with xvfb.
       #  * It will not work under remote sessions like chrome remote desktop.
-      if gpu_mode:
-        emulator_cmd.extend(['-gpu', gpu_mode])
+      if not gpu_mode:
+        gpu_mode = (self._avd_config.avd_launch_settings.gpu_mode
+                    or _DEFAULT_GPU_MODE)
+      emulator_cmd.extend(['-gpu', gpu_mode])
       if debug_tags:
         self._debug_tags = set(debug_tags.split(','))
         # Always print timestamp when debug tags are set.
         self._debug_tags.add('time')
         emulator_cmd.extend(['-debug', ','.join(self._debug_tags)])
-        if 'kernel' in self._debug_tags:
-          # TODO(crbug.com/1404176): newer API levels need "-virtio-console"
+        if 'kernel' in self._debug_tags or 'all' in self._debug_tags:
+          # TODO(crbug.com/40885864): newer API levels need "-virtio-console"
           # as well to print kernel log.
           emulator_cmd.append('-show-kernel')
 
       emulator_env = {
-          # kill immediately when emulator hang.
-          'ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL': '0',
+          # kill as early as possible when emulator hang.
+          'ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL': '1',
           # Sets the emulator configuration directory
           'ANDROID_EMULATOR_HOME': self._emulator_home,
       }
@@ -1063,7 +1107,7 @@ class _AvdInstance:
         self._emulator_serial = timeout_retry.Run(
             listen_for_serial,
             timeout=120 if is_slow_start else 30,
-            retries=0,
+            retries=retries,
             args=[sock])
         logging.info('%s started', self._emulator_serial)
       except Exception:
@@ -1077,9 +1121,12 @@ class _AvdInstance:
       assert self.device is not None, '`instance.device` not initialized.'
       logging.info('Waiting for device to be fully booted.')
       self.device.WaitUntilFullyBooted(timeout=360 if is_slow_start else 90,
-                                       retries=0)
+                                       retries=retries)
       logging.info('Device fully booted, verifying system settings.')
       _EnsureSystemSettings(self.device)
+
+    if enable_network:
+      _EnableNetwork(self.device)
 
   def Stop(self, force=False):
     """Stops the emulator process.
@@ -1144,7 +1191,7 @@ class _AvdInstance:
     return self._emulator_device
 
 
-# TODO(crbug.com/1275767): Refactor it to a dict-based approach.
+# TODO(crbug.com/40207212): Refactor it to a dict-based approach.
 def _EnsureSystemSettings(device):
   set_long_press_timeout_cmd = [
       'settings', 'put', 'secure', 'long_press_timeout', _LONG_PRESS_TIMEOUT
@@ -1161,3 +1208,42 @@ def _EnsureSystemSettings(device):
     logging.info('long_press_timeout set to %r', _LONG_PRESS_TIMEOUT)
   else:
     logging.warning('long_press_timeout is not set correctly')
+
+  # TODO(crbug.com/40283631): Move the date sync function to device_utils.py
+  if device.IsUserBuild():
+    logging.warning('Cannot sync the device date on "user" build')
+    return
+
+  logging.info('Sync the device date.')
+  timezone = device.RunShellCommand(['date', '+"%Z"'],
+                                    single_line=True,
+                                    check_return=True)
+  if timezone != 'UTC':
+    device.RunShellCommand(['setprop', 'persist.sys.timezone', '"Etc/UTC"'],
+                           check_return=True,
+                           as_root=True)
+  set_date_format = '%Y%m%d.%H%M%S'
+  set_date_command = ['date', '-s']
+  if device.build_version_sdk >= version_codes.MARSHMALLOW:
+    set_date_format = '%m%d%H%M%Y.%S'
+    set_date_command = ['date']
+  strgmtime = time.strftime(set_date_format, time.gmtime())
+  set_date_command.append(strgmtime)
+  device.RunShellCommand(set_date_command, check_return=True, as_root=True)
+
+  logging.info('Hide system error dialogs such as crash and ANR dialogs.')
+  device.RunShellCommand(
+      ['settings', 'put', 'global', 'hide_error_dialogs', '1'])
+
+
+def _EnableNetwork(device):
+  logging.info('Enable the network on the emulator.')
+  # TODO(crbug.com/40282869): Remove airplane_mode once all AVD
+  # are rolled to svc-based version.
+  device.RunShellCommand(
+      ['settings', 'put', 'global', 'airplane_mode_on', '0'], as_root=True)
+  device.RunShellCommand(
+      ['am', 'broadcast', '-a', 'android.intent.action.AIRPLANE_MODE'],
+      as_root=True)
+  device.RunShellCommand(['svc', 'wifi', 'enable'], as_root=True)
+  device.RunShellCommand(['svc', 'data', 'enable'], as_root=True)

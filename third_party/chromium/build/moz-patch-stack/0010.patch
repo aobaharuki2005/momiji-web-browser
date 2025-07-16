@@ -14,7 +14,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/831cdef4bf346cb9c
  2 files changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
-index 1fa42b1b1..2883450e3 100644
+index d1a665482..7493fad87 100644
 --- a/config/BUILDCONFIG.gn
 +++ b/config/BUILDCONFIG.gn
 @@ -136,7 +136,7 @@ declare_args() {
@@ -26,7 +26,7 @@ index 1fa42b1b1..2883450e3 100644
               (current_cpu != "s390x" && current_cpu != "s390" &&
                current_cpu != "ppc64" && current_cpu != "ppc" &&
                current_cpu != "mips" && current_cpu != "mips64" &&
-@@ -196,7 +196,7 @@ if (host_toolchain == "") {
+@@ -202,7 +202,7 @@ if (host_toolchain == "") {
    # TODO(dpranke): Add some sort of assert here that verifies that
    # no toolchain omitted host_toolchain from its toolchain_args().
  
@@ -35,7 +35,7 @@ index 1fa42b1b1..2883450e3 100644
      if (target_os != "linux") {
        host_toolchain = "//build/toolchain/linux:clang_$host_cpu"
      } else if (is_clang) {
-@@ -235,7 +235,7 @@ _default_toolchain = ""
+@@ -241,7 +241,7 @@ _default_toolchain = ""
  if (target_os == "android") {
    assert(host_os == "linux", "Android builds are only supported on Linux.")
    _default_toolchain = "//build/toolchain/android:android_clang_$target_cpu"
@@ -44,7 +44,7 @@ index 1fa42b1b1..2883450e3 100644
    # See comments in build/toolchain/cros/BUILD.gn about board compiles.
    if (is_clang) {
      _default_toolchain = "//build/toolchain/linux:clang_$target_cpu"
-@@ -303,6 +303,7 @@ is_chromeos = current_os == "chromeos"
+@@ -309,6 +309,7 @@ is_chromeos = current_os == "chromeos"
  is_fuchsia = current_os == "fuchsia"
  is_ios = current_os == "ios"
  is_linux = current_os == "linux"
@@ -53,7 +53,7 @@ index 1fa42b1b1..2883450e3 100644
  is_nacl = current_os == "nacl"
  is_win = current_os == "win" || current_os == "winuwp"
 diff --git a/config/ui.gni b/config/ui.gni
-index b560f372c..3e2c9fe53 100644
+index 1ad21d73f..1cb9c37bf 100644
 --- a/config/ui.gni
 +++ b/config/ui.gni
 @@ -39,7 +39,7 @@ declare_args() {

@@ -20,6 +20,8 @@ from util import build_utils
 from util import md5_check
 from util import jar_info_utils
 from util import server_utils
+import action_helpers  # build_utils adds //build to sys.path.
+import zip_helpers
 
 _JAVAC_EXTRACTOR = os.path.join(build_utils.DIR_SOURCE_ROOT, 'third_party',
                                 'android_prebuilts', 'build_tools', 'common',
@@ -62,17 +64,17 @@ ERRORPRONE_WARNINGS_TO_DISABLE = [
     'ToStringReturnsNull',
     # If possible, this should be automatically fixed if turned on:
     'MalformedInlineTag',
-    # TODO(crbug.com/834807): Follow steps in bug
+    # TODO(crbug.com/41384359): Follow steps in bug
     'DoubleBraceInitialization',
-    # TODO(crbug.com/834790): Follow steps in bug.
+    # TODO(crbug.com/41384349): Follow steps in bug.
     'CatchAndPrintStackTrace',
-    # TODO(crbug.com/801210): Follow steps in bug.
+    # TODO(crbug.com/41364336): Follow steps in bug.
     'SynchronizeOnNonFinalField',
-    # TODO(crbug.com/802073): Follow steps in bug.
+    # TODO(crbug.com/41364806): Follow steps in bug.
     'TypeParameterUnusedInFormals',
-    # TODO(crbug.com/803484): Follow steps in bug.
+    # TODO(crbug.com/41365724): Follow steps in bug.
     'CatchFail',
-    # TODO(crbug.com/803485): Follow steps in bug.
+    # TODO(crbug.com/41365725): Follow steps in bug.
     'JUnitAmbiguousTestClass',
     # Android platform default is always UTF-8.
     # https://developer.android.com/reference/java/nio/charset/Charset.html#defaultCharset()
@@ -214,29 +216,29 @@ ERRORPRONE_WARNINGS_TO_ENABLE = [
 def ProcessJavacOutput(output, target_name):
   # These warnings cannot be suppressed even for third party code. Deprecation
   # warnings especially do not help since we must support older android version.
-  deprecated_re = re.compile(
-      r'(Note: .* uses? or overrides? a deprecated API.)$')
+  deprecated_re = re.compile(r'Note: .* uses? or overrides? a deprecated API')
   unchecked_re = re.compile(
       r'(Note: .* uses? unchecked or unsafe operations.)$')
   recompile_re = re.compile(r'(Note: Recompile with -Xlint:.* for details.)$')
-
-  activity_re = re.compile(r'^(?P<prefix>\s*location: )class Activity$')
 
   def ApplyFilters(line):
     return not (deprecated_re.match(line) or unchecked_re.match(line)
                 or recompile_re.match(line))
 
-  def Elaborate(line):
-    if activity_re.match(line):
-      prefix = ' ' * activity_re.match(line).end('prefix')
-      return '{}\n{}Expecting a FragmentActivity? See {}'.format(
-          line, prefix, 'docs/ui/android/bytecode_rewriting.md')
-    return line
-
   output = build_utils.FilterReflectiveAccessJavaWarnings(output)
 
+  # Warning currently cannot be silenced via javac flag.
+  if 'Unsafe is internal proprietary API' in output:
+    # Example:
+    # HiddenApiBypass.java:69: warning: Unsafe is internal proprietary API and
+    # may be removed in a future release
+    # import sun.misc.Unsafe;
+    #                 ^
+    output = re.sub(r'.*?Unsafe is internal proprietary API[\s\S]*?\^\n', '',
+                    output)
+    output = re.sub(r'\d+ warnings\n', '', output)
+
   lines = (l for l in output.split('\n') if ApplyFilters(l))
-  lines = (Elaborate(l) for l in lines)
 
   output_processor = javac_output_processor.JavacOutputProcessor(target_name)
   lines = output_processor.Process(lines)
@@ -251,24 +253,24 @@ def CreateJarFile(jar_path,
                   extra_classes_jar=None):
   """Zips files from compilation into a single jar."""
   logging.info('Start creating jar file: %s', jar_path)
-  with build_utils.AtomicOutput(jar_path) as f:
+  with action_helpers.atomic_output(jar_path) as f:
     with zipfile.ZipFile(f.name, 'w') as z:
-      build_utils.ZipDir(z, classes_dir)
+      zip_helpers.zip_directory(z, classes_dir)
       if service_provider_configuration_dir:
         config_files = build_utils.FindInDirectory(
             service_provider_configuration_dir)
         for config_file in config_files:
           zip_path = os.path.relpath(config_file,
                                      service_provider_configuration_dir)
-          build_utils.AddToZipHermetic(z, zip_path, src_path=config_file)
+          zip_helpers.add_to_zip_hermetic(z, zip_path, src_path=config_file)
 
       if additional_jar_files:
         for src_path, zip_path in additional_jar_files:
-          build_utils.AddToZipHermetic(z, zip_path, src_path=src_path)
+          zip_helpers.add_to_zip_hermetic(z, zip_path, src_path=src_path)
       if extra_classes_jar:
-        build_utils.MergeZips(
-            z, [extra_classes_jar],
-            path_transform=lambda p: p if p.endswith('.class') else None)
+        path_transform = lambda p: p if p.endswith('.class') else None
+        zip_helpers.merge_zips(z, [extra_classes_jar],
+                               path_transform=path_transform)
   logging.info('Completed jar file: %s', jar_path)
 
 
@@ -397,13 +399,22 @@ class _InfoFileContext:
     entries = self._Collect()
 
     logging.info('Writing info file: %s', output_path)
-    with build_utils.AtomicOutput(output_path, mode='wb') as f:
+    with action_helpers.atomic_output(output_path, mode='wb') as f:
       jar_info_utils.WriteJarInfoFile(f, entries, self._srcjar_files)
     logging.info('Completed info file: %s', output_path)
 
 
 def _OnStaleMd5(changes, options, javac_cmd, javac_args, java_files, kt_files):
   logging.info('Starting _OnStaleMd5')
+
+  # Use the build server for errorprone runs.
+  if (options.enable_errorprone and not options.skip_build_server
+      and server_utils.MaybeRunCommand(name=options.target_name,
+                                       argv=sys.argv,
+                                       stamp_file=options.jar_path,
+                                       force=options.use_build_server)):
+    return
+
   if options.enable_kythe_annotations:
     # Kythe requires those env variables to be set and compile_java.py does the
     # same
@@ -418,6 +429,8 @@ def _OnStaleMd5(changes, options, javac_cmd, javac_args, java_files, kt_files):
         '--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED',
         '--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED',
         '--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED',
+        '--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED',
+        '--add-exports=jdk.internal.opt/jdk.internal.opt=ALL-UNNAMED',
         '-jar',
         _JAVAC_EXTRACTOR,
     ]
@@ -439,23 +452,33 @@ def _OnStaleMd5(changes, options, javac_cmd, javac_args, java_files, kt_files):
   jar_info_path = None
   if not options.enable_errorprone:
     # Delete any stale files in the generated directory. The purpose of
-    # options.generated_dir is for codesearch.
+    # options.generated_dir is for codesearch and Android Studio.
     shutil.rmtree(options.generated_dir, True)
     intermediates_out_dir = options.generated_dir
 
+    # Write .info file only for the main javac invocation (no need to do it
+    # when running Error Prone.
     jar_info_path = options.jar_path + '.info'
 
   # Compiles with Error Prone take twice as long to run as pure javac. Thus GN
   # rules run both in parallel, with Error Prone only used for checks.
-  _RunCompiler(changes,
-               options,
-               javac_cmd + javac_args,
-               java_files,
-               options.jar_path,
-               kt_files=kt_files,
-               jar_info_path=jar_info_path,
-               intermediates_out_dir=intermediates_out_dir,
-               enable_partial_javac=True)
+  try:
+    _RunCompiler(changes,
+                 options,
+                 javac_cmd + javac_args,
+                 java_files,
+                 options.jar_path,
+                 kt_files=kt_files,
+                 jar_info_path=jar_info_path,
+                 intermediates_out_dir=intermediates_out_dir,
+                 enable_partial_javac=True)
+  except build_utils.CalledProcessError as e:
+    # Do not output stacktrace as it takes up space on gerrit UI, forcing
+    # you to click though to find the actual compilation error. It's never
+    # interesting to see the Python stacktrace for a Java compilation error.
+    sys.stderr.write(e.output)
+    sys.exit(1)
+
   logging.info('Completed all steps in _OnStaleMd5')
 
 
@@ -493,7 +516,7 @@ def _RunCompiler(changes,
   java_srcjars = options.java_srcjars
   save_info_file = jar_info_path is not None
 
-  # Use jar_path's directory to ensure paths are relative (needed for goma).
+  # Use jar_path's directory to ensure paths are relative (needed for rbe).
   temp_dir = jar_path + '.staging'
   build_utils.DeleteDirectory(temp_dir)
   os.makedirs(temp_dir)
@@ -533,9 +556,9 @@ def _RunCompiler(changes,
                                            options.jar_info_exclude_globs)
 
     if intermediates_out_dir is None:
-      input_srcjars_dir = os.path.join(temp_dir, 'input_srcjars')
-    else:
-      input_srcjars_dir = os.path.join(intermediates_out_dir, 'input_srcjars')
+      intermediates_out_dir = temp_dir
+
+    input_srcjars_dir = os.path.join(intermediates_out_dir, 'input_srcjars')
 
     if java_srcjars:
       logging.info('Extracting srcjars to %s', input_srcjars_dir)
@@ -595,6 +618,15 @@ def _RunCompiler(changes,
     CreateJarFile(jar_path, classes_dir, service_provider_configuration,
                   options.additional_jar_files, options.kotlin_jar_path)
 
+    # Remove input srcjars that confuse Android Studio:
+    # https://crbug.com/353326240
+    for root, _, files in os.walk(intermediates_out_dir):
+      for subpath in files:
+        p = os.path.join(root, subpath)
+        # JNI Zero placeholders
+        if '_jni_java/' in p and not p.endswith('Jni.java'):
+          os.unlink(p)
+
     if save_info_file:
       info_file_context.Commit(jar_info_path)
 
@@ -607,7 +639,7 @@ def _RunCompiler(changes,
 
 def _ParseOptions(argv):
   parser = optparse.OptionParser()
-  build_utils.AddDepfileOption(parser)
+  action_helpers.add_depfile_arg(parser)
 
   parser.add_option('--target-name', help='Fully qualified GN target name.')
   parser.add_option('--skip-build-server',
@@ -652,8 +684,6 @@ def _ParseOptions(argv):
       help='Whether code being compiled should be built with stricter '
       'warnings for chromium code.')
   parser.add_option(
-      '--gomacc-path', help='When set, prefix javac command with gomacc')
-  parser.add_option(
       '--errorprone-path', help='Use the Errorprone compiler at this path.')
   parser.add_option(
       '--enable-errorprone',
@@ -686,10 +716,10 @@ def _ParseOptions(argv):
   options, args = parser.parse_args(argv)
   build_utils.CheckOptions(options, parser, required=('jar_path', ))
 
-  options.classpath = build_utils.ParseGnList(options.classpath)
-  options.processorpath = build_utils.ParseGnList(options.processorpath)
-  options.java_srcjars = build_utils.ParseGnList(options.java_srcjars)
-  options.jar_info_exclude_globs = build_utils.ParseGnList(
+  options.classpath = action_helpers.parse_gn_list(options.classpath)
+  options.processorpath = action_helpers.parse_gn_list(options.processorpath)
+  options.java_srcjars = action_helpers.parse_gn_list(options.java_srcjars)
+  options.jar_info_exclude_globs = action_helpers.parse_gn_list(
       options.jar_info_exclude_globs)
 
   additional_jar_files = []
@@ -722,25 +752,13 @@ def main(argv):
   argv = build_utils.ExpandFileArgs(argv)
   options, java_files, kt_files = _ParseOptions(argv)
 
-  # Only use the build server for errorprone runs.
-  if (options.enable_errorprone and not options.skip_build_server
-      and server_utils.MaybeRunCommand(name=options.target_name,
-                                       argv=sys.argv,
-                                       stamp_file=options.jar_path,
-                                       force=options.use_build_server)):
-    return
-
-  javac_cmd = []
-  if options.gomacc_path:
-    javac_cmd.append(options.gomacc_path)
-  javac_cmd.append(build_utils.JAVAC_PATH)
+  javac_cmd = [build_utils.JAVAC_PATH]
 
   javac_args = [
       '-g',
-      # We currently target JDK 11 everywhere, since Mockito is broken by JDK17.
-      # See crbug.com/1409661 for more details.
+      # Jacoco does not currently support a higher value.
       '--release',
-      '11',
+      '17',
       # Chromium only allows UTF8 source files.  Being explicit avoids
       # javac pulling a default encoding from the user's environment.
       '-encoding',
@@ -752,6 +770,11 @@ def main(argv):
       # protobuf-generated files fail this check (javadoc has @deprecated,
       # but method missing @Deprecated annotation).
       '-Xlint:-dep-ann',
+      # Do not warn about finalize() methods. Android still intends to support
+      # them.
+      '-Xlint:-removal',
+      # https://crbug.com/1441023
+      '-J-XX:+PerfDisableSharedMem',
   ]
 
   if options.enable_errorprone:
@@ -815,7 +838,8 @@ def main(argv):
 
   depfile_deps = classpath_inputs
   # Files that are already inputs in GN should go in input_paths.
-  input_paths = depfile_deps + options.java_srcjars + java_files + kt_files
+  input_paths = ([build_utils.JAVAC_PATH] + depfile_deps +
+                 options.java_srcjars + java_files + kt_files)
   if options.header_jar:
     input_paths.append(options.header_jar)
   input_paths += [x[0] for x in options.additional_jar_files]

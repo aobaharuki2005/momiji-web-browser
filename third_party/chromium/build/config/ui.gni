@@ -17,7 +17,7 @@
 # There is more advice on where to put build flags in the "Build flag" section
 # of //build/config/BUILDCONFIG.gn.
 
-import("//chromium/build/config/chromecast_build.gni")
+import("//chromium/build/config/cast.gni")
 import("//chromium/build/config/chromeos/args.gni")
 import("//chromium/build/config/chromeos/ui_mode.gni")
 import("//chromium/build/config/ozone.gni")

@@ -2,7 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//chromium/build/config/chromecast_build.gni")
 import("//chromium/build/config/fuchsia/config.gni")
 import("//chromium/build/config/fuchsia/fuchsia_package_metadata.gni")
 import("//chromium/build/config/gclient_args.gni")
@@ -15,7 +14,7 @@ declare_args() {
   # Sets the Fuchsia Amber repository which will be used by default by the
   # generated installation scripts. If not specified, then no default directory
   # will be used.
-  default_fuchsia_build_dir_for_installation = ""
+  default_fuchsia_out_dir = ""
 
   # Sets the Fuchsia device node name which will be used by default by the
   # generated runner scripts. If not specficed, then no default node name will
@@ -62,9 +61,8 @@ declare_args() {
 #                      --package - the path to a .FAR package to install.
 #                      --package_name - the name of the package to use as an
 #                                       entry point.
-#   include_fuchsia_build_dir: If true, adds
-#                              |default_fuchsia_build_dir_for_installation|
-#                              to executable_args (when set in GN args).
+#   include_fuchsia_out_dir: If true, adds |default_fuchsia_out_dir|
+#                            to executable_args (when set in GN args).
 template("fuchsia_run_script_with_packages") {
   if (defined(invoker.package_name)) {
     _pkg_shortname = invoker.package_name
@@ -82,7 +80,7 @@ template("fuchsia_run_script_with_packages") {
                                  "executable",
                                  "executable_args",
                                  "data",
-                                 "include_fuchsia_build_dir",
+                                 "include_fuchsia_out_dir",
                                  "target",
                                ])
 
@@ -127,11 +125,11 @@ template("fuchsia_run_script_with_packages") {
       executable_args = []
     }
 
-    if (defined(include_fuchsia_build_dir) && include_fuchsia_build_dir &&
-        default_fuchsia_build_dir_for_installation != "") {
+    if (defined(include_fuchsia_out_dir) && include_fuchsia_out_dir &&
+        default_fuchsia_out_dir != "") {
       executable_args += [
         "--fuchsia-out-dir",
-        default_fuchsia_build_dir_for_installation,
+        default_fuchsia_out_dir,
       ]
     }
   }
@@ -143,7 +141,10 @@ template("fuchsia_run_script_with_packages") {
       forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
       executable = _generated_script_path
       wrapper_script = "$root_build_dir/${invoker.executable_wrapper}"
-      deps = [ ":${invoker._run_target}" ]
+      deps = [
+        ":${invoker._install_target}",
+        ":${invoker._run_target}",
+      ]
     }
   }
 }
@@ -175,7 +176,7 @@ template("fuchsia_package_installer") {
       pkg_shortname,
     ]
     output_name_format = "deploy_%package%"
-    include_fuchsia_build_dir = true
+    include_fuchsia_out_dir = true
   }
 }
 
@@ -234,7 +235,7 @@ template("fuchsia_test_runner") {
       "$root_gen_dir/package_metadata/${invoker.package_name}.meta",
     ]
 
-    # TODO(crbug.com/1256870): Remove this once all out-of-tree references
+    # TODO(crbug.com/40200403): Remove this once all out-of-tree references
     # to "package_name_override" are migrated to "package_name".
     if (defined(invoker.package_name_override)) {
       package_name = invoker.package_name_override

@@ -34,22 +34,20 @@ from pylib.constants import host_paths
 _AAPT_PATH = lazy.WeakConstant(lambda: build_tools.GetPath('aapt'))
 _ANDROID_UTILS_PATH = os.path.join(host_paths.DIR_SOURCE_ROOT, 'build',
                                    'android', 'gyp')
-_BUILD_UTILS_PATH = os.path.join(host_paths.DIR_SOURCE_ROOT, 'build', 'util')
-_READOBJ_PATH = os.path.join(constants.ANDROID_NDK_ROOT, 'toolchains', 'llvm',
-                             'prebuilt', 'linux-x86_64', 'bin', 'llvm-readobj')
+_READOBJ_PATH = os.path.join(host_paths.DIR_SOURCE_ROOT, 'third_party',
+                             'llvm-build', 'Release+Asserts', 'bin',
+                             'llvm-readobj')
 
-with host_paths.SysPath(host_paths.BUILD_COMMON_PATH):
-  import perf_tests_results_helper  # pylint: disable=import-error
+with host_paths.SysPath(host_paths.BUILD_UTIL_PATH):
+  from lib.common import perf_tests_results_helper
+  from lib.results import result_sink
+  from lib.results import result_types
 
 with host_paths.SysPath(host_paths.TRACING_PATH):
   from tracing.value import convert_chart_json  # pylint: disable=import-error
 
 with host_paths.SysPath(_ANDROID_UTILS_PATH, 0):
   from util import build_utils  # pylint: disable=import-error
-
-with host_paths.SysPath(_BUILD_UTILS_PATH, 0):
-  from lib.results import result_sink  # pylint: disable=import-error
-  from lib.results import result_types  # pylint: disable=import-error
 
 # Captures an entire config from aapt output.
 _AAPT_CONFIG_PATTERN = r'config %s:(.*?)config [a-zA-Z-]+:'
@@ -70,20 +68,22 @@ _RE_NON_LANGUAGE_PAK = re.compile(r'^assets/.*(resources|percent)\.pak$')
 _READELF_SIZES_METRICS = {
     'text': ['.text'],
     'data': ['.data', '.rodata', '.data.rel.ro', '.data.rel.ro.local'],
-    'relocations': ['.rel.dyn', '.rel.plt', '.rela.dyn', '.rela.plt'],
+    'relocations':
+    ['.rel.dyn', '.rel.plt', '.rela.dyn', '.rela.plt', '.relr.dyn'],
     'unwind': [
         '.ARM.extab', '.ARM.exidx', '.eh_frame', '.eh_frame_hdr',
         '.ARM.exidxsentinel_section_after_text'
     ],
     'symbols': [
-        '.dynsym', '.dynstr', '.dynamic', '.shstrtab', '.got', '.plt',
+        '.dynsym', '.dynstr', '.dynamic', '.shstrtab', '.got', '.plt', '.iplt',
         '.got.plt', '.hash', '.gnu.hash'
     ],
     'other': [
         '.init_array', '.preinit_array', '.ctors', '.fini_array', '.comment',
         '.note.gnu.gold-version', '.note.crashpad.info', '.note.android.ident',
         '.ARM.attributes', '.note.gnu.build-id', '.gnu.version',
-        '.gnu.version_d', '.gnu.version_r', '.interp', '.gcc_except_table'
+        '.gnu.version_d', '.gnu.version_r', '.interp', '.gcc_except_table',
+        '.note.gnu.property'
     ]
 }
 
@@ -209,18 +209,19 @@ def _ParseManifestAttributes(apk_path):
   output = cmd_helper.GetCmdOutput([
       _AAPT_PATH.read(), 'd', 'xmltree', apk_path, 'AndroidManifest.xml'])
 
-  def parse_attr(name):
+  def parse_attr(namespace, name):
     # android:extractNativeLibs(0x010104ea)=(type 0x12)0x0
     # android:extractNativeLibs(0x010104ea)=(type 0x12)0xffffffff
     # dist:onDemand=(type 0x12)0xffffffff
-    m = re.search(name + r'(?:\(.*?\))?=\(type .*?\)(\w+)', output)
+    m = re.search(
+        f'(?:{namespace}:)?{name}' + r'(?:\(.*?\))?=\(type .*?\)(\w+)', output)
     return m and int(m.group(1), 16)
 
-  skip_extract_lib = bool(parse_attr('android:extractNativeLibs'))
-  sdk_version = parse_attr('android:minSdkVersion')
-  is_feature_split = parse_attr('android:isFeatureSplit')
+  skip_extract_lib = bool(parse_attr('android', 'extractNativeLibs'))
+  sdk_version = parse_attr('android', 'minSdkVersion')
+  is_feature_split = parse_attr('android', 'isFeatureSplit')
   # Can use <dist:on-demand>, or <module dist:onDemand="true">.
-  on_demand = parse_attr('dist:onDemand') or 'dist:on-demand' in output
+  on_demand = parse_attr('dist', 'onDemand') or 'on-demand' in output
   on_demand = bool(on_demand and is_feature_split)
 
   return sdk_version, skip_extract_lib, on_demand
@@ -457,7 +458,8 @@ def _AnalyzeInternal(apk_path,
     elif filename.endswith('.arsc'):
       arsc.AddZipInfo(member)
     elif filename.startswith('META-INF') or filename in (
-        'AndroidManifest.xml', 'assets/webapk_dex_version.txt'):
+        'AndroidManifest.xml', 'assets/webapk_dex_version.txt',
+        'stamp-cert-sha256'):
       metadata.AddZipInfo(member)
     elif filename.endswith('.notice'):
       notices.AddZipInfo(member)
@@ -541,6 +543,9 @@ def _AnalyzeInternal(apk_path,
   main_lib_info = native_code.FindLargest()
   native_code_unaligned_size = 0
   for lib_info in native_code.AllEntries():
+    # Skip placeholders.
+    if lib_info.file_size == 0:
+      continue
     section_sizes = _ExtractLibSectionSizesFromApk(apk_path, lib_info.filename)
     native_code_unaligned_size += sum(v for k, v in section_sizes.items()
                                       if k != 'bss')
@@ -630,7 +635,7 @@ def _AnalyzeInternal(apk_path,
   # end result is going to be uploaded to the perf dashboard in the HistogramSet
   # format due to mixed units (bytes vs. zip entries) causing malformed
   # summaries to be generated.
-  # TODO(https://crbug.com/903970): Remove this workaround if unit mixing is
+  # TODO(crbug.com/41425646): Remove this workaround if unit mixing is
   # ever supported.
   report_func('FileCount', 'file count', len(apk_contents), 'zip entries')
 
@@ -857,7 +862,10 @@ def main():
       '--isolated-script-test-perf-output',
       type=os.path.realpath,
       help=argparse.SUPPRESS)
-
+  argparser.add_argument('--isolated-script-test-repeat',
+                         help=argparse.SUPPRESS)
+  argparser.add_argument('--isolated-script-test-launcher-retry-limit',
+                         help=argparse.SUPPRESS)
   output_group = argparser.add_mutually_exclusive_group()
 
   output_group.add_argument(

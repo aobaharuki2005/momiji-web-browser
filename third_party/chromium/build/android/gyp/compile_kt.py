@@ -14,6 +14,7 @@ import time
 import compile_java
 
 from util import build_utils
+import action_helpers  # build_utils adds //build to sys.path.
 
 
 def _RunCompiler(args,
@@ -30,7 +31,7 @@ def _RunCompiler(args,
 
   java_srcjars = args.java_srcjars
 
-  # Use jar_path's directory to ensure paths are relative (needed for goma).
+  # Use jar_path's directory to ensure paths are relative (needed for rbe).
   temp_dir = jar_path + '.staging'
   build_utils.DeleteDirectory(temp_dir)
   os.makedirs(temp_dir)
@@ -97,7 +98,7 @@ def _RunCompiler(args,
 
 def _ParseOptions(argv):
   parser = argparse.ArgumentParser()
-  build_utils.AddDepfileOption(parser)
+  action_helpers.add_depfile_arg(parser)
 
   parser.add_argument('--java-srcjars',
                       action='append',
@@ -113,8 +114,6 @@ def _ParseOptions(argv):
       action='store_true',
       help='Whether code being compiled should be built with stricter '
       'warnings for chromium code.')
-  parser.add_argument('--gomacc-path',
-                      help='When set, prefix kotlinc command with gomacc')
   parser.add_argument('--warnings-as-errors',
                       action='store_true',
                       help='Treat all warnings as errors.')
@@ -125,8 +124,8 @@ def _ParseOptions(argv):
 
   args, extra_args = parser.parse_known_args(argv)
 
-  args.classpath = build_utils.ParseGnList(args.classpath)
-  args.java_srcjars = build_utils.ParseGnList(args.java_srcjars)
+  args.classpath = action_helpers.parse_gn_list(args.classpath)
+  args.java_srcjars = action_helpers.parse_gn_list(args.java_srcjars)
 
   source_files = []
   for arg in extra_args:
@@ -145,10 +144,7 @@ def main(argv):
   argv = build_utils.ExpandFileArgs(argv)
   args, source_files = _ParseOptions(argv)
 
-  kotlinc_cmd = []
-  if args.gomacc_path:
-    kotlinc_cmd.append(args.gomacc_path)
-  kotlinc_cmd.append(build_utils.KOTLINC_PATH)
+  kotlinc_cmd = [build_utils.KOTLINC_PATH]
 
   kotlinc_cmd += [
       '-no-jdk',  # Avoid depending on the bundled JDK.
@@ -158,6 +154,9 @@ def main(argv):
       '-no-stdlib',
       # Avoid depending on the bundled Kotlin reflect libs.
       '-no-reflect',
+      # We typically set a default of 1G for java commands, see
+      # build_utils.JavaCmd. This may help prevent OOMs.
+      '-J-Xmx1G',
   ]
 
   if args.generated_dir:
@@ -174,7 +173,7 @@ def main(argv):
   if args.depfile:
     # GN already knows of the source files, so avoid listing individual files
     # in the depfile.
-    build_utils.WriteDepfile(args.depfile, args.jar_path, args.classpath)
+    action_helpers.write_depfile(args.depfile, args.jar_path, args.classpath)
 
 
 if __name__ == '__main__':

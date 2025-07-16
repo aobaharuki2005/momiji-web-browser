@@ -18,13 +18,13 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/aad17933ade017660
  5 files changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index de871b593..3f4867a54 100644
+index b055e9369..3bb165212 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
-@@ -1898,7 +1898,7 @@ config("no_rtti") {
+@@ -2214,7 +2214,7 @@ config("no_rtti") {
  # to heap-allocated memory are passed over shared library boundaries.
  config("export_dynamic") {
-   # TODO(crbug.com/1052397): Revisit after target_os flip is completed.
+   # TODO(crbug.com/40118868): Revisit after target_os flip is completed.
 -  if (is_linux || is_chromeos_lacros || export_libcxxabi_from_executables) {
 +  if (is_linux || is_bsd || is_chromeos_lacros || export_libcxxabi_from_executables) {
      ldflags = [ "-rdynamic" ]
@@ -44,7 +44,7 @@ index 9e6131d4c..4f560b290 100644
    # The (major) version of GTK to build against.  A different version may be
    # loaded at runtime.
 diff --git a/config/linux/libdrm/BUILD.gn b/config/linux/libdrm/BUILD.gn
-index 31ab0d8da..7791c7e7c 100644
+index a37bd24c2..dd5e66815 100644
 --- a/config/linux/libdrm/BUILD.gn
 +++ b/config/linux/libdrm/BUILD.gn
 @@ -11,7 +11,7 @@ declare_args() {
@@ -57,7 +57,7 @@ index 31ab0d8da..7791c7e7c 100644
  
  if (use_system_libdrm) {
 diff --git a/config/ozone.gni b/config/ozone.gni
-index 9eee45d2d..05e3319b9 100644
+index 8a3bc28c3..bab841739 100644
 --- a/config/ozone.gni
 +++ b/config/ozone.gni
 @@ -9,7 +9,7 @@ import("//build/toolchain/toolchain.gni")
@@ -69,7 +69,7 @@ index 9eee45d2d..05e3319b9 100644
  }
  
  declare_args() {
-@@ -87,7 +87,7 @@ declare_args() {
+@@ -84,7 +84,7 @@ declare_args() {
      } else if (is_chromeos_lacros) {
        ozone_platform = "wayland"
        ozone_platform_wayland = true
@@ -79,7 +79,7 @@ index 9eee45d2d..05e3319b9 100644
        ozone_platform_wayland = true
        ozone_platform_x11 = true
 diff --git a/config/ui.gni b/config/ui.gni
-index 3e2c9fe53..b62dfa56d 100644
+index 1cb9c37bf..981288972 100644
 --- a/config/ui.gni
 +++ b/config/ui.gni
 @@ -33,7 +33,7 @@ declare_args() {

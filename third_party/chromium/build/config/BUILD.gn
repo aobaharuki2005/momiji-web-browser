@@ -3,8 +3,8 @@
 # found in the LICENSE file.
 
 import("//chromium/build/config/c++/c++.gni")
+import("//chromium/build/config/cast.gni")
 import("//chromium/build/config/chrome_build.gni")
-import("//chromium/build/config/chromecast_build.gni")
 import("//chromium/build/config/dcheck_always_on.gni")
 import("//chromium/build/config/features.gni")
 
@@ -16,9 +16,9 @@ import("//chromium/build/config/ios/ios_sdk_overrides.gni")
 import("//chromium/build/config/mac/mac_sdk_overrides.gni")
 
 import("//chromium/build/config/pch.gni")
+import("//chromium/build/config/rust.gni")
 import("//chromium/build/config/sanitizers/sanitizers.gni")
 import("//chromium/build/config/ui.gni")
-import("//chromium/build/toolchain/goma.gni")
 if (is_android) {
   import("//chromium/build/config/android/abi.gni")
 }
@@ -67,7 +67,7 @@ config("feature_flags") {
     # but they also build some targets with the Android toolchain. This ensures
     # that Android targets still build with USE_OZONE=0 in such cases.
     #
-    # TODO(crbug.com/837032): Maybe this can be cleaned up if we can avoid
+    # TODO(crbug.com/41385586): Maybe this can be cleaned up if we can avoid
     # setting use_ozone globally.
     defines += [ "USE_OZONE=1" ]
   }
@@ -211,14 +211,9 @@ config("default_libs") {
     # linking can have run-time side effects, nothing should be listed here.
     libs = []
   } else if (is_ios) {
-    # The libraries listed here will be specified for both the target and the
-    # host. Only the common ones should be listed here.
-    frameworks = [
-      "CoreFoundation.framework",
-      "CoreGraphics.framework",
-      "CoreText.framework",
-      "Foundation.framework",
-    ]
+    # Targets should choose to explicitly link frameworks they require. Since
+    # linking can have run-time side effects, nothing should be listed here.
+    libs = []
   } else if (is_linux || is_chromeos) {
     libs = [
       "dl",
@@ -226,6 +221,12 @@ config("default_libs") {
       "rt",
     ]
   }
+}
+
+_toolchain_marker_name =
+    "toolchain_marker_" + get_label_info(current_toolchain, "name")
+group(_toolchain_marker_name) {
+  # Can be used as an assert_no_deps target (assert_no_deps ignores toolchains).
 }
 
 group("common_deps") {
@@ -237,7 +238,7 @@ group("common_deps") {
 
   # WARNING: This group is a dependency of **every executable and shared
   # library**.  Please be careful adding new dependencies here.
-  public_deps = []
+  public_deps = [ ":$_toolchain_marker_name" ]
 
   if (using_sanitizer) {
     public_deps += [ "//chromium/build/config/sanitizers:deps" ]
@@ -246,6 +247,10 @@ group("common_deps") {
   #if (use_custom_libcxx) {
   #  public_deps += [ "//buildtools/third_party/libc++" ]
   #}
+
+  if (use_libfuzzer) {
+    public_deps += [ "//chromium/build/config/sanitizers:dlclose_shim" ]
+  }
 
   if (use_afl) {
     public_deps += [ "//third_party/afl" ]
@@ -257,34 +262,47 @@ group("common_deps") {
 
   if (is_fuchsia) {
     public_deps +=
-        [ "//third_party/fuchsia-sdk/sdk/build/config:runtime_library_group" ]
+        [ "//third_party/fuchsia-gn-sdk/src/config:runtime_library_group" ]
     if (is_asan) {
       public_deps += [ "//chromium/build/config/fuchsia:asan_runtime_library" ]
     }
+  }
+
+  if (is_win) {
+    # The CRT runtime is dynamically linked in component builds and needs to
+    # be present on bots that run exes or load DLLs. This also includes
+    # debugging DLLs in all builds.
+    data_deps = [ "//chromium/build/win:runtime_libs" ]
   }
 }
 
 # Only the executable template in BUILDCONFIG.gn should reference this.
 group("executable_deps") {
-  public_deps = [ ":common_deps" ]
-  if (export_libcxxabi_from_executables) {
-    public_deps += [ "//buildtools/third_party/libc++abi" ]
+  if (!toolchain_for_rust_host_build_tools) {
+    public_deps = [ ":common_deps" ]
+    if (export_libcxxabi_from_executables) {
+      public_deps += [ "//buildtools/third_party/libc++abi" ]
+    }
+    public_configs = [ "//chromium/build/config/sanitizers:link_executable" ]
   }
-  public_configs = [ "//chromium/build/config/sanitizers:link_executable" ]
 }
 
 # Only the loadable_module template in BUILDCONFIG.gn should reference this.
 group("loadable_module_deps") {
-  public_deps = [ ":common_deps" ]
+  if (!toolchain_for_rust_host_build_tools) {
+    public_deps = [ ":common_deps" ]
 
-  public_configs = [ "//chromium/build/config/sanitizers:link_shared_library" ]
+    public_configs = [ "//chromium/build/config/sanitizers:link_shared_library" ]
+  }
 }
 
 # Only the shared_library template in BUILDCONFIG.gn should reference this.
 group("shared_library_deps") {
-  public_deps = [ ":common_deps" ]
+  if (!toolchain_for_rust_host_build_tools) {
+    public_deps = [ ":common_deps" ]
 
-  public_configs = [ "//chromium/build/config/sanitizers:link_shared_library" ]
+    public_configs = [ "//chromium/build/config/sanitizers:link_shared_library" ]
+  }
 }
 
 # Executable configs -----------------------------------------------------------
@@ -320,10 +338,10 @@ config("executable_config") {
   # If we're using the prebuilt instrumented libraries with the sanitizers, we
   # need to add ldflags to every binary to make sure they are picked up.
   if (prebuilt_instrumented_libraries_available) {
-    configs += [ "//third_party/instrumented_libraries:prebuilt_ldflags" ]
+    configs += [ "//third_party/instrumented_libs:prebuilt_ldflags" ]
   }
   if (use_locally_built_instrumented_libraries) {
-    configs += [ "//third_party/instrumented_libraries:locally_built_ldflags" ]
+    configs += [ "//third_party/instrumented_libs:locally_built_ldflags" ]
   }
 }
 
@@ -351,10 +369,10 @@ config("shared_library_config") {
   # If we're using the prebuilt instrumented libraries with the sanitizers, we
   # need to add ldflags to every binary to make sure they are picked up.
   if (prebuilt_instrumented_libraries_available) {
-    configs += [ "//third_party/instrumented_libraries:prebuilt_ldflags" ]
+    configs += [ "//third_party/instrumented_libs:prebuilt_ldflags" ]
   }
   if (use_locally_built_instrumented_libraries) {
-    configs += [ "//third_party/instrumented_libraries:locally_built_ldflags" ]
+    configs += [ "//third_party/instrumented_libs:locally_built_ldflags" ]
   }
 }
 

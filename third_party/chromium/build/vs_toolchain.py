@@ -17,7 +17,7 @@ import sys
 
 from gn_helpers import ToGNString
 
-# VS 2022 17.4 with 10.0.22621.0 SDK with ARM64 libraries and UWP support.
+# VS 2022 17.9.2 with 10.0.22621.2428 SDK with ARM64 libraries and UWP support.
 # See go/chromium-msvc-toolchain for instructions about how to update the
 # toolchain.
 #
@@ -39,7 +39,7 @@ from gn_helpers import ToGNString
 #   Maps between Visual Studio version and MSVC toolset
 # * MSVS_VERSIONS in this file
 #   Records the packaged and default version of Visual Studio
-TOOLCHAIN_HASH = '27370823e7'
+TOOLCHAIN_HASH = '7393122652'
 SDK_VERSION = '10.0.22621.0'
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -398,6 +398,15 @@ def CopyDlls(target_dir, configuration, target_cpu):
   if configuration == 'Debug':
     _CopyRuntime(target_dir, runtime_dir, target_cpu, debug=True)
   _CopyDebugger(target_dir, target_cpu)
+  if target_cpu == 'arm64':
+    target_dir = os.path.join(target_dir, 'win_clang_x64')
+    target_cpu = 'x64'
+    runtime_dir = x64_runtime
+    os.makedirs(target_dir, exist_ok=True)
+    _CopyRuntime(target_dir, runtime_dir, target_cpu, debug=False)
+    if configuration == 'Debug':
+      _CopyRuntime(target_dir, runtime_dir, target_cpu, debug=True)
+    _CopyDebugger(target_dir, target_cpu)
 
 
 def _CopyDebugger(target_dir, target_cpu):

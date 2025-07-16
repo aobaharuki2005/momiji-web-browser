@@ -32,11 +32,11 @@ build_dotfile_settings = {
     "//chromium/build/toolchain/apple/toolchain.gni",
     "//chromium/build/toolchain/BUILD.gn",
     "//chromium/build/toolchain/concurrent_links.gni",
-    "//chromium/build/toolchain/goma.gni",
     "//chromium/build/toolchain/nacl/BUILD.gn",
+    "//chromium/build/toolchain/rbe.gni",
     "//chromium/build/toolchain/toolchain.gni",
     "//chromium/build/toolchain/win/BUILD.gn",
-    "//chromium/build/toolchain/win/toolchain.gni",
+    "//chromium/build/toolchain/win/win_toolchain_data.gni",
     "//chromium/build/toolchain/zos/BUILD.gn",
     "//chromium/build/util/branding.gni",
   ]

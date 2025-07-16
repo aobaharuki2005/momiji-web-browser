@@ -45,7 +45,7 @@ gcc_toolchain("arm64") {
     target_cpu = "arm64"
     current_os = "linux"
 
-    # reclient does not support gcc.
+    # remote execution does not support gcc.
     use_remoteexec = false
     is_clang = false
   }
@@ -66,7 +66,7 @@ gcc_toolchain("arm") {
     target_cpu = "arm"
     current_os = "linux"
 
-    # reclient does not support gcc.
+    # remote execution does not support gcc.
     use_remoteexec = false
     is_clang = false
   }
@@ -98,7 +98,7 @@ gcc_toolchain("x86") {
     target_cpu = "x86"
     current_os = "linux"
 
-    # reclient does not support gcc.
+    # remote execution does not support gcc.
     use_remoteexec = false
     is_clang = false
   }
@@ -181,6 +181,7 @@ clang_v8_toolchain("clang_x64_v8_loong64") {
 
 # In a LaCrOS build, this toolchain is intended to be used as an alternate
 # toolchain to build Ash-Chrome in a subdirectory.
+# This is a test-only toolchain.
 clang_toolchain("ash_clang_x64") {
   toolchain_args = {
     # This turns the toolchain into the "Linux ChromeOS" build
@@ -202,6 +203,7 @@ clang_toolchain("ash_clang_x64") {
 
 # In an ash build, this toolchain is intended to be used as an alternate
 # toolchain to build lacros-Chrome in a subdirectory.
+# This is a test-only toolchain.
 clang_toolchain("lacros_clang_x64") {
   toolchain_args = {
     # This turns the toolchain into the "Lacros" build
@@ -213,8 +215,6 @@ clang_toolchain("lacros_clang_x64") {
     also_build_lacros_chrome = false
     chromeos_is_browser_only = true
     use_clang_coverage = false
-    dcheck_always_on = false
-    symbol_level = 1
   }
 }
 
@@ -234,7 +234,7 @@ gcc_toolchain("x64") {
     target_cpu = "x64"
     current_os = "linux"
 
-    # reclient does not support gcc.
+    # remote execution does not support gcc.
     use_remoteexec = false
     is_clang = false
   }
@@ -276,10 +276,9 @@ gcc_toolchain("mipsel") {
     target_cpu = "mipsel"
     current_os = "linux"
 
-    # reclient does not support gcc.
+    # remote execution does not support gcc.
     use_remoteexec = false
     is_clang = false
-    use_goma = false
   }
 }
 
@@ -298,10 +297,9 @@ gcc_toolchain("mips64el") {
     target_cpu = "mips64el"
     current_os = "linux"
 
-    # reclient does not support gcc.
+    # remote execution does not support gcc.
     use_remoteexec = false
     is_clang = false
-    use_goma = false
   }
 }
 
@@ -353,7 +351,7 @@ gcc_toolchain("s390x") {
     target_cpu = "s390x"
     current_os = "linux"
 
-    # reclient does not support gcc.
+    # remote execution does not support gcc.
     use_remoteexec = false
     is_clang = false
   }
@@ -388,7 +386,7 @@ gcc_toolchain("ppc64") {
     target_cpu = "ppc64"
     current_os = "linux"
 
-    # reclient does not support gcc.
+    # remote execution does not support gcc.
     use_remoteexec = false
     is_clang = false
   }
@@ -409,7 +407,7 @@ gcc_toolchain("mips") {
     target_cpu = "mips"
     current_os = "linux"
 
-    # reclient does not support gcc.
+    # remote execution does not support gcc.
     use_remoteexec = false
     is_clang = false
   }
@@ -430,7 +428,7 @@ gcc_toolchain("mips64") {
     target_cpu = "mips64"
     current_os = "linux"
 
-    # reclient does not support gcc.
+    # remote execution does not support gcc.
     use_remoteexec = false
     is_clang = false
   }

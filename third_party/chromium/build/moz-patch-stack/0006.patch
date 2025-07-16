@@ -9,14 +9,14 @@ Depends on D149820
 Differential Revision: https://phabricator.services.mozilla.com/D149821
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/243ea5e6411dc1b769419c07045e78d61f406541
 ---
- toolchain/win/setup_toolchain.py | 61 +++++++++++++++++---------------
- 1 file changed, 32 insertions(+), 29 deletions(-)
+ toolchain/win/setup_toolchain.py | 58 +++++++++++++++++---------------
+ 1 file changed, 30 insertions(+), 28 deletions(-)
 
 diff --git a/toolchain/win/setup_toolchain.py b/toolchain/win/setup_toolchain.py
-index d2f5798ce..2843792c5 100644
+index 927fce24f..05264801e 100644
 --- a/toolchain/win/setup_toolchain.py
 +++ b/toolchain/win/setup_toolchain.py
-@@ -252,7 +252,7 @@ def main():
+@@ -251,7 +251,7 @@ def main():
  
    cpus = ('x86', 'x64', 'arm', 'arm64')
    assert target_cpu in cpus
@@ -25,7 +25,7 @@ index d2f5798ce..2843792c5 100644
    include = ''
    lib = ''
  
-@@ -268,42 +268,45 @@ def main():
+@@ -264,30 +264,30 @@ def main():
    def q(s):  # Quote s if it contains spaces or other weird characters.
      return s if re.match(r'^[a-zA-Z0-9._/\\:-]*$', s) else '"' + s + '"'
  
@@ -45,15 +45,14 @@ index d2f5798ce..2843792c5 100644
 -      lib = [p.replace('"', r'\"') for p in env['LIB'].split(';') if p]
 -      lib = list(map(relflag, lib))
 -
--      include_I = ' '.join([q('/I' + i) for i in include])
--      include_imsvc = ' '.join([q('-imsvc' + i) for i in include])
--      libpath_flags = ' '.join([q('-libpath:' + i) for i in lib])
+-      include_I = ['/I' + i for i in include]
+-      include_imsvc = ['-imsvc' + i for i in include]
+-      libpath_flags = ['-libpath:' + i for i in lib]
 -
 -      if (environment_block_name != ''):
 -        env_block = _FormatAsEnvironmentBlock(env)
 -        with open(environment_block_name, 'w', encoding='utf8') as f:
 -          f.write(env_block)
--
 +#   for cpu in cpus:
 +#     if cpu == target_cpu:
 +#       # Extract environment variables for subprocesses.
@@ -70,16 +69,21 @@ index d2f5798ce..2843792c5 100644
 +#       lib = [p.replace('"', r'\"') for p in env['LIB'].split(';') if p]
 +#       lib = list(map(relflag, lib))
 +# 
-+#       include_I = ' '.join([q('/I' + i) for i in include])
-+#       include_imsvc = ' '.join([q('-imsvc' + i) for i in include])
-+#       libpath_flags = ' '.join([q('-libpath:' + i) for i in lib])
++#       include_I = ['/I' + i for i in include]
++#       include_imsvc = ['-imsvc' + i for i in include]
++#       libpath_flags = ['-libpath:' + i for i in lib]
 +# 
 +#       if (environment_block_name != ''):
 +#         env_block = _FormatAsEnvironmentBlock(env)
 +#         with open(environment_block_name, 'w', encoding='utf8') as f:
 +#           f.write(env_block)
-+
-+# We don't really use any of this information so it can be skipped altogether
+ 
+   def ListToArgString(x):
+     return gn_helpers.ToGNString(' '.join(q(i) for i in x))
+@@ -295,11 +295,14 @@ def main():
+   def ListToArgList(x):
+     return f'[{", ".join(gn_helpers.ToGNString(i) for i in x)}]'
+ 
 +  env = {}
 +  env['PATH'] = ''
 +  include_I = include
@@ -87,15 +91,17 @@ index d2f5798ce..2843792c5 100644
 +  libpath_flags = ''
    print('vc_bin_dir = ' + gn_helpers.ToGNString(vc_bin_dir))
 -  assert include_I
-   print('include_flags_I = ' + gn_helpers.ToGNString(include_I))
+   print(f'include_flags_I = {ListToArgString(include_I)}')
+   print(f'include_flags_I_list = {ListToArgList(include_I)}')
 -  assert include_imsvc
    if bool(int(os.environ.get('DEPOT_TOOLS_WIN_TOOLCHAIN', 1))) and win_sdk_path:
-     print('include_flags_imsvc = ' +
-           gn_helpers.ToGNString(q('/winsysroot' + relflag(toolchain_root))))
-   else:
-     print('include_flags_imsvc = ' + gn_helpers.ToGNString(include_imsvc))
+     flags = ['/winsysroot' + relflag(toolchain_root)]
+     print(f'include_flags_imsvc = {ListToArgString(flags)}')
+@@ -308,7 +311,6 @@ def main():
+     print(f'include_flags_imsvc = {ListToArgString(include_imsvc)}')
+     print(f'include_flags_imsvc_list = {ListToArgList(include_imsvc)}')
    print('paths = ' + gn_helpers.ToGNString(env['PATH']))
 -  assert libpath_flags
-   print('libpath_flags = ' + gn_helpers.ToGNString(libpath_flags))
+   print(f'libpath_flags = {ListToArgString(libpath_flags)}')
+   print(f'libpath_flags_list = {ListToArgList(libpath_flags)}')
    if bool(int(os.environ.get('DEPOT_TOOLS_WIN_TOOLCHAIN', 1))) and win_sdk_path:
-     print('libpath_lldlink_flags = ' +

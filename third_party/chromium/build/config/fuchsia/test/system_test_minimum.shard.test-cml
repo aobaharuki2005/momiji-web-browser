@@ -7,9 +7,9 @@
   ],
   use: [
     {
-      directory: "config-data",
+      directory: "tzdata-icu",
       rights: [ "r*" ],
-      path: "/config/data",
+      path: "/config/tzdata/icu",
     },
     {
       storage: "cache",
@@ -30,11 +30,10 @@
     {
       protocol: [
         "fuchsia.buildinfo.Provider",
-        "fuchsia.intl.PropertyProvider",
         "fuchsia.hwinfo.Product",
+        "fuchsia.intl.PropertyProvider",
         "fuchsia.media.ProfileProvider",
         "fuchsia.process.Launcher",
-        "fuchsia.sys.Loader",
       ],
     },
     {

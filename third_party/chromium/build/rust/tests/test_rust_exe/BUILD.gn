@@ -11,7 +11,7 @@ rust_executable("test_rust_exe") {
     "//chromium/build/rust/tests/test_proc_macro_crate",
     "//chromium/build/rust/tests/test_rlib_crate:target1",
     "//chromium/build/rust/tests/test_rust_static_library",
-    "//chromium/build/rust/tests/test_rust_static_library_non_standard_arrangement",
+    "//chromium/build/rust/tests/test_rust_static_library_non_standard_arrangement:lib",
   ]
   build_native_rust_unit_tests = true
 }
