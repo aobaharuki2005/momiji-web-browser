@@ -31,6 +31,7 @@ class FrontendContext;
 // When created, the `add` function should be called with the top-level
 // ScriptIndex.
 struct DelazifyStrategy {
+  using ScriptStencilRef = frontend::ScriptStencilRef;
   using ScriptIndex = frontend::ScriptIndex;
   using InitialStencilAndDelazifications =
       frontend::InitialStencilAndDelazifications;
@@ -43,7 +44,7 @@ struct DelazifyStrategy {
 
   // Return a function identifier which represent the next function to be
   // delazified. If no more function should be delazified, then return 0.
-  virtual ScriptIndex next() = 0;
+  virtual ScriptStencilRef next() = 0;
 
   // Empty the list of functions to be processed next. done() should return true
   // after this call.
@@ -53,8 +54,7 @@ struct DelazifyStrategy {
   // can choose to ignore the insertion of an index in its queue of function to
   // delazify. Return false only in case of errors while inserting, and true
   // otherwise.
-  [[nodiscard]] virtual bool insert(ScriptIndex index,
-                                    frontend::ScriptStencilRef& ref) = 0;
+  [[nodiscard]] virtual bool insert(ScriptStencilRef& ref) = 0;
 
   // Add the inner functions of a delazified function. This function should only
   // be called with a function which has some bytecode associated with it, and
@@ -63,10 +63,7 @@ struct DelazifyStrategy {
   // This function is called with the script index of:
   //  - top-level script, when starting the off-thread delazification.
   //  - functions added by `add` and delazified by `DelazificationContext`.
-  [[nodiscard]] bool add(FrontendContext* fc,
-                         const InitialStencilAndDelazifications& stencils,
-                         const frontend::CompilationStencil& stencil,
-                         ScriptIndex index);
+  [[nodiscard]] bool add(FrontendContext* fc, ScriptStencilRef& ref);
 };
 
 // Delazify all functions using a Depth First traversal of the function-tree
@@ -81,13 +78,13 @@ struct DelazifyStrategy {
 // expectation that calls will follow the same order, and that helper thread
 // would always be ahead of the execution.
 struct DepthFirstDelazification final : public DelazifyStrategy {
-  Vector<ScriptIndex, 0, SystemAllocPolicy> stack;
+  Vector<frontend::ScriptStencilRef, 0, SystemAllocPolicy> stack;
 
   bool done() const override { return stack.empty(); }
-  ScriptIndex next() override { return stack.popCopy(); }
+  ScriptStencilRef next() override { return stack.popCopy(); }
   void clear() override { return stack.clear(); }
-  bool insert(ScriptIndex index, frontend::ScriptStencilRef&) override {
-    return stack.append(index);
+  bool insert(frontend::ScriptStencilRef& ref) override {
+    return stack.append(ref);
   }
 };
 
@@ -97,12 +94,12 @@ struct DepthFirstDelazification final : public DelazifyStrategy {
 // large ones which would be prioritized by this delazification strategy.
 struct LargeFirstDelazification final : public DelazifyStrategy {
   using SourceSize = uint32_t;
-  Vector<std::pair<SourceSize, ScriptIndex>, 0, SystemAllocPolicy> heap;
+  Vector<std::pair<SourceSize, ScriptStencilRef>, 0, SystemAllocPolicy> heap;
 
   bool done() const override { return heap.empty(); }
-  ScriptIndex next() override;
+  ScriptStencilRef next() override;
   void clear() override { return heap.clear(); }
-  bool insert(ScriptIndex, frontend::ScriptStencilRef&) override;
+  bool insert(frontend::ScriptStencilRef&) override;
 };
 
 class DelazificationContext {
@@ -110,10 +107,6 @@ class DelazificationContext {
 
   // Queue of functions to be processed while delazifying.
   UniquePtr<DelazifyStrategy> strategy_;
-
-  // Every delazified function is merged back to provide context for delazifying
-  // even more functions.
-  frontend::CompilationStencilMerger merger_;
 
   RefPtr<frontend::InitialStencilAndDelazifications> stencils_;
 

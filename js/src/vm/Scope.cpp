@@ -889,7 +889,7 @@ AbstractBindingIter<frontend::TaggedParserAtomIndex>::AbstractBindingIter(
     const frontend::ScopeStencilRef& ref)
     : Base() {
   const ScopeStencil& scope = ref.scope();
-  BaseParserScopeData* data = ref.context_.scopeNames[ref.scopeIndex_];
+  BaseParserScopeData* data = ref.context()->scopeNames[ref.scopeIndex_];
   switch (scope.kind()) {
     case ScopeKind::Lexical:
     case ScopeKind::SimpleCatch:

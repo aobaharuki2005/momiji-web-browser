@@ -111,7 +111,8 @@ InputName InputScript::displayAtom() const {
         return InputName(ptr, ptr->function()->fullDisplayAtom());
       },
       [](const ScriptStencilRef& ref) {
-        return InputName(ref, ref.scriptData().functionAtom);
+        auto& scriptData = ref.scriptDataFromEnclosing();
+        return InputName(ref.enclosingScript(), scriptData.functionAtom);
       });
 }
 
@@ -187,11 +188,11 @@ GenericAtom::GenericAtom(const CompilationStencil& context,
 }
 
 GenericAtom::GenericAtom(ScopeStencilRef& scope, TaggedParserAtomIndex index)
-    : GenericAtom(scope.context_, index) {}
+    : GenericAtom(*scope.context(), index) {}
 
 BindingHasher<TaggedParserAtomIndex>::Lookup::Lookup(ScopeStencilRef& scope_ref,
                                                      const GenericAtom& other)
-    : keyStencil(scope_ref.context_), other(other) {}
+    : keyStencil(*scope_ref.context()), other(other) {}
 
 bool GenericAtom::operator==(const GenericAtom& other) const {
   return ref.match(
@@ -353,9 +354,12 @@ bool StencilScopeBindingCache::canCacheFor(ScopeStencilRef ref) { return true; }
 BindingMap<TaggedParserAtomIndex>* StencilScopeBindingCache::createCacheFor(
     ScopeStencilRef ref) {
 #ifdef DEBUG
-  AssertBorrowingSpan(ref.context_.scopeNames, merger_.getResult().scopeNames);
+  MOZ_ASSERT(&ref.stencils_ == &stencils_);
+  MOZ_ASSERT_IF(
+      ref.stencils_.getInitial() != ref.context(),
+      ref.stencils_.getScriptIndexFor(ref.context()) == ref.scriptIndex_);
 #endif
-  auto* dataPtr = ref.context_.scopeNames[ref.scopeIndex_];
+  auto* dataPtr = ref.context()->scopeNames[ref.scopeIndex_];
   BindingMap<TaggedParserAtomIndex> bindingCache;
   if (!scopeMap.putNew(dataPtr, std::move(bindingCache))) {
     return nullptr;
@@ -367,9 +371,12 @@ BindingMap<TaggedParserAtomIndex>* StencilScopeBindingCache::createCacheFor(
 BindingMap<TaggedParserAtomIndex>* StencilScopeBindingCache::lookupScope(
     ScopeStencilRef ref, CacheGeneration gen) {
 #ifdef DEBUG
-  AssertBorrowingSpan(ref.context_.scopeNames, merger_.getResult().scopeNames);
+  MOZ_ASSERT(&ref.stencils_ == &stencils_);
+  MOZ_ASSERT_IF(
+      ref.stencils_.getInitial() != ref.context(),
+      ref.stencils_.getScriptIndexFor(ref.context()) == ref.scriptIndex_);
 #endif
-  auto* dataPtr = ref.context_.scopeNames[ref.scopeIndex_];
+  auto* dataPtr = ref.context()->scopeNames[ref.scopeIndex_];
   auto ptr = scopeMap.lookup(dataPtr);
   if (!ptr) {
     return nullptr;
@@ -970,7 +977,7 @@ static bool IsPrivateField(Scope*, JSAtom* atom) {
 
 static bool IsPrivateField(ScopeStencilRef& scope, TaggedParserAtomIndex atom) {
   if (atom.isParserAtomIndex()) {
-    const CompilationStencil& context = scope.context_;
+    const CompilationStencil& context = *scope.context();
     ParserAtom* parserAtom = context.parserAtomData[atom.toParserAtomIndex()];
     return parserAtom->isPrivateName();
   }
@@ -1604,16 +1611,19 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
   cachedScriptData_ = ScriptDataSpan(nullptr);
   cachedScriptExtra_ = ScriptExtraSpan(nullptr);
 
-  size_t offset = lazy.scriptData().gcThingsOffset.index;
-  size_t length = lazy.scriptData().gcThingsLength;
+  // We are only interested in the functions within the gcthings. The initial
+  // stencil is already aware of all inner functions, and the script indexes can
+  // help build additional ScriptStencilRef.
+  auto gcThings = lazy.gcThingsFromInitial();
+  size_t length = gcThings.Length();
   if (length == 0) {
     return true;
   }
 
   // Reduce the length to the first element which is not a function.
-  for (size_t i = offset; i < offset + length; i++) {
-    if (!lazy.context_.gcThingData[i].isFunction()) {
-      length = i - offset;
+  for (size_t i = 0; i < length; i++) {
+    if (!gcThings[i].isFunction()) {
+      length = i;
       break;
     }
   }
@@ -1630,14 +1640,22 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
   }
 
   for (size_t i = 0; i < length; i++) {
-    ScriptStencilRef inner{lazy.stencils_, lazy.context_,
-                           lazy.context_.gcThingData[i + offset].toFunction()};
+    // The gcThing array is taken out of the initial stencil, thus scriptIndex
+    // are valid for the initial stencil only.
+    ScriptIndex innerIndex = gcThings[i].toFunction();
+    ScriptStencilRef inner{lazy.stencils_, innerIndex};
+
+    // scriptData is extracted from the initial stencil as we are about to
+    // compile the enclosing script.
+    const ScriptStencil& srcData = inner.scriptDataFromInitial();
+
     gcThingsData[i] = TaggedScriptThingIndex(ScriptIndex(i));
     new (mozilla::KnownNotNull, &scriptData[i]) ScriptStencil();
     ScriptStencil& data = scriptData[i];
+    new (mozilla::KnownNotNull, &scriptExtra[i]) ScriptStencilExtra();
     ScriptStencilExtra& extra = scriptExtra[i];
 
-    InputName name{inner, inner.scriptData().functionAtom};
+    InputName name{inner.topLevelScript(), srcData.functionAtom};
     if (!name.isNull()) {
       auto displayAtom = name.internInto(fc, parseAtoms, atomCache);
       if (!displayAtom) {
@@ -1645,7 +1663,7 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
       }
       data.functionAtom = displayAtom;
     }
-    data.functionFlags = inner.scriptData().functionFlags;
+    data.functionFlags = srcData.functionFlags;
 
     extra = inner.scriptExtra();
   }
@@ -1712,15 +1730,14 @@ bool CompilationSyntaxParseCache::copyClosedOverBindings(
   // The gcthings array contains the inner function list followed by the
   // closed-over bindings data. Skip the inner function list, as it is already
   // cached in cachedGCThings_. See also: BaseScript::CreateLazy.
-  size_t offset = lazy.scriptData().gcThingsOffset.index;
-  size_t length = lazy.scriptData().gcThingsLength;
+  auto gcthings = lazy.gcThingsFromInitial();
+  size_t length = gcthings.Length();
   size_t start = cachedGCThings_.Length();
   MOZ_ASSERT(start <= length);
   if (length - start == 0) {
     return true;
   }
   length -= start;
-  start += offset;
 
   // Atoms from the lazy.context (CompilationStencil) are not registered in the
   // the parseAtoms table. Thus we create a new span which will contain all the
@@ -1733,14 +1750,14 @@ bool CompilationSyntaxParseCache::copyClosedOverBindings(
   }
 
   for (size_t i = 0; i < length; i++) {
-    auto gcThing = lazy.context_.gcThingData[i + start];
+    auto gcThing = gcthings[i + start];
     if (gcThing.isNull()) {
       closedOverBindings[i] = TaggedParserAtomIndex::null();
       continue;
     }
 
     MOZ_ASSERT(gcThing.isAtom());
-    InputName name(lazy, gcThing.toAtom());
+    InputName name(lazy.topLevelScript(), gcThing.toAtom());
     auto parserAtom = name.internInto(fc, parseAtoms, atomCache);
     if (!parserAtom) {
       return false;
@@ -3709,7 +3726,7 @@ void InitialStencilAndDelazifications::initRelativeIndexes() {
         index == getInitialIndexFor(enclosingInInitial, enclosedInEnclosing),
         "getInitialIndexFor does not match relativeIndexes_");
     relativeIndexes_[index - 1] = ScriptIndexes{
-      ScriptIndex(enclosing), ScriptIndex(enclosed)
+      enclosingInInitial, enclosedInEnclosing
     };
   };
   for (size_t index = 0; index < initial_->scriptData.size(); index++) {
