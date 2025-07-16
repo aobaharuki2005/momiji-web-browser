@@ -695,6 +695,8 @@ class nsGridContainerFrame::TrackPlan {
   const_iterator begin() const { return mTrackSizes.begin(); }
   const_iterator end() const { return mTrackSizes.end(); }
 
+  void Initialize(TrackSizingPhase aPhase, const Tracks& aTracks);
+
   // Distribute space to all flex tracks this item spans.
   // https://drafts.csswg.org/css-grid-2/#algo-spanning-flex-items
   nscoord DistributeToFlexTrackSizes(
@@ -2787,19 +2789,6 @@ struct nsGridContainerFrame::Tracks {
       }
     }
     return aGrowableTracks.IsEmpty() ? 0 : space;
-  }
-
-  void InitializePlan(TrackSizingPhase aPhase, TrackPlan& aTrackPlan) const {
-    MOZ_ASSERT(aTrackPlan.Length() == mSizes.Length());
-    auto plan = aTrackPlan.begin();
-    auto sz = mSizes.begin();
-    for (; plan != aTrackPlan.end() && sz != mSizes.end(); plan++, sz++) {
-      plan->mBase = StartSizeInDistribution(aPhase, *sz);
-      MOZ_ASSERT(aPhase == TrackSizingPhase::MaxContentMaximums ||
-                     !(sz->mState & TrackSize::eInfinitelyGrowable),
-                 "forgot to reset the eInfinitelyGrowable bit?");
-      plan->mState = sz->mState;
-    }
   }
 
   void CopyPlanToSize(TrackSizingPhase aPhase, const TrackPlan& aTrackPlan,
@@ -6969,7 +6958,7 @@ bool nsGridContainerFrame::Tracks::GrowSizeForSpanningItems(
   const bool isMaxSizingPhase = aPhase == TrackSizingPhase::IntrinsicMaximums ||
                                 aPhase == TrackSizingPhase::MaxContentMaximums;
   bool needToUpdateSizes = false;
-  InitializePlan(aPhase, aTrackPlan);
+  aTrackPlan.Initialize(aPhase, *this);
   for (; aIter != aIterEnd; ++aIter) {
     const SpanningItemData& item = *aIter;
     if (!(item.mState & SelectorForPhase(aPhase, aConstraint))) {
@@ -10801,6 +10790,21 @@ nsGridContainerFrame::FindFrameAt(int32_t aLineNumber, nsPoint aPos,
   *aPosIsBeforeFirstFrame = pos.I(wm) < rect.IStart(wm);
   *aPosIsAfterLastFrame = pos.I(wm) > rect.IEnd(wm);
   return NS_OK;
+}
+
+void nsGridContainerFrame::TrackPlan::Initialize(TrackSizingPhase aPhase,
+                                                 const Tracks& aTracks) {
+  MOZ_ASSERT(mTrackSizes.Length() == aTracks.mSizes.Length());
+  auto plan = mTrackSizes.begin();
+  auto sz = aTracks.mSizes.begin();
+  for (; plan != mTrackSizes.end() && sz != aTracks.mSizes.end();
+       plan++, sz++) {
+    plan->mBase = Tracks::StartSizeInDistribution(aPhase, *sz);
+    MOZ_ASSERT(aPhase == TrackSizingPhase::MaxContentMaximums ||
+                   !(sz->mState & TrackSize::eInfinitelyGrowable),
+               "forgot to reset the eInfinitelyGrowable bit?");
+    plan->mState = sz->mState;
+  }
 }
 
 // Distribute space to all flex tracks this item spans.
