@@ -1,51 +1,46 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 20 Jun 2022 22:34:00 +0000
-Subject: Bug 1921706 - simplify removing libatomic on linux builds.
- r=ng,webrtc-reviewers DONTBUILD
+Date: Tue, 8 Jul 2025 09:15:00 -0500
+Subject: Bug 1974813 - (fix-78f1c67f1) don't process deps from
+ 'buildtools/third_party'
 
-Note: this produces no changes in the generated moz.build files.
-
-o  changeset:   597701:a26d44969a83
-~  user:        Michael Froman <mfroman@mozilla.com>
-   date:        Mon Jun 14 17:39:29 2021 -0500
-   files:       third_party/libwebrtc/build/config/linux/BUILD.gn
-   description:
-   Bug 1654112 - don't use libatomic on linux builds. r=ng
-
-In moz-central a26d44969a83 I added an include of webrtc.gni for
-the build_with_mozilla flag, but there is already a Mozilla
-modifcation in this file that does not rely on that flag.  This
-simplification will help with future google build directory move.
-
-Differential Revision: https://phabricator.services.mozilla.com/D224069
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d57bb9cfa9a7679fa5d3f47ae9343928700ec103
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9855b72bb8a73615cab39cbe8cf04679cc975050
 ---
- config/linux/BUILD.gn | 4 ++++
+ config/BUILDCONFIG.gn | 4 ++++
  1 file changed, 4 insertions(+)
 
-diff --git a/config/linux/BUILD.gn b/config/linux/BUILD.gn
-index cc4749ea0..b96e8cbe3 100644
---- a/config/linux/BUILD.gn
-+++ b/config/linux/BUILD.gn
-@@ -40,10 +40,13 @@ config("runtime_library") {
-     defines = [ "OS_CHROMEOS" ]
-   }
+diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
+index 4d9c9f5db..f1189be21 100644
+--- a/config/BUILDCONFIG.gn
++++ b/config/BUILDCONFIG.gn
+@@ -558,6 +558,7 @@ foreach(_target_type,
+         deps = []
+       }
  
-+  # Mozilla disable libatomic on linux builds
-+  if (false) {
-   if ((!is_chromeos || default_toolchain != "//build/toolchain/cros:target") &&
-       (!use_custom_libcxx || current_cpu == "mipsel")) {
-     libs = [ "atomic" ]
-   }
-+  }
- }
++      if (false) { # Mozilla
+       if (is_clang && (!defined(invoker.use_libcxx_modules) ||
+                        invoker.use_libcxx_modules)) {
+         # This is necessary for Clang modules builds.
+@@ -577,6 +578,7 @@ foreach(_target_type,
+           "//buildtools/third_party/libc++:std_wctype_h",
+         ]
+       }
++      }
  
- config("libcap") {
-@@ -54,6 +57,7 @@ config("libresolv") {
-   libs = [ "resolv" ]
- }
+       # Consumed by the unsafe-buffers plugin during compile.
+       #
+@@ -652,6 +654,7 @@ foreach(_target_type,
+       if (!defined(deps)) {
+         deps = []
+       }
++      if (false) { # Mozilla
+       if (!defined(invoker.no_default_deps) || !invoker.no_default_deps) {
+         # This pulls in one of:
+         # //build/config:executable_deps
+@@ -684,6 +687,7 @@ foreach(_target_type,
+           "//buildtools/third_party/libc++:std_wctype_h",
+         ]
+       }
++      }
  
-+# Mozilla disable glib - Bug 1654112 (hg sha 127ace4d8887)
- if (false && use_glib) {
-   pkg_config("glib") {
-     packages = [
+       # On Android, write shared library output file to metadata. We will use
+       # this information to, for instance, collect all shared libraries that

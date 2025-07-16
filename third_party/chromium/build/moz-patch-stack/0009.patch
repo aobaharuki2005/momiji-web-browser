@@ -1,27 +1,67 @@
 From: Michael Froman <mfroman@mozilla.com>
 Date: Mon, 20 Jun 2022 22:34:00 +0000
-Subject: Bug 1775143 - pt12 - (mirror) 0391681090bb r=ng
+Subject: Bug 1775143 - pt15 - (mirror) 0300b32b7de7 r=ng
 
 (skip-generation)
 
-Depends on D149825
+Depends on D149828
 
-Differential Revision: https://phabricator.services.mozilla.com/D149826
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/75a76abe648ad8bdb9ea858a673bf99a4ec9eb20
+Differential Revision: https://phabricator.services.mozilla.com/D149829
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/831cdef4bf346cb9cc0092ab7e7beea0aa6677c3
 ---
- vs_toolchain.py | 2 ++
- 1 file changed, 2 insertions(+)
+ config/BUILDCONFIG.gn | 7 ++++---
+ config/ui.gni         | 2 +-
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/vs_toolchain.py b/vs_toolchain.py
-index e0f89a555..be334c6fc 100755
---- a/vs_toolchain.py
-+++ b/vs_toolchain.py
-@@ -649,6 +649,8 @@ def main():
-   if len(sys.argv) < 2 or sys.argv[1] not in commands:
-     print('Expected one of: %s' % ', '.join(commands), file=sys.stderr)
-     return 1
-+  if sys.argv[1] == 'copy_dlls':
-+    return 0
-   return commands[sys.argv[1]](*sys.argv[2:])
+diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
+index a9d2caeb1..dd6a105ee 100644
+--- a/config/BUILDCONFIG.gn
++++ b/config/BUILDCONFIG.gn
+@@ -136,7 +136,7 @@ declare_args() {
+   is_official_build = false
  
+   # Set to true when compiling with the Clang compiler.
+-  is_clang = current_os != "linux" ||
++  is_clang = current_os != "linux" || current_os == "openbsd" ||
+              (current_cpu != "s390x" && current_cpu != "s390" &&
+               current_cpu != "ppc64" && current_cpu != "ppc" &&
+               current_cpu != "mips" && current_cpu != "mips64" &&
+@@ -206,7 +206,7 @@ if (host_toolchain == "") {
+   # TODO(dpranke): Add some sort of assert here that verifies that
+   # no toolchain omitted host_toolchain from its toolchain_args().
+ 
+-  if (host_os == "linux") {
++  if (host_os == "linux" || host_os == "openbsd") {
+     if (target_os != "linux") {
+       host_toolchain = "//build/toolchain/linux:clang_$host_cpu"
+     } else if (is_clang) {
+@@ -246,7 +246,7 @@ if (target_os == "android") {
+   # Targeting android on Mac is best-effort and not guaranteed to work.
+   assert(host_os == "linux", "Android builds are only supported on Linux.")
+   _default_toolchain = "//build/toolchain/android:android_clang_$target_cpu"
+-} else if (target_os == "chromeos" || target_os == "linux") {
++} else if (target_os == "chromeos" || target_os == "linux" || target_os == "openbsd") {
+   # See comments in build/toolchain/cros/BUILD.gn about board compiles.
+   if (is_clang) {
+     _default_toolchain = "//build/toolchain/linux:clang_$target_cpu"
+@@ -314,6 +314,7 @@ is_chromeos = current_os == "chromeos"
+ is_fuchsia = current_os == "fuchsia"
+ is_ios = current_os == "ios"
+ is_linux = current_os == "linux"
++is_bsd = current_os == "openbsd"
+ is_mac = current_os == "mac"
+ is_nacl = current_os == "nacl"
+ is_wasm = current_os == "emscripten"
+diff --git a/config/ui.gni b/config/ui.gni
+index 9e7f4df85..2c526a92f 100644
+--- a/config/ui.gni
++++ b/config/ui.gni
+@@ -39,7 +39,7 @@ declare_args() {
+       target_os != "android"
+ }
+ 
+-assert(!use_glib || (is_linux && !is_castos))
++assert(!use_glib || ((is_linux || is_bsd) && !is_castos))
+ 
+ use_atk = use_glib && current_toolchain == default_toolchain
  

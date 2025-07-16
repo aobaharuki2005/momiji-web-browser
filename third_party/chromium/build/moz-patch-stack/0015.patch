@@ -1,42 +1,33 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 1 Oct 2024 21:05:00 +0000
-Subject: Bug 1921706 - remove unnecessary Mozilla mods to
- third_party/libwebrtc/build/win/BUILD.gn r=ng,webrtc-reviewers DONTBUILD
+Date: Mon, 7 Jul 2025 20:46:00 -0500
+Subject: Bug 1974813 - (fix-373e84d10) disable
+ 'clang_lib("compiler_builtins")' target
 
-Note: this produces no changes in the generated moz.build files.
-
-moz-central commit 85b5cef7ef21 (Bug 1654112 - Add check for mozilla build that was in the previous import, restore changes)
-readded changes to third_party/libwebrtc/build/win/BUILD.gn that are not needed.
-
-The include of webrtc.gni was originally added to reference our build_with_mozilla
-flag, but then in same change we set build_with_mozilla back to false meaning we
-never really needed the changes here at all.
-
-Differential Revision: https://phabricator.services.mozilla.com/D224068
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e4b7dbca00cb88d30f45700c32fbbe12d7185833
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf812ff032ed58f1b396d24bde810b127dd24907
 ---
- win/BUILD.gn | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ config/clang/BUILD.gn | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/win/BUILD.gn b/win/BUILD.gn
-index d2d12d953..a63996d6d 100644
---- a/win/BUILD.gn
-+++ b/win/BUILD.gn
-@@ -2,7 +2,6 @@
- # Use of this source code is governed by a BSD-style license that can be
- # found in the LICENSE file.
+diff --git a/config/clang/BUILD.gn b/config/clang/BUILD.gn
+index 0d648fa31..beb81db98 100644
+--- a/config/clang/BUILD.gn
++++ b/config/clang/BUILD.gn
+@@ -252,6 +252,10 @@ template("clang_lib") {
  
--import("//webrtc.gni")
- import("//build/config/clang/clang.gni")
- import("//build/config/sanitizers/sanitizers.gni")
- import("//build/config/win/manifest.gni")
-@@ -17,8 +16,7 @@ windows_manifest("default_exe_manifest") {
-   ]
+ # Adds a dependency on the Clang runtime library clang_rt.builtins.
+ clang_lib("compiler_builtins") {
++# Mozilla: in the past, this checked for !toolchain_has_rust, and
++# effectively made this section a no-op.  We'll make it a definite
++# no-op.  Without this, we see errors during generation.
++if (false) {
+   if (is_mac) {
+     libname = "osx"
+   } else if (is_ios) {
+@@ -280,6 +284,7 @@ clang_lib("compiler_builtins") {
+     libname = "builtins"
+   }
  }
++}
  
--build_with_mozilla = false
--if (is_win && !build_with_mozilla) {
-+if (is_win) {
- #  assert(host_os != "mac" || target_cpu != "x86",
- #         "Windows cross-builds from Mac must be 64-bit.")
- 
+ # Adds a dependency on the Clang runtime library clang_rt.profile.
+ clang_lib("compiler_profile") {

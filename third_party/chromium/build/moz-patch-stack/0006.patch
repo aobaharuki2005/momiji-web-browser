@@ -1,107 +1,32 @@
 From: Michael Froman <mfroman@mozilla.com>
 Date: Mon, 20 Jun 2022 22:34:00 +0000
-Subject: Bug 1775143 - pt7 - (mirror) a62f6186e9d6 r=ng
+Subject: Bug 1775143 - pt8 - (mirror) dc3478ddac7c r=ng
 
 (skip-generation)
 
-Depends on D149820
+Depends on D149821
 
-Differential Revision: https://phabricator.services.mozilla.com/D149821
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/243ea5e6411dc1b769419c07045e78d61f406541
+Differential Revision: https://phabricator.services.mozilla.com/D149822
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9444d12972cebe7d8f805a6e7a81308c063fd91d
 ---
- toolchain/win/setup_toolchain.py | 58 +++++++++++++++++---------------
- 1 file changed, 30 insertions(+), 28 deletions(-)
+ config/BUILD.gn | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/toolchain/win/setup_toolchain.py b/toolchain/win/setup_toolchain.py
-index d6598893c..db0b07eb2 100644
---- a/toolchain/win/setup_toolchain.py
-+++ b/toolchain/win/setup_toolchain.py
-@@ -251,7 +251,7 @@ def main():
+diff --git a/config/BUILD.gn b/config/BUILD.gn
+index ab01bcd5a..d8352aadf 100644
+--- a/config/BUILD.gn
++++ b/config/BUILD.gn
+@@ -109,10 +109,11 @@ config("feature_flags") {
  
-   cpus = ('x86', 'x64', 'arm', 'arm64')
-   assert target_cpu in cpus
--  vc_bin_dir = ''
-+  vc_bin_dir = 'fake_path/cl.exe'
-   include = ''
-   lib = ''
- 
-@@ -264,30 +264,30 @@ def main():
-   def q(s):  # Quote s if it contains spaces or other weird characters.
-     return s if re.match(r'^[a-zA-Z0-9._/\\:-]*$', s) else '"' + s + '"'
- 
--  for cpu in cpus:
--    if cpu == target_cpu:
--      # Extract environment variables for subprocesses.
--      env = _LoadToolchainEnv(cpu, toolchain_root, win_sdk_path, target_store)
--      env['PATH'] = runtime_dirs + os.pathsep + env['PATH']
+ config("debug") {
+   defines = [
+-    "_DEBUG",
+     "DYNAMIC_ANNOTATIONS_ENABLED=1",
+   ]
 -
--      vc_bin_dir = FindFileInEnvList(env, 'PATH', os.pathsep, 'cl.exe')
--
--      # The separator for INCLUDE here must match the one used in
--      # _LoadToolchainEnv() above.
--      include = [p.replace('"', r'\"') for p in env['INCLUDE'].split(';') if p]
--      include = list(map(relflag, include))
--
--      lib = [p.replace('"', r'\"') for p in env['LIB'].split(';') if p]
--      lib = list(map(relflag, lib))
--
--      include_I = ['/I' + i for i in include]
--      include_imsvc = ['-imsvc' + i for i in include]
--      libpath_flags = ['-libpath:' + i for i in lib]
--
--      if (environment_block_name != ''):
--        env_block = _FormatAsEnvironmentBlock(env)
--        with open(environment_block_name, 'w', encoding='utf8') as f:
--          f.write(env_block)
-+#   for cpu in cpus:
-+#     if cpu == target_cpu:
-+#       # Extract environment variables for subprocesses.
-+#       env = _LoadToolchainEnv(cpu, toolchain_root, win_sdk_path, target_store)
-+#       env['PATH'] = runtime_dirs + os.pathsep + env['PATH']
-+# 
-+#       vc_bin_dir = FindFileInEnvList(env, 'PATH', os.pathsep, 'cl.exe')
-+# 
-+#       # The separator for INCLUDE here must match the one used in
-+#       # _LoadToolchainEnv() above.
-+#       include = [p.replace('"', r'\"') for p in env['INCLUDE'].split(';') if p]
-+#       include = list(map(relflag, include))
-+# 
-+#       lib = [p.replace('"', r'\"') for p in env['LIB'].split(';') if p]
-+#       lib = list(map(relflag, lib))
-+# 
-+#       include_I = ['/I' + i for i in include]
-+#       include_imsvc = ['-imsvc' + i for i in include]
-+#       libpath_flags = ['-libpath:' + i for i in lib]
-+# 
-+#       if (environment_block_name != ''):
-+#         env_block = _FormatAsEnvironmentBlock(env)
-+#         with open(environment_block_name, 'w', encoding='utf8') as f:
-+#           f.write(env_block)
- 
-   def ListToArgString(x):
-     return gn_helpers.ToGNString(' '.join(q(i) for i in x))
-@@ -295,11 +295,14 @@ def main():
-   def ListToArgList(x):
-     return f'[{", ".join(gn_helpers.ToGNString(i) for i in x)}]'
- 
-+  env = {}
-+  env['PATH'] = ''
-+  include_I = include
-+  include_imsvc = include
-+  libpath_flags = ''
-   print('vc_bin_dir = ' + gn_helpers.ToGNString(vc_bin_dir))
--  assert include_I
-   print(f'include_flags_I = {ListToArgString(include_I)}')
-   print(f'include_flags_I_list = {ListToArgList(include_I)}')
--  assert include_imsvc
-   if bool(int(os.environ.get('DEPOT_TOOLS_WIN_TOOLCHAIN', 1))) and win_sdk_path:
-     flags = ['/winsysroot' + relflag(toolchain_root)]
-     print(f'include_flags_imsvc = {ListToArgString(flags)}')
-@@ -308,7 +311,6 @@ def main():
-     print(f'include_flags_imsvc = {ListToArgString(include_imsvc)}')
-     print(f'include_flags_imsvc_list = {ListToArgList(include_imsvc)}')
-   print('paths = ' + gn_helpers.ToGNString(env['PATH']))
--  assert libpath_flags
-   print(f'libpath_flags = {ListToArgString(libpath_flags)}')
-   print(f'libpath_flags_list = {ListToArgList(libpath_flags)}')
-   if bool(int(os.environ.get('DEPOT_TOOLS_WIN_TOOLCHAIN', 1))) and win_sdk_path:
++  if (!is_win) {
++   defines += [ "_DEBUG" ]
++  }
+   if (is_nacl) {
+     defines += [ "DYNAMIC_ANNOTATIONS_PREFIX=NACL_" ]
+   }

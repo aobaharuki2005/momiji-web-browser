@@ -1,33 +1,30 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 7 Jul 2025 20:46:00 -0500
-Subject: Bug 1974813 - (fix-373e84d10) disable
- 'clang_lib("compiler_builtins")' target
+Date: Tue, 8 Jul 2025 11:56:00 -0500
+Subject: Bug 1974813 - (fix-131afbb9f) don't use path_exists in siso.gni until
+ we update gn versions
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf812ff032ed58f1b396d24bde810b127dd24907
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6ac11fb7cdd82737d87329386a22d02c508f37b4
 ---
- config/clang/BUILD.gn | 5 +++++
- 1 file changed, 5 insertions(+)
+ toolchain/siso.gni | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/config/clang/BUILD.gn b/config/clang/BUILD.gn
-index 0d648fa31..beb81db98 100644
---- a/config/clang/BUILD.gn
-+++ b/config/clang/BUILD.gn
-@@ -252,6 +252,10 @@ template("clang_lib") {
+diff --git a/toolchain/siso.gni b/toolchain/siso.gni
+index c4a09c339..94650c710 100644
+--- a/toolchain/siso.gni
++++ b/toolchain/siso.gni
+@@ -7,6 +7,7 @@ import("//build/config/gclient_args.gni")
+ use_siso_default = false
  
- # Adds a dependency on the Clang runtime library clang_rt.builtins.
- clang_lib("compiler_builtins") {
-+# Mozilla: in the past, this checked for !toolchain_has_rust, and
-+# effectively made this section a no-op.  We'll make it a definite
-+# no-op.  Without this, we see errors during generation.
-+if (false) {
-   if (is_mac) {
-     libname = "osx"
-   } else if (is_ios) {
-@@ -280,6 +284,7 @@ clang_lib("compiler_builtins") {
-     libname = "builtins"
-   }
+ _is_google_corp_machine = false
++if (false) { # Mozilla
+ if (path_exists("/usr/bin/gcert") ||  # linux
+     path_exists("/usr/local/bin/gcert") ||  # mac
+     path_exists("/c:/gnubby/bin/gcert.exe")) {
+@@ -20,6 +21,7 @@ if (path_exists("//build/config/siso/.sisoenv") &&
+     _is_google_corp_machine && !_is_ninja_used) {
+   use_siso_default = true
  }
 +}
  
- # Adds a dependency on the Clang runtime library clang_rt.profile.
- clang_lib("compiler_profile") {
+ declare_args() {
+   # Placeholder to allow having use_siso in args.gn file.
