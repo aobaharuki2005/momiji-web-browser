@@ -1075,7 +1075,6 @@ void NativeLayerWaylandRender::CommitFrontBufferToScreenLocked(
     buffer->GetSurface()->FenceWait();
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(!mFrontBuffer->IsAttached());
   mSurface->AttachLocked(aProofOfLock, mFrontBuffer);
   mState.mMutatedFrontBuffer = false;
   mState.mMutatedVisibility = false;

@@ -1088,18 +1088,17 @@ bool WaylandSurface::AttachLocked(const WaylandSurfaceLock& aSurfaceLock,
     return false;
   }
 
+  LOGWAYLAND(
+      "WaylandSurface::AttachLocked() transactions [%d] WaylandBuffer [%p] "
+      "attached [%d] size [%d x %d] fractional scale %f",
+      (int)mBufferTransactions.Length(), aBuffer.get(), aBuffer->IsAttached(),
+      bufferSize.width, bufferSize.height, scale);
+
   if (!mBufferTransactions.Contains(transaction)) {
     mBufferTransactions.AppendElement(transaction);
   }
 
   auto* buffer = transaction->BufferBorrowLocked(aSurfaceLock);
-
-  LOGWAYLAND(
-      "WaylandSurface::AttachLocked() transactions [%d] WaylandBuffer [%p] "
-      "wl_buffer [%p] size "
-      "[%d x %d] fractional scale %f",
-      (int)mBufferTransactions.Length(), aBuffer.get(), buffer,
-      bufferSize.width, bufferSize.height, scale);
 
   wl_surface_attach(mSurface, buffer, 0, 0);
   mSurfaceNeedsCommit = true;

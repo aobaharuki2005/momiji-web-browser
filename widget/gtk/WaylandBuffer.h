@@ -196,14 +196,11 @@ class BufferTransaction {
   void BufferDetachCallback();
   void BufferDeleteCallback();
 
-  bool IsFinished() { return mBufferState == BufferState::Detached; }
-
-  enum class BufferState {
-    Detached,
-    Deleted,
-    WaitingForDetach,
-    WaitingForDelete
-  };
+  bool IsAttached() {
+    return mBufferState == BufferState::WaitingForDetach ||
+           mBufferState == BufferState::WaitingForDelete;
+  }
+  bool IsDetached() { return mBufferState == BufferState::Detached; }
 
   void DeleteTransactionLocked(const WaylandSurfaceLock& aSurfaceLock);
 
@@ -215,6 +212,13 @@ class BufferTransaction {
 
   RefPtr<WaylandSurface> mSurface;
   RefPtr<WaylandBuffer> mBuffer;
+
+  enum class BufferState {
+    Detached,
+    Deleted,
+    WaitingForDetach,
+    WaitingForDelete
+  };
 
   BufferState mBufferState{BufferState::Detached};
   wl_buffer* mWLBuffer = nullptr;
