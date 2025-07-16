@@ -637,6 +637,13 @@ class nsGridContainerFrame::TrackPlan {
   const_iterator begin() const { return mTrackSizes.begin(); }
   const_iterator end() const { return mTrackSizes.end(); }
 
+  // Distribute space to all flex tracks this item spans.
+  // https://drafts.csswg.org/css-grid-2/#algo-spanning-flex-items
+  nscoord DistributeToFlexTrackSizes(nscoord aAvailableSpace,
+                                     const nsTArray<uint32_t>& aGrowableTracks,
+                                     const TrackSizingFunctions& aFunctions,
+                                     const nsGridContainerFrame::Tracks& aTracks);
+
  private:
   CopyableTArray<nsGridContainerFrame::TrackSize> mTrackSizes;
 };
@@ -2955,51 +2962,6 @@ struct nsGridContainerFrame::Tracks {
                "unless we clamped some track's size");
   }
 
-  // Distribute space to all flex tracks this item spans.
-  // https://drafts.csswg.org/css-grid-2/#algo-spanning-flex-items
-  nscoord DistributeToFlexTrackSizes(
-      nscoord aAvailableSpace, TrackPlan& aTrackPlan,
-      const nsTArray<uint32_t>& aGrowableTracks,
-      const TrackSizingFunctions& aFunctions) const {
-    nscoord space = aAvailableSpace;
-    // Measure used fraction.
-    double totalFr = 0.0;
-    // TODO alaskanemily: we should be subtracting definite-sized tracks from
-    // the available space below.
-    for (uint32_t track : aGrowableTracks) {
-      MOZ_ASSERT(mSizes[track].mState & TrackSize::eFlexMaxSizing,
-                 "Only flex-sized tracks should be growable during step 4");
-      totalFr += aFunctions.SizingFor(track).GetMax().AsFr();
-    }
-    MOZ_ASSERT(totalFr >= 0.0, "flex fractions must be non-negative.");
-
-    double frSize = aAvailableSpace;
-    if (totalFr > 1.0) {
-      frSize /= totalFr;
-    }
-    // Distribute the space to the tracks proportionally to the fractional
-    // sizes.
-    for (uint32_t track : aGrowableTracks) {
-      TrackSize& sz = aTrackPlan[track];
-      if (sz.IsFrozen()) {
-        continue;
-      }
-      const double trackFr = aFunctions.SizingFor(track).GetMax().AsFr();
-      nscoord size = NSToCoordRoundWithClamp(frSize * trackFr);
-      // This shouldn't happen in theory, but it could happen due to a
-      // combination of floating-point error during the multiplication above
-      // and loss of precision in the cast.
-      if (MOZ_UNLIKELY(size > space)) {
-        size = space;
-        space = 0;
-      } else {
-        space -= size;
-      }
-      sz.mBase = std::max(sz.mBase, size);
-    }
-    return space;
-  }
-
   /**
    * Distribute aAvailableSpace to the planned base size for aGrowableTracks
    * up to their limits, then distribute the remaining space beyond the limits.
@@ -3014,8 +2976,8 @@ struct nsGridContainerFrame::Tracks {
     InitializeItemPlan(aPhase, aItemPlan, aGrowableTracks);
     nscoord space = aAvailableSpace;
     if (aStep == TrackSizingStep::Flex) {
-      space = DistributeToFlexTrackSizes(space, aTrackPlan, aGrowableTracks,
-                                         aFunctions);
+      space = aTrackPlan.DistributeToFlexTrackSizes(space, aGrowableTracks,
+                                                    aFunctions, *this);
     } else {
       space = GrowTracksToLimit(space, aItemPlan, aGrowableTracks,
                                 aFitContentClamper);
@@ -10967,4 +10929,49 @@ nsGridContainerFrame::FindFrameAt(int32_t aLineNumber, nsPoint aPos,
   *aPosIsBeforeFirstFrame = pos.I(wm) < rect.IStart(wm);
   *aPosIsAfterLastFrame = pos.I(wm) > rect.IEnd(wm);
   return NS_OK;
+}
+
+// Distribute space to all flex tracks this item spans.
+// https://drafts.csswg.org/css-grid-2/#algo-spanning-flex-items
+nscoord nsGridContainerFrame::TrackPlan::DistributeToFlexTrackSizes(
+    nscoord aAvailableSpace, const nsTArray<uint32_t>& aGrowableTracks,
+    const TrackSizingFunctions& aFunctions,
+    const nsGridContainerFrame::Tracks& aTracks) {
+  nscoord space = aAvailableSpace;
+  // Measure used fraction.
+  double totalFr = 0.0;
+  // TODO alaskanemily: we should be subtracting definite-sized tracks from
+  // the available space below.
+  for (uint32_t track : aGrowableTracks) {
+    MOZ_ASSERT(aTracks.mSizes[track].mState & TrackSize::eFlexMaxSizing,
+               "Only flex-sized tracks should be growable during step 4");
+    totalFr += aFunctions.SizingFor(track).GetMax().AsFr();
+  }
+  MOZ_ASSERT(totalFr >= 0.0, "flex fractions must be non-negative.");
+
+  double frSize = aAvailableSpace;
+  if (totalFr > 1.0) {
+    frSize /= totalFr;
+  }
+  // Distribute the space to the tracks proportionally to the fractional
+  // sizes.
+  for (uint32_t track : aGrowableTracks) {
+    TrackSize& sz = mTrackSizes[track];
+    if (sz.IsFrozen()) {
+      continue;
+    }
+    const double trackFr = aFunctions.SizingFor(track).GetMax().AsFr();
+    nscoord size = NSToCoordRoundWithClamp(frSize * trackFr);
+    // This shouldn't happen in theory, but it could happen due to a
+    // combination of floating-point error during the multiplication above
+    // and loss of precision in the cast.
+    if (MOZ_UNLIKELY(size > space)) {
+      size = space;
+      space = 0;
+    } else {
+      space -= size;
+    }
+    sz.mBase = std::max(sz.mBase, size);
+  }
+  return space;
 }
