@@ -736,7 +736,6 @@ def generate_gn_config(
         input_variables.update(
             {
                 "mac_sdk_path": "/",
-                "enable_wmax_tokens": False,
             }
         )
 
