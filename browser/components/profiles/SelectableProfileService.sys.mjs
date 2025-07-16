@@ -21,6 +21,7 @@ const PROFILES_CREATED_PREF_NAME = "browser.profiles.created";
 ChromeUtils.defineESModuleGetters(lazy, {
   ClientID: "resource://gre/modules/ClientID.sys.mjs",
   CryptoUtils: "resource://services-crypto/utils.sys.mjs",
+  DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
   EveryWindow: "resource:///modules/EveryWindow.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
@@ -30,7 +31,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 ChromeUtils.defineLazyGetter(lazy, "profilesLocalization", () => {
-  return new Localization(["browser/profiles.ftl"], true);
+  return new Localization(["browser/profiles.ftl"]);
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -992,7 +993,13 @@ class SelectableProfileServiceClass extends EventEmitter {
     // directory name. So we match only word characters for the directory name.
     const safeSalt = salt.match(/\w/g).join("").slice(0, 8);
 
-    const profileDir = `${safeSalt}.${aProfileName}`;
+    const profileDir = lazy.DownloadPaths.sanitize(
+      `${safeSalt}.${aProfileName}`,
+      {
+        compressWhitespaces: false,
+        allowDirectoryNames: true,
+      }
+    );
 
     // Handle errors in bug 1909919
     await Promise.all([
@@ -1118,7 +1125,7 @@ class SelectableProfileServiceClass extends EventEmitter {
       ...(await this.getAllProfiles()).map(p => p.id)
     );
     let [defaultName, originalName] =
-      lazy.profilesLocalization.formatMessagesSync([
+      await lazy.profilesLocalization.formatMessages([
         { id: "default-profile-name", args: { number: nextProfileNumber } },
         { id: "original-profile-name" },
       ]);
