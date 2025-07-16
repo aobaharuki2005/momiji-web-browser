@@ -31,7 +31,7 @@ declare_args() {
   # For now, we don't support cross-compilation at all, but it's in progress. To
   # allow Rust on Android we have a prebuilt toolchain from the Android team,
   # which is used when this variable is `false`.
-  use_chromium_rust_toolchain = target_os == host_os
+  use_chromium_rust_toolchain = false # Mozilla
 
   # Build libstd locally with GN and use that instead of the prebuilts, where
   # applicable. If this is false the prebuilt libstd will always be used. If
