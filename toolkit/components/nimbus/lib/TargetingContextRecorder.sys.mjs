@@ -140,6 +140,7 @@ export const ATTRIBUTE_TRANSFORMS = Object.freeze({
     })),
   firefoxVersion: typeAssertions.quantity,
   hasActiveEnterprisePolicies: typeAssertions.boolean,
+  hasPinnedTabs: typeAssertions.boolean,
   homePageSettings: pick("isCustomUrl", "isDefault", "isLocked", "isWebExt"),
   isDefaultHandler: pick("html", "pdf"),
   isDefaultBrowser: typeAssertions.boolean,
