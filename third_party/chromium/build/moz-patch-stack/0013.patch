@@ -15,7 +15,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3a785d486d97fc9cb
  4 files changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
-index e77ea4afa..b6093c1f8 100644
+index c6332849d..743ebb954 100644
 --- a/config/BUILDCONFIG.gn
 +++ b/config/BUILDCONFIG.gn
 @@ -243,7 +243,7 @@ _default_toolchain = ""

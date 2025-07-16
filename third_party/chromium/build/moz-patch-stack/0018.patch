@@ -1,5 +1,5 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 7 Jul 2025 22:53:02 -0500
+Date: Mon, 7 Jul 2025 22:58:34 -0500
 Subject: Bug 1921707 - point to new build directory location in
  third_party/chromium/build r=ng,glandium
 
@@ -1113,7 +1113,7 @@ index d8352aadf..36c03e0dd 100644
    }
  }
 diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
-index b6093c1f8..a19182c37 100644
+index 743ebb954..82a30bc2d 100644
 --- a/config/BUILDCONFIG.gn
 +++ b/config/BUILDCONFIG.gn
 @@ -207,33 +207,33 @@ if (host_toolchain == "") {
@@ -1436,7 +1436,7 @@ index b6093c1f8..a19182c37 100644
      ]
  
  set_defaults("rust_proc_macro") {
-@@ -574,8 +574,8 @@ foreach(_target_type,
+@@ -584,8 +584,8 @@ foreach(_target_type,
  # Variables
  #   no_default_deps: If true, no standard dependencies will be added.
  #       Targets that set this usually also want to remove
@@ -1447,16 +1447,16 @@ index b6093c1f8..a19182c37 100644
  foreach(_target_type,
          [
            "executable",
-@@ -623,7 +623,7 @@ foreach(_target_type,
-         # //build/config:shared_library_deps
+@@ -634,7 +634,7 @@ foreach(_target_type,
          # (This explicit list is so that grepping for these configs finds where
          # they are used.)
--        deps += [ "//build/config:${_target_type}_deps" ]
-+        deps += [ "//chromium/build/config:${_target_type}_deps" ]
-       }
+         deps += [
+-          "//build/config:${_target_type}_deps",
++          "//chromium/build/config:${_target_type}_deps",
  
-       # On Android, write shared library output file to metadata. We will use
-@@ -720,12 +720,12 @@ if (is_component_build) {
+           # These are necessary for Clang modules builds.
+           "//buildtools/third_party/libc++:_Builtin_limits",
+@@ -738,12 +738,12 @@ if (is_component_build) {
    default_component_configs = default_shared_library_configs
    if (is_android) {
      default_component_configs -=
@@ -1471,7 +1471,7 @@ index b6093c1f8..a19182c37 100644
    }
  } else {
    default_component_configs = default_compiler_configs
-@@ -753,8 +753,8 @@ set_defaults("component") {
+@@ -771,8 +771,8 @@ set_defaults("component") {
  # value should be set using the custom_processor arg.
  
  # Variables needed by rbe.gni aren't available at the top of this file.
@@ -1482,7 +1482,7 @@ index b6093c1f8..a19182c37 100644
  
  # TODO(b/253987456): Add action_foreach support.
  # TODO(379584977): remove this. no need this for siso native.
-@@ -793,8 +793,8 @@ foreach(_target_type, [ "action" ]) {
+@@ -811,8 +811,8 @@ foreach(_target_type, [ "action" ]) {
        # Reproxy directly without actions_remote.py/rewrapper.
        # TODO(b/259381924): Investigate enabling in nacl config.
        if (allow_remote && use_reclient && !is_nacl && !use_siso) {
@@ -2817,7 +2817,7 @@ index f449ebffc..fcf6675a7 100644
  
  assert(use_custom_libcxx, "should only be used if use_custom_libcxx is set")
 diff --git a/config/c++/c++.gni b/config/c++/c++.gni
-index 9d8a6d0b9..a6ff5ce6a 100644
+index ea97f9f60..e73f0dac2 100644
 --- a/config/c++/c++.gni
 +++ b/config/c++/c++.gni
 @@ -2,8 +2,8 @@
@@ -3030,7 +3030,7 @@ index 6913de9bb..bc581c942 100644
    # Use this instead of clang_use_chrome_plugins to enable just the raw-ptr-plugin.
    clang_use_raw_ptr_plugin = false
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 81b33c3ae..817221562 100644
+index 05dda76e1..18cee3c7c 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -2,45 +2,45 @@
@@ -3183,7 +3183,7 @@ index 81b33c3ae..817221562 100644
    }
  
    if (current_cpu == "arm64" && !is_win && is_clang) {
-@@ -1745,7 +1745,7 @@ config("runtime_library") {
+@@ -1757,7 +1757,7 @@ config("runtime_library") {
    # libandroid_support in the -isystem include order.  Otherwise, there will be
    # build errors related to symbols declared in math.h.
    if (use_custom_libcxx) {
@@ -3192,7 +3192,7 @@ index 81b33c3ae..817221562 100644
    }
  
    # Rust and C++ both provide intrinsics for LLVM to call for math operations. We
-@@ -1755,13 +1755,13 @@ config("runtime_library") {
+@@ -1767,13 +1767,13 @@ config("runtime_library") {
    # order to cause that replacement to occur by explicitly linking in clang's
    # compiler-rt library.
    if (is_clang && !is_nacl && !is_cronet_build) {
@@ -3208,7 +3208,7 @@ index 81b33c3ae..817221562 100644
  
      if (use_custom_libunwind) {
        # Instead of using an unwind lib from the toolchain,
-@@ -1774,18 +1774,18 @@ config("runtime_library") {
+@@ -1786,18 +1786,18 @@ config("runtime_library") {
    # categories here, add it to the associated file to keep this shared config
    # smaller.
    if (is_win) {
@@ -3233,7 +3233,7 @@ index 81b33c3ae..817221562 100644
    }
  
    if (is_component_build) {
-@@ -2037,7 +2037,7 @@ config("default_warnings") {
+@@ -2049,7 +2049,7 @@ config("default_warnings") {
  # See also: https://docs.google.com/document/d/1CTbQ-5cQjnjU8aCOtLiA7G6P0i5C6HpSDNlSNq6nl5E
  #
  # To enable in a GN target, use:
@@ -3242,7 +3242,7 @@ index 81b33c3ae..817221562 100644
  
  config("prevent_unsafe_narrowing") {
    if (is_clang) {
-@@ -2386,8 +2386,8 @@ config("no_incompatible_pointer_warnings") {
+@@ -2398,8 +2398,8 @@ config("no_incompatible_pointer_warnings") {
  # You can override the optimization level on a per-target basis by removing the
  # default config and then adding the named one you want:
  #
@@ -3253,7 +3253,7 @@ index 81b33c3ae..817221562 100644
  
  # Shared settings for both "optimize" and "optimize_max" configs.
  # IMPORTANT: On Windows "/O1" and "/O2" must go before the common flags.
-@@ -2618,12 +2618,12 @@ config("optimize_max") {
+@@ -2630,12 +2630,12 @@ config("optimize_max") {
      # The NaCl IRT is a special case and always wants its own config.
      # Various components do:
      #   if (!is_debug) {
@@ -3269,7 +3269,7 @@ index 81b33c3ae..817221562 100644
    } else {
      ldflags = common_optimize_on_ldflags
      if (is_win) {
-@@ -2651,12 +2651,12 @@ config("optimize_speed") {
+@@ -2663,12 +2663,12 @@ config("optimize_speed") {
      # The NaCl IRT is a special case and always wants its own config.
      # Various components do:
      #   if (!is_debug) {
@@ -3285,7 +3285,7 @@ index 81b33c3ae..817221562 100644
    } else {
      ldflags = common_optimize_on_ldflags
      if (is_win) {
-@@ -2688,7 +2688,7 @@ config("default_optimization") {
+@@ -2700,7 +2700,7 @@ config("default_optimization") {
    if (is_nacl && is_nacl_irt) {
      # The NaCl IRT is a special case and always wants its own config.
      # It gets optimized the same way regardless of the type of build.
@@ -3294,7 +3294,7 @@ index 81b33c3ae..817221562 100644
    } else if (is_debug) {
      configs = [ ":no_optimize" ]
    } else if (optimize_for_fuzzing) {
-@@ -2782,8 +2782,8 @@ config("afdo") {
+@@ -2794,8 +2794,8 @@ config("afdo") {
  # You can override the symbol level on a per-target basis by removing the
  # default config and then adding the named one you want:
  #
@@ -3305,7 +3305,7 @@ index 81b33c3ae..817221562 100644
  
  # A helper config that all configs passing /DEBUG to the linker should
  # include as sub-config.
-@@ -2929,7 +2929,7 @@ config("symbols") {
+@@ -2941,7 +2941,7 @@ config("symbols") {
    # https://b/243982712, https://crbug.com/1354616, https://crbug.com/334073642
    if (symbol_level == 2 && !use_debug_fission && !is_nacl && !is_win &&
        (current_cpu == "arm" || current_cpu == "x86")) {
@@ -8714,7 +8714,7 @@ index 210aa6a95..ddd134a2b 100644
 -mixins: "//build/fuchsia/COMMON_METADATA"
 +mixins: "//chromium/build/fuchsia/COMMON_METADATA"
 diff --git a/toolchain/gcc_toolchain.gni b/toolchain/gcc_toolchain.gni
-index a5121ace0..9cd0a6449 100644
+index ac40efcc2..90c11f584 100644
 --- a/toolchain/gcc_toolchain.gni
 +++ b/toolchain/gcc_toolchain.gni
 @@ -2,22 +2,22 @@
@@ -8760,7 +8760,7 @@ index a5121ace0..9cd0a6449 100644
                        root_build_dir)
  
        # The wrapper needs to know what OS we target because it uses that to
-@@ -383,7 +383,7 @@ template("single_gcc_toolchain") {
+@@ -391,7 +391,7 @@ template("single_gcc_toolchain") {
        # existing file.
        if (host_os == "win") {
          tool_wrapper_path =
@@ -8769,7 +8769,7 @@ index a5121ace0..9cd0a6449 100644
          command = "cmd /s /c \"\"$python_path\" $tool_wrapper_path delete-file {{output}} && $command\""
        } else {
          command = "rm -f {{output}} && $command"
-@@ -406,7 +406,7 @@ template("single_gcc_toolchain") {
+@@ -414,7 +414,7 @@ template("single_gcc_toolchain") {
        sofile = "{{output_dir}}/$soname"  # Possibly including toolchain dir.
        rspfile = sofile + ".rsp"
  
@@ -8778,7 +8778,7 @@ index a5121ace0..9cd0a6449 100644
  
        if (defined(invoker.strip)) {
          unstripped_sofile = "{{root_out_dir}}/lib.unstripped/$soname"
-@@ -447,7 +447,7 @@ template("single_gcc_toolchain") {
+@@ -455,7 +455,7 @@ template("single_gcc_toolchain") {
        # requiring sh control structures, pipelines, and POSIX utilities.
        # The host might not have a POSIX shell and utilities (e.g. Windows).
        solink_wrapper =
@@ -8787,7 +8787,7 @@ index a5121ace0..9cd0a6449 100644
        solink_extra_flags = ""
        if (current_os == "aix") {
          # to be intercepted by solink_wrapper, so that we exit immediately
-@@ -519,7 +519,7 @@ template("single_gcc_toolchain") {
+@@ -527,7 +527,7 @@ template("single_gcc_toolchain") {
        sofile = "{{output_dir}}/$soname"
        rspfile = sofile + ".rsp"
  
@@ -8796,7 +8796,7 @@ index a5121ace0..9cd0a6449 100644
  
        if (defined(invoker.strip)) {
          unstripped_sofile = "{{root_out_dir}}/lib.unstripped/$soname"
-@@ -576,7 +576,7 @@ template("single_gcc_toolchain") {
+@@ -584,7 +584,7 @@ template("single_gcc_toolchain") {
        rspfile = "$outfile.rsp"
        unstripped_outfile = outfile
  
@@ -8805,7 +8805,7 @@ index a5121ace0..9cd0a6449 100644
  
        # Use this for {{output_extension}} expansions unless a target manually
        # overrides it (in which case {{output_extension}} will be what the target
-@@ -618,7 +618,7 @@ template("single_gcc_toolchain") {
+@@ -626,7 +626,7 @@ template("single_gcc_toolchain") {
        }
  
        link_wrapper =
@@ -8814,7 +8814,7 @@ index a5121ace0..9cd0a6449 100644
        command = "\"$python_path\" \"$link_wrapper\" --output=\"$outfile\"$strip_switch$map_switch$dwp_switch -- $link_command"
  
        description = "LINK $outfile"
-@@ -664,7 +664,7 @@ template("single_gcc_toolchain") {
+@@ -672,7 +672,7 @@ template("single_gcc_toolchain") {
      }
  
      tool("action") {
@@ -8823,7 +8823,7 @@ index a5121ace0..9cd0a6449 100644
      }
  
      if (toolchain_has_rust) {
-@@ -675,7 +675,7 @@ template("single_gcc_toolchain") {
+@@ -683,7 +683,7 @@ template("single_gcc_toolchain") {
        rustc_bin = "$rust_sysroot_relative/bin/rustc"
        rustc = "$rust_compiler_prefix${rustc_bin}"
        rustc_wrapper =
@@ -8832,7 +8832,7 @@ index a5121ace0..9cd0a6449 100644
  
        # RSP manipulation due to https://bugs.chromium.org/p/gn/issues/detail?id=249
        tool("rust_staticlib") {
-@@ -727,7 +727,7 @@ template("single_gcc_toolchain") {
+@@ -735,7 +735,7 @@ template("single_gcc_toolchain") {
          exename = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
          depfile = "$exename.d"
          rspfile = "$exename.rsp"
@@ -8841,7 +8841,7 @@ index a5121ace0..9cd0a6449 100644
  
          default_output_extension = default_executable_extension
          default_output_dir = "{{root_out_dir}}"
-@@ -743,7 +743,7 @@ template("single_gcc_toolchain") {
+@@ -751,7 +751,7 @@ template("single_gcc_toolchain") {
          dllname = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
          depfile = "$dllname.d"
          rspfile = "$dllname.rsp"
@@ -8850,7 +8850,7 @@ index a5121ace0..9cd0a6449 100644
  
          default_output_extension = default_shlib_extension
          output_prefix = "lib"
-@@ -760,7 +760,7 @@ template("single_gcc_toolchain") {
+@@ -768,7 +768,7 @@ template("single_gcc_toolchain") {
          dllname = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
          depfile = "$dllname.d"
          rspfile = "$dllname.rsp"

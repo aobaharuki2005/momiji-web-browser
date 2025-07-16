@@ -17,10 +17,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/aad17933ade017660
  4 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 00255a9c4..01ca1d84a 100644
+index 1e5ba5ca2..8bb1c855a 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
-@@ -2267,7 +2267,7 @@ config("no_rtti") {
+@@ -2279,7 +2279,7 @@ config("no_rtti") {
  # to heap-allocated memory are passed over shared library boundaries.
  config("export_dynamic") {
    # TODO(crbug.com/40118868): Revisit after target_os flip is completed.

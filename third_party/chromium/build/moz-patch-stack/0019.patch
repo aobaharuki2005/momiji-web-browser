@@ -1,5 +1,5 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 7 Jul 2025 22:53:03 -0500
+Date: Mon, 7 Jul 2025 22:58:35 -0500
 Subject: Bug 1775143 - pt14 - (mirror) 58f47eacaf10 r=ng
 
 Search third_party/libwebrtc/build for current_cpu, removing
@@ -453,7 +453,7 @@ index 2682ea0ad..5efeed6aa 100644
          } else {
            assert(false)  # Unhandled cpu type
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 817221562..1c27657a4 100644
+index 18cee3c7c..c4f7d222f 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -23,11 +23,11 @@ import("//chromium/build/toolchain/rbe.gni")
@@ -667,7 +667,7 @@ index 817221562..1c27657a4 100644
      # arm is normally the default mode for clang, but on chromeos a wrapper
      # is used to pass -mthumb, and therefor change the default.
      cflags = [ "-marm" ]
-@@ -1874,7 +1874,7 @@ config("default_warnings") {
+@@ -1886,7 +1886,7 @@ config("default_warnings") {
  
      # Suppress warnings about ABI changes on ARM (Clang doesn't give this
      # warning).
@@ -676,7 +676,7 @@ index 817221562..1c27657a4 100644
        cflags += [ "-Wno-psabi" ]
      }
  
-@@ -2084,10 +2084,10 @@ config("chromium_code") {
+@@ -2096,10 +2096,10 @@ config("chromium_code") {
        "__STDC_FORMAT_MACROS",
      ]
  
@@ -691,7 +691,7 @@ index 817221562..1c27657a4 100644
        # Non-chromium code is not guaranteed to compile cleanly with
        # _FORTIFY_SOURCE. Also, fortified build may fail when optimizations are
        # disabled, so only do that for Release build.
-@@ -2370,9 +2370,9 @@ config("no_incompatible_pointer_warnings") {
+@@ -2382,9 +2382,9 @@ config("no_incompatible_pointer_warnings") {
    cflags = []
    if (is_clang) {
      cflags += [ "-Wno-incompatible-pointer-types" ]
@@ -703,7 +703,7 @@ index 817221562..1c27657a4 100644
      cflags += [ "-w" ]
    }
  }
-@@ -2429,7 +2429,7 @@ if (is_win) {
+@@ -2441,7 +2441,7 @@ if (is_win) {
    if (is_android) {
      # TODO(jdduke) Re-enable on mips after resolving linking
      # issues with libc++ (crbug.com/456380).
@@ -712,7 +712,7 @@ index 817221562..1c27657a4 100644
        common_optimize_on_ldflags += [
          # Warn in case of text relocations.
          "-Wl,--warn-shared-textrel",
-@@ -2491,7 +2491,7 @@ config("default_stack_frames") {
+@@ -2503,7 +2503,7 @@ config("default_stack_frames") {
        # Omit frame pointers for leaf functions on x86, otherwise building libyuv
        # gives clang's register allocator issues, see llvm.org/PR15798 /
        # crbug.com/233709
@@ -721,7 +721,7 @@ index 817221562..1c27657a4 100644
          cflags += [ "-momit-leaf-frame-pointer" ]
        }
      } else {
-@@ -2907,12 +2907,12 @@ config("symbols") {
+@@ -2919,12 +2919,12 @@ config("symbols") {
      # DWARF info may be corrupt; offsets in a range list entry are in different
      # sections" there.  Maybe just a bug in nacl_switch_32.S.
      _enable_gdb_index =
@@ -737,7 +737,7 @@ index 817221562..1c27657a4 100644
      if (_enable_gdb_index) {
        if (is_clang) {
          # This flag enables the GNU-format pubnames and pubtypes sections,
-@@ -2928,7 +2928,7 @@ config("symbols") {
+@@ -2940,7 +2940,7 @@ config("symbols") {
    # Compress debug on 32-bit ARM to stay under 4GB file size limit.
    # https://b/243982712, https://crbug.com/1354616, https://crbug.com/334073642
    if (symbol_level == 2 && !use_debug_fission && !is_nacl && !is_win &&
@@ -1753,7 +1753,7 @@ index 4040aa762..2136148db 100644
    }
  }
 diff --git a/toolchain/gcc_toolchain.gni b/toolchain/gcc_toolchain.gni
-index 9cd0a6449..70da5d3b6 100644
+index 90c11f584..83ee22656 100644
 --- a/toolchain/gcc_toolchain.gni
 +++ b/toolchain/gcc_toolchain.gni
 @@ -135,8 +135,8 @@ template("single_gcc_toolchain") {
