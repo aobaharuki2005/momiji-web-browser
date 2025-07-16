@@ -126,14 +126,6 @@ internal fun ProtectionPanel(
             }
         }
 
-        if (websitePermissions.isNotEmpty()) {
-            WebsitePermissionsMenuGroup(
-                websitePermissions = websitePermissions,
-                onAutoplayValueClick = onAutoplayValueClick,
-                onToggleablePermissionClick = onToggleablePermissionClick,
-            )
-        }
-
         MenuGroup {
             if (websiteInfoState.isSecured) {
                 MenuItem(
@@ -158,6 +150,14 @@ internal fun ProtectionPanel(
             MenuTextItem(
                 label = stringResource(id = R.string.clear_site_data),
                 onClick = onClearSiteDataMenuClick,
+            )
+        }
+
+        if (websitePermissions.isNotEmpty()) {
+            WebsitePermissionsMenuGroup(
+                websitePermissions = websitePermissions,
+                onAutoplayValueClick = onAutoplayValueClick,
+                onToggleablePermissionClick = onToggleablePermissionClick,
             )
         }
 

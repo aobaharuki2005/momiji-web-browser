@@ -50,8 +50,6 @@ internal fun ConnectionSecurityPanel(
                 )
 
                 if (websiteInfoState.certificateName.isNotEmpty()) {
-                    Divider(color = FirefoxTheme.colors.borderSecondary)
-
                     MenuTextItem(
                         label = stringResource(
                             id = R.string.connection_security_panel_verified_by,
@@ -70,7 +68,7 @@ private fun TrackersBlockedPanelPreview() {
     FirefoxTheme {
         Column(
             modifier = Modifier
-                .background(color = FirefoxTheme.colors.layer3),
+                .background(color = FirefoxTheme.colors.layer2),
         ) {
             ConnectionSecurityPanel(
                 websiteInfoState = WebsiteInfoState(
