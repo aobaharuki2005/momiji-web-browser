@@ -32,12 +32,16 @@ import mozilla.components.browser.thumbnails.BrowserThumbnails
 import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.theme.localAcornColors
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
+import mozilla.components.compose.browser.toolbar.concept.PageOrigin
+import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarState
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
+import mozilla.components.compose.browser.toolbar.store.DisplayState
 import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
 import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
 import mozilla.components.feature.toolbar.ToolbarBehaviorController
 import mozilla.components.lib.state.ext.observeAsComposableState
+import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.readermode.ReaderModeController
@@ -208,7 +212,16 @@ class BrowserToolbarComposable(
 
     private fun initializeToolbarStore() = StoreProvider.get(lifecycleOwner) {
         BrowserToolbarStore(
-            initialState = BrowserToolbarState(),
+            initialState = BrowserToolbarState(
+                displayState = DisplayState(
+                    pageOrigin = PageOrigin(
+                        hint = R.string.search_hint,
+                        title = null,
+                        url = null,
+                        onClick = object : BrowserToolbarEvent {},
+                    ),
+                ),
+            ),
             middleware = listOf(
                 when (customTabSession) {
                     null -> BrowserToolbarMiddleware(

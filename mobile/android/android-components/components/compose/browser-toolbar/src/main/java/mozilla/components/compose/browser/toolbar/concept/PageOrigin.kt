@@ -5,6 +5,8 @@
 package mozilla.components.compose.browser.toolbar.concept
 
 import androidx.annotation.StringRes
+import mozilla.components.compose.browser.toolbar.R
+import mozilla.components.compose.browser.toolbar.R
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.PageOriginContextualMenuInteractions.CopyToClipboardClicked
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.PageOriginContextualMenuInteractions.LoadFromClipboardClicked
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.PageOriginContextualMenuInteractions.PasteFromClipboardClicked
@@ -25,7 +27,7 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteractio
  * that does not fit the available space.
  */
 data class PageOrigin(
-    @param:StringRes val hint: Int,
+    @param:StringRes val hint: Int = R.string.mozac_browser_toolbar_search_hint,
     val title: String?,
     val url: CharSequence?,
     val textGravity: TextGravity = TEXT_GRAVITY_START,
