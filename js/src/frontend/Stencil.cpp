@@ -3701,6 +3701,56 @@ void InitialStencilAndDelazifications::Release() {
   }
 }
 
+void InitialStencilAndDelazifications::initRelativeIndexes() {
+  auto writeIndex = [&](ScriptIndex index, ScriptIndex enclosingInInitial,
+                        ScriptIndex enclosedInEnclosing) {
+    MOZ_ASSERT(index > 0);
+    MOZ_ASSERT(
+        index == getInitialIndexFor(enclosingInInitial, enclosedInEnclosing),
+        "getInitialIndexFor does not match relativeIndexes_");
+    relativeIndexes_[index - 1] = ScriptIndexes{
+      ScriptIndex(enclosing), ScriptIndex(enclosed)
+    };
+  };
+  for (size_t index = 0; index < initial_->scriptData.size(); index++) {
+    auto& scriptData = initial_->scriptData[index];
+    // index > 0 is used to iterate over the top-level which is not flagged as isInterpreted.
+    if (index > 0 && (scriptData.isGhost() || !scriptData.functionFlags.isInterpreted())) {
+      continue;
+    }
+
+    auto gcthings = scriptData.gcthings(*initial_.get());
+    if (scriptData.hasSharedData()) {
+      // Then the gc things might not have a contiguous array of inner
+      // functions. Thus we have to iterate over all gcthings.
+      for (auto gcthing: gcthings) {
+        if (gcthing.isFunction()) {
+          writeIndex(gcthing.toFunction(), ScriptIndex(index), gcthing.toFunction());
+        }
+      }
+      continue;
+    }
+
+    // The function is syntax-parsed in the initial compilation. In this case,
+    // the gcthings contains only the list of inner function indices followed by
+    // the list of closed over bindings. (see
+    // PerHandlerParser<SyntaxParseHandler>::finishFunction)
+
+    // The first element of scriptData and scriptExtra is the compiled script
+    // it-self, in the upcoming delazification stencil, thus we start after, at
+    // 1 to index inner functions.
+    size_t functionIndex = 1;
+    for (auto gcthing: gcthings) {
+      if (!gcthing.isFunction()) {
+        break;
+      }
+      writeIndex(gcthing.toFunction(), ScriptIndex(index),
+                 ScriptIndex(functionIndex));
+      functionIndex++;
+    }
+  }
+}
+
 bool InitialStencilAndDelazifications::init(FrontendContext* fc,
                                             const CompilationStencil* initial) {
   MOZ_ASSERT(initial->isInitialStencil());
@@ -3718,6 +3768,12 @@ bool InitialStencilAndDelazifications::init(FrontendContext* fc,
     ReportOutOfMemory(fc);
     return false;
   }
+
+  if (!relativeIndexes_.resize(initial_->scriptData.size() - 1)) {
+    ReportOutOfMemory(fc);
+    return false;
+  }
+  initRelativeIndexes();
 
   return functionKeyToInitialScriptIndex_.init(fc, initial_);
 }
@@ -3743,6 +3799,52 @@ InitialStencilAndDelazifications::getDelazificationFor(
   MOZ_ASSERT(maybeIndex,
              "The extent parameter should be for a function inside the script");
   return getDelazificationAt(*maybeIndex);
+}
+
+ScriptIndex
+InitialStencilAndDelazifications::getScriptIndexFor(
+    const CompilationStencil* delazification) const {
+  MOZ_ASSERT(!delazification->isInitialStencil());
+  auto maybeIndex =
+      functionKeyToInitialScriptIndex_.get(delazification->functionKey);
+  MOZ_ASSERT(maybeIndex,
+             "The delazification should be for a function inside the script");
+  return *maybeIndex;
+}
+
+const ScriptIndexes& InitialStencilAndDelazifications::getRelativeIndexesAt(
+    ScriptIndex initialIndex) const {
+  MOZ_ASSERT(initialIndex.index > 0);
+
+  return relativeIndexes_[initialIndex.index - 1];
+}
+
+ScriptIndex InitialStencilAndDelazifications::getInitialIndexFor(
+    ScriptIndex enclosingInInitial, ScriptIndex enclosedInEnclosing) const {
+  if (enclosedInEnclosing == 0) {
+    // The first function in a CompilationStencil is it-self.
+    return enclosingInInitial;
+  }
+
+  auto& scriptDataFromInitial = initial_->scriptData[enclosingInInitial];
+  auto gcthings = scriptDataFromInitial.gcthings(*initial_.get());
+  // When looking for enclosed script, there is at least one entry in the array
+  // of gc things.
+  MOZ_ASSERT(gcthings.Length() > 0);
+  MOZ_ASSERT(scriptDataFromInitial.hasSharedData() == gcthings[0].isScope());
+  if (scriptDataFromInitial.hasSharedData()) {
+    // The function is already compiled as part of the initial stencil. Thus,
+    // the enclosedInEnclosing index is already an index in the initial stencil.
+    return enclosedInEnclosing;
+  }
+
+  // When the functions does not have associated bytecode and scope-chains,
+  // then we have a contiguous array of inner functions that we can address
+  // using the enclosed index.
+  //
+  // We remove 1 as index 0 corresponds to the enclosing function, which is not
+  // listed in the set of gc things.
+  return gcthings[enclosedInEnclosing - 1].toFunction();
 }
 
 const CompilationStencil* InitialStencilAndDelazifications::storeDelazification(

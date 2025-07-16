@@ -1376,6 +1376,52 @@ class FunctionKeyToScriptIndexMap {
   }
 };
 
+// This structure represents a function script inside a function, using a pair
+// of indices which points to the enclosing script and the possibly-local index
+// inside the enclosing compilation stencil.
+//
+// The `enclosingIndexInInitial` represents both the function script index in
+// `InitialStencilAndDelazifications::initial_` and the stencil index within
+// `InitialStencilAndDelazifications::delazifications_`, unless it is 0, in
+// which case it corresponds to the initial stencil.
+//
+// The `indexInEnclosing` represents the script index in the compilation stencil
+// in which the enclosing script would be fully parsed, indexed by
+// `enclosingIndexInInitial`, which can either be the initial stencil or a
+// delazification stencil.
+//
+// This structure absorbs the `InitialStencilAndDelazifications` splitted
+// representation of having multiple `CompilationStencil`. Among the differences
+// we can note the followings special case:
+//
+// (a) When `enclosingIndexInInitial` points a function which is eagerly
+//   compiled in the initial compilation, then the `indexInEnclosing` is also an
+//   index in the initial compilation, which points an inner function inside the
+//   enclosing function. Thus, `indexInEnclosing > enclosingIndexInInitial`.
+//
+// (b) When `enclosingIndexInInitial` points a function which is syntax-parsed
+//   in the initial compilation, then the `indexInEnclosing` is an index in a
+//   delazification compilation. Given that the index 0-th of a delazification
+//   compilation is the delazified script. Thus, `indexInEnclosing > 0`, which
+//   points an inner function inside the enclosing function.
+//
+// At the intersection of both cases, the followings should be held:
+//
+// - `indexInEnclosing != 0`: it cannot point neither of the top-level script, or
+//   the enclosing function script itself.
+struct ScriptIndexes {
+  // Index of an enclosing function script within the initial
+  // CompilationStencil. This is used also to retrieve the initial stencil or
+  // delazification stencil from `InitialStencilAndDelazifications`.
+  ScriptIndex enclosingIndexInInitial;
+
+  // Index of a function script within the enclosing `CompilationStencil`. The
+  // enclosing `CompilationStencil` contains the fully-parsed content for the
+  // `enclosingIndexInInitial` function script. It can either be the initial
+  // compilation stencil or the delazitication.
+  ScriptIndex indexInEnclosing;
+};
+
 // A class to Associate the initial stencil and the delazifications.
 //
 // This struct is initialized with the initial stencil, with an empty set of
@@ -1411,7 +1457,39 @@ struct InitialStencilAndDelazifications {
   // uninitialized and unused
   FunctionKeyToScriptIndexMap functionKeyToInitialScriptIndex_;
 
+  // Map an initial scriptIndex to its enclosing initial scriptIndex as well as
+  // its scriptIndex within the enclosing script stencil.
+  //
+  // This structure caches information which is only available after some
+  // computation in a stencil.
+  //
+  // For example, the following script:
+  // ```js
+  // function f1() {
+  //   function f2() {
+  //     function f3() {}
+  //     function f4() {}
+  //   }
+  //   function f5() {}
+  // }
+  // ```
+  //
+  // Would yield a vector such as:
+  //
+  // relativeIndexes_ = {
+  //   /* f1 */ { enclosingIndexInInitial: 0, indexInEnclosing: 1 },
+  //   /* f2 */ { enclosingIndexInInitial: 1, indexInEnclosing: 1 },
+  //   /* f3 */ { enclosingIndexInInitial: 2, indexInEnclosing: 1 },
+  //   /* f4 */ { enclosingIndexInInitial: 2, indexInEnclosing: 2 },
+  //   /* f5 */ { enclosingIndexInInitial: 1, indexInEnclosing: 2 },
+  // }
+  //
+  Vector<ScriptIndexes, 0, js::SystemAllocPolicy> relativeIndexes_;
+
   mutable mozilla::Atomic<uintptr_t> refCount_{0};
+
+  // Initialize relative indexes based on the initial's gcThings.
+  void initRelativeIndexes();
 
  public:
   InitialStencilAndDelazifications() = default;
@@ -1450,6 +1528,38 @@ struct InitialStencilAndDelazifications {
   const CompilationStencil* getDelazificationAt(size_t functionIndex) const;
   const CompilationStencil* getDelazificationFor(
       const SourceExtent& extent) const;
+
+  // Return the ScriptIndex of a delazification stencil in the initial stencil.
+  // This index is retrieved using the SourceExtent.
+  ScriptIndex getScriptIndexFor(const CompilationStencil* delazification) const;
+
+  // Return the script indexes to find the enclosing function script's index in
+  // the initial stencil as well as the ScriptIndex within the enclosing
+  // stencil.
+  const ScriptIndexes& getRelativeIndexesAt(ScriptIndex initialIndex) const;
+
+  // Return the initial scriptIndex corresponding to the `enclosedInEnclosing`
+  // scriptIndex in the `CompilationStencil` indexed by `enclosingInInitial` in
+  // the `InitialStencilAndDelazifications`.
+  //
+  // Special cases:
+  //
+  // - For zero-values of `enclosedInEnclosing`, then the `enclosedInEnclosing`
+  //   index points at the first script of the `CompilationStencil` indexed by
+  //   `enclosingInInitial`. The 0-th script of any `CompilationStencil` is the
+  //   top-level or the function it-self. Thus `enclosingInInitial` is returned.
+  //
+  // - For cases where the script indexed by `enclosingInInitial` is compiled in
+  //   the initial stencil, then the index `enclosedInEnclosing` is already a
+  //   ScriptIndex in the initial CompilationStencil. Thus this function simply
+  //   return `enclosedInEnclosing`.
+  //
+  // Note:
+  //
+  // For non-zero values of `enclosedInEnclosing`, this function behaves as the
+  // reverse mapping of `getRelativeIndexesAt`.
+  ScriptIndex getInitialIndexFor(ScriptIndex enclosingInInitial,
+                                 ScriptIndex enclosedInEnclosing) const;
 
   // Try storing the delazification stencil.
   //
