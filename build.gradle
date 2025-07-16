@@ -284,7 +284,7 @@ def getArtifactSuffix() {
     return suffix
 }
 
-class MachExec extends Exec {
+abstract class MachExec extends Exec {
     def MachExec() {
         // Bug 1543982: When invoking `mach build` recursively, the outer `mach
         // build` itself modifies the environment, causing configure to run
