@@ -32,6 +32,7 @@ import org.mozilla.fenix.settings.SupportUtils
  * @param openTab Invoked when opening a tab when a login url is clicked.
  * @param ioDispatcher Coroutine dispatcher for IO operations.
  * @param clipboardManager For copying logins URLs.
+ * @param refreshLoginsList Invoked to refresh the logins list.
  */
 @Suppress("LongParameterList")
 internal class LoginsMiddleware(
@@ -42,6 +43,7 @@ internal class LoginsMiddleware(
     private val openTab: (url: String, openInNewTab: Boolean) -> Unit,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val clipboardManager: ClipboardManager?,
+    private val refreshLoginsList: Store<LoginsState, LoginsAction>.() -> Unit = { dispatch(Init) },
 ) : Middleware<LoginsState, LoginsAction> {
 
     private val scope = CoroutineScope(ioDispatcher)
@@ -73,6 +75,8 @@ internal class LoginsMiddleware(
             is DetailLoginMenuAction.DeleteLoginMenuItemClicked -> {
                 scope.launch {
                     loginsStorage.delete(action.item.guid)
+
+                    context.store.refreshLoginsList()
 
                     withContext(Dispatchers.Main) {
                         getNavController().navigate(LoginsDestinations.LIST)
@@ -200,9 +204,7 @@ internal class LoginsMiddleware(
         }
 
     private fun Store<LoginsState, LoginsAction>.handleLoginsDetailsBackPressed() = scope.launch {
-        dispatch(
-            Init,
-        )
+        refreshLoginsList()
 
         withContext(Dispatchers.Main) {
             getNavController().navigate(LoginsDestinations.LIST)

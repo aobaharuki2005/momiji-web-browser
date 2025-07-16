@@ -9,6 +9,7 @@ import androidx.navigation.NavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginsStorage
+import mozilla.components.lib.state.Store
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -34,6 +35,7 @@ class LoginsMiddlewareTest {
     private lateinit var exitLogins: () -> Unit
     private lateinit var openTab: (String, Boolean) -> Unit
     private lateinit var persistLoginsSortOrder: suspend (LoginsSortOrder) -> Unit
+    private var refreshLoginsList: Store<LoginsState, LoginsAction>.() -> Unit = {}
 
     private val loginList = List(5) {
         Login(
@@ -184,6 +186,42 @@ class LoginsMiddlewareTest {
             assertTrue(capturedNewTab)
         }
 
+    @Test
+    fun `WHEN two logins are deleted, the logins list is refreshed each time`() =
+        runTestOnMain {
+            var numberOfTimesLoginListRefreshed = 0
+            refreshLoginsList = { numberOfTimesLoginListRefreshed++ }
+            `when`(loginsStorage.list()).thenReturn(loginList)
+
+            val middleware = buildMiddleware()
+            val store = middleware.makeStore()
+            store.dispatch(
+                DetailLoginMenuAction.DeleteLoginMenuItemClicked(
+                    item = LoginItem(
+                        guid = loginList[1].guid,
+                        url = loginList[1].origin,
+                        username = loginList[1].username,
+                        password = loginList[1].password,
+                        timeLastUsed = 0L,
+                    ),
+                ),
+            )
+            store.dispatch(
+                DetailLoginMenuAction.DeleteLoginMenuItemClicked(
+                    item = LoginItem(
+                        guid = loginList[2].guid,
+                        url = loginList[2].origin,
+                        username = loginList[2].username,
+                        password = loginList[2].password,
+                        timeLastUsed = 0L,
+                    ),
+                ),
+            )
+            store.waitUntilIdle()
+
+            assertEquals(2, numberOfTimesLoginListRefreshed)
+        }
+
     private fun buildMiddleware() = LoginsMiddleware(
         loginsStorage = loginsStorage,
         getNavController = { navController },
@@ -192,6 +230,7 @@ class LoginsMiddlewareTest {
         ioDispatcher = coroutineRule.testDispatcher,
         persistLoginsSortOrder = persistLoginsSortOrder,
         clipboardManager = clipboardManager,
+        refreshLoginsList = refreshLoginsList,
     )
 
     private fun LoginsMiddleware.makeStore(
