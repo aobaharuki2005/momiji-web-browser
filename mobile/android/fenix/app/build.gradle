@@ -65,9 +65,9 @@ android {
 
     defaultConfig {
         applicationId "org.mozilla"
-        minSdkVersion config.minSdkVersion
-        compileSdk config.compileSdkVersion
-        targetSdkVersion config.targetSdkVersion
+        minSdkVersion = config.minSdkVersion
+        compileSdk = config.compileSdkVersion
+        targetSdkVersion = config.targetSdkVersion
         versionCode 1
         versionName Config.generateDebugVersionName()
         vectorDrawables.useSupportLibrary = true
@@ -814,7 +814,7 @@ if (project.hasProperty("coverage")) {
     android {
         buildTypes {
             debug {
-                testCoverageEnabled true
+                testCoverageEnabled = true
             }
         }
     }
