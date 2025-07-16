@@ -16,9 +16,6 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeLeft
-import androidx.compose.ui.test.swipeRight
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.matcher.RootMatchers
@@ -37,6 +34,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
+import org.mozilla.fenix.helpers.TestHelper.waitForAppWindowToBeUpdated
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
@@ -226,24 +224,14 @@ class CollectionRobot {
         Log.i(TAG, "removeTabFromCollection: Clicked remove button for tab: $title")
     }
 
-    fun swipeTabLeft(title: String, rule: ComposeTestRule) {
-        Log.i(TAG, "swipeTabLeft: Trying to remove tab: $title using swipe left action")
-        rule.onNode(hasText(title), useUnmergedTree = true)
-            .performTouchInput { swipeLeft() }
-        Log.i(TAG, "swipeTabLeft: Removed tab: $title using swipe left action")
-        Log.i(TAG, "swipeTabLeft: Waiting for rule to be idle")
-        rule.waitForIdle()
-        Log.i(TAG, "swipeTabLeft: Waited for rule to be idle")
+    fun swipeTabLeft(title: String) {
+        itemContainingText(title).swipeLeft(6)
+        waitForAppWindowToBeUpdated()
     }
 
-    fun swipeTabRight(title: String, rule: ComposeTestRule) {
-        Log.i(TAG, "swipeTabRight: Trying to remove tab: $title using swipe right action")
-        rule.onNode(hasText(title), useUnmergedTree = true)
-            .performTouchInput { swipeRight() }
-        Log.i(TAG, "swipeTabRight: Removed tab: $title using swipe right action")
-        Log.i(TAG, "swipeTabRight: Waiting for rule to be idle")
-        rule.waitForIdle()
-        Log.i(TAG, "swipeTabRight: Waited for rule to be idle")
+    fun swipeTabRight(title: String) {
+        itemContainingText(title).swipeRight(6)
+        waitForAppWindowToBeUpdated()
     }
 
     fun goBackInCollectionFlow() {

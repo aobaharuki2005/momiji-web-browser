@@ -5,7 +5,6 @@
 package org.mozilla.fenix.ui
 
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -383,7 +382,9 @@ class CollectionTest : TestSetup() {
         homeScreen {
             verifyCollectionIsDisplayed(composeTestRule, collectionName)
         }.expandCollection(composeTestRule, collectionName) {
-            swipeTabLeft(testPage2.title, composeTestRule)
+            verifyTabSavedInCollection(composeTestRule, testPage1.title, true)
+            verifyTabSavedInCollection(composeTestRule, testPage2.title, true)
+            swipeTabLeft(testPage2.title)
             verifyTabSavedInCollection(composeTestRule, testPage2.title, false)
         }
     }
@@ -404,13 +405,14 @@ class CollectionTest : TestSetup() {
         homeScreen {
             verifyCollectionIsDisplayed(composeTestRule, collectionName)
         }.expandCollection(composeTestRule, collectionName) {
-            swipeTabRight(testPage2.title, composeTestRule)
+            verifyTabSavedInCollection(composeTestRule, testPage1.title, true)
+            verifyTabSavedInCollection(composeTestRule, testPage2.title, true)
+            swipeTabRight(testPage2.title)
             verifyTabSavedInCollection(composeTestRule, testPage2.title, false)
         }
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080080
-    @Ignore("Failing: https://bugzilla.mozilla.org/show_bug.cgi?id=1972084")
     @Test
     fun removeLastTabFromCollectionUsingSwipeActionTest() {
         val testPage = getGenericAsset(mockWebServer, 1)
@@ -422,18 +424,22 @@ class CollectionTest : TestSetup() {
             )
 
         homeScreen {
+            verifyCollectionIsDisplayed(composeTestRule, collectionName)
         }.expandCollection(composeTestRule, collectionName) {
-            swipeTabLeft(testPage.title, composeTestRule)
+            verifyTabSavedInCollection(composeTestRule, testPage.title, true)
+            swipeTabLeft(testPage.title)
+            verifyTabSavedInCollection(composeTestRule, testPage.title, false)
         }
         homeScreen {
-            verifyCollectionIsDisplayed(composeTestRule, collectionName, false)
-            verifySnackBarText("Collection deleted")
             clickSnackbarButton(composeTestRule, "UNDO")
             verifyCollectionIsDisplayed(composeTestRule, collectionName)
         }.expandCollection(composeTestRule, collectionName) {
             verifyTabSavedInCollection(composeTestRule, testPage.title, true)
-            swipeTabRight(testPage.title, composeTestRule)
-            verifySnackBarText("Collection deleted")
+            swipeTabRight(testPage.title)
+            verifyTabSavedInCollection(composeTestRule, testPage.title, false)
+        }
+        homeScreen {
+            verifyCollectionIsDisplayed(composeTestRule, collectionName, false)
         }
     }
 

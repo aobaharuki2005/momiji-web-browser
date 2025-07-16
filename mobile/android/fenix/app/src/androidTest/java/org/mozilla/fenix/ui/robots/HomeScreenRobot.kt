@@ -419,6 +419,7 @@ class HomeScreenRobot {
             composeTestRule.onNodeWithText(title).assertIsDisplayed()
             Log.i(TAG, "verifyCollectionIsDisplayed: Verified that collection with title: $title is displayed")
         } else {
+            composeTestRule.waitUntilDoesNotExist(hasText(title), waitingTime)
             Log.i(TAG, "verifyCollectionIsDisplayed: Trying to verify that collection with title: $title is not displayed")
             composeTestRule.onNodeWithText(title).assertIsNotDisplayed()
             Log.i(TAG, "verifyCollectionIsDisplayed: Verified that collection with title: $title is not displayed")
