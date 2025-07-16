@@ -92,7 +92,7 @@ WaylandBuffer::WaylandBuffer(const LayoutDeviceIntSize& aSize) : mSize(aSize) {}
 
 bool WaylandBuffer::IsAttached() const {
   for (const auto& transaction : mBufferTransactions) {
-    if (transaction->IsAttached()) {
+    if (!transaction->IsFinished()) {
       return true;
     }
   }
@@ -101,8 +101,8 @@ bool WaylandBuffer::IsAttached() const {
 
 BufferTransaction* WaylandBuffer::GetTransaction() {
   for (const auto& transaction : mBufferTransactions) {
-    if (transaction->IsDetached()) {
-      LOGWAYLAND("WaylandBuffer::GetTransaction() [%p] reuse transaction [%d]",
+    if (transaction->IsFinished()) {
+      LOGWAYLAND("WaylandBuffer::GetTransaction() reuse [%p] transactions [%d]",
                  (void*)this, (int)mBufferTransactions.Length());
       return transaction;
     }
@@ -130,9 +130,13 @@ BufferTransaction* WaylandBuffer::GetTransaction() {
 
 void WaylandBuffer::RemoveTransaction(RefPtr<BufferTransaction> aTransaction) {
   LOGWAYLAND("WaylandBuffer::RemoveTransaction() [%p]", (void*)aTransaction);
-  [[maybe_unused]] bool removed =
-      mBufferTransactions.RemoveElement(aTransaction);
-  MOZ_DIAGNOSTIC_ASSERT(removed);
+  MOZ_DIAGNOSTIC_ASSERT(mBufferTransactions.Contains(aTransaction));
+  for (size_t i = 0; i < mBufferTransactions.Length(); i++) {
+    if (mBufferTransactions[i] == aTransaction) {
+      mBufferTransactions.RemoveElementAt(i);
+      return;
+    }
+  }
 }
 
 void WaylandBuffer::SetExternalWLBuffer(wl_buffer* aWLBuffer) {
@@ -328,15 +332,16 @@ bool WaylandBufferDMABUFHolder::Matches(DMABufSurface* aSurface) const {
 
 wl_buffer* BufferTransaction::BufferBorrowLocked(
     const WaylandSurfaceLock& aSurfaceLock) {
-  LOGWAYLAND(
-      "BufferTransaction::BufferBorrow() [%p] widget [%p] WaylandSurface [%p] "
-      "(old %p) "
-      "WaylandBuffer [%p]",
-      this, aSurfaceLock.GetWaylandSurface()->GetLoggingWidget(),
-      aSurfaceLock.GetWaylandSurface(), mSurface.get(), mBuffer.get());
-
+  MOZ_DIAGNOSTIC_ASSERT(!mSurface ||
+                        mSurface == aSurfaceLock.GetWaylandSurface());
   MOZ_DIAGNOSTIC_ASSERT(mBufferState == BufferState::Detached);
+
   mSurface = aSurfaceLock.GetWaylandSurface();
+
+  LOGWAYLAND(
+      "BufferTransaction::BufferBorrow() [%p] WaylandSurface [%p] "
+      "WaylandBuffer [%p]",
+      mSurface->GetLoggingWidget(), mSurface.get(), mBuffer.get());
 
   // We don't take reference to this. Some compositors doesn't send
   // buffer release callback and we may leak BufferTransaction then.
@@ -362,18 +367,15 @@ wl_buffer* BufferTransaction::BufferBorrowLocked(
 }
 
 void BufferTransaction::BufferDetachCallback() {
-  LOGWAYLAND("BufferTransaction::BufferDetach() [%p] WaylandBuffer [%p] ", this,
-             (void*)mBuffer);
+  LOGWAYLAND("BufferTransaction::BufferDetach() [%p] ", (void*)mBuffer);
   WaylandSurfaceLock lock(mSurface);
   if (mBufferState != BufferState::WaitingForDelete) {
     mBufferState = BufferState::Detached;
-    mSurface->RemoveFinishedWaylandTransactionLocked(lock, this);
   }
 }
 
 void BufferTransaction::BufferDeleteCallback() {
-  LOGWAYLAND("BufferTransaction::DeleteCallback() [%p] WaylandBuffer [%p] ",
-             this, (void*)mBuffer);
+  LOGWAYLAND("BufferTransaction::DeleteCallback() [%p] ", (void*)mBuffer);
   WaylandSurfaceLock lock(mSurface);
   mBufferState = BufferState::Deleted;
   DeleteLocked(lock);
@@ -381,10 +383,7 @@ void BufferTransaction::BufferDeleteCallback() {
 
 void BufferTransaction::WlBufferDeleteLocked(
     const WaylandSurfaceLock& aSurfaceLock) {
-  LOGWAYLAND(
-      "BufferTransaction::WlBufferDeleteLocked() [%p] WaylandBuffer [%p] ",
-      this, (void*)mBuffer);
-  MOZ_DIAGNOSTIC_ASSERT(mWLBuffer);
+  LOGWAYLAND("BufferTransaction::WlBufferDeleteLocked() [%p] ", (void*)mBuffer);
   if (mIsExternalBuffer) {
     wl_proxy_set_user_data((wl_proxy*)mWLBuffer, nullptr);
     mWLBuffer = nullptr;
@@ -395,15 +394,16 @@ void BufferTransaction::WlBufferDeleteLocked(
 
 void BufferTransaction::DeleteTransactionLocked(
     const WaylandSurfaceLock& aSurfaceLock) {
+  MOZ_DIAGNOSTIC_ASSERT(mWLBuffer);
+
   if (mBufferState == BufferState::WaitingForDelete) {
     return;
   }
 
   LOGWAYLAND(
-      "BufferTransaction::BufferDelete() [%p] WaylandBuffer [%p] wl_buffer "
-      "[%p] "
-      "external %d state %d",
-      this, (void*)mBuffer, mWLBuffer, mIsExternalBuffer, (int)mBufferState);
+      "BufferTransaction::BufferDelete() WaylandBuffer [%p] wl_buffer [%p] "
+      "external %d",
+      (void*)mBuffer, mWLBuffer, mIsExternalBuffer);
 
   WlBufferDeleteLocked(aSurfaceLock);
 

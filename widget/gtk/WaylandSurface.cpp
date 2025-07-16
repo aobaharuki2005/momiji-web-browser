@@ -578,18 +578,6 @@ void WaylandSurface::GdkCleanUpLocked(const WaylandSurfaceLock& aProofOfLock) {
   }
 }
 
-void WaylandSurface::RemoveFinishedWaylandTransactionLocked(
-    WaylandSurfaceLock& aSurfaceLock, BufferTransaction* aTransaction) {
-  LOGWAYLAND(
-      "WaylandSurface::ReleaseWaylandTransactionLocked() transaction [%p]",
-      aTransaction);
-  MOZ_DIAGNOSTIC_ASSERT(!aTransaction->IsAttached(),
-                        "We can't remove live transaction!");
-  [[maybe_unused]] bool removed =
-      mBufferTransactions.RemoveElement(aTransaction);
-  MOZ_DIAGNOSTIC_ASSERT(removed);
-}
-
 void WaylandSurface::ReleaseAllWaylandTransactionsLocked(
     WaylandSurfaceLock& aSurfaceLock) {
   LOGWAYLAND("WaylandSurface::ReleaseAllWaylandTransactionsLocked(), num %d",
@@ -1100,17 +1088,18 @@ bool WaylandSurface::AttachLocked(const WaylandSurfaceLock& aSurfaceLock,
     return false;
   }
 
-  LOGWAYLAND(
-      "WaylandSurface::AttachLocked() transactions [%d] WaylandBuffer [%p] "
-      "attached [%d] size [%d x %d] fractional scale %f",
-      (int)mBufferTransactions.Length(), aBuffer.get(), aBuffer->IsAttached(),
-      bufferSize.width, bufferSize.height, scale);
-
   if (!mBufferTransactions.Contains(transaction)) {
     mBufferTransactions.AppendElement(transaction);
   }
 
   auto* buffer = transaction->BufferBorrowLocked(aSurfaceLock);
+
+  LOGWAYLAND(
+      "WaylandSurface::AttachLocked() transactions [%d] WaylandBuffer [%p] "
+      "wl_buffer [%p] size "
+      "[%d x %d] fractional scale %f",
+      (int)mBufferTransactions.Length(), aBuffer.get(), buffer,
+      bufferSize.width, bufferSize.height, scale);
 
   wl_surface_attach(mSurface, buffer, 0, 0);
   mSurfaceNeedsCommit = true;
