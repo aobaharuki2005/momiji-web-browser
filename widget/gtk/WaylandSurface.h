@@ -134,6 +134,11 @@ class WaylandSurface final {
   // content.
   void RemoveAttachedBufferLocked(const WaylandSurfaceLock& aProofOfLock);
 
+  // Remove finished transaction when WaylandBuffer is released
+  // by Wayland compositor.
+  void RemoveFinishedWaylandTransactionLocked(WaylandSurfaceLock& aSurfaceLock,
+                                              BufferTransaction* aTransaction);
+
   // CommitLocked() is needed to call after some of *Locked() method
   // to submit the action to Wayland compositor by wl_surface_commit().
 
