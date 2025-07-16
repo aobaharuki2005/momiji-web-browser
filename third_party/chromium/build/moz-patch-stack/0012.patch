@@ -57,19 +57,19 @@ index bf53fdb2c..a51b17812 100644
  
  if (use_system_libdrm) {
 diff --git a/config/ozone.gni b/config/ozone.gni
-index 836300a7b..404755691 100644
+index 3bbd9eaa8..b4887eaae 100644
 --- a/config/ozone.gni
 +++ b/config/ozone.gni
-@@ -10,7 +10,7 @@ declare_args() {
+@@ -9,7 +9,7 @@ import("//build/toolchain/toolchain.gni")
+ declare_args() {
    # Indicates if Ozone is enabled. Ozone is a low-level library layer for Linux
    # that does not require X11.
-   use_ozone =
--      is_chromeos || (is_castos && !is_android) || is_fuchsia || is_linux
-+      is_chromeos || (is_castos && !is_android) || is_fuchsia || is_linux || is_bsd
+-  use_ozone = is_chromeos || is_fuchsia || is_linux
++  use_ozone = is_chromeos || is_fuchsia || is_linux || is_bsd
  }
  
  declare_args() {
-@@ -88,7 +88,7 @@ declare_args() {
+@@ -87,7 +87,7 @@ declare_args() {
      } else if (is_chromeos_lacros) {
        ozone_platform = "wayland"
        ozone_platform_wayland = true

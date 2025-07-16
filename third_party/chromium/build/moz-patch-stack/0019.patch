@@ -1,5 +1,5 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 3 Jul 2025 13:00:53 -0500
+Date: Thu, 3 Jul 2025 13:05:46 -0500
 Subject: Bug 1921707 - point to new build directory location in
  third_party/chromium/build r=ng,glandium
 
@@ -4105,7 +4105,7 @@ index a15d32622..7d916e8f5 100644
            if (current_cpu == "x64") {
              x64_out_dir = root_out_dir
 diff --git a/config/ozone.gni b/config/ozone.gni
-index 404755691..ce10e37d6 100644
+index b4887eaae..c9fc64eaa 100644
 --- a/config/ozone.gni
 +++ b/config/ozone.gni
 @@ -2,9 +2,9 @@
@@ -4121,7 +4121,7 @@ index 404755691..ce10e37d6 100644
  
  declare_args() {
    # Indicates if Ozone is enabled. Ozone is a low-level library layer for Linux
-@@ -16,7 +16,7 @@ declare_args() {
+@@ -15,7 +15,7 @@ declare_args() {
  declare_args() {
    # Ozone extra platforms file path. Can be overridden to build out of
    # tree ozone platforms.
