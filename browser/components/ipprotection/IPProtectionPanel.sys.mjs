@@ -15,6 +15,10 @@ export class IPProtectionPanel {
 
   static PANEL_ID = "PanelUI-ipprotection";
   static TITLE_L10N_ID = "ipprotection-title";
+
+  // TODO: this is temporary URL. Update it once finalized (Bug 1972462).
+  static HELP_PAGE_URL =
+    "https://support.mozilla.org/en-US/products/firefox-private-network-vpn";
   /**
    * Loads the ipprotection custom element script
    * into a given window.
@@ -131,6 +135,14 @@ export class IPProtectionPanel {
   // TODO: actually disconnect from proxy, hardcode for now (Bug 1976021)
   #stopProxy() {}
 
+  showHelpPage() {
+    let win = this.panel.ownerGlobal;
+    if (win && !Cu.isInAutomation) {
+      win.openWebLinkIn(IPProtectionPanel.HELP_PAGE_URL, "tab");
+      this.close();
+    }
+  }
+
   /**
    * Updates the visibility of the panel components before they will shown.
    *
@@ -232,6 +244,7 @@ export class IPProtectionPanel {
     doc.addEventListener("IPProtection:Close", this.handleEvent);
     doc.addEventListener("IPProtection:UserEnable", this.handleEvent);
     doc.addEventListener("IPProtection:UserDisable", this.handleEvent);
+    doc.addEventListener("IPProtection:ShowHelpPage", this.handleEvent);
   }
 
   #removePanelListeners(doc) {
@@ -239,6 +252,7 @@ export class IPProtectionPanel {
     doc.removeEventListener("IPProtection:Close", this.handleEvent);
     doc.removeEventListener("IPProtection:UserEnable", this.handleEvent);
     doc.removeEventListener("IPProtection:UserDisable", this.handleEvent);
+    doc.removeEventListener("IPProtection:ShowHelpPage", this.handleEvent);
   }
 
   #handleEvent(event) {
@@ -250,6 +264,8 @@ export class IPProtectionPanel {
       this.#startProxy();
     } else if (event.type == "IPProtection:UserDisable") {
       this.#stopProxy();
+    } else if (event.type == "IPProtection:ShowHelpPage") {
+      this.showHelpPage();
     }
   }
 }

@@ -2316,3 +2316,12 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
 #content-analysis-panel-container {
   padding: 8px;
 }
+
+/* ----- IP Protection panel ----- */
+#PanelUI-ipprotection {
+  width: 400px;
+}
+
+#PanelUI-ipprotection-header {
+  width: 100%;
+}

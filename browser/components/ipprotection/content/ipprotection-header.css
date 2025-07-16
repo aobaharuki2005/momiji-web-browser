@@ -7,7 +7,15 @@
 #ipprotection-header-wrapper {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+}
+
+#ipprotection-header-title-and-badge {
+  display: flex;
+  flex-grow: 1;
+  align-items: center;
   justify-content: center;
+  gap: var(--space-small);
 
   h1 {
     margin: 0;

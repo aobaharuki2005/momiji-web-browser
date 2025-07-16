@@ -7,6 +7,13 @@ ipprotection-button =
   .label = IP Protection
   .tooltiptext = { -brand-product-name } IP Protection
 
+# The word "Beta" is intended to be uppercase in the experiment label.
+ipprotection-experiment-badge =
+  .label = BETA
+
+ipprotection-help-button =
+  .title = Open IP Protection support page
+
 ipprotection-title = { -brand-product-name } IP Protection
 
 ipprotection-connection-status-on = VPN on

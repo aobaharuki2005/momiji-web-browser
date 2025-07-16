@@ -39,6 +39,12 @@ export default class IPProtectionContentElement extends MozLitElement {
     super.disconnectedCallback();
   }
 
+  handleClickSupportLink() {
+    this.dispatchEvent(
+      new CustomEvent("IPProtection:Close", { bubbles: true })
+    );
+  }
+
   handleToggleConnect(event) {
     let isEnabled = event.target.pressed;
 
@@ -101,7 +107,11 @@ export default class IPProtectionContentElement extends MozLitElement {
       ${this.statusCardTemplate()}
       <div id="upgrade-vpn-content">
         <h2 id="upgrade-vpn-title" data-l10n-id="upgrade-vpn-title"></h2>
-        <p id="upgrade-vpn-paragraph" data-l10n-id="upgrade-vpn-paragraph">
+        <p
+          id="upgrade-vpn-paragraph"
+          data-l10n-id="upgrade-vpn-paragraph"
+          @click=${this.handleClickSupportLink}
+        >
           <a
             is="moz-support-link"
             data-l10n-name="learn-more-vpn"

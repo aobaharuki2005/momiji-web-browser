@@ -5,8 +5,15 @@
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
 
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://global/content/elements/moz-badge.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://global/content/elements/moz-button.mjs";
+
 export default class IPProtectionHeaderElement extends MozLitElement {
   static queries = {
+    experimentBadgeEl: "#ipprotection-experiment-badge",
+    helpButtonEl: "#ipprotection-help-button",
     titleEl: "#ipprotection-header-title",
   };
 
@@ -27,6 +34,15 @@ export default class IPProtectionHeaderElement extends MozLitElement {
     super.disconnectedCallback();
   }
 
+  handleClickHelpButton() {
+    this.dispatchEvent(
+      new CustomEvent("IPProtection:ShowHelpPage", {
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
   render() {
     return html`
       <link
@@ -34,14 +50,26 @@ export default class IPProtectionHeaderElement extends MozLitElement {
         href="chrome://browser/content/ipprotection/ipprotection-header.css"
       />
       <div id="ipprotection-header-wrapper">
-        <!-- Beta tag element -->
-        <h1>
-          <span
-            id="ipprotection-header-title"
-            data-l10n-id=${this.titleId}
-          ></span>
-        </h1>
-        <!-- Question mark info element -->
+        <span id="ipprotection-header-title-and-badge">
+          <h1>
+            <span
+              id="ipprotection-header-title"
+              data-l10n-id=${this.titleId}
+            ></span>
+          </h1>
+          <moz-badge
+            id="ipprotection-experiment-badge"
+            data-l10n-id="ipprotection-experiment-badge"
+          ></moz-badge>
+        </span>
+        <moz-button
+          id="ipprotection-help-button"
+          type="icon ghost"
+          data-l10n-id="ipprotection-help-button"
+          iconSrc="chrome://global/skin/icons/help.svg"
+          @click=${this.handleClickHelpButton}
+          tabindex="0"
+        ></moz-button>
       </div>
     `;
   }
