@@ -233,7 +233,7 @@ def update_locales(command_context):
             "message_dates": message_dates,
         }
         with open(REPORT_PATH, "w") as file:
-            json.dump(report, file, indent=4)
+            json.dump(report, file, indent=2, sort_keys=True)
         display_report(report)
         print("Wrote report to %s" % REPORT_PATH)
 
@@ -245,7 +245,7 @@ def update_locales(command_context):
 
     print("Writing supported locales to %s" % SUPPORTED_LOCALES_PATH)
     with open(SUPPORTED_LOCALES_PATH, "w") as file:
-        json.dump(supported_locales, file, indent=4)
+        json.dump(supported_locales, file, indent=2)
 
     print("Done")
 
