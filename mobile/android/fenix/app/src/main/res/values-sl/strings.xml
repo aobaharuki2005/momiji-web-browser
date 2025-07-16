@@ -340,7 +340,7 @@
   <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
   <string name="browser_menu_switch_to_desktop_site" moz:removedIn="141" tools:ignore="UnusedResources">Preklop na stran za računalnike</string>
   <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site">Preklopi na mobilno stran</string>
+  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">Preklopi na mobilno stran</string>
   <!-- Browser menu label that navigates to the page tools sub-menu -->
   <string name="browser_menu_tools" moz:removedIn="141" tools:ignore="UnusedResources">Orodja</string>
   <!-- Content description (not visible, for screen readers etc.): Back button for all menu redesign sub-menu -->
@@ -1490,12 +1490,12 @@
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
-  <string name="tabs_header_private_tabs_counter_title">Odprtih zasebnih zavihkov: %1$s. Tapnite za preklop zavihkov.</string>
+  <string name="tabs_header_private_tabs_counter_title">Št. odprtih zasebnih zavihkov: %1$s. Tapnite za preklop zavihkov.</string>
   <!--
     Title for the list of tabs in the synced tabs used by a11y services
     The %1$s will be replaced by the number of opened synced tabs
   -->
-  <string name="tabs_header_synced_tabs_counter_title">Odprtih sinhroniziranih zavihkov: %1$s. Tapnite za preklop zavihkov.</string>
+  <string name="tabs_header_synced_tabs_counter_title">Št. odprtih sinhroniziranih zavihkov: %1$s. Tapnite za preklop zavihkov.</string>
   <!-- Text for the tabs header private tabs -->
   <string name="tabs_header_private_tabs_title">Zasebni</string>
   <!-- Text for the tabs header normal tabs -->

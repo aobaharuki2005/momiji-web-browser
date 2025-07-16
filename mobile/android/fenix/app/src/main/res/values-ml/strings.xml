@@ -340,7 +340,7 @@
   <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
   <string name="browser_menu_switch_to_desktop_site" moz:removedIn="141" tools:ignore="UnusedResources">ഉപരിഫലക സൈറ്റിലേക്ക് മാറുക</string>
   <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site">മൊപൈൽ സൈറ്റിലേക്കു് മാറുക</string>
+  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">മൊപൈൽ സൈറ്റിലേക്കു് മാറുക</string>
   <!-- Browser menu label that navigates to the page tools sub-menu -->
   <string name="browser_menu_tools" moz:removedIn="141" tools:ignore="UnusedResources">ഉപകരണങ്ങള്‍</string>
   <!-- Content description (not visible, for screen readers etc.): Back button for all menu redesign sub-menu -->
@@ -1249,7 +1249,7 @@
   <!-- Preference for using using dark or light theme automatically set by battery -->
   <string name="preference_auto_battery_theme">ബാറ്ററി സേവർ സജ്ജമാക്കിയത്</string>
   <!-- Preference for using following device theme -->
-  <string name="preference_follow_device_theme">ഉപകരണ തീം പിന്തുടരുക</string>
+  <string name="preference_follow_device_theme">ഉപകരണ അലങ്കാരം പിന്തുടരുക</string>
   <!--
     Gestures Preferences
 
@@ -1674,6 +1674,8 @@
   <string name="webcompat_reporter_screen_title">പൊട്ടിയ സൈറ്റിന്റെ വിവരം അറിയിക്കുക</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">എല്ലാവൎക്കുമായി %1$s-നെ മെച്ചപ്പെടുത്താൻ സഹായിക്കുക. മോസില്ല ഉദ്യോഗസ്ഥന്മാർ താങ്ങൾ അയയ്ക്കുന്ന വിവരങ്ങൾ വെബ്സ്ഥാനക്കുഴപ്പങ്ങളെ പരിഹരിക്കാൻ ഉപയോഗിക്കുന്നു.</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description_2">%1$s-ലുള്ള കുഴപ്പങ്ങൾ നന്നാക്കാനും എല്ലാവൎക്കതു മെച്ചപ്പെടുത്താനും താങ്ങളുടെ റിപ്പോർട്ട് ഞങ്ങളെ തുണയ്ക്കുന്നു. കൂടുതലറിയുക</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">കൂടുതലറിയുക</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1700,6 +1702,8 @@
   <string name="webcompat_reporter_success_snackbar_text">താങ്ങളുടെ റിപ്പോർട്ട് അയച്ചു</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text">അടയ്ക്കുക</string>
+  <!-- Placeholder text for the description field to prompt the user on what they should type. -->
+  <string name="webcompat_reporter_problem_description_placeholder_text">എന്താണു പറ്റിയതു്. പറ്റേണ്ടതെന്തായിരുന്നു?</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -2879,6 +2883,12 @@
   <string name="synced_tabs_expand_group">സമന്വയിപ്പിച്ച ടാബുക്കൂട്ടം വലുതാക്കുക</string>
   <!-- Content description for collapsing a group of synced tabs. -->
   <string name="synced_tabs_collapse_group">സമന്വയിപ്പിച്ച ടാബുക്കൂട്ടം ചുരുക്കുക</string>
+  <!--
+    Top Sites
+
+    Title text displayed for the shortcuts home screen section.
+  -->
+  <string name="homepage_shortcuts_title">കുറുക്കുവഴികൾ</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">കുറുക്കുവഴി പരിധി എത്തി</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->

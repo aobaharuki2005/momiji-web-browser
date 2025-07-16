@@ -340,7 +340,7 @@
   <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
   <string name="browser_menu_switch_to_desktop_site" moz:removedIn="141" tools:ignore="UnusedResources">Cambiar al sitio de escritorio</string>
   <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site">Cambiar al sitio móvil</string>
+  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">Cambiar al sitio móvil</string>
   <!-- Browser menu label that navigates to the page tools sub-menu -->
   <string name="browser_menu_tools" moz:removedIn="141" tools:ignore="UnusedResources">Herramientas</string>
   <!-- Content description (not visible, for screen readers etc.): Back button for all menu redesign sub-menu -->
@@ -879,6 +879,8 @@
   <string name="preferences_home_2">Página de inicio</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">Ícono de la aplicación</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Visualización de la barra de pestañas</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Gestos</string>
   <!-- Preference for settings related to visual options -->
@@ -1311,6 +1313,8 @@
   <string name="preference_simple_toolbar">Simple</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Expandida</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">La barra de direcciones debe estar arriba cuando se muestre la barra de pestañas.</string>
   <!--
     App icon Preferences
 
@@ -1329,6 +1333,12 @@
   <string name="preference_auto_battery_theme">Establecido por ahorro de batería</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Usar el tema del dispositivo</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Mostrar barra de pestañas</string>
   <!--
     Gestures Preferences
 

@@ -69,7 +69,7 @@
 
     Title for info card on private homescreen in True Private Browsing Mode.
   -->
-  <string name="felt_privacy_desc_card_title">Nun dexa rastru nesti preséu</string>
+  <string name="felt_privacy_desc_card_title">Nun dexes rastru nesti preséu</string>
   <!--
     Explanation for private browsing displayed to users on home view when they first enable
     private mode in our new Total Private Browsing mode.
@@ -180,6 +180,8 @@
   <string name="browser_menu_discover_more_extensions">Descubrir más estensiones</string>
   <!-- The description of the browser menu appears when the user hasn't installed any extensions. -->
   <string name="browser_menu_no_extensions_installed_description">Nun hai nenguna estensión activada</string>
+  <!-- The description of the browser menu appears when the user hasn't installed any extensions and there are recommended extensions. -->
+  <string name="browser_menu_try_a_recommended_extension_description">Prueba una estensión aconseyada</string>
   <!-- Browser menu button that sends a user to help articles -->
   <string name="browser_menu_help">Ayuda</string>
   <!-- Browser menu button that sends a to a the what's new article -->
@@ -243,6 +245,11 @@
   <string name="browser_menu_customize_home_1">Personalizar la páxina d\'aniciu</string>
   <!-- Browser menu label that navigates to the Password screen -->
   <string name="browser_menu_passwords">Contraseñes</string>
+  <!--
+    Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
+    %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="browser_menu_new_in_firefox" moz:removedIn="141" tools:ignore="UnusedResources">Novedaes de %1$s</string>
   <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
   <string name="browser_menu_switch_to_desktop_site" moz:removedIn="141" tools:ignore="UnusedResources">Cambiar al sitiu pa ordenadores</string>
   <!-- Browser menu label that navigates to the page tools sub-menu -->
@@ -346,10 +353,26 @@
   <string name="preferences_category_general">Xeneral</string>
   <!-- Preference category for all links about Fenix -->
   <string name="preferences_category_about">Tocante a</string>
+  <!-- Preference category for settings related to changing the default search engine -->
+  <string name="preferences_category_select_default_search_engine">Seleiciona unu</string>
+  <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+  <string name="preferences_manage_search_shortcuts_2">Xestionar los motores de busca alternativos</string>
+  <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+  <string name="preferences_manage_search_shortcuts_summary">Edita los motores visibles nel menú de busca</string>
   <!-- Preference for settings related to changing the default search engine -->
   <string name="preferences_default_search_engine">Motor de busca predetermináu</string>
   <!-- Preference for settings related to Search -->
   <string name="preferences_search">Busca</string>
+  <!-- Preference for settings related to Search engines -->
+  <string name="preferences_search_engines">Motores de busca</string>
+  <!-- Preference for settings related to Search engines suggestions -->
+  <string name="preferences_search_engines_suggestions">Suxerencies de los motores de busca</string>
+  <!-- Preference Category for settings related to Search address bar -->
+  <string name="preferences_settings_address_bar">Preferencies de la barra de direiciones</string>
+  <!-- Preference Category for settings to Firefox Suggest -->
+  <string name="preference_search_address_bar_fx_suggest" tools:ignore="BrandUsage">Barra de direiciones - Firefox Suggest</string>
+  <!-- Preference link to Learn more about Firefox Suggest -->
+  <string name="preference_search_learn_about_fx_suggest" tools:ignore="BrandUsage">Saber más tocante a Firefox Suggest</string>
   <!-- Preference link to rating Fenix on the Play Store -->
   <string name="preferences_rate">Valorar en Google Play</string>
   <!--
@@ -433,8 +456,12 @@
   <string name="preferences_account_settings">Configuración de la cuenta</string>
   <!-- Preference for enabling url autocomplete -->
   <string name="preferences_enable_autocomplete_urls">Autocompletar les URLs</string>
+  <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+  <string name="preferences_show_sponsored_suggestions">Suxerencies de los patrocinadores</string>
   <!-- Preference for open links in third party apps -->
   <string name="preferences_open_links_in_apps">Abrir los enllaces nes aplicaciones</string>
+  <!-- Preference for open links in third party apps always open in apps option -->
+  <string name="preferences_open_links_in_apps_always">Siempre</string>
   <!-- Preference for open download with an external download manager app -->
   <string name="preferences_external_download_manager" tools:ignore="UnusedResources" moz:removedIn="141">Xestor de descargues esternu</string>
   <!-- Preference for extensions -->
@@ -1334,6 +1361,8 @@
   <string name="saved_logins_sort_strategy_alphabetically">Nome (A-Z)</string>
   <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
   <string name="saved_logins_sort_strategy_last_used">Últimu usu</string>
+  <!-- Preference summary for saving and autofilling payment method data. %s is the name of the app (for example "Firefox"). -->
+  <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">«%s» cifra tolos métodos de pagu que guardes</string>
   <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
   <string name="preferences_credit_cards_sync_cards_across_devices">Sincronizar les tarxetes ente preseos</string>
   <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1473,6 +1502,12 @@
   <string name="inactive_tabs_title">Llingüetes inactives</string>
   <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
   <string name="inactive_tabs_auto_close_message_description" tools:ignore="BrandUsage,UnusedResources">Firefox pue zarrar les llingüetes que nun visitesti demientres el mes pasáu.</string>
+  <!--
+    Awesome bar suggestion's headers
+
+    Search suggestions title for Firefox Suggest.
+  -->
+  <string name="firefox_suggest_header" tools:ignore="BrandUsage">Firefox Suggest</string>
   <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. %s is default search engine name. -->
   <string name="other_default_search_engine_suggestion_header">Busca nel motor «%s»</string>
   <!-- Content description for close button in collection placeholder. -->
