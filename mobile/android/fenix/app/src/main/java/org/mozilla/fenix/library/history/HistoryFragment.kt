@@ -116,6 +116,7 @@ import org.mozilla.fenix.lifecycle.registerForVerification
 import org.mozilla.fenix.lifecycle.verifyUser
 import org.mozilla.fenix.search.BrowserStoreToFenixSearchMapperMiddleware
 import org.mozilla.fenix.search.BrowserToolbarSearchMiddleware
+import org.mozilla.fenix.search.BrowserToolbarSearchStatusSyncMiddleware
 import org.mozilla.fenix.search.BrowserToolbarToFenixSearchMapperMiddleware
 import org.mozilla.fenix.search.FenixSearchMiddleware
 import org.mozilla.fenix.search.SearchFragmentAction
@@ -431,6 +432,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                                 binding.historyLayout.updateLayoutParams {
                                     (this as? ViewGroup.MarginLayoutParams)?.topMargin = 0
                                 }
+                                requireComponents.appStore.dispatch(AppAction.SearchAction.SearchEnded)
                                 searchLayout?.isVisible = false
                             }
                         }
@@ -727,6 +729,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
         BrowserToolbarStore(
             initialState = BrowserToolbarState(mode = Mode.EDIT),
             middleware = listOf(
+                BrowserToolbarSearchStatusSyncMiddleware(requireComponents.appStore),
                 BrowserToolbarSearchMiddleware(
                     appStore = requireComponents.appStore,
                     browserStore = requireComponents.core.store,

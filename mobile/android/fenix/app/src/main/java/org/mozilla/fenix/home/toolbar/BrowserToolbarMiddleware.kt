@@ -210,7 +210,6 @@ class BrowserToolbarMiddleware(
 
             is OriginClicked -> {
                 appStore.dispatch(SearchStarted())
-                context.store.dispatch(ToggleEditMode(true))
             }
             is PasteFromClipboardClicked -> {
                 openNewTab(searchTerms = clipboard.text)

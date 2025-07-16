@@ -33,13 +33,13 @@ import mozilla.components.compose.browser.awesomebar.AwesomeBar
 import mozilla.components.compose.browser.awesomebar.AwesomeBarDefaults
 import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
-import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ToggleEditMode
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.search.BrowserStoreToFenixSearchMapperMiddleware
 import org.mozilla.fenix.search.BrowserToolbarToFenixSearchMapperMiddleware
@@ -125,7 +125,7 @@ class AwesomeBarComposable(
 
         BackHandler {
             searchStore.dispatch(SearchSuggestionsVisibilityUpdated(false))
-            toolbarStore.dispatch(ToggleEditMode(false))
+            appStore.dispatch(SearchEnded)
             browserStore.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true))
         }
 

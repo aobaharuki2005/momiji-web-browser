@@ -60,7 +60,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -540,10 +539,7 @@ class BrowserToolbarMiddlewareTest {
     fun `GIVEN in normal browsing mode WHEN the page origin is clicked THEN start the search UX for normal browsing`() {
         val browsingModeManager = SimpleBrowsingModeManager(Normal)
         val navController: NavController = mockk(relaxed = true)
-        val appStore: AppStore = mockk(relaxed = true) {
-            every { state } returns mockk<AppState>(relaxed = true)
-        }
-        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
+        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk(), mockk())
         val toolbarStore = buildStore(
             middleware = middleware,
             navController = navController,
@@ -553,17 +549,13 @@ class BrowserToolbarMiddlewareTest {
         toolbarStore.dispatch(toolbarStore.state.displayState.pageOrigin.onClick as BrowserToolbarAction)
 
         verify { appStore.dispatch(SearchStarted()) }
-        assertTrue(toolbarStore.state.isEditMode())
     }
 
     @Test
     fun `GIVEN in private browsing mode WHEN the page origin is clicked THEN start the search UX for private browsing`() {
         val browsingModeManager = SimpleBrowsingModeManager(Private)
         val navController: NavController = mockk(relaxed = true)
-        val appStore: AppStore = mockk(relaxed = true) {
-            every { state } returns mockk<AppState>(relaxed = true)
-        }
-        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
+        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk(), mockk())
         val toolbarStore = buildStore(
             middleware = middleware,
             navController = navController,
@@ -573,7 +565,6 @@ class BrowserToolbarMiddlewareTest {
         toolbarStore.dispatch(toolbarStore.state.displayState.pageOrigin.onClick as BrowserToolbarAction)
 
         verify { appStore.dispatch(SearchStarted()) }
-        assertTrue(toolbarStore.state.isEditMode())
     }
 
     @Test

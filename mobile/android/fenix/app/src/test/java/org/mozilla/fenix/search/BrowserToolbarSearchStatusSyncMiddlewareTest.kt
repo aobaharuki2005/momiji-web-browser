@@ -4,10 +4,13 @@
 
 package org.mozilla.fenix.search
 
+import android.os.Handler
+import android.os.Looper
+import android.os.Looper.getMainLooper
 import androidx.lifecycle.Lifecycle
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.test.setMain
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ToggleEditMode
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
@@ -31,6 +34,7 @@ import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarte
 import org.mozilla.fenix.helpers.lifecycle.TestLifecycleOwner
 import org.mozilla.fenix.home.toolbar.HomeToolbarEnvironment
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
 class BrowserToolbarSearchStatusSyncMiddlewareTest {
@@ -51,39 +55,62 @@ class BrowserToolbarSearchStatusSyncMiddlewareTest {
     }
 
     @Test
-    fun `WHEN the toolbar exits search mode THEN synchronize search being ended for the application`() {
+    fun `WHEN the toolbar exits search mode THEN synchronize search being ended for the application`() = runTestOnMain {
+        Dispatchers.setMain(Handler(Looper.getMainLooper()).asCoroutineDispatcher())
         val (_, toolbarStore) = buildMiddlewareAndAddToSearchStore()
-        assertFalse(toolbarStore.state.isEditMode())
-        assertFalse(appStore.state.searchState.isSearchActive)
-
-        appStore.dispatch(SearchStarted())
-        toolbarStore.dispatch(ToggleEditMode(true))
-        assertTrue(appStore.state.searchState.isSearchActive)
-
-        toolbarStore.dispatch(ToggleEditMode(false))
-        assertFalse(appStore.state.searchState.isSearchActive)
-    }
-
-    @Test
-    fun `WHEN search is closed in the application THEN synchronize exiting edit mode in the toolbar`() = runTestOnMain {
-        Dispatchers.setMain(StandardTestDispatcher())
-
-        val (_, toolbarStore) = buildMiddlewareAndAddToSearchStore()
-        appStore.dispatch(SearchStarted())
-        toolbarStore.dispatch(ToggleEditMode(true))
-        testScheduler.advanceUntilIdle()
-        toolbarStore.waitUntilIdle()
-        assertTrue(toolbarStore.state.isEditMode())
-        assertTrue(appStore.state.searchState.isSearchActive)
-
-        appStore.dispatch(SearchEnded).joinBlocking()
-        testScheduler.advanceUntilIdle()
         assertFalse(appStore.state.searchState.isSearchActive)
         assertFalse(toolbarStore.state.isEditMode())
 
         appStore.dispatch(SearchStarted()).joinBlocking()
-        testScheduler.advanceUntilIdle()
+        shadowOf(getMainLooper()).idle()
         assertTrue(appStore.state.searchState.isSearchActive)
+        assertTrue(toolbarStore.state.isEditMode())
+
+        toolbarStore.dispatch(ToggleEditMode(false)).joinBlocking()
+        appStore.waitUntilIdle()
+        shadowOf(getMainLooper()).idle()
+        assertFalse(appStore.state.searchState.isSearchActive)
+        assertFalse(toolbarStore.state.isEditMode())
+    }
+
+    @Test
+    fun `WHEN the toolbar enters search mode THEN don't update the search state for the application`() = runTestOnMain {
+        Dispatchers.setMain(Handler(Looper.getMainLooper()).asCoroutineDispatcher())
+        val (_, toolbarStore) = buildMiddlewareAndAddToSearchStore()
+        assertFalse(toolbarStore.state.isEditMode())
+        assertFalse(appStore.state.searchState.isSearchActive)
+
+        toolbarStore.dispatch(ToggleEditMode(true)).joinBlocking()
+        shadowOf(getMainLooper()).idle()
+
+        assertFalse(appStore.state.searchState.isSearchActive)
+    }
+
+    @Test
+    fun `WHEN search starts in the application THEN put the toolbar in search mode also`() = runTestOnMain {
+        Dispatchers.setMain(Handler(Looper.getMainLooper()).asCoroutineDispatcher())
+        val (_, toolbarStore) = buildMiddlewareAndAddToSearchStore()
+
+        appStore.dispatch(SearchStarted()).joinBlocking()
+        shadowOf(getMainLooper()).idle()
+
+        assertTrue(toolbarStore.state.isEditMode())
+        assertTrue(appStore.state.searchState.isSearchActive)
+    }
+
+    @Test
+    fun `WHEN search is closed in the application THEN synchronize exiting edit mode in the toolbar`() = runTestOnMain {
+        Dispatchers.setMain(Handler(Looper.getMainLooper()).asCoroutineDispatcher())
+
+        val (_, toolbarStore) = buildMiddlewareAndAddToSearchStore()
+        appStore.dispatch(SearchStarted()).joinBlocking()
+        shadowOf(getMainLooper()).idle()
+        assertTrue(toolbarStore.state.isEditMode())
+        assertTrue(appStore.state.searchState.isSearchActive)
+
+        appStore.dispatch(SearchEnded).joinBlocking()
+        shadowOf(getMainLooper()).idle()
+        assertFalse(appStore.state.searchState.isSearchActive)
         assertFalse(toolbarStore.state.isEditMode())
     }
 

@@ -51,6 +51,7 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.search.SelectedSearchEngine
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
@@ -123,14 +124,16 @@ class BrowserToolbarSearchMiddlewareTest {
         val captorMiddleware = CaptureActionsMiddleware<AppState, AppAction>()
         val appStore = AppStore(middlewares = listOf(captorMiddleware))
         val (_, store) = buildMiddlewareAndAddToStore(appStore = appStore)
+        appStore.dispatch(SearchStarted())
         store.dispatch(ToggleEditMode(true))
         store.dispatch(SearchQueryUpdated("test"))
         assertTrue(store.state.isEditMode())
+        assertTrue(appStore.state.searchState.isSearchActive)
         assertEquals("test", store.state.editState.query)
 
         store.dispatch(SearchSettingsItemClicked)
 
-        assertFalse(store.state.isEditMode())
+        assertFalse(appStore.state.searchState.isSearchActive)
         assertEquals("", store.state.editState.query)
         captorMiddleware.assertLastAction(SearchEnded::class) {}
         verify { browserStore.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true)) }
@@ -168,7 +171,7 @@ class BrowserToolbarSearchMiddlewareTest {
 
         store.dispatch(SearchSelectorItemClicked(newEngineSelection))
 
-        assertTrue(store.state.isEditMode())
+        assertTrue(appStore.state.searchState.isSearchActive)
     }
 
     @Test

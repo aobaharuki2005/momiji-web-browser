@@ -30,7 +30,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.base.Divider
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
-import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ToggleEditMode
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarState
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
@@ -185,7 +184,6 @@ internal class HomeToolbarComposable(
     private fun configureStartingInSearchMode() {
         if (!directToSearchConfig.startSearch) return
         appStore.dispatch(SearchStarted())
-        store.dispatch(ToggleEditMode(true))
 
         if (directToSearchConfig.sessionId != null) {
             browserStore.state.findTab(directToSearchConfig.sessionId)?.let {

@@ -49,23 +49,17 @@ class BrowserToolbarSearchStatusSyncMiddleware(
 
         if (action is EnvironmentRehydrated) {
             environment = action.environment as? HomeToolbarEnvironment
-
-            if (appStore.state.searchState.isSearchActive) {
-                syncSearchActive(context.store)
-            }
+            syncSearchActive(context.store)
         }
         if (action is EnvironmentCleared) {
             environment = null
         }
 
-        if (action is ToggleEditMode) {
-            when (action.editMode) {
-                true -> syncSearchActive(context.store)
-                false -> {
-                    syncSearchActiveJob?.cancel()
-                    appStore.dispatch(SearchEnded)
-                }
-            }
+        if (action is ToggleEditMode && !action.editMode) {
+            // Only support the toolbar triggering exiting search mode in the application.
+            // Entering search mode in the application needs more parameters and so
+            // this must happen through a specifically configured action, not through an automated one.
+            appStore.dispatch(SearchEnded)
         }
     }
 
@@ -74,9 +68,7 @@ class BrowserToolbarSearchStatusSyncMiddleware(
         syncSearchActiveJob = appStore.observeWhileActive {
             distinctUntilChangedBy { it.searchState.isSearchActive }
                 .collect {
-                    if (!it.searchState.isSearchActive) {
-                        store.dispatch(ToggleEditMode(false))
-                    }
+                    store.dispatch(ToggleEditMode(it.searchState.isSearchActive))
                 }
         }
     }

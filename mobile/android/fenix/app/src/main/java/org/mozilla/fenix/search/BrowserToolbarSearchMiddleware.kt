@@ -143,7 +143,6 @@ class BrowserToolbarSearchMiddleware(
             }
 
             is SearchSettingsItemClicked -> {
-                context.store.dispatch(ToggleEditMode(false))
                 context.store.dispatch(SearchQueryUpdated(""))
                 appStore.dispatch(SearchEnded)
                 browserStore.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true))
@@ -155,9 +154,6 @@ class BrowserToolbarSearchMiddleware(
             is SearchSelectorItemClicked -> {
                 appStore.dispatch(SearchEngineSelected(action.searchEngine, true))
                 appStore.dispatch(SearchStarted())
-                if (!context.store.state.isEditMode()) {
-                    context.store.dispatch(ToggleEditMode(true))
-                }
                 refreshConfigurationAfterSearchEngineChange(context.store, action.searchEngine)
             }
 
