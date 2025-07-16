@@ -13,10 +13,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/99575d260702afb30
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/config/win/BUILD.gn b/config/win/BUILD.gn
-index 9928e7683..70cb055df 100644
+index 716b48be1..e656a35e2 100644
 --- a/config/win/BUILD.gn
 +++ b/config/win/BUILD.gn
-@@ -294,7 +294,7 @@ config("runtime_library") {
+@@ -289,7 +289,7 @@ config("runtime_library") {
  # manually override this config for their compiles.
  config("winver") {
    defines = [

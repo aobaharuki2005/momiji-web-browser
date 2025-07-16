@@ -17,15 +17,15 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/aad17933ade017660
  4 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 1e5ba5ca2..8bb1c855a 100644
+index e1a6221d3..e7d9f05a8 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
-@@ -2279,7 +2279,7 @@ config("no_rtti") {
+@@ -2282,7 +2282,7 @@ config("no_rtti") {
+ # (de)allocate memory on a different heap, which would spell trouble if pointers
  # to heap-allocated memory are passed over shared library boundaries.
  config("export_dynamic") {
-   # TODO(crbug.com/40118868): Revisit after target_os flip is completed.
--  if (is_linux || is_chromeos_lacros || export_libcxxabi_from_executables) {
-+  if (is_linux || is_bsd || is_chromeos_lacros || export_libcxxabi_from_executables) {
+-  if (is_linux || export_libcxxabi_from_executables) {
++  if (is_linux || is_bsd || export_libcxxabi_from_executables) {
      ldflags = [ "-rdynamic" ]
    }
  }
@@ -43,10 +43,10 @@ index 9e6131d4c..4f560b290 100644
    # The (major) version of GTK to build against.  A different version may be
    # loaded at runtime.
 diff --git a/config/ozone.gni b/config/ozone.gni
-index 8a3bc28c3..bab841739 100644
+index 9c92cdc02..a74459ca9 100644
 --- a/config/ozone.gni
 +++ b/config/ozone.gni
-@@ -9,7 +9,7 @@ import("//build/toolchain/toolchain.gni")
+@@ -8,7 +8,7 @@ import("//build/toolchain/toolchain.gni")
  declare_args() {
    # Indicates if Ozone is enabled. Ozone is a low-level library layer for Linux
    # that does not require X11.
@@ -55,17 +55,17 @@ index 8a3bc28c3..bab841739 100644
  }
  
  declare_args() {
-@@ -84,7 +84,7 @@ declare_args() {
-     } else if (is_chromeos_lacros) {
-       ozone_platform = "wayland"
-       ozone_platform_wayland = true
+@@ -80,7 +80,7 @@ declare_args() {
+       ozone_platform = "x11"
+       ozone_platform_drm = true
+       ozone_platform_x11 = true
 -    } else if (is_linux) {
 +    } else if (is_linux || is_bsd) {
        ozone_platform = "x11"
        ozone_platform_wayland = true
        ozone_platform_x11 = true
 diff --git a/config/ui.gni b/config/ui.gni
-index 1cb9c37bf..981288972 100644
+index 2c526a92f..20e446e34 100644
 --- a/config/ui.gni
 +++ b/config/ui.gni
 @@ -33,7 +33,7 @@ declare_args() {

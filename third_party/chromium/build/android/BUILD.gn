@@ -56,6 +56,7 @@ if (enable_java_templates) {
       "java/src/org/chromium/build/annotations/IdentifierNameString.java",
       "java/src/org/chromium/build/annotations/Initializer.java",
       "java/src/org/chromium/build/annotations/MockedInTests.java",
+      "java/src/org/chromium/build/annotations/MonotonicNonNull.java",
       "java/src/org/chromium/build/annotations/NullMarked.java",
       "java/src/org/chromium/build/annotations/NullUnmarked.java",
       "java/src/org/chromium/build/annotations/Nullable.java",
@@ -114,6 +115,9 @@ if (defined(sanitizer_arch)) {
       "--output",
       rebase_path(outputs[0], root_build_dir),
     ]
+    if (is_hwasan) {
+      args += [ "--is_hwasan" ]
+    }
   }
 }
 
@@ -148,10 +152,10 @@ python_library("devil_chromium_py") {
 group("apk_installer_data") {
   # Other //build users let devil library fetch these from Google Storage.
   if (build_with_chromium) {
-    if (is_component_build) {
+    if (!is_component_build) {
       data_deps = [
         "//chromium/build/android/pylib/device/commands",
-        "//tools/android/md5sum",
+        "//tools/android/devil_util",
       ]
     }
     data =

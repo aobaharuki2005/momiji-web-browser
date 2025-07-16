@@ -14,7 +14,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/831cdef4bf346cb9c
  2 files changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
-index 838fe7b5b..c6332849d 100644
+index bdf8b1363..29f705a54 100644
 --- a/config/BUILDCONFIG.gn
 +++ b/config/BUILDCONFIG.gn
 @@ -136,7 +136,7 @@ declare_args() {
@@ -53,7 +53,7 @@ index 838fe7b5b..c6332849d 100644
  is_nacl = current_os == "nacl"
  is_watchos = current_os == "watchos"
 diff --git a/config/ui.gni b/config/ui.gni
-index 1ad21d73f..1cb9c37bf 100644
+index 9e7f4df85..2c526a92f 100644
 --- a/config/ui.gni
 +++ b/config/ui.gni
 @@ -39,7 +39,7 @@ declare_args() {

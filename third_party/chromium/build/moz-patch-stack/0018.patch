@@ -9,23 +9,26 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9855b72bb8a73615c
  1 file changed, 4 insertions(+)
 
 diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
-index 743ebb954..917e60a3e 100644
+index 417aa53e3..2a8df23c7 100644
 --- a/config/BUILDCONFIG.gn
 +++ b/config/BUILDCONFIG.gn
-@@ -552,10 +552,12 @@ foreach(_target_type,
+@@ -556,6 +556,7 @@ foreach(_target_type,
          deps = []
        }
  
 +      if (false) { # Mozilla
-       if (!defined(invoker.no_default_deps) || !invoker.no_default_deps) {
+       if (is_clang && (!defined(invoker.use_libcxx_modules) ||
+                        invoker.use_libcxx_modules)) {
          # This is necessary for Clang modules builds.
-         deps += [ "//buildtools/third_party/libc++:std" ]
+@@ -575,6 +576,7 @@ foreach(_target_type,
+           "//buildtools/third_party/libc++:std_wctype_h",
+         ]
        }
 +      }
  
        # Consumed by the unsafe-buffers plugin during compile.
        #
-@@ -626,6 +628,7 @@ foreach(_target_type,
+@@ -650,6 +652,7 @@ foreach(_target_type,
        if (!defined(deps)) {
          deps = []
        }
@@ -33,8 +36,8 @@ index 743ebb954..917e60a3e 100644
        if (!defined(invoker.no_default_deps) || !invoker.no_default_deps) {
          # This pulls in one of:
          # //build/config:executable_deps
-@@ -643,6 +646,7 @@ foreach(_target_type,
-           "//buildtools/third_party/libc++:std",
+@@ -682,6 +685,7 @@ foreach(_target_type,
+           "//buildtools/third_party/libc++:std_wctype_h",
          ]
        }
 +      }

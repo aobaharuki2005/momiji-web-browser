@@ -15,7 +15,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3a785d486d97fc9cb
  4 files changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
-index c6332849d..743ebb954 100644
+index 29f705a54..417aa53e3 100644
 --- a/config/BUILDCONFIG.gn
 +++ b/config/BUILDCONFIG.gn
 @@ -243,7 +243,7 @@ _default_toolchain = ""
@@ -39,7 +39,7 @@ index c6332849d..743ebb954 100644
  } else if (target_os == "win") {
    # On Windows, we use the same toolchain for host and target by default.
 diff --git a/config/mac/mac_sdk.gni b/config/mac/mac_sdk.gni
-index 3373b8a32..6692598d6 100644
+index 05cd6f791..1b8a4c8c0 100644
 --- a/config/mac/mac_sdk.gni
 +++ b/config/mac/mac_sdk.gni
 @@ -130,9 +130,9 @@ if (mac_use_xcode_symlinks) {

@@ -11,15 +11,15 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f9c3bbb23f7ae513b
 ---
  config/compiler/BUILD.gn |  4 ++--
  config/linux/BUILD.gn    |  2 +-
- config/sysroot.gni       | 10 +++++-----
+ config/sysroot.gni       |  6 +++---
  toolchain/linux/BUILD.gn | 30 +++++++++++++++---------------
- 4 files changed, 23 insertions(+), 23 deletions(-)
+ 4 files changed, 21 insertions(+), 21 deletions(-)
 
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 80ce7d13f..1e5ba5ca2 100644
+index 0ea63d77d..e1a6221d3 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
-@@ -12,7 +12,7 @@ import("//build/config/clang/clang.gni")
+@@ -11,7 +11,7 @@ import("//build/config/clang/clang.gni")
  import("//build/config/compiler/compiler.gni")
  import("//build/config/coverage/coverage.gni")
  import("//build/config/dcheck_always_on.gni")
@@ -28,7 +28,7 @@ index 80ce7d13f..1e5ba5ca2 100644
  import("//build/config/host_byteorder.gni")
  import("//build/config/pch.gni")
  import("//build/config/rust.gni")
-@@ -1641,7 +1641,7 @@ config("compiler_deterministic") {
+@@ -1629,7 +1629,7 @@ config("compiler_deterministic") {
  }
  
  config("clang_revision") {
@@ -51,22 +51,18 @@ index 131bb71d1..cc4749ea0 100644
      packages = [
        "glib-2.0",
 diff --git a/config/sysroot.gni b/config/sysroot.gni
-index 47fe4cbc8..2bee50f97 100644
+index 9264bb700..71eedaaaf 100644
 --- a/config/sysroot.gni
 +++ b/config/sysroot.gni
-@@ -60,11 +60,11 @@ if (sysroot == "") {
+@@ -60,9 +60,9 @@ if (sysroot == "") {
        } else if (_script_arch == "x64") {
          _script_arch = "amd64"
        }
 -      assert(
--          exec_script("//build/dir_exists.py",
--                      [ rebase_path(sysroot) ],
--                      "string") == "True",
+-          path_exists(sysroot),
 -          "Missing sysroot ($sysroot). To fix, run: build/linux/sysroot_scripts/install-sysroot.py --arch=$_script_arch")
 +      #assert(
-+      #    exec_script("//build/dir_exists.py",
-+      #                [ rebase_path(sysroot) ],
-+      #                "string") == "True",
++      #    path_exists(sysroot),
 +      #    "Missing sysroot ($sysroot). To fix, run: build/linux/sysroot_scripts/install-sysroot.py --arch=$_script_arch")
      }
    } else if (is_mac) {
