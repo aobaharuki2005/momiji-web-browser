@@ -237,33 +237,21 @@ NS_INTERFACE_MAP_END
 
 static void SetTimeoutForGlobal(GlobalObject& aGlobal, TimeoutHandler& aHandler,
                                 int32_t timeout, ErrorResult& aRv) {
-  if (NS_IsMainThread()) {
-    nsCOMPtr<nsPIDOMWindowInner> innerWindow =
-        do_QueryInterface(aGlobal.GetAsSupports());
-    if (!innerWindow) {
-      aRv.ThrowInvalidStateError("Could not find window.");
-      return;
-    }
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
-    int32_t handle;
-    nsresult rv =
-        nsGlobalWindowInner::Cast(innerWindow)
-            ->GetTimeoutManager()
-            ->SetTimeout(&aHandler, timeout, /* aIsInterval */ false,
-                         Timeout::Reason::eAbortSignalTimeout, &handle);
-    if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
-      return;
-    }
-  } else {
-    WorkerPrivate* workerPrivate =
-        GetWorkerPrivateFromContext(aGlobal.Context());
-    workerPrivate->SetTimeout(aGlobal.Context(), &aHandler, timeout,
-                              /* aIsInterval */ false,
-                              Timeout::Reason::eAbortSignalTimeout, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+  TimeoutManager* manager = global->GetTimeoutManager();
+  if (!manager) {
+    aRv.ThrowInvalidStateError("The current global does not support timeout");
+    return;
+  }
+
+  int32_t handle;
+  nsresult rv =
+      manager->SetTimeout(&aHandler, timeout, /* aIsInterval */ false,
+                          Timeout::Reason::eAbortSignalTimeout, &handle);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
   }
 }
 
