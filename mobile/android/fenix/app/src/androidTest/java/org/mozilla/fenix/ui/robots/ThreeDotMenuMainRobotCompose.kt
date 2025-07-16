@@ -5,10 +5,12 @@ package org.mozilla.fenix.ui.robots
 
 import android.util.Log
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -22,6 +24,7 @@ import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -180,10 +183,18 @@ class ThreeDotMenuMainRobotCompose(private val composeTestRule: ComposeTestRule)
         mDevice.waitForIdle()
     }
 
-    fun verifyNoExtensionsButton() {
-        Log.i(TAG, "verifyNoExtensionsButton: Trying to verify that the \"Extensions\" button exists.")
-        composeTestRule.noExtensionsButton().assertExists()
-        Log.i(TAG, "verifyNoExtensionsButton: Verified that the \"Extensions\" button exists.")
+    @OptIn(ExperimentalTestApi::class)
+    fun verifyExtensionsButtonWithInstalledExtension(extensionTitle: String) {
+        Log.i(TAG, "verifyExtensionsButtonWithInstalledExtension: Waiting for $waitingTime for the collapsed \"Extensions\" button with installed $extensionTitle to exist.")
+        composeTestRule.waitUntilAtLeastOneExists(hasContentDescription(extensionTitle, substring = true, ignoreCase = true), waitingTime)
+        Log.i(TAG, "verifyExtensionsButtonWithInstalledExtension: Waited for $waitingTime for the collapsed \"Extensions\" button with installed $extensionTitle to exist.")
+        Log.i(TAG, "verifyExtensionsButtonWithInstalledExtension: Trying to verify that the collapsed \"Extensions\" button with installed $extensionTitle exists.")
+        composeTestRule.onNode(
+            hasTestTag("mainMenu.extensions"),
+        ).assert(
+            hasContentDescription(extensionTitle, substring = true, ignoreCase = true),
+        ).assertIsDisplayed()
+        Log.i(TAG, "verifyExtensionsButtonWithInstalledExtension: Verified that the collapsed \"Extensions\" button with installed $extensionTitle exists.")
     }
 
     fun verifyTryRecommendedExtensionButton() {
@@ -492,8 +503,6 @@ private fun ComposeTestRule.settingsButton() = onNodeWithContentDescription("Set
 private fun ComposeTestRule.extensionsButton() = onNodeWithTag(EXTENSIONS)
 
 private fun ComposeTestRule.tryRecommendedExtensionButton() = onNodeWithContentDescription("Extensions Try a recommended extension", substring = true)
-
-private fun ComposeTestRule.noExtensionsButton() = onNodeWithContentDescription("Extensions No extensions enabled", substring = true)
 
 private fun ComposeTestRule.noExtensionsEnabledButton() = onNodeWithContentDescription("Extensions No extensions enabled", substring = true)
 
