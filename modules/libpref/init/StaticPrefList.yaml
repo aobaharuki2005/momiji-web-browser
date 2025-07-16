@@ -17286,12 +17286,12 @@
 
 - name: security.integrity_policy.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 - name: security.integrity_policy.stylesheet.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 # Which mechanism the secret decoder ring should use for encryption. Decryption
