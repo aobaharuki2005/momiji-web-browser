@@ -177,6 +177,7 @@ support-files = [
 
 ["browser_resume_bkg_video_on_tab_hover.js"]
 skip-if = [
+  "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && tsan", # Bug 1775552
   "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && asan", # Bug 1775552
   "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && debug", # Bug 1775552
   "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && debug && socketprocess_networking", # Bug 1775552
