@@ -154,7 +154,6 @@ struct ThreadStreamingContext {
   JSContext* mJSContext;
   SpliceableChunkedJSONWriter mSamplesDataWriter;
   SpliceableChunkedJSONWriter mMarkersDataWriter;
-  SpliceableChunkedJSONWriter mShapesDataWriter;
   mozilla::NotNull<mozilla::UniquePtr<UniqueStacks>> mUniqueStacks;
 
   // These are updated when writing samples, and reused for "same-sample"s.
