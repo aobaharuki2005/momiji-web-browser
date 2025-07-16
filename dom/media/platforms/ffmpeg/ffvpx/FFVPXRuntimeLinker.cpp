@@ -78,6 +78,9 @@ bool FFVPXRuntimeLinker::Init() {
   StaticMutexAutoLock lock(sMutex);
 
   if (sLinkStatus) {
+    if (sLinkStatus == LinkStatus_SUCCEEDED) {
+      FFmpegDecoderModule<FFVPX_VERSION>::Init(&sFFVPXLib);
+    }
     return sLinkStatus == LinkStatus_SUCCEEDED;
   }
 

@@ -8,6 +8,7 @@
 #  include "WMF.h"
 #  include "WMFDecoderModule.h"
 #endif
+#include "FFVPXRuntimeLinker.h"
 #include "GLContextProvider.h"
 #include "GPUParent.h"
 #include "GPUProcessHost.h"
@@ -507,6 +508,9 @@ mozilla::ipc::IPCResult GPUParent::RecvUpdateVar(const GfxVarUpdate& aUpdate) {
                   "GPUParent::RecvUpdateVar",
                   []() {
                     WMFDecoderModule::Init();
+                    if (StaticPrefs::media_ffvpx_hw_enabled()) {
+                      FFVPXRuntimeLinker::Init();
+                    }
                     NS_DispatchToMainThread(NS_NewRunnableFunction(
                         "GPUParent::UpdateMediaCodecsSupported",
                         [supported = media::MCSInfo::GetSupportFromFactory(
