@@ -1,5 +1,5 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 8 Jul 2025 11:34:27 -0500
+Date: Tue, 8 Jul 2025 11:53:50 -0500
 Subject: Bug 1775143 - pt14 - (mirror) 58f47eacaf10 r=ng
 
 Search third_party/libwebrtc/build for current_cpu, removing
@@ -172,10 +172,10 @@ index 2b2c64ba8..b74b92516 100644
        # Linking objects without GNU_PROPERTY_AARCH64_FEATURE_1_BTI
        # in their .gnu.note section implicitly results in the final
 diff --git a/config/android/abi.gni b/config/android/abi.gni
-index e86cfd6ea..71d232798 100644
+index c300f1d6f..567c75b42 100644
 --- a/config/android/abi.gni
 +++ b/config/android/abi.gni
-@@ -35,11 +35,11 @@ declare_args() {
+@@ -36,11 +36,11 @@ declare_args() {
  assert(!devtools_instrumentation_dumping || use_order_profiling,
         "devtools_instrumentation_dumping requires use_order_profiling")
  
@@ -189,7 +189,7 @@ index e86cfd6ea..71d232798 100644
    import("//chromium/build/config/arm.gni")
    if (arm_version < 7) {
      android_app_abi = "armeabi"
-@@ -48,30 +48,30 @@ if (current_cpu == "x86") {
+@@ -49,30 +49,30 @@ if (current_cpu == "x86") {
    }
    android_abi_target = "arm-linux-androideabi"
    sanitizer_arch = "arm"
@@ -226,7 +226,7 @@ index e86cfd6ea..71d232798 100644
  }
  
  if (target_cpu == "arm64" || target_cpu == "x64" || target_cpu == "mips64el" ||
-@@ -84,9 +84,9 @@ if (target_cpu == "arm64" || target_cpu == "x64" || target_cpu == "mips64el" ||
+@@ -85,9 +85,9 @@ if (target_cpu == "arm64" || target_cpu == "x64" || target_cpu == "mips64el" ||
    assert(false, "Unknown target CPU: $target_cpu")
  }
  
@@ -451,7 +451,7 @@ index 535ac6f10..e453befa3 100644
          } else {
            assert(false)  # Unhandled cpu type
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 3029b9155..7638e61c4 100644
+index f0072b4df..41944545a 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -22,11 +22,11 @@ import("//chromium/build/toolchain/rbe.gni")
@@ -672,7 +672,7 @@ index 3029b9155..7638e61c4 100644
        cflags += [ "-Wno-psabi" ]
      }
  
-@@ -2100,10 +2100,10 @@ config("chromium_code") {
+@@ -2097,10 +2097,10 @@ config("chromium_code") {
        "__STDC_FORMAT_MACROS",
      ]
  
@@ -687,7 +687,7 @@ index 3029b9155..7638e61c4 100644
        # Non-chromium code is not guaranteed to compile cleanly with
        # _FORTIFY_SOURCE. Also, fortified build may fail when optimizations are
        # disabled, so only do that for Release build.
-@@ -2386,9 +2386,9 @@ config("no_incompatible_pointer_warnings") {
+@@ -2383,9 +2383,9 @@ config("no_incompatible_pointer_warnings") {
    cflags = []
    if (is_clang) {
      cflags += [ "-Wno-incompatible-pointer-types" ]
@@ -699,7 +699,7 @@ index 3029b9155..7638e61c4 100644
      cflags += [ "-w" ]
    }
  }
-@@ -2445,7 +2445,7 @@ if (is_win) {
+@@ -2442,7 +2442,7 @@ if (is_win) {
    if (is_android) {
      # TODO(jdduke) Re-enable on mips after resolving linking
      # issues with libc++ (crbug.com/456380).
@@ -708,7 +708,7 @@ index 3029b9155..7638e61c4 100644
        common_optimize_on_ldflags += [
          # Warn in case of text relocations.
          "-Wl,--warn-shared-textrel",
-@@ -2507,7 +2507,7 @@ config("default_stack_frames") {
+@@ -2504,7 +2504,7 @@ config("default_stack_frames") {
        # Omit frame pointers for leaf functions on x86, otherwise building libyuv
        # gives clang's register allocator issues, see llvm.org/PR15798 /
        # crbug.com/233709
@@ -717,7 +717,7 @@ index 3029b9155..7638e61c4 100644
          cflags += [ "-momit-leaf-frame-pointer" ]
        }
      } else {
-@@ -2918,12 +2918,12 @@ config("symbols") {
+@@ -2915,12 +2915,12 @@ config("symbols") {
      # DWARF info may be corrupt; offsets in a range list entry are in different
      # sections" there.  Maybe just a bug in nacl_switch_32.S.
      _enable_gdb_index =
@@ -733,7 +733,7 @@ index 3029b9155..7638e61c4 100644
      if (_enable_gdb_index) {
        if (is_clang) {
          # This flag enables the GNU-format pubnames and pubtypes sections,
-@@ -2939,7 +2939,7 @@ config("symbols") {
+@@ -2936,7 +2936,7 @@ config("symbols") {
    # Compress debug on 32-bit ARM to stay under 4GB file size limit.
    # https://b/243982712, https://crbug.com/1354616, https://crbug.com/334073642
    if (symbol_level == 2 && !use_debug_fission && !is_nacl && !is_win &&
@@ -1551,10 +1551,10 @@ index d920be21f..3fc98bdf1 100644
    # compiler_builtins depends on libm on windows crbug.com/1472681
    '../libm',
 diff --git a/rust/std/rules/BUILD.gn b/rust/std/rules/BUILD.gn
-index b2d4e58dc..1fef9522d 100644
+index 2a6c839fa..611444d77 100644
 --- a/rust/std/rules/BUILD.gn
 +++ b/rust/std/rules/BUILD.gn
-@@ -555,7 +555,7 @@ cargo_crate("compiler_builtins") {
+@@ -523,7 +523,7 @@ cargo_crate("compiler_builtins") {
    output_dir =
        "$root_out_dir/local_rustc_sysroot/lib/rustlib/$rust_abi_target/lib/"
  

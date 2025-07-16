@@ -1,5 +1,5 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 8 Jul 2025 11:34:26 -0500
+Date: Tue, 8 Jul 2025 11:53:49 -0500
 Subject: Bug 1921707 - point to new build directory location in
  third_party/chromium/build r=ng,glandium
 
@@ -306,6 +306,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6b855a2bf6b1f3feb
  toolchain/nacl/BUILD.gn                       |   6 +-
  toolchain/nacl_toolchain.gni                  |   4 +-
  toolchain/rbe.gni                             |   6 +-
+ toolchain/siso.gni                            |   4 +-
  toolchain/toolchain.gni                       |   6 +-
  toolchain/win/BUILD.gn                        |   6 +-
  toolchain/win/midl.gni                        |   4 +-
@@ -320,7 +321,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6b855a2bf6b1f3feb
  util/process_version.gni                      |   6 +-
  win/BUILD.gn                                  |  10 +-
  win/message_compiler.gni                      |   2 +-
- 302 files changed, 1502 insertions(+), 1502 deletions(-)
+ 303 files changed, 1504 insertions(+), 1504 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
 index e7c48e0ec..94be01f40 100644
@@ -1535,10 +1536,10 @@ index cdc2d6fb6..37c98f5e4 100644
 -mixins: "//build/android/COMMON_METADATA"
 +mixins: "//chromium/build/android/COMMON_METADATA"
 diff --git a/config/android/abi.gni b/config/android/abi.gni
-index 87d1cf673..e86cfd6ea 100644
+index 8f6c5b199..c300f1d6f 100644
 --- a/config/android/abi.gni
 +++ b/config/android/abi.gni
-@@ -40,7 +40,7 @@ if (current_cpu == "x86") {
+@@ -41,7 +41,7 @@ if (current_cpu == "x86") {
    android_abi_target = "i686-linux-android"
    sanitizer_arch = "i686"
  } else if (current_cpu == "arm") {
@@ -1547,7 +1548,7 @@ index 87d1cf673..e86cfd6ea 100644
    if (arm_version < 7) {
      android_app_abi = "armeabi"
    } else {
-@@ -106,6 +106,6 @@ if (!skip_secondary_abi_for_cq) {
+@@ -107,6 +107,6 @@ if (enable_android_secondary_abi) {
  
    if (defined(android_secondary_abi_cpu)) {
      android_secondary_abi_toolchain =
@@ -3026,7 +3027,7 @@ index e120a847c..ca9f915ad 100644
        # of Clang modules build.
        !use_libcxx_modules
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 5496aff97..3029b9155 100644
+index 311ca2e22..f0072b4df 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -2,44 +2,44 @@
@@ -3236,7 +3237,7 @@ index 5496aff97..3029b9155 100644
  
  config("prevent_unsafe_narrowing") {
    if (is_clang) {
-@@ -2402,8 +2402,8 @@ config("no_incompatible_pointer_warnings") {
+@@ -2399,8 +2399,8 @@ config("no_incompatible_pointer_warnings") {
  # You can override the optimization level on a per-target basis by removing the
  # default config and then adding the named one you want:
  #
@@ -3247,7 +3248,7 @@ index 5496aff97..3029b9155 100644
  
  # Shared settings for both "optimize" and "optimize_max" configs.
  # IMPORTANT: On Windows "/O1" and "/O2" must go before the common flags.
-@@ -2629,12 +2629,12 @@ config("optimize_max") {
+@@ -2626,12 +2626,12 @@ config("optimize_max") {
      # The NaCl IRT is a special case and always wants its own config.
      # Various components do:
      #   if (!is_debug) {
@@ -3263,7 +3264,7 @@ index 5496aff97..3029b9155 100644
    } else {
      ldflags = common_optimize_on_ldflags
      if (is_win) {
-@@ -2662,12 +2662,12 @@ config("optimize_speed") {
+@@ -2659,12 +2659,12 @@ config("optimize_speed") {
      # The NaCl IRT is a special case and always wants its own config.
      # Various components do:
      #   if (!is_debug) {
@@ -3279,7 +3280,7 @@ index 5496aff97..3029b9155 100644
    } else {
      ldflags = common_optimize_on_ldflags
      if (is_win) {
-@@ -2699,7 +2699,7 @@ config("default_optimization") {
+@@ -2696,7 +2696,7 @@ config("default_optimization") {
    if (is_nacl && is_nacl_irt) {
      # The NaCl IRT is a special case and always wants its own config.
      # It gets optimized the same way regardless of the type of build.
@@ -3288,7 +3289,7 @@ index 5496aff97..3029b9155 100644
    } else if (is_debug) {
      configs = [ ":no_optimize" ]
    } else if (optimize_for_fuzzing) {
-@@ -2793,8 +2793,8 @@ config("afdo") {
+@@ -2790,8 +2790,8 @@ config("afdo") {
  # You can override the symbol level on a per-target basis by removing the
  # default config and then adding the named one you want:
  #
@@ -3299,7 +3300,7 @@ index 5496aff97..3029b9155 100644
  
  # A helper config that all configs passing /DEBUG to the linker should
  # include as sub-config.
-@@ -2940,7 +2940,7 @@ config("symbols") {
+@@ -2937,7 +2937,7 @@ config("symbols") {
    # https://b/243982712, https://crbug.com/1354616, https://crbug.com/334073642
    if (symbol_level == 2 && !use_debug_fission && !is_nacl && !is_win &&
        (current_cpu == "arm" || current_cpu == "x86")) {
@@ -6285,7 +6286,7 @@ index 9a7314779..7cc770762 100644
      rustflags = [
        "--cfg",
 diff --git a/rust/cargo_crate.gni b/rust/cargo_crate.gni
-index 89165763b..da03a3fd2 100644
+index 6d11c538b..6e221c95d 100644
 --- a/rust/cargo_crate.gni
 +++ b/rust/cargo_crate.gni
 @@ -2,9 +2,9 @@
@@ -6301,7 +6302,7 @@ index 89165763b..da03a3fd2 100644
  
  # This template allows for building Cargo crates within gn.
  #
-@@ -380,7 +380,7 @@ template("cargo_crate") {
+@@ -363,7 +363,7 @@ template("cargo_crate") {
      action("${_build_script_name}_write_rustflags") {
        _rustflags_txt = "$_build_script_env_out_dir/rustflags.txt"
        outputs = [ _rustflags_txt ]
@@ -6310,7 +6311,7 @@ index 89165763b..da03a3fd2 100644
        args = [
          "--output",
          rebase_path(_rustflags_txt, root_build_dir),
-@@ -399,13 +399,13 @@ template("cargo_crate") {
+@@ -382,13 +382,13 @@ template("cargo_crate") {
  
      # Extra targets required to make build script work
      action("${_build_script_name}_output") {
@@ -6327,7 +6328,7 @@ index 89165763b..da03a3fd2 100644
          _rustflags_txt,
        ]
        build_script_target = ":${_build_script_name}($rust_macro_toolchain)"
-@@ -516,7 +516,7 @@ template("cargo_crate") {
+@@ -499,7 +499,7 @@ template("cargo_crate") {
                                   "rustflags",
                                 ])
          configs -= [
@@ -6336,7 +6337,7 @@ index 89165763b..da03a3fd2 100644
  
            # Avoid generating profiling data for build scripts.
            #
-@@ -528,9 +528,9 @@ template("cargo_crate") {
+@@ -511,9 +511,9 @@ template("cargo_crate") {
            # If we do include build script output in test metrics, it could be
            # misleading: exercising some code from a build script doesn't give us
            # the same signal as an actual test.
@@ -6791,7 +6792,7 @@ index 40e1f202c..093467a53 100644
    {{#unless deps}}
    ]
 diff --git a/rust/std/rules/BUILD.gn b/rust/std/rules/BUILD.gn
-index 5a9fb14e1..b2d4e58dc 100644
+index 14f0d91d6..2a6c839fa 100644
 --- a/rust/std/rules/BUILD.gn
 +++ b/rust/std/rules/BUILD.gn
 @@ -4,7 +4,7 @@
@@ -6863,7 +6864,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    aliased_deps = {
      core = ":rustc_std_workspace_core"
-@@ -209,20 +209,20 @@ cargo_crate("alloc") {
+@@ -214,20 +214,20 @@ cargo_crate("alloc") {
    cargo_pkg_name = "alloc"
    cargo_pkg_description = "The Rust core allocation and collections library"
    library_configs -= [
@@ -6892,7 +6893,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    rustenv = [
      "CFG_DISABLE_UNSTABLE_FEATURES=0",
-@@ -251,20 +251,20 @@ cargo_crate("cfg_if") {
+@@ -256,20 +256,20 @@ cargo_crate("cfg_if") {
    cargo_pkg_name = "cfg-if"
    cargo_pkg_description = "A macro to ergonomically define an item depending on a large number of #[cfg] parameters. Structured like an if-else chain, the first matching branch is the item that gets emitted."
    library_configs -= [
@@ -6921,7 +6922,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    aliased_deps = {
      core = ":rustc_std_workspace_core"
-@@ -518,19 +518,19 @@ cargo_crate("compiler_builtins") {
+@@ -486,19 +486,19 @@ cargo_crate("compiler_builtins") {
    cargo_pkg_name = "compiler_builtins"
    cargo_pkg_description = "Compiler intrinsics used by the Rust compiler. Also available for other targets if necessary!"
    library_configs -= [
@@ -6949,7 +6950,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    aliased_deps = {
      core = ":rustc_std_workspace_core"
-@@ -1062,20 +1062,20 @@ cargo_crate("core") {
+@@ -1029,20 +1029,20 @@ cargo_crate("core") {
    cargo_pkg_name = "core"
    cargo_pkg_description = "The Rust Core Library"
    library_configs -= [
@@ -6979,7 +6980,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    rustenv = [
      "CFG_DISABLE_UNSTABLE_FEATURES=0",
      "STD_ENV_ARCH=$rust_target_arch",
-@@ -1106,21 +1106,21 @@ cargo_crate("getopts") {
+@@ -1073,21 +1073,21 @@ cargo_crate("getopts") {
    cargo_pkg_name = "getopts"
    cargo_pkg_description = "getopts-like option parsing."
    library_configs -= [
@@ -7009,7 +7010,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    aliased_deps = {
      core = ":rustc_std_workspace_core"
-@@ -1203,21 +1203,21 @@ cargo_crate("gimli") {
+@@ -1170,21 +1170,21 @@ cargo_crate("gimli") {
    cargo_pkg_description =
        "A library for reading and writing the DWARF debugging format."
    library_configs -= [
@@ -7039,7 +7040,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    aliased_deps = {
      alloc = ":rustc_std_workspace_alloc"
-@@ -1282,21 +1282,21 @@ cargo_crate("hashbrown") {
+@@ -1249,21 +1249,21 @@ cargo_crate("hashbrown") {
    cargo_pkg_name = "hashbrown"
    cargo_pkg_description = "A Rust port of Google's SwissTable hash map"
    library_configs -= [
@@ -7069,7 +7070,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    aliased_deps = {
      alloc = ":rustc_std_workspace_alloc"
-@@ -1516,19 +1516,19 @@ cargo_crate("libc") {
+@@ -1483,19 +1483,19 @@ cargo_crate("libc") {
    cargo_pkg_name = "libc"
    cargo_pkg_description = "Raw FFI bindings to platform libraries like libc."
    library_configs -= [
@@ -7097,7 +7098,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    features = [
      "align",
-@@ -1610,20 +1610,20 @@ cargo_crate("memchr") {
+@@ -1577,20 +1577,20 @@ cargo_crate("memchr") {
    cargo_pkg_name = "memchr"
    cargo_pkg_description = "Provides extremely fast (uses SIMD on x86_64, aarch64 and wasm32) routines for 1, 2 or 3 byte search and single substring search."
    library_configs -= [
@@ -7126,7 +7127,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    aliased_deps = {
      core = ":rustc_std_workspace_core"
-@@ -1673,22 +1673,22 @@ cargo_crate("miniz_oxide") {
+@@ -1640,22 +1640,22 @@ cargo_crate("miniz_oxide") {
    cargo_pkg_name = "miniz_oxide"
    cargo_pkg_description = "DEFLATE compression and decompression library rewritten in Rust based on miniz"
    library_configs -= [
@@ -7157,7 +7158,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    aliased_deps = {
      alloc = ":rustc_std_workspace_alloc"
-@@ -1808,22 +1808,22 @@ cargo_crate("object") {
+@@ -1775,22 +1775,22 @@ cargo_crate("object") {
    cargo_pkg_description =
        "A unified interface for reading and writing object file formats."
    library_configs -= [
@@ -7188,7 +7189,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    aliased_deps = {
      alloc = ":rustc_std_workspace_alloc"
-@@ -1875,22 +1875,22 @@ cargo_crate("panic_abort") {
+@@ -1842,22 +1842,22 @@ cargo_crate("panic_abort") {
    cargo_pkg_name = "panic_abort"
    cargo_pkg_description = "Implementation of Rust panics via process aborts"
    library_configs -= [
@@ -7219,7 +7220,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    if (!is_win) {
      deps += [ ":libc" ]
-@@ -1929,23 +1929,23 @@ cargo_crate("panic_unwind") {
+@@ -1896,23 +1896,23 @@ cargo_crate("panic_unwind") {
    cargo_pkg_name = "panic_unwind"
    cargo_pkg_description = "Implementation of Rust panics via stack unwinding"
    library_configs -= [
@@ -7251,7 +7252,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    if (!is_win) {
      deps += [ ":libc" ]
-@@ -1992,20 +1992,20 @@ cargo_crate("proc_macro") {
+@@ -1959,20 +1959,20 @@ cargo_crate("proc_macro") {
    cargo_pkg_version = "0.0.0"
    cargo_pkg_name = "proc_macro"
    library_configs -= [
@@ -7280,7 +7281,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    rustenv = [
      "CFG_DISABLE_UNSTABLE_FEATURES=0",
-@@ -2032,17 +2032,17 @@ cargo_crate("profiler_builtins") {
+@@ -1999,17 +1999,17 @@ cargo_crate("profiler_builtins") {
    cargo_pkg_version = "0.0.0"
    cargo_pkg_name = "profiler_builtins"
    library_configs -= [
@@ -7306,7 +7307,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    rustenv = [
      "CFG_DISABLE_UNSTABLE_FEATURES=0",
      "STD_ENV_ARCH=$rust_target_arch",
-@@ -2074,20 +2074,20 @@ cargo_crate("rustc_demangle") {
+@@ -2041,20 +2041,20 @@ cargo_crate("rustc_demangle") {
    cargo_pkg_name = "rustc-demangle"
    cargo_pkg_description = "Rust compiler symbol demangling."
    library_configs -= [
@@ -7335,7 +7336,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    aliased_deps = {
      core = ":rustc_std_workspace_core"
-@@ -2123,19 +2123,19 @@ cargo_crate("rustc_std_workspace_alloc") {
+@@ -2090,19 +2090,19 @@ cargo_crate("rustc_std_workspace_alloc") {
    cargo_pkg_name = "rustc-std-workspace-alloc"
    cargo_pkg_description = "Hack for the compiler's own build system"
    library_configs -= [
@@ -7363,7 +7364,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    rustenv = [
      "CFG_DISABLE_UNSTABLE_FEATURES=0",
-@@ -2163,19 +2163,19 @@ cargo_crate("rustc_std_workspace_core") {
+@@ -2130,19 +2130,19 @@ cargo_crate("rustc_std_workspace_core") {
    cargo_pkg_name = "rustc-std-workspace-core"
    cargo_pkg_description = "Hack for the compiler's own build system"
    library_configs -= [
@@ -7391,7 +7392,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    rustenv = [
      "CFG_DISABLE_UNSTABLE_FEATURES=0",
-@@ -2203,19 +2203,19 @@ cargo_crate("rustc_std_workspace_std") {
+@@ -2170,19 +2170,19 @@ cargo_crate("rustc_std_workspace_std") {
    cargo_pkg_name = "rustc-std-workspace-std"
    cargo_pkg_description = "Hack for the compiler's own build system"
    library_configs -= [
@@ -7419,7 +7420,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    rustenv = [
      "CFG_DISABLE_UNSTABLE_FEATURES=0",
-@@ -2882,18 +2882,18 @@ cargo_crate("std") {
+@@ -2846,18 +2846,18 @@ cargo_crate("std") {
    cargo_pkg_name = "std"
    cargo_pkg_description = "The Rust Standard Library"
    library_configs -= [
@@ -7445,7 +7446,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    deps = [
      ":alloc",
      ":cfg_if",
-@@ -2905,8 +2905,8 @@ cargo_crate("std") {
+@@ -2869,8 +2869,8 @@ cargo_crate("std") {
      ":rustc_demangle",
      ":std_detect",
      ":unwind",
@@ -7456,7 +7457,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    if (!is_win) {
      deps += [
-@@ -2999,22 +2999,22 @@ cargo_crate("std_detect") {
+@@ -2961,22 +2961,22 @@ cargo_crate("std_detect") {
    cargo_pkg_description =
        "`std::detect` - Rust's standard library run-time CPU feature detection."
    library_configs -= [
@@ -7487,7 +7488,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    if (!is_win) {
      deps += [ ":libc" ]
-@@ -3057,22 +3057,22 @@ cargo_crate("sysroot") {
+@@ -3019,22 +3019,22 @@ cargo_crate("sysroot") {
    cargo_pkg_version = "0.0.0"
    cargo_pkg_name = "sysroot"
    library_configs -= [
@@ -7518,7 +7519,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    features = [
      "backtrace",
-@@ -3137,21 +3137,21 @@ cargo_crate("test") {
+@@ -3099,21 +3099,21 @@ cargo_crate("test") {
    cargo_pkg_version = "0.0.0"
    cargo_pkg_name = "test"
    library_configs -= [
@@ -7548,7 +7549,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    if (!is_win) {
      deps += [ ":libc" ]
-@@ -3187,21 +3187,21 @@ cargo_crate("unicode_width") {
+@@ -3149,21 +3149,21 @@ cargo_crate("unicode_width") {
    cargo_pkg_name = "unicode-width"
    cargo_pkg_description = "Determine displayed width of `char` and `str` types according to Unicode Standard Annex #11 rules."
    library_configs -= [
@@ -7578,7 +7579,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    aliased_deps = {
      core = ":rustc_std_workspace_core"
-@@ -3244,21 +3244,21 @@ cargo_crate("unwind") {
+@@ -3206,21 +3206,21 @@ cargo_crate("unwind") {
    cargo_pkg_version = "0.0.0"
    cargo_pkg_name = "unwind"
    library_configs -= [
@@ -7608,7 +7609,7 @@ index 5a9fb14e1..b2d4e58dc 100644
    ]
    if (!is_win) {
      deps += [ ":libc" ]
-@@ -3290,17 +3290,17 @@ cargo_crate("windows_targets") {
+@@ -3252,17 +3252,17 @@ cargo_crate("windows_targets") {
    cargo_pkg_name = "windows-targets"
    cargo_pkg_description = "A drop-in replacement for the real windows-targets crate for use in std only."
    library_configs -= [
@@ -9042,7 +9043,7 @@ index fbaa65e48..6ca7ce48a 100644
  # This template defines a NaCl toolchain.
  #
 diff --git a/toolchain/rbe.gni b/toolchain/rbe.gni
-index dd8847963..d887bb2a6 100644
+index 444ac6573..c5ca47ba7 100644
 --- a/toolchain/rbe.gni
 +++ b/toolchain/rbe.gni
 @@ -4,8 +4,8 @@
@@ -9056,7 +9057,7 @@ index dd8847963..d887bb2a6 100644
  
  declare_args() {
    # Deprecated: Please use reclient_bin_dir instead.
-@@ -140,7 +140,7 @@ if (use_reclient_cfgs && current_toolchain == default_toolchain) {
+@@ -135,7 +135,7 @@ if (use_reclient_cfgs && current_toolchain == default_toolchain) {
    # it doesn't.
    if (!path_exists(reclient_cc_cfg_file)) {
      # Use exec_script() to show a good error message.
@@ -9065,6 +9066,27 @@ index dd8847963..d887bb2a6 100644
                  [ reclient_cc_cfg_file ],
                  "",
                  [ rebase_path(reclient_cc_cfg_file, ".", root_build_dir) ])
+diff --git a/toolchain/siso.gni b/toolchain/siso.gni
+index c4a09c339..94055d527 100644
+--- a/toolchain/siso.gni
++++ b/toolchain/siso.gni
+@@ -1,6 +1,6 @@
+ # Defines the configuration of siso (next-gen build system)
+ 
+-import("//build/config/gclient_args.gni")
++import("//chromium/build/config/gclient_args.gni")
+ 
+ # use_siso_default is default value of use_siso.
+ # need to match with autoninja's logic.
+@@ -15,7 +15,7 @@ if (path_exists("/usr/bin/gcert") ||  # linux
+ 
+ _is_ninja_used = path_exists(rebase_path(".ninja_deps", root_build_dir))
+ 
+-if (path_exists("//build/config/siso/.sisoenv") &&
++if (path_exists("//chromium/build/config/siso/.sisoenv") &&
+     defined(build_with_chromium) && build_with_chromium &&
+     _is_google_corp_machine && !_is_ninja_used) {
+   use_siso_default = true
 diff --git a/toolchain/toolchain.gni b/toolchain/toolchain.gni
 index 580da7b0d..c80804ace 100644
 --- a/toolchain/toolchain.gni
