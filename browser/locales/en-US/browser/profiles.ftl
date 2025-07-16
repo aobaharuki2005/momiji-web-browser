@@ -144,7 +144,8 @@ canvas-avatar-alt =
 # Craft refers to hobby arts and crafts, represented by a button/fastener commonly found on clothing like shirts
 craft-avatar-alt =
     .alt = Craft
-custom-avatar-alt = Custom
+custom-avatar-alt =
+    .alt = Custom avatar
 # Default favicon refers to the generic globe/world icon that appears in browser tabs when a website doesn't have its own favicon.
 default-favicon-avatar-alt =
     .alt = Default favicon
