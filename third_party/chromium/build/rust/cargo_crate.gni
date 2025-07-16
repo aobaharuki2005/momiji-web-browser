@@ -24,6 +24,7 @@ import("//chromium/build/rust/rust_target.gni")
 #  crate_root
 #  epoch
 #  deps
+#  aliased_deps
 #  features
 #  build_native_rust_unit_tests
 #  edition
@@ -126,9 +127,25 @@ template("cargo_crate") {
                               ]) ]
   }
 
-  # The main target, either a Rust source set or an executable
+  # The main target, either a Rust source set or an executable.
   rust_target(target_name) {
-    # Work out what we're building
+    forward_variables_from(invoker,
+                           "*",
+                           TESTONLY_AND_VISIBILITY + [
+                                 "build_root",
+                                 "build_deps",
+                                 "build_sources",
+                                 "build_script_inputs",
+                                 "build_script_outputs",
+                                 "output_dir",
+                                 "unit_test_target",
+                                 "target_type",
+                                 "configs",
+                                 "rustenv",
+                               ])
+    forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
+
+    # Work out what we're building.
     crate_type = "rlib"
     if (defined(invoker.crate_type)) {
       crate_type = invoker.crate_type
@@ -158,25 +175,21 @@ template("cargo_crate") {
     # for Cargo crates which includes the GN target name to disambiguate them.
     output_dir = "${target_out_dir}/${orig_target_name}"
 
-    # The unit tests for each target, if generated, should be unique as well,
-    # and needs to be unique within the name of the binary itself.
-    unit_test_target = "${_crate_name}_${orig_target_name}_unittests"
-
-    forward_variables_from(invoker,
-                           "*",
-                           [
-                             "build_root",
-                             "build_deps",
-                             "build_sources",
-                             "build_script_inputs",
-                             "build_script_outputs",
-                             "output_dir",
-                             "unit_test_target",
-                             "target_type",
-                             "visibility",
-                             "testonly",
-                             "configs",
-                           ])
+    # The unit tests for each target, if generated, should be unique as well.
+    # a) It needs to be unique even if multiple build targets have the same
+    #    `crate_name`, but different target names.
+    # b) It needs to be unique even if multiple build targets have the same
+    #    `crate_name` and target name, but different epochs.
+    _unit_test_unique_target_name = ""
+    if (_crate_name != orig_target_name) {
+      _unit_test_unique_target_name = "${orig_target_name}_"
+    }
+    _unit_test_unique_epoch = ""
+    if (defined(invoker.epoch)) {
+      _epoch_str = string_replace(invoker.epoch, ".", "_")
+      _unit_test_unique_epoch = "v${_epoch_str}_"
+    }
+    unit_test_target = "${_unit_test_unique_target_name}${_crate_name}_${_unit_test_unique_epoch}unittests"
 
     if (defined(invoker.build_root)) {
       # Uh-oh, we have a build script
@@ -230,7 +243,8 @@ template("cargo_crate") {
     # Extra targets required to make build script work
     action("${build_script_name}_output") {
       script = rebase_path("//chromium/build/rust/run_build_script.py")
-      build_script_target = ":${build_script_name}($host_toolchain)"
+      build_script_target =
+          ":${build_script_name}($host_toolchain_no_sanitizers)"
       deps = [ build_script_target ]
 
       _build_script_exe_dir =
@@ -283,7 +297,7 @@ template("cargo_crate") {
       }
     }
 
-    if (current_toolchain == host_toolchain) {
+    if (current_toolchain == host_toolchain_no_sanitizers) {
       rust_target(build_script_name) {
         target_type = "executable"
         sources = invoker.build_sources
@@ -316,9 +330,5 @@ template("cargo_crate") {
 
 set_defaults("cargo_crate") {
   library_configs = default_compiler_configs
-  library_configs -= [ "//chromium/build/config/compiler:chromium_code" ]
-  library_configs += [ "//chromium/build/config/compiler:no_chromium_code" ]
   executable_configs = default_executable_configs
-  executable_configs -= [ "//chromium/build/config/compiler:chromium_code" ]
-  executable_configs += [ "//chromium/build/config/compiler:no_chromium_code" ]
 }

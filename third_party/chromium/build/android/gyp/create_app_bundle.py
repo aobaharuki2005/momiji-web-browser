@@ -11,6 +11,7 @@ import concurrent.futures
 import json
 import logging
 import os
+import posixpath
 import shutil
 import sys
 import zipfile
@@ -131,15 +132,13 @@ def _ParseArgs(args):
 
   # Merge all uncompressed assets into a set.
   uncompressed_list = []
-  if options.uncompressed_assets:
-    for l in options.uncompressed_assets:
-      for entry in build_utils.ParseGnList(l):
-        # Each entry has the following format: 'zipPath' or 'srcPath:zipPath'
-        pos = entry.find(':')
-        if pos >= 0:
-          uncompressed_list.append(entry[pos + 1:])
-        else:
-          uncompressed_list.append(entry)
+  for entry in build_utils.ParseGnList(options.uncompressed_assets):
+    # Each entry has the following format: 'zipPath' or 'srcPath:zipPath'
+    pos = entry.find(':')
+    if pos >= 0:
+      uncompressed_list.append(entry[pos + 1:])
+    else:
+      uncompressed_list.append(entry)
 
   options.uncompressed_assets = set(uncompressed_list)
 
@@ -199,14 +198,13 @@ def _GenerateBundleConfigJson(uncompressed_assets, compress_dex,
   split_dimensions = [ _MakeSplitDimension(dim, dim in split_dimensions)
                        for dim in _ALL_SPLIT_DIMENSIONS ]
 
-  # Native libraries loaded by the crazy linker.
-  # Whether other .so files are compressed is controlled by
-  # "uncompressNativeLibraries".
-  uncompressed_globs = ['lib/*/crazy.*']
   # Locale-specific pak files stored in bundle splits need not be compressed.
+  uncompressed_globs = [
+      'assets/locales#lang_*/*.pak', 'assets/fallback-locales/*.pak'
+  ]
+  # normpath to allow for ../ prefix.
   uncompressed_globs.extend(
-      ['assets/locales#lang_*/*.pak', 'assets/fallback-locales/*.pak'])
-  uncompressed_globs.extend('assets/' + x for x in uncompressed_assets)
+      posixpath.normpath('assets/' + x) for x in uncompressed_assets)
   # NOTE: Use '**' instead of '*' to work through directories!
   uncompressed_globs.extend('**.' + ext for ext in _UNCOMPRESSED_FILE_EXTS)
   if not compress_dex:
@@ -534,7 +532,7 @@ def main(args):
       f.write(bundle_config)
 
     logging.info('Running bundletool')
-    cmd_args = build_utils.JavaCmd(options.warnings_as_errors) + [
+    cmd_args = build_utils.JavaCmd() + [
         '-jar',
         bundletool.BUNDLETOOL_JAR_PATH,
         'build-bundle',

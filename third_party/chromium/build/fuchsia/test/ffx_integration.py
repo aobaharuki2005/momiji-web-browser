@@ -9,13 +9,15 @@ import os
 import json
 import random
 import subprocess
+import sys
 import tempfile
 
 from contextlib import AbstractContextManager
-from typing import Iterable, Optional
+from typing import IO, Iterable, List, Optional
 
-from common import get_host_arch, run_ffx_command, run_continuous_ffx_command, \
-                   SDK_ROOT
+from common import check_ssh_config_file, run_ffx_command, \
+                   run_continuous_ffx_command, SDK_ROOT
+from compatible_utils import get_host_arch
 
 _EMU_COMMAND_RETRIES = 3
 RUN_SUMMARY_SCHEMA = \
@@ -60,7 +62,14 @@ class ScopedFfxConfig(AbstractContextManager):
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
         if self._new_value != self._old_value:
-            run_ffx_command(['config', 'remove', self._name])
+
+            # Allow removal of config to fail.
+            remove_cmd = run_ffx_command(['config', 'remove', self._name],
+                                         check=False)
+            if remove_cmd.returncode != 0:
+                logging.warning('Error when removing ffx config %s',
+                                self._name)
+
             if self._old_value is not None:
                 # Explicitly set the value back only if removing the new value
                 # doesn't already restore the old value.
@@ -117,16 +126,6 @@ class FfxEmulator(AbstractContextManager):
                 self._scoped_pb_metadata = ScopedFfxConfig(
                     'pbms.metadata', json.dumps((pb_metadata)))
 
-    @staticmethod
-    def _check_ssh_config_file() -> None:
-        """Checks for ssh keys and generates them if they are missing."""
-
-        script_path = os.path.join(SDK_ROOT, 'bin', 'fuchsia-common.sh')
-        check_cmd = [
-            'bash', '-c', f'. {script_path}; check-fuchsia-ssh-config'
-        ]
-        subprocess.run(check_cmd, check=True)
-
     def __enter__(self) -> str:
         """Start the emulator.
 
@@ -136,7 +135,7 @@ class FfxEmulator(AbstractContextManager):
 
         if self._scoped_pb_metadata:
             self._scoped_pb_metadata.__enter__()
-        self._check_ssh_config_file()
+        check_ssh_config_file()
         emu_command = [
             'emu', 'start', self._product_bundle, '--name', self._node_name
         ]
@@ -189,16 +188,18 @@ class FfxEmulator(AbstractContextManager):
                 json.dump(ast.literal_eval(qemu_arm64_meta), f)
             emu_command.extend(['--engine', 'qemu'])
 
-        with ScopedFfxConfig('emu.start.timeout', '180'):
+        with ScopedFfxConfig('emu.start.timeout', '90'):
             for _ in range(_EMU_COMMAND_RETRIES):
 
                 # If the ffx daemon fails to establish a connection with
-                # the emulator after 170 seconds, that means the emulator
+                # the emulator after 85 seconds, that means the emulator
                 # failed to be brought up and a retry is needed.
+                # TODO(fxb/103540): Remove retry when start up issue is fixed.
                 try:
-                    run_ffx_command(emu_command, timeout=170)
+                    run_ffx_command(emu_command, timeout=85)
                     break
-                except subprocess.TimeoutExpired:
+                except (subprocess.TimeoutExpired,
+                        subprocess.CalledProcessError):
                     run_ffx_command(('emu', 'stop'))
         return self._node_name
 
@@ -312,8 +313,19 @@ class FfxTestRunner(AbstractContextManager):
                     self._results_dir, run_artifact_dir, artifact_path)
                 break
 
+        if run_summary['data']['outcome'] == "NOT_STARTED":
+            logging.critical('Test execution was interrupted. Either the '
+                             'emulator crashed while the tests were still '
+                             'running or connection to the device was lost.')
+            sys.exit(1)
+
         # There should be precisely one suite for the test that ran.
-        suite_summary = run_summary.get('data', {}).get('suites', [{}])[0]
+        suites_list = run_summary.get('data', {}).get('suites')
+        if not suites_list:
+            logging.error('Missing or empty list of suites in %s',
+                          run_summary_path)
+            return
+        suite_summary = suites_list[0]
 
         # Get the top-level directory holding all artifacts for this suite.
         artifact_dir = suite_summary.get('artifact_dir')
@@ -342,3 +354,19 @@ class FfxTestRunner(AbstractContextManager):
         """
         self._parse_test_outputs()
         return self._debug_data_directory
+
+
+def run_symbolizer(symbol_paths: List[str], input_fd: IO,
+                   output_fd: IO) -> subprocess.Popen:
+    """Runs symbolizer that symbolizes |input| and outputs to |output|."""
+
+    symbolize_cmd = ([
+        'debug', 'symbolize', '--', '--omit-module-lines', '--build-id-dir',
+        os.path.join(SDK_ROOT, '.build-id')
+    ])
+    for path in symbol_paths:
+        symbolize_cmd.extend(['--ids-txt', path])
+    return run_continuous_ffx_command(symbolize_cmd,
+                                      stdin=input_fd,
+                                      stdout=output_fd,
+                                      stderr=subprocess.STDOUT)

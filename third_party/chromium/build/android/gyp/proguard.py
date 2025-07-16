@@ -14,7 +14,6 @@ import sys
 import zipfile
 
 import dex
-import dex_jdk_libs
 from util import build_utils
 from util import diff_utils
 
@@ -34,16 +33,10 @@ def _ParseOptions():
   parser.add_argument('--r8-path',
                       required=True,
                       help='Path to the R8.jar to use.')
-  parser.add_argument(
-      '--desugar-jdk-libs-json', help='Path to desugar_jdk_libs.json.')
   parser.add_argument('--input-paths',
                       action='append',
                       required=True,
                       help='GN-list of .jar files to optimize.')
-  parser.add_argument('--desugar-jdk-libs-jar',
-                      help='Path to desugar_jdk_libs.jar.')
-  parser.add_argument('--desugar-jdk-libs-configuration-jar',
-                      help='Path to desugar_jdk_libs_configuration.jar.')
   parser.add_argument('--output-path', help='Path to the generated .jar file.')
   parser.add_argument(
       '--proguard-configs',
@@ -193,18 +186,12 @@ class _SplitContext:
     self.staging_dir = os.path.join(work_dir, name)
     os.mkdir(self.staging_dir)
 
-  def CreateOutput(self, has_imported_lib=False, keep_rule_output=None):
+  def CreateOutput(self):
     found_files = build_utils.FindInDirectory(self.staging_dir)
     if not found_files:
       raise Exception('Missing dex outputs in {}'.format(self.staging_dir))
 
     if self.final_output_path.endswith('.dex'):
-      if has_imported_lib:
-        raise Exception(
-            'Trying to create a single .dex file, but a dependency requires '
-            'JDK Library Desugaring (which necessitates a second file).'
-            'Refer to %s to see what desugaring was required' %
-            keep_rule_output)
       if len(found_files) != 1:
         raise Exception('Expected exactly 1 dex file output, found: {}'.format(
             '\t'.join(found_files)))
@@ -216,48 +203,6 @@ class _SplitContext:
     tmp_jar_output = self.staging_dir + '.jar'
     build_utils.DoZip(found_files, tmp_jar_output, base_dir=self.staging_dir)
     shutil.move(tmp_jar_output, self.final_output_path)
-
-
-def _DeDupeInputJars(split_contexts_by_name):
-  """Moves jars used by multiple splits into common ancestors.
-
-  Updates |input_jars| for each _SplitContext.
-  """
-
-  def count_ancestors(split_context):
-    ret = 0
-    if split_context.parent_name:
-      ret += 1
-      ret += count_ancestors(split_contexts_by_name[split_context.parent_name])
-    return ret
-
-  base_context = split_contexts_by_name['base']
-  # Sort by tree depth so that ensure children are visited before their parents.
-  sorted_contexts = list(split_contexts_by_name.values())
-  sorted_contexts.remove(base_context)
-  sorted_contexts.sort(key=count_ancestors, reverse=True)
-
-  # If a jar is present in multiple siblings, promote it to their parent.
-  seen_jars_by_parent = defaultdict(set)
-  for split_context in sorted_contexts:
-    seen_jars = seen_jars_by_parent[split_context.parent_name]
-    new_dupes = seen_jars.intersection(split_context.input_jars)
-    parent_context = split_contexts_by_name[split_context.parent_name]
-    parent_context.input_jars.update(new_dupes)
-    seen_jars.update(split_context.input_jars)
-
-  def ancestor_jars(parent_name, dest=None):
-    dest = dest or set()
-    if not parent_name:
-      return dest
-    parent_context = split_contexts_by_name[parent_name]
-    dest.update(parent_context.input_jars)
-    return ancestor_jars(parent_context.parent_name, dest)
-
-  # Now that jars have been moved up the tree, remove those that appear in
-  # ancestors.
-  for split_context in sorted_contexts:
-    split_context.input_jars -= ancestor_jars(split_context.parent_name)
 
 
 def _OptimizeWithR8(options,
@@ -302,8 +247,12 @@ def _OptimizeWithR8(options,
     base_context = split_contexts_by_name['base']
 
     # R8 OOMs with the default xmx=1G.
-    cmd = build_utils.JavaCmd(options.warnings_as_errors, xmx='2G') + [
+    cmd = build_utils.JavaCmd(xmx='2G') + [
+        # Allows -whyareyounotinlining, which we don't have by default, but
+        # which is useful for one-off queries.
         '-Dcom.android.tools.r8.experimental.enablewhyareyounotinlining=1',
+        # Restricts horizontal class merging to apply only to classes that
+        # share a .java file (nested classes). https://crbug.com/1363709
         '-Dcom.android.tools.r8.enableSameFilePolicy=1',
     ]
     if options.dump_inputs:
@@ -329,14 +278,6 @@ def _OptimizeWithR8(options,
       if not options.warnings_as_errors:
         cmd += ['--map-diagnostics', 'error', 'warning']
 
-    if options.desugar_jdk_libs_json:
-      cmd += [
-          '--desugared-lib',
-          options.desugar_jdk_libs_json,
-          '--desugared-lib-pg-conf-output',
-          options.desugared_library_keep_rule_output,
-      ]
-
     if options.min_api:
       cmd += ['--min-api', options.min_api]
 
@@ -354,8 +295,6 @@ def _OptimizeWithR8(options,
     if options.main_dex_rules_path:
       for main_dex_rule in options.main_dex_rules_path:
         cmd += ['--main-dex-rules', main_dex_rule]
-
-    _DeDupeInputJars(split_contexts_by_name)
 
     # Add any extra inputs to the base context (e.g. desugar runtime).
     extra_jars = set(options.input_paths)
@@ -386,39 +325,8 @@ def _OptimizeWithR8(options,
           'https://chromium.googlesource.com/chromium/src/+/HEAD/build/'
           'android/docs/java_optimization.md#Debugging-common-failures') from e
 
-    base_has_imported_lib = False
-    if options.desugar_jdk_libs_json:
-      logging.debug('Running L8')
-      existing_files = build_utils.FindInDirectory(base_context.staging_dir)
-      jdk_dex_output = os.path.join(base_context.staging_dir,
-                                    'classes%d.dex' % (len(existing_files) + 1))
-      # Use -applymapping to avoid name collisions.
-      l8_dynamic_config_path = os.path.join(tmp_dir, 'l8_dynamic_config.flags')
-      with open(l8_dynamic_config_path, 'w') as f:
-        f.write("-applymapping '{}'\n".format(tmp_mapping_path))
-      # Pass the dynamic config so that obfuscation options are picked up.
-      l8_config_paths = [dynamic_config_path, l8_dynamic_config_path]
-      if os.path.exists(options.desugared_library_keep_rule_output):
-        l8_config_paths.append(options.desugared_library_keep_rule_output)
-
-      base_has_imported_lib = dex_jdk_libs.DexJdkLibJar(
-          options.r8_path, options.min_api, options.desugar_jdk_libs_json,
-          options.desugar_jdk_libs_jar,
-          options.desugar_jdk_libs_configuration_jar, jdk_dex_output,
-          options.warnings_as_errors, l8_config_paths)
-      if int(options.min_api) >= 24 and base_has_imported_lib:
-        with open(jdk_dex_output, 'rb') as f:
-          dexfile = dex_parser.DexFile(bytearray(f.read()))
-          for m in dexfile.IterMethodSignatureParts():
-            print('{}#{}'.format(m[0], m[2]))
-        assert False, (
-            'Desugared JDK libs are disabled on Monochrome and newer - see '
-            'crbug.com/1159984 for details, and see above list for desugared '
-            'classes and methods.')
-
     logging.debug('Collecting ouputs')
-    base_context.CreateOutput(base_has_imported_lib,
-                              options.desugared_library_keep_rule_output)
+    base_context.CreateOutput()
     for split_context in split_contexts_by_name.values():
       if split_context is not base_context:
         split_context.CreateOutput()
@@ -429,7 +337,7 @@ def _OptimizeWithR8(options,
 
 def _OutputKeepRules(r8_path, input_paths, classpath, targets_re_string,
                      keep_rules_output):
-  cmd = build_utils.JavaCmd(False) + [
+  cmd = build_utils.JavaCmd() + [
       '-cp', r8_path, 'com.android.tools.r8.tracereferences.TraceReferences',
       '--map-diagnostics:MissingDefinitionsDiagnostic', 'error', 'warning',
       '--keep-rules', '--output', keep_rules_output
@@ -448,7 +356,7 @@ def _OutputKeepRules(r8_path, input_paths, classpath, targets_re_string,
 
 def _CheckForMissingSymbols(r8_path, dex_files, classpath, warnings_as_errors,
                             error_title):
-  cmd = build_utils.JavaCmd(warnings_as_errors) + [
+  cmd = build_utils.JavaCmd() + [
       '-cp', r8_path, 'com.android.tools.r8.tracereferences.TraceReferences',
       '--map-diagnostics:MissingDefinitionsDiagnostic', 'error', 'warning',
       '--check'

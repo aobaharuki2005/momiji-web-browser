@@ -67,5 +67,19 @@
         "fuchsia.sys.Loader",
       ],
     },
+    {
+      protocol: [
+        "fuchsia.tracing.perfetto.ProducerConnector",
+      ],
+      availability: "optional",
+    },
   ],
+  facets: {
+      "fuchsia.test": {
+          "deprecated-allowed-packages": [
+             "build-info-service",
+             "intl_property_manager",
+          ],
+      },
+  },
 }

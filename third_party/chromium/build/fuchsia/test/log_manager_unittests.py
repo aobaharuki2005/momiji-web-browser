@@ -51,7 +51,7 @@ class LogManagerTest(unittest.TestCase):
         log = log_manager.LogManager(None)
         log_manager.start_system_log(log, True, log_args=['test_log_args'])
         self.assertEqual(mock_ffx.call_args_list[0][0][0],
-                         ['log', '--no-symbols', 'test_log_args'])
+                         ['log', '--raw', 'test_log_args'])
         self.assertEqual(mock_ffx.call_count, 1)
 
     @mock.patch('log_manager.run_continuous_ffx_command')
@@ -59,19 +59,13 @@ class LogManagerTest(unittest.TestCase):
         """Test symbols are used when pkg_paths are set."""
 
         log = log_manager.LogManager(_LOGS_DIR)
-        with mock.patch('os.path.isfile', return_value=True):
-            with mock.patch('builtins.open'):
-                log_manager.start_system_log(log,
-                                             False,
-                                             pkg_paths=['test_pkg'])
-                log.stop()
-        self.assertEqual(mock_ffx.call_args_list[0][0][0],
-                         ['log', '--no-symbols'])
-        self.assertEqual(mock_ffx.call_args_list[1][0][0], [
-            'debug', 'symbolize', '--', '--omit-module-lines', '--ids-txt',
-            'ids.txt'
-        ])
-        self.assertEqual(mock_ffx.call_count, 2)
+        with mock.patch('os.path.isfile', return_value=True), \
+                mock.patch('builtins.open'), \
+                mock.patch('log_manager.run_symbolizer'):
+            log_manager.start_system_log(log, False, pkg_paths=['test_pkg'])
+            log.stop()
+        self.assertEqual(mock_ffx.call_count, 1)
+        self.assertEqual(mock_ffx.call_args_list[0][0][0], ['log', '--raw'])
 
     def test_no_logging_dir_exception(self) -> None:
         """Tests empty LogManager throws an exception on |open_log_file|."""

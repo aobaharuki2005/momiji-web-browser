@@ -14,6 +14,7 @@ tikuta@chromium.org
 file://tools/clang/scripts/OWNERS
 
 # For java build changes:
+smaier@chromium.org
 wnwen@chromium.org
 
 # NOTE: keep this in sync with lsc-owners-override@chromium.org owners
@@ -30,4 +31,4 @@ per-file check_gn_headers_whitelist.txt=*
 per-file whitespace_file.txt=*
 per-file OWNERS.status=*
 per-file OWNERS.setnoparent=set noparent
-per-file OWNERS.setnoparent=file://ENG_REVIEW_OWNERS
+per-file OWNERS.setnoparent=file://ATL_OWNERS

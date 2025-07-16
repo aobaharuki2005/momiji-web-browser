@@ -5,7 +5,6 @@
 
 """Checks the number of static initializers in an APK's library."""
 
-from __future__ import print_function
 
 import argparse
 import os
@@ -42,8 +41,8 @@ def _VerifyLibBuildIdsMatch(tool_prefix, *so_files):
 
 
 def _DumpStaticInitializers(apk_so_name, unzipped_so, out_dir, tool_prefix):
-  lib_name = os.path.basename(apk_so_name).replace('crazy.', '')
-  so_with_symbols_path = os.path.join(out_dir, 'lib.unstripped', lib_name)
+  so_with_symbols_path = os.path.join(out_dir, 'lib.unstripped',
+                                      os.path.basename(apk_so_name))
   if not os.path.exists(so_with_symbols_path):
     raise Exception('Unstripped .so not found. Looked here: %s' %
                     so_with_symbols_path)

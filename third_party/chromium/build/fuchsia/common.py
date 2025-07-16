@@ -14,7 +14,6 @@ DIR_SOURCE_ROOT = os.path.abspath(
     os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 IMAGES_ROOT = os.path.join(
     DIR_SOURCE_ROOT, 'third_party', 'fuchsia-sdk', 'images')
-PRODUCT_BUNDLE_SIGNATURE_FILE = os.path.join(IMAGES_ROOT, '.product_bundle')
 SDK_ROOT = os.path.join(DIR_SOURCE_ROOT, 'third_party', 'fuchsia-sdk', 'sdk')
 
 # The number of seconds to wait when trying to attach to a target.
@@ -43,7 +42,7 @@ def GetHostArchFromPlatform():
   # platform.machine() returns AMD64 on 64-bit Windows.
   if host_arch in ['x86_64', 'AMD64']:
     return 'x64'
-  elif host_arch == 'aarch64':
+  elif host_arch in ['aarch64', 'arm64']:
     return 'arm64'
   raise Exception('Unsupported host architecture: %s' % host_arch)
 

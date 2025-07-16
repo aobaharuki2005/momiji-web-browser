@@ -16,7 +16,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3a785d486d97fc9cb
  5 files changed, 11 insertions(+), 11 deletions(-)
 
 diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
-index 3384f7940..2060745c8 100644
+index 2883450e3..b6eb4be04 100644
 --- a/config/BUILDCONFIG.gn
 +++ b/config/BUILDCONFIG.gn
 @@ -233,7 +233,7 @@ if (host_toolchain == "") {
@@ -57,10 +57,10 @@ index a7f315c30..396cb56a3 100644
    mac_sdk_path = _mac_sdk_result.sdk_path
  }
 diff --git a/config/rust.gni b/config/rust.gni
-index d0fd69625..937289172 100644
+index b3e501149..ccae4502e 100644
 --- a/config/rust.gni
 +++ b/config/rust.gni
-@@ -125,8 +125,8 @@ if (enable_rust) {
+@@ -136,8 +136,8 @@ if (enable_rust) {
      use_unverified_rust_toolchain = false
    } else {
      if (host_os != "linux") {
@@ -72,10 +72,10 @@ index d0fd69625..937289172 100644
  
      rust_sysroot = "//third_party/android_rust_toolchain/toolchain"
 diff --git a/config/win/visual_studio_version.gni b/config/win/visual_studio_version.gni
-index d90244682..955f2a85a 100644
+index 2314ab505..417aef1b3 100644
 --- a/config/win/visual_studio_version.gni
 +++ b/config/win/visual_studio_version.gni
-@@ -35,5 +35,5 @@ if (visual_studio_path == "") {
+@@ -36,5 +36,5 @@ if (visual_studio_path == "") {
           "You must set the visual_studio_version if you set the path")
    assert(wdk_path != "",
           "You must set the wdk_path if you set the visual studio path")
@@ -83,7 +83,7 @@ index d90244682..955f2a85a 100644
 +  visual_studio_runtime_dirs = ""
  }
 diff --git a/win/BUILD.gn b/win/BUILD.gn
-index 17b5ac428..e2a335906 100644
+index 4abe95713..14c2527bc 100644
 --- a/win/BUILD.gn
 +++ b/win/BUILD.gn
 @@ -19,8 +19,8 @@ windows_manifest("default_exe_manifest") {

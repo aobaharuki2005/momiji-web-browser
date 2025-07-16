@@ -59,8 +59,6 @@ if (cros_sdk_version != "") {
     _symlinks = [
       # Tast harness & test data.
       rebase_path("${_cache_path_prefix}+autotest_server_package.tar.bz2"),
-      rebase_path("${_cache_path_prefix}+chromeos-base/tast-cmd"),
-      rebase_path("${_cache_path_prefix}+chromeos-base/tast-remote-tests-cros"),
 
       # Binutils (and other toolchain tools) used to deploy Chrome to the device.
       rebase_path(
@@ -196,10 +194,16 @@ template("generate_skylab_deps") {
     }
     if (defined(tast_disabled_tests)) {
       foreach(_test, tast_disabled_tests) {
-        _skylab_args += [
-          "--disabled-tests",
-          _test,
-        ]
+        _excluded_test_name_and_board = []
+        _excluded_test_name_and_board = string_split(_test, "@") + [ "" ]
+        _excluded_test_name = _excluded_test_name_and_board[0]
+        _excluded_board = _excluded_test_name_and_board[1]
+        if (_excluded_board == "" || _excluded_board == cros_board) {
+          _skylab_args += [
+            "--disabled-tests",
+            _excluded_test_name,
+          ]
+        }
       }
     }
     action(target_name) {
@@ -325,27 +329,23 @@ template("generate_runner_script") {
 
         if (is_tast) {
           # Add tast sdk items.
-          _sdk_data += [
-            _symlink_targets[0],
-            _symlink_targets[1],
-            _symlink_targets[2],
-          ]
+          _sdk_data += [ _symlink_targets[0] ]
         }
         if (deploy_chrome) {
           # To deploy chrome to the VM, it needs to be stripped down to fit into
           # the VM. This is done by using binutils in the toolchain. So add the
           # toolchain to the data.
           _sdk_data += [
-            _symlink_targets[3],
-            _symlink_targets[4],
+            _symlink_targets[1],
+            _symlink_targets[2],
           ]
         }
         if (_cros_is_vm) {
           # Add vm sdk items.
           _sdk_data += [
+            _symlink_targets[3],
+            _symlink_targets[4],
             _symlink_targets[5],
-            _symlink_targets[6],
-            _symlink_targets[7],
           ]
         }
       }
@@ -530,8 +530,14 @@ template("tast_test") {
   if (defined(tast_disabled_tests)) {
     assert(defined(tast_attr_expr),
            "tast_attr_expr must be used when specifying tast_disabled_tests.")
-    foreach(test, tast_disabled_tests) {
-      tast_attr_expr += " && !\"name:${test}\""
+    foreach(_test, tast_disabled_tests) {
+      _excluded_test_name_and_board = []
+      _excluded_test_name_and_board = string_split(_test, "@") + [ "" ]
+      _excluded_test_name = _excluded_test_name_and_board[0]
+      _excluded_board = _excluded_test_name_and_board[1]
+      if (_excluded_board == "" || _excluded_board == cros_board) {
+        tast_attr_expr += " && !\"name:${_excluded_test_name}\""
+      }
     }
   }
   if (defined(tast_attr_expr)) {
@@ -608,8 +614,14 @@ template("lacros_tast_tests") {
     if (defined(tast_disabled_tests)) {
       assert(defined(tast_attr_expr),
              "tast_attr_expr must be used when specifying tast_disabled_tests.")
-      foreach(test, tast_disabled_tests) {
-        tast_attr_expr += " && !\"name:${test}\""
+      foreach(_test, tast_disabled_tests) {
+        _excluded_test_name_and_board = []
+        _excluded_test_name_and_board = string_split(_test, "@") + [ "" ]
+        _excluded_test_name = _excluded_test_name_and_board[0]
+        _excluded_board = _excluded_test_name_and_board[1]
+        if (_excluded_board == "" || _excluded_board == cros_board) {
+          tast_attr_expr += " && !\"name:${_excluded_test_name}\""
+        }
       }
     }
     if (defined(tast_attr_expr)) {

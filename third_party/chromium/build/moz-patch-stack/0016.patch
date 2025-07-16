@@ -19,7 +19,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e4b7dbca00cb88d30
  1 file changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/win/BUILD.gn b/win/BUILD.gn
-index e2a335906..bb71be312 100644
+index 14c2527bc..51ea725ec 100644
 --- a/win/BUILD.gn
 +++ b/win/BUILD.gn
 @@ -2,7 +2,6 @@

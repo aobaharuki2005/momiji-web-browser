@@ -24,7 +24,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d57bb9cfa9a7679fa
  1 file changed, 4 insertions(+)
 
 diff --git a/config/linux/BUILD.gn b/config/linux/BUILD.gn
-index 6801a0b68..f653209ac 100644
+index cc4749ea0..b96e8cbe3 100644
 --- a/config/linux/BUILD.gn
 +++ b/config/linux/BUILD.gn
 @@ -40,10 +40,13 @@ config("runtime_library") {

@@ -33,5 +33,15 @@
       ],
       from: "#test_ui_stack",
     },
+    {
+      protocol: [
+        "fuchsia.sysmem.Allocator",
+      ],
+    },
   ],
+  facets: {
+    "fuchsia.test": {
+        "deprecated-allowed-packages": [ "flatland-scene-manager-test-ui-stack" ],
+    },
+  },
 }

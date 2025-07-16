@@ -61,13 +61,13 @@ class LocalMachineJunitTestRun(test_run.TestRun):
   def SetUp(self):
     pass
 
-  def _GetFilterArgs(self, test_filter_override=None):
+  def _GetFilterArgs(self, shard_test_filter=None):
     ret = []
-    if test_filter_override:
-      ret += ['-gtest-filter', ':'.join(test_filter_override)]
-    elif self._test_instance.test_filters:
-      for test_filter in self._test_instance.test_filters:
-        ret += ['-gtest-filter', test_filter]
+    if shard_test_filter:
+      ret += ['-gtest-filter', ':'.join(shard_test_filter)]
+
+    for test_filter in self._test_instance.test_filters:
+      ret += ['-gtest-filter', test_filter]
 
     if self._test_instance.package_filter:
       ret += ['-package-filter', self._test_instance.package_filter]
@@ -84,8 +84,8 @@ class LocalMachineJunitTestRun(test_run.TestRun):
     jar_args_list = [['-json-results-file', result_file]
                      for result_file in json_result_file_paths]
     for index, jar_arg in enumerate(jar_args_list):
-      test_filter_override = group_test_list[index] if shards > 1 else None
-      jar_arg += self._GetFilterArgs(test_filter_override)
+      shard_test_filter = group_test_list[index] if shards > 1 else None
+      jar_arg += self._GetFilterArgs(shard_test_filter)
 
     return jar_args_list
 
@@ -112,10 +112,12 @@ class LocalMachineJunitTestRun(test_run.TestRun):
         os.makedirs(self._test_instance.coverage_dir)
       elif not os.path.isdir(self._test_instance.coverage_dir):
         raise Exception('--coverage-dir takes a directory, not file path.')
+      # Jacoco supports concurrent processes using the same output file:
+      # https://github.com/jacoco/jacoco/blob/6cd3f0bd8e348f8fba7bffec5225407151f1cc91/org.jacoco.agent.rt/src/org/jacoco/agent/rt/internal/output/FileOutput.java#L67
+      # So no need to vary the output based on shard number.
+      jacoco_coverage_file = os.path.join(self._test_instance.coverage_dir,
+                                          '%s.exec' % self._test_instance.suite)
       if self._test_instance.coverage_on_the_fly:
-        jacoco_coverage_file = os.path.join(
-            self._test_instance.coverage_dir,
-            '%s.exec' % self._test_instance.suite)
         jacoco_agent_path = os.path.join(host_paths.DIR_SOURCE_ROOT,
                                          'third_party', 'jacoco', 'lib',
                                          'jacocoagent.jar')
@@ -125,9 +127,7 @@ class LocalMachineJunitTestRun(test_run.TestRun):
         jvm_args.append(
             jacoco_args.format(jacoco_agent_path, jacoco_coverage_file))
       else:
-        jvm_args.append('-Djacoco-agent.destfile=%s' %
-                        os.path.join(self._test_instance.coverage_dir,
-                                     '%s.exec' % self._test_instance.suite))
+        jvm_args.append('-Djacoco-agent.destfile=%s' % jacoco_coverage_file)
 
     return jvm_args
 
@@ -155,10 +155,10 @@ class LocalMachineJunitTestRun(test_run.TestRun):
   def RunTests(self, results, raw_logs_fh=None):
     # This avoids searching through the classparth jars for tests classes,
     # which takes about 1-2 seconds.
-    # Do not shard when a test filter is present since we do not know at this
-    # point which tests will be filtered out.
-    if (self._test_instance.shards == 1 or self._test_instance.test_filters
-        or self._test_instance.suite in _EXCLUDED_SUITES):
+    if (self._test_instance.shards == 1
+        # TODO(crbug.com/1383650): remove this
+        or self._test_instance.has_literal_filters or
+        self._test_instance.suite in _EXCLUDED_SUITES):
       test_classes = []
       shards = 1
     else:

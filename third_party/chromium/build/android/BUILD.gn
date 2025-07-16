@@ -16,13 +16,6 @@ if (enable_java_templates) {
     create_cache = true
   }
 
-  if (enable_jdk_library_desugaring) {
-    dex_jdk_libs("all_jdk_libs") {
-      output = "$target_out_dir/$target_name.l8.dex"
-      min_sdk_version = default_min_sdk_version
-    }
-  }
-
   generate_build_config_srcjar("build_config_gen") {
     use_final_fields = false
   }
@@ -176,6 +169,9 @@ group("test_runner_device_support") {
   if (build_with_chromium) {
     data_deps += [ "//tools/android/forwarder2" ]
     data += [ "//tools/android/avd/proto/" ]
+    if (enable_chrome_android_internal) {
+       data += [ "//clank/tools/android/avd/proto/" ]
+     }
     if (is_asan) {
       data_deps += [ "//tools/android/asan/third_party:asan_device_setup" ]
     }

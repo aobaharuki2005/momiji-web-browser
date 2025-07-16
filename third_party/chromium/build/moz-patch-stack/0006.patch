@@ -13,10 +13,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/243ea5e6411dc1b76
  1 file changed, 32 insertions(+), 29 deletions(-)
 
 diff --git a/toolchain/win/setup_toolchain.py b/toolchain/win/setup_toolchain.py
-index 112690a7f..284438278 100644
+index d2f5798ce..2843792c5 100644
 --- a/toolchain/win/setup_toolchain.py
 +++ b/toolchain/win/setup_toolchain.py
-@@ -251,7 +251,7 @@ def main():
+@@ -252,7 +252,7 @@ def main():
  
    cpus = ('x86', 'x64', 'arm', 'arm64')
    assert target_cpu in cpus
@@ -25,7 +25,7 @@ index 112690a7f..284438278 100644
    include = ''
    lib = ''
  
-@@ -267,42 +267,45 @@ def main():
+@@ -268,42 +268,45 @@ def main():
    def q(s):  # Quote s if it contains spaces or other weird characters.
      return s if re.match(r'^[a-zA-Z0-9._/\\:-]*$', s) else '"' + s + '"'
  

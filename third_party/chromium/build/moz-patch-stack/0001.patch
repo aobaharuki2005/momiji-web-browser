@@ -21,10 +21,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6125938ac1986d298
  2 files changed, 24 insertions(+), 1 deletion(-)
 
 diff --git a/config/BUILD.gn b/config/BUILD.gn
-index 265d4bc07..0011ba43e 100644
+index 35c9a6275..c5bd24b2c 100644
 --- a/config/BUILD.gn
 +++ b/config/BUILD.gn
-@@ -123,7 +123,7 @@ config("debug") {
+@@ -126,7 +126,7 @@ config("debug") {
      # Enable libstdc++ debugging facilities to help catch problems early, see
      # http://crbug.com/65151 .
      # TODO(phajdan.jr): Should we enable this for all of POSIX?
@@ -34,10 +34,10 @@ index 265d4bc07..0011ba43e 100644
  }
  
 diff --git a/toolchain/linux/BUILD.gn b/toolchain/linux/BUILD.gn
-index f559f5272..174f10c29 100644
+index 5851d2664..393b63ffa 100644
 --- a/toolchain/linux/BUILD.gn
 +++ b/toolchain/linux/BUILD.gn
-@@ -249,6 +249,13 @@ clang_toolchain("clang_mips64el") {
+@@ -254,6 +254,13 @@ clang_toolchain("clang_mips64el") {
    }
  }
  
@@ -51,7 +51,7 @@ index f559f5272..174f10c29 100644
  gcc_toolchain("mipsel") {
    toolprefix = "mipsel-linux-gnu-"
  
-@@ -347,6 +354,22 @@ gcc_toolchain("s390x") {
+@@ -352,6 +359,22 @@ gcc_toolchain("s390x") {
    }
  }
  

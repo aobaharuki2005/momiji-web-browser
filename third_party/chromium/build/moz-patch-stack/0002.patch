@@ -17,10 +17,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f9c3bbb23f7ae513b
  5 files changed, 26 insertions(+), 26 deletions(-)
 
 diff --git a/config/BUILD.gn b/config/BUILD.gn
-index 0011ba43e..dccc3eb6c 100644
+index c5bd24b2c..c70254633 100644
 --- a/config/BUILD.gn
 +++ b/config/BUILD.gn
-@@ -239,9 +239,9 @@ group("common_deps") {
+@@ -242,9 +242,9 @@ group("common_deps") {
      public_deps += [ "//build/config/sanitizers:deps" ]
    }
  
@@ -34,7 +34,7 @@ index 0011ba43e..dccc3eb6c 100644
    if (use_afl) {
      public_deps += [ "//third_party/afl" ]
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index de425eb94..b82294dbd 100644
+index 9afb44258..236e10489 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -12,7 +12,7 @@ import("//build/config/clang/clang.gni")
@@ -46,7 +46,7 @@ index de425eb94..b82294dbd 100644
  import("//build/config/host_byteorder.gni")
  import("//build/config/rust.gni")
  import("//build/config/sanitizers/sanitizers.gni")
-@@ -1365,7 +1365,7 @@ config("compiler_deterministic") {
+@@ -1411,7 +1411,7 @@ config("compiler_deterministic") {
  }
  
  config("clang_revision") {
@@ -56,7 +56,7 @@ index de425eb94..b82294dbd 100644
        "--print-revision",
        "--verify-version=$clang_version",
 diff --git a/config/linux/BUILD.gn b/config/linux/BUILD.gn
-index 8c377163a..6801a0b68 100644
+index 131bb71d1..cc4749ea0 100644
 --- a/config/linux/BUILD.gn
 +++ b/config/linux/BUILD.gn
 @@ -54,7 +54,7 @@ config("libresolv") {
@@ -90,10 +90,10 @@ index dea380727..c7ae6b2c2 100644
    } else if (is_mac) {
      import("//build/config/mac/mac_sdk.gni")
 diff --git a/toolchain/linux/BUILD.gn b/toolchain/linux/BUILD.gn
-index 174f10c29..4aed3c954 100644
+index 393b63ffa..f575ca886 100644
 --- a/toolchain/linux/BUILD.gn
 +++ b/toolchain/linux/BUILD.gn
-@@ -354,21 +354,21 @@ gcc_toolchain("s390x") {
+@@ -359,21 +359,21 @@ gcc_toolchain("s390x") {
    }
  }
  

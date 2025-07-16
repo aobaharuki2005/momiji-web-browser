@@ -14,7 +14,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/831cdef4bf346cb9c
  2 files changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
-index a373e55a3..3384f7940 100644
+index 1fa42b1b1..2883450e3 100644
 --- a/config/BUILDCONFIG.gn
 +++ b/config/BUILDCONFIG.gn
 @@ -136,7 +136,7 @@ declare_args() {
