@@ -197,6 +197,7 @@ class SearchEngineReaderTest {
                 ),
             ),
             searchTermParamName = "test2",
+            displayName = null,
         )
 
         searchEngineDefinition.urls.trending = SearchEngineUrl(
@@ -211,6 +212,7 @@ class SearchEngineReaderTest {
                 ),
             ),
             searchTermParamName = "test3",
+            displayName = null,
         )
 
         val searchEngine = reader.loadStreamAPI(searchEngineDefinition, emptyByteArray, validMimeType, mock())
@@ -338,10 +340,12 @@ class SearchEngineReaderTest {
                     method = "GET",
                     params = emptyList(),
                     searchTermParamName = null,
+                    displayName = null,
                 ),
                 suggestions = null,
                 trending = null,
                 searchForm = null,
+                visualSearch = null,
             ),
             orderHint = null,
             clickUrl = null,
