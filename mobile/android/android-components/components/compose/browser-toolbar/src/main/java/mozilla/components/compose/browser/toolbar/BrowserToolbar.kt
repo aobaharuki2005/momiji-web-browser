@@ -10,6 +10,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin
+import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchAborted
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.UrlSuggestionAutocompleted
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.CommitUrl
@@ -46,6 +47,7 @@ fun BrowserToolbar(
             hint = stringResource(uiState.editState.hint),
             onUrlCommitted = { text -> store.dispatch(CommitUrl(text)) },
             onUrlEdit = { text -> store.dispatch(SearchQueryUpdated(text)) },
+            onUrlEditAborted = { store.dispatch(SearchAborted) },
             onUrlSuggestionAutocompleted = { store.dispatch(UrlSuggestionAutocompleted(it)) },
             onInteraction = { store.dispatch(it) },
         )

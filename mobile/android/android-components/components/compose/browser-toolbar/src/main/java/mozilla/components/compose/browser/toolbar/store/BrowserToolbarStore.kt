@@ -10,6 +10,7 @@ import mozilla.components.compose.browser.toolbar.store.BrowserDisplayToolbarAct
 import mozilla.components.compose.browser.toolbar.store.BrowserDisplayToolbarAction.PageActionsEndUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserDisplayToolbarAction.PageActionsStartUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserDisplayToolbarAction.PageOriginUpdated
+import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchAborted
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.UrlSuggestionAutocompleted
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
 import mozilla.components.lib.state.Middleware
@@ -125,6 +126,7 @@ private fun reduce(state: BrowserToolbarState, action: BrowserToolbarAction): Br
 
         is EnvironmentRehydrated,
         is EnvironmentCleared,
+        is SearchAborted,
         is UrlSuggestionAutocompleted,
         is BrowserToolbarEvent,
             -> {

@@ -279,7 +279,9 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             clearToolbar = {
                 inlineAutocompleteEditText.setText("")
             },
-            dismissDialogAndGoBack = ::dismissDialogAndGoBack,
+            dismissDialogAndGoBack = {
+                dismissDialogAndGoBack()
+            },
         )
         nullableInteractor = SearchDialogInteractor(searchController = requireNotNull(controller))
 

@@ -45,8 +45,6 @@ class BrowserToolbarToFenixSearchMapperMiddleware(
         next: (SearchFragmentAction) -> Unit,
         action: SearchFragmentAction,
     ) {
-        next(action)
-
         if (action is EnvironmentRehydrated) {
             environment = action.environment
 

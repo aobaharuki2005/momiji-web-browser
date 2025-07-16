@@ -732,6 +732,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
         BrowserToolbarStore(
             initialState = BrowserToolbarState(mode = Mode.EDIT),
             middleware = listOf(
+                BrowserToolbarSyncToHistoryMiddleware(historyStore),
                 BrowserToolbarSearchStatusSyncMiddleware(requireComponents.appStore),
                 BrowserToolbarSearchMiddleware(
                     appStore = requireComponents.appStore,

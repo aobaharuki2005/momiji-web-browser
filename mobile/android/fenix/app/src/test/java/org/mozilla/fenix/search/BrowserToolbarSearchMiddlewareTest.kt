@@ -18,7 +18,7 @@ import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.test.setMain
-import mozilla.components.browser.state.action.AwesomeBarAction
+import mozilla.components.browser.state.action.AwesomeBarAction.EngagementFinished
 import mozilla.components.browser.state.action.SearchAction.ApplicationSearchEnginesLoaded
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
@@ -26,6 +26,7 @@ import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction
+import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchAborted
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ToggleEditMode
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
@@ -136,7 +137,7 @@ class BrowserToolbarSearchMiddlewareTest {
         assertFalse(appStore.state.searchState.isSearchActive)
         assertEquals("", store.state.editState.query)
         captorMiddleware.assertLastAction(SearchEnded::class) {}
-        verify { browserStore.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true)) }
+        verify { browserStore.dispatch(EngagementFinished(abandoned = true)) }
         verify {
             navController.navigate(
                 BrowserFragmentDirections.actionGlobalSearchEngineFragment(),
@@ -371,6 +372,18 @@ class BrowserToolbarSearchMiddlewareTest {
             expectedSearchSelector(selectedSearchEngine, newSearchEngines),
             store.state.editState.editActionsStart[0] as SearchSelectorAction,
         )
+    }
+
+    @Test
+    fun `WHEN the search is aborted THEN sync this in application and browser state`() {
+        val appStore: AppStore = mockk(relaxed = true)
+        val browserStore: BrowserStore = mockk(relaxed = true)
+        val (_, store) = buildMiddlewareAndAddToStore(appStore, browserStore)
+
+        store.dispatch(SearchAborted)
+
+        verify { appStore.dispatch(SearchEnded) }
+        verify { browserStore.dispatch(EngagementFinished(abandoned = true)) }
     }
 
     private fun expectedSearchSelector(

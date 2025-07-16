@@ -117,6 +117,12 @@ sealed class BrowserEditToolbarAction : BrowserToolbarAction {
     ) : BrowserEditToolbarAction()
 
     /**
+     * Indicates that the user has aborted editing the URL/text.
+     * This callback works only up until Android API 33.
+     */
+    data object SearchAborted : BrowserEditToolbarAction()
+
+    /**
      * Indicates that a new url suggestion has been autocompleted in the search toolbar.
      */
     data class UrlSuggestionAutocompleted(val url: String) : BrowserEditToolbarAction()

@@ -86,6 +86,7 @@ import org.mozilla.fenix.library.bookmarks.ui.BookmarksState
 import org.mozilla.fenix.library.bookmarks.ui.BookmarksStore
 import org.mozilla.fenix.library.bookmarks.ui.BookmarksSyncMiddleware
 import org.mozilla.fenix.library.bookmarks.ui.BookmarksTelemetryMiddleware
+import org.mozilla.fenix.library.bookmarks.ui.BrowserToolbarSyncToBookmarksMiddleware
 import org.mozilla.fenix.library.bookmarks.ui.LifecycleHolder
 import org.mozilla.fenix.library.bookmarks.ui.PrivateBrowsingLockMiddleware
 import org.mozilla.fenix.lifecycle.registerForVerification
@@ -167,6 +168,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                                 ),
                                 BookmarksTelemetryMiddleware(),
                                 BookmarksSyncMiddleware(requireComponents.backgroundServices.syncStore, lifecycleScope),
+                                BrowserToolbarSyncToBookmarksMiddleware(toolbarStore, lifecycleScope),
                                 BookmarksMiddleware(
                                     bookmarksStorage = requireContext().bookmarkStorage,
                                     clipboardManager = requireActivity().getSystemService(),
