@@ -697,10 +697,10 @@ class nsGridContainerFrame::TrackPlan {
 
   // Distribute space to all flex tracks this item spans.
   // https://drafts.csswg.org/css-grid-2/#algo-spanning-flex-items
-  nscoord DistributeToFlexTrackSizes(nscoord aAvailableSpace,
-                                     const nsTArray<uint32_t>& aGrowableTracks,
-                                     const TrackSizingFunctions& aFunctions,
-                                     const nsGridContainerFrame::Tracks& aTracks);
+  nscoord DistributeToFlexTrackSizes(
+      nscoord aAvailableSpace, const nsTArray<uint32_t>& aGrowableTracks,
+      const TrackSizingFunctions& aFunctions,
+      const nsGridContainerFrame::Tracks& aTracks);
 
  private:
   CopyableTArray<nsGridContainerFrame::TrackSize> mTrackSizes;
@@ -757,6 +757,17 @@ class nsGridContainerFrame::ItemPlan {
   uint32_t MarkExcludedTracks(TrackSizingPhase aPhase,
                               const nsTArray<uint32_t>& aGrowableTracks,
                               SizingConstraint aConstraint);
+
+  /**
+   * Increase the planned size for tracks in aGrowableTracks that aren't
+   * marked with a eSkipGrowUnlimited flag beyond their limit.
+   * This implements the "Distribute space beyond growth limits" step in
+   * https://drafts.csswg.org/css-grid-2/#distribute-extra-space
+   */
+  void GrowSelectedTracksUnlimited(nscoord aAvailableSpace,
+                                   const nsTArray<uint32_t>& aGrowableTracks,
+                                   uint32_t aNumGrowable,
+                                   const FitContentClamper& aFitContentClamper);
 
  private:
   nsTArray<nsGridContainerFrame::TrackSize> mTrackSizes;
@@ -2832,53 +2843,6 @@ struct nsGridContainerFrame::Tracks {
   }
 
   /**
-   * Increase the planned size for tracks in aGrowableTracks that aren't
-   * marked with a eSkipGrowUnlimited flag beyond their limit.
-   * This implements the "Distribute space beyond growth limits" step in
-   * https://drafts.csswg.org/css-grid-2/#distribute-extra-space
-   */
-  void GrowSelectedTracksUnlimited(
-      nscoord aAvailableSpace, ItemPlan& aItemPlan,
-      const nsTArray<uint32_t>& aGrowableTracks, uint32_t aNumGrowable,
-      const FitContentClamper& aFitContentClamper) const {
-    MOZ_ASSERT(aAvailableSpace > 0 && aGrowableTracks.Length() > 0 &&
-               aNumGrowable <= aGrowableTracks.Length());
-    nscoord space = aAvailableSpace;
-    DebugOnly<bool> didClamp = false;
-    while (aNumGrowable) {
-      nscoord spacePerTrack = std::max<nscoord>(space / aNumGrowable, 1);
-      for (uint32_t track : aGrowableTracks) {
-        TrackSize& sz = aItemPlan[track];
-        if (sz.mState & TrackSize::eSkipGrowUnlimited) {
-          continue;  // an excluded track
-        }
-        nscoord delta = spacePerTrack;
-        nscoord newBase = sz.mBase + delta;
-        if (MOZ_UNLIKELY((sz.mState & TrackSize::eApplyFitContentClamping) &&
-                         aFitContentClamper)) {
-          // Clamp newBase to the fit-content() size, for §12.5.2 step 5/6.
-          if (aFitContentClamper(track, sz.mBase, &newBase)) {
-            didClamp = true;
-            delta = newBase - sz.mBase;
-            MOZ_ASSERT(delta >= 0, "track size shouldn't shrink");
-            sz.mState |= TrackSize::eSkipGrowUnlimited1;
-            --aNumGrowable;
-          }
-        }
-        sz.mBase = newBase;
-        space -= delta;
-        MOZ_ASSERT(space >= 0);
-        if (space == 0) {
-          return;
-        }
-      }
-    }
-    MOZ_ASSERT(didClamp,
-               "we don't exit the loop above except by return, "
-               "unless we clamped some track's size");
-  }
-
-  /**
    * Distribute aAvailableSpace to the planned base size for aGrowableTracks
    * up to their limits, then distribute the remaining space beyond the limits.
    */
@@ -2902,8 +2866,8 @@ struct nsGridContainerFrame::Tracks {
     if (space > 0) {
       uint32_t numGrowable =
           aItemPlan.MarkExcludedTracks(aPhase, aGrowableTracks, aConstraint);
-      GrowSelectedTracksUnlimited(space, aItemPlan, aGrowableTracks,
-                                  numGrowable, aFitContentClamper);
+      aItemPlan.GrowSelectedTracksUnlimited(space, aGrowableTracks, numGrowable,
+                                            aFitContentClamper);
     }
 
     for (uint32_t track : aGrowableTracks) {
@@ -10988,4 +10952,44 @@ uint32_t nsGridContainerFrame::ItemPlan::MarkExcludedTracks(
     numGrowable = aNumGrowable;
   }
   return numGrowable;
+}
+
+void nsGridContainerFrame::ItemPlan::GrowSelectedTracksUnlimited(
+    nscoord aAvailableSpace, const nsTArray<uint32_t>& aGrowableTracks,
+    uint32_t aNumGrowable, const FitContentClamper& aFitContentClamper) {
+  MOZ_ASSERT(aAvailableSpace > 0 && aGrowableTracks.Length() > 0 &&
+             aNumGrowable <= aGrowableTracks.Length());
+  nscoord space = aAvailableSpace;
+  DebugOnly<bool> didClamp = false;
+  while (aNumGrowable) {
+    nscoord spacePerTrack = std::max<nscoord>(space / aNumGrowable, 1);
+    for (uint32_t track : aGrowableTracks) {
+      TrackSize& sz = mTrackSizes[track];
+      if (sz.mState & TrackSize::eSkipGrowUnlimited) {
+        continue;  // an excluded track
+      }
+      nscoord delta = spacePerTrack;
+      nscoord newBase = sz.mBase + delta;
+      if (MOZ_UNLIKELY((sz.mState & TrackSize::eApplyFitContentClamping) &&
+                       aFitContentClamper)) {
+        // Clamp newBase to the fit-content() size, for §12.5.2 step 5/6.
+        if (aFitContentClamper(track, sz.mBase, &newBase)) {
+          didClamp = true;
+          delta = newBase - sz.mBase;
+          MOZ_ASSERT(delta >= 0, "track size shouldn't shrink");
+          sz.mState |= TrackSize::eSkipGrowUnlimited1;
+          --aNumGrowable;
+        }
+      }
+      sz.mBase = newBase;
+      space -= delta;
+      MOZ_ASSERT(space >= 0);
+      if (space == 0) {
+        return;
+      }
+    }
+  }
+  MOZ_ASSERT(didClamp,
+             "we don't exit the loop above except by return, "
+             "unless we clamped some track's size");
 }
