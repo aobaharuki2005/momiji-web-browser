@@ -722,6 +722,10 @@ class nsGridContainerFrame::ItemPlan {
     return mTrackSizes[aIndex];
   }
 
+  void Initialize(TrackSizingPhase aPhase,
+                  const nsTArray<uint32_t>& aGrowableTracks,
+                  const nsGridContainerFrame::Tracks& aTracks);
+
   using FitContentClamper =
       std::function<bool(uint32_t aTrack, nscoord aMinSize, nscoord* aSize)>;
 
@@ -2785,18 +2789,6 @@ struct nsGridContainerFrame::Tracks {
     return aGrowableTracks.IsEmpty() ? 0 : space;
   }
 
-  void InitializeItemPlan(TrackSizingPhase aPhase, ItemPlan& aItemPlan,
-                          const nsTArray<uint32_t>& aTracks) const {
-    for (uint32_t track : aTracks) {
-      auto& plan = aItemPlan[track];
-      const TrackSize& sz = mSizes[track];
-      plan.mBase = StartSizeInDistribution(aPhase, sz);
-      bool unlimited = sz.mState & TrackSize::eInfinitelyGrowable;
-      plan.mLimit = unlimited ? NS_UNCONSTRAINEDSIZE : sz.mLimit;
-      plan.mState = sz.mState;
-    }
-  }
-
   void InitializePlan(TrackSizingPhase aPhase, TrackPlan& aTrackPlan) const {
     MOZ_ASSERT(aTrackPlan.Length() == mSizes.Length());
     auto plan = aTrackPlan.begin();
@@ -2853,7 +2845,7 @@ struct nsGridContainerFrame::Tracks {
                               SizingConstraint aConstraint,
                               const TrackSizingFunctions& aFunctions,
                               const FitContentClamper& aFitContentClamper) {
-    InitializeItemPlan(aPhase, aItemPlan, aGrowableTracks);
+    aItemPlan.Initialize(aPhase, aGrowableTracks, *this);
     nscoord space = aAvailableSpace;
     if (aStep == TrackSizingStep::Flex) {
       space = aTrackPlan.DistributeToFlexTrackSizes(space, aGrowableTracks,
@@ -10854,6 +10846,19 @@ nscoord nsGridContainerFrame::TrackPlan::DistributeToFlexTrackSizes(
     sz.mBase = std::max(sz.mBase, size);
   }
   return space;
+}
+
+void nsGridContainerFrame::ItemPlan::Initialize(
+    TrackSizingPhase aPhase, const nsTArray<uint32_t>& aGrowableTracks,
+    const nsGridContainerFrame::Tracks& aTracks) {
+  for (uint32_t track : aGrowableTracks) {
+    auto& plan = mTrackSizes[track];
+    const TrackSize& sz = aTracks.mSizes[track];
+    plan.mBase = Tracks::StartSizeInDistribution(aPhase, sz);
+    bool unlimited = sz.mState & TrackSize::eInfinitelyGrowable;
+    plan.mLimit = unlimited ? NS_UNCONSTRAINEDSIZE : sz.mLimit;
+    plan.mState = sz.mState;
+  }
 }
 
 nscoord nsGridContainerFrame::ItemPlan::GrowTracksToLimit(
