@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.downloads.listscreen
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -47,6 +49,10 @@ internal fun DownloadsTopAppBar(
         actions = {
             actions()
         },
+        windowInsets = WindowInsets(
+            top = 0.dp,
+            bottom = 0.dp,
+        ),
         colors = TopAppBarDefaults.topAppBarColors(containerColor = backgroundColor),
     )
 }

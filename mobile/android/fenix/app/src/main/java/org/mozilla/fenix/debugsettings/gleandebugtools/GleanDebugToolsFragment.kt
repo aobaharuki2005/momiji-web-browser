@@ -6,6 +6,7 @@ package org.mozilla.fenix.debugsettings.gleandebugtools
 
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -18,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.navigation.fragment.findNavController
 import mozilla.telemetry.glean.Glean
@@ -90,6 +92,10 @@ class GleanDebugToolsFragment : ComposeFragment() {
                                 )
                             }
                         },
+                        windowInsets = WindowInsets(
+                            top = 0.dp,
+                            bottom = 0.dp,
+                        ),
                         colors = TopAppBarDefaults.topAppBarColors(containerColor = FirefoxTheme.colors.layer1),
                     )
                 },

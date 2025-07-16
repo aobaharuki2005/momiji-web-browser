@@ -705,6 +705,10 @@ private fun BookmarksListTopBar(
                     }
                 }
             },
+            windowInsets = WindowInsets(
+                top = 0.dp,
+                bottom = 0.dp,
+            ),
         )
     }
 }
@@ -901,6 +905,10 @@ private fun SelectFolderTopBar(
                 }
             }
         },
+        windowInsets = WindowInsets(
+            top = 0.dp,
+            bottom = 0.dp,
+        ),
     )
 }
 
@@ -1243,6 +1251,10 @@ private fun EditFolderTopBar(
                 )
             }
         },
+        windowInsets = WindowInsets(
+            top = 0.dp,
+            bottom = 0.dp,
+        ),
     )
 }
 
@@ -1322,6 +1334,10 @@ private fun AddFolderTopBar(onBackClick: () -> Unit) {
                 )
             }
         },
+        windowInsets = WindowInsets(
+            top = 0.dp,
+            bottom = 0.dp,
+        ),
     )
 }
 
@@ -1510,6 +1526,10 @@ private fun EditBookmarkTopBar(
                 )
             }
         },
+        windowInsets = WindowInsets(
+            top = 0.dp,
+            bottom = 0.dp,
+        ),
     )
 }
 
