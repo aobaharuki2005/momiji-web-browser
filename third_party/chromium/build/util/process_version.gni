@@ -69,6 +69,8 @@ template("process_version") {
   action(action_name) {
     script = "//chromium/build/util/version.py"
 
+    sources = [ "//chromium/build/util/android_chrome_version.py" ]
+
     inputs = [ lastchange_file ]
     if (defined(invoker.inputs)) {
       inputs += invoker.inputs

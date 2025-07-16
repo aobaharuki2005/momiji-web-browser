@@ -28,10 +28,7 @@ assert(!(incremental_install && !is_java_debug),
 # Toolchain used to create native libraries for robolectric_binary() targets.
 robolectric_toolchain = "//chromium/build/toolchain/android:robolectric_$host_cpu"
 
-# NOTE: Because Chrome OS builds may depend on targets built with the Android
-# toolchain, this GNI file may be read and processed from within Chrome OS
-# toolchains. Checking |is_android| here would therefore be too restrictive.
-if (is_android || is_chromeos) {
+if (is_android) {
   import("//chromium/build/config/android/channel.gni")
   import("//chromium/build/config/clang/clang.gni")
   import("//chromium/build/config/dcheck_always_on.gni")
@@ -45,14 +42,14 @@ if (is_android || is_chromeos) {
     # heavily but don't write gclient args files.
 
     import("//chromium/build/config/gclient_args.gni")
-    if (defined(checkout_android_native_support)) {
+    if (defined(checkout_android)) {
       n = "$0x0A"  # Newline
-      assert(checkout_android_native_support,
+      assert(checkout_android,
              "Missing native Android toolchain support. |target_os| in your " +
                  ".gclient configuration file (in the parent directory of " +
-                 "src) must include \"android\" and/or \"chromeos\". For " +
+                 "src) must include \"android\". For " +
                  "example:${n}${n}solutions = [${n}...${n}]${n}" +
-                 "target_os=[\"chromeos\"]${n}${n}" +
+                 "target_os=[\"android\"]${n}${n}" +
                  "After adding |target_os| please re-run \"gclient sync\".${n}")
     }
   }
@@ -130,11 +127,7 @@ if (is_android || is_chromeos) {
 
   if (!defined(default_android_ndk_root)) {
     default_android_ndk_root = "//third_party/android_toolchain/ndk"
-    if (target_cpu == "riscv64") {
-      # Today (2023-08-30) only the canary Android NDK supports RISC-V64.
-      default_android_ndk_root = "//third_party/android_toolchain_canary/ndk"
-    }
-    default_android_ndk_version = "r26b"
+    default_android_ndk_version = "r27"
   } else {
     assert(defined(default_android_ndk_version))
   }
@@ -142,10 +135,10 @@ if (is_android || is_chromeos) {
   public_android_sdk_root = "//third_party/android_sdk/public"
   public_android_sdk_build_tools =
       "${public_android_sdk_root}/build-tools/35.0.0"
-  public_android_sdk_version = "35"
+  public_android_sdk_platform_version = "35"
   if (android_sdk_release == "v") {
     default_android_sdk_root = public_android_sdk_root
-    default_android_sdk_version = public_android_sdk_version
+    default_android_sdk_platform_version = public_android_sdk_platform_version
     default_android_sdk_build_tools_version = "35.0.0"
     public_android_sdk = true
   }
@@ -159,7 +152,7 @@ if (is_android || is_chromeos) {
     # Purposefully repeated so that downstream can change
     # default_android_sdk_root without changing lint version.
     default_lint_android_sdk_root = public_android_sdk_root
-    default_lint_android_sdk_version = 35
+    default_lint_android_sdk_version = public_android_sdk_platform_version
   }
 
   if (!defined(default_extras_android_sdk_root)) {
@@ -182,7 +175,7 @@ if (is_android || is_chromeos) {
   }
 
   if (!defined(android_protoc_bin)) {
-    android_protoc_bin = "//third_party/android_protoc/protoc"
+    android_protoc_bin = "//third_party/android_build_tools/protoc/cipd/protoc"
   }
 
   webview_public_framework_dep =
@@ -214,8 +207,8 @@ if (is_android || is_chromeos) {
     }
 
     android_sdk_root = default_android_sdk_root
-    android_sdk_version = default_android_sdk_version
     android_sdk_build_tools_version = default_android_sdk_build_tools_version
+    android_sdk_platform_version = default_android_sdk_platform_version
 
     lint_android_sdk_root = default_lint_android_sdk_root
     lint_android_sdk_version = default_lint_android_sdk_version
@@ -260,7 +253,7 @@ if (is_android || is_chromeos) {
     # Location of aapt2 used for app bundles. For now, a more recent version
     # than the one distributed with the Android SDK is required.
     android_sdk_tools_bundle_aapt2_dir =
-        "//third_party/android_build_tools/aapt2"
+        "//third_party/android_build_tools/aapt2/cipd"
 
     # Causes expectation failures to break the build, otherwise, just warns on
     # stderr and writes a failure file to $android_configuration_failure_dir:
@@ -315,11 +308,8 @@ if (is_android || is_chromeos) {
   # We need a second declare_args block to make sure we are using the overridden
   # value of the arguments set above.
   declare_args() {
-    if (defined(default_android_sdk_platform_version)) {
-      android_sdk_platform_version = default_android_sdk_platform_version
-    } else {
-      android_sdk_platform_version = android_sdk_version
-    }
+    # Default value for targetSdkVersion for APK and bundle targets.
+    default_target_sdk_version = "35"
 
     # Whether java assertions and Preconditions checks are enabled.
     enable_java_asserts = dcheck_always_on || !is_official_build
@@ -349,7 +339,9 @@ if (is_android || is_chromeos) {
 
   # Defines the name the Android build gives to the current host CPU
   # architecture, which is different than the names GN uses.
-  if (host_cpu == "x64") {
+  if (host_cpu == "x64" || host_cpu == "arm64") {
+    # Android toolchain on Mac supports both ARM64 and x64 architectures
+    # despite the x86_64 tag in the Darwin name.
     android_host_arch = "x86_64"
   } else if (host_cpu == "x86") {
     android_host_arch = "x86"
@@ -447,6 +439,24 @@ if (is_android || is_chromeos) {
 
   javac_paths_for_inputs =
       [ "//third_party/jdk/current/bin/javac" ] + _common_inputs_for_jre_jdk
+
+  kotlinc_paths_for_inputs = [
+    "//third_party/kotlinc",
+    "//third_party/kotlinc/current/bin/kotlinc",
+    "//third_party/kotlinc/current/lib/jvm-abi-gen.jar",
+    "//third_party/kotlinc/current/lib/annotations-13.0.jar",
+    "//third_party/kotlinc/current/lib/kotlin-compiler.jar",
+    "//third_party/kotlinc/current/lib/kotlin-preloader.jar",
+    "//third_party/kotlinc/current/lib/kotlin-reflect.jar",
+    "//third_party/kotlinc/current/lib/kotlin-script-runtime.jar",
+    "//third_party/kotlinc/current/lib/kotlin-scripting-common.jar",
+    "//third_party/kotlinc/current/lib/kotlin-scripting-compiler-impl.jar",
+    "//third_party/kotlinc/current/lib/kotlin-scripting-compiler.jar",
+    "//third_party/kotlinc/current/lib/kotlin-scripting-jvm.jar",
+    "//third_party/kotlinc/current/lib/kotlin-stdlib.jar",
+    "//third_party/kotlinc/current/lib/kotlinx-coroutines-core-jvm.jar",
+    "//third_party/kotlinc/current/lib/trove4j.jar",
+  ]
 
   # TODO(crbug.com/40261378): Remove.
   use_upstream_errorprone_annotations_threadsafe = true

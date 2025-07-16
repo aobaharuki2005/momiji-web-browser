@@ -583,9 +583,17 @@ class OrderedSet(collections.OrderedDict):
   def add(self, key):
     self[key] = True
 
+  def remove(self, key):
+    if key in self:
+      del self[key]
+
   def update(self, iterable):
     for v in iterable:
       self.add(v)
+
+  def difference_update(self, iterable):
+    for v in iterable:
+      self.remove(v)
 
 
 def _ExtractMarkdownDocumentation(input_text):
@@ -781,6 +789,16 @@ def _MergeAssets(all_assets):
     return [f'{src}:{dest}' for dest, src in items]
 
   return create_list(compressed), create_list(uncompressed), locale_paks
+
+
+def _SuffixAssets(suffix_names, suffix, assets):
+  new_assets = []
+  for x in assets:
+    src_path, apk_subpath = x.split(':', 1)
+    if apk_subpath in suffix_names:
+      apk_subpath += suffix
+    new_assets.append(f'{src_path}:{apk_subpath}')
+  return new_assets
 
 
 def _ResolveGroupsAndPublicDeps(config_paths):
@@ -1180,6 +1198,10 @@ def main(argv):
                     help="Path to the target's generated incremental install "
                     "json.")
   parser.add_option(
+      '--suffix-apk-assets-used-by',
+      help='Path to the build config of the apk whose asset list should be '
+      'suffixed.')
+  parser.add_option(
       '--tested-apk-config',
       help='Path to the build config of the tested apk (for an instrumentation '
       'test apk).')
@@ -1248,6 +1270,10 @@ def main(argv):
 
   parser.add_option('--version-name', help='Version name for this APK.')
   parser.add_option('--version-code', help='Version code for this APK.')
+
+  # dist_jar options
+  parser.add_option('--use-interface-jars', action='store_true')
+  parser.add_option('--direct-deps-only', action='store_true')
 
   options, args = parser.parse_args(argv)
 
@@ -1730,7 +1756,10 @@ def main(argv):
   if is_java_target or options.type == 'android_app_bundle':
     # The classpath to use to run this target (or as an input to ProGuard).
     device_classpath = []
-    if is_java_target and options.device_jar_path:
+    # dist_jar configs should not list their device jar in their own classpath
+    # since the classpath is used to create the device jar itself.
+    if (is_java_target and options.device_jar_path
+        and options.type != 'dist_jar'):
       device_classpath.append(options.device_jar_path)
     device_classpath.extend(
         c.get('device_jar_path') for c in all_library_deps
@@ -1740,13 +1769,7 @@ def main(argv):
         device_classpath.extend(c for c in d.get('device_classpath', [])
                                 if c not in device_classpath)
 
-  if options.type in ('dist_jar', 'java_binary', 'robolectric_binary'):
-    # The classpath to use to run this target.
-    host_classpath = []
-    if options.host_jar_path:
-      host_classpath.append(options.host_jar_path)
-    host_classpath.extend(c['host_jar_path'] for c in all_library_deps)
-    deps_info['host_classpath'] = host_classpath
+  all_dist_jar_deps = deps.All('dist_jar')
 
   # We allow lint to be run on android_apk targets, so we collect lint
   # artifacts for them.
@@ -1806,7 +1829,7 @@ def main(argv):
     module_configs_by_name = {d['module_name']: d for d in module_configs}
     per_module_fields = [
         'device_classpath', 'trace_event_rewritten_device_classpath',
-        'all_dex_files'
+        'all_dex_files', 'assets'
     ]
     lint_aars = set()
     lint_srcjars = set()
@@ -1954,6 +1977,78 @@ def main(argv):
     deps_info['proguard_classpath_jars'] = sorted(
         set(extra_proguard_classpath_jars))
 
+  if options.type in ('dist_jar', 'java_binary', 'robolectric_binary'):
+    # The classpath to use to run this target.
+    host_classpath = []
+    if options.host_jar_path:
+      host_classpath.append(options.host_jar_path)
+    host_classpath.extend(c['host_jar_path'] for c in all_library_deps)
+    # Collect all the dist_jar host jars.
+    dist_jar_host_jars = [
+        c['host_jar_path'] for c in all_dist_jar_deps if 'host_jar_path' in c
+    ]
+    # Collect all the jars that went into the dist_jar host jars.
+    dist_jar_host_classpath = set()
+    for c in all_dist_jar_deps:
+      dist_jar_host_classpath.update(c['host_classpath'])
+    # Remove the jars that went into the dist_jar host jars.
+    host_classpath = [
+        p for p in host_classpath if p not in dist_jar_host_classpath
+    ]
+    # Add the dist_jar host jars themselves instead.
+    host_classpath += dist_jar_host_jars
+    deps_info['host_classpath'] = host_classpath
+
+  if is_java_target:
+
+    def _CollectListsFromDeps(deps, key_name):
+      combined = set()
+      for config in deps:
+        combined.update(config.get(key_name, []))
+      return combined
+
+    dist_jar_device_classpath = _CollectListsFromDeps(all_dist_jar_deps,
+                                                      'device_classpath')
+    dist_jar_javac_full_classpath = _CollectListsFromDeps(
+        all_dist_jar_deps, 'javac_full_classpath')
+    dist_jar_javac_full_interface_classpath = _CollectListsFromDeps(
+        all_dist_jar_deps, 'javac_full_interface_classpath')
+    dist_jar_child_dex_files = _CollectListsFromDeps(all_dist_jar_deps,
+                                                     'all_dex_files')
+
+    def _CollectSinglesFromDeps(deps, key_name):
+      return [config[key_name] for config in deps if key_name in config]
+
+    dist_jar_device_jars = _CollectSinglesFromDeps(all_dist_jar_deps,
+                                                   'device_jar_path')
+    dist_jar_combined_dex_files = _CollectSinglesFromDeps(
+        all_dist_jar_deps, 'dex_path')
+    dist_jar_interface_jars = _CollectSinglesFromDeps(all_dist_jar_deps,
+                                                      'interface_jar_path')
+    dist_jar_unprocessed_jars = _CollectSinglesFromDeps(all_dist_jar_deps,
+                                                        'unprocessed_jar_path')
+
+    device_classpath = [
+        p for p in device_classpath if p not in dist_jar_device_classpath
+    ]
+    device_classpath += dist_jar_device_jars
+
+    javac_full_classpath.difference_update(dist_jar_javac_full_classpath)
+    javac_full_classpath.update(dist_jar_unprocessed_jars)
+
+    javac_full_interface_classpath.difference_update(
+        dist_jar_javac_full_interface_classpath)
+    javac_full_interface_classpath.update(dist_jar_interface_jars)
+
+    javac_interface_classpath.update(dist_jar_interface_jars)
+    javac_classpath.update(dist_jar_unprocessed_jars)
+
+    if is_apk_or_module_target or options.type == 'dist_jar':
+      all_dex_files = [
+          p for p in all_dex_files if p not in dist_jar_child_dex_files
+      ]
+      all_dex_files += dist_jar_combined_dex_files
+
   if options.final_dex_path:
     config['final_dex'] = {'path': options.final_dex_path}
   if is_apk_or_module_target or options.type == 'dist_jar':
@@ -2012,14 +2107,21 @@ def main(argv):
     if options.tested_apk_config:
       deps_info['device_classpath_extended'] = device_classpath_extended
 
-  if options.type in ('android_apk', 'dist_jar'):
-    all_interface_jars = []
-    if options.interface_jar_path:
-      all_interface_jars.append(options.interface_jar_path)
-    all_interface_jars.extend(c['interface_jar_path'] for c in all_library_deps)
+  if options.type == 'dist_jar':
+    if options.direct_deps_only:
+      if options.use_interface_jars:
+        dist_jars = config['javac']['interface_classpath']
+      else:
+        dist_jars = sorted(c['device_jar_path']
+                           for c in classpath_direct_library_deps)
+    else:
+      if options.use_interface_jars:
+        dist_jars = [c['interface_jar_path'] for c in all_library_deps]
+      else:
+        dist_jars = deps_info['device_classpath']
 
     config['dist_jar'] = {
-      'all_interface_jars': all_interface_jars,
+        'jars': dist_jars,
     }
 
   if is_apk_or_module_target:
@@ -2123,10 +2225,30 @@ def main(argv):
     manifests_from_deps.sort(key=lambda p: (os.path.basename(p), p))
     deps_info['extra_android_manifests'] += manifests_from_deps
 
-    config['assets'], config['uncompressed_assets'], locale_paks = (
-        _MergeAssets(deps.All('android_assets')))
+    assets, uncompressed_assets, locale_paks = _MergeAssets(
+        deps.All('android_assets'))
+    deps_info['assets'] = assets
+    deps_info['uncompressed_assets'] = uncompressed_assets
     deps_info['locales_java_list'] = _CreateJavaLocaleListFromAssets(
-        config['uncompressed_assets'], locale_paks)
+        uncompressed_assets, locale_paks)
+    if options.suffix_apk_assets_used_by:
+      if options.suffix_apk_assets_used_by == options.build_config:
+        target_config = deps_info
+      else:
+        target_config = GetDepConfig(options.suffix_apk_assets_used_by)
+      all_assets = (target_config['assets'] +
+                    target_config['uncompressed_assets'])
+      suffix = '+' + target_config['package_name'] + '+'
+      suffix_names = {
+          x.split(':', 1)[1].replace(suffix, '')
+          for x in all_assets
+      }
+      deps_info['assets'] = _SuffixAssets(suffix_names, suffix, assets)
+      deps_info['uncompressed_assets'] = _SuffixAssets(suffix_names, suffix,
+                                                       uncompressed_assets)
+      config['apk_assets_suffixed_list'] = ','.join(
+          f'"assets/{x}"' for x in sorted(suffix_names))
+      config['apk_assets_suffix'] = suffix
 
   if options.java_resources_jar_path:
     deps_info['java_resources_jar'] = options.java_resources_jar_path
@@ -2169,10 +2291,10 @@ def main(argv):
                              tested_apk_config['javac_full_classpath_targets']):
         jar_to_target[jar] = target
 
-    # Used by bytecode_processor to give better error message when missing
-    # deps are found. Both javac_full_classpath_targets and javac_full_classpath
-    # must be in identical orders, as they get passed as separate arrays and
-    # then paired up based on index.
+    # Used by check_for_missing_direct_deps.py to give better error message
+    # when missing deps are found. Both javac_full_classpath_targets and
+    # javac_full_classpath must be in identical orders, as they get passed as
+    # separate arrays and then paired up based on index.
     config['deps_info']['javac_full_classpath_targets'] = [
         jar_to_target[x] for x in deps_info['javac_full_classpath']
     ]

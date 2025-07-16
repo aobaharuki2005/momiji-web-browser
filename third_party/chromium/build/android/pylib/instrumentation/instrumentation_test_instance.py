@@ -552,6 +552,7 @@ class InstrumentationTestInstance(test_instance.TestInstance):
     self._junit4_runner_class = None
     self._uses_base_instrumentation = None
     self._has_chromium_test_listener = None
+    self._use_native_coverage_listener = None
     self._test_support_apk = None
     self._initializeApkAttributes(args, error_func)
 
@@ -616,6 +617,8 @@ class InstrumentationTestInstance(test_instance.TestInstance):
     self._initializeApproveAppLinksAttributes(args)
 
     self._webview_process_mode = args.webview_process_mode
+
+    self._webview_rebaseline_mode = args.webview_rebaseline_mode
 
     self._wpr_enable_record = args.wpr_enable_record
 
@@ -693,6 +696,8 @@ class InstrumentationTestInstance(test_instance.TestInstance):
     test_apk_metadata = dict(self._test_apk.GetAllMetadata())
     self._has_chromium_test_listener = bool(
         test_apk_metadata.get('org.chromium.hasTestRunListener'))
+    self._use_native_coverage_listener = bool(
+        test_apk_metadata.get('org.chromium.useNativeCoverageListener'))
     if self._junit4_runner_class:
       if self._test_apk_incremental_install_json:
         for name, value in test_apk_metadata.items():
@@ -931,6 +936,10 @@ class InstrumentationTestInstance(test_instance.TestInstance):
     return self._uses_base_instrumentation
 
   @property
+  def use_native_coverage_listener(self):
+    return self._use_native_coverage_listener
+
+  @property
   def package_info(self):
     return self._package_info
 
@@ -1045,6 +1054,10 @@ class InstrumentationTestInstance(test_instance.TestInstance):
   @property
   def webview_process_mode(self):
     return self._webview_process_mode
+
+  @property
+  def webview_rebaseline_mode(self):
+    return self._webview_rebaseline_mode
 
   @property
   def wpr_replay_mode(self):

@@ -13,10 +13,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ae0c945f3d38d3725
  1 file changed, 9 insertions(+)
 
 diff --git a/build_config.h b/build_config.h
-index ac021d187..7aa018abf 100644
+index cc2ebfa7a..f69db8fee 100644
 --- a/build_config.h
 +++ b/build_config.h
-@@ -375,6 +375,15 @@
+@@ -364,6 +364,15 @@
  #define ARCH_CPU_RISCV64 1
  #define ARCH_CPU_64_BITS 1
  #define ARCH_CPU_LITTLE_ENDIAN 1

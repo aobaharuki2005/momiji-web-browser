@@ -16,15 +16,13 @@
 //
 //  Operating System:
 //    IS_AIX / IS_ANDROID / IS_ASMJS / IS_CHROMEOS / IS_FREEBSD / IS_FUCHSIA /
-//    IS_IOS / IS_IOS_MACCATALYST / IS_IOS_VISION / IS_IOS_WATCH / IS_LINUX /
-//    IS_MAC / IS_NACL / IS_NETBSD / IS_OPENBSD / IS_QNX / IS_SOLARIS / IS_WIN
+//    IS_IOS / IS_IOS_MACCATALYST / IS_LINUX / IS_MAC / IS_NACL / IS_NETBSD /
+//    IS_OPENBSD / IS_QNX / IS_SOLARIS / IS_WATCHOS / IS_WIN
 //  Operating System family:
-//    IS_APPLE: MAC or IOS or IOS_MACCATALYST or IOS_VISION or IOS_WATCH
-//    IS_IOS: IOS or IOS_MACCATALYST or IOS_VISION or IOS_WATCH
+//    IS_APPLE: IOS or MAC or IOS_MACCATALYST or WATCHOS
 //    IS_BSD: FREEBSD or NETBSD or OPENBSD
-//    IS_POSIX: AIX or ANDROID or ASMJS or CHROMEOS or FREEBSD or IOS
-//              or IOS_MACCATALYST or IOS_VISION or IOS_WATCH or LINUX or MAC
-//              or NACL or NETBSD or OPENBSD or QNX or SOLARIS
+//    IS_POSIX: AIX or ANDROID or ASMJS or CHROMEOS or FREEBSD or IOS or LINUX
+//              or MAC or NACL or NETBSD or OPENBSD or QNX or SOLARIS
 
 // This file also adds defines specific to the platform, architecture etc.
 //
@@ -79,11 +77,8 @@
 #if defined(TARGET_OS_MACCATALYST) && TARGET_OS_MACCATALYST
 #define OS_IOS_MACCATALYST
 #endif  // defined(TARGET_OS_MACCATALYST) && TARGET_OS_MACCATALYST
-#if defined(TARGET_OS_VISION) && TARGET_OS_VISION
-#define OS_IOS_VISION 1
-#endif  // defined(TARGET_OS_VISION) && TARGET_OS_VISION
 #if defined(TARGET_OS_WATCH) && TARGET_OS_WATCH
-#define OS_IOS_WATCH 1
+#define OS_WATCHOS 1
 #endif  // defined(TARGET_OS_WATCH) && TARGET_OS_WATCH
 #else
 #define OS_MAC 1
@@ -207,18 +202,6 @@
 #define BUILDFLAG_INTERNAL_IS_IOS_MACCATALYST() (0)
 #endif
 
-#if defined(OS_IOS_VISION)
-#define BUILDFLAG_INTERNAL_IS_IOS_VISION() (1)
-#else
-#define BUILDFLAG_INTERNAL_IS_IOS_VISION() (0)
-#endif
-
-#if defined(OS_IOS_WATCH)
-#define BUILDFLAG_INTERNAL_IS_IOS_WATCH() (1)
-#else
-#define BUILDFLAG_INTERNAL_IS_IOS_WATCH() (0)
-#endif
-
 #if defined(OS_LINUX)
 #define BUILDFLAG_INTERNAL_IS_LINUX() (1)
 #else
@@ -265,6 +248,12 @@
 #define BUILDFLAG_INTERNAL_IS_SOLARIS() (1)
 #else
 #define BUILDFLAG_INTERNAL_IS_SOLARIS() (0)
+#endif
+
+#if defined(OS_WATCHOS)
+#define BUILDFLAG_INTERNAL_IS_WATCHOS() (1)
+#else
+#define BUILDFLAG_INTERNAL_IS_WATCHOS() (0)
 #endif
 
 #if defined(OS_WIN)
@@ -414,6 +403,26 @@
 // The compiler thinks std::u16string::const_iterator and "char16*" are
 // equivalent types.
 #define BASE_STRING16_ITERATOR_IS_CHAR16_POINTER
+#endif
+
+// Architecture-specific feature detection.
+
+#if !defined(CPU_ARM_NEON)
+#if defined(__arm__)
+#if !defined(__ARMEB__) && !defined(__ARM_EABI__) && !defined(__EABI__) && \
+    !defined(__VFP_FP__) && !defined(_WIN32_WCE) && !defined(ANDROID)
+#error Chromium does not support middle endian architecture
+#endif
+#if defined(__ARM_NEON__)
+#define CPU_ARM_NEON 1
+#endif
+#endif  // defined(__arm__)
+#endif  // !defined(CPU_ARM_NEON)
+
+#if !defined(HAVE_MIPS_MSA_INTRINSICS)
+#if defined(__mips_msa) && defined(__mips_isa_rev) && (__mips_isa_rev >= 5)
+#define HAVE_MIPS_MSA_INTRINSICS 1
+#endif
 #endif
 
 #endif  // BUILD_BUILD_CONFIG_H_

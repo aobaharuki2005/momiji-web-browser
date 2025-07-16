@@ -13,10 +13,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9444d12972cebe7d8
  1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/config/BUILD.gn b/config/BUILD.gn
-index fd35f5827..e4ffe6d65 100644
+index ab01bcd5a..d8352aadf 100644
 --- a/config/BUILD.gn
 +++ b/config/BUILD.gn
-@@ -107,10 +107,11 @@ config("feature_flags") {
+@@ -109,10 +109,11 @@ config("feature_flags") {
  
  config("debug") {
    defines = [

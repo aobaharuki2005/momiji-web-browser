@@ -170,12 +170,15 @@ declare_args() {
   #
   # For more information see
   # https://chromium.googlesource.com/chromium/src/+/main/docs/component_build.md
-  is_component_build = is_debug && current_os != "ios"
+  is_component_build =
+      is_debug && current_os != "ios" && current_os != "watchos"
 }
 
 assert(!(is_debug && is_official_build), "Can't do official debug builds")
 assert(!(current_os == "ios" && is_component_build),
        "Can't use component build on iOS")
+assert(!(current_os == "watchos" && is_component_build),
+       "Can't use component build on watchOS")
 
 declare_args() {
   # Unsafe buffers. Location of file used by plugins to track portions of
@@ -239,6 +242,7 @@ if (host_toolchain == "") {
 _default_toolchain = ""
 
 if (target_os == "android") {
+  # Targeting android on Mac is best-effort and not guaranteed to work.
   #assert(host_os == "linux", "Android builds are only supported on Linux.")
   _default_toolchain = "//chromium/build/toolchain/android:android_clang_$target_cpu"
 } else if (target_os == "chromeos" || target_os == "linux" || target_os == "openbsd") {
@@ -312,9 +316,10 @@ is_linux = current_os == "linux"
 is_bsd = current_os == "openbsd"
 is_mac = current_os == "mac"
 is_nacl = current_os == "nacl"
+is_watchos = current_os == "watchos"
 is_win = current_os == "win" || current_os == "winuwp"
 
-is_apple = is_ios || is_mac
+is_apple = is_ios || is_mac || is_watchos
 is_posix = !is_win && !is_fuchsia
 
 # =============================================================================
@@ -349,6 +354,8 @@ default_compiler_configs = [
   "//chromium/build/config/compiler:default_optimization",
   "//chromium/build/config/compiler:default_stack_frames",
   "//chromium/build/config/compiler:default_symbols",
+  "//chromium/build/config/compiler:disallow_unstable_features",
+  "//chromium/build/config/compiler:libcxx_hardening",
   "//chromium/build/config/compiler:libcxx_module",
   "//chromium/build/config/compiler:no_exceptions",
   "//chromium/build/config/compiler:no_rtti",
@@ -750,6 +757,7 @@ import("//chromium/build/toolchain/rbe.gni")
 import("//chromium/build/toolchain/siso.gni")
 
 # TODO(b/253987456): Add action_foreach support.
+# TODO(379584977): remove this. no need this for siso native.
 foreach(_target_type, [ "action" ]) {
   template(_target_type) {
     forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)

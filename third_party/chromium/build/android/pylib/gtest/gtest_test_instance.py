@@ -108,6 +108,11 @@ _RE_TEST_DCHECK_FATAL = re.compile(r'\[.*:FATAL:.*\] (.*)')
 _RE_DISABLED = re.compile(r'DISABLED_')
 _RE_FLAKY = re.compile(r'FLAKY_')
 
+# Detect a new launcher invocation. When encountered, the output parser will
+# stop recording logs for a suddenly crashed test (if one was running) in the
+# previous invocation.
+_RE_LAUNCHER_MAIN_START = re.compile(r'>>ScopedMainEntryLogger')
+
 # Regex that matches the printout when there are test failures.
 # matches "[  FAILED  ] 1 test, listed below:"
 _RE_ANY_TESTS_FAILED = re.compile(r'\[ +FAILED +\].*listed below')
@@ -192,6 +197,7 @@ def ParseGTestOutput(output, symbolizer, device_abi):
 
   for l in output:
     matcher = _RE_TEST_STATUS.match(l)
+    launcher_main_start_match = _RE_LAUNCHER_MAIN_START.match(l)
     if matcher:
       if matcher.group(1) == 'RUN':
         handle_possibly_unknown_test()
@@ -221,11 +227,11 @@ def ParseGTestOutput(output, symbolizer, device_abi):
         test_name = currently_running_matcher.group(1)
         result_type = base_test_result.ResultType.CRASH
         duration = None  # Don't know. Not using 0 as this is unknown vs 0.
-      elif dcheck_matcher:
+      elif dcheck_matcher or launcher_main_start_match:
         result_type = base_test_result.ResultType.CRASH
         duration = None  # Don't know.  Not using 0 as this is unknown vs 0.
 
-    if log is not None:
+    if not launcher_main_start_match:
       if not matcher and _STACK_LINE_RE.match(l):
         stack.append(l)
       else:
@@ -349,6 +355,7 @@ class GtestTestInstance(test_instance.TestInstance):
     self._total_external_shards = args.test_launcher_total_shards
     self._wait_for_java_debugger = args.wait_for_java_debugger
     self._use_existing_test_data = args.use_existing_test_data
+    self._deploy_mock_openxr_runtime = args.deploy_mock_openxr_runtime
 
     # GYP:
     if args.executable_dist_dir:
@@ -469,6 +476,10 @@ class GtestTestInstance(test_instance.TestInstance):
   @property
   def coverage_dir(self):
     return self._coverage_dir
+
+  @property
+  def deploy_mock_openxr_runtime(self):
+    return self._deploy_mock_openxr_runtime
 
   @property
   def enable_xml_result_parsing(self):

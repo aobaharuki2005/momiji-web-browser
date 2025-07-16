@@ -8,7 +8,10 @@ import("//chromium/build/config/chromeos/ui_mode.gni")
 import("//chromium/build/config/cronet/config.gni")
 import("//chromium/build/config/dcheck_always_on.gni")
 import("//chromium/build/config/features.gni")
-import("//chromium/build/config/ios/config.gni")
+
+if (is_ios) {
+  import("//chromium/build/config/apple/mobile_config.gni")
+}
 
 declare_args() {
   # Specify the current PGO phase.

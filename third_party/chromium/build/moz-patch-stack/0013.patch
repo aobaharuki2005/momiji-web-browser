@@ -15,19 +15,19 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3a785d486d97fc9cb
  4 files changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
-index 7493fad87..df169d203 100644
+index e77ea4afa..b6093c1f8 100644
 --- a/config/BUILDCONFIG.gn
 +++ b/config/BUILDCONFIG.gn
-@@ -239,7 +239,7 @@ if (host_toolchain == "") {
- _default_toolchain = ""
+@@ -243,7 +243,7 @@ _default_toolchain = ""
  
  if (target_os == "android") {
+   # Targeting android on Mac is best-effort and not guaranteed to work.
 -  assert(host_os == "linux", "Android builds are only supported on Linux.")
 +  #assert(host_os == "linux", "Android builds are only supported on Linux.")
    _default_toolchain = "//build/toolchain/android:android_clang_$target_cpu"
  } else if (target_os == "chromeos" || target_os == "linux" || target_os == "openbsd") {
    # See comments in build/toolchain/cros/BUILD.gn about board compiles.
-@@ -253,8 +253,8 @@ if (target_os == "android") {
+@@ -257,8 +257,8 @@ if (target_os == "android") {
  } else if (target_os == "ios") {
    _default_toolchain = "//build/toolchain/ios:ios_clang_$target_cpu"
  } else if (target_os == "mac") {
@@ -39,10 +39,10 @@ index 7493fad87..df169d203 100644
  } else if (target_os == "win") {
    # On Windows, we use the same toolchain for host and target by default.
 diff --git a/config/mac/mac_sdk.gni b/config/mac/mac_sdk.gni
-index d30b31b73..ab0ed5005 100644
+index 3373b8a32..6692598d6 100644
 --- a/config/mac/mac_sdk.gni
 +++ b/config/mac/mac_sdk.gni
-@@ -102,9 +102,9 @@ if (use_system_xcode && use_remoteexec) {
+@@ -130,9 +130,9 @@ if (mac_use_xcode_symlinks) {
  }
  sdk_info_args += [ mac_sdk_name ]
  
@@ -56,18 +56,20 @@ index d30b31b73..ab0ed5005 100644
    mac_sdk_path = _mac_sdk_result.sdk_path
  }
 diff --git a/config/win/visual_studio_version.gni b/config/win/visual_studio_version.gni
-index 1da479dd5..8bb39c987 100644
+index bd4116693..256952559 100644
 --- a/config/win/visual_studio_version.gni
 +++ b/config/win/visual_studio_version.gni
-@@ -40,5 +40,5 @@ if (visual_studio_path == "") {
+@@ -40,7 +40,7 @@ if (visual_studio_path == "") {
           "You must set the windows_sdk_version if you set the path")
    assert(wdk_path != "",
           "You must set the wdk_path if you set the visual studio path")
 -  visual_studio_runtime_dirs = []
 +  visual_studio_runtime_dirs = ""
  }
+ 
+ visual_studio_version_logs = [ "windows_sdk_version=${windows_sdk_version}" ]
 diff --git a/win/BUILD.gn b/win/BUILD.gn
-index 4abe95713..14c2527bc 100644
+index a92e3830c..d2d12d953 100644
 --- a/win/BUILD.gn
 +++ b/win/BUILD.gn
 @@ -19,8 +19,8 @@ windows_manifest("default_exe_manifest") {

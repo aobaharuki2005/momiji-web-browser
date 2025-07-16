@@ -10,8 +10,6 @@
 ../../third_party/catapult/common/py_trace_event/py_trace_event/trace_event_impl/perfetto_proto_classes.py
 ../../third_party/catapult/common/py_trace_event/py_trace_event/trace_event_impl/perfetto_trace_writer.py
 ../../third_party/catapult/common/py_trace_event/py_trace_event/trace_time.py
-../../third_party/catapult/common/py_trace_event/third_party/protobuf/encoder.py
-../../third_party/catapult/common/py_trace_event/third_party/protobuf/wire_format.py
 ../../third_party/catapult/common/py_utils/py_utils/__init__.py
 ../../third_party/catapult/common/py_utils/py_utils/atexit_with_log.py
 ../../third_party/catapult/common/py_utils/py_utils/binary_manager.py
@@ -183,10 +181,12 @@ pylib/junit/junit_test_instance.py
 pylib/local/__init__.py
 pylib/local/device/__init__.py
 pylib/local/device/local_device_environment.py
+pylib/local/device/local_device_ethernet_environment.py
 pylib/local/device/local_device_gtest_run.py
 pylib/local/device/local_device_instrumentation_test_run.py
 pylib/local/device/local_device_monkey_test_run.py
 pylib/local/device/local_device_test_run.py
+pylib/local/device/skylab_environment.py
 pylib/local/emulator/__init__.py
 pylib/local/emulator/avd.py
 pylib/local/emulator/ini.py

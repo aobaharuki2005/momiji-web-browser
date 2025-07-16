@@ -9,32 +9,14 @@ Depends on D149816
 Differential Revision: https://phabricator.services.mozilla.com/D149817
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f9c3bbb23f7ae513b2d94fabd2ada44c6100103b
 ---
- config/BUILD.gn          |  6 +++---
  config/compiler/BUILD.gn |  4 ++--
  config/linux/BUILD.gn    |  2 +-
  config/sysroot.gni       | 10 +++++-----
  toolchain/linux/BUILD.gn | 30 +++++++++++++++---------------
- 5 files changed, 26 insertions(+), 26 deletions(-)
+ 4 files changed, 23 insertions(+), 23 deletions(-)
 
-diff --git a/config/BUILD.gn b/config/BUILD.gn
-index b7a40b570..fd35f5827 100644
---- a/config/BUILD.gn
-+++ b/config/BUILD.gn
-@@ -243,9 +243,9 @@ group("common_deps") {
-     public_deps += [ "//build/config/sanitizers:deps" ]
-   }
- 
--  if (use_custom_libcxx) {
--    public_deps += [ "//buildtools/third_party/libc++" ]
--  }
-+  #if (use_custom_libcxx) {
-+  #  public_deps += [ "//buildtools/third_party/libc++" ]
-+  #}
- 
-   if (use_libfuzzer) {
-     public_deps += [ "//build/config/sanitizers:dlclose_shim" ]
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index e67ab7ffe..fceb20deb 100644
+index ffbd381f0..00255a9c4 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -12,7 +12,7 @@ import("//build/config/clang/clang.gni")
@@ -46,7 +28,7 @@ index e67ab7ffe..fceb20deb 100644
  import("//build/config/host_byteorder.gni")
  import("//build/config/pch.gni")
  import("//build/config/rust.gni")
-@@ -1605,7 +1605,7 @@ config("compiler_deterministic") {
+@@ -1641,7 +1641,7 @@ config("compiler_deterministic") {
  }
  
  config("clang_revision") {
@@ -90,10 +72,10 @@ index 47fe4cbc8..2bee50f97 100644
    } else if (is_mac) {
      import("//build/config/mac/mac_sdk.gni")
 diff --git a/toolchain/linux/BUILD.gn b/toolchain/linux/BUILD.gn
-index 416a9b86e..74d01c65d 100644
+index 484faaa9a..b9fdcdde5 100644
 --- a/toolchain/linux/BUILD.gn
 +++ b/toolchain/linux/BUILD.gn
-@@ -357,21 +357,21 @@ gcc_toolchain("s390x") {
+@@ -318,21 +318,21 @@ gcc_toolchain("s390x") {
    }
  }
  

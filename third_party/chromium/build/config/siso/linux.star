@@ -56,12 +56,14 @@ def __step_config(ctx, step_config):
     if android.enabled(ctx):
         step_config = android.step_config(ctx, step_config)
 
-    # nacl step config should be added before clang step config for link step
-    # rules.
+    # nacl and cros rules should be added before clang rules for link action.
     step_config = nacl.step_config(ctx, step_config)
 
+    # cros rules are necessary only for the Siso's builtin RBE client mode.
+    if not reproxy.enabled(ctx):
+        step_config = cros.step_config(ctx, step_config)
+
     step_config = clang.step_config(ctx, step_config)
-    step_config = cros.step_config(ctx, step_config)
     step_config = devtools_frontend.step_config(ctx, step_config)
     step_config = nasm.step_config(ctx, step_config)
     step_config = proto.step_config(ctx, step_config)
@@ -86,11 +88,7 @@ def __step_config(ctx, step_config):
         },
         {
             "name": "version_py",
-            "command_prefix": "python3 ../../build/util/version.py ",
-            "inputs": [
-                "build/util/android_chrome_version.py",
-                "build/util/LASTCHANGE",
-            ],
+            "command_prefix": "python3 ../../build/util/version.py",
             "remote": config.get(ctx, "cog"),
             "canonicalize_dir": True,
             "timeout": "2m",
@@ -132,7 +130,6 @@ def __step_config(ctx, step_config):
             # b/331716896: local fails due to link(2) error.
             "name": "generate_fontconfig_cache",
             "command_prefix": "python3 ../../build/gn_run_binary.py generate_fontconfig_caches",
-            "inputs": ["./etc/fonts/fonts.conf"],
             "remote": config.get(ctx, "cog"),
             "canonicalize_dir": True,
             "timeout": "2m",

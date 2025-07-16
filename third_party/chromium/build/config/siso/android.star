@@ -9,6 +9,18 @@ load("@builtin//lib/gn.star", "gn")
 load("@builtin//struct.star", "module")
 load("./config.star", "config")
 
+# TODO: crbug.com/323091468 - Propagate target android ABI and
+# android SDK version from GN, and remove the hardcoded filegroups.
+__archs = [
+    "aarch64-linux-android",
+    "arm-linux-androideabi",
+    "i686-linux-android",
+    "riscv64-linux-android",
+    "x86_64-linux-android",
+]
+
+__versions = list(range(21, 34))
+
 def __enabled(ctx):
     if "args.gn" in ctx.metadata:
         gn_args = gn.args(ctx)
@@ -17,10 +29,27 @@ def __enabled(ctx):
     return False
 
 def __filegroups(ctx):
-    return {}
+    fg = {}
+    for arch in __archs:
+        for ver in __versions:
+            group = "third_party/android_toolchain/ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/%s/%d:link" % (arch, ver)
+            fg[group] = {
+                "type": "glob",
+                "includes": ["*"],
+            }
+    return fg
 
 def __step_config(ctx, step_config):
     remote_run = True  # Turn this to False when you do file access trace.
+
+    # Run static analysis steps locally when build server is enabled.
+    # https://chromium.googlesource.com/chromium/src/+/main/docs/android_build_instructions.md#asynchronous-static-analysis
+    remote_run_static_analysis = True
+    if "args.gn" in ctx.metadata:
+        gn_args = gn.args(ctx)
+        if gn_args.get("android_static_analysis") == '"build_server"':
+            remote_run_static_analysis = False
+
     step_config["rules"].extend([
         # See also https://chromium.googlesource.com/chromium/src/build/+/HEAD/android/docs/java_toolchain.md
         {
@@ -52,13 +81,14 @@ def __step_config(ctx, step_config):
             "command_prefix": "python3 ../../build/android/gyp/compile_resources.py",
             "handler": "android_compile_resources",
             "exclude_input_patterns": [
-                "*.h",
-                "*.o",
-                "*.cc",
                 "*.a",
-                "*.info",
-                "*.pak",
+                "*.cc",
+                "*.h",
                 "*.inc",
+                "*.info",
+                "*.o",
+                "*.pak",
+                "*.sql",
             ],
             "remote": remote_run,
             "canonicalize_dir": True,
@@ -68,6 +98,59 @@ def __step_config(ctx, step_config):
             "name": "android/compile_java",
             "command_prefix": "python3 ../../build/android/gyp/compile_java.py",
             "handler": "android_compile_java",
+            "exclude_input_patterns": [
+                "*.a",
+                "*.cc",
+                "*.h",
+                "*.inc",
+                "*.info",
+                "*.o",
+                "*.pak",
+                "*.sql",
+            ],
+            # Don't include files under --generated-dir.
+            # This is probably optimization for local incrmental builds.
+            # However, this is harmful for remote build cache hits.
+            "ignore_extra_input_pattern": ".*srcjars.*\\.java",
+            "ignore_extra_output_pattern": ".*srcjars.*\\.java",
+            "remote": remote_run,
+            "platform_ref": "large",
+            "canonicalize_dir": True,
+            "timeout": "2m",
+        },
+        {
+            "name": "android/errorprone",
+            "command_prefix": "python3 ../../build/android/gyp/errorprone.py",
+            "handler": "android_compile_java",
+            "exclude_input_patterns": [
+                "*.a",
+                "*.cc",
+                "*.h",
+                "*.inc",
+                "*.info",
+                "*.o",
+                "*.pak",
+                "*.sql",
+            ],
+            "remote": remote_run_static_analysis,
+            "platform_ref": "large",
+            "canonicalize_dir": True,
+            "timeout": "2m",
+        },
+        {
+            "name": "android/compile_kt",
+            "command_prefix": "python3 ../../build/android/gyp/compile_kt.py",
+            "handler": "android_compile_java",
+            "exclude_input_patterns": [
+                "*.a",
+                "*.cc",
+                "*.h",
+                "*.inc",
+                "*.info",
+                "*.o",
+                "*.pak",
+                "*.sql",
+            ],
             # Don't include files under --generated-dir.
             # This is probably optimization for local incrmental builds.
             # However, this is harmful for remote build cache hits.
@@ -86,6 +169,16 @@ def __step_config(ctx, step_config):
             "indirect_inputs": {
                 "includes": ["*.dex", "*.ijar.jar", "*.turbine.jar"],
             },
+            "exclude_input_patterns": [
+                "*.a",
+                "*.cc",
+                "*.h",
+                "*.inc",
+                "*.info",
+                "*.o",
+                "*.pak",
+                "*.sql",
+            ],
             # *.dex files are intermediate files used in incremental builds.
             # Fo remote actions, let's ignore them, assuming remote cache hits compensate.
             "ignore_extra_input_pattern": ".*\\.dex",
@@ -101,6 +194,39 @@ def __step_config(ctx, step_config):
             "remote": remote_run,
             "canonicalize_dir": True,
             "timeout": "2m",
+        },
+        {
+            "name": "android/generate_resource_allowlist",
+            "command_prefix": "python3 ../../tools/resources/generate_resource_allowlist.py",
+            "indirect_inputs": {
+                "includes": ["*.o", "*.a"],
+            },
+            # When remote linking without bytes enabled, .o, .a files don't
+            # exist on the local file system.
+            # This step also should run remortely to avoid downloading them.
+            "remote": config.get(ctx, "remote-link"),
+            "platform_ref": "large",
+            "canonicalize_dir": True,
+            "timeout": "2m",
+        },
+        {
+            "name": "android/proguard",
+            "command_prefix": "python3 ../../build/android/gyp/proguard.py",
+            "handler": "android_proguard",
+            "exclude_input_patterns": [
+                "*.a",
+                "*.cc",
+                "*.h",
+                "*.inc",
+                "*.info",
+                "*.o",
+                "*.pak",
+                "*.sql",
+            ],
+            "canonicalize_dir": True,
+            "remote": remote_run,
+            "platform_ref": "large",
+            "timeout": "10m",
         },
     ])
     return step_config
@@ -127,7 +253,7 @@ def __android_compile_resources_handler(ctx, cmd):
     #   https://crsrc.org/c/build/config/android/internal_rules.gni;l=2163;drc=1b15af251f8a255e44f2e3e3e7990e67e87dcc3b
     #   https://crsrc.org/c/build/config/android/system_image.gni;l=58;drc=39debde76e509774287a655285d8556a9b8dc634
     # Sample args:
-    #   --aapt2-path ../../third_party/android_build_tools/aapt2/aapt2
+    #   --aapt2-path ../../third_party/android_build_tools/aapt2/cipd/aapt2
     #   --android-manifest gen/chrome/android/trichrome_library_system_stub_apk__manifest.xml
     #   --arsc-package-name=org.chromium.trichromelibrary
     #   --arsc-path obj/chrome/android/trichrome_library_system_stub_apk.ap_
@@ -153,9 +279,7 @@ def __android_compile_resources_handler(ctx, cmd):
         for k in ["--dependencies-res-zips=", "--dependencies-res-zip-overlays=", "--extra-res-packages="]:
             if arg.startswith(k):
                 arg = arg.removeprefix(k)
-                fn, v = __filearg(ctx, arg)
-                if fn:
-                    inputs.append(ctx.fs.canonpath(fn))
+                _, v = __filearg(ctx, arg)
                 for f in v:
                     f = ctx.fs.canonpath(f)
                     inputs.append(f)
@@ -195,11 +319,6 @@ def __android_compile_java_handler(ctx, cmd):
 
     inputs = []
     for i, arg in enumerate(cmd.args):
-        # read .sources file.
-        if arg.startswith("@"):
-            sources = str(ctx.fs.read(ctx.fs.canonpath(arg.removeprefix("@")))).splitlines()
-            for source in sources:
-                inputs.append(ctx.fs.canonpath(source))
         for k in ["--classpath=", "--bootclasspath=", "--processorpath="]:
             if arg.startswith(k):
                 arg = arg.removeprefix(k)
@@ -217,9 +336,7 @@ def __android_compile_java_handler(ctx, cmd):
 
 def __android_dex_handler(ctx, cmd):
     out = cmd.outputs[0]
-    inputs = [
-        out.replace("obj/", "gen/").replace(".dex.jar", ".build_config.json"),
-    ]
+    inputs = []
 
     # Add __dex.desugardeps to the outputs.
     outputs = [
@@ -231,9 +348,7 @@ def __android_dex_handler(ctx, cmd):
         for k in ["--class-inputs=", "--bootclasspath=", "--classpath=", "--class-inputs-filearg=", "--dex-inputs-filearg="]:
             if arg.startswith(k):
                 arg = arg.removeprefix(k)
-                fn, v = __filearg(ctx, arg)
-                if fn:
-                    inputs.append(ctx.fs.canonpath(fn))
+                _, v = __filearg(ctx, arg)
                 for f in v:
                     f, _, _ = f.partition(":")
                     f = ctx.fs.canonpath(f)
@@ -246,15 +361,50 @@ def __android_dex_handler(ctx, cmd):
         outputs = cmd.outputs + outputs,
     )
 
+def __android_proguard_handler(ctx, cmd):
+    inputs = []
+    outputs = []
+    for i, arg in enumerate(cmd.args):
+        for k in ["--proguard-configs=", "--input-paths="]:
+            if arg.startswith(k):
+                arg = arg.removeprefix(k)
+                fn, v = __filearg(ctx, arg)
+                if fn:
+                    inputs.append(ctx.fs.canonpath(fn))
+                for f in v:
+                    f, _, _ = f.partition(":")
+                    inputs.append(ctx.fs.canonpath(f))
+                break
+        if arg in ["--sdk-jars", "--sdk-extension-jars"]:
+            fn, v = __filearg(ctx, cmd.args[i + 1])
+            if fn:
+                inputs.append(ctx.fs.canonpath(fn))
+            for f in v:
+                f, _, _ = f.partition(":")
+                inputs.append(ctx.fs.canonpath(f))
+            continue
+        if arg.startswith("--dex-dest="):
+            arg = arg.removeprefix("--dex-dest=")
+            fn, v = __filearg(ctx, arg)
+            if fn:
+                inputs.append(ctx.fs.canonpath(fn))
+            for f in v:
+                f, _, _ = f.partition(":")
+                outputs.append(ctx.fs.canonpath(f))
+            continue
+
+    ctx.actions.fix(
+        inputs = cmd.inputs + inputs,
+        outputs = cmd.outputs + outputs,
+    )
+
 def __android_turbine_handler(ctx, cmd):
     inputs = []
     for i, arg in enumerate(cmd.args):
         for k in ["--classpath=", "--processorpath="]:
             if arg.startswith(k):
                 arg = arg.removeprefix(k)
-                fn, v = __filearg(ctx, arg)
-                if fn:
-                    inputs.append(ctx.fs.canonpath(fn))
+                _, v = __filearg(ctx, arg)
                 for f in v:
                     f, _, _ = f.partition(":")
                     inputs.append(ctx.fs.canonpath(f))
@@ -316,9 +466,10 @@ def __android_write_build_config_handler(ctx, cmd):
     ctx.actions.fix(inputs = cmd.inputs + inputs)
 
 __handlers = {
-    "android_compile_resources": __android_compile_resources_handler,
     "android_compile_java": __android_compile_java_handler,
+    "android_compile_resources": __android_compile_resources_handler,
     "android_dex": __android_dex_handler,
+    "android_proguard": __android_proguard_handler,
     "android_turbine": __android_turbine_handler,
     "android_write_build_config": __android_write_build_config_handler,
 }
@@ -326,6 +477,7 @@ __handlers = {
 android = module(
     "android",
     enabled = __enabled,
+    archs = __archs,
     step_config = __step_config,
     filegroups = __filegroups,
     handlers = __handlers,

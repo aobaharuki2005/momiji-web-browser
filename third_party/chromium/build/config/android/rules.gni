@@ -4,7 +4,9 @@
 
 import("//chromium/build/config/android/abi.gni")
 import("//chromium/build/config/android/copy_ex.gni")
+import("//chromium/build/config/chrome_build.gni")
 import("//chromium/build/config/clang/clang.gni")
+import("//chromium/build/config/rts.gni")
 import("//chromium/build/config/sanitizers/sanitizers.gni")
 import("//build_overrides/build.gni")
 
@@ -13,7 +15,7 @@ assert(
     "current_toolchain=$current_toolchain default_toolchain=$default_toolchain")
 
 _sanitizer_runtimes = []
-if (use_cfi_diag || is_ubsan || is_ubsan_security || is_ubsan_vptr) {
+if (use_cfi_diag || is_ubsan_any) {
   _sanitizer_runtimes += [ "$clang_base_path/lib/clang/$clang_version/lib/linux/libclang_rt.ubsan_standalone-$sanitizer_arch-android.so" ]
 }
 if (is_asan) {
@@ -116,7 +118,7 @@ if (!is_robolectric && enable_java_templates) {
   import("//chromium/build/toolchain/toolchain.gni")
 
   _BUNDLETOOL_JAR_PATH =
-      "//third_party/android_build_tools/bundletool/bundletool.jar"
+      "//third_party/android_build_tools/bundletool/cipd/bundletool.jar"
 
   # Declare a target for c-preprocessor-generated java files
   #
@@ -1152,7 +1154,7 @@ if (!is_robolectric && enable_java_templates) {
       output_manifest = _android_manifest
       build_config = _build_config
       min_sdk_version = default_min_sdk_version
-      target_sdk_version = android_sdk_version
+      target_sdk_version = default_target_sdk_version
       deps = _non_java_deps + _java_assetres_deps +
              [ ":$_build_config_target_name" ]
       if (defined(invoker.android_manifest_dep)) {
@@ -1173,7 +1175,7 @@ if (!is_robolectric && enable_java_templates) {
       android_manifest = _android_manifest
       arsc_output = _resource_arsc_output
       min_sdk_version = default_min_sdk_version
-      target_sdk_version = android_sdk_version
+      target_sdk_version = default_target_sdk_version
       forward_variables_from(invoker, [ "override_target_sdk" ])
     }
 
@@ -1228,8 +1230,6 @@ if (!is_robolectric && enable_java_templates) {
         import("//third_party/jni_zero/jni_zero.gni")
         _jni_srcjar_target_name = "${target_name}__final_jni"
         generate_jni_registration(_jni_srcjar_target_name) {
-          enable_native_mocks = true
-          require_native_mocks = true
           java_targets = [ ":$_java_binary_target_name" ]
           add_stubs_for_missing_jni = true
         }
@@ -1276,7 +1276,7 @@ if (!is_robolectric && enable_java_templates) {
       }
       srcjar_deps += [
         ":$_compile_resources_target_name",
-        "//chromium/build/android:build_config_for_testing_gen",
+        "//chromium/build/android:build_config_for_robolectric_srcjar",
       ]
       if (_generate_final_jni) {
         srcjar_deps += [ ":$_native_libraries_target_name" ] + _jni_srcjar_deps
@@ -1433,6 +1433,7 @@ if (!is_robolectric && enable_java_templates) {
   #   direct_deps_only: Do not recurse on deps.
   #   jar_excluded_patterns (optional)
   #     List of globs for paths to exclude.
+  #   renaming_rules: rename java classes inside according to these rules.
   #
   # Example
   #   dist_jar("lib_fatjar") {
@@ -1440,41 +1441,90 @@ if (!is_robolectric && enable_java_templates) {
   #     output = "$root_build_dir/MyLibrary.jar"
   #   }
   template("dist_jar") {
-    # TODO(crbug.com/40114668): Remove.
-    not_needed(invoker, [ "no_build_hooks" ])
     forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
+
+    # TODO: Remove uses.
+    not_needed(invoker, [ "use_unprocessed_jars" ])
     _use_interface_jars =
         defined(invoker.use_interface_jars) && invoker.use_interface_jars
-    _use_unprocessed_jars =
-        defined(invoker.use_unprocessed_jars) && invoker.use_unprocessed_jars
-    _direct_deps_only =
-        defined(invoker.direct_deps_only) && invoker.direct_deps_only
-    assert(!(_use_unprocessed_jars && _use_interface_jars),
-           "Cannot set both use_interface_jars and use_unprocessed_jars")
+    _supports_android =
+        !defined(invoker.supports_android) || invoker.supports_android
+    _requires_android =
+        defined(invoker.requires_android) && invoker.requires_android
+    _has_renaming_rules = defined(invoker.renaming_rules)
 
-    _jar_target_name = target_name
+    _is_java_target_name =
+        filter_exclude([ target_name ], java_target_patterns) == []
+    _target_name_without_java_or_junit =
+        string_replace(string_replace(target_name, "_java", "_J"),
+                       "_junit",
+                       "_U")
+    _zip_target_name = "${_target_name_without_java_or_junit}_zip"
+    _zip_jar_path = invoker.output
 
-    if (defined(invoker.build_config)) {
-      _build_config = invoker.build_config
-      _build_config_dep = invoker.build_config_dep
+    if (_has_renaming_rules) {
+      _zip_jar_path = "$target_gen_dir/$target_name.singlejar.jar"
+
+      # if we are java-like and have renaming rules, the main target is the
+      # java_library_impl otherwise its the renaming target.
+      if (_is_java_target_name) {
+        _renaming_target_name = "${_target_name_without_java_or_junit}_renamed"
+        _final_jar_target = _renaming_target_name
+      } else {
+        _renaming_target_name = target_name
+      }
     } else {
-      _build_config = "$target_gen_dir/$target_name.build_config.json"
-      _build_config_target_name = "$target_name$build_config_target_suffix"
-      _build_config_dep = ":$_build_config_target_name"
+      # If we dont have renaming rules then the main target is either the zip
+      # target or the java_library_impl if we are java-like.
+      if (_is_java_target_name) {
+        _final_jar_target = _zip_target_name
+      } else {
+        _zip_target_name = target_name
+      }
+    }
 
+    _build_config = "$target_gen_dir/$target_name.build_config.json"
+    _build_config_target_name = "$target_name$build_config_target_suffix"
+    _build_config_dep = ":$_build_config_target_name"
+
+    if (_is_java_target_name) {
+      # If we have a java-like target name we need to provide the expected
+      # meta_targets as well as the processing (eg: ijar, bytecode rewriting)
+      # that is expected of java targets so that other java targets can depend
+      # on us.
+      java_library_impl(target_name) {
+        forward_variables_from(invoker,
+                               [
+                                 "deps",
+                                 "direct_deps_only",
+                                 "jar_excluded_patterns",
+                               ])
+        type = "dist_jar"
+        if (!defined(deps)) {
+          deps = []
+        }
+        deps += [ ":$_final_jar_target" ]
+
+        supports_android = _supports_android
+        requires_android = _requires_android
+        jar_path = invoker.output
+        enable_bytecode_checks = false
+        use_interface_jars = _use_interface_jars
+      }
+    } else {
       write_build_config(_build_config_target_name) {
         type = "dist_jar"
-        supports_android =
-            !defined(invoker.supports_android) || invoker.supports_android
-        requires_android =
-            defined(invoker.requires_android) && invoker.requires_android
+        forward_variables_from(invoker, [ "direct_deps_only" ])
+        supports_android = _supports_android
+        requires_android = _requires_android
         possible_config_deps = invoker.deps
         build_config = _build_config
+        use_interface_jars = _use_interface_jars
       }
     }
 
     _rebased_build_config = rebase_path(_build_config, root_build_dir)
-    action_with_pydeps(_jar_target_name) {
+    action_with_pydeps(_zip_target_name) {
       forward_variables_from(invoker, [ "data" ])
       script = "//chromium/build/android/gyp/zip.py"
       depfile = "$target_gen_dir/$target_name.d"
@@ -1497,37 +1547,16 @@ if (!is_robolectric && enable_java_templates) {
 
       inputs = [ _build_config ]
 
-      outputs = [ invoker.output ]
+      outputs = [ _zip_jar_path ]
 
       args = [
         "--depfile",
         rebase_path(depfile, root_build_dir),
         "--output",
-        rebase_path(invoker.output, root_build_dir),
+        rebase_path(_zip_jar_path, root_build_dir),
         "--no-compress",
+        "--input-zips=@FileArg($_rebased_build_config:dist_jar:jars)",
       ]
-
-      if (_direct_deps_only) {
-        if (_use_interface_jars) {
-          args += [ "--input-zips=@FileArg($_rebased_build_config:javac:interface_classpath)" ]
-        } else if (_use_unprocessed_jars) {
-          args += [
-            "--input-zips=@FileArg($_rebased_build_config:javac:classpath)",
-          ]
-        } else {
-          assert(
-              false,
-              "direct_deps_only does not work without use_interface_jars or use_unprocessed_jars")
-        }
-      } else {
-        if (_use_interface_jars) {
-          args += [ "--input-zips=@FileArg($_rebased_build_config:dist_jar:all_interface_jars)" ]
-        } else if (_use_unprocessed_jars) {
-          args += [ "--input-zips=@FileArg($_rebased_build_config:deps_info:javac_full_classpath)" ]
-        } else {
-          args += [ "--input-zips=@FileArg($_rebased_build_config:deps_info:device_classpath)" ]
-        }
-      }
 
       _excludes = []
       if (defined(invoker.jar_excluded_patterns)) {
@@ -1543,6 +1572,15 @@ if (!is_robolectric && enable_java_templates) {
       }
       if (_excludes != []) {
         args += [ "--input-zips-excluded-globs=$_excludes" ]
+      }
+    }
+
+    if (_has_renaming_rules) {
+      rename_jar_classes(_renaming_target_name) {
+        input = _zip_jar_path
+        output = invoker.output
+        deps = [ ":$_zip_target_name" ]
+        renaming_rules = invoker.renaming_rules
       }
     }
   }
@@ -1876,41 +1914,26 @@ if (!is_robolectric && enable_java_templates) {
   }
 
   # Creates org/chromium/build/BuildConfig.java
-  # This doesn't really belong in //build since it genates a file for //base.
-  # However, we don't currently have a better way to include this file in all
-  # apks that depend on //base:base_java.
-  #
-  # Variables:
-  #   use_final_fields: True to use final fields. When false, all other
-  #       variables must not be set.
-  #   min_sdk_version: Value for MIN_SDK_VERSION.
-  #   version_code: Value for VERSION_CODE.
-  #   bundles_supported: Whether or not this target can be treated as a bundle.
-  #   resources_version_variable:
-  #   is_incremental_install:
-  #   isolated_splits_enabled: Value for ISOLATED_SPLITS_ENABLED.
   template("generate_build_config_srcjar") {
     java_cpp_template(target_name) {
-      forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
+      forward_variables_from(invoker,
+                             TESTONLY_AND_VISIBILITY + [
+                                   "deps",
+                                   "inputs",
+                                 ])
       sources = [ "//chromium/build/android/java/templates/BuildConfig.template" ]
       defines = []
 
-      # Set these even when !use_final_fields so that they have correct default
-      # values within robolectric_binary(), which ignores jar_excluded_patterns.
       if ((defined(invoker.assertions_implicitly_enabled) &&
            invoker.assertions_implicitly_enabled) || enable_java_asserts) {
         defines += [ "_ENABLE_ASSERTS" ]
       }
-      if (use_cfi_diag || is_ubsan || is_ubsan_security || is_ubsan_vptr) {
+      if (use_cfi_diag || is_ubsan_any) {
         defines += [ "_IS_UBSAN" ]
       }
 
       if (is_chrome_branded) {
         defines += [ "_IS_CHROME_BRANDED" ]
-      }
-
-      if (defined(invoker.bundles_supported) && invoker.bundles_supported) {
-        defines += [ "_BUNDLES_SUPPORTED" ]
       }
 
       if (defined(invoker.isolated_splits_enabled) &&
@@ -1923,19 +1946,26 @@ if (!is_robolectric && enable_java_templates) {
         defines += [ "_IS_INCREMENTAL_INSTALL" ]
       }
 
-      if (invoker.use_final_fields) {
-        forward_variables_from(invoker, [ "deps" ])
-        defines += [ "USE_FINAL" ]
+      if (defined(invoker.min_sdk_version)) {
         defines += [ "_MIN_SDK_VERSION=${invoker.min_sdk_version}" ]
+      } else {
+        defines += [ "_MIN_SDK_VERSION=$default_min_sdk_version" ]
+      }
+      if (defined(invoker.version_code)) {
         defines += [ "_VERSION_CODE=${invoker.version_code}" ]
-        if (defined(invoker.resources_version_variable)) {
-          defines += [
-            "_RESOURCES_VERSION_VARIABLE=${invoker.resources_version_variable}",
-          ]
-        }
-      } else if (is_cronet_build && !is_java_debug) {
-        # Cronet never uses use_final_fields=true, so make this a reasonable default.
-        defines += [ "_DISABLE_DEBUG_LOGS" ]
+      } else {
+        defines += [ "_VERSION_CODE=$android_default_version_code" ]
+      }
+      if (defined(invoker.resources_version_variable)) {
+        defines += [
+          "_RESOURCES_VERSION_VARIABLE=${invoker.resources_version_variable}",
+        ]
+      }
+      if (defined(invoker.apk_assets_suffixed_list)) {
+        defines += [
+          "_APK_ASSETS_SUFFIXED_LIST=${invoker.apk_assets_suffixed_list}",
+          "_APK_ASSETS_SUFFIX=${invoker.apk_assets_suffix}",
+        ]
       }
 
       _test_only = defined(testonly) && testonly
@@ -1943,17 +1973,28 @@ if (!is_robolectric && enable_java_templates) {
         defines += [ "_IS_FOR_TEST" ]
       }
 
-      if (!is_java_debug && !_test_only) {
+      if (!is_java_debug && (!_test_only || is_cronet_build)) {
         defines += [ "_DISABLE_DEBUG_LOGS" ]
       }
 
       if (is_cronet_build) {
         defines += [ "_IS_CRONET_BUILD" ]
+        defines += [ "_LOGTAG_PREFIX=cn_" ]
+      } else {
+        defines += [ "_LOGTAG_PREFIX=cr_" ]
+      }
+      if (is_desktop_android) {
+        defines += [ "_IS_DESKTOP_ANDROID" ]
       }
 
       if (defined(invoker.write_clang_profiling_data) &&
           invoker.write_clang_profiling_data) {
         defines += [ "_WRITE_CLANG_PROFILING_DATA" ]
+      }
+
+      if (defined(invoker.disable_strict_mode_context) &&
+          invoker.disable_strict_mode_context) {
+        defines += [ "_DISABLE_STRICT_MODE_CONTEXT" ]
       }
     }
   }
@@ -1965,7 +2006,6 @@ if (!is_robolectric && enable_java_templates) {
   #
   # Variables:
   #   build_config: Path to build_config used for locale lists.
-  #   is_bundle_module: Whether or not this target is part of a bundle build.
   #   java_package: Java package for the generated class.
   #   use_chromium_linker:
   template("generate_product_config_srcjar") {
@@ -1983,11 +2023,7 @@ if (!is_robolectric && enable_java_templates) {
 
       _use_chromium_linker =
           defined(invoker.use_chromium_linker) && invoker.use_chromium_linker
-      _is_bundle = defined(invoker.is_bundle_module) && invoker.is_bundle_module
-      defines += [
-        "USE_CHROMIUM_LINKER_VALUE=$_use_chromium_linker",
-        "IS_BUNDLE_VALUE=$_is_bundle",
-      ]
+      defines += [ "USE_CHROMIUM_LINKER_VALUE=$_use_chromium_linker" ]
       if (defined(invoker.build_config)) {
         forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "deps" ])
         _rebased_build_config =
@@ -2076,7 +2112,7 @@ if (!is_robolectric && enable_java_templates) {
   #   min_sdk_version: The minimum Android SDK version this target supports.
   #     Optional, default $default_min_sdk_version.
   #   target_sdk_version: The target Android SDK version for this target.
-  #     Optional, default to android_sdk_version.
+  #     Optional, default to default_target_sdk_version.
   #   max_sdk_version: The maximum Android SDK version this target supports.
   #     Optional, default not set.
   #   require_native_mocks: Enforce that any native calls using
@@ -2100,6 +2136,9 @@ if (!is_robolectric && enable_java_templates) {
   #     matches the given config.
   #   expected_proguard_config_base: Treat expected_proguard_config as a diff
   #     with this file as the base.
+  #   suffix_apk_assets_used_by: Prefixes android assets used by the given apk
+  #     with $package_name. Adds the list of renamed packages to
+  #     BuildConfig.java.
   template("android_apk_or_module") {
     forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
     _template_name = target_name
@@ -2109,7 +2148,7 @@ if (!is_robolectric && enable_java_templates) {
     _java_target_name = "${_template_name}__java"
 
     _min_sdk_version = default_min_sdk_version
-    _target_sdk_version = android_sdk_version
+    _target_sdk_version = default_target_sdk_version
     if (defined(invoker.min_sdk_version)) {
       _min_sdk_version = invoker.min_sdk_version
     }
@@ -2457,24 +2496,34 @@ if (!is_robolectric && enable_java_templates) {
     }
     _srcjar_deps += [ ":$_compile_resources_target" ]
 
-    # We don't ship apks anymore, only optimize bundle builds
-    if (_is_bundle_module) {
-      _short_resource_paths =
-          defined(invoker.short_resource_paths) &&
-          invoker.short_resource_paths && enable_arsc_obfuscation
-      _strip_resource_names =
-          defined(invoker.strip_resource_names) &&
-          invoker.strip_resource_names && enable_arsc_obfuscation
-      _strip_unused_resources =
-          defined(invoker.strip_unused_resources) &&
-          invoker.strip_unused_resources && enable_unused_resource_stripping
-      _optimize_resources = _strip_resource_names || _short_resource_paths ||
-                            _strip_unused_resources
+    _short_resource_paths =
+        defined(invoker.short_resource_paths) && invoker.short_resource_paths &&
+        enable_arsc_obfuscation
+    _strip_resource_names =
+        defined(invoker.strip_resource_names) && invoker.strip_resource_names &&
+        enable_arsc_obfuscation
+    _strip_unused_resources =
+        defined(invoker.strip_unused_resources) &&
+        invoker.strip_unused_resources && enable_unused_resource_stripping
+    _optimize_resources = _strip_resource_names || _short_resource_paths ||
+                          _strip_unused_resources
+
+    if (_strip_unused_resources) {
+      # These need to be kept in sync with the target names + output paths
+      # in the android_app_bundle template.
+      _unused_resources_target = "${_template_name}__unused_resources"
+      _unused_resources_config_path =
+          "$target_gen_dir/${_template_name}_unused_resources.config"
     }
 
-    if (_is_bundle_module && _optimize_resources) {
-      _optimized_proto_resources_path =
-          "$target_out_dir/$target_name.optimized.proto.ap_"
+    if (_optimize_resources) {
+      if (_is_bundle_module) {
+        _optimized_proto_resources_path =
+            "$target_out_dir/$target_name.optimized.proto.ap_"
+      } else {
+        _optimized_arsc_resources_path =
+            "$target_out_dir/$target_name.optimized.ap_"
+      }
       if (_short_resource_paths) {
         _resources_path_map_out_path =
             "${target_gen_dir}/${_template_name}_resources_path_map.txt"
@@ -2488,18 +2537,17 @@ if (!is_robolectric && enable_java_templates) {
           resources_path_map_out_path = _resources_path_map_out_path
         }
         r_text_path = _compile_resources_rtxt_out
-        proto_input_path = _proto_resources_path
-        optimized_proto_output = _optimized_proto_resources_path
-        if (_strip_unused_resources) {
-          # These need to be kept in sync with the target names + output paths
-          # in the android_app_bundle template.
-          _unused_resources_target = "${_template_name}__unused_resources"
-          _unused_resources_config_path =
-              "$target_gen_dir/${_template_name}_unused_resources.config"
-          resources_config_paths = [ _unused_resources_config_path ]
-          deps += [ ":$_unused_resources_target" ]
+        if (_is_bundle_module) {
+          proto_input_path = _proto_resources_path
+          optimized_proto_output = _optimized_proto_resources_path
         } else {
-          resources_config_paths = []
+          arsc_input_path = _arsc_resources_path
+          optimized_arsc_output = _optimized_arsc_resources_path
+        }
+        resources_config_paths = []
+        if (_strip_unused_resources) {
+          resources_config_paths += [ _unused_resources_config_path ]
+          deps += [ ":$_unused_resources_target" ]
         }
         if (defined(invoker.resources_config_paths)) {
           resources_config_paths += invoker.resources_config_paths
@@ -2511,6 +2559,18 @@ if (!is_robolectric && enable_java_templates) {
         _copy_unused_resources_target =
             "${_template_name}__copy_unused_resources"
         _final_deps += [ ":$_copy_unused_resources_target" ]
+      }
+
+      # Bundles write their pathmap in a android_app_bundle template.
+      if (_short_resource_paths && !_is_bundle_module) {
+        _final_resources_pathmap_path = "${_final_apk_path}.pathmap.txt"
+        _copy_pathmap_target = "${_template_name}__copy_pathmap"
+        copy(_copy_pathmap_target) {
+          deps = [ ":$_optimize_resources_target" ]
+          sources = [ _resources_path_map_out_path ]
+          outputs = [ _final_resources_pathmap_path ]
+        }
+        _final_deps += [ ":$_copy_pathmap_target" ]
       }
     } else {
       not_needed(invoker, [ "resources_config_paths" ])
@@ -2616,13 +2676,11 @@ if (!is_robolectric && enable_java_templates) {
     }
     if (_generate_buildconfig_java) {
       generate_build_config_srcjar("${_template_name}__build_config_srcjar") {
-        forward_variables_from(invoker, [ "isolated_splits_enabled" ])
-        _bundles_supported = _is_bundle_module
-        if (defined(invoker.bundles_supported)) {
-          _bundles_supported = invoker.bundles_supported
-        }
-        bundles_supported = _bundles_supported
-        use_final_fields = true
+        forward_variables_from(invoker,
+                               [
+                                 "disable_strict_mode_context",
+                                 "isolated_splits_enabled",
+                               ])
         assertions_implicitly_enabled = _assertions_implicitly_enabled
         is_incremental_install = _incremental_apk
         version_code = _version_code
@@ -2634,7 +2692,14 @@ if (!is_robolectric && enable_java_templates) {
           resources_version_variable =
               "org.chromium.base.R.string.product_version"
         }
-        deps = [ ":$_build_config_target" ]
+        if (defined(invoker.suffix_apk_assets_used_by)) {
+          deps = [ ":$_build_config_target" ]
+          inputs = [ _build_config ]
+          apk_assets_suffixed_list =
+              "@FileArg(${_rebased_build_config}:apk_assets_suffixed_list)"
+          apk_assets_suffix =
+              "@FileArg(${_rebased_build_config}:apk_assets_suffix)"
+        }
       }
       _srcjar_deps += [ ":${_template_name}__build_config_srcjar" ]
     }
@@ -2644,7 +2709,6 @@ if (!is_robolectric && enable_java_templates) {
         _locale_target_name =
             "${_template_name}_${_package}__product_config_srcjar"
         generate_product_config_srcjar("$_locale_target_name") {
-          forward_variables_from(invoker, [ "is_bundle_module" ])
           build_config = _build_config
           java_package = _package
           use_chromium_linker = _use_chromium_linker
@@ -2684,6 +2748,7 @@ if (!is_robolectric && enable_java_templates) {
                                "secondary_abi_loadable_modules",
                                "secondary_native_lib_placeholders",
                                "sources",
+                               "suffix_apk_assets_used_by",
                                "library_always_compress",
                              ])
       version_code = _version_code
@@ -2763,25 +2828,6 @@ if (!is_robolectric && enable_java_templates) {
       }
     }
 
-    # Old name for variable, mark as not_needed while it is being renamed
-    # downstream. Remove after all references to baseline_profile_path have been
-    # changed.
-    not_needed(invoker, [ "baseline_profile_path" ])
-
-    _enable_art_profile_optimizations =
-        defined(invoker.art_profile_path) && _proguard_enabled
-
-    if (_enable_art_profile_optimizations) {
-      _include_baseline_profile = enable_baseline_profiles
-      _enable_startup_profile = enable_startup_profiles
-      if (_include_baseline_profile) {
-        _obfuscated_art_profile =
-            "$target_out_dir/${target_name}.obfuscated.hrf"
-      }
-    } else {
-      not_needed(invoker, [ "art_profile_path" ])
-    }
-
     if (_is_bundle_module || _omit_dex) {
       # Dex generation for app bundle modules take place in the
       # android_app_bundle template.
@@ -2815,14 +2861,6 @@ if (!is_robolectric && enable_java_templates) {
           deps += [ ":$_compile_resources_target" ]
           proguard_mapping_path = _proguard_mapping_path
           has_apk_under_test = defined(invoker.apk_under_test)
-
-          if (_enable_art_profile_optimizations) {
-            input_art_profile = invoker.art_profile_path
-            if (_include_baseline_profile) {
-              output_art_profile = _obfuscated_art_profile
-            }
-            enable_startup_profile = _enable_startup_profile
-          }
 
           # Must not be set via write_build_config, because that will cause it
           # to be picked up by test apks that use apk_under_test.
@@ -2861,23 +2899,20 @@ if (!is_robolectric && enable_java_templates) {
 
       _final_dex_target_dep = ":$_final_dex_target_name"
 
-      if (_enable_art_profile_optimizations && _include_baseline_profile) {
-        _binary_profile_target = "${_template_name}__binary_baseline_profile"
-        _binary_baseline_profile_path =
-            "$target_out_dir/$_template_name.baseline.prof"
-        _binary_baseline_profile_metadata_path =
-            _binary_baseline_profile_path + "m"
-        create_binary_profile(_binary_profile_target) {
-          forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
-          binary_baseline_profile_path = _binary_baseline_profile_path
-          binary_baseline_profile_metadata_path =
-              _binary_baseline_profile_metadata_path
-          build_config = _build_config
-          input_profile_path = _obfuscated_art_profile
+      # Unused resources target for bundles handled in android_app_bundle
+      # template.
+      if (_strip_unused_resources && !_is_bundle_module) {
+        unused_resources(_unused_resources_target) {
           deps = [
             ":$_build_config_target",
-            _final_dex_target_dep,
+            ":$_compile_resources_target",
+            ":$_final_dex_target_name",
           ]
+          build_config = _build_config
+          if (_proguard_enabled) {
+            proguard_mapping_path = _proguard_mapping_path
+          }
+          output_config = _unused_resources_config_path
         }
       }
     }
@@ -3004,20 +3039,17 @@ if (!is_robolectric && enable_java_templates) {
           if (defined(_final_dex_path)) {
             dex_path = _final_dex_path
             deps += [ _final_dex_target_dep ]
-            if (_enable_art_profile_optimizations &&
-                _include_baseline_profile) {
-              # extra_assets is a list of ["{src_path}:{dst_path}"]
-              extra_assets = [
-                rebase_path(_binary_baseline_profile_path, root_build_dir) +
-                    ":dexopt/baseline.prof",
-                rebase_path(_binary_baseline_profile_metadata_path,
-                            root_build_dir) + ":dexopt/baseline.profm",
-              ]
-              deps += [ ":$_binary_profile_target" ]
-            }
           }
 
           output_apk_path = _final_apk_path
+
+          if (_optimize_resources) {
+            packaged_resources_path = _optimized_arsc_resources_path
+            deps += [ ":$_optimize_resources_target" ]
+          } else {
+            packaged_resources_path = _arsc_resources_path
+            deps += [ ":$_compile_resources_target" ]
+          }
 
           if (defined(_native_libs_filearg)) {
             native_libs_filearg = _native_libs_filearg
@@ -3235,8 +3267,6 @@ if (!is_robolectric && enable_java_templates) {
   #     ]
   #   }
   template("android_apk") {
-    # TODO(crbug.com/40114668): Remove.
-    not_needed(invoker, [ "no_build_hooks" ])
     android_apk_or_module(target_name) {
       forward_variables_from(
           invoker,
@@ -3250,11 +3280,9 @@ if (!is_robolectric && enable_java_templates) {
             "annotation_processor_deps",
             "apk_under_test",
             "app_as_shared_lib",
-            "art_profile_path",
             "assert_no_deps",
             "assert_no_native_deps",
             "asset_deps",
-            "baseline_profile_path",
             "build_config_include_product_version_resource",
             "bundles_supported",
             "chromium_code",
@@ -3266,6 +3294,8 @@ if (!is_robolectric && enable_java_templates) {
             "deps",
             "enable_lint",
             "enable_proguard_checks",
+            "errorprone_args",
+            "disable_strict_mode_context",
             "enforce_resource_overlays_in_tests",
             "expected_android_manifest",
             "expected_android_manifest_base",
@@ -3308,6 +3338,7 @@ if (!is_robolectric && enable_java_templates) {
             "resource_exclusion_regex",
             "resource_ids_provider_dep",
             "resource_values_filter_rules",
+            "resources_config_paths",
             "require_native_mocks",
             "secondary_abi_loadable_modules",
             "secondary_abi_shared_libraries",
@@ -3316,10 +3347,14 @@ if (!is_robolectric && enable_java_templates) {
             "shared_resources",
             "shared_resources_allowlist_locales",
             "shared_resources_allowlist_target",
+            "short_resource_paths",
             "sources",
             "srcjar_deps",
             "static_library_provider",
             "static_library_provider_use_secondary_abi",
+            "strip_unused_resources",
+            "strip_resource_names",
+            "suffix_apk_assets_used_by",
             "target_sdk_version",
             "testonly",
             "uncompress_dex",
@@ -3413,6 +3448,7 @@ if (!is_robolectric && enable_java_templates) {
             "data",
             "data_deps",
             "deps",
+            "disable_strict_mode_context",
             "expected_android_manifest",
             "expected_android_manifest_base",
             "expected_android_manifest_library_version_offset",
@@ -3460,6 +3496,7 @@ if (!is_robolectric && enable_java_templates) {
             "static_library_provider_use_secondary_abi",
             "strip_resource_names",
             "strip_unused_resources",
+            "suffix_apk_assets_used_by",
             "target_sdk_version",
             "testonly",
             "library_always_compress",
@@ -3506,6 +3543,14 @@ if (!is_robolectric && enable_java_templates) {
   #     apk_under_test: ":bar"
   #   }
   template("instrumentation_test_runner") {
+    if (use_rts) {
+      action("${invoker.target_name}__rts_filters") {
+        script = "//chromium/build/add_rts_filters.py"
+        rts_file = "${root_build_dir}/gen/rts/${invoker.target_name}.filter"
+        args = [ rebase_path(rts_file, root_build_dir) ]
+        outputs = [ rts_file ]
+      }
+    }
     _incremental_apk = !(defined(invoker.never_incremental) &&
                          invoker.never_incremental) && incremental_install
     _apk_operations_target_name = "${target_name}__apk_operations"
@@ -3619,6 +3664,12 @@ if (!is_robolectric && enable_java_templates) {
       if (defined(invoker.additional_apks)) {
         public_deps += invoker.additional_apks
       }
+      if (use_rts) {
+        if (!defined(data_deps)) {
+          data_deps = []
+        }
+        data_deps += [ ":${invoker.target_name}__rts_filters" ]
+      }
     }
   }
 
@@ -3646,6 +3697,8 @@ if (!is_robolectric && enable_java_templates) {
     android_apk(target_name) {
       forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
       testonly = true
+      _use_default_launcher =
+          !defined(invoker.use_default_launcher) || invoker.use_default_launcher
 
       # The size info enables the test_runner to find the source file location
       # of a test after it is ran.
@@ -3655,7 +3708,11 @@ if (!is_robolectric && enable_java_templates) {
         data += invoker.data
       }
 
-      deps = [ "//testing/android/instrumentation:test_runner_java" ]
+      if (_use_default_launcher) {
+        deps = [ "//testing/android/instrumentation:test_runner_java" ]
+      } else {
+        deps = []
+      }
       if (defined(invoker.deps)) {
         deps += invoker.deps
       }
@@ -3822,12 +3879,6 @@ if (!is_robolectric && enable_java_templates) {
       forward_variables_from(invoker, "*", TESTONLY_AND_VISIBILITY)
       create_apk_script = false
 
-      # TODO(crbug.com/40702672): Figure out why angle tests fail to launch
-      #     with newer target_sdk_version.
-      if (!defined(invoker.target_sdk_version) && _use_native_activity) {
-        target_sdk_version = 24
-      }
-
       if (!defined(apk_name)) {
         apk_name = get_label_info(invoker.shared_library, "name")
       }
@@ -3967,6 +4018,7 @@ if (!is_robolectric && enable_java_templates) {
       sources = invoker.sources
       depfile = "$target_gen_dir/$target_name.d"
       outputs = [ _srcjar_path ]
+      inputs = [ android_protoc_bin ]
       args = [
         "--depfile",
         rebase_path(depfile, root_build_dir),
@@ -3995,7 +4047,7 @@ if (!is_robolectric && enable_java_templates) {
           rebase_path(_plugin_path, root_build_dir),
         ]
         deps += [ _plugin_host_label ]
-        inputs = [ _plugin_path ]
+        inputs += [ _plugin_path ]
       }
 
       args += rebase_path(sources, root_build_dir)
@@ -4211,7 +4263,7 @@ if (!is_robolectric && enable_java_templates) {
     assert(
         !_scanned_files.has_native_libraries ||
             (_ignore_native_libraries || _extract_native_libraries),
-        "android_aar_prebuilt() contains .so files." +
+        "android_aar_prebuilt(" + target_name + ") contains .so files." +
             " Please set ignore_native_libraries or extract_native_libraries.")
     assert(
         !(_ignore_native_libraries && _extract_native_libraries),
@@ -4604,7 +4656,6 @@ if (!is_robolectric && enable_java_templates) {
 
     _build_config = "$target_gen_dir/${_target_name}.build_config.json"
     _rebased_build_config = rebase_path(_build_config, root_build_dir)
-    _build_config_target = "$_target_name$build_config_target_suffix"
     if (defined(invoker.proguard_android_sdk_dep)) {
       _android_sdk_dep = invoker.proguard_android_sdk_dep
     } else {
@@ -4620,7 +4671,9 @@ if (!is_robolectric && enable_java_templates) {
       not_needed(invoker, [ "add_view_trace_events" ])
     }
 
-    write_build_config(_build_config_target) {
+    _build_config_target_name = "$_target_name$build_config_target_suffix"
+    _build_config_target = ":$_build_config_target_name"
+    write_build_config(_build_config_target_name) {
       type = "android_app_bundle"
       possible_config_deps = _module_targets + [ _android_sdk_dep ]
       build_config = _build_config
@@ -4632,25 +4685,6 @@ if (!is_robolectric && enable_java_templates) {
         add_view_trace_events = _add_view_trace_events
         proguard_mapping_path = _proguard_mapping_path
       }
-    }
-
-    # Old name for variable, mark as not_needed while it is being renamed
-    # downstream. Remove after all references to baseline_profile_path have been
-    # changed.
-    not_needed(invoker, [ "baseline_profile_path" ])
-
-    _enable_art_profile_optimizations =
-        defined(invoker.art_profile_path) && _proguard_enabled
-
-    if (_enable_art_profile_optimizations) {
-      _include_baseline_profile = enable_baseline_profiles
-      _enable_startup_profile = enable_startup_profiles
-      if (_include_baseline_profile) {
-        _obfuscated_art_profile =
-            "$target_out_dir/${target_name}.obfuscated.hrf"
-      }
-    } else {
-      not_needed(invoker, [ "art_profile_path" ])
     }
 
     if (_proguard_enabled) {
@@ -4683,7 +4717,7 @@ if (!is_robolectric && enable_java_templates) {
             "@FileArg($_rebased_build_config:deps_info:trace_event_rewritten_device_classpath)",
           ]
           deps = [
-                   ":$_build_config_target",
+                   _build_config_target,
                    _trace_event_rewriter_target,
                  ] + _module_java_targets
         }
@@ -4706,15 +4740,8 @@ if (!is_robolectric && enable_java_templates) {
         proguard_enabled = true
         proguard_mapping_path = _proguard_mapping_path
         build_config = _build_config
-        if (_enable_art_profile_optimizations) {
-          input_art_profile = invoker.art_profile_path
-          if (_include_baseline_profile) {
-            output_art_profile = _obfuscated_art_profile
-          }
-          enable_startup_profile = _enable_startup_profile
-        }
 
-        deps = _module_java_targets + [ ":$_build_config_target" ]
+        deps = _module_java_targets + [ _build_config_target ]
         if (_add_view_trace_events) {
           deps += [ ":${_rewritten_jar_target_name}" ]
         }
@@ -4760,33 +4787,12 @@ if (!is_robolectric && enable_java_templates) {
           enable_desugar = false
 
           deps = [
-            ":$_build_config_target",
             ":${_module_target_name}__java",
+            _build_config_target,
           ]
         }
       }
       _dex_target_for_module = ":$_dex_target"
-
-      if (_enable_art_profile_optimizations && _include_baseline_profile) {
-        _module_target_name = get_label_info(_module_target, "name")
-        _binary_profile_target =
-            "${_module_target_name}__binary_baseline_profile"
-        _binary_baseline_profile_path = "$target_out_dir/$_module_target_name/$_module_target_name.baseline.prof"
-        _binary_baseline_profile_metadata_path =
-            _binary_baseline_profile_path + "m"
-        create_binary_profile(_binary_profile_target) {
-          forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
-          binary_baseline_profile_path = _binary_baseline_profile_path
-          binary_baseline_profile_metadata_path =
-              _binary_baseline_profile_metadata_path
-          build_config = _module_build_config
-          input_profile_path = _obfuscated_art_profile
-          deps = [
-            _dex_target_for_module,
-            _module_build_config_target,
-          ]
-        }
-      }
 
       # Generate one module .zip file per bundle module.
       #
@@ -4804,6 +4810,7 @@ if (!is_robolectric && enable_java_templates) {
         module_name = _module.name
         min_sdk_version = _min_sdk_version
         build_config = _module_build_config
+        app_bundle_build_config = _build_config
         module_zip_path = _module_zip_path
         if (!_proguard_enabled) {
           dex_path = _dex_path
@@ -4819,24 +4826,15 @@ if (!is_robolectric && enable_java_templates) {
                                  ])
           top_target_name = _target_name
           build_config_target = _module_build_config_target
+          app_bundle_build_config_target = _build_config_target
         }
 
         deps = [
+          _build_config_target,
           _dex_target_for_module,
           _module_build_config_target,
           _module_target,
         ]
-
-        if (_enable_art_profile_optimizations && _include_baseline_profile) {
-          # extra_assets is a list of ["{src_path}:{dst_path}"]
-          extra_assets = [
-            rebase_path(_binary_baseline_profile_path, root_build_dir) +
-                ":dexopt/baseline.prof",
-            rebase_path(_binary_baseline_profile_metadata_path,
-                        root_build_dir) + ":dexopt/baseline.profm",
-          ]
-          deps += [ ":$_binary_profile_target" ]
-        }
       }
 
       _all_create_module_targets += [
@@ -4911,7 +4909,7 @@ if (!is_robolectric && enable_java_templates) {
       inputs = _all_module_zip_paths + _all_module_build_configs +
                [ _BUNDLETOOL_JAR_PATH ] + java_paths_for_inputs
       outputs = [ _bundle_path ]
-      deps = _all_create_module_targets + [ ":$_build_config_target" ]
+      deps = _all_create_module_targets + [ _build_config_target ]
       args = [
         "--out-bundle=$_rebased_bundle_path",
         "--rtxt-out-path=$_rebased_bundle_path.R.txt",
@@ -4962,7 +4960,7 @@ if (!is_robolectric && enable_java_templates) {
             rebase_path(_module.build_config, root_build_dir)
         args += [
           "--uncompressed-assets=@FileArg(" +
-              "$_rebased_build_config:uncompressed_assets)",
+              "$_rebased_build_config:deps_info:uncompressed_assets)",
           "--rtxt-in-paths=@FileArg(" +
               "$_rebased_build_config:deps_info:r_text_path)",
           "--pathmap-in-paths=@FileArg(" +
@@ -4982,14 +4980,12 @@ if (!is_robolectric && enable_java_templates) {
     # Create size info files for targets that care about size
     # (have proguard enabled).
     if (_proguard_enabled) {
-      # Merge all module targets to obtain size info files for all targets.
-      _all_module_targets = _module_targets
-
       _size_info_target = "${_target_name}__size_info"
       create_size_info_files(_size_info_target) {
         name = "$_bundle_name.aab"
-        deps = _all_module_targets + [ ":$_build_config_target" ]
-        module_build_configs = _all_module_build_configs
+        deps = _module_targets + [ _build_config_target ]
+        modules = _modules
+        build_config = _build_config
       }
     }
 
@@ -5102,7 +5098,7 @@ if (!is_robolectric && enable_java_templates) {
                                  "lint_suppressions_file",
                                ])
         build_config = _build_config
-        build_config_dep = ":$_build_config_target"
+        build_config_dep = _build_config_target
         deps = _module_java_targets
         if (defined(invoker.lint_suppressions_dep)) {
           deps += [ invoker.lint_suppressions_dep ]

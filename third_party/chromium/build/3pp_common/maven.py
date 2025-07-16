@@ -3,22 +3,16 @@
 # found in the LICENSE file.
 """The fetch.py and install.py helpers for a 3pp Maven module."""
 
-import argparse
-import hashlib
 import os
 import pathlib
 import re
 import shutil
 import subprocess
-import sys
 import urllib.request
 
-import scripthash
+import common
 
 APACHE_MAVEN_URL = 'https://repo.maven.apache.org/maven2'
-
-_THIS_DIR = pathlib.Path(__file__).resolve().parent
-_SRC_ROOT = _THIS_DIR.parents[1]
 
 _POM_TEMPLATE = """\
 <project>
@@ -85,31 +79,13 @@ def _detect_latest(maven_url, package):
     return latest
 
 
-def _latest(maven_url, package, version_override=None):
-    # Make the version change every time any Python file changes.
-    file_hash = scripthash.compute()
-    version = version_override or _detect_latest(maven_url, package)
-    print('{}.{}'.format(version, file_hash))
-
-
-def _checkout(checkout_path):
-    # Make 3pp_common scripts available in the docker container install.py
-    # will run in.
-    dest_dir = os.path.join(checkout_path, '.3pp', 'chromium',
-                            os.path.relpath(_THIS_DIR, _SRC_ROOT))
-    os.makedirs(os.path.dirname(dest_dir))
-    shutil.copytree(_THIS_DIR,
-                    dest_dir,
-                    ignore=shutil.ignore_patterns('.*', '__pycache__'))
-    print('Copied', _THIS_DIR, 'to', dest_dir)
-
-
 def _install(output_prefix,
              deps_prefix,
              maven_url,
              package,
              version,
-             jar_name=None):
+             jar_name=None,
+             post_process_func=None):
     # Runs in a docker container.
     group_id, artifact_id = package.split(':')
     if not jar_name:
@@ -123,7 +99,7 @@ def _install(output_prefix,
 
     # Set up JAVA_HOME for the mvn command to find the JDK.
     env = os.environ.copy()
-    env['JAVA_HOME'] = os.path.join(deps_prefix)
+    env['JAVA_HOME'] = common.path_within_checkout('third_party/jdk/current')
 
     # Ensure that mvn works and the environment is set up correctly.
     subprocess.run(['mvn', '-v'], check=True, env=env)
@@ -133,17 +109,19 @@ def _install(output_prefix,
                    check=True,
                    env=env)
 
-    # Move and rename output to the upload directory. Moving only the jar avoids
-    # polluting the output directory with maven intermediate outputs.
-    os.makedirs(output_prefix, exist_ok=True)
-    shutil.move('target/artifact-1-jar-with-dependencies.jar',
-                os.path.join(output_prefix, jar_name))
+    src_jar_path = 'target/artifact-1-jar-with-dependencies.jar'
+    dst_jar_path = os.path.join(output_prefix, jar_name)
+    if post_process_func:
+        post_process_func(src_jar_path, dst_jar_path)
+    else:
+        shutil.move(src_jar_path, dst_jar_path)
 
 
 def main(*,
          package,
          jar_name=None,
          maven_url='https://dl.google.com/android/maven2',
+         post_process_func=None,
          version_override=None):
     """3pp entry point for fetch.py.
 
@@ -151,34 +129,17 @@ def main(*,
       package: E.g.: some.package:some-thing
       jar_name: Name of .jar. Defaults to |some-thing|.jar
       maven_url: URL of Maven repository.
+      post_process_func: Called to finish. Args: src_jar_path, dst_jar_path
       version_override: Use this version instead of the latest one.
     """
-    parser = argparse.ArgumentParser()
-    # TODO(agrieve): Add required=True once 3pp builds with > python3.6.
-    subparsers = parser.add_subparsers()
 
-    subparser = subparsers.add_parser('latest')
-    subparser.set_defaults(action='latest')
+    def do_latest():
+        return version_override or _detect_latest(maven_url, package)
 
-    subparser = subparsers.add_parser('checkout')
-    subparser.add_argument('checkout_path')
-    subparser.set_defaults(action='checkout')
-
-    subparser = subparsers.add_parser('install')
-    subparser.add_argument('output_prefix',
-                           help='The path to install the compiled package to.')
-    subparser.add_argument('deps_prefix',
-                           help='The path to a directory containing all deps.')
-    subparser.set_defaults(action='install')
-    args = parser.parse_args()
-
-    if args.action == 'latest':
-        _latest(maven_url, package, version_override=version_override)
-    elif args.action == 'checkout':
-        _checkout(args.checkout_path)
-    elif args.action == 'install':
-        # Remove the hash at the end: 30.4.0-alpha05.HASH => 30.4.0-alpha05
-        version = os.environ['_3PP_VERSION'].rsplit('.', 1)[0]
-        assert version, '_3PP_VERSION not set'
+    def do_install(args):
         _install(args.output_prefix, args.deps_prefix, maven_url, package,
-                 version, jar_name)
+                 args.version, jar_name, post_process_func)
+
+    common.main(do_latest=do_latest,
+                do_install=do_install,
+                runtime_deps=['//third_party/jdk/current'])

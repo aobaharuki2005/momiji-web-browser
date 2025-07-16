@@ -6,8 +6,9 @@
 # to make it easier to roll new versions of //build in.
 
 build_dotfile_settings = {
-  exec_script_whitelist = [
+  exec_script_allowlist = [
     "//chromium/build/config/android/rules.gni",
+    "//chromium/build/config/apple/mobile_config.gni",
     "//chromium/build/config/chromeos/rules.gni",
     "//chromium/build/config/compiler/BUILD.gn",
     "//chromium/build/config/compiler/pgo/BUILD.gn",
@@ -34,10 +35,15 @@ build_dotfile_settings = {
     "//chromium/build/toolchain/concurrent_links.gni",
     "//chromium/build/toolchain/nacl/BUILD.gn",
     "//chromium/build/toolchain/rbe.gni",
+    "//chromium/build/toolchain/siso.gni",
     "//chromium/build/toolchain/toolchain.gni",
     "//chromium/build/toolchain/win/BUILD.gn",
     "//chromium/build/toolchain/win/win_toolchain_data.gni",
     "//chromium/build/toolchain/zos/BUILD.gn",
     "//chromium/build/util/branding.gni",
   ]
+
+  # TODO(crbug.com/389986807) - move other clients to `exec_script_allowlist`
+  # so that we don't need to keep supporting `exec_script_whitelist`.
+  exec_script_whitelist = exec_script_allowlist
 }

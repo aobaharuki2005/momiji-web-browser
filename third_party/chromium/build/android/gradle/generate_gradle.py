@@ -64,6 +64,7 @@ _DEFAULT_TARGETS = [
     '//chrome/android:chrome_public_apk',
     '//chrome/android:chrome_public_test_apk',
     '//chrome/android:chrome_public_unit_test_apk',
+    '//chrome/browser/android/examples/inline_autofill_service:inline_autofill_service_example_apk',
     '//content/public/android:content_junit_tests',
     '//content/shell/android:content_shell_apk',
     # Below must be included even with --all since they are libraries.
@@ -460,6 +461,8 @@ def _CreateRelativeSymlink(target_path, link_path):
   link_dir = os.path.dirname(link_path)
   relpath = os.path.relpath(target_path, link_dir)
   logging.debug('Creating symlink %s -> %s', link_path, relpath)
+  if not os.path.exists(link_dir):
+    os.makedirs(link_dir)
   os.symlink(relpath, link_path)
 
 
@@ -472,8 +475,6 @@ def _CreateJniLibsDir(output_dir, entry_output_dir, so_files):
     symlink_dir = os.path.join(entry_output_dir, _JNI_LIBS_SUBDIR)
     shutil.rmtree(symlink_dir, True)
     abi_dir = os.path.join(symlink_dir, _ARMEABI_SUBDIR)
-    if not os.path.exists(abi_dir):
-      os.makedirs(abi_dir)
     for so_file in so_files:
       target_path = os.path.join(output_dir, so_file)
       symlinked_path = os.path.join(abi_dir, so_file)
@@ -535,9 +536,9 @@ def _GenerateGradleProperties():
 def _GenerateBaseVars(generator, build_vars):
   variables = {}
   # Avoid pre-release SDKs since Studio might not know how to download them.
-  variables['compile_sdk_version'] = ('android-%s' %
-                                      build_vars['public_android_sdk_version'])
-  target_sdk_version = build_vars['public_android_sdk_version']
+  variables['compile_sdk_version'] = (
+      'android-%s' % build_vars['android_sdk_platform_version'])
+  target_sdk_version = build_vars['android_sdk_platform_version']
   if str(target_sdk_version).isalpha():
     target_sdk_version = '"{}"'.format(target_sdk_version)
   variables['target_sdk_version'] = target_sdk_version

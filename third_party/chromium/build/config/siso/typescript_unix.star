@@ -31,9 +31,6 @@ def __step_config(ctx, step_config):
         {
             "name": "typescript/ts_library",
             "command_prefix": "python3 ../../tools/typescript/ts_library.py",
-            "inputs": [
-                "tools/typescript/ts_library.py",
-            ],
             "indirect_inputs": {
                 "includes": [
                     "*.js",
@@ -41,9 +38,6 @@ def __step_config(ctx, step_config):
                     "*.json",
                 ],
             },
-            "exclude_input_patterns": [
-                "*.stamp",
-            ],
             "remote": remote_run,
             "timeout": "2m",
             "handler": "typescript_ts_library",
@@ -53,18 +47,12 @@ def __step_config(ctx, step_config):
         {
             "name": "typescript/ts_definitions",
             "command_prefix": "python3 ../../tools/typescript/ts_definitions.py",
-            "inputs": [
-                "tools/typescript/ts_definitions.py",
-            ],
             "indirect_inputs": {
                 "includes": [
                     "*.ts",  # *.d.ts, *.css.ts, *.html.ts, etc
                     "*.json",
                 ],
             },
-            "exclude_input_patterns": [
-                "*.stamp",
-            ],
             "remote": remote_run,
             "timeout": "2m",
             "handler": "typescript_ts_definitions",

@@ -29,7 +29,6 @@ from devil import devil_env
 from devil.android import apk_helper
 from devil.android import device_errors
 from devil.android import device_utils
-from devil.android import flag_changer
 from devil.android.sdk import adb_wrapper
 from devil.android.sdk import build_tools
 from devil.android.sdk import intent
@@ -123,13 +122,18 @@ def _GenerateBundleApks(info,
       optimize_for=optimize_for)
 
 
-def _InstallBundle(devices, apk_helper_instance, modules, fake_modules):
+def _InstallBundle(devices,
+                   apk_helper_instance,
+                   modules,
+                   fake_modules,
+                   locales=None):
 
   def Install(device):
     device.Install(apk_helper_instance,
                    permissions=[],
                    modules=modules,
                    fake_modules=fake_modules,
+                   additional_locales=locales,
                    allow_downgrade=True,
                    reinstall=True)
 
@@ -253,6 +257,49 @@ def _ResolveActivity(device, package_name, category, action):
   return next(iter(activity_names))
 
 
+def _ReadDeviceFlags(device, command_line_flags_file):
+  device_path = f'/data/local/tmp/{command_line_flags_file}'
+  old_flags = device.RunShellCommand(f'cat {device_path} 2>/dev/null',
+                                     as_root=True,
+                                     shell=True,
+                                     check_return=False,
+                                     raw_output=True)
+  if not old_flags:
+    return None
+  if old_flags.startswith('_ '):
+    old_flags = old_flags[2:]
+
+  return old_flags
+
+
+def _UpdateDeviceFlags(device, command_line_flags_file, new_flags):
+  if not command_line_flags_file:
+    if new_flags:
+      logging.warning('Command-line flags are not configured for this target.')
+    return
+
+  old_flags = _ReadDeviceFlags(device, command_line_flags_file)
+
+  if new_flags is None:
+    if old_flags:
+      logging.warning('Using pre-existing command-line flags: %s', old_flags)
+    return
+
+  if new_flags != old_flags:
+    adb_command_line.CheckBuildTypeSupportsFlags(device,
+                                                 command_line_flags_file)
+    # This file does not need to be owned by root, but devil's flag_changer
+    # helper uses as_root, so existing files cannot be updated without it.
+    device_path = f'/data/local/tmp/{command_line_flags_file}'
+    if new_flags:
+      logging.info('Updated flags file: %s with value: %s', device_path,
+                   new_flags)
+      device.WriteFile(device_path, '_ ' + new_flags, as_root=True)
+    else:
+      logging.info('Removed flags file: %s', device_path)
+      device.RemovePath(device_path, force=True, as_root=True)
+
+
 def _LaunchUrl(devices,
                package_name,
                argv=None,
@@ -285,17 +332,7 @@ def _LaunchUrl(devices,
       device.RunShellCommand(cmd, check_return=False)
 
       # The flags are first updated with input args.
-      if command_line_flags_file:
-        changer = flag_changer.FlagChanger(device, command_line_flags_file)
-        flags = []
-        if argv:
-          adb_command_line.CheckBuildTypeSupportsFlags(device,
-                                                       command_line_flags_file)
-          flags = shlex.split(argv)
-        try:
-          changer.ReplaceFlags(flags)
-        except device_errors.AdbShellCommandFailedError:
-          logging.exception('Failed to set flags')
+      _UpdateDeviceFlags(device, command_line_flags_file, argv)
 
     launch_intent = intent.Intent(action=action,
                                   activity=activity,
@@ -308,19 +345,6 @@ def _LaunchUrl(devices,
   if wait_for_java_debugger:
     print('Waiting for debugger to attach to process: ' +
           _Colorize(debug_process_name, colorama.Fore.YELLOW))
-
-
-def _ChangeFlags(devices, argv, command_line_flags_file):
-  if argv is None:
-    _DisplayArgs(devices, command_line_flags_file)
-  else:
-    flags = shlex.split(argv)
-    def update(device):
-      adb_command_line.CheckBuildTypeSupportsFlags(device,
-                                                   command_line_flags_file)
-      changer = flag_changer.FlagChanger(device, command_line_flags_file)
-      changer.ReplaceFlags(flags)
-    device_utils.DeviceUtils.parallel(devices).pMap(update)
 
 
 def _TargetCpuToTargetArch(target_cpu):
@@ -1133,23 +1157,15 @@ def _GenerateMissingAllFlagMessage(devices):
           'or use --device to select a device by serial.\n\n' +
           _GenerateAvailableDevicesMessage(devices))
 
-
-def _DisplayArgs(devices, command_line_flags_file):
-  def flags_helper(d):
-    changer = flag_changer.FlagChanger(d, command_line_flags_file)
-    return changer.GetCurrentFlags()
-
-  parallel_devices = device_utils.DeviceUtils.parallel(devices)
-  outputs = parallel_devices.pMap(flags_helper).pGet(None)
-  print('Existing flags per-device (via /data/local/tmp/{}):'.format(
-      command_line_flags_file))
-  for flags in _PrintPerDeviceOutput(devices, outputs, single_line=True):
-    quoted_flags = ' '.join(shlex.quote(f) for f in flags)
-    print(quoted_flags or 'No flags set.')
+def _SanitizeFilename(filename):
+  for sep in os.path.sep, os.path.altsep:
+    if sep is not None:
+      filename = filename.replace(sep, '_')
+  return filename
 
 
 def _DeviceCachePath(device, output_directory):
-  file_name = 'device_cache_%s.json' % device.serial
+  file_name = 'device_cache_%s.json' % _SanitizeFilename(device.serial)
   return os.path.join(output_directory, file_name)
 
 
@@ -1518,6 +1534,11 @@ class _InstallCommand(_Command):
   def _RegisterExtraArgs(self, group):
     if self.is_bundle:
       group.add_argument(
+          '--locales',
+          action='append',
+          help=
+          'Locale splits to install (english is in base, so always installed).')
+      group.add_argument(
           '-m',
           '--module',
           action='append',
@@ -1546,7 +1567,8 @@ class _InstallCommand(_Command):
       modules = list(
           set(self.args.module) - set(self.args.no_module) -
           set(self.args.fake))
-      _InstallBundle(self.devices, self.apk_helper, modules, self.args.fake)
+      _InstallBundle(self.devices, self.apk_helper, modules, self.args.fake,
+                     self.args.locales)
     else:
       _InstallApk(self.devices, self.apk_helper, self.install_dict)
     if self.args.is_official_build:
@@ -1641,8 +1663,21 @@ class _ArgvCommand(_Command):
   all_devices_by_default = True
 
   def Run(self):
-    _ChangeFlags(self.devices, self.args.args,
-                 self.args.command_line_flags_file)
+    command_line_flags_file = self.args.command_line_flags_file
+    argv = self.args.args
+    devices = self.devices
+    parallel_devices = device_utils.DeviceUtils.parallel(devices)
+
+    if argv is not None:
+      parallel_devices.pMap(
+          lambda d: _UpdateDeviceFlags(d, command_line_flags_file, argv))
+
+    outputs = parallel_devices.pMap(
+        lambda d: _ReadDeviceFlags(d, command_line_flags_file) or '').pGet(None)
+
+    print(f'Showing flags via /data/local/tmp/{command_line_flags_file}:')
+    for flags in _PrintPerDeviceOutput(devices, outputs, single_line=True):
+      print(flags or 'No flags set.')
 
 
 class _GdbCommand(_Command):
