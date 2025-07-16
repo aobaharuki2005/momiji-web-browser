@@ -552,9 +552,11 @@ foreach(_target_type,
         deps = []
       }
 
+      if (false) { # Mozilla
       if (!defined(invoker.no_default_deps) || !invoker.no_default_deps) {
         # This is necessary for Clang modules builds.
         deps += [ "//buildtools/third_party/libc++:std" ]
+      }
       }
 
       # Consumed by the unsafe-buffers plugin during compile.
@@ -626,6 +628,7 @@ foreach(_target_type,
       if (!defined(deps)) {
         deps = []
       }
+      if (false) { # Mozilla
       if (!defined(invoker.no_default_deps) || !invoker.no_default_deps) {
         # This pulls in one of:
         # //build/config:executable_deps
@@ -642,6 +645,7 @@ foreach(_target_type,
           "//buildtools/third_party/libc++:_Builtin_stddef",
           "//buildtools/third_party/libc++:std",
         ]
+      }
       }
 
       # On Android, write shared library output file to metadata. We will use
