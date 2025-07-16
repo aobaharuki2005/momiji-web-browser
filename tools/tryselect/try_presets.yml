@@ -372,22 +372,16 @@ webrender:
     description: >-
         Runs the conformance tests relevant to WebRender.
     query:
-        - "!talos !raptor !shippable !asan !components"
-        - "^webrender-"
+        - "!talos !raptor !shippable !asan !tsan !nofis !python-reftest '-reftest"
+        - "!talos !raptor !shippable !asan !tsan !nofis !python-reftest webrender-"
 
-webrender-reftests:
+webrender-linux:
     selector: fuzzy
     description: >-
-        Runs the reftests relevant to WebRender.
+        Runs the conformance tests relevant to WebRender on linux only.
     query:
-        - "!talos !raptor !shippable !asan !nofis 'reftest"
-
-webrender-reftests-linux:
-    selector: fuzzy
-    description: >-
-        Runs the reftests relevant to WebRender on linux only.
-    query:
-        - "!talos !raptor !shippable !asan !nofis 'linux 'reftest"
+        - "!talos !raptor !shippable !asan !tsan !nofis !python-reftest 'linux '-reftest"
+        - "!talos !raptor !shippable !asan !tsan !nofis !python-reftest 'linux webrender-"
 
 webrender-perf:
     selector: fuzzy
