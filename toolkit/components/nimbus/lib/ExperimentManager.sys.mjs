@@ -39,6 +39,7 @@ export const UnenrollmentCause = {
     const { UnenrollReason } = lazy.NimbusTelemetry;
 
     let reason;
+    const extra = {};
 
     if (result.ok) {
       switch (result.status) {
@@ -62,9 +63,16 @@ export const UnenrollmentCause = {
       }
     } else {
       reason = result.reason;
+
+      switch (reason) {
+        case UnenrollReason.L10N_MISSING_ENTRY:
+        case UnenrollReason.L10N_MISSING_LOCALE:
+          extra.locale = result.locale;
+          break;
+      }
     }
 
-    return { reason };
+    return { reason, ...extra };
   },
 
   fromReason(reason) {
@@ -75,6 +83,13 @@ export const UnenrollmentCause = {
     return {
       reason: lazy.NimbusTelemetry.UnenrollReason.CHANGED_PREF,
       changedPref: pref,
+    };
+  },
+
+  MissingLocale(locale) {
+    return {
+      reason: lazy.NimbusTelemetry.UnenrollReason.L10N_MISSING_LOCALE,
+      locale,
     };
   },
 

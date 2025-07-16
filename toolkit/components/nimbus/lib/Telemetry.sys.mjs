@@ -236,6 +236,11 @@ export const NimbusTelemetry = {
         legacyEvent.prefName = cause.prefName;
         gleanEvent.pref_name = cause.prefName;
         break;
+
+      case UnenrollReason.L10N_MISSING_ENTRY:
+      case UnenrollReason.L10N_MISSING_LOCALE:
+        gleanEvent.locale = cause.locale;
+        break;
     }
 
     Glean.normandy.unenrollNimbusExperiment.record(legacyEvent);
