@@ -76,6 +76,7 @@ import org.mozilla.fenix.biometricauthentication.NavigationOrigin
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.tabstrip.TabStrip
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.components.HomepageThumbnailIntegration
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.ContentRecommendationsAction
@@ -249,6 +250,7 @@ class HomeFragment : Fragment() {
     private val searchSelectorBinding = ViewBoundFeatureWrapper<SearchSelectorBinding>()
     private val searchSelectorMenuBinding = ViewBoundFeatureWrapper<SearchSelectorMenuBinding>()
     private val homeScreenPopupManager = ViewBoundFeatureWrapper<HomeScreenPopupManager>()
+    private val thumbnailsFeature = ViewBoundFeatureWrapper<HomepageThumbnailIntegration>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // DO NOT ADD ANYTHING ABOVE THIS getProfilerTime CALL!
@@ -422,6 +424,16 @@ class HomeFragment : Fragment() {
             ),
             owner = viewLifecycleOwner,
             view = binding.root,
+        )
+
+        thumbnailsFeature.set(
+            feature = HomepageThumbnailIntegration(
+                context = requireContext(),
+                view = binding.homepageView,
+                store = requireComponents.core.store,
+            ),
+            owner = this,
+            view = binding.homepageView,
         )
 
         snackbarBinding.set(
