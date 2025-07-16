@@ -37,6 +37,10 @@ cookie.manager = {
       sameSite,
     };
     cookie.manager.cookies.push(newCookie);
+
+    return {
+      result: Ci.nsICookieValidation.eOK,
+    };
   },
 
   remove(host, name, path) {

@@ -234,8 +234,9 @@ cookie.add = function (
   // TODO: Bug 814416
   newCookie.domain = newCookie.domain.replace(IPV4_PORT_EXPR, "");
 
+  let cv;
   try {
-    cookie.manager.add(
+    cv = cookie.manager.add(
       newCookie.domain,
       newCookie.path,
       newCookie.name,
@@ -250,6 +251,12 @@ cookie.add = function (
     );
   } catch (e) {
     throw new lazy.error.UnableToSetCookieError(e);
+  }
+
+  if (cv.result !== Ci.nsICookieValidation.eOK) {
+    throw new lazy.error.UnableToSetCookieError(
+      `Invalid cookie: ${cv.errorString}`
+    );
   }
 };
 
