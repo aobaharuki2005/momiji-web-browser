@@ -15,8 +15,6 @@ declare_args() {
   is_nacl_saigo = false
 }
 
-is_nacl_irt = false
-
 nacl_toolchain_dir = "//native_client/toolchain/${host_os}_x86"
 
 if (is_nacl_glibc) {

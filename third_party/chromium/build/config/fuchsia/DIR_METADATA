@@ -1,3 +1,1 @@
 mixins: "//chromium/build/fuchsia/COMMON_METADATA"
-
-os: FUCHSIA

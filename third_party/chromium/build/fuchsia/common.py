@@ -41,7 +41,8 @@ def GetHostOsFromPlatform():
 
 def GetHostArchFromPlatform():
   host_arch = platform.machine()
-  if host_arch == 'x86_64':
+  # platform.machine() returns AMD64 on 64-bit Windows.
+  if host_arch in ['x86_64', 'AMD64']:
     return 'x64'
   elif host_arch == 'aarch64':
     return 'arm64'
@@ -52,7 +53,10 @@ def GetHostToolPathFromPlatform(tool):
   return os.path.join(SDK_ROOT, 'tools', GetHostArchFromPlatform(), tool)
 
 
+# Remove when arm64 emulator is also included in Fuchsia SDK.
 def GetEmuRootForPlatform(emulator):
+  if GetHostArchFromPlatform() == 'x64':
+    return GetHostToolPathFromPlatform('{0}_internal'.format(emulator))
   return os.path.join(
       DIR_SOURCE_ROOT, 'third_party', '{0}-{1}-{2}'.format(
           emulator, GetHostOsFromPlatform(), GetHostArchFromPlatform()))

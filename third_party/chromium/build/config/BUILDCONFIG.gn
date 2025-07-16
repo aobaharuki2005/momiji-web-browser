@@ -169,6 +169,8 @@ declare_args() {
 }
 
 assert(!(is_debug && is_official_build), "Can't do official debug builds")
+assert(!(current_os == "ios" && is_component_build),
+       "Can't use component build on iOS")
 
 # ==============================================================================
 # TOOLCHAIN SETUP
@@ -341,7 +343,6 @@ default_compiler_configs = [
   "//chromium/build/config/compiler:no_exceptions",
   "//chromium/build/config/compiler:no_rtti",
   "//chromium/build/config/compiler:no_unresolved_symbols",
-  "//chromium/build/config/compiler:prevent_unsafe_narrowing",
   "//chromium/build/config/compiler:runtime_library",
   "//chromium/build/config/compiler:thin_archive",
   "//chromium/build/config/compiler:thinlto_optimize_default",

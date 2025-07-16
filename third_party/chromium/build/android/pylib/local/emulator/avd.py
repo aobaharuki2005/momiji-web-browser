@@ -17,6 +17,7 @@ import threading
 from google.protobuf import text_format  # pylint: disable=import-error
 
 from devil.android import device_utils
+from devil.android import settings
 from devil.android.sdk import adb_wrapper
 from devil.android.tools import system_app
 from devil.utils import cmd_helper
@@ -48,7 +49,8 @@ _DEFAULT_GPU_MODE = 'swiftshader_indirect'
 # This is the default name used by the emulator binary.
 _DEFAULT_SNAPSHOT_NAME = 'default_boot'
 
-# Set long press timeout for clicking to 1000ms.
+# crbug.com/1275767: Set long press timeout to 1000ms to reduce the flakiness
+# caused by click being incorrectly interpreted as longclick.
 _LONG_PRESS_TIMEOUT = '1000'
 
 # The snapshot name to load/save when writable_system=True
@@ -304,6 +306,10 @@ class AvdConfig:
         features_ini_contents.update(self.avd_settings.advanced_features)
 
       with ini.update_ini_file(self._config_ini_path) as config_ini_contents:
+        # Update avd_properties first so that they won't override settings
+        # like screen and ram_size
+        config_ini_contents.update(self.avd_settings.avd_properties)
+
         height = self.avd_settings.screen.height or _DEFAULT_SCREEN_HEIGHT
         width = self.avd_settings.screen.width or _DEFAULT_SCREEN_WIDTH
         density = self.avd_settings.screen.density or _DEFAULT_SCREEN_DENSITY
@@ -363,20 +369,16 @@ class AvdConfig:
       if privileged_apk_tuples:
         system_app.InstallPrivilegedApps(instance.device, privileged_apk_tuples)
 
-      # Skip network disabling on pre-N for now since the svc commands fail
-      # on Marshmallow.
-      if instance.device.build_version_sdk > 23:
-        # Always disable the network to prevent built-in system apps from
-        # updating themselves, which could take over package manager and
-        # cause shell command timeout.
-        # Use svc as this also works on the images with build type "user".
-        logging.info('Disabling the network in emulator.')
-        instance.device.RunShellCommand(['svc', 'wifi', 'disable'],
-                                        check_return=True)
-        instance.device.RunShellCommand(['svc', 'data', 'disable'],
-                                        check_return=True)
+      # Always disable the network to prevent built-in system apps from
+      # updating themselves, which could take over package manager and
+      # cause shell command timeout.
+      logging.info('Disabling the network.')
+      settings.ConfigureContentSettings(instance.device,
+                                        settings.NETWORK_DISABLED_SETTINGS)
 
       if snapshot:
+        # Reboot so that changes like disabling network can take effect.
+        instance.device.Reboot()
         instance.SaveSnapshot()
 
       instance.Stop()
@@ -642,7 +644,11 @@ class _AvdInstance:
             gpu_mode=_DEFAULT_GPU_MODE,
             wipe_data=False,
             debug_tags=None):
-    """Starts the emulator running an instance of the given AVD."""
+    """Starts the emulator running an instance of the given AVD.
+
+    Note when ensure_system_settings is True, the program will wait until the
+    emulator is fully booted, and then update system settings.
+    """
     is_slow_start = False
     # Force to load system snapshot if detected.
     if self.HasSystemSnapshot():
@@ -740,13 +746,12 @@ class _AvdInstance:
         # pylint: disable=W0707
         raise AvdException('Emulator failed to start: %s' % str(e))
 
-    assert self.device is not None, '`instance.device` not initialized.'
-    self.device.WaitUntilFullyBooted(timeout=120 if is_slow_start else 30)
-
     # Set the system settings in "Start" here instead of setting in "Create"
     # because "Create" is used during AVD creation, and we want to avoid extra
     # turn-around on rolling AVD.
     if ensure_system_settings:
+      assert self.device is not None, '`instance.device` not initialized.'
+      self.device.WaitUntilFullyBooted(timeout=120 if is_slow_start else 30)
       _EnsureSystemSettings(self.device)
 
   def Stop(self):

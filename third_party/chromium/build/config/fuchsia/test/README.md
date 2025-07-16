@@ -18,6 +18,9 @@ Chromium tests that must interact with true system services.
 For tests that test fonts by providing `fuchsia.fonts.Provider`. The injected
 `fonts.cmx` requires `fuchsia.tracing.provider.Registry`.
 
+#### fonts.shard.test-cml
+For tests that access system fonts.
+
 #### jit_capabilities.test-cmx
 Required by tests that execute JavaScript. Should only be required in a small
 number of tests.
@@ -44,8 +47,15 @@ https://fuchsia.dev/reference/fidl/fuchsia.web#CreateContextParams and
 https://fuchsia.dev/reference/fidl/fuchsia.web#ContextFeatureFlags.
 Any test-specific exceptions are documented for each file.
 
-#### audio_capabilities.test-cmx
-Corresponds to the `AUDIO` flag. Required for enabling audio input and output.
+#### audio_output.shard.test-cml
+Required by tests that need to enable audio output.
+
+#### platform_video_codecs.shard.test-cml
+Required by tests that need accelerated (e.g., hardware) video codecs.
+
+#### network.shard.test-cml
+For tests that need access to network services, including those that access a
+local HTTP server.
 
 #### network_capabilities.test-cmx
 Corresponds to the `NETWORK` flag. Required for enabling network access. Note
@@ -62,6 +72,9 @@ views.
 #### vulkan_capabilities.test-cmx
 Corresponds to the `VULKAN` flag. Required for enabling GPU-accelerated
 rendering of the web content.
+
+CFv2 tests should use
+`//third_party/fuchsia-sdk/sdk/pkg/vulkan/client.shard.cml`.
 
 #### web_engine_required_capabilities.test-cmx
 Contains services that need to be present when creating a `fuchsia.web.Context`.

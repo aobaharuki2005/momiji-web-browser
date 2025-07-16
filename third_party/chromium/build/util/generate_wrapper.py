@@ -1,4 +1,4 @@
-#!/usr/bin/env vpython
+#!/usr/bin/env python3
 # Copyright 2019 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -15,7 +15,7 @@ import textwrap
 # The interpreter doesn't know about the script, so we have bash
 # inject the script location.
 BASH_TEMPLATE = textwrap.dedent("""\
-    #!/usr/bin/env {vpython}
+    #!/usr/bin/env vpython3
     _SCRIPT_LOCATION = __file__
     {script}
     """)
@@ -27,7 +27,7 @@ BASH_TEMPLATE = textwrap.dedent("""\
 # directly.
 BATCH_TEMPLATE = textwrap.dedent("""\
     @SETLOCAL ENABLEDELAYEDEXPANSION \
-      & {vpython}.bat -x "%~f0" %* \
+      & vpython3.bat -x "%~f0" %* \
       & EXIT /B !ERRORLEVEL!
     _SCRIPT_LOCATION = __file__
     {script}
@@ -43,6 +43,7 @@ SCRIPT_TEMPLATES = {
 PY_TEMPLATE = textwrap.dedent("""\
     import os
     import re
+    import shlex
     import subprocess
     import sys
 
@@ -104,6 +105,13 @@ PY_TEMPLATE = textwrap.dedent("""\
         outdir = os.environ['ISOLATED_OUTDIR']
       return outdir, remaining_args
 
+    def InsertWrapperScriptArgs(args):
+      i = 0
+      while i < len(args):
+        if args[i] == '--wrapper-script-args':
+          args.insert(i + 1, "'%s'" % shlex.join(s for s in sys.argv))
+          break
+        i += 1
 
     def FilterIsolatedOutdirBasedArgs(outdir, args):
       rargs = []
@@ -142,6 +150,7 @@ PY_TEMPLATE = textwrap.dedent("""\
       executable_path = ExpandWrappedPath('{executable_path}')
       outdir, remaining_args = FindIsolatedOutdir(raw_args)
       args = {executable_args}
+      InsertWrapperScriptArgs(args)
       args = FilterIsolatedOutdirBasedArgs(outdir, args)
       executable_args = ExpandWrappedPaths(args)
       cmd = [executable_path] + args + remaining_args
@@ -172,8 +181,7 @@ def Wrap(args):
         executable_path=str(args.executable),
         executable_args=str(args.executable_args))
     template = SCRIPT_TEMPLATES[args.script_language]
-    wrapper_script.write(
-        template.format(script=py_contents, vpython=args.vpython))
+    wrapper_script.write(template.format(script=py_contents))
   os.chmod(args.wrapper_script, 0o750)
 
   return 0
@@ -195,12 +203,6 @@ def CreateArgumentParser():
       '--script-language',
       choices=SCRIPT_TEMPLATES.keys(),
       help='Language in which the wrapper script will be written.')
-  parser.add_argument('--use-vpython3',
-                      dest='vpython',
-                      action='store_const',
-                      const='vpython3',
-                      default='vpython',
-                      help='Use vpython3 instead of vpython')
   parser.add_argument(
       'executable_args', nargs='*',
       help='Arguments to wrap into the executable.')

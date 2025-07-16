@@ -1,67 +1,93 @@
 From: Michael Froman <mfroman@mozilla.com>
 Date: Mon, 20 Jun 2022 22:34:00 +0000
-Subject: Bug 1775143 - pt15 - (mirror) 0300b32b7de7 r=ng
+Subject: Bug 1775143 - pt17 - account for is_desktop_linux going away and
+ using is_linux r=ng
 
 (skip-generation)
 
-Depends on D149828
+Depends on D149830
 
-Differential Revision: https://phabricator.services.mozilla.com/D149829
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/831cdef4bf346cb9cc0092ab7e7beea0aa6677c3
+Differential Revision: https://phabricator.services.mozilla.com/D149831
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/aad17933ade0176606c4d7b694669bc67f5f92b5
 ---
- config/BUILDCONFIG.gn | 7 ++++---
- config/ui.gni         | 2 +-
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ config/compiler/BUILD.gn     | 2 +-
+ config/linux/gtk/gtk.gni     | 2 +-
+ config/linux/libdrm/BUILD.gn | 2 +-
+ config/ozone.gni             | 4 ++--
+ config/ui.gni                | 2 +-
+ 5 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
-index 75eb6fd89..b66b3ffc5 100644
---- a/config/BUILDCONFIG.gn
-+++ b/config/BUILDCONFIG.gn
-@@ -136,7 +136,7 @@ declare_args() {
-   is_official_build = false
+diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
+index fc4a7e2f8..1c2019cd4 100644
+--- a/config/compiler/BUILD.gn
++++ b/config/compiler/BUILD.gn
+@@ -1817,7 +1817,7 @@ config("no_rtti") {
+ # to heap-allocated memory are passed over shared library boundaries.
+ config("export_dynamic") {
+   # TODO(crbug.com/1052397): Revisit after target_os flip is completed.
+-  if (is_linux || is_chromeos_lacros || export_libcxxabi_from_executables) {
++  if (is_linux || is_bsd || is_chromeos_lacros || export_libcxxabi_from_executables) {
+     ldflags = [ "-rdynamic" ]
+   }
+ }
+diff --git a/config/linux/gtk/gtk.gni b/config/linux/gtk/gtk.gni
+index 2362caafa..591c476f9 100644
+--- a/config/linux/gtk/gtk.gni
++++ b/config/linux/gtk/gtk.gni
+@@ -6,7 +6,7 @@ import("//build/config/ui.gni")
  
-   # Set to true when compiling with the Clang compiler.
--  is_clang = current_os != "linux" ||
-+  is_clang = current_os != "linux" || current_os == "openbsd" ||
-              (current_cpu != "s390x" && current_cpu != "s390" &&
-               current_cpu != "ppc64" && current_cpu != "ppc" &&
-               current_cpu != "mips" && current_cpu != "mips64" &&
-@@ -189,7 +189,7 @@ if (host_toolchain == "") {
-   # TODO(dpranke): Add some sort of assert here that verifies that
-   # no toolchain omitted host_toolchain from its toolchain_args().
+ declare_args() {
+   # Whether or not we should use libgtk.
+-  use_gtk = is_linux && !is_castos
++  use_gtk = (is_linux || is_bsd) && !is_castos
  
--  if (host_os == "linux") {
-+  if (host_os == "linux" || host_os == "openbsd") {
-     if (target_os != "linux") {
-       host_toolchain = "//build/toolchain/linux:clang_$host_cpu"
-     } else if (is_clang) {
-@@ -229,7 +229,7 @@ if (target_os == "android") {
-   assert(host_os == "linux" || host_os == "mac",
-          "Android builds are only supported on Linux and Mac hosts.")
-   _default_toolchain = "//build/toolchain/android:android_clang_$target_cpu"
--} else if (target_os == "chromeos" || target_os == "linux") {
-+} else if (target_os == "chromeos" || target_os == "linux" || target_os == "openbsd") {
-   # See comments in build/toolchain/cros/BUILD.gn about board compiles.
-   if (is_clang) {
-     _default_toolchain = "//build/toolchain/linux:clang_$target_cpu"
-@@ -297,6 +297,7 @@ is_chromeos = current_os == "chromeos"
- is_fuchsia = current_os == "fuchsia"
- is_ios = current_os == "ios"
- is_linux = current_os == "linux"
-+is_bsd = current_os == "openbsd"
- is_mac = current_os == "mac"
- is_nacl = current_os == "nacl"
- is_win = current_os == "win" || current_os == "winuwp"
-diff --git a/config/ui.gni b/config/ui.gni
-index 83ec3d7e2..796068b76 100644
---- a/config/ui.gni
-+++ b/config/ui.gni
-@@ -39,7 +39,7 @@ declare_args() {
-       target_os != "android"
+   # The (major) version of GTK to build against.  A different version may be
+   # loaded at runtime.
+diff --git a/config/linux/libdrm/BUILD.gn b/config/linux/libdrm/BUILD.gn
+index bf53fdb2c..a51b17812 100644
+--- a/config/linux/libdrm/BUILD.gn
++++ b/config/linux/libdrm/BUILD.gn
+@@ -11,7 +11,7 @@ declare_args() {
+   # Controls whether the build should use the version of libdrm library shipped
+   # with the system. In release builds of desktop Linux and Chrome OS we use the
+   # system version. Some Chromecast devices use this as well.
+-  use_system_libdrm = is_chromeos_device || (is_linux && !is_castos)
++  use_system_libdrm = is_chromeos_device || ((is_linux || is_bsd) && !is_castos)
  }
  
--assert(!use_glib || (is_linux && !is_chromecast))
-+assert(!use_glib || ((is_linux || is_bsd) && !is_chromecast))
+ if (use_system_libdrm) {
+diff --git a/config/ozone.gni b/config/ozone.gni
+index 836300a7b..404755691 100644
+--- a/config/ozone.gni
++++ b/config/ozone.gni
+@@ -10,7 +10,7 @@ declare_args() {
+   # Indicates if Ozone is enabled. Ozone is a low-level library layer for Linux
+   # that does not require X11.
+   use_ozone =
+-      is_chromeos || (is_castos && !is_android) || is_fuchsia || is_linux
++      is_chromeos || (is_castos && !is_android) || is_fuchsia || is_linux || is_bsd
+ }
  
- use_atk = is_linux && !is_chromecast && use_glib &&
-           current_toolchain == default_toolchain
+ declare_args() {
+@@ -88,7 +88,7 @@ declare_args() {
+     } else if (is_chromeos_lacros) {
+       ozone_platform = "wayland"
+       ozone_platform_wayland = true
+-    } else if (is_linux) {
++    } else if (is_linux || is_bsd) {
+       ozone_platform = "x11"
+       ozone_platform_wayland = true
+       ozone_platform_x11 = true
+diff --git a/config/ui.gni b/config/ui.gni
+index 86dfbaaf0..b786a1c29 100644
+--- a/config/ui.gni
++++ b/config/ui.gni
+@@ -33,7 +33,7 @@ declare_args() {
+   toolkit_views = is_mac || is_win || is_linux || is_chromeos || is_fuchsia
+ 
+   use_glib =
+-      is_linux && !is_castos &&
++      (is_linux || is_bsd) && !is_castos &&
+       # Avoid the need for glib when Android is building things via secondary
+       # toolchains.
+       target_os != "android"

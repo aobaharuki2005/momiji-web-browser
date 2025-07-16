@@ -73,8 +73,6 @@ class Target(object):
     self._log_listener_proc = None
     self._dry_run = False
     self._started = False
-    self._ffx_path = os.path.join(common.SDK_ROOT, 'tools',
-                                  common.GetHostArchFromPlatform(), 'ffx')
     self._log_manager = LogManager(logs_dir)
     self._ffx_runner = ffx_session.FfxRunner(self._log_manager)
 
@@ -90,11 +88,22 @@ class Target(object):
   def __enter__(self):
     return self
   def __exit__(self, exc_type, exc_val, exc_tb):
-    self.Stop()
+    try:
+      self.Stop()
+    finally:
+      # Stop the ffx daemon, since the target device is going / has gone away.
+      # This ensures that the daemon does not become "hung" if the target device
+      # stops responding to network I/O (e.g., due to emulator instance
+      # teardown). The daemon will be automatically restarted by the next `ffx`
+      # call.
+      self._ffx_runner.daemon_stop()
+      # Stop the log manager only after the last use of _ffx_runner.
+      self._log_manager.Stop()
 
   def Start(self):
     """Handles the instantiation and connection process for the Fuchsia
     target instance."""
+    raise NotImplementedError()
 
   def IsStarted(self):
     """Returns True if the Fuchsia target instance is ready to accept
@@ -111,7 +120,6 @@ class Target(object):
       self._symbolizer_proc.kill()
     if self._log_listener_proc:
       self._log_listener_proc.kill()
-    self._log_manager.Stop()
 
   def IsNewInstance(self):
     """Returns True if the connected target instance is newly provisioned."""
@@ -364,24 +372,26 @@ class Target(object):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
         pkgctl_out, pkgctl_err = pkgctl.communicate()
+        pkgctl_out = pkgctl_out.strip()
 
         # Read the expected version from the meta.far Merkel hash file alongside
         # the package's FAR.
         meta_far_path = os.path.join(os.path.dirname(package_path), 'meta.far')
-        meta_far_merkel = subprocess.check_output(
+        meta_far_merkle = subprocess.check_output(
             [common.GetHostToolPathFromPlatform('merkleroot'),
              meta_far_path]).split()[0]
-        if pkgctl_out != meta_far_merkel:
+        if pkgctl_out != meta_far_merkle:
           raise Exception('Hash mismatch for %s after resolve (%s vs %s).' %
-                          (package_name, pkgctl_out, meta_far_merkel))
+                          (package_name, pkgctl_out, meta_far_merkle))
 
-  def RunFFXCommand(self, ffx_args, **kwargs):
+  def RunFFXCommand(self, ffx_args):
     """Automatically gets the FFX path and runs FFX based on the
-    arguments provided. Extra args can be added to be used with Popen.
+    arguments provided.
 
-    ffx_args: The arguments for a ffx command.
-    kwargs: A dictionary of parameters to be passed to subprocess.Popen().
+    Args:
+      ffx_args: The arguments for a ffx command.
 
-    Returns a Popen object for the command."""
-    command = [self._ffx_path] + ffx_args
-    return subprocess.Popen(command, **kwargs)
+    Returns:
+      A Popen object for the command.
+    """
+    return self._ffx_runner.open_ffx(ffx_args)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env vpython3
 #
 # Copyright 2018 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -7,6 +7,7 @@
 """Deploys and runs a test package on a Fuchsia target."""
 
 import argparse
+import logging
 import os
 import shutil
 import sys
@@ -18,6 +19,10 @@ from common_args import AddCommonArgs, AddTargetSpecificArgs, \
 from net_test_server import SetupTestServer
 from run_test_package import RunTestPackage, RunTestPackageArgs
 from runner_exceptions import HandleExceptionAndReturnExitCode
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                             'test')))
+from compatible_utils import map_filter_file_to_package_file
 
 DEFAULT_TEST_SERVER_CONCURRENCY = 4
 
@@ -121,9 +126,13 @@ class CustomArtifactsTestOutputs(TestOutputs):
 
   def GetFile(self, glob, destination):
     """Places all files/directories matched by a glob into a destination."""
-    shutil.copy(
-        os.path.join(self.GetOutputDirectory(), 'artifact-0', 'custom-0', glob),
-        destination)
+    directory = self._ffx_session.get_custom_artifact_directory()
+    if not directory:
+      logger.error(
+          'Failed to parse custom artifact directory from test summary output '
+          'files. Not copying %s from the device', glob)
+      return
+    shutil.copy(os.path.join(directory, glob), destination)
 
   def GetCoverageProfiles(self, destination):
     # Copy all the files in the profile directory.
@@ -223,9 +232,6 @@ def AddTestExecutionArgs(arg_parser):
                          help='Directory to place code coverage information. '
                          'Only relevant when --code-coverage set to true. '
                          'Defaults to current directory.')
-  test_args.add_argument('--child-arg',
-                         action='append',
-                         help='Arguments for the test process.')
   test_args.add_argument('--gtest_also_run_disabled_tests',
                          default=False,
                          action='store_true',
@@ -233,15 +239,6 @@ def AddTestExecutionArgs(arg_parser):
   test_args.add_argument('child_args',
                          nargs='*',
                          help='Arguments for the test process.')
-
-
-def MapFilterFileToPackageFile(filter_file):
-  # TODO(crbug.com/1279803): Until one can send file to the device when running
-  # a test, filter files must be read from the test package.
-  if not FILTER_DIR in filter_file:
-    raise ValueError('CFv2 tests only support registered filter files present '
-                     ' in the test package')
-  return '/pkg/' + filter_file[filter_file.index(FILTER_DIR):]
 
 
 def main():
@@ -319,8 +316,6 @@ def main():
   if args.gtest_also_run_disabled_tests:
     child_args.append('--gtest_also_run_disabled_tests')
 
-  if args.child_arg:
-    child_args.extend(args.child_arg)
   if args.child_args:
     child_args.extend(args.child_args)
 
@@ -352,7 +347,7 @@ def main():
           # TODO(crbug.com/1279803): Until one can send file to the device when
           # running a test, filter files must be read from the test package.
           test_launcher_filter_files = map(
-              MapFilterFileToPackageFile,
+              map_filter_file_to_package_file,
               args.test_launcher_filter_file.split(';'))
           child_args.append('--test-launcher-filter-file=' +
                             ';'.join(test_launcher_filter_files))

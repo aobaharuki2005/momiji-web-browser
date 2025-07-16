@@ -9,29 +9,23 @@ Depends on D149820
 Differential Revision: https://phabricator.services.mozilla.com/D149821
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/243ea5e6411dc1b769419c07045e78d61f406541
 ---
- toolchain/win/setup_toolchain.py | 75 +++++++++++++++++---------------
- 1 file changed, 39 insertions(+), 36 deletions(-)
+ toolchain/win/setup_toolchain.py | 61 +++++++++++++++++---------------
+ 1 file changed, 32 insertions(+), 29 deletions(-)
 
 diff --git a/toolchain/win/setup_toolchain.py b/toolchain/win/setup_toolchain.py
-index ec9e9eeda..e47de2a55 100644
+index e680ba07e..a5ed5163d 100644
 --- a/toolchain/win/setup_toolchain.py
 +++ b/toolchain/win/setup_toolchain.py
-@@ -242,10 +242,10 @@ def main():
+@@ -251,7 +251,7 @@ def main():
  
    cpus = ('x86', 'x64', 'arm', 'arm64')
    assert target_cpu in cpus
 -  vc_bin_dir = ''
--  vc_lib_path = ''
--  vc_lib_atlmfc_path = ''
--  vc_lib_um_path = ''
 +  vc_bin_dir = 'fake_path/cl.exe'
-+  vc_lib_path = 'fake_path/lib'
-+  vc_lib_atlmfc_path = 'fake_path/atlmfc'
-+  vc_lib_um_path = 'fake_path/lib_um'
    include = ''
    lib = ''
  
-@@ -261,39 +261,43 @@ def main():
+@@ -267,42 +267,45 @@ def main():
    def q(s):  # Quote s if it contains spaces or other weird characters.
      return s if re.match(r'^[a-zA-Z0-9._/\\:-]*$', s) else '"' + s + '"'
  
@@ -42,10 +36,6 @@ index ec9e9eeda..e47de2a55 100644
 -      env['PATH'] = runtime_dirs + os.pathsep + env['PATH']
 -
 -      vc_bin_dir = FindFileInEnvList(env, 'PATH', os.pathsep, 'cl.exe')
--      vc_lib_path = FindFileInEnvList(env, 'LIB', ';', 'msvcrt.lib')
--      vc_lib_atlmfc_path = FindFileInEnvList(
--          env, 'LIB', ';', 'atls.lib', optional=True)
--      vc_lib_um_path = FindFileInEnvList(env, 'LIB', ';', 'user32.lib')
 -
 -      # The separator for INCLUDE here must match the one used in
 -      # _LoadToolchainEnv() above.
@@ -71,10 +61,6 @@ index ec9e9eeda..e47de2a55 100644
 +#       env['PATH'] = runtime_dirs + os.pathsep + env['PATH']
 +# 
 +#       vc_bin_dir = FindFileInEnvList(env, 'PATH', os.pathsep, 'cl.exe')
-+#       vc_lib_path = FindFileInEnvList(env, 'LIB', ';', 'msvcrt.lib')
-+#       vc_lib_atlmfc_path = FindFileInEnvList(
-+#           env, 'LIB', ';', 'atls.lib', optional=True)
-+#       vc_lib_um_path = FindFileInEnvList(env, 'LIB', ';', 'user32.lib')
 +# 
 +#       # The separator for INCLUDE here must match the one used in
 +#       # _LoadToolchainEnv() above.
@@ -106,11 +92,10 @@ index ec9e9eeda..e47de2a55 100644
    if bool(int(os.environ.get('DEPOT_TOOLS_WIN_TOOLCHAIN', 1))) and win_sdk_path:
      print('include_flags_imsvc = ' +
            gn_helpers.ToGNString(q('/winsysroot' + relflag(toolchain_root))))
-@@ -306,7 +310,6 @@ def main():
-     print('vc_lib_atlmfc_path = ' + gn_helpers.ToGNString(vc_lib_atlmfc_path))
-   print('vc_lib_um_path = ' + gn_helpers.ToGNString(vc_lib_um_path))
+   else:
+     print('include_flags_imsvc = ' + gn_helpers.ToGNString(include_imsvc))
    print('paths = ' + gn_helpers.ToGNString(env['PATH']))
 -  assert libpath_flags
    print('libpath_flags = ' + gn_helpers.ToGNString(libpath_flags))
- 
- 
+   if bool(int(os.environ.get('DEPOT_TOOLS_WIN_TOOLCHAIN', 1))) and win_sdk_path:
+     print('libpath_lldlink_flags = ' +

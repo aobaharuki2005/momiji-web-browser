@@ -1,102 +1,24 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 20 Jun 2022 22:34:00 +0000
-Subject: Bug 1775143 - pt17 - account for is_desktop_linux going away and
- using is_linux r=ng
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Wed, 18 Jan 2023 19:57:00 +0000
+Subject: Bug 1795993 - P0 - revert upstream change from SSE2 to SSE3 in
+ WebRTC;r=mjf
 
-(skip-generation)
-
-Depends on D149830
-
-Differential Revision: https://phabricator.services.mozilla.com/D149831
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/aad17933ade0176606c4d7b694669bc67f5f92b5
+Differential Revision: https://phabricator.services.mozilla.com/D161201
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/66f4374c461fe27b167062a09f676c5de73e058c
 ---
- config/compiler/BUILD.gn     | 2 +-
- config/linux/gtk/gtk.gni     | 2 +-
- config/linux/libdrm/BUILD.gn | 2 +-
- config/ozone.gni             | 4 ++--
- config/ui.gni                | 4 ++--
- 5 files changed, 7 insertions(+), 7 deletions(-)
+ config/compiler/BUILD.gn | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 94fdbdef8..e62e171cf 100644
+index 1c2019cd4..0b8d73f0f 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
-@@ -1831,7 +1831,7 @@ config("no_rtti") {
- # to heap-allocated memory are passed over shared library boundaries.
- config("export_dynamic") {
-   # TODO(crbug.com/1052397): Revisit after target_os flip is completed.
--  if (is_linux || is_chromeos_lacros || export_libcxxabi_from_executables) {
-+  if (is_linux || is_bsd || is_chromeos_lacros || export_libcxxabi_from_executables) {
-     ldflags = [ "-rdynamic" ]
-   }
- }
-diff --git a/config/linux/gtk/gtk.gni b/config/linux/gtk/gtk.gni
-index 64e62f2d9..b846c8e62 100644
---- a/config/linux/gtk/gtk.gni
-+++ b/config/linux/gtk/gtk.gni
-@@ -6,7 +6,7 @@ import("//build/config/ui.gni")
- 
- declare_args() {
-   # Whether or not we should use libgtk.
--  use_gtk = is_linux && !is_chromecast
-+  use_gtk = (is_linux || is_bsd) && !is_chromecast
- 
-   # The (major) version of GTK to build against.  A different version may be
-   # loaded at runtime.
-diff --git a/config/linux/libdrm/BUILD.gn b/config/linux/libdrm/BUILD.gn
-index e9b40184e..79695cbc6 100644
---- a/config/linux/libdrm/BUILD.gn
-+++ b/config/linux/libdrm/BUILD.gn
-@@ -11,7 +11,7 @@ declare_args() {
-   # Controls whether the build should use the version of libdrm library shipped
-   # with the system. In release builds of desktop Linux and Chrome OS we use the
-   # system version. Some Chromecast devices use this as well.
--  use_system_libdrm = is_chromeos_device || (is_linux && !is_chromecast)
-+  use_system_libdrm = is_chromeos_device || ((is_linux || is_bsd) && !is_chromecast)
- }
- 
- if (use_system_libdrm) {
-diff --git a/config/ozone.gni b/config/ozone.gni
-index 6a29b7c4f..129a0d8df 100644
---- a/config/ozone.gni
-+++ b/config/ozone.gni
-@@ -10,7 +10,7 @@ declare_args() {
-   # Indicates if Ozone is enabled. Ozone is a low-level library layer for Linux
-   # that does not require X11.
-   use_ozone =
--      is_chromeos || (is_chromecast && !is_android) || is_fuchsia || is_linux
-+      is_chromeos || (is_chromecast && !is_android) || is_fuchsia || is_linux || is_bsd
- }
- 
- declare_args() {
-@@ -91,7 +91,7 @@ declare_args() {
-     } else if (is_chromeos_lacros) {
-       ozone_platform = "wayland"
-       ozone_platform_wayland = true
--    } else if (is_linux) {
-+    } else if (is_linux || is_bsd) {
-       ozone_platform = "x11"
-       ozone_platform_wayland = true
-       ozone_platform_x11 = true
-diff --git a/config/ui.gni b/config/ui.gni
-index 796068b76..b6c314f10 100644
---- a/config/ui.gni
-+++ b/config/ui.gni
-@@ -33,7 +33,7 @@ declare_args() {
-   toolkit_views = is_mac || is_win || is_linux || is_chromeos || is_fuchsia
- 
-   use_glib =
--      is_linux && !is_chromecast &&
-+      (is_linux || is_bsd) && !is_chromecast &&
-       # Avoid the need for glib when Android is building things via secondary
-       # toolchains.
-       target_os != "android"
-@@ -41,7 +41,7 @@ declare_args() {
- 
- assert(!use_glib || ((is_linux || is_bsd) && !is_chromecast))
- 
--use_atk = is_linux && !is_chromecast && use_glib &&
-+use_atk = (is_linux || is_bsd) && !is_chromecast && use_glib &&
-           current_toolchain == default_toolchain
- 
- # Whether using Xvfb to provide a display server for a test might be
+@@ -907,7 +907,7 @@ config("compiler_cpu_abi") {
+       if (!is_nacl) {
+         cflags += [
+           "-mfpmath=sse",
+-          "-msse3",
++          "-msse2",
+         ]
+       }
+     } else if (current_cpu == "arm") {

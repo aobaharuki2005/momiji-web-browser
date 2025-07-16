@@ -86,8 +86,17 @@ class FvdlTarget(emu_target.EmuTarget):
                            default=False,
                            help='Run emulator with emulated nic via tun/tap.')
     fvdl_args.add_argument('--custom-image',
-                           help='Specify an image used for booting up the '
-                           'emulator.')
+                           help='Specify an image used for booting up the '\
+                                'emulator.')
+    fvdl_args.add_argument('--enable-graphics',
+                           action='store_true',
+                           default=False,
+                           help='Start emulator with graphics instead of '\
+                                'headless.')
+    fvdl_args.add_argument('--hardware-gpu',
+                           action='store_true',
+                           default=False,
+                           help='Use local GPU hardware instead Swiftshader.')
 
   def _BuildCommand(self):
     boot_data.ProvisionSSH()
@@ -101,10 +110,6 @@ class FvdlTarget(emu_target.EmuTarget):
     fvm_image = common.EnsurePathExists(
         boot_data.GetTargetFile('storage-full.blk', self._image_arch,
                                 self._image_type))
-    aemu_path = common.EnsurePathExists(
-        os.path.join(common.GetEmuRootForPlatform(self.EMULATOR_NAME),
-                     'emulator'))
-
     emu_command = [
         self._FVDL_PATH,
         '--sdk',
@@ -130,10 +135,6 @@ class FvdlTarget(emu_target.EmuTarget):
         fvm_image,
         '--image-architecture',
         self._target_cpu,
-
-        # Use an existing emulator checked out by Chromium.
-        '--aemu-path',
-        aemu_path,
 
         # Use this flag and temp file to define ram size.
         '--device-proto',
@@ -168,14 +169,18 @@ class FvdlTarget(emu_target.EmuTarget):
       ]
       if self._hardware_gpu:
         vulkan_icd_file = os.path.join(
-            common.GetEmuRootForPlatform(self.EMULATOR_NAME), 'lib64', 'vulkan',
-            'vk_swiftshader_icd.json')
+            common.GetHostToolPathFromPlatform('aemu_internal'), 'lib64',
+            'vulkan', 'vk_swiftshader_icd.json')
         env_flags.append('VK_ICD_FILENAMES=%s' % vulkan_icd_file)
       for flag in env_flags:
         emu_command.extend(['--envs', flag])
 
+  def _HasNetworking(self):
+    return self._with_network
+
   def _ConnectToTarget(self):
-    # Indicates the FVDL command finished running.
+    # Wait for the emulator to finish starting up.
+    logging.info('Waiting for fvdl to start...')
     self._emu_process.communicate()
     super(FvdlTarget, self)._ConnectToTarget()
 
@@ -192,8 +197,12 @@ class FvdlTarget(emu_target.EmuTarget):
         logging.error('vdl_output file no longer found. '
                       'Cannot get emulator pid.')
         return False
-    if subprocess.check_output(['ps', '-p', self._pid, 'o', 'comm=']):
-      return True
+    try:
+      if subprocess.check_output(['ps', '-p', self._pid, 'o', 'comm=']):
+        return True
+    except subprocess.CalledProcessError:
+      # The process must be gone.
+      pass
     logging.error('Emulator pid no longer found. Emulator must be down.')
     return False
 
@@ -219,10 +228,9 @@ class FvdlTarget(emu_target.EmuTarget):
       logging.error('vdl_output file not found. Cannot get network address.')
       raise
 
-  def Shutdown(self):
+  def _Shutdown(self):
     if not self._emu_process:
       logging.error('%s did not start' % (self.EMULATOR_NAME))
-      super(FvdlTarget, self).Shutdown()
       return
     femu_command = [
         self._FVDL_PATH, '--sdk', 'kill', '--launched-proto',
@@ -238,7 +246,6 @@ class FvdlTarget(emu_target.EmuTarget):
     self.LogSystemStatistics('system_statistics_end_log')
     self._vdl_output_file.close()
     self._device_proto_file.close()
-    super(FvdlTarget, self).Shutdown()
 
   def _GetSshConfigPath(self):
     return boot_data.GetSSHConfigPath()

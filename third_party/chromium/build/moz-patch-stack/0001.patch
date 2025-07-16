@@ -21,7 +21,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6125938ac1986d298
  2 files changed, 24 insertions(+), 1 deletion(-)
 
 diff --git a/config/BUILD.gn b/config/BUILD.gn
-index 79f1b1aeb..9f2510fb1 100644
+index 8fc6a82df..3dbcb55a1 100644
 --- a/config/BUILD.gn
 +++ b/config/BUILD.gn
 @@ -126,7 +126,7 @@ config("debug") {
@@ -34,10 +34,10 @@ index 79f1b1aeb..9f2510fb1 100644
  }
  
 diff --git a/toolchain/linux/BUILD.gn b/toolchain/linux/BUILD.gn
-index bc17e80e6..3b8813302 100644
+index 102e71207..6d451d743 100644
 --- a/toolchain/linux/BUILD.gn
 +++ b/toolchain/linux/BUILD.gn
-@@ -246,6 +246,13 @@ clang_toolchain("clang_mips64el") {
+@@ -249,6 +249,13 @@ clang_toolchain("clang_mips64el") {
    }
  }
  
@@ -51,7 +51,7 @@ index bc17e80e6..3b8813302 100644
  gcc_toolchain("mipsel") {
    toolprefix = "mipsel-linux-gnu-"
  
-@@ -335,6 +342,22 @@ gcc_toolchain("s390x") {
+@@ -347,6 +354,22 @@ gcc_toolchain("s390x") {
    }
  }
  

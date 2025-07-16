@@ -30,7 +30,6 @@ action("chromium_git_revision") {
 
 group("test_results") {
   data = [
-    "//.vpython",
     "//.vpython3",
     "//chromium/build/util/lib/__init__.py",
     "//chromium/build/util/lib/results/",

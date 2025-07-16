@@ -3,31 +3,37 @@
 # found in the LICENSE file.
 
 import("//chromium/build/config/rust.gni")
-import("//chromium/build/rust/rust_cxx.gni")
 import("//chromium/build/rust/rust_unit_test.gni")
+
+# The //build directory is re-used for non-Chromium products. We do not
+# support cxx/autocxx bindings in such contexts, because
+# //third_party may be missing.
+if (build_with_chromium) {
+  import("//third_party/rust/autocxx/chromium_integration/rust_autocxx.gni")
+}
 
 # Creates a Rust target (rlib, executable, proc macro etc.) with
 # ability to understand some handy variables such as "edition" and
 # "features" and also to build any associated unit tests.
 #
 # Normally, you should not use this directly. Use either
-#   cargo_crate.gni - for 3p crates only
-#   rust_static_library.gni - for 1p Rust code
-# You might, rarely, want to use this for a Rust executable.
+# - cargo_crate.gni - for 3p crates only
+# - rust_static_library.gni - for 1p Rust code
+# - mixed_static_library.gni - for 1p C++ and Rust code together.
 #
 # Because the common use of this is rust_static_library, all the documentation
 # for the supported options is given in rust_static_library.gni. Please refer
 # over there.
 #
-# If you're using rust_chrome_target directly, you will also need to specify:
+# If you're using rust_target directly, you will also need to specify:
 #   target_type
 #     executable, rust_library etc. per GN norms
 #
-#   create_cpp_groups (bool)
-#     Whether both C++ and Rust may link against this. If so, groups
-#     are created for downstream targets to link against in both languages
-#     (again, see rust_static_library for docs). Only works for rust_library
-#     types.
+#   support_use_from_cpp (bool)
+#     Whether both C++ and Rust may link against this. If so, the Rust standard
+#     library will be explicitly included for C++ to link against. This is
+#     always true if cxx_bindings is non-empty, in which case [auto]cxx
+#     will also be implicitly depended on.
 #
 # There is one area where this differs from `rust_static_library`: configs.
 # Here, you must specify `executable_configs` or `library_configs`
@@ -35,17 +41,66 @@ import("//chromium/build/rust/rust_unit_test.gni")
 # different defaults can be provided.
 
 template("rust_target") {
+  # Only one of `crate_root` or `generate_crate_root` can be specified, or
+  # neither.
+  assert(!defined(invoker.crate_root) ||
+         !(defined(invoker.generate_crate_root) && invoker.generate_crate_root))
+
   _target_name = target_name
-  _crate_name = _target_name
+  _crate_name = target_name
   if (defined(invoker.crate_name)) {
     _crate_name = invoker.crate_name
   }
-  if (defined(invoker.crate_root)) {
+
+  if (defined(invoker.output_dir) && invoker.output_dir != "") {
+    _out_dir = invoker.output_dir
+  } else {
+    _out_dir = target_out_dir
+  }
+
+  if (defined(invoker.generate_crate_root) && invoker.generate_crate_root) {
+    generated_file("${_target_name}_crate_root") {
+      outputs = [ "${target_gen_dir}/${target_name}.rs" ]
+      contents = [
+        "// Generated crate root for ${_target_name}.",
+        "// @generated",
+        "",
+      ]
+      foreach(rs, invoker.sources) {
+        rs_path_from_root = rebase_path(rs, target_gen_dir)
+        contents += [ "#[path = \"${rs_path_from_root}\"]" ]
+
+        # Drop the file extension from the module name.
+        rs_modname = string_replace(rs, ".rs", "")
+
+        # Replace invalid "/" chars in the source file path.
+        rs_modname = string_replace(rs_modname, "/", "_")
+
+        # Since source files are specified relative to the BUILD.gn they may
+        # also have ".." path components.
+        rs_modname = string_replace(rs_modname, "..", "dotdot")
+        contents += [
+          "mod ${rs_modname};",
+          "",
+        ]
+      }
+    }
+    _crate_root =
+        string_join("", get_target_outputs(":${_target_name}_crate_root"))
+  } else if (defined(invoker.crate_root)) {
     _crate_root = invoker.crate_root
   } else if (invoker.target_type == "executable") {
     _crate_root = "src/main.rs"
   } else {
     _crate_root = "src/lib.rs"
+  }
+
+  _testonly = false
+  if (defined(invoker.testonly)) {
+    _testonly = invoker.testonly
+  }
+  if (defined(invoker.visibility)) {
+    _visibility = invoker.visibility
   }
 
   _rustflags = []
@@ -85,29 +140,68 @@ template("rust_target") {
       "proc_macro",
     ]
 
-    _forward_to_host_toolchain = true
-    _forward_to_target_name = "${target_name}_proc_macro"
+    if (current_toolchain != host_toolchain) {
+      _forward_to_host_toolchain = true
+    }
+    _main_target_suffix = "${target_name}__proc_macro"
+  } else {
+    _main_target_suffix = "__rlib"
   }
 
-  _deps_for_rust_targets = []
-  if (defined(invoker.mutually_dependent_target)) {
-    _deps_for_rust_targets += [ invoker.mutually_dependent_target ]
-  }
   _deps = []
   if (defined(invoker.deps)) {
     _deps += invoker.deps
   }
-
-  _build_unit_tests = build_rust_unit_tests
-  if (defined(invoker.skip_unit_tests) && invoker.skip_unit_tests == true) {
-    _build_unit_tests = false
+  _public_deps = []
+  if (defined(invoker.public_deps)) {
+    _public_deps += invoker.public_deps
   }
+
+  _build_unit_tests = false
+  if (defined(invoker.build_native_rust_unit_tests)) {
+    _build_unit_tests =
+        invoker.build_native_rust_unit_tests && can_build_rust_unit_tests
+  }
+
+  # Declares that the Rust crate generates bindings between C++ and Rust via the
+  # Cxx/autocxx crates. It may generate C++ headers and/or use the cxx crate macros
+  # to generate Rust code internally, depending on what bindings are declared. If
+  # set, it's a set of rust files that include Cxx or autocxx bindings declarations.
+  _cxx_bindings = []
   if (defined(invoker.cxx_bindings)) {
-    _deps_for_rust_targets += [
-      ":${_target_name}_cxx",
-      "//chromium/build/rust:cxx_rustdeps",
-    ]
+    assert(
+        build_with_chromium,
+        "cxx/autocxx bindings are not supported when building rust targets " +
+            "outside the Chromium build.")
     _cxx_bindings = invoker.cxx_bindings
+  }
+  _rustenv = []
+  if (defined(invoker.rustenv)) {
+    _rustenv += invoker.rustenv
+  }
+  foreach(_autocxx_generated, _cxx_bindings) {
+    # TODO(crbug.com/1306841): Currently we support only a single
+    # include_cpp! macro per target and this ugly environment
+    # variable is necessary. Meanwhile, this path must match that of
+    # out_gen0_rs in rust_autocxx.gni.
+    _rustenv += [ "AUTOCXX_RS_FILE=" + rebase_path(
+                      "$target_gen_dir/$_autocxx_generated/gen0.include.rs") ]
+  }
+
+  # Normally we generate a C++ bindings group only if there are C++ bindings,
+  # since it's not useful otherwise. But mixed targets want to be able to depend
+  # on the Rust side regardless, or other Rust targets that provide interop
+  # without using Cxx to generate bindings (such as via #[no_mangle] functions).
+  _support_use_from_cpp = _cxx_bindings != []
+  if (defined(invoker.support_use_from_cpp) && invoker.support_use_from_cpp) {
+    _support_use_from_cpp = true
+  }
+
+  if (defined(invoker.mutually_dependent_target)) {
+    _mutually_dependent_target = invoker.mutually_dependent_target
+    _mutually_dependent_public_deps = invoker.mutually_dependent_public_deps
+  } else {
+    assert(!defined(_mutually_dependent_public_deps))
   }
 
   # TODO(danakj): This could be a hash generated from the input crate, such as
@@ -125,129 +219,149 @@ template("rust_target") {
   # TODO(crbug.com/1256930) - verify this is correct
   assert(defined(invoker.sources), "sources must be listed")
 
-  _create_cpp_groups = false
-  if (defined(invoker.create_cpp_groups)) {
-    _create_cpp_groups = invoker.create_cpp_groups
-  }
-
-  # If this code may be linked by both C++ and Rust, make differing
-  # groups of deps for each of them, because unfortunately there are
-  # differences in what they need to link against.
-  main_target_suffix = ""
-  if (_create_cpp_groups) {
-    assert(invoker.target_type == "rust_library" ||
-           invoker.target_type == "shared_library")
-    main_target_suffix = "__rlib"
-
-    # Downstream Rust targets should include this in their deps.
-    group(target_name) {
-      forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
-      deps = [ ":${_target_name}${main_target_suffix}" ]
-      deps += _deps_for_rust_targets
-    }
-
-    # Downstream C++ targets should include this in their deps.
-    group("${_target_name}_cpp_bindings") {
-      deps = [ ":${_target_name}${main_target_suffix}" ]
-      if (invoker.target_type == "rust_library") {
-        deps += [
-          # For a rust_library, any C++ code depending on this target should
-          # also depend on the Rust standard library to ensure it's linked into
-          # the final binary by the C++ linker. This isn't needed for a
-          # shared_library, as rustc will link the stdlib into it already.
-          "//chromium/build/rust/std",
-        ]
-      }
-      if (defined(invoker.mutually_dependent_target)) {
-        forward_variables_from(invoker,
-                               TESTONLY_AND_VISIBILITY,
-                               [ "visibility" ])
-        visibility = [ invoker.mutually_dependent_target ]
-      } else {
-        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
-      }
-      if (defined(_cxx_bindings)) {
-        public_deps = [ ":${_target_name}_cxx" ]
-      }
-    }
-  } else {
-    # This is a plain simple single Rust target.
-    assert(!defined(invoker.mutually_dependent_target))
-    assert(_deps_for_rust_targets == [])
-    assert(main_target_suffix == "")
-  }
-
-  _generate_target = true
   if (_forward_to_host_toolchain) {
-    if (current_toolchain != host_toolchain) {
-      # Redirect to the host toolchain.
-      group(target_name) {
-        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
-        public_deps = [ ":${_forward_to_target_name}($host_toolchain)" ]
+    # Redirect to the host toolchain.
+    group(_target_name) {
+      testonly = _testonly
+      if (defined(_visibility)) {
+        visibility = _visibility
+      }
+      public_deps =
+          [ ":${_target_name}${_main_target_suffix}($host_toolchain)" ]
+    }
+
+    not_needed(invoker, "*")
+    not_needed([
+                 "_build_unit_tests",
+                 "_crate_root",
+                 "_crate_name",
+                 "_cxx_bindings",
+                 "_deps",
+                 "_metadata",
+                 "_mutually_dependent_public_deps",
+                 "_mutually_dependent_target",
+                 "_out_dir",
+                 "_public_deps",
+                 "_rustenv",
+                 "_support_use_from_cpp",
+                 "_test_deps",
+                 "_testonly",
+                 "_visibility",
+                 "proc_macro_target",
+               ])
+  } else {
+    group(_target_name) {
+      testonly = _testonly
+      if (defined(_visibility)) {
+        visibility = _visibility
       }
 
-      not_needed(invoker, "*")
-      not_needed([ "proc_macro_target" ])
-      _generate_target = false
-    } else {
-      # We're in the host toolchain, so just generate an alias.
-      group(target_name) {
-        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
-        public_deps = [ ":${_forward_to_target_name}" ]
+      # Both the C++ bindings (if present) and the Rust crate should be treated
+      # like direct dependencies, so we expose them both in public_deps.
+      public_deps = [ ":${_target_name}${_main_target_suffix}" ]
+
+      if (_support_use_from_cpp) {
+        if (_cxx_bindings != []) {
+          public_deps += [ ":${_target_name}_autocxx_generated" ]
+
+          # Additionally, C++ bindings generated by Cxx can include C++ types
+          # that come from the Cxx library, such as `rust::Str`. So any C++
+          # target that depends on a rust target directly may need access to Cxx
+          # as well, which means it must appear in public_deps.
+          public_deps += [ "//chromium/build/rust:cxx_cppdeps" ]
+        } else {
+          # If we're supporting use from C++ but not using Cxx bindings, then we
+          # just need to make sure C++ links in the Rust stdlib.
+          deps = [ "//chromium/build/rust/std" ]
+        }
+      } else {
+        # Mixed targets (which define the below) always enable use from C++.
+        assert(!defined(_mutually_dependent_target))
       }
     }
 
-    # Since we're forwarding through a group which uses `target_name`, we rename
-    # the actual target to what the group points at.
-    target_name = _forward_to_target_name
-  }
+    _rust_deps = _deps
+    _rust_public_deps = _public_deps
+    _autocxx_deps = _deps + _public_deps
 
-  if (_generate_target) {
-    target(invoker.target_type, "${target_name}${main_target_suffix}") {
+    # In a mixed target, the C++ bindings may include headers from the C++
+    # part of the mixed target. Those headers rely on being used with the
+    # correct dependencies present.
+    if (defined(_mutually_dependent_public_deps)) {
+      _autocxx_deps += _mutually_dependent_public_deps
+    }
+
+    # The Rust target (and unit tests) need the autocxx & cxx crates when using
+    # them to generate bindings - both are in autocxx_rustdeps. We also need
+    # to depend upon the autocxx code generation step, since when we build
+    # our Rust code, a procedural macro will look for a file generated by that
+    # codegen step.
+    if (_cxx_bindings != []) {
+      _rust_deps +=
+          [ "//third_party/rust/autocxx/chromium_integration:autocxx_rustdeps" ]
+
+      # Generated bindings are a public dep so that the unit tests can include
+      # them.
+      _rust_public_deps += [ ":${_target_name}_autocxx_generated" ]
+    }
+
+    # You must go through the groups above to get to these targets.
+    _visibility = []
+    _visibility = [ ":${_target_name}" ]
+
+    target(invoker.target_type, "${_target_name}${_main_target_suffix}") {
+      forward_variables_from(invoker,
+                             "*",
+                             TESTONLY_AND_VISIBILITY + [
+                                   "features",
+                                   "deps",
+                                   "public_deps",
+                                   "rustflags",
+                                   "rustenv",
+                                   "configs",
+                                   "output_dir",
+                                   "unit_test_target",
+                                   "test_inputs",
+                                 ])
+
+      testonly = _testonly
+      visibility = _visibility
       crate_name = _crate_name
       crate_root = _crate_root
       configs = []
       configs = _configs
-      deps = _deps
-      if (defined(_cxx_bindings)) {
-        deps += [ "//chromium/build/rust:cxx_rustdeps" ]
-      }
+      deps = _rust_deps
+      public_deps = _rust_public_deps
       rustflags = _rustflags
       rustflags += [ string_join("",
                                  [
                                    "-Cmetadata=",
                                    _metadata,
                                  ]) ]
-      forward_variables_from(invoker,
-                             "*",
-                             [
-                               "features",
-                               "deps",
-                               "rustflags",
-                               "rustenv",
-                               "configs",
-                               "output_name",
-                               "unit_test_target",
-                               "visibility",
-                             ])
-      rustenv = [ "OUT_DIR=" + rebase_path(target_out_dir) ]
-      if (defined(invoker.rustenv)) {
-        rustenv += invoker.rustenv
-      }
-      if (_create_cpp_groups) {
-        visibility = [
-          ":${_target_name}",
-          ":${_target_name}_cpp_bindings",
-        ]
-      } else {
-        forward_variables_from(invoker, [ "visibility" ])
+      rustenv = _rustenv
+      rustenv += [ "OUT_DIR=" + rebase_path(_out_dir) ]
+
+      # The Rust tool() declarations, like C++ ones, use the output_name and
+      # output_dir, so that GN targets can override these if needed. Here we
+      # give them their default values, or allow them to be overridden.
+      output_dir = _out_dir
+      if (!defined(output_name) || output_name == "") {
+        output_name = crate_name
       }
     }
 
-    if (defined(_cxx_bindings)) {
-      rust_cxx("${_target_name}_cxx") {
-        inputs = _cxx_bindings
-        native_header_deps = _deps
+    if (_cxx_bindings != []) {
+      rust_autocxx("${_target_name}_autocxx_generated") {
+        testonly = _testonly
+
+        visibility = [ ":${_target_name}${_main_target_suffix}" ]
+        if (defined(_visibility)) {
+          visibility += _visibility
+        }
+        sources = _cxx_bindings
+        deps = _autocxx_deps
+        configs = _configs
+
         if (is_component_build) {
           # In a component_build the cxx bindings may be linked into a shared
           # library at any point up the dependency tree, so always export.
@@ -258,41 +372,57 @@ template("rust_target") {
           export_symbols = false
         }
       }
-    }
-  } else {
-    not_needed([
-                 "_metadata",
-                 "_crate_root",
-                 "_crate_name",
-               ])
-  }
-
-  if (_generate_target && _build_unit_tests) {
-    _unit_test_target = "${_target_name}_unittests"
-    if (defined(invoker.unit_test_target)) {
-      _unit_test_target = invoker.unit_test_target
+    } else {
+      not_needed([
+                   "_autocxx_deps",
+                   "_mutually_dependent_public_deps",
+                 ])
     }
 
-    rust_unit_test(_unit_test_target) {
-      forward_variables_from(invoker, [ "sources" ])
-      crate_root = _crate_root
-      rustflags = _rustflags
-      deps = _deps
-      if (defined(invoker.test_deps)) {
-        deps += invoker.test_deps
+    if (_build_unit_tests) {
+      _unit_test_target = "${_target_name}_unittests"
+      if (defined(invoker.unit_test_target)) {
+        _unit_test_target = invoker.unit_test_target
       }
-      if (defined(invoker.executable_configs)) {
-        configs = []
-        configs = invoker.executable_configs
+
+      rust_unit_test(_unit_test_target) {
+        forward_variables_from(invoker, [ "sources" ])
+        testonly = true
+        crate_root = _crate_root
+        rustflags = _rustflags
+        output_dir = _out_dir
+        deps = _rust_deps + _public_deps
+        if (defined(invoker.test_deps)) {
+          deps += invoker.test_deps
+        }
+        inputs = []
+        if (defined(invoker.inputs)) {
+          inputs += invoker.inputs
+        }
+        if (defined(invoker.test_inputs)) {
+          inputs += invoker.test_inputs
+        }
+        if (defined(_mutually_dependent_target)) {
+          # This routes through the C++ mixed target rule to get back to the
+          # Rust $_target_name.
+          public_deps = [ _mutually_dependent_target ]
+        } else {
+          public_deps = [ ":${_target_name}" ]
+        }
+        if (defined(invoker.executable_configs)) {
+          configs = []
+          configs = invoker.executable_configs
+        }
+        rustenv = _rustenv
       }
-      deps += _deps_for_rust_targets
+    } else {
+      not_needed([
+                   "_crate_root",
+                   "_crate_name",
+                   "_metadata",
+                   "_mutually_dependent_target",
+                 ])
     }
-  } else {
-    not_needed([
-                 "_test_deps",
-                 "_build_unit_tests",
-               ])
-    not_needed(invoker, [ "test_deps" ])
   }
 }
 

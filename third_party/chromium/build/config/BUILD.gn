@@ -307,10 +307,8 @@ config("executable_config") {
     ]
   } else if (is_linux || is_chromeos || is_android || current_os == "aix") {
     configs += [ "//chromium/build/config/gcc:executable_config" ]
-    if (is_chromecast) {
+    if (is_castos || is_cast_android) {
       configs += [ "//chromium/build/config/chromecast:executable_config" ]
-    } else if (is_fuchsia) {
-      configs += [ "//chromium/build/config/fuchsia:executable_config" ]
     }
   }
 
@@ -340,7 +338,7 @@ config("shared_library_config") {
       "//chromium/build/config/ios:ios_dynamic_flags",
       "//chromium/build/config/ios:ios_shared_library_flags",
     ]
-  } else if (is_chromecast) {
+  } else if (is_castos || is_cast_android) {
     configs += [ "//chromium/build/config/chromecast:shared_library_config" ]
   } else if (is_linux || is_chromeos || current_os == "aix") {
     configs += [ "//chromium/build/config/gcc:shared_library_config" ]
