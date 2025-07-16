@@ -22,15 +22,12 @@ import org.mozilla.fenix.components.appstate.AppState
 class CrashReporterBinding(
     private val context: Context,
     store: AppStore,
-    private val onReporting: (Array<String>?, Context) -> Unit,
+    private val onReporting: (List<String>?, Context) -> Unit,
 ) : AbstractBinding<AppState>(store) {
     override suspend fun onState(flow: Flow<AppState>) {
         flow.distinctUntilChangedBy { state -> state.crashState }
             .collect { state ->
-                if (state.crashState == CrashState.Reporting) {
-                    onReporting(null, context)
-                }
-                if (state.crashState is CrashState.ReportingPull) {
+                if (state.crashState is CrashState.Reporting) {
                     onReporting(state.crashState.crashIDs, context)
                 }
             }

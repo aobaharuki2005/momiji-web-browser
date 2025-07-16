@@ -15,23 +15,32 @@ sealed class CrashAction {
 
     /**
      * [CrashAction] to check if we have a stored deferred value.
+     *
+     * @param crashIds An list of crash IDs that are being requested for pull.
      */
-    data object CheckDeferred : CrashAction()
+    data class CheckDeferred(val crashIds: List<String> = listOf()) : CrashAction()
 
     /**
      * [CrashAction] to restore a stored deferred value.
      */
-    data class RestoreDeferred(val now: TimeInMillis, val until: TimeInMillis) : CrashAction()
+    data class RestoreDeferred(
+        val now: TimeInMillis,
+        val until: TimeInMillis,
+        val crashIds: List<String> = listOf(),
+    ) : CrashAction()
 
     /**
      * [CrashAction] to check if we have any unsent crashes.
      */
-    data object CheckForCrashes : CrashAction()
+    data class CheckForCrashes(val crashIds: List<String> = listOf()) : CrashAction()
 
     /**
      * [CrashAction] to return the result of [CheckForCrashes].
      */
-    data class FinishCheckingForCrashes(val hasUnsentCrashes: Boolean) : CrashAction()
+    data class FinishCheckingForCrashes(
+        val hasUnsentCrashes: Boolean,
+        val crashIds: List<String> = listOf(),
+    ) : CrashAction()
 
     /**
      * [CrashAction] to defer sending crashes until some point in the future.
@@ -39,15 +48,9 @@ sealed class CrashAction {
     data class Defer(val now: TimeInMillis) : CrashAction()
 
     /**
-     * [CrashAction] to ask user consent for sending crashes requested over
-     * Remote Settings.
-     */
-    data class PullCrashes(val crashIDs: Array<String>) : CrashAction()
-
-    /**
      * [CrashAction] show the user a prompt to send unsent crashes.
      */
-    data object ShowPrompt : CrashAction()
+    data class ShowPrompt(val crashIDs: List<String> = listOf()) : CrashAction()
 
     /**
      * [CrashAction] to send when a user taps the cancel button.
@@ -63,5 +66,5 @@ sealed class CrashAction {
     /**
      * [CrashAction] to send when a user taps the send report button.
      */
-    data class ReportTapped(val automaticallySendChecked: Boolean, val crashIDs: Array<String>?) : CrashAction()
+    data class ReportTapped(val automaticallySendChecked: Boolean, val crashIDs: List<String>) : CrashAction()
 }

@@ -52,7 +52,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  */
 class UnsubmittedCrashDialog(
     private val dispatcher: (action: CrashAction) -> Unit,
-    private val crashIDs: Array<String>?,
+    private val crashIDs: List<String>?,
     private val localContext: Context,
 ) : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -86,17 +86,13 @@ class UnsubmittedCrashDialog(
 private fun CrashCard(
     dismiss: () -> Unit,
     dispatcher: (action: CrashAction) -> Unit,
-    crashIDs: Array<String>?,
+    crashIDs: List<String>?,
     cardContext: Context?,
 ) {
-    var requestedByDevs = if (crashIDs != null && crashIDs.size > 0) {
-        true
-    } else {
-        false
-    }
+    val requestedByDevs = crashIDs != null && crashIDs.isNotEmpty()
 
-    var msg = if (requestedByDevs) {
-        if (crashIDs?.size == 1) {
+    val msg = if (requestedByDevs) {
+        if (crashIDs.size == 1) {
             stringResource(
                 R.string.unsubmitted_crash_requested_by_devs_dialog_title,
                 stringResource(R.string.app_name),
@@ -104,7 +100,7 @@ private fun CrashCard(
         } else {
             stringResource(
                 R.string.unsubmitted_crashes_requested_by_devs_dialog_title,
-                crashIDs!!.size,
+                crashIDs.size,
                 stringResource(R.string.app_name),
             )
         }
@@ -194,7 +190,12 @@ private fun CrashCard(
                 text = stringResource(R.string.unsubmitted_crash_dialog_positive_button).uppercase(),
                 color = FirefoxTheme.colors.textSecondary,
                 modifier = Modifier.clickable {
-                    dispatcher(CrashAction.ReportTapped(!requestedByDevs && checkboxChecked, crashIDs))
+                    dispatcher(
+                        CrashAction.ReportTapped(
+                            automaticallySendChecked = !requestedByDevs && checkboxChecked,
+                            crashIDs = crashIDs ?: listOf(),
+                        ),
+                    )
                     dismiss()
                 },
             )
@@ -211,6 +212,21 @@ private fun CrashDialogPreview() {
                 dismiss = {},
                 dispatcher = {},
                 crashIDs = null,
+                cardContext = null,
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun CrashPullDialogPreview() {
+    FirefoxTheme {
+        Box(Modifier.background(FirefoxTheme.colors.layer1)) {
+            CrashCard(
+                dismiss = {},
+                dispatcher = {},
+                crashIDs = listOf("12345", "67890"),
                 cardContext = null,
             )
         }

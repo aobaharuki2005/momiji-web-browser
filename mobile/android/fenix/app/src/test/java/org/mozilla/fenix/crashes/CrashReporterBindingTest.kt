@@ -11,9 +11,8 @@ import mozilla.components.lib.crash.store.CrashAction
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
-import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -34,13 +33,13 @@ class CrashReporterBindingTest {
             context = mockk<Context>(),
             store = appStore,
             onReporting = { crashIDs, ctxt ->
-                assertNull(crashIDs)
+                assertEquals(listOf<String>(), crashIDs)
                 onReportingCalled = true
             },
         )
         binding.start()
 
-        appStore.dispatch(AppAction.CrashActionWrapper(CrashAction.ShowPrompt))
+        appStore.dispatch(AppAction.CrashActionWrapper(CrashAction.ShowPrompt()))
         appStore.waitUntilIdle()
         assertTrue(onReportingCalled)
     }
@@ -54,13 +53,13 @@ class CrashReporterBindingTest {
             store = appStore,
             onReporting = { crashIDs, ctxt ->
                 assertNotNull(crashIDs)
-                assertArrayEquals(arrayOf("1", "2"), crashIDs)
+                assertEquals(listOf("1", "2"), crashIDs)
                 onReportingCalled = true
             },
         )
         binding.start()
 
-        appStore.dispatch(AppAction.CrashActionWrapper(CrashAction.PullCrashes(arrayOf("1", "2"))))
+        appStore.dispatch(AppAction.CrashActionWrapper(CrashAction.ShowPrompt(listOf("1", "2"))))
         appStore.waitUntilIdle()
         assertTrue(onReportingCalled)
     }

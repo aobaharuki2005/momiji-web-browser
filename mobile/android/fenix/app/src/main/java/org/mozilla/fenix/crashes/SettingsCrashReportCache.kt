@@ -35,6 +35,18 @@ class SettingsCrashReportCache(private val settings: Settings) : CrashReportCach
         settings.crashPullNeverShowAgain = neverShowAgain
     }
 
+    override suspend fun setCrashPullDeferUntil(timeInMillis: TimeInMillis) {
+        settings.crashPullDontShowBefore = timeInMillis
+    }
+
+    override suspend fun getCrashPullDeferUntil(): TimeInMillis? =
+        if (settings.crashPullNeverShowAgain) {
+            // defer this forever
+            Long.MAX_VALUE
+        } else {
+            settings.crashPullDontShowBefore
+        }
+
     override suspend fun getReportOption(): CrashReportOption = try {
         CrashReportOption.fromLabel(settings.crashReportChoice)
     } catch (e: IllegalArgumentException) {

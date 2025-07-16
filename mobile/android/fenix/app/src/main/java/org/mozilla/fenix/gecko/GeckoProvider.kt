@@ -75,7 +75,7 @@ object GeckoProvider {
         geckoRuntime.crashPullDelegate = GeckoCrashPullDelegate(
             dispatcher = { crashIDs ->
                 context.components.appStore.dispatch(
-                    AppAction.CrashActionWrapper(CrashAction.PullCrashes(crashIDs)),
+                    AppAction.CrashActionWrapper(CrashAction.CheckDeferred(crashIDs.toList())),
                 )
             },
         )

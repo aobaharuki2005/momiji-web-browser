@@ -30,13 +30,7 @@ sealed class CrashState {
     /**
      * Crash reporter is presenting UI to the user to send unsent crash reports.
      */
-    data object Reporting : CrashState()
-
-    /**
-     * Crash reporter is presenting UI to the user to send crash reports that
-     * were requested over Remote Settings.
-     */
-    data class ReportingPull(val crashIDs: Array<String>) : CrashState()
+    data class Reporting(val crashIDs: List<String> = listOf()) : CrashState()
 
     /**
      * Crash reporter is done.
