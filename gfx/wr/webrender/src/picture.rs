@@ -288,7 +288,7 @@ pub const TILE_SIZE_SCROLLBAR_VERTICAL: DeviceIntSize = DeviceIntSize {
 /// The maximum size per axis of a surface, in DevicePixel coordinates.
 /// Render tasks larger than this size are scaled down to fit, which may cause
 /// some blurriness.
-pub const MAX_SURFACE_SIZE: usize = 8192;
+pub const MAX_SURFACE_SIZE: usize = 4096;
 /// Maximum size of a compositor surface.
 const MAX_COMPOSITOR_SURFACES_SIZE: f32 = 8192.0;
 
