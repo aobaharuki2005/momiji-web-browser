@@ -190,7 +190,7 @@ class BrowserToolbarMiddlewareTest {
     }
     private val settings: Settings = mockk(relaxed = true) {
         every { shouldUseBottomToolbar } returns true
-        every { shouldUseSimpleToolbar } returns true
+        every { shouldUseExpandedToolbar } returns false
         every { isTabStripEnabled } returns false
     }
     private val tabId = "test"
@@ -1225,7 +1225,7 @@ class BrowserToolbarMiddlewareTest {
 
     @Test
     fun `WHEN translation is possible THEN show a translate button`() {
-        every { settings.shouldUseSimpleToolbar } returns false
+        every { settings.shouldUseExpandedToolbar } returns true
         val browserScreenStore = buildBrowserScreenStore()
         val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
         val toolbarStore = buildStore(middleware, browsingModeManager = browsingModeManager, navController = navController)
@@ -1246,7 +1246,7 @@ class BrowserToolbarMiddlewareTest {
 
     @Test
     fun `GIVEN the current page is translated WHEN knowing of this state THEN update the translate button to show this`() {
-        every { settings.shouldUseSimpleToolbar } returns false
+        every { settings.shouldUseExpandedToolbar } returns true
         val browserScreenStore = buildBrowserScreenStore()
         val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
         val toolbarStore = buildStore(middleware, browsingModeManager = browsingModeManager, navController = navController)
@@ -1281,7 +1281,7 @@ class BrowserToolbarMiddlewareTest {
 
     @Test
     fun `GIVEN translation is possible WHEN tapping on the translate button THEN allow user to choose how to translate`() {
-        every { settings.shouldUseSimpleToolbar } returns false
+        every { settings.shouldUseExpandedToolbar } returns true
         val currentNavDestination: NavDestination = mockk {
             every { id } returns R.id.browserFragment
         }
@@ -1941,7 +1941,7 @@ class BrowserToolbarMiddlewareTest {
 
     @Test
     fun `GIVEN in expanded mode WHEN THEN no browser end actions`() = runTestOnMain {
-        every { settings.shouldUseSimpleToolbar } returns false
+        every { settings.shouldUseExpandedToolbar } returns true
         Dispatchers.setMain(StandardTestDispatcher())
         val middleware = buildMiddleware(browserStore = browserStore)
         val toolbarStore = BrowserToolbarStore(
@@ -1982,7 +1982,7 @@ class BrowserToolbarMiddlewareTest {
 
     @Test
     fun `WHEN initializing the navigation bar AND should not use simple toolbar THEN add navigation bar actions`() = runTestOnMain {
-        every { settings.shouldUseSimpleToolbar } returns false
+        every { settings.shouldUseExpandedToolbar } returns true
         every { appState.orientation } returns Portrait
         Dispatchers.setMain(StandardTestDispatcher())
         val middleware = buildMiddleware(appStore = appStore)
@@ -2008,7 +2008,7 @@ class BrowserToolbarMiddlewareTest {
 
     @Test
     fun `WHEN initializing the navigation bar AND should not use simple toolbar AND in landscape THEN add no navigation bar actions`() = runTestOnMain {
-        every { settings.shouldUseSimpleToolbar } returns false
+        every { settings.shouldUseExpandedToolbar } returns true
         every { appState.orientation } returns Landscape
         Dispatchers.setMain(StandardTestDispatcher())
         val middleware = buildMiddleware(appStore = appStore)

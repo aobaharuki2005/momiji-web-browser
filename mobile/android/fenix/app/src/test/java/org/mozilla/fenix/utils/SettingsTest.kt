@@ -1060,7 +1060,7 @@ class SettingsTest {
     fun `GIVEN navigation bar and microsurvey is enabled WHEN getBottomToolbarContainerHeight THEN returns the combined height`() {
         val settings = spyk(settings)
         every { settings.shouldShowMicrosurveyPrompt } returns true
-        every { settings.shouldUseSimpleToolbar } returns false
+        every { settings.shouldUseExpandedToolbar } returns true
 
         val bottomToolbarContainerHeight = settings.getBottomToolbarContainerHeight()
 
@@ -1071,7 +1071,7 @@ class SettingsTest {
     fun `GIVEN the address bar, navigation bar and the microsurvey are shown at bottom WHEN getBottomToolbarHeight THEN returns the combined height`() {
         val settings = spyk(settings)
         every { settings.shouldShowMicrosurveyPrompt } returns true
-        every { settings.shouldUseSimpleToolbar } returns false
+        every { settings.shouldUseExpandedToolbar } returns true
         every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
 
         val bottomToolbarHeight = settings.getBottomToolbarHeight()
@@ -1083,7 +1083,7 @@ class SettingsTest {
     fun `GIVEN navigation bar and microsurvey is shown at bottom WHEN getBottomToolbarHeight THEN returns the combined height`() {
         val settings = spyk(settings)
         every { settings.shouldShowMicrosurveyPrompt } returns true
-        every { settings.shouldUseSimpleToolbar } returns false
+        every { settings.shouldUseExpandedToolbar } returns true
         every { settings.toolbarPosition } returns ToolbarPosition.TOP
 
         val bottomToolbarHeight = settings.getBottomToolbarHeight()
@@ -1095,7 +1095,7 @@ class SettingsTest {
     fun `GIVEN the addressbar and navigation bar is shown at bottom WHEN getBottomToolbarHeight THEN returns the combined height`() {
         val settings = spyk(settings)
         every { settings.shouldShowMicrosurveyPrompt } returns false
-        every { settings.shouldUseSimpleToolbar } returns false
+        every { settings.shouldUseExpandedToolbar } returns true
         every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
 
         val bottomToolbarHeight = settings.getBottomToolbarHeight()

@@ -123,7 +123,7 @@ class BrowserToolbarMiddlewareTest {
 
     @Before
     fun setup() = runTestOnMain {
-        every { testContext.settings().shouldUseSimpleToolbar } returns true
+        every { testContext.settings().shouldUseExpandedToolbar } returns false
         every { testContext.settings().isTabStripEnabled } returns false
     }
 
@@ -157,8 +157,8 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `WHEN initializing the toolbar AND should not use simple toolbar THEN add browser end actions`() = runTestOnMain {
-        every { testContext.settings().shouldUseSimpleToolbar } returns false
+    fun `WHEN initializing the toolbar AND should use expanded toolbar THEN add browser end actions`() = runTestOnMain {
+        every { testContext.settings().shouldUseExpandedToolbar } returns true
         val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
 
         val toolbarStore = buildStore(middleware)
@@ -168,8 +168,8 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `WHEN initializing the navigation bar AND should not use simple toolbar THEN add navigation bar actions`() = runTestOnMain {
-        every { testContext.settings().shouldUseSimpleToolbar } returns false
+    fun `WHEN initializing the navigation bar AND should use expanded toolbar THEN add navigation bar actions`() = runTestOnMain {
+        every { testContext.settings().shouldUseExpandedToolbar } returns true
         val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
 
         val toolbarStore = buildStore(middleware)
@@ -189,8 +189,8 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `WHEN initializing the navigation bar AND should not use simple toolbar AND orientation is landscape THEN add no navigation bar actions`() = runTestOnMain {
-        every { testContext.settings().shouldUseSimpleToolbar } returns false
+    fun `WHEN initializing the navigation bar AND should use expanded toolbar AND orientation is landscape THEN add no navigation bar actions`() = runTestOnMain {
+        every { testContext.settings().shouldUseExpandedToolbar } returns true
         every { appState.orientation } returns Landscape
         val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
 

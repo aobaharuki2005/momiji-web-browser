@@ -12,13 +12,13 @@
     android:layout_height="wrap_content">
 
     <include layout="@layout/preference_widget_radiobutton_vertical"
-        android:id="@+id/option_true"
+        android:id="@+id/option_false"
         android:layout_width="120dp"
         android:layout_weight="1"
         android:layout_height="wrap_content" />
 
     <include layout="@layout/preference_widget_radiobutton_vertical"
-        android:id="@+id/option_false"
+        android:id="@+id/option_true"
         android:layout_width="120dp"
         android:layout_weight="1"
         android:layout_height="wrap_content" />

@@ -687,7 +687,7 @@ class BrowserToolbarMiddleware(
             },
             ToolbarActionConfig(ToolbarAction.Translate) {
                 browserScreenStore.state.pageTranslationStatus.isTranslationPossible &&
-                        !settings.shouldUseSimpleToolbar
+                        settings.shouldUseExpandedToolbar
             },
         ).filter { config ->
             config.isVisible()
@@ -697,17 +697,17 @@ class BrowserToolbarMiddleware(
     }
 
     private fun buildEndBrowserActions(): List<Action> {
-        val isSimpleOrLandscape = appStore.state.orientation == OrientationMode.Landscape ||
-                settings.shouldUseSimpleToolbar
+        val isExpandedAndPortrait = settings.shouldUseExpandedToolbar &&
+                appStore.state.orientation == OrientationMode.Portrait
 
         return listOf(
             ToolbarActionConfig(ToolbarAction.NewTab) {
-                !settings.isTabStripEnabled && isSimpleOrLandscape
+                !settings.isTabStripEnabled && !isExpandedAndPortrait
             },
             ToolbarActionConfig(ToolbarAction.TabCounter) {
-                !settings.isTabStripEnabled && isSimpleOrLandscape
+                !settings.isTabStripEnabled && !isExpandedAndPortrait
             },
-            ToolbarActionConfig(ToolbarAction.Menu) { isSimpleOrLandscape },
+            ToolbarActionConfig(ToolbarAction.Menu) { !isExpandedAndPortrait },
         ).filter { config ->
             config.isVisible()
         }.map { config ->
@@ -716,7 +716,7 @@ class BrowserToolbarMiddleware(
     }
 
     private fun buildNavigationActions(isBookmarked: Boolean): List<Action> {
-        val isExpandedAndPortrait = !settings.shouldUseSimpleToolbar &&
+        val isExpandedAndPortrait = settings.shouldUseExpandedToolbar &&
                     appStore.state.orientation == OrientationMode.Portrait
 
         return listOf(
