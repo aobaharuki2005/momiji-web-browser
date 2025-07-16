@@ -80,7 +80,8 @@ def _GenerateProjectFile(android_manifest,
                          resource_sources=None,
                          custom_lint_jars=None,
                          custom_annotation_zips=None,
-                         android_sdk_version=None):
+                         android_sdk_version=None,
+                         baseline_path=None):
   project = ElementTree.Element('project')
   root = ElementTree.SubElement(project, 'root')
   # Run lint from output directory: crbug.com/1115594
@@ -88,6 +89,9 @@ def _GenerateProjectFile(android_manifest,
   sdk = ElementTree.SubElement(project, 'sdk')
   # Lint requires that the sdk path be an absolute path.
   sdk.set('dir', os.path.abspath(android_sdk_root))
+  if baseline_path is not None:
+    baseline = ElementTree.SubElement(project, 'baseline')
+    baseline.set('file', baseline_path)
   cache = ElementTree.SubElement(project, 'cache')
   cache.set('dir', cache_dir)
   main_module = ElementTree.SubElement(project, 'module')
@@ -163,12 +167,6 @@ def _GenerateAndroidManifest(original_manifest_path, extra_manifest_paths,
     for node in extra_app_node:
       app_node.append(node)
 
-  if app_node.find(
-      '{%s}allowBackup' % manifest_utils.ANDROID_NAMESPACE) is None:
-    # Assume no backup is intended, appeases AllowBackup lint check and keeping
-    # it working for manifests that do define android:allowBackup.
-    app_node.set('{%s}allowBackup' % manifest_utils.ANDROID_NAMESPACE, 'false')
-
   uses_sdk = manifest.find('./uses-sdk')
   if uses_sdk is None:
     uses_sdk = ElementTree.Element('uses-sdk')
@@ -191,7 +189,8 @@ def _WriteXmlFile(root, path):
             root, encoding='utf-8')).toprettyxml(indent='  ').encode('utf-8'))
 
 
-def _RunLint(lint_binary_path,
+def _RunLint(create_cache,
+             lint_binary_path,
              backported_methods_path,
              config_path,
              manifest_path,
@@ -212,15 +211,28 @@ def _RunLint(lint_binary_path,
              warnings_as_errors=False):
   logging.info('Lint starting')
 
+  if create_cache:
+    # Occasionally lint may crash due to re-using intermediate files from older
+    # lint runs. See https://crbug.com/1258178 for context.
+    logging.info('Clearing cache dir %s before creating cache.', cache_dir)
+    shutil.rmtree(cache_dir, ignore_errors=True)
+    os.makedirs(cache_dir)
+
   cmd = [
       lint_binary_path,
+      # Uncomment to update baseline files during lint upgrades. Avoid using
+      # for now since it seems to downgrade baseline format from 6 to 5. Until
+      # that is fixed, remove the baseline and re-run lint instead (remember
+      # to remove the LintError entry before committing).
+      #'--update-baseline',
+      # Uncomment to easily remove fixed lint errors. This is not turned on by
+      # default due to: https://crbug.com/1256477#c5
+      #'--remove-fixed',
       '--quiet',  # Silences lint's "." progress updates.
       '--disable',
       ','.join(_DISABLED_ALWAYS),
   ]
 
-  if baseline:
-    cmd.extend(['--baseline', baseline])
   if testonly_target:
     cmd.extend(['--disable', ','.join(_DISABLED_FOR_TESTS)])
 
@@ -263,10 +275,6 @@ def _RunLint(lint_binary_path,
   custom_annotation_zips = []
   if aars:
     for aar in aars:
-      # androidx custom lint checks require a newer version of lint. Disable
-      # until we update see https://crbug.com/1225326
-      if 'androidx' in aar:
-        continue
       # Use relative source for aar files since they are not generated.
       aar_dir = os.path.join(aar_root_dir,
                              os.path.splitext(_SrcRelative(aar))[0])
@@ -300,7 +308,7 @@ def _RunLint(lint_binary_path,
                                            classpath, srcjar_sources,
                                            resource_sources, custom_lint_jars,
                                            custom_annotation_zips,
-                                           android_sdk_version)
+                                           android_sdk_version, baseline)
 
   project_xml_path = os.path.join(lint_gen_dir, 'project.xml')
   _WriteXmlFile(project_file_root, project_xml_path)
@@ -366,6 +374,9 @@ def _ParseArgs(argv):
   parser.add_argument('--skip-build-server',
                       action='store_true',
                       help='Avoid using the build server.')
+  parser.add_argument('--use-build-server',
+                      action='store_true',
+                      help='Always use the build server.')
   parser.add_argument('--lint-binary-path',
                       required=True,
                       help='Path to lint executable.')
@@ -446,8 +457,10 @@ def main():
   # Avoid parallelizing cache creation since lint runs without the cache defeat
   # the purpose of creating the cache in the first place.
   if (not args.create_cache and not args.skip_build_server
-      and server_utils.MaybeRunCommand(
-          name=args.target_name, argv=sys.argv, stamp_file=args.stamp)):
+      and server_utils.MaybeRunCommand(name=args.target_name,
+                                       argv=sys.argv,
+                                       stamp_file=args.stamp,
+                                       force=args.use_build_server)):
     return
 
   sources = []
@@ -464,7 +477,8 @@ def main():
                            ])
   depfile_deps = [p for p in possible_depfile_deps if p]
 
-  _RunLint(args.lint_binary_path,
+  _RunLint(args.create_cache,
+           args.lint_binary_path,
            args.backported_methods,
            args.config_path,
            args.manifest_path,

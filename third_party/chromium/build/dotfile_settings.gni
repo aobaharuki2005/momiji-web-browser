@@ -36,6 +36,7 @@ build_dotfile_settings = {
     "//chromium/build/toolchain/nacl/BUILD.gn",
     "//chromium/build/toolchain/toolchain.gni",
     "//chromium/build/toolchain/win/BUILD.gn",
+    "//chromium/build/toolchain/zos/BUILD.gn",
     "//chromium/build/util/branding.gni",
     "//chromium/build/util/version.gni",
   ]

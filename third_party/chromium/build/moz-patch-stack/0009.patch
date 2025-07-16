@@ -13,7 +13,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1cdf94de5db5e884d
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/config/linux/BUILD.gn b/config/linux/BUILD.gn
-index 2bdd08fc4..863114e58 100644
+index 652b9cbd0..6092ff329 100644
 --- a/config/linux/BUILD.gn
 +++ b/config/linux/BUILD.gn
 @@ -2,6 +2,8 @@
@@ -25,7 +25,7 @@ index 2bdd08fc4..863114e58 100644
  import("//build/config/c++/c++.gni")
  import("//build/config/chromeos/ui_mode.gni")
  import("//build/config/linux/pkg_config.gni")
-@@ -39,7 +41,7 @@ config("runtime_library") {
+@@ -42,7 +44,7 @@ config("runtime_library") {
  
    if ((!(is_chromeos_ash || is_chromeos_lacros) ||
         default_toolchain != "//build/toolchain/cros:target") &&

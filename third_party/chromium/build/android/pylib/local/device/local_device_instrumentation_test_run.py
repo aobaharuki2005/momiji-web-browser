@@ -104,6 +104,7 @@ _EXTRA_PACKAGE_UNDER_TEST = ('org.chromium.chrome.test.pagecontroller.rules.'
 FEATURE_ANNOTATION = 'Feature'
 RENDER_TEST_FEATURE_ANNOTATION = 'RenderTest'
 WPR_ARCHIVE_FILE_PATH_ANNOTATION = 'WPRArchiveDirectory'
+WPR_ARCHIVE_NAME_ANNOTATION = 'WPRArchiveDirectory$ArchiveName'
 WPR_RECORD_REPLAY_TEST_FEATURE_ANNOTATION = 'WPRRecordReplayTest'
 
 _DEVICE_GOLD_DIR = 'skia_gold'
@@ -162,8 +163,7 @@ def _GetTargetPackageName(test_apk):
 class LocalDeviceInstrumentationTestRun(
     local_device_test_run.LocalDeviceTestRun):
   def __init__(self, env, test_instance):
-    super(LocalDeviceInstrumentationTestRun, self).__init__(
-        env, test_instance)
+    super().__init__(env, test_instance)
     self._chrome_proxy = None
     self._context_managers = collections.defaultdict(list)
     self._flag_changers = {}
@@ -513,12 +513,21 @@ class LocalDeviceInstrumentationTestRun(
         # Feature flags won't work in instrumentation tests unless the activity
         # is restarted.
         # Tests with identical features are grouped to minimize restarts.
-        if 'Features$EnableFeatures' in annotations:
-          batch_name += '|enabled:' + ','.join(
-              sorted(annotations['Features$EnableFeatures']['value']))
-        if 'Features$DisableFeatures' in annotations:
-          batch_name += '|disabled:' + ','.join(
-              sorted(annotations['Features$DisableFeatures']['value']))
+        # UnitTests that specify flags always use Features.JUnitProcessor, so
+        # they don't need to be split.
+        if batch_name != 'UnitTests':
+          if 'Features$EnableFeatures' in annotations:
+            batch_name += '|enabled:' + ','.join(
+                sorted(annotations['Features$EnableFeatures']['value']))
+          if 'Features$DisableFeatures' in annotations:
+            batch_name += '|disabled:' + ','.join(
+                sorted(annotations['Features$DisableFeatures']['value']))
+          if 'CommandLineFlags$Add' in annotations:
+            batch_name += '|cmd_line_add:' + ','.join(
+                sorted(annotations['CommandLineFlags$Add']['value']))
+          if 'CommandLineFlags$Remove' in annotations:
+            batch_name += '|cmd_line_remove:' + ','.join(
+                sorted(annotations['CommandLineFlags$Remove']['value']))
 
         if not batch_name in batched_tests:
           batched_tests[batch_name] = []
@@ -526,15 +535,28 @@ class LocalDeviceInstrumentationTestRun(
       else:
         other_tests.append(test)
 
+    def dict2list(d):
+      if isinstance(d, dict):
+        return sorted([(k, dict2list(v)) for k, v in d.items()])
+      if isinstance(d, list):
+        return [dict2list(v) for v in d]
+      if isinstance(d, tuple):
+        return tuple(dict2list(v) for v in d)
+      return d
+
     all_tests = []
-    for _, tests in list(batched_tests.items()):
-      tests.sort()  # Ensure a consistent ordering across external shards.
+    for _, btests in list(batched_tests.items()):
+      # Ensure a consistent ordering across external shards.
+      if len(btests) > _TEST_BATCH_MAX_GROUP_SIZE:
+        btests.sort(key=dict2list)
       all_tests.extend([
-          tests[i:i + _TEST_BATCH_MAX_GROUP_SIZE]
-          for i in range(0, len(tests), _TEST_BATCH_MAX_GROUP_SIZE)
+          btests[i:i + _TEST_BATCH_MAX_GROUP_SIZE]
+          for i in range(0, len(btests), _TEST_BATCH_MAX_GROUP_SIZE)
       ])
     all_tests.extend(other_tests)
-    return all_tests
+    # Sort all tests by hash.
+    # TODO(crbug.com/1257820): Add sorting logic back to _PartitionTests.
+    return self._SortTests(all_tests)
 
   #override
   def _GetUniqueTestName(self, test):
@@ -654,10 +676,12 @@ class LocalDeviceInstrumentationTestRun(
                                wpr_archive_path,
                                os.path.exists(wpr_archive_path)))
 
+      file_name = _GetWPRArchiveFileName(
+          test) or self._GetUniqueTestName(test) + '.wprgo'
+
       # Some linux version does not like # in the name. Replaces it with __.
-      archive_path = os.path.join(
-          wpr_archive_path,
-          _ReplaceUncommonChars(self._GetUniqueTestName(test)) + '.wprgo')
+      archive_path = os.path.join(wpr_archive_path,
+                                  _ReplaceUncommonChars(file_name))
 
       if not os.path.exists(_WPR_GO_LINUX_X86_64_PATH):
         # If we got to this stage, then we should have
@@ -1040,8 +1064,8 @@ class LocalDeviceInstrumentationTestRun(
     if device.FileExists(trace_device_file.name):
       try:
         java_trace_json = device.ReadFile(trace_device_file.name)
-      except IOError:
-        raise Exception('error pulling trace file from device')
+      except IOError as e:
+        raise Exception('error pulling trace file from device') from e
       finally:
         trace_device_file.close()
 
@@ -1351,16 +1375,21 @@ def _IsWPRRecordReplayTest(test):
   """Determines whether a test or a list of tests is a WPR RecordReplay Test."""
   if not isinstance(test, list):
     test = [test]
-  return any([
-      WPR_RECORD_REPLAY_TEST_FEATURE_ANNOTATION in t['annotations'].get(
-          FEATURE_ANNOTATION, {}).get('value', ()) for t in test
-  ])
+  return any(WPR_RECORD_REPLAY_TEST_FEATURE_ANNOTATION in t['annotations'].get(
+      FEATURE_ANNOTATION, {}).get('value', ()) for t in test)
 
 
 def _GetWPRArchivePath(test):
   """Retrieves the archive path from the WPRArchiveDirectory annotation."""
   return test['annotations'].get(WPR_ARCHIVE_FILE_PATH_ANNOTATION,
                                  {}).get('value', ())
+
+
+def _GetWPRArchiveFileName(test):
+  """Retrieves the WPRArchiveDirectory.ArchiveName annotation."""
+  value = test['annotations'].get(WPR_ARCHIVE_NAME_ANNOTATION,
+                                  {}).get('value', None)
+  return value[0] if value else None
 
 
 def _ReplaceUncommonChars(original):
@@ -1378,8 +1407,8 @@ def _IsRenderTest(test):
   """Determines if a test or list of tests has a RenderTest amongst them."""
   if not isinstance(test, list):
     test = [test]
-  return any([RENDER_TEST_FEATURE_ANNOTATION in t['annotations'].get(
-              FEATURE_ANNOTATION, {}).get('value', ()) for t in test])
+  return any(RENDER_TEST_FEATURE_ANNOTATION in t['annotations'].get(
+      FEATURE_ANNOTATION, {}).get('value', ()) for t in test)
 
 
 def _GenerateRenderTestHtml(image_name, failure_link, golden_link, diff_link):
@@ -1491,7 +1520,7 @@ def _MatchingTestInResults(results, full_test_name):
     True if one of the results in |results| has the same name as
     |full_test_name|, otherwise False.
   """
-  return any([r for r in results if r.GetName() == full_test_name])
+  return any(r for r in results if r.GetName() == full_test_name)
 
 
 def _ShouldReportNoMatchingResult(full_test_name):

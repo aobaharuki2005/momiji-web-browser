@@ -31,7 +31,6 @@ BROWSER_TEST_SUITES = [
     'android_sync_integration_tests',
     'components_browsertests',
     'content_browsertests',
-    'hybrid_browsertest',
     'weblayer_browsertests',
 ]
 
@@ -320,7 +319,7 @@ def TestNameWithoutDisabledPrefix(test_name):
 class GtestTestInstance(test_instance.TestInstance):
 
   def __init__(self, args, data_deps_delegate, error_func):
-    super(GtestTestInstance, self).__init__()
+    super().__init__()
     # TODO(jbudorick): Support multiple test suites.
     if len(args.suite_name) > 1:
       raise ValueError('Platform mode currently supports only 1 gtest suite')
@@ -624,4 +623,3 @@ class GtestTestInstance(test_instance.TestInstance):
   #override
   def TearDown(self):
     """Do nothing."""
-    pass

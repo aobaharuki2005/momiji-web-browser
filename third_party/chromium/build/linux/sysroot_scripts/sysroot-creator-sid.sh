@@ -19,7 +19,7 @@ DIST=sid
 # It will be needed until gnome keyring is removed (http://crbug.com/466975 and
 # http://crbug.com/355223).
 ARCHIVE_URL="https://snapshot.debian.org/archive/debian"
-ARCHIVE_TIMESTAMP=20210309T203820Z
+ARCHIVE_TIMESTAMP=20210819T144544Z
 APT_SOURCES_LIST="${ARCHIVE_URL}/${ARCHIVE_TIMESTAMP}/ stretch main
 ${ARCHIVE_URL}/${ARCHIVE_TIMESTAMP}/ experimental main
 ${ARCHIVE_URL}/${ARCHIVE_TIMESTAMP}/ sid main"
@@ -75,6 +75,7 @@ DEBIAN_PACKAGES="\
   libcap-dev
   libcap-ng0
   libcap2
+  libcloudproviders0
   libcolord2
   libcom-err2
   libcups2
@@ -93,6 +94,7 @@ DEBIAN_PACKAGES="\
   libdbusmenu-glib4
   libdbusmenu-gtk3-4
   libdbusmenu-gtk4
+  libdeflate-dev
   libdeflate0
   libdrm-amdgpu1
   libdrm-dev
@@ -115,6 +117,7 @@ DEBIAN_PACKAGES="\
   libffi-dev
   libffi6
   libffi7
+  libffi8
   libflac-dev
   libflac8
   libfontconfig-dev
@@ -181,6 +184,7 @@ DEBIAN_PACKAGES="\
   libindicator7
   libinput-dev
   libinput10
+  libjbig-dev
   libjbig0
   libjpeg62-turbo
   libjpeg62-turbo-dev
@@ -285,7 +289,9 @@ DEBIAN_PACKAGES="\
   libtasn1-6
   libthai-dev
   libthai0
+  libtiff-dev
   libtiff5
+  libtiffxx5
   libtinfo6
   libtirpc3
   libudev-dev
@@ -301,8 +307,6 @@ DEBIAN_PACKAGES="\
   libva2
   libvorbis0a
   libvorbisenc2
-  libvpx-dev
-  libvpx6
   libvulkan-dev
   libvulkan1
   libwacom2
@@ -381,7 +385,6 @@ DEBIAN_PACKAGES="\
   linux-libc-dev
   mesa-common-dev
   shared-mime-info
-  speech-dispatcher
   uuid-dev
   wayland-protocols
   x11proto-composite-dev
@@ -417,6 +420,7 @@ DEBIAN_PACKAGES_X86="
   libmpx2
   libquadmath0
   libubsan1
+  valgrind
 "
 
 DEBIAN_PACKAGES_ARM="
@@ -429,6 +433,7 @@ DEBIAN_PACKAGES_ARM="
   libgtk-4-1
   libgtk-4-dev
   libubsan1
+  valgrind
 "
 
 DEBIAN_PACKAGES_ARM64="
@@ -444,6 +449,7 @@ DEBIAN_PACKAGES_ARM64="
   libthai0
   libtsan0
   libubsan1
+  valgrind
 "
 
 DEBIAN_PACKAGES_ARMEL="
@@ -458,6 +464,7 @@ DEBIAN_PACKAGES_ARMEL="
 "
 
 DEBIAN_PACKAGES_MIPS64EL="
+  valgrind
 "
 
 . "${SCRIPT_DIR}/sysroot-creator.sh"

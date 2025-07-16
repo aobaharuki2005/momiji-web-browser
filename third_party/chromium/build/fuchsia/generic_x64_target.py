@@ -51,7 +51,7 @@ class GenericX64PavedDeviceTarget(device_target.DeviceTarget):
     should_provision = False
 
     if self._Discover():
-      self._WaitUntilReady()
+      self._ConnectToTarget()
 
       if self._os_check != 'ignore':
         if self._SDKHashMatches():
@@ -86,7 +86,7 @@ class GenericX64PavedDeviceTarget(device_target.DeviceTarget):
       bootserver_command += ['-n', self._node_name]
 
     bootserver_command += ['--']
-    bootserver_command += boot_data.GetKernelArgs(self._out_dir)
+    bootserver_command += boot_data.GetKernelArgs()
 
     logging.debug(' '.join(bootserver_command))
     _, stdout = SubprocessCallWithTimeout(bootserver_command,

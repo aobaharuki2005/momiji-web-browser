@@ -18,6 +18,10 @@ IMAGES_ROOT = os.path.join(
     DIR_SOURCE_ROOT, 'third_party', 'fuchsia-sdk', 'images')
 SDK_ROOT = os.path.join(DIR_SOURCE_ROOT, 'third_party', 'fuchsia-sdk', 'sdk')
 
+# The number of seconds to wait when trying to attach to a target.
+ATTACH_RETRY_SECONDS = 120
+
+
 def EnsurePathExists(path):
   """Checks that the file |path| exists on the filesystem and returns the path
   if it does, raising an exception otherwise."""
@@ -97,6 +101,12 @@ def GetAvailableTcpPort():
   return port
 
 
+def RunGnSdkFunction(script, function):
+  script_path = os.path.join(SDK_ROOT, 'bin', script)
+  function_cmd = ['bash', '-c', '. %s; %s' % (script_path, function)]
+  return SubprocessCallWithTimeout(function_cmd)
+
+
 def SubprocessCallWithTimeout(command, silent=False, timeout_secs=None):
   """Helper function for running a command.
 
@@ -112,11 +122,15 @@ def SubprocessCallWithTimeout(command, silent=False, timeout_secs=None):
 
   if silent:
     devnull = open(os.devnull, 'w')
-    process = subprocess.Popen(command, stdout=devnull, stderr=devnull)
+    process = subprocess.Popen(command,
+                               stdout=devnull,
+                               stderr=devnull,
+                               text=True)
   else:
     process = subprocess.Popen(command,
                                stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
+                               stderr=subprocess.PIPE,
+                               text=True)
   timeout_timer = None
   if timeout_secs:
 
@@ -138,3 +152,12 @@ def SubprocessCallWithTimeout(command, silent=False, timeout_secs=None):
     raise Exception('Timeout when executing \"%s\".' % ' '.join(command))
 
   return process.returncode, out, err
+
+
+def IsRunningUnattended():
+  """Returns true if running non-interactively.
+
+  When running unattended, confirmation prompts and the like are suppressed.
+  """
+  # Chromium tests only for the presence of the variable, so match that here.
+  return 'CHROME_HEADLESS' in os.environ

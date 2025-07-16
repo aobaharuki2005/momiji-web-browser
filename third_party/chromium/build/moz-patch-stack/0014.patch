@@ -1,34 +1,102 @@
 From: Michael Froman <mfroman@mozilla.com>
 Date: Mon, 20 Jun 2022 22:34:00 +0000
-Subject: Bug 1775143 - pt16 - (mirror) 65d11ae74c1e r=ng
+Subject: Bug 1775143 - pt17 - account for is_desktop_linux going away and
+ using is_linux r=ng
 
 (skip-generation)
 
-Depends on D149829
+Depends on D149830
 
-Differential Revision: https://phabricator.services.mozilla.com/D149830
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ae0c945f3d38d37251ca87428c011012bea81fb2
+Differential Revision: https://phabricator.services.mozilla.com/D149831
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/aad17933ade0176606c4d7b694669bc67f5f92b5
 ---
- build_config.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ config/compiler/BUILD.gn     | 2 +-
+ config/linux/gtk/gtk.gni     | 2 +-
+ config/linux/libdrm/BUILD.gn | 2 +-
+ config/ozone.gni             | 4 ++--
+ config/ui.gni                | 4 ++--
+ 5 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/build_config.h b/build_config.h
-index 584b22a12..c39ae9da5 100644
---- a/build_config.h
-+++ b/build_config.h
-@@ -201,6 +201,15 @@
- #define ARCH_CPU_RISCV64 1
- #define ARCH_CPU_64_BITS 1
- #define ARCH_CPU_LITTLE_ENDIAN 1
-+#elif defined(__sparc__)
-+#if defined(__LP64__)
-+#define ARCH_CPU_SPARC64 1
-+#define ARCH_CPU_64_BITS 1
-+#define ARCH_CPU_BIG_ENDIAN 1
-+#endif
-+#define ARCH_CPU_SPARC 1
-+#define ARCH_CPU_32_BITS 1
-+#define ARCH_CPU_BIG_ENDIAN 1
- #else
- #error Please add support for your architecture in build/build_config.h
- #endif
+diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
+index 4c993f277..5bf16e3f2 100644
+--- a/config/compiler/BUILD.gn
++++ b/config/compiler/BUILD.gn
+@@ -1816,7 +1816,7 @@ config("no_rtti") {
+ # to heap-allocated memory are passed over shared library boundaries.
+ config("export_dynamic") {
+   # TODO(crbug.com/1052397): Revisit after target_os flip is completed.
+-  if (is_linux || is_chromeos_lacros || export_libcxxabi_from_executables) {
++  if (is_linux || is_bsd || is_chromeos_lacros || export_libcxxabi_from_executables) {
+     ldflags = [ "-rdynamic" ]
+   }
+ }
+diff --git a/config/linux/gtk/gtk.gni b/config/linux/gtk/gtk.gni
+index 64e62f2d9..b846c8e62 100644
+--- a/config/linux/gtk/gtk.gni
++++ b/config/linux/gtk/gtk.gni
+@@ -6,7 +6,7 @@ import("//build/config/ui.gni")
+ 
+ declare_args() {
+   # Whether or not we should use libgtk.
+-  use_gtk = is_linux && !is_chromecast
++  use_gtk = (is_linux || is_bsd) && !is_chromecast
+ 
+   # The (major) version of GTK to build against.  A different version may be
+   # loaded at runtime.
+diff --git a/config/linux/libdrm/BUILD.gn b/config/linux/libdrm/BUILD.gn
+index e9b40184e..79695cbc6 100644
+--- a/config/linux/libdrm/BUILD.gn
++++ b/config/linux/libdrm/BUILD.gn
+@@ -11,7 +11,7 @@ declare_args() {
+   # Controls whether the build should use the version of libdrm library shipped
+   # with the system. In release builds of desktop Linux and Chrome OS we use the
+   # system version. Some Chromecast devices use this as well.
+-  use_system_libdrm = is_chromeos_device || (is_linux && !is_chromecast)
++  use_system_libdrm = is_chromeos_device || ((is_linux || is_bsd) && !is_chromecast)
+ }
+ 
+ if (use_system_libdrm) {
+diff --git a/config/ozone.gni b/config/ozone.gni
+index 6a29b7c4f..129a0d8df 100644
+--- a/config/ozone.gni
++++ b/config/ozone.gni
+@@ -10,7 +10,7 @@ declare_args() {
+   # Indicates if Ozone is enabled. Ozone is a low-level library layer for Linux
+   # that does not require X11.
+   use_ozone =
+-      is_chromeos || (is_chromecast && !is_android) || is_fuchsia || is_linux
++      is_chromeos || (is_chromecast && !is_android) || is_fuchsia || is_linux || is_bsd
+ }
+ 
+ declare_args() {
+@@ -91,7 +91,7 @@ declare_args() {
+     } else if (is_chromeos_lacros) {
+       ozone_platform = "wayland"
+       ozone_platform_wayland = true
+-    } else if (is_linux) {
++    } else if (is_linux || is_bsd) {
+       ozone_platform = "x11"
+       ozone_platform_wayland = true
+       ozone_platform_x11 = true
+diff --git a/config/ui.gni b/config/ui.gni
+index 796068b76..b6c314f10 100644
+--- a/config/ui.gni
++++ b/config/ui.gni
+@@ -33,7 +33,7 @@ declare_args() {
+   toolkit_views = is_mac || is_win || is_linux || is_chromeos || is_fuchsia
+ 
+   use_glib =
+-      is_linux && !is_chromecast &&
++      (is_linux || is_bsd) && !is_chromecast &&
+       # Avoid the need for glib when Android is building things via secondary
+       # toolchains.
+       target_os != "android"
+@@ -41,7 +41,7 @@ declare_args() {
+ 
+ assert(!use_glib || ((is_linux || is_bsd) && !is_chromecast))
+ 
+-use_atk = is_linux && !is_chromecast && use_glib &&
++use_atk = (is_linux || is_bsd) && !is_chromecast && use_glib &&
+           current_toolchain == default_toolchain
+ 
+ # Whether using Xvfb to provide a display server for a test might be

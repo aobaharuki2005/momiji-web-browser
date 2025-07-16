@@ -9,13 +9,15 @@ import subprocess
 import time
 
 import common
+import ffx_session
 import remote_cmd
-import runner_logs
+
+from log_manager import LogManager
+from symbolizer import BuildIdsPaths, RunSymbolizer
 
 
 _SHUTDOWN_CMD = ['dm', 'poweroff']
 _ATTACH_RETRY_INTERVAL = 1
-_ATTACH_RETRY_SECONDS = 120
 
 # Amount of time to wait for a complete package installation, as a
 # mitigation against hangs due to pkg/network-related failures.
@@ -59,17 +61,22 @@ class FuchsiaTargetException(Exception):
     super(FuchsiaTargetException, self).__init__(message)
 
 
+# TODO(crbug.com/1250803): Factor high level commands out of target.
 class Target(object):
   """Base class representing a Fuchsia deployment target."""
 
-  def __init__(self, out_dir, target_cpu):
+  def __init__(self, out_dir, target_cpu, logs_dir):
     self._out_dir = out_dir
-    self._started = False
-    self._dry_run = False
     self._target_cpu = target_cpu
     self._command_runner = None
+    self._symbolizer_proc = None
+    self._log_listener_proc = None
+    self._dry_run = False
+    self._started = False
     self._ffx_path = os.path.join(common.SDK_ROOT, 'tools',
                                   common.GetHostArchFromPlatform(), 'ffx')
+    self._log_manager = LogManager(logs_dir)
+    self._ffx_runner = ffx_session.FfxRunner(self._log_manager)
 
   @staticmethod
   def CreateFromArgs(args):
@@ -83,7 +90,7 @@ class Target(object):
   def __enter__(self):
     return self
   def __exit__(self, exc_type, exc_val, exc_tb):
-    return
+    self.Stop()
 
   def Start(self):
     """Handles the instantiation and connection process for the Fuchsia
@@ -93,6 +100,18 @@ class Target(object):
     """Returns True if the Fuchsia target instance is ready to accept
     commands."""
     return self._started
+
+  def GetFfxTarget(self):
+    """Returns the FfxTarget instance to use to interact with this target."""
+    raise NotImplementedError()
+
+  def Stop(self):
+    """Stop all subprocesses and close log streams."""
+    if self._symbolizer_proc:
+      self._symbolizer_proc.kill()
+    if self._log_listener_proc:
+      self._log_listener_proc.kill()
+    self._log_manager.Stop()
 
   def IsNewInstance(self):
     """Returns True if the connected target instance is newly provisioned."""
@@ -109,6 +128,21 @@ class Target(object):
           remote_cmd.CommandRunner(self._GetSshConfigPath(), host, port)
 
     return self._command_runner
+
+  def StartSystemLog(self, package_paths):
+    """Start a system log reader as a long-running SSH task."""
+    system_log = self._log_manager.Open('system_log')
+    if package_paths:
+      self._log_listener_proc = self.RunCommandPiped(['log_listener'],
+                                                     stdout=subprocess.PIPE,
+                                                     stderr=subprocess.STDOUT)
+      self._symbolizer_proc = RunSymbolizer(self._log_listener_proc.stdout,
+                                            system_log,
+                                            BuildIdsPaths(package_paths))
+    else:
+      self._log_listener_proc = self.RunCommandPiped(['log_listener'],
+                                                     stdout=system_log,
+                                                     stderr=subprocess.STDOUT)
 
   def RunCommandPiped(self, command, **kwargs):
     """Starts a remote command and immediately returns a Popen object for the
@@ -234,6 +268,19 @@ class Target(object):
                                           remote_cmd.COPY_FROM_TARGET,
                                           recursive)
 
+  def GetFileAsString(self, source):
+    """Reads a file on the device and returns it as a string.
+
+    source: The remote file path to read.
+    """
+    cat_proc = self.RunCommandPiped(['cat', source],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
+    stdout, _ = cat_proc.communicate()
+    if cat_proc.returncode != 0:
+      raise Exception('Could not read file %s on device.', source)
+    return stdout.decode('utf-8')
+
   def _GetEndpoint(self):
     """Returns a (host, port) tuple for the SSH connection to the target."""
     raise NotImplementedError()
@@ -247,12 +294,12 @@ class Target(object):
   def _AssertIsStarted(self):
     assert self.IsStarted()
 
-  def _WaitUntilReady(self):
+  def _ConnectToTarget(self):
     logging.info('Connecting to Fuchsia using SSH.')
 
     host, port = self._GetEndpoint()
-    end_time = time.time() + _ATTACH_RETRY_SECONDS
-    ssh_diagnostic_log = runner_logs.FileStreamFor('ssh_diagnostic_log')
+    end_time = time.time() + common.ATTACH_RETRY_SECONDS
+    ssh_diagnostic_log = self._log_manager.Open('ssh_diagnostic_log')
     while time.time() < end_time:
       runner = remote_cmd.CommandRunner(self._GetSshConfigPath(), host, port)
       ssh_proc = runner.RunCommandPiped(['true'],
@@ -262,12 +309,16 @@ class Target(object):
       if ssh_proc.wait() == 0:
         logging.info('Connected!')
         self._started = True
+        self._command_runner = runner
         return True
       time.sleep(_ATTACH_RETRY_INTERVAL)
 
     logging.error('Timeout limit reached.')
 
     raise FuchsiaTargetException('Couldn\'t connect using SSH.')
+
+  def _DisconnectFromTarget(self):
+    pass
 
   def _GetSshConfigPath(self, path):
     raise NotImplementedError()
@@ -294,7 +345,7 @@ class Target(object):
       # Resolve all packages, to have them pulled into the device/VM cache.
       for package_path in package_paths:
         package_name, package_version = _GetPackageInfo(package_path)
-        logging.info('Resolving %s into cache.', package_name)
+        logging.info('Installing %s...', package_name)
         return_code = self.RunCommand(
             ['pkgctl', 'resolve',
              _GetPackageUri(package_name), '>/dev/null'],

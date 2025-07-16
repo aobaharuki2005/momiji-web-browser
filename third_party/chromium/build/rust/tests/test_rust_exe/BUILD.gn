@@ -2,11 +2,16 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-executable("test_rust_exe") {
+import("//chromium/build/rust/rust_executable.gni")
+
+rust_executable("test_rust_exe") {
   crate_root = "main.rs"
-  deps = [ "//chromium/build/rust/tests/test_rust_source_set" ]
-  rustflags = [
-    "--edition",
-    "2018",
+  sources = [ "main.rs" ]
+  deps = [
+    "//chromium/build/rust/tests/test_mixed_source_set:test_mixed_source_set_rs",
+    "//chromium/build/rust/tests/test_proc_macro_crate",
+    "//chromium/build/rust/tests/test_rlib_crate",
+    "//chromium/build/rust/tests/test_rust_source_set",
+    "//chromium/build/rust/tests/test_rust_source_set_non_standard_arrangement",
   ]
 }

@@ -39,17 +39,29 @@ class FvdlTarget(emu_target.EmuTarget):
   EMULATOR_NAME = 'aemu'
   _FVDL_PATH = os.path.join(common.SDK_ROOT, 'tools', 'x64', 'fvdl')
 
-  def __init__(self, out_dir, target_cpu, system_log_file, require_kvm,
-               enable_graphics, hardware_gpu, with_network, ram_size_mb):
-    super(FvdlTarget, self).__init__(out_dir, target_cpu, system_log_file)
+  def __init__(self, out_dir, target_cpu, require_kvm, enable_graphics,
+               hardware_gpu, with_network, cpu_cores, ram_size_mb, logs_dir,
+               custom_image):
+    super(FvdlTarget, self).__init__(out_dir, target_cpu, logs_dir)
     self._require_kvm = require_kvm
     self._enable_graphics = enable_graphics
     self._hardware_gpu = hardware_gpu
     self._with_network = with_network
+    self._cpu_cores = cpu_cores
     self._ram_size_mb = ram_size_mb
+    self._custom_image = custom_image
 
     self._host = None
     self._pid = None
+
+    if custom_image:
+      components = custom_image.split('.')
+      if len(components) != 2:
+        raise ValueError("Invalid custom_image name:", custom_image)
+      self._image_type, self._image_arch = components
+    else:
+      self._image_arch = self._GetTargetSdkArch()
+      self._image_type = boot_data.TARGET_TYPE_QEMU
 
     # Use a temp file for vdl output.
     self._vdl_output_file = tempfile.NamedTemporaryFile()
@@ -61,9 +73,10 @@ class FvdlTarget(emu_target.EmuTarget):
 
   @staticmethod
   def CreateFromArgs(args):
-    return FvdlTarget(args.out_dir, args.target_cpu, args.system_log_file,
-                      args.require_kvm, args.enable_graphics, args.hardware_gpu,
-                      args.with_network, args.ram_size_mb)
+    return FvdlTarget(args.out_dir, args.target_cpu, args.require_kvm,
+                      args.enable_graphics, args.hardware_gpu,
+                      args.with_network, args.cpu_cores, args.ram_size_mb,
+                      args.logs_dir, args.custom_image)
 
   @staticmethod
   def RegisterArgs(arg_parser):
@@ -72,19 +85,22 @@ class FvdlTarget(emu_target.EmuTarget):
                            action='store_true',
                            default=False,
                            help='Run emulator with emulated nic via tun/tap.')
+    fvdl_args.add_argument('--custom-image',
+                           help='Specify an image used for booting up the '
+                           'emulator.')
 
   def _BuildCommand(self):
     boot_data.ProvisionSSH()
     self._host_ssh_port = common.GetAvailableTcpPort()
     kernel_image = common.EnsurePathExists(
-        boot_data.GetTargetFile('qemu-kernel.kernel', self._GetTargetSdkArch(),
-                                boot_data.TARGET_TYPE_QEMU))
+        boot_data.GetTargetFile('qemu-kernel.kernel', self._image_arch,
+                                self._image_type))
     zbi_image = common.EnsurePathExists(
-        boot_data.GetTargetFile('zircon-a.zbi', self._GetTargetSdkArch(),
-                                boot_data.TARGET_TYPE_QEMU))
+        boot_data.GetTargetFile('zircon-a.zbi', self._image_arch,
+                                self._image_type))
     fvm_image = common.EnsurePathExists(
-        boot_data.GetTargetFile('storage-full.blk', self._GetTargetSdkArch(),
-                                boot_data.TARGET_TYPE_QEMU))
+        boot_data.GetTargetFile('storage-full.blk', self._image_arch,
+                                self._image_type))
     aemu_path = common.EnsurePathExists(
         os.path.join(common.GetEmuRootForPlatform(self.EMULATOR_NAME),
                      'emulator'))
@@ -93,7 +109,6 @@ class FvdlTarget(emu_target.EmuTarget):
         self._FVDL_PATH,
         '--sdk',
         'start',
-        '--nopackageserver',
         '--nointeractive',
 
         # Host port mapping for user-networking mode.
@@ -103,6 +118,8 @@ class FvdlTarget(emu_target.EmuTarget):
         # no-interactive requires a --vdl-output flag to shutdown the emulator.
         '--vdl-output',
         self._vdl_output_file.name,
+        '-c',
+        ' '.join(boot_data.GetKernelArgs()),
 
         # Use existing images instead of downloading new ones.
         '--kernel-image',
@@ -120,8 +137,11 @@ class FvdlTarget(emu_target.EmuTarget):
 
         # Use this flag and temp file to define ram size.
         '--device-proto',
-        self._device_proto_file.name
+        self._device_proto_file.name,
+        '--cpu-count',
+        str(self._cpu_cores)
     ]
+    self._ConfigureEmulatorLog(emu_command)
 
     if not self._require_kvm:
       emu_command.append('--noacceleration')
@@ -132,14 +152,32 @@ class FvdlTarget(emu_target.EmuTarget):
     if self._with_network:
       emu_command.append('-N')
 
-    logging.info('FVDL command: ' + ' '.join(emu_command))
-
     return emu_command
 
-  def _WaitUntilReady(self):
+  def _ConfigureEmulatorLog(self, emu_command):
+    if self._log_manager.IsLoggingEnabled():
+      emu_command.extend([
+          '--emulator-log',
+          os.path.join(self._log_manager.GetLogDirectory(), 'emulator_log')
+      ])
+
+      env_flags = [
+          'ANDROID_EMUGL_LOG_PRINT=1',
+          'ANDROID_EMUGL_VERBOSE=1',
+          'VK_LOADER_DEBUG=info,error',
+      ]
+      if self._hardware_gpu:
+        vulkan_icd_file = os.path.join(
+            common.GetEmuRootForPlatform(self.EMULATOR_NAME), 'lib64', 'vulkan',
+            'vk_swiftshader_icd.json')
+        env_flags.append('VK_ICD_FILENAMES=%s' % vulkan_icd_file)
+      for flag in env_flags:
+        emu_command.extend(['--envs', flag])
+
+  def _ConnectToTarget(self):
     # Indicates the FVDL command finished running.
     self._emu_process.communicate()
-    super(FvdlTarget, self)._WaitUntilReady()
+    super(FvdlTarget, self)._ConnectToTarget()
 
   def _IsEmuStillRunning(self):
     if not self._pid:
@@ -162,7 +200,7 @@ class FvdlTarget(emu_target.EmuTarget):
   def _GetEndpoint(self):
     if self._with_network:
       return self._GetNetworkAddress()
-    return ('localhost', self._host_ssh_port)
+    return (self.LOCAL_ADDRESS, self._host_ssh_port)
 
   def _GetNetworkAddress(self):
     if self._host:
@@ -184,6 +222,7 @@ class FvdlTarget(emu_target.EmuTarget):
   def Shutdown(self):
     if not self._emu_process:
       logging.error('%s did not start' % (self.EMULATOR_NAME))
+      super(FvdlTarget, self).Shutdown()
       return
     femu_command = [
         self._FVDL_PATH, '--sdk', 'kill', '--launched-proto',
@@ -195,10 +234,11 @@ class FvdlTarget(emu_target.EmuTarget):
       logging.info('FVDL shutdown successfully')
     else:
       logging.info('FVDL kill returned error status {}'.format(returncode))
-    emu_target.LogProcessStatistics('proc_stat_end_log')
-    emu_target.LogSystemStatistics('system_statistics_end_log')
+    self.LogProcessStatistics('proc_stat_end_log')
+    self.LogSystemStatistics('system_statistics_end_log')
     self._vdl_output_file.close()
     self._device_proto_file.close()
+    super(FvdlTarget, self).Shutdown()
 
   def _GetSshConfigPath(self):
     return boot_data.GetSSHConfigPath()

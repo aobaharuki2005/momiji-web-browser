@@ -158,6 +158,7 @@ PYTHON_UNIT_TEST_SUITES = {
         'path':
         os.path.join(DIR_SOURCE_ROOT, 'build', 'android', 'gyp'),
         'test_modules': [
+            'create_unwind_table_tests',
             'java_cpp_enum_tests',
             'java_cpp_strings_tests',
             'java_google_api_keys_tests',
@@ -202,7 +203,7 @@ def SetOutputDirectory(output_directory):
   CheckOutputDirectory(). Typically by providing an --output-dir or
   --chromium-output-dir option.
   """
-  os.environ['CHROMIUM_OUTPUT_DIR'] = output_directory
+  os.environ['CHROMIUM_OUTPUT_DIR'] = os.path.abspath(output_directory)
 
 
 # The message that is printed when the Chromium output directory cannot

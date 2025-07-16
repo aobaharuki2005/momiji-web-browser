@@ -50,6 +50,10 @@ _IGNORE_WARNINGS = (
     r'Ignoring -shrinkunusedprotofields since the protobuf-lite runtime is',
 )
 
+_SKIPPED_CLASS_FILE_NAMES = (
+    'module-info.class',  # Explicitly skipped by r8/utils/FileUtils#isClassFile
+)
+
 
 def _ParseArgs(args):
   args = build_utils.ExpandFileArgs(args)
@@ -196,6 +200,18 @@ def CreateStderrFilter(show_desugar_default_interface_warnings):
     #   Error message #1 indented here.
     #   Error message #2 indented here.
     output = re.sub(r'^Warning in .*?:\n(?!  )', '', output, flags=re.MULTILINE)
+
+    # Caused by protobuf runtime using -identifiernamestring in a way that
+    # doesn't work with R8. Looks like:
+    # Rule matches ... (very long line) {
+    #   static java.lang.String CONTAINING_TYPE_*;
+    # }
+    output = re.sub(
+        r'Rule matches the static final field `java\.lang\.String '
+        'com\.google\.protobuf.*\{\n.*?\n\}\n?',
+        '',
+        output,
+        flags=re.DOTALL)
     return output
 
   return filter_stderr
@@ -323,7 +339,7 @@ def _ZipMultidex(file_dir, dex_files):
       ordered_files.append(('classes.dex', f))
       break
   if not ordered_files:
-    raise Exception('Could not find classes.dex multidex file in %s',
+    raise Exception('Could not find classes.dex multidex file in %s' %
                     dex_files)
   for dex_idx in range(2, len(dex_files) + 1):
     archive_name = 'classes%d.dex' % dex_idx
@@ -332,10 +348,10 @@ def _ZipMultidex(file_dir, dex_files):
         ordered_files.append((archive_name, f))
         break
     else:
-      raise Exception('Could not find classes%d.dex multidex file in %s',
+      raise Exception('Could not find classes%d.dex multidex file in %s' %
                       dex_files)
   if len(set(f[1] for f in ordered_files)) != len(ordered_files):
-    raise Exception('Unexpected clashing filenames for multidex in %s',
+    raise Exception('Unexpected clashing filenames for multidex in %s' %
                     dex_files)
 
   zip_name = os.path.join(file_dir, 'multidex_classes.zip')
@@ -425,7 +441,7 @@ def _IntermediateDexFilePathsFromInputJars(class_inputs, incremental_dir):
   for jar in class_inputs:
     with zipfile.ZipFile(jar, 'r') as z:
       for subpath in z.namelist():
-        if subpath.endswith('.class'):
+        if _IsClassFile(subpath):
           subpath = subpath[:-5] + 'dex'
           dex_files.append(os.path.join(incremental_dir, subpath))
   return dex_files
@@ -467,15 +483,21 @@ def _ComputeRequiredDesugarClasses(changes, desugar_dependencies_file,
   return required_classes
 
 
+def _IsClassFile(path):
+  if os.path.basename(path) in _SKIPPED_CLASS_FILE_NAMES:
+    return False
+  return path.endswith('.class')
+
+
 def _ExtractClassFiles(changes, tmp_dir, class_inputs, required_classes_set):
   classes_list = []
   for jar in class_inputs:
     if changes:
       changed_class_list = (set(changes.IterChangedSubpaths(jar))
                             | required_classes_set)
-      predicate = lambda x: x in changed_class_list and x.endswith('.class')
+      predicate = lambda x: x in changed_class_list and _IsClassFile(x)
     else:
-      predicate = lambda x: x.endswith('.class')
+      predicate = _IsClassFile
 
     classes_list.extend(
         build_utils.ExtractAll(jar, path=tmp_dir, predicate=predicate))
@@ -630,6 +652,7 @@ def main(args):
 
   if options.desugar_jdk_libs_json:
     dex_cmd += ['--desugared-lib', options.desugar_jdk_libs_json]
+    input_paths += [options.desugar_jdk_libs_json]
   if options.force_enable_assertions:
     dex_cmd += ['--force-enable-assertions']
 
