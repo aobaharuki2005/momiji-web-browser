@@ -576,6 +576,64 @@ TrackSize::StateBits nsGridContainerFrame::TrackSize::Initialize(
   return mState;
 }
 
+// Indicates if we are in intrinsic sizing step 3 (spanning items not
+// spanning any flex tracks) or step 4 (spanning items that span one or more
+// flex tracks).
+// https://drafts.csswg.org/css-grid-2/#algo-content
+enum class TrackSizingStep {
+  NotFlex,  // https://drafts.csswg.org/css-grid-2/#algo-spanning-items
+  Flex,     // https://drafts.csswg.org/css-grid-2/#algo-spanning-flex-items
+};
+
+// Sizing phases, used in intrinsic sizing steps 3 and 4.
+// https://drafts.csswg.org/css-grid-2/#algo-spanning-items
+enum class TrackSizingPhase {
+  IntrinsicMinimums,
+  ContentBasedMinimums,
+  MaxContentMinimums,
+  IntrinsicMaximums,
+  MaxContentMaximums,
+};
+
+// Used for grid items intrinsic size types.
+// See CachedIntrinsicSizes which uses this for content contributions.
+enum class GridIntrinsicSizeType {
+  // MinContribution is the "minimum contribution", defined at
+  // https://drafts.csswg.org/css-grid-2/#min-size-contribution
+  MinContribution,
+  MinContentContribution,
+  MaxContentContribution
+};
+
+static constexpr GridIntrinsicSizeType kAllGridIntrinsicSizeTypes[] = {
+    GridIntrinsicSizeType::MinContribution,
+    GridIntrinsicSizeType::MinContentContribution,
+    GridIntrinsicSizeType::MaxContentContribution};
+
+// Glue to make mozilla::EnumeratedArray work with GridIntrinsicSizeType.
+namespace mozilla {
+template <>
+struct MaxContiguousEnumValue<GridIntrinsicSizeType> {
+  static constexpr GridIntrinsicSizeType value =
+      GridIntrinsicSizeType::MaxContentContribution;
+};
+}  // namespace mozilla
+
+// Convert a track sizing phase into which GridIntrinsicSizeType is applicable.
+static GridIntrinsicSizeType SizeTypeForPhase(TrackSizingPhase aPhase) {
+  switch (aPhase) {
+    case TrackSizingPhase::IntrinsicMinimums:
+      return GridIntrinsicSizeType::MinContribution;
+    case TrackSizingPhase::ContentBasedMinimums:
+    case TrackSizingPhase::IntrinsicMaximums:
+      return GridIntrinsicSizeType::MinContentContribution;
+    case TrackSizingPhase::MaxContentMinimums:
+    case TrackSizingPhase::MaxContentMaximums:
+      return GridIntrinsicSizeType::MaxContentContribution;
+  }
+  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected phase");
+}
+
 class nsGridContainerFrame::TrackPlan {
  public:
   TrackPlan() = default;
@@ -675,6 +733,30 @@ class nsGridContainerFrame::ItemPlan {
   nscoord GrowTracksToLimit(nscoord aAvailableSpace,
                             const nsTArray<uint32_t>& aGrowableTracks,
                             const FitContentClamper& aFitContentClamper);
+
+  /**
+   * Helper for GrowSelectedTracksUnlimited.  For the set of tracks (S) that
+   * match aMinSizingSelector: if a track in S doesn't match aMaxSizingSelector
+   * then mark it with aSkipFlag.  If all tracks in S were marked then unmark
+   * them.  Return aNumGrowable minus the number of tracks marked.  It is
+   * assumed that this plan has no aSkipFlag set for tracks in aGrowableTracks
+   * on entry to this method.
+   */
+  uint32_t MarkExcludedTracks(uint32_t aNumGrowable,
+                              const nsTArray<uint32_t>& aGrowableTracks,
+                              TrackSize::StateBits aMinSizingSelector,
+                              TrackSize::StateBits aMaxSizingSelector,
+                              TrackSize::StateBits aSkipFlag);
+
+  /**
+   * Mark all tracks in aGrowableTracks with an eSkipGrowUnlimited bit if
+   * they *shouldn't* grow unlimited in §12.5.1.2.4 "Distribute space beyond
+   * growth limits" https://drafts.csswg.org/css-grid-2/#extra-space
+   * Return the number of tracks that are still growable.
+   */
+  uint32_t MarkExcludedTracks(TrackSizingPhase aPhase,
+                              const nsTArray<uint32_t>& aGrowableTracks,
+                              SizingConstraint aConstraint);
 
  private:
   nsTArray<nsGridContainerFrame::TrackSize> mTrackSizes;
@@ -2433,64 +2515,6 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
   bool mHasRepeatAuto;
 };
 
-// Indicates if we are in intrinsic sizing step 3 (spanning items not
-// spanning any flex tracks) or step 4 (spanning items that span one or more
-// flex tracks).
-// https://drafts.csswg.org/css-grid-2/#algo-content
-enum class TrackSizingStep {
-  NotFlex,  // https://drafts.csswg.org/css-grid-2/#algo-spanning-items
-  Flex,     // https://drafts.csswg.org/css-grid-2/#algo-spanning-flex-items
-};
-
-// Sizing phases, used in intrinsic sizing steps 3 and 4.
-// https://drafts.csswg.org/css-grid-2/#algo-spanning-items
-enum class TrackSizingPhase {
-  IntrinsicMinimums,
-  ContentBasedMinimums,
-  MaxContentMinimums,
-  IntrinsicMaximums,
-  MaxContentMaximums,
-};
-
-// Used for grid items intrinsic size types.
-// See CachedIntrinsicSizes which uses this for content contributions.
-enum class GridIntrinsicSizeType {
-  // MinContribution is the "minimum contribution", defined at
-  // https://drafts.csswg.org/css-grid-2/#min-size-contribution
-  MinContribution,
-  MinContentContribution,
-  MaxContentContribution
-};
-
-static constexpr GridIntrinsicSizeType kAllGridIntrinsicSizeTypes[] = {
-    GridIntrinsicSizeType::MinContribution,
-    GridIntrinsicSizeType::MinContentContribution,
-    GridIntrinsicSizeType::MaxContentContribution};
-
-// Glue to make mozilla::EnumeratedArray work with GridIntrinsicSizeType.
-namespace mozilla {
-template <>
-struct MaxContiguousEnumValue<GridIntrinsicSizeType> {
-  static constexpr GridIntrinsicSizeType value =
-      GridIntrinsicSizeType::MaxContentContribution;
-};
-}  // namespace mozilla
-
-// Convert a track sizing phase into which GridIntrinsicSizeType is applicable.
-static GridIntrinsicSizeType SizeTypeForPhase(TrackSizingPhase aPhase) {
-  switch (aPhase) {
-    case TrackSizingPhase::IntrinsicMinimums:
-      return GridIntrinsicSizeType::MinContribution;
-    case TrackSizingPhase::ContentBasedMinimums:
-    case TrackSizingPhase::IntrinsicMaximums:
-      return GridIntrinsicSizeType::MinContentContribution;
-    case TrackSizingPhase::MaxContentMinimums:
-    case TrackSizingPhase::MaxContentMaximums:
-      return GridIntrinsicSizeType::MaxContentContribution;
-  }
-  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected phase");
-}
-
 struct CachedIntrinsicSizes;
 
 /**
@@ -2808,77 +2832,6 @@ struct nsGridContainerFrame::Tracks {
   }
 
   /**
-   * Helper for GrowSelectedTracksUnlimited.  For the set of tracks (S) that
-   * match aMinSizingSelector: if a track in S doesn't match aMaxSizingSelector
-   * then mark it with aSkipFlag.  If all tracks in S were marked then unmark
-   * them.  Return aNumGrowable minus the number of tracks marked.  It is
-   * assumed that aItemPlan have no aSkipFlag set for tracks in aGrowableTracks
-   * on entry to this method.
-   */
-  static uint32_t MarkExcludedTracks(ItemPlan& aItemPlan, uint32_t aNumGrowable,
-                                     const nsTArray<uint32_t>& aGrowableTracks,
-                                     TrackSize::StateBits aMinSizingSelector,
-                                     TrackSize::StateBits aMaxSizingSelector,
-                                     TrackSize::StateBits aSkipFlag) {
-    bool foundOneSelected = false;
-    bool foundOneGrowable = false;
-    uint32_t numGrowable = aNumGrowable;
-    for (uint32_t track : aGrowableTracks) {
-      TrackSize& sz = aItemPlan[track];
-      const auto state = sz.mState;
-      if (state & aMinSizingSelector) {
-        foundOneSelected = true;
-        if (state & aMaxSizingSelector) {
-          foundOneGrowable = true;
-          continue;
-        }
-        sz.mState |= aSkipFlag;
-        MOZ_ASSERT(numGrowable != 0);
-        --numGrowable;
-      }
-    }
-    // 12.5 "if there are no such tracks, then all affected tracks"
-    if (foundOneSelected && !foundOneGrowable) {
-      for (uint32_t track : aGrowableTracks) {
-        aItemPlan[track].mState &= ~aSkipFlag;
-      }
-      numGrowable = aNumGrowable;
-    }
-    return numGrowable;
-  }
-
-  /**
-   * Mark all tracks in aGrowableTracks with an eSkipGrowUnlimited bit if
-   * they *shouldn't* grow unlimited in §12.5.1.2.4 "Distribute space beyond
-   * growth limits" https://drafts.csswg.org/css-grid-2/#extra-space
-   * Return the number of tracks that are still growable.
-   */
-  static uint32_t MarkExcludedTracks(TrackSizingPhase aPhase,
-                                     ItemPlan& aItemPlan,
-                                     const nsTArray<uint32_t>& aGrowableTracks,
-                                     SizingConstraint aConstraint) {
-    uint32_t numGrowable = aGrowableTracks.Length();
-    if (aPhase == TrackSizingPhase::IntrinsicMaximums ||
-        aPhase == TrackSizingPhase::MaxContentMaximums) {
-      // "when handling any intrinsic growth limit: all affected tracks"
-      return numGrowable;
-    }
-
-    TrackSize::StateBits selector = SelectorForPhase(aPhase, aConstraint);
-    numGrowable = MarkExcludedTracks(aItemPlan, numGrowable, aGrowableTracks,
-                                     TrackSize::eMaxContentMinSizing,
-                                     TrackSize::eMaxContentMaxSizing,
-                                     TrackSize::eSkipGrowUnlimited1);
-    // Note that eMaxContentMinSizing is always included. We do those first:
-    if ((selector &= ~TrackSize::eMaxContentMinSizing)) {
-      numGrowable = MarkExcludedTracks(aItemPlan, numGrowable, aGrowableTracks,
-                                       selector, TrackSize::eIntrinsicMaxSizing,
-                                       TrackSize::eSkipGrowUnlimited2);
-    }
-    return numGrowable;
-  }
-
-  /**
    * Increase the planned size for tracks in aGrowableTracks that aren't
    * marked with a eSkipGrowUnlimited flag beyond their limit.
    * This implements the "Distribute space beyond growth limits" step in
@@ -2948,7 +2901,7 @@ struct nsGridContainerFrame::Tracks {
 
     if (space > 0) {
       uint32_t numGrowable =
-          MarkExcludedTracks(aPhase, aItemPlan, aGrowableTracks, aConstraint);
+          aItemPlan.MarkExcludedTracks(aPhase, aGrowableTracks, aConstraint);
       GrowSelectedTracksUnlimited(space, aItemPlan, aGrowableTracks,
                                   numGrowable, aFitContentClamper);
     }
@@ -10981,4 +10934,58 @@ nscoord nsGridContainerFrame::ItemPlan::GrowTracksToLimit(
   }
   MOZ_ASSERT_UNREACHABLE("we don't exit the loop above except by return");
   return 0;
+}
+
+uint32_t nsGridContainerFrame::ItemPlan::MarkExcludedTracks(
+    TrackSizingPhase aPhase, const nsTArray<uint32_t>& aGrowableTracks,
+    SizingConstraint aConstraint) {
+  uint32_t numGrowable = aGrowableTracks.Length();
+  if (aPhase == TrackSizingPhase::IntrinsicMaximums ||
+      aPhase == TrackSizingPhase::MaxContentMaximums) {
+    // "when handling any intrinsic growth limit: all affected tracks"
+    return numGrowable;
+  }
+
+  TrackSize::StateBits selector = Tracks::SelectorForPhase(aPhase, aConstraint);
+  numGrowable = MarkExcludedTracks(
+      numGrowable, aGrowableTracks, TrackSize::eMaxContentMinSizing,
+      TrackSize::eMaxContentMaxSizing, TrackSize::eSkipGrowUnlimited1);
+  // Note that eMaxContentMinSizing is always included. We do those first:
+  if ((selector &= ~TrackSize::eMaxContentMinSizing)) {
+    numGrowable = MarkExcludedTracks(numGrowable, aGrowableTracks, selector,
+                                     TrackSize::eIntrinsicMaxSizing,
+                                     TrackSize::eSkipGrowUnlimited2);
+  }
+  return numGrowable;
+}
+
+uint32_t nsGridContainerFrame::ItemPlan::MarkExcludedTracks(
+    uint32_t aNumGrowable, const nsTArray<uint32_t>& aGrowableTracks,
+    TrackSize::StateBits aMinSizingSelector,
+    TrackSize::StateBits aMaxSizingSelector, TrackSize::StateBits aSkipFlag) {
+  bool foundOneSelected = false;
+  bool foundOneGrowable = false;
+  uint32_t numGrowable = aNumGrowable;
+  for (uint32_t track : aGrowableTracks) {
+    TrackSize& sz = mTrackSizes[track];
+    const auto state = sz.mState;
+    if (state & aMinSizingSelector) {
+      foundOneSelected = true;
+      if (state & aMaxSizingSelector) {
+        foundOneGrowable = true;
+        continue;
+      }
+      sz.mState |= aSkipFlag;
+      MOZ_ASSERT(numGrowable != 0);
+      --numGrowable;
+    }
+  }
+  // 12.5 "if there are no such tracks, then all affected tracks"
+  if (foundOneSelected && !foundOneGrowable) {
+    for (uint32_t track : aGrowableTracks) {
+      mTrackSizes[track].mState &= ~aSkipFlag;
+    }
+    numGrowable = aNumGrowable;
+  }
+  return numGrowable;
 }
