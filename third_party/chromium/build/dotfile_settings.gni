@@ -10,6 +10,7 @@ build_dotfile_settings = {
     "//chromium/build/config/android/rules.gni",
     "//chromium/build/config/apple/mobile_config.gni",
     "//chromium/build/config/chromeos/rules.gni",
+    "//chromium/build/config/clang/BUILD.gn",
     "//chromium/build/config/compiler/BUILD.gn",
     "//chromium/build/config/compiler/pgo/BUILD.gn",
     "//chromium/build/config/gcc/gcc_version.gni",

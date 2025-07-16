@@ -17,10 +17,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/aad17933ade017660
  4 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 04ae6d165..fa659a296 100644
+index 6b36c5c2a..422161013 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
-@@ -2279,7 +2279,7 @@ config("no_rtti") {
+@@ -2308,7 +2308,7 @@ config("no_rtti") {
  # (de)allocate memory on a different heap, which would spell trouble if pointers
  # to heap-allocated memory are passed over shared library boundaries.
  config("export_dynamic") {

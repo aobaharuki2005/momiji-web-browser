@@ -2246,7 +2246,6 @@ if (enable_java_templates) {
       "//third_party/protobuf/python/google/protobuf/descriptor_pb2.py",
       "//third_party/protobuf/python/google/protobuf/descriptor_pool.py",
       "//third_party/protobuf/python/google/protobuf/internal/__init__.py",
-      "//third_party/protobuf/python/google/protobuf/internal/_parameterized.py",
       "//third_party/protobuf/python/google/protobuf/internal/api_implementation.py",
       "//third_party/protobuf/python/google/protobuf/internal/builder.py",
       "//third_party/protobuf/python/google/protobuf/internal/containers.py",
@@ -2290,7 +2289,6 @@ if (enable_java_templates) {
       "//third_party/protobuf/python/google/protobuf/pyext/cpp_message.py",
       "//third_party/protobuf/python/google/protobuf/reflection.py",
       "//third_party/protobuf/python/google/protobuf/runtime_version.py",
-      "//third_party/protobuf/python/google/protobuf/service.py",
       "//third_party/protobuf/python/google/protobuf/service_reflection.py",
       "//third_party/protobuf/python/google/protobuf/symbol_database.py",
       "//third_party/protobuf/python/google/protobuf/text_encoding.py",
@@ -3253,20 +3251,20 @@ if (enable_java_templates) {
         _rebased_errorprone_buildconfig =
             rebase_path("$_dep_gen_dir/$_dep_name.build_config.json",
                         root_build_dir)
-        args += [ "--processorpath=@FileArg($_rebased_errorprone_buildconfig:deps_info:host_classpath)" ]
+        args += [
+          "--processorpath=$_rebased_nullaway_jar",
+          "--enable-nullaway",
+          "--processorpath=@FileArg($_rebased_errorprone_buildconfig:deps_info:host_classpath)",
+        ]
         inputs += [
+          _nullaway_jar,
+
           # errorprone requires the plugin directory to detect src dir.
           # https://source.chromium.org/chromium/chromium/src/+/main:tools/android/errorprone_plugin/src/org/chromium/tools/errorprone/plugin/UseNetworkAnnotations.java;l=84;drc=dfd88085261b662a5c0a1abea1a3b120b08e8e48
           "//tools/android/errorprone_plugin/OWNERS",
         ]
         if (defined(testonly) && testonly) {
           args += [ "--testonly" ]
-        } else {
-          inputs += [ _nullaway_jar ]
-          args += [
-            "--processorpath=$_rebased_nullaway_jar",
-            "--enable-nullaway",
-          ]
         }
         if (defined(invoker.skip_build_server) && invoker.skip_build_server) {
           # Nocompile tests need lint to fail through ninja.
@@ -4071,6 +4069,7 @@ if (enable_java_templates) {
         "additional_jar_files",
         "apk_name",
         "jar_excluded_patterns",
+        "jar_included_patterns",
         "javac_args",
         "processor_args_javac",
       ]

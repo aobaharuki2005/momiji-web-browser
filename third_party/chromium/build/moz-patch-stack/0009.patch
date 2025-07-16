@@ -13,7 +13,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/75a76abe648ad8bdb
  1 file changed, 2 insertions(+)
 
 diff --git a/vs_toolchain.py b/vs_toolchain.py
-index f0b8bacf5..1817bcc4a 100755
+index e0f89a555..be334c6fc 100755
 --- a/vs_toolchain.py
 +++ b/vs_toolchain.py
 @@ -649,6 +649,8 @@ def main():

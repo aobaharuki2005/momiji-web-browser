@@ -1,5 +1,5 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 8 Jul 2025 11:53:49 -0500
+Date: Tue, 8 Jul 2025 12:33:20 -0500
 Subject: Bug 1921707 - point to new build directory location in
  third_party/chromium/build r=ng,glandium
 
@@ -81,9 +81,9 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6b855a2bf6b1f3feb
  config/chromeos/BUILD.gn                      |   2 +-
  config/chromeos/rules.gni                     |  38 +-
  config/chromeos/ui_mode.gni                   |   2 +-
- config/clang/BUILD.gn                         |   6 +-
+ config/clang/BUILD.gn                         |   8 +-
  config/clang/clang.gni                        |  10 +-
- config/compiler/BUILD.gn                      | 120 ++---
+ config/compiler/BUILD.gn                      | 122 ++---
  config/compiler/compiler.gni                  |  26 +-
  config/compiler/pgo/BUILD.gn                  |  10 +-
  config/compiler/pgo/pgo.gni                   |  14 +-
@@ -157,13 +157,13 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6b855a2bf6b1f3feb
  config/win/manifest.gni                       |  10 +-
  config/zip.gni                                |   2 +-
  config/zos/BUILD.gn                           |   4 +-
- dotfile_settings.gni                          |  64 +--
+ dotfile_settings.gni                          |  66 +--
  fuchsia/DIR_METADATA                          |   2 +-
  fuchsia/cipd/BUILD.gn                         |  10 +-
  fuchsia/cipd/DIR_METADATA                     |   2 +-
  fuchsia/test/BUILD.gn                         |   4 +-
  fuchsia/test/run_pytype.py                    |   2 +-
- gn_logs.gni                                   |  16 +-
+ gn_logs.gni                                   |  18 +-
  ios/intent_definition.gni                     |   6 +-
  linux/BUILD.gn                                |   8 +-
  linux/extract_symbols.gni                     |   6 +-
@@ -225,7 +225,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6b855a2bf6b1f3feb
  partitioned_shared_library.gni                |  10 +-
  private_code_test/BUILD.gn                    |   2 +-
  private_code_test/private_code_test.gni       |   8 +-
- rust/BUILD.gn                                 |   6 +-
+ rust/BUILD.gn                                 |   4 +-
  rust/cargo_crate.gni                          |  20 +-
  rust/chromium_prelude/BUILD.gn                |   6 +-
  rust/chromium_prelude/import_test.rs          |   6 +-
@@ -308,6 +308,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6b855a2bf6b1f3feb
  toolchain/rbe.gni                             |   6 +-
  toolchain/siso.gni                            |   4 +-
  toolchain/toolchain.gni                       |   6 +-
+ toolchain/wasm/BUILD.gn                       |   2 +-
  toolchain/win/BUILD.gn                        |   6 +-
  toolchain/win/midl.gni                        |   4 +-
  toolchain/win/toolchain.gni                   |  44 +-
@@ -321,10 +322,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6b855a2bf6b1f3feb
  util/process_version.gni                      |   6 +-
  win/BUILD.gn                                  |  10 +-
  win/message_compiler.gni                      |   2 +-
- 303 files changed, 1504 insertions(+), 1504 deletions(-)
+ 304 files changed, 1508 insertions(+), 1508 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index e7c48e0ec..94be01f40 100644
+index c159f3233..42942a955 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -2,16 +2,16 @@
@@ -374,7 +375,7 @@ index c39c19cbf..adab1bd8d 100755
  
  
 diff --git a/android/BUILD.gn b/android/BUILD.gn
-index 7aa764359..cc6b979b5 100644
+index bae601822..66c26fddc 100644
 --- a/android/BUILD.gn
 +++ b/android/BUILD.gn
 @@ -2,13 +2,13 @@
@@ -398,7 +399,7 @@ index 7aa764359..cc6b979b5 100644
  import("//build_overrides/build.gni")
  
  if (build_with_chromium) {
-@@ -99,7 +99,7 @@ if (enable_java_templates) {
+@@ -102,7 +102,7 @@ if (enable_java_templates) {
        deps = [
          ":junit_test_assets",
          ":junit_test_resources",
@@ -407,7 +408,7 @@ index 7aa764359..cc6b979b5 100644
          "//third_party/junit",
        ]
      }
-@@ -126,8 +126,8 @@ if (defined(sanitizer_arch)) {
+@@ -129,8 +129,8 @@ if (defined(sanitizer_arch)) {
  python_library("test_result_presentations_py") {
    pydeps_file = "pylib/results/presentation/test_results_presentation.pydeps"
    data = [
@@ -418,7 +419,7 @@ index 7aa764359..cc6b979b5 100644
      "//third_party/catapult/third_party/gsutil/",
      "//third_party/jinja2/debug.py",
      "//third_party/six",
-@@ -143,7 +143,7 @@ python_library("devil_chromium_py") {
+@@ -146,7 +146,7 @@ python_library("devil_chromium_py") {
      "//third_party/catapult/devil/devil/devil_dependencies.json",
  
      # Read by gn_helpers.BuildWithChromium()
@@ -427,7 +428,7 @@ index 7aa764359..cc6b979b5 100644
    ]
  }
  
-@@ -154,7 +154,7 @@ group("apk_installer_data") {
+@@ -157,7 +157,7 @@ group("apk_installer_data") {
    if (build_with_chromium) {
      if (!is_component_build) {
        data_deps = [
@@ -436,7 +437,7 @@ index 7aa764359..cc6b979b5 100644
          "//tools/android/devil_util",
        ]
      }
-@@ -231,7 +231,7 @@ group("test_runner_device_support") {
+@@ -234,7 +234,7 @@ group("test_runner_device_support") {
  
    # Proguard is needed only when using apks (rather than native executables).
    if (enable_java_templates) {
@@ -1115,10 +1116,10 @@ index d8352aadf..36c03e0dd 100644
    }
  }
 diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
-index 2a8df23c7..769400add 100644
+index f1189be21..4bb38fe31 100644
 --- a/config/BUILDCONFIG.gn
 +++ b/config/BUILDCONFIG.gn
-@@ -207,33 +207,33 @@ if (host_toolchain == "") {
+@@ -208,33 +208,33 @@ if (host_toolchain == "") {
  
    if (host_os == "linux" || host_os == "openbsd") {
      if (target_os != "linux") {
@@ -1162,7 +1163,7 @@ index 2a8df23c7..769400add 100644
    } else {
      assert(false, "Unsupported host_os: $host_os")
    }
-@@ -244,40 +244,40 @@ _default_toolchain = ""
+@@ -245,40 +245,40 @@ _default_toolchain = ""
  if (target_os == "android") {
    # Targeting android on Mac is best-effort and not guaranteed to work.
    #assert(host_os == "linux", "Android builds are only supported on Linux.")
@@ -1214,7 +1215,7 @@ index 2a8df23c7..769400add 100644
  } else {
    assert(false, "Unsupported target_os: $target_os")
  }
-@@ -341,77 +341,77 @@ is_posix = !is_win && !is_fuchsia
+@@ -343,77 +343,77 @@ is_posix = !is_win && !is_fuchsia
  
  # Holds all configs used for running the compiler.
  default_compiler_configs = [
@@ -1332,7 +1333,7 @@ index 2a8df23c7..769400add 100644
  }
  
  # Static libraries and source sets use only the compiler ones.
-@@ -431,29 +431,29 @@ if (is_win) {
+@@ -433,29 +433,29 @@ if (is_win) {
    # Many targets remove these configs, so they are not contained within
    # //build/config:executable_config for easy removal.
    _linker_configs = [
@@ -1369,7 +1370,7 @@ index 2a8df23c7..769400add 100644
  }
  if (is_fuchsia) {
    # Sometimes executables are linked by rustc passing a command line to
-@@ -461,7 +461,7 @@ if (is_fuchsia) {
+@@ -463,7 +463,7 @@ if (is_fuchsia) {
    # resulting (fatal) warning. Unfortunately there's no way to do this only
    # for binaries linked by rustc; gn does not make the distinction.
    default_executable_configs +=
@@ -1378,7 +1379,7 @@ index 2a8df23c7..769400add 100644
  }
  
  set_defaults("executable") {
-@@ -471,19 +471,19 @@ set_defaults("executable") {
+@@ -473,19 +473,19 @@ set_defaults("executable") {
  # Shared library and loadable module defaults (also for components in component
  # mode).
  default_shared_library_configs = default_compiler_configs + [
@@ -1402,7 +1403,7 @@ index 2a8df23c7..769400add 100644
  }
  if (is_fuchsia) {
    # Sometimes shared libraries are linked by rustc passing a command line to
-@@ -491,7 +491,7 @@ if (is_fuchsia) {
+@@ -493,7 +493,7 @@ if (is_fuchsia) {
    # resulting (fatal) warning. Unfortunately there's no way to do this only
    # for binaries linked by rustc; gn does not make the distinction.
    default_shared_library_configs +=
@@ -1411,7 +1412,7 @@ index 2a8df23c7..769400add 100644
  }
  set_defaults("shared_library") {
    configs = default_shared_library_configs
-@@ -501,20 +501,20 @@ set_defaults("loadable_module") {
+@@ -503,20 +503,20 @@ set_defaults("loadable_module") {
  
    # loadable_modules are generally used by other libs, not just via JNI.
    if (is_android) {
@@ -1438,7 +1439,7 @@ index 2a8df23c7..769400add 100644
      ]
  
  set_defaults("rust_proc_macro") {
-@@ -605,8 +605,8 @@ foreach(_target_type,
+@@ -607,8 +607,8 @@ foreach(_target_type,
  # Variables
  #   no_default_deps: If true, no standard dependencies will be added.
  #       Targets that set this usually also want to remove
@@ -1449,7 +1450,7 @@ index 2a8df23c7..769400add 100644
  #   use_libcxx_modules: If true, libc++'s modules are added to deps.
  #       This is true by default.
  foreach(_target_type,
-@@ -660,7 +660,7 @@ foreach(_target_type,
+@@ -662,7 +662,7 @@ foreach(_target_type,
          # //build/config:shared_library_deps
          # (This explicit list is so that grepping for these configs finds where
          # they are used.)
@@ -1458,7 +1459,7 @@ index 2a8df23c7..769400add 100644
        }
  
        if (is_clang && (!defined(invoker.use_libcxx_modules) ||
-@@ -781,12 +781,12 @@ if (is_component_build) {
+@@ -783,12 +783,12 @@ if (is_component_build) {
    default_component_configs = default_shared_library_configs
    if (is_android) {
      default_component_configs -=
@@ -1603,7 +1604,7 @@ index f394dfc6d..de6c3595d 100644
  # Contains useful GN variables that may be used by scripts that take
  # --output-directory as an arg.
 diff --git a/config/android/config.gni b/config/android/config.gni
-index 13bf3e43a..f4a51bf02 100644
+index e9b3014f2..92251bb69 100644
 --- a/config/android/config.gni
 +++ b/config/android/config.gni
 @@ -26,14 +26,14 @@ assert(!(incremental_install && !is_java_debug),
@@ -1636,7 +1637,7 @@ index 13bf3e43a..f4a51bf02 100644
      if (defined(checkout_android)) {
        n = "$0x0A"  # Newline
        assert(checkout_android,
-@@ -114,7 +114,7 @@ if (is_android) {
+@@ -113,7 +113,7 @@ if (is_android) {
    if (enable_chrome_android_internal) {
      import("//clank/config.gni")
    } else {
@@ -1645,7 +1646,7 @@ index 13bf3e43a..f4a51bf02 100644
      declare_args() {
        # Which Android SDK to use.
        android_sdk_release = default_android_sdk_release
-@@ -159,7 +159,7 @@ if (is_android) {
+@@ -158,7 +158,7 @@ if (is_android) {
    }
  
    if (!defined(default_android_keystore_path)) {
@@ -1721,7 +1722,7 @@ index 6518a2d3a..20ea336fe 100644
      inputs = [
        _dump_syms,
 diff --git a/config/android/internal_rules.gni b/config/android/internal_rules.gni
-index ce96df1be..63c6bfa51 100644
+index c28730b18..d7d23b24c 100644
 --- a/config/android/internal_rules.gni
 +++ b/config/android/internal_rules.gni
 @@ -4,18 +4,18 @@
@@ -1954,7 +1955,7 @@ index ce96df1be..63c6bfa51 100644
  
      _target_sdk_version = invoker.target_sdk_version
      if (defined(invoker.override_target_sdk)) {
-@@ -2609,7 +2609,7 @@ if (enable_java_templates) {
+@@ -2607,7 +2607,7 @@ if (enable_java_templates) {
      forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, [ "deps" ])
@@ -1963,7 +1964,7 @@ index ce96df1be..63c6bfa51 100644
        inputs = [
          android_sdk_tools_bundle_aapt2,
          invoker.r_text_path,
-@@ -2671,7 +2671,7 @@ if (enable_java_templates) {
+@@ -2669,7 +2669,7 @@ if (enable_java_templates) {
    template("unused_resources") {
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "deps" ])
@@ -1972,7 +1973,7 @@ index ce96df1be..63c6bfa51 100644
        depfile = "$target_gen_dir/${target_name}.d"
        _unused_resources_script = "$root_build_dir/bin/helper/unused_resources"
        inputs = [ _unused_resources_script ] + java_paths_for_inputs
-@@ -2679,7 +2679,7 @@ if (enable_java_templates) {
+@@ -2677,7 +2677,7 @@ if (enable_java_templates) {
        if (!defined(deps)) {
          deps = []
        }
@@ -1981,7 +1982,7 @@ index ce96df1be..63c6bfa51 100644
        _rebased_build_config = rebase_path(invoker.build_config, root_build_dir)
        args = [
          "--script",
-@@ -2738,7 +2738,7 @@ if (enable_java_templates) {
+@@ -2736,7 +2736,7 @@ if (enable_java_templates) {
    template("create_size_info_files") {
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "deps" ])
@@ -1990,7 +1991,7 @@ index ce96df1be..63c6bfa51 100644
        _jar_info_path = "$root_build_dir/size-info/${invoker.name}.jar.info"
        _pak_info_path = "$root_build_dir/size-info/${invoker.name}.pak.info"
        _res_info_path = "$root_build_dir/size-info/${invoker.name}.res.info"
-@@ -2832,7 +2832,7 @@ if (enable_java_templates) {
+@@ -2830,7 +2830,7 @@ if (enable_java_templates) {
            invoker.secondary_native_lib_placeholders
      }
  
@@ -1999,7 +2000,7 @@ index ce96df1be..63c6bfa51 100644
  
      _inputs = [ invoker.packaged_resources_path ]
  
-@@ -3105,16 +3105,16 @@ if (enable_java_templates) {
+@@ -3103,16 +3103,16 @@ if (enable_java_templates) {
  
      action_with_pydeps(target_name) {
        if (invoker.use_turbine) {
@@ -2019,7 +2020,7 @@ index ce96df1be..63c6bfa51 100644
          inputs = javac_paths_for_inputs
        }
  
-@@ -3331,7 +3331,7 @@ if (enable_java_templates) {
+@@ -3329,7 +3329,7 @@ if (enable_java_templates) {
      }
  
      action_with_pydeps(target_name) {
@@ -2028,7 +2029,7 @@ index ce96df1be..63c6bfa51 100644
        depfile = "$target_gen_dir/$target_name.d"
        deps = _srcjar_deps
        if (defined(invoker.deps)) {
-@@ -3401,7 +3401,7 @@ if (enable_java_templates) {
+@@ -3399,7 +3399,7 @@ if (enable_java_templates) {
                                     "data_deps",
                                     "public_deps",
                                   ])
@@ -2037,7 +2038,7 @@ index ce96df1be..63c6bfa51 100644
        deps = [ _ijar_target ]
        if (defined(invoker.deps)) {
          deps += invoker.deps
-@@ -3593,8 +3593,8 @@ if (enable_java_templates) {
+@@ -3591,8 +3591,8 @@ if (enable_java_templates) {
        }
      }
  
@@ -2048,7 +2049,7 @@ index ce96df1be..63c6bfa51 100644
      } else {
        _default_deps = []
      }
-@@ -4150,7 +4150,7 @@ if (enable_java_templates) {
+@@ -4149,7 +4149,7 @@ if (enable_java_templates) {
                         get_label_info(invoker.bytecode_rewriter_target, "name")
        _rebased_build_config = rebase_path(_build_config, root_build_dir)
        action_with_pydeps(_rewritten_jar_target_name) {
@@ -2057,7 +2058,7 @@ index ce96df1be..63c6bfa51 100644
          inputs = java_paths_for_inputs + [
                     _rewriter_path,
                     _build_config,
-@@ -4537,7 +4537,7 @@ template("create_android_app_bundle_module") {
+@@ -4536,7 +4536,7 @@ template("create_android_app_bundle_module") {
  
    forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
    _deps = invoker.deps
@@ -2066,7 +2067,7 @@ index ce96df1be..63c6bfa51 100644
  
    # NOTE: Compared to the inputs of the "package_apk" template action,
    #       this list is much smaller, since finalize_apk is never called
-@@ -4665,7 +4665,7 @@ template("rename_jar_classes") {
+@@ -4664,7 +4664,7 @@ template("rename_jar_classes") {
                               "deps",
                               "public_deps",
                             ])
@@ -2555,7 +2556,7 @@ index c3c62337a..8fc2e6feb 100644
        args = [
          "--locale-list=${invoker.ui_locales}",
 diff --git a/config/android/system_image.gni b/config/android/system_image.gni
-index cd050c422..8b5ba3dcf 100644
+index 56a235572..54d5cc29e 100644
 --- a/config/android/system_image.gni
 +++ b/config/android/system_image.gni
 @@ -2,7 +2,7 @@
@@ -2585,7 +2586,7 @@ index cd050c422..8b5ba3dcf 100644
      inputs = [
        _manifest_path,
        android_sdk_tools_bundle_aapt2,
-@@ -236,7 +236,7 @@ template("system_image_apks") {
+@@ -234,7 +234,7 @@ template("system_image_apks") {
    }
  
    action_with_pydeps(target_name) {
@@ -2594,7 +2595,7 @@ index cd050c422..8b5ba3dcf 100644
      deps = [ invoker.apk_or_bundle_target ]
      inputs = [ invoker.input_apk_or_bundle ]
      if (defined(invoker.stub_output)) {
-@@ -261,7 +261,7 @@ template("system_image_apks") {
+@@ -259,7 +259,7 @@ template("system_image_apks") {
          rebase_path(_wrapper_path, root_out_dir),
        ]
        inputs += [ _wrapper_path ]
@@ -2978,10 +2979,10 @@ index 5dbe524b3..da47f3848 100644
  declare_args() {
    chromeos_is_browser_only = false
 diff --git a/config/clang/BUILD.gn b/config/clang/BUILD.gn
-index 985a1e116..535ac6f10 100644
+index beb81db98..166c55798 100644
 --- a/config/clang/BUILD.gn
 +++ b/config/clang/BUILD.gn
-@@ -2,13 +2,13 @@
+@@ -2,20 +2,20 @@
  # Use of this source code is governed by a BSD-style license that can be
  # found in the LICENSE file.
  
@@ -2997,9 +2998,17 @@ index 985a1e116..535ac6f10 100644
 +  import("//chromium/build/config/apple/mobile_config.gni")
  }
  
+ _use_cros_sysroot_libs =
+     is_chromeos_device && current_toolchain == default_toolchain
+ 
+ if (_use_cros_sysroot_libs) {
+-  import("//build/toolchain/cros_toolchain.gni")  # For `cros_target_cc`
++  import("//chromium/build/toolchain/cros_toolchain.gni")  # For `cros_target_cc`
+ }
+ 
  # Helper function for adding cflags to use a clang plugin.
 diff --git a/config/clang/clang.gni b/config/clang/clang.gni
-index e120a847c..ca9f915ad 100644
+index 2ad331d38..32574dd16 100644
 --- a/config/clang/clang.gni
 +++ b/config/clang/clang.gni
 @@ -2,10 +2,10 @@
@@ -3027,7 +3036,7 @@ index e120a847c..ca9f915ad 100644
        # of Clang modules build.
        !use_libcxx_modules
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 311ca2e22..f0072b4df 100644
+index 1f2ccfa21..7111affd1 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -2,44 +2,44 @@
@@ -3131,7 +3140,7 @@ index 311ca2e22..f0072b4df 100644
    }
  
    configs += [
-@@ -603,7 +603,7 @@ config("compiler") {
+@@ -593,7 +593,7 @@ config("compiler") {
      # TODO(crbug.com/40283598): This causes binary size growth and potentially
      # other problems.
      # TODO(crbug.com/40284925): This isn't supported by Cronet's mainline llvm version.
@@ -3140,16 +3149,16 @@ index 311ca2e22..f0072b4df 100644
          !llvm_android_mainline) {
        cflags += [
          "-mllvm",
-@@ -629,7 +629,7 @@ config("compiler") {
+@@ -618,7 +618,7 @@ config("compiler") {
+     # Enable ELF CREL (see crbug.com/357878242) for all platforms that use ELF
      # (excluding toolchains that use an older version of LLVM).
-     # TODO(crbug.com/376278218): This causes segfault on Linux ARM builds.
-     if (is_linux && !llvm_android_mainline && current_cpu != "arm" &&
+     if (is_linux && !llvm_android_mainline &&
 -        default_toolchain != "//build/toolchain/cros:target") {
 +        default_toolchain != "//chromium/build/toolchain/cros:target") {
        cflags += [ "-Wa,--crel,--allow-experimental-crel" ]
      }
    }
-@@ -1157,8 +1157,8 @@ config("thinlto_optimize_default") {
+@@ -1147,8 +1147,8 @@ config("thinlto_optimize_default") {
  # Use this to enable optimization in the ThinLTO link step for select targets
  # when thin_lto_enable_optimizations is set by doing:
  #
@@ -3160,7 +3169,7 @@ index 311ca2e22..f0072b4df 100644
  #
  # Since it makes linking significantly slower and more resource intensive, only
  # use it on important targets such as the main browser executable or dll.
-@@ -1200,7 +1200,7 @@ config("compiler_cpu_abi") {
+@@ -1190,7 +1190,7 @@ config("compiler_cpu_abi") {
  
    configs = []
    if (is_chromeos) {
@@ -3169,7 +3178,7 @@ index 311ca2e22..f0072b4df 100644
    }
  
    if ((is_posix && !is_apple) || is_fuchsia) {
-@@ -1514,7 +1514,7 @@ config("compiler_codegen") {
+@@ -1504,7 +1504,7 @@ config("compiler_codegen") {
    ldflags = []
  
    if (is_nacl) {
@@ -3178,7 +3187,16 @@ index 311ca2e22..f0072b4df 100644
    }
  
    if (current_cpu == "arm64" && !is_win && is_clang) {
-@@ -1749,7 +1749,7 @@ config("runtime_library") {
+@@ -1652,7 +1652,7 @@ config("clang_revision") {
+ # e.g. by setting in the the project's .gn file.
+ config("clang_warning_suppression") {
+   # Some build configs use older versions of clang that don't support WSMs
+-  if (!is_nacl && default_toolchain != "//build/toolchain/cros:target" &&
++  if (!is_nacl && default_toolchain != "//chromium/build/toolchain/cros:target" &&
+       !llvm_android_mainline && is_clang &&
+       clang_warning_suppression_file != "") {
+     from_build_root =
+@@ -1765,7 +1765,7 @@ config("runtime_library") {
    # libandroid_support in the -isystem include order.  Otherwise, there will be
    # build errors related to symbols declared in math.h.
    if (use_custom_libcxx) {
@@ -3187,7 +3205,7 @@ index 311ca2e22..f0072b4df 100644
    }
  
    # Rust and C++ both provide intrinsics for LLVM to call for math operations. We
-@@ -1759,13 +1759,13 @@ config("runtime_library") {
+@@ -1775,13 +1775,13 @@ config("runtime_library") {
    # order to cause that replacement to occur by explicitly linking in clang's
    # compiler-rt library.
    if (is_clang && !is_nacl && !is_cronet_build) {
@@ -3203,7 +3221,7 @@ index 311ca2e22..f0072b4df 100644
  
      if (use_custom_libunwind) {
        # Instead of using an unwind lib from the toolchain,
-@@ -1778,18 +1778,18 @@ config("runtime_library") {
+@@ -1794,18 +1794,18 @@ config("runtime_library") {
    # categories here, add it to the associated file to keep this shared config
    # smaller.
    if (is_win) {
@@ -3228,7 +3246,7 @@ index 311ca2e22..f0072b4df 100644
    }
  
    if (is_component_build) {
-@@ -2050,7 +2050,7 @@ config("default_warnings") {
+@@ -2082,7 +2082,7 @@ config("default_warnings") {
  # See also: https://docs.google.com/document/d/1CTbQ-5cQjnjU8aCOtLiA7G6P0i5C6HpSDNlSNq6nl5E
  #
  # To enable in a GN target, use:
@@ -3237,7 +3255,7 @@ index 311ca2e22..f0072b4df 100644
  
  config("prevent_unsafe_narrowing") {
    if (is_clang) {
-@@ -2399,8 +2399,8 @@ config("no_incompatible_pointer_warnings") {
+@@ -2428,8 +2428,8 @@ config("no_incompatible_pointer_warnings") {
  # You can override the optimization level on a per-target basis by removing the
  # default config and then adding the named one you want:
  #
@@ -3248,7 +3266,7 @@ index 311ca2e22..f0072b4df 100644
  
  # Shared settings for both "optimize" and "optimize_max" configs.
  # IMPORTANT: On Windows "/O1" and "/O2" must go before the common flags.
-@@ -2626,12 +2626,12 @@ config("optimize_max") {
+@@ -2655,12 +2655,12 @@ config("optimize_max") {
      # The NaCl IRT is a special case and always wants its own config.
      # Various components do:
      #   if (!is_debug) {
@@ -3264,7 +3282,7 @@ index 311ca2e22..f0072b4df 100644
    } else {
      ldflags = common_optimize_on_ldflags
      if (is_win) {
-@@ -2659,12 +2659,12 @@ config("optimize_speed") {
+@@ -2688,12 +2688,12 @@ config("optimize_speed") {
      # The NaCl IRT is a special case and always wants its own config.
      # Various components do:
      #   if (!is_debug) {
@@ -3280,7 +3298,7 @@ index 311ca2e22..f0072b4df 100644
    } else {
      ldflags = common_optimize_on_ldflags
      if (is_win) {
-@@ -2696,7 +2696,7 @@ config("default_optimization") {
+@@ -2725,7 +2725,7 @@ config("default_optimization") {
    if (is_nacl && is_nacl_irt) {
      # The NaCl IRT is a special case and always wants its own config.
      # It gets optimized the same way regardless of the type of build.
@@ -3289,7 +3307,7 @@ index 311ca2e22..f0072b4df 100644
    } else if (is_debug) {
      configs = [ ":no_optimize" ]
    } else if (optimize_for_fuzzing) {
-@@ -2790,8 +2790,8 @@ config("afdo") {
+@@ -2819,8 +2819,8 @@ config("afdo") {
  # You can override the symbol level on a per-target basis by removing the
  # default config and then adding the named one you want:
  #
@@ -3300,7 +3318,7 @@ index 311ca2e22..f0072b4df 100644
  
  # A helper config that all configs passing /DEBUG to the linker should
  # include as sub-config.
-@@ -2937,7 +2937,7 @@ config("symbols") {
+@@ -2966,7 +2966,7 @@ config("symbols") {
    # https://b/243982712, https://crbug.com/1354616, https://crbug.com/334073642
    if (symbol_level == 2 && !use_debug_fission && !is_nacl && !is_win &&
        (current_cpu == "arm" || current_cpu == "x86")) {
@@ -3684,7 +3702,7 @@ index e05af1155..09060e4ab 100644
      inputs = [ _ids_txt ]
  
 diff --git a/config/fuchsia/test/platform_video_codecs.shard.test-cml b/config/fuchsia/test/platform_video_codecs.shard.test-cml
-index 929e2ec4c..2d2e67759 100644
+index bfa19c7d3..515c7c03b 100644
 --- a/config/fuchsia/test/platform_video_codecs.shard.test-cml
 +++ b/config/fuchsia/test/platform_video_codecs.shard.test-cml
 @@ -3,7 +3,7 @@
@@ -3697,7 +3715,7 @@ index 929e2ec4c..2d2e67759 100644
    children: [
      {
 diff --git a/config/fuchsia/test/test_ui_stack.shard.test-cml b/config/fuchsia/test/test_ui_stack.shard.test-cml
-index f3ad837e5..c26e1ff05 100644
+index 4e0103eea..d9975bb0c 100644
 --- a/config/fuchsia/test/test_ui_stack.shard.test-cml
 +++ b/config/fuchsia/test/test_ui_stack.shard.test-cml
 @@ -2,7 +2,7 @@
@@ -3841,7 +3859,7 @@ index 7d0d56369..4a0ac3555 100644
  declare_args() {
    # Generate orderfile at application startup and then exit.
 diff --git a/config/ios/ios_sdk.gni b/config/ios/ios_sdk.gni
-index ff28e7e7d..498c4c653 100644
+index 9a0ea63dd..bb870b5b1 100644
 --- a/config/ios/ios_sdk.gni
 +++ b/config/ios/ios_sdk.gni
 @@ -2,11 +2,11 @@
@@ -4724,7 +4742,7 @@ index 3e8e42533..afe2c7aee 100644
  if (current_cpu == "riscv64" || v8_current_cpu == "riscv64" ||
      current_cpu == "riscv32" || v8_current_cpu == "riscv32") {
 diff --git a/config/rust.gni b/config/rust.gni
-index 43503ba4d..565e494ef 100644
+index 74b3b9ced..0b032436a 100644
 --- a/config/rust.gni
 +++ b/config/rust.gni
 @@ -2,18 +2,18 @@
@@ -4752,7 +4770,7 @@ index 43503ba4d..565e494ef 100644
  }
  
  declare_args() {
-@@ -206,7 +206,7 @@ if (is_linux || is_chromeos) {
+@@ -219,7 +219,7 @@ if (is_linux || is_chromeos) {
      cargo_target_abi = ""
    }
  } else if (is_android) {
@@ -4762,7 +4780,7 @@ index 43503ba4d..565e494ef 100644
      rust_abi_target = android_abi_target
      cargo_target_abi = ""
 diff --git a/config/sanitizers/BUILD.gn b/config/sanitizers/BUILD.gn
-index 224d887da..a9bdea4ed 100644
+index b854fda66..3f1e1f285 100644
 --- a/config/sanitizers/BUILD.gn
 +++ b/config/sanitizers/BUILD.gn
 @@ -2,16 +2,16 @@
@@ -4788,8 +4806,8 @@ index 224d887da..a9bdea4ed 100644
 +  import("//chromium/build/config/apple/mobile_config.gni")
  }
  
- # libfuzzer can't cope with shared objects being unloaded, which sometimes
-@@ -119,7 +119,7 @@ if ((is_apple || is_win) && (is_asan || is_ubsan_any)) {
+ declare_args() {
+@@ -125,7 +125,7 @@ if ((is_apple || is_win) && (is_asan || is_ubsan_any)) {
      # On iOS, the runtime library need to be code signed (adhoc signature)
      # starting with Xcode 8, so use an action instead of a copy on iOS.
      action("copy_sanitizer_runtime") {
@@ -4798,7 +4816,7 @@ index 224d887da..a9bdea4ed 100644
        sources = [ _clang_rt_dso_full_path ]
        outputs = [ "$root_out_dir/" + get_path_info(sources[0], "file") ]
        args = [
-@@ -155,30 +155,30 @@ static_library("options_sources") {
+@@ -161,30 +161,30 @@ static_library("options_sources") {
      ":deps",
      "//:gn_all",
    ]
@@ -4834,7 +4852,7 @@ index 224d887da..a9bdea4ed 100644
      }
      sources += [ tsan_suppressions_file ]
    }
-@@ -186,7 +186,7 @@ static_library("options_sources") {
+@@ -192,7 +192,7 @@ static_library("options_sources") {
  
  if (use_dlcloseshim) {
    source_set("dlclose_shim") {
@@ -4843,7 +4861,7 @@ index 224d887da..a9bdea4ed 100644
    }
  } else {
    group("dlclose_shim") {
-@@ -670,7 +670,7 @@ config("not_fuzzed") {
+@@ -679,7 +679,7 @@ config("not_fuzzed") {
      # optimize_for_fuzzing (-O1). When given multiple optimization flags, clang
      # obeys the last one, so as long as this flag comes after -O1, it should work.
      # Since this config will always be depended on after
@@ -5155,16 +5173,17 @@ index 6d41055b4..c41d5237b 100644
  # This is included by reference in the //build/config/compiler config that
  # is applied to all targets. It is here to specify defines and flags that
 diff --git a/dotfile_settings.gni b/dotfile_settings.gni
-index b2c1bc1f1..94bd6c973 100644
+index f0a0a01d9..8105ba99c 100644
 --- a/dotfile_settings.gni
 +++ b/dotfile_settings.gni
-@@ -7,38 +7,38 @@
+@@ -7,39 +7,39 @@
  
  build_dotfile_settings = {
    exec_script_allowlist = [
 -    "//build/config/android/rules.gni",
 -    "//build/config/apple/mobile_config.gni",
 -    "//build/config/chromeos/rules.gni",
+-    "//build/config/clang/BUILD.gn",
 -    "//build/config/compiler/BUILD.gn",
 -    "//build/config/compiler/pgo/BUILD.gn",
 -    "//build/config/gcc/gcc_version.gni",
@@ -5197,6 +5216,7 @@ index b2c1bc1f1..94bd6c973 100644
 +    "//chromium/build/config/android/rules.gni",
 +    "//chromium/build/config/apple/mobile_config.gni",
 +    "//chromium/build/config/chromeos/rules.gni",
++    "//chromium/build/config/clang/BUILD.gn",
 +    "//chromium/build/config/compiler/BUILD.gn",
 +    "//chromium/build/config/compiler/pgo/BUILD.gn",
 +    "//chromium/build/config/gcc/gcc_version.gni",
@@ -5307,7 +5327,7 @@ index 8e603313c..c7c3f873f 100755
  
  def main() -> int:
 diff --git a/gn_logs.gni b/gn_logs.gni
-index 4bea97151..c92dfa73f 100644
+index df49ddab1..4c2c6abb7 100644
 --- a/gn_logs.gni
 +++ b/gn_logs.gni
 @@ -2,9 +2,9 @@
@@ -5323,8 +5343,15 @@ index 4bea97151..c92dfa73f 100644
  
  build_gn_logs = [ "### rbe.gni ###" ] + rbe_logs
  build_gn_logs += [ "" ]
-@@ -14,8 +14,8 @@ build_gn_logs += [ "### compiler.gni ###" ] + compiler_logs
+@@ -14,14 +14,14 @@ build_gn_logs += [ "### compiler.gni ###" ] + compiler_logs
  build_gn_logs += [ "" ]
+ 
+ if (target_os == "android") {
+-  import("//build/config/android/config.gni")
++  import("//chromium/build/config/android/config.gni")
+   build_gn_logs += [ "### android/config.gni ###" ] + android_logs
+   build_gn_logs += [ "" ]
+ }
  
  if (target_os == "ios") {
 -  import("//build/config/ios/ios_sdk.gni")
@@ -5334,7 +5361,7 @@ index 4bea97151..c92dfa73f 100644
    build_gn_logs += [ "### ios_sdk.gni ###" ] + ios_sdk_logs
    build_gn_logs += [ "" ]
    build_gn_logs += [ "### mac_sdk.gni ###" ] + mac_sdk_logs
-@@ -23,20 +23,20 @@ if (target_os == "ios") {
+@@ -29,20 +29,20 @@ if (target_os == "ios") {
  }
  
  if (target_os == "mac") {
@@ -5390,7 +5417,7 @@ index 652ff6684..00c447663 100644
      outputs = _generate_source_output
      args = [
 diff --git a/linux/BUILD.gn b/linux/BUILD.gn
-index b298abb70..892ab1689 100644
+index 653951df5..a3d8267f8 100644
 --- a/linux/BUILD.gn
 +++ b/linux/BUILD.gn
 @@ -2,9 +2,9 @@
@@ -5406,7 +5433,7 @@ index b298abb70..892ab1689 100644
  
  if (use_gio) {
    pkg_config("gio_config") {
-@@ -23,7 +23,7 @@ if (use_system_freetype) {
+@@ -26,7 +26,7 @@ if (use_system_freetype) {
    # the system, use with caution,for details see build/config/freetype/BUILD.gn.
    pkg_config("freetype_from_pkgconfig") {
      visibility = [
@@ -6255,7 +6282,7 @@ index 09d6a8dca..943cb9699 100644
            get_label_info(_private_paths_dep, "target_gen_dir") +
            "/private_paths.txt"
 diff --git a/rust/BUILD.gn b/rust/BUILD.gn
-index 9a7314779..7cc770762 100644
+index c2920d46d..a17812bda 100644
 --- a/rust/BUILD.gn
 +++ b/rust/BUILD.gn
 @@ -2,7 +2,7 @@
@@ -6267,16 +6294,7 @@ index 9a7314779..7cc770762 100644
  
  if (toolchain_has_rust) {
    config("edition_2024") {
-@@ -22,7 +22,7 @@ if (toolchain_has_rust) {
-   }
- 
-   if (enable_rust_cxx) {
--    import("//build/rust/cxx_version.gni")
-+    import("//chromium/build/rust/cxx_version.gni")
- 
-     config("cxx_include_path") {
-       defines = [ "CR_CXX_INCLUDE=\"third_party/rust/chromium_crates_io/vendor/cxx-${cxx_version}/include/cxx.h\"" ]
-@@ -96,7 +96,7 @@ config("forbid_unsafe") {
+@@ -89,7 +89,7 @@ config("forbid_unsafe") {
  }
  
  config("panic_immediate_abort") {
@@ -6792,7 +6810,7 @@ index 40e1f202c..093467a53 100644
    {{#unless deps}}
    ]
 diff --git a/rust/std/rules/BUILD.gn b/rust/std/rules/BUILD.gn
-index 14f0d91d6..2a6c839fa 100644
+index 6a8234310..d5f8efac4 100644
 --- a/rust/std/rules/BUILD.gn
 +++ b/rust/std/rules/BUILD.gn
 @@ -4,7 +4,7 @@
@@ -6864,7 +6882,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    aliased_deps = {
      core = ":rustc_std_workspace_core"
-@@ -214,20 +214,20 @@ cargo_crate("alloc") {
+@@ -209,20 +209,20 @@ cargo_crate("alloc") {
    cargo_pkg_name = "alloc"
    cargo_pkg_description = "The Rust core allocation and collections library"
    library_configs -= [
@@ -6893,7 +6911,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    rustenv = [
      "CFG_DISABLE_UNSTABLE_FEATURES=0",
-@@ -256,20 +256,20 @@ cargo_crate("cfg_if") {
+@@ -251,20 +251,20 @@ cargo_crate("cfg_if") {
    cargo_pkg_name = "cfg-if"
    cargo_pkg_description = "A macro to ergonomically define an item depending on a large number of #[cfg] parameters. Structured like an if-else chain, the first matching branch is the item that gets emitted."
    library_configs -= [
@@ -6922,7 +6940,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    aliased_deps = {
      core = ":rustc_std_workspace_core"
-@@ -486,19 +486,19 @@ cargo_crate("compiler_builtins") {
+@@ -518,19 +518,19 @@ cargo_crate("compiler_builtins") {
    cargo_pkg_name = "compiler_builtins"
    cargo_pkg_description = "Compiler intrinsics used by the Rust compiler. Also available for other targets if necessary!"
    library_configs -= [
@@ -6950,7 +6968,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    aliased_deps = {
      core = ":rustc_std_workspace_core"
-@@ -1029,20 +1029,20 @@ cargo_crate("core") {
+@@ -1062,20 +1062,20 @@ cargo_crate("core") {
    cargo_pkg_name = "core"
    cargo_pkg_description = "The Rust Core Library"
    library_configs -= [
@@ -6980,7 +6998,7 @@ index 14f0d91d6..2a6c839fa 100644
    rustenv = [
      "CFG_DISABLE_UNSTABLE_FEATURES=0",
      "STD_ENV_ARCH=$rust_target_arch",
-@@ -1073,21 +1073,21 @@ cargo_crate("getopts") {
+@@ -1106,21 +1106,21 @@ cargo_crate("getopts") {
    cargo_pkg_name = "getopts"
    cargo_pkg_description = "getopts-like option parsing."
    library_configs -= [
@@ -7010,7 +7028,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    aliased_deps = {
      core = ":rustc_std_workspace_core"
-@@ -1170,21 +1170,21 @@ cargo_crate("gimli") {
+@@ -1203,21 +1203,21 @@ cargo_crate("gimli") {
    cargo_pkg_description =
        "A library for reading and writing the DWARF debugging format."
    library_configs -= [
@@ -7040,7 +7058,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    aliased_deps = {
      alloc = ":rustc_std_workspace_alloc"
-@@ -1249,21 +1249,21 @@ cargo_crate("hashbrown") {
+@@ -1282,21 +1282,21 @@ cargo_crate("hashbrown") {
    cargo_pkg_name = "hashbrown"
    cargo_pkg_description = "A Rust port of Google's SwissTable hash map"
    library_configs -= [
@@ -7070,7 +7088,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    aliased_deps = {
      alloc = ":rustc_std_workspace_alloc"
-@@ -1483,19 +1483,19 @@ cargo_crate("libc") {
+@@ -1519,19 +1519,19 @@ cargo_crate("libc") {
    cargo_pkg_name = "libc"
    cargo_pkg_description = "Raw FFI bindings to platform libraries like libc."
    library_configs -= [
@@ -7098,7 +7116,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    features = [
      "align",
-@@ -1577,20 +1577,20 @@ cargo_crate("memchr") {
+@@ -1613,20 +1613,20 @@ cargo_crate("memchr") {
    cargo_pkg_name = "memchr"
    cargo_pkg_description = "Provides extremely fast (uses SIMD on x86_64, aarch64 and wasm32) routines for 1, 2 or 3 byte search and single substring search."
    library_configs -= [
@@ -7127,7 +7145,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    aliased_deps = {
      core = ":rustc_std_workspace_core"
-@@ -1640,22 +1640,22 @@ cargo_crate("miniz_oxide") {
+@@ -1676,22 +1676,22 @@ cargo_crate("miniz_oxide") {
    cargo_pkg_name = "miniz_oxide"
    cargo_pkg_description = "DEFLATE compression and decompression library rewritten in Rust based on miniz"
    library_configs -= [
@@ -7158,7 +7176,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    aliased_deps = {
      alloc = ":rustc_std_workspace_alloc"
-@@ -1775,22 +1775,22 @@ cargo_crate("object") {
+@@ -1811,22 +1811,22 @@ cargo_crate("object") {
    cargo_pkg_description =
        "A unified interface for reading and writing object file formats."
    library_configs -= [
@@ -7189,7 +7207,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    aliased_deps = {
      alloc = ":rustc_std_workspace_alloc"
-@@ -1842,22 +1842,22 @@ cargo_crate("panic_abort") {
+@@ -1878,22 +1878,22 @@ cargo_crate("panic_abort") {
    cargo_pkg_name = "panic_abort"
    cargo_pkg_description = "Implementation of Rust panics via process aborts"
    library_configs -= [
@@ -7220,7 +7238,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    if (!is_win) {
      deps += [ ":libc" ]
-@@ -1896,23 +1896,23 @@ cargo_crate("panic_unwind") {
+@@ -1932,23 +1932,23 @@ cargo_crate("panic_unwind") {
    cargo_pkg_name = "panic_unwind"
    cargo_pkg_description = "Implementation of Rust panics via stack unwinding"
    library_configs -= [
@@ -7252,7 +7270,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    if (!is_win) {
      deps += [ ":libc" ]
-@@ -1959,20 +1959,20 @@ cargo_crate("proc_macro") {
+@@ -1995,20 +1995,20 @@ cargo_crate("proc_macro") {
    cargo_pkg_version = "0.0.0"
    cargo_pkg_name = "proc_macro"
    library_configs -= [
@@ -7281,7 +7299,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    rustenv = [
      "CFG_DISABLE_UNSTABLE_FEATURES=0",
-@@ -1999,17 +1999,17 @@ cargo_crate("profiler_builtins") {
+@@ -2035,17 +2035,17 @@ cargo_crate("profiler_builtins") {
    cargo_pkg_version = "0.0.0"
    cargo_pkg_name = "profiler_builtins"
    library_configs -= [
@@ -7307,7 +7325,7 @@ index 14f0d91d6..2a6c839fa 100644
    rustenv = [
      "CFG_DISABLE_UNSTABLE_FEATURES=0",
      "STD_ENV_ARCH=$rust_target_arch",
-@@ -2041,20 +2041,20 @@ cargo_crate("rustc_demangle") {
+@@ -2077,20 +2077,20 @@ cargo_crate("rustc_demangle") {
    cargo_pkg_name = "rustc-demangle"
    cargo_pkg_description = "Rust compiler symbol demangling."
    library_configs -= [
@@ -7336,7 +7354,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    aliased_deps = {
      core = ":rustc_std_workspace_core"
-@@ -2090,19 +2090,19 @@ cargo_crate("rustc_std_workspace_alloc") {
+@@ -2126,19 +2126,19 @@ cargo_crate("rustc_std_workspace_alloc") {
    cargo_pkg_name = "rustc-std-workspace-alloc"
    cargo_pkg_description = "Hack for the compiler's own build system"
    library_configs -= [
@@ -7364,7 +7382,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    rustenv = [
      "CFG_DISABLE_UNSTABLE_FEATURES=0",
-@@ -2130,19 +2130,19 @@ cargo_crate("rustc_std_workspace_core") {
+@@ -2166,19 +2166,19 @@ cargo_crate("rustc_std_workspace_core") {
    cargo_pkg_name = "rustc-std-workspace-core"
    cargo_pkg_description = "Hack for the compiler's own build system"
    library_configs -= [
@@ -7392,7 +7410,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    rustenv = [
      "CFG_DISABLE_UNSTABLE_FEATURES=0",
-@@ -2170,19 +2170,19 @@ cargo_crate("rustc_std_workspace_std") {
+@@ -2206,19 +2206,19 @@ cargo_crate("rustc_std_workspace_std") {
    cargo_pkg_name = "rustc-std-workspace-std"
    cargo_pkg_description = "Hack for the compiler's own build system"
    library_configs -= [
@@ -7420,7 +7438,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    rustenv = [
      "CFG_DISABLE_UNSTABLE_FEATURES=0",
-@@ -2846,18 +2846,18 @@ cargo_crate("std") {
+@@ -2890,18 +2890,18 @@ cargo_crate("std") {
    cargo_pkg_name = "std"
    cargo_pkg_description = "The Rust Standard Library"
    library_configs -= [
@@ -7446,7 +7464,7 @@ index 14f0d91d6..2a6c839fa 100644
    deps = [
      ":alloc",
      ":cfg_if",
-@@ -2869,8 +2869,8 @@ cargo_crate("std") {
+@@ -2913,8 +2913,8 @@ cargo_crate("std") {
      ":rustc_demangle",
      ":std_detect",
      ":unwind",
@@ -7457,7 +7475,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    if (!is_win) {
      deps += [
-@@ -2961,22 +2961,22 @@ cargo_crate("std_detect") {
+@@ -3007,22 +3007,22 @@ cargo_crate("std_detect") {
    cargo_pkg_description =
        "`std::detect` - Rust's standard library run-time CPU feature detection."
    library_configs -= [
@@ -7488,7 +7506,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    if (!is_win) {
      deps += [ ":libc" ]
-@@ -3019,22 +3019,22 @@ cargo_crate("sysroot") {
+@@ -3065,22 +3065,22 @@ cargo_crate("sysroot") {
    cargo_pkg_version = "0.0.0"
    cargo_pkg_name = "sysroot"
    library_configs -= [
@@ -7519,7 +7537,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    features = [
      "backtrace",
-@@ -3099,21 +3099,21 @@ cargo_crate("test") {
+@@ -3145,21 +3145,21 @@ cargo_crate("test") {
    cargo_pkg_version = "0.0.0"
    cargo_pkg_name = "test"
    library_configs -= [
@@ -7549,7 +7567,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    if (!is_win) {
      deps += [ ":libc" ]
-@@ -3149,21 +3149,21 @@ cargo_crate("unicode_width") {
+@@ -3195,21 +3195,21 @@ cargo_crate("unicode_width") {
    cargo_pkg_name = "unicode-width"
    cargo_pkg_description = "Determine displayed width of `char` and `str` types according to Unicode Standard Annex #11 rules."
    library_configs -= [
@@ -7579,7 +7597,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    aliased_deps = {
      core = ":rustc_std_workspace_core"
-@@ -3206,21 +3206,21 @@ cargo_crate("unwind") {
+@@ -3252,21 +3252,21 @@ cargo_crate("unwind") {
    cargo_pkg_version = "0.0.0"
    cargo_pkg_name = "unwind"
    library_configs -= [
@@ -7609,7 +7627,7 @@ index 14f0d91d6..2a6c839fa 100644
    ]
    if (!is_win) {
      deps += [ ":libc" ]
-@@ -3252,17 +3252,17 @@ cargo_crate("windows_targets") {
+@@ -3298,17 +3298,17 @@ cargo_crate("windows_targets") {
    cargo_pkg_name = "windows-targets"
    cargo_pkg_description = "A drop-in replacement for the real windows-targets crate for use in std only."
    library_configs -= [
@@ -8509,7 +8527,7 @@ index 04d592016..ed81c27b5 100644
  declare_args() {
    # Reduce the number of tasks using the copy_bundle_data and compile_xcassets
 diff --git a/toolchain/apple/toolchain.gni b/toolchain/apple/toolchain.gni
-index 4e88d9f6c..d1ce002fa 100644
+index 384375fbd..8c3de67a1 100644
 --- a/toolchain/apple/toolchain.gni
 +++ b/toolchain/apple/toolchain.gni
 @@ -6,14 +6,14 @@
@@ -8671,7 +8689,7 @@ index 4e88d9f6c..d1ce002fa 100644
  
          depfile = "{{target_out_dir}}/{{module_name}}.d"
          depsformat = "gcc"
-@@ -751,7 +751,7 @@ template("single_apple_toolchain") {
+@@ -752,7 +752,7 @@ template("single_apple_toolchain") {
          _src_dir = rebase_path("//", root_build_dir)
          _gen_dir = rebase_path(root_gen_dir, root_build_dir)
          _const_gather_protocols_file = rebase_path(
@@ -8680,7 +8698,7 @@ index 4e88d9f6c..d1ce002fa 100644
                  root_build_dir)
  
          command =
-@@ -771,7 +771,7 @@ template("single_apple_toolchain") {
+@@ -772,7 +772,7 @@ template("single_apple_toolchain") {
      # disallow future uses of xcassets on macOS. https://crbug.com/965663.
      if (toolchain_args.current_os == "ios") {
        tool("compile_xcassets") {
@@ -8689,7 +8707,7 @@ index 4e88d9f6c..d1ce002fa 100644
                              root_build_dir)
  
          _env_vars = "TOOL_VERSION=${tool_versions.compile_xcassets}"
-@@ -788,12 +788,12 @@ template("single_apple_toolchain") {
+@@ -789,12 +789,12 @@ template("single_apple_toolchain") {
                    " {{xcasset_compiler_flags}} " + "-o {{output}} {{inputs}}"
  
          description = "COMPILE_XCASSETS {{output}}"
@@ -9088,7 +9106,7 @@ index 94650c710..7725d666e 100644
      _is_google_corp_machine && !_is_ninja_used) {
    use_siso_default = true
 diff --git a/toolchain/toolchain.gni b/toolchain/toolchain.gni
-index 580da7b0d..c80804ace 100644
+index ce642da05..754f0e3bb 100644
 --- a/toolchain/toolchain.gni
 +++ b/toolchain/toolchain.gni
 @@ -5,8 +5,8 @@
@@ -9102,7 +9120,7 @@ index 580da7b0d..c80804ace 100644
  import("//build_overrides/build.gni")
  
  declare_args() {
-@@ -102,7 +102,7 @@ stamp_description = "STAMP {{output}}"
+@@ -105,7 +105,7 @@ stamp_description = "STAMP {{output}}"
  copy_description = "COPY {{source}} {{output}}"
  if (host_os == "win") {
    _tool_wrapper_path =
@@ -9111,6 +9129,19 @@ index 580da7b0d..c80804ace 100644
  
    stamp_command = "cmd /c type nul > \"{{output}}\""
    copy_command = "\"$python_path\" $_tool_wrapper_path recursive-mirror {{source}} {{output}}"
+diff --git a/toolchain/wasm/BUILD.gn b/toolchain/wasm/BUILD.gn
+index 38298f349..26d790b0b 100644
+--- a/toolchain/wasm/BUILD.gn
++++ b/toolchain/wasm/BUILD.gn
+@@ -2,7 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
+-import("//build/toolchain/gcc_toolchain.gni")
++import("//chromium/build/toolchain/gcc_toolchain.gni")
+ 
+ # This WASM toolchain is NOT to be used to build any Chromium code,
+ # i.e. tests and samples are currently fine.
 diff --git a/toolchain/win/BUILD.gn b/toolchain/win/BUILD.gn
 index d7f348487..1727eb6f6 100644
 --- a/toolchain/win/BUILD.gn
@@ -9158,7 +9189,7 @@ index c906b6394..fcab19141 100644
      sources = invoker.sources
  
 diff --git a/toolchain/win/toolchain.gni b/toolchain/win/toolchain.gni
-index 1c30b04b7..1af294b42 100644
+index 7dbd8a17e..96b978aad 100644
 --- a/toolchain/win/toolchain.gni
 +++ b/toolchain/win/toolchain.gni
 @@ -2,21 +2,21 @@
@@ -9202,7 +9233,7 @@ index 1c30b04b7..1af294b42 100644
                        root_build_dir)
        coverage_wrapper = coverage_wrapper + " --target-os=" + target_os
        if (toolchain_coverage_instrumentation_input_file != "") {
-@@ -301,7 +301,7 @@ template("msvc_toolchain") {
+@@ -306,7 +306,7 @@ template("msvc_toolchain") {
            # Wrap ml(64).exe with a script that makes its output deterministic.
            # It's lld only because the script zaps obj Timestamp which
            # link.exe /incremental looks at.
@@ -9211,7 +9242,7 @@ index 1c30b04b7..1af294b42 100644
            ml = "\"$python_path\" $ml_py $ml"
          }
  
-@@ -325,7 +325,7 @@ template("msvc_toolchain") {
+@@ -330,7 +330,7 @@ template("msvc_toolchain") {
        rust_sysroot_relative = rebase_path(rust_sysroot, root_build_dir)
        rustc = "$rust_sysroot_relative/bin/rustc"
        rustc_wrapper =
@@ -9220,7 +9251,7 @@ index 1c30b04b7..1af294b42 100644
        rustc_windows_args = " -Clinker=$link$rust_linkflags $rustc_common_args"
  
        tool("rust_staticlib") {
-@@ -379,7 +379,7 @@ template("msvc_toolchain") {
+@@ -384,7 +384,7 @@ template("msvc_toolchain") {
          pdbname = "$exename.pdb"
          rspfile = "$exename.rsp"
          depfile = "$exename.d"
@@ -9229,7 +9260,7 @@ index 1c30b04b7..1af294b42 100644
  
          default_output_extension = ".exe"
          default_output_dir = "{{root_out_dir}}"
-@@ -404,7 +404,7 @@ template("msvc_toolchain") {
+@@ -409,7 +409,7 @@ template("msvc_toolchain") {
          pdbname = "$dllname.pdb"
          rspfile = "$dllname.rsp"
          depfile = "$dllname.d"
@@ -9238,7 +9269,7 @@ index 1c30b04b7..1af294b42 100644
  
          default_output_extension = ".dll"
          default_output_dir = "{{root_out_dir}}"
-@@ -440,7 +440,7 @@ template("msvc_toolchain") {
+@@ -445,7 +445,7 @@ template("msvc_toolchain") {
          pdbname = "$dllname.pdb"
          rspfile = "$dllname.rsp"
          depfile = "$dllname.d"
@@ -9247,7 +9278,7 @@ index 1c30b04b7..1af294b42 100644
  
          default_output_extension = ".dll"
          default_output_dir = "{{root_out_dir}}"
-@@ -493,7 +493,7 @@ template("msvc_toolchain") {
+@@ -498,7 +498,7 @@ template("msvc_toolchain") {
        libname = "${dllname}.lib"  # e.g. foo.dll.lib
        pdbname = "${dllname}.pdb"
        rspfile = "${dllname}.rsp"
@@ -9256,7 +9287,7 @@ index 1c30b04b7..1af294b42 100644
  
        command = "$linker_wrapper$link$cc_linkflags \"/OUT:$dllname\" /nologo ${sys_lib_flags} \"/IMPLIB:$libname\" /DLL \"/PDB:$pdbname\" \"@$rspfile\""
  
-@@ -528,7 +528,7 @@ template("msvc_toolchain") {
+@@ -533,7 +533,7 @@ template("msvc_toolchain") {
        dllname = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
        pdbname = "${dllname}.pdb"
        rspfile = "${dllname}.rsp"
@@ -9265,7 +9296,7 @@ index 1c30b04b7..1af294b42 100644
  
        command = "$linker_wrapper$link$cc_linkflags \"/OUT:$dllname\" /nologo ${sys_lib_flags} /DLL \"/PDB:$pdbname\" \"@$rspfile\""
  
-@@ -551,7 +551,7 @@ template("msvc_toolchain") {
+@@ -556,7 +556,7 @@ template("msvc_toolchain") {
        exename = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
        pdbname = "$exename.pdb"
        rspfile = "$exename.rsp"
@@ -9274,7 +9305,7 @@ index 1c30b04b7..1af294b42 100644
  
        command = "$linker_wrapper$link$cc_linkflags \"/OUT:$exename\" /nologo ${sys_lib_flags} \"/PDB:$pdbname\" \"@$rspfile\""
  
-@@ -576,16 +576,16 @@ template("msvc_toolchain") {
+@@ -581,16 +581,16 @@ template("msvc_toolchain") {
      tool("stamp") {
        command = stamp_command
        description = stamp_description

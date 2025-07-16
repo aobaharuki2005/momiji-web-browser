@@ -14,7 +14,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/831cdef4bf346cb9c
  2 files changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
-index bdf8b1363..29f705a54 100644
+index a9d2caeb1..dd6a105ee 100644
 --- a/config/BUILDCONFIG.gn
 +++ b/config/BUILDCONFIG.gn
 @@ -136,7 +136,7 @@ declare_args() {
@@ -26,7 +26,7 @@ index bdf8b1363..29f705a54 100644
               (current_cpu != "s390x" && current_cpu != "s390" &&
                current_cpu != "ppc64" && current_cpu != "ppc" &&
                current_cpu != "mips" && current_cpu != "mips64" &&
-@@ -205,7 +205,7 @@ if (host_toolchain == "") {
+@@ -206,7 +206,7 @@ if (host_toolchain == "") {
    # TODO(dpranke): Add some sort of assert here that verifies that
    # no toolchain omitted host_toolchain from its toolchain_args().
  
@@ -35,7 +35,7 @@ index bdf8b1363..29f705a54 100644
      if (target_os != "linux") {
        host_toolchain = "//build/toolchain/linux:clang_$host_cpu"
      } else if (is_clang) {
-@@ -245,7 +245,7 @@ if (target_os == "android") {
+@@ -246,7 +246,7 @@ if (target_os == "android") {
    # Targeting android on Mac is best-effort and not guaranteed to work.
    assert(host_os == "linux", "Android builds are only supported on Linux.")
    _default_toolchain = "//build/toolchain/android:android_clang_$target_cpu"
@@ -44,14 +44,14 @@ index bdf8b1363..29f705a54 100644
    # See comments in build/toolchain/cros/BUILD.gn about board compiles.
    if (is_clang) {
      _default_toolchain = "//build/toolchain/linux:clang_$target_cpu"
-@@ -313,6 +313,7 @@ is_chromeos = current_os == "chromeos"
+@@ -314,6 +314,7 @@ is_chromeos = current_os == "chromeos"
  is_fuchsia = current_os == "fuchsia"
  is_ios = current_os == "ios"
  is_linux = current_os == "linux"
 +is_bsd = current_os == "openbsd"
  is_mac = current_os == "mac"
  is_nacl = current_os == "nacl"
- is_watchos = current_os == "watchos"
+ is_wasm = current_os == "emscripten"
 diff --git a/config/ui.gni b/config/ui.gni
 index 9e7f4df85..2c526a92f 100644
 --- a/config/ui.gni

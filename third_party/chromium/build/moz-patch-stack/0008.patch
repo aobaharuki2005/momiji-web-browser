@@ -13,14 +13,14 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/99575d260702afb30
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/config/win/BUILD.gn b/config/win/BUILD.gn
-index 716b48be1..e656a35e2 100644
+index a71603fb1..e656a35e2 100644
 --- a/config/win/BUILD.gn
 +++ b/config/win/BUILD.gn
 @@ -289,7 +289,7 @@ config("runtime_library") {
  # manually override this config for their compiles.
  config("winver") {
    defines = [
--    "NTDDI_VERSION=NTDDI_WIN10_NI",
+-    "NTDDI_VERSION=NTDDI_WIN11_GE",
 +    "NTDDI_VERSION=0x0A000000",
  
      # We can't say `=_WIN32_WINNT_WIN10` here because some files do

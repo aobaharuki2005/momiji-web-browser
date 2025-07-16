@@ -9,10 +9,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf812ff032ed58f1b
  1 file changed, 5 insertions(+)
 
 diff --git a/config/clang/BUILD.gn b/config/clang/BUILD.gn
-index 3705ddc5f..985a1e116 100644
+index 0d648fa31..beb81db98 100644
 --- a/config/clang/BUILD.gn
 +++ b/config/clang/BUILD.gn
-@@ -214,6 +214,10 @@ template("clang_lib") {
+@@ -252,6 +252,10 @@ template("clang_lib") {
  
  # Adds a dependency on the Clang runtime library clang_rt.builtins.
  clang_lib("compiler_builtins") {
@@ -23,7 +23,7 @@ index 3705ddc5f..985a1e116 100644
    if (is_mac) {
      libname = "osx"
    } else if (is_ios) {
-@@ -242,6 +246,7 @@ clang_lib("compiler_builtins") {
+@@ -280,6 +284,7 @@ clang_lib("compiler_builtins") {
      libname = "builtins"
    }
  }

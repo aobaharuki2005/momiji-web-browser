@@ -15,10 +15,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3a785d486d97fc9cb
  4 files changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
-index 29f705a54..417aa53e3 100644
+index dd6a105ee..4d9c9f5db 100644
 --- a/config/BUILDCONFIG.gn
 +++ b/config/BUILDCONFIG.gn
-@@ -243,7 +243,7 @@ _default_toolchain = ""
+@@ -244,7 +244,7 @@ _default_toolchain = ""
  
  if (target_os == "android") {
    # Targeting android on Mac is best-effort and not guaranteed to work.
@@ -27,7 +27,7 @@ index 29f705a54..417aa53e3 100644
    _default_toolchain = "//build/toolchain/android:android_clang_$target_cpu"
  } else if (target_os == "chromeos" || target_os == "linux" || target_os == "openbsd") {
    # See comments in build/toolchain/cros/BUILD.gn about board compiles.
-@@ -257,8 +257,8 @@ if (target_os == "android") {
+@@ -258,8 +258,8 @@ if (target_os == "android") {
  } else if (target_os == "ios") {
    _default_toolchain = "//build/toolchain/ios:ios_clang_$target_cpu"
  } else if (target_os == "mac") {

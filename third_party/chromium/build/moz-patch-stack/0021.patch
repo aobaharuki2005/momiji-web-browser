@@ -1,5 +1,5 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 8 Jul 2025 11:53:50 -0500
+Date: Tue, 8 Jul 2025 12:33:21 -0500
 Subject: Bug 1775143 - pt14 - (mirror) 58f47eacaf10 r=ng
 
 Search third_party/libwebrtc/build for current_cpu, removing
@@ -53,6 +53,7 @@ sed -i 's/current_cpu/target_cpu/g' third_party/libwebrtc/build/toolchain/linux/
 sed -i 's/current_cpu/target_cpu/g' third_party/libwebrtc/build/toolchain/linux/unbundle/BUILD.gn
 sed -i 's/current_cpu/target_cpu/g' third_party/libwebrtc/build/toolchain/mac/BUILD.gn
 sed -i 's/current_cpu/target_cpu/g' third_party/libwebrtc/build/toolchain/nacl/BUILD.gn
+sed -i 's/current_cpu/target_cpu/g' third_party/libwebrtc/build/toolchain/wasm/BUILD.gn
 sed -i 's/current_cpu/target_cpu/g' third_party/libwebrtc/build/toolchain/win/BUILD.gn
 sed -i 's/current_cpu/target_cpu/g' third_party/libwebrtc/build/toolchain/win/midl.gni
 sed -i 's/current_cpu/target_cpu/g' third_party/libwebrtc/build/toolchain/win/toolchain.gni
@@ -75,8 +76,8 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ec13234e5a641a026
  config/arm.gni                    |  6 +--
  config/chromecast/BUILD.gn        |  4 +-
  config/chromeos/BUILD.gn          |  8 ++--
- config/clang/BUILD.gn             | 28 +++++------
- config/compiler/BUILD.gn          | 78 +++++++++++++++---------------
+ config/clang/BUILD.gn             | 36 +++++++-------
+ config/compiler/BUILD.gn          | 76 ++++++++++++++---------------
  config/compiler/compiler.gni      | 22 ++++-----
  config/compiler/pgo/BUILD.gn      |  4 +-
  config/fuchsia/gn_configs.gni     |  2 +-
@@ -110,13 +111,14 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ec13234e5a641a026
  toolchain/linux/unbundle/BUILD.gn |  4 +-
  toolchain/mac/BUILD.gn            | 32 ++++++-------
  toolchain/nacl/BUILD.gn           | 10 ++--
+ toolchain/wasm/BUILD.gn           |  2 +-
  toolchain/win/BUILD.gn            |  2 +-
  toolchain/win/midl.gni            |  6 +--
  toolchain/win/toolchain.gni       | 44 ++++++++---------
  toolchain/zos/BUILD.gn            |  2 +-
  win/BUILD.gn                      |  4 +-
  win/message_compiler.gni          |  2 +-
- 49 files changed, 332 insertions(+), 332 deletions(-)
+ 50 files changed, 336 insertions(+), 336 deletions(-)
 
 diff --git a/config/BUILD.gn b/config/BUILD.gn
 index 36c03e0dd..7cf351624 100644
@@ -240,10 +242,10 @@ index c300f1d6f..567c75b42 100644
  # Do not define android_secondary_abi_cpu or android_app_secondary_abi for
  # target_cpu's that are 32-bit-only or 64-bit-only, as they are not used. The
 diff --git a/config/android/config.gni b/config/android/config.gni
-index f4a51bf02..8ff0a0089 100644
+index 92251bb69..8a6259464 100644
 --- a/config/android/config.gni
 +++ b/config/android/config.gni
-@@ -197,7 +197,7 @@ if (is_android) {
+@@ -196,7 +196,7 @@ if (is_android) {
        # Android did not support 64 bit before API 21.
        android64_ndk_api_level = 21
      }
@@ -252,7 +254,7 @@ index f4a51bf02..8ff0a0089 100644
        # Android did not support RISC-V64 before API 35.
        android64_ndk_api_level = 35
      }
-@@ -370,19 +370,19 @@ if (is_android) {
+@@ -369,19 +369,19 @@ if (is_android) {
    # Location of libgcc. This is only needed for the current GN toolchain, so we
    # only need to define the current one, rather than one for every platform
    # like the toolchain roots.
@@ -384,10 +386,10 @@ index f850557db..2bbbd9d28 100644
    }
  }
 diff --git a/config/clang/BUILD.gn b/config/clang/BUILD.gn
-index 535ac6f10..e453befa3 100644
+index 166c55798..24a3be52e 100644
 --- a/config/clang/BUILD.gn
 +++ b/config/clang/BUILD.gn
-@@ -155,11 +155,11 @@ template("clang_lib") {
+@@ -173,11 +173,11 @@ template("clang_lib") {
          _dir = "windows"
          _prefix = ""
          _ext = "lib"
@@ -402,9 +404,25 @@ index 535ac6f10..e453befa3 100644
            _suffix = "-aarch64"
          } else {
            assert(false)  # Unhandled cpu type
-@@ -167,36 +167,36 @@ template("clang_lib") {
-       } else if (is_apple) {
-         _dir = "darwin"
+@@ -187,48 +187,48 @@ template("clang_lib") {
+       } else if (_use_cros_sysroot_libs) {
+         _clang_lib_dir = _cros_resource_dir
+         _dir = "lib/linux"
+-        if (current_cpu == "x64") {
++        if (target_cpu == "x64") {
+           _suffix = "-x86_64"
+-        } else if (current_cpu == "x86") {
++        } else if (target_cpu == "x86") {
+           _suffix = "-i386"
+-        } else if (current_cpu == "arm") {
++        } else if (target_cpu == "arm") {
+           _suffix = "-armhf"
+-        } else if (current_cpu == "arm64") {
++        } else if (target_cpu == "arm64") {
+           _suffix = "-aarch64"
+         } else {
+           assert(false)  # Unhandled cpu type
+         }
        } else if (is_linux || is_chromeos) {
 -        if (current_cpu == "x64") {
 +        if (target_cpu == "x64") {
@@ -451,7 +469,7 @@ index 535ac6f10..e453befa3 100644
          } else {
            assert(false)  # Unhandled cpu type
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index f0072b4df..41944545a 100644
+index 7111affd1..a59a5df6e 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -22,11 +22,11 @@ import("//chromium/build/toolchain/rbe.gni")
@@ -481,7 +499,7 @@ index f0072b4df..41944545a 100644
             clang_use_default_sample_profile)) {
          chrome_orderfile_path = default_chrome_orderfile
        }
-@@ -483,7 +483,7 @@ config("compiler") {
+@@ -473,7 +473,7 @@ config("compiler") {
      # entries). This reduces object file size a bit and makes linking a bit
      # faster.
      # On arm64, this is already the default behavior.
@@ -490,16 +508,7 @@ index f0072b4df..41944545a 100644
        asmflags += [ "-femit-dwarf-unwind=no-compact-unwind" ]
        cflags += [ "-femit-dwarf-unwind=no-compact-unwind" ]
      }
-@@ -628,7 +628,7 @@ config("compiler") {
-     # Enable ELF CREL (see crbug.com/357878242) for all platforms that use ELF
-     # (excluding toolchains that use an older version of LLVM).
-     # TODO(crbug.com/376278218): This causes segfault on Linux ARM builds.
--    if (is_linux && !llvm_android_mainline && current_cpu != "arm" &&
-+    if (is_linux && !llvm_android_mainline && target_cpu != "arm" &&
-         default_toolchain != "//chromium/build/toolchain/cros:target") {
-       cflags += [ "-Wa,--crel,--allow-experimental-crel" ]
-     }
-@@ -843,7 +843,7 @@ config("compiler") {
+@@ -832,7 +832,7 @@ config("compiler") {
  
      # TODO(crbug.com/40182783): investigate why this isn't effective on
      # arm32.
@@ -508,7 +517,7 @@ index f0072b4df..41944545a 100644
        cflags += [ "-fwhole-program-vtables" ]
  
        if (toolchain_supports_rust_thin_lto) {
-@@ -869,7 +869,7 @@ config("compiler") {
+@@ -858,7 +858,7 @@ config("compiler") {
      # unless the architecture revision in .ARM.attributes is sufficiently new.
      # TODO(pcc): The contents of .ARM.attributes should be based on the
      # -march flag passed at compile time (see llvm.org/pr36291).
@@ -517,7 +526,7 @@ index f0072b4df..41944545a 100644
        ldflags += [ "-march=$arm_arch" ]
      }
    }
-@@ -1097,7 +1097,7 @@ config("compiler") {
+@@ -1087,7 +1087,7 @@ config("compiler") {
    #
    # Reduce confusion by making the __ARM_NEON__ #define always available,
    # as NEON is a mandatory part of ARMv8 anyway.
@@ -526,7 +535,7 @@ index f0072b4df..41944545a 100644
      defines += [ "__ARM_NEON__=1" ]
    }
  }
-@@ -1206,13 +1206,13 @@ config("compiler_cpu_abi") {
+@@ -1196,13 +1196,13 @@ config("compiler_cpu_abi") {
    if ((is_posix && !is_apple) || is_fuchsia) {
      # CPU architecture. We may or may not be doing a cross compile now, so for
      # simplicity we always explicitly set the architecture.
@@ -542,7 +551,7 @@ index f0072b4df..41944545a 100644
        cflags += [ "-m32" ]
        ldflags += [ "-m32" ]
        if (!is_nacl) {
-@@ -1221,7 +1221,7 @@ config("compiler_cpu_abi") {
+@@ -1211,7 +1211,7 @@ config("compiler_cpu_abi") {
            "-msse2",
          ]
        }
@@ -551,7 +560,7 @@ index f0072b4df..41944545a 100644
        if (is_clang && !is_android && !is_nacl && !is_chromeos_device) {
          cflags += [ "--target=arm-linux-gnueabihf" ]
          ldflags += [ "--target=arm-linux-gnueabihf" ]
-@@ -1235,13 +1235,13 @@ config("compiler_cpu_abi") {
+@@ -1225,13 +1225,13 @@ config("compiler_cpu_abi") {
        if (arm_tune != "") {
          cflags += [ "-mtune=$arm_tune" ]
        }
@@ -567,7 +576,7 @@ index f0072b4df..41944545a 100644
        ldflags += [ "-Wl,--hash-style=sysv" ]
        if (custom_toolchain == "") {
          if (is_clang) {
-@@ -1326,7 +1326,7 @@ config("compiler_cpu_abi") {
+@@ -1316,7 +1316,7 @@ config("compiler_cpu_abi") {
        }
  
        cflags += [ "-m${mips_float_abi}-float" ]
@@ -576,7 +585,7 @@ index f0072b4df..41944545a 100644
        ldflags += [ "-Wl,--hash-style=sysv" ]
        if (custom_toolchain == "") {
          if (is_clang) {
-@@ -1371,7 +1371,7 @@ config("compiler_cpu_abi") {
+@@ -1361,7 +1361,7 @@ config("compiler_cpu_abi") {
        }
  
        cflags += [ "-m${mips_float_abi}-float" ]
@@ -585,7 +594,7 @@ index f0072b4df..41944545a 100644
        cflags += [ "-D__SANE_USERSPACE_TYPES__" ]
        ldflags += [ "-Wl,--hash-style=sysv" ]
        if (custom_toolchain == "") {
-@@ -1435,7 +1435,7 @@ config("compiler_cpu_abi") {
+@@ -1425,7 +1425,7 @@ config("compiler_cpu_abi") {
            "-Wa,-march=loongson3a",
          ]
        }
@@ -594,7 +603,7 @@ index f0072b4df..41944545a 100644
        ldflags += [ "-Wl,--hash-style=sysv" ]
        if (custom_toolchain == "") {
          if (is_clang) {
-@@ -1473,7 +1473,7 @@ config("compiler_cpu_abi") {
+@@ -1463,7 +1463,7 @@ config("compiler_cpu_abi") {
          ]
          ldflags += [ "-mips64r2" ]
        }
@@ -603,7 +612,7 @@ index f0072b4df..41944545a 100644
        if (current_os == "aix") {
          cflags += [ "-maix64" ]
          ldflags += [ "-maix64" ]
-@@ -1481,13 +1481,13 @@ config("compiler_cpu_abi") {
+@@ -1471,13 +1471,13 @@ config("compiler_cpu_abi") {
          cflags += [ "-m64" ]
          ldflags += [ "-m64" ]
        }
@@ -619,7 +628,7 @@ index f0072b4df..41944545a 100644
        if (is_clang) {
          cflags += [ "--target=loongarch64-linux-gnu" ]
          ldflags += [ "--target=loongarch64-linux-gnu" ]
-@@ -1496,7 +1496,7 @@ config("compiler_cpu_abi") {
+@@ -1486,7 +1486,7 @@ config("compiler_cpu_abi") {
          "-mabi=lp64d",
          "-mcmodel=medium",
        ]
@@ -628,7 +637,7 @@ index f0072b4df..41944545a 100644
        cflags += [ "-m64" ]
        ldflags += [ "-m64" ]
      }
-@@ -1517,7 +1517,7 @@ config("compiler_codegen") {
+@@ -1507,7 +1507,7 @@ config("compiler_codegen") {
      configs += [ "//chromium/build/config/nacl:compiler_codegen" ]
    }
  
@@ -637,7 +646,7 @@ index f0072b4df..41944545a 100644
      # Disable outlining everywhere on arm64 except Win. For more information see
      # crbug.com/931297 for Android and crbug.com/1410297 for iOS.
      # TODO(crbug.com/40890229): Enable this on Windows if possible.
-@@ -1663,7 +1663,7 @@ config("rustc_revision") {
+@@ -1678,7 +1678,7 @@ config("rustc_revision") {
  }
  
  config("compiler_arm_fpu") {
@@ -646,7 +655,7 @@ index f0072b4df..41944545a 100644
      cflags = [ "-mfpu=$arm_fpu" ]
      if (!arm_use_thumb) {
        cflags += [ "-marm" ]
-@@ -1673,14 +1673,14 @@ config("compiler_arm_fpu") {
+@@ -1688,14 +1688,14 @@ config("compiler_arm_fpu") {
  }
  
  config("compiler_arm_thumb") {
@@ -663,7 +672,7 @@ index f0072b4df..41944545a 100644
      # arm is normally the default mode for clang, but on chromeos a wrapper
      # is used to pass -mthumb, and therefor change the default.
      cflags = [ "-marm" ]
-@@ -1878,7 +1878,7 @@ config("default_warnings") {
+@@ -1894,7 +1894,7 @@ config("default_warnings") {
  
      # Suppress warnings about ABI changes on ARM (Clang doesn't give this
      # warning).
@@ -672,7 +681,7 @@ index f0072b4df..41944545a 100644
        cflags += [ "-Wno-psabi" ]
      }
  
-@@ -2097,10 +2097,10 @@ config("chromium_code") {
+@@ -2129,10 +2129,10 @@ config("chromium_code") {
        "__STDC_FORMAT_MACROS",
      ]
  
@@ -687,7 +696,7 @@ index f0072b4df..41944545a 100644
        # Non-chromium code is not guaranteed to compile cleanly with
        # _FORTIFY_SOURCE. Also, fortified build may fail when optimizations are
        # disabled, so only do that for Release build.
-@@ -2383,9 +2383,9 @@ config("no_incompatible_pointer_warnings") {
+@@ -2412,9 +2412,9 @@ config("no_incompatible_pointer_warnings") {
    cflags = []
    if (is_clang) {
      cflags += [ "-Wno-incompatible-pointer-types" ]
@@ -699,7 +708,7 @@ index f0072b4df..41944545a 100644
      cflags += [ "-w" ]
    }
  }
-@@ -2442,7 +2442,7 @@ if (is_win) {
+@@ -2471,7 +2471,7 @@ if (is_win) {
    if (is_android) {
      # TODO(jdduke) Re-enable on mips after resolving linking
      # issues with libc++ (crbug.com/456380).
@@ -708,7 +717,7 @@ index f0072b4df..41944545a 100644
        common_optimize_on_ldflags += [
          # Warn in case of text relocations.
          "-Wl,--warn-shared-textrel",
-@@ -2504,7 +2504,7 @@ config("default_stack_frames") {
+@@ -2533,7 +2533,7 @@ config("default_stack_frames") {
        # Omit frame pointers for leaf functions on x86, otherwise building libyuv
        # gives clang's register allocator issues, see llvm.org/PR15798 /
        # crbug.com/233709
@@ -717,13 +726,13 @@ index f0072b4df..41944545a 100644
          cflags += [ "-momit-leaf-frame-pointer" ]
        }
      } else {
-@@ -2915,12 +2915,12 @@ config("symbols") {
+@@ -2944,12 +2944,12 @@ config("symbols") {
      # DWARF info may be corrupt; offsets in a range list entry are in different
      # sections" there.  Maybe just a bug in nacl_switch_32.S.
      _enable_gdb_index =
 -        symbol_level == 2 && !is_apple && !is_nacl && current_cpu != "x86" &&
 +        symbol_level == 2 && !is_apple && !is_nacl && target_cpu != "x86" &&
-         current_os != "zos" && use_lld &&
+         current_os != "zos" && use_lld && !is_wasm &&
          # Disable on non-fission 32-bit Android because it pushes
          # libcomponents_unittests over the 4gb size limit.
 -        !(is_android && !use_debug_fission && current_cpu != "x64" &&
@@ -733,7 +742,7 @@ index f0072b4df..41944545a 100644
      if (_enable_gdb_index) {
        if (is_clang) {
          # This flag enables the GNU-format pubnames and pubtypes sections,
-@@ -2936,7 +2936,7 @@ config("symbols") {
+@@ -2965,7 +2965,7 @@ config("symbols") {
    # Compress debug on 32-bit ARM to stay under 4GB file size limit.
    # https://b/243982712, https://crbug.com/1354616, https://crbug.com/334073642
    if (symbol_level == 2 && !use_debug_fission && !is_nacl && !is_win &&
@@ -1186,7 +1195,7 @@ index afe2c7aee..a0a163ab8 100644
      # RISCV Vector extension compilation flag.
      riscv_use_rvv = false
 diff --git a/config/rust.gni b/config/rust.gni
-index 565e494ef..dc4c69bde 100644
+index 0b032436a..6dd7de5fb 100644
 --- a/config/rust.gni
 +++ b/config/rust.gni
 @@ -174,16 +174,16 @@ if (enable_rust) {
@@ -1210,7 +1219,7 @@ index 565e494ef..dc4c69bde 100644
      if (arm_float_abi == "hard") {
        float_suffix = "hf"
      } else {
-@@ -197,12 +197,12 @@ if (is_linux || is_chromeos) {
+@@ -210,12 +210,12 @@ if (is_linux || is_chromeos) {
        rust_abi_target = "arm-unknown-linux-gnueabi" + float_suffix
        cargo_target_abi = "eabi" + float_suffix
      }
@@ -1225,7 +1234,7 @@ index 565e494ef..dc4c69bde 100644
      cargo_target_abi = ""
    }
  } else if (is_android) {
-@@ -236,17 +236,17 @@ if (is_linux || is_chromeos) {
+@@ -255,17 +255,17 @@ if (is_linux || is_chromeos) {
      assert(false, "Unknown Android ABI: " + android_abi_target)
    }
  } else if (is_fuchsia) {
@@ -1246,7 +1255,7 @@ index 565e494ef..dc4c69bde 100644
      if (target_platform == "iphoneos") {
        if (target_environment == "simulator") {
          rust_abi_target = "aarch64-apple-ios-sim"
-@@ -273,10 +273,10 @@ if (is_linux || is_chromeos) {
+@@ -292,10 +292,10 @@ if (is_linux || is_chromeos) {
      } else {
        assert(false, "unsupported target_platform=$target_platform")
      }
@@ -1259,7 +1268,7 @@ index 565e494ef..dc4c69bde 100644
      if (target_platform == "iphoneos") {
        if (target_environment == "simulator") {
          rust_abi_target = "x86_64-apple-ios"
-@@ -297,29 +297,29 @@ if (is_linux || is_chromeos) {
+@@ -316,29 +316,29 @@ if (is_linux || is_chromeos) {
      } else {
        assert(false, "unsupported target_platform=$target_platform")
      }
@@ -1295,7 +1304,7 @@ index 565e494ef..dc4c69bde 100644
      rust_abi_target = "i686-pc-windows-msvc"
      cargo_target_abi = ""
    } else {
-@@ -331,23 +331,23 @@ assert(!toolchain_has_rust || rust_abi_target != "")
+@@ -350,23 +350,23 @@ assert(!toolchain_has_rust || rust_abi_target != "")
  
  # This variable is passed to the Rust libstd build.
  rust_target_arch = ""
@@ -1329,10 +1338,10 @@ index 565e494ef..dc4c69bde 100644
  }
  
 diff --git a/config/sanitizers/BUILD.gn b/config/sanitizers/BUILD.gn
-index a9bdea4ed..b0f0ef227 100644
+index 3f1e1f285..cb36e20a2 100644
 --- a/config/sanitizers/BUILD.gn
 +++ b/config/sanitizers/BUILD.gn
-@@ -76,7 +76,7 @@ group("deps") {
+@@ -82,7 +82,7 @@ group("deps") {
    }
  }
  
@@ -1341,7 +1350,7 @@ index a9bdea4ed..b0f0ef227 100644
         "ASan is only supported in 64-bit builds on Windows.")
  
  if ((is_apple || is_win) && (is_asan || is_ubsan_any)) {
-@@ -98,7 +98,7 @@ if ((is_apple || is_win) && (is_asan || is_ubsan_any)) {
+@@ -104,7 +104,7 @@ if ((is_apple || is_win) && (is_asan || is_ubsan_any)) {
        assert(is_ubsan_any)
        _clang_rt_dso_path = "darwin/libclang_rt.ubsan_iossim_dynamic.dylib"
      }
@@ -1350,7 +1359,7 @@ index a9bdea4ed..b0f0ef227 100644
      if (is_asan) {
        _clang_rt_dso_path = "windows/clang_rt.asan_dynamic-x86_64.dll"
      } else {
-@@ -282,7 +282,7 @@ config("default_sanitizer_ldflags") {
+@@ -288,7 +288,7 @@ config("default_sanitizer_ldflags") {
      # or -fsanitize=fuzzer.
      ldflags = []
      if (is_asan) {
@@ -1359,7 +1368,7 @@ index a9bdea4ed..b0f0ef227 100644
        libs = [ "clang_rt.asan_dynamic-x86_64.lib" ]
        if (is_component_build) {
          ldflags +=
-@@ -293,7 +293,7 @@ config("default_sanitizer_ldflags") {
+@@ -299,7 +299,7 @@ config("default_sanitizer_ldflags") {
        }
      }
      if (use_libfuzzer) {
@@ -1368,7 +1377,7 @@ index a9bdea4ed..b0f0ef227 100644
        assert(!is_component_build,
               "LibFuzzer only supports non-component builds on Windows")
  
-@@ -449,7 +449,7 @@ config("coverage_flags") {
+@@ -457,7 +457,7 @@ config("coverage_flags") {
          "-mllvm",
          "-sanitizer-coverage-prune-blocks=1",
        ]
@@ -1551,10 +1560,10 @@ index d920be21f..3fc98bdf1 100644
    # compiler_builtins depends on libm on windows crbug.com/1472681
    '../libm',
 diff --git a/rust/std/rules/BUILD.gn b/rust/std/rules/BUILD.gn
-index 2a6c839fa..611444d77 100644
+index d5f8efac4..3a31c32ff 100644
 --- a/rust/std/rules/BUILD.gn
 +++ b/rust/std/rules/BUILD.gn
-@@ -523,7 +523,7 @@ cargo_crate("compiler_builtins") {
+@@ -555,7 +555,7 @@ cargo_crate("compiler_builtins") {
    output_dir =
        "$root_out_dir/local_rustc_sysroot/lib/rustlib/$rust_abi_target/lib/"
  
@@ -2291,6 +2300,19 @@ index 8d70258fc..81af95759 100644
        is_clang = true
        use_lld = false
        is_nacl_saigo = true
+diff --git a/toolchain/wasm/BUILD.gn b/toolchain/wasm/BUILD.gn
+index 26d790b0b..44db05c13 100644
+--- a/toolchain/wasm/BUILD.gn
++++ b/toolchain/wasm/BUILD.gn
+@@ -22,7 +22,7 @@ gcc_toolchain("wasm") {
+   ld = cxx
+ 
+   toolchain_args = {
+-    current_cpu = "wasm"
++    target_cpu = "wasm"
+     current_os = "emscripten"
+ 
+     is_clang = true
 diff --git a/toolchain/win/BUILD.gn b/toolchain/win/BUILD.gn
 index 1727eb6f6..103e78534 100644
 --- a/toolchain/win/BUILD.gn
@@ -2326,7 +2348,7 @@ index fcab19141..611bbbe54 100644
        idl_target_platform = "arm64"
      } else {
 diff --git a/toolchain/win/toolchain.gni b/toolchain/win/toolchain.gni
-index 1af294b42..5834c7fdf 100644
+index 96b978aad..3e62d17be 100644
 --- a/toolchain/win/toolchain.gni
 +++ b/toolchain/win/toolchain.gni
 @@ -32,7 +32,7 @@ _clang_bin_path = rebase_path("$clang_base_path/bin", root_build_dir)
@@ -2365,7 +2387,7 @@ index 1af294b42..5834c7fdf 100644
          sys_lib_flags += " /MACHINE:ARM64"
        }
  
-@@ -256,7 +256,7 @@ template("msvc_toolchain") {
+@@ -261,7 +261,7 @@ template("msvc_toolchain") {
      tool("asm") {
        is_msvc_assembler = true
  
@@ -2374,7 +2396,7 @@ index 1af294b42..5834c7fdf 100644
          if (toolchain_is_clang) {
            ml = "${cl_prefix}${_clang_bin_path}/clang-cl${_exe} --target=aarch64-pc-windows"
            if (host_os == "win") {
-@@ -275,13 +275,13 @@ template("msvc_toolchain") {
+@@ -280,13 +280,13 @@ template("msvc_toolchain") {
          if (toolchain_is_clang && !disable_llvm_ml) {
            prefix = rebase_path("$clang_base_path/bin", root_build_dir)
            ml = "$prefix/llvm-ml${_exe}"
@@ -2390,7 +2412,7 @@ index 1af294b42..5834c7fdf 100644
              ml = "ml64.exe"
            } else {
              ml = "ml.exe"
-@@ -294,7 +294,7 @@ template("msvc_toolchain") {
+@@ -299,7 +299,7 @@ template("msvc_toolchain") {
  
          # Suppress final-stage linking on x64/x86 builds. (Armasm64 does not
          # require /c because it doesn't support linking.)
@@ -2399,7 +2421,7 @@ index 1af294b42..5834c7fdf 100644
            ml += " /c"
          }
          if (use_lld && (!toolchain_is_clang || disable_llvm_ml)) {
-@@ -305,7 +305,7 @@ template("msvc_toolchain") {
+@@ -310,7 +310,7 @@ template("msvc_toolchain") {
            ml = "\"$python_path\" $ml_py $ml"
          }
  
@@ -2408,7 +2430,7 @@ index 1af294b42..5834c7fdf 100644
            # armasm64.exe does not support definitions passed via the command
            # line. (Fortunately, they're not needed for compiling the V8
            # snapshot, which is the only time this assembler is required.)
-@@ -720,7 +720,7 @@ template("win_toolchains") {
+@@ -725,7 +725,7 @@ template("win_toolchains") {
          is_clang = false
          use_clang_coverage = false
          current_os = "win"
@@ -2417,7 +2439,7 @@ index 1af294b42..5834c7fdf 100644
        }
      }
      msvc_system_allocator_toolchain(
-@@ -735,7 +735,7 @@ template("win_toolchains") {
+@@ -740,7 +740,7 @@ template("win_toolchains") {
          is_clang = false
          use_clang_coverage = false
          current_os = "win"
@@ -2426,7 +2448,7 @@ index 1af294b42..5834c7fdf 100644
        }
      }
      msvc_system_allocator_toolchain(
-@@ -750,7 +750,7 @@ template("win_toolchains") {
+@@ -755,7 +755,7 @@ template("win_toolchains") {
          is_clang = false
          use_clang_coverage = false
          current_os = "win"
@@ -2435,7 +2457,7 @@ index 1af294b42..5834c7fdf 100644
        }
      }
      msvc_rust_host_build_tools_toolchain(
-@@ -765,7 +765,7 @@ template("win_toolchains") {
+@@ -770,7 +770,7 @@ template("win_toolchains") {
          is_clang = false
          use_clang_coverage = false
          current_os = "win"
@@ -2444,7 +2466,7 @@ index 1af294b42..5834c7fdf 100644
        }
      }
    }
-@@ -798,7 +798,7 @@ template("win_toolchains") {
+@@ -803,7 +803,7 @@ template("win_toolchains") {
        }
        is_clang = true
        current_os = "win"
@@ -2453,7 +2475,7 @@ index 1af294b42..5834c7fdf 100644
      }
    }
    msvc_system_allocator_toolchain(
-@@ -818,7 +818,7 @@ template("win_toolchains") {
+@@ -823,7 +823,7 @@ template("win_toolchains") {
        }
        is_clang = true
        current_os = "win"
@@ -2462,7 +2484,7 @@ index 1af294b42..5834c7fdf 100644
      }
    }
    msvc_system_allocator_toolchain(
-@@ -838,7 +838,7 @@ template("win_toolchains") {
+@@ -843,7 +843,7 @@ template("win_toolchains") {
        }
        is_clang = true
        current_os = "win"
@@ -2471,7 +2493,7 @@ index 1af294b42..5834c7fdf 100644
      }
    }
    msvc_rust_host_build_tools_toolchain(
-@@ -858,7 +858,7 @@ template("win_toolchains") {
+@@ -863,7 +863,7 @@ template("win_toolchains") {
        }
        is_clang = true
        current_os = "win"

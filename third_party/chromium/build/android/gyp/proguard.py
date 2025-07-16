@@ -61,6 +61,9 @@ _IGNORE_WARNINGS = (
     # This class is referenced by kotlinx-coroutines-core-jvm but it does not
     # depend on it. Not actually needed though.
     r'Missing class org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement',
+    # TODO(b/404818708): androidx.appsearch code is referencing classes in the
+    # Android B sdk thus we must ignore these warnings until after the sdk roll.
+    r'Missing class .* androidx.appsearch.platformstorage.converter.*\$ApiHelperForB',
     # Ignore MethodParameter attribute count isn't matching in espresso.
     # This is a banner warning and each individual file affected will have
     # its own warning.
@@ -354,7 +357,7 @@ def _OptimizeWithR8(options, config_paths, libraries, dynamic_config_data):
         '-Dcom.android.tools.r8.allowTestProguardOptions=true',
         # Needed because we don't add an unconditional -keep for Enum.values()
         # methods. http://b/204939965
-        '-Dcom.android.tools.r8.experimentalTraceEnumReflection=1',
+        '-Dcom.android.tools.r8.experimentalTraceAndroidEnumSerialization=1',
     ]
     if options.sdk_extension_jars:
       # Enable API modelling for OS extensions. https://b/326252366

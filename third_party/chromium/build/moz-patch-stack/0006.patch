@@ -13,7 +13,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/243ea5e6411dc1b76
  1 file changed, 30 insertions(+), 28 deletions(-)
 
 diff --git a/toolchain/win/setup_toolchain.py b/toolchain/win/setup_toolchain.py
-index 927fce24f..05264801e 100644
+index d6598893c..db0b07eb2 100644
 --- a/toolchain/win/setup_toolchain.py
 +++ b/toolchain/win/setup_toolchain.py
 @@ -251,7 +251,7 @@ def main():
