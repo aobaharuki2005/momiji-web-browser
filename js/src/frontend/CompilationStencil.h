@@ -131,7 +131,8 @@ class InputScope {
 
   // Create an InputScope given a CompilationStencil and the ScopeIndex which is
   // an offset within the same CompilationStencil given as argument.
-  InputScope(const InitialStencilAndDelazifications& stencils, ScriptIndex scriptIndex, ScopeIndex scopeIndex)
+  InputScope(const InitialStencilAndDelazifications& stencils,
+             ScriptIndex scriptIndex, ScopeIndex scopeIndex)
       : scope_(ScopeStencilRef{stencils, scriptIndex, scopeIndex}) {}
 
   // Returns the variant used by the InputScope. This can be useful for complex
@@ -203,9 +204,9 @@ class InputScope {
                             if (!scope.hasEnclosing()) {
                               break;
                             }
-                            new (&it) ScopeStencilRef{ref.stencils_,
-                                                      ref.scriptIndex_,
-                                                      scope.enclosing()};
+                            new (&it)
+                                ScopeStencilRef{ref.stencils_, ref.scriptIndex_,
+                                                scope.enclosing()};
                           }
                           return false;
                         },
@@ -825,8 +826,7 @@ struct CompilationInput {
   }
 
   void initFromStencil(const InitialStencilAndDelazifications& stencils,
-                       ScriptIndex scriptIndex,
-                       ScriptSource* ss) {
+                       ScriptIndex scriptIndex, ScriptSource* ss) {
     target = CompilationTarget::Delazification;
     lazy_ = InputScript(stencils, scriptIndex);
     source = ss;
@@ -1459,7 +1459,8 @@ class FunctionKeyToScriptIndexMap {
 //
 // At the intersection of both cases, the followings should be held:
 //
-// - `indexInEnclosing != 0`: it cannot point neither of the top-level script, or
+// - `indexInEnclosing != 0`: it cannot point neither of the top-level script,
+// or
 //   the enclosing function script itself.
 struct ScriptIndexes {
   // Index of an enclosing function script within the initial
@@ -1562,15 +1563,13 @@ struct InitialStencilAndDelazifications {
     RefPtr<InitialStencilAndDelazifications> stencils_;
 
     explicit RelativeIndexesGuard(InitialStencilAndDelazifications* stencils)
-        : stencils_(stencils)
-    {}
+        : stencils_(stencils) {}
+
    public:
     RelativeIndexesGuard() : stencils_(nullptr) {}
 
     RelativeIndexesGuard(RelativeIndexesGuard&& src)
-      : stencils_(std::move(src.stencils_))
-    {
-    }
+        : stencils_(std::move(src.stencils_)) {}
 
     ~RelativeIndexesGuard() {
       if (stencils_) {
@@ -2391,7 +2390,7 @@ const ScriptStencilExtra& ScopeStencilRef::functionScriptExtra() const {
   ScriptIndex functionIndexInContext = scope().functionIndex();
   // Convert the function's index to an index in the initial stencil.
   ScriptIndex functionIndexInInitial =
-    stencils_.getInitialIndexFor(scriptIndex_, functionIndexInContext);
+      stencils_.getInitialIndexFor(scriptIndex_, functionIndexInContext);
   // Create a ScriptStencilRef from the function index in the initial stencil.
   ScriptStencilRef function{stencils_, functionIndexInInitial};
   return function.scriptExtra();
@@ -2478,8 +2477,7 @@ FunctionFlags InputScope::functionFlags() const {
         // as in InputScript::functionFlags() would yield an error for cases
         // where the functionIndexInContext is 0, as we will look for the
         // scriptData in the wrong CompilationStencil.
-        ScriptStencil& data =
-            ref.context()->scriptData[functionIndexInContext];
+        ScriptStencil& data = ref.context()->scriptData[functionIndexInContext];
         return data.functionFlags;
       },
       [](const FakeStencilGlobalScope&) -> FunctionFlags {
@@ -2545,8 +2543,8 @@ const ScriptStencil& ScriptStencilRef::scriptDataFromEnclosing() const {
   return enclosing.context()->scriptData[indexes.indexInEnclosing];
 }
 
-mozilla::Span<TaggedScriptThingIndex>
-ScriptStencilRef::gcThingsFromInitial() const {
+mozilla::Span<TaggedScriptThingIndex> ScriptStencilRef::gcThingsFromInitial()
+    const {
   return scriptDataFromInitial().gcthings(*stencils_.getInitial());
 }
 

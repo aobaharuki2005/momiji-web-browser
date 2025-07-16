@@ -3722,7 +3722,8 @@ InitialStencilAndDelazifications::RelativeIndexesGuard
 InitialStencilAndDelazifications::ensureRelativeIndexes(FrontendContext* fc) {
   auto consumersGuard = relativeIndexes_.consumers_.lock();
   if (consumersGuard > 0) {
-    MOZ_ASSERT(relativeIndexes_.indexes_.length() == initial_->scriptData.size() - 1);
+    MOZ_ASSERT(relativeIndexes_.indexes_.length() ==
+               initial_->scriptData.size() - 1);
     consumersGuard += 1;
     return RelativeIndexesGuard(this);
   }
@@ -3738,14 +3739,15 @@ InitialStencilAndDelazifications::ensureRelativeIndexes(FrontendContext* fc) {
     MOZ_ASSERT(
         index == getInitialIndexFor(enclosingInInitial, enclosedInEnclosing),
         "getInitialIndexFor does not match relativeIndexes_");
-    relativeIndexes_[index - 1] = ScriptIndexes{
-      enclosingInInitial, enclosedInEnclosing
-    };
+    relativeIndexes_[index - 1] =
+        ScriptIndexes{enclosingInInitial, enclosedInEnclosing};
   };
   for (size_t index = 0; index < initial_->scriptData.size(); index++) {
     auto& scriptData = initial_->scriptData[index];
-    // index > 0 is used to iterate over the top-level which is not flagged as isInterpreted.
-    if (index > 0 && (scriptData.isGhost() || !scriptData.functionFlags.isInterpreted())) {
+    // index > 0 is used to iterate over the top-level which is not flagged as
+    // isInterpreted.
+    if (index > 0 &&
+        (scriptData.isGhost() || !scriptData.functionFlags.isInterpreted())) {
       continue;
     }
 
@@ -3753,9 +3755,10 @@ InitialStencilAndDelazifications::ensureRelativeIndexes(FrontendContext* fc) {
     if (scriptData.hasSharedData()) {
       // Then the gc things might not have a contiguous array of inner
       // functions. Thus we have to iterate over all gcthings.
-      for (auto gcthing: gcthings) {
+      for (auto gcthing : gcthings) {
         if (gcthing.isFunction()) {
-          writeIndex(gcthing.toFunction(), ScriptIndex(index), gcthing.toFunction());
+          writeIndex(gcthing.toFunction(), ScriptIndex(index),
+                     gcthing.toFunction());
         }
       }
       continue;
@@ -3770,7 +3773,7 @@ InitialStencilAndDelazifications::ensureRelativeIndexes(FrontendContext* fc) {
     // it-self, in the upcoming delazification stencil, thus we start after, at
     // 1 to index inner functions.
     size_t functionIndex = 1;
-    for (auto gcthing: gcthings) {
+    for (auto gcthing : gcthings) {
       if (!gcthing.isFunction()) {
         break;
       }
@@ -3836,8 +3839,7 @@ InitialStencilAndDelazifications::getDelazificationFor(
   return getDelazificationAt(*maybeIndex);
 }
 
-ScriptIndex
-InitialStencilAndDelazifications::getScriptIndexFor(
+ScriptIndex InitialStencilAndDelazifications::getScriptIndexFor(
     const CompilationStencil* delazification) const {
   MOZ_ASSERT(!delazification->isInitialStencil());
   auto maybeIndex =

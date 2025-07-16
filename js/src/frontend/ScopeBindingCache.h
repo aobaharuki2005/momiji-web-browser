@@ -239,7 +239,8 @@ class MOZ_STACK_CLASS StencilScopeBindingCache final
 #endif
 
  public:
-  explicit StencilScopeBindingCache(const InitialStencilAndDelazifications& stencils)
+  explicit StencilScopeBindingCache(
+      const InitialStencilAndDelazifications& stencils)
 #ifdef DEBUG
       : stencils_(stencils)
 #endif

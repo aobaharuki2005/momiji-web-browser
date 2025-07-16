@@ -29,14 +29,15 @@ using namespace js;
 // This is an equivalent of std::swap but this one should work with
 // ScriptStencilRef constant fields by relying on placement-new trickery to
 // "create" a new value instead of updating the value of each field.
-template <typename T> void const_swap(T& a, T& b) {
-    alignas(T) unsigned char buffer[sizeof(T)];
-    T* temp = new (buffer) T(std::move(a));
-    a.~T();
-    new (&a) T(std::move(b));
-    b.~T();
-    new (&b) T(std::move(*temp));
-    temp->~T();
+template <typename T>
+void const_swap(T& a, T& b) {
+  alignas(T) unsigned char buffer[sizeof(T)];
+  T* temp = new (buffer) T(std::move(a));
+  a.~T();
+  new (&a) T(std::move(b));
+  b.~T();
+  new (&b) T(std::move(*temp));
+  temp->~T();
 }
 
 bool DelazifyStrategy::add(FrontendContext* fc, ScriptStencilRef& ref) {
