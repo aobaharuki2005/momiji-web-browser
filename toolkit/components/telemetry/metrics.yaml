@@ -74,6 +74,42 @@ legacy.telemetry:
       - BASELINE_PING
     send_in_pings: *client_id_pings
 
+  session_id:
+    type: uuid
+    lifetime: application
+    description: |
+      Legacy Telemetry's session identifier.
+      Set near startup and stable until shutdown.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: never
+
+  session_start_date:
+    type: datetime
+    time_unit: hour
+    lifetime: application
+    description: |
+      Legacy Telemetry's session start time.
+      The time at which the Telemetry session started.
+      Likely near to the (wall-clock) time that the application started.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: never
+
 telemetry:
   data_upload_optin:
     type: boolean
