@@ -880,7 +880,7 @@
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">Eicon ap</string>
   <!-- Preference for showing the tab strip -->
-  <string name="preferences_tab_strip">Arddangosfa bar tab</string>
+  <string name="preferences_tab_strip">Dangosydd bar tab</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Ystumiau</string>
   <!-- Preference for settings related to visual options -->
@@ -1314,7 +1314,7 @@
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Estynnwyd</string>
   <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
-  <string name="preference_toolbar_pref_disabled_explanation">Rhaid i\'r bar cyfeiriad fod ar ei ben pan ddangosir bar tab.</string>
+  <string name="preference_toolbar_pref_disabled_explanation">Rhaid i\'r bar cyfeiriad fod ar y brig pan fydd y bar tab yn cael ei ddangos.</string>
   <!--
     App icon Preferences
 
@@ -2919,9 +2919,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Gwall wrth gysylltu â “%s”</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">Crëwyd %s</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">Crëwyd %s</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">Cadwyd %s</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">Cadwyd %s</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">Dilëwyd %s</string>
   <!-- Heading for the instructions to allow a permission -->

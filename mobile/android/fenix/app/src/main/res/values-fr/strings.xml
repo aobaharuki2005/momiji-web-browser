@@ -879,6 +879,8 @@
   <string name="preferences_home_2">Page d’accueil</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">Icône de l’application</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Affichage de la barre d’onglets</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Mouvements</string>
   <!-- Preference for settings related to visual options -->
@@ -1311,6 +1313,8 @@
   <string name="preference_simple_toolbar">Simple</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Développée</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">La barre d’adresse doit être en haut lorsque la barre d’onglets est affichée.</string>
   <!--
     App icon Preferences
 
@@ -1329,6 +1333,12 @@
   <string name="preference_auto_battery_theme">Défini par l’économie d’énergie de la batterie</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Suivre le thème de l’appareil</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Afficher la barre d’onglets</string>
   <!--
     Gestures Preferences
 
@@ -2909,9 +2919,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Erreur de connexion à «\u00a0%s\u00a0»</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">%s\u00a0: création effectuée</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s\u00a0: création effectuée</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">%s\u00a0: enregistrement effectué</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s\u00a0: enregistrement effectué</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">%s\u00a0: suppression effectuée</string>
   <!-- Heading for the instructions to allow a permission -->

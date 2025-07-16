@@ -879,6 +879,8 @@
   <string name="preferences_home_2">首頁</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">應用程式圖示</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">分頁列顯示位置</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">手勢</string>
   <!-- Preference for settings related to visual options -->
@@ -1311,6 +1313,8 @@
   <string name="preference_simple_toolbar">簡單</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">展開</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">顯示分頁列時，網址列必須在頂端。</string>
   <!--
     App icon Preferences
 
@@ -1329,6 +1333,12 @@
   <string name="preference_auto_battery_theme">由系統省電模式設定</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">依照裝置佈景主題顯示</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">顯示分頁列</string>
   <!--
     Gestures Preferences
 
@@ -2909,9 +2919,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">連線到「%s」時發生錯誤</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">已建立 %s</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">已建立 %s</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">已儲存 %s</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">已儲存 %s</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">已刪除 %s</string>
   <!-- Heading for the instructions to allow a permission -->
