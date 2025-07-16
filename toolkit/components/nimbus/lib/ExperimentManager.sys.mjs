@@ -838,10 +838,14 @@ export class ExperimentManager {
     if (
       !enrollment.active &&
       result.status === lazy.MatchStatus.TARGETING_AND_BUCKETING &&
-      enrollment.unenrollReason !== UnenrollReason.INDIVIDUAL_OPT_OUT
+      [
+        UnenrollReason.BUCKETING,
+        UnenrollReason.TARGETING_MISMATCH,
+        UnenrollReason.STUDIES_OPT_OUT,
+      ].includes(enrollment.unenrollReason)
     ) {
-      // We only re-enroll if we match targeting and bucketing and the user did
-      // not purposefully opt out via about:studies.
+      // We only re-enroll if we match targeting and bucketing and the unenroll
+      // reason is one of the above reasons.
       lazy.log.debug(`Re-enrolling in rollout "${recipe.slug}`);
       return !!(await this.enroll(recipe, source, { reenroll: true }));
     }
