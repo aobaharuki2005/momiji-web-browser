@@ -730,6 +730,7 @@ def generate_gn_config(
                 "visual_studio_path": "/",
                 "visual_studio_version": 2015,
                 "wdk_path": "/",
+                "windows_sdk_version": "n/a",
             }
         )
     if input_variables["target_os"] == "mac":
