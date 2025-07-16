@@ -1155,7 +1155,7 @@ void PresShell::Destroy() {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "destroy called on presshell while scripts not blocked");
 
-  [[maybe_unused]] nsIURI* uri = mDocument->GetDocumentURI();
+  nsIURI* uri = mDocument->GetDocumentURI();
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_RELEVANT_FOR_JS(
       "Layout tree destruction", LAYOUT_Destroy,
       uri ? uri->GetSpecOrDefault() : "N/A"_ns);
@@ -10736,7 +10736,7 @@ DOMHighResTimeStamp PresShell::GetPerformanceNowUnclamped() {
 
 bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
                          OverflowChangedTracker* aOverflowTracker) {
-  [[maybe_unused]] nsIURI* uri = mDocument->GetDocumentURI();
+  nsIURI* uri = mDocument->GetDocumentURI();
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_RELEVANT_FOR_JS(
       "Reflow", LAYOUT_Reflow, uri ? uri->GetSpecOrDefault() : "N/A"_ns);
 

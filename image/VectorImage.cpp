@@ -253,7 +253,7 @@ bool SVGDrawingCallback::operator()(gfxContext* aContext,
   MOZ_ASSERT(presShell, "GetPresShell returned null for an SVG image?");
 
   Document* doc = presShell->GetDocument();
-  [[maybe_unused]] nsIURI* uri = doc ? doc->GetDocumentURI() : nullptr;
+  nsIURI* uri = doc ? doc->GetDocumentURI() : nullptr;
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
       "SVG Image drawing", GRAPHICS,
       nsPrintfCString("%dx%d %s", mSize.width, mSize.height,
