@@ -44,6 +44,14 @@ TextDirectiveCreator::CreateTextDirectiveFromRange(
     TEXT_FRAGMENT_LOG("Input range does not contain text.");
     return VoidCString();
   }
+  const bool rangeIsOnlyWhitespace =
+      std::all_of(rangeContent.View().cbegin(), rangeContent.View().cend(),
+                  nsContentUtils::IsHTMLWhitespaceOrNBSP);
+
+  if (rangeIsOnlyWhitespace) {
+    TEXT_FRAGMENT_LOG("Input range contains only whitespace.");
+    return VoidCString();
+  }
 
   const RefPtr<AbstractRange> extendedRange =
       MOZ_TRY(ExtendRangeToWordBoundaries(aInputRange));

@@ -49,6 +49,7 @@
     <!-- empty text node will be inserted right here -->
     <span id="afterEmptyTextNode">after empty text node</span>
   </p>
+  <div id="nbsp">&nbsp;</div>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const empty = document.createTextNode("");
@@ -428,6 +429,12 @@
         "Input range contains image only: Produces empty text directive"
       );
 
+      range.selectNode(nbsp);
+      textDirective = await SpecialPowers.wrap(document).fragmentDirective.createTextDirectiveForSelection();
+      is(
+        textDirective, null,
+        "Input range contains nbsp only: Produces empty text directive"
+      );
     }
 
     async function testExpandRangeToWordBoundaries() {
