@@ -12,6 +12,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.CustomizationSettings
@@ -56,6 +57,7 @@ class CustomizationFragment : PreferenceFragmentCompat() {
         val tabletAndTabStripEnabled = Settings(requireContext()).isTabStripEnabled
         updateToolbarCategoryBasedOnTabStrip(tabletAndTabStripEnabled)
         setupTabStripCategory()
+        setupToolbarLayout()
 
         // if tab strip is enabled, swipe toolbar to switch tabs should not be enabled so the
         // preference is not shown
@@ -175,7 +177,16 @@ class CustomizationFragment : PreferenceFragmentCompat() {
             val enabled = newValue as Boolean
             context.settings().isTabStripEnabled = enabled
             updateToolbarCategoryBasedOnTabStrip(enabled)
+            setupToolbarLayout()
             true
+        }
+    }
+
+    private fun setupToolbarLayout() {
+        val settings = requireContext().settings()
+        (requirePreference(R.string.pref_key_customization_category_toolbar_layout) as PreferenceCategory).apply {
+            isVisible = Config.channel.isDebug && settings.shouldUseComposableToolbar && settings.toolbarRedesignEnabled
+            isEnabled = !settings.isTabStripEnabled
         }
     }
 
