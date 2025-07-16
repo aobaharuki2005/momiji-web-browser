@@ -34,6 +34,19 @@ void XRE_StartupTimelineRecord(int aEvent, TimeStamp aWhen) {
   StartupTimeline::Record((StartupTimeline::Event)aEvent, aWhen);
 }
 
+void StartupTimeline::Record(Event ev, TimeStamp when) {
+  sStartupTimeline[ev] = when;
+
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+  uint32_t msSinceProcStart =
+      (uint32_t)(when - TimeStamp::ProcessCreation()).ToMilliseconds();
+  glean::timestamps::startup_timeline
+      .EnumGet(static_cast<glean::timestamps::StartupTimelineLabel>(ev))
+      .Set(msSinceProcStart);
+}
+
 void StartupTimeline::RecordOnce(Event ev) { RecordOnce(ev, TimeStamp::Now()); }
 
 void StartupTimeline::RecordOnce(Event ev, const TimeStamp& aWhen) {

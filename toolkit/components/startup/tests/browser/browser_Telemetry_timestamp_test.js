@@ -33,3 +33,42 @@ add_task(async function test() {
     "first_paint is less than total browser test runtime."
   );
 });
+
+add_task(async function timeline_order() {
+  // These must be in the order they happen, which isn't necessarily
+  // the order they're listed in the enum.
+  const timelineSteps = [
+    "process",
+    "start",
+    "main",
+    "selectProfile",
+    "afterProfileLocked",
+    "startupCrashDetectionBegin",
+    "startupCrashDetectionEnd",
+    //"sessionRestoreInit", // sessionRestoreInit and createTopLevelWindow aren't stably ordered
+    "createTopLevelWindow",
+    //"firstPaint", // firstPaint and firstPaint2 aren't stably ordered
+    "firstPaint2",
+    "sessionRestored",
+    "linkerInitialized",
+    "librariesLoaded",
+    "firstLoadURI",
+  ];
+
+  let prev = 0;
+  let prevStep;
+  for (let step of timelineSteps) {
+    const stepValue = Glean.timestamps.startupTimeline[step].testGetValue();
+    if (!stepValue) {
+      info(`Step ${step} has no value this run. That's okay.`);
+      continue;
+    }
+    Assert.greaterOrEqual(
+      stepValue,
+      prev,
+      `Step ${step} happens later than the ${prevStep}.`
+    );
+    prev = stepValue;
+    prevStep = step;
+  }
+});

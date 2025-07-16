@@ -66,7 +66,7 @@ class StartupTimeline {
     Record(ev, TimeStamp::Now());
   }
 
-  static void Record(Event ev, TimeStamp when) { sStartupTimeline[ev] = when; }
+  static void Record(Event ev, TimeStamp when);
 
   static void RecordOnce(Event ev, const TimeStamp& aWhen);
   static void RecordOnce(Event ev);

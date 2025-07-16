@@ -46,3 +46,39 @@ timestamps:
     expires: never
     unit: ms
     telemetry_mirror: TIMESTAMPS_FIRST_PAINT_TWO
+
+  startup_timeline:
+    type: labeled_quantity
+    unit: milliseconds since process creation
+    lifetime: application
+    description: |
+      Events on the startup timeline, in millis since process creation.
+      See `StartupTimeline.h`
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
+    notification_emails:
+      - dtownsend@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
+    data_sensitivity:
+      - technical
+    labels:
+      - process
+      - start
+      - main
+      - selectProfile
+      - afterProfileLocked
+      - startupCrashDetectionBegin
+      - startupCrashDetectionEnd
+      - firstPaint
+      - firstPaint2
+      - sessionRestoreInit
+      - sessionRestored
+      - createTopLevelWindow
+      - linkerInitialized
+      - librariesLoaded
+      - firstLoadURI
+      - quitApplication
+      - profileBeforeChange
