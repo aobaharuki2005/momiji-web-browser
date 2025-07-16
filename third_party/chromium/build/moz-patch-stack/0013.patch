@@ -72,11 +72,11 @@ index b3e501149..ccae4502e 100644
  
      rust_sysroot = "//third_party/android_rust_toolchain/toolchain"
 diff --git a/config/win/visual_studio_version.gni b/config/win/visual_studio_version.gni
-index 2314ab505..417aef1b3 100644
+index 1da479dd5..8bb39c987 100644
 --- a/config/win/visual_studio_version.gni
 +++ b/config/win/visual_studio_version.gni
-@@ -36,5 +36,5 @@ if (visual_studio_path == "") {
-          "You must set the visual_studio_version if you set the path")
+@@ -40,5 +40,5 @@ if (visual_studio_path == "") {
+          "You must set the windows_sdk_version if you set the path")
    assert(wdk_path != "",
           "You must set the wdk_path if you set the visual studio path")
 -  visual_studio_runtime_dirs = []

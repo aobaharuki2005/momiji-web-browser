@@ -2,14 +2,14 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-assert(is_fuchsia)
-
 import("//chromium/build/config/chromecast_build.gni")
 import("//chromium/build/config/fuchsia/config.gni")
 import("//chromium/build/config/fuchsia/fuchsia_package_metadata.gni")
 import("//chromium/build/config/gclient_args.gni")
 import("//chromium/build/config/sysroot.gni")
 import("//chromium/build/util/generate_wrapper.gni")
+
+assert(is_fuchsia)
 
 declare_args() {
   # Sets the Fuchsia Amber repository which will be used by default by the

@@ -1,5 +1,5 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 3 Jul 2025 17:52:35 -0500
+Date: Mon, 7 Jul 2025 13:11:49 -0500
 Subject: Bug 1921707 - point to new build directory location in
  third_party/chromium/build r=ng,glandium
 
@@ -136,7 +136,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6b855a2bf6b1f3feb
  config/riscv.gni                              |   2 +-
  config/rust.gni                               |  12 +-
  config/sanitizers/BUILD.gn                    |  26 +-
- config/sanitizers/sanitizers.gni              |  20 +-
+ config/sanitizers/sanitizers.gni              |  26 +-
  config/sysroot.gni                            |  10 +-
  config/ui.gni                                 |   8 +-
  config/v8_target_cpu.gni                      |  12 +-
@@ -205,7 +205,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6b855a2bf6b1f3feb
  linux/unbundle/vulkan-SPIRV-Tools.gn          |   4 +-
  linux/unbundle/woff2.gn                       |   4 +-
  linux/unbundle/zlib.gn                        |   2 +-
- nocompile.gni                                 |  12 +-
+ nocompile.gni                                 |  14 +-
  partitioned_shared_library.gni                |   8 +-
  private_code_test/BUILD.gn                    |   2 +-
  private_code_test/private_code_test.gni       |   4 +-
@@ -256,7 +256,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6b855a2bf6b1f3feb
  toolchain/cros_toolchain.gni                  |   4 +-
  toolchain/fuchsia/BUILD.gn                    |   2 +-
  toolchain/fuchsia/DIR_METADATA                |   2 +-
- toolchain/gcc_toolchain.gni                   |  40 +--
+ toolchain/gcc_toolchain.gni                   |  42 +--
  toolchain/ios/BUILD.gn                        |  12 +-
  toolchain/linux/BUILD.gn                      |  10 +-
  toolchain/linux/unbundle/BUILD.gn             |   2 +-
@@ -276,7 +276,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6b855a2bf6b1f3feb
  util/process_version.gni                      |   4 +-
  win/BUILD.gn                                  |  10 +-
  win/message_compiler.gni                      |   2 +-
- 258 files changed, 1221 insertions(+), 1221 deletions(-)
+ 258 files changed, 1226 insertions(+), 1226 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
 index 58f5f20fb..bb3b80c27 100644
@@ -1582,7 +1582,7 @@ index d4daa6a2a..773f5dc00 100644
      inputs = [
        _dump_syms,
 diff --git a/config/android/internal_rules.gni b/config/android/internal_rules.gni
-index ca98628bb..440f6efa3 100644
+index fb39adb22..0012b6d16 100644
 --- a/config/android/internal_rules.gni
 +++ b/config/android/internal_rules.gni
 @@ -4,19 +4,19 @@
@@ -1625,7 +1625,7 @@ index ca98628bb..440f6efa3 100644
      depfile = "$target_gen_dir/$target_name.d"
      inputs = []
      outputs = [ invoker.build_config ]
-@@ -641,11 +641,11 @@ template("generate_android_wrapper") {
+@@ -655,11 +655,11 @@ template("generate_android_wrapper") {
    generate_wrapper(target_name) {
      forward_variables_from(invoker, "*", TESTONLY_AND_VISIBILITY)
      forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
@@ -1641,7 +1641,7 @@ index ca98628bb..440f6efa3 100644
      ]
    }
  }
-@@ -657,7 +657,7 @@ template("generate_r_java") {
+@@ -671,7 +671,7 @@ template("generate_r_java") {
      inputs = [ invoker.build_config ]
      outputs = [ invoker.srcjar_path ]
      _rebased_build_config = rebase_path(invoker.build_config, root_build_dir)
@@ -1650,7 +1650,7 @@ index ca98628bb..440f6efa3 100644
      args = [
        "--depfile",
        rebase_path(depfile, root_build_dir),
-@@ -734,7 +734,7 @@ template("test_runner_script") {
+@@ -748,7 +748,7 @@ template("test_runner_script") {
      if (defined(invoker.android_test_runner_script)) {
        _runner_script = invoker.android_test_runner_script
      } else {
@@ -1659,7 +1659,7 @@ index ca98628bb..440f6efa3 100644
      }
  
      deps = []
-@@ -742,11 +742,11 @@ template("test_runner_script") {
+@@ -756,11 +756,11 @@ template("test_runner_script") {
        deps = invoker.deps
      }
      data_deps = [
@@ -1673,7 +1673,7 @@ index ca98628bb..440f6efa3 100644
      }
      if (defined(invoker.data_deps)) {
        data_deps += invoker.data_deps
-@@ -1000,9 +1000,9 @@ if (enable_java_templates) {
+@@ -1014,9 +1014,9 @@ if (enable_java_templates) {
  
        # https://crbug.com/1098752 Fix for bot OOM (https://crbug.com/1098333).
        if (defined(java_cmd_pool_size)) {
@@ -1685,7 +1685,7 @@ index ca98628bb..440f6efa3 100644
        }
  
        # Lint requires generated sources and generated resources from the build.
-@@ -1045,7 +1045,7 @@ if (enable_java_templates) {
+@@ -1059,7 +1059,7 @@ if (enable_java_templates) {
        _lint_gen_dir = "$target_gen_dir/$target_name"
        _backported_methods = "//third_party/r8/backported_methods.txt"
  
@@ -1694,7 +1694,7 @@ index ca98628bb..440f6efa3 100644
        depfile = "$target_gen_dir/$target_name.d"
        inputs = [
          _lint_jar_path,
-@@ -1127,7 +1127,7 @@ if (enable_java_templates) {
+@@ -1141,7 +1141,7 @@ if (enable_java_templates) {
        } else {
          _stamp_path = "$target_out_dir/$target_name/build.lint.stamp"
          deps += [
@@ -1703,7 +1703,7 @@ index ca98628bb..440f6efa3 100644
            invoker.build_config_dep,
          ]
          inputs += [ invoker.build_config ]
-@@ -1161,7 +1161,7 @@ if (enable_java_templates) {
+@@ -1175,7 +1175,7 @@ if (enable_java_templates) {
  
    template("proguard") {
      forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
@@ -1712,7 +1712,7 @@ index ca98628bb..440f6efa3 100644
      _deps = invoker.deps
  
      _inputs = [
-@@ -1351,9 +1351,9 @@ if (enable_java_templates) {
+@@ -1365,9 +1365,9 @@ if (enable_java_templates) {
  
        # http://crbug.com/725224. Fix for bots running out of memory.
        if (defined(java_cmd_pool_size)) {
@@ -1724,7 +1724,7 @@ index ca98628bb..440f6efa3 100644
        }
      }
    }
-@@ -1380,7 +1380,7 @@ if (enable_java_templates) {
+@@ -1394,7 +1394,7 @@ if (enable_java_templates) {
          _max_heap_size = "1G"
        }
  
@@ -1733,7 +1733,7 @@ index ca98628bb..440f6efa3 100644
        inputs = [ _build_config ]
        _java_script = "$root_build_dir/bin/$_script_name"
        outputs = [ _java_script ]
-@@ -1470,7 +1470,7 @@ if (enable_java_templates) {
+@@ -1484,7 +1484,7 @@ if (enable_java_templates) {
      }
  
      if (_enable_main_dex_list) {
@@ -1742,7 +1742,7 @@ index ca98628bb..440f6efa3 100644
      }
  
      if (_desugar_needs_classpath || _proguard_enabled) {
-@@ -1572,7 +1572,7 @@ if (enable_java_templates) {
+@@ -1588,7 +1588,7 @@ if (enable_java_templates) {
                                       "data",
                                       "data_deps",
                                     ])
@@ -1751,7 +1751,7 @@ index ca98628bb..440f6efa3 100644
          deps = _deps
          depfile = "$target_gen_dir/$target_name.d"
          outputs = [ invoker.output ]
-@@ -1587,9 +1587,9 @@ if (enable_java_templates) {
+@@ -1603,9 +1603,9 @@ if (enable_java_templates) {
          if (!_is_library) {
            # http://crbug.com/725224. Fix for bots running out of memory.
            if (defined(java_cmd_pool_size)) {
@@ -1763,7 +1763,7 @@ index ca98628bb..440f6efa3 100644
            }
          }
  
-@@ -1738,7 +1738,7 @@ if (enable_java_templates) {
+@@ -1746,7 +1746,7 @@ if (enable_java_templates) {
        _sources_json_file = "$target_out_dir/${target_name}__jacoco_sources.json"
        _jacococli_jar = "//third_party/jacoco/lib/jacococli.jar"
  
@@ -1772,7 +1772,7 @@ index ca98628bb..440f6efa3 100644
        inputs = invoker.source_files + [
                   _jacococli_jar,
                   invoker.input_jar_path,
-@@ -1770,7 +1770,7 @@ if (enable_java_templates) {
+@@ -1778,7 +1778,7 @@ if (enable_java_templates) {
  
    template("filter_jar") {
      action_with_pydeps(target_name) {
@@ -1781,7 +1781,7 @@ index ca98628bb..440f6efa3 100644
        forward_variables_from(invoker,
                               TESTONLY_AND_VISIBILITY + [
                                     "deps",
-@@ -1853,7 +1853,7 @@ if (enable_java_templates) {
+@@ -1861,7 +1861,7 @@ if (enable_java_templates) {
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "data_deps" ])
        _bytecode_checker_script = "$root_build_dir/bin/helper/bytecode_processor"
@@ -1790,7 +1790,7 @@ index ca98628bb..440f6efa3 100644
        inputs = [
          invoker.build_config,
          invoker.input_jar,
-@@ -1862,7 +1862,7 @@ if (enable_java_templates) {
+@@ -1870,7 +1870,7 @@ if (enable_java_templates) {
        outputs = [ "$target_out_dir/$target_name.bytecode.stamp" ]
        deps =
            invoker.deps +
@@ -1799,7 +1799,7 @@ index ca98628bb..440f6efa3 100644
        _rebased_build_config = rebase_path(invoker.build_config, root_build_dir)
        args = [
          "--target-name",
-@@ -1901,7 +1901,7 @@ if (enable_java_templates) {
+@@ -1909,7 +1909,7 @@ if (enable_java_templates) {
    template("merge_manifests") {
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "deps" ])
@@ -1808,7 +1808,7 @@ index ca98628bb..440f6efa3 100644
        depfile = "$target_gen_dir/$target_name.d"
  
        inputs = [
-@@ -1981,7 +1981,7 @@ if (enable_java_templates) {
+@@ -1989,7 +1989,7 @@ if (enable_java_templates) {
                                     "public_deps",
                                     "sources",
                                   ])
@@ -1817,7 +1817,7 @@ index ca98628bb..440f6efa3 100644
  
        depfile = "$target_gen_dir/${invoker.target_name}.d"
        outputs = [
-@@ -2137,7 +2137,7 @@ if (enable_java_templates) {
+@@ -2145,7 +2145,7 @@ if (enable_java_templates) {
      }
      _final_srcjar_path = "${target_gen_dir}/${target_name}.srcjar"
  
@@ -1826,7 +1826,7 @@ index ca98628bb..440f6efa3 100644
  
      _inputs = [
        invoker.build_config,
-@@ -2463,7 +2463,7 @@ if (enable_java_templates) {
+@@ -2471,7 +2471,7 @@ if (enable_java_templates) {
      forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, [ "deps" ])
@@ -1835,7 +1835,7 @@ index ca98628bb..440f6efa3 100644
        outputs = [ invoker.optimized_proto_output ]
        inputs = [
          android_sdk_tools_bundle_aapt2,
-@@ -2511,7 +2511,7 @@ if (enable_java_templates) {
+@@ -2519,7 +2519,7 @@ if (enable_java_templates) {
    template("unused_resources") {
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "deps" ])
@@ -1844,7 +1844,7 @@ index ca98628bb..440f6efa3 100644
        depfile = "$target_gen_dir/${target_name}.d"
        _unused_resources_script = "$root_build_dir/bin/helper/unused_resources"
        inputs = [ _unused_resources_script ]
-@@ -2522,7 +2522,7 @@ if (enable_java_templates) {
+@@ -2530,7 +2530,7 @@ if (enable_java_templates) {
        if (!defined(deps)) {
          deps = []
        }
@@ -1853,7 +1853,7 @@ index ca98628bb..440f6efa3 100644
        _rebased_module_build_config =
            rebase_path(invoker.build_config, root_build_dir)
        args = [
-@@ -2568,7 +2568,7 @@ if (enable_java_templates) {
+@@ -2576,7 +2576,7 @@ if (enable_java_templates) {
    template("create_size_info_files") {
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "deps" ])
@@ -1862,7 +1862,7 @@ index ca98628bb..440f6efa3 100644
        _jar_info_path = "$root_build_dir/size-info/${invoker.name}.jar.info"
        _pak_info_path = "$root_build_dir/size-info/${invoker.name}.pak.info"
        _res_info_path = "$root_build_dir/size-info/${invoker.name}.res.info"
-@@ -2664,7 +2664,7 @@ if (enable_java_templates) {
+@@ -2672,7 +2672,7 @@ if (enable_java_templates) {
            invoker.secondary_native_lib_placeholders
      }
  
@@ -1871,7 +1871,7 @@ index ca98628bb..440f6efa3 100644
  
      _inputs = [ invoker.packaged_resources_path ]
  
-@@ -2921,9 +2921,9 @@ if (enable_java_templates) {
+@@ -2929,9 +2929,9 @@ if (enable_java_templates) {
  
      action_with_pydeps(target_name) {
        if (invoker.use_turbine) {
@@ -1883,7 +1883,7 @@ index ca98628bb..440f6efa3 100644
        }
  
        if (target_name == "chrome_java__header") {
-@@ -3019,7 +3019,7 @@ if (enable_java_templates) {
+@@ -3027,7 +3027,7 @@ if (enable_java_templates) {
          args += [ "--gomacc-path=$goma_dir/gomacc" ]
  
          # Override the default action_pool when goma is enabled.
@@ -1892,7 +1892,7 @@ index ca98628bb..440f6efa3 100644
        }
  
        # Flag enable_kythe_annotations requires
-@@ -3109,7 +3109,7 @@ if (enable_java_templates) {
+@@ -3117,7 +3117,7 @@ if (enable_java_templates) {
      }
  
      action_with_pydeps(target_name) {
@@ -1901,7 +1901,7 @@ index ca98628bb..440f6efa3 100644
        depfile = "$target_gen_dir/$target_name.d"
        deps = _srcjar_deps
        if (defined(invoker.deps)) {
-@@ -3154,7 +3154,7 @@ if (enable_java_templates) {
+@@ -3162,7 +3162,7 @@ if (enable_java_templates) {
          args += [ "--gomacc-path=$goma_dir/gomacc" ]
  
          # Override the default action_pool when goma is enabled.
@@ -1910,7 +1910,7 @@ index ca98628bb..440f6efa3 100644
        }
  
        if (_chromium_code) {
-@@ -3184,7 +3184,7 @@ if (enable_java_templates) {
+@@ -3192,7 +3192,7 @@ if (enable_java_templates) {
                                     "data_deps",
                                     "public_deps",
                                   ])
@@ -1919,7 +1919,7 @@ index ca98628bb..440f6efa3 100644
        deps = [ _ijar_target ]
        if (defined(invoker.deps)) {
          deps += invoker.deps
-@@ -3886,7 +3886,7 @@ if (enable_java_templates) {
+@@ -3895,7 +3895,7 @@ if (enable_java_templates) {
                         get_label_info(invoker.bytecode_rewriter_target, "name")
        _rebased_build_config = rebase_path(_build_config, root_build_dir)
        action_with_pydeps(_rewritten_jar_target_name) {
@@ -1928,7 +1928,7 @@ index ca98628bb..440f6efa3 100644
          inputs = [
            _rewriter_path,
            _build_config,
-@@ -4227,7 +4227,7 @@ template("create_android_app_bundle_module") {
+@@ -4236,7 +4236,7 @@ template("create_android_app_bundle_module") {
  
    forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
    _deps = invoker.deps
@@ -1937,7 +1937,7 @@ index ca98628bb..440f6efa3 100644
  
    # NOTE: Compared to the inputs of the "package_apk" template action,
    #       this list is much smaller, since finalize_apk is never called
-@@ -4369,7 +4369,7 @@ template("create_android_app_bundle_module") {
+@@ -4378,7 +4378,7 @@ template("create_android_app_bundle_module") {
  #   output: Path to native libraries config.
  template("allot_native_libraries") {
    action_with_pydeps(target_name) {
@@ -1971,7 +1971,7 @@ index 7dab72227..b978a1b1e 100644
      inputs = []
      args = [ "--output=" + rebase_path(invoker.linker_script, root_build_dir) ]
 diff --git a/config/android/rules.gni b/config/android/rules.gni
-index c06074c9d..9487f69ea 100644
+index 70b8b3742..7ffdc2f56 100644
 --- a/config/android/rules.gni
 +++ b/config/android/rules.gni
 @@ -4,16 +4,16 @@
@@ -2202,7 +2202,7 @@ index c06074c9d..9487f69ea 100644
          inputs = [ _android_manifest ]
          outputs = [ _incremental_android_manifest ]
  
-@@ -3121,7 +3121,7 @@ if (enable_java_templates && is_android) {
+@@ -3122,7 +3122,7 @@ if (enable_java_templates && is_android) {
              (!defined(testonly) || !testonly) &&
              # Injected JaCoCo code causes -checkdiscards to fail.
              !use_jacoco_coverage) {
@@ -2255,7 +2255,7 @@ index c06074c9d..9487f69ea 100644
            data += [ "$_final_apk_path.mapping" ]
            args += [
              "--proguard-mapping-path",
-@@ -3799,7 +3799,7 @@ if (enable_java_templates && is_android) {
+@@ -3804,7 +3804,7 @@ if (enable_java_templates && is_android) {
    template("instrumentation_test_runner") {
      if (use_rts) {
        action("${invoker.target_name}__rts_filters") {
@@ -2264,7 +2264,7 @@ index c06074c9d..9487f69ea 100644
          rts_file = "${root_build_dir}/gen/rts/${invoker.target_name}.filter"
          inverted_rts_file =
              "${root_build_dir}/gen/rts/${invoker.target_name}_inverted.filter"
-@@ -3826,7 +3826,7 @@ if (enable_java_templates && is_android) {
+@@ -3831,7 +3831,7 @@ if (enable_java_templates && is_android) {
  
      action_with_pydeps(_apk_operations_target_name) {
        testonly = true
@@ -2273,7 +2273,7 @@ index c06074c9d..9487f69ea 100644
        deps = []
        _generated_script = "$root_build_dir/bin/${invoker.target_name}"
        outputs = [ _generated_script ]
-@@ -4158,7 +4158,7 @@ if (enable_java_templates && is_android) {
+@@ -4163,7 +4163,7 @@ if (enable_java_templates && is_android) {
  
        if (!defined(use_default_launcher) || use_default_launcher) {
          deps += [
@@ -2282,7 +2282,7 @@ index c06074c9d..9487f69ea 100644
            "//testing/android/native_test:native_test_java",
          ]
        }
-@@ -4193,7 +4193,7 @@ if (enable_java_templates && is_android) {
+@@ -4198,7 +4198,7 @@ if (enable_java_templates && is_android) {
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
  
@@ -2291,7 +2291,7 @@ index c06074c9d..9487f69ea 100644
        depfile = "$target_gen_dir/$target_name.d"
        sources = invoker.sources
  
-@@ -4273,7 +4273,7 @@ if (enable_java_templates && is_android) {
+@@ -4278,7 +4278,7 @@ if (enable_java_templates && is_android) {
        # The suffix "__protoc_java.srcjar" is used by SuperSize to identify
        # protobuf symbols.
        _srcjar_path = "$target_gen_dir/$target_name.srcjar"
@@ -2300,7 +2300,7 @@ index c06074c9d..9487f69ea 100644
  
        if (defined(invoker.deps)) {
          # Need to care only about targets that might generate .proto files.
-@@ -4373,7 +4373,7 @@ if (enable_java_templates && is_android) {
+@@ -4378,7 +4378,7 @@ if (enable_java_templates && is_android) {
  
      action_with_pydeps("${_template_name}__flatc_java") {
        _srcjar_path = "$target_gen_dir/$target_name.srcjar"
@@ -2309,7 +2309,7 @@ index c06074c9d..9487f69ea 100644
  
        deps = [ _flatc_dep ]
        if (defined(invoker.deps)) {
-@@ -4497,7 +4497,7 @@ if (enable_java_templates && is_android) {
+@@ -4502,7 +4502,7 @@ if (enable_java_templates && is_android) {
      # Some libraries might not have resources; others might have two jars.
      if (update_android_aar_prebuilts) {
        print("Writing " + rebase_path(_info_path, "//"))
@@ -2318,7 +2318,7 @@ index c06074c9d..9487f69ea 100644
                    [
                          "list",
                          "--output",
-@@ -4531,7 +4531,7 @@ if (enable_java_templates && is_android) {
+@@ -4536,7 +4536,7 @@ if (enable_java_templates && is_android) {
      assert(_scanned_files.has_classes_jar || _scanned_files.subjars == [])
  
      action_with_pydeps(_unpack_target_name) {
@@ -2327,7 +2327,7 @@ index c06074c9d..9487f69ea 100644
        args = [
                 "extract",
                 "--output-dir",
-@@ -5021,12 +5021,12 @@ if (enable_java_templates && is_android) {
+@@ -5026,12 +5026,12 @@ if (enable_java_templates && is_android) {
      if (_proguard_enabled) {
        if (_add_view_trace_events) {
          _trace_event_rewriter_target =
@@ -2342,7 +2342,7 @@ index c06074c9d..9487f69ea 100644
            inputs = [
              _rewriter_path,
              _build_config,
-@@ -5238,7 +5238,7 @@ if (enable_java_templates && is_android) {
+@@ -5243,7 +5243,7 @@ if (enable_java_templates && is_android) {
  
      _bundle_target_name = "${_target_name}__bundle"
      action_with_pydeps(_bundle_target_name) {
@@ -2351,7 +2351,7 @@ index c06074c9d..9487f69ea 100644
        inputs = _all_module_zip_paths + _all_module_build_configs +
                 [ _BUNDLETOOL_JAR_PATH ]
        outputs = [ _bundle_path ]
-@@ -5312,9 +5312,9 @@ if (enable_java_templates && is_android) {
+@@ -5317,9 +5317,9 @@ if (enable_java_templates && is_android) {
  
        # http://crbug.com/725224. Fix for bots running out of memory.
        if (defined(java_cmd_pool_size)) {
@@ -2363,7 +2363,7 @@ index c06074c9d..9487f69ea 100644
        }
      }
  
-@@ -5353,7 +5353,7 @@ if (enable_java_templates && is_android) {
+@@ -5358,7 +5358,7 @@ if (enable_java_templates && is_android) {
      _bundle_wrapper_script_path = "$_bundle_wrapper_script_dir/$_target_name"
  
      action_with_pydeps("${_target_name}__wrapper_script") {
@@ -2372,7 +2372,7 @@ index c06074c9d..9487f69ea 100644
        inputs = [ _base_module_build_config ]
        outputs = [ _bundle_wrapper_script_path ]
  
-@@ -5365,8 +5365,8 @@ if (enable_java_templates && is_android) {
+@@ -5370,8 +5370,8 @@ if (enable_java_templates && is_android) {
          _bundle_path,
        ]
        data_deps = [
@@ -2383,7 +2383,7 @@ index c06074c9d..9487f69ea 100644
        ]
  
        deps = [ _base_module_build_config_target ]
-@@ -5421,7 +5421,7 @@ if (enable_java_templates && is_android) {
+@@ -5426,7 +5426,7 @@ if (enable_java_templates && is_android) {
          ]
  
          # Required by logcat command.
@@ -2392,7 +2392,7 @@ index c06074c9d..9487f69ea 100644
          data += [ _proguard_mapping_path ]
        }
      }
-@@ -5476,7 +5476,7 @@ if (enable_java_templates && is_android) {
+@@ -5481,7 +5481,7 @@ if (enable_java_templates && is_android) {
  
      _apks_path = "$root_build_dir/apks/$_bundle_name.apks"
      action_with_pydeps("${_target_name}_apks") {
@@ -2401,7 +2401,7 @@ index c06074c9d..9487f69ea 100644
        inputs = [
          _bundle_path,
          _BUNDLETOOL_JAR_PATH,
-@@ -5510,9 +5510,9 @@ if (enable_java_templates && is_android) {
+@@ -5515,9 +5515,9 @@ if (enable_java_templates && is_android) {
  
        # http://crbug.com/725224. Fix for bots running out of memory.
        if (defined(java_cmd_pool_size)) {
@@ -2413,7 +2413,7 @@ index c06074c9d..9487f69ea 100644
        }
      }
    }
-@@ -5534,7 +5534,7 @@ if (enable_java_templates && is_android) {
+@@ -5539,7 +5539,7 @@ if (enable_java_templates && is_android) {
    template("create_app_bundle_minimal_apks") {
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "deps" ])
@@ -2422,7 +2422,7 @@ index c06074c9d..9487f69ea 100644
        _dir = get_path_info(invoker.bundle_path, "dir")
        _name = get_path_info(invoker.bundle_path, "name")
        _output_path = "$_dir/$_name.minimal.apks"
-@@ -5574,7 +5574,7 @@ template("generate_ui_locale_resources") {
+@@ -5579,7 +5579,7 @@ template("generate_ui_locale_resources") {
                  "${target_name}.zip"
  
    action_with_pydeps(_generating_target_name) {
@@ -2783,7 +2783,7 @@ index 7196fcf6c..5083c65a0 100644
    clang_base_path = default_clang_base_path
  }
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 7f7df90d5..1bd28a0f5 100644
+index 77fdcb8ba..f497086b8 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -2,45 +2,45 @@
@@ -2889,7 +2889,7 @@ index 7f7df90d5..1bd28a0f5 100644
    }
  
    configs += [
-@@ -946,8 +946,8 @@ config("thinlto_optimize_default") {
+@@ -950,8 +950,8 @@ config("thinlto_optimize_default") {
  # Use this to enable optimization in the ThinLTO link step for select targets
  # when thin_lto_enable_optimizations is set by doing:
  #
@@ -2900,7 +2900,7 @@ index 7f7df90d5..1bd28a0f5 100644
  #
  # Since it makes linking significantly slower and more resource intensive, only
  # use it on important targets such as the main browser executable or dll.
-@@ -981,7 +981,7 @@ config("compiler_cpu_abi") {
+@@ -985,7 +985,7 @@ config("compiler_cpu_abi") {
  
    configs = []
    if (is_chromeos) {
@@ -2909,7 +2909,7 @@ index 7f7df90d5..1bd28a0f5 100644
    }
  
    # TODO(https://crbug.com/1383873): Remove this once figured out.
-@@ -1302,7 +1302,7 @@ config("compiler_codegen") {
+@@ -1306,7 +1306,7 @@ config("compiler_codegen") {
    ldflags = []
  
    if (is_nacl) {
@@ -2917,8 +2917,8 @@ index 7f7df90d5..1bd28a0f5 100644
 +    configs += [ "//chromium/build/config/nacl:compiler_codegen" ]
    }
  
-   if (current_cpu == "arm64" && !is_win) {
-@@ -1486,31 +1486,31 @@ config("runtime_library") {
+   if (current_cpu == "arm64" && !is_win && is_clang) {
+@@ -1490,31 +1490,31 @@ config("runtime_library") {
    # libandroid_support in the -isystem include order.  Otherwise, there will be
    # build errors related to symbols declared in math.h.
    if (use_custom_libcxx) {
@@ -2958,7 +2958,7 @@ index 7f7df90d5..1bd28a0f5 100644
    }
  
    if (is_component_build) {
-@@ -1686,7 +1686,7 @@ config("default_warnings") {
+@@ -1690,7 +1690,7 @@ config("default_warnings") {
  # See also: https://docs.google.com/document/d/1CTbQ-5cQjnjU8aCOtLiA7G6P0i5C6HpSDNlSNq6nl5E
  #
  # To enable in a GN target, use:
@@ -2967,7 +2967,7 @@ index 7f7df90d5..1bd28a0f5 100644
  
  config("prevent_unsafe_narrowing") {
    if (is_clang) {
-@@ -2005,8 +2005,8 @@ config("no_incompatible_pointer_warnings") {
+@@ -2009,8 +2009,8 @@ config("no_incompatible_pointer_warnings") {
  # You can override the optimization level on a per-target basis by removing the
  # default config and then adding the named one you want:
  #
@@ -2978,7 +2978,7 @@ index 7f7df90d5..1bd28a0f5 100644
  
  # Shared settings for both "optimize" and "optimize_max" configs.
  # IMPORTANT: On Windows "/O1" and "/O2" must go before the common flags.
-@@ -2219,12 +2219,12 @@ config("optimize_max") {
+@@ -2223,12 +2223,12 @@ config("optimize_max") {
      # The NaCl IRT is a special case and always wants its own config.
      # Various components do:
      #   if (!is_debug) {
@@ -2994,7 +2994,7 @@ index 7f7df90d5..1bd28a0f5 100644
    } else {
      ldflags = common_optimize_on_ldflags
      if (is_win) {
-@@ -2252,12 +2252,12 @@ config("optimize_speed") {
+@@ -2256,12 +2256,12 @@ config("optimize_speed") {
      # The NaCl IRT is a special case and always wants its own config.
      # Various components do:
      #   if (!is_debug) {
@@ -3010,7 +3010,7 @@ index 7f7df90d5..1bd28a0f5 100644
    } else {
      ldflags = common_optimize_on_ldflags
      if (is_win) {
-@@ -2286,7 +2286,7 @@ config("default_optimization") {
+@@ -2290,7 +2290,7 @@ config("default_optimization") {
    if (is_nacl && is_nacl_irt) {
      # The NaCl IRT is a special case and always wants its own config.
      # It gets optimized the same way regardless of the type of build.
@@ -3019,7 +3019,7 @@ index 7f7df90d5..1bd28a0f5 100644
    } else if (is_debug) {
      configs = [ ":no_optimize" ]
    } else if (optimize_for_fuzzing) {
-@@ -2372,8 +2372,8 @@ config("afdo") {
+@@ -2378,8 +2378,8 @@ config("afdo") {
  # You can override the symbol level on a per-target basis by removing the
  # default config and then adding the named one you want:
  #
@@ -3030,7 +3030,7 @@ index 7f7df90d5..1bd28a0f5 100644
  
  # A helper config that all configs passing /DEBUG to the linker should
  # include as sub-config.
-@@ -2510,7 +2510,7 @@ config("symbols") {
+@@ -2516,7 +2516,7 @@ config("symbols") {
    # https://b/243982712.
    if (symbol_level == 2 && is_chromeos_device && !use_debug_fission &&
        !is_nacl && current_cpu == "arm") {
@@ -3221,7 +3221,7 @@ index 88a9c59f0..52170c9ef 100644
      public_deps = [ "//third_party:freetype_harfbuzz" ]
    }
 diff --git a/config/fuchsia/BUILD.gn b/config/fuchsia/BUILD.gn
-index 1becaa43b..d346151eb 100644
+index dd5a73b1a..0dde70a2f 100644
 --- a/config/fuchsia/BUILD.gn
 +++ b/config/fuchsia/BUILD.gn
 @@ -2,9 +2,9 @@
@@ -3256,12 +3256,12 @@ index 210aa6a95..ddd134a2b 100644
 -mixins: "//build/fuchsia/COMMON_METADATA"
 +mixins: "//chromium/build/fuchsia/COMMON_METADATA"
 diff --git a/config/fuchsia/generate_runner_scripts.gni b/config/fuchsia/generate_runner_scripts.gni
-index de5b598c0..6d72f1393 100644
+index e7453092b..df23bd052 100644
 --- a/config/fuchsia/generate_runner_scripts.gni
 +++ b/config/fuchsia/generate_runner_scripts.gni
-@@ -4,12 +4,12 @@
- 
- assert(is_fuchsia)
+@@ -2,12 +2,12 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
  
 -import("//build/config/chromecast_build.gni")
 -import("//build/config/fuchsia/config.gni")
@@ -3276,8 +3276,8 @@ index de5b598c0..6d72f1393 100644
 +import("//chromium/build/config/sysroot.gni")
 +import("//chromium/build/util/generate_wrapper.gni")
  
- declare_args() {
-   # Sets the Fuchsia Amber repository which will be used by default by the
+ assert(is_fuchsia)
+ 
 @@ -92,7 +92,7 @@ template("fuchsia_run_script_with_packages") {
      if (!defined(data_deps)) {
        data_deps = []
@@ -3306,7 +3306,7 @@ index de5b598c0..6d72f1393 100644
      executable = rebase_path(_test_runner_py)
  
 diff --git a/config/fuchsia/packaged_content_embedder_excluded_dirs.gni b/config/fuchsia/packaged_content_embedder_excluded_dirs.gni
-index a08ed454a..42634a64c 100644
+index f179a66d7..3e43cde86 100644
 --- a/config/fuchsia/packaged_content_embedder_excluded_dirs.gni
 +++ b/config/fuchsia/packaged_content_embedder_excluded_dirs.gni
 @@ -2,7 +2,7 @@
@@ -3316,8 +3316,8 @@ index a08ed454a..42634a64c 100644
 -import("//build/config/devtools.gni")
 +import("//chromium/build/config/devtools.gni")
  
- # List of transitively included directories that should be stripped from
- # released packages for size reasons. For use with the |excluded_dirs| variable
+ assert(is_fuchsia)
+ 
 diff --git a/config/fuchsia/size_optimized_cast_receiver_args.gn b/config/fuchsia/size_optimized_cast_receiver_args.gn
 index 9a366c7bf..fbc274ad5 100644
 --- a/config/fuchsia/size_optimized_cast_receiver_args.gn
@@ -3345,19 +3345,19 @@ index b59ce96a6..a7152fa3c 100644
  enable_widevine = true
  use_internal_isolated_origins = true
 diff --git a/config/fuchsia/sizes.gni b/config/fuchsia/sizes.gni
-index 87e4fff92..b47789d17 100644
+index fc9767622..f78d1ca9b 100644
 --- a/config/fuchsia/sizes.gni
 +++ b/config/fuchsia/sizes.gni
-@@ -2,7 +2,7 @@
- # Use of this source code is governed by a BSD-style license that can be
- # found in the LICENSE file.
+@@ -4,7 +4,7 @@
+ 
+ assert(is_fuchsia)
  
 -import("//build/util/generate_wrapper.gni")
 +import("//chromium/build/util/generate_wrapper.gni")
  
  template("compute_fuchsia_package_sizes") {
    generate_wrapper(target_name) {
-@@ -12,7 +12,7 @@ template("compute_fuchsia_package_sizes") {
+@@ -14,7 +14,7 @@ template("compute_fuchsia_package_sizes") {
                               "data_deps",
                             ])
      testonly = true
@@ -3366,7 +3366,7 @@ index 87e4fff92..b47789d17 100644
      wrapper_script = "$root_out_dir/bin/run_${target_name}"
  
      assert(target_cpu == "arm64" || target_cpu == "x64",
-@@ -31,7 +31,7 @@ template("compute_fuchsia_package_sizes") {
+@@ -33,7 +33,7 @@ template("compute_fuchsia_package_sizes") {
      # TODO(crbug.com/1347172): Remove arm64 once the execution of fuchsia_sizes
      # has been migrated to x64 machines.
      data += [
@@ -4484,7 +4484,7 @@ index ccae4502e..f0da1a889 100644
    if (rust_abi_target == "arm-linux-androideabi") {
      # Android clang target specifications mostly match Rust, but this
 diff --git a/config/sanitizers/BUILD.gn b/config/sanitizers/BUILD.gn
-index 35b7ba7aa..ee86a9ac2 100644
+index 8a50b7e02..8dec8b59b 100644
 --- a/config/sanitizers/BUILD.gn
 +++ b/config/sanitizers/BUILD.gn
 @@ -2,15 +2,15 @@
@@ -4509,7 +4509,7 @@ index 35b7ba7aa..ee86a9ac2 100644
  }
  
  # Contains the dependencies needed for sanitizers to link into executables and
-@@ -79,7 +79,7 @@ if ((is_apple || is_win) && is_asan) {
+@@ -85,7 +85,7 @@ if ((is_apple || is_win) && is_asan) {
      # On iOS, the runtime library need to be code signed (adhoc signature)
      # starting with Xcode 8, so use an action instead of a copy on iOS.
      action("copy_asan_runtime") {
@@ -4518,7 +4518,7 @@ index 35b7ba7aa..ee86a9ac2 100644
        sources = [ _clang_rt_dso_full_path ]
        outputs = [ "$root_out_dir/" + get_path_info(sources[0], "file") ]
        args = [
-@@ -115,30 +115,30 @@ static_library("options_sources") {
+@@ -121,30 +121,30 @@ static_library("options_sources") {
      ":deps",
      "//:gn_all",
    ]
@@ -4554,7 +4554,7 @@ index 35b7ba7aa..ee86a9ac2 100644
      }
      sources += [ tsan_suppressions_file ]
    }
-@@ -582,7 +582,7 @@ config("not_fuzzed") {
+@@ -588,7 +588,7 @@ config("not_fuzzed") {
      # optimize_for_fuzzing (-O1). When given multiple optimization flags, clang
      # obeys the last one, so as long as this flag comes after -O1, it should work.
      # Since this config will always be depended on after
@@ -4564,7 +4564,7 @@ index 35b7ba7aa..ee86a9ac2 100644
      # though this sounds fragile, it isn't a big deal if it breaks, since proto
      # fuzzers will still work, they will just be slightly slower.
 diff --git a/config/sanitizers/sanitizers.gni b/config/sanitizers/sanitizers.gni
-index bcbd26761..b873e6d11 100644
+index 15008ca78..043246140 100644
 --- a/config/sanitizers/sanitizers.gni
 +++ b/config/sanitizers/sanitizers.gni
 @@ -2,12 +2,12 @@
@@ -4586,7 +4586,7 @@ index bcbd26761..b873e6d11 100644
  
  declare_args() {
    # Compile for Address Sanitizer to find memory bugs.
-@@ -269,21 +269,21 @@ not_fuzzed_remove_nonasan_configs = []
+@@ -284,21 +284,21 @@ not_fuzzed_remove_nonasan_configs = []
  
  if (use_fuzzing_engine) {
    # Removing coverage should always just work.
@@ -4612,6 +4612,23 @@ index bcbd26761..b873e6d11 100644
  
        assert(not_fuzzed_remove_nonasan_configs == not_fuzzed_remove_configs)
      }
+@@ -308,8 +308,8 @@ if (use_fuzzing_engine) {
+ # Options common to different fuzzer engines.
+ # Engine should be compiled without coverage (infinite loop in trace_cmp).
+ fuzzing_engine_remove_configs = [
+-  "//build/config/coverage:default_coverage",
+-  "//build/config/sanitizers:default_sanitizer_flags",
++  "//chromium/build/config/coverage:default_coverage",
++  "//chromium/build/config/sanitizers:default_sanitizer_flags",
+ ]
+ 
+ # Add any sanitizer flags back. In MSAN builds, instrumenting libfuzzer with
+@@ -322,4 +322,4 @@ fuzzing_engine_remove_configs = [
+ # expecting one particular ABI (https://crbug.com/915422). The other sanitizers
+ # are added back for the same reason.
+ fuzzing_engine_add_configs =
+-    [ "//build/config/sanitizers:default_sanitizer_flags_but_coverage" ]
++    [ "//chromium/build/config/sanitizers:default_sanitizer_flags_but_coverage" ]
 diff --git a/config/sysroot.gni b/config/sysroot.gni
 index c7ae6b2c2..09167b5a6 100644
 --- a/config/sysroot.gni
@@ -5737,7 +5754,7 @@ index 2019a4064..7a1daf2bc 100644
  shim_headers("zlib_shim") {
    root_path = "."
 diff --git a/nocompile.gni b/nocompile.gni
-index 093cf66eb..8524b56c2 100644
+index 942ad9ece..36740ebb5 100644
 --- a/nocompile.gni
 +++ b/nocompile.gni
 @@ -11,7 +11,7 @@
@@ -5749,7 +5766,7 @@ index 093cf66eb..8524b56c2 100644
  # nocompile_test("my_module_nc_unittests") {
  #   sources = [
  #     'nc_testset_1.nc',
-@@ -58,9 +58,9 @@
+@@ -58,13 +58,13 @@
  # something goes wrong, and know during the unittest run that the test was at
  # least processed when things go right.
  
@@ -5761,8 +5778,13 @@ index 093cf66eb..8524b56c2 100644
 +import("//chromium/build/toolchain/toolchain.gni")
  import("//testing/test.gni")
  
+ if (is_mac) {
+-  import("//build/config/mac/mac_sdk.gni")
++  import("//chromium/build/config/mac/mac_sdk.gni")
+ }
+ 
  declare_args() {
-@@ -70,8 +70,8 @@ declare_args() {
+@@ -74,8 +74,8 @@ declare_args() {
  }
  
  if (enable_nocompile_tests) {
@@ -6755,7 +6777,7 @@ index 8bdb2edf5..e4d904993 100644
      ":cfg_if",
      ":compiler_builtins",
 diff --git a/rust/tests/BUILD.gn b/rust/tests/BUILD.gn
-index ba5d50ac5..3928fb7be 100644
+index 04c1d9f07..b6f352789 100644
 --- a/rust/tests/BUILD.gn
 +++ b/rust/tests/BUILD.gn
 @@ -2,8 +2,8 @@
@@ -7434,7 +7456,7 @@ index 210aa6a95..ddd134a2b 100644
 -mixins: "//build/fuchsia/COMMON_METADATA"
 +mixins: "//chromium/build/fuchsia/COMMON_METADATA"
 diff --git a/toolchain/gcc_toolchain.gni b/toolchain/gcc_toolchain.gni
-index 713c1b9fd..29b45eab5 100644
+index cf9730e73..9be5ed23b 100644
 --- a/toolchain/gcc_toolchain.gni
 +++ b/toolchain/gcc_toolchain.gni
 @@ -2,22 +2,22 @@
@@ -7552,6 +7574,15 @@ index 713c1b9fd..29b45eab5 100644
  
        # RSP manipulation due to https://bugs.chromium.org/p/gn/issues/detail?id=249
        tool("rust_staticlib") {
+@@ -755,7 +755,7 @@ template("single_gcc_toolchain") {
+       dummy_libgcc = ""
+       if (is_android) {
+         dummy_libgcc_path =
+-            rebase_path("//build/android/dummy_libgcc", root_build_dir)
++            rebase_path("//chromium/build/android/dummy_libgcc", root_build_dir)
+         dummy_libgcc = "-L$dummy_libgcc_path"
+       }
+ 
 diff --git a/toolchain/ios/BUILD.gn b/toolchain/ios/BUILD.gn
 index cfcbdc660..c379f2615 100644
 --- a/toolchain/ios/BUILD.gn

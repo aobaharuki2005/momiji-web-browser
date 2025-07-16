@@ -13,10 +13,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/75a76abe648ad8bdb
  1 file changed, 2 insertions(+)
 
 diff --git a/vs_toolchain.py b/vs_toolchain.py
-index a420dad63..9db4e1237 100755
+index be9aea680..9942d2915 100755
 --- a/vs_toolchain.py
 +++ b/vs_toolchain.py
-@@ -571,6 +571,8 @@ def main():
+@@ -573,6 +573,8 @@ def main():
    if len(sys.argv) < 2 or sys.argv[1] not in commands:
      print('Expected one of: %s' % ', '.join(commands), file=sys.stderr)
      return 1
