@@ -576,6 +576,101 @@ TrackSize::StateBits nsGridContainerFrame::TrackSize::Initialize(
   return mState;
 }
 
+class nsGridContainerFrame::TrackPlan {
+ public:
+  TrackPlan() = default;
+
+  explicit TrackPlan(size_t aCapacity) : mTrackSizes(aCapacity) {}
+
+  TrackPlan(const TrackPlan& aOther) : mTrackSizes() {
+    mTrackSizes.Assign(aOther.mTrackSizes);
+  }
+
+  explicit TrackPlan(const nsTArray<nsGridContainerFrame::TrackSize>& aArray) {
+    mTrackSizes.Assign(aArray);
+  }
+
+  TrackPlan(TrackPlan&& aOther) : mTrackSizes(std::move(aOther.mTrackSizes)) {}
+
+  ~TrackPlan() = default;
+
+  TrackPlan& operator=(const TrackPlan& aOther) {
+    mTrackSizes.Assign(aOther.mTrackSizes);
+    return *this;
+  }
+  TrackPlan& operator=(TrackPlan&& aOther) {
+    mTrackSizes.Assign(std::move(aOther.mTrackSizes));
+    return *this;
+  }
+
+  size_t Length() const { return mTrackSizes.Length(); }
+
+  void SetLength(size_t aSize) { mTrackSizes.SetLength(aSize); }
+
+  bool IsEmpty() const { return mTrackSizes.IsEmpty(); }
+
+  // Temporary, for interop with places that still just use raw arrays;
+  // will be removed in following patch.
+  nsTArray<nsGridContainerFrame::TrackSize>& AsArray() { return mTrackSizes; }
+  const nsTArray<nsGridContainerFrame::TrackSize>& AsArray() const {
+    return mTrackSizes;
+  }
+
+  void Assign(const TrackPlan& aRHS) { mTrackSizes.Assign(aRHS.mTrackSizes); }
+  void Assign(const nsTArray<nsGridContainerFrame::TrackSize>& aRHS) {
+    mTrackSizes.Assign(aRHS);
+  }
+
+  nsGridContainerFrame::TrackSize& LastElement() {
+    return mTrackSizes.LastElement();
+  }
+
+  nsGridContainerFrame::TrackSize& operator[](size_t aIndex) {
+    return mTrackSizes[aIndex];
+  }
+
+  const nsGridContainerFrame::TrackSize& operator[](size_t aIndex) const {
+    return mTrackSizes[aIndex];
+  }
+
+  void ClearAndRetainStorage() { mTrackSizes.ClearAndRetainStorage(); }
+
+  TrackPlan Clone() const { return *this; }
+
+  void ZeroInitialize() {
+    PodZero(mTrackSizes.Elements(), mTrackSizes.Length());
+  }
+
+  using iterator = nsTArray<nsGridContainerFrame::TrackSize>::iterator;
+  iterator begin() { return mTrackSizes.begin(); }
+  iterator end() { return mTrackSizes.end(); }
+
+ private:
+  CopyableTArray<nsGridContainerFrame::TrackSize> mTrackSizes;
+};
+
+using TrackPlan = nsGridContainerFrame::TrackPlan;
+
+class nsGridContainerFrame::ItemPlan {
+ public:
+  ItemPlan() = default;
+
+  explicit ItemPlan(size_t aCapacity) : mTrackSizes(aCapacity) {}
+
+  ~ItemPlan() = default;
+
+  void SetLength(size_t aSize) { mTrackSizes.SetLength(aSize); }
+
+  nsGridContainerFrame::TrackSize& operator[](size_t aIndex) {
+    return mTrackSizes[aIndex];
+  }
+
+ private:
+  nsTArray<nsGridContainerFrame::TrackSize> mTrackSizes;
+};
+
+using ItemPlan = nsGridContainerFrame::ItemPlan;
+
 /**
  * A LineRange can be definite or auto - when it's definite it represents
  * a consecutive set of tracks between a starting line and an ending line.
@@ -685,11 +780,20 @@ struct nsGridContainerFrame::LineRange {
    */
   void ToPositionAndLength(const nsTArray<TrackSize>& aTrackSizes,
                            nscoord* aPos, nscoord* aLength) const;
+  void ToPositionAndLength(const TrackPlan& aTrackPlan, nscoord* aPos,
+                           nscoord* aLength) const {
+    ToPositionAndLength(aTrackPlan.AsArray(), aPos, aLength);
+  }
+
   /**
    * Given an array of track sizes, return the length of the tracks in this
    * line range.
    */
   nscoord ToLength(const nsTArray<TrackSize>& aTrackSizes) const;
+  nscoord ToLength(const TrackPlan& aTrackPlan) const {
+    return ToLength(aTrackPlan.AsArray());
+  }
+
   /**
    * Given an array of track sizes and a grid origin coordinate, adjust the
    * abs.pos. containing block along an axis given by aPos and aLength.
@@ -1225,7 +1329,7 @@ struct nsGridContainerFrame::UsedTrackSizes {
   // This only has valid sizes when mCanResolveLineRangeSize is true in
   // the same axis.  It may have zero tracks (a grid with only abs.pos.
   // subgrids/items may have zero tracks).
-  PerLogicalAxis<nsTArray<TrackSize>> mSizes;
+  PerLogicalAxis<TrackPlan> mSizes;
   // True if mSizes can be used to resolve line range sizes in an axis.
   PerLogicalAxis<bool> mCanResolveLineRangeSize;
 
@@ -2544,9 +2648,9 @@ struct nsGridContainerFrame::Tracks {
       TrackSizingStep aStep, TrackSizingPhase aPhase,
       nsTArray<SpanningItemData>::iterator aIter,
       nsTArray<SpanningItemData>::iterator aIterEnd,
-      nsTArray<uint32_t>& aTracks, nsTArray<TrackSize>& aPlan,
-      nsTArray<TrackSize>& aItemPlan, SizingConstraint aConstraint,
-      bool aIsGridIntrinsicSizing, const TrackSizingFunctions& aFunctions,
+      nsTArray<uint32_t>& aTracks, TrackPlan& aPlan, ItemPlan& aItemPlan,
+      SizingConstraint aConstraint, bool aIsGridIntrinsicSizing,
+      const TrackSizingFunctions& aFunctions,
       const FitContentClamper& aFitContentClamper = nullptr,
       bool aNeedInfinitelyGrowableFlag = false);
 
@@ -2640,8 +2744,7 @@ struct nsGridContainerFrame::Tracks {
     return aGrowableTracks.IsEmpty() ? 0 : space;
   }
 
-  void InitializeItemPlan(TrackSizingPhase aPhase,
-                          nsTArray<TrackSize>& aItemPlan,
+  void InitializeItemPlan(TrackSizingPhase aPhase, ItemPlan& aItemPlan,
                           const nsTArray<uint32_t>& aTracks) const {
     for (uint32_t track : aTracks) {
       auto& plan = aItemPlan[track];
@@ -2653,8 +2756,7 @@ struct nsGridContainerFrame::Tracks {
     }
   }
 
-  void InitializePlan(TrackSizingPhase aPhase,
-                      nsTArray<TrackSize>& aPlan) const {
+  void InitializePlan(TrackSizingPhase aPhase, TrackPlan& aPlan) const {
     for (size_t i = 0, len = aPlan.Length(); i < len; ++i) {
       auto& plan = aPlan[i];
       const auto& sz = mSizes[i];
@@ -2666,7 +2768,7 @@ struct nsGridContainerFrame::Tracks {
     }
   }
 
-  void CopyPlanToSize(TrackSizingPhase aPhase, const nsTArray<TrackSize>& aPlan,
+  void CopyPlanToSize(TrackSizingPhase aPhase, const TrackPlan& aPlan,
                       bool aNeedInfinitelyGrowableFlag) {
     for (size_t i = 0, len = mSizes.Length(); i < len; ++i) {
       const auto& plan = aPlan[i];
@@ -2702,7 +2804,7 @@ struct nsGridContainerFrame::Tracks {
    * and then freeze them (all aGrowableTracks must be unfrozen on entry).
    * Subtract the space added from aAvailableSpace and return that.
    */
-  nscoord GrowTracksToLimit(nscoord aAvailableSpace, nsTArray<TrackSize>& aPlan,
+  nscoord GrowTracksToLimit(nscoord aAvailableSpace, ItemPlan& aPlan,
                             const nsTArray<uint32_t>& aGrowableTracks,
                             const FitContentClamper& aFitContentClamper) const {
     MOZ_ASSERT(aAvailableSpace > 0 && aGrowableTracks.Length() > 0);
@@ -2754,8 +2856,7 @@ struct nsGridContainerFrame::Tracks {
    * assumed that aPlan have no aSkipFlag set for tracks in aGrowableTracks
    * on entry to this method.
    */
-  static uint32_t MarkExcludedTracks(nsTArray<TrackSize>& aPlan,
-                                     uint32_t aNumGrowable,
+  static uint32_t MarkExcludedTracks(ItemPlan& aPlan, uint32_t aNumGrowable,
                                      const nsTArray<uint32_t>& aGrowableTracks,
                                      TrackSize::StateBits aMinSizingSelector,
                                      TrackSize::StateBits aMaxSizingSelector,
@@ -2793,8 +2894,7 @@ struct nsGridContainerFrame::Tracks {
    * growth limits" https://drafts.csswg.org/css-grid-2/#extra-space
    * Return the number of tracks that are still growable.
    */
-  static uint32_t MarkExcludedTracks(TrackSizingPhase aPhase,
-                                     nsTArray<TrackSize>& aPlan,
+  static uint32_t MarkExcludedTracks(TrackSizingPhase aPhase, ItemPlan& aPlan,
                                      const nsTArray<uint32_t>& aGrowableTracks,
                                      SizingConstraint aConstraint) {
     uint32_t numGrowable = aGrowableTracks.Length();
@@ -2824,7 +2924,7 @@ struct nsGridContainerFrame::Tracks {
    * https://drafts.csswg.org/css-grid-2/#distribute-extra-space
    */
   void GrowSelectedTracksUnlimited(
-      nscoord aAvailableSpace, nsTArray<TrackSize>& aPlan,
+      nscoord aAvailableSpace, ItemPlan& aPlan,
       const nsTArray<uint32_t>& aGrowableTracks, uint32_t aNumGrowable,
       const FitContentClamper& aFitContentClamper) const {
     MOZ_ASSERT(aAvailableSpace > 0 && aGrowableTracks.Length() > 0 &&
@@ -2867,7 +2967,7 @@ struct nsGridContainerFrame::Tracks {
   // Distribute space to all flex tracks this item spans.
   // https://drafts.csswg.org/css-grid-2/#algo-spanning-flex-items
   nscoord DistributeToFlexTrackSizes(
-      nscoord aAvailableSpace, nsTArray<TrackSize>& aPlan,
+      nscoord aAvailableSpace, TrackPlan& aPlan,
       const nsTArray<uint32_t>& aGrowableTracks,
       const TrackSizingFunctions& aFunctions) const {
     nscoord space = aAvailableSpace;
@@ -2914,9 +3014,8 @@ struct nsGridContainerFrame::Tracks {
    * up to their limits, then distribute the remaining space beyond the limits.
    */
   void DistributeToTrackSizes(TrackSizingStep aStep, TrackSizingPhase aPhase,
-                              nscoord aAvailableSpace,
-                              nsTArray<TrackSize>& aPlan,
-                              nsTArray<TrackSize>& aItemPlan,
+                              nscoord aAvailableSpace, TrackPlan& aPlan,
+                              ItemPlan& aItemPlan,
                               nsTArray<uint32_t>& aGrowableTracks,
                               SizingConstraint aConstraint,
                               const TrackSizingFunctions& aFunctions,
@@ -4247,8 +4346,8 @@ void nsGridContainerFrame::UsedTrackSizes::ResolveTrackSizesForAxis(
     return;
   }
   if (aFrame->IsSubgrid(aAxis)) {
-    CopyUsedTrackSizes(mSizes[aAxis], parent, parentSizes, aFrame, subgrid,
-                       aAxis);
+    CopyUsedTrackSizes(mSizes[aAxis].AsArray(), parent, parentSizes, aFrame,
+                       subgrid, aAxis);
     mCanResolveLineRangeSize[aAxis] = true;
   } else {
     const auto& range = subgrid->mArea.LineRangeForAxis(parentAxis);
@@ -7035,9 +7134,8 @@ bool nsGridContainerFrame::Tracks::GrowSizeForSpanningItems(
     TrackSizingStep aStep, TrackSizingPhase aPhase,
     nsTArray<SpanningItemData>::iterator aIter,
     nsTArray<SpanningItemData>::iterator aIterEnd, nsTArray<uint32_t>& aTracks,
-    nsTArray<TrackSize>& aPlan, nsTArray<TrackSize>& aItemPlan,
-    SizingConstraint aConstraint, bool aIsGridIntrinsicSizing,
-    const TrackSizingFunctions& aFunctions,
+    TrackPlan& aPlan, ItemPlan& aItemPlan, SizingConstraint aConstraint,
+    bool aIsGridIntrinsicSizing, const TrackSizingFunctions& aFunctions,
     const FitContentClamper& aFitContentClamper,
     bool aNeedInfinitelyGrowableFlag) {
   const bool isMaxSizingPhase = aPhase == TrackSizingPhase::IntrinsicMaximums ||
@@ -7274,9 +7372,9 @@ void nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
               SpanningItemData::IsSpanLessThan);
 
     nsTArray<uint32_t> tracks(maxSpan);
-    nsTArray<TrackSize> plan(mSizes.Length());
+    TrackPlan plan(mSizes.Length());
     plan.SetLength(mSizes.Length());
-    nsTArray<TrackSize> itemPlan(mSizes.Length());
+    ItemPlan itemPlan(mSizes.Length());
     itemPlan.SetLength(mSizes.Length());
 
     // Start / end iterator for items of the same span length:
@@ -10624,7 +10722,7 @@ void nsGridContainerFrame::StoreUsedTrackSizes(
     uts = new UsedTrackSizes();
     SetProperty(UsedTrackSizes::Prop(), uts);
   }
-  uts->mSizes[aAxis] = aSizes.Clone();
+  uts->mSizes[aAxis].Assign(aSizes);
   uts->mCanResolveLineRangeSize[aAxis] = true;
   // XXX is resetting these bits necessary?
   for (auto& sz : uts->mSizes[aAxis]) {
