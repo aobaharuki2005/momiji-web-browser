@@ -403,15 +403,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         }
 
         @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
-        fun queueReviewPrompt() {
-            queue.runIfReadyOrQueue {
-                GlobalScope.launch(IO) {
-                    components.reviewPromptController.trackApplicationLaunch()
-                }
-            }
-        }
-
-        @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
         fun queueRestoreLocale() {
             queue.runIfReadyOrQueue {
                 GlobalScope.launch(IO) {
@@ -463,7 +454,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         queueInitStorageAndServices()
         queueMetrics()
         queueIncrementNumberOfAppLaunches()
-        queueReviewPrompt()
         queueRestoreLocale()
         queueStorageMaintenance()
         queueNimbusFetchInForeground()

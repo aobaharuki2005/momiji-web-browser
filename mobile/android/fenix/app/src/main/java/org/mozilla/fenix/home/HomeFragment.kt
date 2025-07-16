@@ -65,7 +65,6 @@ import mozilla.components.lib.state.ext.flow
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
@@ -1107,13 +1106,8 @@ class HomeFragment : Fragment() {
         // We only want this observer live just before we navigate away to the collection creation screen
         requireComponents.core.tabCollectionStorage.unregister(collectionStorageObserver)
 
-        if (FeatureFlags.CUSTOM_REVIEW_PROMPT_ENABLED) {
-            requireComponents.appStore.dispatch(CheckIfEligibleForReviewPrompt)
-        } else {
-            lifecycleScope.launch(IO) {
-                requireComponents.reviewPromptController.promptReview(requireActivity())
-            }
-        }
+        // Trigger review prompt logic and show the appropriate prompt variation if applicable
+        requireComponents.appStore.dispatch(CheckIfEligibleForReviewPrompt)
     }
 
     @VisibleForTesting

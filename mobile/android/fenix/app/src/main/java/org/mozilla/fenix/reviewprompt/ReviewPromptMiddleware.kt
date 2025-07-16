@@ -6,10 +6,6 @@ package org.mozilla.fenix.reviewprompt
 
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
-import org.mozilla.fenix.components.ReviewPromptController
-import org.mozilla.fenix.components.ReviewPromptController.Companion.APPRX_MONTH_IN_MILLIS
-import org.mozilla.fenix.components.ReviewPromptController.Companion.NUMBER_OF_LAUNCHES_REQUIRED
-import org.mozilla.fenix.components.ReviewPromptController.Companion.NUMBER_OF_MONTHS_TO_PASS
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.ReviewPromptAction.CheckIfEligibleForReviewPrompt
 import org.mozilla.fenix.components.appstate.AppAction.ReviewPromptAction.DoNotShowReviewPrompt
@@ -91,13 +87,21 @@ class ReviewPromptMiddleware(
             timeNowInMillis() - (APPRX_MONTH_IN_MILLIS * NUMBER_OF_MONTHS_TO_PASS)
         return settings.lastReviewPromptTimeInMillis > approximatelyFourMonthsAgo
     }
+
+    private companion object {
+        const val APPRX_MONTH_IN_MILLIS: Long = 1000L * 60L * 60L * 24L * 30L
+        const val NUMBER_OF_MONTHS_TO_PASS = 4
+    }
 }
+
+private const val NUMBER_OF_LAUNCHES_REQUIRED = 5
 
 /**
  * Matches logic from [ReviewPromptController.shouldShowPrompt].
  * Kept for parity. To be replaced by a set of new triggers.
  */
 fun legacyReviewPromptTrigger(settings: Settings): Boolean {
-    val hasOpenedAtLeastFiveTimes = settings.numberOfAppLaunches >= NUMBER_OF_LAUNCHES_REQUIRED
+    val hasOpenedAtLeastFiveTimes =
+        settings.numberOfAppLaunches >= NUMBER_OF_LAUNCHES_REQUIRED
     return settings.isDefaultBrowser && hasOpenedAtLeastFiveTimes
 }
