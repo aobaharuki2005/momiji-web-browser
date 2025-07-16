@@ -97,3 +97,36 @@ add_task(async function test_delete_all() {
   });
   Assert.equal(notifications.length, 0, "Should get zero notification");
 });
+
+add_task(async function test_delete_all() {
+  const db = new MemoryNotificationDB();
+  const { notifications, byTag } = db.testGetRawMap();
+
+  // Save a notification
+  const origin = "https://example.com";
+  const scope = "https://example.com/";
+  await db.taskSave({
+    origin,
+    notification: {
+      id: "foo",
+      tag: "foo",
+      serviceWorkerRegistrationScope: scope,
+    },
+  });
+
+  Assert.ok(origin in notifications, "notification map should include origin");
+  Assert.ok(origin in byTag, "notification tag map should include origin");
+
+  await db.taskDelete({
+    origin,
+    id: "foo",
+  });
+  Assert.ok(
+    !(origin in notifications),
+    "notification map should not include origin"
+  );
+  Assert.ok(
+    !(origin in byTag),
+    "notification tag map should not include origin"
+  );
+});
