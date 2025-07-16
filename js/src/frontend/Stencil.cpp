@@ -3760,6 +3760,26 @@ const CompilationStencil* InitialStencilAndDelazifications::storeDelazification(
     return raw;
   }
 
+#ifdef DEBUG
+  // The delazification vector already has an entry for the function. This is an
+  // opportunity to test whether we are generating the same stencils.
+  {
+    const CompilationStencil* saved = delazifications_[functionIndex - 1];
+    raw->assertNoExternalDependency();
+    saved->assertNoExternalDependency();
+    MOZ_ASSERT(raw->source == saved->source);
+    MOZ_ASSERT(raw->scriptData.size() == saved->scriptData.size());
+    MOZ_ASSERT(raw->scriptExtra.size() == saved->scriptExtra.size());
+    MOZ_ASSERT(raw->gcThingData.size() == saved->gcThingData.size());
+    MOZ_ASSERT(raw->scopeData.size() == saved->scopeData.size());
+    MOZ_ASSERT(raw->scopeNames.size() == saved->scopeNames.size());
+    MOZ_ASSERT(raw->regExpData.size() == saved->regExpData.size());
+    MOZ_ASSERT(raw->bigIntData.size() == saved->bigIntData.size());
+    MOZ_ASSERT(raw->objLiteralData.size() == saved->objLiteralData.size());
+    MOZ_ASSERT(raw->parserAtomData.size() == saved->parserAtomData.size());
+  }
+#endif
+
   raw->Release();
   return delazifications_[functionIndex - 1];
 }
