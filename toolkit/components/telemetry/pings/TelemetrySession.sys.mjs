@@ -1086,6 +1086,8 @@ var Impl = {
         this._startupIO.startupSessionRestoreReadBytes,
         this._startupIO.startupSessionRestoreWriteBytes,
       ] = counters;
+      Glean.startupIo.read.sessionRestore.set(counters[0]);
+      Glean.startupIo.write.sessionRestore.set(counters[1]);
     }
     this._slowSQLStartup = Services.telemetry.slowSQL;
   },
@@ -1133,6 +1135,8 @@ var Impl = {
             this._startupIO.startupWindowVisibleReadBytes,
             this._startupIO.startupWindowVisibleWriteBytes,
           ] = counters;
+          Glean.startupIo.read.windowVisible.set(counters[0]);
+          Glean.startupIo.write.windowVisible.set(counters[1]);
         }
         break;
       case "sessionstore-windows-restored":

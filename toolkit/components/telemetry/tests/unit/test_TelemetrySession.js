@@ -365,6 +365,8 @@ function checkPayload(payload, reason, successfulPings) {
       payload.simpleMeasurements.startupSessionRestoreWriteBytes,
       0
     );
+    Assert.greater(Glean.startupIo.read.sessionRestore.testGetValue(), 0);
+    Assert.greater(Glean.startupIo.write.sessionRestore.testGetValue(), 0);
   }
 
   const TELEMETRY_SEND_SUCCESS = "TELEMETRY_SEND_SUCCESS";

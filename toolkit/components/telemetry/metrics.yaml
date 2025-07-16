@@ -1451,3 +1451,46 @@ third.party.modules:
                     type: array
                     items:
                       type: number
+
+startup.io:
+  read:
+    type: labeled_quantity
+    unit: bytes
+    description: |
+      Windows-only.
+      Cumulative bytes read by the application according to the OS, per startup
+      phase.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
+    expires: never
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    labels:
+      - sessionRestore
+      - windowVisible
+
+  write:
+    type: labeled_quantity
+    unit: bytes
+    description: |
+      Windows-only.
+      Cumulative bytes written by the application according to the OS, per startup
+      phase.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
+    expires: never
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    labels:
+      - sessionRestore
+      - windowVisible
