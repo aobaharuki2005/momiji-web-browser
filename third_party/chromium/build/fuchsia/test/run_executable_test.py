@@ -1,5 +1,5 @@
 #!/usr/bin/env vpython3
-# Copyright 2022 The Chromium Authors. All rights reserved.
+# Copyright 2022 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 """Implements commands for standalone CFv2 test executables."""
@@ -13,11 +13,14 @@ import sys
 
 from typing import List, Optional
 
-from common import get_component_uri, register_common_args, \
+from common import get_component_uri, get_host_arch, register_common_args, \
                    register_device_args, register_log_args, run_ffx_command
 from compatible_utils import map_filter_file_to_package_file
 from ffx_integration import FfxTestRunner
 from test_runner import TestRunner
+from test_server import setup_test_server
+
+DEFAULT_TEST_SERVER_CONCURRENCY = 4
 
 
 def _copy_custom_output_file(test_runner: FfxTestRunner, file: str,
@@ -33,25 +36,59 @@ def _copy_custom_output_file(test_runner: FfxTestRunner, file: str,
     shutil.copy(os.path.join(artifact_dir, file), dest)
 
 
+def _copy_coverage_files(test_runner: FfxTestRunner, dest: str) -> None:
+    """Copy debug data file from the device to the host."""
+
+    coverage_dir = test_runner.get_debug_data_directory()
+    if not coverage_dir:
+        logging.error(
+            'Failed to parse coverage data directory from test summary '
+            'output files. Not copying coverage files from the device.')
+        return
+    shutil.copytree(coverage_dir, dest, dirs_exist_ok=True)
+
+
+def _get_vulkan_args(use_vulkan: Optional[str]) -> List[str]:
+    """Helper function to set vulkan related flag."""
+
+    vulkan_args = []
+    if not use_vulkan:
+        if get_host_arch() == 'x64':
+            # TODO(crbug.com/1261646) Remove once Vulkan is enabled by
+            # default.
+            use_vulkan = 'native'
+        else:
+            # Use swiftshader on arm64 by default because most arm64 bots
+            # currently don't support Vulkan emulation.
+            use_vulkan = 'swiftshader'
+            vulkan_args.append('--ozone-platform=headless')
+    vulkan_args.append(f'--use-vulkan={use_vulkan}')
+    return vulkan_args
+
+
 class ExecutableTestRunner(TestRunner):
     """Test runner for running standalone test executables."""
 
-    def __init__(self,
-                 out_dir: str,
-                 test_args: List[str],
-                 test_name: str,
-                 target_id: Optional[str],
-                 logs_dir: Optional[str] = None) -> None:
+    def __init__(  # pylint: disable=too-many-arguments
+            self,
+            out_dir: str,
+            test_args: List[str],
+            test_name: str,
+            target_id: Optional[str],
+            code_coverage_dir: Optional[str],
+            logs_dir: Optional[str] = None) -> None:
         super().__init__(out_dir, test_args, [test_name], target_id)
+        if not self._test_args:
+            self._test_args = []
         self._test_name = test_name
+        self._code_coverage_dir = code_coverage_dir
         self._custom_artifact_directory = None
         self._isolated_script_test_output = None
         self._logs_dir = logs_dir
         self._test_launcher_summary_output = None
+        self._test_server = None
 
     def _get_args(self) -> List[str]:
-        if not self._test_args:
-            return []
         parser = argparse.ArgumentParser()
         parser.add_argument(
             '--isolated-script-test-output',
@@ -76,19 +113,31 @@ class ExecutableTestRunner(TestRunner):
             '--test-launcher-filter-file',
             help='Filter file(s) passed to target test process. Use ";" to '
             'separate multiple filter files.')
-        parser.add_argument('test_process_args',
-                            nargs='*',
-                            help='Arguments for the test process.')
+        parser.add_argument('--test-launcher-jobs',
+                            type=int,
+                            help='Sets the number of parallel test jobs.')
+        parser.add_argument('--enable-test-server',
+                            action='store_true',
+                            default=False,
+                            help='Enable Chrome test server spawner.')
+        parser.add_argument('--test-arg',
+                            dest='test_args',
+                            action='append',
+                            help='Legacy flag to pass in arguments for '
+                            'the test process. These arguments can now be '
+                            'passed in without a preceding "--" flag.')
+        parser.add_argument('--use-vulkan',
+                            help='\'native\', \'swiftshader\' or \'none\'.')
         args, child_args = parser.parse_known_args(self._test_args)
         if args.isolated_script_test_output:
             self._isolated_script_test_output = args.isolated_script_test_output
             child_args.append(
                 '--isolated-script-test-output=/custom_artifacts/%s' %
                 os.path.basename(self._isolated_script_test_output))
-        if args.test_launcher_shard_index:
+        if args.test_launcher_shard_index is not None:
             child_args.append('--test-launcher-shard-index=%d' %
                               args.test_launcher_shard_index)
-        if args.test_launcher_total_shards:
+        if args.test_launcher_total_shards is not None:
             child_args.append('--test-launcher-total-shards=%d' %
                               args.test_launcher_total_shards)
         if args.test_launcher_summary_output:
@@ -103,10 +152,23 @@ class ExecutableTestRunner(TestRunner):
                 args.test_launcher_filter_file.split(';'))
             child_args.append('--test-launcher-filter-file=' +
                               ';'.join(test_launcher_filter_files))
-        child_args.extend(args.test_process_args)
+        if args.test_launcher_jobs is not None:
+            test_concurrency = args.test_launcher_jobs
+        else:
+            test_concurrency = DEFAULT_TEST_SERVER_CONCURRENCY
+        if args.enable_test_server:
+            self._test_server, spawner_url_base = setup_test_server(
+                self._target_id, test_concurrency)
+            child_args.append('--remote-test-server-spawner-url-base=%s' %
+                              spawner_url_base)
+        child_args.extend(_get_vulkan_args(args.use_vulkan))
+        if args.test_args:
+            child_args.extend(args.test_args)
         return child_args
 
     def _postprocess(self, test_runner: FfxTestRunner) -> None:
+        if self._test_server:
+            self._test_server.Stop()
         if self._test_launcher_summary_output:
             _copy_custom_output_file(
                 test_runner,
@@ -115,8 +177,11 @@ class ExecutableTestRunner(TestRunner):
         if self._isolated_script_test_output:
             _copy_custom_output_file(
                 test_runner,
-                os.path.basename(self._test_launcher_summary_output),
+                os.path.basename(self._isolated_script_test_output),
                 self._isolated_script_test_output)
+        if self._code_coverage_dir:
+            _copy_coverage_files(test_runner,
+                                 os.path.basename(self._code_coverage_dir))
 
     def run_test(self) -> subprocess.Popen:
         test_args = self._get_args()
@@ -149,18 +214,31 @@ def create_executable_test_runner(runner_args: argparse.Namespace,
                                   test_args: List[str]):
     """Helper for creating an ExecutableTestRunner."""
 
+    if not runner_args.code_coverage:
+        runner_args.code_coverage_dir = None
     return ExecutableTestRunner(runner_args.out_dir, test_args,
                                 runner_args.test_type, runner_args.target_id,
+                                runner_args.code_coverage_dir,
                                 runner_args.logs_dir)
 
 
-def register_test_args(parser: argparse.ArgumentParser) -> None:
+def register_executable_test_args(parser: argparse.ArgumentParser) -> None:
     """Register common arguments for ExecutableTestRunner."""
 
     test_args = parser.add_argument_group('test', 'arguments for test running')
+    test_args.add_argument('--code-coverage',
+                           default=False,
+                           action='store_true',
+                           help='Gather code coverage information.')
+    test_args.add_argument('--code-coverage-dir',
+                           default=os.getcwd(),
+                           help='Directory to place code coverage '
+                           'information. Only relevant when --code-coverage '
+                           'is set to true. Defaults to current directory.')
     test_args.add_argument('--test-name',
                            dest='test_type',
-                           help='Name of the test package (e.g. unit_tests).')
+                           help='Name of the test package (e.g. '
+                           'unit_tests).')
 
 
 def main():
@@ -170,7 +248,7 @@ def main():
     register_common_args(parser)
     register_device_args(parser)
     register_log_args(parser)
-    register_test_args(parser)
+    register_executable_test_args(parser)
     runner_args, test_args = parser.parse_known_args()
     runner = create_executable_test_runner(runner_args, test_args)
     return runner.run_test().returncode

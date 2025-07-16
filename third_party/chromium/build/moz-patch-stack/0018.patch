@@ -8,7 +8,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7e1a138772ce49bd7
  1 file changed, 1 deletion(-)
 
 diff --git a/vs_toolchain.py b/vs_toolchain.py
-index 1d294cb90..d41603377 100755
+index 0f6846738..46305d9d2 100755
 --- a/vs_toolchain.py
 +++ b/vs_toolchain.py
 @@ -9,7 +9,6 @@ import collections

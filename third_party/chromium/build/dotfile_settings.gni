@@ -1,4 +1,4 @@
-# Copyright (c) 2016 The Chromium Authors. All rights reserved.
+# Copyright 2016 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -7,8 +7,6 @@
 
 build_dotfile_settings = {
   exec_script_whitelist = [
-    "//chromium/build/config/android/config.gni",
-    "//chromium/build/config/android/internal_rules.gni",
     "//chromium/build/config/android/rules.gni",
     "//chromium/build/config/chromeos/rules.gni",
     "//chromium/build/config/compiler/BUILD.gn",
@@ -39,6 +37,5 @@ build_dotfile_settings = {
     "//chromium/build/toolchain/win/toolchain.gni",
     "//chromium/build/toolchain/zos/BUILD.gn",
     "//chromium/build/util/branding.gni",
-    "//chromium/build/util/version.gni",
   ]
 }

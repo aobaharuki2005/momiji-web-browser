@@ -1,4 +1,4 @@
-# Copyright 2014 The Chromium Authors. All rights reserved.
+# Copyright 2014 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -109,15 +109,15 @@ class LocalDeviceTestRun(test_run.TestRun):
                 base_test_result.BaseTestResult(
                     self._GetUniqueTestName(test),
                     base_test_result.ResultType.TIMEOUT))
-        except Exception as e:  # pylint: disable=broad-except
+        except device_errors.DeviceUnreachableError:
+          # If the device is no longer reachable then terminate this
+          # run_tests_on_device call.
+          raise
+        except base_error.BaseError:
+          # If we get a device error but believe the device is still
+          # reachable, attempt to continue using it.
           if isinstance(tests, test_collection.TestCollection):
             rerun = test
-          if (isinstance(e, device_errors.DeviceUnreachableError)
-              or not isinstance(e, base_error.BaseError)):
-            # If we get a device error but believe the device is still
-            # reachable, attempt to continue using it. Otherwise, raise
-            # the exception and terminate this run_tests_on_device call.
-            raise
 
           consecutive_device_errors += 1
           if consecutive_device_errors >= 3:
@@ -184,9 +184,9 @@ class LocalDeviceTestRun(test_run.TestRun):
           results.append(try_results)
 
           try:
-            if self._ShouldShard():
+            if self._ShouldShardTestsForDevices():
               tc = test_collection.TestCollection(
-                  self._CreateShards(grouped_tests))
+                  self._CreateShardsForDevices(grouped_tests))
               self._env.parallel_devices.pMap(
                   run_tests_on_device, tc, try_results).pGet(None)
             else:
@@ -350,7 +350,7 @@ class LocalDeviceTestRun(test_run.TestRun):
           self._env.tool, device)
     return self._tools[str(device)]
 
-  def _CreateShards(self, tests):
+  def _CreateShardsForDevices(self, tests):
     raise NotImplementedError
 
   def _GetUniqueTestName(self, test):
@@ -360,6 +360,13 @@ class LocalDeviceTestRun(test_run.TestRun):
   def _ShouldRetry(self, test, result):
     # pylint: disable=no-self-use,unused-argument
     return True
+
+  #override
+  def GetTestsForListing(self):
+    ret = self._GetTests()
+    ret = FlattenTestList(ret)
+    ret.sort()
+    return ret
 
   def _GetTests(self):
     raise NotImplementedError
@@ -371,8 +378,19 @@ class LocalDeviceTestRun(test_run.TestRun):
   def _RunTest(self, device, test):
     raise NotImplementedError
 
-  def _ShouldShard(self):
+  def _ShouldShardTestsForDevices(self):
     raise NotImplementedError
+
+
+def FlattenTestList(values):
+  """Returns a list with all nested lists (shard groupings) expanded."""
+  ret = []
+  for v in values:
+    if isinstance(v, list):
+      ret += v
+    else:
+      ret.append(v)
+  return ret
 
 
 def SetAppCompatibilityFlagsIfNecessary(packages, device):

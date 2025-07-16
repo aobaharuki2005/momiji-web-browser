@@ -8,18 +8,27 @@ Depends on D149831
 Differential Revision: https://phabricator.services.mozilla.com/D149832
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3a785d486d97fc9cb263eafb0fe8f2148fc0b101
 ---
- config/BUILDCONFIG.gn                | 4 ++--
+ config/BUILDCONFIG.gn                | 6 +++---
  config/mac/mac_sdk.gni               | 6 +++---
  config/rust.gni                      | 4 ++--
  config/win/visual_studio_version.gni | 2 +-
  win/BUILD.gn                         | 4 ++--
- 5 files changed, 10 insertions(+), 10 deletions(-)
+ 5 files changed, 11 insertions(+), 11 deletions(-)
 
 diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
-index 1da9f6558..2e42dfc41 100644
+index 3384f7940..2060745c8 100644
 --- a/config/BUILDCONFIG.gn
 +++ b/config/BUILDCONFIG.gn
-@@ -243,8 +243,8 @@ if (target_os == "android") {
+@@ -233,7 +233,7 @@ if (host_toolchain == "") {
+ _default_toolchain = ""
+ 
+ if (target_os == "android") {
+-  assert(host_os == "linux", "Android builds are only supported on Linux.")
++  #assert(host_os == "linux", "Android builds are only supported on Linux.")
+   _default_toolchain = "//build/toolchain/android:android_clang_$target_cpu"
+ } else if (target_os == "chromeos" || target_os == "linux" || target_os == "openbsd") {
+   # See comments in build/toolchain/cros/BUILD.gn about board compiles.
+@@ -247,8 +247,8 @@ if (target_os == "android") {
  } else if (target_os == "ios") {
    _default_toolchain = "//build/toolchain/ios:ios_clang_$target_cpu"
  } else if (target_os == "mac") {
@@ -31,10 +40,10 @@ index 1da9f6558..2e42dfc41 100644
  } else if (target_os == "win") {
    # On Windows, we use the same toolchain for host and target by default.
 diff --git a/config/mac/mac_sdk.gni b/config/mac/mac_sdk.gni
-index 7b1761607..f04a3520c 100644
+index a7f315c30..396cb56a3 100644
 --- a/config/mac/mac_sdk.gni
 +++ b/config/mac/mac_sdk.gni
-@@ -88,9 +88,9 @@ if (use_system_xcode && (use_goma || use_remoteexec)) {
+@@ -95,9 +95,9 @@ if (use_system_xcode && (use_goma || use_remoteexec)) {
  }
  sdk_info_args += [ mac_sdk_name ]
  
@@ -48,7 +57,7 @@ index 7b1761607..f04a3520c 100644
    mac_sdk_path = _mac_sdk_result.sdk_path
  }
 diff --git a/config/rust.gni b/config/rust.gni
-index 42247b80c..defa694b3 100644
+index d0fd69625..937289172 100644
 --- a/config/rust.gni
 +++ b/config/rust.gni
 @@ -125,8 +125,8 @@ if (enable_rust) {
@@ -63,7 +72,7 @@ index 42247b80c..defa694b3 100644
  
      rust_sysroot = "//third_party/android_rust_toolchain/toolchain"
 diff --git a/config/win/visual_studio_version.gni b/config/win/visual_studio_version.gni
-index 982fbe8d3..80eb0355c 100644
+index d90244682..955f2a85a 100644
 --- a/config/win/visual_studio_version.gni
 +++ b/config/win/visual_studio_version.gni
 @@ -35,5 +35,5 @@ if (visual_studio_path == "") {
@@ -74,7 +83,7 @@ index 982fbe8d3..80eb0355c 100644
 +  visual_studio_runtime_dirs = ""
  }
 diff --git a/win/BUILD.gn b/win/BUILD.gn
-index 47773498e..fd4a2a318 100644
+index 17b5ac428..e2a335906 100644
 --- a/win/BUILD.gn
 +++ b/win/BUILD.gn
 @@ -19,8 +19,8 @@ windows_manifest("default_exe_manifest") {

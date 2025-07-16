@@ -1,4 +1,4 @@
-# Copyright 2014 The Chromium Authors. All rights reserved.
+# Copyright 2014 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -18,14 +18,12 @@ if (is_ios) {
 group("deps") {
   if (using_sanitizer) {
     public_configs = [
-      ":sanitizer_options_link_helper",
-
       # Even when a target removes default_sanitizer_flags, it may be depending
       # on a library that did not remove default_sanitizer_flags. Thus, we need
       # to add the ldflags here as well as in default_sanitizer_flags.
       ":default_sanitizer_ldflags",
     ]
-    deps = [ ":options_sources" ]
+    deps = []
     if (!is_fuchsia) {
       if (is_win) {
         exe = ".exe"
@@ -36,6 +34,11 @@ group("deps") {
         "//tools/valgrind/asan/",
         "$clang_base_path/bin/llvm-symbolizer${exe}",
       ]
+    }
+    if (is_asan || is_lsan || is_msan || is_tsan || is_ubsan || is_ubsan_vptr ||
+        is_ubsan_security) {
+      public_configs += [ ":sanitizer_options_link_helper" ]
+      deps += [ ":options_sources" ]
     }
     if (use_prebuilt_instrumented_libraries ||
         use_locally_built_instrumented_libraries) {
@@ -171,9 +174,6 @@ config("default_sanitizer_ldflags") {
     }
     if (is_ubsan || is_ubsan_security) {
       ldflags += [ "-fsanitize=undefined" ]
-    }
-    if (is_ubsan_null) {
-      ldflags += [ "-fsanitize=null" ]
     }
     if (is_ubsan_vptr) {
       ldflags += [ "-fsanitize=vptr" ]
@@ -403,6 +403,9 @@ config("msan_flags") {
 
       # TODO(https://crbug.com/1317909): evaluate and possibly enable
       "-fno-sanitize-memory-use-after-dtor",
+
+      # TODO(https://crbug.com/1369167): evaluate and possibly enable
+      "-fno-sanitize-memory-param-retval",
     ]
   }
 }
@@ -435,6 +438,7 @@ config("ubsan_flags") {
       "-fsanitize=float-divide-by-zero",
       "-fsanitize=integer-divide-by-zero",
       "-fsanitize=null",
+      "-fsanitize=nonnull-attribute",
       "-fsanitize=object-size",
       "-fsanitize=return",
       "-fsanitize=returns-nonnull-attribute",
@@ -486,12 +490,6 @@ config("ubsan_security_flags") {
   }
 }
 
-config("ubsan_null_flags") {
-  if (is_ubsan_null) {
-    cflags = [ "-fsanitize=null" ]
-  }
-}
-
 config("ubsan_vptr_flags") {
   if (is_ubsan_vptr) {
     if (!defined(ubsan_vptr_ignorelist_path)) {
@@ -523,7 +521,6 @@ all_sanitizer_configs = [
   ":tsan_flags",
   ":ubsan_flags",
   ":ubsan_no_recover",
-  ":ubsan_null_flags",
   ":ubsan_security_flags",
   ":ubsan_vptr_flags",
   ":fuzzing_build_mode",

@@ -1,6 +1,6 @@
 #!/usr/bin/env vpython3
 #
-# Copyright (c) 2013 The Chromium Authors. All rights reserved.
+# Copyright 2013 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -394,7 +394,7 @@ def FinishProvisioning(device, options):
         get_date_command, as_root=True, single_line=True).replace('"', '')
     device_time = datetime.datetime.strptime(device_time, "%Y%m%d.%H%M%S")
     correct_time = datetime.datetime.strptime(strgmtime, date_format)
-    tdelta = (correct_time - device_time).seconds
+    tdelta = abs(correct_time - device_time).seconds
     if tdelta <= 1:
       logging.info('Date/time successfully set on %s', device)
       return True

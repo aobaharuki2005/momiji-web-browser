@@ -1,5 +1,5 @@
 #!/usr/bin/env vpython3
-# Copyright 2021 The Chromium Authors. All rights reserved.
+# Copyright 2021 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -15,6 +15,12 @@ import unittest.mock as mock
 from argparse import Namespace
 from ffx_session import FfxRunner
 from fvdl_target import FvdlTarget, _SSH_KEY_DIR
+
+_EMU_METADATA = {
+    "disk_images": ["fuchsia.blk"],
+    "initial_ramdisk": "fuchsia.zbi",
+    "kernel": "fuchsia.bin"
+}
 
 
 @mock.patch.object(FfxRunner, 'daemon_stop')
@@ -33,6 +39,8 @@ class TestBuildCommandFvdlTarget(unittest.TestCase):
                           cpu_cores=10)
     common.EnsurePathExists = mock.MagicMock(return_value='image')
     boot_data.ProvisionSSH = mock.MagicMock()
+    FvdlTarget._GetPbPath = mock.MagicMock(return_value='path')
+    FvdlTarget._GetEmuMetadata = mock.MagicMock(return_value=_EMU_METADATA)
     FvdlTarget._Shutdown = mock.MagicMock()
 
   def testBasicEmuCommand(self, mock_daemon_stop):

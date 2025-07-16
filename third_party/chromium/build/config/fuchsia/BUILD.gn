@@ -1,10 +1,11 @@
-# Copyright 2017 The Chromium Authors. All rights reserved.
+# Copyright 2017 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 import("//chromium/build/config/chromecast_build.gni")
 import("//chromium/build/config/clang/clang.gni")
 import("//chromium/build/config/fuchsia/generate_runner_scripts.gni")
+import("//third_party/fuchsia-sdk/sdk/build/config/config.gni")
 
 assert(is_fuchsia)
 assert(!is_posix)
@@ -45,11 +46,17 @@ group("deployment_resources") {
     "//third_party/fuchsia-sdk/sdk/tools/${test_host_cpu}/zbi",
     "//third_party/fuchsia-sdk/sdk/tools/${test_host_cpu}/zbi-meta.json",
   ]
+
+  if (fuchsia_additional_boot_images == []) {
+    data += [ "${boot_image_root}" ]
+  }
+
+  foreach(fuchsia_additional_boot_image, fuchsia_additional_boot_images) {
+    data += [ "${fuchsia_additional_boot_image}/" ]
+  }
+
   if (test_isolate_uses_emulator) {
     data += [
-      "${boot_image_root}/qemu/qemu-kernel.kernel",
-      "${boot_image_root}/qemu/storage-full.blk",
-      "${boot_image_root}/qemu/zircon-a.zbi",
       "//third_party/fuchsia-sdk/sdk/bin/device_launcher.version",
       "//third_party/fuchsia-sdk/sdk/tools/${test_host_cpu}/fvdl",
     ]
@@ -61,11 +68,14 @@ group("deployment_resources") {
         "//third_party/fuchsia-sdk/sdk/tools/${test_host_cpu}/qemu_internal-meta.json",
       ]
     } else if (test_host_cpu == "arm64") {
-      data += [ "//third_party/qemu-${host_os}-${test_host_cpu}/" ]
+      data += [
+        "//third_party/qemu-${host_os}-${test_host_cpu}/",
+
+        # TODO(https://crbug.com/1336776): remove when ffx has native support
+        # for starting emulator on arm64 host.
+        "//third_party/fuchsia-sdk/sdk/tools/x64/qemu_internal-meta.json",
+      ]
     }
-  }
-  foreach(fuchsia_additional_boot_image, fuchsia_additional_boot_images) {
-    data += [ "${fuchsia_additional_boot_image}/" ]
   }
 }
 

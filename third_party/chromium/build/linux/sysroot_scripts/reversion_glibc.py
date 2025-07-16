@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2021 The Chromium Authors. All rights reserved.
+# Copyright 2021 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -10,8 +10,10 @@ import re
 import subprocess
 import sys
 
-# This constant comes from https://crbug.com/580892
-MAX_ALLOWED_GLIBC_VERSION = [2, 17]
+# This constant comes from the oldest glibc version in
+# //chrome/installer/linux/debian/dist_package_versions.json and
+# //chrome/installer/linux/rpm/dist_package_provides.json
+MAX_ALLOWED_GLIBC_VERSION = [2, 26]
 
 VERSION_PATTERN = re.compile('GLIBC_([0-9\.]+)')
 SECTION_PATTERN = re.compile(r'^ *\[ *[0-9]+\] +(\S+) +\S+ + ([0-9a-f]+) .*$')
@@ -60,12 +62,17 @@ for line in stdout.decode("utf-8").split('\n'):
   # The default version will have '@@' in the name.
   is_default = len(name) > 2
 
-  match = re.match(VERSION_PATTERN, version)
-  # Ignore symbols versioned with GLIBC_PRIVATE.
-  if not match:
-    continue
+  if version.startswith('XCRYPT_'):
+    # Prefer GLIBC_* versioned symbols over XCRYPT_* ones.  Set the version to
+    # something > MAX_ALLOWED_GLIBC_VERSION so this symbol will not be picked.
+    version = [float('inf')]
+  else:
+    match = re.match(VERSION_PATTERN, version)
+    # Ignore symbols versioned with GLIBC_PRIVATE.
+    if not match:
+      continue
+    version = [int(part) for part in match.group(1).split('.')]
 
-  version = [int(part) for part in match.group(1).split('.')]
   if version < MAX_ALLOWED_GLIBC_VERSION:
     old_supported_version = supported_version.get(base_name, ([-1], -1))
     supported_version[base_name] = max((version, index), old_supported_version)

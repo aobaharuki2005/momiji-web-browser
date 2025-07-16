@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2015 The Chromium Authors. All rights reserved.
+# Copyright 2015 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -29,7 +29,7 @@ def GetScriptName():
 
 def GenerateOutput(constant_definitions):
   template = string.Template("""
-// Copyright 2015 The Chromium Authors. All rights reserved.
+// Copyright 2015 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -106,8 +106,6 @@ def _DoMain(argv):
       'REMOTING_HOST')
   values['GOOGLE_CLIENT_SECRET_REMOTING_HOST'] = (google_api_keys.
       GetClientSecret('REMOTING_HOST'))
-  values['GOOGLE_CLIENT_ID_REMOTING_IDENTITY_API'] = (google_api_keys.
-      GetClientID('REMOTING_IDENTITY_API'))
 
   if options.out:
     _DoWriteJavaOutput(options.out, values)

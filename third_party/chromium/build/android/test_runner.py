@@ -1,6 +1,6 @@
 #!/usr/bin/env vpython3
 #
-# Copyright 2013 The Chromium Authors. All rights reserved.
+# Copyright 2013 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -181,6 +181,11 @@ def AddCommonOptions(parser):
       action='store_true',
       help='Whether to archive test output locally and generate '
            'a local results detail page.')
+
+  parser.add_argument('--list-tests',
+                      action='store_true',
+                      help='List available tests and exit.')
+
   parser.add_argument('--wrapper-script-args',
                       help='A string of args that were passed to the wrapper '
                       'script. This should probably not be edited by a '
@@ -310,6 +315,10 @@ def AddDeviceOptions(parser):
       action='store_true',
       dest='upload_logcats_file',
       help='Whether to upload logcat file to logdog.')
+  parser.add_argument(
+      '--use-persistent-shell',
+      action='store_true',
+      help='Uses a persistent shell connection for the adb connection.')
 
   logcat_output_group = parser.add_mutually_exclusive_group()
   logcat_output_group.add_argument(
@@ -428,6 +437,13 @@ def AddInstrumentationTestOptions(parser):
 
   parser = parser.add_argument_group('instrumentation arguments')
 
+  parser.add_argument('--additional-apex',
+                      action='append',
+                      dest='additional_apexs',
+                      default=[],
+                      type=_RealPath,
+                      help='Additional apex that must be installed on '
+                      'the device when the tests are run')
   parser.add_argument(
       '--additional-apk',
       action='append', dest='additional_apks', default=[],
@@ -459,6 +475,11 @@ def AddInstrumentationTestOptions(parser):
   parser.add_argument(
       '--apk-under-test',
       help='Path or name of the apk under test.')
+  parser.add_argument(
+      '--store-data-in-app-directory',
+      action='store_true',
+      help='Store test data in the application\'s data directory. By default '
+      'the test data is stored in the external storage folder.')
   parser.add_argument(
       '--module',
       action='append',
@@ -527,6 +548,20 @@ def AddInstrumentationTestOptions(parser):
            "on Nougat the provider can't be determined and so "
            'the system will choose the default provider.')
   parser.add_argument(
+      '--run-setup-command',
+      default=[],
+      action='append',
+      dest='run_setup_commands',
+      help='This can be used to run a custom shell command on the device as a '
+      'setup step')
+  parser.add_argument(
+      '--run-teardown-command',
+      default=[],
+      action='append',
+      dest='run_teardown_commands',
+      help='This can be used to run a custom shell command on the device as a '
+      'teardown step')
+  parser.add_argument(
       '--runtime-deps-path',
       dest='runtime_deps_path', type=os.path.realpath,
       help='Runtime data dependency file from GN.')
@@ -570,9 +605,6 @@ def AddInstrumentationTestOptions(parser):
       help='Install the test apk as an instant app. '
       'Instant apps run in a more restrictive execution environment.')
   parser.add_argument(
-      '--test-jar',
-      help='Path of jar containing test java files.')
-  parser.add_argument(
       '--test-launcher-batch-limit',
       dest='test_launcher_batch_limit',
       type=int,
@@ -584,6 +616,11 @@ def AddInstrumentationTestOptions(parser):
       type=float,
       help='Factor by which timeouts should be scaled.')
   parser.add_argument(
+      '--is-unit-test',
+      action='store_true',
+      help=('Specify the test suite as composed of unit tests, blocking '
+            'certain operations.'))
+  parser.add_argument(
       '-w', '--wait-for-java-debugger', action='store_true',
       help='Wait for java debugger to attach before running any application '
            'code. Also disables test timeouts and sets retries=0.')
@@ -594,6 +631,12 @@ def AddInstrumentationTestOptions(parser):
                       default=False,
                       help='If true, WPR server runs in record mode.'
                       'otherwise, runs in replay mode.')
+
+  parser.add_argument(
+      '--approve-app-links',
+      help='Force enables Digital Asset Link verification for the provided '
+      'package and domain, example usage: --approve-app-links '
+      'com.android.package:www.example.com')
 
   # These arguments are suppressed from the help text because they should
   # only ever be specified by an intermediate script.
@@ -709,6 +752,8 @@ def AddJUnitTestOptions(parser):
   parser.add_argument(
       '--robolectric-runtime-deps-dir',
       help='Path to runtime deps for Robolectric.')
+  parser.add_argument('--native-libs-dir',
+                      help='Path to search for native libraries.')
   parser.add_argument(
       '--resource-apk',
       required=True,
@@ -1024,6 +1069,19 @@ def RunTestsInPlatformMode(args, result_sink_client=None):
   contexts_to_notify_on_sigterm.append(env)
   contexts_to_notify_on_sigterm.append(test_run)
 
+  if args.list_tests:
+    try:
+      with out_manager, env, test_instance, test_run:
+        test_names = test_run.GetTestsForListing()
+      print('There are {} tests:'.format(len(test_names)))
+      for n in test_names:
+        print(n)
+      return 0
+    except NotImplementedError:
+      sys.stderr.write('Test does not support --list-tests (type={}).\n'.format(
+          args.command))
+      return 1
+
   ### Run.
   with out_manager, json_finalizer():
     # |raw_logs_fh| is only used by Robolectric tests.
@@ -1066,9 +1124,10 @@ def RunTestsInPlatformMode(args, result_sink_client=None):
             flakiness_server=getattr(args, 'flakiness_dashboard_server',
                                      None))
 
-        if iteration_results.GetNotPass():
-          _LogRerunStatement(iteration_results.GetNotPass(),
-                             args.wrapper_script_args)
+        failed_tests = (iteration_results.GetNotPass() -
+                        iteration_results.GetSkip())
+        if failed_tests:
+          _LogRerunStatement(failed_tests, args.wrapper_script_args)
 
         if args.break_on_failure and not iteration_results.DidRunPass():
           break
@@ -1156,10 +1215,15 @@ def _LogRerunStatement(failed_tests, wrapper_arg_str):
                       'test filter file.')
     return
 
-  test_filter_file = os.path.join(os.path.relpath(constants.GetOutDirectory()),
+  output_directory = constants.GetOutDirectory()
+  if not os.path.exists(output_directory):
+    logging.error('Output directory not found. Unable to generate failing '
+                  'test filter file.')
+    return
+
+  test_filter_file = os.path.join(os.path.relpath(output_directory),
                                   _RERUN_FAILED_TESTS_FILE)
-  arg_list = shlex.split(
-      wrapper_arg_str.strip('\'')) if wrapper_arg_str else sys.argv
+  arg_list = shlex.split(wrapper_arg_str) if wrapper_arg_str else sys.argv
   index = 0
   while index < len(arg_list):
     arg = arg_list[index]

@@ -1,12 +1,9 @@
-# Copyright 2014 The Chromium Authors. All rights reserved.
+# Copyright 2014 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# TODO(crbug.com/1259122): Remove //build/config/sanitizers/sanitizers.gni when
-# Chromium Clang ship with a catalyst version of the compiler runtime.
-
 import("//chromium/build/config/ios/ios_sdk.gni")
-import("//chromium/build/config/sanitizers/sanitizers.gni")
+import("//chromium/build/toolchain/apple/toolchain.gni")
 import("//chromium/build/toolchain/goma.gni")
 import("//chromium/build/toolchain/rbe.gni")
 import("//chromium/build/toolchain/toolchain.gni")
@@ -69,11 +66,6 @@ config("compiler") {
   # an Objective C struct won't be called, which is very bad.
   cflags_objcc = [ "-fobjc-call-cxx-cdtors" ]
 
-  # TODO(crbug.com/1331345) Disable sprintf errors in Xcode 14 beta 1.
-  if (xcode_version_int >= 1400) {
-    cflags += [ "-Wno-deprecated-declarations" ]
-  }
-
   ldflags = common_flags
 }
 
@@ -114,14 +106,6 @@ config("runtime_library") {
       "-Fsystem",
       "$_sdk_root/System/iOSSupport/System/Library/Frameworks",
     ]
-  }
-
-  if (enable_ios_bitcode) {
-    if (is_debug) {
-      common_flags += [ "-fembed-bitcode-marker" ]
-    } else {
-      common_flags += [ "-fembed-bitcode" ]
-    }
   }
 
   asmflags = common_flags
@@ -167,30 +151,34 @@ config("ios_dynamic_flags") {
 
   # The path to the Swift compatibility libraries (required to run code built
   # with version N of the SDK on older version of the OS) is relative to the
-  # toolchains directory and changes with the environment.
-  _swift_compatibility_libs_dir_prefix = "$ios_toolchains_path/usr/lib/swift"
+  # toolchains directory and changes with the environment when using the
+  # system toolchain. When using the hermetic swift toolchain instead, those
+  # libraries are relative to $swift_toolchain_path.
+  if (swift_toolchain_path == "") {
+    _swift_compatibility_libs_prefix = ios_toolchains_path
+  } else {
+    _swift_compatibility_libs_prefix = swift_toolchain_path
+  }
+
   if (target_environment == "simulator") {
-    _swift_compatibility_libs_dir =
-        "$_swift_compatibility_libs_dir_prefix/iphonesimulator"
+    _swift_compatibility_libs_suffix = "iphonesimulator"
   } else if (target_environment == "device") {
-    _swift_compatibility_libs_dir =
-        "$_swift_compatibility_libs_dir_prefix/iphoneos"
+    _swift_compatibility_libs_suffix = "iphoneos"
   } else if (target_environment == "catalyst") {
     # The Swift compatibility libraries have changed location starting with
     # Xcode 13.0, so check the version of Xcode when deciding which path to
     # use.
     if (xcode_version_int >= 1300) {
-      _swift_compatibility_libs_dir =
-          "$_swift_compatibility_libs_dir_prefix/macosx"
+      _swift_compatibility_libs_suffix = "macosx"
     } else {
-      _swift_compatibility_libs_dir =
-          "$_swift_compatibility_libs_dir_prefix/maccatalyst"
+      _swift_compatibility_libs_suffix = "maccatalyst"
     }
   }
 
   lib_dirs = [
     "$ios_sdk_path/usr/lib/swift",
-    _swift_compatibility_libs_dir,
+    "$_swift_compatibility_libs_prefix/usr/lib/swift/" +
+        "$_swift_compatibility_libs_suffix",
   ]
 
   # When building for catalyst, some Swift support libraries are in a
@@ -236,7 +224,7 @@ config("xctest_config") {
 }
 
 config("enable_swift_cxx_interop") {
-  swiftflags = [ "-enable-cxx-interop" ]
+  swiftflags = [ "-enable-experimental-cxx-interop" ]
 }
 
 group("xctest") {
@@ -287,7 +275,10 @@ action("xctest_runner_without_arm64e") {
     xcode_version,
   ]
 
+  # When running under ASan, the ASan runtime library must be packaged alongside
+  # the test runner binary.
+  deps = [ "//chromium/build/config/sanitizers:deps" ]
   if (use_system_xcode && (use_goma || use_remoteexec)) {
-    deps = [ ":copy_xctrunner_app" ]
+    deps += [ ":copy_xctrunner_app" ]
   }
 }

@@ -18,10 +18,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/aad17933ade017660
  5 files changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index fc4a7e2f8..1c2019cd4 100644
+index e29fa2294..1b215dbfa 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
-@@ -1817,7 +1817,7 @@ config("no_rtti") {
+@@ -1871,7 +1871,7 @@ config("no_rtti") {
  # to heap-allocated memory are passed over shared library boundaries.
  config("export_dynamic") {
    # TODO(crbug.com/1052397): Revisit after target_os flip is completed.
@@ -31,7 +31,7 @@ index fc4a7e2f8..1c2019cd4 100644
    }
  }
 diff --git a/config/linux/gtk/gtk.gni b/config/linux/gtk/gtk.gni
-index 2362caafa..591c476f9 100644
+index 9e6131d4c..4f560b290 100644
 --- a/config/linux/gtk/gtk.gni
 +++ b/config/linux/gtk/gtk.gni
 @@ -6,7 +6,7 @@ import("//build/config/ui.gni")
@@ -44,7 +44,7 @@ index 2362caafa..591c476f9 100644
    # The (major) version of GTK to build against.  A different version may be
    # loaded at runtime.
 diff --git a/config/linux/libdrm/BUILD.gn b/config/linux/libdrm/BUILD.gn
-index bf53fdb2c..a51b17812 100644
+index 31ab0d8da..7791c7e7c 100644
 --- a/config/linux/libdrm/BUILD.gn
 +++ b/config/linux/libdrm/BUILD.gn
 @@ -11,7 +11,7 @@ declare_args() {
@@ -57,7 +57,7 @@ index bf53fdb2c..a51b17812 100644
  
  if (use_system_libdrm) {
 diff --git a/config/ozone.gni b/config/ozone.gni
-index 3bbd9eaa8..b4887eaae 100644
+index 9eee45d2d..05e3319b9 100644
 --- a/config/ozone.gni
 +++ b/config/ozone.gni
 @@ -9,7 +9,7 @@ import("//build/toolchain/toolchain.gni")
@@ -79,7 +79,7 @@ index 3bbd9eaa8..b4887eaae 100644
        ozone_platform_wayland = true
        ozone_platform_x11 = true
 diff --git a/config/ui.gni b/config/ui.gni
-index 86dfbaaf0..b786a1c29 100644
+index 3e2c9fe53..b62dfa56d 100644
 --- a/config/ui.gni
 +++ b/config/ui.gni
 @@ -33,7 +33,7 @@ declare_args() {

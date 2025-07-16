@@ -1,4 +1,4 @@
-# Copyright 2018 The Chromium Authors. All rights reserved.
+# Copyright 2018 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -112,9 +112,6 @@ def AddCommonArgs(arg_parser):
   package_args.add_argument(
       '--package-name',
       help='Name of the package to execute, defined in ' + 'package metadata.')
-  package_args.add_argument('--component-version',
-                            help='Component version of the package to execute',
-                            default='1')
 
   emu_args = arg_parser.add_argument_group('emu', 'General emulator arguments')
   emu_args.add_argument('--cpu-cores',

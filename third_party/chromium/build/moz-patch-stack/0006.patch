@@ -13,7 +13,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/243ea5e6411dc1b76
  1 file changed, 32 insertions(+), 29 deletions(-)
 
 diff --git a/toolchain/win/setup_toolchain.py b/toolchain/win/setup_toolchain.py
-index e680ba07e..a5ed5163d 100644
+index 112690a7f..284438278 100644
 --- a/toolchain/win/setup_toolchain.py
 +++ b/toolchain/win/setup_toolchain.py
 @@ -251,7 +251,7 @@ def main():
@@ -51,7 +51,7 @@ index e680ba07e..a5ed5163d 100644
 -
 -      if (environment_block_name != ''):
 -        env_block = _FormatAsEnvironmentBlock(env)
--        with open(environment_block_name, 'w') as f:
+-        with open(environment_block_name, 'w', encoding='utf8') as f:
 -          f.write(env_block)
 -
 +#   for cpu in cpus:
@@ -76,7 +76,7 @@ index e680ba07e..a5ed5163d 100644
 +# 
 +#       if (environment_block_name != ''):
 +#         env_block = _FormatAsEnvironmentBlock(env)
-+#         with open(environment_block_name, 'w') as f:
++#         with open(environment_block_name, 'w', encoding='utf8') as f:
 +#           f.write(env_block)
 +
 +# We don't really use any of this information so it can be skipped altogether

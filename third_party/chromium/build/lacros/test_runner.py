@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2020 The Chromium Authors. All rights reserved.
+# Copyright 2020 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 """This script facilitates running tests for lacros on Linux.
@@ -112,6 +112,19 @@ _TARGETS_REQUIRE_MOJO_CROSAPI = [
     'lacros_chrome_browsertests',
     'lacros_chrome_browsertests_run_in_series'
 ]
+
+# Default test filter file for each target. These filter files will be
+# used by default if no other filter file get specified.
+_DEFAULT_FILTER_FILES_MAPPING = {
+    'browser_tests': 'linux-lacros.browser_tests.filter',
+    'components_unittests': 'linux-lacros.components_unittests.filter',
+    'content_browsertests': 'linux-lacros.content_browsertests.filter',
+    'interactive_ui_tests': 'linux-lacros.interactive_ui_tests.filter',
+    'lacros_chrome_browsertests':
+    'linux-lacros.lacros_chrome_browsertests.filter',
+    'sync_integration_tests': 'linux-lacros.sync_integration_tests.filter',
+    'unit_tests': 'linux-lacros.unit_tests.filter',
+}
 
 
 def _GetAshChromeDirPath(version):
@@ -362,6 +375,35 @@ def _IsRunningOnBots(forward_args):
   return '--test-launcher-bot-mode' in forward_args
 
 
+def _KillNicely(proc, timeout_secs=0.5):
+  """Kills a subprocess nicely.
+
+  Args:
+    proc: The subprocess to kill.
+    timeout_secs: The timeout to wait in seconds.
+  """
+  if proc and proc.poll() is None:
+    proc.terminate()
+    try:
+      proc.wait(timeout_secs)
+    except subprocess.TimeoutExpired:
+      proc.kill()
+      proc.wait()
+
+
+def _ClearDir(dirpath):
+  """Deletes everything within the directory.
+
+  Args:
+    dirpath: The path of the directory.
+  """
+  for e in os.scandir(dirpath):
+    if e.is_dir():
+      shutil.rmtree(e.path)
+    elif e.is_file():
+      os.remove(e.path)
+
+
 def _RunTestWithAshChrome(args, forward_args):
   """Runs tests with ash-chrome.
 
@@ -423,6 +465,7 @@ lacros_version_skew_tests_v92.0.4515.130/test_ash_chrome
     ash_ready_file = '%s/ash_ready.txt' % tmp_ash_data_dir_name
     enable_mojo_crosapi = any(t == os.path.basename(args.command)
                               for t in _TARGETS_REQUIRE_MOJO_CROSAPI)
+    ash_wayland_socket_name = 'wayland-exo'
 
     ash_process = None
     ash_env = os.environ.copy()
@@ -432,9 +475,15 @@ lacros_version_skew_tests_v92.0.4515.130/test_ash_chrome
         '--user-data-dir=%s' % tmp_ash_data_dir_name,
         '--enable-wayland-server',
         '--no-startup-window',
+        '--disable-lacros-keep-alive',
+        '--disable-login-lacros-opening',
         '--enable-features=LacrosSupport,LacrosPrimary,LacrosOnly',
         '--ash-ready-file-path=%s' % ash_ready_file,
+        '--wayland-server-socket=%s' % ash_wayland_socket_name,
     ]
+    if '--enable-pixel-output-in-tests' not in forward_args:
+      ash_cmd.append('--disable-gl-drawing-for-tests')
+
     if enable_mojo_crosapi:
       ash_cmd.append(lacros_mojo_socket_arg)
 
@@ -484,8 +533,11 @@ lacros_version_skew_tests_v92.0.4515.130/test_ash_chrome
       logging.warning('Are you using test_ash_chrome?')
       logging.warning('Printing the output of "ps aux" for debugging:')
       subprocess.call(['ps', 'aux'])
-      if ash_process and ash_process.poll() is None:
-        ash_process.kill()
+      _KillNicely(ash_process)
+
+      # Clean up for retry.
+      _ClearDir(tmp_xdg_dir_name)
+      _ClearDir(tmp_ash_data_dir_name)
 
     if not ash_process_has_started:
       raise RuntimeError('Timed out waiting for ash-chrome to start')
@@ -495,17 +547,14 @@ lacros_version_skew_tests_v92.0.4515.130/test_ash_chrome
       forward_args.append(lacros_mojo_socket_arg)
 
     test_env = os.environ.copy()
+    test_env['WAYLAND_DISPLAY'] = ash_wayland_socket_name
     test_env['EGL_PLATFORM'] = 'surfaceless'
     test_env['XDG_RUNTIME_DIR'] = tmp_xdg_dir_name
     test_process = subprocess.Popen([args.command] + forward_args, env=test_env)
     return test_process.wait()
 
   finally:
-    if ash_process and ash_process.poll() is None:
-      ash_process.terminate()
-      # Allow process to do cleanup and exit gracefully before killing.
-      time.sleep(0.5)
-      ash_process.kill()
+    _KillNicely(ash_process)
 
     shutil.rmtree(tmp_xdg_dir_name, ignore_errors=True)
     shutil.rmtree(tmp_ash_data_dir_name, ignore_errors=True)
@@ -522,10 +571,7 @@ def _RunTestDirectly(args, forward_args):
     p = subprocess.Popen([args.command] + forward_args)
     return p.wait()
   finally:
-    if p and p.poll() is None:
-      p.terminate()
-      time.sleep(0.5)
-      p.kill()
+    _KillNicely(p)
 
 
 def _HandleSignal(sig, _):
@@ -544,6 +590,16 @@ def _HandleSignal(sig, _):
   sys.exit(128 + sig)
 
 
+def _ExpandFilterFileIfNeeded(test_target, forward_args):
+  if (test_target in _DEFAULT_FILTER_FILES_MAPPING.keys() and not any(
+      [arg.startswith('--test-launcher-filter-file') for arg in forward_args])):
+    file_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), '..', '..', 'testing',
+                     'buildbot', 'filters',
+                     _DEFAULT_FILTER_FILES_MAPPING[test_target]))
+    forward_args.append(f'--test-launcher-filter-file={file_path}')
+
+
 def _RunTest(args, forward_args):
   """Runs tests with given args.
 
@@ -559,13 +615,15 @@ def _RunTest(args, forward_args):
     raise RuntimeError('Specified test command: "%s" doesn\'t exist' %
                        args.command)
 
+  test_target = os.path.basename(args.command)
+  _ExpandFilterFileIfNeeded(test_target, forward_args)
+
   # |_TARGETS_REQUIRE_ASH_CHROME| may not always be accurate as it is updated
   # with a best effort only, therefore, allow the invoker to override the
   # behavior with a specified ash-chrome version, which makes sure that
   # automated CI/CQ builders would always work correctly.
   requires_ash_chrome = any(
-      re.match(t, os.path.basename(args.command))
-      for t in _TARGETS_REQUIRE_ASH_CHROME)
+      re.match(t, test_target) for t in _TARGETS_REQUIRE_ASH_CHROME)
   if not requires_ash_chrome and not args.ash_chrome_version:
     return _RunTestDirectly(args, forward_args)
 

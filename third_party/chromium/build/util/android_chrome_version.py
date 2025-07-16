@@ -1,4 +1,5 @@
-# Copyright 2019 The Chromium Authors. All rights reserved.
+#!/usr/bin/env python3
+# Copyright 2019 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 """Different build variants of Chrome for Android have different version codes.
@@ -23,6 +24,13 @@ b) Firebase project support (used by official builders) requires unique
 WEBVIEW_STABLE, WEBVIEW_BETA, WEBVIEW_DEV are all used for standalone webview,
 whereas the others are used for various chrome APKs.
 
+TRICHROME_BETA is used for TrichromeChrome, TrichromeWebView, and
+TrichromeLibrary when these are compiled to use the stable package name. Similar
+to how WEBVIEW_STABLE/WEBVIEW_BETA work, this allows users to opt into the open
+Beta Track for the stable package. When Trichrome is configured to use a
+distinct package name for the Beta package, the version code will use TRICHROME
+instead of TRICHROME_BETA.
+
 Note that a package digit of '3' for Webview is reserved for Trichrome Webview.
 The same versionCode is used for both Trichrome Chrome and Trichrome Webview.
 
@@ -37,17 +45,20 @@ For example:
 
 """
 
+import argparse
+from collections import namedtuple
+
 # Package name version bits.
 _PACKAGE_NAMES = {
     'CHROME': 0,
     'CHROME_MODERN': 10,
     'MONOCHROME': 20,
     'TRICHROME': 30,
+    'TRICHROME_BETA': 40,
     'WEBVIEW_STABLE': 0,
     'WEBVIEW_BETA': 10,
     'WEBVIEW_DEV': 20,
 }
-
 """ "Next" builds get +500 on their patch number.
 
 This ensures that they are considered "newer" than any non-next build of the
@@ -57,7 +68,6 @@ actual patch number will never reach 500, which has never even come close in
 the past.
 """
 _NEXT_BUILD_VERSION_CODE_DIFF = 50000
-
 """List of version numbers to be created for each build configuration.
 Tuple format:
 
@@ -66,7 +76,7 @@ Tuple format:
 Here, (supported ABIs) is referring to the combination of browser ABI and
 webview library ABI present in a particular APK. For example, 64_32 implies a
 64-bit browser with an extra 32-bit Webview library. See also
-_ABIS_TO_BIT_MASK.
+_ABIS_TO_DIGIT_MASK.
 """
 _APKS = {
     '32': [
@@ -74,6 +84,7 @@ _APKS = {
         ('CHROME_MODERN', 'CHROME_MODERN', '32'),
         ('MONOCHROME', 'MONOCHROME', '32'),
         ('TRICHROME', 'TRICHROME', '32'),
+        ('TRICHROME_BETA', 'TRICHROME_BETA', '32'),
         ('WEBVIEW_STABLE', 'WEBVIEW_STABLE', '32'),
         ('WEBVIEW_BETA', 'WEBVIEW_BETA', '32'),
         ('WEBVIEW_DEV', 'WEBVIEW_DEV', '32'),
@@ -91,6 +102,13 @@ _APKS = {
         ('TRICHROME_32_64', 'TRICHROME', '32_64'),
         ('TRICHROME_64_32', 'TRICHROME', '64_32'),
         ('TRICHROME_64', 'TRICHROME', '64'),
+        ('TRICHROME_64_HIGH', 'TRICHROME', '64_high'),
+        ('TRICHROME_BETA', 'TRICHROME_BETA', '32_64'),
+        ('TRICHROME_32_BETA', 'TRICHROME_BETA', '32'),
+        ('TRICHROME_32_64_BETA', 'TRICHROME_BETA', '32_64'),
+        ('TRICHROME_64_32_BETA', 'TRICHROME_BETA', '64_32'),
+        ('TRICHROME_64_BETA', 'TRICHROME_BETA', '64'),
+        ('TRICHROME_64_HIGH_BETA', 'TRICHROME_BETA', '64_high'),
         ('WEBVIEW_STABLE', 'WEBVIEW_STABLE', '32_64'),
         ('WEBVIEW_BETA', 'WEBVIEW_BETA', '32_64'),
         ('WEBVIEW_DEV', 'WEBVIEW_DEV', '32_64'),
@@ -109,7 +127,6 @@ _ARCH_TO_MFG_AND_BITNESS = {
     'arm64': ('arm', '64'),
     'x86': ('intel', '32'),
     'x64': ('intel', '64'),
-    'mipsel': ('mipsel', '32'),
 }
 
 # Expose the available choices to other scripts.
@@ -152,15 +169,14 @@ things here:
   version on a 64-bit device, otherwise it won't work properly. So, the 64-bit
   version needs to be a higher versionCode, as otherwise a 64-bit device would
   prefer the 32-bit version that does not include any 64-bit code, and fail.
-- The relative order of mips isn't important, but it needs to be a *distinct*
-  value to the other architectures because all builds need unique version codes.
 """
-_ABIS_TO_BIT_MASK = {
+_ABIS_TO_DIGIT_MASK = {
     'arm': {
         '32': 0,
         '32_64': 3,
         '64_32': 4,
         '64': 5,
+        '64_high': 9,
     },
     'intel': {
         '32': 1,
@@ -168,17 +184,22 @@ _ABIS_TO_BIT_MASK = {
         '64_32': 7,
         '64': 8,
     },
-    'mipsel': {
-        '32': 2,
-    }
 }
+
+VersionCodeComponents = namedtuple('VersionCodeComponents', [
+    'build_number',
+    'patch_number',
+    'package_name',
+    'abi',
+    'is_next_build',
+])
 
 
 def TranslateVersionCode(version_code, is_webview=False):
   """Translates a version code to its component parts.
 
   Returns:
-    A 5-tuple with the form:
+    A 5-tuple (VersionCodeComponents) with the form:
       - Build number - integer
       - Patch number - integer
       - Package name - string
@@ -223,7 +244,7 @@ def TranslateVersionCode(version_code, is_webview=False):
         package_name = package
         break
 
-  for arch, bitness_to_number in _ABIS_TO_BIT_MASK.items():
+  for arch, bitness_to_number in _ABIS_TO_DIGIT_MASK.items():
     for bitness, number in bitness_to_number.items():
       if abi_digit == number:
         abi = arch if arch != 'intel' else 'x86'
@@ -231,7 +252,8 @@ def TranslateVersionCode(version_code, is_webview=False):
           abi += '_' + bitness
         break
 
-  return build_number, patch_number, package_name, abi, is_next_build
+  return VersionCodeComponents(build_number, patch_number, package_name, abi,
+                               is_next_build)
 
 
 def GenerateVersionCodes(version_values, arch, is_next_build):
@@ -269,11 +291,27 @@ def GenerateVersionCodes(version_values, arch, is_next_build):
   version_codes = {}
 
   for apk, package, abis in _APKS[bitness]:
-    abi_bits = _ABIS_TO_BIT_MASK[mfg][abis]
-    package_bits = _PACKAGE_NAMES[package]
+    if abis == '64_high' and arch != 'arm64':
+      continue
+    abi_part = _ABIS_TO_DIGIT_MASK[mfg][abis]
+    package_part = _PACKAGE_NAMES[package]
 
     version_code_name = apk + '_VERSION_CODE'
-    version_code_val = base_version_code + abi_bits + package_bits
+    version_code_val = base_version_code + package_part + abi_part
     version_codes[version_code_name] = str(version_code_val)
 
   return version_codes
+
+
+def main():
+  parser = argparse.ArgumentParser(description='Parses version codes.')
+  parser.add_argument('version_code', help='Version code (e.g. 529700010).')
+  parser.add_argument('--webview',
+                      action='store_true',
+                      help='Whether this is a webview version code.')
+  args = parser.parse_args()
+  print(TranslateVersionCode(args.version_code, is_webview=args.webview))
+
+
+if __name__ == '__main__':
+  main()

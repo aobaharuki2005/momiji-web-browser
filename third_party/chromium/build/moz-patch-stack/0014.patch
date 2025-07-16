@@ -10,10 +10,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/66f4374c461fe27b1
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 1c2019cd4..0b8d73f0f 100644
+index 1b215dbfa..f64bbe106 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
-@@ -907,7 +907,7 @@ config("compiler_cpu_abi") {
+@@ -955,7 +955,7 @@ config("compiler_cpu_abi") {
        if (!is_nacl) {
          cflags += [
            "-mfpmath=sse",

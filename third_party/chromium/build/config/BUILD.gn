@@ -1,4 +1,4 @@
-# Copyright (c) 2013 The Chromium Authors. All rights reserved.
+# Copyright 2013 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -48,9 +48,6 @@ config("feature_flags") {
   defines = []
   if (dcheck_always_on) {
     defines += [ "DCHECK_ALWAYS_ON=1" ]
-    if (dcheck_is_configurable) {
-      defines += [ "DCHECK_IS_CONFIGURABLE" ]
-    }
   }
   if (use_udev) {
     # TODO(brettw) should probably be "=1".
@@ -89,7 +86,7 @@ config("feature_flags") {
   if (is_msan) {
     defines += [ "MEMORY_SANITIZER" ]
   }
-  if (is_ubsan || is_ubsan_null || is_ubsan_vptr || is_ubsan_security) {
+  if (is_ubsan || is_ubsan_vptr || is_ubsan_security) {
     defines += [ "UNDEFINED_SANITIZER" ]
   }
   if (is_official_build) {
@@ -382,4 +379,11 @@ config("precompiled_headers") {
       precompiled_source = "//chromium/build/precompile.h"
     }
   }
+}
+
+# Add this config to link steps in order to compress debug sections. This is
+# especially useful on 32-bit architectures in order to keep file sizes under
+# 4gb.
+config("compress_debug_sections") {
+  ldflags = [ "-gz" ]
 }

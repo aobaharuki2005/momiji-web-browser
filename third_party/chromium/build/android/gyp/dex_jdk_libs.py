@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2020 The Chromium Authors. All rights reserved.
+# Copyright 2020 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -68,7 +68,7 @@ def DexJdkLibJar(r8_path,
     ]
 
     build_utils.CheckOutput(cmd,
-                            print_stdout=True,
+                            print_stdout=False,
                             fail_on_output=warnings_as_errors)
     if os.path.exists(os.path.join(tmp_dir, 'classes2.dex')):
       raise Exception('Achievement unlocked: desugar_jdk_libs is multidex!')

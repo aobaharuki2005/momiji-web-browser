@@ -1,4 +1,4 @@
-# Copyright 2020 The Chromium Authors. All rights reserved.
+# Copyright 2020 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -12,14 +12,6 @@ python_library("lacros_resource_sizes_py") {
     "//chromium/build/util:test_results",
     "//third_party/catapult/tracing:convert_chart_json",
   ]
-}
-
-process_version("lacros_version_metadata") {
-  sources = [ "//chrome/VERSION" ]
-
-  template_file = "metadata.json.in"
-  output = "$root_out_dir/metadata.json"
-  process_only = true
 }
 
 # Lacros is built with "{arch}-generic" configuration. However, in Chrome

@@ -10,7 +10,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f5c9cd6cc881ec024
  1 file changed, 8 deletions(-)
 
 diff --git a/config/android/BUILD.gn b/config/android/BUILD.gn
-index 69341cea3..534a88ac6 100644
+index f8d2e95c0..bdb183759 100644
 --- a/config/android/BUILD.gn
 +++ b/config/android/BUILD.gn
 @@ -90,14 +90,6 @@ config("runtime_library") {

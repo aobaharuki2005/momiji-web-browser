@@ -1,4 +1,4 @@
-# Copyright 2019 The Chromium Authors. All rights reserved.
+# Copyright 2019 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -136,21 +136,6 @@ class _VersionTest(unittest.TestCase):
 
     self.assertEqual(arch_chrome_version_code, '484400001')
 
-  def testGenerateVersionCodesAndroidArchMips(self):
-    """Assert it handles different architectures correctly.
-
-    Version codes for different builds need to be distinct and maintain a
-    certain ordering.
-    See docstring on android_chrome_version._ABIS_TO_BIT_MASK for
-    reasoning.
-    """
-    output = GenerateVersionCodes(EXAMPLE_VERSION_VALUES,
-                                  arch='mipsel',
-                                  is_next_build=False)
-    arch_chrome_version_code = output['CHROME_VERSION_CODE']
-
-    self.assertEqual(arch_chrome_version_code, '484400002')
-
   def testGenerateVersionCodesAndroidArchArm64(self):
     """Assert it handles different architectures correctly.
 
@@ -185,6 +170,8 @@ class _VersionTest(unittest.TestCase):
     arch_trichrome_32_64_version_code = output['TRICHROME_32_64_VERSION_CODE']
     arch_trichrome_64_32_version_code = output['TRICHROME_64_32_VERSION_CODE']
     arch_trichrome_64_version_code = output['TRICHROME_64_VERSION_CODE']
+    arch_trichrome_64_high_version_code = output[
+        'TRICHROME_64_HIGH_VERSION_CODE']
 
     self.assertEqual(arch_monochrome_32_version_code, '484400020')
     self.assertEqual(arch_monochrome_32_64_version_code, '484400023')
@@ -196,6 +183,7 @@ class _VersionTest(unittest.TestCase):
     self.assertEqual(arch_trichrome_version_code, '484400033')
     self.assertEqual(arch_trichrome_64_32_version_code, '484400034')
     self.assertEqual(arch_trichrome_64_version_code, '484400035')
+    self.assertEqual(arch_trichrome_64_high_version_code, '484400039')
 
   def testGenerateVersionCodesAndroidArchX64(self):
     """Assert it handles different architectures correctly.
@@ -325,6 +313,26 @@ class _VersionTest(unittest.TestCase):
 
     self.assertGreater(webview_dev_version_code, webview_beta_version_code)
 
+  def testGenerateVersionCodesTrichromeChannelOrderBeta(self):
+    """Assert Trichrome beta channel is higher than stable.
+
+    When Trichrome channels are compiled to use the stable channel's package
+    name, their version codes need to follow the order stable < beta.
+
+    This allows that if a user opts into beta track, they will always have the
+    beta apk, including any finch experiments targeted at beta users, even when
+    beta and stable channels are otherwise on the same version.
+    """
+    output = GenerateVersionCodes(EXAMPLE_VERSION_VALUES,
+                                  arch='arm',
+                                  is_next_build=False)
+
+    trichrome_stable_version_code = output['TRICHROME_VERSION_CODE']
+    trichrome_beta_version_code = output['TRICHROME_BETA_VERSION_CODE']
+
+    self.assertGreater(trichrome_beta_version_code,
+                       trichrome_stable_version_code)
+
 
 class _VersionCodeTest(unittest.TestCase):
   def testGenerateThenTranslate(self):
@@ -406,11 +414,21 @@ class _VersionCodeTest(unittest.TestCase):
   def testArm_64_32Translate(self):
     """Test for a build with Trichrome and arm_64_32."""
     build, patch, package, abi, is_next_build = TranslateVersionCode(
-        '499900014')
+        '499900034')
     self.assertEqual(build, 4999)
     self.assertEqual(patch, 0)
-    self.assertEqual(package, 'CHROME_MODERN')
+    self.assertEqual(package, 'TRICHROME')
     self.assertEqual(abi, 'arm_64_32')
+    self.assertEqual(is_next_build, False)
+
+  def testArm_64BuildTranslate(self):
+    """Test for a build with Trichrome and arm_64_high."""
+    build, patch, package, abi, is_next_build = TranslateVersionCode(
+        '534613739')
+    self.assertEqual(build, 5346)
+    self.assertEqual(patch, 137)
+    self.assertEqual(package, 'TRICHROME')
+    self.assertEqual(abi, 'arm_64_high')
     self.assertEqual(is_next_build, False)
 
   def testX86_64Translate(self):

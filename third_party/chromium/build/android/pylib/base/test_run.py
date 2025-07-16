@@ -1,4 +1,4 @@
-# Copyright 2014 The Chromium Authors. All rights reserved.
+# Copyright 2014 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -35,6 +35,10 @@ class TestRun:
                |base_test_result.TestRunResults| objects.
       raw_logs_fh: An optional file handle to write raw logs to.
     """
+    raise NotImplementedError
+
+  def GetTestsForListing(self):
+    """Returns a list of test names."""
     raise NotImplementedError
 
   def TearDown(self):

@@ -1,4 +1,4 @@
-# Copyright 2014 The Chromium Authors. All rights reserved.
+# Copyright 2014 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -27,6 +27,11 @@ if (enable_java_templates) {
     use_final_fields = false
   }
 
+  generate_build_config_srcjar("build_config_for_testing_gen") {
+    use_final_fields = false
+    testonly = true
+  }
+
   write_native_libraries_java("native_libraries_gen") {
     use_final_fields = false
   }
@@ -38,13 +43,14 @@ if (enable_java_templates) {
       ":native_libraries_gen",
     ]
     sources = [
-      "java/src/org/chromium/base/annotations/CheckDiscard.java",
-      "java/src/org/chromium/base/annotations/DoNotClassMerge.java",
-      "java/src/org/chromium/base/annotations/DoNotInline.java",
-      "java/src/org/chromium/base/annotations/IdentifierNameString.java",
-      "java/src/org/chromium/base/annotations/MainDex.java",
-      "java/src/org/chromium/base/annotations/MockedInTests.java",
-      "java/src/org/chromium/base/annotations/UsedByReflection.java",
+      "java/src/org/chromium/build/annotations/AlwaysInline.java",
+      "java/src/org/chromium/build/annotations/CheckDiscard.java",
+      "java/src/org/chromium/build/annotations/DoNotClassMerge.java",
+      "java/src/org/chromium/build/annotations/DoNotInline.java",
+      "java/src/org/chromium/build/annotations/IdentifierNameString.java",
+      "java/src/org/chromium/build/annotations/MainDex.java",
+      "java/src/org/chromium/build/annotations/MockedInTests.java",
+      "java/src/org/chromium/build/annotations/UsedByReflection.java",
     ]
 
     jar_excluded_patterns = [ "*/build/BuildConfig.class" ]
@@ -52,6 +58,8 @@ if (enable_java_templates) {
     # New version of NativeLibraries.java (with the actual correct values) will
     # be created when creating an apk.
     jar_excluded_patterns += [ "*/NativeLibraries.class" ]
+
+    proguard_configs = [ "chromium_annotations.flags" ]
   }
 
   # Not all //build embedders pull in junit_binary deps that live in //third_party.
@@ -67,7 +75,7 @@ if (enable_java_templates) {
       sources = [ "junit/res/values/strings.xml" ]
       mergeable_android_manifests = [ "junit/AndroidManifest_mergetest.xml" ]
     }
-    junit_binary("build_junit_tests") {
+    robolectric_binary("build_junit_tests") {
       # Test has no JNI, so skip JNI Generator step.
       generate_final_jni = false
       resources_package = "org.chromium.build"
@@ -85,8 +93,17 @@ if (enable_java_templates) {
   }
 }
 
+# TODO(go/turn-down-test-results): Remove once we turn down
+# test-results.appspot.com
 python_library("test_result_presentations_py") {
   pydeps_file = "pylib/results/presentation/test_results_presentation.pydeps"
+  data = [
+    "//chromium/build/android/pylib/results/presentation/template",
+    "//chromium/build/android/pylib/results/presentation/javascript/main_html.js",
+    "//third_party/catapult/third_party/gsutil/",
+    "//third_party/jinja2/debug.py",
+    "//third_party/six",
+  ]
 }
 
 python_library("devil_chromium_py") {

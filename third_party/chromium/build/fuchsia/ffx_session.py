@@ -1,5 +1,5 @@
-#!/usr/bin/env vpython
-# Copyright 2022 The Chromium Authors. All rights reserved.
+#!/usr/bin/env vpython3
+# Copyright 2022 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 """A helper tool for running Fuchsia's `ffx`.
@@ -19,36 +19,23 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 
 import common
 import log_manager
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                             'test')))
+from compatible_utils import parse_host_port
+
+RUN_SUMMARY_SCHEMA = \
+  'https://fuchsia.dev/schema/ffx_test/run_summary-8d1dd964.json'
 
 
 def get_ffx_path():
   """Returns the full path to `ffx`."""
   return os.path.join(common.SDK_ROOT, 'tools',
                       common.GetHostArchFromPlatform(), 'ffx')
-
-
-def parse_host_port(host_port_pair):
-  """Parses a host name or IP address and a port number from a string of any of
-  the following forms:
-  - hostname:port
-  - IPv4addy:port
-  - [IPv6addy]:port
-
-  Returns:
-    A tuple of the string host name/address and integer port number.
-
-  Raises:
-    ValueError if `host_port_pair` does not contain a colon or if the substring
-      following the last colon cannot be converted to an int.
-  """
-  host, port = host_port_pair.rsplit(':', 1)
-  # Strip the brackets if the host looks like an IPv6 address.
-  if len(host) > 2 and host[0] == '[' and host[-1] == ']':
-    host = host[1:-1]
-  return (host, int(port))
 
 
 def format_host_port(host, port):
@@ -64,6 +51,49 @@ class FfxRunner():
   def __init__(self, log_manager):
     self._ffx = get_ffx_path()
     self._log_manager = log_manager
+
+  def _get_daemon_status(self):
+    """Determines daemon status via `ffx daemon socket`.
+
+    Returns:
+      dict of status of the socket. Status will have a key Running or
+      NotRunning to indicate if the daemon is running.
+    """
+    status = json.loads(
+        self.run_ffx(['--machine', 'json', 'daemon', 'socket'],
+                     check=True,
+                     suppress_repair=True))
+    if status.get('pid') and status.get('pid', {}).get('status', {}):
+      return status['pid']['status']
+    return {'NotRunning': True}
+
+  def _is_daemon_running(self):
+    return 'Running' in self._get_daemon_status()
+
+  def _wait_for_daemon(self, start=True, timeout_seconds=100):
+    """Waits for daemon to reach desired state in a polling loop.
+
+    Sleeps for 5s between polls.
+
+    Args:
+      start: bool. Indicates to wait for daemon to start up. If False,
+        indicates waiting for daemon to die.
+      timeout_seconds: int. Number of seconds to wait for the daemon to reach
+        the desired status.
+    Raises:
+      TimeoutError: if the daemon does not reach the desired state in time.
+    """
+    wanted_status = 'start' if start else 'stop'
+    sleep_period_seconds = 5
+    attempts = int(timeout_seconds / sleep_period_seconds)
+    for i in range(attempts):
+      if self._is_daemon_running() == start:
+        return
+      if i != attempts:
+        logging.info('Waiting for daemon to %s...', wanted_status)
+        time.sleep(sleep_period_seconds)
+
+    raise TimeoutError(f'Daemon did not {wanted_status} in time.')
 
   def _run_repair_command(self, output):
     """Scans `output` for a self-repair command to run and, if found, runs it.
@@ -91,6 +121,7 @@ class FfxRunner():
             ('--record', '--output-dir', self._log_manager.GetLogDirectory()))
       try:
         self.run_ffx(args, suppress_repair=True)
+        self._wait_for_daemon(start=True)
       except subprocess.CalledProcessError as cpe:
         return False  # Repair failed.
       return True  # Repair succeeded.
@@ -315,6 +346,8 @@ class FfxRunner():
   def daemon_stop(self):
     """Stops the ffx daemon."""
     self.run_ffx(['daemon', 'stop'], check=False, suppress_repair=True)
+    # Daemon should stop at this point.
+    self._wait_for_daemon(start=False)
 
 
 class FfxTarget():
@@ -432,18 +465,14 @@ class FfxSession():
     """
     self._log_manager = log_manager
     self._ffx = FfxRunner(log_manager)
-    self._structured_output_config = None
     self._own_output_dir = False
     self._output_dir = None
     self._run_summary = None
     self._suite_summary = None
     self._custom_artifact_directory = None
+    self._debug_data_directory = None
 
   def __enter__(self):
-    # Enable experimental structured output for ffx.
-    self._structured_output_config = self._ffx.scoped_config(
-        'test.experimental_structured_output', 'true')
-    self._structured_output_config.__enter__()
     if self._log_manager.IsLoggingEnabled():
       # Use a subdir of the configured log directory to hold test outputs.
       self._output_dir = os.path.join(self._log_manager.GetLogDirectory(),
@@ -468,9 +497,6 @@ class FfxSession():
       shutil.rmtree(self._output_dir, ignore_errors=True)
       self._own_output_dir = False
     self._output_dir = None
-    # Restore the previous experimental structured output setting.
-    self._structured_output_config.__exit__(exc_type, exc_val, exc_tb)
-    self._structured_output_config = None
     return False
 
   def get_output_dir(self):
@@ -488,8 +514,8 @@ class FfxSession():
       A subprocess.Popen object.
     """
     command = [
-        'test', 'run', '--output-directory', self._output_dir, component_uri,
-        '--'
+        '--config', 'test.experimental_structured_output=false', 'test', 'run',
+        '--output-directory', self._output_dir, component_uri, '--'
     ]
     command.extend(package_args)
     return ffx_target.open_ffx(command)
@@ -519,47 +545,36 @@ class FfxSession():
                     str(value_error))
       return
 
-    assert self._run_summary['version'] == '0', \
+    assert self._run_summary['schema_id'] == RUN_SUMMARY_SCHEMA, \
       'Unsupported version found in %s' % run_summary_path
 
-    # There should be precisely one suite for the test that ran. Find and parse
-    # its file.
-    suite_summary_filename = self._run_summary.get('suites',
-                                                   [{}])[0].get('summary')
-    if not suite_summary_filename:
-      logging.error('Failed to find suite zero\'s summary filename in %s',
-                    run_summary_path)
-      return
-    suite_summary_path = os.path.join(self._output_dir, suite_summary_filename)
-    try:
-      with open(suite_summary_path) as suite_summary_file:
-        self._suite_summary = json.load(suite_summary_file)
-    except IOError as io_error:
-      logging.error('Error reading suite summary file: %s', str(io_error))
-      return
-    except ValueError as value_error:
-      logging.error('Error parsing suite summary file %s: %s',
-                    suite_summary_path, str(value_error))
-      return
+    run_artifact_dir = self._run_summary.get('data', {})['artifact_dir']
+    for artifact_path, artifact in self._run_summary.get(
+        'data', {})['artifacts'].items():
+      if artifact['artifact_type'] == 'DEBUG':
+        self._debug_data_directory = os.path.join(self._output_dir,
+                                                  run_artifact_dir,
+                                                  artifact_path)
+        break
 
-    assert self._suite_summary['version'] == '0', \
-      'Unsupported version found in %s' % suite_summary_path
+    # There should be precisely one suite for the test that ran.
+    self._suite_summary = self._run_summary.get('data', {}).get('suites',
+                                                                [{}])[0]
 
     # Get the top-level directory holding all artifacts for this suite.
     artifact_dir = self._suite_summary.get('artifact_dir')
     if not artifact_dir:
       logging.error('Failed to find suite\'s artifact_dir in %s',
-                    suite_summary_path)
+                    run_summary_path)
       return
 
-    # Get the path corresponding to the CUSTOM artifact.
+    # Get the path corresponding to artifacts
     for artifact_path, artifact in self._suite_summary['artifacts'].items():
-      if artifact['artifact_type'] != 'CUSTOM':
-        continue
-      self._custom_artifact_directory = os.path.join(self._output_dir,
-                                                     artifact_dir,
-                                                     artifact_path)
-      break
+      if artifact['artifact_type'] == 'CUSTOM':
+        self._custom_artifact_directory = os.path.join(self._output_dir,
+                                                       artifact_dir,
+                                                       artifact_path)
+        break
 
   def get_custom_artifact_directory(self):
     """Returns the full path to the directory holding custom artifacts emitted
@@ -567,6 +582,13 @@ class FfxSession():
     """
     self._parse_test_outputs()
     return self._custom_artifact_directory
+
+  def get_debug_data_directory(self):
+    """Returns the full path to the directory holding custom artifacts emitted
+    by the test, or None if the path cannot be determined.
+    """
+    self._parse_test_outputs()
+    return self._debug_data_directory
 
 
 def make_arg_parser():

@@ -1,5 +1,5 @@
 #!/usr/bin/env vpython3
-# Copyright 2021 The Chromium Authors. All rights reserved.
+# Copyright 2021 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 """Tests scenarios with number of devices and invalid devices"""
@@ -9,9 +9,10 @@ import subprocess
 import time
 import unittest
 import unittest.mock as mock
+
 from argparse import Namespace
 from device_target import DeviceTarget
-from ermine_ctl import ErmineCtl
+from legacy_ermine_ctl import LegacyErmineCtl
 from ffx_session import FfxRunner, FfxTarget
 from target import Target, FuchsiaTargetException
 
@@ -157,7 +158,7 @@ class TestDiscoverDeviceTarget(unittest.TestCase):
     with DeviceTarget.CreateFromArgs(self.args) as device_target_instance, \
          mock.patch.object(DeviceTarget, '_Discover') as mock_discover, \
          mock.patch.object(DeviceTarget, '_ConnectToTarget') as mock_connect, \
-         mock.patch.object(DeviceTarget, '_GetSdkHash') as mock_hash, \
+         mock.patch('device_target.get_sdk_hash') as mock_hash, \
          mock.patch.object(
             DeviceTarget, '_GetInstalledSdkVersion') as mock_version, \
          mock.patch.object(
@@ -178,7 +179,7 @@ class TestDiscoverDeviceTarget(unittest.TestCase):
     with DeviceTarget.CreateFromArgs(self.args) as device_target_instance, \
          mock.patch.object(DeviceTarget, '_Discover') as mock_discover, \
          mock.patch.object(DeviceTarget, '_ConnectToTarget') as mock_ready, \
-         mock.patch.object(DeviceTarget, '_GetSdkHash') as mock_hash, \
+         mock.patch('device_target.get_sdk_hash') as mock_hash, \
          mock.patch.object(
             DeviceTarget, '_GetInstalledSdkVersion') as mock_version, \
          mock.patch.object(
@@ -193,9 +194,9 @@ class TestDiscoverDeviceTarget(unittest.TestCase):
   def testLoginCallsOnlyIfErmineExists(self, mock_daemon_stop):
     with DeviceTarget.CreateFromArgs(self.args) as device_target_instance, \
          mock.patch.object(
-             ErmineCtl, 'exists',
+             LegacyErmineCtl, 'exists',
              new_callable=mock.PropertyMock) as mock_exists, \
-         mock.patch.object(ErmineCtl, 'TakeToShell') as mock_shell:
+         mock.patch.object(LegacyErmineCtl, 'take_to_shell') as mock_shell:
       mock_exists.return_value = True
 
       device_target_instance._Login()
@@ -205,9 +206,9 @@ class TestDiscoverDeviceTarget(unittest.TestCase):
 
     with DeviceTarget.CreateFromArgs(self.args) as device_target_instance, \
          mock.patch.object(
-             ErmineCtl, 'exists',
+             LegacyErmineCtl, 'exists',
              new_callable=mock.PropertyMock) as mock_exists, \
-         mock.patch.object(ErmineCtl, 'TakeToShell') as mock_shell:
+         mock.patch.object(LegacyErmineCtl, 'take_to_shell') as mock_shell:
       mock_exists.return_value = False
 
       device_target_instance._Login()

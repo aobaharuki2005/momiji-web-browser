@@ -1,5 +1,5 @@
 #!/usr/bin/env vpython3
-# Copyright 2022 The Chromium Authors. All rights reserved.
+# Copyright 2022 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 """Reads log data from a device."""
@@ -14,7 +14,9 @@ from contextlib import AbstractContextManager
 from typing import Iterable, Optional, TextIO
 
 from common import read_package_paths, register_common_args, \
-                   register_device_args, run_continuous_ffx_command
+                   register_device_args, run_continuous_ffx_command, \
+                   run_ffx_command
+from ffx_integration import ScopedFfxConfig
 
 
 class LogManager(AbstractContextManager):
@@ -27,6 +29,17 @@ class LogManager(AbstractContextManager):
         # value.
         self._log_files = {}
         self._log_procs = []
+        self._scoped_ffx_log = None
+
+        if self._logs_dir:
+            self._scoped_ffx_log = ScopedFfxConfig('log.dir', self._logs_dir)
+
+    def __enter__(self):
+        if self._scoped_ffx_log:
+            self._scoped_ffx_log.__enter__()
+            run_ffx_command(('daemon', 'stop'), check=False)
+
+        return self
 
     def is_logging_enabled(self) -> bool:
         """Check whether logging is turned on."""
@@ -59,6 +72,11 @@ class LogManager(AbstractContextManager):
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.stop()
+        if self._scoped_ffx_log:
+            self._scoped_ffx_log.__exit__(exc_type, exc_value, traceback)
+
+            # Allow command to fail while ffx team investigates the issue.
+            run_ffx_command(('daemon', 'stop'), check=False)
 
 
 def start_system_log(log_manager: LogManager,
@@ -106,12 +124,13 @@ def start_system_log(log_manager: LogManager,
             symbolize_cmd.extend(['--ids-txt', symbol_path])
         log_manager.add_log_process(
             run_continuous_ffx_command(symbolize_cmd,
+                                       target_id,
                                        stdin=log_proc.stdout,
                                        stdout=system_log,
                                        stderr=subprocess.STDOUT))
     else:
         log_manager.add_log_process(
-            run_continuous_ffx_command(log_cmd, stdout=system_log))
+            run_continuous_ffx_command(log_cmd, target_id, stdout=system_log))
 
 
 def main():

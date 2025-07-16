@@ -17,10 +17,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f9c3bbb23f7ae513b
  5 files changed, 26 insertions(+), 26 deletions(-)
 
 diff --git a/config/BUILD.gn b/config/BUILD.gn
-index 3dbcb55a1..4f4b259ad 100644
+index 0011ba43e..dccc3eb6c 100644
 --- a/config/BUILD.gn
 +++ b/config/BUILD.gn
-@@ -242,9 +242,9 @@ group("common_deps") {
+@@ -239,9 +239,9 @@ group("common_deps") {
      public_deps += [ "//build/config/sanitizers:deps" ]
    }
  
@@ -34,7 +34,7 @@ index 3dbcb55a1..4f4b259ad 100644
    if (use_afl) {
      public_deps += [ "//third_party/afl" ]
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index f0a9a086a..fc4a7e2f8 100644
+index bd039fc85..e29fa2294 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -12,7 +12,7 @@ import("//build/config/clang/clang.gni")
@@ -46,7 +46,7 @@ index f0a9a086a..fc4a7e2f8 100644
  import("//build/config/host_byteorder.gni")
  import("//build/config/rust.gni")
  import("//build/config/sanitizers/sanitizers.gni")
-@@ -1305,7 +1305,7 @@ config("compiler_deterministic") {
+@@ -1360,7 +1360,7 @@ config("compiler_deterministic") {
  }
  
  config("clang_revision") {
@@ -56,7 +56,7 @@ index f0a9a086a..fc4a7e2f8 100644
        "--print-revision",
        "--verify-version=$clang_version",
 diff --git a/config/linux/BUILD.gn b/config/linux/BUILD.gn
-index d304d0810..28f6c8d79 100644
+index 8c377163a..6801a0b68 100644
 --- a/config/linux/BUILD.gn
 +++ b/config/linux/BUILD.gn
 @@ -54,7 +54,7 @@ config("libresolv") {
@@ -69,10 +69,10 @@ index d304d0810..28f6c8d79 100644
      packages = [
        "glib-2.0",
 diff --git a/config/sysroot.gni b/config/sysroot.gni
-index cbcf0a3f0..cb8cb8340 100644
+index dea380727..c7ae6b2c2 100644
 --- a/config/sysroot.gni
 +++ b/config/sysroot.gni
-@@ -61,11 +61,11 @@ if (sysroot == "") {
+@@ -59,11 +59,11 @@ if (sysroot == "") {
        } else if (_script_arch == "x64") {
          _script_arch = "amd64"
        }
@@ -90,7 +90,7 @@ index cbcf0a3f0..cb8cb8340 100644
    } else if (is_mac) {
      import("//build/config/mac/mac_sdk.gni")
 diff --git a/toolchain/linux/BUILD.gn b/toolchain/linux/BUILD.gn
-index 6d451d743..53577e75b 100644
+index 174f10c29..4aed3c954 100644
 --- a/toolchain/linux/BUILD.gn
 +++ b/toolchain/linux/BUILD.gn
 @@ -354,21 +354,21 @@ gcc_toolchain("s390x") {

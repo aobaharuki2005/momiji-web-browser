@@ -21,10 +21,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6125938ac1986d298
  2 files changed, 24 insertions(+), 1 deletion(-)
 
 diff --git a/config/BUILD.gn b/config/BUILD.gn
-index 8fc6a82df..3dbcb55a1 100644
+index 265d4bc07..0011ba43e 100644
 --- a/config/BUILD.gn
 +++ b/config/BUILD.gn
-@@ -126,7 +126,7 @@ config("debug") {
+@@ -123,7 +123,7 @@ config("debug") {
      # Enable libstdc++ debugging facilities to help catch problems early, see
      # http://crbug.com/65151 .
      # TODO(phajdan.jr): Should we enable this for all of POSIX?
@@ -34,7 +34,7 @@ index 8fc6a82df..3dbcb55a1 100644
  }
  
 diff --git a/toolchain/linux/BUILD.gn b/toolchain/linux/BUILD.gn
-index 102e71207..6d451d743 100644
+index f559f5272..174f10c29 100644
 --- a/toolchain/linux/BUILD.gn
 +++ b/toolchain/linux/BUILD.gn
 @@ -249,6 +249,13 @@ clang_toolchain("clang_mips64el") {

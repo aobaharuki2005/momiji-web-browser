@@ -1,4 +1,4 @@
-# Copyright 2021 The Chromium Authors. All rights reserved.
+# Copyright 2021 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 """Implements commands for running and interacting with Fuchsia on FVDL."""
@@ -42,26 +42,18 @@ class FvdlTarget(emu_target.EmuTarget):
   def __init__(self, out_dir, target_cpu, require_kvm, enable_graphics,
                hardware_gpu, with_network, cpu_cores, ram_size_mb, logs_dir,
                custom_image):
-    super(FvdlTarget, self).__init__(out_dir, target_cpu, logs_dir)
+
+    super(FvdlTarget, self).__init__(out_dir, target_cpu, logs_dir,
+                                     custom_image)
     self._require_kvm = require_kvm
     self._enable_graphics = enable_graphics
     self._hardware_gpu = hardware_gpu
     self._with_network = with_network
     self._cpu_cores = cpu_cores
     self._ram_size_mb = ram_size_mb
-    self._custom_image = custom_image
 
     self._host = None
     self._pid = None
-
-    if custom_image:
-      components = custom_image.split('.')
-      if len(components) != 2:
-        raise ValueError("Invalid custom_image name:", custom_image)
-      self._image_type, self._image_arch = components
-    else:
-      self._image_arch = self._GetTargetSdkArch()
-      self._image_type = boot_data.TARGET_TYPE_QEMU
 
     # Use a temp file for vdl output.
     self._vdl_output_file = tempfile.NamedTemporaryFile()
@@ -102,14 +94,14 @@ class FvdlTarget(emu_target.EmuTarget):
     boot_data.ProvisionSSH()
     self._host_ssh_port = common.GetAvailableTcpPort()
     kernel_image = common.EnsurePathExists(
-        boot_data.GetTargetFile('qemu-kernel.kernel', self._image_arch,
-                                self._image_type))
+        boot_data.GetTargetFile(self._kernel, self._pb_path))
     zbi_image = common.EnsurePathExists(
-        boot_data.GetTargetFile('zircon-a.zbi', self._image_arch,
-                                self._image_type))
+        boot_data.GetTargetFile(self._ramdisk, self._pb_path))
     fvm_image = common.EnsurePathExists(
-        boot_data.GetTargetFile('storage-full.blk', self._image_arch,
-                                self._image_type))
+        boot_data.GetTargetFile(self._disk_image, self._pb_path))
+    aemu_path = common.EnsurePathExists(
+        os.path.join(common.GetHostToolPathFromPlatform('aemu_internal'),
+                     'emulator'))
     emu_command = [
         self._FVDL_PATH,
         '--sdk',
@@ -125,6 +117,10 @@ class FvdlTarget(emu_target.EmuTarget):
         self._vdl_output_file.name,
         '-c',
         ' '.join(boot_data.GetKernelArgs()),
+
+        # Use an existing emulator checked out by Chromium.
+        '--aemu-path',
+        aemu_path,
 
         # Use existing images instead of downloading new ones.
         '--kernel-image',

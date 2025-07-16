@@ -1,5 +1,5 @@
 #!/usr/bin/env vpython3
-# Copyright 2016 The Chromium Authors. All rights reserved.
+# Copyright 2016 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -217,7 +217,7 @@ class _ProjectEntry:
         'java_library',
         "java_annotation_processor",
         'java_binary',
-        'junit_binary',
+        'robolectric_binary',
     )
 
   def ResSources(self):
@@ -545,7 +545,7 @@ def _GenerateGradleFile(entry, generator, build_vars, jinja_processor):
   elif deps_info['type'] == 'java_binary':
     target_type = 'java_binary'
     variables['main_class'] = deps_info.get('main_class')
-  elif deps_info['type'] == 'junit_binary':
+  elif deps_info['type'] == 'robolectric_binary':
     target_type = 'android_junit'
     sourceSetName = 'test'
   else:
@@ -839,7 +839,7 @@ def main():
     # used by apks/bundles/binaries/tests or that are explicitly mentioned in
     # --targets.
     BASE_TYPES = ('android_apk', 'android_app_bundle_module', 'java_binary',
-                  'junit_binary')
+                  'robolectric_binary')
     main_entries = [
         e for e in main_entries
         if (e.GetType() in BASE_TYPES or e.GnTarget() in targets_from_args
@@ -907,7 +907,7 @@ def main():
   logging.warning('Generated files will only appear once you\'ve built them.')
   logging.warning('Generated projects for Android Studio %s', channel)
   logging.warning('For more tips: https://chromium.googlesource.com/chromium'
-                  '/src.git/+/master/docs/android_studio.md')
+                  '/src.git/+/main/docs/android_studio.md')
 
 
 if __name__ == '__main__':

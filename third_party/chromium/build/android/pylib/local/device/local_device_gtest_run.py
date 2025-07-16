@@ -1,4 +1,4 @@
-# Copyright 2014 The Chromium Authors. All rights reserved.
+# Copyright 2014 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -95,29 +95,39 @@ def _GenerateSequentialFileNames(filename):
     yield '%s_%d%s' % (base, i, ext)
 
 
-def _ExtractTestsFromFilter(gtest_filter):
-  """Returns the list of tests specified by the given filter.
+def _ExtractTestsFromFilters(gtest_filters):
+  """Returns the list of tests specified by the given filters.
 
   Returns:
     None if the device should be queried for the test list instead.
   """
-  # Empty means all tests, - means exclude filter.
-  if not gtest_filter or '-' in gtest_filter:
+  # - means exclude filter.
+  for gtest_filter in gtest_filters:
+    if '-' in gtest_filter:
+      return None
+  # Empty means all tests
+  if not any(gtest_filters):
     return None
 
-  patterns = gtest_filter.split(':')
-  # For a single pattern, allow it even if it has a wildcard so long as the
-  # wildcard comes at the end and there is at least one . to prove the scope is
-  # not too large.
-  # This heuristic is not necessarily faster, but normally is.
-  if len(patterns) == 1 and patterns[0].endswith('*'):
-    no_suffix = patterns[0].rstrip('*')
-    if '*' not in no_suffix and '.' in no_suffix:
-      return patterns
+  if len(gtest_filters) == 1:
+    patterns = gtest_filters[0].split(':')
+    # For a single pattern, allow it even if it has a wildcard so long as the
+    # wildcard comes at the end and there is at least one . to prove the scope
+    # is not too large.
+    # This heuristic is not necessarily faster, but normally is.
+    if len(patterns) == 1 and patterns[0].endswith('*'):
+      no_suffix = patterns[0].rstrip('*')
+      if '*' not in no_suffix and '.' in no_suffix:
+        return patterns
 
-  if '*' in gtest_filter:
-    return None
-  return patterns
+  all_patterns = set(gtest_filters[0].split(':'))
+  for gtest_filter in gtest_filters:
+    patterns = gtest_filter.split(':')
+    for pattern in patterns:
+      if '*' in pattern:
+        return None
+    all_patterns = all_patterns.intersection(set(patterns))
+  return list(all_patterns)
 
 
 def _GetDeviceTimeoutMultiplier():
@@ -272,8 +282,8 @@ class _ApkDelegate:
           reinstall=True,
           permissions=self._permissions)
 
-  def ResultsDirectory(self, device):
-    return device.GetApplicationDataDirectory(self._package)
+  def ResultsDirectory(self, device):  # pylint: disable=no-self-use
+    return device.GetExternalStoragePath()
 
   def Run(self, test, device, flags=None, **kwargs):
     extras = dict(self._extras)
@@ -546,15 +556,6 @@ class LocalDeviceGtestRun(local_device_test_run.LocalDeviceTestRun):
       def bind_crash_handler(step, dev):
         return lambda: crash_handler.RetryOnSystemCrash(step, dev)
 
-      # Explicitly enable root to ensure that tests run under deterministic
-      # conditions. Without this explicit call, EnableRoot() is called from
-      # push_test_data() when PushChangedFiles() determines that it should use
-      # _PushChangedFilesZipped(), which is only most of the time.
-      # Root is required (amongst maybe other reasons) to pull the results file
-      # from the device, since it lives within the application's data directory
-      # (via GetApplicationDataDirectory()).
-      device.EnableRoot()
-
       steps = [
           bind_crash_handler(s, device)
           for s in (install_apk, push_test_data, init_tool_and_start_servers)]
@@ -569,11 +570,25 @@ class LocalDeviceGtestRun(local_device_test_run.LocalDeviceTestRun):
         self._test_instance.GetDataDependencies())
 
   #override
-  def _ShouldShard(self):
+  def _ShouldShardTestsForDevices(self):
+    """Shard tests across several devices.
+
+    Returns:
+      True if tests should be sharded across several devices,
+      False otherwise.
+    """
     return True
 
   #override
-  def _CreateShards(self, tests):
+  def _CreateShardsForDevices(self, tests):
+    """Create shards of tests to run on devices.
+
+    Args:
+      tests: List containing tests or test batches.
+
+    Returns:
+      List of test batches.
+    """
     # _crashes are tests that might crash and make the tests in the same shard
     # following the crashed testcase not run.
     # Thus we need to create separate shards for each crashed testcase,
@@ -602,7 +617,7 @@ class LocalDeviceGtestRun(local_device_test_run.LocalDeviceTestRun):
       # When the exact list of tests to run is given via command-line (e.g. when
       # locally iterating on a specific test), skip querying the device (which
       # takes ~3 seconds).
-      tests = _ExtractTestsFromFilter(self._test_instance.gtest_filter)
+      tests = _ExtractTestsFromFilters(self._test_instance.gtest_filters)
       if tests:
         return tests
 
@@ -618,8 +633,10 @@ class LocalDeviceGtestRun(local_device_test_run.LocalDeviceTestRun):
         timeout = None
 
       flags = [
-          f for f in self._test_instance.flags
-          if f not in ['--wait-for-debugger', '--wait-for-java-debugger']
+          f for f in self._test_instance.flags if f not in [
+              '--wait-for-debugger', '--wait-for-java-debugger',
+              '--gtest_also_run_disabled_tests'
+          ]
       ]
       flags.append('--gtest_list_tests')
 

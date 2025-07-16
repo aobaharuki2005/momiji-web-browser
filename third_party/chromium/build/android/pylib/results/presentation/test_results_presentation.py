@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2017 The Chromium Authors. All rights reserved.
+# Copyright 2017 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -108,18 +108,22 @@ def action_cell(action, data, html_class):
   }
 
 
-def flakiness_dashbord_link(test_name, suite_name):
-  url_args = urlencode([('testType', suite_name), ('tests', test_name)])
-  return ('https://test-results.appspot.com/'
-         'dashboards/flakiness_dashboard.html#%s' % url_args)
+def flakiness_dashbord_link(test_name, suite_name, bucket):
+  # Assume the bucket will be like "foo-bar-baz", we will take "foo"
+  # as the test_project.
+  # Fallback to "chromium" if bucket is not passed, e.g. local_output=True
+  test_project = bucket.split('-')[0] if bucket else 'chromium'
+  query = '%s/%s' % (suite_name, test_name)
+  url_args = urlencode([('t', 'TESTS'), ('q', query), ('tp', test_project)])
+  return 'https://ci.chromium.org/ui/search?%s' % url_args
 
 
-def logs_cell(result, test_name, suite_name):
+def logs_cell(result, test_name, suite_name, bucket):
   """Formats result logs data for processing in jinja template."""
   link_list = []
   result_link_dict = result.get('links', {})
   result_link_dict['flakiness'] = flakiness_dashbord_link(
-      test_name, suite_name)
+      test_name, suite_name, bucket)
   for name, href in sorted(result_link_dict.items()):
     link_list.append(link(
         data=name,
@@ -146,7 +150,7 @@ def status_class(status):
   return status
 
 
-def create_test_table(results_dict, cs_base_url, suite_name):
+def create_test_table(results_dict, cs_base_url, suite_name, bucket):
   """Format test data for injecting into HTML table."""
 
   header_row = [
@@ -179,7 +183,8 @@ def create_test_table(results_dict, cs_base_url, suite_name):
                html_class=('center %s' %
                   status_class(result['status']))),
           cell(data=result['elapsed_time_ms']),     # elapsed_time_ms
-          logs_cell(result, test_name, suite_name), # logs
+          logs_cell(result, test_name, suite_name, bucket),
+                                                    # logs
           pre_cell(data=result['output_snippet'],   # output_snippet
                    html_class='left'),
       ])
@@ -288,7 +293,7 @@ def results_to_html(results_dict, cs_base_url, bucket, test_name,
         just a local file.
   """
   test_rows_header, test_rows = create_test_table(
-      results_dict, cs_base_url, test_name)
+      results_dict, cs_base_url, test_name, bucket)
   suite_rows_header, suite_rows, suite_row_footer = create_suite_table(
       results_dict)
 
@@ -403,7 +408,7 @@ def upload_screenshot_set(json_path, test_name, bucket, builder_name,
   dest = google_storage_helper.unique_name(
     'screenshots_%s_%s_%s' % (test_name, builder_name, build_number),
     suffix='.json')
-  with tempfile.NamedTemporaryFile(suffix='.json') as temp_file:
+  with tempfile.NamedTemporaryFile(mode='w', suffix='.json') as temp_file:
     temp_file.write(screenshot_set)
     temp_file.flush()
     return google_storage_helper.upload(

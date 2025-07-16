@@ -1,4 +1,4 @@
-// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Copyright 2012 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -49,7 +49,7 @@
 #ifndef BUILD_BUILD_CONFIG_H_
 #define BUILD_BUILD_CONFIG_H_
 
-#include "build/buildflag.h"
+#include "build/buildflag.h"  // IWYU pragma: export
 
 // A set of macros to use for platform detection.
 #if defined(__native_client__)
@@ -243,6 +243,12 @@
 #define BUILDFLAG_INTERNAL_IS_WIN() (1)
 #else
 #define BUILDFLAG_INTERNAL_IS_WIN() (0)
+#endif
+
+#if defined(USE_OZONE)
+#define BUILDFLAG_INTERNAL_IS_OZONE() (1)
+#else
+#define BUILDFLAG_INTERNAL_IS_OZONE() (0)
 #endif
 
 // Compiler detection. Note: clang masquerades as GCC on POSIX and as MSVC on

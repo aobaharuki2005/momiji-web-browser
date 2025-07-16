@@ -1,4 +1,4 @@
-# Copyright 2019 The Chromium Authors. All rights reserved.
+# Copyright 2019 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -16,6 +16,7 @@ import threading
 
 from google.protobuf import text_format  # pylint: disable=import-error
 
+from devil.android import apk_helper
 from devil.android import device_utils
 from devil.android import settings
 from devil.android.sdk import adb_wrapper
@@ -32,6 +33,10 @@ from pylib.local.emulator.proto import avd_pb2
 COMMON_CIPD_ROOT = os.path.join(constants.DIR_SOURCE_ROOT, '.android_emulator')
 
 _ALL_PACKAGES = object()
+
+# These files are used as backing files for corresponding qcow2 images.
+_BACKING_FILES = ('system.img', 'vendor.img')
+
 _DEFAULT_AVDMANAGER_PATH = os.path.join(
     constants.ANDROID_SDK_ROOT, 'cmdline-tools', 'latest', 'bin', 'avdmanager')
 # Default to a 480dp mdpi screen (a relatively large phone).
@@ -88,6 +93,46 @@ def _Load(avd_proto_path):
   """
   with open(avd_proto_path) as avd_proto_file:
     return text_format.Merge(avd_proto_file.read(), avd_pb2.Avd())
+
+
+def _FindMinSdkFile(apk_dir, min_sdk):
+  """Finds the apk file associated with the min_sdk file.
+
+  This reads a version.json file located in the apk_dir to find an apk file
+  that is closest without going over the min_sdk.
+
+  Args:
+    apk_dir: The directory to look for apk files.
+    min_sdk: The minimum sdk version supported by the device.
+
+  Returns:
+    The path to the file that suits the minSdkFile or None
+  """
+  json_file = os.path.join(apk_dir, 'version.json')
+  if not os.path.exists(json_file):
+    logging.error('Json version file not found: %s', json_file)
+    return None
+
+  min_sdk_found = None
+  curr_min_sdk_version = 0
+  with open(json_file) as f:
+    data = json.loads(f.read())
+    # Finds the entry that is closest to min_sdk without going over.
+    for entry in data:
+      if (entry['min_sdk'] > curr_min_sdk_version
+          and entry['min_sdk'] <= min_sdk):
+        min_sdk_found = entry
+        curr_min_sdk_version = entry['min_sdk']
+
+    if not min_sdk_found:
+      logging.error('No suitable apk file found that suits the minimum sdk %d.',
+                    min_sdk)
+      return None
+
+    logging.info('Found apk file for mininum sdk %d: %r with version %r',
+                 min_sdk, min_sdk_found['file_name'],
+                 min_sdk_found['version_name'])
+    return os.path.join(apk_dir, min_sdk_found['file_name'])
 
 
 class _AvdManagerAgent:
@@ -205,6 +250,8 @@ class AvdConfig:
         COMMON_CIPD_ROOT, self._config.emulator_package.dest_path)
     self._emulator_path = os.path.join(self._emulator_sdk_root, 'emulator',
                                        'emulator')
+    self._qemu_img_path = os.path.join(self._emulator_sdk_root, 'emulator',
+                                       'qemu-img')
 
     self._initialized = False
     self._initializer_lock = threading.Lock()
@@ -226,8 +273,24 @@ class AvdConfig:
     return os.path.join(self._avd_home, '%s.avd' % self._config.avd_name)
 
   @property
+  def _system_image_dir(self):
+    return os.path.join(COMMON_CIPD_ROOT,
+                        self._config.system_image_package.dest_path,
+                        *self._config.system_image_name.split(';'))
+
+  @property
+  def _root_ini_path(self):
+    """The <avd_name>.ini file."""
+    return os.path.join(self._avd_home, '%s.ini' % self._config.avd_name)
+
+  @property
   def _config_ini_path(self):
+    """The config.ini file under _avd_dir."""
     return os.path.join(self._avd_dir, 'config.ini')
+
+  @property
+  def _features_ini_path(self):
+    return os.path.join(self._emulator_home, 'advancedFeatures.ini')
 
   def Create(self,
              force=False,
@@ -270,6 +333,8 @@ class AvdConfig:
     self._InstallCipdPackages(packages=[
         self._config.emulator_package,
         self._config.system_image_package,
+        *self._config.privileged_apk,
+        *self._config.additional_apk,
     ])
 
     android_avd_home = self._avd_home
@@ -290,20 +355,15 @@ class AvdConfig:
       logging.info('Modifying AVD configuration.')
 
       # Clear out any previous configuration or state from this AVD.
-      root_ini = os.path.join(android_avd_home,
-                              '%s.ini' % self._config.avd_name)
-      features_ini = os.path.join(self._emulator_home, 'advancedFeatures.ini')
-      avd_dir = self._avd_dir
+      with ini.update_ini_file(self._root_ini_path) as r_ini_contents:
+        r_ini_contents['path.rel'] = 'avd/%s.avd' % self._config.avd_name
 
-      with ini.update_ini_file(root_ini) as root_ini_contents:
-        root_ini_contents['path.rel'] = 'avd/%s.avd' % self._config.avd_name
-
-      with ini.update_ini_file(features_ini) as features_ini_contents:
+      with ini.update_ini_file(self._features_ini_path) as f_ini_contents:
         # features_ini file will not be refreshed by avdmanager during
         # creation. So explicitly clear its content to exclude any leftover
         # from previous creation.
-        features_ini_contents.clear()
-        features_ini_contents.update(self.avd_settings.advanced_features)
+        f_ini_contents.clear()
+        f_ini_contents.update(self.avd_settings.advanced_features)
 
       with ini.update_ini_file(self._config_ini_path) as config_ini_contents:
         # Update avd_properties first so that they won't override settings
@@ -328,7 +388,7 @@ class AvdConfig:
 
         config_ini_contents['hw.sdCard'] = 'yes'
         if self.avd_settings.sdcard.size:
-          sdcard_path = os.path.join(avd_dir, _SDCARD_NAME)
+          sdcard_path = os.path.join(self._avd_dir, _SDCARD_NAME)
           mksdcard_path = os.path.join(os.path.dirname(self._emulator_path),
                                        'mksdcard')
           cmd_helper.RunCmd([
@@ -338,13 +398,37 @@ class AvdConfig:
           ])
           config_ini_contents['hw.sdCard.path'] = sdcard_path
 
+      if not additional_apks:
+        additional_apks = []
+      for pkg in self._config.additional_apk:
+        apk_dir = os.path.join(COMMON_CIPD_ROOT, pkg.dest_path)
+        apk_file = _FindMinSdkFile(apk_dir, self._config.min_sdk)
+        # Some of these files come from chrome internal, so may not be
+        # available to non-internal permissioned users.
+        if os.path.exists(apk_file):
+          logging.info('Adding additional apk for install: %s', apk_file)
+          additional_apks.append(apk_file)
+
+      if not privileged_apk_tuples:
+        privileged_apk_tuples = []
+      for pkg in self._config.privileged_apk:
+        apk_dir = os.path.join(COMMON_CIPD_ROOT, pkg.dest_path)
+        apk_file = _FindMinSdkFile(apk_dir, self._config.min_sdk)
+        # Some of these files come from chrome internal, so may not be
+        # available to non-internal permissioned users.
+        if os.path.exists(apk_file):
+          logging.info('Adding privilege apk for install: %s', apk_file)
+          privileged_apk_tuples.append(
+              (apk_file, self._config.install_privileged_apk_partition))
+
       # Start & stop the AVD.
       self._Initialize()
       instance = _AvdInstance(self._emulator_path, self._emulator_home,
                               self._config)
       # Enable debug for snapshot when it is set to True
-      debug_tags = 'init,snapshot' if snapshot else None
-      # Installing privileged apks requires modifying the system image.
+      debug_tags = 'time,init,snapshot' if snapshot else None
+      # Installing privileged apks requires modifying the system
+      # image.
       writable_system = bool(privileged_apk_tuples)
       instance.Start(ensure_system_settings=False,
                      read_only=False,
@@ -361,13 +445,20 @@ class AvdConfig:
       instance.device.WaitUntilFullyBooted(decrypt=True, timeout=180, retries=0)
 
       if additional_apks:
-        for additional_apk in additional_apks:
-          instance.device.Install(additional_apk,
-                                  allow_downgrade=True,
-                                  reinstall=True)
+        for apk in additional_apks:
+          instance.device.Install(apk, allow_downgrade=True, reinstall=True)
+          package_name = apk_helper.GetPackageName(apk)
+          package_version = instance.device.GetApplicationVersion(package_name)
+          logging.info('The version for package %r on the device is %r',
+                       package_name, package_version)
 
       if privileged_apk_tuples:
         system_app.InstallPrivilegedApps(instance.device, privileged_apk_tuples)
+        for apk, _ in privileged_apk_tuples:
+          package_name = apk_helper.GetPackageName(apk)
+          package_version = instance.device.GetApplicationVersion(package_name)
+          logging.info('The version for package %r on the device is %r',
+                       package_name, package_version)
 
       # Always disable the network to prevent built-in system apps from
       # updating themselves, which could take over package manager and
@@ -387,7 +478,7 @@ class AvdConfig:
       # operation in some circumstances (beyond the obvious -read-only ones),
       # and there seems to be no mechanism by which it gets closed or deleted.
       # See https://bit.ly/2pWQTH7 for context.
-      multiInstanceLockFile = os.path.join(avd_dir, 'multiinstance.lock')
+      multiInstanceLockFile = os.path.join(self._avd_dir, 'multiinstance.lock')
       if os.path.exists(multiInstanceLockFile):
         os.unlink(multiInstanceLockFile)
 
@@ -399,17 +490,19 @@ class AvdConfig:
           'install_mode':
           'copy',
           'data': [{
-              'dir': os.path.relpath(avd_dir, self._emulator_home)
+              'dir': os.path.relpath(self._avd_dir, self._emulator_home)
           }, {
-              'file': os.path.relpath(root_ini, self._emulator_home)
+              'file':
+              os.path.relpath(self._root_ini_path, self._emulator_home)
           }, {
-              'file': os.path.relpath(features_ini, self._emulator_home)
+              'file':
+              os.path.relpath(self._features_ini_path, self._emulator_home)
           }],
       }
 
       logging.info('Creating AVD CIPD package.')
-      logging.debug('ensure file content: %s',
-                    json.dumps(package_def_content, indent=2))
+      logging.info('ensure file content: %s',
+                   json.dumps(package_def_content, indent=2))
 
       with tempfile_ext.TemporaryFileName(suffix='.json') as package_def_path:
         with open(package_def_path, 'w') as package_def_file:
@@ -481,6 +574,33 @@ class AvdConfig:
     self._InstallCipdPackages(packages=packages)
     self._MakeWriteable()
     self._UpdateConfigs()
+    self._RebaseQcow2Images()
+
+  def _RebaseQcow2Images(self):
+    """Rebase the paths in qcow2 images.
+
+    qcow2 files may exists in avd directory which have hard-coded paths to the
+    backing files, e.g., system.img, vendor.img. Such paths need to be rebased
+    if the avd is moved to a different directory in order to boot successfully.
+    """
+    for f in _BACKING_FILES:
+      qcow2_image_path = os.path.join(self._avd_dir, '%s.qcow2' % f)
+      if not os.path.exists(qcow2_image_path):
+        continue
+      backing_file_path = os.path.join(self._system_image_dir, f)
+      logging.info('Rebasing the qcow2 image %r with the backing file %r',
+                   qcow2_image_path, backing_file_path)
+      cmd_helper.RunCmd([
+          self._qemu_img_path,
+          'rebase',
+          '-u',
+          '-f',
+          'qcow2',
+          '-b',
+          # The path to backing file must be relative to the qcow2 image.
+          os.path.relpath(backing_file_path, os.path.dirname(qcow2_image_path)),
+          qcow2_image_path,
+      ])
 
   def _IterVersionedCipdPackages(self, packages):
     pkgs_by_dir = collections.defaultdict(list)
@@ -489,6 +609,8 @@ class AvdConfig:
           self._config.avd_package,
           self._config.emulator_package,
           self._config.system_image_package,
+          *self._config.privileged_apk,
+          *self._config.additional_apk,
       ]
     for pkg in packages:
       # Skip when no version exists to prevent "IsAvailable()" returning False
@@ -549,6 +671,11 @@ class AvdConfig:
      * Emulator instance can be booted correctly.
      * The snapshot can be loaded successfully.
     """
+    # Update the absolute avd path in root_ini file
+    with ini.update_ini_file(self._root_ini_path) as r_ini_contents:
+      r_ini_contents['path'] = self._avd_dir
+
+    # Update hardware settings.
     config_files = [self._config_ini_path]
     # The file hardware.ini within each snapshot need to be updated as well.
     hw_ini_glob_pattern = os.path.join(self._avd_dir, 'snapshots', '*',
@@ -643,13 +770,14 @@ class _AvdInstance:
             writable_system=False,
             gpu_mode=_DEFAULT_GPU_MODE,
             wipe_data=False,
-            debug_tags=None):
+            debug_tags=None,
+            require_fast_start=False):
     """Starts the emulator running an instance of the given AVD.
 
     Note when ensure_system_settings is True, the program will wait until the
     emulator is fully booted, and then update system settings.
     """
-    is_slow_start = False
+    is_slow_start = not require_fast_start
     # Force to load system snapshot if detected.
     if self.HasSystemSnapshot():
       if not writable_system:
@@ -701,7 +829,10 @@ class _AvdInstance:
       if debug_tags:
         emulator_cmd.extend(['-debug', debug_tags])
 
-      emulator_env = {}
+      emulator_env = {
+          # kill immediately when emulator hang.
+          'ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL': '0',
+      }
       if self._emulator_home:
         emulator_env['ANDROID_EMULATOR_HOME'] = self._emulator_home
       if 'DISPLAY' in os.environ:
@@ -740,28 +871,33 @@ class _AvdInstance:
         self._emulator_serial = timeout_retry.Run(
             listen_for_serial, timeout=30, retries=0, args=[sock])
         logging.info('%s started', self._emulator_serial)
-      except Exception as e:
-        self.Stop()
-        # avd.py is executed with python2.
-        # pylint: disable=W0707
-        raise AvdException('Emulator failed to start: %s' % str(e))
+      except Exception:
+        self.Stop(force=True)
+        raise
 
     # Set the system settings in "Start" here instead of setting in "Create"
     # because "Create" is used during AVD creation, and we want to avoid extra
     # turn-around on rolling AVD.
     if ensure_system_settings:
       assert self.device is not None, '`instance.device` not initialized.'
-      self.device.WaitUntilFullyBooted(timeout=120 if is_slow_start else 30)
+      logging.info('Waiting for device to be fully booted.')
+      self.device.WaitUntilFullyBooted(timeout=360 if is_slow_start else 90,
+                                       retries=0)
+      logging.info('Device fully booted, verifying system settings.')
       _EnsureSystemSettings(self.device)
 
-  def Stop(self):
-    """Stops the emulator process."""
+  def Stop(self, force=False):
+    """Stops the emulator process.
+
+    When "force" is True, we will call "terminate" on the emulator process,
+    which is recommended when emulator is not responding to adb commands.
+    """
     if self._emulator_proc:
       if self._emulator_proc.poll() is None:
-        if self.device:
-          self.device.adb.Emu('kill')
-        else:
+        if force or not self.device:
           self._emulator_proc.terminate()
+        else:
+          self.device.adb.Emu('kill')
         self._emulator_proc.wait()
       self._emulator_proc = None
       self._emulator_serial = None

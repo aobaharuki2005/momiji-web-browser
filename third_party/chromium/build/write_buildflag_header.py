@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2015 The Chromium Authors. All rights reserved.
+# Copyright 2015 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -85,7 +85,7 @@ def WriteHeader(options):
 
     output_file.write('\n#ifndef %s\n' % options.header_guard)
     output_file.write('#define %s\n\n' % options.header_guard)
-    output_file.write('#include "build/buildflag.h"\n\n')
+    output_file.write('#include "build/buildflag.h" // IWYU pragma: export\n\n')
 
     for pair in options.flags:
       output_file.write('#define BUILDFLAG_INTERNAL_%s() (%s)\n' % pair)

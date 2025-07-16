@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-# Copyright (c) 2012 The Chromium Authors. All rights reserved.
+# Copyright 2012 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -33,14 +33,13 @@ usage() {
 build_apt_package_list() {
   echo "Building apt package list." >&2
   apt-cache dumpavail | \
-    python3 -c '\
-      import re,sys; \
-      o = sys.stdin.read(); \
-      p = {"i386": ":i386"}; \
-      f = re.M | re.S; \
-      r = re.compile(r"^Package: (.+?)$.+?^Architecture: (.+?)$", f); \
-      m = ["%s%s" % (x, p.get(y, "")) for x, y in re.findall(r, o)]; \
-      print("\n".join(m))'
+    python3 -c 'import re,sys; \
+o = sys.stdin.read(); \
+p = {"i386": ":i386"}; \
+f = re.M | re.S; \
+r = re.compile(r"^Package: (.+?)$.+?^Architecture: (.+?)$", f); \
+m = ["%s%s" % (x, p.get(y, "")) for x, y in re.findall(r, o)]; \
+print("\n".join(m))'
 }
 
 # Checks whether a particular package is available in the repos.
@@ -98,18 +97,17 @@ fi
 
 distro_codename=$(lsb_release --codename --short)
 distro_id=$(lsb_release --id --short)
-# TODO(crbug.com/1199405): Remove 14.04 (trusty) and 16.04 (xenial).
-supported_codenames="(trusty|xenial|bionic|disco|eoan|focal|groovy)"
+# TODO(crbug.com/1199405): Remove 16.04 (xenial).
+supported_codenames="(xenial|bionic|focal|jammy)"
 supported_ids="(Debian)"
 if [ 0 -eq "${do_unsupported-0}" ] && [ 0 -eq "${do_quick_check-0}" ] ; then
   if [[ ! $distro_codename =~ $supported_codenames &&
         ! $distro_id =~ $supported_ids ]]; then
     echo -e "ERROR: The only supported distros are\n" \
-      "\tUbuntu 14.04 LTS (trusty with EoL April 2022)\n" \
       "\tUbuntu 16.04 LTS (xenial with EoL April 2024)\n" \
       "\tUbuntu 18.04 LTS (bionic with EoL April 2028)\n" \
-      "\tUbuntu 20.04 LTS (focal with Eol April 2030)\n" \
-      "\tUbuntu 20.10 (groovy)\n" \
+      "\tUbuntu 20.04 LTS (focal with EoL April 2030)\n" \
+      "\tUbuntu 22.04 LTS (jammy with EoL April 2032)\n" \
       "\tDebian 10 (buster) or later" >&2
     exit 1
   fi
@@ -272,7 +270,9 @@ common_lib_list="\
   zlib1g
 "
 
-if package_exists libffi7; then
+if package_exists libffi8; then
+  common_lib_list="${common_lib_list} libffi8"
+elif package_exists libffi7; then
   common_lib_list="${common_lib_list} libffi7"
 elif package_exists libffi6; then
   common_lib_list="${common_lib_list} libffi6"
@@ -294,6 +294,9 @@ fi
 if package_exists libwayland-egl1; then
   lib_list="${lib_list} libwayland-egl1"
 fi
+if package_exists libpangocairo-1.0-0; then
+  lib_list="${lib_list} libpangocairo-1.0-0"
+fi
 if package_exists libgl1:i386; then
   lib_list="${lib_list} libgl1:i386"
 fi
@@ -302,6 +305,9 @@ if package_exists libegl1:i386; then
 fi
 if package_exists libwayland-egl1:i386; then
   lib_list="${lib_list} libwayland-egl1:i386"
+fi
+if package_exists libpangocairo-1.0-0:i386; then
+  lib_list="${lib_list} libpangocairo-1.0-0:i386"
 fi
 
 # 32-bit libraries needed e.g. to compile V8 snapshot for Android or armhf
@@ -403,7 +409,11 @@ if package_exists apache2.2-bin; then
 else
   backwards_compatible_list="${backwards_compatible_list} apache2-bin"
 fi
-if package_exists php7.4-cgi; then
+if package_exists php8.1-cgi; then
+  backwards_compatible_list="${backwards_compatible_list} php8.1-cgi libapache2-mod-php8.1"
+elif package_exists php8.0-cgi; then
+  backwards_compatible_list="${backwards_compatible_list} php8.0-cgi libapache2-mod-php8.0"
+elif package_exists php7.4-cgi; then
   backwards_compatible_list="${backwards_compatible_list} php7.4-cgi libapache2-mod-php7.4"
 elif package_exists php7.3-cgi; then
   backwards_compatible_list="${backwards_compatible_list} php7.3-cgi libapache2-mod-php7.3"
@@ -420,14 +430,6 @@ else
 fi
 
 case $distro_codename in
-  trusty)
-    backwards_compatible_list+=" \
-      libgbm-dev-lts-trusty
-      libgl1-mesa-dev-lts-trusty
-      libgl1-mesa-glx-lts-trusty:i386
-      libgles2-mesa-dev-lts-trusty
-      mesa-common-dev-lts-trusty"
-    ;;
   xenial)
     backwards_compatible_list+=" \
       libgbm-dev-lts-xenial
@@ -443,20 +445,11 @@ arm_list="libc6-dev-armhf-cross
           linux-libc-dev-armhf-cross
           g++-arm-linux-gnueabihf"
 
-# Work around for dependency issue Ubuntu/Trusty: http://crbug.com/435056
+# Work around for dependency issue Ubuntu: http://crbug.com/435056
 case $distro_codename in
-  trusty)
-    arm_list+=" g++-4.8-multilib-arm-linux-gnueabihf
-                gcc-4.8-multilib-arm-linux-gnueabihf"
-    ;;
   xenial|bionic)
     arm_list+=" g++-5-multilib-arm-linux-gnueabihf
                 gcc-5-multilib-arm-linux-gnueabihf
-                gcc-arm-linux-gnueabihf"
-    ;;
-  disco|eoan)
-    arm_list+=" g++-9-multilib-arm-linux-gnueabihf
-                gcc-9-multilib-arm-linux-gnueabihf
                 gcc-arm-linux-gnueabihf"
     ;;
   focal)
@@ -464,12 +457,10 @@ case $distro_codename in
                 gcc-10-multilib-arm-linux-gnueabihf
                 gcc-arm-linux-gnueabihf"
     ;;
-  groovy)
-    arm_list+=" g++-10-multilib-arm-linux-gnueabihf
-                gcc-10-multilib-arm-linux-gnueabihf
-                gcc-arm-linux-gnueabihf
-                g++-10-arm-linux-gnueabihf
-                gcc-10-arm-linux-gnueabihf"
+  jammy)
+    arm_list+=" gcc-arm-linux-gnueabihf
+                g++-11-arm-linux-gnueabihf
+                gcc-11-arm-linux-gnueabihf"
     ;;
 esac
 
@@ -506,7 +497,9 @@ nacl_list="\
 "
 
 # Some package names have changed over time
-if package_exists libssl1.1; then
+if package_exists libssl-dev; then
+  nacl_list="${nacl_list} libssl-dev:i386"
+elif package_exists libssl1.1; then
   nacl_list="${nacl_list} libssl1.1:i386"
 elif package_exists libssl1.0.2; then
   nacl_list="${nacl_list} libssl1.0.2:i386"
@@ -596,7 +589,7 @@ fi
 # that are part of v8 need to be compiled with -m32 which means
 # that basic multilib support is needed.
 if file -L /sbin/init | grep -q 'ELF 64-bit'; then
-  # gcc-multilib conflicts with the arm cross compiler (at least in trusty) but
+  # gcc-multilib conflicts with the arm cross compiler but
   # g++-X.Y-multilib gives us the 32-bit support that we need. Find out the
   # appropriate value of X and Y by seeing what version the current
   # distribution's g++-multilib package depends on.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2014 The Chromium Authors. All rights reserved.
+# Copyright 2014 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -26,9 +26,10 @@ def FetchValuesFromFile(values_dict, file_name):
 
   The file must exist, otherwise you get the Python exception from open().
   """
-  for line in open(file_name, 'r').readlines():
-    key, val = line.rstrip('\r\n').split('=', 1)
-    values_dict[key] = val
+  with open(file_name, 'r') as f:
+    for line in f.readlines():
+      key, val = line.rstrip('\r\n').split('=', 1)
+      values_dict[key] = val
 
 
 def FetchValues(file_list, is_official_build=None):
@@ -146,12 +147,10 @@ def BuildParser():
                       help='Whether the current build should be an official '
                            'build, used in addition to the environment '
                            'variable.')
-  parser.add_argument(
-      '--next',
-      action='store_true',
-      help='Whether the current build should be a "next" '
-      'build, which targets pre-release versions of '
-      'Android')
+  parser.add_argument('--next',
+                      action='store_true',
+                      help='Whether the current build should be a "next" '
+                      'build, which targets pre-release versions of Android.')
   parser.add_argument('args', nargs=argparse.REMAINDER,
                       help='For compatibility: INPUT and OUTPUT can be '
                            'passed as positional arguments.')
