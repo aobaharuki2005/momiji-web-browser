@@ -254,6 +254,8 @@
     <string name="pref_key_addresses_manage_addresses" translatable="false">pref_key_addresses_manage_addresses</string>
     <!-- Key for the "Save and autofill addresses" preference in the "Autofill" fragment -->
     <string name="pref_key_addresses_save_and_autofill_addresses" translatable="false">pref_key_addresses_save_and_autofill_addresses</string>
+    <!-- Key for the "Sync addresses across devices" preference in the "Autofill" fragment -->
+    <string name="pref_key_addresses_sync_cards_across_devices" translatable="false">pref_key_addresses_sync_cards_across_devices</string>
 
     <!-- Privacy Settings -->
     <string name="pref_key_privacy_security_category" translatable="false">pref_key_privacy_security_category</string>
