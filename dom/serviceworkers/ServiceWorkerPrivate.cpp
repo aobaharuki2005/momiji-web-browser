@@ -1050,8 +1050,7 @@ nsresult ServiceWorkerPrivate::SendPushSubscriptionChangeEvent(
 }
 
 nsresult ServiceWorkerPrivate::SendNotificationClickEvent(
-    const IPCNotification& aNotification,
-    const nsAString& aAction) {
+    const IPCNotification& aNotification, const nsAString& aAction) {
   MOZ_ASSERT(NS_IsMainThread());
 
   ServiceWorkerNotificationClickEventOpArgs clickArgs;
