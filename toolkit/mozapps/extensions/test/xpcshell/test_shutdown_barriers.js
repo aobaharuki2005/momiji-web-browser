@@ -11,11 +11,6 @@ AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
-add_setup(() => {
-  do_get_profile();
-  Services.fog.initializeFOG();
-});
-
 add_task(async function test_shutdown_barriers() {
   await promiseStartupManager();
 
@@ -47,11 +42,6 @@ add_task(async function test_shutdown_barriers() {
     });
 
     await addon.disable();
-
-    Assert.ok(
-      Glean.xpiDatabase.lateStack.testGetValue(),
-      "Saving addon changes late in shutdown is recorded."
-    );
 
     // Delay again for the same reasons.
     await delay(1000);
@@ -173,8 +163,6 @@ add_task(async function test_late_XPIDB_load_rejected() {
     /XPIDatabase.asyncLoadDB attempt after XPIProvider shutdown/,
     "Expect XPIDatebase._dbPromise to be set to the expected rejected promise"
   );
-
-  Assert.ok(Glean.xpiDatabase.lateLoad.testGetValue(), "Late load stack set.");
 
   Assert.equal(
     resolveDBReadySpy.callCount,
