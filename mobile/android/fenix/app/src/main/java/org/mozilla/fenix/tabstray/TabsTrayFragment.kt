@@ -697,23 +697,17 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         tabSize: Int,
         isNewCollection: Boolean = false,
     ) {
+        val messageResId = when {
+            isNewCollection -> R.string.create_collection_tabs_saved_new_collection
+            tabSize == 1 -> R.string.create_collection_tab_saved
+            else -> return // Don't show snackbar for multiple tabs
+        }
+
         runIfFragmentIsAttached {
             showSnackbar(
                 snackBarParentView = requireView(),
                 snackbarState = SnackbarState(
-                    message = getString(
-                        when {
-                            isNewCollection -> {
-                                R.string.create_collection_tabs_saved_new_collection
-                            }
-                            tabSize > 1 -> {
-                                R.string.create_collection_tabs_saved
-                            }
-                            else -> {
-                                R.string.create_collection_tab_saved
-                            }
-                        },
-                    ),
+                    message = getString(messageResId),
                     duration = SnackbarState.Duration.Preset.Long,
                 ),
             )

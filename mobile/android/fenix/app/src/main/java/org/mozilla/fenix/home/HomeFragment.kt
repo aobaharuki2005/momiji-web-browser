@@ -202,19 +202,15 @@ class HomeFragment : Fragment() {
         @SuppressLint("NotifyDataSetChanged")
         override fun onTabsAdded(tabCollection: TabCollection, sessions: List<TabSessionState>) {
             view?.let {
-                val message = if (sessions.size == 1) {
-                    R.string.create_collection_tab_saved
-                } else {
-                    R.string.create_collection_tabs_saved
+                if (sessions.size == 1) {
+                    Snackbar.make(
+                        snackBarParentView = binding.dynamicSnackbarContainer,
+                        snackbarState = SnackbarState(
+                            message = it.context.getString(R.string.create_collection_tab_saved),
+                            duration = SnackbarState.Duration.Preset.Long,
+                        ),
+                    ).show()
                 }
-
-                Snackbar.make(
-                    snackBarParentView = binding.dynamicSnackbarContainer,
-                    snackbarState = SnackbarState(
-                        message = it.context.getString(message),
-                        duration = SnackbarState.Duration.Preset.Long,
-                    ),
-                ).show()
             }
         }
     }

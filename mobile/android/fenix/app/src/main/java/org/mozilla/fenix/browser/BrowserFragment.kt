@@ -637,22 +637,17 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             tabSize: Int,
             isNewCollection: Boolean = false,
         ) {
+            val messageResId = when {
+                isNewCollection -> R.string.create_collection_tabs_saved_new_collection
+                tabSize == 1 -> R.string.create_collection_tab_saved
+                else -> return // Don't show snackbar for multiple tabs
+            }
+
             view?.let {
-                val messageStringRes = when {
-                    isNewCollection -> {
-                        R.string.create_collection_tabs_saved_new_collection
-                    }
-                    tabSize > 1 -> {
-                        R.string.create_collection_tabs_saved
-                    }
-                    else -> {
-                        R.string.create_collection_tab_saved
-                    }
-                }
                 Snackbar.make(
                     snackBarParentView = binding.dynamicSnackbarContainer,
                     snackbarState = SnackbarState(
-                        message = getString(messageStringRes),
+                        message = getString(messageResId),
                     ),
                 ).show()
             }
