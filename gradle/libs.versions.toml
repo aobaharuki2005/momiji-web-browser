@@ -79,7 +79,7 @@ serialization = "1.9.0"
 
 # Linter versions
 detekt = "1.23.8"
-ktlint = "1.6.0"
+ktlint = "1.7.0"
 spotless = "7.1.0"
 
 # Mozilla versions

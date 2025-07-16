@@ -502,6 +502,7 @@ subprojects { project ->
                         'ktlint_standard_argument-list-wrapping'     : 'disabled',
                         'ktlint_standard_class-signature'            : 'disabled',
                         'ktlint_standard_enum-wrapping'              : 'disabled',
+                        'ktlint_standard_expression-operand-wrapping': 'disabled',
                         'ktlint_standard_function-expression-body'   : 'disabled',
                         'ktlint_standard_function-signature'         : 'disabled',
                         'ktlint_standard_max-line-length'            : 'disabled',
