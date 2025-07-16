@@ -40,6 +40,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
+import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.toolbar.ToolbarPosition.BOTTOM
 import org.mozilla.fenix.components.toolbar.ToolbarPosition.TOP
 import org.mozilla.fenix.databinding.FragmentHomeBinding
@@ -183,7 +184,12 @@ internal class HomeToolbarComposable(
 
     private fun configureStartingInSearchMode() {
         if (!directToSearchConfig.startSearch) return
-        appStore.dispatch(SearchStarted())
+        appStore.dispatch(
+            SearchStarted(
+                tabId = directToSearchConfig.sessionId,
+                source = directToSearchConfig.source,
+            ),
+        )
 
         if (directToSearchConfig.sessionId != null) {
             browserStore.state.findTab(directToSearchConfig.sessionId)?.let {
@@ -247,10 +253,12 @@ internal class HomeToolbarComposable(
          * @property startSearch Whether to start in search mode. Defaults to `false`.
          * @property sessionId The session ID of the current session with details of which to start search.
          * Defaults to `null`.
+         * @property source The application feature from where a new search was started.
          */
         data class DirectToSearchConfig(
             val startSearch: Boolean = false,
             val sessionId: String? = null,
+            val source: MetricsUtils.Source = MetricsUtils.Source.NONE,
         )
     }
 }

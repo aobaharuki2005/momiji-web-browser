@@ -584,6 +584,7 @@ class HomeFragment : Fragment() {
                     startSearch = bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR) ||
                             FxNimbus.features.oneClickSearch.value().enabled,
                     sessionId = args.sessionToStartSearchFor,
+                    source = args.searchAccessPoint,
                 ),
                 tabStripContent = { TabStrip() },
                 searchSuggestionsContent = { toolbarStore, modifier ->
