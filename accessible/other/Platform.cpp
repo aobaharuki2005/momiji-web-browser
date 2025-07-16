@@ -25,8 +25,7 @@ void a11y::PlatformFocusEvent(Accessible* aTarget) {}
 
 void a11y::PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
                                   bool aIsSelectionCollapsed,
-                                  int32_t aGranularity,
-                                  bool aFromUser) {}
+                                  int32_t aGranularity, bool aFromUser) {}
 
 void a11y::PlatformTextChangeEvent(Accessible*, const nsAString&, int32_t,
                                    uint32_t, bool, bool) {}

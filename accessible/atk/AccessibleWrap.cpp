@@ -1031,8 +1031,7 @@ void a11y::PlatformFocusEvent(Accessible* aTarget) {
 
 void a11y::PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
                                   bool aIsSelectionCollapsed,
-                                  int32_t aGranularity,
-                                  bool aFromUser) {
+                                  int32_t aGranularity, bool aFromUser) {
   AtkObject* wrapper = GetWrapperFor(aTarget);
   g_signal_emit_by_name(wrapper, "text_caret_moved", aOffset);
 }
