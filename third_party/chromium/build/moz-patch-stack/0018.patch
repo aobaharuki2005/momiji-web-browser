@@ -1,5 +1,5 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 3 Jul 2025 17:30:27 -0500
+Date: Thu, 3 Jul 2025 17:52:35 -0500
 Subject: Bug 1921707 - point to new build directory location in
  third_party/chromium/build r=ng,glandium
 
@@ -56,9 +56,9 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6b855a2bf6b1f3feb
  config/android/copy_ex.gni                    |   4 +-
  config/android/create_unwind_table.gni        |   4 +-
  config/android/extract_unwind_tables.gni      |   4 +-
- config/android/internal_rules.gni             | 104 +++----
+ config/android/internal_rules.gni             | 106 +++----
  config/android/linker_version_script.gni      |   6 +-
- config/android/rules.gni                      | 126 ++++----
+ config/android/rules.gni                      | 124 ++++----
  config/android/system_image.gni               |  10 +-
  config/android/test/classpath_order/BUILD.gn  |   2 +-
  config/android/test/proto/BUILD.gn            |   2 +-
@@ -86,12 +86,15 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6b855a2bf6b1f3feb
  config/freetype/BUILD.gn                      |   6 +-
  config/fuchsia/BUILD.gn                       |  10 +-
  config/fuchsia/DIR_METADATA                   |   2 +-
- config/fuchsia/generate_runner_scripts.gni    |  22 +-
+ config/fuchsia/generate_runner_scripts.gni    |  18 +-
  ...ackaged_content_embedder_excluded_dirs.gni |   2 +-
  .../size_optimized_cast_receiver_args.gn      |   2 +-
  ...e_optimized_cast_receiver_args_internal.gn |   2 +-
  config/fuchsia/sizes.gni                      |   6 +-
  config/fuchsia/symbol_archive.gni             |   2 +-
+ .../test/gfx_test_ui_stack.shard.test-cml     |   2 +-
+ .../test/platform_video_codecs.shard.test-cml |   2 +-
+ .../fuchsia/test/test_ui_stack.shard.test-cml |   2 +-
  .../fuchsia/test/web_instance.shard.test-cml  |  12 +-
  config/gcc/BUILD.gn                           |  12 +-
  config/host_byteorder.gni                     |   2 +-
@@ -130,6 +133,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6b855a2bf6b1f3feb
  config/posix/BUILD.gn                         |   6 +-
  config/profiling/profiling.gni                |   4 +-
  config/python.gni                             |   4 +-
+ config/riscv.gni                              |   2 +-
  config/rust.gni                               |  12 +-
  config/sanitizers/BUILD.gn                    |  26 +-
  config/sanitizers/sanitizers.gni              |  20 +-
@@ -272,7 +276,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6b855a2bf6b1f3feb
  util/process_version.gni                      |   4 +-
  win/BUILD.gn                                  |  10 +-
  win/message_compiler.gni                      |   2 +-
- 254 files changed, 1219 insertions(+), 1219 deletions(-)
+ 258 files changed, 1221 insertions(+), 1221 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
 index 58f5f20fb..bb3b80c27 100644
@@ -1461,7 +1465,7 @@ index 27866a7c1..e80bb71c1 100644
  # Contains useful GN variables that may be used by scripts that take
  # --output-directory as an arg.
 diff --git a/config/android/config.gni b/config/android/config.gni
-index 11b66eb95..ee53b6234 100644
+index b60b6fb8d..319e5fccd 100644
 --- a/config/android/config.gni
 +++ b/config/android/config.gni
 @@ -8,9 +8,9 @@
@@ -1578,13 +1582,14 @@ index d4daa6a2a..773f5dc00 100644
      inputs = [
        _dump_syms,
 diff --git a/config/android/internal_rules.gni b/config/android/internal_rules.gni
-index ec03c6e3c..08ee03043 100644
+index ca98628bb..440f6efa3 100644
 --- a/config/android/internal_rules.gni
 +++ b/config/android/internal_rules.gni
-@@ -4,18 +4,18 @@
+@@ -4,19 +4,19 @@
  
  # Do not add any imports to non-//build directories here.
  # Some projects (e.g. V8) do not have non-build directories DEPS'ed in.
+-import("//build/config/android/channel.gni")
 -import("//build/config/android/config.gni")
 -import("//build/config/compiler/compiler.gni")
 -import("//build/config/compute_inputs_for_analyze.gni")
@@ -1594,6 +1599,7 @@ index ec03c6e3c..08ee03043 100644
 -import("//build/toolchain/goma.gni")
 -import("//build/toolchain/kythe.gni")
 -import("//build/util/generate_wrapper.gni")
++import("//chromium/build/config/android/channel.gni")
 +import("//chromium/build/config/android/config.gni")
 +import("//chromium/build/config/compiler/compiler.gni")
 +import("//chromium/build/config/compute_inputs_for_analyze.gni")
@@ -1610,7 +1616,7 @@ index ec03c6e3c..08ee03043 100644
  }
  assert(is_android)
  
-@@ -159,7 +159,7 @@ template("write_build_config") {
+@@ -160,7 +160,7 @@ template("write_build_config") {
        deps += [ invoker.android_manifest_dep ]
      }
  
@@ -1619,7 +1625,7 @@ index ec03c6e3c..08ee03043 100644
      depfile = "$target_gen_dir/$target_name.d"
      inputs = []
      outputs = [ invoker.build_config ]
-@@ -640,11 +640,11 @@ template("generate_android_wrapper") {
+@@ -641,11 +641,11 @@ template("generate_android_wrapper") {
    generate_wrapper(target_name) {
      forward_variables_from(invoker, "*", TESTONLY_AND_VISIBILITY)
      forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
@@ -1635,7 +1641,7 @@ index ec03c6e3c..08ee03043 100644
      ]
    }
  }
-@@ -656,7 +656,7 @@ template("generate_r_java") {
+@@ -657,7 +657,7 @@ template("generate_r_java") {
      inputs = [ invoker.build_config ]
      outputs = [ invoker.srcjar_path ]
      _rebased_build_config = rebase_path(invoker.build_config, root_build_dir)
@@ -1644,7 +1650,7 @@ index ec03c6e3c..08ee03043 100644
      args = [
        "--depfile",
        rebase_path(depfile, root_build_dir),
-@@ -733,7 +733,7 @@ template("test_runner_script") {
+@@ -734,7 +734,7 @@ template("test_runner_script") {
      if (defined(invoker.android_test_runner_script)) {
        _runner_script = invoker.android_test_runner_script
      } else {
@@ -1653,7 +1659,7 @@ index ec03c6e3c..08ee03043 100644
      }
  
      deps = []
-@@ -741,11 +741,11 @@ template("test_runner_script") {
+@@ -742,11 +742,11 @@ template("test_runner_script") {
        deps = invoker.deps
      }
      data_deps = [
@@ -1667,7 +1673,7 @@ index ec03c6e3c..08ee03043 100644
      }
      if (defined(invoker.data_deps)) {
        data_deps += invoker.data_deps
-@@ -999,9 +999,9 @@ if (enable_java_templates) {
+@@ -1000,9 +1000,9 @@ if (enable_java_templates) {
  
        # https://crbug.com/1098752 Fix for bot OOM (https://crbug.com/1098333).
        if (defined(java_cmd_pool_size)) {
@@ -1679,7 +1685,7 @@ index ec03c6e3c..08ee03043 100644
        }
  
        # Lint requires generated sources and generated resources from the build.
-@@ -1044,7 +1044,7 @@ if (enable_java_templates) {
+@@ -1045,7 +1045,7 @@ if (enable_java_templates) {
        _lint_gen_dir = "$target_gen_dir/$target_name"
        _backported_methods = "//third_party/r8/backported_methods.txt"
  
@@ -1688,7 +1694,7 @@ index ec03c6e3c..08ee03043 100644
        depfile = "$target_gen_dir/$target_name.d"
        inputs = [
          _lint_jar_path,
-@@ -1126,7 +1126,7 @@ if (enable_java_templates) {
+@@ -1127,7 +1127,7 @@ if (enable_java_templates) {
        } else {
          _stamp_path = "$target_out_dir/$target_name/build.lint.stamp"
          deps += [
@@ -1697,7 +1703,7 @@ index ec03c6e3c..08ee03043 100644
            invoker.build_config_dep,
          ]
          inputs += [ invoker.build_config ]
-@@ -1160,7 +1160,7 @@ if (enable_java_templates) {
+@@ -1161,7 +1161,7 @@ if (enable_java_templates) {
  
    template("proguard") {
      forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
@@ -1706,7 +1712,7 @@ index ec03c6e3c..08ee03043 100644
      _deps = invoker.deps
  
      _inputs = [
-@@ -1343,9 +1343,9 @@ if (enable_java_templates) {
+@@ -1351,9 +1351,9 @@ if (enable_java_templates) {
  
        # http://crbug.com/725224. Fix for bots running out of memory.
        if (defined(java_cmd_pool_size)) {
@@ -1718,7 +1724,7 @@ index ec03c6e3c..08ee03043 100644
        }
      }
    }
-@@ -1372,7 +1372,7 @@ if (enable_java_templates) {
+@@ -1380,7 +1380,7 @@ if (enable_java_templates) {
          _max_heap_size = "1G"
        }
  
@@ -1727,7 +1733,7 @@ index ec03c6e3c..08ee03043 100644
        inputs = [ _build_config ]
        _java_script = "$root_build_dir/bin/$_script_name"
        outputs = [ _java_script ]
-@@ -1462,7 +1462,7 @@ if (enable_java_templates) {
+@@ -1470,7 +1470,7 @@ if (enable_java_templates) {
      }
  
      if (_enable_main_dex_list) {
@@ -1736,7 +1742,7 @@ index ec03c6e3c..08ee03043 100644
      }
  
      if (_desugar_needs_classpath || _proguard_enabled) {
-@@ -1562,7 +1562,7 @@ if (enable_java_templates) {
+@@ -1572,7 +1572,7 @@ if (enable_java_templates) {
                                       "data",
                                       "data_deps",
                                     ])
@@ -1745,7 +1751,7 @@ index ec03c6e3c..08ee03043 100644
          deps = _deps
          depfile = "$target_gen_dir/$target_name.d"
          outputs = [ invoker.output ]
-@@ -1577,9 +1577,9 @@ if (enable_java_templates) {
+@@ -1587,9 +1587,9 @@ if (enable_java_templates) {
          if (!_is_library) {
            # http://crbug.com/725224. Fix for bots running out of memory.
            if (defined(java_cmd_pool_size)) {
@@ -1757,7 +1763,7 @@ index ec03c6e3c..08ee03043 100644
            }
          }
  
-@@ -1728,7 +1728,7 @@ if (enable_java_templates) {
+@@ -1738,7 +1738,7 @@ if (enable_java_templates) {
        _sources_json_file = "$target_out_dir/${target_name}__jacoco_sources.json"
        _jacococli_jar = "//third_party/jacoco/lib/jacococli.jar"
  
@@ -1766,7 +1772,7 @@ index ec03c6e3c..08ee03043 100644
        inputs = invoker.source_files + [
                   _jacococli_jar,
                   invoker.input_jar_path,
-@@ -1760,7 +1760,7 @@ if (enable_java_templates) {
+@@ -1770,7 +1770,7 @@ if (enable_java_templates) {
  
    template("filter_jar") {
      action_with_pydeps(target_name) {
@@ -1775,7 +1781,7 @@ index ec03c6e3c..08ee03043 100644
        forward_variables_from(invoker,
                               TESTONLY_AND_VISIBILITY + [
                                     "deps",
-@@ -1843,7 +1843,7 @@ if (enable_java_templates) {
+@@ -1853,7 +1853,7 @@ if (enable_java_templates) {
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "data_deps" ])
        _bytecode_checker_script = "$root_build_dir/bin/helper/bytecode_processor"
@@ -1784,7 +1790,7 @@ index ec03c6e3c..08ee03043 100644
        inputs = [
          invoker.build_config,
          invoker.input_jar,
-@@ -1852,7 +1852,7 @@ if (enable_java_templates) {
+@@ -1862,7 +1862,7 @@ if (enable_java_templates) {
        outputs = [ "$target_out_dir/$target_name.bytecode.stamp" ]
        deps =
            invoker.deps +
@@ -1793,7 +1799,7 @@ index ec03c6e3c..08ee03043 100644
        _rebased_build_config = rebase_path(invoker.build_config, root_build_dir)
        args = [
          "--target-name",
-@@ -1891,7 +1891,7 @@ if (enable_java_templates) {
+@@ -1901,7 +1901,7 @@ if (enable_java_templates) {
    template("merge_manifests") {
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "deps" ])
@@ -1802,7 +1808,7 @@ index ec03c6e3c..08ee03043 100644
        depfile = "$target_gen_dir/$target_name.d"
  
        inputs = [
-@@ -1971,7 +1971,7 @@ if (enable_java_templates) {
+@@ -1981,7 +1981,7 @@ if (enable_java_templates) {
                                     "public_deps",
                                     "sources",
                                   ])
@@ -1811,7 +1817,7 @@ index ec03c6e3c..08ee03043 100644
  
        depfile = "$target_gen_dir/${invoker.target_name}.d"
        outputs = [
-@@ -2127,7 +2127,7 @@ if (enable_java_templates) {
+@@ -2137,7 +2137,7 @@ if (enable_java_templates) {
      }
      _final_srcjar_path = "${target_gen_dir}/${target_name}.srcjar"
  
@@ -1820,7 +1826,7 @@ index ec03c6e3c..08ee03043 100644
  
      _inputs = [
        invoker.build_config,
-@@ -2453,7 +2453,7 @@ if (enable_java_templates) {
+@@ -2463,7 +2463,7 @@ if (enable_java_templates) {
      forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, [ "deps" ])
@@ -1829,7 +1835,7 @@ index ec03c6e3c..08ee03043 100644
        outputs = [ invoker.optimized_proto_output ]
        inputs = [
          android_sdk_tools_bundle_aapt2,
-@@ -2501,7 +2501,7 @@ if (enable_java_templates) {
+@@ -2511,7 +2511,7 @@ if (enable_java_templates) {
    template("unused_resources") {
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "deps" ])
@@ -1838,7 +1844,7 @@ index ec03c6e3c..08ee03043 100644
        depfile = "$target_gen_dir/${target_name}.d"
        _unused_resources_script = "$root_build_dir/bin/helper/unused_resources"
        inputs = [ _unused_resources_script ]
-@@ -2512,7 +2512,7 @@ if (enable_java_templates) {
+@@ -2522,7 +2522,7 @@ if (enable_java_templates) {
        if (!defined(deps)) {
          deps = []
        }
@@ -1847,7 +1853,7 @@ index ec03c6e3c..08ee03043 100644
        _rebased_module_build_config =
            rebase_path(invoker.build_config, root_build_dir)
        args = [
-@@ -2558,7 +2558,7 @@ if (enable_java_templates) {
+@@ -2568,7 +2568,7 @@ if (enable_java_templates) {
    template("create_size_info_files") {
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "deps" ])
@@ -1856,7 +1862,7 @@ index ec03c6e3c..08ee03043 100644
        _jar_info_path = "$root_build_dir/size-info/${invoker.name}.jar.info"
        _pak_info_path = "$root_build_dir/size-info/${invoker.name}.pak.info"
        _res_info_path = "$root_build_dir/size-info/${invoker.name}.res.info"
-@@ -2654,7 +2654,7 @@ if (enable_java_templates) {
+@@ -2664,7 +2664,7 @@ if (enable_java_templates) {
            invoker.secondary_native_lib_placeholders
      }
  
@@ -1865,7 +1871,7 @@ index ec03c6e3c..08ee03043 100644
  
      _inputs = [ invoker.packaged_resources_path ]
  
-@@ -2911,9 +2911,9 @@ if (enable_java_templates) {
+@@ -2921,9 +2921,9 @@ if (enable_java_templates) {
  
      action_with_pydeps(target_name) {
        if (invoker.use_turbine) {
@@ -1877,7 +1883,7 @@ index ec03c6e3c..08ee03043 100644
        }
  
        if (target_name == "chrome_java__header") {
-@@ -3009,7 +3009,7 @@ if (enable_java_templates) {
+@@ -3019,7 +3019,7 @@ if (enable_java_templates) {
          args += [ "--gomacc-path=$goma_dir/gomacc" ]
  
          # Override the default action_pool when goma is enabled.
@@ -1886,7 +1892,7 @@ index ec03c6e3c..08ee03043 100644
        }
  
        # Flag enable_kythe_annotations requires
-@@ -3099,7 +3099,7 @@ if (enable_java_templates) {
+@@ -3109,7 +3109,7 @@ if (enable_java_templates) {
      }
  
      action_with_pydeps(target_name) {
@@ -1895,7 +1901,7 @@ index ec03c6e3c..08ee03043 100644
        depfile = "$target_gen_dir/$target_name.d"
        deps = _srcjar_deps
        if (defined(invoker.deps)) {
-@@ -3144,7 +3144,7 @@ if (enable_java_templates) {
+@@ -3154,7 +3154,7 @@ if (enable_java_templates) {
          args += [ "--gomacc-path=$goma_dir/gomacc" ]
  
          # Override the default action_pool when goma is enabled.
@@ -1904,7 +1910,7 @@ index ec03c6e3c..08ee03043 100644
        }
  
        if (_chromium_code) {
-@@ -3174,7 +3174,7 @@ if (enable_java_templates) {
+@@ -3184,7 +3184,7 @@ if (enable_java_templates) {
                                     "data_deps",
                                     "public_deps",
                                   ])
@@ -1913,7 +1919,7 @@ index ec03c6e3c..08ee03043 100644
        deps = [ _ijar_target ]
        if (defined(invoker.deps)) {
          deps += invoker.deps
-@@ -3876,7 +3876,7 @@ if (enable_java_templates) {
+@@ -3886,7 +3886,7 @@ if (enable_java_templates) {
                         get_label_info(invoker.bytecode_rewriter_target, "name")
        _rebased_build_config = rebase_path(_build_config, root_build_dir)
        action_with_pydeps(_rewritten_jar_target_name) {
@@ -1922,7 +1928,7 @@ index ec03c6e3c..08ee03043 100644
          inputs = [
            _rewriter_path,
            _build_config,
-@@ -4217,7 +4217,7 @@ template("create_android_app_bundle_module") {
+@@ -4227,7 +4227,7 @@ template("create_android_app_bundle_module") {
  
    forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
    _deps = invoker.deps
@@ -1931,7 +1937,7 @@ index ec03c6e3c..08ee03043 100644
  
    # NOTE: Compared to the inputs of the "package_apk" template action,
    #       this list is much smaller, since finalize_apk is never called
-@@ -4359,7 +4359,7 @@ template("create_android_app_bundle_module") {
+@@ -4369,7 +4369,7 @@ template("create_android_app_bundle_module") {
  #   output: Path to native libraries config.
  template("allot_native_libraries") {
    action_with_pydeps(target_name) {
@@ -1965,14 +1971,13 @@ index 7dab72227..b978a1b1e 100644
      inputs = []
      args = [ "--output=" + rebase_path(invoker.linker_script, root_build_dir) ]
 diff --git a/config/android/rules.gni b/config/android/rules.gni
-index c17780dd5..a9760d799 100644
+index c06074c9d..9487f69ea 100644
 --- a/config/android/rules.gni
 +++ b/config/android/rules.gni
-@@ -5,17 +5,17 @@
+@@ -4,16 +4,16 @@
+ 
  # Do not add any imports to non-//build directories here.
  # Some projects (e.g. V8) do not have non-build directories DEPS'ed in.
- 
--import("//build/config/android/channel.gni")
 -import("//build/config/android/config.gni")
 -import("//build/config/android/copy_ex.gni")
 -import("//build/config/clang/clang.gni")
@@ -1983,7 +1988,6 @@ index c17780dd5..a9760d799 100644
 -import("//build/config/sanitizers/sanitizers.gni")
 -import("//build/config/zip.gni")
 -import("//build/toolchain/toolchain.gni")
-+import("//chromium/build/config/android/channel.gni")
 +import("//chromium/build/config/android/config.gni")
 +import("//chromium/build/config/android/copy_ex.gni")
 +import("//chromium/build/config/clang/clang.gni")
@@ -1994,10 +1998,10 @@ index c17780dd5..a9760d799 100644
 +import("//chromium/build/config/sanitizers/sanitizers.gni")
 +import("//chromium/build/config/zip.gni")
 +import("//chromium/build/toolchain/toolchain.gni")
- 
  assert(is_android || is_robolectric)
  
-@@ -136,7 +136,7 @@ template("create_native_executable_dist") {
+ declare_args() {
+@@ -133,7 +133,7 @@ template("create_native_executable_dist") {
  
  if (enable_java_templates) {
    if (is_android) {
@@ -2006,7 +2010,7 @@ index c17780dd5..a9760d799 100644
    }
  
    # JNI target implementation. See generate_jni or generate_jar_jni for usage.
-@@ -158,7 +158,7 @@ if (enable_java_templates) {
+@@ -155,7 +155,7 @@ if (enable_java_templates) {
          # cycle, though.
          "//base:debugging_buildflags",
          "//base:logging_buildflags",
@@ -2015,7 +2019,7 @@ index c17780dd5..a9760d799 100644
        ]
      }
  
-@@ -279,9 +279,9 @@ if (enable_java_templates) {
+@@ -276,9 +276,9 @@ if (enable_java_templates) {
          public_deps = []
          public_deps = [ ":$target_name($default_toolchain)" ]
          public_configs =
@@ -2027,7 +2031,7 @@ index c17780dd5..a9760d799 100644
          if (defined(visibility)) {
            # Allow dependency on ourselves from secondary toolchain.
            visibility += [ ":$target_name" ]
-@@ -477,7 +477,7 @@ if (enable_java_templates && is_android) {
+@@ -474,7 +474,7 @@ if (enable_java_templates && is_android) {
          ]
  
          # This gives targets depending on this registration access to our generated header.
@@ -2036,7 +2040,7 @@ index c17780dd5..a9760d799 100644
        }
  
        if (defined(invoker.file_exclusions)) {
-@@ -535,7 +535,7 @@ if (enable_java_templates && is_android) {
+@@ -532,7 +532,7 @@ if (enable_java_templates && is_android) {
                                 "testonly",
                                 "visibility",
                               ])
@@ -2045,7 +2049,7 @@ index c17780dd5..a9760d799 100644
        outputs = [ "$target_gen_dir/$target_name.srcjar" ]
  
        _include_dirs = [
-@@ -585,7 +585,7 @@ if (enable_java_templates && is_android) {
+@@ -582,7 +582,7 @@ if (enable_java_templates && is_android) {
  
        # The sources aren't compiled so don't check their dependencies.
        check_includes = false
@@ -2054,7 +2058,7 @@ index c17780dd5..a9760d799 100644
  
        _srcjar_path = "${target_gen_dir}/${target_name}.srcjar"
        _rebased_srcjar_path = rebase_path(_srcjar_path, root_build_dir)
-@@ -649,7 +649,7 @@ if (enable_java_templates && is_android) {
+@@ -646,7 +646,7 @@ if (enable_java_templates && is_android) {
  
        # The sources aren't compiled so don't check their dependencies.
        check_includes = false
@@ -2063,7 +2067,7 @@ index c17780dd5..a9760d799 100644
  
        _srcjar_path = "${target_gen_dir}/${target_name}.srcjar"
        _rebased_srcjar_path = rebase_path(_srcjar_path, root_build_dir)
-@@ -722,7 +722,7 @@ if (enable_java_templates && is_android) {
+@@ -719,7 +719,7 @@ if (enable_java_templates && is_android) {
  
        # The sources aren't compiled so don't check their dependencies.
        check_includes = false
@@ -2072,7 +2076,7 @@ index c17780dd5..a9760d799 100644
  
        _srcjar_path = "${target_gen_dir}/${target_name}.srcjar"
        _rebased_srcjar_path = rebase_path(_srcjar_path, root_build_dir)
-@@ -761,7 +761,7 @@ if (enable_java_templates && is_android) {
+@@ -758,7 +758,7 @@ if (enable_java_templates && is_android) {
        if (defined(invoker.includes)) {
          inputs += invoker.includes
        }
@@ -2081,7 +2085,7 @@ index c17780dd5..a9760d799 100644
  
        outputs = [ invoker.output ]
  
-@@ -812,7 +812,7 @@ if (enable_java_templates && is_android) {
+@@ -809,7 +809,7 @@ if (enable_java_templates && is_android) {
  
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "deps" ])
@@ -2090,7 +2094,7 @@ index c17780dd5..a9760d799 100644
        outputs = [ _native_libraries_file ]
        args = [
          "--output",
-@@ -872,7 +872,7 @@ if (enable_java_templates && is_android) {
+@@ -869,7 +869,7 @@ if (enable_java_templates && is_android) {
    #
    #   action("my_resources__create_zip") {
    #     _depfile = "$target_gen_dir/${target_name}.d"
@@ -2099,7 +2103,7 @@ index c17780dd5..a9760d799 100644
    #     args = [
    #       "--depfile", rebase_path(_depfile, root_build_dir),
    #       "--output-zip", rebase_path(_zip_archive, root_build_dir),
-@@ -910,7 +910,7 @@ if (enable_java_templates && is_android) {
+@@ -907,7 +907,7 @@ if (enable_java_templates && is_android) {
        ]
        inputs = [ invoker.generated_resources_zip ]
        outputs = [ _rtxt_out_path ]
@@ -2108,7 +2112,7 @@ index c17780dd5..a9760d799 100644
        args = [
          "--resources-zip-path",
          rebase_path(invoker.generated_resources_zip, root_build_dir),
-@@ -948,7 +948,7 @@ if (enable_java_templates && is_android) {
+@@ -945,7 +945,7 @@ if (enable_java_templates && is_android) {
      action_with_pydeps(_generating_target_name) {
        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "deps" ])
        inputs = invoker.resources
@@ -2117,7 +2121,7 @@ index c17780dd5..a9760d799 100644
  
        outputs = [ _resources_zip ]
  
-@@ -1002,7 +1002,7 @@ if (enable_java_templates && is_android) {
+@@ -999,7 +999,7 @@ if (enable_java_templates && is_android) {
                                 "deps",
                                 "testonly",
                               ])
@@ -2126,7 +2130,7 @@ index c17780dd5..a9760d799 100644
        _lib_path = "${invoker.base_dir}/$android_app_abi/${invoker.lib_name}"
        _stripped_output_path = "$root_out_dir/${invoker.lib_name}"
        _unstripped_output_path =
-@@ -1299,7 +1299,7 @@ if (enable_java_templates && is_android) {
+@@ -1296,7 +1296,7 @@ if (enable_java_templates && is_android) {
          forward_variables_from(invoker, [ "deps" ])
          public_deps = [ ":$_build_config_target_name" ]
  
@@ -2135,7 +2139,7 @@ index c17780dd5..a9760d799 100644
          inputs = _all_sources
          outputs = [ "$target_gen_dir/$target_name.stamp" ]
          args = [
-@@ -1504,7 +1504,7 @@ if (enable_java_templates && is_android) {
+@@ -1501,7 +1501,7 @@ if (enable_java_templates && is_android) {
        if (defined(invoker.android_manifest)) {
          input_manifest = invoker.android_manifest
        } else {
@@ -2144,7 +2148,7 @@ index c17780dd5..a9760d799 100644
        }
  
        if (defined(_package_name)) {
-@@ -1626,7 +1626,7 @@ if (enable_java_templates && is_android) {
+@@ -1623,7 +1623,7 @@ if (enable_java_templates && is_android) {
        }
        srcjar_deps += [
          ":$_compile_resources_target_name",
@@ -2153,7 +2157,7 @@ index c17780dd5..a9760d799 100644
        ]
        if (_generate_final_jni) {
          srcjar_deps += [
-@@ -1823,7 +1823,7 @@ if (enable_java_templates && is_android) {
+@@ -1820,7 +1820,7 @@ if (enable_java_templates && is_android) {
      _rebased_build_config = rebase_path(_build_config, root_build_dir)
      action_with_pydeps(_jar_target_name) {
        forward_variables_from(invoker, [ "data" ])
@@ -2162,7 +2166,7 @@ index c17780dd5..a9760d799 100644
        depfile = "$target_gen_dir/$target_name.d"
        deps = [ _build_config_dep ]
  
-@@ -2038,7 +2038,7 @@ if (enable_java_templates && is_android) {
+@@ -2039,7 +2039,7 @@ if (enable_java_templates && is_android) {
                               ])
        depfile = "$target_gen_dir/$target_name.d"
        deps = _deps
@@ -2171,7 +2175,7 @@ index c17780dd5..a9760d799 100644
  
        inputs = [ _build_config ]
  
-@@ -2251,7 +2251,7 @@ if (enable_java_templates && is_android) {
+@@ -2252,7 +2252,7 @@ if (enable_java_templates && is_android) {
    template("generate_build_config_srcjar") {
      java_cpp_template(target_name) {
        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
@@ -2180,7 +2184,7 @@ index c17780dd5..a9760d799 100644
        defines = []
  
        # Set these even when !use_final_fields so that they have correct default
-@@ -2324,7 +2324,7 @@ if (enable_java_templates && is_android) {
+@@ -2325,7 +2325,7 @@ if (enable_java_templates && is_android) {
          defines += [ "USE_FINAL" ]
        }
  
@@ -2189,7 +2193,7 @@ index c17780dd5..a9760d799 100644
        defines += [ "PACKAGE=${invoker.java_package}" ]
  
        _use_chromium_linker =
-@@ -2712,7 +2712,7 @@ if (enable_java_templates && is_android) {
+@@ -2713,7 +2713,7 @@ if (enable_java_templates && is_android) {
        action_with_pydeps(_incremental_manifest_target_name) {
          deps = [ ":$_merge_manifest_target" ]
          script =
@@ -2198,7 +2202,7 @@ index c17780dd5..a9760d799 100644
          inputs = [ _android_manifest ]
          outputs = [ _incremental_android_manifest ]
  
-@@ -3120,7 +3120,7 @@ if (enable_java_templates && is_android) {
+@@ -3121,7 +3121,7 @@ if (enable_java_templates && is_android) {
              (!defined(testonly) || !testonly) &&
              # Injected JaCoCo code causes -checkdiscards to fail.
              !use_jacoco_coverage) {
@@ -2251,7 +2255,7 @@ index c17780dd5..a9760d799 100644
            data += [ "$_final_apk_path.mapping" ]
            args += [
              "--proguard-mapping-path",
-@@ -3790,7 +3790,7 @@ if (enable_java_templates && is_android) {
+@@ -3799,7 +3799,7 @@ if (enable_java_templates && is_android) {
    template("instrumentation_test_runner") {
      if (use_rts) {
        action("${invoker.target_name}__rts_filters") {
@@ -2260,7 +2264,7 @@ index c17780dd5..a9760d799 100644
          rts_file = "${root_build_dir}/gen/rts/${invoker.target_name}.filter"
          inverted_rts_file =
              "${root_build_dir}/gen/rts/${invoker.target_name}_inverted.filter"
-@@ -3817,7 +3817,7 @@ if (enable_java_templates && is_android) {
+@@ -3826,7 +3826,7 @@ if (enable_java_templates && is_android) {
  
      action_with_pydeps(_apk_operations_target_name) {
        testonly = true
@@ -2269,7 +2273,7 @@ index c17780dd5..a9760d799 100644
        deps = []
        _generated_script = "$root_build_dir/bin/${invoker.target_name}"
        outputs = [ _generated_script ]
-@@ -4149,7 +4149,7 @@ if (enable_java_templates && is_android) {
+@@ -4158,7 +4158,7 @@ if (enable_java_templates && is_android) {
  
        if (!defined(use_default_launcher) || use_default_launcher) {
          deps += [
@@ -2278,7 +2282,7 @@ index c17780dd5..a9760d799 100644
            "//testing/android/native_test:native_test_java",
          ]
        }
-@@ -4184,7 +4184,7 @@ if (enable_java_templates && is_android) {
+@@ -4193,7 +4193,7 @@ if (enable_java_templates && is_android) {
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
  
@@ -2287,7 +2291,7 @@ index c17780dd5..a9760d799 100644
        depfile = "$target_gen_dir/$target_name.d"
        sources = invoker.sources
  
-@@ -4264,7 +4264,7 @@ if (enable_java_templates && is_android) {
+@@ -4273,7 +4273,7 @@ if (enable_java_templates && is_android) {
        # The suffix "__protoc_java.srcjar" is used by SuperSize to identify
        # protobuf symbols.
        _srcjar_path = "$target_gen_dir/$target_name.srcjar"
@@ -2296,7 +2300,7 @@ index c17780dd5..a9760d799 100644
  
        if (defined(invoker.deps)) {
          # Need to care only about targets that might generate .proto files.
-@@ -4364,7 +4364,7 @@ if (enable_java_templates && is_android) {
+@@ -4373,7 +4373,7 @@ if (enable_java_templates && is_android) {
  
      action_with_pydeps("${_template_name}__flatc_java") {
        _srcjar_path = "$target_gen_dir/$target_name.srcjar"
@@ -2305,7 +2309,7 @@ index c17780dd5..a9760d799 100644
  
        deps = [ _flatc_dep ]
        if (defined(invoker.deps)) {
-@@ -4488,7 +4488,7 @@ if (enable_java_templates && is_android) {
+@@ -4497,7 +4497,7 @@ if (enable_java_templates && is_android) {
      # Some libraries might not have resources; others might have two jars.
      if (update_android_aar_prebuilts) {
        print("Writing " + rebase_path(_info_path, "//"))
@@ -2314,7 +2318,7 @@ index c17780dd5..a9760d799 100644
                    [
                          "list",
                          "--output",
-@@ -4522,7 +4522,7 @@ if (enable_java_templates && is_android) {
+@@ -4531,7 +4531,7 @@ if (enable_java_templates && is_android) {
      assert(_scanned_files.has_classes_jar || _scanned_files.subjars == [])
  
      action_with_pydeps(_unpack_target_name) {
@@ -2323,7 +2327,7 @@ index c17780dd5..a9760d799 100644
        args = [
                 "extract",
                 "--output-dir",
-@@ -5011,12 +5011,12 @@ if (enable_java_templates && is_android) {
+@@ -5021,12 +5021,12 @@ if (enable_java_templates && is_android) {
      if (_proguard_enabled) {
        if (_add_view_trace_events) {
          _trace_event_rewriter_target =
@@ -2338,7 +2342,7 @@ index c17780dd5..a9760d799 100644
            inputs = [
              _rewriter_path,
              _build_config,
-@@ -5231,7 +5231,7 @@ if (enable_java_templates && is_android) {
+@@ -5238,7 +5238,7 @@ if (enable_java_templates && is_android) {
  
      _bundle_target_name = "${_target_name}__bundle"
      action_with_pydeps(_bundle_target_name) {
@@ -2347,7 +2351,7 @@ index c17780dd5..a9760d799 100644
        inputs = _all_module_zip_paths + _all_module_build_configs +
                 [ _BUNDLETOOL_JAR_PATH ]
        outputs = [ _bundle_path ]
-@@ -5307,9 +5307,9 @@ if (enable_java_templates && is_android) {
+@@ -5312,9 +5312,9 @@ if (enable_java_templates && is_android) {
  
        # http://crbug.com/725224. Fix for bots running out of memory.
        if (defined(java_cmd_pool_size)) {
@@ -2359,7 +2363,7 @@ index c17780dd5..a9760d799 100644
        }
      }
  
-@@ -5348,7 +5348,7 @@ if (enable_java_templates && is_android) {
+@@ -5353,7 +5353,7 @@ if (enable_java_templates && is_android) {
      _bundle_wrapper_script_path = "$_bundle_wrapper_script_dir/$_target_name"
  
      action_with_pydeps("${_target_name}__wrapper_script") {
@@ -2368,7 +2372,7 @@ index c17780dd5..a9760d799 100644
        inputs = [ _base_module_build_config ]
        outputs = [ _bundle_wrapper_script_path ]
  
-@@ -5360,8 +5360,8 @@ if (enable_java_templates && is_android) {
+@@ -5365,8 +5365,8 @@ if (enable_java_templates && is_android) {
          _bundle_path,
        ]
        data_deps = [
@@ -2379,7 +2383,7 @@ index c17780dd5..a9760d799 100644
        ]
  
        deps = [ _base_module_build_config_target ]
-@@ -5417,7 +5417,7 @@ if (enable_java_templates && is_android) {
+@@ -5421,7 +5421,7 @@ if (enable_java_templates && is_android) {
          ]
  
          # Required by logcat command.
@@ -2388,7 +2392,7 @@ index c17780dd5..a9760d799 100644
          data += [ _proguard_mapping_path ]
        }
      }
-@@ -5472,7 +5472,7 @@ if (enable_java_templates && is_android) {
+@@ -5476,7 +5476,7 @@ if (enable_java_templates && is_android) {
  
      _apks_path = "$root_build_dir/apks/$_bundle_name.apks"
      action_with_pydeps("${_target_name}_apks") {
@@ -2397,7 +2401,7 @@ index c17780dd5..a9760d799 100644
        inputs = [
          _bundle_path,
          _BUNDLETOOL_JAR_PATH,
-@@ -5506,9 +5506,9 @@ if (enable_java_templates && is_android) {
+@@ -5510,9 +5510,9 @@ if (enable_java_templates && is_android) {
  
        # http://crbug.com/725224. Fix for bots running out of memory.
        if (defined(java_cmd_pool_size)) {
@@ -2409,7 +2413,7 @@ index c17780dd5..a9760d799 100644
        }
      }
    }
-@@ -5530,7 +5530,7 @@ if (enable_java_templates && is_android) {
+@@ -5534,7 +5534,7 @@ if (enable_java_templates && is_android) {
    template("create_app_bundle_minimal_apks") {
      action_with_pydeps(target_name) {
        forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "deps" ])
@@ -2418,7 +2422,7 @@ index c17780dd5..a9760d799 100644
        _dir = get_path_info(invoker.bundle_path, "dir")
        _name = get_path_info(invoker.bundle_path, "name")
        _output_path = "$_dir/$_name.minimal.apks"
-@@ -5570,7 +5570,7 @@ template("generate_ui_locale_resources") {
+@@ -5574,7 +5574,7 @@ template("generate_ui_locale_resources") {
                  "${target_name}.zip"
  
    action_with_pydeps(_generating_target_name) {
@@ -3252,7 +3256,7 @@ index 210aa6a95..ddd134a2b 100644
 -mixins: "//build/fuchsia/COMMON_METADATA"
 +mixins: "//chromium/build/fuchsia/COMMON_METADATA"
 diff --git a/config/fuchsia/generate_runner_scripts.gni b/config/fuchsia/generate_runner_scripts.gni
-index 66974f5d2..2dd489584 100644
+index de5b598c0..6d72f1393 100644
 --- a/config/fuchsia/generate_runner_scripts.gni
 +++ b/config/fuchsia/generate_runner_scripts.gni
 @@ -4,12 +4,12 @@
@@ -3274,7 +3278,7 @@ index 66974f5d2..2dd489584 100644
  
  declare_args() {
    # Sets the Fuchsia Amber repository which will be used by default by the
-@@ -99,7 +99,7 @@ template("fuchsia_run_script_with_packages") {
+@@ -92,7 +92,7 @@ template("fuchsia_run_script_with_packages") {
      if (!defined(data_deps)) {
        data_deps = []
      }
@@ -3283,35 +3287,24 @@ index 66974f5d2..2dd489584 100644
  
      _combined_package_list = [ invoker.package ]
  
-@@ -206,14 +206,14 @@ template("fuchsia_package_installer") {
+@@ -168,7 +168,7 @@ template("fuchsia_package_installer") {
+                            "*",
                             TESTONLY_AND_VISIBILITY + [ "executable_args" ])
      forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
-     if (use_v2_script) {
--      executable = rebase_path("//build/fuchsia/test/deploy_to_fuchsia.py")
-+      executable = rebase_path("//chromium/build/fuchsia/test/deploy_to_fuchsia.py")
-       executable_args = [
-         "--out-dir",
-         "@WrappedPath(.)",
-         pkg_shortname,
-       ]
-     } else {
--      executable = rebase_path("//build/fuchsia/deploy_to_pkg_repo.py")
-+      executable = rebase_path("//chromium/build/fuchsia/deploy_to_pkg_repo.py")
-     }
-     output_name_format = "deploy_%package%"
-     include_fuchsia_build_dir = true
-@@ -243,9 +243,9 @@ template("fuchsia_test_runner") {
+-    executable = rebase_path("//build/fuchsia/test/deploy_to_fuchsia.py")
++    executable = rebase_path("//chromium/build/fuchsia/test/deploy_to_fuchsia.py")
+     executable_args = [
+       "--out-dir",
+       "@WrappedPath(.)",
+@@ -195,7 +195,7 @@ template("fuchsia_test_runner") {
+                                  "package_deps",
                                 ])
  
-     if (use_v2_script) {
--      _test_runner_py = "//build/fuchsia/test/run_test.py"
-+      _test_runner_py = "//chromium/build/fuchsia/test/run_test.py"
-     } else {
--      _test_runner_py = "//build/fuchsia/test_runner.py"
-+      _test_runner_py = "//chromium/build/fuchsia/test_runner.py"
-     }
+-    _test_runner_py = "//build/fuchsia/test/run_test.py"
++    _test_runner_py = "//chromium/build/fuchsia/test/run_test.py"
  
      executable = rebase_path(_test_runner_py)
+ 
 diff --git a/config/fuchsia/packaged_content_embedder_excluded_dirs.gni b/config/fuchsia/packaged_content_embedder_excluded_dirs.gni
 index a08ed454a..42634a64c 100644
 --- a/config/fuchsia/packaged_content_embedder_excluded_dirs.gni
@@ -3326,7 +3319,7 @@ index a08ed454a..42634a64c 100644
  # List of transitively included directories that should be stripped from
  # released packages for size reasons. For use with the |excluded_dirs| variable
 diff --git a/config/fuchsia/size_optimized_cast_receiver_args.gn b/config/fuchsia/size_optimized_cast_receiver_args.gn
-index b65d05d22..1ce0d7586 100644
+index 9a366c7bf..fbc274ad5 100644
 --- a/config/fuchsia/size_optimized_cast_receiver_args.gn
 +++ b/config/fuchsia/size_optimized_cast_receiver_args.gn
 @@ -8,7 +8,7 @@
@@ -3395,6 +3388,45 @@ index e05af1155..09060e4ab 100644
  
      inputs = [ _ids_txt ]
  
+diff --git a/config/fuchsia/test/gfx_test_ui_stack.shard.test-cml b/config/fuchsia/test/gfx_test_ui_stack.shard.test-cml
+index 2e51f033f..3bd80a343 100644
+--- a/config/fuchsia/test/gfx_test_ui_stack.shard.test-cml
++++ b/config/fuchsia/test/gfx_test_ui_stack.shard.test-cml
+@@ -7,7 +7,7 @@
+ // choice of API-set is not important.
+ {
+   include: [
+-    "//build/config/fuchsia/test/sysmem.shard.test-cml",
++    "//chromium/build/config/fuchsia/test/sysmem.shard.test-cml",
+   ],
+   children: [
+     {
+diff --git a/config/fuchsia/test/platform_video_codecs.shard.test-cml b/config/fuchsia/test/platform_video_codecs.shard.test-cml
+index 13b5a1b79..edc4f37ab 100644
+--- a/config/fuchsia/test/platform_video_codecs.shard.test-cml
++++ b/config/fuchsia/test/platform_video_codecs.shard.test-cml
+@@ -3,7 +3,7 @@
+ // found in the LICENSE file.
+ {
+   include: [
+-    "//build/config/fuchsia/test/sysmem.shard.test-cml",
++    "//chromium/build/config/fuchsia/test/sysmem.shard.test-cml",
+   ],
+   children: [
+     {
+diff --git a/config/fuchsia/test/test_ui_stack.shard.test-cml b/config/fuchsia/test/test_ui_stack.shard.test-cml
+index 102867cf1..59a3ce897 100644
+--- a/config/fuchsia/test/test_ui_stack.shard.test-cml
++++ b/config/fuchsia/test/test_ui_stack.shard.test-cml
+@@ -2,7 +2,7 @@
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ {
+-  include: [ "//build/config/fuchsia/test/sysmem.shard.test-cml" ],
++  include: [ "//chromium/build/config/fuchsia/test/sysmem.shard.test-cml" ],
+   children: [
+     {
+       name: "test_ui_stack",
 diff --git a/config/fuchsia/test/web_instance.shard.test-cml b/config/fuchsia/test/web_instance.shard.test-cml
 index b996f4ab6..793c329de 100644
 --- a/config/fuchsia/test/web_instance.shard.test-cml
@@ -4406,6 +4438,19 @@ index f3431fcc0..36c46e008 100644
  #
  # - The .pydeps file contains a list of python dependencies (imports really)
  #   and is generated _manually_ by using a command like:
+diff --git a/config/riscv.gni b/config/riscv.gni
+index b9597a0a9..6e99e6f03 100644
+--- a/config/riscv.gni
++++ b/config/riscv.gni
+@@ -2,7 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
+-import("//build/config/v8_target_cpu.gni")
++import("//chromium/build/config/v8_target_cpu.gni")
+ 
+ if (current_cpu == "riscv64" || v8_current_cpu == "riscv64") {
+   declare_args() {
 diff --git a/config/rust.gni b/config/rust.gni
 index ccae4502e..f0da1a889 100644
 --- a/config/rust.gni
@@ -4439,7 +4484,7 @@ index ccae4502e..f0da1a889 100644
    if (rust_abi_target == "arm-linux-androideabi") {
      # Android clang target specifications mostly match Rust, but this
 diff --git a/config/sanitizers/BUILD.gn b/config/sanitizers/BUILD.gn
-index b80e2e287..a98e064da 100644
+index 35b7ba7aa..ee86a9ac2 100644
 --- a/config/sanitizers/BUILD.gn
 +++ b/config/sanitizers/BUILD.gn
 @@ -2,15 +2,15 @@
@@ -4475,7 +4520,7 @@ index b80e2e287..a98e064da 100644
        args = [
 @@ -115,30 +115,30 @@ static_library("options_sources") {
      ":deps",
-     "//:gn_visibility",
+     "//:gn_all",
    ]
 -  sources = [ "//build/sanitizers/sanitizer_options.cc" ]
 +  sources = [ "//chromium/build/sanitizers/sanitizer_options.cc" ]
@@ -4519,7 +4564,7 @@ index b80e2e287..a98e064da 100644
      # though this sounds fragile, it isn't a big deal if it breaks, since proto
      # fuzzers will still work, they will just be slightly slower.
 diff --git a/config/sanitizers/sanitizers.gni b/config/sanitizers/sanitizers.gni
-index 3db3b91e5..9cc221326 100644
+index bcbd26761..b873e6d11 100644
 --- a/config/sanitizers/sanitizers.gni
 +++ b/config/sanitizers/sanitizers.gni
 @@ -2,12 +2,12 @@
@@ -4541,7 +4586,7 @@ index 3db3b91e5..9cc221326 100644
  
  declare_args() {
    # Compile for Address Sanitizer to find memory bugs.
-@@ -264,21 +264,21 @@ not_fuzzed_remove_nonasan_configs = []
+@@ -269,21 +269,21 @@ not_fuzzed_remove_nonasan_configs = []
  
  if (use_fuzzing_engine) {
    # Removing coverage should always just work.
@@ -4666,7 +4711,7 @@ index 6c41226a6..cc165effb 100644
    } else if (is_msan) {
      # If we're running under a sanitizer, if we configure v8 to generate
 diff --git a/config/win/BUILD.gn b/config/win/BUILD.gn
-index e69b65002..827ba6b02 100644
+index 9600e2bac..9f6ff38d1 100644
 --- a/config/win/BUILD.gn
 +++ b/config/win/BUILD.gn
 @@ -2,16 +2,16 @@
@@ -4877,7 +4922,7 @@ index 210aa6a95..ddd134a2b 100644
 -mixins: "//build/fuchsia/COMMON_METADATA"
 +mixins: "//chromium/build/fuchsia/COMMON_METADATA"
 diff --git a/fuchsia/cipd/BUILD.gn b/fuchsia/cipd/BUILD.gn
-index 80fe93b18..206c07aa3 100644
+index 0019b8645..21dee7f28 100644
 --- a/fuchsia/cipd/BUILD.gn
 +++ b/fuchsia/cipd/BUILD.gn
 @@ -6,9 +6,9 @@
@@ -4893,7 +4938,7 @@ index 80fe93b18..206c07aa3 100644
  import("//third_party/fuchsia-sdk/sdk/build/build_id_dir.gni")
  import("//third_party/fuchsia-sdk/sdk/build/cipd.gni")
  
-@@ -271,7 +271,7 @@ action("strip_chromedriver_binary") {
+@@ -263,7 +263,7 @@ action("strip_chromedriver_binary") {
    prog_name = "${root_out_dir}/clang_x64/chromedriver"
  
    deps = [ "//chrome/test/chromedriver:chromedriver_server($host_toolchain)" ]

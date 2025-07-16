@@ -1,5 +1,5 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 3 Jul 2025 17:30:28 -0500
+Date: Thu, 3 Jul 2025 17:52:35 -0500
 Subject: Bug 1775143 - pt14 - (mirror) 58f47eacaf10 r=ng
 
 Search third_party/libwebrtc/build for current_cpu, removing
@@ -32,6 +32,7 @@ sed -i 's/current_cpu/target_cpu/g' third_party/libwebrtc/build/config/nacl/conf
 sed -i 's/current_cpu/target_cpu/g' third_party/libwebrtc/build/config/nacl/host_toolchain.gni
 sed -i 's/current_cpu/target_cpu/g' third_party/libwebrtc/build/config/nacl/rules.gni
 sed -i 's/current_cpu/target_cpu/g' third_party/libwebrtc/build/config/posix/BUILD.gn
+sed -i 's/current_cpu/target_cpu/g' third_party/libwebrtc/build/config/riscv.gni
 sed -i 's/current_cpu/target_cpu/g' third_party/libwebrtc/build/config/rust.gni
 sed -i 's/current_cpu/target_cpu/g' third_party/libwebrtc/build/config/sanitizers/BUILD.gn
 sed -i 's/current_cpu/target_cpu/g' third_party/libwebrtc/build/config/sanitizers/sanitizers.gni
@@ -84,6 +85,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ec13234e5a641a026
  config/nacl/host_toolchain.gni    |  6 +--
  config/nacl/rules.gni             | 16 +++---
  config/posix/BUILD.gn             |  2 +-
+ config/riscv.gni                  |  2 +-
  config/rust.gni                   | 40 +++++++--------
  config/sanitizers/BUILD.gn        | 14 +++---
  config/sanitizers/sanitizers.gni  |  4 +-
@@ -106,7 +108,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ec13234e5a641a026
  toolchain/zos/BUILD.gn            |  2 +-
  win/BUILD.gn                      |  4 +-
  win/message_compiler.gni          |  2 +-
- 44 files changed, 305 insertions(+), 305 deletions(-)
+ 45 files changed, 306 insertions(+), 306 deletions(-)
 
 diff --git a/config/BUILD.gn b/config/BUILD.gn
 index 278d76265..644415057 100644
@@ -209,7 +211,7 @@ index 5e2ec054c..6b88d903c 100644
  
  if (target_cpu == "arm64" || target_cpu == "x64" || target_cpu == "mips64el") {
 diff --git a/config/android/config.gni b/config/android/config.gni
-index ee53b6234..2b807066f 100644
+index 319e5fccd..2bb658f4d 100644
 --- a/config/android/config.gni
 +++ b/config/android/config.gni
 @@ -324,17 +324,17 @@ if (is_android || is_chromeos) {
@@ -237,10 +239,10 @@ index ee53b6234..2b807066f 100644
    } else {
      assert(false, "Need android libgcc support for your target arch.")
 diff --git a/config/android/rules.gni b/config/android/rules.gni
-index a9760d799..1dfd1cfbf 100644
+index 9487f69ea..a59971811 100644
 --- a/config/android/rules.gni
 +++ b/config/android/rules.gni
-@@ -800,11 +800,11 @@ if (enable_java_templates && is_android) {
+@@ -797,11 +797,11 @@ if (enable_java_templates && is_android) {
    #       variables must not be set.
    template("write_native_libraries_java") {
      _native_libraries_file = "$target_gen_dir/$target_name.srcjar"
@@ -1083,6 +1085,19 @@ index 19cd33757..2e83cc90c 100644
                        "trim string",
                        [ "//chromium/build/linux/sysroot_scripts/sysroots.json" ])
        defines += [ "CR_SYSROOT_KEY=$sysroot_key" ]
+diff --git a/config/riscv.gni b/config/riscv.gni
+index 6e99e6f03..dfadb380c 100644
+--- a/config/riscv.gni
++++ b/config/riscv.gni
+@@ -4,7 +4,7 @@
+ 
+ import("//chromium/build/config/v8_target_cpu.gni")
+ 
+-if (current_cpu == "riscv64" || v8_current_cpu == "riscv64") {
++if (target_cpu == "riscv64" || v8_target_cpu == "riscv64") {
+   declare_args() {
+     # RISCV Vector extension compilation flag.
+     riscv_use_rvv = false
 diff --git a/config/rust.gni b/config/rust.gni
 index f0da1a889..35ee9f030 100644
 --- a/config/rust.gni
@@ -1178,7 +1193,7 @@ index f0da1a889..35ee9f030 100644
  }
  
 diff --git a/config/sanitizers/BUILD.gn b/config/sanitizers/BUILD.gn
-index a98e064da..fb0372910 100644
+index ee86a9ac2..e7fea6890 100644
 --- a/config/sanitizers/BUILD.gn
 +++ b/config/sanitizers/BUILD.gn
 @@ -55,7 +55,7 @@ group("deps") {
@@ -1243,7 +1258,7 @@ index a98e064da..fb0372910 100644
          cflags += [
            "-mllvm",
 diff --git a/config/sanitizers/sanitizers.gni b/config/sanitizers/sanitizers.gni
-index 9cc221326..5eaca6194 100644
+index b873e6d11..172556a7a 100644
 --- a/config/sanitizers/sanitizers.gni
 +++ b/config/sanitizers/sanitizers.gni
 @@ -138,7 +138,7 @@ if (!is_a_target_toolchain || toolchain_disables_sanitizers) {
@@ -1255,7 +1270,7 @@ index 9cc221326..5eaca6194 100644
    is_hwasan = false
  }
  
-@@ -222,7 +222,7 @@ if (use_libfuzzer && (is_linux || is_chromeos)) {
+@@ -227,7 +227,7 @@ if (use_libfuzzer && (is_linux || is_chromeos)) {
  assert(!is_debug || !(is_msan || is_ubsan || is_ubsan_vptr),
         "Sanitizers should generally be used in release (set is_debug=false).")
  
@@ -1330,7 +1345,7 @@ index 09167b5a6..96e6dc3a8 100644
    }
  }
 diff --git a/config/win/BUILD.gn b/config/win/BUILD.gn
-index 827ba6b02..b8b41ad10 100644
+index 9f6ff38d1..b64cb1875 100644
 --- a/config/win/BUILD.gn
 +++ b/config/win/BUILD.gn
 @@ -50,7 +50,7 @@ declare_args() {
@@ -1376,7 +1391,7 @@ index 827ba6b02..b8b41ad10 100644
        cflags += [ "-msse3" ]
      }
  
-@@ -306,7 +306,7 @@ config("winver") {
+@@ -303,7 +303,7 @@ config("winver") {
  
  # Linker flags for Windows SDK setup, this is applied only to EXEs and DLLs.
  config("sdk_link") {
@@ -1385,7 +1400,7 @@ index 827ba6b02..b8b41ad10 100644
      ldflags = [
        "/SAFESEH",  # Not compatible with x64 so use only for x86.
        "/largeaddressaware",
-@@ -530,11 +530,11 @@ config("static_crt") {
+@@ -527,11 +527,11 @@ config("static_crt") {
  # Subsystem --------------------------------------------------------------------
  
  # This is appended to the subsystem to specify a minimum version.
