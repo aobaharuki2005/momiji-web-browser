@@ -6,7 +6,6 @@ package mozilla.components.compose.browser.toolbar.concept
 
 import androidx.annotation.StringRes
 import mozilla.components.compose.browser.toolbar.R
-import mozilla.components.compose.browser.toolbar.R
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.PageOriginContextualMenuInteractions.CopyToClipboardClicked
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.PageOriginContextualMenuInteractions.LoadFromClipboardClicked
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.PageOriginContextualMenuInteractions.PasteFromClipboardClicked
