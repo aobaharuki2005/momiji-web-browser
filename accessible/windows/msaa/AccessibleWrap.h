@@ -9,6 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "LocalAccessible.h"
+#include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/StaticPtr.h"
@@ -34,6 +35,20 @@ class AccessibleWrap : public LocalAccessible {
  public:
   // LocalAccessible
   virtual void Shutdown() override;
+
+  // Helper methods
+  /**
+   * System caret support: update the Windows caret position.
+   * The system caret works more universally than the MSAA caret
+   * For example, Window-Eyes, JAWS, ZoomText and Windows Tablet Edition use it
+   * We will use an invisible system caret.
+   * Gecko is still responsible for drawing its own caret
+   */
+  static void UpdateSystemCaretFor(Accessible* aAccessible,
+                                   const LayoutDeviceIntRect& aCaretRect);
+  static void UpdateSystemCaretFor(LocalAccessible* aAccessible);
+  static void UpdateSystemCaretFor(RemoteAccessible* aProxy,
+                                   const LayoutDeviceIntRect& aCaretRect);
 
  public:
   /**

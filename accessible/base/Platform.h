@@ -13,6 +13,7 @@
 
 #if defined(ANDROID)
 #  include "nsTArray.h"
+#  include "nsRect.h"
 #endif
 
 #ifdef MOZ_WIDGET_COCOA
@@ -94,9 +95,11 @@ void PlatformEvent(Accessible* aTarget, uint32_t aEventType);
 void PlatformStateChangeEvent(Accessible* aTarget, uint64_t aState,
                               bool aEnabled);
 
-void PlatformFocusEvent(Accessible* aTarget);
+void PlatformFocusEvent(Accessible* aTarget,
+                        const LayoutDeviceIntRect& aCaretRect);
 void PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
                             bool aIsSelectionCollapsed, int32_t aGranularity,
+                            const LayoutDeviceIntRect& aCaretRect,
                             bool aFromUser);
 void PlatformTextChangeEvent(Accessible* aTarget, const nsAString& aStr,
                              int32_t aStart, uint32_t aLen, bool aIsInsert,

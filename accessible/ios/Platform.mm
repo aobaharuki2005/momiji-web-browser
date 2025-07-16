@@ -38,10 +38,12 @@ void PlatformEvent(Accessible*, uint32_t) {}
 
 void PlatformStateChangeEvent(Accessible*, uint64_t, bool) {}
 
-void PlatformFocusEvent(Accessible* aTarget) {}
+void PlatformFocusEvent(Accessible* aTarget,
+                        const LayoutDeviceIntRect& aCaretRect) {}
 
 void PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
                             bool aIsSelectionCollapsed, int32_t aGranularity,
+                            const LayoutDeviceIntRect& aCaretRect,
                             bool aFromUser) {}
 
 void PlatformTextChangeEvent(Accessible*, const nsAString&, int32_t, uint32_t,
