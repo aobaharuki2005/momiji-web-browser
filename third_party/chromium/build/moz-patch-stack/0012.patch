@@ -18,7 +18,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/aad17933ade017660
  5 files changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index b055e9369..3bb165212 100644
+index fceb20deb..c5ec0ce2e 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -2214,7 +2214,7 @@ config("no_rtti") {

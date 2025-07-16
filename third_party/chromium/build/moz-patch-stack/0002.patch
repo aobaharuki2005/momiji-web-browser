@@ -34,7 +34,7 @@ index b7a40b570..fd35f5827 100644
    if (use_libfuzzer) {
      public_deps += [ "//build/config/sanitizers:dlclose_shim" ]
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 5898b8c54..b055e9369 100644
+index e67ab7ffe..fceb20deb 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -12,7 +12,7 @@ import("//build/config/clang/clang.gni")

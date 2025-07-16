@@ -1,5 +1,5 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 7 Jul 2025 20:12:22 -0500
+Date: Mon, 7 Jul 2025 20:13:31 -0500
 Subject: Bug 1921707 - point to new build directory location in
  third_party/chromium/build r=ng,glandium
 
@@ -2825,7 +2825,7 @@ index 899cfa5ee..4f1993999 100644
  declare_args() {
    # Deprecated, use is_chromeos_lacros.
 diff --git a/config/clang/BUILD.gn b/config/clang/BUILD.gn
-index e6d80a8d4..b0e1fd675 100644
+index fcca59b0f..80e420e0d 100644
 --- a/config/clang/BUILD.gn
 +++ b/config/clang/BUILD.gn
 @@ -2,12 +2,12 @@
@@ -2869,7 +2869,7 @@ index 9928fc37b..a39ba70f3 100644
    # Use this instead of clang_use_chrome_plugins to enable just the raw-ptr-plugin.
    clang_use_raw_ptr_plugin = false
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 1e00d84eb..ce1ffa8ab 100644
+index d3d7682d9..c204eb969 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -2,46 +2,46 @@
@@ -3027,7 +3027,7 @@ index 1e00d84eb..ce1ffa8ab 100644
 @@ -1719,13 +1719,13 @@ config("runtime_library") {
    # order to cause that replacement to occur by explicitly linking in clang's
    # compiler-rt library.
-   if (is_clang && toolchain_has_rust) {
+   if (is_clang && !is_nacl) {
 -    configs += [ "//build/config/clang:compiler_builtins" ]
 +    configs += [ "//chromium/build/config/clang:compiler_builtins" ]
    }

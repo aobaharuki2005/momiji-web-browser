@@ -1,5 +1,5 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 7 Jul 2025 20:12:23 -0500
+Date: Mon, 7 Jul 2025 20:13:31 -0500
 Subject: Bug 1775143 - pt14 - (mirror) 58f47eacaf10 r=ng
 
 Search third_party/libwebrtc/build for current_cpu, removing
@@ -389,7 +389,7 @@ index d16d15e6e..fae0505b9 100644
    }
  }
 diff --git a/config/clang/BUILD.gn b/config/clang/BUILD.gn
-index b0e1fd675..385206835 100644
+index 80e420e0d..73dd45e62 100644
 --- a/config/clang/BUILD.gn
 +++ b/config/clang/BUILD.gn
 @@ -178,11 +178,11 @@ template("clang_lib") {
@@ -456,7 +456,7 @@ index b0e1fd675..385206835 100644
          } else {
            assert(false)  # Unhandled cpu type
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index ce1ffa8ab..10bc2ca84 100644
+index c204eb969..f713f12b5 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -24,11 +24,11 @@ import("//chromium/build/toolchain/rbe.gni")
