@@ -237,6 +237,10 @@ template("clang_lib") {
 
 # Adds a dependency on the Clang runtime library clang_rt.builtins.
 clang_lib("compiler_builtins") {
+# Mozilla: in the past, this checked for !toolchain_has_rust, and
+# effectively made this section a no-op.  We'll make it a definite
+# no-op.  Without this, we see errors during generation.
+if (false) {
   if (is_mac) {
     libname = "osx"
   } else if (is_ios) {
@@ -250,6 +254,7 @@ clang_lib("compiler_builtins") {
   } else {
     libname = "builtins"
   }
+}
 }
 
 # Adds a dependency on the Clang runtime library clang_rt.profile.
