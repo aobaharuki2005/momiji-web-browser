@@ -1,5 +1,5 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 7 Jul 2025 13:11:49 -0500
+Date: Mon, 7 Jul 2025 13:14:34 -0500
 Subject: Bug 1921707 - point to new build directory location in
  third_party/chromium/build r=ng,glandium
 
@@ -4452,7 +4452,7 @@ index b9597a0a9..6e99e6f03 100644
  if (current_cpu == "riscv64" || v8_current_cpu == "riscv64") {
    declare_args() {
 diff --git a/config/rust.gni b/config/rust.gni
-index ccae4502e..f0da1a889 100644
+index 4ef6e549f..b0d67eada 100644
 --- a/config/rust.gni
 +++ b/config/rust.gni
 @@ -2,13 +2,13 @@
@@ -4474,7 +4474,7 @@ index ccae4502e..f0da1a889 100644
  }
  
  declare_args() {
-@@ -167,7 +167,7 @@ if (is_linux) {
+@@ -162,7 +162,7 @@ if (is_linux) {
    }
    rust_abi_target = cpu + "-unknown-linux-gnu"
  } else if (is_android) {
@@ -6187,7 +6187,7 @@ index b5fe564bd..ec633fba3 100644
  if (toolchain_has_rust) {
    # List of Rust stdlib rlibs which are present in the official Rust toolchain
 diff --git a/rust/std/rules/BUILD.gn b/rust/std/rules/BUILD.gn
-index 8bdb2edf5..e4d904993 100644
+index 8ac1b7dea..143811047 100644
 --- a/rust/std/rules/BUILD.gn
 +++ b/rust/std/rules/BUILD.gn
 @@ -2,25 +2,25 @@
@@ -6323,16 +6323,16 @@ index 8bdb2edf5..e4d904993 100644
  }
  cargo_crate("compiler_builtins") {
    crate_type = "rlib"
--  crate_root = "//build/rust/std/fake_root/../../../../third_party/rust-toolchain/lib/rustlib/src/rust/vendor/compiler_builtins-0.1.85/src/lib.rs"
-+  crate_root = "//chromium/build/rust/std/fake_root/../../../../third_party/rust-toolchain/lib/rustlib/src/rust/vendor/compiler_builtins-0.1.85/src/lib.rs"
+-  crate_root = "//build/rust/std/fake_root/../../../../third_party/rust-toolchain/lib/rustlib/src/rust/vendor/compiler_builtins-0.1.87/src/lib.rs"
++  crate_root = "//chromium/build/rust/std/fake_root/../../../../third_party/rust-toolchain/lib/rustlib/src/rust/vendor/compiler_builtins-0.1.87/src/lib.rs"
    no_std = true
  
    # Unit tests skipped. Generate with --with-tests to include them.
    build_native_rust_unit_tests = false
--  sources = [ "//build/rust/std/fake_root/../../../../third_party/rust-toolchain/lib/rustlib/src/rust/vendor/compiler_builtins-0.1.85/src/lib.rs" ]
-+  sources = [ "//chromium/build/rust/std/fake_root/../../../../third_party/rust-toolchain/lib/rustlib/src/rust/vendor/compiler_builtins-0.1.85/src/lib.rs" ]
+-  sources = [ "//build/rust/std/fake_root/../../../../third_party/rust-toolchain/lib/rustlib/src/rust/vendor/compiler_builtins-0.1.87/src/lib.rs" ]
++  sources = [ "//chromium/build/rust/std/fake_root/../../../../third_party/rust-toolchain/lib/rustlib/src/rust/vendor/compiler_builtins-0.1.87/src/lib.rs" ]
    edition = "2015"
-   cargo_pkg_version = "0.1.85"
+   cargo_pkg_version = "0.1.87"
    cargo_pkg_authors = "Jorge Aparicio <japaricious@gmail.com>"
    cargo_pkg_name = "compiler_builtins"
    cargo_pkg_description = "Compiler intrinsics used by the Rust compiler. Also available for other targetsif necessary!"
@@ -6730,9 +6730,9 @@ index 8bdb2edf5..e4d904993 100644
 +  executable_configs -= [ "//chromium/build/config/compiler:chromium_code" ]
 +  executable_configs += [ "//chromium/build/config/compiler:no_chromium_code" ]
    deps = [
-     ":cfg_if",
      ":core",
-@@ -716,22 +716,22 @@ cargo_crate("test") {
+     ":getopts",
+@@ -714,22 +714,22 @@ cargo_crate("test") {
  }
  cargo_crate("unicode_width") {
    crate_type = "rlib"
@@ -6761,7 +6761,7 @@ index 8bdb2edf5..e4d904993 100644
    deps = [
      ":compiler_builtins",
      ":rustc_std_workspace_core",
-@@ -759,10 +759,10 @@ cargo_crate("unwind") {
+@@ -757,10 +757,10 @@ cargo_crate("unwind") {
    edition = "2021"
    cargo_pkg_version = "0.0.0"
    cargo_pkg_name = "unwind"

@@ -1,5 +1,5 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 7 Jul 2025 13:11:50 -0500
+Date: Mon, 7 Jul 2025 13:14:34 -0500
 Subject: Bug 1775143 - pt14 - (mirror) 58f47eacaf10 r=ng
 
 Search third_party/libwebrtc/build for current_cpu, removing
@@ -86,7 +86,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ec13234e5a641a026
  config/nacl/rules.gni             | 16 +++---
  config/posix/BUILD.gn             |  2 +-
  config/riscv.gni                  |  2 +-
- config/rust.gni                   | 40 +++++++--------
+ config/rust.gni                   | 46 ++++++++---------
  config/sanitizers/BUILD.gn        | 14 +++---
  config/sanitizers/sanitizers.gni  |  4 +-
  config/sysroot.gni                | 26 +++++-----
@@ -108,7 +108,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ec13234e5a641a026
  toolchain/zos/BUILD.gn            |  2 +-
  win/BUILD.gn                      |  4 +-
  win/message_compiler.gni          |  2 +-
- 45 files changed, 306 insertions(+), 306 deletions(-)
+ 45 files changed, 309 insertions(+), 309 deletions(-)
 
 diff --git a/config/BUILD.gn b/config/BUILD.gn
 index 278d76265..644415057 100644
@@ -1099,10 +1099,10 @@ index 6e99e6f03..dfadb380c 100644
      # RISCV Vector extension compilation flag.
      riscv_use_rvv = false
 diff --git a/config/rust.gni b/config/rust.gni
-index f0da1a889..35ee9f030 100644
+index b0d67eada..81d440686 100644
 --- a/config/rust.gni
 +++ b/config/rust.gni
-@@ -81,11 +81,11 @@ declare_args() {
+@@ -77,9 +77,9 @@ declare_args() {
  # Platform support for "official" toolchains (Android or Chromium)
  android_toolchain_supports_platform =
      (!is_nacl &&
@@ -1112,13 +1112,10 @@ index f0da1a889..35ee9f030 100644
 +     (is_android && (target_cpu == "arm" || target_cpu == "arm64" ||
 +                     target_cpu == "x64" || target_cpu == "x86"))) ||
 +    (is_linux && target_cpu == "x64")
- chromium_toolchain_supports_platform =
--    !is_nacl && is_linux && current_cpu == "x64"
-+    !is_nacl && is_linux && target_cpu == "x64"
+ chromium_toolchain_supports_platform = !is_nacl
  custom_toolchain_supports_platform = !is_nacl || rust_toolchain_supports_nacl
  
- toolchain_has_rust =
-@@ -159,7 +159,7 @@ if (enable_rust) {
+@@ -154,7 +154,7 @@ if (enable_rust) {
  # other toolchains.
  rust_abi_target = ""
  if (is_linux) {
@@ -1127,7 +1124,7 @@ index f0da1a889..35ee9f030 100644
    if (cpu == "arm64") {
      cpu = "aarch64"
    } else if (cpu == "x64") {
-@@ -175,25 +175,25 @@ if (is_linux) {
+@@ -170,41 +170,41 @@ if (is_linux) {
      rust_abi_target = "armv7-linux-androideabi"
    }
  } else if (is_fuchsia) {
@@ -1159,7 +1156,27 @@ index f0da1a889..35ee9f030 100644
      rust_abi_target = "i386-apple-ios"
    } else {
      assert(false, "Architecture not supported")
-@@ -206,23 +206,23 @@ assert(!toolchain_has_rust || rust_abi_target != "")
+   }
+ } else if (is_mac) {
+-  if (current_cpu == "arm64") {
++  if (target_cpu == "arm64") {
+     rust_abi_target = "aarch64-apple-darwin"
+-  } else if (current_cpu == "x64") {
++  } else if (target_cpu == "x64") {
+     rust_abi_target = "x86_64-apple-darwin"
+   } else {
+     assert(false, "Architecture not supported")
+   }
+ } else if (is_win) {
+-  if (current_cpu == "arm64") {
++  if (target_cpu == "arm64") {
+     rust_abi_target = "aarch64-pc-windows-msvc"
+-  } else if (current_cpu == "x86" || current_cpu == "x64") {
++  } else if (target_cpu == "x86" || target_cpu == "x64") {
+     rust_abi_target = "x86_64-pc-windows-msvc"
+   } else {
+     assert(false, "Architecture not supported")
+@@ -215,23 +215,23 @@ assert(!toolchain_has_rust || rust_abi_target != "")
  
  # This variable is passed to the Rust libstd build.
  rust_target_arch = ""

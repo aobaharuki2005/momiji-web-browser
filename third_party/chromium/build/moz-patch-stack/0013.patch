@@ -57,10 +57,10 @@ index a7f315c30..396cb56a3 100644
    mac_sdk_path = _mac_sdk_result.sdk_path
  }
 diff --git a/config/rust.gni b/config/rust.gni
-index b3e501149..ccae4502e 100644
+index 9e3973d68..4ef6e549f 100644
 --- a/config/rust.gni
 +++ b/config/rust.gni
-@@ -136,8 +136,8 @@ if (enable_rust) {
+@@ -131,8 +131,8 @@ if (enable_rust) {
      use_unverified_rust_toolchain = false
    } else {
      if (host_os != "linux") {
