@@ -1156,7 +1156,7 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
 
     BrowsingContext* bc = doc->GetBrowsingContext();
     if (bc && bc->TouchEventsOverride() == TouchEventsOverride::Enabled &&
-        bc->InRDMPane()) {
+        bc->Top()->InRDMPane()) {
       return;
     }
 
