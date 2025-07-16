@@ -578,7 +578,7 @@
   grid-template-columns: repeat(1, 300px);
 
   @media (min-width: $break-point-medium) {
-    @for $i from 0 through 6 {
+    @for $i from 0 through 16 {
       .col-1-position-#{$i} {
         order: $i;
       }
@@ -612,7 +612,7 @@
   @media (min-width: $break-point-layout-variant) {
     grid-template-columns: repeat(2, 300px);
 
-    @for $i from 0 through 6 {
+    @for $i from 0 through 16 {
       .col-2-position-#{$i} {
         order: $i;
       }
@@ -647,7 +647,7 @@
     grid-template-columns: repeat(3, 300px);
     gap: var(--space-large);
 
-    @for $i from 0 through 6 {
+    @for $i from 0 through 16 {
       .col-3-position-#{$i} {
         order: $i;
       }
@@ -681,7 +681,7 @@
   @media (min-width: $break-point-sections-variant) {
     grid-template-columns: repeat(4, 300px);
 
-    @for $i from 0 through 6 {
+    @for $i from 0 through 16 {
       .col-4-position-#{$i} {
         order: $i;
       }
