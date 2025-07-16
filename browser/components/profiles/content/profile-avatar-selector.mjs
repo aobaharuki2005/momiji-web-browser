@@ -205,6 +205,7 @@ export class ProfileAvatarSelector extends MozLitElement {
           html`<moz-visual-picker-item
             l10nId=${this.getAvatarL10nId(avatar)}
             value=${avatar}
+            ?checked=${this.value === avatar}
             ><moz-button
               class="avatar-button"
               type="ghost"
