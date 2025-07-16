@@ -851,17 +851,15 @@ class BookmarksMiddlewareTest {
     }
 
     @Test
-    fun `WHEN copy clicked in bookmark item menu THEN copy bookmark url to clipboard and snackboard is shown`() {
+    fun `WHEN copy clicked in bookmark item menu THEN copy bookmark url to clipboard`() {
         val url = "url"
         val bookmarkItem = BookmarkItem.Bookmark(url = url, title = "title", previewImageUrl = url, guid = "guid", position = null)
-        var snackShown = false
         val middleware = buildMiddleware()
         val store = middleware.makeStore()
 
         store.dispatch(BookmarksListMenuAction.Bookmark.CopyClicked(bookmarkItem))
 
         verify(clipboardManager).setPrimaryClip(any())
-        assertTrue(snackShown)
     }
 
     @Test
