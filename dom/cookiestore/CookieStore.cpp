@@ -102,10 +102,14 @@ bool ValidateCookieNameAndValue(const nsAString& aName, const nsAString& aValue,
 }
 
 bool ValidateCookieDomain(nsIPrincipal* aPrincipal, const nsAString& aName,
-                          const nsAString& aDomain, Promise* aPromise) {
+                          const nsAString& aDomain, nsAString& aRetDomain,
+                          Promise* aPromise) {
   MOZ_ASSERT(aPromise);
 
-  if (aDomain.IsEmpty()) {
+  aRetDomain.Assign(aDomain);
+  ToLowerCase(aRetDomain);
+
+  if (aRetDomain.IsEmpty()) {
     return true;
   }
 
@@ -117,30 +121,32 @@ bool ValidateCookieDomain(nsIPrincipal* aPrincipal, const nsAString& aName,
     return false;
   }
 
-  // If the name has a __Host- prefix, then aDomain must be empty.
-  if (CookiePrefixes::Has(CookiePrefixes::eHost, aName) && !aDomain.IsEmpty()) {
+  // If the name has a __Host- prefix, then aRetDomain must be empty.
+  if (CookiePrefixes::Has(CookiePrefixes::eHost, aName) &&
+      !aRetDomain.IsEmpty()) {
     aPromise->MaybeRejectWithTypeError(
         "Cookie domain is not allowed for cookies with a __Host- prefix");
     return false;
   }
 
-  if (aDomain[0] == '.') {
+  if (aRetDomain[0] == '.') {
     aPromise->MaybeRejectWithTypeError("Cookie domain cannot start with '.'");
     return false;
   }
 
   NS_ConvertUTF8toUTF16 host(utf8Domain);
-  if (host != aDomain) {
-    if ((host.Length() < aDomain.Length() + 1) ||
-        !StringEndsWith(host, aDomain) ||
-        host[host.Length() - aDomain.Length() - 1] != '.') {
+
+  if (host != aRetDomain) {
+    if ((host.Length() < aRetDomain.Length() + 1) ||
+        !StringEndsWith(host, aRetDomain) ||
+        host[host.Length() - aRetDomain.Length() - 1] != '.') {
       aPromise->MaybeRejectWithTypeError(
           "Cookie domain must domain-match current host");
       return false;
     }
   }
 
-  if (aDomain.Length() > 1024) {
+  if (aRetDomain.Length() > 1024) {
     aPromise->MaybeRejectWithTypeError(
         "Cookie domain size cannot be greater than 1024 bytes");
     return false;
@@ -388,8 +394,9 @@ already_AddRefed<Promise> CookieStore::Set(const CookieInit& aOptions,
           return;
         }
 
+        nsString domain;
         if (!ValidateCookieDomain(cookiePrincipal, aOptions.mName,
-                                  aOptions.mDomain, promise)) {
+                                  aOptions.mDomain, domain, promise)) {
           return;
         }
 
@@ -397,9 +404,8 @@ already_AddRefed<Promise> CookieStore::Set(const CookieInit& aOptions,
           return;
         }
 
-        if (!ValidateCookieNamePrefix(aOptions.mName, aOptions.mValue,
-                                      aOptions.mDomain, aOptions.mPath,
-                                      promise)) {
+        if (!ValidateCookieNamePrefix(aOptions.mName, aOptions.mValue, domain,
+                                      aOptions.mPath, promise)) {
           return;
         }
 
@@ -442,10 +448,9 @@ already_AddRefed<Promise> CookieStore::Set(const CookieInit& aOptions,
                 partitionForeign, usingStorageAccess, isOn3PCBExceptionList,
                 aOptions.mName, aOptions.mValue,
                 // If expires is not set, it's a session cookie.
-                aOptions.mExpires.IsNull(), ComputeExpiry(aOptions),
-                aOptions.mDomain, aOptions.mPath,
-                SameSiteToConst(aOptions.mSameSite), aOptions.mPartitioned,
-                operationID);
+                aOptions.mExpires.IsNull(), ComputeExpiry(aOptions), domain,
+                aOptions.mPath, SameSiteToConst(aOptions.mSameSite),
+                aOptions.mPartitioned, operationID);
         if (NS_WARN_IF(!ipcPromise)) {
           promise->MaybeResolveWithUndefined();
           return;
@@ -503,8 +508,9 @@ already_AddRefed<Promise> CookieStore::Delete(
   NS_DispatchToCurrentThread(NS_NewRunnableFunction(
       __func__, [self = RefPtr(this), promise = RefPtr(promise), aOptions,
                  cookiePrincipal = RefPtr(cookiePrincipal.get())]() {
+        nsString domain;
         if (!ValidateCookieDomain(cookiePrincipal, aOptions.mName,
-                                  aOptions.mDomain, promise)) {
+                                  aOptions.mDomain, domain, promise)) {
           return;
         }
 
@@ -512,7 +518,7 @@ already_AddRefed<Promise> CookieStore::Delete(
           return;
         }
 
-        if (!ValidateCookieNamePrefix(aOptions.mName, u""_ns, aOptions.mDomain,
+        if (!ValidateCookieNamePrefix(aOptions.mName, u""_ns, domain,
                                       aOptions.mPath, promise)) {
           return;
         }
@@ -553,8 +559,8 @@ already_AddRefed<Promise> CookieStore::Delete(
                 mozilla::WrapNotNull(cookieURI.get()),
                 cookiePrincipal->OriginAttributesRef(), thirdPartyContext,
                 partitionForeign, usingStorageAccess, isOn3PCBExceptionList,
-                aOptions.mName, aOptions.mDomain, aOptions.mPath,
-                aOptions.mPartitioned, operationID);
+                aOptions.mName, domain, aOptions.mPath, aOptions.mPartitioned,
+                operationID);
         if (NS_WARN_IF(!ipcPromise)) {
           promise->MaybeResolveWithUndefined();
           return;
