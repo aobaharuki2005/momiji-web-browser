@@ -596,6 +596,9 @@ var AddonManagerInternal = {
       }
 
       this.recordTimestamp("AMI_startup_begin");
+      Glean.addonsManager.startupTimeline.AMI_startup_begin.set(
+        Services.telemetry.msSinceProcessStart()
+      );
 
       // Enable the AMRemoteSettings client.
       AMRemoteSettings.init();
@@ -765,6 +768,9 @@ var AddonManagerInternal = {
       gStartupComplete = true;
       gStartedPromise.resolve();
       this.recordTimestamp("AMI_startup_end");
+      Glean.addonsManager.startupTimeline.AMI_startup_end.set(
+        Services.telemetry.msSinceProcessStart()
+      );
     } catch (e) {
       logger.error("startup failed", e);
       AddonManagerPrivate.recordException("AMI", "startup failed", e);
