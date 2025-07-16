@@ -12112,72 +12112,9 @@ function Lists() {
 
 
 function FocusTimer() {
-  const [timer, setTimer] = (0,external_React_namespaceObject.useState)(0);
-  const [isRunning, setIsRunning] = (0,external_React_namespaceObject.useState)(false);
-  const inputRef = (0,external_React_namespaceObject.useRef)(null);
-  (0,external_React_namespaceObject.useEffect)(() => {
-    let interval;
-    if (isRunning && timer > 0) {
-      interval = setInterval(() => {
-        setTimer(previousValue => {
-          if (previousValue <= 1) {
-            clearInterval(interval);
-            setIsRunning(false);
-            return 0;
-          }
-          return previousValue - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isRunning, timer]);
-
-  // set timer function
-  const setTimerMinutes = e => {
-    e.preventDefault();
-    const minutes = inputRef.current.value;
-    const minutesInt = parseInt(minutes, 10);
-    if (minutesInt > 0) {
-      setTimer(minutesInt * 60); // change set minutes to seconds
-    }
-  };
-
-  // Pause timer function
-  const toggleTimer = () => {
-    if (timer > 0) {
-      setIsRunning(previousValue => !previousValue); // using an updater function for an accurate state update
-    }
-  };
-
-  // reset timer function
-  const resetTimer = () => {
-    setIsRunning(false);
-    setTimer(0);
-  };
-  const formatTime = seconds => {
-    const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
-    const secs = (seconds % 60).toString().padStart(2, '0');
-    return `${minutes}:${secs}`;
-  };
-  return /*#__PURE__*/external_React_default().createElement("article", {
-    className: "focus-timer-wrapper"
-  }, /*#__PURE__*/external_React_default().createElement("p", null, "Focus timer widget"), /*#__PURE__*/external_React_default().createElement("form", {
-    onSubmit: setTimerMinutes
-  }, /*#__PURE__*/external_React_default().createElement("label", {
-    htmlFor: "countdown"
-  }), /*#__PURE__*/external_React_default().createElement("input", {
-    type: "number",
-    id: "countdown",
-    ref: inputRef
-  }), /*#__PURE__*/external_React_default().createElement("button", {
-    type: "submit"
-  }, "Set minutes")), /*#__PURE__*/external_React_default().createElement("div", {
-    className: "timer-buttons"
-  }, /*#__PURE__*/external_React_default().createElement("button", {
-    onClick: toggleTimer
-  }, isRunning ? "Pause" : "Play"), /*#__PURE__*/external_React_default().createElement("button", {
-    onClick: resetTimer
-  }, "Reset")), "Time left: ", formatTime(timer));
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    className: "focus-timer"
+  }, "FocusTimer Widget");
 }
 
 ;// CONCATENATED MODULE: ./content-src/components/Widgets/Widgets.jsx
