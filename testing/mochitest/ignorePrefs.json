@@ -39,6 +39,7 @@
   "extensions.ui.mlmodel.hidden",
   "extensions.ui.sitepermission.hidden",
   "extensions.webextensions.ExtensionStorageIDB.migrated.*",
+  "mail.*",
   "media.gmp-manager.buildID",
   "media.gmp-manager.lastCheck",
   "media.gmp-manager.lastEmptyCheck",
