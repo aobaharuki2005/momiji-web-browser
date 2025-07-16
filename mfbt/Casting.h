@@ -96,10 +96,10 @@ inline constexpr const char* TypeToString() {
     return #type;                                     \
   }
 
-#define T2SF(type)                                     \
-  template <>                                         \
+#define T2SF(type)                                            \
+  template <>                                                 \
   inline constexpr const char* TypeToStringFallback<type>() { \
-    return #type;                                     \
+    return #type;                                             \
   }
 
 T2S(uint8_t);
