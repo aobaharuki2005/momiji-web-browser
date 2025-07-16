@@ -8868,14 +8868,10 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
 static bool IsSamePrincipalForDocumentURI(nsIPrincipal* aCurrentPrincipal,
                                           nsIURI* aCurrentURI,
                                           nsIURI* aNewURI) {
-  if (!StaticPrefs::dom_security_setdocumenturi()) {
-    return true;
-  }
   nsCOMPtr<nsIURI> principalURI = aCurrentPrincipal->GetURI();
   if (aCurrentPrincipal->GetIsNullPrincipal()) {
-    nsCOMPtr<nsIPrincipal> precursor =
-        aCurrentPrincipal->GetPrecursorPrincipal();
-    if (precursor) {
+    if (nsCOMPtr<nsIPrincipal> precursor =
+            aCurrentPrincipal->GetPrecursorPrincipal()) {
       principalURI = precursor->GetURI();
     }
   }

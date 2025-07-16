@@ -390,37 +390,34 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvInternalLoad(
 IPCResult WindowGlobalParent::RecvUpdateDocumentURI(NotNull<nsIURI*> aURI) {
   // XXX(nika): Assert that the URI change was one which makes sense (either
   // about:blank -> a real URI, or a legal push/popstate URI change):
-  if (StaticPrefs::dom_security_setdocumenturi()) {
-    nsAutoCString scheme;
-    if (NS_FAILED(aURI->GetScheme(scheme))) {
-      return IPC_FAIL(this, "Setting DocumentURI without scheme.");
-    }
+  nsAutoCString scheme;
+  if (NS_FAILED(aURI->GetScheme(scheme))) {
+    return IPC_FAIL(this, "Setting DocumentURI without scheme.");
+  }
 
-    nsCOMPtr<nsIIOService> ios = do_GetIOService();
-    if (!ios) {
-      return IPC_FAIL(this, "Cannot get IOService");
-    }
-    nsCOMPtr<nsIProtocolHandler> handler;
-    ios->GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
-    if (!handler) {
-      return IPC_FAIL(this, "Setting DocumentURI with unknown protocol.");
-    }
+  nsCOMPtr<nsIIOService> ios = do_GetIOService();
+  if (!ios) {
+    return IPC_FAIL(this, "Cannot get IOService");
+  }
+  nsCOMPtr<nsIProtocolHandler> handler;
+  ios->GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
+  if (!handler) {
+    return IPC_FAIL(this, "Setting DocumentURI with unknown protocol.");
+  }
 
-    nsCOMPtr<nsIURI> principalURI = mDocumentPrincipal->GetURI();
-    if (mDocumentPrincipal->GetIsNullPrincipal()) {
-      nsCOMPtr<nsIPrincipal> precursor =
-          mDocumentPrincipal->GetPrecursorPrincipal();
-      if (precursor) {
-        principalURI = precursor->GetURI();
-      }
+  nsCOMPtr<nsIURI> principalURI = mDocumentPrincipal->GetURI();
+  if (mDocumentPrincipal->GetIsNullPrincipal()) {
+    if (nsCOMPtr<nsIPrincipal> precursor =
+            mDocumentPrincipal->GetPrecursorPrincipal()) {
+      principalURI = precursor->GetURI();
     }
+  }
 
-    if (nsScriptSecurityManager::IsHttpOrHttpsAndCrossOrigin(principalURI,
-                                                             aURI)) {
-      return IPC_FAIL(this,
-                      "Setting DocumentURI with a different Origin than "
-                      "principal URI");
-    }
+  if (nsScriptSecurityManager::IsHttpOrHttpsAndCrossOrigin(principalURI,
+                                                           aURI)) {
+    return IPC_FAIL(this,
+                    "Setting DocumentURI with a different Origin than "
+                    "principal URI");
   }
 
   mDocumentURI = aURI;

@@ -632,21 +632,18 @@ void WindowGlobalChild::SetDocumentURI(nsIURI* aDocumentURI) {
       nsContentUtils::TruncatedURLForDisplay(aDocumentURI, 1024),
       embedderInnerWindowID, BrowsingContext()->UsePrivateBrowsing());
 
-  if (StaticPrefs::dom_security_setdocumenturi()) {
-    nsCOMPtr<nsIURI> principalURI = mDocumentPrincipal->GetURI();
-    if (mDocumentPrincipal->GetIsNullPrincipal()) {
-      nsCOMPtr<nsIPrincipal> precursor =
-          mDocumentPrincipal->GetPrecursorPrincipal();
-      if (precursor) {
-        principalURI = precursor->GetURI();
-      }
+  nsCOMPtr<nsIURI> principalURI = mDocumentPrincipal->GetURI();
+  if (mDocumentPrincipal->GetIsNullPrincipal()) {
+    if (nsCOMPtr<nsIPrincipal> precursor =
+            mDocumentPrincipal->GetPrecursorPrincipal()) {
+      principalURI = precursor->GetURI();
     }
-
-    MOZ_DIAGNOSTIC_ASSERT(!nsScriptSecurityManager::IsHttpOrHttpsAndCrossOrigin(
-                              principalURI, aDocumentURI),
-                          "Setting DocumentURI with a different origin "
-                          "than principal URI");
   }
+
+  MOZ_DIAGNOSTIC_ASSERT(!nsScriptSecurityManager::IsHttpOrHttpsAndCrossOrigin(
+                            principalURI, aDocumentURI),
+                        "Setting DocumentURI with a different origin "
+                        "than principal URI");
 
   mDocumentURI = aDocumentURI;
   SendUpdateDocumentURI(WrapNotNull(aDocumentURI));
