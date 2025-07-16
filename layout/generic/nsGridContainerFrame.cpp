@@ -582,13 +582,7 @@ class nsGridContainerFrame::TrackPlan {
 
   explicit TrackPlan(size_t aCapacity) : mTrackSizes(aCapacity) {}
 
-  TrackPlan(const TrackPlan& aOther) : mTrackSizes() {
-    mTrackSizes.Assign(aOther.mTrackSizes);
-  }
-
-  explicit TrackPlan(const nsTArray<nsGridContainerFrame::TrackSize>& aArray) {
-    mTrackSizes.Assign(aArray);
-  }
+  TrackPlan(const TrackPlan& aOther) : mTrackSizes(aOther.mTrackSizes) {}
 
   TrackPlan(TrackPlan&& aOther) : mTrackSizes(std::move(aOther.mTrackSizes)) {}
 
@@ -609,16 +603,11 @@ class nsGridContainerFrame::TrackPlan {
 
   bool IsEmpty() const { return mTrackSizes.IsEmpty(); }
 
-  // Temporary, for interop with places that still just use raw arrays;
-  // will be removed in following patch.
-  nsTArray<nsGridContainerFrame::TrackSize>& AsArray() { return mTrackSizes; }
-  const nsTArray<nsGridContainerFrame::TrackSize>& AsArray() const {
-    return mTrackSizes;
-  }
-
   void Assign(const TrackPlan& aRHS) { mTrackSizes.Assign(aRHS.mTrackSizes); }
-  void Assign(const nsTArray<nsGridContainerFrame::TrackSize>& aRHS) {
-    mTrackSizes.Assign(aRHS);
+
+  nsGridContainerFrame::TrackSize* AppendElement(
+      nsGridContainerFrame::TrackSize aElement) {
+    return mTrackSizes.AppendElement(aElement);
   }
 
   nsGridContainerFrame::TrackSize& LastElement() {
@@ -635,8 +624,6 @@ class nsGridContainerFrame::TrackPlan {
 
   void ClearAndRetainStorage() { mTrackSizes.ClearAndRetainStorage(); }
 
-  TrackPlan Clone() const { return *this; }
-
   void ZeroInitialize() {
     PodZero(mTrackSizes.Elements(), mTrackSizes.Length());
   }
@@ -644,6 +631,11 @@ class nsGridContainerFrame::TrackPlan {
   using iterator = nsTArray<nsGridContainerFrame::TrackSize>::iterator;
   iterator begin() { return mTrackSizes.begin(); }
   iterator end() { return mTrackSizes.end(); }
+
+  using const_iterator =
+      nsTArray<nsGridContainerFrame::TrackSize>::const_iterator;
+  const_iterator begin() const { return mTrackSizes.begin(); }
+  const_iterator end() const { return mTrackSizes.end(); }
 
  private:
   CopyableTArray<nsGridContainerFrame::TrackSize> mTrackSizes;
@@ -769,30 +761,25 @@ struct nsGridContainerFrame::LineRange {
       mEnd -= aNumRemovedTracks[mEnd];
     }
   }
+
   /**
    * Return the contribution of this line range for step 2 in
    * https://drafts.csswg.org/css-grid-2/#auto-placement-algo
    */
   uint32_t HypotheticalEnd() const { return mEnd; }
+
   /**
    * Given an array of track sizes, return the starting position and length
    * of the tracks in this line range.
    */
-  void ToPositionAndLength(const nsTArray<TrackSize>& aTrackSizes,
-                           nscoord* aPos, nscoord* aLength) const;
   void ToPositionAndLength(const TrackPlan& aTrackPlan, nscoord* aPos,
-                           nscoord* aLength) const {
-    ToPositionAndLength(aTrackPlan.AsArray(), aPos, aLength);
-  }
+                           nscoord* aLength) const;
 
   /**
    * Given an array of track sizes, return the length of the tracks in this
    * line range.
    */
-  nscoord ToLength(const nsTArray<TrackSize>& aTrackSizes) const;
-  nscoord ToLength(const TrackPlan& aTrackPlan) const {
-    return ToLength(aTrackPlan.AsArray());
-  }
+  nscoord ToLength(const TrackPlan& aTrackPlan) const;
 
   /**
    * Given an array of track sizes and a grid origin coordinate, adjust the
@@ -1310,7 +1297,7 @@ struct nsGridContainerFrame::UsedTrackSizes {
   UsedTrackSizes() : mCanResolveLineRangeSize{false, false} {}
 
   /**
-   * Setup mSizes by copying track sizes from aFrame's grid container
+   * Setup mTrackPlans by copying track sizes from aFrame's grid container
    * parent when aAxis is subgridded (and recurse if the parent is a subgrid
    * that doesn't have sizes yet), or by running the Track Sizing Algo when
    * the axis is not subgridded (for a subgrid).
@@ -1329,8 +1316,8 @@ struct nsGridContainerFrame::UsedTrackSizes {
   // This only has valid sizes when mCanResolveLineRangeSize is true in
   // the same axis.  It may have zero tracks (a grid with only abs.pos.
   // subgrids/items may have zero tracks).
-  PerLogicalAxis<TrackPlan> mSizes;
-  // True if mSizes can be used to resolve line range sizes in an axis.
+  PerLogicalAxis<TrackPlan> mTrackPlans;
+  // True if mTrackPlans can be used to resolve line range sizes in an axis.
   PerLogicalAxis<bool> mCanResolveLineRangeSize;
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(Prop, UsedTrackSizes)
@@ -3237,7 +3224,7 @@ struct nsGridContainerFrame::Tracks {
   void Dump() const;
 #endif
 
-  CopyableAutoTArray<TrackSize, 32> mSizes;
+  TrackPlan mSizes;
   nscoord mContentBoxSize;
   nscoord mGridGap;
   // The first(last)-baseline for the first(last) track in this axis.
@@ -3404,8 +3391,8 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput {
         aGridContainerFrame->SetProperty(UsedTrackSizes::Prop(), prop);
       }
       prop->mCanResolveLineRangeSize = {true, true};
-      prop->mSizes[LogicalAxis::Inline].Assign(mCols.mSizes);
-      prop->mSizes[LogicalAxis::Block].Assign(mRows.mSizes);
+      prop->mTrackPlans[LogicalAxis::Inline].Assign(mCols.mSizes);
+      prop->mTrackPlans[LogicalAxis::Block].Assign(mRows.mSizes);
     }
 
     // Copy item data from each child's first-in-flow data in mSharedGridData.
@@ -4233,7 +4220,7 @@ static Subgrid* SubgridComputeMarginBorderPadding(
   return subgrid;
 }
 
-static void CopyUsedTrackSizes(nsTArray<TrackSize>& aResult,
+static void CopyUsedTrackSizes(TrackPlan& aResult,
                                const nsGridContainerFrame* aUsedTrackSizesFrame,
                                const UsedTrackSizes* aUsedTrackSizes,
                                const nsGridContainerFrame* aSubgridFrame,
@@ -4246,7 +4233,7 @@ static void CopyUsedTrackSizes(nsTArray<TrackSize>& aResult,
                         : aSubgrid->mGridRowEnd);
   auto parentAxis =
       aSubgrid->mIsOrthogonal ? GetOrthogonalAxis(aSubgridAxis) : aSubgridAxis;
-  const auto& parentSizes = aUsedTrackSizes->mSizes[parentAxis];
+  const auto& parentSizes = aUsedTrackSizes->mTrackPlans[parentAxis];
   MOZ_ASSERT(aUsedTrackSizes->mCanResolveLineRangeSize[parentAxis]);
   if (parentSizes.IsEmpty()) {
     return;
@@ -4267,7 +4254,7 @@ static void CopyUsedTrackSizes(nsTArray<TrackSize>& aResult,
       MOZ_ASSERT(!parent->IsGridContainerFrame());
       outerGridItemFrame = parent;
     }
-    auto sizeInAxis = range.ToLength(aUsedTrackSizes->mSizes[parentAxis]);
+    auto sizeInAxis = range.ToLength(aUsedTrackSizes->mTrackPlans[parentAxis]);
     LogicalSize pmPercentageBasis =
         aSubgrid->mIsOrthogonal ? LogicalSize(wm, nscoord(0), sizeInAxis)
                                 : LogicalSize(wm, sizeInAxis, nscoord(0));
@@ -4346,12 +4333,13 @@ void nsGridContainerFrame::UsedTrackSizes::ResolveTrackSizesForAxis(
     return;
   }
   if (aFrame->IsSubgrid(aAxis)) {
-    CopyUsedTrackSizes(mSizes[aAxis].AsArray(), parent, parentSizes, aFrame,
-                       subgrid, aAxis);
+    CopyUsedTrackSizes(mTrackPlans[aAxis], parent, parentSizes, aFrame, subgrid,
+                       aAxis);
     mCanResolveLineRangeSize[aAxis] = true;
   } else {
     const auto& range = subgrid->mArea.LineRangeForAxis(parentAxis);
-    nscoord contentBoxSize = range.ToLength(parentSizes->mSizes[parentAxis]);
+    nscoord contentBoxSize =
+        range.ToLength(parentSizes->mTrackPlans[parentAxis]);
     auto parentWM = aFrame->GetParent()->GetWritingMode();
     contentBoxSize -=
         subgrid->mMarginBorderPadding.StartEnd(parentAxis, parentWM);
@@ -4372,7 +4360,7 @@ void nsGridContainerFrame::UsedTrackSizes::ResolveSubgridTrackSizesForAxis(
   gridRI.CalculateTrackSizesForAxis(aAxis, grid, aContentBoxSize,
                                     SizingConstraint::NoConstraint);
   const auto& tracks = gridRI.TracksFor(aAxis);
-  mSizes[aAxis].Assign(tracks.mSizes);
+  mTrackPlans[aAxis].Assign(tracks.mSizes);
   mCanResolveLineRangeSize[aAxis] = tracks.mCanResolveLineRangeSize;
   MOZ_ASSERT(mCanResolveLineRangeSize[aAxis]);
 }
@@ -5354,8 +5342,8 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
   if (aGridRI.mFrame->HasSubgridItems() || aGridRI.mFrame->IsSubgrid()) {
     if (auto* uts = aGridRI.mFrame->GetUsedTrackSizes()) {
       uts->mCanResolveLineRangeSize = {false, false};
-      uts->mSizes[LogicalAxis::Inline].ClearAndRetainStorage();
-      uts->mSizes[LogicalAxis::Block].ClearAndRetainStorage();
+      uts->mTrackPlans[LogicalAxis::Inline].ClearAndRetainStorage();
+      uts->mTrackPlans[LogicalAxis::Block].ClearAndRetainStorage();
     }
   }
 
@@ -5822,7 +5810,7 @@ void nsGridContainerFrame::Tracks::Initialize(
     const NonNegativeLengthPercentageOrNormal& aGridGap, uint32_t aNumTracks,
     nscoord aContentBoxSize) {
   mSizes.SetLength(aNumTracks);
-  PodZero(mSizes.Elements(), mSizes.Length());
+  mSizes.ZeroInitialize();
   for (uint32_t i = 0, len = mSizes.Length(); i < len; ++i) {
     auto& sz = mSizes[i];
     mStateUnion |= sz.Initialize(aContentBoxSize, aFunctions.SizingFor(i));
@@ -6118,7 +6106,7 @@ static nscoord ContentContribution(const GridItemInfo& aGridItem,
           }
           MOZ_ASSERT(originalItem, "huh?");
           const auto& range = originalItem->mArea.LineRangeForAxis(subgridAxis);
-          const nscoord sz = range.ToLength(uts->mSizes[subgridAxis]);
+          const nscoord sz = range.ToLength(uts->mTrackPlans[subgridAxis]);
           if (childWM.IsOrthogonalTo(subgridFrame->GetWritingMode())) {
             availBSize = sz;
             cbSize.BSize(childWM) = sz;
@@ -7642,7 +7630,7 @@ void nsGridContainerFrame::Tracks::StretchFlexibleTracks(
     maxSize = mAxis == LogicalAxis::Block ? ri->ComputedMaxBSize()
                                           : ri->ComputedMaxISize();
   }
-  Maybe<CopyableAutoTArray<TrackSize, 32>> origSizes;
+  Maybe<TrackPlan> origSizes;
   bool applyMinMax = (minSize != 0 || maxSize != NS_UNCONSTRAINEDSIZE) &&
                      aAvailableSize == NS_UNCONSTRAINEDSIZE;
   // We iterate twice at most.  The 2nd time if the grid size changed after
@@ -7907,8 +7895,7 @@ nscoord nsGridContainerFrame::Tracks::TotalTrackSizeWithoutAlignment(
 }
 
 void nsGridContainerFrame::LineRange::ToPositionAndLength(
-    const nsTArray<TrackSize>& aTrackSizes, nscoord* aPos,
-    nscoord* aLength) const {
+    const TrackPlan& aTrackSizes, nscoord* aPos, nscoord* aLength) const {
   MOZ_ASSERT(mStart != kAutoLine && mEnd != kAutoLine,
              "expected a definite LineRange");
   MOZ_ASSERT(mStart < mEnd);
@@ -7919,7 +7906,7 @@ void nsGridContainerFrame::LineRange::ToPositionAndLength(
 }
 
 nscoord nsGridContainerFrame::LineRange::ToLength(
-    const nsTArray<TrackSize>& aTrackSizes) const {
+    const TrackPlan& aTrackSizes) const {
   MOZ_ASSERT(mStart != kAutoLine && mEnd != kAutoLine,
              "expected a definite LineRange");
   MOZ_ASSERT(mStart < mEnd);
@@ -7987,7 +7974,7 @@ LogicalSize nsGridContainerFrame::GridReflowInput::PercentageBasisFor(
                                                        : LogicalAxis::Inline;
         const auto& range = aGridItem.mArea.LineRangeForAxis(rangeAxis);
         cbSize.ISize(subgridWM) =
-            range.ToLength(uts->mSizes[LogicalAxis::Inline]);
+            range.ToLength(uts->mTrackPlans[LogicalAxis::Inline]);
       }
       if (!subgridFrame->IsRowSubgrid() &&
           uts->mCanResolveLineRangeSize[LogicalAxis::Block]) {
@@ -7995,7 +7982,7 @@ LogicalSize nsGridContainerFrame::GridReflowInput::PercentageBasisFor(
                                                        : LogicalAxis::Block;
         const auto& range = aGridItem.mArea.LineRangeForAxis(rangeAxis);
         cbSize.BSize(subgridWM) =
-            range.ToLength(uts->mSizes[LogicalAxis::Block]);
+            range.ToLength(uts->mTrackPlans[LogicalAxis::Block]);
       }
       return cbSize.ConvertTo(wm, subgridWM);
     }
@@ -10715,17 +10702,17 @@ nsGridContainerFrame::UsedTrackSizes* nsGridContainerFrame::GetUsedTrackSizes()
   return GetProperty(UsedTrackSizes::Prop());
 }
 
-void nsGridContainerFrame::StoreUsedTrackSizes(
-    LogicalAxis aAxis, const nsTArray<TrackSize>& aSizes) {
+void nsGridContainerFrame::StoreUsedTrackSizes(LogicalAxis aAxis,
+                                               const TrackPlan& aSizes) {
   auto* uts = GetUsedTrackSizes();
   if (!uts) {
     uts = new UsedTrackSizes();
     SetProperty(UsedTrackSizes::Prop(), uts);
   }
-  uts->mSizes[aAxis].Assign(aSizes);
+  uts->mTrackPlans[aAxis].Assign(aSizes);
   uts->mCanResolveLineRangeSize[aAxis] = true;
   // XXX is resetting these bits necessary?
-  for (auto& sz : uts->mSizes[aAxis]) {
+  for (auto& sz : uts->mTrackPlans[aAxis]) {
     sz.mState &= ~(TrackSize::eFrozen | TrackSize::eSkipGrowUnlimited |
                    TrackSize::eInfinitelyGrowable);
   }
