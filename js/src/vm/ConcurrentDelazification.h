@@ -7,6 +7,7 @@
 #ifndef vm_ConcurrentDelazification_h
 #define vm_ConcurrentDelazification_h
 
+#include "mozilla/Maybe.h"            // mozilla::Maybe
 #include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
 
 #include <stddef.h>  // size_t
@@ -104,11 +105,13 @@ struct LargeFirstDelazification final : public DelazifyStrategy {
 
 class DelazificationContext {
   const JS::PrefableCompileOptions initialPrefableOptions_;
+  using Stencils = frontend::InitialStencilAndDelazifications;
 
   // Queue of functions to be processed while delazifying.
   UniquePtr<DelazifyStrategy> strategy_;
 
-  RefPtr<frontend::InitialStencilAndDelazifications> stencils_;
+  RefPtr<Stencils> stencils_;
+  mozilla::Maybe<Stencils::RelativeIndexesGuard> indexesGuard_;
 
   // Record any errors happening while parsing or generating bytecode.
   FrontendContext fc_;
@@ -124,8 +127,7 @@ class DelazificationContext {
       : initialPrefableOptions_(initialPrefableOptions),
         stackQuota_(stackQuota) {}
 
-  bool init(const JS::ReadOnlyCompileOptions& options,
-            frontend::InitialStencilAndDelazifications* stencils);
+  bool init(const JS::ReadOnlyCompileOptions& options, Stencils* stencils);
   bool delazify();
 
   // This function is called by `delazify` function to know whether the

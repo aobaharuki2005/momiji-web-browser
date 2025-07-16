@@ -1474,6 +1474,22 @@ struct ScriptIndexes {
   ScriptIndex indexInEnclosing;
 };
 
+struct RelativeIndexes {
+  // Number of tasks which are making use of the indexes_ vector.
+  ExclusiveData<size_t> consumers_;
+
+  // The consumers_ lock must be held and should have at most a single consumer
+  // to write to this value. In the spirit, this should be an RWExclusiveData
+  // using the same lock as the consumers_, except that we do not want to hold
+  // the lock when we are in a section where the consumer value is positive.
+  Vector<ScriptIndexes, 0, js::SystemAllocPolicy> indexes_;
+
+  RelativeIndexes() : consumers_(mutexid::StencilCache), indexes_() {}
+
+  ScriptIndexes& operator[](size_t i) { return indexes_[i]; }
+  const ScriptIndexes& operator[](size_t i) const { return indexes_[i]; }
+};
+
 // A class to Associate the initial stencil and the delazifications.
 //
 // This struct is initialized with the initial stencil, with an empty set of
@@ -1536,12 +1552,39 @@ struct InitialStencilAndDelazifications {
   //   /* f5 */ { enclosingIndexInInitial: 1, indexInEnclosing: 2 },
   // }
   //
-  Vector<ScriptIndexes, 0, js::SystemAllocPolicy> relativeIndexes_;
+  RelativeIndexes relativeIndexes_;
 
   mutable mozilla::Atomic<uintptr_t> refCount_{0};
 
+ public:
+  class RelativeIndexesGuard {
+    friend struct InitialStencilAndDelazifications;
+    RefPtr<InitialStencilAndDelazifications> stencils_;
+
+    explicit RelativeIndexesGuard(InitialStencilAndDelazifications* stencils)
+        : stencils_(stencils)
+    {}
+   public:
+    RelativeIndexesGuard() : stencils_(nullptr) {}
+
+    RelativeIndexesGuard(RelativeIndexesGuard&& src)
+      : stencils_(std::move(src.stencils_))
+    {
+    }
+
+    ~RelativeIndexesGuard() {
+      if (stencils_) {
+        stencils_->decrementRelativeIndexesConsumer();
+        stencils_ = nullptr;
+      }
+    };
+    explicit operator bool() { return bool(stencils_); }
+  };
+
+ private:
   // Initialize relative indexes based on the initial's gcThings.
-  void initRelativeIndexes();
+  void decrementRelativeIndexesConsumer();
+  friend class RelativeIndexesGuard;
 
  public:
   InitialStencilAndDelazifications() = default;
@@ -1552,6 +1595,8 @@ struct InitialStencilAndDelazifications {
 
   [[nodiscard]] bool init(FrontendContext* fc,
                           const CompilationStencil* initial);
+
+  [[nodiscard]] RelativeIndexesGuard ensureRelativeIndexes(FrontendContext* fc);
 
   // Get the initial stencil.
   // As long as this instance is initialized, this returns non-null pointer.

@@ -163,6 +163,14 @@ bool DelazificationContext::init(
     return false;
   }
 
+  // Initialize the relative indexes which are necessary for walking
+  // delazification stencils from the CompilationInput.
+  auto indexesGuard = stencils->ensureRelativeIndexes(&fc_);
+  if (!indexesGuard) {
+    return false;
+  }
+  indexesGuard_.emplace(std::move(indexesGuard));
+
   switch (options.eagerDelazificationStrategy()) {
     case JS::DelazificationOption::OnDemandOnly:
       // OnDemandOnly will parse function as they are require to continue the

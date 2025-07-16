@@ -3718,7 +3718,20 @@ void InitialStencilAndDelazifications::Release() {
   }
 }
 
-void InitialStencilAndDelazifications::initRelativeIndexes() {
+InitialStencilAndDelazifications::RelativeIndexesGuard
+InitialStencilAndDelazifications::ensureRelativeIndexes(FrontendContext* fc) {
+  auto consumersGuard = relativeIndexes_.consumers_.lock();
+  if (consumersGuard > 0) {
+    MOZ_ASSERT(relativeIndexes_.indexes_.length() == initial_->scriptData.size() - 1);
+    consumersGuard += 1;
+    return RelativeIndexesGuard(this);
+  }
+
+  if (!relativeIndexes_.indexes_.resize(initial_->scriptData.size() - 1)) {
+    ReportOutOfMemory(fc);
+    return RelativeIndexesGuard(nullptr);
+  }
+
   auto writeIndex = [&](ScriptIndex index, ScriptIndex enclosingInInitial,
                         ScriptIndex enclosedInEnclosing) {
     MOZ_ASSERT(index > 0);
@@ -3766,6 +3779,17 @@ void InitialStencilAndDelazifications::initRelativeIndexes() {
       functionIndex++;
     }
   }
+
+  consumersGuard += 1;
+  return RelativeIndexesGuard(this);
+}
+
+void InitialStencilAndDelazifications::decrementRelativeIndexesConsumer() {
+  auto consumersGuard = relativeIndexes_.consumers_.lock();
+  consumersGuard -= 1;
+  if (consumersGuard == 0) {
+    relativeIndexes_.indexes_.clearAndFree();
+  }
 }
 
 bool InitialStencilAndDelazifications::init(FrontendContext* fc,
@@ -3785,12 +3809,6 @@ bool InitialStencilAndDelazifications::init(FrontendContext* fc,
     ReportOutOfMemory(fc);
     return false;
   }
-
-  if (!relativeIndexes_.resize(initial_->scriptData.size() - 1)) {
-    ReportOutOfMemory(fc);
-    return false;
-  }
-  initRelativeIndexes();
 
   return functionKeyToInitialScriptIndex_.init(fc, initial_);
 }
