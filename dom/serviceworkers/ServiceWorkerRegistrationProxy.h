@@ -9,7 +9,6 @@
 
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/PServiceWorkerRegistrationParent.h"
-#include "mozilla/dom/notification/NotificationUtils.h"
 #include "nsProxyRelease.h"
 #include "ServiceWorkerRegistrationDescriptor.h"
 #include "ServiceWorkerRegistrationListener.h"
@@ -87,8 +86,7 @@ class ServiceWorkerRegistrationProxy final
 
   RefPtr<NavigationPreloadStatePromise> GetNavigationPreloadState();
 
-  RefPtr<notification::NotificationsPromise> GetNotifications(
-      const nsAString& aTag);
+  RefPtr<NotificationsPromise> GetNotifications(const nsAString& aTag);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ServiceWorkerRegistrationProxy,
                                         override);

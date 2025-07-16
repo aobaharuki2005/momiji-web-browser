@@ -6,15 +6,12 @@
 
 #include "ServiceWorkerUnregisterJob.h"
 
+#include "mozilla/Unused.h"
 #include "mozilla/dom/CookieStoreSubscriptionService.h"
-#include "mozilla/dom/notification/NotificationUtils.h"
-#include "nsIAlertsService.h"
 #include "nsIPushService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "ServiceWorkerManager.h"
-
-using namespace mozilla::dom::notification;
 
 namespace mozilla::dom {
 
@@ -23,27 +20,24 @@ class ServiceWorkerUnregisterJob::PushUnsubscribeCallback final
  public:
   NS_DECL_ISUPPORTS
 
-  already_AddRefed<GenericPromise> Promise() {
-    return mPromiseHolder.Ensure(__func__);
+  explicit PushUnsubscribeCallback(ServiceWorkerUnregisterJob* aJob)
+      : mJob(aJob) {
+    MOZ_ASSERT(NS_IsMainThread());
   }
 
   NS_IMETHOD
-  OnUnsubscribe(nsresult aStatus, bool success) override {
+  OnUnsubscribe(nsresult aStatus, bool) override {
     // Warn if unsubscribing fails, but don't prevent the worker from
     // unregistering.
-    (void)NS_WARN_IF(NS_FAILED(aStatus));
-    mPromiseHolder.Resolve(success, __func__);
+    Unused << NS_WARN_IF(NS_FAILED(aStatus));
+    mJob->Unregister();
     return NS_OK;
   }
 
  private:
-  virtual ~PushUnsubscribeCallback() {
-    // We may be shutting down prematurely without getting the result, so make
-    // sure to settle the promise.
-    mPromiseHolder.RejectIfExists(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
-  };
+  ~PushUnsubscribeCallback() = default;
 
-  MozPromiseHolder<GenericPromise> mPromiseHolder;
+  RefPtr<ServiceWorkerUnregisterJob> mJob;
 };
 
 NS_IMPL_ISUPPORTS(ServiceWorkerUnregisterJob::PushUnsubscribeCallback,
@@ -61,65 +55,6 @@ bool ServiceWorkerUnregisterJob::GetResult() const {
 
 ServiceWorkerUnregisterJob::~ServiceWorkerUnregisterJob() = default;
 
-already_AddRefed<GenericPromise>
-ServiceWorkerUnregisterJob::ClearNotifications() {
-  RefPtr<GenericPromise::Private> resultPromise =
-      new GenericPromise::Private(__func__);
-
-  nsCOMPtr<nsIAlertsService> alertsService =
-      do_GetService("@mozilla.org/alerts-service;1");
-
-  nsAutoCString origin;
-  nsresult rv = mPrincipal->GetOrigin(origin);
-  if (!alertsService || NS_FAILED(rv)) {
-    resultPromise->Reject(rv, __func__);
-    return resultPromise.forget();
-  }
-
-  RefPtr<NotificationsPromise> promise =
-      GetStoredNotificationsForScope(mPrincipal, mScope, u""_ns);
-
-  promise->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [resultPromise,
-       alertsService](const CopyableTArray<IPCNotification>& aNotifications) {
-        for (const IPCNotification& notification : aNotifications) {
-          // CloseAlert will emit alertfinished which will synchronously remove
-          // each notification also from the DB. (The DB removal doesn't happen
-          // synchronously but its task queue guarantees the order.)
-          alertsService->CloseAlert(notification.id(), false);
-        }
-        resultPromise->Resolve(true, __func__);
-      },
-      [resultPromise](nsresult rv) { resultPromise->Reject(rv, __func__); });
-
-  return resultPromise.forget();
-}
-
-already_AddRefed<GenericPromise>
-ServiceWorkerUnregisterJob::ClearPushSubscriptions() {
-  RefPtr<GenericPromise::Private> resultPromise =
-      new GenericPromise::Private(__func__);
-
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIPushService> pushService =
-      do_GetService("@mozilla.org/push/Service;1", &rv);
-  if (NS_FAILED(rv)) {
-    resultPromise->Reject(rv, __func__);
-    return resultPromise.forget();
-  }
-
-  nsCOMPtr<PushUnsubscribeCallback> unsubscribeCallback =
-      new PushUnsubscribeCallback();
-  rv = pushService->Unsubscribe(NS_ConvertUTF8toUTF16(mScope), mPrincipal,
-                                unsubscribeCallback);
-  if (NS_FAILED(rv)) {
-    resultPromise->Reject(rv, __func__);
-    return resultPromise.forget();
-  }
-  return unsubscribeCallback->Promise();
-}
-
 void ServiceWorkerUnregisterJob::AsyncExecute() {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -130,14 +65,23 @@ void ServiceWorkerUnregisterJob::AsyncExecute() {
 
   CookieStoreSubscriptionService::ServiceWorkerUnregistered(mPrincipal, mScope);
 
-  nsTArray<RefPtr<GenericPromise>> promises{ClearNotifications(),
-                                            ClearPushSubscriptions()};
-
-  GenericPromise::AllSettled(GetMainThreadSerialEventTarget(), promises)
-      ->Then(GetMainThreadSerialEventTarget(), __func__,
-             [self = RefPtr(this)](
-                 GenericPromise::AllSettledPromiseType::ResolveOrRejectValue&&
-                     aValue) { self->Unregister(); });
+  // Push API, section 5: "When a service worker registration is unregistered,
+  // any associated push subscription must be deactivated." To ensure the
+  // service worker registration isn't cleared as we're unregistering, we
+  // unsubscribe first.
+  nsCOMPtr<nsIPushService> pushService =
+      do_GetService("@mozilla.org/push/Service;1");
+  if (NS_WARN_IF(!pushService)) {
+    Unregister();
+    return;
+  }
+  nsCOMPtr<nsIUnsubscribeResultCallback> unsubscribeCallback =
+      new PushUnsubscribeCallback(this);
+  nsresult rv = pushService->Unsubscribe(NS_ConvertUTF8toUTF16(mScope),
+                                         mPrincipal, unsubscribeCallback);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    Unregister();
+  }
 }
 
 void ServiceWorkerUnregisterJob::Unregister() {

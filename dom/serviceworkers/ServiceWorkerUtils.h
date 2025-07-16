@@ -39,6 +39,9 @@ using ServiceWorkerRegistrationListPromise =
 using NavigationPreloadStatePromise =
     MozPromise<IPCNavigationPreloadState, CopyableErrorResult, false>;
 
+using NotificationsPromise =
+    MozPromise<CopyableTArray<IPCNotification>, nsresult, false>;
+
 using ServiceWorkerRegistrationCallback =
     std::function<void(const ServiceWorkerRegistrationDescriptor&)>;
 

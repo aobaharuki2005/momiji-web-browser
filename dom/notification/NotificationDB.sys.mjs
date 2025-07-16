@@ -139,13 +139,6 @@ export class NotificationDB {
     });
   }
 
-  testGetRawMap() {
-    return {
-      notifications: this.#notifications,
-      byTag: this.#byTag,
-    };
-  }
-
   // Helper function: promise will be resolved once file exists and/or is loaded.
   #ensureLoaded() {
     if (!this.#loaded) {
@@ -241,13 +234,6 @@ export class NotificationDB {
       });
   }
 
-  removeOriginIfEmpty(origin) {
-    if (!Object.keys(this.#notifications[origin]).length) {
-      delete this.#notifications[origin];
-      delete this.#byTag[origin];
-    }
-  }
-
   taskGetAll(data) {
     let { origin, scope } = data;
     lazy.console.debug(
@@ -324,7 +310,6 @@ export class NotificationDB {
       delete this.#byTag[origin][oldNotification.tag];
     }
     delete this.#notifications[origin][id];
-    this.removeOriginIfEmpty(origin);
     return this.save();
   }
 
@@ -342,7 +327,10 @@ export class NotificationDB {
           delete this.#byTag[origin][oldNotification.tag];
         }
       }
-      this.removeOriginIfEmpty(origin);
+      if (!Object.keys(data).length) {
+        delete this.#notifications[origin];
+        delete this.#byTag[origin];
+      }
     }
 
     return this.save();
