@@ -686,7 +686,6 @@ var Impl = {
       payloadObj.fileIOReports = protect(
         () => Services.telemetry.fileIOReports
       );
-      payloadObj.lateWrites = protect(() => Services.telemetry.lateWrites);
 
       payloadObj.addonDetails = protect(() =>
         lazy.AddonManagerPrivate.getTelemetryDetails()
