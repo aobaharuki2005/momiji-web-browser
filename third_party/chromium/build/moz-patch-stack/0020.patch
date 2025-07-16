@@ -1,28 +1,29 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Wed, 4 Oct 2023 22:29:00 +0000
-Subject: Bug 1855330 - pt3 - add shim targets to limit BUILD.gn changes.
+Date: Tue, 13 Feb 2024 21:58:00 +0000
+Subject: Bug 1876554 - libwebrtc change to support openbsd riscv64 toolchain.
  r=ng,webrtc-reviewers
 
-Adding these shim targets reduces the need to modify many BUILD.gn
-files by removing those deps.  We can retroactively fix the places
-we're already removing those deps in a future bug.
-
-Depends on D190094
-
-Differential Revision: https://phabricator.services.mozilla.com/D190095
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a150bc95a2e914da08d6c0e0cfb0f4887f5b9ae7
+Differential Revision: https://phabricator.services.mozilla.com/D201148
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9170e1167dfe486f45659e5e849f4edb433610f5
 ---
- config/compiler/BUILD.gn | 3 +++
- 1 file changed, 3 insertions(+)
+ toolchain/linux/BUILD.gn | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index a1293bc43..9a91ad87c 100644
---- a/config/compiler/BUILD.gn
-+++ b/config/compiler/BUILD.gn
-@@ -2646,3 +2646,6 @@ config("cet_shadow_stack") {
-     ldflags = [ "/CETCOMPAT" ]
+diff --git a/toolchain/linux/BUILD.gn b/toolchain/linux/BUILD.gn
+index ca0fcb540..d992ac6c7 100644
+--- a/toolchain/linux/BUILD.gn
++++ b/toolchain/linux/BUILD.gn
+@@ -297,6 +297,13 @@ gcc_toolchain("mips64el") {
    }
  }
+ 
++clang_toolchain("clang_riscv64") {
++  toolchain_args = {
++    target_cpu = "riscv64"
++    current_os = "linux"
++  }
++}
 +
-+# moz shim target to limit widespread BUILD.gn changes
-+config("prevent_unsafe_narrowing") {}
+ gcc_toolchain("riscv64") {
+   toolprefix = "riscv64-linux-gnu"
+ 

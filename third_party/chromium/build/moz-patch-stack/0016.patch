@@ -1,112 +1,90 @@
 From: Michael Froman <mfroman@mozilla.com>
 Date: Mon, 20 Jun 2022 22:34:00 +0000
-Subject: Bug 1775143 - pt17 - account for is_desktop_linux going away and
- using is_linux r=ng
+Subject: Bug 1775143 - pt18 - (mirror) (cherry-pick) glandium's D149205.patch
+ r=ng
 
-(skip-generation)
+Depends on D149831
 
-Depends on D149830
-
-Differential Revision: https://phabricator.services.mozilla.com/D149831
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/aad17933ade0176606c4d7b694669bc67f5f92b5
+Differential Revision: https://phabricator.services.mozilla.com/D149832
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3a785d486d97fc9cb263eafb0fe8f2148fc0b101
 ---
- config/compiler/BUILD.gn     | 2 +-
- config/linux/gtk/gtk.gni     | 2 +-
- config/linux/libdrm/BUILD.gn | 2 +-
- config/ozone.gni             | 8 ++++----
- config/ui.gni                | 4 ++--
- 5 files changed, 9 insertions(+), 9 deletions(-)
+ config/BUILDCONFIG.gn                | 4 ++--
+ config/mac/mac_sdk.gni               | 6 +++---
+ config/rust.gni                      | 4 ++--
+ config/win/visual_studio_version.gni | 2 +-
+ win/BUILD.gn                         | 4 ++--
+ 5 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 531b4184d..b4a7a5efa 100644
---- a/config/compiler/BUILD.gn
-+++ b/config/compiler/BUILD.gn
-@@ -1880,7 +1880,7 @@ config("no_rtti") {
- # to heap-allocated memory are passed over shared library boundaries.
- config("export_dynamic") {
-   # TODO(crbug.com/1052397): Revisit after target_os flip is completed.
--  if (is_linux || is_chromeos_lacros || export_libcxxabi_from_executables) {
-+  if (is_linux || is_bsd || is_chromeos_lacros || export_libcxxabi_from_executables) {
-     ldflags = [ "-rdynamic" ]
+diff --git a/config/BUILDCONFIG.gn b/config/BUILDCONFIG.gn
+index 4d7d4f103..571ae5f0d 100644
+--- a/config/BUILDCONFIG.gn
++++ b/config/BUILDCONFIG.gn
+@@ -234,8 +234,8 @@ if (target_os == "android") {
+ } else if (target_os == "ios") {
+   _default_toolchain = "//build/toolchain/ios:ios_clang_$target_cpu"
+ } else if (target_os == "mac") {
+-  assert(host_os == "mac" || host_os == "linux",
+-         "Mac cross-compiles are unsupported.")
++  #assert(host_os == "mac" || host_os == "linux",
++  #       "Mac cross-compiles are unsupported.")
+   _default_toolchain = "//build/toolchain/mac:clang_$target_cpu"
+ } else if (target_os == "win") {
+   # On Windows, we use the same toolchain for host and target by default.
+diff --git a/config/mac/mac_sdk.gni b/config/mac/mac_sdk.gni
+index 19aa06674..6671893ae 100644
+--- a/config/mac/mac_sdk.gni
++++ b/config/mac/mac_sdk.gni
+@@ -89,9 +89,9 @@ if (use_system_xcode && use_goma) {
+ }
+ sdk_info_args += [ mac_sdk_name ]
+ 
+-_mac_sdk_result = exec_script(script_name, sdk_info_args, "scope")
+-xcode_version = _mac_sdk_result.xcode_version
+-xcode_build = _mac_sdk_result.xcode_build
++#_mac_sdk_result = exec_script(script_name, sdk_info_args, "scope")
++#xcode_version = _mac_sdk_result.xcode_version
++#xcode_build = _mac_sdk_result.xcode_build
+ if (mac_sdk_path == "" && use_system_xcode && use_goma) {
+   mac_sdk_path = _mac_sdk_result.sdk_path
+ }
+diff --git a/config/rust.gni b/config/rust.gni
+index 864c176ca..baf1b0bb1 100644
+--- a/config/rust.gni
++++ b/config/rust.gni
+@@ -73,8 +73,8 @@ if (use_unverified_rust_toolchain) {
+   rust_prefix = "$rust_bin_dir/"
+ } else if (toolchain_has_official_rust) {
+   if (host_os != "linux") {
+-    assert(false,
+-           "Attempt to use standard Rust toolchain on an unsupported platform")
++#     assert(false,
++#            "Attempt to use standard Rust toolchain on an unsupported platform")
    }
+   rust_prefix =
+       rebase_path("//third_party/android_rust_toolchain/toolchain/1.54.0/bin/")
+diff --git a/config/win/visual_studio_version.gni b/config/win/visual_studio_version.gni
+index 982fbe8d3..80eb0355c 100644
+--- a/config/win/visual_studio_version.gni
++++ b/config/win/visual_studio_version.gni
+@@ -35,5 +35,5 @@ if (visual_studio_path == "") {
+          "You must set the visual_studio_version if you set the path")
+   assert(wdk_path != "",
+          "You must set the wdk_path if you set the visual studio path")
+-  visual_studio_runtime_dirs = []
++  visual_studio_runtime_dirs = ""
  }
-diff --git a/config/linux/gtk/gtk.gni b/config/linux/gtk/gtk.gni
-index 1e45248e6..70cb82315 100644
---- a/config/linux/gtk/gtk.gni
-+++ b/config/linux/gtk/gtk.gni
-@@ -6,5 +6,5 @@ import("//build/config/ui.gni")
+diff --git a/win/BUILD.gn b/win/BUILD.gn
+index 47773498e..fd4a2a318 100644
+--- a/win/BUILD.gn
++++ b/win/BUILD.gn
+@@ -19,8 +19,8 @@ windows_manifest("default_exe_manifest") {
  
- declare_args() {
-   # Whether or not we should use libgtk.
--  use_gtk = is_linux && !is_chromecast
-+  use_gtk = (is_linux || is_bsd) && !is_chromecast
- }
-diff --git a/config/linux/libdrm/BUILD.gn b/config/linux/libdrm/BUILD.gn
-index e9b40184e..79695cbc6 100644
---- a/config/linux/libdrm/BUILD.gn
-+++ b/config/linux/libdrm/BUILD.gn
-@@ -11,7 +11,7 @@ declare_args() {
-   # Controls whether the build should use the version of libdrm library shipped
-   # with the system. In release builds of desktop Linux and Chrome OS we use the
-   # system version. Some Chromecast devices use this as well.
--  use_system_libdrm = is_chromeos_device || (is_linux && !is_chromecast)
-+  use_system_libdrm = is_chromeos_device || ((is_linux || is_bsd) && !is_chromecast)
- }
+ build_with_mozilla = false
+ if (is_win && !build_with_mozilla) {
+-  assert(host_os != "mac" || target_cpu != "x86",
+-         "Windows cross-builds from Mac must be 64-bit.")
++#  assert(host_os != "mac" || target_cpu != "x86",
++#         "Windows cross-builds from Mac must be 64-bit.")
  
- if (use_system_libdrm) {
-diff --git a/config/ozone.gni b/config/ozone.gni
-index 9f94d11b3..bf6eb7827 100644
---- a/config/ozone.gni
-+++ b/config/ozone.gni
-@@ -10,7 +10,7 @@ declare_args() {
-   # Indicates if Ozone is enabled. Ozone is a low-level library layer for Linux
-   # that does not require X11.
-   use_ozone =
--      is_chromeos || (is_chromecast && !is_android) || is_fuchsia || is_linux
-+      is_chromeos || (is_chromecast && !is_android) || is_fuchsia || is_linux || is_bsd
- }
- 
- declare_args() {
-@@ -91,7 +91,7 @@ declare_args() {
-     } else if (is_chromeos_lacros) {
-       ozone_platform = "wayland"
-       ozone_platform_wayland = true
--    } else if (is_linux) {
-+    } else if (is_linux || is_bsd) {
-       ozone_platform = "x11"
-       ozone_platform_wayland = true
-       ozone_platform_x11 = true
-@@ -119,7 +119,7 @@ declare_args() {
-   # once all the other places are fixed.
-   # TODO(1096425): remove use_x11.
-   use_x11 =
--      ozone_platform_x11 && is_linux && !is_chromecast && !is_chromeos_lacros
-+      ozone_platform_x11 && (is_linux || is_bsd) && !is_chromecast && !is_chromeos_lacros
- }
- 
- import(ozone_extra_path)
-@@ -149,4 +149,4 @@ if (ozone_platform == "gbm") {
-   ozone_platform = "drm"
- }
- 
--assert(use_x11 == ozone_platform_x11 || !is_linux || is_chromecast)
-+assert(use_x11 == ozone_platform_x11 || !is_linux || !is_bsd || is_chromecast)
-diff --git a/config/ui.gni b/config/ui.gni
-index d63ce5118..1bcc33e19 100644
---- a/config/ui.gni
-+++ b/config/ui.gni
-@@ -32,12 +32,12 @@ declare_args() {
-   # True means the UI is built using the "views" framework.
-   toolkit_views = is_mac || is_win || is_linux || is_chromeos || is_fuchsia
- 
--  use_glib = is_linux && !is_chromecast
-+  use_glib = (is_linux || is_bsd) && !is_chromecast
- }
- 
- assert(!use_glib || ((is_linux || is_bsd) && !is_chromecast))
- 
--use_atk = is_linux && !is_chromecast && use_glib &&
-+use_atk = (is_linux || is_bsd) && !is_chromecast && use_glib &&
-           current_toolchain == default_toolchain
- 
- # Whether using Xvfb to provide a display server for a test might be
+   action("copy_cdb_to_output") {
+     script = "//build/win/copy_cdb_to_output.py"

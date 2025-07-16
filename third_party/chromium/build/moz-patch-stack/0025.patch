@@ -659,7 +659,7 @@ index 7e25a0b6f..22df2c538 100644
      # Constuct the host toolchain version of the tool.
      host_tool = invoker.tool + "($host_toolchain)"
 diff --git a/config/BUILD.gn b/config/BUILD.gn
-index 05ae8a8c9..2ee400d8d 100644
+index 9c82a4d9b..5e9a929de 100644
 --- a/config/BUILD.gn
 +++ b/config/BUILD.gn
 @@ -2,26 +2,26 @@
@@ -1116,7 +1116,7 @@ index 9079f6f53..99cc7bbf4 100644
  # This is included by reference in the //build/config/compiler config that
  # is applied to all targets. It is here to separate out the logic.
 diff --git a/config/android/BUILD.gn b/config/android/BUILD.gn
-index 85d27ea89..2f7c7bcc0 100644
+index 5606edcaf..32c8af364 100644
 --- a/config/android/BUILD.gn
 +++ b/config/android/BUILD.gn
 @@ -2,13 +2,13 @@
@@ -1155,13 +1155,13 @@ index 85d27ea89..2f7c7bcc0 100644
  }
  
 diff --git a/config/android/abi.gni b/config/android/abi.gni
-index 1dbbf0cd6..364a06b29 100644
+index 9f2f14b30..c2455baac 100644
 --- a/config/android/abi.gni
 +++ b/config/android/abi.gni
-@@ -45,7 +45,7 @@ if (target_cpu == "x86") {
+@@ -45,7 +45,7 @@ if (current_cpu == "x86") {
    android_app_abi = "x86"
    android_abi_target = "i686-linux-android"
- } else if (target_cpu == "arm") {
+ } else if (current_cpu == "arm") {
 -  import("//build/config/arm.gni")
 +  import("//chromium/build/config/arm.gni")
    if (arm_version < 7) {
@@ -1219,7 +1219,7 @@ index a47607dc7..3c09ce0f0 100644
  # Contains useful GN variables that may be used by scripts that take
  # --output-directory as an arg.
 diff --git a/config/android/config.gni b/config/android/config.gni
-index 13418299e..1a1667f06 100644
+index e7540e8be..f851fdf3e 100644
 --- a/config/android/config.gni
 +++ b/config/android/config.gni
 @@ -8,8 +8,8 @@
@@ -1714,7 +1714,7 @@ index 96d8b665d..b71e6f499 100644
      inputs = []
      args = [ "--output=" + rebase_path(invoker.linker_script, root_build_dir) ]
 diff --git a/config/android/rules.gni b/config/android/rules.gni
-index 45499a378..78fd25e63 100644
+index 54f3ca1d8..07ab079b2 100644
 --- a/config/android/rules.gni
 +++ b/config/android/rules.gni
 @@ -5,16 +5,16 @@
@@ -2183,7 +2183,7 @@ index dd1d796fa..deb34d179 100644
  # This file declares arguments and configs that control whether dSYM debug
  # info is produced and whether build products are stripped.
 diff --git a/config/arm.gni b/config/arm.gni
-index a0ada4245..9f7a08d6b 100644
+index 0185dd731..4b59c1141 100644
 --- a/config/arm.gni
 +++ b/config/arm.gni
 @@ -2,7 +2,7 @@
@@ -2193,7 +2193,7 @@ index a0ada4245..9f7a08d6b 100644
 -import("//build/config/v8_target_cpu.gni")
 +import("//chromium/build/config/v8_target_cpu.gni")
  
- # These are primarily relevant in target_cpu == "arm" contexts, where
+ # These are primarily relevant in current_cpu == "arm" contexts, where
  # ARM code is being compiled.  But they can also be relevant in the
 diff --git a/config/buildflags_paint_preview.gni b/config/buildflags_paint_preview.gni
 index 7129e7663..5206887fc 100644
@@ -2251,7 +2251,7 @@ index 10a780c19..a016fd99f 100644
    # Use libc++ instead of stdlibc++ when using the host_cpu toolchain, even if
    # use_custom_libcxx is false. This is useful for cross-compiles where a custom
 diff --git a/config/chromecast/BUILD.gn b/config/chromecast/BUILD.gn
-index d52d19cad..173ba1bca 100644
+index a4ebc9821..a20dcfbe4 100644
 --- a/config/chromecast/BUILD.gn
 +++ b/config/chromecast/BUILD.gn
 @@ -2,7 +2,7 @@
@@ -2390,7 +2390,7 @@ index 588864586..ca94b4abf 100644
    clang_base_path = default_clang_base_path
  }
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 9a91ad87c..b2915ee61 100644
+index cfe44b756..8b663a746 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -2,49 +2,49 @@
@@ -2439,16 +2439,16 @@ index 9a91ad87c..b2915ee61 100644
 +import("//chromium/build/toolchain/toolchain.gni")
  import("//build_overrides/build.gni")
  
- if (target_cpu == "arm" || target_cpu == "arm64") {
+ if (current_cpu == "arm" || current_cpu == "arm64") {
 -  import("//build/config/arm.gni")
 +  import("//chromium/build/config/arm.gni")
  }
- if (target_cpu == "mipsel" || target_cpu == "mips64el" ||
-     target_cpu == "mips" || target_cpu == "mips64") {
+ if (current_cpu == "mipsel" || current_cpu == "mips64el" ||
+     current_cpu == "mips" || current_cpu == "mips64") {
 -  import("//build/config/mips.gni")
 +  import("//chromium/build/config/mips.gni")
  }
- if (target_cpu == "x64") {
+ if (current_cpu == "x64") {
 -  import("//build/config/x64.gni")
 +  import("//chromium/build/config/x64.gni")
  }
@@ -2522,7 +2522,7 @@ index 9a91ad87c..b2915ee61 100644
 +    configs += [ "//chromium/build/config/nacl:compiler_codegen" ]
    }
  
-   if (target_cpu == "arm64" && is_android) {
+   if (current_cpu == "arm64" && is_android) {
 @@ -1367,28 +1367,28 @@ config("runtime_library") {
    # libandroid_support in the -isystem include order.  Otherwise, there will be
    # build errors related to symbols declared in math.h.
@@ -2623,7 +2623,7 @@ index 9a91ad87c..b2915ee61 100644
  # A helper config that all configs passing /DEBUG to the linker should
  # include as sub-config.
 diff --git a/config/compiler/compiler.gni b/config/compiler/compiler.gni
-index 55ae571ab..d57486277 100644
+index 932d4dff2..ec473bb6f 100644
 --- a/config/compiler/compiler.gni
 +++ b/config/compiler/compiler.gni
 @@ -2,30 +2,30 @@
@@ -2654,7 +2654,7 @@ index 55ae571ab..d57486277 100644
 -  import("//build/config/android/abi.gni")
 +  import("//chromium/build/config/android/abi.gni")
  }
- if (target_cpu == "arm" || target_cpu == "arm64") {
+ if (current_cpu == "arm" || current_cpu == "arm64") {
 -  import("//build/config/arm.gni")
 +  import("//chromium/build/config/arm.gni")
  }
@@ -2978,7 +2978,7 @@ index 48a1a7f1e..22c7212ca 100644
  } else if (host_cpu == "ppc" || host_cpu == "s390" || host_cpu == "s390x" ||
             host_cpu == "mips" || host_cpu == "mips64") {
 diff --git a/config/ios/BUILD.gn b/config/ios/BUILD.gn
-index 525c439e7..95881017b 100644
+index 2ed614921..bd8864dd9 100644
 --- a/config/ios/BUILD.gn
 +++ b/config/ios/BUILD.gn
 @@ -2,9 +2,9 @@
@@ -3082,7 +3082,7 @@ index 115db7ffd..2ff35d999 100644
  # Invokes generate_wrapper to create an executable script wrapping iOS'
  # run.py with baked in arguments. Only takes effect when test entry in
 diff --git a/config/ios/rules.gni b/config/ios/rules.gni
-index 04d605dd9..77485e01c 100644
+index 1c74f158e..c3f988782 100644
 --- a/config/ios/rules.gni
 +++ b/config/ios/rules.gni
 @@ -2,11 +2,11 @@
@@ -3241,7 +3241,7 @@ index 04d605dd9..77485e01c 100644
 -    configs += [ "//build/config/ios:xctest_config" ]
 +    configs += [ "//chromium/build/config/ios:xctest_config" ]
  
-     output_dir = "$target_out_dir/$target_cpu"
+     output_dir = "$target_out_dir/$current_cpu"
      output_name = _output_name
 @@ -1760,7 +1760,7 @@ template("ios_xctest_bundle") {
        testonly = true
@@ -3332,7 +3332,7 @@ index 04d605dd9..77485e01c 100644
      bundle_extension = ".app"
      product_type = _ios_xcode_app_bundle_id
 diff --git a/config/linux/BUILD.gn b/config/linux/BUILD.gn
-index 9c35ee102..8bee35712 100644
+index 0d0a54a04..0643d871b 100644
 --- a/config/linux/BUILD.gn
 +++ b/config/linux/BUILD.gn
 @@ -2,10 +2,10 @@
@@ -3353,7 +3353,7 @@ index 9c35ee102..8bee35712 100644
 @@ -16,7 +16,7 @@ group("linux") {
  # Linux-only. This is not applied to Android, but is applied to ChromeOS.
  config("compiler") {
-   if (target_cpu == "arm64") {
+   if (current_cpu == "arm64") {
 -    import("//build/config/arm.gni")
 +    import("//chromium/build/config/arm.gni")
      cflags = []
@@ -3365,7 +3365,7 @@ index 9c35ee102..8bee35712 100644
    if ((!(is_chromeos_ash || is_chromeos_lacros) ||
 -       default_toolchain != "//build/toolchain/cros:target") &&
 +       default_toolchain != "//chromium/build/toolchain/cros:target") &&
-       (!use_custom_libcxx || target_cpu == "mipsel")) {
+       (!use_custom_libcxx || current_cpu == "mipsel")) {
      libs = [ "atomic" ]
    }
 diff --git a/config/linux/atk/BUILD.gn b/config/linux/atk/BUILD.gn
@@ -3548,7 +3548,7 @@ index 6bc75294c..9fe47ed7a 100644
  declare_args() {
    use_pangocairo = is_linux && !is_chromecast
 diff --git a/config/linux/pkg_config.gni b/config/linux/pkg_config.gni
-index f3b40755b..bf95599b7 100644
+index 428e44ac0..0f604652a 100644
 --- a/config/linux/pkg_config.gni
 +++ b/config/linux/pkg_config.gni
 @@ -2,7 +2,7 @@
@@ -3598,7 +3598,7 @@ index c2f94e929..2b17f0c69 100644
  declare_args() {
    # Use LogErrorNotReached() for NOTREACHED().
 diff --git a/config/mac/BUILD.gn b/config/mac/BUILD.gn
-index 032c77ee3..d086fcd71 100644
+index 8005ed540..14d4f5e1a 100644
 --- a/config/mac/BUILD.gn
 +++ b/config/mac/BUILD.gn
 @@ -2,10 +2,10 @@
@@ -3724,7 +3724,7 @@ index 7753a97fe..f965f997b 100644
        outputs = [ "$target_gen_dir/$_pkg_info_target" ]
        args = [ "--plist" ] + rebase_path(sources, root_build_dir) +
 diff --git a/config/mips.gni b/config/mips.gni
-index 8ad7e2791..8c14384b2 100644
+index 6365088b1..f1a13310e 100644
 --- a/config/mips.gni
 +++ b/config/mips.gni
 @@ -2,7 +2,7 @@
@@ -3734,10 +3734,10 @@ index 8ad7e2791..8c14384b2 100644
 -import("//build/config/v8_target_cpu.gni")
 +import("//chromium/build/config/v8_target_cpu.gni")
  
- # These are primarily relevant in target_cpu == "mips*" contexts, where
+ # These are primarily relevant in current_cpu == "mips*" contexts, where
  # MIPS code is being compiled.  But they can also be relevant in the
 diff --git a/config/nacl/BUILD.gn b/config/nacl/BUILD.gn
-index 89fbf85aa..2f13d7100 100644
+index c0c5282b3..7eef0eb97 100644
 --- a/config/nacl/BUILD.gn
 +++ b/config/nacl/BUILD.gn
 @@ -2,7 +2,7 @@
@@ -3750,7 +3750,7 @@ index 89fbf85aa..2f13d7100 100644
  # Native Client Definitions
  config("nacl_defines") {
 diff --git a/config/nacl/config.gni b/config/nacl/config.gni
-index 9ebdb39c3..ed2533905 100644
+index 6873055c6..130d4108b 100644
 --- a/config/nacl/config.gni
 +++ b/config/nacl/config.gni
 @@ -52,10 +52,10 @@ nacl_toolchain_tooldir =
@@ -3767,7 +3767,7 @@ index 9ebdb39c3..ed2533905 100644
 +nacl_nonsfi_toolchain = "//chromium/build/toolchain/nacl:newlib_pnacl_nonsfi"
  is_nacl_nonsfi = current_toolchain == nacl_nonsfi_toolchain
 diff --git a/config/nacl/rules.gni b/config/nacl/rules.gni
-index 42bb24835..702ed4f59 100644
+index 834c46175..d3db9ba80 100644
 --- a/config/nacl/rules.gni
 +++ b/config/nacl/rules.gni
 @@ -2,7 +2,7 @@
@@ -3780,13 +3780,13 @@ index 42bb24835..702ed4f59 100644
  # Generate a nmf file
  #
 @@ -101,7 +101,7 @@ template("generate_nmf") {
-         if (target_cpu == "x64" || target_os == "win") {
+         if (current_cpu == "x64" || target_os == "win") {
            # For x86-64, the lib/ directory is called lib64/ instead
            # when copied by create_nmf.py.
 -          glibc_tc = "//build/toolchain/nacl:glibc"
 +          glibc_tc = "//chromium/build/toolchain/nacl:glibc"
-           assert(current_toolchain == "${glibc_tc}_${target_cpu}")
-           if (target_cpu == "x64") {
+           assert(current_toolchain == "${glibc_tc}_${current_cpu}")
+           if (current_cpu == "x64") {
              x64_out_dir = root_out_dir
 diff --git a/config/ozone.gni b/config/ozone.gni
 index bf6eb7827..c744d2bcf 100644
@@ -3830,7 +3830,7 @@ index efc8a3be3..07107afbe 100644
  declare_args() {
    # Precompiled header file support is by default available,
 diff --git a/config/posix/BUILD.gn b/config/posix/BUILD.gn
-index a49254f01..d732bab1f 100644
+index 261346e04..2d2292f38 100644
 --- a/config/posix/BUILD.gn
 +++ b/config/posix/BUILD.gn
 @@ -2,7 +2,7 @@
@@ -3848,7 +3848,7 @@ index a49254f01..d732bab1f 100644
        sysroot_hash =
 -          exec_script("//build/linux/sysroot_scripts/install-sysroot.py",
 +          exec_script("//chromium/build/linux/sysroot_scripts/install-sysroot.py",
-                       [ "--print-hash=$target_cpu" ],
+                       [ "--print-hash=$current_cpu" ],
                        "trim string",
 -                      [ "//build/linux/sysroot_scripts/sysroots.json" ])
 +                      [ "//chromium/build/linux/sysroot_scripts/sysroots.json" ])
@@ -3886,7 +3886,7 @@ index 2dfb7e927..dcb67338d 100644
  # - The .pydeps file contains a list of python dependencies (imports really)
  #   and is generated _manually_ by using a command like:
 diff --git a/config/rust.gni b/config/rust.gni
-index 5ff90e6d1..1f5ed6bdb 100644
+index baf1b0bb1..d1df7e5f9 100644
 --- a/config/rust.gni
 +++ b/config/rust.gni
 @@ -2,12 +2,12 @@
@@ -3916,7 +3916,7 @@ index 5ff90e6d1..1f5ed6bdb 100644
    if (rust_abi_target == "arm-linux-androideabi") {
      # Android clang target specifications mostly match Rust, but this
 diff --git a/config/sanitizers/BUILD.gn b/config/sanitizers/BUILD.gn
-index 8c31a7808..e5e56e200 100644
+index 55b388a43..f1335c255 100644
 --- a/config/sanitizers/BUILD.gn
 +++ b/config/sanitizers/BUILD.gn
 @@ -2,15 +2,15 @@
@@ -3996,7 +3996,7 @@ index 8c31a7808..e5e56e200 100644
      # though this sounds fragile, it isn't a big deal if it breaks, since proto
      # fuzzers will still work, they will just be slightly slower.
 diff --git a/config/sanitizers/sanitizers.gni b/config/sanitizers/sanitizers.gni
-index 3bb41df05..73e6fed16 100644
+index 8d26d0054..a99204ab2 100644
 --- a/config/sanitizers/sanitizers.gni
 +++ b/config/sanitizers/sanitizers.gni
 @@ -2,12 +2,12 @@
@@ -4045,7 +4045,7 @@ index 3bb41df05..73e6fed16 100644
        assert(not_fuzzed_remove_nonasan_configs == not_fuzzed_remove_configs)
      }
 diff --git a/config/sysroot.gni b/config/sysroot.gni
-index 9d2c828c6..b1a1d4672 100644
+index 97be0da77..14f708869 100644
 --- a/config/sysroot.gni
 +++ b/config/sysroot.gni
 @@ -5,7 +5,7 @@
@@ -4094,7 +4094,7 @@ index 9d2c828c6..b1a1d4672 100644
 +    import("//chromium/build/config/ios/ios_sdk.gni")
      sysroot = ios_sdk_path
    } else if (is_fuchsia) {
-     if (target_cpu == "arm64" || target_cpu == "x64") {
+     if (current_cpu == "arm64" || current_cpu == "x64") {
 diff --git a/config/ui.gni b/config/ui.gni
 index 1bcc33e19..5e4c09a6b 100644
 --- a/config/ui.gni
@@ -4148,7 +4148,7 @@ index 305981f3f..36905ce0c 100644
    } else if (is_msan) {
      # If we're running under a sanitizer, if we configure v8 to generate
 diff --git a/config/win/BUILD.gn b/config/win/BUILD.gn
-index afeea308d..8c73d0fed 100644
+index 5da49a9a5..fa7585784 100644
 --- a/config/win/BUILD.gn
 +++ b/config/win/BUILD.gn
 @@ -2,16 +2,16 @@
@@ -4445,7 +4445,7 @@ index 54314c768..154327aef 100644
  if (use_gio) {
    pkg_config("gio_config") {
 diff --git a/linux/extract_symbols.gni b/linux/extract_symbols.gni
-index c92aaa0a1..a4bd6d182 100644
+index 52cb1b50d..3dc7fa005 100644
 --- a/linux/extract_symbols.gni
 +++ b/linux/extract_symbols.gni
 @@ -2,7 +2,7 @@
@@ -4890,7 +4890,7 @@ index 6cf8f1b40..c56a4bc39 100644
  declare_args() {
    # Pool for non goma tasks.
 diff --git a/toolchain/aix/BUILD.gn b/toolchain/aix/BUILD.gn
-index 0390a0c42..69f1d6026 100644
+index 523b54ef6..ebee9cd8f 100644
 --- a/toolchain/aix/BUILD.gn
 +++ b/toolchain/aix/BUILD.gn
 @@ -2,7 +2,7 @@
@@ -4903,7 +4903,7 @@ index 0390a0c42..69f1d6026 100644
  gcc_toolchain("ppc64") {
    cc = "gcc"
 diff --git a/toolchain/android/BUILD.gn b/toolchain/android/BUILD.gn
-index a611a09f4..1b5c7bea7 100644
+index 728885e59..17b1a6e60 100644
 --- a/toolchain/android/BUILD.gn
 +++ b/toolchain/android/BUILD.gn
 @@ -2,12 +2,12 @@
@@ -5119,7 +5119,7 @@ index c0342256a..9cf12ee13 100644
  declare_args() {
    # Limit the number of concurrent links; we often want to run fewer
 diff --git a/toolchain/cros/BUILD.gn b/toolchain/cros/BUILD.gn
-index 7140f87d2..d524f00e5 100644
+index c1e8c2109..b68586a06 100644
 --- a/toolchain/cros/BUILD.gn
 +++ b/toolchain/cros/BUILD.gn
 @@ -2,10 +2,10 @@
@@ -5153,7 +5153,7 @@ index ccc4db293..d254ec365 100644
  declare_args() {
    # These must be specified for a board-specific build.
 diff --git a/toolchain/fuchsia/BUILD.gn b/toolchain/fuchsia/BUILD.gn
-index dbfcc9802..3010cb7a0 100644
+index d77640b1a..643e12841 100644
 --- a/toolchain/fuchsia/BUILD.gn
 +++ b/toolchain/fuchsia/BUILD.gn
 @@ -2,7 +2,7 @@
@@ -5166,7 +5166,7 @@ index dbfcc9802..3010cb7a0 100644
  # Fuchsia builds using the Clang toolchain, with most parameters common across
  # the different target architectures.
 diff --git a/toolchain/gcc_toolchain.gni b/toolchain/gcc_toolchain.gni
-index 2b547c343..38a683502 100644
+index 8b2fe90d0..25549623e 100644
 --- a/toolchain/gcc_toolchain.gni
 +++ b/toolchain/gcc_toolchain.gni
 @@ -2,22 +2,22 @@
@@ -5276,7 +5276,7 @@ index 2b547c343..38a683502 100644
  
      if (toolchain_has_rust) {
 diff --git a/toolchain/ios/BUILD.gn b/toolchain/ios/BUILD.gn
-index 4c9cc586d..dee2bcb5c 100644
+index 100932730..bf062a414 100644
 --- a/toolchain/ios/BUILD.gn
 +++ b/toolchain/ios/BUILD.gn
 @@ -2,8 +2,8 @@
@@ -5292,7 +5292,7 @@ index 4c9cc586d..dee2bcb5c 100644
  # and its tools to build target for iOS platform.
 @@ -51,7 +51,7 @@ ios_toolchain("ios_clang_arm64_fat_arm") {
    toolchain_args = {
-     target_cpu = "arm"
+     current_cpu = "arm"
      is_fat_secondary_toolchain = true
 -    primary_fat_toolchain_name = "//build/toolchain/ios:ios_clang_arm64"
 +    primary_fat_toolchain_name = "//chromium/build/toolchain/ios:ios_clang_arm64"
@@ -5301,7 +5301,7 @@ index 4c9cc586d..dee2bcb5c 100644
  
 @@ -71,7 +71,7 @@ ios_toolchain("ios_clang_x64_fat_arm64") {
    toolchain_args = {
-     target_cpu = "arm64"
+     current_cpu = "arm64"
      is_fat_secondary_toolchain = true
 -    primary_fat_toolchain_name = "//build/toolchain/ios:ios_clang_x64"
 +    primary_fat_toolchain_name = "//chromium/build/toolchain/ios:ios_clang_x64"
@@ -5309,7 +5309,7 @@ index 4c9cc586d..dee2bcb5c 100644
  }
  
 @@ -94,7 +94,7 @@ ios_toolchain("ios_clang_x64_14_0_fat_arm64") {
-     target_cpu = "arm64"
+     current_cpu = "arm64"
      ios_deployment_target = "14.0"
      is_fat_secondary_toolchain = true
 -    primary_fat_toolchain_name = "//build/toolchain/ios:ios_clang_x64_14_0"
@@ -5319,7 +5319,7 @@ index 4c9cc586d..dee2bcb5c 100644
  
 @@ -102,7 +102,7 @@ ios_toolchain("ios_clang_x64_fat_x86") {
    toolchain_args = {
-     target_cpu = "x86"
+     current_cpu = "x86"
      is_fat_secondary_toolchain = true
 -    primary_fat_toolchain_name = "//build/toolchain/ios:ios_clang_x64"
 +    primary_fat_toolchain_name = "//chromium/build/toolchain/ios:ios_clang_x64"
@@ -5327,7 +5327,7 @@ index 4c9cc586d..dee2bcb5c 100644
  }
  
 diff --git a/toolchain/linux/BUILD.gn b/toolchain/linux/BUILD.gn
-index 0f443a044..92478637c 100644
+index d992ac6c7..6a97a568a 100644
 --- a/toolchain/linux/BUILD.gn
 +++ b/toolchain/linux/BUILD.gn
 @@ -2,9 +2,9 @@
@@ -5344,7 +5344,7 @@ index 0f443a044..92478637c 100644
  clang_toolchain("clang_ppc64") {
    enable_linker_map = true
 diff --git a/toolchain/linux/unbundle/BUILD.gn b/toolchain/linux/unbundle/BUILD.gn
-index 0e20f271f..aed67c6c1 100644
+index 4719d540b..13c776f9f 100644
 --- a/toolchain/linux/unbundle/BUILD.gn
 +++ b/toolchain/linux/unbundle/BUILD.gn
 @@ -2,7 +2,7 @@
@@ -5357,7 +5357,7 @@ index 0e20f271f..aed67c6c1 100644
  gcc_toolchain("default") {
    cc = getenv("CC")
 diff --git a/toolchain/mac/BUILD.gn b/toolchain/mac/BUILD.gn
-index 4809b4ba0..87b46e6a4 100644
+index 70274fac5..1ae8f3731 100644
 --- a/toolchain/mac/BUILD.gn
 +++ b/toolchain/mac/BUILD.gn
 @@ -2,8 +2,8 @@
@@ -5372,7 +5372,7 @@ index 4809b4ba0..87b46e6a4 100644
  # Specialisation of the apple_toolchain template to declare the toolchain
  # and its tools to build target for macOS platform.
 diff --git a/toolchain/nacl/BUILD.gn b/toolchain/nacl/BUILD.gn
-index 259e6347a..ef813b8a2 100644
+index 8cd5550de..ef9e463e0 100644
 --- a/toolchain/nacl/BUILD.gn
 +++ b/toolchain/nacl/BUILD.gn
 @@ -2,9 +2,9 @@
@@ -5428,7 +5428,7 @@ index 6d8f162d8..9277d5493 100644
    stamp_command = "cmd /c type nul > \"{{output}}\""
    copy_command =
 diff --git a/toolchain/win/BUILD.gn b/toolchain/win/BUILD.gn
-index 571235286..ca5f514bd 100644
+index cf34007b9..56f173929 100644
 --- a/toolchain/win/BUILD.gn
 +++ b/toolchain/win/BUILD.gn
 @@ -2,15 +2,15 @@
@@ -5513,7 +5513,7 @@ index 571235286..ca5f514bd 100644
    }
  }
 diff --git a/toolchain/win/midl.gni b/toolchain/win/midl.gni
-index ecf02acd3..ebb60edfc 100644
+index 9f7014285..60fda3858 100644
 --- a/toolchain/win/midl.gni
 +++ b/toolchain/win/midl.gni
 @@ -4,7 +4,7 @@
@@ -5646,7 +5646,7 @@ index 998ce077d..d6c8a8a7c 100644
    _version_dictionary_template +=
        "chrome_version_code = " + "\"@CHROME_VERSION_CODE@\" " +
 diff --git a/win/BUILD.gn b/win/BUILD.gn
-index 66f86d3f7..4b2123439 100644
+index 3b66ddf1c..a3d0d0e9c 100644
 --- a/win/BUILD.gn
 +++ b/win/BUILD.gn
 @@ -2,9 +2,9 @@
@@ -5676,7 +5676,7 @@ index 66f86d3f7..4b2123439 100644
      outputs = [
        "$root_out_dir/cdb/cdb.exe",
 diff --git a/win/message_compiler.gni b/win/message_compiler.gni
-index 21f4ec8b1..944d833a2 100644
+index 0ddbc1f42..06fbbd4ff 100644
 --- a/win/message_compiler.gni
 +++ b/win/message_compiler.gni
 @@ -38,7 +38,7 @@ template("message_compiler") {

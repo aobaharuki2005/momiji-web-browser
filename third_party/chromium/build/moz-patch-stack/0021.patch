@@ -1,29 +1,30 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 13 Feb 2024 21:58:00 +0000
-Subject: Bug 1876554 - libwebrtc change to support openbsd riscv64 toolchain.
- r=ng,webrtc-reviewers
+From: Ryan VanderMeulen <ryanvm@gmail.com>
+Date: Tue, 20 Feb 2024 14:10:00 +0000
+Subject: Bug 1822171 - Remove android_support dependency from libwebrtc.
+ r=webrtc-reviewers,mjf
 
-Differential Revision: https://phabricator.services.mozilla.com/D201148
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9170e1167dfe486f45659e5e849f4edb433610f5
+Differential Revision: https://phabricator.services.mozilla.com/D202075
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f5c9cd6cc881ec024c419b3aa071ac933ef5eabe
 ---
- toolchain/linux/BUILD.gn | 7 +++++++
- 1 file changed, 7 insertions(+)
+ config/android/BUILD.gn | 8 --------
+ 1 file changed, 8 deletions(-)
 
-diff --git a/toolchain/linux/BUILD.gn b/toolchain/linux/BUILD.gn
-index 697247abc..0f443a044 100644
---- a/toolchain/linux/BUILD.gn
-+++ b/toolchain/linux/BUILD.gn
-@@ -297,6 +297,13 @@ gcc_toolchain("mips64el") {
-   }
- }
+diff --git a/config/android/BUILD.gn b/config/android/BUILD.gn
+index 3803fd4f1..5606edcaf 100644
+--- a/config/android/BUILD.gn
++++ b/config/android/BUILD.gn
+@@ -89,14 +89,6 @@ config("runtime_library") {
  
-+clang_toolchain("clang_riscv64") {
-+  toolchain_args = {
-+    target_cpu = "riscv64"
-+    current_os = "linux"
-+  }
-+}
-+
- gcc_toolchain("riscv64") {
-   toolprefix = "riscv64-linux-gnu"
+   libs = []
  
+-  # On 64-bit platforms, the only symbols provided by libandroid_support.a are
+-  # strto{d,f,l,ul}_l. These symbols are not used by our libc++, and newer NDKs
+-  # don't provide a libandroid_support.a on 64-bit platforms, so we only depend
+-  # on this library on 32-bit platforms.
+-  if (current_cpu == "arm" || current_cpu == "x86") {
+-    libs += [ "android_support" ]
+-  }
+-
+   # arm builds of libc++ starting in NDK r12 depend on unwind.
+   if (current_cpu == "arm") {
+     libs += [ "unwind" ]

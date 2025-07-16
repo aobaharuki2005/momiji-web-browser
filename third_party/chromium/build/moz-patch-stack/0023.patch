@@ -1,42 +1,62 @@
 From: Michael Froman <mfroman@mozilla.com>
 Date: Tue, 1 Oct 2024 21:05:00 +0000
-Subject: Bug 1921706 - remove unnecessary Mozilla mods to
- third_party/libwebrtc/build/win/BUILD.gn r=ng,webrtc-reviewers DONTBUILD
+Subject: Bug 1921706 - simplify removing libatomic on linux builds.
+ r=ng,webrtc-reviewers DONTBUILD
 
 Note: this produces no changes in the generated moz.build files.
 
-moz-central commit 85b5cef7ef21 (Bug 1654112 - Add check for mozilla build that was in the previous import, restore changes)
-readded changes to third_party/libwebrtc/build/win/BUILD.gn that are not needed.
+o  changeset:   597701:a26d44969a83
+~  user:        Michael Froman <mfroman@mozilla.com>
+   date:        Mon Jun 14 17:39:29 2021 -0500
+   files:       third_party/libwebrtc/build/config/linux/BUILD.gn
+   description:
+   Bug 1654112 - don't use libatomic on linux builds. r=ng
 
-The include of webrtc.gni was originally added to reference our build_with_mozilla
-flag, but then in same change we set build_with_mozilla back to false meaning we
-never really needed the changes here at all.
+In moz-central a26d44969a83 I added an include of webrtc.gni for
+the build_with_mozilla flag, but there is already a Mozilla
+modifcation in this file that does not rely on that flag.  This
+simplification will help with future google build directory move.
 
-Differential Revision: https://phabricator.services.mozilla.com/D224068
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e4b7dbca00cb88d30f45700c32fbbe12d7185833
+Differential Revision: https://phabricator.services.mozilla.com/D224069
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d57bb9cfa9a7679fa5d3f47ae9343928700ec103
 ---
- win/BUILD.gn | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ config/linux/BUILD.gn | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/win/BUILD.gn b/win/BUILD.gn
-index d41e55dcb..66f86d3f7 100644
---- a/win/BUILD.gn
-+++ b/win/BUILD.gn
-@@ -2,7 +2,6 @@
+diff --git a/config/linux/BUILD.gn b/config/linux/BUILD.gn
+index 863114e58..0d0a54a04 100644
+--- a/config/linux/BUILD.gn
++++ b/config/linux/BUILD.gn
+@@ -2,8 +2,6 @@
  # Use of this source code is governed by a BSD-style license that can be
  # found in the LICENSE file.
  
--import("//webrtc.gni")
- import("//build/config/clang/clang.gni")
- import("//build/config/sanitizers/sanitizers.gni")
- import("//build/config/win/manifest.gni")
-@@ -17,8 +16,7 @@ windows_manifest("default_exe_manifest") {
-   ]
+-import("../../../webrtc.gni")
+-
+ import("//build/config/c++/c++.gni")
+ import("//build/config/chromeos/ui_mode.gni")
+ import("//build/config/linux/pkg_config.gni")
+@@ -39,11 +37,14 @@ config("runtime_library") {
+     defines = [ "OS_CHROMEOS" ]
+   }
+ 
++  # Mozilla disable libatomic on linux builds
++  if (false) {
+   if ((!(is_chromeos_ash || is_chromeos_lacros) ||
+        default_toolchain != "//build/toolchain/cros:target") &&
+-      (!use_custom_libcxx || current_cpu == "mipsel") && !build_with_mozilla) {
++      (!use_custom_libcxx || current_cpu == "mipsel")) {
+     libs = [ "atomic" ]
+   }
++  }
  }
  
--build_with_mozilla = false
--if (is_win && !build_with_mozilla) {
-+if (is_win) {
- #  assert(host_os != "mac" || target_cpu != "x86",
- #         "Windows cross-builds from Mac must be 64-bit.")
+ config("libcap") {
+@@ -54,6 +55,7 @@ config("libresolv") {
+   libs = [ "resolv" ]
+ }
  
++# Mozilla disable glib - Bug 1654112 (hg sha 127ace4d8887)
+ if (false && use_glib) {
+   pkg_config("glib") {
+     packages = [
