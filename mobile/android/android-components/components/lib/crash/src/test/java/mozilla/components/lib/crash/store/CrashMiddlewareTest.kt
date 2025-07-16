@@ -32,7 +32,7 @@ class CrashMiddlewareTest {
         val middleware = CrashMiddleware(cache, mock(), mock(), scope)
         val middlewareContext: Pair<() -> CrashState, (CrashAction) -> Unit> = Pair(mock(), mock())
 
-        `when`(cache.getAlwaysSend()).thenReturn(true)
+        `when`(cache.getReportOption()).thenReturn(CrashReportOption.Auto)
         middleware.invoke(middlewareContext, mock(), CrashAction.Initialize)
 
         val (_, dispatcher) = middlewareContext
@@ -45,7 +45,7 @@ class CrashMiddlewareTest {
         val middleware = CrashMiddleware(cache, mock(), mock(), scope)
         val middlewareContext: Pair<() -> CrashState, (CrashAction) -> Unit> = Pair(mock(), mock())
 
-        `when`(cache.getAlwaysSend()).thenReturn(false)
+        `when`(cache.getReportOption()).thenReturn(CrashReportOption.Ask)
         middleware.invoke(middlewareContext, mock(), CrashAction.Initialize)
 
         val (_, dispatcher) = middlewareContext
@@ -173,7 +173,7 @@ class CrashMiddlewareTest {
         val (_, dispatcher) = middlewareContext
         middleware.invoke(middlewareContext, mock(), CrashAction.FinishCheckingForCrashes(hasUnsentCrashes = false))
 
-        verify(cache, never()).getAlwaysSend()
+        verify(cache, never()).getReportOption()
         verify(dispatcher, never()).invoke(CrashAction.ShowPrompt)
     }
 
@@ -184,12 +184,12 @@ class CrashMiddlewareTest {
         val middleware = CrashMiddleware(cache, crashReporter, { 777L }, scope)
         val middlewareContext: Pair<() -> CrashState, (CrashAction) -> Unit> = Pair(mock(), mock())
 
-        `when`(cache.getAlwaysSend()).thenReturn(true)
+        `when`(cache.getReportOption()).thenReturn(CrashReportOption.Auto)
         `when`(crashReporter.unsentCrashReportsSince(777L)).thenReturn(listOf(mock<Crash.UncaughtExceptionCrash>(), mock<Crash.UncaughtExceptionCrash>()))
         val (_, dispatcher) = middlewareContext
         middleware.invoke(middlewareContext, mock(), CrashAction.FinishCheckingForCrashes(hasUnsentCrashes = true))
 
-        verify(cache).getAlwaysSend()
+        verify(cache).getReportOption()
         verify(crashReporter, times(2)).submitReport(any(), any())
         verify(dispatcher, never()).invoke(CrashAction.ShowPrompt)
     }
@@ -201,11 +201,11 @@ class CrashMiddlewareTest {
         val middleware = CrashMiddleware(cache, crashReporter, mock(), scope)
         val middlewareContext: Pair<() -> CrashState, (CrashAction) -> Unit> = Pair(mock(), mock())
 
-        `when`(cache.getAlwaysSend()).thenReturn(false)
+        `when`(cache.getReportOption()).thenReturn(CrashReportOption.Ask)
         val (_, dispatcher) = middlewareContext
         middleware.invoke(middlewareContext, mock(), CrashAction.FinishCheckingForCrashes(hasUnsentCrashes = true))
 
-        verify(cache).getAlwaysSend()
+        verify(cache).getReportOption()
         verify(crashReporter, never()).submitReport(any(), any())
         verify(dispatcher).invoke(CrashAction.ShowPrompt)
     }
@@ -254,7 +254,7 @@ class CrashMiddlewareTest {
         `when`(crashReporter.unsentCrashReportsSince(777L)).thenReturn(listOf(mock<Crash.UncaughtExceptionCrash>(), mock<Crash.UncaughtExceptionCrash>()))
         middleware.invoke(mock(), mock(), CrashAction.ReportTapped(automaticallySendChecked = true, crashIDs = null))
 
-        verify(cache).setAlwaysSend(true)
+        verify(cache).setReportOption(CrashReportOption.Auto)
         verify(crashReporter, never()).findCrashReports(any())
         verify(crashReporter, times(2)).submitReport(any(), any())
     }
@@ -268,7 +268,7 @@ class CrashMiddlewareTest {
         `when`(crashReporter.unsentCrashReportsSince(777L)).thenReturn(listOf(mock<Crash.UncaughtExceptionCrash>(), mock<Crash.UncaughtExceptionCrash>()))
         middleware.invoke(mock(), mock(), CrashAction.ReportTapped(automaticallySendChecked = false, crashIDs = null))
 
-        verify(cache, never()).setAlwaysSend(true)
+        verify(cache, never()).setReportOption(any())
         verify(crashReporter, never()).findCrashReports(any())
         verify(crashReporter, times(2)).submitReport(any(), any())
     }
@@ -282,7 +282,7 @@ class CrashMiddlewareTest {
 
         middleware.invoke(mock(), mock(), CrashAction.ReportTapped(automaticallySendChecked = true, crashIDs = crashIDs))
 
-        verify(cache, never()).setAlwaysSend(true)
+        verify(cache, never()).setReportOption(any())
         verify(crashReporter, never()).unsentCrashReportsSince(anyLong())
     }
 

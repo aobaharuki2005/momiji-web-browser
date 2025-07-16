@@ -145,7 +145,6 @@ class DataChoicesFragment : Fragment() {
     }
 
     private suspend fun updateCrashChoice(newValue: CrashReportOption, context: Context) {
-        context.settings().crashReportAlwaysSend = newValue == CrashReportOption.Auto
         context.settings().useNewCrashReporterDialog = newValue == CrashReportOption.Never
         crashReportCache.setReportOption(newValue)
     }

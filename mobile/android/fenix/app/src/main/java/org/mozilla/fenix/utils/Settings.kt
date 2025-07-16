@@ -2430,15 +2430,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * A user preference indicating that crash reports should always be automatically sent. This can be updated
-     * through the unsubmitted crash dialog or through data choice preferences.
-     */
-    var crashReportAlwaysSend by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_crash_reporting_always_report),
-        default = false,
-    )
-
-    /**
      * Indicates whether or not we should use the new crash reporter dialog.
      */
     var useNewCrashReporterDialog by booleanPreference(

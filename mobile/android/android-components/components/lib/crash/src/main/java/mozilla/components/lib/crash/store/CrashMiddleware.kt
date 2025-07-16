@@ -16,10 +16,26 @@ import mozilla.components.lib.crash.R
  *
  * @property labelId The string resource label ID associated with the option.
  */
-enum class CrashReportOption(@param:StringRes val labelId: Int) {
-    Ask(R.string.crash_reporting_ask),
-    Auto(R.string.crash_reporting_auto),
-    Never(R.string.crash_reporting_never),
+enum class CrashReportOption(
+    @param:StringRes val labelId: Int,
+    val label: String,
+) {
+    Ask(R.string.crash_reporting_ask, "Ask"),
+    Auto(R.string.crash_reporting_auto, "Auto"),
+    Never(R.string.crash_reporting_never, "Never"),
+    ;
+
+    /**
+     * Companion object for [CrashReportOption] to provide utility methods.
+     */
+    companion object {
+        /**
+         * Convert a string to a [CrashReportOption] to avoid minification issues.
+         */
+        fun fromLabel(label: String): CrashReportOption {
+            return entries.find { it.label.equals(label, ignoreCase = true) } ?: Ask
+        }
+    }
 }
 
 /**
@@ -49,16 +65,6 @@ interface CrashReportCache {
      * Stores a deferred timestamp.
      */
     suspend fun setDeferredUntil(timeInMillis: TimeInMillis?)
-
-    /**
-     * Check to see if the user always wants to send crash reports.
-     */
-    suspend fun getAlwaysSend(): Boolean
-
-    /**
-     * Stores the users response to always send crashes.
-     */
-    suspend fun setAlwaysSend(alwaysSend: Boolean)
 
     /**
      * Records that the user does not want to see the remote settings crash pull
@@ -110,13 +116,17 @@ class CrashMiddleware(
 
         when (action) {
             is CrashAction.Initialize -> scope.launch {
-                val nextAction = if (cache.getAlwaysSend()) {
-                    CrashAction.CheckForCrashes
-                } else {
-                    CrashAction.CheckDeferred
+                when (cache.getReportOption()) {
+                    CrashReportOption.Ask -> {
+                        dispatch(CrashAction.CheckDeferred)
+                    }
+                    CrashReportOption.Auto -> {
+                        dispatch(CrashAction.CheckForCrashes)
+                    }
+                    CrashReportOption.Never -> {
+                        return@launch
+                    }
                 }
-
-                dispatch(nextAction)
             }
             is CrashAction.CheckDeferred -> scope.launch {
                 val nextAction = cache.getDeferredUntil()?.let {
@@ -138,7 +148,7 @@ class CrashMiddleware(
             }
             is CrashAction.FinishCheckingForCrashes -> scope.launch {
                 if (!action.hasUnsentCrashes) { return@launch }
-                if (cache.getAlwaysSend()) {
+                if (cache.getReportOption() == CrashReportOption.Auto) {
                     sendUnsentCrashReports()
                 } else {
                     dispatch(CrashAction.ShowPrompt)
@@ -155,11 +165,11 @@ class CrashMiddleware(
                 }
             }
             is CrashAction.ReportTapped -> scope.launch {
-                if (action.crashIDs != null && action.crashIDs.size > 0) {
+                if (action.crashIDs != null && action.crashIDs.isNotEmpty()) {
                     sendCrashReports(action.crashIDs)
                 } else {
                     if (action.automaticallySendChecked) {
-                        cache.setAlwaysSend(true)
+                        cache.setReportOption(CrashReportOption.Auto)
                     }
                     sendUnsentCrashReports()
                 }
