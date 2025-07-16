@@ -63,6 +63,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CollectionInfo
@@ -97,6 +98,7 @@ import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.lib.state.ext.observeAsState
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
@@ -236,6 +238,7 @@ private fun BookmarksList(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { AcornSnackbarHostState() }
 
+    val view = LocalView.current
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -501,8 +504,9 @@ private fun BookmarksList(
                     .fillMaxSize()
                     .pointerInput(WindowInsets.isImeVisible) {
                         detectTapGestures(
-                            // Hide the keyboard for any touches in the empty area of the awesomebar
+                            // Exit search for any touches in the empty area of the awesomebar.
                             onPress = {
+                                focusManager.clearFocus()
                                 keyboardController?.hide()
                                 store.dispatch(SearchDismissed)
                             },
@@ -527,7 +531,7 @@ private fun BookmarksList(
                         searchStore.dispatch(SuggestionSelected(suggestion))
                     },
                     onVisibilityStateUpdated = {},
-                    onScroll = { keyboardController?.hide() },
+                    onScroll = { view.hideKeyboard() },
                     profiler = components.core.engine.profiler,
                 )
             }

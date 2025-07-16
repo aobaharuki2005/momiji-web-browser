@@ -37,6 +37,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
@@ -82,6 +83,7 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.support.base.feature.UserInteractionHandler
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.kotlin.toShortUrl
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 import mozilla.telemetry.glean.private.NoExtras
@@ -423,6 +425,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                             }
                         }
 
+                        val view = LocalView.current
                         val focusManager = LocalFocusManager.current
                         val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -447,8 +450,8 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                                         detectTapGestures(
                                             // Hide the keyboard for any touches in the empty area of the awesomebar
                                             onPress = {
-                                                keyboardController?.hide()
                                                 focusManager.clearFocus()
+                                                keyboardController?.hide()
                                                 if (searchState.query.isEmpty()) {
                                                     historyStore.dispatch(SearchDismissed)
                                                 }
@@ -474,7 +477,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                                         searchStore.dispatch(SuggestionSelected(suggestion))
                                     },
                                     onVisibilityStateUpdated = {},
-                                    onScroll = { keyboardController?.hide() },
+                                    onScroll = { view.hideKeyboard() },
                                     profiler = requireComponents.core.engine.profiler,
                                 )
                             }

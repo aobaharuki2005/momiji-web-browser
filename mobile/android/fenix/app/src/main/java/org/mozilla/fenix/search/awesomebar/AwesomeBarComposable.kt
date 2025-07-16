@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -35,6 +36,7 @@ import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.lib.state.ext.observeAsComposableState
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
@@ -110,6 +112,7 @@ class AwesomeBarComposable(
                         !state.showSearchShortcuts
             }
         }
+        val view = LocalView.current
         val focusManager = LocalFocusManager.current
         val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -150,7 +153,7 @@ class AwesomeBarComposable(
                     .pointerInput(WindowInsets.isImeVisible) {
                         detectTapGestures(
                             // Hide the keyboard for any touches in the empty area of the awesomebar
-                            onPress = { keyboardController?.hide() },
+                            onPress = { view.hideKeyboard() },
                         )
                     },
             ) {
@@ -172,7 +175,7 @@ class AwesomeBarComposable(
                         searchStore.dispatch(SuggestionSelected(suggestion))
                     },
                     onVisibilityStateUpdated = {},
-                    onScroll = { keyboardController?.hide() },
+                    onScroll = { view.hideKeyboard() },
                     profiler = components.core.engine.profiler,
                 )
             }
