@@ -53,6 +53,8 @@ class StylePropertyMap final : public StylePropertyMapReadOnly {
 
   // end of StylePropertyMap Web IDL declarations
 
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
+
  private:
   virtual ~StylePropertyMap() = default;
 };

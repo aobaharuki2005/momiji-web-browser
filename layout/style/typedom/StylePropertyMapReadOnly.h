@@ -60,6 +60,8 @@ class StylePropertyMapReadOnly : public nsISupports, public nsWrapperCache {
 
   // end of StylePropertyMapReadOnly Web IDL declarations
 
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
+
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
  protected:

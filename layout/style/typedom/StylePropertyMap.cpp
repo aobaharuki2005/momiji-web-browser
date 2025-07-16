@@ -48,4 +48,9 @@ void StylePropertyMap::Clear() {}
 
 // end of StylePropertyMap Web IDL implementation
 
+size_t StylePropertyMap::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+  return StylePropertyMapReadOnly::SizeOfExcludingThis(aMallocSizeOf) +
+         aMallocSizeOf(this);
+}
+
 }  // namespace mozilla::dom

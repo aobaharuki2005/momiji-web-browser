@@ -41,6 +41,7 @@
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/dom/StylePropertyMap.h"
 #include "mozilla/dom/StylePropertyMapReadOnly.h"
 #include "nsIControllers.h"
 #include "nsIDocumentEncoder.h"
@@ -577,6 +578,9 @@ void FragmentOrElement::nsDOMSlots::Traverse(
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mSlots->mComputedStyleMap");
   aCb.NoteXPCOMChild(mComputedStyleMap.get());
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mSlots->mAttributeStyleMap");
+  aCb.NoteXPCOMChild(mAttributeStyleMap.get());
 }
 
 void FragmentOrElement::nsDOMSlots::Unlink(nsINode& aNode) {
@@ -589,6 +593,7 @@ void FragmentOrElement::nsDOMSlots::Unlink(nsINode& aNode) {
   mChildrenList = nullptr;
   mClassList = nullptr;
   mComputedStyleMap = nullptr;
+  mAttributeStyleMap = nullptr;
 }
 
 size_t FragmentOrElement::nsDOMSlots::SizeOfIncludingThis(
@@ -614,6 +619,10 @@ size_t FragmentOrElement::nsDOMSlots::SizeOfIncludingThis(
 
   if (mComputedStyleMap) {
     n += mComputedStyleMap->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  if (mAttributeStyleMap) {
+    n += mAttributeStyleMap->SizeOfIncludingThis(aMallocSizeOf);
   }
 
   // Measurement of the following members may be added later if DMD finds it is
