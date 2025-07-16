@@ -60,6 +60,9 @@ void Rule::UnlinkDeclarationWrapper(nsWrapperCache& aDecl) {
   //
   // So we reimplement a modified version of nsWrapperCache::ReleaseWrapper here
   // that unpreserves both wrappers before doing any clearing.
+  //
+  // XXX nsWrapperCache::ReleaseWrapper now calls JS::HeapObjectPostWriteBarrier
+  // Should it be called also here? See bug 1977384.
   bool needDrop = PreservingWrapper() || aDecl.PreservingWrapper();
   SetPreservingWrapper(false);
   aDecl.SetPreservingWrapper(false);

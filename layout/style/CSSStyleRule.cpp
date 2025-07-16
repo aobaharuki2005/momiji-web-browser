@@ -12,6 +12,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/dom/CSSStyleRuleBinding.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/dom/StylePropertyMap.h"
 #include "nsCSSPseudoElements.h"
 #include "nsISupports.h"
 
@@ -122,6 +123,12 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(CSSStyleRule)
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(CSSStyleRule, GroupRule)
   // Keep this in sync with IsCCLeaf.
 
+  // XXX The comment below seems to be incorrect/confusing, the TraceWrapper
+  // call is needed because CSSStyleRuleDeclaration doesn't support cycle
+  // collection?
+  // This appears to have been done for performance reasons, but it's unclear
+  // whether it's still a good idea.
+
   // Trace the wrapper for our declaration.  This just expands out
   // NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER which we can't use
   // directly because the wrapper is on the declaration, not on us.
@@ -130,6 +137,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CSSStyleRule)
   // Keep this in sync with IsCCLeaf.
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStyleMap)
 
   // Unlink the wrapper for our declaration.
   //
@@ -140,12 +149,19 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(GroupRule)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSStyleRule, GroupRule)
   // Keep this in sync with IsCCLeaf.
+
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleMap)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 bool CSSStyleRule::IsCCLeaf() const {
   if (!GroupRule::IsCCLeaf()) {
     return false;
   }
+
+  if (mStyleMap) {
+    return false;
+  }
+
   return !mDecls.PreservingWrapper();
 }
 
@@ -155,6 +171,7 @@ size_t CSSStyleRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:
   // - mRawRule
+  // - mStyleMap
   // - mDecls
 
   return n;
@@ -327,6 +344,14 @@ already_AddRefed<nsINodeList> CSSStyleRule::QuerySelectorAll(nsINode& aRoot) {
                               /* useInvalidation */ false);
   Servo_SelectorList_Drop(list);
   return contentList.forget();
+}
+
+StylePropertyMap* CSSStyleRule::StyleMap() {
+  if (!mStyleMap) {
+    mStyleMap = MakeRefPtr<StylePropertyMap>(this);
+  }
+
+  return mStyleMap;
 }
 
 /* virtual */
