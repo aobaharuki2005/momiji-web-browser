@@ -34,7 +34,7 @@ index 0011ba43e..dccc3eb6c 100644
    if (use_afl) {
      public_deps += [ "//third_party/afl" ]
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index bd039fc85..e29fa2294 100644
+index de425eb94..b82294dbd 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -12,7 +12,7 @@ import("//build/config/clang/clang.gni")
@@ -46,7 +46,7 @@ index bd039fc85..e29fa2294 100644
  import("//build/config/host_byteorder.gni")
  import("//build/config/rust.gni")
  import("//build/config/sanitizers/sanitizers.gni")
-@@ -1360,7 +1360,7 @@ config("compiler_deterministic") {
+@@ -1365,7 +1365,7 @@ config("compiler_deterministic") {
  }
  
  config("clang_revision") {

@@ -1,5 +1,5 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 3 Jul 2025 16:39:32 -0500
+Date: Thu, 3 Jul 2025 16:42:23 -0500
 Subject: Bug 1775143 - pt14 - (mirror) 58f47eacaf10 r=ng
 
 Search third_party/libwebrtc/build for current_cpu, removing
@@ -71,7 +71,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ec13234e5a641a026
  config/chromecast/BUILD.gn        |  4 +-
  config/chromeos/BUILD.gn          |  8 +--
  config/compiler/BUILD.gn          | 78 ++++++++++++++--------------
- config/compiler/compiler.gni      | 32 ++++++------
+ config/compiler/compiler.gni      | 34 ++++++-------
  config/ios/BUILD.gn               | 10 ++--
  config/ios/config.gni             |  2 +-
  config/ios/rules.gni              |  8 +--
@@ -106,7 +106,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ec13234e5a641a026
  toolchain/zos/BUILD.gn            |  2 +-
  win/BUILD.gn                      |  8 +--
  win/message_compiler.gni          |  2 +-
- 44 files changed, 296 insertions(+), 296 deletions(-)
+ 44 files changed, 297 insertions(+), 297 deletions(-)
 
 diff --git a/config/BUILD.gn b/config/BUILD.gn
 index ac818010e..6187f7ff2 100644
@@ -122,10 +122,10 @@ index ac818010e..6187f7ff2 100644
      # Enable libstdc++ debugging facilities to help catch problems early, see
      # http://crbug.com/65151 .
 diff --git a/config/android/BUILD.gn b/config/android/BUILD.gn
-index da08688f7..91ce381e2 100644
+index 3da187c7d..c9b71c607 100644
 --- a/config/android/BUILD.gn
 +++ b/config/android/BUILD.gn
-@@ -40,7 +40,7 @@ config("compiler") {
+@@ -40,14 +40,14 @@ config("compiler") {
      "-Wl,--exclude-libs=libvpx_assembly_arm.a",
    ]
  
@@ -134,8 +134,7 @@ index da08688f7..91ce381e2 100644
      # Reduce the page size from 65536 in order to reduce binary size slightly
      # by shrinking the alignment gap between segments. This also causes all
      # segments to be mapped adjacently, which breakpad relies on.
-@@ -54,7 +54,7 @@ config("compiler") {
-     ldflags += [ "-fexperimental-relative-c++-abi-vtables" ]
+     ldflags += [ "-Wl,-z,max-page-size=4096" ]
    }
  
 -  if (current_cpu == "arm64") {
@@ -143,7 +142,7 @@ index da08688f7..91ce381e2 100644
      if (arm_control_flow_integrity == "standard") {
        cflags += [ "-mbranch-protection=standard" ]
      } else if (arm_control_flow_integrity == "pac") {
-@@ -90,7 +90,7 @@ config("runtime_library") {
+@@ -83,7 +83,7 @@ config("runtime_library") {
    libs = []
    ldflags = []
  
@@ -152,7 +151,7 @@ index da08688f7..91ce381e2 100644
      libs += [ "atomic" ]
    }
  }
-@@ -121,7 +121,7 @@ config("lld_branch_target_hardening") {
+@@ -114,7 +114,7 @@ config("lld_branch_target_hardening") {
    # Config opts a shared library into BTI linker hardening. This
    # is an opt-in config (rather than default-enabled) to avoid
    # interfering with the V8 CFI bots (crbug.com/1334614).
@@ -335,7 +334,7 @@ index e8135939b..e7177c4c0 100644
    }
  }
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index 98787bceb..3c3e9b804 100644
+index 2400145c8..f6dda29c9 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -23,11 +23,11 @@ import("//chromium/build/toolchain/rbe.gni")
@@ -382,7 +381,7 @@ index 98787bceb..3c3e9b804 100644
        asmflags += [ "-femit-dwarf-unwind=no-compact-unwind" ]
        cflags += [ "-femit-dwarf-unwind=no-compact-unwind" ]
      }
-@@ -719,7 +719,7 @@ config("compiler") {
+@@ -724,7 +724,7 @@ config("compiler") {
  
      # TODO(https://crbug.com/1211155): investigate why this isn't effective on
      # arm32.
@@ -391,7 +390,7 @@ index 98787bceb..3c3e9b804 100644
        cflags += [ "-fwhole-program-vtables" ]
        if (!is_win) {
          ldflags += [ "-fwhole-program-vtables" ]
-@@ -731,7 +731,7 @@ config("compiler") {
+@@ -736,7 +736,7 @@ config("compiler") {
      # unless the architecture revision in .ARM.attributes is sufficiently new.
      # TODO(pcc): The contents of .ARM.attributes should be based on the
      # -march flag passed at compile time (see llvm.org/pr36291).
@@ -400,7 +399,7 @@ index 98787bceb..3c3e9b804 100644
        ldflags += [ "-march=$arm_arch" ]
      }
    }
-@@ -935,7 +935,7 @@ config("compiler_cpu_abi") {
+@@ -940,7 +940,7 @@ config("compiler_cpu_abi") {
    }
  
    # TODO(https://crbug.com/1383873): Remove this once figured out.
@@ -409,7 +408,7 @@ index 98787bceb..3c3e9b804 100644
      cflags += [ "-fno-global-isel" ]
      ldflags += [ "-fno-global-isel" ]
    }
-@@ -943,13 +943,13 @@ config("compiler_cpu_abi") {
+@@ -948,13 +948,13 @@ config("compiler_cpu_abi") {
    if ((is_posix && !is_apple) || is_fuchsia) {
      # CPU architecture. We may or may not be doing a cross compile now, so for
      # simplicity we always explicitly set the architecture.
@@ -425,7 +424,7 @@ index 98787bceb..3c3e9b804 100644
        cflags += [ "-m32" ]
        ldflags += [ "-m32" ]
        if (!is_nacl) {
-@@ -958,7 +958,7 @@ config("compiler_cpu_abi") {
+@@ -963,7 +963,7 @@ config("compiler_cpu_abi") {
            "-msse2",
          ]
        }
@@ -434,7 +433,7 @@ index 98787bceb..3c3e9b804 100644
        if (is_clang && !is_android && !is_nacl &&
            !(is_chromeos_lacros && is_chromeos_device)) {
          cflags += [ "--target=arm-linux-gnueabihf" ]
-@@ -973,13 +973,13 @@ config("compiler_cpu_abi") {
+@@ -978,13 +978,13 @@ config("compiler_cpu_abi") {
        if (arm_tune != "") {
          cflags += [ "-mtune=$arm_tune" ]
        }
@@ -450,7 +449,7 @@ index 98787bceb..3c3e9b804 100644
        ldflags += [ "-Wl,--hash-style=sysv" ]
        if (custom_toolchain == "") {
          if (is_clang) {
-@@ -1064,7 +1064,7 @@ config("compiler_cpu_abi") {
+@@ -1069,7 +1069,7 @@ config("compiler_cpu_abi") {
        }
  
        cflags += [ "-m${mips_float_abi}-float" ]
@@ -459,7 +458,7 @@ index 98787bceb..3c3e9b804 100644
        ldflags += [ "-Wl,--hash-style=sysv" ]
        if (custom_toolchain == "") {
          if (is_clang) {
-@@ -1109,7 +1109,7 @@ config("compiler_cpu_abi") {
+@@ -1114,7 +1114,7 @@ config("compiler_cpu_abi") {
        }
  
        cflags += [ "-m${mips_float_abi}-float" ]
@@ -468,7 +467,7 @@ index 98787bceb..3c3e9b804 100644
        cflags += [ "-D__SANE_USERSPACE_TYPES__" ]
        ldflags += [ "-Wl,--hash-style=sysv" ]
        if (custom_toolchain == "") {
-@@ -1173,7 +1173,7 @@ config("compiler_cpu_abi") {
+@@ -1178,7 +1178,7 @@ config("compiler_cpu_abi") {
            "-Wa,-march=loongson3a",
          ]
        }
@@ -477,7 +476,7 @@ index 98787bceb..3c3e9b804 100644
        ldflags += [ "-Wl,--hash-style=sysv" ]
        if (custom_toolchain == "") {
          if (is_clang) {
-@@ -1211,7 +1211,7 @@ config("compiler_cpu_abi") {
+@@ -1216,7 +1216,7 @@ config("compiler_cpu_abi") {
          ]
          ldflags += [ "-mips64r2" ]
        }
@@ -486,7 +485,7 @@ index 98787bceb..3c3e9b804 100644
        if (current_os == "aix") {
          cflags += [ "-maix64" ]
          ldflags += [ "-maix64" ]
-@@ -1219,13 +1219,13 @@ config("compiler_cpu_abi") {
+@@ -1224,13 +1224,13 @@ config("compiler_cpu_abi") {
          cflags += [ "-m64" ]
          ldflags += [ "-m64" ]
        }
@@ -502,7 +501,7 @@ index 98787bceb..3c3e9b804 100644
        if (is_clang) {
          cflags += [ "--target=loongarch64-linux-gnu" ]
          ldflags += [ "--target=loongarch64-linux-gnu" ]
-@@ -1234,7 +1234,7 @@ config("compiler_cpu_abi") {
+@@ -1239,7 +1239,7 @@ config("compiler_cpu_abi") {
          "-mabi=lp64d",
          "-mcmodel=medium",
        ]
@@ -511,7 +510,7 @@ index 98787bceb..3c3e9b804 100644
        cflags += [ "-m64" ]
        ldflags += [ "-m64" ]
      }
-@@ -1255,7 +1255,7 @@ config("compiler_codegen") {
+@@ -1260,7 +1260,7 @@ config("compiler_codegen") {
      configs += [ "//chromium/build/config/nacl:compiler_codegen" ]
    }
  
@@ -520,7 +519,7 @@ index 98787bceb..3c3e9b804 100644
      # On arm64 disable outlining for Android. See crbug.com/931297 for more
      # information.
      cflags += [ "-mno-outline" ]
-@@ -1396,7 +1396,7 @@ config("rustc_revision") {
+@@ -1401,7 +1401,7 @@ config("rustc_revision") {
  }
  
  config("compiler_arm_fpu") {
@@ -529,7 +528,7 @@ index 98787bceb..3c3e9b804 100644
      cflags = [ "-mfpu=$arm_fpu" ]
      if (!arm_use_thumb) {
        cflags += [ "-marm" ]
-@@ -1406,14 +1406,14 @@ config("compiler_arm_fpu") {
+@@ -1411,14 +1411,14 @@ config("compiler_arm_fpu") {
  }
  
  config("compiler_arm_thumb") {
@@ -546,7 +545,7 @@ index 98787bceb..3c3e9b804 100644
      # arm is normally the default mode for clang, but on chromeos a wrapper
      # is used to pass -mthumb, and therefor change the default.
      cflags = [ "-marm" ]
-@@ -1521,7 +1521,7 @@ config("default_warnings") {
+@@ -1526,7 +1526,7 @@ config("default_warnings") {
  
      # Suppress warnings about ABI changes on ARM (Clang doesn't give this
      # warning).
@@ -555,7 +554,7 @@ index 98787bceb..3c3e9b804 100644
        cflags += [ "-Wno-psabi" ]
      }
  
-@@ -1690,10 +1690,10 @@ config("chromium_code") {
+@@ -1695,10 +1695,10 @@ config("chromium_code") {
        "__STDC_FORMAT_MACROS",
      ]
  
@@ -570,7 +569,7 @@ index 98787bceb..3c3e9b804 100644
        # Non-chromium code is not guaranteed to compile cleanly with
        # _FORTIFY_SOURCE. Also, fortified build may fail when optimizations are
        # disabled, so only do that for Release build.
-@@ -1966,9 +1966,9 @@ config("no_incompatible_pointer_warnings") {
+@@ -1971,9 +1971,9 @@ config("no_incompatible_pointer_warnings") {
    cflags = []
    if (is_clang) {
      cflags += [ "-Wno-incompatible-pointer-types" ]
@@ -582,7 +581,7 @@ index 98787bceb..3c3e9b804 100644
      cflags += [ "-w" ]
    }
  }
-@@ -2022,7 +2022,7 @@ if (is_win) {
+@@ -2027,7 +2027,7 @@ if (is_win) {
    if (is_android) {
      # TODO(jdduke) Re-enable on mips after resolving linking
      # issues with libc++ (crbug.com/456380).
@@ -591,7 +590,7 @@ index 98787bceb..3c3e9b804 100644
        common_optimize_on_ldflags += [
          # Warn in case of text relocations.
          "-Wl,--warn-shared-textrel",
-@@ -2073,7 +2073,7 @@ config("default_stack_frames") {
+@@ -2078,7 +2078,7 @@ config("default_stack_frames") {
        # Omit frame pointers for leaf functions on x86, otherwise building libyuv
        # gives clang's register allocator issues, see llvm.org/PR15798 /
        # crbug.com/233709
@@ -600,7 +599,7 @@ index 98787bceb..3c3e9b804 100644
          cflags += [ "-momit-leaf-frame-pointer" ]
        }
      } else {
-@@ -2445,12 +2445,12 @@ config("symbols") {
+@@ -2450,12 +2450,12 @@ config("symbols") {
      # DWARF info may be corrupt; offsets in a range list entry are in different
      # sections" there.  Maybe just a bug in nacl_switch_32.S.
      _enable_gdb_index =
@@ -616,7 +615,7 @@ index 98787bceb..3c3e9b804 100644
      if (_enable_gdb_index) {
        if (is_clang) {
          # This flag enables the GNU-format pubnames and pubtypes sections,
-@@ -2468,7 +2468,7 @@ config("symbols") {
+@@ -2473,7 +2473,7 @@ config("symbols") {
    # Compress debug on 32-bit ARM to stay under 4GB for ChromeOS
    # https://b/243982712.
    if (symbol_level == 2 && is_chromeos_device && !use_debug_fission &&
@@ -626,10 +625,10 @@ index 98787bceb..3c3e9b804 100644
    }
  
 diff --git a/config/compiler/compiler.gni b/config/compiler/compiler.gni
-index bd0c74d37..8f90e0a94 100644
+index e73158b67..b555ab775 100644
 --- a/config/compiler/compiler.gni
 +++ b/config/compiler/compiler.gni
-@@ -16,7 +16,7 @@ import("//build_overrides/build.gni")
+@@ -17,7 +17,7 @@ import("//build_overrides/build.gni")
  if (is_android) {
    import("//chromium/build/config/android/abi.gni")
  }
@@ -638,7 +637,7 @@ index bd0c74d37..8f90e0a94 100644
    import("//chromium/build/config/arm.gni")
  }
  
-@@ -102,7 +102,7 @@ declare_args() {
+@@ -103,7 +103,7 @@ declare_args() {
    #
    # It's currently not possible to collect AFDO profiles on anything but
    # x86{,_64}.
@@ -647,7 +646,16 @@ index bd0c74d37..8f90e0a94 100644
  
    # Whether an error should be raised on attempts to make debug builds with
    # is_component_build=false. Very large debug symbols can have unwanted side
-@@ -170,12 +170,12 @@ if (is_chromeos) {
+@@ -151,7 +151,7 @@ declare_args() {
+   # Use offsets rather than pointers in vtables in order to reduce the number of
+   # relocations. This is safe to enable only when all C++ code is built with the
+   # flag set to the same value.
+-  use_relative_vtables_abi = is_android && current_cpu == "arm64" &&
++  use_relative_vtables_abi = is_android && target_cpu == "arm64" &&
+                              use_custom_libcxx && !is_component_build
+ }
+ 
+@@ -173,12 +173,12 @@ if (is_chromeos) {
    # However, Clang does not currently generate usable frame pointers in ARM
    # 32-bit builds (https://bugs.llvm.org/show_bug.cgi?id=18505) so disable them
    # there to avoid the unnecessary overhead.
@@ -662,7 +670,7 @@ index bd0c74d37..8f90e0a94 100644
      enable_frame_pointers = false
    } else {
      enable_frame_pointers = true
-@@ -184,19 +184,19 @@ if (is_chromeos) {
+@@ -187,19 +187,19 @@ if (is_chromeos) {
    enable_frame_pointers =
        enable_profiling ||
        # Ensure that stacks from arm64 crash dumps are usable (crbug.com/391706).
@@ -685,7 +693,7 @@ index bd0c74d37..8f90e0a94 100644
  } else {
    # Explicitly ask for frame pointers, otherwise stacks may be missing for
    # sanitizer and profiling builds.
-@@ -208,7 +208,7 @@ if (is_chromeos) {
+@@ -211,7 +211,7 @@ if (is_chromeos) {
  # most translation units, that they are emitted correctly, and that the
  # compiler or platform provides a way to access them.
  can_unwind_with_frame_pointers = enable_frame_pointers
@@ -694,7 +702,7 @@ index bd0c74d37..8f90e0a94 100644
    # We cannot currently unwind ARM Thumb frame pointers correctly.
    # See https://bugs.llvm.org/show_bug.cgi?id=18505
    can_unwind_with_frame_pointers = false
-@@ -223,23 +223,23 @@ assert(!can_unwind_with_frame_pointers || enable_frame_pointers)
+@@ -226,23 +226,23 @@ assert(!can_unwind_with_frame_pointers || enable_frame_pointers)
  # Unwinding with CFI table is only possible on static library builds and
  # requried only when frame pointers are not enabled.
  can_unwind_with_cfi_table = is_android && !is_component_build &&

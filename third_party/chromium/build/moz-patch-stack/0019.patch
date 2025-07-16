@@ -1,5 +1,5 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 3 Jul 2025 16:39:32 -0500
+Date: Thu, 3 Jul 2025 16:42:22 -0500
 Subject: Bug 1921707 - point to new build directory location in
  third_party/chromium/build r=ng,glandium
 
@@ -75,7 +75,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6b855a2bf6b1f3feb
  config/chromeos/ui_mode.gni                   |   2 +-
  config/clang/clang.gni                        |   4 +-
  config/compiler/BUILD.gn                      | 116 +++++++-------
- config/compiler/compiler.gni                  |  26 ++--
+ config/compiler/compiler.gni                  |  28 ++--
  config/compiler/pgo/BUILD.gn                  |  10 +-
  config/compiler/pgo/pgo.gni                   |   8 +-
  config/coverage/BUILD.gn                      |   2 +-
@@ -277,7 +277,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6b855a2bf6b1f3feb
  util/process_version.gni                      |   4 +-
  win/BUILD.gn                                  |  10 +-
  win/message_compiler.gni                      |   2 +-
- 259 files changed, 1078 insertions(+), 1078 deletions(-)
+ 259 files changed, 1079 insertions(+), 1079 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
 index 3d0551349..be546366a 100644
@@ -1298,7 +1298,7 @@ index 6e55c8393..a4b574620 100644
  # This is included by reference in the //build/config/compiler config that
  # is applied to all targets. It is here to separate out the logic.
 diff --git a/config/android/BUILD.gn b/config/android/BUILD.gn
-index bdb183759..da08688f7 100644
+index 784d1af90..3da187c7d 100644
 --- a/config/android/BUILD.gn
 +++ b/config/android/BUILD.gn
 @@ -2,13 +2,13 @@
@@ -1320,7 +1320,7 @@ index bdb183759..da08688f7 100644
  }
  
  assert(is_android)
-@@ -97,13 +97,13 @@ config("runtime_library") {
+@@ -90,13 +90,13 @@ config("runtime_library") {
  
  config("hide_all_but_jni_onload") {
    ldflags = [ "-Wl,--version-script=" + rebase_path(
@@ -2738,7 +2738,7 @@ index 7196fcf6c..5083c65a0 100644
    clang_base_path = default_clang_base_path
  }
 diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
-index f64bbe106..98787bceb 100644
+index 6ff804d42..2400145c8 100644
 --- a/config/compiler/BUILD.gn
 +++ b/config/compiler/BUILD.gn
 @@ -2,45 +2,45 @@
@@ -2844,7 +2844,7 @@ index f64bbe106..98787bceb 100644
    }
  
    configs += [
-@@ -898,8 +898,8 @@ config("thinlto_optimize_default") {
+@@ -903,8 +903,8 @@ config("thinlto_optimize_default") {
  # Use this to enable optimization in the ThinLTO link step for select targets
  # when thin_lto_enable_optimizations is set by doing:
  #
@@ -2855,7 +2855,7 @@ index f64bbe106..98787bceb 100644
  #
  # Since it makes linking significantly slower and more resource intensive, only
  # use it on important targets such as the main browser executable or dll.
-@@ -931,7 +931,7 @@ config("compiler_cpu_abi") {
+@@ -936,7 +936,7 @@ config("compiler_cpu_abi") {
  
    configs = []
    if (is_chromeos) {
@@ -2864,7 +2864,7 @@ index f64bbe106..98787bceb 100644
    }
  
    # TODO(https://crbug.com/1383873): Remove this once figured out.
-@@ -1252,7 +1252,7 @@ config("compiler_codegen") {
+@@ -1257,7 +1257,7 @@ config("compiler_codegen") {
    ldflags = []
  
    if (is_nacl) {
@@ -2873,7 +2873,7 @@ index f64bbe106..98787bceb 100644
    }
  
    if (current_cpu == "arm64" && is_android) {
-@@ -1438,31 +1438,31 @@ config("runtime_library") {
+@@ -1443,31 +1443,31 @@ config("runtime_library") {
    # libandroid_support in the -isystem include order.  Otherwise, there will be
    # build errors related to symbols declared in math.h.
    if (use_custom_libcxx) {
@@ -2913,7 +2913,7 @@ index f64bbe106..98787bceb 100644
    }
  
    if (is_component_build) {
-@@ -1635,7 +1635,7 @@ config("default_warnings") {
+@@ -1640,7 +1640,7 @@ config("default_warnings") {
  # See also: https://docs.google.com/document/d/14yKUwDaorqqNfgdGqHY_nck2nn02XBQcB5N0ue4fax8
  #
  # To enable in a GN target, use:
@@ -2922,7 +2922,7 @@ index f64bbe106..98787bceb 100644
  
  config("prevent_unsafe_narrowing") {
    if (is_clang) {
-@@ -1982,8 +1982,8 @@ config("no_incompatible_pointer_warnings") {
+@@ -1987,8 +1987,8 @@ config("no_incompatible_pointer_warnings") {
  # You can override the optimization level on a per-target basis by removing the
  # default config and then adding the named one you want:
  #
@@ -2933,7 +2933,7 @@ index f64bbe106..98787bceb 100644
  
  # Shared settings for both "optimize" and "optimize_max" configs.
  # IMPORTANT: On Windows "/O1" and "/O2" must go before the common flags.
-@@ -2182,12 +2182,12 @@ config("optimize_max") {
+@@ -2187,12 +2187,12 @@ config("optimize_max") {
      # The NaCl IRT is a special case and always wants its own config.
      # Various components do:
      #   if (!is_debug) {
@@ -2949,7 +2949,7 @@ index f64bbe106..98787bceb 100644
    } else {
      ldflags = common_optimize_on_ldflags
      if (is_win) {
-@@ -2215,12 +2215,12 @@ config("optimize_speed") {
+@@ -2220,12 +2220,12 @@ config("optimize_speed") {
      # The NaCl IRT is a special case and always wants its own config.
      # Various components do:
      #   if (!is_debug) {
@@ -2965,7 +2965,7 @@ index f64bbe106..98787bceb 100644
    } else {
      ldflags = common_optimize_on_ldflags
      if (is_win) {
-@@ -2249,7 +2249,7 @@ config("default_optimization") {
+@@ -2254,7 +2254,7 @@ config("default_optimization") {
    if (is_nacl && is_nacl_irt) {
      # The NaCl IRT is a special case and always wants its own config.
      # It gets optimized the same way regardless of the type of build.
@@ -2974,7 +2974,7 @@ index f64bbe106..98787bceb 100644
    } else if (is_debug) {
      configs = [ ":no_optimize" ]
    } else if (optimize_for_fuzzing) {
-@@ -2332,8 +2332,8 @@ config("afdo") {
+@@ -2337,8 +2337,8 @@ config("afdo") {
  # You can override the symbol level on a per-target basis by removing the
  # default config and then adding the named one you want:
  #
@@ -2985,7 +2985,7 @@ index f64bbe106..98787bceb 100644
  
  # A helper config that all configs passing /DEBUG to the linker should
  # include as sub-config.
-@@ -2469,7 +2469,7 @@ config("symbols") {
+@@ -2474,7 +2474,7 @@ config("symbols") {
    # https://b/243982712.
    if (symbol_level == 2 && is_chromeos_device && !use_debug_fission &&
        !is_nacl && current_cpu == "arm") {
@@ -2995,13 +2995,14 @@ index f64bbe106..98787bceb 100644
  
    if (is_clang && (!is_nacl || is_nacl_saigo) && current_os != "zos") {
 diff --git a/config/compiler/compiler.gni b/config/compiler/compiler.gni
-index e84f32650..bd0c74d37 100644
+index e0d44eed7..e73158b67 100644
 --- a/config/compiler/compiler.gni
 +++ b/config/compiler/compiler.gni
-@@ -2,30 +2,30 @@
+@@ -2,31 +2,31 @@
  # Use of this source code is governed by a BSD-style license that can be
  # found in the LICENSE file.
  
+-import("//build/config/c++/c++.gni")
 -import("//build/config/chrome_build.gni")
 -import("//build/config/chromecast_build.gni")
 -import("//build/config/chromeos/args.gni")
@@ -3011,6 +3012,7 @@ index e84f32650..bd0c74d37 100644
 -import("//build/toolchain/cc_wrapper.gni")
 -import("//build/toolchain/goma.gni")
 -import("//build/toolchain/toolchain.gni")
++import("//chromium/build/config/c++/c++.gni")
 +import("//chromium/build/config/chrome_build.gni")
 +import("//chromium/build/config/chromecast_build.gni")
 +import("//chromium/build/config/chromeos/args.gni")
