@@ -907,7 +907,11 @@ skip-if = [
 ]
 
 ["test_temporary_file_blob_video_plays.html"]
-skip-if = ["os == 'android'"] # bug 1533534 # android(bug 1232305)
+skip-if = [
+  "os == 'android'", # bug 1533534 # android(bug 1232305)
+  "os == 'linux' && mda_gpu",
+]
+
 
 ["test_videoPlaybackQuality_totalFrames.html"]
 skip-if = ["os == 'win'"] # bug 1374189

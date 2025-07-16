@@ -939,6 +939,13 @@ mochitest-media:
         by-test-platform:
             .*hw-ref.*: [checkout]
             default: [checkout, pip, uv]
+    worker-type:
+        by-variant:
+            media-gpu:
+                by-test-platform:
+                    linux.*: t-linux-talos-1804
+                    default: default
+            default: default
 
 mochitest-valgrind:
     description: "Mochitest plain Valgrind run"

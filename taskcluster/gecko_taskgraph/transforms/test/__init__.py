@@ -258,6 +258,7 @@ test_description_schema = Schema(
         ),
         Optional("worker-type"): optionally_keyed_by(
             "test-platform",
+            "variant",
             Any(str, None),
         ),
         Optional(
