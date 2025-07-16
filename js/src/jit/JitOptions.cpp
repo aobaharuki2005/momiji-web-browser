@@ -81,6 +81,9 @@ DefaultJitOptions::DefaultJitOptions() {
   // Toggles whether Effective Address Analysis is globally disabled.
   SET_DEFAULT(disableEaa, false);
 
+  // Toggles whether Edge Case Analysis is gobally disabled.
+  SET_DEFAULT(disableEdgeCaseAnalysis, false);
+
   // Toggle whether global value numbering is globally disabled.
   SET_DEFAULT(disableGvn, false);
 

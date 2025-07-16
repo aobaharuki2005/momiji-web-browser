@@ -551,6 +551,10 @@ MDefinition* MInstruction::foldsToStore(TempAllocator& alloc) {
   return value;
 }
 
+void MDefinition::analyzeEdgeCasesForward() {}
+
+void MDefinition::analyzeEdgeCasesBackward() {}
+
 void MInstruction::setResumePoint(MResumePoint* resumePoint) {
   MOZ_ASSERT(!resumePoint_);
   resumePoint_ = resumePoint;
@@ -3683,6 +3687,54 @@ MDefinition* MDiv::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+void MDiv::analyzeEdgeCasesForward() {
+  // This is only meaningful when doing integer division.
+  if (type() != MIRType::Int32) {
+    return;
+  }
+
+  MOZ_ASSERT(lhs()->type() == MIRType::Int32);
+  MOZ_ASSERT(rhs()->type() == MIRType::Int32);
+
+  // Try removing divide by zero check
+  if (rhs()->isConstant() && !rhs()->toConstant()->isInt32(0)) {
+    canBeDivideByZero_ = false;
+  }
+
+  // If lhs is a constant int != INT32_MIN, then
+  // negative overflow check can be skipped.
+  if (lhs()->isConstant() && !lhs()->toConstant()->isInt32(INT32_MIN)) {
+    canBeNegativeOverflow_ = false;
+  }
+
+  // If rhs is a constant int != -1, likewise.
+  if (rhs()->isConstant() && !rhs()->toConstant()->isInt32(-1)) {
+    canBeNegativeOverflow_ = false;
+  }
+
+  // If lhs is != 0, then negative zero check can be skipped.
+  if (lhs()->isConstant() && !lhs()->toConstant()->isInt32(0)) {
+    setCanBeNegativeZero(false);
+  }
+
+  // If rhs is >= 0, likewise.
+  if (rhs()->isConstant() && rhs()->type() == MIRType::Int32) {
+    if (rhs()->toConstant()->toInt32() >= 0) {
+      setCanBeNegativeZero(false);
+    }
+  }
+}
+
+void MDiv::analyzeEdgeCasesBackward() {
+  // In general, canBeNegativeZero_ is only valid for integer divides.
+  // It's fine to access here because we're only using it to avoid
+  // wasting effort to decide whether we can clear an already cleared
+  // flag.
+  if (canBeNegativeZero_ && !NeedNegativeZeroCheck(this)) {
+    setCanBeNegativeZero(false);
+  }
+}
+
 bool MDiv::fallible() const { return !isTruncated(); }
 
 MDefinition* MMod::foldsTo(TempAllocator& alloc) {
@@ -3698,6 +3750,24 @@ MDefinition* MMod::foldsTo(TempAllocator& alloc) {
     }
   }
   return this;
+}
+
+void MMod::analyzeEdgeCasesForward() {
+  // These optimizations make sense only for integer division
+  if (type() != MIRType::Int32) {
+    return;
+  }
+
+  if (rhs()->isConstant() && !rhs()->toConstant()->isInt32(0)) {
+    canBeDivideByZero_ = false;
+  }
+
+  if (rhs()->isConstant()) {
+    int32_t n = rhs()->toConstant()->toInt32();
+    if (n > 0 && !IsPowerOfTwo(uint32_t(n))) {
+      canBePowerOfTwoDivisor_ = false;
+    }
+  }
 }
 
 bool MMod::fallible() const {
@@ -3798,6 +3868,34 @@ MDefinition* MMul::foldsTo(TempAllocator& alloc) {
   }
 
   return this;
+}
+
+void MMul::analyzeEdgeCasesForward() {
+  // Try to remove the check for negative zero
+  // This only makes sense when using the integer multiplication
+  if (type() != MIRType::Int32) {
+    return;
+  }
+
+  // If lhs is > 0, no need for negative zero check.
+  if (lhs()->isConstant() && lhs()->type() == MIRType::Int32) {
+    if (lhs()->toConstant()->toInt32() > 0) {
+      setCanBeNegativeZero(false);
+    }
+  }
+
+  // If rhs is > 0, likewise.
+  if (rhs()->isConstant() && rhs()->type() == MIRType::Int32) {
+    if (rhs()->toConstant()->toInt32() > 0) {
+      setCanBeNegativeZero(false);
+    }
+  }
+}
+
+void MMul::analyzeEdgeCasesBackward() {
+  if (canBeNegativeZero() && !NeedNegativeZeroCheck(this)) {
+    setCanBeNegativeZero(false);
+  }
 }
 
 bool MMul::canOverflow() const {
@@ -4338,6 +4436,12 @@ MDefinition* MBooleanToInt32::foldsTo(TempAllocator& alloc) {
   }
 
   return this;
+}
+
+void MToNumberInt32::analyzeEdgeCasesBackward() {
+  if (!NeedNegativeZeroCheck(this)) {
+    setNeedsNegativeZeroCheck(false);
+  }
 }
 
 MDefinition* MTruncateToInt32::foldsTo(TempAllocator& alloc) {
