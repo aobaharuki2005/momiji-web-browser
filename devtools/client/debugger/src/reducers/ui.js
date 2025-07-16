@@ -58,6 +58,7 @@ export const initialUIState = () => ({
   hideIgnoredSources: prefs.hideIgnoredSources,
   sourceMapsEnabled: prefs.clientSourceMapsEnabled,
   sourceMapIgnoreListEnabled: prefs.sourceMapIgnoreListEnabled,
+  pausedOverlayEnabled: prefs.pausedOverlayEnabled,
 });
 
 function update(state = initialUIState(), action) {
@@ -183,6 +184,15 @@ function update(state = initialUIState(), action) {
       if (shouldEnable !== state.sourceMapIgnoreListEnabled) {
         prefs.sourceMapIgnoreListEnabled = shouldEnable;
         return { ...state, sourceMapIgnoreListEnabled: shouldEnable };
+      }
+      return state;
+    }
+
+    case "ENABLE_PAUSED_OVERLAY": {
+      const { shouldEnable } = action;
+      if (shouldEnable !== state.pausedOverlayEnabled) {
+        prefs.pausedOverlayEnabled = shouldEnable;
+        return { ...state, pausedOverlayEnabled: shouldEnable };
       }
       return state;
     }

@@ -244,3 +244,10 @@ export function toggleSourceMapIgnoreList(shouldEnable) {
     });
   };
 }
+
+export function togglePausedOverlay(shouldEnable) {
+  return {
+    type: "ENABLE_PAUSED_OVERLAY",
+    shouldEnable,
+  };
+}
