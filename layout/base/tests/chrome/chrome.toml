@@ -150,12 +150,10 @@ tags = "openwindow"
 
 ["test_printpreview.xhtml"]
 tags = "os_integration"
-skip-if = ["os == 'win'"] # Bug 1929039
 
 ["test_printpreview_bug396024.xhtml"]
 
 ["test_printpreview_bug482976.xhtml"]
-skip-if = ["os == 'win'"] # Bug 1929039 , Bug 1976859
 
 ["test_scrolling_repaints.html"]
 
