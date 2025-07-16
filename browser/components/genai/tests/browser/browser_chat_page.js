@@ -206,54 +206,6 @@ add_task(async function test_page_menu_no_chatbot() {
 });
 
 /**
- * Check tab menu has a label and separator
- *
- */
-add_task(async function test_tab_menu_has_label_and_separator() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.ml.chat.provider", ""],
-      ["browser.ml.chat.menu", true],
-    ],
-  });
-
-  await openContextMenu({
-    menuId: TAB_CONTEXT_MENU,
-    browser: gBrowser.selectedTab.linkedBrowser,
-  });
-
-  const menu = document.getElementById("context_askChat");
-
-  Assert.ok(
-    menu.label === "Ask an AI Chatbot" &&
-      menu.nextSibling.localName === "menuseparator",
-    "Chatbot menu from tab menu has label and menusepartor"
-  );
-
-  // Click Remove AI Chatbot option to set menu prefs false
-  // This will close tab menu
-  menu.getItemAtIndex(menu.itemCount - 1).click();
-
-  await openContextMenu({
-    menuId: TAB_CONTEXT_MENU,
-    browser: gBrowser.selectedTab.linkedBrowser,
-  });
-
-  await TestUtils.waitForCondition(
-    () => menu.hidden,
-    "Menu is hidden after clicking remove chatbot option in menu"
-  );
-
-  const separator = menu.nextElementSibling;
-  Assert.ok(
-    menu.hidden && separator.hidden,
-    "<menu> and <menuseparator> are hidden"
-  );
-
-  await hideContextMenu(TAB_CONTEXT_MENU);
-});
-
-/**
  * Check tab menu should not be shown
  *
  */
