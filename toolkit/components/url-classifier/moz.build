@@ -28,7 +28,6 @@ DEFINES["GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER"] = True
 
 UNIFIED_SOURCES += [
     "chromium/safebrowsing.pb.cc",
-    "chromium/safebrowsing_v5.pb.cc",
     "ChunkSet.cpp",
     "Classifier.cpp",
     "LookupCache.cpp",
@@ -69,7 +68,6 @@ XPCOM_MANIFESTS += [
 
 EXPORTS += [
     "chromium/safebrowsing.pb.h",
-    "chromium/safebrowsing_v5.pb.h",
     "Entries.h",
     "LookupCache.h",
     "LookupCacheV4.h",
