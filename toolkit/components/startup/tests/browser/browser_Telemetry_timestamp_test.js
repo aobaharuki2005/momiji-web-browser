@@ -72,3 +72,70 @@ add_task(async function timeline_order() {
     prevStep = step;
   }
 });
+
+add_task(async function global_timeline_order() {
+  // These must be in the order they happen, which isn't necessarily
+  // the order they're listed in the metric.
+  // There does not appear to be a stable order between all of the groups
+  // of steps, so test each group individually.
+  const startupTimelineSteps = [
+    "process",
+    "start",
+    "main",
+    "selectProfile",
+    "afterProfileLocked",
+    "startupCrashDetectionBegin",
+    "startupCrashDetectionEnd",
+    //"sessionRestoreInit", // sessionRestoreInit and createTopLevelWindow aren't stably ordered
+    "createTopLevelWindow",
+    //"firstPaint", // firstPaint and firstPaint2 aren't stably ordered
+    "firstPaint2",
+    "sessionRestored",
+    "linkerInitialized",
+    "librariesLoaded",
+    "firstLoadURI",
+  ];
+  const browserTimelineSteps = [
+    "delayedStartupStarted",
+    "delayedStartupFinished",
+    "blankWindowShown",
+  ];
+  const sessionTimelineSteps = [
+    "sessionRestoreInitialized",
+    "sessionRestoreRestoring",
+  ];
+  const addonTimelineSteps = [
+    "AMI_startup_begin",
+    "XPI_startup_begin",
+    "XPI_bootstrap_addons_begin",
+    "XPI_bootstrap_addons_end",
+    "XPI_startup_end",
+    "AMI_startup_end",
+  ];
+
+  const timelines = [
+    startupTimelineSteps,
+    browserTimelineSteps,
+    sessionTimelineSteps,
+    addonTimelineSteps,
+  ];
+
+  for (let timelineSteps of timelines) {
+    let prev = 0;
+    let prevStep;
+    for (let step of timelineSteps) {
+      const stepValue = Glean.timestamps.startupTimeline[step].testGetValue();
+      if (!stepValue) {
+        info(`Step ${step} has no value this run. That's okay.`);
+        continue;
+      }
+      Assert.greaterOrEqual(
+        stepValue,
+        prev,
+        `Step ${step} happens later than the ${prevStep}.`
+      );
+      prev = stepValue;
+      prevStep = step;
+    }
+  }
+});

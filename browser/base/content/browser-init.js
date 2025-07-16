@@ -343,6 +343,9 @@ var gBrowserInit = {
     Glean.browserTimings.startupTimeline.delayedStartupStarted.set(
       Services.telemetry.msSinceProcessStart()
     );
+    Glean.timestamps.globalStartupTimeline.delayedStartupStarted.set(
+      Services.telemetry.msSinceProcessStart()
+    );
 
     this._cancelDelayedStartup();
 
@@ -642,6 +645,9 @@ var gBrowserInit = {
     Services.obs.notifyObservers(window, "browser-delayed-startup-finished");
     TelemetryTimestamps.add("delayedStartupFinished");
     Glean.browserTimings.startupTimeline.delayedStartupFinished.set(
+      Services.telemetry.msSinceProcessStart()
+    );
+    Glean.timestamps.globalStartupTimeline.delayedStartupFinished.set(
       Services.telemetry.msSinceProcessStart()
     );
     // We've announced that delayed startup has finished. Do not add code past this point.

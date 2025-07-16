@@ -2698,6 +2698,9 @@ export var XPIProvider = {
       Glean.addonsManager.startupTimeline.XPI_startup_begin.set(
         Services.telemetry.msSinceProcessStart()
       );
+      Glean.timestamps.globalStartupTimeline.XPI_startup_begin.set(
+        Services.telemetry.msSinceProcessStart()
+      );
 
       logger.debug("startup");
 
@@ -2793,6 +2796,9 @@ export var XPIProvider = {
         Glean.addonsManager.startupTimeline.XPI_bootstrap_addons_begin.set(
           Services.telemetry.msSinceProcessStart()
         );
+        Glean.timestamps.globalStartupTimeline.XPI_bootstrap_addons_begin.set(
+          Services.telemetry.msSinceProcessStart()
+        );
 
         for (let addon of this.sortBootstrappedAddons()) {
           // The startup update check above may have already started some
@@ -2838,6 +2844,9 @@ export var XPIProvider = {
         }
         AddonManagerPrivate.recordTimestamp("XPI_bootstrap_addons_end");
         Glean.addonsManager.startupTimeline.XPI_bootstrap_addons_end.set(
+          Services.telemetry.msSinceProcessStart()
+        );
+        Glean.timestamps.globalStartupTimeline.XPI_bootstrap_addons_end.set(
           Services.telemetry.msSinceProcessStart()
         );
       } catch (e) {
@@ -2916,6 +2925,9 @@ export var XPIProvider = {
         Glean.addonsManager.startupTimeline.XPI_finalUIStartup.set(
           Services.telemetry.msSinceProcessStart()
         );
+        Glean.timestamps.globalStartupTimeline.XPI_finalUIStartup.set(
+          Services.telemetry.msSinceProcessStart()
+        );
         Services.obs.removeObserver(observer, "final-ui-startup");
       }, "final-ui-startup");
 
@@ -2967,6 +2979,9 @@ export var XPIProvider = {
 
       AddonManagerPrivate.recordTimestamp("XPI_startup_end");
       Glean.addonsManager.startupTimeline.XPI_startup_end.set(
+        Services.telemetry.msSinceProcessStart()
+      );
+      Glean.timestamps.globalStartupTimeline.XPI_startup_end.set(
         Services.telemetry.msSinceProcessStart()
       );
 

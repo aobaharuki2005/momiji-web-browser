@@ -82,3 +82,56 @@ timestamps:
       - firstLoadURI
       - quitApplication
       - profileBeforeChange
+
+  global_startup_timeline:
+    type: labeled_quantity
+    unit: milliseconds since process creation
+    lifetime: application
+    description: |
+      Events on the startup timeline across all components,
+      in millis since process creation.
+      Combination of
+        - `timestamps.startup_timeline`
+        - `addons_manager.startup_timeline`
+        - `browser.timings.startup_timeline`
+        - `session_restore.startup_timeline`
+      Previously instrumented in "main" ping `simpleMeasurements`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+    expires: 150
+    data_sensitivity:
+      - technical
+    labels:
+      - process # StartupTimeline.h begin -- THESE MUST COME FIRST so we can static_cast in StartupTimeline.h
+      - start
+      - main
+      - selectProfile
+      - afterProfileLocked
+      - startupCrashDetectionBegin
+      - startupCrashDetectionEnd
+      - firstPaint
+      - firstPaint2
+      - sessionRestoreInit
+      - sessionRestored
+      - createTopLevelWindow
+      - linkerInitialized
+      - librariesLoaded
+      - firstLoadURI
+      - quitApplication
+      - profileBeforeChange # StartupTimeline.h end
+      - delayedStartupStarted # browser-init and BrowserGlue start
+      - delayedStartupFinished
+      - blankWindowShown # browser-init and BrowserGlue end
+      - sessionRestoreInitialized # SessionStore.sys.mjs start
+      - sessionRestoreRestoring # SessionStore.sys.mjs end
+      - AMI_startup_begin # extensions start
+      - AMI_startup_end
+      - XPI_startup_begin
+      - XPI_bootstrap_addons_begin
+      - XPI_bootstrap_addons_end
+      - XPI_finalUIStartup
+      - XPI_startup_end # extensions end

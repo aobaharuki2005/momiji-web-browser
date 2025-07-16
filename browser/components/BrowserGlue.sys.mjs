@@ -774,6 +774,9 @@ BrowserGlue.prototype = {
     Glean.browserTimings.startupTimeline.blankWindowShown.set(
       Services.telemetry.msSinceProcessStart()
     );
+    Glean.timestamps.globalStartupTimeline.blankWindowShown.set(
+      Services.telemetry.msSinceProcessStart()
+    );
 
     function getValue(attr) {
       return Services.xulStore.getValue(

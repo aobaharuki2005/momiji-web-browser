@@ -45,6 +45,9 @@ void StartupTimeline::Record(Event ev, TimeStamp when) {
   glean::timestamps::startup_timeline
       .EnumGet(static_cast<glean::timestamps::StartupTimelineLabel>(ev))
       .Set(msSinceProcStart);
+  glean::timestamps::global_startup_timeline
+      .EnumGet(static_cast<glean::timestamps::GlobalStartupTimelineLabel>(ev))
+      .Set(msSinceProcStart);
 }
 
 void StartupTimeline::RecordOnce(Event ev) { RecordOnce(ev, TimeStamp::Now()); }
