@@ -26,6 +26,9 @@ function verifySignatures() {
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "4", "48");
 
 add_setup(async () => {
+  do_get_profile();
+  Services.fog.initializeFOG();
+
   await promiseStartupManager();
 });
 
@@ -343,6 +346,12 @@ add_task(async function test_signedTypes_stored_in_addonDB() {
   // is updated.
   AddonTestUtils.getXPIExports().XPIProvider.checkForChanges(
     /* aAppChanged */ true
+  );
+
+  // checkForChanges forces a sync db load.
+  Assert.ok(
+    Glean.xpiDatabase.syncStack.testGetValue(),
+    "sync db load is reported."
   );
 
   Assert.deepEqual(

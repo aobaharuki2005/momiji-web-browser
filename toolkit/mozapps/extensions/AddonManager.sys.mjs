@@ -3893,6 +3893,7 @@ export var AddonManagerPrivate = {
       }
     }
 
+    Glean.addonsManager.exception.set(report);
     this._simpleMeasures.exception = report;
   },
 
