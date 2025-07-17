@@ -13584,19 +13584,17 @@ if (IsCSSPropertyPrefEnabled("layout.css.anchor-positioning.enabled")) {
   };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.hyphenate-limit-chars.enabled")) {
-  gCSSProperties["hyphenate-limit-chars"] = {
-    domProp: "hyphenateLimitChars",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    applies_to_first_letter: true,
-    applies_to_first_line: true,
-    applies_to_placeholder: true,
-    initial_values: ["auto"],
-    other_values: ["6", "6 2", "8 2 4", "6 2 auto", "6 auto 4"],
-    invalid_values: ["none", "auto auto auto auto", "1 2 3 4", '"string"'],
-  };
-}
+gCSSProperties["hyphenate-limit-chars"] = {
+  domProp: "hyphenateLimitChars",
+  inherited: true,
+  type: CSS_TYPE_LONGHAND,
+  applies_to_first_letter: true,
+  applies_to_first_line: true,
+  applies_to_placeholder: true,
+  initial_values: ["auto"],
+  other_values: ["6", "6 2", "8 2 4", "6 2 auto", "6 auto 4"],
+  invalid_values: ["none", "auto auto auto auto", "1 2 3 4", '"string"'],
+};
 
 if (false) {
   // TODO These properties are chrome-only, and are not exposed via CSSOM.
