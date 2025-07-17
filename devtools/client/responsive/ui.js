@@ -1098,9 +1098,10 @@ class ResponsiveUI {
       currentHeight + deltaY
     );
     this.dynamicToolbar.style.height = newHeight + "px";
+    const offset = newHeight - DYNAMIC_TOOLBAR_MAX_HEIGHT;
     InspectorUtils.setVerticalClipping(
       this.tab.linkedBrowser.browsingContext,
-      -newHeight
+      offset
     );
   }
 
