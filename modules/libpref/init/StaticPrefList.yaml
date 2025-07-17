@@ -9639,13 +9639,6 @@
   mirror: always
   rust: true
 
-# Whether content-box and stroke-box are enabled for transform-box.
-- name: layout.css.transform-box-content-stroke.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Whether @starting-style is enabled?
 - name: layout.css.starting-style-at-rules.enabled
   type: RelaxedAtomicBool

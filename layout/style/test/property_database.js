@@ -3843,7 +3843,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["view-box"],
-    other_values: ["fill-box", "border-box"],
+    other_values: ["fill-box", "border-box", "content-box", "stroke-box"],
     invalid_values: ["padding-box", "margin-box"],
   },
   "transform-origin": {
@@ -12124,15 +12124,6 @@ gCSSProperties.scale = {
     "10 calc(1 + 10px)",
   ],
 };
-
-if (
-  IsCSSPropertyPrefEnabled("layout.css.transform-box-content-stroke.enabled")
-) {
-  gCSSProperties["transform-box"]["other_values"].push(
-    "content-box",
-    "stroke-box"
-  );
-}
 
 gCSSProperties["touch-action"] = {
   domProp: "touchAction",

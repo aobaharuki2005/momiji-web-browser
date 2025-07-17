@@ -83,12 +83,6 @@ static nsRect GetSVGBox(const nsIFrame* aFrame) {
               bboxInAppUnits.height};
     }
     case StyleTransformBox::BorderBox:
-      if (!StaticPrefs::layout_css_transform_box_content_stroke_enabled()) {
-        // If stroke-box is disabled, we shouldn't use it and fall back to
-        // view-box.
-        return computeViewBox();
-      }
-      [[fallthrough]];
     case StyleTransformBox::StrokeBox: {
       // We are using SVGUtils::PathExtentsToMaxStrokeExtents() to compute the
       // bbox contribution for stroke box (if it doesn't have simple bounds),
