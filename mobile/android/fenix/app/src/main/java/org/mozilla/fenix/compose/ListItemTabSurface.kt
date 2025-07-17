@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.compose
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,13 +12,14 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,8 +33,8 @@ import androidx.compose.ui.unit.sp
 import mozilla.components.compose.base.modifier.thenConditional
 import org.mozilla.fenix.theme.FirefoxTheme
 
-const val ITEM_WIDTH = 328
-const val ITEM_HEIGHT = 116
+const val ITEM_WIDTH = 305
+const val IMAGE_SIZE = 66
 
 /**
  * Shared default configuration of a ListItemTabLarge Composable.
@@ -48,14 +50,15 @@ const val ITEM_HEIGHT = 116
 @Composable
 fun ListItemTabSurface(
     imageUrl: String,
-    imageContentScale: ContentScale = ContentScale.Fit,
-    backgroundColor: Color = FirefoxTheme.colors.layer2,
-    contentPadding: PaddingValues = PaddingValues(16.dp),
+    imageContentScale: ContentScale = ContentScale.FillHeight,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
+    contentPadding: PaddingValues = PaddingValues(FirefoxTheme.layout.space.static50),
     onClick: (() -> Unit)? = null,
     tabDetails: @Composable ColumnScope.() -> Unit,
 ) {
     val modifier = Modifier
-        .size(ITEM_WIDTH.dp, ITEM_HEIGHT.dp)
+        .width(ITEM_WIDTH.dp)
+        .wrapContentHeight()
         .thenConditional(
             modifier = Modifier.clickable { onClick!!() },
             predicate = { onClick != null },
@@ -64,14 +67,14 @@ fun ListItemTabSurface(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
     ) {
         Row(
             modifier = Modifier.padding(contentPadding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            val (imageWidth, imageHeight) = 116.dp to 84.dp
+            val (imageWidth, imageHeight) = IMAGE_SIZE.dp to IMAGE_SIZE.dp
             val imageModifier = Modifier
                 .size(imageWidth, imageHeight)
                 .clip(RoundedCornerShape(8.dp))
@@ -84,10 +87,9 @@ fun ListItemTabSurface(
                 contentScale = imageContentScale,
             )
 
-            Spacer(Modifier.width(16.dp))
+            Spacer(Modifier.width(FirefoxTheme.layout.space.static100))
 
             Column(
-                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
                 tabDetails()
@@ -122,8 +124,8 @@ private fun ListItemTabSurfaceWithCustomBackgroundPreview() {
         ) {
             Text(
                 text = "This can be anything",
-                color = FirefoxTheme.colors.textPrimary,
-                fontSize = 22.sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 14.sp,
             )
         }
     }
