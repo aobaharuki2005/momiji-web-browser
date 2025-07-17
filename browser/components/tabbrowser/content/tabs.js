@@ -2231,7 +2231,7 @@
         } else if (this.verticalMode) {
           movingTab.style.top =
             rect.top -
-            (isPinned ? pinnedRect.top : unpinnedRect.top) +
+            (gBrowser.pinnedTabCount > 0 ? pinnedRect.top : unpinnedRect.top) +
             position +
             "px";
           position += rect.height;
@@ -2260,7 +2260,7 @@
         if (this.verticalMode) {
           movingTab.style.top =
             rect.top -
-            (isPinned ? pinnedRect.top : unpinnedRect.top) +
+            (gBrowser.pinnedTabCount > 0 ? pinnedRect.top : unpinnedRect.top) +
             position +
             "px";
           position -= rect.height;
