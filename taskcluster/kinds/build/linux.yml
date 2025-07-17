@@ -2028,7 +2028,7 @@ linux64-aarch64/debug:
         mozconfig-variant: debug
         secrets: true
         tooltool-downloads: public
-    run-on-projects: ['integration']
+    run-on-projects: ['trunk']
     use-sccache: true
     fetches:
         toolchain:
