@@ -301,6 +301,7 @@ for (const type of [
   "WEATHER_UPDATE",
   "WEBEXT_CLICK",
   "WEBEXT_DISMISS",
+  "WIDGETS_LISTS_CHANGE_SELECTED",
   "WIDGETS_LISTS_SET",
   "WIDGETS_LISTS_UPDATE",
   "WIDGETS_TIMER_END",
@@ -7819,7 +7820,23 @@ const INITIAL_STATE = {
     collapsed: false,
   },
   // Widgets
-  ListsWidget: {},
+  ListsWidget: {
+    // value pointing to last selectled list
+    selected: "taskList",
+    // Default state of an empty task list
+    lists: {
+      taskList: {
+        label: "Task List",
+        tasks: [],
+      },
+    },
+    // Keeping this separate from `lists` so that it isnt rendered
+    // in the same way
+    completed: {
+      label: "Completed",
+      tasks: [],
+    },
+  },
   TimerWidget: {
     // Timer duration set by user
     duration: 0,
@@ -8761,8 +8778,10 @@ function TimerWidget(prevState = INITIAL_STATE.TimerWidget, action) {
 
 function ListsWidget(prevState = INITIAL_STATE.ListsWidget, action) {
   switch (action.type) {
-    case actionTypes.WIDGETS_LISTS_UPDATE:
-      return action.data;
+    case actionTypes.WIDGETS_LISTS_SET:
+      return { ...prevState, lists: action.data };
+    case actionTypes.WIDGETS_LISTS_CHANGE_SELECTED:
+      return { ...prevState, selected: action.data };
     default:
       return prevState;
   }
@@ -12167,10 +12186,111 @@ function CardSections({
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 
-function Lists() {
-  return /*#__PURE__*/external_React_default().createElement("div", {
+
+
+function Lists({
+  dispatch
+}) {
+  const listsData = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.ListsWidget);
+  const {
+    selected,
+    lists
+  } = listsData;
+  const [newTask, setNewTask] = (0,external_React_namespaceObject.useState)("");
+  const inputRef = (0,external_React_namespaceObject.useRef)(null);
+  function saveTask() {
+    const trimmedTask = newTask.trimEnd();
+    // only add new task if it has a length, to avoid creating empty tasks
+    if (trimmedTask) {
+      const taskObject = {
+        value: trimmedTask,
+        completed: false,
+        created: Date.now(),
+        id: crypto.randomUUID()
+      };
+      const updatedLists = {
+        ...lists,
+        [selected]: {
+          ...lists[selected],
+          tasks: [...lists[selected].tasks, taskObject]
+        }
+      };
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WIDGETS_LISTS_UPDATE,
+        data: updatedLists
+      }));
+      setNewTask("");
+    }
+  }
+  function updateTask(e, selectedTask) {
+    const selectedTasks = lists[selected].tasks;
+    const updatedTask = {
+      ...selectedTask,
+      completed: e.target.checked
+    };
+    // find selected task and update completed property
+    const updatedTasks = selectedTasks.map(task => task.id === updatedTask.id ? updatedTask : task);
+    const updatedLists = {
+      ...lists,
+      [selected]: {
+        ...lists[selected],
+        tasks: updatedTasks
+      }
+    };
+    dispatch(actionCreators.AlsoToMain({
+      type: actionTypes.WIDGETS_LISTS_UPDATE,
+      data: updatedLists
+    }));
+  }
+
+  // useEffect to manage a click outside of the input
+  (0,external_React_namespaceObject.useEffect)(() => {
+    function handleOutsideClick(e) {
+      if (inputRef.current && !inputRef.current.contains(e.target)) {
+        saveTask();
+      }
+    }
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  });
+  function handleKeyDown(e) {
+    if (e.key === "Enter" && document.activeElement === inputRef.current) {
+      saveTask();
+    } else if (e.key === "Escape" && document.activeElement === inputRef.current) {
+      // Clear out the input when esc is pressed
+      setNewTask("");
+    }
+  }
+  return lists ? /*#__PURE__*/external_React_default().createElement("article", {
     className: "lists"
-  }, "Lists Widget");
+  }, /*#__PURE__*/external_React_default().createElement("moz-select", {
+    value: selected
+  }, Object.entries(lists).map(([key, list]) => /*#__PURE__*/external_React_default().createElement("moz-option", {
+    key: key,
+    value: key,
+    label: list.label
+  }))), /*#__PURE__*/external_React_default().createElement("div", {
+    className: "add-task-container"
+  }, /*#__PURE__*/external_React_default().createElement("input", {
+    ref: inputRef,
+    onChange: e => setNewTask(e.target.value),
+    value: newTask,
+    placeholder: "Enter task",
+    onKeyDown: handleKeyDown
+  })), lists[selected]?.tasks.length >= 1 ? /*#__PURE__*/external_React_default().createElement("moz-reorderable-list", {
+    itemSelector: "fieldset .task-item"
+  }, /*#__PURE__*/external_React_default().createElement("fieldset", null, lists[selected].tasks.map((task, idx) => {
+    return /*#__PURE__*/external_React_default().createElement("label", {
+      key: idx,
+      className: "task-item"
+    }, /*#__PURE__*/external_React_default().createElement("input", {
+      type: "checkbox",
+      onChange: e => updateTask(e, task),
+      checked: task.completed
+    }), /*#__PURE__*/external_React_default().createElement("span", null, task.value));
+  }))) : /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("p", null, "The list is empty. For now \uD83E\uDD8A"))) : null;
 }
 
 ;// CONCATENATED MODULE: ./content-src/components/Widgets/FocusTimer/FocusTimer.jsx
@@ -12263,11 +12383,14 @@ const PREF_WIDGETS_TIMER_ENABLED = "widgets.focusTimer.enabled";
 const PREF_WIDGETS_SYSTEM_TIMER_ENABLED = "widgets.system.focusTimer.enabled";
 function Widgets() {
   const prefs = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Prefs.values);
+  const dispatch = (0,external_ReactRedux_namespaceObject.useDispatch)();
   const listsEnabled = prefs[PREF_WIDGETS_SYSTEM_LISTS_ENABLED] && prefs[PREF_WIDGETS_LISTS_ENABLED];
   const timerEnabled = prefs[PREF_WIDGETS_SYSTEM_TIMER_ENABLED] && prefs[PREF_WIDGETS_TIMER_ENABLED];
   return /*#__PURE__*/external_React_default().createElement("div", {
     className: "widgets-container"
-  }, listsEnabled && /*#__PURE__*/external_React_default().createElement(Lists, null), timerEnabled && /*#__PURE__*/external_React_default().createElement(FocusTimer, null));
+  }, listsEnabled && /*#__PURE__*/external_React_default().createElement(Lists, {
+    dispatch: dispatch
+  }), timerEnabled && /*#__PURE__*/external_React_default().createElement(FocusTimer, null));
 }
 
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamBase/DiscoveryStreamBase.jsx
