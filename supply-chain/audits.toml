@@ -4034,12 +4034,6 @@ who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "25.0.0 -> 26.0.0"
 
-[[audits.naga]]
-who = "Andy Leiserson <aleiserson@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "26.0.0 -> 26.0.0@git:b83c9cfd578837a6163d980130249c245a9c5f8a"
-importable = false
-
 [[audits.net2]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
@@ -6436,12 +6430,6 @@ who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "25.0.0 -> 26.0.0"
 
-[[audits.wgpu-core]]
-who = "Andy Leiserson <aleiserson@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "26.0.0 -> 26.0.0@git:b83c9cfd578837a6163d980130249c245a9c5f8a"
-importable = false
-
 [[audits.wgpu-core-deps-apple]]
 who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
@@ -6463,12 +6451,6 @@ who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "25.0.0 -> 26.0.0"
 
-[[audits.wgpu-core-deps-apple]]
-who = "Andy Leiserson <aleiserson@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "26.0.0 -> 26.0.0@git:b83c9cfd578837a6163d980130249c245a9c5f8a"
-importable = false
-
 [[audits.wgpu-core-deps-windows-linux-android]]
 who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
@@ -6489,12 +6471,6 @@ importable = false
 who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "25.0.0 -> 26.0.0"
-
-[[audits.wgpu-core-deps-windows-linux-android]]
-who = "Andy Leiserson <aleiserson@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "26.0.0 -> 26.0.0@git:b83c9cfd578837a6163d980130249c245a9c5f8a"
-importable = false
 
 [[audits.wgpu-hal]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
@@ -6595,12 +6571,6 @@ who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "25.0.0 -> 26.0.0"
 
-[[audits.wgpu-hal]]
-who = "Andy Leiserson <aleiserson@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "26.0.0 -> 26.0.0@git:b83c9cfd578837a6163d980130249c245a9c5f8a"
-importable = false
-
 [[audits.wgpu-types]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -6694,12 +6664,6 @@ importable = false
 who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "25.0.0 -> 26.0.0"
-
-[[audits.wgpu-types]]
-who = "Andy Leiserson <aleiserson@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "26.0.0 -> 26.0.0@git:b83c9cfd578837a6163d980130249c245a9c5f8a"
-importable = false
 
 [[audits.whatsys]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
