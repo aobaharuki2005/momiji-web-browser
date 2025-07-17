@@ -36,14 +36,7 @@
 #include "rtc_base/dscp.h"
 #include "rtc_base/socket.h"
 
-namespace cricket {
-using webrtc::FrameDecryptorInterface;
-using webrtc::FrameEncryptorInterface;
-using webrtc::FrameTransformerInterface;
-using webrtc::PendingTaskSafetyFlag;
-using webrtc::SafeTask;
-using webrtc::TaskQueueBase;
-using webrtc::VideoTrackInterface;
+namespace webrtc {
 
 VideoOptions::VideoOptions()
     : content_hint(VideoTrackInterface::ContentHint::kNone) {}
@@ -174,7 +167,7 @@ MediaChannelUtil::TransportForMediaChannels::~TransportForMediaChannels() {
 bool MediaChannelUtil::TransportForMediaChannels::SendRtcp(
     rtc::ArrayView<const uint8_t> packet) {
   auto send = [this, packet = rtc::CopyOnWriteBuffer(
-                         packet, kMaxRtpPacketLen)]() mutable {
+                         packet, webrtc::kMaxRtpPacketLen)]() mutable {
     rtc::PacketOptions rtc_options;
     if (DscpEnabled()) {
       rtc_options.dscp = PreferredDscp();
@@ -199,8 +192,8 @@ bool MediaChannelUtil::TransportForMediaChannels::SendRtp(
                batchable = options.batchable,
                last_packet_in_batch = options.last_packet_in_batch,
                is_media = options.is_media, ect_1 = options.send_as_ect1,
-               packet =
-                   rtc::CopyOnWriteBuffer(packet, kMaxRtpPacketLen)]() mutable {
+               packet = rtc::CopyOnWriteBuffer(
+                   packet, webrtc::kMaxRtpPacketLen)]() mutable {
     rtc::PacketOptions rtc_options;
     rtc_options.packet_id = packet_id;
     if (DscpEnabled()) {
@@ -295,4 +288,4 @@ void MediaChannelUtil::TransportForMediaChannels::SetPreferredDscp(
   UpdateDscp();
 }
 
-}  // namespace cricket
+}  // namespace webrtc

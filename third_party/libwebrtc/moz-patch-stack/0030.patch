@@ -83,8 +83,8 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b86cb7278bc4e5571
  common_audio/fir_filter_avx2.cc               |  2 +
  common_audio/intrin.h                         |  8 ++++
  media/BUILD.gn                                | 39 +++++++++++++++-
- media/base/media_channel.h                    |  4 --
- media/base/media_channel_impl.cc              | 13 ------
+ media/base/media_channel.h                    |  3 --
+ media/base/media_channel_impl.cc              |  9 ----
  modules/audio_coding/BUILD.gn                 |  2 +-
  modules/audio_device/BUILD.gn                 | 17 +++++--
  modules/audio_processing/aec3/BUILD.gn        | 13 ++----
@@ -99,7 +99,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b86cb7278bc4e5571
  test/BUILD.gn                                 | 10 ++++
  video/BUILD.gn                                |  4 +-
  webrtc.gni                                    | 32 ++++++++-----
- 31 files changed, 305 insertions(+), 97 deletions(-)
+ 31 files changed, 305 insertions(+), 92 deletions(-)
  create mode 100644 api/rtp_sender_setparameters_callback.cc
  create mode 100644 api/rtp_sender_setparameters_callback.h
  create mode 100644 common_audio/intrin.h
@@ -561,7 +561,7 @@ index 0000000000..f6ff7f218f
 +  #endif
 +#endif
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 033ebc2221..3e2f8690b6 100644
+index d204ce1b73..3240fc817b 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -77,7 +77,7 @@ rtc_library("rtc_media_base") {
@@ -621,7 +621,7 @@ index 033ebc2221..3e2f8690b6 100644
  
  rtc_source_set("media_channel") {
    sources = [ "base/media_channel.h" ]
-@@ -409,6 +426,7 @@ rtc_library("codec_list") {
+@@ -410,6 +427,7 @@ rtc_library("codec_list") {
  }
  
  rtc_library("rtp_utils") {
@@ -629,7 +629,7 @@ index 033ebc2221..3e2f8690b6 100644
    sources = [
      "base/rtp_utils.cc",
      "base/rtp_utils.h",
-@@ -425,8 +443,10 @@ rtc_library("rtp_utils") {
+@@ -426,8 +444,10 @@ rtc_library("rtp_utils") {
      "//third_party/abseil-cpp/absl/strings:string_view",
    ]
  }
@@ -640,7 +640,7 @@ index 033ebc2221..3e2f8690b6 100644
    sources = [
      "base/stream_params.cc",
      "base/stream_params.h",
-@@ -440,6 +460,7 @@ rtc_library("stream_params") {
+@@ -441,6 +461,7 @@ rtc_library("stream_params") {
      "//third_party/abseil-cpp/absl/algorithm:container",
    ]
  }
@@ -648,7 +648,7 @@ index 033ebc2221..3e2f8690b6 100644
  
  rtc_library("media_constants") {
    sources = [
-@@ -450,6 +471,7 @@ rtc_library("media_constants") {
+@@ -451,6 +472,7 @@ rtc_library("media_constants") {
  }
  
  rtc_library("turn_utils") {
@@ -656,7 +656,7 @@ index 033ebc2221..3e2f8690b6 100644
    sources = [
      "base/turn_utils.cc",
      "base/turn_utils.h",
-@@ -460,14 +482,17 @@ rtc_library("turn_utils") {
+@@ -461,14 +483,17 @@ rtc_library("turn_utils") {
      "../rtc_base/system:rtc_export",
    ]
  }
@@ -674,7 +674,7 @@ index 033ebc2221..3e2f8690b6 100644
  
  rtc_library("rtc_simulcast_encoder_adapter") {
    visibility = [ "*" ]
-@@ -549,6 +574,11 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -550,6 +575,11 @@ rtc_library("rtc_internal_video_codecs") {
      "//third_party/abseil-cpp/absl/container:inlined_vector",
      "//third_party/abseil-cpp/absl/strings",
    ]
@@ -686,7 +686,7 @@ index 033ebc2221..3e2f8690b6 100644
  
    if (enable_libaom) {
      defines += [ "RTC_USE_LIBAOM_AV1_ENCODER" ]
-@@ -568,6 +598,13 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -569,6 +599,13 @@ rtc_library("rtc_internal_video_codecs") {
      "engine/internal_encoder_factory.cc",
      "engine/internal_encoder_factory.h",
    ]
@@ -701,30 +701,27 @@ index 033ebc2221..3e2f8690b6 100644
  
  rtc_library("rtc_audio_video") {
 diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index 3de664d26d..a554963212 100644
+index 3c4dd7f44f..2fd5082301 100644
 --- a/media/base/media_channel.h
 +++ b/media/base/media_channel.h
-@@ -64,10 +64,6 @@
- 
- namespace webrtc {
+@@ -67,9 +67,6 @@ namespace webrtc {
  class VideoFrame;
--
+ struct VideoFormat;
+ 
 -webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
 -                                             RTCError error);
 -
- }  // namespace webrtc
- 
- namespace cricket {
+ class VideoMediaSendChannelInterface;
+ class VideoMediaReceiveChannelInterface;
+ class VoiceMediaSendChannelInterface;
 diff --git a/media/base/media_channel_impl.cc b/media/base/media_channel_impl.cc
-index b93315963a..e8949bf64f 100644
+index dd84ecc79b..2c6d00db35 100644
 --- a/media/base/media_channel_impl.cc
 +++ b/media/base/media_channel_impl.cc
-@@ -36,19 +36,6 @@
- #include "rtc_base/dscp.h"
- #include "rtc_base/socket.h"
+@@ -38,15 +38,6 @@
  
--namespace webrtc {
--
+ namespace webrtc {
+ 
 -webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
 -                                             RTCError error) {
 -  if (callback) {
@@ -734,11 +731,9 @@ index b93315963a..e8949bf64f 100644
 -  return error;
 -}
 -
--}  // namespace webrtc
--
- namespace cricket {
- using webrtc::FrameDecryptorInterface;
- using webrtc::FrameEncryptorInterface;
+ VideoOptions::VideoOptions()
+     : content_hint(VideoTrackInterface::ContentHint::kNone) {}
+ VideoOptions::~VideoOptions() = default;
 diff --git a/modules/audio_coding/BUILD.gn b/modules/audio_coding/BUILD.gn
 index cb8b03bc63..334d2e7a6a 100644
 --- a/modules/audio_coding/BUILD.gn
