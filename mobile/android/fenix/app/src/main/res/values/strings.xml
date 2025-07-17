@@ -2018,7 +2018,7 @@
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Collection deleted</string>
     <!-- Text shown in snackbar when user renames a collection -->
-    <string name="snackbar_collection_renamed">Collection renamed</string>
+    <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Collection renamed</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">Tab closed</string>
     <!-- Text shown in snackbar when user closes all tabs -->

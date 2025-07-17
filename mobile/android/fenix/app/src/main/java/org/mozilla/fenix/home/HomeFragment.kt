@@ -195,11 +195,6 @@ class HomeFragment : Fragment() {
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
         @SuppressLint("NotifyDataSetChanged")
-        override fun onCollectionRenamed(tabCollection: TabCollection, title: String) {
-            showRenamedSnackbar()
-        }
-
-        @SuppressLint("NotifyDataSetChanged")
         override fun onTabsAdded(tabCollection: TabCollection, sessions: List<TabSessionState>) {
             view?.let {
                 if (sessions.size == 1) {
@@ -1193,18 +1188,6 @@ class HomeFragment : Fragment() {
 
     private fun registerCollectionStorageObserver() {
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
-    }
-
-    private fun showRenamedSnackbar() {
-        view?.let { view ->
-            Snackbar.make(
-                snackBarParentView = binding.dynamicSnackbarContainer,
-                snackbarState = SnackbarState(
-                    message = view.context.getString(R.string.snackbar_collection_renamed),
-                    duration = SnackbarState.Duration.Preset.Long,
-                ),
-            ).show()
-        }
     }
 
     private fun openTabsTray() {
