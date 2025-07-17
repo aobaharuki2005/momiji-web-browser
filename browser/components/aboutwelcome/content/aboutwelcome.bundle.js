@@ -119,6 +119,16 @@ const AboutWelcomeUtils = {
         return obj;
       }, {});
   },
+  getTileStyle(tile, validStyle) {
+    const preferredTileStyle = tile?.style;
+    const legacyTileStyle = tile?.tiles?.style ?? null;
+
+    return this.getValidStyle(
+      preferredTileStyle ?? legacyTileStyle,
+      validStyle,
+      true
+    );
+  },
 };
 
 
@@ -2187,6 +2197,7 @@ __webpack_require__.r(__webpack_exports__);
 
 const HEADER_STYLES = ["backgroundColor", "border", "padding", "margin", "width", "height"];
 const TILE_STYLES = ["marginBlock", "marginInline", "paddingBlock", "paddingInline"];
+const CONTAINER_STYLES = ["padding", "margin", "marginBlock", "marginInline", "paddingBlock", "paddingInline", "flexDirection", "flexWrap", "flexFlow", "flexGrow", "flexShrink", "justifyContent", "alignItems", "gap"];
 const ContentTiles = props => {
   const {
     content
@@ -2252,7 +2263,7 @@ const ContentTiles = props => {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       key: index,
       className: `content-tile ${header ? "has-header" : ""}`,
-      style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_9__.AboutWelcomeUtils.getValidStyle(tile.style, TILE_STYLES)
+      style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_9__.AboutWelcomeUtils.getTileStyle(tile, TILE_STYLES)
     }, header?.title && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
       className: "tile-header secondary",
       onClick: () => toggleTile(index, tile),
@@ -2331,7 +2342,8 @@ const ContentTiles = props => {
   const renderContentTiles = () => {
     if (Array.isArray(tiles)) {
       return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-        id: "content-tiles-container"
+        id: "content-tiles-container",
+        style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_9__.AboutWelcomeUtils.getValidStyle(content?.contentTilesContainer?.style, CONTAINER_STYLES)
       }, tiles.map((tile, index) => renderContentTile(tile, index)));
     }
     // If tiles is not an array render the tile alone without a container
@@ -2859,7 +2871,7 @@ const MultiSelect = ({
     return getOrderedIds().map(id => data.find(item => item.id === id));
   }, [] // eslint-disable-line react-hooks/exhaustive-deps
   );
-  const containerStyle = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getValidStyle(content.tiles.style, MULTI_SELECT_STYLES, true), [content.tiles.style]);
+  const containerStyle = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.getTileStyle(content.tiles, MULTI_SELECT_STYLES), [content.tiles]);
   const PickerIcon = ({
     emoji,
     bgColor,
