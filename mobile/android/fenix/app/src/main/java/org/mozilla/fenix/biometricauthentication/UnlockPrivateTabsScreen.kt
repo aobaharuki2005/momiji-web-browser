@@ -28,7 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.button.PrimaryButton
 import mozilla.components.compose.base.button.TextButton
-import mozilla.components.compose.base.utils.getAttr
+import mozilla.components.compose.base.utils.getResolvedAttrResId
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.isLargeWindow
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -100,18 +100,18 @@ private fun Logo() {
     Row(
         modifier = Modifier
             .padding(32.dp)
-            .height(60.dp),
+            .height(62.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Image(
             modifier = Modifier.padding(end = 14.dp),
-            painter = painterResource(getAttr(R.attr.fenixWordmarkLogo)),
+            painter = painterResource(getResolvedAttrResId(R.attr.fenixWordmarkLogo)),
             contentDescription = null,
         )
 
         Image(
             modifier = Modifier.height(28.dp),
-            painter = painterResource(getAttr(R.attr.fenixWordmarkText)),
+            painter = painterResource(getResolvedAttrResId(R.attr.fenixWordmarkText)),
             contentDescription = stringResource(R.string.app_name),
         )
     }
