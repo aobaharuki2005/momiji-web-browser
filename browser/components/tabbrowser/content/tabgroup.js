@@ -23,6 +23,9 @@
       `;
 
     /** @type {string} */
+    #defaultGroupName = "";
+
+    /** @type {string} */
     #label;
 
     /** @type {MozTextLabel} */
@@ -76,6 +79,17 @@
       this.appendChild(this.constructor.fragment);
       this.initializeAttributeInheritance();
 
+      Services.obs.addObserver(
+        this.resetDefaultGroupName,
+        "intl:app-locales-changed"
+      );
+      window.addEventListener("unload", () => {
+        Services.obs.removeObserver(
+          this.resetDefaultGroupName,
+          "intl:app-locales-changed"
+        );
+      });
+
       this.addEventListener("click", this);
 
       this.#labelElement = this.querySelector(".tab-group-label");
@@ -113,6 +127,12 @@
       // mounts after getting created by `Tabbrowser.adoptTabGroup`.
       this.#wasCreatedByAdoption = false;
     }
+
+    resetDefaultGroupName = () => {
+      this.#defaultGroupName = "";
+      this.#updateLabelAriaAttributes();
+      this.#updateTooltip();
+    };
 
     disconnectedCallback() {
       this.ownerGlobal.removeEventListener("TabSelect", this);
@@ -156,7 +176,19 @@
               ".tab-group-overflow-count"
             );
             if (tabCount > 1) {
-              overflowCountLabel.textContent = `+${tabCount - 1}`;
+              gBrowser.tabLocalization
+                .formatValue("tab-group-overflow-count", {
+                  tabCount: tabCount - 1,
+                })
+                .then(result => (overflowCountLabel.textContent = result));
+              gBrowser.tabLocalization
+                .formatValue("tab-group-overflow-count-tooltip", {
+                  tabCount: tabCount - 1,
+                })
+                .then(result => {
+                  overflowCountLabel.setAttribute("tooltiptext", result);
+                  overflowCountLabel.setAttribute("aria-description", result);
+                });
               this.toggleAttribute("hasmultipletabs", true);
             } else {
               overflowCountLabel.textContent = "";
@@ -194,6 +226,15 @@
       }
     }
 
+    get defaultGroupName() {
+      if (!this.#defaultGroupName) {
+        this.#defaultGroupName = gBrowser.tabLocalization.formatValueSync(
+          "tab-group-name-default"
+        );
+      }
+      return this.#defaultGroupName;
+    }
+
     get id() {
       return this.getAttribute("id");
     }
@@ -221,10 +262,8 @@
       // If the group name is empty, use a zero width space so we
       // always create a text node and get consistent layout.
       this.setAttribute("label", val || "\u200b");
-
-      this.dataset.tooltip = val;
-
       this.#updateLabelAriaAttributes();
+      this.#updateTooltip();
       if (diff) {
         this.dispatchEvent(
           new CustomEvent("TabGroupUpdate", { bubbles: true })
@@ -257,6 +296,7 @@
       }
       this.toggleAttribute("collapsed", val);
       this.#updateCollapsedAriaAttributes();
+      this.#updateTooltip();
       const eventName = val ? "TabGroupCollapse" : "TabGroupExpand";
       this.dispatchEvent(new CustomEvent(eventName, { bubbles: true }));
     }
@@ -270,12 +310,7 @@
     }
 
     async #updateLabelAriaAttributes() {
-      let tabGroupName = this.#label;
-      if (!tabGroupName) {
-        tabGroupName = await gBrowser.tabLocalization.formatValue(
-          "tab-group-name-default"
-        );
-      }
+      let tabGroupName = this.#label || this.defaultGroupName;
 
       let tabGroupDescription = await gBrowser.tabLocalization.formatValue(
         "tab-group-description",
@@ -293,6 +328,20 @@
       this.#labelElement?.setAttribute("aria-expanded", ariaExpanded);
     }
 
+    async #updateTooltip() {
+      let tabGroupName = this.#label || this.defaultGroupName;
+      let tooltipKey = this.collapsed
+        ? "tab-group-label-tooltip-collapsed"
+        : "tab-group-label-tooltip-expanded";
+      await gBrowser.tabLocalization
+        .formatValue(tooltipKey, {
+          tabGroupName,
+        })
+        .then(result => {
+          this.dataset.tooltip = result;
+        });
+    }
+
     get tabs() {
       return Array.from(this.children).filter(node => node.matches("tab"));
     }
@@ -302,6 +351,10 @@
      */
     get labelElement() {
       return this.#labelElement;
+    }
+
+    get overflowCountLabel() {
+      return this.#overflowCountLabel;
     }
 
     /**
