@@ -844,6 +844,8 @@ struct DOMEventMarker : public BaseMarkerType<DOMEventMarker> {
       "{marker.data.eventType} - DOMEvent";
   static constexpr const char* ChartLabel = "{marker.data.eventType}";
 
+  static constexpr bool IsStackBased = true;
+
   static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
                                    const nsCString& aTarget,
                                    const TimeDuration& aLatency,
