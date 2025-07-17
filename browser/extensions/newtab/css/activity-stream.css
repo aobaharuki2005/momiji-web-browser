@@ -8078,14 +8078,9 @@ main section {
   width: 298px;
   transition: opacity 0.3s, visibility 0.3s;
 }
-.feature-highlight .feature-highlight-modal .icon-dismiss {
-  flex-shrink: 0;
-  background-size: 12px;
-  height: 12px;
-  width: 12px;
-  margin: var(--space-medium);
-  color: var(--icon-color);
-  border: none;
+.feature-highlight .feature-highlight-modal > moz-button {
+  margin-inline-start: var(--space-xsmall);
+  z-index: 1;
 }
 .feature-highlight .feature-highlight-modal .message-icon {
   margin-block: var(--space-large);
@@ -8392,6 +8387,40 @@ main section {
   width: var(--arrow-size);
   box-shadow: 4px -4px 6px -2px rgba(0, 0, 0, 0.15);
   pointer-events: none;
+}
+
+.shortcut-feature-highlight .feature-highlight-modal {
+  padding: var(--space-large);
+}
+.shortcut-feature-highlight .feature-highlight-modal p {
+  margin: 0;
+  padding-block-start: 0;
+}
+.shortcut-feature-highlight .feature-highlight-modal p, .shortcut-feature-highlight .feature-highlight-modal p:hover {
+  color: inherit;
+}
+.shortcut-feature-highlight .feature-highlight-modal .message-icon {
+  display: none;
+}
+.shortcut-feature-highlight .feature-highlight-modal.inset-block-end {
+  margin-block-start: var(--space-large);
+  inset-inline-end: var(--space-xlarge);
+}
+.shortcut-feature-highlight .feature-highlight-modal img {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+.shortcut-feature-highlight .shortcut-feature-highlight-content {
+  display: flex;
+  gap: var(--space-medium);
+}
+.shortcut-feature-highlight .shortcut-feature-highlight-copy {
+  font-size: var(--font-size-small);
+}
+.shortcut-feature-highlight .shortcut-feature-highlight-copy .title {
+  font-weight: var(--font-weight-bold);
+  margin-block-end: var(--space-xsmall);
+  text-align: inherit;
 }
 
 /* stylelint-disable max-nesting-depth */

@@ -20,6 +20,8 @@ import { TOP_SITES_MAX_SITES_PER_ROW } from "common/Reducers.sys.mjs";
 import { ContextMenuButton } from "content-src/components/ContextMenu/ContextMenuButton";
 import { TopSiteImpressionWrapper } from "./TopSiteImpressionWrapper";
 import { connect } from "react-redux";
+import { MessageWrapper } from "../MessageWrapper/MessageWrapper";
+import { ShortcutFeatureHighlight } from "../DiscoveryStreamComponents/FeatureHighlight/ShortcutFeatureHighlight";
 
 const SPOC_TYPE = "SPOC";
 const NEWTAB_SOURCE = "newtab";
@@ -39,6 +41,7 @@ export class TopSiteLink extends React.PureComponent {
     this.state = { screenshotImage: null };
     this.onDragEvent = this.onDragEvent.bind(this);
     this.onKeyPress = this.onKeyPress.bind(this);
+    this.shouldShowOMCHighlight = this.shouldShowOMCHighlight.bind(this);
   }
 
   /*
@@ -249,6 +252,14 @@ export class TopSiteLink extends React.PureComponent {
     };
   }
 
+  shouldShowOMCHighlight(componentId) {
+    const messageData = this.props.Messages?.messageData;
+    if (!messageData || Object.keys(messageData).length === 0) {
+      return false;
+    }
+    return messageData?.content?.messageType === componentId;
+  }
+
   render() {
     const {
       children,
@@ -424,6 +435,18 @@ export class TopSiteLink extends React.PureComponent {
               />
             </div>
           </a>
+          {isAddButton && this.shouldShowOMCHighlight("ShortcutHighlight") && (
+            <MessageWrapper
+              dispatch={this.props.dispatch}
+              onClick={e => e.stopPropagation()}
+            >
+              <ShortcutFeatureHighlight
+                dispatch={this.props.dispatch}
+                feature="FEATURE_SHORTCUT_HIGHLIGHT"
+                position="inset-block-end inset-inline-start"
+              />
+            </MessageWrapper>
+          )}
           {children}
           {impressionStats}
         </div>
@@ -984,6 +1007,7 @@ export class _TopSiteList extends React.PureComponent {
             onFocus={() => {
               this.onTopsiteFocus(i);
             }}
+            Messages={this.props.Messages}
           />
         );
       } else {
@@ -1036,5 +1060,6 @@ export class _TopSiteList extends React.PureComponent {
 
 export const TopSiteList = connect(state => ({
   App: state.App,
+  Messages: state.Messages,
   Prefs: state.Prefs,
 }))(_TopSiteList);
