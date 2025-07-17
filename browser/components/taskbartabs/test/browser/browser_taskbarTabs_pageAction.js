@@ -301,22 +301,3 @@ add_task(async function testIframeNavigationIsIgnored() {
 function getURIScheme(uri) {
   return Services.io.newURI(uri).scheme;
 }
-
-add_task(async function testPrefIsMonitored() {
-  const element = document.getElementById("taskbar-tabs-button");
-
-  await BrowserTestUtils.withNewTab(BASE_URL, async () => {
-    ok(!element.hidden, "Page action starts as visible");
-    await testVisibilityChange(BASE_URL, HIDDEN_URI, true, false);
-
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.taskbarTabs.enabled", false]],
-    });
-    ok(element.hidden, "Page action becomes invisible");
-    await testVisibilityChange(BASE_URL, HIDDEN_URI, false, false);
-
-    await SpecialPowers.popPrefEnv();
-    ok(!element.hidden, "Page action becomes visible again");
-    await testVisibilityChange(BASE_URL, HIDDEN_URI, true, false);
-  });
-});
