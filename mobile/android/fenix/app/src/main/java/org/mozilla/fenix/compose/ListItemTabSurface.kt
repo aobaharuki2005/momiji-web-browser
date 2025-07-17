@@ -12,10 +12,10 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -58,7 +58,7 @@ fun ListItemTabSurface(
 ) {
     val modifier = Modifier
         .width(ITEM_WIDTH.dp)
-        .wrapContentHeight()
+        .fillMaxHeight()
         .thenConditional(
             modifier = Modifier.clickable { onClick!!() },
             predicate = { onClick != null },
@@ -71,7 +71,8 @@ fun ListItemTabSurface(
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
     ) {
         Row(
-            modifier = Modifier.padding(contentPadding),
+            modifier = Modifier.fillMaxHeight()
+                .padding(contentPadding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val (imageWidth, imageHeight) = IMAGE_SIZE.dp to IMAGE_SIZE.dp

@@ -7,18 +7,19 @@ package org.mozilla.fenix.home.pocket.ui
 import android.content.res.Configuration
 import android.graphics.Rect
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +32,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -54,7 +56,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.IMAGE_SIZE
 import org.mozilla.fenix.compose.ITEM_WIDTH
 import org.mozilla.fenix.compose.ListItemTabSurface
-import org.mozilla.fenix.compose.eagerFlingBehavior
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.fake.FakeHomepagePreview
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
@@ -83,7 +84,11 @@ fun Story(
 ) {
     val imageUrl = story.imageUrl.replace(
         "{wh}",
-        with(LocalDensity.current) { "${IMAGE_SIZE.dp.toPx().roundToInt()}x${IMAGE_SIZE.dp.toPx().roundToInt()}" },
+        with(LocalDensity.current) {
+            "${IMAGE_SIZE.dp.toPx().roundToInt()}x${
+                IMAGE_SIZE.dp.toPx().roundToInt()
+            }"
+        },
     )
 
     ListItemTabSurface(
@@ -225,7 +230,11 @@ fun ContentRecommendationStory(
 ) {
     val imageUrl = recommendation.imageUrl.replace(
         "{wh}",
-        with(LocalDensity.current) { "${IMAGE_SIZE.dp.toPx().roundToInt()}x${IMAGE_SIZE.dp.toPx().roundToInt()}" },
+        with(LocalDensity.current) {
+            "${IMAGE_SIZE.dp.toPx().roundToInt()}x${
+                IMAGE_SIZE.dp.toPx().roundToInt()
+            }"
+        },
     )
 
     ListItemTabSurface(
@@ -266,170 +275,154 @@ fun Stories(
     onStoryShown: (PocketStory, Triple<Int, Int, Int>) -> Unit,
     onStoryClicked: (PocketStory, Triple<Int, Int, Int>) -> Unit,
 ) {
-    // Show stories in at most 3 rows but on any number of columns depending on the data received.
-    val maxRowsNo = 1
-    val storiesToShow = stories.chunked(maxRowsNo)
-
-    val listState = rememberLazyListState()
-    val flingBehavior = eagerFlingBehavior(lazyRowState = listState)
-
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
-
-    val endPadding =
-        remember { mutableStateOf(endPadding(configuration, screenWidth, contentPadding)) }
-    // Force recomposition as padding is not consistently updated when orientation has changed.
-    endPadding.value = endPadding(configuration, screenWidth, contentPadding)
-
-    LazyRow(
-        modifier = Modifier.semantics {
-            testTagsAsResourceId = true
-            testTag = "pocket.stories"
-        },
-        contentPadding = PaddingValues(start = contentPadding, end = endPadding.value),
-        state = listState,
-        flingBehavior = flingBehavior,
+    Row(
+        modifier = Modifier
+            .height(intrinsicSize = IntrinsicSize.Max)
+            .horizontalScroll(rememberScrollState())
+            .padding(start = contentPadding, end = contentPadding)
+            .semantics {
+                testTagsAsResourceId = true
+                testTag = "pocket.stories"
+            },
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        itemsIndexed(storiesToShow) { columnIndex, columnItems ->
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                columnItems.forEachIndexed { rowIndex, story ->
-                    Box(
-                        modifier = Modifier
-                            .semantics {
-                            testTagsAsResourceId = true
-                            testTag = when (story) {
-                                is PocketRecommendedStory,
-                                is ContentRecommendation,
-                                    -> HOMEPAGE_STORY
+        stories.forEachIndexed { columnIndex, story ->
+            val rowIndex = 0
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .semantics {
+                        testTagsAsResourceId = true
+                        testTag = when (story) {
+                            is PocketRecommendedStory,
+                            is ContentRecommendation,
+                                -> HOMEPAGE_STORY
 
-                                else -> HOMEPAGE_SPONSORED_STORY
-                            }
-                        },
-                    ) {
-                        when (story) {
-                            is PocketRecommendedStory -> {
-                                Story(
-                                    story = story,
-                                    backgroundColor = backgroundColor,
-                                ) {
-                                    val uri = story.url.toUri()
-                                        .buildUpon()
-                                        .appendQueryParameter(
-                                            URI_PARAM_UTM_KEY,
-                                            POCKET_STORIES_UTM_VALUE,
+                            else -> HOMEPAGE_SPONSORED_STORY
+                        }
+                    },
+            ) {
+                when (story) {
+                    is PocketRecommendedStory -> {
+                        Story(
+                            story = story,
+                            backgroundColor = backgroundColor,
+                        ) {
+                            val uri = story.url.toUri()
+                                .buildUpon()
+                                .appendQueryParameter(
+                                    URI_PARAM_UTM_KEY,
+                                    POCKET_STORIES_UTM_VALUE,
+                                )
+                                .build().toString()
+                            onStoryClicked(
+                                it.copy(url = uri),
+                                Triple(rowIndex, columnIndex, stories.indexOf(story)),
+                            )
+                        }
+                    }
+
+                    is PocketSponsoredStory -> {
+                        val screenBounds = Rect()
+                            .apply { LocalView.current.getWindowVisibleDisplayFrame(this) }
+                            .apply {
+                                // Check if this is in a preview because `.settings()` breaks previews
+                                if (!inComposePreview) {
+                                    val verticalOffset =
+                                        LocalContext.current.resources.getDimensionPixelSize(
+                                            R.dimen.browser_toolbar_height,
                                         )
-                                        .build().toString()
-                                    onStoryClicked(
-                                        it.copy(url = uri),
-                                        Triple(rowIndex, columnIndex, stories.indexOf(story)),
-                                    )
-                                }
-                            }
 
-                            is PocketSponsoredStory -> {
-                                val screenBounds = Rect()
-                                    .apply { LocalView.current.getWindowVisibleDisplayFrame(this) }
-                                    .apply {
-                                        // Check if this is in a preview because `.settings()` breaks previews
-                                        if (!inComposePreview) {
-                                            val verticalOffset =
-                                                LocalContext.current.resources.getDimensionPixelSize(
-                                                    R.dimen.browser_toolbar_height,
-                                                )
-
-                                            if (LocalContext.current.settings().shouldUseBottomToolbar) {
-                                                bottom -= verticalOffset
-                                            } else {
-                                                top += verticalOffset
-                                            }
-                                        }
-                                    }
-                                Box(
-                                    modifier = Modifier.onShown(
-                                        threshold = 0.5f,
-                                        onVisible = {
-                                            onStoryShown(
-                                                story,
-                                                Triple(
-                                                    rowIndex,
-                                                    columnIndex,
-                                                    stories.indexOf(story),
-                                                ),
-                                            )
-                                        },
-                                        screenBounds = screenBounds,
-                                    ),
-                                ) {
-                                    SponsoredStory(
-                                        story = story,
-                                        backgroundColor = backgroundColor,
-                                    ) {
-                                        onStoryClicked(
-                                            story,
-                                            Triple(rowIndex, columnIndex, stories.indexOf(story)),
-                                        )
+                                    if (LocalContext.current.settings().shouldUseBottomToolbar) {
+                                        bottom -= verticalOffset
+                                    } else {
+                                        top += verticalOffset
                                     }
                                 }
                             }
-
-                            is ContentRecommendation -> {
-                                ContentRecommendationStory(
-                                    recommendation = story,
-                                    backgroundColor = backgroundColor,
-                                ) {
-                                    onStoryClicked(
+                        Box(
+                            modifier = Modifier.onShown(
+                                threshold = 0.5f,
+                                onVisible = {
+                                    onStoryShown(
                                         story,
-                                        Triple(rowIndex, columnIndex, stories.indexOf(story)),
+                                        Triple(
+                                            rowIndex,
+                                            columnIndex,
+                                            stories.indexOf(story),
+                                        ),
                                     )
+                                },
+                                screenBounds = screenBounds,
+                            ),
+                        ) {
+                            SponsoredStory(
+                                story = story,
+                                backgroundColor = backgroundColor,
+                            ) {
+                                onStoryClicked(
+                                    story,
+                                    Triple(rowIndex, columnIndex, stories.indexOf(story)),
+                                )
+                            }
+                        }
+                    }
+
+                    is ContentRecommendation -> {
+                        ContentRecommendationStory(
+                            recommendation = story,
+                            backgroundColor = backgroundColor,
+                        ) {
+                            onStoryClicked(
+                                story,
+                                Triple(rowIndex, columnIndex, stories.indexOf(story)),
+                            )
+                        }
+                    }
+
+                    is SponsoredContent -> {
+                        val screenBounds = Rect()
+                            .apply { LocalView.current.getWindowVisibleDisplayFrame(this) }
+                            .apply {
+                                // Check if this is in a preview because `settings()` breaks previews
+                                if (!inComposePreview) {
+                                    val verticalOffset =
+                                        LocalContext.current.resources.getDimensionPixelSize(
+                                            R.dimen.browser_toolbar_height,
+                                        )
+
+                                    if (LocalContext.current.settings().shouldUseBottomToolbar) {
+                                        bottom -= verticalOffset
+                                    } else {
+                                        top += verticalOffset
+                                    }
                                 }
                             }
 
-                            is SponsoredContent -> {
-                                val screenBounds = Rect()
-                                    .apply { LocalView.current.getWindowVisibleDisplayFrame(this) }
-                                    .apply {
-                                        // Check if this is in a preview because `settings()` breaks previews
-                                        if (!inComposePreview) {
-                                            val verticalOffset =
-                                                LocalContext.current.resources.getDimensionPixelSize(
-                                                    R.dimen.browser_toolbar_height,
-                                                )
-
-                                            if (LocalContext.current.settings().shouldUseBottomToolbar) {
-                                                bottom -= verticalOffset
-                                            } else {
-                                                top += verticalOffset
-                                            }
-                                        }
-                                    }
-
-                                Box(
-                                    modifier = Modifier.onShown(
-                                        threshold = 0.5f,
-                                        onVisible = {
-                                            onStoryShown(
-                                                story,
-                                                Triple(
-                                                    rowIndex,
-                                                    columnIndex,
-                                                    stories.indexOf(story),
-                                                ),
-                                            )
-                                        },
-                                        screenBounds = screenBounds,
-                                    ),
-                                ) {
-                                    SponsoredContentStory(
-                                        sponsoredContent = story,
-                                        backgroundColor = backgroundColor,
-                                    ) {
-                                        onStoryClicked(
-                                            story,
-                                            Triple(rowIndex, columnIndex, stories.indexOf(story)),
-                                        )
-                                    }
-                                }
+                        Box(
+                            modifier = Modifier.onShown(
+                                threshold = 0.5f,
+                                onVisible = {
+                                    onStoryShown(
+                                        story,
+                                        Triple(
+                                            rowIndex,
+                                            columnIndex,
+                                            stories.indexOf(story),
+                                        ),
+                                    )
+                                },
+                                screenBounds = screenBounds,
+                            ),
+                        ) {
+                            SponsoredContentStory(
+                                sponsoredContent = story,
+                                backgroundColor = backgroundColor,
+                            ) {
+                                onStoryClicked(
+                                    story,
+                                    Triple(rowIndex, columnIndex, stories.indexOf(story)),
+                                )
                             }
                         }
                     }
@@ -439,26 +432,14 @@ fun Stories(
     }
 }
 
-private fun endPadding(configuration: Configuration, screenWidth: Dp, contentPadding: Dp) =
-    if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-        alignColumnToTitlePadding(screenWidth = screenWidth, contentPadding = contentPadding)
-    } else {
-        contentPadding
-    }
-
-/**
- * If the column item is wider than the [screenWidth] default to the [contentPadding].
- */
-private fun alignColumnToTitlePadding(screenWidth: Dp, contentPadding: Dp) =
-    max(screenWidth - (ITEM_WIDTH.dp + contentPadding), contentPadding)
-
 @Suppress("MagicNumber")
 @Composable
 @Preview
 private fun StoriesPreview() {
     FirefoxTheme {
         Box(
-            Modifier.background(MaterialTheme.colorScheme.surface)
+            Modifier
+                .background(MaterialTheme.colorScheme.surface)
                 .systemBarsPadding()
                 .padding(top = 32.dp),
         ) {
