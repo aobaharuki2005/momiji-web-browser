@@ -118,7 +118,6 @@ tasks:
             extra-config:
                 extra_mozconfig_content:
                     - ac_add_options --target=aarch64
-                    - unset MOZ_STDCXX_COMPAT
             tooltool-downloads: public
         run-on-projects: ['mozilla-central']
         fetches:

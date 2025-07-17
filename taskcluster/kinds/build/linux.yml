@@ -1980,7 +1980,6 @@ linux64-aarch64/opt:
         extra-config:
             extra_mozconfig_content:
                 - ac_add_options --target=aarch64
-                - unset MOZ_STDCXX_COMPAT
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
@@ -2024,7 +2023,6 @@ linux64-aarch64/debug:
         extra-config:
             extra_mozconfig_content:
                 - ac_add_options --target=aarch64
-                - unset MOZ_STDCXX_COMPAT
         script: "mozharness/scripts/fx_desktop_build.py"
         custom-build-variant-cfg: debug
         mozconfig-variant: debug
@@ -2081,7 +2079,6 @@ linux64-aarch64-shippable/opt:
         extra-config:
             extra_mozconfig_content:
                 - ac_add_options --target=aarch64
-                - unset MOZ_STDCXX_COMPAT
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
@@ -2136,7 +2133,6 @@ linux64-aarch64-devedition/opt:
             max_build_output_timeout: 3600
             extra_mozconfig_content:
                 - ac_add_options --target=aarch64
-                - unset MOZ_STDCXX_COMPAT
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
