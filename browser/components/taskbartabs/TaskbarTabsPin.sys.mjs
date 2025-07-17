@@ -56,6 +56,8 @@ export const TaskbarTabsPin = {
   async unpinTaskbarTab(aTaskbarTab) {
     lazy.logConsole.info("Unpinning Taskbar Tab from the taskbar.");
 
+    // Can't use generateShortcutInfo right now since we need an absolute
+    // path. getTaskbarTabShortcutPath accounts for the subdirectory.
     let shortcutFilename = generateName(aTaskbarTab);
     let shortcutPath =
       lazy.ShellService.getTaskbarTabShortcutPath(shortcutFilename);
@@ -180,19 +182,13 @@ async function getImageFromUri(aUri) {
 async function createShortcut(aTaskbarTab, aFileIcon) {
   lazy.logConsole.info("Creating Taskbar Tabs shortcut.");
 
-  let name = generateName(aTaskbarTab);
-  let lnkFile = name + ".lnk";
-
-  lazy.logConsole.debug(`Using shortcut filename: ${lnkFile}`);
+  let { relativePath, description } = await generateShortcutInfo(aTaskbarTab);
+  lazy.logConsole.debug(
+    `Using shortcut path relative to Programs folder: ${relativePath}`
+  );
 
   let targetfile = Services.dirsvc.get("XREExeF", Ci.nsIFile);
   let profileFolder = Services.dirsvc.get("ProfD", Ci.nsIFile);
-
-  const l10n = new Localization(["preview/taskbartabs.ftl"]);
-  const description = await l10n.formatValue(
-    "taskbar-tab-shortcut-description",
-    { name }
-  );
 
   return await lazy.ShellService.createShortcut(
     targetfile,
@@ -211,8 +207,38 @@ async function createShortcut(aTaskbarTab, aFileIcon) {
     0,
     aTaskbarTab.id, // AUMID
     "Programs",
-    lnkFile
+    relativePath
   );
+}
+
+/**
+ * Gets the path to the shortcut relative to the Start Menu folder,
+ * as well as the description that should be attached to the shortcut.
+ *
+ * @param {TaskbarTab} aTaskbarTab - The Taskbar Tab to get the path of.
+ * @returns {Promise<{description: string, relativePath: string}>} The description
+ * and relative path of the shortcut.
+ */
+async function generateShortcutInfo(aTaskbarTab) {
+  const l10n = new Localization([
+    "branding/brand.ftl",
+    "preview/taskbartabs.ftl",
+  ]);
+
+  let humanName = generateName(aTaskbarTab);
+  let basename = sanitizeFilename(humanName);
+  let dirname = await l10n.formatValue("taskbar-tab-shortcut-folder");
+  dirname = sanitizeFilename(dirname, { allowDirectoryNames: true });
+
+  const description = await l10n.formatValue(
+    "taskbar-tab-shortcut-description",
+    { name: humanName }
+  );
+
+  return {
+    description,
+    relativePath: dirname + "\\" + basename + ".lnk",
+  };
 }
 
 /**
@@ -249,6 +275,31 @@ function generateName(aTaskbarTab) {
     .join(" ");
 
   return name;
+}
+
+/**
+ * Cleans up the filename so it can be saved safely. This means replacing invalid names
+ * (e.g. DOS devices) with others, or replacing invalid characters (e.g. asterisks on
+ * Windows) with underscores.
+ *
+ * @param {string} aWantedName - The name to validate and sanitize.
+ * @param {object} aOptions - Options to affect the sanitization.
+ * @param {boolean} aOptions.allowDirectoryNames - Indicates that the name will be used
+ * as a directory. If so, the validation rules may be slightly more lax.
+ * @returns {string} The sanitized name.
+ */
+function sanitizeFilename(aWantedName, { allowDirectoryNames = false } = {}) {
+  const mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+
+  let flags =
+    Ci.nsIMIMEService.VALIDATE_SANITIZE_ONLY |
+    Ci.nsIMIMEService.VALIDATE_DONT_COLLAPSE_WHITESPACE;
+
+  if (allowDirectoryNames) {
+    flags |= Ci.nsIMIMEService.VALIDATE_ALLOW_DIRECTORY_NAMES;
+  }
+
+  return mimeService.validateFileNameForSaving(aWantedName, "", flags);
 }
 
 /**

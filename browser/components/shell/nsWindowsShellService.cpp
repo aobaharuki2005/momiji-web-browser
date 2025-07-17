@@ -1834,7 +1834,19 @@ nsWindowsShellService::GetTaskbarTabShortcutPath(const nsAString& aShortcutName,
     return NS_ERROR_FILE_NOT_FOUND;
   }
   progFolderNS.Assign(progFolderW);
-  aRetPath = progFolderNS + u"\\"_ns + aShortcutName + u".lnk"_ns;
+
+  nsTArray<nsCString> resIds = {
+      "branding/brand.ftl"_ns,
+      "preview/taskbartabs.ftl"_ns,
+  };
+  RefPtr<Localization> l10n = Localization::Create(resIds, true);
+
+  nsAutoCString dirname;
+  IgnoredErrorResult rv;
+  l10n->FormatValueSync("taskbar-tab-shortcut-folder"_ns, {}, dirname, rv);
+
+  aRetPath = progFolderNS + u"\\"_ns + NS_ConvertUTF8toUTF16(dirname) +
+             u"\\"_ns + aShortcutName + u".lnk"_ns;
   return NS_OK;
 }
 
