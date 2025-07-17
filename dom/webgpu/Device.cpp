@@ -456,7 +456,16 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
             canvasContexts.AppendElement(context);
           }
         };
-    if (entry.mResource.IsGPUBufferBinding()) {
+    if (entry.mResource.IsGPUBuffer()) {
+      const auto& buffer = entry.mResource.GetAsGPUBuffer();
+      if (!buffer->mId) {
+        NS_WARNING("Buffer has no id -- ignoring.");
+        continue;
+      }
+      e.buffer = buffer->mId;
+      e.offset = 0;
+      e.size = 0;
+    } else if (entry.mResource.IsGPUBufferBinding()) {
       const auto& bufBinding = entry.mResource.GetAsGPUBufferBinding();
       if (!bufBinding.mBuffer->mId) {
         NS_WARNING("Buffer binding has no id -- ignoring.");

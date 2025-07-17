@@ -600,6 +600,7 @@ dictionary GPUBindGroupDescriptor
 typedef (GPUSampler or
          GPUTexture or
          GPUTextureView or
+         GPUBuffer or
          GPUBufferBinding) GPUBindingResource;
 
 dictionary GPUBindGroupEntry {
