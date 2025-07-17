@@ -43,7 +43,8 @@ export class ProfileAvatarSelector extends MozLitElement {
     topRightMover: "#mover-topRight",
     bottomLeftMover: "#mover-bottomLeft",
     bottomRightMover: "#mover-bottomRight",
-    avatars: "#avatars",
+    avatarPicker: "#avatars",
+    avatars: { all: "moz-visual-picker-item" },
   };
 
   constructor() {
@@ -145,7 +146,7 @@ export class ProfileAvatarSelector extends MozLitElement {
   }
 
   handleAvatarChange() {
-    const selectedAvatar = this.avatars.value;
+    const selectedAvatar = this.avatarPicker.value;
 
     document.dispatchEvent(
       new CustomEvent("Profiles:AvatarSelected", {
@@ -196,6 +197,7 @@ export class ProfileAvatarSelector extends MozLitElement {
     ];
 
     return html`<moz-visual-picker
+      type="listbox"
       value=${this.avatar}
       name="avatar"
       id="avatars"

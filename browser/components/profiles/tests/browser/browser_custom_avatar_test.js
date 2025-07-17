@@ -98,10 +98,6 @@ add_task(async function test_edit_profile_custom_avatar() {
   }
   await setup();
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.profiles.updated-avatar-selector", true]],
-  });
-
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -138,8 +134,6 @@ add_task(async function test_edit_profile_custom_avatar() {
       });
     }
   );
-
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_edit_profile_custom_avatar_upload() {
@@ -150,10 +144,6 @@ add_task(async function test_edit_profile_custom_avatar_upload() {
     return;
   }
   const profile = await setup();
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.profiles.updated-avatar-selector", true]],
-  });
 
   const avatarWidth = 100;
   const avatarHeight = 100;
@@ -284,8 +274,6 @@ add_task(async function test_edit_profile_custom_avatar_upload() {
   );
 
   MockFilePicker.cleanup();
-
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_avatar_selector_tabs() {
@@ -296,10 +284,6 @@ add_task(async function test_avatar_selector_tabs() {
     return;
   }
   await setup();
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.profiles.updated-avatar-selector", true]],
-  });
 
   await BrowserTestUtils.withNewTab(
     {
@@ -408,8 +392,6 @@ add_task(async function test_avatar_selector_tabs() {
       });
     }
   );
-
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_edit_profile_custom_avatar_crop() {
@@ -420,10 +402,6 @@ add_task(async function test_edit_profile_custom_avatar_crop() {
     return;
   }
   const profile = await setup();
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.profiles.updated-avatar-selector", true]],
-  });
 
   const avatarWidth = 1000;
   const avatarHeight = 2000;
@@ -599,8 +577,6 @@ add_task(async function test_edit_profile_custom_avatar_crop() {
   );
 
   MockFilePicker.cleanup();
-
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_edit_profile_custom_avatar_keyboard_crop() {
@@ -611,10 +587,6 @@ add_task(async function test_edit_profile_custom_avatar_keyboard_crop() {
     return;
   }
   const profile = await setup();
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.profiles.updated-avatar-selector", true]],
-  });
 
   const avatarWidth = 100;
   const avatarHeight = 100;
@@ -848,6 +820,4 @@ add_task(async function test_edit_profile_custom_avatar_keyboard_crop() {
   );
 
   MockFilePicker.cleanup();
-
-  await SpecialPowers.popPrefEnv();
 });

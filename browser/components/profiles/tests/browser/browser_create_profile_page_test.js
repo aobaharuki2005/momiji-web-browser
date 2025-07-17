@@ -194,7 +194,27 @@ add_task(async function test_new_profile_avatar() {
         // Fill in the input so we don't hit the beforeunload warning
         newProfileCard.nameInput.value = "test";
 
-        let avatars = newProfileCard.avatars;
+        EventUtils.synthesizeMouseAtCenter(
+          newProfileCard.avatarSelectorLink,
+          {},
+          content
+        );
+
+        const avatarSelector = newProfileCard.avatarSelector;
+
+        await ContentTaskUtils.waitForCondition(
+          () => ContentTaskUtils.isVisible(avatarSelector),
+          "Waiting for avatar selector to become visible"
+        );
+
+        EventUtils.synthesizeMouseAtCenter(
+          avatarSelector.iconTabButton,
+          {},
+          content
+        );
+        await avatarSelector.updateComplete;
+
+        let avatars = avatarSelector.avatars;
         let newAvatar = Array.from(avatars).find(
           avatar => avatar.value === expected
         );
@@ -210,7 +230,7 @@ add_task(async function test_new_profile_avatar() {
         );
 
         // Sometimes the async message takes a bit longer to arrive.
-        await new Promise(resolve => content.setTimeout(resolve, 100));
+        await new Promise(resolve => content.setTimeout(resolve, 200));
       });
 
       let curProfile = await SelectableProfileService.getProfile(profile.id);
