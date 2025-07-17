@@ -23,7 +23,7 @@ index f68dfb07f0..1f8090613a 100644
          "api/video:video_rtp_headers",
          "test:rtp_test_utils",
 diff --git a/api/environment/environment_factory.cc b/api/environment/environment_factory.cc
-index 293ef6cf8a..b9cb6b4f53 100644
+index 50bee27c34..410e39b803 100644
 --- a/api/environment/environment_factory.cc
 +++ b/api/environment/environment_factory.cc
 @@ -102,12 +102,22 @@ Environment EnvironmentFactory::CreateWithDefaults() && {
