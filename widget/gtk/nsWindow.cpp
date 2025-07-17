@@ -7061,8 +7061,14 @@ void nsWindow::UpdateOpaqueRegionInternal() {
 
       region = cairo_region_create();
 
+      const auto clientRegion =
+          LayoutDeviceIntRect(LayoutDeviceIntPoint(), GetClientSize());
       for (auto iter = mOpaqueRegion.RectIter(); !iter.Done(); iter.Next()) {
-        auto gdkRect = DevicePixelsToGdkRectRoundIn(iter.Get());
+        auto thisRect = iter.Get().Intersect(clientRegion);
+        if (thisRect.IsEmpty()) {
+          continue;
+        }
+        auto gdkRect = DevicePixelsToGdkRectRoundIn(thisRect);
         cairo_rectangle_int_t rect = {gdkRect.x + offset.x,
                                       gdkRect.y + offset.y, gdkRect.width,
                                       gdkRect.height};
