@@ -12,6 +12,7 @@
 #include "ComputePassEncoder.h"
 #include "Device.h"
 #include "RenderPassEncoder.h"
+#include "TextureView.h"
 #include "Utility.h"
 #include "mozilla/webgpu/CanvasContext.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
@@ -222,9 +223,29 @@ already_AddRefed<RenderPassEncoder> CommandEncoder::BeginRenderPass(
   dom::GPURenderPassDescriptor desc{aDesc};
 
   for (auto& at : desc.mColorAttachments) {
-    TrackPresentationContext(at.mView->GetTargetContext());
+    auto coerceToViewInPlace =
+        [](dom::OwningGPUTextureOrGPUTextureView& texOrView)
+        -> RefPtr<TextureView> {
+      RefPtr<TextureView> view;
+      switch (texOrView.GetType()) {
+        case dom::OwningGPUTextureOrGPUTextureView::Type::eGPUTexture: {
+          dom::GPUTextureViewDescriptor defaultDesc{};
+          RefPtr<Texture> tex = texOrView.GetAsGPUTexture();
+          texOrView.SetAsGPUTextureView() = tex->CreateView(defaultDesc);
+          break;
+        }
+
+        case dom::OwningGPUTextureOrGPUTextureView::Type::eGPUTextureView:
+          // Nothing to do, great!
+          break;
+      }
+      view = texOrView.GetAsGPUTextureView();
+      return view;
+    };
+    TrackPresentationContext(coerceToViewInPlace(at.mView)->GetTargetContext());
     if (at.mResolveTarget.WasPassed()) {
-      TrackPresentationContext(at.mResolveTarget.Value().GetTargetContext());
+      TrackPresentationContext(
+          coerceToViewInPlace(at.mResolveTarget.Value())->GetTargetContext());
     }
   }
 

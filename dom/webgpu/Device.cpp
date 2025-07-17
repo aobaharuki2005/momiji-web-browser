@@ -465,6 +465,11 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
       e.buffer = bufBinding.mBuffer->mId;
       e.offset = bufBinding.mOffset;
       e.size = bufBinding.mSize.WasPassed() ? bufBinding.mSize.Value() : 0;
+    } else if (entry.mResource.IsGPUTexture()) {
+      auto texture = entry.mResource.GetAsGPUTexture();
+      const dom::GPUTextureViewDescriptor defaultDesc{};
+      RefPtr<TextureView> texture_view = texture->CreateView(defaultDesc);
+      setTextureViewBinding(*texture_view);
     } else if (entry.mResource.IsGPUTextureView()) {
       auto texture_view = entry.mResource.GetAsGPUTextureView();
       setTextureViewBinding(texture_view);
