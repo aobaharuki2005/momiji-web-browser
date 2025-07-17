@@ -1493,7 +1493,7 @@ class GeckoEngineSession(
         ) {
             val request = GeckoPermissionRequest.App(
                 permissions?.toList() ?: emptyList(),
-                callback,
+                mutableListOf(callback),
             )
             notifyObservers { onAppPermissionRequest(request) }
         }
