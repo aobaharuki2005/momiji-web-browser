@@ -572,8 +572,6 @@ skip-if = [
 
 ["test_of_type_selectors.xhtml"]
 
-["test_overscroll_behavior_pref.html"]
-
 ["test_page_parser.html"]
 
 ["test_parse_eof.html"]

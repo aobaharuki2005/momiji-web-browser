@@ -10030,12 +10030,6 @@
   mirror: always
   rust: true
 
-# Is support for overscroll-behavior enabled?
-- name: layout.css.overscroll-behavior.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Enables support for @margin rules.
 - name: layout.css.margin-rules.enabled
   type: RelaxedAtomicBool

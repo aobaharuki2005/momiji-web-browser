@@ -13185,57 +13185,55 @@ if (IsCSSPropertyPrefEnabled("layout.css.overflow-clip-box.enabled")) {
   };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.overscroll-behavior.enabled")) {
-  gCSSProperties["overscroll-behavior-x"] = {
-    domProp: "overscrollBehaviorX",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["auto"],
-    other_values: ["contain", "none"],
-    invalid_values: ["left", "1px"],
-  };
-  gCSSProperties["overscroll-behavior-y"] = {
-    domProp: "overscrollBehaviorY",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["auto"],
-    other_values: ["contain", "none"],
-    invalid_values: ["left", "1px"],
-  };
-  gCSSProperties["overscroll-behavior-inline"] = {
-    domProp: "overscrollBehaviorInline",
-    inherited: false,
-    logical: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["auto"],
-    other_values: ["contain", "none"],
-    invalid_values: ["left", "1px"],
-  };
-  gCSSProperties["overscroll-behavior-block"] = {
-    domProp: "overscrollBehaviorBlock",
-    inherited: false,
-    logical: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["auto"],
-    other_values: ["contain", "none"],
-    invalid_values: ["left", "1px"],
-  };
-  gCSSProperties["overscroll-behavior"] = {
-    domProp: "overscrollBehavior",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: ["overscroll-behavior-x", "overscroll-behavior-y"],
-    initial_values: ["auto"],
-    other_values: [
-      "contain",
-      "none",
-      "contain contain",
-      "contain auto",
-      "none contain",
-    ],
-    invalid_values: ["left", "1px", "contain auto none", "contain nonsense"],
-  };
-}
+gCSSProperties["overscroll-behavior-x"] = {
+  domProp: "overscrollBehaviorX",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: ["auto"],
+  other_values: ["contain", "none"],
+  invalid_values: ["left", "1px"],
+};
+gCSSProperties["overscroll-behavior-y"] = {
+  domProp: "overscrollBehaviorY",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: ["auto"],
+  other_values: ["contain", "none"],
+  invalid_values: ["left", "1px"],
+};
+gCSSProperties["overscroll-behavior-inline"] = {
+  domProp: "overscrollBehaviorInline",
+  inherited: false,
+  logical: true,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: ["auto"],
+  other_values: ["contain", "none"],
+  invalid_values: ["left", "1px"],
+};
+gCSSProperties["overscroll-behavior-block"] = {
+  domProp: "overscrollBehaviorBlock",
+  inherited: false,
+  logical: true,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: ["auto"],
+  other_values: ["contain", "none"],
+  invalid_values: ["left", "1px"],
+};
+gCSSProperties["overscroll-behavior"] = {
+  domProp: "overscrollBehavior",
+  inherited: false,
+  type: CSS_TYPE_TRUE_SHORTHAND,
+  subproperties: ["overscroll-behavior-x", "overscroll-behavior-y"],
+  initial_values: ["auto"],
+  other_values: [
+    "contain",
+    "none",
+    "contain contain",
+    "contain auto",
+    "none contain",
+  ],
+  invalid_values: ["left", "1px", "contain auto none", "contain nonsense"],
+};
 
 {
   const patterns = {
