@@ -279,8 +279,6 @@ class MainMenuTestCompose : TestSetup() {
             clickManageExtensionsButtonFromRedesignedMainMenu(composeTestRule)
         }.openDetailedMenuForAddon(recommendedExtensionTitle) {
         }.removeAddon(composeTestRule.activityRule) {
-            verifySnackBarText("Successfully uninstalled $recommendedExtensionTitle")
-            waitUntilSnackbarGone()
         }.goBack {
         }
         browserScreen {

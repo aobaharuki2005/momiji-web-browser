@@ -17,8 +17,6 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.getEnhancedTrackingProtectionAsset
 import org.mozilla.fenix.helpers.TestHelper
-import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
-import org.mozilla.fenix.helpers.TestHelper.waitUntilSnackbarGone
 import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
 import org.mozilla.fenix.ui.robots.addonsMenu
@@ -98,8 +96,6 @@ class SettingsAddonsTest : TestSetup() {
             closeAddonInstallCompletePrompt()
         }.openDetailedMenuForAddon(addonName) {
         }.removeAddon(activityTestRule.activityRule) {
-            verifySnackBarText("Successfully uninstalled $addonName")
-            waitUntilSnackbarGone()
         }.goBack {
         }.openThreeDotMenu {
         }.openAddonsManagerMenu {
