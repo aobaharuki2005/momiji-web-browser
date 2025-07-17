@@ -38,6 +38,16 @@ struct LayerState {
   // mFrontBuffer was changed and we need to commit it to Wayland compositor
   // to show new content.
   bool mMutatedFrontBuffer : 1;
+
+  // For debugging purposse. Resets the layer state
+  // to force full init.
+  void InvalidateAll() {
+    mIsVisible = false;
+    mMutatedVisibility = true;
+    mMutatedStackingOrder = true;
+    mMutatedPlacement = true;
+    mMutatedFrontBuffer = true;
+  }
 };
 
 class NativeLayerRootWayland final : public NativeLayerRoot {

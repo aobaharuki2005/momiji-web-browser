@@ -818,6 +818,7 @@ bool NativeLayerWayland::Map(WaylandSurfaceLock* aParentWaylandSurfaceLock) {
   mNeedsMainThreadUpdate = MainThreadUpdate::Map;
   mState.mMutatedStackingOrder = true;
   mState.mMutatedVisibility = true;
+  mState.mMutatedPlacement = true;
   return true;
 }
 
