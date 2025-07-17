@@ -537,7 +537,7 @@ class nsBlockFrame : public nsContainerFrame {
   }
 
   bool IsButtonLike() const {
-    if (!Style()->IsAnonBox() && mContent->IsHTMLElement(nsGkAtoms::button)) {
+    if (mContent && mContent->IsHTMLElement(nsGkAtoms::button)) {
       return true;
     }
     return IsButtonControlFrame();
