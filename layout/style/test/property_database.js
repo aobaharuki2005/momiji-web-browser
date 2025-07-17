@@ -1736,8 +1736,7 @@ var gCSSProperties = {
     invalid_values: [],
   },
   "-moz-appearance": {
-    // Hidden from CSSProperties, see bug 1977489.
-    // domProp: "MozAppearance",
+    domProp: "MozAppearance",
     inherited: false,
     type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
     alias_for: "appearance",
