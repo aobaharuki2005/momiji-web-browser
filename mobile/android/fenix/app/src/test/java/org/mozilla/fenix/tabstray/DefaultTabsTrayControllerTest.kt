@@ -173,9 +173,6 @@ class DefaultTabsTrayControllerTest {
             fenixBrowserUseCases.addNewHomepageTab(
                 private = true,
             )
-            navController.navigate(
-                TabsTrayFragmentDirections.actionGlobalHome(focusOnAddressBar = true),
-            )
             navigationInteractor.onTabTrayDismissed()
             profiler.addMarker(
                 "DefaultTabTrayController.onNewTabTapped",
@@ -219,9 +216,6 @@ class DefaultTabsTrayControllerTest {
             profiler.getProfilerTime()
             fenixBrowserUseCases.addNewHomepageTab(
                 private = false,
-            )
-            navController.navigate(
-                TabsTrayFragmentDirections.actionGlobalHome(focusOnAddressBar = true),
             )
             navigationInteractor.onTabTrayDismissed()
             profiler.addMarker(

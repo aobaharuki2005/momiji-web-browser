@@ -260,11 +260,12 @@ class DefaultTabsTrayController(
             fenixBrowserUseCases.addNewHomepageTab(
                 private = isPrivate,
             )
+        } else {
+            navController.navigate(
+                TabsTrayFragmentDirections.actionGlobalHome(focusOnAddressBar = true),
+            )
         }
 
-        navController.navigate(
-            TabsTrayFragmentDirections.actionGlobalHome(focusOnAddressBar = true),
-        )
         navigationInteractor.onTabTrayDismissed()
         profiler?.addMarker(
             "DefaultTabTrayController.onNewTabTapped",
