@@ -2616,19 +2616,19 @@
   value: false
   mirror: always
 
-# Disable cookie-store API
+# Enable cookie-store API
 - name: dom.cookieStore.enabled
   type: RelaxedAtomicBool
   value: true
   mirror: always
 
-# Disable cookie-store manager API
+# Enable cookie-store manager API
 - name: dom.cookieStore.manager.enabled
   type: RelaxedAtomicBool
   value: true
   mirror: always
 
-# Disable extra cookie-store properties
+# Enable extra cookie-store properties
 - name: dom.cookieStore.extra.enabled
   type: RelaxedAtomicBool
   value: @IS_NIGHTLY_BUILD@
@@ -13139,6 +13139,13 @@
 - name: network.cookie.block_nameless_with_equal_char
   type: RelaxedAtomicBool
   value: true
+  mirror: always
+
+# A Enable a workaround for XPCShell tests to avoid setting the cookies via
+# HttpChannelParent actor
+- name: network.cookie.skip_browsing_context_check_in_parent_for_testing
+  type: bool
+  value: false
   mirror: always
 
 # If we should attempt to race the cache and network.

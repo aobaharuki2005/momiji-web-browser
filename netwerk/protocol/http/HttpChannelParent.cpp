@@ -24,9 +24,9 @@
 #include "mozilla/Components.h"
 #include "mozilla/InputStreamLengthHelper.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -2201,8 +2201,8 @@ void HttpChannelParent::SetCookieHeaders(
   // we cannot explicitly set the loadGroup for the parent channel because it's
   // created from the content process. To workaround this, we add a testing pref
   // to skip this check.
-  if (!Preferences::GetBool(
-          "network.cookie.skip_browsing_context_check_in_parent_for_testing") &&
+  if (!StaticPrefs::
+          network_cookie_skip_browsing_context_check_in_parent_for_testing() &&
       mChannel->IsBrowsingContextDiscarded()) {
     return;
   }
