@@ -11,7 +11,6 @@
 
 #include "plerror.h"
 #include "plgetopt.h"
-#include "prwin.h"
 
 #include <stdlib.h>
 #include <string.h>
