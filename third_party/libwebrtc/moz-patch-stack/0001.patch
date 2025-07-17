@@ -1,262 +1,142 @@
 From: Michael Froman <mjfroman@mac.com>
-Date: Thu, 17 Jul 2025 14:25:51 -0500
-Subject: (tmp-cherry-pick) Revert "Use only one kind of codec list merging in
- CodecVendor." (4aa2908fee)
+Date: Thu, 17 Jul 2025 14:27:29 -0500
+Subject: (tmp-cherry-pick) Revert "Stop using the UsedPayloadTypes class"
+ (ebb67395c1)
 
-This reverts commit 7bb84253eab7c6c607fe7141815fbd7d4fa326b7.
+This reverts commit adb68d04d78f63d61f4544b087b931391af0d9f8.
 
-Reason for revert: Breaks downstream project
+Reason for revert: Breaks downstream project.
 
 Original change's description:
-> Use only one kind of codec list merging in CodecVendor.
+> Stop using the UsedPayloadTypes class
 >
-> This should allow us to use only the PayloadTypePicker for assigning
-> PT values. (Only one usage of UsedPayloadTypes left).
+> This means that all assignment of payload types is now used
+> using the PayloadTypeSuggester.
 >
 > Bug: webrtc:360058654
-> Change-Id: I1d72188ea1533f684f5fe9365d9dc444755c891d
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/385180
-> Commit-Queue: Harald Alvestrand <hta@webrtc.org>
+> Change-Id: Ib668f637fb79aacf6327b7c71008ae3fb9df630d
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/385340
 > Reviewed-by: Evan Shrubsole <eshr@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#44328}
+> Commit-Queue: Harald Alvestrand <hta@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#44329}
 
 Bug: webrtc:360058654
 No-Presubmit: true
 No-Tree-Checks: true
 No-Try: true
-Change-Id: Ic7f8209f41a1e5cee45701f3e67f9e22fad0bc6a
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/385581
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
+Change-Id: Ib3f5bc2abc49845cda4debb2cabc9664cdb2baed
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/385580
 Owners-Override: Mirko Bonadei <mbonadei@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#44335}
+Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Cr-Commit-Position: refs/heads/main@{#44334}
 ---
- pc/codec_vendor.cc | 158 ++++++++++++++++++++++++++++++++++-----------
- pc/codec_vendor.h  |   3 +
- 2 files changed, 122 insertions(+), 39 deletions(-)
+ pc/codec_vendor.cc | 16 +++++++++++-----
+ pc/used_ids.h      | 38 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 49 insertions(+), 5 deletions(-)
 
 diff --git a/pc/codec_vendor.cc b/pc/codec_vendor.cc
-index 75e5ab0973..33547091dd 100644
+index f9c9125562..75e5ab0973 100644
 --- a/pc/codec_vendor.cc
 +++ b/pc/codec_vendor.cc
-@@ -54,8 +54,10 @@ namespace webrtc {
- 
- namespace {
- 
--using cricket::CodecList;
--using cricket::Codecs;
-+using webrtc::PayloadTypeSuggester;
-+using webrtc::RTCError;
-+using webrtc::RTCErrorOr;
-+using webrtc::RtpTransceiverDirection;
- 
- bool IsRtxCodec(const RtpCodecCapability& capability) {
-   return absl::EqualsIgnoreCase(capability.name, cricket::kRtxCodecName);
-@@ -180,20 +182,7 @@ RTCError MergeCodecs(const CodecList& reference_codecs,
-         return suggestion.MoveError();
+@@ -39,6 +39,7 @@
+ #include "pc/rtp_media_utils.h"
+ #include "pc/session_description.h"
+ #include "pc/typed_codec_vendor.h"
++#include "pc/used_ids.h"
+ #include "rtc_base/checks.h"
+ #include "rtc_base/logging.h"
+ #include "rtc_base/string_encode.h"
+@@ -632,6 +633,14 @@ RTCErrorOr<std::vector<Codec>> CodecVendor::GetNegotiatedCodecsForOffer(
+           }
+         }
        }
-       codec.id = suggestion.value();
--      // The rewrite of the parameter may have turned the codec into
--      // one that is already present.
--      bool skip = false;
--      for (const Codec& present_codec : offered_codecs) {
--        if (present_codec.id == codec.id) {
--          RTC_DCHECK(
--              webrtc::MatchesWithReferenceAttributes(present_codec, codec));
--          skip = true;
--          break;
--        }
--      }
--      if (!skip) {
--        offered_codecs.push_back(codec);
--      }
-+      offered_codecs.push_back(codec);
-     }
-   }
- 
-@@ -251,24 +240,82 @@ RTCError MergeCodecs(const CodecList& reference_codecs,
-         return suggestion.MoveError();
-       }
-       red_codec.id = suggestion.value();
--      // The rewrite of the parameter may have turned the RED codec into
--      // one that is already present.
--      bool skip = false;
--      for (const Codec& present_codec : offered_codecs) {
--        if (present_codec.id == red_codec.id) {
--          RTC_DCHECK(
--              webrtc::MatchesWithReferenceAttributes(present_codec, red_codec));
--          skip = true;
--          break;
--        }
-+      offered_codecs.push_back(red_codec);
-+    }
-+  }
-+  offered_codecs.CheckConsistency();
-+  return RTCError::OK();
-+}
-+
-+// Adds all codecs from `reference_codecs` to `offered_codecs` that don't
-+// already exist in `offered_codecs` and ensure the payload types don't
-+// collide.
-+// OLD VERSION - uses UsedPayloadTypes
-+void MergeCodecs(const CodecList& reference_codecs,
-+                 CodecList& offered_codecs,
-+                 UsedPayloadTypes* used_pltypes) {
-+  // Add all new codecs that are not RTX/RED codecs.
-+  // The two-pass splitting of the loops means preferring payload types
-+  // of actual codecs with respect to collisions.
-+  for (const Codec& reference_codec : reference_codecs) {
-+    if (reference_codec.GetResiliencyType() != Codec::ResiliencyType::kRtx &&
-+        reference_codec.GetResiliencyType() != Codec::ResiliencyType::kRed &&
-+        !FindMatchingCodec(reference_codecs, offered_codecs, reference_codec)) {
-+      Codec codec = reference_codec;
-+      used_pltypes->FindAndSetIdUsed(&codec);
-+      offered_codecs.push_back(codec);
-+    }
-+  }
-+
-+  // Add all new RTX or RED codecs.
-+  for (const Codec& reference_codec : reference_codecs) {
-+    if (reference_codec.GetResiliencyType() == Codec::ResiliencyType::kRtx &&
-+        !FindMatchingCodec(reference_codecs, offered_codecs, reference_codec)) {
-+      Codec rtx_codec = reference_codec;
-+      const Codec* associated_codec =
-+          GetAssociatedCodecForRtx(reference_codecs, rtx_codec);
-+      if (!associated_codec) {
-+        continue;
++      // Note what PTs are already in use.
++      UsedPayloadTypes
++          used_pltypes;  // Used to avoid pt collisions in filtered_codecs
++      for (auto& codec : filtered_codecs) {
++        // Note: This may change PTs. Doing so woud indicate an error, but
++        // UsedPayloadTypes doesn't offer a means to make the distinction.
++        used_pltypes.FindAndSetIdUsed(&codec);
 +      }
-+      // Find a codec in the offered list that matches the reference codec.
-+      // Its payload type may be different than the reference codec.
-+      std::optional<Codec> matching_codec = FindMatchingCodec(
-+          reference_codecs, offered_codecs, *associated_codec);
-+      if (!matching_codec) {
-+        RTC_LOG(LS_WARNING)
-+            << "Couldn't find matching " << associated_codec->name << " codec.";
-+        continue;
+       // Add other supported codecs.
+       for (const Codec& codec : supported_codecs) {
+         std::optional<Codec> found_codec =
+@@ -658,11 +667,8 @@ RTCErrorOr<std::vector<Codec>> CodecVendor::GetNegotiatedCodecsForOffer(
+                                     changed_referenced_codec->id);
+             }
+           }
+-          auto pt_or_error = pt_suggester.SuggestPayloadType(mid, *found_codec);
+-          if (!pt_or_error.ok()) {
+-            return pt_or_error.MoveError();
+-          }
+-          found_codec->id = pt_or_error.value();
++          // Quick fix for b/395077842: Remap the codec if it collides.
++          used_pltypes.FindAndSetIdUsed(&(*found_codec));
+           filtered_codecs.push_back(*found_codec);
+         }
        }
--      if (!skip) {
--        offered_codecs.push_back(red_codec);
-+
-+      rtx_codec.params[cricket::kCodecParamAssociatedPayloadType] =
-+          absl::StrCat(matching_codec->id);
-+      used_pltypes->FindAndSetIdUsed(&rtx_codec);
-+      offered_codecs.push_back(rtx_codec);
-+    } else if (reference_codec.GetResiliencyType() ==
-+                   Codec::ResiliencyType::kRed &&
-+               !FindMatchingCodec(reference_codecs, offered_codecs,
-+                                  reference_codec)) {
-+      Codec red_codec = reference_codec;
-+      const Codec* associated_codec =
-+          GetAssociatedCodecForRed(reference_codecs, red_codec);
-+      if (associated_codec) {
-+        std::optional<Codec> matching_codec = FindMatchingCodec(
-+            reference_codecs, offered_codecs, *associated_codec);
-+        if (!matching_codec) {
-+          RTC_LOG(LS_WARNING) << "Couldn't find matching "
-+                              << associated_codec->name << " codec.";
-+          continue;
-+        }
-+
-+        red_codec.params[cricket::kCodecParamNotInNameValueFormat] =
-+            absl::StrCat(matching_codec->id) + "/" +
-+            absl::StrCat(matching_codec->id);
-       }
-+      used_pltypes->FindAndSetIdUsed(&red_codec);
-+      offered_codecs.push_back(red_codec);
-     }
-   }
-   offered_codecs.CheckConsistency();
--  return RTCError::OK();
- }
+diff --git a/pc/used_ids.h b/pc/used_ids.h
+index ddd88ce4a4..b719a04a06 100644
+--- a/pc/used_ids.h
++++ b/pc/used_ids.h
+@@ -14,7 +14,9 @@
+ #include <vector>
  
- // `codecs` is a full list of codecs with correct payload type mappings, which
-@@ -591,12 +638,10 @@ RTCErrorOr<std::vector<Codec>> CodecVendor::GetNegotiatedCodecsForOffer(
-     MergeCodecs(checked_codec_list.value(), mid, codecs, pt_suggester);
-   }
-   // Add our codecs that are not in the current description.
--  if (media_description_options.type == webrtc::MediaType::AUDIO) {
--    MergeCodecs(audio_recv_codecs(), mid, codecs, pt_suggester);
--    MergeCodecs(audio_send_codecs(), mid, codecs, pt_suggester);
-+  if (media_description_options.type == MediaType::AUDIO) {
-+    MergeCodecs(all_audio_codecs(), mid, codecs, pt_suggester);
-   } else {
--    MergeCodecs(video_recv_codecs(), mid, codecs, pt_suggester);
--    MergeCodecs(video_send_codecs(), mid, codecs, pt_suggester);
-+    MergeCodecs(all_video_codecs(), mid, codecs, pt_suggester);
-   }
-   CodecList filtered_codecs;
-   CodecList supported_codecs =
-@@ -722,12 +767,10 @@ RTCErrorOr<Codecs> CodecVendor::GetNegotiatedCodecsForAnswer(
-     MergeCodecs(checked_codec_list.value(), mid, codecs, pt_suggester);
-   }
-   // Add all our supported codecs
--  if (media_description_options.type == webrtc::MediaType::AUDIO) {
--    MergeCodecs(audio_recv_codecs(), mid, codecs, pt_suggester);
--    MergeCodecs(audio_send_codecs(), mid, codecs, pt_suggester);
-+  if (media_description_options.type == MediaType::AUDIO) {
-+    MergeCodecs(all_audio_codecs(), mid, codecs, pt_suggester);
-   } else {
--    MergeCodecs(video_recv_codecs(), mid, codecs, pt_suggester);
--    MergeCodecs(video_send_codecs(), mid, codecs, pt_suggester);
-+    MergeCodecs(all_video_codecs(), mid, codecs, pt_suggester);
-   }
-   CodecList filtered_codecs;
-   CodecList negotiated_codecs;
-@@ -920,6 +963,43 @@ CodecList CodecVendor::GetAudioCodecsForAnswer(
-   RTC_CHECK_NOTREACHED();
- }
+ #include "api/rtp_parameters.h"
++#include "media/base/codec.h"
+ #include "rtc_base/checks.h"
++#include "rtc_base/logging.h"
  
-+CodecList CodecVendor::all_video_codecs() const {
-+  CodecList all_codecs;
-+  UsedPayloadTypes used_payload_types;
-+  for (const Codec& codec : video_recv_codecs_.codecs()) {
-+    Codec codec_mutable = codec;
-+    used_payload_types.FindAndSetIdUsed(&codec_mutable);
-+    all_codecs.push_back(codec_mutable);
-+  }
+ namespace webrtc {
+ template <typename IdStruct>
+@@ -86,6 +88,41 @@ class UsedIds {
+   std::set<int> id_set_;
+ };
+ 
++// Helper class used for finding duplicate RTP payload types among audio, video
++// and data codecs. When bundle is used the payload types may not collide.
++class UsedPayloadTypes : public UsedIds<Codec> {
++ public:
++  UsedPayloadTypes()
++      : UsedIds<Codec>(kFirstDynamicPayloadTypeLowerRange,
++                       kLastDynamicPayloadTypeUpperRange) {}
 +
-+  // Use MergeCodecs to merge the second half of our list as it already checks
-+  // and fixes problems with duplicate payload types.
-+  MergeCodecs(video_send_codecs_.codecs(), all_codecs, &used_payload_types);
-+
-+  return all_codecs;
-+}
-+
-+CodecList CodecVendor::all_audio_codecs() const {
-+  // Compute the audio codecs union.
-+  CodecList codecs;
-+  for (const Codec& send : audio_send_codecs_.codecs()) {
-+    codecs.push_back(send);
-+    if (!FindMatchingCodec(audio_send_codecs_.codecs(),
-+                           audio_recv_codecs_.codecs(), send)) {
-+      // It doesn't make sense to have an RTX codec we support sending but not
-+      // receiving.
-+      RTC_DCHECK(send.GetResiliencyType() != Codec::ResiliencyType::kRtx);
++  // Check if a payload type is valid. The range [64-95] is forbidden
++  // when rtcp-mux is used.
++  static bool IsIdValid(Codec codec, bool rtcp_mux) {
++    if (rtcp_mux && (codec.id > kLastDynamicPayloadTypeLowerRange &&
++                     codec.id < kFirstDynamicPayloadTypeUpperRange)) {
++      return false;
 +    }
++    return codec.id >= 0 && codec.id <= kLastDynamicPayloadTypeUpperRange;
 +  }
-+  for (const Codec& recv : audio_recv_codecs_.codecs()) {
-+    if (!FindMatchingCodec(audio_recv_codecs_.codecs(),
-+                           audio_send_codecs_.codecs(), recv)) {
-+      codecs.push_back(recv);
-+    }
++
++ protected:
++  bool IsIdUsed(int new_id) override {
++    // Range marked for RTCP avoidance is "used".
++    if (new_id > kLastDynamicPayloadTypeLowerRange &&
++        new_id < kFirstDynamicPayloadTypeUpperRange)
++      return true;
++    return UsedIds<Codec>::IsIdUsed(new_id);
 +  }
-+  return codecs;
-+}
 +
- CodecList CodecVendor::audio_sendrecv_codecs() const {
-   // Use NegotiateCodecs to merge our codec lists, since the operation is
-   // essentially the same. Put send_codecs as the offered_codecs, which is the
-diff --git a/pc/codec_vendor.h b/pc/codec_vendor.h
-index c8e783c9f6..4bc93f8143 100644
---- a/pc/codec_vendor.h
-+++ b/pc/codec_vendor.h
-@@ -96,6 +96,9 @@ class CodecVendor {
-       const RtpTransceiverDirection& offer,
-       const RtpTransceiverDirection& answer) const;
- 
-+  CodecList all_video_codecs() const;
-+  CodecList all_audio_codecs() const;
++ private:
++  static const int kFirstDynamicPayloadTypeLowerRange = 35;
++  static const int kLastDynamicPayloadTypeLowerRange = 63;
 +
-   TypedCodecVendor audio_send_codecs_;
-   TypedCodecVendor audio_recv_codecs_;
++  static const int kFirstDynamicPayloadTypeUpperRange = 96;
++  static const int kLastDynamicPayloadTypeUpperRange = 127;
++};
++
+ // Helper class used for finding duplicate RTP Header extension ids among
+ // audio and video extensions.
+ class UsedRtpHeaderExtensionIds : public UsedIds<RtpExtension> {
+@@ -152,6 +189,7 @@ class UsedRtpHeaderExtensionIds : public UsedIds<RtpExtension> {
+ // TODO(bugs.webrtc.org/4222596): Remove once all references are updated.
+ namespace cricket {
+ using ::webrtc::UsedIds;
++using ::webrtc::UsedPayloadTypes;
+ using ::webrtc::UsedRtpHeaderExtensionIds;
+ }  // namespace cricket
  
