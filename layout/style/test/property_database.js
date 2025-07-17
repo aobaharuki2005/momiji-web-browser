@@ -8363,8 +8363,22 @@ var gCSSProperties = {
       "calc(3*25px)",
       "calc(25px*3)",
       "calc(3*25px + 50%)",
+      "2em hanging",
+      "5% each-line",
+      "-10px hanging each-line",
+      "hanging calc(2px)",
+      "each-line calc(-2px)",
+      "each-line calc(50%) hanging",
+      "hanging calc(3*25px) each-line",
+      "each-line hanging calc(25px*3)",
     ],
-    invalid_values: ["stretch"],
+    invalid_values: [
+      "stretch",
+      "hanging",
+      "each-line",
+      "-10px hanging hanging",
+      "each-line calc(2px) each-line",
+    ],
     quirks_values: { 5: "5px" },
   },
   "text-overflow": {
@@ -12294,25 +12308,6 @@ gCSSProperties["text-justify"] = {
   other_values: ["none", "inter-word", "inter-character", "distribute"],
   invalid_values: [],
 };
-
-if (IsCSSPropertyPrefEnabled("layout.css.text-indent-keywords.enabled")) {
-  gCSSProperties["text-indent"].other_values.push(
-    "2em hanging",
-    "5% each-line",
-    "-10px hanging each-line",
-    "hanging calc(2px)",
-    "each-line calc(-2px)",
-    "each-line calc(50%) hanging",
-    "hanging calc(3*25px) each-line",
-    "each-line hanging calc(25px*3)"
-  );
-  gCSSProperties["text-indent"].invalid_values.push(
-    "hanging",
-    "each-line",
-    "-10px hanging hanging",
-    "each-line calc(2px) each-line"
-  );
-}
 
 if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
   gCSSProperties["font-variation-settings"] = {
