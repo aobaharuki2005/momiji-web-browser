@@ -442,8 +442,8 @@ mozperftest:
                     - browsertime
     when:
         files-changed:
-            - 'testing/performance/**'
-            - 'python/mozperftest/**'
+            - 'testing/**'
+            - 'python/**'
 
 nimbus:
     description: >
