@@ -13891,23 +13891,21 @@ gCSSProperties["forced-color-adjust"] = {
   invalid_values: [],
 };
 
-if (IsCSSPropertyPrefEnabled("layout.css.animation-composition.enabled")) {
-  gCSSProperties["animation-composition"] = {
-    domProp: "animationComposition",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    applies_to_marker: true,
-    initial_values: ["replace"],
-    other_values: [
-      "add",
-      "accumulate",
-      "replace, add",
-      "add, accumulate",
-      "replace, add, accumulate",
-    ],
-    invalid_values: ["all", "none"],
-  };
-}
+gCSSProperties["animation-composition"] = {
+  domProp: "animationComposition",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  applies_to_marker: true,
+  initial_values: ["replace"],
+  other_values: [
+    "add",
+    "accumulate",
+    "replace, add",
+    "add, accumulate",
+    "replace, add, accumulate",
+  ],
+  invalid_values: ["all", "none"],
+};
 
 if (IsCSSPropertyPrefEnabled("layout.css.prefixes.animations")) {
   Object.assign(gCSSProperties, {
