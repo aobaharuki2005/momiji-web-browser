@@ -413,6 +413,7 @@ var gBrowserInit = {
     BookmarkingUI.init();
     gURLBar.delayedStartupInit();
     gProtectionsHandler.init();
+    gTrustPanelHandler.init();
 
     let safeMode = document.getElementById("helpSafeMode");
     if (Services.appinfo.inSafeMode) {
@@ -1068,6 +1069,7 @@ var gBrowserInit = {
       ctrlTab.uninit();
       gBrowserThumbnails.uninit();
       gProtectionsHandler.uninit();
+      gTrustPanelHandler.uninit();
       FullZoom.destroy();
 
       Services.obs.removeObserver(gIdentityHandler, "perm-changed");
