@@ -663,6 +663,7 @@ async function assertSelectorEnginesEqualsExpected(
           suggestions: null,
           trending: null,
           searchForm: null,
+          visualSearch: null,
           ...expectedEngines[i].urls,
         };
         expectedEngines[i].urls.search = {

@@ -400,12 +400,14 @@ export class JsonEngineUrl {
             base, 
             method, 
             params, 
-            searchTermParamName
+            searchTermParamName, 
+            displayName
         } = {
             base: undefined, 
             method: undefined, 
             params: undefined, 
-            searchTermParamName: undefined
+            searchTermParamName: undefined, 
+            displayName: undefined
         }
     ) {
         try {
@@ -440,6 +442,14 @@ export class JsonEngineUrl {
             }
             throw e;
         }
+        try {
+            FfiConverterOptionalString.checkType(displayName)
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart("displayName");
+            }
+            throw e;
+        }
         /**
          * The PrePath and FilePath of the URL. May include variables for engines
          * which have a variable FilePath, e.g. `{searchTerms}` for when a search
@@ -461,6 +471,11 @@ export class JsonEngineUrl {
          * is included in the base.
          */
         this.searchTermParamName = searchTermParamName;
+        /**
+         * The display name of the URL, if any. This is useful if the URL
+         * corresponds to a brand name distinct from the engine's brand name.
+         */
+        this.displayName = displayName;
     }
 
     equals(other) {
@@ -469,6 +484,7 @@ export class JsonEngineUrl {
             && this.method == other.method
             && this.params == other.params
             && this.searchTermParamName == other.searchTermParamName
+            && this.displayName == other.displayName
         )
     }
 }
@@ -481,6 +497,7 @@ export class FfiConverterTypeJSONEngineUrl extends FfiConverterArrayBuffer {
             method: FfiConverterOptionalTypeJSONEngineMethod.read(dataStream),
             params: FfiConverterOptionalSequenceTypeSearchUrlParam.read(dataStream),
             searchTermParamName: FfiConverterOptionalString.read(dataStream),
+            displayName: FfiConverterOptionalString.read(dataStream),
         });
     }
     static write(dataStream, value) {
@@ -488,6 +505,7 @@ export class FfiConverterTypeJSONEngineUrl extends FfiConverterArrayBuffer {
         FfiConverterOptionalTypeJSONEngineMethod.write(dataStream, value.method);
         FfiConverterOptionalSequenceTypeSearchUrlParam.write(dataStream, value.params);
         FfiConverterOptionalString.write(dataStream, value.searchTermParamName);
+        FfiConverterOptionalString.write(dataStream, value.displayName);
     }
 
     static computeSize(value) {
@@ -496,6 +514,7 @@ export class FfiConverterTypeJSONEngineUrl extends FfiConverterArrayBuffer {
         totalSize += FfiConverterOptionalTypeJSONEngineMethod.computeSize(value.method);
         totalSize += FfiConverterOptionalSequenceTypeSearchUrlParam.computeSize(value.params);
         totalSize += FfiConverterOptionalString.computeSize(value.searchTermParamName);
+        totalSize += FfiConverterOptionalString.computeSize(value.displayName);
         return totalSize
     }
 
@@ -533,6 +552,14 @@ export class FfiConverterTypeJSONEngineUrl extends FfiConverterArrayBuffer {
         } catch (e) {
             if (e instanceof UniFFITypeError) {
                 e.addItemDescriptionPart(".searchTermParamName");
+            }
+            throw e;
+        }
+        try {
+            FfiConverterOptionalString.checkType(value.displayName);
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart(".displayName");
             }
             throw e;
         }
@@ -583,12 +610,14 @@ export class JsonEngineUrls {
             search, 
             suggestions, 
             trending, 
-            searchForm
+            searchForm, 
+            visualSearch
         } = {
             search: undefined, 
             suggestions: undefined, 
             trending: undefined, 
-            searchForm: undefined
+            searchForm: undefined, 
+            visualSearch: undefined
         }
     ) {
         try {
@@ -623,6 +652,14 @@ export class JsonEngineUrls {
             }
             throw e;
         }
+        try {
+            FfiConverterOptionalTypeJSONEngineUrl.checkType(visualSearch)
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart("visualSearch");
+            }
+            throw e;
+        }
         /**
          * The URL to use for searches.
          */
@@ -639,6 +676,10 @@ export class JsonEngineUrls {
          * The URL of the search engine homepage.
          */
         this.searchForm = searchForm;
+        /**
+         * The URL to use for visual searches.
+         */
+        this.visualSearch = visualSearch;
     }
 
     equals(other) {
@@ -647,6 +688,7 @@ export class JsonEngineUrls {
             && this.suggestions == other.suggestions
             && this.trending == other.trending
             && this.searchForm == other.searchForm
+            && this.visualSearch == other.visualSearch
         )
     }
 }
@@ -659,6 +701,7 @@ export class FfiConverterTypeJSONEngineUrls extends FfiConverterArrayBuffer {
             suggestions: FfiConverterOptionalTypeJSONEngineUrl.read(dataStream),
             trending: FfiConverterOptionalTypeJSONEngineUrl.read(dataStream),
             searchForm: FfiConverterOptionalTypeJSONEngineUrl.read(dataStream),
+            visualSearch: FfiConverterOptionalTypeJSONEngineUrl.read(dataStream),
         });
     }
     static write(dataStream, value) {
@@ -666,6 +709,7 @@ export class FfiConverterTypeJSONEngineUrls extends FfiConverterArrayBuffer {
         FfiConverterOptionalTypeJSONEngineUrl.write(dataStream, value.suggestions);
         FfiConverterOptionalTypeJSONEngineUrl.write(dataStream, value.trending);
         FfiConverterOptionalTypeJSONEngineUrl.write(dataStream, value.searchForm);
+        FfiConverterOptionalTypeJSONEngineUrl.write(dataStream, value.visualSearch);
     }
 
     static computeSize(value) {
@@ -674,6 +718,7 @@ export class FfiConverterTypeJSONEngineUrls extends FfiConverterArrayBuffer {
         totalSize += FfiConverterOptionalTypeJSONEngineUrl.computeSize(value.suggestions);
         totalSize += FfiConverterOptionalTypeJSONEngineUrl.computeSize(value.trending);
         totalSize += FfiConverterOptionalTypeJSONEngineUrl.computeSize(value.searchForm);
+        totalSize += FfiConverterOptionalTypeJSONEngineUrl.computeSize(value.visualSearch);
         return totalSize
     }
 
@@ -711,6 +756,14 @@ export class FfiConverterTypeJSONEngineUrls extends FfiConverterArrayBuffer {
         } catch (e) {
             if (e instanceof UniFFITypeError) {
                 e.addItemDescriptionPart(".searchForm");
+            }
+            throw e;
+        }
+        try {
+            FfiConverterOptionalTypeJSONEngineUrl.checkType(value.visualSearch);
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart(".visualSearch");
             }
             throw e;
         }
@@ -826,12 +879,14 @@ export class SearchEngineUrl {
             base, 
             method, 
             params, 
-            searchTermParamName
+            searchTermParamName, 
+            displayName
         } = {
             base: undefined, 
             method: undefined, 
             params: undefined, 
-            searchTermParamName: undefined
+            searchTermParamName: undefined, 
+            displayName: undefined
         }
     ) {
         try {
@@ -866,6 +921,14 @@ export class SearchEngineUrl {
             }
             throw e;
         }
+        try {
+            FfiConverterOptionalString.checkType(displayName)
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart("displayName");
+            }
+            throw e;
+        }
         /**
          * The PrePath and FilePath of the URL. May include variables for engines
          * which have a variable FilePath, e.g. `{searchTerms}` for when a search
@@ -887,6 +950,11 @@ export class SearchEngineUrl {
          * is included in the base.
          */
         this.searchTermParamName = searchTermParamName;
+        /**
+         * The display name of the URL, if any. This is useful if the URL
+         * corresponds to a brand name distinct from the engine's brand name.
+         */
+        this.displayName = displayName;
     }
 
     equals(other) {
@@ -895,6 +963,7 @@ export class SearchEngineUrl {
             && this.method == other.method
             && this.params == other.params
             && this.searchTermParamName == other.searchTermParamName
+            && this.displayName == other.displayName
         )
     }
 }
@@ -907,6 +976,7 @@ export class FfiConverterTypeSearchEngineUrl extends FfiConverterArrayBuffer {
             method: FfiConverterString.read(dataStream),
             params: FfiConverterSequenceTypeSearchUrlParam.read(dataStream),
             searchTermParamName: FfiConverterOptionalString.read(dataStream),
+            displayName: FfiConverterOptionalString.read(dataStream),
         });
     }
     static write(dataStream, value) {
@@ -914,6 +984,7 @@ export class FfiConverterTypeSearchEngineUrl extends FfiConverterArrayBuffer {
         FfiConverterString.write(dataStream, value.method);
         FfiConverterSequenceTypeSearchUrlParam.write(dataStream, value.params);
         FfiConverterOptionalString.write(dataStream, value.searchTermParamName);
+        FfiConverterOptionalString.write(dataStream, value.displayName);
     }
 
     static computeSize(value) {
@@ -922,6 +993,7 @@ export class FfiConverterTypeSearchEngineUrl extends FfiConverterArrayBuffer {
         totalSize += FfiConverterString.computeSize(value.method);
         totalSize += FfiConverterSequenceTypeSearchUrlParam.computeSize(value.params);
         totalSize += FfiConverterOptionalString.computeSize(value.searchTermParamName);
+        totalSize += FfiConverterOptionalString.computeSize(value.displayName);
         return totalSize
     }
 
@@ -959,6 +1031,14 @@ export class FfiConverterTypeSearchEngineUrl extends FfiConverterArrayBuffer {
         } catch (e) {
             if (e instanceof UniFFITypeError) {
                 e.addItemDescriptionPart(".searchTermParamName");
+            }
+            throw e;
+        }
+        try {
+            FfiConverterOptionalString.checkType(value.displayName);
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart(".displayName");
             }
             throw e;
         }
@@ -1009,12 +1089,14 @@ export class SearchEngineUrls {
             search, 
             suggestions, 
             trending, 
-            searchForm
+            searchForm, 
+            visualSearch
         } = {
             search: undefined, 
             suggestions: undefined, 
             trending: undefined, 
-            searchForm: undefined
+            searchForm: undefined, 
+            visualSearch: undefined
         }
     ) {
         try {
@@ -1049,6 +1131,14 @@ export class SearchEngineUrls {
             }
             throw e;
         }
+        try {
+            FfiConverterOptionalTypeSearchEngineUrl.checkType(visualSearch)
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart("visualSearch");
+            }
+            throw e;
+        }
         /**
          * The URL to use for searches.
          */
@@ -1065,6 +1155,10 @@ export class SearchEngineUrls {
          * The URL of the search engine homepage.
          */
         this.searchForm = searchForm;
+        /**
+         * The URL to use for visual searches.
+         */
+        this.visualSearch = visualSearch;
     }
 
     equals(other) {
@@ -1073,6 +1167,7 @@ export class SearchEngineUrls {
             && this.suggestions == other.suggestions
             && this.trending == other.trending
             && this.searchForm == other.searchForm
+            && this.visualSearch == other.visualSearch
         )
     }
 }
@@ -1085,6 +1180,7 @@ export class FfiConverterTypeSearchEngineUrls extends FfiConverterArrayBuffer {
             suggestions: FfiConverterOptionalTypeSearchEngineUrl.read(dataStream),
             trending: FfiConverterOptionalTypeSearchEngineUrl.read(dataStream),
             searchForm: FfiConverterOptionalTypeSearchEngineUrl.read(dataStream),
+            visualSearch: FfiConverterOptionalTypeSearchEngineUrl.read(dataStream),
         });
     }
     static write(dataStream, value) {
@@ -1092,6 +1188,7 @@ export class FfiConverterTypeSearchEngineUrls extends FfiConverterArrayBuffer {
         FfiConverterOptionalTypeSearchEngineUrl.write(dataStream, value.suggestions);
         FfiConverterOptionalTypeSearchEngineUrl.write(dataStream, value.trending);
         FfiConverterOptionalTypeSearchEngineUrl.write(dataStream, value.searchForm);
+        FfiConverterOptionalTypeSearchEngineUrl.write(dataStream, value.visualSearch);
     }
 
     static computeSize(value) {
@@ -1100,6 +1197,7 @@ export class FfiConverterTypeSearchEngineUrls extends FfiConverterArrayBuffer {
         totalSize += FfiConverterOptionalTypeSearchEngineUrl.computeSize(value.suggestions);
         totalSize += FfiConverterOptionalTypeSearchEngineUrl.computeSize(value.trending);
         totalSize += FfiConverterOptionalTypeSearchEngineUrl.computeSize(value.searchForm);
+        totalSize += FfiConverterOptionalTypeSearchEngineUrl.computeSize(value.visualSearch);
         return totalSize
     }
 
@@ -1137,6 +1235,14 @@ export class FfiConverterTypeSearchEngineUrls extends FfiConverterArrayBuffer {
         } catch (e) {
             if (e instanceof UniFFITypeError) {
                 e.addItemDescriptionPart(".searchForm");
+            }
+            throw e;
+        }
+        try {
+            FfiConverterOptionalTypeSearchEngineUrl.checkType(value.visualSearch);
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart(".visualSearch");
             }
             throw e;
         }
