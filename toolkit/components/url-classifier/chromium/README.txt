@@ -29,6 +29,8 @@ to avoid naming pollution. We use this source file along with protobuf compiler 
 - Change the package namespace to 'mozilla.safebrowsing.v5'
 - Remove unnecessary imports and annotations.
 - Remove unnecessary options.
+- Replace the google.protobuf.Duration with a local Duration message with the
+  same format.
 - Remove the service section that is not used in Gecko.
 - Add option to enable optimization for the lite runtime.
 

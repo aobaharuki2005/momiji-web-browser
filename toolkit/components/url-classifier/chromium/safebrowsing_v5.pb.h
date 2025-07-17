@@ -29,7 +29,6 @@
 #include <google/protobuf/repeated_field.h>  // IWYU pragma: export
 #include <google/protobuf/extension_set.h>  // IWYU pragma: export
 #include <google/protobuf/generated_enum_util.h>
-#include <google/protobuf/duration.pb.h>
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
 #define PROTOBUF_INTERNAL_EXPORT_safebrowsing_5fv5_2eproto
@@ -52,6 +51,9 @@ extern BatchGetHashListsRequestDefaultTypeInternal _BatchGetHashListsRequest_def
 class BatchGetHashListsResponse;
 struct BatchGetHashListsResponseDefaultTypeInternal;
 extern BatchGetHashListsResponseDefaultTypeInternal _BatchGetHashListsResponse_default_instance_;
+class Duration;
+struct DurationDefaultTypeInternal;
+extern DurationDefaultTypeInternal _Duration_default_instance_;
 class FullHash;
 struct FullHashDefaultTypeInternal;
 extern FullHashDefaultTypeInternal _FullHash_default_instance_;
@@ -100,6 +102,7 @@ extern SizeConstraintsDefaultTypeInternal _SizeConstraints_default_instance_;
 PROTOBUF_NAMESPACE_OPEN
 template<> ::mozilla::safebrowsing::v5::BatchGetHashListsRequest* Arena::CreateMaybeMessage<::mozilla::safebrowsing::v5::BatchGetHashListsRequest>(Arena*);
 template<> ::mozilla::safebrowsing::v5::BatchGetHashListsResponse* Arena::CreateMaybeMessage<::mozilla::safebrowsing::v5::BatchGetHashListsResponse>(Arena*);
+template<> ::mozilla::safebrowsing::v5::Duration* Arena::CreateMaybeMessage<::mozilla::safebrowsing::v5::Duration>(Arena*);
 template<> ::mozilla::safebrowsing::v5::FullHash* Arena::CreateMaybeMessage<::mozilla::safebrowsing::v5::FullHash>(Arena*);
 template<> ::mozilla::safebrowsing::v5::FullHash_FullHashDetail* Arena::CreateMaybeMessage<::mozilla::safebrowsing::v5::FullHash_FullHashDetail>(Arena*);
 template<> ::mozilla::safebrowsing::v5::GetHashListRequest* Arena::CreateMaybeMessage<::mozilla::safebrowsing::v5::GetHashListRequest>(Arena*);
@@ -359,6 +362,147 @@ class SearchHashesRequest final :
 };
 // -------------------------------------------------------------------
 
+class Duration final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:mozilla.safebrowsing.v5.Duration) */ {
+ public:
+  inline Duration() : Duration(nullptr) {}
+  ~Duration() override;
+  explicit PROTOBUF_CONSTEXPR Duration(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  Duration(const Duration& from);
+  Duration(Duration&& from) noexcept
+    : Duration() {
+    *this = ::std::move(from);
+  }
+
+  inline Duration& operator=(const Duration& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline Duration& operator=(Duration&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const Duration& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const Duration* internal_default_instance() {
+    return reinterpret_cast<const Duration*>(
+               &_Duration_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    1;
+
+  friend void swap(Duration& a, Duration& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(Duration* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(Duration* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  Duration* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<Duration>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const Duration& from);
+  void MergeFrom(const Duration& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(Duration* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "mozilla.safebrowsing.v5.Duration";
+  }
+  protected:
+  explicit Duration(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kSecondsFieldNumber = 1,
+    kNanosFieldNumber = 2,
+  };
+  // int64 seconds = 1;
+  void clear_seconds();
+  int64_t seconds() const;
+  void set_seconds(int64_t value);
+  private:
+  int64_t _internal_seconds() const;
+  void _internal_set_seconds(int64_t value);
+  public:
+
+  // int32 nanos = 2;
+  void clear_nanos();
+  int32_t nanos() const;
+  void set_nanos(int32_t value);
+  private:
+  int32_t _internal_nanos() const;
+  void _internal_set_nanos(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:mozilla.safebrowsing.v5.Duration)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    int64_t seconds_;
+    int32_t nanos_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_safebrowsing_5fv5_2eproto;
+};
+// -------------------------------------------------------------------
+
 class SearchHashesResponse final :
     public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:mozilla.safebrowsing.v5.SearchHashesResponse) */ {
  public:
@@ -398,7 +542,7 @@ class SearchHashesResponse final :
                &_SearchHashesResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    1;
+    2;
 
   friend void swap(SearchHashesResponse& a, SearchHashesResponse& b) {
     a.Swap(&b);
@@ -483,23 +627,23 @@ class SearchHashesResponse final :
   const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::mozilla::safebrowsing::v5::FullHash >&
       full_hashes() const;
 
-  // .google.protobuf.Duration cache_duration = 2;
+  // .mozilla.safebrowsing.v5.Duration cache_duration = 2;
   bool has_cache_duration() const;
   private:
   bool _internal_has_cache_duration() const;
   public:
   void clear_cache_duration();
-  const ::PROTOBUF_NAMESPACE_ID::Duration& cache_duration() const;
-  PROTOBUF_NODISCARD ::PROTOBUF_NAMESPACE_ID::Duration* release_cache_duration();
-  ::PROTOBUF_NAMESPACE_ID::Duration* mutable_cache_duration();
-  void set_allocated_cache_duration(::PROTOBUF_NAMESPACE_ID::Duration* cache_duration);
+  const ::mozilla::safebrowsing::v5::Duration& cache_duration() const;
+  PROTOBUF_NODISCARD ::mozilla::safebrowsing::v5::Duration* release_cache_duration();
+  ::mozilla::safebrowsing::v5::Duration* mutable_cache_duration();
+  void set_allocated_cache_duration(::mozilla::safebrowsing::v5::Duration* cache_duration);
   private:
-  const ::PROTOBUF_NAMESPACE_ID::Duration& _internal_cache_duration() const;
-  ::PROTOBUF_NAMESPACE_ID::Duration* _internal_mutable_cache_duration();
+  const ::mozilla::safebrowsing::v5::Duration& _internal_cache_duration() const;
+  ::mozilla::safebrowsing::v5::Duration* _internal_mutable_cache_duration();
   public:
   void unsafe_arena_set_allocated_cache_duration(
-      ::PROTOBUF_NAMESPACE_ID::Duration* cache_duration);
-  ::PROTOBUF_NAMESPACE_ID::Duration* unsafe_arena_release_cache_duration();
+      ::mozilla::safebrowsing::v5::Duration* cache_duration);
+  ::mozilla::safebrowsing::v5::Duration* unsafe_arena_release_cache_duration();
 
   // @@protoc_insertion_point(class_scope:mozilla.safebrowsing.v5.SearchHashesResponse)
  private:
@@ -510,7 +654,7 @@ class SearchHashesResponse final :
   typedef void DestructorSkippable_;
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::mozilla::safebrowsing::v5::FullHash > full_hashes_;
-    ::PROTOBUF_NAMESPACE_ID::Duration* cache_duration_;
+    ::mozilla::safebrowsing::v5::Duration* cache_duration_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -557,7 +701,7 @@ class FullHash_FullHashDetail final :
                &_FullHash_FullHashDetail_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    2;
+    3;
 
   friend void swap(FullHash_FullHashDetail& a, FullHash_FullHashDetail& b) {
     a.Swap(&b);
@@ -707,7 +851,7 @@ class FullHash final :
                &_FullHash_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    3;
+    4;
 
   friend void swap(FullHash& a, FullHash& b) {
     a.Swap(&b);
@@ -864,7 +1008,7 @@ class GetHashListRequest final :
                &_GetHashListRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    4;
+    5;
 
   friend void swap(GetHashListRequest& a, GetHashListRequest& b) {
     a.Swap(&b);
@@ -1035,7 +1179,7 @@ class SizeConstraints final :
                &_SizeConstraints_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    5;
+    6;
 
   friend void swap(SizeConstraints& a, SizeConstraints& b) {
     a.Swap(&b);
@@ -1176,7 +1320,7 @@ class RiceDeltaEncoded32Bit final :
                &_RiceDeltaEncoded32Bit_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    6;
+    7;
 
   friend void swap(RiceDeltaEncoded32Bit& a, RiceDeltaEncoded32Bit& b) {
     a.Swap(&b);
@@ -1344,7 +1488,7 @@ class RiceDeltaEncoded64Bit final :
                &_RiceDeltaEncoded64Bit_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    7;
+    8;
 
   friend void swap(RiceDeltaEncoded64Bit& a, RiceDeltaEncoded64Bit& b) {
     a.Swap(&b);
@@ -1512,7 +1656,7 @@ class RiceDeltaEncoded128Bit final :
                &_RiceDeltaEncoded128Bit_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    8;
+    9;
 
   friend void swap(RiceDeltaEncoded128Bit& a, RiceDeltaEncoded128Bit& b) {
     a.Swap(&b);
@@ -1691,7 +1835,7 @@ class RiceDeltaEncoded256Bit final :
                &_RiceDeltaEncoded256Bit_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    9;
+    10;
 
   friend void swap(RiceDeltaEncoded256Bit& a, RiceDeltaEncoded256Bit& b) {
     a.Swap(&b);
@@ -1892,7 +2036,7 @@ class HashListMetadata final :
                &_HashListMetadata_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    10;
+    11;
 
   friend void swap(HashListMetadata& a, HashListMetadata& b) {
     a.Swap(&b);
@@ -2118,7 +2262,7 @@ class HashList final :
                &_HashList_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    11;
+    12;
 
   friend void swap(HashList& a, HashList& b) {
     a.Swap(&b);
@@ -2254,23 +2398,23 @@ class HashList final :
       ::mozilla::safebrowsing::v5::RiceDeltaEncoded32Bit* compressed_removals);
   ::mozilla::safebrowsing::v5::RiceDeltaEncoded32Bit* unsafe_arena_release_compressed_removals();
 
-  // .google.protobuf.Duration minimum_wait_duration = 6;
+  // .mozilla.safebrowsing.v5.Duration minimum_wait_duration = 6;
   bool has_minimum_wait_duration() const;
   private:
   bool _internal_has_minimum_wait_duration() const;
   public:
   void clear_minimum_wait_duration();
-  const ::PROTOBUF_NAMESPACE_ID::Duration& minimum_wait_duration() const;
-  PROTOBUF_NODISCARD ::PROTOBUF_NAMESPACE_ID::Duration* release_minimum_wait_duration();
-  ::PROTOBUF_NAMESPACE_ID::Duration* mutable_minimum_wait_duration();
-  void set_allocated_minimum_wait_duration(::PROTOBUF_NAMESPACE_ID::Duration* minimum_wait_duration);
+  const ::mozilla::safebrowsing::v5::Duration& minimum_wait_duration() const;
+  PROTOBUF_NODISCARD ::mozilla::safebrowsing::v5::Duration* release_minimum_wait_duration();
+  ::mozilla::safebrowsing::v5::Duration* mutable_minimum_wait_duration();
+  void set_allocated_minimum_wait_duration(::mozilla::safebrowsing::v5::Duration* minimum_wait_duration);
   private:
-  const ::PROTOBUF_NAMESPACE_ID::Duration& _internal_minimum_wait_duration() const;
-  ::PROTOBUF_NAMESPACE_ID::Duration* _internal_mutable_minimum_wait_duration();
+  const ::mozilla::safebrowsing::v5::Duration& _internal_minimum_wait_duration() const;
+  ::mozilla::safebrowsing::v5::Duration* _internal_mutable_minimum_wait_duration();
   public:
   void unsafe_arena_set_allocated_minimum_wait_duration(
-      ::PROTOBUF_NAMESPACE_ID::Duration* minimum_wait_duration);
-  ::PROTOBUF_NAMESPACE_ID::Duration* unsafe_arena_release_minimum_wait_duration();
+      ::mozilla::safebrowsing::v5::Duration* minimum_wait_duration);
+  ::mozilla::safebrowsing::v5::Duration* unsafe_arena_release_minimum_wait_duration();
 
   // .mozilla.safebrowsing.v5.HashListMetadata metadata = 8;
   bool has_metadata() const;
@@ -2392,7 +2536,7 @@ class HashList final :
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr version_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr sha256_checksum_;
     ::mozilla::safebrowsing::v5::RiceDeltaEncoded32Bit* compressed_removals_;
-    ::PROTOBUF_NAMESPACE_ID::Duration* minimum_wait_duration_;
+    ::mozilla::safebrowsing::v5::Duration* minimum_wait_duration_;
     ::mozilla::safebrowsing::v5::HashListMetadata* metadata_;
     bool partial_update_;
     union CompressedAdditionsUnion {
@@ -2451,7 +2595,7 @@ class BatchGetHashListsRequest final :
                &_BatchGetHashListsRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    12;
+    13;
 
   friend void swap(BatchGetHashListsRequest& a, BatchGetHashListsRequest& b) {
     a.Swap(&b);
@@ -2642,7 +2786,7 @@ class BatchGetHashListsResponse final :
                &_BatchGetHashListsResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    13;
+    14;
 
   friend void swap(BatchGetHashListsResponse& a, BatchGetHashListsResponse& b) {
     a.Swap(&b);
@@ -2781,7 +2925,7 @@ class ListHashListsRequest final :
                &_ListHashListsRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    14;
+    15;
 
   friend void swap(ListHashListsRequest& a, ListHashListsRequest& b) {
     a.Swap(&b);
@@ -2927,7 +3071,7 @@ class ListHashListsResponse final :
                &_ListHashListsResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    15;
+    16;
 
   friend void swap(ListHashListsResponse& a, ListHashListsResponse& b) {
     a.Swap(&b);
@@ -3129,6 +3273,50 @@ SearchHashesRequest::mutable_hash_prefixes() {
 
 // -------------------------------------------------------------------
 
+// Duration
+
+// int64 seconds = 1;
+inline void Duration::clear_seconds() {
+  _impl_.seconds_ = int64_t{0};
+}
+inline int64_t Duration::_internal_seconds() const {
+  return _impl_.seconds_;
+}
+inline int64_t Duration::seconds() const {
+  // @@protoc_insertion_point(field_get:mozilla.safebrowsing.v5.Duration.seconds)
+  return _internal_seconds();
+}
+inline void Duration::_internal_set_seconds(int64_t value) {
+  
+  _impl_.seconds_ = value;
+}
+inline void Duration::set_seconds(int64_t value) {
+  _internal_set_seconds(value);
+  // @@protoc_insertion_point(field_set:mozilla.safebrowsing.v5.Duration.seconds)
+}
+
+// int32 nanos = 2;
+inline void Duration::clear_nanos() {
+  _impl_.nanos_ = 0;
+}
+inline int32_t Duration::_internal_nanos() const {
+  return _impl_.nanos_;
+}
+inline int32_t Duration::nanos() const {
+  // @@protoc_insertion_point(field_get:mozilla.safebrowsing.v5.Duration.nanos)
+  return _internal_nanos();
+}
+inline void Duration::_internal_set_nanos(int32_t value) {
+  
+  _impl_.nanos_ = value;
+}
+inline void Duration::set_nanos(int32_t value) {
+  _internal_set_nanos(value);
+  // @@protoc_insertion_point(field_set:mozilla.safebrowsing.v5.Duration.nanos)
+}
+
+// -------------------------------------------------------------------
+
 // SearchHashesResponse
 
 // repeated .mozilla.safebrowsing.v5.FullHash full_hashes = 1;
@@ -3171,24 +3359,30 @@ SearchHashesResponse::full_hashes() const {
   return _impl_.full_hashes_;
 }
 
-// .google.protobuf.Duration cache_duration = 2;
+// .mozilla.safebrowsing.v5.Duration cache_duration = 2;
 inline bool SearchHashesResponse::_internal_has_cache_duration() const {
   return this != internal_default_instance() && _impl_.cache_duration_ != nullptr;
 }
 inline bool SearchHashesResponse::has_cache_duration() const {
   return _internal_has_cache_duration();
 }
-inline const ::PROTOBUF_NAMESPACE_ID::Duration& SearchHashesResponse::_internal_cache_duration() const {
-  const ::PROTOBUF_NAMESPACE_ID::Duration* p = _impl_.cache_duration_;
-  return p != nullptr ? *p : reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Duration&>(
-      ::PROTOBUF_NAMESPACE_ID::_Duration_default_instance_);
+inline void SearchHashesResponse::clear_cache_duration() {
+  if (GetArenaForAllocation() == nullptr && _impl_.cache_duration_ != nullptr) {
+    delete _impl_.cache_duration_;
+  }
+  _impl_.cache_duration_ = nullptr;
 }
-inline const ::PROTOBUF_NAMESPACE_ID::Duration& SearchHashesResponse::cache_duration() const {
+inline const ::mozilla::safebrowsing::v5::Duration& SearchHashesResponse::_internal_cache_duration() const {
+  const ::mozilla::safebrowsing::v5::Duration* p = _impl_.cache_duration_;
+  return p != nullptr ? *p : reinterpret_cast<const ::mozilla::safebrowsing::v5::Duration&>(
+      ::mozilla::safebrowsing::v5::_Duration_default_instance_);
+}
+inline const ::mozilla::safebrowsing::v5::Duration& SearchHashesResponse::cache_duration() const {
   // @@protoc_insertion_point(field_get:mozilla.safebrowsing.v5.SearchHashesResponse.cache_duration)
   return _internal_cache_duration();
 }
 inline void SearchHashesResponse::unsafe_arena_set_allocated_cache_duration(
-    ::PROTOBUF_NAMESPACE_ID::Duration* cache_duration) {
+    ::mozilla::safebrowsing::v5::Duration* cache_duration) {
   if (GetArenaForAllocation() == nullptr) {
     delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.cache_duration_);
   }
@@ -3200,9 +3394,9 @@ inline void SearchHashesResponse::unsafe_arena_set_allocated_cache_duration(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:mozilla.safebrowsing.v5.SearchHashesResponse.cache_duration)
 }
-inline ::PROTOBUF_NAMESPACE_ID::Duration* SearchHashesResponse::release_cache_duration() {
+inline ::mozilla::safebrowsing::v5::Duration* SearchHashesResponse::release_cache_duration() {
   
-  ::PROTOBUF_NAMESPACE_ID::Duration* temp = _impl_.cache_duration_;
+  ::mozilla::safebrowsing::v5::Duration* temp = _impl_.cache_duration_;
   _impl_.cache_duration_ = nullptr;
 #ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
   auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
@@ -3215,35 +3409,34 @@ inline ::PROTOBUF_NAMESPACE_ID::Duration* SearchHashesResponse::release_cache_du
 #endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
   return temp;
 }
-inline ::PROTOBUF_NAMESPACE_ID::Duration* SearchHashesResponse::unsafe_arena_release_cache_duration() {
+inline ::mozilla::safebrowsing::v5::Duration* SearchHashesResponse::unsafe_arena_release_cache_duration() {
   // @@protoc_insertion_point(field_release:mozilla.safebrowsing.v5.SearchHashesResponse.cache_duration)
   
-  ::PROTOBUF_NAMESPACE_ID::Duration* temp = _impl_.cache_duration_;
+  ::mozilla::safebrowsing::v5::Duration* temp = _impl_.cache_duration_;
   _impl_.cache_duration_ = nullptr;
   return temp;
 }
-inline ::PROTOBUF_NAMESPACE_ID::Duration* SearchHashesResponse::_internal_mutable_cache_duration() {
+inline ::mozilla::safebrowsing::v5::Duration* SearchHashesResponse::_internal_mutable_cache_duration() {
   
   if (_impl_.cache_duration_ == nullptr) {
-    auto* p = CreateMaybeMessage<::PROTOBUF_NAMESPACE_ID::Duration>(GetArenaForAllocation());
+    auto* p = CreateMaybeMessage<::mozilla::safebrowsing::v5::Duration>(GetArenaForAllocation());
     _impl_.cache_duration_ = p;
   }
   return _impl_.cache_duration_;
 }
-inline ::PROTOBUF_NAMESPACE_ID::Duration* SearchHashesResponse::mutable_cache_duration() {
-  ::PROTOBUF_NAMESPACE_ID::Duration* _msg = _internal_mutable_cache_duration();
+inline ::mozilla::safebrowsing::v5::Duration* SearchHashesResponse::mutable_cache_duration() {
+  ::mozilla::safebrowsing::v5::Duration* _msg = _internal_mutable_cache_duration();
   // @@protoc_insertion_point(field_mutable:mozilla.safebrowsing.v5.SearchHashesResponse.cache_duration)
   return _msg;
 }
-inline void SearchHashesResponse::set_allocated_cache_duration(::PROTOBUF_NAMESPACE_ID::Duration* cache_duration) {
+inline void SearchHashesResponse::set_allocated_cache_duration(::mozilla::safebrowsing::v5::Duration* cache_duration) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   if (message_arena == nullptr) {
-    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.cache_duration_);
+    delete _impl_.cache_duration_;
   }
   if (cache_duration) {
     ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(
-                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(cache_duration));
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(cache_duration);
     if (message_arena != submessage_arena) {
       cache_duration = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
           message_arena, cache_duration, submessage_arena);
@@ -4861,24 +5054,30 @@ inline void HashList::set_allocated_compressed_removals(::mozilla::safebrowsing:
   // @@protoc_insertion_point(field_set_allocated:mozilla.safebrowsing.v5.HashList.compressed_removals)
 }
 
-// .google.protobuf.Duration minimum_wait_duration = 6;
+// .mozilla.safebrowsing.v5.Duration minimum_wait_duration = 6;
 inline bool HashList::_internal_has_minimum_wait_duration() const {
   return this != internal_default_instance() && _impl_.minimum_wait_duration_ != nullptr;
 }
 inline bool HashList::has_minimum_wait_duration() const {
   return _internal_has_minimum_wait_duration();
 }
-inline const ::PROTOBUF_NAMESPACE_ID::Duration& HashList::_internal_minimum_wait_duration() const {
-  const ::PROTOBUF_NAMESPACE_ID::Duration* p = _impl_.minimum_wait_duration_;
-  return p != nullptr ? *p : reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Duration&>(
-      ::PROTOBUF_NAMESPACE_ID::_Duration_default_instance_);
+inline void HashList::clear_minimum_wait_duration() {
+  if (GetArenaForAllocation() == nullptr && _impl_.minimum_wait_duration_ != nullptr) {
+    delete _impl_.minimum_wait_duration_;
+  }
+  _impl_.minimum_wait_duration_ = nullptr;
 }
-inline const ::PROTOBUF_NAMESPACE_ID::Duration& HashList::minimum_wait_duration() const {
+inline const ::mozilla::safebrowsing::v5::Duration& HashList::_internal_minimum_wait_duration() const {
+  const ::mozilla::safebrowsing::v5::Duration* p = _impl_.minimum_wait_duration_;
+  return p != nullptr ? *p : reinterpret_cast<const ::mozilla::safebrowsing::v5::Duration&>(
+      ::mozilla::safebrowsing::v5::_Duration_default_instance_);
+}
+inline const ::mozilla::safebrowsing::v5::Duration& HashList::minimum_wait_duration() const {
   // @@protoc_insertion_point(field_get:mozilla.safebrowsing.v5.HashList.minimum_wait_duration)
   return _internal_minimum_wait_duration();
 }
 inline void HashList::unsafe_arena_set_allocated_minimum_wait_duration(
-    ::PROTOBUF_NAMESPACE_ID::Duration* minimum_wait_duration) {
+    ::mozilla::safebrowsing::v5::Duration* minimum_wait_duration) {
   if (GetArenaForAllocation() == nullptr) {
     delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.minimum_wait_duration_);
   }
@@ -4890,9 +5089,9 @@ inline void HashList::unsafe_arena_set_allocated_minimum_wait_duration(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:mozilla.safebrowsing.v5.HashList.minimum_wait_duration)
 }
-inline ::PROTOBUF_NAMESPACE_ID::Duration* HashList::release_minimum_wait_duration() {
+inline ::mozilla::safebrowsing::v5::Duration* HashList::release_minimum_wait_duration() {
   
-  ::PROTOBUF_NAMESPACE_ID::Duration* temp = _impl_.minimum_wait_duration_;
+  ::mozilla::safebrowsing::v5::Duration* temp = _impl_.minimum_wait_duration_;
   _impl_.minimum_wait_duration_ = nullptr;
 #ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
   auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
@@ -4905,35 +5104,34 @@ inline ::PROTOBUF_NAMESPACE_ID::Duration* HashList::release_minimum_wait_duratio
 #endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
   return temp;
 }
-inline ::PROTOBUF_NAMESPACE_ID::Duration* HashList::unsafe_arena_release_minimum_wait_duration() {
+inline ::mozilla::safebrowsing::v5::Duration* HashList::unsafe_arena_release_minimum_wait_duration() {
   // @@protoc_insertion_point(field_release:mozilla.safebrowsing.v5.HashList.minimum_wait_duration)
   
-  ::PROTOBUF_NAMESPACE_ID::Duration* temp = _impl_.minimum_wait_duration_;
+  ::mozilla::safebrowsing::v5::Duration* temp = _impl_.minimum_wait_duration_;
   _impl_.minimum_wait_duration_ = nullptr;
   return temp;
 }
-inline ::PROTOBUF_NAMESPACE_ID::Duration* HashList::_internal_mutable_minimum_wait_duration() {
+inline ::mozilla::safebrowsing::v5::Duration* HashList::_internal_mutable_minimum_wait_duration() {
   
   if (_impl_.minimum_wait_duration_ == nullptr) {
-    auto* p = CreateMaybeMessage<::PROTOBUF_NAMESPACE_ID::Duration>(GetArenaForAllocation());
+    auto* p = CreateMaybeMessage<::mozilla::safebrowsing::v5::Duration>(GetArenaForAllocation());
     _impl_.minimum_wait_duration_ = p;
   }
   return _impl_.minimum_wait_duration_;
 }
-inline ::PROTOBUF_NAMESPACE_ID::Duration* HashList::mutable_minimum_wait_duration() {
-  ::PROTOBUF_NAMESPACE_ID::Duration* _msg = _internal_mutable_minimum_wait_duration();
+inline ::mozilla::safebrowsing::v5::Duration* HashList::mutable_minimum_wait_duration() {
+  ::mozilla::safebrowsing::v5::Duration* _msg = _internal_mutable_minimum_wait_duration();
   // @@protoc_insertion_point(field_mutable:mozilla.safebrowsing.v5.HashList.minimum_wait_duration)
   return _msg;
 }
-inline void HashList::set_allocated_minimum_wait_duration(::PROTOBUF_NAMESPACE_ID::Duration* minimum_wait_duration) {
+inline void HashList::set_allocated_minimum_wait_duration(::mozilla::safebrowsing::v5::Duration* minimum_wait_duration) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   if (message_arena == nullptr) {
-    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.minimum_wait_duration_);
+    delete _impl_.minimum_wait_duration_;
   }
   if (minimum_wait_duration) {
     ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(
-                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(minimum_wait_duration));
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(minimum_wait_duration);
     if (message_arena != submessage_arena) {
       minimum_wait_duration = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
           message_arena, minimum_wait_duration, submessage_arena);
@@ -5554,6 +5752,8 @@ inline void ListHashListsResponse::set_allocated_next_page_token(std::string* ne
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

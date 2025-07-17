@@ -18,8 +18,6 @@ option optimize_for = LITE_RUNTIME;
 
 package mozilla.safebrowsing.v5;
 
-import "google/protobuf/duration.proto";
-
 // Types of threats.
 enum ThreatType {
   // Unknown threat type. If this is returned by the server, the client shall
@@ -116,6 +114,24 @@ message SearchHashesRequest {
   repeated bytes hash_prefixes = 1;
 }
 
+// A message that copy from the duration.proto. This is used for replacing the
+// reducing the google.protobuf.Duration. So we can decrease the number of
+// needed compiled protobuf files.
+message Duration {
+  // Signed seconds of the span of time. Must be from -315,576,000,000
+  // to +315,576,000,000 inclusive. Note: these bounds are computed from:
+  // 60 sec/min * 60 min/hr * 24 hr/day * 365.25 days/year * 10000 years
+  int64 seconds = 1;
+
+  // Signed fractions of a second at nanosecond resolution of the span
+  // of time. Durations less than one second are represented with a 0
+  // `seconds` field and a positive or negative `nanos` field. For durations
+  // of one second or more, a non-zero value for the `nanos` field must be
+  // of the same sign as the `seconds` field. Must be from -999,999,999
+  // to +999,999,999 inclusive.
+  int32 nanos = 2;
+}
+
 // The response returned after searching threat hashes.
 //
 // If nothing is found, the server will return an OK status (HTTP status code
@@ -146,7 +162,7 @@ message SearchHashesResponse {
   // Important: the client MUST NOT assume that the server will return the same
   // cache duration for all responses. The server MAY choose different cache
   // durations for different responses depending on the situation.
-  google.protobuf.Duration cache_duration = 2;
+  Duration cache_duration = 2;
 }
 
 // The full hash identified with one or more matches.
@@ -428,7 +444,7 @@ message HashList {
   // omitted or zero, clients SHOULD fetch immediately because it indicates that
   // the server has an additional update to be sent to the client, but could not
   // due to the client-specified constraints.
-  google.protobuf.Duration minimum_wait_duration = 6;
+  Duration minimum_wait_duration = 6;
 
   // The sorted list of all hashes, hashed again with SHA256.
   // This is the checksum for the sorted list of all hashes present in the

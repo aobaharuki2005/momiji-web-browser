@@ -33,6 +33,20 @@ struct SearchHashesRequestDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SearchHashesRequestDefaultTypeInternal _SearchHashesRequest_default_instance_;
+PROTOBUF_CONSTEXPR Duration::Duration(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.seconds_)*/int64_t{0}
+  , /*decltype(_impl_.nanos_)*/0
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct DurationDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR DurationDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~DurationDefaultTypeInternal() {}
+  union {
+    Duration _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 DurationDefaultTypeInternal _Duration_default_instance_;
 PROTOBUF_CONSTEXPR SearchHashesResponse::SearchHashesResponse(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.full_hashes_)*/{}
@@ -714,20 +728,227 @@ std::string SearchHashesRequest::GetTypeName() const {
 
 // ===================================================================
 
-class SearchHashesResponse::_Internal {
+class Duration::_Internal {
  public:
-  static const ::PROTOBUF_NAMESPACE_ID::Duration& cache_duration(const SearchHashesResponse* msg);
 };
 
-const ::PROTOBUF_NAMESPACE_ID::Duration&
+Duration::Duration(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.v5.Duration)
+}
+Duration::Duration(const Duration& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  Duration* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.seconds_){}
+    , decltype(_impl_.nanos_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  ::memcpy(&_impl_.seconds_, &from._impl_.seconds_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.nanos_) -
+    reinterpret_cast<char*>(&_impl_.seconds_)) + sizeof(_impl_.nanos_));
+  // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.v5.Duration)
+}
+
+inline void Duration::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.seconds_){int64_t{0}}
+    , decltype(_impl_.nanos_){0}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+Duration::~Duration() {
+  // @@protoc_insertion_point(destructor:mozilla.safebrowsing.v5.Duration)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void Duration::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void Duration::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void Duration::Clear() {
+// @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.v5.Duration)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ::memset(&_impl_.seconds_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.nanos_) -
+      reinterpret_cast<char*>(&_impl_.seconds_)) + sizeof(_impl_.nanos_));
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* Duration::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // int64 seconds = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.seconds_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 nanos = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.nanos_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* Duration::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.v5.Duration)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int64 seconds = 1;
+  if (this->_internal_seconds() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(1, this->_internal_seconds(), target);
+  }
+
+  // int32 nanos = 2;
+  if (this->_internal_nanos() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_nanos(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.v5.Duration)
+  return target;
+}
+
+size_t Duration::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.v5.Duration)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // int64 seconds = 1;
+  if (this->_internal_seconds() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_seconds());
+  }
+
+  // int32 nanos = 2;
+  if (this->_internal_nanos() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_nanos());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void Duration::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const Duration*>(
+      &from));
+}
+
+void Duration::MergeFrom(const Duration& from) {
+  Duration* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.v5.Duration)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_seconds() != 0) {
+    _this->_internal_set_seconds(from._internal_seconds());
+  }
+  if (from._internal_nanos() != 0) {
+    _this->_internal_set_nanos(from._internal_nanos());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void Duration::CopyFrom(const Duration& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:mozilla.safebrowsing.v5.Duration)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Duration::IsInitialized() const {
+  return true;
+}
+
+void Duration::InternalSwap(Duration* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(Duration, _impl_.nanos_)
+      + sizeof(Duration::_impl_.nanos_)
+      - PROTOBUF_FIELD_OFFSET(Duration, _impl_.seconds_)>(
+          reinterpret_cast<char*>(&_impl_.seconds_),
+          reinterpret_cast<char*>(&other->_impl_.seconds_));
+}
+
+std::string Duration::GetTypeName() const {
+  return "mozilla.safebrowsing.v5.Duration";
+}
+
+
+// ===================================================================
+
+class SearchHashesResponse::_Internal {
+ public:
+  static const ::mozilla::safebrowsing::v5::Duration& cache_duration(const SearchHashesResponse* msg);
+};
+
+const ::mozilla::safebrowsing::v5::Duration&
 SearchHashesResponse::_Internal::cache_duration(const SearchHashesResponse* msg) {
   return *msg->_impl_.cache_duration_;
-}
-void SearchHashesResponse::clear_cache_duration() {
-  if (GetArenaForAllocation() == nullptr && _impl_.cache_duration_ != nullptr) {
-    delete _impl_.cache_duration_;
-  }
-  _impl_.cache_duration_ = nullptr;
 }
 SearchHashesResponse::SearchHashesResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
@@ -745,7 +966,7 @@ SearchHashesResponse::SearchHashesResponse(const SearchHashesResponse& from)
 
   _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   if (from._internal_has_cache_duration()) {
-    _this->_impl_.cache_duration_ = new ::PROTOBUF_NAMESPACE_ID::Duration(*from._impl_.cache_duration_);
+    _this->_impl_.cache_duration_ = new ::mozilla::safebrowsing::v5::Duration(*from._impl_.cache_duration_);
   }
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.v5.SearchHashesResponse)
 }
@@ -813,7 +1034,7 @@ const char* SearchHashesResponse::_InternalParse(const char* ptr, ::_pbi::ParseC
         } else
           goto handle_unusual;
         continue;
-      // .google.protobuf.Duration cache_duration = 2;
+      // .mozilla.safebrowsing.v5.Duration cache_duration = 2;
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           ptr = ctx->ParseMessage(_internal_mutable_cache_duration(), ptr);
@@ -858,7 +1079,7 @@ uint8_t* SearchHashesResponse::_InternalSerialize(
         InternalWriteMessage(1, repfield, repfield.GetCachedSize(), target, stream);
   }
 
-  // .google.protobuf.Duration cache_duration = 2;
+  // .mozilla.safebrowsing.v5.Duration cache_duration = 2;
   if (this->_internal_has_cache_duration()) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
       InternalWriteMessage(2, _Internal::cache_duration(this),
@@ -888,7 +1109,7 @@ size_t SearchHashesResponse::ByteSizeLong() const {
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
-  // .google.protobuf.Duration cache_duration = 2;
+  // .mozilla.safebrowsing.v5.Duration cache_duration = 2;
   if (this->_internal_has_cache_duration()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
@@ -918,7 +1139,7 @@ void SearchHashesResponse::MergeFrom(const SearchHashesResponse& from) {
 
   _this->_impl_.full_hashes_.MergeFrom(from._impl_.full_hashes_);
   if (from._internal_has_cache_duration()) {
-    _this->_internal_mutable_cache_duration()->::PROTOBUF_NAMESPACE_ID::Duration::MergeFrom(
+    _this->_internal_mutable_cache_duration()->::mozilla::safebrowsing::v5::Duration::MergeFrom(
         from._internal_cache_duration());
   }
   _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
@@ -3483,7 +3704,7 @@ class HashList::_Internal {
   static const ::mozilla::safebrowsing::v5::RiceDeltaEncoded128Bit& additions_sixteen_bytes(const HashList* msg);
   static const ::mozilla::safebrowsing::v5::RiceDeltaEncoded256Bit& additions_thirty_two_bytes(const HashList* msg);
   static const ::mozilla::safebrowsing::v5::RiceDeltaEncoded32Bit& compressed_removals(const HashList* msg);
-  static const ::PROTOBUF_NAMESPACE_ID::Duration& minimum_wait_duration(const HashList* msg);
+  static const ::mozilla::safebrowsing::v5::Duration& minimum_wait_duration(const HashList* msg);
   static const ::mozilla::safebrowsing::v5::HashListMetadata& metadata(const HashList* msg);
 };
 
@@ -3507,7 +3728,7 @@ const ::mozilla::safebrowsing::v5::RiceDeltaEncoded32Bit&
 HashList::_Internal::compressed_removals(const HashList* msg) {
   return *msg->_impl_.compressed_removals_;
 }
-const ::PROTOBUF_NAMESPACE_ID::Duration&
+const ::mozilla::safebrowsing::v5::Duration&
 HashList::_Internal::minimum_wait_duration(const HashList* msg) {
   return *msg->_impl_.minimum_wait_duration_;
 }
@@ -3575,12 +3796,6 @@ void HashList::set_allocated_additions_thirty_two_bytes(::mozilla::safebrowsing:
   }
   // @@protoc_insertion_point(field_set_allocated:mozilla.safebrowsing.v5.HashList.additions_thirty_two_bytes)
 }
-void HashList::clear_minimum_wait_duration() {
-  if (GetArenaForAllocation() == nullptr && _impl_.minimum_wait_duration_ != nullptr) {
-    delete _impl_.minimum_wait_duration_;
-  }
-  _impl_.minimum_wait_duration_ = nullptr;
-}
 HashList::HashList(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
   : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
@@ -3631,7 +3846,7 @@ HashList::HashList(const HashList& from)
     _this->_impl_.compressed_removals_ = new ::mozilla::safebrowsing::v5::RiceDeltaEncoded32Bit(*from._impl_.compressed_removals_);
   }
   if (from._internal_has_minimum_wait_duration()) {
-    _this->_impl_.minimum_wait_duration_ = new ::PROTOBUF_NAMESPACE_ID::Duration(*from._impl_.minimum_wait_duration_);
+    _this->_impl_.minimum_wait_duration_ = new ::mozilla::safebrowsing::v5::Duration(*from._impl_.minimum_wait_duration_);
   }
   if (from._internal_has_metadata()) {
     _this->_impl_.metadata_ = new ::mozilla::safebrowsing::v5::HashListMetadata(*from._impl_.metadata_);
@@ -3833,7 +4048,7 @@ const char* HashList::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx)
         } else
           goto handle_unusual;
         continue;
-      // .google.protobuf.Duration minimum_wait_duration = 6;
+      // .mozilla.safebrowsing.v5.Duration minimum_wait_duration = 6;
       case 6:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
           ptr = ctx->ParseMessage(_internal_mutable_minimum_wait_duration(), ptr);
@@ -3947,7 +4162,7 @@ uint8_t* HashList::_InternalSerialize(
         _Internal::compressed_removals(this).GetCachedSize(), target, stream);
   }
 
-  // .google.protobuf.Duration minimum_wait_duration = 6;
+  // .mozilla.safebrowsing.v5.Duration minimum_wait_duration = 6;
   if (this->_internal_has_minimum_wait_duration()) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
       InternalWriteMessage(6, _Internal::minimum_wait_duration(this),
@@ -4032,7 +4247,7 @@ size_t HashList::ByteSizeLong() const {
         *_impl_.compressed_removals_);
   }
 
-  // .google.protobuf.Duration minimum_wait_duration = 6;
+  // .mozilla.safebrowsing.v5.Duration minimum_wait_duration = 6;
   if (this->_internal_has_minimum_wait_duration()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
@@ -4119,7 +4334,7 @@ void HashList::MergeFrom(const HashList& from) {
         from._internal_compressed_removals());
   }
   if (from._internal_has_minimum_wait_duration()) {
-    _this->_internal_mutable_minimum_wait_duration()->::PROTOBUF_NAMESPACE_ID::Duration::MergeFrom(
+    _this->_internal_mutable_minimum_wait_duration()->::mozilla::safebrowsing::v5::Duration::MergeFrom(
         from._internal_minimum_wait_duration());
   }
   if (from._internal_has_metadata()) {
@@ -5134,6 +5349,10 @@ PROTOBUF_NAMESPACE_OPEN
 template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::v5::SearchHashesRequest*
 Arena::CreateMaybeMessage< ::mozilla::safebrowsing::v5::SearchHashesRequest >(Arena* arena) {
   return Arena::CreateMessageInternal< ::mozilla::safebrowsing::v5::SearchHashesRequest >(arena);
+}
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::v5::Duration*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::v5::Duration >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::v5::Duration >(arena);
 }
 template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::v5::SearchHashesResponse*
 Arena::CreateMaybeMessage< ::mozilla::safebrowsing::v5::SearchHashesResponse >(Arena* arena) {

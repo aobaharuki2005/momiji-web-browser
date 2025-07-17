@@ -1,14 +1,14 @@
 diff --git a/toolkit/components/url-classifier/chromium/safebrowsing_v5.proto b/toolkit/components/url-classifier/chromium/safebrowsing_v5.proto
-index 0d5947d99a10..34d73802e1df 100644
+index 0d5947d99a10..764b185d18ee 100644
 --- a/toolkit/components/url-classifier/chromium/safebrowsing_v5.proto
 +++ b/toolkit/components/url-classifier/chromium/safebrowsing_v5.proto
-@@ -14,77 +14,11 @@
-
+@@ -14,77 +14,9 @@
+ 
  syntax = "proto3";
-
+ 
 -package google.security.safebrowsing.v5;
 +option optimize_for = LITE_RUNTIME;
-
+ 
 -import "google/api/annotations.proto";
 -import "google/api/client.proto";
 -import "google/api/field_behavior.proto";
@@ -36,8 +36,7 @@ index 0d5947d99a10..34d73802e1df 100644
 -      get: "/v5/hashes:search"
 -    };
 -  }
-+package mozilla.safebrowsing.v5;
- 
+-
 -  // Get the latest contents of a hash list. A hash list may either by a threat
 -  // list or a non-threat list such as the Global Cache.
 -  //
@@ -79,20 +78,38 @@ index 0d5947d99a10..34d73802e1df 100644
 -    };
 -  }
 -}
-+import "google/protobuf/duration.proto";
++package mozilla.safebrowsing.v5;
  
  // Types of threats.
  enum ThreatType {
-@@ -179,7 +113,7 @@ message SearchHashesRequest {
+@@ -179,7 +111,25 @@ message SearchHashesRequest {
    //
    // Currently each hash prefix is required to be exactly 4 bytes long. This MAY
    // be relaxed in the future.
 -  repeated bytes hash_prefixes = 1 [(google.api.field_behavior) = REQUIRED];
 +  repeated bytes hash_prefixes = 1;
++}
++
++// A message that copy from the duration.proto. This is used for replacing the
++// reducing the google.protobuf.Duration. So we can decrease the number of
++// needed compiled protobuf files.
++message Duration {
++  // Signed seconds of the span of time. Must be from -315,576,000,000
++  // to +315,576,000,000 inclusive. Note: these bounds are computed from:
++  // 60 sec/min * 60 min/hr * 24 hr/day * 365.25 days/year * 10000 years
++  int64 seconds = 1;
++
++  // Signed fractions of a second at nanosecond resolution of the span
++  // of time. Durations less than one second are represented with a 0
++  // `seconds` field and a positive or negative `nanos` field. For durations
++  // of one second or more, a non-zero value for the `nanos` field must be
++  // of the same sign as the `seconds` field. Must be from -999,999,999
++  // to +999,999,999 inclusive.
++  int32 nanos = 2;
  }
  
  // The response returned after searching threat hashes.
-@@ -195,8 +129,7 @@ message SearchHashesRequest {
+@@ -195,8 +145,7 @@ message SearchHashesRequest {
  // simplified into a single `cache_duration` field.
  message SearchHashesResponse {
    // Unordered list. The unordered list of full hashes found.
@@ -102,7 +119,16 @@ index 0d5947d99a10..34d73802e1df 100644
  
    // The client-side cache duration. The client MUST add this duration to the
    // current time to determine the expiration time. The expiration time then
-@@ -237,8 +170,7 @@ message FullHash {
+@@ -213,7 +162,7 @@ message SearchHashesResponse {
+   // Important: the client MUST NOT assume that the server will return the same
+   // cache duration for all responses. The server MAY choose different cache
+   // durations for different responses depending on the situation.
+-  google.protobuf.Duration cache_duration = 2;
++  Duration cache_duration = 2;
+ }
+ 
+ // The full hash identified with one or more matches.
+@@ -237,8 +186,7 @@ message FullHash {
  
      // Unordered list. Additional attributes about those full hashes. This may
      // be empty.
@@ -112,7 +138,7 @@ index 0d5947d99a10..34d73802e1df 100644
    }
  
    // The matching full hash. This is the SHA256 hash. The length will be exactly
-@@ -247,8 +179,7 @@ message FullHash {
+@@ -247,8 +195,7 @@ message FullHash {
  
    // Unordered list. A repeated field identifying the details relevant to this
    // full hash.
@@ -122,7 +148,7 @@ index 0d5947d99a10..34d73802e1df 100644
  }
  
  // A request to obtain a hash list, which may be a threat list or a non-threat
-@@ -265,12 +196,7 @@ message FullHash {
+@@ -265,12 +212,7 @@ message FullHash {
  message GetHashListRequest {
    // Required. The name of this particular hash list. It may be a threat list,
    // or it may be the Global Cache.
@@ -136,7 +162,7 @@ index 0d5947d99a10..34d73802e1df 100644
  
    // The version of the hash list that the client already has. If this is the
    // first time the client is fetching the hash list, this field MUST be
-@@ -437,15 +363,13 @@ message HashListMetadata {
+@@ -437,15 +379,13 @@ message HashListMetadata {
    // hashes or hash prefixes in this hash list. May be empty if the entry does
    // not represent a threat, i.e. in the case that it represents a likely safe
    // type.
@@ -154,7 +180,7 @@ index 0d5947d99a10..34d73802e1df 100644
  
    // A human-readable description about this list. Written in English.
    string description = 4;
-@@ -459,11 +383,6 @@ message HashListMetadata {
+@@ -459,11 +399,6 @@ message HashListMetadata {
  
  // A list of hashes identified by its name.
  message HashList {
@@ -166,7 +192,16 @@ index 0d5947d99a10..34d73802e1df 100644
    // The Rice-delta encoded version of additions. The hash prefix lengths of
    // additions are uniform across all additions in the list.
    oneof compressed_additions {
-@@ -529,12 +448,7 @@ message BatchGetHashListsRequest {
+@@ -509,7 +444,7 @@ message HashList {
+   // omitted or zero, clients SHOULD fetch immediately because it indicates that
+   // the server has an additional update to be sent to the client, but could not
+   // due to the client-specified constraints.
+-  google.protobuf.Duration minimum_wait_duration = 6;
++  Duration minimum_wait_duration = 6;
+ 
+   // The sorted list of all hashes, hashed again with SHA256.
+   // This is the checksum for the sorted list of all hashes present in the
+@@ -529,12 +464,7 @@ message BatchGetHashListsRequest {
    // Required. The names of the particular hash lists. The list MAY be a threat
    // list, or it may be the Global Cache. The names MUST NOT contain duplicates;
    // if they did, the client will get an error.
@@ -180,7 +215,7 @@ index 0d5947d99a10..34d73802e1df 100644
  
    // The versions of the hash list that the client already has. If this is the
    // first time the client is fetching the hash lists, the field should be
-@@ -586,4 +500,3 @@ message ListHashListsResponse {
+@@ -586,4 +516,3 @@ message ListHashListsResponse {
    // If this field is omitted, there are no subsequent pages.
    string next_page_token = 2;
  }
