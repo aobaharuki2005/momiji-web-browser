@@ -56,7 +56,6 @@ import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.PocketStory.SponsoredContent
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ITEM_WIDTH
-import org.mozilla.fenix.compose.ListItemTabLarge
 import org.mozilla.fenix.compose.ListItemTabSurface
 import org.mozilla.fenix.compose.SelectableChip
 import org.mozilla.fenix.compose.SelectableChipColors
@@ -95,53 +94,51 @@ fun PocketStory(
     )
     val isValidPublisher = story.publisher.isNotBlank()
     val isValidTimeToRead = story.timeToRead >= 0
-    ListItemTabLarge(
+    ListItemTabSurface(
         imageUrl = imageUrl,
         backgroundColor = backgroundColor,
         onClick = { onStoryClick(story) },
-        title = {
+    ) {
+        Text(
+            text = story.title,
+            modifier = Modifier.semantics {
+                testTagsAsResourceId = true
+                testTag = "pocket.story.title"
+            },
+            color = FirefoxTheme.colors.textPrimary,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 2,
+            style = FirefoxTheme.typography.body2,
+        )
+
+        if (isValidPublisher && isValidTimeToRead) {
+            TabSubtitleWithInterdot(story.publisher, "${story.timeToRead} min")
+        } else if (isValidPublisher) {
             Text(
-                text = story.title,
+                text = story.publisher,
                 modifier = Modifier.semantics {
                     testTagsAsResourceId = true
-                    testTag = "pocket.story.title"
+                    testTag = "pocket.story.publisher"
                 },
-                color = FirefoxTheme.colors.textPrimary,
+                color = FirefoxTheme.colors.textSecondary,
                 overflow = TextOverflow.Ellipsis,
-                maxLines = 2,
-                style = FirefoxTheme.typography.body2,
+                maxLines = 1,
+                style = FirefoxTheme.typography.caption,
             )
-        },
-        subtitle = {
-            if (isValidPublisher && isValidTimeToRead) {
-                TabSubtitleWithInterdot(story.publisher, "${story.timeToRead} min")
-            } else if (isValidPublisher) {
-                Text(
-                    text = story.publisher,
-                    modifier = Modifier.semantics {
-                        testTagsAsResourceId = true
-                        testTag = "pocket.story.publisher"
-                    },
-                    color = FirefoxTheme.colors.textSecondary,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
-                    style = FirefoxTheme.typography.caption,
-                )
-            } else if (isValidTimeToRead) {
-                Text(
-                    text = "${story.timeToRead} min",
-                    modifier = Modifier.semantics {
-                        testTagsAsResourceId = true
-                        testTag = "pocket.story.timeToRead"
-                    },
-                    color = FirefoxTheme.colors.textSecondary,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
-                    style = FirefoxTheme.typography.caption,
-                )
-            }
-        },
-    )
+        } else if (isValidTimeToRead) {
+            Text(
+                text = "${story.timeToRead} min",
+                modifier = Modifier.semantics {
+                    testTagsAsResourceId = true
+                    testTag = "pocket.story.timeToRead"
+                },
+                color = FirefoxTheme.colors.textSecondary,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+                style = FirefoxTheme.typography.caption,
+            )
+        }
+    }
 }
 
 /**
@@ -298,37 +295,35 @@ fun ContentRecommendation(
         with(LocalDensity.current) { "${116.dp.toPx().roundToInt()}x${84.dp.toPx().roundToInt()}" },
     )
 
-    ListItemTabLarge(
+    ListItemTabSurface(
         imageUrl = imageUrl,
         backgroundColor = backgroundColor,
         onClick = { onClick(recommendation) },
-        title = {
-            Text(
-                text = recommendation.title,
-                modifier = Modifier.semantics {
-                    testTagsAsResourceId = true
-                    testTag = "pocket.contentRecommendation.title"
-                },
-                color = FirefoxTheme.colors.textPrimary,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 2,
-                style = FirefoxTheme.typography.body2,
-            )
-        },
-        subtitle = {
-            Text(
-                text = recommendation.publisher,
-                modifier = Modifier.semantics {
-                    testTagsAsResourceId = true
-                    testTag = "pocket.contentRecommendation.publisher"
-                },
-                color = FirefoxTheme.colors.textSecondary,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-                style = FirefoxTheme.typography.caption,
-            )
-        },
-    )
+    ) {
+        Text(
+            text = recommendation.title,
+            modifier = Modifier.semantics {
+                testTagsAsResourceId = true
+                testTag = "pocket.contentRecommendation.title"
+            },
+            color = FirefoxTheme.colors.textPrimary,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 2,
+            style = FirefoxTheme.typography.body2,
+        )
+
+        Text(
+            text = recommendation.publisher,
+            modifier = Modifier.semantics {
+                testTagsAsResourceId = true
+                testTag = "pocket.contentRecommendation.publisher"
+            },
+            color = FirefoxTheme.colors.textSecondary,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+            style = FirefoxTheme.typography.caption,
+        )
+    }
 }
 
 /**
@@ -585,7 +580,8 @@ fun PocketStoriesCategories(
 private fun PocketStoriesComposablesPreview() {
     FirefoxTheme {
         Box(
-            Modifier.background(FirefoxTheme.colors.layer2)
+            Modifier
+                .background(FirefoxTheme.colors.layer2)
                 .systemBarsPadding()
                 .padding(top = 32.dp),
         ) {
@@ -616,9 +612,9 @@ private fun PocketStoryPreview() {
     FirefoxTheme {
         Box(
             Modifier
-            .fillMaxSize()
-            .background(FirefoxTheme.colors.layer2)
-            .padding(8.dp),
+                .fillMaxSize()
+                .background(FirefoxTheme.colors.layer2)
+                .padding(8.dp),
         ) {
             PocketStory(
                 story = FakeHomepagePreview.pocketRecommendedStory(),
