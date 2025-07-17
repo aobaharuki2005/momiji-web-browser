@@ -92,7 +92,7 @@ data class AppState(
     val wallpaperState: WallpaperState = WallpaperState.default,
     val standardSnackbarError: StandardSnackbarError? = null,
     val readerViewState: ReaderViewState = ReaderViewState.None,
-    val snackbarState: SnackbarState = SnackbarState.None,
+    val snackbarState: SnackbarState = SnackbarState.None(),
     val showFindInPage: Boolean = false,
     val crashState: CrashState = CrashState.Idle,
     val wasLastTabClosedPrivate: Boolean? = null,

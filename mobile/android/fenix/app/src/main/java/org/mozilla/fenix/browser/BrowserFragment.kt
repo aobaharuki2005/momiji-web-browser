@@ -37,7 +37,6 @@ import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.store.BrowserScreenAction.ReaderModeStatusUpdated
 import org.mozilla.fenix.components.TabCollectionStorage
-import org.mozilla.fenix.components.appstate.AppAction.SnackbarAction
 import org.mozilla.fenix.components.toolbar.BrowserToolbarComposable
 import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.components.toolbar.FenixBrowserToolbarView
@@ -204,6 +203,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         translationsBinding.set(
             feature = TranslationsBinding(
                 browserStore = context.components.core.store,
+                appStore = context.components.appStore,
                 onTranslationStatusUpdate = {
                     translationsAvailable = it.isTranslationPossible
 
@@ -226,10 +226,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                         )
 
                         safeInvalidateBrowserToolbarView()
-                    }
-
-                    if (!it.isTranslateProcessing) {
-                        requireComponents.appStore.dispatch(SnackbarAction.SnackbarDismissed)
                     }
                 },
                 onShowTranslationsDialog = browserToolbarInteractor::onTranslationsButtonClicked,
@@ -268,10 +264,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 appStore = context.components.appStore,
                 onTranslationStatusUpdate = {
                     translationsAvailable = it.isTranslationPossible
-
-                    if (!it.isTranslateProcessing) {
-                        requireComponents.appStore.dispatch(SnackbarAction.SnackbarDismissed)
-                    }
                 },
                 onShowTranslationsDialog = browserToolbarInteractor::onTranslationsButtonClicked,
                 navController = findNavController(),

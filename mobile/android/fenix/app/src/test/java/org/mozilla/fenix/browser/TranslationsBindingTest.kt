@@ -36,6 +36,9 @@ import org.mozilla.fenix.browser.store.BrowserScreenAction.PageTranslationStatus
 import org.mozilla.fenix.browser.store.BrowserScreenStore
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction.SnackbarAction
+import org.mozilla.fenix.components.appstate.AppState
+import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.None
+import org.mozilla.fenix.components.appstate.snackbar.SnackbarState.TranslationInProgress
 
 @RunWith(AndroidJUnit4::class)
 class TranslationsBindingTest {
@@ -145,6 +148,9 @@ class TranslationsBindingTest {
                 translationEngine = TranslationsBrowserState(isEngineSupported = true),
             ),
         )
+        val appState: AppState = mock()
+        doReturn(None(TranslationInProgress(""))).`when`(appState).snackbarState
+        doReturn(appState).`when`(appStore).state
 
         val binding = TranslationsBinding(
             browserStore = browserStore,
@@ -181,6 +187,9 @@ class TranslationsBindingTest {
                 selectedTabId = tabId,
             ),
         )
+        val appState: AppState = mock()
+        doReturn(None(TranslationInProgress(""))).`when`(appState).snackbarState
+        doReturn(appState).`when`(appStore).state
 
         val binding = TranslationsBinding(
             browserStore = browserStore,
