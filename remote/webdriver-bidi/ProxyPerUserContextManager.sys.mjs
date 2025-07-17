@@ -107,16 +107,13 @@ export class ProxyPerUserContextManager {
 
       if (proxyInfo.proxyType === lazy.ProxyTypes.Manual) {
         const channelURI = channel.originalURI;
-        for (const url of proxyInfo.noProxy ?? []) {
-          if (
-            (url.startsWith(".") && channelURI.host.endsWith(url)) ||
-            (!url.startsWith(".") && channelURI.host === url)
-          ) {
-            proxyFilter.onProxyFilterResult(defaultProxyInfo);
+        if (
+          proxyInfo.noProxy?.length &&
+          proxyInfo.noProxy.includes(channelURI.host)
+        ) {
+          proxyFilter.onProxyFilterResult(defaultProxyInfo);
 
-            // If at least one element from noProxy matches the channel URL no need to check further.
-            return;
-          }
+          return;
         }
 
         if (channelURI.schemeIs("http") && proxyInfo.httpProxy) {
