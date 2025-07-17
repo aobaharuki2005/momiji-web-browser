@@ -28,7 +28,7 @@
 #include "mozilla/dom/MediaKeysBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/gfx/gfxVars.h"
-#include "mozilla/ipc/UtilityAudioDecoderChild.h"
+#include "mozilla/ipc/UtilityMediaServiceChild.h"
 #include "mozilla/ipc/UtilityProcessManager.h"
 #include "mozilla/ipc/UtilityProcessParent.h"
 #include "nsTHashMap.h"
@@ -1406,13 +1406,13 @@ void MFCDMService::GetAllKeySystemsCapabilities(dom::Promise* aPromise) {
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [promise = RefPtr(aPromise)]() {
-            RefPtr<ipc::UtilityAudioDecoderChild> uadc =
-                ipc::UtilityAudioDecoderChild::GetSingleton(kSandboxKind);
-            if (NS_WARN_IF(!uadc)) {
+            RefPtr<ipc::UtilityMediaServiceChild> umsc =
+                ipc::UtilityMediaServiceChild::GetSingleton(kSandboxKind);
+            if (NS_WARN_IF(!umsc)) {
               promise->MaybeReject(NS_ERROR_FAILURE);
               return;
             }
-            uadc->GetKeySystemCapabilities(promise);
+            umsc->GetKeySystemCapabilities(promise);
           },
           [promise = RefPtr(aPromise)](nsresult aError) {
             promise->MaybeReject(NS_ERROR_FAILURE);
@@ -1437,27 +1437,27 @@ RefPtr<GenericNonExclusivePromise> MFCDMService::LaunchMFCDMProcessIfNeeded(
     return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
   }
 
-  RefPtr<ipc::UtilityAudioDecoderChild> uadc =
-      ipc::UtilityAudioDecoderChild::GetSingleton(aSandbox);
-  if (NS_WARN_IF(!uadc)) {
-    NS_WARNING("Failed to get UtilityAudioDecoderChild");
+  RefPtr<ipc::UtilityMediaServiceChild> umsc =
+      ipc::UtilityMediaServiceChild::GetSingleton(aSandbox);
+  if (NS_WARN_IF(!umsc)) {
+    NS_WARNING("Failed to get UtilityMediaServiceChild");
     return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
                                                        __func__);
   }
-  return utilityProc->StartUtility(uadc, aSandbox)
+  return utilityProc->StartUtility(umsc, aSandbox)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [uadc, utilityProc, aSandbox]() {
+          [umsc, utilityProc, aSandbox]() {
             RefPtr<ipc::UtilityProcessParent> parent =
                 utilityProc->GetProcessParent(aSandbox);
             if (!parent) {
-              NS_WARNING("UtilityAudioDecoderParent lost in the middle");
+              NS_WARNING("UtilityMediaServiceParent lost in the middle");
               return GenericNonExclusivePromise::CreateAndReject(
                   NS_ERROR_FAILURE, __func__);
             }
 
-            if (!uadc->CanSend()) {
-              NS_WARNING("UtilityAudioDecoderChild lost in the middle");
+            if (!umsc->CanSend()) {
+              NS_WARNING("UtilityMediaServiceChild lost in the middle");
               return GenericNonExclusivePromise::CreateAndReject(
                   NS_ERROR_FAILURE, __func__);
             }
@@ -1495,13 +1495,13 @@ void MFCDMService::UpdateWidevineL1Path(nsIFile* aFile) {
     return;
   }
 
-  RefPtr<ipc::UtilityAudioDecoderChild> uadc =
-      ipc::UtilityAudioDecoderChild::GetSingleton(sandboxKind);
-  if (NS_WARN_IF(!uadc)) {
-    NS_WARNING("Failed to get UtilityAudioDecoderChild");
+  RefPtr<ipc::UtilityMediaServiceChild> umsc =
+      ipc::UtilityMediaServiceChild::GetSingleton(sandboxKind);
+  if (NS_WARN_IF(!umsc)) {
+    NS_WARNING("Failed to get UtilityMediaServiceChild");
     return;
   }
-  Unused << uadc->SendUpdateWidevineL1Path(widevineL1Path);
+  Unused << umsc->SendUpdateWidevineL1Path(widevineL1Path);
 #ifdef MOZ_WMF_CDM_LPAC_SANDBOX
   SandboxBroker::EnsureLpacPermsissionsOnDir(widevineL1Path);
 #endif

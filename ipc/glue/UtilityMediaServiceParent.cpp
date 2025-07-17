@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "UtilityAudioDecoderParent.h"
+#include "UtilityMediaServiceParent.h"
 
 #include "GeckoProfiler.h"
 #include "nsDebugImpl.h"
@@ -42,7 +42,7 @@
 
 namespace mozilla::ipc {
 
-UtilityAudioDecoderParent::UtilityAudioDecoderParent(
+UtilityMediaServiceParent::UtilityMediaServiceParent(
     nsTArray<gfx::GfxVarUpdate>&& aUpdates)
     : mKind(GetCurrentSandboxingKind()),
       mAudioDecoderParentStart(TimeStamp::Now()) {
@@ -65,7 +65,7 @@ UtilityAudioDecoderParent::UtilityAudioDecoderParent(
   }
 }
 
-UtilityAudioDecoderParent::~UtilityAudioDecoderParent() {
+UtilityMediaServiceParent::~UtilityMediaServiceParent() {
 #ifdef MOZ_WMF_MEDIA_ENGINE
   if (mKind == SandboxingKind::MF_MEDIA_ENGINE_CDM) {
     gfx::gfxConfig::Shutdown();
@@ -81,7 +81,7 @@ UtilityAudioDecoderParent::~UtilityAudioDecoderParent() {
 }
 
 /* static */
-void UtilityAudioDecoderParent::GenericPreloadForSandbox() {
+void UtilityMediaServiceParent::GenericPreloadForSandbox() {
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
   // Preload AV dlls so we can enable Binary Signature Policy
   // to restrict further dll loads.
@@ -91,7 +91,7 @@ void UtilityAudioDecoderParent::GenericPreloadForSandbox() {
 }
 
 /* static */
-void UtilityAudioDecoderParent::WMFPreloadForSandbox() {
+void UtilityMediaServiceParent::WMFPreloadForSandbox() {
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
   // mfplat.dll and mf.dll will be preloaded by
   // wmf::MediaFoundationInitializer::HasInitialized()
@@ -109,8 +109,8 @@ void UtilityAudioDecoderParent::WMFPreloadForSandbox() {
 #endif  // defined(MOZ_SANDBOX) && defined(XP_WIN)
 }
 
-void UtilityAudioDecoderParent::Start(
-    Endpoint<PUtilityAudioDecoderParent>&& aEndpoint) {
+void UtilityMediaServiceParent::Start(
+    Endpoint<PUtilityMediaServiceParent>&& aEndpoint) {
   MOZ_ASSERT(NS_IsMainThread());
 
   DebugOnly<bool> ok = std::move(aEndpoint).Bind(this);
@@ -125,13 +125,13 @@ void UtilityAudioDecoderParent::Start(
   auto supported = media::MCSInfo::GetSupportFromFactory();
   Unused << SendUpdateMediaCodecsSupported(GetRemoteMediaInFromKind(mKind),
                                            supported);
-  PROFILER_MARKER_UNTYPED("UtilityAudioDecoderParent::Start", IPC,
+  PROFILER_MARKER_UNTYPED("UtilityMediaServiceParent::Start", IPC,
                           MarkerOptions(MarkerTiming::IntervalUntilNowFrom(
                               mAudioDecoderParentStart)));
 }
 
 mozilla::ipc::IPCResult
-UtilityAudioDecoderParent::RecvNewContentRemoteMediaManager(
+UtilityMediaServiceParent::RecvNewContentRemoteMediaManager(
     Endpoint<PRemoteMediaManagerParent>&& aEndpoint,
     const ContentParentId& aParentId) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -143,7 +143,7 @@ UtilityAudioDecoderParent::RecvNewContentRemoteMediaManager(
 }
 
 #ifdef MOZ_WMF_MEDIA_ENGINE
-mozilla::ipc::IPCResult UtilityAudioDecoderParent::RecvInitVideoBridge(
+mozilla::ipc::IPCResult UtilityMediaServiceParent::RecvInitVideoBridge(
     Endpoint<PVideoBridgeChild>&& aEndpoint,
     const ContentDeviceData& aContentDeviceData) {
   MOZ_ASSERT(mKind == SandboxingKind::MF_MEDIA_ENGINE_CDM);
@@ -171,11 +171,11 @@ mozilla::ipc::IPCResult UtilityAudioDecoderParent::RecvInitVideoBridge(
   return IPC_OK();
 }
 
-IPCResult UtilityAudioDecoderParent::RecvUpdateVar(
+IPCResult UtilityMediaServiceParent::RecvUpdateVar(
     const GfxVarUpdate& aUpdate) {
   MOZ_ASSERT(mKind == SandboxingKind::MF_MEDIA_ENGINE_CDM);
   auto scopeExit = MakeScopeExit(
-      [self = RefPtr<UtilityAudioDecoderParent>{this},
+      [self = RefPtr<UtilityMediaServiceParent>{this},
        location = GetRemoteMediaInFromKind(mKind),
        couldUseHWDecoder = gfx::gfxVars::CanUseHardwareVideoDecoding()] {
         if (couldUseHWDecoder != gfx::gfxVars::CanUseHardwareVideoDecoding()) {
@@ -192,7 +192,7 @@ IPCResult UtilityAudioDecoderParent::RecvUpdateVar(
 #endif
 
 #ifdef MOZ_WMF_CDM
-IPCResult UtilityAudioDecoderParent::RecvGetKeySystemCapabilities(
+IPCResult UtilityMediaServiceParent::RecvGetKeySystemCapabilities(
     GetKeySystemCapabilitiesResolver&& aResolver) {
   MOZ_ASSERT(mKind == SandboxingKind::MF_MEDIA_ENGINE_CDM);
   MFCDMParent::GetAllKeySystemsCapabilities()->Then(
@@ -206,7 +206,7 @@ IPCResult UtilityAudioDecoderParent::RecvGetKeySystemCapabilities(
   return IPC_OK();
 }
 
-IPCResult UtilityAudioDecoderParent::RecvUpdateWidevineL1Path(
+IPCResult UtilityMediaServiceParent::RecvUpdateWidevineL1Path(
     const nsString& aPath) {
   MFCDMParent::SetWidevineL1Path(NS_ConvertUTF16toUTF8(aPath).get());
   return IPC_OK();

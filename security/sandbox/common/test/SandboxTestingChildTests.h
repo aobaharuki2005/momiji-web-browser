@@ -995,7 +995,7 @@ void RunTestsGenericUtility(SandboxTestingChild* child) {
 #endif             // XP_MACOSX
 }
 
-void RunTestsUtilityAudioDecoder(SandboxTestingChild* child,
+void RunTestsUtilityMediaService(SandboxTestingChild* child,
                                  ipc::SandboxingKind aSandbox) {
   MOZ_ASSERT(child, "No SandboxTestingChild*?");
 

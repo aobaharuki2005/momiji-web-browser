@@ -3,15 +3,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef _include_ipc_glue_UtilityAudioDecoderParent_h_
-#define _include_ipc_glue_UtilityAudioDecoderParent_h_
+#ifndef _include_ipc_glue_UtilityMediaServiceParent_h_
+#define _include_ipc_glue_UtilityMediaServiceParent_h_
 
 #include "mozilla/PRemoteMediaManagerParent.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/UniquePtr.h"
 
 #include "mozilla/ipc/Endpoint.h"
-#include "mozilla/ipc/PUtilityAudioDecoderParent.h"
+#include "mozilla/ipc/PUtilityMediaServiceParent.h"
 
 #include "mozilla/ipc/UtilityProcessSandboxing.h"
 
@@ -21,17 +21,17 @@ namespace mozilla::ipc {
 
 // This is in charge of handling the utility child process side to perform
 // audio decoding
-class UtilityAudioDecoderParent final : public PUtilityAudioDecoderParent {
+class UtilityMediaServiceParent final : public PUtilityMediaServiceParent {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UtilityAudioDecoderParent, override);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UtilityMediaServiceParent, override);
 
-  explicit UtilityAudioDecoderParent(
+  explicit UtilityMediaServiceParent(
       nsTArray<mozilla::gfx::GfxVarUpdate>&& aUpdates);
 
   static void GenericPreloadForSandbox();
   static void WMFPreloadForSandbox();
 
-  void Start(Endpoint<PUtilityAudioDecoderParent>&& aEndpoint);
+  void Start(Endpoint<PUtilityMediaServiceParent>&& aEndpoint);
 
   mozilla::ipc::IPCResult RecvNewContentRemoteMediaManager(
       Endpoint<PRemoteMediaManagerParent>&& aEndpoint,
@@ -53,7 +53,7 @@ class UtilityAudioDecoderParent final : public PUtilityAudioDecoderParent {
 #endif
 
  private:
-  ~UtilityAudioDecoderParent();
+  ~UtilityMediaServiceParent();
 
   const SandboxingKind mKind;
   TimeStamp mAudioDecoderParentStart;
@@ -61,4 +61,4 @@ class UtilityAudioDecoderParent final : public PUtilityAudioDecoderParent {
 
 }  // namespace mozilla::ipc
 
-#endif  // _include_ipc_glue_UtilityAudioDecoderParent_h_
+#endif  // _include_ipc_glue_UtilityMediaServiceParent_h_

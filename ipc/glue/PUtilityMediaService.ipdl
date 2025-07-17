@@ -19,10 +19,10 @@ namespace mozilla {
 
 namespace ipc {
 
-// This protocol allows to run media audio decoding infrastructure on top
-// of the Utility process
+// This protocol allows to run media related services on top of the Utility
+// process.
 [ParentProc=Utility, ChildProc=Parent]
-protocol PUtilityAudioDecoder
+protocol PUtilityMediaService
 {
 parent:
   async NewContentRemoteMediaManager(

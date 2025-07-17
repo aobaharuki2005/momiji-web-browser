@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "UtilityAudioDecoderChild.h"
+#include "UtilityMediaServiceChild.h"
 
 #include "base/basictypes.h"
 #include "mozilla/AppShutdown.h"
@@ -28,7 +28,7 @@
 
 namespace mozilla::ipc {
 
-NS_IMETHODIMP UtilityAudioDecoderChildShutdownObserver::Observe(
+NS_IMETHODIMP UtilityMediaServiceChildShutdownObserver::Observe(
     nsISupports* aSubject, const char* aTopic, const char16_t* aData) {
   MOZ_ASSERT(strcmp(aTopic, "ipc:utility-shutdown") == 0);
 
@@ -37,33 +37,33 @@ NS_IMETHODIMP UtilityAudioDecoderChildShutdownObserver::Observe(
     observerService->RemoveObserver(this, "ipc:utility-shutdown");
   }
 
-  UtilityAudioDecoderChild::Shutdown(mSandbox);
+  UtilityMediaServiceChild::Shutdown(mSandbox);
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(UtilityAudioDecoderChildShutdownObserver, nsIObserver);
+NS_IMPL_ISUPPORTS(UtilityMediaServiceChildShutdownObserver, nsIObserver);
 
-static EnumeratedArray<SandboxingKind, StaticRefPtr<UtilityAudioDecoderChild>,
+static EnumeratedArray<SandboxingKind, StaticRefPtr<UtilityMediaServiceChild>,
                        size_t(SandboxingKind::COUNT)>
     sAudioDecoderChilds;
 
-UtilityAudioDecoderChild::UtilityAudioDecoderChild(SandboxingKind aKind)
+UtilityMediaServiceChild::UtilityMediaServiceChild(SandboxingKind aKind)
     : mSandbox(aKind), mAudioDecoderChildStart(TimeStamp::Now()) {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (observerService) {
-    auto* obs = new UtilityAudioDecoderChildShutdownObserver(aKind);
+    auto* obs = new UtilityMediaServiceChildShutdownObserver(aKind);
     observerService->AddObserver(obs, "ipc:utility-shutdown", false);
   }
 }
 
-nsresult UtilityAudioDecoderChild::BindToUtilityProcess(
+nsresult UtilityMediaServiceChild::BindToUtilityProcess(
     RefPtr<UtilityProcessParent> aUtilityParent) {
-  Endpoint<PUtilityAudioDecoderChild> utilityAudioDecoderChildEnd;
-  Endpoint<PUtilityAudioDecoderParent> utilityAudioDecoderParentEnd;
-  nsresult rv = PUtilityAudioDecoder::CreateEndpoints(
+  Endpoint<PUtilityMediaServiceChild> utilityMediaServiceChildEnd;
+  Endpoint<PUtilityMediaServiceParent> utilityMediaServiceParentEnd;
+  nsresult rv = PUtilityMediaService::CreateEndpoints(
       aUtilityParent->OtherEndpointProcInfo(), EndpointProcInfo::Current(),
-      &utilityAudioDecoderParentEnd, &utilityAudioDecoderChildEnd);
+      &utilityMediaServiceParentEnd, &utilityMediaServiceChildEnd);
 
   if (NS_FAILED(rv)) {
     MOZ_ASSERT(false, "Protocol endpoints failure");
@@ -77,21 +77,21 @@ nsresult UtilityAudioDecoderChild::BindToUtilityProcess(
     updates = gfx::gfxVars::FetchNonDefaultVars();
   }
 #endif
-  if (!aUtilityParent->SendStartUtilityAudioDecoderService(
-          std::move(utilityAudioDecoderParentEnd), std::move(updates))) {
-    MOZ_ASSERT(false, "StartUtilityAudioDecoder service failure");
+  if (!aUtilityParent->SendStartUtilityMediaService(
+          std::move(utilityMediaServiceParentEnd), std::move(updates))) {
+    MOZ_ASSERT(false, "StartUtilityMediaService service failure");
     return NS_ERROR_FAILURE;
   }
 
-  Bind(std::move(utilityAudioDecoderChildEnd));
+  Bind(std::move(utilityMediaServiceChildEnd));
 
-  PROFILER_MARKER_UNTYPED("UtilityAudioDecoderChild::BindToUtilityProcess", IPC,
+  PROFILER_MARKER_UNTYPED("UtilityMediaServiceChild::BindToUtilityProcess", IPC,
                           MarkerOptions(MarkerTiming::IntervalUntilNowFrom(
                               mAudioDecoderChildStart)));
   return NS_OK;
 }
 
-void UtilityAudioDecoderChild::ActorDestroy(ActorDestroyReason aReason) {
+void UtilityMediaServiceChild::ActorDestroy(ActorDestroyReason aReason) {
   MOZ_ASSERT(NS_IsMainThread());
 #ifdef MOZ_WMF_MEDIA_ENGINE
   if (mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM) {
@@ -101,11 +101,11 @@ void UtilityAudioDecoderChild::ActorDestroy(ActorDestroyReason aReason) {
   Shutdown(mSandbox);
 }
 
-void UtilityAudioDecoderChild::Bind(
-    Endpoint<PUtilityAudioDecoderChild>&& aEndpoint) {
+void UtilityMediaServiceChild::Bind(
+    Endpoint<PUtilityMediaServiceChild>&& aEndpoint) {
   MOZ_ASSERT(NS_IsMainThread());
   if (NS_WARN_IF(!aEndpoint.Bind(this))) {
-    MOZ_ASSERT_UNREACHABLE("Failed to bind UtilityAudioDecoderChild!");
+    MOZ_ASSERT_UNREACHABLE("Failed to bind UtilityMediaServiceChild!");
     return;
   }
 #ifdef MOZ_WMF_MEDIA_ENGINE
@@ -116,23 +116,23 @@ void UtilityAudioDecoderChild::Bind(
 }
 
 /* static */
-void UtilityAudioDecoderChild::Shutdown(SandboxingKind aKind) {
+void UtilityMediaServiceChild::Shutdown(SandboxingKind aKind) {
   sAudioDecoderChilds[aKind] = nullptr;
 }
 
 /* static */
-RefPtr<UtilityAudioDecoderChild> UtilityAudioDecoderChild::GetSingleton(
+RefPtr<UtilityMediaServiceChild> UtilityMediaServiceChild::GetSingleton(
     SandboxingKind aKind) {
   MOZ_ASSERT(NS_IsMainThread());
   bool shutdown = AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown);
   if (!sAudioDecoderChilds[aKind] && !shutdown) {
-    sAudioDecoderChilds[aKind] = new UtilityAudioDecoderChild(aKind);
+    sAudioDecoderChilds[aKind] = new UtilityMediaServiceChild(aKind);
   }
   return sAudioDecoderChilds[aKind];
 }
 
 mozilla::ipc::IPCResult
-UtilityAudioDecoderChild::RecvUpdateMediaCodecsSupported(
+UtilityMediaServiceChild::RecvUpdateMediaCodecsSupported(
     const RemoteMediaIn& aLocation,
     const media::MediaCodecsSupported& aSupported) {
   dom::ContentParent::BroadcastMediaCodecsSupportedUpdate(aLocation,
@@ -142,26 +142,26 @@ UtilityAudioDecoderChild::RecvUpdateMediaCodecsSupported(
 
 #ifdef MOZ_WMF_MEDIA_ENGINE
 mozilla::ipc::IPCResult
-UtilityAudioDecoderChild::RecvCompleteCreatedVideoBridge() {
+UtilityMediaServiceChild::RecvCompleteCreatedVideoBridge() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM);
   mHasCreatedVideoBridge = State::Created;
   return IPC_OK();
 }
 
-void UtilityAudioDecoderChild::OnVarChanged(const gfx::GfxVarUpdate& aVar) {
+void UtilityMediaServiceChild::OnVarChanged(const gfx::GfxVarUpdate& aVar) {
   MOZ_ASSERT(mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM);
   SendUpdateVar(aVar);
 }
 
-void UtilityAudioDecoderChild::OnCompositorUnexpectedShutdown() {
+void UtilityMediaServiceChild::OnCompositorUnexpectedShutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM);
   mHasCreatedVideoBridge = State::None;
   CreateVideoBridge();
 }
 
-bool UtilityAudioDecoderChild::CreateVideoBridge() {
+bool UtilityMediaServiceChild::CreateVideoBridge() {
   MOZ_ASSERT(NS_IsMainThread());
   ipc::Endpoint<layers::PVideoBridgeParent> parentPipe;
   ipc::Endpoint<layers::PVideoBridgeChild> childPipe;
@@ -217,7 +217,7 @@ bool UtilityAudioDecoderChild::CreateVideoBridge() {
 #endif
 
 #ifdef MOZ_WMF_CDM
-void UtilityAudioDecoderChild::GetKeySystemCapabilities(
+void UtilityMediaServiceChild::GetKeySystemCapabilities(
     dom::Promise* aPromise) {
   EME_LOG("Ask capabilities for all supported CDMs");
   SendGetKeySystemCapabilities()->Then(
