@@ -11533,9 +11533,9 @@ static void fts5SegIterSetNext(Fts5Index *p, Fts5SegIter *pIter){
 ** leave an error in the Fts5Index object.
 */
 static void fts5SegIterAllocTombstone(Fts5Index *p, Fts5SegIter *pIter){
-  const int nTomb = pIter->pSeg->nPgTombstone;
+  const i64 nTomb = (i64)pIter->pSeg->nPgTombstone;
   if( nTomb>0 ){
-    int nByte = SZ_FTS5TOMBSTONEARRAY(nTomb+1);
+    i64 nByte = SZ_FTS5TOMBSTONEARRAY(nTomb+1);
     Fts5TombstoneArray *pNew;
     pNew = (Fts5TombstoneArray*)sqlite3Fts5MallocZero(&p->rc, nByte);
     if( pNew ){
@@ -22637,7 +22637,7 @@ static void fts5SourceIdFunc(
 ){
   assert( nArg==0 );
   UNUSED_PARAM2(nArg, apUnused);
-  sqlite3_result_text(pCtx, "fts5: 2025-06-28 14:00:48 2af157d77fb1304a74176eaee7fbc7c7e932d946bf25325e9c26c91db19e3079", -1, SQLITE_TRANSIENT);
+  sqlite3_result_text(pCtx, "fts5: 2025-07-17 13:25:10 3ce993b8657d6d9deda380a93cdd6404a8c8ba1b185b2bc423703e41ae5f2543", -1, SQLITE_TRANSIENT);
 }
 
 /*
