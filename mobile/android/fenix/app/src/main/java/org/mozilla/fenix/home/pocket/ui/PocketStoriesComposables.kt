@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -352,7 +354,7 @@ fun PocketStories(
     onStoryClicked: (PocketStory, Triple<Int, Int, Int>) -> Unit,
 ) {
     // Show stories in at most 3 rows but on any number of columns depending on the data received.
-    val maxRowsNo = 3
+    val maxRowsNo = 1
     val storiesToShow = stories.chunked(maxRowsNo)
 
     val listState = rememberLazyListState()
@@ -386,6 +388,7 @@ fun PocketStories(
                                 is PocketRecommendedStory,
                                 is ContentRecommendation,
                                     -> HOMEPAGE_STORY
+
                                 else -> HOMEPAGE_SPONSORED_STORY
                             }
                         },
@@ -398,7 +401,10 @@ fun PocketStories(
                                 ) {
                                     val uri = story.url.toUri()
                                         .buildUpon()
-                                        .appendQueryParameter(URI_PARAM_UTM_KEY, POCKET_STORIES_UTM_VALUE)
+                                        .appendQueryParameter(
+                                            URI_PARAM_UTM_KEY,
+                                            POCKET_STORIES_UTM_VALUE,
+                                        )
                                         .build().toString()
                                     onStoryClicked(
                                         it.copy(url = uri),
@@ -413,9 +419,10 @@ fun PocketStories(
                                     .apply {
                                         // Check if this is in a preview because `.settings()` breaks previews
                                         if (!inComposePreview) {
-                                            val verticalOffset = LocalContext.current.resources.getDimensionPixelSize(
-                                                R.dimen.browser_toolbar_height,
-                                            )
+                                            val verticalOffset =
+                                                LocalContext.current.resources.getDimensionPixelSize(
+                                                    R.dimen.browser_toolbar_height,
+                                                )
 
                                             if (LocalContext.current.settings().shouldUseBottomToolbar) {
                                                 bottom -= verticalOffset
@@ -430,7 +437,11 @@ fun PocketStories(
                                         onVisible = {
                                             onStoryShown(
                                                 story,
-                                                Triple(rowIndex, columnIndex, stories.indexOf(story)),
+                                                Triple(
+                                                    rowIndex,
+                                                    columnIndex,
+                                                    stories.indexOf(story),
+                                                ),
                                             )
                                         },
                                         screenBounds = screenBounds,
@@ -466,9 +477,10 @@ fun PocketStories(
                                     .apply {
                                         // Check if this is in a preview because `settings()` breaks previews
                                         if (!inComposePreview) {
-                                            val verticalOffset = LocalContext.current.resources.getDimensionPixelSize(
-                                                R.dimen.browser_toolbar_height,
-                                            )
+                                            val verticalOffset =
+                                                LocalContext.current.resources.getDimensionPixelSize(
+                                                    R.dimen.browser_toolbar_height,
+                                                )
 
                                             if (LocalContext.current.settings().shouldUseBottomToolbar) {
                                                 bottom -= verticalOffset
@@ -484,7 +496,11 @@ fun PocketStories(
                                         onVisible = {
                                             onStoryShown(
                                                 story,
-                                                Triple(rowIndex, columnIndex, stories.indexOf(story)),
+                                                Triple(
+                                                    rowIndex,
+                                                    columnIndex,
+                                                    stories.indexOf(story),
+                                                ),
                                             )
                                         },
                                         screenBounds = screenBounds,
@@ -550,15 +566,16 @@ fun PocketStoriesCategories(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            categories.filter { it.name != POCKET_STORIES_DEFAULT_CATEGORY_NAME }.forEach { category ->
-                SelectableChip(
-                    text = category.name,
-                    isSelected = selections.map { it.name }.contains(category.name),
-                    selectableChipColors = categoryColors,
-                ) {
-                    onCategoryClick(category)
+            categories.filter { it.name != POCKET_STORIES_DEFAULT_CATEGORY_NAME }
+                .forEach { category ->
+                    SelectableChip(
+                        text = category.name,
+                        isSelected = selections.map { it.name }.contains(category.name),
+                        selectableChipColors = categoryColors,
+                    ) {
+                        onCategoryClick(category)
+                    }
                 }
-            }
         }
     }
 }
@@ -567,7 +584,11 @@ fun PocketStoriesCategories(
 @Preview
 private fun PocketStoriesComposablesPreview() {
     FirefoxTheme {
-        Box(Modifier.background(FirefoxTheme.colors.layer2)) {
+        Box(
+            Modifier.background(FirefoxTheme.colors.layer2)
+                .systemBarsPadding()
+                .padding(top = 32.dp),
+        ) {
             Column {
                 PocketStories(
                     stories = FakeHomepagePreview.pocketStories(limit = 8),
@@ -585,6 +606,78 @@ private fun PocketStoriesComposablesPreview() {
                     onCategoryClick = {},
                 )
             }
+        }
+    }
+}
+
+@Composable
+@Preview
+private fun PocketStoryPreview() {
+    FirefoxTheme {
+        Box(
+            Modifier
+            .fillMaxSize()
+            .background(FirefoxTheme.colors.layer2)
+            .padding(8.dp),
+        ) {
+            PocketStory(
+                story = FakeHomepagePreview.pocketRecommendedStory(),
+                backgroundColor = FirefoxTheme.colors.layer2,
+            ) {}
+        }
+    }
+}
+
+@Composable
+@Preview
+private fun PocketSponsoredStoryPreview() {
+    FirefoxTheme {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(FirefoxTheme.colors.layer2)
+                .padding(8.dp),
+        ) {
+            PocketSponsoredStory(
+                story = FakeHomepagePreview.pocketSponsoredStory(),
+                backgroundColor = FirefoxTheme.colors.layer2,
+            ) {}
+        }
+    }
+}
+
+@Composable
+@Preview
+private fun ContentRecommendationPreview() {
+    FirefoxTheme {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(FirefoxTheme.colors.layer2)
+                .padding(8.dp),
+        ) {
+            ContentRecommendation(
+                recommendation = FakeHomepagePreview.contentRecommendation(),
+                backgroundColor = FirefoxTheme.colors.layer2,
+            ) {}
+        }
+    }
+}
+
+@Composable
+@Preview
+private fun SponsoredContentPreview() {
+    FirefoxTheme {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(FirefoxTheme.colors.layer2)
+                .padding(8.dp),
+        ) {
+            SponsoredContent(
+                sponsoredContent = FakeHomepagePreview.sponsoredContent(),
+                backgroundColor = FirefoxTheme.colors.layer2,
+            ) {}
         }
     }
 }
