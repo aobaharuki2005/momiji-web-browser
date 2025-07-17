@@ -794,7 +794,14 @@ export const GenAI = {
     await this.buildAskChatMenu(menu, {
       browser,
       selectionInfo: null,
-      showItem: (item, shouldShow) => this.showItem(item, shouldShow),
+      showItem: (item, shouldShow) => {
+        const separator = item.nextElementSibling;
+        this.showItem(item, shouldShow);
+
+        if (separator && separator.localName === "menuseparator") {
+          this.showItem(separator, shouldShow);
+        }
+      },
       source: "tab",
       contextTabs,
     });

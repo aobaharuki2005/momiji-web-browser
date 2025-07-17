@@ -145,6 +145,11 @@ add_task(async function test_page_menu_no_chatbot() {
   await BrowserTestUtils.withNewTab("about:blank", async browser => {
     await openContextMenu({ menuId: CONTENT_AREA_CONTEXT_MENU, browser });
 
+    await TestUtils.waitForCondition(() => {
+      const menu = document.getElementById("context-ask-chat");
+      return menu && !menu.hidden && !menu.disabled;
+    }, "Menu should be visible");
+
     Assert.equal(
       document.getElementById("context-ask-chat").hidden,
       false,
@@ -206,10 +211,69 @@ add_task(async function test_page_menu_no_chatbot() {
 });
 
 /**
+ * Check tab menu has a label and separator
+ *
+ */
+add_task(async function test_tab_menu_has_label_and_separator() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.ml.chat.provider", ""],
+      ["browser.ml.chat.menu", true],
+    ],
+  });
+
+  await openContextMenu({
+    menuId: TAB_CONTEXT_MENU,
+    browser: gBrowser.selectedTab.linkedBrowser,
+  });
+
+  let menu;
+  await TestUtils.waitForCondition(() => {
+    menu = document.getElementById("context_askChat");
+    return menu && !menu.hidden && !menu.disabled;
+  }, "Menu should be visible");
+
+  Assert.ok(
+    menu.label === "Ask an AI Chatbot" &&
+      menu.nextSibling.localName === "menuseparator",
+    "Chatbot menu from tab menu has label and menusepartor"
+  );
+
+  await hideContextMenu(TAB_CONTEXT_MENU);
+
+  // Set menu prefs false
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.ml.chat.menu", false]],
+  });
+
+  await openContextMenu({
+    menuId: TAB_CONTEXT_MENU,
+    browser: gBrowser.selectedTab.linkedBrowser,
+  });
+
+  await TestUtils.waitForCondition(
+    () => menu.hidden,
+    "Menu is hidden after changing menu prefs"
+  );
+
+  const separator = menu.nextElementSibling;
+  Assert.ok(
+    menu.hidden && separator.hidden,
+    "<menu> and <menuseparator> are hidden"
+  );
+
+  await hideContextMenu(TAB_CONTEXT_MENU);
+});
+
+/**
  * Check tab menu should not be shown
  *
  */
 add_task(async function test_tab_menu_no_chatbot() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.ml.chat.menu", true]],
+  });
+
   const tab1 = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:blank"
