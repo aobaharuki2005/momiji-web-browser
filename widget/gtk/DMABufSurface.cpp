@@ -1111,16 +1111,14 @@ void DMABufSurfaceRGBA::ReleaseTextures() {
 #endif
   }
 
-  const auto& gle = gl::GLContextEGL::Cast(mGL);
-  const auto& egl = gle->mEgl;
-
-  if (mTexture && mGL->MakeCurrent()) {
+  if (mTexture) {
     mGL->fDeleteTextures(1, &mTexture);
     mTexture = 0;
   }
 
   if (mEGLImage != LOCAL_EGL_NO_IMAGE) {
-    egl->fDestroyImage(mEGLImage);
+    const auto& gle = gl::GLContextEGL::Cast(mGL);
+    gle->mEgl->fDestroyImage(mEGLImage);
     mEGLImage = LOCAL_EGL_NO_IMAGE;
   }
   mGL = nullptr;
