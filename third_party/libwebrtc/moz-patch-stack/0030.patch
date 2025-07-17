@@ -561,7 +561,7 @@ index 0000000000..f6ff7f218f
 +  #endif
 +#endif
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index b7cefbb178..8d1f32ad39 100644
+index 033ebc2221..3e2f8690b6 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -77,7 +77,7 @@ rtc_library("rtc_media_base") {
@@ -621,7 +621,7 @@ index b7cefbb178..8d1f32ad39 100644
  
  rtc_source_set("media_channel") {
    sources = [ "base/media_channel.h" ]
-@@ -408,6 +425,7 @@ rtc_library("codec_list") {
+@@ -409,6 +426,7 @@ rtc_library("codec_list") {
  }
  
  rtc_library("rtp_utils") {
@@ -629,7 +629,7 @@ index b7cefbb178..8d1f32ad39 100644
    sources = [
      "base/rtp_utils.cc",
      "base/rtp_utils.h",
-@@ -424,8 +442,10 @@ rtc_library("rtp_utils") {
+@@ -425,8 +443,10 @@ rtc_library("rtp_utils") {
      "//third_party/abseil-cpp/absl/strings:string_view",
    ]
  }
@@ -640,7 +640,7 @@ index b7cefbb178..8d1f32ad39 100644
    sources = [
      "base/stream_params.cc",
      "base/stream_params.h",
-@@ -439,6 +459,7 @@ rtc_library("stream_params") {
+@@ -440,6 +460,7 @@ rtc_library("stream_params") {
      "//third_party/abseil-cpp/absl/algorithm:container",
    ]
  }
@@ -648,7 +648,7 @@ index b7cefbb178..8d1f32ad39 100644
  
  rtc_library("media_constants") {
    sources = [
-@@ -449,6 +470,7 @@ rtc_library("media_constants") {
+@@ -450,6 +471,7 @@ rtc_library("media_constants") {
  }
  
  rtc_library("turn_utils") {
@@ -656,7 +656,7 @@ index b7cefbb178..8d1f32ad39 100644
    sources = [
      "base/turn_utils.cc",
      "base/turn_utils.h",
-@@ -459,14 +481,17 @@ rtc_library("turn_utils") {
+@@ -460,14 +482,17 @@ rtc_library("turn_utils") {
      "../rtc_base/system:rtc_export",
    ]
  }
@@ -674,7 +674,7 @@ index b7cefbb178..8d1f32ad39 100644
  
  rtc_library("rtc_simulcast_encoder_adapter") {
    visibility = [ "*" ]
-@@ -548,6 +573,11 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -549,6 +574,11 @@ rtc_library("rtc_internal_video_codecs") {
      "//third_party/abseil-cpp/absl/container:inlined_vector",
      "//third_party/abseil-cpp/absl/strings",
    ]
@@ -686,7 +686,7 @@ index b7cefbb178..8d1f32ad39 100644
  
    if (enable_libaom) {
      defines += [ "RTC_USE_LIBAOM_AV1_ENCODER" ]
-@@ -567,6 +597,13 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -568,6 +598,13 @@ rtc_library("rtc_internal_video_codecs") {
      "engine/internal_encoder_factory.cc",
      "engine/internal_encoder_factory.h",
    ]
@@ -701,7 +701,7 @@ index b7cefbb178..8d1f32ad39 100644
  
  rtc_library("rtc_audio_video") {
 diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index eef3c4c851..280ab6fc9f 100644
+index 3de664d26d..a554963212 100644
 --- a/media/base/media_channel.h
 +++ b/media/base/media_channel.h
 @@ -64,10 +64,6 @@

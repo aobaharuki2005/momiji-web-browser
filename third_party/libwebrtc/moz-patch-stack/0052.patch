@@ -31,7 +31,7 @@ index 37f772471f..14b5835f47 100644
    deps = [
      ":audio_sender_interface",
 diff --git a/call/call.cc b/call/call.cc
-index da6a6a4b95..7a0e90fc0e 100644
+index 1e6d4d21bf..8b29516136 100644
 --- a/call/call.cc
 +++ b/call/call.cc
 @@ -514,19 +514,6 @@ class Call final : public webrtc::Call,
