@@ -4908,12 +4908,6 @@
   value: 0
   mirror: always
 
-# This enables the SVGPathSegment APIs
-- name: dom.svg.pathSegment.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # For area and anchor elements with target=_blank and no rel set to
 # opener/noopener.
 - name: dom.targetBlankNoOpener.enabled
