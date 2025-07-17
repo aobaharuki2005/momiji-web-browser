@@ -13,7 +13,7 @@
     When an add-on requires access to more than 4 sites, for example the add-on requires access for 5 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
     then we will show another collapsed entry saying "Access your data on another site".
   -->
-  <string name="mozac_feature_addons_permissions_one_extra_site_description_2">Accede aos teus datos noutro sitio</string>
+  <string name="mozac_feature_addons_permissions_one_extra_site_description_2">Acceder aos teus datos noutro sitio</string>
   <!--
     When an add-on requires access to more than 4 sites, for example the add-on requires access for 6 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
     then we will show another collapsed entry saying "Access your data on 2 other sites". This entry it's for the plural case, when the add-on is accessing more than one extra site.
@@ -24,7 +24,7 @@
     When an add-on requires access to more than 4 sites, for example the add-on requires access for 6 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
     then we will show another collapsed entry saying "Access your data on other sites".
   -->
-  <string name="mozac_feature_addons_permissions_extra_sites_description_2">Accede aos teus datos noutros sitios</string>
+  <string name="mozac_feature_addons_permissions_extra_sites_description_2">Acceder aos teus datos noutros sitios</string>
   <!--
     When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
     then we will show another collapsed entry saying "Access your data on 1 other domain". This entry it's for the singular case, when the add-on is only accessing one extra domain.
@@ -34,7 +34,7 @@
     When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
     then we will show another collapsed entry saying "Access your data on another domain.
   -->
-  <string name="mozac_feature_addons_permissions_one_extra_domain_description_2">Accede aos teus datos noutro dominio</string>
+  <string name="mozac_feature_addons_permissions_one_extra_domain_description_2">Acceder aos teus datos noutro dominio</string>
   <!--
     When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
     then we will show another collapsed entry saying "Access your data on 2 other domains". This entry it's for the plural case, when the add-on is accessing more than one extra domain.
@@ -45,7 +45,7 @@
     When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
     then we will show another collapsed entry saying "Access your data on other domains".
   -->
-  <string name="mozac_feature_addons_permissions_extra_domains_description_plural_2">Accede aos teus datos noutros dominios</string>
+  <string name="mozac_feature_addons_permissions_extra_domains_description_plural_2">Acceder aos teus datos noutros dominios</string>
   <!-- When an add-on requires access to domains, this entry is used to describe the total number of domains. Underneath it will be the list of all the domains. %1$d is the number of all the domains that will be shown to the user as required. -->
   <string name="mozac_feature_addons_permissions_all_domain_count_description" tools:ignore="PluralsCandidate">Accede aos teus datos dos sitios en %1$d dominios</string>
   <!-- Content description for a permission item, for an installed add-on details page. %1$s will be replaced with the permission text name, %2$d will be replaced with the permission position in the list and %3$d will be replaced with the total number of permissions in the list.Taking as an example "Read and modify privacy settings" the whole text will read Read and modify privacy settings, 2 of 6. -->
@@ -105,83 +105,83 @@
   <!-- Description for the "devtools" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_devtools_description">Estender as ferramentas de desenvolvemento para acceder aos seus datos nas lapelas abertas</string>
   <!-- Description for the "privacy" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_privacy_description_for_update">Le e modifica a configuración de privacidade.</string>
+  <string name="mozac_feature_addons_permissions_privacy_description_for_update">Ler e modificar a configuración de privacidade.</string>
   <!-- Description for the "<all_urls>" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_all_urls_description_for_update">Accede aos teus datos para todos os sitios web.</string>
+  <string name="mozac_feature_addons_permissions_all_urls_description_for_update">Acceder aos teus datos para todos os sitios web.</string>
   <!-- Description for the "tabs" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_tabs_description_for_update">Accede ás pestanas do navegador.</string>
+  <string name="mozac_feature_addons_permissions_tabs_description_for_update">Acceder ás pestanas do navegador.</string>
   <!-- Description for the "webNavigation" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_web_navigation_description_for_update">Accede á actividade do navegador durante a navegación.</string>
+  <string name="mozac_feature_addons_permissions_web_navigation_description_for_update">Acceder á actividade do navegador durante a navegación.</string>
   <!-- Description for the "bookmarks" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_bookmarks_description_for_update">Ler e modificar os marcadores.</string>
   <!-- Description for the "browserSettings" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_browser_settings_description_for_update">Le e modifica a configuración do navegador.</string>
+  <string name="mozac_feature_addons_permissions_browser_settings_description_for_update">Ler e modificar a configuración do navegador.</string>
   <!-- Description for the "browsingData" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_browsing_data_description_for_update">Borra o historial de navegación recente, as cookies e os datos relacionados.</string>
+  <string name="mozac_feature_addons_permissions_browsing_data_description_for_update">Borrar o historial de navegación recente, as cookies e os datos relacionados.</string>
   <!-- Description for the "clipboardRead" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_clipboard_read_description_for_update">Obtén datos do portapapeis.</string>
+  <string name="mozac_feature_addons_permissions_clipboard_read_description_for_update">Obter os datos do portapapeis.</string>
   <!-- Description for the "clipboardWrite" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_clipboard_write_description_for_update">Introducir datos no portapapeis.</string>
   <!-- Description for the "declarativeNetRequest" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_declarative_net_request_description_for_update">Bloquear contido en calquera páxina.</string>
+  <string name="mozac_feature_addons_permissions_declarative_net_request_description_for_update">Bloquear o contido en calquera páxina.</string>
   <!-- Description for the "declarativeNetRequestFeedback" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description_for_update">Le o teu historial de navegación.</string>
+  <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description_for_update">Ler o teu historial de navegación.</string>
   <!-- Description for the "downloads" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_downloads_description_for_update">Descarga ficheiros e le e modifica o historial de descargas do navegador.</string>
+  <string name="mozac_feature_addons_permissions_downloads_description_for_update">Descargar ficheiros e ler e modificar o historial de descargas do navegador.</string>
   <!-- Description for the "downloads.open" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_downloads_open_description_for_update">Abre os ficheiros descargados no teu dispositivo.</string>
+  <string name="mozac_feature_addons_permissions_downloads_open_description_for_update">Abrir os ficheiros descargados no teu dispositivo.</string>
   <!-- Description for the "find" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_find_description_for_update">Le o texto de todas as pestanas abertas.</string>
+  <string name="mozac_feature_addons_permissions_find_description_for_update">Ler o texto de todas as pestanas abertas.</string>
   <!-- Description for the "geolocation" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_geolocation_description_for_update">Accede á túa localización.</string>
+  <string name="mozac_feature_addons_permissions_geolocation_description_for_update">Acceder á túa localización.</string>
   <!-- Description for the "history" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_history_description_for_update">Accede ao historial de navegación.</string>
+  <string name="mozac_feature_addons_permissions_history_description_for_update">Acceder ao historial de navegación.</string>
   <!-- Description for the "management" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_management_description_for_update">Supervisa o uso das extensións e xestiona os temas.</string>
+  <string name="mozac_feature_addons_permissions_management_description_for_update">Supervisar o uso das extensións e xestionar os temas.</string>
   <!-- Description for the "nativeMessaging" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_native_messaging_description_for_update">Intercambia mensaxes con aplicacións distintas a esta.</string>
+  <string name="mozac_feature_addons_permissions_native_messaging_description_for_update">Intercambiar mensaxes con aplicacións distintas desta.</string>
   <!-- Description for the "notifications" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_notifications_description_for_update">Mostrache notificacións.</string>
+  <string name="mozac_feature_addons_permissions_notifications_description_for_update">Mostrarche notificacións.</string>
   <!-- Description for the "pkcs11" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_pkcs11_description_for_update">Proporcionar servizos de autenticación criptográfica.</string>
   <!-- Description for the "proxy" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_proxy_description_for_update">Controla a configuración do proxy do navegador.</string>
+  <string name="mozac_feature_addons_permissions_proxy_description_for_update">Controlar a configuración do proxy do navegador.</string>
   <!-- Description for the "sessions" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_sessions_description_for_update">Accede ás pestanas pechadas recentemente.</string>
+  <string name="mozac_feature_addons_permissions_sessions_description_for_update">Acceder ás pestanas pechadas recentemente.</string>
   <!-- Description for the "tabHide" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_tab_hide_description_for_update">Ocultar e mostrar as pestanas do navegador.</string>
   <!-- Description for the "topSites" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_top_sites_description_for_update">Accede ao historial de navegación.</string>
+  <string name="mozac_feature_addons_permissions_top_sites_description_for_update">Acceder ao historial de navegación.</string>
   <!-- Description for the "trialML" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_trial_ml_description_for_update">Descarga e executa modelos de IA no teu dispositivo.</string>
+  <string name="mozac_feature_addons_permissions_trial_ml_description_for_update">Descargar e executar modelos de IA no teu dispositivo.</string>
   <!-- Description for the "userScripts" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_user_scripts_description_for_update">Permite que scripts de terceiros non verificados accedan aos teus datos.</string>
+  <string name="mozac_feature_addons_permissions_user_scripts_description_for_update">Permitir que scripts de terceiros non verificados accedan aos teus datos.</string>
   <!-- Description for the "devtools" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_devtools_description_for_update">Amplia as ferramentas de programador para acceder aos teus datos en pestanas abertas.</string>
+  <string name="mozac_feature_addons_permissions_devtools_description_for_update">Ampliar as ferramentas de programador para acceder aos teus datos en pestanas abertas.</string>
   <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
-  <string name="mozac_feature_addons_permissions_one_site_description_for_update">Accede aos teus datos de %1$s.</string>
+  <string name="mozac_feature_addons_permissions_one_site_description_for_update">Acceder aos teus datos de %1$s.</string>
   <!-- Description for giving an add-on access to users's data in multiple sites in the domain %1$s. %1$s will be replaced by the DNS domain for which a web extension is requesting access (e.g., mozilla.org). -->
-  <string name="mozac_feature_addons_permissions_sites_in_domain_description_for_update">Accede aos teus datos dos sitios do dominio %1$s.</string>
+  <string name="mozac_feature_addons_permissions_sites_in_domain_description_for_update">Acceder aos teus datos dos sitios do dominio %1$s.</string>
   <!--
     When an add-on requires access to more than 2 domains, for example the add-on requires access for 3 domains. We will show the first 2 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description_for_update,
     then we will show another collapsed entry saying "Access your data on another domain.".
   -->
-  <string name="mozac_feature_addons_permissions_one_extra_domain_description_for_update">Accede aos teus datos noutro dominio.</string>
+  <string name="mozac_feature_addons_permissions_one_extra_domain_description_for_update">Acceder aos teus datos noutro dominio.</string>
   <!--
     When an add-on requires access to more than 2 domains, for example the add-on requires access for 4 domains. We will show the first 2 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description_for_update,
     then we will show another collapsed entry saying "Access your data on other domains.".
   -->
-  <string name="mozac_feature_addons_permissions_extra_domains_description_plural_for_update">Accede aos teus datos noutros dominios.</string>
+  <string name="mozac_feature_addons_permissions_extra_domains_description_plural_for_update">Acceder aos teus datos noutros dominios.</string>
   <!--
     When an add-on requires access to more than 2 sites, for example the add-on requires access for 3 sites. We will show the first 2 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description_for_update,
     then we will show another collapsed entry saying "Access your data on another site.".
   -->
-  <string name="mozac_feature_addons_permissions_one_extra_site_description_for_update">Accede aos teus datos noutro sitio.</string>
+  <string name="mozac_feature_addons_permissions_one_extra_site_description_for_update">Acceder aos teus datos noutro sitio.</string>
   <!--
     When an add-on requires access to more than 2 sites, for example the add-on requires access for 4 sites. We will show the first 2 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description_for_update,
     then we will show another collapsed entry saying "Access your data on other sites.".
   -->
-  <string name="mozac_feature_addons_permissions_extra_sites_description_for_update">Accede aos teus datos noutros sitios.</string>
+  <string name="mozac_feature_addons_permissions_extra_sites_description_for_update">Acceder aos teus datos noutros sitios.</string>
   <!-- The text shown when an extension requests the userScripts permission, near the usual description of the userScripts permission -->
   <string name="mozac_feature_addons_permissions_user_scripts_extra_warning">Os scripts non verificados poden supor riscos de seguridade e privacidade. Executa só scripts de extensións ou fontes de confianza.</string>
   <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
@@ -363,7 +363,7 @@
   <!-- The content of the notification displayed when an add-on needs a new permission -->
   <string name="mozac_feature_addons_updater_notification_content_singular" moz:removedIn="142" tools:ignore="UnusedResources">Requírese un permiso novo</string>
   <!-- A short explanation shown in the notification displayed when an add-on has a new update that requires new permissions. -->
-  <string name="mozac_feature_addons_updater_notification_short_intro">Cancela para manter a túa versión e configuración actuais.</string>
+  <string name="mozac_feature_addons_updater_notification_short_intro">Cancelar para manter a túa versión e configuración actuais.</string>
   <!-- The heading for the permissions section in the system notification shown when an add-on has an update that requires user confirmation. %1$s is a list of sentences. -->
   <string name="mozac_feature_addons_updater_notification_heading_permissions">Novos permisos necesarios: %1$s</string>
   <!-- The heading for the data collection permission section in the system notification shown when an add-on has an update that requires user confirmation. %1$s is a list of permissions. -->
@@ -457,7 +457,7 @@
   <!-- Used as text for the link in the description of the post-installation dialog. -->
   <string name="mozac_feature_addons_installed_dialog_description_link_text">configuración da extensión</string>
   <!-- Text shown in the dialog when add-on installation is completed. %1$s is replaced by an active link, using mozac_feature_addons_installed_dialog_description_link_text as text ("extension settings"). -->
-  <string name="mozac_feature_addons_installed_dialog_description_3">Actualiza os permisos e as preferencias de datos en calquera momento en %1$s.</string>
+  <string name="mozac_feature_addons_installed_dialog_description_3">Actualizar os permisos e as preferencias de datos en calquera momento en %1$s.</string>
   <!-- Confirmation button text for the dialog when add-on installation is completed. -->
   <string name="mozac_feature_addons_installed_dialog_okay_button_2">Aceptar</string>
   <!-- "Learn more" link displayed below an add-on status message. -->

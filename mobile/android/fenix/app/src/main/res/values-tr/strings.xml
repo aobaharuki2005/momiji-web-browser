@@ -879,6 +879,8 @@
   <string name="preferences_home_2">Giriş sayfası</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">Uygulama simgesi</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Sekme çubuğu görünümü</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Parmak hareketleri</string>
   <!-- Preference for settings related to visual options -->
@@ -1329,6 +1331,12 @@
   <string name="preference_auto_battery_theme">Pil tasarrufuna göre</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Cihaz temasına uy</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Sekme çubuğunu göster</string>
   <!--
     Gestures Preferences
 
@@ -2270,7 +2278,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Sil</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Adres kopyalandı</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Adres kopyalandı</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Bu örnek bir metindir. Bu ayarı kullanarak boyutu artırıp azalttığınızda sonucun nasıl görüneceğini görebilirsiniz.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

@@ -1663,7 +1663,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Аныхра</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Азхьарԥш ақәҭыхуп</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Азхьарԥш ақәҭыхуп</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Ари текст ҿырԥштәуп. Абраҟа атекст ашәагаа анузырҳалак ма ианурмаҷуа ишааԥшуа аарԥшразы ауп.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

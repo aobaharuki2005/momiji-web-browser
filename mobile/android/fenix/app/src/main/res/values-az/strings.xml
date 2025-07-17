@@ -494,7 +494,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Sil</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL köçürüldü</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL köçürüldü</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">Şrift ölçüsü</string>
   <!-- Subtitle for the tabs item in Delete browsing data, %d is the number of open tabs -->

@@ -2270,7 +2270,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Нест кардан</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Нишонии URL нусха бардошта шуд</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Нишонии URL нусха бардошта шуд</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Ин матни намунавӣ мебошад. Дар ин ҷо матни намунавӣ нишон медиҳад, ки чӣ тавр он ҳангоми калон ва хурд кардани андозаи ҳуруф бо танзими ҷорӣ нишон дода мешавад.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

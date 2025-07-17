@@ -2211,7 +2211,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Өшіру</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL көшірілді</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL көшірілді</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Бұл мәтіндік үлгі. Осы параметрмен өлшемді ұлғайту немесе кішірейту кезінде мәтіннің қалай көрінетінін көруге болады.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

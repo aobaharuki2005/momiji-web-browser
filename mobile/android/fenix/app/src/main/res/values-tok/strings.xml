@@ -1337,7 +1337,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">o weka</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">mi jo e nimi nasin</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">mi jo e nimi nasin</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">nimi li pana ala e kon. ona li lon tawa ni taso: sina ante e suli nimi la nimi li pona ala pona tawa lukin?</string>
   <!--

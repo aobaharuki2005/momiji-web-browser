@@ -1660,7 +1660,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">මකන්න</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">ඒ.ස.නි. පිටපත් විය</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">ඒ.ස.නි. පිටපත් විය</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">මෙය පෙළ නිදසුනකි. මෙම සැකසුම සමඟ ඔබ ප්‍රමාණය වැඩි හෝ අඩු කරන විට පෙළ දිස්වන ආකාරය පෙන්වීමට මෙහි තිබේ.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

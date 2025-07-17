@@ -1533,7 +1533,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">سیل</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">اینترنت آدرسی کوْپی اوْلدو</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">اینترنت آدرسی کوْپی اوْلدو</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">بو نمونه متن‌دیر. بو تنظیم‌له اؤلچونو آرتیردیغینیزدا ویا آزالتیغینیزدا متن‌ین نئجه گؤرونه‌جگینی گؤسترمک اوچون بورادادیر.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

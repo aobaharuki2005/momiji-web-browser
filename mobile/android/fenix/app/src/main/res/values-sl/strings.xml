@@ -2280,7 +2280,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Izbriši</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Spletni naslov kopiran</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Spletni naslov kopiran</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">To je vzorčno besedilo. Pokaže vam, kako bo besedilo prikazano, ko povečate ali zmanjšate velikost s to nastavitvijo.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

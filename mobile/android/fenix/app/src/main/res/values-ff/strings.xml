@@ -803,7 +803,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Momtu</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Ñiiɓirde geese nattaama</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Ñiiɓirde geese nattaama</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Ɗum ko jubbannde binndi. Waɗiraa ko ngam hollirde no binndi ɗii mbayata so a ɓeydii walla a ustii darnde alkule ɗee e ngol teeltol.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

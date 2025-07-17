@@ -758,7 +758,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">سڕینەوە</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">بەستەر لەبەرگیرا</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">بەستەر لەبەرگیرا</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">ئەم دەقێکی نمونەییە. لێرە پیشان دەدرێت بۆ ئەوەی بزانی چۆن دەردەچێت کاتێک قەبارەی نووسدینەکە زیاد و کەم دەکەیت.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

@@ -557,7 +557,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">કાઢી નાખો</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL નકલ કરી</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL નકલ કરી</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_text_size_summary">વેબસાઇટ્સ પર ટેક્સ્ટ મોટા અથવા નાનાં બનાવો</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->

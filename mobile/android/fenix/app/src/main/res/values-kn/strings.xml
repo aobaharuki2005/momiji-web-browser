@@ -602,7 +602,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">ಅಳಿಸು</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL ನಕಲಿಸಲಾಗಿದೆ</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL ನಕಲಿಸಲಾಗಿದೆ</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">ಇದು ಮಾದರಿ ಪಠ್ಯ. ಈ ಸೆಟ್ಟಿಂಗ್‌ನೊಂದಿಗೆ ನೀವು ಗಾತ್ರವನ್ನು ಹೆಚ್ಚಿಸಿದಾಗ ಅಥವಾ ಕಡಿಮೆಗೊಳಿಸಿದಾಗ ಪಠ್ಯ ಹೇಗೆ ಕಾಣಿಸುತ್ತದೆ ಎಂಬುದನ್ನು ತೋರಿಸಲು ಇಲ್ಲಿದೆ.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

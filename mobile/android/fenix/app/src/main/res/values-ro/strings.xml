@@ -858,7 +858,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Șterge</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL copiat</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL copiat</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Acesta este un exemplu de text. Se află aici pentru a arăta cum va apărea textul când mărești sau micșorezi dimensiunea cu această setare.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

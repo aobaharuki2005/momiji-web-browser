@@ -2014,7 +2014,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Burahin</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Kopyahin ang URL</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Kopyahin ang URL</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Halimbawa lang ito. Nandito ang tekstong ito para maipakita ang itsura kapag nilakihan o niliitan ang sukat sa setting na ito.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

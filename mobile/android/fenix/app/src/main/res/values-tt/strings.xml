@@ -1512,7 +1512,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Бетерү</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL копияләнде</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL копияләнде</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_text_size_summary">Вебсайтларда текстны зурайту я кечерәйтү</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->

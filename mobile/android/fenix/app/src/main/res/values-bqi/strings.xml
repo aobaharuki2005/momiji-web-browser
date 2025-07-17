@@ -879,6 +879,8 @@
   <string name="preferences_home_2">بلگه هووه</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">آیکون برنومه</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">نشووݩ داڌن نوار بلگه</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">اشاره یل</string>
   <!-- Preference for settings related to visual options -->
@@ -1311,6 +1313,8 @@
   <string name="preference_simple_toolbar">ساڌه</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">بولند وابیڌه</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">هر سا نوار بلگه نشووݩ داڌه ابۊ، نوار نشۊوی وا ب روء بۊ.</string>
   <!--
     App icon Preferences
 
@@ -1329,6 +1333,12 @@
   <string name="preference_auto_battery_theme">سامووݩ وابیڌه و دست زفت کوݩ قوبه</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">و دین کردن زمینه دسگا</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">نشووݩ داڌن نوار بلگه</string>
   <!--
     Gestures Preferences
 
@@ -2270,7 +2280,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">پاک کردن</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">نشۊوی لف گیری وابی</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">نشۊوی لف گیری وابی</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">یو نمووه هؽل هڌ. ایچونا ٱووڌه تا نشووݩ دیم ک وا گپ کردن یا کۊچیر کردن هندا وا ای سامووݩ، هؽل چتاور دیاری ابۊ.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

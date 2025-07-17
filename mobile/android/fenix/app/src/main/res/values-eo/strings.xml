@@ -2270,7 +2270,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Forigi</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Retadreso kopiita</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Retadreso kopiita</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Tiu ĉi estas ekzempla teksto. Ĝi estas ĉi tie por montri kiel teksto aperos kiam vi etigas aŭ grandigas la tiparon per tiu ĉi agordo.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

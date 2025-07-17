@@ -1132,7 +1132,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Óshiriw</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Silteme kóshirip alındı</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Silteme kóshirip alındı</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Bul úlgi tekst. Siz bul sazlaw járdeminde ólshemdi úlkeytkende yamasa kishireytkende, tekst qanday kórinetuǵının kóriwge boladı.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

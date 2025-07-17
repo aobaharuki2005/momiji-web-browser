@@ -2021,7 +2021,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">ລຶບ</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">ສຳເນົາ URL ແລ້ວ</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">ສຳເນົາ URL ແລ້ວ</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">ນີ້ແມ່ນຂໍ້ຄວາມຕົວຢ່າງ. ມັນຢູ່ທີ່ນີ້ເພື່ອສະແດງໃຫ້ເຫັນວ່າຂໍ້ຄວາມຈະປາກົດແນວໃດເມື່ອທ່ານເພີ່ມຫຼືຫຼຸດລົງຂະຫນາດດ້ວຍການຕັ້ງຄ່ານີ້.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

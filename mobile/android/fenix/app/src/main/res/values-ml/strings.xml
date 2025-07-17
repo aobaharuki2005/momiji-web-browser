@@ -2185,7 +2185,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">നീക്കം ചെയ്യുക</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL പകർത്തി</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL പകർത്തി</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">ഇതൊരു ഉദാഹരണ വാചകമാണ്. നിങ്ങൾ അക്ഷരത്തിന്റെ വലുപ്പം കൂട്ടുകയോ കുറയ്ക്കുകയോ ചെയ്യുമ്പോൾ എങ്ങനെ ദൃശ്യമാകുമെന്ന് കാണിക്കാൻ ഇത് സഹായിക്കുന്നു.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

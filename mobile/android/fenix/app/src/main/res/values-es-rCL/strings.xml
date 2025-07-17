@@ -879,6 +879,8 @@
   <string name="preferences_home_2">Página de inicio</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">Ícono de la aplicación</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Visualización de la barra de pestañas</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Gestos</string>
   <!-- Preference for settings related to visual options -->
@@ -1311,6 +1313,8 @@
   <string name="preference_simple_toolbar">Simple</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Expandido</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">La barra de direcciones debe estar en la parte superior cuando se muestra la barra de pestañas.</string>
   <!--
     App icon Preferences
 
@@ -1329,6 +1333,12 @@
   <string name="preference_auto_battery_theme">Establecido por el ahorrador de batería</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Usar el tema del dispositivo</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Mostrar barra de pestañas</string>
   <!--
     Gestures Preferences
 
@@ -2270,7 +2280,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Eliminar</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL copiada</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL copiada</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Este es un texto de ejemplo. Está aquí para mostrar cómo aparecerá el texto cuando aumentes o disminuyas el tamaño con este ajuste.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

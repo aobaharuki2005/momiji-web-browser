@@ -856,7 +856,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">مٹائیں</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">نقل شدہ URL</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">نقل شدہ URL</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_text_size_summary">ویبسائٹ پر موجود متن کو بڑا یا چھوٹا کریں</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->

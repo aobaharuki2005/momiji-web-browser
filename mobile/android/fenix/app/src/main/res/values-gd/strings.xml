@@ -1909,7 +1909,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Sguab às</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Lethbhreac dhen URL air a dhèanamh</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Lethbhreac dhen URL air a dhèanamh</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Seo ball-eisimpleir de theacsa. Tha e an-seo airson ’s gum faic thu cò ris a bhios an teacsa coltach ’s tu ga lùghdachadh no meudachadh leis an roghainn seo.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

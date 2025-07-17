@@ -2270,7 +2270,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Διαγραφή</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Το URL αντιγράφτηκε</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Το URL αντιγράφτηκε</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Δοκιμαστικό κείμενο. Σας δείχνει πώς φαίνεται το κείμενο για κάθε αυξομείωση μεγέθους που κάνετε με αυτήν τη ρύθμιση.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

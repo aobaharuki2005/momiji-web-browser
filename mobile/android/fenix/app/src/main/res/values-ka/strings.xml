@@ -879,6 +879,8 @@
   <string name="preferences_home_2">საწყისი გვერდი</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">აპის ხატულა</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">ჩანართის ზოლის ჩვენება</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">ჟესტები</string>
   <!-- Preference for settings related to visual options -->
@@ -1311,6 +1313,8 @@
   <string name="preference_simple_toolbar">მარტივი</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">ჩამოშლილი</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">მისამართების ველი უნდა იყოს ზემოთ, როცა ჩანართის ზოლი გამოჩენილია.</string>
   <!--
     App icon Preferences
 
@@ -1329,6 +1333,12 @@
   <string name="preference_auto_battery_theme">ბატარეის დამზოგის მიხედვით</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">მოწყობილობის თემის მიხედვით</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">ჩანართის ზოლის გამოჩენა</string>
   <!--
     Gestures Preferences
 
@@ -2270,7 +2280,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">წაშლა</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL-ს ასლი აღებულია</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL-ს ასლი აღებულია</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">ეს ტექსტი ნიმუშია. იგი აჩვენებს, თუ როგორ გამოჩნდება ნაწერი ამ პარამეტრით ზომის გაზრდისას ან შემცირებისას.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

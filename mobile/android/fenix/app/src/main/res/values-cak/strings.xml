@@ -1378,7 +1378,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Tiyuj</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL xwachib\'ëx</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL xwachib\'ëx</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Re re\' jun tz\'etb\'äl tz\'ib\'anïk. K\'o wawe\' richin nuk\'üt achi\'el xtiwachin ri tz\'ib\'anïk toq xtanimirisaj o xtach\'utinisaj rik\'in re runuk\'ulem re\'.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

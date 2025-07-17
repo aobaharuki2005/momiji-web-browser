@@ -682,7 +682,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">அழி</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">தொடுப்பு நகலெடுக்கப்பட்டது</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">தொடுப்பு நகலெடுக்கப்பட்டது</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">இது மாதிரி உரை. இந்த அமைவைக் கொண்டு உரையின் அளவை அதிகரிக்கும்போதும் அல்லது குறைக்கும்போதும் எவ்வாறு தோன்றும் என்பதைக் காண்பிக்க உள்ளது.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

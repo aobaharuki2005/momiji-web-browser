@@ -600,7 +600,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Scancella</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Indirisso copiou</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Indirisso copiou</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Sto chi o l\'é \'n testo d\'ezenpio. Serve pe fa vedde comme saiâ o testo quande ti t\'aomenti o ti diminoisci o testo con sta inpostaçion.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

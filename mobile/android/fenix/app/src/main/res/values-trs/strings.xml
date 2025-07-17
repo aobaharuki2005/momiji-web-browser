@@ -1193,7 +1193,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Nādūre\'</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Ngà naka URL</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Ngà naka URL</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Ni\'iāj sò\' hua lechrâ nan. Dānaj gūruguì\'ij ni\'iājt sisī nāgi\'iaj yāchìjt asi nāgi\'iaj lít man.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

@@ -2095,7 +2095,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">حذف</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">نشانی رونوشت شد</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">نشانی رونوشت شد</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">این نمونه متن است. در اینجا آمده است تا نشان دهیم که با بزرگنمایی یا کاهش اندازه با این تنظیم ، متن چگونه ظاهر می شود.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

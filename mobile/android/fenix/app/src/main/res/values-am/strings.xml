@@ -2231,7 +2231,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">ሰርዝ</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL ተቀድቷል</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL ተቀድቷል</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">ይህ ናሙና ጽሑፍ ነው። በዚህ ቅንብር መጠን ሲጨምሩ ወይም ሲቀንሱ ጽሁፍ እንዴት እንደሚታይ ለማሳየት እዚህ ነው።</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

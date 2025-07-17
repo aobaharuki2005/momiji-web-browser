@@ -2270,7 +2270,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Squassà</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Indirizzu web cupiatu</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Indirizzu web cupiatu</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Quessu hè un esempiu di testu. Vi permette di vede cumu u testu serà scrittu quandu voi aummenterete o diminuiscerete a so dimensione cù stu parametru.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

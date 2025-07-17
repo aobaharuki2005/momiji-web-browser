@@ -2264,7 +2264,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Scancella</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL cupiatu</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL cupiatu</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Chistu è un testu di scempru. È misu cca pi mustràriti comu si vidi u testu quannu fai a grannizza cchiù granni o cchiù nica cu sta mpustazzioni.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

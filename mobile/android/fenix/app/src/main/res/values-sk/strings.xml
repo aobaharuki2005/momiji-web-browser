@@ -2270,7 +2270,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Odstrániť</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Adresa bola skopírovaná</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Adresa bola skopírovaná</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Toto je náhľad textu. Je tu preto, aby sme vám ukázali, ako sa bude text zobrazovať, keď pomocou tohto nastavenia zväčšíte alebo zmenšíte jeho veľkosť.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

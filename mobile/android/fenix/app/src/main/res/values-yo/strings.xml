@@ -988,7 +988,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Parẹ́</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL ti di dídàkọ</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL ti di dídàkọ</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Èyí jẹ́ àpẹẹrẹ ọ̀rọ̀. Ó wà níbí láti ṣàfihàn bí ọ̀rọ̀ yóò ṣe ma hàn nígbà tí o bá ṣe ìlékún tàbí ìdíkù sí ìwọ̀n rẹ̀ pẹ̀lú ètò yìí.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

@@ -2063,7 +2063,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Dilemel</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL eilet</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL eilet</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Un destenn skouer an hini eo. Amañ emañ evit diskouez deocʼh penaos e vo skrammet an destenn pa greskit pe pa zigreskit ar ment gant an arventenn-mañ.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

@@ -980,7 +980,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">తొలగించు</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL కాపీ అయ్యింది</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL కాపీ అయ్యింది</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">ఇది నమూనా పాఠ్యం. ఈ అమరిక‌తో మీరు పరిమాణాన్ని పెంచినప్పుడు లేదా తగ్గించినప్పుడు పాఠ్యం ఎలా కనిపిస్తుందో చూపించడానికి ఇది ఇక్కడ ఉంది.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

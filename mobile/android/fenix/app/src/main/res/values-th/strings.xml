@@ -2227,7 +2227,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">ลบ</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">คัดลอก URL แล้ว</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">คัดลอก URL แล้ว</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">นี่คือข้อความตัวอย่าง ซึ่งอยู่ที่นี่เพื่อแสดงว่าข้อความจะปรากฏอย่างไรเมื่อคุณเพิ่มหรือลดขนาดด้วยการตั้งค่านี้</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

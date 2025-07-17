@@ -519,7 +519,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Scrios</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Cóipeáladh an URL</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Cóipeáladh an URL</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Is téacs samplach é seo. Feicfidh tú an chuma atá air tar éis duit an chlómhéid a athrú leis an socrú seo.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->

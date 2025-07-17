@@ -2280,7 +2280,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Supprimer</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Adresse web copiée</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Adresse web copiée</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Ceci est un exemple de texte. Il vous montre comment le texte apparaîtra lorsque vous augmentez ou diminuez sa taille avec ce paramètre.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
