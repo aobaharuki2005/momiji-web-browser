@@ -39,10 +39,7 @@ export class ListsFeed {
   async syncLists(isStartup = false) {
     const cachedData = (await this.cache.get()) || {};
     const { lists } = cachedData;
-    // only update lists if this has been set before
-    if (lists) {
-      this.update(lists, isStartup);
-    }
+    this.update(lists, isStartup);
   }
 
   update(data, isStartup = false) {
