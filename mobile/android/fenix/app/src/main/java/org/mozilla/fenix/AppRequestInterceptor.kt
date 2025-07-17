@@ -98,7 +98,10 @@ class AppRequestInterceptor(
             return false
         }
 
-        navController?.get()?.navigate(NavGraphDirections.actionGlobalHome())
+        if (navController?.get()?.currentDestination?.id != R.id.homeFragment) {
+            navController?.get()?.navigate(NavGraphDirections.actionGlobalHome())
+        }
+
         return true
     }
 

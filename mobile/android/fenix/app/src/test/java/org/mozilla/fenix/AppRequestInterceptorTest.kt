@@ -5,6 +5,7 @@
 package org.mozilla.fenix
 
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -66,6 +67,30 @@ class AppRequestInterceptorTest {
         assertNull(result)
 
         verify {
+            navigationController.navigate(NavGraphDirections.actionGlobalHome())
+        }
+    }
+
+    @Test
+    fun `GIVEN homepage is currently shown and a request to ABOUT_HOME WHEN request is intercepted THEN return a null interception response and do not navigate to the homepage`() {
+        val mockDestination: NavDestination = mockk(relaxed = true)
+        every { mockDestination.id } returns R.id.homeFragment
+        every { navigationController.currentDestination } returns mockDestination
+
+        val result = interceptor.onLoadRequest(
+            engineSession = mockk(),
+            uri = ABOUT_HOME,
+            lastUri = ABOUT_HOME,
+            hasUserGesture = true,
+            isSameDomain = true,
+            isDirectNavigation = false,
+            isRedirect = false,
+            isSubframeRequest = false,
+        )
+
+        assertNull(result)
+
+        verify(exactly = 0) {
             navigationController.navigate(NavGraphDirections.actionGlobalHome())
         }
     }
