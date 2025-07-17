@@ -89,7 +89,7 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             kwargs["certutil_binary"] = self.get_binary_path("certutil")
 
         if kwargs["install_fonts"] is None:
-            kwargs["install_fonts"] = False
+            kwargs["install_fonts"] = True
 
         if kwargs["preload_browser"] is None:
             kwargs["preload_browser"] = False
@@ -144,7 +144,7 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             )
 
         if kwargs["install_fonts"] is None:
-            kwargs["install_fonts"] = False
+            kwargs["install_fonts"] = True
 
         if not kwargs["device_serial"]:
             kwargs["device_serial"] = ["emulator-5554"]
