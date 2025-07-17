@@ -202,6 +202,13 @@ static inline void CreateDataDescForPayloadNonPOD(
                       aPayload.StringView().size() + 1);
 }
 
+static inline void CreateDataDescForPayloadNonPOD(
+    PayloadBuffer& aBuffer, EVENT_DATA_DESCRIPTOR& aDescriptor,
+    const mozilla::ProfilerString16View& aPayload) {
+  EventDataDescCreate(&aDescriptor, aPayload.StringView().data(),
+                      (aPayload.StringView().size() + 1) * 2);
+}
+
 template <typename T>
 static inline void CreateDataDescForPayloadNonPOD(
     PayloadBuffer& aBuffer, EVENT_DATA_DESCRIPTOR& aDescriptor,
