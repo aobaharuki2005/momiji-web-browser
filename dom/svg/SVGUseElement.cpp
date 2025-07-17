@@ -580,8 +580,7 @@ void SVGUseElement::LookupHref() {
 
   // Don't allow <use href="data:...">. Using "#ref" inside a data: document is
   // handled above.
-  if (targetURI->SchemeIs("data") &&
-      !StaticPrefs::svg_use_element_data_url_href_allowed()) {
+  if (targetURI->SchemeIs("data")) {
     return;
   }
 
