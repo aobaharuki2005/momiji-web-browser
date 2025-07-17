@@ -448,6 +448,14 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
   for (const auto& entry : aDesc.mEntries) {
     ffi::WGPUBindGroupEntry e = {};
     e.binding = entry.mBinding;
+    auto setTextureViewBinding =
+        [&e, &canvasContexts](const TextureView& texture_view) {
+          e.texture_view = texture_view.mId;
+          auto context = texture_view.GetTargetContext();
+          if (context) {
+            canvasContexts.AppendElement(context);
+          }
+        };
     if (entry.mResource.IsGPUBufferBinding()) {
       const auto& bufBinding = entry.mResource.GetAsGPUBufferBinding();
       if (!bufBinding.mBuffer->mId) {
@@ -459,11 +467,7 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
       e.size = bufBinding.mSize.WasPassed() ? bufBinding.mSize.Value() : 0;
     } else if (entry.mResource.IsGPUTextureView()) {
       auto texture_view = entry.mResource.GetAsGPUTextureView();
-      e.texture_view = texture_view->mId;
-      auto context = texture_view->GetTargetContext();
-      if (context) {
-        canvasContexts.AppendElement(context);
-      }
+      setTextureViewBinding(texture_view);
     } else if (entry.mResource.IsGPUSampler()) {
       e.sampler = entry.mResource.GetAsGPUSampler()->mId;
     } else {
