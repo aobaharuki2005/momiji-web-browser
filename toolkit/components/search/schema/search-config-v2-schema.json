@@ -142,6 +142,12 @@
         }
       }
     },
+    "isNewUntil": {
+      "title": "Is New Until",
+      "type": "string",
+      "description": "Indicates the date until which the engine variant or subvariant is considered new (format: YYYY-MM-DD).",
+      "format": "date"
+    },
     "partnerCode": {
       "title": "Partner Code",
       "description": "The partner code for the engine or variant. This will be inserted into parameters which include '{partnerCode}'",
@@ -329,6 +335,9 @@
                 "environment": {
                   "$ref": "#/definitions/environment"
                 },
+                "isNewUntil": {
+                  "$ref": "#/definitions/isNewUntil"
+                },
                 "partnerCode": {
                   "$ref": "#/definitions/partnerCode"
                 },
@@ -355,6 +364,9 @@
                     "properties": {
                       "environment": {
                         "$ref": "#/definitions/environment"
+                      },
+                      "isNewUntil": {
+                        "$ref": "#/definitions/isNewUntil"
                       },
                       "partnerCode": {
                         "$ref": "#/definitions/partnerCode"

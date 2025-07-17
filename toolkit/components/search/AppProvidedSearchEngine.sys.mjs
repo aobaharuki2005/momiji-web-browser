@@ -645,6 +645,8 @@ export class AppProvidedSearchEngine extends SearchEngine {
     this._definedAliases =
       engineConfig.aliases?.map(alias => `@${alias}`) ?? [];
     this.#partnerCode = engineConfig.partnerCode ?? "";
+    /** @type {string} */
+    this.isNewUntil = engineConfig.isNewUntil ?? "";
 
     for (const [type, urlData] of Object.entries(engineConfig.urls)) {
       if (urlData) {
