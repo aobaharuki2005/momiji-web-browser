@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -98,7 +99,7 @@ fun Story(
             },
             color = FirefoxTheme.colors.textPrimary,
             overflow = TextOverflow.Ellipsis,
-            maxLines = DEFAULT_MAX_LINES,
+            maxLines = maxLines(),
             style = MaterialTheme.typography.bodyMedium,
         )
     }
@@ -141,7 +142,7 @@ fun SponsoredStory(
                 },
                 color = FirefoxTheme.colors.textPrimary,
                 overflow = TextOverflow.Ellipsis,
-                maxLines = SPONSORED_MAX_LINES,
+                maxLines = maxSponsoredLines(),
                 style = FirefoxTheme.typography.body2,
             )
 
@@ -190,7 +191,7 @@ fun SponsoredContentStory(
                 },
                 color = FirefoxTheme.colors.textPrimary,
                 overflow = TextOverflow.Ellipsis,
-                maxLines = SPONSORED_MAX_LINES,
+                maxLines = maxSponsoredLines(),
                 style = FirefoxTheme.typography.body2,
             )
 
@@ -240,7 +241,7 @@ fun ContentRecommendationStory(
             },
             color = FirefoxTheme.colors.textPrimary,
             overflow = TextOverflow.Ellipsis,
-            maxLines = DEFAULT_MAX_LINES,
+            maxLines = maxLines(),
             style = FirefoxTheme.typography.body2,
         )
     }
@@ -490,6 +491,18 @@ private fun StoriesPreview() {
         }
     }
 }
+
+@Composable
+@ReadOnlyComposable
+private fun maxLines() = if (limitMaxLines()) DEFAULT_MAX_LINES else Int.MAX_VALUE
+
+@Composable
+@ReadOnlyComposable
+private fun maxSponsoredLines() = if (limitMaxLines()) SPONSORED_MAX_LINES else Int.MAX_VALUE
+
+@Composable
+@ReadOnlyComposable
+private fun limitMaxLines() = LocalConfiguration.current.fontScale <= 1.0f
 
 private class StoryProvider : PreviewParameterProvider<PocketStory> {
     override val values = FakeHomepagePreview.pocketStories(limit = 7).asSequence()
