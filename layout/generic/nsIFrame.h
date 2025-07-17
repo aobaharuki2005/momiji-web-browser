@@ -4513,6 +4513,35 @@ class nsIFrame : public nsQueryFrame {
     mProperties.Remove(aProperty, this);
   }
 
+  /**
+   * Set the deletable property with a given value if it doesn't already exist;
+   * otherwise, allocate a copy of the passed-in value and insert that as a new
+   * value. Returns the pointer to the property, guaranteed non-null, value that
+   * then can be used to update the property value further.
+   *
+   * Note: Should consider implementing a move variant if it causes perf issues.
+   * Note: As the name suggests, this will behave properly only for properties
+   * declared with NS_DECLARE_FRAME_PROPERTY_DELETABLE!
+   */
+  template <
+      typename T,
+      std::enable_if_t<std::is_pointer<FrameProperties::PropertyType<T>>::value,
+                       bool> = true>
+  FrameProperties::PropertyType<T> SetOrUpdateDeletableProperty(
+      FrameProperties::Descriptor<T> aProperty,
+      const std::remove_pointer_t<FrameProperties::PropertyType<T>>& aValue) {
+    bool found;
+    using DataType = std::remove_pointer_t<FrameProperties::PropertyType<T>>;
+    DataType* storedValue = GetProperty(aProperty, &found);
+    if (!found) {
+      storedValue = new DataType{aValue};
+      AddProperty(aProperty, storedValue);
+    } else {
+      *storedValue = aValue;
+    }
+    return storedValue;
+  }
+
   void RemoveAllProperties() { mProperties.RemoveAll(this); }
 
   // nsIFrames themselves are in the nsPresArena, and so are not measured here.
