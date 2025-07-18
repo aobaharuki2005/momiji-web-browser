@@ -15,6 +15,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.OvershootInterpolator
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
@@ -62,6 +63,7 @@ import mozilla.components.support.ktx.android.view.setNavigationBarColorCompat
 import mozilla.components.support.utils.ext.isLandscape
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -116,6 +118,11 @@ private const val EXPANDED_OFFSET = 56
 private const val HIDING_FRICTION = 0.9f
 private const val PRIVATE_HOME_MENU_BACKGROUND_ALPHA = 100
 
+private object MenuAnimationConfig {
+    const val DURATION = 300L
+    const val START_OFFSET_RATIO = 0.2f
+}
+
 /**
  * A bottom sheet fragment displaying the menu dialog.
  */
@@ -155,6 +162,16 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
 
                 val bottomSheet = findViewById<View?>(R.id.design_bottom_sheet)
                 bottomSheet?.setBackgroundResource(android.R.color.transparent)
+                if (Config.channel.isNightlyOrDebug) {
+                    bottomSheet?.let { sheet ->
+                        sheet.translationY = sheet.height * MenuAnimationConfig.START_OFFSET_RATIO
+                        sheet.animate()
+                            .translationY(0f)
+                            .setInterpolator(OvershootInterpolator())
+                            .setDuration(MenuAnimationConfig.DURATION)
+                            .start()
+                    }
+                }
 
                 bottomSheetBehavior = bottomSheet?.let {
                     BottomSheetBehavior.from(it).apply {
@@ -321,6 +338,12 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
 
                 var isMoreMenuExpanded by remember { mutableStateOf(false) }
 
+                val cornerShape = if (Config.channel.isNightlyOrDebug) {
+                    RoundedCornerShape(28.dp)
+                } else {
+                    RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+                }
+
                 MenuDialogBottomSheet(
                     modifier = Modifier
                         .verticalScroll(rememberScrollState())
@@ -330,7 +353,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                     handlebarContentDescription = handlebarContentDescription,
                     isExtensionsExpanded = isExtensionsExpanded,
                     isMoreMenuExpanded = isMoreMenuExpanded,
-                    cornerShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+                    cornerShape = cornerShape,
                     handleColor = FirefoxTheme.colors.borderInverted.copy(0.4f),
                     handleCornerRadius = CornerRadius(100f, 100f),
                     menuCfrState = if (settings.shouldShowMenuCFR) {
