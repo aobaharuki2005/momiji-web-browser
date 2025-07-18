@@ -37,7 +37,6 @@ support-files = [
   "test_name_constraints/**",
   "test_ocsp_url/**",
   "test_onecrl/**",
-  "test_sanctions/**",
   "test_sdr_preexisting/**",
   "test_sdr_preexisting_with_password/**",
   "test_self_signed_certs/**",
@@ -264,9 +263,6 @@ run-if = [
 ["test_password_prompt.js"]
 
 ["test_pinning.js"]
-run-sequentially = "hardcoded ports"
-
-["test_sanctions_symantec_apple_google.js"]
 run-sequentially = "hardcoded ports"
 
 ["test_sdr.js"]

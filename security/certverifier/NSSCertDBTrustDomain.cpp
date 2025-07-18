@@ -51,10 +51,6 @@
 #include "secder.h"
 #include "secerr.h"
 
-#include "TrustOverrideUtils.h"
-#include "TrustOverride-AppleGoogleDigiCertData.inc"
-#include "TrustOverride-SymantecData.inc"
-
 using namespace mozilla;
 using namespace mozilla::ct;
 using namespace mozilla::pkix;
@@ -94,7 +90,6 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mValidityCheckingMode(validityCheckingMode),
       mNetscapeStepUpPolicy(netscapeStepUpPolicy),
       mCRLiteMode(crliteMode),
-      mSawDistrustedCAByPolicyError(false),
       mOriginAttributes(originAttributes),
       mThirdPartyRootInputs(thirdPartyRootInputs),
       mThirdPartyIntermediateInputs(thirdPartyIntermediateInputs),
@@ -1438,43 +1433,6 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& reversedDERArray,
     }
   }
 
-  // See bug 1434300. If the root is a Symantec root, see if we distrust this
-  // path. Since we already have the root available, we can check that cheaply
-  // here before proceeding with the rest of the algorithm.
-
-  // This algorithm only applies if we are verifying in the context of a TLS
-  // handshake. To determine this, we check mHostname: If it isn't set, this is
-  // not TLS, so don't run the algorithm.
-  if (mHostname && CertDNIsInList(rootBytes, RootSymantecDNs)) {
-    if (numCerts <= 1) {
-      // This chain is supposed to be complete, so this is an error.
-      return Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;
-    }
-    nsTArray<Input> intCerts;
-
-    for (size_t i = 1; i < certArray.Length() - 1; ++i) {
-      const nsTArray<uint8_t>& certBytes = certArray.ElementAt(i);
-      Input certInput;
-      rv = certInput.Init(certBytes.Elements(), certBytes.Length());
-      if (rv != Success) {
-        return Result::FATAL_ERROR_LIBRARY_FAILURE;
-      }
-
-      intCerts.EmplaceBack(certInput);
-    }
-
-    bool isDistrusted = false;
-    nsrv = CheckForSymantecDistrust(intCerts, RootAppleAndGoogleSPKIs,
-                                    isDistrusted);
-    if (NS_FAILED(nsrv)) {
-      return Result::FATAL_ERROR_LIBRARY_FAILURE;
-    }
-    if (isDistrusted) {
-      mSawDistrustedCAByPolicyError = true;
-      return Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;
-    }
-  }
-
   mBuiltChain = std::move(certArray);
 
   return Success;
@@ -1609,7 +1567,6 @@ void NSSCertDBTrustDomain::ResetAccumulatedState() {
   mOCSPStaplingStatus = CertVerifier::OCSP_STAPLING_NEVER_CHECKED;
   mSCTListFromOCSPStapling = nullptr;
   mSCTListFromCertificate = nullptr;
-  mSawDistrustedCAByPolicyError = false;
   mIsBuiltChainRootBuiltInRoot = false;
   mIssuerSources.clear();
   mDistrustAfterTime.reset();
@@ -1638,10 +1595,6 @@ Input NSSCertDBTrustDomain::GetSCTListFromOCSPStapling() const {
 
 bool NSSCertDBTrustDomain::GetIsBuiltChainRootBuiltInRoot() const {
   return mIsBuiltChainRootBuiltInRoot;
-}
-
-bool NSSCertDBTrustDomain::GetIsErrorDueToDistrustedCAPolicy() const {
-  return mSawDistrustedCAByPolicyError;
 }
 
 void NSSCertDBTrustDomain::NoteAuxiliaryExtension(AuxiliaryExtension extension,

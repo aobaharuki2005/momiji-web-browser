@@ -221,8 +221,8 @@ uint32_t MapOverridableErrorToProbeValue(PRErrorCode errorCode) {
       return 16;
     case mozilla::pkix::MOZILLA_PKIX_ERROR_EMPTY_ISSUER_NAME:
       return 17;
-    case mozilla::pkix::MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED:
-      return 18;
+    // mozilla::pkix::MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED was
+    // 18
     case mozilla::pkix::MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT:
       return 19;
     case mozilla::pkix::MOZILLA_PKIX_ERROR_MITM_DETECTED:
@@ -277,7 +277,6 @@ CategorizeCertificateError(PRErrorCode certificateError) {
     case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
     case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
     case SEC_ERROR_UNKNOWN_ISSUER:
-    case mozilla::pkix::MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED:
     case mozilla::pkix::MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY:
     case mozilla::pkix::MOZILLA_PKIX_ERROR_EMPTY_ISSUER_NAME:
     case mozilla::pkix::MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE:

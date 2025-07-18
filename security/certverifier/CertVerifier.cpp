@@ -685,15 +685,6 @@ Result CertVerifier::VerifyCert(
         if (issuerSources) {
           *issuerSources = trustDomain.GetIssuerSources();
         }
-        if (rv != Success && !IsFatalError(rv) &&
-            rv != Result::ERROR_REVOKED_CERTIFICATE &&
-            trustDomain.GetIsErrorDueToDistrustedCAPolicy()) {
-          // Bug 1444440 - If there are multiple paths, at least one to a CA
-          // distrusted-by-policy, and none of them ending in a trusted root,
-          // then we might show a different error (UNKNOWN_ISSUER) than we
-          // intend, confusing users.
-          rv = Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;
-        }
         if (rv == Success) {
           rv = VerifyCertificateTransparencyPolicy(trustDomain, builtChain,
                                                    sctsFromTLSInput, time,
