@@ -13472,14 +13472,6 @@
   value: false
   mirror: always
 
-# This pref will still treat localhost URLs as secure even when hijacked
-# during testing. This is necessary for automated testing to check that we
-# actually treat localhost as a secure origin.
-- name: network.proxy.testing_localhost_is_secure_when_hijacked
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # The timeout used when calling DhcpRequestParams. The call may sometimes hang
 # after resuming from suspend.
 - name: network.proxy.dhcp_wpad_timeout_sec
