@@ -179,23 +179,7 @@ export const INITIAL_STATE = {
     collapsed: false,
   },
   // Widgets
-  ListsWidget: {
-    // value pointing to last selectled list
-    selected: "taskList",
-    // Default state of an empty task list
-    lists: {
-      taskList: {
-        label: "Task List",
-        tasks: [],
-      },
-    },
-    // Keeping this separate from `lists` so that it isnt rendered
-    // in the same way
-    completed: {
-      label: "Completed",
-      tasks: [],
-    },
-  },
+  ListsWidget: {},
   TimerWidget: {
     // Timer duration set by user
     duration: 0,
@@ -1137,10 +1121,8 @@ function TimerWidget(prevState = INITIAL_STATE.TimerWidget, action) {
 
 function ListsWidget(prevState = INITIAL_STATE.ListsWidget, action) {
   switch (action.type) {
-    case at.WIDGETS_LISTS_SET:
-      return { ...prevState, lists: action.data };
-    case at.WIDGETS_LISTS_CHANGE_SELECTED:
-      return { ...prevState, selected: action.data };
+    case at.WIDGETS_LISTS_UPDATE:
+      return action.data;
     default:
       return prevState;
   }

@@ -501,7 +501,6 @@ const TEST_GLOBAL = {
     "newtab",
     "pocketNewtab",
     "newtabSmartShortcuts",
-    "newtabWidgets",
     "cookieBannerHandling",
   ]),
   TelemetryEnvironment: {

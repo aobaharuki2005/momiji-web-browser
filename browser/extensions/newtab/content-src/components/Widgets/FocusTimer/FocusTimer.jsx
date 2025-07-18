@@ -60,7 +60,7 @@ function FocusTimer() {
   };
 
   return (
-    <article id="widget-timer" className="focus-timer-wrapper">
+    <article className="focus-timer-wrapper">
       <p>Focus timer widget</p>
       <form onSubmit={setTimerMinutes}>
         <label htmlFor="countdown"></label>
