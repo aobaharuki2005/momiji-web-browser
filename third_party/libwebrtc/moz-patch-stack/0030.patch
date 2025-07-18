@@ -857,7 +857,7 @@ index a0bda5f494..65aa6a9542 100644
      deps = [
        ":adaptive_fir_filter",
 diff --git a/modules/audio_processing/aec3/adaptive_fir_filter_avx2.cc b/modules/audio_processing/aec3/adaptive_fir_filter_avx2.cc
-index b6eda9f117..8d6e1cf3d7 100644
+index 9f720a5abf..75d94dd704 100644
 --- a/modules/audio_processing/aec3/adaptive_fir_filter_avx2.cc
 +++ b/modules/audio_processing/aec3/adaptive_fir_filter_avx2.cc
 @@ -8,7 +8,7 @@
