@@ -515,7 +515,7 @@ index 1c0a3bcd3f..ddd09481c7 100644
  #include "api/units/data_rate.h"
  #include "api/video/video_content_type.h"
 diff --git a/common_audio/BUILD.gn b/common_audio/BUILD.gn
-index 4845bc71ef..0b5f6cb858 100644
+index bdb6c02079..bd1cc5eae7 100644
 --- a/common_audio/BUILD.gn
 +++ b/common_audio/BUILD.gn
 @@ -267,14 +267,10 @@ if (current_cpu == "x86" || current_cpu == "x64") {
