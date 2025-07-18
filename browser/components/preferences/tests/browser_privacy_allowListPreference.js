@@ -383,3 +383,94 @@ add_task(async function test_prefs_update_when_toggling_checkboxes_in_custom() {
   );
   await cleanUp();
 });
+
+add_task(async function test_reload_button_shows_after_prefs_changed_strict() {
+  await setup();
+  await openPreferencesViaOpenPreferencesAPI("privacy", {
+    leaveOpen: true,
+  });
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  let doc = gBrowser.contentDocument;
+
+  doc.getElementById(ETP_STRICT_ID).click();
+
+  let strictReloadButton = doc.querySelector(
+    "#contentBlockingOptionStrict .content-blocking-warning.reload-tabs .reload-tabs-button"
+  );
+
+  is_element_visible(
+    strictReloadButton,
+    "The strict reload button must be visible"
+  );
+
+  strictReloadButton.click();
+
+  is_element_hidden(
+    strictReloadButton,
+    "The strict reload button must be hidden after clicking it"
+  );
+
+  await clickCheckboxAndWaitForPrefChange(
+    doc,
+    STRICT_BASELINE_CHECKBOX_ID,
+    BASELINE_PREF,
+    false
+  );
+
+  is_element_visible(
+    strictReloadButton,
+    "The strict reload button must be visible after baseline pref changes"
+  );
+
+  strictReloadButton.click();
+
+  is_element_hidden(
+    strictReloadButton,
+    "The strict reload button must be hidden after clicking it"
+  );
+
+  BrowserTestUtils.removeTab(tab);
+  await cleanUp();
+});
+
+add_task(async function test_reload_button_shows_after_prefs_changed_custom() {
+  await setup();
+  await openPreferencesViaOpenPreferencesAPI("privacy", {
+    leaveOpen: true,
+  });
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  let doc = gBrowser.contentDocument;
+
+  doc.getElementById(ETP_CUSTOM_ID).click();
+
+  let customReloadButton = doc.querySelector(
+    "#contentBlockingOptionCustom .content-blocking-warning.reload-tabs .reload-tabs-button"
+  );
+
+  is_element_hidden(
+    customReloadButton,
+    "The custom reload button must be hidden when switching from strict"
+  );
+
+  await clickCheckboxAndWaitForPrefChange(
+    doc,
+    CUSTOM_BASELINE_CHECKBOX_ID,
+    BASELINE_PREF,
+    false
+  );
+
+  is_element_visible(
+    customReloadButton,
+    "The custom reload button must be visible after baseline checkbox changes"
+  );
+
+  customReloadButton.click();
+
+  is_element_hidden(
+    customReloadButton,
+    "The custom reload button must be hidden after clicking it"
+  );
+
+  BrowserTestUtils.removeTab(tab);
+  await cleanUp();
+});

@@ -23,6 +23,8 @@ const CONTENT_BLOCKING_PREFS = [
   "privacy.trackingprotection.emailtracking.pbmode.enabled",
   "privacy.fingerprintingProtection",
   "privacy.fingerprintingProtection.pbmode",
+  "privacy.trackingprotection.allow_list.baseline.enabled",
+  "privacy.trackingprotection.allow_list.convenience.enabled",
 ];
 
 const PREF_OPT_OUT_STUDIES_ENABLED = "app.shield.optoutstudies.enabled";
