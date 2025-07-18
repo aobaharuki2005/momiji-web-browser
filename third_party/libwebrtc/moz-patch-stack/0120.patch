@@ -286,10 +286,10 @@ index 702a8d839d..6fd0767fb8 100644
  
  rtc_library("audio") {
 diff --git a/build_overrides/build.gni b/build_overrides/build.gni
-index 57e8900e3e..e2d0a8ce72 100644
+index 04f5c86306..e3171daf53 100644
 --- a/build_overrides/build.gni
 +++ b/build_overrides/build.gni
-@@ -41,7 +41,7 @@ enable_perfetto_trace_processor = true
+@@ -39,7 +39,7 @@ enable_perfetto_trace_processor = true
  # except for local iOS builds where it's unsupported.
  # Allow for mac cross compile on linux machines.
  if (host_os == "mac" || host_os == "linux") {
