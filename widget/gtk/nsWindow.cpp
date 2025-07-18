@@ -2303,16 +2303,14 @@ void nsWindow::NativeMoveResizeWaylandPopup(bool aMove, bool aResize) {
   mResizedAfterMoveToRect = false;
 
   bool trackedInHierarchy = WaylandPopupConfigure();
-
   // Read popup position from layout if it was moved or newly created.
   // This position is used by move-to-rect method as we need anchor and other
   // info to place popup correctly.
   // We need WaylandPopupConfigure() to be called before to have all needed
   // popup info in place (mainly the anchored flag).
-  if (aMove) {
+  if (aMove || !mPopupMoveToRectParams.mAnchorSet) {
     mPopupMoveToRectParams = WaylandPopupGetPositionFromLayout();
   }
-
   if (!trackedInHierarchy) {
     WaylandPopupSetDirectPosition();
     return;
