@@ -91,7 +91,7 @@ index 6d322652cc..e4d11e4677 100644
  
  }  // namespace voe
 diff --git a/audio/channel_receive.h b/audio/channel_receive.h
-index 2d1850789c..60994cb986 100644
+index 8a5481b588..887bbe3050 100644
 --- a/audio/channel_receive.h
 +++ b/audio/channel_receive.h
 @@ -38,6 +38,7 @@
@@ -100,9 +100,9 @@ index 2d1850789c..60994cb986 100644
  #include "modules/audio_coding/include/audio_coding_module_typedefs.h"
 +#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
  
- // TODO(solenberg, nisse): This file contains a few NOLINT marks, to silence
- // warnings about use of unsigned short.
-@@ -185,7 +186,8 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
+ namespace webrtc {
+ 
+@@ -181,7 +182,8 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
      std::optional<AudioCodecPairId> codec_pair_id,
      rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
      const webrtc::CryptoOptions& crypto_options,

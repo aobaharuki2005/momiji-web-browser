@@ -40,10 +40,6 @@
 #include "modules/audio_coding/include/audio_coding_module_typedefs.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
-// TODO(solenberg, nisse): This file contains a few NOLINT marks, to silence
-// warnings about use of unsigned short.
-// These need cleanup, in a separate cl.
-
 namespace webrtc {
 
 class AudioDeviceModule;
