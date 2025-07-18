@@ -35,7 +35,7 @@ index a869c8ad41..b6a33882d1 100644
                    uint32_t ssrc,
                    uint32_t protected_media_ssrc,
 diff --git a/modules/rtp_rtcp/source/flexfec_receiver.cc b/modules/rtp_rtcp/source/flexfec_receiver.cc
-index 3643f0160e..6ffcd7c9c1 100644
+index c6465fbccf..5d1fd88fd1 100644
 --- a/modules/rtp_rtcp/source/flexfec_receiver.cc
 +++ b/modules/rtp_rtcp/source/flexfec_receiver.cc
 @@ -39,6 +39,7 @@ constexpr TimeDelta kPacketLogInterval = TimeDelta::Seconds(10);

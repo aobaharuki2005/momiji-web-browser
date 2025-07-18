@@ -168,10 +168,10 @@ index 4512935792..0aff8636f8 100644
  
      // Transport for outgoing packets (RTCP).
 diff --git a/modules/rtp_rtcp/include/rtp_rtcp_defines.h b/modules/rtp_rtcp/include/rtp_rtcp_defines.h
-index 49a6d22bee..bb6faeaf74 100644
+index aae48bc268..c66505656d 100644
 --- a/modules/rtp_rtcp/include/rtp_rtcp_defines.h
 +++ b/modules/rtp_rtcp/include/rtp_rtcp_defines.h
-@@ -181,6 +181,14 @@ class NetworkLinkRtcpObserver {
+@@ -180,6 +180,14 @@ class NetworkLinkRtcpObserver {
    virtual void OnRttUpdate(Timestamp /* receive_time */, TimeDelta /* rtt */) {}
  };
  
@@ -187,7 +187,7 @@ index 49a6d22bee..bb6faeaf74 100644
  static constexpr size_t kNumMediaTypes = 5;
  enum class RtpPacketMediaType : size_t {
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index 9e00112075..b89803184c 100644
+index c5b3606c44..9e4aadde46 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.cc
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
 @@ -166,6 +166,7 @@ RTCPReceiver::RTCPReceiver(const Environment& env,
@@ -241,7 +241,7 @@ index 9e00112075..b89803184c 100644
  
  }  // namespace webrtc
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.h b/modules/rtp_rtcp/source/rtcp_receiver.h
-index 029fc3a5e2..33aa986e8b 100644
+index 8fc8ea4bf6..9b9ddb4987 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.h
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.h
 @@ -371,6 +371,7 @@ class RTCPReceiver final {
@@ -253,7 +253,7 @@ index 029fc3a5e2..33aa986e8b 100644
    RtcpLossNotificationObserver* const rtcp_loss_notification_observer_;
    NetworkStateEstimateObserver* const network_state_estimate_observer_;
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index 47f5bbaa53..e58f15fdbb 100644
+index 40836198de..d2304e87db 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 @@ -71,6 +71,9 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {

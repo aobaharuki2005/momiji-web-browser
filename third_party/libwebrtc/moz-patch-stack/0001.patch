@@ -744,7 +744,7 @@ index 30120db3f4..082807f4f5 100644
        device_names->push_back(webrtc::ToUtf8(device.DeviceName));
      }
 diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
-index d7ba03d335..5fa32af69b 100644
+index c08fd08a73..355d1f16d5 100644
 --- a/modules/rtp_rtcp/source/rtcp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtcp_sender.cc
 @@ -210,7 +210,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
@@ -757,10 +757,10 @@ index d7ba03d335..5fa32af69b 100644
    method_ = new_method;
  }
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.cc b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-index 9af58b0467..473d14071c 100644
+index 3f9a852e18..8bc0ab998c 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.cc
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-@@ -424,6 +424,45 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
+@@ -420,6 +420,45 @@ bool PlayoutDelayLimits::Write(ArrayView<uint8_t> data,
    return true;
  }
  
@@ -807,10 +807,10 @@ index 9af58b0467..473d14071c 100644
  //
  // E.g. default video or screenshare.
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.h b/modules/rtp_rtcp/source/rtp_header_extensions.h
-index 5cecd0706f..961fac4e30 100644
+index 8fb26e5522..3416ce8cf3 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.h
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.h
-@@ -314,6 +314,22 @@ class ColorSpaceExtension {
+@@ -309,6 +309,22 @@ class ColorSpaceExtension {
    static size_t WriteLuminance(uint8_t* data, float f, int denominator);
  };
  
@@ -834,7 +834,7 @@ index 5cecd0706f..961fac4e30 100644
  // Subclasses must defined kId and kUri static constexpr members.
  class BaseRtpStringExtension {
 diff --git a/modules/rtp_rtcp/source/rtp_packet.cc b/modules/rtp_rtcp/source/rtp_packet.cc
-index bf8d5e46ae..2277fb95d7 100644
+index fe9d3a7d95..8879feb5ec 100644
 --- a/modules/rtp_rtcp/source/rtp_packet.cc
 +++ b/modules/rtp_rtcp/source/rtp_packet.cc
 @@ -212,6 +212,10 @@ void RtpPacket::ZeroMutableExtensions() {
@@ -849,7 +849,7 @@ index bf8d5e46ae..2277fb95d7 100644
    }
  }
 diff --git a/modules/rtp_rtcp/source/rtp_packet_unittest.cc b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
-index df3428d441..a3976ce1c3 100644
+index 80fe006c01..b4c274e4f7 100644
 --- a/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 +++ b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 @@ -140,6 +140,18 @@ constexpr uint8_t kPacketWithMid[] = {
@@ -917,7 +917,7 @@ index 0b87d6d065..d69ae9420b 100644
  }  // namespace webrtc
  
 diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index 61dd81530b..1988c61d19 100644
+index 888e601e7f..d59b67c090 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender.cc
 @@ -140,6 +140,10 @@ bool IsNonVolatile(RTPExtensionType type) {

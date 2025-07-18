@@ -506,8 +506,7 @@ TEST(RtpPacketTest, UsesZerosForPadding) {
   RtpPacket packet;
 
   EXPECT_TRUE(packet.SetPadding(kPaddingSize));
-  EXPECT_THAT(rtc::MakeArrayView(packet.data() + 12, kPaddingSize - 1),
-              Each(0));
+  EXPECT_THAT(MakeArrayView(packet.data() + 12, kPaddingSize - 1), Each(0));
 }
 
 TEST(RtpPacketTest, CreateOneBytePadding) {
@@ -541,7 +540,7 @@ TEST(RtpPacketTest, ParseMinimum) {
 }
 
 TEST(RtpPacketTest, ParseBuffer) {
-  rtc::CopyOnWriteBuffer unparsed(kMinimumPacket);
+  CopyOnWriteBuffer unparsed(kMinimumPacket);
   const uint8_t* raw = unparsed.data();
 
   RtpPacketReceived packet;
@@ -580,7 +579,7 @@ TEST(RtpPacketTest, ParseHeaderOnly) {
   // clang-format on
 
   RtpPacket packet;
-  EXPECT_TRUE(packet.Parse(rtc::CopyOnWriteBuffer(kPaddingHeader)));
+  EXPECT_TRUE(packet.Parse(CopyOnWriteBuffer(kPaddingHeader)));
   EXPECT_EQ(packet.PayloadType(), 0x62u);
   EXPECT_EQ(packet.SequenceNumber(), 0x3579u);
   EXPECT_EQ(packet.Timestamp(), 0x65431278u);
@@ -600,7 +599,7 @@ TEST(RtpPacketTest, ParseHeaderOnlyWithPadding) {
   // clang-format on
 
   RtpPacket packet;
-  EXPECT_TRUE(packet.Parse(rtc::CopyOnWriteBuffer(kPaddingHeader)));
+  EXPECT_TRUE(packet.Parse(CopyOnWriteBuffer(kPaddingHeader)));
 
   EXPECT_TRUE(packet.has_padding());
   EXPECT_EQ(packet.padding_size(), 0u);
@@ -620,7 +619,7 @@ TEST(RtpPacketTest, ParseHeaderOnlyWithExtensionAndPadding) {
   RtpHeaderExtensionMap extensions;
   extensions.Register<TransmissionOffset>(1);
   RtpPacket packet(&extensions);
-  EXPECT_TRUE(packet.Parse(rtc::CopyOnWriteBuffer(kPaddingHeader)));
+  EXPECT_TRUE(packet.Parse(CopyOnWriteBuffer(kPaddingHeader)));
   EXPECT_TRUE(packet.has_padding());
   EXPECT_TRUE(packet.HasExtension<TransmissionOffset>());
   EXPECT_EQ(packet.padding_size(), 0u);
@@ -636,7 +635,7 @@ TEST(RtpPacketTest, ParsePaddingOnlyPacket) {
   // clang-format on
 
   RtpPacket packet;
-  EXPECT_TRUE(packet.Parse(rtc::CopyOnWriteBuffer(kPaddingHeader)));
+  EXPECT_TRUE(packet.Parse(CopyOnWriteBuffer(kPaddingHeader)));
   EXPECT_TRUE(packet.has_padding());
   EXPECT_EQ(packet.padding_size(), 3u);
 }
@@ -922,11 +921,11 @@ struct UncopyableExtension {
   static constexpr absl::string_view Uri() { return "uri"; }
 
   static size_t ValueSize(const UncopyableValue& /* value */) { return 1; }
-  static bool Write(rtc::ArrayView<uint8_t> /* data */,
+  static bool Write(ArrayView<uint8_t> /* data */,
                     const UncopyableValue& /* value */) {
     return true;
   }
-  static bool Parse(rtc::ArrayView<const uint8_t> /* data */,
+  static bool Parse(ArrayView<const uint8_t> /* data */,
                     UncopyableValue* /* value */) {
     return true;
   }
@@ -959,14 +958,12 @@ struct ParseByReferenceExtension {
   static size_t ValueSize(uint8_t /* value1 */, uint8_t /* value2 */) {
     return 2;
   }
-  static bool Write(rtc::ArrayView<uint8_t> data,
-                    uint8_t value1,
-                    uint8_t value2) {
+  static bool Write(ArrayView<uint8_t> data, uint8_t value1, uint8_t value2) {
     data[0] = value1;
     data[1] = value2;
     return true;
   }
-  static bool Parse(rtc::ArrayView<const uint8_t> data,
+  static bool Parse(ArrayView<const uint8_t> data,
                     uint8_t& value1,
                     uint8_t& value2) {
     value1 = data[0];
