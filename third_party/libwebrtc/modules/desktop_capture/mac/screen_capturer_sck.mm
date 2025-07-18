@@ -650,8 +650,8 @@ void ScreenCapturerSck::OnNewIOSurface(IOSurfaceRef io_surface,
                                       scale_factor * bounding_rect.size.width,
                                       scale_factor * bounding_rect.size.height);
 
-  rtc::ScopedCFTypeRef<IOSurfaceRef> scoped_io_surface(io_surface,
-                                                       RetainPolicy::RETAIN);
+  rtc::ScopedCFTypeRef<IOSurfaceRef> scoped_io_surface(
+      io_surface, rtc::RetainPolicy::RETAIN);
   std::unique_ptr<DesktopFrameIOSurface> desktop_frame_io_surface =
       DesktopFrameIOSurface::Wrap(scoped_io_surface, img_bounding_rect);
   if (!desktop_frame_io_surface) {
