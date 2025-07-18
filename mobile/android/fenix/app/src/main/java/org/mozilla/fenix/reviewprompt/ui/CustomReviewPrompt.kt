@@ -342,9 +342,7 @@ private fun InteractiveCustomReviewPromptPreview() {
         ) {
             CustomReviewPrompt(
                 state = promptState,
-                onRequestDismiss = {
-                    store.dispatch(CustomReviewPromptAction.DismissRequested)
-                },
+                onRequestDismiss = {},
                 onNegativePrePromptButtonClick = {
                     store.dispatch(CustomReviewPromptAction.PositivePrePromptButtonClicked)
                 },
