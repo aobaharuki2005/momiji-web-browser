@@ -515,10 +515,10 @@ index 906d79598b..2c46bb4641 100644
  #include "api/units/data_rate.h"
  #include "api/video/video_content_type.h"
 diff --git a/common_audio/BUILD.gn b/common_audio/BUILD.gn
-index bdb6c02079..bd1cc5eae7 100644
+index 9a7478d8db..8135f5fca0 100644
 --- a/common_audio/BUILD.gn
 +++ b/common_audio/BUILD.gn
-@@ -267,14 +267,10 @@ if (current_cpu == "x86" || current_cpu == "x64") {
+@@ -268,14 +268,10 @@ if (current_cpu == "x86" || current_cpu == "x64") {
        "resampler/sinc_resampler_avx2.cc",
      ]
  
@@ -735,7 +735,7 @@ index 40da627b4b..3684d9d6d6 100644
      : content_hint(VideoTrackInterface::ContentHint::kNone) {}
  VideoOptions::~VideoOptions() = default;
 diff --git a/modules/audio_coding/BUILD.gn b/modules/audio_coding/BUILD.gn
-index cb8b03bc63..334d2e7a6a 100644
+index 6a13b89c4e..a3fc75e091 100644
 --- a/modules/audio_coding/BUILD.gn
 +++ b/modules/audio_coding/BUILD.gn
 @@ -357,7 +357,7 @@ rtc_library("webrtc_opus_wrapper") {
