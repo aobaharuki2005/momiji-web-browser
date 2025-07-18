@@ -2430,7 +2430,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
             LogicalAxis::Inline, aWM, intrinsicBSize, boxSizingAdjust);
       } else if (aspectRatio) {
         tentISize =
-            aCBSize.ISize(aWM) - boxSizingToMarginEdgeISize;  // XXX scrollbar?
+            aCBSize.ISize(aWM) - aBorderPadding.ISize(aWM) - aMargin.ISize(aWM);
         if (tentISize < 0) {
           tentISize = 0;
         }
