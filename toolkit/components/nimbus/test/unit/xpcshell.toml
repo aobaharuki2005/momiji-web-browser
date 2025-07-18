@@ -9,6 +9,7 @@ skip-if = [
 ]
 prefs = [
   "app.normandy.run_interval_seconds=0", # This turns off the update interval for fetching recipes from Remote Settings
+  "messaging-system.log=all", # Enable all Nimbus logging.
 ]
 run-sequentially = "very high failure rate in parallel"
 
