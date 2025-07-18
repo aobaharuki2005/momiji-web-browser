@@ -105,7 +105,7 @@ index c1b4db19f6..442648676c 100644
    const DesktopCapturer::SourceId source_;
  };
 diff --git a/modules/desktop_capture/mac/screen_capturer_sck.mm b/modules/desktop_capture/mac/screen_capturer_sck.mm
-index a664c013bc..7b3814645e 100644
+index 2f9edffbd8..6197e30dc6 100644
 --- a/modules/desktop_capture/mac/screen_capturer_sck.mm
 +++ b/modules/desktop_capture/mac/screen_capturer_sck.mm
 @@ -72,6 +72,8 @@ class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final

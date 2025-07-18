@@ -88,10 +88,10 @@ index 02bdbe111a..d1d41b5ef0 100644
    ],
  }
 diff --git a/modules/desktop_capture/desktop_capture_options.h b/modules/desktop_capture/desktop_capture_options.h
-index c44ec6a9e8..51785a4085 100644
+index 4ebd4ccab9..ddf12637a8 100644
 --- a/modules/desktop_capture/desktop_capture_options.h
 +++ b/modules/desktop_capture/desktop_capture_options.h
-@@ -79,6 +79,14 @@ class RTC_EXPORT DesktopCaptureOptions {
+@@ -77,6 +77,14 @@ class RTC_EXPORT DesktopCaptureOptions {
    // new versions of macOS that remove support for the CGDisplay-based APIs.
    bool allow_sck_capturer() const { return allow_sck_capturer_; }
    void set_allow_sck_capturer(bool allow) { allow_sck_capturer_ = allow; }
@@ -105,15 +105,15 @@ index c44ec6a9e8..51785a4085 100644
 +  }
  #endif
  
-   const rtc::scoped_refptr<FullScreenWindowDetector>&
-@@ -243,6 +251,7 @@ class RTC_EXPORT DesktopCaptureOptions {
-   rtc::scoped_refptr<DesktopConfigurationMonitor> configuration_monitor_;
+   const scoped_refptr<FullScreenWindowDetector>& full_screen_window_detector()
+@@ -242,6 +250,7 @@ class RTC_EXPORT DesktopCaptureOptions {
+   webrtc::scoped_refptr<DesktopConfigurationMonitor> configuration_monitor_;
    bool allow_iosurface_ = false;
    bool allow_sck_capturer_ = false;
 +  bool allow_sck_system_picker_ = false;
  #endif
  
-   rtc::scoped_refptr<FullScreenWindowDetector> full_screen_window_detector_;
+   scoped_refptr<FullScreenWindowDetector> full_screen_window_detector_;
 diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
 index 7fd0fc31d8..45c13751aa 100644
 --- a/modules/desktop_capture/desktop_capturer.cc
@@ -342,7 +342,7 @@ index 105cbf0783..e0c467714a 100644
  
  #endif  // MODULES_DESKTOP_CAPTURE_MAC_SCREEN_CAPTURER_SCK_H_
 diff --git a/modules/desktop_capture/mac/screen_capturer_sck.mm b/modules/desktop_capture/mac/screen_capturer_sck.mm
-index 264a0a8f8b..f180d3bc62 100644
+index fee65eec81..d6e3c2eeee 100644
 --- a/modules/desktop_capture/mac/screen_capturer_sck.mm
 +++ b/modules/desktop_capture/mac/screen_capturer_sck.mm
 @@ -14,6 +14,7 @@

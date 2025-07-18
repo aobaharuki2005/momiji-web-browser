@@ -10,7 +10,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b6b37905a574e7706
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/modules/desktop_capture/mac/screen_capturer_sck.mm b/modules/desktop_capture/mac/screen_capturer_sck.mm
-index f180d3bc62..a664c013bc 100644
+index d6e3c2eeee..2f9edffbd8 100644
 --- a/modules/desktop_capture/mac/screen_capturer_sck.mm
 +++ b/modules/desktop_capture/mac/screen_capturer_sck.mm
 @@ -434,7 +434,7 @@ friend void AbslStringify(Sink& sink,

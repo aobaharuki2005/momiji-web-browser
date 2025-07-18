@@ -563,7 +563,7 @@ index b55f7e8fa9..2b1392ced0 100644
  std::unique_ptr<DesktopCapturer> WindowCapturerX11::CreateRawWindowCapturer(
      const DesktopCaptureOptions& options) {
 diff --git a/modules/desktop_capture/linux/x11/window_capturer_x11.h b/modules/desktop_capture/linux/x11/window_capturer_x11.h
-index ac591c272e..cfd29eca66 100644
+index 2605c54650..53aabb46fe 100644
 --- a/modules/desktop_capture/linux/x11/window_capturer_x11.h
 +++ b/modules/desktop_capture/linux/x11/window_capturer_x11.h
 @@ -22,6 +22,7 @@
@@ -583,7 +583,7 @@ index ac591c272e..cfd29eca66 100644
 +
    Callback* callback_ = nullptr;
  
-   rtc::scoped_refptr<SharedXDisplay> x_display_;
+   scoped_refptr<SharedXDisplay> x_display_;
 diff --git a/modules/desktop_capture/linux/x11/x_error_trap.cc b/modules/desktop_capture/linux/x11/x_error_trap.cc
 index 24c2065111..3314dd286c 100644
 --- a/modules/desktop_capture/linux/x11/x_error_trap.cc
