@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { Lists } from "./Lists/Lists";
 import { FocusTimer } from "./FocusTimer/FocusTimer";
 
@@ -14,7 +14,6 @@ const PREF_WIDGETS_SYSTEM_TIMER_ENABLED = "widgets.system.focusTimer.enabled";
 
 function Widgets() {
   const prefs = useSelector(state => state.Prefs.values);
-  const dispatch = useDispatch();
 
   const listsEnabled =
     prefs[PREF_WIDGETS_SYSTEM_LISTS_ENABLED] &&
@@ -26,7 +25,7 @@ function Widgets() {
 
   return (
     <div className="widgets-container">
-      {listsEnabled && <Lists dispatch={dispatch} />}
+      {listsEnabled && <Lists />}
       {timerEnabled && <FocusTimer />}
     </div>
   );
