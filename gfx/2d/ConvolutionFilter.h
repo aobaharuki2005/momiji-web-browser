@@ -8,7 +8,6 @@
 #define MOZILLA_GFX_CONVOLUTION_FILTER_H_
 
 #include "mozilla/UniquePtr.h"
-#include "Types.h"
 
 namespace skia {
 class SkConvolutionFilter1D;
@@ -28,11 +27,9 @@ class ConvolutionFilter final {
   bool GetFilterOffsetAndLength(int32_t aRowIndex, int32_t* aResultOffset,
                                 int32_t* aResultLength);
 
-  void ConvolveHorizontally(const uint8_t* aSrc, uint8_t* aDst,
-                            SurfaceFormat aFormat);
+  void ConvolveHorizontally(const uint8_t* aSrc, uint8_t* aDst, bool aHasAlpha);
   void ConvolveVertically(uint8_t* const* aSrc, uint8_t* aDst,
-                          int32_t aRowIndex, int32_t aRowSize,
-                          SurfaceFormat aFormat);
+                          int32_t aRowIndex, int32_t aRowSize, bool aHasAlpha);
 
   enum class ResizeMethod { BOX, LANCZOS3 };
 

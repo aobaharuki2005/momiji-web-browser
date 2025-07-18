@@ -3425,9 +3425,9 @@ already_AddRefed<SourceSurface> SharedContextWebgl::DownscaleBlurInput(
       if (srcMap.IsMapped() && dstMap.IsMapped()) {
         if (Scale(srcMap.GetData() + aSourceRect.y * srcMap.GetStride() +
                       aSourceRect.x * BytesPerPixel(aSurface->GetFormat()),
-                  aSourceRect.width, aSourceRect.height, srcMap.GetStride(),
-                  dstMap.GetData(), scaleSize.width, scaleSize.height,
-                  dstMap.GetStride(), aSurface->GetFormat())) {
+                  srcMap.GetStride(), aSourceRect.width, aSourceRect.height,
+                  dstMap.GetData(), dstMap.GetStride(), scaleSize.width,
+                  scaleSize.height, aSurface->GetFormat())) {
           return scaleData.forget();
         }
       }
