@@ -883,7 +883,7 @@ index 025794d262..a23a7c15ce 100644
      } else {
        cflags = [
 diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index 634ef53920..059a4dadc1 100644
+index ba1424058e..c979e889ff 100644
 --- a/modules/desktop_capture/BUILD.gn
 +++ b/modules/desktop_capture/BUILD.gn
 @@ -346,37 +346,12 @@ rtc_library("desktop_capture") {
