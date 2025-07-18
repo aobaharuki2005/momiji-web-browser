@@ -2270,7 +2270,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Forigi</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Retadreso kopiita</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Retadreso kopiita</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Tiu ĉi estas ekzempla teksto. Ĝi estas ĉi tie por montri kiel teksto aperos kiam vi etigas aŭ grandigas la tiparon per tiu ĉi agordo.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2909,9 +2909,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Eraro dum konekto al “%s”</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">%s kreita</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s kreita</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">%s konservita</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s konservita</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">%s forigita</string>
   <!-- Heading for the instructions to allow a permission -->

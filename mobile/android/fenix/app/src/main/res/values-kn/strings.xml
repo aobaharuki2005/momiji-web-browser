@@ -602,7 +602,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">ಅಳಿಸು</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL ನಕಲಿಸಲಾಗಿದೆ</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL ನಕಲಿಸಲಾಗಿದೆ</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">ಇದು ಮಾದರಿ ಪಠ್ಯ. ಈ ಸೆಟ್ಟಿಂಗ್‌ನೊಂದಿಗೆ ನೀವು ಗಾತ್ರವನ್ನು ಹೆಚ್ಚಿಸಿದಾಗ ಅಥವಾ ಕಡಿಮೆಗೊಳಿಸಿದಾಗ ಪಠ್ಯ ಹೇಗೆ ಕಾಣಿಸುತ್ತದೆ ಎಂಬುದನ್ನು ತೋರಿಸಲು ಇಲ್ಲಿದೆ.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -879,9 +879,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">“%s” ಗೆ ಸಂಪರ್ಕಿಸುವಲ್ಲಿ ದೋಷ</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">%s ರಚಿಸಲಾಗಿದೆ</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s ರಚಿಸಲಾಗಿದೆ</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">%s ಉಳಿಸಲಾಗಿದೆ</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s ಉಳಿಸಲಾಗಿದೆ</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">%s ಅಳಿಸಲಾಗಿದೆ</string>
   <!-- Heading for the instructions to allow a permission -->

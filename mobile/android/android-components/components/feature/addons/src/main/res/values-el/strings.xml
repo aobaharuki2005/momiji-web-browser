@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://schemas.android.com/apk/res-auto">
-  <!-- Description for privacy add-on permission. -->
-  <string name="mozac_feature_addons_permissions_privacy_description">Ανάγνωση και τροποποίηση ρυθμίσεων απορρήτου</string>
-  <!-- Description for all_urls add-on permission. -->
-  <string name="mozac_feature_addons_permissions_all_urls_description">Πρόσβαση στα δεδομένα σας για κάθε ιστότοπο</string>
   <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
   <string name="mozac_feature_addons_permissions_one_site_description">Πρόσβαση στα δεδομένα σας για το %1$s</string>
   <!-- Description for giving an add-on access to users's data in multiple sites in the domain %1$s. %1$s will be replaced by the DNS domain for which a web extension is requesting access (e.g., mozilla.org). -->
@@ -12,76 +8,82 @@
     When an add-on requires access to more than 4 sites, for example the add-on requires access for 5 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
     then we will show another collapsed entry saying "Access your data on 1 other site". This entry it's for the singular case, when the add-on is only accessing one extra site.
   -->
-  <string name="mozac_feature_addons_permissions_one_extra_site_description" tools:ignore="PluralsCandidate">Πρόσβαση στα δεδομένα σας σε άλλη 1 σελίδα</string>
+  <string name="mozac_feature_addons_permissions_one_extra_site_description" tools:ignore="PluralsCandidate,UnusedResources" moz:removedIn="142">Πρόσβαση στα δεδομένα σας σε άλλη 1 σελίδα</string>
   <!--
     When an add-on requires access to more than 4 sites, for example the add-on requires access for 6 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
     then we will show another collapsed entry saying "Access your data on 2 other sites". This entry it's for the plural case, when the add-on is accessing more than one extra site.
     %1$d will be replaced by an integer indicating the number of additional hosts for which this web extension is requesting permission.
   -->
-  <string name="mozac_feature_addons_permissions_extra_sites_description" tools:ignore="PluralsCandidate">Πρόσβαση στα δεδομένα σας σε %1$d ακόμη ιστοτόπους</string>
+  <string name="mozac_feature_addons_permissions_extra_sites_description" tools:ignore="PluralsCandidate,UnusedResources" moz:removedIn="142">Πρόσβαση στα δεδομένα σας σε %1$d ακόμη ιστοτόπους</string>
   <!--
     When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
     then we will show another collapsed entry saying "Access your data on 1 other domain". This entry it's for the singular case, when the add-on is only accessing one extra domain.
   -->
-  <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate">Πρόσβαση στα δεδομένα σας σε 1 ακόμα τομέα</string>
+  <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate,UnusedResources" moz:removedIn="142">Πρόσβαση στα δεδομένα σας σε 1 ακόμα τομέα</string>
   <!--
     When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
     then we will show another collapsed entry saying "Access your data on 2 other domains". This entry it's for the plural case, when the add-on is accessing more than one extra domain.
     %1$d will be replaced by an integer indicating the number of additional domains for which this web extension is requesting permission.
   -->
-  <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">Πρόσβαση στα δεδομένα σας σε %1$d ακόμα τομείς</string>
+  <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate,UnusedResources" moz:removedIn="142">Πρόσβαση στα δεδομένα σας σε %1$d ακόμα τομείς</string>
   <!-- When an add-on requires access to domains, this entry is used to describe the total number of domains. Underneath it will be the list of all the domains. %1$d is the number of all the domains that will be shown to the user as required. -->
   <string name="mozac_feature_addons_permissions_all_domain_count_description" tools:ignore="PluralsCandidate">Πρόσβαση στα δεδομένα σας για ιστοτόπους σε %1$d τομείς</string>
   <!-- Content description for a permission item, for an installed add-on details page. %1$s will be replaced with the permission text name, %2$d will be replaced with the permission position in the list and %3$d will be replaced with the total number of permissions in the list.Taking as an example "Read and modify privacy settings" the whole text will read Read and modify privacy settings, 2 of 6. -->
   <string name="mozac_feature_addons_permissions_content_description_item">%1$s, %2$d από %3$d</string>
-  <!-- Description for tabs add-on permission. -->
+  <!-- Description for the "privacy" WebExtensions API permission. -->
+  <string name="mozac_feature_addons_permissions_privacy_description">Ανάγνωση και τροποποίηση ρυθμίσεων απορρήτου</string>
+  <!-- Description for the "<all_urls>" WebExtensions API permission. -->
+  <string name="mozac_feature_addons_permissions_all_urls_description">Πρόσβαση στα δεδομένα σας για κάθε ιστότοπο</string>
+  <!-- Description for the "tabs" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_tabs_description">Πρόσβαση στις καρτέλες προγράμματος περιήγησης</string>
-  <!-- Description for navigation permission. -->
+  <!-- Description for the "webNavigation" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_web_navigation_description">Πρόσβαση στη δραστηριότητα περιήγησης κατά την πλοήγηση</string>
-  <!-- Description for bookmarks permission. -->
+  <!-- Description for the "bookmarks" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_bookmarks_description">Ανάγνωση και τροποποίηση σελιδοδεικτών</string>
-  <!-- Description for browser_setting permission. -->
+  <!-- Description for the "browserSettings" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_browser_setting_description">Ανάγνωση και τροποποίηση ρυθμίσεων προγράμματος περιήγησης</string>
-  <!-- Description for browser_data permission. -->
+  <!-- Description for the "browsingData" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_browser_data_description">Απαλοιφή πρόσφατου ιστορικού περιήγησης, cookie και σχετικών δεδομένων</string>
-  <!-- Description for clipboard_read permission. -->
+  <!-- Description for the "clipboardRead" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_clipboard_read_description">Λήψη δεδομένων από το πρόχειρο</string>
-  <!-- Description for clipboard_write permission. -->
+  <!-- Description for the "clipboardWrite" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_clipboard_write_description">Εισαγωγή δεδομένων στο πρόχειρο</string>
-  <!-- Description for declarativeNetRequest permission. -->
+  <!-- Description for the "declarativeNetRequest" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_declarative_net_request_description">Φραγή περιεχομένου σε οποιαδήποτε σελίδα</string>
-  <!-- Description for declarativeNetRequestFeedback permission. -->
+  <!-- Description for the "declarativeNetRequestFeedback" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Ανάγνωση του ιστορικού περιήγησής σας</string>
-  <!-- Description for downloads permission. -->
+  <!-- Description for the "downloads" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_downloads_description">Λήψη αρχείων και ανάγνωση/τροποποίηση ιστορικού λήψεων του προγράμματος περιήγησης</string>
-  <!-- Description for downloads_open permission. -->
+  <!-- Description for the "downloads.open" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_downloads_open_description">Άνοιγμα ληφθέντων αρχείων της συσκευής σας</string>
-  <!-- Description for find permission. -->
+  <!-- Description for the "find" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_find_description">Ανάγνωση κειμένου από όλες τις ανοικτές καρτέλες</string>
-  <!-- Description for geolocation permission. -->
+  <!-- Description for the "geolocation" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_geolocation_description">Πρόσβαση στην τοποθεσία σας</string>
-  <!-- Description for history permission. -->
+  <!-- Description for the "history" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_history_description">Πρόσβαση στο ιστορικό περιήγησης</string>
-  <!-- Description for management permission. -->
+  <!-- Description for the "management" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_management_description">Εποπτεία χρήσης επεκτάσεων και διαχείριση θεμάτων</string>
-  <!-- Description for native_messaging permission. -->
+  <!-- Description for the "nativeMessaging" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_native_messaging_description">Ανταλλαγή μηνυμάτων με εφαρμογές εκτός αυτής</string>
-  <!-- Description for notifications permission. -->
+  <!-- Description for the "notifications" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_notifications_description">Εμφάνιση ειδοποιήσεων σε εσάς</string>
-  <!-- Description for pkcs11 permission. -->
+  <!-- Description for the "pkcs11" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_pkcs11_description">Παροχή κρυπτογραφικών υπηρεσιών ταυτοποίησης</string>
-  <!-- Description for proxy permission. -->
+  <!-- Description for the "proxy" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_proxy_description">Έλεγχος ρυθμίσεων διαμεσολαβητή προγράμματος περιήγησης</string>
-  <!-- Description for sessions permission. -->
+  <!-- Description for the "sessions" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_sessions_description">Πρόσβαση στις πρόσφατα κλεισμένες καρτέλες</string>
-  <!-- Description for tab_hide permission. -->
+  <!-- Description for the "tabHide" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_tab_hide_description">Απόκρυψη και εμφανιση καρτελών προγράμματος περιήγησης</string>
-  <!-- Description for top_sites permission. -->
+  <!-- Description for the "topSites" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_top_sites_description">Πρόσβαση στο ιστορικό περιήγησης</string>
-  <!-- Description for trialML permission. -->
+  <!-- Description for the "trialML" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_trial_ml_description">Λήψη και εκτέλεση μοντέλων ΤΝ στη συσκευή</string>
-  <!-- Description for userScripts permission. -->
+  <!-- Description for the "userScripts" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_user_scripts_description">Να επιτρέπεται σε μη επαληθευμένα σενάρια τρίτων η πρόσβαση στα δεδομένα σας</string>
+  <!-- Description for the "devtools" WebExtensions API permission. -->
+  <string name="mozac_feature_addons_permissions_devtools_description">Επέκταση των εργαλείων ανάπτυξης για πρόσβαση στα δεδομένα σας στις ανοικτές καρτέλες</string>
   <!-- The text shown when an extension requests the userScripts permission, near the usual description of the userScripts permission -->
   <string name="mozac_feature_addons_permissions_user_scripts_extra_warning">Τα μη επαληθευμένα σενάρια μπορούν να θέσουν σε κίνδυνο την ασφάλεια και το απόρρητό σας. Να εκτελείτε σενάρια μόνο από επεκτάσεις ή πηγές που εμπιστεύεστε.</string>
   <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
@@ -92,8 +94,6 @@
   <string name="mozac_feature_addons_permissions_none_required_data_collection_description">Ο δημιουργός δηλώνει ότι αυτή η επέκταση δεν απαιτεί συλλογή δεδομένων.</string>
   <!-- The sentence used when the extension requests new data collection permissions. %1$s is a formatted list of permissions. -->
   <string name="mozac_feature_addons_permissions_data_collection_optional_description">Ο δημιουργός δηλώνει ότι η επέκταση θέλει να συλλέγει: %1$s</string>
-  <!-- Description for devtools permission. -->
-  <string name="mozac_feature_addons_permissions_devtools_description">Επέκταση των εργαλείων ανάπτυξης για πρόσβαση στα δεδομένα σας στις ανοικτές καρτέλες</string>
   <!-- Description for text button that expands the list of domain permissions -->
   <string name="mozac_feature_addons_permissions_show_all_sites">Εμφάνιση όλων των ιστοτόπων</string>
   <!-- Description for text button that hides the majority of the list of domain permissions -->
@@ -249,15 +249,15 @@
   <!-- Button in the extensions manager that opens AMO in a tab -->
   <string name="mozac_feature_addons_find_more_extensions_button_text">Εύρεση περισσότερων επεκτάσεων</string>
   <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on -->
-  <string name="mozac_feature_addons_updater_notification_allow_button">Αποδοχή</string>
+  <string name="mozac_feature_addons_updater_notification_allow_button" moz:removedIn="142" tools:ignore="UnusedResources">Αποδοχή</string>
   <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated -->
-  <string name="mozac_feature_addons_updater_notification_deny_button">Άρνηση</string>
+  <string name="mozac_feature_addons_updater_notification_deny_button" moz:removedIn="142" tools:ignore="UnusedResources">Άρνηση</string>
   <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons -->
-  <string name="mozac_feature_addons_updater_notification_title">Το %1$s έχει νέα ενημέρωση</string>
+  <string name="mozac_feature_addons_updater_notification_title" moz:removedIn="142" tools:ignore="UnusedResources">Το %1$s έχει νέα ενημέρωση</string>
   <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions -->
-  <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">Απαιτούνται %1$d νέα δικαιώματα</string>
+  <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate,UnusedResources" moz:removedIn="142">Απαιτούνται %1$d νέα δικαιώματα</string>
   <!-- The content of the notification displayed when an add-on needs a new permission -->
-  <string name="mozac_feature_addons_updater_notification_content_singular">Απαιτείται ένα νέο δικαίωμα</string>
+  <string name="mozac_feature_addons_updater_notification_content_singular" moz:removedIn="142" tools:ignore="UnusedResources">Απαιτείται ένα νέο δικαίωμα</string>
   <!-- Name of the "notification channel" used for displaying a notification for updating an extension. See https://developer.android.com/training/notify-user/channels -->
   <string name="mozac_feature_addons_updater_notification_channel_2">Ενημερώσεις επεκτάσεων</string>
   <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
@@ -339,9 +339,9 @@
   <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
   <string name="mozac_feature_addons_updater_dialog_status">Κατάσταση:</string>
   <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
-  <string name="mozac_feature_addons_installed_dialog_title">Το %1$s έχει προστεθεί στο %2$s</string>
+  <string name="mozac_feature_addons_installed_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">Το %1$s έχει προστεθεί στο %2$s</string>
   <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
-  <string name="mozac_feature_addons_installed_dialog_description_2">Αποκτήστε πρόσβαση στο %1$s από το μενού του %2$s.</string>
+  <string name="mozac_feature_addons_installed_dialog_description_2" moz:removedIn="142" tools:ignore="UnusedResources">Αποκτήστε πρόσβαση στο %1$s από το μενού του %2$s.</string>
   <!-- Confirmation button text for the dialog when add-on installation is completed. -->
   <string name="mozac_feature_addons_installed_dialog_okay_button_2">OK</string>
   <!-- "Learn more" link displayed below an add-on status message. -->

@@ -1909,7 +1909,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Sguab às</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Lethbhreac dhen URL air a dhèanamh</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Lethbhreac dhen URL air a dhèanamh</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Seo ball-eisimpleir de theacsa. Tha e an-seo airson ’s gum faic thu cò ris a bhios an teacsa coltach ’s tu ga lùghdachadh no meudachadh leis an roghainn seo.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2436,9 +2436,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Mearachd a’ ceangal ri “%s”</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">Chaidh %s a chruthachadh</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">Chaidh %s a chruthachadh</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">Chaidh %s a shàbhaladh</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">Chaidh %s a shàbhaladh</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">Chaidh %s a sguabadh às</string>
   <!-- Heading for the instructions to allow a permission -->

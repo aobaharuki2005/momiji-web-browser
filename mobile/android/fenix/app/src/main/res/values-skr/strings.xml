@@ -1656,7 +1656,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">مٹاؤ</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">یوآرایل نقل تھی ڳیا</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">یوآرایل نقل تھی ڳیا</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">ایہ نمونے دی عبارت ہے۔ ایہ ایہ ݙکھیندی ہے جو ترتیباں وچ سائز گھٹیسوں یا ودھیسوں تاں عبارت کین٘ویں نظرسی۔</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2183,9 +2183,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">”%s“ نال رابطہ کرݨ وچ خرابی</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">%s بݨ ڳیا</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s بݨ ڳیا</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">محفوظ %s</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">محفوظ %s</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">مٹ ڳیا %s</string>
   <!-- Heading for the instructions to allow a permission -->

@@ -600,7 +600,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Scancella</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Indirisso copiou</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Indirisso copiou</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Sto chi o l\'é \'n testo d\'ezenpio. Serve pe fa vedde comme saiâ o testo quande ti t\'aomenti o ti diminoisci o testo con sta inpostaçion.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -867,9 +867,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Erô de conescion a “%s”</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">%s creou</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s creou</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">%s sarvou</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s sarvou</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">%s scancelou</string>
   <!-- Heading for the instructions to allow a permission -->

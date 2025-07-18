@@ -2063,7 +2063,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Dilemel</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL eilet</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL eilet</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Un destenn skouer an hini eo. Amañ emañ evit diskouez deocʼh penaos e vo skrammet an destenn pa greskit pe pa zigreskit ar ment gant an arventenn-mañ.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2632,9 +2632,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Fazi en ur gennaskañ ouzh “%s”</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">%s : krouet</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s : krouet</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">%s : enrollet</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s : enrollet</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">%s : dilamet</string>
   <!-- Heading for the instructions to allow a permission -->

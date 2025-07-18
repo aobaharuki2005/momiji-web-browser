@@ -1193,7 +1193,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Nādūre\'</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Ngà naka URL</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Ngà naka URL</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Ni\'iāj sò\' hua lechrâ nan. Dānaj gūruguì\'ij ni\'iājt sisī nāgi\'iaj yāchìjt asi nāgi\'iaj lít man.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -1648,9 +1648,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Na\'ue gi\'iaj kōnektandoj ngà “%s”</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">%s ngà nahuij gahui</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s ngà nahuij gahui</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">Ngà nanun sà\' %s</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">Ngà nanun sà\' %s</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">Ngà nare\' %s</string>
   <!-- Heading for the instructions to allow a permission -->

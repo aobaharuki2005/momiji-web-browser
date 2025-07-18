@@ -1156,7 +1156,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Skasuj</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Adresa je skopiowano</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Adresa je skopiowano</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">To je przikładowy tekst. Je sam na to, coby pokozać, jak bydzie wyglōndoł, jak go zwiynkszysz abo zmyńszysz z tym sztalōnkym.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
