@@ -1262,7 +1262,7 @@ export const PREFS_CONFIG = new Map([
     {
       title:
         "Switches on grouping of sponsored checkboxes on 'about:settings#home' page",
-      value: false,
+      value: true,
     },
   ],
   [
