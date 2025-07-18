@@ -65,8 +65,10 @@ const INDENT_STR = " ".repeat(INDENT_SIZE);
  *        The CssRuleView containg the document holding this rule editor.
  * @param {Rule} rule
  *        The Rule object we're editing.
+ * @param {Object} options
+ * @param {Set} options.elementsWithPendingClicks
  */
-function RuleEditor(ruleView, rule) {
+function RuleEditor(ruleView, rule, options = {}) {
   EventEmitter.decorate(this);
 
   this.ruleView = ruleView;
@@ -74,6 +76,7 @@ function RuleEditor(ruleView, rule) {
   this.toolbox = this.ruleView.inspector.toolbox;
   this.telemetry = this.toolbox.telemetry;
   this.rule = rule;
+  this.options = options;
 
   this.isEditable = !rule.isSystem;
   // Flag that blocks updates of the selector and properties when it is
@@ -648,7 +651,9 @@ RuleEditor.prototype = {
 
     for (const prop of this.rule.textProps) {
       if (!prop.editor && !prop.invisible) {
-        const editor = new TextPropertyEditor(this, prop);
+        const editor = new TextPropertyEditor(this, prop, {
+          elementsWithPendingClicks: this.options.elementsWithPendingClicks,
+        });
         this.propertyList.appendChild(editor.element);
       } else if (prop.editor) {
         // If an editor already existed, append it to the bottom now to make sure the
@@ -779,7 +784,9 @@ RuleEditor.prototype = {
       siblingProp
     );
     const index = this.rule.textProps.indexOf(prop);
-    const editor = new TextPropertyEditor(this, prop);
+    const editor = new TextPropertyEditor(this, prop, {
+      elementsWithPendingClicks: this.options.elementsWithPendingClicks,
+    });
 
     // Insert this node before the DOM node that is currently at its new index
     // in the property list.  There is currently one less node in the DOM than
