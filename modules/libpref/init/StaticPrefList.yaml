@@ -10840,6 +10840,12 @@
   value: true
   mirror: always
 
+# Whether to render all unknown mathml elements as <mrow>
+- name: mathml.unknown_mrow.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Whether to disable fallback for mathvariant=italic/bold/bold-italic via
 # styling when lacking proper fonts for Mathematical Alphanumeric Symbols.
 # We expect all OSes to have relevant fonts, except Android, see bug 1789083.

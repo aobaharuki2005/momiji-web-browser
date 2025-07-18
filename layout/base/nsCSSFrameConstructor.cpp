@@ -4581,14 +4581,13 @@ void nsCSSFrameConstructor::FlushAccumulatedBlock(
 
 // Only <math> elements can be floated or positioned.  All other MathML
 // should be in-flow.
-#define SIMPLE_MATHML_CREATE(_tag, _func)             \
-  {                                                   \
-    nsGkAtoms::_tag, {                                \
-      _func, FCDATA_DISALLOW_OUT_OF_FLOW |            \
-                 FCDATA_FORCE_NULL_ABSPOS_CONTAINER | \
-                 FCDATA_WRAP_KIDS_IN_BLOCKS           \
-    }                                                 \
+#define MATHML_DATA(_func)                                                    \
+  FrameConstructionData {                                                     \
+    _func, FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_FORCE_NULL_ABSPOS_CONTAINER | \
+               FCDATA_WRAP_KIDS_IN_BLOCKS                                     \
   }
+
+#define SIMPLE_MATHML_CREATE(_tag, _func) {nsGkAtoms::_tag, MATHML_DATA(_func)}
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
@@ -4616,6 +4615,14 @@ nsCSSFrameConstructor::FindMathMLData(const Element& aElement,
         FCDATA_FORCE_NULL_ABSPOS_CONTAINER | FCDATA_IS_LINE_PARTICIPANT |
             FCDATA_WRAP_KIDS_IN_BLOCKS);
     return &sInlineMathData;
+  }
+
+  // Special case for elements with a display value other than none
+  // specified in mathml.css that are not handled by this function.
+  // These shouldn't be rendered as an mrow.
+  if (tag == nsGkAtoms::mtable || tag == nsGkAtoms::mtr ||
+      tag == nsGkAtoms::mlabeledtr || tag == nsGkAtoms::mtd) {
+    return nullptr;
   }
 
   static constexpr FrameConstructionDataByTag sMathMLData[] = {
@@ -4649,7 +4656,18 @@ nsCSSFrameConstructor::FindMathMLData(const Element& aElement,
       SIMPLE_MATHML_CREATE(menclose, NS_NewMathMLmencloseFrame),
       SIMPLE_MATHML_CREATE(semantics, NS_NewMathMLmrowFrame)};
 
-  return FindDataByTag(aElement, aStyle, sMathMLData, std::size(sMathMLData));
+  if (const auto* data = FindDataByTag(aElement, aStyle, sMathMLData,
+                                       std::size(sMathMLData))) {
+    return data;
+  }
+  if (!StaticPrefs::mathml_unknown_mrow_enabled()) {
+    return nullptr;
+  }
+  // Unknown MathML elements render as an mrow, see:
+  // https://w3c.github.io/mathml-core/#ref-for-dfn-unknown-mathml-element-2
+  static constexpr FrameConstructionData sMrowData =
+      MATHML_DATA(NS_NewMathMLmrowFrame);
+  return &sMrowData;
 }
 
 nsContainerFrame* nsCSSFrameConstructor::ConstructFrameWithAnonymousChild(
