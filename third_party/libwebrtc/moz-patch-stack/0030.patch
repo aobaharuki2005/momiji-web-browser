@@ -489,7 +489,7 @@ index 38e61ef56f..37f772471f 100644
      "../api:transport_api",
      "../api/adaptation:resource_adaptation_api",
 diff --git a/call/audio_send_stream.h b/call/audio_send_stream.h
-index 768ba0b19e..2d2cc89b08 100644
+index d1b3e64ba3..fa465f7d89 100644
 --- a/call/audio_send_stream.h
 +++ b/call/audio_send_stream.h
 @@ -27,7 +27,7 @@
@@ -502,7 +502,7 @@ index 768ba0b19e..2d2cc89b08 100644
  #include "api/units/time_delta.h"
  #include "call/audio_sender.h"
 diff --git a/call/video_send_stream.h b/call/video_send_stream.h
-index 1c0a3bcd3f..ddd09481c7 100644
+index 906d79598b..2c46bb4641 100644
 --- a/call/video_send_stream.h
 +++ b/call/video_send_stream.h
 @@ -23,7 +23,7 @@

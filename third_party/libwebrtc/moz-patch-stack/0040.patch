@@ -113,7 +113,7 @@ index 6b9d816872..ed6297866b 100644
  }  // namespace voe
  }  // namespace webrtc
 diff --git a/call/audio_receive_stream.h b/call/audio_receive_stream.h
-index 42502f5297..25010da77b 100644
+index 4ae9ba04de..098307f135 100644
 --- a/call/audio_receive_stream.h
 +++ b/call/audio_receive_stream.h
 @@ -22,6 +22,7 @@
@@ -147,7 +147,7 @@ index 3bfb35297f..20c91982c1 100644
    return ss.str();
  }
 diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 4512935792..0aff8636f8 100644
+index c69ec1a674..b07f08eddf 100644
 --- a/call/video_receive_stream.h
 +++ b/call/video_receive_stream.h
 @@ -22,6 +22,7 @@
