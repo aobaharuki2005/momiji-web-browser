@@ -88,7 +88,7 @@ index 02bdbe111a..d1d41b5ef0 100644
    ],
  }
 diff --git a/modules/desktop_capture/desktop_capture_options.h b/modules/desktop_capture/desktop_capture_options.h
-index 4ebd4ccab9..ddf12637a8 100644
+index e9737b4159..dca0c6386f 100644
 --- a/modules/desktop_capture/desktop_capture_options.h
 +++ b/modules/desktop_capture/desktop_capture_options.h
 @@ -77,6 +77,14 @@ class RTC_EXPORT DesktopCaptureOptions {
@@ -106,7 +106,7 @@ index 4ebd4ccab9..ddf12637a8 100644
  #endif
  
    const scoped_refptr<FullScreenWindowDetector>& full_screen_window_detector()
-@@ -242,6 +250,7 @@ class RTC_EXPORT DesktopCaptureOptions {
+@@ -248,6 +256,7 @@ class RTC_EXPORT DesktopCaptureOptions {
    webrtc::scoped_refptr<DesktopConfigurationMonitor> configuration_monitor_;
    bool allow_iosurface_ = false;
    bool allow_sck_capturer_ = false;
