@@ -1584,6 +1584,11 @@ static bool SetTimeout(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  if (IsCrossCompartmentWrapper(functionRefValue.toObjectOrNull())) {
+    JS_ReportErrorASCII(cx, "functionRef cannot be a CCW");
+    return false;
+  }
+
   int32_t delay;
   if (!JS::ToInt32(cx, delayValue, &delay)) {
     return false;

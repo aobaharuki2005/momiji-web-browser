@@ -14,4 +14,8 @@ Promise.resolve().then().then(() => drainedQueue = true);
 drainJobQueue();
 assertEq(drainedQueue, true);
 
+// Cannot use a CCW for the callback
+let g = newGlobal({newCompartment: true});
+assertThrowsInstanceOf(() => g.setTimeout(() => {}), g.Error);
+
 reportCompare(true, true);
