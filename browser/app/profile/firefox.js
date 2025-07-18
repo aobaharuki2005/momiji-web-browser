@@ -2160,6 +2160,7 @@ pref("sidebar.notification.badge.aichat", false);
 
 pref("browser.ml.chat.enabled", true);
 pref("browser.ml.chat.hideLocalhost", true);
+pref("browser.ml.chat.maxLength", 7000);
 pref("browser.ml.chat.menu", true);
 pref("browser.ml.chat.page", false);
 pref("browser.ml.chat.page.footerBadge", true);

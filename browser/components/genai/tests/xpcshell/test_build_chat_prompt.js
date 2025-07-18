@@ -149,6 +149,15 @@ add_task(async function test_estimate_limit() {
   const defaultLimit = GenAI.estimateSelectionLimit();
   Assert.ok(defaultLimit, "Got a default limit");
   Assert.greater(defaultLimit, limit, "Default uses a larger length");
+
+  Services.prefs.setIntPref("browser.ml.chat.maxLength", 10000);
+  const customLimit = GenAI.estimateSelectionLimit();
+  Assert.ok(customLimit, "Got a custom limit");
+  Assert.greater(
+    customLimit,
+    defaultLimit,
+    "Custom limit is larger than default"
+  );
 });
 
 /**

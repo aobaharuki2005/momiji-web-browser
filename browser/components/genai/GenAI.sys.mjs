@@ -34,6 +34,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
   null,
   reorderChatProviders
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "chatMaxLength",
+  "browser.ml.chat.maxLength"
+);
 XPCOMUtils.defineLazyPreferenceGetter(lazy, "chatMenu", "browser.ml.chat.menu");
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -149,7 +154,7 @@ export const GenAI = {
         link1: "https://openai.com/terms",
         link2: "https://openai.com/privacy",
         linksId: "genai-settings-chat-chatgpt-links",
-        maxLength: 13700,
+        maxLength: 9350,
         name: "ChatGPT",
         tooltipId: "genai-onboarding-chatgpt-tooltip",
       },
@@ -887,7 +892,7 @@ export const GenAI = {
    * @param {number} maxLength optional of the provider request URI
    * @returns {number} adjusted length estimate
    */
-  estimateSelectionLimit(maxLength = 8000) {
+  estimateSelectionLimit(maxLength = lazy.chatMaxLength) {
     // Could try to be smarter including the selected text with URI encoding,
     // base URI length, other parts of the prompt (especially for custom)
     return Math.round(maxLength * 0.85) - 500;
