@@ -116,7 +116,7 @@ export class ProxyPerUserContextManager {
           return;
         }
 
-        if (channelURI.schemeIs("http") && proxyInfo.httpProxy) {
+        if (proxyInfo.httpProxy) {
           this.#addProxyFilter(proxyFilter, {
             host: proxyInfo.httpProxy,
             port: proxyInfo.httpProxyPort,
@@ -124,7 +124,7 @@ export class ProxyPerUserContextManager {
           });
         }
 
-        if (channelURI.schemeIs("https") && proxyInfo.sslProxy) {
+        if (proxyInfo.sslProxy) {
           this.#addProxyFilter(proxyFilter, {
             host: proxyInfo.sslProxy,
             port: proxyInfo.sslProxyPort,
@@ -132,7 +132,7 @@ export class ProxyPerUserContextManager {
           });
         }
 
-        if (channelURI.schemeIs(undefined) && proxyInfo.socksProxy) {
+        if (proxyInfo.socksProxy) {
           this.#addProxyFilter(proxyFilter, {
             host: proxyInfo.socksProxy,
             port: proxyInfo.socksProxyPort,
