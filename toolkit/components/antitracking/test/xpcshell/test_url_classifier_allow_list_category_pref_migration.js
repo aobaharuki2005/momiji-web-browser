@@ -41,7 +41,7 @@ add_task(async function test_migration_already_completed() {
   Services.prefs.setBoolPref(CONVENIENCE_ALLOW_LIST_PREF, true);
 
   info("Triggering migration with migration pref already set to true");
-  exceptionListService.testRunCategoryPrefsMigration();
+  exceptionListService.maybeMigrateCategoryPrefs();
 
   info(
     "Verifying that migration pref remains true and allow list prefs unchanged"
@@ -77,7 +77,7 @@ add_task(async function test_migration_standard_category() {
   Services.prefs.setBoolPref(CONVENIENCE_ALLOW_LIST_PREF, true);
 
   info("Triggering migration with content blocking category set to 'standard'");
-  exceptionListService.testRunCategoryPrefsMigration();
+  exceptionListService.maybeMigrateCategoryPrefs();
 
   info("Verifying that migration pref is true and allow list prefs unchanged");
   // Verify that the migration pref is true and allow list prefs unchanged
@@ -112,7 +112,7 @@ add_task(async function test_migration_strict_category() {
 
   info("Triggering migration with content blocking category set to 'strict'");
   // Trigger migration
-  exceptionListService.testRunCategoryPrefsMigration();
+  exceptionListService.maybeMigrateCategoryPrefs();
 
   info(
     "Verifying that migration pref is set to true and allow list prefs are disabled"
@@ -149,7 +149,7 @@ add_task(async function test_migration_custom_category() {
 
   info("Triggering migration with content blocking category set to 'custom'");
   // Trigger migration
-  exceptionListService.testRunCategoryPrefsMigration();
+  exceptionListService.maybeMigrateCategoryPrefs();
 
   info(
     "Verifying that migration pref is set to true and allow list prefs remain disabled"
@@ -190,7 +190,7 @@ add_task(async function test_migration_mixed_pref_states() {
     "Triggering migration with mixed allow list pref states (baseline=true, convenience=false)"
   );
   // Trigger migration
-  exceptionListService.testRunCategoryPrefsMigration();
+  exceptionListService.maybeMigrateCategoryPrefs();
 
   info(
     "Verifying that migration pref is set to true and both allow list prefs are disabled"
@@ -220,7 +220,7 @@ add_task(async function test_migration_default_pref_values() {
     "Triggering migration with default content blocking category ('standard')"
   );
   // Trigger migration
-  exceptionListService.testRunCategoryPrefsMigration();
+  exceptionListService.maybeMigrateCategoryPrefs();
 
   info(
     "Verifying that migration pref is set to true and allow list prefs use default values"
@@ -259,8 +259,8 @@ add_task(async function test_migration_idempotency() {
 
   info("Triggering migration multiple times to test idempotency");
   // Trigger migration multiple times
-  exceptionListService.testRunCategoryPrefsMigration();
-  exceptionListService.testRunCategoryPrefsMigration();
+  exceptionListService.maybeMigrateCategoryPrefs();
+  exceptionListService.maybeMigrateCategoryPrefs();
 
   info(
     "Verifying that migration pref is set to true and allow list prefs are disabled after multiple calls"

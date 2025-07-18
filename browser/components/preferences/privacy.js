@@ -474,6 +474,30 @@ var gPrivacyPane = {
     });
   },
 
+  /**
+   * Ensure the tracking protection exception list is migrated before the privacy
+   * preferences UI is shown.
+   * If the migration has already been run, this is a no-op.
+   */
+  _ensureTrackingProtectionExceptionListMigration() {
+    // Let's check the migration pref here as well to avoid the extra xpcom call
+    // for the common case where we've already migrated.
+    if (
+      Services.prefs.getBoolPref(
+        "privacy.trackingprotection.allow_list.hasMigratedCategoryPrefs",
+        false
+      )
+    ) {
+      return;
+    }
+
+    let exceptionListService = Cc[
+      "@mozilla.org/url-classifier/exception-list-service;1"
+    ].getService(Ci.nsIUrlClassifierExceptionListService);
+
+    exceptionListService.maybeMigrateCategoryPrefs();
+  },
+
   _initThirdPartyCertsToggle() {
     // Third-party certificate import is only implemented for Windows and Mac,
     // and we should not expose this as a user-configurable setting if there's
@@ -934,6 +958,7 @@ var gPrivacyPane = {
     this.fingerprintingProtectionReadPrefs();
     this.networkCookieBehaviorReadPrefs();
     this._initTrackingProtectionExtensionControl();
+    this._ensureTrackingProtectionExceptionListMigration();
     this._initThirdPartyCertsToggle();
     this._initProfilesInfo();
 

@@ -266,10 +266,6 @@ UrlClassifierExceptionListService.prototype = {
     );
   },
 
-  testRunCategoryPrefsMigration() {
-    this.maybeMigrateCategoryPrefs();
-  },
-
   onUpdateEntries(entries) {
     for (let key of Object.keys(this.features)) {
       let feature = this.features[key];
