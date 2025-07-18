@@ -103,55 +103,55 @@ const IS_DRAGGING_CLASSNAME = "ruleview-propertyvalue-dragging";
  * @param {TextProperty} property
  *        The text property to edit.
  */
-function TextPropertyEditor(ruleEditor, property) {
-  this.ruleEditor = ruleEditor;
-  this.ruleView = this.ruleEditor.ruleView;
-  this.cssProperties = this.ruleView.cssProperties;
-  this.doc = this.ruleEditor.doc;
-  this.popup = this.ruleView.popup;
-  this.prop = property;
-  this.prop.editor = this;
-  this.browserWindow = this.doc.defaultView.top;
+class TextPropertyEditor {
+  constructor(ruleEditor, property) {
+    this.ruleEditor = ruleEditor;
+    this.ruleView = this.ruleEditor.ruleView;
+    this.cssProperties = this.ruleView.cssProperties;
+    this.doc = this.ruleEditor.doc;
+    this.popup = this.ruleView.popup;
+    this.prop = property;
+    this.prop.editor = this;
+    this.browserWindow = this.doc.defaultView.top;
 
-  this._populatedComputed = false;
-  this._hasPendingClick = false;
-  this._clickedElementOptions = null;
+    this._populatedComputed = false;
+    this._hasPendingClick = false;
+    this._clickedElementOptions = null;
 
-  this.toolbox = this.ruleView.inspector.toolbox;
-  this.telemetry = this.toolbox.telemetry;
+    this.toolbox = this.ruleView.inspector.toolbox;
+    this.telemetry = this.toolbox.telemetry;
 
-  this._isDragging = false;
-  this._capturingPointerId = null;
-  this._hasDragged = false;
-  this._draggingController = null;
-  this._draggingValueCache = null;
+    this._isDragging = false;
+    this._capturingPointerId = null;
+    this._hasDragged = false;
+    this._draggingController = null;
+    this._draggingValueCache = null;
 
-  this.getGridlineNames = this.getGridlineNames.bind(this);
-  this.update = this.update.bind(this);
-  this.updatePropertyState = this.updatePropertyState.bind(this);
-  this._onDraggablePreferenceChanged =
-    this._onDraggablePreferenceChanged.bind(this);
-  this._onEnableChanged = this._onEnableChanged.bind(this);
-  this._onEnableClicked = this._onEnableClicked.bind(this);
-  this._onExpandClicked = this._onExpandClicked.bind(this);
-  this._onNameDone = this._onNameDone.bind(this);
-  this._onStartEditing = this._onStartEditing.bind(this);
-  this._onSwatchCommit = this._onSwatchCommit.bind(this);
-  this._onSwatchPreview = this._onSwatchPreview.bind(this);
-  this._onSwatchRevert = this._onSwatchRevert.bind(this);
-  this._onValidate = this.ruleView.debounce(this._previewValue, 10, this);
-  this._onValueDone = this._onValueDone.bind(this);
+    this.getGridlineNames = this.getGridlineNames.bind(this);
+    this.update = this.update.bind(this);
+    this.updatePropertyState = this.updatePropertyState.bind(this);
+    this._onDraggablePreferenceChanged =
+      this._onDraggablePreferenceChanged.bind(this);
+    this._onEnableChanged = this._onEnableChanged.bind(this);
+    this._onEnableClicked = this._onEnableClicked.bind(this);
+    this._onExpandClicked = this._onExpandClicked.bind(this);
+    this._onNameDone = this._onNameDone.bind(this);
+    this._onStartEditing = this._onStartEditing.bind(this);
+    this._onSwatchCommit = this._onSwatchCommit.bind(this);
+    this._onSwatchPreview = this._onSwatchPreview.bind(this);
+    this._onSwatchRevert = this._onSwatchRevert.bind(this);
+    this._onValidate = this.ruleView.debounce(this._previewValue, 10, this);
+    this._onValueDone = this._onValueDone.bind(this);
 
-  this._draggingOnPointerDown = this._draggingOnPointerDown.bind(this);
-  this._draggingOnMouseMove = throttle(this._draggingOnMouseMove, 30, this);
-  this._draggingOnPointerUp = this._draggingOnPointerUp.bind(this);
-  this._draggingOnKeydown = this._draggingOnKeydown.bind(this);
+    this._draggingOnPointerDown = this._draggingOnPointerDown.bind(this);
+    this._draggingOnMouseMove = throttle(this._draggingOnMouseMove, 30, this);
+    this._draggingOnPointerUp = this._draggingOnPointerUp.bind(this);
+    this._draggingOnKeydown = this._draggingOnKeydown.bind(this);
 
-  this._create();
-  this.update();
-}
+    this._create();
+    this.update();
+  }
 
-TextPropertyEditor.prototype = {
   /**
    * Boolean indicating if the name or value is being currently edited.
    */
@@ -163,19 +163,19 @@ TextPropertyEditor.prototype = {
         this.ruleView.tooltips.isEditing
       ) || this.popup.isOpen
     );
-  },
+  }
 
   /**
    * Get the rule to the current text property
    */
   get rule() {
     return this.prop.rule;
-  },
+  }
 
   // Exposed for tests.
   get _DRAGGING_DEADZONE_DISTANCE() {
     return DRAGGING_DEADZONE_DISTANCE;
-  },
+  }
 
   /**
    * Create the property editor's DOM.
@@ -514,7 +514,7 @@ TextPropertyEditor.prototype = {
         inputAriaLabelledBy: this.nameSpan.id,
       });
     }
-  },
+  }
 
   /**
    * Get the grid line names of the grid that the currently selected element is
@@ -588,7 +588,7 @@ TextPropertyEditor.prototype = {
     // Emit message for test files
     this.ruleView.inspector.emit("grid-line-names-updated");
     return gridLineNames;
-  },
+  }
 
   /**
    * Get the path from which to resolve requests for this
@@ -602,7 +602,7 @@ TextPropertyEditor.prototype = {
       return domRule.href || domRule.nodeHref;
     }
     return undefined;
-  },
+  }
 
   /**
    * Populate the span based on changes to the TextProperty.
@@ -912,14 +912,14 @@ TextPropertyEditor.prototype = {
         elementToFocus.focus();
       }
     }
-  },
+  }
 
   _onStartEditing() {
     this.element.classList.remove("ruleview-overridden");
     this.filterProperty.hidden = true;
     this.enable.style.visibility = "hidden";
     this.expander.style.display = "none";
-  },
+  }
 
   get shouldShowComputedExpander() {
     // Only show the expander to reveal computed properties if:
@@ -932,7 +932,7 @@ TextPropertyEditor.prototype = {
       this.prop.computed.some(c => c.name !== this.prop.name) &&
       !this.prop.computed.every(c => !c.value)
     );
-  },
+  }
 
   /**
    * Update the visibility of the enable checkbox, the warning indicator, the used
@@ -984,7 +984,7 @@ TextPropertyEditor.prototype = {
 
     this.updatePropertyUsedIndicator();
     this.updatePropertyCompatibilityIndicator();
-  },
+  }
 
   updatePropertyUsedIndicator() {
     const { used } = this.prop.isUsed();
@@ -996,7 +996,7 @@ TextPropertyEditor.prototype = {
       this.element.classList.add("unused");
       this.unusedState.hidden = false;
     }
-  },
+  }
 
   async updatePropertyCompatibilityIndicator() {
     const { isCompatible } = await this.prop.isCompatible();
@@ -1006,7 +1006,7 @@ TextPropertyEditor.prototype = {
     } else {
       this.compatibilityState.hidden = false;
     }
-  },
+  }
 
   /**
    * Update the indicator for computed styles. The computed styles themselves
@@ -1024,7 +1024,7 @@ TextPropertyEditor.prototype = {
     if (this.expander.getAttribute("aria-expanded" === "true")) {
       this._populateComputed();
     }
-  },
+  }
 
   /**
    * Populate the list of computed styles.
@@ -1050,7 +1050,7 @@ TextPropertyEditor.prototype = {
         "ruleview-computed"
       );
     }
-  },
+  }
 
   /**
    * Update the indicator for overridden shorthand styles. The shorthand
@@ -1062,7 +1062,7 @@ TextPropertyEditor.prototype = {
 
     this._populatedShorthandOverridden = false;
     this._populateShorthandOverridden();
-  },
+  }
 
   /**
    * Populate the list of overridden shorthand styles.
@@ -1090,7 +1090,7 @@ TextPropertyEditor.prototype = {
         "ruleview-overridden-item"
       );
     }
-  },
+  }
 
   /**
    * Creates and populates a list item with the computed CSS property.
@@ -1136,7 +1136,7 @@ TextPropertyEditor.prototype = {
     appendText(propertyContainer, ";");
 
     return li;
-  },
+  }
 
   /**
    * Handle updates to the preference which disables/enables the feature to
@@ -1148,14 +1148,14 @@ TextPropertyEditor.prototype = {
     } else {
       this._removeDraggingCapacity();
     }
-  },
+  }
 
   /**
    * Stop clicks propogating down the tree from the enable / disable checkbox.
    */
   _onEnableClicked(event) {
     event.stopPropagation();
-  },
+  }
 
   /**
    * Handles clicks on the disabled property.
@@ -1164,7 +1164,7 @@ TextPropertyEditor.prototype = {
     this.prop.setEnabled(this.enable.checked);
     event.stopPropagation();
     this.telemetry.recordEvent("edit_rule", "ruleview");
-  },
+  }
 
   /**
    * Handles clicks on the computed property expander. If the computed list is
@@ -1191,7 +1191,7 @@ TextPropertyEditor.prototype = {
     }
 
     event.stopPropagation();
-  },
+  }
 
   /**
    * Expands the computed list when a computed property is matched by the style
@@ -1204,7 +1204,7 @@ TextPropertyEditor.prototype = {
       this.computed.setAttribute("filter-open", "");
       this._populateComputed();
     }
-  },
+  }
 
   /**
    * Collapses the computed list that was expanded by style filtering.
@@ -1215,7 +1215,7 @@ TextPropertyEditor.prototype = {
     if (!this.computed.hasAttribute("user-open")) {
       this.expander.setAttribute("aria-expanded", "false");
     }
-  },
+  }
 
   /**
    * Called when the property name's inplace editor is closed.
@@ -1275,7 +1275,7 @@ TextPropertyEditor.prototype = {
         this.ruleEditor.addProperties(properties.slice(1), this.prop);
       }
     }
-  },
+  }
 
   /**
    * Remove property from style and the editors from DOM.
@@ -1308,7 +1308,7 @@ TextPropertyEditor.prototype = {
     this.nameSpan.textProperty = null;
     this.valueSpan.textProperty = null;
     this.prop.remove();
-  },
+  }
 
   /**
    * Called when a value editor closes.  If the user pressed escape,
@@ -1388,7 +1388,7 @@ TextPropertyEditor.prototype = {
     }
 
     return onPropertySet;
-  },
+  }
 
   /**
    * Called when the swatch editor wants to commit a value change.
@@ -1396,14 +1396,14 @@ TextPropertyEditor.prototype = {
   _onSwatchCommit() {
     this._onValueDone(this.valueSpan.textContent, true);
     this.update();
-  },
+  }
 
   /**
    * Called when the swatch editor wants to preview a value change.
    */
   _onSwatchPreview() {
     this._previewValue(this.valueSpan.textContent);
-  },
+  }
 
   /**
    * Called when the swatch editor closes from an ESC. Revert to the original
@@ -1412,7 +1412,7 @@ TextPropertyEditor.prototype = {
   _onSwatchRevert() {
     this._previewValue(this.prop.value, true);
     this.update();
-  },
+  }
 
   /**
    * Parse a value string and break it into pieces, starting with the
@@ -1459,7 +1459,7 @@ TextPropertyEditor.prototype = {
       propertiesToAdd,
       firstValue,
     };
-  },
+  }
 
   /**
    * Live preview this property, without committing changes.
@@ -1482,7 +1482,7 @@ TextPropertyEditor.prototype = {
       val.value,
       val.priority
     );
-  },
+  }
 
   /**
    * Check if the event passed has a "small increment" modifier
@@ -1495,7 +1495,7 @@ TextPropertyEditor.prototype = {
     const modifier =
       lazy.AppConstants.platform === "macosx" ? "altKey" : "ctrlKey";
     return event[modifier] === true;
-  },
+  }
 
   /**
    * Parses the value to check if it is a dimension
@@ -1510,7 +1510,7 @@ TextPropertyEditor.prototype = {
     const cssDimensionRegex =
       /^(?<value>[+-]?(\d*\.)?\d+(e[+-]?\d+)?)(?<unit>(%|[a-zA-Z]+))$/;
     return value.match(cssDimensionRegex);
-  },
+  }
 
   /**
    * Check if a textProperty value is supported to add the dragging feature
@@ -1539,7 +1539,7 @@ TextPropertyEditor.prototype = {
 
     const dimensionMatchObj = this._parseDimension(textProperty.value);
     return !!dimensionMatchObj;
-  },
+  }
 
   _draggingOnPointerDown(event) {
     // We want to handle a drag during a mouse button is pressed.  So, we can
@@ -1585,7 +1585,7 @@ TextPropertyEditor.prototype = {
     this.valueSpan.addEventListener("keydown", this._draggingOnKeydown, {
       signal,
     });
-  },
+  }
 
   _draggingOnMouseMove(event) {
     if (!this._isDragging) {
@@ -1633,7 +1633,7 @@ TextPropertyEditor.prototype = {
       .setValue(roundedValue + unit, this.prop.priority)
       .then(() => this.ruleView.emitForTests("property-updated-by-dragging"));
     this._hasDragged = true;
-  },
+  }
 
   _draggingOnPointerUp() {
     if (!this._isDragging) {
@@ -1644,7 +1644,7 @@ TextPropertyEditor.prototype = {
       this.prop.setEnabled(true);
     }
     this._onStopDragging();
-  },
+  }
 
   _draggingOnKeydown(event) {
     if (event.key == "Escape") {
@@ -1652,7 +1652,7 @@ TextPropertyEditor.prototype = {
       this._onStopDragging();
       event.preventDefault();
     }
-  },
+  }
 
   _onStopDragging() {
     // childHasDragged is used to stop the propagation of a click event when we
@@ -1675,7 +1675,7 @@ TextPropertyEditor.prototype = {
     }
     this.valueSpan.classList.remove(IS_DRAGGING_CLASSNAME);
     this._draggingController.abort();
-  },
+  }
 
   /**
    * add event listeners to add the ability to modify any size value
@@ -1691,7 +1691,7 @@ TextPropertyEditor.prototype = {
       this._draggingOnPointerDown,
       { passive: true }
     );
-  },
+  }
 
   _removeDraggingCapacity() {
     if (!this.valueSpan.classList.contains(DRAGGABLE_VALUE_CLASSNAME)) {
@@ -1704,7 +1704,7 @@ TextPropertyEditor.prototype = {
       this._draggingOnPointerDown,
       { passive: true }
     );
-  },
+  }
 
   /**
    * Validate this property. Does it make sense for this value to be assigned
@@ -1714,7 +1714,7 @@ TextPropertyEditor.prototype = {
    */
   isValid() {
     return this.prop.isValid();
-  },
+  }
 
   /**
    * Validate the name of this property.
@@ -1722,11 +1722,11 @@ TextPropertyEditor.prototype = {
    */
   isNameValid() {
     return this.prop.isNameValid();
-  },
+  }
 
   isInvalidAtComputedValueTime() {
     return this.prop.isInvalidAtComputedValueTime();
-  },
+  }
 
   /**
    * Display grid-template-area value strings each on their own line
@@ -1763,7 +1763,7 @@ TextPropertyEditor.prototype = {
           `\n${quoteSymbolsUsed[i]}` + line.join(" ") + quoteSymbolsUsed[i]
       )
       .join(" ");
-  },
-};
+  }
+}
 
 module.exports = TextPropertyEditor;
