@@ -640,6 +640,9 @@ https_first_disabled = true
 support-files = ["slow-page.sjs"]
 
 ["browser_strip_on_share.js"]
+skip-if = [
+  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && asan && swgl", # Bug 1890664
+]
 
 ["browser_strip_on_share_telemetry.js"]
 

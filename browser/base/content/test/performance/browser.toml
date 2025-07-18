@@ -25,8 +25,10 @@ support-files = ["head.js"]
 skip-if = [
   "asan",
   "debug",
+  "os == 'linux' && os_version == '18.04' && processor == 'x86_64'", # Bug 1969231
+  "os == 'mac' && os_version == '10.15' && processor == 'x86_64' && opt", # Bug 1969231
+  "os == 'mac' && os_version == '15.00' && arch == 'aarch64'", # Bug 1969231
   "os == 'win'", # Bug 1775626
-  "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && socketprocess_networking", # Bug 1382809, bug 1369959
 ]
 
 ["browser_hidden_browser_vsync.js"]

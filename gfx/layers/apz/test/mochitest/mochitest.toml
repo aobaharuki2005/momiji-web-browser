@@ -119,6 +119,7 @@ skip-if = [
 ["test_group_pointerevents.html"]
 skip-if = [
   "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && debug", # Bug 1776964
+  "os == 'win' && os_version == '10.2009' && processor == 'x86_64'", # Bug 1977133
   "os == 'win' && os_version == '11.26100' && processor == 'x86'", # Bug 1404836
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64'", # Bug 1404836
 ]

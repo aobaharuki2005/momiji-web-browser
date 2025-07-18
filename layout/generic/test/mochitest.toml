@@ -250,6 +250,9 @@ skip-if = [
 ]
 
 ["test_scroll_position_iframe.html"]
+skip-if = [
+  "os == 'android' && android_version == '24' && processor == 'x86_64'", # Bug 1971645
+]
 
 ["test_scroll_position_restore.html"]
 support-files = ["file_scroll_position_restore.html"]

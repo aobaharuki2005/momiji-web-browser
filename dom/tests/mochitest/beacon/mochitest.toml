@@ -14,8 +14,9 @@ run-sequentially = "bug 1784963 - beacon-handler shares state"
 
 ["test_beaconFrame.html"]
 skip-if = [
-  "http3",
   "http2",
+  "http3",
+  "os == 'android' && android_version == '24' && processor == 'x86_64'", # Bug 1784963
   "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && xorigin", # Bug 1784963
 ]
 

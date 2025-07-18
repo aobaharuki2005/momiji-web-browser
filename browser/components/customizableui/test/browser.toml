@@ -66,6 +66,9 @@ tags = "overflowable-toolbar"
 
 ["browser_885052_customize_mode_observers_disabed.js"]
 tags = "fullscreen"
+skip-if = [
+  "os == 'linux' && os_version == '24.04' && processor == 'x86_64'", # Bug 1781368
+]
 
 ["browser_885530_showInPrivateBrowsing.js"]
 
@@ -147,8 +150,10 @@ support-files = ["dummy_history_item.html"]
 
 ["browser_947914_button_zoomReset.js"]
 skip-if = [
-  "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && debug && socketprocess_networking",
+  "os == 'linux' && os_version == '18.04' && processor == 'x86_64'", # Bug 1775671
+  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && debug && socketprocess_networking", # Bug 1775671
   "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && opt",
+  "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && debug", # Bug 1775671
 ]
 
 ["browser_947987_removable_default.js"]

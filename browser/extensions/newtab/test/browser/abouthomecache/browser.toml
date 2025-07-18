@@ -36,6 +36,9 @@ tags = "newtab"
 ["browser_locale_change.js"]
 
 ["browser_no_cache.js"]
+skip-if = [
+  "os == 'linux' && os_version == '18.04' && processor == 'x86_64'", # Bug 1952938
+]
 
 ["browser_no_cache_on_SessionStartup_restore.js"]
 
