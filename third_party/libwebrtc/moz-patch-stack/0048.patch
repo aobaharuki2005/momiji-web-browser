@@ -159,7 +159,7 @@ index d2304e87db..bbdb38864e 100644
    // Within this list, the sender-source SSRC pair is unique and per-pair the
    // ReportBlockData represents the latest Report Block that was received for
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index f22acb0f57..9ccb46ddca 100644
+index 54adbe1707..262dea79b9 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -1179,9 +1179,10 @@ std::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
@@ -176,7 +176,7 @@ index f22acb0f57..9ccb46ddca 100644
  
  std::optional<RtpRtcpInterface::SenderReportStats>
 diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index d46acba850..3a6f3c9540 100644
+index d67c89ec1e..d75c303fc4 100644
 --- a/video/rtp_video_stream_receiver2.h
 +++ b/video/rtp_video_stream_receiver2.h
 @@ -232,7 +232,8 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
@@ -190,7 +190,7 @@ index d46acba850..3a6f3c9540 100644
   private:
    // Implements RtpVideoFrameReceiver.
 diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index 26f0d8f6f6..63f0c877cf 100644
+index aec50d35df..eb27040b15 100644
 --- a/video/video_receive_stream2.cc
 +++ b/video/video_receive_stream2.cc
 @@ -631,7 +631,8 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
