@@ -2489,6 +2489,9 @@ pictureinpicture:
 glean:
   description: "The Glean data-control-plane feature within Firefox Desktop for controlling metric configuration"
   owner: glean-team@mozilla.com
+  applications:
+    - firefox-desktop
+    - firefox-desktop-background-task
   hasExposure: false
   allowCoenrollment: true
   variables:
@@ -2502,6 +2505,9 @@ glean:
 gleanInternalSdk:
   description: "The Glean internal SDK feature intended only for internal Glean Team use"
   owner: glean-team@mozilla.com
+  applications:
+    - firefox-desktop
+    - firefox-desktop-background-task
   hasExposure: false
   variables:
     finalInactive:
@@ -4301,6 +4307,7 @@ nimbusTelemetry:
   hasExposure: false
   applications:
     - firefox-desktop
+    - firefox-desktop-background-task
   variables:
     gleanMetricConfiguration:
       description: >
