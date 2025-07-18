@@ -537,7 +537,7 @@ index 14b75f1229..626997322e 100644
      }
    }
 diff --git a/modules/audio_processing/agc2/BUILD.gn b/modules/audio_processing/agc2/BUILD.gn
-index 5da168a292..c37c525f15 100644
+index 3808a92ca2..1d887efc22 100644
 --- a/modules/audio_processing/agc2/BUILD.gn
 +++ b/modules/audio_processing/agc2/BUILD.gn
 @@ -255,7 +255,7 @@ rtc_library("vad_wrapper") {
