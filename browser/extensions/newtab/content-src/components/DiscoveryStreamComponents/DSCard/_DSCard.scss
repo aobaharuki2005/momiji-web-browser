@@ -270,6 +270,7 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
     }
 
     .source-wrapper {
+      color: var(--newtab-text-secondary-text);
       display: flex;
       margin-block-end: var(--space-xxsmall);
       align-items: center;
@@ -444,7 +445,6 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
 
       .source {
         -webkit-line-clamp: 1;
-        color: var(--newtab-text-secondary-text);
         font-size: var(--font-size-small);
       }
 
@@ -455,10 +455,6 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
         height: 28px;
         align-content: center;
         margin-block-start: var(--space-small);
-      }
-
-      .story-footer .story-sponsored-label {
-        color: var(--newtab-text-secondary-text);
       }
 
       .story-sponsored-label {

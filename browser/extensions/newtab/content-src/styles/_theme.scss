@@ -28,7 +28,7 @@ $shadow-image-inset: inset 0 0 0 0.5px $black-15;
   // General styles
   --newtab-background-color: #{$in-content-page-background};
   --newtab-background-color-secondary: #{$newtab-background-secondary};
-  --newtab-text-primary-color: #{$in-content-page-color};
+  --newtab-text-primary-color: var(--text-color);
   // Card Background includes 20% transparency
   --newtab-background-card: #{$newtab-background-card};
   --newtab-text-topic-label-color: var(--color-violet-70);

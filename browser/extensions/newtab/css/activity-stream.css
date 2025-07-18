@@ -7048,6 +7048,7 @@ main section {
   line-height: normal;
 }
 .ds-card .meta .source-wrapper {
+  color: var(--newtab-text-secondary-text);
   display: flex;
   margin-block-end: var(--space-xxsmall);
   align-items: center;
@@ -7181,7 +7182,6 @@ main section {
 }
 .ds-card-grid .sections-card-ui .meta .source {
   -webkit-line-clamp: 1;
-  color: var(--newtab-text-secondary-text);
   font-size: var(--font-size-small);
 }
 .ds-card-grid .sections-card-ui .meta .story-footer {
@@ -7190,9 +7190,6 @@ main section {
   height: 28px;
   align-content: center;
   margin-block-start: var(--space-small);
-}
-.ds-card-grid .sections-card-ui .meta .story-footer .story-sponsored-label {
-  color: var(--newtab-text-secondary-text);
 }
 .ds-card-grid .sections-card-ui .meta .story-sponsored-label {
   line-height: unset;
