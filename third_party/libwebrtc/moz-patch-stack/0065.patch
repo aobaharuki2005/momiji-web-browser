@@ -170,7 +170,7 @@ index cfc16d5854..17d7cc769c 100644
  
  void PacketBuffer::Clear() {
 diff --git a/modules/video_coding/packet_buffer.h b/modules/video_coding/packet_buffer.h
-index ecf7343c19..f43420740c 100644
+index f17b00efb1..e205032fa6 100644
 --- a/modules/video_coding/packet_buffer.h
 +++ b/modules/video_coding/packet_buffer.h
 @@ -79,7 +79,10 @@ class PacketBuffer {

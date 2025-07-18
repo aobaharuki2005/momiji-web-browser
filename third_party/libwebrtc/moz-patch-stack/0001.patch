@@ -1290,12 +1290,12 @@ index fe5c09bd87..d50111c175 100644
  
    // Returns the name of the device used by this module.
 diff --git a/modules/video_capture/video_capture_factory.cc b/modules/video_capture/video_capture_factory.cc
-index e4afdb4164..127bb06a2e 100644
+index 8354067f93..6e884f0d91 100644
 --- a/modules/video_capture/video_capture_factory.cc
 +++ b/modules/video_capture/video_capture_factory.cc
 @@ -16,11 +16,7 @@ namespace webrtc {
  
- rtc::scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
+ scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
      [[maybe_unused]] const char* deviceUniqueIdUTF8) {
 -#if defined(WEBRTC_ANDROID) || defined(WEBRTC_MAC)
 -  return nullptr;
@@ -1304,8 +1304,8 @@ index e4afdb4164..127bb06a2e 100644
 -#endif
  }
  
- rtc::scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
-@@ -37,11 +33,7 @@ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
+ scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
+@@ -37,11 +33,7 @@ scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
  }
  
  VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo() {
@@ -1318,7 +1318,7 @@ index e4afdb4164..127bb06a2e 100644
  
  VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo(
 diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index ef2df2b867..52efa52902 100644
+index 06f9bd3165..cafc13c970 100644
 --- a/modules/video_capture/video_capture_impl.cc
 +++ b/modules/video_capture/video_capture_impl.cc
 @@ -77,7 +77,6 @@ VideoCaptureImpl::VideoCaptureImpl()
@@ -1400,7 +1400,7 @@ index ef2df2b867..52efa52902 100644
  
    return 0;
 diff --git a/modules/video_capture/video_capture_impl.h b/modules/video_capture/video_capture_impl.h
-index bb4fa1682c..0036e738b3 100644
+index 3ec832f871..16658d9844 100644
 --- a/modules/video_capture/video_capture_impl.h
 +++ b/modules/video_capture/video_capture_impl.h
 @@ -64,8 +64,10 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
@@ -1425,7 +1425,7 @@ index bb4fa1682c..0036e738b3 100644
  
    int64_t _lastProcessFrameTimeNanos RTC_GUARDED_BY(capture_checker_);
 diff --git a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
-index 689d1d74b2..a4bfa2fc1a 100644
+index b34baf66f2..13a9c87c0d 100644
 --- a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
 +++ b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
 @@ -284,6 +284,7 @@ LibvpxVp9Encoder::LibvpxVp9Encoder(const Environment& env,
@@ -1509,7 +1509,7 @@ index 689d1d74b2..a4bfa2fc1a 100644
                                               std::optional<int>* spatial_idx,
                                               std::optional<int>* temporal_idx,
 diff --git a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.h b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.h
-index 2741fe8cbc..705820f917 100644
+index aa54caa6b2..aa21658bab 100644
 --- a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.h
 +++ b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.h
 @@ -82,6 +82,9 @@ class LibvpxVp9Encoder : public VideoEncoder {

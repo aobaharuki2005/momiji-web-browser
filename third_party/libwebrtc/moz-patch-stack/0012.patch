@@ -62,7 +62,7 @@ index 7397a10625..19b32f16b9 100644
  int32_t DeviceInfoV4l2::Init() {
    return 0;
 diff --git a/modules/video_capture/linux/video_capture_linux.cc b/modules/video_capture/linux/video_capture_linux.cc
-index a2ea218a8b..23a8f4f3f3 100644
+index 0b57cfe90c..1c635ea440 100644
 --- a/modules/video_capture/linux/video_capture_linux.cc
 +++ b/modules/video_capture/linux/video_capture_linux.cc
 @@ -10,7 +10,6 @@
