@@ -21,9 +21,18 @@ const { ProxyPerUserContextManager } = ChromeUtils.importESModule(
   "chrome://remote/content/webdriver-bidi/ProxyPerUserContextManager.sys.mjs"
 );
 
+const gOverride = Cc["@mozilla.org/network/native-dns-override;1"].getService(
+  Ci.nsINativeDNSResolverOverride
+);
+
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["network.proxy.allow_hijacking_localhost", true]],
+  });
+  gOverride.addIPOverride("test1.example.com", "127.0.0.1");
+
+  registerCleanupFunction(async () => {
+    gOverride.clearOverrides();
   });
 });
 
@@ -84,7 +93,7 @@ add_task(async function test_manual_http_proxy_per_user_context_with_noProxy() {
   const proxyConfiguration = ProxyConfiguration.fromJSON({
     proxyType: "manual",
     httpProxy: proxyURL,
-    noProxy: ["localhost"],
+    noProxy: ["test1.example.com"],
   });
   proxyManager.addConfiguration(userContextId, proxyConfiguration);
 
@@ -96,6 +105,43 @@ add_task(async function test_manual_http_proxy_per_user_context_with_noProxy() {
   BrowserTestUtils.removeTab(tabInUserContext);
   ContextualIdentityService.remove(userContextId);
 });
+
+add_task(
+  async function test_manual_http_proxy_per_user_context_with_noProxy_with_url_pattern() {
+    const [serverURL, proxyURL, secondServerURL] = createHTTPProxy();
+
+    const proxyManager = new ProxyPerUserContextManager();
+
+    const userContext = ContextualIdentityService.create("test_name");
+    const { userContextId } = userContext;
+
+    const tabInUserContext = BrowserTestUtils.addTab(gBrowser, serverURL, {
+      userContextId,
+    });
+    const browserInUserContext = tabInUserContext.linkedBrowser;
+
+    info(
+      "Set up a manual proxy for user context with `noProxy` field for an URL pattern"
+    );
+    const proxyConfiguration = ProxyConfiguration.fromJSON({
+      proxyType: "manual",
+      httpProxy: proxyURL,
+      noProxy: [".example.com"],
+    });
+    proxyManager.addConfiguration(userContextId, proxyConfiguration);
+
+    info("Verify that navigation request is not proxied");
+    await isPageNotProxied(browserInUserContext, serverURL);
+
+    info("Verify that navigation to url not matching the pattern is proxied");
+    await isPageProxied(browserInUserContext, secondServerURL);
+
+    proxyManager.destroy();
+
+    BrowserTestUtils.removeTab(tabInUserContext);
+    ContextualIdentityService.remove(userContextId);
+  }
+);
 
 add_task(async function test_override_manual_http_proxy_per_user_context() {
   const [serverURL, proxyURL] = createHTTPProxy();
@@ -268,6 +314,8 @@ add_task(
 function createHTTPProxy() {
   const server = new HttpServer();
   server.start(-1);
+  server.identity.add("http", "test1.example.com", server.identity.primaryPort);
+  server.identity.add("http", "example.com", server.identity.primaryPort);
   server.registerPathHandler("/", (request, response) => {
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.setHeader("Content-Type", "text/plain", true);
@@ -276,21 +324,29 @@ function createHTTPProxy() {
 
   const proxyServer = new HttpServer();
   proxyServer.start(-1);
-  proxyServer.identity.add("http", "localhost", server.identity.primaryPort);
+  proxyServer.identity.add(
+    "http",
+    "test1.example.com",
+    server.identity.primaryPort
+  );
+  proxyServer.identity.add("http", "example.com", server.identity.primaryPort);
   proxyServer.registerPathHandler("/", (request, response) => {
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.setHeader("Content-Type", "text/plain", true);
     response.write("Proxied");
   });
 
-  registerCleanupFunction(() => {
-    server.stop();
-    proxyServer.stop();
+  registerCleanupFunction(async () => {
+    await server.stop();
+    await proxyServer.stop();
   });
 
   return [
-    `http://localhost:${server.identity.primaryPort}`,
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+    `http://test1.example.com:${server.identity.primaryPort}`,
     `localhost:${proxyServer.identity.primaryPort}`,
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+    `http://example.com:${server.identity.primaryPort}`,
   ];
 }
 
