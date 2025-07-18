@@ -472,19 +472,6 @@ def setup_lambdatest_options(config, tasks):
 
 
 @task_transforms.add
-def setup_internal_artifacts(config, tasks):
-    for task in tasks:
-        task["worker"].setdefault("artifacts", []).append(
-            {
-                "name": "perftest",
-                "path": "build/perftest",
-                "type": "directory",
-            }
-        )
-        yield task
-
-
-@task_transforms.add
 def select_tasks_to_lambda(config, tasks):
     """
     all motionmark tests
