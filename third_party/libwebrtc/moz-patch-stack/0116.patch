@@ -29,10 +29,10 @@ index 334d2e7a6a..700965152e 100644
  }
  
 diff --git a/modules/portal/BUILD.gn b/modules/portal/BUILD.gn
-index 53b294c6f3..4db7816bc4 100644
+index e8367393a3..a693604389 100644
 --- a/modules/portal/BUILD.gn
 +++ b/modules/portal/BUILD.gn
-@@ -138,10 +138,10 @@ if (!build_with_mozilla) {
+@@ -139,10 +139,10 @@ if (!build_with_mozilla) {
        deps -= [ ":pipewire_stubs" ]
        defines -= [ "WEBRTC_DLOPEN_PIPEWIRE" ]
        public_deps = [
