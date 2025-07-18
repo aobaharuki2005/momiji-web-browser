@@ -4449,9 +4449,35 @@ main section {
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+.widgets-container:has(.lists), .widgets-container:has(.focus-timer) {
+  display: grid;
+  border: 1px solid var(--border-color-card);
+  grid-template: 1fr 1fr;
+  column-gap: var(--space-large);
+  width: 100%;
+}
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+.lists {
+  grid-column: span 1;
+  width: 300px;
+  background: var(--newtab-background-card);
+  border-radius: var(--border-radius-large);
+  padding: var(--space-large);
+  max-height: 282px;
+}
+.lists fieldset {
+  padding: var(--space-xsmall);
+}
+.lists .task-item {
+  display: flex;
+}
+.lists .task-item input:checked ~ span {
+  text-decoration: line-through;
+}
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
