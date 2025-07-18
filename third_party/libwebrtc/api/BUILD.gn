@@ -201,6 +201,7 @@ rtc_library("candidate") {
     "../rtc_base:stringutils",
     "../rtc_base/system:rtc_export",
     "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/strings:string_view",
   ]
 }
@@ -415,6 +416,7 @@ if (!build_with_mozilla) {
     "//third_party/abseil-cpp/absl/base:core_headers",
     "//third_party/abseil-cpp/absl/functional:any_invocable",
     "//third_party/abseil-cpp/absl/memory",
+    "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/strings:string_view",
 
     # Basically, don't add stuff here. You might break sensitive downstream
@@ -1397,6 +1399,7 @@ if (rtc_include_tests) {
     testonly = true
     sources = [ "test/mock_session_description_interface.h" ]
     deps = [
+      ":candidate",
       ":libjingle_peerconnection_api",
       "../test:test_support",
     ]
@@ -1410,6 +1413,7 @@ if (rtc_include_tests) {
       ":array_view",
       ":frame_transformer_interface",
       "../test:test_support",
+      "units:time_delta",
       "units:timestamp",
     ]
   }
@@ -1466,6 +1470,7 @@ if (rtc_include_tests) {
       ":frame_transformer_interface",
       "../api/units:timestamp",
       "../test:test_support",
+      "units:time_delta",
     ]
   }
 

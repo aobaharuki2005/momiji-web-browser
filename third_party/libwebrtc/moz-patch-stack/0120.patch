@@ -121,7 +121,7 @@ index ca973787ee..6f68d7ecad 100644
    deps = [
      "net/dcsctp/public:factory",
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 7cef6fb0d9..da389984b4 100644
+index b6a0a3afff..37492e6740 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -136,7 +136,7 @@ index 7cef6fb0d9..da389984b4 100644
  
  group("api") {
 diff --git a/api/audio/test/BUILD.gn b/api/audio/test/BUILD.gn
-index 91b8d3195c..8d66ee1abb 100644
+index b1060faae3..c567b6b0f3 100644
 --- a/api/audio/test/BUILD.gn
 +++ b/api/audio/test/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -211,7 +211,7 @@ index a3ee0d4e0c..322c52ac64 100644
  
  rtc_source_set("audio_encoder_g722_config") {
 diff --git a/api/audio_codecs/opus/BUILD.gn b/api/audio_codecs/opus/BUILD.gn
-index fad98a9619..5fd83d4aa0 100644
+index 2035a791be..c5936ac39f 100644
 --- a/api/audio_codecs/opus/BUILD.gn
 +++ b/api/audio_codecs/opus/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -241,7 +241,7 @@ index 40714b196e..2c6b39f59e 100644
  
  if (rtc_include_tests) {
 diff --git a/api/video/BUILD.gn b/api/video/BUILD.gn
-index c98fb3017f..1e95af2f3e 100644
+index 98591e6050..7468539145 100644
 --- a/api/video/BUILD.gn
 +++ b/api/video/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -256,7 +256,7 @@ index c98fb3017f..1e95af2f3e 100644
  
  rtc_library("video_rtp_headers") {
 diff --git a/api/video_codecs/BUILD.gn b/api/video_codecs/BUILD.gn
-index 4692207be7..9bf7a34a1b 100644
+index 8351ae424b..5e8259826f 100644
 --- a/api/video_codecs/BUILD.gn
 +++ b/api/video_codecs/BUILD.gn
 @@ -8,8 +8,8 @@
