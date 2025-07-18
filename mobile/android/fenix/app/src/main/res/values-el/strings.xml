@@ -879,6 +879,8 @@
   <string name="preferences_home_2">Αρχική σελίδα</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">Εικονίδιο εφαρμογής</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Προβολή γραμμής καρτελών</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Χειρονομίες</string>
   <!-- Preference for settings related to visual options -->
@@ -1329,6 +1331,12 @@
   <string name="preference_auto_battery_theme">Ορισμός από εξοικονόμηση μπαταρίας</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Χρήση θέματος συσκευής</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Εμφάνιση γραμμής καρτελών</string>
   <!--
     Gestures Preferences
 

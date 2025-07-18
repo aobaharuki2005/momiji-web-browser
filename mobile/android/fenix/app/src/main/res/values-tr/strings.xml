@@ -1313,6 +1313,8 @@
   <string name="preference_simple_toolbar">Basit</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Genişletilmiş</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">Sekme çubuğu gösterilirken adres çubuğu üstte olmalıdır.</string>
   <!--
     App icon Preferences
 
@@ -1509,7 +1511,7 @@
   <!-- Text for the tabs header normal tabs -->
   <string name="tabs_header_normal_tabs_title">Sekmeler</string>
   <!-- Text for the tabs header synced tabs -->
-  <string name="tabs_header_synced_tabs_title">Eşitle</string>
+  <string name="tabs_header_synced_tabs_title">Eşitlenen</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Sekme ekle</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
