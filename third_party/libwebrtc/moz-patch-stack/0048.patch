@@ -37,10 +37,10 @@ index 9b875d8a5a..733ccbe7d6 100644
      // Timing frame info: all important timestamps for a full lifetime of a
      // single 'timing frame'.
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index fcbe871980..7cab66042b 100644
+index b89803184c..e35f51f236 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.cc
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -388,11 +388,13 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
+@@ -389,11 +389,13 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
  
  void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
                                          uint32_t* octet_count,
@@ -141,10 +141,10 @@ index 625ec14c8d..af123a3015 100644
    // A snapshot of the most recent Report Block with additional data of
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index e14072c0fc..02828619a6 100644
+index e58f15fdbb..a1020faa81 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-@@ -407,10 +407,11 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
+@@ -408,10 +408,11 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
        StreamDataCounters* rtx_counters) const = 0;
  
  
@@ -190,10 +190,10 @@ index d46acba850..3a6f3c9540 100644
   private:
    // Implements RtpVideoFrameReceiver.
 diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index 2f53969f62..875130c41d 100644
+index 26f0d8f6f6..63f0c877cf 100644
 --- a/video/video_receive_stream2.cc
 +++ b/video/video_receive_stream2.cc
-@@ -595,7 +595,8 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
+@@ -631,7 +631,8 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
    // seem to be any support for these stats right now. So, we hack this in.
    rtp_video_stream_receiver_.RemoteRTCPSenderInfo(
        &stats.rtcp_sender_packets_sent, &stats.rtcp_sender_octets_sent,

@@ -93,10 +93,10 @@ index b4c944ccf8..9b5898b2e7 100644
    }
    return 0;
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index 02828619a6..e3dc8d9248 100644
+index a1020faa81..055e429de3 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-@@ -278,7 +278,7 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
+@@ -279,7 +279,7 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
    // Returns the FlexFEC SSRC, if there is one.
    virtual std::optional<uint32_t> FlexfecSsrc() const = 0;
  

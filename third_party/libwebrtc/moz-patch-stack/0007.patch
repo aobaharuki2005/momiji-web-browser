@@ -33,10 +33,10 @@ index dc9c1816ef..2d0af9e1c7 100644
      // Timing frame info: all important timestamps for a full lifetime of a
      // single 'timing frame'.
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index 9f94e253c4..ed4a9aa70e 100644
+index 2be14bed0e..9e00112075 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.cc
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -385,10 +385,12 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
+@@ -386,10 +386,12 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
  }
  
  void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
@@ -127,10 +127,10 @@ index 1b2afac61f..625ec14c8d 100644
    // A snapshot of the most recent Report Block with additional data of
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index b61d75cde2..68e8fb70bd 100644
+index 939b05618d..47f5bbaa53 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-@@ -404,9 +404,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
+@@ -405,9 +405,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
        StreamDataCounters* rtx_counters) const = 0;
  
  

@@ -757,10 +757,10 @@ index d7ba03d335..5fa32af69b 100644
    method_ = new_method;
  }
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.cc b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-index 46c82180eb..bb035729f8 100644
+index 9af58b0467..473d14071c 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.cc
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-@@ -423,6 +423,45 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
+@@ -424,6 +424,45 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
    return true;
  }
  
@@ -807,10 +807,10 @@ index 46c82180eb..bb035729f8 100644
  //
  // E.g. default video or screenshare.
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.h b/modules/rtp_rtcp/source/rtp_header_extensions.h
-index c8ca45f72c..a42dcfd1cf 100644
+index 5cecd0706f..961fac4e30 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.h
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.h
-@@ -310,6 +310,22 @@ class ColorSpaceExtension {
+@@ -314,6 +314,22 @@ class ColorSpaceExtension {
    static size_t WriteLuminance(uint8_t* data, float f, int denominator);
  };
  
@@ -849,10 +849,10 @@ index bf8d5e46ae..2277fb95d7 100644
    }
  }
 diff --git a/modules/rtp_rtcp/source/rtp_packet_unittest.cc b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
-index ace1a236f2..162fc27388 100644
+index df3428d441..a3976ce1c3 100644
 --- a/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 +++ b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
-@@ -123,6 +123,18 @@ constexpr uint8_t kPacketWithMid[] = {
+@@ -140,6 +140,18 @@ constexpr uint8_t kPacketWithMid[] = {
      0xbe, 0xde, 0x00, 0x01,
      0xb2, 'm', 'i', 'd'};
  
@@ -871,7 +871,7 @@ index ace1a236f2..162fc27388 100644
  constexpr uint32_t kCsrcs[] = {0x34567890, 0x32435465};
  constexpr uint8_t kPayload[] = {'p', 'a', 'y', 'l', 'o', 'a', 'd'};
  constexpr uint8_t kPacketPaddingSize = 8;
-@@ -402,6 +414,24 @@ TEST(RtpPacketTest, FailsToSetUnregisteredExtension) {
+@@ -419,6 +431,24 @@ TEST(RtpPacketTest, FailsToSetUnregisteredExtension) {
    EXPECT_EQ(packet.GetExtension<TransportSequenceNumber>(), std::nullopt);
  }
  

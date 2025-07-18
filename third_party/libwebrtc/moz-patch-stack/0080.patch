@@ -15,10 +15,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/62e71a2f745c4b98d
  3 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
-index 6c6f43c9bc..5ffdee93f8 100644
+index cc472aa76f..2a31953cc1 100644
 --- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
 +++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
-@@ -123,7 +123,7 @@ RtpVideoStreamReceiverFrameTransformerDelegate::
+@@ -138,7 +138,7 @@ RtpVideoStreamReceiverFrameTransformerDelegate::
          RtpVideoFrameReceiver* receiver,
          Clock* clock,
          rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
@@ -28,10 +28,10 @@ index 6c6f43c9bc..5ffdee93f8 100644
      : receiver_(receiver),
        frame_transformer_(std::move(frame_transformer)),
 diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
-index c99260831e..7c081513f1 100644
+index 7ed54f80d7..e9bef933ed 100644
 --- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
 +++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
-@@ -41,7 +41,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
+@@ -44,7 +44,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
        RtpVideoFrameReceiver* receiver,
        Clock* clock,
        rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
@@ -40,7 +40,7 @@ index c99260831e..7c081513f1 100644
        uint32_t ssrc);
  
    void Init();
-@@ -71,7 +71,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
+@@ -74,7 +74,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
    RtpVideoFrameReceiver* receiver_ RTC_GUARDED_BY(network_sequence_checker_);
    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_
        RTC_GUARDED_BY(network_sequence_checker_);

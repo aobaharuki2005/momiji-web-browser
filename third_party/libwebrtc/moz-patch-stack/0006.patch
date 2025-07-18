@@ -30,10 +30,10 @@ index 7c6387c876..dc9c1816ef 100644
      // single 'timing frame'.
      std::optional<webrtc::TimingFrameInfo> timing_frame_info;
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index 3e710dfc1d..9f94e253c4 100644
+index d45f3e44fb..2be14bed0e 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.cc
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -384,6 +384,13 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
+@@ -385,6 +385,13 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
    return last_xr_rtis;
  }
  
@@ -123,10 +123,10 @@ index 57139e2242..1b2afac61f 100644
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
    // Within this list, the `ReportBlockData::source_ssrc()`, which is the SSRC
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index 1ae3a312d2..b61d75cde2 100644
+index 0d4d2a513b..939b05618d 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-@@ -403,6 +403,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
+@@ -404,6 +404,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
        StreamDataCounters* rtp_counters,
        StreamDataCounters* rtx_counters) const = 0;
  
