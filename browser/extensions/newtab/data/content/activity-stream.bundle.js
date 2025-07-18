@@ -12384,8 +12384,10 @@ const PREF_WIDGETS_SYSTEM_TIMER_ENABLED = "widgets.system.focusTimer.enabled";
 function Widgets() {
   const prefs = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Prefs.values);
   const dispatch = (0,external_ReactRedux_namespaceObject.useDispatch)();
-  const listsEnabled = prefs[PREF_WIDGETS_SYSTEM_LISTS_ENABLED] && prefs[PREF_WIDGETS_LISTS_ENABLED];
-  const timerEnabled = prefs[PREF_WIDGETS_SYSTEM_TIMER_ENABLED] && prefs[PREF_WIDGETS_TIMER_ENABLED];
+  const nimbusListsEnabled = prefs.widgetsConfig?.listsEnabled;
+  const nimbusTimerEnabled = prefs.widgetsConfig?.timerEnabled;
+  const listsEnabled = (nimbusListsEnabled || prefs[PREF_WIDGETS_SYSTEM_LISTS_ENABLED]) && prefs[PREF_WIDGETS_LISTS_ENABLED];
+  const timerEnabled = (nimbusTimerEnabled || prefs[PREF_WIDGETS_SYSTEM_TIMER_ENABLED]) && prefs[PREF_WIDGETS_TIMER_ENABLED];
   return /*#__PURE__*/external_React_default().createElement("div", {
     className: "widgets-container"
   }, listsEnabled && /*#__PURE__*/external_React_default().createElement(Lists, {
