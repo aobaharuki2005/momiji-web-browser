@@ -261,6 +261,7 @@ export var AboutNewTabResourceMapping = {
       }
       lazy.aboutRedirector.wrappedJSObject.notifyBuiltInAddonInitialized();
       Glean.newtab.addonReadySuccess.set(true);
+      Glean.newtab.addonXpiUsed.set(isXPI);
       this.logger.debug("Newtab resource mapping completed successfully");
     } catch (e) {
       this.logger.error("Failed to complete resource mapping: ", e);

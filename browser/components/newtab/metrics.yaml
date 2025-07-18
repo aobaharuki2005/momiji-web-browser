@@ -961,6 +961,22 @@ newtab:
       - mconley@mozilla.com
     expires: never
 
+  addon_xpi_used:
+    type: boolean
+    description: >
+      True if a downloaded XPI file is where the newtab resources are being
+      mapped from.
+    bugs:
+      - https://bugzil.la/1978061
+    data_reviews:
+      - https://bugzil.la/1978061
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - pdahiya@mozilla.com
+      - mconley@mozilla.com
+    expires: never
+
   trending_search_impression:
     type: event
     description: >
