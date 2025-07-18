@@ -55,7 +55,7 @@ index c6465fbccf..5d1fd88fd1 100644
  FlexfecReceiver::FlexfecReceiver(
      Clock* clock,
 diff --git a/rtc_base/task_utils/repeating_task.h b/rtc_base/task_utils/repeating_task.h
-index c45de95ecc..28c691c3de 100644
+index 5779fc1a8b..e90ac7d7a0 100644
 --- a/rtc_base/task_utils/repeating_task.h
 +++ b/rtc_base/task_utils/repeating_task.h
 @@ -57,7 +57,7 @@ class RepeatingTaskHandle {

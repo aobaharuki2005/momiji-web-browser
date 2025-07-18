@@ -16,7 +16,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8d832e832ffe51324
  1 file changed, 13 insertions(+)
 
 diff --git a/rtc_base/logging.h b/rtc_base/logging.h
-index a2329a999a..5e853ef093 100644
+index 8ef468fa5f..11e83db856 100644
 --- a/rtc_base/logging.h
 +++ b/rtc_base/logging.h
 @@ -48,6 +48,14 @@
