@@ -82,7 +82,7 @@ function Lists({ dispatch }) {
   }
 
   return lists ? (
-    <article className="lists">
+    <article id="widget-lists" className="lists">
       <moz-select value={selected}>
         {Object.entries(lists).map(([key, list]) => (
           <moz-option key={key} value={key} label={list.label} />
