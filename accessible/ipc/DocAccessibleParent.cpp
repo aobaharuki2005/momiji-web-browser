@@ -1177,6 +1177,17 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvFocusEvent(
   return IPC_OK();
 }
 
+LayoutDeviceIntRect DocAccessibleParent::GetCachedCaretRect() {
+  LayoutDeviceIntRect caretRect = mCaretRect;
+  if (!caretRect.IsEmpty()) {
+    // Reapply doc offset to the caret rect.
+    LayoutDeviceIntRect docRect = Bounds();
+    caretRect.MoveBy(docRect.X(), docRect.Y());
+  }
+
+  return caretRect;
+}
+
 void DocAccessibleParent::SelectionRanges(nsTArray<TextRange>* aRanges) const {
   aRanges->SetCapacity(mTextSelections.Length());
   for (const auto& data : mTextSelections) {

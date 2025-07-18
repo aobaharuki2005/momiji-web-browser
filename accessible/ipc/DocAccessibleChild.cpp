@@ -401,7 +401,13 @@ LayoutDeviceIntRect DocAccessibleChild::GetCaretRectFor(const uint64_t& aID) {
     return LayoutDeviceIntRect();
   }
 
-  return text->GetCaretRect().first;
+  LayoutDeviceIntRect rect = text->GetCaretRect().first;
+
+  // Remove doc offset and reapply in parent.
+  LayoutDeviceIntRect docBounds = mDoc->Bounds();
+  rect.MoveBy(-docBounds.X(), -docBounds.Y());
+
+  return rect;
 }
 
 bool DocAccessibleChild::SendFocusEvent(const uint64_t& aID) {
