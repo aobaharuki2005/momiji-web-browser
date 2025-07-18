@@ -118,7 +118,7 @@ index e628c3abba..32a64550bd 100644
    # TODO(https://bugs.webrtc.org/14437):  Remove this section if general
    # Chromium fix resolves the problem.
 diff --git a/BUILD.gn b/BUILD.gn
-index fb9c90f591..c79280232b 100644
+index ca8d8faa61..c1e86466a0 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -33,7 +33,7 @@ if (is_android) {
@@ -141,7 +141,7 @@ index fb9c90f591..c79280232b 100644
    if (!rtc_builtin_ssl_root_certificates) {
      defines += [ "WEBRTC_EXCLUDE_BUILT_IN_SSL_ROOT_CERTS" ]
    }
-@@ -497,9 +501,11 @@ config("common_config") {
+@@ -501,9 +505,11 @@ config("common_config") {
    }
  }
  
@@ -153,7 +153,7 @@ index fb9c90f591..c79280232b 100644
  
  if (!rtc_build_ssl) {
    config("external_ssl_library") {
-@@ -562,6 +568,34 @@ if (!build_with_chromium) {
+@@ -566,6 +572,34 @@ if (!build_with_chromium) {
        "sdk",
        "video",
      ]
@@ -188,7 +188,7 @@ index fb9c90f591..c79280232b 100644
  
      if (rtc_include_builtin_audio_codecs) {
        deps += [
-@@ -574,6 +608,16 @@ if (!build_with_chromium) {
+@@ -578,6 +612,16 @@ if (!build_with_chromium) {
        deps += [
          "api/video:video_frame",
          "api/video:video_rtp_headers",
@@ -701,7 +701,7 @@ index d204ce1b73..3240fc817b 100644
  
  rtc_library("rtc_audio_video") {
 diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index bbb321eae5..acf496f5b0 100644
+index b1f026372a..3eefc07cd9 100644
 --- a/media/base/media_channel.h
 +++ b/media/base/media_channel.h
 @@ -67,9 +67,6 @@ namespace webrtc {
@@ -1292,7 +1292,7 @@ index 3e7af5a1e9..7f70e4eefd 100644
      "../api:sequence_checker",
      "../api/adaptation:resource_adaptation_api",
 diff --git a/webrtc.gni b/webrtc.gni
-index d77a4310f2..29286c5b95 100644
+index 35c9768a1a..c7d0befb56 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -35,6 +35,11 @@ if (is_mac) {
@@ -1364,7 +1364,7 @@ index d77a4310f2..29286c5b95 100644
    # Experimental: enable use of Android AAudio which requires Android SDK 26 or above
    # and NDK r16 or above.
    rtc_enable_android_aaudio = false
-@@ -290,7 +297,7 @@ declare_args() {
+@@ -295,7 +302,7 @@ declare_args() {
    rtc_build_json = !build_with_mozilla
    rtc_build_libsrtp = !build_with_mozilla
    rtc_build_libvpx = !build_with_mozilla
@@ -1373,7 +1373,7 @@ index d77a4310f2..29286c5b95 100644
    rtc_build_opus = !build_with_mozilla
    rtc_build_ssl = !build_with_mozilla
  
-@@ -299,7 +306,7 @@ declare_args() {
+@@ -304,7 +311,7 @@ declare_args() {
  
    # Chromium uses its own IO handling, so the internal ADM is only built for
    # standalone WebRTC.
@@ -1382,7 +1382,7 @@ index d77a4310f2..29286c5b95 100644
  
    # Set this to true to enable the avx2 support in webrtc.
    # TODO: Make sure that AVX2 works also for non-clang compilers.
-@@ -339,6 +346,9 @@ declare_args() {
+@@ -344,6 +351,9 @@ declare_args() {
    rtc_enable_grpc = rtc_enable_protobuf && (is_linux || is_mac)
  }
  
@@ -1392,7 +1392,7 @@ index d77a4310f2..29286c5b95 100644
  # Make it possible to provide custom locations for some libraries (move these
  # up into declare_args should we need to actually use them for the GN build).
  rtc_libvpx_dir = "//third_party/libvpx"
-@@ -1205,7 +1215,7 @@ if (is_mac || is_ios) {
+@@ -1210,7 +1220,7 @@ if (is_mac || is_ios) {
    }
  }
  

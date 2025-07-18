@@ -79,7 +79,7 @@ index 940244f9af..fa6a5e85d8 100644
  # The python interpreter to use by default. On Windows, this will look
  # for vpython3.exe and vpython3.bat.
 diff --git a/BUILD.gn b/BUILD.gn
-index ca973787ee..6f68d7ecad 100644
+index 6508557150..6da9ceab1e 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -21,15 +21,15 @@
@@ -102,7 +102,7 @@ index ca973787ee..6f68d7ecad 100644
    import("//third_party/jni_zero/jni_zero.gni")
  }
  
-@@ -535,7 +535,7 @@ if (!build_with_chromium) {
+@@ -539,7 +539,7 @@ if (!build_with_chromium) {
  
      sources = []
      complete_static_lib = true
@@ -111,7 +111,7 @@ index ca973787ee..6f68d7ecad 100644
      defines = []
  
      deps = [
-@@ -842,7 +842,7 @@ rtc_static_library("dcsctp") {
+@@ -846,7 +846,7 @@ rtc_static_library("dcsctp") {
    visibility = [ "//:default" ]
    sources = []
    complete_static_lib = true
@@ -874,7 +874,7 @@ index fb107ef1a3..b718fa583d 100644
  
  declare_args() {
 diff --git a/webrtc.gni b/webrtc.gni
-index 33d81920f4..7e6602dfd7 100644
+index 3cc7d4777a..62faaeb211 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -5,12 +5,12 @@
@@ -922,7 +922,7 @@ index 33d81920f4..7e6602dfd7 100644
  }
  
  if (build_with_chromium) {
-@@ -379,8 +379,8 @@ rtc_common_configs = [ webrtc_root + ":common_config" ]
+@@ -384,8 +384,8 @@ rtc_common_configs = [ webrtc_root + ":common_config" ]
  
  if (is_mac || is_ios) {
    if (filter_include(default_compiler_configs,
@@ -933,7 +933,7 @@ index 33d81920f4..7e6602dfd7 100644
    }
  }
  
-@@ -398,7 +398,7 @@ rtc_common_inherited_config = webrtc_root + ":common_inherited_config"
+@@ -403,7 +403,7 @@ rtc_common_inherited_config = webrtc_root + ":common_inherited_config"
  # Common configs to remove or add in all rtc targets.
  rtc_remove_configs = []
  if (!build_with_chromium && is_clang) {

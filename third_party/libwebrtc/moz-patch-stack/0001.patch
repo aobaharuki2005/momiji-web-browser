@@ -1594,7 +1594,7 @@ index 1a07e9641e..de97fe9446 100644
  // The list of logging streams currently configured.
  // Note: we explicitly do not clean this up, because of the uncertain ordering
 diff --git a/rtc_base/logging.h b/rtc_base/logging.h
-index 6bb2b1d6e4..8ef468fa5f 100644
+index b011acbefa..717aae2e19 100644
 --- a/rtc_base/logging.h
 +++ b/rtc_base/logging.h
 @@ -555,6 +555,12 @@ class LogMessage {
@@ -1649,7 +1649,7 @@ index 0a9226ef6f..620c1c02f3 100644
    vcm_ = nullptr;
  }
 diff --git a/webrtc.gni b/webrtc.gni
-index cd861f91a0..d77a4310f2 100644
+index 2a407632d6..35c9768a1a 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -123,7 +123,7 @@ declare_args() {
