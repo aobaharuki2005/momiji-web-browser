@@ -1761,7 +1761,7 @@ CssRuleView.prototype = {
     let isComputedHighlighted = false;
 
     // Highlight search matches in the computed list of properties
-    editor._populateComputed();
+    editor.populateComputed();
     for (const computed of editor.prop.computed) {
       if (computed.element) {
         // Get the actual property value displayed in the computed list
