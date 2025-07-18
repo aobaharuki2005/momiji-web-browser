@@ -16,7 +16,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9314046d89ebc0836
  2 files changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
-index 21a9c1ca4a..01a8f04daa 100644
+index bc4fdc1227..e7df105d63 100644
 --- a/modules/desktop_capture/mac/screen_capturer_mac.mm
 +++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
 @@ -286,7 +286,8 @@ DesktopRect GetExcludedWindowPixelBounds(CGWindowID window,

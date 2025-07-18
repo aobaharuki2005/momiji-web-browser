@@ -30,7 +30,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b3eb0533cabd88f3c
  1 file changed, 94 insertions(+), 21 deletions(-)
 
 diff --git a/modules/desktop_capture/mac/screen_capturer_sck.mm b/modules/desktop_capture/mac/screen_capturer_sck.mm
-index ecd818ee91..080ab23395 100644
+index ba1d7cf169..4c98e17aa7 100644
 --- a/modules/desktop_capture/mac/screen_capturer_sck.mm
 +++ b/modules/desktop_capture/mac/screen_capturer_sck.mm
 @@ -75,7 +75,7 @@ class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final
@@ -142,8 +142,8 @@ index ecd818ee91..080ab23395 100644
 +                                      scale_factor * bounding_rect.size.width,
 +                                      scale_factor * bounding_rect.size.height);
 +
-   rtc::ScopedCFTypeRef<IOSurfaceRef> scoped_io_surface(
-       io_surface, rtc::RetainPolicy::RETAIN);
+   rtc::ScopedCFTypeRef<IOSurfaceRef> scoped_io_surface(io_surface,
+                                                        RetainPolicy::RETAIN);
    std::unique_ptr<DesktopFrameIOSurface> desktop_frame_io_surface =
 -      DesktopFrameIOSurface::Wrap(scoped_io_surface);
 +      DesktopFrameIOSurface::Wrap(scoped_io_surface, img_bounding_rect);

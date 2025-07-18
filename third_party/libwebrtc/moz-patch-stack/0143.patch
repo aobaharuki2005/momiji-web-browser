@@ -342,7 +342,7 @@ index 105cbf0783..e0c467714a 100644
  
  #endif  // MODULES_DESKTOP_CAPTURE_MAC_SCREEN_CAPTURER_SCK_H_
 diff --git a/modules/desktop_capture/mac/screen_capturer_sck.mm b/modules/desktop_capture/mac/screen_capturer_sck.mm
-index 264a0a8f8b..f180d3bc62 100644
+index c641ea10cb..fdf7e3ab12 100644
 --- a/modules/desktop_capture/mac/screen_capturer_sck.mm
 +++ b/modules/desktop_capture/mac/screen_capturer_sck.mm
 @@ -14,6 +14,7 @@

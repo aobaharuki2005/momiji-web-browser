@@ -21,7 +21,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/37c4cd46ca2fa9f27
  1 file changed, 31 insertions(+)
 
 diff --git a/modules/desktop_capture/mac/screen_capturer_sck.mm b/modules/desktop_capture/mac/screen_capturer_sck.mm
-index 1bc70cfce3..ecd818ee91 100644
+index 3e82f35f0d..ba1d7cf169 100644
 --- a/modules/desktop_capture/mac/screen_capturer_sck.mm
 +++ b/modules/desktop_capture/mac/screen_capturer_sck.mm
 @@ -66,6 +66,9 @@ class API_AVAILABLE(macos(14.0)) ScreenCapturerSck final
