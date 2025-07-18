@@ -190,10 +190,10 @@ index d67c89ec1e..d75c303fc4 100644
   private:
    // Implements RtpVideoFrameReceiver.
 diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index aec50d35df..eb27040b15 100644
+index 1c25c6083f..e4e2cb9835 100644
 --- a/video/video_receive_stream2.cc
 +++ b/video/video_receive_stream2.cc
-@@ -631,7 +631,8 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
+@@ -632,7 +632,8 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
    // seem to be any support for these stats right now. So, we hack this in.
    rtp_video_stream_receiver_.RemoteRTCPSenderInfo(
        &stats.rtcp_sender_packets_sent, &stats.rtcp_sender_octets_sent,
