@@ -15,7 +15,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d380a43d59f4f7cbc
  4 files changed, 35 insertions(+)
 
 diff --git a/audio/audio_send_stream.cc b/audio/audio_send_stream.cc
-index 891ae4387f..4de30e700d 100644
+index 94991f76e4..9347e8e860 100644
 --- a/audio/audio_send_stream.cc
 +++ b/audio/audio_send_stream.cc
 @@ -412,6 +412,7 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
@@ -27,7 +27,7 @@ index 891ae4387f..4de30e700d 100644
    stats.header_and_padding_bytes_sent =
        call_stats.header_and_padding_bytes_sent;
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index b9e0d582fe..9dcd3b29ca 100644
+index 52817f31ff..b1b18410c4 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
 @@ -81,6 +81,31 @@ constexpr TimeDelta kMinRetransmissionWindow = TimeDelta::Millis(30);
@@ -97,7 +97,7 @@ index b9e0d582fe..9dcd3b29ca 100644
    StreamDataCounters rtp_stats;
    StreamDataCounters rtx_stats;
 diff --git a/audio/channel_send.h b/audio/channel_send.h
-index 86d5427a00..353f808a93 100644
+index 8991fc0f44..69c1822109 100644
 --- a/audio/channel_send.h
 +++ b/audio/channel_send.h
 @@ -49,6 +49,7 @@ struct CallSendStatistics {
