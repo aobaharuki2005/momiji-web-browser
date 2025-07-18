@@ -32,7 +32,6 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/SVGImageContext.h"
 #include "mozilla/ScrollContainerFrame.h"
-#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/dom/DocumentInlines.h"
@@ -3083,8 +3082,7 @@ nsBackgroundLayerState nsCSSRendering::PrepareImageLayer(
   // Only do partial bg image drawing in content documents: non-content
   // documents are viewed as UI of the browser and a partial draw of a bg image
   // might look weird in that context.
-  if (StaticPrefs::layout_display_partial_background_images() &&
-      XRE_IsContentProcess() && !aPresContext->IsChrome()) {
+  if (XRE_IsContentProcess() && !aPresContext->IsChrome()) {
     irFlags |= nsImageRenderer::FLAG_DRAW_PARTIAL_FRAMES;
   }
 

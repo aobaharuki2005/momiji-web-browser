@@ -10774,12 +10774,6 @@
   value: false
   mirror: always
 
-# Whether to draw images in CSS backgrounds if we only have a partial frame.
-- name: layout.display_partial_background_images
-  type: bool
-  value: true
-  mirror: always
-
 # Controls whether nsRefreshDriver::IsInHighRateMode() may ever return true.
 - name: layout.expose_high_rate_mode_from_refreshdriver
   type: bool
