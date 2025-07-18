@@ -159,6 +159,10 @@ urlbar-result-menu-show-less-frequently =
 urlbar-result-menu-dont-show-weather-suggestions =
     .label = Don’t show weather suggestions
 
+# Used for Split Button.
+urlbar-splitbutton-dropmarker =
+    .title = Open menu
+
 # A message shown in the urlbar when the user submits feedback on a suggestion
 # (e.g., it shows an inaccurate location, it's shown too often, etc.).
 urlbar-feedback-acknowledgment = Thanks for your feedback

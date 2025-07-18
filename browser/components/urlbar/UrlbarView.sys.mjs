@@ -1715,6 +1715,9 @@ export class UrlbarView {
       "urlbarView-button-menu",
       "urlbarView-splitbutton-dropmarker"
     );
+    this.#l10nCache.setElementL10n(dropmarker, {
+      id: "urlbar-splitbutton-dropmarker",
+    });
     dropmarker.setAttribute("role", "button");
     let icon = this.#createElement("img");
     icon.src = "chrome://global/skin/icons/arrow-down-12.svg";
