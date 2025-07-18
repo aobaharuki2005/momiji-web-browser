@@ -550,7 +550,10 @@ support-files = [
 
 ["browser_searchSingleWordNotification.js"]
 https_first_disabled = true
-skip-if = ["os == 'linux' && os_version == '18.04' && processor == 'x86_64' && opt && a11y_checks && swgl"] # Bug 1773830
+skip-if = [
+  "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && opt && a11y_checks && swgl", # Bug 1773830
+  "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && opt", # Bug 1929645
+]
 
 ["browser_searchSuggestions.js"]
 support-files = [
