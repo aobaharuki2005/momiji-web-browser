@@ -251,12 +251,15 @@ module.exports = function (config) {
               },
             "content-src/components/DiscoveryStreamComponents/AdBanner/AdBanner.jsx":
               {
+                statements: 94.12,
+                lines: 94.12,
+                functions: 75,
                 branches: 60,
               },
             "content-src/components/DiscoveryStreamComponents/AdBannerContextMenu/AdBannerContextMenu.jsx":
               {
-                statements: 86,
-                lines: 86,
+                statements: 84,
+                lines: 84,
                 functions: 83,
               },
             "content-src/components/DiscoveryStreamComponents/DSThumbsUpDownButtons/DSThumbsUpDownButtons.jsx":

@@ -4701,7 +4701,8 @@ function AdBannerContextMenu({
   spoc,
   position,
   type,
-  showAdReporting
+  showAdReporting,
+  toggleActive = () => {}
 }) {
   const ADBANNER_CONTEXT_MENU_OPTIONS = ["BlockAdUrl", ...(showAdReporting ? ["ReportAd"] : []), "ManageSponsoredContent", "OurSponsorsAndYourPrivacy"];
   const [showContextMenu, setShowContextMenu] = (0,external_React_namespaceObject.useState)(false);
@@ -4734,6 +4735,7 @@ function AdBannerContextMenu({
    */
   const toggleContextMenu = isKeyBoard => {
     toggleContextMenuStyleSwitch(!showContextMenu);
+    toggleActive(!showContextMenu);
     setShowContextMenu(!showContextMenu);
     setIsKeyboardAccess(isKeyBoard);
   };
@@ -4749,6 +4751,7 @@ function AdBannerContextMenu({
   };
   const onUpdate = () => {
     toggleContextMenuStyleSwitch(!showContextMenu);
+    toggleActive(!showContextMenu);
     setShowContextMenu(!showContextMenu);
   };
   return /*#__PURE__*/external_React_default().createElement("div", {
@@ -4849,6 +4852,8 @@ const AdBanner = ({
   };
   const sectionsEnabled = prefs["discoverystream.sections.enabled"];
   const showAdReporting = prefs["discoverystream.reportAds.enabled"];
+  const [menuActive, setMenuActive] = (0,external_React_namespaceObject.useState)(false);
+  const adBannerWrapperClassName = `ad-banner-wrapper ${menuActive ? "active" : ""}`;
   const {
     width: imgWidth,
     height: imgHeight
@@ -4875,24 +4880,21 @@ const AdBanner = ({
       }
     }));
   };
+  const toggleActive = active => {
+    setMenuActive(active);
+  };
 
   // in the default card grid 1 would come before the 1st row of cards and 9 comes after the last row
   // using clamp to make sure its between valid values (1-9)
   const clampedRow = Math.max(1, Math.min(9, row));
   return /*#__PURE__*/external_React_default().createElement("aside", {
-    className: "ad-banner-wrapper",
+    className: adBannerWrapperClassName,
     style: {
       gridRow: clampedRow
     }
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: `ad-banner-inner ${spoc.format}`
-  }, /*#__PURE__*/external_React_default().createElement(AdBannerContextMenu, {
-    dispatch: dispatch,
-    spoc: spoc,
-    position: row,
-    type: type,
-    showAdReporting: showAdReporting
-  }), /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
+  }, /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
     className: "ad-banner-link",
     url: spoc.url,
     title: spoc.title || spoc.sponsor || spoc.alt_text,
@@ -4921,11 +4923,20 @@ const AdBanner = ({
     loading: "eager",
     width: imgWidth,
     height: imgHeight
-  }))), /*#__PURE__*/external_React_default().createElement("div", {
+  })), /*#__PURE__*/external_React_default().createElement("div", {
     className: "ad-banner-sponsored"
   }, /*#__PURE__*/external_React_default().createElement("span", {
     className: "ad-banner-sponsored-label",
     "data-l10n-id": "newtab-label-sponsored-fixed"
+  }))), /*#__PURE__*/external_React_default().createElement("div", {
+    className: "ad-banner-hover-background"
+  }, /*#__PURE__*/external_React_default().createElement(AdBannerContextMenu, {
+    dispatch: dispatch,
+    spoc: spoc,
+    position: row,
+    type: type,
+    showAdReporting: showAdReporting,
+    toggleActive: toggleActive
   }))));
 };
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/TrendingSearches/TrendingSearches.jsx
