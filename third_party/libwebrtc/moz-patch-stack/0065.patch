@@ -30,7 +30,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ee566d1bfb654d36e
  12 files changed, 70 insertions(+), 8 deletions(-)
 
 diff --git a/api/video/frame_buffer.cc b/api/video/frame_buffer.cc
-index fe9d4c3d23..4981acf0ca 100644
+index 17a030b2c4..251b464f37 100644
 --- a/api/video/frame_buffer.cc
 +++ b/api/video/frame_buffer.cc
 @@ -149,14 +149,29 @@ void FrameBuffer::DropNextDecodableTemporalUnit() {
