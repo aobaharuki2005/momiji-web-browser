@@ -1022,6 +1022,9 @@ pref("browser.tabs.dragDrop.moveOverThresholdPercent", 80);
 
 pref("browser.tabs.firefox-view.logLevel", "Warn");
 
+// Special case to use search term when making a group from a single page search
+pref("browser.tabs.groups.smart.searchTopicEnabled", true);
+
 pref("browser.tabs.groups.smart.userEnabled", true);
 
 pref("security.allow_parent_unrestricted_js_loads", false);
