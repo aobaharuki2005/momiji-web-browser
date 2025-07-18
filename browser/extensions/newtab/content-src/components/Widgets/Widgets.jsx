@@ -16,12 +16,15 @@ function Widgets() {
   const prefs = useSelector(state => state.Prefs.values);
   const dispatch = useDispatch();
 
+  const nimbusListsEnabled = prefs.widgetsConfig?.listsEnabled;
+  const nimbusTimerEnabled = prefs.widgetsConfig?.timerEnabled;
+
   const listsEnabled =
-    prefs[PREF_WIDGETS_SYSTEM_LISTS_ENABLED] &&
+    (nimbusListsEnabled || prefs[PREF_WIDGETS_SYSTEM_LISTS_ENABLED]) &&
     prefs[PREF_WIDGETS_LISTS_ENABLED];
 
   const timerEnabled =
-    prefs[PREF_WIDGETS_SYSTEM_TIMER_ENABLED] &&
+    (nimbusTimerEnabled || prefs[PREF_WIDGETS_SYSTEM_TIMER_ENABLED]) &&
     prefs[PREF_WIDGETS_TIMER_ENABLED];
 
   return (

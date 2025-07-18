@@ -1587,6 +1587,20 @@ newtabUnifiedAds:
         branch: user
         pref: browser.newtabpage.activity-stream.unifiedAds.adsFeed.tiles.enabled
 
+newtabWidgets:
+  description: about:newtab widgets feature
+  owner: mcrawford@mozilla.com
+  hasExposure: false
+  variables:
+    listsEnabled:
+      type: boolean
+      description: >-
+        Enable Lists widget
+    timerEnabled:
+      type: boolean
+      description: >-
+        Enable Focus Timer widget
+
 pocketNewtab:
   description: The Pocket section in newtab
   owner: sdowne@mozilla.com
