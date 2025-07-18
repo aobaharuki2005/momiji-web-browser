@@ -30,10 +30,7 @@ class DefaultBrowsingModeManagerTest {
     @MockK lateinit var settings: Settings
 
     @MockK(relaxed = true)
-    lateinit var modeDidChange: (BrowsingMode) -> Unit
-
-    @MockK(relaxed = true)
-    lateinit var updateAppStateMode: (BrowsingMode) -> Unit
+    lateinit var onModeChange: (BrowsingMode) -> Unit
 
     @get:Rule
     val mockkRule = MockkRetryTestRule()
@@ -47,30 +44,26 @@ class DefaultBrowsingModeManagerTest {
     }
 
     @Test
-    fun `WHEN mode is set THEN modeDidChange and updateAppState callbacks are invoked and last known mode setting is set`() {
+    fun `WHEN mode is set THEN onModeChange callback is invoked and last known browsing mode setting is set`() {
         val manager = buildBrowsingModeManager()
 
-        verify(exactly = 0) {
-            modeDidChange.invoke(any())
-            settings.lastKnownMode = any()
-            updateAppStateMode.invoke(any())
+        verify {
+            onModeChange.invoke(BrowsingMode.Normal)
+            settings.lastKnownMode = BrowsingMode.Normal
         }
 
         manager.mode = BrowsingMode.Private
 
         verify {
-            modeDidChange(BrowsingMode.Private)
+            onModeChange(BrowsingMode.Private)
             settings.lastKnownMode = BrowsingMode.Private
-            updateAppStateMode(BrowsingMode.Private)
         }
 
         manager.mode = BrowsingMode.Normal
-        manager.mode = BrowsingMode.Normal
 
         verify {
-            modeDidChange(BrowsingMode.Normal)
+            onModeChange(BrowsingMode.Normal)
             settings.lastKnownMode = BrowsingMode.Normal
-            updateAppStateMode(BrowsingMode.Normal)
         }
     }
 
@@ -105,6 +98,11 @@ class DefaultBrowsingModeManagerTest {
         val manager = buildBrowsingModeManager(store = browserStore)
 
         assertEquals(BrowsingMode.Private, manager.mode)
+
+        verify {
+            onModeChange.invoke(BrowsingMode.Private)
+            settings.lastKnownMode = BrowsingMode.Private
+        }
     }
 
     @Test
@@ -114,6 +112,11 @@ class DefaultBrowsingModeManagerTest {
         val manager = buildBrowsingModeManager()
 
         assertEquals(BrowsingMode.Normal, manager.mode)
+
+        verify {
+            onModeChange.invoke(BrowsingMode.Normal)
+            settings.lastKnownMode = BrowsingMode.Normal
+        }
     }
 
     @Test
@@ -123,6 +126,11 @@ class DefaultBrowsingModeManagerTest {
         val manager = buildBrowsingModeManager()
 
         assertEquals(BrowsingMode.Normal, manager.mode)
+
+        verify {
+            onModeChange.invoke(BrowsingMode.Normal)
+            settings.lastKnownMode = BrowsingMode.Normal
+        }
     }
 
     @Test
@@ -133,6 +141,11 @@ class DefaultBrowsingModeManagerTest {
         val manager = buildBrowsingModeManager(intent = intent)
 
         assertEquals(BrowsingMode.Private, manager.mode)
+
+        verify {
+            onModeChange.invoke(BrowsingMode.Private)
+            settings.lastKnownMode = BrowsingMode.Private
+        }
     }
 
     @Test
@@ -203,8 +216,7 @@ class DefaultBrowsingModeManagerTest {
             intent = intent,
             store = store,
             settings = settings,
-            modeDidChange = modeDidChange,
-            updateAppStateMode = updateAppStateMode,
+            onModeChange = onModeChange,
         )
     }
 }

@@ -1084,8 +1084,7 @@ class DefaultTabsTrayControllerTest {
             intent = null,
             store = browserStore,
             settings = settings,
-            modeDidChange = mockk(relaxed = true),
-            updateAppStateMode = { updatedMode ->
+            onModeChange = { updatedMode ->
                 appStateModeUpdate = updatedMode
             },
         )

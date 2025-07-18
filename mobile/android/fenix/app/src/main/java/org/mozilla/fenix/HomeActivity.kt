@@ -1273,16 +1273,16 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             intent = intent,
             store = components.core.store,
             settings = components.settings,
-            modeDidChange = { newMode ->
+            onModeChange = { newMode ->
                 updateSecureWindowFlags(newMode)
-                themeManager.currentTheme = newMode
-            },
-            updateAppStateMode = { newMode ->
+
+                if (::themeManager.isInitialized) {
+                    themeManager.currentTheme = newMode
+                }
+
                 components.appStore.dispatch(AppAction.BrowsingModeManagerModeChanged(mode = newMode))
             },
-        ).also {
-            updateSecureWindowFlags(it.mode)
-        }
+        )
     }
 
     private fun updateSecureWindowFlags(mode: BrowsingMode = browsingModeManager.mode) {

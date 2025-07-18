@@ -46,7 +46,7 @@ class TabCounterViewTest {
     private lateinit var browsingModeManager: BrowsingModeManager
     private lateinit var settings: Settings
     private lateinit var appStore: AppStore
-    private lateinit var modeDidChange: (BrowsingMode) -> Unit
+    private lateinit var onModeChange: (BrowsingMode) -> Unit
     private lateinit var tabCounterView: TabCounterView
     private lateinit var tabCounter: MozacTabCounter
 
@@ -55,7 +55,7 @@ class TabCounterViewTest {
         navController = mockk(relaxed = true)
         settings = mockk(relaxed = true)
         appStore = mockk(relaxed = true)
-        modeDidChange = mockk(relaxed = true)
+        onModeChange = mockk(relaxed = true)
 
         tabCounter = spyk(MozacTabCounter(testContext))
 
@@ -63,8 +63,7 @@ class TabCounterViewTest {
             intent = null,
             store = BrowserStore(),
             settings = settings,
-            modeDidChange = modeDidChange,
-            updateAppStateMode = {},
+            onModeChange = onModeChange,
         )
     }
 
