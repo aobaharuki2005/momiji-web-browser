@@ -209,6 +209,19 @@ class TextDirectiveUtil final {
   template <TextScanDirection direction>
   static nsTArray<uint32_t> ComputeWordBoundaryDistances(
       const nsAString& aString);
+
+  /**
+   * @brief Returns true if the word between `aWordBegin` and `aWordEnd` is
+   *        just whitespace or punctuation.
+   * @param aString The string to check. Must not be empty.
+   * @param aWordBegin The start index of the word.
+   * @param aWordEnd The end index of the word.
+   * @return true if the word is just whitespace or punctuation, false
+   * otherwise.
+   */
+  static bool WordIsJustWhitespaceOrPunctuation(const nsAString& aString,
+                                                uint32_t aWordBegin,
+                                                uint32_t aWordEnd);
 };
 
 class TimeoutWatchdog final {
@@ -505,13 +518,19 @@ template <TextScanDirection direction>
   // This loop relies on underflowing `pos` when going left as stop condition.
   while (pos < aString.Length()) {
     auto [wordBegin, wordEnd] = intl::WordBreaker::FindWord(aString, pos);
-    if constexpr (direction == TextScanDirection::Left) {
-      wordBoundaryDistances.AppendElement(aString.Length() - wordBegin);
-      pos = wordBegin - 1;
-    } else {
-      wordBoundaryDistances.AppendElement(wordEnd);
-      pos = wordEnd + 1;
+    pos = direction == TextScanDirection::Left ? wordBegin - 1 : wordEnd + 1;
+    if (WordIsJustWhitespaceOrPunctuation(aString, wordBegin, wordEnd)) {
+      // The WordBreaker algorithm breaks at punctuation, so that "foo bar. baz"
+      // would be split into four words: [foo, bar, ., baz].
+      // To avoid this, we skip words which are just whitespace or punctuation
+      // and add the punctuation to the previous word, so that the above example
+      // would yield three words: [foo, bar., baz].
+      continue;
     }
+
+    wordBoundaryDistances.AppendElement(direction == TextScanDirection::Left
+                                            ? aString.Length() - wordBegin
+                                            : wordEnd);
   }
   return std::move(wordBoundaryDistances);
 }

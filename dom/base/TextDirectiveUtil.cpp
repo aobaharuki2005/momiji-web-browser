@@ -254,4 +254,16 @@ RangeBoundary TextDirectiveUtil::MoveToNextBoundaryPoint(
   return {node, pos};
 }
 
+/* static */ bool TextDirectiveUtil::WordIsJustWhitespaceOrPunctuation(
+    const nsAString& aString, uint32_t aWordBegin, uint32_t aWordEnd) {
+  MOZ_ASSERT(aWordEnd <= aString.Length());
+  MOZ_ASSERT(aWordBegin < aWordEnd);
+
+  auto word = aString.View().substr(aWordBegin, aWordEnd - aWordBegin);
+  return std::all_of(word.cbegin(), word.cend(), [](const char16_t ch) {
+    return nsContentUtils::IsHTMLWhitespaceOrNBSP(ch) ||
+           mozilla::IsPunctuationForWordSelect(ch);
+  });
+}
+
 }  // namespace mozilla::dom
