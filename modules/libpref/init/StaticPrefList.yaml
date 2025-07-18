@@ -10660,6 +10660,13 @@
   value: false
   mirror: always
 
+# Whether supports() conditions in @import is enabled
+- name: layout.css.import-supports.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+  rust: true
+
 # Whether :-moz-broken is supported in content.
 - name: layout.css.moz-broken.content.enabled
   type: RelaxedAtomicBool

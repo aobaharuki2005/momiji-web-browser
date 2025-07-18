@@ -18,6 +18,9 @@ const TEST_URI = `
 `;
 
 add_task(async function () {
+  // Enable the pref for @import supports()
+  await pushPref("layout.css.import-supports.enabled", true);
+
   await addTab(
     "https://example.com/document-builder.sjs?html=" +
       encodeURIComponent(TEST_URI)
