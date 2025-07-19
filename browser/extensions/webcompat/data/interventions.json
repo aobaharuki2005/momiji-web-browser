@@ -4579,5 +4579,22 @@
         }
       }
     ]
+  },
+  "1960823": {
+    "label": "dvcreservations.com",
+    "bugs": {
+      "1960823": {
+        "issue": "broken-scrolling",
+        "matches": ["*://dvcreservations.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "content_scripts": {
+          "js": ["bug1960823-dvcreservations.com-niceScroll-disable.js"]
+        }
+      }
+    ]
   }
 }
