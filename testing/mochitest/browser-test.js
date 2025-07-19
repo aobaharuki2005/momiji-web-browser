@@ -5,9 +5,7 @@
 /* import-globals-from mochitest-e10s-utils.js */
 
 // Test timeout (seconds)
-var gTimeoutSeconds = Services.prefs.getIntPref(
-  "testing.browserTestHarness.timeout"
-);
+var gTimeoutSeconds = 45;
 var gConfig;
 
 var { AppConstants } = ChromeUtils.importESModule(
@@ -97,10 +95,16 @@ function testInit() {
 
   if (gConfig.testRoot == "browser") {
     // Make sure to launch the test harness for the first opened window only
-    if (Services.prefs.prefHasUserValue("testing.browserTestHarness.running")) {
+    var prefs = Services.prefs;
+    if (prefs.prefHasUserValue("testing.browserTestHarness.running")) {
       return;
     }
-    Services.prefs.setBoolPref("testing.browserTestHarness.running", true);
+
+    prefs.setBoolPref("testing.browserTestHarness.running", true);
+
+    if (prefs.prefHasUserValue("testing.browserTestHarness.timeout")) {
+      gTimeoutSeconds = prefs.getIntPref("testing.browserTestHarness.timeout");
+    }
 
     var sstring = Cc["@mozilla.org/supports-string;1"].createInstance(
       Ci.nsISupportsString
@@ -142,11 +146,11 @@ function testInit() {
   if (gConfig.e10s) {
     e10s_init();
 
-    let processCount = Services.prefs.getIntPref("dom.ipc.processCount", 1);
+    let processCount = prefs.getIntPref("dom.ipc.processCount", 1);
     if (processCount > 1) {
       // Currently starting a content process is slow, to aviod timeouts, let's
       // keep alive content processes.
-      Services.prefs.setIntPref("dom.ipc.keepProcessesAlive.web", processCount);
+      prefs.setIntPref("dom.ipc.keepProcessesAlive.web", processCount);
     }
 
     Services.mm.loadFrameScript(
