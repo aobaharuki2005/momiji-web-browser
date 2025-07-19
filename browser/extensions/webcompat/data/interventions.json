@@ -1926,6 +1926,21 @@
       }
     ]
   },
+  "1899048": {
+    "label": "datanyze.com",
+    "bugs": {
+      "1899048": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://www.datanyze.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "ua_string": ["Chrome"]
+      }
+    ]
+  },
   "1892898": {
     "label": "investopedia.com",
     "bugs": {
