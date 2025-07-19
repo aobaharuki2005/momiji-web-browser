@@ -4467,6 +4467,21 @@
       }
     ]
   },
+  "1977195": {
+    "label": "wattpad.com",
+    "bugs": {
+      "1977195": {
+        "issue": "broken-images",
+        "matches": ["*://www.wattpad.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
+  },
   "1934908": {
     "label": "www.cbsnews.com",
     "bugs": {
