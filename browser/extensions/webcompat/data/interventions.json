@@ -4878,5 +4878,22 @@
         }
       }
     ]
+  },
+  "1976402": {
+    "label": "dieseldispatch.com",
+    "bugs": {
+      "1976402": {
+        "issue": "broken-scrolling",
+        "matches": ["*://dieseldispatch.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "content_scripts": {
+          "js": ["bug1976402-dieseldispatch.com-emulate-mousewheel-events.js"]
+        }
+      }
+    ]
   }
 }
