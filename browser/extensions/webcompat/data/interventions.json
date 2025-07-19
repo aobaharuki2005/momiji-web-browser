@@ -2321,6 +2321,21 @@
       }
     ]
   },
+  "1898989": {
+    "label": "mymsc.com",
+    "bugs": {
+      "1898989": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://*.mymsc.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "ua_string": ["Chrome_with_FxQuantum"]
+      }
+    ]
+  },
   "1898994": {
     "label": "eportal.uestc.edu.cn",
     "bugs": {
