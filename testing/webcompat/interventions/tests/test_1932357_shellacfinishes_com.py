@@ -1,6 +1,6 @@
 import pytest
 
-URL = "https://www.thai-masszazs.net/"
+URL = "https://www.shellacfinishes.com/introduction"
 
 
 @pytest.mark.only_platforms("android")

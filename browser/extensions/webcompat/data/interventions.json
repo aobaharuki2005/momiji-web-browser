@@ -4542,6 +4542,23 @@
       }
     ]
   },
+  "1932357": {
+    "label": "shellacfinishes.com",
+    "bugs": {
+      "1932357": {
+        "issue": "broken-scrolling",
+        "matches": ["*://www.shellacfinishes.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "content_scripts": {
+          "js": ["bug1932357-shellacfinishes.com-niceScroll-disable.js"]
+        }
+      }
+    ]
+  },
   "1934908": {
     "label": "www.cbsnews.com",
     "bugs": {
