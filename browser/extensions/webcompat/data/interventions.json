@@ -2007,6 +2007,23 @@
       }
     ]
   },
+  "1895997": {
+    "label": "e.seb.lt",
+    "bugs": {
+      "1895997": {
+        "issue": "unsupported-warning",
+        "matches": ["*://e.seb.lt/ib/login*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "content_scripts": {
+          "js": ["bug1895997-e.seb.lt-prevent-unsupported-warning.js"]
+        }
+      }
+    ]
+  },
   "1896349": {
     "label": "vivaldi.com",
     "bugs": {
