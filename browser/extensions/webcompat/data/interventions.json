@@ -4787,23 +4787,6 @@
       }
     ]
   },
-  "1972859": {
-    "label": "login.primericaonline.com",
-    "bugs": {
-      "1972859": {
-        "issue": "page-fails-to-load",
-        "matches": ["*://*.primericaonline.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "content_scripts": {
-          "js": ["bug1972859-primericaonline.com-polyfill-ancestorOrigins.js"]
-        }
-      }
-    ]
-  },
   "1973920": {
     "label": "app.genio.co",
     "bugs": {
