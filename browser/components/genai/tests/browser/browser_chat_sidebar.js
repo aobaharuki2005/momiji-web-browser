@@ -17,10 +17,7 @@ registerCleanupFunction(() => {
  */
 add_task(async function test_sidebar_render() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.ml.chat.provider", TEST_CHAT_PROVIDER_URL],
-      ["browser.ml.chat.page", false],
-    ],
+    set: [["browser.ml.chat.provider", TEST_CHAT_PROVIDER_URL]],
   });
 
   await SidebarController.show("viewGenaiChatSidebar");
