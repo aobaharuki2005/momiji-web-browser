@@ -22,24 +22,47 @@ async function hideContextMenu() {
   await promise;
 }
 
+async function waitMenuState(menu, shouldHide, description) {
+  await TestUtils.waitForCondition(() => {
+    return menu && menu.hidden === shouldHide;
+  }, description);
+}
+
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["test.wait300msAfterTabSwitch", true]],
   });
 });
 
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("browser.ml.chat.page.menuBadge");
+});
+
 /**
  * Check that the chat context menu is hidden by default
  */
 add_task(async function test_hidden_menu() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.ml.chat.page", false]],
+  });
+
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     await openContextMenu();
+
+    await this.waitMenuState(
+      document.getElementById("context-ask-chat"),
+      true,
+      "Menu should be hidden"
+    );
+
     Assert.ok(
       document.getElementById("context-ask-chat").hidden,
       "Ask chat menu is hidden"
     );
     await hideContextMenu();
   });
+  // Test is using new page feature functionality
+  await SpecialPowers.popPrefEnv();
 });
 
 /**
@@ -51,6 +74,13 @@ add_task(async function test_menu_enabled() {
   });
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     await openContextMenu();
+
+    await this.waitMenuState(
+      document.getElementById("context-ask-chat"),
+      false,
+      "Menu should be visible"
+    );
+
     Assert.ok(
       !document.getElementById("context-ask-chat").hidden,
       "Ask chat menu is shown"
@@ -71,8 +101,15 @@ add_task(async function test_remove_option() {
       "Provider is set"
     );
 
+    await this.waitMenuState(
+      document.getElementById("context-ask-chat"),
+      false,
+      "Menu should be visible"
+    );
+
     const menu = document.getElementById("context-ask-chat");
     menu.getItemAtIndex(menu.itemCount - 1).click();
+
     await hideContextMenu();
 
     Assert.equal(
@@ -95,6 +132,7 @@ add_task(async function test_open_tab() {
     set: [
       ["browser.ml.chat.provider", "http://localhost:8080"],
       ["browser.ml.chat.sidebar", false],
+      ["browser.ml.chat.page", false],
     ],
   });
   await BrowserTestUtils.withNewTab("about:blank", async () => {
@@ -120,6 +158,7 @@ add_task(async function test_open_sidebar() {
     set: [
       ["browser.ml.chat.provider", "http://localhost:8080"],
       ["browser.ml.chat.sidebar", true],
+      ["browser.ml.chat.page", false],
     ],
   });
   await BrowserTestUtils.withNewTab("about:blank", async () => {
@@ -162,6 +201,13 @@ add_task(async function test_custom_prompt() {
   });
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     await openContextMenu();
+
+    await this.waitMenuState(
+      document.getElementById("context-ask-chat"),
+      false,
+      "Menu should be visible"
+    );
+
     document.getElementById("context-ask-chat").getItemAtIndex(0).click();
     await hideContextMenu();
     SidebarController.hide();
