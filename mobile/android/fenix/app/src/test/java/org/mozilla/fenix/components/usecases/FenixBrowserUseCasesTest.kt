@@ -18,6 +18,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.utils.ABOUT_HOME_URL
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.search.ext.createSearchEngine
 import mozilla.components.feature.session.SessionUseCases
@@ -27,7 +28,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.usecases.FenixBrowserUseCases.Companion.ABOUT_HOME
 
 @RunWith(AndroidJUnit4::class)
 class FenixBrowserUseCasesTest {
@@ -314,7 +314,7 @@ class FenixBrowserUseCasesTest {
 
         verify {
             addNewTabUseCase.invoke(
-                url = ABOUT_HOME,
+                url = ABOUT_HOME_URL,
                 title = testContext.getString(R.string.tab_tray_homepage_tab),
                 private = true,
             )
@@ -324,7 +324,7 @@ class FenixBrowserUseCasesTest {
 
         verify {
             addNewTabUseCase.invoke(
-                url = ABOUT_HOME,
+                url = ABOUT_HOME_URL,
                 title = testContext.getString(R.string.tab_tray_homepage_tab),
                 private = false,
             )
@@ -337,7 +337,7 @@ class FenixBrowserUseCasesTest {
 
         verify {
             loadUrlUseCase.invoke(
-                url = ABOUT_HOME,
+                url = ABOUT_HOME_URL,
                 flags = EngineSession.LoadUrlFlags.none(),
             )
         }

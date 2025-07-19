@@ -24,6 +24,7 @@ import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.mediasession.MediaSession.PlaybackState
 import mozilla.components.concept.engine.prompt.ShareData
+import mozilla.components.concept.engine.utils.ABOUT_HOME_URL
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.feature.accounts.push.CloseTabsUseCases
 import mozilla.components.feature.downloads.ui.DownloadCancelDialogFragment
@@ -44,7 +45,6 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
-import org.mozilla.fenix.components.usecases.FenixBrowserUseCases.Companion.ABOUT_HOME
 import org.mozilla.fenix.ext.DEFAULT_ACTIVE_DAYS
 import org.mozilla.fenix.ext.potentialInactiveTabs
 import org.mozilla.fenix.home.HomeScreenViewModel.Companion.ALL_NORMAL_TABS
@@ -592,7 +592,7 @@ class DefaultTabsTrayController(
                 val mode = BrowsingMode.fromBoolean(tab.content.private)
                 browsingModeManager.mode = mode
 
-                if (tab.content.url == ABOUT_HOME) {
+                if (tab.content.url == ABOUT_HOME_URL) {
                     handleNavigateToHome()
                 } else {
                     handleNavigateToBrowser()

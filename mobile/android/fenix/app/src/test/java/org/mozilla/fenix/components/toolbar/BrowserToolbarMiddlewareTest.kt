@@ -69,6 +69,7 @@ import mozilla.components.compose.browser.toolbar.store.ProgressBarGravity.Top
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.cookiehandling.CookieBannersStorage
 import mozilla.components.concept.engine.permission.SitePermissionsStorage
+import mozilla.components.concept.engine.utils.ABOUT_HOME_URL
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.TrackingProtectionUseCases
@@ -143,7 +144,6 @@ import org.mozilla.fenix.components.toolbar.TabCounterInteractions.CloseCurrentT
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.TabCounterClicked
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.TabCounterLongClicked
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
-import org.mozilla.fenix.components.usecases.FenixBrowserUseCases.Companion.ABOUT_HOME
 import org.mozilla.fenix.ext.isLargeWindow
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
@@ -337,7 +337,8 @@ class BrowserToolbarMiddlewareTest {
         )
         assertEqualsOrigin(pageOrigin, toolbarStore.state.displayState.pageOrigin)
 
-        browserStore.dispatch(UpdateUrlAction(sessionId = tab.id, url = ABOUT_HOME)).joinBlocking()
+        browserStore.dispatch(UpdateUrlAction(sessionId = tab.id, url = ABOUT_HOME_URL))
+            .joinBlocking()
         testScheduler.advanceUntilIdle()
 
         assertEqualsOrigin(

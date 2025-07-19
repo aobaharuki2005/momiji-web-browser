@@ -8,6 +8,7 @@ import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.utils.ABOUT_HOME_URL
 import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
@@ -120,7 +121,7 @@ class FenixBrowserUseCases(
      */
     fun addNewHomepageTab(private: Boolean): String {
         return addNewTabUseCase.invoke(
-            url = ABOUT_HOME,
+            url = ABOUT_HOME_URL,
             title = homepageTitle,
             private = private,
         )
@@ -130,13 +131,6 @@ class FenixBrowserUseCases(
      * Loads the homepage ("about:home").
      */
     fun navigateToHomepage() {
-        loadUrlUseCase.invoke(url = ABOUT_HOME)
-    }
-
-    /**
-     * Contains constants used by [FenixBrowserUseCases].
-     */
-    companion object {
-        const val ABOUT_HOME = "about:home"
+        loadUrlUseCase.invoke(url = ABOUT_HOME_URL)
     }
 }

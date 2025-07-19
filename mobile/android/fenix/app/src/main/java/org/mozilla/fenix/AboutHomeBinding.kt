@@ -12,8 +12,8 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.utils.ABOUT_HOME_URL
 import mozilla.components.lib.state.helpers.AbstractBinding
-import org.mozilla.fenix.components.usecases.FenixBrowserUseCases.Companion.ABOUT_HOME
 import org.mozilla.fenix.home.HomeFragment
 
 /**
@@ -30,7 +30,7 @@ class AboutHomeBinding(
             .map { it.selectedTab?.content?.url }
             .distinctUntilChanged()
             .collect { url ->
-                if (url == ABOUT_HOME && navController.currentDestination?.id != R.id.homeFragment) {
+                if (url == ABOUT_HOME_URL && navController.currentDestination?.id != R.id.homeFragment) {
                     navController.navigate(NavGraphDirections.actionGlobalHome())
                 }
             }

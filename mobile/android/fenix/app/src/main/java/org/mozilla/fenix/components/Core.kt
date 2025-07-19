@@ -352,6 +352,9 @@ class Core(
                     applicationContext = context,
                     repository = DefaultHomepageAsANewTabPreferenceRepository(context.settings()),
                 ),
+                AboutHomeMiddleware(
+                    homepageTitle = context.getString(R.string.tab_tray_homepage_tab),
+                ),
             )
 
         BrowserStore(

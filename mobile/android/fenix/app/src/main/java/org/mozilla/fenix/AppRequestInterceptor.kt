@@ -13,9 +13,9 @@ import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.concept.engine.utils.ABOUT_HOME_URL
 import mozilla.components.support.ktx.kotlin.isContentUrl
 import org.mozilla.fenix.GleanMetrics.ErrorPage
-import org.mozilla.fenix.components.usecases.FenixBrowserUseCases.Companion.ABOUT_HOME
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isOnline
 import java.lang.ref.WeakReference
@@ -94,7 +94,7 @@ class AppRequestInterceptor(
      * @return True if the [uri] request was intercepted and false otherwise.
      */
     private fun interceptAboutHomeRequest(uri: String): Boolean {
-        if (uri != ABOUT_HOME) {
+        if (uri != ABOUT_HOME_URL) {
             return false
         }
 

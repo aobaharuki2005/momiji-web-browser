@@ -12,6 +12,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.utils.ABOUT_HOME_URL
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -24,7 +25,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mozilla.fenix.components.usecases.FenixBrowserUseCases.Companion.ABOUT_HOME
 
 @RunWith(AndroidJUnit4::class)
 class AboutHomeBindingTest {
@@ -65,14 +65,14 @@ class AboutHomeBindingTest {
         browserStore.dispatch(
             ContentAction.UpdateUrlAction(
                 sessionId = tab.id,
-                url = ABOUT_HOME,
+                url = ABOUT_HOME_URL,
             ),
         )
 
         // Wait for ContentAction.UpdateUrlAction
         browserStore.waitUntilIdle()
 
-        assertEquals(ABOUT_HOME, tab.content.url)
+        assertEquals(ABOUT_HOME_URL, tab.content.url)
 
         verify(navController).navigate(NavGraphDirections.actionGlobalHome())
     }
@@ -93,14 +93,14 @@ class AboutHomeBindingTest {
         browserStore.dispatch(
             ContentAction.UpdateUrlAction(
                 sessionId = tabId,
-                url = ABOUT_HOME,
+                url = ABOUT_HOME_URL,
             ),
         )
 
         // Wait for ContentAction.UpdateUrlAction
         browserStore.waitUntilIdle()
 
-        assertEquals(ABOUT_HOME, tab.content.url)
+        assertEquals(ABOUT_HOME_URL, tab.content.url)
 
         verify(navController, never()).navigate(NavGraphDirections.actionGlobalHome())
     }

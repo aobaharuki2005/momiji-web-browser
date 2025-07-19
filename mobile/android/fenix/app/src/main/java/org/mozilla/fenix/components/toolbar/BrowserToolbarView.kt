@@ -19,11 +19,11 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
+import mozilla.components.concept.engine.utils.ABOUT_HOME_URL
 import mozilla.components.concept.toolbar.ScrollableToolbar
 import mozilla.components.support.ktx.util.URLStringUtils
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
-import org.mozilla.fenix.components.usecases.FenixBrowserUseCases.Companion.ABOUT_HOME
 import org.mozilla.fenix.customtabs.CustomTabToolbarIntegration
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.ThemeManager
@@ -131,7 +131,7 @@ class BrowserToolbarView(
                 }
 
                 display.urlFormatter = { url ->
-                    if (url.contentEquals(ABOUT_HOME)) {
+                    if (url.contentEquals(ABOUT_HOME_URL)) {
                         // Default to showing the toolbar hint when the URL is ABOUT_HOME.
                         ""
                     } else {

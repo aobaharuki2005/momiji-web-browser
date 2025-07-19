@@ -11,8 +11,8 @@ import androidx.core.graphics.createBitmap
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.thumbnails.HomepageThumbnails
 import mozilla.components.browser.thumbnails.RequestHomepageScreenshot
+import mozilla.components.concept.engine.utils.ABOUT_HOME_URL
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import org.mozilla.fenix.components.usecases.FenixBrowserUseCases.Companion.ABOUT_HOME
 
 /**
  * HomeFragment delegate to take screenshot of homepage when view loads and display as a thumbnail in tabstray.
@@ -26,7 +26,14 @@ class HomepageThumbnailIntegration(
     private val view: View,
     private val store: BrowserStore,
 ) : LifecycleAwareFeature {
-    private val feature by lazy { HomepageThumbnails(context, store, ABOUT_HOME, ::homepageRequest) }
+    private val feature by lazy {
+        HomepageThumbnails(
+            context = context,
+            store = store,
+            homepageUrl = ABOUT_HOME_URL,
+            homepageRequest = ::homepageRequest,
+        )
+    }
 
     override fun start() {
         feature.start()
