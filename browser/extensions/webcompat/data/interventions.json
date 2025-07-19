@@ -141,6 +141,23 @@
       }
     ]
   },
+  "1458885": {
+    "label": "ipstack.com",
+    "bugs": {
+      "1458885": {
+        "issue": "broken-layout",
+        "matches": ["*://ipstack.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "content_scripts": {
+          "css": ["bug1458885-ipstack.com-fix-line-break-on-button.css"]
+        }
+      }
+    ]
+  },
   "1457335": {
     "label": "histography.io",
     "bugs": {
