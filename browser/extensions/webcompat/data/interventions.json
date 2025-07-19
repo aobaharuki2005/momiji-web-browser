@@ -3928,6 +3928,21 @@
       }
     ]
   },
+  "1955529": {
+    "label": "kancelaria.kros.sk",
+    "bugs": {
+      "1955529": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://kancelaria.kros.sk/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "ua_string": ["Chrome_with_FxQuantum"]
+      }
+    ]
+  },
   "1955932": {
     "label": "coopvoce.it",
     "bugs": {
