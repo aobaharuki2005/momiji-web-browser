@@ -21,7 +21,7 @@ support-files = [
   "browser_scrollPositions_sample_frameset.html",
   "browser_scrollPositions_readerModeArticle.html",
   "browser_sessionStorage.html",
-  "browser_speculative_connect.html",
+  "browser_speculative_connect.html",browser_tab_groups_closed.js
   "coopHeaderCommon.sjs",
   "restore_redirect_http.html",
   "restore_redirect_http.html^headers^",
@@ -306,6 +306,9 @@ skip-if = [
 ["browser_switch_remoteness.js"]
 
 ["browser_tab_groups_closed.js"]
+skip-if = [
+  "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && debug" # Bug 1934803
+]
 
 ["browser_tab_groups_closed_groups_in_closed_windows.js"]
 
