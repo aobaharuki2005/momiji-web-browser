@@ -879,6 +879,8 @@
   <string name="preferences_home_2">Kotisivu</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">Sovelluskuvake</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Välilehtipalkin näyttö</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Eleet</string>
   <!-- Preference for settings related to visual options -->
@@ -1311,6 +1313,8 @@
   <string name="preference_simple_toolbar">Yksinkertainen</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Laajennuttu</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">Osoitepalkin on oltava ylhäällä, kun välilehtipalkki on näkyvissä.</string>
   <!--
     App icon Preferences
 
@@ -1329,6 +1333,12 @@
   <string name="preference_auto_battery_theme">Asetettu virransäästön toimesta</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Seuraa laitteen teemaa</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Näytä välilehtipalkki</string>
   <!--
     Gestures Preferences
 
