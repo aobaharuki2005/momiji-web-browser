@@ -80,7 +80,10 @@ bool Gecko_IsSignificantChild(const nsINode*, bool whitespace_is_significant);
 const nsINode* Gecko_GetLastChild(const nsINode*);
 const nsINode* Gecko_GetFlattenedTreeParentNode(const nsINode*);
 void Gecko_GetAnonymousContentForElement(const mozilla::dom::Element*,
-                                         nsTArray<nsIContent*>*);
+                                         nsIContent** stack_buffer,
+                                         size_t stack_buffer_cap,
+                                         size_t* stack_buffer_len,
+                                         nsTArray<nsIContent*>* excess_array);
 
 const nsTArray<RefPtr<nsINode>>* Gecko_GetAssignedNodes(
     const mozilla::dom::Element*);

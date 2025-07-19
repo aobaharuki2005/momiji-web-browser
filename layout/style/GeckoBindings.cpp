@@ -134,24 +134,40 @@ const nsINode* Gecko_GetFlattenedTreeParentNode(const nsINode* aNode) {
 }
 
 void Gecko_GetAnonymousContentForElement(const Element* aElement,
-                                         nsTArray<nsIContent*>* aArray) {
+                                         nsIContent** aStackBuffer,
+                                         size_t aStackBufferCap,
+                                         size_t* aStackBufferLen,
+                                         nsTArray<nsIContent*>* aExcessArray) {
   MOZ_ASSERT(aElement->MayHaveAnonymousChildren());
-  const bool hasProps = aElement->HasProperties();
-  if (hasProps) {
+  MOZ_ASSERT(*aStackBufferLen == 0);
+  MOZ_ASSERT(aStackBufferCap > 2, "We do unchecked appends for common pseudos");
+  if (aElement->HasProperties()) {
     if (auto* marker = nsLayoutUtils::GetMarkerPseudo(aElement)) {
-      aArray->AppendElement(marker);
+      aStackBuffer[(*aStackBufferLen)++] = marker;
     }
     if (auto* before = nsLayoutUtils::GetBeforePseudo(aElement)) {
-      aArray->AppendElement(before);
+      aStackBuffer[(*aStackBufferLen)++] = before;
     }
-  }
-  nsContentUtils::AppendNativeAnonymousChildren(
-      aElement, *aArray, nsIContent::eSkipDocumentLevelNativeAnonymousContent);
-  if (hasProps) {
     if (auto* after = nsLayoutUtils::GetAfterPseudo(aElement)) {
-      aArray->AppendElement(after);
+      aStackBuffer[(*aStackBufferLen)++] = after;
     }
   }
+  AutoTArray<nsIContent*, 5> elements;
+  nsContentUtils::AppendNativeAnonymousChildren(
+      aElement, elements, nsIContent::eSkipDocumentLevelNativeAnonymousContent);
+  size_t nacChildren = elements.Length();
+  if (!nacChildren) {
+    return;  // Nothing else to do.
+  }
+
+  // If we fit in the stack buffer, copy there, otherwise use aExcessArray.
+  if (nacChildren <= aStackBufferCap - *aStackBufferLen) {
+    PodCopy(aStackBuffer + *aStackBufferLen, elements.Elements(), nacChildren);
+    *aStackBufferLen += nacChildren;
+  } else {
+    aExcessArray->SwapElements(elements);
+  }
+  MOZ_DIAGNOSTIC_ASSERT(*aStackBufferLen <= aStackBufferCap);
 }
 
 void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* aAnonContent) {
