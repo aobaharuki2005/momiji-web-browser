@@ -2150,6 +2150,21 @@
       }
     ]
   },
+  "1898928": {
+    "label": "cleanfeed.net",
+    "bugs": {
+      "1898928": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://cleanfeed.net/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
+  },
   "1898931": {
     "label": "facturador.afip.gob.ar",
     "bugs": {
