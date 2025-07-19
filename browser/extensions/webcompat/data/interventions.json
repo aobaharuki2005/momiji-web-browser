@@ -2984,6 +2984,23 @@
       }
     ]
   },
+  "1903480": {
+    "label": "ace7.acecombat.jp",
+    "bugs": {
+      "1903480": {
+        "issue": "broken-scrolling",
+        "matches": ["*://ace7.acecombat.jp/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "content_scripts": {
+          "js": ["bug1903480-ace7.acecombat.jp-slow-down-scrolling.js"]
+        }
+      }
+    ]
+  },
   "1904952": {
     "label": "idserver.servizicie.interno.gov.it",
     "bugs": {
