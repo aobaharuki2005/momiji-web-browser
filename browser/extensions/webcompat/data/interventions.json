@@ -2212,6 +2212,26 @@
       }
     ]
   },
+  "1898929": {
+    "label": "app.sessionlinkpro.com",
+    "bugs": {
+      "1898929": {
+        "issue": "unsupported-warning",
+        "matches": ["*://app.sessionlinkpro.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "content_scripts": {
+          "js": [
+            "lib/ua_helpers.js",
+            "bug1898929-app.sessionlinkpro.com-spoof-user-agent.js"
+          ]
+        }
+      }
+    ]
+  },
   "1898931": {
     "label": "facturador.afip.gob.ar",
     "bugs": {
