@@ -1146,7 +1146,10 @@
       },
       "1902475": {
         "issue": "firefox-blocked-completely",
-        "matches": ["*://cdk.fairgocasinowins.com/*"]
+        "matches": [
+          "*://cdk.fairgocasinowins.com/*",
+          "*://cdk.fairgo-pokies.com/*"
+        ]
       },
       "1902493": {
         "issue": "firefox-blocked-completely",
