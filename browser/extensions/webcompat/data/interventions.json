@@ -3393,21 +3393,6 @@
       }
     ]
   },
-  "1921410": {
-    "label": "maps.apple.com",
-    "bugs": {
-      "1921410": {
-        "issue": "blocked-content",
-        "matches": ["*://*.maps.apple.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["linux"],
-        "ua_string": ["change_OS_to_Windows"]
-      }
-    ]
-  },
   "1923656": {
     "label": "ipmph.com",
     "bugs": {
