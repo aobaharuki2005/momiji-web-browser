@@ -2090,6 +2090,21 @@
       }
     ]
   },
+  "1897941": {
+    "label": "biodiscover.com",
+    "bugs": {
+      "1897941": {
+        "issue": "desktop-layout-not-mobile",
+        "matches": ["*://biodiscover.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "ua_string": ["Chrome_with_FxQuantum"]
+      }
+    ]
+  },
   "1898909": {
     "label": "remotasks.com",
     "bugs": {
