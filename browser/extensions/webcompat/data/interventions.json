@@ -715,25 +715,6 @@
       }
     ]
   },
-  "1778168": {
-    "label": "watch.antennaplus.gr",
-    "bugs": {
-      "1778168": {
-        "issue": "firefox-blocked-completely",
-        "matches": ["*://watch.antennaplus.gr/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["mac", "windows"],
-        "ua_string": ["add_Chrome"]
-      },
-      {
-        "platforms": ["linux"],
-        "ua_string": ["add_Chrome", "change_OS_to_Windows"]
-      }
-    ]
-  },
   "1779059": {
     "label": "lazada.co.id",
     "bugs": {
