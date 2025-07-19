@@ -2381,6 +2381,23 @@
       }
     ]
   },
+  "1899063": {
+    "label": "onlinestep.pgc.edu",
+    "bugs": {
+      "1899063": {
+        "issue": "unsupported-warning",
+        "matches": ["*://onlinestep.pgc.edu/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "content_scripts": {
+          "css": ["bug1899063-onlinestep.pgc.edu-hide-unsupported-message.css"]
+        }
+      }
+    ]
+  },
   "1899065": {
     "label": "CenterParcs UK and Ireland",
     "bugs": {
