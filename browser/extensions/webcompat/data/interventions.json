@@ -4539,6 +4539,21 @@
       }
     ]
   },
+  "1968187": {
+    "label": "authface.liquid-auth.com",
+    "bugs": {
+      "1968187": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://authface.liquid-auth.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
+  },
   "1968198": {
     "label": "www.metacritic.com",
     "bugs": {
