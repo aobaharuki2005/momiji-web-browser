@@ -62,6 +62,13 @@ const MAX_TEXTURE_EXTENT: u32 = std::i16::MAX as u32;
 // Then we may have to ignore the spec or get it changed.
 const MAX_BINDINGS_PER_RESOURCE_TYPE: u32 = 64;
 
+#[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
+fn emit_critical_invalid_note(what: &'static str) {
+    // SAFETY: We ensure that the pointer provided is not null.
+    let msg = CString::new(format!("{what} is invalid")).unwrap();
+    unsafe { gfx_critical_note(msg.as_ptr()) }
+}
+
 fn restrict_limits(limits: wgt::Limits) -> wgt::Limits {
     wgt::Limits {
         max_buffer_size: limits.max_buffer_size.min(MAX_BUFFER_SIZE),
@@ -266,37 +273,34 @@ fn support_use_shared_texture_in_swap_chain(
             false
         } else {
             unsafe {
-                global.adapter_as_hal::<wgc::api::Vulkan, _, bool>(self_id, |hal_adapter| {
-                    let hal_adapter = match hal_adapter {
-                        None => {
-                            let msg = c"Vulkan adapter is invalid";
-                            gfx_critical_note(msg.as_ptr());
-                            return false;
-                        }
-                        Some(hal_adapter) => hal_adapter,
-                    };
-
-                    let capabilities = hal_adapter.physical_device_capabilities();
-                    static REQUIRED: &[&'static std::ffi::CStr] = &[
-                        khr::external_memory_fd::NAME,
-                        ash::ext::external_memory_dma_buf::NAME,
-                        ash::ext::image_drm_format_modifier::NAME,
-                        khr::external_semaphore_fd::NAME,
-                    ];
-                    REQUIRED.iter().all(|extension| {
-                        let supported = capabilities.supports_extension(extension);
-                        if !supported {
-                            log::info!(
-                                concat!(
-                                    "WebGPU: disabling SharedTexture swapchain: \n",
-                                    "Vulkan extension not supported: {:?}",
-                                ),
-                                extension.to_string_lossy()
-                            );
-                        }
-                        supported
-                    })
-                })
+                match global.adapter_as_hal::<wgc::api::Vulkan>(self_id) {
+                    None => {
+                        emit_critical_invalid_note("Vulkan adapter");
+                        false
+                    }
+                    Some(hal_adapter) => {
+                        let capabilities = hal_adapter.physical_device_capabilities();
+                        static REQUIRED: &[&'static std::ffi::CStr] = &[
+                            khr::external_memory_fd::NAME,
+                            ash::ext::external_memory_dma_buf::NAME,
+                            ash::ext::image_drm_format_modifier::NAME,
+                            khr::external_semaphore_fd::NAME,
+                        ];
+                        REQUIRED.iter().all(|extension| {
+                            let supported = capabilities.supports_extension(extension);
+                            if !supported {
+                                log::info!(
+                                    concat!(
+                                        "WebGPU: disabling SharedTexture swapchain: \n",
+                                        "Vulkan extension not supported: {:?}",
+                                    ),
+                                    extension.to_string_lossy()
+                                );
+                            }
+                            supported
+                        })
+                    }
+                }
             }
         };
         return support;
@@ -378,134 +382,115 @@ unsafe fn adapter_request_device(
 
     #[cfg(target_os = "linux")]
     {
-        let support_dma_buf =
-            global.adapter_as_hal::<wgc::api::Vulkan, _, bool>(self_id, |hal_adapter| {
-                let hal_adapter = match hal_adapter {
-                    None => {
-                        let msg = c"Vulkan adapter is invalid";
-                        gfx_critical_note(msg.as_ptr());
-                        return false;
-                    }
-                    Some(hal_adapter) => hal_adapter,
+        let hal_adapter = global.adapter_as_hal::<wgc::api::Vulkan>(self_id);
+
+        let support_dma_buf = hal_adapter.as_ref().is_some_and(|hal_adapter| {
+            let capabilities = hal_adapter.physical_device_capabilities();
+
+            capabilities.supports_extension(khr::external_memory_fd::NAME)
+                && capabilities.supports_extension(ash::ext::external_memory_dma_buf::NAME)
+                && capabilities.supports_extension(ash::ext::image_drm_format_modifier::NAME)
+                && capabilities.supports_extension(khr::external_semaphore_fd::NAME)
+        });
+
+        match (hal_adapter, support_dma_buf) {
+            (None, _) => {
+                emit_critical_invalid_note("Vulkan adapter");
+            }
+            (Some(_), false) => {}
+            (Some(hal_adapter), true) => {
+                let mut enabled_extensions =
+                    hal_adapter.required_device_extensions(desc.required_features);
+                enabled_extensions.push(khr::external_memory_fd::NAME);
+                enabled_extensions.push(ash::ext::external_memory_dma_buf::NAME);
+                enabled_extensions.push(ash::ext::image_drm_format_modifier::NAME);
+                enabled_extensions.push(khr::external_semaphore_fd::NAME);
+
+                let mut enabled_phd_features = hal_adapter
+                    .physical_device_features(&enabled_extensions, desc.required_features);
+
+                let raw_instance = hal_adapter.shared_instance().raw_instance();
+                let raw_physical_device = hal_adapter.raw_physical_device();
+
+                let queue_family_index = raw_instance
+                    .get_physical_device_queue_family_properties(raw_physical_device)
+                    .into_iter()
+                    .enumerate()
+                    .find_map(|(queue_family_index, info)| {
+                        if info.queue_flags.contains(vk::QueueFlags::GRAPHICS) {
+                            Some(queue_family_index as u32)
+                        } else {
+                            None
+                        }
+                    });
+
+                let Some(queue_family_index) = queue_family_index else {
+                    let msg = c"Vulkan device has no graphics queue";
+                    gfx_critical_note(msg.as_ptr());
+                    return Some(format!("Internal Error: Failed to create ash::Device"));
                 };
 
-                let capabilities = hal_adapter.physical_device_capabilities();
+                let family_info = vk::DeviceQueueCreateInfo::default()
+                    .queue_family_index(queue_family_index)
+                    .queue_priorities(&[1.0]);
+                let family_infos = [family_info];
 
-                capabilities.supports_extension(khr::external_memory_fd::NAME)
-                    && capabilities.supports_extension(ash::ext::external_memory_dma_buf::NAME)
-                    && capabilities.supports_extension(ash::ext::image_drm_format_modifier::NAME)
-                    && capabilities.supports_extension(khr::external_semaphore_fd::NAME)
-            });
+                let str_pointers = enabled_extensions
+                    .iter()
+                    .map(|&s| {
+                        // Safe because `enabled_extensions` entries have static lifetime.
+                        s.as_ptr()
+                    })
+                    .collect::<Vec<_>>();
 
-        if support_dma_buf {
-            let hal_device = global
-                .adapter_as_hal::<wgc::api::Vulkan, _, Option<wgh::OpenDevice<wgh::api::Vulkan>>>(
+                let pre_info = vk::DeviceCreateInfo::default()
+                    .queue_create_infos(&family_infos)
+                    .enabled_extension_names(&str_pointers);
+                let info = enabled_phd_features.add_to_device_create(pre_info);
+
+                let raw_device =
+                    match raw_instance.create_device(raw_physical_device, &info, None) {
+                        Err(err) => {
+                            let msg =
+                                CString::new(format!("create_device() failed: {:?}", err))
+                                    .unwrap();
+                            gfx_critical_note(msg.as_ptr());
+                            return Some(format!("Internal Error: Failed to create ash::Device"));
+                        }
+                        Ok(raw_device) => raw_device,
+                    };
+
+                let hal_device = match hal_adapter.device_from_raw(
+                    raw_device,
+                    None,
+                    &enabled_extensions,
+                    desc.required_features,
+                    &desc.memory_hints,
+                    family_info.queue_family_index,
+                    0,
+                ) {
+                    Err(err) => {
+                        let msg =
+                            CString::new(format!("device_from_raw() failed: {:?}", err))
+                                .unwrap();
+                        gfx_critical_note(msg.as_ptr());
+                        return Some(format!("Internal Error: Failed to create ash::Device"));
+                    }
+                    Ok(hal_device) => hal_device,
+                };
+
+                let res = global.create_device_from_hal(
                     self_id,
-                    |hal_adapter| {
-                        let hal_adapter = match hal_adapter {
-                            None => {
-                                let msg = c"Vulkan adapter is invalid";
-                                gfx_critical_note(msg.as_ptr());
-                                return None;
-                            }
-                            Some(hal_adapter) => hal_adapter,
-                        };
-
-                        let mut enabled_extensions =
-                            hal_adapter.required_device_extensions(desc.required_features);
-                        enabled_extensions.push(khr::external_memory_fd::NAME);
-                        enabled_extensions.push(ash::ext::external_memory_dma_buf::NAME);
-                        enabled_extensions.push(ash::ext::image_drm_format_modifier::NAME);
-                        enabled_extensions.push(khr::external_semaphore_fd::NAME);
-
-                        let mut enabled_phd_features = hal_adapter
-                            .physical_device_features(&enabled_extensions, desc.required_features);
-
-                        let raw_instance = hal_adapter.shared_instance().raw_instance();
-                        let raw_physical_device = hal_adapter.raw_physical_device();
-
-                        let queue_family_index = raw_instance
-                            .get_physical_device_queue_family_properties(raw_physical_device)
-                            .into_iter()
-                            .enumerate()
-                            .find_map(|(queue_family_index, info)| {
-                                if info.queue_flags.contains(vk::QueueFlags::GRAPHICS) {
-                                    Some(queue_family_index as u32)
-                                } else {
-                                    None
-                                }
-                            });
-
-                        let queue_family_index = match queue_family_index {
-                            None => {
-                                let msg = c"Vulkan device has no graphics queue";
-                                gfx_critical_note(msg.as_ptr());
-                                return None;
-                            }
-                            Some(queue_family_index) => queue_family_index,
-                        };
-
-                        let family_info = vk::DeviceQueueCreateInfo::default()
-                            .queue_family_index(queue_family_index)
-                            .queue_priorities(&[1.0]);
-                        let family_infos = [family_info];
-
-                        let str_pointers = enabled_extensions
-                            .iter()
-                            .map(|&s| {
-                                // Safe because `enabled_extensions` entries have static lifetime.
-                                s.as_ptr()
-                            })
-                            .collect::<Vec<_>>();
-
-                        let pre_info = vk::DeviceCreateInfo::default()
-                            .queue_create_infos(&family_infos)
-                            .enabled_extension_names(&str_pointers);
-                        let info = enabled_phd_features.add_to_device_create(pre_info);
-
-                        let raw_device =
-                            match raw_instance.create_device(raw_physical_device, &info, None) {
-                                Err(err) => {
-                                    let msg =
-                                        CString::new(format!("create_device() failed: {:?}", err))
-                                            .unwrap();
-                                    gfx_critical_note(msg.as_ptr());
-                                    return None;
-                                }
-                                Ok(raw_device) => raw_device,
-                            };
-
-                        let hal_device = hal_adapter.device_from_raw(
-                            raw_device,
-                            None,
-                            &enabled_extensions,
-                            desc.required_features,
-                            &desc.memory_hints,
-                            family_info.queue_family_index,
-                            0,
-                        );
-                        Some(hal_device.unwrap())
-                    },
+                    hal_device.into(),
+                    &desc,
+                    Some(new_device_id),
+                    Some(new_queue_id),
                 );
-
-            let hal_device = match hal_device {
-                None => {
-                    return Some(format!("Internal Error: Failed to create ash::Device"));
+                if let Err(err) = res {
+                    return Some(format!("{err}"));
                 }
-                Some(hal_device) => hal_device,
-            };
-
-            let res = global.create_device_from_hal(
-                self_id,
-                hal_device.into(),
-                &desc,
-                Some(new_device_id),
-                Some(new_queue_id),
-            );
-            if let Err(err) = res {
-                return Some(format!("{err}"));
+                return None;
             }
-            return None;
         }
     }
 
@@ -778,41 +763,21 @@ pub extern "C" fn wgpu_server_get_device_fence_handle(
     device_id: id::DeviceId,
 ) -> *mut c_void {
     #[cfg(target_os = "windows")]
-    {
-        let dx12_device = unsafe {
-            global.device_as_hal::<wgc::api::Dx12, _, Option<Direct3D12::ID3D12Device>>(
-                device_id,
-                |hal_device| hal_device.map(|device| device.raw_device().clone()),
-            )
-        };
-        let dx12_device = match dx12_device {
-            Some(device) => device,
-            None => {
-                return ptr::null_mut();
-            }
+    unsafe {
+        let Some(dx12_device) = global.device_as_hal::<wgc::api::Dx12>(device_id)
+                .map(|device| device.raw_device().clone()) else {
+            return ptr::null_mut();
         };
 
-        let dx12_fence = unsafe {
-            global.device_fence_as_hal::<wgc::api::Dx12, _, Option<Direct3D12::ID3D12Fence>>(
-                device_id,
-                |hal_fence| hal_fence.map(|fence| fence.raw_fence().clone()),
-            )
-        };
-        let dx12_fence = match dx12_fence {
-            Some(fence) => fence,
-            None => {
-                return ptr::null_mut();
-            }
+        let Some(dx12_fence) = global.device_fence_as_hal::<wgc::api::Dx12>(device_id)
+                .map(|fence| fence.raw_fence().clone()) else {
+            return ptr::null_mut();
         };
 
-        let res = unsafe {
-            dx12_device.CreateSharedHandle(&dx12_fence, None, Foundation::GENERIC_ALL.0, None)
-        };
-
-        return match res {
+        match dx12_device.CreateSharedHandle(&dx12_fence, None, Foundation::GENERIC_ALL.0, None) {
             Ok(handle) => handle.0,
             Err(_) => ptr::null_mut(),
-        };
+        }
     }
     #[cfg(not(target_os = "windows"))]
     ptr::null_mut()
@@ -844,18 +809,14 @@ pub struct VkImageHandle {
 impl VkImageHandle {
     fn destroy(&self, global: &Global, device_id: id::DeviceId) {
         unsafe {
-            global.device_as_hal::<wgc::api::Vulkan, _, ()>(device_id, |hal_device| {
-                let hal_device = match hal_device {
-                    None => {
-                        return;
-                    }
-                    Some(hal_device) => hal_device,
-                };
-                let device = hal_device.raw_device();
+            let Some(hal_device) = global.device_as_hal::<wgc::api::Vulkan>(device_id) else {
+                return;
+            };
 
-                (device.fp_v1_0().destroy_image)(self.device, self.image, ptr::null());
-                (device.fp_v1_0().free_memory)(self.device, self.memory, ptr::null());
-            })
+            let device = hal_device.raw_device();
+
+            (device.fp_v1_0().destroy_image)(self.device, self.image, ptr::null());
+            (device.fp_v1_0().free_memory)(self.device, self.memory, ptr::null());
         };
     }
 }
@@ -869,244 +830,221 @@ pub extern "C" fn wgpu_vkimage_create_with_dma_buf(
     height: u32,
     out_memory_size: *mut u64,
 ) -> *mut VkImageHandle {
-    let image_handle = unsafe {
-        global.device_as_hal::<wgc::api::Vulkan, _, Option<VkImageHandle>>(
-            device_id,
-            |hal_device| {
-                let hal_device = match hal_device {
-                    None => {
-                        let msg = c"Vulkan device is invalid";
-                        gfx_critical_note(msg.as_ptr());
-                        return None;
-                    }
-                    Some(hal_device) => hal_device,
-                };
+    unsafe {
+        let Some(hal_device) = global.device_as_hal::<wgc::api::Vulkan>(device_id) else {
+            emit_critical_invalid_note("Vulkan device");
+            return ptr::null_mut();
+        };
 
-                let device = hal_device.raw_device();
-                let physical_device = hal_device.raw_physical_device();
-                let instance = hal_device.shared_instance().raw_instance();
+        let device = hal_device.raw_device();
+        let physical_device = hal_device.raw_physical_device();
+        let instance = hal_device.shared_instance().raw_instance();
 
-                let count = {
-                    let mut drm_format_modifier_props_list =
-                        vk::DrmFormatModifierPropertiesListEXT::default();
-                    let mut format_properties_2 = vk::FormatProperties2::default()
-                        .push_next(&mut drm_format_modifier_props_list);
+        let count = {
+            let mut drm_format_modifier_props_list =
+                vk::DrmFormatModifierPropertiesListEXT::default();
+            let mut format_properties_2 = vk::FormatProperties2::default()
+                .push_next(&mut drm_format_modifier_props_list);
 
-                    instance.get_physical_device_format_properties2(
-                        physical_device,
-                        vk::Format::R8G8B8A8_UNORM,
-                        &mut format_properties_2,
-                    );
-                    drm_format_modifier_props_list.drm_format_modifier_count
-                };
+            instance.get_physical_device_format_properties2(
+                physical_device,
+                vk::Format::R8G8B8A8_UNORM,
+                &mut format_properties_2,
+            );
+            drm_format_modifier_props_list.drm_format_modifier_count
+        };
 
-                if count == 0 {
-                    let msg = c"get_physical_device_format_properties2() failed";
-                    gfx_critical_note(msg.as_ptr());
-                    return None;
-                }
-
-                let mut modifier_props =
-                    vec![vk::DrmFormatModifierPropertiesEXT::default(); count as usize];
-
-                let mut drm_format_modifier_props_list =
-                    vk::DrmFormatModifierPropertiesListEXT::default()
-                        .drm_format_modifier_properties(&mut modifier_props);
-                let mut format_properties_2 =
-                    vk::FormatProperties2::default().push_next(&mut drm_format_modifier_props_list);
-
-                instance.get_physical_device_format_properties2(
-                    physical_device,
-                    vk::Format::R8G8B8A8_UNORM,
-                    &mut format_properties_2,
-                );
-
-                let mut usage_flags = vk::ImageUsageFlags::empty();
-                usage_flags |= vk::ImageUsageFlags::COLOR_ATTACHMENT;
-
-                modifier_props.retain(|modifier_prop| {
-                    let support = is_dmabuf_supported(
-                        instance,
-                        physical_device,
-                        vk::Format::R8G8B8A8_UNORM,
-                        modifier_prop.drm_format_modifier,
-                        usage_flags,
-                    );
-                    support
-                });
-
-                if modifier_props.is_empty() {
-                    let msg = c"format not supported for dmabuf import";
-                    gfx_critical_note(msg.as_ptr());
-                    return None;
-                }
-
-                let modifiers: Vec<u64> = modifier_props
-                    .iter()
-                    .map(|modifier_prop| modifier_prop.drm_format_modifier)
-                    .collect();
-
-                let mut modifier_list = vk::ImageDrmFormatModifierListCreateInfoEXT::default()
-                    .drm_format_modifiers(&modifiers);
-
-                let extent = vk::Extent3D {
-                    width,
-                    height,
-                    depth: 1,
-                };
-
-                let mut external_image_create_info = vk::ExternalMemoryImageCreateInfo::default()
-                    .handle_types(vk::ExternalMemoryHandleTypeFlags::DMA_BUF_EXT);
-
-                let mut export_memory_alloc_info = vk::ExportMemoryAllocateInfo::default()
-                    .handle_types(vk::ExternalMemoryHandleTypeFlags::DMA_BUF_EXT);
-
-                let flags = vk::ImageCreateFlags::empty();
-
-                let vk_info = vk::ImageCreateInfo::default()
-                    .flags(flags)
-                    .image_type(vk::ImageType::TYPE_2D)
-                    .format(vk::Format::R8G8B8A8_UNORM)
-                    .extent(extent)
-                    .mip_levels(1)
-                    .array_layers(1)
-                    .samples(vk::SampleCountFlags::TYPE_1)
-                    .tiling(vk::ImageTiling::DRM_FORMAT_MODIFIER_EXT)
-                    .usage(usage_flags)
-                    .sharing_mode(vk::SharingMode::EXCLUSIVE)
-                    .initial_layout(vk::ImageLayout::UNDEFINED)
-                    .push_next(&mut modifier_list)
-                    .push_next(&mut external_image_create_info);
-
-                let image = match device.create_image(&vk_info, None) {
-                    Err(err) => {
-                        let msg =
-                            CString::new(format!("create_image() failed: {:?}", err)).unwrap();
-                        gfx_critical_note(msg.as_ptr());
-                        return None;
-                    }
-                    Ok(image) => image,
-                };
-
-                let mut image_modifier_properties =
-                    vk::ImageDrmFormatModifierPropertiesEXT::default();
-                let image_drm_format_modifier =
-                    ash::ext::image_drm_format_modifier::Device::new(instance, device);
-                let ret = image_drm_format_modifier.get_image_drm_format_modifier_properties(
-                    image,
-                    &mut image_modifier_properties,
-                );
-                if ret.is_err() {
-                    let msg = CString::new(format!(
-                        "get_image_drm_format_modifier_properties() failed: {:?}",
-                        ret
-                    ))
-                    .unwrap();
-                    gfx_critical_note(msg.as_ptr());
-                    return None;
-                }
-
-                let memory_req = device.get_image_memory_requirements(image);
-
-                let mem_properties =
-                    instance.get_physical_device_memory_properties(physical_device);
-
-                let index = mem_properties
-                    .memory_types
-                    .iter()
-                    .enumerate()
-                    .position(|(i, t)| {
-                        ((1 << i) & memory_req.memory_type_bits) != 0
-                            && t.property_flags
-                                .contains(vk::MemoryPropertyFlags::DEVICE_LOCAL)
-                    });
-
-                let index = match index {
-                    None => {
-                        let msg = c"Failed to get DEVICE_LOCAL memory index";
-                        gfx_critical_note(msg.as_ptr());
-                        return None;
-                    }
-                    Some(index) => index,
-                };
-
-                let mut dedicated_memory_info =
-                    vk::MemoryDedicatedAllocateInfo::default().image(image);
-
-                let memory_allocate_info = vk::MemoryAllocateInfo::default()
-                    .allocation_size(memory_req.size)
-                    .memory_type_index(index as u32)
-                    .push_next(&mut dedicated_memory_info)
-                    .push_next(&mut export_memory_alloc_info);
-
-                let memory = match device.allocate_memory(&memory_allocate_info, None) {
-                    Err(err) => {
-                        let msg =
-                            CString::new(format!("allocate_memory() failed: {:?}", err)).unwrap();
-                        gfx_critical_note(msg.as_ptr());
-                        return None;
-                    }
-                    Ok(memory) => memory,
-                };
-
-                let result = device.bind_image_memory(image, memory, /* offset */ 0);
-                if result.is_err() {
-                    let msg =
-                        CString::new(format!("bind_image_memory() failed: {:?}", result)).unwrap();
-                    gfx_critical_note(msg.as_ptr());
-                    return None;
-                }
-
-                *out_memory_size = memory_req.size;
-
-                let modifier_prop = modifier_props.iter().find(|prop| {
-                    prop.drm_format_modifier == image_modifier_properties.drm_format_modifier
-                });
-                let modifier_prop = match modifier_prop {
-                    None => {
-                        let msg = c"failed to find modifier_prop";
-                        gfx_critical_note(msg.as_ptr());
-                        return None;
-                    }
-                    Some(modifier_prop) => modifier_prop,
-                };
-
-                let plane_count = modifier_prop.drm_format_modifier_plane_count;
-
-                let mut layouts = Vec::new();
-                for i in 0..plane_count {
-                    let flag = match i {
-                        0 => vk::ImageAspectFlags::PLANE_0,
-                        1 => vk::ImageAspectFlags::PLANE_1,
-                        2 => vk::ImageAspectFlags::PLANE_2,
-                        _ => unreachable!(),
-                    };
-                    let subresource = vk::ImageSubresource::default().aspect_mask(flag);
-                    let layout = device.get_image_subresource_layout(image, subresource);
-                    layouts.push(layout);
-                }
-
-                Some(VkImageHandle {
-                    device: device.handle(),
-                    image,
-                    memory,
-                    memory_size: memory_req.size,
-                    memory_type_index: index as u32,
-                    modifier: image_modifier_properties.drm_format_modifier,
-                    layouts,
-                })
-            },
-        )
-    };
-
-    let image_handle = match image_handle {
-        None => {
+        if count == 0 {
+            let msg = c"get_physical_device_format_properties2() failed";
+            gfx_critical_note(msg.as_ptr());
             return ptr::null_mut();
         }
-        Some(image_handle) => image_handle,
-    };
 
-    Box::into_raw(Box::new(image_handle))
+        let mut modifier_props =
+            vec![vk::DrmFormatModifierPropertiesEXT::default(); count as usize];
+
+        let mut drm_format_modifier_props_list =
+            vk::DrmFormatModifierPropertiesListEXT::default()
+                .drm_format_modifier_properties(&mut modifier_props);
+        let mut format_properties_2 =
+            vk::FormatProperties2::default().push_next(&mut drm_format_modifier_props_list);
+
+        instance.get_physical_device_format_properties2(
+            physical_device,
+            vk::Format::R8G8B8A8_UNORM,
+            &mut format_properties_2,
+        );
+
+        let mut usage_flags = vk::ImageUsageFlags::empty();
+        usage_flags |= vk::ImageUsageFlags::COLOR_ATTACHMENT;
+
+        modifier_props.retain(|modifier_prop| {
+            let support = is_dmabuf_supported(
+                instance,
+                physical_device,
+                vk::Format::R8G8B8A8_UNORM,
+                modifier_prop.drm_format_modifier,
+                usage_flags,
+            );
+            support
+        });
+
+        if modifier_props.is_empty() {
+            let msg = c"format not supported for dmabuf import";
+            gfx_critical_note(msg.as_ptr());
+            return ptr::null_mut();
+        }
+
+        let modifiers: Vec<u64> = modifier_props
+            .iter()
+            .map(|modifier_prop| modifier_prop.drm_format_modifier)
+            .collect();
+
+        let mut modifier_list = vk::ImageDrmFormatModifierListCreateInfoEXT::default()
+            .drm_format_modifiers(&modifiers);
+
+        let extent = vk::Extent3D {
+            width,
+            height,
+            depth: 1,
+        };
+
+        let mut external_image_create_info = vk::ExternalMemoryImageCreateInfo::default()
+            .handle_types(vk::ExternalMemoryHandleTypeFlags::DMA_BUF_EXT);
+
+        let mut export_memory_alloc_info = vk::ExportMemoryAllocateInfo::default()
+            .handle_types(vk::ExternalMemoryHandleTypeFlags::DMA_BUF_EXT);
+
+        let flags = vk::ImageCreateFlags::empty();
+
+        let vk_info = vk::ImageCreateInfo::default()
+            .flags(flags)
+            .image_type(vk::ImageType::TYPE_2D)
+            .format(vk::Format::R8G8B8A8_UNORM)
+            .extent(extent)
+            .mip_levels(1)
+            .array_layers(1)
+            .samples(vk::SampleCountFlags::TYPE_1)
+            .tiling(vk::ImageTiling::DRM_FORMAT_MODIFIER_EXT)
+            .usage(usage_flags)
+            .sharing_mode(vk::SharingMode::EXCLUSIVE)
+            .initial_layout(vk::ImageLayout::UNDEFINED)
+            .push_next(&mut modifier_list)
+            .push_next(&mut external_image_create_info);
+
+        let image = match device.create_image(&vk_info, None) {
+            Err(err) => {
+                let msg =
+                    CString::new(format!("create_image() failed: {:?}", err)).unwrap();
+                gfx_critical_note(msg.as_ptr());
+                return ptr::null_mut();
+            }
+            Ok(image) => image,
+        };
+
+        let mut image_modifier_properties =
+            vk::ImageDrmFormatModifierPropertiesEXT::default();
+        let image_drm_format_modifier =
+            ash::ext::image_drm_format_modifier::Device::new(instance, device);
+        let ret = image_drm_format_modifier.get_image_drm_format_modifier_properties(
+            image,
+            &mut image_modifier_properties,
+        );
+        if ret.is_err() {
+            let msg = CString::new(format!(
+                "get_image_drm_format_modifier_properties() failed: {:?}",
+                ret
+            ))
+            .unwrap();
+            gfx_critical_note(msg.as_ptr());
+            return ptr::null_mut();
+        }
+
+        let memory_req = device.get_image_memory_requirements(image);
+
+        let mem_properties =
+            instance.get_physical_device_memory_properties(physical_device);
+
+        let index = mem_properties
+            .memory_types
+            .iter()
+            .enumerate()
+            .position(|(i, t)| {
+                ((1 << i) & memory_req.memory_type_bits) != 0
+                    && t.property_flags
+                        .contains(vk::MemoryPropertyFlags::DEVICE_LOCAL)
+            });
+
+        let Some(index) = index else {
+            let msg = c"Failed to get DEVICE_LOCAL memory index";
+            gfx_critical_note(msg.as_ptr());
+            return ptr::null_mut();
+        };
+
+        let mut dedicated_memory_info =
+            vk::MemoryDedicatedAllocateInfo::default().image(image);
+
+        let memory_allocate_info = vk::MemoryAllocateInfo::default()
+            .allocation_size(memory_req.size)
+            .memory_type_index(index as u32)
+            .push_next(&mut dedicated_memory_info)
+            .push_next(&mut export_memory_alloc_info);
+
+        let memory = match device.allocate_memory(&memory_allocate_info, None) {
+            Err(err) => {
+                let msg =
+                    CString::new(format!("allocate_memory() failed: {:?}", err)).unwrap();
+                gfx_critical_note(msg.as_ptr());
+                return ptr::null_mut();
+            }
+            Ok(memory) => memory,
+        };
+
+        let result = device.bind_image_memory(image, memory, /* offset */ 0);
+        if result.is_err() {
+            let msg = CString::new(format!("bind_image_memory() failed: {:?}", result)).unwrap();
+            gfx_critical_note(msg.as_ptr());
+            return ptr::null_mut();
+        }
+
+        *out_memory_size = memory_req.size;
+
+        let modifier_prop = modifier_props.iter().find(|prop| {
+            prop.drm_format_modifier == image_modifier_properties.drm_format_modifier
+        });
+        let Some(modifier_prop) = modifier_prop else {
+            let msg = c"failed to find modifier_prop";
+            gfx_critical_note(msg.as_ptr());
+            return ptr::null_mut();
+        };
+
+        let plane_count = modifier_prop.drm_format_modifier_plane_count;
+
+        let mut layouts = Vec::new();
+        for i in 0..plane_count {
+            let flag = match i {
+                0 => vk::ImageAspectFlags::PLANE_0,
+                1 => vk::ImageAspectFlags::PLANE_1,
+                2 => vk::ImageAspectFlags::PLANE_2,
+                _ => unreachable!(),
+            };
+            let subresource = vk::ImageSubresource::default().aspect_mask(flag);
+            let layout = device.get_image_subresource_layout(image, subresource);
+            layouts.push(layout);
+        }
+
+        let image_handle = VkImageHandle {
+            device: device.handle(),
+            image,
+            memory,
+            memory_size: memory_req.size,
+            memory_type_index: index as u32,
+            modifier: image_modifier_properties.drm_format_modifier,
+            layouts,
+        };
+
+        Box::into_raw(Box::new(image_handle))
+    }
 }
 
 #[no_mangle]
@@ -1133,30 +1071,21 @@ pub extern "C" fn wgpu_vkimage_get_file_descriptor(
     handle: &VkImageHandle,
 ) -> i32 {
     unsafe {
-        global.device_as_hal::<wgc::api::Vulkan, _, i32>(device_id, |hal_device| {
-            let hal_device = match hal_device {
-                None => {
-                    let msg = c"Vulkan device is invalid";
-                    gfx_critical_note(msg.as_ptr());
-                    return -1;
-                }
-                Some(hal_device) => hal_device,
-            };
+        let Some(hal_device) = global.device_as_hal::<wgc::api::Vulkan>(device_id) else {
+            emit_critical_invalid_note("Vulkan device");
+            return -1;
+        };
 
-            let device = hal_device.raw_device();
-            let instance = hal_device.shared_instance().raw_instance();
+        let device = hal_device.raw_device();
+        let instance = hal_device.shared_instance().raw_instance();
 
-            let get_fd_info = vk::MemoryGetFdInfoKHR::default()
-                .memory(handle.memory)
-                .handle_type(vk::ExternalMemoryHandleTypeFlags::DMA_BUF_EXT);
+        let get_fd_info = vk::MemoryGetFdInfoKHR::default()
+            .memory(handle.memory)
+            .handle_type(vk::ExternalMemoryHandleTypeFlags::DMA_BUF_EXT);
 
-            let loader = khr::external_memory_fd::Device::new(instance, device);
+        let loader = khr::external_memory_fd::Device::new(instance, device);
 
-            return match loader.get_memory_fd(&get_fd_info) {
-                Err(..) => -1,
-                Ok(fd) => fd,
-            };
-        })
+        loader.get_memory_fd(&get_fd_info).unwrap_or(-1)
     }
 }
 
@@ -1195,10 +1124,8 @@ pub extern "C" fn wgpu_server_get_device_fence_metal_shared_event(
     #[cfg(target_os = "macos")]
     {
         let shared_event = unsafe {
-            global.device_fence_as_hal::<wgc::api::Metal, _, Option<metal::SharedEvent>>(
-                device_id,
-                |hal_fence| hal_fence.map(|fence| fence.raw_shared_event().unwrap().clone()),
-            )
+            global.device_fence_as_hal::<wgc::api::Metal>(device_id)
+                .map(|fence| fence.raw_shared_event().unwrap().clone())
         };
         let shared_event = match shared_event {
             Some(shared_event) => shared_event,
@@ -1478,26 +1405,16 @@ impl Global {
         swap_chain_id: Option<SwapChainId>,
     ) -> bool {
         let dx12_device = unsafe {
-            self.device_as_hal::<wgc::api::Dx12, _, Option<Direct3D12::ID3D12Device>>(
-                device_id,
-                |hal_device| {
-                    if hal_device.is_none() {
-                        return None;
-                    }
-                    hal_device.map(|hal_device| hal_device.raw_device().clone())
-                },
-            )
+            match self.device_as_hal::<wgc::api::Dx12>(device_id)
+                .map(|hal_device| hal_device.raw_device().clone()) {
+                None => {
+                    emit_critical_invalid_note("dx12 device");
+                    return false;
+                }
+                Some(dx12_device) => dx12_device,
+            }
         };
 
-        if dx12_device.is_none() {
-            let msg = c"dx12 device is none";
-            unsafe {
-                gfx_critical_note(msg.as_ptr());
-            }
-            return false;
-        }
-
-        let dx12_device = dx12_device.unwrap();
         let ret = unsafe {
             wgpu_server_ensure_shared_texture_for_swap_chain(
                 self.webgpu_parent,
@@ -1571,8 +1488,8 @@ impl Global {
         desc: &wgc::resource::TextureDescriptor,
         swap_chain_id: Option<SwapChainId>,
     ) -> bool {
-        let ret = unsafe {
-            wgpu_server_ensure_shared_texture_for_swap_chain(
+        unsafe {
+            let ret = wgpu_server_ensure_shared_texture_for_swap_chain(
                 self.webgpu_parent,
                 swap_chain_id.unwrap(),
                 device_id,
@@ -1581,186 +1498,154 @@ impl Global {
                 desc.size.height,
                 desc.format,
                 desc.usage,
-            )
-        };
-        if ret != true {
-            let msg = c"Failed to create shared texture";
-            unsafe {
+            );
+            if ret != true {
+                let msg = c"Failed to create shared texture";
                 gfx_critical_note(msg.as_ptr());
-            }
-            return false;
-        }
-
-        let handle = unsafe { wgpu_server_get_vk_image_handle(self.webgpu_parent, texture_id) };
-        if handle.is_null() {
-            let msg = c"Failed to get VkImageHandle";
-            unsafe {
-                gfx_critical_note(msg.as_ptr());
-            }
-            return false;
-        }
-
-        let vk_image_wrapper = unsafe { &*handle };
-
-        let fd = unsafe { wgpu_server_get_dma_buf_fd(self.webgpu_parent, texture_id) };
-        if fd < 0 {
-            let msg = c"Failed to get DMABuf fd";
-            unsafe {
-                gfx_critical_note(msg.as_ptr());
-            }
-            return false;
-        }
-
-        // Ensure to close file descriptor
-        let owned_fd = unsafe { OwnedFd::from_raw_fd(fd as RawFd) };
-
-        let image_holder = unsafe {
-            self.device_as_hal::<wgc::api::Vulkan, _, Option<VkImageHolder>>(
-                device_id,
-                |hal_device| {
-                    let hal_device = match hal_device {
-                        None => {
-                            let msg = c"Vulkan device is invalid";
-                            gfx_critical_note(msg.as_ptr());
-                            return None;
-                        }
-                        Some(hal_device) => hal_device,
-                    };
-
-                    let device = hal_device.raw_device();
-
-                    let extent = vk::Extent3D {
-                        width: desc.size.width,
-                        height: desc.size.height,
-                        depth: 1,
-                    };
-                    let mut usage_flags = vk::ImageUsageFlags::empty();
-                    usage_flags |= vk::ImageUsageFlags::COLOR_ATTACHMENT;
-
-                    let mut external_image_create_info =
-                        vk::ExternalMemoryImageCreateInfo::default()
-                            .handle_types(vk::ExternalMemoryHandleTypeFlags::DMA_BUF_EXT);
-
-                    let vk_info = vk::ImageCreateInfo::default()
-                        .flags(vk::ImageCreateFlags::ALIAS)
-                        .image_type(vk::ImageType::TYPE_2D)
-                        .format(vk::Format::R8G8B8A8_UNORM)
-                        .extent(extent)
-                        .mip_levels(1)
-                        .array_layers(1)
-                        .samples(vk::SampleCountFlags::TYPE_1)
-                        .tiling(vk::ImageTiling::OPTIMAL)
-                        .usage(usage_flags)
-                        .sharing_mode(vk::SharingMode::EXCLUSIVE)
-                        .initial_layout(vk::ImageLayout::UNDEFINED)
-                        .push_next(&mut external_image_create_info);
-
-                    let image = match device.create_image(&vk_info, None) {
-                        Err(err) => {
-                            let msg =
-                                CString::new(format!("create_image() failed: {:?}", err)).unwrap();
-                            gfx_critical_note(msg.as_ptr());
-                            return None;
-                        }
-                        Ok(image) => image,
-                    };
-
-                    let memory_req = device.get_image_memory_requirements(image);
-                    if memory_req.size > vk_image_wrapper.memory_size {
-                        let msg = c"Invalid memory size";
-                        gfx_critical_note(msg.as_ptr());
-                        return None;
-                    }
-
-                    let mut dedicated_memory_info =
-                        vk::MemoryDedicatedAllocateInfo::default().image(image);
-
-                    let mut import_memory_fd_info = vk::ImportMemoryFdInfoKHR::default()
-                        .handle_type(vk::ExternalMemoryHandleTypeFlags::DMA_BUF_EXT)
-                        .fd(owned_fd.into_raw_fd());
-
-                    let memory_allocate_info = vk::MemoryAllocateInfo::default()
-                        .allocation_size(vk_image_wrapper.memory_size)
-                        .memory_type_index(vk_image_wrapper.memory_type_index)
-                        .push_next(&mut dedicated_memory_info)
-                        .push_next(&mut import_memory_fd_info);
-
-                    let memory = match device.allocate_memory(&memory_allocate_info, None) {
-                        Err(err) => {
-                            let msg = CString::new(format!("allocate_memory() failed: {:?}", err))
-                                .unwrap();
-                            gfx_critical_note(msg.as_ptr());
-                            return None;
-                        }
-                        Ok(memory) => memory,
-                    };
-
-                    let result = device.bind_image_memory(image, memory, /* offset */ 0);
-                    if result.is_err() {
-                        let msg = CString::new(format!("bind_image_memory() failed: {:?}", result))
-                            .unwrap();
-                        gfx_critical_note(msg.as_ptr());
-                        return None;
-                    }
-
-                    Some(VkImageHolder {
-                        device: device.handle(),
-                        image,
-                        memory,
-                        fn_destroy_image: device.fp_v1_0().destroy_image,
-                        fn_free_memory: device.fp_v1_0().free_memory,
-                    })
-                },
-            )
-        };
-
-        let image_holder = match image_holder {
-            None => {
-                let msg = c"Failed to get vk::Image";
-                unsafe {
-                    gfx_critical_note(msg.as_ptr());
-                }
                 return false;
             }
-            Some(image_holder) => image_holder,
-        };
 
-        let hal_desc = wgh::TextureDescriptor {
-            label: None,
-            size: desc.size,
-            mip_level_count: desc.mip_level_count,
-            sample_count: desc.sample_count,
-            dimension: desc.dimension,
-            format: desc.format,
-            usage: wgt::TextureUses::COPY_DST | wgt::TextureUses::COLOR_TARGET,
-            memory_flags: wgh::MemoryFlags::empty(),
-            view_formats: vec![],
-        };
+            let handle = wgpu_server_get_vk_image_handle(self.webgpu_parent, texture_id);
+            if handle.is_null() {
+                let msg = c"Failed to get VkImageHandle";
+                gfx_critical_note(msg.as_ptr());
+                return false;
+            }
 
-        let image = image_holder.image;
+            let vk_image_wrapper = &*handle;
 
-        let hal_texture = unsafe {
-            <wgh::api::Vulkan as wgh::Api>::Device::texture_from_raw(
+            let fd = wgpu_server_get_dma_buf_fd(self.webgpu_parent, texture_id);
+            if fd < 0 {
+                let msg = c"Failed to get DMABuf fd";
+                gfx_critical_note(msg.as_ptr());
+                return false;
+            }
+
+            // Ensure to close file descriptor
+            let owned_fd = OwnedFd::from_raw_fd(fd as RawFd);
+
+            let Some(hal_device) = self.device_as_hal::<wgc::api::Vulkan>(device_id) else {
+                emit_critical_invalid_note("Vulkan device");
+                return false;
+            };
+
+            let device = hal_device.raw_device();
+
+            let extent = vk::Extent3D {
+                width: desc.size.width,
+                height: desc.size.height,
+                depth: 1,
+            };
+            let mut usage_flags = vk::ImageUsageFlags::empty();
+            usage_flags |= vk::ImageUsageFlags::COLOR_ATTACHMENT;
+
+            let mut external_image_create_info =
+                vk::ExternalMemoryImageCreateInfo::default()
+                    .handle_types(vk::ExternalMemoryHandleTypeFlags::DMA_BUF_EXT);
+
+            let vk_info = vk::ImageCreateInfo::default()
+                .flags(vk::ImageCreateFlags::ALIAS)
+                .image_type(vk::ImageType::TYPE_2D)
+                .format(vk::Format::R8G8B8A8_UNORM)
+                .extent(extent)
+                .mip_levels(1)
+                .array_layers(1)
+                .samples(vk::SampleCountFlags::TYPE_1)
+                .tiling(vk::ImageTiling::OPTIMAL)
+                .usage(usage_flags)
+                .sharing_mode(vk::SharingMode::EXCLUSIVE)
+                .initial_layout(vk::ImageLayout::UNDEFINED)
+                .push_next(&mut external_image_create_info);
+
+            let image = match device.create_image(&vk_info, None) {
+                Err(err) => {
+                    let msg =
+                        CString::new(format!("Failed to get vk::Image: create_image() failed: {:?}", err)).unwrap();
+                    gfx_critical_note(msg.as_ptr());
+                    return false;
+                }
+                Ok(image) => image,
+            };
+
+            let memory_req = device.get_image_memory_requirements(image);
+            if memory_req.size > vk_image_wrapper.memory_size {
+                let msg = c"Invalid memory size";
+                gfx_critical_note(msg.as_ptr());
+                return false;
+            }
+
+            let mut dedicated_memory_info =
+                vk::MemoryDedicatedAllocateInfo::default().image(image);
+
+            let mut import_memory_fd_info = vk::ImportMemoryFdInfoKHR::default()
+                .handle_type(vk::ExternalMemoryHandleTypeFlags::DMA_BUF_EXT)
+                .fd(owned_fd.into_raw_fd());
+
+            let memory_allocate_info = vk::MemoryAllocateInfo::default()
+                .allocation_size(vk_image_wrapper.memory_size)
+                .memory_type_index(vk_image_wrapper.memory_type_index)
+                .push_next(&mut dedicated_memory_info)
+                .push_next(&mut import_memory_fd_info);
+
+            let memory = match device.allocate_memory(&memory_allocate_info, None) {
+                Err(err) => {
+                    let msg = CString::new(format!("Failed to get vk::Image: allocate_memory() failed: {:?}", err))
+                        .unwrap();
+                    gfx_critical_note(msg.as_ptr());
+                    return false;
+                }
+                Ok(memory) => memory,
+            };
+
+            match device.bind_image_memory(image, memory, /* offset */ 0) {
+                Ok(()) => {}
+                Err(err) => {
+                    let msg = CString::new(format!("Failed to get vk::Image: bind_image_memory() failed: {:?}", err))
+                        .unwrap();
+                    gfx_critical_note(msg.as_ptr());
+                    return false;
+                }
+            }
+
+            let image_holder = VkImageHolder {
+                device: device.handle(),
+                image,
+                memory,
+                fn_destroy_image: device.fp_v1_0().destroy_image,
+                fn_free_memory: device.fp_v1_0().free_memory,
+            };
+
+            let hal_desc = wgh::TextureDescriptor {
+                label: None,
+                size: desc.size,
+                mip_level_count: desc.mip_level_count,
+                sample_count: desc.sample_count,
+                dimension: desc.dimension,
+                format: desc.format,
+                usage: wgt::TextureUses::COPY_DST | wgt::TextureUses::COLOR_TARGET,
+                memory_flags: wgh::MemoryFlags::empty(),
+                view_formats: vec![],
+            };
+
+            let image = image_holder.image;
+
+            let hal_texture = <wgh::api::Vulkan as wgh::Api>::Device::texture_from_raw(
                 image,
                 &hal_desc,
                 Some(Box::new(move || {
                     image_holder.destroy();
                 })),
-            )
-        };
+            );
 
-        let (_, error) = unsafe {
-            self.create_texture_from_hal(Box::new(hal_texture), device_id, &desc, Some(texture_id))
-        };
-        if let Some(err) = error {
-            let msg = CString::new(format!("create_texture_from_hal() failed: {:?}", err)).unwrap();
-            unsafe {
+            let (_, error) = self.create_texture_from_hal(Box::new(hal_texture), device_id, &desc, Some(texture_id));
+            if let Some(err) = error {
+                let msg = CString::new(format!("create_texture_from_hal() failed: {:?}", err)).unwrap();
                 gfx_critical_note(msg.as_ptr());
+                return false;
             }
-            return false;
-        }
 
-        true
+            true
+        }
     }
 
     #[cfg(target_os = "macos")]
@@ -1771,6 +1656,8 @@ impl Global {
         desc: &wgc::resource::TextureDescriptor,
         swap_chain_id: Option<SwapChainId>,
     ) -> bool {
+        use metal::foreign_types::ForeignType as _;
+
         let ret = unsafe {
             wgpu_server_ensure_shared_texture_for_swap_chain(
                 self.webgpu_parent,
@@ -1805,60 +1692,48 @@ impl Global {
 
         let desc_ref = &desc;
 
-        let raw = unsafe {
-            self.device_as_hal::<wgc::api::Metal, _, Option<metal::Texture>>(
-                device_id,
-                |hal_device| {
-                    let hal_device = match hal_device {
-                        None => {
-                            let msg = c"metal device is invalid";
-                            gfx_critical_note(msg.as_ptr());
-                            return None;
-                        }
-                        Some(hal_device) => hal_device,
-                    };
+        let raw_texture: metal::Texture = unsafe {
+            let Some(hal_device) = self.device_as_hal::<wgc::api::Metal>(device_id) else {
+                emit_critical_invalid_note("metal device");
+                return false;
+            };
 
-                    use metal::foreign_types::ForeignType as _;
-                    let device = hal_device.raw_device();
+            let device = hal_device.raw_device();
 
-                    objc::rc::autoreleasepool(|| {
-                        let descriptor = metal::TextureDescriptor::new();
-                        let usage = metal::MTLTextureUsage::RenderTarget
-                            | metal::MTLTextureUsage::ShaderRead
-                            | metal::MTLTextureUsage::PixelFormatView;
+            objc::rc::autoreleasepool(|| {
+                let descriptor = metal::TextureDescriptor::new();
+                let usage = metal::MTLTextureUsage::RenderTarget
+                    | metal::MTLTextureUsage::ShaderRead
+                    | metal::MTLTextureUsage::PixelFormatView;
 
-                        descriptor.set_texture_type(metal::MTLTextureType::D2);
-                        descriptor.set_width(desc_ref.size.width as u64);
-                        descriptor.set_height(desc_ref.size.height as u64);
-                        descriptor.set_mipmap_level_count(desc_ref.mip_level_count as u64);
-                        descriptor.set_pixel_format(metal::MTLPixelFormat::BGRA8Unorm);
-                        descriptor.set_usage(usage);
-                        descriptor.set_storage_mode(metal::MTLStorageMode::Private);
+                descriptor.set_texture_type(metal::MTLTextureType::D2);
+                descriptor.set_width(desc_ref.size.width as u64);
+                descriptor.set_height(desc_ref.size.height as u64);
+                descriptor.set_mipmap_level_count(desc_ref.mip_level_count as u64);
+                descriptor.set_pixel_format(metal::MTLPixelFormat::BGRA8Unorm);
+                descriptor.set_usage(usage);
+                descriptor.set_storage_mode(metal::MTLStorageMode::Private);
 
-                        let raw_device = device.lock();
-                        let raw_texture: metal::Texture = msg_send![*raw_device, newTextureWithDescriptor: descriptor
-                        iosurface:io_surface.obj
-                        plane:0];
-
-                        if raw_texture.as_ptr().is_null() {
-                            let msg = c"Failed to create metal::Texture for swap chain";
-                            gfx_critical_note(msg.as_ptr());
-                            return None;
-                        }
-
-                        if let Some(label) = &desc_ref.label {
-                            raw_texture.set_label(&label);
-                        }
-
-                        Some(raw_texture)
-                    })
-                },
-            )
+                let raw_device = device.lock();
+                msg_send![*raw_device, newTextureWithDescriptor: descriptor iosurface:io_surface.obj plane:0]
+            })
         };
+
+        if raw_texture.as_ptr().is_null() {
+            let msg = c"Failed to create metal::Texture for swap chain";
+            unsafe {
+                gfx_critical_note(msg.as_ptr());
+            }
+            return false;
+        }
+
+        if let Some(label) = &desc_ref.label {
+            raw_texture.set_label(&label);
+        }
 
         let hal_texture = unsafe {
             <wgh::api::Metal as wgh::Api>::Device::texture_from_raw(
-                raw.unwrap(),
+                raw_texture,
                 wgt::TextureFormat::Bgra8Unorm,
                 metal::MTLTextureType::D2,
                 1,
@@ -2963,16 +2838,6 @@ pub struct VkSemaphoreHandle {
     pub semaphore: vk::Semaphore,
 }
 
-#[allow(dead_code)]
-fn emit_critical_invalid_note_if_none<T>(what: &'static str, t: Option<T>) -> Option<T> {
-    if t.is_none() {
-        // SAFETY: We ensure that the pointer provided is not null.
-        let msg = CString::new(format!("{what} is invalid")).unwrap();
-        unsafe { gfx_critical_note(msg.as_ptr()) }
-    }
-    t
-}
-
 #[no_mangle]
 #[cfg(target_os = "linux")]
 pub extern "C" fn wgpu_vksemaphore_create_signal_semaphore(
@@ -2980,37 +2845,32 @@ pub extern "C" fn wgpu_vksemaphore_create_signal_semaphore(
     queue_id: id::QueueId,
 ) -> *mut VkSemaphoreHandle {
     let semaphore_handle = unsafe {
-        global.queue_as_hal::<wgc::api::Vulkan, _, Option<VkSemaphoreHandle>>(
-            queue_id,
-            |hal_queue| {
-                let hal_queue = emit_critical_invalid_note_if_none("Vulkan queue", hal_queue)?;
-                let device = hal_queue.raw_device();
+        let Some(hal_queue) = global.queue_as_hal::<wgc::api::Vulkan>(queue_id) else {
+            emit_critical_invalid_note("Vulkan queue");
+            return ptr::null_mut();
+        };
+        let device = hal_queue.raw_device();
 
-                let mut export_semaphore_create_info = vk::ExportSemaphoreCreateInfo::default()
-                    .handle_types(vk::ExternalSemaphoreHandleTypeFlags::OPAQUE_FD);
-                let create_info =
-                    vk::SemaphoreCreateInfo::default().push_next(&mut export_semaphore_create_info);
-                let semaphore = match device.create_semaphore(&create_info, None) {
-                    Err(err) => {
-                        let msg =
-                            CString::new(format!("create_semaphore() failed: {:?}", err)).unwrap();
-                        gfx_critical_note(msg.as_ptr());
-                        return None;
-                    }
-                    Ok(semaphore) => semaphore,
-                };
+        let mut export_semaphore_create_info = vk::ExportSemaphoreCreateInfo::default()
+            .handle_types(vk::ExternalSemaphoreHandleTypeFlags::OPAQUE_FD);
+        let create_info =
+            vk::SemaphoreCreateInfo::default().push_next(&mut export_semaphore_create_info);
+        let semaphore = match device.create_semaphore(&create_info, None) {
+            Err(err) => {
+                let msg =
+                    CString::new(format!("create_semaphore() failed: {:?}", err)).unwrap();
+                gfx_critical_note(msg.as_ptr());
+                return ptr::null_mut();
+            }
+            Ok(semaphore) => semaphore,
+        };
 
-                hal_queue.add_signal_semaphore(semaphore, None);
+        hal_queue.add_signal_semaphore(semaphore, None);
 
-                Some(VkSemaphoreHandle { semaphore })
-            },
-        )
+        VkSemaphoreHandle { semaphore }
     };
 
-    match semaphore_handle {
-        None => ptr::null_mut(),
-        Some(semaphore_handle) => Box::into_raw(Box::new(semaphore_handle)),
-    }
+    Box::into_raw(Box::new(semaphore_handle))
 }
 
 #[no_mangle]
@@ -3021,18 +2881,23 @@ pub unsafe extern "C" fn wgpu_vksemaphore_get_file_descriptor(
     handle: &VkSemaphoreHandle,
 ) -> i32 {
     let file_descriptor = unsafe {
-        global.device_as_hal::<wgc::api::Vulkan, _, Option<i32>>(device_id, |hal_device| {
-            let hal_device = emit_critical_invalid_note_if_none("Vulkan device", hal_device)?;
-            let device = hal_device.raw_device();
-            let instance = hal_device.shared_instance().raw_instance();
+        match global.device_as_hal::<wgc::api::Vulkan>(device_id) {
+            None => {
+                emit_critical_invalid_note("Vulkan device");
+                None
+            }
+            Some(hal_device) => {
+                let device = hal_device.raw_device();
+                let instance = hal_device.shared_instance().raw_instance();
 
-            let external_semaphore_fd = khr::external_semaphore_fd::Device::new(instance, device);
-            let get_fd_info = vk::SemaphoreGetFdInfoKHR::default()
-                .semaphore(handle.semaphore)
-                .handle_type(vk::ExternalSemaphoreHandleTypeFlags::OPAQUE_FD);
+                let external_semaphore_fd = khr::external_semaphore_fd::Device::new(instance, device);
+                let get_fd_info = vk::SemaphoreGetFdInfoKHR::default()
+                    .semaphore(handle.semaphore)
+                    .handle_type(vk::ExternalSemaphoreHandleTypeFlags::OPAQUE_FD);
 
-            external_semaphore_fd.get_semaphore_fd(&get_fd_info).ok()
-        })
+                external_semaphore_fd.get_semaphore_fd(&get_fd_info).ok()
+            }
+        }
     };
 
     // From [Wikipedia](https://en.wikipedia.org/wiki/File_descriptor):
@@ -3050,17 +2915,12 @@ pub unsafe extern "C" fn wgpu_vksemaphore_destroy(
     handle: &VkSemaphoreHandle,
 ) {
     unsafe {
-        global.device_as_hal::<wgc::api::Vulkan, _, ()>(device_id, |hal_device| {
-            let hal_device = emit_critical_invalid_note_if_none("Vulkan device", hal_device);
-            let hal_device = match hal_device {
-                None => {
-                    return;
-                }
-                Some(hal_device) => hal_device,
-            };
-            let device = hal_device.raw_device();
-            device.destroy_semaphore(handle.semaphore, None);
-        })
+        let Some(hal_device) = global.device_as_hal::<wgc::api::Vulkan>(device_id) else {
+            emit_critical_invalid_note("Vulkan device");
+            return;
+        };
+        let device = hal_device.raw_device();
+        device.destroy_semaphore(handle.semaphore, None);
     };
 }
 
