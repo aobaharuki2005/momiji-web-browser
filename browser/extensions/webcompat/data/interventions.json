@@ -2909,6 +2909,26 @@
       }
     ]
   },
+  "1902407": {
+    "label": "www.sigadoc.mt.gov.br",
+    "bugs": {
+      "1902407": {
+        "issue": "unsupported-warning",
+        "matches": ["*://www.sigadoc.mt.gov.br/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "content_scripts": {
+          "js": [
+            "lib/ua_helpers.js",
+            "bug1902407-www.sigadoc.mt.gov.br-user-agent-spoof.js"
+          ]
+        }
+      }
+    ]
+  },
   "1902411": {
     "label": "agent.foundi.info",
     "bugs": {
