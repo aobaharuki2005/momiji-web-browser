@@ -2892,6 +2892,23 @@
       }
     ]
   },
+  "1902405": {
+    "label": "soffice.11st.co.kr",
+    "bugs": {
+      "1902405": {
+        "issue": "unsupported-warning",
+        "matches": ["*://soffice.11st.co.kr/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "content_scripts": {
+          "css": ["bug1902405-soffice.11st.co.kr-hide-browser-warning.css"]
+        }
+      }
+    ]
+  },
   "1902406": {
     "label": "sp.hi.co.kr",
     "bugs": {
