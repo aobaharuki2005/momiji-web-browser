@@ -2163,6 +2163,23 @@
       }
     ]
   },
+  "1898934": {
+    "label": "tza.red",
+    "bugs": {
+      "1898934": {
+        "issue": "unsupported-warning",
+        "matches": ["*://tza.red/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "content_scripts": {
+          "js": ["bug1898934-tza.red-prevent-unsupported-message.js"]
+        }
+      }
+    ]
+  },
   "1898935": {
     "label": "mysunlife.sunlife.com.hk",
     "bugs": {
