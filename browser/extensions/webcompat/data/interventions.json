@@ -3242,6 +3242,21 @@
       }
     ]
   },
+  "1926501": {
+    "label": "iwebv2.thebankersbank.com",
+    "bugs": {
+      "1926501": {
+        "issue": "unsupported-warning",
+        "matches": ["*://iwebv2.thebankersbank.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["Chrome_with_FxQuantum"]
+      }
+    ]
+  },
   "1926564": {
     "label": "app.phase.com",
     "bugs": {
