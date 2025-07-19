@@ -34,6 +34,8 @@
   <string name="no_private_tabs_description">Opnu huliðsfliparnir þínir verða sýndir hér.</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d valið</string>
+  <!-- Tab tray multi select title in app bar when no tabs are selected -->
+  <string name="tab_tray_multi_select_title_empty">Veldu flipa</string>
   <!-- Label of button in create collection dialog for creating a new collection -->
   <string name="tab_tray_add_new_collection">Bæta við nýju safni</string>
   <!-- Label of editable text in create collection dialog for naming a new collection -->
@@ -674,7 +676,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Ef þú deilir því hvernig þú uppgötvaðir Firefox og að þú notar hann, hjálpar þú við að kynna vafrann okkar fyrir fleirum.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Deildu lágmarksgögnum með markaðstæknifélögum Mozilla. Þessi gögn eru aldrei seld eða notuð til að sýna þér auglýsingar.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Deila lágmarksgögnum með markaðstæknifélögum Mozilla. Þessi gögn eru aldrei seld eða notuð til að sýna þér auglýsingar.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Hvernig við notum gögnin</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -682,7 +684,7 @@
   <!-- Marketing onboarding page title variant. “One last thing” refers to the final step or action in the onboarding process that we’re asking users to take before they can start using the browser. -->
   <string name="onboarding_marketing_title_1" tools:ignore="UnusedResources">Eitt að lokum</string>
   <!-- Marketing onboarding page body variant. 'Firefox' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">Deildu því hvernig þú uppgötvaðir Firefox og að þú notar hann með markaðstækniaðilum Mozilla. Þessi gögn eru aldrei seld.</string>
+  <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">Deila því hvernig þú uppgötvaðir Firefox og að þú notar hann með markaðstækniaðilum Mozilla. Þessi gögn eru aldrei seld.</string>
   <!-- Marketing onboarding page button label variant. Button to confirm choice and start browsing. -->
   <string name="onboarding_marketing_positive_button_1" tools:ignore="UnusedResources">Samþykkja og byrja að vafra</string>
   <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
@@ -873,6 +875,10 @@
   <string name="preferences_theme">Þema</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">Upphafssíða</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">Forritstákn</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Birting flipastikunnar</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Bendingar</string>
   <!-- Preference for settings related to visual options -->
@@ -955,6 +961,8 @@
   <string name="preferences_choose_app_for_downloads">Stýra niðurhölum með öðru forriti</string>
   <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
   <string name="preferences_downloads_settings_clean_up_files_title">Eyða úr %s og tæki</string>
+  <!-- Summary for the setting to automatically clean up downloaded files -->
+  <string name="preferences_downloads_settings_clean_up_files_summary">Ef þú fjarlægir skrár úr niðurhalsstjóranum þínum, fjarlægir þú þær einnig af tækinu þínu</string>
   <!-- Preference for downloads -->
   <string name="preferences_downloads">Sóttar skrár</string>
   <!-- Preference for enabling gecko engine logs -->
@@ -1266,7 +1274,7 @@
     Preference description for marketing data collection.
     Note: The words "Firefox" and "Mozilla" should NOT be translated. “That you use it” is to mean that the user is opting in to sharing that they are continuing to use Firefox after installing it; not that Firefox is tracking their “usage” or what they’re using it for.
   -->
-  <string name="preferences_marketing_data_description_4" tools:ignore="BrandUsage">Deildu því hvernig þú uppgötvaðir Firefox og að þú notar hann með markaðstæknifélögum Mozilla.</string>
+  <string name="preferences_marketing_data_description_4" tools:ignore="BrandUsage">Deila því hvernig þú uppgötvaðir Firefox og að þú notar hann með markaðstæknifélögum Mozilla.</string>
   <!-- Learn more link for marketing data preference -->
   <string name="preferences_marketing_data_learn_more">Frekari upplýsingar um markaðsgögn</string>
   <!-- Learn more link for crash reporting preference -->
@@ -1304,6 +1312,12 @@
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Dregið sundur</string>
   <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">Veldu forritstákn</string>
+  <!--
     Theme Preferences
 
     Preference for using light theme
@@ -1315,6 +1329,12 @@
   <string name="preference_auto_battery_theme">Stillt af Battery Saver</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Fylgja þema tækisins</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Sýna flipastiku</string>
   <!--
     Gestures Preferences
 
@@ -1466,6 +1486,13 @@
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Frekari upplýsingar</string>
   <!--
+    Sessions
+
+    Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs
+  -->
+  <string name="tabs_header_normal_tabs_counter_title">Opnir venjulegir flipar: %1$s. Ýttu til að skipta um flipa.</string>
+  <!--
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
@@ -1475,6 +1502,12 @@
     The %1$s will be replaced by the number of opened synced tabs
   -->
   <string name="tabs_header_synced_tabs_counter_title">Opnir samstilltir flipar: %1$s. Ýttu til að skipta um flipa.</string>
+  <!-- Text for the tabs header private tabs -->
+  <string name="tabs_header_private_tabs_title">Huliðs</string>
+  <!-- Text for the tabs header normal tabs -->
+  <string name="tabs_header_normal_tabs_title">Flipar</string>
+  <!-- Text for the tabs header synced tabs -->
+  <string name="tabs_header_synced_tabs_title">Samstiling</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Bæta við flipa</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1726,6 +1759,8 @@
   <string name="webcompat_reporter_screen_title">Tilkynna bilað vefsvæði</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Hjálpaðu til við að gera %1$s betri fyrir alla. Starfsmenn Mozilla nota upplýsingarnar sem þú sendir til að laga vandamál varðandi vefsíður.</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">Kanna nánar</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">Vefslóð</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1734,12 +1769,14 @@
   <string name="webcompat_reporter_label_whats_broken_2">Hvað er bilað?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Veldu ástæðu</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">Veldu ástæðu</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Veldu ástæðu</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">Lýstu vandamálinu (valfrjálst)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
-  <string name="webcompat_reporter_send_more_info">Sendu frekari upplýsingar</string>
+  <string name="webcompat_reporter_send_more_info">Senda frekari upplýsingar</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">Hætta við</string>
   <!-- The button text for the send button to submit the provided form data. -->
@@ -1796,6 +1833,10 @@
   <string name="tab_crash_restore">Endurheimta flipa</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title">%s þurfti að endurræsa</string>
+  <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_title">Þú ert með ósenda hrunskýrslu sem tengist hrunum sem verið er að rannsaka. Ef þú sendir hana mun það hjálpa okkur að bæta %1$s. Ef þessari tilkynningu er lokað verður skýrslan hunsuð.</string>
+  <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crashes_requested_by_devs_dialog_title">Þú ert með ósendar hrunskýrslur (%1$d) sem tengjast hrunum sem verið er að rannsaka. Ef þú sendir þær mun það hjálpa okkur að bæta %2$s. Ef þessari tilkynningu er lokað verða skýrslurnar hunsaðar.</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Senda hrunskýrslur inn sjálfkrafa</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -2059,7 +2100,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d flipi valinn</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">Flipar vistaðir!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Flipar vistaðir!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">Safn vistað!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -2194,7 +2235,7 @@
   -->
   <string name="snackbar_collection_deleted">Safni eytt</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">Safn endurnefnt</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Safn endurnefnt</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Flipa lokað</string>
   <!-- Text shown in snackbar when user closes all tabs -->
@@ -2240,6 +2281,8 @@
   <string name="preference_accessibility_text_size_summary">Stækka eða minnka texta á vefsvæðum</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">Leturstærð</string>
+  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
+  <string name="a11y_preference_accessibility_font_size_percentage">%d %%.</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">Sjálfvirk leturstærð</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -2737,6 +2780,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">Vista og fylla út í heimilisföng</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Þar með talin símanúmer og tölvupóstföng</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">Samstilla vistföng milli tækja</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">Samstilla vistföng</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Bæta við korti</string>
   <!-- Title of the "Edit card" screen -->
@@ -3393,10 +3440,18 @@
   <string name="protection_panel_banner_protected_description">Þú ert varin/n. Ef við komum auga á eitthvað látum við þig vita.</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">Aukin rakningarvörn</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned on -->
+  <string name="protection_panel_etp_toggle_on">Virkt</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned off -->
+  <string name="protection_panel_etp_toggle_off">Óvirkt</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
   <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Ef eitthvað virðist bilað á þessu vefsvæði, skaltu prófa að slökkva á vörnum.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description_2">Ef eitthvað virðist bilað á þessu vefsvæði, skaltu prófa að slökkva á því.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
   <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Slökkt er á vörnum. Við mælum með að kveikja aftur á þeim.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
+  <string name="protection_panel_etp_toggle_disabled_description_2">Mælt er með að kveikja á rakningarvörn.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3406,6 +3461,8 @@
   <string name="protection_panel_no_trackers_blocked">Engir rekjarar fundust</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Friðhelgi og öryggisstillingar</string>
+  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
+  <string name="protection_panel_privacy_and_security_settings_2">Persónuverndarstillingar</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">Heimildir</string>
   <!--
@@ -3615,6 +3672,14 @@
   <string name="debug_drawer_override_region">Yfirtaka heima- og núverandi svæði</string>
   <!-- The title of the button for overriding home region permanently. -->
   <string name="debug_drawer_override_home_region_permanently">Yfirskrifa heimilissvæði varanlega</string>
+  <!--
+    Add-ons debug tools
+
+    The description of the Add-ons Tools in the Debug Drawer
+  -->
+  <string name="debug_drawer_addons_tools_title">Verkfæri vðbóta</string>
+  <!-- The title of the button used to check for add-on updates. -->
+  <string name="addons_debug_tools_check_for_updates_button">Leita að uppfærslum</string>
   <!--
     Messages explaining how to exit fullscreen mode
 

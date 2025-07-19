@@ -413,15 +413,15 @@
   <!-- Text shown when attempting to install an add-on that is soft-blocked. %1$s is the add-on name. %2$s is the app name. -->
   <string name="mozac_feature_addons_soft_blocked_1">Doplněk %1$s porušuje pravidla Mozilly, a proto nemůže být nainstalován do aplikace %2$s.</string>
   <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_enabled">Doplněk %1$s byl úspěšně povolen</string>
+  <string name="mozac_feature_addons_successfully_enabled" tools:ignore="UnusedResources" moz:removedIn="142">Doplněk %1$s byl úspěšně povolen</string>
   <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_enable">Doplněk %1$s se nepodařilo povolit</string>
   <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_disabled">Doplněk %1$s byl úspěšně zakázán</string>
+  <string name="mozac_feature_addons_successfully_disabled" tools:ignore="UnusedResources" moz:removedIn="142">Doplněk %1$s byl úspěšně zakázán</string>
   <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_disable">Doplněk %1$s se nepodařilo zakázat</string>
   <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_uninstalled">Doplněk %1$s byl úspěšně odinstalován</string>
+  <string name="mozac_feature_addons_successfully_uninstalled" tools:ignore="UnusedResources" moz:removedIn="142">Doplněk %1$s byl úspěšně odinstalován</string>
   <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_uninstall">Doplněk %1$s se nepodařilo odinstalovat</string>
   <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->

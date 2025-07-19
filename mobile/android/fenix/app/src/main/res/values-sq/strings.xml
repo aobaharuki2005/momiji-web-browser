@@ -1935,7 +1935,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d skedë e përzgjedhur</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">Skedat u ruajtën!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Skedat u ruajtën!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">Koleksioni u ruajt!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -2070,7 +2070,7 @@
   -->
   <string name="snackbar_collection_deleted">Koleksioni u fshi</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">Koleksioni u rimeërtua</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Koleksioni u rimeërtua</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Skeda u mbyll</string>
   <!-- Text shown in snackbar when user closes all tabs -->

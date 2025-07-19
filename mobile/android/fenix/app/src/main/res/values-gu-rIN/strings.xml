@@ -465,7 +465,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d ટેબ્સ પસંદ કરેલ</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">ટેબ્સ સાચવ્યા!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">ટેબ્સ સાચવ્યા!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
   <string name="create_collection_tab_saved">ટેબ સાચવી!</string>
   <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -530,7 +530,7 @@
   -->
   <string name="snackbar_collection_deleted">સંગ્રહ કાઢી નાખ્યા</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">સંગ્રહનું નામ બદલ્યું</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">સંગ્રહનું નામ બદલ્યું</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">ટેબ બંધ કર્યું</string>
   <!-- Text shown in snackbar when user closes all tabs -->

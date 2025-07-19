@@ -573,7 +573,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d ট্যাব নির্বাচন করা হয়েছে</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">ট্যাবগুলো সংরক্ষণ করা হয়েছে!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">ট্যাবগুলো সংরক্ষণ করা হয়েছে!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
   <string name="create_collection_tab_saved">ট্যাব সংরক্ষণ করা হয়েছে!</string>
   <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -638,7 +638,7 @@
   -->
   <string name="snackbar_collection_deleted">সংগ্রহ মুছে ফেলা হয়েছে</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">সংগ্রহের নামকরণ</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">সংগ্রহের নামকরণ</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">ট্যাব বন্ধ করা হয়েছে</string>
   <!-- Text shown in snackbar when user closes all tabs -->

@@ -2106,7 +2106,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d sekme seçildi</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">Sekmeler kaydedildi!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Sekmeler kaydedildi!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">Koleksiyon kaydedildi!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -2241,7 +2241,7 @@
   -->
   <string name="snackbar_collection_deleted">Koleksiyon silindi</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">Koleksiyon yeniden adlandırıldı</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Koleksiyon yeniden adlandırıldı</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Sekme kapatıldı</string>
   <!-- Text shown in snackbar when user closes all tabs -->
@@ -2792,6 +2792,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">Adresleri kaydet ve doldur</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Telefon numaraları ve e-posta adresleri de dahildir</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">Adresleri cihazlar arasında eşitle</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">Adresleri eşitle</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Kart ekle</string>
   <!-- Title of the "Edit card" screen -->

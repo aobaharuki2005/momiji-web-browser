@@ -1490,7 +1490,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">පටිති %d ක් තෝරා ඇත</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">පටිත්ත සුරැකිණි!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">පටිත්ත සුරැකිණි!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">එකතුව සුරැකිණි!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -1621,7 +1621,7 @@
   -->
   <string name="snackbar_collection_deleted">එකතුව මැකිණි</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">එකතුව නම් කෙරිණි</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">එකතුව නම් කෙරිණි</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">පටිත්ත වැසිණි</string>
   <!-- Text shown in snackbar when user closes all tabs -->

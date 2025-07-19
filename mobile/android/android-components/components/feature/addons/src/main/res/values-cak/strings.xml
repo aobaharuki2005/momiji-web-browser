@@ -205,15 +205,15 @@
   <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
   <string name="mozac_feature_addons_failed_to_install_incompatible_error">Man xyak ta ri %1$s ruma man nuk\'äm ta ri\' rik\'in %2$s %3$s.</string>
   <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_enabled">Ütz xtzij ri %1$s</string>
+  <string name="mozac_feature_addons_successfully_enabled" tools:ignore="UnusedResources" moz:removedIn="142">Ütz xtzij ri %1$s</string>
   <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_enable">Xsach toq xtzij ri %1$s</string>
   <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_disabled">Ütz xchup ri %1$s</string>
+  <string name="mozac_feature_addons_successfully_disabled" tools:ignore="UnusedResources" moz:removedIn="142">Ütz xchup ri %1$s</string>
   <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_disable">Xsach toq xchup ri %1$s</string>
   <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_uninstalled">Ütz xyuj ri %1$s</string>
+  <string name="mozac_feature_addons_successfully_uninstalled" tools:ignore="UnusedResources" moz:removedIn="142">Ütz xyuj ri %1$s</string>
   <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_uninstall">Xsach toq xyuj ri %1$s</string>
   <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->

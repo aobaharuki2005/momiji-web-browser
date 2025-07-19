@@ -199,15 +199,15 @@
   <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
   <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s кушымчасын урнаштырып булмый, чөнки ул %2$s %3$s версиясе белән ярашмый.</string>
   <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_enabled">%1$s уңышлы кабызылды</string>
+  <string name="mozac_feature_addons_successfully_enabled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s уңышлы кабызылды</string>
   <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_enable">%1$s кушымчасын кабызып булмады</string>
   <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_disabled">%1$s уңышлы сүндерелде</string>
+  <string name="mozac_feature_addons_successfully_disabled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s уңышлы сүндерелде</string>
   <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_disable">%1$s кушымчасын сүндереп булмады</string>
   <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_uninstalled">%1$s уңышлы алып ташланды</string>
+  <string name="mozac_feature_addons_successfully_uninstalled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s уңышлы алып ташланды</string>
   <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_uninstall">%1$s кушымчасын бетереп булмады</string>
   <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->

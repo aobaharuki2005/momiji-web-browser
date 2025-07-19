@@ -123,15 +123,15 @@
   <!-- Text shown after failing to install an add-on (when add-on type isn't supported or an unknown has errored). %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_install">%1$s ಅನ್ನು ಸ್ಥಾಪಿಸಲು ವಿಫಲವಾಗಿದೆ</string>
   <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_enabled">%1$s ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ</string>
+  <string name="mozac_feature_addons_successfully_enabled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ</string>
   <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_enable">%1$s ಅನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಲು ವಿಫಲವಾಗಿದೆ</string>
   <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_disabled">%1$s ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ</string>
+  <string name="mozac_feature_addons_successfully_disabled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ</string>
   <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_disable">%1$s ಅನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲು ವಿಫಲವಾಗಿದೆ</string>
   <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_uninstalled">%1$s ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸ್ಥಾಪಿಸಲಾಗಿದೆ</string>
+  <string name="mozac_feature_addons_successfully_uninstalled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸ್ಥಾಪಿಸಲಾಗಿದೆ</string>
   <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_uninstall">%1$s ಅನ್ನು ಸ್ಥಾಪಿಸಲು ವಿಫಲವಾಗಿದೆ</string>
   <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->

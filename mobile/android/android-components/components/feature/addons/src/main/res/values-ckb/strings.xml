@@ -141,15 +141,15 @@
   <!-- Text shown after failing to install an add-on (when add-on type isn't supported or an unknown has errored). %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_install">نەتوانرا %1$s دابمەزرێت</string>
   <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_enabled">بەسەرکەوتوویی %1$s چالاک کرا</string>
+  <string name="mozac_feature_addons_successfully_enabled" tools:ignore="UnusedResources" moz:removedIn="142">بەسەرکەوتوویی %1$s چالاک کرا</string>
   <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_enable">نەتوانرا %1$s چالاک بکرێت</string>
   <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_disabled">بەسەرکەوتوویی %1$s ناچالاک کرا</string>
+  <string name="mozac_feature_addons_successfully_disabled" tools:ignore="UnusedResources" moz:removedIn="142">بەسەرکەوتوویی %1$s ناچالاک کرا</string>
   <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_disable">نەتوانرا %1$s ناچالاک بکرێت</string>
   <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_uninstalled">%1$s سەرکەوتووانە سڕایەوە</string>
+  <string name="mozac_feature_addons_successfully_uninstalled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s سەرکەوتووانە سڕایەوە</string>
   <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_uninstall">نەتوانرا %1$s بسڕێتەوە</string>
   <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->

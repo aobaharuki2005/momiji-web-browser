@@ -163,15 +163,15 @@
   <!-- Text shown after failing to install an add-on (when add-on type isn't supported or an unknown has errored). %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_install">Instalacyjo rozszyrzynio %1$s sie niy podarziła</string>
   <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_enabled">Rozszyrzynie %1$s je załōnczōne</string>
+  <string name="mozac_feature_addons_successfully_enabled" tools:ignore="UnusedResources" moz:removedIn="142">Rozszyrzynie %1$s je załōnczōne</string>
   <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_enable">Załōnczynie rozszyrzynio %1$s sie niy podarziło</string>
   <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_disabled">Roszyrzynie %1$s je zastawiōne</string>
+  <string name="mozac_feature_addons_successfully_disabled" tools:ignore="UnusedResources" moz:removedIn="142">Roszyrzynie %1$s je zastawiōne</string>
   <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_disable">Zastawiynie rozszyrzynio %1$s sie niy podarziło</string>
   <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_uninstalled">Rozszyrzynie %1$s je ôdinstalowane</string>
+  <string name="mozac_feature_addons_successfully_uninstalled" tools:ignore="UnusedResources" moz:removedIn="142">Rozszyrzynie %1$s je ôdinstalowane</string>
   <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_uninstall">Ôdinstalowanie rozszyrzynio %1$s sie niy podarziło</string>
   <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->

@@ -2011,7 +2011,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d ടാബ് തിരഞ്ഞെടുത്തു</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">ടാബുകൾ സൂക്ഷിച്ചു!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">ടാബുകൾ സൂക്ഷിച്ചു!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">ശേഖരം കരുതിവച്ചു!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -2146,7 +2146,7 @@
   -->
   <string name="snackbar_collection_deleted">ശേഖരം ഇല്ലാതാക്കി</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">ശേഖരത്തിന്റെ പേരുമാറ്റി</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">ശേഖരത്തിന്റെ പേരുമാറ്റി</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">ടാബ് അടച്ചു</string>
   <!-- Text shown in snackbar when user closes all tabs -->

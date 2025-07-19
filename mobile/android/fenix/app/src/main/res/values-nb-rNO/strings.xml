@@ -2106,7 +2106,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d fane valgt</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">Faner lagret!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Faner lagret!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">Samling lagret!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -2241,7 +2241,7 @@
   -->
   <string name="snackbar_collection_deleted">Samling slettet</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">Samlingen omdøpt</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Samlingen omdøpt</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Fane lukket</string>
   <!-- Text shown in snackbar when user closes all tabs -->

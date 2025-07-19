@@ -121,11 +121,11 @@
   <!-- Text shown after failing to install an add-on (when add-on type isn't supported or an unknown has errored). %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_install">%1$s સ્થાપિત કરવામાં નિષ્ફળ</string>
   <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_enabled">%1$s ને સફળતાપૂર્વક સક્ષમ કર્યું</string>
+  <string name="mozac_feature_addons_successfully_enabled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s ને સફળતાપૂર્વક સક્ષમ કર્યું</string>
   <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_enable">%1$s ને સક્ષમ કરવામાં નિષ્ફળ</string>
   <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_disabled">%1$s ને સફળતાપૂર્વક અક્ષમ કર્યું</string>
+  <string name="mozac_feature_addons_successfully_disabled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s ને સફળતાપૂર્વક અક્ષમ કર્યું</string>
   <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_disable">%1$s ને અક્ષમ કરવામાં નિષ્ફળ</string>
   <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->

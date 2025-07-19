@@ -207,15 +207,15 @@
   <!-- Text shown when attempting to install an add-on that can only be install via Enterprise Policies, which is not supported on Android.  %1$s is the add-on name. -->
   <string name="mozac_feature_addons_admin_install_only">%1$s نوں صرف انٹرپرائیز پالسیاں ورت کے ای سنگٹھن ولوں انسٹال کیتا جا سکدا اے، جو کہ ایس پلیٹفارم تے سہائک نہیں اے، ایس کرکے ایس نوں انسٹال نہیں کیتا جا سکیا۔</string>
   <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_enabled">%1$s ایپ نوں چالو لا گیا</string>
+  <string name="mozac_feature_addons_successfully_enabled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s ایپ نوں چالو لا گیا</string>
   <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_enable">%1$s ایپ نوں چالو کر نہیں سکیا گیا</string>
   <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_disabled">%1$s نوں چالو الٹایا گیا</string>
+  <string name="mozac_feature_addons_successfully_disabled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s نوں چالو الٹایا گیا</string>
   <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_disable">%1$s نوں چالو الٹا نہیں سکیا</string>
   <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_uninstalled">%1$s ایپ اݨ‌انسٹال کیتی گئی</string>
+  <string name="mozac_feature_addons_successfully_uninstalled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s ایپ اݨ‌انسٹال کیتی گئی</string>
   <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_uninstall">%1$s ایپ اݨ‌انسٹال کر نہیں سکی</string>
   <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->

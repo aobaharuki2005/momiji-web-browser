@@ -2090,7 +2090,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d scheda scartata</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">Sarbasti i schedi!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Sarbasti i schedi!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">Sarbasti a ricota!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -2225,7 +2225,7 @@
   -->
   <string name="snackbar_collection_deleted">Scancillasti a ricota</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">Canciasti u nomu â ricota</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Canciasti u nomu â ricota</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Chiujisti a scheda</string>
   <!-- Text shown in snackbar when user closes all tabs -->

@@ -129,15 +129,15 @@
   <!-- Text shown after failing to install an add-on (when add-on type isn't supported or an unknown has errored). %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_install">%1$s को स्थापित करने में विफल</string>
   <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_enabled">%1$s को सफलतापूर्वक सक्षम किया गया</string>
+  <string name="mozac_feature_addons_successfully_enabled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s को सफलतापूर्वक सक्षम किया गया</string>
   <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_enable">%1$s को सक्षम करने में असफल</string>
   <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_disabled">%1$s को सफलतापूर्वक अक्षम किया गया</string>
+  <string name="mozac_feature_addons_successfully_disabled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s को सफलतापूर्वक अक्षम किया गया</string>
   <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_disable">%1$s को अक्षम करने में असफल</string>
   <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_uninstalled">%1$s को सफलतापूर्वक अस्थापित किया गया</string>
+  <string name="mozac_feature_addons_successfully_uninstalled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s को सफलतापूर्वक अस्थापित किया गया</string>
   <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_uninstall">%1$s को अस्थापित करने में असफल</string>
   <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
