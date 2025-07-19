@@ -3697,6 +3697,29 @@
       }
     ]
   },
+  "1933929": {
+    "label": "toei-anim.co.jp",
+    "bugs": {
+      "1933929": {
+        "issue": "page-fails-to-load",
+        "matches": ["*://toei-anim.co.jp/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "replace_string_in_request": [
+          {
+            "find": "Date\\.parse\\(e\\.newsInfoDetail\\.date\\)",
+            "replace": "Date.parse(s.newsInfoDetail.date)",
+            "urls": [
+              "https://www.toei-anim.co.jp/_next/static/chunks/585-f8188c5d925661df.js"
+            ]
+          }
+        ]
+      }
+    ]
+  },
   "1934189": {
     "label": "fdj.fr",
     "bugs": {
