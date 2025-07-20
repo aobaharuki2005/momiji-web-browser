@@ -1576,7 +1576,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">Выбрана картка: %d</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">Карткі захаваны!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Карткі захаваны!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">Калекцыя захаваная!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -1706,7 +1706,7 @@
   -->
   <string name="snackbar_collection_deleted">Калекцыя выдалена</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">Калекцыя перайменавана</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Калекцыя перайменавана</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Картка закрыта</string>
   <!-- Text shown in snackbar when user closes all tabs -->

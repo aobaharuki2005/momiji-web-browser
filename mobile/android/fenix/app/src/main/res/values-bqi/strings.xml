@@ -2106,7 +2106,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d بلگه پسند وابی</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">بلگه یل زفت وابین!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">بلگه یل زفت وابین!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">کتن زفت وابی!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -2241,7 +2241,7 @@
   -->
   <string name="snackbar_collection_deleted">کتن پاک وابیڌه</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">کتن آلشت نوم داڌه بیڌه</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">کتن آلشت نوم داڌه بیڌه</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">بلگه بسته وابیڌه</string>
   <!-- Text shown in snackbar when user closes all tabs -->
@@ -2792,6 +2792,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">زفت وو پور کردن نشۊویا</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">وا نومره تیلیفووا وو نشۊوی ایمیلا</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">هوم گوم کردن نشۊویا منجا دسگا یل</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">هوم گوم کردن نشۊویا</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">ٱووردن کارت</string>
   <!-- Title of the "Edit card" screen -->

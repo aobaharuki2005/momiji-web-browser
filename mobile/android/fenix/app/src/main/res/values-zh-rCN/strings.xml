@@ -2096,7 +2096,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">已选取 %d 个标签页</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">标签页已保存！</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">标签页已保存！</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">收藏集已保存！</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -2231,7 +2231,7 @@
   -->
   <string name="snackbar_collection_deleted">收藏集已删除</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">收藏集已更名</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">收藏集已更名</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">标签页已关闭</string>
   <!-- Text shown in snackbar when user closes all tabs -->

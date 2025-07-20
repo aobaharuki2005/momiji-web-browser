@@ -155,15 +155,15 @@
   <!-- Text shown after failing to install an add-on (when add-on type isn't supported or an unknown has errored). %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_install">%1$s நிறுவுதல் தோல்வி</string>
   <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_enabled">%1$s வெற்றிகரமாகச் செயற்படுத்தப்பட்டது</string>
+  <string name="mozac_feature_addons_successfully_enabled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s வெற்றிகரமாகச் செயற்படுத்தப்பட்டது</string>
   <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_enable">%1$s செயற்படுத்துதல் தோல்வி</string>
   <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_disabled">%1$s வெற்றிகரமாகச் செயல்நீக்கப்பட்டது</string>
+  <string name="mozac_feature_addons_successfully_disabled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s வெற்றிகரமாகச் செயல்நீக்கப்பட்டது</string>
   <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_disable">%1$s செயல்நீக்குதல் தோல்வி</string>
   <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_uninstalled">%1$s வெற்றிகரமாக நிறுவல்நீக்கப்பட்டது</string>
+  <string name="mozac_feature_addons_successfully_uninstalled" tools:ignore="UnusedResources" moz:removedIn="142">%1$s வெற்றிகரமாக நிறுவல்நீக்கப்பட்டது</string>
   <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_uninstall">%1$s நிறுவல்நீக்குதல் தோல்வி</string>
   <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->

@@ -1409,7 +1409,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">الألسنة المحدّدة: %d</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">حُفظت الألسنة!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">حُفظت الألسنة!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">حُفظت التجميعة!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -1526,7 +1526,7 @@
   -->
   <string name="snackbar_collection_deleted">حُذفت التجميعة</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">تغيّر اسم التجميعة</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">تغيّر اسم التجميعة</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">أُغلق اللسان</string>
   <!-- Text shown in snackbar when user closes all tabs -->

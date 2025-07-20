@@ -303,15 +303,15 @@
   <!-- Text shown when attempting to install an add-on that is soft-blocked. %1$s is the add-on name. %2$s is the app name. -->
   <string name="mozac_feature_addons_soft_blocked_1">Rozszerzenie „%1$s” narusza zasady Mozilli i nie można go instalować w aplikacji %2$s.</string>
   <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_enabled">Włączono rozszerzenie „%1$s”</string>
+  <string name="mozac_feature_addons_successfully_enabled" tools:ignore="UnusedResources" moz:removedIn="142">Włączono rozszerzenie „%1$s”</string>
   <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_enable">Włączenie rozszerzenia „%1$s” się nie powiodło</string>
   <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_disabled">Wyłączono rozszerzenie „%1$s”</string>
+  <string name="mozac_feature_addons_successfully_disabled" tools:ignore="UnusedResources" moz:removedIn="142">Wyłączono rozszerzenie „%1$s”</string>
   <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_disable">Wyłączenie rozszerzenia „%1$s” się nie powiodło</string>
   <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_uninstalled">Odinstalowano rozszerzenie „%1$s”</string>
+  <string name="mozac_feature_addons_successfully_uninstalled" tools:ignore="UnusedResources" moz:removedIn="142">Odinstalowano rozszerzenie „%1$s”</string>
   <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_uninstall">Odinstalowanie rozszerzenia „%1$s” się nie powiodło</string>
   <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->

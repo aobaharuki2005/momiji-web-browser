@@ -2106,7 +2106,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d scheda seligite</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">Schedas salvate!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Schedas salvate!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">Collection salvate!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -2241,7 +2241,7 @@
   -->
   <string name="snackbar_collection_deleted">Collection delite</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">Collection renominate</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Collection renominate</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Scheda claudite</string>
   <!-- Text shown in snackbar when user closes all tabs -->
