@@ -34,6 +34,8 @@
   <string name="no_private_tabs_description">Suas abas privativas são mostradas aqui.</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d selecionadas</string>
+  <!-- Tab tray multi select title in app bar when no tabs are selected -->
+  <string name="tab_tray_multi_select_title_empty">Selecionar abas</string>
   <!-- Label of button in create collection dialog for creating a new collection -->
   <string name="tab_tray_add_new_collection">Nova coleção</string>
   <!-- Label of editable text in create collection dialog for naming a new collection -->
@@ -338,7 +340,7 @@
   <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
   <string name="browser_menu_switch_to_desktop_site" moz:removedIn="141" tools:ignore="UnusedResources">Mudar para a versão de computador do site</string>
   <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site">Mudar para versão de dispositivos móveis</string>
+  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">Mudar para versão de dispositivos móveis</string>
   <!-- Browser menu label that navigates to the page tools sub-menu -->
   <string name="browser_menu_tools" moz:removedIn="141" tools:ignore="UnusedResources">Ferramentas</string>
   <!-- Content description (not visible, for screen readers etc.): Back button for all menu redesign sub-menu -->
@@ -875,6 +877,10 @@
   <string name="preferences_theme">Tema</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">Tela inicial</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">Ícone do aplicativo</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Exibição da barra de abas</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Gestos</string>
   <!-- Preference for settings related to visual options -->
@@ -1307,6 +1313,14 @@
   <string name="preference_simple_toolbar">Simples</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Expandida</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">A barra de endereços deve estar no alto quando a barra de abas é exibida.</string>
+  <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">Selecionar ícone do aplicativo</string>
   <!--
     Theme Preferences
 
@@ -1319,6 +1333,12 @@
   <string name="preference_auto_battery_theme">Definido pela economia de bateria</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Acompanhar tema do dispositivo</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Mostrar barra de abas</string>
   <!--
     Gestures Preferences
 
@@ -1470,6 +1490,13 @@
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Saiba mais</string>
   <!--
+    Sessions
+
+    Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs
+  -->
+  <string name="tabs_header_normal_tabs_counter_title">Abas normais abertas: %1$s. Toque para mudar de aba.</string>
+  <!--
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
@@ -1479,6 +1506,12 @@
     The %1$s will be replaced by the number of opened synced tabs
   -->
   <string name="tabs_header_synced_tabs_counter_title">Abas sincronizadas abertas: %1$s. Toque para mudar de aba.</string>
+  <!-- Text for the tabs header private tabs -->
+  <string name="tabs_header_private_tabs_title">Privativas</string>
+  <!-- Text for the tabs header normal tabs -->
+  <string name="tabs_header_normal_tabs_title">Abas</string>
+  <!-- Text for the tabs header synced tabs -->
+  <string name="tabs_header_synced_tabs_title">Sincronizadas</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Adicionar aba</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -2073,7 +2106,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d aba selecionada</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">Abas salvas!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Abas salvas!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">Coleção salva!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -2208,7 +2241,7 @@
   -->
   <string name="snackbar_collection_deleted">Coleção excluída</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">Coleção renomeada</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Coleção renomeada</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Aba fechada</string>
   <!-- Text shown in snackbar when user closes all tabs -->
@@ -2247,7 +2280,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Excluir</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL copiada</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL copiada</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Este é um texto de exemplo. Está aqui para mostrar como o texto será exibido quando você usar esta configuração para aumentar ou diminuir o tamanho.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2387,6 +2420,10 @@
   <string name="preference_enhanced_tracking_protection_strict">Rigoroso</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">Proteção mais forte contra rastreamento e desempenho mais rápido, mas alguns sites podem não funcionar corretamente.</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">Permitir que o %1$s aplique automaticamente exceções necessárias para evitar os principais problemas em sites.</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">Aplicar automaticamente também exceções necessárias apenas para resolver problemas menores e disponibilizar recursos práticos.</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">O que é bloqueado pela proteção rigorosa contra rastreamento</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -2882,9 +2919,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Erro ao conectar com “%s”</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">%s criado</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s criado</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">%s salvo</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s salvo</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">%s excluído</string>
   <!-- Heading for the instructions to allow a permission -->

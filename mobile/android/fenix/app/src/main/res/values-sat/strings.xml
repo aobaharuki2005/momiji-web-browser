@@ -332,7 +332,7 @@
   <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
   <string name="browser_menu_switch_to_desktop_site" moz:removedIn="141" tools:ignore="UnusedResources">ᱰᱮᱥᱠᱴᱚᱯ ᱥᱟᱭᱤᱴ ᱛᱮ ᱪᱟᱞᱟᱜ ᱢᱮ</string>
   <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site">ᱢᱳᱵᱟᱭᱤᱞ ᱥᱟᱭᱤᱴ ᱛᱮ ᱩᱪᱟᱹᱲᱚᱜ ᱢᱮ</string>
+  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">ᱢᱳᱵᱟᱭᱤᱞ ᱥᱟᱭᱤᱴ ᱛᱮ ᱩᱪᱟᱹᱲᱚᱜ ᱢᱮ</string>
   <!-- Browser menu label that navigates to the page tools sub-menu -->
   <string name="browser_menu_tools" moz:removedIn="141" tools:ignore="UnusedResources">ᱦᱟᱹᱛᱤᱭᱟᱹᱨ ᱠᱚ</string>
   <!-- Content description (not visible, for screen readers etc.): Back button for all menu redesign sub-menu -->
@@ -1958,7 +1958,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d ᱴᱮᱵᱽ ᱵᱟᱪᱷᱟᱣ ᱟᱠᱟᱱᱟ</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">ᱴᱮᱵᱽ ᱠᱚ ᱥᱟᱺᱪᱟᱣᱮᱱᱟ!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">ᱴᱮᱵᱽ ᱠᱚ ᱥᱟᱺᱪᱟᱣᱮᱱᱟ!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">ᱛᱩᱢᱟᱹᱞ ᱥᱟᱺᱪᱟᱣᱮᱱᱟ!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -2093,7 +2093,7 @@
   -->
   <string name="snackbar_collection_deleted">ᱛᱩᱢᱟᱹᱞ ᱢᱮᱴᱟᱣᱮᱱᱟ</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">ᱛᱩᱢᱟᱹᱞ ᱫᱚᱦᱲᱟ ᱧᱩᱛᱩᱢ ᱮᱢ ᱦᱩᱭᱮᱱᱟ</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">ᱛᱩᱢᱟᱹᱞ ᱫᱚᱦᱲᱟ ᱧᱩᱛᱩᱢ ᱮᱢ ᱦᱩᱭᱮᱱᱟ</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">ᱴᱮᱵᱽ ᱵᱚᱸᱫᱚᱭᱮᱱᱟ</string>
   <!-- Text shown in snackbar when user closes all tabs -->
@@ -2132,7 +2132,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL ᱱᱚᱠᱚᱞ ᱮᱱᱟ</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL ᱱᱚᱠᱚᱞ ᱮᱱᱟ</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">ᱱᱚᱶᱟ ᱫᱚ ᱡᱮᱢᱚᱱ ᱟᱲᱟ ᱠᱟᱱᱟ ᱾ ᱱᱚᱶᱟ ᱫᱚ ᱥᱟᱡᱟᱣ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱠᱟᱱᱟ ᱚᱠᱟᱞᱠᱟᱛᱮ ᱟᱲᱟ ᱞᱚ ᱢᱟᱨᱟᱝ ᱟᱨ ᱵᱟᱝ ᱠᱟᱹᱴᱤᱡ ᱞᱮᱠᱷᱟᱱ ᱚᱠᱟᱞᱠᱟ ᱧᱮᱞᱚᱜᱼᱟ ᱾</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2749,9 +2749,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">%s ᱨᱮ ᱡᱩᱲᱟᱹᱣ ᱛᱮ ᱵᱷᱩᱞ ᱦᱩᱭᱮᱱᱟ</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">%s ᱛᱮᱭᱟᱨᱮᱱᱟ</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s ᱛᱮᱭᱟᱨᱮᱱᱟ</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">%s ᱥᱟᱺᱪᱟᱣᱮᱱᱟ</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s ᱥᱟᱺᱪᱟᱣᱮᱱᱟ</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">%s ᱢᱮᱴᱟᱣᱮᱱᱟ</string>
   <!-- Heading for the instructions to allow a permission -->

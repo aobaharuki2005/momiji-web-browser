@@ -34,6 +34,8 @@
   <string name="no_private_tabs_description">Diskouezet e vo amañ hocʼh ivinelloù prevez.</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d diuzet</string>
+  <!-- Tab tray multi select title in app bar when no tabs are selected -->
+  <string name="tab_tray_multi_select_title_empty">Diuzañ ivinelloù</string>
   <!-- Label of button in create collection dialog for creating a new collection -->
   <string name="tab_tray_add_new_collection">Ouzhpennañ un dastumad nevez</string>
   <!-- Label of editable text in create collection dialog for naming a new collection -->
@@ -324,13 +326,15 @@
   <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
   <string name="browser_menu_switch_to_desktop_site" moz:removedIn="141" tools:ignore="UnusedResources">Mont d\'ar stumm evit an urzhiataer</string>
   <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site">Lec’hienn hezoug</string>
+  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">Lec’hienn hezoug</string>
   <!-- Browser menu label that navigates to the page tools sub-menu -->
   <string name="browser_menu_tools" moz:removedIn="141" tools:ignore="UnusedResources">Ostilhoù</string>
   <!-- Content description (not visible, for screen readers etc.): Back button for all menu redesign sub-menu -->
   <string name="browser_menu_back_button_content_description" moz:removedIn="141" tools:ignore="UnusedResources">Distreiñ d\'al lañser pennañ</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
   <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">Serriñ panell al lañser pennañ</string>
+  <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
+  <string name="browser_main_menu_content_description_navigation_header">Merdeiñ</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">Skoazell</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
@@ -360,10 +364,14 @@
   <string name="browser_menu_save_description" moz:removedIn="141" tools:ignore="UnusedResources">Ouzhpennañ ur sined, berradenn, pennbajenn, dastumad, PDF</string>
   <!-- Browser menu label that bookmarks the currently visited page -->
   <string name="browser_menu_bookmark_this_page" moz:removedIn="141" tools:ignore="UnusedResources">Lakaat ur sined war ar bajenn-mañ</string>
+  <!-- Browser menu label that bookmarks the currently visited page -->
+  <string name="browser_menu_bookmark_this_page_2">Ouzhpennañ ar bajenn-mañ er sinedoù</string>
   <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
   <string name="browser_menu_edit_bookmark">Kemmañ ar sined</string>
   <!-- Browser menu label that the saves the currently visited page as a PDF -->
   <string name="browser_menu_save_as_pdf" moz:removedIn="141" tools:ignore="UnusedResources">Enrollañ evel PDF…</string>
+  <!-- Browser menu label that the saves the currently visited page as a PDF -->
+  <string name="browser_menu_save_as_pdf_2">Enrollañ evel PDF</string>
   <!-- Browser menu label for turning ON reader view of the current visited page -->
   <string name="browser_menu_turn_on_reader_view" moz:removedIn="141" tools:ignore="UnusedResources">Enaouiñ ar mod lenn</string>
   <!-- Browser menu label for turning OFF reader view of the current visited page -->
@@ -372,13 +380,19 @@
   <string name="browser_menu_open_in_normal_tab" moz:removedIn="141" tools:ignore="UnusedResources">Mont d\'un ivinell nann-prevez</string>
   <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
   <string name="browser_menu_translate_page" moz:removedIn="141" tools:ignore="UnusedResources">Treiñ ar bajenn…</string>
+  <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
+  <string name="browser_menu_translate_page_2">Treiñ ar bajenn</string>
   <!-- Browser menu label for navigating to the Web Compat Reporter feature, which provides users the ability to send bug reports for broken sites. -->
   <string name="browser_menu_webcompat_reporter">Danevelliñ ul lec\'hienn torret…</string>
+  <!-- Browser menu label for navigating to the Web Compat Reporter feature, which provides users the ability to send bug reports for broken sites. -->
+  <string name="browser_menu_webcompat_reporter_2">Danevelliñ ul lec’hienn torret</string>
   <!--
     Browser menu label that is displayed when the current page has been translated by the translation feature.
     %1$s is the name of the language that page was translated to (e.g. English).
   -->
   <string name="browser_menu_translated_to" moz:removedIn="141" tools:ignore="UnusedResources">Troet e %1$s</string>
+  <!-- Browser menu label that is displayed when the current page has been translated by the translation feature. -->
+  <string name="browser_menu_translated">Troet</string>
   <!-- Browser menu label for the print feature -->
   <string name="browser_menu_print" moz:removedIn="141" tools:ignore="UnusedResources">Moullañ…</string>
   <!-- Browser menu label for the print feature -->
@@ -388,6 +402,8 @@
     %1$s is the name of the app (for example "Firefox").
   -->
   <string name="browser_menu_delete_browsing_data_on_quit">Kuitaat %1$s</string>
+  <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
+  <string name="browser_menu_recommended_extensions_content_description">Muioc’h a ditouroù</string>
   <!--
     Menu "contextual feature recommendation" (CFR)
 
@@ -826,6 +842,8 @@
   <string name="preferences_theme">Neuz</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">Degemer</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">Arlun an arload</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Jestroù</string>
   <!-- Preference for settings related to visual options -->
@@ -1871,7 +1889,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d ivinell diuzet</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">Ivinelloù enrollet!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Ivinelloù enrollet!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">Dastumad enrollet!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -2006,7 +2024,7 @@
   -->
   <string name="snackbar_collection_deleted">Dastumad dilamet</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">Dastumad adanvet</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Dastumad adanvet</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Ivinell serret</string>
   <!-- Text shown in snackbar when user closes all tabs -->
@@ -2045,7 +2063,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Dilemel</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL eilet</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL eilet</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Un destenn skouer an hini eo. Amañ emañ evit diskouez deocʼh penaos e vo skrammet an destenn pa greskit pe pa zigreskit ar ment gant an arventenn-mañ.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2614,9 +2632,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Fazi en ur gennaskañ ouzh “%s”</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">%s : krouet</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s : krouet</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">%s : enrollet</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s : enrollet</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">%s : dilamet</string>
   <!-- Heading for the instructions to allow a permission -->

@@ -664,7 +664,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d بازدەر دیاریکراوە</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">بازدەرەکان پاشەکەوتکرا!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">بازدەرەکان پاشەکەوتکرا!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">کۆکەرەوە پاشەکەوتکرا!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -731,7 +731,7 @@
   -->
   <string name="snackbar_collection_deleted">کۆکەرەوە سڕایەوە</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">کۆکەرەوە ناولێنرایەوە</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">کۆکەرەوە ناولێنرایەوە</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">بازدەر داخرا</string>
   <!-- Text shown in snackbar when user closes all tabs -->
@@ -758,7 +758,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">سڕینەوە</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">بەستەر لەبەرگیرا</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">بەستەر لەبەرگیرا</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">ئەم دەقێکی نمونەییە. لێرە پیشان دەدرێت بۆ ئەوەی بزانی چۆن دەردەچێت کاتێک قەبارەی نووسدینەکە زیاد و کەم دەکەیت.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -1029,9 +1029,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">هەڵە لە پەیوەندیکردن بە “%s”</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">%s درووستکرا</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s درووستکرا</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">%s پاشەکەوتکرا</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s پاشەکەوتکرا</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">%s سڕایەوە</string>
   <!-- Heading for the instructions to allow a permission -->

@@ -340,7 +340,7 @@
   <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
   <string name="browser_menu_switch_to_desktop_site" moz:removedIn="141" tools:ignore="UnusedResources">Newid i wefan bwrdd gwaith</string>
   <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site">Newid i wefan symudol</string>
+  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">Newid i wefan symudol</string>
   <!-- Browser menu label that navigates to the page tools sub-menu -->
   <string name="browser_menu_tools" moz:removedIn="141" tools:ignore="UnusedResources">Offer</string>
   <!-- Content description (not visible, for screen readers etc.): Back button for all menu redesign sub-menu -->
@@ -879,6 +879,8 @@
   <string name="preferences_home_2">Tudalen Cartref</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">Eicon ap</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Dangosydd bar tab</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Ystumiau</string>
   <!-- Preference for settings related to visual options -->
@@ -1311,6 +1313,8 @@
   <string name="preference_simple_toolbar">Syml</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Estynnwyd</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">Rhaid i\'r bar cyfeiriad fod ar y brig pan fydd y bar tab yn cael ei ddangos.</string>
   <!--
     App icon Preferences
 
@@ -1329,6 +1333,12 @@
   <string name="preference_auto_battery_theme">Gosodwyd gan yr Arbedwr Batri</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Dilyn thema’r ddyfais</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Dangos bar tab</string>
   <!--
     Gestures Preferences
 
@@ -2096,7 +2106,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d tab wedi’i ddewis</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">Tabiau wedi’u cadw!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Tabiau wedi’u cadw!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">Casgliad wedi’i gadw!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -2231,7 +2241,7 @@
   -->
   <string name="snackbar_collection_deleted">Dilëwyd y casgliad</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">Ailenwyd y casgliad</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Ailenwyd y casgliad</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Tab wedi’i gau</string>
   <!-- Text shown in snackbar when user closes all tabs -->
@@ -2270,7 +2280,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Dileu</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL wedi’i gopïo</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL wedi’i gopïo</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Testun enghreifftiol yw hwn. Mae yma i ddangos sut bydd testun yn ymddangos pan fyddwch chi’n cynyddu neu’n lleihau maint y gosodiad hwn.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2782,6 +2792,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">Cadw a llanw cyfeiriadau</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Yn cynnwys rhifau ffôn a chyfeiriadau e-bost</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">Cysoni cyfeiriadau ar draws dyfeisiau</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">Cyfeiriadau cysoni</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Ychwanegu cerdyn</string>
   <!-- Title of the "Edit card" screen -->
@@ -2909,9 +2923,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Gwall wrth gysylltu â “%s”</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">Crëwyd %s</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">Crëwyd %s</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">Cadwyd %s</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">Cadwyd %s</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">Dilëwyd %s</string>
   <!-- Heading for the instructions to allow a permission -->

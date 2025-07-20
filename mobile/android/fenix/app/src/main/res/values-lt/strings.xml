@@ -828,7 +828,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">Pažymėta %d kortelė</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">Kortelės įrašytos!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Kortelės įrašytos!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">Rinkinys įrašytas!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -897,7 +897,7 @@
   -->
   <string name="snackbar_collection_deleted">Rinkinys pašalintas</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">Rinkinys pervadintas</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Rinkinys pervadintas</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Kortelė užverta</string>
   <!-- Text shown in snackbar when user closes all tabs -->
@@ -928,7 +928,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Pašalinti</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL nukopijuotas</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL nukopijuotas</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Tai pavyzdinis tekstas. Jis leidžia pamatyti, kaip atrodys tekstas padidinus arba sumažinus jo dydį su šia nuostata.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -1270,9 +1270,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Nepavyko prisijungti prie „%s“</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">Sukurta „%s“</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">Sukurta „%s“</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">Įrašyta „%s“</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">Įrašyta „%s“</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">Pašalinta „%s“</string>
   <!-- Heading for the instructions to allow a permission -->

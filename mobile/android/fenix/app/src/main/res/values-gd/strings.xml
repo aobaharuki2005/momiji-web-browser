@@ -336,7 +336,7 @@
   <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
   <string name="browser_menu_switch_to_desktop_site" moz:removedIn="141" tools:ignore="UnusedResources">Seall an làrach desktop</string>
   <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site">Seall an làrach mobile</string>
+  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">Seall an làrach mobile</string>
   <!-- Browser menu label that navigates to the page tools sub-menu -->
   <string name="browser_menu_tools" moz:removedIn="141" tools:ignore="UnusedResources">Innealan</string>
   <!-- Content description (not visible, for screen readers etc.): Back button for all menu redesign sub-menu -->
@@ -1739,7 +1739,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d taba air a thaghadh</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">Chaidh na tabaichean a shàbhaladh!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Chaidh na tabaichean a shàbhaladh!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">Chaidh an cruinneachadh a shàbhaladh!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -1870,7 +1870,7 @@
   -->
   <string name="snackbar_collection_deleted">Chaidh an cruinneachadh a sguabadh às</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">Chaidh ainm ùr a thoirt air a’ chruinneachadh</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Chaidh ainm ùr a thoirt air a’ chruinneachadh</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Chaidh an taba a dhùnadh</string>
   <!-- Text shown in snackbar when user closes all tabs -->
@@ -1909,7 +1909,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Sguab às</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Lethbhreac dhen URL air a dhèanamh</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Lethbhreac dhen URL air a dhèanamh</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Seo ball-eisimpleir de theacsa. Tha e an-seo airson ’s gum faic thu cò ris a bhios an teacsa coltach ’s tu ga lùghdachadh no meudachadh leis an roghainn seo.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2436,9 +2436,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Mearachd a’ ceangal ri “%s”</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">Chaidh %s a chruthachadh</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">Chaidh %s a chruthachadh</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">Chaidh %s a shàbhaladh</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">Chaidh %s a shàbhaladh</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">Chaidh %s a sguabadh às</string>
   <!-- Heading for the instructions to allow a permission -->

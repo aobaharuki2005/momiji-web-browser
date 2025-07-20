@@ -338,7 +338,7 @@
   <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
   <string name="browser_menu_switch_to_desktop_site" moz:removedIn="141" tools:ignore="UnusedResources">Passe al sît par scritori</string>
   <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site">Passe al sît par celulâr</string>
+  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">Passe al sît par celulâr</string>
   <!-- Browser menu label that navigates to the page tools sub-menu -->
   <string name="browser_menu_tools" moz:removedIn="141" tools:ignore="UnusedResources">Struments</string>
   <!-- Content description (not visible, for screen readers etc.): Back button for all menu redesign sub-menu -->
@@ -2073,7 +2073,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d schede selezionade</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">Schedis salvadis!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Schedis salvadis!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">Racuelte salvade!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -2208,7 +2208,7 @@
   -->
   <string name="snackbar_collection_deleted">Racuelte eliminade</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">Cambiât non ae racuelte</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Cambiât non ae racuelte</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Schede sierade</string>
   <!-- Text shown in snackbar when user closes all tabs -->
@@ -2247,7 +2247,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Elimine</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL copiât</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL copiât</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Chest al è un test di esempli. Al è achì par mostrâti cemût che il test al vignarà fûr cuant che tu aumentis o tu diminuissis la dimension dai caratars cun cheste impostazion.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2882,9 +2882,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Erôr tal conetisi a “%s”</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">%s creât</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s creât</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">%s salvât</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s salvât</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">%s eliminât</string>
   <!-- Heading for the instructions to allow a permission -->

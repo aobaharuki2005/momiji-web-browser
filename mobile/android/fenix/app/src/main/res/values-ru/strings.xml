@@ -340,7 +340,7 @@
   <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
   <string name="browser_menu_switch_to_desktop_site" moz:removedIn="141" tools:ignore="UnusedResources">Перейти на версию для ПК</string>
   <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site">Перейти на мобильный сайт</string>
+  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">Перейти на мобильный сайт</string>
   <!-- Browser menu label that navigates to the page tools sub-menu -->
   <string name="browser_menu_tools" moz:removedIn="141" tools:ignore="UnusedResources">Инструменты</string>
   <!-- Content description (not visible, for screen readers etc.): Back button for all menu redesign sub-menu -->
@@ -879,6 +879,8 @@
   <string name="preferences_home_2">Домашняя страница</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">Значок приложения</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Отображение панели вкладок</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Жесты</string>
   <!-- Preference for settings related to visual options -->
@@ -1311,6 +1313,8 @@
   <string name="preference_simple_toolbar">Простой</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Расширенный</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">Когда отображается панель вкладок, адресная строка должна быть сверху.</string>
   <!--
     App icon Preferences
 
@@ -1329,6 +1333,12 @@
   <string name="preference_auto_battery_theme">Учитывать режим экономии батареи</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Использовать тему устройства</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Показать панель вкладок</string>
   <!--
     Gestures Preferences
 
@@ -2096,7 +2106,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">Выбрана %d вкладка</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">Вкладки сохранены!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Вкладки сохранены!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">Сборник сохранён!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -2231,7 +2241,7 @@
   -->
   <string name="snackbar_collection_deleted">Сборник удалён</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">Сборник переименован</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Сборник переименован</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Вкладка закрыта</string>
   <!-- Text shown in snackbar when user closes all tabs -->
@@ -2270,7 +2280,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Удалить</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">Ссылка скопирована</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">Ссылка скопирована</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Это пример текста. Он здесь для того, чтобы показать, как текст будет отображаться, когда вы будете увеличивать или уменьшать его размер.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2782,6 +2792,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">Сохранять и заполнять адреса</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Включает номера телефонов и адреса электронной почты</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">Синхронизируйте адреса между устройствами</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">Синхронизация адресов</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Добавить карту</string>
   <!-- Title of the "Edit card" screen -->
@@ -2909,9 +2923,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Ошибка подключения к “%s”</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">%s добавлена</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s добавлена</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">%s сохранена</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s сохранена</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">%s удалён</string>
   <!-- Heading for the instructions to allow a permission -->

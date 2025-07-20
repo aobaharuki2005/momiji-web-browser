@@ -34,6 +34,8 @@
   <string name="no_private_tabs_description">Vaši privatni tabovi će biti prikazani ovdje.</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d označeno</string>
+  <!-- Tab tray multi select title in app bar when no tabs are selected -->
+  <string name="tab_tray_multi_select_title_empty">Odaberi tabove</string>
   <!-- Label of button in create collection dialog for creating a new collection -->
   <string name="tab_tray_add_new_collection">Dodaj novu kolekciju</string>
   <!-- Label of editable text in create collection dialog for naming a new collection -->
@@ -338,7 +340,7 @@
   <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
   <string name="browser_menu_switch_to_desktop_site" moz:removedIn="141" tools:ignore="UnusedResources">Prebacite se na desktop stranicu</string>
   <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site">Prebacite se na mobilnu stranicu</string>
+  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">Prebacite se na mobilnu stranicu</string>
   <!-- Browser menu label that navigates to the page tools sub-menu -->
   <string name="browser_menu_tools" moz:removedIn="141" tools:ignore="UnusedResources">Alati</string>
   <!-- Content description (not visible, for screen readers etc.): Back button for all menu redesign sub-menu -->
@@ -875,6 +877,10 @@
   <string name="preferences_theme">Tema</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">Početna stranica</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">Ikona aplikacije</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Prikaz trake s tabovma</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Gestovi</string>
   <!-- Preference for settings related to visual options -->
@@ -1307,6 +1313,14 @@
   <string name="preference_simple_toolbar">Jednostavno</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Prošireno</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">Adresna traka mora biti na vrhu kada se prikazuje traka s tabovima.</string>
+  <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">Odaberite ikonu aplikacije</string>
   <!--
     Theme Preferences
 
@@ -1319,6 +1333,12 @@
   <string name="preference_auto_battery_theme">Postavio Battery Saver</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Slijedi temu uređaja</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Prikaži traku s tabovima</string>
   <!--
     Gestures Preferences
 
@@ -1470,6 +1490,13 @@
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Saznajte više</string>
   <!--
+    Sessions
+
+    Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs
+  -->
+  <string name="tabs_header_normal_tabs_counter_title">Normalno otvoreni tabovi: %1$s. Dodirnite za prebacivanje između tabova.</string>
+  <!--
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
@@ -1479,6 +1506,12 @@
     The %1$s will be replaced by the number of opened synced tabs
   -->
   <string name="tabs_header_synced_tabs_counter_title">Otvoreni sinhronizovani tabovi: %1$s. Dodirnite za promjenu tabova.</string>
+  <!-- Text for the tabs header private tabs -->
+  <string name="tabs_header_private_tabs_title">Privatno</string>
+  <!-- Text for the tabs header normal tabs -->
+  <string name="tabs_header_normal_tabs_title">Tabovi</string>
+  <!-- Text for the tabs header synced tabs -->
+  <string name="tabs_header_synced_tabs_title">Sinhronizacija</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Dodaj tab</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -2073,7 +2106,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d tab označen</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">Tabovi spašeni!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Tabovi spašeni!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">Kolekcija spašena!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -2208,7 +2241,7 @@
   -->
   <string name="snackbar_collection_deleted">Kolekcija obrisana</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">Kolekcija preimenovana</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Kolekcija preimenovana</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Tab zatvoren</string>
   <!-- Text shown in snackbar when user closes all tabs -->
@@ -2247,7 +2280,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Obriši</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL kopiran</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL kopiran</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Ovo je primjer teksta. Ovdje se nalazi kako bi vam prikazali kako će tekst izgledati kada povećate ili smanjite veličinu pomoću ove postavke.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2387,6 +2420,10 @@
   <string name="preference_enhanced_tracking_protection_strict">Strogo</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">Jača zaštita od praćenja i brže performanse, ali neke web stranice možda neće raditi ispravno.</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">Dozvolite da %1$s automatski primjenjuje izuzetke potrebne za izbjegavanje većih kvarova na web stranici.</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">Također automatski primijenite izuzetke koji su potrebni samo za rješavanje manjih problema i omogućavanje praktičnih funkcija.</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Šta je blokirano od strane stroge tracking zaštite</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -2882,9 +2919,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Greška u povezivanju na “%s”</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">Kreirano %s</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">Kreirano %s</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">Spašeno %s</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">Spašeno %s</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">Obrisano %s</string>
   <!-- Heading for the instructions to allow a permission -->

@@ -340,7 +340,7 @@
   <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
   <string name="browser_menu_switch_to_desktop_site" moz:removedIn="141" tools:ignore="UnusedResources">Bytt til datamaskinversjon</string>
   <!-- Browser menu label that toggles the request for the mobile site of the currently visited page -->
-  <string name="browser_menu_switch_to_mobile_site">Bytt til mobilutgaven</string>
+  <string name="browser_menu_switch_to_mobile_site" moz:removedIn="142" tools:ignore="UnusedResources">Bytt til mobilutgaven</string>
   <!-- Browser menu label that navigates to the page tools sub-menu -->
   <string name="browser_menu_tools" moz:removedIn="141" tools:ignore="UnusedResources">Verktøy</string>
   <!-- Content description (not visible, for screen readers etc.): Back button for all menu redesign sub-menu -->
@@ -879,6 +879,8 @@
   <string name="preferences_home_2">Startside</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">App-ikon</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Visning av fanelinje</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Bevegelser</string>
   <!-- Preference for settings related to visual options -->
@@ -1311,6 +1313,8 @@
   <string name="preference_simple_toolbar">Enkel</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Utvidet</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">Adresselinjen må være øverst når fanelinjen vises.</string>
   <!--
     App icon Preferences
 
@@ -1329,6 +1333,12 @@
   <string name="preference_auto_battery_theme">Innstilt av strømstyring</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Følg enhetens tema</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Vis fanelinje</string>
   <!--
     Gestures Preferences
 
@@ -2096,7 +2106,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d fane valgt</string>
   <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-  <string name="create_collection_tabs_saved">Faner lagret!</string>
+  <string name="create_collection_tabs_saved" tools:ignore="UnusedResources" moz:removedIn="142">Faner lagret!</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection">Samling lagret!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -2231,7 +2241,7 @@
   -->
   <string name="snackbar_collection_deleted">Samling slettet</string>
   <!-- Text shown in snackbar when user renames a collection -->
-  <string name="snackbar_collection_renamed">Samlingen omdøpt</string>
+  <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Samlingen omdøpt</string>
   <!-- Text shown in snackbar when user closes a tab -->
   <string name="snackbar_tab_closed">Fane lukket</string>
   <!-- Text shown in snackbar when user closes all tabs -->
@@ -2270,7 +2280,7 @@
   <!-- Tab collection deletion prompt dialog option to delete the collection -->
   <string name="tab_collection_dialog_positive">Slett</string>
   <!-- Message for copying the URL via long press on the toolbar -->
-  <string name="url_copied">URL kopiert</string>
+  <string name="url_copied" tools:ignore="UnusedResources" moz:removedIn="142">URL kopiert</string>
   <!-- Sample text for accessibility font size -->
   <string name="accessibility_text_size_sample_text_1">Dette er eksempeltekst. Det er her for å vise hvordan tekst vil vises når du øker eller reduserer størrelsen med denne innstillingen.</string>
   <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -2909,9 +2919,9 @@
   <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">Feil ved tilkobling til «%s»</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_success_message">%s ble opprettet</string>
+  <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s ble opprettet</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_edit_custom_engine_success_message">%s ble lagret</string>
+  <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s ble lagret</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_delete_search_engine_success_message">%s ble slettet</string>
   <!-- Heading for the instructions to allow a permission -->
