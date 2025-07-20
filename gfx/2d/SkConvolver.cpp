@@ -16,6 +16,7 @@
 
 namespace skia {
 
+using mozilla::gfx::BytesPerPixel;
 using mozilla::gfx::IsOpaque;
 using mozilla::gfx::SurfaceFormat;
 
@@ -615,7 +616,8 @@ bool BGRAConvolve2D(const unsigned char* sourceData, int sourceByteRowStride,
 
   // Loop over every possible output row, processing just enough horizontal
   // convolutions to run each subsequent vertical convolution.
-  MOZ_ASSERT(outputByteRowStride >= filterX.numValues() * 4);
+  MOZ_ASSERT(outputByteRowStride >=
+             filterX.numValues() * BytesPerPixel(format));
   int numOutputRows = filterY.numValues();
 
   // We need to check which is the last line to convolve before we advance 4
