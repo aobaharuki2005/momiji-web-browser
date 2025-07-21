@@ -374,7 +374,8 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
 
   void* alloc(size_t bytes, bool nurseryOwned);
   void* allocInGC(size_t bytes, bool nurseryOwned);
-  void* realloc(void* alloc, size_t bytes, bool nurseryOwned);
+  void* realloc(void* alloc, size_t oldBytes, size_t newBytes,
+                bool nurseryOwned);
   void free(void* alloc);
   size_t getAllocSize(void* alloc);
   bool isNurseryOwned(void* alloc);
@@ -484,8 +485,8 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
                       uintptr_t freeEnd, bool expectUnchanged,
                       FreeLists& freeLists);
   void freeMedium(void* alloc);
-  bool growMedium(void* alloc, size_t newBytes);
-  bool shrinkMedium(void* alloc, size_t newBytes);
+  bool growMedium(void* alloc, size_t oldBytes, size_t newBytes);
+  bool shrinkMedium(void* alloc, size_t oldBytes, size_t newBytes);
   enum class ListPosition { Front, Back };
   FreeRegion* addFreeRegion(FreeLists* freeLists, uintptr_t start,
                             uintptr_t bytes, SizeKind kind, bool anyDecommitted,
@@ -494,7 +495,8 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   void updateFreeRegionStart(FreeLists* freeLists, FreeRegion* region,
                              uintptr_t newStart, SizeKind kind);
   FreeLists* getChunkFreeLists(BufferChunk* chunk);
-  bool isSweepingChunk(BufferChunk* chunk);
+  bool isSweepingChunkAfterMerge(BufferChunk* chunk);
+  bool isSweepingChunk(BufferChunk* chunk) const;
   void traceMediumAlloc(JSTracer* trc, Cell* owner, void** allocp,
                         const char* name);
   bool isMediumBufferNurseryOwned(void* alloc) const;
