@@ -8,14 +8,16 @@ import androidx.navigation.NavController
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.ktx.kotlin.isUrl
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Events
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
+import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.NimbusComponents
 import org.mozilla.fenix.components.metrics.MetricsUtils
-import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.utils.Settings
 
 /**
  * An interface that handles the view manipulation of the home screen toolbar.
@@ -41,18 +43,22 @@ interface ToolbarController {
  * The default implementation of [ToolbarController].
  */
 class DefaultToolbarController(
-    private val activity: HomeActivity,
-    private val store: BrowserStore,
+    private val appStore: AppStore,
+    private val browserStore: BrowserStore,
+    private val nimbusComponents: NimbusComponents,
     private val navController: NavController,
+    private val settings: Settings,
+    private val fenixBrowserUseCases: FenixBrowserUseCases,
 ) : ToolbarController {
     override fun handlePasteAndGo(clipboardText: String) {
-        val searchEngine = store.state.search.selectedOrDefaultSearchEngine
+        val searchEngine = browserStore.state.search.selectedOrDefaultSearchEngine
 
-        activity.openToBrowserAndLoad(
+        navController.navigate(R.id.browserFragment)
+        fenixBrowserUseCases.loadUrlOrSearch(
             searchTermOrURL = clipboardText,
-            newTab = true,
-            from = BrowserDirection.FromHome,
-            engine = searchEngine,
+            newTab = !settings.enableHomepageAsNewTab,
+            private = appStore.state.mode.isPrivate,
+            searchEngine = searchEngine,
         )
 
         if (clipboardText.isUrl() || searchEngine == null) {
@@ -60,10 +66,10 @@ class DefaultToolbarController(
         } else {
             val searchAccessPoint = MetricsUtils.Source.ACTION
             MetricsUtils.recordSearchMetrics(
-                searchEngine,
-                searchEngine == store.state.search.selectedOrDefaultSearchEngine,
-                searchAccessPoint,
-                activity.components.nimbus.events,
+                engine = searchEngine,
+                isDefault = searchEngine == browserStore.state.search.selectedOrDefaultSearchEngine,
+                searchAccessPoint = searchAccessPoint,
+                nimbusEventStore = nimbusComponents.events,
             )
         }
     }
@@ -84,7 +90,7 @@ class DefaultToolbarController(
         navController.nav(
             navController.currentDestination?.id,
             directions,
-            BrowserAnimator.getToolbarNavOptions(activity),
+            BrowserAnimator.getToolbarNavOptions(toolbarPosition = settings.toolbarPosition),
         )
 
         Events.searchBarTapped.record(Events.SearchBarTappedExtra("HOME"))

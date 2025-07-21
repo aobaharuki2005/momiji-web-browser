@@ -543,9 +543,12 @@ class HomeFragment : Fragment() {
                 navController = findNavController(),
             ),
             toolbarController = DefaultToolbarController(
-                activity = activity,
-                store = components.core.store,
+                appStore = components.appStore,
+                browserStore = components.core.store,
+                nimbusComponents = components.nimbus,
                 navController = findNavController(),
+                settings = components.settings,
+                fenixBrowserUseCases = components.useCases.fenixBrowserUseCases,
             ),
             homeSearchController = DefaultHomeSearchController(
                 appStore = components.appStore,
