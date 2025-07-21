@@ -761,6 +761,9 @@ void CycleCollectedJSContext::DispatchToMicroTask(
   MOZ_ASSERT(runnable);
 
   JS::JobQueueMayNotBeEmpty(Context());
+  PROFILER_MARKER_FLOW_ONLY("CycleCollectedJSContext::DispatchToMicroTask",
+                            OTHER, {}, FlowMarker,
+                            Flow::FromPointer(runnable.get()));
 
   LogMicroTaskRunnable::LogDispatch(runnable.get());
   if (!runnable->isInList()) {
@@ -876,6 +879,9 @@ bool CycleCollectedJSContext::PerformMicroTaskCheckPoint(bool aForce) {
       didProcess = true;
 
       LogMicroTaskRunnable::Run log(runnable.get());
+      AUTO_PROFILER_TERMINATING_FLOW_MARKER_FLOW_ONLY(
+          "CycleCollectedJSContext::PerformMicroTaskCheckPoint", OTHER,
+          Flow::FromPointer(runnable.get()));
       runnable->Run(aso);
       runnable = nullptr;
     }
@@ -920,6 +926,9 @@ void CycleCollectedJSContext::PerformDebuggerMicroTaskCheckpoint() {
     if (mPendingMicroTaskRunnables.empty() && mDebuggerMicroTaskQueue.empty()) {
       JS::JobQueueIsEmpty(Context());
     }
+    AUTO_PROFILER_TERMINATING_FLOW_MARKER_FLOW_ONLY(
+        "CycleCollectedJSContext::PerformDebuggerMicroTaskCheckpoint", OTHER,
+        Flow::FromPointer(runnable.get()));
     runnable->Run(aso);
     runnable = nullptr;
   }

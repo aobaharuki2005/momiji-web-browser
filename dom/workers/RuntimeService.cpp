@@ -38,6 +38,7 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/glean/DomWorkersMetrics.h"
 #include "mozilla/glean/DomServiceworkersMetrics.h"
+#include "mozilla/FlowMarkers.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/AtomList.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -1010,6 +1011,8 @@ class WorkerJSContext final : public mozilla::CycleCollectedJSContext {
       // A recycled object may be in the list already.
       mMicrotasksToTrace.insertBack(runnable);
     }
+    PROFILER_MARKER_FLOW_ONLY("WorkerJSContext::DispatchToMicroTask", OTHER, {},
+                              FlowMarker, Flow::FromPointer(runnable.get()));
     microTaskQueue->push_back(std::move(runnable));
   }
 
