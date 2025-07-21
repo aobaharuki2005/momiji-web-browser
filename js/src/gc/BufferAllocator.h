@@ -131,20 +131,18 @@ struct SmallBufferRegion;
 //
 // Chunks containing nursery-owned buffers are stored in a separate list to
 // chunks that only contain tenured-owned buffers to reduce the number of chunks
-// that need to be swept for minor GC. They are stored in |mediumMixedChunks|
-// and are moved to |mediumMixedChunksToSweep| at the start of minor GC. They
-// are then swept on a background thread and are placed in
-// |sweptMediumMixedChunks| if they are not freed. From there they can merged
-// back into one of the main thread lists (since they may no longer contain
-// nursery-owned buffers).
+// that need to be swept for minor GC. They are stored in |mixedChunks| and are
+// moved to |mixedChunksToSweep| at the start of minor GC. They are then swept
+// on a background thread and are placed in |sweptMixedChunks| if they are not
+// freed. From there they can merged back into one of the main thread lists
+// (since they may no longer contain nursery-owned buffers).
 //
-// Chunks containing tenured-owned buffers are stored in |mediumTenuredChunks|
-// and are moved to |mediumTenuredChunksToSweep| at the start of major GC. They
-// are unavailable for allocation after this point and will be swept on a
-// background thread and placed in |sweptMediumTenuredChunks| if they are not
-// freed. From there they will be merged back into |mediumTenuredChunks|. This
-// means that allocation during an incremental GC will allocate a new
-// chunk.
+// Chunks containing tenured-owned buffers are stored in |tenuredChunks| and are
+// moved to |tenuredChunksToSweep| at the start of major GC. They are
+// unavailable for allocation after this point and will be swept on a background
+// thread and placed in |sweptTenuredChunks| if they are not freed. From there
+// they will be merged back into |tenuredChunks|. This means that allocation
+// during an incremental GC will allocate a new chunk.
 //
 // Merging swept data requires taking a lock and so only happens when
 // necessary. This happens when a new chunk is needed or at various points
@@ -154,9 +152,9 @@ struct SmallBufferRegion;
 // Since major GC requires doing a minor GC at the start and we don't want to
 // have to wait for minor GC sweeping to finish there is an optimization where
 // chunks containing nursery-owned buffers swept as part of minor GC at the
-// start of a major GC are moved directly from |sweptMediumMixedChunks| to
-// |mediumTenuredChunksToSweep| at the end of minor GC sweeping. This is
-// controlled by the |majorStartedWhileMinorSweeping| flag.
+// start of a major GC are moved directly from |sweptMixedChunks| to
+// |tenuredChunksToSweep| at the end of minor GC sweeping. This is controlled by
+// the |majorStartedWhileMinorSweeping| flag.
 //
 // Similarly, if a major GC finishes while minor GC is sweeping then rather than
 // waiting for it to finish we set the |majorFinishedWhileMinorSweeping| flag so
@@ -169,11 +167,11 @@ struct SmallBufferRegion;
 // is currently being swept off-thread.
 //
 // Reallocation works by resizing in place if possible. It is always possible to
-// shrink a medium allocation in place if the target size is still
-// medium. In-place growth is possible if there is enough free space following
-// the allocation. This is not supported if the containing chunk is currently
-// being swept off-thread.  If not possible, a new allocation is made and the
-// contents of the buffer copied.
+// shrink a medium allocation in place if the target size is still medium.
+// In-place growth is possible if there is enough free space following the
+// allocation. This is not supported if the containing chunk is currently being
+// swept off-thread.  If not possible, a new allocation is made and the contents
+// of the buffer copied.
 //
 // Large allocations
 // -----------------
@@ -278,29 +276,29 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   // The zone this allocator is associated with.
   MainThreadOrGCTaskData<JS::Zone*> zone;
 
-  // Chunks that contain medium buffers. May contain both nursery-owned and
-  // tenured-owned buffers.
-  MainThreadData<BufferChunkList> mediumMixedChunks;
+  // Chunks containing medium and small buffers. They may contain both
+  // nursery-owned and tenured-owned buffers.
+  MainThreadData<BufferChunkList> mixedChunks;
 
-  // Chunks that contain only tenured-owned medium sized buffers.
-  MainThreadData<BufferChunkList> mediumTenuredChunks;
+  // Chunks containing only tenured-owned small and medium buffers.
+  MainThreadData<BufferChunkList> tenuredChunks;
 
-  // Free lists for medium sized buffers. Used for allocation.
-  MainThreadData<FreeLists> mediumFreeLists;
+  // Free lists for small and medium buffers. Used for allocation.
+  MainThreadData<FreeLists> freeLists;
 
   // Chunks that may contain nursery-owned buffers waiting to be swept during a
-  // minor GC. Populated from |mediumMixedChunks|.
-  MainThreadOrGCTaskData<BufferChunkList> mediumMixedChunksToSweep;
+  // minor GC. Populated from |mixedChunks|.
+  MainThreadOrGCTaskData<BufferChunkList> mixedChunksToSweep;
 
   // Chunks that contain only tenured-owned buffers waiting to be swept during a
-  // major GC. Populated from |mediumTenuredChunks|.
-  MainThreadOrGCTaskData<BufferChunkList> mediumTenuredChunksToSweep;
+  // major GC. Populated from |tenuredChunks|.
+  MainThreadOrGCTaskData<BufferChunkList> tenuredChunksToSweep;
 
   // Chunks that have been swept and their associated free lists.
-  MutexData<BufferChunkList> sweptMediumMixedChunks;
-  MutexData<BufferChunkList> sweptMediumTenuredChunks;
-  MutexData<FreeLists> sweptMediumNurseryFreeLists;
-  MutexData<FreeLists> sweptMediumTenuredFreeLists;
+  MutexData<BufferChunkList> sweptMixedChunks;
+  MutexData<BufferChunkList> sweptTenuredChunks;
+  MutexData<FreeLists> sweptNurseryFreeLists;
+  MutexData<FreeLists> sweptTenuredFreeLists;
 
   // List of large nursery-owned buffers.
   MainThreadData<LargeAllocList> largeNurseryAllocs;
@@ -320,8 +318,8 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   MutexData<LargeAllocList> sweptLargeTenuredAllocs;
 
   // Flag to indicate that data from minor sweeping is available to be
-  // merged. This includes chunks in the sweptMediumMixedChunks or
-  // sweptMediumTenuredChunks lists and the minorSweepingFinished flag.
+  // merged. This includes chunks in the |sweptMixedChunks| or
+  // |sweptTenuredChunks| lists and the minorSweepingFinished flag.
   mozilla::Atomic<bool, mozilla::Relaxed> hasMinorSweepDataToMerge;
 
   // GC state for minor and major GC.
@@ -392,9 +390,9 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   static void printStats(GCRuntime* gc, mozilla::TimeStamp creationTime,
                          bool isMajorGC, FILE* file);
   void getStats(size_t& usedBytes, size_t& freeBytes, size_t& adminBytes,
-                size_t& mediumNurseryChunkCount,
-                size_t& mediumTenuredChunkCount, size_t& freeRegions,
-                size_t& largeNurseryAllocCount, size_t& largeTenuredAllocCount);
+                size_t& nurseryChunkCount, size_t& tenuredChunkCount,
+                size_t& freeRegions, size_t& largeNurseryAllocCount,
+                size_t& largeTenuredAllocCount);
 
 #ifdef DEBUG
   void checkGCStateNotInUse();
