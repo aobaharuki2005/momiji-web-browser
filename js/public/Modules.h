@@ -95,6 +95,25 @@ using LoadModuleRejectedCallback = std::function<bool(
     JSContext* cx, JS::Handle<JS::Value> hostDefined, Handle<JS::Value> error)>;
 
 /**
+ * https://tc39.es/ecma262/#sec-LoadRequestedModules
+ *
+ * Load the dependency module graph of the parameter 'module'.
+ *
+ * The spec defines using 'promise objects' to notify the result.
+ * To address the synchronous loading behavior from mozJSModuleLoader, an
+ * overloaded version that takes function callbacks to notify the result is also
+ * provided.
+ */
+extern JS_PUBLIC_API bool LoadRequestedModules(
+    JSContext* cx, Handle<JSObject*> module, Handle<Value> hostDefined,
+    LoadModuleResolvedCallback&& resolved,
+    LoadModuleRejectedCallback&& rejected);
+
+extern JS_PUBLIC_API bool LoadRequestedModules(
+    JSContext* cx, Handle<JSObject*> module, Handle<Value> hostDefined,
+    MutableHandle<JSObject*> promiseOut);
+
+/**
  * The module metadata hook.
  *
  * See: https://tc39.es/ecma262/#sec-hostgetimportmetaproperties
