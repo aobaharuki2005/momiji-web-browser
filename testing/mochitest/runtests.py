@@ -3367,7 +3367,6 @@ toolbar#nav-bar {
             options.keep_open = False
             options.runUntilFailure = True
             options.profilePath = None
-            options.comparePrefs = True
             result = self.runTests(options)
             result = result or (-2 if self.countfail > 0 else 0)
             self.message_logger.finish()
