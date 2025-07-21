@@ -102,7 +102,9 @@ bool ModuleLoaderBase::ImportMetaResolve(JSContext* cx, unsigned argc,
                                          Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   RootedValue modulePrivate(
-      cx, js::GetFunctionNativeReserved(&args.callee(), ModulePrivateSlot));
+      cx, js::GetFunctionNativeReserved(
+              &args.callee(),
+              static_cast<size_t>(ImportMetaSlots::ModulePrivateSlot)));
 
   // https://html.spec.whatwg.org/#hostgetimportmetaproperties
   // Step 4.1. Set specifier to ? ToString(specifier).
@@ -214,8 +216,9 @@ bool ModuleLoaderBase::HostPopulateImportMeta(
   // Store the 'active script' of the meta object into the function slot.
   // https://html.spec.whatwg.org/#active-script
   RootedObject resolveFuncObj(aCx, JS_GetFunctionObject(resolveFunc));
-  js::SetFunctionNativeReserved(resolveFuncObj, ModulePrivateSlot,
-                                aReferencingPrivate);
+  js::SetFunctionNativeReserved(
+      resolveFuncObj, static_cast<size_t>(ImportMetaSlots::ModulePrivateSlot),
+      aReferencingPrivate);
 
   return true;
 }
@@ -789,42 +792,145 @@ nsresult ModuleLoaderBase::ResolveRequestedModules(
   return NS_OK;
 }
 
+static bool OnLoadRequestedModulesResolvedImpl(ModuleLoadRequest* aRequest) {
+  LOG(("ScriptLoadRequest (%p): LoadRequestedModules resolved", aRequest));
+  if (!aRequest->IsCanceled()) {
+    aRequest->SetReady();
+    aRequest->LoadFinished();
+  }
+
+  // Decrease the reference 'AddRef'ed when converting the hostDefined.
+  aRequest->Release();
+  return true;
+}
+
+static bool OnLoadRequestedModulesRejectedImpl(ModuleLoadRequest* aRequest,
+                                               Handle<JS::Value> error) {
+  LOG(("ScriptLoadRequest (%p): LoadRequestedModules rejected", aRequest));
+  // Decrease the reference 'AddRef'ed when converting the hostDefined.
+  aRequest->Release();
+  return true;
+}
+
 void ModuleLoaderBase::StartFetchingModuleDependencies(
     ModuleLoadRequest* aRequest) {
-  LOG(("ScriptLoadRequest (%p): Start fetching module dependencies", aRequest));
-
   if (aRequest->IsCanceled()) {
     return;
   }
 
   MOZ_ASSERT(aRequest->mModuleScript);
   MOZ_ASSERT(!aRequest->mModuleScript->HasParseError());
+  ModuleScript* moduleScript = aRequest->mModuleScript;
+  MOZ_ASSERT(moduleScript->ModuleRecord());
   MOZ_ASSERT(aRequest->IsFetching() || aRequest->IsCompiling());
-  aRequest->mState = ModuleLoadRequest::State::LoadingImports;
+  MOZ_ASSERT(aRequest->IsTopLevel());
 
-  nsTArray<ModuleMapKey> requestedModules;
-  nsresult rv = ResolveRequestedModules(aRequest, &requestedModules);
-  if (NS_FAILED(rv)) {
-    aRequest->mModuleScript = nullptr;
-    aRequest->ModuleErrored();
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(mGlobalObject))) {
     return;
   }
+  JSContext* cx = jsapi.cx();
 
-  if (requestedModules.Length() == 0) {
-    // There are no descendants to load so this request is ready.
-    aRequest->DependenciesLoaded();
-    return;
+  JS::Rooted<JSObject*> module(cx, moduleScript->ModuleRecord());
+
+  LOG(
+      ("ScriptLoadRequest (%p): module record (%p) Start fetching module "
+       "dependencies",
+       aRequest, module.get()));
+
+  // Wrap the request into a JS::Value, and AddRef() it.
+  // The Release() will be called in the resolved/rejected handlers.
+  JS::Rooted<JS::Value> hostDefinedVal(cx, JS::PrivateValue(aRequest));
+  aRequest->AddRef();
+
+  bool result = false;
+
+  // TODO: Bug1973660: Use Promise version of LoadRequestedModules on Workers.
+  if (aRequest->HasScriptLoadContext()) {
+    Rooted<JSFunction*> onResolved(
+        cx, js::NewFunctionWithReserved(cx, OnLoadRequestedModulesResolved,
+                                        OnLoadRequestedModulesResolvedNumArgs,
+                                        0, "resolved"));
+    if (!onResolved) {
+      JS_ReportOutOfMemory(cx);
+      return;
+    }
+
+    RootedFunction onRejected(
+        cx, js::NewFunctionWithReserved(cx, OnLoadRequestedModulesRejected,
+                                        OnLoadRequestedModulesRejectedNumArgs,
+                                        0, "rejected"));
+    if (!onRejected) {
+      JS_ReportOutOfMemory(cx);
+      return;
+    }
+
+    RootedObject resolveFuncObj(cx, JS_GetFunctionObject(onResolved));
+    js::SetFunctionNativeReserved(
+        resolveFuncObj,
+        static_cast<size_t>(OnLoadRequestedModulesSlot::HostDefinedSlot),
+        hostDefinedVal);
+
+    RootedObject rejectFuncObj(cx, JS_GetFunctionObject(onRejected));
+    js::SetFunctionNativeReserved(
+        rejectFuncObj,
+        static_cast<size_t>(OnLoadRequestedModulesSlot::HostDefinedSlot),
+        hostDefinedVal);
+
+    JS::Rooted<JSObject*> loadPromise(cx);
+    result = JS::LoadRequestedModules(cx, module, hostDefinedVal, &loadPromise);
+    JS::AddPromiseReactions(cx, loadPromise, resolveFuncObj, rejectFuncObj);
+  } else {
+    result = JS::LoadRequestedModules(
+        cx, module, hostDefinedVal,
+        [](JSContext* cx, JS::Handle<JS::Value> requestVal) {
+          ModuleLoadRequest* request =
+              static_cast<ModuleLoadRequest*>(requestVal.toPrivate());
+          MOZ_ASSERT(request);
+          return OnLoadRequestedModulesResolvedImpl(request);
+        },
+        [](JSContext* cx, JS::Handle<JS::Value> requestVal,
+           Handle<JS::Value> error) {
+          ModuleLoadRequest* request =
+              static_cast<ModuleLoadRequest*>(requestVal.toPrivate());
+          MOZ_ASSERT(request);
+          return OnLoadRequestedModulesRejectedImpl(request, error);
+        });
   }
 
-  MOZ_ASSERT(aRequest->mAwaitingImports == 0);
-  aRequest->mAwaitingImports = requestedModules.Length();
-
-  // For each requested module in `requestedModules`, fetch a module script
-  // graph given url, module script's CORS setting, and module script's
-  // settings object.
-  for (const ModuleMapKey& requestedModule : requestedModules) {
-    StartFetchingModuleAndDependencies(aRequest, requestedModule);
+  if (!result) {
+    LOG(("ScriptLoadRequest (%p): LoadRequestedModules failed", aRequest));
+    OnLoadRequestedModulesRejectedImpl(aRequest, UndefinedHandleValue);
   }
+}
+
+// static
+bool ModuleLoaderBase::OnLoadRequestedModulesResolved(JSContext* cx,
+                                                      unsigned argc,
+                                                      Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  ModuleLoadRequest* request = static_cast<ModuleLoadRequest*>(
+      js::GetFunctionNativeReserved(
+          &args.callee(),
+          static_cast<size_t>(OnLoadRequestedModulesSlot::HostDefinedSlot))
+          .toPrivate());
+  MOZ_ASSERT(request);
+  return OnLoadRequestedModulesResolvedImpl(request);
+}
+
+// static
+bool ModuleLoaderBase::OnLoadRequestedModulesRejected(JSContext* cx,
+                                                      unsigned argc,
+                                                      Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  Rooted<JS::Value> error(cx, args.get(OnLoadRequestedModulesRejectedErrorArg));
+  ModuleLoadRequest* request = static_cast<ModuleLoadRequest*>(
+      js::GetFunctionNativeReserved(
+          &args.callee(),
+          static_cast<size_t>(OnLoadRequestedModulesSlot::HostDefinedSlot))
+          .toPrivate());
+  MOZ_ASSERT(request);
+  return OnLoadRequestedModulesRejectedImpl(request, error);
 }
 
 bool ModuleLoaderBase::GetImportMapSRI(
