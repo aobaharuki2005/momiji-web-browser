@@ -497,7 +497,6 @@ class ModuleLoaderBase : public nsISupports {
  private:
   ModuleScript* GetFetchedModule(const ModuleMapKey& moduleMapKey) const;
 
-  JS::Value FindFirstParseError(JSContext* aCx, ModuleLoadRequest* aRequest);
   nsresult ResolveRequestedModules(
       ModuleLoadRequest* aRequest,
       nsTArray<ModuleMapKey>* aRequestedModulesOut);

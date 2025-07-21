@@ -1549,35 +1549,6 @@ bool ModuleLoaderBase::HasDynamicImport(
 }
 #endif
 
-JS::Value ModuleLoaderBase::FindFirstParseError(JSContext* aCx,
-                                                ModuleLoadRequest* aRequest) {
-  MOZ_ASSERT(aRequest);
-
-  js::AutoCheckRecursionLimit recursion(aCx);
-  if (!recursion.check(aCx)) {
-    return JS::UndefinedValue();
-  }
-
-  ModuleScript* moduleScript = aRequest->mModuleScript;
-  MOZ_ASSERT(moduleScript);
-
-  if (moduleScript->HasParseError()) {
-    return moduleScript->ParseError();
-  }
-
-  for (ModuleLoadRequest* childRequest : aRequest->mImports) {
-    MOZ_DIAGNOSTIC_ASSERT(moduleScript->HadImportMap() ==
-                          childRequest->mModuleScript->HadImportMap());
-
-    JS::Value error = FindFirstParseError(aCx, childRequest);
-    if (!error.isUndefined()) {
-      return error;
-    }
-  }
-
-  return JS::UndefinedValue();
-}
-
 bool ModuleLoaderBase::InstantiateModuleGraph(ModuleLoadRequest* aRequest) {
   // Instantiate a top-level module and record any error.
 
@@ -1592,21 +1563,15 @@ bool ModuleLoaderBase::InstantiateModuleGraph(ModuleLoadRequest* aRequest) {
   ModuleScript* moduleScript = aRequest->mModuleScript;
   MOZ_ASSERT(moduleScript);
 
+  MOZ_ASSERT(!moduleScript->HasParseError());
+  MOZ_ASSERT(moduleScript->ModuleRecord());
+
   AutoJSAPI jsapi;
   if (NS_WARN_IF(!jsapi.Init(mGlobalObject))) {
     return false;
   }
 
   JSContext* cx = jsapi.cx();
-  JS::Value parseError = FindFirstParseError(cx, aRequest);
-  if (!parseError.isUndefined()) {
-    moduleScript->SetErrorToRethrow(parseError);
-    LOG(("ScriptLoadRequest (%p):   found parse error", aRequest));
-    return true;
-  }
-
-  MOZ_ASSERT(moduleScript->ModuleRecord());
-
   JS::Rooted<JSObject*> module(cx, moduleScript->ModuleRecord());
   if (!xpc::Scriptability::AllowedIfExists(module)) {
     return true;
