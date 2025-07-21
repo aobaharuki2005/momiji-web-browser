@@ -179,12 +179,22 @@ abstract class AbstractFetchDownloadService : Service() {
                     }
 
                     ACTION_RESUME -> {
-                        setDownloadJobStatus(currentDownloadJobState, DOWNLOADING)
+                        if (!File(currentDownloadJobState.state.filePath).exists()) {
+                            currentDownloadJobState.lastNotificationUpdate =
+                                System.currentTimeMillis()
+                            currentDownloadJobState.createdTime = System.currentTimeMillis()
+                            currentDownloadJobState.notifiedStopped = false
 
-                        currentDownloadJobState.job = CoroutineScope(IO).launch {
-                            startDownloadJob(currentDownloadJobState)
+                            setDownloadJobStatus(currentDownloadJobState, FAILED)
+
+                            updateDownloadNotification()
+                        } else {
+                            setDownloadJobStatus(currentDownloadJobState, DOWNLOADING)
+
+                            currentDownloadJobState.job = CoroutineScope(IO).launch {
+                                startDownloadJob(currentDownloadJobState)
+                            }
                         }
-
                         emitNotificationResumeFact()
                         logger.debug("ACTION_RESUME for ${currentDownloadJobState.state.id}")
                     }

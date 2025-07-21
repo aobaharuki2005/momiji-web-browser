@@ -578,8 +578,14 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
-    fun `broadcastReceiver handles ACTION_RESUME`() = runTest(testsDispatcher) {
-        val download = DownloadState("https://example.com/file.txt", "file.txt")
+    fun `WHEN an intent is sent with an ACTION_RESUME action and the file exists THEN the broadcastReceiver resumes the download`() = runTest(testsDispatcher) {
+        folder.newFile("file.txt")
+
+        val download = DownloadState(
+            url = "https://example.com/file.txt",
+            fileName = "file.txt",
+            destinationDirectory = folder.root.path,
+        )
 
         val downloadResponse = Response(
             "https://example.com/file.txt",
@@ -638,7 +644,80 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs[providedDownload.value.state.id]?.job?.join()
 
         verify(service).startDownloadJob(providedDownload.value)
+
+        File(downloadJobState.state.filePath).delete()
     }
+
+    @Test
+    fun `WHEN an intent is sent with an ACTION_RESUME action and the file doesn't exist THEN the broadcastReceiver sets the download status to FAILED`() =
+        runTest(testsDispatcher) {
+            folder.newFile("file.txt")
+
+            val download = DownloadState(
+                url = "https://example.com/file.txt",
+                fileName = "file.txt",
+                destinationDirectory = folder.root.path,
+            )
+
+            val downloadResponse = Response(
+                "https://example.com/file.txt",
+                200,
+                MutableHeaders(),
+                Response.Body(mock()),
+            )
+            val resumeResponse = Response(
+                "https://example.com/file.txt",
+                206,
+                MutableHeaders("Content-Range" to "1-67589/67589"),
+                Response.Body(mock()),
+            )
+
+            doReturn(downloadResponse).`when`(client)
+                .fetch(Request("https://example.com/file.txt"))
+            doReturn(resumeResponse).`when`(client)
+                .fetch(
+                    Request(
+                        "https://example.com/file.txt",
+                        headers = MutableHeaders("Range" to "bytes=1-"),
+                    ),
+                )
+
+            val downloadIntent = Intent("ACTION_DOWNLOAD")
+            downloadIntent.putExtra(EXTRA_DOWNLOAD_ID, download.id)
+
+            browserStore.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
+            service.onStartCommand(downloadIntent, 0, 0)
+            service.downloadJobs.values.forEach { it.job?.join() }
+
+            val providedDownload = argumentCaptor<DownloadJobState>()
+            verify(service).performDownload(providedDownload.capture(), anyBoolean())
+
+            // Simulate a pause
+            var downloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
+            downloadJobState.currentBytesCopied = 1
+            service.setDownloadJobStatus(downloadJobState, DownloadState.Status.PAUSED)
+
+            File(downloadJobState.state.filePath).delete()
+
+            val resumeIntent = Intent(ACTION_RESUME).apply {
+                setPackage(testContext.applicationContext.packageName)
+                putExtra(INTENT_EXTRA_DOWNLOAD_ID, providedDownload.value.state.id)
+            }
+
+            doNothing().`when`(service).updateDownloadNotification(any(), any(), any())
+
+            CollectionProcessor.withFactCollection { facts ->
+                service.broadcastReceiver.onReceive(testContext, resumeIntent)
+
+                val resumeFact = facts[0]
+                assertEquals(Action.RESUME, resumeFact.action)
+                assertEquals(NOTIFICATION, resumeFact.item)
+            }
+
+            downloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
+
+            assertEquals(FAILED, service.getDownloadJobStatus(downloadJobState))
+        }
 
     @Test
     fun `broadcastReceiver handles ACTION_TRY_AGAIN`() = runTest(testsDispatcher) {
