@@ -201,8 +201,13 @@ class BufferTransaction {
            mBufferState == BufferState::WaitingForDelete;
   }
   bool IsDetached() { return mBufferState == BufferState::Detached; }
+  bool IsDeleted() { return mBufferState == BufferState::Deleted; }
 
   void DeleteTransactionLocked(const WaylandSurfaceLock& aSurfaceLock);
+
+  bool MatchesBuffer(uintptr_t aBuffer) {
+    return aBuffer == reinterpret_cast<uintptr_t>(mBuffer.get());
+  }
 
  private:
   ~BufferTransaction();

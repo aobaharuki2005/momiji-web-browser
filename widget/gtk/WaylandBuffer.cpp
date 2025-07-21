@@ -350,6 +350,8 @@ wl_buffer* BufferTransaction::BufferBorrowLocked(
         [](void* aData, wl_buffer* aBuffer) {
           auto transaction = static_cast<BufferTransaction*>(aData);
           if (transaction) {
+            // BufferDetachCallback can delete transaction
+            RefPtr grip{transaction};
             transaction->BufferDetachCallback();
           }
         }};
@@ -363,13 +365,18 @@ wl_buffer* BufferTransaction::BufferBorrowLocked(
 }
 
 void BufferTransaction::BufferDetachCallback() {
-  LOGWAYLAND("BufferTransaction::BufferDetach() [%p] WaylandBuffer [%p] ", this,
-             (void*)mBuffer);
   WaylandSurfaceLock lock(mSurface);
+  LOGWAYLAND(
+      "BufferTransaction::BufferDetach() [%p] WaylandBuffer [%p] attached to "
+      "WaylandSurface %d",
+      this, (void*)mBuffer, mSurface->IsBufferAttached(mBuffer));
+
   if (mBufferState != BufferState::WaitingForDelete) {
     mBufferState = BufferState::Detached;
 
-    if (mIsExternalBuffer) {
+    // Delete this transaction if WaylandSurface uses different WaylandBuffer
+    // already, we don't need to keep it for recycling.
+    if (!mSurface->IsBufferAttached(mBuffer)) {
       DeleteTransactionLocked(lock);
     }
   }
@@ -451,6 +458,10 @@ void BufferTransaction::DeleteLocked(const WaylandSurfaceLock& aSurfaceLock) {
   LOGWAYLAND("BufferTransaction::DeleteLocked() [%p] WaylandBuffer [%p]", this,
              (void*)mBuffer);
   MOZ_DIAGNOSTIC_ASSERT(mBufferState == BufferState::Deleted);
+  MOZ_DIAGNOSTIC_ASSERT(mSurface);
+
+  // Unlink from Surface
+  mSurface->RemoveTransactionLocked(aSurfaceLock, this);
   mSurface = nullptr;
 
   // This can destroy us

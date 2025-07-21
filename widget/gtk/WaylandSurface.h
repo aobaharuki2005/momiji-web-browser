@@ -128,11 +128,17 @@ class WaylandSurface final {
   // on screen.
   bool AttachLocked(const WaylandSurfaceLock& aSurfaceLock,
                     RefPtr<WaylandBuffer> aBuffer);
+  bool IsBufferAttached(WaylandBuffer* aBuffer);
 
   // If there's any WaylandBuffer recently attached, detach it.
   // It makes the WaylandSurface invisible and it doesn't have any
   // content.
   void RemoveAttachedBufferLocked(const WaylandSurfaceLock& aProofOfLock);
+
+  // Remove deleted transaction from WaylandSurface, it may release
+  // referenced WaylandBuffer.
+  void RemoveTransactionLocked(const WaylandSurfaceLock& aSurfaceLock,
+                               RefPtr<BufferTransaction> aTransaction);
 
   // CommitLocked() is needed to call after some of *Locked() method
   // to submit the action to Wayland compositor by wl_surface_commit().
@@ -281,6 +287,8 @@ class WaylandSurface final {
   void Commit(WaylandSurfaceLock* aProofOfLock, bool aForceCommit,
               bool aForceDisplayFlush);
 
+  BufferTransaction* GetNextTransactionLocked(
+      const WaylandSurfaceLock& aSurfaceLock, WaylandBuffer* aBuffer);
   // Force release/detele all transactions and wl_buffers attached to them.
   void ReleaseAllWaylandTransactionsLocked(WaylandSurfaceLock& aSurfaceLock);
 
@@ -350,6 +358,7 @@ class WaylandSurface final {
   // there buffers live until compositor notify us that we
   // can release them.
   AutoTArray<RefPtr<BufferTransaction>, 3> mBufferTransactions;
+  uintptr_t mLatestAttachedBuffer = 0;
 
   // Indicates mSurface has buffer attached so we can attach subsurface
   // to it and expect to get frame callbacks from Wayland compositor.

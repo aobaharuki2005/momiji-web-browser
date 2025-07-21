@@ -480,6 +480,8 @@ bool WaylandSurface::MapLocked(const WaylandSurfaceLock& aProofOfLock,
 
   // Created wl_surface is without buffer attached
   mBufferAttached = false;
+  mLatestAttachedBuffer = 0;
+
   struct wl_compositor* compositor = WaylandDisplayGet()->GetCompositor();
   mSurface = wl_compositor_create_surface(compositor);
   if (!mSurface) {
@@ -1071,6 +1073,58 @@ void WaylandSurface::InvalidateLocked(const WaylandSurfaceLock& aProofOfLock) {
   mSurfaceNeedsCommit = true;
 }
 
+void WaylandSurface::RemoveTransactionLocked(
+    const WaylandSurfaceLock& aProofOfLock,
+    RefPtr<BufferTransaction> aTransaction) {
+  // If we're called from
+  // ReleaseAllWaylandTransactionsLocked -> DeleteTransactionLocked
+  // then mBufferTransactions is empty.
+  if (mBufferTransactions.IsEmpty()) {
+    return;
+  }
+  LOGWAYLAND("WaylandSurface::RemoveTransactionLocked() [%p]",
+             (void*)aTransaction);
+  MOZ_DIAGNOSTIC_ASSERT(aTransaction->IsDeleted());
+  [[maybe_unused]] bool removed =
+      mBufferTransactions.RemoveElement(aTransaction);
+}
+
+BufferTransaction* WaylandSurface::GetNextTransactionLocked(
+    const WaylandSurfaceLock& aProofOfLock, WaylandBuffer* aBuffer) {
+  auto* nextTransaction = aBuffer->GetTransaction();
+  if (!nextTransaction) {
+    return nullptr;
+  }
+
+  auto transactions = std::move(mBufferTransactions);
+  bool addedNext = false;
+  // DeleteTransactionLocked() may delete BufferTransaction so
+  // iterate with ref taken.
+  for (auto t : transactions) {
+    if (t == nextTransaction) {
+      mBufferTransactions.AppendElement(nextTransaction);
+      addedNext = true;
+      continue;
+    }
+    MOZ_DIAGNOSTIC_ASSERT(!t->IsDeleted());
+    // Remove detached transactions from unused buffers.
+    if (t->IsDetached() && !t->MatchesBuffer(mLatestAttachedBuffer)) {
+      t->DeleteTransactionLocked(aProofOfLock);
+    } else {
+      mBufferTransactions.AppendElement(t);
+    }
+  }
+  if (!addedNext) {
+    mBufferTransactions.AppendElement(nextTransaction);
+  }
+  return nextTransaction;
+}
+
+bool WaylandSurface::IsBufferAttached(WaylandBuffer* aBuffer) {
+  return mLatestAttachedBuffer == reinterpret_cast<uintptr_t>(aBuffer) &&
+         mBufferAttached;
+}
+
 bool WaylandSurface::AttachLocked(const WaylandSurfaceLock& aSurfaceLock,
                                   RefPtr<WaylandBuffer> aBuffer) {
   MOZ_DIAGNOSTIC_ASSERT(&aSurfaceLock == mSurfaceLock);
@@ -1083,24 +1137,20 @@ bool WaylandSurface::AttachLocked(const WaylandSurfaceLock& aSurfaceLock,
                 gfx::IntSize((int)round(bufferSize.width / scale),
                              (int)round(bufferSize.height / scale)));
 
-  auto* transaction = aBuffer->GetTransaction();
-  if (!transaction) {
-    return false;
-  }
-
   LOGWAYLAND(
       "WaylandSurface::AttachLocked() transactions [%d] WaylandBuffer [%p] "
       "attached [%d] size [%d x %d] fractional scale %f",
       (int)mBufferTransactions.Length(), aBuffer.get(), aBuffer->IsAttached(),
       bufferSize.width, bufferSize.height, scale);
 
-  if (!mBufferTransactions.Contains(transaction)) {
-    mBufferTransactions.AppendElement(transaction);
+  auto* transaction = GetNextTransactionLocked(aSurfaceLock, aBuffer);
+  if (!transaction) {
+    return false;
   }
 
-  auto* buffer = transaction->BufferBorrowLocked(aSurfaceLock);
-
-  wl_surface_attach(mSurface, buffer, 0, 0);
+  wl_surface_attach(mSurface, transaction->BufferBorrowLocked(aSurfaceLock), 0,
+                    0);
+  mLatestAttachedBuffer = reinterpret_cast<uintptr_t>(aBuffer.get());
   mSurfaceNeedsCommit = true;
   mBufferAttached = true;
   return true;
@@ -1115,6 +1165,7 @@ void WaylandSurface::RemoveAttachedBufferLocked(
 
   SetSizeLocked(aSurfaceLock, gfx::IntSize(0, 0), gfx::IntSize(0, 0));
   wl_surface_attach(mSurface, nullptr, 0, 0);
+  mLatestAttachedBuffer = 0;
   mSurfaceNeedsCommit = true;
   mBufferAttached = false;
 }
