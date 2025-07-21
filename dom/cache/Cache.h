@@ -38,6 +38,14 @@ namespace cache {
 class AutoChildOpArgs;
 class CacheChild;
 
+enum class PutStatusPolicy { Default, RequireOK };
+bool IsValidPutRequestURL(const nsACString& aUrl, ErrorResult& aRv);
+bool IsValidPutRequestMethod(const RequestOrUTF8String& aRequest,
+                             ErrorResult& aRv);
+bool IsValidPutRequestMethod(const Request& aRequest, ErrorResult& aRv);
+bool IsValidPutResponseStatus(Response& aResponse, PutStatusPolicy aPolicy,
+                              ErrorResult& aRv);
+
 class Cache final : public nsISupports,
                     public nsWrapperCache,
                     public TypeUtils,
