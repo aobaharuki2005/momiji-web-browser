@@ -321,6 +321,10 @@ class JS_HAZ_ROOTED nsWrapperCache {
 
   void ReleaseWrapper(void* aScriptObjectHolder);
 
+  // Special case version of ReleaseWrapper. For use by
+  // Rule::UnlinkDeclarationWrapper only.
+  void ReleaseWrapperWithoutDrop();
+
   void TraceWrapper(JSTracer* aTrc, const char* name) {
     if (mWrapper) {
       js::UnsafeTraceManuallyBarrieredEdge(aTrc, &mWrapper, name);
@@ -338,6 +342,8 @@ class JS_HAZ_ROOTED nsWrapperCache {
 
  private:
   void SetWrapperJSObject(JSObject* aWrapper);
+
+  void ReleaseWrapperAndMaybeDropHolder(void* aScriptObjectHolderToDrop);
 
   // We'd like to assert that these aren't used from servo threads, but we don't
   // have a great way to do that because:

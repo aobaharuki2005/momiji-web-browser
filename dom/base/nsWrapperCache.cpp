@@ -48,11 +48,24 @@ void nsWrapperCache::SetWrapperJSObject(JSObject* aNewWrapper) {
 }
 
 void nsWrapperCache::ReleaseWrapper(void* aScriptObjectHolder) {
-  // If the behavior here changes in a substantive way, you may need
-  // to update css::Rule::UnlinkDeclarationWrapper as well.
+  MOZ_ASSERT(aScriptObjectHolder);
+  ReleaseWrapperAndMaybeDropHolder(aScriptObjectHolder);
+}
+
+void nsWrapperCache::ReleaseWrapperWithoutDrop() {
+  // Special case version of ReleaseWrapper for Rule::UnlinkDeclarationWrapper.
+  // This allows it to release two separate wrappers with the same CC
+  // participant correctly.
+  ReleaseWrapperAndMaybeDropHolder(nullptr);
+}
+
+void nsWrapperCache::ReleaseWrapperAndMaybeDropHolder(
+    void* aScriptObjectHolderToDrop) {
   if (PreservingWrapper()) {
     SetPreservingWrapper(false);
-    cyclecollector::DropJSObjectsImpl(aScriptObjectHolder);
+    if (aScriptObjectHolderToDrop) {
+      cyclecollector::DropJSObjectsImpl(aScriptObjectHolderToDrop);
+    }
     JS::HeapObjectPostWriteBarrier(&mWrapper, mWrapper, nullptr);
   }
 }
