@@ -242,25 +242,23 @@ void HTMLSelectElement::GetAutocompleteInfo(AutocompleteInfo& aInfo) {
 
 void HTMLSelectElement::InsertChildBefore(nsIContent* aKid,
                                           nsIContent* aBeforeThis, bool aNotify,
-                                          ErrorResult& aRv,
-                                          nsINode* aOldParent) {
+                                          ErrorResult& aRv) {
   const uint32_t index =
       aBeforeThis ? *ComputeIndexOf(aBeforeThis) : GetChildCount();
   SafeOptionListMutation safeMutation(this, this, aKid, index, aNotify);
-  nsGenericHTMLFormControlElementWithState::InsertChildBefore(
-      aKid, aBeforeThis, aNotify, aRv, aOldParent);
+  nsGenericHTMLFormControlElementWithState::InsertChildBefore(aKid, aBeforeThis,
+                                                              aNotify, aRv);
   if (aRv.Failed()) {
     safeMutation.MutationFailed();
   }
 }
 
 void HTMLSelectElement::RemoveChildNode(nsIContent* aKid, bool aNotify,
-                                        const BatchRemovalState* aState,
-                                        nsINode* aNewParent) {
+                                        const BatchRemovalState* aState) {
   SafeOptionListMutation safeMutation(this, this, nullptr,
                                       *ComputeIndexOf(aKid), aNotify);
   nsGenericHTMLFormControlElementWithState::RemoveChildNode(aKid, aNotify,
-                                                            aState, aNewParent);
+                                                            aState);
 }
 
 void HTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,

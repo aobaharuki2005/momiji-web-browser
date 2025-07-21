@@ -43,11 +43,9 @@ class SVGSwitchElement final : public SVGSwitchElementBase {
                                            SVGSwitchElementBase)
   // nsINode
   void InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
-                         bool aNotify, ErrorResult& aRv,
-                         nsINode* aOldParent = nullptr) override;
+                         bool aNotify, ErrorResult& aRv) override;
   void RemoveChildNode(nsIContent* aKid, bool aNotify,
-                       const BatchRemovalState* aState,
-                       nsINode* aNewParent = nullptr) override;
+                       const BatchRemovalState*) override;
 
   // nsIContent
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;

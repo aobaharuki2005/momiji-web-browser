@@ -298,12 +298,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   nsIContent* GetActiveContent() const { return mActiveContent; }
 
   void NativeAnonymousContentRemoved(nsIContent* aAnonContent);
-  void ContentInserted(nsIContent* aChild, const ContentInsertInfo& aInfo);
-  void ContentAppended(nsIContent* aFirstNewContent,
-                       const ContentAppendInfo& aInfo);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void ContentRemoved(
-      dom::Document* aDocument, nsIContent* aContent,
-      const ContentRemoveInfo& aInfo);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void ContentRemoved(dom::Document* aDocument,
+                                                  nsIContent* aContent);
 
   /**
    * Called when a native anonymous <div> element which is root element of

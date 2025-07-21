@@ -108,8 +108,7 @@ nsresult HTMLFieldSetElement::Reset() { return NS_OK; }
 
 void HTMLFieldSetElement::InsertChildBefore(nsIContent* aChild,
                                             nsIContent* aBeforeThis,
-                                            bool aNotify, ErrorResult& aRv,
-                                            nsINode* aOldParent) {
+                                            bool aNotify, ErrorResult& aRv) {
   bool firstLegendHasChanged = false;
 
   if (aChild->IsHTMLElement(nsGkAtoms::legend)) {
@@ -133,7 +132,7 @@ void HTMLFieldSetElement::InsertChildBefore(nsIContent* aChild,
   }
 
   nsGenericHTMLFormControlElement::InsertChildBefore(aChild, aBeforeThis,
-                                                     aNotify, aRv, aOldParent);
+                                                     aNotify, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -144,8 +143,7 @@ void HTMLFieldSetElement::InsertChildBefore(nsIContent* aChild,
 }
 
 void HTMLFieldSetElement::RemoveChildNode(nsIContent* aKid, bool aNotify,
-                                          const BatchRemovalState* aState,
-                                          nsINode* aNewParent) {
+                                          const BatchRemovalState* aState) {
   bool firstLegendHasChanged = false;
 
   if (mFirstLegend && aKid == mFirstLegend) {
@@ -162,8 +160,7 @@ void HTMLFieldSetElement::RemoveChildNode(nsIContent* aKid, bool aNotify,
     }
   }
 
-  nsGenericHTMLFormControlElement::RemoveChildNode(aKid, aNotify, aState,
-                                                   aNewParent);
+  nsGenericHTMLFormControlElement::RemoveChildNode(aKid, aNotify, aState);
 
   if (firstLegendHasChanged) {
     NotifyElementsForFirstLegendChange(aNotify);

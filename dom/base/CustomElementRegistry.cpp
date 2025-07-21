@@ -75,10 +75,6 @@ class CustomElementCallback {
   CustomElementCallback(Element* aThisObject, ElementCallbackType aCallbackType,
                         CallbackFunction* aCallback,
                         const LifecycleCallbackArgs& aArgs);
-  // Secondary callback is needed when moveBefore falls back to
-  // disconnected/connected callbacks.
-  void SetSecondaryCallback(ElementCallbackType aType,
-                            CallbackFunction* aCallback);
   void Traverse(nsCycleCollectionTraversalCallback& aCb) const;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
   void Call();
@@ -88,14 +84,11 @@ class CustomElementCallback {
       const LifecycleCallbackArgs& aArgs, CustomElementDefinition* aDefinition);
 
  private:
-  void Call(ElementCallbackType aType, RefPtr<CallbackFunction>& aCallback);
   // The this value to use for invocation of the callback.
   RefPtr<Element> mThisObject;
   RefPtr<CallbackFunction> mCallback;
-  RefPtr<CallbackFunction> mSecondaryCallback;
   // The type of callback (eCreated, eAttached, etc.)
   ElementCallbackType mType;
-  ElementCallbackType mSecondaryType;
   // Arguments to be passed to the callback,
   LifecycleCallbackArgs mArgs;
 };
@@ -167,27 +160,6 @@ UniquePtr<CustomElementCallback> CustomElementCallback::Create(
       }
       break;
 
-    case ElementCallbackType::eConnectedMove:
-      if (aDefinition->mCallbacks->mConnectedMoveCallback.WasPassed()) {
-        func = aDefinition->mCallbacks->mConnectedMoveCallback.Value();
-      } else if (aDefinition->mCallbacks->mDisconnectedCallback.WasPassed()) {
-        UniquePtr<CustomElementCallback> callback =
-            MakeUnique<CustomElementCallback>(
-                aCustomElement, ElementCallbackType::eDisconnected,
-                aDefinition->mCallbacks->mDisconnectedCallback.Value(), aArgs);
-        if (aDefinition->mCallbacks->mConnectedCallback.WasPassed()) {
-          callback->SetSecondaryCallback(
-              ElementCallbackType::eConnected,
-              aDefinition->mCallbacks->mConnectedCallback.Value());
-        }
-        return callback;
-      } else if (aDefinition->mCallbacks->mConnectedCallback.WasPassed()) {
-        return MakeUnique<CustomElementCallback>(
-            aCustomElement, ElementCallbackType::eConnected,
-            aDefinition->mCallbacks->mConnectedCallback.Value(), aArgs);
-      }
-      break;
-
     case ElementCallbackType::eAttributeChanged:
       if (aDefinition->mCallbacks->mAttributeChangedCallback.WasPassed()) {
         func = aDefinition->mCallbacks->mAttributeChangedCallback.Value();
@@ -241,48 +213,34 @@ UniquePtr<CustomElementCallback> CustomElementCallback::Create(
 }
 
 void CustomElementCallback::Call() {
-  if (mCallback) {
-    Call(mType, mCallback);
-  }
-  if (mSecondaryCallback) {
-    Call(mSecondaryType, mSecondaryCallback);
-  }
-}
-
-void CustomElementCallback::Call(ElementCallbackType aType,
-                                 RefPtr<CallbackFunction>& aCallback) {
-  switch (aType) {
+  switch (mType) {
     case ElementCallbackType::eConnected:
-      static_cast<LifecycleConnectedCallback*>(aCallback.get())
+      static_cast<LifecycleConnectedCallback*>(mCallback.get())
           ->Call(mThisObject);
       break;
     case ElementCallbackType::eDisconnected:
-      static_cast<LifecycleDisconnectedCallback*>(aCallback.get())
+      static_cast<LifecycleDisconnectedCallback*>(mCallback.get())
           ->Call(mThisObject);
       break;
     case ElementCallbackType::eAdopted:
-      static_cast<LifecycleAdoptedCallback*>(aCallback.get())
+      static_cast<LifecycleAdoptedCallback*>(mCallback.get())
           ->Call(mThisObject, mArgs.mOldDocument, mArgs.mNewDocument);
       break;
-    case ElementCallbackType::eConnectedMove:
-      static_cast<LifecycleConnectedMoveCallback*>(aCallback.get())
-          ->Call(mThisObject);
-      break;
     case ElementCallbackType::eAttributeChanged:
-      static_cast<LifecycleAttributeChangedCallback*>(aCallback.get())
+      static_cast<LifecycleAttributeChangedCallback*>(mCallback.get())
           ->Call(mThisObject, nsDependentAtomString(mArgs.mName),
                  mArgs.mOldValue, mArgs.mNewValue, mArgs.mNamespaceURI);
       break;
     case ElementCallbackType::eFormAssociated:
-      static_cast<LifecycleFormAssociatedCallback*>(aCallback.get())
+      static_cast<LifecycleFormAssociatedCallback*>(mCallback.get())
           ->Call(mThisObject, mArgs.mForm);
       break;
     case ElementCallbackType::eFormReset:
-      static_cast<LifecycleFormResetCallback*>(aCallback.get())
+      static_cast<LifecycleFormResetCallback*>(mCallback.get())
           ->Call(mThisObject);
       break;
     case ElementCallbackType::eFormDisabled:
-      static_cast<LifecycleFormDisabledCallback*>(aCallback.get())
+      static_cast<LifecycleFormDisabledCallback*>(mCallback.get())
           ->Call(mThisObject, mArgs.mDisabled);
       break;
     case ElementCallbackType::eFormStateRestore: {
@@ -303,7 +261,7 @@ void CustomElementCallback::Call(ElementCallbackType aType,
         value.SetValue().SetAsUSVString().ShareOrDependUpon(
             owningValue.GetAsUSVString());
       }
-      static_cast<LifecycleFormStateRestoreCallback*>(aCallback.get())
+      static_cast<LifecycleFormStateRestoreCallback*>(mCallback.get())
           ->Call(mThisObject, value, mArgs.mReason);
     } break;
     case ElementCallbackType::eGetCustomInterface:
@@ -319,9 +277,6 @@ void CustomElementCallback::Traverse(
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mCallback");
   aCb.NoteXPCOMChild(mCallback);
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mSecondaryCallback");
-  aCb.NoteXPCOMChild(mSecondaryCallback);
 }
 
 size_t CustomElementCallback::SizeOfIncludingThis(
@@ -333,8 +288,6 @@ size_t CustomElementCallback::SizeOfIncludingThis(
   // We own mCallback but it doesn't have any special memory reporting we can do
   // for it other than report its own size.
   n += aMallocSizeOf(mCallback);
-
-  n += aMallocSizeOf(mSecondaryCallback);
 
   n += mArgs.SizeOfExcludingThis(aMallocSizeOf);
 
@@ -349,12 +302,6 @@ CustomElementCallback::CustomElementCallback(
       mCallback(aCallback),
       mType(aCallbackType),
       mArgs(aArgs) {}
-
-void CustomElementCallback::SetSecondaryCallback(
-    ElementCallbackType aType, mozilla::dom::CallbackFunction* aCallback) {
-  mSecondaryType = aType;
-  mSecondaryCallback = aCallback;
-}
 
 //-----------------------------------------------------
 // CustomElementData

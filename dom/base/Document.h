@@ -707,11 +707,9 @@ class Document : public nsINode,
 
   // nsINode
   void InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
-                         bool aNotify, ErrorResult& aRv,
-                         nsINode* aOldParent = nullptr) override;
+                         bool aNotify, ErrorResult& aRv) override;
   void RemoveChildNode(nsIContent* aKid, bool aNotify,
-                       const BatchRemovalState* = nullptr,
-                       nsINode* aNewParent = nullptr) final;
+                       const BatchRemovalState* = nullptr) final;
   nsresult Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }

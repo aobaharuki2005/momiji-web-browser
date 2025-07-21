@@ -3628,12 +3628,6 @@
   value: true
   mirror: always
 
-# Enable ParentNode.moveBefore().
-- name: dom.movebefore.enabled
-  type: bool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
 # Whether to dispatch mutation events.
 - name: dom.mutation_events.enabled
   type: bool

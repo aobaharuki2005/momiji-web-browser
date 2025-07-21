@@ -24,11 +24,9 @@ class HTMLPictureElement final : public nsGenericHTMLElement {
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
   void RemoveChildNode(nsIContent* aKid, bool aNotify,
-                       const BatchRemovalState* aState,
-                       nsINode* aNewParent = nullptr) override;
+                       const BatchRemovalState*) override;
   void InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
-                         bool aNotify, ErrorResult& aRv,
-                         nsINode* aOldParent = nullptr) override;
+                         bool aNotify, ErrorResult& aRv) override;
 
  protected:
   virtual ~HTMLPictureElement();

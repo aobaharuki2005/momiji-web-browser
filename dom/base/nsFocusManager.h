@@ -143,17 +143,11 @@ class nsFocusManager final : public nsIFocusManager,
     return mActiveBrowsingContextInContent;
   }
 
-  void ContentInserted(nsIContent* aChild, const ContentInsertInfo& aInfo);
-
-  void ContentAppended(nsIContent* aFirstNewContent,
-                       const ContentAppendInfo& aInfo);
-
   /**
    * Called when content has been removed.
    */
   MOZ_CAN_RUN_SCRIPT nsresult ContentRemoved(Document* aDocument,
-                                             nsIContent* aContent,
-                                             const ContentRemoveInfo& aInfo);
+                                             nsIContent* aContent);
 
   void NeedsFlushBeforeEventHandling(mozilla::dom::Element* aElement) {
     if (mFocusedElement == aElement) {
@@ -900,8 +894,6 @@ class nsFocusManager final : public nsIFocusManager,
   // Returns true if set and false if ignored.
   bool SetActiveBrowsingContextInChrome(mozilla::dom::BrowsingContext* aContext,
                                         uint64_t aActionId);
-
-  void FocusedElementMayHaveMoved(nsIContent* aContent, nsINode* aOldParent);
 
  public:
   // Chrome-only

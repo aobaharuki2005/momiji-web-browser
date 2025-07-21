@@ -29,8 +29,7 @@ HTMLPictureElement::~HTMLPictureElement() = default;
 NS_IMPL_ELEMENT_CLONE(HTMLPictureElement)
 
 void HTMLPictureElement::RemoveChildNode(nsIContent* aKid, bool aNotify,
-                                         const BatchRemovalState* aState,
-                                         nsINode* aNewParent) {
+                                         const BatchRemovalState* aState) {
   MOZ_ASSERT(aKid);
 
   if (auto* img = HTMLImageElement::FromNode(aKid)) {
@@ -47,15 +46,13 @@ void HTMLPictureElement::RemoveChildNode(nsIContent* aKid, bool aNotify,
     }
   }
 
-  nsGenericHTMLElement::RemoveChildNode(aKid, aNotify, aState, aNewParent);
+  nsGenericHTMLElement::RemoveChildNode(aKid, aNotify, aState);
 }
 
 void HTMLPictureElement::InsertChildBefore(nsIContent* aKid,
                                            nsIContent* aBeforeThis,
-                                           bool aNotify, ErrorResult& aRv,
-                                           nsINode* aOldParent) {
-  nsGenericHTMLElement::InsertChildBefore(aKid, aBeforeThis, aNotify, aRv,
-                                          aOldParent);
+                                           bool aNotify, ErrorResult& aRv) {
+  nsGenericHTMLElement::InsertChildBefore(aKid, aBeforeThis, aNotify, aRv);
   if (aRv.Failed() || !aKid) {
     return;
   }
