@@ -668,7 +668,8 @@ void BufferAllocator::ChunkLists::pushBack(size_t sizeClass,
   available[sizeClass] = true;
 }
 
-BufferAllocator::BufferChunkList BufferAllocator::ChunkLists::extractAllChunks() {
+BufferAllocator::BufferChunkList
+BufferAllocator::ChunkLists::extractAllChunks() {
   BufferChunkList result;
   for (auto list = chunkListIter(); !list.done(); list.next()) {
     result.append(std::move(list.get()));
@@ -1012,8 +1013,7 @@ BufferAllocator::BufferAllocator(Zone* zone)
       minorState(State::NotCollecting),
       majorState(State::NotCollecting),
       minorSweepingFinished(lock()),
-      majorSweepingFinished(lock()) {
-}
+      majorSweepingFinished(lock()) {}
 
 BufferAllocator::~BufferAllocator() {
 #ifdef DEBUG
@@ -2813,7 +2813,8 @@ void BufferAllocator::updateFreeListsAfterAlloc(FreeLists* freeLists,
     return;
   }
 
-  size_t newSizeClass = SizeClassForFreeRegion(newSize, SizeClassKind(sizeClass));
+  size_t newSizeClass =
+      SizeClassForFreeRegion(newSize, SizeClassKind(sizeClass));
   MOZ_ASSERT_IF(newSizeClass != MaxMediumAllocClass,
                 newSize >= SizeClassBytes(newSizeClass));
   MOZ_ASSERT(newSizeClass <= sizeClass);
