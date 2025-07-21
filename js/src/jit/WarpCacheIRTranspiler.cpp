@@ -467,59 +467,15 @@ bool WarpCacheIRTranspiler::emitGuardShape(ObjOperandId objId,
   return true;
 }
 
-template <auto FuseMember, CompilationDependency::Type DepType>
-struct RealmFuseDependency final : public CompilationDependency {
-  RealmFuseDependency() : CompilationDependency(DepType) {}
-
-  virtual bool registerDependency(JSContext* cx,
-                                  const IonScriptKey& ionScript) override {
-    MOZ_ASSERT(checkDependency(cx));
-
-    return (cx->realm()->realmFuses.*FuseMember)
-        .addFuseDependency(cx, ionScript);
-  }
-
-  virtual UniquePtr<CompilationDependency> clone() const override {
-    return MakeUnique<RealmFuseDependency<FuseMember, DepType>>();
-  }
-
-  virtual bool checkDependency(JSContext* cx) override {
-    return (cx->realm()->realmFuses.*FuseMember).intact();
-  }
-
-  virtual bool operator==(const CompilationDependency& dep) const override {
-    return dep.type == type;
-  }
-};
-
 bool WarpCacheIRTranspiler::emitGuardFuse(RealmFuses::FuseIndex fuseIndex) {
-  // Register a compilation dependency (for invalidating realm fuses) or add a
-  // fuse guard (for other fuses).
   switch (fuseIndex) {
-    case RealmFuses::FuseIndex::OptimizeGetIteratorFuse: {
-      using Dependency =
-          RealmFuseDependency<&RealmFuses::optimizeGetIteratorFuse,
-                              CompilationDependency::Type::GetIterator>;
-      return mirGen().tracker.addDependency(Dependency());
-    }
-    case RealmFuses::FuseIndex::OptimizeArraySpeciesFuse: {
-      using Dependency =
-          RealmFuseDependency<&RealmFuses::optimizeArraySpeciesFuse,
-                              CompilationDependency::Type::ArraySpecies>;
-      return mirGen().tracker.addDependency(Dependency());
-    }
-    case RealmFuses::FuseIndex::OptimizeRegExpPrototypeFuse: {
-      using Dependency =
-          RealmFuseDependency<&RealmFuses::optimizeRegExpPrototypeFuse,
-                              CompilationDependency::Type::RegExpPrototype>;
-      return mirGen().tracker.addDependency(Dependency());
-    }
-    case RealmFuses::FuseIndex::OptimizeStringPrototypeSymbolsFuse: {
-      using Dependency = RealmFuseDependency<
-          &RealmFuses::optimizeStringPrototypeSymbolsFuse,
-          CompilationDependency::Type::StringPrototypeSymbols>;
-      return mirGen().tracker.addDependency(Dependency());
-    }
+    case RealmFuses::FuseIndex::OptimizeGetIteratorFuse:
+    case RealmFuses::FuseIndex::OptimizeArraySpeciesFuse:
+    case RealmFuses::FuseIndex::OptimizeRegExpPrototypeFuse:
+    case RealmFuses::FuseIndex::OptimizeStringPrototypeSymbolsFuse:
+      // This is a no-op because WarpOracle has added a compilation dependency.
+      MOZ_ASSERT(RealmFuses::isInvalidatingFuse(fuseIndex));
+      return true;
     default:
       MOZ_ASSERT(!RealmFuses::isInvalidatingFuse(fuseIndex));
       auto* ins = MGuardFuse::New(alloc(), fuseIndex);

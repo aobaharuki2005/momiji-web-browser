@@ -16665,7 +16665,7 @@ struct EmulatesUndefinedDependency final : public CompilationDependency {
     return dep.type == type;
   }
 
-  virtual bool checkDependency(JSContext* cx) override {
+  virtual bool checkDependency(JSContext* cx) const override {
     return cx->runtime()->hasSeenObjectEmulateUndefinedFuse.ref().intact();
   }
 
@@ -16691,7 +16691,7 @@ struct ArrayExceedsInt32LengthDependency final : public CompilationDependency {
     return dep.type == type;
   }
 
-  virtual bool checkDependency(JSContext* cx) override {
+  virtual bool checkDependency(JSContext* cx) const override {
     return cx->runtime()->hasSeenArrayExceedsInt32LengthFuse.ref().intact();
   }
 

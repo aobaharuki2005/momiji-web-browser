@@ -789,6 +789,76 @@ static void MaybeSetInliningStateFromJitHints(JSContext* cx,
   }
 }
 
+template <auto FuseMember, CompilationDependency::Type DepType>
+struct RealmFuseDependency final : public CompilationDependency {
+  RealmFuseDependency() : CompilationDependency(DepType) {}
+
+  virtual bool registerDependency(JSContext* cx,
+                                  const IonScriptKey& ionScript) override {
+    MOZ_ASSERT(checkDependency(cx));
+
+    return (cx->realm()->realmFuses.*FuseMember)
+        .addFuseDependency(cx, ionScript);
+  }
+
+  virtual UniquePtr<CompilationDependency> clone() const override {
+    return MakeUnique<RealmFuseDependency<FuseMember, DepType>>();
+  }
+
+  virtual bool checkDependency(JSContext* cx) const override {
+    return (cx->realm()->realmFuses.*FuseMember).intact();
+  }
+
+  virtual bool operator==(const CompilationDependency& dep) const override {
+    return dep.type == type;
+  }
+};
+
+bool WarpOracle::addFuseDependency(RealmFuses::FuseIndex fuseIndex,
+                                   bool* stillValid) {
+  auto addIfStillValid = [&](const auto& dep) {
+    if (!dep.checkDependency(cx_)) {
+      *stillValid = false;
+      return true;
+    }
+    *stillValid = true;
+    return mirGen().tracker.addDependency(dep);
+  };
+
+  // Register a compilation dependency for all invalidating fuses that are still
+  // valid.
+  switch (fuseIndex) {
+    case RealmFuses::FuseIndex::OptimizeGetIteratorFuse: {
+      using Dependency =
+          RealmFuseDependency<&RealmFuses::optimizeGetIteratorFuse,
+                              CompilationDependency::Type::GetIterator>;
+      return addIfStillValid(Dependency());
+    }
+    case RealmFuses::FuseIndex::OptimizeArraySpeciesFuse: {
+      using Dependency =
+          RealmFuseDependency<&RealmFuses::optimizeArraySpeciesFuse,
+                              CompilationDependency::Type::ArraySpecies>;
+      return addIfStillValid(Dependency());
+    }
+    case RealmFuses::FuseIndex::OptimizeRegExpPrototypeFuse: {
+      using Dependency =
+          RealmFuseDependency<&RealmFuses::optimizeRegExpPrototypeFuse,
+                              CompilationDependency::Type::RegExpPrototype>;
+      return addIfStillValid(Dependency());
+    }
+    case RealmFuses::FuseIndex::OptimizeStringPrototypeSymbolsFuse: {
+      using Dependency = RealmFuseDependency<
+          &RealmFuses::optimizeStringPrototypeSymbolsFuse,
+          CompilationDependency::Type::StringPrototypeSymbols>;
+      return addIfStillValid(Dependency());
+    }
+    default:
+      MOZ_ASSERT(!RealmFuses::isInvalidatingFuse(fuseIndex));
+      *stillValid = true;
+      return true;
+  }
+}
+
 AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
                                                   BytecodeLocation loc) {
   // Do one of the following:
@@ -798,6 +868,11 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
   //
   // * If that single ICStub is a call IC with a known target, instead add a
   //   WarpInline snapshot to transpile the guards to MIR and inline the target.
+  //
+  // * If that single ICStub has a CacheIR fuse guard for an invalidating fuse,
+  //   add a compilation dependency for this fuse. If the fuse is no longer
+  //   valid, add a WarpBailout snapshot to avoid throwing away the JIT code
+  //   immediately after compilation.
   //
   // * If the Baseline IC is cold (never executed), add a WarpBailout snapshot
   //   so that we can collect information in Baseline.
@@ -908,10 +983,10 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
 
   // Only create a snapshot if all opcodes are supported by the transpiler.
   CacheIRReader reader(stubInfo);
+  bool hasInvalidFuseGuard = false;
   while (reader.more()) {
     CacheOp op = reader.readOp();
     CacheIROpInfo opInfo = CacheIROpInfos[size_t(op)];
-    reader.skip(opInfo.argLength);
 
     if (!opInfo.transpile) {
       [[maybe_unused]] unsigned line;
@@ -934,33 +1009,59 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     // them.
     switch (op) {
       case CacheOp::CallRegExpMatcherResult:
+        reader.argsForCallRegExpMatcherResult();  // Unused.
         if (!oracle_->snapshotJitZoneStub(JitZone::StubKind::RegExpMatcher)) {
           return abort(AbortReason::Error);
         }
         break;
       case CacheOp::CallRegExpSearcherResult:
+        reader.argsForCallRegExpSearcherResult();  // Unused.
         if (!oracle_->snapshotJitZoneStub(JitZone::StubKind::RegExpSearcher)) {
           return abort(AbortReason::Error);
         }
         break;
       case CacheOp::RegExpBuiltinExecMatchResult:
+        reader.argsForRegExpBuiltinExecMatchResult();  // Unused.
         if (!oracle_->snapshotJitZoneStub(JitZone::StubKind::RegExpExecMatch)) {
           return abort(AbortReason::Error);
         }
         break;
       case CacheOp::RegExpBuiltinExecTestResult:
+        reader.argsForRegExpBuiltinExecTestResult();  // Unused.
         if (!oracle_->snapshotJitZoneStub(JitZone::StubKind::RegExpExecTest)) {
           return abort(AbortReason::Error);
         }
         break;
       case CacheOp::ConcatStringsResult:
+        reader.argsForConcatStringsResult();  // Unused.
         if (!oracle_->snapshotJitZoneStub(JitZone::StubKind::StringConcat)) {
           return abort(AbortReason::Error);
         }
         break;
+      case CacheOp::GuardFuse: {
+        auto [fuseIndex] = reader.argsForGuardFuse();
+        bool stillValid;
+        if (!oracle_->addFuseDependency(fuseIndex, &stillValid)) {
+          return abort(AbortReason::Alloc);
+        }
+        if (!stillValid) {
+          hasInvalidFuseGuard = true;
+        }
+        break;
+      }
       default:
+        reader.skip(opInfo.argLength);
         break;
     }
+  }
+
+  // Insert a bailout if the stub has a guard for an invalidating fuse that's
+  // no longer intact.
+  if (hasInvalidFuseGuard) {
+    if (!AddOpSnapshot<WarpBailout>(alloc_, snapshots, offset)) {
+      return abort(AbortReason::Alloc);
+    }
+    return Ok();
   }
 
   // Check GC is not possible between updating stub pointers and creating the
