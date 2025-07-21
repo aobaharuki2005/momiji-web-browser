@@ -1355,7 +1355,8 @@ bool OptimizeMIR(MIRGenerator* mir) {
     }
   }
 
-  if (mir->optimizationInfo().eaaEnabled()) {
+  // EAA, but only for wasm; it appears to be of minimal benefit for JS inputs.
+  if (mir->compilingWasm() && mir->optimizationInfo().eaaEnabled()) {
     EffectiveAddressAnalysis eaa(mir, graph);
     JitSpewCont(JitSpew_EAA, "\n");
     if (!eaa.analyze()) {
