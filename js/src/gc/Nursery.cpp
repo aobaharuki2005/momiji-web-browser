@@ -1396,12 +1396,6 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   stats().beginNurseryCollection();
   gcprobes::MinorGCStart();
 
-  if (stats().bufferAllocStatsEnabled() && runtime()->isMainRuntime()) {
-    stats().maybePrintProfileHeaders();
-    BufferAllocator::printStats(gc, gc->stats().creationTime(), false,
-                                gc->stats().profileFile());
-  }
-
   gc->callNurseryCollectionCallbacks(
       JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START, reason);
 
@@ -1422,6 +1416,12 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   // minor GC number, which is incremented regardless. See the call to
   // joinSweepTask in GCRuntime::endSweepingSweepGroup.
   joinSweepTask();
+
+  if (stats().bufferAllocStatsEnabled() && runtime()->isMainRuntime()) {
+    stats().maybePrintProfileHeaders();
+    BufferAllocator::printStats(gc, gc->stats().creationTime(), false,
+                                gc->stats().profileFile());
+  }
 
   // If it isn't empty, it will call doCollection, and possibly after that
   // isEmpty() will become true, so use another variable to keep track of the

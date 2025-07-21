@@ -3309,15 +3309,17 @@ static const char* const BufferAllocatorStatsPrefix = "BufAllc:";
   _("Reason", 20, "%-20.20s", reason)                 \
   _("", 2, "%2s", "")                                 \
   _("TotalKB", 8, "%8zu", totalBytes / 1024)          \
-  _("UsedKB", 8, "%8zu", usedBytes / 1024)            \
-  _("FreeKB", 8, "%8zu", freeBytes / 1024)            \
+  _("UsedKB", 8, "%8zu", stats.usedBytes / 1024)      \
+  _("FreeKB", 8, "%8zu", stats.freeBytes / 1024)      \
   _("Zs", 3, "%3zu", zoneCount)                       \
   _("", 7, "%7s", "")                                 \
-  _("MixdCs", 6, "%6zu", mixedChunks)                 \
-  _("TnrCs", 6, "%6zu", tenuredChunks)                \
-  _("FreeRs", 6, "%6zu", freeRegions)                 \
-  _("LNurAs", 6, "%6zu", largeNurseryAllocs)          \
-  _("LTnrAs", 6, "%6zu", largeTenuredAllocs)
+  _("MixSRs", 6, "%6zu", stats.mixedSmallRegions)     \
+  _("TnrSRs", 6, "%6zu", stats.tenuredSmallRegions)   \
+  _("MixCs", 6, "%6zu", stats.mixedChunks)            \
+  _("TnrCs", 6, "%6zu", stats.tenuredChunks)          \
+  _("FreeRs", 6, "%6zu", stats.freeRegions)           \
+  _("LNurAs", 6, "%6zu", stats.largeNurseryAllocs)    \
+  _("LTnrAs", 6, "%6zu", stats.largeTenuredAllocs)
 
 /* static */
 void BufferAllocator::printStatsHeader(FILE* file) {
@@ -3357,22 +3359,13 @@ void BufferAllocator::printStats(GCRuntime* gc, mozilla::TimeStamp creationTime,
   const char* reason = isMajorGC ? "post major slice" : "pre minor GC";
 
   size_t zoneCount = 0;
-  size_t usedBytes = 0;
-  size_t freeBytes = 0;
-  size_t adminBytes = 0;
-  size_t mixedChunks = 0;
-  size_t tenuredChunks = 0;
-  size_t freeRegions = 0;
-  size_t largeNurseryAllocs = 0;
-  size_t largeTenuredAllocs = 0;
+  Stats stats;
   for (AllZonesIter zone(gc); !zone.done(); zone.next()) {
     zoneCount++;
-    zone->bufferAllocator.getStats(usedBytes, freeBytes, adminBytes,
-                                   mixedChunks, tenuredChunks, freeRegions,
-                                   largeNurseryAllocs, largeTenuredAllocs);
+    zone->bufferAllocator.getStats(stats);
   }
 
-  size_t totalBytes = usedBytes + freeBytes + adminBytes;
+  size_t totalBytes = stats.usedBytes + stats.freeBytes + stats.adminBytes;
 
 #define PRINT_FIELD_VALUE(_1, _2, format, value) \
   sprinter.printf(" " format, value);
@@ -3421,60 +3414,59 @@ void BufferAllocator::addSizeOfExcludingThis(size_t* usedBytesOut,
   MOZ_ASSERT(minorState == State::NotCollecting);
   MOZ_ASSERT(majorState == State::NotCollecting);
 
-  size_t usedBytes = 0;
-  size_t freeBytes = 0;
-  size_t adminBytes = 0;
-  size_t mixedChunks = 0;
-  size_t tenuredChunks = 0;
-  size_t freeRegions = 0;
-  size_t largeNurseryAllocs = 0;
-  size_t largeTenuredAllocs = 0;
-  getStats(usedBytes, freeBytes, adminBytes, mixedChunks, tenuredChunks,
-           freeRegions, largeNurseryAllocs, largeTenuredAllocs);
+  Stats stats;
+  getStats(stats);
 
-  *usedBytesOut += usedBytes;
-  *freeBytesOut += freeBytes;
-  *adminBytesOut += adminBytes;
+  *usedBytesOut += stats.usedBytes;
+  *freeBytesOut += stats.freeBytes;
+  *adminBytesOut += stats.adminBytes;
 }
 
-void BufferAllocator::getStats(size_t& usedBytes, size_t& freeBytes,
-                               size_t& adminBytes, size_t& nurseryChunkCount,
-                               size_t& tenuredChunkCount, size_t& freeRegions,
-                               size_t& largeNurseryAllocCount,
-                               size_t& largeTenuredAllocCount) {
+static void GetChunkStats(BufferChunk* chunk, BufferAllocator::Stats& stats) {
+  stats.usedBytes += ChunkSize - FirstMediumAllocOffset;
+  stats.adminBytes += FirstMediumAllocOffset;
+  for (BufferChunk::SmallRegionIter iter(chunk); !iter.done(); iter.next()) {
+    SmallBufferRegion* region = iter.get();
+    if (region->hasNurseryOwnedAllocs()) {
+      stats.mixedSmallRegions++;
+    } else {
+      stats.tenuredSmallRegions++;
+    }
+    stats.adminBytes += FirstSmallAllocOffset;
+  }
+}
+
+void BufferAllocator::getStats(Stats& stats) {
   maybeMergeSweptData();
 
   MOZ_ASSERT(minorState == State::NotCollecting);
 
-  for (const BufferChunk* chunk : mixedChunks.ref()) {
-    (void)chunk;
-    nurseryChunkCount++;
-    usedBytes += ChunkSize - FirstMediumAllocOffset;
-    adminBytes += FirstMediumAllocOffset;
+  for (BufferChunk* chunk : mixedChunks.ref()) {
+    stats.mixedChunks++;
+    GetChunkStats(chunk, stats);
   }
-  for (const BufferChunk* chunk : tenuredChunks.ref()) {
+  for (BufferChunk* chunk : tenuredChunks.ref()) {
     (void)chunk;
-    tenuredChunkCount++;
-    usedBytes += ChunkSize - FirstMediumAllocOffset;
-    adminBytes += FirstMediumAllocOffset;
+    stats.tenuredChunks++;
+    GetChunkStats(chunk, stats);
   }
   for (const LargeBuffer* buffer : largeNurseryAllocs.ref()) {
-    largeNurseryAllocCount++;
-    usedBytes += buffer->allocBytes();
-    adminBytes += sizeof(LargeBuffer);
+    stats.largeNurseryAllocs++;
+    stats.usedBytes += buffer->allocBytes();
+    stats.adminBytes += sizeof(LargeBuffer);
   }
   for (const LargeBuffer* buffer : largeTenuredAllocs.ref()) {
-    largeTenuredAllocCount++;
-    usedBytes += buffer->allocBytes();
-    adminBytes += sizeof(LargeBuffer);
+    stats.largeTenuredAllocs++;
+    stats.usedBytes += buffer->allocBytes();
+    stats.adminBytes += sizeof(LargeBuffer);
   }
   for (const FreeList& freeList : freeLists.ref()) {
     for (const FreeRegion* region : freeList) {
-      freeRegions++;
+      stats.freeRegions++;
       size_t size = region->size();
-      MOZ_ASSERT(usedBytes >= size);
-      usedBytes -= size;
-      freeBytes += size;
+      MOZ_ASSERT(stats.usedBytes >= size);
+      stats.usedBytes -= size;
+      stats.freeBytes += size;
     }
   }
 }

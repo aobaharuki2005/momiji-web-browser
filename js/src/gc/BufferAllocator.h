@@ -397,10 +397,20 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   static void printStatsHeader(FILE* file);
   static void printStats(GCRuntime* gc, mozilla::TimeStamp creationTime,
                          bool isMajorGC, FILE* file);
-  void getStats(size_t& usedBytes, size_t& freeBytes, size_t& adminBytes,
-                size_t& nurseryChunkCount, size_t& tenuredChunkCount,
-                size_t& freeRegions, size_t& largeNurseryAllocCount,
-                size_t& largeTenuredAllocCount);
+
+  struct Stats {
+    size_t usedBytes = 0;
+    size_t freeBytes = 0;
+    size_t adminBytes = 0;
+    size_t mixedSmallRegions = 0;
+    size_t tenuredSmallRegions = 0;
+    size_t mixedChunks = 0;
+    size_t tenuredChunks = 0;
+    size_t freeRegions = 0;
+    size_t largeNurseryAllocs = 0;
+    size_t largeTenuredAllocs = 0;
+  };
+  void getStats(Stats& stats);
 
 #ifdef DEBUG
   void checkGCStateNotInUse();
