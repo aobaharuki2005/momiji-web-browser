@@ -1372,7 +1372,7 @@ export var UrlbarUtils = {
    * Unescape, decode punycode, and trim (both protocol and trailing slash)
    * the URL. Use for displaying purposes only!
    *
-   * @param {string} url The url that should be prepared for display.
+   * @param {string|URL} url The url that should be prepared for display.
    * @param {object} [options] Preparation options.
    * @param {boolean} [options.trimURL] Whether the displayed URL should be
    *                  trimmed or not.
@@ -1382,28 +1382,38 @@ export var UrlbarUtils = {
   prepareUrlForDisplay(url, { trimURL = true, schemeless = false } = {}) {
     // Some domains are encoded in punycode. The following ensures we display
     // the url in utf-8.
-    try {
-      url = new URL(url).URI.displaySpec;
-    } catch {} // In some cases url is not a valid url.
+    let displayString;
+    if (typeof url == "string") {
+      try {
+        displayString = new URL(url).URI.displaySpec;
+      } catch {
+        // In some cases url is not a valid url, so we fallback to using the
+        // string as-is.
+        displayString = url;
+      }
+    } else {
+      displayString = url.URI.displaySpec;
+    }
 
-    if (url) {
+    if (displayString) {
       if (schemeless) {
-        url = this.stripPrefixAndTrim(url, {
+        displayString = this.stripPrefixAndTrim(displayString, {
           stripHttp: true,
           stripHttps: true,
         })[0];
       } else if (trimURL && lazy.UrlbarPrefs.get("trimURLs")) {
-        url = lazy.BrowserUIUtils.removeSingleTrailingSlashFromURL(url);
-        if (url.startsWith("https://")) {
-          url = url.substring(8);
-          if (url.startsWith("www.")) {
-            url = url.substring(4);
+        displayString =
+          lazy.BrowserUIUtils.removeSingleTrailingSlashFromURL(displayString);
+        if (displayString.startsWith("https://")) {
+          displayString = displayString.substring(8);
+          if (displayString.startsWith("www.")) {
+            displayString = displayString.substring(4);
           }
         }
       }
     }
 
-    return this.unEscapeURIForUI(url);
+    return this.unEscapeURIForUI(displayString);
   },
 
   /**
@@ -2630,9 +2640,11 @@ export class UrlbarMuxer {
    * Sorts queryContext results in-place.
    *
    * @param {UrlbarQueryContext} _queryContext the context to sort results for.
+   * @param {Array} _unsortedResults
+   *   The array of UrlbarResult that is not sorted yet.
    * @abstract
    */
-  sort(_queryContext) {
+  sort(_queryContext, _unsortedResults) {
     throw new Error("Trying to access the base class, must be overridden");
   }
 }
