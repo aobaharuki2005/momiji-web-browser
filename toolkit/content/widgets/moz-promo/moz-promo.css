@@ -15,9 +15,9 @@
 */
 
 :host([type="vibrant"]) {
-  --promo-message-text-color: var(--color-violet-80);
+  --promo-message-text-color: light-dark(var(--color-violet-80), var(--color-violet-0));
   --promo-heading-text-color: var(--promo-message-text-color);
-  --promo-background-color: var(--color-violet-0);
+  --promo-background-color: light-dark(var(--color-violet-0), var(--color-violet-90));
   --promo-border-color: var(--color-violet-30);
 }
 

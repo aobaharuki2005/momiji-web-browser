@@ -4,6 +4,7 @@
 
 import { html, ifDefined } from "../vendor/lit.all.mjs";
 import "./moz-promo.mjs";
+import "../moz-button/moz-button.mjs";
 
 const fluentStrings = [
   "moz-promo-message",
@@ -64,6 +65,7 @@ const Template = ({
   width,
   imageSrc,
   imageAlignment,
+  hasActionButton,
 }) => html`
   <div style="width: ${width}px">
     <moz-promo
@@ -73,7 +75,14 @@ const Template = ({
       data-l10n-id=${ifDefined(l10nId)}
       imageSrc=${ifDefined(imageSrc)}
       imageAlignment=${ifDefined(imageAlignment)}
+    >
+      ${
+        hasActionButton
+          ? html` <moz-button slot="actions">Actions button</moz-button>`
+          : ""
+      }
     ></moz-promo>
+    </moz-promo>
   </div>
 `;
 
@@ -82,6 +91,7 @@ Default.args = {
   width: 600,
   type: "default",
   l10nId: "moz-promo-message",
+  hasActionButton: false,
 };
 
 export const Vibrant = Template.bind({});
@@ -131,4 +141,10 @@ export const RectangleImage = Template.bind({});
 RectangleImage.args = {
   ...ImageAtStart.args,
   imageSrc: "chrome://global/content/aboutconfig/background.svg",
+};
+
+export const SlottedAction = Template.bind({});
+SlottedAction.args = {
+  ...Default.args,
+  hasActionButton: true,
 };
