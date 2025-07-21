@@ -131,6 +131,10 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   void AssertAllImportsCancelled() const;
 
  public:
+  void UpdateReferrerPolicy(mozilla::dom::ReferrerPolicy aReferrerPolicy) {
+    mReferrerPolicy = aReferrerPolicy;
+  }
+
   // Is this a request for a top level module script or an import?
   const bool mIsTopLevel;
 

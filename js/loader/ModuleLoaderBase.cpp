@@ -636,6 +636,12 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
     }
     RefPtr<ModuleScript> moduleScript =
         aRequest->mLoadedScript->AsModuleScript();
+
+    // Update the module script's referrer policy to reflect any changes made
+    // to the ModuleLoadRequest during HTTP response parsing.
+    if (moduleScript->ReferrerPolicy() != aRequest->ReferrerPolicy()) {
+      moduleScript->UpdateReferrerPolicy(aRequest->ReferrerPolicy());
+    }
     aRequest->mModuleScript = moduleScript;
 
     moduleScript->SetForPreload(aRequest->mLoadContext->IsPreload());

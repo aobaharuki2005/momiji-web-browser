@@ -172,10 +172,6 @@ class ScriptLoadRequest : public nsISupports,
     return mReferrerPolicy;
   }
 
-  void UpdateReferrerPolicy(mozilla::dom::ReferrerPolicy aReferrerPolicy) {
-    mReferrerPolicy = aReferrerPolicy;
-  }
-
   enum ParserMetadata ParserMetadata() const {
     return mFetchOptions->mParserMetadata;
   }

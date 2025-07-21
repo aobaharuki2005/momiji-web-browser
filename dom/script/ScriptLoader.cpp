@@ -4394,7 +4394,7 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
       ReferrerPolicy policy =
           nsContentUtils::GetReferrerPolicyFromChannel(httpChannel);
       if (policy != ReferrerPolicy::_empty) {
-        aRequest->UpdateReferrerPolicy(policy);
+        aRequest->AsModuleRequest()->UpdateReferrerPolicy(policy);
       }
     }
 
