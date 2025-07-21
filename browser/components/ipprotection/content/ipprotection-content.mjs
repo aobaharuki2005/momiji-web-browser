@@ -18,6 +18,7 @@ export default class IPProtectionContentElement extends MozLitElement {
     connectionTitleEl: "#connection-title",
     connectionToggleEl: "#connection-toggle",
     upgradeEl: "#upgrade-vpn-content",
+    supportLinkEl: "#vpn-support-link",
   };
 
   static properties = {
@@ -39,10 +40,12 @@ export default class IPProtectionContentElement extends MozLitElement {
     super.disconnectedCallback();
   }
 
-  handleClickSupportLink() {
-    this.dispatchEvent(
-      new CustomEvent("IPProtection:Close", { bubbles: true })
-    );
+  handleClickSupportLink(event) {
+    if (event.target === this.supportLinkEl) {
+      this.dispatchEvent(
+        new CustomEvent("IPProtection:Close", { bubbles: true })
+      );
+    }
   }
 
   handleToggleConnect(event) {
@@ -113,6 +116,7 @@ export default class IPProtectionContentElement extends MozLitElement {
           @click=${this.handleClickSupportLink}
         >
           <a
+            id="vpn-support-link"
             is="moz-support-link"
             data-l10n-name="learn-more-vpn"
             support-page="test"
