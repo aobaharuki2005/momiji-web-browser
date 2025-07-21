@@ -707,15 +707,11 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
     nsCOMPtr<nsIURI> referrer =
         mWorkerRef->Private()->GetReferrerInfo()->GetOriginalReferrer();
 
-    RefPtr<JS::loader::VisitedURLSet> visitedSet =
-        ModuleLoadRequest::NewVisitedSetForTopLevelImport(
-            uri, JS::ModuleType::JavaScript);
-
     // Part of Step 2. This sets the Top-level flag to true
     request = new ModuleLoadRequest(
         uri, JS::ModuleType::JavaScript, referrerPolicy, fetchOptions,
         SRIMetadata(), referrer, loadContext, ModuleLoadRequest::Kind::TopLevel,
-        moduleLoader, visitedSet, nullptr);
+        moduleLoader, nullptr);
   }
 
   // Set the mURL, it will be used for error handling and debugging.

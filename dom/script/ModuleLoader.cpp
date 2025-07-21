@@ -362,14 +362,10 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateTopLevel(
     ScriptFetchOptions* aFetchOptions, const SRIMetadata& aIntegrity,
     nsIURI* aReferrer, ScriptLoadContext* aContext,
     ScriptLoadRequestType aRequestType) {
-  RefPtr<VisitedURLSet> visitedSet =
-      ModuleLoadRequest::NewVisitedSetForTopLevelImport(
-          aURI, JS::ModuleType::JavaScript);
-
-  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, JS::ModuleType::JavaScript, aReferrerPolicy, aFetchOptions,
-      aIntegrity, aReferrer, aContext, ModuleLoadRequest::Kind::TopLevel, this,
-      visitedSet, nullptr);
+  RefPtr<ModuleLoadRequest> request =
+      new ModuleLoadRequest(aURI, JS::ModuleType::JavaScript, aReferrerPolicy,
+                            aFetchOptions, aIntegrity, aReferrer, aContext,
+                            ModuleLoadRequest::Kind::TopLevel, this, nullptr);
 
   GetScriptLoader()->TryUseCache(request, aElement, aFetchOptions->mNonce,
                                  aRequestType);
@@ -386,11 +382,11 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
   // script mode.
   newContext->mScriptMode = aParent->GetScriptLoadContext()->mScriptMode;
 
-  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, aModuleType, aParent->ReferrerPolicy(), aParent->mFetchOptions,
-      aSriMetadata, aParent->mURI, newContext,
-      ModuleLoadRequest::Kind::StaticImport, aParent->mLoader,
-      aParent->mVisitedSet, aParent->GetRootModule());
+  RefPtr<ModuleLoadRequest> request =
+      new ModuleLoadRequest(aURI, aModuleType, aParent->ReferrerPolicy(),
+                            aParent->mFetchOptions, aSriMetadata, aParent->mURI,
+                            newContext, ModuleLoadRequest::Kind::StaticImport,
+                            aParent->mLoader, aParent->GetRootModule());
 
   GetScriptLoader()->TryUseCache(request);
 
@@ -447,16 +443,13 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
   context->mIsInline = false;
   context->mScriptMode = ScriptLoadContext::ScriptMode::eAsync;
 
-  RefPtr<VisitedURLSet> visitedSet =
-      ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI, aModuleType);
-
   SRIMetadata sriMetadata;
   GetImportMapSRI(aURI, baseURL, mLoader->GetConsoleReportCollector(),
                   &sriMetadata);
 
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, aModuleType, referrerPolicy, options, sriMetadata, baseURL, context,
-      ModuleLoadRequest::Kind::DynamicImport, this, visitedSet, nullptr);
+      ModuleLoadRequest::Kind::DynamicImport, this, nullptr);
 
   request->SetDynamicImport(aMaybeActiveScript, aSpecifier, aPromise);
 

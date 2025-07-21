@@ -22,15 +22,6 @@ class LoadedScript;
 class ModuleScript;
 class ModuleLoaderBase;
 
-// A reference counted set of module keys (URL and module type) we have visited
-// in the process of loading a module graph.
-class VisitedURLSet : public nsTHashtable<ModuleMapKey> {
-  NS_INLINE_DECL_REFCOUNTING(VisitedURLSet)
-
- private:
-  ~VisitedURLSet() = default;
-};
-
 // A load request for a module, created for every top level module script and
 // every module import.  Load request can share an ModuleScript if there are
 // multiple imports of the same module.
@@ -68,11 +59,7 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
                     ScriptFetchOptions* aFetchOptions,
                     const SRIMetadata& aIntegrity, nsIURI* aReferrer,
                     LoadContextBase* aContext, Kind aKind,
-                    ModuleLoaderBase* aLoader, VisitedURLSet* aVisitedSet,
-                    ModuleLoadRequest* aRootModule);
-
-  static VisitedURLSet* NewVisitedSetForTopLevelImport(
-      nsIURI* aURI, JS::ModuleType aModuleType);
+                    ModuleLoaderBase* aLoader, ModuleLoadRequest* aRootModule);
 
   bool IsTopLevel() const override { return mIsTopLevel; }
 
@@ -171,10 +158,6 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   // Number of child modules (i.e. imported modules) that this module is waiting
   // for.
   size_t mAwaitingImports = 0;
-
-  // Set of module URLs visited while fetching the module graph this request is
-  // part of.
-  RefPtr<VisitedURLSet> mVisitedSet;
 
   // For dynamic imports, the details to pass to FinishDynamicImport.
   RefPtr<LoadedScript> mDynamicReferencingScript;
