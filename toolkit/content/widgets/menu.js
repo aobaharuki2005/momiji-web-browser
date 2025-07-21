@@ -133,7 +133,6 @@
   class MozMenuCaption extends MozMenuBaseMixin(MozXULElement) {
     static get inheritedAttributes() {
       return {
-        ".menu-icon": "src=image,validate,src",
         ".menu-text": "value=label,crop",
       };
     }
@@ -142,7 +141,6 @@
       this.textContent = "";
       this.appendChild(
         MozXULElement.parseXULToFragment(`
-      <image class="menu-icon" aria-hidden="true"></image>
       <label class="menu-text" crop="end" aria-hidden="true"/>
     `)
       );
