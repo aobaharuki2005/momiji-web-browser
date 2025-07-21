@@ -738,7 +738,7 @@ internal fun MozillaAccountMenuItem(
         Authenticated -> {
             label = account?.displayName ?: account?.email
                 ?: stringResource(id = R.string.browser_menu_account_settings)
-            description = null
+            description = stringResource(id = R.string.browser_menu_signed_in_caption)
         }
 
         is Authenticating -> {
