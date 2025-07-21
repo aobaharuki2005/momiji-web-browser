@@ -114,6 +114,14 @@ extern JS_PUBLIC_API bool LoadRequestedModules(
     MutableHandle<JSObject*> promiseOut);
 
 /**
+ * Used to retrieve the hostDefined value passed to LoadRequestedModules during
+ * HostLoadImportedModules.
+ */
+extern JS_PUBLIC_API void GetLoadingModuleHostDefinedValue(
+    JSContext* cx, Handle<Value> statePrivate,
+    MutableHandleValue hostDefinedOut);
+
+/**
  * The module metadata hook.
  *
  * See: https://tc39.es/ecma262/#sec-hostgetimportmetaproperties

@@ -332,6 +332,12 @@ nsresult ModuleLoaderBase::StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
     aRequest->SetUnknownDataType();
   }
 
+  if (LOG_ENABLED()) {
+    nsAutoCString url;
+    aRequest->mURI->GetAsciiSpec(url);
+    LOG(("ScriptLoadRequest (%p): Start module load %s", aRequest, url.get()));
+  }
+
   // If we're restarting the request, the module should already be in the
   // "fetching" map.
   MOZ_ASSERT_IF(
@@ -976,32 +982,30 @@ bool ModuleLoaderBase::GetImportMapSRI(
 }
 
 void ModuleLoaderBase::StartFetchingModuleAndDependencies(
-    ModuleLoadRequest* aParent, const ModuleMapKey& aRequestedModule,
+    JSContext* aCx, const ModuleMapKey& aRequestedModule,
     JS::Handle<JSObject*> aReferrer, JS::Handle<JS::Value> aReferencingPrivate,
     JS::Handle<JSObject*> aModuleRequest, JS::Handle<JS::Value> aStatePrivate) {
+  MOZ_ASSERT(aReferrer);
+  JS::Rooted<JS::Value> referrerPrivate(aCx, JS::GetModulePrivate(aReferrer));
+  RefPtr<LoadedScript> referrer = GetLoadedScriptOrNull(aCx, referrerPrivate);
+
   // Check import map for integrity information
   mozilla::dom::SRIMetadata sriMetadata;
-  GetImportMapSRI(aRequestedModule.mUri, aParent->mURI,
+  GetImportMapSRI(aRequestedModule.mUri, referrer->GetURI(),
                   mLoader->GetConsoleReportCollector(), &sriMetadata);
 
-  RefPtr<ModuleLoadRequest> childRequest =
-      CreateStaticImport(aRequestedModule.mUri, aRequestedModule.mModuleType,
-                         aParent, sriMetadata);
+  JS::Rooted<JS::Value> hostDefinedVal(aCx);
+  JS::GetLoadingModuleHostDefinedValue(aCx, aStatePrivate, &hostDefinedVal);
+  ModuleLoadRequest* root =
+      static_cast<ModuleLoadRequest*>(hostDefinedVal.toPrivate());
+  MOZ_ASSERT(root);
+  LoadContextBase* loadContext = root->mLoadContext;
 
-  aParent->mImports.AppendElement(childRequest);
-
-  if (LOG_ENABLED()) {
-    nsAutoCString url1;
-    aParent->mURI->GetAsciiSpec(url1);
-
-    nsAutoCString url2;
-    aRequestedModule.mUri->GetAsciiSpec(url2);
-
-    LOG(("ScriptLoadRequest (%p): Start fetching dependency %p", aParent,
-         childRequest.get()));
-    LOG(("StartFetchingModuleAndDependencies \"%s\" -> \"%s\"", url1.get(),
-         url2.get()));
-  }
+  RefPtr<ModuleLoadRequest> childRequest = CreateStaticImport(
+      aRequestedModule.mUri, aRequestedModule.mModuleType,
+      referrer->AsModuleScript(), sriMetadata, loadContext, this);
+  LOG(("ScriptLoadRequest (%p): start fetch dependencies: root (%p)",
+       childRequest.get(), root));
 
   MOZ_ASSERT(!childRequest->mWaitingParentRequest);
   childRequest->mWaitingParentRequest = aParent;
@@ -1016,9 +1020,6 @@ void ModuleLoaderBase::StartFetchingModuleAndDependencies(
   nsresult rv = StartModuleLoad(childRequest);
   if (NS_FAILED(rv)) {
     MOZ_ASSERT(!childRequest->mModuleScript);
-    LOG(("ScriptLoadRequest (%p):   rejecting %p", aParent,
-         childRequest.get()));
-
     mLoader->ReportErrorToConsole(childRequest, rv);
     childRequest->LoadFailed();
   }
