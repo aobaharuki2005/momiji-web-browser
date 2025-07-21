@@ -13,9 +13,9 @@ taskbar-tab-urlbar-button-open =
 # shortcut for a Taskbar Tab.
 # Variables:
 #   $name (string) - A name associated to the website. This might be
-                     pulled from a Web Application Manifest, generated
-                     via a heuristic, or simply be the hostname of the
-                     site.
+#                    pulled from a Web Application Manifest, generated
+#                    via a heuristic, or simply be the hostname of the
+#                    site.
 taskbar-tab-shortcut-description = { $name } Web App
 
 # This string is used as the name of the folder that contains Taskbar
