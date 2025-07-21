@@ -18,7 +18,7 @@
 #include "js/ErrorReport.h"           // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
-#include "js/Modules.h"  // JS::FinishDynamicModuleImport, JS::{G,S}etModuleResolveHook, JS::Get{ModulePrivate,ModuleScript,RequestedModule{s,Specifier,SourcePos}}, JS::SetModule{DynamicImport,Metadata}Hook
+#include "js/Modules.h"  // JS::FinishLoadingImportedModule, JS::{G,S}etModuleResolveHook, JS::Get{ModulePrivate,ModuleScript,RequestedModule{s,Specifier,SourcePos}}, JS::SetModule{Load,Metadata}Hook
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_GetElement
 #include "js/SourceText.h"
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
@@ -92,9 +92,186 @@ void ModuleLoaderBase::EnsureModuleHooksInitialized() {
     return;
   }
 
+  JS::SetModuleLoadHook(rt, HostLoadImportedModule);
   JS::SetModuleMetadataHook(rt, HostPopulateImportMeta);
   JS::SetScriptPrivateReferenceHooks(rt, HostAddRefTopLevelScript,
                                      HostReleaseTopLevelScript);
+}
+
+// https://html.spec.whatwg.org/#hostloadimportedmodule
+// static
+bool ModuleLoaderBase::HostLoadImportedModule(
+    JSContext* aCx, JS::Handle<JSObject*> aReferrer,
+    JS::Handle<JS::Value> aReferencingPrivate,
+    JS::Handle<JSObject*> aModuleRequest, JS::Handle<JS::Value> aStatePrivate,
+    JS::Handle<JSObject*> aPromise) {
+  // https://tc39.es/ecma262/#sec-HostLoadImportedModule
+  //
+  // The host environment must perform FinishLoadingImportedModule(referrer,
+  // specifier, payload, result), where result is either a normal completion
+  // containing the loaded Module Record or a throw completion, either
+  // synchronously or asynchronously.
+  auto finishLoading = mozilla::MakeScopeExit([aCx, aStatePrivate, aPromise]() {
+    JS::FinishLoadingImportedModuleFailed(aCx, aStatePrivate, aPromise,
+                                          UndefinedHandleValue);
+  });
+
+  JS::Rooted<JSString*> specifierString(
+      aCx, JS::GetModuleRequestSpecifier(aCx, aModuleRequest));
+  if (!specifierString) {
+    return false;
+  }
+
+  // Let url be the result of resolving a module specifier given referencing
+  // module script and specifier.
+  nsAutoJSString string;
+  if (!string.init(aCx, specifierString)) {
+    return false;
+  }
+
+  {
+    // LoadedScript should only live in this block, otherwise it will be a GC
+    // hazard
+    RefPtr<LoadedScript> script(
+        GetLoadedScriptOrNull(aCx, aReferencingPrivate));
+
+    RefPtr<ModuleLoaderBase> loader = GetCurrentModuleLoader(aCx);
+    if (!loader) {
+      return false;
+    }
+
+    if (aPromise && !loader->IsDynamicImportSupported()) {
+      finishLoading.release();
+      JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
+                                JSMSG_DYNAMIC_IMPORT_NOT_SUPPORTED);
+      JS::FinishLoadingImportedModuleFailedWithPendingException(aCx, aPromise);
+      return true;
+    }
+
+    // Step 7. Disallow further import maps given settingsObject.
+    // Impl note: Disallow import maps is done in ModuleLoader::StartFetch
+
+    // Step 8. Let url be the result of resolving a module specifier given
+    //         referencingScript and moduleRequest.[[Specifier]], catching any
+    //         exceptions. If they throw an exception, let resolutionError be
+    //         the thrown exception.
+    auto result = loader->ResolveModuleSpecifier(script, string);
+
+    // Step 9. If the previous step threw an exception, then:
+    if (result.isErr()) {
+      // Step 9.1. Let completion be Completion Record { [[Type]]: throw,
+      //           [[Value]]: resolutionError, [[Target]]: empty }.
+      JS::Rooted<JS::Value> error(aCx);
+      nsresult rv =
+          loader->HandleResolveFailure(aCx, script, string, result.unwrapErr(),
+                                       0, JS::ColumnNumberOneOrigin(), &error);
+      if (NS_FAILED(rv)) {
+        JS_ReportOutOfMemory(aCx);
+        return false;
+      }
+
+      // Step 9.2. Perform FinishLoadingImportedModule(referrer, moduleRequest,
+      //           payload, completion).
+      finishLoading.release();
+      JS::FinishLoadingImportedModuleFailed(aCx, aStatePrivate, aPromise,
+                                            error);
+
+      // Step 9.3. Return.
+      return true;
+    }
+
+    MOZ_ASSERT(result.isOk());
+    nsCOMPtr<nsIURI> uri = result.unwrap();
+    MOZ_ASSERT(uri, "Failed to resolve module specifier");
+
+    LOG(
+        ("ModuleLoaderBase::HostLoadImportedModule loader (%p) uri %s referrer "
+         "(%p)",
+         loader.get(), uri->GetSpecOrDefault().get(), aReferrer.get()));
+
+    // TODO: Bug 1968895 : Unify the fetching for static/dynamic import
+    if (aPromise) {
+      // This is a dynamic import.
+
+      RefPtr<ModuleLoadRequest> request = loader->CreateDynamicImport(
+          aCx, uri, script, aModuleRequest, aPromise);
+      if (!request) {
+        finishLoading.release();
+        // Throws TypeError if CreateDynamicImport returns nullptr.
+        JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
+                                  JSMSG_DYNAMIC_IMPORT_NOT_SUPPORTED);
+        JS::FinishLoadingImportedModuleFailedWithPendingException(aCx,
+                                                                  aPromise);
+        return true;
+      }
+
+      nsresult rv = loader->StartDynamicImport(request);
+      if (NS_SUCCEEDED(rv)) {
+        loader->OnDynamicImportStarted(request);
+      } else {
+        finishLoading.release();
+
+        nsAutoCString url;
+        uri->GetSpec(url);
+        JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
+                                  JSMSG_DYNAMIC_IMPORT_FAILED, url.get());
+
+        JS::FinishLoadingImportedModuleFailedWithPendingException(aCx,
+                                                                  aPromise);
+        return true;
+      }
+    } else {
+      finishLoading.release();
+      loader->StartFetchingModuleAndDependencies(
+          aCx, ModuleMapKey(uri, moduleType), aReferrer, aReferencingPrivate,
+          aModuleRequest, aStatePrivate);
+    }
+  }
+
+  finishLoading.release();
+  return true;
+}
+
+// static
+bool ModuleLoaderBase::FinishLoadingImportedModule(
+    JSContext* aCx, ModuleLoadRequest* aRequest) {
+  // The request should been removed from mDynamicImportRequests.
+  MOZ_ASSERT_IF(aRequest->mDynamicPromise,
+                !aRequest->mLoader->HasDynamicImport(aRequest));
+
+  JS::Rooted<JSObject*> module(aCx);
+  {
+    ModuleScript* moduleScript = aRequest->mModuleScript;
+    MOZ_ASSERT(moduleScript);
+    MOZ_ASSERT(moduleScript->ModuleRecord());
+    module.set(moduleScript->ModuleRecord());
+  }
+  MOZ_ASSERT(module);
+
+  JS::Rooted<JSObject*> referrer(aCx, aRequest->mReferrerObj);
+  JS::Rooted<JS::Value> referencingPrivate(aCx, aRequest->mReferencingPrivate);
+  JS::Rooted<JSObject*> moduleReqObj(aCx, aRequest->mModuleRequestObj);
+  JS::Rooted<JS::Value> statePrivate(aCx, aRequest->mStatePrivate);
+
+  if (!statePrivate.isUndefined()) {
+    LOG(("ScriptLoadRequest (%p): FinishLoadingImportedModule module (%p)",
+         aRequest, module.get()));
+    JS::FinishLoadingImportedModule(aCx, referrer, referencingPrivate,
+                                    moduleReqObj, statePrivate, module);
+    aRequest->mReferrerObj = nullptr;
+    aRequest->mReferencingPrivate.setUndefined();
+    aRequest->mModuleRequestObj = nullptr;
+    aRequest->mStatePrivate.setUndefined();
+  } else {
+    JS::Rooted<JSObject*> promise(aCx, aRequest->mDynamicPromise);
+    JS::Rooted<JS::Value> hostDefined(aCx, JS::PrivateValue(aRequest));
+    JS::FinishLoadingImportedModule(aCx, referrer, referencingPrivate,
+                                    moduleReqObj, promise, module, hostDefined);
+    MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+    aRequest->ClearDynamicImport();
+  }
+
+  return true;
 }
 
 // static
@@ -566,6 +743,17 @@ nsresult ModuleLoaderBase::OnFetchComplete(ModuleLoadRequest* aRequest,
 void ModuleLoaderBase::OnFetchSucceeded(ModuleLoadRequest* aRequest) {
   if (aRequest->IsTopLevel()) {
     StartFetchingModuleDependencies(aRequest);
+  } else {
+    MOZ_ASSERT(!aRequest->IsDynamicImport());
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(mGlobalObject)) {
+      return;
+    }
+    JSContext* cx = jsapi.cx();
+    FinishLoadingImportedModule(cx, aRequest);
+
+    aRequest->SetReady();
+    aRequest->LoadFinished();
   }
 }
 

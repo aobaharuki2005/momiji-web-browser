@@ -457,6 +457,15 @@ class ModuleLoaderBase : public nsISupports {
 
   static void EnsureModuleHooksInitialized();
 
+  static bool HostLoadImportedModule(JSContext* aCx,
+                                     Handle<JSObject*> aReferrer,
+                                     JS::Handle<JS::Value> aReferencingPrivate,
+                                     JS::Handle<JSObject*> aModuleRequest,
+                                     JS::Handle<JS::Value> aStatePrivate,
+                                     JS::Handle<JSObject*> aPromise);
+  static bool FinishLoadingImportedModule(JSContext* aCx,
+                                          ModuleLoadRequest* aRequest);
+
   static bool HostPopulateImportMeta(JSContext* aCx,
                                      JS::Handle<JS::Value> aReferencingPrivate,
                                      JS::Handle<JSObject*> aMetaObject);
