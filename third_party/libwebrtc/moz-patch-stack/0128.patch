@@ -38,7 +38,7 @@ index ce8fc4db57..b5a65f0591 100644
        ]
        # Added when we removed deps in other places to avoid building
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index c3f085dd55..33627bfa27 100644
+index b18aa81c10..28e3c9266f 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -12,12 +12,10 @@ import("../webrtc.gni")
@@ -116,7 +116,7 @@ index c3f085dd55..33627bfa27 100644
    public_configs = []
    if (!build_with_chromium) {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 3d13654335..b3e064b281 100644
+index 6f807ddf57..337d7f6106 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -1500,29 +1500,32 @@ rtc_source_set("ssl_header") {

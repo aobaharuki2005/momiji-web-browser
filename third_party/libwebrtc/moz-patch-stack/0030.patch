@@ -561,7 +561,7 @@ index 0000000000..f6ff7f218f
 +  #endif
 +#endif
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index d204ce1b73..3240fc817b 100644
+index d75ea94cad..5d0f8a7407 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -77,7 +77,7 @@ rtc_library("rtc_media_base") {
@@ -883,10 +883,10 @@ index 025794d262..a23a7c15ce 100644
      } else {
        cflags = [
 diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index d9d06c823a..844d3d556f 100644
+index 4b004c6527..cc2a1a2302 100644
 --- a/modules/desktop_capture/BUILD.gn
 +++ b/modules/desktop_capture/BUILD.gn
-@@ -346,37 +346,12 @@ rtc_library("desktop_capture") {
+@@ -347,37 +347,12 @@ rtc_library("desktop_capture") {
      ]
      deps += [ ":desktop_capture_objc" ]
    }
@@ -924,7 +924,7 @@ index d9d06c823a..844d3d556f 100644
    }
  
    if (rtc_use_x11_extensions) {
-@@ -538,9 +513,7 @@ rtc_library("desktop_capture") {
+@@ -539,9 +514,7 @@ rtc_library("desktop_capture") {
      deps += [ "../../rtc_base:sanitizer" ]
    }
  
@@ -1025,7 +1025,7 @@ index 22f5ff2acc..a88e742c88 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index c38e61f963..d96affb5c4 100644
+index ea206b52a1..91536f13a0 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -312,6 +312,7 @@ rtc_library("sample_counter") {
@@ -1188,7 +1188,7 @@ index c38e61f963..d96affb5c4 100644
  
  rtc_library("ssl_adapter") {
    visibility = [ "*" ]
-@@ -2233,7 +2257,7 @@ if (rtc_include_tests) {
+@@ -2232,7 +2256,7 @@ if (rtc_include_tests) {
    }
  }
  
