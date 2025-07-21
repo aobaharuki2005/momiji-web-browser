@@ -1114,7 +1114,8 @@ nsresult mozJSModuleLoader::ImportESModule(
 
   // All modules are loaded. MaybeReportLoadError isn't necessary from here.
 
-  if (!request->InstantiateModuleGraph()) {
+  if (!request->mModuleScript->HasErrorToRethrow() &&
+      !request->InstantiateModuleGraph()) {
     return NS_ERROR_FAILURE;
   }
 
