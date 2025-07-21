@@ -263,7 +263,11 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
 
   enum class State : uint8_t { NotCollecting, Marking, Sweeping };
 
-  enum class OwnerKind : uint8_t { Tenured = 0, Nursery, None };
+  enum class SweepKind : uint8_t {
+    SweepTenured = 0,
+    SweepNursery,
+    RebuildFreeLists
+  };
 
   // The zone this allocator is associated with.
   MainThreadOrGCTaskData<JS::Zone*> zone;
@@ -428,6 +432,8 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   // Medium allocation methods:
 
   static bool IsMediumAlloc(void* alloc);
+  static bool CanSweepAlloc(bool nurseryOwned,
+                            BufferAllocator::SweepKind sweepKind);
 
   void* allocMedium(size_t bytes, bool nurseryOwned, bool inGC);
   void* retryBumpAlloc(size_t requestedBytes, size_t sizeClass, bool inGC);
@@ -437,8 +443,8 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
                                  size_t sizeClass);
   void recommitRegion(FreeRegion* region);
   bool allocNewChunk(bool inGC);
-  bool sweepChunk(BufferChunk* chunk, OwnerKind ownerKindToSweep,
-                  bool shouldDecommit, FreeLists& freeLists);
+  bool sweepChunk(BufferChunk* chunk, SweepKind sweepKind, bool shouldDecommit,
+                  FreeLists& freeLists);
   void addSweptRegion(BufferChunk* chunk, uintptr_t freeStart,
                       uintptr_t freeEnd, bool shouldDecommit,
                       bool expectUnchanged, FreeLists& freeLists);

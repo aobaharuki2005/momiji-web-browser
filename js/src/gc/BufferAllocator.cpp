@@ -1036,7 +1036,7 @@ void BufferAllocator::sweepForMinorCollection() {
   while (!mediumMixedChunksToSweep.ref().isEmpty()) {
     BufferChunk* chunk = mediumMixedChunksToSweep.ref().popFirst();
     FreeLists sweptFreeLists;
-    if (sweepChunk(chunk, OwnerKind::Nursery, false, sweptFreeLists)) {
+    if (sweepChunk(chunk, SweepKind::SweepNursery, false, sweptFreeLists)) {
       {
         AutoLock lock(this);
         sweptMediumMixedChunks.ref().pushBack(chunk);
@@ -1132,7 +1132,8 @@ void BufferAllocator::sweepForMajorCollection(bool shouldDecommit) {
   while (!mediumTenuredChunksToSweep.ref().isEmpty()) {
     BufferChunk* chunk = mediumTenuredChunksToSweep.ref().popFirst();
     FreeLists sweptFreeLists;
-    if (sweepChunk(chunk, OwnerKind::Tenured, shouldDecommit, sweptFreeLists)) {
+    if (sweepChunk(chunk, SweepKind::SweepTenured, shouldDecommit,
+                   sweptFreeLists)) {
       {
         AutoLock lock(this);
         sweptMediumTenuredChunks.ref().pushBack(chunk);
@@ -1220,8 +1221,8 @@ void BufferAllocator::abortMajorSweeping(const AutoLock& lock) {
 
   // Rebuild free lists for chunks we didn't end up sweeping.
   for (BufferChunk* chunk : mediumTenuredChunksToSweep.ref()) {
-    MOZ_ALWAYS_TRUE(
-        sweepChunk(chunk, OwnerKind::None, false, mediumFreeLists.ref()));
+    MOZ_ALWAYS_TRUE(sweepChunk(chunk, SweepKind::RebuildFreeLists, false,
+                               mediumFreeLists.ref()));
   }
 
   mediumTenuredChunks.ref().prepend(
@@ -1851,7 +1852,7 @@ bool BufferAllocator::allocNewChunk(bool inGC) {
   return true;
 }
 
-bool BufferAllocator::sweepChunk(BufferChunk* chunk, OwnerKind ownerKindToSweep,
+bool BufferAllocator::sweepChunk(BufferChunk* chunk, SweepKind sweepKind,
                                  bool shouldDecommit, FreeLists& freeLists) {
   // Find all regions of free space in |chunk| and add them to the swept free
   // lists.
@@ -1876,10 +1877,7 @@ bool BufferAllocator::sweepChunk(BufferChunk* chunk, OwnerKind ownerKindToSweep,
     uintptr_t allocEnd = iter.getOffset() + bytes;
 
     bool nurseryOwned = chunk->isNurseryOwned(alloc);
-    OwnerKind ownerKind = OwnerKind(uint8_t(nurseryOwned));
-    MOZ_ASSERT_IF(nurseryOwned, ownerKind == OwnerKind::Nursery);
-    MOZ_ASSERT_IF(!nurseryOwned, ownerKind == OwnerKind::Tenured);
-    bool canSweep = ownerKind == ownerKindToSweep;
+    bool canSweep = CanSweepAlloc(nurseryOwned, sweepKind);
     bool shouldSweep = canSweep && !chunk->isMarked(alloc);
 
     if (shouldSweep) {
@@ -1905,7 +1903,7 @@ bool BufferAllocator::sweepChunk(BufferChunk* chunk, OwnerKind ownerKindToSweep,
         chunk->setUnmarked(alloc);
       }
       if (nurseryOwned) {
-        MOZ_ASSERT(ownerKindToSweep == OwnerKind::Nursery);
+        MOZ_ASSERT(sweepKind == SweepKind::SweepNursery);
         hasNurseryOwnedAllocs = true;
       }
       sweptAny = false;
@@ -1917,7 +1915,7 @@ bool BufferAllocator::sweepChunk(BufferChunk* chunk, OwnerKind ownerKindToSweep,
   }
 
   if (freeStart == FirstMediumAllocOffset &&
-      ownerKindToSweep != OwnerKind::None) {
+      sweepKind != SweepKind::RebuildFreeLists) {
     // Chunk is empty. Give it back to the system.
     bool allMemoryCommitted = chunk->decommittedPages.ref().IsEmpty();
     chunk->~BufferChunk();
@@ -1936,6 +1934,15 @@ bool BufferAllocator::sweepChunk(BufferChunk* chunk, OwnerKind ownerKindToSweep,
   chunk->hasNurseryOwnedAllocsAfterSweep = hasNurseryOwnedAllocs;
 
   return true;
+}
+
+/* static */
+bool BufferAllocator::CanSweepAlloc(bool nurseryOwned,
+                                    BufferAllocator::SweepKind sweepKind) {
+  static_assert(SweepKind::SweepNursery == SweepKind(uint8_t(true)));
+  static_assert(SweepKind::SweepTenured == SweepKind(uint8_t(false)));
+  SweepKind requiredKind = SweepKind(uint8_t(nurseryOwned));
+  return sweepKind == requiredKind;
 }
 
 void BufferAllocator::addSweptRegion(BufferChunk* chunk, uintptr_t freeStart,
