@@ -2185,7 +2185,7 @@ class ImportOKPKeyTask : public ImportKeyTask {
         if (mJwk.mAlg.WasPassed() &&
             !mJwk.mAlg.Value().EqualsLiteral(JWK_ALG_EDDSA) &&
             !mJwk.mAlg.Value().EqualsLiteral(JWK_ALG_ED25519)) {
-          return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+          return NS_ERROR_DOM_DATA_ERR;
         }
       }
       if (!NormalizeToken(mJwk.mCrv.Value(), mNamedCurve)) {
