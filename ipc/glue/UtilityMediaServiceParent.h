@@ -56,7 +56,7 @@ class UtilityMediaServiceParent final : public PUtilityMediaServiceParent {
   ~UtilityMediaServiceParent();
 
   const SandboxingKind mKind;
-  TimeStamp mAudioDecoderParentStart;
+  TimeStamp mUtilityMediaServiceParentStart;
 };
 
 }  // namespace mozilla::ipc

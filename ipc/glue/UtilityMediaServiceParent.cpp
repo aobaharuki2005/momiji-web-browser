@@ -45,7 +45,7 @@ namespace mozilla::ipc {
 UtilityMediaServiceParent::UtilityMediaServiceParent(
     nsTArray<gfx::GfxVarUpdate>&& aUpdates)
     : mKind(GetCurrentSandboxingKind()),
-      mAudioDecoderParentStart(TimeStamp::Now()) {
+      mUtilityMediaServiceParentStart(TimeStamp::Now()) {
 #ifdef MOZ_WMF_MEDIA_ENGINE
   if (mKind == SandboxingKind::MF_MEDIA_ENGINE_CDM) {
     nsDebugImpl::SetMultiprocessMode("MF Media Engine CDM");
@@ -127,7 +127,7 @@ void UtilityMediaServiceParent::Start(
                                            supported);
   PROFILER_MARKER_UNTYPED("UtilityMediaServiceParent::Start", IPC,
                           MarkerOptions(MarkerTiming::IntervalUntilNowFrom(
-                              mAudioDecoderParentStart)));
+                              mUtilityMediaServiceParentStart)));
 }
 
 mozilla::ipc::IPCResult
