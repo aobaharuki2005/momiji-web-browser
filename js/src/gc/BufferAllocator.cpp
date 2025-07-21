@@ -149,6 +149,21 @@ class BitSetIter {
   operator size_t() const { return get(); }
 };
 
+// Iterator that yields offsets and pointers into a block of memory
+// corresponding to the bits set in a BitSet.
+template <typename BitmapIter, size_t Granularity, typename T = void>
+class BitmapToBlockIter : public BitmapIter {
+  uintptr_t baseAddr;
+
+ public:
+  template <typename S>
+  BitmapToBlockIter(void* base, S&& arg)
+      : BitmapIter(std::forward<S>(arg)), baseAddr(uintptr_t(base)) {}
+  size_t getOffset() const { return BitmapIter::get() * Granularity; }
+  T* get() const { return reinterpret_cast<T*>(baseAddr + getOffset()); }
+  operator T*() const { return get(); }
+};
+
 // A chunk containing medium buffer allocations for a single zone. Unlike
 // ArenaChunk, allocations from different zones do not share chunks.
 struct BufferChunk : public ChunkBase,
@@ -181,8 +196,13 @@ struct BufferChunk : public ChunkBase,
   using SmallRegionBitmap = AtomicBitmap<SmallRegionsPerChunk>;
   MainThreadOrGCTaskData<SmallRegionBitmap> smallRegionBitmap;
 
-  class AllocIter;
-  class SmallRegionIter;
+  using AllocIter =
+      BitmapToBlockIter<BitSetIter<MaxAllocsPerChunk>, MediumAllocGranularity>;
+  AllocIter allocIter() { return {this, allocBitmap.ref()}; }
+
+  using SmallRegionIter = BitmapToBlockIter<SmallRegionBitmap::Iter,
+                                            SmallRegionSize, SmallBufferRegion>;
+  SmallRegionIter smallRegionIter() { return {this, smallRegionBitmap.ref()}; }
 
   static BufferChunk* from(void* alloc) {
     ChunkBase* chunk = js::gc::detail::GetGCAddressChunkBase(alloc);
@@ -257,37 +277,6 @@ bool BufferChunk::isValidOffset(uintptr_t offset) {
 }
 #endif
 
-class BufferChunk::AllocIter : public BitSetIter<MaxAllocsPerChunk> {
-  BufferChunk* chunk;
-
- public:
-  explicit AllocIter(BufferChunk* chunk)
-      : BitSetIter(chunk->allocBitmap.ref()), chunk(chunk) {}
-  size_t getOffset() const {
-    return BitSetIter::get() * MediumAllocGranularity;
-  }
-  void* get() const {
-    return reinterpret_cast<void*>(uintptr_t(chunk) + getOffset());
-  }
-  operator void*() const { return get(); }
-};
-
-class BufferChunk::SmallRegionIter {
-  BufferChunk* chunk;
-  SmallRegionBitmap::Iter iter;
-
- public:
-  explicit SmallRegionIter(BufferChunk* chunk)
-      : chunk(chunk), iter(chunk->smallRegionBitmap.ref()) {}
-  bool done() const { return iter.done(); }
-  void next() { iter.next(); }
-  size_t getOffset() const { return iter.get() * SmallRegionSize; }
-  SmallBufferRegion* get() const {
-    return reinterpret_cast<SmallBufferRegion*>(uintptr_t(chunk) + getOffset());
-  }
-  operator void*() { return get(); }
-};
-
 // A sub-region backed by a medium allocation which contains small buffer
 // allocations.
 struct SmallBufferRegion {
@@ -304,6 +293,10 @@ struct SmallBufferRegion {
   MainThreadOrGCTaskData<PerAllocBitmap> nurseryOwnedBitmap;
 
   MainThreadOrGCTaskData<bool> hasNurseryOwnedAllocs_;
+
+  using AllocIter =
+      BitmapToBlockIter<BitSetIter<MaxAllocsPerRegion>, SmallAllocGranularity>;
+  AllocIter allocIter() { return {this, allocBitmap.ref()}; }
 
   static SmallBufferRegion* from(void* alloc) {
     uintptr_t addr = uintptr_t(alloc) & ~SmallRegionMask;
@@ -350,46 +343,6 @@ struct SmallBufferRegion {
 static constexpr size_t FirstSmallAllocOffset =
     RoundUp(sizeof(SmallBufferRegion), SmallAllocGranularity);
 static_assert(FirstSmallAllocOffset < SmallRegionSize);
-
-// Iterate allocations in a SmallBufferRegion.
-class SmallBufferRegionIter {
-  SmallBufferRegion* region;
-  size_t offset = FirstSmallAllocOffset;
-  size_t size = 0;
-
- public:
-  explicit SmallBufferRegionIter(SmallBufferRegion* region) : region(region) {
-    settle();
-  }
-  bool done() const { return offset == SmallRegionSize; }
-  void next() {
-    MOZ_ASSERT(!done());
-    offset += size;
-    MOZ_ASSERT(offset <= SmallRegionSize);
-    if (!done()) {
-      settle();
-    }
-  }
-  size_t getOffset() const {
-    MOZ_ASSERT(!done());
-    return offset;
-  }
-  void* get() const {
-    MOZ_ASSERT(!done());
-    MOZ_ASSERT(offset < SmallRegionSize);
-    MOZ_ASSERT((offset % SmallAllocGranularity) == 0);
-    return reinterpret_cast<void*>(uintptr_t(region) + offset);
-  }
-  operator void*() { return get(); }
-
- private:
-  void settle() {
-    offset = region->findNextAllocated(offset);
-    if (!done()) {
-      size = region->allocBytes(get());
-    }
-  }
-};
 
 static void CheckHighBitsOfPointer(void* ptr) {
 #ifdef JS_64BIT
@@ -1707,8 +1660,7 @@ void BufferAllocator::clearMarkStateAfterBarrierVerification() {
   for (auto* chunks : {&mixedChunks.ref(), &tenuredChunks.ref()}) {
     for (auto* chunk : *chunks) {
       chunk->markBits.ref().clear();
-      for (BufferChunk::SmallRegionIter iter(chunk); !iter.done();
-           iter.next()) {
+      for (auto iter = chunk->smallRegionIter(); !iter.done(); iter.next()) {
         SmallBufferRegion* region = iter.get();
         region->markBits.ref().clear();
       }
@@ -1869,7 +1821,7 @@ void BufferAllocator::verifyChunk(BufferChunk* chunk,
 
   size_t freeOffset = FirstMediumAllocOffset;
 
-  for (BufferChunk::AllocIter iter(chunk); !iter.done(); iter.next()) {
+  for (auto iter = chunk->allocIter(); !iter.done(); iter.next()) {
     // Check any free region preceding this allocation.
     size_t offset = iter.getOffset();
     MOZ_ASSERT(offset >= FirstMediumAllocOffset);
@@ -1917,7 +1869,7 @@ void BufferAllocator::verifySmallBufferRegion(SmallBufferRegion* region) {
 
   size_t freeOffset = FirstSmallAllocOffset;
 
-  for (SmallBufferRegionIter iter(region); !iter.done(); iter.next()) {
+  for (auto iter = region->allocIter(); !iter.done(); iter.next()) {
     // Check any free region preceding this allocation.
     size_t offset = iter.getOffset();
     MOZ_ASSERT(offset >= FirstSmallAllocOffset);
@@ -2483,7 +2435,7 @@ bool BufferAllocator::sweepChunk(BufferChunk* chunk, SweepKind sweepKind,
   size_t mallocHeapBytesFreed = 0;
 
   // First sweep any small buffer regions.
-  for (BufferChunk::SmallRegionIter iter(chunk); !iter.done(); iter.next()) {
+  for (auto iter = chunk->smallRegionIter(); !iter.done(); iter.next()) {
     SmallBufferRegion* region = iter.get();
     MOZ_ASSERT(!chunk->isMarked(region));
     MOZ_ASSERT(chunk->allocBytes(region) == SmallRegionSize);
@@ -2502,7 +2454,7 @@ bool BufferAllocator::sweepChunk(BufferChunk* chunk, SweepKind sweepKind,
     }
   }
 
-  for (BufferChunk::AllocIter iter(chunk); !iter.done(); iter.next()) {
+  for (auto iter = chunk->allocIter(); !iter.done(); iter.next()) {
     void* alloc = iter.get();
 
     size_t bytes = chunk->allocBytes(alloc);
@@ -2639,7 +2591,7 @@ bool BufferAllocator::sweepSmallBufferRegion(BufferChunk* chunk,
   size_t freeStart = FirstSmallAllocOffset;
   bool sweptAny = false;
 
-  for (SmallBufferRegionIter iter(region); !iter.done(); iter.next()) {
+  for (auto iter = region->allocIter(); !iter.done(); iter.next()) {
     void* alloc = iter.get();
 
     size_t bytes = region->allocBytes(alloc);
@@ -3471,7 +3423,7 @@ size_t BufferAllocator::getSizeOfNurseryBuffers() {
   size_t bytes = 0;
 
   for (BufferChunk* chunk : mixedChunks.ref()) {
-    for (BufferChunk::AllocIter alloc(chunk); !alloc.done(); alloc.next()) {
+    for (auto alloc = chunk->allocIter(); !alloc.done(); alloc.next()) {
       if (chunk->isNurseryOwned(alloc)) {
         bytes += chunk->allocBytes(alloc);
       }
@@ -3504,7 +3456,7 @@ void BufferAllocator::addSizeOfExcludingThis(size_t* usedBytesOut,
 static void GetChunkStats(BufferChunk* chunk, BufferAllocator::Stats& stats) {
   stats.usedBytes += ChunkSize - FirstMediumAllocOffset;
   stats.adminBytes += FirstMediumAllocOffset;
-  for (BufferChunk::SmallRegionIter iter(chunk); !iter.done(); iter.next()) {
+  for (auto iter = chunk->smallRegionIter(); !iter.done(); iter.next()) {
     SmallBufferRegion* region = iter.get();
     if (region->hasNurseryOwnedAllocs()) {
       stats.mixedSmallRegions++;
