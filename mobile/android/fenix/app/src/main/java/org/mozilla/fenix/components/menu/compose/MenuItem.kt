@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.Divider
+import mozilla.components.compose.base.modifier.optionalClickable
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.WEB_EXTENSION_ITEM
 import org.mozilla.fenix.compose.list.IconListItem
@@ -120,13 +121,12 @@ internal fun MenuItem(
     IconListItem(
         label = label,
         modifier = modifier
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = LocalIndication.current,
+            .optionalClickable(
                 enabled = enabled,
-            ) { onClick?.invoke() }
+                onClick = onClick,
+            )
             .clearAndSetSemantics {
-                role = Role.Button
+                onClick?.let { role = Role.Button }
                 this.contentDescription = contentDescription
                 if (collectionItemInfo != null) {
                     this.collectionItemInfo = collectionItemInfo
@@ -225,14 +225,13 @@ internal fun WebExtensionMenuItem(
         enabled = enabled == true,
         onClick = onClick,
         modifier = Modifier
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = LocalIndication.current,
+            .optionalClickable(
                 enabled = enabled == true,
-            ) { onClick?.invoke() }
+                onClick = onClick,
+            )
             .testTag(WEB_EXTENSION_ITEM)
             .clearAndSetSemantics {
-                role = Role.Button
+                onClick?.let { role = Role.Button }
                 contentDescription = label
                 collectionItemInfo =
                     CollectionItemInfo(
