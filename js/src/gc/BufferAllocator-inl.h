@@ -32,15 +32,25 @@ static constexpr size_t MaxMediumAllocSize =
 
 static constexpr size_t MinAllocSize = MinSmallAllocSize;
 
+static constexpr size_t SmallAllocGranularityShift =
+    BufferAllocator::MinSmallAllocShift;
 static constexpr size_t MediumAllocGranularityShift =
     BufferAllocator::MinMediumAllocShift;
+
+static constexpr size_t SmallAllocGranularity = 1 << SmallAllocGranularityShift;
 static constexpr size_t MediumAllocGranularity = 1
                                                  << MediumAllocGranularityShift;
 
+using SmallBufferSize = EncodedSize<SmallAllocGranularityShift>;
 using MediumBufferSize = EncodedSize<MediumAllocGranularityShift>;
 
 static constexpr size_t MaxMediumAllocClass =
-    BufferAllocator::AllocSizeClasses - 1;
+    BufferAllocator::MaxMediumAllocShift - BufferAllocator::MinSizeClassShift;
+static_assert(MaxMediumAllocClass == BufferAllocator::AllocSizeClasses - 1);
+
+static constexpr size_t MaxSmallAllocClass =
+    BufferAllocator::MinMediumAllocShift - 1 -
+    BufferAllocator::MinSizeClassShift;
 
 /* static */
 inline bool BufferAllocator::IsSmallAllocSize(size_t bytes) {
@@ -60,9 +70,8 @@ inline size_t BufferAllocator::GetGoodAllocSize(size_t requiredBytes) {
     return RoundUp(requiredBytes, ChunkSize);
   }
 
-  // TODO: Support more sizes than powers of 2
   if (IsSmallAllocSize(requiredBytes)) {
-    return mozilla::RoundUpPow2(requiredBytes);
+    return SmallBufferSize(requiredBytes).get();
   }
 
   return MediumBufferSize(requiredBytes).get();

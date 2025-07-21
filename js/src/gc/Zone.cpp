@@ -607,15 +607,11 @@ void Zone::prepareForMovingGC() {
 
   MOZ_ASSERT(!isPreservingCode());
   forceDiscardJitCode(gcx);
-
-  // We must always call fixupAfterMovingGC after this point.
-  bufferAllocator.prepareForMovingGC();
 }
 
 void Zone::fixupAfterMovingGC() {
   ZoneAllocator::fixupAfterMovingGC();
   shapeZone().fixupPropMapShapeTableAfterMovingGC();
-  bufferAllocator.fixupAfterMovingGC();
 }
 
 void Zone::purgeAtomCache() {

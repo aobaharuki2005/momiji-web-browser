@@ -47,6 +47,7 @@ struct BufferChunk;
 struct Cell;
 class GCRuntime;
 struct LargeBuffer;
+struct SmallBufferRegion;
 
 // BufferAllocator allocates dynamically sized blocks of memory which can be
 // reclaimed by the garbage collector and are associated with GC things.
@@ -343,10 +344,6 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   // cleanup will be deferred to the end of the minor sweeping.
   MainThreadData<bool> majorFinishedWhileMinorSweeping;
 
-#ifdef DEBUG
-  MainThreadData<bool> movingGCInProgress;
-#endif
-
  public:
   explicit BufferAllocator(JS::Zone* zone);
   ~BufferAllocator();
@@ -374,8 +371,6 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   void startMajorSweeping(MaybeLock& lock);
   void sweepForMajorCollection(bool shouldDecommit);
   void finishMajorCollection(const AutoLock& lock);
-  void prepareForMovingGC();
-  void fixupAfterMovingGC();
   void clearMarkStateAfterBarrierVerification();
 
   bool isEmpty() const;
@@ -386,7 +381,7 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
 
   // For debugging, used to implement GetMarkInfo. Returns false for allocations
   // being swept on another thread.
-  bool isPointerWithinMediumOrLargeBuffer(void* ptr);
+  bool isPointerWithinBuffer(void* ptr);
 
   Mutex& lock() const;
 
@@ -425,16 +420,13 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   static inline bool IsSmallAllocSize(size_t bytes);
   static bool IsSmallAlloc(void* alloc);
 
-  static SmallBuffer* GetSmallBuffer(void* alloc);
-  friend struct LargeBuffer;
-
   void* allocSmall(size_t bytes, bool nurseryOwned, bool inGC);
+  void* retrySmallAlloc(size_t requestedBytes, size_t sizeClass, bool inGC);
+  bool allocNewSmallRegion(bool inGC);
   void traceSmallAlloc(JSTracer* trc, Cell* owner, void** allocp,
                        const char* name);
-  void markSmallNurseryOwnedBuffer(SmallBuffer* buffer, bool ownerWasTenured);
+  void markSmallNurseryOwnedBuffer(void* alloc, bool ownerWasTenured);
   bool markSmallTenuredAlloc(void* alloc);
-
-  static AllocKind AllocKindForSmallAlloc(size_t bytes);
 
   // Medium allocation methods:
 
@@ -460,13 +452,18 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   void addSweptRegion(BufferChunk* chunk, uintptr_t freeStart,
                       uintptr_t freeEnd, bool shouldDecommit,
                       bool expectUnchanged, FreeLists& freeLists);
+  bool sweepSmallBufferRegion(BufferChunk* chunk, SmallBufferRegion* region,
+                              SweepKind sweepKind, FreeLists& freeLists);
+  void addSweptRegion(SmallBufferRegion* region, uintptr_t freeStart,
+                      uintptr_t freeEnd, bool expectUnchanged,
+                      FreeLists& freeLists);
   void freeMedium(void* alloc);
   bool growMedium(void* alloc, size_t newBytes);
   bool shrinkMedium(void* alloc, size_t newBytes);
   enum class ListPosition { Front, Back };
   FreeRegion* addFreeRegion(FreeLists* freeLists, uintptr_t start,
-                            uintptr_t bytes, bool anyDecommitted,
-                            ListPosition position,
+                            uintptr_t bytes, size_t maxSizeClass,
+                            bool anyDecommitted, ListPosition position,
                             bool expectUnchanged = false);
   void updateFreeRegionStart(FreeLists* freeLists, FreeRegion* region,
                              uintptr_t newStart);
@@ -497,15 +494,15 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   static bool IsLargeAlloc(void* alloc);
 
   void* allocLarge(size_t bytes, bool nurseryOwned, bool inGC);
-  bool sweepLargeTenured(LargeBuffer* buffer);
+  bool isLargeTenuredMarked(LargeBuffer* buffer);
   void freeLarge(void* alloc);
   bool shrinkLarge(LargeBuffer* buffer, size_t newBytes);
   void unmapLarge(LargeBuffer* buffer, bool isSweeping, MaybeLock& lock);
+  void unregisterLarge(LargeBuffer* buffer, bool isSweeping, MaybeLock& lock);
   void traceLargeAlloc(JSTracer* trc, Cell* owner, void** allocp,
                        const char* name);
   void markLargeNurseryOwnedBuffer(LargeBuffer* buffer, bool ownerWasTenured);
   bool markLargeTenuredBuffer(LargeBuffer* buffer);
-  bool isLargeAllocMarked(void* alloc);
 
   // Lookup a large buffer by pointer in the map.
   LargeBuffer* lookupLargeBuffer(void* alloc);
@@ -524,6 +521,9 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   void checkAllocListGCStateNotInUse(LargeAllocList& list, bool isNurseryOwned);
   void verifyChunk(BufferChunk* chunk, bool hasNurseryOwnedAllocs);
   void verifyFreeRegion(BufferChunk* chunk, uintptr_t endOffset,
+                        size_t expectedSize);
+  void verifySmallBufferRegion(SmallBufferRegion* region);
+  void verifyFreeRegion(SmallBufferRegion* chunk, uintptr_t endOffset,
                         size_t expectedSize);
 #endif
 };

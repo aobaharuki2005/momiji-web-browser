@@ -527,6 +527,8 @@ BEGIN_TEST(testBufferAllocator_API) {
       CHECK(!IsBufferAllocMarkedBlack(zone, alloc));
 
       CHECK(cx->runtime()->gc.isPointerWithinBufferAlloc(alloc));
+      void* ptr = reinterpret_cast<void*>(uintptr_t(alloc) + 8);
+      CHECK(cx->runtime()->gc.isPointerWithinBufferAlloc(ptr));
 
       holder->setBuffer(alloc);
       if (nurseryOwned) {
