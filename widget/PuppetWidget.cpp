@@ -100,7 +100,6 @@ void PuppetWidget::InfallibleCreate(nsIWidget* aParent,
 
   mBounds = aRect;
   mEnabled = true;
-  mVisible = true;
 
   mNeedIMEStateInit = MightNeedIMEFocus(aInitData);
 
