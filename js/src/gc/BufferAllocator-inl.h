@@ -28,7 +28,9 @@ static constexpr size_t MaxSmallAllocSize =
 static constexpr size_t MinMediumAllocSize =
     1 << BufferAllocator::MinMediumAllocShift;
 static constexpr size_t MaxMediumAllocSize =
-    1 << BufferAllocator::MaxMediumAllocShift;
+    1 << (BufferAllocator::MinLargeAllocShift - 1);
+static constexpr size_t MinLargeAllocSize =
+    1 << BufferAllocator::MinLargeAllocShift;
 
 static constexpr size_t MinAllocSize = MinSmallAllocSize;
 
@@ -44,13 +46,12 @@ static constexpr size_t MediumAllocGranularity = 1
 using SmallBufferSize = EncodedSize<SmallAllocGranularityShift>;
 using MediumBufferSize = EncodedSize<MediumAllocGranularityShift>;
 
-static constexpr size_t MaxMediumAllocClass =
-    BufferAllocator::MaxMediumAllocShift - BufferAllocator::MinSizeClassShift;
-static_assert(MaxMediumAllocClass == BufferAllocator::AllocSizeClasses - 1);
-
 static constexpr size_t MaxSmallAllocClass =
     BufferAllocator::MinMediumAllocShift - 1 -
     BufferAllocator::MinSizeClassShift;
+
+static constexpr size_t MaxMediumAllocClass =
+    BufferAllocator::AllocSizeClasses - 1;
 
 /* static */
 inline bool BufferAllocator::IsSmallAllocSize(size_t bytes) {

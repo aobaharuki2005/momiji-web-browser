@@ -19,6 +19,8 @@
 #include "jsapi-tests/tests.h"
 #include "vm/PlainObject.h"
 
+#include "gc/BufferAllocator-inl.h"
+
 #if defined(XP_WIN)
 #  include "util/WindowsWrapper.h"
 #  include <psapi.h>
@@ -642,19 +644,21 @@ BEGIN_TEST(testBufferAllocator_reallocInPlace) {
   // Grow medium -> medium: supported if free space after allocation
   // We should be able to grow in place if it's the last thing allocated.
   // *** If this starts failing we may need to allocate a new zone ***
-  CHECK(TestRealloc(1024, 2048, true));
+  size_t bytes = MinMediumAllocSize;
+  CHECK(TestRealloc(bytes, bytes * 2, true));
 
   // Shrink medium -> medium: supported
-  CHECK(TestRealloc(2048, 1024, true));
+  CHECK(TestRealloc(bytes * 2, bytes, true));
 
   // Grow large -> large: not supported
-  CHECK(TestRealloc(1 * 1024 * 1024, 2 * 1024 * 1024, false));
+  bytes = MinLargeAllocSize;
+  CHECK(TestRealloc(bytes, 2 * bytes, false));
 
   // Shrink large -> large: supported on non-Windows platforms
 #ifdef XP_WIN
-  CHECK(TestRealloc(2 * 1024 * 1024, 1 * 1024 * 1024, false));
+  CHECK(TestRealloc(2 * bytes, bytes, false));
 #else
-  CHECK(TestRealloc(2 * 1024 * 1024, 1 * 1024 * 1024, true));
+  CHECK(TestRealloc(2 * bytes, bytes, true));
 #endif
 
   JS_GC(cx);
@@ -704,7 +708,8 @@ BEGIN_TEST(testBufferAllocator_alignedAlloc) {
   size_t initialGCHeapSize = zone->gcHeapSize.bytes();
   size_t initialMallocHeapSize = zone->mallocHeapSize.bytes();
 
-  for (size_t requestSize = 1024; requestSize < 512 * 1024; requestSize *= 2) {
+  for (size_t requestSize = MinMediumAllocSize;
+       requestSize < MaxMediumAllocSize; requestSize *= 2) {
     void* alloc = TestAllocAligned(zone, requestSize);
     CHECK(alloc);
     CHECK((uintptr_t(alloc) % requestSize) == 0);
@@ -789,7 +794,8 @@ BEGIN_TEST(testBufferAllocator_stress) {
     size_t bytes = randomSize();
 
     if (!liveAllocs[index]) {
-      if ((std::rand() % 4) == 0 && bytes >= 1024 && bytes <= 256 * 1024) {
+      if ((std::rand() % 4) == 0 && bytes >= MinMediumAllocSize &&
+          bytes <= MaxMediumAllocSize / 2) {
         bytes = mozilla::RoundUpPow2(bytes);
         liveAllocs[index] = TestAllocAligned(zone, bytes);
       } else {

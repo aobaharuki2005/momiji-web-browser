@@ -59,8 +59,8 @@ struct SmallBufferRegion;
 // allocation requested. There are three size ranges, divided as follows:
 //
 //   Size:            Kind:   Allocator implementation:
-//    16 B  - 128 B   Small   Uses the cell (arena) allocator
-//   256 B  - 512 KB  Medium  Uses a free list allocator
+//    16 B  -   4 KB  Small   Uses a free list allocator from 16KB regions
+//     4 KB - 512 KB  Medium  Uses a free list allocator from 1 MB chunks
 //     1 MB -         Large   Uses the OS page allocator (e.g. mmap)
 //
 // The smallest supported allocation size is 16 bytes. This will be used for a
@@ -196,8 +196,8 @@ struct SmallBufferRegion;
 class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
  public:
   static constexpr size_t MinSmallAllocShift = 4;    // 16 B
-  static constexpr size_t MinMediumAllocShift = 8;   // 256 B
-  static constexpr size_t MaxMediumAllocShift = 19;  // 512 KB
+  static constexpr size_t MinMediumAllocShift = 12;  //  4 KB
+  static constexpr size_t MinLargeAllocShift = 20;   //  1 MB
 
   // TODO: Ideally this would equal MinSmallAllocShift but we're constrained by
   // the size of FreeRegion which won't fit into 16 bytes.
@@ -205,7 +205,7 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   static_assert(MinSizeClassShift >= MinSmallAllocShift);
 
   static constexpr size_t AllocSizeClasses =
-      MaxMediumAllocShift - MinSizeClassShift + 1;
+      MinLargeAllocShift - MinSizeClassShift;
 
   // An RAII guard to lock and unlock the buffer allocator lock.
   class AutoLock : public LockGuard<Mutex> {
