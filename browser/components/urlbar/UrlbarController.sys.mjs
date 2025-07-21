@@ -16,6 +16,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
+ChromeUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.UrlbarUtils.getLogger({ prefix: "Controller" })
+);
+
 const NOTIFICATIONS = {
   QUERY_STARTED: "onQueryStarted",
   QUERY_RESULTS: "onQueryResults",
@@ -82,10 +86,6 @@ export class UrlbarController {
     this.engagementEvent = new TelemetryEvent(
       this,
       options.eventTelemetryCategory
-    );
-
-    ChromeUtils.defineLazyGetter(this, "logger", () =>
-      lazy.UrlbarUtils.getLogger({ prefix: "Controller" })
     );
   }
 
@@ -352,7 +352,7 @@ export class UrlbarController {
         }
       // Fall through, we want the SPACE key to activate this element.
       case KeyEvent.DOM_VK_RETURN:
-        this.logger.debug(`Enter pressed${executeAction ? "" : " delayed"}`);
+        lazy.logger.debug(`Enter pressed${executeAction ? "" : " delayed"}`);
         if (executeAction) {
           this.input.handleCommand(event);
         }
@@ -1151,7 +1151,7 @@ class TelemetryEvent {
       return;
     }
 
-    this._controller.logger.info(`${method} event:`, eventInfo);
+    lazy.logger.info(`${method} event:`, eventInfo);
 
     Glean.urlbar[method].record(eventInfo);
   }
@@ -1200,7 +1200,7 @@ class TelemetryEvent {
       // Record the `keyword_exposure` event if there's a keyword.
       if (keyword) {
         let data = { keyword, terminal, result: resultType };
-        this._controller.logger.debug("Recording keyword_exposure event", data);
+        lazy.logger.debug("Recording keyword_exposure event", data);
         Glean.urlbar.keywordExposure.record(data);
         keywordExposureRecorded = true;
       }
@@ -1212,7 +1212,7 @@ class TelemetryEvent {
       results: tuples.map(t => t[0]).join(","),
       terminal: tuples.map(t => t[1]).join(","),
     };
-    this._controller.logger.debug("Recording exposure event", exposure);
+    lazy.logger.debug("Recording exposure event", exposure);
     Glean.urlbar.exposure.record(exposure);
 
     // Submit the `urlbar-keyword-exposure` ping if any keyword exposure events
