@@ -100,12 +100,18 @@ private fun ProvideAcornTokens(
     )
 }
 
-val localAcornColors = staticCompositionLocalOf<AcornColors> {
-    error("No AcornColors provided")
+/**
+ * CompositionLocal that provides the current Acorn color palette to the Compose tree.
+ *
+ * Defaults to [lightColorPalette]. This value is typically set by [AcornTheme] at the root of
+ * your application. To access the active palette, use [AcornTheme.colors].
+ */
+val localAcornColors = staticCompositionLocalOf {
+    lightColorPalette
 }
 
-private val localWindowSize = staticCompositionLocalOf<AcornWindowSize> {
-    error("No AcornWindowSize provided")
+private val localWindowSize = staticCompositionLocalOf {
+    AcornWindowSize.Small
 }
 
 private val localLayout = staticCompositionLocalOf {
