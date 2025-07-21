@@ -49,9 +49,7 @@ class BlankDecoderModule : public PlatformDecoderModule {
   template <typename T, typename... Args>
   friend already_AddRefed<T> MakeAndAddRef(Args&&...);
 
-  const char* Name() const override {
-    return "Blank";
-  }
+  const char* Name() const override { return "Blank"; }
 
  public:
   static already_AddRefed<PlatformDecoderModule> Create();

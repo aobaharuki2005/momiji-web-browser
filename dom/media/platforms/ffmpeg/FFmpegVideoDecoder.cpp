@@ -1307,22 +1307,22 @@ void FFmpegVideoDecoder<LIBAV_VER>::RecordFrame(const MediaRawData* aSample,
             case AV_PIX_FMT_YUV420P:
             case AV_PIX_FMT_YUVJ420P:
             case AV_PIX_FMT_YUV420P10LE:
-#  if LIBAVCODEC_VERSION_MAJOR >= 57
+#if LIBAVCODEC_VERSION_MAJOR >= 57
             case AV_PIX_FMT_YUV420P12LE:
-#  endif
+#endif
               return Some(DecodeStage::YUV420P);
             case AV_PIX_FMT_YUV422P:
             case AV_PIX_FMT_YUV422P10LE:
-#  if LIBAVCODEC_VERSION_MAJOR >= 57
+#if LIBAVCODEC_VERSION_MAJOR >= 57
             case AV_PIX_FMT_YUV422P12LE:
-#  endif
+#endif
               return Some(DecodeStage::YUV422P);
             case AV_PIX_FMT_YUV444P:
             case AV_PIX_FMT_YUVJ444P:
             case AV_PIX_FMT_YUV444P10LE:
-#  if LIBAVCODEC_VERSION_MAJOR >= 57
+#if LIBAVCODEC_VERSION_MAJOR >= 57
             case AV_PIX_FMT_YUV444P12LE:
-#  endif
+#endif
               return Some(DecodeStage::YUV444P);
             case AV_PIX_FMT_GBRP:
             case AV_PIX_FMT_GBRP10LE:

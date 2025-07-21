@@ -53,7 +53,7 @@ const char* RemoteDecoderModule::Name() const {
     case RemoteMediaIn::UtilityProcess_MFMediaEngineCDM:
       return "Remote: Utility_MFMediaEngineCDM";
     default:
-    MOZ_CRASH("Missing enum handling");
+      MOZ_CRASH("Missing enum handling");
   }
 }
 

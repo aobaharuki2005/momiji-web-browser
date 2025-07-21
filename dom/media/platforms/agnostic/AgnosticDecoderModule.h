@@ -13,10 +13,8 @@ namespace mozilla {
 
 class AgnosticDecoderModule : public PlatformDecoderModule {
  public:
- const char* Name() const override {
-   return "Agnostic";
- }
- static already_AddRefed<PlatformDecoderModule> Create();
+  const char* Name() const override { return "Agnostic"; }
+  static already_AddRefed<PlatformDecoderModule> Create();
 
   media::DecodeSupportSet SupportsMimeType(
       const nsACString& aMimeType,
