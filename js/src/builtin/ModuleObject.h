@@ -567,10 +567,6 @@ class GraphLoadingStateRecordObject : public NativeObject {
 
 JSObject* GetOrCreateModuleMetaObject(JSContext* cx, HandleObject module);
 
-ModuleObject* CallModuleResolveHook(JSContext* cx,
-                                    HandleValue referencingPrivate,
-                                    HandleObject moduleRequest);
-
 JSObject* StartDynamicModuleImport(JSContext* cx, HandleScript script,
                                    HandleValue specifier, HandleValue options);
 

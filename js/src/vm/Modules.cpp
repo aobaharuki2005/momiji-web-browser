@@ -53,17 +53,16 @@ static bool SyntheticModuleEvaluate(JSContext* cx, Handle<ModuleObject*> module,
 
 ////////////////////////////////////////////////////////////////////////////////
 // Public API
-JS_PUBLIC_API JS::ModuleResolveHook JS::GetModuleResolveHook(JSRuntime* rt) {
+JS_PUBLIC_API JS::ModuleLoadHook JS::GetModuleLoadHook(JSRuntime* rt) {
   AssertHeapIsIdle();
 
-  return rt->moduleResolveHook;
+  return rt->moduleLoadHook;
 }
 
-JS_PUBLIC_API void JS::SetModuleResolveHook(JSRuntime* rt,
-                                            ModuleResolveHook func) {
+JS_PUBLIC_API void JS::SetModuleLoadHook(JSRuntime* rt, ModuleLoadHook func) {
   AssertHeapIsIdle();
 
-  rt->moduleResolveHook = func;
+  rt->moduleLoadHook = func;
 }
 
 JS_PUBLIC_API JS::ModuleMetadataHook JS::GetModuleMetadataHook(JSRuntime* rt) {
@@ -77,20 +76,6 @@ JS_PUBLIC_API void JS::SetModuleMetadataHook(JSRuntime* rt,
   AssertHeapIsIdle();
 
   rt->moduleMetadataHook = func;
-}
-
-JS_PUBLIC_API JS::ModuleDynamicImportHook JS::GetModuleDynamicImportHook(
-    JSRuntime* rt) {
-  AssertHeapIsIdle();
-
-  return rt->moduleDynamicImportHook;
-}
-
-JS_PUBLIC_API void JS::SetModuleDynamicImportHook(
-    JSRuntime* rt, ModuleDynamicImportHook func) {
-  AssertHeapIsIdle();
-
-  rt->moduleDynamicImportHook = func;
 }
 
 JS_PUBLIC_API bool JS::FinishDynamicModuleImport(

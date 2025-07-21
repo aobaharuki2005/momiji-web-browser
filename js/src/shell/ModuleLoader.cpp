@@ -61,9 +61,7 @@ bool ModuleLoader::init(JSContext* cx, HandleString loadPath) {
   }
 
   JSRuntime* rt = cx->runtime();
-  JS::SetModuleResolveHook(rt, ModuleLoader::ResolveImportedModule);
   JS::SetModuleMetadataHook(rt, ModuleLoader::GetImportMetaProperties);
-  JS::SetModuleDynamicImportHook(rt, ModuleLoader::ImportModuleDynamically);
   return true;
 }
 
