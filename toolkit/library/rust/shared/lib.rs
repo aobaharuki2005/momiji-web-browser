@@ -100,7 +100,7 @@ extern crate osclientcerts;
 #[cfg(not(target_os = "android"))]
 extern crate gkrust_uniffi_components;
 
-#[cfg(feature = "uniffi_fixtures")]
+#[cfg(all(feature = "uniffi_fixtures", not(target_os = "android")))]
 extern crate uniffi_bindgen_gecko_js_test_fixtures;
 
 #[cfg(not(target_os = "android"))]
