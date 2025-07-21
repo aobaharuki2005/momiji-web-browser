@@ -2792,6 +2792,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">Salvar e compilar automaticamente adresses</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Include numeros de telephono e adresses email</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">Synchronisa adresses inter plure apparatos</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">Synchronisar adresses</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Adder carta</string>
   <!-- Title of the "Edit card" screen -->

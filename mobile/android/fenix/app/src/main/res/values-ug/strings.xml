@@ -2792,6 +2792,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">ئادرېس ساقلاپ تولدۇرىدۇ</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">تېلېفون نومۇرى ۋە ئېلخەت ئادرېسىنى ئۆز ئىچىگە ئالىدۇ</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">ئادرېسنى ئۈسكۈنىلەر ئارا قەدەمداشلايدۇ</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">ئادرېسنى قەدەمداشلايدۇ</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">كارتا قوش</string>
   <!-- Title of the "Edit card" screen -->
