@@ -684,6 +684,7 @@ fun SelectableIconListItem(
  * @param modifier [Modifier] to be applied to the composable.
  * @param descriptionTextColor [Color] to be applied to the description.
  * @param iconTint Tint to be applied to [icon].
+ * @param labelOverflow How visual overflow should be handled for the label.
  * @param afterListItemAction Composable for adding UI to the end of the list item.
  * @param belowListItemContent Composable for adding UI to the bottom of the list item content.
  */
@@ -696,6 +697,7 @@ fun SelectableListItem(
     modifier: Modifier = Modifier,
     descriptionTextColor: Color = FirefoxTheme.colors.textSecondary,
     iconTint: Color = FirefoxTheme.colors.iconPrimary,
+    labelOverflow: TextOverflow = TextOverflow.Ellipsis,
     afterListItemAction: @Composable RowScope.() -> Unit,
     belowListItemContent: @Composable ColumnScope.() -> Unit = {},
 ) {
@@ -705,6 +707,7 @@ fun SelectableListItem(
         modifier = modifier,
         descriptionTextColor = descriptionTextColor,
         belowListItemContent = belowListItemContent,
+        labelOverflow = labelOverflow,
         beforeListItemAction = {
             SelectableItemIcon(
                 icon = {
@@ -765,6 +768,7 @@ private fun SelectableItemIcon(
  * @param labelModifier [Modifier] to be applied to the label.
  * @param labelTextColor [Color] to be applied to the label.
  * @param descriptionTextColor [Color] to be applied to the description.
+ * @param labelOverflow How visual overflow should be handled for the label.
  * @param maxLabelLines An optional maximum number of lines for the label text to span.
  * @param description An optional description text below the label.
  * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
@@ -785,6 +789,7 @@ private fun ListItem(
     labelModifier: Modifier = Modifier,
     labelTextColor: Color = FirefoxTheme.colors.textPrimary,
     descriptionTextColor: Color = FirefoxTheme.colors.textSecondary,
+    labelOverflow: TextOverflow = TextOverflow.Ellipsis,
     maxLabelLines: Int = 1,
     description: String? = null,
     maxDescriptionLines: Int = 1,
@@ -824,6 +829,7 @@ private fun ListItem(
             labelModifier = labelModifier,
             labelTextColor = labelTextColor,
             descriptionTextColor = descriptionTextColor,
+            labelOverflow = labelOverflow,
             maxLabelLines = maxLabelLines,
             description = description,
             maxDescriptionLines = maxDescriptionLines,
@@ -842,6 +848,7 @@ private fun ListItemContent(
     labelModifier: Modifier = Modifier,
     labelTextColor: Color = FirefoxTheme.colors.textPrimary,
     descriptionTextColor: Color = FirefoxTheme.colors.textSecondary,
+    labelOverflow: TextOverflow = TextOverflow.Ellipsis,
     maxLabelLines: Int = 1,
     description: String? = null,
     maxDescriptionLines: Int = 1,
@@ -855,7 +862,7 @@ private fun ListItemContent(
             text = label,
             modifier = labelModifier,
             color = if (enabled) labelTextColor else FirefoxTheme.colors.textDisabled,
-            overflow = TextOverflow.Ellipsis,
+            overflow = labelOverflow,
             style = FirefoxTheme.typography.subtitle1.merge(
                 platformStyle = PlatformTextStyle(includeFontPadding = true),
             ),

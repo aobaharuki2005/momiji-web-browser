@@ -6,6 +6,7 @@ package org.mozilla.fenix.snackbar
 
 import android.content.Context
 import android.view.View
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.navigation.NavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.snackbar.Snackbar.LENGTH_INDEFINITE
@@ -169,6 +170,7 @@ class SnackbarBindingTest {
         verify(snackbarDelegate).show(
             text = eq(outputMessage),
             subText = eq(null),
+            subTextOverflow = eq(null),
             duration = eq(LENGTH_LONG),
             isError = eq(false),
             action = eq("EDIT"),
@@ -200,6 +202,7 @@ class SnackbarBindingTest {
         verify(snackbarDelegate).show(
             text = eq(outputMessage),
             subText = eq(null),
+            subTextOverflow = eq(null),
             duration = eq(LENGTH_LONG),
             isError = eq(false),
             action = eq(testContext.getString(R.string.edit_bookmark_snackbar_action)),
@@ -521,6 +524,7 @@ class SnackbarBindingTest {
         verify(snackbarDelegate).show(
             text = eq(testContext.tabClosedUndoMessage(false)),
             subText = eq(null),
+            subTextOverflow = eq(null),
             duration = eq(LENGTH_LONG),
             isError = eq(false),
             action = eq(testContext.getString(R.string.snackbar_deleted_undo)),
@@ -544,6 +548,7 @@ class SnackbarBindingTest {
         verify(snackbarDelegate).show(
             text = eq(testContext.getString(R.string.download_item_status_failed)),
             subText = eq("fileName"),
+            subTextOverflow = eq(TextOverflow.MiddleEllipsis),
             duration = eq(DOWNLOAD_SNACKBAR_DURATION_MS),
             isError = eq(false),
             action = eq(testContext.getString(R.string.download_failed_snackbar_action_details)),
@@ -584,6 +589,7 @@ class SnackbarBindingTest {
         verify(snackbarDelegate).show(
             text = eq(testContext.getString(R.string.download_completed_snackbar)),
             subText = eq("fileName"),
+            subTextOverflow = eq(TextOverflow.MiddleEllipsis),
             duration = eq(DOWNLOAD_SNACKBAR_DURATION_MS),
             isError = eq(false),
             action = eq(testContext.getString(R.string.download_completed_snackbar_action_open)),
@@ -641,6 +647,7 @@ class SnackbarBindingTest {
         verify(snackbarDelegate).show(
             text = eq(testContext.getString(R.string.download_in_progress_snackbar)),
             subText = eq(null),
+            subTextOverflow = eq(null),
             duration = eq(DOWNLOAD_SNACKBAR_DURATION_MS),
             isError = eq(false),
             action = eq(testContext.getString(R.string.download_in_progress_snackbar_action_details)),
@@ -667,6 +674,7 @@ class SnackbarBindingTest {
         verify(snackbarDelegate).show(
             text = eq(testContext.getString(R.string.webcompat_reporter_success_snackbar_text)),
             subText = eq(null),
+            subTextOverflow = eq(null),
             duration = eq(WEBCOMPAT_SNACKBAR_DURATION_MS),
             isError = eq(false),
             action = eq(testContext.getString(R.string.webcompat_reporter_dismiss_success_snackbar_text)),

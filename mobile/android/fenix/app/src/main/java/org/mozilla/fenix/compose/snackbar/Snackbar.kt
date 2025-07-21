@@ -312,9 +312,9 @@ internal fun Snackbar(
 
                     snackbarState.subMessage?.let {
                         Text(
-                            text = it,
+                            text = it.text,
                             color = colors.messageTextColor,
-                            overflow = TextOverflow.Ellipsis,
+                            overflow = it.textOverflow,
                             maxLines = 1,
                             style = FirefoxTheme.typography.caption,
                         )
@@ -396,7 +396,7 @@ private fun SnackbarHostPreview() {
                         snackbarHostState.showSnackbar(
                             snackbarState = SnackbarState(
                                 message = "Default snackbar",
-                                subMessage = "Default subMessage",
+                                subMessage = SnackbarState.SubMessage("Default subMessage"),
                                 duration = SnackbarState.Duration.Preset.Short,
                                 type = Type.Default,
                                 action = Action(
@@ -421,7 +421,7 @@ private fun SnackbarHostPreview() {
                         snackbarHostState.showSnackbar(
                             snackbarState = SnackbarState(
                                 message = "Warning snackbar",
-                                subMessage = "Default subMessage",
+                                subMessage = SnackbarState.SubMessage("Default subMessage"),
                                 duration = SnackbarState.Duration.Preset.Short,
                                 type = Type.Warning,
                                 action = Action(

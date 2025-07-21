@@ -29,6 +29,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -87,6 +88,7 @@ internal fun FileListItem(
         } else {
             FirefoxTheme.colors.iconPrimary
         },
+        labelOverflow = TextOverflow.Ellipsis,
         afterListItemAction = {
             if (areAfterListItemIconsVisible) {
                 AfterListItemAction(
