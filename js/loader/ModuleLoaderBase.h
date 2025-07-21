@@ -541,8 +541,6 @@ class ModuleLoaderBase : public nsISupports {
   nsresult CreateModuleScript(ModuleLoadRequest* aRequest);
   void DispatchModuleErrored(ModuleLoadRequest* aRequest);
 
-  bool IsFetchingAndHasWaitingRequest(ModuleLoadRequest* aRequest);
-
   void OnFetchSucceeded(ModuleLoadRequest* aRequest);
   void OnFetchFailed(ModuleLoadRequest* aRequest);
 

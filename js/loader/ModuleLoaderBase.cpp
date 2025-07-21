@@ -1371,8 +1371,6 @@ void ModuleLoaderBase::StartFetchingModuleAndDependencies(
   LOG(("ScriptLoadRequest (%p): start fetch dependencies: root (%p)",
        childRequest.get(), root));
 
-  MOZ_ASSERT(!childRequest->mWaitingParentRequest);
-  childRequest->mWaitingParentRequest = aParent;
   childRequest->mReferrerObj = aReferrer;
   childRequest->mReferencingPrivate = aReferencingPrivate;
   childRequest->mModuleRequestObj = aModuleRequest;
@@ -1387,40 +1385,6 @@ void ModuleLoaderBase::StartFetchingModuleAndDependencies(
     mLoader->ReportErrorToConsole(childRequest, rv);
     childRequest->LoadFailed();
     OnFetchFailed(childRequest);
-  }
-}
-
-void ModuleLoadRequest::ChildLoadComplete(bool aSuccess) {
-  RefPtr<ModuleLoadRequest> parent = mWaitingParentRequest;
-  MOZ_ASSERT(parent);
-  MOZ_ASSERT(parent->mAwaitingImports != 0);
-
-  mWaitingParentRequest = nullptr;
-  parent->mAwaitingImports--;
-
-  if (parent->IsFinished()) {
-    MOZ_ASSERT_IF(!aSuccess, parent->IsErrored());
-    return;
-  }
-
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(mLoader->GetGlobalObject())) {
-    return;
-  }
-
-  js::AutoCheckRecursionLimit recursion(jsapi.cx());
-  if (!recursion.check(jsapi.cx())) {
-    // Call LoadFinished on root module directly, as LoadFailed might trigger
-    // another recursive call to sub-modules.
-    mRootModule->SetReady();
-    mRootModule->LoadFinished();
-    return;
-  }
-
-  if (!aSuccess) {
-    parent->ModuleErrored();
-  } else if (parent->mAwaitingImports == 0) {
-    parent->DependenciesLoaded();
   }
 }
 
@@ -1849,18 +1813,6 @@ void ModuleLoaderBase::MoveModulesTo(ModuleLoaderBase* aDest) {
   }
 
   mFetchedModules.Clear();
-}
-
-bool ModuleLoaderBase::IsFetchingAndHasWaitingRequest(
-    ModuleLoadRequest* aRequest) {
-  auto entry = mFetchingModules.Lookup(
-      ModuleMapKey(aRequest->mURI, aRequest->mModuleType));
-  if (!entry) {
-    return false;
-  }
-
-  RefPtr<LoadingRequest> loadingRequest = entry.Data();
-  return !loadingRequest->mWaiting.IsEmpty();
 }
 
 #undef LOG
