@@ -2473,28 +2473,26 @@ toolbar#nav-bar {
         }
 
         test_timeout = None
-        if options.flavor == "browser" and options.timeout:
-            test_timeout = options.timeout
-
-        # browser-chrome tests use a fairly short default timeout of 45 seconds;
-        # this is sometimes too short on asan and debug, where we expect reduced
-        # performance.
-        if (
-            (mozinfo.info["asan"] or mozinfo.info["debug"])
-            and options.flavor == "browser"
-            and options.timeout is None
-        ):
-            self.log.info("Increasing default timeout to 90 seconds (asan or debug)")
-            test_timeout = 90
-
-        # tsan builds need even more time
-        if (
-            mozinfo.info["tsan"]
-            and options.flavor == "browser"
-            and options.timeout is None
-        ):
-            self.log.info("Increasing default timeout to 120 seconds (tsan)")
-            test_timeout = 120
+        if options.flavor == "browser":
+            if options.timeout:
+                test_timeout = options.timeout
+            else:
+                if mozinfo.info["asan"] or mozinfo.info["debug"]:
+                    # browser-chrome tests use a fairly short default timeout of 45 seconds;
+                    # this is sometimes too short on asan and debug, where we expect reduced
+                    # performance.
+                    self.log.info(
+                        "Increasing default timeout to 90 seconds (asan or debug)"
+                    )
+                    test_timeout = 90
+                elif mozinfo.info["tsan"]:
+                    # tsan builds need even more time
+                    self.log.info("Increasing default timeout to 120 seconds (tsan)")
+                    test_timeout = 120
+                else:
+                    test_timeout = 45
+        elif options.flavor in ("a11y", "chrome"):
+            test_timeout = 45
 
         if mozinfo.info["os"] == "win" and mozinfo.info["processor"] == "aarch64":
             test_timeout = self.DEFAULT_TIMEOUT * 4
