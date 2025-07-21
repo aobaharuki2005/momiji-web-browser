@@ -27,13 +27,6 @@ namespace mozilla {
 template <int V>
 class FFmpegDecoderModule : public PlatformDecoderModule {
  public:
-  const char* Name() const override {
-#ifdef FFVPX_VERSION
-    return "FFmpeg(FFVPX)";
-#else
-    return "FFmpeg(OS library)";
-#endif
-  }
   static void Init(FFmpegLibWrapper* aLib) {
 #if (defined(XP_WIN) || defined(MOZ_WIDGET_GTK)) && \
     defined(MOZ_USE_HWDECODE) && !defined(MOZ_FFVPX_AUDIOONLY)
@@ -151,16 +144,13 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
     // decoder to allow PDMFactory to select an alternative HW-capable decoder
     // module if available. In contrast, in the RDD process, it is acceptable
     // to fallback to SW decoding when HW decoding is not available.
-    if (XRE_IsGPUProcess()) {
-      AVCodecID videoCodec =
-          FFmpegVideoDecoder<V>::GetCodecId(aParams.mConfig.mMimeType);
-      if (IsHWDecodingSupported(videoCodec) &&
-          !decoder->IsHardwareAccelerated()) {
-        MOZ_LOG(sPDMLog, LogLevel::Debug,
-                ("FFmpeg video decoder can't perform hw decoding, abort!"));
-        Unused << decoder->Shutdown();
-        decoder = nullptr;
-      }
+    if (XRE_IsGPUProcess() &&
+        IsHWDecodingSupported(aParams.mConfig.mMimeType) &&
+        !decoder->IsHardwareAccelerated()) {
+      MOZ_LOG(sPDMLog, LogLevel::Debug,
+              ("FFmpeg video decoder can't perform hw decoding, abort!"));
+      Unused << decoder->Shutdown();
+      decoder = nullptr;
     }
     return decoder.forget();
   }
@@ -241,7 +231,7 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
     if (IsSWDecodingSupported(codecId)) {
       supports += media::DecodeSupport::SoftwareDecode;
     }
-    if (IsHWDecodingSupported(codecId)) {
+    if (IsHWDecodingSupported(mimeType)) {
       supports += media::DecodeSupport::HardwareDecode;
     }
 
@@ -278,7 +268,7 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
     return FFmpegDataDecoder<V>::FindSoftwareAVCodec(mLib, aCodec);
   }
 
-  bool IsHWDecodingSupported(AVCodecID aCodec) const {
+  bool IsHWDecodingSupported(const nsACString& aMimeType) const {
     if (!gfx::gfxVars::IsInitialized() ||
         !gfx::gfxVars::CanUseHardwareVideoDecoding()) {
       return false;
@@ -288,7 +278,8 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
       return false;
     }
 #endif
-    return sSupportedHWCodecs.Contains(aCodec);
+    AVCodecID videoCodec = FFmpegVideoDecoder<V>::GetCodecId(aMimeType);
+    return sSupportedHWCodecs.Contains(videoCodec);
   }
 
  private:

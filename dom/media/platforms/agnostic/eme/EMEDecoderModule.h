@@ -18,7 +18,6 @@ class PDMFactory;
 
 class EMEDecoderModule : public PlatformDecoderModule {
  public:
-  const char* Name() const override { return "EME"; }
   EMEDecoderModule(CDMProxy* aProxy, PDMFactory* aPDM);
 
  protected:

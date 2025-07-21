@@ -55,8 +55,6 @@ class MockDecoderModule : public PlatformDecoderModule {
                DecoderDoctorDiagnostics* aDiagnostics),
               (const override));
 
-  const char* Name() const override { return "Mock"; }
-
  protected:
   ~MockDecoderModule() override = default;
 };

@@ -31,15 +31,14 @@ template <int V>
 #if (defined(XP_WIN) || defined(MOZ_WIDGET_GTK)) && \
     defined(MOZ_USE_HWDECODE) && !defined(MOZ_FFVPX_AUDIOONLY)
 #  ifdef XP_WIN
-  if (!XRE_IsGPUProcess())
-#  else
-  if (!XRE_IsRDDProcess())
-#  endif
-  {
-    MOZ_LOG(sPEMLog, LogLevel::Debug,
-            ("No support in %s process", XRE_GetProcessTypeString()));
+  if (!XRE_IsGPUProcess()) {
     return;
   }
+#  else
+  if (!XRE_IsRDDProcess()) {
+    return;
+  }
+#  endif
 
   if (!gfx::gfxVars::IsInitialized()) {
     MOZ_ASSERT(AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdown));
@@ -77,7 +76,7 @@ template <int V>
   for (const auto& entry : kCodecIDs) {
     if (!entry.mHwAllowed) {
       MOZ_LOG(
-          sPEMLog, LogLevel::Debug,
+          sPDMLog, LogLevel::Debug,
           ("Hw codec disabled by gfxVars for %s", AVCodecToString(entry.mId)));
       continue;
     }
@@ -85,13 +84,13 @@ template <int V>
     const auto* codec =
         FFmpegDataEncoder<V>::FindHardwareEncoder(aLib, entry.mId);
     if (!codec) {
-      MOZ_LOG(sPEMLog, LogLevel::Debug,
+      MOZ_LOG(sPDMLog, LogLevel::Debug,
               ("No hw codec or encoder for %s", AVCodecToString(entry.mId)));
       continue;
     }
 
     sSupportedHWCodecs.AppendElement(entry.mId);
-    MOZ_LOG(sPEMLog, LogLevel::Debug,
+    MOZ_LOG(sPDMLog, LogLevel::Debug,
             ("Support %s for hw encoding", AVCodecToString(entry.mId)));
   }
 #endif  // (XP_WIN || MOZ_WIDGET_GTK) && MOZ_USE_HWDECODE &&

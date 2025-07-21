@@ -1125,35 +1125,20 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
         aId, flag);
   });
 
-#ifdef MOZ_FFMPEG_USE_INPUT_INFO_MAP
-  InsertInputInfo(aSample);
-#endif
-
 #if LIBAVCODEC_VERSION_MAJOR >= 58
-  if (aData || !mHasSentDrainPacket) {
-    packet->duration = aSample->mDuration.ToMicroseconds();
-    int res = mLib->avcodec_send_packet(mCodecContext, packet);
-    if (res < 0) {
-      // In theory, avcodec_send_packet could sent -EAGAIN should its internal
-      // buffers be full. In practice this can't happen as we only feed one
-      // frame at a time, and we immediately call avcodec_receive_frame right
-      // after.
-      char errStr[AV_ERROR_MAX_STRING_SIZE];
-      mLib->av_strerror(res, errStr, AV_ERROR_MAX_STRING_SIZE);
-      FFMPEG_LOG("avcodec_send_packet error: %s", errStr);
-      return MediaResult(
-          res == int(AVERROR_EOF) ? NS_ERROR_DOM_MEDIA_END_OF_STREAM
-                                  : NS_ERROR_DOM_MEDIA_DECODE_ERR,
-          RESULT_DETAIL("avcodec_send_packet error: %s", errStr));
-    }
-  }
-  if (!aData) {
-    // On some platforms (e.g. Android), there are a limited number of output
-    // buffers available. When draining, we may reach this limit, so we must
-    // return what we have, and allow the caller to try again. We don't need to
-    // resend the null packet in that case since the codec is still in the
-    // draining state.
-    mHasSentDrainPacket = true;
+  packet->duration = aSample->mDuration.ToMicroseconds();
+  int res = mLib->avcodec_send_packet(mCodecContext, packet);
+  if (res < 0) {
+    // In theory, avcodec_send_packet could sent -EAGAIN should its internal
+    // buffers be full. In practice this can't happen as we only feed one frame
+    // at a time, and we immediately call avcodec_receive_frame right after.
+    char errStr[AV_ERROR_MAX_STRING_SIZE];
+    mLib->av_strerror(res, errStr, AV_ERROR_MAX_STRING_SIZE);
+    FFMPEG_LOG("avcodec_send_packet error: %s", errStr);
+    return MediaResult(res == int(AVERROR_EOF)
+                           ? NS_ERROR_DOM_MEDIA_END_OF_STREAM
+                           : NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                       RESULT_DETAIL("avcodec_send_packet error: %s", errStr));
   }
   if (aGotFrame) {
     *aGotFrame = false;
@@ -1172,9 +1157,9 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     }
 #  endif
 
-    int res = mLib->avcodec_receive_frame(mCodecContext, mFrame);
+    res = mLib->avcodec_receive_frame(mCodecContext, mFrame);
     if (res == int(AVERROR_EOF)) {
-      FFMPEG_LOG("  End of stream or output buffer shortage.");
+      FFMPEG_LOG("  End of stream.");
       return NS_ERROR_DOM_MEDIA_END_OF_STREAM;
     }
     if (res == AVERROR(EAGAIN)) {
@@ -1237,12 +1222,63 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
       return rv;
     }
 
-    RecordFrame(aSample, aResults.LastElement());
+    mPerformanceRecorder.Record(mFrame->pkt_dts, [&](auto& aStage) {
+      aStage.SetResolution(mFrame->width, mFrame->height);
+      auto format = [&]() -> Maybe<DecodeStage::ImageFormat> {
+        switch (mCodecContext->pix_fmt) {
+          case AV_PIX_FMT_YUV420P:
+          case AV_PIX_FMT_YUVJ420P:
+          case AV_PIX_FMT_YUV420P10LE:
+#  if LIBAVCODEC_VERSION_MAJOR >= 57
+          case AV_PIX_FMT_YUV420P12LE:
+#  endif
+            return Some(DecodeStage::YUV420P);
+          case AV_PIX_FMT_YUV422P:
+          case AV_PIX_FMT_YUV422P10LE:
+#  if LIBAVCODEC_VERSION_MAJOR >= 57
+          case AV_PIX_FMT_YUV422P12LE:
+#  endif
+            return Some(DecodeStage::YUV422P);
+          case AV_PIX_FMT_YUV444P:
+          case AV_PIX_FMT_YUVJ444P:
+          case AV_PIX_FMT_YUV444P10LE:
+#  if LIBAVCODEC_VERSION_MAJOR >= 57
+          case AV_PIX_FMT_YUV444P12LE:
+#  endif
+            return Some(DecodeStage::YUV444P);
+          case AV_PIX_FMT_GBRP:
+          case AV_PIX_FMT_GBRP10LE:
+            return Some(DecodeStage::GBRP);
+          case AV_PIX_FMT_VAAPI_VLD:
+            return Some(DecodeStage::VAAPI_SURFACE);
+#  ifdef MOZ_ENABLE_D3D11VA
+          case AV_PIX_FMT_D3D11:
+            return Some(DecodeStage::D3D11_SURFACE);
+#  endif
+          default:
+            return Nothing();
+        }
+      }();
+      format.apply([&](auto& aFmt) { aStage.SetImageFormat(aFmt); });
+      aStage.SetColorDepth(GetColorDepth(mCodecContext->pix_fmt));
+      aStage.SetYUVColorSpace(GetFrameColorSpace());
+      aStage.SetColorRange(GetFrameColorRange());
+      aStage.SetStartTimeAndEndTime(aSample->mTime.ToMicroseconds(),
+                                    aSample->GetEndTime().ToMicroseconds());
+    });
     if (aGotFrame) {
       *aGotFrame = true;
     }
   } while (true);
 #else
+  // LibAV provides no API to retrieve the decoded sample's duration.
+  // (FFmpeg >= 1.0 provides av_frame_get_pkt_duration)
+  // As such we instead use a map using the dts as key that we will retrieve
+  // later.
+  // The map will have a typical size of 16 entry.
+  mDurationMap.Insert(aSample->mTimecode.ToMicroseconds(),
+                      aSample->mDuration.ToMicroseconds());
+
   if (!PrepareFrame()) {
     NS_WARNING("FFmpeg decoder failed to allocate frame.");
     return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
@@ -1278,72 +1314,71 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
   // If we've decoded a frame then we need to output it
   int64_t pts =
       mPtsContext.GuessCorrectPts(GetFramePts(mFrame), mFrame->pkt_dts);
+  // Retrieve duration from dts.
+  // We use the first entry found matching this dts (this is done to
+  // handle damaged file with multiple frames with the same dts)
 
-  InputInfo info(aSample);
-  TakeInputInfo(mFrame, info);
+  int64_t duration;
+  if (!mDurationMap.Find(mFrame->pkt_dts, duration)) {
+    NS_WARNING("Unable to retrieve duration from map");
+    duration = aSample->mDuration.ToMicroseconds();
+    // dts are probably incorrectly reported ; so clear the map as we're
+    // unlikely to find them in the future anyway. This also guards
+    // against the map becoming extremely big.
+    mDurationMap.Clear();
+  }
 
-  MediaResult rv = CreateImage(aSample->mOffset, pts, info.mDuration, aResults);
+  MediaResult rv = CreateImage(aSample->mOffset, pts, duration, aResults);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  mTrackingId.apply(
-      [&](const auto&) { RecordFrame(aSample, aResults.LastElement()); });
+  mTrackingId.apply([&](const auto&) {
+    mPerformanceRecorder.Record(mFrame->pkt_dts, [&](DecodeStage& aStage) {
+      aStage.SetResolution(mFrame->width, mFrame->height);
+      auto format = [&]() -> Maybe<DecodeStage::ImageFormat> {
+        switch (mCodecContext->pix_fmt) {
+          case AV_PIX_FMT_YUV420P:
+          case AV_PIX_FMT_YUVJ420P:
+          case AV_PIX_FMT_YUV420P10LE:
+#  if LIBAVCODEC_VERSION_MAJOR >= 57
+          case AV_PIX_FMT_YUV420P12LE:
+#  endif
+            return Some(DecodeStage::YUV420P);
+          case AV_PIX_FMT_YUV422P:
+          case AV_PIX_FMT_YUV422P10LE:
+#  if LIBAVCODEC_VERSION_MAJOR >= 57
+          case AV_PIX_FMT_YUV422P12LE:
+#  endif
+            return Some(DecodeStage::YUV422P);
+          case AV_PIX_FMT_YUV444P:
+          case AV_PIX_FMT_YUVJ444P:
+          case AV_PIX_FMT_YUV444P10LE:
+#  if LIBAVCODEC_VERSION_MAJOR >= 57
+          case AV_PIX_FMT_YUV444P12LE:
+#  endif
+            return Some(DecodeStage::YUV444P);
+          case AV_PIX_FMT_GBRP:
+          case AV_PIX_FMT_GBRP10LE:
+            return Some(DecodeStage::GBRP);
+          default:
+            return Nothing();
+        }
+      }();
+      format.apply([&](auto& aFmt) { aStage.SetImageFormat(aFmt); });
+      aStage.SetColorDepth(GetColorDepth(mCodecContext->pix_fmt));
+      aStage.SetYUVColorSpace(GetFrameColorSpace());
+      aStage.SetColorRange(GetFrameColorRange());
+      aStage.SetStartTimeAndEndTime(aSample->mTime.ToMicroseconds(),
+                                    aSample->GetEndTime().ToMicroseconds());
+    });
+  });
 
   if (aGotFrame) {
     *aGotFrame = true;
   }
   return rv;
 #endif
-}
-
-void FFmpegVideoDecoder<LIBAV_VER>::RecordFrame(const MediaRawData* aSample,
-                                                const MediaData* aData) {
-  mPerformanceRecorder.Record(
-      aData->mTimecode.ToMicroseconds(), [&](auto& aStage) {
-        aStage.SetResolution(mFrame->width, mFrame->height);
-        auto format = [&]() -> Maybe<DecodeStage::ImageFormat> {
-          switch (mCodecContext->pix_fmt) {
-            case AV_PIX_FMT_YUV420P:
-            case AV_PIX_FMT_YUVJ420P:
-            case AV_PIX_FMT_YUV420P10LE:
-#if LIBAVCODEC_VERSION_MAJOR >= 57
-            case AV_PIX_FMT_YUV420P12LE:
-#endif
-              return Some(DecodeStage::YUV420P);
-            case AV_PIX_FMT_YUV422P:
-            case AV_PIX_FMT_YUV422P10LE:
-#if LIBAVCODEC_VERSION_MAJOR >= 57
-            case AV_PIX_FMT_YUV422P12LE:
-#endif
-              return Some(DecodeStage::YUV422P);
-            case AV_PIX_FMT_YUV444P:
-            case AV_PIX_FMT_YUVJ444P:
-            case AV_PIX_FMT_YUV444P10LE:
-#if LIBAVCODEC_VERSION_MAJOR >= 57
-            case AV_PIX_FMT_YUV444P12LE:
-#endif
-              return Some(DecodeStage::YUV444P);
-            case AV_PIX_FMT_GBRP:
-            case AV_PIX_FMT_GBRP10LE:
-              return Some(DecodeStage::GBRP);
-            case AV_PIX_FMT_VAAPI_VLD:
-              return Some(DecodeStage::VAAPI_SURFACE);
-#ifdef MOZ_ENABLE_D3D11VA
-            case AV_PIX_FMT_D3D11:
-              return Some(DecodeStage::D3D11_SURFACE);
-#endif
-            default:
-              return Nothing();
-          }
-        }();
-        format.apply([&](auto& aFmt) { aStage.SetImageFormat(aFmt); });
-        aStage.SetColorDepth(GetColorDepth(mCodecContext->pix_fmt));
-        aStage.SetYUVColorSpace(GetFrameColorSpace());
-        aStage.SetColorRange(GetFrameColorRange());
-        aStage.SetStartTimeAndEndTime(aSample->mTime.ToMicroseconds(),
-                                      aSample->GetEndTime().ToMicroseconds());
-      });
 }
 
 gfx::ColorDepth FFmpegVideoDecoder<LIBAV_VER>::GetColorDepth(
@@ -1582,7 +1617,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
         VideoData::CreateAndCopyData(
             mInfo, mImageContainer, aOffset, TimeUnit::FromMicroseconds(aPts),
             TimeUnit::FromMicroseconds(aDuration), b, !!mFrame->key_frame,
-            TimeUnit::FromMicroseconds(mFrame->pkt_dts),
+            TimeUnit::FromMicroseconds(-1),
             mInfo.ScaledImageRect(mFrame->width, mFrame->height),
             mImageAllocator);
     if (r.isErr()) {
@@ -1663,7 +1698,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
   RefPtr<VideoData> vp = VideoData::CreateFromImage(
       mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
       TimeUnit::FromMicroseconds(aDuration), surface->GetAsImage(),
-      !!mFrame->key_frame, TimeUnit::FromMicroseconds(mFrame->pkt_dts));
+      !!mFrame->key_frame, TimeUnit::FromMicroseconds(-1));
 
   if (!vp) {
     return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
@@ -1712,7 +1747,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageV4L2(
   RefPtr<VideoData> vp = VideoData::CreateFromImage(
       mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
       TimeUnit::FromMicroseconds(aDuration), surface->GetAsImage(),
-      !!mFrame->key_frame, TimeUnit::FromMicroseconds(mFrame->pkt_dts));
+      !!mFrame->key_frame, TimeUnit::FromMicroseconds(-1));
 
   if (!vp) {
     return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
@@ -1728,13 +1763,8 @@ RefPtr<MediaDataDecoder::FlushPromise>
 FFmpegVideoDecoder<LIBAV_VER>::ProcessFlush() {
   FFMPEG_LOG("ProcessFlush()");
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
-#if LIBAVCODEC_VERSION_MAJOR >= 58
-  mHasSentDrainPacket = false;
-#endif
 #if LIBAVCODEC_VERSION_MAJOR < 58
   mPtsContext.Reset();
-#endif
-#ifdef MOZ_FFMPEG_USE_DURATION_MAP
   mDurationMap.Clear();
 #endif
 #if defined(MOZ_USE_HWDECODE) && defined(MOZ_WIDGET_GTK)
@@ -2151,7 +2181,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageD3D11(
   RefPtr<VideoData> v = VideoData::CreateFromImage(
       mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
       TimeUnit::FromMicroseconds(aDuration), image, !!mFrame->key_frame,
-      TimeUnit::FromMicroseconds(mFrame->pkt_dts));
+      TimeUnit::FromMicroseconds(-1));
   if (!v) {
     nsPrintfCString msg("D3D image allocation error");
     FFMPEG_LOG("%s", msg.get());
