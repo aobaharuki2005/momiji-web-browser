@@ -9,10 +9,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
-ChromeUtils.defineLazyGetter(lazy, "logger", () =>
-  lazy.UrlbarUtils.getLogger({ prefix: "GeolocationUtils" })
-);
-
 // Cache period for Merino's geolocation response. This is intentionally a small
 // amount of time. See the `cachePeriodMs` discussion in `MerinoClient`.
 const GEOLOCATION_CACHE_PERIOD_MS = 120000; // 2 minutes
@@ -25,6 +21,12 @@ const EARTH_RADIUS_KM = 6371.009;
  * between locations, and finding suggestions that best match the geolocation.
  */
 class _GeolocationUtils {
+  constructor() {
+    ChromeUtils.defineLazyGetter(this, "logger", () =>
+      lazy.UrlbarUtils.getLogger({ prefix: "GeolocationUtils" })
+    );
+  }
+
   /**
    * Fetches the client's geolocation from Merino. Merino gets the geolocation
    * by looking up the client's IP address in its MaxMind database. We cache
@@ -60,13 +62,13 @@ class _GeolocationUtils {
       });
     }
 
-    lazy.logger.debug("Fetching geolocation from Merino");
+    this.logger.debug("Fetching geolocation from Merino");
     let results = await this.#merino.fetch({
       providers: ["geolocation"],
       query: "",
     });
 
-    lazy.logger.debug("Got geolocation from Merino", results);
+    this.logger.debug("Got geolocation from Merino", results);
 
     return results?.[0]?.custom_details?.geolocation || null;
   }

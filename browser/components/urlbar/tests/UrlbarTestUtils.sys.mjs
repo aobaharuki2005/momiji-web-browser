@@ -84,6 +84,7 @@ export var UrlbarTestUtils = {
    * Waits to a search to be complete.
    *
    * @param {object} win The window containing the urlbar
+   * @returns {Promise} Resolved when done.
    */
   async promiseSearchComplete(win) {
     let waitForQuery = () => {
@@ -91,7 +92,6 @@ export var UrlbarTestUtils = {
         () => win.gURLBar.lastQueryContextPromise
       );
     };
-    /** @type {UrlbarQueryContext} */
     let context = await waitForQuery();
     if (win.gURLBar.searchMode) {
       // Search mode may start a second query.
@@ -141,7 +141,7 @@ export var UrlbarTestUtils = {
     selectionStart = -1,
     selectionEnd = -1,
     reopenOnBlur = true,
-  }) {
+  } = {}) {
     if (this.SimpleTest) {
       await this.SimpleTest.promiseFocus(window);
     } else {
@@ -199,7 +199,7 @@ export var UrlbarTestUtils = {
    *
    * @param {object} win The window containing the urlbar
    * @param {number} index The index to look for
-   * @throws {Error} When the index exceeds the number of available results
+   * @returns {HtmlElement|XulElement} the result's element.
    */
   async waitForAutocompleteResultAt(win, index) {
     // TODO Bug 1530338: Quantum Bar doesn't yet implement lazy results replacement.
@@ -227,7 +227,7 @@ export var UrlbarTestUtils = {
    * @param {object} win The window containing the urlbar
    * @param {string} buttonName The name of the button, e.g. "menu", "0", etc.
    * @param {number} resultIndex The index of the result
-   * @returns {HTMLSpanElement} The button
+   * @returns {HtmlElement} The button
    */
   getButtonForResultIndex(win, buttonName, resultIndex) {
     return this.getRowAt(win, resultIndex).querySelector(
@@ -328,20 +328,20 @@ export var UrlbarTestUtils = {
    *   The options object.
    * @param {object} options.window
    *   The window containing the urlbar.
-   * @param {string} [options.accesskey]
+   * @param {string} options.accesskey
    *   The access key of the menu item to return.
-   * @param {string} [options.command]
+   * @param {string} options.command
    *   The command name of the menu item to return.
-   * @param {number} [options.resultIndex]
+   * @param {number} options.resultIndex
    *   The index of the result. Defaults to the current selected index.
-   * @param {boolean} [options.openByMouse]
+   * @param {boolean} options.openByMouse
    *   Whether to open the menu by mouse or keyboard.
-   * @param {Array} [options.submenuSelectors]
+   * @param {Array} options.submenuSelectors
    *   If the command is in the top-level result menu, leave this as an empty
    *   array. If it's in a submenu, set this to an array where each element i is
    *   a selector that can be used to get the i'th menu item that opens a
    *   submenu.
-   * @returns {Promise<XULElement>}
+   * @returns {DOMElement}
    *   Returns the menu item element.
    */
   async openResultMenuAndGetItem({
@@ -465,9 +465,9 @@ export var UrlbarTestUtils = {
    *   submenu, and the last element is the command name.
    * @param {object} options
    *   The options object.
-   * @param {number} [options.resultIndex]
+   * @param {number} options.resultIndex
    *   The index of the result. Defaults to the current selected index.
-   * @param {boolean} [options.openByMouse]
+   * @param {boolean} options.openByMouse
    *   Whether to open the menu by mouse or keyboard.
    */
   async openResultMenuAndClickItem(
@@ -530,7 +530,7 @@ export var UrlbarTestUtils = {
    *
    * @param {object} win The window containing the urlbar
    * @param {number} index The index to look for
-   * @returns {Promise<object>} An object with numerous properties describing the result.
+   * @returns {object} An object with numerous properties describing the result.
    */
   async getDetailsOfResultAt(win, index) {
     let element = await this.waitForAutocompleteResultAt(win, index);
@@ -644,18 +644,12 @@ export var UrlbarTestUtils = {
    * Selects the element at the index specified.
    *
    * @param {object} win The window containing the urlbar.
-   * @param {number} index The index to select.
+   * @param {index} index The index to select.
    */
   setSelectedRowIndex(win, index) {
     win.gURLBar.view.selectedRowIndex = index;
   },
 
-  /**
-   * Gets the results container div for the address bar.
-   *
-   * @param {Window} win
-   * @returns {HTMLDivElement}
-   */
   getResultsContainer(win) {
     return win.gURLBar.view.panel.querySelector(".urlbarView-results");
   },
@@ -674,10 +668,8 @@ export var UrlbarTestUtils = {
   /**
    * Ensures at least one search suggestion is present.
    *
-   * @param {Window} win The window containing the urlbar
-   * @returns {Promise<number>}
-   *   The index of the first suggestion
-   * @throws {Error} When the index exceeds the number of available results
+   * @param {object} win The window containing the urlbar
+   * @returns {boolean} whether at least one search suggestion is present.
    */
   promiseSuggestionsPresent(win) {
     // TODO Bug 1530338: Quantum Bar doesn't yet implement lazy results replacement. When
@@ -777,7 +769,7 @@ export var UrlbarTestUtils = {
   /**
    * Open the input field context menu and run a task on it.
    *
-   * @param {Window} win the current window
+   * @param {nsIWindow} win the current window
    * @param {Function} task a task function to run, gets the contextmenu popup
    *        as argument.
    */
@@ -1126,9 +1118,9 @@ export var UrlbarTestUtils = {
    *   The window to operate on.
    * @param {object} options
    *   Options object
-   * @param {boolean} [options.backspace]
+   * @param {boolean} options.backspace
    *   Exits search mode by backspacing at the beginning of the search string.
-   * @param {boolean} [options.clickClose]
+   * @param {boolean} options.clickClose
    *   Exits search mode by clicking the close button on the search mode
    *   indicator.
    * @param {boolean} [options.waitForSearch]
@@ -1276,7 +1268,7 @@ export var UrlbarTestUtils = {
    *   The feature to init.
    * @param {string} [enrollmentType]
    *   The enrollment type, either "rollout" (default) or "config".
-   * @returns {Promise<() => Promise<void>>}
+   * @returns {Function}
    *   A cleanup function that will unenroll the feature, returns a promise.
    */
   async initNimbusFeature(
@@ -1369,7 +1361,7 @@ export var UrlbarTestUtils = {
    *      and ">" chars.
    * @param {string} [options.additionalMsg]
    *   Additional message to use for Assert.equal.
-   * @param {number} [options.selectionType]
+   * @param {int} [options.selectionType]
    *   The selectionType for which the input should be checked.
    */
   async checkFormatting(
@@ -1551,7 +1543,7 @@ class TestProvider extends UrlbarProvider {
    *   An array of UrlbarResult objects that will be the provider's results.
    * @param {string} [options.name]
    *   The provider's name.  Provider names should be unique.
-   * @param {Values<typeof UrlbarUtils.PROVIDER_TYPE>} [options.type]
+   * @param {UrlbarUtils.PROVIDER_TYPE} [options.type]
    *   The provider's type.
    * @param {number} [options.priority]
    *   The provider's priority.  Built-in providers have a priority of zero.
@@ -1610,7 +1602,7 @@ class TestProvider extends UrlbarProvider {
     // As this has been a common source of mistakes, auto-upgrade the provider
     // type to heuristic if any result is heuristic.
     if (!type && this.results?.some(r => r.heuristic)) {
-      this._type = UrlbarUtils.PROVIDER_TYPE.HEURISTIC;
+      this.type = UrlbarUtils.PROVIDER_TYPE.HEURISTIC;
     }
 
     if (onEngagement) {

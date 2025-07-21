@@ -384,11 +384,11 @@ export class SuggestBackend extends SuggestFeature {
    *
    * @param {string} searchString
    *   The search string.
-   * @param {object} [options]
+   * @param {object} options
    *   Options object.
-   * @param {UrlbarQueryContext} [options.queryContext]
+   * @param {UrlbarQueryContext} options.queryContext
    *   The query context.
-   * @param {?Array} [options.types]
+   * @param {Array} options.types
    *   This is only intended to be used in special circumstances and normally
    *   should not be specified. Array of suggestion types to query. By default
    *   all enabled suggestion types are queried.
@@ -397,7 +397,7 @@ export class SuggestBackend extends SuggestFeature {
    *   suggestions matched or suggestions can't be fetched for any reason.
    * @abstract
    */
-  async query(searchString, { queryContext, types = null } = {}) {
+  async query(searchString, { queryContext, types }) {
     throw new Error("Trying to access the base class, must be overridden");
   }
 

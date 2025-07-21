@@ -1372,7 +1372,7 @@ export var UrlbarUtils = {
    * Unescape, decode punycode, and trim (both protocol and trailing slash)
    * the URL. Use for displaying purposes only!
    *
-   * @param {string|URL} url The url that should be prepared for display.
+   * @param {string} url The url that should be prepared for display.
    * @param {object} [options] Preparation options.
    * @param {boolean} [options.trimURL] Whether the displayed URL should be
    *                  trimmed or not.
@@ -1382,38 +1382,28 @@ export var UrlbarUtils = {
   prepareUrlForDisplay(url, { trimURL = true, schemeless = false } = {}) {
     // Some domains are encoded in punycode. The following ensures we display
     // the url in utf-8.
-    let displayString;
-    if (typeof url == "string") {
-      try {
-        displayString = new URL(url).URI.displaySpec;
-      } catch {
-        // In some cases url is not a valid url, so we fallback to using the
-        // string as-is.
-        displayString = url;
-      }
-    } else {
-      displayString = url.URI.displaySpec;
-    }
+    try {
+      url = new URL(url).URI.displaySpec;
+    } catch {} // In some cases url is not a valid url.
 
-    if (displayString) {
+    if (url) {
       if (schemeless) {
-        displayString = this.stripPrefixAndTrim(displayString, {
+        url = this.stripPrefixAndTrim(url, {
           stripHttp: true,
           stripHttps: true,
         })[0];
       } else if (trimURL && lazy.UrlbarPrefs.get("trimURLs")) {
-        displayString =
-          lazy.BrowserUIUtils.removeSingleTrailingSlashFromURL(displayString);
-        if (displayString.startsWith("https://")) {
-          displayString = displayString.substring(8);
-          if (displayString.startsWith("www.")) {
-            displayString = displayString.substring(4);
+        url = lazy.BrowserUIUtils.removeSingleTrailingSlashFromURL(url);
+        if (url.startsWith("https://")) {
+          url = url.substring(8);
+          if (url.startsWith("www.")) {
+            url = url.substring(4);
           }
         }
       }
     }
 
-    return this.unEscapeURIForUI(displayString);
+    return this.unEscapeURIForUI(url);
   },
 
   /**
@@ -2640,11 +2630,9 @@ export class UrlbarMuxer {
    * Sorts queryContext results in-place.
    *
    * @param {UrlbarQueryContext} _queryContext the context to sort results for.
-   * @param {Array} _unsortedResults
-   *   The array of UrlbarResult that is not sorted yet.
    * @abstract
    */
-  sort(_queryContext, _unsortedResults) {
+  sort(_queryContext) {
     throw new Error("Trying to access the base class, must be overridden");
   }
 }
@@ -2654,12 +2642,10 @@ export class UrlbarMuxer {
  * The provider scope is to query a datasource and return results from it.
  */
 export class UrlbarProvider {
-  #lazy = XPCOMUtils.declareLazy({
-    logger: () => UrlbarUtils.getLogger({ prefix: `Provider.${this.name}` }),
-  });
-
-  get logger() {
-    return this.#lazy.logger;
+  constructor() {
+    ChromeUtils.defineLazyGetter(this, "logger", () =>
+      UrlbarUtils.getLogger({ prefix: `Provider.${this.name}` })
+    );
   }
 
   /**
@@ -3050,7 +3036,7 @@ export class SkippableTimer {
    * @param {number} [options.time] A delay in milliseconds to wait for
    * @param {boolean} [options.reportErrorOnTimeout] If true and the timer times
    *                  out, an error will be logged with Cu.reportError
-   * @param {ConsoleInstance} [options.logger] An optional logger
+   * @param {Console} [options.logger] An optional logger
    */
   constructor({
     name = "<anonymous timer>",

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -29,11 +27,6 @@ const SESSION_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
  * its requests to Merino.
  */
 export class MerinoClient {
-  #lazy = XPCOMUtils.declareLazy({
-    logger: () =>
-      lazy.UrlbarUtils.getLogger({ prefix: `MerinoClient [${this.#name}]` }),
-  });
-
   /**
    * @returns {object}
    *   The names of URL search params.
@@ -88,6 +81,9 @@ export class MerinoClient {
     this.#name = name;
     this.#allowOhttp = allowOhttp;
     this.#cachePeriodMs = cachePeriodMs;
+    ChromeUtils.defineLazyGetter(this, "logger", () =>
+      lazy.UrlbarUtils.getLogger({ prefix: `MerinoClient [${name}]` })
+    );
   }
 
   /**
@@ -165,7 +161,7 @@ export class MerinoClient {
     timeoutMs = lazy.UrlbarPrefs.get("merinoTimeoutMs"),
     otherParams = {},
   }) {
-    this.#lazy.logger.debug("Fetch start", { query });
+    this.logger.debug("Fetch start", { query });
 
     // Get the endpoint URL. It's empty by default when running tests so they
     // don't hit the network.
@@ -176,7 +172,7 @@ export class MerinoClient {
     let url = URL.parse(endpointString);
     if (!url) {
       let error = new Error(`${endpointString} is not a valid URL`);
-      this.#lazy.logger.error("Error creating endpoint URL", error);
+      this.logger.error("Error creating endpoint URL", error);
       return [];
     }
 
@@ -218,7 +214,7 @@ export class MerinoClient {
     // params.
 
     let details = { query, providers, timeoutMs, url: url.toString() };
-    this.#lazy.logger.debug("Fetch details", details);
+    this.logger.debug("Fetch details", details);
 
     // If caching is enabled, generate the cache key for this request URL.
     let cacheKey;
@@ -232,7 +228,7 @@ export class MerinoClient {
         Date.now() < this.#cache.dateMs + this.#cachePeriodMs &&
         this.#cache.key == cacheKey
       ) {
-        this.#lazy.logger.debug("Fetch served from cache");
+        this.logger.debug("Fetch served from cache");
         return this.#cache.suggestions;
       }
     }
@@ -252,7 +248,7 @@ export class MerinoClient {
       this.#sessionTimer = new lazy.SkippableTimer({
         name: "Merino session timeout",
         time: this.#sessionTimeoutMs,
-        logger: this.#lazy.logger,
+        logger: this.logger,
         callback: () => this.resetSession(),
       });
     }
@@ -261,7 +257,7 @@ export class MerinoClient {
     this.#sequenceNumber++;
 
     let recordResponse = category => {
-      this.#lazy.logger.debug("Fetch done", { status: category });
+      this.logger.debug("Fetch done", { status: category });
       this.#lastFetchStatus = category;
       recordResponse = null;
     };
@@ -270,10 +266,10 @@ export class MerinoClient {
     let timer = (this.#timeoutTimer = new lazy.SkippableTimer({
       name: "Merino timeout",
       time: timeoutMs,
-      logger: this.#lazy.logger,
+      logger: this.logger,
       callback: () => {
         // The fetch timed out.
-        this.#lazy.logger.debug("Fetch timed out", { timeoutMs });
+        this.logger.debug("Fetch timed out", { timeoutMs });
         recordResponse?.("timeout");
       },
     }));
@@ -284,7 +280,7 @@ export class MerinoClient {
     try {
       this.#fetchController?.abort();
     } catch (error) {
-      this.#lazy.logger.error("Error aborting previous fetch", error);
+      this.logger.error("Error aborting previous fetch", error);
     }
 
     // Do the fetch.
@@ -303,7 +299,7 @@ export class MerinoClient {
           // the response from this inner function and assuming it will also be
           // returned by `Promise.race`.
           response = await this.#fetch(url, { signal: controller.signal });
-          this.#lazy.logger.debug("Got response", {
+          this.logger.debug("Got response", {
             status: response?.status,
             ...details,
           });
@@ -312,7 +308,7 @@ export class MerinoClient {
           }
         } catch (error) {
           if (error.name != "AbortError") {
-            this.#lazy.logger.error("Fetch error", error);
+            this.logger.error("Fetch error", error);
             recordResponse?.("network_error");
           }
         } finally {
@@ -349,11 +345,11 @@ export class MerinoClient {
     try {
       body = await response.json();
     } catch (error) {
-      this.#lazy.logger.error("Error getting response as JSON", error);
+      this.logger.error("Error getting response as JSON", error);
     }
 
     if (body) {
-      this.#lazy.logger.debug("Response body", body);
+      this.logger.debug("Response body", body);
     }
 
     if (!body?.suggestions?.length) {
@@ -363,7 +359,7 @@ export class MerinoClient {
 
     let { suggestions, request_id } = body;
     if (!Array.isArray(suggestions)) {
-      this.#lazy.logger.error("Unexpected response", body);
+      this.logger.error("Unexpected response", body);
       recordResponse?.("no_suggestion");
       return [];
     }
