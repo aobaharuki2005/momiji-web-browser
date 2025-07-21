@@ -606,7 +606,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     RefPtr<SessionHistoryEntry> mEntry;
   };
   nsTArray<LoadingSessionHistoryEntry> mLoadingEntries;
-  AutoCleanLinkedList<RefPtr<SessionHistoryEntry>> mActiveEntryList;
+  LinkedList<SessionHistoryEntry> mActiveEntryList;
   RefPtr<SessionHistoryEntry> mActiveEntry;
 
   RefPtr<nsSecureBrowserUI> mSecureBrowserUI;
