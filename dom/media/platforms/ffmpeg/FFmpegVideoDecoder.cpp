@@ -2140,8 +2140,9 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageD3D11(
   }
 
   ID3D11Resource* resource = reinterpret_cast<ID3D11Resource*>(mFrame->data[0]);
-  ID3D11Texture2D* texture = nullptr;
-  hr = resource->QueryInterface(IID_PPV_ARGS(&texture));
+  RefPtr<ID3D11Texture2D> texture;
+  hr = resource->QueryInterface(
+      static_cast<ID3D11Texture2D**>(getter_AddRefs(texture)));
   if (FAILED(hr)) {
     nsPrintfCString msg("Failed to get ID3D11Texture2D, hr=%lx", hr);
     FFMPEG_LOG("%s", msg.get());
