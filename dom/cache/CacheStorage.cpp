@@ -527,13 +527,6 @@ void CacheStorage::AssertOwningThread() const {
 }
 #endif
 
-PBackgroundChild* CacheStorage::GetIPCManager() {
-  // This is true because CacheStorage always uses IgnoreBody for requests.
-  // So we should never need to get the IPC manager during Request or
-  // Response serialization.
-  MOZ_CRASH("CacheStorage does not implement TypeUtils::GetIPCManager()");
-}
-
 CacheStorage::~CacheStorage() {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
   if (mActor) {

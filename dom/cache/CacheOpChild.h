@@ -54,8 +54,6 @@ class CacheOpChild final : public PCacheOpChild,
   virtual void AssertOwningThread() const override;
 #endif
 
-  virtual mozilla::ipc::PBackgroundChild* GetIPCManager() override;
-
   // Utility methods
   void HandleResponse(const Maybe<CacheResponse>& aMaybeResponse);
 

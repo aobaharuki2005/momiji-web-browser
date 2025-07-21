@@ -506,12 +506,6 @@ nsIGlobalObject* Cache::GetGlobalObject() const { return mGlobal; }
 void Cache::AssertOwningThread() const { NS_ASSERT_OWNINGTHREAD(Cache); }
 #endif
 
-PBackgroundChild* Cache::GetIPCManager() {
-  NS_ASSERT_OWNINGTHREAD(Cache);
-  MOZ_DIAGNOSTIC_ASSERT(mActor);
-  return mActor->Manager();
-}
-
 Cache::~Cache() {
   NS_ASSERT_OWNINGTHREAD(Cache);
   if (mActor) {

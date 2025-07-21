@@ -89,8 +89,6 @@ class Cache final : public nsISupports,
   virtual void AssertOwningThread() const override;
 #endif
 
-  virtual mozilla::ipc::PBackgroundChild* GetIPCManager() override;
-
  private:
   class FetchHandler;
 

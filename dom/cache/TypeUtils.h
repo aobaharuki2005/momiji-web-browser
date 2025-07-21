@@ -77,12 +77,6 @@ class TypeUtils {
   inline void AssertOwningThread() const {}
 #endif
 
-  // This is mainly declared to support serializing body streams.  Some
-  // TypeUtils implementations do not expect to be used for this kind of
-  // serialization.  These classes will MOZ_CRASH() if you try to call
-  // GetIPCManager().
-  virtual mozilla::ipc::PBackgroundChild* GetIPCManager() = 0;
-
   SafeRefPtr<InternalRequest> ToInternalRequest(JSContext* aCx,
                                                 const RequestOrUTF8String& aIn,
                                                 BodyAction aBodyAction,

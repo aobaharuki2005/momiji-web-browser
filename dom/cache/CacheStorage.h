@@ -88,8 +88,6 @@ class CacheStorage final : public nsISupports,
   virtual void AssertOwningThread() const override;
 #endif
 
-  virtual mozilla::ipc::PBackgroundChild* GetIPCManager() override;
-
  private:
   CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,
                const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
