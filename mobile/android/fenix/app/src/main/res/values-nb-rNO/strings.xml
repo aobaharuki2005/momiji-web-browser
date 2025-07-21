@@ -2792,6 +2792,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">Lagre og fyll ut adresser</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Inkluderer telefonnumre og e-postadresser</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">Synkroniser adresser på tvers av enheter</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">Synkroniser adresser</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Legg til kort</string>
   <!-- Title of the "Edit card" screen -->

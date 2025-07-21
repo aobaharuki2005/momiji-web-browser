@@ -2792,6 +2792,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">მისამართების შენახვა და თვითშევსება</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">მოიცავს ტელეფონის ნომრებსა და ელფოსტის მისამართებს</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">დაასინქრონეთ მისამართები სხვადასხვა მოწყობილობაზე</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">დაასინქ. მისამართები</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">ბარათის დამატება</string>
   <!-- Title of the "Edit card" screen -->
