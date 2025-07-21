@@ -44,7 +44,8 @@ using MediumBufferSize = EncodedSize<MediumAllocGranularityShift>;
 // Hardcoded max sizes for the different size ranges. These are checked in the
 // BufferAllocator constructor.
 static constexpr size_t MaxSmallAllocSize = MinMediumAllocSize - 128;
-static constexpr size_t MaxMediumAllocSize = MinLargeAllocSize / 2;
+static constexpr size_t MaxMediumAllocSize = MinLargeAllocSize - (64 * 1024);
+static constexpr size_t MaxAlignedAllocSize = MinLargeAllocSize / 4;
 
 // Size classes map to power of two sizes. The full range contains two
 // consecutive sub-ranges [MinSmallAllocClass, MaxSmallAllocClass] and

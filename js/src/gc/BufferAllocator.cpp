@@ -2130,6 +2130,8 @@ void* BufferAllocator::bumpAlloc(size_t bytes, size_t sizeClass,
   }
 
   FreeRegion* region = freeLists.ref().getFirstRegion(sizeClass);
+  MOZ_ASSERT(region->size() >= bytes);
+
   void* ptr = allocFromRegion(region, bytes, sizeClass);
   updateFreeListsAfterAlloc(&freeLists.ref(), region, sizeClass);
   return ptr;
@@ -2146,7 +2148,10 @@ void* BufferAllocator::allocFromRegion(FreeRegion* region, size_t bytes,
                                        size_t sizeClass) {
   uintptr_t start = region->startAddr;
   MOZ_ASSERT(region->getEnd() > start);
-  MOZ_ASSERT(region->size() >= SizeClassBytes(sizeClass));
+  MOZ_ASSERT_IF(sizeClass != MaxMediumAllocClass,
+                region->size() >= SizeClassBytes(sizeClass));
+  MOZ_ASSERT_IF(sizeClass == MaxMediumAllocClass,
+                region->size() >= MaxMediumAllocSize);
   MOZ_ASSERT(start % GranularityForSizeClass(sizeClass) == 0);
   MOZ_ASSERT(region->size() % GranularityForSizeClass(sizeClass) == 0);
 
@@ -2166,9 +2171,12 @@ void* BufferAllocator::allocFromRegion(FreeRegion* region, size_t bytes,
   return ptr;
 }
 
+// Allocate a region of size |bytes| aligned to |bytes|. The maximum size is
+// limited to 256KB. In practice this is only ever used to allocate
+// SmallBufferRegions.
 void* BufferAllocator::allocMediumAligned(size_t bytes, bool inGC) {
   MOZ_ASSERT(bytes >= MinMediumAllocSize);
-  MOZ_ASSERT(bytes <= MaxMediumAllocSize / 2);
+  MOZ_ASSERT(bytes <= MaxAlignedAllocSize);
   MOZ_ASSERT(mozilla::IsPowerOfTwo(bytes));
 
   // Get size class from |bytes|.
@@ -2340,10 +2348,11 @@ void BufferAllocator::updateFreeListsAfterAlloc(FreeLists* freeLists,
     return;
   }
 
-  size_t newSizeClass =
-      SizeClassForFreeRegion(newSize, SizeClassKind(sizeClass));
-  MOZ_ASSERT(newSize >= SizeClassBytes(newSizeClass));
-  MOZ_ASSERT(newSizeClass < sizeClass);
+  size_t newSizeClass = SizeClassForFreeRegion(newSize, SizeClassKind(sizeClass));
+  MOZ_ASSERT_IF(newSizeClass != MaxMediumAllocClass,
+                newSize >= SizeClassBytes(newSizeClass));
+  MOZ_ASSERT(newSizeClass <= sizeClass);
+  MOZ_ASSERT_IF(newSizeClass != MaxMediumAllocClass, newSizeClass < sizeClass);
   MOZ_ASSERT(SizeClassKind(newSizeClass) == SizeClassKind(sizeClass));
   freeLists->pushFront(newSizeClass, region);
 }
@@ -2809,7 +2818,8 @@ BufferAllocator::FreeRegion* BufferAllocator::addFreeRegion(
   }
 
   size_t sizeClass = SizeClassForFreeRegion(bytes, kind);
-  MOZ_ASSERT(bytes >= SizeClassBytes(sizeClass));
+  MOZ_ASSERT_IF(sizeClass != MaxMediumAllocClass,
+                bytes >= SizeClassBytes(sizeClass));
 
   MOZ_ASSERT(start % GranularityForSizeClass(sizeClass) == 0);
   MOZ_ASSERT(bytes % GranularityForSizeClass(sizeClass) == 0);
@@ -3094,6 +3104,13 @@ size_t BufferAllocator::SizeClassForMediumAlloc(size_t bytes) {
 size_t BufferAllocator::SizeClassForFreeRegion(size_t bytes, SizeKind kind) {
   MOZ_ASSERT(bytes >= MinFreeRegionSize);
   MOZ_ASSERT(bytes < ChunkSize);
+
+  if (kind == SizeKind::Medium && bytes >= MaxMediumAllocSize) {
+    // Free regions large enough for MaxMediumAllocSize don't have to have
+    // enough space for that size rounded up to the next power of two, as is the
+    // case for smaller regions.
+    return MaxMediumAllocClass;
+  }
 
   size_t log2Size = mozilla::FloorLog2(bytes);
   MOZ_ASSERT((size_t(1) << log2Size) <= bytes);

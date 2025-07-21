@@ -402,8 +402,9 @@ static size_t SomeAllocSizes[] = {16,
                                   255 * 1024,
                                   257 * 1024,
                                   600 * 1024,
-                                  983040,
-                                  990 * 1024,
+                                  MaxMediumAllocSize,
+                                  MaxMediumAllocSize + 1,
+                                  1020 * 1024,
                                   1 * 1024 * 1024,
                                   3 * 1024 * 1024,
                                   10 * 1024 * 1024};
@@ -736,7 +737,7 @@ BEGIN_TEST(testBufferAllocator_alignedAlloc) {
   size_t initialMallocHeapSize = zone->mallocHeapSize.bytes();
 
   for (size_t requestSize = MinMediumAllocSize;
-       requestSize < MaxMediumAllocSize; requestSize *= 2) {
+       requestSize <= MaxAlignedAllocSize; requestSize *= 2) {
     void* alloc = TestAllocAligned(zone, requestSize);
     CHECK(alloc);
     CHECK((uintptr_t(alloc) % requestSize) == 0);
@@ -822,7 +823,7 @@ BEGIN_TEST(testBufferAllocator_stress) {
 
     if (!liveAllocs[index]) {
       if ((std::rand() % 4) == 0 && bytes >= MinMediumAllocSize &&
-          bytes <= MaxMediumAllocSize / 2) {
+          bytes <= ChunkSize / 4) {
         bytes = mozilla::RoundUpPow2(bytes);
         liveAllocs[index] = TestAllocAligned(zone, bytes);
       } else {
