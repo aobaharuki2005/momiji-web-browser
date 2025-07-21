@@ -119,13 +119,14 @@ struct BufferAllocator::FreeRegion
 };
 
 // Iterator that yields the indexes of set bits in a mozilla::BitSet.
-template <size_t N>
+template <size_t N, typename Word = size_t>
 class BitSetIter {
-  const mozilla::BitSet<N>& bitset;
+  using BitSet = mozilla::BitSet<N, Word>;
+  const BitSet& bitset;
   size_t bit = 0;
 
  public:
-  explicit BitSetIter(const mozilla::BitSet<N>& bitset) : bitset(bitset) {
+  explicit BitSetIter(const BitSet& bitset) : bitset(bitset) {
     MOZ_ASSERT(!done());
     if (!bitset[bit]) {
       next();
@@ -515,6 +516,116 @@ inline void BufferAllocator::FreeLists::checkAvailable() const {
     MOZ_ASSERT(available[i] == !lists[i].isEmpty());
   }
 #endif
+}
+
+size_t BufferAllocator::ChunkLists::getFirstAvailableSizeClass(
+    size_t minSizeClass, size_t maxSizeClass) const {
+  MOZ_ASSERT(maxSizeClass <= MaxMediumAllocClass);
+
+  size_t result = available.FindNext(minSizeClass);
+  MOZ_ASSERT(result >= minSizeClass);
+  MOZ_ASSERT_IF(result != SIZE_MAX, !lists[result].isEmpty());
+
+  if (result > maxSizeClass) {
+    return SIZE_MAX;
+  }
+
+  return result;
+}
+
+BufferChunk* BufferAllocator::ChunkLists::popFirstChunk(size_t sizeClass) {
+  MOZ_ASSERT(sizeClass < AllocSizeClasses);
+  MOZ_ASSERT(!lists[sizeClass].isEmpty());
+  BufferChunk* chunk = lists[sizeClass].popFirst();
+  if (lists[sizeClass].isEmpty()) {
+    available[sizeClass] = false;
+  }
+  return chunk;
+}
+
+void BufferAllocator::ChunkLists::remove(size_t sizeClass, BufferChunk* chunk) {
+  MOZ_ASSERT(sizeClass <= AllocSizeClasses);
+  lists[sizeClass].remove(chunk);
+  available[sizeClass] = !lists[sizeClass].isEmpty();
+}
+
+void BufferAllocator::ChunkLists::pushFront(size_t sizeClass,
+                                            BufferChunk* chunk) {
+  MOZ_ASSERT(sizeClass <= AllocSizeClasses);
+  lists[sizeClass].pushFront(chunk);
+  available[sizeClass] = true;
+}
+
+void BufferAllocator::ChunkLists::pushBack(size_t sizeClass,
+                                           BufferChunk* chunk) {
+  MOZ_ASSERT(sizeClass <= AllocSizeClasses);
+  lists[sizeClass].pushBack(chunk);
+  available[sizeClass] = true;
+}
+
+BufferAllocator::BufferChunkList BufferAllocator::ChunkLists::extractAllChunks() {
+  BufferChunkList result;
+  for (BufferChunkList& list : lists) {
+    result.append(std::move(list));
+  }
+  available.ResetAll();
+  return result;
+}
+
+inline bool BufferAllocator::ChunkLists::isEmpty() const {
+  checkAvailable();
+  return available.IsEmpty();
+}
+
+inline void BufferAllocator::ChunkLists::checkAvailable() const {
+#ifdef DEBUG
+  for (size_t i = 0; i < AllocSizeClasses; i++) {
+    MOZ_ASSERT(available[i] == !lists[i].isEmpty());
+  }
+#endif
+}
+
+class BufferAllocator::ChunkLists::ChunkIter {
+  ChunkLists& chunkLists;
+  BitSetIter<AllocSizeClasses + 1, uint32_t> sizeClass;
+  BufferChunk* chunk = nullptr;
+
+ public:
+  explicit ChunkIter(ChunkLists& chunkLists)
+      : chunkLists(chunkLists), sizeClass(chunkLists.available) {
+    settle();
+  }
+
+  bool done() const { return !chunk; }
+
+  void next() {
+    MOZ_ASSERT(!done());
+    chunk = chunk->getNext();
+    if (!chunk) {
+      sizeClass.next();
+      settle();
+    }
+  }
+
+  BufferChunk* get() const { return chunk; }
+  operator BufferChunk*() const { return get(); }
+  BufferChunk* operator->() const { return get(); }
+
+ private:
+  void settle() {
+    while (!sizeClass.done()) {
+      chunk = chunkLists.lists[sizeClass].getFirst();
+      if (chunk) {
+        break;
+      }
+      sizeClass.next();
+    }
+  }
+};
+
+BufferAllocator::ChunkLists::ChunkIter
+BufferAllocator::ChunkLists::chunkIter() {
+  return ChunkIter(*this);
 }
 
 }  // namespace js::gc

@@ -280,6 +280,39 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
     void checkAvailable() const;
   };
 
+  class ChunkLists {
+    using ChunkListArray =
+        mozilla::Array<BufferChunkList, AllocSizeClasses + 1>;
+    ChunkListArray lists;
+    mozilla::BitSet<AllocSizeClasses + 1, uint32_t> available;
+
+   public:
+    class ChunkIter;
+
+    ChunkLists() = default;
+
+    ChunkLists(const ChunkLists& other) = delete;
+    ChunkLists& operator=(const ChunkLists& other) = delete;
+
+    ChunkIter chunkIter();
+
+    void pushFront(size_t sizeClass, BufferChunk* chunk);
+    void pushBack(size_t sizeClass, BufferChunk* chunk);
+
+    // Returns SIZE_MAX if none available.
+    size_t getFirstAvailableSizeClass(size_t minSizeClass,
+                                      size_t maxSizeClass) const;
+
+    BufferChunk* popFirstChunk(size_t sizeClass);
+
+    void remove(size_t sizeClass, BufferChunk* chunk);
+
+    BufferChunkList extractAllChunks();
+
+    bool isEmpty() const;
+    void checkAvailable() const;
+  };
+
   using LargeAllocList = SlimLinkedList<LargeBuffer>;
 
   using LargeAllocMap =
