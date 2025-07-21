@@ -464,6 +464,7 @@ class HomeFragment : Fragment() {
             reloadUrlUseCase = components.useCases.sessionUseCases.reload,
             topSitesUseCases = components.useCases.topSitesUseCase,
             marsUseCases = components.useCases.marsUseCases,
+            fenixBrowserUseCases = components.useCases.fenixBrowserUseCases,
             appStore = components.appStore,
             navControllerRef = WeakReference(findNavController()),
             viewLifecycleScope = viewLifecycleOwner.lifecycleScope,

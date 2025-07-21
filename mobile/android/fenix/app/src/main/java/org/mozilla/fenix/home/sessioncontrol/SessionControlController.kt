@@ -56,6 +56,7 @@ import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.setup.checklist.ChecklistItem
 import org.mozilla.fenix.components.metrics.MetricsUtils
+import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.home.HomeFragment
@@ -249,6 +250,7 @@ class DefaultSessionControlController(
     private val reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase,
     private val topSitesUseCases: TopSitesUseCases,
     private val marsUseCases: MARSUseCases,
+    private val fenixBrowserUseCases: FenixBrowserUseCases,
     private val appStore: AppStore,
     private val navControllerRef: WeakReference<NavController>,
     private val viewLifecycleScope: CoroutineScope,
@@ -285,15 +287,16 @@ class DefaultSessionControlController(
             engine,
             tab,
             onTabRestored = {
-                activity.openToBrowser(BrowserDirection.FromHome)
+                navController.navigate(R.id.browserFragment)
                 selectTabUseCase.invoke(it)
                 reloadUrlUseCase.invoke(it)
             },
             onFailure = {
-                activity.openToBrowserAndLoad(
+                navController.navigate(R.id.browserFragment)
+                fenixBrowserUseCases.loadUrlOrSearch(
                     searchTermOrURL = tab.url,
-                    newTab = true,
-                    from = BrowserDirection.FromHome,
+                    newTab = !settings.enableHomepageAsNewTab,
+                    private = appStore.state.mode.isPrivate,
                 )
             },
         )

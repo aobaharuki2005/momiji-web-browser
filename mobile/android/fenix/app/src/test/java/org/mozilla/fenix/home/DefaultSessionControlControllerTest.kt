@@ -59,6 +59,7 @@ import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.setup.checklist.ChecklistItem
+import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixGleanTestRule
@@ -100,6 +101,7 @@ class DefaultSessionControlControllerTest {
     private val selectTabUseCase: TabsUseCases = mockk(relaxed = true)
     private val topSitesUseCases: TopSitesUseCases = mockk(relaxed = true)
     private val marsUseCases: MARSUseCases = mockk(relaxed = true)
+    private val fenixBrowserUseCases: FenixBrowserUseCases = mockk(relaxed = true)
     private val settings: Settings = mockk(relaxed = true)
     private val analytics: Analytics = mockk(relaxed = true)
     private val scope = coroutinesTestRule.scope
@@ -186,7 +188,9 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
-    fun `handleCollectionOpenTabClicked onFailure`() {
+    fun `GIVEN browsing mode is private and collection tab cannot be restored WHEN a collection tab is opened THEN open collection in a new private tab`() {
+        every { appStore.state.mode } returns BrowsingMode.Private
+
         val tab = mockk<ComponentTab> {
             every { url } returns "https://mozilla.org"
             every { restore(filesDir, engine, restoreSessionId = false) } returns null
@@ -199,10 +203,36 @@ class DefaultSessionControlControllerTest {
         assertEquals(null, recordedEvents.single().extra)
 
         verify {
-            activity.openToBrowserAndLoad(
+            navController.navigate(R.id.browserFragment)
+            fenixBrowserUseCases.loadUrlOrSearch(
                 searchTermOrURL = "https://mozilla.org",
                 newTab = true,
-                from = BrowserDirection.FromHome,
+                private = true,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN homepage as a new tab is enabled and collection tab cannot be restored WHEN a collection tab is opened THEN open collection tab in existing tab`() {
+        every { settings.enableHomepageAsNewTab } returns true
+
+        val tab = mockk<ComponentTab> {
+            every { url } returns "https://mozilla.org"
+            every { restore(filesDir, engine, restoreSessionId = false) } returns null
+        }
+        createController().handleCollectionOpenTabClicked(tab)
+
+        assertNotNull(Collections.tabRestored.testGetValue())
+        val recordedEvents = Collections.tabRestored.testGetValue()!!
+        assertEquals(1, recordedEvents.size)
+        assertEquals(null, recordedEvents.single().extra)
+
+        verify {
+            navController.navigate(R.id.browserFragment)
+            fenixBrowserUseCases.loadUrlOrSearch(
+                searchTermOrURL = "https://mozilla.org",
+                newTab = false,
+                private = false,
             )
         }
     }
@@ -240,7 +270,7 @@ class DefaultSessionControlControllerTest {
         assertEquals(1, recordedEvents.size)
         assertEquals(null, recordedEvents.single().extra)
 
-        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+        verify { navController.navigate(R.id.browserFragment) }
         verify { selectTabUseCase.selectTab.invoke(restoredTab.id) }
         verify { reloadUrlUseCase.reload.invoke(restoredTab.id) }
     }
@@ -275,7 +305,7 @@ class DefaultSessionControlControllerTest {
         assertEquals(1, recordedEvents.size)
         assertEquals(null, recordedEvents.single().extra)
 
-        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+        verify { navController.navigate(R.id.browserFragment) }
         verify { selectTabUseCase.selectTab.invoke(restoredTab.id) }
         verify { reloadUrlUseCase.reload.invoke(restoredTab.id) }
     }
@@ -1554,6 +1584,7 @@ class DefaultSessionControlControllerTest {
             reloadUrlUseCase = reloadUrlUseCase.reload,
             topSitesUseCases = topSitesUseCases,
             marsUseCases = marsUseCases,
+            fenixBrowserUseCases = fenixBrowserUseCases,
             appStore = appStore,
             navControllerRef = WeakReference(navController),
             viewLifecycleScope = scope,
