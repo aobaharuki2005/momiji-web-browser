@@ -2483,27 +2483,65 @@ bool BufferAllocator::useAvailableChunk(size_t sizeClass, size_t maxSizeClass) {
 
 bool BufferAllocator::useAvailableChunk(size_t sizeClass, size_t maxSizeClass,
                                         ChunkLists& src, BufferChunkList& dst) {
-  sizeClass = src.getFirstAvailableSizeClass(sizeClass, maxSizeClass);
-  MOZ_ASSERT(sizeClass != FullChunkSizeClass);
-  if (sizeClass == SIZE_MAX) {
-    return false;
-  }
-
-  BufferChunk* chunk = src.popFirstChunk(sizeClass);
-  MOZ_ASSERT(chunk->ownsFreeLists);
-  MOZ_ASSERT(chunk->freeLists.ref().hasSizeClass(sizeClass));
-  MOZ_ASSERT(chunk->sizeClassForAvailableLists() == sizeClass);
-  MOZ_ASSERT(chunk->freeLists.ref().getFirstAvailableSizeClass(
-                 sizeClass, maxSizeClass) <= maxSizeClass);
-
-  dst.pushBack(chunk);
-  freeLists.ref().append(std::move(chunk->freeLists.ref()));
-  chunk->ownsFreeLists = false;
-  chunk->freeLists.ref().assertEmpty();
+  // Move available chunks from available list |src| to current list |dst| (and
+  // put their free regions into the |freeLists|) for size classes less than or
+  // equal to |sizeClass| that are not currently represented in the free lists
+  // and for which we have chunks in |src|.
+  //
+  // Chunks are moved from the available list to the free lists as needed to
+  // limit the number of regions in the free lists, as these need to be iterated
+  // on minor GC.
+  //
+  // This restriction on only moving regions less than or equal to the required
+  // size class is to encourage filling up more used chunks before using less
+  // used chunks, in the hope that less used chunks will become completely empty
+  // and can be reclaimed.
 
   MOZ_ASSERT(freeLists.ref().getFirstAvailableSizeClass(
-                 sizeClass, maxSizeClass) <= maxSizeClass);
-  return true;
+                 sizeClass, maxSizeClass) == SIZE_MAX);
+
+  SizeClassBitSet sizeClasses = getChunkSizeClassesToMove(maxSizeClass, src);
+  for (auto i = BitSetIter(sizeClasses); !i.done(); i.next()) {
+    MOZ_ASSERT(i <= maxSizeClass);
+    MOZ_ASSERT(!freeLists.ref().hasSizeClass(i));
+
+    BufferChunk* chunk = src.popFirstChunk(i);
+    MOZ_ASSERT(chunk->ownsFreeLists);
+    MOZ_ASSERT(chunk->freeLists.ref().hasSizeClass(i));
+
+    dst.pushBack(chunk);
+    freeLists.ref().append(std::move(chunk->freeLists.ref()));
+    chunk->ownsFreeLists = false;
+    chunk->freeLists.ref().assertEmpty();
+
+    if (i >= sizeClass) {
+      // We should now be able to allocate a block of the required size as we've
+      // added free regions of size class |i| where |i => sizeClass|.
+      MOZ_ASSERT(freeLists.ref().getFirstAvailableSizeClass(
+                     sizeClass, maxSizeClass) != SIZE_MAX);
+      return true;
+    }
+  }
+
+  MOZ_ASSERT(freeLists.ref().getFirstAvailableSizeClass(
+                 sizeClass, maxSizeClass) == SIZE_MAX);
+  return false;
+}
+
+BufferAllocator::SizeClassBitSet BufferAllocator::getChunkSizeClassesToMove(
+    size_t maxSizeClass, ChunkLists& src) const {
+  // Make a bitmap of size classes up to |maxSizeClass| which are not present in
+  // |freeLists| but which are present in available chunks |src|.
+  //
+  // The ChunkLists bitmap has an extra bit to represent full chunks compared to
+  // the FreeLists bitmap. This prevents using the classes methods, but since
+  // they both fit into a single word we can manipulate the storage directly.
+  SizeClassBitSet result;
+  auto& sizeClasses = result.Storage()[0];
+  auto& srcAvailable = src.availableSizeClasses().Storage()[0];
+  auto& freeAvailable = freeLists.ref().availableSizeClasses().Storage()[0];
+  sizeClasses = srcAvailable & ~freeAvailable & BitMask(maxSizeClass + 1);
+  return result;
 }
 
 // Differentiate between small and medium size classes. Large allocations do not

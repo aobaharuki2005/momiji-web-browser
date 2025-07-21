@@ -240,11 +240,14 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   struct FreeRegion;
   using FreeList = SlimLinkedList<FreeRegion>;
 
+  using SizeClassBitSet = mozilla::BitSet<AllocSizeClasses, uint32_t>;
+
   // Segregated free list: an array of free lists, one per size class.
   class FreeLists {
     using FreeListArray = mozilla::Array<FreeList, AllocSizeClasses>;
+
     FreeListArray lists;
-    mozilla::BitSet<AllocSizeClasses, uint32_t> available;
+    SizeClassBitSet available;
 
    public:
     FreeLists() = default;
@@ -259,6 +262,7 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
     bool isEmpty() const { return available.IsEmpty(); }
 
     bool hasSizeClass(size_t sizeClass) const;
+    const auto& availableSizeClasses() const { return available; }
 
     // Returns SIZE_MAX if none available.
     size_t getFirstAvailableSizeClass(size_t minSizeClass,
@@ -289,8 +293,10 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   class ChunkLists {
     using ChunkListArray =
         mozilla::Array<BufferChunkList, AllocSizeClasses + 1>;
+    using AvailableBitSet = mozilla::BitSet<AllocSizeClasses + 1, uint32_t>;
+
     ChunkListArray lists;
-    mozilla::BitSet<AllocSizeClasses + 1, uint32_t> available;
+    AvailableBitSet available;
 
    public:
     class ChunkIter;
@@ -301,6 +307,7 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
     ChunkLists& operator=(const ChunkLists& other) = delete;
 
     ChunkIter chunkIter();
+    const auto& availableSizeClasses() const { return available; }
 
     void pushFront(size_t sizeClass, BufferChunk* chunk);
     void pushBack(BufferChunk* chunk);
@@ -522,6 +529,8 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   bool useAvailableChunk(size_t sizeClass, size_t maxSizeClass);
   bool useAvailableChunk(size_t sizeClass, size_t maxSizeClass, ChunkLists& src,
                          BufferChunkList& dst);
+  SizeClassBitSet getChunkSizeClassesToMove(size_t maxSizeClass,
+                                            ChunkLists& src) const;
   void* bumpAlloc(size_t bytes, size_t sizeClass, size_t maxSizeClass);
   void* allocFromRegion(FreeRegion* region, size_t bytes, size_t sizeClass);
   void* allocMediumAligned(size_t bytes, bool inGC);
