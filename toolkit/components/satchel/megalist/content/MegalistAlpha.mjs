@@ -266,12 +266,7 @@ export class MegalistAlpha extends MozLitElement {
   }
 
   receiveSetDisplayMode(displayMode) {
-    if (this.displayMode !== displayMode) {
-      this.displayMode = displayMode;
-      const radioBtnId =
-        displayMode === DISPLAY_MODES.ALL ? "allLogins" : "alerts";
-      this.shadowRoot.querySelector(`#${radioBtnId}`).checked = true;
-    }
+    this.displayMode = displayMode;
   }
 
   receiveReauthResponse(isAuthorized) {
@@ -374,6 +369,10 @@ export class MegalistAlpha extends MozLitElement {
   renderList() {
     return this.records.length
       ? html`
+          <div class="first-row">
+            ${this.renderSearch()} ${this.renderMenu()}
+          </div>
+          <div class="second-row">${this.renderRadioButtons()}</div>
           <div
             class="passwords-list"
             role="listbox"
@@ -551,7 +550,7 @@ export class MegalistAlpha extends MozLitElement {
     </moz-card>`;
   }
 
-  renderLastRow() {
+  renderContent() {
     switch (this.viewMode) {
       case VIEW_MODES.LIST:
         return this.renderList();
@@ -620,12 +619,6 @@ export class MegalistAlpha extends MozLitElement {
     `;
   }
 
-  renderFirstRow() {
-    return html`<div class="first-row">
-      ${this.renderSearch()} ${this.renderMenu()}
-    </div>`;
-  }
-
   renderRadioButtons() {
     return html`
       <div
@@ -634,7 +627,7 @@ export class MegalistAlpha extends MozLitElement {
       >
         <input
           @change=${this.#onRadioButtonChange}
-          checked
+          .checked=${this.displayMode === DISPLAY_MODES.ALL}
           type="radio"
           id="allLogins"
           name="logins"
@@ -648,6 +641,7 @@ export class MegalistAlpha extends MozLitElement {
 
         <input
           @change=${this.#onRadioButtonChange}
+          .checked=${this.displayMode === DISPLAY_MODES.ALERTS}
           type="radio"
           id="alerts"
           name="logins"
@@ -747,14 +741,6 @@ export class MegalistAlpha extends MozLitElement {
     `;
   }
 
-  renderSecondRow() {
-    if (!this.header) {
-      return "";
-    }
-
-    return html`<div class="second-row">${this.renderRadioButtons()}</div>`;
-  }
-
   async #scrollPasswordCardIntoView(guid) {
     const matchingRecordIndex = this.records.findIndex(
       record => record.origin.guid === guid
@@ -799,8 +785,7 @@ export class MegalistAlpha extends MozLitElement {
           data-l10n-attrs="heading"
           view="viewCPMSidebar"
         ></sidebar-panel-header>
-        ${this.renderFirstRow()} ${this.renderSecondRow()}
-        ${this.renderNotification()} ${this.renderLastRow()}
+        ${this.renderNotification()} ${this.renderContent()}
       </div>
     `;
   }
