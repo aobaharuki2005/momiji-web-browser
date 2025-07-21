@@ -251,6 +251,55 @@ def gen_compiler_method(name, args):
     return code
 
 
+def gen_reader_method(name, args):
+    """Generates CacheIRReader code for a single opcode."""
+
+    # Generate a struct that holds the opcode's arguments and a CacheIRReader
+    # method that returns this struct. For example for GuardShape:
+    #
+    #   struct GuardShapeArgs final { ObjOperandId objId; uint32_t shapeOffset; };
+    #
+    #   GuardShapeArgs argsForGuardShape() {
+    #     MOZ_ASSERT(*lastOp_ == CacheOp::GuardShape);
+    #     ObjOperandId objId_ = this->objOperandId();
+    #     uint32_t shapeOffset_ = this->stubOffset();
+    #     return { objId_, shapeOffset_ };
+    #   }
+    #
+    # Note that we use a trailing underscore for the variables to ensure variable
+    # names don't conflict with class methods.
+
+    struct_name = f"{name}Args"
+    method_name = f"argsFor{name}"
+
+    read_args_code = ""
+    method_vars = []
+    struct_fields = []
+
+    if args:
+        for arg_name, arg_type in args.items():
+            cpp_type, suffix, readexpr = arg_reader_info[arg_type]
+            readexpr = readexpr.replace("reader.", "this->")
+            cpp_field_name = arg_name + suffix
+            cpp_var_name = cpp_field_name + "_"
+            method_vars.append(cpp_var_name)
+            struct_fields.append(f"{cpp_type} {cpp_field_name};")
+            read_args_code += f"  {cpp_type} {cpp_var_name} = {readexpr};\\\n"
+
+    # Generate struct.
+    code = f"struct {struct_name} final {{ {' '.join(struct_fields)} }};\\\n"
+
+    # Generate reader method.
+    code += f"{struct_name} {method_name}() {{\\\n"
+    code += f"  MOZ_ASSERT(*lastOp_ == CacheOp::{name});\\\n"
+    code += read_args_code
+    vars_list = ", ".join(method_vars)
+    code += f"  return {{ {vars_list} }};\\\n"
+    code += "}\\\n"
+
+    return code
+
+
 # For each argument type, the method name for printing it.
 arg_spewer_method = {
     "ValId": "spewOperandId",
@@ -460,6 +509,9 @@ def generate_cacheirops_header(c_out, yaml_path):
     # Generated CacheIRWriter methods.
     writer_methods = []
 
+    # Generated CacheIRReader methods.
+    reader_methods = []
+
     # Generated CacheIRCompiler methods.
     compiler_shared_methods = []
     compiler_unshared_methods = []
@@ -504,6 +556,7 @@ def generate_cacheirops_header(c_out, yaml_path):
         ops_items.append(f"_({name}, {args_length}, {transpile_str}, {cost_estimate})")
 
         writer_methods.append(gen_writer_method(name, args, custom_writer))
+        reader_methods.append(gen_reader_method(name, args))
 
         if shared:
             compiler_shared_methods.append(gen_compiler_method(name, args))
@@ -524,6 +577,10 @@ def generate_cacheirops_header(c_out, yaml_path):
 
     contents += "#define CACHE_IR_WRITER_GENERATED \\\n"
     contents += "\\\n".join(writer_methods)
+    contents += "\n\n"
+
+    contents += "#define CACHE_IR_READER_GENERATED \\\n"
+    contents += "\\\n".join(reader_methods)
     contents += "\n\n"
 
     contents += "#define CACHE_IR_COMPILER_SHARED_GENERATED \\\n"
