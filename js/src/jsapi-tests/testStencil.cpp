@@ -97,6 +97,12 @@ bool basic_test(const CharT* chars) {
       cx, JS::InstantiateModuleStencil(cx, instantiateOptions, stencil));
   CHECK(moduleObject);
 
+  CHECK(JS::LoadRequestedModules(
+      cx, moduleObject, JS::UndefinedHandleValue,
+      [](JSContext* cx, JS::Handle<JS::Value> val) { return true; },
+      [](JSContext* cx, JS::Handle<JS::Value> val,
+         JS::Handle<JS::Value> error) { return true; }));
+
   // Link and evaluate the module graph. The link step used to be call
   // "instantiate" but is unrelated to the concept in Stencil with same name.
   JS::RootedValue rval(cx);
