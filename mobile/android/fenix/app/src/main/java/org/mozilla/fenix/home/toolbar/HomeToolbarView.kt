@@ -25,6 +25,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentHomeBinding
 import org.mozilla.fenix.databinding.FragmentHomeToolbarViewLayoutBinding
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapAreaVertically
 import org.mozilla.fenix.ext.isLargeWindow
 import org.mozilla.fenix.ext.settings
@@ -157,6 +158,7 @@ internal class HomeToolbarView(
         lifecycleOwner = homeFragment.viewLifecycleOwner,
         homeActivity = homeActivity,
         navController = homeFragment.findNavController(),
+        fenixBrowserUseCases = context.components.useCases.fenixBrowserUseCases,
         menuButton = WeakReference(toolbarBinding.menuButton),
     ).also { it.build() }
 
