@@ -7513,11 +7513,12 @@ class MStoreTypedArrayElementHole : public MQuaternaryInstruction,
   ALLOW_CLONE(MStoreTypedArrayElementHole)
 };
 
-// Compute an "effective address", i.e., a compound computation of the form:
+// Compute a 3-component "effective address":
 //   base + index * scale + displacement
-class MEffectiveAddress : public MBinaryInstruction, public NoTypePolicy::Data {
-  MEffectiveAddress(MDefinition* base, MDefinition* index, Scale scale,
-                    int32_t displacement)
+class MEffectiveAddress3 : public MBinaryInstruction,
+                           public NoTypePolicy::Data {
+  MEffectiveAddress3(MDefinition* base, MDefinition* index, Scale scale,
+                     int32_t displacement)
       : MBinaryInstruction(classOpcode, base, index),
         scale_(scale),
         displacement_(displacement) {
@@ -7531,7 +7532,7 @@ class MEffectiveAddress : public MBinaryInstruction, public NoTypePolicy::Data {
   int32_t displacement_;
 
  public:
-  INSTRUCTION_HEADER(EffectiveAddress)
+  INSTRUCTION_HEADER(EffectiveAddress3)
   TRIVIAL_NEW_WRAPPERS
 
   MDefinition* base() const { return lhs(); }
@@ -7539,7 +7540,55 @@ class MEffectiveAddress : public MBinaryInstruction, public NoTypePolicy::Data {
   Scale scale() const { return scale_; }
   int32_t displacement() const { return displacement_; }
 
-  ALLOW_CLONE(MEffectiveAddress)
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+#ifdef JS_JITSPEW
+  void getExtras(ExtrasCollector* extras) const override {
+    char buf[64];
+    SprintfLiteral(buf, "(disp=%d, scale=%s)", int(displacement_),
+                   StringFromScale(scale_));
+    extras->add(buf);
+  }
+#endif
+
+  ALLOW_CLONE(MEffectiveAddress3)
+};
+
+// Compute a 2-component "effective address":
+//   index * scale + displacement
+class MEffectiveAddress2 : public MUnaryInstruction, public NoTypePolicy::Data {
+  MEffectiveAddress2(MDefinition* index, Scale scale, int32_t displacement)
+      : MUnaryInstruction(classOpcode, index),
+        scale_(scale),
+        displacement_(displacement) {
+    MOZ_ASSERT(index->type() == MIRType::Int32);
+    setMovable();
+    setResultType(MIRType::Int32);
+  }
+
+  Scale scale_;
+  int32_t displacement_;
+
+ public:
+  INSTRUCTION_HEADER(EffectiveAddress2)
+  TRIVIAL_NEW_WRAPPERS
+
+  MDefinition* index() const { return input(); }
+  Scale scale() const { return scale_; }
+  int32_t displacement() const { return displacement_; }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+#ifdef JS_JITSPEW
+  void getExtras(ExtrasCollector* extras) const override {
+    char buf[64];
+    SprintfLiteral(buf, "(disp=%d, scale=%s)", int(displacement_),
+                   StringFromScale(scale_));
+    extras->add(buf);
+  }
+#endif
+
+  ALLOW_CLONE(MEffectiveAddress2)
 };
 
 // Clamp input to range [0, 255] for Uint8ClampedArray.

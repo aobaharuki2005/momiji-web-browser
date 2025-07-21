@@ -117,8 +117,8 @@ static void AnalyzeLsh(TempAllocator& alloc, MLsh* lsh) {
     return;
   }
 
-  MEffectiveAddress* eaddr =
-      MEffectiveAddress::New(alloc, base, index, scale, displacement);
+  MEffectiveAddress3* eaddr =
+      MEffectiveAddress3::New(alloc, base, index, scale, displacement);
   last->replaceAllUsesWith(eaddr);
   last->block()->insertAfter(last, eaddr);
 }

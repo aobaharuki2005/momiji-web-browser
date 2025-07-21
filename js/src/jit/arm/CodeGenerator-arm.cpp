@@ -2080,15 +2080,26 @@ void CodeGenerator::visitSoftUDivOrMod(LSoftUDivOrMod* ins) {
   masm.bind(&done);
 }
 
-void CodeGenerator::visitEffectiveAddress(LEffectiveAddress* ins) {
-  const MEffectiveAddress* mir = ins->mir();
+void CodeGenerator::visitEffectiveAddress3(LEffectiveAddress3* ins) {
+  const MEffectiveAddress3* mir = ins->mir();
   Register base = ToRegister(ins->base());
   Register index = ToRegister(ins->index());
   Register output = ToRegister(ins->output());
 
-  ScratchRegisterScope scratch(masm);
-
   masm.as_add(output, base, lsl(index, mir->scale()));
+  if (mir->displacement() != 0) {
+    ScratchRegisterScope scratch(masm);
+    masm.ma_add(Imm32(mir->displacement()), output, scratch);
+  }
+}
+
+void CodeGenerator::visitEffectiveAddress2(LEffectiveAddress2* ins) {
+  const MEffectiveAddress2* mir = ins->mir();
+  Register index = ToRegister(ins->index());
+  Register output = ToRegister(ins->output());
+
+  masm.ma_lsl(Imm32(mir->scale()), index, output);
+  ScratchRegisterScope scratch(masm);
   masm.ma_add(Imm32(mir->displacement()), output, scratch);
 }
 

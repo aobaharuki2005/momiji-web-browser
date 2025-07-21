@@ -2382,10 +2382,16 @@
 #endif
   mir_op: AtomicTypedArrayElementBinop
 
-- name: EffectiveAddress
+- name: EffectiveAddress3
   result_type: WordSized
   operands:
     base: WordSized
+    index: WordSized
+  mir_op: true
+
+- name: EffectiveAddress2
+  result_type: WordSized
+  operands:
     index: WordSized
   mir_op: true
 

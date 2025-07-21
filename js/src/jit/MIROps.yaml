@@ -2052,7 +2052,10 @@
 - name: StoreTypedArrayElementHole
   gen_boilerplate: false
 
-- name: EffectiveAddress
+- name: EffectiveAddress3
+  gen_boilerplate: false
+
+- name: EffectiveAddress2
   gen_boilerplate: false
 
 - name: ClampToUint8

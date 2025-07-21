@@ -1707,14 +1707,33 @@ void CodeGenerator::visitUMod(LUMod* ins) {
   }
 }
 
-void CodeGenerator::visitEffectiveAddress(LEffectiveAddress* ins) {
-  const MEffectiveAddress* mir = ins->mir();
+void CodeGenerator::visitEffectiveAddress3(LEffectiveAddress3* ins) {
+  const MEffectiveAddress3* mir = ins->mir();
   const ARMRegister base = toWRegister(ins->base());
   const ARMRegister index = toWRegister(ins->index());
   const ARMRegister output = toWRegister(ins->output());
 
-  masm.Add(output, base, Operand(index, vixl::LSL, mir->scale()));
-  masm.Add(output, output, Operand(mir->displacement()));
+  if (mir->scale() == Scale::TimesOne) {
+    masm.Add(output, base, Operand(index));
+  } else {
+    masm.Add(output, base, Operand(index, vixl::LSL, mir->scale()));
+  }
+  if (mir->displacement() != 0) {
+    masm.Add(output, output, Operand(mir->displacement()));
+  }
+}
+
+void CodeGenerator::visitEffectiveAddress2(LEffectiveAddress2* ins) {
+  const MEffectiveAddress2* mir = ins->mir();
+  const ARMRegister index = toWRegister(ins->index());
+  const ARMRegister output = toWRegister(ins->output());
+  // Ensured because the LIR's `index` input is not an AtStart variant.
+  // If this ever fails, we'll need to generate a slower sequence the same
+  // as ::visitEffectiveAddress, but with `base` being `wzr`.
+  MOZ_RELEASE_ASSERT(output.code() != index.code());
+
+  masm.Mov(output, mir->displacement());
+  masm.Add(output, output, Operand(index, vixl::LSL, mir->scale()));
 }
 
 void CodeGenerator::visitNegI(LNegI* ins) {

@@ -1113,8 +1113,11 @@ void MacroAssemblerRiscv64::computeScaledAddress(const BaseIndex& address,
   Register index = address.index;
   int32_t shift = Imm32::ShiftOf(address.scale).value;
   UseScratchRegisterScope temps(this);
-  Register tmp = dest == base ? temps.Acquire() : dest;
-  if (shift) {
+  if (shift && base == zero) {
+    MOZ_ASSERT(shift <= 4);
+    slli(dest, index, shift);
+  } else if (shift) {
+    Register tmp = dest == base ? temps.Acquire() : dest;
     MOZ_ASSERT(shift <= 4);
     slli(tmp, index, shift);
     add(dest, base, tmp);
