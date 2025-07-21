@@ -194,11 +194,17 @@ struct LargeBuffer;
 
 class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
  public:
+  static constexpr size_t MinSmallAllocShift = 4;    // 16 B
   static constexpr size_t MinMediumAllocShift = 8;   // 256 B
   static constexpr size_t MaxMediumAllocShift = 19;  // 512 KB
 
-  static constexpr size_t MediumAllocClasses =
-      MaxMediumAllocShift - MinMediumAllocShift + 1;
+  // TODO: Ideally this would equal MinSmallAllocShift but we're constrained by
+  // the size of FreeRegion which won't fit into 16 bytes.
+  static constexpr size_t MinSizeClassShift = 5;  // 32 B
+  static_assert(MinSizeClassShift >= MinSmallAllocShift);
+
+  static constexpr size_t AllocSizeClasses =
+      MaxMediumAllocShift - MinSizeClassShift + 1;
 
   // An RAII guard to lock and unlock the buffer allocator lock.
   class AutoLock : public LockGuard<Mutex> {
@@ -219,9 +225,9 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
 
   // Segregated free list: an array of free lists, one per size class.
   class FreeLists {
-    using FreeListArray = mozilla::Array<FreeList, MediumAllocClasses>;
+    using FreeListArray = mozilla::Array<FreeList, AllocSizeClasses>;
     FreeListArray lists;
-    mozilla::BitSet<MediumAllocClasses, uint32_t> available;
+    mozilla::BitSet<AllocSizeClasses, uint32_t> available;
 
    public:
     FreeLists() = default;

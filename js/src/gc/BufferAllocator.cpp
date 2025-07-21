@@ -30,6 +30,9 @@ using namespace js::gc;
 
 namespace js::gc {
 
+static constexpr size_t MinFreeRegionSize =
+    1 << BufferAllocator::MinSizeClassShift;
+
 static constexpr size_t SmallRegionShift = 14;  // 16 KB
 static constexpr size_t SmallRegionSize = 1 << SmallRegionShift;
 static constexpr uintptr_t SmallRegionMask = SmallRegionSize - 1;
@@ -319,20 +322,20 @@ BufferAllocator::FreeRegion* BufferAllocator::FreeLists::getFirstRegion(
 
 void BufferAllocator::FreeLists::pushFront(size_t sizeClass,
                                            FreeRegion* region) {
-  MOZ_ASSERT(sizeClass < MediumAllocClasses);
+  MOZ_ASSERT(sizeClass < AllocSizeClasses);
   lists[sizeClass].pushFront(region);
   available[sizeClass] = true;
 }
 
 void BufferAllocator::FreeLists::pushBack(size_t sizeClass,
                                           FreeRegion* region) {
-  MOZ_ASSERT(sizeClass < MediumAllocClasses);
+  MOZ_ASSERT(sizeClass < AllocSizeClasses);
   lists[sizeClass].pushBack(region);
   available[sizeClass] = true;
 }
 
 void BufferAllocator::FreeLists::append(FreeLists&& other) {
-  for (size_t i = 0; i < MediumAllocClasses; i++) {
+  for (size_t i = 0; i < AllocSizeClasses; i++) {
     if (!other.lists[i].isEmpty()) {
       lists[i].append(std::move(other.lists[i]));
       available[i] = true;
@@ -343,7 +346,7 @@ void BufferAllocator::FreeLists::append(FreeLists&& other) {
 }
 
 void BufferAllocator::FreeLists::prepend(FreeLists&& other) {
-  for (size_t i = 0; i < MediumAllocClasses; i++) {
+  for (size_t i = 0; i < AllocSizeClasses; i++) {
     if (!other.lists[i].isEmpty()) {
       lists[i].prepend(std::move(other.lists[i]));
       available[i] = true;
@@ -354,7 +357,7 @@ void BufferAllocator::FreeLists::prepend(FreeLists&& other) {
 }
 
 void BufferAllocator::FreeLists::remove(size_t sizeClass, FreeRegion* region) {
-  MOZ_ASSERT(sizeClass < MediumAllocClasses);
+  MOZ_ASSERT(sizeClass < AllocSizeClasses);
   lists[sizeClass].remove(region);
   available[sizeClass] = !lists[sizeClass].isEmpty();
 }
@@ -368,7 +371,7 @@ void BufferAllocator::FreeLists::clear() {
 
 template <typename Pred>
 void BufferAllocator::FreeLists::eraseIf(Pred&& pred) {
-  for (size_t i = 0; i < MediumAllocClasses; i++) {
+  for (size_t i = 0; i < AllocSizeClasses; i++) {
     FreeList& freeList = lists[i];
     freeList.eraseIf(std::forward<Pred>(pred));
     available[i] = !freeList.isEmpty();
@@ -377,7 +380,7 @@ void BufferAllocator::FreeLists::eraseIf(Pred&& pred) {
 
 inline void BufferAllocator::FreeLists::assertEmpty() const {
 #ifdef DEBUG
-  for (size_t i = 0; i < MediumAllocClasses; i++) {
+  for (size_t i = 0; i < AllocSizeClasses; i++) {
     MOZ_ASSERT(lists[i].isEmpty());
   }
   MOZ_ASSERT(available.IsEmpty());
@@ -394,7 +397,7 @@ inline void BufferAllocator::FreeLists::assertContains(
 
 inline void BufferAllocator::FreeLists::checkAvailable() const {
 #ifdef DEBUG
-  for (size_t i = 0; i < MediumAllocClasses; i++) {
+  for (size_t i = 0; i < AllocSizeClasses; i++) {
     MOZ_ASSERT(available[i] == !lists[i].isEmpty());
   }
 #endif
@@ -1618,6 +1621,7 @@ void BufferAllocator::verifyChunk(BufferChunk* chunk,
 
 void BufferAllocator::verifyFreeRegion(BufferChunk* chunk, uintptr_t endOffset,
                                        size_t expectedSize) {
+  MOZ_ASSERT(expectedSize >= MinFreeRegionSize);
   auto* freeRegion = FreeRegion::fromEndOffset(chunk, endOffset);
   MOZ_ASSERT(freeRegion->isInList());
   MOZ_ASSERT(freeRegion->size() == expectedSize);
@@ -1935,7 +1939,14 @@ void BufferAllocator::updateFreeListsAfterAlloc(FreeLists* freeLists,
   }
 
   // Otherwise region is now too small. Move it to the appropriate bucket for
-  // its reduced size.
+  // its reduced size if possible.
+
+  if (newSize < MinFreeRegionSize) {
+    // We can't record a region this small. The free space will not be reused
+    // until enough adjacent space become free
+    return;
+  }
+
   size_t newSizeClass = SizeClassForFreeRegion(newSize);
   MOZ_ASSERT(newSize >= SizeClassBytes(newSizeClass));
   MOZ_ASSERT(newSizeClass < sizeClass);
@@ -2210,6 +2221,7 @@ void BufferAllocator::freeMedium(void* alloc) {
     // "The Memory Fragmentation Problem: Solved?"  by Johnstone et al.
     region =
         addFreeRegion(freeLists, startAddr, bytes, false, ListPosition::Front);
+    MOZ_ASSERT(region);  // Always succeeds for medium allocations.
   } else {
     // There is a free region following this allocation. Expand the existing
     // region down to cover the newly freed space.
@@ -2273,6 +2285,13 @@ bool BufferAllocator::isSweepingChunk(BufferChunk* chunk) {
 BufferAllocator::FreeRegion* BufferAllocator::addFreeRegion(
     FreeLists* freeLists, uintptr_t start, size_t bytes, bool anyDecommitted,
     ListPosition position, bool expectUnchanged /* = false */) {
+  static_assert(sizeof(FreeRegion) <= MinFreeRegionSize);
+  if (bytes < MinFreeRegionSize) {
+    // We can't record a region this small. The free space will not be reused
+    // until enough adjacent space become free.
+    return nullptr;
+  }
+
   uintptr_t end = start + bytes;
 #ifdef DEBUG
   if (expectUnchanged) {
@@ -2516,37 +2535,40 @@ BufferAllocator::FreeRegion* BufferChunk::findPrecedingFreeRegion(
 
 /* static */
 size_t BufferAllocator::SizeClassForAlloc(size_t bytes) {
-  MOZ_ASSERT(bytes >= MinMediumAllocSize);
+  MOZ_ASSERT(bytes >= MinSmallAllocSize);
   MOZ_ASSERT(bytes <= MaxMediumAllocSize);
 
   size_t log2Size = mozilla::CeilingLog2(bytes);
   MOZ_ASSERT((size_t(1) << log2Size) >= bytes);
-  MOZ_ASSERT(MinMediumAllocShift == mozilla::CeilingLog2(MinMediumAllocSize));
-  MOZ_ASSERT(log2Size >= MinMediumAllocShift);
-  size_t sizeClass = log2Size - MinMediumAllocShift;
-  MOZ_ASSERT(sizeClass < MediumAllocClasses);
+  MOZ_ASSERT(MinSizeClassShift == mozilla::CeilingLog2(MinFreeRegionSize));
+  if (log2Size < MinSizeClassShift) {
+    return 0;
+  }
+
+  size_t sizeClass = log2Size - MinSizeClassShift;
+  MOZ_ASSERT(sizeClass < AllocSizeClasses);
   return sizeClass;
 }
 
 /* static */
 size_t BufferAllocator::SizeClassForFreeRegion(size_t bytes) {
-  MOZ_ASSERT(bytes >= MinMediumAllocSize);
+  MOZ_ASSERT(bytes >= MinFreeRegionSize);
   MOZ_ASSERT(bytes < ChunkSize);
 
   size_t log2Size = mozilla::FloorLog2(bytes);
   MOZ_ASSERT((size_t(1) << log2Size) <= bytes);
-  MOZ_ASSERT(log2Size >= MinMediumAllocShift);
+  MOZ_ASSERT(log2Size >= MinSizeClassShift);
   size_t sizeClass =
-      std::min(log2Size - MinMediumAllocShift, MediumAllocClasses - 1);
-  MOZ_ASSERT(sizeClass < MediumAllocClasses);
+      std::min(log2Size - MinSizeClassShift, AllocSizeClasses - 1);
+  MOZ_ASSERT(sizeClass < AllocSizeClasses);
 
   return sizeClass;
 }
 
 /* static */
 inline size_t BufferAllocator::SizeClassBytes(size_t sizeClass) {
-  MOZ_ASSERT(sizeClass < MediumAllocClasses);
-  return 1 << (sizeClass + MinMediumAllocShift);
+  MOZ_ASSERT(sizeClass < AllocSizeClasses);
+  return 1 << (sizeClass + MinSizeClassShift);
 }
 
 /* static */
