@@ -102,6 +102,12 @@
     <action
         android:id="@+id/action_global_historyFragment"
         app:destination="@id/historyFragment" />
+    <action
+        android:id="@+id/action_global_crashListFragment"
+        app:destination="@id/crashListFragment" />
+    <action
+        android:id="@+id/action_global_gleanDebugToolsFragment"
+        app:destination="@id/gleanDebugToolsFragment" />
 
     <action
         android:id="@+id/action_global_downloadsFragment"

@@ -10,6 +10,7 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.lifecycle.Lifecycle.State.RESUMED
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.NavController
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChangedBy
@@ -28,6 +29,7 @@ import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.UrlSuggestionAutocompleted
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction
+import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.CommitUrl
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ToggleEditMode
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarMenu
@@ -42,15 +44,20 @@ import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.ext.flow
+import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.UnifiedSearch
+import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode.Private
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEngineSelected
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
+import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.TABS_SEARCH_ENGINE_ID
@@ -60,6 +67,7 @@ import org.mozilla.fenix.search.SearchSelectorEvents.SearchSelectorClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSelectorItemClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSettingsItemClicked
 import org.mozilla.fenix.search.ext.searchEngineShortcuts
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction.ContentDescription.StringContentDescription as SearchSelectorDescription
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction.Icon.DrawableIcon as SearchSelectorIcon
@@ -102,6 +110,7 @@ class BrowserToolbarSearchMiddleware(
     private var syncCurrentSearchEngineJob: Job? = null
     private var syncAvailableSearchEnginesJob: Job? = null
 
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     override fun invoke(
         context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         next: (BrowserToolbarAction) -> Unit,
@@ -167,10 +176,93 @@ class BrowserToolbarSearchMiddleware(
                 components.core.engine.speculativeConnect(action.url)
             }
 
+            is CommitUrl -> {
+                // Do not load URL if application search engine is selected.
+                if (reconcileSelectedEngine()?.type == SearchEngine.Type.APPLICATION) {
+                    return
+                }
+
+                val navController = environment?.navController ?: return
+
+                when (action.text) {
+                    "about:crashes" -> {
+                        // The list of past crashes can be accessed via "settings > about", but desktop and
+                        // fennec users may be used to navigating to "about:crashes". So we intercept this here
+                        // and open the crash list activity instead.
+                        navController.navigate(
+                            NavGraphDirections.actionGlobalCrashListFragment(),
+                        )
+                    }
+                    "about:addons" -> {
+                        navController.navigate(
+                            NavGraphDirections.actionGlobalAddonsManagementFragment(),
+                        )
+                        browserStore.dispatch(EngagementFinished(abandoned = false))
+                    }
+                    "about:glean" -> {
+                        navController.navigate(
+                            NavGraphDirections.actionGlobalGleanDebugToolsFragment(),
+                        )
+                    }
+                    "moz://a" -> openSearchOrUrl(
+                        SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.MANIFESTO),
+                        navController,
+                    )
+                    else ->
+                        if (action.text.isNotBlank()) {
+                            openSearchOrUrl(action.text, navController)
+                        } else {
+                            browserStore.dispatch(EngagementFinished(abandoned = true))
+                        }
+                }
+
+                appStore.dispatch(SearchEnded)
+            }
+
             else -> {
                 // no-op.
             }
         }
+    }
+
+    private fun openSearchOrUrl(text: String, navController: NavController) {
+        val searchEngine = reconcileSelectedEngine()
+        val isDefaultEngine = searchEngine?.id == browserStore.state.search.regionDefaultSearchEngineId
+        val newTab = if (settings.enableHomepageAsNewTab) {
+            false
+        } else {
+            appStore.state.searchState.sourceTabId == null
+        }
+
+        navController.navigate(
+            NavGraphDirections.actionGlobalBrowser(),
+        )
+
+        components.useCases.fenixBrowserUseCases.loadUrlOrSearch(
+            searchTermOrURL = text,
+            newTab = newTab,
+            forceSearch = !isDefaultEngine,
+            private = environment?.browsingModeManager?.mode == Private,
+            searchEngine = searchEngine,
+        )
+
+        if (text.isUrl() || searchEngine == null) {
+            Events.enteredUrl.record(Events.EnteredUrlExtra(autocomplete = false))
+        } else {
+            val searchAccessPoint = when (appStore.state.searchState.searchAccessPoint) {
+                MetricsUtils.Source.NONE -> MetricsUtils.Source.ACTION
+                else -> appStore.state.searchState.searchAccessPoint
+            }
+
+            MetricsUtils.recordSearchMetrics(
+                searchEngine,
+                isDefaultEngine,
+                searchAccessPoint,
+                components.nimbus.events,
+            )
+        }
+
+        browserStore.dispatch(EngagementFinished(abandoned = false))
     }
 
     private fun refreshConfigurationAfterSearchEngineChange(
