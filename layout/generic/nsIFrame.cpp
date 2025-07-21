@@ -786,6 +786,16 @@ void nsIFrame::HandlePrimaryFrameStyleChange(ComputedStyle* aOldStyle) {
     }
   }
 
+  const bool wasReferringToAnchor = aOldStyle &&
+                                    oldDisp->IsAbsolutelyPositionedStyle() &&
+                                    aOldStyle->HasAnchorPosReference();
+  const bool isReferringToAnchor = HasAnchorPosReference();
+  if (wasReferringToAnchor && !isReferringToAnchor) {
+    PresShell()->RemoveAnchorPosPositioned(this);
+  } else if (!wasReferringToAnchor && isReferringToAnchor) {
+    PresShell()->AddAnchorPosPositioned(this);
+  }
+
   bool handleAnchorPosAnchorNameChange =
       oldDisp ? oldDisp->mAnchorName != disp->mAnchorName
               : disp->HasAnchorName();

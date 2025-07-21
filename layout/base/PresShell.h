@@ -754,6 +754,16 @@ class PresShell final : public nsStubDocumentObserver,
   void AddAnchorPosAnchor(const nsAtom* aName, nsIFrame* aFrame);
   void RemoveAnchorPosAnchor(const nsAtom* aName, nsIFrame* aFrame);
 
+  inline void AddAnchorPosPositioned(nsIFrame* aFrame) {
+    if (!mAnchorPosPositioned.Contains(aFrame)) {
+      mAnchorPosPositioned.AppendElement(aFrame);
+    }
+  }
+
+  inline void RemoveAnchorPosPositioned(nsIFrame* aFrame) {
+    mAnchorPosPositioned.RemoveElement(aFrame);
+  }
+
 #ifdef MOZ_REFLOW_PERF
   void DumpReflows();
   void CountReflows(const char* aName, nsIFrame* aFrame);
@@ -3196,6 +3206,7 @@ class PresShell final : public nsStubDocumentObserver,
   nsTHashSet<WeakFrame*> mWeakFrames;
 
   nsTHashMap<RefPtr<const nsAtom>, nsTArray<nsIFrame*>> mAnchorPosAnchors;
+  nsTArray<nsIFrame*> mAnchorPosPositioned;
 
   // Reflow roots that need to be reflowed.
   DepthOrderedFrameList mDirtyRoots;
