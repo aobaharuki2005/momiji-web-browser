@@ -50,6 +50,8 @@
     <span id="afterEmptyTextNode">after empty text node</span>
   </p>
   <div id="nbsp">&nbsp;</div>
+  <div id="punctuationStartsRangeBasedTextDirective">"</div>
+  <div id="punctuationEndsRangeBasedTextDirective">text preceded by punctuation in a different block</div>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const empty = document.createTextNode("");
@@ -354,6 +356,15 @@
           content: "node",
           textDirective: "text=node"
         },
+        {
+          name: "Range-based text directive with punctuation as start",
+          startContainer: punctuationStartsRangeBasedTextDirective.firstChild,
+          startOffset: 0,
+          endContainer: punctuationEndsRangeBasedTextDirective.firstChild,
+          endOffset: 4,
+          content: '"\n  text',
+          textDirective: "text=%22,text"
+        }
       ]) {
         const range = document.createRange();
         range.setStart(testCase.startContainer, testCase.startOffset);

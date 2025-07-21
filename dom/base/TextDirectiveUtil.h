@@ -205,6 +205,9 @@ class TextDirectiveUtil final {
    * used, and the distances are based off the begin of the string.
    * The returned array is always sorted and contains monotonically increasing
    * values.
+   *
+   * This function is guaranteed to return at least one word boundary distance,
+   * the last element always being the length of the string.
    */
   template <TextScanDirection direction>
   static nsTArray<uint32_t> ComputeWordBoundaryDistances(
@@ -531,6 +534,10 @@ template <TextScanDirection direction>
     wordBoundaryDistances.AppendElement(direction == TextScanDirection::Left
                                             ? aString.Length() - wordBegin
                                             : wordEnd);
+  }
+  if (wordBoundaryDistances.IsEmpty() ||
+      wordBoundaryDistances.LastElement() != aString.Length()) {
+    wordBoundaryDistances.AppendElement(aString.Length());
   }
   return std::move(wordBoundaryDistances);
 }
