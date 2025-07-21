@@ -2642,10 +2642,12 @@ export class UrlbarMuxer {
  * The provider scope is to query a datasource and return results from it.
  */
 export class UrlbarProvider {
-  constructor() {
-    ChromeUtils.defineLazyGetter(this, "logger", () =>
-      UrlbarUtils.getLogger({ prefix: `Provider.${this.name}` })
-    );
+  #lazy = XPCOMUtils.declareLazy({
+    logger: () => UrlbarUtils.getLogger({ prefix: `Provider.${this.name}` }),
+  });
+
+  get logger() {
+    return this.#lazy.logger;
   }
 
   /**
@@ -3036,7 +3038,7 @@ export class SkippableTimer {
    * @param {number} [options.time] A delay in milliseconds to wait for
    * @param {boolean} [options.reportErrorOnTimeout] If true and the timer times
    *                  out, an error will be logged with Cu.reportError
-   * @param {Console} [options.logger] An optional logger
+   * @param {ConsoleInstance} [options.logger] An optional logger
    */
   constructor({
     name = "<anonymous timer>",

@@ -68,6 +68,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+ChromeUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.UrlbarUtils.getLogger({ prefix: "Input" })
+);
+
 const DEFAULT_FORM_HISTORY_NAME = "searchbar-history";
 const SEARCH_BUTTON_CLASS = "urlbar-search-button";
 
@@ -321,10 +325,6 @@ export class UrlbarInput {
 
     this.editor.newlineHandling =
       Ci.nsIEditor.eNewlinesStripSurroundingWhitespace;
-
-    ChromeUtils.defineLazyGetter(this, "logger", () =>
-      lazy.UrlbarUtils.getLogger({ prefix: "Input" })
-    );
   }
 
   /**
@@ -1035,7 +1035,7 @@ export class UrlbarInput {
    */
   pickElement(element, event) {
     let result = this.view.getResultFromElement(element);
-    this.logger.debug(
+    lazy.logger.debug(
       `pickElement ${element} with event ${event?.type}, result: ${result}`
     );
     if (!result) {
@@ -3627,7 +3627,7 @@ export class UrlbarInput {
             .filter(Boolean)
             .join("@");
         } catch (ex) {
-          this.logger.error("Should only try to untrim valid URLs");
+          lazy.logger.error("Should only try to untrim valid URLs");
         }
         if (!this.#selectedText.startsWith(prePathMinusPort)) {
           selectionStart += offset;
@@ -4175,7 +4175,7 @@ export class UrlbarInput {
   }
 
   _on_blur(event) {
-    this.logger.debug("Blur Event");
+    lazy.logger.debug("Blur Event");
     // We cannot count every blur events after a missed engagement as abandoment
     // because the user may have clicked on some view element that executes
     // a command causing a focus change. For example opening preferences from
@@ -4286,7 +4286,7 @@ export class UrlbarInput {
   }
 
   _on_focus(event) {
-    this.logger.debug("Focus Event");
+    lazy.logger.debug("Focus Event");
     if (!this._hideFocus) {
       this.toggleAttribute("focused", true);
     }
