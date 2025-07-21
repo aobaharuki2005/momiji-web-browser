@@ -7,6 +7,7 @@
 #include "vm/Watchtower.h"
 
 #include "js/CallAndConstruct.h"
+#include "js/experimental/TypedData.h"
 #include "vm/Compartment.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
@@ -248,6 +249,22 @@ static bool ReshapeForProtoMutation(JSContext* cx, HandleObject obj) {
   return true;
 }
 
+static constexpr bool IsTypedArrayProtoKey(JSProtoKey protoKey) {
+  switch (protoKey) {
+#define PROTO_KEY(_, T, N) \
+  case JSProto_##N##Array: \
+    return true;
+    JS_FOR_EACH_TYPED_ARRAY(PROTO_KEY)
+#undef PROTO_KEY
+    default:
+      return false;
+  }
+}
+
+static_assert(
+    !IsTypedArrayProtoKey(JSProto_TypedArray),
+    "IsTypedArrayProtoKey(JSProto_TypedArray) is expected to return false");
+
 static bool WatchProtoChangeImpl(JSContext* cx, HandleObject obj) {
   if (!obj->isUsedAsPrototype()) {
     return true;
@@ -271,6 +288,13 @@ static bool WatchProtoChangeImpl(JSContext* cx, HandleObject obj) {
 
     if (nobj == nobj->global().maybeGetPrototype(JSProto_String)) {
       nobj->realm()->realmFuses.optimizeStringPrototypeSymbolsFuse.popFuse(
+          cx, nobj->realm()->realmFuses);
+    }
+
+    auto protoKey = StandardProtoKeyOrNull(nobj);
+    if (IsTypedArrayProtoKey(protoKey) &&
+        nobj == nobj->global().maybeGetPrototype(protoKey)) {
+      nobj->realm()->realmFuses.optimizeTypedArraySpeciesFuse.popFuse(
           cx, nobj->realm()->realmFuses);
     }
   }
@@ -498,6 +522,32 @@ static void MaybePopSharedArrayBufferPrototypeFuses(JSContext* cx,
   }
 }
 
+static void MaybePopTypedArrayConstructorFuses(JSContext* cx, NativeObject* obj,
+                                               jsid id) {
+  if (obj != obj->global().maybeGetConstructor(JSProto_TypedArray)) {
+    return;
+  }
+  if (id.isWellKnownSymbol(JS::SymbolCode::species)) {
+    obj->realm()->realmFuses.optimizeTypedArraySpeciesFuse.popFuse(
+        cx, obj->realm()->realmFuses);
+  }
+}
+
+static void MaybePopTypedArrayPrototypeFuses(JSContext* cx, NativeObject* obj,
+                                             jsid id) {
+  auto protoKey = StandardProtoKeyOrNull(obj);
+  if (protoKey != JSProto_TypedArray && !IsTypedArrayProtoKey(protoKey)) {
+    return;
+  }
+  if (obj != obj->global().maybeGetPrototype(protoKey)) {
+    return;
+  }
+  if (id.isAtom(cx->names().constructor)) {
+    obj->realm()->realmFuses.optimizeTypedArraySpeciesFuse.popFuse(
+        cx, obj->realm()->realmFuses);
+  }
+}
+
 static void MaybePopFuses(JSContext* cx, NativeObject* obj, jsid id) {
   // Handle writes to Array constructor fuse properties.
   MaybePopArrayConstructorFuses(cx, obj, id);
@@ -546,6 +596,13 @@ static void MaybePopFuses(JSContext* cx, NativeObject* obj, jsid id) {
 
   // Handle writes to SharedArrayBuffer.prototype fuse properties.
   MaybePopSharedArrayBufferPrototypeFuses(cx, obj, id);
+
+  // Handle writes to %TypedArray% constructor fuse properties.
+  MaybePopTypedArrayConstructorFuses(cx, obj, id);
+
+  // Handle writes to %TypedArray%.prototype and concrete TypedArray.prototype
+  // fuse properties.
+  MaybePopTypedArrayPrototypeFuses(cx, obj, id);
 }
 
 // static

@@ -3499,6 +3499,30 @@ static TypedArrayObject* TypedArrayCreateFromConstructor(
   return unwrapped;
 }
 
+static bool HasBuiltinTypedArraySpecies(TypedArrayObject* obj, JSContext* cx) {
+  // Ensure `%TypedArray%.prototype.constructor` and `%TypedArray%[@@species]`
+  // haven't been mutated. Ensure concrete `TypedArray.prototype.constructor`
+  // and the prototype of `TypedArray.prototype` haven't been mutated.
+  if (!cx->realm()->realmFuses.optimizeTypedArraySpeciesFuse.intact()) {
+    return false;
+  }
+
+  auto protoKey = StandardProtoKeyOrNull(obj);
+
+  // Ensure |obj|'s prototype is the actual concrete TypedArray.prototype.
+  auto* proto = cx->global()->maybeGetPrototype(protoKey);
+  if (!proto || obj->staticPrototype() != proto) {
+    return false;
+  }
+
+  // Fail if |obj| has an own `constructor` property.
+  if (obj->containsPure(cx->names().constructor)) {
+    return false;
+  }
+
+  return true;
+}
+
 static bool IsTypedArraySpecies(JSContext* cx, JSFunction* species) {
   return IsSelfHostedFunctionWithName(species,
                                       cx->names().dollar_TypedArraySpecies_);
@@ -3512,6 +3536,10 @@ static bool IsTypedArraySpecies(JSContext* cx, JSFunction* species) {
 template <typename... Args>
 static TypedArrayObject* TypedArraySpeciesCreateImpl(
     JSContext* cx, Handle<TypedArrayObject*> exemplar, Args... args) {
+  if (HasBuiltinTypedArraySpecies(exemplar, cx)) {
+    return TypedArrayCreateSameType(cx, exemplar, args...);
+  }
+
   // Step 1.
   auto ctorKey = StandardProtoKeyOrNull(exemplar);
   Rooted<JSObject*> defaultCtor(
@@ -5089,7 +5117,7 @@ static const ClassSpec TypedArrayObjectSharedTypedArrayPrototypeClassSpec = {
     TypedArrayObject::staticProperties,
     TypedArrayObject::protoFunctions,
     TypedArrayObject::protoAccessors,
-    nullptr,
+    GenericFinishInit<WhichHasFuseProperty::ProtoAndCtor>,
     ClassSpec::DontDefineConstructor,
 };
 
@@ -5418,7 +5446,7 @@ static const ClassSpec
       static_prototype_properties[Scalar::Type::Name],              \
       TypedArrayMethods(Scalar::Type::Name),                        \
       static_prototype_properties[Scalar::Type::Name],              \
-      nullptr,                                                      \
+      GenericFinishInit<WhichHasFuseProperty::Proto>,               \
       JSProto_TypedArray,                                           \
   },
 
