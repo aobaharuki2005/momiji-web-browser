@@ -240,7 +240,8 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
     auto end() const { return lists.end(); }
 
     // Returns SIZE_MAX if none available.
-    size_t getFirstAvailableSizeClass(size_t minSizeClass) const;
+    size_t getFirstAvailableSizeClass(size_t minSizeClass,
+                                      size_t maxSizeClass) const;
 
     FreeRegion* getFirstRegion(size_t sizeClass);
 
@@ -442,8 +443,8 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
                             BufferAllocator::SweepKind sweepKind);
 
   void* allocMedium(size_t bytes, bool nurseryOwned, bool inGC);
-  void* retryBumpAlloc(size_t requestedBytes, size_t sizeClass, bool inGC);
-  void* bumpAlloc(size_t bytes, size_t sizeClass);
+  void* retryMediumAlloc(size_t requestedBytes, size_t sizeClass, bool inGC);
+  void* bumpAlloc(size_t bytes, size_t sizeClass, size_t maxSizeClass);
   void* allocFromRegion(FreeRegion* region, size_t bytes, size_t sizeClass);
   void* allocMediumAligned(size_t bytes, bool inGC);
   void* retryAlignedAlloc(size_t sizeClass, bool inGC);

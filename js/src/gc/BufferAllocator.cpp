@@ -307,10 +307,17 @@ BufferAllocator::FreeLists& BufferAllocator::FreeLists::operator=(
 }
 
 size_t BufferAllocator::FreeLists::getFirstAvailableSizeClass(
-    size_t minSizeClass) const {
+    size_t minSizeClass, size_t maxSizeClass) const {
+  MOZ_ASSERT(maxSizeClass <= MaxMediumAllocClass);
+
   size_t result = available.FindNext(minSizeClass);
   MOZ_ASSERT(result >= minSizeClass);
   MOZ_ASSERT_IF(result != SIZE_MAX, !lists[result].isEmpty());
+
+  if (result > maxSizeClass) {
+    return SIZE_MAX;
+  }
+
   return result;
 }
 
@@ -1702,9 +1709,9 @@ void* BufferAllocator::allocMedium(size_t bytes, bool nurseryOwned, bool inGC) {
   // Get size class from |bytes|.
   size_t sizeClass = SizeClassForAlloc(bytes);
 
-  void* alloc = bumpAlloc(bytes, sizeClass);
+  void* alloc = bumpAlloc(bytes, sizeClass, MaxMediumAllocClass);
   if (MOZ_UNLIKELY(!alloc)) {
-    alloc = retryBumpAlloc(bytes, sizeClass, inGC);
+    alloc = retryMediumAlloc(bytes, sizeClass, inGC);
     if (!alloc) {
       return nullptr;
     }
@@ -1714,14 +1721,14 @@ void* BufferAllocator::allocMedium(size_t bytes, bool nurseryOwned, bool inGC) {
   return alloc;
 }
 
-MOZ_NEVER_INLINE void* BufferAllocator::retryBumpAlloc(size_t bytes,
-                                                       size_t sizeClass,
-                                                       bool inGC) {
+MOZ_NEVER_INLINE void* BufferAllocator::retryMediumAlloc(size_t bytes,
+                                                         size_t sizeClass,
+                                                         bool inGC) {
   if (hasMinorSweepDataToMerge) {
     // Avoid taking the lock unless we know there is data to merge. This reduces
     // context switches.
     mergeSweptData();
-    void* ptr = bumpAlloc(bytes, sizeClass);
+    void* ptr = bumpAlloc(bytes, sizeClass, MaxMediumAllocClass);
     if (ptr) {
       return ptr;
     }
@@ -1731,16 +1738,18 @@ MOZ_NEVER_INLINE void* BufferAllocator::retryBumpAlloc(size_t bytes,
     return nullptr;
   }
 
-  void* ptr = bumpAlloc(bytes, sizeClass);
+  void* ptr = bumpAlloc(bytes, sizeClass, MaxMediumAllocClass);
   MOZ_ASSERT(ptr);
   return ptr;
 }
 
-void* BufferAllocator::bumpAlloc(size_t bytes, size_t sizeClass) {
+void* BufferAllocator::bumpAlloc(size_t bytes, size_t sizeClass,
+                                 size_t maxSizeClass) {
   mediumFreeLists.ref().checkAvailable();
 
   // Find smallest suitable size class that has free regions.
-  sizeClass = mediumFreeLists.ref().getFirstAvailableSizeClass(sizeClass);
+  sizeClass =
+      mediumFreeLists.ref().getFirstAvailableSizeClass(sizeClass, maxSizeClass);
   if (sizeClass == SIZE_MAX) {
     return nullptr;
   }
@@ -1822,8 +1831,8 @@ void* BufferAllocator::alignedAlloc(size_t sizeClass) {
   // Try the first free region for the smallest possible size class. This will
   // fail if that region is for the exact size class requested but the region is
   // not aligned.
-  size_t allocClass =
-      mediumFreeLists.ref().getFirstAvailableSizeClass(sizeClass);
+  size_t allocClass = mediumFreeLists.ref().getFirstAvailableSizeClass(
+      sizeClass, MaxMediumAllocClass);
   MOZ_ASSERT(allocClass >= sizeClass);
   if (allocClass == SIZE_MAX) {
     return nullptr;
@@ -1839,7 +1848,8 @@ void* BufferAllocator::alignedAlloc(size_t sizeClass) {
   // If we couldn't allocate an aligned region, try a larger size class. This
   // only happens if we selected the size class equal to the requested size.
   MOZ_ASSERT(allocClass == sizeClass);
-  allocClass = mediumFreeLists.ref().getFirstAvailableSizeClass(sizeClass + 1);
+  allocClass = mediumFreeLists.ref().getFirstAvailableSizeClass(
+      sizeClass + 1, MaxMediumAllocClass);
   if (allocClass == SIZE_MAX) {
     return nullptr;
   }

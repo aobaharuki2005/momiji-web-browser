@@ -21,9 +21,6 @@
 
 namespace js::gc {
 
-// todo: rename
-static constexpr size_t MinAllocSize = MinCellSize;  // 16 bytes
-
 static constexpr size_t MinSmallAllocSize =
     1 << BufferAllocator::MinSmallAllocShift;
 static constexpr size_t MaxSmallAllocSize =
@@ -33,12 +30,17 @@ static constexpr size_t MinMediumAllocSize =
 static constexpr size_t MaxMediumAllocSize =
     1 << BufferAllocator::MaxMediumAllocShift;
 
+static constexpr size_t MinAllocSize = MinSmallAllocSize;
+
 static constexpr size_t MediumAllocGranularityShift =
     BufferAllocator::MinMediumAllocShift;
 static constexpr size_t MediumAllocGranularity = 1
                                                  << MediumAllocGranularityShift;
 
 using MediumBufferSize = EncodedSize<MediumAllocGranularityShift>;
+
+static constexpr size_t MaxMediumAllocClass =
+    BufferAllocator::AllocSizeClasses - 1;
 
 /* static */
 inline bool BufferAllocator::IsSmallAllocSize(size_t bytes) {
