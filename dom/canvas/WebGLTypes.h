@@ -101,7 +101,6 @@ namespace webgl {
 template <typename T>
 struct QueueParamTraits;
 class TexUnpackBytes;
-class TexUnpackImage;
 class TexUnpackSurface;
 }  // namespace webgl
 

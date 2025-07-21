@@ -571,7 +571,8 @@ nsresult DMABufSurface::ReadIntoBuffer(mozilla::gl::GLContext* aGLContext,
   const gl::OriginPos destOrigin = gl::OriginPos::BottomLeft;
   {
     const ScopedBindFramebuffer bindFB(aGLContext, autoFBForTex.FB());
-    if (!aGLContext->BlitHelper()->Blit(this, aSize, destOrigin)) {
+    if (!aGLContext->BlitHelper()->Blit(
+            this, gfx::IntRect(gfx::IntPoint(0, 0), aSize), destOrigin)) {
       LOGDMABUF("ReadIntoBuffer: Blit failed.");
       return NS_ERROR_FAILURE;
     }

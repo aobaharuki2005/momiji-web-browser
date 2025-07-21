@@ -547,6 +547,10 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
                             const Maybe<size_t> destStride = Nothing());
   already_AddRefed<gfx::SourceSurface> GetBackBufferSnapshot(
       const bool requireAlphaPremult);
+  std::shared_ptr<gl::SharedSurface> GetBackBufferSnapshotSharedSurface(
+      layers::TextureType texType, bool bgra = false, bool yFlip = false,
+      bool requireAlphaPremult = false);
+  void RecycleSnapshotSharedSurface(std::shared_ptr<gl::SharedSurface>);
   gl::SwapChain* GetSwapChain(WebGLFramebuffer*, const bool webvr);
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebuffer*,
                                                   const bool webvr);
@@ -1301,6 +1305,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
 
   gl::SwapChain mSwapChain;
   gl::SwapChain mWebVRSwapChain;
+  gl::SwapChain mSnapshotSwapChain;
 
   RefPtr<layers::RemoteTextureOwnerClient> mRemoteTextureOwner;
 
@@ -1336,7 +1341,8 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   void BlitBackbufferToCurDriverFB(
       WebGLFramebuffer* const srcAsWebglFb = nullptr,
       const gl::MozFramebuffer* const srcAsMozFb = nullptr,
-      bool srcIsBGRA = false) const;
+      bool srcIsBGRA = false, bool yFlip = false,
+      Maybe<gfxAlphaType> convertAlpha = {}) const;
 
   struct GetDefaultFBForReadDesc {
     bool endOfFrame = false;
@@ -1359,7 +1365,9 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
 
   template <typename... Args>
   void GeneratePerfWarning(const char* const fmt, const Args&... args) const {
-    GenerateError(webgl::kErrorPerfWarning, fmt, args...);
+    if (ShouldGeneratePerfWarnings()) {
+      GenerateError(webgl::kErrorPerfWarning, fmt, args...);
+    }
   }
 
  public:
@@ -1375,7 +1383,6 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   friend class ScopedResolveTexturesForDraw;
   friend class webgl::TexUnpackBlob;
   friend class webgl::TexUnpackBytes;
-  friend class webgl::TexUnpackImage;
   friend class webgl::TexUnpackSurface;
   friend struct webgl::UniformInfo;
   friend class WebGLTexture;

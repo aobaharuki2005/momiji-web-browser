@@ -951,7 +951,8 @@ void WebGLContext::OnEndOfFrame() {
 
 void WebGLContext::BlitBackbufferToCurDriverFB(
     WebGLFramebuffer* const srcAsWebglFb,
-    const gl::MozFramebuffer* const srcAsMozFb, bool srcIsBGRA) const {
+    const gl::MozFramebuffer* const srcAsMozFb, bool srcIsBGRA, bool yFlip,
+    Maybe<gfxAlphaType> convertAlpha) const {
   // BlitFramebuffer ignores ColorMask().
 
   if (mScissorTestEnabled) {
@@ -982,9 +983,9 @@ void WebGLContext::BlitBackbufferToCurDriverFB(
 
   // If no format conversion is necessary, then attempt to directly blit
   // between framebuffers. Otherwise, if we need to convert to RGBA from
-  // the source format, then we will need to use the texture blit path
-  // below.
-  if (!srcIsBGRA) {
+  // the source format or do other conversions, then we will need to use
+  // the texture blit path below.
+  if (!srcIsBGRA && !yFlip && !convertAlpha) {
     if (gl->IsSupported(gl::GLFeature::framebuffer_blit)) {
       gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fbo);
       gl->fBlitFramebuffer(0, 0, size.width, size.height, 0, 0, size.width,
@@ -1011,8 +1012,9 @@ void WebGLContext::BlitBackbufferToCurDriverFB(
   }
 
   // DrawBlit handles ColorMask itself.
-  gl->BlitHelper()->DrawBlitTextureToFramebuffer(
-      colorTex, size, size, LOCAL_GL_TEXTURE_2D, srcIsBGRA);
+  gl->BlitHelper()->DrawBlitTextureToFramebuffer(colorTex, size, size,
+                                                 LOCAL_GL_TEXTURE_2D, srcIsBGRA,
+                                                 yFlip, convertAlpha);
 }
 
 // -
@@ -1135,7 +1137,7 @@ bool WebGLContext::PresentInto(gl::SwapChain& swapChain) {
     blitter.Draw({
         .texMatrix0 = gl::Mat3::I(),
         .yFlip = false,
-        .destSize = size,
+        .fbSize = size,
         .destRect = {},
     });
 
@@ -1265,7 +1267,7 @@ bool WebGLContext::CopyToSwapChain(
 
   OnEndOfFrame();
 
-  if (!srcFb) {
+  if (!srcFb || !srcFb->IsCheckFramebufferStatusComplete()) {
     return false;
   }
   const auto* info = srcFb->GetCompletenessInfo();
@@ -1517,13 +1519,8 @@ Maybe<uvec2> WebGLContext::FrontBufferSnapshotInto(
 
   // -
 
-  front->WaitForBufferOwnership();
-  front->LockProd();
-  front->ProducerReadAcquire();
-  auto reset = MakeScopeExit([&] {
-    front->ProducerReadRelease();
-    front->UnlockProd();
-  });
+  front->BeginRead();
+  auto reset = MakeScopeExit([&] { front->EndRead(); });
 
   // -
 
@@ -1674,6 +1671,53 @@ already_AddRefed<gfx::SourceSurface> WebGLContext::GetBackBufferSnapshot(
   }
 
   return dataSurf.forget();
+}
+
+std::shared_ptr<gl::SharedSurface>
+WebGLContext::GetBackBufferSnapshotSharedSurface(layers::TextureType texType,
+                                                 bool bgra, bool yFlip,
+                                                 bool requireAlphaPremult) {
+  const FuncScope funcScope(*this, "<GetBackBufferSnapshotSharedSurface>");
+  if (IsContextLost()) {
+    return nullptr;
+  }
+
+  const auto surfSize = DrawingBufferSize();
+  if (surfSize.x <= 0 || surfSize.y <= 0) {
+    return nullptr;
+  }
+
+  InitSwapChain(*gl, mSnapshotSwapChain, texType, true);
+
+  {
+    // TODO: ColorSpace will need to be part of SwapChainOptions for DTWebgl.
+    const auto colorSpace = ToColorSpace2ForOutput(mDrawingBufferColorSpace);
+    auto presenter = mSnapshotSwapChain.Acquire(
+        gfx::IntSize(surfSize.x, surfSize.y), colorSpace);
+    if (!presenter) {
+      GenerateWarning("Swap chain surface creation failed.");
+      return nullptr;
+    }
+
+    const ScopedFBRebinder saveFB(this);
+    const auto srcFb = GetDefaultFBForRead();
+
+    const auto destFb = presenter->Fb();
+    gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, destFb);
+
+    BlitBackbufferToCurDriverFB(
+        nullptr, srcFb, bgra, yFlip,
+        requireAlphaPremult && mOptions.alpha && !mOptions.premultipliedAlpha
+            ? Some(gfxAlphaType::Premult)
+            : Nothing());
+  }
+
+  return mSnapshotSwapChain.FrontBuffer();
+}
+
+void WebGLContext::RecycleSnapshotSharedSurface(
+    std::shared_ptr<gl::SharedSurface> sharedSurface) {
+  mSnapshotSwapChain.StoreRecycledSurface(sharedSurface);
 }
 
 void WebGLContext::ClearVRSwapChain() { mWebVRSwapChain.ClearPool(); }

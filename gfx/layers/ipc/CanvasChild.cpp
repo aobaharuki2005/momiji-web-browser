@@ -773,8 +773,9 @@ already_AddRefed<gfx::SourceSurface> CanvasChild::SnapshotExternalCanvas(
   // Once the IPDL message is sent to generate the snapshot, resolve the sync-id
   // to a surface in the recording stream. The AwaitTranslationSync above will
   // ensure this event is not translated until the snapshot is generated first.
-  mRecorder->RecordEvent(
-      RecordedResolveExternalSnapshot(syncId, gfx::ReferencePtr(surface)));
+  mRecorder->RecordEvent(aTarget,
+                         RecordedResolveExternalSnapshot(
+                             syncId, gfx::ReferencePtr(surface), size, format));
 
   uint32_t managerId = static_cast<gfx::CanvasManagerChild*>(Manager())->Id();
   ActorId canvasId = aActor->Id();

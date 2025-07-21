@@ -251,10 +251,11 @@ mozilla::ipc::IPCResult CanvasManagerParent::RecvGetSnapshot(
   return actor;
 }
 
-/* static */ already_AddRefed<DataSourceSurface>
+/* static */ already_AddRefed<SourceSurface>
 CanvasManagerParent::GetCanvasSurface(dom::ContentParentId aContentId,
                                       uint32_t aManagerId, ActorId aCanvasId,
-                                      uintptr_t aSurfaceId) {
+                                      uintptr_t aSurfaceId,
+                                      Maybe<layers::SurfaceDescriptor>* aDesc) {
   IProtocol* actor = GetCanvasActor(aContentId, aManagerId, aCanvasId);
   if (!actor) {
     return nullptr;
@@ -262,7 +263,7 @@ CanvasManagerParent::GetCanvasSurface(dom::ContentParentId aContentId,
   switch (actor->GetProtocolId()) {
     case ProtocolId::PCanvasMsgStart:
       return static_cast<layers::CanvasTranslator*>(actor)->WaitForSurface(
-          aSurfaceId);
+          aSurfaceId, aDesc);
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported protocol");
       break;

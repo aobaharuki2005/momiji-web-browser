@@ -4477,23 +4477,21 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
     bool sameColorSpace = (srcColorSpace == dstColorSpace);
 
     const auto fallbackReason = [&]() -> Maybe<std::string> {
-      const bool canUploadViaSd = contextInfo.uploadableSdTypes[sdType];
       // Canvas2D surfaces may require and depend upon conversions such as
       // unpremultiplying the source data. We allow these conversions to occur
       // because it is still a performance benefit to do the conversion in the
       // GPU process where WebGL processing happens, rather than cause excess
       // synchronization and data transfer back to the content process.
       const bool allowConversion =
-          canUploadViaSd &&
           sdType == layers::SurfaceDescriptor::TSurfaceDescriptorCanvasSurface;
-      auto fallbackReason =
-          BlitPreventReason(level, offset, respecFormat, pi, *desc,
-                            contextInfo.optionalRenderableFormatBits,
-                            sameColorSpace, allowConversion);
-      if (fallbackReason) {
-        return fallbackReason;
+      if (const char* fallbackReason =
+              BlitPreventReason(imageTarget, level, offset, respecFormat, pi,
+                                *desc, contextInfo.optionalRenderableFormatBits,
+                                sameColorSpace, allowConversion)) {
+        return Some(std::string(fallbackReason));
       }
 
+      const bool canUploadViaSd = contextInfo.uploadableSdTypes[sdType];
       if (!canUploadViaSd) {
         const nsPrintfCString msg(
             "Fast uploads for resource type %i not implemented.", int(sdType));
@@ -4565,18 +4563,6 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
                 "SurfaceDescriptorCanvasSurface works only in GPU process."});
           }
         } break;
-      }
-
-      switch (respecFormat) {
-        case LOCAL_GL_SRGB:
-        case LOCAL_GL_SRGB8:
-        case LOCAL_GL_SRGB_ALPHA:
-        case LOCAL_GL_SRGB8_ALPHA8: {
-          const nsPrintfCString msg(
-              "srgb-encoded formats (like %s) are not supported.",
-              EnumString(respecFormat).c_str());
-          return Some(ToString(msg));
-        }
       }
 
       if (StaticPrefs::webgl_disable_DOM_blit_uploads()) {
