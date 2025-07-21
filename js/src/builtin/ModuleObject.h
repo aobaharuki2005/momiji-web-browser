@@ -573,10 +573,8 @@ JSObject* StartDynamicModuleImport(JSContext* cx, HandleScript script,
 bool OnModuleEvaluationFailure(JSContext* cx, HandleObject evaluationPromise,
                                JS::ModuleErrorBehaviour errorBehaviour);
 
-bool FinishDynamicModuleImport(JSContext* cx, HandleObject evaluationPromise,
-                               HandleValue referencingPrivate,
-                               HandleObject moduleRequest,
-                               HandleObject promise);
+bool FinishDynamicModuleImport(JSContext* cx, HandleValue contextValue,
+                               HandleObject evaluationPromise);
 
 }  // namespace js
 
