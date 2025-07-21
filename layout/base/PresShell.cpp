@@ -4784,8 +4784,28 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::AttributeChanged(
   }
 }
 
+static void MaybeDestroyFramesAndStyles(nsIContent* aContent,
+                                        nsPresContext& aPresContext) {
+  if (!aContent->IsElement()) {
+    return;
+  }
+
+  Element* element = aContent->AsElement();
+  if (!element->HasServoData()) {
+    return;
+  }
+
+  Element* parent =
+      Element::FromNodeOrNull(element->GetFlattenedTreeParentNode());
+  if (!parent || !parent->HasServoData() ||
+      Servo_Element_IsDisplayNone(parent)) {
+    DestroyFramesAndStyleDataFor(element, aPresContext,
+                                 RestyleManager::IncludeRoot::Yes);
+  }
+}
+
 MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::ContentAppended(
-    nsIContent* aFirstNewContent, const ContentAppendInfo&) {
+    nsIContent* aFirstNewContent, const ContentAppendInfo& aInfo) {
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   MOZ_ASSERT(!mIsDocumentGone, "Unexpected ContentAppended");
   MOZ_ASSERT(aFirstNewContent->OwnerDoc() == mDocument, "Unexpected document");
@@ -4800,6 +4820,12 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::ContentAppended(
     return;
   }
 
+  mPresContext->EventStateManager()->ContentAppended(aFirstNewContent, aInfo);
+
+  if (aInfo.mOldParent) {
+    MaybeDestroyFramesAndStyles(aFirstNewContent, *mPresContext);
+  }
+
   nsAutoCauseReflowNotifier crNotifier(this);
 
   // Call this here so it only happens for real content mutations and
@@ -4812,13 +4838,19 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::ContentAppended(
 }
 
 MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::ContentInserted(
-    nsIContent* aChild, const ContentInsertInfo&) {
+    nsIContent* aChild, const ContentInsertInfo& aInfo) {
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   MOZ_ASSERT(!mIsDocumentGone, "Unexpected ContentInserted");
   MOZ_ASSERT(aChild->OwnerDoc() == mDocument, "Unexpected document");
 
   if (!mDidInitialize) {
     return;
+  }
+
+  mPresContext->EventStateManager()->ContentInserted(aChild, aInfo);
+
+  if (aInfo.mOldParent) {
+    MaybeDestroyFramesAndStyles(aChild, *mPresContext);
   }
 
   nsAutoCauseReflowNotifier crNotifier(this);
@@ -4833,14 +4865,14 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::ContentInserted(
 }
 
 MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::ContentWillBeRemoved(
-    nsIContent* aChild, const ContentRemoveInfo&) {
+    nsIContent* aChild, const ContentRemoveInfo& aInfo) {
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   MOZ_ASSERT(!mIsDocumentGone, "Unexpected ContentRemoved");
   MOZ_ASSERT(aChild->OwnerDoc() == mDocument, "Unexpected document");
   // Notify the ESM that the content has been removed, so that
   // it can clean up any state related to the content.
 
-  mPresContext->EventStateManager()->ContentRemoved(mDocument, aChild);
+  mPresContext->EventStateManager()->ContentRemoved(mDocument, aChild, aInfo);
 
   nsAutoCauseReflowNotifier crNotifier(this);
 
@@ -4848,6 +4880,15 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::ContentWillBeRemoved(
        tracker; tracker = tracker->mPreviousTracker) {
     if (tracker->ConnectedNode().IsInclusiveFlatTreeDescendantOf(aChild)) {
       tracker->mConnectedAncestor = aChild->GetFlattenedTreeParentElement();
+    }
+  }
+
+  if (aInfo.mNewParent && aChild->IsElement()) {
+    if (aInfo.mNewParent->IsElement() &&
+        aInfo.mNewParent->AsElement()->HasServoData() &&
+        !Servo_Element_IsDisplayNone(aInfo.mNewParent->AsElement())) {
+      DestroyFramesForAndRestyle(aChild->AsElement());
+      return;
     }
   }
 

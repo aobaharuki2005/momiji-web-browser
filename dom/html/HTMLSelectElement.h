@@ -202,9 +202,11 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
   bool IsHTMLFocusable(IsFocusableFlags, bool* aIsFocusable,
                        int32_t* aTabIndex) override;
   void InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
-                         bool aNotify, ErrorResult& aRv) override;
+                         bool aNotify, ErrorResult& aRv,
+                         nsINode* aOldParent = nullptr) override;
   void RemoveChildNode(nsIContent* aKid, bool aNotify,
-                       const BatchRemovalState*) override;
+                       const BatchRemovalState* aState,
+                       nsINode* aNewParent = nullptr) override;
 
   // nsGenericHTMLElement
   bool IsDisabledForEvents(WidgetEvent* aEvent) override;

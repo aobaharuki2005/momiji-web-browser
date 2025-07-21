@@ -868,10 +868,62 @@ void nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow,
   mWindowBeingLowered = nullptr;
 }
 
+void nsFocusManager::FocusedElementMayHaveMoved(nsIContent* aContent,
+                                                nsINode* aOldParent) {
+  if (!aOldParent) {
+    return;
+  }
+
+  if (aOldParent->IsElement() &&
+      !aOldParent->AsElement()->State().HasState(ElementState::FOCUS_WITHIN)) {
+    return;
+  }
+
+  nsPIDOMWindowOuter* window = aContent->OwnerDoc()->GetWindow();
+  if (!window) {
+    return;
+  }
+
+  Element* focusedElement = window->GetFocusedElement();
+  if (!focusedElement) {
+    return;
+  }
+
+  if (!nsContentUtils::ContentIsHostIncludingDescendantOf(focusedElement,
+                                                          aContent)) {
+    return;
+  }
+  if (aOldParent->IsElement()) {
+    // Clear the old ancestor chain.
+    NotifyFocusStateChange(aOldParent->AsElement(), nullptr, 0, false, false);
+  }
+  // XXX This is not very optimal.
+  // Clear the ancestor chain of focused element.
+  NotifyFocusStateChange(focusedElement, nullptr, 0, false, false);
+  // And set the correct states.
+  NotifyFocusStateChange(focusedElement, nullptr, 0, true, false);
+}
+
+void nsFocusManager::ContentInserted(nsIContent* aChild,
+                                     const ContentInsertInfo& aInfo) {
+  FocusedElementMayHaveMoved(aChild, aInfo.mOldParent);
+}
+
+void nsFocusManager::ContentAppended(nsIContent* aFirstNewContent,
+                                     const ContentAppendInfo& aInfo) {
+  FocusedElementMayHaveMoved(aFirstNewContent, aInfo.mOldParent);
+}
+
 nsresult nsFocusManager::ContentRemoved(Document* aDocument,
-                                        nsIContent* aContent) {
+                                        nsIContent* aContent,
+                                        const ContentRemoveInfo& aInfo) {
   NS_ENSURE_ARG(aDocument);
   NS_ENSURE_ARG(aContent);
+
+  if (aInfo.mNewParent) {
+    // Handled upon insertion in ContentAppended/Inserted.
+    return NS_OK;
+  }
 
   nsPIDOMWindowOuter* windowPtr = aDocument->GetWindow();
   if (!windowPtr) {

@@ -114,7 +114,7 @@ class nsIContent : public nsINode {
    * @note This method is safe to call on nodes that are not bound to a tree.
    */
   virtual void UnbindFromTree(UnbindContext&) = 0;
-  void UnbindFromTree();
+  void UnbindFromTree(nsINode* aNewParent = nullptr);
 
   enum {
     /**

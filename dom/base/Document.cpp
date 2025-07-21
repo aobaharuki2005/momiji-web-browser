@@ -7761,7 +7761,8 @@ Element* Document::GetRootElementInternal() const {
 }
 
 void Document::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
-                                 bool aNotify, ErrorResult& aRv) {
+                                 bool aNotify, ErrorResult& aRv,
+                                 nsINode* aOldParent) {
   const bool isElementInsertion = aKid->IsElement();
   if (isElementInsertion && GetRootElement()) {
     NS_WARNING("Inserting root element when we already have one");
@@ -7769,14 +7770,15 @@ void Document::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
     return;
   }
 
-  nsINode::InsertChildBefore(aKid, aBeforeThis, aNotify, aRv);
+  nsINode::InsertChildBefore(aKid, aBeforeThis, aNotify, aRv, aOldParent);
   if (isElementInsertion && !aRv.Failed()) {
     CreateCustomContentContainerIfNeeded();
   }
 }
 
 void Document::RemoveChildNode(nsIContent* aKid, bool aNotify,
-                               const BatchRemovalState* aState) {
+                               const BatchRemovalState* aState,
+                               nsINode* aNewParent) {
   Maybe<mozAutoDocUpdate> updateBatch;
   const bool removingRoot = aKid->IsElement();
   if (removingRoot) {
@@ -7787,7 +7789,10 @@ void Document::RemoveChildNode(nsIContent* aKid, bool aNotify,
     // Notify early so that we can clear the cached element after notifying,
     // without having to slow down nsINode::RemoveChildNode.
     if (aNotify) {
-      MutationObservers::NotifyContentWillBeRemoved(this, aKid, {aState});
+      ContentRemoveInfo info;
+      info.mBatchRemovalState = aState;
+      info.mNewParent = aNewParent;
+      MutationObservers::NotifyContentWillBeRemoved(this, aKid, info);
       aNotify = false;
     }
 
@@ -7802,7 +7807,7 @@ void Document::RemoveChildNode(nsIContent* aKid, bool aNotify,
     mCachedRootElement = nullptr;
   }
 
-  nsINode::RemoveChildNode(aKid, aNotify);
+  nsINode::RemoveChildNode(aKid, aNotify, nullptr, aNewParent);
   MOZ_ASSERT(mCachedRootElement != aKid,
              "Stale pointer in mCachedRootElement, after we tried to clear it "
              "(maybe somebody called GetRootElement() too early?)");

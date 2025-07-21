@@ -56,21 +56,24 @@ Element* HTMLOptGroupElement::GetSelect() {
 
 void HTMLOptGroupElement::InsertChildBefore(nsIContent* aKid,
                                             nsIContent* aBeforeThis,
-                                            bool aNotify, ErrorResult& aRv) {
+                                            bool aNotify, ErrorResult& aRv,
+                                            nsINode* aOldParent) {
   const uint32_t index =
       aBeforeThis ? *ComputeIndexOf(aBeforeThis) : GetChildCount();
   SafeOptionListMutation safeMutation(GetSelect(), this, aKid, index, aNotify);
-  nsGenericHTMLElement::InsertChildBefore(aKid, aBeforeThis, aNotify, aRv);
+  nsGenericHTMLElement::InsertChildBefore(aKid, aBeforeThis, aNotify, aRv,
+                                          aOldParent);
   if (aRv.Failed()) {
     safeMutation.MutationFailed();
   }
 }
 
 void HTMLOptGroupElement::RemoveChildNode(nsIContent* aKid, bool aNotify,
-                                          const BatchRemovalState*) {
+                                          const BatchRemovalState* aState,
+                                          nsINode* aNewParent) {
   SafeOptionListMutation safeMutation(GetSelect(), this, nullptr,
                                       *ComputeIndexOf(aKid), aNotify);
-  nsGenericHTMLElement::RemoveChildNode(aKid, aNotify);
+  nsGenericHTMLElement::RemoveChildNode(aKid, aNotify, aState, aNewParent);
 }
 
 void HTMLOptGroupElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
