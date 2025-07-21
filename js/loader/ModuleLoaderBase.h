@@ -497,7 +497,7 @@ class ModuleLoaderBase : public nsISupports {
       ModuleLoadRequest* aRequest,
       nsTArray<ModuleMapKey>* aRequestedModulesOut);
 
-  void SetModuleFetchFinishedAndResumeWaitingRequests(
+  already_AddRefed<LoadingRequest> SetModuleFetchFinishedAndGetWaitingRequests(
       ModuleLoadRequest* aRequest, nsresult aResult);
   void ResumeWaitingRequests(LoadingRequest* aLoadingRequest, bool aSuccess);
   void ResumeWaitingRequest(ModuleLoadRequest* aRequest, bool aSuccess);

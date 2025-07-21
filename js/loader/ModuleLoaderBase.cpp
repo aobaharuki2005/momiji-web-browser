@@ -556,7 +556,8 @@ void ModuleLoaderBase::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
   mFetchingModules.InsertOrUpdate(moduleMapKey, loadingRequest);
 }
 
-void ModuleLoaderBase::SetModuleFetchFinishedAndResumeWaitingRequests(
+already_AddRefed<ModuleLoaderBase::LoadingRequest>
+ModuleLoaderBase::SetModuleFetchFinishedAndGetWaitingRequests(
     ModuleLoadRequest* aRequest, nsresult aResult) {
   // Update module map with the result of fetching a single module script.
   //
@@ -578,7 +579,7 @@ void ModuleLoaderBase::SetModuleFetchFinishedAndResumeWaitingRequests(
         ("ScriptLoadRequest (%p): Key not found in mFetchingModules, "
          "assuming we have an inline module or have finished fetching already",
          aRequest));
-    return;
+    return nullptr;
   }
 
   // It's possible for a request to be cancelled and removed from the fetching
@@ -592,7 +593,7 @@ void ModuleLoaderBase::SetModuleFetchFinishedAndResumeWaitingRequests(
         ("ScriptLoadRequest (%p): Ignoring completion of cancelled request "
          "that was removed from the map",
          aRequest));
-    return;
+    return nullptr;
   }
 
   MOZ_ALWAYS_TRUE(mFetchingModules.Remove(moduleMapKey));
@@ -602,9 +603,7 @@ void ModuleLoaderBase::SetModuleFetchFinishedAndResumeWaitingRequests(
 
   mFetchedModules.InsertOrUpdate(moduleMapKey, RefPtr{moduleScript});
 
-  LOG(("ScriptLoadRequest (%p): Resuming waiting requests", aRequest));
-  MOZ_ASSERT(loadingRequest->mRequest == aRequest);
-  ResumeWaitingRequests(loadingRequest, bool(moduleScript));
+  return loadingRequest.forget();
 }
 
 void ModuleLoaderBase::ResumeWaitingRequests(LoadingRequest* aLoadingRequest,
@@ -678,11 +677,19 @@ nsresult ModuleLoaderBase::OnFetchComplete(ModuleLoadRequest* aRequest,
     }
   }
 
-  MOZ_ASSERT(NS_SUCCEEDED(rv) == bool(aRequest->mModuleScript));
-  SetModuleFetchFinishedAndResumeWaitingRequests(aRequest, rv);
+  bool success = bool(aRequest->mModuleScript);
+  MOZ_ASSERT(NS_SUCCEEDED(rv) == success);
+  RefPtr<LoadingRequest> waitingRequests =
+      SetModuleFetchFinishedAndGetWaitingRequests(aRequest, rv);
 
   if (!aRequest->IsErrored()) {
     StartFetchingModuleDependencies(aRequest);
+  }
+
+  if (waitingRequests) {
+    MOZ_ASSERT(waitingRequests->mRequest == aRequest);
+    LOG(("ScriptLoadRequest (%p): Resuming waiting requests", aRequest));
+    ResumeWaitingRequests(waitingRequests, success);
   }
 
   return NS_OK;
@@ -1518,7 +1525,7 @@ void ModuleLoaderBase::RegisterImportMap(UniquePtr<ImportMap> aImportMap) {
   // cancel their requests and remove them from the map.
   //
   // The cancelled requests will still complete later so we have to check this
-  // in SetModuleFetchFinishedAndResumeWaitingRequests.
+  // in SetModuleFetchFinishedAndGetWaitingRequests.
   for (const auto& entry : mFetchingModules) {
     LoadingRequest* loadingRequest = entry.GetData();
     MOZ_DIAGNOSTIC_ASSERT(loadingRequest->mRequest->mLoadContext->IsPreload());
