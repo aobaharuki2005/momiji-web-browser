@@ -38,13 +38,10 @@ static constexpr size_t MinLargeAllocSize =
 
 static constexpr size_t MinAllocSize = MinSmallAllocSize;
 
-using SmallBufferSize = EncodedSize<SmallAllocGranularityShift>;
-using MediumBufferSize = EncodedSize<MediumAllocGranularityShift>;
-
-// Hardcoded max sizes for the different size ranges. These are checked in the
-// BufferAllocator constructor.
-static constexpr size_t MaxSmallAllocSize = MinMediumAllocSize - 128;
-static constexpr size_t MaxMediumAllocSize = MinLargeAllocSize - (64 * 1024);
+static constexpr size_t MaxSmallAllocSize =
+    MinMediumAllocSize - SmallAllocGranularity;
+static constexpr size_t MaxMediumAllocSize =
+    MinLargeAllocSize - MediumAllocGranularity;
 static constexpr size_t MaxAlignedAllocSize = MinLargeAllocSize / 4;
 
 // Size classes map to power of two sizes. The full range contains two
@@ -79,10 +76,10 @@ inline size_t BufferAllocator::GetGoodAllocSize(size_t requiredBytes) {
   }
 
   if (IsSmallAllocSize(requiredBytes)) {
-    return SmallBufferSize(requiredBytes).get();
+    return RoundUp(requiredBytes, SmallAllocGranularity);
   }
 
-  return MediumBufferSize(requiredBytes).get();
+  return RoundUp(requiredBytes, MediumAllocGranularity);
 }
 
 /* static */

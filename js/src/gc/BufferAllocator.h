@@ -128,7 +128,7 @@ struct SmallBufferRegion;
 // themselves).
 //
 // Data about allocations is stored in a header in the chunk or region, using
-// bitmaps for boolean flags plus a byte array to record (encoded) sizes.
+// bitmaps for boolean flags.
 //
 // Sweeping works by processing a list of chunks, scanning each one for
 // allocated but unmarked buffers and rebuilding the free region data for that
