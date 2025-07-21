@@ -78,18 +78,6 @@ JS_PUBLIC_API void JS::SetModuleMetadataHook(JSRuntime* rt,
   rt->moduleMetadataHook = func;
 }
 
-JS_PUBLIC_API bool JS::FinishDynamicModuleImport(
-    JSContext* cx, Handle<JSObject*> evaluationPromise,
-    Handle<Value> referencingPrivate, Handle<JSObject*> moduleRequest,
-    Handle<JSObject*> promise) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  cx->check(referencingPrivate, promise);
-
-  return js::FinishDynamicModuleImport(
-      cx, evaluationPromise, referencingPrivate, moduleRequest, promise);
-}
-
 template <typename Unit>
 static JSObject* CompileModuleHelper(JSContext* cx,
                                      const JS::ReadOnlyCompileOptions& options,
