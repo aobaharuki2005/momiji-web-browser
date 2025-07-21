@@ -272,8 +272,8 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
 
     void clear();
 
-    template <typename Pred>
-    void eraseIf(Pred&& pred);
+    template <typename Func>
+    void forEachRegion(Func&& func);
 
     void assertEmpty() const;
     void assertContains(size_t sizeClass, FreeRegion* region) const;
@@ -305,7 +305,8 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   // Chunks containing only tenured-owned small and medium buffers.
   MainThreadData<BufferChunkList> tenuredChunks;
 
-  // Free lists for small and medium buffers. Used for allocation.
+  // Free lists for the small and medium buffers in |mixedChunks| and
+  // |tenuredChunks|. Used for allocation.
   MainThreadData<FreeLists> freeLists;
 
   // Chunks that may contain nursery-owned buffers waiting to be swept during a
@@ -316,11 +317,14 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   // major GC. Populated from |tenuredChunks|.
   MainThreadOrGCTaskData<BufferChunkList> tenuredChunksToSweep;
 
-  // Chunks that have been swept and their associated free lists.
+  // Chunks that have been swept. Populated by a background thread.
   MutexData<BufferChunkList> sweptMixedChunks;
   MutexData<BufferChunkList> sweptTenuredChunks;
-  MutexData<FreeLists> sweptNurseryFreeLists;
-  MutexData<FreeLists> sweptTenuredFreeLists;
+
+  // Chunks that have been swept and are available for allocation but have not
+  // had their free regions merged into |freeLists|. Owned by the main thread.
+  MainThreadData<BufferChunkList> availableMixedChunks;
+  MainThreadData<BufferChunkList> availableTenuredChunks;
 
   // List of large nursery-owned buffers.
   MainThreadData<LargeAllocList> largeNurseryAllocs;
@@ -391,6 +395,7 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   void sweepForMajorCollection(bool shouldDecommit);
   void finishMajorCollection(const AutoLock& lock);
   void clearMarkStateAfterBarrierVerification();
+  void clearChunkMarkBits(BufferChunk* chunk);
 
   bool isEmpty() const;
 
@@ -421,6 +426,8 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
     size_t tenuredSmallRegions = 0;
     size_t mixedChunks = 0;
     size_t tenuredChunks = 0;
+    size_t availableMixedChunks = 0;
+    size_t availableTenuredChunks = 0;
     size_t freeRegions = 0;
     size_t largeNurseryAllocs = 0;
     size_t largeTenuredAllocs = 0;
@@ -465,6 +472,18 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
 
   void* allocMedium(size_t bytes, bool nurseryOwned, bool inGC);
   void* retryMediumAlloc(size_t requestedBytes, size_t sizeClass, bool inGC);
+  template <typename Alloc, typename GrowHeap>
+  void* refillFreeListsAndRetryAlloc(size_t sizeClass, size_t maxSizeClass,
+                                     Alloc&& alloc, GrowHeap&& growHeap);
+  enum class RefillResult { Fail = 0, Success, Retry };
+  template <typename GrowHeap>
+  RefillResult refillFreeLists(size_t sizeClass, size_t maxSizeClass,
+                               GrowHeap&& growHeap);
+  bool useAvailableChunk(size_t sizeClass, size_t maxSizeClass);
+  bool useAvailableChunk(size_t sizeClass, size_t maxSizeClass,
+                         BufferChunkList& src, BufferChunkList& dst);
+  BufferChunk* findAvailableChunk(size_t sizeClass, size_t maxSizeClass,
+                                  BufferChunkList& chunks);
   void* bumpAlloc(size_t bytes, size_t sizeClass, size_t maxSizeClass);
   void* allocFromRegion(FreeRegion* region, size_t bytes, size_t sizeClass);
   void* allocMediumAligned(size_t bytes, bool inGC);
@@ -474,15 +493,15 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   void updateFreeListsAfterAlloc(FreeLists* freeLists, FreeRegion* region,
                                  size_t sizeClass);
   void setAllocated(void* alloc, size_t bytes, bool nurseryOwned, bool inGC);
+  void setChunkHasNurseryAllocs(BufferChunk* chunk);
   void recommitRegion(FreeRegion* region);
   bool allocNewChunk(bool inGC);
-  bool sweepChunk(BufferChunk* chunk, SweepKind sweepKind, bool shouldDecommit,
-                  FreeLists& freeLists);
+  bool sweepChunk(BufferChunk* chunk, SweepKind sweepKind, bool shouldDecommit);
   void addSweptRegion(BufferChunk* chunk, uintptr_t freeStart,
                       uintptr_t freeEnd, bool shouldDecommit,
                       bool expectUnchanged, FreeLists& freeLists);
   bool sweepSmallBufferRegion(BufferChunk* chunk, SmallBufferRegion* region,
-                              SweepKind sweepKind, FreeLists& freeLists);
+                              SweepKind sweepKind);
   void addSweptRegion(SmallBufferRegion* region, uintptr_t freeStart,
                       uintptr_t freeEnd, bool expectUnchanged,
                       FreeLists& freeLists);
@@ -551,9 +570,11 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
 #ifdef DEBUG
   void checkChunkListGCStateNotInUse(BufferChunkList& chunks,
                                      bool hasNurseryOwnedAllocs,
-                                     bool allowAllocatedDuringCollection);
+                                     bool allowAllocatedDuringCollection,
+                                     bool allowFreeLists);
   void checkChunkGCStateNotInUse(BufferChunk* chunk,
-                                 bool allowAllocatedDuringCollection);
+                                 bool allowAllocatedDuringCollection,
+                                 bool allowFreeLists);
   void checkAllocListGCStateNotInUse(LargeAllocList& list, bool isNurseryOwned);
   void verifyChunk(BufferChunk* chunk, bool hasNurseryOwnedAllocs);
   void verifyFreeRegion(BufferChunk* chunk, uintptr_t endOffset,

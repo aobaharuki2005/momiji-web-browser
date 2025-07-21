@@ -478,11 +478,16 @@ void BufferAllocator::FreeLists::clear() {
   available.ResetAll();
 }
 
-template <typename Pred>
-void BufferAllocator::FreeLists::eraseIf(Pred&& pred) {
-  for (size_t i = 0; i < AllocSizeClasses; i++) {
+template <typename Func>
+void BufferAllocator::FreeLists::forEachRegion(Func&& func) {
+  for (size_t i = 0; i <= MaxMediumAllocClass; i++) {
     FreeList& freeList = lists[i];
-    freeList.eraseIf(std::forward<Pred>(pred));
+    FreeRegion* region = freeList.getFirst();
+    while (region) {
+      FreeRegion* next = region->getNext();
+      func(freeList, i, region);
+      region = next;
+    }
     available[i] = !freeList.isEmpty();
   }
 }
@@ -809,8 +814,6 @@ BufferAllocator::BufferAllocator(Zone* zone)
     : zone(zone),
       sweptMixedChunks(lock()),
       sweptTenuredChunks(lock()),
-      sweptNurseryFreeLists(lock()),
-      sweptTenuredFreeLists(lock()),
       sweptLargeTenuredAllocs(lock()),
       minorState(State::NotCollecting),
       majorState(State::NotCollecting),
@@ -824,6 +827,8 @@ BufferAllocator::~BufferAllocator() {
   MOZ_ASSERT(mixedChunks.ref().isEmpty());
   MOZ_ASSERT(tenuredChunks.ref().isEmpty());
   freeLists.ref().assertEmpty();
+  MOZ_ASSERT(availableMixedChunks.ref().isEmpty());
+  MOZ_ASSERT(availableTenuredChunks.ref().isEmpty());
   MOZ_ASSERT(largeNurseryAllocs.ref().isEmpty());
   MOZ_ASSERT(largeTenuredAllocs.ref().isEmpty());
 #endif
@@ -833,7 +838,9 @@ bool BufferAllocator::isEmpty() const {
   MOZ_ASSERT(!zone->wasGCStarted() || zone->isGCFinished());
   MOZ_ASSERT(minorState == State::NotCollecting);
   MOZ_ASSERT(majorState == State::NotCollecting);
-  return mixedChunks.ref().isEmpty() && tenuredChunks.ref().isEmpty() &&
+  return mixedChunks.ref().isEmpty() && availableMixedChunks.ref().isEmpty() &&
+         tenuredChunks.ref().isEmpty() &&
+         availableTenuredChunks.ref().isEmpty() &&
          largeNurseryAllocs.ref().isEmpty() &&
          largeTenuredAllocs.ref().isEmpty();
 }
@@ -1341,28 +1348,53 @@ bool BufferAllocator::startMinorSweeping() {
 
   // Check whether there are any medium chunks containing nursery owned
   // allocations that need to be swept.
-  if (mixedChunks.ref().isEmpty() &&
+  if (mixedChunks.ref().isEmpty() && availableMixedChunks.ref().isEmpty() &&
       largeNurseryAllocsToSweep.ref().isEmpty()) {
     // Nothing more to do. Don't transition to sweeping state.
     minorState = State::NotCollecting;
     return false;
   }
 
-  // TODO: There are more efficient ways to remove the free regions in nursery
-  // chunks from the free lists, but all require some more bookkeeping. I don't
-  // know how much difference such a change would make.
+#ifdef DEBUG
+  for (BufferChunk* chunk : mixedChunks.ref()) {
+    MOZ_ASSERT(!chunk->ownsFreeLists);
+    chunk->freeLists.ref().assertEmpty();
+  }
+#endif
+
+  // Move free regions in |tenuredChunks| out of |freeLists| and into their
+  // respective chunk header. Discard free regions in |mixedChunks| which will
+  // be rebuilt by sweeping.
   //
-  // Some possibilities are:
-  //  - maintain a separate list of free regions in each chunk and use that to
-  //    remove those regions in nursery chunks
+  // This is done for |tenuredChunks| too in order to reduce the number of free
+  // regions we need to process here on the next minor GC.
+  //
+  // Some possibilities to make this more efficient are:
   //  - have separate free lists for nursery/tenured chunks
   //  - keep free regions at different ends of the free list depending on chunk
   //    kind
-  freeLists.ref().eraseIf([](FreeRegion* region) {
-    return BufferChunk::from(region)->hasNurseryOwnedAllocs;
-  });
+  freeLists.ref().forEachRegion(
+      [](FreeList& list, size_t sizeClass, FreeRegion* region) {
+        BufferChunk* chunk = BufferChunk::from(region);
+        if (!chunk->hasNurseryOwnedAllocs) {
+          list.remove(region);
+          chunk->freeLists.ref().pushBack(sizeClass, region);
+        }
+      });
+  freeLists.ref().clear();
 
+  // Set the flag to indicate all tenured chunks now own their free regions.
+  for (BufferChunk* chunk : tenuredChunks.ref()) {
+    MOZ_ASSERT(!chunk->hasNurseryOwnedAllocs);
+    chunk->ownsFreeLists = true;
+  }
+
+  // Move all mixed chunks to the list of chunks to sweep.
   mixedChunksToSweep.ref() = std::move(mixedChunks.ref());
+  mixedChunksToSweep.ref().append(std::move(availableMixedChunks.ref()));
+
+  // Move all tenured chunks to |availableTenuredChunks|.
+  availableTenuredChunks.ref().append(std::move(tenuredChunks.ref()));
 
   minorState = State::Sweeping;
 
@@ -1419,16 +1451,10 @@ void BufferAllocator::sweepForMinorCollection() {
 
   while (!mixedChunksToSweep.ref().isEmpty()) {
     BufferChunk* chunk = mixedChunksToSweep.ref().popFirst();
-    FreeLists sweptFreeLists;
-    if (sweepChunk(chunk, SweepKind::SweepNursery, false, sweptFreeLists)) {
+    if (sweepChunk(chunk, SweepKind::SweepNursery, false)) {
       {
         AutoLock lock(this);
         sweptMixedChunks.ref().pushBack(chunk);
-        if (chunk->hasNurseryOwnedAllocsAfterSweep) {
-          sweptNurseryFreeLists.ref().append(std::move(sweptFreeLists));
-        } else {
-          sweptTenuredFreeLists.ref().append(std::move(sweptFreeLists));
-        }
       }
 
       // Signal to the main thread that swept data is available by setting this
@@ -1459,15 +1485,36 @@ void BufferAllocator::startMajorCollection(MaybeLock& lock) {
   // Everything is tenured since we just evicted the nursery, or will be by the
   // time minor sweeping finishes.
   MOZ_ASSERT(mixedChunks.ref().isEmpty());
+  MOZ_ASSERT(availableMixedChunks.ref().isEmpty());
   MOZ_ASSERT(largeNurseryAllocs.ref().isEmpty());
 #endif
 
-  tenuredChunksToSweep.ref() = std::move(tenuredChunks.ref());
+#ifdef DEBUG
+  for (BufferChunk* chunk : tenuredChunks.ref()) {
+    MOZ_ASSERT(!chunk->ownsFreeLists);
+    chunk->freeLists.ref().assertEmpty();
+  }
+#endif
+
   largeTenuredAllocsToSweep.ref() = std::move(largeTenuredAllocs.ref());
 
-  // Clear the active free lists to prevent further allocation in chunks that
-  // will be swept.
-  freeLists.ref().clear();
+  // Move free regions that need to be swept to the free lists in their
+  // respective chunks.
+  freeLists.ref().forEachRegion(
+      [](FreeList& list, size_t sizeClass, FreeRegion* region) {
+        BufferChunk* chunk = BufferChunk::from(region);
+        MOZ_ASSERT(!chunk->hasNurseryOwnedAllocs);
+        list.remove(region);
+        chunk->freeLists.ref().pushBack(sizeClass, region);
+      });
+
+  for (BufferChunk* chunk : tenuredChunks.ref()) {
+    MOZ_ASSERT(!chunk->hasNurseryOwnedAllocs);
+    chunk->ownsFreeLists = true;
+  }
+
+  tenuredChunksToSweep.ref() = std::move(tenuredChunks.ref());
+  tenuredChunksToSweep.ref().append(std::move(availableTenuredChunks.ref()));
 
   if (minorState == State::Sweeping) {
     // Ensure swept nursery chunks are moved to the tenuredChunks lists in
@@ -1477,6 +1524,7 @@ void BufferAllocator::startMajorCollection(MaybeLock& lock) {
 
 #ifdef DEBUG
   MOZ_ASSERT(tenuredChunks.ref().isEmpty());
+  MOZ_ASSERT(availableTenuredChunks.ref().isEmpty());
   freeLists.ref().assertEmpty();
   MOZ_ASSERT(largeTenuredAllocs.ref().isEmpty());
 #endif
@@ -1526,13 +1574,10 @@ void BufferAllocator::sweepForMajorCollection(bool shouldDecommit) {
 
   while (!tenuredChunksToSweep.ref().isEmpty()) {
     BufferChunk* chunk = tenuredChunksToSweep.ref().popFirst();
-    FreeLists sweptFreeLists;
-    if (sweepChunk(chunk, SweepKind::SweepTenured, shouldDecommit,
-                   sweptFreeLists)) {
+    if (sweepChunk(chunk, SweepKind::SweepTenured, shouldDecommit)) {
       {
         AutoLock lock(this);
         sweptTenuredChunks.ref().pushBack(chunk);
-        sweptTenuredFreeLists.ref().append(std::move(sweptFreeLists));
       }
 
       // Signal to the main thread that swept data is available by setting this
@@ -1599,16 +1644,18 @@ void BufferAllocator::abortMajorSweeping(const AutoLock& lock) {
 
   MOZ_ASSERT(majorState == State::Marking);
   MOZ_ASSERT(sweptTenuredChunks.ref().isEmpty());
+  MOZ_ASSERT(availableTenuredChunks.ref().isEmpty());
 
   clearAllocatedDuringCollectionState(lock);
 
-  // Rebuild free lists for chunks we didn't end up sweeping.
   for (BufferChunk* chunk : tenuredChunksToSweep.ref()) {
-    MOZ_ALWAYS_TRUE(
-        sweepChunk(chunk, SweepKind::RebuildFreeLists, false, freeLists.ref()));
+    MOZ_ASSERT(chunk->ownsFreeLists);
+
+    // Clear mark bits for chunks we didn't end up sweeping.
+    clearChunkMarkBits(chunk);
   }
 
-  tenuredChunks.ref().prepend(std::move(tenuredChunksToSweep.ref()));
+  availableTenuredChunks.ref() = std::move(tenuredChunksToSweep.ref());
   largeTenuredAllocs.ref().prepend(std::move(largeTenuredAllocsToSweep.ref()));
 
   majorState = State::NotCollecting;
@@ -1616,9 +1663,17 @@ void BufferAllocator::abortMajorSweeping(const AutoLock& lock) {
 
 void BufferAllocator::clearAllocatedDuringCollectionState(
     const AutoLock& lock) {
-  ClearAllocatedDuringCollection(mixedChunks.ref());
-  ClearAllocatedDuringCollection(tenuredChunks.ref());
+#ifdef DEBUG
   // This flag is not set for large nursery-owned allocations.
+  for (LargeBuffer* buffer : largeNurseryAllocs.ref()) {
+    MOZ_ASSERT(!buffer->allocatedDuringCollection);
+  }
+#endif
+
+  ClearAllocatedDuringCollection(mixedChunks.ref());
+  ClearAllocatedDuringCollection(availableMixedChunks.ref());
+  ClearAllocatedDuringCollection(tenuredChunks.ref());
+  ClearAllocatedDuringCollection(availableTenuredChunks.ref());
   ClearAllocatedDuringCollection(largeTenuredAllocs.ref());
 }
 
@@ -1659,6 +1714,7 @@ void BufferAllocator::mergeSweptData(const AutoLock& lock) {
   // tenured-owned.
   while (!sweptMixedChunks.ref().isEmpty()) {
     BufferChunk* chunk = sweptMixedChunks.ref().popLast();
+    MOZ_ASSERT(chunk->ownsFreeLists);
     MOZ_ASSERT(chunk->hasNurseryOwnedAllocs);
     chunk->hasNurseryOwnedAllocs = chunk->hasNurseryOwnedAllocsAfterSweep;
 
@@ -1670,11 +1726,11 @@ void BufferAllocator::mergeSweptData(const AutoLock& lock) {
     }
 
     if (chunk->hasNurseryOwnedAllocs) {
-      mixedChunks.ref().pushFront(chunk);
+      availableMixedChunks.ref().pushFront(chunk);
     } else if (majorStartedWhileMinorSweeping) {
       tenuredChunksToSweep.ref().pushFront(chunk);
     } else {
-      tenuredChunks.ref().pushFront(chunk);
+      availableTenuredChunks.ref().pushFront(chunk);
     }
   }
 
@@ -1686,14 +1742,7 @@ void BufferAllocator::mergeSweptData(const AutoLock& lock) {
     MOZ_ASSERT(!chunk->allocatedDuringCollection);
   }
 #endif
-  tenuredChunks.ref().prepend(std::move(sweptTenuredChunks.ref()));
-
-  freeLists.ref().prepend(std::move(sweptNurseryFreeLists.ref()));
-  if (!majorStartedWhileMinorSweeping) {
-    freeLists.ref().prepend(std::move(sweptTenuredFreeLists.ref()));
-  } else {
-    sweptTenuredFreeLists.ref().clear();
-  }
+  availableTenuredChunks.ref().prepend(std::move(sweptTenuredChunks.ref()));
 
   largeTenuredAllocs.ref().prepend(std::move(sweptLargeTenuredAllocs.ref()));
 
@@ -1732,30 +1781,38 @@ void BufferAllocator::clearMarkStateAfterBarrierVerification() {
   MOZ_ASSERT(minorState == State::NotCollecting);
   MOZ_ASSERT(majorState == State::NotCollecting);
 
-  for (auto* chunks : {&mixedChunks.ref(), &tenuredChunks.ref()}) {
+  for (auto* chunks :
+       {&mixedChunks.ref(), &tenuredChunks.ref(), &availableMixedChunks.ref(),
+        &availableTenuredChunks.ref()}) {
     for (auto* chunk : *chunks) {
-      chunk->markBits.ref().clear();
-      for (auto iter = chunk->smallRegionIter(); !iter.done(); iter.next()) {
-        SmallBufferRegion* region = iter.get();
-        region->markBits.ref().clear();
-      }
+      clearChunkMarkBits(chunk);
     }
+  }
+
+#ifdef DEBUG
+  checkGCStateNotInUse();
+#endif
+}
+
+void BufferAllocator::clearChunkMarkBits(BufferChunk* chunk) {
+  chunk->markBits.ref().clear();
+  for (auto iter = chunk->smallRegionIter(); !iter.done(); iter.next()) {
+    SmallBufferRegion* region = iter.get();
+    region->markBits.ref().clear();
   }
 }
 
 bool BufferAllocator::isPointerWithinBuffer(void* ptr) {
   maybeMergeSweptData();
 
-  for (const auto* chunks : {&mixedChunks.ref(), &tenuredChunks.ref()}) {
-    for (auto* chunk : *chunks) {
-      if (chunk->isPointerWithinAllocation(ptr)) {
-        return true;
-      }
-    }
-  }
+  MOZ_ASSERT(mixedChunksToSweep.ref().isEmpty());
+  MOZ_ASSERT_IF(majorState != State::Marking,
+                tenuredChunksToSweep.ref().isEmpty());
 
-  if (majorState == State::Marking) {
-    for (auto* chunk : tenuredChunksToSweep.ref()) {
+  for (const auto* chunks :
+       {&mixedChunks.ref(), &tenuredChunks.ref(), &availableMixedChunks.ref(),
+        &availableTenuredChunks.ref(), &tenuredChunksToSweep.ref()}) {
+    for (auto* chunk : *chunks) {
       if (chunk->isPointerWithinAllocation(ptr)) {
         return true;
       }
@@ -1840,21 +1897,22 @@ void BufferAllocator::checkGCStateNotInUse(const AutoLock& lock) {
   MOZ_ASSERT(majorState == State::NotCollecting);
   bool isNurserySweeping = minorState == State::Sweeping;
 
-  checkChunkListGCStateNotInUse(mixedChunks.ref(), true, false);
-  checkChunkListGCStateNotInUse(tenuredChunks.ref(), false, false);
+  checkChunkListGCStateNotInUse(mixedChunks.ref(), true, false, false);
+  checkChunkListGCStateNotInUse(tenuredChunks.ref(), false, false, false);
+  checkChunkListGCStateNotInUse(availableMixedChunks.ref(), true, false, true);
+  checkChunkListGCStateNotInUse(availableTenuredChunks.ref(), false, false,
+                                true);
 
   if (isNurserySweeping) {
     checkChunkListGCStateNotInUse(sweptMixedChunks.ref(), true,
-                                  majorFinishedWhileMinorSweeping);
-    checkChunkListGCStateNotInUse(sweptTenuredChunks.ref(), false, false);
+                                  majorFinishedWhileMinorSweeping, true);
+    checkChunkListGCStateNotInUse(sweptTenuredChunks.ref(), false, false, true);
   } else {
     MOZ_ASSERT(mixedChunksToSweep.ref().isEmpty());
     MOZ_ASSERT(largeNurseryAllocsToSweep.ref().isEmpty());
 
     MOZ_ASSERT(sweptMixedChunks.ref().isEmpty());
     MOZ_ASSERT(sweptTenuredChunks.ref().isEmpty());
-    sweptNurseryFreeLists.ref().assertEmpty();
-    sweptTenuredFreeLists.ref().assertEmpty();
 
     MOZ_ASSERT(!majorStartedWhileMinorSweeping);
     MOZ_ASSERT(!majorFinishedWhileMinorSweeping);
@@ -1874,18 +1932,28 @@ void BufferAllocator::checkGCStateNotInUse(const AutoLock& lock) {
 
 void BufferAllocator::checkChunkListGCStateNotInUse(
     BufferChunkList& chunks, bool hasNurseryOwnedAllocs,
-    bool allowAllocatedDuringCollection) {
+    bool allowAllocatedDuringCollection, bool allowFreeLists) {
   for (BufferChunk* chunk : chunks) {
-    checkChunkGCStateNotInUse(chunk, allowAllocatedDuringCollection);
+    checkChunkGCStateNotInUse(chunk, allowAllocatedDuringCollection,
+                              allowFreeLists);
     verifyChunk(chunk, hasNurseryOwnedAllocs);
   }
 }
 
 void BufferAllocator::checkChunkGCStateNotInUse(
-    BufferChunk* chunk, bool allowAllocatedDuringCollection) {
+    BufferChunk* chunk, bool allowAllocatedDuringCollection,
+    bool allowFreeLists) {
   MOZ_ASSERT_IF(!allowAllocatedDuringCollection,
                 !chunk->allocatedDuringCollection);
   MOZ_ASSERT(chunk->markBits.ref().isEmpty());
+  for (auto iter = chunk->smallRegionIter(); !iter.done(); iter.next()) {
+    SmallBufferRegion* region = iter.get();
+    MOZ_ASSERT(region->markBits.ref().isEmpty());
+  }
+  MOZ_ASSERT(allowFreeLists == chunk->ownsFreeLists);
+  if (!chunk->ownsFreeLists) {
+    chunk->freeLists.ref().assertEmpty();
+  }
 }
 
 void BufferAllocator::verifyChunk(BufferChunk* chunk,
@@ -2051,11 +2119,7 @@ void* BufferAllocator::allocSmall(size_t bytes, bool nurseryOwned, bool inGC) {
   auto* chunk = BufferChunk::from(alloc);
   if (nurseryOwned && !region->hasNurseryOwnedAllocs()) {
     region->setHasNurseryOwnedAllocs(true);
-    if (!chunk->hasNurseryOwnedAllocs) {
-      tenuredChunks.ref().remove(chunk);
-      chunk->hasNurseryOwnedAllocs = true;
-      mixedChunks.ref().pushBack(chunk);
-    }
+    setChunkHasNurseryAllocs(chunk);
   }
 
   // Heap size updates are done for the small buffer region as a whole, not
@@ -2070,23 +2134,13 @@ void* BufferAllocator::allocSmall(size_t bytes, bool nurseryOwned, bool inGC) {
 MOZ_NEVER_INLINE void* BufferAllocator::retrySmallAlloc(size_t bytes,
                                                         size_t sizeClass,
                                                         bool inGC) {
-  if (hasMinorSweepDataToMerge) {
-    // Avoid taking the lock unless we know there is data to merge. This reduces
-    // context switches.
-    mergeSweptData();
-    void* ptr = bumpAlloc(bytes, sizeClass, MaxSmallAllocClass);
-    if (ptr) {
-      return ptr;
-    }
-  }
+  auto alloc = [&]() {
+    return bumpAlloc(bytes, sizeClass, MaxSmallAllocClass);
+  };
+  auto growHeap = [&]() { return allocNewSmallRegion(inGC); };
 
-  if (!allocNewSmallRegion(inGC)) {
-    return nullptr;
-  }
-
-  void* ptr = bumpAlloc(bytes, sizeClass, MaxSmallAllocClass);
-  MOZ_ASSERT(ptr);
-  return ptr;
+  return refillFreeListsAndRetryAlloc(sizeClass, MaxSmallAllocClass, alloc,
+                                      growHeap);
 }
 
 bool BufferAllocator::allocNewSmallRegion(bool inGC) {
@@ -2151,23 +2205,105 @@ void* BufferAllocator::allocMedium(size_t bytes, bool nurseryOwned, bool inGC) {
 MOZ_NEVER_INLINE void* BufferAllocator::retryMediumAlloc(size_t bytes,
                                                          size_t sizeClass,
                                                          bool inGC) {
+  auto alloc = [&]() {
+    return bumpAlloc(bytes, sizeClass, MaxMediumAllocClass);
+  };
+  auto growHeap = [&]() { return allocNewChunk(inGC); };
+  return refillFreeListsAndRetryAlloc(sizeClass, MaxMediumAllocClass, alloc,
+                                      growHeap);
+}
+
+template <typename Alloc, typename GrowHeap>
+void* BufferAllocator::refillFreeListsAndRetryAlloc(size_t sizeClass,
+                                                    size_t maxSizeClass,
+                                                    Alloc&& alloc,
+                                                    GrowHeap&& growHeap) {
+  for (;;) {
+    RefillResult r = refillFreeLists(sizeClass, maxSizeClass, growHeap);
+    if (r == RefillResult::Fail) {
+      return nullptr;
+    }
+
+    if (r == RefillResult::Retry) {
+      continue;
+    }
+
+    void* ptr = alloc();
+    MOZ_ASSERT(ptr);
+    return ptr;
+  }
+}
+
+template <typename GrowHeap>
+BufferAllocator::RefillResult BufferAllocator::refillFreeLists(
+    size_t sizeClass, size_t maxSizeClass, GrowHeap&& growHeap) {
+  MOZ_ASSERT(sizeClass <= maxSizeClass);
+
+  // Take chunks from the available lists and add their free regions to the
+  // free lists.
+  if (useAvailableChunk(sizeClass, maxSizeClass)) {
+    return RefillResult::Success;
+  }
+
+  // If that fails try to merge swept data and retry, avoiding taking the lock
+  // unless we know there is data to merge. This reduces context switches.
   if (hasMinorSweepDataToMerge) {
-    // Avoid taking the lock unless we know there is data to merge. This reduces
-    // context switches.
     mergeSweptData();
-    void* ptr = bumpAlloc(bytes, sizeClass, MaxMediumAllocClass);
-    if (ptr) {
-      return ptr;
+    return RefillResult::Retry;
+  }
+
+  // If all else fails try to grow the heap.
+  if (growHeap()) {
+    return RefillResult::Success;
+  }
+
+  return RefillResult::Fail;
+}
+
+bool BufferAllocator::useAvailableChunk(size_t sizeClass, size_t maxSizeClass) {
+  return useAvailableChunk(sizeClass, maxSizeClass, availableMixedChunks.ref(),
+                           mixedChunks.ref()) ||
+         useAvailableChunk(sizeClass, maxSizeClass,
+                           availableTenuredChunks.ref(), tenuredChunks.ref());
+}
+
+bool BufferAllocator::useAvailableChunk(size_t sizeClass, size_t maxSizeClass,
+                                        BufferChunkList& src,
+                                        BufferChunkList& dst) {
+  if (src.isEmpty()) {
+    return false;
+  }
+
+  BufferChunk* chunk = findAvailableChunk(sizeClass, maxSizeClass, src);
+  if (!chunk) {
+    return false;
+  }
+
+  src.remove(chunk);
+  dst.pushBack(chunk);
+  freeLists.ref().append(std::move(chunk->freeLists.ref()));
+  chunk->ownsFreeLists = false;
+  chunk->freeLists.ref().assertEmpty();
+
+  MOZ_ASSERT(freeLists.ref().getFirstAvailableSizeClass(
+                 sizeClass, maxSizeClass) <= maxSizeClass);
+  return true;
+}
+
+BufferChunk* BufferAllocator::findAvailableChunk(size_t sizeClass,
+                                                 size_t maxSizeClass,
+                                                 BufferChunkList& chunks) {
+  // TODO: Linear scan to find first available chunk that can satisfy this
+  // request. Removed in next patch.
+  for (BufferChunk* chunk : chunks) {
+    MOZ_ASSERT(chunk->ownsFreeLists);
+    if (chunk->freeLists.ref().getFirstAvailableSizeClass(
+            sizeClass, maxSizeClass) != SIZE_MAX) {
+      return chunk;
     }
   }
 
-  if (!allocNewChunk(inGC)) {
-    return nullptr;
-  }
-
-  void* ptr = bumpAlloc(bytes, sizeClass, MaxMediumAllocClass);
-  MOZ_ASSERT(ptr);
-  return ptr;
+  return nullptr;
 }
 
 // Differentiate between small and medium size classes. Large allocations do not
@@ -2262,23 +2398,10 @@ void* BufferAllocator::allocMediumAligned(size_t bytes, bool inGC) {
 
 MOZ_NEVER_INLINE void* BufferAllocator::retryAlignedAlloc(size_t sizeClass,
                                                           bool inGC) {
-  if (hasMinorSweepDataToMerge) {
-    // Avoid taking the lock unless we know there is data to merge. This reduces
-    // context switches.
-    mergeSweptData();
-    void* ptr = alignedAlloc(sizeClass);
-    if (ptr) {
-      return ptr;
-    }
-  }
-
-  if (!allocNewChunk(inGC)) {
-    return nullptr;
-  }
-
-  void* ptr = alignedAlloc(sizeClass);
-  MOZ_ASSERT(ptr);
-  return ptr;
+  auto alloc = [&]() { return alignedAlloc(sizeClass); };
+  auto growHeap = [&]() { return allocNewChunk(inGC); };
+  return refillFreeListsAndRetryAlloc(sizeClass + 1, MaxMediumAllocClass, alloc,
+                                      growHeap);
 }
 
 void* BufferAllocator::alignedAlloc(size_t sizeClass) {
@@ -2359,10 +2482,8 @@ void BufferAllocator::setAllocated(void* alloc, size_t bytes, bool nurseryOwned,
   MOZ_ASSERT(!chunk->isNurseryOwned(alloc));
   chunk->setNurseryOwned(alloc, nurseryOwned);
 
-  if (nurseryOwned && !chunk->hasNurseryOwnedAllocs) {
-    tenuredChunks.ref().remove(chunk);
-    chunk->hasNurseryOwnedAllocs = true;
-    mixedChunks.ref().pushBack(chunk);
+  if (nurseryOwned) {
+    setChunkHasNurseryAllocs(chunk);
   }
 
   MOZ_ASSERT(!chunk->isMarked(alloc));
@@ -2373,6 +2494,18 @@ void BufferAllocator::setAllocated(void* alloc, size_t bytes, bool nurseryOwned,
   }
 
   MOZ_ASSERT(!chunk->isSmallBufferRegion(alloc));
+}
+
+void BufferAllocator::setChunkHasNurseryAllocs(BufferChunk* chunk) {
+  MOZ_ASSERT(!chunk->ownsFreeLists);
+
+  if (chunk->hasNurseryOwnedAllocs) {
+    return;
+  }
+
+  tenuredChunks.ref().remove(chunk);
+  mixedChunks.ref().pushBack(chunk);
+  chunk->hasNurseryOwnedAllocs = true;
 }
 
 void BufferAllocator::updateFreeListsAfterAlloc(FreeLists* freeLists,
@@ -2508,7 +2641,7 @@ static void SetDeallocated(SmallBufferRegion* region, void* alloc,
 }
 
 bool BufferAllocator::sweepChunk(BufferChunk* chunk, SweepKind sweepKind,
-                                 bool shouldDecommit, FreeLists& freeLists) {
+                                 bool shouldDecommit) {
   // Find all regions of free space in |chunk| and add them to the swept free
   // lists.
 
@@ -2517,9 +2650,19 @@ bool BufferAllocator::sweepChunk(BufferChunk* chunk, SweepKind sweepKind,
   // space they had and then adding their free regions to the free lists in that
   // order.
 
+  MOZ_ASSERT_IF(sweepKind == SweepKind::SweepTenured,
+                !chunk->allocatedDuringCollection);
+  MOZ_ASSERT_IF(sweepKind == SweepKind::SweepTenured, chunk->ownsFreeLists);
+  FreeLists& freeLists = chunk->freeLists.ref();
+
   if (sweepKind == SweepKind::RebuildFreeLists) {
     chunk->markBits.ref().clear();
   }
+
+  // TODO: For tenured sweeping, check whether anything needs to be swept and
+  // reuse the existing free regions rather than rebuilding these every time.
+  freeLists.clear();
+  chunk->ownsFreeLists = true;
 
   GCRuntime* gc = &zone->runtimeFromAnyThread()->gc;
 
@@ -2535,7 +2678,7 @@ bool BufferAllocator::sweepChunk(BufferChunk* chunk, SweepKind sweepKind,
     MOZ_ASSERT(!chunk->isMarked(region));
     MOZ_ASSERT(chunk->allocBytes(region) == SmallRegionSize);
 
-    if (!sweepSmallBufferRegion(chunk, region, sweepKind, freeLists)) {
+    if (!sweepSmallBufferRegion(chunk, region, sweepKind)) {
       MOZ_ASSERT(sweepKind == SweepKind::SweepNursery ||
                  sweepKind == SweepKind::SweepTenured);
       chunk->setSmallBufferRegion(region, false);
@@ -2675,16 +2818,17 @@ void BufferAllocator::addSweptRegion(BufferChunk* chunk, uintptr_t freeStart,
 
 bool BufferAllocator::sweepSmallBufferRegion(BufferChunk* chunk,
                                              SmallBufferRegion* region,
-                                             SweepKind sweepKind,
-                                             FreeLists& freeLists) {
+                                             SweepKind sweepKind) {
   bool hasNurseryOwnedAllocs = false;
+
+  FreeLists& freeLists = chunk->freeLists.ref();
+
+  size_t freeStart = FirstSmallAllocOffset;
+  bool sweptAny = false;
 
   if (sweepKind == SweepKind::RebuildFreeLists) {
     region->markBits.ref().clear();
   }
-
-  size_t freeStart = FirstSmallAllocOffset;
-  bool sweptAny = false;
 
   for (auto iter = region->allocIter(); !iter.done(); iter.next()) {
     void* alloc = iter.get();
@@ -3032,10 +3176,13 @@ BufferAllocator::FreeLists* BufferAllocator::getChunkFreeLists(
     BufferChunk* chunk) {
   MOZ_ASSERT_IF(majorState == State::Sweeping,
                 chunk->allocatedDuringCollection);
+  MOZ_ASSERT_IF(
+      majorState == State::Marking && !chunk->allocatedDuringCollection,
+      chunk->ownsFreeLists);
 
-  if (majorState == State::Marking && !chunk->allocatedDuringCollection) {
-    // The chunk has been queued for sweeping and the free lists cleared.
-    return nullptr;
+  if (chunk->ownsFreeLists) {
+    // The chunk is in one of the available lists.
+    return &chunk->freeLists.ref();
   }
 
   return &freeLists.ref();
@@ -3401,23 +3548,25 @@ void BufferAllocator::unregisterLarge(LargeBuffer* buffer, bool isSweeping,
 
 static const char* const BufferAllocatorStatsPrefix = "BufAllc:";
 
-#define FOR_EACH_BUFFER_STATS_FIELD(_)                \
-  _("PID", 7, "%7zu", pid)                            \
-  _("Runtime", 14, "0x%12p", runtime)                 \
-  _("Timestamp", 10, "%10.6f", timestamp.ToSeconds()) \
-  _("Reason", 20, "%-20.20s", reason)                 \
-  _("", 2, "%2s", "")                                 \
-  _("TotalKB", 8, "%8zu", totalBytes / 1024)          \
-  _("UsedKB", 8, "%8zu", stats.usedBytes / 1024)      \
-  _("FreeKB", 8, "%8zu", stats.freeBytes / 1024)      \
-  _("Zs", 3, "%3zu", zoneCount)                       \
-  _("", 7, "%7s", "")                                 \
-  _("MixSRs", 6, "%6zu", stats.mixedSmallRegions)     \
-  _("TnrSRs", 6, "%6zu", stats.tenuredSmallRegions)   \
-  _("MixCs", 6, "%6zu", stats.mixedChunks)            \
-  _("TnrCs", 6, "%6zu", stats.tenuredChunks)          \
-  _("FreeRs", 6, "%6zu", stats.freeRegions)           \
-  _("LNurAs", 6, "%6zu", stats.largeNurseryAllocs)    \
+#define FOR_EACH_BUFFER_STATS_FIELD(_)                 \
+  _("PID", 7, "%7zu", pid)                             \
+  _("Runtime", 14, "0x%12p", runtime)                  \
+  _("Timestamp", 10, "%10.6f", timestamp.ToSeconds())  \
+  _("Reason", 20, "%-20.20s", reason)                  \
+  _("", 2, "%2s", "")                                  \
+  _("TotalKB", 8, "%8zu", totalBytes / 1024)           \
+  _("UsedKB", 8, "%8zu", stats.usedBytes / 1024)       \
+  _("FreeKB", 8, "%8zu", stats.freeBytes / 1024)       \
+  _("Zs", 3, "%3zu", zoneCount)                        \
+  _("", 7, "%7s", "")                                  \
+  _("MixSRs", 6, "%6zu", stats.mixedSmallRegions)      \
+  _("TnrSRs", 6, "%6zu", stats.tenuredSmallRegions)    \
+  _("MixCs", 6, "%6zu", stats.mixedChunks)             \
+  _("TnrCs", 6, "%6zu", stats.tenuredChunks)           \
+  _("AMixCs", 6, "%6zu", stats.availableMixedChunks)   \
+  _("ATnrCs", 6, "%6zu", stats.availableTenuredChunks) \
+  _("FreeRs", 6, "%6zu", stats.freeRegions)            \
+  _("LNurAs", 6, "%6zu", stats.largeNurseryAllocs)     \
   _("LTnrAs", 6, "%6zu", stats.largeTenuredAllocs)
 
 /* static */
@@ -3544,9 +3693,16 @@ void BufferAllocator::getStats(Stats& stats) {
     stats.mixedChunks++;
     GetChunkStats(chunk, stats);
   }
+  for (BufferChunk* chunk : availableMixedChunks.ref()) {
+    stats.availableMixedChunks++;
+    GetChunkStats(chunk, stats);
+  }
   for (BufferChunk* chunk : tenuredChunks.ref()) {
-    (void)chunk;
     stats.tenuredChunks++;
+    GetChunkStats(chunk, stats);
+  }
+  for (BufferChunk* chunk : availableTenuredChunks.ref()) {
+    stats.availableTenuredChunks++;
     GetChunkStats(chunk, stats);
   }
   for (const LargeBuffer* buffer : largeNurseryAllocs.ref()) {
