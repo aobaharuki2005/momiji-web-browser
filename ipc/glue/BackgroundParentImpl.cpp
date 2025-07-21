@@ -58,6 +58,7 @@
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/dom/quota/QuotaParent.h"
 #include "mozilla/dom/simpledb/ActorsParent.h"
+#include "mozilla/dom/cache/BoundStorageKeyParent.h"
 #include "mozilla/dom/VsyncParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
@@ -1091,6 +1092,24 @@ BackgroundParentImpl::RecvPHttpBackgroundChannelConstructor(
 
   if (NS_WARN_IF(NS_FAILED(aParent->Init(aChannelId)))) {
     return IPC_FAIL_NO_REASON(this);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateBoundStorageKeyParent(
+    Endpoint<::mozilla::dom::cache::PBoundStorageKeyParent>&& aEndpoint,
+    const Namespace& aNamespace, const PrincipalInfo& aPrincipalInfo) {
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  if (!aEndpoint.IsValid()) {
+    return IPC_FAIL(this, "Invalid endpoint for BoundStorageKeyParent");
+  }
+
+  auto* pActor = new dom::cache::BoundStorageKeyParent(this);
+  if (!aEndpoint.Bind(pActor)) {
+    return IPC_FAIL(this, "Failed to bind endpoint for BoundStorageKeyParent actor");
   }
 
   return IPC_OK();
