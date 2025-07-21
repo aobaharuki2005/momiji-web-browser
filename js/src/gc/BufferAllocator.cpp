@@ -201,6 +201,13 @@ struct BufferChunk : public ChunkBase,
   using SmallRegionBitmap = AtomicBitmap<SmallRegionsPerChunk>;
   MainThreadOrGCTaskData<SmallRegionBitmap> smallRegionBitmap;
 
+  // Free regions in this chunk. When a chunk is swept its free regions are
+  // stored here. When the chunk is being used for allocation these are moved to
+  // BufferAllocator::freeLists. |ownsFreeLists| indicates whether this is in
+  // use.
+  MainThreadOrGCTaskData<BufferAllocator::FreeLists> freeLists;
+  MainThreadOrGCTaskData<bool> ownsFreeLists;
+
   using AllocIter =
       BitmapToBlockIter<BitSetIter<MaxAllocsPerChunk>, MediumAllocGranularity>;
   AllocIter allocIter() { return {this, allocStartBitmap.ref()}; }
@@ -209,6 +216,9 @@ struct BufferChunk : public ChunkBase,
                                             SmallRegionSize, SmallBufferRegion>;
   SmallRegionIter smallRegionIter() { return {this, smallRegionBitmap.ref()}; }
 
+  static const BufferChunk* from(const void* alloc) {
+    return from(const_cast<void*>(alloc));
+  }
   static BufferChunk* from(void* alloc) {
     ChunkBase* chunk = js::gc::detail::GetGCAddressChunkBase(alloc);
     MOZ_ASSERT(chunk->kind == ChunkKind::Buffers);
@@ -1886,12 +1896,26 @@ void BufferAllocator::verifyChunk(BufferChunk* chunk,
 
   size_t freeOffset = FirstMediumAllocOffset;
 
+  size_t freeListsFreeRegionCount = 0;
+  if (chunk->ownsFreeLists) {
+    for (const FreeList& list : chunk->freeLists.ref()) {
+      for (const FreeRegion* region : list) {
+        MOZ_ASSERT(BufferChunk::from(region) == chunk);
+        freeListsFreeRegionCount++;
+      }
+    }
+  } else {
+    MOZ_ASSERT(chunk->freeLists.ref().isEmpty());
+  }
+
+  size_t chunkFreeRegionCount = 0;
   for (auto iter = chunk->allocIter(); !iter.done(); iter.next()) {
     // Check any free region preceding this allocation.
     size_t offset = iter.getOffset();
     MOZ_ASSERT(offset >= FirstMediumAllocOffset);
     if (offset > freeOffset) {
-      verifyFreeRegion(chunk, offset, offset - freeOffset);
+      verifyFreeRegion(chunk, offset, offset - freeOffset,
+                       chunkFreeRegionCount);
     }
 
     // Check this allocation.
@@ -1907,7 +1931,7 @@ void BufferAllocator::verifyChunk(BufferChunk* chunk,
     if (chunk->isSmallBufferRegion(alloc)) {
       auto* region = SmallBufferRegion::from(alloc);
       MOZ_ASSERT_IF(region->hasNurseryOwnedAllocs(), hasNurseryOwnedAllocs);
-      verifySmallBufferRegion(region);
+      verifySmallBufferRegion(region, chunkFreeRegionCount);
     }
 
     freeOffset = endOffset;
@@ -1915,19 +1939,26 @@ void BufferAllocator::verifyChunk(BufferChunk* chunk,
 
   // Check any free region following the last allocation.
   if (freeOffset < ChunkSize) {
-    verifyFreeRegion(chunk, ChunkSize, ChunkSize - freeOffset);
+    verifyFreeRegion(chunk, ChunkSize, ChunkSize - freeOffset,
+                     chunkFreeRegionCount);
   }
+
+  MOZ_ASSERT_IF(chunk->ownsFreeLists,
+                freeListsFreeRegionCount == chunkFreeRegionCount);
 }
 
 void BufferAllocator::verifyFreeRegion(BufferChunk* chunk, uintptr_t endOffset,
-                                       size_t expectedSize) {
+                                       size_t expectedSize,
+                                       size_t& freeRegionCount) {
   MOZ_ASSERT(expectedSize >= MinFreeRegionSize);
   auto* freeRegion = FreeRegion::fromEndOffset(chunk, endOffset);
   MOZ_ASSERT(freeRegion->isInList());
   MOZ_ASSERT(freeRegion->size() == expectedSize);
+  freeRegionCount++;
 }
 
-void BufferAllocator::verifySmallBufferRegion(SmallBufferRegion* region) {
+void BufferAllocator::verifySmallBufferRegion(SmallBufferRegion* region,
+                                              size_t& freeRegionCount) {
   bool foundNurseryOwnedAllocs = false;
 
   static constexpr size_t StepBytes = SmallAllocGranularity;
@@ -1939,7 +1970,7 @@ void BufferAllocator::verifySmallBufferRegion(SmallBufferRegion* region) {
     size_t offset = iter.getOffset();
     MOZ_ASSERT(offset >= FirstSmallAllocOffset);
     if (offset > freeOffset) {
-      verifyFreeRegion(region, offset, offset - freeOffset);
+      verifyFreeRegion(region, offset, offset - freeOffset, freeRegionCount);
     }
 
     // Check this allocation.
@@ -1964,13 +1995,14 @@ void BufferAllocator::verifySmallBufferRegion(SmallBufferRegion* region) {
 
   // Check any free region following the last allocation.
   if (freeOffset < SmallRegionSize) {
-    verifyFreeRegion(region, SmallRegionSize, SmallRegionSize - freeOffset);
+    verifyFreeRegion(region, SmallRegionSize, SmallRegionSize - freeOffset,
+                     freeRegionCount);
   }
 }
 
 void BufferAllocator::verifyFreeRegion(SmallBufferRegion* region,
-                                       uintptr_t endOffset,
-                                       size_t expectedSize) {
+                                       uintptr_t endOffset, size_t expectedSize,
+                                       size_t& freeRegionCount) {
   if (expectedSize < MinFreeRegionSize) {
     return;
   }
@@ -1978,6 +2010,7 @@ void BufferAllocator::verifyFreeRegion(SmallBufferRegion* region,
   auto* freeRegion = FreeRegion::fromEndOffset(region, endOffset);
   MOZ_ASSERT(freeRegion->isInList());
   MOZ_ASSERT(freeRegion->size() == expectedSize);
+  freeRegionCount++;
 }
 
 void BufferAllocator::checkAllocListGCStateNotInUse(LargeAllocList& list,

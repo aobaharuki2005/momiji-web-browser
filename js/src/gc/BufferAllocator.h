@@ -254,6 +254,8 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
     auto begin() const { return lists.begin(); }
     auto end() const { return lists.end(); }
 
+    bool isEmpty() const { return available.IsEmpty(); }
+
     // Returns SIZE_MAX if none available.
     size_t getFirstAvailableSizeClass(size_t minSizeClass,
                                       size_t maxSizeClass) const;
@@ -555,10 +557,11 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   void checkAllocListGCStateNotInUse(LargeAllocList& list, bool isNurseryOwned);
   void verifyChunk(BufferChunk* chunk, bool hasNurseryOwnedAllocs);
   void verifyFreeRegion(BufferChunk* chunk, uintptr_t endOffset,
-                        size_t expectedSize);
-  void verifySmallBufferRegion(SmallBufferRegion* region);
+                        size_t expectedSize, size_t& freeRegionCount);
+  void verifySmallBufferRegion(SmallBufferRegion* region,
+                               size_t& freeRegionCount);
   void verifyFreeRegion(SmallBufferRegion* chunk, uintptr_t endOffset,
-                        size_t expectedSize);
+                        size_t expectedSize, size_t& freeRegionCount);
 #endif
 };
 
