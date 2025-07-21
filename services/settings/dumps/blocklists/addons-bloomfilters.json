@@ -3,6 +3,54 @@
     {
       "stash": {
         "blocked": [
+          "wallet@coinbase.com:1.0",
+          "wallet@coinbase.com:2.0",
+          "wallet@coinbase.com:4.0",
+          "wallet@coinbase.com:4.1",
+          "wallet@coinbase.com:4.2"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1752842172620,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1752863705336,
+      "id": "0714d635-64b4-4421-86f0-d40413c7bf04",
+      "last_modified": 1752863772827
+    },
+    {
+      "stash": {
+        "blocked": [
+          "bitget-ext@web3.bitget.com:2.16.23",
+          "{66fc0c02-205e-14ec-bbe0-c2dc01bb6623}:2.2",
+          "{d5413467-d446-49d9-b73b-043f76f25e90}:1.0",
+          "{d5413467-d446-49d9-b73b-043f76f25e90}:101.2",
+          "{d5413467-d446-49d9-b73b-043f76f25e90}:221.45.1",
+          "{95fc0c01-205e-35ec-bbe0-c2dc00bb6622}:3",
+          "{85fc0c01-105e-35ec-bbe0-c2dc00bb6635}:5",
+          "{a2d44c1b-f77f-4173-b66c-9be32950f6b9}:1.8.1",
+          "{a2d44c1b-f77f-4173-b66c-9be32950f6b9}:357.123.0",
+          "{4d90fd67-e85c-4bd0-833b-ee8b3a68cb51}:1.0",
+          "{4d90fd67-e85c-4bd0-833b-ee8b3a68cb51}:2.0.2",
+          "{0f1d6cf0-8070-4026-a23f-be37b82db050}:1.0",
+          "{0f1d6cf0-8070-4026-a23f-be37b82db050}:101.2",
+          "{74fc0c01-105e-47ec-bbe0-c1dc00bb6635}:1.5",
+          "{74fc0c01-105e-47ec-bbe0-c1dc00bb6635}:7",
+          "dsantas845@gmail.com:1.7.0",
+          "mina0rdysl37@gmail.com:2.1.0"
+        ],
+        "unblocked": [],
+        "softblocked": []
+      },
+      "schema": 1752804946342,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1752842105392,
+      "id": "afe33289-ed1b-4e24-9ae9-76be6c7cf798",
+      "last_modified": 1752842172523
+    },
+    {
+      "stash": {
+        "blocked": [
           "{76fb2558-4f8b-4659-8607-e6bf3e24a543}:2.4.6",
           "{9f1625ac-2314-4f28-8c79-b55088c7c083}:2.4.6",
           "{2aa3c97d-af95-4459-902e-00f36b888ef3}:1.0",
@@ -1889,5 +1937,5 @@
       "last_modified": 1739466430716
     }
   ],
-  "timestamp": 1752755771215
+  "timestamp": 1752863772827
 }
