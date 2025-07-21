@@ -112,10 +112,16 @@ struct SmallBufferRegion;
 // list strategy. This is the main part of the allocator.
 //
 // The requested allocation size is used to pick a size class, which is used to
-// index into an array giving a list of free regions of suitable size. The first
-// region in the list is used and its start address updated; it may also be
-// moved to a different list if it is now empty or too small to satisfy further
-// allocations for this size class.
+// find a free regions of suitable size to satisfy that request. In general size
+// classes for allocations are calculated by rounding up to the next power of
+// two; size classes for free regions are calculated by rounding down to the
+// previous power of two. This means that free regions of a particular size
+// class are always large enough to satisfy an allocation of that size class.
+//
+// The allocation size class is used to index into an array giving a list of
+// free regions of that size class. The first region in the list is used and
+// its start address updated; it may also be moved to a different list if it is
+// now empty or too small to satisfy further allocations for this size class.
 //
 // Medium allocations are allocated out of chunks directly and small allocations
 // out of 16KB sub-regions (which are essentially medium allocations
@@ -208,8 +214,12 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   static constexpr size_t MinSizeClassShift = 5;  // 32 B
   static_assert(MinSizeClassShift >= MinSmallAllocShift);
 
+  static constexpr size_t SmallSizeClasses =
+      MinMediumAllocShift - MinSizeClassShift + 1;
+  static constexpr size_t MediumSizeClasses =
+      MinLargeAllocShift - MinMediumAllocShift + 1;
   static constexpr size_t AllocSizeClasses =
-      MinLargeAllocShift - MinSizeClassShift;
+      SmallSizeClasses + MediumSizeClasses;
 
   // An RAII guard to lock and unlock the buffer allocator lock.
   class AutoLock : public LockGuard<Mutex> {
@@ -274,6 +284,8 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
       mozilla::HashMap<void*, LargeBuffer*, PointerHasher<void*>>;
 
   enum class State : uint8_t { NotCollecting, Marking, Sweeping };
+
+  enum class SizeKind : uint8_t { Small, Medium };
 
   enum class SweepKind : uint8_t {
     SweepTenured = 0,
@@ -476,11 +488,11 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   bool shrinkMedium(void* alloc, size_t newBytes);
   enum class ListPosition { Front, Back };
   FreeRegion* addFreeRegion(FreeLists* freeLists, uintptr_t start,
-                            uintptr_t bytes, size_t maxSizeClass,
-                            bool anyDecommitted, ListPosition position,
+                            uintptr_t bytes, SizeKind kind, bool anyDecommitted,
+                            ListPosition position,
                             bool expectUnchanged = false);
   void updateFreeRegionStart(FreeLists* freeLists, FreeRegion* region,
-                             uintptr_t newStart);
+                             uintptr_t newStart, SizeKind kind);
   FreeLists* getChunkFreeLists(BufferChunk* chunk);
   bool isSweepingChunk(BufferChunk* chunk);
   void traceMediumAlloc(JSTracer* trc, Cell* owner, void** allocp,
@@ -489,15 +501,17 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   void markMediumNurseryOwnedBuffer(void* alloc, bool ownerWasTenured);
   bool markMediumTenuredAlloc(void* alloc);
 
-  friend void* TestAllocAligned(JS::Zone* zone, size_t bytes);
+  // Determine whether a size class is for a small or medium allocation.
+  static SizeKind SizeClassKind(size_t sizeClass);
 
   // Get the size class for an allocation. This rounds up to a class that is
   // large enough to hold the required size.
-  static size_t SizeClassForAlloc(size_t bytes);
+  static size_t SizeClassForSmallAlloc(size_t bytes);
+  static size_t SizeClassForMediumAlloc(size_t bytes);
 
   // Get the maximum size class of allocations that can use a free region. This
   // rounds down to the largest class that can fit in this region.
-  static size_t SizeClassForFreeRegion(size_t bytes);
+  static size_t SizeClassForFreeRegion(size_t bytes, SizeKind kind);
 
   static size_t SizeClassBytes(size_t sizeClass);
   friend struct BufferChunk;
@@ -525,6 +539,10 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
 
   void updateHeapSize(size_t bytes, bool checkThresholds,
                       bool updateRetainedSize);
+
+  // Testing functions we allow access.
+  friend void* TestAllocAligned(JS::Zone* zone, size_t bytes);
+  friend size_t TestGetAllocSizeKind(void* alloc);
 
 #ifdef DEBUG
   void checkChunkListGCStateNotInUse(BufferChunkList& chunks,

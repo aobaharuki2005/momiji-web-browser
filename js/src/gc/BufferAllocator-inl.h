@@ -20,19 +20,6 @@
 
 namespace js::gc {
 
-static constexpr size_t MinSmallAllocSize =
-    1 << BufferAllocator::MinSmallAllocShift;
-static constexpr size_t MaxSmallAllocSize =
-    1 << (BufferAllocator::MinMediumAllocShift - 1);
-static constexpr size_t MinMediumAllocSize =
-    1 << BufferAllocator::MinMediumAllocShift;
-static constexpr size_t MaxMediumAllocSize =
-    1 << (BufferAllocator::MinLargeAllocShift - 1);
-static constexpr size_t MinLargeAllocSize =
-    1 << BufferAllocator::MinLargeAllocShift;
-
-static constexpr size_t MinAllocSize = MinSmallAllocSize;
-
 static constexpr size_t SmallAllocGranularityShift =
     BufferAllocator::MinSmallAllocShift;
 static constexpr size_t MediumAllocGranularityShift =
@@ -42,15 +29,35 @@ static constexpr size_t SmallAllocGranularity = 1 << SmallAllocGranularityShift;
 static constexpr size_t MediumAllocGranularity = 1
                                                  << MediumAllocGranularityShift;
 
+static constexpr size_t MinSmallAllocSize =
+    1 << BufferAllocator::MinSmallAllocShift;
+static constexpr size_t MinMediumAllocSize =
+    1 << BufferAllocator::MinMediumAllocShift;
+static constexpr size_t MinLargeAllocSize =
+    1 << BufferAllocator::MinLargeAllocShift;
+
+static constexpr size_t MinAllocSize = MinSmallAllocSize;
+
 using SmallBufferSize = EncodedSize<SmallAllocGranularityShift>;
 using MediumBufferSize = EncodedSize<MediumAllocGranularityShift>;
 
-static constexpr size_t MaxSmallAllocClass =
-    BufferAllocator::MinMediumAllocShift - 1 -
-    BufferAllocator::MinSizeClassShift;
+// Hardcoded max sizes for the different size ranges. These are checked in the
+// BufferAllocator constructor.
+static constexpr size_t MaxSmallAllocSize = MinMediumAllocSize - 128;
+static constexpr size_t MaxMediumAllocSize = MinLargeAllocSize / 2;
 
+// Size classes map to power of two sizes. The full range contains two
+// consecutive sub-ranges [MinSmallAllocClass, MaxSmallAllocClass] and
+// [MinMediumAllocClass, MaxMediumAllocClass]. MaxSmallAllocClass and
+// MinMediumAllocClass are consecutive but both map to the same size, which is
+// MinMediumAllocSize.
+static constexpr size_t MinSmallAllocClass = 0;
+static constexpr size_t MaxSmallAllocClass =
+    BufferAllocator::SmallSizeClasses - 1;
+static constexpr size_t MinMediumAllocClass = MaxSmallAllocClass + 1;
 static constexpr size_t MaxMediumAllocClass =
-    BufferAllocator::AllocSizeClasses - 1;
+    MinMediumAllocClass + BufferAllocator::MediumSizeClasses - 1;
+static_assert(MaxMediumAllocClass == BufferAllocator::AllocSizeClasses - 1);
 
 /* static */
 inline bool BufferAllocator::IsSmallAllocSize(size_t bytes) {

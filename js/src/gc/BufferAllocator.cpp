@@ -777,7 +777,12 @@ BufferAllocator::BufferAllocator(Zone* zone)
       minorState(State::NotCollecting),
       majorState(State::NotCollecting),
       minorSweepingFinished(lock()),
-      majorSweepingFinished(lock()) {}
+      majorSweepingFinished(lock()) {
+  // Check we can represent max sizes and don't round them up too far.
+  MOZ_ASSERT(SmallBufferSize(MaxSmallAllocSize).get() < MinMediumAllocSize);
+  MOZ_ASSERT(MediumBufferSize(MaxMediumAllocSize).get() < MinLargeAllocSize);
+  MOZ_ASSERT((ChunkSize - MaxMediumAllocSize) >= sizeof(BufferChunk));
+}
 
 BufferAllocator::~BufferAllocator() {
 #ifdef DEBUG
@@ -1959,7 +1964,7 @@ void* BufferAllocator::allocSmall(size_t bytes, bool nurseryOwned, bool inGC) {
   bytes = SmallBufferSize(bytes).get();
 
   // Get size class from |bytes|.
-  size_t sizeClass = SizeClassForAlloc(bytes);
+  size_t sizeClass = SizeClassForSmallAlloc(bytes);
 
   void* alloc = bumpAlloc(bytes, sizeClass, MaxSmallAllocClass);
   if (MOZ_UNLIKELY(!alloc)) {
@@ -2035,7 +2040,7 @@ bool BufferAllocator::allocNewSmallRegion(bool inGC) {
   uintptr_t freeEnd = uintptr_t(region) + SmallRegionSize;
 
   size_t sizeClass =
-      std::min(SizeClassForFreeRegion(freeEnd - freeStart), MaxSmallAllocClass);
+      SizeClassForFreeRegion(freeEnd - freeStart, SizeKind::Small);
 
   ptr = reinterpret_cast<void*>(freeEnd - sizeof(FreeRegion));
   FreeRegion* freeRegion = new (ptr) FreeRegion(freeStart);
@@ -2064,7 +2069,7 @@ void* BufferAllocator::allocMedium(size_t bytes, bool nurseryOwned, bool inGC) {
   bytes = MediumBufferSize(bytes).get();
 
   // Get size class from |bytes|.
-  size_t sizeClass = SizeClassForAlloc(bytes);
+  size_t sizeClass = SizeClassForMediumAlloc(bytes);
 
   void* alloc = bumpAlloc(bytes, sizeClass, MaxMediumAllocClass);
   if (MOZ_UNLIKELY(!alloc)) {
@@ -2100,8 +2105,21 @@ MOZ_NEVER_INLINE void* BufferAllocator::retryMediumAlloc(size_t bytes,
   return ptr;
 }
 
+// Differentiate between small and medium size classes. Large allocations do not
+// use size classes.
+static bool IsMediumSizeClass(size_t sizeClass) {
+  MOZ_ASSERT(sizeClass < BufferAllocator::AllocSizeClasses);
+  return sizeClass >= MinMediumAllocClass;
+}
+
+/* static */
+BufferAllocator::SizeKind BufferAllocator::SizeClassKind(size_t sizeClass) {
+  return IsMediumSizeClass(sizeClass) ? SizeKind::Medium : SizeKind::Small;
+}
+
 void* BufferAllocator::bumpAlloc(size_t bytes, size_t sizeClass,
                                  size_t maxSizeClass) {
+  MOZ_ASSERT(SizeClassKind(sizeClass) == SizeClassKind(maxSizeClass));
   freeLists.ref().checkAvailable();
 
   // Find smallest suitable size class that has free regions.
@@ -2118,17 +2136,10 @@ void* BufferAllocator::bumpAlloc(size_t bytes, size_t sizeClass,
 }
 
 #ifdef DEBUG
-
-static bool IsMediumSizeClass(size_t sizeClass) {
-  MOZ_ASSERT(sizeClass < BufferAllocator::AllocSizeClasses);
-  return sizeClass > MaxSmallAllocClass;
-}
-
 static size_t GranularityForSizeClass(size_t sizeClass) {
   return IsMediumSizeClass(sizeClass) ? MediumAllocGranularity
                                       : SmallAllocGranularity;
 }
-
 #endif  // DEBUG
 
 void* BufferAllocator::allocFromRegion(FreeRegion* region, size_t bytes,
@@ -2161,7 +2172,7 @@ void* BufferAllocator::allocMediumAligned(size_t bytes, bool inGC) {
   MOZ_ASSERT(mozilla::IsPowerOfTwo(bytes));
 
   // Get size class from |bytes|.
-  size_t sizeClass = SizeClassForAlloc(bytes);
+  size_t sizeClass = SizeClassForMediumAlloc(bytes);
 
   void* alloc = alignedAlloc(sizeClass);
   if (MOZ_UNLIKELY(!alloc)) {
@@ -2257,8 +2268,8 @@ void* BufferAllocator::alignedAllocFromRegion(FreeRegion* region,
     MOZ_ASSERT(uintptr_t(prefix) == start);
     (void)prefix;
     MOZ_ASSERT(!region->hasDecommittedPages);
-    addFreeRegion(&freeLists.ref(), start, alignBytes, MaxMediumAllocClass,
-                  false, ListPosition::Back);
+    addFreeRegion(&freeLists.ref(), start, alignBytes, SizeKind::Medium, false,
+                  ListPosition::Back);
   }
 
   // Now the start is aligned we can use the normal allocation method.
@@ -2329,10 +2340,11 @@ void BufferAllocator::updateFreeListsAfterAlloc(FreeLists* freeLists,
     return;
   }
 
-  size_t newSizeClass = SizeClassForFreeRegion(newSize);
+  size_t newSizeClass =
+      SizeClassForFreeRegion(newSize, SizeClassKind(sizeClass));
   MOZ_ASSERT(newSize >= SizeClassBytes(newSizeClass));
   MOZ_ASSERT(newSizeClass < sizeClass);
-  MOZ_ASSERT(IsMediumSizeClass(newSizeClass) == IsMediumSizeClass(sizeClass));
+  MOZ_ASSERT(SizeClassKind(newSizeClass) == SizeClassKind(sizeClass));
   freeLists->pushFront(newSizeClass, region);
 }
 
@@ -2397,7 +2409,8 @@ bool BufferAllocator::allocNewChunk(bool inGC) {
   uintptr_t freeStart = uintptr_t(chunk) + FirstMediumAllocOffset;
   uintptr_t freeEnd = uintptr_t(chunk) + ChunkSize;
 
-  size_t sizeClass = SizeClassForFreeRegion(freeEnd - freeStart);
+  size_t sizeClass =
+      SizeClassForFreeRegion(freeEnd - freeStart, SizeKind::Medium);
   MOZ_ASSERT(sizeClass > MaxSmallAllocClass);
   MOZ_ASSERT(sizeClass <= MaxMediumAllocClass);
 
@@ -2584,9 +2597,8 @@ void BufferAllocator::addSweptRegion(BufferChunk* chunk, uintptr_t freeStart,
   freeEnd += uintptr_t(chunk);
 
   size_t bytes = freeEnd - freeStart;
-  MOZ_ASSERT(SizeClassForFreeRegion(bytes) > MaxSmallAllocClass);
-  addFreeRegion(&freeLists, freeStart, bytes, MaxMediumAllocClass,
-                anyDecommitted, ListPosition::Back, expectUnchanged);
+  addFreeRegion(&freeLists, freeStart, bytes, SizeKind::Medium, anyDecommitted,
+                ListPosition::Back, expectUnchanged);
 }
 
 bool BufferAllocator::sweepSmallBufferRegion(BufferChunk* chunk,
@@ -2670,7 +2682,7 @@ void BufferAllocator::addSweptRegion(SmallBufferRegion* region,
   freeEnd += uintptr_t(region);
 
   size_t bytes = freeEnd - freeStart;
-  addFreeRegion(&freeLists, freeStart, bytes, MaxSmallAllocClass, false,
+  addFreeRegion(&freeLists, freeStart, bytes, SizeKind::Small, false,
                 ListPosition::Back, expectUnchanged);
 }
 
@@ -2720,26 +2732,28 @@ void BufferAllocator::freeMedium(void* alloc) {
     // The new region is added to the front of relevant list so as to reuse
     // recently freed memory preferentially. This may reduce fragmentation. See
     // "The Memory Fragmentation Problem: Solved?"  by Johnstone et al.
-    region = addFreeRegion(freeLists, startAddr, bytes, MaxMediumAllocClass,
-                           false, ListPosition::Front);
+    region = addFreeRegion(freeLists, startAddr, bytes, SizeKind::Medium, false,
+                           ListPosition::Front);
     MOZ_ASSERT(region);  // Always succeeds for medium allocations.
   } else {
     // There is a free region following this allocation. Expand the existing
     // region down to cover the newly freed space.
     region = chunk->findFollowingFreeRegion(endAddr);
     MOZ_ASSERT(region->startAddr == endAddr);
-    updateFreeRegionStart(freeLists, region, startAddr);
+    updateFreeRegionStart(freeLists, region, startAddr, SizeKind::Medium);
   }
 
   // Next check for any preceding free region and coalesce.
   FreeRegion* precRegion = chunk->findPrecedingFreeRegion(startAddr);
   if (precRegion) {
     if (freeLists) {
-      size_t sizeClass = SizeClassForFreeRegion(precRegion->size());
+      size_t sizeClass =
+          SizeClassForFreeRegion(precRegion->size(), SizeKind::Medium);
       freeLists->remove(sizeClass, precRegion);
     }
 
-    updateFreeRegionStart(freeLists, region, precRegion->startAddr);
+    updateFreeRegionStart(freeLists, region, precRegion->startAddr,
+                          SizeKind::Medium);
     if (precRegion->hasDecommittedPages) {
       region->hasDecommittedPages = true;
     }
@@ -2784,7 +2798,7 @@ bool BufferAllocator::isSweepingChunk(BufferChunk* chunk) {
 }
 
 BufferAllocator::FreeRegion* BufferAllocator::addFreeRegion(
-    FreeLists* freeLists, uintptr_t start, size_t bytes, size_t maxSizeClass,
+    FreeLists* freeLists, uintptr_t start, size_t bytes, SizeKind kind,
     bool anyDecommitted, ListPosition position,
     bool expectUnchanged /* = false */) {
   static_assert(sizeof(FreeRegion) <= MinFreeRegionSize);
@@ -2794,7 +2808,7 @@ BufferAllocator::FreeRegion* BufferAllocator::addFreeRegion(
     return nullptr;
   }
 
-  size_t sizeClass = std::min(SizeClassForFreeRegion(bytes), maxSizeClass);
+  size_t sizeClass = SizeClassForFreeRegion(bytes, kind);
   MOZ_ASSERT(bytes >= SizeClassBytes(sizeClass));
 
   MOZ_ASSERT(start % GranularityForSizeClass(sizeClass) == 0);
@@ -2827,9 +2841,12 @@ BufferAllocator::FreeRegion* BufferAllocator::addFreeRegion(
 
 void BufferAllocator::updateFreeRegionStart(FreeLists* freeLists,
                                             FreeRegion* region,
-                                            uintptr_t newStart) {
+                                            uintptr_t newStart, SizeKind kind) {
   MOZ_ASSERT((newStart & ~ChunkMask) == (uintptr_t(region) & ~ChunkMask));
   MOZ_ASSERT(region->startAddr != newStart);
+
+  // TODO: Support realloc for small regions.
+  MOZ_ASSERT(kind == SizeKind::Medium);
 
   size_t oldSize = region->size();
   region->startAddr = newStart;
@@ -2838,10 +2855,9 @@ void BufferAllocator::updateFreeRegionStart(FreeLists* freeLists,
     return;
   }
 
-  size_t currentSizeClass = SizeClassForFreeRegion(oldSize);
-  size_t newSizeClass = SizeClassForFreeRegion(region->size());
-  MOZ_ASSERT(IsMediumSizeClass(newSizeClass) ==
-             IsMediumSizeClass(currentSizeClass));
+  size_t currentSizeClass = SizeClassForFreeRegion(oldSize, kind);
+  size_t newSizeClass = SizeClassForFreeRegion(region->size(), kind);
+  MOZ_ASSERT(SizeClassKind(newSizeClass) == SizeClassKind(currentSizeClass));
   if (currentSizeClass != newSizeClass) {
     freeLists->remove(currentSizeClass, region);
     freeLists->pushFront(newSizeClass, region);
@@ -2883,7 +2899,7 @@ bool BufferAllocator::growMedium(void* alloc, size_t newBytes) {
     return false;  // Can't extend because following free region is too small.
   }
 
-  size_t sizeClass = SizeClassForFreeRegion(region->size());
+  size_t sizeClass = SizeClassForFreeRegion(region->size(), SizeKind::Medium);
 
   allocFromRegion(region, extraBytes, sizeClass);
 
@@ -2952,7 +2968,7 @@ bool BufferAllocator::shrinkMedium(void* alloc, size_t newBytes) {
   // If we abut another allocation then add a new free region.
   if (oldEndOffset == ChunkSize || chunk->isAllocated(oldEndOffset)) {
     uintptr_t freeStart = chunkAddr + newEndOffset;
-    addFreeRegion(freeLists, freeStart, sizeChange, MaxMediumAllocClass, false,
+    addFreeRegion(freeLists, freeStart, sizeChange, SizeKind::Medium, false,
                   ListPosition::Front);
     return true;
   }
@@ -2960,7 +2976,8 @@ bool BufferAllocator::shrinkMedium(void* alloc, size_t newBytes) {
   // Otherwise find the following free region and extend it down.
   FreeRegion* region = chunk->findFollowingFreeRegion(chunkAddr + oldEndOffset);
   MOZ_ASSERT(region->startAddr == chunkAddr + oldEndOffset);
-  updateFreeRegionStart(freeLists, region, chunkAddr + newEndOffset);
+  updateFreeRegionStart(freeLists, region, chunkAddr + newEndOffset,
+                        SizeKind::Medium);
 
   return true;
 }
@@ -3041,9 +3058,9 @@ BufferAllocator::FreeRegion* BufferChunk::findPrecedingFreeRegion(
 }
 
 /* static */
-size_t BufferAllocator::SizeClassForAlloc(size_t bytes) {
+size_t BufferAllocator::SizeClassForSmallAlloc(size_t bytes) {
   MOZ_ASSERT(bytes >= MinSmallAllocSize);
-  MOZ_ASSERT(bytes <= MaxMediumAllocSize);
+  MOZ_ASSERT(bytes <= MaxSmallAllocSize);
 
   size_t log2Size = mozilla::CeilingLog2(bytes);
   MOZ_ASSERT((size_t(1) << log2Size) >= bytes);
@@ -3053,12 +3070,28 @@ size_t BufferAllocator::SizeClassForAlloc(size_t bytes) {
   }
 
   size_t sizeClass = log2Size - MinSizeClassShift;
+  MOZ_ASSERT(sizeClass <= MaxSmallAllocClass);
+  return sizeClass;
+}
+
+/* static */
+size_t BufferAllocator::SizeClassForMediumAlloc(size_t bytes) {
+  MOZ_ASSERT(bytes >= MinMediumAllocSize);
+  MOZ_ASSERT(bytes <= MaxMediumAllocSize);
+
+  size_t log2Size = mozilla::CeilingLog2(bytes);
+  MOZ_ASSERT((size_t(1) << log2Size) >= bytes);
+
+  MOZ_ASSERT(log2Size >= MinMediumAllocShift);
+  size_t sizeClass = log2Size - MinMediumAllocShift + MinMediumAllocClass;
+
+  MOZ_ASSERT(sizeClass >= MinMediumAllocClass);
   MOZ_ASSERT(sizeClass < AllocSizeClasses);
   return sizeClass;
 }
 
 /* static */
-size_t BufferAllocator::SizeClassForFreeRegion(size_t bytes) {
+size_t BufferAllocator::SizeClassForFreeRegion(size_t bytes, SizeKind kind) {
   MOZ_ASSERT(bytes >= MinFreeRegionSize);
   MOZ_ASSERT(bytes < ChunkSize);
 
@@ -3067,14 +3100,27 @@ size_t BufferAllocator::SizeClassForFreeRegion(size_t bytes) {
   MOZ_ASSERT(log2Size >= MinSizeClassShift);
   size_t sizeClass =
       std::min(log2Size - MinSizeClassShift, AllocSizeClasses - 1);
-  MOZ_ASSERT(sizeClass < AllocSizeClasses);
 
+  if (kind == SizeKind::Small) {
+    return std::min(sizeClass, MaxSmallAllocClass);
+  }
+
+  sizeClass++;  // Medium size classes start after small ones.
+
+  MOZ_ASSERT(sizeClass >= MinMediumAllocClass);
+  MOZ_ASSERT(sizeClass < AllocSizeClasses);
   return sizeClass;
 }
 
 /* static */
 inline size_t BufferAllocator::SizeClassBytes(size_t sizeClass) {
   MOZ_ASSERT(sizeClass < AllocSizeClasses);
+
+  // The first medium size class is the same size as the last small size class.
+  if (sizeClass >= MinMediumAllocClass) {
+    sizeClass--;
+  }
+
   return 1 << (sizeClass + MinSizeClassShift);
 }
 

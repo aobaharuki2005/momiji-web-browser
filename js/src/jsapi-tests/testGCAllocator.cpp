@@ -393,13 +393,17 @@ static size_t SomeAllocSizes[] = {16,
                                   240,
                                   256,
                                   1000,
+                                  3000,
+                                  3968,
                                   4096,
                                   5000,
                                   16 * 1024,
                                   100 * 1024,
                                   255 * 1024,
-                                  256 * 1024,
+                                  257 * 1024,
                                   600 * 1024,
+                                  983040,
+                                  990 * 1024,
                                   1 * 1024 * 1024,
                                   3 * 1024 * 1024,
                                   10 * 1024 * 1024};
@@ -482,6 +486,19 @@ void BufferHolderObject::trace(JSTracer* trc, JSObject* obj) {
   }
 }
 
+namespace js::gc {
+size_t TestGetAllocSizeKind(void* alloc) {
+  if (BufferAllocator::IsLargeAlloc(alloc)) {
+    return 2;
+  }
+  if (BufferAllocator::IsMediumAlloc(alloc)) {
+    return 1;
+  }
+  MOZ_RELEASE_ASSERT(BufferAllocator::IsSmallAlloc(alloc));
+  return 0;
+}
+}  // namespace js::gc
+
 BEGIN_TEST(testBufferAllocator_API) {
   AutoLeaveZeal leaveZeal(cx);
 
@@ -522,6 +539,16 @@ BEGIN_TEST(testBufferAllocator_API) {
       CHECK(actualSize == GetGoodAllocSize(requestSize));
 
       CHECK(IsNurseryOwned(zone, alloc) == nurseryOwned);
+
+      size_t expectedKind;
+      if (goodSize >= MinLargeAllocSize) {
+        expectedKind = 2;
+      } else if (goodSize >= MinMediumAllocSize) {
+        expectedKind = 1;
+      } else {
+        expectedKind = 0;
+      }
+      CHECK(TestGetAllocSizeKind(alloc) == expectedKind);
 
       WriteAllocData(alloc, actualSize);
       CHECK(CheckAllocData(alloc, actualSize));
