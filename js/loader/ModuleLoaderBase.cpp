@@ -34,8 +34,10 @@
 #include "nsNetUtil.h"            // NS_NewURI
 #include "xpcpublic.h"
 
+using mozilla::AutoSlowOperation;
 using mozilla::CycleCollectedJSContext;
 using mozilla::Err;
+using mozilla::MicroTaskRunnable;
 using mozilla::Preferences;
 using mozilla::UniquePtr;
 using mozilla::WrapNotNull;
@@ -885,6 +887,30 @@ void ModuleLoaderBase::OnFetchFailed(ModuleLoadRequest* aRequest) {
   }
 }
 
+class ModuleErroredRunnable : public MicroTaskRunnable {
+ public:
+  explicit ModuleErroredRunnable(ModuleLoadRequest* aRequest)
+      : mRequest(aRequest) {}
+
+  virtual void Run(AutoSlowOperation& aAso) override {
+    mRequest->ModuleErrored();
+  }
+
+ private:
+  RefPtr<ModuleLoadRequest> mRequest;
+};
+
+void ModuleLoaderBase::DispatchModuleErrored(ModuleLoadRequest* aRequest) {
+  if (aRequest->HasScriptLoadContext()) {
+    CycleCollectedJSContext* context = CycleCollectedJSContext::Get();
+    RefPtr<ModuleErroredRunnable> runnable =
+        new ModuleErroredRunnable(aRequest);
+    context->DispatchToMicroTask(runnable.forget());
+  } else {
+    aRequest->ModuleErrored();
+  }
+}
+
 nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(!aRequest->mModuleScript);
   MOZ_ASSERT(aRequest->mBaseURL);
@@ -975,7 +1001,7 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
       }
 
       moduleScript->SetParseError(error);
-      aRequest->ModuleErrored();
+      DispatchModuleErrored(aRequest);
       return NS_OK;
     }
 
@@ -991,7 +1017,7 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
         aRequest->mModuleScript = nullptr;
         return rv;
       }
-      aRequest->ModuleErrored();
+      DispatchModuleErrored(aRequest);
       return NS_OK;
     }
   }

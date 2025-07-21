@@ -563,6 +563,7 @@ class ModuleLoaderBase : public nsISupports {
   void RemoveDynamicImport(ModuleLoadRequest* aRequest);
 
   nsresult CreateModuleScript(ModuleLoadRequest* aRequest);
+  void DispatchModuleErrored(ModuleLoadRequest* aRequest);
 
   bool IsFetchingAndHasWaitingRequest(ModuleLoadRequest* aRequest);
 
