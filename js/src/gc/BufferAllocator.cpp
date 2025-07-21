@@ -17,6 +17,7 @@
 #include "gc/BufferAllocatorInternals.h"
 #include "gc/GCInternals.h"
 #include "gc/GCLock.h"
+#include "gc/IteratorUtils.h"
 #include "gc/PublicIterators.h"
 #include "gc/Zone.h"
 #include "js/HeapAPI.h"
@@ -163,6 +164,23 @@ class BitmapToBlockIter : public BitmapIter {
   size_t getOffset() const { return BitmapIter::get() * Granularity; }
   T* get() const { return reinterpret_cast<T*>(baseAddr + getOffset()); }
   operator T*() const { return get(); }
+  T* operator->() const { return get(); }
+};
+
+template <typename T>
+class LinkedListIter {
+  T* element;
+
+ public:
+  explicit LinkedListIter(SlimLinkedList<T>& list) : element(list.getFirst()) {}
+  bool done() const { return !element; }
+  void next() {
+    MOZ_ASSERT(!done());
+    element = element->getNext();
+  }
+  T* get() const { return element; }
+  operator T*() const { return get(); }
+  T* operator->() const { return get(); }
 };
 
 // A chunk containing medium buffer allocations for a single zone. Unlike
@@ -393,6 +411,26 @@ static void CheckHighBitsOfPointer(void* ptr) {
 #endif
 }
 
+class BufferAllocator::FreeLists::FreeListIter
+    : public BitSetIter<AllocSizeClasses, uint32_t> {
+  FreeLists& freeLists;
+
+ public:
+  explicit FreeListIter(FreeLists& freeLists)
+      : BitSetIter(freeLists.available), freeLists(freeLists) {}
+  FreeList& get() {
+    size_t sizeClass = BitSetIter::get();
+    return freeLists.lists[sizeClass];
+  }
+  operator FreeList&() { return get(); }
+};
+
+class BufferAllocator::FreeLists::FreeRegionIter
+    : public NestedIterator<FreeListIter, LinkedListIter<FreeRegion>> {
+ public:
+  explicit FreeRegionIter(FreeLists& freeLists) : NestedIterator(freeLists) {}
+};
+
 BufferAllocator::FreeLists::FreeLists(FreeLists&& other) {
   MOZ_ASSERT(this != &other);
   assertEmpty();
@@ -409,6 +447,16 @@ BufferAllocator::FreeLists& BufferAllocator::FreeLists::operator=(
   std::swap(available, other.available);
   other.assertEmpty();
   return *this;
+}
+
+BufferAllocator::FreeLists::FreeListIter
+BufferAllocator::FreeLists::freeListIter() {
+  return FreeListIter(*this);
+}
+
+BufferAllocator::FreeLists::FreeRegionIter
+BufferAllocator::FreeLists::freeRegionIter() {
+  return FreeRegionIter(*this);
 }
 
 bool BufferAllocator::FreeLists::hasSizeClass(size_t sizeClass) const {
@@ -495,8 +543,8 @@ void BufferAllocator::FreeLists::remove(size_t sizeClass, FreeRegion* region) {
 }
 
 void BufferAllocator::FreeLists::clear() {
-  for (auto& freeList : lists) {
-    new (&freeList) FreeList;  // clear() is less efficient.
+  for (auto freeList = freeListIter(); !freeList.done(); freeList.next()) {
+    new (&freeList.get()) FreeList;  // clear() is less efficient.
   }
   available.ResetAll();
 }
@@ -538,6 +586,35 @@ inline void BufferAllocator::FreeLists::checkAvailable() const {
     MOZ_ASSERT(available[i] == !lists[i].isEmpty());
   }
 #endif
+}
+
+class BufferAllocator::ChunkLists::ChunkListIter
+    : public BitSetIter<AllocSizeClasses + 1, uint32_t> {
+  ChunkLists& chunkLists;
+
+ public:
+  explicit ChunkListIter(ChunkLists& chunkLists)
+      : BitSetIter(chunkLists.available), chunkLists(chunkLists) {}
+  BufferChunkList& get() { return chunkLists.lists[getSizeClass()]; }
+  size_t getSizeClass() const { return BitSetIter::get(); }
+  operator BufferChunkList&() { return get(); }
+};
+
+class BufferAllocator::ChunkLists::ChunkIter
+    : public NestedIterator<ChunkListIter, LinkedListIter<BufferChunk>> {
+ public:
+  explicit ChunkIter(ChunkLists& chunkLists) : NestedIterator(chunkLists) {}
+  size_t getSizeClass() const { return iterA().getSizeClass(); }
+};
+
+BufferAllocator::ChunkLists::ChunkListIter
+BufferAllocator::ChunkLists::chunkListIter() {
+  return ChunkListIter(*this);
+}
+
+BufferAllocator::ChunkLists::ChunkIter
+BufferAllocator::ChunkLists::chunkIter() {
+  return ChunkIter(*this);
 }
 
 size_t BufferAllocator::ChunkLists::getFirstAvailableSizeClass(
@@ -593,8 +670,8 @@ void BufferAllocator::ChunkLists::pushBack(size_t sizeClass,
 
 BufferAllocator::BufferChunkList BufferAllocator::ChunkLists::extractAllChunks() {
   BufferChunkList result;
-  for (BufferChunkList& list : lists) {
-    result.append(std::move(list));
+  for (auto list = chunkListIter(); !list.done(); list.next()) {
+    result.append(std::move(list.get()));
   }
   available.ResetAll();
   return result;
@@ -611,51 +688,6 @@ inline void BufferAllocator::ChunkLists::checkAvailable() const {
     MOZ_ASSERT(available[i] == !lists[i].isEmpty());
   }
 #endif
-}
-
-class BufferAllocator::ChunkLists::ChunkIter {
-  ChunkLists& chunkLists;
-  BitSetIter<AllocSizeClasses + 1, uint32_t> sizeClass;
-  BufferChunk* chunk = nullptr;
-
- public:
-  explicit ChunkIter(ChunkLists& chunkLists)
-      : chunkLists(chunkLists), sizeClass(chunkLists.available) {
-    settle();
-  }
-
-  bool done() const { return !chunk; }
-
-  void next() {
-    MOZ_ASSERT(!done());
-    chunk = chunk->getNext();
-    if (!chunk) {
-      sizeClass.next();
-      settle();
-    }
-  }
-
-  size_t getSizeClass() const { return sizeClass; }
-
-  BufferChunk* get() const { return chunk; }
-  operator BufferChunk*() const { return get(); }
-  BufferChunk* operator->() const { return get(); }
-
- private:
-  void settle() {
-    while (!sizeClass.done()) {
-      chunk = chunkLists.lists[sizeClass].getFirst();
-      if (chunk) {
-        break;
-      }
-      sizeClass.next();
-    }
-  }
-};
-
-BufferAllocator::ChunkLists::ChunkIter
-BufferAllocator::ChunkLists::chunkIter() {
-  return ChunkIter(*this);
 }
 
 }  // namespace js::gc
@@ -2180,11 +2212,11 @@ void BufferAllocator::verifyChunk(BufferChunk* chunk,
 
   size_t freeListsFreeRegionCount = 0;
   if (chunk->ownsFreeLists) {
-    for (const FreeList& list : chunk->freeLists.ref()) {
-      for (const FreeRegion* region : list) {
-        MOZ_ASSERT(BufferChunk::from(region) == chunk);
-        freeListsFreeRegionCount++;
-      }
+    chunk->freeLists.ref().checkAvailable();
+    for (auto region = chunk->freeLists.ref().freeRegionIter(); !region.done();
+         region.next()) {
+      MOZ_ASSERT(BufferChunk::from(region) == chunk);
+      freeListsFreeRegionCount++;
     }
   } else {
     MOZ_ASSERT(chunk->freeLists.ref().isEmpty());
@@ -4017,13 +4049,12 @@ void BufferAllocator::getStats(Stats& stats) {
     stats.usedBytes += buffer->allocBytes();
     stats.adminBytes += sizeof(LargeBuffer);
   }
-  for (const FreeList& freeList : freeLists.ref()) {
-    for (const FreeRegion* region : freeList) {
-      stats.freeRegions++;
-      size_t size = region->size();
-      MOZ_ASSERT(stats.usedBytes >= size);
-      stats.usedBytes -= size;
-      stats.freeBytes += size;
-    }
+  for (auto region = freeLists.ref().freeRegionIter(); !region.done();
+       region.next()) {
+    stats.freeRegions++;
+    size_t size = region->size();
+    MOZ_ASSERT(stats.usedBytes >= size);
+    stats.usedBytes -= size;
+    stats.freeBytes += size;
   }
 }

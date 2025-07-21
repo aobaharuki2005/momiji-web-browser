@@ -250,14 +250,16 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
     SizeClassBitSet available;
 
    public:
+    class FreeListIter;
+    class FreeRegionIter;
+
     FreeLists() = default;
 
     FreeLists(FreeLists&& other);
     FreeLists& operator=(FreeLists&& other);
 
-    using const_iterator = FreeListArray::const_iterator;
-    auto begin() const { return lists.begin(); }
-    auto end() const { return lists.end(); }
+    FreeListIter freeListIter();
+    FreeRegionIter freeRegionIter();
 
     bool isEmpty() const { return available.IsEmpty(); }
 
@@ -299,6 +301,7 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
     AvailableBitSet available;
 
    public:
+    class ChunkListIter;
     class ChunkIter;
 
     ChunkLists() = default;
@@ -306,6 +309,7 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
     ChunkLists(const ChunkLists& other) = delete;
     ChunkLists& operator=(const ChunkLists& other) = delete;
 
+    ChunkListIter chunkListIter();
     ChunkIter chunkIter();
     const auto& availableSizeClasses() const { return available; }
 
