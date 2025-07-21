@@ -1508,6 +1508,188 @@ bool ModuleObject::createSyntheticEnvironment(JSContext* cx,
 }
 
 ///////////////////////////////////////////////////////////////////////////
+// GraphLoadingStateRecordObject
+GraphLoadingStateRecord::GraphLoadingStateRecord(
+    JSContext*, JS::LoadModuleResolvedCallback&& resolved_,
+    JS::LoadModuleRejectedCallback&& rejected_)
+    : resolved(std::move(resolved_)), rejected(std::move(rejected_)) {}
+
+GraphLoadingStateRecord::GraphLoadingStateRecord(JSContext*) {}
+
+void GraphLoadingStateRecord::trace(JSTracer* trc) { visited.trace(trc); }
+
+/* static */
+const JSClass GraphLoadingStateRecordObject::class_ = {
+    "GraphLoadingStateRecordObject",
+    JSCLASS_HAS_RESERVED_SLOTS(GraphLoadingStateRecordObject::SlotCount) |
+        JSCLASS_FOREGROUND_FINALIZE,
+    &GraphLoadingStateRecordObject::classOps_,
+};
+static_assert(GraphLoadingStateRecordObject::StateSlot == 0);
+
+/* static */
+const JSClassOps GraphLoadingStateRecordObject::classOps_ = {
+    nullptr,                                  // addProperty
+    nullptr,                                  // delProperty
+    nullptr,                                  // enumerate
+    nullptr,                                  // newEnumerate
+    nullptr,                                  // resolve
+    nullptr,                                  // mayResolve
+    GraphLoadingStateRecordObject::finalize,  // finalize
+    nullptr,                                  // call
+    nullptr,                                  // construct
+    GraphLoadingStateRecordObject::trace,     // trace
+};
+
+/* static */
+GraphLoadingStateRecordObject* GraphLoadingStateRecordObject::create(
+    JSContext* cx, bool isLoading, uint32_t pendingModulesCount,
+    JS::LoadModuleResolvedCallback&& resolved,
+    JS::LoadModuleRejectedCallback&& rejected, Handle<Value> hostDefined) {
+  Rooted<GraphLoadingStateRecordObject*> self(
+      cx, NewObjectWithGivenProto<GraphLoadingStateRecordObject>(cx, nullptr));
+  if (!self) {
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  {
+    Rooted<UniquePtr<GraphLoadingStateRecord>> state(
+        cx, cx->make_unique<GraphLoadingStateRecord>(cx, std::move(resolved),
+                                                     std::move(rejected)));
+    if (!state) {
+      ReportOutOfMemory(cx);
+      return nullptr;
+    }
+
+    InitReservedSlot(self, StateSlot, state.release(),
+                     MemoryUse::GraphLoadingStateRecord);
+  }
+
+  self->initReservedSlot(IsLoadingSlot, Int32Value(isLoading));
+  self->initReservedSlot(PendingModulesCountSlot,
+                         Int32Value(pendingModulesCount));
+  self->initReservedSlot(HostDefinedSlot, hostDefined);
+  return self;
+}
+
+/* static */
+GraphLoadingStateRecordObject* GraphLoadingStateRecordObject::create(
+    JSContext* cx, bool isLoading, uint32_t pendingModulesCount,
+    Handle<PromiseObject*> promise, Handle<Value> hostDefined) {
+  Rooted<GraphLoadingStateRecordObject*> self(
+      cx, NewObjectWithGivenProto<GraphLoadingStateRecordObject>(cx, nullptr));
+  if (!self) {
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  {
+    Rooted<UniquePtr<GraphLoadingStateRecord>> state(
+        cx, cx->make_unique<GraphLoadingStateRecord>(cx));
+    if (!state) {
+      ReportOutOfMemory(cx);
+      return nullptr;
+    }
+
+    InitReservedSlot(self, StateSlot, state.release(),
+                     MemoryUse::GraphLoadingStateRecord);
+  }
+
+  self->initReservedSlot(PromiseSlot, ObjectValue(*promise));
+  self->initReservedSlot(IsLoadingSlot, Int32Value(isLoading));
+  self->initReservedSlot(PendingModulesCountSlot,
+                         Int32Value(pendingModulesCount));
+  self->initReservedSlot(HostDefinedSlot, hostDefined);
+  return self;
+}
+
+VisitedModuleSet& GraphLoadingStateRecordObject::visited() {
+  GraphLoadingStateRecord* state = static_cast<GraphLoadingStateRecord*>(
+      getReservedSlot(StateSlot).toPrivate());
+  MOZ_ASSERT(state);
+  return state->visited;
+}
+
+PromiseObject* GraphLoadingStateRecordObject::promise() {
+  if (getReservedSlot(PromiseSlot).isUndefined()) {
+    return nullptr;
+  }
+  return &getReservedSlot(PromiseSlot).toObject().as<PromiseObject>();
+}
+
+bool GraphLoadingStateRecordObject::isLoading() {
+  return getReservedSlot(IsLoadingSlot).toInt32();
+}
+
+void GraphLoadingStateRecordObject::setIsLoading(bool isLoading) {
+  setReservedSlot(IsLoadingSlot, Int32Value(isLoading));
+}
+
+uint32_t GraphLoadingStateRecordObject::pendingModulesCount() {
+  return getReservedSlot(PendingModulesCountSlot).toInt32();
+}
+
+void GraphLoadingStateRecordObject::setPendingModulesCount(uint32_t count) {
+  setReservedSlot(PendingModulesCountSlot, Int32Value(count));
+}
+
+Value GraphLoadingStateRecordObject::hostDefined() {
+  return getReservedSlot(HostDefinedSlot);
+}
+
+bool GraphLoadingStateRecordObject::resolved(
+    JSContext* cx, JS::Handle<JS::Value> hostDefined) {
+  if (promise()) {
+    Rooted<PromiseObject*> promiseObj(cx, promise());
+    return AsyncFunctionReturned(cx, promiseObj, UndefinedHandleValue);
+  }
+
+  GraphLoadingStateRecord* state = static_cast<GraphLoadingStateRecord*>(
+      getReservedSlot(StateSlot).toPrivate());
+  MOZ_ASSERT(state);
+  MOZ_ASSERT(state->resolved);
+  return state->resolved(cx, hostDefined);
+}
+
+bool GraphLoadingStateRecordObject::rejected(JSContext* cx,
+                                             JS::Handle<JS::Value> hostDefined,
+                                             Handle<JS::Value> error) {
+  if (promise()) {
+    Rooted<PromiseObject*> promiseObj(cx, promise());
+    return AsyncFunctionThrown(cx, promiseObj, error);
+  }
+
+  GraphLoadingStateRecord* state = static_cast<GraphLoadingStateRecord*>(
+      getReservedSlot(StateSlot).toPrivate());
+  MOZ_ASSERT(state);
+  MOZ_ASSERT(state->rejected);
+  return state->rejected(cx, hostDefined, error);
+}
+
+/* static */
+void GraphLoadingStateRecordObject::finalize(JS::GCContext* gcx,
+                                             JSObject* obj) {
+  auto* self = &obj->as<GraphLoadingStateRecordObject>();
+  Value stateValue = self->getReservedSlot(StateSlot);
+  if (!stateValue.isUndefined()) {
+    JS::AutoSuppressGCAnalysis noanal;
+    GraphLoadingStateRecord* state =
+        static_cast<GraphLoadingStateRecord*>(stateValue.toPrivate());
+    gcx->delete_(obj, state, MemoryUse::GraphLoadingStateRecord);
+  }
+}
+
+/* static */
+void GraphLoadingStateRecordObject::trace(JSTracer* trc, JSObject* obj) {
+  GraphLoadingStateRecordObject* self =
+      &obj->as<GraphLoadingStateRecordObject>();
+  GraphLoadingStateRecord* state = static_cast<GraphLoadingStateRecord*>(
+      self->getReservedSlot(StateSlot).toPrivate());
+  state->trace(trc);
+}
+
+///////////////////////////////////////////////////////////////////////////
 // ModuleBuilder
 
 ModuleBuilder::ModuleBuilder(FrontendContext* fc,
