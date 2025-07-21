@@ -10024,7 +10024,7 @@
 # Is support for CSS overflow: -moz-hidden-unscrollable enabled
 - name: layout.css.overflow-moz-hidden-unscrollable.enabled
   type: RelaxedAtomicBool
-  value: @IS_NOT_NIGHTLY_BUILD@
+  value: false
   mirror: always
   rust: true
 
