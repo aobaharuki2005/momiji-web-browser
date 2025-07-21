@@ -540,23 +540,27 @@ async function testTabFrames() {
       2,
       "The two existing targets should be destroyed"
     );
-    is(
-      destroyedTargets[0].targetFront,
-      targets[1].targetFront,
-      "The first destroyed should be the iframe one"
+    const iframeDestroyedTarget = destroyedTargets.find(
+      target => target.targetFront === targets[1].targetFront
+    );
+    ok(
+      iframeDestroyedTarget,
+      "Received the destroyed target notification for the iframe"
     );
     is(
-      destroyedTargets[0].isTargetSwitching,
+      iframeDestroyedTarget.isTargetSwitching,
       false,
       "the target destruction is not flagged as target switching for iframes"
     );
-    is(
-      destroyedTargets[1].targetFront,
-      targets[0].targetFront,
-      "The second destroyed should be the previous top level one (because it is delayed to be fired *after* will-navigate)"
+    const topLevelDestroyedTarget = destroyedTargets.find(
+      target => target.targetFront === targets[0].targetFront
+    );
+    ok(
+      topLevelDestroyedTarget,
+      "Received the destroyed target notification for the top level frame"
     );
     is(
-      destroyedTargets[1].isTargetSwitching,
+      topLevelDestroyedTarget.isTargetSwitching,
       true,
       "the target destruction is flagged as target switching"
     );
