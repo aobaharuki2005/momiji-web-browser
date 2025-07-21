@@ -17,7 +17,11 @@ class AndroidDecoderModule : public PlatformDecoderModule {
   friend already_AddRefed<T> MakeAndAddRef(Args&&...);
 
  public:
-  static already_AddRefed<PlatformDecoderModule> Create(
+
+ const char* Name() const override {
+   return "Android MediaCodec w/ proxy";
+ }
+ static already_AddRefed<PlatformDecoderModule> Create(
       CDMProxy* aProxy = nullptr);
 
   already_AddRefed<MediaDataDecoder> CreateVideoDecoder(

@@ -400,6 +400,8 @@ class PlatformDecoderModule {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PlatformDecoderModule)
 
+  virtual const char* Name() const = 0;
+
   // Perform any per-instance initialization.
   // This is called on the decode task queue.
   virtual nsresult Startup() { return NS_OK; }

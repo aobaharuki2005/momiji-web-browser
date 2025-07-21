@@ -17,6 +17,9 @@ class AppleDecoderModule : public PlatformDecoderModule {
   friend already_AddRefed<T> MakeAndAddRef(Args&&...);
 
  public:
+  const char* Name() const override {
+    return "Apple";
+  }
   static already_AddRefed<PlatformDecoderModule> Create();
 
   nsresult Startup() override;
