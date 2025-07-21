@@ -31,9 +31,9 @@ class CacheChild final : public PCacheChild, public ActorChild {
 
   CacheChild();
 
-  void SetListener(Cache* aListener);
+  void SetListener(CacheChildListener* aListener);
 
-  // Must be called by the associated Cache listener in its DestroyInternal()
+  // Must be called by the associated Cache listener in its OnActorDestroy()
   // method.  Also, Cache must call StartDestroyFromListener() on the actor in
   // its destructor to trigger ActorDestroy() if it has not been called yet.
   void ClearListener();
@@ -73,7 +73,8 @@ class CacheChild final : public PCacheChild, public ActorChild {
   // Use a weak ref so actor does not hold DOM object alive past content use.
   // The Cache object must call ClearListener() to null this before its
   // destroyed.
-  Cache* MOZ_NON_OWNING_REF mListener;
+  CacheChildListener* MOZ_NON_OWNING_REF mListener;
+
   bool mLocked;
   bool mDelayedDestroy;
 };

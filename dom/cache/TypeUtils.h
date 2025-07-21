@@ -37,11 +37,31 @@ class Response;
 
 namespace cache {
 
+class CacheChild;
+class CacheStorageChild;
 class CacheQueryParams;
 class CacheReadStream;
 class CacheRequest;
 class CacheResponse;
 class HeadersEntry;
+
+// common base class for below listeners
+class Listener {
+ public:
+  virtual ~Listener() = default;
+};
+
+// Cache registers itself as the listener of it's actor, CacheChild.
+class CacheChildListener : public Listener {
+ public:
+  virtual void OnActorDestroy(CacheChild* aActor) = 0;
+};
+
+// CacheStorage registers itself as the listener of it's actor, CacheStorageChild.
+class CacheStorageChildListener : public Listener {
+ public:
+  virtual void OnActorDestroy(CacheStorageChild* aActor) = 0;
+};
 
 class TypeUtils {
  public:

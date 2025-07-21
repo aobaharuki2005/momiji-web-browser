@@ -493,7 +493,7 @@ JSObject* Cache::WrapObject(JSContext* aContext,
   return Cache_Binding::Wrap(aContext, this, aGivenProto);
 }
 
-void Cache::DestroyInternal(CacheChild* aActor) {
+void Cache::OnActorDestroy(CacheChild* aActor) {
   MOZ_DIAGNOSTIC_ASSERT(mActor);
   MOZ_DIAGNOSTIC_ASSERT(mActor == aActor);
   mActor->ClearListener();
@@ -516,7 +516,7 @@ Cache::~Cache() {
   NS_ASSERT_OWNINGTHREAD(Cache);
   if (mActor) {
     mActor->StartDestroyFromListener();
-    // DestroyInternal() is called synchronously by StartDestroyFromListener().
+    // OnActorDestroy() is called synchronously by StartDestroyFromListener().
     // So we should have already cleared the mActor.
     MOZ_DIAGNOSTIC_ASSERT(!mActor);
   }

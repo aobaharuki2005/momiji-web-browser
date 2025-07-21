@@ -40,7 +40,8 @@ class CacheWorkerRef;
 
 class CacheStorage final : public nsISupports,
                            public nsWrapperCache,
-                           public TypeUtils {
+                           public TypeUtils,
+                           public CacheStorageChildListener {
   using PBackgroundChild = mozilla::ipc::PBackgroundChild;
 
  public:
@@ -78,7 +79,8 @@ class CacheStorage final : public nsISupports,
                                JS::Handle<JSObject*> aGivenProto) override;
 
   // Called when CacheStorageChild actor is being destroyed
-  void DestroyInternal(CacheStorageChild* aActor);
+  // Override Observer method
+  void OnActorDestroy(CacheStorageChild* aActor) override;
 
   // TypeUtils methods
   virtual nsIGlobalObject* GetGlobalObject() const override;
@@ -106,7 +108,7 @@ class CacheStorage final : public nsISupports,
   nsCOMPtr<nsIGlobalObject> mGlobal;
   const UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
 
-  // weak ref cleared in DestroyInternal
+  // weak ref cleared in OnActorDestroy
   CacheStorageChild* mActor;
 
   nsresult mStatus;

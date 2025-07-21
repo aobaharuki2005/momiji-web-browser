@@ -28,11 +28,11 @@ class CacheStorageChild final : public PCacheStorageChild, public ActorChild {
   friend class PCacheStorageChild;
 
  public:
-  CacheStorageChild(CacheStorage* aListener,
+  CacheStorageChild(CacheStorageChildListener* aListener,
                     SafeRefPtr<CacheWorkerRef> aWorkerRef);
 
   // Must be called by the associated CacheStorage listener in its
-  // DestroyInternal() method.  Also, CacheStorage must call
+  // OnActorDestroy() method.  Also, CacheStorage must call
   // SendDestroyFromListener() on the actor in its destructor to trigger
   // ActorDestroy() if it has not been called yet.
   void ClearListener();
@@ -68,7 +68,7 @@ class CacheStorageChild final : public PCacheStorageChild, public ActorChild {
   // Use a weak ref so actor does not hold DOM object alive past content use.
   // The CacheStorage object must call ClearListener() to null this before its
   // destroyed.
-  CacheStorage* MOZ_NON_OWNING_REF mListener;
+  CacheStorageChildListener* MOZ_NON_OWNING_REF mListener;
   bool mDelayedDestroy;
 };
 

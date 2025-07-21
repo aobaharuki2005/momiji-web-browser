@@ -34,7 +34,7 @@ CacheChild::~CacheChild() {
   MOZ_DIAGNOSTIC_ASSERT(!mLocked);
 }
 
-void CacheChild::SetListener(Cache* aListener) {
+void CacheChild::SetListener(CacheChildListener* aListener) {
   NS_ASSERT_OWNINGTHREAD(CacheChild);
   MOZ_DIAGNOSTIC_ASSERT(!mListener);
   mListener = aListener;
@@ -66,7 +66,7 @@ void CacheChild::StartDestroyFromListener() {
 }
 
 void CacheChild::DestroyInternal() {
-  RefPtr<Cache> listener = mListener;
+  CacheChildListener* listener = mListener;
 
   // StartDestroy() can get called from either Cache or the WorkerRef.
   // Theoretically we can get double called if the right race happens.  Handle
@@ -75,9 +75,9 @@ void CacheChild::DestroyInternal() {
     return;
   }
 
-  listener->DestroyInternal(this);
+  listener->OnActorDestroy(this);
 
-  // Cache listener should call ClearListener() in DestroyInternal()
+  // Cache listener should call ClearListener() in OnActorDestroy()
   MOZ_DIAGNOSTIC_ASSERT(!mListener);
 
   // Start actor destruction from parent process
@@ -97,10 +97,10 @@ void CacheChild::StartDestroy() {
 
 void CacheChild::ActorDestroy(ActorDestroyReason aReason) {
   NS_ASSERT_OWNINGTHREAD(CacheChild);
-  RefPtr<Cache> listener = mListener;
+  CacheChildListener* listener = mListener;
   if (listener) {
-    listener->DestroyInternal(this);
-    // Cache listener should call ClearListener() in DestroyInternal()
+    listener->OnActorDestroy(this);
+    // Cache listener should call ClearListener() in OnActorDestroy()
     MOZ_DIAGNOSTIC_ASSERT(!mListener);
   }
 

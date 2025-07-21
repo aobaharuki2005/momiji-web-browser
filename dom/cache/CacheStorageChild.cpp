@@ -17,7 +17,7 @@ namespace mozilla::dom::cache {
 // declared in ActorUtils.h
 void DeallocPCacheStorageChild(PCacheStorageChild* aActor) { delete aActor; }
 
-CacheStorageChild::CacheStorageChild(CacheStorage* aListener,
+CacheStorageChild::CacheStorageChild(CacheStorageChildListener* aListener,
                                      SafeRefPtr<CacheWorkerRef> aWorkerRef)
     : mListener(aListener), mDelayedDestroy(false) {
   MOZ_COUNT_CTOR(cache::CacheStorageChild);
@@ -54,7 +54,7 @@ void CacheStorageChild::StartDestroyFromListener() {
 }
 
 void CacheStorageChild::DestroyInternal() {
-  RefPtr<CacheStorage> listener = mListener;
+  CacheStorageChildListener* listener = mListener;
 
   // StartDestroy() can get called from either CacheStorage or the
   // CacheWorkerRef.
@@ -64,9 +64,9 @@ void CacheStorageChild::DestroyInternal() {
     return;
   }
 
-  listener->DestroyInternal(this);
+  listener->OnActorDestroy(this);
 
-  // CacheStorage listener should call ClearListener() in DestroyInternal()
+  // CacheStorage listener should call ClearListener() in OnActorDestroy()
   MOZ_DIAGNOSTIC_ASSERT(!mListener);
 
   // Start actor destruction from parent process
@@ -93,10 +93,10 @@ void CacheStorageChild::NoteDeletedActor() {
 
 void CacheStorageChild::ActorDestroy(ActorDestroyReason aReason) {
   NS_ASSERT_OWNINGTHREAD(CacheStorageChild);
-  RefPtr<CacheStorage> listener = mListener;
+  CacheStorageChildListener* listener = mListener;
   if (listener) {
-    listener->DestroyInternal(this);
-    // CacheStorage listener should call ClearListener() in DestroyInternal()
+    listener->OnActorDestroy(this);
+    // CacheStorage listener should call ClearListener() in OnActorDestroy()
     MOZ_DIAGNOSTIC_ASSERT(!mListener);
   }
 
