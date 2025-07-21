@@ -1222,50 +1222,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
       return rv;
     }
 
-    mPerformanceRecorder.Record(mFrame->pkt_dts, [&](auto& aStage) {
-      aStage.SetResolution(mFrame->width, mFrame->height);
-      auto format = [&]() -> Maybe<DecodeStage::ImageFormat> {
-        switch (mCodecContext->pix_fmt) {
-          case AV_PIX_FMT_YUV420P:
-          case AV_PIX_FMT_YUVJ420P:
-          case AV_PIX_FMT_YUV420P10LE:
-#  if LIBAVCODEC_VERSION_MAJOR >= 57
-          case AV_PIX_FMT_YUV420P12LE:
-#  endif
-            return Some(DecodeStage::YUV420P);
-          case AV_PIX_FMT_YUV422P:
-          case AV_PIX_FMT_YUV422P10LE:
-#  if LIBAVCODEC_VERSION_MAJOR >= 57
-          case AV_PIX_FMT_YUV422P12LE:
-#  endif
-            return Some(DecodeStage::YUV422P);
-          case AV_PIX_FMT_YUV444P:
-          case AV_PIX_FMT_YUVJ444P:
-          case AV_PIX_FMT_YUV444P10LE:
-#  if LIBAVCODEC_VERSION_MAJOR >= 57
-          case AV_PIX_FMT_YUV444P12LE:
-#  endif
-            return Some(DecodeStage::YUV444P);
-          case AV_PIX_FMT_GBRP:
-          case AV_PIX_FMT_GBRP10LE:
-            return Some(DecodeStage::GBRP);
-          case AV_PIX_FMT_VAAPI_VLD:
-            return Some(DecodeStage::VAAPI_SURFACE);
-#  ifdef MOZ_ENABLE_D3D11VA
-          case AV_PIX_FMT_D3D11:
-            return Some(DecodeStage::D3D11_SURFACE);
-#  endif
-          default:
-            return Nothing();
-        }
-      }();
-      format.apply([&](auto& aFmt) { aStage.SetImageFormat(aFmt); });
-      aStage.SetColorDepth(GetColorDepth(mCodecContext->pix_fmt));
-      aStage.SetYUVColorSpace(GetFrameColorSpace());
-      aStage.SetColorRange(GetFrameColorRange());
-      aStage.SetStartTimeAndEndTime(aSample->mTime.ToMicroseconds(),
-                                    aSample->GetEndTime().ToMicroseconds());
-    });
+    RecordFrame(aSample, aResults.LastElement());
     if (aGotFrame) {
       *aGotFrame = true;
     }
@@ -1333,52 +1290,63 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     return rv;
   }
 
-  mTrackingId.apply([&](const auto&) {
-    mPerformanceRecorder.Record(mFrame->pkt_dts, [&](DecodeStage& aStage) {
-      aStage.SetResolution(mFrame->width, mFrame->height);
-      auto format = [&]() -> Maybe<DecodeStage::ImageFormat> {
-        switch (mCodecContext->pix_fmt) {
-          case AV_PIX_FMT_YUV420P:
-          case AV_PIX_FMT_YUVJ420P:
-          case AV_PIX_FMT_YUV420P10LE:
-#  if LIBAVCODEC_VERSION_MAJOR >= 57
-          case AV_PIX_FMT_YUV420P12LE:
-#  endif
-            return Some(DecodeStage::YUV420P);
-          case AV_PIX_FMT_YUV422P:
-          case AV_PIX_FMT_YUV422P10LE:
-#  if LIBAVCODEC_VERSION_MAJOR >= 57
-          case AV_PIX_FMT_YUV422P12LE:
-#  endif
-            return Some(DecodeStage::YUV422P);
-          case AV_PIX_FMT_YUV444P:
-          case AV_PIX_FMT_YUVJ444P:
-          case AV_PIX_FMT_YUV444P10LE:
-#  if LIBAVCODEC_VERSION_MAJOR >= 57
-          case AV_PIX_FMT_YUV444P12LE:
-#  endif
-            return Some(DecodeStage::YUV444P);
-          case AV_PIX_FMT_GBRP:
-          case AV_PIX_FMT_GBRP10LE:
-            return Some(DecodeStage::GBRP);
-          default:
-            return Nothing();
-        }
-      }();
-      format.apply([&](auto& aFmt) { aStage.SetImageFormat(aFmt); });
-      aStage.SetColorDepth(GetColorDepth(mCodecContext->pix_fmt));
-      aStage.SetYUVColorSpace(GetFrameColorSpace());
-      aStage.SetColorRange(GetFrameColorRange());
-      aStage.SetStartTimeAndEndTime(aSample->mTime.ToMicroseconds(),
-                                    aSample->GetEndTime().ToMicroseconds());
-    });
-  });
+  mTrackingId.apply(
+      [&](const auto&) { RecordFrame(aSample, aResults.LastElement()); });
 
   if (aGotFrame) {
     *aGotFrame = true;
   }
   return rv;
 #endif
+}
+
+void FFmpegVideoDecoder<LIBAV_VER>::RecordFrame(const MediaRawData* aSample,
+                                                const MediaData* aData) {
+  mPerformanceRecorder.Record(
+      aData->mTimecode.ToMicroseconds(), [&](auto& aStage) {
+        aStage.SetResolution(mFrame->width, mFrame->height);
+        auto format = [&]() -> Maybe<DecodeStage::ImageFormat> {
+          switch (mCodecContext->pix_fmt) {
+            case AV_PIX_FMT_YUV420P:
+            case AV_PIX_FMT_YUVJ420P:
+            case AV_PIX_FMT_YUV420P10LE:
+#  if LIBAVCODEC_VERSION_MAJOR >= 57
+            case AV_PIX_FMT_YUV420P12LE:
+#  endif
+              return Some(DecodeStage::YUV420P);
+            case AV_PIX_FMT_YUV422P:
+            case AV_PIX_FMT_YUV422P10LE:
+#  if LIBAVCODEC_VERSION_MAJOR >= 57
+            case AV_PIX_FMT_YUV422P12LE:
+#  endif
+              return Some(DecodeStage::YUV422P);
+            case AV_PIX_FMT_YUV444P:
+            case AV_PIX_FMT_YUVJ444P:
+            case AV_PIX_FMT_YUV444P10LE:
+#  if LIBAVCODEC_VERSION_MAJOR >= 57
+            case AV_PIX_FMT_YUV444P12LE:
+#  endif
+              return Some(DecodeStage::YUV444P);
+            case AV_PIX_FMT_GBRP:
+            case AV_PIX_FMT_GBRP10LE:
+              return Some(DecodeStage::GBRP);
+            case AV_PIX_FMT_VAAPI_VLD:
+              return Some(DecodeStage::VAAPI_SURFACE);
+#ifdef MOZ_ENABLE_D3D11VA
+            case AV_PIX_FMT_D3D11:
+              return Some(DecodeStage::D3D11_SURFACE);
+#endif
+            default:
+              return Nothing();
+          }
+        }();
+        format.apply([&](auto& aFmt) { aStage.SetImageFormat(aFmt); });
+        aStage.SetColorDepth(GetColorDepth(mCodecContext->pix_fmt));
+        aStage.SetYUVColorSpace(GetFrameColorSpace());
+        aStage.SetColorRange(GetFrameColorRange());
+        aStage.SetStartTimeAndEndTime(aSample->mTime.ToMicroseconds(),
+                                      aSample->GetEndTime().ToMicroseconds());
+      });
 }
 
 gfx::ColorDepth FFmpegVideoDecoder<LIBAV_VER>::GetColorDepth(
@@ -1617,7 +1585,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
         VideoData::CreateAndCopyData(
             mInfo, mImageContainer, aOffset, TimeUnit::FromMicroseconds(aPts),
             TimeUnit::FromMicroseconds(aDuration), b, !!mFrame->key_frame,
-            TimeUnit::FromMicroseconds(-1),
+            TimeUnit::FromMicroseconds(mFrame->pkt_dts),
             mInfo.ScaledImageRect(mFrame->width, mFrame->height),
             mImageAllocator);
     if (r.isErr()) {
@@ -1698,7 +1666,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
   RefPtr<VideoData> vp = VideoData::CreateFromImage(
       mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
       TimeUnit::FromMicroseconds(aDuration), surface->GetAsImage(),
-      !!mFrame->key_frame, TimeUnit::FromMicroseconds(-1));
+      !!mFrame->key_frame, TimeUnit::FromMicroseconds(mFrame->pkt_dts));
 
   if (!vp) {
     return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
@@ -1747,7 +1715,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageV4L2(
   RefPtr<VideoData> vp = VideoData::CreateFromImage(
       mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
       TimeUnit::FromMicroseconds(aDuration), surface->GetAsImage(),
-      !!mFrame->key_frame, TimeUnit::FromMicroseconds(-1));
+      !!mFrame->key_frame, TimeUnit::FromMicroseconds(mFrame->pkt_dts));
 
   if (!vp) {
     return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
@@ -2181,7 +2149,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageD3D11(
   RefPtr<VideoData> v = VideoData::CreateFromImage(
       mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
       TimeUnit::FromMicroseconds(aDuration), image, !!mFrame->key_frame,
-      TimeUnit::FromMicroseconds(-1));
+      TimeUnit::FromMicroseconds(mFrame->pkt_dts));
   if (!v) {
     nsPrintfCString msg("D3D image allocation error");
     FFMPEG_LOG("%s", msg.get());
