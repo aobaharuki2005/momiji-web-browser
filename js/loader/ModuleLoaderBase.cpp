@@ -720,6 +720,8 @@ void ModuleLoaderBase::ResumeWaitingRequest(ModuleLoadRequest* aRequest,
 
   if (!aRequest->IsErrored()) {
     OnFetchSucceeded(aRequest);
+  } else {
+    OnFetchFailed(aRequest);
   }
 }
 
@@ -789,6 +791,8 @@ nsresult ModuleLoaderBase::OnFetchComplete(ModuleLoadRequest* aRequest,
 
   if (!aRequest->IsErrored()) {
     OnFetchSucceeded(aRequest);
+  } else {
+    OnFetchFailed(aRequest);
   }
 
   if (!waitingRequests) {
@@ -813,6 +817,71 @@ void ModuleLoaderBase::OnFetchSucceeded(ModuleLoadRequest* aRequest) {
 
     aRequest->SetReady();
     aRequest->LoadFinished();
+  }
+}
+
+void ModuleLoaderBase::OnFetchFailed(ModuleLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->IsErrored());
+  // For dynamic import, the error handling is done in ProcessDynamicImport
+  if (aRequest->IsDynamicImport()) {
+    return;
+  }
+
+  if (aRequest->IsTopLevel()) {
+    // https://html.spec.whatwg.org/#fetch-the-descendants-of-and-link-a-module-script
+    // Step 2. If record is null, then:
+    // Step 2.1. Set moduleScript's error to rethrow to moduleScript's parse
+    //           error.
+    if (aRequest->mModuleScript && !aRequest->mModuleScript->ModuleRecord()) {
+      MOZ_ASSERT(aRequest->mModuleScript->HasParseError());
+      JS::Value parseError = aRequest->mModuleScript->ParseError();
+      LOG(("ScriptLoadRequest (%p): found parse error", aRequest));
+      aRequest->mModuleScript->SetErrorToRethrow(parseError);
+    }
+  } else {
+    // The remaining case is static import.
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(mGlobalObject)) {
+      return;
+    }
+    JSContext* cx = jsapi.cx();
+
+    MOZ_ASSERT(!aRequest->mStatePrivate.isUndefined());
+    JS::Rooted<JS::Value> statePrivate(cx, aRequest->mStatePrivate);
+    JS::Rooted<JS::Value> error(cx);
+
+    // https://html.spec.whatwg.org/#hostloadimportedmodule
+    //
+    // Step 14.2. If moduleScript is null, then set completion to Completion
+    //            Record { [[Type]]: throw, [[Value]]: a new TypeError,
+    //            [[Target]]: empty }.
+    //
+    // Impl note:
+    // When moduleScript is null, the ScriptLoader will call onerror handler.
+    // So we don't actually create a TypeError for this.
+    if (!aRequest->mModuleScript) {
+      error = UndefinedValue();
+    } else {
+      // Step 14.3. Otherwise, if moduleScript's parse error is not null, then:
+      //   1. Let parseError be moduleScript's parse error.
+      //   2. Set completion to Completion Record { [[Type]]: throw,
+      //      [[Value]]: parseError, [[Target]]: empty }.
+      //   3. If loadState is not undefined and loadState.[[ErrorToRethrow]]
+      //      is null, set loadState.[[ErrorToRethrow]] to parseError.
+      MOZ_ASSERT(aRequest->mModuleScript->HasParseError());
+      error = aRequest->mModuleScript->ParseError();
+    }
+
+    LOG(("ScriptLoadRequest (%p): FinishLoadingImportedModuleFailed",
+         aRequest));
+    // Step 14.5. Perform FinishLoadingImportedModule(referrer, moduleRequest,
+    //            payload, completion).
+    JS::FinishLoadingImportedModuleFailed(cx, statePrivate, nullptr, error);
+
+    aRequest->mReferrerObj = nullptr;
+    aRequest->mReferencingPrivate.setUndefined();
+    aRequest->mModuleRequestObj = nullptr;
+    aRequest->mStatePrivate.setUndefined();
   }
 }
 
@@ -1081,6 +1150,22 @@ static bool OnLoadRequestedModulesResolvedImpl(ModuleLoadRequest* aRequest) {
 static bool OnLoadRequestedModulesRejectedImpl(ModuleLoadRequest* aRequest,
                                                Handle<JS::Value> error) {
   LOG(("ScriptLoadRequest (%p): LoadRequestedModules rejected", aRequest));
+  ModuleScript* moduleScript = aRequest->mModuleScript;
+  // https://html.spec.whatwg.org/#fetch-the-descendants-of-and-link-a-module-script
+  // Step 7. Upon rejection of loadingPromise, run the following
+  //         steps:
+  // Step 7.1. If state.[[ErrorToRethrow]] is not null, set moduleScript's
+  //           error to rethrow to state.[[ErrorToRethrow]] and run
+  //           onComplete given moduleScript.
+  if (moduleScript && !error.isUndefined()) {
+    moduleScript->SetErrorToRethrow(error);
+  } else {
+    // Step 7.2. Otherwise, run onComplete given null.
+    aRequest->mModuleScript = nullptr;
+  }
+
+  aRequest->ModuleErrored();
+
   // Decrease the reference 'AddRef'ed when converting the hostDefined.
   aRequest->Release();
   return true;
@@ -1275,6 +1360,7 @@ void ModuleLoaderBase::StartFetchingModuleAndDependencies(
     MOZ_ASSERT(!childRequest->mModuleScript);
     mLoader->ReportErrorToConsole(childRequest, rv);
     childRequest->LoadFailed();
+    OnFetchFailed(childRequest);
   }
 }
 
@@ -1440,6 +1526,7 @@ bool ModuleLoaderBase::HasPendingDynamicImports() const {
   return !mDynamicImportRequests.isEmpty();
 }
 
+// TODO: Bug 1968890 : Update error handling for dynamic import
 void ModuleLoaderBase::CancelDynamicImport(ModuleLoadRequest* aRequest,
                                            nsresult aResult) {
   // aRequest may have already been unlinked by CC.

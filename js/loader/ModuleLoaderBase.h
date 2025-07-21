@@ -567,6 +567,7 @@ class ModuleLoaderBase : public nsISupports {
   bool IsFetchingAndHasWaitingRequest(ModuleLoadRequest* aRequest);
 
   void OnFetchSucceeded(ModuleLoadRequest* aRequest);
+  void OnFetchFailed(ModuleLoadRequest* aRequest);
 
   // The slot stored in ImportMetaResolve function.
   enum class ImportMetaSlots : uint32_t { ModulePrivateSlot = 0, SlotCount };
