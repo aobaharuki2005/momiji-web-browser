@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
-import { html } from "chrome://global/content/vendor/lit.all.mjs";
+import { html, classMap } from "chrome://global/content/vendor/lit.all.mjs";
 
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/ipprotection/ipprotection-signedout.mjs";
@@ -67,7 +67,6 @@ export default class IPProtectionContentElement extends MozLitElement {
   }
 
   statusCardTemplate() {
-    const isEnabledClass = this.state.isProtectionEnabled ? "is-enabled" : "";
     const statusCardL10nId = this.state.isProtectionEnabled
       ? "ipprotection-connection-status-on"
       : "ipprotection-connection-status-off";
@@ -78,12 +77,27 @@ export default class IPProtectionContentElement extends MozLitElement {
     // TODO: update timer and its starting value according to the protectionEnabledSince property (Bug 1972460)
     const timeConnected = DEFAULT_TIME_CONNECTED;
 
-    return html` <div id="status-card" class=${isEnabledClass}>
-      <div id="connection-wrapper">
-        <span id="connection-icon" class=${isEnabledClass}></span>
+    return html` <div
+      id="status-card"
+      class=${classMap({
+        "is-enabled": this.state.isProtectionEnabled,
+      })}
+    >
+      <div id="connection-wrapper" class="status-card-section">
+        <span
+          id="connection-icon"
+          class=${classMap({
+            "is-enabled": this.state.isProtectionEnabled,
+            "status-card-icon": true,
+          })}
+        ></span>
         <span id="connection-details-and-toggle">
           <div id="connection-details">
-            <h3 id="connection-title" data-l10n-id=${statusCardL10nId}></h3>
+            <span
+              id="connection-title"
+              class="status-card-section-title heading-medium"
+              data-l10n-id=${statusCardL10nId}
+            ></span>
             <span id="connection-time" class="text-deemphasized"
               >${timeConnected}</span
             >
@@ -97,6 +111,29 @@ export default class IPProtectionContentElement extends MozLitElement {
             ></moz-toggle>
           </div>
         </span>
+      </div>
+      <div class="status-card-divider"></div>
+      <div id="location-wrapper" class="status-card-section">
+        <div
+          id="location-title-wrapper"
+          class="status-card-section-title status-card-section-item"
+        >
+          <span id="location-title-icon" class="status-card-icon"></span>
+          <span
+            id="location-title"
+            class="heading-medium"
+            data-l10n-id="ipprotection-location-title"
+          ></span>
+        </div>
+        <div id="location-label" class="status-card-section-item">
+          <!--TODO: add location flag icon (Bug 1976769)-->
+          <span id="location-flag"></span>
+          <span
+            id="location-name"
+            class="text-deemphasized status-card-section-item"
+            >${this.state.location}</span
+          >
+        </div>
       </div>
     </div>`;
   }

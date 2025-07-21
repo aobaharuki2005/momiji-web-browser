@@ -27,6 +27,9 @@ ipprotection-toggle-active =
 ipprotection-toggle-inactive =
   .aria-label = Turn VPN on
 
+# Location refers to the VPN server geographical position.
+ipprotection-location-title = Location
+
 upgrade-vpn-title = Upgrade to protect yourself beyond the browser
 upgrade-vpn-paragraph = Enhance your security with <a data-l10n-name="learn-more-vpn">{ -firefox-vpn-brand-name }</a> protection for your entire device, not just your browser. Customize your VPN location, set site-specific locations, and more.
 upgrade-vpn-button = Upgrade

@@ -45,6 +45,8 @@ export class IPProtectionPanel {
    *  The timestamp in milliseconds since IP Protection was enabled
    * @property {boolean} isSignedIn
    *  True if signed in to account
+   * @property {string} location
+   *  The name of the location the proxy is connected to
    */
 
   /**
@@ -83,6 +85,7 @@ export class IPProtectionPanel {
       isSignedIn: true,
       isProtectionEnabled: false,
       protectionEnabledSince: null,
+      location: "United States",
     };
 
     if (window) {

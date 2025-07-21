@@ -12,6 +12,18 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/ipprotection/IPProtectionPanel.sys.mjs",
 });
 
+async function setAndUpdateIsSignedIn(content, isSignedIn) {
+  content.state.isSignedIn = isSignedIn;
+  content.requestUpdate();
+  await content.updateComplete;
+}
+
+async function resetStateToObj(content, originalState) {
+  content.state = originalState;
+  content.requestUpdate();
+  await content.updateComplete;
+}
+
 /**
  * Tests that the ip protection main panel view has the correct content.
  */
@@ -29,9 +41,7 @@ add_task(async function test_main_content() {
 
   let content = panelView.querySelector(lazy.IPProtectionPanel.CONTENT_TAGNAME);
 
-  content.state.isSignedIn = true;
-  content.requestUpdate();
-  await content.updateComplete;
+  await setAndUpdateIsSignedIn(content, true);
 
   Assert.ok(
     BrowserTestUtils.isVisible(content),
@@ -64,6 +74,8 @@ add_task(async function test_main_content() {
 add_task(async function test_status_card() {
   const l10nIdOn = "ipprotection-connection-status-on";
   const l10nIdOff = "ipprotection-connection-status-off";
+  const mockLocationName = "Planet Earth";
+  let originalState = null;
 
   let button = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
   let panelView = PanelMultiView.getViewNode(
@@ -77,23 +89,39 @@ add_task(async function test_status_card() {
   await panelShownPromise;
 
   let content = panelView.querySelector(lazy.IPProtectionPanel.CONTENT_TAGNAME);
+
   Assert.ok(
     BrowserTestUtils.isVisible(content),
     "ipprotection content component should be present"
   );
+
+  originalState = structuredClone(content.state);
+
+  await setAndUpdateIsSignedIn(content, true);
+
   Assert.ok(content.statusCardEl, "Status card should be present");
   Assert.equal(
     content.connectionTitleEl?.getAttribute("data-l10n-id"),
     l10nIdOff,
     "Status card connection toggle data-l10n-id should be correct by default"
   );
-  Assert.ok(content.state, "State should be present");
+
+  // Verify UI updates based on state
+  content.state.location = mockLocationName;
+  content.requestUpdate();
+  await content.updateComplete;
+
+  let locationName = content.shadowRoot.getElementById("location-name");
+  Assert.equal(
+    locationName?.textContent,
+    mockLocationName,
+    "Location name should be present and correct"
+  );
 
   // Set state as if protection is enabled
   content.state.isProtectionEnabled = true;
-
   content.requestUpdate();
-  await content.statusCardEl.updateComplete;
+  await content.updateComplete;
 
   Assert.equal(
     content.connectionTitleEl?.getAttribute("data-l10n-id"),
@@ -103,15 +131,17 @@ add_task(async function test_status_card() {
 
   // Set state as if protection is disabled
   content.state.isProtectionEnabled = false;
-
   content.requestUpdate();
-  await content.statusCardEl.updateComplete;
+  await content.updateComplete;
 
   Assert.equal(
     content.connectionTitleEl?.getAttribute("data-l10n-id"),
     l10nIdOff,
     "Status card connection toggle data-l10n-id should be correct when protection is disabled"
   );
+
+  // To be safe, reset the entire state
+  await resetStateToObj(content, originalState);
 
   // Close the panel
   let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
@@ -138,6 +168,9 @@ add_task(async function test_ipprotection_events_on_toggle() {
   await panelShownPromise;
 
   let content = panelView.querySelector(lazy.IPProtectionPanel.CONTENT_TAGNAME);
+
+  await setAndUpdateIsSignedIn(content, true);
+
   Assert.ok(
     BrowserTestUtils.isVisible(content),
     "ipprotection content component should be present"
