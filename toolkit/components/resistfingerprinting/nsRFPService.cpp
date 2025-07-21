@@ -1678,7 +1678,7 @@ nsresult nsRFPService::GenerateCanvasKeyFromImageData(
       StaticPrefs::
           privacy_resistFingerprinting_randomization_canvas_use_siphash()) {
     // Hash the canvas data to generate the image data hash.
-    mozilla::HashNumber imageHashData = mozilla::HashString(aImageData, aSize);
+    mozilla::HashNumber imageHashData = mozilla::HashBytes(aImageData, aSize);
 
     // Then, we use the SipHash seeded by the first half of the random key to
     // generate a hash result using the image hash data. Our sipHash is
