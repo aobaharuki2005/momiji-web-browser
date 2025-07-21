@@ -1663,29 +1663,7 @@ void* BufferAllocator::allocMedium(size_t bytes, bool nurseryOwned, bool inGC) {
     }
   }
 
-  BufferChunk* chunk = BufferChunk::from(alloc);
-  chunk->setAllocated(alloc, true);
-
-  MOZ_ASSERT(!chunk->isNurseryOwned(alloc));
-  chunk->setNurseryOwned(alloc, nurseryOwned);
-
-  MOZ_ASSERT(chunk->allocBytes(alloc) == 0);
-  chunk->setAllocBytes(alloc, bytes);
-  MOZ_ASSERT(chunk->allocBytes(alloc) == bytes);
-
-  if (nurseryOwned && !chunk->hasNurseryOwnedAllocs) {
-    mediumTenuredChunks.ref().remove(chunk);
-    chunk->hasNurseryOwnedAllocs = true;
-    mediumMixedChunks.ref().pushBack(chunk);
-  }
-
-  MOZ_ASSERT(!chunk->isMarked(alloc));
-
-  if (!nurseryOwned) {
-    bool checkThresholds = !inGC;
-    updateHeapSize(bytes, checkThresholds, false);
-  }
-
+  setAllocated(alloc, bytes, nurseryOwned, inGC);
   return alloc;
 }
 
@@ -1749,10 +1727,148 @@ void* BufferAllocator::allocFromRegion(FreeRegion* region, size_t bytes,
   return ptr;
 }
 
+void* BufferAllocator::allocMediumAligned(size_t bytes, bool inGC) {
+  MOZ_ASSERT(bytes >= MinMediumAllocSize);
+  MOZ_ASSERT(bytes <= MaxMediumAllocSize / 2);
+  MOZ_ASSERT(mozilla::IsPowerOfTwo(bytes));
+
+  // Get size class from |bytes|.
+  size_t sizeClass = SizeClassForAlloc(bytes);
+
+  void* alloc = alignedAlloc(sizeClass);
+  if (MOZ_UNLIKELY(!alloc)) {
+    alloc = retryAlignedAlloc(sizeClass, inGC);
+    if (!alloc) {
+      return nullptr;
+    }
+  }
+
+  setAllocated(alloc, bytes, false, inGC);
+
+  return alloc;
+}
+
+MOZ_NEVER_INLINE void* BufferAllocator::retryAlignedAlloc(size_t sizeClass,
+                                                          bool inGC) {
+  if (hasMinorSweepDataToMerge) {
+    // Avoid taking the lock unless we know there is data to merge. This reduces
+    // context switches.
+    mergeSweptData();
+    void* ptr = alignedAlloc(sizeClass);
+    if (ptr) {
+      return ptr;
+    }
+  }
+
+  if (!allocNewChunk(inGC)) {
+    return nullptr;
+  }
+
+  void* ptr = alignedAlloc(sizeClass);
+  MOZ_ASSERT(ptr);
+  return ptr;
+}
+
+void* BufferAllocator::alignedAlloc(size_t sizeClass) {
+  mediumFreeLists.ref().checkAvailable();
+
+  // Try the first free region for the smallest possible size class. This will
+  // fail if that region is for the exact size class requested but the region is
+  // not aligned.
+  size_t allocClass =
+      mediumFreeLists.ref().getFirstAvailableSizeClass(sizeClass);
+  MOZ_ASSERT(allocClass >= sizeClass);
+  if (allocClass == SIZE_MAX) {
+    return nullptr;
+  }
+
+  FreeRegion* region = mediumFreeLists.ref().getFirstRegion(allocClass);
+  void* ptr = alignedAllocFromRegion(region, sizeClass);
+  if (ptr) {
+    updateFreeListsAfterAlloc(&mediumFreeLists.ref(), region, allocClass);
+    return ptr;
+  }
+
+  // If we couldn't allocate an aligned region, try a larger size class. This
+  // only happens if we selected the size class equal to the requested size.
+  MOZ_ASSERT(allocClass == sizeClass);
+  allocClass = mediumFreeLists.ref().getFirstAvailableSizeClass(sizeClass + 1);
+  if (allocClass == SIZE_MAX) {
+    return nullptr;
+  }
+
+  region = mediumFreeLists.ref().getFirstRegion(allocClass);
+  ptr = alignedAllocFromRegion(region, sizeClass);
+  MOZ_ASSERT(ptr);
+  updateFreeListsAfterAlloc(&mediumFreeLists.ref(), region, allocClass);
+  return ptr;
+}
+
+void* BufferAllocator::alignedAllocFromRegion(FreeRegion* region,
+                                              size_t sizeClass) {
+  // Attempt to allocate an aligned region from |region|.
+
+  uintptr_t start = region->startAddr;
+  MOZ_ASSERT(region->getEnd() > start);
+  MOZ_ASSERT(region->size() >= SizeClassBytes(sizeClass));
+  MOZ_ASSERT((region->size() % MinMediumAllocSize) == 0);
+
+  size_t bytes = SizeClassBytes(sizeClass);
+  size_t alignedStart = RoundUp(start, bytes);
+  size_t end = alignedStart + bytes;
+  if (end > region->getEnd()) {
+    return nullptr;
+  }
+
+  // Align the start of the region, creating a new free region out of the space
+  // at the start if necessary.
+  if (alignedStart != start) {
+    size_t alignBytes = alignedStart - start;
+    void* prefix = allocFromRegion(region, alignBytes, sizeClass);
+    MOZ_ASSERT(uintptr_t(prefix) == start);
+    (void)prefix;
+    MOZ_ASSERT(!region->hasDecommittedPages);
+    addFreeRegion(&mediumFreeLists.ref(), start, alignBytes, false,
+                  ListPosition::Back);
+  }
+
+  // Now the start is aligned we can use the normal allocation method.
+  MOZ_ASSERT(region->startAddr % bytes == 0);
+  return allocFromRegion(region, bytes, sizeClass);
+}
+
+void BufferAllocator::setAllocated(void* alloc, size_t bytes, bool nurseryOwned,
+                                   bool inGC) {
+  BufferChunk* chunk = BufferChunk::from(alloc);
+  chunk->setAllocated(alloc, true);
+
+  MOZ_ASSERT(!chunk->isNurseryOwned(alloc));
+  chunk->setNurseryOwned(alloc, nurseryOwned);
+
+  MOZ_ASSERT(chunk->allocBytes(alloc) == 0);
+  chunk->setAllocBytes(alloc, bytes);
+  MOZ_ASSERT(chunk->allocBytes(alloc) == bytes);
+
+  if (nurseryOwned && !chunk->hasNurseryOwnedAllocs) {
+    mediumTenuredChunks.ref().remove(chunk);
+    chunk->hasNurseryOwnedAllocs = true;
+    mediumMixedChunks.ref().pushBack(chunk);
+  }
+
+  MOZ_ASSERT(!chunk->isMarked(alloc));
+
+  if (!nurseryOwned) {
+    bool checkThresholds = !inGC;
+    updateHeapSize(bytes, checkThresholds, false);
+  }
+}
+
 void BufferAllocator::updateFreeListsAfterAlloc(FreeLists* freeLists,
                                                 FreeRegion* region,
                                                 size_t sizeClass) {
-  // Updates |freeLists| after an allocation of class |sizeClass| from |region|.
+  // Updates |freeLists| after an allocation from |region| which is currently in
+  // the |sizeClass| free list. This may move the region to a different free
+  // list.
 
   freeLists->assertContains(sizeClass, region);
 

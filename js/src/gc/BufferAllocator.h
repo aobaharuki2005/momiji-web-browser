@@ -439,8 +439,13 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   void* retryBumpAlloc(size_t requestedBytes, size_t sizeClass, bool inGC);
   void* bumpAlloc(size_t bytes, size_t sizeClass);
   void* allocFromRegion(FreeRegion* region, size_t bytes, size_t sizeClass);
+  void* allocMediumAligned(size_t bytes, bool inGC);
+  void* retryAlignedAlloc(size_t sizeClass, bool inGC);
+  void* alignedAlloc(size_t sizeClass);
+  void* alignedAllocFromRegion(FreeRegion* region, size_t sizeClass);
   void updateFreeListsAfterAlloc(FreeLists* freeLists, FreeRegion* region,
                                  size_t sizeClass);
+  void setAllocated(void* alloc, size_t bytes, bool nurseryOwned, bool inGC);
   void recommitRegion(FreeRegion* region);
   bool allocNewChunk(bool inGC);
   bool sweepChunk(BufferChunk* chunk, SweepKind sweepKind, bool shouldDecommit,
@@ -465,6 +470,8 @@ class BufferAllocator : public SlimLinkedListElement<BufferAllocator> {
   bool isMediumBufferNurseryOwned(void* alloc) const;
   void markMediumNurseryOwnedBuffer(void* alloc, bool ownerWasTenured);
   bool markMediumTenuredAlloc(void* alloc);
+
+  friend void* TestAllocAligned(JS::Zone* zone, size_t bytes);
 
   // Get the size class for an allocation. This rounds up to a class that is
   // large enough to hold the required size.

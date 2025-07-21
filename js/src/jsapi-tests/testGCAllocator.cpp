@@ -684,6 +684,45 @@ bool TestRealloc(size_t fromSize, size_t toSize, bool expectedInPlace) {
 }
 END_TEST(testBufferAllocator_reallocInPlace)
 
+namespace js::gc {
+void* TestAllocAligned(Zone* zone, size_t bytes) {
+  return zone->bufferAllocator.allocMediumAligned(bytes, false);
+}
+}  // namespace js::gc
+
+BEGIN_TEST(testBufferAllocator_alignedAlloc) {
+  AutoLeaveZeal leaveZeal(cx);
+
+  Rooted<BufferHolderObject*> holder(cx, BufferHolderObject::create(cx));
+  CHECK(holder);
+
+  JS::NonIncrementalGC(cx, JS::GCOptions::Shrink, JS::GCReason::API);
+
+  Zone* zone = cx->zone();
+  size_t initialGCHeapSize = zone->gcHeapSize.bytes();
+  size_t initialMallocHeapSize = zone->mallocHeapSize.bytes();
+
+  for (size_t requestSize = 1024; requestSize < 512 * 1024; requestSize *= 2) {
+    void* alloc = TestAllocAligned(zone, requestSize);
+    CHECK(alloc);
+    CHECK((uintptr_t(alloc) % requestSize) == 0);
+
+    CHECK(IsBufferAlloc(alloc));
+    size_t actualSize = GetAllocSize(zone, alloc);
+    CHECK(actualSize == requestSize);
+
+    CHECK(!IsNurseryOwned(zone, alloc));
+    FreeBuffer(zone, alloc);
+  }
+
+  JS_GC(cx);
+  CHECK(zone->gcHeapSize.bytes() == initialGCHeapSize);
+  CHECK(zone->mallocHeapSize.bytes() == initialMallocHeapSize);
+
+  return true;
+}
+END_TEST(testBufferAllocator_alignedAlloc)
+
 BEGIN_TEST(testBufferAllocator_predicatesOnOtherAllocs) {
   if (!cx->runtime()->gc.nursery().isEnabled()) {
     fprintf(stderr, "Skipping test as nursery is disabled.\n");
@@ -748,7 +787,12 @@ BEGIN_TEST(testBufferAllocator_stress) {
     size_t bytes = randomSize();
 
     if (!liveAllocs[index]) {
-      liveAllocs[index] = AllocBuffer(zone, bytes, false);
+      if ((std::rand() % 4) == 0 && bytes >= 1024 && bytes <= 256 * 1024) {
+        bytes = mozilla::RoundUpPow2(bytes);
+        liveAllocs[index] = TestAllocAligned(zone, bytes);
+      } else {
+        liveAllocs[index] = AllocBuffer(zone, bytes, false);
+      }
     } else {
       void* ptr = ReallocBuffer(zone, liveAllocs[index], bytes, false);
       if (ptr) {
