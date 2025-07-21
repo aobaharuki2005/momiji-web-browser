@@ -209,6 +209,13 @@ void ShadowRoot::InvalidateStyleAndLayoutOnSubtree(Element* aElement) {
     return;
   }
 
+  if (!aElement->IsInComposedDoc()) {
+    // If RemoveSlot is called from UnbindFromTree while we're moving
+    // (moveBefore) the slot elsewhere, invalidating styles and layout tree
+    // is done explicitly elsewhere.
+    return;
+  }
+
   PresShell* presShell = doc->GetPresShell();
   if (!presShell) {
     return;

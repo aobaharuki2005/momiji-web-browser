@@ -1706,7 +1706,8 @@ static nsresult UpdateGlobalsInSubtree(nsIContent* aRoot) {
 }
 
 void nsINode::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
-                                bool aNotify, ErrorResult& aRv) {
+                                bool aNotify, ErrorResult& aRv,
+                                nsINode* aOldParent) {
   if (!IsContainerNode()) {
     aRv.ThrowHierarchyRequestError(
         "Parent is not a Document, DocumentFragment, or Element node.");
@@ -1741,6 +1742,7 @@ void nsINode::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
   // XXXbz Do we even need this code anymore?
   bool wasInNACScope = ShouldUseNACScope(aKid);
   BindContext context(*this);
+  context.SetIsMove(aOldParent != nullptr);
   aRv = aKid->BindToTree(context, *this);
   if (!aRv.Failed() && !wasInNACScope && ShouldUseNACScope(aKid)) {
     MOZ_ASSERT(ShouldUseNACScope(this),
@@ -1763,9 +1765,13 @@ void nsINode::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
     // Note that we always want to call ContentInserted when things are added
     // as kids to documents
     if (parent && !aBeforeThis) {
-      MutationObservers::NotifyContentAppended(parent, aKid, {});
+      ContentAppendInfo info;
+      info.mOldParent = aOldParent;
+      MutationObservers::NotifyContentAppended(parent, aKid, info);
     } else {
-      MutationObservers::NotifyContentInserted(this, aKid, {});
+      ContentInsertInfo info;
+      info.mOldParent = aOldParent;
+      MutationObservers::NotifyContentInserted(this, aKid, info);
     }
 
     if (nsContentUtils::WantMutationEvents(
@@ -2369,8 +2375,94 @@ void nsINode::ReplaceChildren(nsINode* aNode, ErrorResult& aRv) {
   }
 }
 
+static bool IsDoctypeOrHasFollowingDoctype(nsINode* aNode) {
+  for (; aNode; aNode = aNode->GetNextSibling()) {
+    if (aNode->NodeType() == nsINode::DOCUMENT_TYPE_NODE) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// https://dom.spec.whatwg.org/#dom-parentnode-movebefore
+void nsINode::MoveBefore(nsINode& aNode, nsINode* aChild, ErrorResult& aRv) {
+  nsINode* referenceChild = aChild;
+  if (referenceChild == &aNode) {
+    referenceChild = aNode.GetNextSibling();
+  }
+
+  // Move algorithm
+  // https://dom.spec.whatwg.org/#move
+  // Step 1.
+  nsINode& newParent = *this;
+  GetRootNodeOptions options;
+  options.mComposed = true;
+  if (newParent.GetRootNode(options) != aNode.GetRootNode(options)) {
+    aRv.ThrowHierarchyRequestError("Different root node.");
+    return;
+  }
+
+  // Step 2.
+  if (nsContentUtils::ContentIsHostIncludingDescendantOf(&newParent, &aNode)) {
+    aRv.ThrowHierarchyRequestError("Node is an ancestor of the new parent.");
+    return;
+  }
+
+  // Step 3.
+  if (referenceChild && referenceChild->GetParentNode() != &newParent) {
+    aRv.ThrowNotFoundError("Wrong reference child.");
+    return;
+  }
+
+  // Step 4.
+  if (!aNode.IsElement() && !aNode.IsCharacterData()) {
+    aRv.ThrowHierarchyRequestError("Wrong type of node.");
+    return;
+  }
+
+  // Step 5.
+  if (aNode.IsText() && newParent.IsDocument()) {
+    aRv.ThrowHierarchyRequestError(
+        "Can't move a text node to be a child of a document.");
+    return;
+  }
+
+  // Step 6.
+  if (newParent.IsDocument() && aNode.IsElement() &&
+      (newParent.AsDocument()->GetRootElement() ||
+       IsDoctypeOrHasFollowingDoctype(referenceChild))) {
+    aRv.ThrowHierarchyRequestError(
+        "Can't move an element to be a child of the document.");
+    return;
+  }
+
+  // Step 7.
+  nsINode* oldParent = aNode.GetParentNode();
+
+  // Step 8.
+  MOZ_ASSERT(oldParent);
+
+  // Steps 9-12 happen implicitly in when triggering
+  // nsIMutationObserver notifications.
+  // Step 13, and UnbindFromTree runs step 14 and step 15 and step 16,
+  // and also Step 25..
+  mozAutoDocUpdate updateBatch(GetComposedDoc(), true);
+  RefPtr<Document> doc = OwnerDoc();
+  bool oldMutationFlag = doc->FireMutationEvents();
+  doc->SetFireMutationEvents(false);
+  oldParent->RemoveChildNode(aNode.AsContent(), true, nullptr, &newParent);
+
+  // Steps 17-24 and Step 26.
+  InsertChildBefore(aNode.AsContent(),
+                    referenceChild ? referenceChild->AsContent() : nullptr,
+                    true, aRv, oldParent);
+  doc->SetFireMutationEvents(oldMutationFlag);
+}
+
 void nsINode::RemoveChildNode(nsIContent* aKid, bool aNotify,
-                              const BatchRemovalState* aState) {
+                              const BatchRemovalState* aState,
+                              nsINode* aNewParent) {
   // NOTE: This function must not trigger any calls to
   // Document::GetRootElement() calls until *after* it has removed aKid from
   // aChildArray. Any calls before then could potentially restore a stale
@@ -2383,7 +2475,10 @@ void nsINode::RemoveChildNode(nsIContent* aKid, bool aNotify,
   mozAutoDocUpdate updateBatch(GetComposedDoc(), aNotify);
 
   if (aNotify) {
-    MutationObservers::NotifyContentWillBeRemoved(this, aKid, {aState});
+    ContentRemoveInfo info;
+    info.mBatchRemovalState = aState;
+    info.mNewParent = aNewParent;
+    MutationObservers::NotifyContentWillBeRemoved(this, aKid, info);
   }
 
   // Since aKid is use also after DisconnectChild, ensure it stays alive.
@@ -2392,7 +2487,7 @@ void nsINode::RemoveChildNode(nsIContent* aKid, bool aNotify,
 
   // Invalidate cached array of child nodes
   InvalidateChildNodes();
-  aKid->UnbindFromTree();
+  aKid->UnbindFromTree(aNewParent);
 }
 
 // When replacing, aRefChild is the content being replaced; when

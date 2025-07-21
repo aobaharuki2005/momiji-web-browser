@@ -414,8 +414,8 @@ nsresult nsGenericHTMLElement::BindToTree(BindContext& aContext,
 
   // Hide any nonce from the DOM, but keep the internal value of the
   // nonce by copying and resetting the internal nonce value.
-  if (HasFlag(NODE_HAS_NONCE_AND_HEADER_CSP) && IsInComposedDoc() &&
-      OwnerDoc()->GetBrowsingContext()) {
+  if (!aContext.IsMove() && HasFlag(NODE_HAS_NONCE_AND_HEADER_CSP) &&
+      IsInComposedDoc() && OwnerDoc()->GetBrowsingContext()) {
     nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
         "nsGenericHTMLElement::ResetNonce::Runnable",
         [self = RefPtr<nsGenericHTMLElement>(this)]() {
@@ -443,7 +443,7 @@ void nsGenericHTMLElement::UnbindFromTree(UnbindContext& aContext) {
     // If removedNode's popover attribute is not in the no popover state, then
     // run the hide popover algorithm given removedNode, false, false, and
     // false.
-    if (GetPopoverData()) {
+    if (!aContext.IsMove() && GetPopoverData()) {
       HidePopoverWithoutRunningScript();
     }
     RegUnRegAccessKey(false);

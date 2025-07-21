@@ -104,6 +104,7 @@ struct CharacterDataChangeInfo {
 struct ContentAppendInfo {
   MutationEffectOnScript mMutationEffectOnScript =
       MutationEffectOnScript::DropTrustWorthiness;
+  nsINode* mOldParent = nullptr;
 };
 
 /**
@@ -121,6 +122,7 @@ struct ContentRemoveInfo {
 
   MutationEffectOnScript mMutationEffectOnScript =
       MutationEffectOnScript::DropTrustWorthiness;
+  nsINode* mNewParent = nullptr;
 };
 
 /**
