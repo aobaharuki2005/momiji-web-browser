@@ -325,9 +325,9 @@ bool ModuleLoaderBase::FinishLoadingImportedModule(
     aRequest->mStatePrivate.setUndefined();
   } else {
     JS::Rooted<JSObject*> promise(aCx, aRequest->mDynamicPromise);
-    JS::Rooted<JS::Value> hostDefined(aCx, JS::PrivateValue(aRequest));
     JS::FinishLoadingImportedModule(aCx, referrer, referencingPrivate,
-                                    moduleReqObj, promise, module, hostDefined);
+                                    moduleReqObj, promise, module,
+                                    aRequest->HasScriptLoadContext());
     MOZ_ASSERT(!JS_IsExceptionPending(aCx));
     aRequest->ClearDynamicImport();
   }
@@ -1435,7 +1435,6 @@ nsresult ModuleLoaderBase::StartDynamicImport(ModuleLoadRequest* aRequest) {
   if (NS_FAILED(rv)) {
     mLoader->ReportErrorToConsole(aRequest, rv);
     RemoveDynamicImport(aRequest);
-    FinishDynamicImportAndReject(aRequest, rv);
   }
   return rv;
 }
@@ -1448,61 +1447,25 @@ void ModuleLoaderBase::FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
     return;
   }
 
-  FinishDynamicImport(jsapi.cx(), aRequest, aResult, nullptr);
-}
-
-/* static */
-void ModuleLoaderBase::FinishDynamicImport(
-    JSContext* aCx, ModuleLoadRequest* aRequest, nsresult aResult,
-    JS::Handle<JSObject*> aEvaluationPromise) {
-  LOG(("ScriptLoadRequest (%p): Finish dynamic import %x %d", aRequest,
-       unsigned(aResult), JS_IsExceptionPending(aCx)));
-
-  MOZ_ASSERT_IF(NS_SUCCEEDED(aResult),
-                GetCurrentModuleLoader(aCx) == aRequest->mLoader);
-  // For failure case, aRequest may have already been unlinked by CC.
-  MOZ_ASSERT_IF(
-      NS_FAILED(aResult),
-      GetCurrentModuleLoader(aCx) == aRequest->mLoader || !aRequest->mLoader);
-
-  // If aResult is a failed result, we don't have an EvaluationPromise. If it
-  // succeeded, evaluationPromise may still be null, but in this case it will
-  // be handled by rejecting the dynamic module import promise in the JSAPI.
-  MOZ_ASSERT_IF(NS_FAILED(aResult), !aEvaluationPromise);
-
-  // The request should been removed from mDynamicImportRequests.
-  MOZ_ASSERT(!aRequest->mLoader->HasDynamicImport(aRequest));
-
-  // Complete the dynamic import, report failures indicated by aResult or as a
-  // pending exception on the context.
-
-  if (!aRequest->mDynamicPromise) {
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JSObject*> promise(cx, aRequest->mDynamicPromise);
+  if (!promise) {
     // Import has already been completed.
     return;
   }
 
   if (NS_FAILED(aResult) &&
       aResult != NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {
-    MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+    MOZ_ASSERT(!JS_IsExceptionPending(cx));
     nsAutoCString url;
     aRequest->mURI->GetSpec(url);
-    JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
+    JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
                               JSMSG_DYNAMIC_IMPORT_FAILED, url.get());
+    JS::FinishLoadingImportedModuleFailedWithPendingException(cx, promise);
+  } else {
+    JS::FinishLoadingImportedModuleFailed(cx, UndefinedHandleValue, promise,
+                                          UndefinedHandleValue);
   }
-
-  JS::Rooted<JS::Value> referencingScript(
-      aCx, PrivateFromLoadedScript(aRequest->mDynamicReferencingScript));
-  JS::Rooted<JSString*> specifier(aCx, aRequest->mDynamicSpecifier);
-  JS::Rooted<JSObject*> promise(aCx, aRequest->mDynamicPromise);
-
-  JS::Rooted<JSObject*> moduleRequest(
-      aCx, JS::CreateModuleRequest(aCx, specifier, aRequest->mModuleType));
-
-  JS::FinishDynamicModuleImport(aCx, aEvaluationPromise, referencingScript,
-                                moduleRequest, promise);
-
-  // FinishDynamicModuleImport clears any pending exception.
-  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
 
   aRequest->ClearDynamicImport();
 }
@@ -1664,30 +1627,26 @@ bool ModuleLoaderBase::InstantiateModuleGraph(ModuleLoadRequest* aRequest) {
 }
 
 void ModuleLoaderBase::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(GetGlobalObject())) {
+    return;
+  }
+
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JSObject*> promise(cx, aRequest->mDynamicPromise);
   if (!aRequest->mModuleScript) {
     FinishDynamicImportAndReject(aRequest, NS_ERROR_FAILURE);
     return;
   }
 
-  InstantiateAndEvaluateDynamicImport(aRequest);
-}
-
-void ModuleLoaderBase::InstantiateAndEvaluateDynamicImport(
-    ModuleLoadRequest* aRequest) {
-  MOZ_ASSERT(aRequest->mModuleScript);
-
-  if (!InstantiateModuleGraph(aRequest)) {
-    aRequest->mModuleScript = nullptr;
+  if (aRequest->mModuleScript->HasParseError()) {
+    JS::Rooted<JS::Value> error(cx, aRequest->mModuleScript->ParseError());
+    JS::FinishLoadingImportedModuleFailed(cx, UndefinedHandleValue, promise,
+                                          error);
+    return;
   }
 
-  nsresult rv = NS_ERROR_FAILURE;
-  if (aRequest->mModuleScript) {
-    rv = EvaluateModule(aRequest);
-  }
-
-  if (NS_FAILED(rv)) {
-    FinishDynamicImportAndReject(aRequest, rv);
-  }
+  FinishLoadingImportedModule(cx, aRequest);
 }
 
 nsresult ModuleLoaderBase::EvaluateModule(ModuleLoadRequest* aRequest) {
@@ -1732,11 +1691,6 @@ nsresult ModuleLoaderBase::EvaluateModuleInContext(
     LOG(("ScriptLoadRequest (%p):   module has error to rethrow", aRequest));
     JS::Rooted<JS::Value> error(aCx, moduleScript->ErrorToRethrow());
     JS_SetPendingException(aCx, error);
-    // For a dynamic import, the promise is rejected.  Otherwise an error
-    // is either reported by AutoEntryScript.
-    if (aRequest->IsDynamicImport()) {
-      FinishDynamicImport(aCx, aRequest, NS_OK, nullptr);
-    }
     return NS_OK;
   }
 
