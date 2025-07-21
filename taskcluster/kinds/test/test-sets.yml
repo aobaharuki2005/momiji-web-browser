@@ -545,6 +545,7 @@ android-hw-browsertime:
     - browsertime-benchmark-jetstream3
     - browsertime-video-playback-latency-mobile
     - browsertime-youtube-playback-power-mobile
+    - browsertime-trr-performance-m
 
 android-hw-browsertime-profiling:
     - browsertime-tp6m-profiling

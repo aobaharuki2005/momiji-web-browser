@@ -17510,7 +17510,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Tests DNS lookup time on a CIRA TRR server.
 
    * **alert threshold**: 2.0
-   * **apps**: firefox
+   * **apps**: firefox,fenix
    * **browser cycles**: 3
    * **browsertime args**: --browsertime.test_type=browser_idle --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://private.canadianshield.cira.ca/dns-query
    * **cold**: true
@@ -17673,6 +17673,81 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
 
 
+.. dropdown:: trr-clou-m
+   :class-container: anchor-id-trr-clou-m-c
+
+   * Command to Run Locally
+
+   .. code-block::
+
+      ./mach raptor -t trr-clou-m
+
+   **Owner**: Network Team
+
+   **Description**: Tests DNS lookup time on a Cloudflare TRR server, mobile.
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox,fenix
+   * **browser cycles**: 3
+   * **browsertime args**: --browsertime.test_type=trr_warm --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://mozilla.cloudflare-dns.com/dns-query
+   * **cold**: true
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile interval**: 1
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#79>`__
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 60000
+   * **test script**: trr_performance.js
+   * **test url**: `<None>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-clou-m**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-clou-m-nofis**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-clou-m**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-clou-m-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
 .. dropdown:: trr-cloudf
    :class-container: anchor-id-trr-cloudf-c
 
@@ -17687,7 +17762,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Tests DNS lookup time on a Cloudflare TRR server.
 
    * **alert threshold**: 2.0
-   * **apps**: firefox
+   * **apps**: firefox,fenix
    * **browser cycles**: 3
    * **browsertime args**: --browsertime.test_type=browser_idle --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://mozilla.cloudflare-dns.com/dns-query
    * **cold**: true
@@ -17864,7 +17939,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Tests DNS lookup time on a Comcast TRR server.
 
    * **alert threshold**: 2.0
-   * **apps**: firefox
+   * **apps**: firefox,fenix
    * **browser cycles**: 3
    * **browsertime args**: --browsertime.test_type=browser_idle --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://doh.xfinity.com/dns-query
    * **cold**: true
@@ -18041,7 +18116,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Tests DNS lookup time via native DNS.
 
    * **alert threshold**: 2.0
-   * **apps**: firefox
+   * **apps**: firefox,fenix
    * **browser cycles**: 3
    * **browsertime args**: --browsertime.test_type=browser_idle --firefox.preference network.trr.mode:0
    * **cold**: true
@@ -18204,6 +18279,81 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
 
 
+.. dropdown:: trr-natv-m
+   :class-container: anchor-id-trr-natv-m-c
+
+   * Command to Run Locally
+
+   .. code-block::
+
+      ./mach raptor -t trr-natv-m
+
+   **Owner**: Network Team
+
+   **Description**: Tests DNS lookup time via native DNS, mobile.
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox,fenix
+   * **browser cycles**: 3
+   * **browsertime args**: --browsertime.test_type=browser_idle --firefox.preference network.trr.mode:0
+   * **cold**: true
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile interval**: 1
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#93>`__
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 60000
+   * **test script**: trr_performance.js
+   * **test url**: `<None>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-natv-m**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-natv-m-nofis**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-natv-m**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-natv-m-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
 .. dropdown:: trr-next
    :class-container: anchor-id-trr-next-c
 
@@ -18218,7 +18368,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Tests DNS lookup time on a NextDNS TRR server.
 
    * **alert threshold**: 2.0
-   * **apps**: firefox
+   * **apps**: firefox,fenix
    * **browser cycles**: 3
    * **browsertime args**: --browsertime.test_type=browser_idle --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://firefox.dns.nextdns.io/dns-query
    * **cold**: true
@@ -18381,6 +18531,81 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
 
 
+.. dropdown:: trr-next-m
+   :class-container: anchor-id-trr-next-m-c
+
+   * Command to Run Locally
+
+   .. code-block::
+
+      ./mach raptor -t trr-next-m
+
+   **Owner**: Network Team
+
+   **Description**: Tests DNS lookup time on a NextDNS TRR server, mobile.
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox,fenix
+   * **browser cycles**: 3
+   * **browsertime args**: --browsertime.test_type=browser_idle --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://firefox.dns.nextdns.io/dns-query
+   * **cold**: true
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile interval**: 1
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#86>`__
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 60000
+   * **test script**: trr_performance.js
+   * **test url**: `<None>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-next-m**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-next-m-nofis**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-next-m**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-next-m-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
 .. dropdown:: trr-w-cira
    :class-container: anchor-id-trr-w-cira-c
 
@@ -18395,7 +18620,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Tests DNS lookup time on a CIRA TRR server, with the TRR connection warmed up.
 
    * **alert threshold**: 2.0
-   * **apps**: firefox
+   * **apps**: firefox,fenix
    * **browser cycles**: 3
    * **browsertime args**: --browsertime.test_type=trr_warm --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://private.canadianshield.cira.ca/dns-query
    * **cold**: true
@@ -18558,6 +18783,81 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
 
 
+.. dropdown:: trr-w-cl-m
+   :class-container: anchor-id-trr-w-cl-m-c
+
+   * Command to Run Locally
+
+   .. code-block::
+
+      ./mach raptor -t trr-w-cl-m
+
+   **Owner**: Network Team
+
+   **Description**: Tests DNS lookup time on a Cloudflare TRR server, with the TRR connection warmed up, mobile.
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox,fenix
+   * **browser cycles**: 3
+   * **browsertime args**: --browsertime.test_type=trr_warm --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://mozilla.cloudflare-dns.com/dns-query
+   * **cold**: true
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile interval**: 1
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#100>`__
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 60000
+   * **test script**: trr_performance.js
+   * **test url**: `<None>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-w-cl-m**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-w-cl-m-nofis**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-w-cl-m**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-w-cl-m-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
 .. dropdown:: trr-w-clou
    :class-container: anchor-id-trr-w-clou-c
 
@@ -18572,7 +18872,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Tests DNS lookup time on a Cloudflare TRR server, with the TRR connection warmed up.
 
    * **alert threshold**: 2.0
-   * **apps**: firefox
+   * **apps**: firefox,fenix
    * **browser cycles**: 3
    * **browsertime args**: --browsertime.test_type=trr_warm --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://mozilla.cloudflare-dns.com/dns-query
    * **cold**: true
@@ -18749,7 +19049,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Tests DNS lookup time on a Comcast TRR server, with the TRR connection warmed up.
 
    * **alert threshold**: 2.0
-   * **apps**: firefox
+   * **apps**: firefox,fenix
    * **browser cycles**: 3
    * **browsertime args**: --browsertime.test_type=trr_warm --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://doh.xfinity.com/dns-query
    * **cold**: true
@@ -18912,6 +19212,81 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
 
 
+.. dropdown:: trr-w-ne-m
+   :class-container: anchor-id-trr-w-ne-m-c
+
+   * Command to Run Locally
+
+   .. code-block::
+
+      ./mach raptor -t trr-w-ne-m
+
+   **Owner**: Network Team
+
+   **Description**: Tests DNS lookup time on a NextDNS TRR server, with the TRR connection warmed up, mobile.
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox,fenix
+   * **browser cycles**: 3
+   * **browsertime args**: --browsertime.test_type=trr_warm --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://firefox.dns.nextdns.io/dns-query
+   * **cold**: true
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile interval**: 1
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#107>`__
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 60000
+   * **test script**: trr_performance.js
+   * **test url**: `<None>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-w-ne-m**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-w-ne-m-nofis**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-w-ne-m**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-w-ne-m-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
 .. dropdown:: trr-w-next
    :class-container: anchor-id-trr-w-next-c
 
@@ -18926,7 +19301,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Tests DNS lookup time on a NextDNS TRR server, with the TRR connection warmed up.
 
    * **alert threshold**: 2.0
-   * **apps**: firefox
+   * **apps**: firefox,fenix
    * **browser cycles**: 3
    * **browsertime args**: --browsertime.test_type=trr_warm --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://firefox.dns.nextdns.io/dns-query
    * **cold**: true
