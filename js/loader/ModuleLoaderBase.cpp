@@ -475,6 +475,10 @@ void ModuleLoaderBase::ResumeWaitingRequest(ModuleLoadRequest* aRequest,
   } else {
     aRequest->LoadFailed();
   }
+
+  if (!aRequest->IsErrored()) {
+    OnFetchSucceeded(aRequest);
+  }
 }
 
 void ModuleLoaderBase::WaitForModuleFetch(ModuleLoadRequest* aRequest) {
@@ -509,6 +513,8 @@ ModuleScript* ModuleLoaderBase::GetFetchedModule(
 
 nsresult ModuleLoaderBase::OnFetchComplete(ModuleLoadRequest* aRequest,
                                            nsresult aRv) {
+  LOG(("ScriptLoadRequest (%p): OnFetchComplete result %x", aRequest,
+       (unsigned)aRv));
   MOZ_ASSERT(aRequest->mLoader == this);
   MOZ_ASSERT(!aRequest->mModuleScript);
 
@@ -532,22 +538,29 @@ nsresult ModuleLoaderBase::OnFetchComplete(ModuleLoadRequest* aRequest,
     }
   }
 
-  bool success = bool(aRequest->mModuleScript);
-  MOZ_ASSERT(NS_SUCCEEDED(rv) == success);
   RefPtr<LoadingRequest> waitingRequests =
       SetModuleFetchFinishedAndGetWaitingRequests(aRequest, rv);
+  MOZ_ASSERT_IF(waitingRequests, waitingRequests->mRequest == aRequest);
+
+  bool success = bool(aRequest->mModuleScript);
+  MOZ_ASSERT(NS_SUCCEEDED(rv) == success);
 
   if (!aRequest->IsErrored()) {
+    OnFetchSucceeded(aRequest);
+  }
+
+  if (!waitingRequests) {
+    return NS_OK;
+  }
+
+  ResumeWaitingRequests(waitingRequests, success);
+  return NS_OK;
+}
+
+void ModuleLoaderBase::OnFetchSucceeded(ModuleLoadRequest* aRequest) {
+  if (aRequest->IsTopLevel()) {
     StartFetchingModuleDependencies(aRequest);
   }
-
-  if (waitingRequests) {
-    MOZ_ASSERT(waitingRequests->mRequest == aRequest);
-    LOG(("ScriptLoadRequest (%p): Resuming waiting requests", aRequest));
-    ResumeWaitingRequests(waitingRequests, success);
-  }
-
-  return NS_OK;
 }
 
 nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
@@ -640,6 +653,8 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
 
     moduleScript->SetModuleRecord(module);
 
+    // TODO: Bug 1968885: Remove ModuleLoaderBase::ResolveRequestedModules
+    //
     // Validate requested modules and treat failure to resolve module specifiers
     // the same as a parse error.
     rv = ResolveRequestedModules(aRequest, nullptr);
