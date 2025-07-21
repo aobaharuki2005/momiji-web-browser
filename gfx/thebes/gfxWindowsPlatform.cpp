@@ -69,6 +69,9 @@
 
 #include "base/thread.h"
 #include "mozilla/StaticPrefs_gfx.h"
+#ifdef MOZ_WMF_CDM
+#  include "mozilla/StaticPrefs_media.h"
+#endif
 #include "mozilla/StaticPrefs_layers.h"
 #include "gfxConfig.h"
 #include "VsyncSource.h"
@@ -432,6 +435,30 @@ void gfxWindowsPlatform::InitPlatformHardwareVideoConfig() {
                             "FEATURE_FAILURE_D3D11_WARP_DEVICE"_ns);
   }
 }
+
+#ifdef MOZ_WMF_CDM
+void gfxWindowsPlatform::InitPlatformHardwarDRMConfig() {
+  nsCString message, failureId;
+  FeatureState& featureHWDRM = gfxConfig::GetFeature(Feature::WMF_HW_DRM);
+  featureHWDRM.Reset();
+  featureHWDRM.EnableByDefault();
+  if (StaticPrefs::media_wmf_media_engine_enabled() != 1 &&
+      StaticPrefs::media_wmf_media_engine_enabled() != 2) {
+    featureHWDRM.UserDisable(
+        "Force disabled by 'media.wmf.media-engine.enabled'",
+        "FEATURE_FAILURE_USER_FORCE_DISABLED"_ns);
+  } else if (StaticPrefs::media_wmf_media_engine_bypass_gfx_blocklist()) {
+    featureHWDRM.UserForceEnable(
+        "Force enabled by "
+        "'media.wmf.media-engine.bypass-gfx-blocklist'");
+  }
+  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_WMF_HW_DRM, &message,
+                           failureId)) {
+    featureHWDRM.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
+  }
+  gfxVars::SetUseWMFHWDWM(featureHWDRM.IsEnabled());
+}
+#endif
 
 bool gfxWindowsPlatform::InitDWriteSupport() {
   mozilla::ScopedGfxFeatureReporter reporter("DWrite");
