@@ -4033,8 +4033,6 @@ pref("extensions.formautofill.creditCards.heuristics.mode", 2);
 pref("extensions.formautofill.creditCards.heuristics.fathom.types", "cc-number,cc-name");
 // Defines the threshold to identify whether a field is a cc field
 pref("extensions.formautofill.creditCards.heuristics.fathom.confidenceThreshold", "0.5");
-// Defineis the threshold to mark fields that are "high-confidence", see `isValidSection` for details
-pref("extensions.formautofill.creditCards.heuristics.fathom.highConfidenceThreshold", "0.95");
 // This is Only for testing! Set the confidence value (> 0 && <= 1) after a field is identified by fathom
 pref("extensions.formautofill.creditCards.heuristics.fathom.testConfidence", "0");
 

@@ -138,23 +138,6 @@ export class FieldDetail {
     } else if (fathomConfidence) {
       fieldDetail.reason = "fathom";
       fieldDetail.confidence = fathomConfidence;
-
-      // TODO: This should be removed once we support reference field info across iframe.
-      // Temporarily add an addtional "the field is the only visible input" constraint
-      // when determining whether a form has only a high-confidence cc-* field a valid
-      // credit card section. We can remove this restriction once we are confident
-      // about only using fathom.
-      fieldDetail.isOnlyVisibleFieldWithHighConfidence = false;
-      if (
-        fieldDetail.confidence >
-        lazy.FormAutofillUtils.ccFathomHighConfidenceThreshold
-      ) {
-        const root = element.form || element.ownerDocument;
-        const inputs = root.querySelectorAll("input:not([type=hidden])");
-        if (inputs.length == 1 && inputs[0] == element) {
-          fieldDetail.isOnlyVisibleFieldWithHighConfidence = true;
-        }
-      }
     } else {
       fieldDetail.reason = "regex-heuristic";
     }

@@ -5,7 +5,6 @@
 const IOS_DEFAULT_PREFERENCES = {
   "extensions.formautofill.creditCards.heuristics.mode": 1,
   "extensions.formautofill.creditCards.heuristics.fathom.confidenceThreshold": 0.5,
-  "extensions.formautofill.creditCards.heuristics.fathom.highConfidenceThreshold": 0.95,
   "extensions.formautofill.creditCards.heuristics.fathom.testConfidence": 0,
   "extensions.formautofill.creditCards.heuristics.fathom.types":
     "cc-number,cc-name",
