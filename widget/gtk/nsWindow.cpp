@@ -4013,8 +4013,7 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   // Our bounds may have changed after calling WillPaintWindow.  Clip
   // to the new bounds here.  The region is relative to this
   // window.
-  region.And(region,
-             LayoutDeviceIntRect(LayoutDeviceIntPoint(), GetClientSize()));
+  region.AndWith(LayoutDeviceIntRect(LayoutDeviceIntPoint(), GetClientSize()));
   if (region.IsEmpty()) {
     LOG("quit, region.IsEmpty()");
     return TRUE;

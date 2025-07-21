@@ -175,7 +175,7 @@ void PuppetWidget::Resize(double aWidth, double aHeight, bool aRepaint) {
   // invalidate the expanded area
   if (oldBounds.Size() < mBounds.Size() && aRepaint) {
     LayoutDeviceIntRegion dirty(mBounds);
-    dirty.Sub(dirty, oldBounds);
+    dirty.SubOut(oldBounds);
     InvalidateRegion(this, dirty);
   }
 
