@@ -57,8 +57,8 @@ class SyncModuleLoader : public JS::loader::ModuleLoaderBase {
       const mozilla::dom::SRIMetadata& aSriMetadata) override;
 
   already_AddRefed<ModuleLoadRequest> CreateDynamicImport(
-      JSContext* aCx, nsIURI* aURI, JS::ModuleType aModuleType,
-      LoadedScript* aMaybeActiveScript, JS::Handle<JSString*> aSpecifier,
+      JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
+      JS::Handle<JSObject*> aModuleRequestObj,
       JS::Handle<JSObject*> aPromise) override;
 
   void OnDynamicImportStarted(ModuleLoadRequest* aRequest) override;

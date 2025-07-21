@@ -976,7 +976,9 @@ bool ModuleLoaderBase::GetImportMapSRI(
 }
 
 void ModuleLoaderBase::StartFetchingModuleAndDependencies(
-    ModuleLoadRequest* aParent, const ModuleMapKey& aRequestedModule) {
+    ModuleLoadRequest* aParent, const ModuleMapKey& aRequestedModule,
+    JS::Handle<JSObject*> aReferrer, JS::Handle<JS::Value> aReferencingPrivate,
+    JS::Handle<JSObject*> aModuleRequest, JS::Handle<JS::Value> aStatePrivate) {
   // Check import map for integrity information
   mozilla::dom::SRIMetadata sriMetadata;
   GetImportMapSRI(aRequestedModule.mUri, aParent->mURI,
@@ -1003,6 +1005,13 @@ void ModuleLoaderBase::StartFetchingModuleAndDependencies(
 
   MOZ_ASSERT(!childRequest->mWaitingParentRequest);
   childRequest->mWaitingParentRequest = aParent;
+  childRequest->mReferrerObj = aReferrer;
+  childRequest->mReferencingPrivate = aReferencingPrivate;
+  childRequest->mModuleRequestObj = aModuleRequest;
+  childRequest->mStatePrivate = aStatePrivate;
+
+  // To prevent mStatePrivate from GCed.
+  mozilla::HoldJSObjects(childRequest.get());
 
   nsresult rv = StartModuleLoad(childRequest);
   if (NS_FAILED(rv)) {

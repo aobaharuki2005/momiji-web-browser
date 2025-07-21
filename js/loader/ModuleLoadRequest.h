@@ -30,6 +30,10 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   ~ModuleLoadRequest() {
     MOZ_ASSERT(!mWaitingParentRequest);
     MOZ_ASSERT(mAwaitingImports == 0);
+    MOZ_ASSERT(!mReferrerObj);
+    MOZ_ASSERT(!mModuleRequestObj);
+    MOZ_ASSERT(mReferencingPrivate.isUndefined());
+    MOZ_ASSERT(mStatePrivate.isUndefined());
   }
 
   ModuleLoadRequest(const ModuleLoadRequest& aOther) = delete;
@@ -73,7 +77,7 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   void Cancel() override;
 
   void SetDynamicImport(LoadedScript* aReferencingScript,
-                        JS::Handle<JSString*> aSpecifier,
+                        JS::Handle<JSObject*> aModuleRequestObj,
                         JS::Handle<JSObject*> aPromise);
   void ClearDynamicImport();
 
@@ -163,6 +167,11 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   RefPtr<LoadedScript> mDynamicReferencingScript;
   JS::Heap<JSString*> mDynamicSpecifier;
   JS::Heap<JSObject*> mDynamicPromise;
+
+  JS::Heap<JSObject*> mReferrerObj;
+  JS::Heap<JSObject*> mModuleRequestObj;
+  JS::Heap<Value> mReferencingPrivate;
+  JS::Heap<Value> mStatePrivate;
 };
 
 }  // namespace JS::loader

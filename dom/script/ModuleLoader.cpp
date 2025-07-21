@@ -394,10 +394,9 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
 }
 
 already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
-    JSContext* aCx, nsIURI* aURI, JS::ModuleType aModuleType,
-    LoadedScript* aMaybeActiveScript, JS::Handle<JSString*> aSpecifier,
-    JS::Handle<JSObject*> aPromise) {
-  MOZ_ASSERT(aSpecifier);
+    JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
+    JS::Handle<JSObject*> aModuleRequestObj, JS::Handle<JSObject*> aPromise) {
+  MOZ_ASSERT(aModuleRequestObj);
   MOZ_ASSERT(aPromise);
 
   RefPtr<ScriptFetchOptions> options = nullptr;
@@ -443,18 +442,18 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
   context->mIsInline = false;
   context->mScriptMode = ScriptLoadContext::ScriptMode::eAsync;
 
+  JS::ModuleType moduleType = JS::GetModuleRequestType(aCx, aModuleRequestObj);
   SRIMetadata sriMetadata;
   GetImportMapSRI(aURI, baseURL, mLoader->GetConsoleReportCollector(),
                   &sriMetadata);
 
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, aModuleType, referrerPolicy, options, sriMetadata, baseURL, context,
+      aURI, moduleType, referrerPolicy, options, sriMetadata, baseURL, context,
       ModuleLoadRequest::Kind::DynamicImport, this, nullptr);
 
-  request->SetDynamicImport(aMaybeActiveScript, aSpecifier, aPromise);
+  request->SetDynamicImport(aMaybeActiveScript, aModuleRequestObj, aPromise);
 
   GetScriptLoader()->TryUseCache(request);
-
   return request.forget();
 }
 

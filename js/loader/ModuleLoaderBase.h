@@ -309,8 +309,8 @@ class ModuleLoaderBase : public nsISupports {
 
   // Called by HostImportModuleDynamically hook.
   virtual already_AddRefed<ModuleLoadRequest> CreateDynamicImport(
-      JSContext* aCx, nsIURI* aURI, JS::ModuleType aModuleType,
-      LoadedScript* aMaybeActiveScript, JS::Handle<JSString*> aSpecifier,
+      JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
+      JS::Handle<JSObject*> aModuleRequestObj,
       JS::Handle<JSObject*> aPromise) = 0;
 
   virtual bool IsDynamicImportSupported() { return true; }
@@ -498,8 +498,12 @@ class ModuleLoaderBase : public nsISupports {
 
   void StartFetchingModuleDependencies(ModuleLoadRequest* aRequest);
 
-  void StartFetchingModuleAndDependencies(ModuleLoadRequest* aParent,
-                                          const ModuleMapKey& aRequestedModule);
+  void StartFetchingModuleAndDependencies(
+      ModuleLoadRequest* aParent, const ModuleMapKey& aRequestedModule,
+      JS::Handle<JSObject*> aReferrer,
+      JS::Handle<JS::Value> aReferencingPrivate,
+      JS::Handle<JSObject*> aModuleRequest,
+      JS::Handle<JS::Value> aStatePrivate);
 
   void InstantiateAndEvaluateDynamicImport(ModuleLoadRequest* aRequest);
 
