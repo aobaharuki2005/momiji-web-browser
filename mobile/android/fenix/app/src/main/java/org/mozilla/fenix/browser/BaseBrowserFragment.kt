@@ -1321,6 +1321,7 @@ abstract class BaseBrowserFragment :
                 browserStore = store,
                 components = activity.components,
                 settings = activity.settings(),
+                hideWhenKeyboardShown = true,
                 customTabSession = customTabSessionId?.let { store.state.findCustomTab(it) },
             )
 

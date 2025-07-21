@@ -315,6 +315,7 @@ class HomeFragment : Fragment() {
             container = binding.navigationBarContainer,
             appStore = components.appStore,
             browserStore = store,
+            hideWhenKeyboardShown = true,
         )
 
         if (requireContext().settings().isExperimentationEnabled) {

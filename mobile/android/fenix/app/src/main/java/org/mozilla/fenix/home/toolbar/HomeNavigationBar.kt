@@ -22,6 +22,8 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.compose.utils.KeyboardState
+import org.mozilla.fenix.compose.utils.keyboardAsState
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -34,6 +36,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param container [ViewGroup] which will serve as parent of this View.
  * @param appStore [AppStore] to sync from.
  * @param browserStore [BrowserStore] used for observing the browsing details.
+ * @param hideWhenKeyboardShown If true, navigation bar will be hidden when the keyboard is visible.
  */
 class HomeNavigationBar(
     private val context: Context,
@@ -41,6 +44,7 @@ class HomeNavigationBar(
     private val container: ViewGroup,
     private val appStore: AppStore,
     private val browserStore: BrowserStore,
+    private val hideWhenKeyboardShown: Boolean,
 ) : FenixHomeToolbar {
     val store = StoreProvider.get(lifecycleOwner) {
         BrowserToolbarStore(
@@ -59,8 +63,14 @@ class HomeNavigationBar(
     @Composable
     private fun DefaultNavigationBarContent(showDivider: Boolean) {
         val uiState by store.observeAsState(initialValue = store.state) { it }
+        val isKeyboardVisible = if (hideWhenKeyboardShown) {
+            val keyboardState by keyboardAsState()
+            keyboardState == KeyboardState.Opened
+        } else {
+            false
+        }
 
-        if (uiState.displayState.navigationActions.isNotEmpty()) {
+        if (uiState.displayState.navigationActions.isNotEmpty() && !isKeyboardVisible) {
             FirefoxTheme {
                 NavigationBar(
                     actions = uiState.displayState.navigationActions,

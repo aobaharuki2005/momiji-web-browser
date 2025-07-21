@@ -26,6 +26,8 @@ import org.mozilla.fenix.browser.store.BrowserScreenStore
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.compose.utils.KeyboardState
+import org.mozilla.fenix.compose.utils.keyboardAsState
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.Settings
 
@@ -41,6 +43,7 @@ import org.mozilla.fenix.utils.Settings
  * @param browserStore [BrowserStore] used for observing the browsing details.
  * @param components [Components] allowing interactions with other application features.
  * @param settings [Settings] object to get the toolbar position and other settings.
+ * @param hideWhenKeyboardShown If true, navigation bar will be hidden when the keyboard is visible.
  * @param customTabSession [CustomTabSessionState] if the toolbar is shown in a custom tab.
  */
 @Suppress("LongParameterList")
@@ -53,6 +56,7 @@ class BrowserNavigationBar(
     private val browserStore: BrowserStore,
     private val components: Components,
     private val settings: Settings,
+    private val hideWhenKeyboardShown: Boolean,
     customTabSession: CustomTabSessionState? = null,
 ) : FenixBrowserToolbarView(
     context = context,
@@ -132,8 +136,14 @@ class BrowserNavigationBar(
     @Composable
     private fun DefaultNavigationBarContent(showDivider: Boolean) {
         val uiState by store.observeAsState(initialValue = store.state) { it }
+        val isKeyboardVisible = if (hideWhenKeyboardShown) {
+            val keyboardState by keyboardAsState()
+            keyboardState == KeyboardState.Opened
+        } else {
+            false
+        }
 
-        if (uiState.displayState.navigationActions.isNotEmpty()) {
+        if (uiState.displayState.navigationActions.isNotEmpty() && !isKeyboardVisible) {
             FirefoxTheme {
                 NavigationBar(
                     actions = uiState.displayState.navigationActions,
