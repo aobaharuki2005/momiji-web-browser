@@ -90,6 +90,11 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
   Maybe<gfx::IntSize> DetectVideoSizeChange();
   void NotifyVideoResizing();
 
+#ifdef MOZ_WMF_CDM
+  // We will disable HWDRM when receiving error MSPR_E_NO_DECRYPTOR_AVAILABLE.
+  void NotifyDisableHWDRM();
+#endif
+
   // This generates unique id for each MFMediaEngineParent instance, and it
   // would be increased monotonically.
   static inline uint64_t sMediaEngineIdx = 0;

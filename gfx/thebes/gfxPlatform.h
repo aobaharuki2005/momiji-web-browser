@@ -953,6 +953,8 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
 
   static void VideoDecodingFailedChangedCallback(const char* aPref, void*);
 
+  static void HWDRMFailedChangedCallback(const char* aPref, void*);
+
   static gfxPlatform* gPlatform;
 
   void InitializeCMS();
