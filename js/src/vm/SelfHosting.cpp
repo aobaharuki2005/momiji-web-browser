@@ -853,13 +853,6 @@ static bool intrinsic_GeneratorSetClosed(JSContext* cx, unsigned argc,
   return true;
 }
 
-static void AssertNonNegativeInteger(const Value& v) {
-  MOZ_ASSERT(v.isNumber());
-  MOZ_ASSERT(v.toNumber() >= 0);
-  MOZ_ASSERT(v.toNumber() < DOUBLE_INTEGRAL_PRECISION_LIMIT);
-  MOZ_ASSERT(JS::ToInteger(v.toNumber()) == v.toNumber());
-}
-
 static bool intrinsic_IsTypedArrayConstructor(JSContext* cx, unsigned argc,
                                               Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -1027,127 +1020,6 @@ static bool intrinsic_TypedArrayIsAutoLength(JSContext* cx, unsigned argc,
   bool isAutoLength = obj->is<ResizableTypedArrayObject>() &&
                       obj->as<ResizableTypedArrayObject>().isAutoLength();
   args.rval().setBoolean(isAutoLength);
-  return true;
-}
-
-// Extract the TypedArrayObject* underlying |obj| and return it.  This method,
-// in a TOTALLY UNSAFE manner, completely violates the normal compartment
-// boundaries, returning an object not necessarily in the current compartment
-// or in |obj|'s compartment.
-//
-// All callers of this method are expected to sigil this TypedArrayObject*, and
-// all values and information derived from it, with an "unsafe" prefix, to
-// indicate the extreme caution required when dealing with such values.
-//
-// If calling code discipline ever fails to be maintained, it's gonna have a
-// bad time.
-static TypedArrayObject* DangerouslyUnwrapTypedArray(JSContext* cx,
-                                                     JSObject* obj) {
-  // An unwrapped pointer to an object potentially on the other side of a
-  // compartment boundary!  Isn't this such fun?
-  TypedArrayObject* unwrapped = obj->maybeUnwrapAs<TypedArrayObject>();
-  if (!unwrapped) {
-    ReportAccessDenied(cx);
-    return nullptr;
-  }
-
-  // Be super-duper careful using this, as we've just punched through
-  // the compartment boundary, and things like buffer() on this aren't
-  // same-compartment with anything else in the calling method.
-  return unwrapped;
-}
-
-static bool intrinsic_TypedArrayBitwiseSlice(JSContext* cx, unsigned argc,
-                                             Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 4);
-  MOZ_ASSERT(args[0].isObject());
-  MOZ_ASSERT(args[1].isObject());
-  AssertNonNegativeInteger(args[2]);
-  AssertNonNegativeInteger(args[3]);
-
-  Rooted<TypedArrayObject*> source(cx,
-                                   &args[0].toObject().as<TypedArrayObject>());
-
-  auto sourceLength = source->length();
-  if (!sourceLength) {
-    if (source->hasDetachedBuffer()) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TYPED_ARRAY_DETACHED);
-    } else {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TYPED_ARRAY_RESIZED_BOUNDS);
-    }
-    return false;
-  }
-  MOZ_ASSERT(!source->hasDetachedBuffer());
-
-  // As directed by |DangerouslyUnwrapTypedArray|, sigil this pointer and all
-  // variables derived from it to counsel extreme caution here.
-  Rooted<TypedArrayObject*> unsafeTypedArrayCrossCompartment(cx);
-  unsafeTypedArrayCrossCompartment =
-      DangerouslyUnwrapTypedArray(cx, &args[1].toObject());
-  if (!unsafeTypedArrayCrossCompartment) {
-    return false;
-  }
-  MOZ_ASSERT(!unsafeTypedArrayCrossCompartment->hasDetachedBuffer());
-
-  // The specification requires us to perform bitwise copying when |sourceType|
-  // and |targetType| are the same (ES2017, §22.2.3.24, step 15). Additionally,
-  // as an optimization, we can also perform bitwise copying when |sourceType|
-  // and |targetType| have compatible bit-level representations.
-  Scalar::Type sourceType = source->type();
-  if (!CanUseBitwiseCopy(unsafeTypedArrayCrossCompartment->type(),
-                         sourceType)) {
-    args.rval().setBoolean(false);
-    return true;
-  }
-
-  size_t sourceOffset = size_t(args[2].toNumber());
-  size_t count = size_t(args[3].toNumber());
-
-  MOZ_ASSERT(count > 0);
-  MOZ_ASSERT(count <= unsafeTypedArrayCrossCompartment->length().valueOr(0));
-
-  size_t elementSize = TypedArrayElemSize(sourceType);
-  MOZ_ASSERT(elementSize ==
-             TypedArrayElemSize(unsafeTypedArrayCrossCompartment->type()));
-
-  SharedMem<uint8_t*> sourceData =
-      source->dataPointerEither().cast<uint8_t*>() + sourceOffset * elementSize;
-
-  SharedMem<uint8_t*> unsafeTargetDataCrossCompartment =
-      unsafeTypedArrayCrossCompartment->dataPointerEither().cast<uint8_t*>();
-
-  size_t byteLength = std::min(count, *sourceLength) * elementSize;
-
-  // The same-type case requires exact copying preserving the bit-level
-  // encoding of the source data, so use memcpy if possible. If source and
-  // target are the same buffer, we can't use memcpy (or memmove), because
-  // the specification requires sequential copying of the values. This case
-  // is only possible if a @@species constructor created a specifically
-  // crafted typed array. It won't happen in normal code and hence doesn't
-  // need to be optimized.
-  if (!TypedArrayObject::sameBuffer(source, unsafeTypedArrayCrossCompartment)) {
-    if (source->isSharedMemory() ||
-        unsafeTypedArrayCrossCompartment->isSharedMemory()) {
-      jit::AtomicOperations::memcpySafeWhenRacy(
-          unsafeTargetDataCrossCompartment, sourceData, byteLength);
-    } else {
-      memcpy(unsafeTargetDataCrossCompartment.unwrapUnshared(),
-             sourceData.unwrapUnshared(), byteLength);
-    }
-  } else {
-    using namespace jit;
-
-    for (; byteLength > 0; byteLength--) {
-      AtomicOperations::storeSafeWhenRacy(
-          unsafeTargetDataCrossCompartment++,
-          AtomicOperations::loadSafeWhenRacy(sourceData++));
-    }
-  }
-
-  args.rval().setBoolean(true);
   return true;
 }
 
@@ -2011,7 +1883,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("ToObject", intrinsic_ToObject, 1, 0, IntrinsicToObject),
     JS_FN("ToPropertyKey", intrinsic_ToPropertyKey, 1, 0),
     JS_FN("ToSource", intrinsic_ToSource, 1, 0),
-    JS_FN("TypedArrayBitwiseSlice", intrinsic_TypedArrayBitwiseSlice, 4, 0),
     JS_FN("TypedArrayBuffer", intrinsic_TypedArrayBuffer, 1, 0),
     JS_INLINABLE_FN("TypedArrayByteOffset", intrinsic_TypedArrayByteOffset, 1,
                     0, IntrinsicTypedArrayByteOffset),

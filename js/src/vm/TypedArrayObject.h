@@ -43,11 +43,10 @@ class TypedArrayObject : public ArrayBufferViewObject {
   static_assert(js::detail::TypedArrayDataSlot == DATA_SLOT,
                 "bad inlined constant in TypedData.h");
 
-  static bool sameBuffer(Handle<TypedArrayObject*> a,
-                         Handle<TypedArrayObject*> b) {
+  static bool sameBuffer(const TypedArrayObject* a, const TypedArrayObject* b) {
     // Inline buffers.
     if (!a->hasBuffer() || !b->hasBuffer()) {
-      return a.get() == b.get();
+      return a == b;
     }
 
     // Shared buffers.
