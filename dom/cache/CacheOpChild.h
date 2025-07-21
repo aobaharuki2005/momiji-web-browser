@@ -21,7 +21,7 @@ class Promise;
 namespace cache {
 
 class CacheOpChild final : public PCacheOpChild,
-                           public ActorChild,
+                           public CacheActorChild,
                            public TypeUtils {
   friend class CacheChild;
   friend class CacheStorageChild;

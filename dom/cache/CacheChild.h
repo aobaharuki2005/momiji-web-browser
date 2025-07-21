@@ -22,7 +22,7 @@ namespace cache {
 class Cache;
 class CacheOpArgs;
 
-class CacheChild final : public PCacheChild, public ActorChild {
+class CacheChild final : public PCacheChild, public CacheActorChild {
   friend class PCacheChild;
 
  public:

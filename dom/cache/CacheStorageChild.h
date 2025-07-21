@@ -24,7 +24,7 @@ class CacheStorage;
 class CacheWorkerRef;
 class PCacheChild;
 
-class CacheStorageChild final : public PCacheStorageChild, public ActorChild {
+class CacheStorageChild final : public PCacheStorageChild, public CacheActorChild {
   friend class PCacheStorageChild;
 
  public:
