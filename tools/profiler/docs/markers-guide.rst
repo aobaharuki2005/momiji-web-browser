@@ -28,6 +28,9 @@ Note: Most marker-related identifiers are in the ``mozilla`` namespace, to be ad
     // Create a marker with some additional text information. (Be wary of printf!)
     PROFILER_MARKER_TEXT("Marker Name", JS, MarkerOptions{}, "Additional text information.");
 
+    // Record a simple marker with automatic schema generation from variable names and types.
+    PROFILER_MARKER_SIMPLE_PAYLOAD("My Marker", DOM, MarkerOptions{}, mOpaque, mCount);
+
     // Record a custom marker of type `ExampleNumberMarker` (see definition below).
     PROFILER_MARKER("Number", OTHER, MarkerOptions{}, ExampleNumberMarker, 42);
 
@@ -283,6 +286,48 @@ using the `{fmt} </xpcom/fmt-in-gecko.html>`_ library.
 The same caveat as the Text Marker (described in the previous paragraph) apply
 here. The string formatting isn't performed if the marker wouldn't otherwise
 be recorded, the most typical instance being that the profiler isn't running.
+
+Simple Payload Markers
+^^^^^^^^^^^^^^^^^^^^^^
+
+For simple markers that need to carry structured data without defining a full
+custom marker type, use the ``PROFILER_MARKER_SIMPLE_PAYLOAD`` macro. This macro
+automatically generates a marker schema based on the variable names and types
+you provide:
+
+.. code-block:: cpp
+
+    PROFILER_MARKER_SIMPLE_PAYLOAD(
+        "My Marker", DOM,
+        MarkerOptions{}, // Optional marker options
+        mOpaque, mCount  // Variable names that become payload fields
+    );
+
+The macro performs compile-time type inference to determine appropriate input
+types and formats for the marker schema. It supports various data types
+including integers, timestamps, and strings. The variable names become
+the field names in the marker payload.
+
+Arguments must be simple tokens (i.e. ``(start - end)`` will not work as an
+argument).
+
+Type inference is handled automatically through template functions
+``getDefaultInputTypeForType()`` and ``getDefaultFormatForType()`` that provide
+compile-time type checking and conversion. This eliminates the need to manually
+specify field types and formats for common data types. Those functions can be
+extended as needed.
+
+The macro also supports custom table labels for markers and automatically
+handles JSON streaming of marker data, providing a convenient alternative to
+defining full custom marker types for simple use cases:
+
+.. code-block:: cpp
+
+    PROFILER_MARKER_SIMPLE_PAYLOAD("My Marker", DOM,
+        "This is element number {marker.data.mCount}."
+        " Opaque: {marker.data.mOpaque}",
+        mOpaque, mCount
+    );
 
 Other Typed Markers
 ^^^^^^^^^^^^^^^^^^^

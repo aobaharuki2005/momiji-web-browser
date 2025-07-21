@@ -328,8 +328,9 @@ struct SimplePayloadMarkerTemplate
 // Example: PROFILER_MARKER_SIMPLE_PAYLOAD("My Marker", DOM, mOpaque, mCount)
 //
 // Alternatively a label for the marker table can be specified:
-// Example: PROFILER_MARKET_SIMPLE_PAYLOAD("My Marker", DOM, "This is element
-// number {marker.data.mCount}. Opaque: {marker.data.mOpaque}", mOpaque, mCount)
+// Example: PROFILER_MARKER_SIMPLE_PAYLOAD_WITH_LABEL("My Marker", DOM,
+// "This is element number {marker.data.mCount}. Opaque: {marker.data.mOpaque}",
+// mOpaque, mCount)
 #define PROFILER_MARKER_SIMPLE_PAYLOAD_WITH_LABEL(markerName, categoryName,  \
                                                   label, ...)                \
   do {                                                                       \
