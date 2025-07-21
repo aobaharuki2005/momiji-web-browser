@@ -33,7 +33,6 @@ export default class MozPromo extends MozLitElement {
   }
 
   updated(changedProperties) {
-    // super.updated?.(changedProperties);
     if (changedProperties.has("imageSrc") && this.imageSrc) {
       this.style.setProperty("--promo-image-url", `url("${this.imageSrc}")`);
     }
