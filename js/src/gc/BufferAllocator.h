@@ -50,7 +50,7 @@ struct SmallBufferRegion;
 // BufferAllocator allocates dynamically sized blocks of memory which can be
 // reclaimed by the garbage collector and are associated with GC things.
 //
-// Although these blocks can be reclaimed by GC, explicit free and resize is
+// Although these blocks can be reclaimed by GC, explicit free and resize are
 // also supported. This is important for buffers that can grow or shrink.
 //
 // The allocator uses a different strategy depending on the size of the
@@ -61,9 +61,13 @@ struct SmallBufferRegion;
 //     4 KB - 512 KB  Medium  Uses a free list allocator from 1 MB chunks
 //     1 MB -         Large   Uses the OS page allocator (e.g. mmap)
 //
-// The smallest supported allocation size is 16 bytes. This will be used for a
+// The smallest supported allocation size is 16 bytes. This is used for a
 // dynamic slots allocation with zero slots to set a unique ID on a native
-// object. This will be the size of two Values, i.e. 16 bytes.
+// object. This is the size of two JS::Values.
+//
+// These size ranges are chosen to be the same as those used by jemalloc
+// (although that uses a different kind of allocator for its equivalent of small
+// allocations).
 //
 // Supported operations
 // --------------------
@@ -73,7 +77,7 @@ struct SmallBufferRegion;
 //
 //  - Trace an edge to buffer. When the owning cell is traced it must trace the
 //    edge to the buffer. This will mark the buffer in a GC and prevent it from
-//    being swept.
+//    being swept. This does not trace the buffer contents.
 //
 //  - Free a buffer. This allows uniquely owned buffers to be freed and reused
 //    without waiting for the next GC. It is a hint only and is not supported
@@ -90,25 +94,19 @@ struct SmallBufferRegion;
 // background thread and the memory used by unmarked allocations is reclaimed.
 //
 // The allocator tries hard to avoid locking, and where it is necessary tries to
-// minimize the time spent holding locks. A lock is required to allocate a chunk
-// but after that no locks are required to allocate on the main thread, even
-// when off-thread sweeping is taking place. This is achieved by moving data to
-// be swept to separate containers from those used for allocation on the main
-// thread. Synchronization is required to merge data about swept allocations at
-// the end of sweeping.
+// minimize the time spent holding locks. A lock is required for the following
+// operations:
 //
-// Small allocations
-// -----------------
+//  - allocating a new chunk
+//  - main thread operations on large buffers while sweeping off-thread
+//  - merging back swept data on the main thread
 //
-// These are implemented by the cell allocator and are allocated in arenas (slab
-// allocation).
+// No locks are required to allocate on the main thread, even when off-thread
+// sweeping is taking place. This is achieved by moving data to be swept to
+// separate containers from those used for allocation on the main thread.
 //
-// Note: currently we do not allocate these in the nursery because nursery-owned
-// buffers are allocated directly in the nursery without going through this
-// allocation API.
-//
-// Medium allocations
-// ------------------
+// Small and medium allocations
+// ----------------------------
 //
 // These are allocated in their own zone-specific chunks using a segregated free
 // list strategy. This is the main part of the allocator.
@@ -117,8 +115,14 @@ struct SmallBufferRegion;
 // index into an array giving a list of free regions of suitable size. The first
 // region in the list is used and its start address updated; it may also be
 // moved to a different list if it is now empty or too small to satisfy further
-// allocations for this size class. A bitmap in the chunk header is used to
-// track the start offsets of allocations.
+// allocations for this size class.
+//
+// Medium allocations are allocated out of chunks directly and small allocations
+// out of 16KB sub-regions (which are essentially medium allocations
+// themselves).
+//
+// Data about allocations is stored in a header in the chunk or region, using
+// bitmaps for boolean flags plus a byte array to record (encoded) sizes.
 //
 // Sweeping works by processing a list of chunks, scanning each one for
 // allocated but unmarked buffers and rebuilding the free region data for that
@@ -164,14 +168,16 @@ struct SmallBufferRegion;
 // Free works by extending neighboring free regions to cover the freed
 // allocation or adding a new one if necessary. Free regions are found by
 // checking the allocated bitmap. Free is not supported if the containing chunk
-// is currently being swept off-thread.
+// is currently being swept off-thread. Free is only supported for medium sized
+// allocations.
 //
 // Reallocation works by resizing in place if possible. It is always possible to
 // shrink a medium allocation in place if the target size is still medium.
 // In-place growth is possible if there is enough free space following the
 // allocation. This is not supported if the containing chunk is currently being
 // swept off-thread.  If not possible, a new allocation is made and the contents
-// of the buffer copied.
+// of the buffer copied. Resizing in place is only supported for medium sized
+// allocations.
 //
 // Large allocations
 // -----------------
@@ -180,6 +186,8 @@ struct SmallBufferRegion;
 // are relatively rare and not much attempt is made to optimize them. They are
 // chunk aligned which allows them to be distinguished from the other allocation
 // kinds by checking the low bits the pointer.
+//
+// Shrinking large allocations in place is only supported on Posix-like systems.
 //
 // Naming conventions
 // ------------------
