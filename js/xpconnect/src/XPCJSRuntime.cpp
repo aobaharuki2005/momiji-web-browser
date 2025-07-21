@@ -1464,11 +1464,6 @@ static void ReportZoneStats(const JS::ZoneStats& zStats,
                  zStats.regExpSharedsMallocHeap,
                  "Shared compiled regexp data.");
 
-  // zStats.smallBuffersGCHeap is not reported as a separate item here as it's
-  // reported as part of the owning cell. We must still count it as part of the
-  // total heap size.
-  gcTotal += zStats.smallBuffersGCHeap;
-
   ZRREPORT_BYTES(pathPrefix + "zone-object"_ns, zStats.zoneObject,
                  "The JS::Zone object itself.");
 
@@ -2494,11 +2489,6 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
       "js-main-runtime-gc-heap-committed/used/gc-things/regexp-shareds"_ns,
       KIND_OTHER, rtStats.zTotals.regExpSharedsGCHeap,
       "Used regexpshared cells.");
-
-  MREPORT_BYTES(
-      "js-main-runtime-gc-heap-committed/used/gc-things/small-buffers"_ns,
-      KIND_OTHER, rtStats.zTotals.smallBuffersGCHeap,
-      "Used small buffer cells.");
 
   MOZ_ASSERT(gcThingTotal == rtStats.gcHeapGCThings);
   (void)gcThingTotal;

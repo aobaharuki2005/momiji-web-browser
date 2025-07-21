@@ -1495,8 +1495,8 @@ void BufferAllocator::sweepForMajorCollection(bool shouldDecommit) {
 
   // Unmap large buffers.
   //
-  // Bug 1961749: This could possibly run after signalling sweeping is finished or
-  // concurrently with other sweeping.
+  // Bug 1961749: This could possibly run after signalling sweeping is finished
+  // or concurrently with other sweeping.
   FreeLargeAllocs(largeAllocsToFree);
 
   AutoLock lock(this);
@@ -3485,11 +3485,3 @@ void BufferAllocator::getStats(size_t& usedBytes, size_t& freeBytes,
     }
   }
 }
-
-JS::ubi::Node::Size JS::ubi::Concrete<SmallBuffer>::size(
-    mozilla::MallocSizeOf mallocSizeOf) const {
-  return 0;
-}
-
-const char16_t JS::ubi::Concrete<SmallBuffer>::concreteTypeName[] =
-    u"SmallBuffer";

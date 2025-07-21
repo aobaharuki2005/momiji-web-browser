@@ -393,12 +393,7 @@ void GCRuntime::releaseArena(Arena* arena, const AutoLockGC& lock) {
   MOZ_ASSERT(!arena->onDelayedMarkingList());
   MOZ_ASSERT(TlsGCContext.get()->isFinalizing());
 
-  if (IsBufferAllocKind(arena->getAllocKind())) {
-    size_t usableBytes = ArenaSize - arena->getFirstThingOffset();
-    arena->zone()->mallocHeapSize.removeBytes(usableBytes, true);
-  } else {
-    arena->zone()->gcHeapSize.removeBytes(ArenaSize, true, heapSize);
-  }
+  arena->zone()->gcHeapSize.removeBytes(ArenaSize, true, heapSize);
   if (arena->zone()->isAtomsZone()) {
     arena->freeAtomMarkingBitmapIndex(this, lock);
   }

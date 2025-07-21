@@ -896,32 +896,6 @@ inline bool TenuredThingIsMarkedAny<Cell>(Cell* thing) {
   return thing->asTenured().isMarkedAny();
 }
 
-class alignas(gc::CellAlignBytes) SmallBuffer : public TenuredCell {
- public:
-  static constexpr uintptr_t NURSERY_OWNED_BIT = Bit(3);
-
-  void check() const {}  // No check value.
-
-  bool isNurseryOwned() const;
-  void setNurseryOwned(bool value);
-
-  static const JS::TraceKind TraceKind = JS::TraceKind::SmallBuffer;
-  void traceChildren(JSTracer* trc) {
-    // TODO: Generic tracing not supported for sized allocations.
-    // GCRuntime::checkForCompartmentMismatches ends up calling this because it
-    // iterates all GC cells.
-  }
-
-  size_t allocBytes() const;
-  void* data() { return this + 1; }
-};
-template <size_t bytes>
-struct SmallBufferN : public SmallBuffer {
-  uint8_t data[bytes];
-};
-static_assert(sizeof(SmallBufferN<16>) == 16 + sizeof(SmallBuffer));
-static_assert(sizeof(SmallBufferN<128>) == 128 + sizeof(SmallBuffer));
-
 } /* namespace gc */
 } /* namespace js */
 

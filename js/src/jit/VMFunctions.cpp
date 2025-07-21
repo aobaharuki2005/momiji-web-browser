@@ -187,7 +187,6 @@ struct TypeToRootType<Handle<T*>> {
       case TraceKind::RegExpShared:
       case TraceKind::GetterSetter:
       case TraceKind::PropMap:
-      case TraceKind::SmallBuffer:
         MOZ_CRASH("Unexpected trace kind");
     }
   }

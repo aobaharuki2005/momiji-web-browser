@@ -597,9 +597,6 @@ struct UnusedGCThingSizes {
       case JS::TraceKind::RegExpShared:
         regExpShared += n;
         break;
-      case JS::TraceKind::SmallBuffer:
-        smallBuffer += n;
-        break;
       default:
         MOZ_CRASH("Bad trace kind for UnusedGCThingSizes");
     }
@@ -675,7 +672,6 @@ struct ZoneStats {
   MACRO(Other, MallocHeap, scopesMallocHeap)               \
   MACRO(Other, GCHeapUsed, regExpSharedsGCHeap)            \
   MACRO(Other, MallocHeap, regExpSharedsMallocHeap)        \
-  MACRO(Other, GCHeapUsed, smallBuffersGCHeap)             \
   MACRO(Other, MallocHeap, zoneObject)                     \
   MACRO(Other, MallocHeap, regexpZone)                     \
   MACRO(Other, MallocHeap, jitZone)                        \

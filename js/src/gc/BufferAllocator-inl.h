@@ -14,7 +14,6 @@
 
 #include "ds/SlimLinkedList.h"
 #include "gc/BufferAllocatorInternals.h"
-#include "gc/Cell.h"
 #include "js/HeapAPI.h"
 
 #include "gc/Allocator-inl.h"

@@ -1081,10 +1081,6 @@ template <uint32_t opts>
 void GCMarker::traverse(BaseScript* thing) {
   pushThing<opts>(thing);
 }
-template <uint32_t opts>
-void GCMarker::traverse(SmallBuffer* thing) {
-  // Buffer contents are traced by their owning GC thing.
-}
 
 template <uint32_t opts, typename T>
 void js::GCMarker::traceChildren(T* thing) {

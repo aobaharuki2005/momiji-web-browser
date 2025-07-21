@@ -487,14 +487,7 @@ Arena* GCRuntime::allocateArena(ArenaChunk* chunk, Zone* zone,
 
   Arena* arena = chunk->allocateArena(this, zone, thingKind);
 
-  if (IsBufferAllocKind(thingKind)) {
-    // Try to keep GC scheduling the same to minimize benchmark noise.
-    // Keep this in sync with Arena::release.
-    size_t usableSize = ArenaSize - Arena::firstThingOffset(thingKind);
-    zone->mallocHeapSize.addBytes(usableSize);
-  } else {
-    zone->gcHeapSize.addGCArena(heapSize);
-  }
+  zone->gcHeapSize.addGCArena(heapSize);
 
   // Trigger an incremental slice if needed.
   if (checkThresholds != ShouldCheckThresholds::DontCheckThresholds) {

@@ -202,8 +202,6 @@ void TenuringTracer::onGetterSetterEdge(GetterSetter** gsp, const char* name) {}
 void TenuringTracer::onPropMapEdge(PropMap** mapp, const char* name) {}
 void TenuringTracer::onJitCodeEdge(jit::JitCode** codep, const char* name) {}
 void TenuringTracer::onScopeEdge(Scope** scopep, const char* name) {}
-void TenuringTracer::onSmallBufferEdge(SmallBuffer** sizedp, const char* name) {
-}
 
 void TenuringTracer::traverse(JS::Value* thingp) {
   MOZ_ASSERT(!nursery().inCollectedRegion(thingp));

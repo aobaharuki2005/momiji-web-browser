@@ -111,14 +111,6 @@ namespace gc {
     D(FAT_INLINE_STRING,   String,       JSFatInlineString,     JSFatInlineString,     None,       true,   true) \
     D(STRING,              String,       JSString,              JSString,              Background, true,   true)
 
-#define FOR_EACH_BUFFER_ALLOCKIND(D) \
- /* AllocKind              TraceKind     TypeName               SizedType                  Finalize Nursery Compact */ \
-  D(BUFFER16,              SmallBuffer,  js::gc::SmallBuffer,   js::gc::SmallBufferN<16>,  None,    false,  true) \
-  D(BUFFER32,              SmallBuffer,  js::gc::SmallBuffer,   js::gc::SmallBufferN<32>,  None,    false,  true) \
-  D(BUFFER64,              SmallBuffer,  js::gc::SmallBuffer,   js::gc::SmallBufferN<64>,  None,    false,  true) \
-  D(BUFFER128,             SmallBuffer,  js::gc::SmallBuffer,   js::gc::SmallBufferN<128>, None,    false,  true)
-// clang-format on
-
 #define FOR_EACH_NONOBJECT_NONBUFFER_ALLOCKIND(D) \
   FOR_EACH_NONOBJECT_NONNURSERY_ALLOCKIND(D)      \
   FOR_EACH_NONOBJECT_NURSERY_ALLOCKIND(D)         \
@@ -126,7 +118,6 @@ namespace gc {
 
 #define FOR_EACH_ALLOCKIND(D)  \
   FOR_EACH_OBJECT_ALLOCKIND(D) \
-  FOR_EACH_BUFFER_ALLOCKIND(D) \
   FOR_EACH_NONOBJECT_NONBUFFER_ALLOCKIND(D)
 
 #define DEFINE_ALLOC_KIND(allocKind, _1, _2, _3, _4, _5, _6) allocKind,
@@ -137,11 +128,6 @@ enum class AllocKind : uint8_t {
     OBJECT_LIMIT,
     OBJECT_LAST = OBJECT_LIMIT - 1,
 
-    FOR_EACH_BUFFER_ALLOCKIND(DEFINE_ALLOC_KIND)
-
-    BUFFER_LIMIT,
-    BUFFER_LAST = BUFFER_LIMIT - 1,
-
     FOR_EACH_NONOBJECT_NONBUFFER_ALLOCKIND(DEFINE_ALLOC_KIND)
 
     LIMIT,
@@ -151,8 +137,6 @@ enum class AllocKind : uint8_t {
 
     FIRST = 0,
     OBJECT_FIRST = FUNCTION, // Hardcoded to first object kind.
-
-    BUFFER_FIRST = BUFFER16
   // clang-format on
 };
 #undef DEFINE_ALLOC_KIND
@@ -200,10 +184,6 @@ const char* AllocKindName(AllocKind kind);
 
 constexpr bool IsObjectAllocKind(AllocKind kind) {
   return kind >= AllocKind::OBJECT_FIRST && kind <= AllocKind::OBJECT_LAST;
-}
-
-constexpr bool IsBufferAllocKind(AllocKind kind) {
-  return kind > AllocKind::OBJECT_LAST && kind <= AllocKind::BUFFER_LAST;
 }
 
 constexpr bool IsShapeAllocKind(AllocKind kind) {
