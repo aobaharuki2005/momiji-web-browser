@@ -2947,6 +2947,7 @@ package org.mozilla.geckoview {
     method @UiThread public void click();
     method @UiThread public void click(@NonNull String);
     method @UiThread public void dismiss();
+    method @UiThread public void show();
     field public static final Parcelable.Creator<WebNotification> CREATOR;
     field @NonNull public final WebNotificationAction[] actions;
     field @Nullable public final String imageUrl;
