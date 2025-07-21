@@ -129,11 +129,6 @@ class ComputedStyle {
     return bool(Flags() & Flag::HAS_AUTHOR_SPECIFIED_TEXT_COLOR);
   }
 
-  // Whether any margin _and_ font-size are set.
-  bool HasAuthorSpecifiedMarginAndFontSize() const {
-    return bool(Flags() & Flag::HAS_AUTHOR_SPECIFIED_MARGIN_AND_FONT_SIZE);
-  }
-
   // Does this ComputedStyle or any of its ancestors have text
   // decoration lines?
   // Differs from nsStyleTextReset::HasTextDecorationLines, which tests

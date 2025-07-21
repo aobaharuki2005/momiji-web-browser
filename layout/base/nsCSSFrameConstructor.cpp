@@ -3241,35 +3241,6 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
   return fieldsetFrame;
 }
 
-// We always obey display for h1, but this is a convenient place for our
-// counters.
-const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindH1Data(const Element& aElement,
-                                  ComputedStyle& aStyle) {
-  constexpr auto kCounter =
-      UseCounter::eUseCounter_custom_SectioningH1WithNoFontSizeOrMargins;
-  if (aStyle.HasAuthorSpecifiedMarginAndFontSize()) {
-    return nullptr;
-  }
-  auto* doc = aElement.OwnerDoc();
-  if (doc->HasUseCounter(kCounter)) {
-    return nullptr;
-  }
-  for (auto* ancestor = aElement.GetParent(); ancestor;
-       ancestor = ancestor->GetParent()) {
-    if (ancestor->IsAnyOfHTMLElements(nsGkAtoms::section, nsGkAtoms::aside,
-                                      nsGkAtoms::article, nsGkAtoms::nav)) {
-      doc->SetUseCounter(kCounter);
-      nsContentUtils::ReportToConsole(
-          nsIScriptError::warningFlag, "DOM"_ns, doc,
-          nsContentUtils::eDOM_PROPERTIES,
-          "SectioningH1WithNoFontSizeOrMargins",
-          {u"https://developer.mozilla.org/docs/Web/HTML/Element/Heading_Elements#specifying_a_uniform_font_size_for_h1"_ns});
-    }
-  }
-  return nullptr;
-}
-
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindDetailsData(const Element& aElement,
                                        ComputedStyle& aStyle) {
@@ -3538,7 +3509,6 @@ nsCSSFrameConstructor::FindHTMLData(const Element& aElement,
       SIMPLE_TAG_CREATE(progress, NS_NewProgressFrame),
       SIMPLE_TAG_CREATE(meter, NS_NewMeterFrame),
       SIMPLE_TAG_CHAIN(details, nsCSSFrameConstructor::FindDetailsData),
-      SIMPLE_TAG_CHAIN(h1, nsCSSFrameConstructor::FindH1Data),
   };
 
   return FindDataByTag(aElement, aStyle, sHTMLData, std::size(sHTMLData));
