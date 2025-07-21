@@ -4865,17 +4865,11 @@ static bool IsUnderlineRight(const ComputedStyle& aStyle) {
 }
 
 static bool FrameStopsLineDecorationPropagation(nsIFrame* aFrame,
-                                                nsBlockFrame* aFrameAsBlock,
                                                 nsCompatibility aCompatMode) {
-  MOZ_ASSERT_IF(aFrameAsBlock, aFrameAsBlock == aFrame);
   // In all modes, if we're on an inline-block/table/grid/flex, we're done.
   // If we're on a ruby frame other than ruby text container, we
   // should continue.
   mozilla::StyleDisplay display = aFrame->GetDisplay();
-  // For buttons, we look at the specified display, for historical reasons.
-  if (aFrameAsBlock && aFrameAsBlock->IsButtonLike()) {
-    display = aFrame->StyleDisplay()->mOriginalDisplay;
-  }
   if (!display.IsInlineFlow() &&
       (!display.IsRuby() ||
        display == mozilla::StyleDisplay::RubyTextContainer) &&
@@ -5071,7 +5065,7 @@ void nsTextFrame::GetTextDecorations(
             !ignoreSubproperties));
       }
     }
-    if (FrameStopsLineDecorationPropagation(f, fBlock, compatMode)) {
+    if (FrameStopsLineDecorationPropagation(f, compatMode)) {
       break;
     }
   }
