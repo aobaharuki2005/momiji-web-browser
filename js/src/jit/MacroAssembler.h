@@ -5756,9 +5756,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                              sync, obj, output, scratch);
   }
 
-  void loadResizableTypedArrayByteOffsetMaybeOutOfBoundsIntPtr(
-      Register obj, Register output, Register scratch);
-
   void dateFillLocalTimeSlots(Register obj, Register scratch,
                               const LiveRegisterSet& volatileRegs);
 

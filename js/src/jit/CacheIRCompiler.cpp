@@ -5651,46 +5651,6 @@ bool CacheIRCompiler::emitArrayBufferViewByteOffsetDoubleResult(
   return true;
 }
 
-bool CacheIRCompiler::
-    emitResizableTypedArrayByteOffsetMaybeOutOfBoundsInt32Result(
-        ObjOperandId objId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
-  AutoOutputRegister output(*this);
-  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
-  AutoScratchRegister scratch2(allocator, masm);
-  Register obj = allocator.useRegister(masm, objId);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  masm.loadResizableTypedArrayByteOffsetMaybeOutOfBoundsIntPtr(obj, scratch1,
-                                                               scratch2);
-  masm.guardNonNegativeIntPtrToInt32(scratch1, failure->label());
-  masm.tagValue(JSVAL_TYPE_INT32, scratch1, output.valueReg());
-  return true;
-}
-
-bool CacheIRCompiler::
-    emitResizableTypedArrayByteOffsetMaybeOutOfBoundsDoubleResult(
-        ObjOperandId objId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
-  AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, objId);
-  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
-  AutoScratchRegister scratch2(allocator, masm);
-
-  ScratchDoubleScope fpscratch(masm);
-  masm.loadResizableTypedArrayByteOffsetMaybeOutOfBoundsIntPtr(obj, scratch1,
-                                                               scratch2);
-  masm.convertIntPtrToDouble(scratch1, fpscratch);
-  masm.boxDouble(fpscratch, output.valueReg(), fpscratch);
-  return true;
-}
-
 bool CacheIRCompiler::emitTypedArrayByteLengthInt32Result(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
@@ -5824,18 +5784,6 @@ bool CacheIRCompiler::emitResizableTypedArrayLengthDoubleResult(
   ScratchDoubleScope fpscratch(masm);
   masm.convertIntPtrToDouble(scratch1, fpscratch);
   masm.boxDouble(fpscratch, output.valueReg(), fpscratch);
-  return true;
-}
-
-bool CacheIRCompiler::emitTypedArrayElementSizeResult(ObjOperandId objId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
-  AutoOutputRegister output(*this);
-  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
-  Register obj = allocator.useRegister(masm, objId);
-
-  masm.typedArrayElementSize(obj, scratch);
-  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
 

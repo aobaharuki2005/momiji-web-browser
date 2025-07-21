@@ -1248,20 +1248,6 @@
   args:
     obj: ObjId
 
-- name: ResizableTypedArrayByteOffsetMaybeOutOfBoundsInt32Result
-  shared: true
-  transpile: true
-  cost_estimate: 2
-  args:
-    obj: ObjId
-
-- name: ResizableTypedArrayByteOffsetMaybeOutOfBoundsDoubleResult
-  shared: true
-  transpile: true
-  cost_estimate: 2
-  args:
-    obj: ObjId
-
 - name: TypedArrayByteLengthInt32Result
   shared: true
   transpile: true
@@ -1298,13 +1284,6 @@
     obj: ObjId
 
 - name: ResizableTypedArrayLengthDoubleResult
-  shared: true
-  transpile: true
-  cost_estimate: 2
-  args:
-    obj: ObjId
-
-- name: TypedArrayElementSizeResult
   shared: true
   transpile: true
   cost_estimate: 2

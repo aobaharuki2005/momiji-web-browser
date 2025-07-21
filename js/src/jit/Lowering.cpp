@@ -4419,16 +4419,6 @@ void LIRGenerator::visitResizableTypedArrayLength(
   define(lir, ins);
 }
 
-void LIRGenerator::visitResizableTypedArrayByteOffsetMaybeOutOfBounds(
-    MResizableTypedArrayByteOffsetMaybeOutOfBounds* ins) {
-  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-  MOZ_ASSERT(ins->type() == MIRType::IntPtr);
-
-  auto* lir = new (alloc()) LResizableTypedArrayByteOffsetMaybeOutOfBounds(
-      useRegister(ins->object()), temp());
-  define(lir, ins);
-}
-
 void LIRGenerator::visitResizableDataViewByteLength(
     MResizableDataViewByteLength* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);

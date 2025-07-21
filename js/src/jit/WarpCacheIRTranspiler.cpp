@@ -4495,38 +4495,6 @@ bool WarpCacheIRTranspiler::emitArrayBufferViewByteOffsetDoubleResult(
   return true;
 }
 
-bool WarpCacheIRTranspiler::
-    emitResizableTypedArrayByteOffsetMaybeOutOfBoundsInt32Result(
-        ObjOperandId objId) {
-  MDefinition* obj = getOperand(objId);
-
-  auto* byteOffset =
-      MResizableTypedArrayByteOffsetMaybeOutOfBounds::New(alloc(), obj);
-  add(byteOffset);
-
-  auto* byteOffsetInt32 = MNonNegativeIntPtrToInt32::New(alloc(), byteOffset);
-  add(byteOffsetInt32);
-
-  pushResult(byteOffsetInt32);
-  return true;
-}
-
-bool WarpCacheIRTranspiler::
-    emitResizableTypedArrayByteOffsetMaybeOutOfBoundsDoubleResult(
-        ObjOperandId objId) {
-  MDefinition* obj = getOperand(objId);
-
-  auto* byteOffset =
-      MResizableTypedArrayByteOffsetMaybeOutOfBounds::New(alloc(), obj);
-  add(byteOffset);
-
-  auto* byteOffsetDouble = MIntPtrToDouble::New(alloc(), byteOffset);
-  add(byteOffsetDouble);
-
-  pushResult(byteOffsetDouble);
-  return true;
-}
-
 bool WarpCacheIRTranspiler::emitResizableTypedArrayLengthInt32Result(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
@@ -4667,17 +4635,6 @@ bool WarpCacheIRTranspiler::emitResizableTypedArrayByteLengthDoubleResult(
 
   pushResult(postConversion);
   return resumeAfterUnchecked(postConversion);
-}
-
-bool WarpCacheIRTranspiler::emitTypedArrayElementSizeResult(
-    ObjOperandId objId) {
-  MDefinition* obj = getOperand(objId);
-
-  auto* ins = MTypedArrayElementSize::New(alloc(), obj);
-  add(ins);
-
-  pushResult(ins);
-  return true;
 }
 
 bool WarpCacheIRTranspiler::emitResizableDataViewByteLengthInt32Result(

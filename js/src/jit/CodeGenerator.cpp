@@ -11014,15 +11014,6 @@ void CodeGenerator::visitTypedArrayElementSize(LTypedArrayElementSize* lir) {
   masm.typedArrayElementSize(obj, out);
 }
 
-void CodeGenerator::visitResizableTypedArrayByteOffsetMaybeOutOfBounds(
-    LResizableTypedArrayByteOffsetMaybeOutOfBounds* lir) {
-  Register obj = ToRegister(lir->object());
-  Register out = ToRegister(lir->output());
-  Register temp = ToRegister(lir->temp0());
-
-  masm.loadResizableTypedArrayByteOffsetMaybeOutOfBoundsIntPtr(obj, out, temp);
-}
-
 void CodeGenerator::visitResizableTypedArrayLength(
     LResizableTypedArrayLength* lir) {
   Register obj = ToRegister(lir->object());

@@ -3453,31 +3453,6 @@ void MacroAssembler::loadResizableArrayBufferViewLengthIntPtr(
   bind(&done);
 }
 
-void MacroAssembler::loadResizableTypedArrayByteOffsetMaybeOutOfBoundsIntPtr(
-    Register obj, Register output, Register scratch) {
-  // Inline implementation of TypedArrayObject::byteOffsetMaybeOutOfBounds(),
-  // when the input is guaranteed to be a resizable typed array object.
-
-  loadArrayBufferViewByteOffsetIntPtr(obj, output);
-
-  // TypedArray is neither detached nor out-of-bounds when byteOffset non-zero.
-  Label done;
-  branchPtr(Assembler::NotEqual, output, ImmWord(0), &done);
-
-  // We're done when the initial byteOffset is zero.
-  loadPrivate(Address(obj, ArrayBufferViewObject::initialByteOffsetOffset()),
-              output);
-  branchPtr(Assembler::Equal, output, ImmWord(0), &done);
-
-  // If the buffer is attached, return initialByteOffset.
-  branchIfHasAttachedArrayBuffer(obj, scratch, &done);
-
-  // Otherwise return zero to match the result for fixed-length TypedArrays.
-  movePtr(ImmWord(0), output);
-
-  bind(&done);
-}
-
 void MacroAssembler::dateFillLocalTimeSlots(
     Register obj, Register scratch, const LiveRegisterSet& volatileRegs) {
   // Inline implementation of the cache check from

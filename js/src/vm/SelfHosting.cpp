@@ -863,47 +863,6 @@ static bool intrinsic_IsTypedArrayConstructor(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool intrinsic_TypedArrayBuffer(JSContext* cx, unsigned argc,
-                                       Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
-
-  Rooted<TypedArrayObject*> tarray(cx,
-                                   &args[0].toObject().as<TypedArrayObject>());
-  if (!TypedArrayObject::ensureHasBuffer(cx, tarray)) {
-    return false;
-  }
-
-  args.rval().set(tarray->bufferValue());
-  return true;
-}
-
-static bool intrinsic_TypedArrayByteOffset(JSContext* cx, unsigned argc,
-                                           Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
-
-  auto* tarr = &args[0].toObject().as<TypedArrayObject>();
-  args.rval().setNumber(tarr->byteOffsetMaybeOutOfBounds());
-  return true;
-}
-
-static bool intrinsic_TypedArrayElementSize(JSContext* cx, unsigned argc,
-                                            Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
-
-  unsigned size =
-      TypedArrayElemSize(args[0].toObject().as<TypedArrayObject>().type());
-  MOZ_ASSERT(size == 1 || size == 2 || size == 4 || size == 8);
-
-  args.rval().setInt32(mozilla::AssertedCast<int32_t>(size));
-  return true;
-}
-
 // Return the value of [[ArrayLength]] internal slot of the TypedArray
 static bool intrinsic_TypedArrayLength(JSContext* cx, unsigned argc,
                                        Value* vp) {
@@ -927,20 +886,6 @@ static bool intrinsic_TypedArrayLength(JSContext* cx, unsigned argc,
   }
 
   args.rval().setNumber(*length);
-  return true;
-}
-
-// Return the value of [[ArrayLength]] internal slot of the TypedArray. If the
-// length is out-of-bounds, always return zero.
-static bool intrinsic_TypedArrayLengthZeroOnOutOfBounds(JSContext* cx,
-                                                        unsigned argc,
-                                                        Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
-
-  auto* tarr = &args[0].toObject().as<TypedArrayObject>();
-  args.rval().setNumber(tarr->length().valueOr(0));
   return true;
 }
 
@@ -1007,19 +952,6 @@ static bool intrinsic_PossiblyWrappedTypedArrayHasImmutableBuffer(JSContext* cx,
 
   bool immutable = obj->is<ImmutableTypedArrayObject>();
   args.rval().setBoolean(immutable);
-  return true;
-}
-
-static bool intrinsic_TypedArrayIsAutoLength(JSContext* cx, unsigned argc,
-                                             Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
-
-  JSObject* obj = &args[0].toObject();
-  bool isAutoLength = obj->is<ResizableTypedArrayObject>() &&
-                      obj->as<ResizableTypedArrayObject>().isAutoLength();
-  args.rval().setBoolean(isAutoLength);
   return true;
 }
 
@@ -1883,19 +1815,10 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("ToObject", intrinsic_ToObject, 1, 0, IntrinsicToObject),
     JS_FN("ToPropertyKey", intrinsic_ToPropertyKey, 1, 0),
     JS_FN("ToSource", intrinsic_ToSource, 1, 0),
-    JS_FN("TypedArrayBuffer", intrinsic_TypedArrayBuffer, 1, 0),
-    JS_INLINABLE_FN("TypedArrayByteOffset", intrinsic_TypedArrayByteOffset, 1,
-                    0, IntrinsicTypedArrayByteOffset),
-    JS_INLINABLE_FN("TypedArrayElementSize", intrinsic_TypedArrayElementSize, 1,
-                    0, IntrinsicTypedArrayElementSize),
     JS_FN("TypedArrayInitFromPackedArray",
           intrinsic_TypedArrayInitFromPackedArray, 2, 0),
-    JS_FN("TypedArrayIsAutoLength", intrinsic_TypedArrayIsAutoLength, 1, 0),
     JS_INLINABLE_FN("TypedArrayLength", intrinsic_TypedArrayLength, 1, 0,
                     IntrinsicTypedArrayLength),
-    JS_INLINABLE_FN("TypedArrayLengthZeroOnOutOfBounds",
-                    intrinsic_TypedArrayLengthZeroOnOutOfBounds, 1, 0,
-                    IntrinsicTypedArrayLengthZeroOnOutOfBounds),
     JS_INLINABLE_FN("UnsafeGetInt32FromReservedSlot",
                     intrinsic_UnsafeGetInt32FromReservedSlot, 2, 0,
                     IntrinsicUnsafeGetInt32FromReservedSlot),

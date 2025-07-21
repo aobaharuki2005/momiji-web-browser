@@ -744,7 +744,6 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
     DECLARE_CACHEOP_CASE(ArrayBufferViewByteOffsetDoubleResult);
     DECLARE_CACHEOP_CASE(TypedArrayByteLengthInt32Result);
     DECLARE_CACHEOP_CASE(TypedArrayByteLengthDoubleResult);
-    DECLARE_CACHEOP_CASE(TypedArrayElementSizeResult);
     DECLARE_CACHEOP_CASE(NewStringIteratorResult);
     DECLARE_CACHEOP_CASE(NewRegExpStringIteratorResult);
     DECLARE_CACHEOP_CASE(ObjectCreateResult);
@@ -4907,15 +4906,6 @@ uint64_t ICInterpretOps(uint64_t arg0, uint64_t arg1, ICStub* stub,
         }
         size_t length = *tao->length() * tao->bytesPerElement();
         retValue = DoubleValue(double(length)).asRawBits();
-        PREDICT_RETURN();
-        DISPATCH_CACHEOP();
-      }
-
-      CACHEOP_CASE(TypedArrayElementSizeResult) {
-        ObjOperandId objId = cacheIRReader.objOperandId();
-        TypedArrayObject* tao =
-            reinterpret_cast<TypedArrayObject*>(READ_REG(objId.id()));
-        retValue = Int32Value(int32_t(tao->bytesPerElement())).asRawBits();
         PREDICT_RETURN();
         DISPATCH_CACHEOP();
       }

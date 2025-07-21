@@ -1809,13 +1809,6 @@ void MArrayBufferViewByteOffset::computeRange(TempAllocator& alloc) {
   }
 }
 
-void MResizableTypedArrayByteOffsetMaybeOutOfBounds::computeRange(
-    TempAllocator& alloc) {
-  if constexpr (ArrayBufferObject::ByteLengthLimit <= INT32_MAX) {
-    setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));
-  }
-}
-
 void MResizableTypedArrayLength::computeRange(TempAllocator& alloc) {
   if constexpr (ArrayBufferObject::ByteLengthLimit <= INT32_MAX) {
     setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));

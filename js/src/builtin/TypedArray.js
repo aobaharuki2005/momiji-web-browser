@@ -127,30 +127,6 @@ function TypedArraySpeciesConstructor(obj) {
 
 // ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
 // 22.2.3.5.1 Runtime Semantics: ValidateTypedArray ( O )
-function ValidateTypedArray(obj) {
-  if (IsObject(obj)) {
-    /* Steps 3-5 (non-wrapped typed arrays). */
-    if (IsTypedArray(obj)) {
-      // EnsureAttachedArrayBuffer throws for detached array buffers.
-      EnsureAttachedArrayBuffer(obj);
-      return;
-    }
-
-    /* Steps 3-5 (wrapped typed arrays). */
-    if (IsPossiblyWrappedTypedArray(obj)) {
-      if (PossiblyWrappedTypedArrayHasDetachedBuffer(obj)) {
-        ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
-      }
-      return;
-    }
-  }
-
-  /* Steps 1-2. */
-  ThrowTypeError(JSMSG_NON_TYPED_ARRAY_RETURNED);
-}
-
-// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
-// 22.2.3.5.1 Runtime Semantics: ValidateTypedArray ( O )
 function ValidateWritableTypedArray(obj) {
   if (IsObject(obj)) {
     /* Steps 3-5 (non-wrapped typed arrays). */
@@ -202,55 +178,6 @@ function TypedArrayCreateWithLength(constructor, length) {
 }
 
 // ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
-// 22.2.4.6 TypedArrayCreate ( constructor, argumentList )
-function TypedArrayCreateWithBuffer(constructor, buffer, byteOffset, length) {
-  // Step 1.
-  var newTypedArray = constructContentFunction(
-    constructor,
-    constructor,
-    buffer,
-    byteOffset,
-    length
-  );
-
-  // Step 2.
-  ValidateTypedArray(newTypedArray);
-
-  // We also need to make sure the length is in-bounds. This is checked by
-  // calling PossiblyWrappedTypedArrayLength, which throws for out-of-bounds.
-  PossiblyWrappedTypedArrayLength(newTypedArray);
-
-  // Step 3 (not applicable).
-
-  // Step 4.
-  return newTypedArray;
-}
-
-// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
-// 22.2.4.6 TypedArrayCreate ( constructor, argumentList )
-function TypedArrayCreateWithResizableBuffer(constructor, buffer, byteOffset) {
-  // Step 1.
-  var newTypedArray = constructContentFunction(
-    constructor,
-    constructor,
-    buffer,
-    byteOffset
-  );
-
-  // Step 2.
-  ValidateTypedArray(newTypedArray);
-
-  // We also need to make sure the length is in-bounds. This is checked by
-  // calling PossiblyWrappedTypedArrayLength, which throws for out-of-bounds.
-  PossiblyWrappedTypedArrayLength(newTypedArray);
-
-  // Step 3 (not applicable).
-
-  // Step 4.
-  return newTypedArray;
-}
-
-// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
 // 22.2.4.7 TypedArraySpeciesCreate ( exemplar, argumentList )
 function TypedArraySpeciesCreateWithLength(exemplar, length) {
   // Step 1 (omitted).
@@ -260,39 +187,6 @@ function TypedArraySpeciesCreateWithLength(exemplar, length) {
 
   // Step 4.
   return TypedArrayCreateWithLength(C, length);
-}
-
-// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
-// 22.2.4.7 TypedArraySpeciesCreate ( exemplar, argumentList )
-function TypedArraySpeciesCreateWithBuffer(
-  exemplar,
-  buffer,
-  byteOffset,
-  length
-) {
-  // Step 1 (omitted).
-
-  // Steps 2-3.
-  var C = TypedArraySpeciesConstructor(exemplar);
-
-  // Step 4.
-  return TypedArrayCreateWithBuffer(C, buffer, byteOffset, length);
-}
-
-// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
-// 22.2.4.7 TypedArraySpeciesCreate ( exemplar, argumentList )
-function TypedArraySpeciesCreateWithResizableBuffer(
-  exemplar,
-  buffer,
-  byteOffset
-) {
-  // Step 1 (omitted).
-
-  // Steps 2-3.
-  var C = TypedArraySpeciesConstructor(exemplar);
-
-  // Step 4.
-  return TypedArrayCreateWithResizableBuffer(C, buffer, byteOffset);
 }
 
 // ES6 draft rev30 (2014/12/24) 22.2.3.6 %TypedArray%.prototype.entries()
