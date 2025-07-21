@@ -84,14 +84,14 @@ struct PipelineArgs {
 #[derive(Clone, Debug, Deserialize, Serialize, Node)]
 pub struct Config {
     #[serde(default)]
-    pub async_wrappers: IndexMap<String, ConcrrencyMode>,
+    pub async_wrappers: IndexMap<String, ConcurrencyMode>,
     #[serde(default)]
     custom_types: IndexMap<String, CustomTypeConfig>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Node, PartialEq, Eq)]
 #[serde(rename_all = "PascalCase")]
-pub enum ConcrrencyMode {
+pub enum ConcurrencyMode {
     /// Function will remain synchronous, running on the main thread
     Sync,
     /// Function will be wrapped in an async wrapper

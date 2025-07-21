@@ -3,78 +3,50 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use super::*;
-use crate::ConcrrencyMode;
+use crate::ConcurrencyMode;
 
 use anyhow::{anyhow, bail, Result};
 
 pub fn pass(module: &mut Module) -> Result<()> {
-    let async_wrappers = module.config.async_wrappers.clone();
-    let module_name = module.name.clone();
-    let crate_name = module.crate_name.clone();
+    // We have to generate for_callback_interface for now.  In the future, this probably should be
+    // done in the general pipeline.
+    module.visit_mut(|cbi: &mut CallbackInterface| {
+        cbi.visit_mut(|callable: &mut Callable| {
+            if let CallableKind::VTableMethod {
+                for_callback_interface,
+                ..
+            } = &mut callable.kind
+            {
+                *for_callback_interface = true;
+            }
+        });
+    });
+
+    let async_wrappers = &module.config.async_wrappers;
+    let module_name = &module.name;
 
     // Track unconfigured callables for later reporting
     let mut unconfigured_callables = Vec::new();
 
-    // Check functions (these are standalone functions, never callback interface methods)
-    module.try_visit_mut(|func: &mut Function| {
+    // Configure all callables
+    module.functions.try_visit_mut(|callable: &mut Callable| {
         handle_callable(
-            &mut func.callable,
-            &async_wrappers,
+            callable,
+            async_wrappers,
             &mut unconfigured_callables,
-            &module_name,
+            module_name,
         )
     })?;
-
-    // Check interface methods - both regular interfaces and trait interfaces need configuration
-    // Regular interfaces (without vtables): require explicit async/sync configuration
-    // Trait interfaces (with vtables): support foreign implementation, configuration handled differently
-    let mut interface_results = Vec::new();
-    module.visit_mut(|int: &mut Interface| {
-        if int.vtable.is_none() {
-            // Regular interface - require explicit configuration
-            for constructor in &mut int.constructors {
-                let result = handle_callable(
-                    &mut constructor.callable,
-                    &async_wrappers,
-                    &mut unconfigured_callables,
-                    &module_name,
-                );
-                if let Err(e) = result {
-                    interface_results.push(Err(e));
-                }
-            }
-            for method in &mut int.methods {
-                let result = handle_callable(
-                    &mut method.callable,
-                    &async_wrappers,
-                    &mut unconfigured_callables,
-                    &module_name,
-                );
-                if let Err(e) = result {
-                    interface_results.push(Err(e));
-                }
-            }
-        } else {
-            // Interface with vtable (trait interface) - apply default logic
-            for method in &mut int.methods {
-                let result = handle_vtable_callable(
-                    &mut method.callable,
-                    &async_wrappers,
-                    &mut unconfigured_callables,
-                    &module_name,
-                    &int.name,
-                );
-                if let Err(e) = result {
-                    interface_results.push(Err(e));
-                }
-            }
-        }
-    });
-
-    // Check if any interface processing failed
-    for result in interface_results {
-        result?;
-    }
+    module
+        .type_definitions
+        .try_visit_mut(|callable: &mut Callable| {
+            handle_callable(
+                callable,
+                async_wrappers,
+                &mut unconfigured_callables,
+                module_name,
+            )
+        })?;
 
     // Report unconfigured callables
     if !unconfigured_callables.is_empty() {
@@ -91,7 +63,7 @@ pub fn pass(module: &mut Module) -> Result<()> {
         message.push_str(
             "\nPlease add these callables to the `toolkit/components/uniffi-bindgen-gecko-js/config.toml` file with explicit configuration:\n",
         );
-        message.push_str(&format!("[{}.async_wrappers]\n", crate_name));
+        message.push_str(&format!("[{}.async_wrappers]\n", module.crate_name));
 
         for (spec, _) in &unconfigured_callables {
             message.push_str(&format!("\"{}\" = \"AsyncWrapped\"  # or \"Sync\"\n", spec));
@@ -105,19 +77,26 @@ pub fn pass(module: &mut Module) -> Result<()> {
 }
 fn handle_callable(
     callable: &mut Callable,
-    async_wrappers: &indexmap::IndexMap<String, ConcrrencyMode>,
+    async_wrappers: &indexmap::IndexMap<String, ConcurrencyMode>,
     unconfigured_callables: &mut Vec<(String, String)>,
     module_name: &str,
 ) -> Result<()> {
     let name = &callable.name;
     let spec = match &callable.kind {
+        CallableKind::VTableMethod {
+            for_callback_interface: true,
+            ..
+        } => {
+            // Callback interfaces aren't configured using `config.toml` file yet.
+            return Ok(());
+        }
         CallableKind::Function => name.clone(),
         CallableKind::Method { interface_name, .. }
         | CallableKind::Constructor { interface_name, .. } => {
             format!("{interface_name}.{name}")
         }
-        CallableKind::VTableMethod { trait_name } => {
-            bail!("Callback Interface Methods should be handled by handle_vtable_callable: {trait_name}.{name}")
+        CallableKind::VTableMethod { trait_name, .. } => {
+            format!("{trait_name}.{name}")
         }
     };
 
@@ -149,16 +128,24 @@ fn handle_callable(
                 interface_name: parent,
                 ..
             }
-            | CallableKind::VTableMethod { trait_name: parent } => async_wrappers.get(parent),
+            | CallableKind::VTableMethod {
+                trait_name: parent, ..
+            } => async_wrappers.get(parent),
             _ => None,
         },
     };
     match config {
-        Some(ConcrrencyMode::Sync) => {
+        Some(ConcurrencyMode::Sync) => {
             callable.is_js_async = false;
             callable.uniffi_scaffolding_method = "UniFFIScaffolding.callSync".to_string();
         }
-        Some(ConcrrencyMode::AsyncWrapped) => {
+        Some(ConcurrencyMode::AsyncWrapped) => {
+            if matches!(callable.kind, CallableKind::VTableMethod { .. }) {
+                bail!(
+                    "VTable method '{}' cannot be AsyncWrapped as foreign-implemented trait interfaces don't support async wrapping",
+                    spec
+                );
+            }
             callable.is_js_async = true;
             callable.uniffi_scaffolding_method = "UniFFIScaffolding.callAsyncWrapper".to_string();
         }
@@ -176,7 +163,7 @@ fn handle_callable(
                     "Constructor '{}.{}' in module '{}'",
                     interface_name, name, module_name
                 ),
-                CallableKind::VTableMethod { trait_name } => format!(
+                CallableKind::VTableMethod { trait_name, .. } => format!(
                     "VTable method '{}.{}' in module '{}'",
                     trait_name, name, module_name
                 ),
@@ -187,54 +174,6 @@ fn handle_callable(
             // Default to async for now - this won't matter if we fail the build
             callable.is_js_async = true;
             callable.uniffi_scaffolding_method = "UniFFIScaffolding.callAsyncWrapper".to_string();
-        }
-    }
-
-    Ok(())
-}
-
-fn handle_vtable_callable(
-    callable: &mut Callable,
-    async_wrappers: &indexmap::IndexMap<String, ConcrrencyMode>,
-    unconfigured_callables: &mut Vec<(String, String)>,
-    module_name: &str,
-    interface_name: &str,
-) -> Result<()> {
-    // Generate spec for vtable methods
-    let name = &callable.name;
-    let spec = format!("{}.{}", interface_name, name);
-
-    // Check if this is a truly async method (has async_data)
-    if callable.async_data.is_some() {
-        // Check that there isn't an entry in async_wrappers for truly async methods
-        if async_wrappers.contains_key(&spec) {
-            bail!("VTable method '{}' has async_data and should not have an entry in async_wrappers config", spec);
-        }
-        callable.is_js_async = true;
-        callable.uniffi_scaffolding_method = "UniFFIScaffolding.callAsync".to_string();
-        return Ok(());
-    }
-
-    // Check if this vtable method has explicit configuration
-    match async_wrappers.get(&spec) {
-        Some(ConcrrencyMode::Sync) => {
-            callable.is_js_async = false;
-            callable.uniffi_scaffolding_method = "UniFFIScaffolding.callSync".to_string();
-        }
-        Some(ConcrrencyMode::AsyncWrapped) => {
-            // Foreign-implemented trait interfaces can't be async-wrapped
-            return Err(anyhow!(
-                "VTable method '{}' cannot be AsyncWrapped as foreign-implemented trait interfaces don't support async wrapping",
-                spec
-            ));
-        }
-        None => {
-            // Only add to unconfigured list if not configured
-            let source_info = format!(
-                "VTable method '{}.{}' in module '{}'",
-                interface_name, name, module_name
-            );
-            unconfigured_callables.push((spec, source_info));
         }
     }
 

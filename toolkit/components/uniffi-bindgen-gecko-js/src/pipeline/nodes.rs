@@ -242,6 +242,7 @@ pub enum CallableKind {
     },
     VTableMethod {
         trait_name: String,
+        for_callback_interface: bool,
     },
 }
 
