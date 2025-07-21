@@ -120,8 +120,9 @@ BufferTransaction* WaylandBuffer::GetTransaction() {
 
   LOGWAYLAND(
       "WaylandBuffer::GetTransaction() create new [%p] wl_buffer [%p] "
-      "transactions [%d]",
-      (void*)this, buffer, (int)mBufferTransactions.Length());
+      "transactions [%d] external buffer [%d]",
+      (void*)this, buffer, (int)mBufferTransactions.Length(),
+      !!mExternalWlBuffer);
 
   auto* transaction = new BufferTransaction(this, buffer, !!mExternalWlBuffer);
   mBufferTransactions.AppendElement(transaction);
@@ -367,6 +368,10 @@ void BufferTransaction::BufferDetachCallback() {
   WaylandSurfaceLock lock(mSurface);
   if (mBufferState != BufferState::WaitingForDelete) {
     mBufferState = BufferState::Detached;
+
+    if (mIsExternalBuffer) {
+      DeleteTransactionLocked(lock);
+    }
   }
 }
 

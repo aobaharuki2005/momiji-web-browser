@@ -525,13 +525,16 @@ GdkWindow* NativeLayerRootWayland::GetGdkWindow() const {
 RefPtr<WaylandBuffer> NativeLayerRootWayland::BorrowExternalBuffer(
     RefPtr<DMABufSurface> aDMABufSurface) {
   LOG("NativeLayerRootWayland::BorrowExternalBuffer() WaylandSurface [%p] UID "
-      "%d PID %d",
-      aDMABufSurface.get(), aDMABufSurface->GetUID(), aDMABufSurface->GetPID());
+      "%d PID %d mExternalBuffers num %d",
+      aDMABufSurface.get(), aDMABufSurface->GetUID(), aDMABufSurface->GetPID(),
+      (int)mExternalBuffers.Length());
 
   RefPtr waylandBuffer =
       widget::WaylandBufferDMABUF::CreateExternal(aDMABufSurface);
   for (auto& b : mExternalBuffers) {
     if (b.Matches(aDMABufSurface)) {
+      LOG("NativeLayerRootWayland::BorrowExternalBuffer() wl_buffer matches, "
+          "recycling");
       waylandBuffer->SetExternalWLBuffer(b.GetWLBuffer());
       return waylandBuffer.forget();
     }
@@ -542,6 +545,8 @@ RefPtr<WaylandBuffer> NativeLayerRootWayland::BorrowExternalBuffer(
     return nullptr;
   }
 
+  LOG("NativeLayerRootWayland::BorrowExternalBuffer() adding new wl_buffer");
+  waylandBuffer->SetExternalWLBuffer(wlbuffer);
   mExternalBuffers.EmplaceBack(aDMABufSurface, wlbuffer);
   return waylandBuffer.forget();
 }
@@ -1150,17 +1155,18 @@ void NativeLayerWaylandExternal::AttachExternalImage(
   }
 
   auto surface = mTextureHost->GetSurface();
+  mIsHDR = surface->IsHDRSurface();
+
+  LOG("NativeLayerWaylandExternal::AttachExternalImage() host [%p] "
+      "DMABufSurface [%p] DMABuf UID %d [%d x %d] HDR %d Opaque %d recycle %d",
+      mTextureHost.get(), mTextureHost->GetSurface().get(),
+      mTextureHost->GetSurface()->GetUID(), mSize.width, mSize.height, mIsHDR,
+      mIsOpaque, surface->CanRecycle());
+
   mFrontBuffer = surface->CanRecycle()
                      ? mRootLayer->BorrowExternalBuffer(surface)
                      : widget::WaylandBufferDMABUF::CreateExternal(surface);
-  mIsHDR = surface->IsHDRSurface();
   mState.mMutatedFrontBuffer = true;
-
-  LOG("NativeLayerWaylandExternal::AttachExternalImage() host [%p] "
-      "DMABufSurface [%p] DMABuf UID %d [%d x %d] HDR %d Opaque %d",
-      mTextureHost.get(), mTextureHost->GetSurface().get(),
-      mTextureHost->GetSurface()->GetUID(), mSize.width, mSize.height, mIsHDR,
-      mIsOpaque);
 }
 
 void NativeLayerWaylandExternal::DiscardBackbuffersLocked(
