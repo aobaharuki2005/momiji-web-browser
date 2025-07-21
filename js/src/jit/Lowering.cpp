@@ -4754,8 +4754,7 @@ void LIRGenerator::visitEffectiveAddress3(MEffectiveAddress3* ins) {
 }
 
 void LIRGenerator::visitEffectiveAddress2(MEffectiveAddress2* ins) {
-  define(new (alloc()) LEffectiveAddress2(useRegister(ins->index())),
-         ins);
+  define(new (alloc()) LEffectiveAddress2(useRegister(ins->index())), ins);
 }
 
 void LIRGenerator::visitArrayPopShift(MArrayPopShift* ins) {

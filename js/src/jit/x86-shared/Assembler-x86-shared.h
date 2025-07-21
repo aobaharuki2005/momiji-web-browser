@@ -48,8 +48,14 @@ struct ScratchSimd128Scope : public AutoFloatRegisterScope {
 
 class Operand {
  public:
-  enum Kind { REG, MEM_REG_DISP, FPREG, MEM_SCALE, MEM_ADDRESS32,
-              MEM_SCALE_NOBASE };
+  enum Kind {
+    REG,
+    MEM_REG_DISP,
+    FPREG,
+    MEM_SCALE,
+    MEM_ADDRESS32,
+    MEM_SCALE_NOBASE
+  };
 
  private:
   Kind kind_ : 4;
