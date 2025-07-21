@@ -2967,9 +2967,72 @@ bool js::FinishDynamicModuleImport(JSContext* cx, HandleValue contextValue,
   return true;
 }
 
+static bool OnLoadRequestedModulesResolvedImpl(
+    JSContext* cx, Handle<DynamicImportContextObject*> context) {
+  MOZ_ASSERT(context);
+  Rooted<JSObject*> module(cx, context->module());
+  Rooted<JSObject*> promise(cx, context->promise());
+  if (!JS::ModuleLink(cx, module)) {
+    //    b. If link is an abrupt completion, then
+    //      i. Perform ! Call(promiseCapability.[[Reject]], undefined, «
+    //      link.[[Value]] »). ii. Return unused.
+    return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
+  }
+  MOZ_ASSERT(!JS_IsExceptionPending(cx));
+
+  //    c. Let evaluatePromise be module.Evaluate().
+  JS::Rooted<JS::Value> rval(cx);
+  JS::Rooted<JSObject*> evaluationPromise(cx);
+  mozilla::DebugOnly<bool> ok = JS::ModuleEvaluate(cx, module, &rval);
+  if (rval.isObject()) {
+    evaluationPromise.set(&rval.toObject());
+  }
+  MOZ_ASSERT_IF(ok, !JS_IsExceptionPending(cx));
+
+  Rooted<Value> contextValue(cx, ObjectValue(*context));
+  return FinishDynamicModuleImport(cx, contextValue, evaluationPromise);
+}
+
+// static
+bool OnLoadRequestedModulesResolved(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  Rooted<DynamicImportContextObject*> context(cx);
+  context = static_cast<DynamicImportContextObject*>(
+      &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
+  return OnLoadRequestedModulesResolvedImpl(cx, context);
+}
+
 bool js::ContinueDynamicImport(JSContext* cx, Handle<Value> referencingPrivate,
                                Handle<JSObject*> moduleRequest,
                                Handle<JSObject*> promise,
                                Handle<JSObject*> result, bool usePromise) {
-  return true;
+  MOZ_ASSERT(result);
+  Rooted<DynamicImportContextObject*> context(
+      cx, DynamicImportContextObject::create(cx, referencingPrivate,
+                                             moduleRequest, promise, result));
+  if (!context) {
+    return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
+  }
+
+  // The module dependencies has been loaded in the host layer, so we only need
+  // to do _linkAndEvaluate_ part defined in the spec.
+  if (usePromise) {
+    JS::Rooted<PromiseObject*> promise(cx, CreatePromiseObjectForAsync(cx));
+    Rooted<Value> contextValue(cx, ObjectValue(*context));
+
+    Rooted<JSFunction*> onResolved(
+        cx, js::NewFunctionWithReserved(cx, OnLoadRequestedModulesResolved, 0,
+                                        0, "resolved"));
+    if (!onResolved) {
+      JS_ReportOutOfMemory(cx);
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+
+    RootedObject resolveFuncObj(cx, JS_GetFunctionObject(onResolved));
+    js::SetFunctionNativeReserved(resolveFuncObj, 0, contextValue);
+    JS::AddPromiseReactions(cx, promise, resolveFuncObj, nullptr);
+    return AsyncFunctionReturned(cx, promise, UndefinedHandleValue);
+  } else {
+    return OnLoadRequestedModulesResolvedImpl(cx, context);
+  }
 }
