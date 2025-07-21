@@ -35,16 +35,6 @@ class AccessibleWrap : public LocalAccessible {
   // LocalAccessible
   virtual void Shutdown() override;
 
-  // Helper methods
-  /**
-   * System caret support: update the Windows caret position.
-   * The system caret works more universally than the MSAA caret
-   * For example, Window-Eyes, JAWS, ZoomText and Windows Tablet Edition use it
-   * We will use an invisible system caret.
-   * Gecko is still responsible for drawing its own caret
-   */
-  static void UpdateSystemCaretFor(Accessible* aAccessible);
-
  public:
   /**
    * Determine whether this is the root accessible for its HWND.
