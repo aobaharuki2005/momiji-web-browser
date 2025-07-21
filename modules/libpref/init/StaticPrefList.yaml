@@ -16443,12 +16443,6 @@
   value: 100
   mirror: always
 
-# Time span in seconds for reporting limit.
-- name: security.csp.reporting.limit.timespan
-  type: uint32_t
-  value: 2
-  mirror: always
-
 # Enable/disable CSP reporting (report-uri and report-to)
 - name: security.csp.reporting.enabled
   type: bool
