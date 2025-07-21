@@ -429,6 +429,10 @@ export let ContentBlockingPrefs = {
       return;
     }
 
+    let prefBranch = lockPrefs
+      ? Services.prefs.getDefaultBranch(null)
+      : Services.prefs.getBranch(null);
+
     for (let pref in this.CATEGORY_PREFS[category]) {
       let value = this.CATEGORY_PREFS[category][pref];
       if (!Services.prefs.prefIsLocked(pref)) {
@@ -446,13 +450,13 @@ export let ContentBlockingPrefs = {
           }
           switch (Services.prefs.getPrefType(pref)) {
             case Services.prefs.PREF_BOOL:
-              Services.prefs.setBoolPref(pref, value);
+              prefBranch.setBoolPref(pref, value);
               break;
             case Services.prefs.PREF_INT:
-              Services.prefs.setIntPref(pref, value);
+              prefBranch.setIntPref(pref, value);
               break;
             case Services.prefs.PREF_STRING:
-              Services.prefs.setStringPref(pref, value);
+              prefBranch.setStringPref(pref, value);
               break;
           }
           if (lockPrefs) {
