@@ -66,15 +66,6 @@ bool ModuleLoader::init(JSContext* cx, HandleString loadPath) {
 }
 
 // static
-JSObject* ModuleLoader::ResolveImportedModule(
-    JSContext* cx, JS::HandleValue referencingPrivate,
-    JS::HandleObject moduleRequest) {
-  ShellContext* scx = GetShellContext(cx);
-  return scx->moduleLoader->resolveImportedModule(cx, referencingPrivate,
-                                                  moduleRequest);
-}
-
-// static
 bool ModuleLoader::GetImportMetaProperties(JSContext* cx,
                                            JS::HandleValue privateValue,
                                            JS::HandleObject metaObject) {
@@ -108,16 +99,6 @@ bool ModuleLoader::ImportMetaResolve(JSContext* cx, unsigned argc, Value* vp) {
   // Step 4.4. Return the serialization of url.
   args.rval().setString(url);
   return true;
-}
-
-// static
-bool ModuleLoader::ImportModuleDynamically(JSContext* cx,
-                                           JS::HandleValue referencingPrivate,
-                                           JS::HandleObject moduleRequest,
-                                           JS::HandleObject promise) {
-  ShellContext* scx = GetShellContext(cx);
-  return scx->moduleLoader->dynamicImport(cx, referencingPrivate, moduleRequest,
-                                          promise);
 }
 
 bool ModuleLoader::loadRootModule(JSContext* cx, HandleString path) {
@@ -171,18 +152,6 @@ bool ModuleLoader::loadAndExecute(JSContext* cx, HandleString path,
   }
 
   return JS::ModuleEvaluate(cx, module, rval);
-}
-
-JSObject* ModuleLoader::resolveImportedModule(
-    JSContext* cx, JS::HandleValue referencingPrivate,
-    JS::HandleObject moduleRequest) {
-  Rooted<JSLinearString*> path(cx,
-                               resolve(cx, moduleRequest, referencingPrivate));
-  if (!path) {
-    return nullptr;
-  }
-
-  return loadAndParse(cx, path, moduleRequest);
 }
 
 bool ModuleLoader::populateImportMeta(JSContext* cx,
