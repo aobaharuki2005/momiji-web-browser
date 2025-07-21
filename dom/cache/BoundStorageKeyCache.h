@@ -37,11 +37,12 @@ class CacheChild;
 
 using CachePromise = MozPromiseBase;
 
-/* This is similar to Cache class as BoundStorageKeyCacheStorage is to CacheStorage i.e.
- * 1. Exposes and implements Cache APIs but uses MozPromise as it's return value rather
- *    than JS Promise
- * 2. IPC communication can be retargetted to any event target as it's protocol gets created
- *    on a top-level actor
+/* This is similar to Cache class as BoundStorageKeyCacheStorage is to
+ * CacheStorage i.e.
+ * 1. Exposes and implements Cache APIs but uses MozPromise as it's return value
+ * rather than JS Promise
+ * 2. IPC communication can be retargetted to any event target as it's protocol
+ * gets created on a top-level actor
  */
 class BoundStorageKeyCache final : public nsISupports,
                                    public TypeUtils,
@@ -87,10 +88,10 @@ class BoundStorageKeyCache final : public nsISupports,
                                      const RequestOrUTF8String& aRequest,
                                      CallerType aCallerType, ErrorResult& aRv);
 
-  already_AddRefed<CachePromise> AddAll(JSContext* aContext,
-                                        const Sequence<OwningRequestOrUTF8String>& aRequestList,
-                                        CallerType aCallerType,
-                                        ErrorResult& aRv);
+  already_AddRefed<CachePromise> AddAll(
+      JSContext* aContext,
+      const Sequence<OwningRequestOrUTF8String>& aRequestList,
+      CallerType aCallerType, ErrorResult& aRv);
 
   already_AddRefed<CachePromise> Put(JSContext* aCx,
                                      const RequestOrUTF8String& aRequest,
@@ -121,8 +122,8 @@ class BoundStorageKeyCache final : public nsISupports,
   // Called when we're destroyed or CCed.
   void DisconnectFromActor();
 
-  void ExecuteOp(AutoChildOpArgs& aOpArgs,
-                 RefPtr<CachePromise>& aPromise, ErrorResult& aRv);
+  void ExecuteOp(AutoChildOpArgs& aOpArgs, RefPtr<CachePromise>& aPromise,
+                 ErrorResult& aRv);
 
   already_AddRefed<CachePromise> AddAll(
       const GlobalObject& aGlobal, nsTArray<SafeRefPtr<Request>>&& aRequestList,

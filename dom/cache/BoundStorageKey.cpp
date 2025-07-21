@@ -44,16 +44,14 @@ nsresult BoundStorageKey::Init(Namespace aNamespace,
     auto rv = PBoundStorageKey::CreateEndpoints(&parentEP, &childEP);
     Unused << NS_WARN_IF(NS_FAILED(rv));
 
-
     PBackgroundChild* bgActor = BackgroundChild::GetOrCreateForCurrentThread();
     if (NS_WARN_IF(!bgActor)) {
       NS_WARNING("BoundStorageKey failed to obtain bgActor");
       return NS_ERROR_UNEXPECTED;
     }
 
-    bgActor->SendCreateBoundStorageKeyParent(std::move(parentEP),
-                                            aNamespace,
-                                            aPrincipalInfo);
+    bgActor->SendCreateBoundStorageKeyParent(std::move(parentEP), aNamespace,
+                                             aPrincipalInfo);
 
     if (NS_WARN_IF(!(childEP.Bind(actor, aTarget)))) {
       NS_WARNING("BoundStorageKeyChildActor failed to bind to target.");
@@ -85,10 +83,12 @@ BoundStorageKey::~BoundStorageKey() {
 }
 
 // static
-already_AddRefed<BoundStorageKeyCacheStorage> BoundStorageKeyCacheStorage::Create(
-    Namespace aNamespace, nsIGlobalObject* aGlobal,
-    WorkerPrivate* aWorkerPrivate, nsISerialEventTarget* aActorTarget,
-    ErrorResult& aRv) {
+already_AddRefed<BoundStorageKeyCacheStorage>
+BoundStorageKeyCacheStorage::Create(Namespace aNamespace,
+                                    nsIGlobalObject* aGlobal,
+                                    WorkerPrivate* aWorkerPrivate,
+                                    nsISerialEventTarget* aActorTarget,
+                                    ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate);
 
   if (aWorkerPrivate->GetOriginAttributes().IsPrivateBrowsing() &&
@@ -133,8 +133,7 @@ already_AddRefed<BoundStorageKeyCacheStorage> BoundStorageKeyCacheStorage::Creat
   RefPtr<BoundStorageKeyCacheStorage> ref =
       new BoundStorageKeyCacheStorage(aNamespace, aGlobal, principalInfo);
 
-  auto rv = ref->Init(aWorkerPrivate, aNamespace,
-                 principalInfo, aActorTarget);
+  auto rv = ref->Init(aWorkerPrivate, aNamespace, principalInfo, aActorTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv = rv;
     return nullptr;
@@ -164,10 +163,7 @@ BoundStorageKeyCacheStorage::BoundStorageKeyCacheStorage(
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo)
     : mGlobal(aGlobal),
       mPrincipalInfo(MakeUnique<PrincipalInfo>(aPrincipalInfo)),
-      mNamespace(aNamespace) {
-
-    }
-
+      mNamespace(aNamespace) {}
 
 void BoundStorageKeyCacheStorage::OnActorDestroy(CacheStorageChild* aActor) {
   AssertOwningThread();
@@ -175,8 +171,8 @@ void BoundStorageKeyCacheStorage::OnActorDestroy(CacheStorageChild* aActor) {
   MOZ_DIAGNOSTIC_ASSERT(mActor);
   MOZ_DIAGNOSTIC_ASSERT(mCacheStorageChild.get() == aActor);
 
- mCacheStorageChild->ClearListener();
- mCacheStorageChild = nullptr;
+  mCacheStorageChild->ClearListener();
+  mCacheStorageChild = nullptr;
 }
 
 BoundStorageKeyCacheStorage::~BoundStorageKeyCacheStorage() {
@@ -187,17 +183,20 @@ BoundStorageKeyCacheStorage::~BoundStorageKeyCacheStorage() {
 }
 
 already_AddRefed<CacheStorageChild>
-BoundStorageKeyCacheStorage::CreateCacheStorageChild(WorkerPrivate* aWorkerPrivate) {
+BoundStorageKeyCacheStorage::CreateCacheStorageChild(
+    WorkerPrivate* aWorkerPrivate) {
   SafeRefPtr<CacheWorkerRef> workerRef;
   if (aWorkerPrivate) {
     aWorkerPrivate->AssertIsOnWorkerThread();
-    workerRef = CacheWorkerRef::Create(aWorkerPrivate, CacheWorkerRef::eIPCWorkerRef);
-    if (NS_WARN_IF(!workerRef))  {
+    workerRef =
+        CacheWorkerRef::Create(aWorkerPrivate, CacheWorkerRef::eIPCWorkerRef);
+    if (NS_WARN_IF(!workerRef)) {
       return nullptr;
     }
   }
 
-  RefPtr<CacheStorageChild> newActor = new CacheStorageChild(this, std::move(workerRef), mActor.get());
+  RefPtr<CacheStorageChild> newActor =
+      new CacheStorageChild(this, std::move(workerRef), mActor.get());
   auto* constructedActor = mActor->SendPCacheStorageConstructor(
       newActor, mNamespace, *mPrincipalInfo);
 
@@ -254,7 +253,8 @@ auto BoundStorageKeyCacheStorage::Has(const nsAString& aKey, ErrorResult& aRv)
   return promise.forget();
 }
 
-auto BoundStorageKeyCacheStorage::Delete(const nsAString& aKey, ErrorResult& aRv)
+auto BoundStorageKeyCacheStorage::Delete(const nsAString& aKey,
+                                         ErrorResult& aRv)
     -> already_AddRefed<CacheStoragePromise> {
   AssertOwningThread();
 

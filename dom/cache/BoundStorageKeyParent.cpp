@@ -21,7 +21,7 @@ BoundStorageKeyParent::AllocPCacheStorageParent(
     const Namespace& aNamespace, const PrincipalInfo& aPrincipalInfo) {
   MOZ_ASSERT(mBackgroundParent);
   return dom::cache::AllocPCacheStorageParent(mBackgroundParent, this,
-                                               aNamespace, aPrincipalInfo);
+                                              aNamespace, aPrincipalInfo);
 }
 
 }  // namespace mozilla::dom::cache

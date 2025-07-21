@@ -38,11 +38,11 @@ class BoundStorageKeyParent final : public PBoundStorageKeyParent {
   already_AddRefed<PCacheStorageParent> AllocPCacheStorageParent(
       const Namespace& aNamespace, const PrincipalInfo& aPrincipalInfo);
 
-  // Keeping a reference to PBackgroundParent actor as it is required to passed in
-  // when creating CacheStorageParent in AllocPCacheStorageParent.
-  // Raw ptr is fine here as PBackground is one of the few top-level that gets created
-  // very early on in the content and parent lifecycle and extends the lifetime of this
-  // class.
+  // Keeping a reference to PBackgroundParent actor as it is required to passed
+  // in when creating CacheStorageParent in AllocPCacheStorageParent. Raw ptr is
+  // fine here as PBackground is one of the few top-level that gets created very
+  // early on in the content and parent lifecycle and extends the lifetime of
+  // this class.
   mozilla::ipc::PBackgroundParent* MOZ_NON_OWNING_REF mBackgroundParent;
 };
 

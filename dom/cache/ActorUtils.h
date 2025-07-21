@@ -31,10 +31,13 @@ class PCacheStorageParent;
 
 // Creates and returns a CacheChild object
 //
-// aParentActor -> CacheChild being a non-top level action gets created as a child actor
-//  If a parent wishes to get notified for child's lifecycle events like destruction,
-//  it can do so by implementing and passing itself as a ActorChild interface as parameter
-already_AddRefed<PCacheChild> AllocPCacheChild(ActorChild* aParentActor = nullptr);
+// aParentActor -> CacheChild being a non-top level action gets created as a
+// child actor
+//  If a parent wishes to get notified for child's lifecycle events like
+//  destruction, it can do so by implementing and passing itself as a ActorChild
+//  interface as parameter
+already_AddRefed<PCacheChild> AllocPCacheChild(
+    ActorChild* aParentActor = nullptr);
 
 // Helper method to carry-out the destruction of CacheChild actor
 void DeallocPCacheChild(PCacheChild* aActor);
@@ -42,23 +45,26 @@ void DeallocPCacheChild(PCacheChild* aActor);
 // Helper method to carry-out the destruction of CacheParent actor
 void DeallocPCacheParent(PCacheParent* aActor);
 
-// Similar to CacheChild above, parent can get notified for CacheStreamControlChild lifecycle events
-already_AddRefed<PCacheStreamControlChild> AllocPCacheStreamControlChild(ActorChild* aParentActor = nullptr);
+// Similar to CacheChild above, parent can get notified for
+// CacheStreamControlChild lifecycle events
+already_AddRefed<PCacheStreamControlChild> AllocPCacheStreamControlChild(
+    ActorChild* aParentActor = nullptr);
 
 void DeallocPCacheStreamControlParent(PCacheStreamControlParent* aActor);
 
-// This method is used on the main process side to create CacheStorageParent actor in response
-// to construction request received from the child process side
+// This method is used on the main process side to create CacheStorageParent
+// actor in response to construction request received from the child process
+// side
 //
 // caller is expected to pass below parameters:
-// aBackgroundIPCActor -> BackgroundParent actor; required to verify PrincipalInfo
-// aBoundStorageKeyActor -> In case this is getting created on BoundStorageKeyParent actor, nullptr otherwise
-// aNamespace -> Namespace corresponding to this request
-// aPrincipalInfo -> PrincipalInfo corresponding to this request
+// aBackgroundIPCActor -> BackgroundParent actor; required to verify
+// PrincipalInfo aBoundStorageKeyActor -> In case this is getting created on
+// BoundStorageKeyParent actor, nullptr otherwise aNamespace -> Namespace
+// corresponding to this request aPrincipalInfo -> PrincipalInfo corresponding
+// to this request
 already_AddRefed<PCacheStorageParent> AllocPCacheStorageParent(
     mozilla::ipc::PBackgroundParent* aBackgroundIPCActor,
-    PBoundStorageKeyParent* aBoundStorageKeyActor,
-    Namespace aNamespace,
+    PBoundStorageKeyParent* aBoundStorageKeyActor, Namespace aNamespace,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
 // Helper method to carry-out the destruction of CacheStorageChild actor

@@ -360,9 +360,8 @@ auto BoundStorageKeyCache::AddAll(const GlobalObject& aGlobal,
   MOZ_DIAGNOSTIC_ASSERT(mActor);
 
   // Fetch doesn't work on non-main threads yet.
-  RefPtr<CachePromise> promise =
-    AddAllResultPromise::CreateAndReject(ErrorResult(NS_ERROR_FAILURE),
-                                          __func__);
+  RefPtr<CachePromise> promise = AddAllResultPromise::CreateAndReject(
+      ErrorResult(NS_ERROR_FAILURE), __func__);
   return promise.forget();
 }
 
@@ -397,8 +396,7 @@ auto BoundStorageKeyCache::PutAll(
 }
 
 OpenMode BoundStorageKeyCache::GetOpenMode() const {
-  return mNamespace == CHROME_ONLY_NAMESPACE ? OpenMode::Eager
-                                             : OpenMode::Lazy;
+  return mNamespace == CHROME_ONLY_NAMESPACE ? OpenMode::Eager : OpenMode::Lazy;
 }
 
 }  // namespace mozilla::dom::cache

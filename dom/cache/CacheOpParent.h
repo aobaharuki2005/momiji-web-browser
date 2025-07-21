@@ -26,10 +26,9 @@ class CacheOpParent final : public PCacheOpParent,
   using Manager::Listener::OnOpComplete;
 
  public:
- CacheOpParent(const WeakRefParentType& aIpcManager,
-               const CacheOpArgs& aOpArgs,
-               CacheId aCacheId = INVALID_CACHE_ID,
-               Namespace aNamespace = INVALID_NAMESPACE);
+  CacheOpParent(const WeakRefParentType& aIpcManager,
+                const CacheOpArgs& aOpArgs, CacheId aCacheId = INVALID_CACHE_ID,
+                Namespace aNamespace = INVALID_NAMESPACE);
 
   void Execute(const SafeRefPtr<ManagerId>& aManagerId);
 
@@ -61,7 +60,8 @@ class CacheOpParent final : public PCacheOpParent,
   void ProcessCrossOriginResourcePolicyHeader(
       ErrorResult& aRv, const nsTArray<SavedResponse>& aResponses);
 
-  mozilla::LazyInitializedOnceEarlyDestructible<const WeakRefParentType> mIpcManager;
+  mozilla::LazyInitializedOnceEarlyDestructible<const WeakRefParentType>
+      mIpcManager;
   const CacheId mCacheId;
   const Namespace mNamespace;
   const CacheOpArgs mOpArgs;

@@ -19,14 +19,15 @@ namespace mozilla::dom::cache {
 using mozilla::ipc::FileDescriptor;
 
 // declared in ActorUtils.h
-already_AddRefed<PCacheStreamControlChild> AllocPCacheStreamControlChild(ActorChild* aParentActor) {
+already_AddRefed<PCacheStreamControlChild> AllocPCacheStreamControlChild(
+    ActorChild* aParentActor) {
   return MakeAndAddRef<CacheStreamControlChild>(aParentActor);
 }
 
 CacheStreamControlChild::CacheStreamControlChild(ActorChild* aParentActor)
-    : mParentActor(aParentActor)
-    , mDestroyStarted(false)
-    , mDestroyDelayed(false) {
+    : mParentActor(aParentActor),
+      mDestroyStarted(false),
+      mDestroyDelayed(false) {
   MOZ_COUNT_CTOR(cache::CacheStreamControlChild);
 }
 

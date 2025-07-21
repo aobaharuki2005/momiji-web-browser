@@ -56,7 +56,8 @@ void BoundStorageKeyChild::DestroyInternal() {
 }
 
 void BoundStorageKeyChild::StartDestroy() {
-  // StartDestroy() can get called from either child actor or the CacheWorkerRef.
+  // StartDestroy() can get called from either child actor or the
+  // CacheWorkerRef.
   NS_ASSERT_OWNINGTHREAD(BoundStorageKeyChild);
 
   if (NumChildActors() != 0) {

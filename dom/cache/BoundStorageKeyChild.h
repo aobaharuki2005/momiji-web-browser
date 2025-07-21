@@ -62,14 +62,13 @@ class BoundStorageKeyChild final : public PBoundStorageKeyChild,
 
   // utility methods
   inline uint32_t NumChildActors() {
-    return ManagedPCacheStorageChild().Count() +
-           ManagedPCacheChild().Count() +
+    return ManagedPCacheStorageChild().Count() + ManagedPCacheChild().Count() +
            ManagedPCacheStreamControlChild().Count();
   }
 
   // Use a weak ref so actor does not hold DOM object alive past content use.
-  // The BoundStorageKey object must call ClearListener() to null this before its
-  // destroyed.
+  // The BoundStorageKey object must call ClearListener() to null this before
+  // its destroyed.
   BoundStorageKeyChildListener* MOZ_NON_OWNING_REF mListener;
   bool mDelayedDestroy;
 };

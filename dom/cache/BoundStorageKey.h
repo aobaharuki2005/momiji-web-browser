@@ -42,8 +42,9 @@ using mozilla::ipc::PrincipalInfo;
  * implementation into separate directory while more derived implementations
  * could be under their respective storage directories like dom/cache for
  * BoundStorageKeyCacheStorage.
-*/
-class BoundStorageKey : public nsISupports, public BoundStorageKeyChildListener {
+ */
+class BoundStorageKey : public nsISupports,
+                        public BoundStorageKeyChildListener {
  public:
   using PBackgroundChild = ::mozilla::ipc::PBackgroundChild;
 
@@ -60,8 +61,7 @@ class BoundStorageKey : public nsISupports, public BoundStorageKeyChildListener 
   // Initialization is performed here i.e.
   // 1. Child and parent actors are setup and connection is attempted.
   // 2. EventTarget has been retargetted to aTarget
-  nsresult Init(Namespace aNamespace,
-                const PrincipalInfo& aPrincipalInfo,
+  nsresult Init(Namespace aNamespace, const PrincipalInfo& aPrincipalInfo,
                 nsISerialEventTarget* aTarget = GetCurrentSerialEventTarget());
 
   RefPtr<BoundStorageKeyChild> mActor;
@@ -82,18 +82,20 @@ using KeysResultPromise =
 using MatchResultPromise =
     mozilla::MozPromise<RefPtr<Response>, ErrorResult, true /* IsExclusive= */>;
 
-/* This class exposes Cache APIs to be used by internal clients and is currently used
- * by service workers when performing a lookup for cache'd scripts. This is intended
- * to be used by internal clients only and is in contrast with CacheStorage which is
- * used by internal and JS clients; though comparatively, internal clients would find
- * it easier to work with this class.
- * There are two major differences between the two:
- *  1. APIs in CacheStorage return JS promise whereas this class return MozPromise
- *  2. Even though both classes uses same underlying actors but actor used here gets spun
- *     off of top-level actor, BoundStorageKeyChild which could be retargetted to any
- *     event target.
- * TODO: Since we have two implementations now; this class and CacheStorage with almost
- * similar responsibilities; it maybe worth exploring to consolidate both.
+/* This class exposes Cache APIs to be used by internal clients and is currently
+ * used by service workers when performing a lookup for cache'd scripts. This is
+ * intended to be used by internal clients only and is in contrast with
+ * CacheStorage which is used by internal and JS clients; though comparatively,
+ * internal clients would find it easier to work with this class. There are two
+ * major differences between the two:
+ *  1. APIs in CacheStorage return JS promise whereas this class return
+ * MozPromise
+ *  2. Even though both classes uses same underlying actors but actor used here
+ * gets spun off of top-level actor, BoundStorageKeyChild which could be
+ * retargetted to any event target.
+ * TODO: Since we have two implementations now; this class and CacheStorage with
+ * almost similar responsibilities; it maybe worth exploring to consolidate
+ * both.
  */
 class BoundStorageKeyCacheStorage final : public BoundStorageKey,
                                           public TypeUtils,
@@ -112,22 +114,21 @@ class BoundStorageKeyCacheStorage final : public BoundStorageKey,
   inline void AssertOwningThread() const {}
 #endif
 
-  nsresult Init(WorkerPrivate* aWorkerPrivate,
-                Namespace aNamespace,
+  nsresult Init(WorkerPrivate* aWorkerPrivate, Namespace aNamespace,
                 const PrincipalInfo& aPrincipalInfo,
                 nsISerialEventTarget* aTarget = GetCurrentSerialEventTarget());
 
-  // Below methods declares the APIs that this class exposes, which looks similar to
-  // CacheStorage but return type is different
+  // Below methods declares the APIs that this class exposes, which looks
+  // similar to CacheStorage but return type is different
   already_AddRefed<CacheStoragePromise> Match(
       JSContext* aCx, const RequestOrUTF8String& aRequest,
       const MultiCacheQueryOptions& aOptions, ErrorResult& aRv);
   already_AddRefed<CacheStoragePromise> Has(const nsAString& aKey,
-                                               ErrorResult& aRv);
+                                            ErrorResult& aRv);
   already_AddRefed<CacheStoragePromise> Open(const nsAString& aKey,
-                                                ErrorResult& aRv);
+                                             ErrorResult& aRv);
   already_AddRefed<CacheStoragePromise> Delete(const nsAString& aKey,
-                                                  ErrorResult& aRv);
+                                               ErrorResult& aRv);
   already_AddRefed<CacheStoragePromise> Keys(ErrorResult& aRv);
 
   nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
@@ -142,10 +143,12 @@ class BoundStorageKeyCacheStorage final : public BoundStorageKey,
   template <typename PromiseType>
   struct Entry;
 
-  BoundStorageKeyCacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,
-                              const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
+  BoundStorageKeyCacheStorage(
+      Namespace aNamespace, nsIGlobalObject* aGlobal,
+      const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
-  already_AddRefed<CacheStorageChild> CreateCacheStorageChild(WorkerPrivate* aWorkerPrivate);
+  already_AddRefed<CacheStorageChild> CreateCacheStorageChild(
+      WorkerPrivate* aWorkerPrivate);
   ~BoundStorageKeyCacheStorage() override;
 
   template <typename EntryType>

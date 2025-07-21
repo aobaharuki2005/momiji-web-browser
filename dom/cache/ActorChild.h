@@ -13,11 +13,13 @@ namespace mozilla::dom::cache {
 
 class CacheWorkerRef;
 
-// ActorChild is used in parent-child hierachies where parent actor implements the interface
-// and expects the child actor class to notify it for various reasons. Child actor cannot bind
-// directly to it's parent actor class (i.e. manager) as it could have multiple managers.
-// TODO: I think it would be better to move this to a more general location as this
-// is very generic interface and can represent any parent-child actor relationship.
+// ActorChild is used in parent-child hierachies where parent actor implements
+// the interface and expects the child actor class to notify it for various
+// reasons. Child actor cannot bind directly to it's parent actor class (i.e.
+// manager) as it could have multiple managers.
+// TODO: I think it would be better to move this to a more general location as
+// this is very generic interface and can represent any parent-child actor
+// relationship.
 class ActorChild {
  public:
   virtual void StartDestroy() = 0;
@@ -28,8 +30,9 @@ class ActorChild {
   ~ActorChild() = default;
 };
 
-// This is more specific interface and meant to be used by cache related parent/child actors.
-// Each cache actor expects to keep the worker ref alive throughout it's lifetime.
+// This is more specific interface and meant to be used by cache related
+// parent/child actors. Each cache actor expects to keep the worker ref alive
+// throughout it's lifetime.
 class CacheActorChild : public ActorChild {
  public:
   void SetWorkerRef(SafeRefPtr<CacheWorkerRef> aWorkerRef);

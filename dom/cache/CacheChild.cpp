@@ -23,10 +23,10 @@ already_AddRefed<PCacheChild> AllocPCacheChild(ActorChild* aParentActor) {
 void DeallocPCacheChild(PCacheChild* aActor) { delete aActor; }
 
 CacheChild::CacheChild(ActorChild* aParentActor)
-    : mParentActor(aParentActor)
-    , mListener(nullptr)
-    , mLocked(false)
-    , mDelayedDestroy(false) {
+    : mParentActor(aParentActor),
+      mListener(nullptr),
+      mLocked(false),
+      mDelayedDestroy(false) {
   MOZ_COUNT_CTOR(cache::CacheChild);
 }
 

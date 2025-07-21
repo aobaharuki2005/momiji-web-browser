@@ -882,8 +882,8 @@ BackgroundParentImpl::RecvShutdownServiceWorkerRegistrar() {
 already_AddRefed<PCacheStorageParent>
 BackgroundParentImpl::AllocPCacheStorageParent(
     const Namespace& aNamespace, const PrincipalInfo& aPrincipalInfo) {
-  return dom::cache::AllocPCacheStorageParent(this, nullptr,
-                                              aNamespace, aPrincipalInfo);
+  return dom::cache::AllocPCacheStorageParent(this, nullptr, aNamespace,
+                                              aPrincipalInfo);
 }
 
 PMessagePortParent* BackgroundParentImpl::AllocPMessagePortParent(
@@ -1110,7 +1110,8 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateBoundStorageKeyParent(
 
   auto* pActor = new dom::cache::BoundStorageKeyParent(this);
   if (!aEndpoint.Bind(pActor)) {
-    return IPC_FAIL(this, "Failed to bind endpoint for BoundStorageKeyParent actor");
+    return IPC_FAIL(this,
+                    "Failed to bind endpoint for BoundStorageKeyParent actor");
   }
 
   return IPC_OK();

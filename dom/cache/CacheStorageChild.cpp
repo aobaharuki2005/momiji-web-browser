@@ -20,9 +20,7 @@ void DeallocPCacheStorageChild(PCacheStorageChild* aActor) { delete aActor; }
 CacheStorageChild::CacheStorageChild(CacheStorageChildListener* aListener,
                                      SafeRefPtr<CacheWorkerRef> aWorkerRef,
                                      ActorChild* aParentActor)
-    : mParentActor(aParentActor)
-    , mListener(aListener)
-    , mDelayedDestroy(false) {
+    : mParentActor(aParentActor), mListener(aListener), mDelayedDestroy(false) {
   MOZ_COUNT_CTOR(cache::CacheStorageChild);
   MOZ_DIAGNOSTIC_ASSERT(mListener);
 

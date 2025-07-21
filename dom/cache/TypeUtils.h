@@ -58,16 +58,18 @@ class CacheChildListener : public Listener {
   virtual void OnActorDestroy(CacheChild* aActor) = 0;
 };
 
-// CacheStorage registers itself as the listener of it's actor, CacheStorageChild.
+// CacheStorage registers itself as the listener of it's actor,
+// CacheStorageChild.
 class CacheStorageChildListener : public Listener {
  public:
   virtual void OnActorDestroy(CacheStorageChild* aActor) = 0;
 };
 
-// BoundStorageKey registers itself as the listener of it's actor, BoundStorageKeyChild.
+// BoundStorageKey registers itself as the listener of it's actor,
+// BoundStorageKeyChild.
 class BoundStorageKeyChildListener : public Listener {
  public:
-   virtual void OnActorDestroy(BoundStorageKeyChild* aActor) = 0;
+  virtual void OnActorDestroy(BoundStorageKeyChild* aActor) = 0;
 };
 
 class TypeUtils {
