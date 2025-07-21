@@ -20,6 +20,7 @@ import { MozLitElement } from "../lit-utils.mjs";
 export default class MozPromo extends MozLitElement {
   static queries = {
     actionsSlot: "slot[name=actions]",
+    supportLinkSlot: "slot[name=support-link]",
   };
 
   static properties = {
@@ -69,6 +70,7 @@ export default class MozPromo extends MozLitElement {
           <p class="message">${this.message}</p>
           <div class="actions-and-support-link-wrapper">
             <slot name="actions"></slot>
+            <slot name="support-link"></slot>
           </div>
         </div>
         ${!imageStartAligned ? this.imageTemplate() : ""}

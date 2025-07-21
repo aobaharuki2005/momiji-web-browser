@@ -38,6 +38,13 @@
       <moz-promo id="actionsPromo" heading="Actions slot" type="default">
         <button slot="actions">Action button</button>
       </moz-promo>
+      <moz-promo
+        id="supportLinkPromo"
+        heading="Support link slot"
+        type="vibrant"
+      >
+        <a slot="support-link" href="#learn-more">Learn more</a>
+      </moz-promo>
     </div>
     <pre id="test"></pre>
     <script class="testbody" type="application/javascript">
@@ -252,6 +259,36 @@
           actionsPromo.actionsSlot.assignedElements()[0],
           actionsButton,
           "Adding the actions button back to the promo element updates the slotted element correctly"
+        );
+      });
+
+      add_task(async function test_support_link_slot() {
+        let supportLinkPromo = document.getElementById("supportLinkPromo");
+        ok(
+          supportLinkPromo,
+          "Promo element should exist when using an element for the support-link slot"
+        );
+        let supportLink = supportLinkPromo.querySelector("a");
+        is(
+          supportLinkPromo.supportLinkSlot.assignedElements()[0],
+          supportLink,
+          "Slotted support link is correctly assigned"
+        );
+
+        supportLink.remove();
+        await supportLinkPromo.updateComplete;
+        is(
+          supportLinkPromo.supportLinkSlot.assignedElements().length,
+          0,
+          "The support-link slot updates correctly when the slotted element is removed"
+        );
+
+        supportLinkPromo.append(supportLink);
+        await supportLinkPromo.updateComplete;
+        is(
+          supportLinkPromo.supportLinkSlot.assignedElements()[0],
+          supportLink,
+          "Adding the support link back to the promo element updates the slotted element correctly"
         );
       });
     </script>

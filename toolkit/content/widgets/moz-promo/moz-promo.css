@@ -93,3 +93,11 @@
   word-break: break-word;
   margin: 0;
 }
+
+/* MozPromo slot styles */
+
+.actions-and-support-link-wrapper {
+  display: flex;
+  gap: var(--space-small);
+  align-items: baseline;
+}
