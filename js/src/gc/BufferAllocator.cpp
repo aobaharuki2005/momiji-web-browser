@@ -30,6 +30,12 @@ using namespace js::gc;
 
 namespace js::gc {
 
+static constexpr size_t SmallRegionShift = 14;  // 16 KB
+static constexpr size_t SmallRegionSize = 1 << SmallRegionShift;
+static constexpr uintptr_t SmallRegionMask = SmallRegionSize - 1;
+static_assert(SmallRegionSize >= MinMediumAllocSize);
+static_assert(SmallRegionSize <= MaxMediumAllocSize);
+
 struct alignas(CellAlignBytes) LargeBuffer
     : public SlimLinkedListElement<LargeBuffer> {
   void* alloc;
@@ -146,7 +152,12 @@ struct BufferChunk : public ChunkBase,
   using PerPageBitmap = mozilla::BitSet<PagesPerChunk, uint32_t>;
   MainThreadOrGCTaskData<PerPageBitmap> decommittedPages;
 
+  static constexpr size_t SmallRegionsPerChunk = ChunkSize / SmallRegionSize;
+  using SmallRegionBitmap = AtomicBitmap<SmallRegionsPerChunk>;
+  MainThreadOrGCTaskData<SmallRegionBitmap> smallRegionBitmap;
+
   class AllocIter;
+  class SmallRegionIter;
 
   static BufferChunk* from(void* alloc) {
     ChunkBase* chunk = js::gc::detail::GetGCAddressChunkBase(alloc);
@@ -163,6 +174,9 @@ struct BufferChunk : public ChunkBase,
 
   void setNurseryOwned(void* alloc, bool nurseryOwned);
   bool isNurseryOwned(const void* alloc) const;
+
+  void setSmallBufferRegion(void* alloc, bool smallAlloc);
+  bool isSmallBufferRegion(const void* alloc) const;
 
   void setAllocBytes(void* alloc, size_t bytes);
   size_t allocBytes(const void* alloc) const;
@@ -183,16 +197,18 @@ struct BufferChunk : public ChunkBase,
   bool isPointerWithinAllocation(void* ptr) const;
 
  private:
+  template <size_t Divisor = MinMediumAllocSize, size_t Align = Divisor>
   size_t ptrToIndex(const void* alloc) const {
     MOZ_ASSERT((uintptr_t(alloc) & ~ChunkMask) == uintptr_t(this));
     uintptr_t offset = uintptr_t(alloc) & ChunkMask;
-    return offsetToIndex(offset);
+    return offsetToIndex<Divisor, Align>(offset);
   }
 
+  template <size_t Divisor = MinMediumAllocSize, size_t Align = Divisor>
   static size_t offsetToIndex(uintptr_t offset) {
     MOZ_ASSERT(isValidOffset(offset));
-    MOZ_ASSERT(offset % MediumAllocGranularity == 0);
-    return offset / MediumAllocGranularity;
+    MOZ_ASSERT(offset % Align == 0);
+    return offset / Divisor;
   }
 
   const void* ptrFromOffset(uintptr_t offset) const {
@@ -240,6 +256,22 @@ class BufferChunk::AllocIter {
     MOZ_ASSERT(!done());
     return bit * MediumAllocGranularity;
   }
+  void* get() const {
+    return reinterpret_cast<void*>(uintptr_t(chunk) + getOffset());
+  }
+  operator void*() { return get(); }
+};
+
+class BufferChunk::SmallRegionIter {
+  BufferChunk* chunk;
+  SmallRegionBitmap::Iter iter;
+
+ public:
+  explicit SmallRegionIter(BufferChunk* chunk)
+      : chunk(chunk), iter(chunk->smallRegionBitmap.ref()) {}
+  bool done() const { return iter.done(); }
+  void next() { iter.next(); }
+  size_t getOffset() const { return iter.get() * SmallRegionSize; }
   void* get() const {
     return reinterpret_cast<void*>(uintptr_t(chunk) + getOffset());
   }
@@ -449,6 +481,17 @@ bool BufferChunk::isNurseryOwned(const void* alloc) const {
   MOZ_ASSERT(isAllocated(alloc));
   size_t bit = ptrToIndex(alloc);
   return nurseryOwnedBitmap.ref()[bit];
+}
+
+void BufferChunk::setSmallBufferRegion(void* alloc, bool smallAlloc) {
+  MOZ_ASSERT(isAllocated(alloc));
+  size_t bit = ptrToIndex<SmallRegionSize, SmallRegionSize>(alloc);
+  smallRegionBitmap.ref().setBit(bit, smallAlloc);
+}
+
+bool BufferChunk::isSmallBufferRegion(const void* alloc) const {
+  size_t bit = ptrToIndex<SmallRegionSize, MediumAllocGranularity>(alloc);
+  return smallRegionBitmap.ref().getBit(bit);
 }
 
 void BufferChunk::setAllocBytes(void* alloc, size_t bytes) {
@@ -1861,6 +1904,8 @@ void BufferAllocator::setAllocated(void* alloc, size_t bytes, bool nurseryOwned,
     bool checkThresholds = !inGC;
     updateHeapSize(bytes, checkThresholds, false);
   }
+
+  MOZ_ASSERT(!chunk->isSmallBufferRegion(alloc));
 }
 
 void BufferAllocator::updateFreeListsAfterAlloc(FreeLists* freeLists,
@@ -1968,6 +2013,15 @@ bool BufferAllocator::allocNewChunk(bool inGC) {
   return true;
 }
 
+static void SetDeallocated(BufferChunk* chunk, void* alloc) {
+  chunk->setNurseryOwned(alloc, false);
+  chunk->setAllocBytes(alloc, 0);
+  if (chunk->isSmallBufferRegion(alloc)) {
+    chunk->setSmallBufferRegion(alloc, false);
+  }
+  chunk->setAllocated(alloc, false);
+}
+
 bool BufferAllocator::sweepChunk(BufferChunk* chunk, SweepKind sweepKind,
                                  bool shouldDecommit, FreeLists& freeLists) {
   // Find all regions of free space in |chunk| and add them to the swept free
@@ -2001,9 +2055,7 @@ bool BufferAllocator::sweepChunk(BufferChunk* chunk, SweepKind sweepKind,
       if (!nurseryOwned) {
         mallocHeapBytesFreed += bytes;
       }
-      chunk->setNurseryOwned(alloc, false);
-      chunk->setAllocBytes(alloc, 0);
-      chunk->setAllocated(alloc, false);
+      SetDeallocated(chunk, alloc);
       PoisonAlloc(alloc, JS_SWEPT_TENURED_PATTERN, bytes,
                   MemCheckKind::MakeUndefined);
       sweptAny = true;
@@ -2133,17 +2185,13 @@ void BufferAllocator::freeMedium(void* alloc) {
     zone->mallocHeapSize.removeBytes(bytes, updateRetained);
   }
 
-  // Update metadata.
-  chunk->setNurseryOwned(alloc, false);
-  chunk->setAllocBytes(alloc, 0);
-
   // TODO: Since the mark bits are atomic, it's probably OK to unmark even if
   // the chunk is currently being swept. If we get lucky the memory will be
   // freed sooner.
   chunk->setUnmarked(alloc);
 
-  // Set region as not allocated and then clear mark bit.
-  chunk->setAllocated(alloc, false);
+  // Set region as not allocated and clear metadata.
+  SetDeallocated(chunk, alloc);
 
   FreeLists* freeLists = getChunkFreeLists(chunk);
 

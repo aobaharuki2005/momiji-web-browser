@@ -271,6 +271,8 @@ class AtomicBitmap {
   inline bool isEmpty() const;
   inline void clear();
   inline void copyFrom(const AtomicBitmap& other);
+
+  class Iter;
 };
 
 /*
