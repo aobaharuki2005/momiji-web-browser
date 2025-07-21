@@ -131,6 +131,8 @@ bool IsBufferAlloc(void* alloc);
 
 bool IsNurseryOwned(JS::Zone* zone, void* alloc);
 
+// Get the size of the |alloc| in bytes. Must not be called while sweeping is
+// happening.
 size_t GetAllocSize(JS::Zone* zone, void* alloc);
 
 // Buffer allocator GC-internal API.

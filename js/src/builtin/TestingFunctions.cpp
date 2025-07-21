@@ -7570,6 +7570,7 @@ static bool ByteSize(JSContext* cx, unsigned argc, Value* vp) {
   {
     // We can't tolerate the GC moving things around while we're using a
     // ubi::Node. Check that nothing we do causes a GC.
+    cx->runtime()->gc.nursery().joinSweepTask();
     JS::AutoCheckCannotGC autoCannotGC;
 
     JS::ubi::Node node = args.get(0);
