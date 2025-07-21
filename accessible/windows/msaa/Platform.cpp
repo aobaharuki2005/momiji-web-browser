@@ -121,8 +121,7 @@ void a11y::PlatformStateChangeEvent(Accessible* aTarget, uint64_t aState,
   uiaRawElmProvider::RaiseUiaEventForStateChange(aTarget, aState, aEnabled);
 }
 
-void a11y::PlatformFocusEvent(Accessible* aTarget,
-                              const LayoutDeviceIntRect& aCaretRect) {
+void a11y::PlatformFocusEvent(Accessible* aTarget) {
   if (aTarget->IsRemote() && FocusMgr() &&
       FocusMgr()->FocusedLocalAccessible()) {
     // This is a focus event from a remote document, but focus has moved out
@@ -144,7 +143,6 @@ void a11y::PlatformFocusEvent(Accessible* aTarget,
 void a11y::PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
                                   bool aIsSelectionCollapsed,
                                   int32_t aGranularity,
-                                  const LayoutDeviceIntRect& aCaretRect,
                                   bool aFromUser) {
   UpdateSystemCaretFor(aTarget);
   MsaaAccessible::FireWinEvent(aTarget,
