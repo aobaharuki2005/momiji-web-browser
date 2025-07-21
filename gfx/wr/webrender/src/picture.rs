@@ -103,7 +103,7 @@ use crate::prim_store::image::AdjustedImageSource;
 use crate::{command_buffer::PrimitiveCommand, render_task_graph::RenderTaskGraphBuilder, renderer::GpuBufferBuilderF};
 use crate::box_shadow::BLUR_SAMPLE_SCALE;
 use crate::clip::{ClipChainInstance, ClipItemKind, ClipLeafId, ClipNodeId, ClipSpaceConversion, ClipStore, ClipTreeBuilder};
-use crate::profiler::{self, TransactionProfile};
+use crate::profiler::{self, add_text_marker, TransactionProfile};
 use crate::spatial_tree::{SpatialTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace};
 use crate::composite::{tile_kind, CompositeState, CompositeTileSurface, CompositorClipIndex, CompositorKind, NativeSurfaceId, NativeTileId};
 use crate::composite::{ExternalSurfaceDescriptor, ExternalSurfaceDependency, CompositeTileDescriptor, CompositeTile};
@@ -4725,13 +4725,14 @@ impl PictureCompositeMode {
                 FilterGraphOp::SVGFEBlendScreen => {}
                 FilterGraphOp::SVGFEBlendSoftLight => {}
                 FilterGraphOp::SVGFEColorMatrix { values } => {
-                    if values[3] != 0.0 ||
-                        values[7] != 0.0 ||
-                        values[11] != 0.0 ||
-                        values[19] != 0.0 {
-                        // Manipulating alpha can easily create new
+                    if values[19] > 0.0 {
+                        // Manipulating alpha offset can easily create new
                         // pixels outside of input subregions
                         used_subregion = full_subregion;
+                        add_text_marker(
+                            "SVGFEColorMatrix",
+                            "SVGFEColorMatrix with non-zero alpha offset, using full subregion",
+                            Duration::from_millis(1));
                     }
                 }
                 FilterGraphOp::SVGFEComponentTransfer => unreachable!(),
@@ -4741,6 +4742,10 @@ impl PictureCompositeMode {
                     // creating new pixels outside of input subregions
                     if *creates_pixels {
                         used_subregion = full_subregion;
+                        add_text_marker(
+                            "SVGFEComponentTransfer",
+                            "SVGFEComponentTransfer with non-zero minimum alpha, using full subregion",
+                            Duration::from_millis(1));
                     }
                 }
                 FilterGraphOp::SVGFECompositeArithmetic { k1, k2, k3, k4 } => {
@@ -4764,6 +4769,10 @@ impl PictureCompositeMode {
                     // can fill pixels outside input subregions
                     if *k4 > 0.0 {
                         used_subregion = full_subregion;
+                        add_text_marker(
+                            "SVGFECompositeArithmetic",
+                            "SVGFECompositeArithmetic with non-zero offset, using full subregion",
+                            Duration::from_millis(1));
                     }
                 }
                 FilterGraphOp::SVGFECompositeATop => {}

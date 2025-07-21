@@ -4127,9 +4127,13 @@ impl<'a> SceneBuilder<'a> {
                                 // not the 4th red value.  This layout makes the
                                 // shader more compatible with buggy compilers that
                                 // do not like indexing components on a vec4.
+                                //
+                                // If the alpha value of the lowest alpha index
+                                // is more than 0.5/255.0, then the filter
+                                // creates pixels from nothing.
                                 let creates_pixels =
                                     if let Some(a) = filter_data.r_values.get(3) {
-                                        *a != 0.0
+                                        *a >= (0.5/255.0)
                                     } else {
                                         false
                                     };

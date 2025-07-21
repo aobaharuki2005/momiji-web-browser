@@ -6,10 +6,12 @@ use api::{CompositeOperator, FilterPrimitive, FilterPrimitiveInput, FilterPrimit
 use api::{LineStyle, LineOrientation, ClipMode, MixBlendMode, ColorF, ColorSpace, FilterOpGraphPictureBufferId};
 use api::MAX_RENDER_TASK_SIZE;
 use api::units::*;
+use std::time::Duration;
 use crate::box_shadow::BLUR_SAMPLE_SCALE;
 use crate::clip::{ClipDataStore, ClipItemKind, ClipStore, ClipNodeRange};
 use crate::command_buffer::{CommandBufferIndex, QuadFlags};
 use crate::pattern::{PatternKind, PatternShaderInput};
+use crate::profiler::{add_text_marker};
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::filterdata::SFilterData;
 use crate::frame_builder::FrameBuilderConfig;
@@ -2064,12 +2066,8 @@ impl RenderTask {
                 FilterGraphOp::SVGFEBlendScreen => {},
                 FilterGraphOp::SVGFEBlendSoftLight => {},
                 FilterGraphOp::SVGFEColorMatrix{values} => {
-                    if values[3] != 0.0 ||
-                        values[7] != 0.0 ||
-                        values[11] != 0.0 ||
-                        values[15] != 1.0 ||
-                        values[19] != 0.0 {
-                        // Manipulating alpha can easily create new
+                    if values[19] > 0.0 {
+                        // Manipulating alpha offset can easily create new
                         // pixels outside of input subregions
                         used_subregion = full_subregion;
                     }
@@ -2194,6 +2192,12 @@ impl RenderTask {
                     used_subregion = full_subregion;
                 },
             }
+
+            add_text_marker(
+                "SVGFEGraph",
+                &format!("{}({})", op.kind(), filter_index),
+                Duration::from_micros((used_subregion.width() * used_subregion.height() / 1000.0) as u64),
+            );
 
             // SVG spec requires that a later node sampling pixels outside
             // this node's subregion will receive a transparent black color
