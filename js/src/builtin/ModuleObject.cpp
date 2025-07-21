@@ -2966,3 +2966,10 @@ bool js::FinishDynamicModuleImport(JSContext* cx, HandleValue contextValue,
 
   return true;
 }
+
+bool js::ContinueDynamicImport(JSContext* cx, Handle<Value> referencingPrivate,
+                               Handle<JSObject*> moduleRequest,
+                               Handle<JSObject*> promise,
+                               Handle<JSObject*> result, bool usePromise) {
+  return true;
+}

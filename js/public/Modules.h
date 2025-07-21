@@ -121,6 +121,32 @@ extern JS_PUBLIC_API void SetModuleMetadataHook(JSRuntime* rt,
                                                 ModuleMetadataHook func);
 
 /**
+ * A function callback called by the host layer to indicate the call of
+ * HostLoadImportedModule has finished.
+ *
+ * See https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
+ */
+extern JS_PUBLIC_API bool FinishLoadingImportedModule(
+    JSContext* cx, Handle<JSObject*> referrer, Handle<Value> referencingPrivate,
+    Handle<JSObject*> moduleRequest, Handle<Value> statePrivate,
+    Handle<JSObject*> result);
+
+extern JS_PUBLIC_API bool FinishLoadingImportedModule(
+    JSContext* cx, Handle<JSObject*> referrer, Handle<Value> referencingPrivate,
+    Handle<JSObject*> moduleRequest, Handle<JSObject*> promise,
+    Handle<JSObject*> result, bool usePromise);
+
+/**
+ * Overloaded version of FinishLoadingImportedModule for error handling.
+ */
+extern JS_PUBLIC_API bool FinishLoadingImportedModuleFailed(
+    JSContext* cx, Handle<Value> statePrivate, Handle<JSObject*> promise,
+    Handle<Value> error);
+
+extern JS_PUBLIC_API bool FinishLoadingImportedModuleFailedWithPendingException(
+    JSContext* cx, Handle<JSObject*> promise);
+
+/**
  * Parse the given source buffer as a module in the scope of the current global
  * of cx and return a source text module record.
  */
