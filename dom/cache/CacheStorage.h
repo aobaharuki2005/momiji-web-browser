@@ -38,6 +38,9 @@ namespace cache {
 class CacheStorageChild;
 class CacheWorkerRef;
 
+bool IsTrusted(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+               bool aTestingPrefEnabled);
+
 class CacheStorage final : public nsISupports,
                            public nsWrapperCache,
                            public TypeUtils,

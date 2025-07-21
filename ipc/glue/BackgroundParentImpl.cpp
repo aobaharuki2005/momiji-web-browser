@@ -882,7 +882,8 @@ BackgroundParentImpl::RecvShutdownServiceWorkerRegistrar() {
 already_AddRefed<PCacheStorageParent>
 BackgroundParentImpl::AllocPCacheStorageParent(
     const Namespace& aNamespace, const PrincipalInfo& aPrincipalInfo) {
-  return dom::cache::AllocPCacheStorageParent(this, aNamespace, aPrincipalInfo);
+  return dom::cache::AllocPCacheStorageParent(this, nullptr,
+                                              aNamespace, aPrincipalInfo);
 }
 
 PMessagePortParent* BackgroundParentImpl::AllocPMessagePortParent(

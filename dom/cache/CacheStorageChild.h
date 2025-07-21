@@ -9,7 +9,9 @@
 
 #include "mozilla/dom/cache/ActorChild.h"
 #include "mozilla/dom/cache/Types.h"
+#include "mozilla/dom/cache/TypeUtils.h"
 #include "mozilla/dom/cache/PCacheStorageChild.h"
+#include "mozilla/dom/cache/CacheOpChild.h"
 
 class nsIGlobalObject;
 
@@ -29,7 +31,8 @@ class CacheStorageChild final : public PCacheStorageChild, public CacheActorChil
 
  public:
   CacheStorageChild(CacheStorageChildListener* aListener,
-                    SafeRefPtr<CacheWorkerRef> aWorkerRef);
+                    SafeRefPtr<CacheWorkerRef> aWorkerRef,
+                    ActorChild* aParentActor = nullptr);
 
   // Must be called by the associated CacheStorage listener in its
   // OnActorDestroy() method.  Also, CacheStorage must call
@@ -37,8 +40,14 @@ class CacheStorageChild final : public PCacheStorageChild, public CacheActorChil
   // ActorDestroy() if it has not been called yet.
   void ClearListener();
 
-  void ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
-                 nsISupports* aParent, const CacheOpArgs& aArgs);
+  template <typename PromiseType>
+  void ExecuteOp(nsIGlobalObject* aGlobal, PromiseType& aPromise,
+                 nsISupports* aParent, const CacheOpArgs& aArgs) {
+    Unused << SendPCacheOpConstructor(
+        new CacheOpChild(GetWorkerRefPtr().clonePtr(), aGlobal, aParent,
+                         aPromise, this),
+        aArgs);
+  }
 
   // Our parent Listener object has gone out of scope and is being destroyed.
   void StartDestroyFromListener();
@@ -64,6 +73,8 @@ class CacheStorageChild final : public PCacheStorageChild, public CacheActorChil
 
   // utility methods
   inline uint32_t NumChildActors() { return ManagedPCacheOpChild().Count(); }
+
+  ActorChild* mParentActor;
 
   // Use a weak ref so actor does not hold DOM object alive past content use.
   // The CacheStorage object must call ClearListener() to null this before its

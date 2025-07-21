@@ -15,15 +15,18 @@
 namespace mozilla::dom::cache {
 
 // Declared in ActorUtils.h
-already_AddRefed<PCacheChild> AllocPCacheChild() {
-  return MakeAndAddRef<CacheChild>();
+already_AddRefed<PCacheChild> AllocPCacheChild(ActorChild* aParentActor) {
+  return MakeAndAddRef<CacheChild>(aParentActor);
 }
 
 // Declared in ActorUtils.h
 void DeallocPCacheChild(PCacheChild* aActor) { delete aActor; }
 
-CacheChild::CacheChild()
-    : mListener(nullptr), mLocked(false), mDelayedDestroy(false) {
+CacheChild::CacheChild(ActorChild* aParentActor)
+    : mParentActor(aParentActor)
+    , mListener(nullptr)
+    , mLocked(false)
+    , mDelayedDestroy(false) {
   MOZ_COUNT_CTOR(cache::CacheChild);
 }
 
@@ -45,14 +48,6 @@ void CacheChild::ClearListener() {
   NS_ASSERT_OWNINGTHREAD(CacheChild);
   MOZ_DIAGNOSTIC_ASSERT(mListener);
   mListener = nullptr;
-}
-
-void CacheChild::ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
-                           nsISupports* aParent, const CacheOpArgs& aArgs) {
-  MOZ_ALWAYS_TRUE(SendPCacheOpConstructor(
-      new CacheOpChild(GetWorkerRefPtr().clonePtr(), aGlobal, aParent, aPromise,
-                       this),
-      aArgs));
 }
 
 void CacheChild::StartDestroyFromListener() {
@@ -102,6 +97,10 @@ void CacheChild::ActorDestroy(ActorDestroyReason aReason) {
     listener->OnActorDestroy(this);
     // Cache listener should call ClearListener() in OnActorDestroy()
     MOZ_DIAGNOSTIC_ASSERT(!mListener);
+  }
+
+  if (mParentActor) {
+    mParentActor->NoteDeletedActor();
   }
 
   RemoveWorkerRef();

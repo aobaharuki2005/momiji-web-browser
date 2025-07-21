@@ -67,8 +67,6 @@ struct CacheStorage::Entry final {
   SafeRefPtr<InternalRequest> mRequest;
 };
 
-namespace {
-
 bool IsTrusted(const PrincipalInfo& aPrincipalInfo, bool aTestingPrefEnabled) {
   // Can happen on main thread or worker thread
 
@@ -129,8 +127,6 @@ bool IsTrusted(const PrincipalInfo& aPrincipalInfo, bool aTestingPrefEnabled) {
   return nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(
       nsDependentCSubstring(url + authPos + hostPos, hostLen));
 }
-
-}  // namespace
 
 // static
 already_AddRefed<CacheStorage> CacheStorage::CreateOnMainThread(

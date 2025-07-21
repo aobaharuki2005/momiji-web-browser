@@ -16,7 +16,13 @@
 #include "nsIInputStream.h"
 #include "nsString.h"
 
-namespace mozilla::dom::cache {
+namespace mozilla {
+namespace ipc {
+class PBackgroundParent;
+}  // namespace ipc
+
+namespace dom::cache {
+class PBoundStorageKeyParent;
 
 enum Namespace {
   DEFAULT_NAMESPACE,
@@ -58,6 +64,10 @@ using InputStreamResolver = std::function<void(nsCOMPtr<nsIInputStream>&&)>;
 
 enum class OpenMode : uint8_t { Eager, Lazy, NumTypes };
 
-}  // namespace mozilla::dom::cache
+using pPBackgroundParent = mozilla::ipc::PBackgroundParent*;
+using pPBoundStorageKeyParent = PBoundStorageKeyParent*;
+using WeakRefParentType = Variant<pPBackgroundParent, pPBoundStorageKeyParent>;
+}  // namespace dom::cache
+}  // namespace mozilla
 
 #endif  // mozilla_dom_cache_Types_h

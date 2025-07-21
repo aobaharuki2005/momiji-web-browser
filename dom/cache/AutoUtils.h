@@ -8,6 +8,7 @@
 #define mozilla_dom_cache_AutoUtils_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/InitializedOnce.h"
 #include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/dom/cache/Types.h"
@@ -69,7 +70,7 @@ class MOZ_STACK_CLASS AutoChildOpArgs final {
 
 class MOZ_STACK_CLASS AutoParentOpResult final {
  public:
-  AutoParentOpResult(mozilla::ipc::PBackgroundParent* aManager,
+  AutoParentOpResult(const WeakRefParentType& aManager,
                      const CacheOpResult& aOpResult, uint32_t aEntryCount);
   ~AutoParentOpResult();
 
@@ -87,7 +88,7 @@ class MOZ_STACK_CLASS AutoParentOpResult final {
   void SerializeReadStream(const nsID& aId, StreamList& aStreamList,
                            CacheReadStream* aReadStreamOut);
 
-  mozilla::ipc::PBackgroundParent* mManager;
+  const WeakRefParentType mManager;
   CacheOpResult mOpResult;
   CacheStreamControlParent* mStreamControl;
   bool mSent;

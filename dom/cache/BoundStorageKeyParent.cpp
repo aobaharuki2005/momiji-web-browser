@@ -20,7 +20,8 @@ already_AddRefed<dom::cache::PCacheStorageParent>
 BoundStorageKeyParent::AllocPCacheStorageParent(
     const Namespace& aNamespace, const PrincipalInfo& aPrincipalInfo) {
   MOZ_ASSERT(mBackgroundParent);
-  return nullptr;
+  return dom::cache::AllocPCacheStorageParent(mBackgroundParent, this,
+                                               aNamespace, aPrincipalInfo);
 }
 
 }  // namespace mozilla::dom::cache
