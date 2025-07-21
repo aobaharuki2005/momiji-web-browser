@@ -82,6 +82,8 @@ class UtilityMediaServiceChild final : public PUtilityMediaServiceChild
 
 #ifdef MOZ_WMF_CDM
   void GetKeySystemCapabilities(dom::Promise* aPromise);
+
+  mozilla::ipc::IPCResult RecvDisableHardwareDRM();
 #endif
 
  private:

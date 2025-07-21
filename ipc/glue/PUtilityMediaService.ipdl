@@ -49,6 +49,9 @@ child:
   async CompleteCreatedVideoBridge();
 #endif
 
+#ifdef MOZ_WMF_CDM
+  async DisableHardwareDRM();
+#endif
 };
 
 } // namespace ipc

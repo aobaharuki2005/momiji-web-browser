@@ -269,6 +269,13 @@ void UtilityMediaServiceChild::GetKeySystemCapabilities(
         promise->MaybeReject(NS_ERROR_DOM_MEDIA_CDM_ERR);
       });
 }
+
+mozilla::ipc::IPCResult UtilityMediaServiceChild::RecvDisableHardwareDRM() {
+  MOZ_ASSERT(NS_IsMainThread());
+  static constexpr const char* kHardDRMPref = "media.eme.hwdrm.failed";
+  Preferences::SetBool(kHardDRMPref, true);
+  return IPC_OK();
+}
 #endif
 
 }  // namespace mozilla::ipc

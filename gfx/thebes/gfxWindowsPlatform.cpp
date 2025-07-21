@@ -456,6 +456,11 @@ void gfxWindowsPlatform::InitPlatformHardwarDRMConfig() {
                            failureId)) {
     featureHWDRM.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
   }
+  if (Preferences::GetBool("media.eme.hwdrm.failed", false)) {
+    featureHWDRM.ForceDisable(FeatureStatus::Unavailable,
+                              "Force disabled by failed to find a descryptor",
+                              "FEATURE_FAILURE_NO_DESCRYPTOR_FAILED"_ns);
+  }
   gfxVars::SetUseWMFHWDWM(featureHWDRM.IsEnabled());
 }
 #endif

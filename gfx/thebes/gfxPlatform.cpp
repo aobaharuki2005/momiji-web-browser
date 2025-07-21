@@ -926,6 +926,8 @@ void gfxPlatform::Init() {
     Preferences::RegisterCallbackAndCall(
         VideoDecodingFailedChangedCallback,
         "media.hardware-video-decoding.failed");
+    Preferences::RegisterCallbackAndCall(HWDRMFailedChangedCallback,
+                                         "media.eme.hwdrm.failed");
   }
 
 #if defined(XP_WIN)
@@ -2413,6 +2415,14 @@ void gfxPlatform::VideoDecodingFailedChangedCallback(const char* aPref, void*) {
   MOZ_ASSERT(XRE_IsParentProcess());
   if (gPlatform) {
     gPlatform->InitHardwareVideoConfig();
+  }
+}
+
+/* static */
+void gfxPlatform::HWDRMFailedChangedCallback(const char* aPref, void*) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  if (gPlatform) {
+    gPlatform->InitPlatformHardwarDRMConfig();
   }
 }
 
