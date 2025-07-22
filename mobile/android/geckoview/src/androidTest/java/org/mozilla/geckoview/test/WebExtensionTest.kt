@@ -1817,7 +1817,6 @@ class WebExtensionTest : BaseSessionTest() {
                 assertEquals(notification.imageUrl, "https://example.com/img.svg")
                 // This should be filled out, Bug 1589693
                 assertEquals(notification.source, null)
-                notification.show()
             }
         })
 

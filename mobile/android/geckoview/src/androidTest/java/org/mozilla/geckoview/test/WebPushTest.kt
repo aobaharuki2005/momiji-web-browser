@@ -180,7 +180,6 @@ class WebPushTest : BaseSessionTest() {
                 assertThat("Title should match", notification.title, equalTo(expectedTitle))
                 assertThat("Body should match", notification.text, equalTo(expectedBody))
                 assertThat("Source should match", notification.source, endsWith("sw.js"))
-                notification.show()
                 notificationResult.complete(null)
             }
         })

@@ -950,7 +950,6 @@ public class GeckoViewActivity extends AppCompatActivity
                 } else {
                   notificationManager.notify(mLastID++, builder.build());
                 }
-                notification.show();
               }
 
               @Override
