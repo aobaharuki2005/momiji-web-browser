@@ -504,7 +504,7 @@ addons_manager:
     description: |
       Most recent exception reported by the Addons Manager this app session.
       Previously reported in the "main" ping `simpleMeasurements`.
-      ```
+      ```text
       {
         module: string module name,
         context: string context, like the method name,
