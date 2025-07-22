@@ -84,8 +84,6 @@ skip-if = [
 
 ["test_TelemetryHistograms.js"]
 
-["test_TelemetryLateWrites.js"]
-
 ["test_TelemetryReportingPolicy.js"]
 tags = "addons"
 

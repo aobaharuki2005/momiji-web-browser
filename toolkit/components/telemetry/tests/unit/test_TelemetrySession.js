@@ -2130,7 +2130,6 @@ add_task(async function test_pingExtendedStats() {
     "log",
     "slowSQL",
     "fileIOReports",
-    "lateWrites",
     "addonDetails",
   ];
 
