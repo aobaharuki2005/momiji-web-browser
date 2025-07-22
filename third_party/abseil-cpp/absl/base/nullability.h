@@ -221,7 +221,8 @@
 #define ABSL_POINTERS_DEFAULT_NONNULL
 
 #if defined(__clang__) && !defined(__OBJC__) && \
-    ABSL_HAVE_FEATURE(nullability_on_classes)
+    ABSL_HAVE_FEATURE(nullability_on_classes) && \
+    0 // mozilla - stop warnings in libwebrtc for "missing a nullability type specifier"
 // absl_nonnull (default with `ABSL_POINTERS_DEFAULT_NONNULL`)
 //
 // The indicated pointer is never null. It is the responsibility of the provider
