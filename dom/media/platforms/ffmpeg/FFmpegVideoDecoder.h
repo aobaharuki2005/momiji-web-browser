@@ -244,6 +244,10 @@ class FFmpegVideoDecoder<LIBAV_VER>
   DecodeStats mDecodeStats;
 #endif
 
+#if LIBAVCODEC_VERSION_MAJOR >= 58
+  bool mHasSentDrainPacket = false;
+#endif
+
 #if LIBAVCODEC_VERSION_MAJOR < 58
   class PtsCorrectionContext {
    public:

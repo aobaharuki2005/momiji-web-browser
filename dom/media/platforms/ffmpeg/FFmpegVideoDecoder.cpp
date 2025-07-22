@@ -1130,19 +1130,30 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
 #endif
 
 #if LIBAVCODEC_VERSION_MAJOR >= 58
-  packet->duration = aSample->mDuration.ToMicroseconds();
-  int res = mLib->avcodec_send_packet(mCodecContext, packet);
-  if (res < 0) {
-    // In theory, avcodec_send_packet could sent -EAGAIN should its internal
-    // buffers be full. In practice this can't happen as we only feed one frame
-    // at a time, and we immediately call avcodec_receive_frame right after.
-    char errStr[AV_ERROR_MAX_STRING_SIZE];
-    mLib->av_strerror(res, errStr, AV_ERROR_MAX_STRING_SIZE);
-    FFMPEG_LOG("avcodec_send_packet error: %s", errStr);
-    return MediaResult(res == int(AVERROR_EOF)
-                           ? NS_ERROR_DOM_MEDIA_END_OF_STREAM
-                           : NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                       RESULT_DETAIL("avcodec_send_packet error: %s", errStr));
+  if (aData || !mHasSentDrainPacket) {
+    packet->duration = aSample->mDuration.ToMicroseconds();
+    int res = mLib->avcodec_send_packet(mCodecContext, packet);
+    if (res < 0) {
+      // In theory, avcodec_send_packet could sent -EAGAIN should its internal
+      // buffers be full. In practice this can't happen as we only feed one
+      // frame at a time, and we immediately call avcodec_receive_frame right
+      // after.
+      char errStr[AV_ERROR_MAX_STRING_SIZE];
+      mLib->av_strerror(res, errStr, AV_ERROR_MAX_STRING_SIZE);
+      FFMPEG_LOG("avcodec_send_packet error: %s", errStr);
+      return MediaResult(
+          res == int(AVERROR_EOF) ? NS_ERROR_DOM_MEDIA_END_OF_STREAM
+                                  : NS_ERROR_DOM_MEDIA_DECODE_ERR,
+          RESULT_DETAIL("avcodec_send_packet error: %s", errStr));
+    }
+  }
+  if (!aData) {
+    // On some platforms (e.g. Android), there are a limited number of output
+    // buffers available. When draining, we may reach this limit, so we must
+    // return what we have, and allow the caller to try again. We don't need to
+    // resend the null packet in that case since the codec is still in the
+    // draining state.
+    mHasSentDrainPacket = true;
   }
   if (aGotFrame) {
     *aGotFrame = false;
@@ -1161,9 +1172,9 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     }
 #  endif
 
-    res = mLib->avcodec_receive_frame(mCodecContext, mFrame);
+    int res = mLib->avcodec_receive_frame(mCodecContext, mFrame);
     if (res == int(AVERROR_EOF)) {
-      FFMPEG_LOG("  End of stream.");
+      FFMPEG_LOG("  End of stream or output buffer shortage.");
       return NS_ERROR_DOM_MEDIA_END_OF_STREAM;
     }
     if (res == AVERROR(EAGAIN)) {
@@ -1717,6 +1728,9 @@ RefPtr<MediaDataDecoder::FlushPromise>
 FFmpegVideoDecoder<LIBAV_VER>::ProcessFlush() {
   FFMPEG_LOG("ProcessFlush()");
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+#if LIBAVCODEC_VERSION_MAJOR >= 58
+  mHasSentDrainPacket = false;
+#endif
 #if LIBAVCODEC_VERSION_MAJOR < 58
   mPtsContext.Reset();
 #endif
