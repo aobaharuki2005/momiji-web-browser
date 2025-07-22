@@ -269,12 +269,11 @@ function getPinnedTabsCount() {
 export let URICountListener = {
   // A set containing the visited domains, see bug 1271310.
   _domainSet: new Set(),
-  // A set containing the visited origins during the last 24 hours (similar to domains, but not quite the same)
-  _domain24hrSet: new Set(),
+  // A map containing the visited origins during the last 24 hours (similar
+  // to domains, but not quite the same), mapping to a timeoutId or 0.
+  _domain24hrSet: new Map(),
   // A map to keep track of the URIs loaded from the restored tabs.
   _restoredURIsMap: new WeakMap(),
-  // Ongoing expiration timeouts.
-  _timeouts: new Set(),
 
   isHttpURI(uri) {
     // Only consider http(s) schemas.
@@ -415,14 +414,19 @@ export let URICountListener = {
       Glean.browserEngagement.uniqueDomainsCount.set(this._domainSet.size);
     }
 
-    this._domain24hrSet.add(baseDomain);
-    if (lazy.gRecentVisitedOriginsExpiry) {
-      let timeoutId = lazy.setTimeout(() => {
-        this._domain24hrSet.delete(baseDomain);
-        this._timeouts.delete(timeoutId);
-      }, lazy.gRecentVisitedOriginsExpiry * 1000);
-      this._timeouts.add(timeoutId);
+    // Clear and re-add the expiration timeout for this base domain, if any.
+    let timeoutId = this._domain24hrSet.get(baseDomain);
+    if (timeoutId) {
+      lazy.clearTimeout(timeoutId);
     }
+    if (lazy.gRecentVisitedOriginsExpiry) {
+      timeoutId = lazy.setTimeout(() => {
+        this._domain24hrSet.delete(baseDomain);
+      }, lazy.gRecentVisitedOriginsExpiry * 1000);
+    } else {
+      timeoutId = 0;
+    }
+    this._domain24hrSet.set(baseDomain, timeoutId);
   },
 
   /**
@@ -444,8 +448,7 @@ export let URICountListener = {
    * Resets the number of unique domains visited in this session.
    */
   resetUniqueDomainsVisitedInPast24Hours() {
-    this._timeouts.forEach(timeoutId => lazy.clearTimeout(timeoutId));
-    this._timeouts.clear();
+    this._domain24hrSet.forEach(value => lazy.clearTimeout(value));
     this._domain24hrSet.clear();
   },
 
