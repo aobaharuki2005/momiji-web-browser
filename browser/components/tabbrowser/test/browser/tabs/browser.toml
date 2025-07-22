@@ -562,7 +562,7 @@ skip-if = [
   "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && vertical_tab && opt", # Bug 1903733
 ]
 
-["browser_tab_manger_synced_tabs.js"]
+["browser_tab_manager_synced_tabs.js"]
 tags = "vertical-tabs"
 
 ["browser_tab_move_active_tab.js"]
