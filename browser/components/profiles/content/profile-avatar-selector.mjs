@@ -3,8 +3,39 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
-import { html } from "chrome://global/content/vendor/lit.all.mjs";
+import { html, ifDefined } from "chrome://global/content/vendor/lit.all.mjs";
 import { Region, ViewDimensions } from "./avatarSelectionHelpers.mjs";
+
+const AVATARS = [
+  "barbell",
+  "bike",
+  "book",
+  "briefcase",
+  "canvas",
+  "craft",
+  "default-favicon",
+  "diamond",
+  "flower",
+  "folder",
+  "hammer",
+  "heart",
+  "heart-rate",
+  "history",
+  "leaf",
+  "lightbulb",
+  "makeup",
+  "message",
+  "musical-note",
+  "palette",
+  "paw-print",
+  "plane",
+  "present",
+  "shopping",
+  "soccer",
+  "sparkle-single",
+  "star",
+  "video-game-controller",
+];
 
 const VIEWS = {
   ICON: "icon",
@@ -28,6 +59,8 @@ export class ProfileAvatarSelector extends MozLitElement {
   static properties = {
     value: { type: String },
     view: { type: String },
+    state: { type: String },
+    avatarLabels: { type: Object, state: true },
   };
 
   static queries = {
@@ -55,6 +88,26 @@ export class ProfileAvatarSelector extends MozLitElement {
     this.avatarRegion = new Region(this.viewDimensions);
 
     this.state = STATES.SELECTED;
+    this.avatarLabels = {};
+  }
+
+  async connectedCallback() {
+    super.connectedCallback();
+
+    await this.loadAvatarLabels();
+  }
+
+  async loadAvatarLabels() {
+    const avatarL10nData = await document.l10n.formatValues(
+      AVATARS.map(avatar => this.getAvatarL10nId(avatar))
+    );
+
+    this.avatarLabels = {};
+    for (let i = 0; i < AVATARS.length; i++) {
+      this.avatarLabels[AVATARS[i]] = avatarL10nData[i];
+    }
+
+    this.requestUpdate();
   }
 
   setView(newView) {
@@ -148,6 +201,8 @@ export class ProfileAvatarSelector extends MozLitElement {
         return "flower-avatar";
       case "folder":
         return "folder-avatar";
+      case "hammer":
+        return "hammer-avatar";
       case "heart":
         return "heart-avatar";
       case "heart-rate":
@@ -164,12 +219,20 @@ export class ProfileAvatarSelector extends MozLitElement {
         return "message-avatar";
       case "musical-note":
         return "musical-note-avatar";
+      case "palette":
+        return "palette-avatar";
       case "paw-print":
         return "paw-print-avatar";
-      case "sparkle-single":
-        return "sparkle-single-avatar";
+      case "plane":
+        return "plane-avatar";
+      case "present":
+        return "present-avatar";
+      case "shopping":
+        return "shopping-avatar";
       case "soccer":
         return "soccer-avatar";
+      case "sparkle-single":
+        return "sparkle-single-avatar";
       case "star":
         return "star-avatar";
       case "video-game-controller":
@@ -199,47 +262,16 @@ export class ProfileAvatarSelector extends MozLitElement {
   }
 
   iconTabContentTemplate() {
-    let avatars = [
-      "star",
-      "flower",
-      "briefcase",
-      "heart",
-      "book",
-      "shopping",
-      "present",
-      "plane",
-      "barbell",
-      "bike",
-      "craft",
-      "diamond",
-      "hammer",
-      "heart-rate",
-      "leaf",
-      "makeup",
-      "palette",
-      "musical-note",
-      "paw-print",
-      "sparkle-single",
-      "soccer",
-      "video-game-controller",
-      "default-favicon",
-      "canvas",
-      "history",
-      "folder",
-      "message",
-      "lightbulb",
-    ];
-
     return html`<moz-visual-picker
       type="listbox"
       value=${this.avatar}
       name="avatar"
       id="avatars"
       @change=${this.handleAvatarChange}
-      >${avatars.map(
+      >${AVATARS.map(
         avatar =>
           html`<moz-visual-picker-item
-            l10nId=${this.getAvatarL10nId(avatar)}
+            aria-label=${ifDefined(this.avatarLabels[avatar])}
             value=${avatar}
             ?checked=${this.value === avatar}
             ><moz-button
