@@ -3543,10 +3543,9 @@ void JSObject::debugCheckNewObject(Shape* shape, js::gc::AllocKind allocKind,
   MOZ_ASSERT(!shape->isDictionary());
 
   // If the class has the JSCLASS_DELAY_METADATA_BUILDER flag, the caller must
-  // use AutoSetNewObjectMetadata. Ignore Wasm GC objects for now (bug 1963323).
-  MOZ_ASSERT_IF(
-      clasp->shouldDelayMetadataBuilder() && !IsWasmGcObjectClass(clasp),
-      shape->realm()->hasActiveAutoSetNewObjectMetadata());
+  // use AutoSetNewObjectMetadata.
+  MOZ_ASSERT_IF(clasp->shouldDelayMetadataBuilder(),
+                shape->realm()->hasActiveAutoSetNewObjectMetadata());
   MOZ_ASSERT(!shape->realm()->hasObjectPendingMetadata());
 
   // Non-native classes manage their own data and slots, so numFixedSlots is

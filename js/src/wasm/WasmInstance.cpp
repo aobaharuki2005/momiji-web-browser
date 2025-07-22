@@ -2376,6 +2376,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
       debugFilter_(nullptr),
       callRefMetrics_(nullptr),
       maxInitializedGlobalsIndexPlus1_(0),
+      allocationMetadataBuilder_(nullptr),
       addressOfLastBufferedWholeCell_(
           cx->runtime()->gc.addressOfLastBufferedWholeCell()) {
   for (size_t i = 0; i < N_BASELINE_SCRATCH_WORDS; i++) {
