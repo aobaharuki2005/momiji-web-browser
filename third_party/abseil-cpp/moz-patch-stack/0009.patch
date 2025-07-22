@@ -9,10 +9,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/928c6aa703b29d466
  1 file changed, 2 insertions(+)
 
 diff --git a/abseil-cpp/BUILD.gn b/abseil-cpp/BUILD.gn
-index 85f9d95d45b..43791c61fc6 100644
+index ad8fa35a7d9..ebc5ff1a78b 100644
 --- a/abseil-cpp/BUILD.gn
 +++ b/abseil-cpp/BUILD.gn
-@@ -188,6 +188,7 @@ source_set("absl_full") {
+@@ -192,6 +192,7 @@ source_set("absl_full") {
  }
  
  group("absl_full_deps") {
@@ -20,7 +20,7 @@ index 85f9d95d45b..43791c61fc6 100644
    public_deps = [
      # Banned because each flag registration generates a static initializer, and
      # the flag registration mechanism is problematic in component builds.
-@@ -209,6 +210,7 @@ group("absl_full_deps") {
+@@ -213,6 +214,7 @@ group("absl_full_deps") {
    ]
  
    public_configs = [ "//third_party/abseil-cpp/absl/flags:absl_flags_config" ]

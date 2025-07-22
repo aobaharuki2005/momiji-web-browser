@@ -1,25 +1,30 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 1 Jul 2025 18:38:00 -0500
-Subject: Bug 1974813 - abseil-cpp - remove prevent_unsafe_narrowing build
- config since chromium/build now automatically includes it
+Date: Thu, 10 Jul 2025 10:39:00 -0500
+Subject: Bug 1978462 - disable ABSL_HAVE_LEAK_SANITIZER due to missing symbols
+ (like __lsan_ignore_object)
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/af60dbfe1bbea15ac5102a8ca90b9f6624ee151c
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fdbec58643d95ef27963b070e162931c6354d1e8
 ---
- abseil-cpp/absl.gni | 4 ++++
- 1 file changed, 4 insertions(+)
+ abseil-cpp/absl/base/config.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/abseil-cpp/absl.gni b/abseil-cpp/absl.gni
-index f13ae7919ca..af7f68f9c85 100644
---- a/abseil-cpp/absl.gni
-+++ b/abseil-cpp/absl.gni
-@@ -38,6 +38,10 @@ template("absl_source_set") {
-         "//abseil-cpp:absl_define_config",
-       ]
+diff --git a/abseil-cpp/absl/base/config.h b/abseil-cpp/absl/base/config.h
+index 0e4c31cf0d3..e15578f1e5d 100644
+--- a/abseil-cpp/absl/base/config.h
++++ b/abseil-cpp/absl/base/config.h
+@@ -798,6 +798,7 @@ static_assert(ABSL_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
+ // LeakSanitizer is available does not mean it is active. Use the
+ // always-available run-time interface in //absl/debugging/leak_check.h for
+ // interacting with LeakSanitizer.
++#if 0 // mozilla - builds fail missing lsan symbols like __lsan_ignore_object
+ #ifdef ABSL_HAVE_LEAK_SANITIZER
+ #error "ABSL_HAVE_LEAK_SANITIZER cannot be directly set."
+ #elif defined(LEAK_SANITIZER)
+@@ -812,6 +813,7 @@ static_assert(ABSL_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
+ // GCC or Clang using the LeakSanitizer integrated into AddressSanitizer.
+ #define ABSL_HAVE_LEAK_SANITIZER 1
+ #endif
++#endif
  
-+      if (moz_webrtc_build) {
-+        configs -= [ "//chromium/build/config/compiler:prevent_unsafe_narrowing" ]
-+      }
-+
-       if (!defined(defines)) {
-         defines = []
-       }
+ // ABSL_HAVE_CLASS_TEMPLATE_ARGUMENT_DEDUCTION
+ //

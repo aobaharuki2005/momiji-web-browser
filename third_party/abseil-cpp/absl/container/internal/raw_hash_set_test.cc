@@ -20,6 +20,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <deque>
 #include <functional>
 #include <iostream>
@@ -97,6 +98,23 @@ using ::testing::UnorderedElementsAre;
 
 // Convenience function to static cast to ctrl_t.
 ctrl_t CtrlT(int i) { return static_cast<ctrl_t>(i); }
+
+// Enables sampling with 1 percent sampling rate and
+// resets the rate counter for the current thread.
+void SetSamplingRateTo1Percent() {
+  SetHashtablezEnabled(true);
+  SetHashtablezSampleParameter(100);  // Sample ~1% of tables.
+  // Reset rate counter for the current thread.
+  TestOnlyRefreshSamplingStateForCurrentThread();
+}
+
+// Disables sampling and resets the rate counter for the current thread.
+void DisableSampling() {
+  SetHashtablezEnabled(false);
+  SetHashtablezSampleParameter(1 << 16);
+  // Reset rate counter for the current thread.
+  TestOnlyRefreshSamplingStateForCurrentThread();
+}
 
 TEST(GrowthInfoTest, GetGrowthLeft) {
   GrowthInfo gi;
@@ -576,6 +594,48 @@ template <int N, bool kSoo>
 using SizedValuePolicy =
     ValuePolicy<SizedValue<N>, /*kTransferable=*/true, kSoo>;
 
+// Value is aligned as type T and contains N copies of it.
+template <typename T, int N>
+class AlignedValue {
+ public:
+  AlignedValue(int64_t v) {  // NOLINT
+    for (int i = 0; i < N; ++i) {
+      vals_[i] = v;
+      if (sizeof(T) < sizeof(int64_t)) {
+        v >>= (8 * sizeof(T));
+      } else {
+        v = 0;
+      }
+    }
+  }
+  AlignedValue() : AlignedValue(0) {}
+  AlignedValue(const AlignedValue&) = default;
+  AlignedValue& operator=(const AlignedValue&) = default;
+
+  int64_t operator*() const {
+    if (sizeof(T) == sizeof(int64_t)) {
+      return vals_[0];
+    }
+    int64_t result = 0;
+    for (int i = N - 1; i >= 0; --i) {
+      result <<= (8 * sizeof(T));
+      result += vals_[i];
+    }
+    return result;
+  }
+  explicit operator int() const { return **this; }
+  explicit operator int64_t() const { return **this; }
+
+  template <typename H>
+  friend H AbslHashValue(H h, AlignedValue sv) {
+    return H::combine(std::move(h), *sv);
+  }
+  bool operator==(const AlignedValue& rhs) const { return **this == *rhs; }
+
+ private:
+  T vals_[N];
+};
+
 class StringPolicy {
   template <class F, class K, class V,
             class = typename std::enable_if<
@@ -942,8 +1002,42 @@ TYPED_TEST(SooTest, InsertWithinCapacity) {
 template <class TableType>
 class SmallTableResizeTest : public testing::Test {};
 
-using SmallTableTypes =
-    ::testing::Types<IntTable, TransferableIntTable, SooIntTable>;
+using SmallTableTypes = ::testing::Types<
+    IntTable, TransferableIntTable, SooIntTable,
+    // int8
+    ValueTable<int8_t, /*kTransferable=*/true, /*kSoo=*/true>,
+    ValueTable<int8_t, /*kTransferable=*/false, /*kSoo=*/true>,
+    // int16
+    ValueTable<int16_t, /*kTransferable=*/true, /*kSoo=*/true>,
+    ValueTable<int16_t, /*kTransferable=*/false, /*kSoo=*/true>,
+    // int128
+    ValueTable<SizedValue<16>, /*kTransferable=*/true, /*kSoo=*/true>,
+    ValueTable<SizedValue<16>, /*kTransferable=*/false, /*kSoo=*/true>,
+    // int192
+    ValueTable<SizedValue<24>, /*kTransferable=*/true, /*kSoo=*/true>,
+    ValueTable<SizedValue<24>, /*kTransferable=*/false, /*kSoo=*/true>,
+    // Special tables.
+    MinimumAlignmentUint8Table,
+    CustomAllocIntTable,
+    BadTable,
+    // alignment 1, size 2.
+    ValueTable<AlignedValue<uint8_t, 2>, /*kTransferable=*/true, /*kSoo=*/true>,
+    ValueTable<AlignedValue<uint8_t, 2>, /*kTransferable=*/false,
+               /*kSoo=*/true>,
+    // alignment 1, size 7.
+    ValueTable<AlignedValue<uint8_t, 7>, /*kTransferable=*/true, /*kSoo=*/true>,
+    ValueTable<AlignedValue<uint8_t, 7>, /*kTransferable=*/false,
+               /*kSoo=*/true>,
+    // alignment 2, size 6.
+    ValueTable<AlignedValue<uint16_t, 3>, /*kTransferable=*/true,
+               /*kSoo=*/true>,
+    ValueTable<AlignedValue<uint16_t, 3>, /*kTransferable=*/false,
+               /*kSoo=*/true>,
+    // alignment 2, size 10.
+    ValueTable<AlignedValue<uint16_t, 5>, /*kTransferable=*/true,
+               /*kSoo=*/true>,
+    ValueTable<AlignedValue<uint16_t, 5>, /*kTransferable=*/false,
+               /*kSoo=*/true>>;
 TYPED_TEST_SUITE(SmallTableResizeTest, SmallTableTypes);
 
 TYPED_TEST(SmallTableResizeTest, InsertIntoSmallTable) {
@@ -962,6 +1056,9 @@ TYPED_TEST(SmallTableResizeTest, ResizeGrowSmallTables) {
   for (size_t source_size = 0; source_size < 32; ++source_size) {
     for (size_t target_size = source_size; target_size < 32; ++target_size) {
       for (bool rehash : {false, true}) {
+        SCOPED_TRACE(absl::StrCat("source_size: ", source_size,
+                                  ", target_size: ", target_size,
+                                  ", rehash: ", rehash));
         TypeParam t;
         for (size_t i = 0; i < source_size; ++i) {
           t.insert(static_cast<int>(i));
@@ -981,6 +1078,7 @@ TYPED_TEST(SmallTableResizeTest, ResizeGrowSmallTables) {
 }
 
 TYPED_TEST(SmallTableResizeTest, ResizeReduceSmallTables) {
+  DisableSampling();
   for (size_t source_size = 0; source_size < 32; ++source_size) {
     for (size_t target_size = 0; target_size <= source_size; ++target_size) {
       TypeParam t;
@@ -2153,7 +2251,7 @@ TYPED_TEST(SooTest, FindFullDeletedRegression) {
 
 TYPED_TEST(SooTest, ReplacingDeletedSlotDoesNotRehash) {
   // We need to disable hashtablez to avoid issues related to SOO and sampling.
-  SetHashtablezEnabled(false);
+  DisableSampling();
 
   size_t n;
   {
@@ -2521,7 +2619,7 @@ TYPED_TEST(SooTest, IterationOrderChangesOnRehash) {
 // This prevents dependency on pointer stability on small tables.
 TYPED_TEST(SooTest, UnstablePointers) {
   // We need to disable hashtablez to avoid issues related to SOO and sampling.
-  SetHashtablezEnabled(false);
+  DisableSampling();
 
   TypeParam table;
 
@@ -2659,12 +2757,17 @@ TYPED_TEST_SUITE(RawHashSamplerTest, RawHashSamplerTestTypes);
 TYPED_TEST(RawHashSamplerTest, Sample) {
   constexpr bool soo_enabled = std::is_same<SooIntTable, TypeParam>::value;
   // Enable the feature even if the prod default is off.
-  SetHashtablezEnabled(true);
-  SetHashtablezSampleParameter(100);  // Sample ~1% of tables.
+  SetSamplingRateTo1Percent();
 
   auto& sampler = GlobalHashtablezSampler();
   size_t start_size = 0;
-  absl::flat_hash_set<const HashtablezInfo*> preexisting_info;
+
+  // Reserve these utility tables, so that if they sampled, they'll be
+  // preexisting.
+  absl::flat_hash_set<const HashtablezInfo*> preexisting_info(10);
+  absl::flat_hash_map<size_t, int> observed_checksums(10);
+  absl::flat_hash_map<ssize_t, int> reservations(10);
+
   start_size += sampler.Iterate([&](const HashtablezInfo& info) {
     preexisting_info.insert(&info);
     ++start_size;
@@ -2691,8 +2794,6 @@ TYPED_TEST(RawHashSamplerTest, Sample) {
     }
   }
   size_t end_size = 0;
-  absl::flat_hash_map<size_t, int> observed_checksums;
-  absl::flat_hash_map<ssize_t, int> reservations;
   end_size += sampler.Iterate([&](const HashtablezInfo& info) {
     ++end_size;
     if (preexisting_info.contains(&info)) return;
@@ -2731,12 +2832,12 @@ TYPED_TEST(RawHashSamplerTest, Sample) {
 std::vector<const HashtablezInfo*> SampleSooMutation(
     absl::FunctionRef<void(SooIntTable&)> mutate_table) {
   // Enable the feature even if the prod default is off.
-  SetHashtablezEnabled(true);
-  SetHashtablezSampleParameter(100);  // Sample ~1% of tables.
+  SetSamplingRateTo1Percent();
 
   auto& sampler = GlobalHashtablezSampler();
   size_t start_size = 0;
-  absl::flat_hash_set<const HashtablezInfo*> preexisting_info;
+  // Reserve the table, so that if it sampled, it'll be preexisting.
+  absl::flat_hash_set<const HashtablezInfo*> preexisting_info(10);
   start_size += sampler.Iterate([&](const HashtablezInfo& info) {
     preexisting_info.insert(&info);
     ++start_size;
@@ -2860,8 +2961,7 @@ TEST(RawHashSamplerTest, SooTableRehashShrinkWhenSizeFitsInSoo) {
 
 TEST(RawHashSamplerTest, DoNotSampleCustomAllocators) {
   // Enable the feature even if the prod default is off.
-  SetHashtablezEnabled(true);
-  SetHashtablezSampleParameter(100);  // Sample ~1% of tables.
+  SetSamplingRateTo1Percent();
 
   auto& sampler = GlobalHashtablezSampler();
   size_t start_size = 0;
@@ -3398,22 +3498,22 @@ TEST(Table, CountedHash) {
 // IterateOverFullSlots doesn't support SOO.
 TEST(Table, IterateOverFullSlotsEmpty) {
   NonSooIntTable t;
-  auto fail_if_any = [](const ctrl_t*, auto* i) {
-    FAIL() << "expected no slots " << **i;
+  using SlotType = typename NonSooIntTable::slot_type;
+  auto fail_if_any = [](const ctrl_t*, void* i) {
+    FAIL() << "expected no slots " << **static_cast<SlotType*>(i);
   };
   container_internal::IterateOverFullSlots(
-      RawHashSetTestOnlyAccess::GetCommon(t),
-      RawHashSetTestOnlyAccess::GetSlots(t), fail_if_any);
+      RawHashSetTestOnlyAccess::GetCommon(t), sizeof(SlotType), fail_if_any);
   for (size_t i = 0; i < 256; ++i) {
     t.reserve(i);
     container_internal::IterateOverFullSlots(
-        RawHashSetTestOnlyAccess::GetCommon(t),
-        RawHashSetTestOnlyAccess::GetSlots(t), fail_if_any);
+        RawHashSetTestOnlyAccess::GetCommon(t), sizeof(SlotType), fail_if_any);
   }
 }
 
 TEST(Table, IterateOverFullSlotsFull) {
   NonSooIntTable t;
+  using SlotType = typename NonSooIntTable::slot_type;
 
   std::vector<int64_t> expected_slots;
   for (int64_t idx = 0; idx < 128; ++idx) {
@@ -3422,9 +3522,9 @@ TEST(Table, IterateOverFullSlotsFull) {
 
     std::vector<int64_t> slots;
     container_internal::IterateOverFullSlots(
-        RawHashSetTestOnlyAccess::GetCommon(t),
-        RawHashSetTestOnlyAccess::GetSlots(t),
-        [&t, &slots](const ctrl_t* ctrl, auto* i) {
+        RawHashSetTestOnlyAccess::GetCommon(t), sizeof(SlotType),
+        [&t, &slots](const ctrl_t* ctrl, void* slot) {
+          SlotType* i = static_cast<SlotType*>(slot);
           ptrdiff_t ctrl_offset =
               ctrl - RawHashSetTestOnlyAccess::GetCommon(t).control();
           ptrdiff_t slot_offset = i - RawHashSetTestOnlyAccess::GetSlots(t);
@@ -3443,16 +3543,16 @@ TEST(Table, IterateOverFullSlotsDeathOnRemoval) {
     if (reserve_size == -1) reserve_size = size;
     for (int64_t idx = 0; idx < size; ++idx) {
       NonSooIntTable t;
+      using SlotType = typename NonSooIntTable::slot_type;
       t.reserve(static_cast<size_t>(reserve_size));
       for (int val = 0; val <= idx; ++val) {
         t.insert(val);
       }
 
       container_internal::IterateOverFullSlots(
-          RawHashSetTestOnlyAccess::GetCommon(t),
-          RawHashSetTestOnlyAccess::GetSlots(t),
-          [&t](const ctrl_t*, auto* i) {
-            int64_t value = **i;
+          RawHashSetTestOnlyAccess::GetCommon(t), sizeof(SlotType),
+          [&t](const ctrl_t*, void* slot) {
+            int64_t value = **static_cast<SlotType*>(slot);
             // Erase the other element from 2*k and 2*k+1 pair.
             t.erase(value ^ 1);
           });
@@ -3478,16 +3578,16 @@ TEST(Table, IterateOverFullSlotsDeathOnInsert) {
     int64_t size = reserve_size / size_divisor;
     for (int64_t idx = 1; idx <= size; ++idx) {
       NonSooIntTable t;
+      using SlotType = typename NonSooIntTable::slot_type;
       t.reserve(static_cast<size_t>(reserve_size));
       for (int val = 1; val <= idx; ++val) {
         t.insert(val);
       }
 
       container_internal::IterateOverFullSlots(
-          RawHashSetTestOnlyAccess::GetCommon(t),
-          RawHashSetTestOnlyAccess::GetSlots(t),
-          [&t](const ctrl_t*, auto* i) {
-            int64_t value = **i;
+          RawHashSetTestOnlyAccess::GetCommon(t), sizeof(SlotType),
+          [&t](const ctrl_t*, void* slot) {
+            int64_t value = **static_cast<SlotType*>(slot);
             t.insert(-value);
           });
     }
@@ -3550,7 +3650,7 @@ TEST(Table, RehashToSooUnsampled) {
 
   // We disable hashtablez sampling for this test to ensure that the table isn't
   // sampled. When the table is sampled, it won't rehash down to SOO.
-  SetHashtablezEnabled(false);
+  DisableSampling();
 
   t.reserve(100);
   t.insert(0);
@@ -3566,7 +3666,7 @@ TEST(Table, RehashToSooUnsampled) {
 }
 
 TEST(Table, ReserveToNonSoo) {
-  for (int reserve_capacity : {8, 100000}) {
+  for (size_t reserve_capacity : {8u, 100000u}) {
     SooIntTable t;
     t.insert(0);
 
@@ -3735,6 +3835,14 @@ TEST(Table, MovedFromCallsFail) {
     t3 = std::move(t1);
     EXPECT_DEATH_IF_SUPPORTED(t3.contains(1), "moved-from");
   }
+}
+
+TEST(Table, MaxSizeOverflow) {
+  size_t overflow = (std::numeric_limits<size_t>::max)();
+  EXPECT_DEATH_IF_SUPPORTED(IntTable t(overflow), "Hash table size overflow");
+  IntTable t;
+  EXPECT_DEATH_IF_SUPPORTED(t.reserve(overflow), "Hash table size overflow");
+  EXPECT_DEATH_IF_SUPPORTED(t.rehash(overflow), "Hash table size overflow");
 }
 
 }  // namespace

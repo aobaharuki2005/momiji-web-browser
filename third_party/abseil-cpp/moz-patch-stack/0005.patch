@@ -83,7 +83,7 @@ index b19ac75675a..ff2ff91cfa4 100644
        visibility = [ "//third_party/abseil-cpp/:*" ]
        deps += [
 diff --git a/abseil-cpp/absl/random/internal/BUILD.gn b/abseil-cpp/absl/random/internal/BUILD.gn
-index 794d6d49217..6928369c6de 100644
+index cb11943ec66..616804aa595 100644
 --- a/abseil-cpp/absl/random/internal/BUILD.gn
 +++ b/abseil-cpp/absl/random/internal/BUILD.gn
 @@ -245,6 +245,7 @@ absl_source_set("randen_hwaes_impl") {

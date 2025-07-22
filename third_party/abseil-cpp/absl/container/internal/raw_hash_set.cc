@@ -24,9 +24,11 @@
 #include "absl/base/config.h"
 #include "absl/base/dynamic_annotations.h"
 #include "absl/base/internal/endian.h"
+#include "absl/base/internal/raw_logging.h"
 #include "absl/base/optimization.h"
 #include "absl/container/internal/container_memory.h"
 #include "absl/container/internal/hashtablez_sampler.h"
+#include "absl/functional/function_ref.h"
 #include "absl/hash/hash.h"
 #include "absl/numeric/bits.h"
 
@@ -107,6 +109,19 @@ size_t SingleGroupTableH1(size_t hash, ctrl_t* control) {
       hash ^ static_cast<size_t>(reinterpret_cast<uintptr_t>(control))));
 }
 
+// Returns the address of the slot `i` iterations after `slot` assuming each
+// slot has the specified size.
+inline void* NextSlot(void* slot, size_t slot_size, size_t i = 1) {
+  return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(slot) +
+                                 slot_size * i);
+}
+
+// Returns the address of the slot just before `slot` assuming each slot has the
+// specified size.
+inline void* PrevSlot(void* slot, size_t slot_size) {
+  return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(slot) - slot_size);
+}
+
 }  // namespace
 
 GenerationType* EmptyGeneration() {
@@ -139,12 +154,58 @@ bool ShouldInsertBackwardsForDebug(size_t capacity, size_t hash,
   return !is_small(capacity) && (H1(hash, ctrl) ^ RandomSeed()) % 13 > 6;
 }
 
+void IterateOverFullSlots(const CommonFields& c, size_t slot_size,
+                          absl::FunctionRef<void(const ctrl_t*, void*)> cb) {
+  const size_t cap = c.capacity();
+  const ctrl_t* ctrl = c.control();
+  void* slot = c.slot_array();
+  if (is_small(cap)) {
+    // Mirrored/cloned control bytes in small table are also located in the
+    // first group (starting from position 0). We are taking group from position
+    // `capacity` in order to avoid duplicates.
+
+    // Small tables capacity fits into portable group, where
+    // GroupPortableImpl::MaskFull is more efficient for the
+    // capacity <= GroupPortableImpl::kWidth.
+    assert(cap <= GroupPortableImpl::kWidth &&
+           "unexpectedly large small capacity");
+    static_assert(Group::kWidth >= GroupPortableImpl::kWidth,
+                  "unexpected group width");
+    // Group starts from kSentinel slot, so indices in the mask will
+    // be increased by 1.
+    const auto mask = GroupPortableImpl(ctrl + cap).MaskFull();
+    --ctrl;
+    slot = PrevSlot(slot, slot_size);
+    for (uint32_t i : mask) {
+      cb(ctrl + i, SlotAddress(slot, i, slot_size));
+    }
+    return;
+  }
+  size_t remaining = c.size();
+  ABSL_ATTRIBUTE_UNUSED const size_t original_size_for_assert = remaining;
+  while (remaining != 0) {
+    for (uint32_t i : GroupFullEmptyOrDeleted(ctrl).MaskFull()) {
+      assert(IsFull(ctrl[i]) && "hash table was modified unexpectedly");
+      cb(ctrl + i, SlotAddress(slot, i, slot_size));
+      --remaining;
+    }
+    ctrl += Group::kWidth;
+    slot = NextSlot(slot, slot_size, Group::kWidth);
+    assert((remaining == 0 || *(ctrl - 1) != ctrl_t::kSentinel) &&
+           "hash table was modified unexpectedly");
+  }
+  // NOTE: erasure of the current element is allowed in callback for
+  // absl::erase_if specialization. So we use `>=`.
+  assert(original_size_for_assert >= c.size() &&
+         "hash table was modified unexpectedly");
+}
+
 size_t PrepareInsertAfterSoo(size_t hash, size_t slot_size,
                              CommonFields& common) {
   assert(common.capacity() == NextCapacity(SooCapacity()));
   // After resize from capacity 1 to 3, we always have exactly the slot with
   // index 1 occupied, so we need to insert either at index 0 or index 2.
-  assert(HashSetResizeHelper::SooSlotIndex() == 1);
+  static_assert(SooSlotIndex() == 1, "");
   PrepareInsertCommon(common);
   const size_t offset = SingleGroupTableH1(hash, common.control()) & 2;
   common.growth_info().OverwriteEmptyAsFull();
@@ -172,18 +233,6 @@ FindInfo find_first_non_full_outofline(const CommonFields& common,
 }
 
 namespace {
-
-// Returns the address of the slot just after slot assuming each slot has the
-// specified size.
-static inline void* NextSlot(void* slot, size_t slot_size) {
-  return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(slot) + slot_size);
-}
-
-// Returns the address of the slot just before slot assuming each slot has the
-// specified size.
-static inline void* PrevSlot(void* slot, size_t slot_size) {
-  return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(slot) - slot_size);
-}
 
 // Finds guaranteed to exists empty slot from the given position.
 // NOTE: this function is almost never triggered inside of the
@@ -336,7 +385,7 @@ void EraseMetaOnly(CommonFields& c, size_t index, size_t slot_size) {
 }
 
 void ClearBackingArray(CommonFields& c, const PolicyFunctions& policy,
-                       bool reuse, bool soo_enabled) {
+                       void* alloc, bool reuse, bool soo_enabled) {
   c.set_size(0);
   if (reuse) {
     assert(!soo_enabled || c.capacity() > SooCapacity());
@@ -348,7 +397,9 @@ void ClearBackingArray(CommonFields& c, const PolicyFunctions& policy,
     // infoz.
     c.infoz().RecordClearedReservation();
     c.infoz().RecordStorageChanged(0, soo_enabled ? SooCapacity() : 0);
-    (*policy.dealloc)(c, policy);
+    c.infoz().Unregister();
+    (*policy.dealloc)(alloc, c.capacity(), c.control(), policy.slot_size,
+                      policy.slot_align, c.has_infoz());
     c = soo_enabled ? CommonFields{soo_tag_t{}} : CommonFields{non_soo_tag_t{}};
   }
 }
@@ -477,18 +528,6 @@ void HashSetResizeHelper::GrowIntoSingleGroupShuffleControlBytes(
   // new_ctrl after 2nd store =  E0123456EEEEEEESE0123456EEEEEEE
 }
 
-void HashSetResizeHelper::InitControlBytesAfterSoo(ctrl_t* new_ctrl, ctrl_t h2,
-                                                   size_t new_capacity) {
-  assert(is_single_group(new_capacity));
-  std::memset(new_ctrl, static_cast<int8_t>(ctrl_t::kEmpty),
-              NumControlBytes(new_capacity));
-  assert(HashSetResizeHelper::SooSlotIndex() == 1);
-  // This allows us to avoid branching on had_soo_slot_.
-  assert(had_soo_slot_ || h2 == ctrl_t::kEmpty);
-  new_ctrl[1] = new_ctrl[new_capacity + 2] = h2;
-  new_ctrl[new_capacity] = ctrl_t::kSentinel;
-}
-
 void HashSetResizeHelper::GrowIntoSingleGroupShuffleTransferableSlots(
     void* new_slots, size_t slot_size) const {
   ABSL_ASSUME(old_capacity_ > 0);
@@ -511,14 +550,23 @@ void HashSetResizeHelper::GrowSizeIntoSingleGroupTransferable(
   PoisonSingleGroupEmptySlots(c, slot_size);
 }
 
-void HashSetResizeHelper::TransferSlotAfterSoo(CommonFields& c,
-                                               size_t slot_size) {
+void HashSetResizeHelper::InsertOldSooSlotAndInitializeControlBytesLarge(
+    CommonFields& c, size_t hash, ctrl_t* new_ctrl, void* new_slots,
+    const PolicyFunctions& policy) {
   assert(was_soo_);
   assert(had_soo_slot_);
-  assert(is_single_group(c.capacity()));
-  std::memcpy(SlotAddress(c.slot_array(), SooSlotIndex(), slot_size),
-              old_soo_data(), slot_size);
-  PoisonSingleGroupEmptySlots(c, slot_size);
+  size_t new_capacity = c.capacity();
+
+  size_t offset = probe(new_ctrl, new_capacity, hash).offset();
+  offset = offset == new_capacity ? 0 : offset;
+  SanitizerPoisonMemoryRegion(new_slots, policy.slot_size * new_capacity);
+  void* target_slot = SlotAddress(new_slots, offset, policy.slot_size);
+  SanitizerUnpoisonMemoryRegion(target_slot, policy.slot_size);
+  policy.transfer(&c, target_slot, c.soo_data());
+  c.set_control(new_ctrl);
+  c.set_slots(new_slots);
+  ResetCtrl(c, policy.slot_size);
+  SetCtrl(c, offset, H2(hash), policy.slot_size);
 }
 
 namespace {
@@ -576,7 +624,7 @@ FindInfo FindInsertPositionWithGrowthOrRehash(CommonFields& common, size_t hash,
     DropDeletesWithoutResize(common, policy);
   } else {
     // Otherwise grow the container.
-    policy.resize(common, NextCapacity(cap), HashtablezInfoHandle{});
+    policy.resize(common, NextCapacity(cap), /*force_infoz=*/false);
   }
   // This function is typically called with tables containing deleted slots.
   // The table will be big and `FindFirstNonFullAfterResize` will always
@@ -632,7 +680,7 @@ size_t PrepareInsertNonSoo(CommonFields& common, size_t hash, FindInfo target,
     // 3. Table with deleted slots that needs to be rehashed or resized.
     if (ABSL_PREDICT_TRUE(common.growth_info().HasNoGrowthLeftAndNoDeleted())) {
       const size_t old_capacity = common.capacity();
-      policy.resize(common, NextCapacity(old_capacity), HashtablezInfoHandle{});
+      policy.resize(common, NextCapacity(old_capacity), /*force_infoz=*/false);
       target = HashSetResizeHelper::FindFirstNonFullAfterResize(
           common, old_capacity, hash);
     } else {
@@ -645,7 +693,7 @@ size_t PrepareInsertNonSoo(CommonFields& common, size_t hash, FindInfo target,
         const size_t cap = common.capacity();
         policy.resize(common,
                       common.growth_left() > 0 ? cap : NextCapacity(cap),
-                      HashtablezInfoHandle{});
+                      /*force_infoz=*/false);
       }
       if (ABSL_PREDICT_TRUE(common.growth_left() > 0)) {
         target = find_first_non_full(common, hash);
@@ -659,6 +707,10 @@ size_t PrepareInsertNonSoo(CommonFields& common, size_t hash, FindInfo target,
   SetCtrl(common, target.offset, H2(hash), policy.slot_size);
   common.infoz().RecordInsert(hash, target.probe_length);
   return target.offset;
+}
+
+void HashTableSizeOverflow() {
+  ABSL_RAW_LOG(FATAL, "Hash table size overflow");
 }
 
 }  // namespace container_internal

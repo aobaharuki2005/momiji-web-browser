@@ -12,10 +12,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d976369464663a914
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/abseil-cpp/absl/functional/internal/any_invocable.h b/abseil-cpp/absl/functional/internal/any_invocable.h
-index c2d8cd4727a..366d94c4fe1 100644
+index 0ac54780157..b78cce0d884 100644
 --- a/abseil-cpp/absl/functional/internal/any_invocable.h
 +++ b/abseil-cpp/absl/functional/internal/any_invocable.h
-@@ -205,7 +205,7 @@ union TypeErasedState {
+@@ -199,7 +199,7 @@ union TypeErasedState {
  template <class T>
  T& ObjectInLocalStorage(TypeErasedState* const state) {
    // We launder here because the storage may be reused with the same type.
