@@ -75,7 +75,6 @@ import org.mozilla.fenix.tabstray.DefaultTabsTrayController
 import org.mozilla.fenix.tabstray.DefaultTabsTrayInteractor
 import org.mozilla.fenix.tabstray.InactiveTabsBinding
 import org.mozilla.fenix.tabstray.Page
-import org.mozilla.fenix.tabstray.SecureTabsTrayBinding
 import org.mozilla.fenix.tabstray.TabSheetBehaviorManager
 import org.mozilla.fenix.tabstray.TabsTrayAccessPoint
 import org.mozilla.fenix.tabstray.TabsTrayAction
@@ -85,6 +84,7 @@ import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.TabsTrayTelemetryMiddleware
 import org.mozilla.fenix.tabstray.TraySheetBehaviorCallback
+import org.mozilla.fenix.tabstray.binding.SecureTabManagerBinding
 import org.mozilla.fenix.tabstray.browser.TabSorter
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsIntegration
 import org.mozilla.fenix.tabstray.ui.fab.TabsTrayFab
@@ -118,7 +118,7 @@ class TabManagementFragment : AppCompatDialogFragment() {
     @VisibleForTesting internal lateinit var trayBehaviorManager: TabSheetBehaviorManager
 
     private val inactiveTabsBinding = ViewBoundFeatureWrapper<InactiveTabsBinding>()
-    private val secureTabsTrayBinding = ViewBoundFeatureWrapper<SecureTabsTrayBinding>()
+    private val secureTabManagerBinding = ViewBoundFeatureWrapper<SecureTabManagerBinding>()
     private val tabsFeature = ViewBoundFeatureWrapper<TabsFeature>()
     private val syncedTabsIntegration = ViewBoundFeatureWrapper<SyncedTabsIntegration>()
 
@@ -503,12 +503,11 @@ class TabManagementFragment : AppCompatDialogFragment() {
             view = view,
         )
 
-        secureTabsTrayBinding.set(
-            feature = SecureTabsTrayBinding(
+        secureTabManagerBinding.set(
+            feature = SecureTabManagerBinding(
                 store = tabsTrayStore,
                 settings = requireComponents.settings,
                 fragment = this,
-                dialog = dialog as TabsTrayDialog,
             ),
             owner = this,
             view = view,
