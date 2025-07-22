@@ -37,8 +37,8 @@ function update(state = initialTabState(), action) {
     case "INSERT_SOURCE_ACTORS":
       return addVisibleTabsForSourceActors(state, action.sourceActors);
 
-    case "REMOVE_THREAD": {
-      return resetTabsForThread(state, action.threadActorID);
+    case "REMOVE_SOURCES": {
+      return resetTabsForRemovedSources(state, action);
     }
 
     default:
@@ -118,15 +118,15 @@ function removeSourcesFromTabList(state, { sources }) {
   return { tabs: newTabs };
 }
 
-function resetTabsForThread(state, threadActorID) {
+function resetTabsForRemovedSources(state, { sources }) {
   let changed = false;
   // Nullify source and sourceActor attributes of all tabs
-  // related to the given thread so that they become hidden.
+  // related to any of the removed sources.
   //
   // They may later be restored if a source matches their URL again.
-  // This is similar to persistTabs, but specific to a unique thread.
+  // This is similar to persistTabs, but specific to a list of sources.
   const tabs = state.tabs.map(tab => {
-    if (tab.sourceActor?.thread != threadActorID) {
+    if (!sources.includes(tab.source)) {
       return tab;
     }
     changed = true;
