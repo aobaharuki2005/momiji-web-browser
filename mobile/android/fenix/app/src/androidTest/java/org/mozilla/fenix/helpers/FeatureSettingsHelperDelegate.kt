@@ -45,7 +45,6 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         shouldUseBottomToolbar = settings.shouldUseBottomToolbar,
         onboardingFeatureEnabled = settings.onboardingFeatureEnabled,
         isUseNewCrashReporterDialog = settings.useNewCrashReporterDialog,
-        isTabSwipeCFREnabled = settings.hasShownTabSwipeCFR,
     )
 
     /**
@@ -68,7 +67,6 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
     override var shouldUseBottomToolbar: Boolean by updatedFeatureFlags::shouldUseBottomToolbar
     override var onboardingFeatureEnabled: Boolean by updatedFeatureFlags::onboardingFeatureEnabled
     override var isUseNewCrashReporterDialog: Boolean by updatedFeatureFlags::isUseNewCrashReporterDialog
-    override var isTabSwipeCFREnabled: Boolean by updatedFeatureFlags::isTabSwipeCFREnabled
 
     override fun applyFlagUpdates() {
         Log.i(TAG, "applyFlagUpdates: Trying to apply the updated feature flags: $updatedFeatureFlags")
@@ -102,7 +100,6 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         setPermissions(PhoneFeature.LOCATION, featureFlags.isLocationPermissionEnabled)
         settings.onboardingFeatureEnabled = featureFlags.onboardingFeatureEnabled
         settings.useNewCrashReporterDialog = featureFlags.isUseNewCrashReporterDialog
-        settings.hasShownTabSwipeCFR = !featureFlags.isTabSwipeCFREnabled
     }
 }
 
@@ -124,7 +121,6 @@ private data class FeatureFlags(
     var shouldUseBottomToolbar: Boolean,
     var onboardingFeatureEnabled: Boolean,
     var isUseNewCrashReporterDialog: Boolean,
-    var isTabSwipeCFREnabled: Boolean,
 )
 
 internal fun getETPPolicy(settings: Settings): ETPPolicy {

@@ -67,7 +67,6 @@ class HomeActivityTestRule(
         isMicrosurveyEnabled: Boolean = settings.microsurveyFeatureEnabled,
         shouldUseBottomToolbar: Boolean = settings.shouldUseBottomToolbar,
         isUseNewCrashReporterDialog: Boolean = false,
-        isTabSwipeCFREnabled: Boolean = false,
     ) : this(initialTouchMode, launchActivity, skipOnboarding) {
         this.isHomepageHeaderEnabled = isHomepageHeaderEnabled
         this.isPocketEnabled = isPocketEnabled
@@ -85,7 +84,6 @@ class HomeActivityTestRule(
         this.isMicrosurveyEnabled = isMicrosurveyEnabled
         this.shouldUseBottomToolbar = shouldUseBottomToolbar
         this.isUseNewCrashReporterDialog = isUseNewCrashReporterDialog
-        this.isTabSwipeCFREnabled = isTabSwipeCFREnabled
     }
 
     /**
@@ -147,7 +145,6 @@ class HomeActivityTestRule(
             shouldUseBottomToolbar = true,
             isPageLoadTranslationsPromptEnabled = false,
             isUseNewCrashReporterDialog = useNewCrashReporterDialog,
-            isTabSwipeCFREnabled = true,
         )
     }
 }
@@ -189,7 +186,6 @@ class HomeActivityIntentTestRule internal constructor(
         isMicrosurveyEnabled: Boolean = settings.microsurveyFeatureEnabled,
         shouldUseBottomToolbar: Boolean = settings.shouldUseBottomToolbar,
         onboardingFeatureEnabled: Boolean = true,
-        isTabSwipeCFREnabled: Boolean = false,
     ) : this(initialTouchMode, launchActivity, skipOnboarding) {
         this.isHomepageHeaderEnabled = isHomepageHeaderEnabled
         this.isPocketEnabled = isPocketEnabled
@@ -207,7 +203,6 @@ class HomeActivityIntentTestRule internal constructor(
         this.isMicrosurveyEnabled = isMicrosurveyEnabled
         this.shouldUseBottomToolbar = shouldUseBottomToolbar
         this.onboardingFeatureEnabled = onboardingFeatureEnabled
-        this.isTabSwipeCFREnabled = isTabSwipeCFREnabled
     }
 
     private val longTapUserPreference = getLongPressTimeout()
@@ -277,7 +272,6 @@ class HomeActivityIntentTestRule internal constructor(
         isMenuRedesignCFREnabled = settings.shouldShowMenuCFR
         isMicrosurveyEnabled = settings.microsurveyFeatureEnabled
         shouldUseBottomToolbar = settings.shouldUseBottomToolbar
-        isTabSwipeCFREnabled = !settings.hasShownTabSwipeCFR
     }
 
     companion object {
@@ -305,7 +299,6 @@ class HomeActivityIntentTestRule internal constructor(
             // remove with https://bugzilla.mozilla.org/show_bug.cgi?id=1917640
             shouldUseBottomToolbar = true,
             isPageLoadTranslationsPromptEnabled = false,
-            isTabSwipeCFREnabled = true,
         )
     }
 }
