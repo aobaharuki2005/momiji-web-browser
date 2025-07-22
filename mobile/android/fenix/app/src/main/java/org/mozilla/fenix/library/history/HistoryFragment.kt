@@ -32,12 +32,14 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
@@ -322,7 +324,9 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
     override fun onResume() {
         super.onResume()
 
-        (activity as NavHostActivity).getSupportActionBarAndInflateIfNecessary().show()
+        if (context?.components?.appStore?.state?.searchState?.isSearchActive != true) {
+            (activity as NavHostActivity).getSupportActionBarAndInflateIfNecessary().show()
+        }
     }
 
     override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
@@ -438,16 +442,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
 
                         LaunchedEffect(historyState.isSearching) {
                             if (!historyState.isSearching) {
-                                (activity as? AppCompatActivity)?.supportActionBar?.show()
-                                binding.historyLayout.updateLayoutParams {
-                                    (this as? ViewGroup.MarginLayoutParams)?.topMargin = 0
-                                }
-                                searchLayout?.isVisible = false
-                                requireComponents.appStore.dispatch(AppAction.SearchAction.SearchEnded)
-                                toolbarStore.dispatch(BrowserEditToolbarAction.SearchQueryUpdated(""))
-                                requireComponents.core.store.dispatch(EngagementFinished(abandoned = true))
-                                focusManager.clearFocus()
-                                keyboardController?.hide()
+                                closeSearchUx(searchLayout, focusManager, keyboardController)
                             }
                         }
 
@@ -499,13 +494,6 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                 }
             }
         }
-        (activity as? AppCompatActivity)?.supportActionBar?.hide()
-        binding.historyLayout.updateLayoutParams {
-            (this as? ViewGroup.MarginLayoutParams)?.topMargin =
-                requireContext().resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
-        }
-        searchLayout?.isVisible = true
-
         val appStore = requireComponents.appStore
         val historySearchEngine = requireComponents.core.store.state.search.searchEngines.firstOrNull {
             it.id == HISTORY_SEARCH_ENGINE_ID
@@ -514,6 +502,35 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
             appStore.dispatch(AppAction.SearchAction.SearchEngineSelected(it, false))
         }
         appStore.dispatch(AppAction.SearchAction.SearchStarted())
+
+        showSearchUx()
+    }
+
+    private fun showSearchUx() {
+        (activity as? AppCompatActivity)?.supportActionBar?.hide()
+        binding.historyLayout.updateLayoutParams {
+            (this as? ViewGroup.MarginLayoutParams)?.topMargin =
+                requireContext().resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+        }
+        searchLayout?.isVisible = true
+    }
+
+    private fun closeSearchUx(
+        searchLayout: ComposeView?,
+        focusManager: FocusManager,
+        keyboardController: SoftwareKeyboardController?,
+    ) {
+        focusManager.clearFocus()
+        keyboardController?.hide()
+
+        (activity as? AppCompatActivity)?.supportActionBar?.show()
+        binding.historyLayout.updateLayoutParams {
+            (this as? ViewGroup.MarginLayoutParams)?.topMargin = 0
+        }
+        searchLayout?.isVisible = false
+        requireComponents.appStore.dispatch(AppAction.SearchAction.SearchEnded)
+        toolbarStore.dispatch(BrowserEditToolbarAction.SearchQueryUpdated(""))
+        requireComponents.core.store.dispatch(EngagementFinished(abandoned = true))
     }
 
     private fun handleOpenHistoryInPrivateTabsMultiSelectMenuItem() {
