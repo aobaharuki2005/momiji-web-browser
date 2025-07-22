@@ -838,9 +838,9 @@ dependencies = [
 
 [[package]]
 name = "chrono"
-version = "0.4.40"
+version = "0.4.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a7964611d71df112cb1730f2ee67324fcf4d0fc6606acbbe9bfe06df124637c"
+checksum = "c469d952047f47f91b68d1cba3f10d63c11d73e4636f24f08daf0278abf01c4d"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
@@ -2049,7 +2049,6 @@ dependencies = [
  "serde_json",
  "tempfile",
  "thin-vec",
- "time 0.1.45",
  "uuid",
  "wr_malloc_size_of",
  "xpcom",
@@ -2704,9 +2703,9 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "64.5.1"
+version = "64.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "670a275c24171f78152fb817ffb9d31e6b3b7679e574d7ee9f7f3ec21f1ea856"
+checksum = "dc009205ab570a032a9a620932acf697e69744881149ec10188c2a6e9f8bb058"
 dependencies = [
  "crossbeam-channel",
  "glean-core",
@@ -2719,9 +2718,9 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "64.5.1"
+version = "64.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ebccab975e944c0f4993135d7edb62b3a249b06dbd614b6d544d59588cf76f14"
+checksum = "7b6452ff6beb4f45f49bc48cec2c62d6b1c93036e09afa646c033009a98bab9a"
 dependencies = [
  "android_logger",
  "bincode",
@@ -2736,7 +2735,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 1.999.999",
- "time 0.1.45",
+ "time 0.3.36",
  "uniffi",
  "uuid",
  "wr_malloc_size_of",
