@@ -26,16 +26,9 @@ class ModuleLoader {
   void clearModules(JSContext* cx);
 
  private:
-  static JSObject* ResolveImportedModule(JSContext* cx,
-                                         HandleValue referencingPrivate,
-                                         HandleObject moduleRequest);
   static bool GetImportMetaProperties(JSContext* cx, HandleValue privateValue,
                                       HandleObject metaObject);
   static bool ImportMetaResolve(JSContext* cx, unsigned argc, Value* vp);
-  static bool ImportModuleDynamically(JSContext* cx,
-                                      HandleValue referencingPrivate,
-                                      HandleObject moduleRequest,
-                                      HandleObject promise);
 
   static bool DynamicImportDelayFulfilled(JSContext* cx, unsigned argc,
                                           Value* vp);
@@ -44,8 +37,6 @@ class ModuleLoader {
 
   bool loadAndExecute(JSContext* cx, HandleString path,
                       HandleObject moduleRequestArg, MutableHandleValue);
-  JSObject* resolveImportedModule(JSContext* cx, HandleValue referencingPrivate,
-                                  HandleObject moduleRequest);
   bool populateImportMeta(JSContext* cx, HandleValue privateValue,
                           HandleObject metaObject);
   bool importMetaResolve(JSContext* cx,
