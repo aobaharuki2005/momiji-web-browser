@@ -56,7 +56,6 @@ import org.mozilla.fenix.settings.studies.StudiesFragmentDirections
 import org.mozilla.fenix.settings.wallpaper.WallpaperSettingsFragmentDirections
 import org.mozilla.fenix.share.AddNewDeviceFragmentDirections
 import org.mozilla.fenix.tabstray.TabsTrayFragmentDirections
-import org.mozilla.fenix.tabstray.ui.TabManagementFragmentDirections
 import org.mozilla.fenix.trackingprotection.TrackingProtectionPanelDialogFragmentDirections
 import org.mozilla.fenix.translations.TranslationsDialogFragmentDirections
 import org.mozilla.fenix.translations.preferences.downloadlanguages.DownloadLanguagesPreferenceFragmentDirections
@@ -322,7 +321,6 @@ private fun getHomeNavDirections(
     BrowserDirection.FromLoginDetailFragment -> LoginDetailFragmentDirections.actionGlobalBrowser()
 
     BrowserDirection.FromTabsTray -> TabsTrayFragmentDirections.actionGlobalBrowser()
-    BrowserDirection.FromTabManager -> TabManagementFragmentDirections.actionGlobalBrowser()
 
     BrowserDirection.FromRecentlyClosed -> RecentlyClosedFragmentDirections.actionGlobalBrowser()
 

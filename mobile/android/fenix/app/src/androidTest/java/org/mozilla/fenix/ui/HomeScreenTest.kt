@@ -11,7 +11,6 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper.waitUntilSnackbarGone
 import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -108,8 +107,6 @@ class HomeScreenTest : TestSetup() {
             verifyJumpBackInItemWithUrl(activityTestRule, secondWebPage.url.toString())
         }.openTabDrawer(activityTestRule) {
             closeTabWithTitle(secondWebPage.title)
-            waitUntilSnackbarGone()
-            verifyExistingOpenTabs(firstWebPage.title)
         }.closeTabDrawer {
         }
 

@@ -5,6 +5,7 @@
 package org.mozilla.fenix.ui
 
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import mozilla.components.concept.engine.mediasession.MediaSession
 import org.junit.Ignore
 import org.junit.Rule
@@ -200,6 +201,30 @@ class TabbedBrowsingTest : TestSetup() {
             verifyPrivateTabsNotification()
         }.clickClosePrivateTabsNotification {
             verifyHomeScreen()
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/903602
+    @Test
+    fun verifyTabTrayNotShowingStateHalfExpanded() {
+        homeScreen {
+        }.openTabDrawer(composeTestRule) {
+            verifyNoOpenTabsInNormalBrowsing()
+            // With no tabs opened the state should be STATE_COLLAPSED.
+            verifyTabsTrayBehaviorState(BottomSheetBehavior.STATE_COLLAPSED)
+            // Need to ensure the halfExpandedRatio is very small so that when in STATE_HALF_EXPANDED
+            // the tabTray will actually have a very small height (for a very short time) akin to being hidden.
+            verifyMinusculeHalfExpandedRatio()
+        }.clickTopBar {
+        }.waitForTabTrayBehaviorToIdle {
+            // Touching the topBar would normally advance the tabTray to the next state.
+            // We don't want that.
+            verifyTabsTrayBehaviorState(BottomSheetBehavior.STATE_COLLAPSED)
+        }.advanceToHalfExpandedState {
+        }.waitForTabTrayBehaviorToIdle {
+            // TabTray should not be displayed in STATE_HALF_EXPANDED.
+            // When advancing to this state it should immediately be hidden.
+            verifyTabTrayIsClosed()
         }
     }
 
