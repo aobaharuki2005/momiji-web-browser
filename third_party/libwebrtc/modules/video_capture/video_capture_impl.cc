@@ -109,7 +109,7 @@ void VideoCaptureImpl::RegisterCaptureDataCallback(
 }
 
 void VideoCaptureImpl::DeRegisterCaptureDataCallback(
-    rtc::VideoSinkInterface<VideoFrame>* dataCallBack) {
+    webrtc::VideoSinkInterface<VideoFrame>* dataCallBack) {
   MutexLock lock(&api_lock_);
   auto it = _dataCallBacks.find(dataCallBack);
   if (it != _dataCallBacks.end()) {

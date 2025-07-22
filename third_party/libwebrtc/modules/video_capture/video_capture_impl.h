@@ -65,7 +65,7 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
   virtual void RegisterCaptureDataCallback(
       RawVideoSinkInterface* dataCallback) override;
   void DeRegisterCaptureDataCallback(
-      rtc::VideoSinkInterface<VideoFrame>* dataCallback) override;
+      webrtc::VideoSinkInterface<VideoFrame>* dataCallback) override;
 
   int32_t StopCaptureIfAllClientsClose() override;
   int32_t SetCaptureRotation(VideoRotation rotation) override;

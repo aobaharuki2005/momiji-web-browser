@@ -120,7 +120,7 @@ class VideoCaptureModule : public RefCountInterface {
 
   //  Remove capture data callback
   virtual void DeRegisterCaptureDataCallback(
-      rtc::VideoSinkInterface<VideoFrame> *dataCallback) = 0;
+      webrtc::VideoSinkInterface<VideoFrame> *dataCallback) = 0;
 
   // Start capture device
   virtual int32_t StartCapture(const VideoCaptureCapability& capability) = 0;
