@@ -8,6 +8,7 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.NotificationManagerCompat
 import com.google.android.play.core.review.ReviewManagerFactory
@@ -332,4 +333,5 @@ class Components(private val context: Context) {
  */
 val components: Components
     @Composable
+    @ReadOnlyComposable
     get() = LocalContext.current.components

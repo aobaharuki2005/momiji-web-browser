@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -576,7 +577,11 @@ private fun PrivateHomepagePreview() {
 }
 
 private val horizontalMargin: Dp
-    @Composable get() = dimensionResource(R.dimen.home_item_horizontal_margin)
+    @Composable
+    @ReadOnlyComposable
+    get() = dimensionResource(R.dimen.home_item_horizontal_margin)
 
 private val verticalMargin: Dp
-    @Composable get() = dimensionResource(R.dimen.home_item_vertical_margin)
+    @Composable
+    @ReadOnlyComposable
+    get() = dimensionResource(R.dimen.home_item_vertical_margin)

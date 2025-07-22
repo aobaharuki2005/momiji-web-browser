@@ -27,6 +27,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -356,14 +357,18 @@ private data class SnackbarColors(
 ) {
     companion object {
         val default: SnackbarColors
-            @Composable get() = SnackbarColors(
+            @Composable
+            @ReadOnlyComposable
+            get() = SnackbarColors(
                 messageTextColor = FirefoxTheme.colors.textActionPrimary,
                 actionTextColor = FirefoxTheme.colors.textActionPrimary,
                 backgroundColor = FirefoxTheme.colors.actionPrimary,
             )
 
         val warning: SnackbarColors
-            @Composable get() = SnackbarColors(
+            @Composable
+            @ReadOnlyComposable
+            get() = SnackbarColors(
                 messageTextColor = FirefoxTheme.colors.textCritical,
                 actionTextColor = FirefoxTheme.colors.textPrimary,
                 backgroundColor = FirefoxTheme.colors.layer3,

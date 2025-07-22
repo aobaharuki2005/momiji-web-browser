@@ -8,6 +8,7 @@ package mozilla.components.compose.base.theme
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -1042,10 +1043,14 @@ fun acornPrivateColorScheme(): ColorScheme = privateColorPalette.toM3ColorScheme
  * Attention-grabbing color against surface for fills, icons, and text, indicating neutral information.
  */
 val ColorScheme.information: Color
-    @Composable get() = AcornTheme.colors.iconAccentBlue
+    @Composable
+    @ReadOnlyComposable
+    get() = AcornTheme.colors.iconAccentBlue
 
 /**
  * @see AcornColors.surfaceDimVariant
  */
 val ColorScheme.surfaceDimVariant: Color
-    @Composable get() = AcornTheme.colors.surfaceDimVariant
+    @Composable
+    @ReadOnlyComposable
+    get() = AcornTheme.colors.surfaceDimVariant
