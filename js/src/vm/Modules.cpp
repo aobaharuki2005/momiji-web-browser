@@ -50,6 +50,10 @@ static bool ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> module,
                            MutableHandle<Value> rval);
 static bool SyntheticModuleEvaluate(JSContext* cx, Handle<ModuleObject*> module,
                                     MutableHandle<Value> rval);
+static bool ContinueModuleLoading(JSContext* cx,
+                                  Handle<GraphLoadingStateRecordObject*> state,
+                                  Handle<JSObject*> moduleCompletion,
+                                  Handle<Value> error);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Public API
@@ -1387,11 +1391,28 @@ static bool InnerModuleLoading(JSContext* cx,
     // Step 2.d. For each String required of module.[[RequestedModules]], do
     Rooted<ModuleRequestObject*> moduleRequest(cx);
     Rooted<ModuleObject*> recordModule(cx);
+    Rooted<JSAtom*> invalidKey(cx);
     for (const RequestedModule& request : module->requestedModules()) {
       moduleRequest = request.moduleRequest();
-      // Step 2.d.i. If module.[[LoadedModules]] contains a Record whose
-      // [[Specifier]] is required, then
-      if (auto record = module->loadedModules().lookup(moduleRequest)) {
+
+      // https://tc39.es/proposal-import-attributes/#sec-InnerModuleLoading
+      if (moduleRequest->hasFirstUnsupportedAttributeKey()) {
+        UniqueChars printableKey = AtomToPrintableString(
+            cx, moduleRequest->getFirstUnsupportedAttributeKey());
+        JS_ReportErrorNumberASCII(
+            cx, GetErrorMessage, nullptr,
+            JSMSG_IMPORT_ATTRIBUTES_STATIC_IMPORT_UNSUPPORTED_ATTRIBUTE,
+            printableKey ? printableKey.get() : "");
+
+        JS::ExceptionStack exnStack(cx);
+        if (!JS::StealPendingExceptionStack(cx, &exnStack)) {
+          return false;
+        }
+
+        ContinueModuleLoading(cx, state, nullptr, exnStack.exception());
+      } else if (auto record = module->loadedModules().lookup(moduleRequest)) {
+        // Step 2.d.i. If module.[[LoadedModules]] contains a Record whose
+        //             [[Specifier]] is required, then
         // Step 2.d.i.1. Let record be that Record.
         // Step 2.d.i.2. Perform InnerModuleLoading(state, record.[[Module]]).
         recordModule = record->value();
@@ -1670,23 +1691,8 @@ static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
   Rooted<ModuleRequestObject*> required(cx);
   Rooted<ModuleObject*> requiredModule(cx);
   for (const RequestedModule& request : module->requestedModules()) {
-    required = request.moduleRequest();
-
-    // According to the spec, this should be in InnerModuleLoading, but
-    // currently, our module code is not aligned with the spec text.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1894729
-    if (required->hasFirstUnsupportedAttributeKey()) {
-      UniqueChars printableKey = AtomToPrintableString(
-          cx, required->getFirstUnsupportedAttributeKey());
-      JS_ReportErrorNumberASCII(
-          cx, GetErrorMessage, nullptr,
-          JSMSG_IMPORT_ATTRIBUTES_STATIC_IMPORT_UNSUPPORTED_ATTRIBUTE,
-          printableKey ? printableKey.get() : "");
-
-      return false;
-    }
-
     // Step 9.a. Let requiredModule be ? GetImportedModule(module, required).
+    required = request.moduleRequest();
     requiredModule = GetImportedModule(cx, module, required);
     if (!requiredModule) {
       return false;
