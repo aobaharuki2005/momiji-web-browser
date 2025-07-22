@@ -1400,20 +1400,22 @@ class PropertyView {
         class: "rule-link",
       });
 
-      const link = createChild(span, "a", {
-        target: "_blank",
-        class: "computed-link theme-link",
-        title: selector.longSource,
-        sourcelocation: selector.source,
-        tabindex: "0",
-        textContent: selector.source,
-      });
-      link.addEventListener("click", selector.openStyleEditor);
-      const shortcuts = new KeyShortcuts({
-        window: this.#tree.styleWindow,
-        target: link,
-      });
-      shortcuts.on("Return", () => selector.openStyleEditor());
+      if (selector.source) {
+        const link = createChild(span, "a", {
+          target: "_blank",
+          class: "computed-link theme-link",
+          title: selector.longSource,
+          sourcelocation: selector.source,
+          tabindex: "0",
+          textContent: selector.source,
+        });
+        link.addEventListener("click", selector.openStyleEditor);
+        const shortcuts = new KeyShortcuts({
+          window: this.#tree.styleWindow,
+          target: link,
+        });
+        shortcuts.on("Return", () => selector.openStyleEditor());
+      }
 
       const status = createChild(p, "span", {
         dir: "ltr",
@@ -1603,10 +1605,7 @@ class SelectorView {
     this.openStyleEditor = this.openStyleEditor.bind(this);
 
     const rule = this.selectorInfo.rule;
-    if (!rule || !rule.parentStyleSheet || rule.type == ELEMENT_STYLE) {
-      this.source = CssLogic.l10n("rule.sourceElement");
-      this.longSource = this.source;
-    } else {
+    if (rule?.parentStyleSheet) {
       // This always refers to the generated location.
       const sheet = rule.parentStyleSheet;
       const sourceSuffix = rule.line > 0 ? ":" + rule.line : "";
