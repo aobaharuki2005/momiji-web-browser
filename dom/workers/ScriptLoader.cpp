@@ -1191,7 +1191,8 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
     //    relevant global object to fire an event named error at worker.
     //
     // The event will be dispatched in CompileScriptRunnable.
-    if (request->mModuleScript->HasParseError()) {
+    if (request->mModuleScript->HasParseError() ||
+        request->mModuleScript->HasErrorToRethrow()) {
       // Here we assign an error code that is not a JS Exception, so
       // CompileRunnable can dispatch the event.
       mRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);

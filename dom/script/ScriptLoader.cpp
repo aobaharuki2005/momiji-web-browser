@@ -2392,7 +2392,8 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
       return NS_OK;
     }
 
-    if (request->mModuleScript) {
+    if (request->mModuleScript &&
+        !request->mModuleScript->HasErrorToRethrow()) {
       if (!request->InstantiateModuleGraph()) {
         request->mModuleScript = nullptr;
       }

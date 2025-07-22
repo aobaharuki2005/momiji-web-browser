@@ -267,24 +267,36 @@ void WorkletModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
     return;
   }
 
-  if (!aRequest->InstantiateModuleGraph()) {
-    return;
-  }
-
-  nsresult rv = aRequest->EvaluateModule();
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
+  bool hasParseError = aRequest->mModuleScript->HasParseError();
   bool hasError = aRequest->mModuleScript->HasErrorToRethrow();
-  if (hasError) {
+
+  if (!hasParseError && !hasError) {
+    if (!aRequest->InstantiateModuleGraph()) {
+      return;
+    }
+
+    nsresult rv = aRequest->EvaluateModule();
+    if (NS_FAILED(rv)) {
+      return;
+    }
+
+    hasError = aRequest->mModuleScript->HasErrorToRethrow();
+  }
+
+  if (hasParseError || hasError) {
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(GetGlobalObject()))) {
       return;
     }
 
     JSContext* cx = jsapi.cx();
-    JS::Rooted<JS::Value> error(cx, aRequest->mModuleScript->ErrorToRethrow());
+    JS::Rooted<JS::Value> error(cx);
+    if (hasParseError) {
+      error = aRequest->mModuleScript->ParseError();
+    } else {
+      error = aRequest->mModuleScript->ErrorToRethrow();
+    }
+    JS_SetPendingException(cx, error);
     RefPtr<AddModuleThrowErrorRunnable> runnable =
         new AddModuleThrowErrorRunnable(handlerRef);
     ErrorResult result;
