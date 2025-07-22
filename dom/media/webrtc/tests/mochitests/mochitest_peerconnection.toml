@@ -248,6 +248,10 @@ scheme = "http"
 
 ["test_peerConnection_insertDTMF.html"]
 
+["test_peerConnection_localhostPolicy.html"]
+skip-if = ["os == 'android'"] # websockets don't work on android (bug 1266217)
+scheme = "http"
+
 ["test_peerConnection_localReofferRollback.html"]
 
 ["test_peerConnection_localRollback.html"]
