@@ -4051,11 +4051,6 @@ pref("extensions.formautofill.heuristics.refillOnSiteClearingFields.timeout", 50
 
 pref("extensions.formautofill.heuristics.autofillSameOriginWithTop", true);
 
-#ifdef NIGHTLY_BUILD
-  pref("extensions.formautofill.ml.experiment.enabled", true);
-  pref("extensions.formautofill.ml.experiment.modelRevision", "v0.1.3");
-#endif
-
 pref("toolkit.osKeyStore.loglevel", "Warn");
 
 pref("extensions.formautofill.supportRTL", false);

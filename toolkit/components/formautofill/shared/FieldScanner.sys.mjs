@@ -4,9 +4,7 @@
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
-  FormAutofill: "resource://autofill/FormAutofill.sys.mjs",
   FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
-  MLAutofill: "resource://autofill/MLAutofill.sys.mjs",
 });
 
 /**
@@ -100,11 +98,8 @@ export class FieldDetail {
     fieldName = null,
     {
       autocompleteInfo = null,
-      fathomLabel = null,
       fathomConfidence = null,
       isVisible = true,
-      mlHeaderInput = null,
-      mlButtonInput = null,
       isLookup = false,
     } = {}
   ) {
@@ -155,17 +150,6 @@ export class FieldDetail {
 
     // Info required by heuristics
     fieldDetail.maxLength = element.maxLength;
-
-    if (
-      lazy.FormAutofill.isMLExperimentEnabled &&
-      ["input", "select"].includes(element.localName)
-    ) {
-      fieldDetail.mlinput = lazy.MLAutofill.getMLMarkup(fieldDetail.element);
-      fieldDetail.mlHeaderInput = mlHeaderInput;
-      fieldDetail.mlButtonInput = mlButtonInput;
-      fieldDetail.fathomLabel = fathomLabel;
-      fieldDetail.fathomConfidence = fathomConfidence;
-    }
 
     fieldDetail.isLookup = isLookup;
 
