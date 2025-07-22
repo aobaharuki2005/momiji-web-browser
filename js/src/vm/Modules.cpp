@@ -17,7 +17,7 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "builtin/JSON.h"  // js::ParseJSONWithReviver
-#include "builtin/ModuleObject.h"  // js::FinishDynamicModuleImport, js::{,Requested}ModuleObject
+#include "builtin/ModuleObject.h"
 #include "builtin/Promise.h"  // js::CreatePromiseObjectForAsync, js::AsyncFunctionReturned
 #include "ds/Sort.h"
 #include "frontend/BytecodeCompiler.h"  // js::frontend::CompileModule
@@ -76,6 +76,53 @@ JS_PUBLIC_API void JS::SetModuleMetadataHook(JSRuntime* rt,
   AssertHeapIsIdle();
 
   rt->moduleMetadataHook = func;
+}
+
+JS_PUBLIC_API bool JS::FinishLoadingImportedModule(
+    JSContext* cx, Handle<JSObject*> referrer, Handle<Value> referencingPrivate,
+    Handle<JSObject*> moduleRequest, Handle<Value> statePrivate,
+    Handle<JSObject*> result) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(referencingPrivate);
+
+  return js::FinishLoadingImportedModule(cx, referrer, referencingPrivate,
+                                         moduleRequest, statePrivate, result);
+}
+
+JS_PUBLIC_API bool JS::FinishLoadingImportedModule(
+    JSContext* cx, Handle<JSObject*> referrer, Handle<Value> referencingPrivate,
+    Handle<JSObject*> moduleRequest, Handle<JSObject*> promise,
+    Handle<JSObject*> result, bool usePromise) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(referencingPrivate);
+
+  return js::FinishLoadingImportedModule(cx, referrer, referencingPrivate,
+                                         moduleRequest, promise, result,
+                                         usePromise);
+}
+
+JS_PUBLIC_API bool JS::FinishLoadingImportedModuleFailed(
+    JSContext* cx, Handle<Value> statePrivate, Handle<JSObject*> promise,
+    Handle<Value> error) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  if (!statePrivate.isUndefined()) {
+    cx->check(statePrivate, error);
+    return js::FinishLoadingImportedModuleFailed(cx, statePrivate, error);
+  }
+
+  cx->check(promise);
+  return js::FinishLoadingImportedModuleFailed(cx, promise, error);
+}
+
+JS_PUBLIC_API bool JS::FinishLoadingImportedModuleFailedWithPendingException(
+    JSContext* cx, Handle<JSObject*> promise) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(promise);
+  return js::FinishLoadingImportedModuleFailedWithPendingException(cx, promise);
 }
 
 template <typename Unit>
@@ -1400,6 +1447,114 @@ static bool InnerModuleLoading(JSContext* cx,
 
   // Step 6. Return unused.
   return true;
+}
+
+// https://tc39.es/ecma262/#sec-ContinueModuleLoading
+// ContinueModuleLoading ( state, moduleCompletion )
+static bool ContinueModuleLoading(JSContext* cx,
+                                  Handle<GraphLoadingStateRecordObject*> state,
+                                  Handle<JSObject*> moduleCompletion,
+                                  Handle<Value> error) {
+  // Step 1. If state.[[IsLoading]] is false, return unused.
+  if (!state->isLoading()) {
+    return true;
+  }
+
+  // Step 2. If moduleCompletion is a normal completion, then
+  if (moduleCompletion) {
+    // Step 2.a. Perform InnerModuleLoading(state, moduleCompletion.[[Value]]).
+    Rooted<ModuleObject*> module(cx, &moduleCompletion->as<ModuleObject>());
+    return InnerModuleLoading(cx, state, module);
+  }
+
+  // Step 3. Else,
+  // Step 3.a. Set state.[[IsLoading]] to false.
+  state->setIsLoading(false);
+
+  // Step 3.b. Perform ! Call(state.[[PromiseCapability]].[[Reject]],
+  // undefined, « moduleCompletion.[[Value]] »).
+  RootedValue hostDefined(cx, state->hostDefined());
+  return state->rejected(cx, hostDefined, error);
+}
+
+// https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
+// Succeeded version
+bool js::FinishLoadingImportedModule(JSContext* cx, Handle<JSObject*> referrer,
+                                     Handle<Value> referencingPrivate,
+                                     Handle<JSObject*> moduleRequest,
+                                     Handle<Value> statePrivate,
+                                     Handle<JSObject*> result) {
+  // Impl note: Currently this is called when a static import is finished.
+  MOZ_ASSERT(referrer);
+  Rooted<ModuleObject*> mod(cx, &referrer->as<ModuleObject>());
+  auto& loadedModules = mod->loadedModules();
+
+  // Step 1. If result is a normal completion, then
+  // Step 1.a. If referrer.[[LoadedModules]] contains a Record whose
+  //           [[Specifier]] is specifier, then
+  if (auto record = loadedModules.lookup(moduleRequest)) {
+    //  Step 1.a.i. Assert: That Record's [[Module]] is result.[[Value]].
+    MOZ_ASSERT(record->value() == result);
+  } else {
+    // Step 1.b. Else, append the Record { moduleRequest.[[Specifer]],
+    //           [[Attributes]]: moduleRequest.[[Attributes]],
+    //           [[Module]]: result.[[Value]] } to referrer.[[LoadedModules]].
+    if (!loadedModules.putNew(moduleRequest, &result->as<ModuleObject>())) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+  }
+
+  return js::ContinueLoadingImportedModule(cx, statePrivate, result,
+                                           UndefinedHandleValue);
+}
+
+// For Dynamic import
+bool js::FinishLoadingImportedModule(JSContext* cx, Handle<JSObject*> referrer,
+                                     Handle<Value> referencingPrivate,
+                                     Handle<JSObject*> moduleRequest,
+                                     Handle<JSObject*> promise,
+                                     Handle<JSObject*> result,
+                                     bool usePromise) {
+  return js::ContinueDynamicImport(cx, referencingPrivate, moduleRequest,
+                                   promise, result, usePromise);
+}
+
+// https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
+// Failed version
+bool js::FinishLoadingImportedModuleFailed(JSContext* cx,
+                                           Handle<Value> statePrivate,
+                                           Handle<Value> error) {
+  return js::ContinueLoadingImportedModule(cx, statePrivate, nullptr, error);
+}
+
+bool js::FinishLoadingImportedModuleFailed(JSContext* cx,
+                                           Handle<JSObject*> promise,
+                                           Handle<Value> error) {
+  MOZ_ASSERT(promise);
+  JS_SetPendingException(cx, error);
+  return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
+}
+
+bool js::FinishLoadingImportedModuleFailedWithPendingException(
+    JSContext* cx, Handle<JSObject*> promise) {
+  MOZ_ASSERT(JS_IsExceptionPending(cx));
+  MOZ_ASSERT(promise);
+  return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
+}
+
+// The 2nd part of FinishLoadingImportedModule defined in
+// https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
+bool js::ContinueLoadingImportedModule(JSContext* cx,
+                                       Handle<Value> statePrivate,
+                                       Handle<JSObject*> result,
+                                       Handle<Value> error) {
+  // Step 2. If payload is a GraphLoadingState Record, then
+  // Step 2.a. Perform ContinueModuleLoading(payload, result).
+  MOZ_ASSERT(!statePrivate.isUndefined());
+  Rooted<GraphLoadingStateRecordObject*> state(cx);
+  state = static_cast<GraphLoadingStateRecordObject*>(&statePrivate.toObject());
+  return ContinueModuleLoading(cx, state, result, error);
 }
 
 // https://tc39.es/ecma262/#sec-moduledeclarationlinking
