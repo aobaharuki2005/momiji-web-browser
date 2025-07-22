@@ -16668,8 +16668,8 @@ struct EmulatesUndefinedDependency final : public CompilationDependency {
         .addFuseDependency(cx, ionScript);
   }
 
-  virtual UniquePtr<CompilationDependency> clone() const override {
-    return MakeUnique<EmulatesUndefinedDependency>();
+  virtual CompilationDependency* clone(TempAllocator& alloc) const override {
+    return new (alloc.fallible()) EmulatesUndefinedDependency();
   }
 };
 
@@ -16694,19 +16694,19 @@ struct ArrayExceedsInt32LengthDependency final : public CompilationDependency {
         .addFuseDependency(cx, ionScript);
   }
 
-  virtual UniquePtr<CompilationDependency> clone() const override {
-    return MakeUnique<ArrayExceedsInt32LengthDependency>();
+  virtual CompilationDependency* clone(TempAllocator& alloc) const override {
+    return new (alloc.fallible()) ArrayExceedsInt32LengthDependency();
   }
 };
 
 bool CodeGenerator::addHasSeenObjectEmulateUndefinedFuseDependency() {
   EmulatesUndefinedDependency dep;
-  return mirGen().tracker.addDependency(dep);
+  return mirGen().tracker.addDependency(alloc(), dep);
 }
 
 bool CodeGenerator::addHasSeenArrayExceedsInt32LengthFuseDependency() {
   ArrayExceedsInt32LengthDependency dep;
-  return mirGen().tracker.addDependency(dep);
+  return mirGen().tracker.addDependency(alloc(), dep);
 }
 
 bool CodeGenerator::link(JSContext* cx) {

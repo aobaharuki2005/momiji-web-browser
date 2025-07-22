@@ -801,8 +801,8 @@ struct RealmFuseDependency final : public CompilationDependency {
         .addFuseDependency(cx, ionScript);
   }
 
-  virtual UniquePtr<CompilationDependency> clone() const override {
-    return MakeUnique<RealmFuseDependency<FuseMember, DepType>>();
+  virtual CompilationDependency* clone(TempAllocator& alloc) const override {
+    return new (alloc.fallible()) RealmFuseDependency<FuseMember, DepType>();
   }
 
   virtual bool checkDependency(JSContext* cx) const override {
@@ -822,7 +822,7 @@ bool WarpOracle::addFuseDependency(RealmFuses::FuseIndex fuseIndex,
       return true;
     }
     *stillValid = true;
-    return mirGen().tracker.addDependency(dep);
+    return mirGen().tracker.addDependency(alloc_, dep);
   };
 
   // Register a compilation dependency for all invalidating fuses that are still
