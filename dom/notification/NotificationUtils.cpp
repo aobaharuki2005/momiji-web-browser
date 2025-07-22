@@ -219,6 +219,11 @@ already_AddRefed<NotificationsPromise> GetStoredNotificationsForScope(
 
   nsCOMPtr<nsINotificationStorage> notificationStorage =
       GetNotificationStorage(aPrincipal->GetIsInPrivateBrowsing());
+  if (!notificationStorage) {
+    return NotificationsPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
+                                                 __func__)
+        .forget();
+  }
 
   rv = notificationStorage->Get(origin, NS_ConvertUTF8toUTF16(aScope), aTag,
                                 callback);
