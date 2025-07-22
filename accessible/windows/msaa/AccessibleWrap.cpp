@@ -58,19 +58,3 @@ void AccessibleWrap::GetNativeInterface(void** aOutAccessible) {
   RefPtr<IAccessible> result = GetMsaa();
   return result.forget(aOutAccessible);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// AccessibleWrap
-
-//------- Helper methods ---------
-
-bool AccessibleWrap::IsRootForHWND() {
-  if (IsRoot()) {
-    return true;
-  }
-  HWND thisHwnd = MsaaAccessible::GetHWNDFor(this);
-  AccessibleWrap* parent = static_cast<AccessibleWrap*>(LocalParent());
-  MOZ_ASSERT(parent);
-  HWND parentHwnd = MsaaAccessible::GetHWNDFor(parent);
-  return thisHwnd != parentHwnd;
-}
