@@ -1650,13 +1650,10 @@ class WebRtcIceConnectTest : public StunTest {
   }
 
   void Init(bool setup_stun_servers = true,
-            NrIceCtx::Policy ice_policy = NrIceCtx::ICE_POLICY_ALL) {
+            NrIceCtx::Config config = NrIceCtx::Config()) {
     if (initted_) {
       return;
     }
-
-    NrIceCtx::Config config;
-    config.mPolicy = ice_policy;
 
     p1_ = MakeUnique<IceTestPeer>("P1", test_utils_, true, config);
     p2_ = MakeUnique<IceTestPeer>("P2", test_utils_, false, config);
@@ -2120,9 +2117,9 @@ TEST_F(WebRtcIceGatherTest, TestGatherFakeStunServerHostnameNoResolver) {
     return;
   }
 
-  NrIceCtx::GlobalConfig config;
-  config.mTcpEnabled = false;
-  NrIceCtx::InitializeGlobals(config);
+  NrIceCtx::GlobalConfig globalConfig;
+  globalConfig.mTcpEnabled = false;
+  NrIceCtx::InitializeGlobals(globalConfig);
   EnsurePeer();
   peer_->SetStunServer(stun_server_hostname_, kDefaultStunServerPort);
   peer_->AddStream(1);
@@ -2452,13 +2449,14 @@ TEST_F(WebRtcIceGatherTest, TestGatherVerifyNoLoopback) {
 }
 
 TEST_F(WebRtcIceGatherTest, TestGatherAllowLoopback) {
-  NrIceCtx::GlobalConfig config;
-  config.mTcpEnabled = false;
-  config.mAllowLoopback = true;
-  NrIceCtx::InitializeGlobals(config);
+  NrIceCtx::GlobalConfig globalConfig;
+  globalConfig.mTcpEnabled = false;
+  NrIceCtx::InitializeGlobals(globalConfig);
 
+  NrIceCtx::Config config;
+  config.mAllowLoopback = true;
   // Set up peer with loopback allowed.
-  peer_ = MakeUnique<IceTestPeer>("P1", test_utils_, true, NrIceCtx::Config());
+  peer_ = MakeUnique<IceTestPeer>("P1", test_utils_, true, config);
   peer_->AddStream(1);
   Gather();
   ASSERT_TRUE(StreamHasMatchingCandidate(0, "127.0.0.1"));
@@ -2976,7 +2974,7 @@ TEST_F(WebRtcIceConnectTest, DISABLED_TestConnectNoHost) {
   NrIceCtx::GlobalConfig config;
   config.mTcpEnabled = false;
   NrIceCtx::InitializeGlobals(config);
-  Init(false, NrIceCtx::ICE_POLICY_NO_HOST);
+  Init(false, NrIceCtx::Config{.mPolicy = NrIceCtx::ICE_POLICY_NO_HOST});
   AddStream(1);
   ASSERT_TRUE(Gather());
   SetExpectedTypes(NrIceCandidate::Type::ICE_SERVER_REFLEXIVE,
@@ -2986,11 +2984,13 @@ TEST_F(WebRtcIceConnectTest, DISABLED_TestConnectNoHost) {
 }
 
 TEST_F(WebRtcIceConnectTest, TestLoopbackOnlySortOf) {
-  NrIceCtx::GlobalConfig config;
-  config.mTcpEnabled = false;
+  NrIceCtx::GlobalConfig globalConfig;
+  globalConfig.mTcpEnabled = false;
+  NrIceCtx::InitializeGlobals(globalConfig);
+
+  NrIceCtx::Config config;
   config.mAllowLoopback = true;
-  NrIceCtx::InitializeGlobals(config);
-  Init(false);
+  Init(false, config);
   AddStream(1);
   SetCandidateFilter(IsLoopbackCandidate);
   ASSERT_TRUE(Gather());
@@ -3114,7 +3114,7 @@ TEST_F(WebRtcIceConnectTest, TestConnectNoNatNoHost) {
   NrIceCtx::GlobalConfig config;
   config.mTcpEnabled = false;
   NrIceCtx::InitializeGlobals(config);
-  Init(false, NrIceCtx::ICE_POLICY_NO_HOST);
+  Init(false, NrIceCtx::Config{.mPolicy = NrIceCtx::ICE_POLICY_NO_HOST});
   UseTestStunServer();
   // Because we are connecting from our host candidate to the
   // other side's apparent srflx (which is also their host)
@@ -3131,7 +3131,7 @@ TEST_F(WebRtcIceConnectTest, TestConnectFullConeNoHost) {
   config.mTcpEnabled = false;
   NrIceCtx::InitializeGlobals(config);
   UseNat();
-  Init(false, NrIceCtx::ICE_POLICY_NO_HOST);
+  Init(false, NrIceCtx::Config{.mPolicy = NrIceCtx::ICE_POLICY_NO_HOST});
   UseTestStunServer();
   SetExpectedTypes(NrIceCandidate::Type::ICE_SERVER_REFLEXIVE,
                    NrIceCandidate::Type::ICE_SERVER_REFLEXIVE);

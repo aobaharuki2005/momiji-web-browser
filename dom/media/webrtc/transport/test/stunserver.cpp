@@ -97,6 +97,7 @@ extern "C" {
 #include "stun_util.h"
 #include "registry.h"
 #include "nr_socket_buffered_stun.h"
+#include "addrs.h"
 }
 
 #include "stunserver.h"
@@ -270,8 +271,8 @@ int TestStunServer::Initialize(int address_family) {
     return R_INTERNAL;
   }
 
-  // removes duplicates and, based on prefs, loopback and link_local addrs
-  r = nr_stun_filter_local_addresses(addrs, &addr_ct);
+  // removes duplicate, loopback, and link_local addrs
+  r = nr_stun_filter_addrs(addrs, true, true, &addr_ct);
   if (r) {
     MOZ_MTLOG(ML_ERROR, "Couldn't filter addresses");
     return R_INTERNAL;

@@ -183,6 +183,8 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   uint32_t mMinDtlsVersion = 0;
   uint32_t mMaxDtlsVersion = 0;
   bool mForceNoHost = false;
+  bool mAllowLoopback = false;
+  bool mAllowLinkLocal = false;
   Maybe<NrIceCtx::NatSimulatorConfig> mNatConfig;
 
   std::set<std::string> mSignaledAddresses;
@@ -458,10 +460,6 @@ nsresult MediaTransportHandler::ConvertIceServers(
 
 static NrIceCtx::GlobalConfig GetGlobalConfig() {
   NrIceCtx::GlobalConfig config;
-  config.mAllowLinkLocal =
-      Preferences::GetBool("media.peerconnection.ice.link_local", false);
-  config.mAllowLoopback =
-      Preferences::GetBool("media.peerconnection.ice.loopback", false);
   config.mTcpEnabled =
       Preferences::GetBool("media.peerconnection.ice.tcp", false);
   config.mStunClientMaxTransmits = Preferences::GetInt(
@@ -578,6 +576,10 @@ void MediaTransportHandlerSTS::CreateIceCtx(const std::string& aName) {
         mForceNoHost =
             Preferences::GetBool("media.peerconnection.ice.no_host", false);
         mNatConfig = GetNatConfig();
+        mAllowLoopback =
+            Preferences::GetBool("media.peerconnection.ice.loopback", false);
+        mAllowLinkLocal =
+            Preferences::GetBool("media.peerconnection.ice.link_local", false);
 
         MOZ_RELEASE_ASSERT(STSShutdownHandler::Instance());
         STSShutdownHandler::Instance()->Register(this);
@@ -641,6 +643,9 @@ nsresult MediaTransportHandlerSTS::SetIceConfig(
         if (config.mPolicy == NrIceCtx::ICE_POLICY_ALL && mForceNoHost) {
           config.mPolicy = NrIceCtx::ICE_POLICY_NO_HOST;
         }
+
+        config.mAllowLoopback = mAllowLoopback;
+        config.mAllowLinkLocal = mAllowLinkLocal;
         config.mNatSimulatorConfig = mNatConfig;
 
         nsresult rv;

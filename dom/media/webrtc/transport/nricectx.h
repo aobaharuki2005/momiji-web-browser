@@ -220,6 +220,8 @@ class NrIceCtx {
 
   struct Config {
     NrIceCtx::Policy mPolicy = NrIceCtx::ICE_POLICY_ALL;
+    bool mAllowLinkLocal = false;
+    bool mAllowLoopback = false;
     Maybe<NatSimulatorConfig> mNatSimulatorConfig;
   };
 
@@ -233,8 +235,6 @@ class NrIceCtx {
   void DestroyStream(const std::string& id);
 
   struct GlobalConfig {
-    bool mAllowLinkLocal = false;
-    bool mAllowLoopback = false;
     bool mTcpEnabled = true;
     int mStunClientMaxTransmits = 7;
     int mTrickleIceGracePeriod = 5000;
