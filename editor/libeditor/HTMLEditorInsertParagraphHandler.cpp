@@ -1588,79 +1588,103 @@ EditorDOMPoint HTMLEditor::AutoInsertParagraphHandler::
     GetBetterSplitPointToAvoidToContinueLink(
         const EditorDOMPoint& aCandidatePointToSplit,
         const Element& aElementToSplit) {
-  // We shouldn't create new anchor element which has non-empty href unless
-  // splitting middle of it because we assume that users don't want to create
-  // *same* anchor element across two or more paragraphs in most cases.
-  // So, adjust selection start if it's edge of anchor element(s).
-  // XXX We don't support white-space collapsing in these cases since it needs
-  //     some additional work with WhiteSpaceVisibilityKeeper but it's not
-  //     usual case. E.g., |<a href="foo"><b>foo []</b> </a>|
-  if (aCandidatePointToSplit.IsStartOfContainer()) {
-    EditorDOMPoint candidatePoint(aCandidatePointToSplit);
-    for (nsIContent* container =
-             aCandidatePointToSplit.GetContainerAs<nsIContent>();
-         container && container != &aElementToSplit;
-         container = container->GetParent()) {
-      if (HTMLEditUtils::IsLink(container)) {
-        // Found link should be only in right node.  So, we shouldn't split
-        // it.
-        candidatePoint.Set(container);
+  EditorDOMPoint pointToSplit = [&]() MOZ_NEVER_INLINE_DEBUG {
+    // We shouldn't create new anchor element which has non-empty href unless
+    // splitting middle of it because we assume that users don't want to create
+    // *same* anchor element across two or more paragraphs in most cases.
+    // So, adjust selection start if it's edge of anchor element(s).
+    {
+      const WSScanResult prevVisibleThing =
+          WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
+              WSRunScanner::Scan::All, aCandidatePointToSplit,
+              BlockInlineCheck::UseComputedDisplayOutsideStyle,
+              &aElementToSplit);
+      if (prevVisibleThing.GetContent() &&
+          // Only if the previous thing is not in the same container.
+          prevVisibleThing.GetContent() !=
+              aCandidatePointToSplit.GetContainer() &&
+          // Only if the previous thing is a preceding node of closest inclusive
+          // ancestor element at the split point.
+          !prevVisibleThing.GetContent()->IsInclusiveDescendantOf(
+              aCandidatePointToSplit.GetContainerOrContainerParentElement())) {
+        EditorRawDOMPoint candidatePointToSplit =
+            aCandidatePointToSplit.To<EditorRawDOMPoint>();
+        const Element* const commonAncestor =
+            Element::FromNode(nsContentUtils::GetClosestCommonInclusiveAncestor(
+                candidatePointToSplit.GetContainerOrContainerParentElement(),
+                prevVisibleThing.GetContent()));
+        MOZ_ASSERT(commonAncestor);
+        for (const Element* container =
+                 candidatePointToSplit.GetContainerOrContainerParentElement();
+             container && container != commonAncestor;
+             container = container->GetParentElement()) {
+          if (!HTMLEditUtils::IsLink(container)) {
+            continue;
+          }
+          // Found link should be only in right node.  So, we shouldn't split
+          // it.
+          candidatePointToSplit.Set(container);
+          // Even if we found an anchor element, don't break because DOM API
+          // allows to nest anchor elements.
+        }
+        return candidatePointToSplit.To<EditorDOMPoint>();
+      }
+    }
+    WSScanResult nextVisibleThing =
+        WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
+            WSRunScanner::Scan::All, aCandidatePointToSplit,
+            BlockInlineCheck::UseComputedDisplayOutsideStyle, &aElementToSplit);
+    if (nextVisibleThing.ReachedInvisibleBRElement()) {
+      nextVisibleThing =
+          WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
+              WSRunScanner::Scan::All,
+              nextVisibleThing.PointAfterReachedContent<EditorRawDOMPoint>(),
+              BlockInlineCheck::UseComputedDisplayOutsideStyle,
+              &aElementToSplit);
+    }
+    if (nextVisibleThing.GetContent() &&
+        // Only if the next thing is not in the same container.
+        nextVisibleThing.GetContent() !=
+            aCandidatePointToSplit.GetContainer() &&
+        // Only if the next thing is a preceding node of closest inclusive
+        // ancestor element at the split point.
+        !nextVisibleThing.GetContent()->IsInclusiveDescendantOf(
+            aCandidatePointToSplit.GetContainerOrContainerParentElement())) {
+      EditorRawDOMPoint candidatePointToSplit =
+          aCandidatePointToSplit.To<EditorRawDOMPoint>();
+      const Element* const commonAncestor =
+          Element::FromNode(nsContentUtils::GetClosestCommonInclusiveAncestor(
+              candidatePointToSplit.GetContainerOrContainerParentElement(),
+              nextVisibleThing.GetContent()));
+      MOZ_ASSERT(commonAncestor);
+      for (const Element* container =
+               candidatePointToSplit.GetContainerOrContainerParentElement();
+           container && container != commonAncestor;
+           container = container->GetParentElement()) {
+        if (!HTMLEditUtils::IsLink(container)) {
+          continue;
+        }
+        // Found link should be only in left node.  So, we shouldn't split it.
+        candidatePointToSplit.SetAfter(container);
         // Even if we found an anchor element, don't break because DOM API
         // allows to nest anchor elements.
       }
-      // If the container is middle of its parent, stop adjusting split point.
-      if (container->GetPreviousSibling()) {
-        // XXX Should we check if previous sibling is visible content?
-        //     E.g., should we ignore comment node, invisible <br> element?
-        break;
-      }
+      return candidatePointToSplit.To<EditorDOMPoint>();
     }
-    return candidatePoint;
-  }
 
-  // We also need to check if selection is at invisible <br> element at end
-  // of an <a href="foo"> element because editor inserts a <br> element when
-  // user types Enter key after a white-space which is at middle of
-  // <a href="foo"> element and when setting selection at end of the element,
-  // selection becomes referring the <br> element.  We may need to change this
-  // behavior later if it'd be standardized.
-  if (!aCandidatePointToSplit.IsEndOfContainer() &&
-      !aCandidatePointToSplit.IsBRElementAtEndOfContainer()) {
+    // Okay, split the ancestors as-is.
     return aCandidatePointToSplit;
-  }
-  // If there are 2 <br> elements, the first <br> element is visible.  E.g.,
-  // |<a href="foo"><b>boo[]<br></b><br></a>|, we should split the <a>
-  // element.  Otherwise, E.g., |<a href="foo"><b>boo[]<br></b></a>|,
-  // we should not split the <a> element and ignore inline elements in it.
-  bool foundBRElement = aCandidatePointToSplit.IsBRElementAtEndOfContainer();
-  EditorDOMPoint candidatePoint(aCandidatePointToSplit);
-  for (nsIContent* container =
-           aCandidatePointToSplit.GetContainerAs<nsIContent>();
-       container && container != &aElementToSplit;
-       container = container->GetParent()) {
-    if (HTMLEditUtils::IsLink(container)) {
-      // Found link should be only in left node.  So, we shouldn't split it.
-      candidatePoint.SetAfter(container);
-      // Even if we found an anchor element, don't break because DOM API
-      // allows to nest anchor elements.
-    }
-    // If the container is middle of its parent, stop adjusting split point.
-    if (nsIContent* nextSibling = container->GetNextSibling()) {
-      if (foundBRElement) {
-        // If we've already found a <br> element, we assume found node is
-        // visible <br> or something other node.
-        // XXX Should we check if non-text data node like comment?
-        break;
-      }
+  }();
 
-      // XXX Should we check if non-text data node like comment?
-      if (!nextSibling->IsHTMLElement(nsGkAtoms::br)) {
-        break;
-      }
-      foundBRElement = true;
-    }
+  // If the candidate split point is not in a splittable node, let's move the
+  // point after the parent.
+  for (const nsIContent* container = pointToSplit.ContainerAs<nsIContent>();
+       container && container != &aElementToSplit &&
+       !HTMLEditUtils::IsSplittableNode(*container);
+       container = container->GetParent()) {
+    pointToSplit = pointToSplit.ParentPoint();
   }
-  return candidatePoint;
+  return pointToSplit;
 }
 
 Result<SplitNodeResult, nsresult>

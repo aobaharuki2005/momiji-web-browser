@@ -1089,20 +1089,6 @@ class EditorDOMPointBase final {
     return mOffset.value() == mParent->Length() - 1;
   }
 
-  bool IsBRElementAtEndOfContainer() const {
-    if (NS_WARN_IF(!mParent)) {
-      return false;
-    }
-    if (!mParent->IsContainerNode()) {
-      return false;
-    }
-    const_cast<SelfType*>(this)->EnsureChild();
-    if (!mChild || mChild->GetNextSibling()) {
-      return false;
-    }
-    return mChild->IsHTMLElement(nsGkAtoms::br);
-  }
-
   /**
    * Return a point in text node if "this" points around a text node.
    * EditorDOMPointType can always be EditorDOMPoint or EditorRawDOMPoint,
