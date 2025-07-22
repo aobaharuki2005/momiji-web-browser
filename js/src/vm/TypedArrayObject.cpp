@@ -1747,9 +1747,9 @@ static bool TypedArray_toStringTagGetter(JSContext* cx, unsigned argc,
 };
 
 template <typename T>
-static inline bool SetFromTypedArray(Handle<TypedArrayObject*> target,
+static inline bool SetFromTypedArray(TypedArrayObject* target,
                                      size_t targetLength,
-                                     Handle<TypedArrayObject*> source,
+                                     TypedArrayObject* source,
                                      size_t sourceLength, size_t offset) {
   // WARNING: |source| may be an unwrapped typed array from a different
   // compartment. Proceed with caution!

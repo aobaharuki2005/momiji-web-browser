@@ -398,10 +398,9 @@ class ElementSpecific {
    * Act as if the assignments occurred from a fresh copy of |source|, in
    * case the two memory ranges overlap.
    */
-  static bool setFromTypedArray(Handle<TypedArrayObject*> target,
-                                size_t targetLength,
-                                Handle<TypedArrayObject*> source,
-                                size_t sourceLength, size_t offset) {
+  static bool setFromTypedArray(TypedArrayObject* target, size_t targetLength,
+                                TypedArrayObject* source, size_t sourceLength,
+                                size_t offset) {
     // WARNING: |source| may be an unwrapped typed array from a different
     // compartment. Proceed with caution!
 
@@ -588,9 +587,9 @@ class ElementSpecific {
   }
 
  private:
-  static bool setFromOverlappingTypedArray(Handle<TypedArrayObject*> target,
+  static bool setFromOverlappingTypedArray(TypedArrayObject* target,
                                            size_t targetLength,
-                                           Handle<TypedArrayObject*> source,
+                                           TypedArrayObject* source,
                                            size_t sourceLength, size_t offset) {
     // WARNING: |source| may be an unwrapped typed array from a different
     // compartment. Proceed with caution!
