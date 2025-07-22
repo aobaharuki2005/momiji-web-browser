@@ -246,7 +246,7 @@ function createPrettySource(source, sourceActor) {
   return async ({ dispatch }) => {
     const url = getPrettyOriginalSourceURL(source);
     const id = generatedToOriginalId(source.id, url);
-    const prettySource = createPrettyPrintOriginalSource(id, url);
+    const prettySource = createPrettyPrintOriginalSource(id, url, source);
 
     dispatch({
       type: "ADD_ORIGINAL_SOURCES",
