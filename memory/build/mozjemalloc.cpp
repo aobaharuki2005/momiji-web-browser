@@ -1561,15 +1561,9 @@ bool arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge,
 }
 
 void arena_t::InitChunk(arena_chunk_t* aChunk, size_t aMinCommittedPages) {
+  new (aChunk) arena_chunk_t(this);
+
   mStats.mapped += kChunkSize;
-
-  aChunk->arena = this;
-
-  // Claim that no pages are in use, since the header is merely overhead.
-  aChunk->ndirty = 0;
-
-  aChunk->mIsPurging = false;
-  aChunk->mDying = false;
 
   // Setup the chunk's pages in two phases.  First we mark which pages are
   // committed & decommitted and perform the decommit.  Then we update the map
@@ -1629,10 +1623,6 @@ void arena_t::InitChunk(arena_chunk_t* aChunk, size_t aMinCommittedPages) {
   aChunk->map[gChunkHeaderNumPages].bits |= gMaxLargeClass;
   aChunk->map[gChunkNumPages - 2].bits |= gMaxLargeClass;
   mRunsAvail.Insert(&aChunk->map[gChunkHeaderNumPages]);
-
-#ifdef MALLOC_DOUBLE_PURGE
-  new (&aChunk->chunks_madvised_elem) DoublyLinkedListElement<arena_chunk_t>();
-#endif
 }
 
 bool arena_t::RemoveChunk(arena_chunk_t* aChunk) {

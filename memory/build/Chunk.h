@@ -164,14 +164,17 @@ struct arena_chunk_t {
   mozilla::DoublyLinkedListElement<arena_chunk_t> chunks_madvised_elem;
 #endif
 
-  // Number of dirty pages.
-  size_t ndirty;
+  // Number of dirty pages that may be purged, the header is never counted
+  // here.
+  size_t ndirty = 0;
 
-  bool mIsPurging;
-  bool mDying;
+  bool mIsPurging = false;
+  bool mDying = false;
 
   // Map of pages within chunk that keeps track of free/large/small.
   arena_chunk_map_t map[];  // Dynamically sized.
+
+  explicit arena_chunk_t(arena_t* aArena) : arena(aArena) {}
 
   bool IsEmpty();
 };
