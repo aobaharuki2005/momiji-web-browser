@@ -19,7 +19,7 @@ const {
 } = require("resource://devtools/server/actors/utils/style-utils.js");
 
 const {
-  style: { ELEMENT_STYLE },
+  style: { ELEMENT_STYLE, PRES_HINTS },
 } = require("resource://devtools/shared/constants.js");
 
 loader.lazyRequireGetter(
@@ -110,6 +110,16 @@ class StyleRuleActor extends Actor {
         this.column = InspectorUtils.getRuleColumn(this.rawRule);
         this._parentSheet = this.rawRule.parentStyleSheet;
       }
+    } else if (item.declarationOrigin === "pres-hints") {
+      this.type = PRES_HINTS;
+      this.ruleClassName = PRES_HINTS;
+      this.rawNode = item;
+      this.rawRule = {
+        style: item.style,
+        toString() {
+          return "[element attribute styles " + this.style + "]";
+        },
+      };
     } else {
       // Fake a rule
       this.type = ELEMENT_STYLE;
@@ -425,6 +435,9 @@ class StyleRuleActor extends Actor {
         form.href = doc.location ? doc.location.href : "";
         form.authoredText = this.rawNode.getAttribute("style");
         break;
+      case PRES_HINTS:
+        form.href = "";
+        break;
       case "CSSCharsetRule":
         form.encoding = this.rawRule.encoding;
         break;
@@ -576,6 +589,7 @@ class StyleRuleActor extends Actor {
       case "CSSNestedDeclarations":
       case "CSSStyleRule":
       case ELEMENT_STYLE:
+      case PRES_HINTS:
         return this.rawStyle.cssText || "";
       case "CSSKeyframesRule":
       case "CSSKeyframeRule":

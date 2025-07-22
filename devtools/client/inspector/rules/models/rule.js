@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  style: { ELEMENT_STYLE },
+  style: { ELEMENT_STYLE, PRES_HINTS },
 } = require("resource://devtools/shared/constants.js");
 const CssLogic = require("resource://devtools/shared/inspector/css-logic.js");
 const TextProperty = require("resource://devtools/client/inspector/rules/models/text-property.js");
@@ -161,9 +161,15 @@ class Rule {
   }
 
   get selectorText() {
-    return this.domRule.selectors
-      ? this.domRule.selectors.join(", ")
-      : CssLogic.l10n("rule.sourceElement");
+    if (Array.isArray(this.domRule.selectors)) {
+      return this.domRule.selectors.join(", ");
+    }
+
+    if (this.domRule.type === PRES_HINTS) {
+      return CssLogic.l10n("rule.sourceElementAttributesStyle");
+    }
+
+    return CssLogic.l10n("rule.sourceElement");
   }
 
   /**
@@ -874,6 +880,13 @@ class Rule {
     return this.domRule.ancestorData.some(
       ({ type }) => type === "starting-style"
     );
+  }
+
+  /**
+   * @returns {Boolean} Whether or not the rule can be edited
+   */
+  isEditable() {
+    return !this.isSystem && this.domRule.type !== PRES_HINTS;
   }
 
   /**

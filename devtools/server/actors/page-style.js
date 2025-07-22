@@ -899,14 +899,18 @@ class PageStyleActor extends Actor {
     // most-specific.
     for (let i = domRules.length - 1; i >= 0; i--) {
       const domRule = domRules[i];
-      if (domRule.declarationOrigin) {
-        // TODO(bug 1212289): Deal with declarations here.
+      const isSystem =
+        domRule.parentStyleSheet &&
+        SharedCssLogic.isAgentStylesheet(domRule.parentStyleSheet);
+
+      // For now, when dealing with InspectorDeclaration, we only care about presentational
+      // hints style (e.g. <img height=100>).
+      if (
+        domRule.declarationOrigin &&
+        domRule.declarationOrigin !== "pres-hints"
+      ) {
         continue;
       }
-
-      const isSystem = SharedCssLogic.isAgentStylesheet(
-        domRule.parentStyleSheet
-      );
 
       if (isSystem && options.filter != SharedCssLogic.FILTER.UA) {
         continue;
