@@ -438,26 +438,26 @@ class AliasSet {
   static_assert((1 << NumCategories) - 1 == Any,
                 "NumCategories must include all flags present in Any");
 
-  explicit AliasSet(uint32_t flags) : flags_(flags) {}
+  explicit constexpr AliasSet(uint32_t flags) : flags_(flags) {}
 
  public:
-  inline bool isNone() const { return flags_ == None_; }
-  uint32_t flags() const { return flags_ & Any; }
-  inline bool isStore() const { return !!(flags_ & Store_); }
-  inline bool isLoad() const { return !isStore() && !isNone(); }
-  inline AliasSet operator|(const AliasSet& other) const {
+  inline constexpr bool isNone() const { return flags_ == None_; }
+  constexpr uint32_t flags() const { return flags_ & Any; }
+  inline constexpr bool isStore() const { return !!(flags_ & Store_); }
+  inline constexpr bool isLoad() const { return !isStore() && !isNone(); }
+  inline constexpr AliasSet operator|(const AliasSet& other) const {
     return AliasSet(flags_ | other.flags_);
   }
-  inline AliasSet operator&(const AliasSet& other) const {
+  inline constexpr AliasSet operator&(const AliasSet& other) const {
     return AliasSet(flags_ & other.flags_);
   }
-  inline AliasSet operator~() const { return AliasSet(~flags_); }
-  static AliasSet None() { return AliasSet(None_); }
-  static AliasSet Load(uint32_t flags) {
+  inline constexpr AliasSet operator~() const { return AliasSet(~flags_); }
+  static constexpr AliasSet None() { return AliasSet(None_); }
+  static constexpr AliasSet Load(uint32_t flags) {
     MOZ_ASSERT(flags && !(flags & Store_));
     return AliasSet(flags);
   }
-  static AliasSet Store(uint32_t flags) {
+  static constexpr AliasSet Store(uint32_t flags) {
     MOZ_ASSERT(flags && !(flags & Store_));
     return AliasSet(flags | Store_);
   }
