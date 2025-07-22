@@ -282,6 +282,7 @@ export class ProfileAvatarSelector extends MozLitElement {
         <moz-button
           id="back-button"
           @click=${this.handleCancelClick}
+          @keydown=${this.handleBackKeyDown}
           type="icon ghost"
           iconSrc="chrome://global/skin/icons/arrow-left.svg"
         ></moz-button>
@@ -334,12 +335,14 @@ export class ProfileAvatarSelector extends MozLitElement {
       <moz-button-group class="custom-avatar-actions"
         ><moz-button
           @click=${this.handleCancelClick}
+          @keydown=${this.handleCancelKeyDown}
           data-l10n-id="avatar-selector-cancel-button"
         ></moz-button
         ><moz-button
           type="primary"
           id="save-button"
           @click=${this.handleSaveClick}
+          @keydown=${this.handleSaveKeyDown}
           data-l10n-id="avatar-selector-save-button"
         ></moz-button
       ></moz-button-group>`;
@@ -353,6 +356,27 @@ export class ProfileAvatarSelector extends MozLitElement {
       URL.revokeObjectURL(this.blobURL);
     }
     this.file = null;
+  }
+
+  handleBackKeyDown(event) {
+    if (event.code === "Enter" || event.code === "Space") {
+      event.preventDefault();
+      this.handleCancelClick(event);
+    }
+  }
+
+  handleCancelKeyDown(event) {
+    if (event.code === "Enter" || event.code === "Space") {
+      event.preventDefault();
+      this.handleCancelClick(event);
+    }
+  }
+
+  handleSaveKeyDown(event) {
+    if (event.code === "Enter" || event.code === "Space") {
+      event.preventDefault();
+      this.handleSaveClick(event);
+    }
   }
 
   async handleSaveClick(event) {

@@ -710,3 +710,64 @@ add_task(async function test_edit_profile_system_theme() {
   );
   await lightTheme.enable();
 });
+
+add_task(async function test_edit_link_keyboard_accessibility() {
+  if (!AppConstants.MOZ_SELECTABLE_PROFILES) {
+    ok(true, "Skipping because !AppConstants.MOZ_SELECTABLE_PROFILES");
+    return;
+  }
+
+  await setup();
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:editprofile",
+    },
+    async browser => {
+      await SpecialPowers.spawn(browser, [], async () => {
+        const EventUtils = ContentTaskUtils.getEventUtils(content);
+
+        let editProfileCard =
+          content.document.querySelector("edit-profile-card").wrappedJSObject;
+
+        await ContentTaskUtils.waitForCondition(
+          () => editProfileCard.initialized,
+          "Waiting for edit-profile-card to be initialized"
+        );
+        await editProfileCard.updateComplete;
+
+        let editLink = editProfileCard.avatarSelectorLink;
+
+        Assert.ok(editLink, "Edit link should exist");
+        Assert.equal(
+          editLink.getAttribute("tabindex"),
+          "0",
+          "Edit link should be focusable"
+        );
+
+        editLink.focus();
+        let avatarSelector = editProfileCard.avatarSelector;
+        Assert.ok(avatarSelector.hidden, "Avatar selector should start hidden");
+
+        EventUtils.synthesizeKey("KEY_Enter", {}, content);
+        Assert.ok(
+          !avatarSelector.hidden,
+          "Avatar selector should be visible after Enter key"
+        );
+
+        EventUtils.synthesizeKey("KEY_Enter", {}, content); // Hide the avatar selector first
+        Assert.ok(
+          avatarSelector.hidden,
+          "Avatar selector should be hidden again"
+        );
+
+        EventUtils.synthesizeKey(" ", {}, content);
+        Assert.ok(
+          !avatarSelector.hidden,
+          "Avatar selector should be visible after Space key"
+        );
+      });
+    }
+  );
+});
