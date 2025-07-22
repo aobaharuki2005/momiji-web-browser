@@ -55,6 +55,7 @@ import org.mozilla.fenix.utils.Settings
  *
  * @param context [Context] used for various system interactions.
  * @param homeBinding [FragmentHomeBinding] which will serve as parent for this composable.
+ * @param navController [NavController] to use for navigating to other in-app destinations.
  * @param toolbarStore [BrowserToolbarStore] containing the composable toolbar state.
  * @param appStore [AppStore] to sync from.
  * @param browserStore [BrowserStore] to sync from.
@@ -69,6 +70,7 @@ import org.mozilla.fenix.utils.Settings
 internal class HomeToolbarComposable(
     private val context: Context,
     private val homeBinding: FragmentHomeBinding,
+    private val navController: NavController,
     private val toolbarStore: BrowserToolbarStore,
     private val appStore: AppStore,
     private val browserStore: BrowserStore,
@@ -88,8 +90,12 @@ internal class HomeToolbarComposable(
             val shouldShowTabStrip: Boolean = remember { settings.isTabStripEnabled }
 
             BackInvokedHandler(isSearching) {
+                val sourceTabId = appStore.state.searchState.sourceTabId
                 appStore.dispatch(SearchEnded)
                 browserStore.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true))
+                if (sourceTabId != null) {
+                    navController.navigate(R.id.browserFragment)
+                }
             }
 
             FirefoxTheme {
