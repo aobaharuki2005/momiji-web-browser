@@ -32,6 +32,7 @@ export function getSourceFromId(state, id) {
   const source = getSource(state, id);
   if (!source) {
     console.warn(`source ${id} does not exist`);
+    dump(`>> ${new Error().stack}\n`);
   }
   return source;
 }
@@ -271,7 +272,7 @@ export function getPrettyPrintMessage(state, location) {
   }
 
   if (source.isPrettyPrinted) {
-    return L10N.getStr("sourceFooter.prettyPrint.isPrettyPrintedMessage");
+    return L10N.getStr("sourceTabs.removePrettyPrint");
   }
 
   if (source.isOriginal) {

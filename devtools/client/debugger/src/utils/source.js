@@ -339,29 +339,16 @@ export function getTextAtPosition(sourceId, asyncContent, location) {
  *        The reducer source object.
  * @param {Boolean} isBlackBoxed
  *        To be set to true, when the given source is blackboxed.
- * @param {Boolean} hasPrettyTab
- *        To be set to true, if the given source isn't the pretty printed one,
  *        but another tab for that source is opened pretty printed.
  * @return String
  *        The classname to use.
  */
-export function getSourceClassnames(
-  source,
-  isBlackBoxed,
-  hasPrettyTab = false
-) {
+export function getSourceClassnames(source, isBlackBoxed) {
   // Conditionals should be ordered by priority of icon!
   const defaultClassName = "file";
 
   if (!source || !source.url) {
     return defaultClassName;
-  }
-
-  // In the SourceTree, we don't show the pretty printed sources,
-  // but still want to show the pretty print icon when a pretty printed tab
-  // for the current source is opened.
-  if (source.isPrettyPrinted || hasPrettyTab) {
-    return "prettyPrint";
   }
 
   if (isBlackBoxed) {

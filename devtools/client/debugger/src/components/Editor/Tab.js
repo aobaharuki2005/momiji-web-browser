@@ -104,7 +104,6 @@ class Tab extends PureComponent {
           source,
           sourceActor,
         }),
-        forTab: true,
       }),
       div(
         {

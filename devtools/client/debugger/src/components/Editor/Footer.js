@@ -68,6 +68,7 @@ class SourceFooter extends PureComponent {
       canPrettyPrint,
       prettyPrintMessage,
       prettyPrintAndSelectSource,
+      removePrettyPrintedSource,
       sourceLoaded,
     } = this.props;
 
@@ -91,19 +92,22 @@ class SourceFooter extends PureComponent {
     return button(
       {
         onClick: () => {
+          if (selectedSource.isPrettyPrinted) {
+            removePrettyPrintedSource(selectedSource);
+            return;
+          }
           if (!canPrettyPrint) {
             return;
           }
           prettyPrintAndSelectSource(selectedSource);
         },
         className: classnames("action", type, {
-          active: sourceLoaded && canPrettyPrint,
           pretty: selectedSource.isPrettyPrinted,
         }),
         key: type,
         title: prettyPrintMessage,
         "aria-label": prettyPrintMessage,
-        disabled: !canPrettyPrint,
+        disabled: !canPrettyPrint && !selectedSource.isPrettyPrinted,
       },
       React.createElement(AccessibleImage, {
         className: type,
@@ -467,6 +471,7 @@ const mapStateToProps = state => {
 };
 
 export default connect(mapStateToProps, {
+  removePrettyPrintedSource: actions.removePrettyPrintedSource,
   prettyPrintAndSelectSource: actions.prettyPrintAndSelectSource,
   toggleBlackBox: actions.toggleBlackBox,
   jumpToMappedLocation: actions.jumpToMappedLocation,
