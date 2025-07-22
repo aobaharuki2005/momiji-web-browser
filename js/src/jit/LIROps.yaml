@@ -3129,6 +3129,24 @@
     boundsCheckLimit: Int64
   mir_op: WasmBoundsCheck
 
+- name: WasmBoundsCheckInstanceField
+  result_type: WordSized
+  operands:
+    instance: WordSized
+    ptr: WordSized
+  arguments:
+    offset: uint32_t
+  mir_op: WasmBoundsCheck
+
+- name: WasmBoundsCheckInstanceField64
+  result_type: Int64
+  operands:
+    instance: WordSized
+    ptr: Int64
+  arguments:
+    offset: uint32_t
+  mir_op: WasmBoundsCheck
+
 - name: WasmExtendU32Index
   result_type: WordSized
   operands:

@@ -835,18 +835,13 @@ class LWasmCallIndirectAdjunctSafepoint : public LInstructionHelper<0, 0, 0> {
 // dual-call construction is only meaningful for wasm because wasm has no
 // invalidation of code; this is not a pattern to be used generally.
 class LWasmCall : public LVariadicInstruction<0, 0> {
-  bool needsBoundsCheck_;
-  mozilla::Maybe<uint32_t> tableSize_;
   LWasmCallIndirectAdjunctSafepoint* adjunctSafepoint_;
 
  public:
   LIR_HEADER(WasmCall);
 
-  LWasmCall(uint32_t numOperands, bool needsBoundsCheck,
-            mozilla::Maybe<uint32_t> tableSize = mozilla::Nothing())
+  explicit LWasmCall(uint32_t numOperands)
       : LVariadicInstruction(classOpcode, numOperands),
-        needsBoundsCheck_(needsBoundsCheck),
-        tableSize_(tableSize),
         adjunctSafepoint_(nullptr) {
     this->setIsCall();
   }
@@ -883,8 +878,6 @@ class LWasmCall : public LVariadicInstruction<0, 0> {
     return !reg.isFloat() && reg.gpr() == InstanceReg;
   }
 
-  bool needsBoundsCheck() const { return needsBoundsCheck_; }
-  mozilla::Maybe<uint32_t> tableSize() const { return tableSize_; }
   LWasmCallIndirectAdjunctSafepoint* adjunctSafepoint() const {
     MOZ_ASSERT(adjunctSafepoint_ != nullptr);
     return adjunctSafepoint_;

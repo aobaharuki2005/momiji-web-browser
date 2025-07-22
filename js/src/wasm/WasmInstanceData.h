@@ -166,8 +166,10 @@ struct MemoryInstanceData {
 // to bounds-check and index the table.
 
 struct TableInstanceData {
-  // Length of the table in number of elements (not bytes).
-  uint32_t length;
+  // Length of the table in number of elements (not bytes). Although the type is
+  // uint64_t, the maximum value fits in 32 bits -- this value can safely be
+  // loaded as either a 32-bit value or a 64-bit value.
+  uint64_t length;
 
   // Pointer to the array of elements (which can have various representations).
   // For tables of anyref this is null.

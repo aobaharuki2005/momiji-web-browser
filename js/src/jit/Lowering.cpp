@@ -6482,7 +6482,33 @@ void LIRGenerator::visitWasmAddOffset(MWasmAddOffset* ins) {
   }
 }
 
+// When MWasmLoadInstance is used with MWasmBoundsCheck, it can be used as a
+// memory operand instead of being allocated to a register.
+static bool CanEmitWasmLoadInstanceAtUses(MWasmLoadInstance* ins) {
+  if (!ins->canEmitAtUses()) {
+    return false;
+  }
+
+  if (!ins->hasOneUse()) {
+    return false;
+  }
+
+  MUseIterator iter(ins->usesBegin());
+  MNode* node = iter->consumer();
+  if (!node->isDefinition() || !node->toDefinition()->isInstruction()) {
+    return false;
+  }
+
+  MInstruction* use = node->toDefinition()->toInstruction();
+  return use->isWasmBoundsCheck();
+}
+
 void LIRGenerator::visitWasmLoadInstance(MWasmLoadInstance* ins) {
+  if (CanEmitWasmLoadInstanceAtUses(ins)) {
+    emitAtUses(ins);
+    return;
+  }
+
   if (ins->type() == MIRType::Int64) {
 #ifdef JS_PUNBOX64
     LAllocation instance = useRegisterAtStart(ins->instance());
@@ -6541,27 +6567,64 @@ void LIRGenerator::visitWasmBoundsCheck(MWasmBoundsCheck* ins) {
 
   MOZ_ASSERT(boundsCheckLimit->type() == index->type());
 
+  // Fold the instance load into the bounds check as a memory operand,
+  // if possible
+  if (boundsCheckLimit->isWasmLoadInstance() &&
+      boundsCheckLimit->isEmittedAtUses()) {
+    MWasmLoadInstance* lengthFromInstance =
+        boundsCheckLimit->toWasmLoadInstance();
+    if (index->type() == MIRType::Int64) {
+      if (JitOptions.spectreIndexMasking) {
+        auto* lir = new (alloc()) LWasmBoundsCheckInstanceField64(
+            useRegister(lengthFromInstance->instance()),
+            useInt64RegisterAtStart(index), lengthFromInstance->offset());
+        defineInt64ReuseInput(lir, ins, 1);
+      } else {
+        auto* lir = new (alloc()) LWasmBoundsCheckInstanceField64(
+            useRegisterAtStart(lengthFromInstance->instance()),
+            useInt64RegisterAtStart(index), lengthFromInstance->offset());
+        add(lir, ins);
+      }
+    } else {
+      MOZ_ASSERT(index->type() == MIRType::Int32);
+
+      if (JitOptions.spectreIndexMasking) {
+        auto* lir = new (alloc()) LWasmBoundsCheckInstanceField(
+            useRegister(lengthFromInstance->instance()),
+            useRegisterAtStart(index), lengthFromInstance->offset());
+        defineReuseInput(lir, ins, 1);
+      } else {
+        auto* lir = new (alloc()) LWasmBoundsCheckInstanceField(
+            useRegisterAtStart(lengthFromInstance->instance()),
+            useRegisterAtStart(index), lengthFromInstance->offset());
+        add(lir, ins);
+      }
+    }
+  }
+
   if (index->type() == MIRType::Int64) {
     if (JitOptions.spectreIndexMasking) {
-      auto* lir = new (alloc()) LWasmBoundsCheck64(
-          useInt64RegisterAtStart(index), useInt64Register(boundsCheckLimit));
-      defineInt64ReuseInput(lir, ins, 0);
-    } else {
       auto* lir = new (alloc())
           LWasmBoundsCheck64(useInt64RegisterAtStart(index),
-                             useInt64RegisterAtStart(boundsCheckLimit));
+                             useInt64RegisterOrConstant(boundsCheckLimit));
+      defineInt64ReuseInput(lir, ins, 0);
+    } else {
+      auto* lir = new (alloc()) LWasmBoundsCheck64(
+          useInt64RegisterAtStart(index),
+          useInt64RegisterOrConstantAtStart(boundsCheckLimit));
       add(lir, ins);
     }
   } else {
     MOZ_ASSERT(index->type() == MIRType::Int32);
 
     if (JitOptions.spectreIndexMasking) {
-      auto* lir = new (alloc()) LWasmBoundsCheck(useRegisterAtStart(index),
-                                                 useRegister(boundsCheckLimit));
+      auto* lir = new (alloc()) LWasmBoundsCheck(
+          useRegisterAtStart(index), useRegisterOrConstant(boundsCheckLimit));
       defineReuseInput(lir, ins, 0);
     } else {
-      auto* lir = new (alloc()) LWasmBoundsCheck(
-          useRegisterAtStart(index), useRegisterAtStart(boundsCheckLimit));
+      auto* lir = new (alloc())
+          LWasmBoundsCheck(useRegisterAtStart(index),
+                           useRegisterOrConstantAtStart(boundsCheckLimit));
       add(lir, ins);
     }
   }
@@ -6986,28 +7049,7 @@ void LIRGenerator::visitWasmStackContinueOnSuspendable(
 
 template <class MWasmCallT>
 void LIRGenerator::visitWasmCall(MWasmCallT ins) {
-  bool needsBoundsCheck = true;
-  mozilla::Maybe<uint32_t> tableSize;
-
-  if (ins->callee().isTable()) {
-    MDefinition* index = ins->getOperand(ins->numArgs());
-
-    if (ins->callee().which() == wasm::CalleeDesc::WasmTable) {
-      uint64_t minLength = ins->callee().wasmTableMinLength();
-      mozilla::Maybe<uint64_t> maxLength = ins->callee().wasmTableMaxLength();
-      if (index->isConstant() &&
-          uint32_t(index->toConstant()->toInt32()) < minLength) {
-        needsBoundsCheck = false;
-      }
-      if (minLength <= UINT32_MAX && maxLength.isSome() &&
-          *maxLength == minLength) {
-        tableSize = maxLength;
-      }
-    }
-  }
-
-  auto* lir = allocateVariadic<LWasmCall>(ins->numOperands(), needsBoundsCheck,
-                                          tableSize);
+  auto* lir = allocateVariadic<LWasmCall>(ins->numOperands());
   if (!lir) {
     abort(AbortReason::Alloc, "OOM: LIRGenerator::lowerWasmCall");
     return;

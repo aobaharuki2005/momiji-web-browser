@@ -749,9 +749,9 @@ class MWasmBoundsCheck : public MBinaryInstruction, public NoTypePolicy::Data {
   enum Target {
     // Linear memory at index zero, which is the only memory allowed so far.
     Memory0,
-    // Everything else.  Currently comprises tables, and arrays in the GC
-    // proposal.
-    Unknown
+    // Everything else. Currently comprises other memories, tables, and arrays
+    // in the GC proposal.
+    Unknown,
   };
 
  private:

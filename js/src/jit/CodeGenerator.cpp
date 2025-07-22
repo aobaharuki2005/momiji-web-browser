@@ -9751,20 +9751,6 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
       retOffset = masm.asmCallIndirect(desc, callee);
       break;
     case wasm::CalleeDesc::WasmTable: {
-      Label* boundsCheckFailed = nullptr;
-      if (lir->needsBoundsCheck()) {
-        auto* ool = new (alloc()) LambdaOutOfLineCode([=](OutOfLineCode& ool) {
-          masm.wasmTrap(wasm::Trap::OutOfBounds, desc.toTrapSiteDesc());
-        });
-        if (lir->isCatchable()) {
-          addOutOfLineCode(ool, lir->mirCatchable());
-        } else if (isReturnCall) {
-          addOutOfLineCode(ool, lir->mirReturnCall());
-        } else {
-          addOutOfLineCode(ool, lir->mirUncatchable());
-        }
-        boundsCheckFailed = ool->entry();
-      }
       Label* nullCheckFailed = nullptr;
 #ifndef WASM_HAS_HEAPREG
       {
@@ -9784,15 +9770,13 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
       if (isReturnCall) {
         ReturnCallAdjustmentInfo retCallInfo(
             callBase->stackArgAreaSizeUnaligned(), inboundStackArgBytes_);
-        masm.wasmReturnCallIndirect(desc, callee, boundsCheckFailed,
-                                    nullCheckFailed, mozilla::Nothing(),
-                                    retCallInfo);
+        masm.wasmReturnCallIndirect(desc, callee, nullCheckFailed, retCallInfo);
         // The rest of the method is unnecessary for a return call.
         return;
       }
       MOZ_ASSERT(!isReturnCall);
-      masm.wasmCallIndirect(desc, callee, boundsCheckFailed, nullCheckFailed,
-                            lir->tableSize(), &retOffset, &secondRetOffset);
+      masm.wasmCallIndirect(desc, callee, nullCheckFailed, &retOffset,
+                            &secondRetOffset);
       // Register reloading and realm switching are handled dynamically inside
       // wasmCallIndirect.  There are two return offsets, one for each call
       // instruction (fast path and slow path).
@@ -20378,7 +20362,19 @@ void CodeGenerator::emitResumableWasmTrapOOL(
 
 void CodeGenerator::visitWasmBoundsCheck(LWasmBoundsCheck* ins) {
   const MWasmBoundsCheck* mir = ins->mir();
+
   Register ptr = ToRegister(ins->ptr());
+  if (ins->boundsCheckLimit()->isConstant()) {
+    auto* ool = new (alloc()) LambdaOutOfLineCode([=](OutOfLineCode& ool) {
+      masm.wasmTrap(wasm::Trap::OutOfBounds, mir->trapSiteDesc());
+    });
+    addOutOfLineCode(ool, mir);
+    masm.branch32(Assembler::AboveOrEqual, ptr,
+                  Imm32(ins->boundsCheckLimit()->toConstant()->toInt32()),
+                  ool->entry());
+    return;
+  }
+
   Register boundsCheckLimit = ToRegister(ins->boundsCheckLimit());
   // When there are no spectre mitigations in place, branching out-of-line to
   // the trap is a big performance win, but with mitigations it's trickier.  See
@@ -20400,7 +20396,18 @@ void CodeGenerator::visitWasmBoundsCheck(LWasmBoundsCheck* ins) {
 
 void CodeGenerator::visitWasmBoundsCheck64(LWasmBoundsCheck64* ins) {
   const MWasmBoundsCheck* mir = ins->mir();
+
   Register64 ptr = ToRegister64(ins->ptr());
+  if (IsConstant(ins->boundsCheckLimit())) {
+    auto* ool = new (alloc()) LambdaOutOfLineCode([=](OutOfLineCode& ool) {
+      masm.wasmTrap(wasm::Trap::OutOfBounds, mir->trapSiteDesc());
+    });
+    addOutOfLineCode(ool, mir);
+    masm.branch64(Assembler::AboveOrEqual, ptr,
+                  Imm64(ToInt64(ins->boundsCheckLimit())), ool->entry());
+    return;
+  }
+
   Register64 boundsCheckLimit = ToRegister64(ins->boundsCheckLimit());
   // See above.
   if (JitOptions.spectreIndexMasking) {
@@ -20415,6 +20422,50 @@ void CodeGenerator::visitWasmBoundsCheck64(LWasmBoundsCheck64* ins) {
     addOutOfLineCode(ool, mir);
     masm.wasmBoundsCheck64(Assembler::AboveOrEqual, ptr, boundsCheckLimit,
                            ool->entry());
+  }
+}
+
+void CodeGenerator::visitWasmBoundsCheckInstanceField(
+    LWasmBoundsCheckInstanceField* ins) {
+  const MWasmBoundsCheck* mir = ins->mir();
+  Register ptr = ToRegister(ins->ptr());
+  Register instance = ToRegister(ins->instance());
+  // See above.
+  if (JitOptions.spectreIndexMasking) {
+    Label ok;
+    masm.wasmBoundsCheck32(Assembler::Condition::Below, ptr,
+                           Address(instance, ins->offset()), &ok);
+    masm.wasmTrap(wasm::Trap::OutOfBounds, mir->trapSiteDesc());
+    masm.bind(&ok);
+  } else {
+    auto* ool = new (alloc()) LambdaOutOfLineCode([=](OutOfLineCode& ool) {
+      masm.wasmTrap(wasm::Trap::OutOfBounds, mir->trapSiteDesc());
+    });
+    addOutOfLineCode(ool, mir);
+    masm.wasmBoundsCheck32(Assembler::Condition::AboveOrEqual, ptr,
+                           Address(instance, ins->offset()), ool->entry());
+  }
+}
+
+void CodeGenerator::visitWasmBoundsCheckInstanceField64(
+    LWasmBoundsCheckInstanceField64* ins) {
+  const MWasmBoundsCheck* mir = ins->mir();
+  Register64 ptr = ToRegister64(ins->ptr());
+  Register instance = ToRegister(ins->instance());
+  // See above.
+  if (JitOptions.spectreIndexMasking) {
+    Label ok;
+    masm.wasmBoundsCheck64(Assembler::Condition::Below, ptr,
+                           Address(instance, ins->offset()), &ok);
+    masm.wasmTrap(wasm::Trap::OutOfBounds, mir->trapSiteDesc());
+    masm.bind(&ok);
+  } else {
+    auto* ool = new (alloc()) LambdaOutOfLineCode([=](OutOfLineCode& ool) {
+      masm.wasmTrap(wasm::Trap::OutOfBounds, mir->trapSiteDesc());
+    });
+    addOutOfLineCode(ool, mir);
+    masm.wasmBoundsCheck64(Assembler::Condition::AboveOrEqual, ptr,
+                           Address(instance, ins->offset()), ool->entry());
   }
 }
 

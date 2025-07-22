@@ -2041,9 +2041,6 @@ bool BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
   MOZ_ASSERT(callIndirectId.kind() != CallIndirectIdKind::AsmJS);
 
   const TableDesc& table = codeMeta_.tables[tableIndex];
-
-  loadI32(indexVal, RegI32(WasmTableCallIndexReg));
-
   CallSiteDesc desc(bytecodeOffset(), CallSiteKind::Indirect);
   CalleeDesc callee =
       CalleeDesc::wasmTable(codeMeta_, table, tableIndex, callIndirectId);
@@ -2052,6 +2049,31 @@ bool BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
   if (!oob) {
     return false;
   }
+
+  if (table.addressType() == AddressType::I64) {
+#ifdef JS_PUNBOX64
+    RegI64 indexReg = RegI64(Register64(WasmTableCallIndexReg));
+#else
+    RegI64 indexReg =
+        RegI64(Register64(WasmTableCallScratchReg0, WasmTableCallIndexReg));
+#endif
+    loadI64(indexVal, indexReg);
+    masm.branch64(
+        Assembler::Condition::BelowOrEqual,
+        Address(InstanceReg, wasm::Instance::offsetInData(
+                                 callee.tableLengthInstanceDataOffset())),
+        indexReg, oob->entry());
+    // From this point forward, the callee index is known to fit in 32 bits and
+    // therefore we only need WasmTableCallIndexReg.
+  } else {
+    loadI32(indexVal, RegI32(WasmTableCallIndexReg));
+    masm.branch32(
+        Assembler::Condition::BelowOrEqual,
+        Address(InstanceReg, wasm::Instance::offsetInData(
+                                 callee.tableLengthInstanceDataOffset())),
+        WasmTableCallIndexReg, oob->entry());
+  }
+
   Label* nullCheckFailed = nullptr;
 #ifndef WASM_HAS_HEAPREG
   OutOfLineCode* nullref = addOutOfLineCode(new (alloc_) OutOfLineAbortingTrap(
@@ -2062,13 +2084,12 @@ bool BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
   nullCheckFailed = nullref->entry();
 #endif
   if (!tailCall) {
-    masm.wasmCallIndirect(desc, callee, oob->entry(), nullCheckFailed,
-                          mozilla::Nothing(), fastCallOffset, slowCallOffset);
+    masm.wasmCallIndirect(desc, callee, nullCheckFailed, fastCallOffset,
+                          slowCallOffset);
   } else {
     ReturnCallAdjustmentInfo retCallInfo = BuildReturnCallAdjustmentInfo(
         this->funcType(), (*codeMeta_.types)[funcTypeIndex].funcType());
-    masm.wasmReturnCallIndirect(desc, callee, oob->entry(), nullCheckFailed,
-                                mozilla::Nothing(), retCallInfo);
+    masm.wasmReturnCallIndirect(desc, callee, nullCheckFailed, retCallInfo);
   }
   return true;
 }
@@ -5523,10 +5544,6 @@ bool BaseCompiler::emitCallIndirect() {
   }
 
   // Stack: ... arg1 .. argn callee
-
-  replaceTableAddressWithClampedInt32(
-      codeMeta_.tables[tableIndex].addressType());
-
   sync();
 
   const FuncType& funcType = (*codeMeta_.types)[funcTypeIndex].funcType();
@@ -5590,9 +5607,6 @@ bool BaseCompiler::emitReturnCallIndirect() {
   }
 
   // Stack: ... arg1 .. argn callee
-
-  replaceTableAddressWithClampedInt32(
-      codeMeta_.tables[tableIndex].addressType());
 
   sync();
   if (!insertDebugCollapseFrame()) {
