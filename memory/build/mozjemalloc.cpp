@@ -1673,11 +1673,6 @@ bool arena_t::RemoveChunk(arena_chunk_t* aChunk) {
   return true;
 }
 
-bool arena_chunk_t::IsEmpty() {
-  return (mPageMap[gChunkHeaderNumPages].bits &
-          (~gPageSizeMask | CHUNK_MAP_ALLOCATED)) == gMaxLargeClass;
-}
-
 arena_chunk_t* arena_t::DemoteChunkToSpare(arena_chunk_t* aChunk) {
   if (mSpare) {
     if (!RemoveChunk(mSpare)) {
