@@ -76,11 +76,46 @@ export class ProfileAvatarSelector extends MozLitElement {
     }
   }
 
+  toggleHidden(force = null) {
+    if (force === true) {
+      this.hidden = true;
+    } else if (force === false) {
+      this.hidden = false;
+    } else {
+      this.hidden = !this.hidden;
+    }
+
+    // Add or remove event listeners as necessary
+    if (this.hidden) {
+      document.removeEventListener("click", this);
+      window.removeEventListener("keydown", this);
+    } else {
+      document.addEventListener("click", this);
+      window.addEventListener("keydown", this);
+    }
+  }
+
+  show() {
+    this.toggleHidden(false);
+  }
+
+  hide() {
+    this.toggleHidden(true);
+  }
+
+  maybeHide() {
+    if (this.view === VIEWS.CROP) {
+      this.setView(VIEWS.CUSTOM);
+      return;
+    }
+
+    this.hide();
+  }
+
   cropViewStart() {
     window.addEventListener("pointerdown", this);
     window.addEventListener("pointermove", this);
     window.addEventListener("pointerup", this);
-    window.addEventListener("keydown", this);
     document.documentElement.classList.add("disable-text-selection");
   }
 
@@ -88,7 +123,6 @@ export class ProfileAvatarSelector extends MozLitElement {
     window.removeEventListener("pointerdown", this);
     window.removeEventListener("pointermove", this);
     window.removeEventListener("pointerup", this);
-    window.removeEventListener("keydown", this);
     document.documentElement.classList.remove("disable-text-selection");
   }
 
@@ -384,7 +418,7 @@ export class ProfileAvatarSelector extends MozLitElement {
     }
 
     this.setView(VIEWS.CUSTOM);
-    this.hidden = true;
+    this.hide();
   }
 
   updateViewDimensions() {
@@ -443,23 +477,40 @@ export class ProfileAvatarSelector extends MozLitElement {
   }
 
   handleEvent(event) {
-    if (this.view !== VIEWS.CROP) {
-      return;
-    }
-
     switch (event.type) {
-      case "pointerdown":
+      case "pointerdown": {
         this.handlePointerDown(event);
         break;
-      case "pointermove":
+      }
+      case "pointermove": {
         this.handlePointerMove(event);
         break;
-      case "pointerup":
+      }
+      case "pointerup": {
         this.handlePointerUp(event);
         break;
-      case "keydown":
+      }
+      case "keydown": {
         this.handleKeyDown(event);
         break;
+      }
+      case "click": {
+        if (this.view === VIEWS.CROP) {
+          return;
+        }
+
+        let element = event.originalTarget;
+        while (element && element !== this) {
+          element = element?.getRootNode()?.host;
+        }
+
+        if (element === this) {
+          return;
+        }
+
+        this.hide();
+        break;
+      }
     }
   }
 
@@ -555,6 +606,14 @@ export class ProfileAvatarSelector extends MozLitElement {
   }
 
   handleKeyDown(event) {
+    if (event.key === "Escape") {
+      this.maybeHide();
+    }
+
+    if (this.view !== VIEWS.CROP) {
+      return;
+    }
+
     switch (event.key) {
       case "ArrowLeft":
         this.handleArrowLeftKeyDown(event);
