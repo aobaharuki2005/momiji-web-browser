@@ -4,7 +4,9 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 142.0 (In Development)
+# 143.0 (In Development)
+
+# 142.0
 * **feature-tabs**:
   * Updated `LastTabFeature` to not close the current tab when there's no history. [Bug 1813413](https://bugzilla.mozilla.org/show_bug.cgi?id=1813413).
 * **feature-downloads**:
