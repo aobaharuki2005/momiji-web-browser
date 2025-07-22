@@ -7,6 +7,7 @@ use crate::batch::{BatchKey, BatchKind, BrushBatchKind, BatchFeatures};
 use crate::composite::{CompositeFeatures, CompositeSurfaceFormat};
 use crate::device::{Device, Program, ShaderError};
 use crate::pattern::PatternKind;
+use crate::precise_time_ns;
 use crate::telemetry::Telemetry;
 use euclid::default::Transform3D;
 use glyph_rasterizer::GlyphFormat;
@@ -18,7 +19,6 @@ use crate::renderer::{
 use crate::profiler::{self, TransactionProfile, ns_to_ms};
 
 use gleam::gl::GlType;
-use time::precise_time_ns;
 
 use std::cell::RefCell;
 use std::collections::VecDeque;
@@ -1360,7 +1360,7 @@ impl CompositorShaders {
             yuv_fast_features.push("YUV");
             yuv_fast_features.push("FAST_PATH");
             fast_path_features.push("FAST_PATH");
-    
+
             let index = Self::get_shader_index(*image_buffer_kind);
 
             let feature_string = get_feature_string(

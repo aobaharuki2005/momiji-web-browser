@@ -15,10 +15,9 @@ use std::marker::PhantomData;
 use std::ops::Range;
 use std::mem;
 use std::collections::HashMap;
-use time::precise_time_ns;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 // local imports
-use crate::display_item as di;
+use crate::{display_item as di, precise_time_ns};
 use crate::display_item_cache::*;
 use crate::{APZScrollGeneration, HasScrollLinkedEffect, PipelineId, PropertyBinding};
 use crate::gradient_builder::GradientBuilder;

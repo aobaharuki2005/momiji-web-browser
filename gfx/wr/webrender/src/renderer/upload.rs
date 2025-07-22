@@ -21,7 +21,6 @@ use std::collections::VecDeque;
 use std::sync::Arc;
 use std::time::Duration;
 use euclid::{Transform3D, point2};
-use time::precise_time_ns;
 use malloc_size_of::MallocSizeOfOps;
 use api::units::*;
 use api::{ExternalImageSource, ImageBufferKind, ImageFormat};
@@ -39,7 +38,7 @@ use crate::device::{
 use crate::gpu_types::CopyInstance;
 use crate::batch::BatchTextures;
 use crate::texture_pack::{GuillotineAllocator, FreeRectSlice};
-use crate::profiler;
+use crate::{precise_time_ns, profiler};
 use crate::render_api::MemoryReport;
 
 pub const BATCH_UPLOAD_TEXTURE_SIZE: DeviceIntSize = DeviceIntSize::new(512, 512);
@@ -88,7 +87,7 @@ pub fn upload_to_texture_cache(
         let texture = &renderer.texture_resolver.texture_cache_map[&texture_id].texture;
         for update in updates {
             let TextureCacheUpdate { rect, stride, offset, format_override, source } = update;
-            let mut arc_data = None; 
+            let mut arc_data = None;
             let dummy_data;
             let data = match source {
                 TextureUpdateSource::Bytes { ref data } => {

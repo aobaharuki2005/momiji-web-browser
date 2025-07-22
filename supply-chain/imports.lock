@@ -272,8 +272,8 @@ user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.glean-core]]
-version = "64.5.1"
-when = "2025-06-23"
+version = "64.5.2"
+when = "2025-07-01"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
@@ -2730,6 +2730,12 @@ delta = "2.4.0 -> 2.4.1"
 notes = "Only allowing new clippy lints"
 aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
 
+[[audits.mozilla.audits.chrono]]
+who = "Lars Eggert <lars@eggert.org>"
+criteria = "safe-to-deploy"
+delta = "0.4.40 -> 0.4.41"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
 [[audits.mozilla.audits.crossbeam-channel]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -2760,6 +2766,12 @@ aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-c
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.8.14 -> 0.8.19"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.deranged]]
+who = "Lars Eggert <lars@eggert.org>"
+criteria = "safe-to-deploy"
+delta = "0.3.11 -> 0.4.0"
 aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
 
 [[audits.mozilla.audits.either]]
@@ -2808,4 +2820,16 @@ aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-c
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
 version = "0.15.0"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.time]]
+who = "Lars Eggert <lars@eggert.org>"
+criteria = "safe-to-deploy"
+delta = "0.3.36 -> 0.3.41"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.time-core]]
+who = "Lars Eggert <lars@eggert.org>"
+criteria = "safe-to-deploy"
+delta = "0.1.2 -> 0.1.4"
 aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"

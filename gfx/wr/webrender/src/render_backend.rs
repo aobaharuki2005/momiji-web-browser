@@ -16,7 +16,7 @@ use api::{FramePublishId, PrimitiveKeyKind, RenderReasons};
 use api::units::*;
 use api::channel::{single_msg_channel, Sender, Receiver};
 use crate::bump_allocator::ChunkPool;
-use crate::AsyncPropertySampler;
+use crate::{precise_time_ns, AsyncPropertySampler};
 use crate::box_shadow::BoxShadow;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::render_api::CaptureBits;
@@ -71,7 +71,6 @@ use std::{mem, u32};
 use std::path::PathBuf;
 #[cfg(feature = "replay")]
 use crate::frame_builder::Frame;
-use time::precise_time_ns;
 use core::time::Duration;
 use crate::util::{Recycler, VecHelper, drain_filter};
 
