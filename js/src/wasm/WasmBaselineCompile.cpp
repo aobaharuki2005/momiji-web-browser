@@ -7386,17 +7386,20 @@ bool BaseCompiler::emitBarrieredStore(const Maybe<RegRef>& object,
   masm.storePtr(value, Address(valueAddr, 0));
 
   // The post-barrier preserves object and value.
-  if (postBarrierKind == PostBarrierKind::Imprecise) {
-    return emitPostBarrierEdgeImprecise(object, valueAddr, value);
+  switch (postBarrierKind) {
+    case PostBarrierKind::None:
+      freePtr(valueAddr);
+      return true;
+    case PostBarrierKind::Imprecise:
+      return emitPostBarrierEdgeImprecise(object, valueAddr, value);
+    case PostBarrierKind::Precise:
+      return emitPostBarrierEdgePrecise(object, valueAddr, prevValue, value);
+    case PostBarrierKind::WholeCell:
+      // valueAddr is reused as a temp register.
+      return emitPostBarrierWholeCell(object.value(), value, valueAddr);
+    default:
+      MOZ_CRASH("unknown barrier kind");
   }
-  if (postBarrierKind == PostBarrierKind::Precise) {
-    return emitPostBarrierEdgePrecise(object, valueAddr, prevValue, value);
-  }
-  if (postBarrierKind == PostBarrierKind::WholeCell) {
-    // valueAddr is reused as a temp register.
-    return emitPostBarrierWholeCell(object.value(), value, valueAddr);
-  }
-  MOZ_CRASH("unknown barrier kind");
 }
 
 void BaseCompiler::emitBarrieredClear(RegPtr valueAddr) {
@@ -7684,7 +7687,8 @@ bool BaseCompiler::emitGcStructSet(RegRef object, RegPtr areaBase,
 
 bool BaseCompiler::emitGcArraySet(RegRef object, RegPtr data, RegI32 index,
                                   const ArrayType& arrayType, AnyReg value,
-                                  PreBarrierKind preBarrierKind) {
+                                  PreBarrierKind preBarrierKind,
+                                  PostBarrierKind postBarrierKind) {
   // Try to use a base index store instruction if the field type fits in a
   // shift immediate. If not we shift the index manually and then unshift
   // it after the store. We don't use an extra register for this because we
@@ -7724,7 +7728,7 @@ bool BaseCompiler::emitGcArraySet(RegRef object, RegPtr data, RegI32 index,
 
   // emitBarrieredStore preserves object and value
   if (!emitBarrieredStore(Some(object), valueAddr, value.ref(), preBarrierKind,
-                          PostBarrierKind::Imprecise)) {
+                          postBarrierKind)) {
     return false;
   }
 
@@ -8239,7 +8243,7 @@ bool BaseCompiler::emitArrayNew() {
 
   // Assign value to array[numElements]. All registers are preserved
   if (!emitGcArraySet(object, rdata, numElements, arrayType, value,
-                      PreBarrierKind::None)) {
+                      PreBarrierKind::None, PostBarrierKind::None)) {
     return false;
   }
 
@@ -8247,9 +8251,18 @@ bool BaseCompiler::emitArrayNew() {
   masm.branch32(Assembler::GreaterThan, numElements, Imm32(0), &loop);
   masm.bind(&done);
 
+  if (arrayType.elementType().isRefRepr()) {
+    // Emit one whole-cell post barrier for the whole array, since there is just
+    // one object and one value. Reuses rdata as a temp register.
+    if (!emitPostBarrierWholeCell(object, value.ref(), rdata)) {
+      return false;
+    }
+  } else {
+    freePtr(rdata);
+  }
+
   freeI32(numElements);
   freeAny(value);
-  freePtr(rdata);
   pushRef(object);
 
   return true;
@@ -8317,7 +8330,7 @@ bool BaseCompiler::emitArrayNewFixed() {
       freePtr(RegPtr(PreBarrierReg));
     }
     if (!emitGcArraySet(object, rdata, index, arrayType, value,
-                        PreBarrierKind::None)) {
+                        PreBarrierKind::None, PostBarrierKind::WholeCell)) {
       return false;
     }
     freeI32(index);
@@ -8540,7 +8553,7 @@ bool BaseCompiler::emitArraySet() {
   // be freeing them all after this is done. But this is needed for repeated
   // assignments used in array.new/new_default.
   if (!emitGcArraySet(rp, rdata, index, arrayType, value,
-                      PreBarrierKind::Normal)) {
+                      PreBarrierKind::Normal, PostBarrierKind::Imprecise)) {
     return false;
   }
 
@@ -8835,7 +8848,7 @@ bool BaseCompiler::emitArrayFill() {
 
   // Assign value to rdata[numElements]. All registers are preserved.
   if (!emitGcArraySet(rp, rdata, numElements, arrayType, value,
-                      PreBarrierKind::None)) {
+                      PreBarrierKind::None, PostBarrierKind::Imprecise)) {
     return false;
   }
 

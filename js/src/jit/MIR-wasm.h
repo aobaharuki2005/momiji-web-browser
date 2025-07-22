@@ -1511,6 +1511,9 @@ class MWasmDerivedIndexPointer : public MBinaryInstruction,
 // Whether to perform a pre-write barrier for a wasm store reference.
 enum class WasmPreBarrierKind : uint8_t { None, Normal };
 
+// Whether to perform a post-write barrier for a wasm store reference.
+enum class WasmPostBarrierKind : uint8_t { None, Edge, WholeCell };
+
 // Stores a reference to an address. This performs a pre-barrier on the address,
 // but not a post-barrier. A post-barrier must be performed separately, if it's
 // required.  The accessed location is `valueBase + valueOffset`.  The latter
@@ -1562,6 +1565,8 @@ class MWasmPostWriteBarrierWholeCell : public MTernaryInstruction,
   MWasmPostWriteBarrierWholeCell(MDefinition* instance, MDefinition* object,
                                  MDefinition* value)
       : MTernaryInstruction(classOpcode, instance, object, value) {
+    MOZ_ASSERT(object->type() == MIRType::WasmAnyRef);
+    MOZ_ASSERT(value->type() == MIRType::WasmAnyRef);
     setGuard();
   }
 
@@ -1585,6 +1590,8 @@ class MWasmPostWriteBarrierEdgeAtIndex : public MAryInstruction<5>,
                                    MDefinition* valueBase, MDefinition* index,
                                    uint32_t scale, MDefinition* value)
       : MAryInstruction<5>(classOpcode), elemSize_(scale) {
+    MOZ_ASSERT(object->type() == MIRType::WasmAnyRef);
+    MOZ_ASSERT(value->type() == MIRType::WasmAnyRef);
     initOperand(0, instance);
     initOperand(1, object);
     initOperand(2, valueBase);
