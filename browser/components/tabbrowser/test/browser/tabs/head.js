@@ -296,7 +296,7 @@ async function dragAndDrop(
     ctrlKey: copy,
     altKey: copy,
     clientX: rect.left + rect.width / 2 + (afterTab ? 1 : -1),
-    clientY: rect.top + rect.height / 2,
+    clientY: rect.top + rect.height / 2 + (afterTab ? 1 : -1),
   };
 
   if (destWindow != origWindow) {
