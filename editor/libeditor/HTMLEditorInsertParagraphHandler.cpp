@@ -1106,134 +1106,54 @@ nsresult HTMLEditor::AutoInsertParagraphHandler::
 Result<InsertParagraphResult, nsresult>
 HTMLEditor::AutoInsertParagraphHandler::HandleInHeadingElement(
     Element& aHeadingElement, const EditorDOMPoint& aPointToSplit) {
-  // FIXME: Stop splitting aHeadingElement if it's not required.
-  auto splitHeadingResult =
-      [this, &aPointToSplit, &aHeadingElement]()
-          MOZ_CAN_RUN_SCRIPT -> Result<SplitNodeResult, nsresult> {
-    // Normalize collapsible white-spaces around the split point to keep
-    // them visible after the split.  Note that this does not touch
-    // selection because of using AutoTransactionsConserveSelection in
-    // WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes().
-    Result<EditorDOMPoint, nsresult> preparationResult =
-        WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
-            mHTMLEditor, aPointToSplit, aHeadingElement);
-    if (MOZ_UNLIKELY(preparationResult.isErr())) {
-      NS_WARNING(
-          "WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement() "
-          "failed");
-      return preparationResult.propagateErr();
-    }
-    EditorDOMPoint pointToSplit = preparationResult.unwrap();
-    MOZ_ASSERT(pointToSplit.IsInContentNode());
+  // Don't preserve empty link at the end of the left heading element nor the
+  // start of the right one.
+  const EditorDOMPoint pointToSplit =
+      GetBetterPointToSplitParagraph(aHeadingElement, aPointToSplit);
+  MOZ_ASSERT(pointToSplit.IsInContentNodeAndValidInComposedDoc());
 
-    // Split the header
-    Result<SplitNodeResult, nsresult> splitResult =
-        mHTMLEditor.SplitNodeDeepWithTransaction(
-            aHeadingElement, pointToSplit,
-            SplitAtEdges::eAllowToCreateEmptyContainer);
+  // If the split point is end of the heading element, we should not touch the
+  // heading element and insert a default paragraph next to the heading element.
+  if (SplitPointIsEndOfSplittingBlock(aHeadingElement, pointToSplit,
+                                      IgnoreBlockBoundaries::Yes)) {
+    Result<InsertParagraphResult, nsresult>
+        handleAtEndOfHeadingElementResultOrError =
+            HandleAtEndOfHeadingElement(aHeadingElement);
     NS_WARNING_ASSERTION(
-        splitResult.isOk(),
-        "HTMLEditor::SplitNodeDeepWithTransaction(aHeadingElement, "
-        "SplitAtEdges::eAllowToCreateEmptyContainer) failed");
-    return splitResult;
-  }();
-  if (MOZ_UNLIKELY(splitHeadingResult.isErr())) {
-    NS_WARNING("Failed to splitting aHeadingElement");
-    return splitHeadingResult.propagateErr();
-  }
-  SplitNodeResult unwrappedSplitHeadingResult = splitHeadingResult.unwrap();
-  unwrappedSplitHeadingResult.IgnoreCaretPointSuggestion();
-  if (MOZ_UNLIKELY(!unwrappedSplitHeadingResult.DidSplit())) {
-    NS_WARNING(
-        "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
-        "eAllowToCreateEmptyContainer) didn't split aHeadingElement");
-    return Err(NS_ERROR_FAILURE);
+        handleAtEndOfHeadingElementResultOrError.isOk(),
+        "AutoInsertParagraphHandler::HandleAtEndOfHeadingElement() failed");
+    return handleAtEndOfHeadingElementResultOrError;
   }
 
-  // If the left heading element is empty, put a padding <br> element for empty
-  // last line into it.
-  // FYI: leftHeadingElement is grabbed by unwrappedSplitHeadingResult so that
-  //      it's safe to access anytime.
-  auto* const leftHeadingElement =
-      unwrappedSplitHeadingResult.GetPreviousContentAs<Element>();
-  MOZ_ASSERT(leftHeadingElement,
-             "SplitNodeResult::GetPreviousContent() should return something if "
-             "DidSplit() returns true");
-  MOZ_DIAGNOSTIC_ASSERT(HTMLEditUtils::IsHeader(*leftHeadingElement));
-  if (HTMLEditUtils::IsEmptyNode(
-          *leftHeadingElement,
-          {EmptyCheckOption::TreatSingleBRElementAsVisible,
-           EmptyCheckOption::TreatNonEditableContentAsInvisible})) {
-    Result<CreateElementResult, nsresult> insertPaddingBRElementResult =
-        mHTMLEditor.InsertPaddingBRElementForEmptyLastLineWithTransaction(
-            EditorDOMPoint(leftHeadingElement, 0u));
-    if (MOZ_UNLIKELY(insertPaddingBRElementResult.isErr())) {
-      NS_WARNING(
-          "HTMLEditor::InsertPaddingBRElementForEmptyLastLineWithTransaction("
-          ") failed");
-      return insertPaddingBRElementResult.propagateErr();
-    }
-    insertPaddingBRElementResult.inspect().IgnoreCaretPointSuggestion();
+  Result<SplitNodeResult, nsresult> splitHeadingResultOrError =
+      SplitParagraphWithTransaction(aHeadingElement, pointToSplit);
+  if (MOZ_UNLIKELY(splitHeadingResultOrError.isErr())) {
+    NS_WARNING(
+        "AutoInsertParagraphHandler::SplitParagraphWithTransaction() failed");
+    return splitHeadingResultOrError.propagateErr();
+  }
+  SplitNodeResult splitHeadingResult = splitHeadingResultOrError.unwrap();
+  splitHeadingResult.IgnoreCaretPointSuggestion();
+  if (MOZ_UNLIKELY(!splitHeadingResult.DidSplit())) {
+    NS_WARNING(
+        "AutoInsertParagraphHandler::SplitParagraphWithTransaction() didn't "
+        "split aHeadingElement");
+    return Err(NS_ERROR_FAILURE);
   }
 
   // Put caret at start of the right head element if it's not empty.
   auto* const rightHeadingElement =
-      unwrappedSplitHeadingResult.GetNextContentAs<Element>();
+      splitHeadingResult.GetNextContentAs<Element>();
   MOZ_ASSERT(rightHeadingElement,
              "SplitNodeResult::GetNextContent() should return something if "
              "DidSplit() returns true");
-  if (!HTMLEditUtils::IsEmptyBlockElement(
-          *rightHeadingElement,
-          {EmptyCheckOption::TreatNonEditableContentAsInvisible},
-          BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
-    return InsertParagraphResult(rightHeadingElement,
-                                 EditorDOMPoint(rightHeadingElement, 0u));
-  }
+  return InsertParagraphResult(rightHeadingElement,
+                               splitHeadingResult.UnwrapCaretPoint());
+}
 
-  // If the right heading element is empty, delete it.
-  // TODO: If we know the new heading element becomes empty, we stop spliting
-  //       the heading element.
-  // MOZ_KnownLive(rightHeadingElement) because it's grabbed by
-  // unwrappedSplitHeadingResult.
-  nsresult rv = mHTMLEditor.DeleteNodeWithTransaction(
-      MOZ_KnownLive(*rightHeadingElement));
-  if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-    return Err(rv);
-  }
-
-  // Layout tells the caret to blink in a weird place if we don't place a
-  // break after the header.
-  // XXX This block is dead code unless the removed right heading element is
-  //     reconnected by a mutation event listener.  This is a regression of
-  //     bug 1405751:
-  //     https://searchfox.org/mozilla-central/diff/879f3317d1331818718e18776caa47be7f426a22/editor/libeditor/HTMLEditRules.cpp#6389
-  //     However, the traditional behavior is different from the other browsers.
-  //     Chrome creates new paragraph in this case.  Therefore, we should just
-  //     drop this block in a follow up bug.
-  if (rightHeadingElement->GetNextSibling()) {
-    // XXX Ignoring non-editable <br> element here is odd because non-editable
-    //     <br> elements also work as <br> from point of view of layout.
-    nsIContent* nextEditableSibling =
-        HTMLEditUtils::GetNextSibling(*rightHeadingElement->GetNextSibling(),
-                                      {WalkTreeOption::IgnoreNonEditableNode});
-    if (nextEditableSibling &&
-        nextEditableSibling->IsHTMLElement(nsGkAtoms::br)) {
-      auto afterEditableBRElement = EditorDOMPoint::After(*nextEditableSibling);
-      if (NS_WARN_IF(!afterEditableBRElement.IsSet())) {
-        return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
-      }
-      // Put caret at the <br> element.
-      return InsertParagraphResult::NotHandled(
-          std::move(afterEditableBRElement));
-    }
-  }
-
-  if (MOZ_UNLIKELY(!leftHeadingElement->IsInComposedDoc())) {
-    NS_WARNING("The left heading element was unexpectedly removed");
-    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
-  }
-
+Result<InsertParagraphResult, nsresult>
+HTMLEditor::AutoInsertParagraphHandler::HandleAtEndOfHeadingElement(
+    Element& aHeadingElement) {
   // XXX This makes HTMLEditor instance stateful.  So, we should move this out
   // from AutoInsertParagraphHandler with adding a method which HTMLEditor can
   // consider to do this.
@@ -1247,12 +1167,15 @@ HTMLEditor::AutoInsertParagraphHandler::HandleInHeadingElement(
           ? *nsGkAtoms::p
           : mDefaultParagraphSeparatorTagName;
   // We want a wrapper element even if we separate with a <br>.
+  // FIXME: Chrome does not preserve the style coming from the heading element.
+  // However, Chrome preserves the inline ancestors at the split point.
+  // Perhaps, we should follow them.
   // MOZ_KnownLive(newParagraphTagName) because it's available until shutdown.
   Result<CreateElementResult, nsresult> createNewParagraphElementResult =
-      mHTMLEditor.CreateAndInsertElement(
-          WithTransaction::Yes, MOZ_KnownLive(newParagraphTagName),
-          EditorDOMPoint::After(*leftHeadingElement),
-          HTMLEditor::InsertNewBRElement);
+      mHTMLEditor.CreateAndInsertElement(WithTransaction::Yes,
+                                         MOZ_KnownLive(newParagraphTagName),
+                                         EditorDOMPoint::After(aHeadingElement),
+                                         HTMLEditor::InsertNewBRElement);
   if (MOZ_UNLIKELY(createNewParagraphElementResult.isErr())) {
     NS_WARNING(
         "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");

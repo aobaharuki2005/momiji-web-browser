@@ -635,6 +635,12 @@ class MOZ_STACK_CLASS HTMLEditor::AutoInsertParagraphHandler final {
                          const EditorDOMPoint& aPointToSplit);
 
   /**
+   * Handle insertParagraph command at end of a heading element.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<InsertParagraphResult, nsresult>
+  HandleAtEndOfHeadingElement(Element& aHeadingElement);
+
+  /**
    * Handle insertParagraph command (i.e., handling Enter key press) in a list
    * item element.
    *
