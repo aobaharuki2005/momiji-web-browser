@@ -12,6 +12,9 @@ include protocol PBrowser;
 #ifdef MOZ_WIDGET_GTK
 include protocol PGIOChannel;
 #endif
+#ifdef MOZ_WIDGET_ANDROID
+include protocol PGeckoViewContentChannel;
+#endif
 include protocol PWebSocket;
 include protocol PWebSocketEventListener;
 include protocol PTCPSocket;
@@ -60,6 +63,9 @@ namespace net {
   manages PDataChannel;
 #ifdef MOZ_WIDGET_GTK
   manages PGIOChannel;
+#endif
+#ifdef MOZ_WIDGET_ANDROID
+  manages PGeckoViewContentChannel;
 #endif
   manages PSimpleChannel;
   manages PFileChannel;
@@ -119,6 +125,12 @@ parent:
 #endif
   async PSimpleChannel(uint32_t channelId);
   async PFileChannel();
+
+#ifdef MOZ_WIDGET_ANDROID
+  async PGeckoViewContentChannel(nullable PBrowser browser,
+                                 SerializedLoadContext loadContext,
+                                 GeckoViewContentChannelArgs args);
+#endif
 
   async RequestContextLoadBegin(uint64_t rcid);
   async RequestContextAfterDOMContentLoaded(uint64_t rcid);
