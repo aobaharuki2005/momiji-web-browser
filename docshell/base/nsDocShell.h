@@ -1186,6 +1186,12 @@ class nsDocShell final : public nsDocLoader,
   void InformNavigationAPIAboutAbortingNavigation();
 
   enum class OngoingNavigation : uint8_t { NavigationID, Traversal };
+  enum class UnsetOngoingNavigation : bool { No, Yes };
+  // Implementation for `nsIWebNavigation::Stop`, extended to add a flag whether
+  // to unset the ongoing navigation or not.
+  MOZ_CAN_RUN_SCRIPT
+  nsresult StopInternal(uint32_t aStopFlags,
+                        UnsetOngoingNavigation aUnsetOngoingNavigation);
 
   MOZ_CAN_RUN_SCRIPT
   void SetOngoingNavigation(
