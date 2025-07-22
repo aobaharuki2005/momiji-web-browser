@@ -408,6 +408,12 @@ class FileID {
       return false;
     }
 
+    if (elf_header->e_shoff == 0) {
+      *section_start = nullptr;
+      *section_size = 0;
+      return false;
+    }
+
     const Shdr* sections =
         GetOffset<ElfClass, Shdr>(elf_header, elf_header->e_shoff);
     const Shdr* section_names = sections + elf_header->e_shstrndx;
