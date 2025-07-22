@@ -45,6 +45,7 @@ class SourceText;
 
 namespace loader {
 
+class LoadContextBase;
 class ModuleLoaderBase;
 class ModuleLoadRequest;
 class ModuleScript;
@@ -304,8 +305,9 @@ class ModuleLoaderBase : public nsISupports {
  private:
   // Create a module load request for a static module import.
   virtual already_AddRefed<ModuleLoadRequest> CreateStaticImport(
-      nsIURI* aURI, JS::ModuleType aModuleType, ModuleLoadRequest* aParent,
-      const mozilla::dom::SRIMetadata& aSriMetadata) = 0;
+      nsIURI* aURI, JS::ModuleType aModuleType, ModuleScript* aReferrerScript,
+      const mozilla::dom::SRIMetadata& aSriMetadata,
+      LoadContextBase* aLoadContext, JS::loader::ModuleLoaderBase* aLoader) = 0;
 
   // Called by HostImportModuleDynamically hook.
   virtual already_AddRefed<ModuleLoadRequest> CreateDynamicImport(
@@ -499,7 +501,7 @@ class ModuleLoaderBase : public nsISupports {
   void StartFetchingModuleDependencies(ModuleLoadRequest* aRequest);
 
   void StartFetchingModuleAndDependencies(
-      ModuleLoadRequest* aParent, const ModuleMapKey& aRequestedModule,
+      JSContext* aCx, const ModuleMapKey& aRequestedModule,
       JS::Handle<JSObject*> aReferrer,
       JS::Handle<JS::Value> aReferencingPrivate,
       JS::Handle<JSObject*> aModuleRequest,

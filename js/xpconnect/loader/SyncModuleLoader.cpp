@@ -61,13 +61,17 @@ SyncModuleLoader::SyncModuleLoader(SyncScriptLoader* aScriptLoader,
 SyncModuleLoader::~SyncModuleLoader() { MOZ_ASSERT(mLoadRequests.isEmpty()); }
 
 already_AddRefed<ModuleLoadRequest> SyncModuleLoader::CreateStaticImport(
-    nsIURI* aURI, JS::ModuleType aModuleType, ModuleLoadRequest* aParent,
-    const mozilla::dom::SRIMetadata& aSriMetadata) {
+    nsIURI* aURI, JS::ModuleType aModuleType,
+    JS::loader::ModuleScript* aReferrerScript,
+    const mozilla::dom::SRIMetadata& aSriMetadata,
+    JS::loader::LoadContextBase* aLoadContext,
+    JS::loader::ModuleLoaderBase* aLoader) {
   RefPtr<SyncLoadContext> context = new SyncLoadContext();
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, aModuleType, aParent->ReferrerPolicy(), aParent->mFetchOptions,
-      dom::SRIMetadata(), aParent->mURI, context,
-      ModuleLoadRequest::Kind::StaticImport, this, aParent->GetRootModule());
+      aURI, aModuleType, aReferrerScript->ReferrerPolicy(),
+      aReferrerScript->GetFetchOptions(), dom::SRIMetadata(),
+      aReferrerScript->GetURI(), context, ModuleLoadRequest::Kind::StaticImport,
+      this, aLoadContext->mRequest->AsModuleRequest()->GetRootModule());
   request->NoCacheEntryFound();
   return request.forget();
 }

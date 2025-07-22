@@ -374,19 +374,22 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateTopLevel(
 }
 
 already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
-    nsIURI* aURI, JS::ModuleType aModuleType, ModuleLoadRequest* aParent,
-    const mozilla::dom::SRIMetadata& aSriMetadata) {
+    nsIURI* aURI, JS::ModuleType aModuleType, ModuleScript* aReferrerScript,
+    const mozilla::dom::SRIMetadata& aSriMetadata,
+    JS::loader::LoadContextBase* aLoadContext,
+    JS::loader::ModuleLoaderBase* aLoader) {
   RefPtr<ScriptLoadContext> newContext = new ScriptLoadContext();
   newContext->mIsInline = false;
   // Propagated Parent values. TODO: allow child modules to use root module's
   // script mode.
-  newContext->mScriptMode = aParent->GetScriptLoadContext()->mScriptMode;
+  newContext->mScriptMode = aLoadContext->AsWindowContext()->mScriptMode;
 
-  RefPtr<ModuleLoadRequest> request =
-      new ModuleLoadRequest(aURI, aModuleType, aParent->ReferrerPolicy(),
-                            aParent->mFetchOptions, aSriMetadata, aParent->mURI,
-                            newContext, ModuleLoadRequest::Kind::StaticImport,
-                            aParent->mLoader, aParent->GetRootModule());
+  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
+      aURI, aModuleType, aReferrerScript->ReferrerPolicy(),
+      aReferrerScript->GetFetchOptions(), aSriMetadata,
+      aReferrerScript->GetURI(), newContext,
+      ModuleLoadRequest::Kind::StaticImport, aLoader,
+      aLoadContext->mRequest->AsModuleRequest()->GetRootModule());
 
   GetScriptLoader()->TryUseCache(request);
 

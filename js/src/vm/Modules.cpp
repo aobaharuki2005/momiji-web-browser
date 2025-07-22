@@ -274,6 +274,19 @@ JS_PUBLIC_API bool JS::LoadRequestedModules(
                                   promiseOut);
 }
 
+JS_PUBLIC_API void JS::GetLoadingModuleHostDefinedValue(
+    JSContext* cx, Handle<Value> statePrivate,
+    MutableHandleValue hostDefinedOut) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->releaseCheck(statePrivate);
+
+  Rooted<GraphLoadingStateRecordObject*> state(cx);
+  state = static_cast<GraphLoadingStateRecordObject*>(&statePrivate.toObject());
+  MOZ_ASSERT(state);
+  hostDefinedOut.set(state->hostDefined());
+}
+
 JS_PUBLIC_API bool JS::ModuleEvaluate(JSContext* cx,
                                       Handle<JSObject*> moduleRecord,
                                       MutableHandle<JS::Value> rval) {
