@@ -79,7 +79,7 @@ static const char* acLogTag = "WebrtcAudioSessionConduit";
 #endif
 #define LOGTAG acLogTag
 
-using namespace cricket;
+using namespace webrtc;
 using LocalDirection = MediaSessionConduitLocalDirection;
 
 const char kCodecParamCbr[] = "cbr";
@@ -385,7 +385,7 @@ void WebrtcAudioConduit::OnControlConfigChange() {
         mControl.mFrameTransformerProxySend.Ref();
     if (!mSendStreamConfig.frame_transformer) {
       mSendStreamConfig.frame_transformer =
-          new rtc::RefCountedObject<FrameTransformer>(false);
+          new webrtc::RefCountedObject<FrameTransformer>(false);
       sendStreamRecreationNeeded = true;
     }
     static_cast<FrameTransformer*>(mSendStreamConfig.frame_transformer.get())
@@ -398,7 +398,7 @@ void WebrtcAudioConduit::OnControlConfigChange() {
         mControl.mFrameTransformerProxyRecv.Ref();
     if (!mRecvStreamConfig.frame_transformer) {
       mRecvStreamConfig.frame_transformer =
-          new rtc::RefCountedObject<FrameTransformer>(false);
+          new webrtc::RefCountedObject<FrameTransformer>(false);
       recvStreamRecreationNeeded = true;
     }
     static_cast<FrameTransformer*>(mRecvStreamConfig.frame_transformer.get())
@@ -681,12 +681,12 @@ void WebrtcAudioConduit::OnRtpReceived(webrtc::RtpPacketReceived&& aPacket,
   }
 }
 
-void WebrtcAudioConduit::OnRtcpReceived(rtc::CopyOnWriteBuffer&& aPacket) {
+void WebrtcAudioConduit::OnRtcpReceived(webrtc::CopyOnWriteBuffer&& aPacket) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
   if (mCall->Call()) {
     mCall->Call()->Receiver()->DeliverRtcpPacket(
-        std::forward<rtc::CopyOnWriteBuffer>(aPacket));
+        std::forward<webrtc::CopyOnWriteBuffer>(aPacket));
   }
 }
 
@@ -1054,7 +1054,7 @@ void WebrtcAudioConduit::SetJitterBufferTarget(DOMHighResTimeStamp aTargetMs) {
       })));
 }
 
-void WebrtcAudioConduit::DeliverPacket(rtc::CopyOnWriteBuffer packet,
+void WebrtcAudioConduit::DeliverPacket(webrtc::CopyOnWriteBuffer packet,
                                        PacketType type) {
   // Currently unused.
   MOZ_ASSERT(false);

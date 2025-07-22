@@ -1016,7 +1016,8 @@ ipc::IPCResult CamerasParent::RecvStartCapture(
               if (!error) {
                 if (cbh) {
                   cap.VideoCapture()->RegisterCaptureDataCallback(
-                      static_cast<rtc::VideoSinkInterface<webrtc::VideoFrame>*>(
+                      static_cast<
+                          webrtc::VideoSinkInterface<webrtc::VideoFrame>*>(
                           *cbh));
                   if (auto* event = cap.CaptureEndedEvent();
                       event && !(*cbh)->mConnectedToCaptureEnded) {
@@ -1111,7 +1112,8 @@ void CamerasParent::StopCapture(const CaptureEngine& aCapEngine,
                                           VideoEngine::CaptureEntry& cap) {
           if (cap.VideoCapture()) {
             cap.VideoCapture()->DeRegisterCaptureDataCallback(
-                static_cast<rtc::VideoSinkInterface<webrtc::VideoFrame>*>(cbh));
+                static_cast<webrtc::VideoSinkInterface<webrtc::VideoFrame>*>(
+                    cbh));
             cap.VideoCapture()->StopCaptureIfAllClientsClose();
 
             sDeviceUniqueIDs.erase(aCaptureId);

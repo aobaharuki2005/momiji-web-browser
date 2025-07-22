@@ -117,7 +117,7 @@ VideoCaptureFactory::CreateVideoCapture(
   result.mDesktopImpl =
       webrtc::DesktopCaptureImpl::Create(aModuleId, aUniqueId, aType);
   result.mCapturer =
-      rtc::scoped_refptr<webrtc::VideoCaptureModule>(result.mDesktopImpl);
+      webrtc::scoped_refptr<webrtc::VideoCaptureModule>(result.mDesktopImpl);
 #endif
 
   return result;

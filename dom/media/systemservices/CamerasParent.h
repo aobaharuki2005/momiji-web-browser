@@ -30,7 +30,7 @@ namespace mozilla::camera {
 class CamerasParent;
 class VideoEngine;
 
-class CallbackHelper : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+class CallbackHelper : public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
   CallbackHelper(CaptureEngine aCapEng, uint32_t aStreamId,
                  CamerasParent* aParent)

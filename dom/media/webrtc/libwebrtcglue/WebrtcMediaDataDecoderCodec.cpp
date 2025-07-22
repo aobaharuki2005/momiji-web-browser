@@ -100,8 +100,8 @@ int32_t WebrtcMediaDataDecoder::Decode(const webrtc::EncodedImage& aInputImage,
         // Nothing to display.
         continue;
       }
-      rtc::scoped_refptr<ImageBuffer> image(
-          new rtc::RefCountedObject<ImageBuffer>(std::move(video->mImage)));
+      webrtc::scoped_refptr<ImageBuffer> image(
+          new webrtc::RefCountedObject<ImageBuffer>(std::move(video->mImage)));
 
       auto videoFrame = webrtc::VideoFrame::Builder()
                             .set_video_frame_buffer(image)

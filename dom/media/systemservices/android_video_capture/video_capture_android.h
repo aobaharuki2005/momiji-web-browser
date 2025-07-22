@@ -30,8 +30,8 @@ class VideoCaptureAndroid : public VideoCaptureImpl {
   virtual bool CaptureStarted();
   virtual int32_t CaptureSettings(VideoCaptureCapability& settings);
 
-  void OnIncomingFrame(rtc::scoped_refptr<I420Buffer> buffer, int32_t degrees,
-                       int64_t captureTime = 0);
+  void OnIncomingFrame(webrtc::scoped_refptr<I420Buffer> buffer,
+                       int32_t degrees, int64_t captureTime = 0);
 
  protected:
   virtual ~VideoCaptureAndroid();

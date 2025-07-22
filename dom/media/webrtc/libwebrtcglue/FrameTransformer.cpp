@@ -40,7 +40,7 @@ void FrameTransformer::Transform(
 }
 
 void FrameTransformer::RegisterTransformedFrameCallback(
-    rtc::scoped_refptr<webrtc::TransformedFrameCallback> aCallback) {
+    webrtc::scoped_refptr<webrtc::TransformedFrameCallback> aCallback) {
   MutexAutoLock lock(mCallbacksMutex);
   mCallback = aCallback;
 }
@@ -51,7 +51,7 @@ void FrameTransformer::UnregisterTransformedFrameCallback() {
 }
 
 void FrameTransformer::RegisterTransformedFrameSinkCallback(
-    rtc::scoped_refptr<webrtc::TransformedFrameCallback> aCallback,
+    webrtc::scoped_refptr<webrtc::TransformedFrameCallback> aCallback,
     uint32_t aSsrc) {
   MutexAutoLock lock(mCallbacksMutex);
   mCallbacksBySsrc[aSsrc] = aCallback;

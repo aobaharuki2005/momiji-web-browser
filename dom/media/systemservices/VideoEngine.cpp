@@ -179,13 +179,13 @@ already_AddRefed<VideoEngine> VideoEngine::Create(
 }
 
 VideoEngine::CaptureEntry::CaptureEntry(
-    int32_t aCapnum, rtc::scoped_refptr<webrtc::VideoCaptureModule> aCapture,
+    int32_t aCapnum, webrtc::scoped_refptr<webrtc::VideoCaptureModule> aCapture,
     webrtc::DesktopCaptureImpl* aDesktopImpl)
     : mCapnum(aCapnum),
       mVideoCaptureModule(std::move(aCapture)),
       mDesktopImpl(aDesktopImpl) {}
 
-rtc::scoped_refptr<webrtc::VideoCaptureModule>
+webrtc::scoped_refptr<webrtc::VideoCaptureModule>
 VideoEngine::CaptureEntry::VideoCapture() {
   return mVideoCaptureModule;
 }

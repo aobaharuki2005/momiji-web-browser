@@ -29,7 +29,7 @@ class VideoCaptureAvFoundation : public VideoCaptureImpl {
   VideoCaptureAvFoundation(AVCaptureDevice* _Nonnull aDevice);
   virtual ~VideoCaptureAvFoundation();
 
-  static rtc::scoped_refptr<VideoCaptureModule> Create(
+  static webrtc::scoped_refptr<VideoCaptureModule> Create(
       const char* _Nullable aDeviceUniqueIdUTF8);
 
   // Implementation of VideoCaptureImpl. Single threaded.

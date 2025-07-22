@@ -122,7 +122,7 @@ const char* vcLogTag = "WebrtcVideoSessionConduit";
 #endif
 #define LOGTAG vcLogTag
 
-using namespace cricket;
+using namespace webrtc;
 using LocalDirection = MediaSessionConduitLocalDirection;
 
 const int kNullPayloadType = -1;
@@ -174,7 +174,7 @@ webrtc::VideoCodecType SupportedCodecType(webrtc::VideoCodecType aType) {
 }
 
 // Call thread only.
-rtc::scoped_refptr<webrtc::VideoEncoderConfig::EncoderSpecificSettings>
+webrtc::scoped_refptr<webrtc::VideoEncoderConfig::EncoderSpecificSettings>
 ConfigureVideoEncoderSettings(const VideoCodecConfig& aConfig,
                               const WebrtcVideoConduit* aConduit,
                               webrtc::CodecParameterMap& aParameters) {
@@ -231,9 +231,9 @@ ConfigureVideoEncoderSettings(const VideoCodecConfig& aConfig,
     vp8_settings.automaticResizeOn = automatic_resize;
     // VP8 denoising is enabled by default.
     vp8_settings.denoisingOn = codec_default_denoising ? true : denoising;
-    return rtc::scoped_refptr<
+    return webrtc::scoped_refptr<
         webrtc::VideoEncoderConfig::EncoderSpecificSettings>(
-        new rtc::RefCountedObject<
+        new webrtc::RefCountedObject<
             webrtc::VideoEncoderConfig::Vp8EncoderSpecificSettings>(
             vp8_settings));
   }
@@ -248,9 +248,9 @@ ConfigureVideoEncoderSettings(const VideoCodecConfig& aConfig,
     }
     // VP9 denoising is disabled by default.
     vp9_settings.denoisingOn = codec_default_denoising ? false : denoising;
-    return rtc::scoped_refptr<
+    return webrtc::scoped_refptr<
         webrtc::VideoEncoderConfig::EncoderSpecificSettings>(
-        new rtc::RefCountedObject<
+        new webrtc::RefCountedObject<
             webrtc::VideoEncoderConfig::Vp9EncoderSpecificSettings>(
             vp9_settings));
   }
@@ -892,7 +892,7 @@ void WebrtcVideoConduit::OnControlConfigChange() {
           mControl.mFrameTransformerProxySend.Ref();
       if (!mSendStreamConfig.frame_transformer) {
         mSendStreamConfig.frame_transformer =
-            new rtc::RefCountedObject<FrameTransformer>(true);
+            new webrtc::RefCountedObject<FrameTransformer>(true);
         sendStreamRecreationNeeded = true;
       }
       static_cast<FrameTransformer*>(mSendStreamConfig.frame_transformer.get())
@@ -905,7 +905,7 @@ void WebrtcVideoConduit::OnControlConfigChange() {
           mControl.mFrameTransformerProxyRecv.Ref();
       if (!mRecvStreamConfig.frame_transformer) {
         mRecvStreamConfig.frame_transformer =
-            new rtc::RefCountedObject<FrameTransformer>(true);
+            new webrtc::RefCountedObject<FrameTransformer>(true);
       }
       static_cast<FrameTransformer*>(mRecvStreamConfig.frame_transformer.get())
           ->SetProxy(mControl.mConfiguredFrameTransformerProxyRecv);
@@ -1493,10 +1493,10 @@ void WebrtcVideoConduit::DetachRenderer() {
   }
 }
 
-rtc::RefCountedObject<mozilla::VideoStreamFactory>*
+webrtc::RefCountedObject<mozilla::VideoStreamFactory>*
 WebrtcVideoConduit::CreateVideoStreamFactory() {
   auto videoStreamFactory = mVideoStreamFactory.Lock();
-  *videoStreamFactory = new rtc::RefCountedObject<VideoStreamFactory>(
+  *videoStreamFactory = new webrtc::RefCountedObject<VideoStreamFactory>(
       *mCurSendCodecConfig, mMinBitrate, mStartBitrate, mPrefMaxBitrate,
       mNegotiatedMaxBitrate);
   return videoStreamFactory->get();
@@ -1574,7 +1574,7 @@ void WebrtcVideoConduit::SetTrackSource(
 
 // Transport Layer Callbacks
 
-void WebrtcVideoConduit::DeliverPacket(rtc::CopyOnWriteBuffer packet,
+void WebrtcVideoConduit::DeliverPacket(webrtc::CopyOnWriteBuffer packet,
                                        PacketType type) {
   // Currently unused.
   MOZ_ASSERT(false);
@@ -1647,12 +1647,12 @@ void WebrtcVideoConduit::OnRtpReceived(webrtc::RtpPacketReceived&& aPacket,
   }
 }
 
-void WebrtcVideoConduit::OnRtcpReceived(rtc::CopyOnWriteBuffer&& aPacket) {
+void WebrtcVideoConduit::OnRtcpReceived(webrtc::CopyOnWriteBuffer&& aPacket) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
   if (mCall->Call()) {
     mCall->Call()->Receiver()->DeliverRtcpPacket(
-        std::forward<rtc::CopyOnWriteBuffer>(aPacket));
+        std::forward<webrtc::CopyOnWriteBuffer>(aPacket));
   }
 }
 

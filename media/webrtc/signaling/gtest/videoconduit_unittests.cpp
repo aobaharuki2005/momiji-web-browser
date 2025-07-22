@@ -28,7 +28,7 @@ using namespace webrtc;
 
 namespace test {
 
-class MockVideoSink : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+class MockVideoSink : public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
   MockVideoSink() : mVideoFrame(nullptr, kVideoRotation_0, 0) {}
 
@@ -107,7 +107,7 @@ class VideoConduitTest : public Test {
 
   void SendVideoFrame(unsigned short width, unsigned short height,
                       int64_t capture_time_ms) {
-    rtc::scoped_refptr<webrtc::I420Buffer> buffer =
+    webrtc::scoped_refptr<webrtc::I420Buffer> buffer =
         webrtc::I420Buffer::Create(width, height);
     memset(buffer->MutableDataY(), 0x10, buffer->StrideY() * buffer->height());
     memset(buffer->MutableDataU(), 0x80,
@@ -772,7 +772,7 @@ TEST_F(VideoConduitTest, TestOnSinkWantsChanged) {
         Some(RtpRtcpConfig(webrtc::RtcpMode::kCompound, true));
   });
   ASSERT_TRUE(Call()->mVideoSendEncoderConfig);
-  rtc::VideoSinkWants wants;
+  webrtc::VideoSinkWants wants;
   wants.max_pixel_count = 256000;
   mVideoFrameConverter->AddOrUpdateSink(mVideoSink.get(), wants);
   SendVideoFrame(1920, 1080, 1);
@@ -860,7 +860,7 @@ TEST_F(VideoConduitTestScalingLocked, TestOnSinkWantsChanged) {
         Some(RtpRtcpConfig(webrtc::RtcpMode::kCompound, true));
   });
   ASSERT_TRUE(Call()->mVideoSendEncoderConfig);
-  rtc::VideoSinkWants wants;
+  webrtc::VideoSinkWants wants;
   wants.max_pixel_count = 256000;
   mVideoFrameConverter->AddOrUpdateSink(mVideoSink.get(), wants);
   SendVideoFrame(1920, 1080, 1);
@@ -1579,7 +1579,7 @@ TEST_P(VideoConduitCodecModeTest, TestVideoEncodeMaxFs) {
 
   // maxFs should not force pixel count above what a mVideoSink has requested.
   // We set 3600 macroblocks (16x16 pixels), so we request 3500 here.
-  rtc::VideoSinkWants wants;
+  webrtc::VideoSinkWants wants;
   wants.max_pixel_count = 3500 * 16 * 16;
   mVideoFrameConverter->AddOrUpdateSink(mVideoSink.get(), wants);
 
@@ -1643,7 +1643,7 @@ TEST_P(VideoConduitCodecModeTest, TestVideoEncodeMaxFsNegotiatedThenSinkWants) {
     ASSERT_EQ(mVideoSink->mOnFrameCount, frame);
   }
 
-  rtc::VideoSinkWants wants;
+  webrtc::VideoSinkWants wants;
   wants.max_pixel_count = 3600 * 16 * 16;
   mVideoFrameConverter->AddOrUpdateSink(mVideoSink.get(), wants);
 
@@ -1718,7 +1718,7 @@ TEST_P(VideoConduitCodecModeTest,
   });
   ASSERT_TRUE(Call()->mVideoSendEncoderConfig);
 
-  rtc::VideoSinkWants wants;
+  webrtc::VideoSinkWants wants;
   wants.max_pixel_count = 3500 * 16 * 16;
   mVideoFrameConverter->AddOrUpdateSink(mVideoSink.get(), wants);
 
@@ -2367,9 +2367,9 @@ TEST_F(VideoConduitTest, TestVideoConfigurationH264) {
 
     ASSERT_TRUE(Call()->mVideoSendEncoderConfig);
     auto& params = Call()->mVideoSendEncoderConfig->video_format.parameters;
-    EXPECT_EQ(params[cricket::kH264FmtpPacketizationMode], "0");
-    EXPECT_EQ(params[cricket::kH264FmtpProfileLevelId], "42e01f");
-    EXPECT_EQ(params[cricket::kH264FmtpSpropParameterSets], sprop1);
+    EXPECT_EQ(params[webrtc::kH264FmtpPacketizationMode], "0");
+    EXPECT_EQ(params[webrtc::kH264FmtpProfileLevelId], "42e01f");
+    EXPECT_EQ(params[webrtc::kH264FmtpSpropParameterSets], sprop1);
   }
 
   {
@@ -2387,9 +2387,9 @@ TEST_F(VideoConduitTest, TestVideoConfigurationH264) {
 
     ASSERT_TRUE(Call()->mVideoSendEncoderConfig);
     auto& params = Call()->mVideoSendEncoderConfig->video_format.parameters;
-    EXPECT_EQ(params[cricket::kH264FmtpPacketizationMode], "1");
-    EXPECT_EQ(params[cricket::kH264FmtpProfileLevelId], "64000c");
-    EXPECT_EQ(params[cricket::kH264FmtpSpropParameterSets], sprop2);
+    EXPECT_EQ(params[webrtc::kH264FmtpPacketizationMode], "1");
+    EXPECT_EQ(params[webrtc::kH264FmtpProfileLevelId], "64000c");
+    EXPECT_EQ(params[webrtc::kH264FmtpSpropParameterSets], sprop2);
   }
 }
 
@@ -2413,9 +2413,9 @@ TEST_F(VideoConduitTest, TestVideoConfigurationAV1) {
 
     ASSERT_TRUE(Call()->mVideoSendEncoderConfig);
     auto& params = Call()->mVideoSendEncoderConfig->video_format.parameters;
-    EXPECT_EQ(params[cricket::kAv1FmtpProfile], "2");
-    EXPECT_EQ(params[cricket::kAv1FmtpLevelIdx], "4");
-    EXPECT_EQ(params[cricket::kAv1FmtpTier], "1");
+    EXPECT_EQ(params[webrtc::kAv1FmtpProfile], "2");
+    EXPECT_EQ(params[webrtc::kAv1FmtpLevelIdx], "4");
+    EXPECT_EQ(params[webrtc::kAv1FmtpTier], "1");
   }
 }
 

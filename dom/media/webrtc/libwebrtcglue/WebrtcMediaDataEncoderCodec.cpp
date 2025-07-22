@@ -158,8 +158,8 @@ static void InitCodecSpecficInfo(webrtc::CodecSpecificInfo& aInfo,
   switch (aCodecSettings->codecType) {
     case webrtc::VideoCodecType::kVideoCodecH264: {
       aInfo.codecSpecific.H264.packetization_mode =
-          aParameters.count(cricket::kH264FmtpPacketizationMode) == 1 &&
-                  aParameters.at(cricket::kH264FmtpPacketizationMode) == "1"
+          aParameters.count(webrtc::kH264FmtpPacketizationMode) == 1 &&
+                  aParameters.at(webrtc::kH264FmtpPacketizationMode) == "1"
               ? webrtc::H264PacketizationMode::NonInterleaved
               : webrtc::H264PacketizationMode::SingleNalUnit;
       break;
@@ -188,8 +188,8 @@ int32_t WebrtcMediaDataEncoder::InitEncode(
 
   // TODO: enable max output size setting when supported.
   if (aCodecSettings->codecType == webrtc::VideoCodecType::kVideoCodecH264 &&
-      !(mFormatParams.count(cricket::kH264FmtpPacketizationMode) == 1 &&
-        mFormatParams.at(cricket::kH264FmtpPacketizationMode) == "1")) {
+      !(mFormatParams.count(webrtc::kH264FmtpPacketizationMode) == 1 &&
+        mFormatParams.at(webrtc::kH264FmtpPacketizationMode) == "1")) {
     LOG("Some platform encoders don't support setting max output size."
         " Falling back to SW");
     return WEBRTC_VIDEO_CODEC_FALLBACK_SOFTWARE;
@@ -370,7 +370,7 @@ static already_AddRefed<VideoData> CreateVideoDataFromWebrtcVideoFrame(
   // discontinuous time and confuses the video receiver when switching from
   // platform to libwebrtc encoder.
   TimeUnit timestamp =
-      media::TimeUnit(aFrame.rtp_timestamp(), cricket::kVideoCodecClockrate);
+      media::TimeUnit(aFrame.rtp_timestamp(), webrtc::kVideoCodecClockrate);
   return VideoData::CreateFromImage(image->GetSize(), 0, timestamp, aDuration,
                                     image, aIsKeyFrame, timestamp);
 }
@@ -472,7 +472,7 @@ int32_t WebrtcMediaDataEncoder::Encode(
           image._encodedWidth = displaySize.width;
           image._encodedHeight = displaySize.height;
           CheckedInt64 time =
-              TimeUnitToFrames(frame->mTime, cricket::kVideoCodecClockrate);
+              TimeUnitToFrames(frame->mTime, webrtc::kVideoCodecClockrate);
           if (!time.isValid()) {
             self->mError = MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                        "invalid timestamp from encoder");

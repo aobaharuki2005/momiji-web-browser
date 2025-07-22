@@ -14,9 +14,9 @@ using mozilla::MakeRefPtr;
 using mozilla::TimeDuration;
 
 namespace webrtc::videocapturemodule {
-rtc::scoped_refptr<webrtc::VideoCaptureModule> VideoCaptureFake::Create(
+webrtc::scoped_refptr<webrtc::VideoCaptureModule> VideoCaptureFake::Create(
     nsISerialEventTarget* aTarget) {
-  return rtc::make_ref_counted<VideoCaptureFake>(aTarget);
+  return webrtc::make_ref_counted<VideoCaptureFake>(aTarget);
 }
 
 VideoCaptureFake::VideoCaptureFake(nsISerialEventTarget* aTarget)
