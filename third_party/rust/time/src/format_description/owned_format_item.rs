@@ -45,6 +45,7 @@ impl fmt::Debug for OwnedFormatItem {
     }
 }
 
+// region: conversions from FormatItem
 impl From<BorrowedFormatItem<'_>> for OwnedFormatItem {
     fn from(item: BorrowedFormatItem<'_>) -> Self {
         (&item).into()
@@ -98,7 +99,9 @@ impl<'a, T: AsRef<[BorrowedFormatItem<'a>]> + ?Sized> From<&T> for OwnedFormatIt
         )
     }
 }
+// endregion conversions from FormatItem
 
+// region: from variants
 impl From<Component> for OwnedFormatItem {
     fn from(component: Component) -> Self {
         Self::Component(component)
@@ -132,7 +135,9 @@ impl TryFrom<OwnedFormatItem> for Vec<OwnedFormatItem> {
         }
     }
 }
+// endregion from variants
 
+// region: equality
 impl PartialEq<Component> for OwnedFormatItem {
     fn eq(&self, rhs: &Component) -> bool {
         matches!(self, Self::Component(component) if component == rhs)
@@ -156,3 +161,4 @@ impl PartialEq<OwnedFormatItem> for &[OwnedFormatItem] {
         rhs == self
     }
 }
+// endregion equality

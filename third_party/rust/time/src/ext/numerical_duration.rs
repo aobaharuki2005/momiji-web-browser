@@ -107,34 +107,34 @@ impl NumericalDuration for i64 {
 
 impl NumericalDuration for f64 {
     fn nanoseconds(self) -> Duration {
-        Duration::nanoseconds(self as i64)
+        Duration::nanoseconds(self as _)
     }
 
     fn microseconds(self) -> Duration {
-        Duration::nanoseconds((self * Nanosecond::per(Microsecond) as Self) as i64)
+        Duration::nanoseconds((self * Nanosecond::per(Microsecond) as Self) as _)
     }
 
     fn milliseconds(self) -> Duration {
-        Duration::nanoseconds((self * Nanosecond::per(Millisecond) as Self) as i64)
+        Duration::nanoseconds((self * Nanosecond::per(Millisecond) as Self) as _)
     }
 
     fn seconds(self) -> Duration {
-        Duration::nanoseconds((self * Nanosecond::per(Second) as Self) as i64)
+        Duration::nanoseconds((self * Nanosecond::per(Second) as Self) as _)
     }
 
     fn minutes(self) -> Duration {
-        Duration::nanoseconds((self * Nanosecond::per(Minute) as Self) as i64)
+        Duration::nanoseconds((self * Nanosecond::per(Minute) as Self) as _)
     }
 
     fn hours(self) -> Duration {
-        Duration::nanoseconds((self * Nanosecond::per(Hour) as Self) as i64)
+        Duration::nanoseconds((self * Nanosecond::per(Hour) as Self) as _)
     }
 
     fn days(self) -> Duration {
-        Duration::nanoseconds((self * Nanosecond::per(Day) as Self) as i64)
+        Duration::nanoseconds((self * Nanosecond::per(Day) as Self) as _)
     }
 
     fn weeks(self) -> Duration {
-        Duration::nanoseconds((self * Nanosecond::per(Week) as Self) as i64)
+        Duration::nanoseconds((self * Nanosecond::per(Week) as Self) as _)
     }
 }

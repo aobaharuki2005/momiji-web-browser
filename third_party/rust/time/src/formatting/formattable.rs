@@ -21,7 +21,7 @@ use crate::{error, Date, Time, UtcOffset};
 ///
 /// [`Date::format`] and [`Time::format`] each use a format description to generate
 /// a String from their data. See the respective methods for usage examples.
-#[cfg_attr(docsrs, doc(notable_trait))]
+#[cfg_attr(__time_03_docs, doc(notable_trait))]
 pub trait Formattable: sealed::Sealed {}
 impl Formattable for BorrowedFormatItem<'_> {}
 impl Formattable for [BorrowedFormatItem<'_>] {}
@@ -42,7 +42,7 @@ mod sealed {
         /// Format the item into the provided output, returning the number of bytes written.
         fn format_into(
             &self,
-            output: &mut (impl io::Write + ?Sized),
+            output: &mut impl io::Write,
             date: Option<Date>,
             time: Option<Time>,
             offset: Option<UtcOffset>,
@@ -62,10 +62,11 @@ mod sealed {
     }
 }
 
+// region: custom formats
 impl sealed::Sealed for BorrowedFormatItem<'_> {
     fn format_into(
         &self,
-        output: &mut (impl io::Write + ?Sized),
+        output: &mut impl io::Write,
         date: Option<Date>,
         time: Option<Time>,
         offset: Option<UtcOffset>,
@@ -86,7 +87,7 @@ impl sealed::Sealed for BorrowedFormatItem<'_> {
 impl sealed::Sealed for [BorrowedFormatItem<'_>] {
     fn format_into(
         &self,
-        output: &mut (impl io::Write + ?Sized),
+        output: &mut impl io::Write,
         date: Option<Date>,
         time: Option<Time>,
         offset: Option<UtcOffset>,
@@ -102,7 +103,7 @@ impl sealed::Sealed for [BorrowedFormatItem<'_>] {
 impl sealed::Sealed for OwnedFormatItem {
     fn format_into(
         &self,
-        output: &mut (impl io::Write + ?Sized),
+        output: &mut impl io::Write,
         date: Option<Date>,
         time: Option<Time>,
         offset: Option<UtcOffset>,
@@ -123,7 +124,7 @@ impl sealed::Sealed for OwnedFormatItem {
 impl sealed::Sealed for [OwnedFormatItem] {
     fn format_into(
         &self,
-        output: &mut (impl io::Write + ?Sized),
+        output: &mut impl io::Write,
         date: Option<Date>,
         time: Option<Time>,
         offset: Option<UtcOffset>,
@@ -142,7 +143,7 @@ where
 {
     fn format_into(
         &self,
-        output: &mut (impl io::Write + ?Sized),
+        output: &mut impl io::Write,
         date: Option<Date>,
         time: Option<Time>,
         offset: Option<UtcOffset>,
@@ -150,11 +151,13 @@ where
         self.deref().format_into(output, date, time, offset)
     }
 }
+// endregion custom formats
 
+// region: well-known formats
 impl sealed::Sealed for Rfc2822 {
     fn format_into(
         &self,
-        output: &mut (impl io::Write + ?Sized),
+        output: &mut impl io::Write,
         date: Option<Date>,
         time: Option<Time>,
         offset: Option<UtcOffset>,
@@ -205,7 +208,7 @@ impl sealed::Sealed for Rfc2822 {
 impl sealed::Sealed for Rfc3339 {
     fn format_into(
         &self,
-        output: &mut (impl io::Write + ?Sized),
+        output: &mut impl io::Write,
         date: Option<Date>,
         time: Option<Time>,
         offset: Option<UtcOffset>,
@@ -240,6 +243,7 @@ impl sealed::Sealed for Rfc3339 {
         bytes += write(output, b":")?;
         bytes += format_number_pad_zero::<2>(output, time.second())?;
 
+        #[allow(clippy::if_not_else)]
         if time.nanosecond() != 0 {
             let nanos = time.nanosecond();
             bytes += write(output, b".")?;
@@ -281,7 +285,7 @@ impl sealed::Sealed for Rfc3339 {
 impl<const CONFIG: EncodedConfig> sealed::Sealed for Iso8601<CONFIG> {
     fn format_into(
         &self,
-        output: &mut (impl io::Write + ?Sized),
+        output: &mut impl io::Write,
         date: Option<Date>,
         time: Option<Time>,
         offset: Option<UtcOffset>,
@@ -310,3 +314,4 @@ impl<const CONFIG: EncodedConfig> sealed::Sealed for Iso8601<CONFIG> {
         Ok(bytes)
     }
 }
+// endregion well-known formats

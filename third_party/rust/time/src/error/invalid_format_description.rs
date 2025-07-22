@@ -115,14 +115,10 @@ impl fmt::Display for InvalidFormatDescription {
                 context,
                 index,
             } => {
-                if context.is_empty() {
-                    write!(f, "{what} is not supported at byte index {index}")
-                } else {
-                    write!(
-                        f,
-                        "{what} is not supported in {context} at byte index {index}"
-                    )
-                }
+                write!(
+                    f,
+                    "{what} is not supported in {context} at byte index {index}"
+                )
             }
         }
     }

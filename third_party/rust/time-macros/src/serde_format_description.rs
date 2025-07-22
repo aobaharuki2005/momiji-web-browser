@@ -1,7 +1,6 @@
 use proc_macro::{Ident, TokenStream, TokenTree};
 
 pub(crate) fn build(
-    visibility: TokenStream,
     mod_name: Ident,
     ty: TokenTree,
     format: TokenStream,
@@ -104,7 +103,6 @@ pub(crate) fn build(
 
     let serialize_option = if cfg!(feature = "formatting") {
         quote! {
-            #[allow(clippy::ref_option)]
             pub fn serialize<S: ::serde::Serializer>(
                 option: &Option<__TimeSerdeType>,
                 serializer: S,
@@ -151,10 +149,7 @@ pub(crate) fn build(
     };
 
     quote! {
-        #S(visibility) mod #(mod_name) {
-            use super::*;
-            // TODO Remove the prefix, forcing the user to import the type themself. This must be
-            // done in a breaking change.
+        mod #(mod_name) {
             use ::time::#(ty) as __TimeSerdeType;
 
             const fn description() -> impl #S(fd_traits) {
@@ -165,9 +160,7 @@ pub(crate) fn build(
             #S(serialize_primary)
             #S(deserialize_primary)
 
-            // While technically public, this is effectively the same visibility as the enclosing
-            // module, which has its visibility controlled by the user.
-            pub mod option {
+            pub(super) mod option {
                 use super::{description, __TimeSerdeType};
                 #S(deserialize_option_imports)
 

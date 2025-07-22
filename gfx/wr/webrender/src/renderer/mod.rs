@@ -59,7 +59,7 @@ use crate::composite::{CompositorKind, Compositor, NativeTileId, CompositeFeatur
 use crate::composite::{CompositorConfig, NativeSurfaceOperationDetails, NativeSurfaceId, NativeSurfaceOperation, ClipRadius};
 use crate::composite::TileKind;
 use crate::segment::SegmentBuilder;
-use crate::{debug_colors, precise_time_ns, CompositorInputConfig, CompositorSurfaceUsage};
+use crate::{debug_colors, CompositorInputConfig, CompositorSurfaceUsage};
 use crate::device::{DepthFunction, Device, DrawTarget, ExternalTexture, GpuFrameId, UploadPBOPool};
 use crate::device::{ReadTarget, ShaderError, Texture, TextureFilter, TextureFlags, TextureSlot, Texel};
 use crate::device::query::{GpuSampler, GpuTimer};
@@ -115,6 +115,7 @@ use std::{
 };
 #[cfg(any(feature = "capture", feature = "replay"))]
 use std::collections::hash_map::Entry;
+use time::precise_time_ns;
 
 mod debug;
 mod gpu_buffer;

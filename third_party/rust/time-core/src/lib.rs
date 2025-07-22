@@ -8,5 +8,4 @@
 #![doc(test(attr(deny(warnings))))]
 
 pub mod convert;
-mod hint;
 pub mod util;

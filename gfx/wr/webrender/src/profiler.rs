@@ -21,7 +21,6 @@
 
 use api::{ColorF, ColorU};
 use glyph_rasterizer::profiler::GlyphRasterizeProfiler;
-use crate::precise_time_ns;
 use crate::renderer::DebugRenderer;
 use crate::device::query::GpuTimer;
 use euclid::{Point2D, Rect, Size2D, vec2, default};
@@ -33,6 +32,7 @@ use std::fmt::{Write, Debug};
 use std::f32;
 use std::ops::Range;
 use std::time::Duration;
+use time::precise_time_ns;
 
 macro_rules! set_text {
     ($dst:expr, $($arg:tt)*) => {

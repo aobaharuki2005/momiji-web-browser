@@ -944,13 +944,9 @@ impl NaiveDateTime {
     /// The maximum possible `NaiveDateTime`.
     pub const MAX: Self = Self { date: NaiveDate::MAX, time: NaiveTime::MAX };
 
-    /// The datetime of the Unix Epoch, 1970-01-01 00:00:00.
-    ///
-    /// Note that while this may look like the UNIX epoch, it is missing the
-    /// time zone. The actual UNIX epoch cannot be expressed by this type,
-    /// however it is available as [`DateTime::UNIX_EPOCH`].
-    #[deprecated(since = "0.4.41", note = "use `DateTime::UNIX_EPOCH` instead")]
-    pub const UNIX_EPOCH: Self = DateTime::UNIX_EPOCH.naive_utc();
+    /// The Unix Epoch, 1970-01-01 00:00:00.
+    pub const UNIX_EPOCH: Self =
+        expect(NaiveDate::from_ymd_opt(1970, 1, 1), "").and_time(NaiveTime::MIN);
 }
 
 impl From<NaiveDate> for NaiveDateTime {
@@ -2138,13 +2134,18 @@ impl str::FromStr for NaiveDateTime {
     }
 }
 
-/// The default value for a NaiveDateTime is 1st of January 1970 at 00:00:00.
+/// The default value for a NaiveDateTime is one with epoch 0
+/// that is, 1st of January 1970 at 00:00:00.
 ///
-/// Note that while this may look like the UNIX epoch, it is missing the
-/// time zone. The actual UNIX epoch cannot be expressed by this type,
-/// however it is available as [`DateTime::UNIX_EPOCH`].
+/// # Example
+///
+/// ```rust
+/// use chrono::NaiveDateTime;
+///
+/// assert_eq!(NaiveDateTime::default(), NaiveDateTime::UNIX_EPOCH);
+/// ```
 impl Default for NaiveDateTime {
     fn default() -> Self {
-        DateTime::UNIX_EPOCH.naive_local()
+        Self::UNIX_EPOCH
     }
 }
