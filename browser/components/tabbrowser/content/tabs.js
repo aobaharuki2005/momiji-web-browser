@@ -2544,7 +2544,7 @@
       }
 
       dragData.animDropElementIndex = newIndex;
-      dragData.dropElement = tabs[newIndex];
+      dragData.dropElement = tabs[Math.min(newIndex, tabs.length - 1)];
       dragData.dropBefore = newIndex < tabs.length;
 
       // Shift background tabs to leave a gap where the dragged tab
