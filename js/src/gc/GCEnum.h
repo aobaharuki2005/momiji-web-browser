@@ -112,7 +112,6 @@ enum class GCAbortReason {
   _(StringContents)                        \
   _(ScriptPrivateData)                     \
   _(MapObjectData)                         \
-  _(BigIntDigits)                          \
   _(ScopeData)                             \
   _(WeakMapObject)                         \
   _(ShapeSetForAdd)                        \

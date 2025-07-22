@@ -1387,8 +1387,7 @@ size_t js::gc::TenuringTracer::moveBigInt(JS::BigInt* dst, JS::BigInt* src,
   size_t nbytes = length * sizeof(JS::BigInt::Digit);
 
   Nursery::WasBufferMoved result =
-      nursery().maybeMoveNurseryOrMallocBufferOnPromotion(
-          &dst->heapDigits_, dst, nbytes, MemoryUse::BigIntDigits);
+      nursery().maybeMoveBufferOnPromotion(&dst->heapDigits_, dst, nbytes);
   if (result == Nursery::BufferMoved) {
     nursery().setDirectForwardingPointer(src->heapDigits_, dst->heapDigits_);
     size += nbytes;

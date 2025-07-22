@@ -104,7 +104,7 @@ namespace gc {
 
 #define FOR_EACH_NONOBJECT_NURSERY_ALLOCKIND(D) \
  /* AllocKind              TraceKind     TypeName               SizedType              Finalize    Nursery Compact */ \
-    D(BIGINT,              BigInt,       JS::BigInt,            JS::BigInt,            Background, true,   true)
+    D(BIGINT,              BigInt,       JS::BigInt,            JS::BigInt,            None,       true,   true)
 
 #define FOR_EACH_NURSERY_STRING_ALLOCKIND(D) \
  /* AllocKind              TraceKind     TypeName               SizedType              Finalize    Nursery Compact */ \
