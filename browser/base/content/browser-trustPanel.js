@@ -223,9 +223,15 @@ class TrustPanel {
     document.getElementById("trustpanel-popup-icon").src =
       favicon?.uri.spec ?? "";
 
-    document
-      .getElementById("trustpanel-toggle")
-      .toggleAttribute("pressed", this.#trackingProtectionEnabled);
+    let toggle = document.getElementById("trustpanel-toggle");
+    toggle.toggleAttribute("pressed", this.#trackingProtectionEnabled);
+    document.l10n.setAttributes(
+      toggle,
+      this.#trackingProtectionEnabled
+        ? "trustpanel-etp-toggle-on"
+        : "trustpanel-etp-toggle-off",
+      { host }
+    );
 
     document.getElementById("trustpanel-popup-host").textContent = host;
 
@@ -351,14 +357,19 @@ class TrustPanel {
       document.getElementById("trustpanel-blocker-details-content"),
       `protections-panel-${blocker.l10nKeys.content}`
     );
-    let header = blocker.l10nKeys.general;
-    // These sections use the same string so reuse the same l10n key.
-    if (["cookies", "tracking-cookies", "social-tracking"].includes(header)) {
-      header = "tracking";
+
+    let listHeaderId;
+    if (blocker.l10nKeys.general == "fingerprinter") {
+      listHeaderId = "trustpanel-fingerprinter-list-header";
+    } else if (blocker.l10nKeys.general == "cryptominer") {
+      listHeaderId = "trustpanel-cryptominer-tab-list-header";
+    } else {
+      listHeaderId = "trustpanel-tracking-content-tab-list-header";
     }
+
     document.l10n.setAttributes(
       document.getElementById("trustpanel-blocker-details-list-header"),
-      `trustpanel-${blocker.l10nKeys.general}-tab-list-header`
+      listHeaderId
     );
 
     let { items } = await blocker._generateSubViewListItems();

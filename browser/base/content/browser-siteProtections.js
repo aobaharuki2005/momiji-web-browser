@@ -331,7 +331,7 @@ let Fingerprinting =
   new (class FingerprintingProtection extends ProtectionCategory {
     iconSrc = "chrome://browser/skin/fingerprint.svg";
     l10nKeys = {
-      title: "fingerprinter",
+      title: "fingerprinters",
       content: "fingerprinters",
       general: "fingerprinter",
     };
