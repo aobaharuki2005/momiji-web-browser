@@ -98,6 +98,51 @@ void ModuleLoaderBase::EnsureModuleHooksInitialized() {
                                      HostReleaseTopLevelScript);
 }
 
+static bool ModuleTypeAllowed(JS::ModuleType aModuleType) {
+  return aModuleType != JS::ModuleType::Unknown;
+}
+
+static bool CreateBadModuleTypeError(JSContext* aCx, LoadedScript* aScript,
+                                     nsIURI* aURI,
+                                     JS::MutableHandle<JS::Value> aErrorOut) {
+  JS::Rooted<JSString*> filename(aCx);
+  if (aScript) {
+    nsAutoCString url;
+    aScript->BaseURL()->GetAsciiSpec(url);
+    filename = JS_NewStringCopyZ(aCx, url.get());
+  } else {
+    filename = JS_NewStringCopyZ(aCx, "(unknown)");
+  }
+
+  if (!filename) {
+    return false;
+  }
+
+  MOZ_ASSERT(aURI);
+  nsAutoCString url;
+  aURI->GetSpec(url);
+
+  JS::Rooted<JSString*> uri(aCx, JS_NewStringCopyZ(aCx, url.get()));
+  if (!uri) {
+    return false;
+  }
+
+  JS::Rooted<JSString*> msg(aCx,
+                            JS_NewStringCopyZ(aCx, ": invalid module type"));
+  if (!msg) {
+    return false;
+  }
+
+  JS::Rooted<JSString*> errMsg(aCx, JS_ConcatStrings(aCx, uri, msg));
+  if (!errMsg) {
+    return false;
+  }
+
+  return JS::CreateError(aCx, JSEXN_TYPEERR, nullptr, filename, 0,
+                         JS::ColumnNumberOneOrigin(), nullptr, errMsg,
+                         JS::NothingHandleValue, aErrorOut);
+}
+
 // https://html.spec.whatwg.org/#hostloadimportedmodule
 // static
 bool ModuleLoaderBase::HostLoadImportedModule(
@@ -188,6 +233,20 @@ bool ModuleLoaderBase::HostLoadImportedModule(
         ("ModuleLoaderBase::HostLoadImportedModule loader (%p) uri %s referrer "
          "(%p)",
          loader.get(), uri->GetSpecOrDefault().get(), aReferrer.get()));
+
+    JS::ModuleType moduleType = JS::GetModuleRequestType(aCx, aModuleRequest);
+    if (!ModuleTypeAllowed(moduleType)) {
+      LOG(("ModuleLoaderBase::HostLoadImportedModule uri %s, bad module type",
+           uri->GetSpecOrDefault().get()));
+      JS::Rooted<JS::Value> error(aCx);
+      if (!CreateBadModuleTypeError(aCx, script, uri, &error)) {
+        JS_ReportOutOfMemory(aCx);
+        return false;
+      }
+      JS::FinishLoadingImportedModuleFailed(aCx, aStatePrivate, aPromise,
+                                            error);
+      return true;
+    }
 
     // TODO: Bug 1968895 : Unify the fetching for static/dynamic import
     if (aPromise) {
