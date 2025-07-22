@@ -737,6 +737,58 @@ class MOZ_STACK_CLASS HTMLEditor::AutoInsertParagraphHandler final {
       const Element& aBlockElementToSplit,
       const EditorDOMPoint& aCandidatePointToSplit);
 
+  enum class IgnoreBlockBoundaries : bool { No, Yes };
+
+  /**
+   * Return true if splitting aBlockElementToSplit at aPointToSplit will create
+   * empty left element.
+   *
+   * @param aBlockElementToSplit    The paragraph element which we want to
+   *                                split.
+   * @param aPointToSplit           The split position in aBlockElementToSplit.
+   * @param aIgnoreBlockBoundaries  If No, return true only when aPointToSplit
+   *                                is immediately after a block boundary of
+   *                                aBlockElementToSplit.  In other words,
+   *                                may return true only when aPointToSplit
+   *                                is not in a child block of
+   *                                aBlockElementToSplit.
+   *                                If Yes, return true even when aPointToSplit
+   *                                is immediately after any current block
+   *                                boundary which is followed by the block
+   *                                boundary of aBlockElementToSplit.  In other
+   *                                words, return true when aPointToSplit is in
+   *                                a child block which is start of any ancestor
+   *                                block elements.
+   */
+  [[nodiscard]] static bool SplitPointIsStartOfSplittingBlock(
+      const Element& aBlockElementToSplit, const EditorDOMPoint& aPointToSplit,
+      IgnoreBlockBoundaries aIgnoreBlockBoundaries);
+
+  /**
+   * Return true if splitting aBlockElementToSplit at aPointToSplit will create
+   * empty right element.
+   *
+   * @param aBlockElementToSplit    The paragraph element which we want to
+   *                                split.
+   * @param aPointToSplit           The split position in aBlockElementToSplit.
+   * @param aIgnoreBlockBoundaries  If No, return true only when aPointToSplit
+   *                                is immediately before a block boundary of
+   *                                aBlockElementToSplit.  In other words,
+   *                                may return true only when aPointToSplit
+   *                                is not in a child block of
+   *                                aBlockElementToSplit.
+   *                                If Yes, return true even when aPointToSplit
+   *                                is immediately before any current block
+   *                                boundary which is followed by the block
+   *                                boundary of aBlockElementToSplit.  In other
+   *                                words, return true when aPointToSplit is in
+   *                                a child block which is end of any ancestor
+   *                                block elements.
+   */
+  [[nodiscard]] static bool SplitPointIsEndOfSplittingBlock(
+      const Element& aBlockElementToSplit, const EditorDOMPoint& aPointToSplit,
+      IgnoreBlockBoundaries aIgnoreBlockBoundaries);
+
   MOZ_KNOWN_LIVE HTMLEditor& mHTMLEditor;
   MOZ_KNOWN_LIVE const Element& mEditingHost;
   MOZ_KNOWN_LIVE nsStaticAtom& mDefaultParagraphSeparatorTagName;

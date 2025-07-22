@@ -2012,6 +2012,44 @@ HTMLEditor::AutoInsertParagraphHandler::HandleInListItemElement(
   const EditorDOMPoint pointToSplit =
       GetBetterPointToSplitParagraph(aListItemElement, aPointToSplit);
   MOZ_ASSERT(pointToSplit.IsInContentNodeAndValidInComposedDoc());
+
+  // If insertParagraph at end of <dt> or <dd>, we should put opposite type list
+  // item without copying the style of end of aListItemElement.
+  // FIXME: Chrome does not do this.  So, we should stop doing this at least on
+  // Firefox later.
+  if (aListItemElement.IsAnyOfHTMLElements(nsGkAtoms::dt, nsGkAtoms::dd) &&
+      SplitPointIsEndOfSplittingBlock(aListItemElement, pointToSplit,
+                                      IgnoreBlockBoundaries::Yes) &&
+      // However, don't do that if we're handling it in empty list item.
+      !SplitPointIsStartOfSplittingBlock(aListItemElement, pointToSplit,
+                                         IgnoreBlockBoundaries::Yes)) {
+    nsStaticAtom& oppositeTypeListItemTag =
+        aListItemElement.IsHTMLElement(nsGkAtoms::dt) ? *nsGkAtoms::dd
+                                                      : *nsGkAtoms::dt;
+    // MOZ_KnownLive(oppositeTypeListItemTag) because it's available
+    // until shutdown.
+    Result<CreateElementResult, nsresult>
+        insertOppositeTypeListItemResultOrError =
+            mHTMLEditor.CreateAndInsertElement(
+                WithTransaction::Yes, MOZ_KnownLive(oppositeTypeListItemTag),
+                EditorDOMPoint::After(aListItemElement),
+                HTMLEditor::InsertNewBRElement);
+    if (MOZ_UNLIKELY(insertOppositeTypeListItemResultOrError.isErr())) {
+      NS_WARNING(
+          "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
+      return insertOppositeTypeListItemResultOrError.propagateErr();
+    }
+    CreateElementResult insertOppositeTypeListItemResult =
+        insertOppositeTypeListItemResultOrError.unwrap();
+    insertOppositeTypeListItemResult.IgnoreCaretPointSuggestion();
+    RefPtr<Element> oppositeTypeListItemElement =
+        insertOppositeTypeListItemResult.UnwrapNewNode();
+    EditorDOMPoint startOfOppositeTypeListItem(oppositeTypeListItemElement, 0u);
+    MOZ_ASSERT(oppositeTypeListItemElement);
+    return InsertParagraphResult(std::move(oppositeTypeListItemElement),
+                                 std::move(startOfOppositeTypeListItem));
+  }
+
   // If aListItemElement has some content or aListItemElement is empty but it's
   // a child of editing host, we want a new list item at the same list level.
   // First, sort out white-spaces.
@@ -2038,70 +2076,71 @@ HTMLEditor::AutoInsertParagraphHandler::HandleInListItemElement(
         "split the listitem");
     return Err(NS_ERROR_FAILURE);
   }
-  // FYI: They are grabbed by unwrappedSplitListItemElement so that they are
-  // known live
-  //      things.
-  auto& leftListItemElement =
-      *splitListItemElement.GetPreviousContentAs<Element>();
-  auto& rightListItemElement =
-      *splitListItemElement.GetNextContentAs<Element>();
+  auto* const rightListItemElement =
+      splitListItemElement.GetNextContentAs<Element>();
+  return InsertParagraphResult(rightListItemElement,
+                               std::move(pointToPutCaret));
+}
 
-  // Hack: until I can change the damaged doc range code back to being
-  // extra-inclusive, I have to manually detect certain list items that may be
-  // left empty.
-  if (HTMLEditUtils::IsEmptyNode(
-          leftListItemElement,
-          {EmptyCheckOption::TreatNonEditableContentAsInvisible})) {
-    return InsertParagraphResult(&rightListItemElement,
-                                 std::move(pointToPutCaret));
+// static
+bool HTMLEditor::AutoInsertParagraphHandler::SplitPointIsStartOfSplittingBlock(
+    const Element& aBlockElementToSplit, const EditorDOMPoint& aPointToSplit,
+    IgnoreBlockBoundaries aIgnoreBlockBoundaries) {
+  EditorRawDOMPoint pointToSplit = aPointToSplit.To<EditorRawDOMPoint>();
+  while (true) {
+    const WSScanResult prevVisibleThing =
+        WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
+            WSRunScanner::Scan::All, pointToSplit,
+            BlockInlineCheck::UseComputedDisplayOutsideStyle);
+    if (!prevVisibleThing.ReachedCurrentBlockBoundary()) {
+      return false;
+    }
+    if (prevVisibleThing.ElementPtr() == &aBlockElementToSplit) {
+      return true;
+    }
+    if (!static_cast<bool>(aIgnoreBlockBoundaries)) {
+      return false;
+    }
+    pointToSplit = pointToSplit.ParentPoint();
   }
+}
 
-  if (aListItemElement.IsHTMLElement(nsGkAtoms::li) ||
-      !HTMLEditUtils::IsEmptyNode(
-          rightListItemElement,
-          {EmptyCheckOption::TreatNonEditableContentAsInvisible})) {
-    return InsertParagraphResult(&rightListItemElement,
-                                 std::move(pointToPutCaret));
+// static
+bool HTMLEditor::AutoInsertParagraphHandler::SplitPointIsEndOfSplittingBlock(
+    const Element& aBlockElementToSplit, const EditorDOMPoint& aPointToSplit,
+    IgnoreBlockBoundaries aIgnoreBlockBoundaries) {
+  bool maybeFollowedByInvisibleBRElement = true;
+  EditorRawDOMPoint pointToSplit = aPointToSplit.To<EditorRawDOMPoint>();
+  while (true) {
+    WSScanResult nextVisibleThing =
+        WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
+            WSRunScanner::Scan::All, pointToSplit,
+            BlockInlineCheck::UseComputedDisplayOutsideStyle,
+            &aBlockElementToSplit);
+    if (maybeFollowedByInvisibleBRElement &&
+        (nextVisibleThing.ReachedBRElement() ||
+         nextVisibleThing.ReachedPreformattedLineBreak())) {
+      nextVisibleThing =
+          WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
+              WSRunScanner::Scan::All,
+              nextVisibleThing.PointAfterReachedContent<EditorRawDOMPoint>(),
+              BlockInlineCheck::UseComputedDisplayOutsideStyle,
+              &aBlockElementToSplit);
+    }
+    if (!nextVisibleThing.ReachedCurrentBlockBoundary()) {
+      return false;
+    }
+    if (nextVisibleThing.ElementPtr() == &aBlockElementToSplit) {
+      return true;
+    }
+    if (!static_cast<bool>(aIgnoreBlockBoundaries)) {
+      return false;
+    }
+    pointToSplit = pointToSplit.AfterContainer();
+    // <br> element after other block boundary creates an empty line so that
+    // it's always visible.
+    maybeFollowedByInvisibleBRElement = false;
   }
-
-  // If aListItemElement is a <dd> or a <dt> and the right list item is empty
-  // or a direct child of the editing host, replace it a new list item element
-  // whose type is the other one.
-  // TODO: We can consider this situation before splitting the list item.
-  // So, we should stop splitting the list item in this case.
-  MOZ_ASSERT(
-      aListItemElement.IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dt));
-  nsStaticAtom& nextDefinitionListItemTagName =
-      aListItemElement.IsHTMLElement(nsGkAtoms::dt) ? *nsGkAtoms::dd
-                                                    : *nsGkAtoms::dt;
-  // MOZ_KnownLive(nextDefinitionListItemTagName) because it's available
-  // until shutdown.
-  Result<CreateElementResult, nsresult> createNewListItemElementResult =
-      mHTMLEditor.CreateAndInsertElement(
-          WithTransaction::Yes, MOZ_KnownLive(nextDefinitionListItemTagName),
-          EditorDOMPoint::After(rightListItemElement),
-          HTMLEditor::InsertNewBRElement);
-  if (MOZ_UNLIKELY(createNewListItemElementResult.isErr())) {
-    NS_WARNING(
-        "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
-    return createNewListItemElementResult.propagateErr();
-  }
-  CreateElementResult unwrappedCreateNewListItemElementResult =
-      createNewListItemElementResult.unwrap();
-  unwrappedCreateNewListItemElementResult.IgnoreCaretPointSuggestion();
-  RefPtr<Element> newListItemElement =
-      unwrappedCreateNewListItemElementResult.UnwrapNewNode();
-  MOZ_ASSERT(newListItemElement);
-  // MOZ_KnownLive(rightListItemElement) because it's grabbed by
-  // unwrappedSplitListItemElement.
-  nsresult rv = mHTMLEditor.DeleteNodeWithTransaction(
-      MOZ_KnownLive(rightListItemElement));
-  if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-    return Err(rv);
-  }
-  return InsertParagraphResult(std::move(newListItemElement),
-                               EditorDOMPoint(newListItemElement, 0u));
 }
 
 }  // namespace mozilla
