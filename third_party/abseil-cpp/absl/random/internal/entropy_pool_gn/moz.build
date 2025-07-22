@@ -24,7 +24,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/abseil-cpp/absl/random/internal/pool_urbg.cc"
+    "/third_party/abseil-cpp/absl/random/internal/entropy_pool.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -168,4 +168,4 @@ if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86_64":
     DEFINES["CR_SYSROOT_KEY"] = "20250129T203412Z-1"
     DEFINES["_GNU_SOURCE"] = True
 
-Library("pool_urbg_gn")
+Library("entropy_pool_gn")

@@ -25,8 +25,7 @@ LOCAL_INCLUDES += [
 
 UNIFIED_SOURCES += [
     "/third_party/abseil-cpp/absl/strings/cord.cc",
-    "/third_party/abseil-cpp/absl/strings/cord_analysis.cc",
-    "/third_party/abseil-cpp/absl/strings/cord_buffer.cc"
+    "/third_party/abseil-cpp/absl/strings/cord_analysis.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
