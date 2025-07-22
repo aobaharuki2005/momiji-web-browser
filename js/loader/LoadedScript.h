@@ -55,8 +55,13 @@ class LoadContextBase;
 // exposed to the memory reporter such that sharing might be accounted for
 // properly.
 class LoadedScript : public nsIMemoryReporter {
+ private:
   ScriptKind mKind;
-  const mozilla::dom::ReferrerPolicy mReferrerPolicy;
+
+ protected:
+  mozilla::dom::ReferrerPolicy mReferrerPolicy;
+
+ private:
   RefPtr<ScriptFetchOptions> mFetchOptions;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIURI> mBaseURL;
@@ -441,6 +446,10 @@ class ModuleScript final : public LoadedScript {
   void UnlinkModuleRecord();
 
   friend void CheckModuleScriptPrivate(LoadedScript*, const JS::Value&);
+
+  void UpdateReferrerPolicy(mozilla::dom::ReferrerPolicy aReferrerPolicy) {
+    mReferrerPolicy = aReferrerPolicy;
+  }
 };
 
 ClassicScript* LoadedScript::AsClassicScript() {
