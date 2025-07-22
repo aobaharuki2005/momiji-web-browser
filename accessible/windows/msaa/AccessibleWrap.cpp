@@ -5,16 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AccessibleWrap.h"
-
-#include "mozilla/a11y/DocAccessibleParent.h"
-#include "AccEvent.h"
-#include "nsAccUtils.h"
-#include "nsIAccessibleEvent.h"
-#include "nsIWidget.h"
-#include "nsWindowsHelpers.h"
-#include "ServiceProvider.h"
-#include "sdnAccessible.h"
-#include "LocalAccessible-inl.h"
+#include "MsaaAccessible.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -42,10 +33,6 @@ void AccessibleWrap::Shutdown() {
   }
   LocalAccessible::Shutdown();
 }
-
-//-----------------------------------------------------
-// IUnknown interface methods - see iunknown.h for documentation
-//-----------------------------------------------------
 
 MsaaAccessible* AccessibleWrap::GetMsaa() {
   if (!mMsaa) {

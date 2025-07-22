@@ -14,12 +14,8 @@
 #include "mozilla/a11y/HyperTextAccessibleBase.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
-#include "WinUtils.h"
 #include "ia2AccessibleText.h"
-
-#include <tuple>
 
 #if defined(MOZ_TELEMETRY_REPORTING)
 #  include "mozilla/glean/AccessibleMetrics.h"

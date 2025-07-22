@@ -7,17 +7,10 @@
 #ifndef mozilla_a11y_AccessibleWrap_h_
 #define mozilla_a11y_AccessibleWrap_h_
 
-#include "nsCOMPtr.h"
 #include "LocalAccessible.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/mscom/Utils.h"
-#include "mozilla/StaticPtr.h"
-#include "nsXULAppAPI.h"
-#include "Units.h"
 
 namespace mozilla {
 namespace a11y {
-class DocRemoteAccessibleWrap;
 class MsaaAccessible;
 
 /**
