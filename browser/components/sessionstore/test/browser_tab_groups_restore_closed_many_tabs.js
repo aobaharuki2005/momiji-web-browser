@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { TabGroupTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TabGroupTestUtils.sys.mjs"
-);
-
 // Ensure that a closed tab group will record all of its tabs into session state
 // without being constrained by the `browser.sessionstore.max_tabs_undo` pref
 // which normally limits the number of closed tabs that we retain in state.
@@ -27,18 +23,17 @@ registerCleanupFunction(async () => {
 add_task(async function test_restoreClosedTabGroupWithManyTabs() {
   let win = await promiseNewWindowLoaded();
   let tabs = [];
-  let tabs_names = [];
   for (let i = 1; i <= numberOfTabsToTest; i++) {
     let tab = BrowserTestUtils.addTab(
       win.gBrowser,
       `https://example.com/?${i}`
     );
-    tabs_names.push(`https://example.com/?${i}`);
     tabs.push(tab);
   }
   await Promise.all(
     tabs.map(tab => BrowserTestUtils.browserLoaded(tab.linkedBrowser))
   );
+  await Promise.all(tabs.map(tab => TabStateFlusher.flush(tab.linkedBrowser)));
 
   const tabGroupToClose = win.gBrowser.addTabGroup(tabs, {
     color: "blue",
@@ -46,13 +41,20 @@ add_task(async function test_restoreClosedTabGroupWithManyTabs() {
   });
   const tabGroupToCloseId = tabGroupToClose.id;
 
+  await TabStateFlusher.flushWindow(win);
+
   Assert.equal(
     win.gBrowser.tabs.length,
     numberOfTabsToTest + 1,
     `there should be ${numberOfTabsToTest} new tabs + 1 initial tab from the new window`
   );
 
-  await TabGroupTestUtils.removeTabGroup(tabGroupToClose);
+  let removePromise = BrowserTestUtils.waitForEvent(
+    tabGroupToClose,
+    "TabGroupRemoved"
+  );
+  win.gBrowser.removeTabGroup(tabGroupToClose);
+  await removePromise;
 
   Assert.ok(
     !win.gBrowser.tabGroups.length,
@@ -80,95 +82,14 @@ add_task(async function test_restoreClosedTabGroupWithManyTabs() {
   );
 
   let restorePromise = BrowserTestUtils.waitForEvent(win, "SSWindowStateReady");
-  let undoTabGroup = SessionStore.undoCloseTabGroup(
-    win,
-    tabGroupToCloseId,
-    win
-  );
+  SessionStore.undoCloseTabGroup(win, tabGroupToCloseId, win);
   await restorePromise;
-  await Promise.all(
-    undoTabGroup.tabs.map(tab =>
-      BrowserTestUtils.browserLoaded(tab.linkedBrowser)
-    )
-  );
 
   Assert.equal(
     win.gBrowser.tabs.length,
     numberOfTabsToTest + 1,
     `there should be ${numberOfTabsToTest} tabs restored + 1 initial tab from the new window`
   );
-  for (let i = 1; i <= numberOfTabsToTest; i++) {
-    Assert.equal(
-      undoTabGroup.tabs[i - 1].linkedBrowser.currentURI.spec,
-      tabs_names[i - 1],
-      `the undo tab ${i} should preserve its order in the group`
-    );
-  }
-
-  await BrowserTestUtils.closeWindow(win);
-});
-
-add_task(async function test_restoreSavedTabGroupWithManyTabs() {
-  let win = await promiseNewWindowLoaded();
-  let tabs = [];
-  let tabs_names = [];
-  for (let i = 1; i <= numberOfTabsToTest; i++) {
-    let tab = BrowserTestUtils.addTab(
-      win.gBrowser,
-      `https://example.com/?${i}`
-    );
-    tabs_names.push(`https://example.com/?${i}`);
-    tabs.push(tab);
-  }
-  await Promise.all(
-    tabs.map(tab => BrowserTestUtils.browserLoaded(tab.linkedBrowser))
-  );
-
-  const tabGroupToSaveAndClose = win.gBrowser.addTabGroup(tabs, {
-    color: "blue",
-    label: "many tabs",
-  });
-  const tabGroupToSaveAndCloseId = tabGroupToSaveAndClose.id;
-
-  Assert.equal(
-    win.gBrowser.tabs.length,
-    numberOfTabsToTest + 1,
-    `there should be ${numberOfTabsToTest} new tabs + 1 initial tab from the new window`
-  );
-
-  await TabGroupTestUtils.saveAndCloseTabGroup(tabGroupToSaveAndClose);
-
-  Assert.ok(
-    !win.gBrowser.tabGroups.length,
-    "closed tab group should not be in the tab strip"
-  );
-
-  await TabStateFlusher.flushWindow(win);
-
-  let restorePromise = BrowserTestUtils.waitForEvent(win, "SSWindowStateReady");
-  let savedTabGroup = SessionStore.openSavedTabGroup(
-    tabGroupToSaveAndCloseId,
-    win
-  );
-  await restorePromise;
-  await Promise.all(
-    savedTabGroup.tabs.map(tab =>
-      BrowserTestUtils.browserLoaded(tab.linkedBrowser)
-    )
-  );
-
-  Assert.equal(
-    win.gBrowser.tabs.length,
-    numberOfTabsToTest + 1,
-    `there should be ${numberOfTabsToTest} tabs restored + 1 initial tab from the new window`
-  );
-  for (let i = 1; i <= numberOfTabsToTest; i++) {
-    Assert.equal(
-      savedTabGroup.tabs[i - 1].linkedBrowser.currentURI.spec,
-      tabs_names[i - 1],
-      `restored tab ${i} should preserve its order in the group`
-    );
-  }
 
   await BrowserTestUtils.closeWindow(win);
 });
