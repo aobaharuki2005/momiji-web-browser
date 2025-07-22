@@ -341,7 +341,7 @@ class SnackbarBinding(
                         snackbarDelegate.show(
                             text = getCannotOpenFileErrorMessage(
                                 context,
-                                state.downloadState,
+                                state.downloadState.filePath,
                             ),
                             duration = DOWNLOAD_SNACKBAR_DURATION_MS,
                         )

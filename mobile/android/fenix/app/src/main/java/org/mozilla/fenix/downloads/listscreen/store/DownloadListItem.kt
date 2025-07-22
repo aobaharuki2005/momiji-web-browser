@@ -7,7 +7,6 @@ package org.mozilla.fenix.downloads.listscreen.store
 import androidx.annotation.DrawableRes
 import androidx.annotation.FloatRange
 import androidx.annotation.StringRes
-import mozilla.components.browser.state.state.content.DownloadState
 import org.mozilla.fenix.R
 
 /**
@@ -161,18 +160,6 @@ data class FileItem(
          * Indicates that the [Downloading] download has been completed.
          */
         data object Completed : Status
-
-        /**
-         * Convert a [Status] to a [DownloadState.Status].
-         */
-        fun toDownloadStateStatus(): DownloadState.Status = when (this) {
-            is Initiated -> DownloadState.Status.INITIATED
-            is Downloading -> DownloadState.Status.DOWNLOADING
-            is Paused -> DownloadState.Status.PAUSED
-            is Cancelled -> DownloadState.Status.CANCELLED
-            is Failed -> DownloadState.Status.FAILED
-            is Completed -> DownloadState.Status.COMPLETED
-        }
     }
 }
 

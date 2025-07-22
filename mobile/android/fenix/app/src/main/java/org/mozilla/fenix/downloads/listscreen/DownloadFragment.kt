@@ -6,7 +6,6 @@ package org.mozilla.fenix.downloads.listscreen
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.fragment.findNavController
-import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -60,19 +59,11 @@ class DownloadFragment : ComposeFragment() {
     private fun openItem(item: FileItem, mode: BrowsingMode? = null) {
         mode?.let { (activity as HomeActivity).browsingModeManager.mode = it }
         context?.let {
-            val downloadState = DownloadState(
-                id = item.id,
-                url = item.url,
-                fileName = item.fileName,
-                contentType = item.contentType,
-                status = item.status.toDownloadStateStatus(),
-            )
-
             val canOpenFile = AbstractFetchDownloadService.openFile(
                 applicationContext = it.applicationContext,
-                downloadFileName = downloadState.fileName,
-                downloadFilePath = downloadState.filePath,
-                downloadContentType = downloadState.contentType,
+                downloadFileName = item.fileName,
+                downloadFilePath = item.filePath,
+                downloadContentType = item.contentType,
             )
 
             val rootView = view
@@ -82,7 +73,7 @@ class DownloadFragment : ComposeFragment() {
                     snackbarState = SnackbarState(
                         message = getCannotOpenFileErrorMessage(
                             context = it,
-                            download = downloadState,
+                            filePath = item.filePath,
                         ),
                     ),
                 ).show()
