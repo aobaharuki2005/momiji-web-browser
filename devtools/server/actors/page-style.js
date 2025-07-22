@@ -232,18 +232,15 @@ class PageStyleActor extends Actor {
   /**
    * Get the computed style for a node.
    *
-   * @param NodeActor node
-   * @param object options
-   *   `filter`: A string filter that affects the "matched" handling.
-   *     'user': Include properties from user style sheets.
-   *     'ua': Include properties from user and user-agent sheets.
-   *     Default value is 'ua'
-   *   `markMatched`: true if you want the 'matched' property to be added
-   *     when a computed property has been modified by a style included
-   *     by `filter`.
-   *   `onlyMatched`: true if unmatched properties shouldn't be included.
-   *   `filterProperties`: An array of properties names that you would like
-   *     returned.
+   * @param {NodeActor} node
+   * @param {Object} options
+   * @param {String} options.filter: A string filter that affects the "matched" handling.
+   * @param {Array<String>} options.filterProperties: An array of properties names that
+   *        you would like returned.
+   * @param {Boolean} options.markMatched: true if you want the 'matched' property to be
+   *        added when a computed property has been modified by a style included by `filter`.
+   * @param {Boolean} options.onlyMatched: true if unmatched properties shouldn't be included.
+   * @param {Boolean} options.clearCache: true if the cssLogic cache should be cleared.
    *
    * @returns a JSON blob with the following form:
    *   {
@@ -258,6 +255,9 @@ class PageStyleActor extends Actor {
   getComputed(node, options) {
     const ret = Object.create(null);
 
+    if (options.clearCache) {
+      this.cssLogic.reset();
+    }
     const filterProperties = Array.isArray(options.filterProperties)
       ? options.filterProperties
       : null;
@@ -556,14 +556,24 @@ class PageStyleActor extends Actor {
   // node.
   getSelectorSource(selectorInfo, relativeTo) {
     let result = selectorInfo.selector.text;
-    if (selectorInfo.inlineStyle) {
+    const ruleDeclarationOrigin =
+      selectorInfo.selector.cssRule.domRule.declarationOrigin;
+    if (
+      ruleDeclarationOrigin === "style-attribute" ||
+      ruleDeclarationOrigin === "pres-hints"
+    ) {
       const source = selectorInfo.sourceElement;
       if (source === relativeTo) {
         result = "element";
       } else {
         result = CssLogic.getShortName(source);
       }
+
+      if (ruleDeclarationOrigin === "pres-hints") {
+        result += " attributes style";
+      }
     }
+
     return result;
   }
 
