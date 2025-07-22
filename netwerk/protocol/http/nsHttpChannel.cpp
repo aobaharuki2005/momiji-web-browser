@@ -11501,5 +11501,14 @@ NS_IMETHODIMP nsHttpChannel::GetLastTransportStatus(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHttpChannel::GetCacheDisposition(CacheDisposition* aDisposition) {
+  if (!aDisposition) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aDisposition = mCacheDisposition;
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla
