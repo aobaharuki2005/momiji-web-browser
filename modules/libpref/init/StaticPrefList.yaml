@@ -7259,6 +7259,11 @@
   value: false
 #endif
 
+# Enable dithering in DrawTargetSkia
+- name: gfx.skia.dithering
+  type: bool
+  value: false
+  mirror: once
 
 # Log severe performance warnings to the error console and profiles.
 # This should be use to quickly find which slow paths are used by test cases.
