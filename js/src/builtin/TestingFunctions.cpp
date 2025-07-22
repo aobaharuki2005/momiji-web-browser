@@ -328,7 +328,7 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#if defined(_M_IX86) || defined(__i386__)
+#if defined(JS_CODEGEN_X86)
   value = BooleanValue(true);
 #else
   value = BooleanValue(false);
@@ -337,7 +337,7 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#if defined(_M_X64) || defined(__x86_64__)
+#if defined(JS_CODEGEN_X64)
   value = BooleanValue(true);
 #else
   value = BooleanValue(false);
