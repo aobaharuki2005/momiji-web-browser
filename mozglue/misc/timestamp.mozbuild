@@ -23,3 +23,9 @@ elif CONFIG["HAVE_CLOCK_MONOTONIC"]:
     ]
 elif CONFIG["COMPILE_ENVIRONMENT"]:
     error("No TimeStamp implementation on this platform.  Build will not succeed")
+
+EXPORTS.mozilla += [
+    "Now.h",
+    "TimeStamp.h",
+    "Uptime.h",
+]
