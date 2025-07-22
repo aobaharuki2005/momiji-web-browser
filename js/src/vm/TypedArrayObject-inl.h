@@ -409,6 +409,8 @@ class ElementSpecific {
     MOZ_ASSERT(Scalar::isBigIntType(target->type()) ==
                    Scalar::isBigIntType(source->type()),
                "can't convert between BigInt and Number");
+    MOZ_ASSERT(!target->is<ImmutableTypedArrayObject>(),
+               "target is not an immutable typed array");
     MOZ_ASSERT(!target->hasDetachedBuffer(), "target isn't detached");
     MOZ_ASSERT(!source->hasDetachedBuffer(), "source isn't detached");
     MOZ_ASSERT(*target->length() >= targetLength, "target isn't shrunk");
@@ -459,6 +461,8 @@ class ElementSpecific {
                                    size_t offset = 0) {
     MOZ_ASSERT(target->type() == TypeIDOfType<T>::id,
                "target type and NativeType must match");
+    MOZ_ASSERT(!target->is<ImmutableTypedArrayObject>(),
+               "target is not an immutable typed array");
     MOZ_ASSERT(!source->is<TypedArrayObject>(),
                "use setFromTypedArray instead of this method");
     MOZ_ASSERT_IF(target->hasDetachedBuffer(), target->length().isNothing());
