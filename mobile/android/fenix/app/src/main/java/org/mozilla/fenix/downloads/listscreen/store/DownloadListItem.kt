@@ -128,81 +128,39 @@ data class FileItem(
     sealed interface Status {
 
         /**
-         * Transitions the status to the next state based on the [action].
-         */
-        fun transition(action: DownloadControlAction): Status
-
-        /**
-         * Enum class representing the download actions that a user can trigger on a [FileItem].
-         */
-        enum class DownloadControlAction {
-            PAUSE,
-            RESUME,
-            RETRY,
-            CANCEL,
-        }
-
-        /**
          * Indicates that the download is in the first state after creation but not yet [Downloading].
          */
-        data object Initiated : Status {
-            override fun transition(action: DownloadControlAction): Status = when (action) {
-                DownloadControlAction.CANCEL -> Cancelled
-                else -> this
-            }
-        }
+        data object Initiated : Status
 
         /**
          * Indicates that an [Initiated] download is now actively being downloaded.
          */
         data class Downloading(
             @param:FloatRange(from = 0.0, to = 1.0) val progress: Float?,
-        ) : Status {
-            override fun transition(action: DownloadControlAction): Status = when (action) {
-                DownloadControlAction.PAUSE -> Paused(progress = progress)
-                DownloadControlAction.CANCEL -> Cancelled
-                else -> this
-            }
-        }
+        ) : Status
 
         /**
          * Indicates that the download that has been [Downloading] has been paused.
          */
         data class Paused(
             @param:FloatRange(from = 0.0, to = 1.0) val progress: Float?,
-        ) : Status {
-            override fun transition(action: DownloadControlAction): Status = when (action) {
-                DownloadControlAction.RESUME -> Downloading(progress = progress)
-                DownloadControlAction.CANCEL -> Cancelled
-                else -> this
-            }
-        }
+        ) : Status
 
         /**
          * Indicates that the download that has been [Downloading] has been cancelled.
          */
-        data object Cancelled : Status {
-            override fun transition(action: DownloadControlAction): Status = this
-        }
+        data object Cancelled : Status
 
         /**
          * Indicates that the download that has been [Downloading] has moved to failed because
          * something unexpected has happened.
          */
-        data object Failed : Status {
-            override fun transition(action: DownloadControlAction): Status = when (action) {
-                DownloadControlAction.RETRY -> Initiated
-                DownloadControlAction.CANCEL -> Cancelled
-                else -> this
-            }
-        }
+        data object Failed : Status
 
         /**
          * Indicates that the [Downloading] download has been completed.
          */
-        data object Completed : Status {
-            override fun transition(action: DownloadControlAction): Status = this
-        }
+        data object Completed : Status
 
         /**
          * Convert a [Status] to a [DownloadState.Status].
