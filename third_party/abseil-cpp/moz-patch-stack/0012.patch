@@ -1,30 +1,53 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 7 Jan 2025 15:39:00 -0600
-Subject: Bug 1935474 - disable ABSL_HAVE_THREAD_SANITIZER due to missing
- symbols (like __tsan_mutex_destroy). r?ng!
+Date: Thu, 16 Jan 2025 11:29:00 -0600
+Subject: Bug 1935474 - don't demangle rust symbols. r?ng!
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a248ecb7e0fa939cc145e3ef62f57783411ec367
+Building demangle.cc causes errors in our hazard-linux64-haz/debug build.
+For now, we'll avoid calling DemangleRustSymbolEncoding, and skip building
+demangle.cc.
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/828151aa9455ccbfe45787bbe00127813c97cc9e
 ---
- abseil-cpp/absl/base/config.h | 2 ++
- 1 file changed, 2 insertions(+)
+ abseil-cpp/absl/debugging/BUILD.gn             | 4 ++++
+ abseil-cpp/absl/debugging/internal/demangle.cc | 4 ++++
+ 2 files changed, 8 insertions(+)
 
-diff --git a/abseil-cpp/absl/base/config.h b/abseil-cpp/absl/base/config.h
-index 58077a2c58f..0e4c31cf0d3 100644
---- a/abseil-cpp/absl/base/config.h
-+++ b/abseil-cpp/absl/base/config.h
-@@ -739,6 +739,7 @@ static_assert(ABSL_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
- // ABSL_HAVE_THREAD_SANITIZER
- //
- // ThreadSanitizer (TSan) is a fast data race detector.
-+#if 0 // mozilla - builds fail missing tsan symbols like __tsan_mutex_destroy
- #ifdef ABSL_HAVE_THREAD_SANITIZER
- #error "ABSL_HAVE_THREAD_SANITIZER cannot be directly set."
- #elif defined(__SANITIZE_THREAD__)
-@@ -746,6 +747,7 @@ static_assert(ABSL_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
- #elif ABSL_HAVE_FEATURE(thread_sanitizer)
- #define ABSL_HAVE_THREAD_SANITIZER 1
- #endif
+diff --git a/abseil-cpp/absl/debugging/BUILD.gn b/abseil-cpp/absl/debugging/BUILD.gn
+index d848aafc0bd..b920da6000d 100644
+--- a/abseil-cpp/absl/debugging/BUILD.gn
++++ b/abseil-cpp/absl/debugging/BUILD.gn
+@@ -184,6 +184,9 @@ absl_test("decode_rust_punycode_test") {
+ }
+ 
+ absl_source_set("demangle_rust") {
++# hazard-linux64-haz/debug builds fail when this section is
++# included in the build.
++if (!moz_webrtc_build) {
+   sources = [ "internal/demangle_rust.cc" ]
+   public = [ "internal/demangle_rust.h" ]
+   deps = [
+@@ -192,6 +195,7 @@ absl_source_set("demangle_rust") {
+     "//third_party/abseil-cpp/absl/base:core_headers",
+   ]
+ }
++}
+ 
+ absl_test("demangle_rust_test") {
+   sources = [ "internal/demangle_rust_test.cc" ]
+diff --git a/abseil-cpp/absl/debugging/internal/demangle.cc b/abseil-cpp/absl/debugging/internal/demangle.cc
+index caac76367f0..ce827912aa2 100644
+--- a/abseil-cpp/absl/debugging/internal/demangle.cc
++++ b/abseil-cpp/absl/debugging/internal/demangle.cc
+@@ -2952,9 +2952,13 @@ static bool Overflowed(const State *state) {
+ 
+ // The demangler entry point.
+ bool Demangle(const char* mangled, char* out, size_t out_size) {
++// mozilla - hazard-linux64-haz/debug failure when demangle_rust.cc is
++// included in the build.  For now we'll avoid this code.
++#if 0
+   if (mangled[0] == '_' && mangled[1] == 'R') {
+     return DemangleRustSymbolEncoding(mangled, out, out_size);
+   }
 +#endif
  
- // ABSL_HAVE_ADDRESS_SANITIZER
- //
+   State state;
+   InitState(&state, mangled, out, out_size);

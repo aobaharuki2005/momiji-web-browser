@@ -1,23 +1,30 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 7 Jan 2025 15:37:00 -0600
-Subject: Bug 1935474 - only apply android api < 17 fix for SYS_mmap2 if
- actually on < 17 api. r?ng!
+Date: Tue, 7 Jan 2025 15:39:00 -0600
+Subject: Bug 1935474 - disable ABSL_HAVE_THREAD_SANITIZER due to missing
+ symbols (like __tsan_mutex_destroy). r?ng!
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7822a8be4fb906ec1570667f72565a1a91f17228
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a248ecb7e0fa939cc145e3ef62f57783411ec367
 ---
- abseil-cpp/absl/base/internal/direct_mmap.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ abseil-cpp/absl/base/config.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/abseil-cpp/absl/base/internal/direct_mmap.h b/abseil-cpp/absl/base/internal/direct_mmap.h
-index 1beb2ee4e52..986a8200ad8 100644
---- a/abseil-cpp/absl/base/internal/direct_mmap.h
-+++ b/abseil-cpp/absl/base/internal/direct_mmap.h
-@@ -94,7 +94,7 @@ inline void* DirectMmap(void* start, size_t length, int prot, int flags, int fd,
-     errno = EINVAL;
-     return MAP_FAILED;
-   }
--#ifdef __BIONIC__
-+#if defined(__BIONIC__) && (!defined(__ANDROID_API__) || __ANDROID_API__ < 17)
-   // SYS_mmap2 has problems on Android API level <= 16.
-   // Workaround by invoking __mmap2() instead.
-   return __mmap2(start, length, prot, flags, fd,
+diff --git a/abseil-cpp/absl/base/config.h b/abseil-cpp/absl/base/config.h
+index 510c485e861..136aa44cf5c 100644
+--- a/abseil-cpp/absl/base/config.h
++++ b/abseil-cpp/absl/base/config.h
+@@ -688,6 +688,7 @@ static_assert(ABSL_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
+ // ABSL_HAVE_THREAD_SANITIZER
+ //
+ // ThreadSanitizer (TSan) is a fast data race detector.
++#if 0 // mozilla - builds fail missing tsan symbols like __tsan_mutex_destroy
+ #ifdef ABSL_HAVE_THREAD_SANITIZER
+ #error "ABSL_HAVE_THREAD_SANITIZER cannot be directly set."
+ #elif defined(__SANITIZE_THREAD__)
+@@ -695,6 +696,7 @@ static_assert(ABSL_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
+ #elif ABSL_HAVE_FEATURE(thread_sanitizer)
+ #define ABSL_HAVE_THREAD_SANITIZER 1
+ #endif
++#endif
+ 
+ // ABSL_HAVE_ADDRESS_SANITIZER
+ //

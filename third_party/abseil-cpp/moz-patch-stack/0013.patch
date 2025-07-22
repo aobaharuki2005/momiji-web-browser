@@ -1,53 +1,25 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 16 Jan 2025 11:29:00 -0600
-Subject: Bug 1935474 - don't demangle rust symbols. r?ng!
+Date: Tue, 1 Jul 2025 18:38:00 -0500
+Subject: Bug 1974813 - abseil-cpp - remove prevent_unsafe_narrowing build
+ config since chromium/build now automatically includes it
 
-Building demangle.cc causes errors in our hazard-linux64-haz/debug build.
-For now, we'll avoid calling DemangleRustSymbolEncoding, and skip building
-demangle.cc.
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/828151aa9455ccbfe45787bbe00127813c97cc9e
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/af60dbfe1bbea15ac5102a8ca90b9f6624ee151c
 ---
- abseil-cpp/absl/debugging/BUILD.gn             | 4 ++++
- abseil-cpp/absl/debugging/internal/demangle.cc | 4 ++++
- 2 files changed, 8 insertions(+)
+ abseil-cpp/absl.gni | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/abseil-cpp/absl/debugging/BUILD.gn b/abseil-cpp/absl/debugging/BUILD.gn
-index d848aafc0bd..b920da6000d 100644
---- a/abseil-cpp/absl/debugging/BUILD.gn
-+++ b/abseil-cpp/absl/debugging/BUILD.gn
-@@ -184,6 +184,9 @@ absl_test("decode_rust_punycode_test") {
- }
+diff --git a/abseil-cpp/absl.gni b/abseil-cpp/absl.gni
+index f13ae7919ca..af7f68f9c85 100644
+--- a/abseil-cpp/absl.gni
++++ b/abseil-cpp/absl.gni
+@@ -38,6 +38,10 @@ template("absl_source_set") {
+         "//abseil-cpp:absl_define_config",
+       ]
  
- absl_source_set("demangle_rust") {
-+# hazard-linux64-haz/debug builds fail when this section is
-+# included in the build.
-+if (!moz_webrtc_build) {
-   sources = [ "internal/demangle_rust.cc" ]
-   public = [ "internal/demangle_rust.h" ]
-   deps = [
-@@ -192,6 +195,7 @@ absl_source_set("demangle_rust") {
-     "//third_party/abseil-cpp/absl/base:core_headers",
-   ]
- }
-+}
- 
- absl_test("demangle_rust_test") {
-   sources = [ "internal/demangle_rust_test.cc" ]
-diff --git a/abseil-cpp/absl/debugging/internal/demangle.cc b/abseil-cpp/absl/debugging/internal/demangle.cc
-index caac76367f0..ce827912aa2 100644
---- a/abseil-cpp/absl/debugging/internal/demangle.cc
-+++ b/abseil-cpp/absl/debugging/internal/demangle.cc
-@@ -2952,9 +2952,13 @@ static bool Overflowed(const State *state) {
- 
- // The demangler entry point.
- bool Demangle(const char* mangled, char* out, size_t out_size) {
-+// mozilla - hazard-linux64-haz/debug failure when demangle_rust.cc is
-+// included in the build.  For now we'll avoid this code.
-+#if 0
-   if (mangled[0] == '_' && mangled[1] == 'R') {
-     return DemangleRustSymbolEncoding(mangled, out, out_size);
-   }
-+#endif
- 
-   State state;
-   InitState(&state, mangled, out, out_size);
++      if (moz_webrtc_build) {
++        configs -= [ "//chromium/build/config/compiler:prevent_unsafe_narrowing" ]
++      }
++
+       if (!defined(defines)) {
+         defines = []
+       }
