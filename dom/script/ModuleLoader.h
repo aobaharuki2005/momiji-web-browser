@@ -74,8 +74,8 @@ class ModuleLoader final : public JS::loader::ModuleLoaderBase {
 
   // Create a module load request for a dynamic module import.
   already_AddRefed<ModuleLoadRequest> CreateDynamicImport(
-      JSContext* aCx, nsIURI* aURI, JS::ModuleType aModuleType,
-      LoadedScript* aMaybeActiveScript, JS::Handle<JSString*> aSpecifier,
+      JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
+      JS::Handle<JSObject*> aModuleRequestObj,
       JS::Handle<JSObject*> aPromise) override;
 
   static ModuleLoader* From(ModuleLoaderBase* aLoader) {
