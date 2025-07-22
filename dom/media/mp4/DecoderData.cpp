@@ -183,7 +183,7 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* aTrack,
         mp4ParseSampleCodecSpecific.data, mp4ParseSampleCodecSpecific.length);
     mCodecSpecificConfig =
         AudioCodecSpecificVariant{std::move(opusCodecSpecificData)};
-  } else if (codecType == MP4PARSE_CODEC_AAC) {
+  } else if (codecType == MP4PARSE_CODEC_AAC || codecType == MP4PARSE_CODEC_XHEAAC) {
     mMimeType = "audio/mp4a-latm"_ns;
     int64_t codecDelayUS = aTrack->media_time;
     double USECS_PER_S = 1e6;

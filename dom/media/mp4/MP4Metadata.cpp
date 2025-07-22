@@ -297,6 +297,9 @@ MP4Metadata::ResultAndTrackInfo MP4Metadata::GetTrackInfo(
       case MP4PARSE_CODEC_AAC:
         codecString = "aac";
         break;
+      case MP4PARSE_CODEC_XHEAAC:
+        codecString = "xhe-aac";
+        break;
       case MP4PARSE_CODEC_OPUS:
         codecString = "opus";
         break;
