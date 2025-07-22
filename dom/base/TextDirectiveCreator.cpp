@@ -38,20 +38,6 @@ TextDirectiveCreator::CreateTextDirectiveFromRange(
     const TimeoutWatchdog* aWatchdog) {
   MOZ_ASSERT(aInputRange);
   MOZ_ASSERT(!aInputRange->Collapsed());
-  const nsString rangeContent =
-      MOZ_TRY(TextDirectiveUtil::RangeContentAsString(aInputRange));
-  if (rangeContent.IsEmpty()) {
-    TEXT_FRAGMENT_LOG("Input range does not contain text.");
-    return VoidCString();
-  }
-  const bool rangeIsOnlyWhitespace =
-      std::all_of(rangeContent.View().cbegin(), rangeContent.View().cend(),
-                  nsContentUtils::IsHTMLWhitespaceOrNBSP);
-
-  if (rangeIsOnlyWhitespace) {
-    TEXT_FRAGMENT_LOG("Input range contains only whitespace.");
-    return VoidCString();
-  }
 
   const RefPtr<AbstractRange> extendedRange =
       MOZ_TRY(ExtendRangeToWordBoundaries(aInputRange));
@@ -115,12 +101,30 @@ TextDirectiveCreator::CreateInstance(Document* aDocument, AbstractRange* aRange,
 Result<RefPtr<AbstractRange>, ErrorResult>
 TextDirectiveCreator::ExtendRangeToWordBoundaries(AbstractRange* aRange) {
   MOZ_ASSERT(aRange && !aRange->Collapsed());
-  TEXT_FRAGMENT_LOG(
-      "Input range :\n{}",
-      NS_ConvertUTF16toUTF8(
-          TextDirectiveUtil::RangeContentAsString(aRange).unwrapOr(
-              u"<Could not be converted to string>"_ns)));
   ErrorResult rv;
+  const nsString rangeContent =
+      MOZ_TRY(TextDirectiveUtil::RangeContentAsString(aRange));
+  TEXT_FRAGMENT_LOG("Input range :\n{}", NS_ConvertUTF16toUTF8(rangeContent));
+
+  if (rangeContent.IsEmpty()) {
+    TEXT_FRAGMENT_LOG("Input range does not contain text.");
+    return Result<RefPtr<AbstractRange>, ErrorResult>(nullptr);
+  }
+
+  if (std::all_of(rangeContent.View().cbegin(), rangeContent.View().cend(),
+                  nsContentUtils::IsHTMLWhitespaceOrNBSP)) {
+    TEXT_FRAGMENT_LOG("Input range contains only whitespace.");
+    return Result<RefPtr<AbstractRange>, ErrorResult>(nullptr);
+  }
+  if (std::all_of(rangeContent.View().cbegin(), rangeContent.View().cend(),
+                  IsPunctuationForWordSelect)) {
+    RefPtr range =
+        StaticRange::Create(aRange->StartRef(), aRange->EndRef(), rv);
+    if (MOZ_UNLIKELY(rv.Failed())) {
+      return Err(std::move(rv));
+    }
+    return Result<RefPtr<AbstractRange>, ErrorResult>(range);
+  }
   RangeBoundary startPoint = TextDirectiveUtil::FindNextNonWhitespacePosition<
       TextScanDirection::Right>(aRange->StartRef());
   startPoint =

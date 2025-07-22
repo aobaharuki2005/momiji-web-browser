@@ -56,6 +56,8 @@
   <div>Foo Bar</div>
   <div id="rangeBasedWithPrefixAtBlockBoundaries">Some text Foo Bar more text</div>
   <div id="rangeBasedWithPrefixAtBlockBoundariesEnd">End of Range</div>
+  <!-- Test case for Bug 1976480. -->
+  <div id="quotationMark">"Quotation mark"</div>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const empty = document.createTextNode("");
@@ -377,6 +379,33 @@
           endOffset: 3,
           content: "Bar more text\n  End",
           textDirective: "text=Bar%20more,End"
+        },
+        {
+          name: "Test for Bug 1976480: Selected quotation mark should not be extended to the next word",
+          startContainer: quotationMark.firstChild,
+          startOffset: 0,
+          endContainer: quotationMark.firstChild,
+          endOffset: 1,
+          content: "\"",
+          textDirective: "text=Range-,%22"
+        },
+        {
+          name: "Test for Bug 1976480: Selected quotation mark should not be extended to the previous word",
+          startContainer: quotationMark.firstChild,
+          startOffset: 15,
+          endContainer: quotationMark.firstChild,
+          endOffset: 16,
+          content: "\"",
+          textDirective: "text=mark-,%22"
+        },
+        {
+          name: "Test for Bug 1976480: Text inside quotation marks should not have the selection extended to the quotation marks",
+          startContainer: quotationMark.firstChild,
+          startOffset: 1,
+          endContainer: quotationMark.firstChild,
+          endOffset: 15,
+          content: "Quotation mark",
+          textDirective: "text=Quotation%20mark"
         },
       ]) {
         const range = document.createRange();
