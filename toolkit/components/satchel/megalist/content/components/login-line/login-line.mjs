@@ -224,6 +224,7 @@ class ConcealedLoginLine extends MozLitElement {
           role="option"
           class="reveal-button"
           type="icon ghost"
+          tabindex="-1"
           data-l10n-id=${this.#revealBtnLabel}
           iconSrc=${this.#revealIconSrc()}
           @keypress=${async e => {
