@@ -251,6 +251,29 @@ JS_PUBLIC_API bool JS::ModuleLink(JSContext* cx, Handle<JSObject*> moduleArg) {
   return ::ModuleLink(cx, moduleArg.as<ModuleObject>());
 }
 
+JS_PUBLIC_API bool JS::LoadRequestedModules(
+    JSContext* cx, Handle<JSObject*> moduleArg, Handle<Value> hostDefined,
+    JS::LoadModuleResolvedCallback&& resolved,
+    JS::LoadModuleRejectedCallback&& rejected) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->releaseCheck(moduleArg);
+
+  return js::LoadRequestedModules(cx, moduleArg.as<ModuleObject>(), hostDefined,
+                                  std::move(resolved), std::move(rejected));
+}
+
+JS_PUBLIC_API bool JS::LoadRequestedModules(
+    JSContext* cx, Handle<JSObject*> moduleArg, Handle<Value> hostDefined,
+    MutableHandle<JSObject*> promiseOut) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->releaseCheck(moduleArg);
+
+  return js::LoadRequestedModules(cx, moduleArg.as<ModuleObject>(), hostDefined,
+                                  promiseOut);
+}
+
 JS_PUBLIC_API bool JS::ModuleEvaluate(JSContext* cx,
                                       Handle<JSObject*> moduleRecord,
                                       MutableHandle<JS::Value> rval) {
@@ -1576,6 +1599,73 @@ bool js::ContinueLoadingImportedModule(JSContext* cx,
   Rooted<GraphLoadingStateRecordObject*> state(cx);
   state = static_cast<GraphLoadingStateRecordObject*>(&statePrivate.toObject());
   return ContinueModuleLoading(cx, state, result, error);
+}
+
+// https://tc39.es/ecma262/#sec-LoadRequestedModules
+bool js::LoadRequestedModules(JSContext* cx, Handle<ModuleObject*> module,
+                              Handle<Value> hostDefined,
+                              JS::LoadModuleResolvedCallback&& resolved,
+                              JS::LoadModuleRejectedCallback&& rejected) {
+  if (module->hasSyntheticModuleFields()) {
+    // Step 1. Return ! PromiseResolve(%Promise%, undefined).
+    return resolved(cx, hostDefined);
+  }
+
+  // Step 1. If hostDefined is not present, let hostDefined be empty.
+  // Step 2. Let pc be ! NewPromiseCapability(%Promise%).
+  // Note: For implementation we use callbacks to notify the results.
+
+  // Step 3. Let state be the GraphLoadingState Record { [[IsLoading]]: true,
+  //         [[PendingModulesCount]]: 1, [[Visited]]: « »,
+  //         [[PromiseCapability]]: pc, [[HostDefined]]: hostDefined }.
+  Rooted<GraphLoadingStateRecordObject*> state(
+      cx,
+      GraphLoadingStateRecordObject::create(cx, true, 1, std::move(resolved),
+                                            std::move(rejected), hostDefined));
+  if (!state) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  // Step 4. Perform InnerModuleLoading(state, module).
+  return InnerModuleLoading(cx, state, module);
+}
+
+bool js::LoadRequestedModules(JSContext* cx, Handle<ModuleObject*> module,
+                              Handle<Value> hostDefined,
+                              MutableHandle<JSObject*> promiseOut) {
+  // Step 1. If hostDefined is not present, let hostDefined be empty.
+  // Step 2. Let pc be ! NewPromiseCapability(%Promise%).
+  Rooted<PromiseObject*> pc(cx, CreatePromiseObjectForAsync(cx));
+  if (!pc) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  if (module->hasSyntheticModuleFields()) {
+    // Step 1. Return ! PromiseResolve(%Promise%, undefined).
+    promiseOut.set(pc);
+    return AsyncFunctionReturned(cx, pc, UndefinedHandleValue);
+  }
+
+  // Step 3. Let state be the GraphLoadingState Record { [[IsLoading]]: true,
+  //         [[PendingModulesCount]]: 1, [[Visited]]: « »,
+  //         [[PromiseCapability]]: pc, [[HostDefined]]: hostDefined }.
+  Rooted<GraphLoadingStateRecordObject*> state(
+      cx, GraphLoadingStateRecordObject::create(cx, true, 1, pc, hostDefined));
+  if (!state) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  // Step 4. Perform InnerModuleLoading(state, module).
+  if (!InnerModuleLoading(cx, state, module)) {
+    return false;
+  }
+
+  // Step 5. Return pc.[[Promise]].
+  promiseOut.set(pc);
+  return true;
 }
 
 // https://tc39.es/ecma262/#sec-moduledeclarationlinking
