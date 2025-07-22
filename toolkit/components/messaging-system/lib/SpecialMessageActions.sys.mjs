@@ -202,6 +202,7 @@ export const SpecialMessageActions = {
       "browser.aboutwelcome.didSeeFinalScreen",
       "browser.crashReports.unsubmittedCheck.autoSubmit2",
       "browser.dataFeatureRecommendations.enabled",
+      "browser.ipProtection.enabled",
       "browser.migrate.content-modal.about-welcome-behavior",
       "browser.migrate.content-modal.import-all.enabled",
       "browser.migrate.preferences-entrypoint.enabled",

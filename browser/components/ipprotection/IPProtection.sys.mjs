@@ -7,9 +7,12 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ASRouter: "resource:///modules/asrouter/ASRouter.sys.mjs",
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   IPProtectionPanel:
     "resource:///modules/ipprotection/IPProtectionPanel.sys.mjs",
+  requestIdleCallback: "resource://gre/modules/Timer.sys.mjs",
+  cancelIdleCallback: "resource://gre/modules/Timer.sys.mjs",
 });
 
 const FXA_WIDGET_ID = "fxa-toolbar-menu-button";
@@ -38,6 +41,7 @@ class IPProtectionWidget {
 
   constructor() {
     this.updateEnabled = this.#updateEnabled.bind(this);
+    this.sendReadyTrigger = this.#sendReadyTrigger.bind(this);
   }
 
   /**
@@ -136,6 +140,9 @@ class IPProtectionWidget {
     this.#destroyPanels();
     lazy.CustomizableUI.destroyWidget(IPProtectionWidget.WIDGET_ID);
     this.#created = false;
+    if (this.readyTriggerIdleCallback) {
+      lazy.cancelIdleCallback(this.readyTriggerIdleCallback);
+    }
   }
 
   /**
@@ -211,7 +218,21 @@ class IPProtectionWidget {
    *
    * @param {XULElement} _toolbaritem - the widget toolbaritem.
    */
-  #onCreated(_toolbaritem) {}
+  #onCreated(_toolbaritem) {
+    this.readyTriggerIdleCallback = lazy.requestIdleCallback(
+      this.sendReadyTrigger
+    );
+  }
+
+  async #sendReadyTrigger() {
+    await lazy.ASRouter.waitForInitialized;
+    const win = Services.wm.getMostRecentBrowserWindow();
+    const browser = win?.gBrowser?.selectedBrowser;
+    await lazy.ASRouter.sendTriggerMessage({
+      browser,
+      id: "ipProtectionReady",
+    });
+  }
 }
 
 const IPProtection = new IPProtectionWidget();

@@ -20,6 +20,16 @@ ipprotection-help-button =
 
 ipprotection-title = { -firefox-vpn-brand-name }
 
+## Feature introduction callout
+
+ipprotection-feature-introduction-title = Boost your browser’s privacy with free { -firefox-vpn-brand-name }
+ipprotection-feature-introduction-link-text = You’ve been selected for early access to our new, <a data-l10n-name="learn-more-vpn">built-in VPN</a>. Enhance your browser’s protection by hiding your location and encrypting your traffic.
+ipprotection-feature-introduction-button-primary = Next
+ipprotection-feature-introduction-button-secondary-not-now = Not now
+ipprotection-feature-introduction-button-secondary-no-thanks = No thanks
+
+##
+
 ipprotection-connection-status-on = VPN on
 ipprotection-connection-status-off = VPN off
 ipprotection-toggle-active =
