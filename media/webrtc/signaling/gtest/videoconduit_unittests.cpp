@@ -432,7 +432,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodec) {
   ASSERT_EQ(Call()->mVideoSendConfig->rtp.payload_type, 120);
   ASSERT_EQ(Call()->mVideoSendConfig->rtp.rtcp_mode,
             webrtc::RtcpMode::kCompound);
-  ASSERT_EQ(Call()->mVideoSendConfig->rtp.max_packet_size, kVideoMtu);
+  ASSERT_EQ(Call()->mVideoSendConfig->rtp.max_packet_size, mozilla::kVideoMtu);
   ASSERT_EQ(Call()->mVideoSendEncoderConfig->content_type,
             VideoEncoderConfig::ContentType::kRealtimeVideo);
   ASSERT_EQ(Call()->mVideoSendEncoderConfig->min_transmit_bitrate_bps, 0);
@@ -1211,7 +1211,7 @@ TEST_P(VideoConduitCodecModeTest, TestReconfigureSendMediaCodec) {
   EXPECT_EQ(Call()->mVideoSendConfig->rtp.payload_type, 120);
   EXPECT_EQ(Call()->mVideoSendConfig->rtp.rtcp_mode,
             webrtc::RtcpMode::kCompound);
-  EXPECT_EQ(Call()->mVideoSendConfig->rtp.max_packet_size, kVideoMtu);
+  EXPECT_EQ(Call()->mVideoSendConfig->rtp.max_packet_size, mozilla::kVideoMtu);
   EXPECT_EQ(Call()->mVideoSendEncoderConfig->content_type,
             GetParam() == webrtc::VideoCodecMode::kRealtimeVideo
                 ? VideoEncoderConfig::ContentType::kRealtimeVideo
@@ -1361,7 +1361,7 @@ TEST_P(VideoConduitCodecModeTest,
   EXPECT_EQ(Call()->mVideoSendConfig->rtp.payload_type, 120);
   EXPECT_EQ(Call()->mVideoSendConfig->rtp.rtcp_mode,
             webrtc::RtcpMode::kCompound);
-  EXPECT_EQ(Call()->mVideoSendConfig->rtp.max_packet_size, kVideoMtu);
+  EXPECT_EQ(Call()->mVideoSendConfig->rtp.max_packet_size, mozilla::kVideoMtu);
   EXPECT_EQ(Call()->mVideoSendEncoderConfig->content_type,
             GetParam() == webrtc::VideoCodecMode::kRealtimeVideo
                 ? VideoEncoderConfig::ContentType::kRealtimeVideo
