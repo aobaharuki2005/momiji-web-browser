@@ -739,6 +739,7 @@ class js::CyclicModuleFields {
   HeapPtr<JSObject*> metaObject;
   HeapPtr<ScriptSourceObject*> scriptSourceObject;
   RequestedModuleVector requestedModules;
+  LoadedModuleMap loadedModules;
   ImportEntryVector importEntries;
   ExportEntryVector exportEntries;
   IndirectBindingMap importBindings;
@@ -788,6 +789,7 @@ void CyclicModuleFields::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &scriptSourceObject,
                     "CyclicModuleFields::scriptSourceObject");
   requestedModules.trace(trc);
+  loadedModules.trace(trc);
   importEntries.trace(trc);
   exportEntries.trace(trc);
   importBindings.trace(trc);
@@ -1293,6 +1295,14 @@ void ModuleObject::setCycleRoot(ModuleObject* cycleRoot) {
 ModuleObject* ModuleObject::getCycleRoot() const {
   MOZ_RELEASE_ASSERT(cyclicModuleFields()->cycleRoot);
   return cyclicModuleFields()->cycleRoot;
+}
+
+LoadedModuleMap& ModuleObject::loadedModules() {
+  return cyclicModuleFields()->loadedModules;
+}
+
+const LoadedModuleMap& ModuleObject::loadedModules() const {
+  return cyclicModuleFields()->loadedModules;
 }
 
 bool ModuleObject::hasSyntheticModuleFields() const {

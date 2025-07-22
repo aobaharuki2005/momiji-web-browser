@@ -342,6 +342,22 @@ constexpr uint32_t ASYNC_EVALUATING_POST_ORDER_INIT = 1;
 // Value that the field is set to after being cleared.
 constexpr uint32_t ASYNC_EVALUATING_POST_ORDER_CLEARED = 0;
 
+// The map used by [[LoadedModules]] in Realm Record Fields, Script Record
+// Fields, and additional fields of Cyclic Module Records.
+// https://tc39.es/ecma262/#table-realm-record-fields
+// https://tc39.es/ecma262/#table-script-records
+// https://tc39.es/ecma262/#table-cyclic-module-fields
+//
+// For Import attributes proposal, this map maps from ModuleRequest records to
+// Module records.
+// https://tc39.es/proposal-import-attributes/#sec-cyclic-module-records
+//
+// TODO:
+// Bug 1968874 : Implement [[LoadedModules]] in Realm Records and Script Records
+using LoadedModuleMap =
+    GCHashMap<HeapPtr<JSObject*>, HeapPtr<ModuleObject*>,
+              StableCellHasher<HeapPtr<JSObject*>>, SystemAllocPolicy>;
+
 // Currently, the ModuleObject class is used to represent both the Source Text
 // Module Record and the Synthetic Module Record. Ideally, this is something
 // that should be refactored to follow the same hierarchy as in the spec.
@@ -437,6 +453,8 @@ class ModuleObject : public NativeObject {
   ModuleObject* getCycleRoot() const;
   bool hasCyclicModuleFields() const;
   bool hasSyntheticModuleFields() const;
+  LoadedModuleMap& loadedModules();
+  const LoadedModuleMap& loadedModules() const;
 
   static void onTopLevelEvaluationFinished(ModuleObject* module);
 
