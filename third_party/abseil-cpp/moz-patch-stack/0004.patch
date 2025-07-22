@@ -83,10 +83,10 @@ index b19ac75675a..ff2ff91cfa4 100644
        visibility = [ "//third_party/abseil-cpp/:*" ]
        deps += [
 diff --git a/abseil-cpp/absl/random/internal/BUILD.gn b/abseil-cpp/absl/random/internal/BUILD.gn
-index cb11943ec66..616804aa595 100644
+index 46dcff5a887..2aef8a1aa9d 100644
 --- a/abseil-cpp/absl/random/internal/BUILD.gn
 +++ b/abseil-cpp/absl/random/internal/BUILD.gn
-@@ -245,6 +245,7 @@ absl_source_set("randen_hwaes_impl") {
+@@ -242,6 +242,7 @@ absl_source_set("randen_hwaes_impl") {
    visibility = [ "//third_party/abseil-cpp/absl/random/*" ]
  }
  
@@ -94,7 +94,7 @@ index cb11943ec66..616804aa595 100644
  executable("gaussian_distribution_gentables") {
    sources = [ "gaussian_distribution_gentables.cc" ]
    deps = [
-@@ -253,6 +254,7 @@ executable("gaussian_distribution_gentables") {
+@@ -250,6 +251,7 @@ executable("gaussian_distribution_gentables") {
    ]
    visibility = [ "//third_party/abseil-cpp/absl/random/*" ]
  }

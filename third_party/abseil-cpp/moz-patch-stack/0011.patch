@@ -9,10 +9,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a248ecb7e0fa939cc
  1 file changed, 2 insertions(+)
 
 diff --git a/abseil-cpp/absl/base/config.h b/abseil-cpp/absl/base/config.h
-index 510c485e861..136aa44cf5c 100644
+index 7514b86e5e7..7ae83241314 100644
 --- a/abseil-cpp/absl/base/config.h
 +++ b/abseil-cpp/absl/base/config.h
-@@ -688,6 +688,7 @@ static_assert(ABSL_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
+@@ -655,6 +655,7 @@ static_assert(ABSL_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
  // ABSL_HAVE_THREAD_SANITIZER
  //
  // ThreadSanitizer (TSan) is a fast data race detector.
@@ -20,7 +20,7 @@ index 510c485e861..136aa44cf5c 100644
  #ifdef ABSL_HAVE_THREAD_SANITIZER
  #error "ABSL_HAVE_THREAD_SANITIZER cannot be directly set."
  #elif defined(__SANITIZE_THREAD__)
-@@ -695,6 +696,7 @@ static_assert(ABSL_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
+@@ -662,6 +663,7 @@ static_assert(ABSL_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
  #elif ABSL_HAVE_FEATURE(thread_sanitizer)
  #define ABSL_HAVE_THREAD_SANITIZER 1
  #endif

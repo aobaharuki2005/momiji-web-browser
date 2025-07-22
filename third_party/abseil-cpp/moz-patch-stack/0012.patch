@@ -12,10 +12,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/828151aa9455ccbfe
  2 files changed, 8 insertions(+)
 
 diff --git a/abseil-cpp/absl/debugging/BUILD.gn b/abseil-cpp/absl/debugging/BUILD.gn
-index d848aafc0bd..b920da6000d 100644
+index 9041c59ddad..ed1d087c90d 100644
 --- a/abseil-cpp/absl/debugging/BUILD.gn
 +++ b/abseil-cpp/absl/debugging/BUILD.gn
-@@ -184,6 +184,9 @@ absl_test("decode_rust_punycode_test") {
+@@ -187,6 +187,9 @@ absl_test("decode_rust_punycode_test") {
  }
  
  absl_source_set("demangle_rust") {
@@ -25,7 +25,7 @@ index d848aafc0bd..b920da6000d 100644
    sources = [ "internal/demangle_rust.cc" ]
    public = [ "internal/demangle_rust.h" ]
    deps = [
-@@ -192,6 +195,7 @@ absl_source_set("demangle_rust") {
+@@ -195,6 +198,7 @@ absl_source_set("demangle_rust") {
      "//third_party/abseil-cpp/absl/base:core_headers",
    ]
  }
@@ -34,10 +34,10 @@ index d848aafc0bd..b920da6000d 100644
  absl_test("demangle_rust_test") {
    sources = [ "internal/demangle_rust_test.cc" ]
 diff --git a/abseil-cpp/absl/debugging/internal/demangle.cc b/abseil-cpp/absl/debugging/internal/demangle.cc
-index caac76367f0..ce827912aa2 100644
+index dc15b8e5849..13683bec9e7 100644
 --- a/abseil-cpp/absl/debugging/internal/demangle.cc
 +++ b/abseil-cpp/absl/debugging/internal/demangle.cc
-@@ -2952,9 +2952,13 @@ static bool Overflowed(const State *state) {
+@@ -2957,9 +2957,13 @@ static bool Overflowed(const State *state) {
  
  // The demangler entry point.
  bool Demangle(const char* mangled, char* out, size_t out_size) {

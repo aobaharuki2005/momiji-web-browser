@@ -9,10 +9,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fdbec58643d95ef27
  1 file changed, 2 insertions(+)
 
 diff --git a/abseil-cpp/absl/base/config.h b/abseil-cpp/absl/base/config.h
-index 136aa44cf5c..6621832db53 100644
+index 7ae83241314..753bce47007 100644
 --- a/abseil-cpp/absl/base/config.h
 +++ b/abseil-cpp/absl/base/config.h
-@@ -747,6 +747,7 @@ static_assert(ABSL_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
+@@ -714,6 +714,7 @@ static_assert(ABSL_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
  // LeakSanitizer is available does not mean it is active. Use the
  // always-available run-time interface in //absl/debugging/leak_check.h for
  // interacting with LeakSanitizer.
@@ -20,7 +20,7 @@ index 136aa44cf5c..6621832db53 100644
  #ifdef ABSL_HAVE_LEAK_SANITIZER
  #error "ABSL_HAVE_LEAK_SANITIZER cannot be directly set."
  #elif defined(LEAK_SANITIZER)
-@@ -761,6 +762,7 @@ static_assert(ABSL_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
+@@ -728,6 +729,7 @@ static_assert(ABSL_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
  // GCC or Clang using the LeakSanitizer integrated into AddressSanitizer.
  #define ABSL_HAVE_LEAK_SANITIZER 1
  #endif
