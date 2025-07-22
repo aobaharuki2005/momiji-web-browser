@@ -564,13 +564,17 @@ void RangeBasedTextDirectiveCreator::FindStartMatchCommonSubstringLengths(
             mPrefixFoldCaseContent,
             TextDirectiveUtil::FindNextNonWhitespacePosition<
                 TextScanDirection::Left>(range->StartRef()));
+    TEXT_FRAGMENT_LOG("Common prefix length: {}", commonPrefixLength);
 
     TEXT_FRAGMENT_LOG(
         "Computing common start substring length for start match {}.",
         loopCounter);
     const uint32_t commonStartLength =
         TextDirectiveUtil::ComputeCommonSubstringLength<
-            TextScanDirection::Right>(mStartFoldCaseContent, range->EndRef());
+            TextScanDirection::Right>(
+            mStartFoldCaseContent,
+            TextDirectiveUtil::FindNextNonWhitespacePosition<
+                TextScanDirection::Right>(range->EndRef()));
 
     TEXT_FRAGMENT_LOG("Common length: {}", commonStartLength);
     mStartMatchCommonSubstringLengths.EmplaceBack(commonPrefixLength,
@@ -590,7 +594,10 @@ void RangeBasedTextDirectiveCreator::FindEndMatchCommonSubstringLengths(
                       loopCounter);
     const uint32_t commonEndLength =
         TextDirectiveUtil::ComputeCommonSubstringLength<
-            TextScanDirection::Left>(mEndFoldCaseContent, range->StartRef());
+            TextScanDirection::Left>(
+            mEndFoldCaseContent,
+            TextDirectiveUtil::FindNextNonWhitespacePosition<
+                TextScanDirection::Left>(range->StartRef()));
     TEXT_FRAGMENT_LOG("Common end term length: {}", commonEndLength);
     TEXT_FRAGMENT_LOG(
         "Computing common suffix substring length for end match {}.",
@@ -601,6 +608,7 @@ void RangeBasedTextDirectiveCreator::FindEndMatchCommonSubstringLengths(
             mSuffixFoldCaseContent,
             TextDirectiveUtil::FindNextNonWhitespacePosition<
                 TextScanDirection::Right>(range->EndRef()));
+    TEXT_FRAGMENT_LOG("Common suffix length: {}", commonSuffixLength);
 
     mEndMatchCommonSubstringLengths.EmplaceBack(commonEndLength,
                                                 commonSuffixLength);

@@ -52,6 +52,10 @@
   <div id="nbsp">&nbsp;</div>
   <div id="punctuationStartsRangeBasedTextDirective">"</div>
   <div id="punctuationEndsRangeBasedTextDirective">text preceded by punctuation in a different block</div>
+  <!-- Test case for Bug 1976869. -->
+  <div>Foo Bar</div>
+  <div id="rangeBasedWithPrefixAtBlockBoundaries">Some text Foo Bar more text</div>
+  <div id="rangeBasedWithPrefixAtBlockBoundariesEnd">End of Range</div>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const empty = document.createTextNode("");
@@ -364,7 +368,16 @@
           endOffset: 4,
           content: '"\n  text',
           textDirective: "text=%22,text"
-        }
+        },
+        {
+          name: "Test for Bug 1976869 (edge cases for common string length computation)",
+          startContainer: rangeBasedWithPrefixAtBlockBoundaries.firstChild,
+          startOffset: 14,
+          endContainer: rangeBasedWithPrefixAtBlockBoundariesEnd.firstChild,
+          endOffset: 3,
+          content: "Bar more text\n  End",
+          textDirective: "text=Bar%20more,End"
+        },
       ]) {
         const range = document.createRange();
         range.setStart(testCase.startContainer, testCase.startOffset);
