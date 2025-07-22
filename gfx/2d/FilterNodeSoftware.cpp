@@ -29,7 +29,7 @@ namespace {
 
 /**
  * This class provides a way to get a pow() results in constant-time. It works
- * by caching 129 ((1 << sCacheIndexPrecisionBits) + 1) values for bases between
+ * by caching 257 ((1 << sCacheIndexPrecisionBits) + 1) values for bases between
  * 0 and 1 and a fixed exponent.
  **/
 class PowCache {
@@ -89,7 +89,7 @@ class PowCache {
 
   static const int sInputIntPrecisionBits = 15;
   static const int sOutputIntPrecisionBits = 15;
-  static const int sCacheIndexPrecisionBits = 7;
+  static const int sCacheIndexPrecisionBits = 8;
 
   inline bool HasPowerTable() const { return mNumPowTablePreSquares >= 0; }
 
