@@ -6237,7 +6237,6 @@
         return;
       }
 
-      aGroup.collapsed = false;
       this.#handleTabMove(aTab, () => aGroup.appendChild(aTab), metricsContext);
       this.removeFromMultiSelectedTabs(aTab);
       this.tabContainer._notifyBackgroundTab(aTab);
