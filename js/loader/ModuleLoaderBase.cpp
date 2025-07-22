@@ -1450,6 +1450,33 @@ ModuleLoaderBase::~ModuleLoaderBase() {
   LOG(("ModuleLoaderBase::~ModuleLoaderBase %p", this));
 }
 
+void ModuleLoaderBase::CancelFetchingModules() {
+  for (const auto& entry : mFetchingModules) {
+    RefPtr<LoadingRequest> loadingRequest = entry.GetData();
+
+    // The compile task might not execute if the global is shutting down, while
+    // the root module is still awaiting the result of the compiling request.
+    // Therefore, we call OnFetchFailed to notify the root module of the
+    // failure.
+    bool isCompiling = loadingRequest->mRequest->IsCompiling();
+    if (isCompiling) {
+      OnFetchFailed(loadingRequest->mRequest);
+    }
+
+    loadingRequest->mRequest->Cancel();
+
+    for (const auto& request : loadingRequest->mWaiting) {
+      request->Cancel();
+      if (isCompiling) {
+        OnFetchFailed(request);
+      }
+    }
+  }
+
+  // We don't clear mFetchingModules here, as the fetching requests might arrive
+  // after the global is still shutting down.
+}
+
 void ModuleLoaderBase::Shutdown() {
   CancelAndClearDynamicImports();
 
