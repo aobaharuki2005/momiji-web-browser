@@ -121,17 +121,6 @@ extern JS_PUBLIC_API void SetModuleMetadataHook(JSRuntime* rt,
                                                 ModuleMetadataHook func);
 
 /**
- * This must be called after a dynamic import operation is complete.
- *
- * If |evaluationPromise| is rejected, the rejection reason will be used to
- * complete the user's promise.
- */
-extern JS_PUBLIC_API bool FinishDynamicModuleImport(
-    JSContext* cx, Handle<JSObject*> evaluationPromise,
-    Handle<Value> referencingPrivate, Handle<JSObject*> moduleRequest,
-    Handle<JSObject*> promise);
-
-/**
  * Parse the given source buffer as a module in the scope of the current global
  * of cx and return a source text module record.
  */
