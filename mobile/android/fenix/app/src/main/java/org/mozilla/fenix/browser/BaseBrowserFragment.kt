@@ -267,7 +267,8 @@ abstract class BaseBrowserFragment :
     internal val browserToolbarView: FenixBrowserToolbarView
         get() = _browserToolbarView!!
 
-    private var browserNavigationBar: BrowserNavigationBar? = null
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    internal var browserNavigationBar: BrowserNavigationBar? = null
 
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     @Suppress("VariableNaming")
@@ -2180,6 +2181,12 @@ abstract class BaseBrowserFragment :
             collapse()
             gone()
         }
+
+        browserNavigationBar?.apply {
+            collapse()
+            gone()
+        }
+
         _bottomToolbarContainerView?.toolbarContainerView?.apply {
             collapse()
             isVisible = false
@@ -2203,9 +2210,11 @@ abstract class BaseBrowserFragment :
     internal fun collapseBrowserView() {
         if (webAppToolbarShouldBeVisible) {
             browserToolbarView.visible()
+            browserNavigationBar?.visible()
             _bottomToolbarContainerView?.toolbarContainerView?.isVisible = true
             reinitializeEngineView()
             browserToolbarView.expand()
+            browserNavigationBar?.expand()
             _bottomToolbarContainerView?.toolbarContainerView?.expand()
         }
     }
