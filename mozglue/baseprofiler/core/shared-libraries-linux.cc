@@ -843,30 +843,25 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
   // We collect the bulk of the library info using dl_iterate_phdr.
   dl_iterate_phdr(dl_iterate_callback, &libInfoList);
 
-  for (const auto& libInfo : libInfoList) {
-    info.AddSharedLibrary(
-        SharedLibraryAtPath(libInfo.mName.c_str(), libInfo.mFirstMappingStart,
-                            libInfo.mLastMappingEnd,
-                            libInfo.mFirstMappingStart - libInfo.mBaseAddress));
-  }
-
 #if defined(GP_OS_linux)
-  // Make another pass over the information we just harvested from
-  // dl_iterate_phdr.  If we see a nameless object mapped at what we earlier
-  // established to be the main executable's load address, attach the
-  // executable's name to that entry.
-  for (size_t i = 0; i < info.GetSize(); i++) {
-    SharedLibrary& lib = info.GetMutableEntry(i);
-    if (lib.GetStart() <= exeExeAddr && exeExeAddr <= lib.GetEnd() &&
-        lib.GetDebugPath().empty()) {
-      lib = SharedLibraryAtPath(exeName, lib.GetStart(), lib.GetEnd(),
-                                lib.GetOffset());
-
-      // We only expect to see one such entry.
-      break;
-    }
-  }
+  bool exeNameAssigned = false;
 #endif
+  for (const auto& libInfo : libInfoList) {
+    const char* libraryName = libInfo.mName.c_str();
+#if defined(GP_OS_linux)
+    // If we see a nameless object mapped at what we earlier established to be
+    // the main executable's load address, use the executable's name instead.
+    if (!exeNameAssigned && libInfo.mFirstMappingStart <= exeExeAddr &&
+        exeExeAddr <= libInfo.mLastMappingEnd && libInfo.mName.empty()) {
+      libraryName = exeName;
+      exeNameAssigned = true;
+    }
+#endif
+
+    info.AddSharedLibrary(SharedLibraryAtPath(
+        libraryName, libInfo.mFirstMappingStart, libInfo.mLastMappingEnd,
+        libInfo.mFirstMappingStart - libInfo.mBaseAddress));
+  }
 
   return info;
 }
