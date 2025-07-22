@@ -11,7 +11,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::u32;
 use api::{MinimapData, SnapshotImageKey};
-use time::precise_time_ns;
+use crate::precise_time_ns;
 use crate::api::channel::{Sender, single_msg_channel, unbounded_channel};
 use crate::api::{BuiltDisplayList, IdNamespace, ExternalScrollId, Parameter, BoolParameter};
 use crate::api::{FontKey, FontInstanceKey, NativeFontHandle};

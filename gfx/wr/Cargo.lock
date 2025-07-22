@@ -1100,7 +1100,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
- "time 0.3.41",
+ "time",
  "uniffi",
  "uuid",
  "wr_malloc_size_of",
@@ -2876,17 +2876,6 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.1.44"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6db9e6914ab8b1ae1c260a4ae7a49b6c5611b40328a735b21862567685e73255"
-dependencies = [
- "libc",
- "wasi 0.10.0+wasi-snapshot-preview1",
- "winapi",
-]
-
-[[package]]
-name = "time"
 version = "0.3.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a7619e19bc266e0f9c5e6686659d394bc57973859340060a69221e57dbc0c40"
@@ -3343,7 +3332,6 @@ dependencies = [
  "smallvec",
  "svg_fmt",
  "swgl",
- "time 0.1.44",
  "topological-sort",
  "tracy-rs",
  "webrender_api",
@@ -3381,7 +3369,6 @@ dependencies = [
  "serde",
  "serde_bytes",
  "serde_derive",
- "time 0.1.44",
  "wr_malloc_size_of",
 ]
 

@@ -7516,7 +7516,6 @@ dependencies = [
  "smallvec",
  "svg_fmt",
  "swgl",
- "time 0.1.45",
  "topological-sort",
  "tracy-rs",
  "webrender_api",
@@ -7539,7 +7538,6 @@ dependencies = [
  "serde",
  "serde_bytes",
  "serde_derive",
- "time 0.1.45",
  "wr_malloc_size_of",
 ]
 

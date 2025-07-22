@@ -156,7 +156,6 @@ extern crate rayon;
 extern crate ron;
 #[macro_use]
 extern crate smallvec;
-extern crate time;
 #[cfg(all(feature = "capture", feature = "png"))]
 extern crate png;
 #[cfg(test)]
@@ -198,3 +197,22 @@ pub use bump_allocator::ChunkPool;
 
 #[cfg(feature = "sw_compositor")]
 pub use crate::compositor::sw_compositor;
+
+// Re-implementation of the time@0.2 version.
+// Originally here: https://github.com/time-rs/time/blob/97e45ea7b2fbe688b57a47af33478fabe44caed7/src/lib.rs#L496-L505
+//
+// `SystemTime` is explicitly _not_ monotonic and therefore not exactly right for what webrender uses it.
+// We can't rely `Instant::now()` as that doesn't give us an epoch to work from.
+// Calling code however assumes its a timestamp as an integer it can do math on (and even serialize).
+// The `time@0.3` crate doesn't expose any monotonic clock to use either.
+// This should be re-implemented based on monotonic clocks or usage should switch to `Instant`/`Duration`.
+fn precise_time_ns() -> u64 {
+    use std::convert::TryInto;
+    use std::time::SystemTime;
+
+    (SystemTime::now().duration_since(SystemTime::UNIX_EPOCH))
+        .expect("System clock was before 1970.")
+        .as_nanos()
+        .try_into()
+        .expect("This function will be removed long before this is an issue.")
+}
