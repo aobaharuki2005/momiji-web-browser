@@ -731,11 +731,11 @@ class MOZ_STACK_CLASS HTMLEditor::AutoInsertParagraphHandler final {
 
   /**
    * Return a better point to split the paragraph to avoid to keep a typing in a
-   * link in the new paragraph.
+   * link or a paragraph in list item in the new paragraph.
    */
-  [[nodiscard]] EditorDOMPoint GetBetterSplitPointToAvoidToContinueLink(
-      const EditorDOMPoint& aCandidatePointToSplit,
-      const Element& aElementToSplit);
+  [[nodiscard]] EditorDOMPoint GetBetterPointToSplitParagraph(
+      const Element& aBlockElementToSplit,
+      const EditorDOMPoint& aCandidatePointToSplit);
 
   MOZ_KNOWN_LIVE HTMLEditor& mHTMLEditor;
   MOZ_KNOWN_LIVE const Element& mEditingHost;
