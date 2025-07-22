@@ -10,7 +10,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9cf7afd94407318bb
  2 files changed, 18 insertions(+), 18 deletions(-)
 
 diff --git a/abseil-cpp/BUILD.gn b/abseil-cpp/BUILD.gn
-index 2474ca7fd2e..90cb271d6cd 100644
+index 43791c61fc6..97a164aac98 100644
 --- a/abseil-cpp/BUILD.gn
 +++ b/abseil-cpp/BUILD.gn
 @@ -56,7 +56,6 @@ component("absl") {
@@ -21,7 +21,7 @@ index 2474ca7fd2e..90cb271d6cd 100644
    public_deps = [
      "//third_party/abseil-cpp/absl/algorithm",
      "//third_party/abseil-cpp/absl/algorithm:container",
-@@ -122,23 +121,6 @@ group("absl_component_deps") {
+@@ -123,23 +122,6 @@ group("absl_component_deps") {
      # alternative to inject abort hook. See notes in `base/logging.cc`.
      "//third_party/abseil-cpp/absl/base:raw_logging_internal",
    ]
@@ -45,7 +45,7 @@ index 2474ca7fd2e..90cb271d6cd 100644
  
    if (is_component_build) {
      public_deps += [ ":absl_full_deps" ]
-@@ -152,6 +134,19 @@ group("absl_component_deps") {
+@@ -153,6 +135,19 @@ group("absl_component_deps") {
    }
  
    visibility = [ ":absl" ]
@@ -66,10 +66,10 @@ index 2474ca7fd2e..90cb271d6cd 100644
  
  # Some third-party libraries use additional parts of absl that are banned in
 diff --git a/abseil-cpp/absl/random/internal/BUILD.gn b/abseil-cpp/absl/random/internal/BUILD.gn
-index 85fd64e95b8..da8a22f486e 100644
+index 6928369c6de..fbac21f6bb4 100644
 --- a/abseil-cpp/absl/random/internal/BUILD.gn
 +++ b/abseil-cpp/absl/random/internal/BUILD.gn
-@@ -188,6 +188,11 @@ absl_source_set("platform") {
+@@ -189,6 +189,11 @@ absl_source_set("platform") {
      "//third_party/abseil-cpp/absl/base:config",
    ]
    visibility = [ "//third_party/abseil-cpp/absl/random/*" ]

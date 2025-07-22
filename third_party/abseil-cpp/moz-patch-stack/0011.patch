@@ -7,10 +7,10 @@ Subject: Bug 1944513 - avoid symbol visibility issues for getauxval()
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/abseil-cpp/absl/random/internal/randen_detect.cc b/abseil-cpp/absl/random/internal/randen_detect.cc
-index bdeab877b98..e23cdb32a51 100644
+index 828db4790ae..7a1a1c0c801 100644
 --- a/abseil-cpp/absl/random/internal/randen_detect.cc
 +++ b/abseil-cpp/absl/random/internal/randen_detect.cc
-@@ -63,7 +63,7 @@ static void __cpuid(int cpu_info[4], int info_type) {
+@@ -74,7 +74,7 @@ static void __cpuid(int cpu_info[4], int info_type) {
  // On linux, just use the c-library getauxval call.
  #if defined(ABSL_INTERNAL_USE_LINUX_GETAUXVAL)
  
