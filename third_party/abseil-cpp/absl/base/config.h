@@ -798,6 +798,7 @@ static_assert(ABSL_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
 // LeakSanitizer is available does not mean it is active. Use the
 // always-available run-time interface in //absl/debugging/leak_check.h for
 // interacting with LeakSanitizer.
+#if 0 // mozilla - builds fail missing lsan symbols like __lsan_ignore_object
 #ifdef ABSL_HAVE_LEAK_SANITIZER
 #error "ABSL_HAVE_LEAK_SANITIZER cannot be directly set."
 #elif defined(LEAK_SANITIZER)
@@ -811,6 +812,7 @@ static_assert(ABSL_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
 #elif defined(ABSL_HAVE_ADDRESS_SANITIZER)
 // GCC or Clang using the LeakSanitizer integrated into AddressSanitizer.
 #define ABSL_HAVE_LEAK_SANITIZER 1
+#endif
 #endif
 
 // ABSL_HAVE_CLASS_TEMPLATE_ARGUMENT_DEDUCTION
