@@ -1189,7 +1189,8 @@ bool SharedContextWebgl::ReadInto(uint8_t* aDstData, int32_t aDstStride,
                                   SurfaceFormat aFormat, const IntRect& aBounds,
                                   TextureHandle* aHandle) {
   MOZ_ASSERT(aFormat == SurfaceFormat::B8G8R8A8 ||
-             aFormat == SurfaceFormat::B8G8R8X8);
+             aFormat == SurfaceFormat::B8G8R8X8 ||
+             aFormat == SurfaceFormat::A8);
 
   // If reading into a new texture, we have to bind it to a scratch framebuffer
   // for reading.
@@ -1206,7 +1207,7 @@ bool SharedContextWebgl::ReadInto(uint8_t* aDstData, int32_t aDstStride,
   webgl::ReadPixelsDesc desc;
   desc.srcOffset = *ivec2::From(aBounds);
   desc.size = *uvec2::FromSize(aBounds);
-  desc.packState.rowLength = aDstStride / 4;
+  desc.packState.rowLength = aDstStride / BytesPerPixel(aFormat);
   Range<uint8_t> range = {aDstData, size_t(aDstStride) * aBounds.height};
   mWebgl->ReadPixelsInto(desc, range);
 
@@ -3359,16 +3360,14 @@ already_AddRefed<SourceSurface> SharedContextWebgl::DownscaleBlurInput(
       mWebgl->FramebufferAttach(LOCAL_GL_READ_FRAMEBUFFER,
                                 LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_TEXTURE_2D,
                                 readInfo);
+
       // Set up the draw framebuffer for the half-size texture.
       if (!mTargetFramebuffer) {
         mTargetFramebuffer = mWebgl->CreateFramebuffer();
       }
       BackingTexture* halfBacking = halfHandle->GetBackingTexture();
-      if (!halfBacking->IsInitialized()) {
-        BindAndInitRenderTex(halfBacking->GetWebGLTexture(),
-                             halfBacking->GetFormat(), halfBacking->GetSize());
-        halfBacking->MarkInitialized();
-      }
+      InitRenderTex(halfBacking);
+
       mWebgl->BindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, mTargetFramebuffer);
       webgl::FbAttachInfo drawInfo;
       drawInfo.tex = halfBacking->GetWebGLTexture();
@@ -3376,14 +3375,22 @@ already_AddRefed<SourceSurface> SharedContextWebgl::DownscaleBlurInput(
                                 LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_TEXTURE_2D,
                                 drawInfo);
 
-      DisableScissor(true);
+      IntRect halfBounds = halfHandle->GetBounds();
+      EnableScissor(halfBounds, true);
+      if (!halfBacking->IsInitialized()) {
+        halfBacking->MarkInitialized();
+        // WebGL implicitly clears the backing texture the first time it is
+        // used.
+      } else if (i == 0 && !aSurface->GetRect().Contains(sourceRect)) {
+        // Only clear if the blit does not completely fill the framebuffer.
+        ClearRenderTex(halfBacking);
+      }
 
-      // Do a linear-scaled blit from the full-size to the half-size texutre.
+      // Do a linear-scaled blit from the full-size to the half-size texture.
       IntRect fullBounds = sourceRect;
       if (fullHandle) {
         fullBounds += fullHandle->GetBounds().TopLeft();
       }
-      IntRect halfBounds = halfHandle->GetBounds();
       static_cast<WebGL2Context*>(mWebgl.get())
           ->BlitFramebuffer(fullBounds.x, fullBounds.y, fullBounds.XMost(),
                             fullBounds.YMost(), halfBounds.x, halfBounds.y,
@@ -4762,8 +4769,9 @@ bool SharedContextWebgl::DrawPathAccel(
       if (accelShadow) {
         RefPtr<SourceSurface> pathSurface = pathDT->Snapshot();
         // If the target changed, try to restore it.
-        if ((mCurrentTarget == oldTarget && mTargetHandle == oldHandle) ||
-            oldTarget->PrepareContext(!oldHandle, oldHandle)) {
+        if ((mCurrentTarget == oldTarget && mTargetHandle == oldHandle &&
+             mViewportSize == oldViewport) ||
+            oldTarget->PrepareContext(!oldHandle, oldHandle, oldViewport)) {
           RefPtr<TextureHandle> inputHandle;
           // Generate the accelerated shadow from the software surface.
           if (BlurRectAccel(quantBounds,
