@@ -331,6 +331,10 @@ RuleEditor.prototype = {
       tabindex: this.isSelectorEditable ? "0" : "-1",
     });
 
+    if (this.rule.domRule.type === ELEMENT_STYLE) {
+      this.selectorText.classList.add("alternative-selector");
+    }
+
     if (this.isSelectorEditable) {
       this.selectorText.addEventListener("click", event => {
         // Clicks within the selector shouldn't propagate any further.

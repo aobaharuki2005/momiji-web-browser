@@ -559,11 +559,10 @@ class PageStyleActor extends Actor {
     if (selectorInfo.inlineStyle) {
       const source = selectorInfo.sourceElement;
       if (source === relativeTo) {
-        result = "this";
+        result = "element";
       } else {
         result = CssLogic.getShortName(source);
       }
-      result += ".style";
     }
     return result;
   }

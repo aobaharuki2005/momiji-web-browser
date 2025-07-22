@@ -78,7 +78,7 @@ add_task(async function () {
     `,
     expectedMatchedSelectors: [
       // style attribute wins
-      { selector: "this.style", value: "var(--style-attr_in-attr)" },
+      { selector: "element", value: "var(--style-attr_in-attr)" },
       { selector: "#style-attr", value: "var(--style-attr_in-rule)" },
     ],
   });
@@ -311,7 +311,10 @@ add_task(async function () {
         selector: "#important-style-attr",
         value: "var(--important-style-attr_in-rule-important)",
       },
-      { selector: "this.style", value: "var(--important-style-attr_in-attr)" },
+      {
+        selector: "element",
+        value: "var(--important-style-attr_in-attr)",
+      },
     ],
   });
 
@@ -334,7 +337,7 @@ add_task(async function () {
     expectedMatchedSelectors: [
       // both values are important, so style attribute wins
       {
-        selector: "this.style",
+        selector: "element",
         value: "var(--all-important-style-attr_in-attr-important)",
       },
       {
@@ -585,7 +588,7 @@ add_task(async function () {
     expectedMatchedSelectors: [
       // important properties in style attribute wins
       {
-        selector: "this.style",
+        selector: "element",
         value:
           "var(--all-important-in-layer-no-layer-style-attr_in-attr-important)",
       },

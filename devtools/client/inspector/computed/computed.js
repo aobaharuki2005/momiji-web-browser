@@ -1423,10 +1423,13 @@ class PropertyView {
         textContent: selector.statusText + " ",
       });
 
-      createChild(status, "div", {
-        class: "fix-get-selection",
+      const selectorEl = createChild(status, "div", {
+        class: "fix-get-selection computed-other-property-selector",
         textContent: selector.sourceText,
       });
+      if (selector.selectorInfo.rule.type === ELEMENT_STYLE) {
+        selectorEl.classList.add("alternative-selector");
+      }
 
       const valueDiv = createChild(status, "div", {
         class:
