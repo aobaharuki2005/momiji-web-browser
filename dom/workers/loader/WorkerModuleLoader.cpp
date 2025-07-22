@@ -58,8 +58,7 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateStaticImport(
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, aModuleType, aParent->ReferrerPolicy(), aParent->mFetchOptions,
       SRIMetadata(), aParent->mURI, loadContext,
-      ModuleLoadRequest::Kind::StaticImport, this, aParent->mVisitedSet,
-      aParent->GetRootModule());
+      ModuleLoadRequest::Kind::StaticImport, this, aParent->GetRootModule());
 
   request->mURL = request->mURI->GetSpecOrDefault();
   request->NoCacheEntryFound();
@@ -138,14 +137,10 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
       // used during installation.)
       true);
 
-  RefPtr<JS::loader::VisitedURLSet> visitedSet =
-      ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI, aModuleType);
-
   ReferrerPolicy referrerPolicy = workerPrivate->GetReferrerPolicy();
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, aModuleType, referrerPolicy, options, SRIMetadata(), baseURL,
-      context, ModuleLoadRequest::Kind::DynamicImport, this, visitedSet,
-      nullptr);
+      context, ModuleLoadRequest::Kind::DynamicImport, this, nullptr);
 
   request->SetDynamicImport(aMaybeActiveScript, aSpecifier, aPromise);
   request->NoCacheEntryFound();

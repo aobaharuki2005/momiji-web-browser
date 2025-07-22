@@ -49,29 +49,20 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ModuleLoadRequest,
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mDynamicPromise)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-/* static */
-VisitedURLSet* ModuleLoadRequest::NewVisitedSetForTopLevelImport(
-    nsIURI* aURI, JS::ModuleType aModuleType) {
-  auto set = new VisitedURLSet();
-  set->PutEntry(ModuleMapKey(aURI, aModuleType));
-  return set;
-}
-
 ModuleLoadRequest::ModuleLoadRequest(
     nsIURI* aURI, JS::ModuleType aModuleType,
     mozilla::dom::ReferrerPolicy aReferrerPolicy,
     ScriptFetchOptions* aFetchOptions,
     const mozilla::dom::SRIMetadata& aIntegrity, nsIURI* aReferrer,
     LoadContextBase* aContext, Kind aKind, ModuleLoaderBase* aLoader,
-    VisitedURLSet* aVisitedSet, ModuleLoadRequest* aRootModule)
+    ModuleLoadRequest* aRootModule)
     : ScriptLoadRequest(ScriptKind::eModule, aURI, aReferrerPolicy,
                         aFetchOptions, aIntegrity, aReferrer, aContext),
       mIsTopLevel(aKind == Kind::TopLevel || aKind == Kind::DynamicImport),
       mModuleType(aModuleType),
       mIsDynamicImport(aKind == Kind::DynamicImport),
       mLoader(aLoader),
-      mRootModule(aRootModule),
-      mVisitedSet(aVisitedSet) {
+      mRootModule(aRootModule) {
   MOZ_ASSERT(mLoader);
 }
 

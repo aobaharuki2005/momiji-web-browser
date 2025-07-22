@@ -71,8 +71,7 @@ already_AddRefed<ModuleLoadRequest> WorkletModuleLoader::CreateStaticImport(
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, aModuleType, aParent->ReferrerPolicy(), aParent->mFetchOptions,
       SRIMetadata(), referrer, loadContext,
-      ModuleLoadRequest::Kind::StaticImport, this, aParent->mVisitedSet,
-      aParent->GetRootModule());
+      ModuleLoadRequest::Kind::StaticImport, this, aParent->GetRootModule());
 
   request->mURL = request->mURI->GetSpecOrDefault();
   request->NoCacheEntryFound();

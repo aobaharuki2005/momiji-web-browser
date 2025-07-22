@@ -1086,15 +1086,11 @@ nsresult mozJSModuleLoader::ImportESModule(
 
   RefPtr<SyncLoadContext> context = new SyncLoadContext();
 
-  RefPtr<VisitedURLSet> visitedSet =
-      ModuleLoadRequest::NewVisitedSetForTopLevelImport(
-          uri, JS::ModuleType::JavaScript);
-
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       uri, JS::ModuleType::JavaScript, dom::ReferrerPolicy::No_referrer,
       options, dom::SRIMetadata(),
       /* aReferrer = */ nullptr, context, ModuleLoadRequest::Kind::TopLevel,
-      mModuleLoader, visitedSet, nullptr);
+      mModuleLoader, nullptr);
 
   request->NoCacheEntryFound();
 

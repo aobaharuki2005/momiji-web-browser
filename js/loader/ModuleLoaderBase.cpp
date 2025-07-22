@@ -948,11 +948,6 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
   MOZ_ASSERT(aRequest->mModuleScript);
   MOZ_ASSERT(!aRequest->mModuleScript->HasParseError());
   MOZ_ASSERT(aRequest->IsFetching() || aRequest->IsCompiling());
-
-  auto visitedSet = aRequest->mVisitedSet;
-  MOZ_ASSERT(visitedSet->Contains(
-      ModuleMapKey(aRequest->mURI, aRequest->mModuleType)));
-
   aRequest->mState = ModuleLoadRequest::State::LoadingImports;
 
   nsTArray<ModuleMapKey> requestedModules;
@@ -961,18 +956,6 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
     aRequest->mModuleScript = nullptr;
     aRequest->ModuleErrored();
     return;
-  }
-
-  // Remove already visited requested modules from the list. Put unvisited
-  // requested modules into the visited set.
-  size_t i = 0;
-  while (i < requestedModules.Length()) {
-    if (visitedSet->Contains(requestedModules[i])) {
-      requestedModules.RemoveElementAt(i);
-    } else {
-      visitedSet->PutEntry(requestedModules[i]);
-      i++;
-    }
   }
 
   if (requestedModules.Length() == 0) {
