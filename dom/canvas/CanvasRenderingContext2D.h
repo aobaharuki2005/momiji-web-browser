@@ -304,7 +304,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
 
   void GetFont(nsACString& aFont) { aFont = GetFont(); }
 
-  void SetFont(const nsACString& aFont, mozilla::ErrorResult& aError);
+  void SetFont(const nsACString& aFont, ErrorResult& aError);
 
   CanvasTextAlign TextAlign() { return CurrentState().textAlign; }
   void SetTextAlign(const CanvasTextAlign& aTextAlign) {
@@ -843,7 +843,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
                             gfx::IntSize aImgSize);
 
   nsCString& GetFont() {
-    /* will initilize the value if not set, else does nothing */
+    // will initialize the value if not set, else does nothing
     GetCurrentFontStyle();
 
     return CurrentState().font;
@@ -1077,8 +1077,9 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     ElementOrArray<ClipState> clipsAndTransforms;
 
     RefPtr<gfxFontGroup> fontGroup;
-    RefPtr<nsAtom> fontLanguage;
     nsFont fontFont;
+    RefPtr<const ComputedStyle>
+        fontComputedStyle;  // NOTE: Only non-null if connected.
 
     EnumeratedArray<Style, RefPtr<CanvasGradient>, size_t(Style::MAX)>
         gradientStyles;
@@ -1097,8 +1098,6 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
 
     gfx::Float letterSpacing = 0.0f;
     gfx::Float wordSpacing = 0.0f;
-    mozilla::StyleLineHeight fontLineHeight =
-        mozilla::StyleLineHeight::Normal();
     nsCString letterSpacingStr;
     nsCString wordSpacingStr;
 
@@ -1139,9 +1138,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     // We keep track of this to ensure that if this gets out of sync with the
     // tainted state of the canvas itself, we update our filters accordingly.
     bool filterSourceGraphicTainted = false;
-
     bool imageSmoothingEnabled = true;
-    bool fontExplicitLanguage = false;
   };
 
   AutoTArray<ContextState, 3> mStyleStack;
@@ -1187,6 +1184,10 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   };
 
   FontStyleCache mFontStyleCache;
+  const ComputedStyle* GetCurrentFontComputedStyle() {
+    GetCurrentFontStyle();
+    return CurrentState().fontComputedStyle;
+  }
 
   struct ColorStyleCacheEntry {
     nsCString mKey;

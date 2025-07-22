@@ -1110,8 +1110,8 @@ CanvasRenderingContext2D::ContextState::ContextState() = default;
 
 CanvasRenderingContext2D::ContextState::ContextState(const ContextState& aOther)
     : fontGroup(aOther.fontGroup),
-      fontLanguage(aOther.fontLanguage),
       fontFont(aOther.fontFont),
+      fontComputedStyle(aOther.fontComputedStyle),
       gradientStyles(aOther.gradientStyles),
       patternStyles(aOther.patternStyles),
       colorStyles(aOther.colorStyles),
@@ -1125,7 +1125,6 @@ CanvasRenderingContext2D::ContextState::ContextState(const ContextState& aOther)
       textRendering(aOther.textRendering),
       letterSpacing(aOther.letterSpacing),
       wordSpacing(aOther.wordSpacing),
-      fontLineHeight(aOther.fontLineHeight),
       letterSpacingStr(aOther.letterSpacingStr),
       wordSpacingStr(aOther.wordSpacingStr),
       shadowColor(aOther.shadowColor),
@@ -1147,8 +1146,7 @@ CanvasRenderingContext2D::ContextState::ContextState(const ContextState& aOther)
       filter(aOther.filter),
       filterAdditionalImages(aOther.filterAdditionalImages.Clone()),
       filterSourceGraphicTainted(aOther.filterSourceGraphicTainted),
-      imageSmoothingEnabled(aOther.imageSmoothingEnabled),
-      fontExplicitLanguage(aOther.fontExplicitLanguage) {}
+      imageSmoothingEnabled(aOther.imageSmoothingEnabled) {}
 
 CanvasRenderingContext2D::ContextState::~ContextState() = default;
 
@@ -2955,10 +2953,7 @@ bool CanvasRenderingContext2D::ParseFilter(
     return true;
   }
 
-  nsAutoCString usedFont;  // unused
-
-  RefPtr<const ComputedStyle> parentStyle = GetFontStyleForServo(
-      mCanvasElement, GetFont(), presShell, usedFont, aError);
+  const ComputedStyle* parentStyle = GetCurrentFontComputedStyle();
   if (!parentStyle) {
     return false;
   }
@@ -3015,15 +3010,13 @@ CanvasRenderingContext2D::ResolveStyleForProperty(nsCSSPropertyID aProperty,
     return nullptr;
   }
 
-  nsAutoCString usedFont;
-  IgnoredErrorResult err;
-  RefPtr<const ComputedStyle> parentStyle =
-      GetFontStyleForServo(mCanvasElement, GetFont(), presShell, usedFont, err);
+  const ComputedStyle* parentStyle = GetCurrentFontComputedStyle();
   if (!parentStyle) {
     return nullptr;
   }
 
-  return ResolveStyleForServo(aProperty, aValue, parentStyle, presShell, err);
+  return ResolveStyleForServo(aProperty, aValue, parentStyle, presShell,
+                              IgnoreErrors());
 }
 
 void CanvasRenderingContext2D::GetLetterSpacing(nsACString& aLetterSpacing) {
@@ -3262,22 +3255,33 @@ void CanvasRenderingContext2D::UpdateFilter(bool aFlushIfNeeded) {
 
     presContext = presShell->GetPresContext();
   }
-  RefPtr<const ComputedStyle> canvasStyle;
-  if (mCanvasElement) {
-    canvasStyle = nsComputedDOMStyle::GetComputedStyleNoFlush(mCanvasElement);
-  }
+  // FIXME(emilio): This seems like it should use GetCurrentFontComputedStyle to
+  // make sure the font is up-to-date, but the old code didn't... Find a
+  // test-case where it matters?
+  const ComputedStyle* currentFontStyle = CurrentState().fontComputedStyle;
+  const RefPtr<const ComputedStyle> canvasStyle =
+      mCanvasElement
+          ? nsComputedDOMStyle::GetComputedStyleNoFlush(mCanvasElement)
+          : nullptr;
 
   MOZ_RELEASE_ASSERT(!mStyleStack.IsEmpty());
-
-  CurrentState().filter = FilterInstance::GetFilterDescription(
-      mCanvasElement, CurrentState().filterChain.AsSpan(),
-      CurrentState().autoSVGFiltersObserver, writeOnly,
-      CanvasUserSpaceMetrics(
-          GetSize(), CurrentState().fontFont, CurrentState().fontLineHeight,
-          CurrentState().fontLanguage, CurrentState().fontExplicitLanguage,
-          canvasStyle, presContext),
-      gfxRect(0, 0, mWidth, mHeight), CurrentState().filterAdditionalImages);
-  CurrentState().filterSourceGraphicTainted = writeOnly;
+  auto& state = CurrentState();
+  auto lineHeight = currentFontStyle
+                        ? currentFontStyle->StyleFont()->mLineHeight
+                        : StyleLineHeight::Normal();
+  auto* language = currentFontStyle
+                       ? currentFontStyle->StyleFont()->mLanguage.get()
+                       : nullptr;
+  bool explicitLanguage =
+      state.fontComputedStyle &&
+      state.fontComputedStyle->StyleFont()->mExplicitLanguage;
+  state.filter = FilterInstance::GetFilterDescription(
+      mCanvasElement, state.filterChain.AsSpan(), state.autoSVGFiltersObserver,
+      writeOnly,
+      CanvasUserSpaceMetrics(GetSize(), state.fontFont, lineHeight, language,
+                             explicitLanguage, canvasStyle, presContext),
+      gfxRect(0, 0, mWidth, mHeight), state.filterAdditionalImages);
+  state.filterSourceGraphicTainted = writeOnly;
 }
 
 //
@@ -4331,9 +4335,7 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
   CurrentState().font = data.mUsedFont;
   CurrentState().fontFont = fontStyle->mFont;
   CurrentState().fontFont.size = fontStyle->mSize;
-  CurrentState().fontLanguage = fontStyle->mLanguage;
-  CurrentState().fontExplicitLanguage = fontStyle->mExplicitLanguage;
-  CurrentState().fontLineHeight = data.mStyle->StyleFont()->mLineHeight;
+  CurrentState().fontComputedStyle = data.mStyle;
 
   return true;
 }
@@ -4536,15 +4538,13 @@ bool CanvasRenderingContext2D::SetFontInternalDisconnected(
                        fontFaceSetImpl,   // aUserFontSet
                        1.0,               // aDevToCssSize
                        StyleFontVariantEmoji::Normal);
-  CurrentState().fontGroup = fontGroup;
-  SerializeFontForCanvas(list, fontStyle, CurrentState().font);
-  CurrentState().fontFont = nsFont(StyleFontFamily{list, false, false},
-                                   StyleCSSPixelLength::FromPixels(size));
-  CurrentState().fontFont.variantCaps = fontStyle.variantCaps;
-  CurrentState().fontLanguage = nullptr;
-  CurrentState().fontExplicitLanguage = false;
-  // We don't have any computed style, assume normal height.
-  CurrentState().fontLineHeight = StyleLineHeight::Normal();
+  auto& state = CurrentState();
+  state.fontGroup = fontGroup;
+  SerializeFontForCanvas(list, fontStyle, state.font);
+  state.fontFont = nsFont(StyleFontFamily{list, false, false},
+                          StyleCSSPixelLength::FromPixels(size));
+  state.fontFont.variantCaps = fontStyle.variantCaps;
+  state.fontComputedStyle = nullptr;
   return true;
 }
 
