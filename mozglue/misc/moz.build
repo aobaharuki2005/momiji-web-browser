@@ -14,6 +14,7 @@ EXPORTS.mozilla += [
     "IntegerPrintfMacros.h",
     "LoggingCore.h",
     "MmapFaultHandler.h",
+    "Now.h",
     "PlatformConditionVariable.h",
     "PlatformMutex.h",
     "PlatformRWLock.h",
@@ -22,6 +23,8 @@ EXPORTS.mozilla += [
     "Sprintf.h",
     "SSE.h",
     "StackWalk.h",
+    "TimeStamp.h",
+    "Uptime.h",
 ]
 
 EXPORTS.mozilla.glue += [
