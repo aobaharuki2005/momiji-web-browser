@@ -306,9 +306,9 @@ for (const type of [
   "WIDGETS_LISTS_UPDATE",
   "WIDGETS_TIMER_END",
   "WIDGETS_TIMER_PAUSE",
+  "WIDGETS_TIMER_PLAY",
   "WIDGETS_TIMER_RESET",
   "WIDGETS_TIMER_SET_DURATION",
-  "WIDGETS_TIMER_START",
 ]) {
   actionTypes[type] = type;
 }
@@ -7851,10 +7851,9 @@ const INITIAL_STATE = {
   TimerWidget: {
     // Timer duration set by user
     duration: 0,
-    // Time that the timer was started
+    // the Date.now() value when a user starts/resumes a timer
     startTime: null,
-    // Calculated when a user pauses the timer
-    remaining: 0,
+    // Boolean indicating if timer is currently running
     isRunning: false,
   },
 };
@@ -8755,32 +8754,46 @@ function TrendingSearch(prevState = INITIAL_STATE.TrendingSearch, action) {
 function TimerWidget(prevState = INITIAL_STATE.TimerWidget, action) {
   switch (action.type) {
     case actionTypes.WIDGETS_TIMER_SET:
-      return { ...action.data };
-    case actionTypes.WIDGETS_TIMER_SET_DURATION:
       return {
         ...prevState,
-        duration: action.data,
-        remaining: action.data,
+        ...action.data,
       };
-    case actionTypes.WIDGETS_TIMER_START:
-      return { ...prevState, startTime: Date.now(), isRunning: true };
+    case actionTypes.WIDGETS_TIMER_SET_DURATION:
+      return {
+        duration: action.data,
+        startTime: null,
+        isRunning: false,
+      };
+    case actionTypes.WIDGETS_TIMER_PLAY:
+      return {
+        ...prevState,
+        startTime: Math.floor(Date.now() / 1000), // reflected in seconds
+        isRunning: true,
+      };
     case actionTypes.WIDGETS_TIMER_PAUSE:
       if (prevState.isRunning) {
-        const elapsed = Date.now() - prevState.startTime;
         return {
           ...prevState,
-          remaining: prevState.duration - elapsed,
-          isRunning: false,
+          duration: action.data.duration,
+          // setting startTime to null on pause because we need to check the exact time the user presses play,
+          // whether it's when the user starts or resumes the timer. This helps get accurate results
           startTime: null,
+          isRunning: false,
         };
       }
       break;
     case actionTypes.WIDGETS_TIMER_RESET:
       return {
-        ...prevState,
-        isRunning: false,
+        duration: 0,
         startTime: null,
-        remaining: prevState.duration,
+        isRunning: false,
+      };
+    case actionTypes.WIDGETS_TIMER_END:
+      return {
+        ...prevState,
+        duration: 0,
+        startTime: null,
+        isRunning: false,
       };
     default:
       return prevState;
@@ -12310,55 +12323,91 @@ function Lists({
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 
-function FocusTimer() {
-  const [timer, setTimer] = (0,external_React_namespaceObject.useState)(0);
-  const [isRunning, setIsRunning] = (0,external_React_namespaceObject.useState)(false);
+
+
+function FocusTimer({
+  dispatch
+}) {
   const inputRef = (0,external_React_namespaceObject.useRef)(null);
+  const timerData = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.TimerWidget);
+  const {
+    duration,
+    startTime,
+    isRunning
+  } = timerData;
+  const [timeLeft, setTimeLeft] = (0,external_React_namespaceObject.useState)(0);
+  const calculateTimeRemaining = (dur, start) => {
+    const currentTime = Math.floor(Date.now() / 1000);
+
+    // Subtract the elapsed time from initial duration to get time remaining in the timer
+    return Math.max(dur - (currentTime - start), 0);
+  };
   (0,external_React_namespaceObject.useEffect)(() => {
     let interval;
-    if (isRunning && timer > 0) {
+    if (isRunning && duration > 0) {
       interval = setInterval(() => {
-        setTimer(previousValue => {
-          if (previousValue <= 1) {
-            clearInterval(interval);
-            setIsRunning(false);
-            return 0;
-          }
-          return previousValue - 1;
-        });
+        const remaining = calculateTimeRemaining(duration, startTime);
+        if (remaining <= 0) {
+          clearInterval(interval);
+          dispatch(actionCreators.AlsoToMain({
+            type: actionTypes.WIDGETS_TIMER_END
+          }));
+        }
+
+        // using setTimeNow to trigger a re-render of the component to show live countdown each second
+        setTimeLeft(remaining);
       }, 1000);
     }
+
+    // Shows the correct live time in the UI whenever the timer state changes
+    const newTime = isRunning ? calculateTimeRemaining(duration, startTime) : duration;
+    setTimeLeft(newTime);
     return () => clearInterval(interval);
-  }, [isRunning, timer]);
+  }, [isRunning, startTime, duration, dispatch, timeLeft]);
 
   // set timer function
   const setTimerMinutes = e => {
     e.preventDefault();
-    const minutes = inputRef.current.value;
-    const minutesInt = parseInt(minutes, 10);
-    if (minutesInt > 0) {
-      setTimer(minutesInt * 60); // change set minutes to seconds
+    const minutes = parseInt(inputRef.current.value, 10);
+    const seconds = minutes * 60;
+    if (minutes > 0) {
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WIDGETS_TIMER_SET_DURATION,
+        data: seconds
+      }));
     }
   };
 
   // Pause timer function
   const toggleTimer = () => {
-    if (timer > 0) {
-      setIsRunning(previousValue => !previousValue); // using an updater function for an accurate state update
+    if (!isRunning && duration > 0) {
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WIDGETS_TIMER_PLAY
+      }));
+    } else if (isRunning) {
+      // calculated to get the new baseline of the timer when it starts or resumes
+      const remaining = calculateTimeRemaining(duration, startTime);
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WIDGETS_TIMER_PAUSE,
+        data: {
+          duration: remaining
+        }
+      }));
     }
   };
 
   // reset timer function
   const resetTimer = () => {
-    setIsRunning(false);
-    setTimer(0);
+    dispatch(actionCreators.AlsoToMain({
+      type: actionTypes.WIDGETS_TIMER_RESET
+    }));
   };
   const formatTime = seconds => {
     const minutes = Math.floor(seconds / 60).toString().padStart(2, "0");
     const secs = (seconds % 60).toString().padStart(2, "0");
     return `${minutes}:${secs}`;
   };
-  return /*#__PURE__*/external_React_default().createElement("article", {
+  return timerData ? /*#__PURE__*/external_React_default().createElement("article", {
     className: "focus-timer-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("p", null, "Focus timer widget"), /*#__PURE__*/external_React_default().createElement("form", {
     onSubmit: setTimerMinutes
@@ -12376,7 +12425,7 @@ function FocusTimer() {
     onClick: toggleTimer
   }, isRunning ? "Pause" : "Play"), /*#__PURE__*/external_React_default().createElement("button", {
     onClick: resetTimer
-  }, "Reset")), "Time left: ", formatTime(timer));
+  }, "Reset")), "Time left: ", formatTime(timeLeft)) : null;
 }
 
 ;// CONCATENATED MODULE: ./content-src/components/Widgets/Widgets.jsx
@@ -12403,7 +12452,9 @@ function Widgets() {
     className: "widgets-container"
   }, listsEnabled && /*#__PURE__*/external_React_default().createElement(Lists, {
     dispatch: dispatch
-  }), timerEnabled && /*#__PURE__*/external_React_default().createElement(FocusTimer, null));
+  }), timerEnabled && /*#__PURE__*/external_React_default().createElement(FocusTimer, {
+    dispatch: dispatch
+  }));
 }
 
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamBase/DiscoveryStreamBase.jsx

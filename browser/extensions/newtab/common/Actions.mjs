@@ -233,9 +233,9 @@ for (const type of [
   "WIDGETS_LISTS_UPDATE",
   "WIDGETS_TIMER_END",
   "WIDGETS_TIMER_PAUSE",
+  "WIDGETS_TIMER_PLAY",
   "WIDGETS_TIMER_RESET",
   "WIDGETS_TIMER_SET_DURATION",
-  "WIDGETS_TIMER_START",
 ]) {
   actionTypes[type] = type;
 }

@@ -2,53 +2,99 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 import React, { useState, useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
 
-function FocusTimer() {
-  const [timer, setTimer] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
+function FocusTimer({ dispatch }) {
   const inputRef = useRef(null);
+  const timerData = useSelector(state => state.TimerWidget);
+  const { duration, startTime, isRunning } = timerData;
+  const [timeLeft, setTimeLeft] = useState(0);
+
+  const calculateTimeRemaining = (dur, start) => {
+    const currentTime = Math.floor(Date.now() / 1000);
+
+    // Subtract the elapsed time from initial duration to get time remaining in the timer
+    return Math.max(dur - (currentTime - start), 0);
+  };
 
   useEffect(() => {
     let interval;
-    if (isRunning && timer > 0) {
+    if (isRunning && duration > 0) {
       interval = setInterval(() => {
-        setTimer(previousValue => {
-          if (previousValue <= 1) {
-            clearInterval(interval);
-            setIsRunning(false);
-            return 0;
-          }
-          return previousValue - 1;
-        });
+        const remaining = calculateTimeRemaining(duration, startTime);
+
+        if (remaining <= 0) {
+          clearInterval(interval);
+          dispatch(
+            ac.AlsoToMain({
+              type: at.WIDGETS_TIMER_END,
+            })
+          );
+        }
+
+        // using setTimeNow to trigger a re-render of the component to show live countdown each second
+        setTimeLeft(remaining);
       }, 1000);
     }
 
+    // Shows the correct live time in the UI whenever the timer state changes
+    const newTime = isRunning
+      ? calculateTimeRemaining(duration, startTime)
+      : duration;
+
+    setTimeLeft(newTime);
+
     return () => clearInterval(interval);
-  }, [isRunning, timer]);
+  }, [isRunning, startTime, duration, dispatch, timeLeft]);
 
   // set timer function
   const setTimerMinutes = e => {
     e.preventDefault();
-    const minutes = inputRef.current.value;
-    const minutesInt = parseInt(minutes, 10);
+    const minutes = parseInt(inputRef.current.value, 10);
+    const seconds = minutes * 60;
 
-    if (minutesInt > 0) {
-      setTimer(minutesInt * 60); // change set minutes to seconds
+    if (minutes > 0) {
+      dispatch(
+        ac.AlsoToMain({
+          type: at.WIDGETS_TIMER_SET_DURATION,
+          data: seconds,
+        })
+      );
     }
   };
 
   // Pause timer function
   const toggleTimer = () => {
-    if (timer > 0) {
-      setIsRunning(previousValue => !previousValue); // using an updater function for an accurate state update
+    if (!isRunning && duration > 0) {
+      dispatch(
+        ac.AlsoToMain({
+          type: at.WIDGETS_TIMER_PLAY,
+        })
+      );
+    } else if (isRunning) {
+      // calculated to get the new baseline of the timer when it starts or resumes
+      const remaining = calculateTimeRemaining(duration, startTime);
+
+      dispatch(
+        ac.AlsoToMain({
+          type: at.WIDGETS_TIMER_PAUSE,
+          data: {
+            duration: remaining,
+          },
+        })
+      );
     }
   };
 
   // reset timer function
   const resetTimer = () => {
-    setIsRunning(false);
-    setTimer(0);
+    dispatch(
+      ac.AlsoToMain({
+        type: at.WIDGETS_TIMER_RESET,
+      })
+    );
   };
 
   const formatTime = seconds => {
@@ -59,7 +105,7 @@ function FocusTimer() {
     return `${minutes}:${secs}`;
   };
 
-  return (
+  return timerData ? (
     <article className="focus-timer-wrapper">
       <p>Focus timer widget</p>
       <form onSubmit={setTimerMinutes}>
@@ -71,9 +117,9 @@ function FocusTimer() {
         <button onClick={toggleTimer}>{isRunning ? "Pause" : "Play"}</button>
         <button onClick={resetTimer}>Reset</button>
       </div>
-      Time left: {formatTime(timer)}
+      Time left: {formatTime(timeLeft)}
     </article>
-  );
+  ) : null;
 }
 
 export { FocusTimer };

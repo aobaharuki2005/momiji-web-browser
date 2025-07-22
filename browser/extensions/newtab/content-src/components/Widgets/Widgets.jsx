@@ -30,7 +30,7 @@ function Widgets() {
   return (
     <div className="widgets-container">
       {listsEnabled && <Lists dispatch={dispatch} />}
-      {timerEnabled && <FocusTimer />}
+      {timerEnabled && <FocusTimer dispatch={dispatch} />}
     </div>
   );
 }

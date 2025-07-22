@@ -39,7 +39,9 @@ export class TimerFeed {
   async syncTimer(isStartup = false) {
     const cachedData = (await this.cache.get()) || {};
     const { timer } = cachedData;
-    this.update(timer, isStartup);
+    if (timer) {
+      this.update(timer, isStartup);
+    }
   }
 
   update(data, isStartup = false) {
@@ -70,11 +72,11 @@ export class TimerFeed {
           }
         }
         break;
-      case at.WIDGETS_TIMER_END:
+      case at.WIDGETS_TIMER_SET_DURATION:
+      case at.WIDGETS_TIMER_PLAY:
       case at.WIDGETS_TIMER_PAUSE:
       case at.WIDGETS_TIMER_RESET:
-      case at.WIDGETS_TIMER_SET_DURATION:
-      case at.WIDGETS_TIMER_START:
+      case at.WIDGETS_TIMER_END:
         {
           const prevState = this.store.getState().TimerWidget;
           await this.cache.set("timer", { ...prevState, ...action.data });

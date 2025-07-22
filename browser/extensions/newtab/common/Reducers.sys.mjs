@@ -199,10 +199,9 @@ export const INITIAL_STATE = {
   TimerWidget: {
     // Timer duration set by user
     duration: 0,
-    // Time that the timer was started
+    // the Date.now() value when a user starts/resumes a timer
     startTime: null,
-    // Calculated when a user pauses the timer
-    remaining: 0,
+    // Boolean indicating if timer is currently running
     isRunning: false,
   },
 };
@@ -1103,32 +1102,46 @@ function TrendingSearch(prevState = INITIAL_STATE.TrendingSearch, action) {
 function TimerWidget(prevState = INITIAL_STATE.TimerWidget, action) {
   switch (action.type) {
     case at.WIDGETS_TIMER_SET:
-      return { ...action.data };
-    case at.WIDGETS_TIMER_SET_DURATION:
       return {
         ...prevState,
-        duration: action.data,
-        remaining: action.data,
+        ...action.data,
       };
-    case at.WIDGETS_TIMER_START:
-      return { ...prevState, startTime: Date.now(), isRunning: true };
+    case at.WIDGETS_TIMER_SET_DURATION:
+      return {
+        duration: action.data,
+        startTime: null,
+        isRunning: false,
+      };
+    case at.WIDGETS_TIMER_PLAY:
+      return {
+        ...prevState,
+        startTime: Math.floor(Date.now() / 1000), // reflected in seconds
+        isRunning: true,
+      };
     case at.WIDGETS_TIMER_PAUSE:
       if (prevState.isRunning) {
-        const elapsed = Date.now() - prevState.startTime;
         return {
           ...prevState,
-          remaining: prevState.duration - elapsed,
-          isRunning: false,
+          duration: action.data.duration,
+          // setting startTime to null on pause because we need to check the exact time the user presses play,
+          // whether it's when the user starts or resumes the timer. This helps get accurate results
           startTime: null,
+          isRunning: false,
         };
       }
       break;
     case at.WIDGETS_TIMER_RESET:
       return {
-        ...prevState,
-        isRunning: false,
+        duration: 0,
         startTime: null,
-        remaining: prevState.duration,
+        isRunning: false,
+      };
+    case at.WIDGETS_TIMER_END:
+      return {
+        ...prevState,
+        duration: 0,
+        startTime: null,
+        isRunning: false,
       };
     default:
       return prevState;
