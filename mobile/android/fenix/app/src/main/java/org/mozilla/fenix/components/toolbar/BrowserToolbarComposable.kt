@@ -6,7 +6,6 @@ package org.mozilla.fenix.components.toolbar
 
 import android.view.Gravity
 import android.view.ViewGroup
-import androidx.activity.compose.BackHandler
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +27,7 @@ import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.theme.localAcornColors
+import mozilla.components.compose.base.utils.BackInvokedHandler
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.feature.toolbar.ToolbarBehaviorController
@@ -75,6 +75,7 @@ class BrowserToolbarComposable(
     private var showDivider by mutableStateOf(false)
 
     override val layout = ScrollableToolbarComposeView(activity, this) {
+        val isSearching = toolbarStore.observeAsComposableState { it.isEditMode() }.value
         val shouldShowTabStrip: Boolean = remember { shouldShowTabStrip() }
         val progressBarValue = toolbarStore.observeAsComposableState {
             it.displayState.progressBarConfig?.progress
@@ -91,7 +92,7 @@ class BrowserToolbarComposable(
             onDispose { toolbarController.stop() }
         }
 
-        BackHandler {
+        BackInvokedHandler(isSearching) {
             appStore.dispatch(SearchEnded)
             browserStore.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true))
         }

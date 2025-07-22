@@ -7,7 +7,6 @@ package org.mozilla.fenix.home.toolbar
 import android.content.Context
 import android.view.Gravity
 import android.view.ViewGroup
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
@@ -30,9 +29,13 @@ import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.base.Divider
+import mozilla.components.compose.base.utils.BackInvokedHandler
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
+import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
+import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
+import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.support.ktx.android.view.ImeInsetsSynchronizer
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
@@ -81,9 +84,10 @@ internal class HomeToolbarComposable(
         id = R.id.composable_toolbar
 
         setContent {
+            val isSearching = toolbarStore.observeAsComposableState { it.isEditMode() }.value
             val shouldShowTabStrip: Boolean = remember { settings.isTabStripEnabled }
 
-            BackHandler {
+            BackInvokedHandler(isSearching) {
                 appStore.dispatch(SearchEnded)
                 browserStore.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true))
             }

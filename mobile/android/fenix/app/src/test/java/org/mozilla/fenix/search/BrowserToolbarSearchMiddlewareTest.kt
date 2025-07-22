@@ -77,6 +77,7 @@ import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
 import org.mozilla.fenix.components.appstate.search.SearchState as AppSearchState
 
 @RunWith(RobolectricTestRunner::class)
@@ -384,7 +385,21 @@ class BrowserToolbarSearchMiddlewareTest {
     }
 
     @Test
-    fun `WHEN the search is aborted THEN sync this in application and browser state`() {
+    @Config(sdk = [33])
+    fun `GIVEN on Android 33+ WHEN the search is aborted THEN don't exit search mode`() {
+        val appStore: AppStore = mockk(relaxed = true)
+        val browserStore: BrowserStore = mockk(relaxed = true)
+        val (_, store) = buildMiddlewareAndAddToStore(appStore, browserStore)
+
+        store.dispatch(SearchAborted)
+
+        verify(exactly = 0) { appStore.dispatch(SearchEnded) }
+        verify(exactly = 0) { browserStore.dispatch(EngagementFinished(abandoned = true)) }
+    }
+
+    @Test
+    @Config(sdk = [32])
+    fun `GIVEN on Android 32- WHEN the search is aborted THEN sync this in application and browser state`() {
         val appStore: AppStore = mockk(relaxed = true)
         val browserStore: BrowserStore = mockk(relaxed = true)
         val (_, store) = buildMiddlewareAndAddToStore(appStore, browserStore)

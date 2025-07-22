@@ -91,6 +91,7 @@ import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.textfield.TextField
 import mozilla.components.compose.base.textfield.TextFieldColors
 import mozilla.components.compose.base.theme.AcornTheme
+import mozilla.components.compose.base.utils.BackInvokedHandler
 import mozilla.components.compose.browser.awesomebar.AwesomeBar
 import mozilla.components.compose.browser.awesomebar.AwesomeBarDefaults
 import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
@@ -315,7 +316,7 @@ private fun BookmarksList(
         }
     }
 
-    BackHandler(state.isSearching) {
+    BackInvokedHandler(state.isSearching) {
         store.dispatch(SearchDismissed)
     }
 
