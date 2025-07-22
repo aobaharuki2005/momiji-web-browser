@@ -137,6 +137,10 @@ struct FuncImportInstanceData {
   // values for lazy table initialization.
   GCPtr<JSObject*> callable;
   static_assert(sizeof(GCPtr<JSObject*>) == sizeof(void*), "for JIT access");
+
+  // See "Wasm Function.prototype.call.bind optimization" in WasmInstance.cpp
+  // for more information.
+  bool isFunctionCallBind;
 };
 
 struct MemoryInstanceData {
