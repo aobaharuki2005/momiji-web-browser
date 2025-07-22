@@ -7,29 +7,27 @@ package org.mozilla.fenix.components.toolbar
 import android.view.Gravity
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams
 import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.theme.localAcornColors
 import mozilla.components.compose.base.utils.BackInvokedHandler
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
+import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ToolbarGravityUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
+import mozilla.components.compose.browser.toolbar.store.ToolbarGravity
+import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Bottom
+import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Top
 import mozilla.components.feature.toolbar.ToolbarBehaviorController
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.browser.store.BrowserScreenStore
@@ -72,14 +70,19 @@ class BrowserToolbarComposable(
     settings = settings,
     customTabSession = customTabSession,
 ) {
-    private var showDivider by mutableStateOf(false)
+    init {
+        // Reset the toolbar position whenever coming back to browsing
+        // like after changing the toolbar position in settings.
+        toolbarStore.dispatch(
+            ToolbarGravityUpdated(
+                buildToolbarGravityConfig(),
+            ),
+        )
+    }
 
     override val layout = ScrollableToolbarComposeView(activity, this) {
         val isSearching = toolbarStore.observeAsComposableState { it.isEditMode() }.value
         val shouldShowTabStrip: Boolean = remember { shouldShowTabStrip() }
-        val progressBarValue = toolbarStore.observeAsComposableState {
-            it.displayState.progressBarConfig?.progress
-        }.value ?: 0
         val customColors = browserScreenStore.observeAsComposableState { it.customTabColors }
 
         DisposableEffect(activity) {
@@ -122,7 +125,7 @@ class BrowserToolbarComposable(
                             .wrapContentHeight(),
                     ) {
                         tabStripContent()
-                        BrowserToolbar(showDivider, progressBarValue, settings.shouldUseBottomToolbar)
+                        BrowserToolbar(toolbarStore)
                     }
 
                     false -> Column(
@@ -130,7 +133,7 @@ class BrowserToolbarComposable(
                             .fillMaxWidth()
                             .wrapContentHeight(),
                     ) {
-                        BrowserToolbar(showDivider, progressBarValue, settings.shouldUseBottomToolbar)
+                        BrowserToolbar(toolbarStore)
                         if (settings.toolbarPosition == BOTTOM) {
                             navigationBarContent?.invoke()
                         }
@@ -157,35 +160,13 @@ class BrowserToolbarComposable(
         updateDividerVisibility(true)
     }
 
-    @Composable
-    private fun BrowserToolbar(
-        shouldShowDivider: Boolean,
-        progressBarValue: Int,
-        shouldUseBottomToolbar: Boolean,
-    ) {
-        // Ensure the divider is shown together with the toolbar
-        Box {
-            BrowserToolbar(
-                store = toolbarStore,
-            )
-            @Suppress("MagicNumber")
-            if (shouldShowDivider && progressBarValue !in 1..99) {
-                Divider(
-                    modifier = Modifier.align(
-                        when (shouldUseBottomToolbar) {
-                            true -> Alignment.TopCenter
-                            false -> Alignment.BottomCenter
-                        },
-                    ),
-                )
-            }
-        }
+    override fun updateDividerVisibility(isVisible: Boolean) {
+        // no-op
+        // For the toolbar redesign we will always show the toolbar divider
     }
 
-    override fun updateDividerVisibility(isVisible: Boolean) {
-        showDivider = when (customTabSession) {
-            null -> isVisible
-            else -> false
-        }
+    private fun buildToolbarGravityConfig(): ToolbarGravity = when (settings.shouldUseBottomToolbar) {
+        true -> Bottom
+        false -> Top
     }
 }

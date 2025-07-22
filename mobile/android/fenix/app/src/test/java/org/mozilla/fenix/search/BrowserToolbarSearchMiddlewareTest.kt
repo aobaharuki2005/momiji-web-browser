@@ -95,6 +95,7 @@ class BrowserToolbarSearchMiddlewareTest {
     val lifecycleOwner: LifecycleOwner = TestLifecycleOwner(RESUMED)
     val navController: NavController = mockk {
         every { navigate(any<NavDirections>()) } just Runs
+        every { navigate(any<Int>()) } just Runs
     }
     val browsingModeManager: BrowsingModeManager = mockk()
 

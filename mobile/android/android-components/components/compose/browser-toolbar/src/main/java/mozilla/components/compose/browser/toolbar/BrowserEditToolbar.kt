@@ -6,6 +6,7 @@ package mozilla.components.compose.browser.toolbar
 
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.browser.toolbar.concept.Action
 import mozilla.components.compose.browser.toolbar.concept.Action.ActionButtonRes
@@ -38,6 +40,9 @@ import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorA
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction.ContentDescription.StringResContentDescription
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction.Icon.DrawableIcon
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
+import mozilla.components.compose.browser.toolbar.store.ToolbarGravity
+import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Bottom
+import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Top
 import mozilla.components.compose.browser.toolbar.ui.InlineAutocompleteTextField
 import mozilla.components.concept.toolbar.AutocompleteProvider
 import mozilla.components.ui.icons.R as iconsR
@@ -50,6 +55,7 @@ private val ROUNDED_CORNER_SHAPE = RoundedCornerShape(8.dp)
  *
  * @param query The current query.
  * @param showQueryAsPreselected Whether or not to show the query as preselected.
+ * @param gravity [ToolbarGravity] for where the toolbar is being placed on the screen.
  * @param autocompleteProviders Optional list of [AutocompleteProvider]s to be used for
  * inline autocompleting the current query.
  * @param useComposeTextField Whether or not to use the Compose [TextField] or a view-based
@@ -72,6 +78,7 @@ fun BrowserEditToolbar(
     query: String,
     hint: String,
     showQueryAsPreselected: Boolean = false,
+    gravity: ToolbarGravity = Top,
     autocompleteProviders: List<AutocompleteProvider> = emptyList(),
     useComposeTextField: Boolean = false,
     editActionsStart: List<Action> = emptyList(),
@@ -82,101 +89,116 @@ fun BrowserEditToolbar(
     onUrlSuggestionAutocompleted: (String) -> Unit = {},
     onInteraction: (BrowserToolbarEvent) -> Unit,
 ) {
-    Row(
+    Box(
         modifier = Modifier
             .background(color = AcornTheme.colors.layer1)
-            .padding(all = 8.dp)
-            .height(40.dp)
-            .clip(shape = ROUNDED_CORNER_SHAPE)
-            .background(color = AcornTheme.colors.layer3),
-        verticalAlignment = Alignment.CenterVertically,
+            .fillMaxWidth(),
     ) {
-        if (useComposeTextField) {
-            TextField(
-                value = query,
-                onValueChange = { value ->
-                    onUrlEdit(value)
-                },
-                placeholder = {
-                    Text(
-                        text = hint,
-                        color = AcornTheme.colors.textSecondary,
-                    )
-                },
-                colors = TextFieldDefaults.colors(
-                    focusedTextColor = AcornTheme.colors.textPrimary,
-                    unfocusedTextColor = AcornTheme.colors.textPrimary,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                    errorIndicatorColor = Color.Transparent,
-                    unfocusedContainerColor = AcornTheme.colors.layer3,
-                    focusedContainerColor = AcornTheme.colors.layer3,
-                    disabledContainerColor = AcornTheme.colors.layer3,
-                    errorContainerColor = AcornTheme.colors.layer3,
-                ),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Uri,
-                    imeAction = ImeAction.Go,
-                ),
-                keyboardActions = KeyboardActions(
-                    onGo = { onUrlCommitted(query) },
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                shape = ROUNDED_CORNER_SHAPE,
-                leadingIcon = {
-                    ActionContainer(
-                        actions = editActionsStart,
-                        onInteraction = onInteraction,
-                    )
-                },
-                trailingIcon = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(all = 8.dp)
+                .height(40.dp)
+                .clip(shape = ROUNDED_CORNER_SHAPE)
+                .background(color = AcornTheme.colors.layer3),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (useComposeTextField) {
+                TextField(
+                    value = query,
+                    onValueChange = { value ->
+                        onUrlEdit(value)
+                    },
+                    placeholder = {
+                        Text(
+                            text = hint,
+                            color = AcornTheme.colors.textSecondary,
+                        )
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedTextColor = AcornTheme.colors.textPrimary,
+                        unfocusedTextColor = AcornTheme.colors.textPrimary,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        errorIndicatorColor = Color.Transparent,
+                        unfocusedContainerColor = AcornTheme.colors.layer3,
+                        focusedContainerColor = AcornTheme.colors.layer3,
+                        disabledContainerColor = AcornTheme.colors.layer3,
+                        errorContainerColor = AcornTheme.colors.layer3,
+                    ),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Uri,
+                        imeAction = ImeAction.Go,
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onGo = { onUrlCommitted(query) },
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = ROUNDED_CORNER_SHAPE,
+                    leadingIcon = {
                         ActionContainer(
-                            actions = editActionsEnd,
+                            actions = editActionsStart,
                             onInteraction = onInteraction,
                         )
-
-                        if (query.isNotEmpty()) {
-                            ClearButton(
-                                tint = AcornTheme.colors.iconPrimary,
-                                onButtonClicked = { onUrlEdit("") },
+                    },
+                    trailingIcon = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            ActionContainer(
+                                actions = editActionsEnd,
+                                onInteraction = onInteraction,
                             )
+
+                            if (query.isNotEmpty()) {
+                                ClearButton(
+                                    tint = AcornTheme.colors.iconPrimary,
+                                    onButtonClicked = { onUrlEdit("") },
+                                )
+                            }
                         }
-                    }
-                },
-            )
-        } else {
-            ActionContainer(
-                actions = editActionsStart,
-                onInteraction = onInteraction,
-            )
-
-            InlineAutocompleteTextField(
-                query = query,
-                hint = hint,
-                showQueryAsPreselected = showQueryAsPreselected,
-                autocompleteProviders = autocompleteProviders,
-                modifier = Modifier.weight(1f),
-                onUrlEdit = onUrlEdit,
-                onUrlCommitted = onUrlCommitted,
-                onUrlEditAborted = onUrlEditAborted,
-                onUrlSuggestionAutocompleted = onUrlSuggestionAutocompleted,
-            )
-
-            ActionContainer(
-                actions = editActionsEnd,
-                onInteraction = onInteraction,
-            )
-
-            if (query.isNotEmpty()) {
-                ClearButton(
-                    tint = AcornTheme.colors.iconPrimary,
-                    onButtonClicked = { onUrlEdit("") },
+                    },
                 )
+            } else {
+                ActionContainer(
+                    actions = editActionsStart,
+                    onInteraction = onInteraction,
+                )
+
+                InlineAutocompleteTextField(
+                    query = query,
+                    hint = hint,
+                    showQueryAsPreselected = showQueryAsPreselected,
+                    autocompleteProviders = autocompleteProviders,
+                    modifier = Modifier.weight(1f),
+                    onUrlEdit = onUrlEdit,
+                    onUrlCommitted = onUrlCommitted,
+                    onUrlEditAborted = onUrlEditAborted,
+                    onUrlSuggestionAutocompleted = onUrlSuggestionAutocompleted,
+                )
+
+                ActionContainer(
+                    actions = editActionsEnd,
+                    onInteraction = onInteraction,
+                )
+
+                if (query.isNotEmpty()) {
+                    ClearButton(
+                        tint = AcornTheme.colors.iconPrimary,
+                        onButtonClicked = { onUrlEdit("") },
+                    )
+                }
             }
         }
+
+        Divider(
+            modifier = Modifier.align(
+                when (gravity) {
+                    Top -> Alignment.BottomCenter
+                    Bottom -> Alignment.TopCenter
+                },
+            ),
+        )
     }
 }
 
@@ -210,6 +232,7 @@ private fun BrowserEditToolbarPreview() {
         BrowserEditToolbar(
             query = "http://www.mozilla.org",
             hint = "Search or enter address",
+            gravity = Top,
             autocompleteProviders = emptyList(),
             useComposeTextField = true,
             editActionsStart = listOf(

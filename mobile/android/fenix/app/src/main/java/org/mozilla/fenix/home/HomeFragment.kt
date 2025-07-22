@@ -311,9 +311,10 @@ class HomeFragment : Fragment() {
         }
 
         homeNavigationBar = HomeNavigationBar(
-            context = requireContext(),
+            context = activity,
             container = binding.navigationBarContainer,
             toolbarStore = buildToolbarStore(activity),
+            settings = activity.settings(),
             hideWhenKeyboardShown = true,
         )
 
