@@ -499,10 +499,18 @@ class StyleRuleActor extends Actor {
         // InspectorUtils.supports only supports the 1-arg version, but that's
         // what we want to do anyways so that we also accept !important in the
         // value.
-        decl.isValid = InspectorUtils.supports(
-          `${decl.name}:${decl.value}`,
-          supportsOptions
-        );
+        decl.isValid =
+          // Always consider pres hints styles declarations valid. We need this because
+          // in some cases we might get quirks declarations for which we serialize the
+          // value to something meaningful for the user, but that can't be actually set.
+          // (e.g. for <table> in quirks mode, we get a `color: -moz-inherit-from-body-quirk`)
+          // In such case InspectorUtils.supports() would return false, but that would be
+          // odd to show "invalid" pres hints declaration in the UI.
+          this.ruleClassName === PRES_HINTS ||
+          InspectorUtils.supports(
+            `${decl.name}:${decl.value}`,
+            supportsOptions
+          );
         // TODO: convert from Object to Boolean. See Bug 1574471
         decl.isUsed = isPropertyUsed(el, style, this.rawRule, decl.name);
         // Check property name. All valid CSS properties support "initial" as a value.

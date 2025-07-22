@@ -16,6 +16,7 @@ const TEST_URI = `
     In <span>a galaxy </span><span class="right">far far</span> <p align="left">away</p>
   </h1>
   <h2 align="left" style="text-align: center">foo</h2>
+  <table></table>
 `;
 
 add_task(async function () {
@@ -125,6 +126,18 @@ add_task(async function () {
       ],
     },
   ]);
+
+  await selectNode("table", inspector);
+  checkRuleViewContent(view, [
+    {
+      selector: "element",
+      declarations: [],
+    },
+    {
+      selector: "element attributes style",
+      declarations: [{ name: "color", value: "-moz-inherit-from-body-quirk" }],
+    },
+  ]);
 });
 
 function checkRuleViewContent(view, expectedElements) {
@@ -194,6 +207,13 @@ function checkRuleViewContent(view, expectedElements) {
         ruleViewPropertyElement.classList.contains("ruleview-overridden"),
         !!expectedDeclaration?.overridden,
         `"${selector}" ${propName.innerText} is ${expectedDeclaration?.overridden ? "" : "not "} overridden`
+      );
+      is(
+        ruleViewPropertyElement.querySelector(
+          ".ruleview-warning:not([hidden])"
+        ),
+        null,
+        "The declaration is valid"
       );
     }
   }
