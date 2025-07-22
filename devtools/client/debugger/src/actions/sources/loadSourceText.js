@@ -17,7 +17,6 @@ import { addBreakpoint } from "../breakpoints/index";
 import { prettyPrintSourceTextContent } from "./prettyPrint";
 import { isFulfilled, fulfilled } from "../../utils/async-value";
 
-import { isPretty } from "../../utils/source";
 import { createLocation } from "../../utils/location";
 import { memoizeableAction } from "../../utils/memoizableAction";
 
@@ -47,7 +46,7 @@ async function loadOriginalSource(
   source,
   { getState, sourceMapLoader, prettyPrintWorker }
 ) {
-  if (isPretty(source)) {
+  if (source.isPrettyPrinted) {
     const generatedSource = getGeneratedSource(getState(), source);
     if (!generatedSource) {
       throw new Error("Unable to find minified original.");

@@ -32,7 +32,7 @@ import {
   isSelectedMappedSourceLoading,
 } from "../../selectors/index";
 
-import { isPretty, shouldBlackbox } from "../../utils/source";
+import { shouldBlackbox } from "../../utils/source";
 
 import { PaneToggleButton } from "../shared/Button/index";
 import AccessibleImage from "../shared/AccessibleImage";
@@ -98,7 +98,7 @@ class SourceFooter extends PureComponent {
         },
         className: classnames("action", type, {
           active: sourceLoaded && canPrettyPrint,
-          pretty: isPretty(selectedSource),
+          pretty: selectedSource.isPrettyPrinted,
         }),
         key: type,
         title: prettyPrintMessage,

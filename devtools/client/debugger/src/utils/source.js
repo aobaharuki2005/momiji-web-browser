@@ -161,14 +161,6 @@ export function isJavaScript(source, content) {
   );
 }
 
-/**
- * @memberof utils/source
- * @static
- */
-export function isPretty(source) {
-  return isPrettyURL(source.url);
-}
-
 export function isPrettyURL(url) {
   return url ? url.endsWith(":formatted") : false;
 }
@@ -368,7 +360,7 @@ export function getSourceClassnames(
   // In the SourceTree, we don't show the pretty printed sources,
   // but still want to show the pretty print icon when a pretty printed tab
   // for the current source is opened.
-  if (isPretty(source) || hasPrettyTab) {
+  if (source.isPrettyPrinted || hasPrettyTab) {
     return "prettyPrint";
   }
 
