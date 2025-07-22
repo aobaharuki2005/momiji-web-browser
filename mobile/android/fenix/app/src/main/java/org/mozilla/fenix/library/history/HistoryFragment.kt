@@ -16,6 +16,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioGroup
+import androidx.activity.compose.BackHandler
 import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -62,6 +63,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import mozilla.components.browser.state.action.AwesomeBarAction.EngagementFinished
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.HistoryMetadataAction
 import mozilla.components.browser.state.action.RecentlyClosedAction
@@ -73,6 +75,7 @@ import mozilla.components.compose.browser.awesomebar.AwesomeBar
 import mozilla.components.compose.browser.awesomebar.AwesomeBarDefaults
 import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
+import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarState
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
@@ -137,7 +140,7 @@ private const val MATERIAL_DESIGN_SCRIM = "#52000000"
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, MenuProvider {
     private lateinit var historyStore: HistoryFragmentStore
-    private val toolbarStore by lazy { buildToolbarStore() }
+    private lateinit var toolbarStore: BrowserToolbarStore
     private val searchStore by lazy { buildSearchStore(toolbarStore) }
 
     private lateinit var historyProvider: DefaultPagedHistoryProvider
@@ -210,6 +213,10 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
             accountManager = requireContext().components.backgroundServices.accountManager,
             scope = lifecycleScope,
         )
+
+        if (requireContext().settings().shouldUseComposableToolbar) {
+            toolbarStore = buildToolbarStore()
+        }
 
         return view
     }
@@ -435,9 +442,17 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                                 binding.historyLayout.updateLayoutParams {
                                     (this as? ViewGroup.MarginLayoutParams)?.topMargin = 0
                                 }
-                                requireComponents.appStore.dispatch(AppAction.SearchAction.SearchEnded)
                                 searchLayout?.isVisible = false
+                                requireComponents.appStore.dispatch(AppAction.SearchAction.SearchEnded)
+                                toolbarStore.dispatch(BrowserEditToolbarAction.SearchQueryUpdated(""))
+                                requireComponents.core.store.dispatch(EngagementFinished(abandoned = true))
+                                focusManager.clearFocus()
+                                keyboardController?.hide()
                             }
+                        }
+
+                        BackHandler(historyState.isSearching) {
+                            historyStore.dispatch(SearchDismissed)
                         }
 
                         Column {

@@ -1299,6 +1299,7 @@ abstract class BaseBrowserFragment :
             container = binding.browserLayout,
             toolbarStore = toolbarStore,
             browserScreenStore = browserScreenStore,
+            appStore = requireComponents.appStore,
             browserStore = store,
             settings = activity.settings(),
             customTabSession = customTabSessionId?.let { store.state.findCustomTab(it) },
