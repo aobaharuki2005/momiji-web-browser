@@ -6,7 +6,6 @@
 
 #include "ModuleLoadRequest.h"
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/ScriptLoadContext.h"
 
@@ -28,11 +27,11 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(ModuleLoadRequest)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ModuleLoadRequest,
                                                 ScriptLoadRequest)
-  tmp->mReferencingPrivate.setUndefined();
-  tmp->mReferrerObj = nullptr;
-  tmp->mModuleRequestObj = nullptr;
-  tmp->mStatePrivate.setUndefined();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoader, mRootModule, mModuleScript,
+  if (tmp->mWaitingParentRequest) {
+    tmp->mWaitingParentRequest->ChildModuleUnlinked();
+  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoader, mRootModule, mModuleScript, mImports,
+                                  mWaitingParentRequest,
                                   mDynamicReferencingScript)
   tmp->ClearDynamicImport();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -40,17 +39,23 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ModuleLoadRequest,
                                                   ScriptLoadRequest)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoader, mRootModule, mModuleScript,
+                                    mImports, mWaitingParentRequest,
                                     mDynamicReferencingScript)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ModuleLoadRequest,
                                                ScriptLoadRequest)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mDynamicSpecifier)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mDynamicPromise)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mReferrerObj)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mModuleRequestObj)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mReferencingPrivate)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mStatePrivate)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+/* static */
+VisitedURLSet* ModuleLoadRequest::NewVisitedSetForTopLevelImport(
+    nsIURI* aURI, JS::ModuleType aModuleType) {
+  auto set = new VisitedURLSet();
+  set->PutEntry(ModuleMapKey(aURI, aModuleType));
+  return set;
+}
 
 ModuleLoadRequest::ModuleLoadRequest(
     nsIURI* aURI, JS::ModuleType aModuleType,
@@ -58,14 +63,15 @@ ModuleLoadRequest::ModuleLoadRequest(
     ScriptFetchOptions* aFetchOptions,
     const mozilla::dom::SRIMetadata& aIntegrity, nsIURI* aReferrer,
     LoadContextBase* aContext, Kind aKind, ModuleLoaderBase* aLoader,
-    ModuleLoadRequest* aRootModule)
+    VisitedURLSet* aVisitedSet, ModuleLoadRequest* aRootModule)
     : ScriptLoadRequest(ScriptKind::eModule, aURI, aReferrerPolicy,
                         aFetchOptions, aIntegrity, aReferrer, aContext),
       mIsTopLevel(aKind == Kind::TopLevel || aKind == Kind::DynamicImport),
       mModuleType(aModuleType),
       mIsDynamicImport(aKind == Kind::DynamicImport),
       mLoader(aLoader),
-      mRootModule(aRootModule) {
+      mRootModule(aRootModule),
+      mVisitedSet(aVisitedSet) {
   MOZ_ASSERT(mLoader);
 }
 
@@ -79,6 +85,7 @@ bool ModuleLoadRequest::IsErrored() const {
 
 void ModuleLoadRequest::Cancel() {
   if (IsCanceled()) {
+    AssertAllImportsCancelled();
     return;
   }
 
@@ -89,8 +96,11 @@ void ModuleLoadRequest::Cancel() {
   ScriptLoadRequest::Cancel();
 
   mModuleScript = nullptr;
-  mReferrerObj = nullptr;
-  mModuleRequestObj = nullptr;
+  CancelImports();
+
+  if (mWaitingParentRequest) {
+    ChildLoadComplete(false);
+  }
 }
 
 void ModuleLoadRequest::SetReady() {
@@ -101,6 +111,10 @@ void ModuleLoadRequest::SetReady() {
   // modules instantiated.
 
   ScriptLoadRequest::SetReady();
+
+  if (mWaitingParentRequest) {
+    ChildLoadComplete(true);
+  }
 }
 
 void ModuleLoadRequest::ModuleLoaded() {
@@ -110,6 +124,7 @@ void ModuleLoadRequest::ModuleLoaded() {
   LOG(("ScriptLoadRequest (%p): Module loaded", this));
 
   if (IsCanceled()) {
+    AssertAllImportsCancelled();
     return;
   }
 
@@ -120,6 +135,8 @@ void ModuleLoadRequest::ModuleLoaded() {
     ModuleErrored();
     return;
   }
+
+  mLoader->StartFetchingModuleDependencies(this);
 }
 
 void ModuleLoadRequest::LoadFailed() {
@@ -129,6 +146,7 @@ void ModuleLoadRequest::LoadFailed() {
   LOG(("ScriptLoadRequest (%p): Module load failed", this));
 
   if (IsCanceled()) {
+    AssertAllImportsCancelled();
     return;
   }
 
@@ -144,19 +162,16 @@ void ModuleLoadRequest::ModuleErrored() {
 
   LOG(("ScriptLoadRequest (%p): Module errored", this));
 
-  if (IsCanceled()) {
+  if (IsCanceled() || IsCancelingImports()) {
     return;
   }
 
   MOZ_ASSERT(!IsFinished());
 
-  mozilla::DebugOnly<bool> hasRethrow =
-      mModuleScript && mModuleScript->HasErrorToRethrow();
+  CheckModuleDependenciesLoaded();
+  MOZ_ASSERT(IsErrored());
 
-  // When LoadRequestedModules fails, we will set error to rethrow to the module
-  // script and call ModuleErrored().
-  MOZ_ASSERT(IsErrored() || hasRethrow);
-
+  CancelImports();
   if (IsFinished()) {
     // Cancelling an outstanding import will error this request.
     return;
@@ -164,6 +179,67 @@ void ModuleLoadRequest::ModuleErrored() {
 
   SetReady();
   LoadFinished();
+}
+
+void ModuleLoadRequest::DependenciesLoaded() {
+  // The module and all of its dependencies have been successfully fetched and
+  // compiled.
+
+  LOG(("ScriptLoadRequest (%p): Module dependencies loaded", this));
+
+  if (IsCanceled()) {
+    return;
+  }
+
+  MOZ_ASSERT(IsLoadingImports());
+  MOZ_ASSERT(!IsErrored());
+
+  CheckModuleDependenciesLoaded();
+  AssertAllImportsFinished();
+  SetReady();
+  LoadFinished();
+}
+
+void ModuleLoadRequest::CheckModuleDependenciesLoaded() {
+  LOG(("ScriptLoadRequest (%p): Check dependencies loaded", this));
+
+  if (!mModuleScript || mModuleScript->HasParseError()) {
+    return;
+  }
+
+  for (const auto& childRequest : mImports) {
+    ModuleScript* childScript = childRequest->mModuleScript;
+    if (!childScript) {
+      mModuleScript = nullptr;
+      LOG(("ScriptLoadRequest (%p):   %p failed (load error)", this,
+           childRequest.get()));
+      return;
+    }
+
+    MOZ_DIAGNOSTIC_ASSERT(mModuleScript->HadImportMap() ==
+                          childScript->HadImportMap());
+  }
+
+  LOG(("ScriptLoadRequest (%p):   all ok", this));
+}
+
+void ModuleLoadRequest::CancelImports() {
+  State origState = mState;
+
+  // To prevent reentering ModuleErrored() for this request via mImports[i]'s
+  // ChildLoadComplete().
+  mState = State::CancelingImports;
+
+  for (size_t i = 0; i < mImports.Length(); i++) {
+    if (mLoader->IsFetchingAndHasWaitingRequest(mImports[i])) {
+      LOG(("CancelImports import %p is fetching and has waiting\n",
+           mImports[i].get()));
+      continue;
+    }
+    mImports[i]->Cancel();
+  }
+
+  mState = origState;
 }
 
 void ModuleLoadRequest::LoadFinished() {
@@ -175,11 +251,23 @@ void ModuleLoadRequest::LoadFinished() {
   mLoader->OnModuleLoadComplete(request);
 }
 
-void ModuleLoadRequest::SetDynamicImport(
-    LoadedScript* aReferencingScript, JS::Handle<JSObject*> aModuleRequestObj,
-    JS::Handle<JSObject*> aPromise) {
+void ModuleLoadRequest::ChildModuleUnlinked() {
+  // This module was waiting for a child request, but the child reqeust
+  // got unlinked by CC and will never complete.
+  // It also means this module itself is also in the cycle, and will be
+  // unlinked or has already been unlinked, and will be collected.
+  // There's no need to normally finish the module request.
+  // Just reflect the awaiting imports count, so that the assertion in the
+  // destructor passes.
+  MOZ_ASSERT(mAwaitingImports > 0);
+  mAwaitingImports--;
+}
+
+void ModuleLoadRequest::SetDynamicImport(LoadedScript* aReferencingScript,
+                                         JS::Handle<JSString*> aSpecifier,
+                                         JS::Handle<JSObject*> aPromise) {
   mDynamicReferencingScript = aReferencingScript;
-  mModuleRequestObj = aModuleRequestObj;
+  mDynamicSpecifier = aSpecifier;
   mDynamicPromise = aPromise;
 
   mozilla::HoldJSObjects(this);
@@ -187,8 +275,24 @@ void ModuleLoadRequest::SetDynamicImport(
 
 void ModuleLoadRequest::ClearDynamicImport() {
   mDynamicReferencingScript = nullptr;
-  mModuleRequestObj = nullptr;
+  mDynamicSpecifier = nullptr;
   mDynamicPromise = nullptr;
+}
+
+inline void ModuleLoadRequest::AssertAllImportsFinished() const {
+#ifdef DEBUG
+  for (const auto& request : mImports) {
+    MOZ_ASSERT(request->IsFinished());
+  }
+#endif
+}
+
+inline void ModuleLoadRequest::AssertAllImportsCancelled() const {
+#ifdef DEBUG
+  for (const auto& request : mImports) {
+    MOZ_ASSERT(request->IsCanceled());
+  }
+#endif
 }
 
 }  // namespace JS::loader

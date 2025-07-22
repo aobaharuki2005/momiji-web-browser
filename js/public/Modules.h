@@ -47,9 +47,9 @@ enum class ModuleType : uint32_t {
 };
 
 /**
- * The HostLoadImportedModule hook.
+ * The HostResolveImportedModule hook.
  *
- * See: https://tc39.es/ecma262/#sec-HostLoadImportedModule
+ * See: https://tc39.es/ecma262/#sec-hostresolveimportedmodule
  *
  * This embedding-defined hook is used to implement module loading. It is called
  * to get or create a module object corresponding to |moduleRequest| occurring
@@ -63,63 +63,28 @@ enum class ModuleType : uint32_t {
  * JS::SetModulePrivate. It's assumed that the embedding can handle receiving
  * either here.
  *
- * The spec defines the embedding (host layer) must call
- * FinishLoadingImportedModule either synchronously or asynchronously.
- *
  * This hook must obey the restrictions defined in the spec:
- *  - Each time the hook is called with the same (referrer, referencingPrivate)
- *    pair, then it must call FinishLoadingImportedModule with the same result
- *    each time.
- *  - The operation must treat _statePrivate_ and _promise_ arguments as opaque
- *    values to be passed through to FinishLoadingImportedModule.
- */
-using ModuleLoadHook = bool (*)(JSContext* cx, Handle<JSObject*> referrer,
-                                Handle<Value> referencingPrivate,
-                                Handle<JSObject*> moduleRequest,
-                                Handle<Value> statePrivate,
-                                Handle<JSObject*> promise);
-
-/**
- * Get the HostLoadImportedModule hook for the runtime.
- */
-extern JS_PUBLIC_API ModuleLoadHook GetModuleLoadHook(JSRuntime* rt);
-
-/**
- * Set the HostLoadImportedModule hook for the runtime to the given function.
- */
-extern JS_PUBLIC_API void SetModuleLoadHook(JSRuntime* rt, ModuleLoadHook func);
-
-using LoadModuleResolvedCallback =
-    std::function<bool(JSContext* cx, JS::Handle<JS::Value> hostDefined)>;
-using LoadModuleRejectedCallback = std::function<bool(
-    JSContext* cx, JS::Handle<JS::Value> hostDefined, Handle<JS::Value> error)>;
-
-/**
- * https://tc39.es/ecma262/#sec-LoadRequestedModules
+ *  - Each time the hook is called with the same arguemnts, the same module must
+ *    be returned.
+ *  - If a module cannot be created for the given arguments, an exception must
+ *    be thrown.
  *
- * Load the dependency module graph of the parameter 'module'.
- *
- * The spec defines using 'promise objects' to notify the result.
- * To address the synchronous loading behavior from mozJSModuleLoader, an
- * overloaded version that takes function callbacks to notify the result is also
- * provided.
+ * This is a synchronous operation.
  */
-extern JS_PUBLIC_API bool LoadRequestedModules(
-    JSContext* cx, Handle<JSObject*> module, Handle<Value> hostDefined,
-    LoadModuleResolvedCallback&& resolved,
-    LoadModuleRejectedCallback&& rejected);
-
-extern JS_PUBLIC_API bool LoadRequestedModules(
-    JSContext* cx, Handle<JSObject*> module, Handle<Value> hostDefined,
-    MutableHandle<JSObject*> promiseOut);
+using ModuleResolveHook = JSObject* (*)(JSContext* cx,
+                                        Handle<Value> referencingPrivate,
+                                        Handle<JSObject*> moduleRequest);
 
 /**
- * Used to retrieve the hostDefined value passed to LoadRequestedModules during
- * HostLoadImportedModules.
+ * Get the HostResolveImportedModule hook for the runtime.
  */
-extern JS_PUBLIC_API void GetLoadingModuleHostDefinedValue(
-    JSContext* cx, Handle<Value> statePrivate,
-    MutableHandleValue hostDefinedOut);
+extern JS_PUBLIC_API ModuleResolveHook GetModuleResolveHook(JSRuntime* rt);
+
+/**
+ * Set the HostResolveImportedModule hook for the runtime to the given function.
+ */
+extern JS_PUBLIC_API void SetModuleResolveHook(JSRuntime* rt,
+                                               ModuleResolveHook func);
 
 /**
  * The module metadata hook.
@@ -148,30 +113,54 @@ extern JS_PUBLIC_API void SetModuleMetadataHook(JSRuntime* rt,
                                                 ModuleMetadataHook func);
 
 /**
- * A function callback called by the host layer to indicate the call of
- * HostLoadImportedModule has finished.
+ * The HostImportModuleDynamically hook.
  *
- * See https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
+ * See https://tc39.es/ecma262/#sec-hostimportmoduledynamically
+ *
+ * Used to implement dynamic module import. Called when evaluating import()
+ * expressions.
+ *
+ * This starts an asynchronous operation. Some time after this hook is called
+ * the embedding must call JS::FinishDynamicModuleImport() passing the
+ * |referencingPrivate|, |moduleRequest| and |promise| arguments from the
+ * call. This must happen for both success and failure cases.
+ *
+ * In the meantime the embedding can take whatever steps it needs to make the
+ * module available. If successful, after calling FinishDynamicModuleImport()
+ * the module should be returned by the resolve hook when passed
+ * |referencingPrivate| and |moduleRequest|.
  */
-extern JS_PUBLIC_API bool FinishLoadingImportedModule(
-    JSContext* cx, Handle<JSObject*> referrer, Handle<Value> referencingPrivate,
-    Handle<JSObject*> moduleRequest, Handle<Value> statePrivate,
-    Handle<JSObject*> result);
-
-extern JS_PUBLIC_API bool FinishLoadingImportedModule(
-    JSContext* cx, Handle<JSObject*> referrer, Handle<Value> referencingPrivate,
-    Handle<JSObject*> moduleRequest, Handle<JSObject*> promise,
-    Handle<JSObject*> result, bool usePromise);
+using ModuleDynamicImportHook = bool (*)(JSContext* cx,
+                                         Handle<Value> referencingPrivate,
+                                         Handle<JSObject*> moduleRequest,
+                                         Handle<JSObject*> promise);
 
 /**
- * Overloaded version of FinishLoadingImportedModule for error handling.
+ * Get the HostImportModuleDynamically hook for the runtime.
  */
-extern JS_PUBLIC_API bool FinishLoadingImportedModuleFailed(
-    JSContext* cx, Handle<Value> statePrivate, Handle<JSObject*> promise,
-    Handle<Value> error);
+extern JS_PUBLIC_API ModuleDynamicImportHook
+GetModuleDynamicImportHook(JSRuntime* rt);
 
-extern JS_PUBLIC_API bool FinishLoadingImportedModuleFailedWithPendingException(
-    JSContext* cx, Handle<JSObject*> promise);
+/**
+ * Set the HostImportModuleDynamically hook for the runtime to the given
+ * function.
+ *
+ * If this hook is not set (or set to nullptr) then the JS engine will throw an
+ * exception if dynamic module import is attempted.
+ */
+extern JS_PUBLIC_API void SetModuleDynamicImportHook(
+    JSRuntime* rt, ModuleDynamicImportHook func);
+
+/**
+ * This must be called after a dynamic import operation is complete.
+ *
+ * If |evaluationPromise| is rejected, the rejection reason will be used to
+ * complete the user's promise.
+ */
+extern JS_PUBLIC_API bool FinishDynamicModuleImport(
+    JSContext* cx, Handle<JSObject*> evaluationPromise,
+    Handle<Value> referencingPrivate, Handle<JSObject*> moduleRequest,
+    Handle<JSObject*> promise);
 
 /**
  * Parse the given source buffer as a module in the scope of the current global

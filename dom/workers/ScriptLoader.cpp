@@ -707,11 +707,15 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
     nsCOMPtr<nsIURI> referrer =
         mWorkerRef->Private()->GetReferrerInfo()->GetOriginalReferrer();
 
+    RefPtr<JS::loader::VisitedURLSet> visitedSet =
+        ModuleLoadRequest::NewVisitedSetForTopLevelImport(
+            uri, JS::ModuleType::JavaScript);
+
     // Part of Step 2. This sets the Top-level flag to true
     request = new ModuleLoadRequest(
         uri, JS::ModuleType::JavaScript, referrerPolicy, fetchOptions,
         SRIMetadata(), referrer, loadContext, ModuleLoadRequest::Kind::TopLevel,
-        moduleLoader, nullptr);
+        moduleLoader, visitedSet, nullptr);
   }
 
   // Set the mURL, it will be used for error handling and debugging.
@@ -1191,8 +1195,7 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
     //    relevant global object to fire an event named error at worker.
     //
     // The event will be dispatched in CompileScriptRunnable.
-    if (request->mModuleScript->HasParseError() ||
-        request->mModuleScript->HasErrorToRethrow()) {
+    if (request->mModuleScript->HasParseError()) {
       // Here we assign an error code that is not a JS Exception, so
       // CompileRunnable can dispatch the event.
       mRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);

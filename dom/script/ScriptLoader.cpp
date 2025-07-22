@@ -1820,7 +1820,6 @@ void ScriptLoader::CancelAndClearScriptLoadRequests() {
   mOffThreadCompilingRequests.CancelRequestsAndClear();
 
   if (mModuleLoader) {
-    mModuleLoader->CancelFetchingModules();
     mModuleLoader->CancelAndClearDynamicImports();
   }
 
@@ -2393,8 +2392,7 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
       return NS_OK;
     }
 
-    if (request->mModuleScript &&
-        !request->mModuleScript->HasErrorToRethrow()) {
+    if (request->mModuleScript) {
       if (!request->InstantiateModuleGraph()) {
         request->mModuleScript = nullptr;
       }
@@ -4102,6 +4100,8 @@ void ScriptLoader::ReportPreloadErrorsToConsole(ScriptLoadRequest* aRequest) {
     ReportErrorToConsole(
         aRequest, aRequest->GetScriptLoadContext()->mUnreportedPreloadError);
     aRequest->GetScriptLoadContext()->mUnreportedPreloadError = NS_OK;
+    MOZ_ASSERT_IF(aRequest->IsModuleRequest(),
+                  aRequest->AsModuleRequest()->mImports.IsEmpty());
   }
 
   // TODO:
@@ -4394,7 +4394,7 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
       ReferrerPolicy policy =
           nsContentUtils::GetReferrerPolicyFromChannel(httpChannel);
       if (policy != ReferrerPolicy::_empty) {
-        aRequest->AsModuleRequest()->UpdateReferrerPolicy(policy);
+        aRequest->UpdateReferrerPolicy(policy);
       }
     }
 

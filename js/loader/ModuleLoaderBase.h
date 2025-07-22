@@ -45,7 +45,6 @@ class SourceText;
 
 namespace loader {
 
-class LoadContextBase;
 class ModuleLoaderBase;
 class ModuleLoadRequest;
 class ModuleScript;
@@ -291,8 +290,6 @@ class ModuleLoaderBase : public nsISupports {
   explicit ModuleLoaderBase(ScriptLoaderInterface* aLoader,
                             nsIGlobalObject* aGlobalObject);
 
-  void CancelFetchingModules();
-
   // Called to break cycles during shutdown to prevent memory leaks.
   void Shutdown();
 
@@ -307,14 +304,13 @@ class ModuleLoaderBase : public nsISupports {
  private:
   // Create a module load request for a static module import.
   virtual already_AddRefed<ModuleLoadRequest> CreateStaticImport(
-      nsIURI* aURI, JS::ModuleType aModuleType, ModuleScript* aReferrerScript,
-      const mozilla::dom::SRIMetadata& aSriMetadata,
-      LoadContextBase* aLoadContext, JS::loader::ModuleLoaderBase* aLoader) = 0;
+      nsIURI* aURI, JS::ModuleType aModuleType, ModuleLoadRequest* aParent,
+      const mozilla::dom::SRIMetadata& aSriMetadata) = 0;
 
   // Called by HostImportModuleDynamically hook.
   virtual already_AddRefed<ModuleLoadRequest> CreateDynamicImport(
-      JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
-      JS::Handle<JSObject*> aModuleRequestObj,
+      JSContext* aCx, nsIURI* aURI, JS::ModuleType aModuleType,
+      LoadedScript* aMaybeActiveScript, JS::Handle<JSString*> aSpecifier,
       JS::Handle<JSObject*> aPromise) = 0;
 
   virtual bool IsDynamicImportSupported() { return true; }
@@ -459,15 +455,9 @@ class ModuleLoaderBase : public nsISupports {
 
   static void EnsureModuleHooksInitialized();
 
-  static bool HostLoadImportedModule(JSContext* aCx,
-                                     Handle<JSObject*> aReferrer,
-                                     JS::Handle<JS::Value> aReferencingPrivate,
-                                     JS::Handle<JSObject*> aModuleRequest,
-                                     JS::Handle<JS::Value> aStatePrivate,
-                                     JS::Handle<JSObject*> aPromise);
-  static bool FinishLoadingImportedModule(JSContext* aCx,
-                                          ModuleLoadRequest* aRequest);
-
+  static JSObject* HostResolveImportedModule(
+      JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
+      JS::Handle<JSObject*> aModuleRequest);
   static bool HostPopulateImportMeta(JSContext* aCx,
                                      JS::Handle<JS::Value> aReferencingPrivate,
                                      JS::Handle<JSObject*> aMetaObject);
@@ -475,6 +465,9 @@ class ModuleLoaderBase : public nsISupports {
   static JSString* ImportMetaResolveImpl(
       JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
       JS::Handle<JSString*> aSpecifier);
+  static bool HostImportModuleDynamically(
+      JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
+      JS::Handle<JSObject*> aModuleRequest, JS::Handle<JSObject*> aPromise);
 
   ResolveResult ResolveModuleSpecifier(LoadedScript* aScript,
                                        const nsAString& aSpecifier);
@@ -499,30 +492,22 @@ class ModuleLoaderBase : public nsISupports {
  private:
   ModuleScript* GetFetchedModule(const ModuleMapKey& moduleMapKey) const;
 
+  JS::Value FindFirstParseError(JSContext* aCx, ModuleLoadRequest* aRequest);
   nsresult ResolveRequestedModules(
       ModuleLoadRequest* aRequest,
       nsTArray<ModuleMapKey>* aRequestedModulesOut);
 
-  already_AddRefed<LoadingRequest> SetModuleFetchFinishedAndGetWaitingRequests(
+  void SetModuleFetchFinishedAndResumeWaitingRequests(
       ModuleLoadRequest* aRequest, nsresult aResult);
   void ResumeWaitingRequests(LoadingRequest* aLoadingRequest, bool aSuccess);
   void ResumeWaitingRequest(ModuleLoadRequest* aRequest, bool aSuccess);
 
   void StartFetchingModuleDependencies(ModuleLoadRequest* aRequest);
 
-  void StartFetchingModuleAndDependencies(
-      JSContext* aCx, const ModuleMapKey& aRequestedModule,
-      JS::Handle<JSObject*> aReferrer,
-      JS::Handle<JS::Value> aReferencingPrivate,
-      JS::Handle<JSObject*> aModuleRequest,
-      JS::Handle<JS::Value> aStatePrivate);
+  void StartFetchingModuleAndDependencies(ModuleLoadRequest* aParent,
+                                          const ModuleMapKey& aRequestedModule);
 
   void InstantiateAndEvaluateDynamicImport(ModuleLoadRequest* aRequest);
-
-  static bool OnLoadRequestedModulesResolved(JSContext* cx, unsigned argc,
-                                             Value* vp);
-  static bool OnLoadRequestedModulesRejected(JSContext* cx, unsigned argc,
-                                             Value* vp);
 
   /**
    * Shorthand Wrapper for JSAPI FinishDynamicImport function for the reject
@@ -538,34 +523,42 @@ class ModuleLoaderBase : public nsISupports {
   void FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
                                     nsresult aResult);
 
+  /**
+   * Wrapper for JSAPI FinishDynamicImport function. Takes an optional argument
+   * `aEvaluationPromise` which, if null, exits early.
+   *
+   * This is the Top Level Await version, which works with modules which return
+   * promises.
+   *
+   * @param aCX
+   *        The JSContext for the module.
+   * @param aRequest
+   *        The module load request for the dynamic module.
+   * @param aResult
+   *        The result of running ModuleEvaluate -- If this is successful, then
+   *        we can await the associated EvaluationPromise.
+   * @param aEvaluationPromise
+   *        The evaluation promise returned from evaluating the module. If this
+   *        is null, JS::FinishDynamicImport will reject the dynamic import
+   *        module promise.
+   */
+  static void FinishDynamicImport(JSContext* aCx, ModuleLoadRequest* aRequest,
+                                  nsresult aResult,
+                                  JS::Handle<JSObject*> aEvaluationPromise);
+
   void RemoveDynamicImport(ModuleLoadRequest* aRequest);
 
   nsresult CreateModuleScript(ModuleLoadRequest* aRequest);
-  void DispatchModuleErrored(ModuleLoadRequest* aRequest);
 
-  void OnFetchSucceeded(ModuleLoadRequest* aRequest);
-  void OnFetchFailed(ModuleLoadRequest* aRequest);
+  bool IsFetchingAndHasWaitingRequest(ModuleLoadRequest* aRequest);
 
   // The slot stored in ImportMetaResolve function.
-  enum class ImportMetaSlots : uint32_t { ModulePrivateSlot = 0, SlotCount };
+  enum { ModulePrivateSlot = 0, SlotCount };
 
   // The number of args in ImportMetaResolve.
   static const uint32_t ImportMetaResolveNumArgs = 1;
   // The index of the 'specifier' argument in ImportMetaResolve.
   static const uint32_t ImportMetaResolveSpecifierArg = 0;
-
-  // The slot stored in OnLoadRequestedModulesResolved/Rejected.
-  enum class OnLoadRequestedModulesSlot : uint8_t {
-    HostDefinedSlot = 0,
-    SlotCount
-  };
-
-  // The number of args in OnLoadRequestedModulesResolved/Rejected.
-  static const uint32_t OnLoadRequestedModulesResolvedNumArgs = 0;
-  static const uint32_t OnLoadRequestedModulesRejectedNumArgs = 1;
-
-  // The index of the 'error' argument in OnLoadRequestedModulesRejected.
-  static const uint32_t OnLoadRequestedModulesRejectedErrorArg = 0;
 
  public:
   static mozilla::LazyLogModule gCspPRLog;

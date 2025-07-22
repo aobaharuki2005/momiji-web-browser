@@ -41,11 +41,8 @@ nsIURI* WorkerModuleLoader::GetBaseURI() const {
 }
 
 already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateStaticImport(
-    nsIURI* aURI, JS::ModuleType aModuleType,
-    JS::loader::ModuleScript* aReferrerScript,
-    const mozilla::dom::SRIMetadata& aSriMetadata,
-    JS::loader::LoadContextBase* aLoadContext,
-    JS::loader::ModuleLoaderBase* aLoader) {
+    nsIURI* aURI, JS::ModuleType aModuleType, ModuleLoadRequest* aParent,
+    const mozilla::dom::SRIMetadata& aSriMetadata) {
   // We are intentionally deviating from the specification here and using the
   // worker's CSP rather than the document CSP. The spec otherwise requires our
   // service worker integration to be changed, and additionally the decision
@@ -54,16 +51,15 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateStaticImport(
   // See Discussion in https://github.com/w3c/webappsec-csp/issues/336
   Maybe<ClientInfo> clientInfo = GetGlobalObject()->GetClientInfo();
 
-  WorkerLoadContext* context = aLoadContext->AsWorkerContext();
   RefPtr<WorkerLoadContext> loadContext = new WorkerLoadContext(
-      WorkerLoadContext::Kind::StaticImport, clientInfo, context->mScriptLoader,
-      context->mOnlyExistingCachedResourcesAllowed);
+      WorkerLoadContext::Kind::StaticImport, clientInfo,
+      aParent->GetWorkerLoadContext()->mScriptLoader,
+      aParent->GetWorkerLoadContext()->mOnlyExistingCachedResourcesAllowed);
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, aModuleType, aReferrerScript->ReferrerPolicy(),
-      aReferrerScript->GetFetchOptions(), SRIMetadata(),
-      aReferrerScript->GetURI(), loadContext,
-      ModuleLoadRequest::Kind::StaticImport, this,
-      aLoadContext->mRequest->AsModuleRequest()->GetRootModule());
+      aURI, aModuleType, aParent->ReferrerPolicy(), aParent->mFetchOptions,
+      SRIMetadata(), aParent->mURI, loadContext,
+      ModuleLoadRequest::Kind::StaticImport, this, aParent->mVisitedSet,
+      aParent->GetRootModule());
 
   request->mURL = request->mURI->GetSpecOrDefault();
   request->NoCacheEntryFound();
@@ -87,8 +83,9 @@ bool WorkerModuleLoader::CreateDynamicImportLoader() {
 }
 
 already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
-    JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
-    JS::Handle<JSObject*> aModuleRequestObj, JS::Handle<JSObject*> aPromise) {
+    JSContext* aCx, nsIURI* aURI, JS::ModuleType aModuleType,
+    LoadedScript* aMaybeActiveScript, JS::Handle<JSString*> aSpecifier,
+    JS::Handle<JSObject*> aPromise) {
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
 
   if (!CreateDynamicImportLoader()) {
@@ -101,7 +98,7 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
   if (workerPrivate->IsServiceWorker()) {
     return nullptr;
   }
-  MOZ_ASSERT(aModuleRequestObj);
+  MOZ_ASSERT(aSpecifier);
   MOZ_ASSERT(aPromise);
 
   RefPtr<ScriptFetchOptions> options;
@@ -141,13 +138,16 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
       // used during installation.)
       true);
 
-  JS::ModuleType moduleType = JS::GetModuleRequestType(aCx, aModuleRequestObj);
+  RefPtr<JS::loader::VisitedURLSet> visitedSet =
+      ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI, aModuleType);
+
   ReferrerPolicy referrerPolicy = workerPrivate->GetReferrerPolicy();
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, moduleType, referrerPolicy, options, SRIMetadata(), baseURL,
-      context, ModuleLoadRequest::Kind::DynamicImport, this, nullptr);
+      aURI, aModuleType, referrerPolicy, options, SRIMetadata(), baseURL,
+      context, ModuleLoadRequest::Kind::DynamicImport, this, visitedSet,
+      nullptr);
 
-  request->SetDynamicImport(aMaybeActiveScript, aModuleRequestObj, aPromise);
+  request->SetDynamicImport(aMaybeActiveScript, aSpecifier, aPromise);
   request->NoCacheEntryFound();
 
   return request.forget();
