@@ -7,7 +7,6 @@
 package org.mozilla.fenix.ui.robots
 
 import android.util.Log
-import android.view.View
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assert
@@ -34,16 +33,8 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
-import androidx.test.espresso.Espresso
-import androidx.test.espresso.UiController
-import androidx.test.espresso.ViewAction
-import androidx.test.espresso.assertion.ViewAssertions
-import androidx.test.espresso.matcher.ViewMatchers
-import com.google.android.material.bottomsheet.BottomSheetBehavior
 import mozilla.components.ui.tabcounter.TabCounterTestTags
-import org.hamcrest.Matcher
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.AppAndSystemHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.TAG
@@ -54,9 +45,6 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.mDevice
-import org.mozilla.fenix.helpers.idlingresource.BottomSheetBehaviorStateIdlingResource
-import org.mozilla.fenix.helpers.matchers.BottomSheetBehaviorHalfExpandedMaxRatioMatcher
-import org.mozilla.fenix.helpers.matchers.BottomSheetBehaviorStateMatcher
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
 
 fun tabDrawer(
@@ -264,18 +252,6 @@ class TabDrawerRobot(private val composeTestRule: ComposeTestRule) {
         Log.i(TAG, "verifyTabCloseButton: Trying to verify that the close tab button exists")
         composeTestRule.closeTabButton().assertExists()
         Log.i(TAG, "verifyTabCloseButton: Verified that the close tab button exists")
-    }
-
-    fun verifyTabsTrayBehaviorState(expectedState: Int) {
-        Log.i(TAG, "verifyTabsTrayBehaviorState: Trying to verify that the tabs tray state matches: $expectedState")
-        tabsTrayView().check(ViewAssertions.matches(BottomSheetBehaviorStateMatcher(expectedState)))
-        Log.i(TAG, "verifyTabsTrayBehaviorState: Verified that the tabs tray state matches: $expectedState")
-    }
-
-    fun verifyMinusculeHalfExpandedRatio() {
-        Log.i(TAG, "verifyMinusculeHalfExpandedRatio: Trying to verify the tabs tray half expanded ratio")
-        tabsTrayView().check(ViewAssertions.matches(BottomSheetBehaviorHalfExpandedMaxRatioMatcher(0.001f)))
-        Log.i(TAG, "verifyMinusculeHalfExpandedRatio: Verified the tabs tray half expanded ratio")
     }
 
     fun verifyTabTrayIsOpen() {
@@ -566,59 +542,6 @@ class TabDrawerRobot(private val composeTestRule: ComposeTestRule) {
             return Transition(composeTestRule)
         }
 
-        fun waitForTabTrayBehaviorToIdle(interact: TabDrawerRobot.() -> Unit): Transition {
-            // Need to get the behavior of tab_wrapper and wait for that to idle.
-            var behavior: BottomSheetBehavior<*>? = null
-
-            // Null check here since it's possible that the view is already animated away from the screen.
-            tabsTrayView()?.perform(
-                object : ViewAction {
-                    override fun getDescription(): String {
-                        return "Postpone actions to after the BottomSheetBehavior has settled"
-                    }
-
-                    override fun getConstraints(): Matcher<View> {
-                        return ViewMatchers.isAssignableFrom(View::class.java)
-                    }
-
-                    override fun perform(uiController: UiController?, view: View?) {
-                        behavior = BottomSheetBehavior.from(view!!)
-                    }
-                },
-            )
-
-            behavior?.let {
-                registerAndCleanupIdlingResources(
-                    BottomSheetBehaviorStateIdlingResource(it),
-                ) {
-                    TabDrawerRobot(composeTestRule).interact()
-                }
-            }
-
-            return Transition(composeTestRule)
-        }
-
-        fun advanceToHalfExpandedState(interact: TabDrawerRobot.() -> Unit): Transition {
-            tabsTrayView().perform(
-                object : ViewAction {
-                    override fun getDescription(): String {
-                        return "Advance a BottomSheetBehavior to STATE_HALF_EXPANDED"
-                    }
-
-                    override fun getConstraints(): Matcher<View> {
-                        return ViewMatchers.isAssignableFrom(View::class.java)
-                    }
-
-                    override fun perform(uiController: UiController?, view: View?) {
-                        val behavior = BottomSheetBehavior.from(view!!)
-                        behavior.state = BottomSheetBehavior.STATE_HALF_EXPANDED
-                    }
-                },
-            )
-            TabDrawerRobot(composeTestRule).interact()
-            return Transition(composeTestRule)
-        }
-
         fun closeTabDrawer(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             Log.i(TAG, "closeTabDrawer: Trying to close the tabs tray by clicking the handle")
             composeTestRule.bannerHandle().performSemanticsAction(SemanticsActions.OnClick)
@@ -667,11 +590,6 @@ private fun clickCollectionsButton(composeTestRule: ComposeTestRule, interact: C
     CollectionRobot().interact()
     return CollectionRobot.Transition()
 }
-
-/**
- * Obtains the root [View] that wraps the Tabs Tray.
- */
-private fun tabsTrayView() = Espresso.onView(ViewMatchers.withId(R.id.tabs_tray_root))
 
 /**
  * Obtains the root Tabs Tray.
