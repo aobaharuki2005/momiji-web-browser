@@ -18,7 +18,7 @@ use crate::renderer::{
 use crate::profiler::{self, TransactionProfile, ns_to_ms};
 
 use gleam::gl::GlType;
-use crate::precise_time_ns;
+use time::precise_time_ns;
 
 use std::cell::RefCell;
 use std::collections::VecDeque;
