@@ -372,6 +372,9 @@ class MachFormatter(base.BaseFormatter):
             for d in intermittents:
                 rv += self._format_status(data["test"], d)
 
+        if data["status"] == "SKIP" and data.get("message"):
+            rv += f" ({data['message']})"
+
         if "expected" not in data and not bool(subtests["unexpected"]):
             color = self.color_formatter.log_test_status_pass
         else:
