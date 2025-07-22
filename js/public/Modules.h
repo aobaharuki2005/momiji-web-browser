@@ -86,6 +86,11 @@ extern JS_PUBLIC_API ModuleResolveHook GetModuleResolveHook(JSRuntime* rt);
 extern JS_PUBLIC_API void SetModuleResolveHook(JSRuntime* rt,
                                                ModuleResolveHook func);
 
+using LoadModuleResolvedCallback =
+    std::function<bool(JSContext* cx, JS::Handle<JS::Value> hostDefined)>;
+using LoadModuleRejectedCallback = std::function<bool(
+    JSContext* cx, JS::Handle<JS::Value> hostDefined, Handle<JS::Value> error)>;
+
 /**
  * The module metadata hook.
  *

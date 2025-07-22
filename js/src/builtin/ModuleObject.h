@@ -480,6 +480,73 @@ class ModuleObject : public NativeObject {
   const SyntheticModuleFields* syntheticModuleFields() const;
 };
 
+using VisitedModuleSet =
+    GCHashSet<HeapPtr<ModuleObject*>, DefaultHasher<HeapPtr<ModuleObject*>>,
+              SystemAllocPolicy>;
+
+// The fields of a GraphLoadingState Record, as described in:
+// https://tc39.es/ecma262/#graphloadingstate-record
+struct GraphLoadingStateRecord {
+  explicit GraphLoadingStateRecord(JSContext* cx);
+  GraphLoadingStateRecord(JSContext* cx,
+                          JS::LoadModuleResolvedCallback&& resolved,
+                          JS::LoadModuleRejectedCallback&& rejected);
+
+  void trace(JSTracer* trc);
+
+  // [[Visited]] : a List of Cyclic Module Records
+  VisitedModuleSet visited;
+
+  JS::LoadModuleResolvedCallback resolved;
+  JS::LoadModuleRejectedCallback rejected;
+};
+
+class GraphLoadingStateRecordObject : public NativeObject {
+ public:
+  enum {
+    StateSlot = 0,
+    PromiseSlot,
+    IsLoadingSlot,
+    PendingModulesCountSlot,
+    HostDefinedSlot,
+    SlotCount
+  };
+
+  static const JSClass class_;
+  static const JSClassOps classOps_;
+
+  [[nodiscard]] static GraphLoadingStateRecordObject* create(
+      JSContext* cx, bool isLoading, uint32_t pendingModulesCount,
+      JS::LoadModuleResolvedCallback&& resolved,
+      JS::LoadModuleRejectedCallback&& rejected, Handle<Value> hostDefined);
+
+  [[nodiscard]] static GraphLoadingStateRecordObject* create(
+      JSContext* cx, bool isLoading, uint32_t pendingModulesCount,
+      Handle<PromiseObject*> promise, Handle<Value> hostDefined);
+
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
+  static void trace(JSTracer* trc, JSObject* obj);
+
+  // [[PromiseCapability]] : a PromiseCapability Record
+  PromiseObject* promise();
+
+  // [[IsLoading]] : a Boolean
+  bool isLoading();
+  void setIsLoading(bool isLoading);
+
+  // [[PendingModulesCount]] : a non-negative integer
+  uint32_t pendingModulesCount();
+  void setPendingModulesCount(uint32_t count);
+
+  VisitedModuleSet& visited();
+
+  Value hostDefined();
+
+  bool resolved(JSContext* cx, JS::Handle<JS::Value> hostDefined);
+  bool rejected(JSContext* cx, JS::Handle<JS::Value> hostDefined,
+                Handle<JS::Value> error);
+};
+
 JSObject* GetOrCreateModuleMetaObject(JSContext* cx, HandleObject module);
 
 ModuleObject* CallModuleResolveHook(JSContext* cx,
