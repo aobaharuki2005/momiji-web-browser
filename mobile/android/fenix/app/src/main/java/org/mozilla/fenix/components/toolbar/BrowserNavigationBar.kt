@@ -14,16 +14,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams
-import androidx.fragment.app.Fragment
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.browser.toolbar.NavigationBar
-import mozilla.components.compose.browser.toolbar.store.BrowserToolbarState
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.feature.toolbar.ToolbarBehaviorController
 import mozilla.components.lib.state.ext.observeAsState
-import org.mozilla.fenix.browser.store.BrowserScreenStore
-import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.compose.utils.KeyboardState
@@ -36,25 +32,18 @@ import org.mozilla.fenix.utils.Settings
  * lifecycle-aware integration for use within the [BrowserToolbarView] framework.
  *
  * @param context [Context] used to access resources and other application-level operations.
- * @param lifecycleOwner [Fragment] as a [LifecycleOwner] to used to organize lifecycle dependent operations.
  * @param container [ViewGroup] which will serve as parent of this View.
- * @param appStore [AppStore] to sync from.
- * @param browserScreenStore [BrowserScreenStore] used for integration with other browser screen functionalities.
+ * @param toolbarStore [BrowserToolbarStore] containing the navigation bar state.
  * @param browserStore [BrowserStore] used for observing the browsing details.
- * @param components [Components] allowing interactions with other application features.
  * @param settings [Settings] object to get the toolbar position and other settings.
  * @param hideWhenKeyboardShown If true, navigation bar will be hidden when the keyboard is visible.
  * @param customTabSession [CustomTabSessionState] if the toolbar is shown in a custom tab.
  */
-@Suppress("LongParameterList")
 class BrowserNavigationBar(
     private val context: Context,
-    private val lifecycleOwner: Fragment,
     container: ViewGroup,
-    private val appStore: AppStore,
-    private val browserScreenStore: BrowserScreenStore,
+    private val toolbarStore: BrowserToolbarStore,
     private val browserStore: BrowserStore,
-    private val components: Components,
     private val settings: Settings,
     private val hideWhenKeyboardShown: Boolean,
     customTabSession: CustomTabSessionState? = null,
@@ -65,28 +54,6 @@ class BrowserNavigationBar(
 ) {
     override fun updateDividerVisibility(isVisible: Boolean) {
         // No-op: Divider is not controlled through this.
-    }
-
-    val store = StoreProvider.get(lifecycleOwner) {
-        BrowserToolbarStore(
-            initialState = BrowserToolbarState(),
-            middleware = listOf(
-                BrowserToolbarMiddleware(
-                    appStore = appStore,
-                    browserScreenStore = browserScreenStore,
-                    browserStore = browserStore,
-                    permissionsStorage = components.core.geckoSitePermissionsStorage,
-                    cookieBannersStorage = components.core.cookieBannersStorage,
-                    trackingProtectionUseCases = components.useCases.trackingProtectionUseCases,
-                    useCases = components.useCases,
-                    nimbusComponents = components.nimbus,
-                    clipboard = components.clipboardHandler,
-                    publicSuffixList = components.publicSuffixList,
-                    settings = settings,
-                    bookmarksStorage = components.core.bookmarksStorage,
-                ),
-            ),
-        )
     }
 
     override val layout: ScrollableToolbarComposeView =
@@ -135,7 +102,7 @@ class BrowserNavigationBar(
 
     @Composable
     private fun DefaultNavigationBarContent(showDivider: Boolean) {
-        val uiState by store.observeAsState(initialValue = store.state) { it }
+        val uiState by toolbarStore.observeAsState(initialValue = toolbarStore.state) { it }
         val isKeyboardVisible = if (hideWhenKeyboardShown) {
             val keyboardState by keyboardAsState()
             keyboardState == KeyboardState.Opened
@@ -148,7 +115,7 @@ class BrowserNavigationBar(
                 NavigationBar(
                     actions = uiState.displayState.navigationActions,
                     shouldShowDivider = showDivider,
-                    onInteraction = { store.dispatch(it) },
+                    onInteraction = { toolbarStore.dispatch(it) },
                 )
             }
         }

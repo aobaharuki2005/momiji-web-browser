@@ -32,37 +32,20 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * lifecycle-aware integration for use within the [FenixHomeToolbar] framework.
  *
  * @param context [Context] used to access resources and other application-level operations.
- * @param lifecycleOwner [Fragment] as a [LifecycleOwner] to used to organize lifecycle dependent operations.
  * @param container [ViewGroup] which will serve as parent of this View.
- * @param appStore [AppStore] to sync from.
- * @param browserStore [BrowserStore] used for observing the browsing details.
+ * @param toolbarStore [BrowserToolbarStore] containing the navigation bar state.
  * @param hideWhenKeyboardShown If true, navigation bar will be hidden when the keyboard is visible.
  */
 class HomeNavigationBar(
     private val context: Context,
-    private val lifecycleOwner: Fragment,
     private val container: ViewGroup,
-    private val appStore: AppStore,
-    private val browserStore: BrowserStore,
+    private val toolbarStore: BrowserToolbarStore,
     private val hideWhenKeyboardShown: Boolean,
 ) : FenixHomeToolbar {
-    val store = StoreProvider.get(lifecycleOwner) {
-        BrowserToolbarStore(
-            initialState = BrowserToolbarState(),
-            middleware = listOf(
-                BrowserToolbarMiddleware(
-                    appStore = appStore,
-                    browserStore = browserStore,
-                    clipboard = context.components.clipboardHandler,
-                    useCases = context.components.useCases,
-                ),
-            ),
-        )
-    }
 
     @Composable
     private fun DefaultNavigationBarContent(showDivider: Boolean) {
-        val uiState by store.observeAsState(initialValue = store.state) { it }
+        val uiState by toolbarStore.observeAsState(initialValue = toolbarStore.state) { it }
         val isKeyboardVisible = if (hideWhenKeyboardShown) {
             val keyboardState by keyboardAsState()
             keyboardState == KeyboardState.Opened
@@ -75,7 +58,7 @@ class HomeNavigationBar(
                 NavigationBar(
                     actions = uiState.displayState.navigationActions,
                     shouldShowDivider = showDivider,
-                    onInteraction = { store.dispatch(it) },
+                    onInteraction = { toolbarStore.dispatch(it) },
                 )
             }
         }
