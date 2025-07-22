@@ -230,6 +230,12 @@ bool ForkServer::HandleForkNewSubprocess(UniquePtr<IPC::Message> aMessage) {
 #if defined(MOZ_MEMORY) && defined(DEBUG)
   jemalloc_stats_t stats;
   jemalloc_stats(&stats);
+  // What we actually want to assert is that there are 0 thread-local arenas
+  // (threads may exist but thread-local arenas are opt-in) that would be leaked
+  // (because the threads wont exist in the new process), and 0 private
+  // main-thread-only arenas and this is not the main thread (as those might be
+  // inconsistent in the new process).  Instead we check that there's exactly
+  // one arena - the default public arena).
   MOZ_ASSERT(stats.narenas == 1,
              "ForkServer before fork()/clone() should have a single arena.");
 #endif
