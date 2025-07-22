@@ -2258,13 +2258,13 @@ size_t arena_t::TryCoalesce(arena_chunk_t* aChunk, size_t run_ind,
 }
 
 arena_chunk_t* arena_t::DallocRun(arena_run_t* aRun, bool aDirty) {
-  arena_chunk_t* chunk;
-  size_t size, run_ind, run_pages;
-
-  chunk = GetChunkForPtr(aRun);
-  run_ind = (size_t)((uintptr_t(aRun) - uintptr_t(chunk)) >> gPageSize2Pow);
+  arena_chunk_t* chunk = GetChunkForPtr(aRun);
+  size_t run_ind =
+      (size_t)((uintptr_t(aRun) - uintptr_t(chunk)) >> gPageSize2Pow);
   MOZ_DIAGNOSTIC_ASSERT(run_ind >= gChunkHeaderNumPages);
   MOZ_RELEASE_ASSERT(run_ind < gChunkNumPages - 1);
+
+  size_t size, run_pages;
   if ((chunk->mPageMap[run_ind].bits & CHUNK_MAP_LARGE) != 0) {
     size = chunk->mPageMap[run_ind].bits & ~gPageSizeMask;
     run_pages = (size >> gPageSize2Pow);
@@ -2275,9 +2275,7 @@ arena_chunk_t* arena_t::DallocRun(arena_run_t* aRun, bool aDirty) {
 
   // Mark pages as unallocated in the chunk map.
   if (aDirty) {
-    size_t i;
-
-    for (i = 0; i < run_pages; i++) {
+    for (size_t i = 0; i < run_pages; i++) {
       MOZ_DIAGNOSTIC_ASSERT(
           (chunk->mPageMap[run_ind + i].bits & CHUNK_MAP_DIRTY) == 0);
       chunk->mPageMap[run_ind + i].bits = CHUNK_MAP_DIRTY;
@@ -2289,9 +2287,7 @@ arena_chunk_t* arena_t::DallocRun(arena_run_t* aRun, bool aDirty) {
     chunk->mNumDirty += run_pages;
     mNumDirty += run_pages;
   } else {
-    size_t i;
-
-    for (i = 0; i < run_pages; i++) {
+    for (size_t i = 0; i < run_pages; i++) {
       chunk->mPageMap[run_ind + i].bits &=
           ~(CHUNK_MAP_LARGE | CHUNK_MAP_ALLOCATED);
     }
