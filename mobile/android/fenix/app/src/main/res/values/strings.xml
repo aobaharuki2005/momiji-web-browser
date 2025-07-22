@@ -370,7 +370,9 @@
 %1$s is the name of the app (for example "Firefox"). -->
     <string name="browser_menu_default_banner_title">Make %1$s your default</string>
     <!-- Label text within the set as default banner  -->
-    <string name="browser_menu_default_banner_subtitle">Takes seconds. Change anytime.</string>
+    <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">Takes seconds. Change anytime.</string>
+    <!-- Label text within the set as default banner  -->
+    <string name="browser_menu_default_banner_subtitle_2">Fast, private, and made for you.</string>
     <!-- Content description for the button that dismisses the set as default banner in the menu -->
     <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Dismiss</string>
     <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
