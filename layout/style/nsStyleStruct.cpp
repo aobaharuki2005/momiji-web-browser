@@ -2197,7 +2197,7 @@ nsStyleDisplay::nsStyleDisplay()
     : mDisplay(StyleDisplay::Inline),
       mOriginalDisplay(StyleDisplay::Inline),
       mContentVisibility(StyleContentVisibility::Visible),
-      mContainerType(StyleContainerType::Normal),
+      mContainerType(StyleContainerType::NORMAL),
       mAppearance(StyleAppearance::None),
       mContain(StyleContain::NONE),
       mEffectiveContainment(StyleContain::NONE),

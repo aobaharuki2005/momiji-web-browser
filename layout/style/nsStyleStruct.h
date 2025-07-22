@@ -1548,7 +1548,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleContainerType mContainerType;
 
   bool IsQueryContainer() const {
-    return mContainerType != mozilla::StyleContainerType::Normal;
+    return mContainerType != mozilla::StyleContainerType::NORMAL;
   }
 
   // See WritingModes.h for the implementations.

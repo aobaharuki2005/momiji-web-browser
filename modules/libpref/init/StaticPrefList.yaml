@@ -10182,6 +10182,13 @@
   value: 0.750f
   mirror: always
 
+# Whether container scroll-state queries are enabled.
+- name: layout.css.scroll-state.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Stylo thread-pool size.
 # Negative means auto, 0 disables the thread-pool (main-thread styling), other
 # numbers override as specified.

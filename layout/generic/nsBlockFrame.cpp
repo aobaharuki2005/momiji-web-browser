@@ -676,8 +676,8 @@ Maybe<nscoord> nsBlockFrame::GetNaturalBaselineBOffset(
       if (line.IsEmpty()) {
         continue;
       }
-      // Buttons use the end of the content as a baseline if we haven't found one
-      // yet.
+      // Buttons use the end of the content as a baseline if we haven't found
+      // one yet.
       nscoord bEnd = line.BEnd();
       offset.emplace(aBaselineGroup == BaselineSharingGroup::Last
                          ? BSize(aWM) - bEnd
@@ -6809,7 +6809,8 @@ static bool StyleEstablishesBFC(const ComputedStyle* aStyle) {
   // https://drafts.csswg.org/css-multicol/#columns
   const auto* disp = aStyle->StyleDisplay();
   return disp->IsContainPaint() || disp->IsContainLayout() ||
-         disp->mContainerType != StyleContainerType::Normal ||
+         disp->mContainerType &
+             (StyleContainerType::SIZE | StyleContainerType::INLINE_SIZE) ||
          disp->DisplayInside() == StyleDisplayInside::FlowRoot ||
          disp->IsAbsolutelyPositionedStyle() || disp->IsFloatingStyle() ||
          aStyle->IsRootElementStyle() || AnonymousBoxIsBFC(aStyle);
