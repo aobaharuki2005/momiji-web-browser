@@ -877,25 +877,6 @@ nsresult Loader::CheckContentPolicy(
   return NS_OK;
 }
 
-static void RecordUseCountersIfNeeded(Document* aDoc,
-                                      const StyleSheet& aSheet) {
-  if (!aDoc) {
-    return;
-  }
-  const StyleUseCounters* docCounters = aDoc->GetStyleUseCounters();
-  if (!docCounters) {
-    return;
-  }
-  if (aSheet.URLData()->ChromeRulesEnabled()) {
-    return;
-  }
-  const auto* sheetCounters = aSheet.GetStyleUseCounters();
-  if (!sheetCounters) {
-    return;
-  }
-  Servo_UseCounters_Merge(docCounters, sheetCounters);
-}
-
 bool Loader::MaybePutIntoLoadsPerformed(SheetLoadData& aLoadData) {
   if (!aLoadData.mURI) {
     // Inline style sheet is not tracked.
@@ -1591,7 +1572,7 @@ void Loader::AddPerformanceEntryForCachedSheet(SheetLoadData& aLoadData) {
 }
 
 void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
-  RecordUseCountersIfNeeded(mDocument, *aData.mSheet);
+  aData.mSheet->PropagateUseCountersTo(mDocument);
   if (MaybePutIntoLoadsPerformed(aData) &&
       aData.mShouldEmulateNotificationsForCachedLoad) {
     NotifyObserversForCachedSheet(aData);
@@ -2082,7 +2063,7 @@ nsresult Loader::LoadChildSheet(StyleSheet& aParentSheet,
     if (!isReusableSheet) {
       // Child sheets are not handled by NotifyObservers, and these need to be
       // performed here if the sheet comes from the SharedStyleSheetCache.
-      RecordUseCountersIfNeeded(mDocument, *data->mSheet);
+      data->mSheet->PropagateUseCountersTo(mDocument);
       if (MaybePutIntoLoadsPerformed(*data)) {
         NotifyObserversForCachedSheet(*data);
         AddPerformanceEntryForCachedSheet(*data);
