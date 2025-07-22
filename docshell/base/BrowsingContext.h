@@ -19,6 +19,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/LocationBase.h"
 #include "mozilla/dom/MaybeDiscarded.h"
+#include "mozilla/dom/NavigationBinding.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/BrowsingContextBinding.h"
@@ -450,6 +451,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
                    bool aSetNavigating = false);
 
   nsresult InternalLoad(nsDocShellLoadState* aLoadState);
+
+  void Navigate(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv,
+                NavigationHistoryBehavior aHistoryHandling =
+                    NavigationHistoryBehavior::Auto);
 
   // Removes the root document for this BrowsingContext tree from the BFCache,
   // if it is cached, and returns true if it was.
@@ -1024,6 +1029,12 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
                                        bool aHasPostData);
 
  private:
+  // Check whether it's OK to load the given url with the given subject
+  // principal, and if so construct the right nsDocShellLoadInfo for the load
+  // and return it.
+  already_AddRefed<nsDocShellLoadState> CheckURLAndCreateLoadState(
+      nsIURI* aURI, nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
+
   bool AddSHEntryWouldIncreaseLength(SessionHistoryInfo* aCurrentEntry) const;
 
   // Assert that this BrowsingContext is coherent relative to related
