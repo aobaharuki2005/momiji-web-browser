@@ -44,7 +44,8 @@ using mozilla::Nothing;
 using mozilla::Some;
 using mozilla::Span;
 
-static_assert(ModuleStatus::Unlinked < ModuleStatus::Linking &&
+static_assert(ModuleStatus::New < ModuleStatus::Unlinked &&
+                  ModuleStatus::Unlinked < ModuleStatus::Linking &&
                   ModuleStatus::Linking < ModuleStatus::Linked &&
                   ModuleStatus::Linked < ModuleStatus::Evaluating &&
                   ModuleStatus::Evaluating < ModuleStatus::EvaluatingAsync &&
@@ -712,7 +713,7 @@ void SyntheticModuleFields::trace(JSTracer* trc) { exportNames.trace(trc); }
 // https://tc39.es/ecma262/#sec-cyclic-module-records
 class js::CyclicModuleFields {
  public:
-  ModuleStatus status = ModuleStatus::Unlinked;
+  ModuleStatus status = ModuleStatus::New;
 
   bool hasTopLevelAwait : 1;
 
@@ -1147,7 +1148,7 @@ const char* ModuleObject::filename() const {
 }
 
 static inline void AssertValidModuleStatus(ModuleStatus status) {
-  MOZ_ASSERT(status >= ModuleStatus::Unlinked &&
+  MOZ_ASSERT(status >= ModuleStatus::New &&
              status <= ModuleStatus::Evaluated_Error);
 }
 
@@ -1324,7 +1325,8 @@ bool ModuleObject::hadEvaluationError() const {
 }
 
 void ModuleObject::setEvaluationError(HandleValue newValue) {
-  MOZ_ASSERT(status() != ModuleStatus::Unlinked);
+  MOZ_ASSERT(status() != ModuleStatus::Unlinked &&
+             status() != ModuleStatus::New);
   MOZ_ASSERT(!hadEvaluationError());
 
   cyclicModuleFields()->status = ModuleStatus::Evaluated_Error;

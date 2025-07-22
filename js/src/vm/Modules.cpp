@@ -431,7 +431,8 @@ JS_PUBLIC_API void JS::ClearModuleEnvironment(JSObject* moduleObj) {
 
 JS_PUBLIC_API bool JS::ModuleIsLinked(JSObject* moduleObj) {
   AssertHeapIsIdle();
-  return moduleObj->as<ModuleObject>().status() != ModuleStatus::Unlinked;
+  return moduleObj->as<ModuleObject>().status() != ModuleStatus::New &&
+         moduleObj->as<ModuleObject>().status() != ModuleStatus::Unlinked;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -490,6 +491,8 @@ static bool GatherAvailableModuleAncestors(
 
 static const char* ModuleStatusName(ModuleStatus status) {
   switch (status) {
+    case ModuleStatus::New:
+      return "New";
     case ModuleStatus::Unlinked:
       return "Unlinked";
     case ModuleStatus::Linking:
@@ -920,8 +923,9 @@ static bool SyntheticModuleResolveExport(JSContext* cx,
 ModuleNamespaceObject* js::GetOrCreateModuleNamespace(
     JSContext* cx, Handle<ModuleObject*> module) {
   // Step 1. Assert: If module is a Cyclic Module Record, then module.[[Status]]
-  //         is not unlinked.
-  MOZ_ASSERT(module->status() != ModuleStatus::Unlinked);
+  //         is not new or unlinked.
+  MOZ_ASSERT(module->status() != ModuleStatus::New ||
+             module->status() != ModuleStatus::Unlinked);
 
   // Step 2. Let namespace be module.[[Namespace]].
   Rooted<ModuleNamespaceObject*> ns(cx, module->namespace_());
@@ -1314,9 +1318,11 @@ static bool ModuleLink(JSContext* cx, Handle<ModuleObject*> module) {
     return true;
   }
 
-  // Step 1. Assert: module.[[Status]] is not linking or evaluating.
+  // Step 1. Assert: module.[[Status]] is one of unlinked, linked,
+  //         evaluating-async, or evaluated.
   ModuleStatus status = module->status();
-  if (status == ModuleStatus::Linking || status == ModuleStatus::Evaluating) {
+  if (status == ModuleStatus::New || status == ModuleStatus::Linking ||
+      status == ModuleStatus::Evaluating) {
     ThrowUnexpectedModuleStatus(cx, status);
     return false;
   }

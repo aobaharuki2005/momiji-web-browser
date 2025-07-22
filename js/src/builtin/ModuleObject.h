@@ -307,6 +307,7 @@ class ModuleNamespaceObject : public ProxyObject {
 // Value types of [[Status]] in a Cyclic Module Record
 // https://tc39.es/ecma262/#table-cyclic-module-fields
 enum class ModuleStatus : int8_t {
+  New,
   Unlinked,
   Linking,
   Linked,

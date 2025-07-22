@@ -33,7 +33,7 @@ testGetter(a, "namespace");
 // ==== status getter ====
 const c = registerModule('c', parseModule(`
 `));
-assertEq(c.status, "Unlinked");
+assertEq(c.status, "New");
 moduleLink(c);
 assertEq(c.status, "Linked");
 moduleEvaluate(c);
