@@ -186,26 +186,27 @@ enum ChannelDisposition {
 };
 
 static nsLiteralCString CacheDispositionToTelemetryLabel(
-    CacheDisposition hitOrMiss) {
+    nsICacheInfoChannel::CacheDisposition hitOrMiss) {
   switch (hitOrMiss) {
-    case kCacheUnresolved:
+    case nsICacheInfoChannel::kCacheUnresolved:
       return "Unresolved"_ns;
-    case kCacheHit:
+    case nsICacheInfoChannel::kCacheHit:
       return "Hit"_ns;
-    case kCacheHitViaReval:
+    case nsICacheInfoChannel::kCacheHitViaReval:
       return "HitViaReval"_ns;
-    case kCacheMissedViaReval:
+    case nsICacheInfoChannel::kCacheMissedViaReval:
       return "MissedViaReval"_ns;
-    case kCacheMissed:
+    case nsICacheInfoChannel::kCacheMissed:
       return "Missed"_ns;
-    case kCacheUnknown:
+    case nsICacheInfoChannel::kCacheUnknown:
       return "Unknown"_ns;
+    default:
+      return "Invalid"_ns;
   }
-  return "Unresolved"_ns;
 }
 
-void AccumulateCacheHitTelemetry(CacheDisposition hitOrMiss,
-                                 nsIChannel* aChannel) {
+void AccumulateCacheHitTelemetry(
+    nsICacheInfoChannel::CacheDisposition hitOrMiss, nsIChannel* aChannel) {
   nsCString key("UNKNOWN");
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
