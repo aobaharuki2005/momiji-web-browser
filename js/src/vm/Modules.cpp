@@ -655,6 +655,25 @@ static void ThrowUnexpectedModuleStatus(JSContext* cx, ModuleStatus status) {
                            JSMSG_BAD_MODULE_STATUS, ModuleStatusName(status));
 }
 
+// https://tc39.es/ecma262/#sec-HostLoadImportedModule
+static bool HostLoadImportedModule(
+    JSContext* cx, Handle<ModuleObject*> referrer,
+    Handle<JSObject*> moduleRequest,
+    Handle<GraphLoadingStateRecordObject*> payload) {
+  JS::ModuleLoadHook moduleLoadHook = cx->runtime()->moduleLoadHook;
+  if (!moduleLoadHook) {
+    JS_ReportErrorASCII(cx, "Module load hook not set");
+    return false;
+  }
+
+  MOZ_ASSERT(referrer);
+  MOZ_ASSERT(moduleRequest);
+  Rooted<Value> referencingPrivate(cx, JS::GetModulePrivate(referrer));
+  RootedValue payloadPrivate(cx, ObjectValue(*payload));
+  return moduleLoadHook(cx, referrer, referencingPrivate, moduleRequest,
+                        payloadPrivate, nullptr);
+}
+
 static bool ModuleResolveExportImpl(JSContext* cx, Handle<ModuleObject*> module,
                                     Handle<JSAtom*> exportName,
                                     MutableHandle<ResolveSet> resolveSet,
@@ -1298,6 +1317,101 @@ static bool ModuleInitializeEnvironment(JSContext* cx,
   //                 and privateEnv.
   // Step 24.a.iii.2. Perform ! env.InitializeBinding(dn, fo).
   return ModuleObject::instantiateFunctionDeclarations(cx, module);
+}
+
+// https://tc39.es/ecma262/#sec-InnerModuleLoading
+// InnerModuleLoading ( state, module )
+static bool InnerModuleLoading(JSContext* cx,
+                               Handle<GraphLoadingStateRecordObject*> state,
+                               Handle<ModuleObject*> module) {
+  MOZ_ASSERT(state);
+  MOZ_ASSERT(module);
+
+  // Step 1. Assert: state.[[IsLoading]] is true.
+  MOZ_ASSERT(state->isLoading());
+
+  // Step 2. If module is a Cyclic Module Record, module.[[Status]] is new, and
+  // state.[[Visited]] does not contain module, then
+  if (module->hasCyclicModuleFields() &&
+      module->status() == ModuleStatus::New && !state->visited().has(module)) {
+    // Step 2.a. Append module to state.[[Visited]].
+    if (!state->visited().putNew(module)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+
+    // Step 2.b. Let requestedModulesCount be the number of elements in
+    //           module.[[RequestedModules]].
+    size_t requestedModulesCount = module->requestedModules().Length();
+
+    // Step 2.c. Set state.[[PendingModulesCount]] to
+    //           state.[[PendingModulesCount]] + requestedModulesCount.
+    uint32_t count = state->pendingModulesCount() + requestedModulesCount;
+    state->setPendingModulesCount(count);
+
+    // Step 2.d. For each String required of module.[[RequestedModules]], do
+    Rooted<ModuleRequestObject*> moduleRequest(cx);
+    Rooted<ModuleObject*> recordModule(cx);
+    for (const RequestedModule& request : module->requestedModules()) {
+      moduleRequest = request.moduleRequest();
+      // Step 2.d.i. If module.[[LoadedModules]] contains a Record whose
+      // [[Specifier]] is required, then
+      if (auto record = module->loadedModules().lookup(moduleRequest)) {
+        // Step 2.d.i.1. Let record be that Record.
+        // Step 2.d.i.2. Perform InnerModuleLoading(state, record.[[Module]]).
+        recordModule = record->value();
+        if (!InnerModuleLoading(cx, state, recordModule)) {
+          return false;
+        }
+      } else {
+        // Step 2.d.ii. Else,
+        // Step 2.d.ii.1. Perform HostLoadImportedModule(module, required,
+        //                state.[[HostDefined]], state).
+        if (!HostLoadImportedModule(cx, module, moduleRequest, state)) {
+          return false;
+        }
+      }
+
+      // Step 2.d.iii. If state.[[IsLoading]] is false, return unused.
+      if (!state->isLoading()) {
+        return true;
+      }
+    }
+  }
+
+  // Step 3. Assert: state.[[PendingModulesCount]] ≥ 1.
+  MOZ_ASSERT(state->pendingModulesCount() >= 1);
+
+  // Step 4. Set state.[[PendingModulesCount]] to
+  //         state.[[PendingModulesCount]] - 1.
+  uint32_t count = state->pendingModulesCount() - 1;
+  state->setPendingModulesCount(count);
+
+  // Step 5. If state.[[PendingModulesCount]] = 0, then
+  if (state->pendingModulesCount() == 0) {
+    // Step 5.a. Set state.[[IsLoading]] to false.
+    state->setIsLoading(false);
+
+    // Step 5.b. For each Cyclic Module Record loaded of state.[[Visited]], do
+    for (auto iter = state->visited().iter(); !iter.done(); iter.next()) {
+      auto& loaded = iter.get();
+      // Step 5.b.i. If loaded.[[Status]] is new, set loaded.[[Status]] to
+      // unlinked.
+      if (loaded->status() == ModuleStatus::New) {
+        loaded->setStatus(ModuleStatus::Unlinked);
+      }
+    }
+
+    // Step 5.c. Perform ! Call(state.[[PromiseCapability]].[[Resolve]],
+    //                          undefined, « undefined »).
+    RootedValue hostDefined(cx, state->hostDefined());
+    if (!state->resolved(cx, hostDefined)) {
+      return false;
+    }
+  }
+
+  // Step 6. Return unused.
+  return true;
 }
 
 // https://tc39.es/ecma262/#sec-moduledeclarationlinking
