@@ -262,8 +262,10 @@ class FFmpegVideoDecoder<LIBAV_VER>
 
   const bool mLowLatency;
   const Maybe<TrackingId> mTrackingId;
+
+  void RecordFrame(const MediaRawData* aSample, const MediaData* aData);
+
   PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;
-  PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder2;
 
   // True if we're allocating shmem for ffmpeg decode buffer.
   Maybe<Atomic<bool>> mIsUsingShmemBufferForDecode;
