@@ -63,6 +63,9 @@ enum class SkipTransitionReason : uint8_t {
   PseudoUpdateFailure,
   Resize,
   PageSwap,
+  // Can happen due to various recoverable internal errors such as GPU process
+  // crashes or GPU device resets.
+  ResetRendering,
 };
 
 // https://drafts.csswg.org/css-view-transitions-1/#viewtransition-phase

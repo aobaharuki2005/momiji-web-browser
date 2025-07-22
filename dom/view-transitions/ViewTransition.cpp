@@ -1704,6 +1704,10 @@ void ViewTransition::SkipTransition(
         readyPromise->MaybeRejectWithInvalidStateError(
             "Skipped view transition due to hidden new element");
         break;
+      case SkipTransitionReason::ResetRendering:
+        readyPromise->MaybeRejectWithInvalidStateError(
+            "Skipped view transition due to graphics process or device reset");
+        break;
       case SkipTransitionReason::UpdateCallbackRejected:
         readyPromise->MaybeReject(aUpdateCallbackRejectReason);
 
