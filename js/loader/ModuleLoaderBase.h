@@ -455,9 +455,6 @@ class ModuleLoaderBase : public nsISupports {
 
   static void EnsureModuleHooksInitialized();
 
-  static JSObject* HostResolveImportedModule(
-      JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
-      JS::Handle<JSObject*> aModuleRequest);
   static bool HostPopulateImportMeta(JSContext* aCx,
                                      JS::Handle<JS::Value> aReferencingPrivate,
                                      JS::Handle<JSObject*> aMetaObject);
@@ -465,9 +462,6 @@ class ModuleLoaderBase : public nsISupports {
   static JSString* ImportMetaResolveImpl(
       JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
       JS::Handle<JSString*> aSpecifier);
-  static bool HostImportModuleDynamically(
-      JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
-      JS::Handle<JSObject*> aModuleRequest, JS::Handle<JSObject*> aPromise);
 
   ResolveResult ResolveModuleSpecifier(LoadedScript* aScript,
                                        const nsAString& aSpecifier);
