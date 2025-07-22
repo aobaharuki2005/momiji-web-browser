@@ -126,8 +126,6 @@ void ModuleLoadRequest::ModuleLoaded() {
     ModuleErrored();
     return;
   }
-
-  mLoader->StartFetchingModuleDependencies(this);
 }
 
 void ModuleLoadRequest::LoadFailed() {

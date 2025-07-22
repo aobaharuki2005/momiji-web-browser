@@ -503,6 +503,11 @@ class ModuleLoaderBase : public nsISupports {
 
   void InstantiateAndEvaluateDynamicImport(ModuleLoadRequest* aRequest);
 
+  static bool OnLoadRequestedModulesResolved(JSContext* cx, unsigned argc,
+                                             Value* vp);
+  static bool OnLoadRequestedModulesRejected(JSContext* cx, unsigned argc,
+                                             Value* vp);
+
   /**
    * Shorthand Wrapper for JSAPI FinishDynamicImport function for the reject
    * case where we do not have `aEvaluationPromise`. As there is no evaluation
@@ -547,12 +552,25 @@ class ModuleLoaderBase : public nsISupports {
   bool IsFetchingAndHasWaitingRequest(ModuleLoadRequest* aRequest);
 
   // The slot stored in ImportMetaResolve function.
-  enum { ModulePrivateSlot = 0, SlotCount };
+  enum class ImportMetaSlots : uint32_t { ModulePrivateSlot = 0, SlotCount };
 
   // The number of args in ImportMetaResolve.
   static const uint32_t ImportMetaResolveNumArgs = 1;
   // The index of the 'specifier' argument in ImportMetaResolve.
   static const uint32_t ImportMetaResolveSpecifierArg = 0;
+
+  // The slot stored in OnLoadRequestedModulesResolved/Rejected.
+  enum class OnLoadRequestedModulesSlot : uint8_t {
+    HostDefinedSlot = 0,
+    SlotCount
+  };
+
+  // The number of args in OnLoadRequestedModulesResolved/Rejected.
+  static const uint32_t OnLoadRequestedModulesResolvedNumArgs = 0;
+  static const uint32_t OnLoadRequestedModulesRejectedNumArgs = 1;
+
+  // The index of the 'error' argument in OnLoadRequestedModulesRejected.
+  static const uint32_t OnLoadRequestedModulesRejectedErrorArg = 0;
 
  public:
   static mozilla::LazyLogModule gCspPRLog;

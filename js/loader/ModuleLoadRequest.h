@@ -115,9 +115,9 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   void ProcessDynamicImport() { mLoader->ProcessDynamicImport(this); }
 
   void ChildLoadComplete(bool aSuccess);
+  void LoadFinished();
 
  private:
-  void LoadFinished();
   void CancelImports();
   void CheckModuleDependenciesLoaded();
 
