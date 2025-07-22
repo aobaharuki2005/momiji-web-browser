@@ -16651,6 +16651,9 @@ struct EmulatesUndefinedDependency final : public CompilationDependency {
       : CompilationDependency(CompilationDependency::Type::EmulatesUndefined) {
         };
 
+  virtual HashNumber hash() const override {
+    return mozilla::HashGeneric(type);
+  }
   virtual bool operator==(const CompilationDependency& dep) const override {
     // Since the emulates undefined fuse is runtime wide, they are all equal
     return dep.type == type;
@@ -16678,6 +16681,9 @@ struct ArrayExceedsInt32LengthDependency final : public CompilationDependency {
       : CompilationDependency(
             CompilationDependency::Type::ArrayExceedsInt32Length) {};
 
+  virtual HashNumber hash() const override {
+    return mozilla::HashGeneric(type);
+  }
   virtual bool operator==(const CompilationDependency& dep) const override {
     return dep.type == type;
   }
@@ -16758,10 +16764,10 @@ bool CodeGenerator::link(JSContext* cx) {
   }
 
   IonScriptKey ionScriptKey(script, compilationId);
-  for (auto& dep : tracker.dependencies) {
+  for (auto r(tracker.dependencies.all()); !r.empty(); r.popFront()) {
+    CompilationDependency* dep = r.front();
     if (!dep->registerDependency(cx, ionScriptKey)) {
-      return false;  // Should we make sure we only return false on OOM and then
-                     // eat the OOM here?
+      return false;
     }
   }
 

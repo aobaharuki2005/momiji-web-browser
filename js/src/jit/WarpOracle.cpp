@@ -809,6 +809,9 @@ struct RealmFuseDependency final : public CompilationDependency {
     return (cx->realm()->realmFuses.*FuseMember).intact();
   }
 
+  virtual HashNumber hash() const override {
+    return mozilla::HashGeneric(type);
+  }
   virtual bool operator==(const CompilationDependency& dep) const override {
     return dep.type == type;
   }
