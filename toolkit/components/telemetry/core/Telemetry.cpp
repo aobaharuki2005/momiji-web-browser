@@ -24,6 +24,7 @@
 #include "js/PropertyAndElement.h"  // JS_DefineElement, JS_DefineProperty
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/glean/ProfilesMetrics.h"
 #include "mozilla/glean/TelemetryMetrics.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
@@ -337,6 +338,7 @@ class nsFetchTelemetryData : public Runnable {
     }
 
     glean::browser_timings::last_shutdown.Set(lastShutdownDuration);
+    glean::profile_lock::failed_lock_count.Set(failedLockCount);
 
     nsCOMPtr<nsIRunnable> e =
         NewRunnableMethod("nsFetchTelemetryData::MainThread", this,
