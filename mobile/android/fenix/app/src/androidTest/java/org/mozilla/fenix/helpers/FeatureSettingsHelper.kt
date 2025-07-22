@@ -97,6 +97,11 @@ interface FeatureSettingsHelper {
     var isUseNewCrashReporterDialog: Boolean
 
     /**
+     * Enable or disable the tab swipe CFR.
+     */
+    var isTabSwipeCFREnabled: Boolean
+
+    /**
      * Enable or disable the translations prompt after a page that can be translated is loaded.
      */
     fun enableOrDisablePageLoadTranslationsPrompt(enableTranslationsPrompt: Boolean) {
