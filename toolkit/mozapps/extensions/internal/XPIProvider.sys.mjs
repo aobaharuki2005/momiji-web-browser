@@ -3397,6 +3397,7 @@ export var XPIProvider = {
           "XPIDB_startup_load_reasons",
           updateReasons
         );
+        Glean.xpiDatabase.startupLoadReasons.set(updateReasons);
         XPIExports.XPIDatabase.syncLoadDB(false);
         try {
           extensionListChanged =

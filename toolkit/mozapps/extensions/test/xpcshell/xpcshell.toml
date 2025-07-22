@@ -189,6 +189,8 @@ skip-if = [
 ["test_recommendations.js"]
 skip-if = ["require_signing"]
 
+["test_recordException.js"]
+
 ["test_registerchrome.js"]
 
 ["test_registry.js"]
