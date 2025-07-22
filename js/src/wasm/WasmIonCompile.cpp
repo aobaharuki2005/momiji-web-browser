@@ -1625,10 +1625,9 @@ class FunctionCompiler {
       actualBase = extended;
     }
 
-    auto target = memoryIndex == 0 ? MWasmBoundsCheck::Memory0
-                                   : MWasmBoundsCheck::Unknown;
     auto* ins = MWasmBoundsCheck::New(alloc(), actualBase, boundsCheckLimit,
-                                      trapSiteDesc(), target);
+                                      trapSiteDesc(), MWasmBoundsCheck::Memory,
+                                      memoryIndex);
     curBlock_->add(ins);
     actualBase = ins;
 
@@ -2198,8 +2197,9 @@ class FunctionCompiler {
     // Load the table length and perform a bounds check with spectre index
     // masking
     auto* length = loadTableLength(tableIndex);
-    auto* check = MWasmBoundsCheck::New(
-        alloc(), address, length, trapSiteDesc(), MWasmBoundsCheck::Unknown);
+    auto* check =
+        MWasmBoundsCheck::New(alloc(), address, length, trapSiteDesc(),
+                              MWasmBoundsCheck::Table, tableIndex);
     curBlock_->add(check);
     if (JitOptions.spectreIndexMasking) {
       address = check;
@@ -5317,7 +5317,7 @@ class FunctionCompiler {
     // Create a bounds check.
     auto* boundsCheck =
         MWasmBoundsCheck::New(alloc(), index, numElements, trapSiteDesc(),
-                              MWasmBoundsCheck::Target::Unknown);
+                              MWasmBoundsCheck::Target::Other);
     if (!boundsCheck) {
       return nullptr;
     }
@@ -10570,15 +10570,6 @@ bool FunctionCompiler::emitBodyExprs() {
 }  // end anonymous namespace
 
 bool RootCompiler::generate() {
-  // Initialize global information used for optimization
-  if (codeMeta_.numMemories() > 0) {
-    if (codeMeta_.memories[0].addressType() == AddressType::I32) {
-      mirGen_.initMinWasmMemory0Length(codeMeta_.memories[0].initialLength32());
-    } else {
-      mirGen_.initMinWasmMemory0Length(codeMeta_.memories[0].initialLength64());
-    }
-  }
-
   // Only activate branch hinting if the option is enabled and some hints were
   // parsed.
   if (codeMeta_.branchHintingEnabled() && !codeMeta_.branchHints.isEmpty()) {

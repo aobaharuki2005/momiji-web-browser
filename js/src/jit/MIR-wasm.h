@@ -747,24 +747,30 @@ class MWasmHeapReg : public MNullaryInstruction {
 class MWasmBoundsCheck : public MBinaryInstruction, public NoTypePolicy::Data {
  public:
   enum Target {
-    // Linear memory at index zero, which is the only memory allowed so far.
-    Memory0,
-    // Everything else. Currently comprises other memories, tables, and arrays
-    // in the GC proposal.
-    Unknown,
+    // If using the following options, `targetIndex` must be specified.
+    Memory,
+    Table,
+    // Everything else. Currently used for arrays in the GC proposal. If using
+    // this, targetIndex should not be used.
+    Other,
   };
 
  private:
   wasm::TrapSiteDesc trapSiteDesc_;
   Target target_;
+  uint32_t targetIndex_;
 
   explicit MWasmBoundsCheck(MDefinition* index, MDefinition* boundsCheckLimit,
                             const wasm::TrapSiteDesc& trapSiteDesc,
-                            Target target)
+                            Target target, uint32_t targetIndex = UINT32_MAX)
       : MBinaryInstruction(classOpcode, index, boundsCheckLimit),
         trapSiteDesc_(trapSiteDesc),
-        target_(target) {
+        target_(target),
+        targetIndex_(targetIndex) {
     MOZ_ASSERT(index->type() == boundsCheckLimit->type());
+    MOZ_ASSERT_IF(target == Memory || target == Table,
+                  targetIndex != UINT32_MAX);
+    MOZ_ASSERT_IF(target == Other, targetIndex == UINT32_MAX);
 
     // Bounds check is effectful: it throws for OOB.
     setGuard();
@@ -781,7 +787,8 @@ class MWasmBoundsCheck : public MBinaryInstruction, public NoTypePolicy::Data {
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
-  bool isMemory0() const { return target_ == MWasmBoundsCheck::Memory0; }
+  Target target() const { return target_; }
+  uint32_t targetIndex() const { return targetIndex_; }
 
   bool isRedundant() const { return !isGuard(); }
 

@@ -28,6 +28,7 @@ MIRGenerator::MIRGenerator(CompileRealm* realm,
       runtime(realm ? realm->runtime() : nullptr),
       outerInfo_(info),
       optimizationInfo_(optimizationInfo),
+      wasmCodeMeta_(wasmCodeMeta),
       alloc_(alloc),
       graph_(graph),
       offThreadStatus_(Ok()),
@@ -41,7 +42,6 @@ MIRGenerator::MIRGenerator(CompileRealm* realm,
                                    : false),
       bigIntsCanBeInNursery_(realm ? realm->zone()->canNurseryAllocateBigInts()
                                    : false),
-      minWasmMemory0Length_(0),
       options(options),
       gs_(alloc, wasmCodeMeta) {}
 
