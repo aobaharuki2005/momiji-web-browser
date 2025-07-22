@@ -21,6 +21,9 @@
 namespace mozilla {
 
 struct LimitersAndCaretData;  // Declared in nsFrameSelection.h
+namespace dom {
+class HTMLBRElement;
+};
 
 /*****************************************************************************
  * AutoInlineStyleSetter is a temporary class to set an inline style to
@@ -596,18 +599,29 @@ class MOZ_STACK_CLASS HTMLEditor::AutoInsertParagraphHandler final {
    *
    * @param aParentDivOrP   The parent block.  This must be <p> or <div>
    *                        element.
-   * @param aCandidatePointToSplit
-   *                        The point where the caller want to split
-   *                        aParentDivOrP.  However, in some cases, this is not
-   *                        used as-is.  E.g., this method avoids to create new
-   *                        empty <a href> in the right paragraph.  So this may
-   *                        be adjusted to proper position around it.
-   * @return                If the caller should default to inserting <br>
-   *                        element, returns "not handled".
+   * @param aPointToSplit   The point where the caller want to split
+   *                        aParentDivOrP.  This should be computed with
+   *                        GetBetterSplitPointToAvoidToContinueLink().
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<SplitNodeResult, nsresult>
   HandleInParagraph(Element& aParentDivOrP,
-                    const EditorDOMPoint& aCandidatePointToSplit);
+                    const EditorDOMPoint& aPointToSplit);
+
+  /**
+   * Return true if the HTMLEditor is in the mode which `insertParagraph` should
+   * always create a new paragraph or in the cases that we create a new
+   * paragraph in the legacy mode.
+   */
+  [[nodiscard]] bool ShouldCreateNewParagraph(
+      Element& aParentDivOrP, const EditorDOMPoint& aPointToSplit) const;
+
+  /**
+   * Return true if aBRElement is nullptr or an invisible <br> or a padding <br>
+   * for making the last empty line visible.
+   */
+  [[nodiscard]] static bool
+  IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(
+      const dom::HTMLBRElement* aBRElement);
 
   /**
    * Handle insertParagraph command (i.e., handling Enter key press) in a

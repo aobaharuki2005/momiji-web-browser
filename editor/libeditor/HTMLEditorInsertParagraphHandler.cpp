@@ -415,40 +415,47 @@ HTMLEditor::AutoInsertParagraphHandler::Run() {
       (mDefaultParagraphSeparator != ParagraphSeparator::br &&
        editableBlockElement->IsAnyOfHTMLElements(nsGkAtoms::p,
                                                  nsGkAtoms::div))) {
-    // Paragraphs: special rules to look for <br>s
-    Result<SplitNodeResult, nsresult> splitNodeResult = HandleInParagraph(
-        *editableBlockElement, insertedPaddingBRElement
-                                   ? EditorDOMPoint(insertedPaddingBRElement)
-                                   : pointToInsert);
-    if (MOZ_UNLIKELY(splitNodeResult.isErr())) {
-      NS_WARNING("HTMLEditor::HandleInsertParagraphInParagraph() failed");
-      return splitNodeResult.propagateErr();
-    }
-    if (splitNodeResult.inspect().Handled()) {
-      SplitNodeResult unwrappedSplitNodeResult = splitNodeResult.unwrap();
-      const RefPtr<Element> rightParagraphElement =
-          unwrappedSplitNodeResult.DidSplit()
-              ? unwrappedSplitNodeResult.GetNextContentAs<Element>()
-              : blockElementToPutCaret.get();
-      const EditorDOMPoint pointToPutCaret =
-          unwrappedSplitNodeResult.UnwrapCaretPoint();
-      nsresult rv = CollapseSelectionToPointOrIntoBlockWhichShouldHaveCaret(
-          pointToPutCaret, rightParagraphElement,
-          {SuggestCaret::AndIgnoreTrivialError});
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "AutoInsertParagraphHandler::"
-            "CollapseSelectionToPointOrIntoBlockWhichShouldHaveCaret() failed");
-        return Err(rv);
+    const EditorDOMPoint pointToSplit =
+        GetBetterSplitPointToAvoidToContinueLink(
+            insertedPaddingBRElement ? EditorDOMPoint(insertedPaddingBRElement)
+                                     : pointToInsert,
+            *editableBlockElement);
+    if (ShouldCreateNewParagraph(*editableBlockElement, pointToSplit)) {
+      MOZ_ASSERT(pointToSplit.IsInContentNodeAndValidInComposedDoc());
+      // Paragraphs: special rules to look for <br>s
+      Result<SplitNodeResult, nsresult> splitNodeResult =
+          HandleInParagraph(*editableBlockElement, pointToSplit);
+      if (MOZ_UNLIKELY(splitNodeResult.isErr())) {
+        NS_WARNING("HTMLEditor::HandleInsertParagraphInParagraph() failed");
+        return splitNodeResult.propagateErr();
       }
-      NS_WARNING_ASSERTION(
-          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-          "AutoInsertParagraphHandler::"
-          "CollapseSelectionToPointOrIntoBlockWhichShouldHaveCaret() "
-          "failed, but ignored");
-      return EditActionResult::HandledResult();
+      if (splitNodeResult.inspect().Handled()) {
+        SplitNodeResult unwrappedSplitNodeResult = splitNodeResult.unwrap();
+        const RefPtr<Element> rightParagraphElement =
+            unwrappedSplitNodeResult.DidSplit()
+                ? unwrappedSplitNodeResult.GetNextContentAs<Element>()
+                : blockElementToPutCaret.get();
+        const EditorDOMPoint pointToPutCaret =
+            unwrappedSplitNodeResult.UnwrapCaretPoint();
+        nsresult rv = CollapseSelectionToPointOrIntoBlockWhichShouldHaveCaret(
+            pointToPutCaret, rightParagraphElement,
+            {SuggestCaret::AndIgnoreTrivialError});
+        if (NS_FAILED(rv)) {
+          NS_WARNING(
+              "AutoInsertParagraphHandler::"
+              "CollapseSelectionToPointOrIntoBlockWhichShouldHaveCaret() "
+              "failed");
+          return Err(rv);
+        }
+        NS_WARNING_ASSERTION(
+            rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+            "AutoInsertParagraphHandler::"
+            "CollapseSelectionToPointOrIntoBlockWhichShouldHaveCaret() "
+            "failed, but ignored");
+        return EditActionResult::HandledResult();
+      }
+      MOZ_ASSERT(!splitNodeResult.inspect().HasCaretPointSuggestion());
     }
-    MOZ_ASSERT(!splitNodeResult.inspect().HasCaretPointSuggestion());
 
     // Fall through, if HandleInsertParagraphInParagraph() didn't handle it.
     MOZ_ASSERT(pointToInsert.IsSetAndValid(),
@@ -1267,25 +1274,94 @@ HTMLEditor::AutoInsertParagraphHandler::HandleInHeadingElement(
       std::move(pointToPutCaret));
 }
 
+// static
+bool HTMLEditor::AutoInsertParagraphHandler::
+    IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(
+        const dom::HTMLBRElement* aBRElement) {
+  return !aBRElement || HTMLEditUtils::IsInvisibleBRElement(*aBRElement) ||
+         EditorUtils::IsPaddingBRElementForEmptyLastLine(*aBRElement);
+}
+
+bool HTMLEditor::AutoInsertParagraphHandler::ShouldCreateNewParagraph(
+    Element& aParentDivOrP, const EditorDOMPoint& aPointToSplit) const {
+  MOZ_ASSERT(aPointToSplit.IsInContentNodeAndValidInComposedDoc());
+
+  if (MOZ_LIKELY(mHTMLEditor.GetReturnInParagraphCreatesNewParagraph())) {
+    // We should always create a new paragraph by default.
+    return true;
+  }
+  if (aPointToSplit.GetContainer() == &aParentDivOrP) {
+    // We are trying to split only the current paragraph, let's do it.
+    return true;
+  }
+  if (aPointToSplit.IsInTextNode()) {
+    if (aPointToSplit.IsStartOfContainer()) {
+      // If we're splitting the paragraph at start of a `Text` and it does
+      // not follow a <br> or follows an invisible <br>, we should not create a
+      // new paragraph.
+      // XXX It seems that here assumes that the paragraph has only this `Text`.
+      const auto* const precedingBRElement =
+          HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetPreviousSibling(
+              *aPointToSplit.ContainerAs<Text>(),
+              {WalkTreeOption::IgnoreNonEditableNode}));
+      return !IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(
+          precedingBRElement);
+    }
+    if (aPointToSplit.IsEndOfContainer()) {
+      // If we're splitting the paragraph at end of a `Text` and it's not
+      // followed by a <br> or is followed by an invisible <br>, we should not
+      // create a new paragraph.
+      // XXX It seems that here assumes that the paragraph has only this `Text`.
+      const auto* const followingBRElement =
+          HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetNextSibling(
+              *aPointToSplit.ContainerAs<Text>(),
+              {WalkTreeOption::IgnoreNonEditableNode}));
+      return !IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(
+          followingBRElement);
+    }
+    // If we're splitting the paragraph at middle of a `Text`, we should create
+    // a new paragraph.
+    return true;
+  }
+
+  // If we're splitting in a child element of the paragraph and it does not
+  // follow a <br> or follows an invisible <br>, maybe we should not create a
+  // new paragraph.
+  // XXX Why? We probably need to do this if we're splitting in an inline
+  //     element which and whose parents provide some styles, we should put
+  //     the <br> element for making a placeholder in the left paragraph for
+  //     moving to the caret, but I think that this could be handled in fewer
+  //     cases than this.
+  const auto* const precedingBRElement =
+      HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetPreviousContent(
+          aPointToSplit, {WalkTreeOption::IgnoreNonEditableNode},
+          BlockInlineCheck::Unused, &mEditingHost));
+  if (!IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(
+          precedingBRElement)) {
+    return true;
+  }
+  // If we're splitting in a child element of the paragraph and it's not
+  // followed by a <br> or followed by an invisible <br>, we should not create a
+  // new paragraph.
+  const auto* followingBRElement =
+      HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetNextContent(
+          aPointToSplit, {WalkTreeOption::IgnoreNonEditableNode},
+          BlockInlineCheck::Unused, &mEditingHost));
+  return !IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(
+      followingBRElement);
+}
+
 Result<SplitNodeResult, nsresult>
 HTMLEditor::AutoInsertParagraphHandler::HandleInParagraph(
-    Element& aParentDivOrP, const EditorDOMPoint& aCandidatePointToSplit) {
-  MOZ_ASSERT(aCandidatePointToSplit.IsSetAndValid());
+    Element& aParentDivOrP, const EditorDOMPoint& aPointToSplit) {
+  MOZ_ASSERT(aPointToSplit.IsInContentNodeAndValidInComposedDoc());
 
-  // First, get a better split point to avoid to create a new empty link in the
-  // right paragraph.
-  EditorDOMPoint pointToSplit = GetBetterSplitPointToAvoidToContinueLink(
-      aCandidatePointToSplit, aParentDivOrP);
-  MOZ_ASSERT(pointToSplit.IsSetAndValid());
-
-  const bool createNewParagraph =
-      mHTMLEditor.GetReturnInParagraphCreatesNewParagraph();
+  EditorDOMPoint pointToSplit(aPointToSplit);
   RefPtr<HTMLBRElement> brElement;
-  if (createNewParagraph && pointToSplit.GetContainer() == &aParentDivOrP) {
+  if (pointToSplit.GetContainer() == &aParentDivOrP) {
     // We are try to split only the current paragraph.  Therefore, we don't need
     // to create new <br> elements around it (if left and/or right paragraph
     // becomes empty, it'll be treated by SplitParagraphWithTransaction().
-    brElement = nullptr;
   } else if (pointToSplit.IsInTextNode()) {
     if (pointToSplit.IsStartOfContainer()) {
       // If we're splitting the paragraph at start of a text node and there is
@@ -1300,13 +1376,7 @@ HTMLEditor::AutoInsertParagraphHandler::HandleInParagraph(
           HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetPreviousSibling(
               *pointToSplit.ContainerAs<Text>(),
               {WalkTreeOption::IgnoreNonEditableNode}));
-      if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
-          EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
-        // If insertParagraph does not create a new paragraph, default to
-        // insertLineBreak.
-        if (!createNewParagraph) {
-          return SplitNodeResult::NotHandled(pointToSplit);
-        }
+      if (IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(brElement)) {
         const EditorDOMPoint pointToInsertBR = pointToSplit.ParentPoint();
         MOZ_ASSERT(pointToInsertBR.IsSet());
         if (pointToInsertBR.IsInContentNode() &&
@@ -1341,13 +1411,7 @@ HTMLEditor::AutoInsertParagraphHandler::HandleInParagraph(
       brElement = HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetNextSibling(
           *pointToSplit.ContainerAs<Text>(),
           {WalkTreeOption::IgnoreNonEditableNode}));
-      if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
-          EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
-        // If insertParagraph does not create a new paragraph, default to
-        // insertLineBreak.
-        if (!createNewParagraph) {
-          return SplitNodeResult::NotHandled(pointToSplit);
-        }
+      if (IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(brElement)) {
         const auto pointToInsertBR =
             EditorDOMPoint::After(*pointToSplit.ContainerAs<Text>());
         MOZ_ASSERT(pointToInsertBR.IsSet());
@@ -1373,12 +1437,6 @@ HTMLEditor::AutoInsertParagraphHandler::HandleInParagraph(
         }
       }
     } else {
-      // If insertParagraph does not create a new paragraph, default to
-      // insertLineBreak.
-      if (!createNewParagraph) {
-        return SplitNodeResult::NotHandled(pointToSplit);
-      }
-
       // If we're splitting the paragraph at middle of a text node, we should
       // split the text node here and put a <br> element next to the left text
       // node.
@@ -1473,19 +1531,12 @@ HTMLEditor::AutoInsertParagraphHandler::HandleInParagraph(
     brElement = HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetPreviousContent(
         pointToSplit, {WalkTreeOption::IgnoreNonEditableNode},
         BlockInlineCheck::Unused, &mEditingHost));
-    if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
-        EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
+    if (IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(brElement)) {
       // is there a BR after it?
       brElement = HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetNextContent(
           pointToSplit, {WalkTreeOption::IgnoreNonEditableNode},
           BlockInlineCheck::Unused, &mEditingHost));
-      if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
-          EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
-        // If insertParagraph does not create a new paragraph, default to
-        // insertLineBreak.
-        if (!createNewParagraph) {
-          return SplitNodeResult::NotHandled(pointToSplit);
-        }
+      if (IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(brElement)) {
         if (pointToSplit.IsInContentNode() &&
             HTMLEditUtils::CanNodeContain(
                 *pointToSplit.ContainerAs<nsIContent>(), *nsGkAtoms::br)) {
