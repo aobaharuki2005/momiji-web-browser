@@ -116,7 +116,6 @@ import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlControllerCallback
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
-import org.mozilla.fenix.home.store.HomeToolbarStoreBuilder
 import org.mozilla.fenix.home.store.HomepageState
 import org.mozilla.fenix.home.toolbar.DefaultToolbarController
 import org.mozilla.fenix.home.toolbar.FenixHomeToolbar
@@ -311,10 +310,11 @@ class HomeFragment : Fragment() {
         }
 
         homeNavigationBar = HomeNavigationBar(
-            context = activity,
+            context = requireContext(),
+            lifecycleOwner = this,
             container = binding.navigationBarContainer,
-            toolbarStore = buildToolbarStore(activity),
-            settings = activity.settings(),
+            appStore = components.appStore,
+            browserStore = store,
             hideWhenKeyboardShown = true,
         )
 
@@ -576,33 +576,30 @@ class HomeFragment : Fragment() {
         return binding.root
     }
 
-    private fun buildToolbar(activity: HomeActivity): FenixHomeToolbar =
-        when (activity.settings().shouldUseComposableToolbar) {
-            true -> {
-                val toolbarStore = buildToolbarStore(activity)
-
-                HomeToolbarComposable(
-                    context = activity,
-                    homeBinding = binding,
-                    navController = findNavController(),
-                    toolbarStore = toolbarStore,
-                    appStore = activity.components.appStore,
-                    browserStore = activity.components.core.store,
-                    settings = activity.settings(),
-                    directToSearchConfig = DirectToSearchConfig(
-                        startSearch = bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR) ||
-                                FxNimbus.features.oneClickSearch.value().enabled,
-                        sessionId = args.sessionToStartSearchFor,
-                        source = args.searchAccessPoint,
-                    ),
-                    tabStripContent = { TabStrip() },
-                    searchSuggestionsContent = { modifier ->
-                        (awesomeBarComposable ?: initializeAwesomeBarComposable(toolbarStore, modifier))
-                            ?.SearchSuggestions()
-                    },
-                    navigationBarContent = homeNavigationBar?.asComposable(),
-                )
-            }
+    private fun buildToolbar(activity: HomeActivity) =
+        when (requireContext().settings().shouldUseComposableToolbar) {
+            true -> HomeToolbarComposable(
+                context = activity,
+                lifecycleOwner = this,
+                navController = findNavController(),
+                homeBinding = binding,
+                appStore = activity.components.appStore,
+                browserStore = activity.components.core.store,
+                browsingModeManager = activity.browsingModeManager,
+                settings = activity.settings(),
+                directToSearchConfig = DirectToSearchConfig(
+                    startSearch = bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR) ||
+                            FxNimbus.features.oneClickSearch.value().enabled,
+                    sessionId = args.sessionToStartSearchFor,
+                    source = args.searchAccessPoint,
+                ),
+                tabStripContent = { TabStrip() },
+                searchSuggestionsContent = { toolbarStore, modifier ->
+                    (awesomeBarComposable ?: initializeAwesomeBarComposable(toolbarStore, modifier))
+                        ?.SearchSuggestions()
+                },
+                navigationBarContent = homeNavigationBar?.asComposable(),
+            )
 
             false -> HomeToolbarView(
                 homeBinding = binding,
@@ -611,15 +608,6 @@ class HomeFragment : Fragment() {
                 homeActivity = activity,
             )
         }
-
-    private fun buildToolbarStore(activity: HomeActivity) = HomeToolbarStoreBuilder.build(
-        context = activity,
-        lifecycleOwner = this,
-        navController = findNavController(),
-        appStore = requireContext().components.appStore,
-        browserStore = requireContext().components.core.store,
-        browsingModeManager = activity.browsingModeManager,
-    )
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)

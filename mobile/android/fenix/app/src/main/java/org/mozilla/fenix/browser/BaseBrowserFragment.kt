@@ -34,6 +34,8 @@ import androidx.core.view.OnApplyWindowInsetsListener
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
@@ -155,13 +157,17 @@ import org.mozilla.fenix.biometricauthentication.BiometricAuthenticationManager
 import org.mozilla.fenix.biometricauthentication.NavigationOrigin
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
-import org.mozilla.fenix.browser.readermode.ReaderModeController
+import org.mozilla.fenix.browser.store.BrowserScreenAction.EnvironmentCleared
+import org.mozilla.fenix.browser.store.BrowserScreenAction.EnvironmentRehydrated
+import org.mozilla.fenix.browser.store.BrowserScreenMiddleware
 import org.mozilla.fenix.browser.store.BrowserScreenStore
+import org.mozilla.fenix.browser.store.BrowserScreenStore.Environment
 import org.mozilla.fenix.browser.tabstrip.TabStrip
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.FenixAutocompletePrompt
 import org.mozilla.fenix.components.FenixSuggestStrongPasswordPrompt
 import org.mozilla.fenix.components.FindInPageIntegration
+import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.accounts.FxaWebChannelIntegration
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction
@@ -1279,17 +1285,42 @@ abstract class BaseBrowserFragment :
     private fun initializeBrowserToolbarComposable(
         activity: HomeActivity,
         store: BrowserStore,
-        readerModeController: DefaultReaderModeController,
+        readerMenuController: DefaultReaderModeController,
     ): BrowserToolbarComposable {
-        browserScreenStore = buildBrowserScreenStore()
-        val toolbarStore = buildToolbarStore(activity, readerModeController)
+        browserScreenStore = StoreProvider.get(this) {
+            BrowserScreenStore(
+                middleware = listOf(
+                    BrowserScreenMiddleware(requireComponents.analytics.crashReporter),
+                ),
+            )
+        }.also {
+            it.dispatch(
+                EnvironmentRehydrated(
+                    Environment(
+                        context = requireContext(),
+                        viewLifecycleOwner = viewLifecycleOwner,
+                        fragmentManager = childFragmentManager,
+                    ),
+                ),
+            )
+            viewLifecycleOwner.lifecycle.addObserver(
+                object : DefaultLifecycleObserver {
+                    override fun onDestroy(owner: LifecycleOwner) {
+                        it.dispatch(EnvironmentCleared)
+                    }
+                },
+            )
+        }
 
         browserNavigationBar =
              BrowserNavigationBar(
                 context = activity,
+                lifecycleOwner = this,
                 container = binding.browserLayout,
-                toolbarStore = toolbarStore,
+                appStore = activity.components.appStore,
+                browserScreenStore = browserScreenStore,
                 browserStore = store,
+                components = activity.components,
                 settings = activity.settings(),
                 hideWhenKeyboardShown = true,
                 customTabSession = customTabSessionId?.let { store.state.findCustomTab(it) },
@@ -1297,11 +1328,17 @@ abstract class BaseBrowserFragment :
 
         return BrowserToolbarComposable(
             activity = activity,
+            lifecycleOwner = this,
             container = binding.browserLayout,
-            toolbarStore = toolbarStore,
+            navController = findNavController(),
+            appStore = activity.components.appStore,
             browserScreenStore = browserScreenStore,
-            appStore = requireComponents.appStore,
             browserStore = store,
+            components = activity.components,
+            browsingModeManager = activity.browsingModeManager,
+            browserAnimator = browserAnimator,
+            thumbnailsFeature = thumbnailsFeature.get(),
+            readerModeController = readerMenuController,
             settings = activity.settings(),
             customTabSession = customTabSessionId?.let { store.state.findCustomTab(it) },
             tabStripContent = buildTabStrip(activity),
@@ -1355,31 +1392,6 @@ abstract class BaseBrowserFragment :
             )
         }
     }
-
-    private fun buildBrowserScreenStore() = BrowserScreenStoreBuilder.build(
-        context = requireContext(),
-        lifecycleOwner = this,
-        fragmentManager = childFragmentManager,
-    )
-
-    private fun buildToolbarStore(
-        activity: HomeActivity,
-        readerModeController: ReaderModeController,
-    ) = BrowserToolbarStoreBuilder.build(
-        activity = activity,
-        lifecycleOwner = this,
-        navController = findNavController(),
-        appStore = activity.components.appStore,
-        browserStore = activity.components.core.store,
-        browserScreenStore = browserScreenStore,
-        components = activity.components,
-        browsingModeManager = activity.browsingModeManager,
-        browserAnimator = browserAnimator,
-        thumbnailsFeature = thumbnailsFeature.get(),
-        readerModeController = readerModeController,
-        settings = activity.settings(),
-        customTabSession = customTabSessionId?.let { activity.components.core.store.state.findCustomTab(it) },
-    )
 
     private fun showUndoSnackbar(message: String) {
         viewLifecycleOwner.lifecycleScope.allowUndo(

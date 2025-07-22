@@ -20,7 +20,7 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.DisplayState
 import mozilla.components.compose.browser.toolbar.store.EditState
 import mozilla.components.compose.browser.toolbar.store.Mode
-import mozilla.components.lib.state.ext.observeAsComposableState
+import mozilla.components.lib.state.ext.observeAsState
 
 /**
  * A customizable toolbar for browsers.
@@ -35,13 +35,12 @@ import mozilla.components.lib.state.ext.observeAsComposableState
 fun BrowserToolbar(
     store: BrowserToolbarStore,
 ) {
-    val uiState by store.observeAsComposableState { it }
+    val uiState by store.observeAsState(initialValue = store.state) { it }
 
     if (uiState.isEditMode()) {
         BrowserEditToolbar(
             query = uiState.editState.query,
             showQueryAsPreselected = uiState.editState.showQueryAsPreselected,
-            gravity = uiState.gravity,
             autocompleteProviders = uiState.editState.autocompleteProviders,
             editActionsStart = uiState.editState.editActionsStart,
             editActionsEnd = uiState.editState.editActionsEnd,
@@ -56,7 +55,6 @@ fun BrowserToolbar(
         BrowserDisplayToolbar(
             pageOrigin = uiState.displayState.pageOrigin,
             progressBarConfig = uiState.displayState.progressBarConfig,
-            gravity = uiState.gravity,
             browserActionsStart = uiState.displayState.browserActionsStart,
             pageActionsStart = uiState.displayState.pageActionsStart,
             pageActionsEnd = uiState.displayState.pageActionsEnd,

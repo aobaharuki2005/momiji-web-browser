@@ -51,6 +51,7 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarState
 import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
 import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
 import mozilla.components.compose.browser.toolbar.store.ProgressBarConfig
+import mozilla.components.compose.browser.toolbar.store.ProgressBarGravity
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.cookiehandling.CookieBannersStorage
 import mozilla.components.concept.engine.permission.SitePermissions
@@ -776,7 +777,13 @@ class BrowserToolbarMiddleware(
         )
     }
 
-    private fun buildProgressBar(progress: Int = 0) = ProgressBarConfig(progress)
+    private fun buildProgressBar(progress: Int = 0) = ProgressBarConfig(
+        progress = progress,
+        gravity = when (settings.shouldUseBottomToolbar) {
+            true -> ProgressBarGravity.Top
+            false -> ProgressBarGravity.Bottom
+        },
+    )
 
     private fun openNewTab(
         browsingMode: BrowsingMode,

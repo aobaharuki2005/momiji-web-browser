@@ -41,12 +41,13 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.search.BrowserStoreToFenixSearchMapperMiddleware
 import org.mozilla.fenix.search.BrowserToolbarToFenixSearchMapperMiddleware
 import org.mozilla.fenix.search.FenixSearchMiddleware
 import org.mozilla.fenix.search.SearchFragmentAction
+import org.mozilla.fenix.search.SearchFragmentAction.SearchSuggestionsVisibilityUpdated
 import org.mozilla.fenix.search.SearchFragmentAction.SuggestionClicked
 import org.mozilla.fenix.search.SearchFragmentAction.SuggestionSelected
 import org.mozilla.fenix.search.SearchFragmentStore
@@ -126,8 +127,8 @@ class AwesomeBarComposable(
         }
 
         BackHandler {
-            searchStore.dispatch(SearchFragmentAction.SearchSuggestionsVisibilityUpdated(false))
-            appStore.dispatch(AppAction.SearchAction.SearchEnded)
+            searchStore.dispatch(SearchSuggestionsVisibilityUpdated(false))
+            appStore.dispatch(SearchEnded)
             browserStore.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true))
         }
 

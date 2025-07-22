@@ -23,22 +23,20 @@ import mozilla.components.compose.browser.toolbar.concept.Action
 import mozilla.components.compose.browser.toolbar.concept.Action.ActionButtonRes
 import mozilla.components.compose.browser.toolbar.concept.Action.TabCounterAction
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
-import mozilla.components.compose.browser.toolbar.store.ToolbarGravity
-import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Top
 import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Top-level UI for displaying the navigation bar.
  *
- * @param actions List of browser [Action]s to be displayed in the navigation bar.
- * @param toolbarGravity [ToolbarGravity] for where the toolbar is being placed on the screen.
+ * @param actions List of browser [Action]s to be displayed in the navigation bar,
+ * @param shouldShowDivider Whether a divider should be shown.
  * @param onInteraction Callback invoked with a [BrowserToolbarEvent] whenever the user interacts
  * with any action in the navigation bar.
  */
 @Composable
 fun NavigationBar(
     actions: List<Action> = emptyList(),
-    toolbarGravity: ToolbarGravity = Top,
+    shouldShowDivider: Boolean,
     onInteraction: (BrowserToolbarEvent) -> Unit,
 ) {
     Box(
@@ -55,6 +53,12 @@ fun NavigationBar(
             .semantics(mergeDescendants = true) {}
             .fillMaxWidth(),
     ) {
+        if (shouldShowDivider) {
+            Divider(
+                modifier = Modifier.align(Alignment.TopCenter),
+            )
+        }
+
         ActionContainer(
             actions = actions,
             onInteraction = onInteraction,
@@ -63,12 +67,6 @@ fun NavigationBar(
                 .align(Alignment.Center),
             horizontalArrangement = Arrangement.SpaceEvenly,
         )
-
-        if (toolbarGravity == Top) {
-            Divider(
-                modifier = Modifier.align(Alignment.TopCenter),
-            )
-        }
     }
 }
 
@@ -77,7 +75,7 @@ fun NavigationBar(
 private fun NavigationBarPreview() {
     AcornTheme {
         NavigationBar(
-            actions = listOf(
+            listOf(
                 ActionButtonRes(
                     drawableResId = iconsR.drawable.mozac_ic_bookmark_24,
                     contentDescription = android.R.string.untitled,
@@ -106,7 +104,7 @@ private fun NavigationBarPreview() {
                     onClick = object : BrowserToolbarEvent {},
                 ),
             ),
-            toolbarGravity = Top,
+            false,
         ) {}
     }
 }

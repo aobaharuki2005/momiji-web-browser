@@ -26,7 +26,6 @@ class AutofillSelectBarBehavior<V : View>(
         add(R.id.toolbar_navbar_container)
         if (toolbarPosition == ToolbarPosition.BOTTOM) {
             add(R.id.toolbar)
-            add(R.id.composable_toolbar)
         }
     }
 

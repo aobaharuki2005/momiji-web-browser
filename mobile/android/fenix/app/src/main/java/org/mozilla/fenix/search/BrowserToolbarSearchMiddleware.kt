@@ -5,7 +5,6 @@
 package org.mozilla.fenix.search
 
 import android.content.res.Resources
-import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.core.graphics.drawable.toDrawable
 import androidx.lifecycle.Lifecycle.State.RESUMED
@@ -150,14 +149,8 @@ class BrowserToolbarSearchMiddleware(
             }
 
             is SearchAborted -> {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                    val sourceTabId = appStore.state.searchState.sourceTabId
-                    appStore.dispatch(SearchEnded)
-                    browserStore.dispatch(EngagementFinished(abandoned = true))
-                    if (sourceTabId != null) {
-                        environment?.navController?.navigate(R.id.browserFragment)
-                    }
-                }
+                appStore.dispatch(SearchEnded)
+                browserStore.dispatch(EngagementFinished(abandoned = true))
             }
 
             is SearchSelectorClicked -> {

@@ -64,6 +64,8 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
 import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
 import mozilla.components.compose.browser.toolbar.store.ProgressBarConfig
+import mozilla.components.compose.browser.toolbar.store.ProgressBarGravity.Bottom
+import mozilla.components.compose.browser.toolbar.store.ProgressBarGravity.Top
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.cookiehandling.CookieBannersStorage
 import mozilla.components.concept.engine.permission.SitePermissionsStorage
@@ -115,6 +117,7 @@ import org.mozilla.fenix.components.NimbusComponents
 import org.mozilla.fenix.components.UseCases
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.CurrentTabClosed
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.components.appstate.AppAction.SnackbarAction.SnackbarDismissed
 import org.mozilla.fenix.components.appstate.AppAction.URLCopiedToClipboard
 import org.mozilla.fenix.components.appstate.AppState
@@ -199,6 +202,15 @@ class BrowserToolbarMiddlewareTest {
     private val trackingProtectionUseCases: TrackingProtectionUseCases = mockk()
     private val publicSuffixList = PublicSuffixList(testContext)
     private val bookmarksStorage: BookmarksStorage = mockk(relaxed = true)
+
+    @Test
+    fun `WHEN initializing the toolbar THEN reset app search state`() = runTestOnMain {
+        val middleware = buildMiddleware(appStore = appStore)
+
+        val toolbarStore = buildStore(middleware)
+
+        verify { appStore.dispatch(SearchEnded) }
+    }
 
     @Test
     fun `WHEN initializing the toolbar THEN add browser start actions`() = runTestOnMain {
@@ -1098,6 +1110,7 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(
             ProgressBarConfig(
                 progress = 50,
+                gravity = Top,
                 color = null,
             ),
             toolbarStore.state.displayState.progressBarConfig,
@@ -1130,6 +1143,7 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(
             ProgressBarConfig(
                 progress = 71,
+                gravity = Bottom,
                 color = null,
             ),
             toolbarStore.state.displayState.progressBarConfig,

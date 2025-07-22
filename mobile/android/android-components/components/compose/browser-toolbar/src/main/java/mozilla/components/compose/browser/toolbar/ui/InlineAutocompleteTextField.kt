@@ -160,7 +160,7 @@ internal fun InlineAutocompleteTextField(
 
                 updateText(query)
                 if (showQueryAsPreselected && query.isNotBlank()) {
-                    post { selectAll() }
+                    selectAll()
                 }
 
                 setOnCommitListener {
