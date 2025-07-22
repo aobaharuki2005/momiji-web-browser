@@ -573,39 +573,34 @@ class MOZ_STACK_CLASS HTMLEditor::AutoInsertParagraphHandler final {
 
   /**
    * SplitParagraphWithTransaction() splits the parent block, aParentDivOrP, at
-   * aStartOfRightNode.
+   * aPointToSplit.
    *
-   * @param aParentDivOrP       The parent block to be split.  This must be <p>
-   *                            or <div> element.
-   * @param aStartOfRightNode   The point to be start of right node after
-   *                            split.  This must be descendant of
-   *                            aParentDivOrP.
-   * @param aMayBecomeVisibleBRElement
-   *                            Next <br> element of the split point if there
-   *                            is.  Otherwise, nullptr. If this is not nullptr,
-   *                            the <br> element may be removed if it becomes
-   *                            visible.
+   * @param aBlockElementToSplit    The current paragraph which should be split.
+   * @param aPointToSplit           The point to split aBlockElementToSplit.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<SplitNodeResult, nsresult>
-  SplitParagraphWithTransaction(Element& aParentDivOrP,
-                                const EditorDOMPoint& aStartOfRightNode,
-                                dom::HTMLBRElement* aMayBecomeVisibleBRElement);
+  SplitParagraphWithTransaction(Element& aBlockElementToSplit,
+                                const EditorDOMPoint& aPointToSplit);
 
   /**
-   * Do the right thing for Enter key press or 'insertParagraph' command in
-   * aParentDivOrP.  aParentDivOrP will be split **around**
-   * aCandidatePointToSplit.  If this thinks that it should be handled to insert
-   * a <br> instead, this returns "not handled".
+   * Delete preceding invisible line break before aPointToSplit if and only if
+   * there is.
    *
-   * @param aParentDivOrP   The parent block.  This must be <p> or <div>
-   *                        element.
-   * @param aPointToSplit   The point where the caller want to split
-   *                        aParentDivOrP.  This should be computed with
-   *                        GetBetterSplitPointToAvoidToContinueLink().
+   * @return New point to split aBlockElementToSplit
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<SplitNodeResult, nsresult>
-  HandleInParagraph(Element& aParentDivOrP,
-                    const EditorDOMPoint& aPointToSplit);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  EnsureNoInvisibleLineBreakBeforePointToSplit(
+      const Element& aBlockElementToSplit, const EditorDOMPoint& aPointToSplit);
+
+  /**
+   * Maybe insert a <br> element if it's required to keep the inline container
+   * visible after splitting aBlockElementToSplit at aPointToSplit.
+   *
+   * @return New point to split aBlockElementToSplit
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  MaybeInsertFollowingBRElementToPreserveRightBlock(
+      const Element& aBlockElementToSplit, const EditorDOMPoint& aPointToSplit);
 
   /**
    * Return true if the HTMLEditor is in the mode which `insertParagraph` should

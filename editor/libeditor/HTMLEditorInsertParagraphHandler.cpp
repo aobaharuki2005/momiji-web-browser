@@ -424,9 +424,9 @@ HTMLEditor::AutoInsertParagraphHandler::Run() {
       MOZ_ASSERT(pointToSplit.IsInContentNodeAndValidInComposedDoc());
       // Paragraphs: special rules to look for <br>s
       Result<SplitNodeResult, nsresult> splitNodeResult =
-          HandleInParagraph(*editableBlockElement, pointToSplit);
+          SplitParagraphWithTransaction(*editableBlockElement, pointToSplit);
       if (MOZ_UNLIKELY(splitNodeResult.isErr())) {
-        NS_WARNING("HTMLEditor::HandleInsertParagraphInParagraph() failed");
+        NS_WARNING("HTMLEditor::SplitParagraphWithTransaction() failed");
         return splitNodeResult.propagateErr();
       }
       if (splitNodeResult.inspect().Handled()) {
@@ -457,10 +457,7 @@ HTMLEditor::AutoInsertParagraphHandler::Run() {
       MOZ_ASSERT(!splitNodeResult.inspect().HasCaretPointSuggestion());
     }
 
-    // Fall through, if HandleInsertParagraphInParagraph() didn't handle it.
-    MOZ_ASSERT(pointToInsert.IsSetAndValid(),
-               "HTMLEditor::HandleInsertParagraphInParagraph() shouldn't touch "
-               "the DOM tree if it returns not-handled state");
+    // Fall through, if we didn't handle it above.
   }
 
   // If nobody handles this edit action, let's insert new <br> at the selection.
@@ -1351,238 +1348,6 @@ bool HTMLEditor::AutoInsertParagraphHandler::ShouldCreateNewParagraph(
       followingBRElement);
 }
 
-Result<SplitNodeResult, nsresult>
-HTMLEditor::AutoInsertParagraphHandler::HandleInParagraph(
-    Element& aParentDivOrP, const EditorDOMPoint& aPointToSplit) {
-  MOZ_ASSERT(aPointToSplit.IsInContentNodeAndValidInComposedDoc());
-
-  EditorDOMPoint pointToSplit(aPointToSplit);
-  RefPtr<HTMLBRElement> brElement;
-  if (pointToSplit.GetContainer() == &aParentDivOrP) {
-    // We are try to split only the current paragraph.  Therefore, we don't need
-    // to create new <br> elements around it (if left and/or right paragraph
-    // becomes empty, it'll be treated by SplitParagraphWithTransaction().
-  } else if (pointToSplit.IsInTextNode()) {
-    if (pointToSplit.IsStartOfContainer()) {
-      // If we're splitting the paragraph at start of a text node and there is
-      // no preceding visible <br> element, we need to create a <br> element to
-      // keep the inline elements containing this text node.
-      // TODO: If the parent of the text node is the splitting paragraph,
-      //       obviously we don't need to do this because empty paragraphs will
-      //       be treated by SplitParagraphWithTransaction().  In this case, we
-      //       just need to update pointToSplit for using the same path as the
-      //       previous `if` block.
-      brElement =
-          HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetPreviousSibling(
-              *pointToSplit.ContainerAs<Text>(),
-              {WalkTreeOption::IgnoreNonEditableNode}));
-      if (IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(brElement)) {
-        const EditorDOMPoint pointToInsertBR = pointToSplit.ParentPoint();
-        MOZ_ASSERT(pointToInsertBR.IsSet());
-        if (pointToInsertBR.IsInContentNode() &&
-            HTMLEditUtils::CanNodeContain(
-                *pointToInsertBR.ContainerAs<nsIContent>(), *nsGkAtoms::br)) {
-          Result<CreateLineBreakResult, nsresult> insertBRElementResultOrError =
-              mHTMLEditor.InsertLineBreak(WithTransaction::Yes,
-                                          LineBreakType::BRElement,
-                                          pointToInsertBR);
-          if (MOZ_UNLIKELY(insertBRElementResultOrError.isErr())) {
-            NS_WARNING(
-                "HTMLEditor::InsertLineBreak(WithTransaction::Yes, "
-                "LineBreakType::BRElement) failed");
-            return insertBRElementResultOrError.propagateErr();
-          }
-          CreateLineBreakResult insertBRElementResult =
-              insertBRElementResultOrError.unwrap();
-          // We'll collapse `Selection` to the place suggested by
-          // SplitParagraphWithTransaction.
-          insertBRElementResult.IgnoreCaretPointSuggestion();
-          brElement = &insertBRElementResult->BRElementRef();
-        }
-      }
-    } else if (pointToSplit.IsEndOfContainer()) {
-      // If we're splitting the paragraph at end of a text node and there is not
-      // following visible <br> element, we need to create a <br> element after
-      // the text node to make current style specified by parent inline elements
-      // keep in the right paragraph.
-      // TODO: Same as above, we don't need to do this if the text node is a
-      //       direct child of the paragraph.  For using the simplest path, we
-      //       just need to update `pointToSplit` in the case.
-      brElement = HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetNextSibling(
-          *pointToSplit.ContainerAs<Text>(),
-          {WalkTreeOption::IgnoreNonEditableNode}));
-      if (IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(brElement)) {
-        const auto pointToInsertBR =
-            EditorDOMPoint::After(*pointToSplit.ContainerAs<Text>());
-        MOZ_ASSERT(pointToInsertBR.IsSet());
-        if (pointToInsertBR.IsInContentNode() &&
-            HTMLEditUtils::CanNodeContain(
-                *pointToInsertBR.ContainerAs<nsIContent>(), *nsGkAtoms::br)) {
-          Result<CreateLineBreakResult, nsresult> insertBRElementResultOrError =
-              mHTMLEditor.InsertLineBreak(WithTransaction::Yes,
-                                          LineBreakType::BRElement,
-                                          pointToInsertBR);
-          if (MOZ_UNLIKELY(insertBRElementResultOrError.isErr())) {
-            NS_WARNING(
-                "HTMLEditor::InsertLineBreak(WithTransaction::Yes, "
-                "LineBreakType::BRElement) failed");
-            return insertBRElementResultOrError.propagateErr();
-          }
-          CreateLineBreakResult insertBRElementResult =
-              insertBRElementResultOrError.unwrap();
-          // We'll collapse `Selection` to the place suggested by
-          // SplitParagraphWithTransaction.
-          insertBRElementResult.IgnoreCaretPointSuggestion();
-          brElement = &insertBRElementResult->BRElementRef();
-        }
-      }
-    } else {
-      // If we're splitting the paragraph at middle of a text node, we should
-      // split the text node here and put a <br> element next to the left text
-      // node.
-      // XXX Why? I think that this should be handled in
-      //     SplitParagraphWithTransaction() directly because I don't find
-      //     the necessary case of the <br> element.
-
-      // XXX We split a text node here if caret is middle of it to insert
-      //     <br> element **before** splitting aParentDivOrP.  Then, if
-      //     the <br> element becomes unnecessary, it'll be removed again.
-      //     So this does much more complicated things than what we want to
-      //     do here.  We should handle this case separately to make the code
-      //     much simpler.
-
-      // Normalize collapsible white-spaces around the split point to keep
-      // them visible after the split.  Note that this does not touch
-      // selection because of using AutoTransactionsConserveSelection in
-      // WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes().
-      Result<EditorDOMPoint, nsresult> pointToSplitOrError =
-          WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
-              mHTMLEditor, pointToSplit, aParentDivOrP);
-      if (NS_WARN_IF(mHTMLEditor.Destroyed())) {
-        return Err(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (MOZ_UNLIKELY(pointToSplitOrError.isErr())) {
-        NS_WARNING(
-            "WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement() "
-            "failed");
-        return pointToSplitOrError.propagateErr();
-      }
-      MOZ_ASSERT(pointToSplitOrError.inspect().IsSetAndValid());
-      if (pointToSplitOrError.inspect().IsSet()) {
-        pointToSplit = pointToSplitOrError.unwrap();
-      }
-      Result<SplitNodeResult, nsresult> splitParentDivOrPResult =
-          mHTMLEditor.SplitNodeWithTransaction(pointToSplit);
-      if (MOZ_UNLIKELY(splitParentDivOrPResult.isErr())) {
-        NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-        return splitParentDivOrPResult;
-      }
-      // We'll collapse `Selection` to the place suggested by
-      // SplitParagraphWithTransaction.
-      splitParentDivOrPResult.inspect().IgnoreCaretPointSuggestion();
-
-      pointToSplit.SetToEndOf(
-          splitParentDivOrPResult.inspect().GetPreviousContent());
-      if (NS_WARN_IF(!pointToSplit.IsInContentNode())) {
-        return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
-      }
-
-      // We need to put new <br> after the left node if given node was split
-      // above.
-      const auto pointToInsertBR =
-          EditorDOMPoint::After(*pointToSplit.ContainerAs<nsIContent>());
-      MOZ_ASSERT(pointToInsertBR.IsSet());
-      if (pointToInsertBR.IsInContentNode() &&
-          HTMLEditUtils::CanNodeContain(
-              *pointToInsertBR.ContainerAs<nsIContent>(), *nsGkAtoms::br)) {
-        AutoTrackDOMPoint trackPointToSplit(mHTMLEditor.RangeUpdaterRef(),
-                                            &pointToSplit);
-        Result<CreateLineBreakResult, nsresult> insertBRElementResultOrError =
-            mHTMLEditor.InsertLineBreak(WithTransaction::Yes,
-                                        LineBreakType::BRElement,
-                                        pointToInsertBR);
-        if (MOZ_UNLIKELY(insertBRElementResultOrError.isErr())) {
-          NS_WARNING(
-              "HTMLEditor::InsertLineBreak(WithTransaction::Yes, "
-              "LineBreakType::BRElement) failed");
-          return insertBRElementResultOrError.propagateErr();
-        }
-        CreateLineBreakResult insertBRElementResult =
-            insertBRElementResultOrError.unwrap();
-        // We'll collapse `Selection` to the place suggested by
-        // SplitParagraphWithTransaction.
-        insertBRElementResult.IgnoreCaretPointSuggestion();
-        brElement = &insertBRElementResult->BRElementRef();
-        trackPointToSplit.FlushAndStopTracking();
-        if (NS_WARN_IF(!pointToSplit.IsInContentNodeAndValidInComposedDoc())) {
-          return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
-        }
-      }
-    }
-  } else {
-    // If we're splitting in a child element of the paragraph, and there is no
-    // <br> element around it, we should insert a <br> element at the split
-    // point and keep splitting the paragraph after the new <br> element.
-    // XXX Why? We probably need to do this if we're splitting in an inline
-    //     element which and whose parents provide some styles, we should put
-    //     the <br> element for making a placeholder in the left paragraph for
-    //     moving to the caret, but I think that this could be handled in fewer
-    //     cases than this.
-    brElement = HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetPreviousContent(
-        pointToSplit, {WalkTreeOption::IgnoreNonEditableNode},
-        BlockInlineCheck::Unused, &mEditingHost));
-    if (IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(brElement)) {
-      // is there a BR after it?
-      brElement = HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetNextContent(
-          pointToSplit, {WalkTreeOption::IgnoreNonEditableNode},
-          BlockInlineCheck::Unused, &mEditingHost));
-      if (IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(brElement)) {
-        if (pointToSplit.IsInContentNode() &&
-            HTMLEditUtils::CanNodeContain(
-                *pointToSplit.ContainerAs<nsIContent>(), *nsGkAtoms::br)) {
-          Result<CreateLineBreakResult, nsresult> insertBRElementResultOrError =
-              mHTMLEditor.InsertLineBreak(
-                  WithTransaction::Yes, LineBreakType::BRElement, pointToSplit);
-          if (MOZ_UNLIKELY(insertBRElementResultOrError.isErr())) {
-            NS_WARNING(
-                "HTMLEditor::InsertLineBreak(WithTransaction::Yes, "
-                "LineBreakType::BRElement) failed");
-            return insertBRElementResultOrError.propagateErr();
-          }
-          CreateLineBreakResult insertBRElementResult =
-              insertBRElementResultOrError.unwrap();
-          // We'll collapse `Selection` to the place suggested by
-          // SplitParagraphWithTransaction.
-          insertBRElementResult.IgnoreCaretPointSuggestion();
-          brElement = &insertBRElementResult->BRElementRef();
-          // We split the parent after the <br>.
-          pointToSplit.SetAfter(brElement);
-          if (NS_WARN_IF(!pointToSplit.IsSet())) {
-            return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
-          }
-        }
-      }
-    }
-  }
-
-  Result<SplitNodeResult, nsresult> splitParagraphResult =
-      SplitParagraphWithTransaction(aParentDivOrP, pointToSplit, brElement);
-  if (MOZ_UNLIKELY(splitParagraphResult.isErr())) {
-    NS_WARNING(
-        "AutoInsertParagraphHandler::SplitParagraphWithTransaction() failed");
-    return splitParagraphResult;
-  }
-  if (MOZ_UNLIKELY(!splitParagraphResult.inspect().DidSplit())) {
-    NS_WARNING(
-        "AutoInsertParagraphHandler::SplitParagraphWithTransaction() didn't "
-        "split the paragraph");
-    splitParagraphResult.inspect().IgnoreCaretPointSuggestion();
-    return Err(NS_ERROR_FAILURE);
-  }
-  MOZ_ASSERT(splitParagraphResult.inspect().Handled());
-  return splitParagraphResult;
-}
-
 // static
 EditorDOMPoint HTMLEditor::AutoInsertParagraphHandler::
     GetBetterSplitPointToAvoidToContinueLink(
@@ -1687,66 +1452,337 @@ EditorDOMPoint HTMLEditor::AutoInsertParagraphHandler::
   return pointToSplit;
 }
 
+Result<EditorDOMPoint, nsresult> HTMLEditor::AutoInsertParagraphHandler::
+    EnsureNoInvisibleLineBreakBeforePointToSplit(
+        const Element& aBlockElementToSplit,
+        const EditorDOMPoint& aPointToSplit) {
+  const WSScanResult nextVisibleThing =
+      WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
+          WSRunScanner::Scan::All, aPointToSplit,
+          BlockInlineCheck::UseComputedDisplayOutsideStyle,
+          &aBlockElementToSplit);
+  if (!nextVisibleThing.ReachedBlockBoundary()) {
+    return aPointToSplit;
+  }
+  const WSScanResult prevVisibleThing =
+      WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
+          WSRunScanner::Scan::All, aPointToSplit,
+          BlockInlineCheck::UseComputedDisplayOutsideStyle,
+          &aBlockElementToSplit);
+  Maybe<EditorLineBreak> precedingInvisibleLineBreak;
+  if (prevVisibleThing.ReachedBRElement()) {
+    precedingInvisibleLineBreak.emplace(*prevVisibleThing.BRElementPtr());
+  } else if (prevVisibleThing.ReachedPreformattedLineBreak()) {
+    precedingInvisibleLineBreak.emplace(*prevVisibleThing.TextPtr(),
+                                        prevVisibleThing.Offset_Deprecated());
+  } else {
+    return aPointToSplit;
+  }
+  EditorDOMPoint pointToSplit = aPointToSplit;
+  {
+    // FIXME: Once bug 1951041 is fixed in the layout level, we don't need to
+    // treat collapsible white-spaces before invisible <br> elements here.
+    AutoTrackDOMPoint trackPointToSplit(mHTMLEditor.RangeUpdaterRef(),
+                                        &pointToSplit);
+    Result<EditorDOMPoint, nsresult>
+        normalizePrecedingWhiteSpacesResultOrError =
+            WhiteSpaceVisibilityKeeper::NormalizeWhiteSpacesBefore(
+                mHTMLEditor, precedingInvisibleLineBreak->To<EditorDOMPoint>(),
+                {});
+    if (MOZ_UNLIKELY(normalizePrecedingWhiteSpacesResultOrError.isErr())) {
+      NS_WARNING(
+          "WhiteSpaceVisibilityKeeper::NormalizeWhiteSpacesBefore() failed");
+      return normalizePrecedingWhiteSpacesResultOrError.propagateErr();
+    }
+  }
+  if (NS_WARN_IF(!pointToSplit.IsInContentNodeAndValidInComposedDoc()) ||
+      NS_WARN_IF(!pointToSplit.GetContainer()->IsInclusiveDescendantOf(
+          &aBlockElementToSplit))) {
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+  {
+    AutoTrackDOMPoint trackPointToSplit(mHTMLEditor.RangeUpdaterRef(),
+                                        &pointToSplit);
+    Result<EditorDOMPoint, nsresult> deleteInvisibleLineBreakResult =
+        mHTMLEditor.DeleteLineBreakWithTransaction(*precedingInvisibleLineBreak,
+                                                   nsIEditor::eNoStrip,
+                                                   aBlockElementToSplit);
+    if (MOZ_UNLIKELY(deleteInvisibleLineBreakResult.isErr())) {
+      NS_WARNING("HTMLEditor::DeleteLineBreakWithTransaction() failed");
+      return deleteInvisibleLineBreakResult.propagateErr();
+    }
+  }
+  if (NS_WARN_IF(!pointToSplit.IsInContentNodeAndValidInComposedDoc()) ||
+      NS_WARN_IF(!pointToSplit.GetContainer()->IsInclusiveDescendantOf(
+          &aBlockElementToSplit))) {
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+  return pointToSplit;
+}
+
+Result<EditorDOMPoint, nsresult> HTMLEditor::AutoInsertParagraphHandler::
+    MaybeInsertFollowingBRElementToPreserveRightBlock(
+        const Element& aBlockElementToSplit,
+        const EditorDOMPoint& aPointToSplit) {
+  MOZ_ASSERT(HTMLEditUtils::IsSplittableNode(aBlockElementToSplit));
+  MOZ_ASSERT(aPointToSplit.ContainerAs<nsIContent>()->IsInclusiveDescendantOf(
+      &aBlockElementToSplit));
+
+  const Element* const closestContainerElement =
+      HTMLEditUtils::GetInclusiveAncestorElement(
+          *aPointToSplit.ContainerAs<nsIContent>(),
+          {HTMLEditUtils::AncestorType::ClosestContainerElement,
+           HTMLEditUtils::AncestorType::AllowRootOrAncestorLimiterElement},
+          BlockInlineCheck::UseComputedDisplayOutsideStyle,
+          &aBlockElementToSplit);
+  MOZ_ASSERT(closestContainerElement);
+  MOZ_ASSERT(HTMLEditUtils::IsSplittableNode(*closestContainerElement));
+
+  // If we're at end of the paragraph and there are some inline container
+  // elements, we want to preserve the inline containers to preserve their
+  // styles.
+  Maybe<EditorLineBreak> unnecessaryLineBreak;
+  const EditorDOMPoint pointToInsertFollowingBRElement =
+      [&]() MOZ_NEVER_INLINE_DEBUG {
+        const WSScanResult nextVisibleThing =
+            WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
+                WSRunScanner::Scan::All, aPointToSplit,
+                BlockInlineCheck::UseComputedDisplayOutsideStyle,
+                &aBlockElementToSplit);
+        if (nextVisibleThing.ReachedBRElement() ||
+            nextVisibleThing.ReachedPreformattedLineBreak()) {
+          // If it's followed by a line break in the closest ancestor container
+          // element, we can use it.
+          if ((nextVisibleThing.ReachedBRElement() &&
+               nextVisibleThing.BRElementPtr()->GetParentNode() ==
+                   closestContainerElement) ||
+              (nextVisibleThing.ReachedPreformattedLineBreak() &&
+               nextVisibleThing.TextPtr()->GetParentNode() ==
+                   closestContainerElement)) {
+            return EditorDOMPoint();
+          }
+          const WSScanResult nextVisibleThingAfterLineBreak =
+              WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
+                  WSRunScanner::Scan::All,
+                  nextVisibleThing
+                      .PointAfterReachedContent<EditorRawDOMPoint>(),
+                  BlockInlineCheck::UseComputedDisplayOutsideStyle,
+                  &aBlockElementToSplit);
+          // If the line break is visible, we don't need to insert a padding
+          // <br> element for the right paragraph because it'll have some
+          // visible content.
+          if (!nextVisibleThingAfterLineBreak.ReachedCurrentBlockBoundary()) {
+            return EditorDOMPoint();
+          }
+        }
+        // If it's not directly followed by current block boundary, we don't
+        // need to insert a padding <br> element for the right paragraph because
+        // it'll have some visible content.
+        else if (!nextVisibleThing.ReachedCurrentBlockBoundary()) {
+          return EditorDOMPoint();
+        }
+        // We want to insert a padding <br> into the closest ancestor container
+        // element to preserve the style provided by it.
+        EditorDOMPoint candidatePoint = aPointToSplit;
+        for (; candidatePoint.GetContainer() != closestContainerElement;
+             candidatePoint = candidatePoint.AfterContainer()) {
+          MOZ_ASSERT(candidatePoint.GetContainer() != &aBlockElementToSplit);
+        }
+        // If we reached invisible line break which is not in the closest
+        // container element, we don't want it anymore once we put invisible
+        // <br> element into the closest container element.
+        if (nextVisibleThing.ReachedBRElement()) {
+          unnecessaryLineBreak.emplace(*nextVisibleThing.BRElementPtr());
+        } else if (nextVisibleThing.ReachedPreformattedLineBreak()) {
+          unnecessaryLineBreak.emplace(*nextVisibleThing.TextPtr(),
+                                       nextVisibleThing.Offset_Deprecated());
+        }
+        return candidatePoint;
+      }();
+
+  if (unnecessaryLineBreak) {
+    Result<EditorDOMPoint, nsresult> deleteLineBreakResultOrError =
+        mHTMLEditor.DeleteLineBreakWithTransaction(
+            *unnecessaryLineBreak, nsIEditor::eNoStrip, aBlockElementToSplit);
+    if (MOZ_UNLIKELY(deleteLineBreakResultOrError.isErr())) {
+      NS_WARNING("HTMLEditor::DeleteLineBreakWithTransaction() failed");
+      return deleteLineBreakResultOrError.propagateErr();
+    }
+    if (NS_WARN_IF(!aPointToSplit.IsSetAndValidInComposedDoc())) {
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    }
+    if (pointToInsertFollowingBRElement.IsSet() &&
+        (NS_WARN_IF(!pointToInsertFollowingBRElement
+                         .IsInContentNodeAndValidInComposedDoc()) ||
+         NS_WARN_IF(!pointToInsertFollowingBRElement.GetContainer()
+                         ->IsInclusiveDescendantOf(&aBlockElementToSplit)))) {
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    }
+  }
+  EditorDOMPoint pointToSplit(aPointToSplit);
+  if (pointToInsertFollowingBRElement.IsSet()) {
+    Maybe<AutoTrackDOMPoint> trackPointToSplit;
+    if (pointToSplit.GetContainer() ==
+        pointToInsertFollowingBRElement.GetContainer()) {
+      trackPointToSplit.emplace(mHTMLEditor.RangeUpdaterRef(), &pointToSplit);
+    }
+    Result<CreateElementResult, nsresult> insertPaddingBRElementResultOrError =
+        mHTMLEditor.InsertBRElement(
+            WithTransaction::Yes,
+            // XXX We don't want to expose the <br> for IME, but the plaintext
+            // serializer requires this. See bug 1385905.
+            BRElementType::Normal, pointToInsertFollowingBRElement);
+    if (MOZ_UNLIKELY(insertPaddingBRElementResultOrError.isErr())) {
+      return insertPaddingBRElementResultOrError.propagateErr();
+    }
+    insertPaddingBRElementResultOrError.unwrap().IgnoreCaretPointSuggestion();
+  }
+  if (NS_WARN_IF(!pointToSplit.IsInContentNodeAndValidInComposedDoc()) ||
+      NS_WARN_IF(!pointToSplit.GetContainer()->IsInclusiveDescendantOf(
+          &aBlockElementToSplit))) {
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+  if (mHTMLEditor.GetDefaultParagraphSeparator() != ParagraphSeparator::br) {
+    return pointToSplit;
+  }
+  // If we're in the legacy mode, we don't want the right paragraph start with
+  // an empty line.  So, if the right paragraph now starts with 2 <br> elements,
+  // remove the second one.  (The first one is in the closest container element,
+  // so, we want to keep it.)
+  const WSScanResult nextVisibleThing =
+      WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
+          WSRunScanner::Scan::All, pointToSplit,
+          BlockInlineCheck::UseComputedDisplayOutsideStyle,
+          &aBlockElementToSplit);
+  if (!nextVisibleThing.ReachedBRElement()) {
+    return pointToSplit;
+  }
+  const WSScanResult nextVisibleThingAfterFirstBRElement =
+      WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
+          WSRunScanner::Scan::All,
+          nextVisibleThing.PointAfterReachedContent<EditorRawDOMPoint>(),
+          BlockInlineCheck::UseComputedDisplayOutsideStyle,
+          &aBlockElementToSplit);
+  if (!nextVisibleThingAfterFirstBRElement.ReachedBRElement()) {
+    return pointToSplit;
+  }
+  nsresult rv = mHTMLEditor.DeleteNodeWithTransaction(
+      MOZ_KnownLive(*nextVisibleThingAfterFirstBRElement.BRElementPtr()));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+    return Err(rv);
+  }
+  if (NS_WARN_IF(!pointToSplit.IsInContentNodeAndValidInComposedDoc()) ||
+      NS_WARN_IF(!pointToSplit.GetContainer()->IsInclusiveDescendantOf(
+          &aBlockElementToSplit))) {
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+  return pointToSplit;
+}
+
 Result<SplitNodeResult, nsresult>
 HTMLEditor::AutoInsertParagraphHandler::SplitParagraphWithTransaction(
-    Element& aParentDivOrP, const EditorDOMPoint& aStartOfRightNode,
-    HTMLBRElement* aMayBecomeVisibleBRElement) {
+    Element& aBlockElementToSplit, const EditorDOMPoint& aPointToSplit) {
+  // First, maybe the split point follows an invisible <br>.  E.g., when
+  // `<p><a href=foo>foo[]<br></a></p>`,
+  // GetBetterSplitPointToAvoidToContinueLink() adjusted the split point as
+  // `<p><a href=foo>foo<br></a>{}</p>`.  Then, we shouldn't insert another
+  // <br> to end of the left <p> to make the last line visible.  Even though we
+  // need to insert an invisible <br> element later, let's delete the invisible
+  // line break first to make this method simpler.
+  Result<EditorDOMPoint, nsresult> deleteInvisibleLineBreakResultOrError =
+      EnsureNoInvisibleLineBreakBeforePointToSplit(aBlockElementToSplit,
+                                                   aPointToSplit);
+  if (MOZ_UNLIKELY(deleteInvisibleLineBreakResultOrError.isErr())) {
+    NS_WARNING(
+        "AutoInsertParagraphHandler::SplitParagraphWithTransaction() failed");
+    return deleteInvisibleLineBreakResultOrError.propagateErr();
+  }
+  EditorDOMPoint pointToSplit = deleteInvisibleLineBreakResultOrError.unwrap();
+  MOZ_ASSERT(pointToSplit.IsInContentNodeAndValidInComposedDoc());
+  MOZ_ASSERT(pointToSplit.GetContainer()->IsInclusiveDescendantOf(
+      &aBlockElementToSplit));
+
+  // Then, we need to keep the visibility of the surrounding collapsible
+  // white-spaces at the split point.
   Result<EditorDOMPoint, nsresult> preparationResult =
       WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
-          mHTMLEditor, aStartOfRightNode, aParentDivOrP);
+          mHTMLEditor, aPointToSplit, aBlockElementToSplit);
   if (MOZ_UNLIKELY(preparationResult.isErr())) {
     NS_WARNING(
         "WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement() failed");
     return preparationResult.propagateErr();
   }
-  EditorDOMPoint pointToSplit = preparationResult.unwrap();
-  MOZ_ASSERT(pointToSplit.IsInContentNode());
+  pointToSplit = preparationResult.unwrap();
+  MOZ_ASSERT(pointToSplit.IsInContentNodeAndValidInComposedDoc());
+  MOZ_ASSERT(pointToSplit.GetContainer()->IsInclusiveDescendantOf(
+      &aBlockElementToSplit));
 
-  // Split the paragraph.
-  Result<SplitNodeResult, nsresult> splitDivOrPResult =
-      mHTMLEditor.SplitNodeDeepWithTransaction(
-          aParentDivOrP, pointToSplit,
-          SplitAtEdges::eAllowToCreateEmptyContainer);
-  if (MOZ_UNLIKELY(splitDivOrPResult.isErr())) {
-    NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
-    return splitDivOrPResult;
+  // Next, if there are some inline elements which we will split and we're
+  // splitting the deepest one at end of it, we need to put invisible <br>
+  // before splitting to preserve the cloned inline elements in the new
+  // paragraph.
+  {
+    Result<EditorDOMPoint, nsresult> insertPaddingBRElementResultOrError =
+        MaybeInsertFollowingBRElementToPreserveRightBlock(aBlockElementToSplit,
+                                                          pointToSplit);
+    if (MOZ_UNLIKELY(insertPaddingBRElementResultOrError.isErr())) {
+      NS_WARNING(
+          "AutoInsertParagraphHandler::"
+          "MaybeInsertFollowingBRElementToPreserveRightBlock() failed");
+      return insertPaddingBRElementResultOrError.propagateErr();
+    }
+    pointToSplit = insertPaddingBRElementResultOrError.unwrap();
+    if (NS_WARN_IF(!pointToSplit.IsInContentNodeAndValidInComposedDoc()) ||
+        NS_WARN_IF(!pointToSplit.GetContainer()->IsInclusiveDescendantOf(
+            &aBlockElementToSplit))) {
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    }
   }
-  SplitNodeResult unwrappedSplitDivOrPResult = splitDivOrPResult.unwrap();
-  if (MOZ_UNLIKELY(!unwrappedSplitDivOrPResult.DidSplit())) {
+
+  // Then, split current paragraph.
+  const RefPtr<Element> deepestContainerElementToSplit =
+      HTMLEditUtils::GetInclusiveAncestorElement(
+          *pointToSplit.ContainerAs<nsIContent>(),
+          {HTMLEditUtils::AncestorType::ClosestContainerElement,
+           HTMLEditUtils::AncestorType::AllowRootOrAncestorLimiterElement},
+          BlockInlineCheck::UseComputedDisplayOutsideStyle,
+          &aBlockElementToSplit);
+  if (NS_WARN_IF(!deepestContainerElementToSplit)) {
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+  Result<SplitNodeResult, nsresult> splitDivOrPResultOrError =
+      mHTMLEditor.SplitNodeDeepWithTransaction(
+          aBlockElementToSplit, pointToSplit,
+          SplitAtEdges::eAllowToCreateEmptyContainer);
+  if (MOZ_UNLIKELY(splitDivOrPResultOrError.isErr())) {
+    NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
+    return splitDivOrPResultOrError;
+  }
+  SplitNodeResult splitDivOrPResult = splitDivOrPResultOrError.unwrap();
+  if (MOZ_UNLIKELY(!splitDivOrPResult.DidSplit())) {
     NS_WARNING(
         "HTMLEditor::SplitNodeDeepWithTransaction() didn't split any nodes");
-    return unwrappedSplitDivOrPResult;
+    return splitDivOrPResult;
   }
 
   // We'll compute caret suggestion later.  So the simple result is not needed.
-  unwrappedSplitDivOrPResult.IgnoreCaretPointSuggestion();
+  splitDivOrPResult.IgnoreCaretPointSuggestion();
 
   auto* const leftDivOrParagraphElement =
-      unwrappedSplitDivOrPResult.GetPreviousContentAs<Element>();
+      splitDivOrPResult.GetPreviousContentAs<Element>();
   MOZ_ASSERT(leftDivOrParagraphElement,
              "SplitNodeResult::GetPreviousContent() should return something if "
              "DidSplit() returns true");
   auto* const rightDivOrParagraphElement =
-      unwrappedSplitDivOrPResult.GetNextContentAs<Element>();
+      splitDivOrPResult.GetNextContentAs<Element>();
   MOZ_ASSERT(rightDivOrParagraphElement,
              "SplitNodeResult::GetNextContent() should return something if "
              "DidSplit() returns true");
 
-  // Get rid of the break, if it is visible (otherwise it may be needed to
-  // prevent an empty p).
-  if (aMayBecomeVisibleBRElement &&
-      HTMLEditUtils::IsVisibleBRElement(*aMayBecomeVisibleBRElement)) {
-    nsresult rv =
-        mHTMLEditor.DeleteNodeWithTransaction(*aMayBecomeVisibleBRElement);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-      return Err(rv);
-    }
-  }
-
   // Remove ID attribute on the paragraph from the right node.
   // MOZ_KnownLive(rightDivOrParagraphElement) because it's grabbed by
-  // unwrappedSplitDivOrPResult.
+  // splitDivOrPResult.
   nsresult rv = mHTMLEditor.RemoveAttributeWithTransaction(
       MOZ_KnownLive(*rightDivOrParagraphElement), *nsGkAtoms::id);
   if (NS_FAILED(rv)) {
@@ -1755,104 +1791,65 @@ HTMLEditor::AutoInsertParagraphHandler::SplitParagraphWithTransaction(
     return Err(rv);
   }
 
-  // We need to ensure to both paragraphs visible even if they are empty.
-  // However, padding <br> element for empty last line isn't useful in this
-  // case because it'll be ignored by PlaintextSerializer.  Additionally,
-  // it'll be exposed as <br> with Element.innerHTML.  Therefore, we can use
-  // normal <br> elements for placeholder in this case.  Note that Chromium
-  // also behaves so.
-
-  // MOZ_KnownLive(leftDivOrParagraphElement) because it's grabbed by
-  // splitDivOrResult.
-  {
-    Result<CreateLineBreakResult, nsresult> insertBRElementResultOrError =
-        InsertBRElementIfEmptyBlockElement(
-            MOZ_KnownLive(*leftDivOrParagraphElement),
-            InsertBRElementIntoEmptyBlock::Start,
-            BlockInlineCheck::UseComputedDisplayStyle);
-    if (MOZ_UNLIKELY(insertBRElementResultOrError.isErr())) {
-      NS_WARNING(
-          "InsertBRElementIfEmptyBlockElement(leftDivOrParagraphElement, "
-          "InsertBRElementIntoEmptyBlock::Start, "
-          "BlockInlineCheck::UseComputedDisplayStyle) failed");
-      return Err(rv);
+  // Finally, we need to ensure that both paragraphs are visible even if they
+  // are empty.  Note that we need to use padding <br> element for the empty
+  // last line as usual because it won't appear as a line break when serialized
+  // by ContentEventHandler.  Thus, if we were using normal <br> elements,
+  // disappearing following line break of composition string would make IME
+  // confused.
+  if (NS_WARN_IF(!deepestContainerElementToSplit->IsInclusiveDescendantOf(
+          leftDivOrParagraphElement))) {
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+  const EditorDOMPoint pointToInsertBRElement = [&]() MOZ_NEVER_INLINE_DEBUG {
+    // If we split the paragraph immediately after a block boundary or a line
+    // break, we need to put a padding <br> to make an empty line.
+    const WSScanResult prevVisibleThing =
+        WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
+            WSRunScanner::Scan::All,
+            EditorRawDOMPoint::AtEndOf(*deepestContainerElementToSplit),
+            BlockInlineCheck::UseComputedDisplayOutsideStyle,
+            leftDivOrParagraphElement);
+    if (prevVisibleThing.ReachedLineBoundary()) {
+      return EditorDOMPoint::AtEndOf(*deepestContainerElementToSplit);
     }
-    insertBRElementResultOrError.unwrap().IgnoreCaretPointSuggestion();
+    // If we split a descendant element and it's empty, we need to put a padding
+    // <br> element into it to preserve the style of the element.
+    if (deepestContainerElementToSplit == leftDivOrParagraphElement) {
+      return EditorDOMPoint();
+    }
+    const WSScanResult nextVisibleThing =
+        WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
+            WSRunScanner::Scan::All,
+            EditorRawDOMPoint(deepestContainerElementToSplit, 0),
+            BlockInlineCheck::UseComputedDisplayOutsideStyle,
+            leftDivOrParagraphElement);
+    return nextVisibleThing.ReachedCurrentBlockBoundary()
+               ? EditorDOMPoint::AtEndOf(*deepestContainerElementToSplit)
+               : EditorDOMPoint();
+  }();
+  if (pointToInsertBRElement.IsSet()) {
+    Result<CreateElementResult, nsresult> insertPaddingBRElementResultOrError =
+        mHTMLEditor.InsertBRElement(
+            WithTransaction::Yes,
+            // XXX We don't want to expose the <br> for IME, but the plaintext
+            // serializer requires this. See bug 1385905.
+            BRElementType::Normal, pointToInsertBRElement);
+    if (MOZ_UNLIKELY(insertPaddingBRElementResultOrError.isErr())) {
+      return insertPaddingBRElementResultOrError.propagateErr();
+    }
+    insertPaddingBRElementResultOrError.unwrap().IgnoreCaretPointSuggestion();
   }
 
-  if (HTMLEditUtils::IsEmptyNode(*rightDivOrParagraphElement)) {
-    // If the right paragraph is empty, it might have an empty inline element
-    // (which may contain other empty inline containers) and optionally a <br>
-    // element which may not be in the deepest inline element.
-    if (const RefPtr<Element> deepestInlineContainerElement =
-            GetDeepestFirstChildInlineContainerElement(
-                *rightDivOrParagraphElement)) {
-      const Maybe<EditorLineBreak> lineBreak =
-          HTMLEditUtils::GetFirstLineBreak<EditorLineBreak>(
-              *rightDivOrParagraphElement);
-      if (lineBreak.isSome()) {
-        // If there is a <br> element and it is in the deepest inline container,
-        // we need to do nothing anymore. Let's suggest caret position as at the
-        // <br>.
-        if (lineBreak->IsHTMLBRElement() &&
-            lineBreak->BRElementRef().GetParentNode() ==
-                deepestInlineContainerElement) {
-          auto pointAtBRElement = lineBreak->To<EditorDOMPoint>();
-          {
-            AutoEditorDOMPointChildInvalidator lockOffset(pointAtBRElement);
-            nsresult rv = mHTMLEditor.UpdateBRElementType(
-                MOZ_KnownLive(lineBreak->BRElementRef()),
-                BRElementType::PaddingForEmptyLastLine);
-            if (NS_FAILED(rv)) {
-              NS_WARNING("EditorBase::UpdateBRElementType() failed");
-              return Err(rv);
-            }
-          }
-          return SplitNodeResult(std::move(unwrappedSplitDivOrPResult),
-                                 pointAtBRElement);
-        }
-        // Otherwise, we should put a padding line break into the deepest
-        // inline container and then, existing line break (if there is)
-        // becomes unnecessary.
-        Result<EditorDOMPoint, nsresult> lineBreakPointOrError =
-            mHTMLEditor.DeleteLineBreakWithTransaction(
-                lineBreak.ref(), nsIEditor::eStrip, mEditingHost);
-        if (MOZ_UNLIKELY(lineBreakPointOrError.isErr())) {
-          NS_WARNING("HTMLEditor::DeleteLineBreakWithTransaction() failed");
-          return lineBreakPointOrError.propagateErr();
-        }
-        Result<CreateElementResult, nsresult> insertPaddingBRElementResult =
-            mHTMLEditor.InsertPaddingBRElementForEmptyLastLineWithTransaction(
-                EditorDOMPoint::AtEndOf(deepestInlineContainerElement));
-        if (MOZ_UNLIKELY(insertPaddingBRElementResult.isErr())) {
-          NS_WARNING(
-              "HTMLEditor::"
-              "InsertPaddingBRElementForEmptyLastLineWithTransaction() failed");
-          return insertPaddingBRElementResult.propagateErr();
-        }
-        insertPaddingBRElementResult.inspect().IgnoreCaretPointSuggestion();
-        return SplitNodeResult(
-            std::move(unwrappedSplitDivOrPResult),
-            EditorDOMPoint(
-                insertPaddingBRElementResult.inspect().GetNewNode()));
-      }
-    }
-
-    // If there is no inline container elements, we just need to make the
-    // right paragraph visible.
-    Result<CreateLineBreakResult, nsresult> insertBRElementResultOrError =
-        InsertBRElementIfEmptyBlockElement(
-            MOZ_KnownLive(*rightDivOrParagraphElement),
-            InsertBRElementIntoEmptyBlock::Start,
-            BlockInlineCheck::UseComputedDisplayStyle);
-    if (MOZ_UNLIKELY(insertBRElementResultOrError.isErr())) {
-      NS_WARNING(
-          "InsertBRElementIfEmptyBlockElement(rightDivOrParagraphElement, "
-          "InsertBRElementIntoEmptyBlock::Start, "
-          "BlockInlineCheck::UseComputedDisplayStyle) failed");
-      return insertBRElementResultOrError.propagateErr();
-    }
-    insertBRElementResultOrError.unwrap().IgnoreCaretPointSuggestion();
+  // The right paragraph should not be empty because
+  // MaybeInsertFollowingBRElementToPreserveRightBlock() should've already put a
+  // padding <br> before splitting the paragraph.
+  if (NS_WARN_IF(HTMLEditUtils::IsEmptyNode(
+          *rightDivOrParagraphElement,
+          {EmptyCheckOption::TreatSingleBRElementAsVisible,
+           EmptyCheckOption::TreatListItemAsVisible,
+           EmptyCheckOption::TreatTableCellAsVisible}))) {
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
   // Let's put caret at start of the first leaf container.
@@ -1860,13 +1857,14 @@ HTMLEditor::AutoInsertParagraphHandler::SplitParagraphWithTransaction(
       *rightDivOrParagraphElement, {LeafNodeType::LeafNodeOrChildBlock},
       BlockInlineCheck::UseComputedDisplayStyle);
   if (MOZ_UNLIKELY(!child)) {
-    return SplitNodeResult(std::move(unwrappedSplitDivOrPResult),
+    return SplitNodeResult(std::move(splitDivOrPResult),
                            EditorDOMPoint(rightDivOrParagraphElement, 0u));
   }
+
   return child->IsText() || HTMLEditUtils::IsContainerNode(*child)
-             ? SplitNodeResult(std::move(unwrappedSplitDivOrPResult),
+             ? SplitNodeResult(std::move(splitDivOrPResult),
                                EditorDOMPoint(child, 0u))
-             : SplitNodeResult(std::move(unwrappedSplitDivOrPResult),
+             : SplitNodeResult(std::move(splitDivOrPResult),
                                EditorDOMPoint(child));
 }
 

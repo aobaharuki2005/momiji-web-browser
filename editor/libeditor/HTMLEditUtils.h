@@ -1723,6 +1723,8 @@ class HTMLEditUtils final {
   enum class AncestorType {
     // If there is an ancestor block, it's a limiter of the scan.
     ClosestBlockElement,
+    // If there is an ancestor container element, it's a limiter of the scan.
+    ClosestContainerElement,
     // If there is no ancestor block in the range, the topmost inline element is
     // a limiter of the scan.
     MostDistantInlineElementInBlock,
