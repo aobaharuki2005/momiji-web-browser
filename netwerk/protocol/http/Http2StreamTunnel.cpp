@@ -23,14 +23,47 @@
 
 namespace mozilla::net {
 
-NS_IMPL_ADDREF_INHERITED(Http2StreamTunnel, Http2StreamBase)
-NS_IMPL_RELEASE_INHERITED(Http2StreamTunnel, Http2StreamBase)
+bool Http2StreamTunnel::DispatchRelease() {
+  if (OnSocketThread()) {
+    return false;
+  }
+
+  gSocketTransportService->Dispatch(
+      NewNonOwningRunnableMethod("net::Http2StreamTunnel::Release", this,
+                                 &Http2StreamTunnel::Release),
+      NS_DISPATCH_NORMAL);
+
+  return true;
+}
+
+NS_IMPL_ADDREF(Http2StreamTunnel)
+NS_IMETHODIMP_(MozExternalRefCountType)
+Http2StreamTunnel::Release() {
+  nsrefcnt count = mRefCnt - 1;
+  if (DispatchRelease()) {
+    // Redispatched to the socket thread.
+    return count;
+  }
+
+  MOZ_ASSERT(0 != mRefCnt, "dup release");
+  count = --mRefCnt;
+  NS_LOG_RELEASE(this, count, "Http2StreamTunnel");
+
+  if (0 == count) {
+    mRefCnt = 1;
+    delete (this);
+    return 0;
+  }
+
+  return count;
+}
 
 NS_INTERFACE_MAP_BEGIN(Http2StreamTunnel)
   NS_INTERFACE_MAP_ENTRY(nsITransport)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(Http2StreamTunnel)
   NS_INTERFACE_MAP_ENTRY(nsITransport)
   NS_INTERFACE_MAP_ENTRY(nsISocketTransport)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
 Http2StreamTunnel::Http2StreamTunnel(Http2Session* session, int32_t priority,
@@ -330,10 +363,14 @@ nsresult Http2StreamTunnel::GenerateHeaders(nsCString& aCompressedData,
   return NS_OK;
 }
 
-OutputStreamTunnel::OutputStreamTunnel(Http2StreamTunnel* aStream)
-    : mWeakStream(aStream) {}
+OutputStreamTunnel::OutputStreamTunnel(Http2StreamTunnel* aStream) {
+  mWeakStream = do_GetWeakReference(aStream);
+}
 
-OutputStreamTunnel::~OutputStreamTunnel() = default;
+OutputStreamTunnel::~OutputStreamTunnel() {
+  NS_ProxyRelease("OutputStreamTunnel::~OutputStreamTunnel",
+                  gSocketTransportService, mWeakStream.forget());
+}
 
 nsresult OutputStreamTunnel::OnSocketReady(nsresult condition) {
   LOG(("OutputStreamTunnel::OnSocketReady [this=%p cond=%" PRIx32
@@ -433,7 +470,7 @@ OutputStreamTunnel::CloseWithStatus(nsresult reason) {
        this, static_cast<uint32_t>(reason)));
   mCondition = reason;
 
-  RefPtr<Http2StreamTunnel> tunnel = mWeakStream.get();
+  RefPtr<Http2StreamTunnel> tunnel = do_QueryReferent(mWeakStream);
   mWeakStream = nullptr;
   if (!tunnel) {
     return NS_OK;
@@ -481,10 +518,14 @@ OutputStreamTunnel::AsyncWait(nsIOutputStreamCallback* callback, uint32_t flags,
   return NS_OK;
 }
 
-InputStreamTunnel::InputStreamTunnel(Http2StreamTunnel* aStream)
-    : mWeakStream(aStream) {}
+InputStreamTunnel::InputStreamTunnel(Http2StreamTunnel* aStream) {
+  mWeakStream = do_GetWeakReference(aStream);
+}
 
-InputStreamTunnel::~InputStreamTunnel() = default;
+InputStreamTunnel::~InputStreamTunnel() {
+  NS_ProxyRelease("InputStreamTunnel::~InputStreamTunnel",
+                  gSocketTransportService, mWeakStream.forget());
+}
 
 nsresult InputStreamTunnel::OnSocketReady(nsresult condition) {
   LOG(("InputStreamTunnel::OnSocketReady [this=%p cond=%" PRIx32 "]\n", this,
@@ -565,7 +606,7 @@ InputStreamTunnel::CloseWithStatus(nsresult reason) {
        this, static_cast<uint32_t>(reason)));
   mCondition = reason;
 
-  RefPtr<Http2StreamTunnel> tunnel = mWeakStream.get();
+  RefPtr<Http2StreamTunnel> tunnel = do_QueryReferent(mWeakStream);
   mWeakStream = nullptr;
   if (!tunnel) {
     return NS_OK;
@@ -617,7 +658,7 @@ InputStreamTunnel::AsyncWait(nsIInputStreamCallback* callback, uint32_t flags,
 }
 
 nsresult OutputStreamTunnel::GetStream(Http2StreamTunnel** aStream) {
-  RefPtr<Http2StreamTunnel> tunnel = mWeakStream.get();
+  RefPtr<Http2StreamTunnel> tunnel = do_QueryReferent(mWeakStream);
   MOZ_ASSERT(tunnel);
   if (!tunnel) {
     return NS_ERROR_UNEXPECTED;
@@ -644,7 +685,7 @@ nsresult OutputStreamTunnel::GetSession(Http2Session** aSession) {
 }
 
 nsresult InputStreamTunnel::GetStream(Http2StreamTunnel** aStream) {
-  RefPtr<Http2StreamTunnel> tunnel = mWeakStream.get();
+  RefPtr<Http2StreamTunnel> tunnel = do_QueryReferent(mWeakStream);
   MOZ_ASSERT(tunnel);
   if (!tunnel) {
     return NS_ERROR_UNEXPECTED;

@@ -35,12 +35,10 @@ class Http2PushedStream;
 class Http2Decompressor;
 class Http2WebTransportSession;
 
-class Http2StreamBase : public nsISupports,
-                        public nsAHttpSegmentReader,
+class Http2StreamBase : public nsAHttpSegmentReader,
                         public nsAHttpSegmentWriter,
                         public SupportsWeakPtr {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSAHTTPSEGMENTREADER
 
   enum stateType {
@@ -209,8 +207,7 @@ class Http2StreamBase : public nsISupports,
 
  protected:
   virtual ~Http2StreamBase();
-  friend class DeleteHttp2StreamBase;
-  void DeleteSelfOnSocketThread();
+
   virtual void HandleResponseHeaders(nsACString& aHeadersOut,
                                      int32_t httpResponseCode) {}
   virtual nsresult CallToWriteData(uint32_t count, uint32_t* countRead) = 0;
