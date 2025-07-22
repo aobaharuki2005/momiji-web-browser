@@ -840,10 +840,14 @@ var Impl = {
     // Generate a unique id once per session so the server can cope with duplicate
     // submissions, orphaning and other oddities. The id is shared across subsessions.
     this._sessionId = Policy.generateSessionUUID();
+    Glean.legacyTelemetry.sessionId.set(this._sessionId);
     this.startNewSubsession();
     // startNewSubsession sets |_subsessionStartDate| to the current date/time. Use
     // the very same value for |_sessionStartDate|.
     this._sessionStartDate = this._subsessionStartDate;
+    Glean.legacyTelemetry.sessionStartDate.set(
+      this._sessionStartDate.getTime() * 1000
+    );
 
     annotateCrashReport(this._sessionId);
 
