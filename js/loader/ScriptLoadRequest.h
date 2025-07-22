@@ -134,8 +134,6 @@ class ScriptLoadRequest : public nsISupports,
     PendingFetchingError,
     Fetching,
     Compiling,
-    LoadingImports,
-    CancelingImports,
     Ready,
     Canceled
   };
@@ -150,8 +148,6 @@ class ScriptLoadRequest : public nsISupports,
   // the JavaScript engine.
   bool IsFetching() const { return mState == State::Fetching; }
   bool IsCompiling() const { return mState == State::Compiling; }
-  bool IsLoadingImports() const { return mState == State::LoadingImports; }
-  bool IsCancelingImports() const { return mState == State::CancelingImports; }
   bool IsCanceled() const { return mState == State::Canceled; }
 
   bool IsPendingFetchingError() const {
