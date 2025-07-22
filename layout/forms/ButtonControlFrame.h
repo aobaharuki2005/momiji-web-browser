@@ -39,6 +39,9 @@ class ButtonControlFrame : public nsBlockFrame,
                        mozilla::WidgetGUIEvent* aEvent,
                        nsEventStatus* aEventStatus) override;
 
+  void Reflow(nsPresContext*, ReflowOutput&, const ReflowInput&,
+              nsReflowStatus&) override;
+
   // Given a string of text (for the button label), ensure it's not empty so
   // that line height computations work (inserting a zero-width character if
   // necessary).

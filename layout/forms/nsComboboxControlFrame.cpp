@@ -238,9 +238,6 @@ void nsComboboxControlFrame::Reflow(nsPresContext* aPresContext,
   }
 
   ButtonControlFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
-  // We're always complete and we don't support overflow containers
-  // so we shouldn't have a next-in-flow ever.
-  aStatus.Reset();
 }
 
 void nsComboboxControlFrame::Init(nsIContent* aContent,
