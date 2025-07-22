@@ -2496,8 +2496,8 @@ TEST(GeckoProfiler, Markers)
       /* mozilla::TimeStamp aStart */ ts1,
       /* mozilla::TimeStamp aEnd */ ts2,
       /* int64_t aCount */ 56,
-      /* nsICacheInfoChannel::CacheDisposition aCacheDisposition */
-      nsICacheInfoChannel::kCacheHit,
+      /* mozilla::net::CacheDisposition aCacheDisposition */
+      net::kCacheHit,
       /* uint64_t aInnerWindowID */ 78,
       /* bool aIsPrivateBrowsing */ false,
       /* unsigned long aClassOfServiceFlag */ nsIClassOfService::Leader,
@@ -2523,8 +2523,8 @@ TEST(GeckoProfiler, Markers)
       /* mozilla::TimeStamp aStart */ ts1,
       /* mozilla::TimeStamp aEnd */ ts2,
       /* int64_t aCount */ 56,
-      /* nsICacheInfoChannel::CacheDisposition aCacheDisposition */
-      nsICacheInfoChannel::kCacheUnresolved,
+      /* mozilla::net::CacheDisposition aCacheDisposition */
+      net::kCacheUnresolved,
       /* uint64_t aInnerWindowID */ 78,
       /* bool aIsPrivateBrowsing */ false,
       /* unsigned long aClassOfServiceFlag */ nsIClassOfService::Follower,
@@ -2556,8 +2556,8 @@ TEST(GeckoProfiler, Markers)
       /* mozilla::TimeStamp aStart */ ts1,
       /* mozilla::TimeStamp aEnd */ ts2,
       /* int64_t aCount */ 56,
-      /* nsICacheInfoChannel::CacheDisposition aCacheDisposition */
-      nsICacheInfoChannel::kCacheUnresolved,
+      /* mozilla::net::CacheDisposition aCacheDisposition */
+      net::kCacheUnresolved,
       /* uint64_t aInnerWindowID */ 78,
       /* bool aIsPrivateBrowsing */ false,
       /* unsigned long aClassOfServiceFlag */ nsIClassOfService::Speculative,
@@ -2588,8 +2588,8 @@ TEST(GeckoProfiler, Markers)
       /* mozilla::TimeStamp aStart */ ts1,
       /* mozilla::TimeStamp aEnd */ ts2,
       /* int64_t aCount */ 56,
-      /* nsICacheInfoChannel::CacheDisposition aCacheDisposition */
-      nsICacheInfoChannel::kCacheUnresolved,
+      /* mozilla::net::CacheDisposition aCacheDisposition */
+      net::kCacheUnresolved,
       /* uint64_t aInnerWindowID */ 78,
       /* bool aIsPrivateBrowsing */ false,
       /* unsigned long aClassOfServiceFlag */ nsIClassOfService::Background,
@@ -2620,8 +2620,8 @@ TEST(GeckoProfiler, Markers)
       /* mozilla::TimeStamp aStart */ ts1,
       /* mozilla::TimeStamp aEnd */ ts2,
       /* int64_t aCount */ 56,
-      /* nsICacheInfoChannel::CacheDisposition aCacheDisposition */
-      nsICacheInfoChannel::kCacheUnresolved,
+      /* mozilla::net::CacheDisposition aCacheDisposition */
+      net::kCacheUnresolved,
       /* uint64_t aInnerWindowID */ 78,
       /* bool aIsPrivateBrowsing */ false,
       /* unsigned long aClassOfServiceFlag */ nsIClassOfService::Unblocked |
@@ -2652,8 +2652,8 @@ TEST(GeckoProfiler, Markers)
       /* mozilla::TimeStamp aStart */ ts1,
       /* mozilla::TimeStamp aEnd */ ts2,
       /* int64_t aCount */ 56,
-      /* nsICacheInfoChannel::CacheDisposition aCacheDisposition */
-      nsICacheInfoChannel::kCacheUnresolved,
+      /* mozilla::net::CacheDisposition aCacheDisposition */
+      net::kCacheUnresolved,
       /* uint64_t aInnerWindowID */ 78,
       /* bool aIsPrivateBrowsing */ false,
       /* unsigned long aClassOfServiceFlag */ nsIClassOfService::Unblocked |
@@ -2684,8 +2684,8 @@ TEST(GeckoProfiler, Markers)
       /* mozilla::TimeStamp aStart */ ts1,
       /* mozilla::TimeStamp aEnd */ ts2,
       /* int64_t aCount */ 56,
-      /* nsICacheInfoChannel::CacheDisposition aCacheDisposition */
-      nsICacheInfoChannel::kCacheUnresolved,
+      /* mozilla::net::CacheDisposition aCacheDisposition */
+      net::kCacheUnresolved,
       /* uint64_t aInnerWindowID */ 78,
       /* bool aIsPrivateBrowsing */ true,
       /* unsigned long aClassOfServiceFlag */ nsIClassOfService::Tail,

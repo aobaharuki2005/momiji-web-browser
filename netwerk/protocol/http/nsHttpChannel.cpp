@@ -186,27 +186,26 @@ enum ChannelDisposition {
 };
 
 static nsLiteralCString CacheDispositionToTelemetryLabel(
-    nsICacheInfoChannel::CacheDisposition hitOrMiss) {
+    CacheDisposition hitOrMiss) {
   switch (hitOrMiss) {
-    case nsICacheInfoChannel::kCacheUnresolved:
+    case kCacheUnresolved:
       return "Unresolved"_ns;
-    case nsICacheInfoChannel::kCacheHit:
+    case kCacheHit:
       return "Hit"_ns;
-    case nsICacheInfoChannel::kCacheHitViaReval:
+    case kCacheHitViaReval:
       return "HitViaReval"_ns;
-    case nsICacheInfoChannel::kCacheMissedViaReval:
+    case kCacheMissedViaReval:
       return "MissedViaReval"_ns;
-    case nsICacheInfoChannel::kCacheMissed:
+    case kCacheMissed:
       return "Missed"_ns;
-    case nsICacheInfoChannel::kCacheUnknown:
+    case kCacheUnknown:
       return "Unknown"_ns;
-    default:
-      return "Invalid"_ns;
   }
+  return "Unresolved"_ns;
 }
 
-void AccumulateCacheHitTelemetry(
-    nsICacheInfoChannel::CacheDisposition hitOrMiss, nsIChannel* aChannel) {
+void AccumulateCacheHitTelemetry(CacheDisposition hitOrMiss,
+                                 nsIChannel* aChannel) {
   nsCString key("UNKNOWN");
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
@@ -11498,15 +11497,6 @@ nsHttpChannel::GetWebTransportSessionEventListener() {
 NS_IMETHODIMP nsHttpChannel::GetLastTransportStatus(
     nsresult* aLastTransportStatus) {
   *aLastTransportStatus = mLastTransportStatus;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetCacheDisposition(CacheDisposition* aDisposition) {
-  if (!aDisposition) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *aDisposition = mCacheDisposition;
   return NS_OK;
 }
 

@@ -319,7 +319,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   TimeStamp mLastStatusReported;
 
   uint64_t mCacheEntryId{0};
-  CacheDisposition mCacheDisposition{kCacheUnknown};
 
   uint32_t mCacheKey{0};
   int32_t mCacheFetchCount{0};

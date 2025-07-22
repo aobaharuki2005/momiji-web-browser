@@ -1198,7 +1198,6 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
 
   if (httpChannelImpl) {
     httpChannelImpl->IsFromCache(&args.isFromCache());
-    httpChannelImpl->GetCacheDisposition(&args.cacheDisposition());
     httpChannelImpl->IsRacing(&args.isRacing());
     httpChannelImpl->GetCacheEntryId(&args.cacheEntryId());
     httpChannelImpl->GetCacheTokenFetchCount(&args.cacheFetchCount());

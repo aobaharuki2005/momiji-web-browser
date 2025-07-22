@@ -151,11 +151,6 @@ perf:
         description:
           "Whether the user has SSD in their hardware or not. Only available on Windows, after startup-idle-tasks are done"
         type: boolean
-      cache_disposition:
-        description:
-          "cache disposition for the top level document"
-        type: quantity
-        unit: integer
     send_in_pings:
       - pageload
 

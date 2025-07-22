@@ -28,8 +28,6 @@ enum FeatureBits : uint32_t {
 
 namespace IPC {
 
-// Helper functions for serializing the parts of PageLoadExtra that come from
-// the content process before we send it over to the parent process.
 template <>
 struct ParamTraits<mozilla::glean::perf::PageLoadExtra> {
   typedef mozilla::glean::perf::PageLoadExtra paramType;
@@ -51,7 +49,6 @@ struct ParamTraits<mozilla::glean::perf::PageLoadExtra> {
     WriteParam(aWriter, aParam.trrDomain);
     WriteParam(aWriter, aParam.dnsLookupTime);
     WriteParam(aWriter, aParam.features);
-    WriteParam(aWriter, aParam.cacheDisposition);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
@@ -70,8 +67,7 @@ struct ParamTraits<mozilla::glean::perf::PageLoadExtra> {
            ReadParam(aReader, &aResult->sameOriginNav) &&
            ReadParam(aReader, &aResult->trrDomain) &&
            ReadParam(aReader, &aResult->dnsLookupTime) &&
-           ReadParam(aReader, &aResult->features) &&
-           ReadParam(aReader, &aResult->cacheDisposition);
+           ReadParam(aReader, &aResult->features);
   }
 };
 
