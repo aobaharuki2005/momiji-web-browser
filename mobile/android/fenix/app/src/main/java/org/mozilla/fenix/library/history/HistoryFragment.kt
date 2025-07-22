@@ -83,6 +83,7 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.support.base.feature.UserInteractionHandler
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.kotlin.toShortUrl
 import mozilla.components.ui.widgets.withCenterAlignedButtons
@@ -160,9 +161,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
     private val binding get() = _binding!!
     private var searchLayout: ComposeView? = null
 
-    private val pendingDeletionBinding by lazy {
-        PendingDeletionBinding(requireContext().components.appStore, historyView)
-    }
+    private val pendingDeletionBinding = ViewBoundFeatureWrapper<PendingDeletionBinding>()
 
     private var verificationResultLauncher: ActivityResultLauncher<Intent> =
         registerForVerification(onVerified = ::openHistoryInPrivate)
@@ -290,15 +289,19 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
         }
 
         startStateBindings()
+
+        pendingDeletionBinding.set(
+            feature = PendingDeletionBinding(requireContext().components.appStore, historyView),
+            owner = this,
+            view = view,
+        )
     }
 
     private fun startStateBindings() {
-        pendingDeletionBinding.start()
         menuBinding.start()
     }
 
     private fun stopStateBindings() {
-        pendingDeletionBinding.stop()
         menuBinding.stop()
     }
 
