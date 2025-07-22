@@ -259,6 +259,8 @@ skip-if = [
   "condprof", # Bug 1769184 - by design for now
 ]
 
+["test_startupTimeline.js"]
+
 ["test_startup_enable.js"]
 
 ["test_startup_isPrivileged.js"]
