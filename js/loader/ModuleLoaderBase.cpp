@@ -845,8 +845,15 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
 
   bool result = false;
 
+  // PromiseJobRunnable::Call() is not executed if the global is being
+  // destroyed. As a result, the promise returned by LoadRequestedModules may
+  // neither resolve nor reject. To ensure module loading completes reliably in
+  // chrome pages, we use the synchronous variant of LoadRequestedModules.
+  bool isSync = aRequest->mURI->SchemeIs("chrome") ||
+                aRequest->mURI->SchemeIs("resource");
+
   // TODO: Bug1973660: Use Promise version of LoadRequestedModules on Workers.
-  if (aRequest->HasScriptLoadContext()) {
+  if (aRequest->HasScriptLoadContext() && !isSync) {
     Rooted<JSFunction*> onResolved(
         cx, js::NewFunctionWithReserved(cx, OnLoadRequestedModulesResolved,
                                         OnLoadRequestedModulesResolvedNumArgs,
