@@ -220,7 +220,7 @@
             app:argType="org.mozilla.fenix.tabstray.TabsTrayAccessPoint" />
     </dialog>
 
-    <dialog
+    <fragment
         android:id="@+id/tabManagementFragment"
         android:name="org.mozilla.fenix.tabstray.ui.TabManagementFragment">
         <argument
@@ -235,7 +235,7 @@
             android:name="accessPoint"
             android:defaultValue="None"
             app:argType="org.mozilla.fenix.tabstray.TabsTrayAccessPoint" />
-    </dialog>
+    </fragment>
 
     <fragment
         android:id="@+id/startupFragment"
