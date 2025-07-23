@@ -14,8 +14,6 @@
     TabMetrics: "moz-src:///browser/components/tabbrowser/TabMetrics.sys.mjs",
   });
 
-  const TAB_PREVIEW_PREF = "browser.tabs.hoverPreview.enabled";
-
   const DIRECTION_BACKWARD = -1;
   const DIRECTION_FORWARD = 1;
 
@@ -206,10 +204,17 @@
 
       XPCOMUtils.defineLazyPreferenceGetter(
         this,
-        "_showCardPreviews",
-        TAB_PREVIEW_PREF,
+        "_showTabHoverPreview",
+        "browser.tabs.hoverPreview.enabled",
         false
       );
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        "_showTabGroupHoverPreview",
+        "browser.tabs.groups.hoverPreview.enabled",
+        false
+      );
+
       this.tooltip = "tabbrowser-tab-tooltip";
     }
 
@@ -268,7 +273,7 @@
     }
 
     on_TabHoverStart(event) {
-      if (!this._showCardPreviews) {
+      if (!this._showTabHoverPreview) {
         return;
       }
       if (!this.previewPanel) {
@@ -288,7 +293,9 @@
     }
 
     on_TabGroupLabelHoverStart(event) {
-      // TODO bug1976283 gate this behaviour on a feature flag
+      if (!this._showTabGroupHoverPreview) {
+        return;
+      }
 
       if (!this.tabGroupPreviewPanel) {
         const TabGroupHoverPreviewPanel = ChromeUtils.importESModule(

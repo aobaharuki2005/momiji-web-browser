@@ -46,7 +46,7 @@ async function closePreviews(win = window) {
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.tabs.hoverPreview.enabled", true]],
+    set: [["browser.tabs.groups.hoverPreview.enabled", true]],
   });
 });
 
