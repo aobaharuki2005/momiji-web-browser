@@ -85,7 +85,6 @@ import org.mozilla.fenix.tabstray.ui.syncedtabs.OnTabCloseClick as OnSyncedTabCl
  * @param onBookmarkSelectedTabsClick Invoked when the user clicks on the bookmark banner menu item.
  * @param onDeleteSelectedTabsClick Invoked when the user clicks on the close selected tabs banner menu item.
  * @param onForceSelectedTabsAsInactiveClick Invoked when the user clicks on the make inactive banner menu item.
- * @param onTabsTrayDismiss Invoked when accessibility services or UI automation requests dismissal.
  * @param onTabAutoCloseBannerViewOptionsClick Invoked when the user clicks to view the auto close options.
  * @param onTabsTrayPbmLockedClick Invoked when the user interacts with the lock private browsing mode banner.
  * @param onTabsTrayPbmLockedDismiss Invoked when the user clicks either button on the
@@ -136,7 +135,6 @@ fun TabsTray(
     onBookmarkSelectedTabsClick: () -> Unit,
     onDeleteSelectedTabsClick: () -> Unit,
     onForceSelectedTabsAsInactiveClick: () -> Unit,
-    onTabsTrayDismiss: () -> Unit,
     onTabAutoCloseBannerViewOptionsClick: () -> Unit,
     onTabsTrayPbmLockedClick: () -> Unit,
     onTabsTrayPbmLockedDismiss: () -> Unit,
@@ -205,7 +203,6 @@ fun TabsTray(
                 onBookmarkSelectedTabsClick = onBookmarkSelectedTabsClick,
                 onDeleteSelectedTabsClick = onDeleteSelectedTabsClick,
                 onForceSelectedTabsAsInactiveClick = onForceSelectedTabsAsInactiveClick,
-                onDismissClick = onTabsTrayDismiss,
                 onTabAutoCloseBannerViewOptionsClick = onTabAutoCloseBannerViewOptionsClick,
                 onTabsTrayPbmLockedClick = onTabsTrayPbmLockedClick,
                 onTabsTrayPbmLockedDismiss = onTabsTrayPbmLockedDismiss,
@@ -452,7 +449,6 @@ private fun TabsTrayPreviewRoot(
             onDeleteSelectedTabsClick = {},
             onBookmarkSelectedTabsClick = {},
             onForceSelectedTabsAsInactiveClick = {},
-            onTabsTrayDismiss = {},
             onTabAutoCloseBannerViewOptionsClick = {},
             onTabsTrayPbmLockedClick = {},
             onTabsTrayPbmLockedDismiss = {},

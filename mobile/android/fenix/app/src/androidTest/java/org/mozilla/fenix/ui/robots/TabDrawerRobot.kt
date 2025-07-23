@@ -45,6 +45,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.tabstray.DefaultTabManagementFeatureHelper
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
 
 fun tabDrawer(
@@ -543,9 +544,15 @@ class TabDrawerRobot(private val composeTestRule: ComposeTestRule) {
         }
 
         fun closeTabDrawer(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            Log.i(TAG, "closeTabDrawer: Trying to close the tabs tray by clicking the handle")
-            composeTestRule.bannerHandle().performSemanticsAction(SemanticsActions.OnClick)
-            Log.i(TAG, "closeTabDrawer: Closed the tabs tray by clicking the handle")
+            if (DefaultTabManagementFeatureHelper.enhancementsEnabled) {
+                Log.i(TAG, "closeTabDrawer: Trying to close the tabs tray by pressing the back button")
+                mDevice.pressBack()
+                Log.i(TAG, "closeTabDrawer: Closed the tabs tray by pressing the back button")
+            } else {
+                Log.i(TAG, "closeTabDrawer: Trying to close the tabs tray by clicking the handle")
+                composeTestRule.bannerHandle().performSemanticsAction(SemanticsActions.OnClick)
+                Log.i(TAG, "closeTabDrawer: Closed the tabs tray by clicking the handle")
+            }
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()

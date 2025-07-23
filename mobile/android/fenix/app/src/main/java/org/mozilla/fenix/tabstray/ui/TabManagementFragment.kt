@@ -308,7 +308,6 @@ class TabManagementFragment : ComposeFragment() {
                 onDeleteSelectedTabsClick = tabManagerInteractor::onDeleteSelectedTabsClicked,
                 onBookmarkSelectedTabsClick = tabManagerInteractor::onBookmarkSelectedTabsClicked,
                 onForceSelectedTabsAsInactiveClick = tabManagerInteractor::onForceSelectedTabsAsInactiveClicked,
-                onTabsTrayDismiss = ::onTabsTrayDismissed,
                 onTabsTrayPbmLockedClick = ::onTabsTrayPbmLockedClick,
                 onTabsTrayPbmLockedDismiss = {
                     requireContext().settings().shouldShowLockPbmBanner = false
