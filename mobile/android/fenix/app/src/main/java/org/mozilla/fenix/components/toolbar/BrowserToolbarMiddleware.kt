@@ -666,13 +666,14 @@ class BrowserToolbarMiddleware(
 
     private fun buildStartBrowserActions(): List<Action> {
         val environment = environment ?: return emptyList()
-        val isLargeWindowOrLandscape = environment.context.isLargeWindow() ||
-                appStore.state.orientation == OrientationMode.Landscape
+        val isLargeWindow = environment.context.isLargeWindow()
+        val isLandscape = appStore.state.orientation == OrientationMode.Landscape
+        val shouldNavigationButtonBeVisible = isLargeWindow || (settings.shouldUseExpandedToolbar && isLandscape)
 
         return listOf(
-            ToolbarActionConfig(ToolbarAction.Back) { isLargeWindowOrLandscape },
-            ToolbarActionConfig(ToolbarAction.Forward) { isLargeWindowOrLandscape },
-            ToolbarActionConfig(ToolbarAction.RefreshOrStop) { isLargeWindowOrLandscape },
+            ToolbarActionConfig(ToolbarAction.Back) { shouldNavigationButtonBeVisible },
+            ToolbarActionConfig(ToolbarAction.Forward) { shouldNavigationButtonBeVisible },
+            ToolbarActionConfig(ToolbarAction.RefreshOrStop) { shouldNavigationButtonBeVisible },
         ).filter { config ->
             config.isVisible()
         }.map { config ->
