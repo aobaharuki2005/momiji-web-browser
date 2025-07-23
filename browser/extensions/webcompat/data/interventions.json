@@ -3167,6 +3167,23 @@
       }
     ]
   },
+  "1902415": {
+    "label": "kaigetsu.staysee.jp",
+    "bugs": {
+      "1902415": {
+        "issue": "unsupported-warning",
+        "matches": ["*://kaigetsu.staysee.jp/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "content_scripts": {
+          "css": ["bug1902415-kaigetsu.staysee.jp-hide-unsupported.css"]
+        }
+      }
+    ]
+  },
   "1902416": {
     "label": "acionafacil.com.br",
     "bugs": {
