@@ -13604,16 +13604,6 @@ bool SetContextJITOptions(JSContext* cx, const OptionParser& op) {
     }
   }
 
-  if (const char* str = op.getStringOption("ion-edgecase-analysis")) {
-    if (strcmp(str, "on") == 0) {
-      jit::JitOptions.disableEdgeCaseAnalysis = false;
-    } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.disableEdgeCaseAnalysis = true;
-    } else {
-      return OptionFailure("ion-edgecase-analysis", str);
-    }
-  }
-
   if (const char* str = op.getStringOption("ion-pruning")) {
     if (strcmp(str, "on") == 0) {
       jit::JitOptions.disablePruning = false;
