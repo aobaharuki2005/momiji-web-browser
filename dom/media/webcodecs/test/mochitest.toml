@@ -7,7 +7,7 @@ prefs = [
 ]
 support-files = [
   "bug1921817.jpg",
-  "green.png",
+  "green.png"
 ]
 
 ["test_bug1921817.html"]
