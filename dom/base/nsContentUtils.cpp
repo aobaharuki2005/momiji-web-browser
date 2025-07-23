@@ -11748,21 +11748,21 @@ bool nsContentUtils::IsOverridingWindowName(const nsAString& aName) {
 // Unfortunately, we can't unwrap an IDL object using only a concrete type.
 // We need to calculate type data based on the IDL typename. Which means
 // wrapping our templated function in a macro.
-#define EXTRACT_EXN_VALUES(T, ...)                                \
-  ExtractExceptionValues<mozilla::dom::prototypes::id::T,         \
-                         T##_Binding::NativeType, T>(__VA_ARGS__) \
+#define EXTRACT_EXN_VALUES(T, ...)                                    \
+  ExtractExceptionValuesImpl<mozilla::dom::prototypes::id::T,         \
+                             T##_Binding::NativeType, T>(__VA_ARGS__) \
       .isOk()
 
 template <prototypes::ID PrototypeID, class NativeType, typename T>
-static Result<Ok, nsresult> ExtractExceptionValues(
-    JSContext* aCx, JS::Handle<JSObject*> aObj, nsACString& aSourceSpecOut,
+static Result<Ok, nsresult> ExtractExceptionValuesImpl(
+    JSContext* aCx, JS::Handle<JSObject*> aObj, nsACString& aFilename,
     uint32_t* aLineOut, uint32_t* aColumnOut, nsString& aMessageOut) {
   AssertStaticUnwrapOK<PrototypeID>();
   RefPtr<T> exn;
   MOZ_TRY((UnwrapObject<PrototypeID, NativeType>(aObj, exn, nullptr)));
 
-  exn->GetFilename(aCx, aSourceSpecOut);
-  if (!aSourceSpecOut.IsEmpty()) {
+  exn->GetFilename(aCx, aFilename);
+  if (!aFilename.IsEmpty()) {
     *aLineOut = exn->LineNumber(aCx);
     *aColumnOut = exn->ColumnNumber();
   }
@@ -11774,6 +11774,16 @@ static Result<Ok, nsresult> ExtractExceptionValues(
   exn->GetMessageMoz(message);
   aMessageOut.Append(message);
   return Ok();
+}
+
+/* static */
+bool nsContentUtils::ExtractExceptionValues(
+    JSContext* aCx, JS::Handle<JSObject*> aObj, nsACString& aFilename,
+    uint32_t* aLineOut, uint32_t* aColumnOut, nsString& aMessageOut) {
+  return EXTRACT_EXN_VALUES(DOMException, aCx, aObj, aFilename, aLineOut,
+                            aColumnOut, aMessageOut) ||
+         EXTRACT_EXN_VALUES(Exception, aCx, aObj, aFilename, aLineOut,
+                            aColumnOut, aMessageOut);
 }
 
 /* static */
@@ -11789,8 +11799,7 @@ void nsContentUtils::ExtractErrorValues(
     // Try to process as an Error object.  Use the file/line/column values
     // from the Error as they will be more specific to the root cause of
     // the problem.
-    JSErrorReport* err = obj ? JS_ErrorFromException(aCx, obj) : nullptr;
-    if (err) {
+    if (JSErrorReport* err = JS_ErrorFromException(aCx, obj)) {
       // Use xpc to extract the error message only.  We don't actually send
       // this report anywhere.
       RefPtr<xpc::ErrorReport> report = new xpc::ErrorReport();
@@ -11807,15 +11816,9 @@ void nsContentUtils::ExtractErrorValues(
       aMessageOut.Assign(report->mErrorMsg);
     }
 
-    // Next, try to unwrap the rejection value as a DOMException.
-    else if (EXTRACT_EXN_VALUES(DOMException, aCx, obj, aSourceSpecOut,
-                                aLineOut, aColumnOut, aMessageOut)) {
-      return;
-    }
-
-    // Next, try to unwrap the rejection value as an XPC Exception.
-    else if (EXTRACT_EXN_VALUES(Exception, aCx, obj, aSourceSpecOut, aLineOut,
-                                aColumnOut, aMessageOut)) {
+    // Next, try to unwrap the rejection value as a (DOM)Exception.
+    else if (ExtractExceptionValues(aCx, obj, aSourceSpecOut, aLineOut,
+                                    aColumnOut, aMessageOut)) {
       return;
     }
   }

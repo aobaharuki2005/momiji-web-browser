@@ -486,9 +486,17 @@ using DOMInstanceClassHasProtoAtDepth = bool (*)(const JSClass*, uint32_t,
                                                  uint32_t);
 using DOMInstanceClassIsError = bool (*)(const JSClass*);
 
+
+using DOMExtractExceptionInfo = bool (*)(JSContext*, JS::HandleObject,
+                                              bool*,
+                                              JS::MutableHandle<JSString*>,
+                                              uint32_t*, uint32_t*,
+                                              JS::MutableHandle<JSString*>);
+
 struct JSDOMCallbacks {
   DOMInstanceClassHasProtoAtDepth instanceClassMatchesProto;
   DOMInstanceClassIsError instanceClassIsError;
+  DOMExtractExceptionInfo extractExceptionInfo;
 };
 using DOMCallbacks = struct JSDOMCallbacks;
 

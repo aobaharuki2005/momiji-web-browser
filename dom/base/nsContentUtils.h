@@ -1373,6 +1373,12 @@ class nsContentUtils {
 
   static bool PrefetchPreloadEnabled(nsIDocShell* aDocShell);
 
+  static bool ExtractExceptionValues(JSContext* aCx,
+                                     JS::Handle<JSObject*> aException,
+                                     nsACString& aFilename, uint32_t* aLineOut,
+                                     uint32_t* aColumnOut,
+                                     nsString& aMessageOut);
+
   static void ExtractErrorValues(JSContext* aCx, JS::Handle<JS::Value> aValue,
                                  nsACString& aSourceSpecOut, uint32_t* aLineOut,
                                  uint32_t* aColumnOut, nsString& aMessageOut);

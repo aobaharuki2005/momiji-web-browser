@@ -801,6 +801,37 @@ static bool InstanceClassIsError(const JSClass* clasp) {
   return false;
 }
 
+static bool ExtractExceptionInfo(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                                 bool* aIsException,
+                                 JS::MutableHandle<JSString*> aFileName,
+                                 uint32_t* aLine, uint32_t* aColumn,
+                                 JS::MutableHandle<JSString*> aMessage) {
+  *aIsException = false;
+
+  nsAutoCString fileName;
+  nsAutoString message;
+  if (!nsContentUtils::ExtractExceptionValues(aCx, aObj, fileName, aLine, aColumn,
+                                              message)) {
+    return true;
+  }
+
+  *aIsException = true;
+
+  aFileName.set(
+      ::JS_NewStringCopyN(aCx, fileName.BeginReading(), fileName.Length()));
+  if (!aFileName) {
+    return false;
+  }
+
+  aMessage.set(
+      ::JS_NewUCStringCopyN(aCx, message.BeginReading(), message.Length()));
+  if (!aMessage) {
+    return false;
+  }
+
+  return true;
+}
+
 CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSContext* aCx)
     : mContext(nullptr),
       mGCThingCycleCollectorGlobal(sGCThingCycleCollectorGlobal),
@@ -847,7 +878,8 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSContext* aCx)
       CrashReporter::AnnotateOOMAllocationSize);
 
   static js::DOMCallbacks DOMcallbacks = {InstanceClassHasProtoAtDepth,
-                                          InstanceClassIsError};
+                                          InstanceClassIsError,
+                                          ExtractExceptionInfo};
   SetDOMCallbacks(aCx, &DOMcallbacks);
   js::SetScriptEnvironmentPreparer(aCx, &mEnvironmentPreparer);
 
