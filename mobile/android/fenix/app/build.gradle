@@ -253,15 +253,6 @@ android {
     }
 
     bundle {
-        // Profiler issues require us to temporarily package native code compressed to
-        // match the previous APK packaging.
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=1865634
-        packaging {
-            jniLibs {
-                it.useLegacyPackaging = true
-            }
-        }
-
         language {
             // Because we have runtime language selection we will keep all strings and languages
             // in the base APKs.
@@ -282,9 +273,6 @@ android {
         resources {
             excludes += ["META-INF/LICENSE.md", "META-INF/LICENSE-notice.md",
                          "META-INF/versions/9/OSGI-INF/MANIFEST.MF"]
-        }
-        jniLibs {
-            useLegacyPackaging = true
         }
     }
 
