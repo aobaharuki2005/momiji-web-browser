@@ -174,7 +174,6 @@ webrtc-allow-share-screen-and-audio-capture-unsafe-delegation = Allow { $origin 
 webrtc-share-screen-warning = Only share screens with sites you trust. Sharing can allow deceptive sites to browse as you and steal your private data.
 webrtc-share-browser-warning = Only share { -brand-short-name } with sites you trust. Sharing can allow deceptive sites to browse as you and steal your private data.
 
-webrtc-share-screen-learn-more = Learn more
 webrtc-pick-window-or-screen = Select window or screen
 webrtc-share-entire-screen = Entire screen
 webrtc-share-pipe-wire-portal = Use operating system settings

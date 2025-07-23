@@ -197,14 +197,6 @@
   list-style-image: url(chrome://browser/skin/login.svg);
 }
 
-#webRTC-previewVideo {
-  border-radius: var(--border-radius-small);
-  border: 1px solid var(--panel-separator-color);
-  min-width: 0;
-  min-height: 10em;
-  max-height: 250px;
-}
-
 #webRTC-all-windows-shared,
 #webRTC-previewWarning {
   font-size: 0.8em;
