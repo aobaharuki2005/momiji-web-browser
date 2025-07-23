@@ -134,24 +134,26 @@ Result<MoveNodeResult, nsresult> WhiteSpaceVisibilityKeeper::
     }
   }
   // Finally, make sure that we won't create new invisible white-spaces.
-  AutoTrackDOMPoint trackAfterRightBlockChild(aHTMLEditor.RangeUpdaterRef(),
-                                              &afterRightBlockChild);
-  Result<EditorDOMPoint, nsresult> atFirstVisibleThingOrError =
-      WhiteSpaceVisibilityKeeper::NormalizeWhiteSpacesAfter(
-          aHTMLEditor, afterRightBlockChild,
-          {NormalizeOption::StopIfFollowingWhiteSpacesStartsWithNBSP});
-  if (MOZ_UNLIKELY(atFirstVisibleThingOrError.isErr())) {
-    NS_WARNING(
-        "WhiteSpaceVisibilityKeeper::NormalizeWhiteSpacesAfter() failed");
-    return atFirstVisibleThingOrError.propagateErr();
-  }
-  Result<EditorDOMPoint, nsresult> afterLastVisibleThingOrError =
-      WhiteSpaceVisibilityKeeper::NormalizeWhiteSpacesBefore(
-          aHTMLEditor, EditorDOMPoint::AtEndOf(aLeftBlockElement), {});
-  if (MOZ_UNLIKELY(afterLastVisibleThingOrError.isErr())) {
-    NS_WARNING(
-        "WhiteSpaceVisibilityKeeper::NormalizeWhiteSpacesAfter() failed");
-    return afterLastVisibleThingOrError.propagateErr();
+  {
+    AutoTrackDOMPoint trackAfterRightBlockChild(aHTMLEditor.RangeUpdaterRef(),
+                                                &afterRightBlockChild);
+    Result<EditorDOMPoint, nsresult> atFirstVisibleThingOrError =
+        WhiteSpaceVisibilityKeeper::NormalizeWhiteSpacesAfter(
+            aHTMLEditor, afterRightBlockChild,
+            {NormalizeOption::StopIfFollowingWhiteSpacesStartsWithNBSP});
+    if (MOZ_UNLIKELY(atFirstVisibleThingOrError.isErr())) {
+      NS_WARNING(
+          "WhiteSpaceVisibilityKeeper::NormalizeWhiteSpacesAfter() failed");
+      return atFirstVisibleThingOrError.propagateErr();
+    }
+    Result<EditorDOMPoint, nsresult> afterLastVisibleThingOrError =
+        WhiteSpaceVisibilityKeeper::NormalizeWhiteSpacesBefore(
+            aHTMLEditor, EditorDOMPoint::AtEndOf(aLeftBlockElement), {});
+    if (MOZ_UNLIKELY(afterLastVisibleThingOrError.isErr())) {
+      NS_WARNING(
+          "WhiteSpaceVisibilityKeeper::NormalizeWhiteSpacesAfter() failed");
+      return afterLastVisibleThingOrError.propagateErr();
+    }
   }
 
   // XXX And afterRightBlockChild.GetContainerAs<Element>() always returns
