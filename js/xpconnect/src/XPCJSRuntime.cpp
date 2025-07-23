@@ -2762,11 +2762,12 @@ static void AccumulateTelemetryCallback(JSMetric id, uint32_t sample) {
       break;
     case JSMetric::GC_REASON_2: {
       // Assert that every reason has an associated glean label.
-      static_assert(static_cast<uint8_t>(JS::GCReason::LAST_FIREFOX_REASON) ==
-                        static_cast<uint8_t>(
-                            glean::javascript_gc::ReasonLabel::e__Other__),
-                    "GC reason enum and glean::javascript_gc::reason labels do "
-                    "not match.");
+      static_assert(
+          static_cast<uint8_t>(JS::GCReason::LAST_FIREFOX_REASON) + 1 ==
+              static_cast<uint8_t>(
+                  glean::javascript_gc::ReasonLabel::e__Other__),
+          "GC reason enum and glean::javascript_gc::reason labels do "
+          "not match.");
       MOZ_ASSERT(static_cast<JS::GCReason>(sample) <=
                      JS::GCReason::LAST_FIREFOX_REASON,
                  "Invalid GC Reason.");
@@ -2795,7 +2796,7 @@ static void AccumulateTelemetryCallback(JSMetric id, uint32_t sample) {
     case JSMetric::GC_MINOR_REASON: {
       // Assert that every reason has an associated glean label.
       static_assert(
-          static_cast<uint8_t>(JS::GCReason::LAST_FIREFOX_REASON) ==
+          static_cast<uint8_t>(JS::GCReason::LAST_FIREFOX_REASON) + 1 ==
               static_cast<uint8_t>(
                   glean::javascript_gc::MinorReasonLabel::e__Other__),
           "GC reason enum and glean::javascript_gc::reason labels do not "
@@ -2811,7 +2812,7 @@ static void AccumulateTelemetryCallback(JSMetric id, uint32_t sample) {
     case JSMetric::GC_MINOR_REASON_LONG: {
       // Assert that every reason has an associated glean label.
       static_assert(
-          static_cast<uint8_t>(JS::GCReason::LAST_FIREFOX_REASON) ==
+          static_cast<uint8_t>(JS::GCReason::LAST_FIREFOX_REASON) + 1 ==
               static_cast<uint8_t>(
                   glean::javascript_gc::MinorReasonLongLabel::e__Other__),
           "GC reason enum and glean::javascript_gc::reason labels do not "

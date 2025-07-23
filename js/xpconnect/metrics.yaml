@@ -643,6 +643,7 @@ javascript.gc:
       - RESET
       - OUT_OF_NURSERY
       - EVICT_NURSERY
+      - UNUSED4
       - SHARED_MEMORY_LIMIT
       - EAGER_NURSERY_COLLECTION
       - BG_TASK_FINISHED
