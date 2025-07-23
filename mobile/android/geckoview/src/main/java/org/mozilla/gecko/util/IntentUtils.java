@@ -247,7 +247,10 @@ public class IntentUtils {
     public @NonNull GeckoBundle toGeckoBundle() {
       final GeckoBundle bundle = new GeckoBundle();
 
-      bundle.putString("filePath", this.filePath);
+      // Local file path access won't be available on Android 11 or later.
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+        bundle.putString("filePath", this.filePath);
+      }
       bundle.putString("uri", this.uri.toString());
       bundle.putString("relativePath", this.relativePath);
       bundle.putString("name", this.displayName);
