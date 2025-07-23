@@ -310,13 +310,6 @@ class HomeFragment : Fragment() {
             }
         }
 
-        homeNavigationBar = HomeNavigationBar(
-            context = requireContext(),
-            container = binding.navigationBarContainer,
-            toolbarStore = buildToolbarStore(activity),
-            hideWhenKeyboardShown = true,
-        )
-
         if (requireContext().settings().isExperimentationEnabled) {
             messagingFeatureHomescreen.set(
                 feature = MessagingFeature(
@@ -579,6 +572,13 @@ class HomeFragment : Fragment() {
         when (activity.settings().shouldUseComposableToolbar) {
             true -> {
                 val toolbarStore = buildToolbarStore(activity)
+
+                homeNavigationBar = HomeNavigationBar(
+                    context = activity,
+                    container = binding.navigationBarContainer,
+                    toolbarStore = toolbarStore,
+                    hideWhenKeyboardShown = true,
+                )
 
                 HomeToolbarComposable(
                     context = activity,
