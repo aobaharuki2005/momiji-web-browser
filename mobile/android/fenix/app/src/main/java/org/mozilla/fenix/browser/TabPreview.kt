@@ -26,6 +26,7 @@ import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
 import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
+import mozilla.components.compose.browser.toolbar.concept.Action
 import mozilla.components.compose.browser.toolbar.concept.Action.ActionButtonRes
 import mozilla.components.compose.browser.toolbar.concept.Action.TabCounterAction
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin
@@ -186,38 +187,10 @@ class TabPreview @JvmOverloads constructor(
     }
 
     private fun buildComposableToolbarStore(): BrowserToolbarStore {
-        val tabsCount = currentOpenedTabsCount
-        val isPrivateMode = context.components.appStore.state.mode.isPrivate
-
-        val tabsCounterDescription = if (isPrivateMode) {
-            context.getString(R.string.mozac_tab_counter_private)
-        } else {
-            context.getString(R.string.mozac_tab_counter_open_tab_tray)
-        }
-
         return BrowserToolbarStore(
             BrowserToolbarState(
                 displayState = DisplayState(
-                    browserActionsStart = listOf(
-                        ActionButtonRes(
-                            drawableResId = R.drawable.mozac_ic_home_24,
-                            contentDescription = R.string.browser_toolbar_home,
-                            onClick = object : BrowserToolbarEvent {},
-                        ),
-                    ),
-                    browserActionsEnd = listOf(
-                        TabCounterAction(
-                            count = tabsCount,
-                            contentDescription = tabsCounterDescription,
-                            showPrivacyMask = isPrivateMode,
-                            onClick = object : BrowserToolbarEvent {},
-                        ),
-                        ActionButtonRes(
-                            drawableResId = R.drawable.mozac_ic_ellipsis_vertical_24,
-                            contentDescription = R.string.content_description_menu,
-                            onClick = object : BrowserToolbarEvent {},
-                        ),
-                    ),
+                    browserActionsEnd = buildComposableToolbarBrowserEndActions(),
                 ),
             ),
         )
@@ -249,6 +222,36 @@ class TabPreview @JvmOverloads constructor(
                 ),
             )
         }
+    }
+
+    private fun buildComposableToolbarBrowserEndActions(): List<Action> {
+        val tabsCount = currentOpenedTabsCount
+        val isPrivateMode = context.components.appStore.state.mode.isPrivate
+
+        val tabsCounterDescription = if (isPrivateMode) {
+            context.getString(R.string.mozac_tab_counter_private)
+        } else {
+            context.getString(R.string.mozac_tab_counter_open_tab_tray)
+        }
+
+        return listOf(
+            ActionButtonRes(
+                drawableResId = R.drawable.mozac_ic_plus_24,
+                contentDescription = R.string.home_screen_shortcut_open_new_tab_2,
+                onClick = object : BrowserToolbarEvent {},
+            ),
+            TabCounterAction(
+                count = tabsCount,
+                contentDescription = tabsCounterDescription,
+                showPrivacyMask = isPrivateMode,
+                onClick = object : BrowserToolbarEvent {},
+            ),
+            ActionButtonRes(
+                drawableResId = R.drawable.mozac_ic_ellipsis_vertical_24,
+                contentDescription = R.string.content_description_menu,
+                onClick = object : BrowserToolbarEvent {},
+            ),
+        )
     }
 
     private suspend fun buildComposableToolbarPageOrigin(tab: TabSessionState): PageOrigin {
