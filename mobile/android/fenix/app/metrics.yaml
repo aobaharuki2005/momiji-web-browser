@@ -2268,11 +2268,12 @@ custom_review_prompt:
       - android-probes@mozilla.com
     expires: never
 
-  open_mozilla_connect_clicked:
+  leave_feedback_clicked:
     type: event
-    description: Logged when the user chooses to open Mozilla Connect from the custom review prompt.
+    description: Logged when the user chooses to leave feedback from the custom review prompt.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1966653
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1978806
     data_reviews:
       - https://phabricator.services.mozilla.com/D253398
     data_sensitivity:
