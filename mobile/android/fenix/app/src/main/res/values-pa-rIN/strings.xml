@@ -879,6 +879,8 @@
   <string name="preferences_home_2">ਮੁੱਖ ਸਫ਼ਾ</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">ਐਪ ਆਈਕਾਨ</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">ਟੈਬ ਪੱਟੀ ਦੀ ਦਿੱਖ</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">ਇਸ਼ਾਰੇ</string>
   <!-- Preference for settings related to visual options -->
@@ -1311,6 +1313,8 @@
   <string name="preference_simple_toolbar">ਸਧਾਰਨ</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Expanded</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">ਜਦੋਂ ਟੈਬ ਪੱਟੀ ਨੂੰ ਦਿਖਾਇਆ ਜਾਵੇ ਤਾਂ ਸਿਰਨਾਵਾਂ ਪੱਟੀ ਹਮੇਸ਼ਾਂ ਉੱਤੇ ਹੋਣੀ ਚਾਹੀਦੀ ਹੈ।</string>
   <!--
     App icon Preferences
 
@@ -1329,6 +1333,12 @@
   <string name="preference_auto_battery_theme">ਬੈਟਰੀ ਬੱਚਤਕਾਰ ਵਲੋਂ ਨਿਯਤ ਕੀਤਾ</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">ਡਿਵਾਈਸ ਥੀਮ ਦੇ ਮੁਤਾਬਕ</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">ਟੈਬ ਪੱਟੀ ਨੂੰ ਦਿਖਾਓ</string>
   <!--
     Gestures Preferences
 
@@ -2772,6 +2782,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">ਸਿਰਨਾਵਿਆਂ ਨੂੰ ਸੰਭਾਲੋ ਅਤੇ ਭਰੋ</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">ਫ਼ੋਨ ਨੰਬਰਾਂ ਅਤੇ ਈਮੇਲ ਸਿਰਨਾਵਿਆਂ ਸਮੇਤ</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ ਸਿਰਨਾਵਿਆਂ ਨੂੰ ਸਿੰਕ ਕਰੋ</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">ਸਿਰਨਾਵਿਆਂ ਨੂੰ ਸਿੰਕ ਕਰੋ</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">ਕਾਰਡ ਜੋੜੋ</string>
   <!-- Title of the "Edit card" screen -->

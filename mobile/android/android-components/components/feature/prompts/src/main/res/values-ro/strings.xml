@@ -133,6 +133,12 @@
   <string name="mozac_feature_prompts_save_credit_card_prompt_title">Salvează securizat acest card?</string>
   <!-- Text for the title of an update credit card dialog. -->
   <string name="mozac_feature_prompts_update_credit_card_prompt_title">Actualizează data de expirare a cardului?</string>
+  <!--
+    Address Autofill
+
+    Header for the select address prompt to allow users to fill a form with a saved address.
+  -->
+  <string name="mozac_feature_prompts_select_address_2">Selectează adresa</string>
   <!-- Text for the manage addresses button. -->
   <string name="mozac_feature_prompts_manage_address">Gestionează adrese</string>
   <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
