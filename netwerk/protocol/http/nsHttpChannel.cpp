@@ -6957,6 +6957,9 @@ ProxyDNSStrategy nsHttpChannel::GetProxyDNSStrategy() {
 // BeginConnect.
 nsresult nsHttpChannel::BeginConnect() {
   LOG(("nsHttpChannel::BeginConnect [this=%p]\n", this));
+
+  AUTO_PROFILER_FLOW_MARKER("nsHttpChannel::BeginConnect", NETWORK,
+                            Flow::FromPointer(this));
   nsresult rv;
 
   // It is the caller's responsibility to not call us late in shutdown.
