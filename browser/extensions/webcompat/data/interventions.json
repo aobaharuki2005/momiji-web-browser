@@ -3507,6 +3507,23 @@
       }
     ]
   },
+  "1925276": {
+    "label": "xtralife.com",
+    "bugs": {
+      "1925276": {
+        "issue": "broken-layout",
+        "matches": ["*://www.xtralife.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "content_scripts": {
+          "css": ["bug1925276-xtralife.com-fix-search-results.css"]
+        }
+      }
+    ]
+  },
   "1925508": {
     "label": "developer.apple.com",
     "bugs": {
