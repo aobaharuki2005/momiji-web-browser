@@ -135,4 +135,6 @@
   <string name="mozac_feature_prompts_update_credit_card_prompt_title">Actualizează data de expirare a cardului?</string>
   <!-- Text for the manage addresses button. -->
   <string name="mozac_feature_prompts_manage_address">Gestionează adrese</string>
+  <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
+  <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[Autentificarea în %1$s cu un cont %2$s face obiectul <a href=\"%3$s\">Politicii lor de confidențialitate</a> și <a href=\"%4$s\">Condițiilor lor de utilizare a serviciilor</a>]]></string>
 </resources>

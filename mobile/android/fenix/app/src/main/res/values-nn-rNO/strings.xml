@@ -2401,7 +2401,7 @@
 
     Link displayed in enhanced tracking protection panel to access tracking protection settings
   -->
-  <string name="etp_settings">Innstillingar for vern</string>
+  <string name="etp_settings">Verneinnstillingar</string>
   <!-- Preference title for enhanced tracking protection settings -->
   <string name="preference_enhanced_tracking_protection">Utvida sporingsvern</string>
   <!-- Preference summary for enhanced tracking protection settings on/off switch -->
