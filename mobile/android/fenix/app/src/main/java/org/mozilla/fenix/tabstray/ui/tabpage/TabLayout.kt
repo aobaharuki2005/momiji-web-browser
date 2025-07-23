@@ -9,10 +9,15 @@ import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -22,6 +27,9 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -39,10 +48,10 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.compose.base.modifier.thenConditional
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.SwipeToDismissState2
 import org.mozilla.fenix.compose.tabstray.TabGridItem
-import org.mozilla.fenix.compose.tabstray.TabListItem
 import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.browser.compose.DragItemContainer
 import org.mozilla.fenix.tabstray.browser.compose.createGridReorderState
@@ -51,6 +60,7 @@ import org.mozilla.fenix.tabstray.browser.compose.detectGridPressAndDragGestures
 import org.mozilla.fenix.tabstray.browser.compose.detectListPressAndDrag
 import org.mozilla.fenix.tabstray.ext.MIN_COLUMN_WIDTH_DP
 import org.mozilla.fenix.tabstray.ext.numberOfGridColumns
+import org.mozilla.fenix.tabstray.ui.tabitems.TabListItem
 import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.math.max
 
@@ -126,7 +136,6 @@ fun TabLayout(
             selectionMode = selectionMode,
             modifier = modifier,
             onTabClose = onTabClose,
-            onTabMediaClick = onTabMediaClick,
             onTabClick = onTabClick,
             onTabLongClick = onTabLongClick,
             onMove = onMove,
@@ -249,7 +258,7 @@ private fun TabGrid(
 }
 
 @OptIn(ExperimentalFoundationApi::class)
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 @Composable
 private fun TabList(
     tabs: List<TabSessionState>,
@@ -258,7 +267,6 @@ private fun TabList(
     selectionMode: TabsTrayState.Mode,
     modifier: Modifier = Modifier,
     onTabClose: (TabSessionState) -> Unit,
-    onTabMediaClick: (TabSessionState) -> Unit,
     onTabClick: (TabSessionState) -> Unit,
     onTabLongClick: (TabSessionState) -> Unit,
     onMove: (String, String?, Boolean) -> Unit,
@@ -303,8 +311,11 @@ private fun TabList(
                 listState = state,
                 reorderState = reorderState,
                 shouldLongPressToDrag = shouldLongPress,
-            ),
+            )
+            .padding(all = 16.dp)
+            .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 24.dp),
         state = state,
+        contentPadding = PaddingValues(bottom = tabListBottomPadding),
     ) {
         header?.let {
             item(key = HEADER_ITEM_KEY) {
@@ -324,20 +335,30 @@ private fun TabList(
                 TabListItem(
                     tab = tab,
                     thumbnailSize = tabThumbnailSize,
+                    modifier = Modifier
+                        .thenConditional(
+                            // Add top rounded corners to the first item
+                            modifier = Modifier.clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
+                            predicate = { index == 0 },
+                        )
+                        .thenConditional(
+                            // Add bottom rounded corners to the final item
+                            modifier = Modifier.clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)),
+                            predicate = { index == tabs.size - 1 },
+                        ),
                     isSelected = tab.id == selectedTabId,
                     multiSelectionEnabled = isInMultiSelectMode,
                     multiSelectionSelected = selectionMode.selectedTabs.any { it.id == tab.id },
                     shouldClickListen = reorderState.draggingItemKey != tab.id,
                     swipingEnabled = !state.isScrollInProgress,
                     onCloseClick = onTabClose,
-                    onMediaClick = onTabMediaClick,
                     onClick = onTabClick,
                 )
             }
-        }
 
-        item(key = SPAN_ITEM_KEY) {
-            Spacer(modifier = Modifier.height(tabListBottomPadding))
+            if (index != tabs.size - 1) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            }
         }
     }
 }

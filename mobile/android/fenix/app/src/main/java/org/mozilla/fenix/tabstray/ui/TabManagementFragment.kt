@@ -207,7 +207,7 @@ class TabManagementFragment : ComposeFragment() {
             onTabsTrayDismissed()
         }
 
-        FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
+        FirefoxTheme(theme = Theme.getTheme()) {
             TabsTray(
                 tabsTrayStore = tabsTrayStore,
                 displayTabsInGrid = requireContext().settings().gridTabView,
