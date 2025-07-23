@@ -1472,6 +1472,17 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
       if (aIsSubtreeHidden) {
         *aIsSubtreeHidden = true;
       }
+    } else if (auto cssAlt = CssAltContent(content)) {
+      // This is a pseudo-element without children that has CSS alt text. This
+      // only happens when there is alt text with an empty content string; e.g.
+      // content: "" / "alt"
+      // In this case, we need to expose the alt text on the pseudo-element
+      // itself, since we don't have a child to use. We create a
+      // TextLeafAccessible with the pseudo-element as the backing DOM node.
+      newAcc = new TextLeafAccessible(content, document);
+      nsAutoString text;
+      cssAlt.AppendToString(text);
+      newAcc->AsTextLeaf()->SetText(text);
     }
   }
 
