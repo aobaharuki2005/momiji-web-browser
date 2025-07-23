@@ -41,10 +41,6 @@ function run_test() {
   prefs.setBoolPref("network.dns.offline-localhost", false);
   // We always resolve localhost as it's hardcoded without the following pref:
   prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);
-  prefs.setBoolPref(
-    "network.proxy.testing_localhost_is_secure_when_hijacked",
-    false
-  );
   ioService.offline = true;
   try {
     Services.dns.asyncResolve(
@@ -106,7 +102,4 @@ function test3Continued() {
 function cleanup() {
   prefs.clearUserPref("network.dns.offline-localhost");
   prefs.clearUserPref("network.proxy.allow_hijacking_localhost");
-  prefs.clearUserPref(
-    "network.proxy.testing_localhost_is_secure_when_hijacked"
-  );
 }
