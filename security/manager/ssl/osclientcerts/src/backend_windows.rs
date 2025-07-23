@@ -627,19 +627,11 @@ impl Drop for ThreadSpecificHandles {
         let cert = self.cert.take();
         let key = self.key.take();
         let thread = self.thread.clone();
-        // It is possible that we're already on the appropriate thread (e.g. if an error was
-        // encountered in `find_objects` and these handles are being released shortly after being
-        // created).
-        if unsafe { thread.IsOnCurrentThreadInfallible() } {
+        let task = moz_task::spawn_onto("drop", &thread, async move {
             drop(cert);
             drop(key);
-        } else {
-            let task = moz_task::spawn_onto("drop", &thread, async move {
-                drop(cert);
-                drop(key);
-            });
-            futures_executor::block_on(task)
-        }
+        });
+        futures_executor::block_on(task)
     }
 }
 
