@@ -6,6 +6,7 @@
 
 #include "FFmpegEncoderModule.h"
 
+#include "EncoderConfig.h"
 #include "FFmpegLog.h"
 #include "FFmpegAudioEncoder.h"
 #include "FFmpegUtils.h"
@@ -115,6 +116,10 @@ EncodeSupportSet FFmpegEncoderModule<V>::Supports(
                aConfig.mCodec != CodecType::VP9) {
       return EncodeSupportSet{};
     }
+  }
+  // Only software encoder are supported for now.
+  if (aConfig.mHardwarePreference == HardwarePreference::RequireHardware) {
+    return false;
   }
   return SupportsCodec(aConfig.mCodec);
 }
