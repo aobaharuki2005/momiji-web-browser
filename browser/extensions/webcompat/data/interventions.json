@@ -3023,6 +3023,25 @@
       }
     ]
   },
+  "1902402": {
+    "label": "myaccount.flypeach.com",
+    "bugs": {
+      "1902402": {
+        "issue": "unsupported-warning",
+        "matches": ["*://myaccount.flypeach.com/login*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "content_scripts": {
+          "css": [
+            "bug1902402-myaccount.flypeach.com-hide-unsupported-message.css"
+          ]
+        }
+      }
+    ]
+  },
   "1902403": {
     "label": "musicstore.auone.jp",
     "bugs": {
