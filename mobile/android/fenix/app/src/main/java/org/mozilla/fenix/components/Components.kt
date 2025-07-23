@@ -192,7 +192,7 @@ class Components(private val context: Context) {
         AddonManager(core.store, core.engine, addonsProvider, addonUpdater)
     }
 
-    val analytics by lazyMonitored { Analytics(context, performance.visualCompletenessQueue.queue) }
+    val analytics by lazyMonitored { Analytics(context, nimbus, performance.visualCompletenessQueue.queue) }
     val nimbus by lazyMonitored { NimbusComponents(context) }
     val publicSuffixList by lazyMonitored { PublicSuffixList(context) }
     val clipboardHandler by lazyMonitored { ClipboardHandler(context) }
