@@ -19,10 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.updateLayoutParams
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.navigation.NavController
 import mozilla.components.browser.state.ext.getUrl
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
@@ -30,23 +26,15 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.base.Divider
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
-import mozilla.components.compose.browser.toolbar.store.BrowserToolbarState
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
-import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
-import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
 import mozilla.components.support.ktx.android.view.ImeInsetsSynchronizer
 import org.mozilla.fenix.R
-import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.AppStore
-import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.toolbar.ToolbarPosition.BOTTOM
 import org.mozilla.fenix.components.toolbar.ToolbarPosition.TOP
 import org.mozilla.fenix.databinding.FragmentHomeBinding
-import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.search.BrowserToolbarSearchMiddleware
-import org.mozilla.fenix.search.BrowserToolbarSearchStatusSyncMiddleware
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.Settings
 
@@ -55,12 +43,10 @@ import org.mozilla.fenix.utils.Settings
  * integration in the same framework as the [HomeToolbarView].
  *
  * @param context [Context] used for various system interactions.
- * @param lifecycleOwner [Fragment] as a [LifecycleOwner] to used to organize lifecycle dependent operations.
- * @param navController [NavController] to use for navigating to other in-app destinations.
  * @param homeBinding [FragmentHomeBinding] which will serve as parent for this composable.
+ * @param toolbarStore [BrowserToolbarStore] containing the composable toolbar state.
  * @param appStore [AppStore] to sync from.
  * @param browserStore [BrowserStore] to sync from.
- * @param browsingModeManager [BrowsingModeManager] for querying the current browsing mode.
  * @param settings [Settings] for querying various application settings.
  * @param directToSearchConfig [DirectToSearchConfig] configuration for starting with the toolbar in search mode.
  * @param tabStripContent [Composable] as the tab strip content to be displayed together with this toolbar.
@@ -71,21 +57,17 @@ import org.mozilla.fenix.utils.Settings
 @Suppress("LongParameterList")
 internal class HomeToolbarComposable(
     private val context: Context,
-    private val lifecycleOwner: Fragment,
-    private val navController: NavController,
     private val homeBinding: FragmentHomeBinding,
+    private val toolbarStore: BrowserToolbarStore,
     private val appStore: AppStore,
     private val browserStore: BrowserStore,
-    private val browsingModeManager: BrowsingModeManager,
     private val settings: Settings,
     private val directToSearchConfig: DirectToSearchConfig,
     private val tabStripContent: @Composable () -> Unit,
-    private val searchSuggestionsContent: @Composable (BrowserToolbarStore, Modifier) -> Unit,
+    private val searchSuggestionsContent: @Composable (Modifier) -> Unit,
     private val navigationBarContent: (@Composable () -> Unit)?,
 ) : FenixHomeToolbar {
     private var showDivider by mutableStateOf(true)
-
-    private val store = initializeToolbarStore()
 
     override val layout = ComposeView(context).apply {
         id = R.id.composable_toolbar
@@ -100,14 +82,14 @@ internal class HomeToolbarComposable(
                     }
 
                     if (settings.shouldUseBottomToolbar) {
-                        searchSuggestionsContent(store, Modifier.weight(1f))
+                        searchSuggestionsContent(Modifier.weight(1f))
                     }
                     BrowserToolbar(showDivider, settings.shouldUseBottomToolbar)
                     if (settings.toolbarPosition == BOTTOM) {
                         navigationBarContent?.invoke()
                     }
                     if (!settings.shouldUseBottomToolbar) {
-                        searchSuggestionsContent(store, Modifier.weight(1f))
+                        searchSuggestionsContent(Modifier.weight(1f))
                     }
                 }
             }
@@ -154,9 +136,7 @@ internal class HomeToolbarComposable(
     private fun BrowserToolbar(shouldShowDivider: Boolean, shouldUseBottomToolbar: Boolean) {
         // Ensure the divider is shown together with the toolbar
         Box {
-            BrowserToolbar(
-                store = store,
-            )
+            BrowserToolbar(toolbarStore)
             if (shouldShowDivider) {
                 Divider(
                     modifier = Modifier.align(
@@ -193,7 +173,7 @@ internal class HomeToolbarComposable(
 
         if (directToSearchConfig.sessionId != null) {
             browserStore.state.findTab(directToSearchConfig.sessionId)?.let {
-                store.dispatch(
+                toolbarStore.dispatch(
                     SearchQueryUpdated(
                         query = it.getUrl() ?: "",
                         showAsPreselected = true,
@@ -201,46 +181,6 @@ internal class HomeToolbarComposable(
                 )
             }
         }
-    }
-
-    private fun initializeToolbarStore() = StoreProvider.get(lifecycleOwner) {
-        BrowserToolbarStore(
-            initialState = BrowserToolbarState(),
-            middleware = listOf(
-                BrowserToolbarSearchStatusSyncMiddleware(appStore),
-                BrowserToolbarMiddleware(
-                    appStore = appStore,
-                    browserStore = browserStore,
-                    clipboard = context.components.clipboardHandler,
-                    useCases = context.components.useCases,
-                ),
-                BrowserToolbarSearchMiddleware(
-                    appStore = appStore,
-                    browserStore = browserStore,
-                    components = context.components,
-                    settings = context.components.settings,
-                ),
-            ),
-        )
-    }.also {
-        it.dispatch(
-            EnvironmentRehydrated(
-                HomeToolbarEnvironment(
-                    context = context,
-                    viewLifecycleOwner = lifecycleOwner.viewLifecycleOwner,
-                    navController = navController,
-                    browsingModeManager = browsingModeManager,
-                ),
-            ),
-        )
-
-        lifecycleOwner.viewLifecycleOwner.lifecycle.addObserver(
-            object : DefaultLifecycleObserver {
-                override fun onDestroy(owner: LifecycleOwner) {
-                    it.dispatch(EnvironmentCleared)
-                }
-            },
-        )
     }
 
     /**
