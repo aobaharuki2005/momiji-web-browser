@@ -63,6 +63,12 @@ GeneratedFile(
     entry_point="emit_java",
 )
 
+GeneratedFile(
+    "android-components/components/lib/crash/src/main/java/mozilla/components/lib/crash/service/CrashReport.java",
+    script="/toolkit/crashreporter/generate_crash_reporter_sources.py",
+    entry_point="emit_java",
+)
+
 CONFIGURE_SUBST_FILES += ["installer/Makefile"]
 
 DIRS += [

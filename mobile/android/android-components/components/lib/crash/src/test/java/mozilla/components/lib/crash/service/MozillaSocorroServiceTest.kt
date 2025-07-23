@@ -22,6 +22,7 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
@@ -34,6 +35,17 @@ import java.util.zip.GZIPInputStream
 
 @RunWith(AndroidJUnit4::class)
 class MozillaSocorroServiceTest {
+    private fun mockFormDataWriter(service: MozillaSocorroService): MozillaSocorroService.FormDataWriter {
+        val mockFormDataWriter = mock(MozillaSocorroService.FormDataWriter::class.java)
+        doNothing().`when`(mockFormDataWriter).sendPart(any(), any())
+        doNothing().`when`(mockFormDataWriter).sendFile(any(), any())
+        doNothing().`when`(mockFormDataWriter).sendAnnotation(any(), any())
+        doNothing().`when`(mockFormDataWriter).sendProcessName(any())
+        doNothing().`when`(mockFormDataWriter).sendPackageInstallTime(any())
+        doNothing().`when`(mockFormDataWriter).finish()
+        doReturn(mockFormDataWriter).`when`(service).createFormDataWriter(any(), any(), any())
+        return mockFormDataWriter
+    }
 
     @Test
     fun `MozillaSocorroService sends native code crashes to GeckoView crash reporter`() {
@@ -196,12 +208,12 @@ class MozillaSocorroServiceTest {
             )
 
             doReturn(HashMap<String, String>()).`when`(service).readExtrasFromFile(any())
-            doNothing().`when`(service).sendFile(any(), any(), any(), any(), any())
+            val formDataWriter = mockFormDataWriter(service)
             service.report(crash)
 
             verify(service).report(crash)
             verify(service, times(0)).readExtrasFromFile(any())
-            verify(service, times(0)).sendFile(any(), any(), any(), any(), any())
+            verify(formDataWriter, times(0)).sendFile(any(), any())
         } finally {
             mockWebServer.shutdown()
         }
@@ -238,12 +250,12 @@ class MozillaSocorroServiceTest {
             )
 
             doReturn(HashMap<String, String>()).`when`(service).readExtrasFromFile(any())
-            doNothing().`when`(service).sendFile(any(), any(), any(), any(), any())
+            val formDataWriter = mockFormDataWriter(service)
             service.report(crash)
 
             verify(service).report(crash)
             verify(service, times(0)).readExtrasFromFile(any())
-            verify(service, times(0)).sendFile(any(), any(), any(), any(), any())
+            verify(formDataWriter, times(0)).sendFile(any(), any())
         } finally {
             mockWebServer.shutdown()
         }
@@ -280,12 +292,12 @@ class MozillaSocorroServiceTest {
             )
 
             doReturn(HashMap<String, String>()).`when`(service).readExtrasFromFile(any())
-            doNothing().`when`(service).sendFile(any(), any(), any(), any(), any())
+            val formDataWriter = mockFormDataWriter(service)
             service.report(crash)
 
             verify(service).report(crash)
             verify(service).readExtrasFromFile(any())
-            verify(service).sendFile(any(), any(), any(), any(), any())
+            verify(formDataWriter).sendFile(any(), any())
         } finally {
             mockWebServer.shutdown()
         }
