@@ -233,50 +233,83 @@ def emit_header(output, template_filename, annotations_filename):
 ###############################################################################
 
 
-def generate_java_array_initializer(contents):
-    """Generates the initializer for an array of strings.
-    Effectively turns `["a", "b"]` into '   \"a\",\n   \"b\"\n'."""
-
-    initializer = ""
-
-    for name in contents:
-        initializer += '        "' + name + '",\n'
-
-    return initializer.strip(",\n")
+def javadoc_sanitize(s):
+    return s.replace("<", "&lt;").replace(">", "&gt;").replace("@", "&#064;")
 
 
-def generate_class(template, annotations):
+def generate_class(template, package, klass, annotations):
     """Fill the class template from the list of annotations."""
 
-    allowedlist = extract_crash_ping_allowedlist(annotations)
-
+    enum = ",\n".join(
+        f"/** {javadoc_sanitize(data['description'])} */\n{name}(\"{name}\", \"{data.get('scope', 'client')}\")"
+        for (name, data) in annotations
+    )
     return template_header + string.Template(template).substitute(
         {
-            "allowedlist": generate_java_array_initializer(allowedlist),
+            "package": package,
+            "enum": enum,
+            "class": klass,
         }
     )
 
 
-def emit_class(output, annotations_filename):
-    """Generate the CrashReporterConstants.java file."""
+def derive_package_and_class(file_path):
+    """Determine the appropriate package and class name for a java file path."""
+    path = file_path.split("src/main/java/", 1)[1]
+    package_path, klass_path = path.rsplit("/", 1)
+    package = package_path.replace("/", ".")
+    klass = klass_path.removesuffix(".java")
+    return package, klass
 
+
+def emit_java(output, annotations_filename):
+    """Generate the CrashReporter java file."""
+
+    package, klass = derive_package_and_class(output.name)
     template = textwrap.dedent(
         """\
-    package org.mozilla.gecko;
+        package ${package};
 
-    /**
-     * Constants used by the crash reporter. These are generated so that they
-     * are kept in sync with the other C++ and JS users.
-     */
-    public class CrashReporterConstants {
-        public static final String[] ANNOTATION_PING_ALLOWEDLIST = {
-    ${allowedlist}
-        };
-    }"""
+        import androidx.annotation.AnyThread;
+
+        /**
+         * Constants used by the crash reporter. These are generated so that they
+         * are kept in sync with the other C++ and JS users.
+         */
+        final class ${class} {
+            /** Crash Annotations */
+            @AnyThread
+            public enum Annotation {
+                ${enum};
+
+                private final String s;
+                private final String scope;
+
+                private Annotation(String s, String scope) {
+                    this.s = s;
+                    this.scope = scope;
+                }
+
+                public String toString() {
+                    return this.s;
+                }
+
+                /** @return Whether the annotation should be included in crash pings. */
+                public boolean allowedInPing() {
+                    return this.scope.equals("ping");
+                }
+
+                /** @return Whether the annotation should be included in crash reports. */
+                public boolean allowedInReport() {
+                    return allowedInPing() || this.scope.equals("report");
+                }
+            }
+        }
+        """
     )
 
     annotations = read_annotations(annotations_filename)
-    generated_class = generate_class(template, annotations)
+    generated_class = generate_class(template, package, klass, annotations)
 
     try:
         output.write(generated_class)
