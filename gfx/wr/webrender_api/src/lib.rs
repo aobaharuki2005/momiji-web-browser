@@ -841,3 +841,9 @@ impl<'a> Drop for CrashAnnotatorGuard<'a> {
         }
     }
 }
+
+fn precise_time_ns() -> u64 {
+    use std::convert::TryInto;
+    let dur = time::OffsetDateTime::now_utc() - time::OffsetDateTime::UNIX_EPOCH;
+    dur.whole_nanoseconds().try_into().unwrap_or(u64::MAX)
+}

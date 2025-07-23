@@ -215,6 +215,7 @@ def lint(paths, config, log, **lintargs) -> list[Any]:
             for kind, warnings in warning_categories.items():
                 for warning in warnings:
                     message = build_message(kind, warning, show_verbose)
+                    exclusions = config.get("exclude-error", [])
                     if not is_excluded(message, exclusions):
                         results.append(build_issue(config, f, message, "warning"))
 

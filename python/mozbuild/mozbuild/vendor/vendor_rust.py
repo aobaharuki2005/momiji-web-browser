@@ -89,12 +89,7 @@ PACKAGES_WE_ALWAYS_WANT_AN_OVERRIDE_OF = [
 # Historically duplicated crates. Eventually we want this list to be empty.
 # If you do need to make changes increasing the number of duplicates, please
 # add a comment as to why.
-TOLERATED_DUPES = {
-    # Transition from time 0.1 to 0.3 underway, but chrono is stuck on 0.1
-    # and hasn't been updated in 1.5 years (an hypothetical update is
-    # expected to remove the dependency on time altogether).
-    "time": 2,
-}
+TOLERATED_DUPES = {}
 
 
 class VendorRust(MozbuildObject):

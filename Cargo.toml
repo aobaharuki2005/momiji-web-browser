@@ -148,9 +148,6 @@ hermit-abi = { path = "build/rust/hermit-abi" }
 # Patch base64 0.21 to 0.22
 base64_21 = { package = "base64", path = "build/rust/base64" }
 
-# Patch wasi 0.10 to 0.14
-wasi_0_10 = { package = "wasi", path = "build/rust/wasi-0.10" }
-
 # Patch wasi 0.11 to 0.14
 wasi_0_11 = { package = "wasi", path = "build/rust/wasi" }
 
