@@ -15928,7 +15928,8 @@
   mirror: always
 
 # Enable the "convenience" allow-list for less severe site breakage (e.g. embeds
-# or images missing).
+# or images missing). "convenience" can only be enabled if "baseline" is
+# enabled. When "baseline" is false this pref is ignored.
 - name: privacy.trackingprotection.allow_list.convenience.enabled
   type: bool
   value: true
