@@ -2150,6 +2150,8 @@ struct SegmentedControlRenderSettings {
   const NSString* widgetName;
 };
 
+static const CGFloat tabHeights[3] = {17, 20, 23};
+
 static const CGFloat toolbarButtonHeights[3] = {15, 18, 22};
 
 static const SegmentedControlRenderSettings toolbarButtonRenderSettings = {
@@ -3001,6 +3003,12 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistArrowButton:
     case StyleAppearance::Textfield:
+    case StyleAppearance::NumberInput:
+    case StyleAppearance::PasswordInput:
+    case StyleAppearance::Searchfield:
+    case StyleAppearance::ProgressBar:
+    case StyleAppearance::Meter:
+    case StyleAppearance::Range:
       return false;
     
     case StyleAppearance::MozMacSourceList:
@@ -3030,6 +3038,7 @@ LayoutDeviceIntMargin nsNativeThemeCocoa::DirectionAwareMargin(
 }
 
 MOZ_RUNINIT static const LayoutDeviceIntMargin kAquaDropdownBorder(1, 22, 2, 5);
+MOZ_RUNINIT static const LayoutDeviceIntMargin kAquaComboboxBorder(3, 20, 3, 4);
 MOZ_RUNINIT static const LayoutDeviceIntMargin kAquaSearchfieldBorder(3, 5, 2,
                                                                       19);
 MOZ_RUNINIT static const LayoutDeviceIntMargin kAquaSearchfieldBorderBigSur(5,

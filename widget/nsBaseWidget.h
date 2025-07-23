@@ -584,8 +584,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   void ClearCachedWebrenderResources() override;
 
-  void ClearWebrenderAnimationResources() override;
-
   bool SetNeedFastSnaphot() override;
 
   /**

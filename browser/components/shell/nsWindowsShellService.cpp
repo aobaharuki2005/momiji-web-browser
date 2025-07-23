@@ -836,7 +836,7 @@ nsWindowsShellService::SetDesktopBackgroundColor(uint32_t aColor) {
  */
 static nsresult WriteShortcutToLog(nsIFile* aShortcutsLogDir,
                                    KNOWNFOLDERID aFolderId,
-                                   const nsAString& aShortcutName) {
+                                   const nsAString& aShortcutRelativePath) {
   // the section inside the shortcuts log
   nsAutoCString section;
   // the shortcuts log wants "Programs" shortcuts in its "STARTMENU" section
@@ -872,8 +872,8 @@ static nsresult WriteShortcutToLog(nsIFile* aShortcutsLogDir,
   nsINIParser parser;
   bool fileExists = false;
   bool shortcutsLogEntryExists = false;
-  nsAutoCString keyName, shortcutName;
-  shortcutName = NS_ConvertUTF16toUTF8(aShortcutName);
+  nsAutoCString keyName, shortcutRelativePath;
+  shortcutRelativePath = NS_ConvertUTF16toUTF8(aShortcutRelativePath);
 
   shortcutsLog->IsFile(&fileExists);
   // if the shortcuts log exists, find either an existing matching
@@ -883,25 +883,28 @@ static nsresult WriteShortcutToLog(nsIFile* aShortcutsLogDir,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCString iniShortcut;
-    // surely we'll never need more than 10 shortcuts in one section...
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0;; i++) {
       keyName.AssignLiteral("Shortcut");
       keyName.AppendInt(i);
       rv = parser.GetString(section.get(), keyName.get(), iniShortcut);
-      if (NS_FAILED(rv)) {
+      if (NS_FAILED(rv) && rv != NS_ERROR_FAILURE) {
+        return rv;
+      }
+
+      if (rv == NS_ERROR_FAILURE) {
         // we found an unused index
         break;
-      } else if (iniShortcut.Equals(shortcutName)) {
+      } else if (iniShortcut.Equals(shortcutRelativePath)) {
         shortcutsLogEntryExists = true;
       }
     }
-    // otherwise, this is safe to use
   } else {
+    // If the file doesn't exist, then start at Shortcut0.
     keyName.AssignLiteral("Shortcut0");
   }
 
   if (!shortcutsLogEntryExists) {
-    parser.SetString(section.get(), keyName.get(), shortcutName.get());
+    parser.SetString(section.get(), keyName.get(), shortcutRelativePath.get());
     // We write this ourselves instead of using parser->WriteToFile because
     // the INI parser in our uninstaller needs to read this, and only supports
     // UTF-16LE encoding. nsINIParser does not support UTF-16.
@@ -985,13 +988,13 @@ static nsresult CreateShortcutImpl(
     nsIFile* aBinary, const CopyableTArray<nsString>& aArguments,
     const nsAString& aDescription, nsIFile* aIconFile, uint16_t aIconIndex,
     const nsAString& aAppUserModelId, KNOWNFOLDERID aShortcutFolder,
-    const nsAString& aShortcutName, const nsString& aShortcutFile,
+    const nsAString& aShortcutRelativePath, const nsString& aShortcutFile,
     nsIFile* aShortcutsLogDir) {
   NS_ENSURE_ARG(aBinary);
   NS_ENSURE_ARG(aIconFile);
 
-  nsresult rv =
-      WriteShortcutToLog(aShortcutsLogDir, aShortcutFolder, aShortcutName);
+  nsresult rv = WriteShortcutToLog(aShortcutsLogDir, aShortcutFolder,
+                                   aShortcutRelativePath);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<IShellLinkW> link;
@@ -1010,11 +1013,14 @@ static nsresult CreateShortcutImpl(
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::CreateShortcut(
-    nsIFile* aBinary, const nsTArray<nsString>& aArguments,
-    const nsAString& aDescription, nsIFile* aIconFile, uint16_t aIconIndex,
-    const nsAString& aAppUserModelId, const nsAString& aShortcutFolder,
-    const nsAString& aShortcutName, JSContext* aCx, dom::Promise** aPromise) {
+nsWindowsShellService::CreateShortcut(nsIFile* aBinary,
+                                      const nsTArray<nsString>& aArguments,
+                                      const nsAString& aDescription,
+                                      nsIFile* aIconFile, uint16_t aIconIndex,
+                                      const nsAString& aAppUserModelId,
+                                      const nsAString& aShortcutFolder,
+                                      const nsAString& aShortcutRelativePath,
+                                      JSContext* aCx, dom::Promise** aPromise) {
   if (!NS_IsMainThread()) {
     return NS_ERROR_NOT_SAME_THREAD;
   }
@@ -1060,7 +1066,17 @@ nsWindowsShellService::CreateShortcut(
   if (NS_FAILED(nsrv)) {
     return NS_ERROR_FILE_NOT_FOUND;
   }
-  shortcutFile->Append(aShortcutName);
+
+  nsrv = shortcutFile->AppendRelativePath(aShortcutRelativePath);
+  NS_ENSURE_SUCCESS(nsrv, nsrv);
+
+  nsCOMPtr<nsIFile> parentDirectory;
+  nsrv = shortcutFile->GetParent(getter_AddRefs(parentDirectory));
+  NS_ENSURE_SUCCESS(nsrv, nsrv);
+  nsrv = parentDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
+  if (NS_FAILED(nsrv) && nsrv != NS_ERROR_FILE_ALREADY_EXISTS) {
+    return nsrv;
+  }
 
   auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<dom::Promise>>(
       "CreateShortcut promise", promise);
@@ -1074,11 +1090,12 @@ nsWindowsShellService::CreateShortcut(
            aDescription = nsString{aDescription}, iconFile, aIconIndex,
            aAppUserModelId = nsString{aAppUserModelId}, folderId,
            aShortcutFolder = nsString{aShortcutFolder},
-           aShortcutName = nsString{aShortcutName}, shortcutsLogDir,
-           shortcutFile, promiseHolder = std::move(promiseHolder)] {
+           aShortcutRelativePath = nsString{aShortcutRelativePath},
+           shortcutsLogDir, shortcutFile,
+           promiseHolder = std::move(promiseHolder)] {
             nsresult rv = CreateShortcutImpl(
                 binary.get(), aArguments, aDescription, iconFile.get(),
-                aIconIndex, aAppUserModelId, folderId, aShortcutName,
+                aIconIndex, aAppUserModelId, folderId, aShortcutRelativePath,
                 shortcutFile->NativePath(), shortcutsLogDir.get());
 
             NS_DispatchToMainThread(NS_NewRunnableFunction(
@@ -1817,7 +1834,19 @@ nsWindowsShellService::GetTaskbarTabShortcutPath(const nsAString& aShortcutName,
     return NS_ERROR_FILE_NOT_FOUND;
   }
   progFolderNS.Assign(progFolderW);
-  aRetPath = progFolderNS + u"\\"_ns + aShortcutName + u".lnk"_ns;
+
+  nsTArray<nsCString> resIds = {
+      "branding/brand.ftl"_ns,
+      "preview/taskbartabs.ftl"_ns,
+  };
+  RefPtr<Localization> l10n = Localization::Create(resIds, true);
+
+  nsAutoCString dirname;
+  IgnoredErrorResult rv;
+  l10n->FormatValueSync("taskbar-tab-shortcut-folder"_ns, {}, dirname, rv);
+
+  aRetPath = progFolderNS + u"\\"_ns + NS_ConvertUTF8toUTF16(dirname) +
+             u"\\"_ns + aShortcutName + u".lnk"_ns;
   return NS_OK;
 }
 

@@ -502,7 +502,7 @@ void RunTestsContent(SandboxTestingChild* child) {
 
 #    ifdef MOZ_X11
   // Check that X11 access is blocked (bug 1129492).
-  // This will fail if security.sandbox.content.headless is turned off.
+  // This will fail if security.sandbox.content.level is less than 5.
   if (PR_GetEnv("DISPLAY")) {
     Display* disp = XOpenDisplay(nullptr);
 
@@ -570,6 +570,12 @@ void RunTestsContent(SandboxTestingChild* child) {
     // this sandbox it should be blocked (ENOSYS).
     return ioctl(0, _IOW('b', 0, uint64_t), nullptr);
   });
+
+  child->ErrnoValueTest("send_with_flag"_ns, ENOSYS, [] {
+    char c = 0;
+    return send(0, &c, 1, MSG_CONFIRM);
+  });
+
 #  endif  // XP_LINUX
 
 #  ifdef XP_MACOSX
@@ -728,6 +734,11 @@ void RunTestsSocket(SandboxTestingChild* child) {
                "recvmmsg should return -1 with EAGAIN given that no datagrams "
                "are available");
     return 0;
+  });
+
+  child->ErrnoValueTest("send_with_flag"_ns, ENOSYS, [] {
+    char c = 0;
+    return send(0, &c, 1, MSG_OOB);
   });
 
   child->ErrnoValueTest("ioctl_dma_buf"_ns, ENOSYS, [] {
@@ -992,7 +1003,7 @@ void RunTestsGenericUtility(SandboxTestingChild* child) {
 #endif             // XP_MACOSX
 }
 
-void RunTestsUtilityAudioDecoder(SandboxTestingChild* child,
+void RunTestsUtilityMediaService(SandboxTestingChild* child,
                                  ipc::SandboxingKind aSandbox) {
   MOZ_ASSERT(child, "No SandboxTestingChild*?");
 

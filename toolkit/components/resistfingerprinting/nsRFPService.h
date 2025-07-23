@@ -414,6 +414,12 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
   static CSSIntRect GetSpoofedScreenAvailSize(const nsRect& aRect, float aScale,
                                               bool aIsFullscreen);
 
+  static uint64_t GetSpoofedStorageLimit();
+
+  static bool ExposeWebCodecsAPI(JSContext* aCx, JSObject* aObj);
+  static bool ExposeWebCodecsAPIImageDecoder(JSContext* aCx, JSObject* aObj);
+  static bool IsWebCodecsRFPTargetEnabled(JSContext* aCx);
+
  private:
   nsresult Init();
 
@@ -518,7 +524,7 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
   static FingerprintingProtectionType GetFingerprintingProtectionType(
       bool aIsPrivateMode);
 
-  static Maybe<bool> HandleExeptionalRFPTargets(
+  static Maybe<bool> HandleExceptionalRFPTargets(
       RFPTarget aTarget, bool aIsPrivateMode,
       FingerprintingProtectionType aMode);
 

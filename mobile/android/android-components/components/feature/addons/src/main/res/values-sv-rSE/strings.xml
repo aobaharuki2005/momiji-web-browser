@@ -105,43 +105,43 @@
   <!-- Description for the "devtools" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_devtools_description">Utöka utvecklarverktyg för att komma åt dina data i öppna flikar</string>
   <!-- Description for the "privacy" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_privacy_description_for_update">Läs och ändra sekretessinställningar.</string>
+  <string name="mozac_feature_addons_permissions_privacy_description_for_update">Läsa och ändra sekretessinställningar.</string>
   <!-- Description for the "<all_urls>" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_all_urls_description_for_update">Åtkomst till data för alla webbplatser.</string>
   <!-- Description for the "tabs" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_tabs_description_for_update">Öppna webbläsarens flikar.</string>
+  <string name="mozac_feature_addons_permissions_tabs_description_for_update">Åtkomst till webbläsarens flikar.</string>
   <!-- Description for the "webNavigation" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_web_navigation_description_for_update">Åtkomst till webbläsarens aktivitet under navigering.</string>
   <!-- Description for the "bookmarks" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_bookmarks_description_for_update">Läs och ändra bokmärken.</string>
+  <string name="mozac_feature_addons_permissions_bookmarks_description_for_update">Läsa och ändra bokmärken.</string>
   <!-- Description for the "browserSettings" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_browser_settings_description_for_update">Läs och ändra webbläsarens inställningar.</string>
+  <string name="mozac_feature_addons_permissions_browser_settings_description_for_update">Läsa och ändra webbläsarens inställningar.</string>
   <!-- Description for the "browsingData" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_browsing_data_description_for_update">Rensa senaste webbhistoriken, kakor och relaterad data.</string>
+  <string name="mozac_feature_addons_permissions_browsing_data_description_for_update">Rensa senaste webbhistorik, kakor och relaterad data.</string>
   <!-- Description for the "clipboardRead" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_clipboard_read_description_for_update">Hämta data från Urklipp.</string>
+  <string name="mozac_feature_addons_permissions_clipboard_read_description_for_update">Hämta data från urklipp.</string>
   <!-- Description for the "clipboardWrite" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_clipboard_write_description_for_update">Mata in data till urklipp.</string>
   <!-- Description for the "declarativeNetRequest" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_declarative_net_request_description_for_update">Blockera innehåll på valfri sida.</string>
   <!-- Description for the "declarativeNetRequestFeedback" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description_for_update">Läs din surfhistorik.</string>
+  <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description_for_update">Läsa din webbhistorik.</string>
   <!-- Description for the "downloads" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_downloads_description_for_update">Ladda ner filer och läsa och ändra webbläsarens nedladdningshistorik.</string>
   <!-- Description for the "downloads.open" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_downloads_open_description_for_update">Öppna filer som hämtats till din enhet.</string>
   <!-- Description for the "find" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_find_description_for_update">Läsa texten på alla öppna flikar.</string>
+  <string name="mozac_feature_addons_permissions_find_description_for_update">Läsa text på alla öppna flikar.</string>
   <!-- Description for the "geolocation" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_geolocation_description_for_update">Åtkomst till din position.</string>
   <!-- Description for the "history" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_history_description_for_update">Åtkomst till webbhistoriken.</string>
+  <string name="mozac_feature_addons_permissions_history_description_for_update">Åtkomst till webbhistorik.</string>
   <!-- Description for the "management" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_management_description_for_update">Övervaka utökningsanvändning och hantera teman.</string>
+  <string name="mozac_feature_addons_permissions_management_description_for_update">Övervaka tilläggsanvändning och hantera teman.</string>
   <!-- Description for the "nativeMessaging" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_native_messaging_description_for_update">Utbyta meddelanden med andra appar än den här.</string>
   <!-- Description for the "notifications" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
-  <string name="mozac_feature_addons_permissions_notifications_description_for_update">Visa avisering till dig.</string>
+  <string name="mozac_feature_addons_permissions_notifications_description_for_update">Visa aviseringar till dig.</string>
   <!-- Description for the "pkcs11" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_pkcs11_description_for_update">Erbjuda kryptografiska autentiseringstjänster.</string>
   <!-- Description for the "proxy" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->

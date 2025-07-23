@@ -54,7 +54,7 @@
 # significantly, there is an optimization in
 # DisplayPortUtils::MaybeCreateDisplayPortInFirstScrollFrameEncountered based
 # the current structure that we may want to revisit.
-          <arrowscrollbox id="pinned-tabs-container" orient="horizontal" tabindex="-1"></arrowscrollbox>
+          <arrowscrollbox id="pinned-tabs-container" orient="horizontal"></arrowscrollbox>
           <splitter orient="vertical" id="vertical-pinned-tabs-splitter" resizebefore="sibling" resizeafter="none" hidden="true"/>
           <hbox class="tab-drop-indicator" hidden="true"/>
           <arrowscrollbox id="tabbrowser-arrowscrollbox" orient="horizontal" flex="1" clicktoscroll="" scrolledtostart="" scrolledtoend="">
@@ -187,6 +187,7 @@
                             aria-expanded="false"
                             aria-haspopup="menu"
                             tooltip="dynamic-shortcut-tooltip"
+                            data-l10n-id="urlbar-searchmode-default"
                             class="chromeclass-toolbar-additional"
                             type="menu">
               <image id="searchmode-switcher-icon" class="toolbarbutton-icon"/>
@@ -215,6 +216,9 @@
                               role="button"
                               data-l10n-id="urlbar-searchmode-exit-button"
                               class="toolbarbutton-icon close-button" />
+            </box>
+            <box id="trust-icon-container" align="center" role="button" data-l10n-id="urlbar-identity-button">
+              <image id="trust-icon"/>
             </box>
             <!-- Use onclick instead of normal popup= syntax since the popup
                  code fires onmousedown, and hence eats our favicon drag events. -->

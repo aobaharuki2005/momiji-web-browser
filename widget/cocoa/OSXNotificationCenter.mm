@@ -480,7 +480,7 @@ void OSXNotificationCenter::OnActivate(
       if (osxni->mObserver) {
         switch ((int)aActivationType) {
           case NSUserNotificationActivationTypeAdditionalActionClicked: {
-            if(@available(macOS 10.10, *)) { 
+              if (@available(macOS 10.10, *)) {
               MOZ_ASSERT(aAdditionalActivationAction);
               nsAutoString actionName;
               nsCocoaUtils::GetStringForNSString(

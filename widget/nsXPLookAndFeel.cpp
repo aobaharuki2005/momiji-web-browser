@@ -160,7 +160,6 @@ static const char sIntPrefs[][45] = {
     "ui.systemScrollbarSize",
     "ui.touchDeviceSupportPresent",
     "ui.titlebarRadius",
-    "ui.titlebarButtonSpacing",
     "ui.tooltipRadius",
     "ui.dynamicRange",
     "ui.panelAnimations",
@@ -303,11 +302,9 @@ static const char sColorPrefs[][41] = {
     "ui.IMESelectedConvertedTextUnderline",
     "ui.SpellCheckerUnderline",
     "ui.themedScrollbar",
-    "ui.themedScrollbarInactive",
     "ui.themedScrollbarThumb",
     "ui.themedScrollbarThumbHover",
     "ui.themedScrollbarThumbActive",
-    "ui.themedScrollbarThumbInactive",
 };
 
 static_assert(std::size(sColorPrefs) == size_t(LookAndFeel::ColorID::End),
@@ -539,8 +536,10 @@ static constexpr struct {
     // Affects zoom settings which includes text and full zoom.
     {"browser.display.os-zoom-behavior"_ns,
      widget::ThemeChangeKind::StyleAndLayout},
-    // This affects system colors on Linux.
+    // These affects system colors on Linux.
     {"widget.gtk.libadwaita-colors.enabled"_ns, widget::ThemeChangeKind::Style},
+    {"widget.gtk.theme-scrollbar-colors.enabled"_ns,
+     widget::ThemeChangeKind::Style},
     // This affects not only the media query, but also the native theme, so we
     // need to re-layout.
     {"browser.theme.toolbar-theme"_ns, widget::ThemeChangeKind::AllBits},
@@ -1374,10 +1373,8 @@ static bool ColorIsCSSAccessible(LookAndFeel::ColorID aId) {
     case ColorID::TextHighlightBackground:
     case ColorID::TextHighlightForeground:
     case ColorID::ThemedScrollbar:
-    case ColorID::ThemedScrollbarInactive:
     case ColorID::ThemedScrollbarThumb:
     case ColorID::ThemedScrollbarThumbActive:
-    case ColorID::ThemedScrollbarThumbInactive:
     case ColorID::ThemedScrollbarThumbHover:
     case ColorID::IMERawInputBackground:
     case ColorID::IMERawInputForeground:

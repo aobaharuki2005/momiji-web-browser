@@ -38,9 +38,10 @@ interface nsIWindowsShellService : nsIShellService
    * @param aAppUserModelId The App User Model ID to set for the shortcut. This will
    *        affect which icon on the Taskbar the application groups with when first
    *        launched.
-   * @param aShortcutFolder The special Windows folder to create the shortcut in. One of:
-   *        CommonStartMenu, StartMenu, PublicDesktop, Desktop, or QuickLaunch.
-   * @param aShortcutName The filename of the shortcut within aShortcutFolder.
+   * @param aShortcutFolder The special Windows folder to create the shortcut in. Must be
+   *        either "Programs" or "Desktop".
+   * @param aShortcutRelativePath The relative path of the shortcut from the shortcut
+   *        folder.
    * @return The full native path to the created shortcut.
    *
    * @throws NS_ERROR_INVALID_ARG if an invalid shortcut folder is passed
@@ -51,7 +52,8 @@ interface nsIWindowsShellService : nsIShellService
   [implicit_jscontext]
   Promise createShortcut(in nsIFile aBinary, in Array<AString> aArguments,
     in AString aDescription, in nsIFile aIconFile, in unsigned short aIconIndex,
-    in AString aAppUserModelId, in AString aShortcutFolder, in AString aShortcutName);
+    in AString aAppUserModelId, in AString aShortcutFolder,
+    in AString aShortcutRelativePath);
 
   /*
    * Searches the %USERPROFILE%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup

@@ -68,14 +68,14 @@ data class TabsTrayState(
 enum class Page {
 
     /**
-     * The pager position that displays normal tabs.
-     */
-    NormalTabs,
-
-    /**
      * The pager position that displays private tabs.
      */
     PrivateTabs,
+
+    /**
+     * The pager position that displays normal tabs.
+     */
+    NormalTabs,
 
     /**
      * The pager position that displays Synced Tabs.
@@ -87,8 +87,8 @@ enum class Page {
     companion object {
         fun positionToPage(position: Int): Page {
             return when (position) {
-                0 -> NormalTabs
-                1 -> PrivateTabs
+                0 -> PrivateTabs
+                1 -> NormalTabs
                 else -> SyncedTabs
             }
         }

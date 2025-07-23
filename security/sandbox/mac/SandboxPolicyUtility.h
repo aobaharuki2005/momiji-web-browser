@@ -71,7 +71,7 @@ static const char SandboxPolicyUtility[] = R"SANDBOX_LITERAL(
     (global-name "com.apple.coreservices.launchservicesd"))
 )SANDBOX_LITERAL";
 
-static const char SandboxPolicyUtilityAudioDecoderAppleMediaAddend[] =
+static const char SandboxPolicyUtilityMediaServiceAppleMediaAddend[] =
     R"SANDBOX_LITERAL(
   ; For Utility AudioDecoder AppleMedia codecs
   (define macosVersion (string->number (param "MAC_OS_VERSION")))

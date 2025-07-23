@@ -16,9 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -104,12 +104,12 @@ fun MenuBanner(
 
             Icon(
                 painter = painterResource(id = R.drawable.mozac_ic_cross_24),
-                contentDescription = stringResource(id = R.string.browser_menu_default_banner_dismiss),
+                contentDescription = stringResource(id = R.string.browser_menu_default_banner_dismiss_promotion),
                 modifier = Modifier
                     .padding(top = 12.dp, end = 18.dp)
                     .size(20.dp)
                     .clickable(onClick = onDismiss),
-                tint = FirefoxTheme.colors.iconSecondary,
+                tint = FirefoxTheme.colors.iconPrimary,
             )
         }
     }

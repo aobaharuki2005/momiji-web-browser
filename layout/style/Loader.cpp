@@ -9,74 +9,70 @@
 #include "mozilla/css/Loader.h"
 
 #include "MainThreadUtils.h"
+#include "ReferrerInfo.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/css/ErrorReporter.h"
-#include "mozilla/dom/DocGroup.h"
-#include "mozilla/dom/FetchPriority.h"
-#include "mozilla/dom/SRILogHelper.h"
-#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/ConsoleReportCollector.h"
+#include "mozilla/Encoding.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/Logging.h"
-#include "mozilla/glean/LayoutMetrics.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PreloadHashKey.h"
-#include "mozilla/ResultExtensions.h"
-#include "mozilla/URLPreloader.h"
-#include "nsIPrincipal.h"
-#include "nsISupportsPriority.h"
-#include "nsITimedChannel.h"
-#include "nsICachingChannel.h"
-#include "nsSyncLoadService.h"
-#include "nsContentSecurityManager.h"
-#include "nsCOMPtr.h"
-#include "nsString.h"
-#include "nsIContent.h"
-#include "nsIContentInlines.h"
-#include "nsICookieJarSettings.h"
-#include "mozilla/dom/Document.h"
-#include "nsIURI.h"
-#include "nsContentUtils.h"
-#include "nsHttpChannel.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsContentPolicyUtils.h"
-#include "nsIHttpChannel.h"
-#include "nsIHttpChannelInternal.h"
-#include "nsIClassifiedChannel.h"
-#include "nsIClassOfService.h"
-#include "nsIScriptError.h"
-#include "nsMimeTypes.h"
-#include "nsICSSLoaderObserver.h"
-#include "nsThreadUtils.h"
-#include "nsINetworkPredictor.h"
-#include "nsQueryActor.h"
-#include "nsQueryObject.h"
-#include "nsStringStream.h"
-#include "mozilla/dom/MediaList.h"
-#include "mozilla/dom/ShadowRoot.h"
-#include "mozilla/dom/URL.h"
-#include "mozilla/net/UrlClassifierFeatureFactory.h"
-#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ProfilerLabels.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/StyleSheet.h"
-#include "mozilla/StyleSheetInlines.h"
-#include "mozilla/ConsoleReportCollector.h"
-#include "mozilla/css/StreamLoader.h"
 #include "mozilla/SharedStyleSheetCache.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/StyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Try.h"
-#include "ReferrerInfo.h"
-
-#include "nsXULPrototypeCache.h"
-
-#include "nsError.h"
-
+#include "mozilla/URLPreloader.h"
+#include "mozilla/css/ErrorReporter.h"
+#include "mozilla/css/StreamLoader.h"
+#include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/FetchPriority.h"
+#include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/SRICheck.h"
-
-#include "mozilla/Encoding.h"
+#include "mozilla/dom/SRILogHelper.h"
+#include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/dom/URL.h"
+#include "mozilla/glean/LayoutMetrics.h"
+#include "mozilla/net/UrlClassifierFeatureFactory.h"
+#include "nsCOMPtr.h"
+#include "nsContentPolicyUtils.h"
+#include "nsContentSecurityManager.h"
+#include "nsContentUtils.h"
+#include "nsError.h"
+#include "nsHttpChannel.h"
+#include "nsICSSLoaderObserver.h"
+#include "nsICachingChannel.h"
+#include "nsIClassOfService.h"
+#include "nsIClassifiedChannel.h"
+#include "nsIContent.h"
+#include "nsIContentInlines.h"
+#include "nsICookieJarSettings.h"
+#include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
+#include "nsINetworkPredictor.h"
+#include "nsIPrincipal.h"
+#include "nsIScriptError.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsISupportsPriority.h"
+#include "nsITimedChannel.h"
+#include "nsIURI.h"
+#include "nsMimeTypes.h"
+#include "nsQueryActor.h"
+#include "nsQueryObject.h"
+#include "nsString.h"
+#include "nsStringStream.h"
+#include "nsSyncLoadService.h"
+#include "nsThreadUtils.h"
+#include "nsXULPrototypeCache.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::net;
@@ -808,6 +804,15 @@ Loader::IsAlternate Loader::IsAlternateSheet(const nsAString& aTitle,
   return IsAlternate::Yes;
 }
 
+static nsSecurityFlags ComputeSecurityFlags(CORSMode aCORSMode) {
+  nsSecurityFlags securityFlags =
+      nsContentSecurityManager::ComputeSecurityFlags(
+          aCORSMode, nsContentSecurityManager::CORSSecurityMapping::
+                         CORS_NONE_MAPS_TO_INHERITED_CONTEXT);
+  securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
+  return securityFlags;
+}
+
 static nsContentPolicyType ComputeContentPolicyType(
     StylePreloadKind aPreloadKind) {
   return aPreloadKind == StylePreloadKind::None
@@ -815,12 +820,11 @@ static nsContentPolicyType ComputeContentPolicyType(
              : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD;
 }
 
-nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
-                                    nsIPrincipal* aTriggeringPrincipal,
-                                    nsIURI* aTargetURI,
-                                    nsINode* aRequestingNode,
-                                    const nsAString& aNonce,
-                                    StylePreloadKind aPreloadKind) {
+nsresult Loader::CheckContentPolicy(
+    nsIPrincipal* aLoadingPrincipal, nsIPrincipal* aTriggeringPrincipal,
+    nsIURI* aTargetURI, nsINode* aRequestingNode, const nsAString& aNonce,
+    StylePreloadKind aPreloadKind, CORSMode aCORSMode,
+    const nsAString& aIntegrity) {
   // When performing a system load don't consult content policies.
   if (!mDocument) {
     return NS_OK;
@@ -833,6 +837,15 @@ nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
       aLoadingPrincipal, aTriggeringPrincipal, aRequestingNode,
       nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK, contentPolicyType));
   secCheckLoadInfo->SetCspNonce(aNonce);
+
+  // Required for IntegrityPolicy checks.
+  RequestMode requestMode = nsContentSecurityManager::SecurityModeToRequestMode(
+      nsContentSecurityManager::ComputeSecurityMode(
+          ComputeSecurityFlags(aCORSMode)));
+  secCheckLoadInfo->SetRequestMode(Some(requestMode));
+
+  // Required for IntegrityPolicy checks.
+  secCheckLoadInfo->SetIntegrityMetadata(aIntegrity);
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
   nsresult rv =
@@ -1088,11 +1101,7 @@ nsresult Loader::NewStyleSheetChannel(SheetLoadData& aLoadData,
     triggeringClassificationFlags = mDocument->GetScriptTrackingFlags();
   }
 
-  nsSecurityFlags securityFlags =
-      nsContentSecurityManager::ComputeSecurityFlags(
-          aCorsMode, nsContentSecurityManager::CORSSecurityMapping::
-                         CORS_NONE_MAPS_TO_INHERITED_CONTEXT);
-  securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
+  nsSecurityFlags securityFlags = ComputeSecurityFlags(aCorsMode);
 
   nsContentPolicyType contentPolicyType =
       ComputeContentPolicyType(aLoadData.mPreloadKind);
@@ -1390,6 +1399,7 @@ nsresult Loader::LoadSheetAsyncInternal(SheetLoadData& aLoadData,
 
   nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
   loadInfo->SetCspNonce(aLoadData.Nonce());
+  loadInfo->SetIntegrityMetadata(sriMetadata.GetIntegrityString());
 
   if (!aLoadData.ShouldDefer()) {
     if (nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(channel)) {
@@ -1407,14 +1417,6 @@ nsresult Loader::LoadSheetAsyncInternal(SheetLoadData& aLoadData,
     if (nsCOMPtr<nsIReferrerInfo> referrerInfo = aLoadData.ReferrerInfo()) {
       rv = httpChannel->SetReferrerInfo(referrerInfo);
       Unused << NS_WARN_IF(NS_FAILED(rv));
-    }
-
-    nsCOMPtr<nsIHttpChannelInternal> internalChannel =
-        do_QueryInterface(httpChannel);
-    if (internalChannel) {
-      rv = internalChannel->SetIntegrityMetadata(
-          sriMetadata.GetIntegrityString());
-      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     // Set the initiator type
@@ -1884,9 +1886,9 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
   LOG(("  Link sync load: '%s'", syncLoad ? "true" : "false"));
   MOZ_ASSERT_IF(syncLoad, !aObserver);
 
-  nsresult rv =
-      CheckContentPolicy(loadingPrincipal, principal, aInfo.mURI,
-                         requestingNode, aInfo.mNonce, StylePreloadKind::None);
+  nsresult rv = CheckContentPolicy(
+      loadingPrincipal, principal, aInfo.mURI, requestingNode, aInfo.mNonce,
+      StylePreloadKind::None, aInfo.mCORSMode, aInfo.mIntegrity);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // Don't fire the error event if our document is loaded as data.  We're
     // supposed to not even try to do loads in that case... Unfortunately, we
@@ -2011,9 +2013,9 @@ nsresult Loader::LoadChildSheet(StyleSheet& aParentSheet,
   }
 
   nsIPrincipal* principal = aParentSheet.Principal();
-  nsresult rv =
-      CheckContentPolicy(LoaderPrincipal(), principal, aURL, requestingNode,
-                         /* aNonce = */ u""_ns, StylePreloadKind::None);
+  nsresult rv = CheckContentPolicy(
+      LoaderPrincipal(), principal, aURL, requestingNode,
+      /* aNonce = */ u""_ns, StylePreloadKind::None, CORS_NONE, u""_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     if (aParentData) {
       MarkLoadTreeFailed(*aParentData);
@@ -2155,8 +2157,9 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
 
   nsIPrincipal* loadingPrincipal = LoaderPrincipal();
   nsIPrincipal* triggeringPrincipal = loadingPrincipal;
-  nsresult rv = CheckContentPolicy(loadingPrincipal, triggeringPrincipal, aURL,
-                                   mDocument, aNonce, aPreloadKind);
+  nsresult rv =
+      CheckContentPolicy(loadingPrincipal, triggeringPrincipal, aURL, mDocument,
+                         aNonce, aPreloadKind, aCORSMode, aIntegrity);
   if (NS_FAILED(rv)) {
     return Err(rv);
   }

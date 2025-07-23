@@ -16,14 +16,17 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.core.content.edit
 import androidx.lifecycle.LifecycleOwner
+import androidx.preference.PreferenceManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.Engine.HttpsOnlyMode
 import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingMode
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
+import mozilla.components.lib.crash.store.CrashReportOption
 import mozilla.components.support.ktx.android.content.PreferencesHolder
 import mozilla.components.support.ktx.android.content.booleanPreference
+import mozilla.components.support.ktx.android.content.doesDeviceHaveHinge
 import mozilla.components.support.ktx.android.content.floatPreference
 import mozilla.components.support.ktx.android.content.intPreference
 import mozilla.components.support.ktx.android.content.longPreference
@@ -34,9 +37,9 @@ import mozilla.components.support.utils.BrowsersCache
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.settings.counterPreference
 import org.mozilla.fenix.components.settings.featureFlagPreference
 import org.mozilla.fenix.components.settings.lazyFeatureFlagPreference
@@ -174,12 +177,122 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getSharedPreferences(FENIX_PREFERENCES, MODE_PRIVATE)
 
     /**
+     * Indicates if the recent saved bookmarks functionality should be visible.
+     */
+    val showBookmarksHomeFeature: Boolean
+        get() = if (overrideUserSpecifiedHomepageSections) {
+            homescreenSections[HomeScreenSection.BOOKMARKS] == true
+        } else {
+            preferences.getBoolean(
+                appContext.getPreferenceKey(R.string.pref_key_customization_bookmarks),
+                homescreenSections[HomeScreenSection.BOOKMARKS] == true,
+            )
+        }
+
+    /**
+     * Indicates if the recent tabs functionality should be visible.
+     */
+    var showRecentTabsFeature: Boolean
+        get() = if (overrideUserSpecifiedHomepageSections) {
+            homescreenSections[HomeScreenSection.JUMP_BACK_IN] == true
+        } else {
+            preferences.getBoolean(
+                appContext.getPreferenceKey(R.string.pref_key_recent_tabs),
+                homescreenSections[HomeScreenSection.JUMP_BACK_IN] == true,
+            )
+        }
+        set(value) {
+            preferences.edit {
+                putBoolean(appContext.getPreferenceKey(R.string.pref_key_recent_tabs), value)
+            }
+        }
+
+    /**
+     * Indicates if the stories homescreen section should be shown.
+     */
+    var showPocketRecommendationsFeature by lazyFeatureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_pocket_homescreen_recommendations),
+        featureFlag = ContentRecommendationsFeatureHelper.isContentRecommendationsFeatureEnabled(appContext),
+        default = { homescreenSections[HomeScreenSection.POCKET] == true },
+    )
+
+    /**
+     * Indicates if the Pocket recommendations homescreen section should also show sponsored stories.
+     */
+    val showPocketSponsoredStories by lazyFeatureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_pocket_sponsored_stories),
+        default = { homescreenSections[HomeScreenSection.POCKET_SPONSORED_STORIES] == true },
+        featureFlag = ContentRecommendationsFeatureHelper.isPocketSponsoredStoriesFeatureEnabled(appContext),
+    )
+
+    /**
+     * Indicates whether or not the "Recently Visited" section should be shown on the home screen.
+     */
+    var historyMetadataUIFeature: Boolean
+        get() = if (overrideUserSpecifiedHomepageSections) {
+            homescreenSections[HomeScreenSection.RECENT_EXPLORATIONS] == true
+        } else {
+            preferences.getBoolean(
+                appContext.getPreferenceKey(R.string.pref_key_history_metadata_feature),
+                homescreenSections[HomeScreenSection.RECENT_EXPLORATIONS] == true,
+            )
+        }
+        set(value) {
+            preferences.edit {
+                putBoolean(appContext.getPreferenceKey(R.string.pref_key_history_metadata_feature), value)
+            }
+        }
+
+    /**
+     * Indicates whether or not the "Synced Tabs" section should be shown on the home screen.
+     */
+    val showSyncedTabs: Boolean
+        get() = FxNimbus.features.homescreen.value().sectionsEnabled[HomeScreenSection.SYNCED_TABS] == true
+
+    /**
+     * Indicates whether or not the "Collections" section should be shown on the home screen.
+     */
+    val collections: Boolean
+        get() = FxNimbus.features.homescreen.value().sectionsEnabled[HomeScreenSection.COLLECTIONS] == true
+
+    /**
+     * Indicates whether or not the homepage header should be shown.
+     */
+    var showHomepageHeader by lazyFeatureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_enable_homepage_header),
+        featureFlag = true,
+        default = { homescreenSections[HomeScreenSection.HEADER] == true },
+    )
+
+    /**
      * Indicates whether or not top sites should be shown on the home screen.
      */
-    var showTopSitesFeature by lazyFeatureFlagPreference(
-        appContext.getPreferenceKey(R.string.pref_key_show_top_sites),
+    val showTopSitesFeature: Boolean
+        get() = if (overrideUserSpecifiedHomepageSections) {
+            homescreenSections[HomeScreenSection.TOP_SITES] == true
+        } else {
+            preferences.getBoolean(
+                appContext.getPreferenceKey(R.string.pref_key_show_top_sites),
+                homescreenSections[HomeScreenSection.TOP_SITES] == true,
+            )
+        }
+
+    private val homescreenSections: Map<HomeScreenSection, Boolean>
+        get() = FxNimbus.features.homescreen.value().sectionsEnabled
+
+    /**
+     * Indicates if the homepage section settings should be visible.
+     */
+    val showHomepageSectionToggleSettings: Boolean
+        get() = !overrideUserSpecifiedHomepageSections
+
+    /**
+     * Indicates if the user specified homepage section visibility should be ignored.
+     */
+    val overrideUserSpecifiedHomepageSections by lazyFeatureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_override_user_specified_homepage_sections),
         featureFlag = true,
-        default = { homescreenSections[HomeScreenSection.TOP_SITES] == true },
+        default = { FxNimbus.features.overrideUserSpecifiedHomepageSections.value().enabled },
     )
 
     var numberOfAppLaunches by intPreference(
@@ -262,7 +375,8 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     var contileContextId by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_contile_context_id),
-        default = "",
+        default = TopSites.contextId.generateAndSet().toString(),
+        persistDefaultIfNotExists = true,
     )
 
     var currentWallpaperName by stringPreference(
@@ -381,6 +495,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
                 true,
             )
 
+    var crashReportChoice by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_crash_reporting_choice),
+        default = CrashReportOption.Ask.toString(),
+    )
+
     val isRemoteDebuggingEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_remote_debugging),
         default = false,
@@ -407,6 +526,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Users who have not accepted ToS will see a popup asking them to accept.
+     * They can select "Not now" to postpone accepting.
+     */
+    var hasPostponedAcceptingTermsOfService by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_terms_postponed),
+        default = false,
+    )
+
+    /**
      * The daily usage ping is not normally tied to normal telemetry.  We set the default value to
      * [isTelemetryEnabled] because this setting was added in early 2025 and we want to make
      * sure that users who upgrade and had telemetry disabled don't start sending the
@@ -421,6 +549,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var isExperimentationEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_experimentation_v2),
         default = isTelemetryEnabled,
+    )
+
+    /**
+     * This lets us know if the user has disabled experimentation manually so that we know
+     * if we should re-enable experimentation if the user disables and re-enables telemetry.
+     */
+    var hasUserDisabledExperimentation by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_user_disabled_experimentation),
+        default = false,
     )
 
     var isOverrideTPPopupsForPerformanceTest = false
@@ -633,6 +770,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var offerTranslation: Boolean by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_translations_offer),
         default = true,
+    )
+
+    /**
+     * Indicates if the user denies to ever see again the Remote Settings crash
+     * pull UI.
+     */
+    var crashPullNeverShowAgain: Boolean by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_crash_pull_never_show_again),
+        default = false,
     )
 
     @VisibleForTesting
@@ -866,6 +1012,26 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         false,
     )
 
+    var strictAllowListBaselineTrackingProtection by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_strict_allow_list_baseline),
+        true,
+    )
+
+    var strictAllowListConvenienceTrackingProtection by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_strict_allow_list_convenience),
+        false,
+    )
+
+    var customAllowListBaselineTrackingProtection by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_allow_list_baseline),
+        true,
+    )
+
+    var customAllowListConvenienceTrackingProtection by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_allow_list_convenience),
+        false,
+    )
+
     @VisibleForTesting(otherwise = PRIVATE)
     fun setStrictETP() {
         preferences.edit {
@@ -1064,7 +1230,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     val toolbarPosition: ToolbarPosition
-        get() = if (appContext.isTabStripEnabled()) {
+        get() = if (isTabStripEnabled) {
             ToolbarPosition.TOP
         } else if (shouldUseBottomToolbar) {
             ToolbarPosition.BOTTOM
@@ -1610,6 +1776,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true,
     )
 
+    var isTabStripEnabled by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tab_strip_show),
+        default = FxNimbus.features.tabStrip.value().enabled &&
+                (isTabStripEligible(appContext) || FxNimbus.features.tabStrip.value().allowOnAllDevices),
+    )
+
     var isDynamicToolbarEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_dynamic_toolbar),
         default = true,
@@ -1620,11 +1792,32 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true,
     )
 
+    /**
+     * Address Sync feature.
+     */
+    var isAddressSyncEnabled by featureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_enable_address_sync),
+        default = FxNimbus.features.addressSync.value().enabled,
+        featureFlag = isAddressFeatureEnabled(appContext),
+    )
+
     var addressFeature by featureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_show_address_feature),
         default = true,
         featureFlag = isAddressFeatureEnabled(appContext),
     )
+
+    /**
+     * Returns true if the the device has the prerequisites to enable the tab strip.
+     */
+    private fun isTabStripEligible(context: Context): Boolean {
+        // Tab Strip is currently disabled on foldable devices, while we work on improving the
+        // Homescreen / Toolbar / Browser screen to better support the feature. There is also
+        // an emulator bug that causes the doesDeviceHaveHinge check to return true on emulators,
+        // causing it to be disabled on emulator tablets for API 34 and below.
+        // https://issuetracker.google.com/issues/296162661
+        return context.isLargeScreenSize() && !context.doesDeviceHaveHinge()
+    }
 
     /**
      * Show the Addresses autofill feature.
@@ -1659,43 +1852,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         get() =
             FxNimbus.features.queryParameterStripping.value().sectionsEnabled
 
-    private val homescreenSections: Map<HomeScreenSection, Boolean>
-        get() =
-            FxNimbus.features.homescreen.value().sectionsEnabled
-
-    var historyMetadataUIFeature by lazyFeatureFlagPreference(
-        appContext.getPreferenceKey(R.string.pref_key_history_metadata_feature),
-        default = { homescreenSections[HomeScreenSection.RECENT_EXPLORATIONS] == true },
-        featureFlag = true,
-    )
-
-    /**
-     * Indicates if sync onboarding CFR should be shown.
-     */
-    var showSyncCFR by lazyFeatureFlagPreference(
-        appContext.getPreferenceKey(R.string.pref_key_should_show_sync_cfr),
-        featureFlag = true,
-        default = { mr2022Sections[Mr2022Section.SYNC_CFR] == true },
-    )
-
-    /**
-     * Indicates if the recent tabs functionality should be visible.
-     */
-    var showRecentTabsFeature by lazyFeatureFlagPreference(
-        appContext.getPreferenceKey(R.string.pref_key_recent_tabs),
-        featureFlag = true,
-        default = { homescreenSections[HomeScreenSection.JUMP_BACK_IN] == true },
-    )
-
-    /**
-     * Indicates if the recent saved bookmarks functionality should be visible.
-     */
-    var showBookmarksHomeFeature by lazyFeatureFlagPreference(
-        appContext.getPreferenceKey(R.string.pref_key_customization_bookmarks),
-        default = { homescreenSections[HomeScreenSection.BOOKMARKS] == true },
-        featureFlag = true,
-    )
-
     var signedInFxaAccount by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_fxa_signed_in),
         default = false,
@@ -1721,24 +1877,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var shouldAutofillAddressDetails by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_addresses_save_and_autofill_addresses),
         default = true,
-    )
-
-    /**
-     * Indicates if the stories homescreen section should be shown.
-     */
-    var showPocketRecommendationsFeature by lazyFeatureFlagPreference(
-        appContext.getPreferenceKey(R.string.pref_key_pocket_homescreen_recommendations),
-        featureFlag = ContentRecommendationsFeatureHelper.isContentRecommendationsFeatureEnabled(appContext),
-        default = { homescreenSections[HomeScreenSection.POCKET] == true },
-    )
-
-    /**
-     * Indicates if the Pocket recommendations homescreen section should also show sponsored stories.
-     */
-    val showPocketSponsoredStories by lazyFeatureFlagPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_pocket_sponsored_stories),
-        default = { homescreenSections[HomeScreenSection.POCKET_SPONSORED_STORIES] == true },
-        featureFlag = ContentRecommendationsFeatureHelper.isPocketSponsoredStoriesFeatureEnabled(appContext),
     )
 
     /**
@@ -1789,15 +1927,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var pocketSponsoredStoriesCity by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_custom_sponsored_stories_city),
         default = "",
-    )
-
-    /**
-     * Indicates if the MARS API integration is used for sponsored content.
-     */
-    var marsAPIEnabled by lazyFeatureFlagPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_mars_api_enabled),
-        default = { FxNimbus.features.mars.value().enabled },
-        featureFlag = true,
     )
 
     /**
@@ -1862,10 +1991,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Indicates if the user have access to the toolbar redesign option in settings.
+     * Indicates if the user has access to the toolbar redesign option in settings.
      */
-    @VisibleForTesting
-    internal var toolbarRedesignEnabled by booleanPreference(
+    var toolbarRedesignEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_enable_toolbar_redesign),
         default = { FxNimbus.features.toolbarRedesignOption.value().showOptions },
     )
@@ -1970,15 +2098,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var uriLoadGrowthLastSent by longPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_growth_uri_load_last_sent),
         default = 0,
-    )
-
-    /**
-     * Indicates if the Compose Homepage is enabled.
-     */
-    var enableComposeHomepage by lazyFeatureFlagPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_enable_compose_homepage),
-        default = { FxNimbus.features.composeHomepage.value().enabled },
-        featureFlag = true,
     )
 
     /**
@@ -2156,18 +2275,25 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         val isMicrosurveyEnabled = shouldShowMicrosurveyPrompt
         val isToolbarAtBottom = toolbarPosition == ToolbarPosition.BOTTOM
 
-        val microsurveyHeight =
+        val microsurveyHeight = if (isMicrosurveyEnabled) {
             appContext.resources.getDimensionPixelSize(R.dimen.browser_microsurvey_height)
-        val toolbarHeight =
-            appContext.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
-
-        return when {
-            isMicrosurveyEnabled && isToolbarAtBottom -> microsurveyHeight + toolbarHeight
-            isMicrosurveyEnabled -> microsurveyHeight
-            isToolbarAtBottom -> toolbarHeight
-
-            else -> 0
+        } else {
+            0
         }
+
+        val toolbarHeight = if (isToolbarAtBottom) {
+            appContext.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+        } else {
+            0
+        }
+
+        val navBarHeight = if (shouldUseExpandedToolbar) {
+            appContext.resources.getDimensionPixelSize(R.dimen.browser_navbar_height)
+        } else {
+            0
+        }
+
+        return microsurveyHeight + toolbarHeight + navBarHeight
     }
 
     /**
@@ -2196,13 +2322,20 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     fun getBottomToolbarContainerHeight(): Int {
         val isMicrosurveyEnabled = shouldShowMicrosurveyPrompt
-        val microsurveyHeight =
-            appContext.resources.getDimensionPixelSize(R.dimen.browser_microsurvey_height)
 
-        return when {
-            isMicrosurveyEnabled -> microsurveyHeight
-            else -> 0
+        val microsurveyHeight = if (isMicrosurveyEnabled) {
+            appContext.resources.getDimensionPixelSize(R.dimen.browser_microsurvey_height)
+        } else {
+            0
         }
+
+        val navBarHeight = if (shouldUseExpandedToolbar) {
+            appContext.resources.getDimensionPixelSize(R.dimen.browser_navbar_height)
+        } else {
+            0
+        }
+
+        return microsurveyHeight + navBarHeight
     }
 
     /**
@@ -2297,20 +2430,20 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * A user preference indicating that crash reports should always be automatically sent. This can be updated
-     * through the unsubmitted crash dialog or through data choice preferences.
-     */
-    var crashReportAlwaysSend by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_crash_reporting_always_report),
-        default = false,
-    )
-
-    /**
      * Indicates whether or not we should use the new crash reporter dialog.
      */
     var useNewCrashReporterDialog by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_use_new_crash_reporter),
         default = false,
+    )
+
+    /**
+     * Do not show crash pull dialog before this date.
+     * cf browser.crashReports.dontShowBefore on desktop
+     */
+    var crashPullDontShowBefore by longPreference(
+        appContext.getPreferenceKey(R.string.pref_key_crash_pull_dont_show_before),
+        default = 0,
     )
 
     /**
@@ -2468,4 +2601,13 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         key = appContext.getPreferenceKey(R.string.pref_key_distribution_id),
         default = "",
     )
+
+    /**
+     * Indicates whether the app should automatically clean up downloaded files.
+     */
+    fun shouldCleanUpDownloadsAutomatically(): Boolean {
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(appContext)
+        val cleanupPreferenceKey = appContext.getString(R.string.pref_key_downloads_clean_up_files_automatically)
+        return sharedPreferences.getBoolean(cleanupPreferenceKey, false)
+    }
 }

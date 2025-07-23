@@ -2,6 +2,7 @@
 firefox-appdir = "browser"
 head = "head.js"
 prefs = [
+  "browser.newtabpage.resource-mapping.log=true",
   "browser.startup.homepage.abouthome_cache.enabled=true",
   "browser.startup.homepage.abouthome_cache.testing=true",
 ]
@@ -44,3 +45,7 @@ tags = "remote-settings"
 ["test_WeatherFeed.js"]
 
 ["test_ShortcutRanker.js"]
+
+["test_ListsFeed.js"]
+
+["test_TimerFeed.js"]

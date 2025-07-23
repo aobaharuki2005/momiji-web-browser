@@ -37,6 +37,7 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
 
     private fun setupPreferences() {
         requirePreference<SwitchPreference>(R.string.pref_key_show_top_sites).apply {
+            isVisible = requireContext().settings().showHomepageSectionToggleSettings
             isChecked = context.settings().showTopSitesFeature
             onPreferenceChangeListener = object : SharedPreferenceUpdater() {
                 override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
@@ -53,6 +54,7 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
         }
 
         requirePreference<CheckBoxPreference>(R.string.pref_key_enable_contile).apply {
+            isVisible = requireContext().settings().showHomepageSectionToggleSettings
             isChecked = context.settings().showContileFeature
             onPreferenceChangeListener = object : SharedPreferenceUpdater() {
                 override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
@@ -69,6 +71,7 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_recent_tabs).apply {
+            isVisible = requireContext().settings().showHomepageSectionToggleSettings
             isChecked = context.settings().showRecentTabsFeature
             onPreferenceChangeListener = object : SharedPreferenceUpdater() {
                 override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
@@ -85,6 +88,7 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_customization_bookmarks).apply {
+            isVisible = requireContext().settings().showHomepageSectionToggleSettings
             isChecked = context.settings().showBookmarksHomeFeature
             onPreferenceChangeListener = object : SharedPreferenceUpdater() {
                 override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
@@ -124,30 +128,16 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
                 override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
                     when (newValue) {
                         true -> {
-                            if (context.settings().marsAPIEnabled) {
-                                context.components.core.pocketStoriesService.startPeriodicSponsoredContentsRefresh()
-                            } else {
-                                context.components.core.pocketStoriesService.startPeriodicSponsoredStoriesRefresh()
-                            }
+                            context.components.core.pocketStoriesService.startPeriodicSponsoredContentsRefresh()
                         }
                         false -> {
-                            if (context.settings().marsAPIEnabled) {
-                                context.components.core.pocketStoriesService.deleteUser()
+                            context.components.core.pocketStoriesService.deleteUser()
 
-                                context.components.appStore.dispatch(
-                                    ContentRecommendationsAction.SponsoredContentsChange(
-                                        sponsoredContents = emptyList(),
-                                    ),
-                                )
-                            } else {
-                                context.components.core.pocketStoriesService.deleteProfile()
-
-                                context.components.appStore.dispatch(
-                                    ContentRecommendationsAction.PocketSponsoredStoriesChange(
-                                        sponsoredStories = emptyList(),
-                                    ),
-                                )
-                            }
+                            context.components.appStore.dispatch(
+                                ContentRecommendationsAction.SponsoredContentsChange(
+                                    sponsoredContents = emptyList(),
+                                ),
+                            )
                         }
                     }
 
@@ -157,6 +147,7 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_history_metadata_feature).apply {
+            isVisible = requireContext().settings().showHomepageSectionToggleSettings
             isChecked = context.settings().historyMetadataUIFeature
             onPreferenceChangeListener = object : SharedPreferenceUpdater() {
                 override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {

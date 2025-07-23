@@ -25,7 +25,6 @@
  * reloaded by the user, we have to  ensure that the new extension pages are going
  * to run in the same process of the existing addon debugging browser element).
  */
-/* eslint-disable mozilla/valid-lazy */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
@@ -800,7 +799,7 @@ export var ExtensionProcessCrashObserver = {
   },
 
   observe(subject, topic, data) {
-    let childID = data;
+    let childID = parseInt(data, 10);
     switch (topic) {
       case "geckoview-initial-foreground":
         this._appInForeground = true;

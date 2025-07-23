@@ -69,19 +69,25 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_toolbar_redesign).apply {
+            isVisible = Config.channel.isDebug
+            isChecked = context.settings().toolbarRedesignEnabled
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
         requirePreference<SwitchPreference>(R.string.pref_key_use_new_bookmarks_ui).apply {
             isVisible = true
             isChecked = context.settings().useNewBookmarks
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
-
-        requirePreference<SwitchPreference>(R.string.pref_key_enable_compose_logins).apply {
-            isChecked = context.settings().enableComposeLogins
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_address_sync).apply {
+            isVisible = Config.channel.isNightlyOrDebug
+            isChecked = context.settings().isAddressSyncEnabled
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
-        requirePreference<SwitchPreference>(R.string.pref_key_enable_compose_homepage).apply {
-            isChecked = context.settings().enableComposeHomepage
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_compose_logins).apply {
+            isChecked = context.settings().enableComposeLogins
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
@@ -97,20 +103,16 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
+        requirePreference<SwitchPreference>(R.string.pref_key_override_user_specified_homepage_sections).apply {
+            isVisible = Config.channel.isNightlyOrDebug
+            isChecked = context.settings().overrideUserSpecifiedHomepageSections
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
         requirePreference<SwitchPreference>(R.string.pref_key_enable_homepage_as_new_tab).apply {
             isVisible = Config.channel.isNightlyOrDebug
             isChecked = context.settings().enableHomepageAsNewTab
             onPreferenceChangeListener = SharedPreferenceUpdater()
-        }
-
-        requirePreference<SwitchPreference>(R.string.pref_key_mars_api_enabled).apply {
-            isChecked = context.settings().marsAPIEnabled
-            onPreferenceChangeListener = object : SharedPreferenceUpdater() {
-                override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
-                    activity?.recreate()
-                    return super.onPreferenceChange(preference, newValue)
-                }
-            }
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_enable_unified_trust_panel).apply {
@@ -238,6 +240,12 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
                 context.getPreferenceKey(R.string.pref_key_persistent_debug_menu),
                 false,
             )
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_crash_pull_never_show_again).apply {
+            isVisible = true
+            isChecked = context.settings().crashPullNeverShowAgain
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
     }

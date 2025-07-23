@@ -582,6 +582,11 @@ bool Navigator::CookieEnabled() {
 }
 
 bool Navigator::OnLine() {
+  if (nsContentUtils::ShouldResistFingerprinting(
+          GetDocShell(), RFPTarget::NetworkConnection)) {
+    return true;
+  }
+
   if (mWindow) {
     // Check if this tab is set to be offline.
     BrowsingContext* bc = mWindow->GetBrowsingContext();
@@ -1868,7 +1873,7 @@ network::Connection* Navigator::GetConnection(ErrorResult& aRv) {
     }
     mConnection = network::Connection::CreateForWindow(
         mWindow, nsGlobalWindowInner::Cast(mWindow)->ShouldResistFingerprinting(
-                     RFPTarget::NavigatorConnection));
+                     RFPTarget::NetworkConnection));
   }
 
   return mConnection;

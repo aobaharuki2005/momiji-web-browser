@@ -1914,11 +1914,6 @@ class nsIWidget : public nsISupports {
   virtual void ClearCachedWebrenderResources() {}
 
   /**
-   * Clear WebRender animation resources
-   */
-  virtual void ClearWebrenderAnimationResources() {}
-
-  /**
    * Request fast snapshot at RenderCompositor of WebRender.
    * Since readback of Windows DirectComposition is very slow.
    */

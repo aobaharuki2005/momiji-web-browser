@@ -8,9 +8,6 @@
 #define mozilla_StyleSheet_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/css/SheetParsingMode.h"
-#include "mozilla/dom/CSSStyleSheetBinding.h"
-#include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
@@ -18,11 +15,14 @@
 #include "mozilla/ServoTypes.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StyleSheetInfo.h"
+#include "mozilla/css/SheetParsingMode.h"
+#include "mozilla/dom/CSSStyleSheetBinding.h"
+#include "mozilla/dom/SRIMetadata.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsIPrincipal.h"
-#include "nsWrapperCache.h"
-#include "nsStringFwd.h"
 #include "nsProxyRelease.h"
+#include "nsStringFwd.h"
+#include "nsWrapperCache.h"
 
 class nsIGlobalObject;
 class nsINode;

@@ -26,6 +26,7 @@ class MessageLoop;
 namespace mozilla::widget {
 
 class WaylandBuffer;
+class BufferTransaction;
 
 // WaylandSurface is a wrapper for Wayland rendering target
 // which is wl_surface / wl_subsurface.
@@ -126,16 +127,12 @@ class WaylandSurface final {
   // Attach WaylandBuffer which shows WaylandBuffer content
   // on screen.
   bool AttachLocked(const WaylandSurfaceLock& aSurfaceLock,
-                    RefPtr<WaylandBuffer> aWaylandBuffer);
+                    RefPtr<WaylandBuffer> aBuffer);
 
   // If there's any WaylandBuffer recently attached, detach it.
   // It makes the WaylandSurface invisible and it doesn't have any
   // content.
   void RemoveAttachedBufferLocked(const WaylandSurfaceLock& aProofOfLock);
-
-  // Called from Wayland compostor async handler when wl_buffer is
-  // detached or deleted.
-  void BufferFreeCallbackHandler(uintptr_t aWlBufferID, bool aWlBufferDelete);
 
   // CommitLocked() is needed to call after some of *Locked() method
   // to submit the action to Wayland compositor by wl_surface_commit().
@@ -264,6 +261,8 @@ class WaylandSurface final {
 
   void AssertCurrentThreadOwnsMutex();
 
+  void ForceCommit() { mSurfaceNeedsCommit = true; }
+
  private:
   ~WaylandSurface();
 
@@ -282,10 +281,8 @@ class WaylandSurface final {
   void Commit(WaylandSurfaceLock* aProofOfLock, bool aForceCommit,
               bool aForceDisplayFlush);
 
-  // Force release/detele all buffers. Some of them may be attached to
-  // compostor and may get wl_buffer::release callback so we need to sync
-  // delete with wayland compostor.
-  void ReleaseAllWaylandBuffersLocked(WaylandSurfaceLock& aSurfaceLock);
+  // Force release/detele all transactions and wl_buffers attached to them.
+  void ReleaseAllWaylandTransactionsLocked(WaylandSurfaceLock& aSurfaceLock);
 
   void RequestFrameCallbackLocked(const WaylandSurfaceLock& aProofOfLock);
   void ClearFrameCallbackLocked(const WaylandSurfaceLock& aProofOfLock);
@@ -336,7 +333,13 @@ class WaylandSurface final {
 
   // wl_surface setup/states
   wl_surface* mSurface = nullptr;
-  bool mSurfaceNeedsCommit = false;
+  mozilla::Atomic<bool, mozilla::Relaxed> mSurfaceNeedsCommit{false};
+
+  // When subsurface is desynced, we need to commit to parent surface
+  // to see the change in subsurface (this one).
+  // In such case we set mSurfaceNeedsCommit to parent for it.
+  bool mSubsurfaceDesync = true;
+
   wl_subsurface* mSubsurface = nullptr;
   gfx::IntPoint mSubsurfacePosition{-1, -1};
 
@@ -346,7 +349,7 @@ class WaylandSurface final {
   // previous buffer is hold by compositor. We need to keep
   // there buffers live until compositor notify us that we
   // can release them.
-  AutoTArray<RefPtr<WaylandBuffer>, 3> mAttachedBuffers;
+  AutoTArray<RefPtr<BufferTransaction>, 3> mBufferTransactions;
 
   // Indicates mSurface has buffer attached so we can attach subsurface
   // to it and expect to get frame callbacks from Wayland compositor.

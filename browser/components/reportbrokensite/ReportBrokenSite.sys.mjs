@@ -408,6 +408,9 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
       const panelview = win.PanelView.forNode(state.mainPanelview);
       panelview.selectedElement = state.urlInput;
       panelview.focusSelectedElement();
+      Services.focus
+        .getFocusedElementForWindow(win, true, {})
+        ?.setSelectionRange(0, 0);
     });
 
     // Make sure the Okay button is focused when the report sent view pops up.
@@ -721,9 +724,6 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
     );
     gPrefs.globalPrivacyControlEnabled.set(
       prefs["privacy.globalprivacycontrol.enabled"]
-    );
-    gPrefs.h1InSectionUseragentStylesEnabled.set(
-      prefs["layout.css.h1-in-section-ua-styles.enabled"]
     );
     gPrefs.installtriggerEnabled.set(
       prefs["extensions.InstallTrigger.enabled"]

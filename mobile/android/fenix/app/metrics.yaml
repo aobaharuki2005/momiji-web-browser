@@ -162,14 +162,15 @@ events:
           A string containing the name of the item the user tapped. These items
           include:
           add_bookmark, add_to_homescreen, add_to_top_sites, addon_details, addons_manager,
-          back, back_long_press, bookmark, bookmarks, desktop_view_off,
-          desktop_view_off_custom_tab, desktop_view_on, desktop_view_on_custom_tab,
-          discover_more_extensions, dismiss_menu_banner, web_extension_browser_action_clicked,
-          downloads, edit_bookmark, extensions_learn_more, find_in_page, find_in_page_custom_tab,
-          forward, forward_long_press, history, install_addon, menu_banner, new_tab, open_in_app,
-          open_in_fenix, quit, reader_mode_appearance, reload, remove_from_top_sites,
-          save_to_collection, set_default_browser, settings, share, share_custom_tab, stop,
-          sync_account, translate and print_content.
+          back, back_long_press, bookmark, bookmarks, custom_back, custom_back_long_press,
+          custom_desktop_view_off, custom_desktop_view_on, custom_find_in_page,
+          custom_forward, custom_forward_long_press, custom_share, desktop_view_off,
+          desktop_view_on, discover_more_extensions, dismiss_menu_banner, downloads,
+          edit_bookmark, extensions_learn_more, find_in_page, forward, forward_long_press,
+          history, install_addon, installed_addon_details, menu_banner, new_tab, open_in_app,
+          open_in_fenix, print_content, quit, reader_mode_appearance, reload, remove_from_top_sites,
+          save_to_collection, set_default_browser, settings, share, stop, sync_account,
+          translate and web_extension_browser_action_clicked.
         type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/1024
@@ -1131,59 +1132,6 @@ onboarding:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1943588
     data_reviews:
       - https://phabricator.services.mozilla.com/D235440
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: never
-    metadata:
-      tags:
-        - Onboarding
-  syn_cfr_shown:
-    type: event
-    description: |
-      The Sync Onboarding CFR was shown to the user
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/26489
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/26507
-      - https://github.com/mozilla-mobile/firefox-android/pull/3319
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: never
-    metadata:
-      tags:
-        - Onboarding
-  sync_cfr_implicit_dismissal:
-    type: event
-    description: |
-      The Sync Onboarding CFR was dismissed by the user by interacting
-      with the outside of the popup.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/26489
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/26507
-      - https://github.com/mozilla-mobile/firefox-android/pull/3319
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: never
-    metadata:
-      tags:
-        - Onboarding
-  sync_cfr_explicit_dismissal:
-    type: event
-    description: |
-      The Sync Onboarding CFR was dismissed by the user by clicking on
-      the "X" button to close the popup.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/26489
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/26507
-      - https://github.com/mozilla-mobile/firefox-android/pull/3319
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2600,22 +2548,6 @@ generated_password_dialog:
       tags:
         - Logins
 metrics:
-  client_association:
-    type: string
-    description: |
-      The Mozilla Account UID associated with the user.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1970661
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1970661
-    data_sensitivity:
-      - highly_sensitive
-    notification_emails:
-      - fmasalha@mozilla.com
-      - mtighe@mozilla.com
-    expires: never
-    send_in_pings:
-      - fx-accounts
   default_browser:
     type: boolean
     lifetime: application
@@ -13590,22 +13522,6 @@ broken_site_report.browser_info.prefs:
       - webcompat-reporting-tool-telemetry@mozilla.com
     send_in_pings:
       - broken-site-report
-  h1_in_section_useragent_styles_enabled:
-    type: boolean
-    expires: never
-    data_sensitivity:
-      - interaction
-    description: >
-      Value of `layout.css.h1-in-section-ua-styles.enabled`
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1952996
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852340#c16
-    notification_emails:
-      - twisniewski@mozilla.com
-      - webcompat-reporting-tool-telemetry@mozilla.com
-    send_in_pings:
-      - broken-site-report
   resist_fingerprinting_enabled:
     type: boolean
     expires: never
@@ -13746,6 +13662,21 @@ webcompatreporting:
       - interaction
     notification_emails:
       - twisniewski@mozilla.com
+      - webcompat-reporting-tool-telemetry@mozilla.com
+    expires: never
+  learn_more:
+    type: event
+    description: |
+      The user will be redirected to a SUMO article (https://support.mozilla.org/km/kb/report-breakage-due-blocking) to learn more about reporting a broken site.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1970705
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D255555
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - twisniewski@mozilla.com
+      - android-probes@mozilla.com
       - webcompat-reporting-tool-telemetry@mozilla.com
     expires: never
 
@@ -14002,3 +13933,21 @@ downloads:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
+
+client_association:
+  uid:
+    type: string
+    description: |
+      The Mozilla Account UID associated with the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1970661
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1970661
+    data_sensitivity:
+      - highly_sensitive
+    notification_emails:
+      - fmasalha@mozilla.com
+      - mtighe@mozilla.com
+    expires: never
+    send_in_pings:
+      - fx-accounts

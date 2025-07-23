@@ -1236,7 +1236,7 @@ var AddonManagerInternal = {
     return uri.replace(/\+/g, "%2B");
   },
 
-  _updatePromptHandler(info) {
+  updatePromptHandler(info) {
     let oldPerms = info.existingAddon.userPermissions;
     if (!oldPerms) {
       // Updating from a legacy add-on, just let it proceed
@@ -1263,6 +1263,7 @@ var AddonManagerInternal = {
       let subject = {
         wrappedJSObject: {
           addon: info.addon,
+          existingAddon: info.existingAddon,
           permissions: difference,
           resolve,
           reject,
@@ -1271,7 +1272,10 @@ var AddonManagerInternal = {
           install: info.install,
         },
       };
-      Services.obs.notifyObservers(subject, "webextension-update-permissions");
+      Services.obs.notifyObservers(
+        subject,
+        "webextension-update-permission-prompt"
+      );
     });
   },
 
@@ -1336,7 +1340,7 @@ var AddonManagerInternal = {
                       // not when update-available check completes, no?
                       logger.debug(`Starting upgrade install of ${aAddon.id}`);
                       aInstall.promptHandler = (...args) =>
-                        AddonManagerInternal._updatePromptHandler(...args);
+                        AddonManagerInternal.updatePromptHandler(...args);
                       aInstall.install();
                     }
                   },
@@ -2591,7 +2595,7 @@ var AddonManagerInternal = {
 
     if (!!options.preferUpdateOverInstall && install.existingAddon) {
       install.promptHandler = (...args) =>
-        AddonManagerInternal._updatePromptHandler(...args);
+        AddonManagerInternal.updatePromptHandler(...args);
     } else {
       AddonManagerInternal.setupPromptHandler(
         browser,
@@ -3075,6 +3079,19 @@ var AddonManagerInternal = {
     }
 
     return this.getAddonsByTypes(null);
+  },
+
+  getBuiltinAddonVersion(addonId) {
+    if (!gStarted) {
+      throw Components.Exception(
+        "AddonManager is not initialized",
+        Cr.NS_ERROR_NOT_INITIALIZED
+      );
+    }
+
+    return this._getProviderByName("XPIProvider").getBuiltinAddonVersion(
+      addonId
+    );
   },
 
   shouldShowBlocklistAttention() {
@@ -4344,6 +4361,28 @@ export var AddonManager = {
     return AddonManagerInternal.getAllAddons();
   },
 
+  /**
+   * Gets the version of the auto-install built-in add-on
+   * with the given addonID (if a built-in with that add-on
+   * id exists).
+   *
+   * NOTE:
+   * - This method is limited to built-in add-ons
+   *   auto-installed in the "app-builtin-addons" location
+   *   based on the list bundled in Firefox Desktop builds as
+   *   "chrome://browser/content/built_in_addons.json".
+   * - This method will throws an exception if called before
+   *   the AddonManager and the XPIProvider has been started.
+   *
+   * @param  {string} addonId
+   *   Addon id of the built-in add-on to get a version for.
+   * @return {string|void}
+   *   Returns the built-in add-on version if one is found.
+   */
+  getBuiltinAddonVersion(addonId) {
+    return AddonManagerInternal.getBuiltinAddonVersion(addonId);
+  },
+
   getInstallsByTypes(aTypes) {
     return AddonManagerInternal.getInstallsByTypes(aTypes);
   },
@@ -4563,6 +4602,14 @@ export var AddonManager = {
    */
   get beforeShutdown() {
     return gBeforeShutdownBarrier.client;
+  },
+
+  /**
+   * Returns a promise that should be attached to an installation prompt
+   * handler when we update an add-on.
+   */
+  async updatePromptHandler(aInfo) {
+    return AddonManagerInternal.updatePromptHandler(aInfo);
   },
 };
 

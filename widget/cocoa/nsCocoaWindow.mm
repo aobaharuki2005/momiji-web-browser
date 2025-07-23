@@ -32,6 +32,7 @@
 #include "nsChildView.h"
 #include "nsCocoaFeatures.h"
 #include "nsIScreenManager.h"
+#include "nsIAppStartup.h"
 #include "nsIWidgetListener.h"
 #include "nsXULPopupManager.h"
 #include "VibrancyManager.h"
@@ -42,6 +43,7 @@
 #include "qcms.h"
 
 #include "mozilla/AutoRestore.h"
+#include "mozilla/Components.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/Maybe.h"
@@ -2666,6 +2668,13 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
 + (void)paintMenubarForWindow:(NSWindow*)aWindow {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
+  if (!NSApp.active) {
+    // Early exit if the app isn't active. This is because we can't safely
+    // set the NSApp.mainMenu property in such a case. We early exit so we
+    // also don't invoke any side effects.
+    return;
+  }
+
   // make sure we only act on windows that have this kind of
   // object as a delegate
   id windowDelegate = [aWindow delegate];
@@ -2926,9 +2935,17 @@ void nsCocoaWindow::CocoaWindowDidResize() {
   RefPtr<nsMenuBarX> hiddenWindowMenuBar =
       nsMenuUtilsX::GetHiddenWindowMenuBar();
   if (hiddenWindowMenuBar) {
-    // We do an async paint in order to prevent crashes when macOS is actively
-    // enumerating the menu items in `NSApp.mainMenu`.
-    hiddenWindowMenuBar->PaintAsyncIfNeeded();
+    bool isTerminating = false;
+    nsCOMPtr<nsIAppStartup> appStartup(components::AppStartup::Service());
+    if (appStartup) {
+      appStartup->GetAttemptingQuit(&isTerminating);
+    }
+
+    if (!isTerminating) {
+      // We do an async paint in order to prevent crashes when macOS is actively
+      // enumerating the menu items in `NSApp.mainMenu`.
+      hiddenWindowMenuBar->PaintAsyncIfNeeded();
+    }
   }
 
   NSWindow* window = [aNotification object];

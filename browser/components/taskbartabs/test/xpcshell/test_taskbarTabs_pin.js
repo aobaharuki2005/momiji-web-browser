@@ -42,13 +42,19 @@ let mockFaviconService = {
   defaultFavicon: {},
 };
 
+let faviconService = Cc[
+  "@mozilla.org/browser/favicon-service;1"
+].createInstance(Ci.nsIFaviconService);
+
 sinon.stub(mockFaviconService, "getFaviconForPage").callsFake(async () => {
   if (faviconThrows) {
     return null;
   }
-  return { uri: kFaviconUri };
+  return { dataURI: kFaviconUri };
 });
-sinon.stub(mockFaviconService, "defaultFavicon").value(kFaviconUri);
+sinon
+  .stub(mockFaviconService, "defaultFavicon")
+  .value(faviconService.defaultFavicon);
 
 // Favicons are written to the profile directory, ensure it exists.
 do_get_profile();
@@ -116,6 +122,48 @@ add_task(async function test_pin_missing_favicon() {
     !mockFaviconService.defaultFavicon.calledOnce,
     "The default icon should be used when a favicon exists for the page."
   );
+});
+
+add_task(async function test_pin_location() {
+  sinon.resetHistory();
+
+  await TaskbarTabsPin.pinTaskbarTab(taskbarTab);
+  const spy = proxyNativeShellService.createShortcut;
+  ok(spy.calledOnce, "A shortcut was created");
+  Assert.equal(
+    spy.firstCall.args[6],
+    "Programs",
+    "The shortcut went into the Start Menu folder"
+  );
+  Assert.equal(
+    spy.firstCall.args[7].split("\\", 2)[1],
+    "Test.lnk",
+    "The shortcut should be in a subdirectory and have a default name"
+  );
+});
+
+add_task(async function test_pin_location_dos_name() {
+  const parsedURI = Services.io.newURI("https://aux.test");
+  const invalidTaskbarTab = registry.findOrCreateTaskbarTab(parsedURI, 0);
+  sinon.resetHistory();
+
+  await TaskbarTabsPin.pinTaskbarTab(invalidTaskbarTab);
+  const spy = proxyNativeShellService.createShortcut;
+  ok(spy.calledOnce, "A shortcut was created");
+  Assert.equal(
+    spy.firstCall.args[6],
+    "Programs",
+    "The shortcut went into the Start Menu folder"
+  );
+  // 'Untitled' is the default selected by the MIME code, since
+  // AUX is a reserved name on Windows.
+  Assert.equal(
+    spy.firstCall.args[7].split("\\", 2)[1],
+    "Untitled.lnk",
+    "The shortcut should be in a subdirectory and have a default name"
+  );
+
+  registry.removeTaskbarTab(invalidTaskbarTab);
 });
 
 add_task(async function test_unpin() {

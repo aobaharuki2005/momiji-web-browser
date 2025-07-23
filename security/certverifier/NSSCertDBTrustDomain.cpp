@@ -55,10 +55,6 @@
 #  include "nsCocoaFeatures.h"
 #endif
 
-#include "TrustOverrideUtils.h"
-#include "TrustOverride-AppleGoogleDigiCertData.inc"
-#include "TrustOverride-SymantecData.inc"
-
 using namespace mozilla;
 using namespace mozilla::ct;
 using namespace mozilla::pkix;
@@ -98,7 +94,6 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mValidityCheckingMode(validityCheckingMode),
       mNetscapeStepUpPolicy(netscapeStepUpPolicy),
       mCRLiteMode(crliteMode),
-      mSawDistrustedCAByPolicyError(false),
       mOriginAttributes(originAttributes),
       mThirdPartyRootInputs(thirdPartyRootInputs),
       mThirdPartyIntermediateInputs(thirdPartyIntermediateInputs),
@@ -1262,9 +1257,10 @@ Result NSSCertDBTrustDomain::VerifyAndMaybeCacheEncodedOCSPResponse(
   return rv;
 }
 
-nsresult isDistrustedCertificateChain(
+nsresult IsDistrustedCertificateChain(
     const nsTArray<nsTArray<uint8_t>>& certArray,
-    const SECTrustType certDBTrustType, bool& isDistrusted) {
+    const SECTrustType certDBTrustType, bool& isDistrusted,
+    Maybe<mozilla::pkix::Time>& distrustAfterTimeOut) {
   if (certArray.Length() == 0) {
     return NS_ERROR_FAILURE;
   }
@@ -1356,6 +1352,7 @@ nsresult isDistrustedCertificateChain(
 
   Time distrustAfterTime =
       mozilla::pkix::TimeFromEpochInSeconds(distrustAfter / PR_USEC_PER_SEC);
+  distrustAfterTimeOut.emplace(distrustAfterTime);
   if (endEntityNotBefore <= distrustAfterTime) {
     isDistrusted = false;
   }
@@ -1414,8 +1411,8 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& reversedDERArray,
   // the NotAfter value of the parent when the root is a builtin.
   if (mIsBuiltChainRootBuiltInRoot) {
     bool isDistrusted;
-    nsrv =
-        isDistrustedCertificateChain(certArray, mCertDBTrustType, isDistrusted);
+    nsrv = IsDistrustedCertificateChain(certArray, mCertDBTrustType,
+                                        isDistrusted, mDistrustAfterTime);
     if (NS_FAILED(nsrv)) {
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }
@@ -1437,43 +1434,6 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& reversedDERArray,
       }
       MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
               ("ignoring built-in distrust after for third-party root"));
-    }
-  }
-
-  // See bug 1434300. If the root is a Symantec root, see if we distrust this
-  // path. Since we already have the root available, we can check that cheaply
-  // here before proceeding with the rest of the algorithm.
-
-  // This algorithm only applies if we are verifying in the context of a TLS
-  // handshake. To determine this, we check mHostname: If it isn't set, this is
-  // not TLS, so don't run the algorithm.
-  if (mHostname && CertDNIsInList(rootBytes, RootSymantecDNs)) {
-    if (numCerts <= 1) {
-      // This chain is supposed to be complete, so this is an error.
-      return Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;
-    }
-    nsTArray<Input> intCerts;
-
-    for (size_t i = 1; i < certArray.Length() - 1; ++i) {
-      const nsTArray<uint8_t>& certBytes = certArray.ElementAt(i);
-      Input certInput;
-      rv = certInput.Init(certBytes.Elements(), certBytes.Length());
-      if (rv != Success) {
-        return Result::FATAL_ERROR_LIBRARY_FAILURE;
-      }
-
-      intCerts.EmplaceBack(certInput);
-    }
-
-    bool isDistrusted = false;
-    nsrv = CheckForSymantecDistrust(intCerts, RootAppleAndGoogleSPKIs,
-                                    isDistrusted);
-    if (NS_FAILED(nsrv)) {
-      return Result::FATAL_ERROR_LIBRARY_FAILURE;
-    }
-    if (isDistrusted) {
-      mSawDistrustedCAByPolicyError = true;
-      return Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;
     }
   }
 
@@ -1611,9 +1571,9 @@ void NSSCertDBTrustDomain::ResetAccumulatedState() {
   mOCSPStaplingStatus = CertVerifier::OCSP_STAPLING_NEVER_CHECKED;
   mSCTListFromOCSPStapling = nullptr;
   mSCTListFromCertificate = nullptr;
-  mSawDistrustedCAByPolicyError = false;
   mIsBuiltChainRootBuiltInRoot = false;
   mIssuerSources.clear();
+  mDistrustAfterTime.reset();
 }
 
 static Input SECItemToInput(const UniqueSECItem& item) {
@@ -1639,10 +1599,6 @@ Input NSSCertDBTrustDomain::GetSCTListFromOCSPStapling() const {
 
 bool NSSCertDBTrustDomain::GetIsBuiltChainRootBuiltInRoot() const {
   return mIsBuiltChainRootBuiltInRoot;
-}
-
-bool NSSCertDBTrustDomain::GetIsErrorDueToDistrustedCAPolicy() const {
-  return mSawDistrustedCAByPolicyError;
 }
 
 void NSSCertDBTrustDomain::NoteAuxiliaryExtension(AuxiliaryExtension extension,

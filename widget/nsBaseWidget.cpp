@@ -1641,13 +1641,6 @@ void nsBaseWidget::ClearCachedWebrenderResources() {
   mWindowRenderer->AsWebRender()->ClearCachedResources();
 }
 
-void nsBaseWidget::ClearWebrenderAnimationResources() {
-  if (!mWindowRenderer || !mWindowRenderer->AsWebRender()) {
-    return;
-  }
-  mWindowRenderer->AsWebRender()->ClearAnimationResources();
-}
-
 bool nsBaseWidget::SetNeedFastSnaphot() {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!mCompositorSession);
