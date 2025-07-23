@@ -1834,6 +1834,7 @@ class SchemaAPIManager extends EventEmitter {
     );
 
     Object.assign(global, {
+      global, // This must be first, see bug 1977694.
       AppConstants,
       Cc,
       ChromeWorker,
@@ -1859,7 +1860,6 @@ class SchemaAPIManager extends EventEmitter {
       WebExtensionPolicy,
       XPCOMUtils,
       extensions: this,
-      global,
     });
 
     ChromeUtils.defineLazyGetter(global, "console", getConsole);
