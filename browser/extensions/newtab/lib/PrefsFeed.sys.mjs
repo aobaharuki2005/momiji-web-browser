@@ -236,7 +236,11 @@ export class PrefsFeed {
     this._setBoolPref(values, "discoverystream.isCollectionDismissible", false);
     this._setBoolPref(values, "discoverystream.hardcoded-basic-layout", false);
     this._setBoolPref(values, "discoverystream.personalization.enabled", false);
-    this._setBoolPref(values, "discoverystream.personalization.override");
+    this._setBoolPref(
+      values,
+      "discoverystream.personalization.override",
+      false
+    );
     this._setStringPref(
       values,
       "discoverystream.personalization.modelKeys",
