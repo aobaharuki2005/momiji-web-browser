@@ -330,10 +330,7 @@ nsresult TRR::SendHTTPRequest() {
   rv = internalChannel->SetIsTRRServiceChannel(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // When using OHTTP, the we can't use cached connection info, since we
-  // need to connect to the relay, not the TRR server.
-  if (UseDefaultServer() && !useOHTTP &&
-      StaticPrefs::network_trr_async_connInfo()) {
+  if (UseDefaultServer() && StaticPrefs::network_trr_async_connInfo()) {
     RefPtr<nsHttpConnectionInfo> trrConnInfo =
         TRRService::Get()->TRRConnectionInfo();
     if (trrConnInfo) {

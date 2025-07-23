@@ -411,13 +411,9 @@ static_assert(sControlFunctions[0x0F] == Http2Session::RecvUnused);
 static_assert(sControlFunctions[Http2Session::FRAME_TYPE_PRIORITY_UPDATE] ==
               Http2Session::RecvPriorityUpdate);
 
-uint32_t Http2Session::RoomForMoreConcurrent() {
+bool Http2Session::RoomForMoreConcurrent() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  if (mConcurrent > mMaxConcurrent) {
-    MOZ_ASSERT(false, "how does this happen?");
-    return 0;
-  }
-  return mMaxConcurrent - mConcurrent;
+  return (mConcurrent < mMaxConcurrent);
 }
 
 bool Http2Session::RoomForMoreStreams() {
@@ -688,16 +684,15 @@ void Http2Session::QueueStream(Http2StreamBase* stream) {
 void Http2Session::ProcessPending() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  uint32_t available = RoomForMoreConcurrent();
   RefPtr<Http2StreamBase> stream;
-  while (available && (stream = mQueueManager.GetNextStreamFromQueue(
-                           Http2StreamQueueType::QueuedStreams))) {
+  while (RoomForMoreConcurrent() &&
+         (stream = mQueueManager.GetNextStreamFromQueue(
+              Http2StreamQueueType::QueuedStreams))) {
     LOG3(("Http2Session::ProcessPending %p stream %p woken from queue.", this,
           stream.get()));
     MOZ_ASSERT(!stream->CountAsActive());
     mQueueManager.AddStreamToQueue(Http2StreamQueueType::ReadyForWrite, stream);
     SetWriteCallbacks();
-    available--;
   }
 }
 

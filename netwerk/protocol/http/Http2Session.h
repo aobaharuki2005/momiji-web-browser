@@ -413,7 +413,7 @@ class Http2Session final : public ASpdySession,
   void UpdateLocalSessionWindow(uint32_t bytes);
 
   void MaybeDecrementConcurrent(Http2StreamBase* stream);
-  uint32_t RoomForMoreConcurrent();
+  bool RoomForMoreConcurrent();
   void IncrementConcurrent(Http2StreamBase* stream);
   void QueueStream(Http2StreamBase* stream);
 
