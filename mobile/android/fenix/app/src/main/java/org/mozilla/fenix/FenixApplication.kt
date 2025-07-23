@@ -481,6 +481,11 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         // no-op, LeakCanary is disabled by default
     }
 
+    // This should be removed when the UI tests have been adjusted to accommodate
+    // Homepage as a New Tab feature.
+    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1928587
+    internal open fun isRunningInTestEnvironment(): Boolean = false
+
     private fun setupPush() {
         // Sets the PushFeature as the singleton instance for push messages to go to.
         // We need the push feature setup here to deliver messages in the case where the service
