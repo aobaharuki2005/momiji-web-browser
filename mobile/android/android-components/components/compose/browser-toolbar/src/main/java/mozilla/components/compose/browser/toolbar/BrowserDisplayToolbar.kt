@@ -36,7 +36,6 @@ import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Top
 import mozilla.components.compose.browser.toolbar.ui.Origin
 import mozilla.components.ui.icons.R as iconsR
 
-private val ROUNDED_CORNER_SHAPE = RoundedCornerShape(8.dp)
 private const val NO_TOOLBAR_PADDING_DP = 0
 private const val TOOLBAR_PADDING_DP = 8
 private const val MINIMUM_PROGRESS_BAR_STATE = 1
@@ -117,7 +116,7 @@ fun BrowserDisplayToolbar(
                     .height(48.dp)
                     .background(
                         color = AcornTheme.colors.layer3,
-                        shape = ROUNDED_CORNER_SHAPE,
+                        shape = RoundedCornerShape(90.dp),
                     )
                     .padding(
                         start = when (pageActionsStart.isEmpty()) {

@@ -47,7 +47,7 @@ import mozilla.components.compose.browser.toolbar.ui.InlineAutocompleteTextField
 import mozilla.components.concept.toolbar.AutocompleteProvider
 import mozilla.components.ui.icons.R as iconsR
 
-private val ROUNDED_CORNER_SHAPE = RoundedCornerShape(8.dp)
+private val ROUNDED_CORNER_SHAPE = RoundedCornerShape(90.dp)
 
 /**
  * Sub-component of the [BrowserToolbar] responsible for allowing the user to edit the current
