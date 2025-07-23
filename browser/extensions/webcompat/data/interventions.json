@@ -2794,6 +2794,21 @@
       }
     ]
   },
+  "1902378": {
+    "label": "acesso.processo.rio",
+    "bugs": {
+      "1902378": {
+        "issue": "unsupported-warning",
+        "matches": ["*://acesso.processo.rio/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
+  },
   "1902379": {
     "label": "adl.edu.tw",
     "bugs": {
