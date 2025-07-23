@@ -762,6 +762,21 @@
       }
     ]
   },
+  "1793475": {
+    "label": "www.unitedwifi.com",
+    "bugs": {
+      "1793475": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://*.unitedwifi.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["Chrome"]
+      }
+    ]
+  },
   "1799968": {
     "label": "www.samsung.com (scrolling fix)",
     "bugs": {
