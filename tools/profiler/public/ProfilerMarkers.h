@@ -264,32 +264,17 @@ using Tracing = mozilla::baseprofiler::markers::Tracing;
     }                                                                         \
   } while (false)
 
-// Template specializations for Gecko-specific types
-namespace mozilla {
-template <>
-constexpr MarkerSchema::InputType
-MarkerSchema::getDefaultInputTypeForType<nsCString>() {
-  return InputType::CString;
-}
-
-template <>
-constexpr MarkerSchema::Format
-MarkerSchema::getDefaultFormatForType<nsCString>() {
-  return Format::SanitizedString;
-}
-}  // namespace mozilla
-
 namespace geckoprofiler::markers {
 // This allows us to bundle the argument name and its type into a single class
 // so they may be passed to the SimplePayloadMarkerTemplate class.
 template <const char* ArgName, typename ArgType>
 struct FieldDescription {
   static constexpr const char* name = ArgName;
-  using type = ArgType;
+  static constexpr ArgType var = {};
 };
 
 // This is a template class at the compile unit scope because function scope
-// classes cannot have static members. (Even when constexpr)
+// classes cannot have static members. (Event when constexpr)
 template <const char ArgName[], const char ArgTableLabel[],
           typename... ArgTypes>
 struct SimplePayloadMarkerTemplate
@@ -301,9 +286,9 @@ struct SimplePayloadMarkerTemplate
 
   static constexpr MS::PayloadField PayloadFields[] = {
       {ArgTypes::name,
-       MS::getDefaultInputTypeForType<typename ArgTypes::type>(),
+       MS::getDefaultInputTypeForType<decltype(ArgTypes::var)>(),
        ArgTypes::name,
-       MS::getDefaultFormatForType<typename ArgTypes::type>()}...};
+       MS::getDefaultFormatForType<decltype(ArgTypes::var)>()}...};
 
   static constexpr const char* TableLabel = ArgTableLabel;
 
@@ -312,7 +297,7 @@ struct SimplePayloadMarkerTemplate
 
   static void StreamJSONMarkerData(
       mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
-      const typename ArgTypes::type&... args) {
+      const decltype(ArgTypes::var)&... args) {
     mozilla::BaseMarkerType<
         SimplePayloadMarkerTemplate<ArgName, ArgTableLabel, ArgTypes...>>::
         StreamJSONMarkerDataImpl(aWriter, args...);
