@@ -26,7 +26,6 @@ import org.mozilla.fenix.utils.Settings
 
 class SecureTabManagerBindingTest {
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
 
@@ -49,7 +48,7 @@ class SecureTabManagerBindingTest {
         )
 
         secureTabManagerBinding.start()
-        tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(Page.PrivateTabs.ordinal)))
+        tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.PrivateTabs))
         tabsTrayStore.waitUntilIdle()
 
         verify { fragment.secure() }
@@ -66,7 +65,7 @@ class SecureTabManagerBindingTest {
         every { settings.allowScreenshotsInPrivateMode } returns true
 
         secureTabManagerBinding.start()
-        tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(Page.PrivateTabs.ordinal)))
+        tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.PrivateTabs))
         tabsTrayStore.waitUntilIdle()
 
         verify { fragment.removeSecure() }
@@ -83,7 +82,7 @@ class SecureTabManagerBindingTest {
         )
 
         secureTabManagerBinding.start()
-        tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(Page.NormalTabs.ordinal)))
+        tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.NormalTabs))
         tabsTrayStore.waitUntilIdle()
 
         verify { fragment.removeSecure() }
@@ -100,7 +99,7 @@ class SecureTabManagerBindingTest {
         )
 
         secureTabManagerBinding.start()
-        tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(Page.NormalTabs.ordinal)))
+        tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.NormalTabs))
         tabsTrayStore.waitUntilIdle()
 
         verify(exactly = 0) { fragment.removeSecure() }

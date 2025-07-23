@@ -247,16 +247,17 @@ private fun TabPageBanner(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         TabRow(
-            selectedTabIndex = selectedPage.ordinal,
+            selectedTabIndex = Page.pageToPosition(selectedPage),
             modifier = Modifier
                 .fillMaxWidth(MAX_WIDTH_TAB_ROW_PERCENT)
                 .fillMaxHeight(),
             contentColor = MaterialTheme.colorScheme.primary,
             divider = {},
             indicator = { tabPositions ->
+                    val selectedTabIndex = Page.pageToPosition(selectedPage)
                 TabRowDefaults.PrimaryIndicator(
                     modifier = Modifier
-                        .tabIndicatorOffset(tabPositions[selectedPage.ordinal]),
+                        .tabIndicatorOffset(tabPositions[selectedTabIndex]),
                     shape = RoundedCornerShape(
                         topStart = TAB_INDICATOR_ROUNDED_CORNER_DP.dp,
                         topEnd = TAB_INDICATOR_ROUNDED_CORNER_DP.dp,
