@@ -97,6 +97,8 @@
       this.#labelElement.container = gBrowser.tabContainer;
       this.#labelElement.group = this;
 
+      this.#labelElement.addEventListener("mouseover", this);
+      this.#labelElement.addEventListener("mouseout", this);
       this.#labelElement.addEventListener("contextmenu", e => {
         e.preventDefault();
         gBrowser.tabGroupMenu.openEditModal(this);
@@ -481,6 +483,25 @@
     /**
      * @param {CustomEvent} event
      */
+    on_mouseover(event) {
+      if (event.target === this.#labelElement) {
+        this.#labelElement.dispatchEvent(
+          new CustomEvent("TabGroupLabelHoverStart", { bubbles: true })
+        );
+      }
+    }
+
+    /**
+     * @param {CustomEvent} event
+     */
+    on_mouseout(event) {
+      if (event.target === this.#labelElement) {
+        this.#labelElement.dispatchEvent(
+          new CustomEvent("TabGroupLabelHoverEnd", { bubbles: true })
+        );
+      }
+    }
+
     on_TabSelect(event) {
       const { previousTab } = event.detail;
       this.hasActiveTab = event.target.group === this;
