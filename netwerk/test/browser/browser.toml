@@ -232,4 +232,6 @@ support-files = [
   "fetch_from_tracker.sjs",
 ]
 
+["browser_ipAddressSpace_mainpage_unaffected.js"]
+
 ["browser_test_offline_tab.js"]
