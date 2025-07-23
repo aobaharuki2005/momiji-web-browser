@@ -3628,7 +3628,6 @@ customize_home:
       - https://github.com/mozilla-mobile/fenix/pull/28709#issuecomment-1410642835
     data_sensitivity:
       - interaction
-    lifetime: application
     notification_emails:
       - android-probes@mozilla.com
     expires: never
