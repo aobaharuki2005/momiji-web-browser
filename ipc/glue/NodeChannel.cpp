@@ -40,9 +40,8 @@ struct IPC::ParamTraits<mozilla::ipc::NodeChannel::Introduction> {
 
 namespace mozilla::ipc {
 
-NodeChannel::NodeChannel(const NodeName& aName,
-                         UniquePtr<IPC::Channel> aChannel, Listener* aListener,
-                         base::ProcessId aPid,
+NodeChannel::NodeChannel(const NodeName& aName, IPC::Channel* aChannel,
+                         Listener* aListener, base::ProcessId aPid,
                          GeckoChildProcessHost* aChildProcessHost)
     : mListener(aListener),
       mName(aName),

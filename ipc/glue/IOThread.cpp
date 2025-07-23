@@ -89,7 +89,7 @@ IOThreadChild::IOThreadChild(IPC::Channel::ChannelHandle aClientHandle,
 IOThreadChild::~IOThreadChild() { StopThread(); }
 
 void IOThreadChild::Init() {
-  auto channel = MakeUnique<IPC::Channel>(
+  RefPtr<IPC::Channel> channel = IPC::Channel::Create(
       std::move(mClientHandle), IPC::Channel::MODE_CLIENT, mParentPid);
 #if defined(XP_WIN)
   channel->StartAcceptingHandles(IPC::Channel::MODE_CLIENT);
@@ -97,8 +97,7 @@ void IOThreadChild::Init() {
   channel->StartAcceptingMachPorts(IPC::Channel::MODE_CLIENT);
 #endif
 
-  mInitialPort = mozilla::ipc::NodeController::InitChildProcess(
-      std::move(channel), mParentPid);
+  mInitialPort = NodeController::InitChildProcess(channel, mParentPid);
 }
 
 void IOThreadChild::CleanUp() { NodeController::CleanUp(); }

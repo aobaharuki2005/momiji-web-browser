@@ -634,11 +634,11 @@ void NodeController::OnIntroduce(const NodeName& aFromNode,
     return;
   }
 
-  auto channel =
-      MakeUnique<IPC::Channel>(std::move(aIntroduction.mHandle),
-                               aIntroduction.mMode, aIntroduction.mOtherPid);
-  auto nodeChannel = MakeRefPtr<NodeChannel>(
-      aIntroduction.mName, std::move(channel), this, aIntroduction.mOtherPid);
+  RefPtr<IPC::Channel> channel =
+      IPC::Channel::Create(std::move(aIntroduction.mHandle),
+                           aIntroduction.mMode, aIntroduction.mOtherPid);
+  auto nodeChannel = MakeRefPtr<NodeChannel>(aIntroduction.mName, channel, this,
+                                             aIntroduction.mOtherPid);
 
   {
     auto state = mState.Lock();
@@ -775,8 +775,7 @@ static mojo::core::ports::NodeName RandomNodeName() {
 }
 
 std::tuple<ScopedPort, RefPtr<NodeChannel>> NodeController::InviteChildProcess(
-    UniquePtr<IPC::Channel> aChannel,
-    GeckoChildProcessHost* aChildProcessHost) {
+    IPC::Channel* aChannel, GeckoChildProcessHost* aChildProcessHost) {
   MOZ_ASSERT(IsBroker());
   AssertIOThread();
 
@@ -785,9 +784,8 @@ std::tuple<ScopedPort, RefPtr<NodeChannel>> NodeController::InviteChildProcess(
   // sends us its' real name in an `AcceptInvite` message.
   auto ports = CreatePortPair();
   auto inviteName = RandomNodeName();
-  auto nodeChannel =
-      MakeRefPtr<NodeChannel>(inviteName, std::move(aChannel), this,
-                              base::kInvalidProcessId, aChildProcessHost);
+  auto nodeChannel = MakeRefPtr<NodeChannel>(
+      inviteName, aChannel, this, base::kInvalidProcessId, aChildProcessHost);
   {
     auto state = mState.Lock();
     MOZ_DIAGNOSTIC_ASSERT(!state->mPeers.Contains(inviteName),
@@ -808,7 +806,7 @@ void NodeController::InitBrokerProcess() {
   gNodeController = new NodeController(kBrokerNodeName);
 }
 
-ScopedPort NodeController::InitChildProcess(UniquePtr<IPC::Channel> aChannel,
+ScopedPort NodeController::InitChildProcess(IPC::Channel* aChannel,
                                             base::ProcessId aParentPid) {
   AssertIOThread();
   MOZ_ASSERT(!gNodeController);
@@ -828,8 +826,8 @@ ScopedPort NodeController::InitChildProcess(UniquePtr<IPC::Channel> aChannel,
     locker.port()->pending_merge_peer = true;
   }
 
-  auto nodeChannel = MakeRefPtr<NodeChannel>(
-      kBrokerNodeName, std::move(aChannel), gNodeController, aParentPid);
+  auto nodeChannel = MakeRefPtr<NodeChannel>(kBrokerNodeName, aChannel,
+                                             gNodeController, aParentPid);
   {
     auto state = gNodeController->mState.Lock();
     MOZ_DIAGNOSTIC_ASSERT(!state->mPeers.Contains(kBrokerNodeName));

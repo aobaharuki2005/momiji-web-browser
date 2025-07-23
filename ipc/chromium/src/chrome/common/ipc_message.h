@@ -362,6 +362,8 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   }
 
   friend class Channel;
+  friend class ChannelPosix;
+  friend class ChannelWin;
   friend class MessageReplyDeserializer;
   friend class SyncMessage;
   friend class mozilla::ipc::MiniTransceiver;
