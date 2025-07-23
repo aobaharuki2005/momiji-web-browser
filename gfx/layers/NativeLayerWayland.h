@@ -100,6 +100,10 @@ class NativeLayerRootWayland final : public NativeLayerRoot {
   explicit NativeLayerRootWayland(
       RefPtr<widget::WaylandSurface> aWaylandSurface);
 
+  void NotifyFullscreenChanged(bool aIsFullscreen) {
+    mIsFullscreen = aIsFullscreen;
+  }
+
  private:
   ~NativeLayerRootWayland();
 
@@ -153,6 +157,7 @@ class NativeLayerRootWayland final : public NativeLayerRoot {
   // Layers have been added/removed
   bool mRootMutatedStackingOrder = false;
   bool mMainThreadUpdateQueued = false;
+  bool mIsFullscreen = false;
 };
 
 class NativeLayerWayland : public NativeLayer {

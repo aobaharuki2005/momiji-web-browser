@@ -417,9 +417,9 @@ void NativeLayerRootWayland::LogStatsLocked(
   }
   LOGVERBOSE(
       "Rendering stats: layers [%d] mapped [%d] attached [%d] visible [%d] "
-      "rendered [%d] opaque [%d] opaque set [%d]",
+      "rendered [%d] opaque [%d] opaque set [%d] fullscreen [%d]",
       layersNum, layersMapped, layersBufferAttached, layersVisible,
-      layersRendered, layersMappedOpaque, layersMappedOpaqueSet);
+      layersRendered, layersMappedOpaque, layersMappedOpaqueSet, mIsFullscreen);
 }
 #endif
 
