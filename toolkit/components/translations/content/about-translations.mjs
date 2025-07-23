@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // The following globals are injected via the AboutTranslationsChild actor.
-// translations.mjs is running in an unprivileged context, and these injected functions
+// about-translations.mjs is running in an unprivileged context, and these injected functions
 // allow for the page to get access to additional privileged features.
 
 /* global AT_getSupportedLanguages, AT_log, AT_getScriptDirection,
