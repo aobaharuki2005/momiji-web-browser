@@ -7677,6 +7677,7 @@ mozilla::ipc::IPCResult ContentParent::RecvGetContiguousSessionHistoryInfos(
     const MaybeDiscarded<BrowsingContext>& aContext,
     GetContiguousSessionHistoryInfosResolver&& aResolver) {
   if (aContext.IsNullOrDiscarded()) {
+    aResolver({});
     return IPC_OK();
   }
 
