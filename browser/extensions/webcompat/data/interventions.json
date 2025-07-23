@@ -2974,6 +2974,21 @@
       }
     ]
   },
+  "1902400": {
+    "label": "sales-crowd.jp",
+    "bugs": {
+      "1902400": {
+        "issue": "unsupported-warning",
+        "matches": ["*://sales-crowd.jp/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
+  },
   "1902403": {
     "label": "musicstore.auone.jp",
     "bugs": {
