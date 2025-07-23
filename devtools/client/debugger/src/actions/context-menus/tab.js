@@ -18,7 +18,7 @@ import { prettyPrintAndSelectSource } from "../sources/prettyPrint";
 import { copyToClipboard, showSource } from "../ui";
 import { closeTab, closeTabs } from "../tabs";
 
-import { getRawSourceURL, shouldBlackbox } from "../../utils/source";
+import { getRawSourceURL, isPretty, shouldBlackbox } from "../../utils/source";
 import { copyToTheClipboard } from "../../utils/clipboard";
 
 /**
@@ -117,7 +117,7 @@ export function showTabContextMenu(event, source) {
       {
         item: {
           ...tabMenuItems.prettyPrint,
-          disabled: source.isPrettyPrinted,
+          disabled: isPretty(source),
           click: () => dispatch(prettyPrintAndSelectSource(source)),
         },
       },

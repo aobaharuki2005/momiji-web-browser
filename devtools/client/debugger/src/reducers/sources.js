@@ -7,6 +7,7 @@
  * @module reducers/sources
  */
 
+import { originalToGeneratedId } from "devtools/client/shared/source-map-loader/index";
 import { prefs } from "../utils/prefs";
 import { createPendingSelectedLocation } from "../utils/location";
 
@@ -240,7 +241,7 @@ function update(state = initialSourcesState(), action) {
       };
     }
 
-    case "REMOVE_SOURCES": {
+    case "REMOVE_THREAD": {
       return removeSourcesAndActors(state, action);
     }
   }
@@ -270,7 +271,7 @@ function addSources(state, sources) {
 
     // In case of original source, maintain the mapping of generated source to original sources map.
     if (source.isOriginal) {
-      const generatedSourceId = source.generatedSource.id;
+      const generatedSourceId = originalToGeneratedId(source.id);
       let originalSourceIds =
         state.mutableOriginalSources.get(generatedSourceId);
       if (!originalSourceIds) {
@@ -329,42 +330,11 @@ function removeSourcesAndActors(state, action) {
 
     if (removedSource.isOriginal) {
       mutableOriginalBreakableLines.delete(sourceId);
-      // Also ensure removing this original source id in the array specific to its
-      // generated source
-      const generatedSourceId = removedSource.generatedSource.id;
-      let originalSourceIds = mutableOriginalSources.get(generatedSourceId);
-      if (originalSourceIds) {
-        originalSourceIds = originalSourceIds.filter(id => id != sourceId);
-        mutableOriginalSources.set(generatedSourceId, originalSourceIds);
-      }
-
-      // We should also remove the mapped location from the breakpoint positions
-      //
-      // `mutableBreakpointPositions` is a Map keyed per generated source id
-      //   `generatedBreakpointPositions` is a Array
-      //     `position` is an object with `location` and `generatedLocation` attributes
-      const generatedBreakpointPositions =
-        mutableBreakpointPositions.get(generatedSourceId);
-      if (generatedBreakpointPositions) {
-        for (const line in generatedBreakpointPositions) {
-          for (const position of generatedBreakpointPositions[line]) {
-            // Only clear the original mapped location if that's a breakpoint
-            // for the currently removed original source. This generated/bundle source
-            // may have breakpoints for many original sources.
-            if (position.location.source == removedSource) {
-              position.location = position.generatedLocation;
-            }
-          }
-        }
-      }
     }
 
     mutableBreakpointPositions.delete(sourceId);
 
-    if (
-      action.resetSelectedLocation &&
-      newState.selectedLocation?.source == removedSource
-    ) {
+    if (newState.selectedLocation?.source == removedSource) {
       newState.selectedLocation = null;
       newState.selectedOriginalLocation = UNDEFINED_LOCATION;
     }
@@ -389,10 +359,7 @@ function removeSourcesAndActors(state, action) {
       mutableSourceActors.delete(sourceId);
     }
 
-    if (
-      action.resetSelectedLocation &&
-      newState.selectedLocation?.sourceActor == removedActor
-    ) {
+    if (newState.selectedLocation?.sourceActor == removedActor) {
       newState.selectedLocation = null;
       newState.selectedOriginalLocation = UNDEFINED_LOCATION;
     }

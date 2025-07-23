@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+import { originalToGeneratedId } from "devtools/client/shared/source-map-loader/index";
+
 import {
+  getSource,
+  getSourceFromId,
   getBreakpointPositionsForSource,
   getSourceActorsForSource,
 } from "../../selectors/index";
@@ -146,7 +150,8 @@ async function _setBreakpointPositions(location, thunkArgs) {
       location.source.id,
       true
     );
-    generatedSource = location.source.generatedSource;
+    const generatedSourceId = originalToGeneratedId(location.source.id);
+    generatedSource = getSourceFromId(getState(), generatedSourceId);
 
     // Note: While looping here may not look ideal, in the vast majority of
     // cases, the number of ranges here should be very small, and is quite
@@ -167,7 +172,7 @@ async function _setBreakpointPositions(location, thunkArgs) {
       // We limit the retrieval of positions within the given range, so that we don't
       // retrieve the whole bundle positions.
       const allActorsPositions = await Promise.all(
-        getSourceActorsForSource(getState(), generatedSource.id).map(actor =>
+        getSourceActorsForSource(getState(), generatedSourceId).map(actor =>
           client.getSourceActorBreakpointPositions(actor, range)
         )
       );
@@ -256,7 +261,10 @@ async function _setBreakpointPositions(location, thunkArgs) {
 }
 
 function generatedSourceActorKey(state, source) {
-  const generatedSource = source.isOriginal ? source.generatedSource : source;
+  const generatedSource = getSource(
+    state,
+    source.isOriginal ? originalToGeneratedId(source.id) : source.id
+  );
   const actors = generatedSource
     ? getSourceActorsForSource(state, generatedSource.id).map(
         ({ actor }) => actor

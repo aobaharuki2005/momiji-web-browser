@@ -13,7 +13,8 @@ add_task(async function () {
   await openOutlinePanel(dbg);
   const originalSourceOutlineItems = getItems(dbg);
 
-  await togglePrettyPrint(dbg);
+  clickElement(dbg, "prettyPrintButton");
+  await waitForLoadedSource(dbg, "simple1.js:formatted");
   await waitForElementWithSelector(dbg, ".outline-list");
   const prettySourceOutlineItems = getItems(dbg);
 

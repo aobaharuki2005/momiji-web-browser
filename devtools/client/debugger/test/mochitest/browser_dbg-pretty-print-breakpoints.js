@@ -11,7 +11,7 @@ add_task(async function () {
   const dbg = await initDebugger("doc-pretty.html", "pretty.js");
 
   await selectSource(dbg, "pretty.js");
-  await togglePrettyPrint(dbg);
+  await prettyPrint(dbg);
 
   await addBreakpoint(dbg, "pretty.js:formatted", 5);
 
@@ -37,6 +37,7 @@ add_task(async function () {
   assertNotPaused(dbg);
 
   await closeTab(dbg, "pretty.js");
+  await closeTab(dbg, "pretty.js:formatted");
 });
 
 // Tests that breakpoints appear and work when you reload a page
@@ -45,15 +46,15 @@ add_task(async function () {
   const dbg = await initDebugger("doc-pretty.html", "pretty.js");
 
   await selectSource(dbg, "pretty.js");
-  await togglePrettyPrint(dbg);
+  await prettyPrint(dbg);
 
   await addBreakpoint(dbg, "pretty.js:formatted", 5);
 
   info("Check that equivalent breakpoint to pretty.js (generated source)");
-  await togglePrettyPrint(dbg);
+  await selectSource(dbg, "pretty.js");
   await assertBreakpoint(dbg, 4);
 
-  await togglePrettyPrint(dbg);
+  await selectSource(dbg, "pretty.js:formatted");
 
   is(dbg.selectors.getBreakpointCount(), 1, "Only one breakpoint exists");
 
@@ -82,11 +83,12 @@ add_task(async function () {
   info("Add breakpoint to pretty.js (generated source)");
   await addBreakpoint(dbg, "pretty.js", 4, 8);
 
-  await togglePrettyPrint(dbg);
+  await prettyPrint(dbg);
 
   info(
     "Check that equivalent breakpoint is added to pretty.js:formatted (original source)"
   );
+  await selectSource(dbg, "pretty.js:formatted");
   await assertBreakpoint(dbg, 5);
 
   is(dbg.selectors.getBreakpointCount(), 1, "Only one breakpoint created");
@@ -114,20 +116,17 @@ add_task(async function () {
   await selectSource(dbg, "pretty.js");
   await addBreakpoint(dbg, "pretty.js", 9);
 
-  await togglePrettyPrint(dbg);
+  await prettyPrint(dbg);
   await assertBreakpoint(dbg, 11);
 
-  await togglePrettyPrint(dbg);
-
-  // Column breakpoints updates are awaited by togglePrettyPrint and are done asynchronously
-  await waitFor(() => !!findAllElements(dbg, "columnBreakpoints").length);
+  await selectSource(dbg, "pretty.js");
   ok(
     findAllElements(dbg, "columnBreakpoints").length,
     "Column breakpoints are still shown in the minified file after pretty-printing"
   );
   await addBreakpoint(dbg, "pretty.js", 9, 55);
 
-  await togglePrettyPrint(dbg);
+  await selectSource(dbg, "pretty.js:formatted");
   await assertBreakpoint(dbg, 16);
 });
 
@@ -139,7 +138,7 @@ async function assertBreakpointsInNonPrettyAndPrettySources(dbg) {
   await assertPausedAtSourceAndLine(dbg, prettyPrintedSource.id, 5);
   await assertBreakpoint(dbg, 5);
 
-  await togglePrettyPrint(dbg);
+  await selectSource(dbg, "pretty.js");
 
   info("Assert pause and display on the correct line in the minified source");
   const minifiedSource = findSource(dbg, "pretty.js");

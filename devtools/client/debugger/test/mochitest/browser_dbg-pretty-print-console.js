@@ -27,7 +27,8 @@ add_task(async function () {
   await waitForSelectedLocation(dbg, 4, 73);
 
   info("Click on pretty print button and wait for the file to be formatted");
-  await togglePrettyPrint(dbg);
+  clickElement(dbg, "prettyPrintButton");
+  await waitForSelectedSource(dbg, "math.min.js:formatted");
 
   info("Switch back to console and check message");
   const formattedLink = await waitForConsoleMessageLink(

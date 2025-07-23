@@ -6,6 +6,7 @@ import { showMenu } from "../../context-menu/menu";
 
 import { copyToTheClipboard } from "../../utils/clipboard";
 import {
+  isPretty,
   getRawSourceURL,
   shouldBlackbox,
   findBlackBoxRange,
@@ -47,7 +48,7 @@ export function showEditorContextMenu(event, editor, lineObject, location) {
     const hasMappedLocation =
       (source.isOriginal ||
         isSourceWithMap(state, source.id) ||
-        source.isPrettyPrinted) &&
+        isPretty(source)) &&
       !getPrettySource(state, source.id);
     const isSourceOnIgnoreList =
       isSourceMapIgnoreListEnabled(state) &&

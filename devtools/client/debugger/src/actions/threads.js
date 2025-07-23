@@ -4,14 +4,14 @@
 
 import { createThread } from "../client/firefox/create";
 import { getSourcesToRemoveForThread } from "../selectors/index";
-import { removeSources } from "./sources/removeSources";
+import { getEditor } from "../utils/editor/index";
 
 export function addTarget(targetFront) {
   return { type: "INSERT_THREAD", newThread: createThread(targetFront) };
 }
 
 export function removeTarget(targetFront) {
-  return async ({ getState, dispatch }) => {
+  return ({ getState, dispatch, parserWorker }) => {
     const threadActorID = targetFront.targetForm.threadActor;
 
     // Just before emitting the REMOVE_THREAD action,
@@ -25,17 +25,23 @@ export function removeTarget(targetFront) {
       threadActorID
     );
 
-    // Notify the reducers that a target/thread is being removed.
+    // Notify the reducers that a target/thread is being removed
+    // and that all related resources should be cleared.
+    // This action receives the list of related source actors and source objects
+    // related to that to-be-removed target.
     // This will be fired on navigation for all existing targets.
     // That except the top target, when pausing on unload, where the top target may still hold longer.
     // Also except for service worker targets, which may be kept alive.
     dispatch({
       type: "REMOVE_THREAD",
       threadActorID,
+      actors,
+      sources,
     });
-    // A distinct action is used to notify about all the sources and source actors objects
-    // to be removed. This action is shared by some other codepath. Like removing the pretty printed source.
-    await dispatch(removeSources(sources, actors));
+    const sourceIds = sources.map(source => source.id);
+    parserWorker.clearSources(sourceIds);
+    const editor = getEditor();
+    editor.clearSources(sourceIds);
   };
 }
 

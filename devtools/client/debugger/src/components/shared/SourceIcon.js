@@ -10,7 +10,7 @@ import { connect } from "devtools/client/shared/vendor/react-redux";
 import AccessibleImage from "./AccessibleImage";
 
 import { getSourceClassnames } from "../../utils/source";
-import { isSourceBlackBoxed } from "../../selectors/index";
+import { isSourceBlackBoxed, hasPrettyTab } from "../../selectors/index";
 
 class SourceIcon extends PureComponent {
   static get propTypes() {
@@ -18,6 +18,7 @@ class SourceIcon extends PureComponent {
       modifier: PropTypes.func,
       location: PropTypes.object.isRequired,
       iconClass: PropTypes.string,
+      forTab: PropTypes.bool,
     };
   }
 
@@ -39,12 +40,18 @@ class SourceIcon extends PureComponent {
 }
 
 export default connect((state, props) => {
-  const { location } = props;
+  const { forTab, location } = props;
   const isBlackBoxed = isSourceBlackBoxed(state, location.source);
+  // For the tab icon, we don't want to show the pretty icon for the non-pretty tab
+  const hasMatchingPrettyTab = !forTab && hasPrettyTab(state, location.source);
 
   // This is the key function that will compute the icon type,
   // In addition to the "modifier" implemented by each callsite.
-  const iconClass = getSourceClassnames(location.source, isBlackBoxed);
+  const iconClass = getSourceClassnames(
+    location.source,
+    isBlackBoxed,
+    hasMatchingPrettyTab
+  );
 
   return {
     iconClass,

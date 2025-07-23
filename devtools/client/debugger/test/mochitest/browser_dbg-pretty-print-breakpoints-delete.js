@@ -16,14 +16,16 @@ add_task(async function () {
 
   await selectSource(dbg, "pretty.js");
 
-  await togglePrettyPrint(dbg);
+  await prettyPrint(dbg);
 
   await addBreakpointToPrettyPrintedFile(dbg);
 
   info(
-    `Go back to the minimized source, so it is not automatically reopened on reload`
+    `Close the pretty-printed source, so it is not automatically reopened on reload`
   );
-  await togglePrettyPrint(dbg);
+  await closeTab(dbg, "pretty.js:formatted");
+
+  await waitForSelectedSource(dbg, "pretty.js");
 
   info(
     "Assert that a equivalent breakpoint was set in pretty.js (generated source)"
@@ -47,16 +49,18 @@ add_task(async function () {
 
   await selectSource(dbg, "pretty.js");
 
-  await togglePrettyPrint(dbg);
+  await prettyPrint(dbg);
 
   await addBreakpointToPrettyPrintedFile(dbg);
 
   info("Check that breakpoint gets added to pretty.js (generated source)");
-  await togglePrettyPrint(dbg);
+  await selectSource(dbg, "pretty.js");
   await assertBreakpoint(dbg, 4);
 
-  info("Switch back to the pretty printed version");
-  await togglePrettyPrint(dbg);
+  info("Close the  pretty.js (generated source)");
+  await closeTab(dbg, "pretty.js");
+
+  await waitForSelectedSource(dbg, "pretty.js:formatted");
 
   info(`Remove the breakpoint from pretty.js:formatted (original source)`);
   await clickGutter(dbg, 5);
@@ -83,7 +87,7 @@ async function reloadAndCheckNoBreakpointExists(dbg) {
   info("Reload and pretty print pretty.js");
   await reload(dbg, "pretty.js");
   await selectSource(dbg, "pretty.js");
-  await togglePrettyPrint(dbg);
+  await prettyPrint(dbg);
   info("Check that we do not pause on the removed breakpoint");
   invokeInTab("stuff");
   await waitForPaused(dbg);
@@ -94,7 +98,7 @@ async function reloadAndCheckNoBreakpointExists(dbg) {
   );
   await assertPausedAtSourceAndLine(dbg, sourcePretty.id, 8);
 
-  await togglePrettyPrint(dbg);
+  await selectSource(dbg, "pretty.js");
   const source = findSource(dbg, "pretty.js");
 
   info(

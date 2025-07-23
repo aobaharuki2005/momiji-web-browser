@@ -16,7 +16,8 @@ add_task(async function () {
   await waitForPaused(dbg, "math.min.js");
   await assertPausedAtSourceAndLine(dbg, findSource(dbg, "math.min.js").id, 3);
 
-  await togglePrettyPrint(dbg);
+  clickElement(dbg, "prettyPrintButton");
+  await waitForSelectedSource(dbg, "math.min.js:formatted");
   await waitForState(
     dbg,
     () => dbg.selectors.getSelectedFrame().location.line == 18

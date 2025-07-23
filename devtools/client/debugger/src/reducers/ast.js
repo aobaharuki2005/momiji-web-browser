@@ -14,44 +14,38 @@ export function initialASTState() {
     // We are using mutable objects as we never return the dictionary as-is from the selectors
     // but only their values.
     // Note that all these dictionaries are storing objects as values
-    // which all will have:
-    // * a "source" attribute,
-    // * a "lines" array.
-    mutableInScopeLines: new Map(),
+    // which all will have a threadActorId attribute.
+    mutableInScopeLines: {},
   };
 }
 
 function update(state = initialASTState(), action) {
   switch (action.type) {
     case "IN_SCOPE_LINES": {
-      state.mutableInScopeLines.set(makeBreakpointId(action.location), {
+      state.mutableInScopeLines[makeBreakpointId(action.location)] = {
         lines: action.lines,
-        source: action.location.source,
-      });
+        threadActorId: action.location.sourceActor?.thread,
+      };
       return {
         ...state,
       };
     }
 
     case "RESUME": {
-      return initialASTState();
+      return { ...state, mutableInScopeLines: {} };
     }
 
-    case "REMOVE_SOURCES": {
-      const { sources } = action;
-      if (!sources.length) {
-        return state;
-      }
-      const { mutableInScopeLines } = state;
-      let changed = false;
-      for (const [breakpointId, { source }] in mutableInScopeLines.entries()) {
-        if (sources.includes(source)) {
-          mutableInScopeLines.delete(breakpointId);
-          changed = true;
+    case "REMOVE_THREAD": {
+      function clearDict(dict, threadId) {
+        for (const key in dict) {
+          if (dict[key].threadActorId == threadId) {
+            delete dict[key];
+          }
         }
       }
 
-      return changed ? { ...state } : state;
+      clearDict(state.mutableInScopeLines, action.threadActorID);
+      return { ...state };
     }
 
     default: {

@@ -262,11 +262,7 @@ function waitForSelectedSource(dbg, sourceOrUrl) {
         // or a Source object.
         if (typeof sourceOrUrl == "string") {
           const url = location.source.url;
-          if (
-            typeof url != "string" ||
-            (!url.includes(encodeURI(sourceOrUrl)) &&
-              !url.includes(sourceOrUrl))
-          ) {
+          if (typeof url != "string" || !url.includes(encodeURI(sourceOrUrl))) {
             return false;
           }
         } else if (location.source.id != sourceOrUrl.id) {
@@ -1277,15 +1273,9 @@ async function invokeWithBreakpoint(
   await invokeResult;
 }
 
-async function togglePrettyPrint(dbg) {
+function prettyPrint(dbg) {
   const source = dbg.selectors.getSelectedSource();
-  clickElement(dbg, "prettyPrintButton");
-  if (source.isPrettyPrinted) {
-    await waitForSelectedSource(dbg, source.generatedSource);
-  } else {
-    const prettyURL = source.url ? source.url : source.id.split("/").at(-1);
-    await waitForSelectedSource(dbg, prettyURL + ":formatted");
-  }
+  return dbg.actions.prettyPrintAndSelectSource(source);
 }
 
 async function expandAllScopes(dbg) {

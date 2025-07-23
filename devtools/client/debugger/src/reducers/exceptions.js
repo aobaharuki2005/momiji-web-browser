@@ -19,8 +19,8 @@ function update(state = initialExceptionsState(), action) {
   switch (action.type) {
     case "ADD_EXCEPTION":
       return updateExceptions(state, action);
-    case "REMOVE_SOURCES": {
-      return removeExceptionsForSourceActors(state, action.actors);
+    case "REMOVE_THREAD": {
+      return removeExceptionsFromThread(state, action);
     }
   }
   return state;
@@ -57,13 +57,22 @@ function updateExceptions(state, action) {
   };
 }
 
-function removeExceptionsForSourceActors(state, sourceActors) {
+function removeExceptionsFromThread(state, action) {
   const { mutableExceptionsMap } = state;
+  const { threadActorID } = action;
   const sizeBefore = mutableExceptionsMap.size;
-  for (const sourceActor of sourceActors) {
-    mutableExceptionsMap.delete(sourceActor.id);
+  for (const [sourceActorId, exceptions] of mutableExceptionsMap) {
+    // All exceptions relates to the same source actor, and so, the same thread actor.
+    if (exceptions[0].threadActorId == threadActorID) {
+      mutableExceptionsMap.delete(sourceActorId);
+    }
   }
-  return mutableExceptionsMap.size != sizeBefore ? { ...state } : state;
+  if (sizeBefore != mutableExceptionsMap.size) {
+    return {
+      ...state,
+    };
+  }
+  return state;
 }
 
 export default update;

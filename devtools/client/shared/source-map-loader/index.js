@@ -118,9 +118,6 @@ class SourceMapLoader extends WorkerDispatcher {
 
     return rv;
   }
-  clearSourceMapForGeneratedSources = this.task(
-    "clearSourceMapForGeneratedSources"
-  );
 
   destroy() {
     // Request to stop the underlying DOM Worker

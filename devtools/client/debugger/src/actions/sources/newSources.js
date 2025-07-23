@@ -253,7 +253,7 @@ export function newOriginalSources(originalSourcesInfo) {
       }
 
       actorsSources[sourceActor.actor].push(
-        createSourceMapOriginalSource(id, url, sourceActor.sourceObject)
+        createSourceMapOriginalSource(id, url)
       );
     }
 

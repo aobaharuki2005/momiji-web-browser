@@ -2,12 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+import { originalToGeneratedId } from "devtools/client/shared/source-map-loader/index";
 import { getSelectedLocation } from "./sources";
 import { getSelectedFrame } from "./pause";
 
 function getGeneratedId(source) {
   if (source.isOriginal) {
-    return source.generatedSource.id;
+    return originalToGeneratedId(source.id);
   }
 
   return source.id;

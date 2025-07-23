@@ -29,7 +29,8 @@ add_task(async function () {
     "The source map button is disabled"
   );
 
-  await togglePrettyPrint(dbg);
+  clickElement(dbg, "prettyPrintButton");
+  await waitForSelectedSource(dbg, "bundle.js:formatted");
   ok(true, "Pretty printed source shown");
 
   const toggled = waitForDispatch(dbg.store, "TOGGLE_SOURCE_MAPS_ENABLED");

@@ -144,10 +144,10 @@ function update(state = initialUIState(), action) {
       return { ...state, highlightedLineRange: null };
     }
 
-    case "REMOVE_SOURCES": {
+    case "REMOVE_THREAD": {
       // Reset the highlighted range if the related source has been removed
-      const source = state.highlightedLineRange?.source;
-      if (source && action.sources.includes(source)) {
+      const sourceId = state.highlightedLineRange?.sourceId;
+      if (sourceId && action.sources.some(s => s.id == sourceId)) {
         return { ...state, highlightedLineRange: null };
       }
       return state;

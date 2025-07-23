@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { createSelector } from "devtools/client/shared/vendor/reselect";
+import { getPrettySourceURL } from "../utils/source";
 
 import { getSpecificSourceByURL } from "./sources";
 import { isSimilarTab } from "../utils/tabs";
@@ -18,32 +19,13 @@ export const getSourcesForTabs = createSelector(getSourceTabs, sourceTabs => {
   return sourceTabs.map(tab => tab.source);
 });
 
-export function tabExists(state, source) {
-  // Minimized(=generatedSource) and its related pretty printed source will both share the same tab,
-  // so we should consider that the tab is already opened if the tab relates to the passed minimized source.
-  return getSourceTabs(state).some(
-    tab =>
-      tab.source.id == source.id ||
-      (tab.source.generatedSource?.id == source.id &&
-        tab.source.isPrettyPrinted)
-  );
+export function tabExists(state, sourceId) {
+  return !!getSourceTabs(state).find(tab => tab.source.id == sourceId);
 }
 
-/**
- * For a given non-original source, returns true only if this source has been pretty printed
- * and has a tab currently opened with pretty printing enabled.
- *
- * @return {Boolean}
- */
 export function hasPrettyTab(state, source) {
-  return getTabs(state).some(tab => {
-    // We either match a tab with the pretty printed source (when the source is actually already pretty printed),
-    // or when the tab is a background tab, registered against the generated source (the source hasn't been pretty printed yet).
-    return (
-      (tab.source?.generatedSource == source && tab.source.isPrettyPrinted) ||
-      (tab.isPrettyPrinted && tab.source == source)
-    );
-  });
+  const prettyUrl = getPrettySourceURL(source.url);
+  return getTabs(state).some(tab => tab.url === prettyUrl);
 }
 
 /**

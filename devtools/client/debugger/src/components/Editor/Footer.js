@@ -32,7 +32,7 @@ import {
   isSelectedMappedSourceLoading,
 } from "../../selectors/index";
 
-import { shouldBlackbox } from "../../utils/source";
+import { isPretty, shouldBlackbox } from "../../utils/source";
 
 import { PaneToggleButton } from "../shared/Button/index";
 import AccessibleImage from "../shared/AccessibleImage";
@@ -68,7 +68,6 @@ class SourceFooter extends PureComponent {
       canPrettyPrint,
       prettyPrintMessage,
       prettyPrintAndSelectSource,
-      removePrettyPrintedSource,
       sourceLoaded,
     } = this.props;
 
@@ -92,22 +91,19 @@ class SourceFooter extends PureComponent {
     return button(
       {
         onClick: () => {
-          if (selectedSource.isPrettyPrinted) {
-            removePrettyPrintedSource(selectedSource);
-            return;
-          }
           if (!canPrettyPrint) {
             return;
           }
           prettyPrintAndSelectSource(selectedSource);
         },
         className: classnames("action", type, {
-          pretty: selectedSource.isPrettyPrinted,
+          active: sourceLoaded && canPrettyPrint,
+          pretty: isPretty(selectedSource),
         }),
         key: type,
         title: prettyPrintMessage,
         "aria-label": prettyPrintMessage,
-        disabled: !canPrettyPrint && !selectedSource.isPrettyPrinted,
+        disabled: !canPrettyPrint,
       },
       React.createElement(AccessibleImage, {
         className: type,
@@ -471,7 +467,6 @@ const mapStateToProps = state => {
 };
 
 export default connect(mapStateToProps, {
-  removePrettyPrintedSource: actions.removePrettyPrintedSource,
   prettyPrintAndSelectSource: actions.prettyPrintAndSelectSource,
   toggleBlackBox: actions.toggleBlackBox,
   jumpToMappedLocation: actions.jumpToMappedLocation,

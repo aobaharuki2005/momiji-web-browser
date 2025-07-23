@@ -10,6 +10,8 @@ import {
 
 import { comparePosition, createLocation } from "../../utils/location";
 
+import { originalToGeneratedId } from "devtools/client/shared/source-map-loader/index";
+import { getSource } from "../../selectors/index";
 import { addBreakpoint, removeBreakpointAtGeneratedLocation } from "./modify";
 
 async function findBreakpointPosition({ dispatch }, location) {
@@ -40,7 +42,11 @@ export function syncPendingBreakpoint(source, pendingBreakpoint) {
   return async thunkArgs => {
     const { getState, client, dispatch } = thunkArgs;
 
-    const generatedSource = source.isOriginal ? source.generatedSource : source;
+    const generatedSourceId = source.isOriginal
+      ? originalToGeneratedId(source.id)
+      : source.id;
+
+    const generatedSource = getSource(getState(), generatedSourceId);
 
     if (!source || !generatedSource) {
       return null;
