@@ -11518,10 +11518,10 @@ static bool InstanceClassHasProtoAtDepth(const JSClass* clasp, uint32_t protoID,
 static bool InstanceClassIsError(const JSClass* clasp) { return false; }
 
 static bool ExtractExceptionInfo(JSContext* cx, JS::HandleObject obj,
-                                              bool* isException,
-                                              JS::MutableHandle<JSString*> fileName,
-                                              uint32_t* line, uint32_t* column,
-                                              JS::MutableHandle<JSString*> message) {
+                                 bool* isException,
+                                 JS::MutableHandle<JSString*> fileName,
+                                 uint32_t* line, uint32_t* column,
+                                 JS::MutableHandle<JSString*> message) {
   *isException = false;
   return true;
 }

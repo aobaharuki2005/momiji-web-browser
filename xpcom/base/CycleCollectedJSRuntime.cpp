@@ -810,8 +810,8 @@ static bool ExtractExceptionInfo(JSContext* aCx, JS::Handle<JSObject*> aObj,
 
   nsAutoCString fileName;
   nsAutoString message;
-  if (!nsContentUtils::ExtractExceptionValues(aCx, aObj, fileName, aLine, aColumn,
-                                              message)) {
+  if (!nsContentUtils::ExtractExceptionValues(aCx, aObj, fileName, aLine,
+                                              aColumn, message)) {
     return true;
   }
 
@@ -877,9 +877,8 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSContext* aCx)
   js::AutoEnterOOMUnsafeRegion::setAnnotateOOMAllocationSizeCallback(
       CrashReporter::AnnotateOOMAllocationSize);
 
-  static js::DOMCallbacks DOMcallbacks = {InstanceClassHasProtoAtDepth,
-                                          InstanceClassIsError,
-                                          ExtractExceptionInfo};
+  static js::DOMCallbacks DOMcallbacks = {
+      InstanceClassHasProtoAtDepth, InstanceClassIsError, ExtractExceptionInfo};
   SetDOMCallbacks(aCx, &DOMcallbacks);
   js::SetScriptEnvironmentPreparer(aCx, &mEnvironmentPreparer);
 
