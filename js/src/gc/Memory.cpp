@@ -608,7 +608,16 @@ static void* MapAlignedPagesRandom(size_t length, size_t alignment) {
   for (size_t i = 1; i <= 1024; ++i) {
     if (i & 0xf) {
       uint64_t desired = alignment * GetNumberInRange(minNum, maxNum);
+#  if defined(__FreeBSD__)
+      int flags = MAP_PRIVATE | MAP_ANON |
+                  MAP_ALIGNED(mozilla::CeilingLog2Size(alignment));
+      region = MozTaggedAnonymousMmap((void*)(uintptr_t)desired, length,
+                                      int(PageAccess::ReadWrite), flags, -1, 0,
+                                      "js-gc-heap");
+#  else
       region = MapMemoryAtFuzzy(reinterpret_cast<void*>(desired), length);
+
+#  endif
       if (!region) {
         continue;
       }
