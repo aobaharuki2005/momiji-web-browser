@@ -2494,6 +2494,12 @@ toolbar#nav-bar {
         elif options.flavor in ("a11y", "chrome"):
             test_timeout = 45
 
+        if mozinfo.info["os"] == "win" and mozinfo.info["processor"] == "aarch64":
+            test_timeout = self.DEFAULT_TIMEOUT * 4
+            self.log.info(
+                f"Increasing default timeout to {test_timeout} seconds (win aarch64)"
+            )
+
         if "MOZ_CHAOSMODE=0xfb" in options.environment and test_timeout:
             test_timeout *= 2
             self.log.info(
