@@ -160,6 +160,7 @@ export class SettingControl extends MozLitElement {
       ".control": this,
       "data-subcategory": config.subcategory,
       "?disabled": this.setting.locked,
+      ...config.controlAttrs,
     };
 
     if (config.l10nArgs) {
