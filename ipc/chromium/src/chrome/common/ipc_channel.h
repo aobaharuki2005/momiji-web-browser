@@ -65,7 +65,7 @@ class Channel {
     virtual void OnChannelError() {}
   };
 
-  enum Mode { MODE_SERVER, MODE_CLIENT };
+  enum Mode { MODE_BROKER_SERVER, MODE_BROKER_CLIENT, MODE_PEER };
 
   enum {
 
@@ -138,16 +138,6 @@ class Channel {
 #if defined(XP_DARWIN)
   // Configure the mach task_t for the peer task.
   virtual void SetOtherMachTask(task_t task) MOZ_EXCLUDES(SendMutex()) = 0;
-
-  // Tell this pipe to accept mach ports. Exactly one side of the IPC connection
-  // must be set as `MODE_SERVER` and that side will be responsible for
-  // transferring the rights between processes.
-  virtual void StartAcceptingMachPorts(Mode mode) MOZ_EXCLUDES(SendMutex()) = 0;
-#elif defined(XP_WIN)
-  // Tell this pipe to accept handles. Exactly one side of the IPC connection
-  // must be set as `MODE_SERVER`, and that side will be responsible for calling
-  // `DuplicateHandle` to transfer the handle between processes.
-  virtual void StartAcceptingHandles(Mode mode) MOZ_EXCLUDES(SendMutex()) = 0;
 #endif
 
   // Create a new pair of pipe endpoints which can be used to establish a

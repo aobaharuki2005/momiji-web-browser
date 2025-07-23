@@ -34,7 +34,6 @@ class ChannelWin : public Channel, public MessageLoopForIO::IOHandler {
 
   bool Connect(Listener* listener) MOZ_EXCLUDES(SendMutex()) override;
   void Close() MOZ_EXCLUDES(SendMutex()) override;
-  void StartAcceptingHandles(Mode mode) MOZ_EXCLUDES(SendMutex()) override;
   // NOTE: `Send` may be called on threads other than the I/O thread.
   bool Send(mozilla::UniquePtr<Message> message)
       MOZ_EXCLUDES(SendMutex()) override;
@@ -59,6 +58,7 @@ class ChannelWin : public Channel, public MessageLoopForIO::IOHandler {
   void OutputQueuePop() MOZ_REQUIRES(SendMutex());
 
   bool EnqueueHelloMessage() MOZ_REQUIRES(SendMutex(), IOThread());
+  void MaybeOpenProcessHandle() MOZ_REQUIRES(SendMutex(), IOThread());
   void CloseLocked() MOZ_REQUIRES(SendMutex(), IOThread());
 
   bool ProcessIncomingMessages(MessageLoopForIO::IOContext* context,
@@ -78,7 +78,7 @@ class ChannelWin : public Channel, public MessageLoopForIO::IOHandler {
                              DWORD bytes_transfered, DWORD error);
 
  private:
-  Mode mode_ MOZ_GUARDED_BY(IOThread());
+  Mode mode_ MOZ_GUARDED_BY(chan_cap_);
 
   struct State {
     explicit State(ChannelWin* channel);
@@ -127,14 +127,8 @@ class ChannelWin : public Channel, public MessageLoopForIO::IOHandler {
   base::ProcessId other_pid_ MOZ_GUARDED_BY(chan_cap_) =
       base::kInvalidProcessId;
 
-  // Whether or not to accept handles from a remote process, and whether this
-  // process is the privileged side of a IPC::Channel which can transfer
-  // handles.
-  bool accept_handles_ MOZ_GUARDED_BY(chan_cap_) = false;
-  bool privileged_ MOZ_GUARDED_BY(chan_cap_) = false;
-
   // A privileged process handle used to transfer HANDLEs to and from the remote
-  // process. This will only be used if `privileged_` is set.
+  // process. This will only be used if `mode_ == MODE_BROKER_SERVER`.
   HANDLE other_process_ MOZ_GUARDED_BY(chan_cap_) = INVALID_HANDLE_VALUE;
 };
 

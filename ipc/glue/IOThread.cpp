@@ -90,12 +90,7 @@ IOThreadChild::~IOThreadChild() { StopThread(); }
 
 void IOThreadChild::Init() {
   RefPtr<IPC::Channel> channel = IPC::Channel::Create(
-      std::move(mClientHandle), IPC::Channel::MODE_CLIENT, mParentPid);
-#if defined(XP_WIN)
-  channel->StartAcceptingHandles(IPC::Channel::MODE_CLIENT);
-#elif defined(XP_DARWIN)
-  channel->StartAcceptingMachPorts(IPC::Channel::MODE_CLIENT);
-#endif
+      std::move(mClientHandle), IPC::Channel::MODE_BROKER_CLIENT, mParentPid);
 
   mInitialPort = NodeController::InitChildProcess(channel, mParentPid);
 }
