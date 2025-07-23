@@ -418,16 +418,30 @@ function addSortedItem(array, newValue, comparator) {
   array.splice(index, 0, newValue);
 }
 
+// Cache each of last possible containers to speedup item addition
+// when we are adding to the same container (thread, group, folder)
+let lastThreadItem = null;
+let lastGroupItem = null;
+let lastDirectoryItem = null;
+
 function addSource(threadItems, source, sourceActor) {
   // Ensure creating or fetching the related Thread Item
-  let threadItem = threadItems.find(item => {
-    return item.threadActorID == sourceActor.thread;
-  });
-  if (!threadItem) {
-    threadItem = createThreadTreeItem(sourceActor.thread);
-    // Note that threadItems will be cloned once to force a state update
-    // by the callsite of `addSourceActor`
-    addSortedItem(threadItems, threadItem, sortThreadItems);
+  let threadItem;
+  if (lastThreadItem?.threadActorID == sourceActor.thread) {
+    threadItem = lastThreadItem;
+  } else {
+    threadItem = threadItems.find(item => {
+      return item.threadActorID == sourceActor.thread;
+    });
+    if (!threadItem) {
+      threadItem = createThreadTreeItem(sourceActor.thread);
+      // Note that threadItems will be cloned once to force a state update
+      // by the callsite of `addSourceActor`
+      addSortedItem(threadItems, threadItem, sortThreadItems);
+    }
+    lastThreadItem = threadItem;
+    lastGroupItem = null;
+    lastDirectoryItem = null;
   }
 
   // Then ensure creating or fetching the related Group Item
@@ -435,28 +449,38 @@ function addSource(threadItems, source, sourceActor) {
   const { displayURL } = source;
   const { group, origin } = displayURL;
 
-  let groupItem = threadItem.children.find(item => {
-    return item.groupName == group;
-  });
+  let groupItem;
+  if (lastGroupItem?.groupName == group) {
+    groupItem = lastGroupItem;
+  } else {
+    groupItem = threadItem.children.find(item => {
+      return item.groupName == group;
+    });
 
-  if (!groupItem) {
-    groupItem = createGroupTreeItem(group, origin, threadItem, source);
-    // Copy children in order to force updating react in case we picked
-    // this directory as a project root
-    threadItem.children = [...threadItem.children];
+    if (!groupItem) {
+      groupItem = createGroupTreeItem(group, origin, threadItem, source);
+      // Copy children in order to force updating react in case we picked
+      // this directory as a project root
+      threadItem.children = [...threadItem.children];
 
-    addSortedItem(threadItem.children, groupItem, sortItems);
+      addSortedItem(threadItem.children, groupItem, sortItems);
+    }
+    lastGroupItem = groupItem;
+    lastDirectoryItem = null;
   }
 
   // Then ensure creating or fetching all possibly nested Directory Item(s)
   const { path } = displayURL;
   const parentPath = path.substring(0, path.lastIndexOf("/"));
-  const parentUrl = source.url.substring(0, source.url.lastIndexOf("/"));
-  const directoryItem = addOrGetParentDirectory(
-    groupItem,
-    parentPath,
-    parentUrl
-  );
+  let directoryItem;
+  if (lastDirectoryItem?.path == parentPath) {
+    directoryItem = lastDirectoryItem;
+  } else {
+    const { url } = displayURL;
+    const parentUrl = url.substring(0, url.lastIndexOf("/"));
+    directoryItem = addOrGetParentDirectory(groupItem, parentPath, parentUrl);
+    lastDirectoryItem = directoryItem;
+  }
 
   // Check if a previous source actor registered this source.
   // It happens if we load the same url multiple times, or,
@@ -502,9 +526,7 @@ function findSourceInThreadItem(source, threadItem) {
     });
   }
 
-  const directoryItem = groupItem._allGroupDirectoryItems.find(item => {
-    return item.type == "directory" && item.path == parentPath;
-  });
+  const directoryItem = groupItem._allGroupDirectoryItems.get(parentPath);
   if (!directoryItem) {
     return null;
   }
@@ -611,9 +633,7 @@ function addOrGetParentDirectory(groupItem, path, url) {
     return groupItem;
   }
   // See if we have this directory already registered by a previous source
-  const existing = groupItem._allGroupDirectoryItems.find(item => {
-    return item.type == "directory" && item.path == path;
-  });
+  const existing = groupItem._allGroupDirectoryItems.get(path);
   if (existing) {
     return existing;
   }
@@ -637,7 +657,7 @@ function addOrGetParentDirectory(groupItem, path, url) {
 
   // Also maintain the list of all group items,
   // Which helps speedup querying for existing items.
-  groupItem._allGroupDirectoryItems.push(directory);
+  groupItem._allGroupDirectoryItems.set(directory.path, directory);
 
   return directory;
 }
@@ -693,6 +713,8 @@ function createGroupTreeItem(groupName, origin, parent, source) {
     }),
 
     groupName,
+
+    // This is only used by project directory root tooltip
     url: origin,
 
     // When a content script appear in a web page,
@@ -700,10 +722,10 @@ function createGroupTreeItem(groupName, origin, parent, source) {
     // be having an extension icon.
     isForExtensionSource: source.isExtension,
 
-    // List of all nested items for this group.
+    // Map of all nested directory items for this group, keyed by their path.
     // This helps find any nested directory in a given group without having to walk the tree.
-    // This is meant to be used only by the reducer.
-    _allGroupDirectoryItems: [],
+    // This is meant to be used only within the reducer.
+    _allGroupDirectoryItems: new Map(),
   };
 }
 function createDirectoryTreeItem(path, url, parent) {
@@ -733,6 +755,8 @@ function createDirectoryTreeItem(path, url, parent) {
     // path will be:
     //   foo/bar
     path,
+
+    // This is only used by project directory root tooltip
     url,
   };
 }
