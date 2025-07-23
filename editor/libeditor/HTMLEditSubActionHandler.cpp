@@ -6389,7 +6389,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
   }
   pointToPutCaret =
       HTMLEditUtils::GetDeepestEditableStartPointOf<EditorDOMPoint>(
-          *container->AsContent());
+          *container->AsContent(), {});
   if (NS_WARN_IF(!pointToPutCaret.IsSet())) {
     return Err(NS_ERROR_FAILURE);
   }

@@ -808,7 +808,9 @@ EditorDOMPoint HTMLEditUtils::LineRequiresPaddingLineBreakToBeVisible(
           {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
     EditorDOMPoint pointToInsertLineBreak =
         HTMLEditUtils::GetDeepestEditableEndPointOf<EditorDOMPoint>(
-            *maybeNonEditableBlock);
+            *maybeNonEditableBlock,
+            {EditablePointOption::RecognizeInvisibleWhiteSpaces,
+             EditablePointOption::StopAtComment});
     if (pointToInsertLineBreak.IsInTextNode()) {
       pointToInsertLineBreak.SetAfterContainer();
     }
@@ -3170,6 +3172,33 @@ bool HTMLEditUtils::IsTransparentCSSColor(const nsAString& aColor) {
   return GetNormalizedCSSColorValue(aColor, ZeroAlphaColor::TransparentKeyword,
                                     normalizedCSSColorValue) &&
          normalizedCSSColorValue.EqualsASCII("transparent");
+}
+
+/******************************************************************************
+ * operator<<() for enum classes of HTMLEditUtils
+ ******************************************************************************/
+
+std::ostream& operator<<(std::ostream& aStream,
+                         const HTMLEditUtils::EditablePointOption& aOption) {
+  constexpr static const char* names[] = {
+      "RecognizeInvisibleWhiteSpaces",
+      "StopAtComment",
+  };
+  return aStream << names[static_cast<uint32_t>(aOption)];
+}
+
+std::ostream& operator<<(std::ostream& aStream,
+                         const HTMLEditUtils::EditablePointOptions& aOptions) {
+  aStream << "{";
+  bool first = true;
+  for (const auto option : aOptions) {
+    if (!first) {
+      aStream << ", ";
+    }
+    aStream << ToString(option).c_str();
+    first = false;
+  }
+  return aStream << "}";
 }
 
 /******************************************************************************

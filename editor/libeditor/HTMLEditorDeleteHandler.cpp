@@ -57,6 +57,8 @@
 namespace mozilla {
 
 using namespace dom;
+using EditablePointOption = HTMLEditUtils::EditablePointOption;
+using EditablePointOptions = HTMLEditUtils::EditablePointOptions;
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using InvisibleWhiteSpaces = HTMLEditUtils::InvisibleWhiteSpaces;
 using LeafNodeType = HTMLEditUtils::LeafNodeType;
@@ -3613,7 +3615,8 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
 
   auto startOfRightContent =
       HTMLEditUtils::GetDeepestEditableStartPointOf<EditorDOMPoint>(
-          *mRightContent);
+          *mRightContent, {EditablePointOption::RecognizeInvisibleWhiteSpaces,
+                           EditablePointOption::StopAtComment});
   AutoTrackDOMPoint trackStartOfRightContent(aHTMLEditor.RangeUpdaterRef(),
                                              &startOfRightContent);
   Result<EditorDOMPoint, nsresult> atFirstChildOfTheLastRightNodeOrError =
@@ -4342,7 +4345,7 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
       }
       auto pointToPutCaret =
           HTMLEditUtils::GetDeepestEditableStartPointOf<EditorDOMPoint>(
-              *mRightContent);
+              *mRightContent, {});
       MOZ_ASSERT(pointToPutCaret.IsSet());
       deleteResult |= CaretPoint(std::move(pointToPutCaret));
     }
@@ -5577,7 +5580,9 @@ Result<DeleteRangeResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
               movedLineRange.StartRef().GetChildAs<Element>()) {
         maybeDeepStartOfRightContent =
             HTMLEditUtils::GetDeepestEditableStartPointOf<EditorDOMPoint>(
-                *firstMovedElement);
+                *firstMovedElement,
+                {EditablePointOption::RecognizeInvisibleWhiteSpaces,
+                 EditablePointOption::StopAtComment});
       } else {
         maybeDeepStartOfRightContent = movedLineRange.StartRef();
       }
@@ -5618,7 +5623,8 @@ Result<DeleteRangeResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
             startOfRightContent.GetChildAs<Element>()) {
       startOfRightContent =
           HTMLEditUtils::GetDeepestEditableStartPointOf<EditorDOMPoint>(
-              *element);
+              *element, {EditablePointOption::RecognizeInvisibleWhiteSpaces,
+                         EditablePointOption::StopAtComment});
     }
     AutoTrackDOMPoint trackStartOfRightBlock(aHTMLEditor.RangeUpdaterRef(),
                                              &startOfRightContent);
@@ -5653,7 +5659,9 @@ Result<DeleteRangeResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
       mLeftBlockElement) {
     EditorDOMPoint startOfRightContent =
         HTMLEditUtils::GetDeepestEditableStartPointOf<EditorDOMPoint>(
-            *mRightBlockElement);
+            *mRightBlockElement,
+            {EditablePointOption::RecognizeInvisibleWhiteSpaces,
+             EditablePointOption::StopAtComment});
     AutoTrackDOMPoint trackStartOfRightBlock(aHTMLEditor.RangeUpdaterRef(),
                                              &startOfRightContent);
     Result<MoveNodeResult, nsresult> moveFirstLineResult =
@@ -5684,7 +5692,9 @@ Result<DeleteRangeResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
   MOZ_ASSERT(!mPointContainingTheOtherBlockElement.IsSet());
   EditorDOMPoint startOfRightContent =
       HTMLEditUtils::GetDeepestEditableStartPointOf<EditorDOMPoint>(
-          *mRightBlockElement);
+          *mRightBlockElement,
+          {EditablePointOption::RecognizeInvisibleWhiteSpaces,
+           EditablePointOption::StopAtComment});
   AutoTrackDOMPoint trackStartOfRightBlock(aHTMLEditor.RangeUpdaterRef(),
                                            &startOfRightContent);
   Result<MoveNodeResult, nsresult> moveFirstLineResult =
@@ -7655,7 +7665,9 @@ EditorRawDOMRange HTMLEditor::AutoDeleteRangesHandler::
       return EditorRawDOMPoint(firstListItemElement);
     }
     return HTMLEditUtils::GetDeepestEditableStartPointOf<EditorRawDOMPoint>(
-        *firstListItemElement);
+        *firstListItemElement,
+        {EditablePointOption::RecognizeInvisibleWhiteSpaces,
+         EditablePointOption::StopAtComment});
   };
 
   auto GetDeepestEditableEndPointOfList = [](Element& aListElement) {
@@ -7669,7 +7681,9 @@ EditorRawDOMRange HTMLEditor::AutoDeleteRangesHandler::
       return EditorRawDOMPoint::After(*lastListItemElement);
     }
     return HTMLEditUtils::GetDeepestEditableEndPointOf<EditorRawDOMPoint>(
-        *lastListItemElement);
+        *lastListItemElement,
+        {EditablePointOption::RecognizeInvisibleWhiteSpaces,
+         EditablePointOption::StopAtComment});
   };
 
   Element* const startListElement =

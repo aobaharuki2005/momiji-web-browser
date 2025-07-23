@@ -13,6 +13,8 @@ MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.toml"]
 
 BROWSER_CHROME_MANIFESTS += ["tests/browser.toml"]
 
+TEST_DIRS += ["gtest"]
+
 EXPORTS.mozilla += [
     "EditAction.h",
     "EditorBase.h",
