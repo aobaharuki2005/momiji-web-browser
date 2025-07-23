@@ -1614,9 +1614,24 @@ networking:
       - necko@mozilla.com
     expires: never
     labels:
-      - h1
-      - h2
-      - h3
+      - mozilla.cloudflare-dns.com_h1
+      - firefox.dns.nextdns.io_h1
+      - private.canadianshield.cira.ca_h1
+      - doh.xfinity.com_h1
+      - dns.shaw.ca_h1
+      - dooh.cloudflare-dns.com_h1
+      - mozilla.cloudflare-dns.com_h2
+      - firefox.dns.nextdns.io_h2
+      - private.canadianshield.cira.ca_h2
+      - doh.xfinity.com_h2
+      - dns.shaw.ca_h2
+      - dooh.cloudflare-dns.com_h2
+      - mozilla.cloudflare-dns.com_h3
+      - firefox.dns.nextdns.io_h3
+      - private.canadianshield.cira.ca_h3
+      - doh.xfinity.com_h3
+      - dns.shaw.ca_h3
+      - dooh.cloudflare-dns.com_h3
 
   http_redirect_to_scheme_top_level: &http_redirect_to_scheme_top_level
     type: labeled_counter

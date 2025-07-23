@@ -289,9 +289,11 @@ Http2Session::~Http2Session() {
 
   Shutdown(NS_OK);
 
-  if (mTrrStreams) {
-    mozilla::glean::networking::trr_request_count_per_conn.Get("h2"_ns).Add(
-        static_cast<int32_t>(mTrrStreams));
+  RefPtr<nsHttpConnectionInfo> ci = ConnectionInfo();
+  if (mTrrStreams && ci) {
+    mozilla::glean::networking::trr_request_count_per_conn
+        .Get(nsPrintfCString("%s_h2", ci->Origin()))
+        .Add(static_cast<int32_t>(mTrrStreams));
   }
   glean::spdy::parallel_streams.AccumulateSingleSample(mConcurrentHighWater);
   glean::spdy::request_per_conn.AccumulateSingleSample(mCntActivated);
