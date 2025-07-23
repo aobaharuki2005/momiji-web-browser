@@ -3107,6 +3107,21 @@
       }
     ]
   },
+  "1902408": {
+    "label": "mgr.knowbe.jp",
+    "bugs": {
+      "1902408": {
+        "issue": "unsupported-warning",
+        "matches": ["*://mgr.knowbe.jp/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["Chrome_with_FxQuantum"]
+      }
+    ]
+  },
   "1902411": {
     "label": "agent.foundi.info",
     "bugs": {
