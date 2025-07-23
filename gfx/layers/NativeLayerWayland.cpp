@@ -392,6 +392,7 @@ void NativeLayerRootWayland::LogStatsLocked(
   int layersMappedOpaqueSet = 0;
   int layersBufferAttached = 0;
   int layersVisible = 0;
+  int layersRendered = 0;
 
   for (RefPtr<NativeLayerWayland>& layer : mSublayers) {
     layersNum++;
@@ -410,12 +411,15 @@ void NativeLayerRootWayland::LogStatsLocked(
     if (layer->State()->mIsVisible) {
       layersVisible++;
     }
+    if (layer->State()->mRendered) {
+      layersRendered++;
+    }
   }
   LOGVERBOSE(
-      "Layers [%d] mapped [%d] attached [%d] visible [%d] opaque [%d] opaque "
-      "set [%d]",
+      "Rendering stats: layers [%d] mapped [%d] attached [%d] visible [%d] "
+      "rendered [%d] opaque [%d] opaque set [%d]",
       layersNum, layersMapped, layersBufferAttached, layersVisible,
-      layersMappedOpaque, layersMappedOpaqueSet);
+      layersRendered, layersMappedOpaque, layersMappedOpaqueSet);
 }
 #endif
 
@@ -462,7 +466,7 @@ bool NativeLayerRootWayland::CommitToScreen() {
 
   bool mutatedStackingOrder = mRootMutatedStackingOrder;
   for (RefPtr<NativeLayerWayland>& layer : mSublayers) {
-    layer->UpdateLayer(scale);
+    layer->RenderLayer(scale);
     if (layer->State()->mMutatedStackingOrder) {
       mutatedStackingOrder = true;
     }
@@ -472,6 +476,7 @@ bool NativeLayerRootWayland::CommitToScreen() {
     NativeLayerWayland* previousWaylandSurface = nullptr;
     for (RefPtr<NativeLayerWayland>& layer : mSublayers) {
       if (layer->State()->mIsVisible) {
+        layer->State()->mRendered = true;
         if (previousWaylandSurface) {
           layer->PlaceAbove(previousWaylandSurface);
         }
@@ -768,12 +773,12 @@ void NativeLayerWayland::UpdateLayerPlacementLocked(
       bufferClip.Intersect(Rect(0, 0, mSize.width, mSize.height)));
 }
 
-void NativeLayerWayland::UpdateLayer(int aScale) {
+void NativeLayerWayland::RenderLayer(int aScale) {
   WaylandSurfaceLock lock(mSurface);
 
   SetScalelocked(lock, aScale);
   UpdateLayerPlacementLocked(lock);
-  CommitFrontBufferToScreenLocked(lock);
+  mState.mRendered = CommitFrontBufferToScreenLocked(lock);
 
   if (mState.mIsVisible) {
     MOZ_DIAGNOSTIC_ASSERT(mSurface->HasBufferAttached());
@@ -1042,11 +1047,11 @@ void NativeLayerWaylandRender::HandlePartialUpdateLocked(
   }
 }
 
-void NativeLayerWaylandRender::CommitFrontBufferToScreenLocked(
+bool NativeLayerWaylandRender::CommitFrontBufferToScreenLocked(
     const WaylandSurfaceLock& aProofOfLock) {
   // Don't operate over hidden layers
   if (!mState.mIsVisible) {
-    return;
+    return false;
   }
 
   // Return if front buffer didn't changed (or changed area is empty)
@@ -1058,13 +1063,13 @@ void NativeLayerWaylandRender::CommitFrontBufferToScreenLocked(
         "mState.mMutatedVisibility [%d]",
         mState.mMutatedFrontBuffer, mDirtyRegion.IsEmpty(),
         mState.mMutatedVisibility);
-    return;
+    return false;
   }
 
   if (!mFrontBuffer) {
     LOG("NativeLayerWaylandRender::CommitFrontBufferToScreenLocked() - missing "
         "front buffer!");
-    return;
+    return false;
   }
 
   LOG("NativeLayerWaylandRender::CommitFrontBufferToScreenLocked()");
@@ -1084,6 +1089,7 @@ void NativeLayerWaylandRender::CommitFrontBufferToScreenLocked(
   mSurface->AttachLocked(aProofOfLock, mFrontBuffer);
   mState.mMutatedFrontBuffer = false;
   mState.mMutatedVisibility = false;
+  return true;
 }
 
 void NativeLayerWaylandRender::NotifySurfaceReady() {
@@ -1197,23 +1203,24 @@ Maybe<GLuint> NativeLayerWaylandExternal::NextSurfaceAsFramebuffer(
   return Nothing();
 }
 
-void NativeLayerWaylandExternal::CommitFrontBufferToScreenLocked(
+bool NativeLayerWaylandExternal::CommitFrontBufferToScreenLocked(
     const WaylandSurfaceLock& aProofOfLock) {
   if (!mState.mMutatedFrontBuffer || !mState.mIsVisible) {
-    return;
+    return false;
   }
 
   if (!mFrontBuffer) {
     LOG("NativeLayerWaylandExternal::CommitFrontBufferToScreenLocked() - "
         "missing "
         "front buffer!");
-    return;
+    return false;
   }
 
   LOG("NativeLayerWaylandExternal::CommitFrontBufferToScreenLocked()");
   mSurface->InvalidateLocked(aProofOfLock);
   mSurface->AttachLocked(aProofOfLock, mFrontBuffer);
   mState.mMutatedFrontBuffer = false;
+  return true;
 }
 
 NativeLayerWaylandExternal::~NativeLayerWaylandExternal() {
