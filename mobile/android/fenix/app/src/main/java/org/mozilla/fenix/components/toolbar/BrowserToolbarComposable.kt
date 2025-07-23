@@ -6,6 +6,7 @@ package org.mozilla.fenix.components.toolbar
 
 import android.view.Gravity
 import android.view.ViewGroup
+import androidx.activity.compose.BackHandler
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams
+import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.base.Divider
@@ -31,10 +33,10 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.feature.toolbar.ToolbarBehaviorController
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.browser.store.BrowserScreenStore
-import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.components.toolbar.ToolbarPosition.BOTTOM
 import org.mozilla.fenix.components.toolbar.ToolbarPosition.TOP
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.Settings
 
@@ -46,6 +48,7 @@ import org.mozilla.fenix.utils.Settings
  * @param container [ViewGroup] which will serve as parent of this View.
  * @param toolbarStore [BrowserToolbarStore] containing the composable toolbar state.
  * @param browserScreenStore [BrowserScreenStore] used for integration with other browser screen functionalities.
+ * @param appStore [AppStore] used for integration with other application features.
  * @param browserStore [BrowserStore] used for observing the browsing details.
  * @param settings [Settings] object to get the toolbar position and other settings.
  * @param customTabSession [CustomTabSessionState] if the toolbar is shown in a custom tab.
@@ -58,6 +61,7 @@ class BrowserToolbarComposable(
     container: ViewGroup,
     private val toolbarStore: BrowserToolbarStore,
     private val browserScreenStore: BrowserScreenStore,
+    private val appStore: AppStore,
     private val browserStore: BrowserStore,
     private val settings: Settings,
     private val customTabSession: CustomTabSessionState? = null,
@@ -85,6 +89,11 @@ class BrowserToolbarComposable(
             )
             toolbarController.start()
             onDispose { toolbarController.stop() }
+        }
+
+        BackHandler {
+            appStore.dispatch(SearchEnded)
+            browserStore.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true))
         }
 
         FirefoxTheme {
