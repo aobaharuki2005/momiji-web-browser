@@ -8140,7 +8140,7 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
       if (type == ExtContentPolicy::TYPE_DOCUMENT ||
           type == ExtContentPolicy::TYPE_SUBDOCUMENT) {
         RefPtr<mozilla::dom::BrowsingContext> bc;
-        mLoadInfo->GetBrowsingContext(getter_AddRefs(bc));
+        mLoadInfo->GetTargetBrowsingContext(getter_AddRefs(bc));
         if (bc) {
           bc->SetCurrentIPAddressSpace(docAddressSpace);
         }
