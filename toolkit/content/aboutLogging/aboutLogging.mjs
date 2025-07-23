@@ -168,6 +168,13 @@ const gLoggingPresets = {
     },
     profilerPreset: "ml",
   },
+  webcompat: {
+    modules: "console:5,PageMessages:5",
+    l10nIds: {
+      label: "about-logging-preset-web-compat-label",
+      description: "about-logging-preset-web-compat-description",
+    },
+  },
   ...gOsSpecificLoggingPresets,
   custom: {
     modules: "",
@@ -849,11 +856,14 @@ function startLogging() {
       const profilerPreset =
         gLoggingSettings.profilerPreset ??
         gLoggingPresets[gLoggingSettings.loggingPreset].profilerPreset;
-      lazy.ProfilerPrefsPresets.changePreset(
-        "aboutlogging",
-        profilerPreset,
-        supportedFeatures
-      );
+      // Some about:logging presets don't have an associated profiler preset.
+      if (profilerPreset) {
+        lazy.ProfilerPrefsPresets.changePreset(
+          "aboutlogging",
+          profilerPreset,
+          supportedFeatures
+        );
+      }
     } else {
       // a baseline set of threads, and possibly others, overriden by the URL
       lazy.ProfilerPrefsPresets.changePreset(
