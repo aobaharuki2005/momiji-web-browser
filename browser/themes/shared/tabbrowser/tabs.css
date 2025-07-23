@@ -1216,8 +1216,6 @@ tab-group {
     margin-inline-end: 3px;
   }
   #tabbrowser-tabs[orient="vertical"] & {
-    padding-block-start: var(--space-small);
-
     #tabbrowser-tabs[expanded] & {
       margin-inline-start: var(--space-medium);
     }
@@ -1250,6 +1248,10 @@ tab-group {
   color: var(--tab-group-line-color);
   margin: 0;
   padding: var(--space-small);
+
+  #tabbrowser-tabs[orient="vertical"] & {
+    margin-inline-start: var(--tab-inner-inline-margin);
+  }
 }
 
 .tab-group-label {
