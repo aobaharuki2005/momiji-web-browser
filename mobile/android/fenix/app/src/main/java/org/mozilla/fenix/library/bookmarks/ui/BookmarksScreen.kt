@@ -349,12 +349,10 @@ private fun BookmarksList(
             }
         },
         topBar = {
-            Box {
+            if (useNewSearchUX && state.isSearching) {
+                BrowserToolbar(toolbarStore)
+            } else {
                 BookmarksListTopBar(store = store)
-
-                if (useNewSearchUX && state.isSearching) {
-                    BrowserToolbar(toolbarStore)
-                }
             }
         },
         containerColor = FirefoxTheme.colors.layer1,
@@ -509,6 +507,7 @@ private fun BookmarksList(
             Box(
                 modifier = Modifier
                     .background(awesomebarScrim)
+                    .padding(paddingValues)
                     .fillMaxSize()
                     .pointerInput(WindowInsets.isImeVisible) {
                         detectTapGestures(
