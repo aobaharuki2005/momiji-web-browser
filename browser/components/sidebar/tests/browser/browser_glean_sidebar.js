@@ -367,18 +367,17 @@ add_task(async function test_customize_extensions_clicked() {
     );
 
   info("Click on the extension link.");
-  let browserLocationChanged = BrowserTestUtils.waitForLocationChange(
-    window.gBrowser,
-    "about:addons"
-  );
-  customizeComponent.extensionLink.focus();
-
+  const deferredEMLoaded = Promise.withResolvers();
+  Services.obs.addObserver(function observer(_, topic) {
+    Services.obs.removeObserver(observer, topic);
+    deferredEMLoaded.resolve();
+  }, "EM-loaded");
   EventUtils.synthesizeMouseAtCenter(
-    customizeComponent.extensionLink,
+    customizeComponent.extensionLinks[0],
     {},
     SidebarController.browser.contentWindow
   );
-  await browserLocationChanged;
+  await deferredEMLoaded.promise;
 
   const events = Glean.sidebarCustomize.extensionsClicked.testGetValue();
   Assert.equal(events.length, 1, "One event was reported.");

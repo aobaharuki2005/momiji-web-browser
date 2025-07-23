@@ -7,10 +7,6 @@ const { ExtensionCommon } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionCommon.sys.mjs"
 );
 
-const { AddonTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/AddonTestUtils.sys.mjs"
-);
-
 add_setup(() =>
   SpecialPowers.pushPrefEnv({
     set: [["layout.css.devPixelsPerPx", 1]],
@@ -147,10 +143,11 @@ add_task(async function test_open_new_private_window_after_install() {
   const privateWin = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
-  let sidebar = privateWin.document.querySelector("sidebar-main");
+  const { document } = privateWin;
+  const sidebar = document.querySelector("sidebar-main");
   ok(sidebar, "Sidebar is shown.");
 
-  info("Waiting for extension buttons to update");
+  info("Waiting for extension buttons to be present");
   await BrowserTestUtils.waitForMutationCondition(
     sidebar,
     { childList: true, subTree: true },
@@ -162,44 +159,7 @@ add_task(async function test_open_new_private_window_after_install() {
     "Extension is hidden in private browser window."
   );
 
-  is(
-    Services.prefs.getStringPref("sidebar.installed.extensions"),
-    extension.id,
-    "Extension has been added to the installed extensions preference"
-  );
-
-  // Test removing an extension
   await extension.unload();
-
-  is(
-    Services.prefs.getStringPref("sidebar.installed.extensions"),
-    "",
-    "Installed extensions pref has been cleared"
-  );
-
-  const newWin = await BrowserTestUtils.openNewBrowserWindow();
-  sidebar = newWin.document.querySelector("sidebar-main");
-  ok(sidebar, "Sidebar is shown in new window.");
-
-  info("Waiting for extension buttons to be present");
-  await BrowserTestUtils.waitForMutationCondition(
-    sidebar,
-    { childList: true, subTree: true },
-    () => !!sidebar.extensionButtons
-  );
-  is(
-    sidebar.extensionButtons.length,
-    0,
-    "Removed extension is not visible in new browser window."
-  );
-
-  is(
-    Services.prefs.getStringPref("sidebar.main.tools"),
-    "aichat,syncedtabs,history,bookmarks",
-    "Extension is not in the main tools pref"
-  );
-
-  await BrowserTestUtils.closeWindow(newWin);
   await BrowserTestUtils.closeWindow(privateWin);
 });
 
@@ -211,76 +171,47 @@ add_task(async function test_customize_sidebar_extensions() {
   const extension = ExtensionTestUtils.loadExtension({ ...extData });
   await extension.startup();
   await extension.awaitMessage("sidebar");
-  let extensionButtonCount = sidebar.extensionButtons.length;
-  is(extensionButtonCount, 1, "Extension is shown in the sidebar.");
+  is(sidebar.extensionButtons.length, 1, "Extension is shown in the sidebar.");
 
   await toggleSidebarPanel(window, "viewCustomizeSidebar");
   let customizeDocument = SidebarController.browser.contentDocument;
   const customizeComponent =
     customizeDocument.querySelector("sidebar-customize");
-
-  let checkedInputs = Array.from(customizeComponent.extensionInputs).filter(
-    input => input.checked
-  );
-
+  let extensionEntrypointsCount = sidebar.extensionButtons.length;
   is(
-    extensionButtonCount,
-    checkedInputs.length,
-    "The button for the extension entrypoint is in the launcher and input checked."
-  );
-
-  is(
-    Services.prefs.getStringPref("sidebar.installed.extensions"),
-    extension.id,
-    "Extension has been added to the installed extensions preference"
+    customizeComponent.extensionLinks.length,
+    extensionEntrypointsCount,
+    `${extensionEntrypointsCount} links to manage sidebar extensions are shown in the Customize Menu.`
   );
 
   // Default icon and title matches.
-  const extensionLabel = checkedInputs[0].getAttribute("label");
+  const extensionLink = customizeComponent.extensionLinks[0];
   let iconUrl = `moz-extension://${extension.uuid}/icon.png`;
-  let iconEl = checkedInputs[0].getAttribute("iconsrc");
-  is(iconEl, iconUrl, "Extension has the correct icon.");
-  is(extensionLabel, "Default Title", "Extension has the correct title.");
-
-  customizeComponent.extensionInputs[0].click();
-  await sidebar.updateComplete;
+  let iconEl = extensionLink.closest(".extension-item").querySelector(".icon");
+  is(iconEl.src, iconUrl, "Extension has the correct icon.");
   is(
-    sidebar.extensionButtons.length,
-    0,
-    "Extension is removed from the sidebar launcher."
+    extensionLink.textContent.trim(),
+    "Default Title",
+    "Extension has the correct title."
   );
 
-  is(
-    Services.prefs.getStringPref("sidebar.main.tools"),
-    "aichat,syncedtabs,history,bookmarks",
-    "Extension is not in the main tools pref"
+  // Test manage extension
+  let browserLoaded = BrowserTestUtils.browserLoaded(
+    window.gBrowser,
+    false,
+    "about:addons"
   );
-  // Test reloading an extension
-  let readyPromise = AddonTestUtils.promiseWebExtensionStartup(extension.id);
-  await sendMessage(extension, "reload-extension", "");
-  info("waiting for extension startup");
-  await readyPromise;
-
-  await sidebar.updateComplete;
-  is(
-    sidebar.extensionButtons.length,
-    0,
-    "Extension is still removed from the sidebar."
-  );
-
-  is(
-    Services.prefs.getStringPref("sidebar.installed.extensions"),
-    extension.id,
-    "Extension is still in the installed extensions preference"
-  );
-
-  is(
-    Services.prefs.getStringPref("sidebar.main.tools"),
-    "aichat,syncedtabs,history,bookmarks",
-    "Extension is still not in the main tools pref"
-  );
+  extensionLink.click();
+  await browserLoaded;
+  info("about:addons is the new opened tab");
 
   await extension.unload();
+  await sidebar.updateComplete;
+  is(
+    sidebar.extensionButtons.length,
+    0,
+    "Extension is removed from the sidebar."
+  );
 });
 
 add_task(async function test_extensions_keyboard_navigation() {
@@ -305,31 +236,31 @@ add_task(async function test_extensions_keyboard_navigation() {
     customizeDocument.querySelector("sidebar-customize");
   let extensionEntrypointsCount = sidebar.extensionButtons.length;
   is(
-    customizeComponent.extensionInputs.length,
+    customizeComponent.extensionLinks.length,
     extensionEntrypointsCount,
-    `${extensionEntrypointsCount} inputs for extensions are shown in the Customize Menu.`
+    `${extensionEntrypointsCount} links to manage sidebar extensions are shown in the Customize Menu.`
   );
 
-  customizeComponent.extensionLink.focus();
-  Assert.equal(
-    customizeComponent.shadowRoot.activeElement,
-    customizeComponent.extensionLink,
-    "Manage extensions link is focused"
-  );
-
-  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
+  customizeComponent.extensionLinks[0].focus();
   ok(
-    isActiveElement(customizeComponent.extensionInputs[1]),
-    "Second extension input is now focused."
+    isActiveElement(customizeComponent.extensionLinks[0]),
+    "First extension link is focused."
   );
 
-  info("Press Tab key.");
-  EventUtils.synthesizeKey("KEY_Tab", {});
-  Assert.equal(
-    customizeComponent.shadowRoot.activeElement,
-    customizeComponent.extensionLink,
-    "Manage extensions link is focused"
+  info("Press Arrow Down key.");
+  EventUtils.synthesizeKey("KEY_ArrowDown", {});
+  ok(
+    isActiveElement(customizeComponent.extensionLinks[1]),
+    "Second extension link is focused."
   );
+
+  info("Press Arrow Up key.");
+  EventUtils.synthesizeKey("KEY_ArrowUp", {});
+  ok(
+    isActiveElement(customizeComponent.extensionLinks[0]),
+    "First extension link is focused."
+  );
+
   info("Press Enter key.");
   let browserLocationChanged = BrowserTestUtils.waitForLocationChange(
     window.gBrowser,

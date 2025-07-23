@@ -362,12 +362,6 @@ export default class SidebarMain extends MozLitElement {
     );
   }
 
-  unpinExtension() {
-    window.SidebarController.toggleTool(
-      this.contextMenuTarget.getAttribute("view")
-    );
-  }
-
   getImageUrl(icon, targetURI) {
     if (window.IS_STORYBOOK) {
       return `chrome://global/skin/icons/defaultFavicon.svg`;
@@ -416,9 +410,6 @@ export default class SidebarMain extends MozLitElement {
             break;
           case "sidebar-context-menu-remove-extension":
             await this.removeExtension();
-            break;
-          case "sidebar-context-menu-unpin-extension":
-            this.unpinExtension();
             break;
           case "sidebar-context-menu-hide-sidebar":
             if (

@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  html,
-  when,
-  ifDefined,
-} from "chrome://global/content/vendor/lit.all.mjs";
+import { html, when } from "chrome://global/content/vendor/lit.all.mjs";
 
 import { SidebarPage } from "./sidebar-page.mjs";
 
@@ -29,6 +25,7 @@ const TAB_DIRECTION_SETTING_PREF = "sidebar.verticalTabs";
 export class SidebarCustomize extends SidebarPage {
   constructor() {
     super();
+    this.activeExtIndex = 0;
     XPCOMUtils.defineLazyPreferenceGetter(
       this.#prefValues,
       "visibility",
@@ -75,6 +72,7 @@ export class SidebarCustomize extends SidebarPage {
   #prefValues = {};
 
   static properties = {
+    activeExtIndex: { type: Number },
     visibility: { type: String },
     isPositionStart: { type: Boolean },
     verticalTabsEnabled: { type: Boolean },
@@ -82,9 +80,8 @@ export class SidebarCustomize extends SidebarPage {
   };
 
   static queries = {
-    toolInputs: { all: ".tools > .tool" },
-    extensionInputs: { all: ".extensions > .tool" },
-    extensionLink: ".extension-item a",
+    toolInputs: { all: ".tool" },
+    extensionLinks: { all: ".extension-link" },
     positionInput: "#position",
     visibilityInput: "#hide-sidebar",
     verticalTabsInput: "#vertical-tabs",
@@ -126,10 +123,10 @@ export class SidebarCustomize extends SidebarPage {
     }
   }
 
-  async onToggleToolInput(e, commandID) {
+  async onToggleToolInput(e) {
     e.preventDefault();
-    this.getWindow().SidebarController.toggleTool(commandID);
-    switch (commandID) {
+    this.getWindow().SidebarController.toggleTool(e.target.id);
+    switch (e.target.id) {
       case "viewGenaiChatSidebar":
         Glean.sidebarCustomize.chatbotEnabled.record({
           checked: e.target.checked,
@@ -174,28 +171,51 @@ export class SidebarCustomize extends SidebarPage {
     if (tool.hidden) {
       return null;
     }
-
     return html`
       <moz-checkbox
         class="tool"
         type="checkbox"
         id=${tool.view}
-        name=${tool.name}
+        name=${tool.view}
         iconsrc=${tool.iconUrl}
-        data-l10n-id=${ifDefined(this.getInputL10nId(tool.view))}
-        label=${ifDefined(tool.tooltiptext)}
-        @change=${e => this.onToggleToolInput(e, tool.commandID)}
+        data-l10n-id=${this.getInputL10nId(tool.view)}
+        @change=${this.onToggleToolInput}
         ?checked=${!tool.disabled}
       ></moz-checkbox>
     `;
   }
 
-  manageAddons(e) {
-    if (e.type == "click" || (e.type == "keydown" && e.code == "Enter")) {
-      e.preventDefault();
-      this.getWindow().BrowserAddonUI.openAddonsMgr("addons://list/extension");
-      Glean.sidebarCustomize.extensionsClicked.record();
+  async manageAddon(extensionId) {
+    await this.getWindow().BrowserAddonUI.manageAddon(
+      extensionId,
+      "unifiedExtensions"
+    );
+    Glean.sidebarCustomize.extensionsClicked.record();
+  }
+
+  handleKeydown(e) {
+    if (e.code == "ArrowUp") {
+      if (this.activeExtIndex > 0) {
+        this.focusIndex(this.activeExtIndex - 1);
+      }
+    } else if (e.code == "ArrowDown") {
+      if (this.activeExtIndex < this.extensionLinks.length - 1) {
+        this.focusIndex(this.activeExtIndex + 1);
+      }
+    } else if (
+      (e.type == "keydown" && e.code == "Enter") ||
+      (e.type == "keydown" && e.code == "Space")
+    ) {
+      this.manageAddon(e.target.getAttribute("extensionId"));
     }
+  }
+
+  focusIndex(index) {
+    let extLinkList = Array.from(
+      this.shadowRoot.querySelectorAll(".extension-link")
+    );
+    extLinkList[index].focus();
+    this.activeExtIndex = index;
   }
 
   reversePosition() {
@@ -205,6 +225,27 @@ export class SidebarCustomize extends SidebarPage {
       position:
         this.isPositionStart !== this.getWindow().RTL_UI ? "left" : "right",
     });
+  }
+
+  extensionTemplate(extension, index) {
+    return html` <div class="extension-item">
+      <img src=${extension.iconUrl} class="icon" role="presentation" />
+      <div
+        extensionId=${extension.extensionId}
+        role="listitem"
+        @click=${() => this.manageAddon(extension.extensionId)}
+        @keydown=${this.handleKeydown}
+      >
+        <a
+          href="about:addons"
+          class="extension-link"
+          tabindex=${index === this.activeExtIndex ? 0 : -1}
+          target="_blank"
+          @click=${e => e.preventDefault()}
+          >${extension.tooltiptext}
+        </a>
+      </div>
+    </div>`;
   }
 
   render() {
@@ -269,7 +310,7 @@ export class SidebarCustomize extends SidebarPage {
             ?checked=${!this.isPositionStart}
         ></moz-checkbox>
         </moz-fieldset>
-        <moz-fieldset class="customize-group tools" data-l10n-id="sidebar-customize-firefox-tools-header">
+        <moz-fieldset class="customize-group" data-l10n-id="sidebar-customize-firefox-tools-header">
           ${this.getWindow()
             .SidebarController.getTools()
             .map(tool => this.toolInputTemplate(tool))}
@@ -283,23 +324,9 @@ export class SidebarCustomize extends SidebarPage {
                 data-l10n-id="sidebar-customize-extensions-header"
               ></h4>
               <div role="list" class="extensions">
-                ${extensions.map(extension =>
-                  this.toolInputTemplate(extension)
+                ${extensions.map((extension, index) =>
+                  this.extensionTemplate(extension, index)
                 )}
-                <div class="extension-item">
-                  <img
-                    src="chrome://mozapps/skin/extensions/category-extensions.svg"
-                    class="icon"
-                    role="presentation"
-                  />
-                  <a
-                    href="about:addons"
-                    @click=${this.manageAddons}
-                    @keydown=${this.manageAddons}
-                    data-l10n-id="sidebar-manage-extensions"
-                  >
-                  </a>
-                </div>
               </div>
             </div>`
         )}
