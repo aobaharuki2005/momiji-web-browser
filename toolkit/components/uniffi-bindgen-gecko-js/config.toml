@@ -70,6 +70,10 @@ TabsStore = "AsyncWrapped"
 WebExtStorageBridgedEngine = "AsyncWrapped"
 WebExtStorageStore = "AsyncWrapped"
 
+[tracing_support.async_wrappers]
+"register_event_sink" = "Sync"
+"unregister_event_sink" = "Sync"
+
 [uniffi_bindings_tests.async_wrappers]
 "clone_interface" = "Sync"
 "create_async_test_trait_interface" = "AsyncWrapped"

@@ -107,6 +107,7 @@ extern crate uniffi_bindgen_gecko_js_test_fixtures;
 extern crate viaduct;
 
 extern crate gecko_logger;
+extern crate gecko_tracing;
 
 #[cfg(feature = "oxidized_breakpad")]
 extern crate rust_minidump_writer_linux;
@@ -154,6 +155,8 @@ use gecko_logger::GeckoLogger;
 pub extern "C" fn GkRust_Init() {
     // Initialize logging.
     let _ = GeckoLogger::init();
+    // Initialize tracing.
+    gecko_tracing::initialize_tracing();
 }
 
 #[no_mangle]

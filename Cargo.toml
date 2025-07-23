@@ -252,6 +252,7 @@ sql-support = { git = "https://github.com/mozilla/application-services", rev = "
 suggest = { git = "https://github.com/mozilla/application-services", rev = "b5175a2a2458834c9fdc0468d851658b0657f95b" }
 sync15 = { git = "https://github.com/mozilla/application-services", rev = "b5175a2a2458834c9fdc0468d851658b0657f95b" }
 tabs = { git = "https://github.com/mozilla/application-services", rev = "b5175a2a2458834c9fdc0468d851658b0657f95b" }
+tracing-support = { git = "https://github.com/mozilla/application-services", rev = "b5175a2a2458834c9fdc0468d851658b0657f95b" }
 viaduct = { git = "https://github.com/mozilla/application-services", rev = "b5175a2a2458834c9fdc0468d851658b0657f95b" }
 webext-storage = { git = "https://github.com/mozilla/application-services", rev = "b5175a2a2458834c9fdc0468d851658b0657f95b" }
 

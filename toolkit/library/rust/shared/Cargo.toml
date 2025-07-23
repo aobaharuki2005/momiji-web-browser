@@ -31,6 +31,7 @@ encoding_glue = { path = "../../../../intl/encoding_glue" }
 authrs_bridge = { path = "../../../../dom/webauthn/authrs_bridge" }
 gkrust_utils = { path = "../../../../xpcom/rust/gkrust_utils" }
 gecko_logger = { path = "../../../../xpcom/rust/gecko_logger" }
+gecko_tracing = { path = "../../../../xpcom/rust/gecko_tracing" }
 rsdparsa_capi = { path = "../../../../dom/media/webrtc/sdp/rsdparsa_capi" }
 # We have these to enforce common feature sets for said crates.
 log = {version = "0.4", features = ["release_max_level_info"]}

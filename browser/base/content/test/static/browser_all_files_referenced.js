@@ -119,6 +119,9 @@ var gExceptionPaths = [
   "resource://builtin-addons/newtab/",
   "resource://newtab/",
   "chrome://newtab/",
+
+  // UniFFI test files.
+  "moz-src:///toolkit/components/uniffi-bindgen-gecko-js/tests/generated/",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running
@@ -324,6 +327,11 @@ var allowlist = [
 
   // A QA and dev debug tool.
   { file: "chrome://browser/content/places/interactionsViewer.html" },
+
+  // A uniffi-generated file which isn't used directly by 1969013 but will be by a followup.
+  {
+    file: "moz-src:///toolkit/components/uniffi-bindgen-gecko-js/components/generated/RustTracing.sys.mjs",
+  },
 ];
 
 if (AppConstants.NIGHTLY_BUILD) {
