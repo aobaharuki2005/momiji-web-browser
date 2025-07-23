@@ -2091,6 +2091,12 @@ import org.mozilla.geckoview.SessionTextInput.EditableListener.IMEState;
       return;
     }
 
+    if (start != end && !causedOnlyByComposition) {
+      // selection isn't collapsed. This change is caused by web content side.
+      // So we have to update the selection in Java side.
+      mIgnoreSelectionChange = false;
+    }
+
     if (mIgnoreSelectionChange) {
       mIgnoreSelectionChange = false;
     } else {

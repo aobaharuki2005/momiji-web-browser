@@ -1646,4 +1646,40 @@ class TextInputDelegateTest : BaseSessionTest() {
             )
         }
     }
+
+    // Bug 1964660 - Sync selection without text change
+    @WithDisplay(width = 512, height = 512)
+    // Child process updates require having a display.
+    @Test
+    fun updateSelectionWithoutTextChange() {
+        assumeThat("input only", id, equalTo("#input"))
+
+        setupContent("[***]")
+        val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
+
+        mainSession.evaluateJS(
+            """
+            document.querySelector('$id').blur();
+
+            document.querySelector('$id').addEventListener('focus', () => {
+                document.querySelector('$id').setSelectionRange(1, 4);
+            });
+            document.querySelector('$id').addEventListener('input', () => {
+                document.querySelector('$id').value = '[***]';
+                document.querySelector('$id').setSelectionRange(1, 4);
+            });
+            """.trimIndent(),
+        )
+
+        mainSession.evaluateJS("document.querySelector('$id').focus()")
+        mainSession.waitUntilCalled(GeckoSession.TextInputDelegate::class, "restartInput")
+
+        processChildEvents()
+        assertSelection("selection isn't collapsed at start", ic, 1, 4)
+
+        pressKey(ic, KeyEvent.KEYCODE_A)
+        processChildEvents()
+        assertText("text isn't changed", ic, "[***]")
+        assertSelection("selection isn't collapsed", ic, 1, 4)
+    }
 }
