@@ -624,7 +624,7 @@ class TabManagementFragment : AppCompatDialogFragment() {
                 true -> getString(R.string.snackbar_private_tab_closed)
                 false -> getString(R.string.snackbar_tab_closed)
             }
-        val pagePosition = if (isPrivate) Page.PrivateTabs.ordinal else Page.NormalTabs.ordinal
+        val page = if (isPrivate) Page.PrivateTabs else Page.NormalTabs
 
         lifecycleScope.allowUndo(
             view = requireView(),
@@ -632,7 +632,7 @@ class TabManagementFragment : AppCompatDialogFragment() {
             undoActionTitle = getString(R.string.snackbar_deleted_undo),
             onCancel = {
                 requireComponents.useCases.tabsUseCases.undo.invoke()
-                tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(pagePosition)))
+                tabsTrayStore.dispatch(TabsTrayAction.PageSelected(page))
             },
             operation = { },
             elevation = ELEVATION,
@@ -653,7 +653,7 @@ class TabManagementFragment : AppCompatDialogFragment() {
             undoActionTitle = getString(R.string.snackbar_deleted_undo),
             onCancel = {
                 requireComponents.useCases.tabsUseCases.undo.invoke()
-                tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(Page.NormalTabs.ordinal)))
+                tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.NormalTabs))
             },
             operation = { },
             elevation = ELEVATION,
