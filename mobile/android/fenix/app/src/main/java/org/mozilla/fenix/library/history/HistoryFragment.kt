@@ -466,13 +466,11 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                                     .fillMaxSize()
                                     .pointerInput(WindowInsets.isImeVisible) {
                                         detectTapGestures(
-                                            // Hide the keyboard for any touches in the empty area of the awesomebar
+                                            // Exit search for any touches in the empty area of the awesomebar
                                             onPress = {
                                                 focusManager.clearFocus()
                                                 keyboardController?.hide()
-                                                if (searchState.query.isEmpty()) {
-                                                    historyStore.dispatch(SearchDismissed)
-                                                }
+                                                historyStore.dispatch(SearchDismissed)
                                             },
                                         )
                                     },
