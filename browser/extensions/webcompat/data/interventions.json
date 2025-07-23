@@ -3331,6 +3331,21 @@
       }
     ]
   },
+  "1913744": {
+    "label": "confetti.buzz",
+    "bugs": {
+      "1913744": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://confetti.buzz/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["Chrome_with_FxQuantum"]
+      }
+    ]
+  },
   "1913759": {
     "label": "playblackdesert.com",
     "bugs": {
