@@ -3782,6 +3782,21 @@
       }
     ]
   },
+  "1924718": {
+    "label": "ai.invideo.io",
+    "bugs": {
+      "1924718": {
+        "issue": "blocked-content",
+        "matches": ["*://ai.invideo.io/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
+  },
   "1925276": {
     "label": "xtralife.com",
     "bugs": {
