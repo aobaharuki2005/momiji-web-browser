@@ -513,7 +513,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
         (activity as? AppCompatActivity)?.supportActionBar?.hide()
         binding.historyLayout.updateLayoutParams {
             (this as? ViewGroup.MarginLayoutParams)?.topMargin =
-                requireContext().resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+                requireContext().resources.getDimensionPixelSize(R.dimen.composable_browser_toolbar_height)
         }
         searchLayout?.isVisible = true
     }

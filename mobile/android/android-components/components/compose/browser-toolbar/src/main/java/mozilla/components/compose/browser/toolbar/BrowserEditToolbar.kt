@@ -98,7 +98,7 @@ fun BrowserEditToolbar(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(all = 8.dp)
-                .height(40.dp)
+                .height(48.dp)
                 .clip(shape = ROUNDED_CORNER_SHAPE)
                 .background(color = AcornTheme.colors.layer3),
             verticalAlignment = Alignment.CenterVertically,

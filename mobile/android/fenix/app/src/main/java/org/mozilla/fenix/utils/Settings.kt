@@ -2282,7 +2282,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         }
 
         val toolbarHeight = if (isToolbarAtBottom) {
-            appContext.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+            browserToolbarHeight
         } else {
             0
         }
@@ -2303,7 +2303,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     fun getTopToolbarHeight(includeTabStrip: Boolean): Int {
         val isToolbarAtTop = toolbarPosition == ToolbarPosition.TOP
-        val toolbarHeight = appContext.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+        val toolbarHeight = browserToolbarHeight
 
         return if (isToolbarAtTop && includeTabStrip) {
             toolbarHeight + appContext.resources.getDimensionPixelSize(R.dimen.tab_strip_height)
@@ -2313,6 +2313,17 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             0
         }
     }
+
+    /**
+     * Returns the height of the browser toolbar height.
+     */
+    val browserToolbarHeight: Int
+        get() = appContext.resources.getDimensionPixelSize(
+            when (shouldUseComposableToolbar) {
+                true -> R.dimen.composable_browser_toolbar_height
+                false -> R.dimen.browser_toolbar_height
+            },
+        )
 
     /**
      * Returns the height of the bottom toolbar container.

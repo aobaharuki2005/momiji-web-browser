@@ -114,7 +114,7 @@ fun BrowserDisplayToolbar(
                         },
                         bottom = TOOLBAR_PADDING_DP.dp,
                     )
-                    .height(40.dp)
+                    .height(48.dp)
                     .background(
                         color = AcornTheme.colors.layer3,
                         shape = ROUNDED_CORNER_SHAPE,
@@ -144,7 +144,7 @@ fun BrowserDisplayToolbar(
                 Origin(
                     hint = pageOrigin.hint,
                     modifier = Modifier
-                        .height(48.dp)
+                        .height(56.dp)
                         .weight(1f),
                     url = pageOrigin.url,
                     title = pageOrigin.title,
