@@ -35,6 +35,7 @@
 #include "js/experimental/TypedData.h"  // JS_IsArrayBufferViewObject
 #include "js/friend/ErrorMessages.h"  // JSErrNum, js::GetErrorMessage, JSMSG_*
 #include "js/Object.h"                // JS::GetBuiltinClass
+#include "js/Prefs.h"                 // JS::Prefs::ducktyped_errors
 #include "js/PropertyAndElement.h"    // JS_GetProperty, JS_HasProperty
 #include "js/SavedFrameAPI.h"
 #include "js/Stack.h"
@@ -533,8 +534,11 @@ bool JS::ErrorReportBuilder::init(JSContext* cx,
   // have to do it in that order, because DOMExceptions have Error.prototype
   // on their proto chain, and hence also have a "fileName" property, but its
   // value is "".
+  //
+  // WARNING: This is disabled by default and planned to be removed completely.
   const char* filename_str = "filename";
-  if (!reportp && exnObject && sniffingBehavior == WithSideEffects &&
+  if (JS::Prefs::ducktyped_errors() && !reportp && exnObject &&
+      sniffingBehavior == WithSideEffects &&
       IsDuckTypedErrorObject(cx, exnObject, &filename_str)) {
     // Temporary value for pulling properties off of duck-typed objects.
     RootedValue val(cx);

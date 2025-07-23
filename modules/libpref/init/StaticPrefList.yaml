@@ -9247,6 +9247,15 @@
   mirror: always
   set_spidermonkey_pref: always
 
+
+# Whether to treat "ducktyped" error objects like `{message: "<message>", fileName: "foo", lineNumber: 1}`
+# as real Error objects during exception handling.
+- name: javascript.options.ducktyped_errors
+  type: bool
+  value: false
+  mirror: always
+  set_spidermonkey_pref: always
+
 # Whether to support parsing '//(#@) source(Mapping)?URL=' pragmas.
 - name: javascript.options.source_pragmas
   type: bool
