@@ -13647,17 +13647,6 @@ nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
   // referrer could be null here in some odd cases, but that's ok,
   // we'll just load the link w/o sending a referrer in those cases.
 
-  // If this is an anchor element, grab its type property to use as a hint
-  nsAutoString typeHint;
-  RefPtr<HTMLAnchorElement> anchor = HTMLAnchorElement::FromNode(aContent);
-  if (anchor) {
-    anchor->GetType(typeHint);
-    NS_ConvertUTF16toUTF8 utf8Hint(typeHint);
-    nsAutoCString type, dummy;
-    NS_ParseRequestContentType(utf8Hint, type, dummy);
-    CopyUTF8toUTF16(type, typeHint);
-  }
-
   uint32_t loadType = LOAD_LINK;
   if (aLoadState->IsFormSubmission()) {
     if (aLoadState->Target().IsEmpty()) {
@@ -13686,7 +13675,6 @@ nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
   aLoadState->SetTriggeringStorageAccess(triggeringStorageAccess);
   aLoadState->SetReferrerInfo(referrerInfo);
   aLoadState->SetInternalLoadFlags(flags);
-  aLoadState->SetTypeHint(NS_ConvertUTF16toUTF8(typeHint));
   aLoadState->SetLoadType(loadType);
   aLoadState->SetSourceBrowsingContext(mBrowsingContext);
   aLoadState->SetSourceElement(aContent->AsElement());

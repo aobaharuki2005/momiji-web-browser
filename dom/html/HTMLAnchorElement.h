@@ -107,10 +107,6 @@ class HTMLAnchorElement final : public nsGenericHTMLElement,
   void SetHreflang(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetHTMLAttr(nsGkAtoms::hreflang, aValue, rv);
   }
-  // Needed for docshell
-  void GetType(nsAString& aValue) const {
-    GetHTMLAttr(nsGkAtoms::type, aValue);
-  }
   void GetType(DOMString& aValue) const {
     GetHTMLAttr(nsGkAtoms::type, aValue);
   }
