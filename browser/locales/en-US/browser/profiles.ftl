@@ -232,3 +232,12 @@ soccer-avatar = Soccer
 sparkle-single-avatar = Sparkle
 star-avatar = Star
 video-game-controller-avatar = Video game controller
+
+custom-avatar-crop-back-button =
+  .aria-label = Back
+custom-avatar-crop-view =
+  .aria-label = Crop image view
+custom-avatar-crop-area =
+  .aria-label = Adjust crop area
+custom-avatar-drag-handle =
+  .aria-label = Resize crop area
