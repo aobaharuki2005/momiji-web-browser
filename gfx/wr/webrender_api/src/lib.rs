@@ -36,7 +36,6 @@ extern crate malloc_size_of_derive;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate time;
 
 extern crate malloc_size_of;
 extern crate peek_poke;
@@ -840,10 +839,4 @@ impl<'a> Drop for CrashAnnotatorGuard<'a> {
             annotator.clear(self.annotation);
         }
     }
-}
-
-fn precise_time_ns() -> u64 {
-    use std::convert::TryInto;
-    let dur = time::OffsetDateTime::now_utc() - time::OffsetDateTime::UNIX_EPOCH;
-    dur.whole_nanoseconds().try_into().unwrap_or(u64::MAX)
 }

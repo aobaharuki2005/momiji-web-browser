@@ -912,8 +912,8 @@ user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.zeitstempel]]
-version = "0.1.1"
-when = "2021-03-18"
+version = "0.1.2"
+when = "2025-07-22"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
@@ -1519,6 +1519,12 @@ who = "Johan Andersson <opensource@embark-studios.com>"
 criteria = "safe-to-deploy"
 version = "0.9.0"
 notes = "Only few constants. No unsafe usage or other ambient capabilities"
+
+[[audits.embark-studios.audits.yaml-rust]]
+who = "Johan Andersson <opensource@embark-studios.com>"
+criteria = "safe-to-deploy"
+version = "0.4.5"
+notes = "No unsafe usage or ambient capabilities"
 
 [[audits.google.audits.ash]]
 who = "David Koloski <dkoloski@google.com>"

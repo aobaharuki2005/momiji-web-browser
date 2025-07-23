@@ -17,7 +17,7 @@ use std::mem;
 use std::collections::HashMap;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 // local imports
-use crate::{display_item as di, precise_time_ns};
+use crate::display_item as di;
 use crate::display_item_cache::*;
 use crate::{APZScrollGeneration, HasScrollLinkedEffect, PipelineId, PropertyBinding};
 use crate::gradient_builder::GradientBuilder;
@@ -2201,7 +2201,7 @@ impl DisplayListBuilder {
     pub fn begin(&mut self) {
         assert_eq!(self.state, BuildState::Idle);
         self.state = BuildState::Build;
-        self.builder_start_time = precise_time_ns();
+        self.builder_start_time = zeitstempel::now();
         self.reset();
     }
 
@@ -2235,7 +2235,7 @@ impl DisplayListBuilder {
             &mut self.payload,
             DisplayListPayload::new(next_capacity),
         );
-        let end_time = precise_time_ns();
+        let end_time = zeitstempel::now();
 
         self.state = BuildState::Idle;
 

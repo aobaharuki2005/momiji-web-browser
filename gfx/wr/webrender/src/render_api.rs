@@ -24,7 +24,6 @@ use crate::api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation
 use crate::api::DEFAULT_TILE_SIZE;
 use crate::api::units::*;
 use crate::api_resources::ApiResources;
-use crate::precise_time_ns;
 use glyph_rasterizer::SharedFontResources;
 use crate::scene_builder_thread::{SceneBuilderRequest, SceneBuilderResult};
 use crate::intern::InterningMemoryReport;
@@ -223,7 +222,7 @@ impl Transaction {
             notifications: Vec::new(),
             use_scene_builder_thread: true,
             generate_frame: GenerateFrame::No,
-            creation_time: precise_time_ns(),
+            creation_time: zeitstempel::now(),
             invalidate_rendered_frame: false,
             low_priority: false,
             render_reasons: RenderReasons::empty(),
@@ -311,7 +310,7 @@ impl Transaction {
         epoch: Epoch,
         (pipeline_id, mut display_list): (PipelineId, BuiltDisplayList),
     ) {
-        display_list.set_send_time_ns(precise_time_ns());
+        display_list.set_send_time_ns(zeitstempel::now());
         self.scene_ops.push(
             SceneMsg::SetDisplayList {
                 display_list,

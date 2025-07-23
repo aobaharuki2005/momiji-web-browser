@@ -16,7 +16,7 @@ use api::{FramePublishId, PrimitiveKeyKind, RenderReasons};
 use api::units::*;
 use api::channel::{single_msg_channel, Sender, Receiver};
 use crate::bump_allocator::ChunkPool;
-use crate::{precise_time_ns, AsyncPropertySampler};
+use crate::AsyncPropertySampler;
 use crate::box_shadow::BoxShadow;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::render_api::CaptureBits;
@@ -518,7 +518,7 @@ impl Document {
         render_reasons: RenderReasons,
         chunk_pool: Arc<ChunkPool>,
     ) -> RenderedDocument {
-        let frame_build_start_time = precise_time_ns();
+        let frame_build_start_time = zeitstempel::now();
 
         // Advance to the next frame.
         self.stamp.advance();
@@ -559,7 +559,7 @@ impl Document {
         self.has_built_scene = false;
 
         let frame_build_time_ms =
-            profiler::ns_to_ms(precise_time_ns() - frame_build_start_time);
+            profiler::ns_to_ms(zeitstempel::now() - frame_build_start_time);
         self.profile.set(profiler::FRAME_BUILDING_TIME, frame_build_time_ms);
         self.profile.start_time(profiler::FRAME_SEND_TIME);
 
@@ -1489,7 +1489,7 @@ impl RenderBackend {
         has_built_scene: bool,
         start_time: Option<u64>
     ) -> bool {
-        let update_doc_start = precise_time_ns();
+        let update_doc_start = zeitstempel::now();
 
         let requested_frame = render_frame;
 
@@ -1569,7 +1569,7 @@ impl RenderBackend {
             }
 
             if start_time.is_some() {
-              Telemetry::record_time_to_frame_build(Duration::from_nanos(precise_time_ns() - start_time.unwrap()));
+              Telemetry::record_time_to_frame_build(Duration::from_nanos(zeitstempel::now() - start_time.unwrap()));
             }
             profile_scope!("generate frame");
 
@@ -1650,7 +1650,7 @@ impl RenderBackend {
                 None => {},
             }
 
-            let update_doc_time = profiler::ns_to_ms(precise_time_ns() - update_doc_start);
+            let update_doc_time = profiler::ns_to_ms(zeitstempel::now() - update_doc_start);
             rendered_document.profile.set(profiler::UPDATE_DOCUMENT_TIME, update_doc_time);
 
             let msg = ResultMsg::PublishPipelineInfo(doc.updated_pipeline_info());

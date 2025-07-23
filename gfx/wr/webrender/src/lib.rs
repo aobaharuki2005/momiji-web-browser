@@ -156,7 +156,6 @@ extern crate rayon;
 extern crate ron;
 #[macro_use]
 extern crate smallvec;
-extern crate time;
 #[cfg(all(feature = "capture", feature = "png"))]
 extern crate png;
 #[cfg(test)]
@@ -198,9 +197,3 @@ pub use bump_allocator::ChunkPool;
 
 #[cfg(feature = "sw_compositor")]
 pub use crate::compositor::sw_compositor;
-
-fn precise_time_ns() -> u64 {
-    use std::convert::TryInto;
-    let dur = time::OffsetDateTime::now_utc() - time::OffsetDateTime::UNIX_EPOCH;
-    dur.whole_nanoseconds().try_into().unwrap_or(u64::MAX)
-}

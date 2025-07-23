@@ -59,7 +59,7 @@ use crate::composite::{CompositorKind, Compositor, NativeTileId, CompositeFeatur
 use crate::composite::{CompositorConfig, NativeSurfaceOperationDetails, NativeSurfaceId, NativeSurfaceOperation, ClipRadius};
 use crate::composite::TileKind;
 use crate::segment::SegmentBuilder;
-use crate::{debug_colors, precise_time_ns, CompositorInputConfig, CompositorSurfaceUsage};
+use crate::{debug_colors, CompositorInputConfig, CompositorSurfaceUsage};
 use crate::device::{DepthFunction, Device, DrawTarget, ExternalTexture, GpuFrameId, UploadPBOPool};
 use crate::device::{ReadTarget, ShaderError, Texture, TextureFilter, TextureFlags, TextureSlot, Texel};
 use crate::device::query::{GpuSampler, GpuTimer};
@@ -1353,7 +1353,7 @@ impl Renderer {
                 result
             }
             None => {
-                self.last_time = precise_time_ns();
+                self.last_time = zeitstempel::now();
                 Ok(RenderResults::default())
             }
         };
@@ -1688,7 +1688,7 @@ impl Renderer {
         let t = self.profile.end_time(profiler::RENDERER_TIME);
         self.profile.end_time_if_started(profiler::TOTAL_FRAME_CPU_TIME);
 
-        let current_time = precise_time_ns();
+        let current_time = zeitstempel::now();
         if device_size.is_some() {
             let time = profiler::ns_to_ms(current_time - self.last_time);
             self.profile.set(profiler::FRAME_TIME, time);
@@ -2007,12 +2007,12 @@ impl Renderer {
 
             // Now that we've saved as many deletions for reuse as we can, actually delete whatever is left.
             if !pending_deletes.is_empty() {
-                let delete_texture_start = precise_time_ns();
+                let delete_texture_start = zeitstempel::now();
                 for (texture, _) in pending_deletes {
                     add_event_marker("TextureCacheFree");
                     self.device.delete_texture(texture);
                 }
-                delete_cache_texture_time += precise_time_ns() - delete_texture_start;
+                delete_cache_texture_time += zeitstempel::now() - delete_texture_start;
             }
 
             for allocation in update_list.allocations {
@@ -2024,7 +2024,7 @@ impl Renderer {
                 match allocation.kind {
                     TextureCacheAllocationKind::Alloc(ref info) |
                     TextureCacheAllocationKind::Reset(ref info) => {
-                        let create_cache_texture_start = precise_time_ns();
+                        let create_cache_texture_start = zeitstempel::now();
                         // Create a new native texture, as requested by the texture cache.
                         // If we managed to reuse a deleted texture, then prefer that instead.
                         //
@@ -2064,7 +2064,7 @@ impl Renderer {
                             }
                         }
 
-                        create_cache_texture_time += precise_time_ns() - create_cache_texture_start;
+                        create_cache_texture_time += zeitstempel::now() - create_cache_texture_start;
 
                         self.texture_resolver.texture_cache_map.insert(allocation.id, CacheTexture {
                             texture,

@@ -16,7 +16,7 @@ use crate::quad::QuadTileClassifier;
 use crate::segment::EdgeAaSegmentMask;
 use crate::border::BorderSegmentCacheKey;
 use crate::debug_item::{DebugItem, DebugMessage};
-use crate::{debug_colors, precise_time_ns};
+use crate::debug_colors;
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
 use glyph_rasterizer::GlyphKey;
@@ -1332,7 +1332,7 @@ impl PrimitiveScratchBuffer {
         const LINE_HEIGHT: f32 = 20.0;
         const X0: f32 = 32.0;
         const Y0: f32 = 32.0;
-        let now = precise_time_ns();
+        let now = zeitstempel::now();
 
         let msgs_to_remove = self.messages.len().max(MSGS_TO_RETAIN) - MSGS_TO_RETAIN;
         let mut msgs_removed = 0;
@@ -1438,7 +1438,7 @@ impl PrimitiveScratchBuffer {
     ) {
         self.messages.push(DebugMessage {
             msg,
-            timestamp: precise_time_ns(),
+            timestamp: zeitstempel::now(),
         })
     }
 }
