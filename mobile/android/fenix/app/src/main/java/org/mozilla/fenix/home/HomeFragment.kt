@@ -577,6 +577,7 @@ class HomeFragment : Fragment() {
                     context = activity,
                     container = binding.navigationBarContainer,
                     toolbarStore = toolbarStore,
+                    settings = activity.settings(),
                     hideWhenKeyboardShown = true,
                 )
 

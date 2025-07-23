@@ -7,39 +7,31 @@ package org.mozilla.fenix.home.toolbar
 import android.content.Context
 import android.view.Gravity
 import android.view.ViewGroup
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.updateLayoutParams
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.ext.getUrl
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.utils.BackInvokedHandler
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
+import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ToolbarGravityUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
-import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
-import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
+import mozilla.components.compose.browser.toolbar.store.ToolbarGravity
+import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Bottom
+import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Top
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.support.ktx.android.view.ImeInsetsSynchronizer
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
-import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
 import org.mozilla.fenix.components.metrics.MetricsUtils
@@ -80,7 +72,15 @@ internal class HomeToolbarComposable(
     private val searchSuggestionsContent: @Composable (Modifier) -> Unit,
     private val navigationBarContent: (@Composable () -> Unit)?,
 ) : FenixHomeToolbar {
-    private var showDivider by mutableStateOf(true)
+    init {
+        // Reset the toolbar visibility & position whenever coming back to the home screen
+        // like after changing the toolbar position in settings.
+        toolbarStore.dispatch(
+            ToolbarGravityUpdated(
+                buildToolbarGravityConfig(),
+            ),
+        )
+    }
 
     override val layout = ComposeView(context).apply {
         id = R.id.composable_toolbar
@@ -107,7 +107,7 @@ internal class HomeToolbarComposable(
                     if (settings.shouldUseBottomToolbar) {
                         searchSuggestionsContent(Modifier.weight(1f))
                     }
-                    BrowserToolbar(showDivider, settings.shouldUseBottomToolbar)
+                    BrowserToolbar(toolbarStore)
                     if (settings.toolbarPosition == BOTTOM) {
                         navigationBarContent?.invoke()
                     }
@@ -138,7 +138,8 @@ internal class HomeToolbarComposable(
     }
 
     override fun updateDividerVisibility(isVisible: Boolean) {
-        showDivider = isVisible
+        // no-op
+        // For the toolbar redesign we will always show the toolbar divider
     }
 
     override fun updateButtonVisibility(
@@ -155,22 +156,9 @@ internal class HomeToolbarComposable(
         // To be added later
     }
 
-    @Composable
-    private fun BrowserToolbar(shouldShowDivider: Boolean, shouldUseBottomToolbar: Boolean) {
-        // Ensure the divider is shown together with the toolbar
-        Box {
-            BrowserToolbar(toolbarStore)
-            if (shouldShowDivider) {
-                Divider(
-                    modifier = Modifier.align(
-                        when (shouldUseBottomToolbar) {
-                            true -> Alignment.TopCenter
-                            false -> Alignment.BottomCenter
-                        },
-                    ),
-                )
-            }
-        }
+    private fun buildToolbarGravityConfig(): ToolbarGravity = when (settings.shouldUseBottomToolbar) {
+        true -> Bottom
+        false -> Top
     }
 
     private fun updateHomeAppBarIntegration() {

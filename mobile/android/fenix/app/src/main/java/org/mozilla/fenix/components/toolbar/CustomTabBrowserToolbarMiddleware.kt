@@ -38,7 +38,6 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarState
 import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
 import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
 import mozilla.components.compose.browser.toolbar.store.ProgressBarConfig
-import mozilla.components.compose.browser.toolbar.store.ProgressBarGravity
 import mozilla.components.concept.engine.cookiehandling.CookieBannersStorage
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissionsStorage
@@ -408,13 +407,7 @@ class CustomTabBrowserToolbarMiddleware(
         )
     }
 
-    private fun buildProgressBar(progress: Int = 0) = ProgressBarConfig(
-        progress = progress,
-        gravity = when (settings.shouldUseBottomToolbar) {
-            true -> ProgressBarGravity.Top
-            false -> ProgressBarGravity.Bottom
-        },
-    )
+    private fun buildProgressBar(progress: Int = 0) = ProgressBarConfig(progress)
 
     private suspend fun getUrlDomain(): String? {
         val url = customTab?.content?.url

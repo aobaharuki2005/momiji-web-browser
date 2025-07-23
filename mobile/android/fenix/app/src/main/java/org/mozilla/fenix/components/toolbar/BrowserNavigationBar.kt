@@ -18,10 +18,10 @@ import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.browser.toolbar.NavigationBar
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
+import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Bottom
+import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Top
 import mozilla.components.feature.toolbar.ToolbarBehaviorController
 import mozilla.components.lib.state.ext.observeAsState
-import org.mozilla.fenix.components.Components
-import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.compose.utils.KeyboardState
 import org.mozilla.fenix.compose.utils.keyboardAsState
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -68,7 +68,7 @@ class BrowserNavigationBar(
                 onDispose { toolbarController.stop() }
             }
 
-            DefaultNavigationBarContent(showDivider = true)
+            DefaultNavigationBarContent()
         }.apply {
             container.addView(
                 this,
@@ -97,12 +97,18 @@ class BrowserNavigationBar(
             }
         }
 
-        DefaultNavigationBarContent(showDivider = false)
+        DefaultNavigationBarContent()
     }
 
     @Composable
-    private fun DefaultNavigationBarContent(showDivider: Boolean) {
+    private fun DefaultNavigationBarContent() {
         val uiState by toolbarStore.observeAsState(initialValue = toolbarStore.state) { it }
+        val toolbarGravity = remember(settings) {
+            when (settings.shouldUseBottomToolbar) {
+                true -> Bottom
+                false -> Top
+            }
+        }
         val isKeyboardVisible = if (hideWhenKeyboardShown) {
             val keyboardState by keyboardAsState()
             keyboardState == KeyboardState.Opened
@@ -114,7 +120,7 @@ class BrowserNavigationBar(
             FirefoxTheme {
                 NavigationBar(
                     actions = uiState.displayState.navigationActions,
-                    shouldShowDivider = showDivider,
+                    toolbarGravity = toolbarGravity,
                     onInteraction = { toolbarStore.dispatch(it) },
                 )
             }
