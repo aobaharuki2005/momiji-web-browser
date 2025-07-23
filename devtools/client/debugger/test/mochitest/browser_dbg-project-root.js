@@ -367,7 +367,7 @@ function assertRootLabelTooltip(dbg, text) {
   const rootHeader = dbg.win.document.querySelector(
     ".sources-clear-root-label"
   );
-  ok(rootHeader.title.includes(text));
+  Assert.stringContains(rootHeader.title, text);
 }
 
 async function clearProjectRoot(dbg) {

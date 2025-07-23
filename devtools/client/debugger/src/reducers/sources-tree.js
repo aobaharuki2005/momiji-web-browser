@@ -476,9 +476,7 @@ function addSource(threadItems, source, sourceActor) {
   if (lastDirectoryItem?.path == parentPath) {
     directoryItem = lastDirectoryItem;
   } else {
-    const { url } = displayURL;
-    const parentUrl = url.substring(0, url.lastIndexOf("/"));
-    directoryItem = addOrGetParentDirectory(groupItem, parentPath, parentUrl);
+    directoryItem = addOrGetParentDirectory(groupItem, parentPath);
     lastDirectoryItem = directoryItem;
   }
 
@@ -621,13 +619,11 @@ export function sortThreads(a, b) {
  *        The Group Item for the group where the path should be displayed.
  * @param {String} path
  *        Path of the directory for which we want a Directory Item.
- * @param {String} url
- *        URL of the directory for which we want a Directory Item.
  * @return {GroupItem|DirectoryItem}
  *        The parent Item where this path should be inserted.
  *        Note that it may be displayed right under the Group Item if the path is empty.
  */
-function addOrGetParentDirectory(groupItem, path, url) {
+function addOrGetParentDirectory(groupItem, path) {
   // We reached the top of the Tree, so return the Group Item.
   if (!path) {
     return groupItem;
@@ -640,15 +636,10 @@ function addOrGetParentDirectory(groupItem, path, url) {
   // It doesn't exists, so we will create a new Directory Item.
   // But now, lookup recursively for the parent Item for this to-be-create Directory Item
   const parentPath = path.substring(0, path.lastIndexOf("/"));
-  const parentUrl = url.substring(0, url.lastIndexOf("/"));
-  const parentDirectory = addOrGetParentDirectory(
-    groupItem,
-    parentPath,
-    parentUrl
-  );
+  const parentDirectory = addOrGetParentDirectory(groupItem, parentPath);
 
   // We can now create the new Directory Item and register it in its parent Item.
-  const directory = createDirectoryTreeItem(path, url, parentDirectory);
+  const directory = createDirectoryTreeItem(path, parentDirectory);
   // Copy children in order to force updating react in case we picked
   // this directory as a project root
   parentDirectory.children = [...parentDirectory.children];
@@ -715,7 +706,7 @@ function createGroupTreeItem(groupName, origin, parent, source) {
     groupName,
 
     // This is only used by project directory root tooltip
-    url: origin,
+    origin,
 
     // When a content script appear in a web page,
     // a dedicated group is created for it and should
@@ -728,7 +719,7 @@ function createGroupTreeItem(groupName, origin, parent, source) {
     _allGroupDirectoryItems: new Map(),
   };
 }
-function createDirectoryTreeItem(path, url, parent) {
+function createDirectoryTreeItem(path, parent) {
   // If the parent is a group we want to use '/' as separator
   const pathSeparator = parent.type == "directory" ? "/" : "|";
 
@@ -755,9 +746,6 @@ function createDirectoryTreeItem(path, url, parent) {
     // path will be:
     //   foo/bar
     path,
-
-    // This is only used by project directory root tooltip
-    url,
   };
 }
 function createSourceTreeItem(source, sourceActor, parent) {
