@@ -345,21 +345,19 @@ var ctrlTab = {
       let canvas = aPreview._canvas;
       let canvasWidth = this.canvasWidth;
       let canvasHeight = this.canvasHeight;
-      let placeholder = document.createElement("img");
-      placeholder.className = "ctrlTab-placeholder";
-      placeholder.setAttribute("width", canvasWidth);
-      placeholder.setAttribute("height", canvasHeight);
-      placeholder.setAttribute("alt", "");
-      canvas.appendChild(placeholder);
+      canvas.setAttribute("width", canvasWidth);
+      canvas.style.minWidth = canvasWidth + "px";
+      canvas.style.maxWidth = canvasWidth + "px";
+      canvas.style.minHeight = canvasHeight + "px";
+      canvas.style.maxHeight = canvasHeight + "px";
       tabPreviews
         .get(aTab)
         .then(img => {
           switch (aPreview._tab) {
             case aTab:
+              this._clearCanvas(canvas);
               if (img) {
-                img.style.width = canvasWidth + "px";
-                img.style.height = canvasHeight + "px";
-                canvas.replaceChild(img, placeholder);
+                canvas.appendChild(img);
               }
               break;
             case null:
@@ -392,7 +390,9 @@ var ctrlTab = {
 
   // Remove previous preview images from the canvas box.
   _clearCanvas(canvas) {
-    canvas.replaceChildren();
+    while (canvas.firstElementChild) {
+      canvas.firstElementChild.remove();
+    }
   },
 
   advanceFocus: function ctrlTab_advanceFocus(aForward) {
