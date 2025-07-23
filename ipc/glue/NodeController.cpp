@@ -53,11 +53,8 @@ static LazyLogModule gNodeControllerLog{"NodeController"};
     NODECONTROLLER_LOG(LogLevel::Warning, fmt_, ##__VA_ARGS__)
 #endif
 
-NodeController::NodeController(const NodeName& aName,
-                               const IPC::Channel::ChannelKind* aChannelKind)
-    : mName(aName),
-      mNode(MakeUnique<Node>(aName, this)),
-      mChannelKind(aChannelKind) {}
+NodeController::NodeController(const NodeName& aName)
+    : mName(aName), mNode(MakeUnique<Node>(aName, this)) {}
 
 NodeController::~NodeController() {
   auto state = mState.Lock();
@@ -319,9 +316,9 @@ void NodeController::ContactRemotePeer(const NodeName& aNode,
   if (aEvent && !IsBroker() && aNode != kBrokerNodeName &&
       aEvent->type() == Event::kUserMessage) {
     auto* userEvent = static_cast<UserMessageEvent*>(aEvent.get());
-    needsRelay = userEvent->HasMessage() &&
-                 mChannelKind->num_relayed_attachments(
-                     *userEvent->GetMessage<IPC::Message>()) > 0;
+    needsRelay =
+        userEvent->HasMessage() &&
+        userEvent->GetMessage<IPC::Message>()->num_relayed_attachments() > 0;
   }
 #endif
 
@@ -387,8 +384,8 @@ void NodeController::ContactRemotePeer(const NodeName& aNode,
                          "Relaying message '%s' for peer %s due to %" PRIu32
                          " attachments",
                          message->name(), ToString(aNode).c_str(),
-                         mChannelKind->num_relayed_attachments(*message));
-      MOZ_ASSERT(mChannelKind->num_relayed_attachments(*message) > 0 && broker);
+                         message->num_relayed_attachments());
+      MOZ_ASSERT(message->num_relayed_attachments() > 0 && broker);
       broker->SendEventMessage(std::move(message));
     } else if (peer) {
       peer->SendEventMessage(std::move(message));
@@ -446,7 +443,7 @@ void NodeController::OnEventMessage(const NodeName& aFromNode,
   AssertIOThread();
 
   bool isRelay = aMessage->is_relay();
-  if (isRelay && mChannelKind->num_relayed_attachments(*aMessage) == 0) {
+  if (isRelay && aMessage->num_relayed_attachments() == 0) {
     NODECONTROLLER_WARNING(
         "Invalid relay message without relayed attachments from peer %s!",
         ToString(aFromNode).c_str());
@@ -489,7 +486,7 @@ void NodeController::OnEventMessage(const NodeName& aFromNode,
         return;
       }
       MOZ_ASSERT(message->is_relay(), "Message stopped being a relay message?");
-      MOZ_ASSERT(mChannelKind->num_relayed_attachments(*message) > 0,
+      MOZ_ASSERT(message->num_relayed_attachments() > 0,
                  "Message doesn't have relayed attachments?");
 
       NODECONTROLLER_LOG(
@@ -497,8 +494,7 @@ void NodeController::OnEventMessage(const NodeName& aFromNode,
           "Relaying message '%s' from peer %s to peer %s (%" PRIu32
           " attachments)",
           message->name(), ToString(aFromNode).c_str(),
-          ToString(relayTarget).c_str(),
-          mChannelKind->num_relayed_attachments(*message));
+          ToString(relayTarget).c_str(), message->num_relayed_attachments());
 
       RefPtr<NodeChannel> peer;
       {
@@ -628,7 +624,7 @@ void NodeController::OnIntroduce(const NodeName& aFromNode,
   MOZ_ASSERT(aIntroduction.mMyPid == base::GetCurrentProcId(),
              "We're the wrong process to receive this?");
 
-  if (!mChannelKind->is_valid_handle(aIntroduction.mHandle)) {
+  if (!aIntroduction.mHandle) {
     NODECONTROLLER_WARNING("Could not be introduced to peer %s",
                            ToString(aIntroduction.mName).c_str());
     mNode->LostConnectionToNode(aIntroduction.mName);
@@ -638,13 +634,11 @@ void NodeController::OnIntroduce(const NodeName& aFromNode,
     return;
   }
 
-  RefPtr<IPC::Channel> channel =
-      IPC::Channel::Create(std::move(aIntroduction.mHandle),
-                           IPC::Channel::MODE_PEER, aIntroduction.mOtherPid);
-  MOZ_ASSERT(channel->GetKind() == mChannelKind);
-
-  auto nodeChannel = MakeRefPtr<NodeChannel>(aIntroduction.mName, channel, this,
-                                             aIntroduction.mOtherPid);
+  auto channel =
+      MakeUnique<IPC::Channel>(std::move(aIntroduction.mHandle),
+                               aIntroduction.mMode, aIntroduction.mOtherPid);
+  auto nodeChannel = MakeRefPtr<NodeChannel>(
+      aIntroduction.mName, std::move(channel), this, aIntroduction.mOtherPid);
 
   {
     auto state = mState.Lock();
@@ -700,7 +694,7 @@ void NodeController::OnRequestIntroduction(const NodeName& aFromNode,
 
   RefPtr<NodeChannel> peerB = GetNodeChannel(aName);
   IPC::Channel::ChannelHandle handleA, handleB;
-  if (!peerB || !mChannelKind->create_raw_pipe(&handleA, &handleB)) {
+  if (!peerB || !IPC::Channel::CreateRawPipe(&handleA, &handleB)) {
     NODECONTROLLER_WARNING(
         "Rejecting introduction request from '%s' for unknown peer '%s'",
         ToString(aFromNode).c_str(), ToString(aName).c_str());
@@ -708,16 +702,18 @@ void NodeController::OnRequestIntroduction(const NodeName& aFromNode,
     // We don't know this peer, or ran into issues creating the descriptor! Send
     // an invalid introduction to content to clean up any pending outbound
     // messages.
-    NodeChannel::Introduction intro{aName, IPC::Channel::ChannelHandle{},
+    NodeChannel::Introduction intro{aName, nullptr, IPC::Channel::MODE_SERVER,
                                     peerA->OtherPid(), base::kInvalidProcessId};
     peerA->Introduce(std::move(intro));
     return;
   }
 
-  NodeChannel::Introduction introA{aName, std::move(handleA), peerA->OtherPid(),
+  NodeChannel::Introduction introA{aName, std::move(handleA),
+                                   IPC::Channel::MODE_SERVER, peerA->OtherPid(),
                                    peerB->OtherPid()};
   NodeChannel::Introduction introB{aFromNode, std::move(handleB),
-                                   peerB->OtherPid(), peerA->OtherPid()};
+                                   IPC::Channel::MODE_CLIENT, peerB->OtherPid(),
+                                   peerA->OtherPid()};
   peerA->Introduce(std::move(introA));
   peerB->Introduce(std::move(introB));
 }
@@ -778,30 +774,20 @@ static mojo::core::ports::NodeName RandomNodeName() {
   return {RandomUint64OrDie(), RandomUint64OrDie()};
 }
 
-bool NodeController::InviteChildProcess(
-    GeckoChildProcessHost* aChildProcessHost,
-    IPC::Channel::ChannelHandle* aClientHandle, ScopedPort* aInitialPort,
-    NodeChannel** aNodeChannel) {
+std::tuple<ScopedPort, RefPtr<NodeChannel>> NodeController::InviteChildProcess(
+    UniquePtr<IPC::Channel> aChannel,
+    GeckoChildProcessHost* aChildProcessHost) {
   MOZ_ASSERT(IsBroker());
   AssertIOThread();
-
-  IPC::Channel::ChannelHandle serverHandle;
-  if (!mChannelKind->create_raw_pipe(&serverHandle, aClientHandle)) {
-    return false;
-  }
-
-  RefPtr<IPC::Channel> channel = IPC::Channel::Create(
-      std::move(serverHandle), IPC::Channel::MODE_BROKER_SERVER,
-      base::kInvalidProcessId);
-  MOZ_ASSERT(channel->GetKind() == mChannelKind);
 
   // Create the peer with a randomly generated name, and store it in `mInvites`.
   // This channel and name will be used for communication with the node until it
   // sends us its' real name in an `AcceptInvite` message.
   auto ports = CreatePortPair();
   auto inviteName = RandomNodeName();
-  auto nodeChannel = MakeRefPtr<NodeChannel>(
-      inviteName, channel, this, base::kInvalidProcessId, aChildProcessHost);
+  auto nodeChannel =
+      MakeRefPtr<NodeChannel>(inviteName, std::move(aChannel), this,
+                              base::kInvalidProcessId, aChildProcessHost);
   {
     auto state = mState.Lock();
     MOZ_DIAGNOSTIC_ASSERT(!state->mPeers.Contains(inviteName),
@@ -813,29 +799,22 @@ bool NodeController::InviteChildProcess(
   }
 
   nodeChannel->Start();
-
-  *aInitialPort = std::move(ports.first);
-  nodeChannel.forget(aNodeChannel);
-  return true;
+  return std::tuple{std::move(ports.first), std::move(nodeChannel)};
 }
 
-void NodeController::InitBrokerProcess(
-    const IPC::Channel::ChannelKind* aChannelKind) {
+void NodeController::InitBrokerProcess() {
   AssertIOThread();
   MOZ_ASSERT(!gNodeController);
-  gNodeController = new NodeController(kBrokerNodeName, aChannelKind);
+  gNodeController = new NodeController(kBrokerNodeName);
 }
 
-ScopedPort NodeController::InitChildProcess(
-    IPC::Channel::ChannelHandle&& aChannelHandle, base::ProcessId aParentPid) {
+ScopedPort NodeController::InitChildProcess(UniquePtr<IPC::Channel> aChannel,
+                                            base::ProcessId aParentPid) {
   AssertIOThread();
   MOZ_ASSERT(!gNodeController);
-
-  RefPtr<IPC::Channel> channel = IPC::Channel::Create(
-      std::move(aChannelHandle), IPC::Channel::MODE_BROKER_CLIENT, aParentPid);
 
   auto nodeName = RandomNodeName();
-  gNodeController = new NodeController(nodeName, channel->GetKind());
+  gNodeController = new NodeController(nodeName);
 
   auto ports = gNodeController->CreatePortPair();
   PortRef toMerge = ports.second.Release();
@@ -849,8 +828,8 @@ ScopedPort NodeController::InitChildProcess(
     locker.port()->pending_merge_peer = true;
   }
 
-  auto nodeChannel = MakeRefPtr<NodeChannel>(kBrokerNodeName, channel,
-                                             gNodeController, aParentPid);
+  auto nodeChannel = MakeRefPtr<NodeChannel>(
+      kBrokerNodeName, std::move(aChannel), gNodeController, aParentPid);
   {
     auto state = gNodeController->mState.Lock();
     MOZ_DIAGNOSTIC_ASSERT(!state->mPeers.Contains(kBrokerNodeName));

@@ -23,10 +23,6 @@ class IOThread : private base::Thread {
   // lifetime of the IO Thread).
   static IOThread* Get() { return sSingleton; }
 
-  // Called during XPCOM component startup and shutdown.
-  static void Startup();
-  static void Shutdown();
-
   // Get the nsISerialEventTarget which should be used to dispatch events to run
   // on the IOThreadBase.
   nsISerialEventTarget* GetEventTarget() {
@@ -54,17 +50,13 @@ class IOThread : private base::Thread {
 
 // Background I/O thread used by the parent process.
 class IOThreadParent : public IOThread {
- protected:
-  void Init() override;
-  void CleanUp() override;
-
- private:
-  friend class IOThread;
-
+ public:
   IOThreadParent();
   ~IOThreadParent();
 
-  const IPC::Channel::ChannelKind* mChannelKind;
+ protected:
+  void Init() override;
+  void CleanUp() override;
 };
 
 // Background I/O thread used by the child process.

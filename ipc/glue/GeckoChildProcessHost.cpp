@@ -893,21 +893,26 @@ bool GeckoChildProcessHost::LaunchAndWaitForProcessHandle(
   return WaitForProcessHandle();
 }
 
-bool GeckoChildProcessHost::InitializeChannel(
-    IPC::Channel::ChannelHandle* aClientHandle) {
-  mNodeController = NodeController::GetSingleton();
-  if (!mNodeController->InviteChildProcess(this, aClientHandle, &mInitialPort,
-                                           getter_AddRefs(mNodeChannel))) {
-    return false;
-  }
+void GeckoChildProcessHost::InitializeChannel(
+    IPC::Channel::ChannelHandle&& aServerHandle) {
+  // Create the IPC channel which will be used for communication with this
+  // process.
+  mozilla::UniquePtr<IPC::Channel> channel = MakeUnique<IPC::Channel>(
+      std::move(aServerHandle), IPC::Channel::MODE_SERVER,
+      base::kInvalidProcessId);
+#if defined(XP_WIN)
+  channel->StartAcceptingHandles(IPC::Channel::MODE_SERVER);
+#elif defined(XP_DARWIN)
+  channel->StartAcceptingMachPorts(IPC::Channel::MODE_SERVER);
+#endif
 
-  MOZ_ASSERT(mInitialPort.IsValid());
-  MOZ_ASSERT(mNodeChannel);
+  mNodeController = NodeController::GetSingleton();
+  std::tie(mInitialPort, mNodeChannel) =
+      mNodeController->InviteChildProcess(std::move(channel), this);
 
   MonitorAutoLock lock(mMonitor);
   mProcessState = CHANNEL_INITIALIZED;
   lock.Notify();
-  return true;
 }
 
 void GeckoChildProcessHost::SetAlreadyDead() {
@@ -1883,27 +1888,14 @@ RefPtr<ProcessLaunchPromise> BaseProcessLauncher::Launch(
   // The ForkServer doesn't use IPC::Channel for communication, so we can skip
   // initializing it.
   if (mProcessType != GeckoProcessType_ForkServer) {
+    IPC::Channel::ChannelHandle serverHandle;
     IPC::Channel::ChannelHandle clientHandle;
-    if (!aHost->InitializeChannel(&clientHandle)) {
-      return ProcessLaunchPromise::CreateAndReject(
-          LaunchError("InitializeChannel"), __func__);
-    }
-
-    if (auto* handle = std::get_if<UniqueFileHandle>(&clientHandle)) {
-      geckoargs::sIPCHandle.Put(std::move(*handle), mChildArgs);
-    }
-#ifdef XP_DARWIN
-    // NOTE: We don't support passing UniqueMachReceiveRight instances on the
-    // command line, so clientHandle must be a send right.
-    else if (auto* port = std::get_if<UniqueMachSendRight>(&clientHandle)) {
-      geckoargs::sIPCPort.Put(std::move(*port), mChildArgs);
-    }
-#endif
-    else {
-      MOZ_ASSERT_UNREACHABLE();
-      return ProcessLaunchPromise::CreateAndReject(LaunchError("BadPipeType"),
+    if (!IPC::Channel::CreateRawPipe(&serverHandle, &clientHandle)) {
+      return ProcessLaunchPromise::CreateAndReject(LaunchError("CreateRawPipe"),
                                                    __func__);
     }
+    aHost->InitializeChannel(std::move(serverHandle));
+    geckoargs::sIPCHandle.Put(std::move(clientHandle), mChildArgs);
   }
 
   return InvokeAsync(mLaunchThread, this, __func__,

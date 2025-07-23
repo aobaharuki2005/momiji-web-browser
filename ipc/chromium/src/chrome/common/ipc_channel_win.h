@@ -27,35 +27,39 @@
 
 namespace IPC {
 
-class ChannelWin : public Channel, public MessageLoopForIO::IOHandler {
+class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
  public:
-  ChannelWin(mozilla::UniqueFileHandle pipe, Mode mode,
-             base::ProcessId other_pid);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_EVENT_TARGET(
+      ChannelImpl, IOThread().GetEventTarget());
 
-  bool Connect(Listener* listener) MOZ_EXCLUDES(SendMutex()) override;
-  void Close() MOZ_EXCLUDES(SendMutex()) override;
+  using ChannelHandle = Channel::ChannelHandle;
+
+  // Mirror methods of Channel, see ipc_channel.h for description.
+  ChannelImpl(ChannelHandle pipe, Mode mode, base::ProcessId other_pid);
+  bool Connect(Listener* listener) MOZ_EXCLUDES(SendMutex());
+  void Close() MOZ_EXCLUDES(SendMutex());
+  void StartAcceptingHandles(Mode mode) MOZ_EXCLUDES(SendMutex());
   // NOTE: `Send` may be called on threads other than the I/O thread.
-  bool Send(mozilla::UniquePtr<Message> message)
-      MOZ_EXCLUDES(SendMutex()) override;
+  bool Send(mozilla::UniquePtr<Message> message) MOZ_EXCLUDES(SendMutex());
 
-  void SetOtherPid(base::ProcessId other_pid) override;
+  void SetOtherPid(base::ProcessId other_pid);
 
-  const ChannelKind* GetKind() const override { return &sKind; }
-
-  static const ChannelKind sKind;
+  // See the comment in ipc_channel.h for info on IsClosed()
+  // NOTE: `IsClosed` may be called on threads other than the I/O thread.
+  bool IsClosed() MOZ_EXCLUDES(SendMutex()) {
+    mozilla::MutexAutoLock lock(SendMutex());
+    chan_cap_.NoteLockHeld();
+    return pipe_ == INVALID_HANDLE_VALUE;
+  }
 
  private:
-  ~ChannelWin() {
+  ~ChannelImpl() {
     IOThread().AssertOnCurrentThread();
     if (pipe_ != INVALID_HANDLE_VALUE ||
         other_process_ != INVALID_HANDLE_VALUE) {
       Close();
     }
   }
-
-  static bool CreateRawPipe(ChannelHandle* server, ChannelHandle* client);
-  static uint32_t NumRelayedAttachments(const IPC::Message& message);
-  static bool IsValidHandle(const ChannelHandle& handle);
 
   void Init(Mode mode) MOZ_REQUIRES(SendMutex(), IOThread());
 
@@ -64,7 +68,6 @@ class ChannelWin : public Channel, public MessageLoopForIO::IOHandler {
   void OutputQueuePop() MOZ_REQUIRES(SendMutex());
 
   bool EnqueueHelloMessage() MOZ_REQUIRES(SendMutex(), IOThread());
-  void MaybeOpenProcessHandle() MOZ_REQUIRES(SendMutex(), IOThread());
   void CloseLocked() MOZ_REQUIRES(SendMutex(), IOThread());
 
   bool ProcessIncomingMessages(MessageLoopForIO::IOContext* context,
@@ -83,16 +86,29 @@ class ChannelWin : public Channel, public MessageLoopForIO::IOHandler {
   virtual void OnIOCompleted(MessageLoopForIO::IOContext* context,
                              DWORD bytes_transfered, DWORD error);
 
+  const mozilla::EventTargetCapability<nsISerialEventTarget>& IOThread() const
+      MOZ_RETURN_CAPABILITY(chan_cap_.Target()) {
+    return chan_cap_.Target();
+  }
+
+  mozilla::Mutex& SendMutex() MOZ_RETURN_CAPABILITY(chan_cap_.Lock()) {
+    return chan_cap_.Lock();
+  }
+
  private:
-  Mode mode_ MOZ_GUARDED_BY(chan_cap_);
+  // Compound capability of the IO thread and a Mutex.
+  mozilla::EventTargetAndLockCapability<nsISerialEventTarget, mozilla::Mutex>
+      chan_cap_;
+
+  Mode mode_ MOZ_GUARDED_BY(IOThread());
 
   struct State {
-    explicit State(ChannelWin* channel);
+    explicit State(ChannelImpl* channel);
     ~State();
     MessageLoopForIO::IOContext context;
     // When there is pending I/O, this holds a strong reference to the
-    // ChannelWin to prevent it from going away.
-    RefPtr<ChannelWin> is_pending;
+    // ChannelImpl to prevent it from going away.
+    RefPtr<ChannelImpl> is_pending;
   };
 
   State input_state_ MOZ_GUARDED_BY(IOThread());
@@ -133,9 +149,17 @@ class ChannelWin : public Channel, public MessageLoopForIO::IOHandler {
   base::ProcessId other_pid_ MOZ_GUARDED_BY(chan_cap_) =
       base::kInvalidProcessId;
 
+  // Whether or not to accept handles from a remote process, and whether this
+  // process is the privileged side of a IPC::Channel which can transfer
+  // handles.
+  bool accept_handles_ MOZ_GUARDED_BY(chan_cap_) = false;
+  bool privileged_ MOZ_GUARDED_BY(chan_cap_) = false;
+
   // A privileged process handle used to transfer HANDLEs to and from the remote
-  // process. This will only be used if `mode_ == MODE_BROKER_SERVER`.
+  // process. This will only be used if `privileged_` is set.
   HANDLE other_process_ MOZ_GUARDED_BY(chan_cap_) = INVALID_HANDLE_VALUE;
+
+  DISALLOW_COPY_AND_ASSIGN(ChannelImpl);
 };
 
 }  // namespace IPC
