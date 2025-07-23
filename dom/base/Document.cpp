@@ -2422,6 +2422,17 @@ void Document::AccumulatePageLoadTelemetry(
   }
 #endif
 
+  nsCOMPtr<nsICacheInfoChannel> cacheInfoChannel =
+      do_QueryInterface(GetChannel());
+  if (cacheInfoChannel) {
+    nsICacheInfoChannel::CacheDisposition disposition =
+        nsICacheInfoChannel::kCacheUnknown;
+    nsresult rv = cacheInfoChannel->GetCacheDisposition(&disposition);
+    if (NS_SUCCEEDED(rv)) {
+      aEventTelemetryDataOut.cacheDisposition = mozilla::Some(disposition);
+    }
+  }
+
   aEventTelemetryDataOut.features = mozilla::Some(mPageloadEventFeatures);
 }
 

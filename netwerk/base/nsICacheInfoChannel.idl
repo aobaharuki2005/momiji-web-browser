@@ -205,6 +205,11 @@ interface nsICacheInfoChannel : nsISupports
    *        passed.
    */
   nsIAsyncOutputStream openAlternativeOutputStream(in ACString type, in long long predictedSize);
+
+  /**
+   * Returns the cache disposition for this channel.
+   */
+  nsICacheInfoChannel_CacheDisposition getCacheDisposition();
 };
 
 %{ C++
