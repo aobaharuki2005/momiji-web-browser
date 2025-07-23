@@ -230,6 +230,11 @@ MOZ_EXPORT struct wl_pointer* gdk_wayland_device_get_wl_pointer(
     GdkDevice* device) {
   return NULL;
 }
+
+MOZ_EXPORT struct wl_seat* gdk_wayland_device_get_wl_seat(GdkDevice* device) {
+  return NULL;
+}
+
 MOZ_EXPORT struct wl_display* gdk_wayland_display_get_wl_display(
     GdkDisplay* display) {
   return NULL;
