@@ -3105,7 +3105,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   () => {
     if (
       gUnifiedExtensions._initialized &&
-      gUnifiedExtensions.buttonAlwaysVisible
+      !gUnifiedExtensions.buttonAlwaysVisible
     ) {
       gUnifiedExtensions.updateButtonVisibility();
     }
