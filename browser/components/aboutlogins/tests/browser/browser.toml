@@ -26,6 +26,9 @@ skip-if = ["os == 'mac' && os_version == '10.15' && processor == 'x86_64' && opt
 ["browser_confirmDeleteDialog.js"]
 
 ["browser_contextmenuFillLogins.js"]
+skip-if = [
+  "os == 'linux' && debug",# Disabling because of Bug 1974208
+]
 
 ["browser_copyToClipboardButton.js"]
 
