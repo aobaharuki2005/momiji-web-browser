@@ -545,7 +545,7 @@ bool HTMLEditUtils::IsAnyTableElementButNotTable(nsINode* aNode) {
 /**
  * IsTable() returns true if aNode is an html table.
  */
-bool HTMLEditUtils::IsTable(nsINode* aNode) {
+bool HTMLEditUtils::IsTable(const nsINode* aNode) {
   return aNode && aNode->IsHTMLElement(nsGkAtoms::table);
 }
 
@@ -3183,6 +3183,10 @@ std::ostream& operator<<(std::ostream& aStream,
   constexpr static const char* names[] = {
       "RecognizeInvisibleWhiteSpaces",
       "StopAtComment",
+      "StopAtListElement",
+      "StopAtListItemElement",
+      "StopAtTableElement",
+      "StopAtAnyTableElement",
   };
   return aStream << names[static_cast<uint32_t>(aOption)];
 }

@@ -326,7 +326,7 @@ class HTMLEditUtils final {
   static bool IsNodeThatCanOutdent(nsINode* aNode);
   static bool IsHeader(nsINode& aNode);
   static bool IsListItem(const nsINode* aNode);
-  static bool IsTable(nsINode* aNode);
+  static bool IsTable(const nsINode* aNode);
   static bool IsTableRow(nsINode* aNode);
   static bool IsAnyTableElement(const nsINode* aNode);
   static bool IsAnyTableElementButNotTable(nsINode* aNode);
@@ -2626,6 +2626,14 @@ class HTMLEditUtils final {
     RecognizeInvisibleWhiteSpaces,
     // Stop at Comment node.
     StopAtComment,
+    // Stop at List element.
+    StopAtListElement,
+    // Stop at ListItem element.
+    StopAtListItemElement,
+    // Stop at Table element.
+    StopAtTableElement,
+    // Stop at any table element.
+    StopAtAnyTableElement,
   };
   using EditablePointOptions = EnumSet<EditablePointOption>;
 
@@ -2641,7 +2649,15 @@ class HTMLEditUtils final {
         : mIgnoreInvisibleText(!aOptions.contains(
               EditablePointOption::RecognizeInvisibleWhiteSpaces)),
           mIgnoreComment(
-              !aOptions.contains(EditablePointOption::StopAtComment)) {}
+              !aOptions.contains(EditablePointOption::StopAtComment)),
+          mStopAtListElement(
+              aOptions.contains(EditablePointOption::StopAtListElement)),
+          mStopAtListItemElement(
+              aOptions.contains(EditablePointOption::StopAtListItemElement)),
+          mStopAtTableElement(
+              aOptions.contains(EditablePointOption::StopAtTableElement)),
+          mStopAtAnyTableElement(
+              aOptions.contains(EditablePointOption::StopAtAnyTableElement)) {}
 
     [[nodiscard]] bool IgnoreInvisibleWhiteSpaces() const {
       return mIgnoreInvisibleText;
@@ -2659,9 +2675,27 @@ class HTMLEditUtils final {
       return false;
     }
 
+    [[nodiscard]] bool ShouldStopScanningAt(const nsIContent& aContent) const {
+      if (HTMLEditUtils::IsAnyListElement(&aContent)) {
+        return mStopAtListElement;
+      }
+      if (HTMLEditUtils::IsListItem(&aContent)) {
+        return mStopAtListItemElement;
+      }
+      if (HTMLEditUtils::IsAnyTableElement(&aContent)) {
+        return mStopAtAnyTableElement ||
+               (mStopAtTableElement && HTMLEditUtils::IsTable(&aContent));
+      }
+      return false;
+    }
+
    private:
     const bool mIgnoreInvisibleText;
     const bool mIgnoreComment;
+    const bool mStopAtListElement;
+    const bool mStopAtListItemElement;
+    const bool mStopAtTableElement;
+    const bool mStopAtAnyTableElement;
   };
 
  public:
@@ -2696,7 +2730,8 @@ class HTMLEditUtils final {
         // boundary.
         for (nsIContent* nextSibling = firstChild->GetNextSibling();
              nextSibling; nextSibling = nextSibling->GetNextSibling()) {
-          if (!checker.NodeShouldBeIgnored(*nextSibling)) {
+          if (!checker.NodeShouldBeIgnored(*nextSibling) ||
+              checker.ShouldStopScanningAt(*nextSibling)) {
             meaningfulFirstChild = nextSibling;
             break;
           }
@@ -2718,7 +2753,8 @@ class HTMLEditUtils final {
         }
         break;
       }
-      if (!HTMLEditUtils::IsContainerNode(*meaningfulFirstChild) ||
+      if (checker.ShouldStopScanningAt(*meaningfulFirstChild) ||
+          !HTMLEditUtils::IsContainerNode(*meaningfulFirstChild) ||
           !EditorUtils::IsEditableContent(*meaningfulFirstChild,
                                           EditorBase::EditorType::HTML)) {
         // FIXME: If the node is at middle of invisible white-spaces, we should
@@ -2761,7 +2797,8 @@ class HTMLEditUtils final {
       if (checker.NodeShouldBeIgnored(*lastChild)) {
         for (nsIContent* nextSibling = lastChild->GetPreviousSibling();
              nextSibling; nextSibling = nextSibling->GetPreviousSibling()) {
-          if (!checker.NodeShouldBeIgnored(*nextSibling)) {
+          if (!checker.NodeShouldBeIgnored(*nextSibling) ||
+              checker.ShouldStopScanningAt(*nextSibling)) {
             meaningfulLastChild = nextSibling;
             break;
           }
@@ -2788,7 +2825,8 @@ class HTMLEditUtils final {
         }
         break;
       }
-      if (!HTMLEditUtils::IsContainerNode(*meaningfulLastChild) ||
+      if (checker.ShouldStopScanningAt(*meaningfulLastChild) ||
+          !HTMLEditUtils::IsContainerNode(*meaningfulLastChild) ||
           !EditorUtils::IsEditableContent(*meaningfulLastChild,
                                           EditorBase::EditorType::HTML)) {
         // FIXME: If the node is at middle of invisible white-spaces, we should
