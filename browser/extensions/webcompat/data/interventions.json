@@ -2814,6 +2814,23 @@
       }
     ]
   },
+  "1902388": {
+    "label": "clinic.platomedical.com",
+    "bugs": {
+      "1902388": {
+        "issue": "unsupported-warning",
+        "matches": ["*://clinic.platomedical.com/login*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "content_scripts": {
+          "css": ["bug1902388-clinic.platomedical.com-hide-recommendation.css"]
+        }
+      }
+    ]
+  },
   "1902389": {
     "label": "store.91app.com",
     "bugs": {
