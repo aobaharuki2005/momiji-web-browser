@@ -35,8 +35,6 @@ class MFMediaEngineDecoderModule final : public PlatformDecoderModule {
       const SupportDecoderParams& aParams,
       DecoderDoctorDiagnostics* aDiagnostics) const override;
 
-  const char* Name() const override { return "MFMediaEngine"; }
-
  private:
   media::DecodeSupportSet SupportInternal(
       const SupportDecoderParams& aParams,
