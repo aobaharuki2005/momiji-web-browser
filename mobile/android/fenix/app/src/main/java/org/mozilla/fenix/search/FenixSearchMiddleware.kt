@@ -35,6 +35,7 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.NimbusComponents
 import org.mozilla.fenix.components.UseCases
@@ -50,6 +51,7 @@ import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.search.SearchFragmentAction.EnvironmentCleared
 import org.mozilla.fenix.search.SearchFragmentAction.EnvironmentRehydrated
 import org.mozilla.fenix.search.SearchFragmentAction.Init
+import org.mozilla.fenix.search.SearchFragmentAction.PrivateSuggestionsCardAccepted
 import org.mozilla.fenix.search.SearchFragmentAction.SearchEnginesSelectedActions
 import org.mozilla.fenix.search.SearchFragmentAction.SearchProvidersUpdated
 import org.mozilla.fenix.search.SearchFragmentAction.SearchStarted
@@ -181,6 +183,10 @@ class FenixSearchMiddleware(
                 }
             }
 
+            is PrivateSuggestionsCardAccepted -> {
+                updateSearchProviders(context.store)
+            }
+
             else -> next(action)
         }
     }
@@ -232,9 +238,22 @@ class FenixSearchMiddleware(
     private fun maybeShowFxSuggestions(store: Store<SearchFragmentState, SearchFragmentAction>) {
         val shouldShowSuggestions = store.state.run {
             (showTrendingSearches || showRecentSearches || showShortcutsSuggestions) &&
-                (query.isNotEmpty() || FxNimbus.features.searchSuggestionsOnHomepage.value().enabled)
+                (query.isNotEmpty() || FxNimbus.features.searchSuggestionsOnHomepage.value().enabled) &&
+                    isSearchSuggestionsFeatureEnabled()
         }
         store.dispatch(SearchSuggestionsVisibilityUpdated(shouldShowSuggestions))
+
+        val showPrivatePrompt = with(store.state) {
+            !settings.showSearchSuggestionsInPrivateOnboardingFinished &&
+                    environment?.browsingModeManager?.mode?.isPrivate == true &&
+                    !isSearchSuggestionsFeatureEnabled() && !showSearchShortcuts && url != query
+        }
+
+        store.dispatch(
+            SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(
+                showPrivatePrompt,
+            ),
+        )
     }
 
     /**
@@ -245,10 +264,22 @@ class FenixSearchMiddleware(
         query: String,
     ) {
         val shouldShowSuggestions = with(store.state) {
-            url != query && query.isNotBlank() || showSearchShortcuts
+            (url != query && query.isNotBlank() || showSearchShortcuts) && isSearchSuggestionsFeatureEnabled()
         }
 
         store.dispatch(SearchSuggestionsVisibilityUpdated(shouldShowSuggestions))
+
+        val showPrivatePrompt = with(store.state) {
+            !settings.showSearchSuggestionsInPrivateOnboardingFinished &&
+                    environment?.browsingModeManager?.mode?.isPrivate == true &&
+                    !isSearchSuggestionsFeatureEnabled() && !showSearchShortcuts && url != query
+        }
+
+        store.dispatch(
+            SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(
+                showPrivatePrompt,
+            ),
+        )
     }
 
     /**
@@ -467,6 +498,22 @@ class FenixSearchMiddleware(
             repeatOnLifecycle(RESUMED) {
                 flow().observe()
             }
+        }
+    }
+
+    /**
+     * Check whether search suggestions should be shown in the AwesomeBar.
+     *
+     * @return `true` if search suggestions should be shown `false` otherwise.
+     */
+    @VisibleForTesting
+    internal fun isSearchSuggestionsFeatureEnabled(): Boolean {
+        val environment = environment ?: return false
+
+        return when (environment.browsingModeManager.mode) {
+            BrowsingMode.Normal -> settings.shouldShowSearchSuggestions
+            BrowsingMode.Private ->
+                settings.shouldShowSearchSuggestions && settings.shouldShowSearchSuggestionsInPrivate
         }
     }
 }

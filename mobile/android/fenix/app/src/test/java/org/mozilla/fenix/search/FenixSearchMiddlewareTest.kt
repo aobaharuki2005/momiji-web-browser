@@ -47,6 +47,7 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.NimbusComponents
@@ -190,6 +191,7 @@ class FenixSearchMiddlewareTest {
         val wasEngineSelectedByUser = false
         val isSearchInPrivateMode = false
         every { settings.shouldShowRecentSearchSuggestions } returns true
+        every { settings.shouldShowSearchSuggestions } returns true
         val (middleware, store) = buildMiddlewareAndAddToSearchStore()
         val expectedSuggestionProviders = setOf(mockk<SuggestionProvider>(), mockk<SuggestionProvider>())
         val expectedSearchSuggestionsProvider: SearchSuggestionsProvidersBuilder = mockk {
@@ -215,6 +217,7 @@ class FenixSearchMiddlewareTest {
         val wasEngineSelectedByUser = false
         val isSearchInPrivateMode = true
         every { settings.shouldShowShortcutSuggestions } returns true
+        every { settings.shouldShowSearchSuggestions } returns true
         val (middleware, store) = buildMiddlewareAndAddToSearchStore()
         val expectedSuggestionProviders = setOf(mockk<SuggestionProvider>(), mockk<SuggestionProvider>())
         val expectedSearchSuggestionsProvider: SearchSuggestionsProvidersBuilder = mockk {
@@ -236,6 +239,7 @@ class FenixSearchMiddlewareTest {
     @Test
     fun `GIVEN the search query is updated WHEN it is different than the current URL and not empty THEN show search suggestions`() {
         val (_, store) = buildMiddlewareAndAddToSearchStore()
+        every { settings.shouldShowSearchSuggestions } returns true
 
         store.dispatch(SearchFragmentAction.UpdateQuery(store.state.url))
         assertFalse(store.state.shouldShowSearchSuggestions)
@@ -251,12 +255,77 @@ class FenixSearchMiddlewareTest {
     fun `GIVEN a search query already exists WHEN the search providers are updated THEN show new search suggestions`() {
         val (_, store) = buildMiddlewareAndAddToSearchStore()
         store.dispatch(SearchFragmentAction.UpdateQuery("test"))
+        every { settings.shouldShowSearchSuggestions } returns true
 
         store.dispatch(SearchProvidersUpdated(listOf(mockk())))
 
         searchActionsCaptor.assertLastAction(SearchSuggestionsVisibilityUpdated::class) {
             assertTrue(it.visible)
         }
+    }
+
+    @Test
+    fun `GIVEN user has not allowed to show suggestions WHEN search query is different than the current URL and not empty THEN don't show search suggestions`() {
+        val (_, store) = buildMiddlewareAndAddToSearchStore()
+        every { settings.shouldShowSearchSuggestions } returns false
+
+        store.dispatch(SearchFragmentAction.UpdateQuery(store.state.url))
+        assertFalse(store.state.shouldShowSearchSuggestions)
+
+        store.dispatch(SearchFragmentAction.UpdateQuery("test"))
+        assertFalse(store.state.shouldShowSearchSuggestions)
+    }
+
+    @Test
+    fun `GIVEN browsing mode is private and user has allowed suggestions in private mode WHEN search query is different than the current URL and not empty THEN show search suggestions`() {
+        val (_, store) = buildMiddlewareAndAddToSearchStore()
+        every { settings.shouldShowSearchSuggestions } returns true
+        every { settings.shouldShowSearchSuggestionsInPrivate } returns true
+        every { browsingModeManager.mode } returns BrowsingMode.Private
+
+        store.dispatch(SearchFragmentAction.UpdateQuery(store.state.url))
+        assertFalse(store.state.shouldShowSearchSuggestions)
+
+        store.dispatch(SearchFragmentAction.UpdateQuery("test"))
+        assertTrue(store.state.shouldShowSearchSuggestions)
+    }
+
+    @Test
+    fun `GIVEN browsing mode is private and user has not allowed suggestions in private mode WHEN search query is different than the current URL and not empty THEN don't show search suggestions and show private suggestions card`() {
+        val (_, store) = buildMiddlewareAndAddToSearchStore()
+        every { settings.shouldShowSearchSuggestions } returns true
+        every { settings.shouldShowSearchSuggestionsInPrivate } returns false
+        every { browsingModeManager.mode } returns BrowsingMode.Private
+
+        store.dispatch(SearchFragmentAction.UpdateQuery(store.state.url))
+        assertFalse(store.state.shouldShowSearchSuggestions)
+
+        store.dispatch(SearchFragmentAction.UpdateQuery("test"))
+        assertFalse(store.state.shouldShowSearchSuggestions)
+        assertTrue(store.state.showSearchSuggestionsHint)
+    }
+
+    @Test
+    fun `GIVEN user allows to show search suggestions in private mode WHEN search is started THEN show search suggestions`() {
+        val (_, store) = buildMiddlewareAndAddToSearchStore()
+        every { settings.shouldShowSearchSuggestions } returns true
+        every { settings.shouldShowSearchSuggestionsInPrivate } returns false
+        every { browsingModeManager.mode } returns BrowsingMode.Private
+
+        store.dispatch(SearchFragmentAction.UpdateQuery(store.state.url))
+        assertFalse(store.state.shouldShowSearchSuggestions)
+
+        store.dispatch(SearchFragmentAction.UpdateQuery("test"))
+        assertFalse(store.state.shouldShowSearchSuggestions)
+        assertTrue(store.state.showSearchSuggestionsHint)
+
+        every { settings.shouldShowSearchSuggestionsInPrivate } returns true
+        every { settings.showSearchSuggestionsInPrivateOnboardingFinished } returns true
+        store.dispatch(SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(false))
+
+        store.dispatch(SearchFragmentAction.UpdateQuery("test2"))
+        assertTrue(store.state.shouldShowSearchSuggestions)
+        assertFalse(store.state.showSearchSuggestionsHint)
     }
 
     @Test
