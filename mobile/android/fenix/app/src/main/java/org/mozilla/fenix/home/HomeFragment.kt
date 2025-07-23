@@ -583,6 +583,7 @@ class HomeFragment : Fragment() {
                 HomeToolbarComposable(
                     context = activity,
                     homeBinding = binding,
+                    navController = findNavController(),
                     toolbarStore = toolbarStore,
                     appStore = activity.components.appStore,
                     browserStore = activity.components.core.store,

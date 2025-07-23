@@ -51,6 +51,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.NavGraphDirections
+import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode.Normal
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -387,7 +388,9 @@ class BrowserToolbarSearchMiddlewareTest {
     @Test
     @Config(sdk = [33])
     fun `GIVEN on Android 33+ WHEN the search is aborted THEN don't exit search mode`() {
-        val appStore: AppStore = mockk(relaxed = true)
+        val appStore: AppStore = mockk(relaxed = true) {
+            every { state.searchState } returns AppSearchState.EMPTY
+        }
         val browserStore: BrowserStore = mockk(relaxed = true)
         val (_, store) = buildMiddlewareAndAddToStore(appStore, browserStore)
 
@@ -400,7 +403,9 @@ class BrowserToolbarSearchMiddlewareTest {
     @Test
     @Config(sdk = [32])
     fun `GIVEN on Android 32- WHEN the search is aborted THEN sync this in application and browser state`() {
-        val appStore: AppStore = mockk(relaxed = true)
+        val appStore: AppStore = mockk(relaxed = true) {
+            every { state.searchState } returns AppSearchState.EMPTY
+        }
         val browserStore: BrowserStore = mockk(relaxed = true)
         val (_, store) = buildMiddlewareAndAddToStore(appStore, browserStore)
 
@@ -408,6 +413,24 @@ class BrowserToolbarSearchMiddlewareTest {
 
         verify { appStore.dispatch(SearchEnded) }
         verify { browserStore.dispatch(EngagementFinished(abandoned = true)) }
+    }
+
+    @Test
+    @Config(sdk = [32])
+    fun `GIVEN on Android 32- and search was started from a tab WHEN the search is aborted THEN sync this data and navigate back to the tab that started search`() {
+        val appStore: AppStore = mockk(relaxed = true) {
+            every { state.searchState } returns AppSearchState.EMPTY.copy(
+                sourceTabId = "test",
+            )
+        }
+        val browserStore: BrowserStore = mockk(relaxed = true)
+        val (_, store) = buildMiddlewareAndAddToStore(appStore, browserStore)
+
+        store.dispatch(SearchAborted)
+
+        verify { appStore.dispatch(SearchEnded) }
+        verify { browserStore.dispatch(EngagementFinished(abandoned = true)) }
+        verify { navController.navigate(R.id.browserFragment) }
     }
 
     @Test

@@ -151,8 +151,12 @@ class BrowserToolbarSearchMiddleware(
 
             is SearchAborted -> {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                    val sourceTabId = appStore.state.searchState.sourceTabId
                     appStore.dispatch(SearchEnded)
                     browserStore.dispatch(EngagementFinished(abandoned = true))
+                    if (sourceTabId != null) {
+                        environment?.navController?.navigate(R.id.browserFragment)
+                    }
                 }
             }
 
