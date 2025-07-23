@@ -492,7 +492,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1313"
+            line="1264"
             column="9"/>
     </issue>
 
@@ -503,7 +503,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1330"
+            line="1366"
             column="9"/>
     </issue>
 
@@ -514,7 +514,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1355"
+            line="1407"
             column="9"/>
     </issue>
 
@@ -525,7 +525,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1389"
+            line="1438"
             column="9"/>
     </issue>
 
@@ -536,7 +536,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1423"
+            line="1455"
             column="9"/>
     </issue>
 
@@ -548,6 +548,39 @@
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
             line="1480"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="        mockkStatic(Context::isLargeWindow) {"
+        errorLine2="        ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="1514"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="        mockkStatic(Context::isLargeWindow) {"
+        errorLine2="        ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="1548"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NoStaticMocking"
+        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
+        errorLine1="        mockkStatic(Context::isLargeWindow) {"
+        errorLine2="        ^">
+        <location
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="1605"
             column="9"/>
     </issue>
 
