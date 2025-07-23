@@ -15,20 +15,24 @@ add_task(async function () {
   // (bug 1352274). TCP Fast Open is not present on all platforms therefore the
   // number of response headers will vary depending on the platform.
   await pushPref("network.tcp.tcp_fastopen_enable", false);
-
-  info("Starting test... ");
-
-  await testSimpleReload();
-  await testResponseBodyLimits();
-  await testManyReloads();
-  await testClearedRequests();
-});
-
-async function testSimpleReload() {
-  info("Test with a simple page reload");
   const { tab, monitor, toolbox } = await initNetMonitor(HTTPS_SIMPLE_URL, {
     requestCount: 1,
   });
+
+  info("Starting test... ");
+
+  await testSimpleReload({ tab, monitor, toolbox });
+  await testResponseBodyLimits({ tab, monitor, toolbox });
+  await testManyReloads({ tab, monitor, toolbox });
+  await testClearedRequests({ tab, monitor, toolbox });
+
+  // Do not use teardown(monitor) as testClearedRequests register broken requests
+  // which never complete and would block on waitForAllNetworkUpdateEvents
+  await closeTabAndToolbox();
+});
+
+async function testSimpleReload({ tab, monitor, toolbox }) {
+  info("Test with a simple page reload");
 
   const har = await reloadAndCopyAllAsHar({ tab, monitor, toolbox });
 
@@ -52,51 +56,27 @@ async function testSimpleReload() {
   isnot(entry.response.content.text, undefined, "Check response body");
   is(entry.response.content.text.length, 465, "Response body is complete");
   isnot(entry.timings, undefined, "Check timings");
-
-  await teardown(monitor);
 }
 
-async function testResponseBodyLimits() {
-  {
-    info("Test response body limit (non zero).");
-    await pushPref("devtools.netmonitor.responseBodyLimit", 10);
-    const { tab, monitor, toolbox } = await initNetMonitor(HTTPS_SIMPLE_URL, {
-      requestCount: 1,
-    });
+async function testResponseBodyLimits({ tab, monitor, toolbox }) {
+  info("Test response body limit (non zero).");
+  await pushPref("devtools.netmonitor.responseBodyLimit", 10);
+  let har = await reloadAndCopyAllAsHar({ tab, monitor, toolbox });
+  let entry = har.log.entries[0];
+  is(entry.response.content.text.length, 10, "Response body must be truncated");
 
-    const har = await reloadAndCopyAllAsHar({ tab, monitor, toolbox });
-    const entry = har.log.entries[0];
-    is(
-      entry.response.content.text.length,
-      10,
-      "Response body must be truncated"
-    );
-    await teardown(monitor);
-  }
-
-  {
-    await pushPref("devtools.netmonitor.responseBodyLimit", 0);
-    info("Test response body limit (zero).");
-
-    const { tab, monitor, toolbox } = await initNetMonitor(HTTPS_SIMPLE_URL, {
-      requestCount: 1,
-    });
-    const har = await reloadAndCopyAllAsHar({ tab, monitor, toolbox });
-    const entry = har.log.entries[0];
-    is(
-      entry.response.content.text.length,
-      465,
-      "Response body must not be truncated"
-    );
-    await teardown(monitor);
-  }
+  info("Test response body limit (zero).");
+  await pushPref("devtools.netmonitor.responseBodyLimit", 0);
+  har = await reloadAndCopyAllAsHar({ tab, monitor, toolbox });
+  entry = har.log.entries[0];
+  is(
+    entry.response.content.text.length,
+    465,
+    "Response body must not be truncated"
+  );
 }
 
-async function testManyReloads() {
-  const { tab, monitor, toolbox } = await initNetMonitor(HTTPS_SIMPLE_URL, {
-    requestCount: 1,
-  });
-
+async function testManyReloads({ tab, monitor, toolbox }) {
   const har = await reloadAndCopyAllAsHar({
     tab,
     monitor,
@@ -129,15 +109,9 @@ async function testManyReloads() {
 
   entry = har.log.entries.find(e => e.response.status != 0);
   assertNavigationRequestEntry(entry);
-
-  await teardown(monitor);
 }
 
-async function testClearedRequests() {
-  const { tab, monitor } = await initNetMonitor(HTTPS_SIMPLE_URL, {
-    requestCount: 1,
-  });
-
+async function testClearedRequests({ tab, monitor }) {
   info("Navigate to an empty page");
   const topDocumentURL =
     "https://example.org/document-builder.sjs?html=empty-document";
@@ -193,10 +167,6 @@ async function testClearedRequests() {
   info(
     "The fetch request doesn't appear in HAR export, because its lazy data is freed and we completely ignore the request."
   );
-
-  // Do not use teardown(monitor) as testClearedRequests register broken requests
-  // which never complete and would block on waitForAllNetworkUpdateEvents
-  await closeTabAndToolbox();
 }
 
 function assertNavigationRequestEntry(entry) {

@@ -172,12 +172,6 @@ export class NetworkObserver {
    */
   #openRequests = new lazy.ChannelMap();
   /**
-   * The maximum size (in bytes) of the individual response bodies to be stored.
-   *
-   * @type {number}
-   */
-  #responseBodyLimit = 0;
-  /**
    * Network response bodies are piped through a buffer of the given size
    * (in bytes).
    *
@@ -193,12 +187,6 @@ export class NetworkObserver {
    */
   #saveRequestAndResponseBodies = true;
   /**
-   * Whether response bodies should be decoded or not.
-   *
-   * @type {boolean}
-   */
-  #decodeResponseBodies = false;
-  /**
    * Throttling configuration, see constructor of NetworkThrottleManager
    *
    * @type {Object}
@@ -211,13 +199,7 @@ export class NetworkObserver {
   #throttler = null;
 
   constructor(options = {}) {
-    const {
-      decodeResponseBodies,
-      ignoreChannelFunction,
-      onNetworkEvent,
-      responseBodyLimit,
-    } = options;
-
+    const { ignoreChannelFunction, onNetworkEvent } = options;
     if (typeof ignoreChannelFunction !== "function") {
       throw new Error(
         `Expected "ignoreChannelFunction" to be a function, got ${ignoreChannelFunction} (${typeof ignoreChannelFunction})`
@@ -230,14 +212,8 @@ export class NetworkObserver {
       );
     }
 
-    this.#decodeResponseBodies = decodeResponseBodies;
     this.#ignoreChannelFunction = ignoreChannelFunction;
     this.#onNetworkEvent = onNetworkEvent;
-
-    // Set the provided responseBodyLimit if any, otherwise use the default "0".
-    if (typeof responseBodyLimit === "number") {
-      this.#responseBodyLimit = responseBodyLimit;
-    }
 
     // Start all platform observers.
     if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT) {
@@ -286,19 +262,6 @@ export class NetworkObserver {
 
   setAuthPromptListenerEnabled(enabled) {
     this.#authPromptListenerEnabled = enabled;
-  }
-
-  /**
-   * Update the maximum size in bytes that can be collected for network response
-   * bodies. Responses for which the NetworkResponseListener has already been
-   * created will not be using the new limit, only later responses will be
-   * affected.
-   *
-   * @param {number} responseBodyLimit
-   *        The new responseBodyLimit to use.
-   */
-  setResponseBodyLimit(responseBodyLimit) {
-    this.#responseBodyLimit = responseBodyLimit;
   }
 
   setSaveRequestAndResponseBodies(save) {
@@ -1185,12 +1148,11 @@ export class NetworkObserver {
     sink.init(false, false, this.#responsePipeSegmentSize, PR_UINT32_MAX, null);
 
     // Add listener for the response body.
-    const newListener = new lazy.NetworkResponseListener(httpActivity, {
-      decodedCertificateCache: this.#decodedCertificateCache,
-      decodeResponseBody: this.#decodeResponseBodies,
-      fromServiceWorker: httpActivity.fromServiceWorker,
-      responseBodyLimit: this.#responseBodyLimit,
-    });
+    const newListener = new lazy.NetworkResponseListener(
+      httpActivity,
+      this.#decodedCertificateCache,
+      httpActivity.fromServiceWorker
+    );
 
     // Remember the input stream, so it isn't released by GC.
     newListener.inputStream = sink.inputStream;
