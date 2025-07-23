@@ -23,6 +23,12 @@ namespace IPC {
 
 static constexpr mach_msg_id_t kIPDLMessageId = 'IPDL';
 
+const Channel::ChannelKind ChannelMach::sKind{
+    .create_raw_pipe = &ChannelMach::CreateRawPipe,
+    .num_relayed_attachments = &ChannelMach::NumRelayedAttachments,
+    .is_valid_handle = &ChannelMach::IsValidHandle,
+};
+
 ChannelMach::ChannelMach(mozilla::UniqueMachReceiveRight receive,
                          mozilla::UniqueMachSendRight send, Mode mode,
                          base::ProcessId other_pid)
@@ -739,6 +745,24 @@ bool ChannelMach::CreateRawPipe(mozilla::UniqueMachReceiveRight* server,
   server->reset(port);
   client->reset(port);
   return true;
+}
+
+// static
+uint32_t ChannelMach::NumRelayedAttachments(const Message& message) {
+  return 0;
+}
+
+// static
+bool ChannelMach::IsValidHandle(const ChannelHandle& handle) {
+  if (const auto* server =
+          std::get_if<mozilla::UniqueMachReceiveRight>(&handle)) {
+    return !!*server;
+  }
+  if (const auto* client =
+          std::get_if<mozilla::UniqueMachReceiveRight>(&handle)) {
+    return !!*client;
+  }
+  return false;
 }
 
 }  // namespace IPC

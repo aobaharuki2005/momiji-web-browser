@@ -40,7 +40,9 @@ class ChannelWin : public Channel, public MessageLoopForIO::IOHandler {
 
   void SetOtherPid(base::ProcessId other_pid) override;
 
-  static bool CreateRawPipe(ChannelHandle* server, ChannelHandle* client);
+  const ChannelKind* GetKind() const override { return &sKind; }
+
+  static const ChannelKind sKind;
 
  private:
   ~ChannelWin() {
@@ -50,6 +52,10 @@ class ChannelWin : public Channel, public MessageLoopForIO::IOHandler {
       Close();
     }
   }
+
+  static bool CreateRawPipe(ChannelHandle* server, ChannelHandle* client);
+  static uint32_t NumRelayedAttachments(const IPC::Message& message);
+  static bool IsValidHandle(const ChannelHandle& handle);
 
   void Init(Mode mode) MOZ_REQUIRES(SendMutex(), IOThread());
 

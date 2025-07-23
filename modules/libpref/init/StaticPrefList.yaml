@@ -3316,11 +3316,12 @@
 #endif
 
 #if defined(XP_DARWIN)
-# Whether or not to use the mach-based IPC backend on macOS/iOS
+# Whether or not to use the mach-based IPC backend on macOS/iOS.
+# Only read once at startup by IOThreadParent's constructor.
 - name: dom.ipc.backend.mach
   type: bool
   value: @IS_IOS@
-  mirror: once
+  mirror: never
 #endif
 
 #ifdef MOZ_WIDGET_GTK

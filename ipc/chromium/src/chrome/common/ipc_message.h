@@ -348,8 +348,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   uint32_t num_receive_rights() const;
 #endif
 
-  uint32_t num_relayed_attachments() const;
-
 #ifdef FUZZING_SNAPSHOT
   bool IsFuzzMsg() const { return isFuzzMsg; }
   void SetFuzzMsg() { isFuzzMsg = true; }
