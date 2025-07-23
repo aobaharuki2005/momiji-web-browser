@@ -265,8 +265,8 @@ user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
 
 [[publisher.glean]]
-version = "64.5.1"
-when = "2025-06-23"
+version = "64.5.2"
+when = "2025-07-01"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
@@ -1519,12 +1519,6 @@ who = "Johan Andersson <opensource@embark-studios.com>"
 criteria = "safe-to-deploy"
 version = "0.9.0"
 notes = "Only few constants. No unsafe usage or other ambient capabilities"
-
-[[audits.embark-studios.audits.yaml-rust]]
-who = "Johan Andersson <opensource@embark-studios.com>"
-criteria = "safe-to-deploy"
-version = "0.4.5"
-notes = "No unsafe usage or ambient capabilities"
 
 [[audits.google.audits.ash]]
 who = "David Koloski <dkoloski@google.com>"
