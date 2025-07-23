@@ -1705,7 +1705,7 @@ static bool CanReuseInlineSheet(StyleSheet* aSheet, nsIURI* aNewBaseURI) {
       if (BaseURIsArePathCompatible(oldBase, aNewBaseURI)) {
         break;
       }
-    [[fallthrough]];
+      [[fallthrough]];
     case StyleLikelyBaseUriDependency::Full:
       LOG(("  Can't reuse due to base URI dependency"));
       return false;
