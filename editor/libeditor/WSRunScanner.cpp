@@ -12,7 +12,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"  // for AssertedCast
-#include "mozilla/dom/Comment.h"
 
 #include "nsDebug.h"
 #include "nsError.h"
@@ -205,30 +204,6 @@ WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
       return WSScanResult(*this, WSScanResult::ScanDirection::Backward,
                           TextFragmentDataAtStartRef().StartRef(),
                           TextFragmentDataAtStartRef().StartRawReason());
-    case WSType::SpecialContent: {
-      const Comment* comment = Comment::FromNode(
-          TextFragmentDataAtStartRef().GetStartReasonContent());
-      if (!comment) {
-        break;
-      }
-      // If we reached a comment node, we should skip it because it's always
-      // invisible.
-      while (true) {
-        const EditorRawDOMPoint atComment(comment);
-        WSRunScanner scanner(mScanMode, atComment,
-                             mTextFragmentDataAtStart.BlockInlineCheckMode(),
-                             mTextFragmentDataAtStart.GetAncestorLimiter());
-        if (scanner.TextFragmentDataAtStartRef().StartRawReason() ==
-            WSType::SpecialContent) {
-          if ((comment = Comment::FromNode(scanner.TextFragmentDataAtStartRef()
-                                               .GetStartReasonContent()))) {
-            // Reached another comment node, keep scanning...
-            continue;
-          }
-        }
-        return scanner.ScanPreviousVisibleNodeOrBlockBoundaryFrom(atComment);
-      }
-    }
     default:
       break;
   }
@@ -323,32 +298,6 @@ WSScanResult WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(
       return WSScanResult(*this, WSScanResult::ScanDirection::Forward,
                           TextFragmentDataAtStartRef().EndRef(),
                           TextFragmentDataAtStartRef().EndRawReason());
-    case WSType::SpecialContent: {
-      const Comment* comment =
-          Comment::FromNode(TextFragmentDataAtStartRef().GetEndReasonContent());
-      if (!comment) {
-        break;
-      }
-      // If we reached a comment node, we should skip it because it's always
-      // invisible.
-      while (true) {
-        const EditorRawDOMPoint afterComment =
-            EditorRawDOMPoint::After(*comment);
-        WSRunScanner scanner(mScanMode, afterComment,
-                             mTextFragmentDataAtStart.BlockInlineCheckMode(),
-                             mTextFragmentDataAtStart.GetAncestorLimiter());
-        if (scanner.TextFragmentDataAtStartRef().EndRawReason() ==
-            WSType::SpecialContent) {
-          if ((comment = Comment::FromNode(scanner.TextFragmentDataAtStartRef()
-                                               .GetEndReasonContent()))) {
-            // Reached another comment node, keep scanning...
-            continue;
-          }
-        }
-        return scanner.ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(
-            afterComment);
-      }
-    }
     default:
       break;
   }
