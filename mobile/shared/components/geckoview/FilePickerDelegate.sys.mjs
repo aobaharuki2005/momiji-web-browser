@@ -134,6 +134,7 @@ export class FilePickerDelegate {
       ].createInstance(Ci.nsIAndroidContentInputStream);
       input.init(Services.io.newURI(uri));
       const buffer = lazy.NetUtil.readInputStream(input);
+      input.close();
 
       const file = (() => {
         if (this._prompt.domWin) {
