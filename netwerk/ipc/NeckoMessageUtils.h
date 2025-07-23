@@ -14,7 +14,6 @@
 #include "mozilla/net/ClassOfService.h"
 #include "mozilla/net/DNS.h"
 #include "nsExceptionHandler.h"
-#include "nsICacheInfoChannel.h"
 #include "nsIDNSService.h"
 #include "nsIHttpChannel.h"
 #include "nsITRRSkipReason.h"
@@ -206,13 +205,6 @@ struct ParamTraits<mozilla::net::LNAPermission>
     : public ContiguousEnumSerializerInclusive<
           mozilla::net::LNAPermission, mozilla::net::LNAPermission::Granted,
           mozilla::net::LNAPermission::Pending> {};
-
-template <>
-struct ParamTraits<nsICacheInfoChannel::CacheDisposition>
-    : public ContiguousEnumSerializer<
-          nsICacheInfoChannel::CacheDisposition,
-          nsICacheInfoChannel::kCacheUnresolved,
-          nsICacheInfoChannel::kCacheDispositionEnd> {};
 
 }  // namespace IPC
 
