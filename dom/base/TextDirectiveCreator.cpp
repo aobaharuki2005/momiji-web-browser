@@ -108,13 +108,13 @@ TextDirectiveCreator::ExtendRangeToWordBoundaries(AbstractRange* aRange) {
 
   if (rangeContent.IsEmpty()) {
     TEXT_FRAGMENT_LOG("Input range does not contain text.");
-    return Result<RefPtr<AbstractRange>, ErrorResult>(nullptr);
+    return {nullptr};
   }
 
   if (std::all_of(rangeContent.View().cbegin(), rangeContent.View().cend(),
                   nsContentUtils::IsHTMLWhitespaceOrNBSP)) {
     TEXT_FRAGMENT_LOG("Input range contains only whitespace.");
-    return Result<RefPtr<AbstractRange>, ErrorResult>(nullptr);
+    return {nullptr};
   }
   if (std::all_of(rangeContent.View().cbegin(), rangeContent.View().cend(),
                   IsPunctuationForWordSelect)) {
@@ -123,7 +123,7 @@ TextDirectiveCreator::ExtendRangeToWordBoundaries(AbstractRange* aRange) {
     if (MOZ_UNLIKELY(rv.Failed())) {
       return Err(std::move(rv));
     }
-    return Result<RefPtr<AbstractRange>, ErrorResult>(range);
+    return {range};
   }
   RangeBoundary startPoint = TextDirectiveUtil::FindNextNonWhitespacePosition<
       TextScanDirection::Right>(aRange->StartRef());
@@ -159,7 +159,7 @@ TextDirectiveCreator::ExtendRangeToWordBoundaries(AbstractRange* aRange) {
     }
   }
   TEXT_FRAGMENT_LOG("Extending to word boundaries collapsed the range.");
-  return Result<RefPtr<AbstractRange>, ErrorResult>(nullptr);
+  return {nullptr};
 }
 
 Result<bool, ErrorResult>
