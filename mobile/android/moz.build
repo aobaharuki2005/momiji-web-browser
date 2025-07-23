@@ -57,6 +57,12 @@ GeneratedFile(
     inputs=["geckoview/src/main/java/org/mozilla/gecko/util/XPCOMError.jinja"],
 )
 
+GeneratedFile(
+    "geckoview/src/main/java/org/mozilla/geckoview/CrashReport.java",
+    script="/toolkit/crashreporter/generate_crash_reporter_sources.py",
+    entry_point="emit_java",
+)
+
 CONFIGURE_SUBST_FILES += ["installer/Makefile"]
 
 DIRS += [
