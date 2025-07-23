@@ -2089,7 +2089,7 @@ void CycleCollectedJSRuntime::OnGC(JSContext* aContext, JSGCStatus aStatus,
     case JSGC_BEGIN:
       MOZ_RELEASE_ASSERT(mTraceState.is<Nothing>());
       nsCycleCollector_prepareForGarbageCollection();
-      PrepareWaitingZonesForGC();
+      PrepareWaitingZonesForGC(aReason);
       break;
     case JSGC_END: {
       MOZ_RELEASE_ASSERT(mTraceState.is<Nothing>());
@@ -2149,10 +2149,12 @@ void CycleCollectedJSRuntime::SetLargeAllocationFailure(OOMState aNewState) {
   AnnotateAndSetOutOfMemory(&mLargeAllocationFailureState, aNewState);
 }
 
-void CycleCollectedJSRuntime::PrepareWaitingZonesForGC() {
+void CycleCollectedJSRuntime::PrepareWaitingZonesForGC(JS::GCReason aReason) {
   JSContext* cx = CycleCollectedJSContext::Get()->Context();
   if (mZonesWaitingForGC.Count() == 0) {
-    JS::PrepareForFullGC(cx);
+    if (!JS::InternalGCReason(aReason)) {
+      JS::PrepareForFullGC(cx);
+    }
   } else {
     for (const auto& key : mZonesWaitingForGC) {
       JS::PrepareZoneForGC(cx, key);
