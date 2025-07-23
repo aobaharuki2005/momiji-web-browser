@@ -13522,7 +13522,7 @@
 # actually treat localhost as a secure origin.
 - name: network.proxy.testing_localhost_is_secure_when_hijacked
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # The timeout used when calling DhcpRequestParams. The call may sometimes hang
