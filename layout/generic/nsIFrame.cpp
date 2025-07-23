@@ -896,6 +896,10 @@ void nsIFrame::Destroy(DestroyContext& aContext) {
     }
   }
 
+  if (HasAnchorPosReference()) {
+    ps->RemoveAnchorPosPositioned(this);
+  }
+
   // Disable visibility tracking. Note that we have to do this before we clear
   // frame properties and lose track of whether we were previously visible.
   // XXX(seth): It'd be ideal to assert that we're already marked nonvisible
