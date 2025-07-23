@@ -413,6 +413,7 @@ void HttpChannelChild::OnStartRequest(
   mIsRacing = aArgs.isRacing();
   mCacheEntryAvailable = aArgs.cacheEntryAvailable();
   mCacheEntryId = aArgs.cacheEntryId();
+  mCacheDisposition = aArgs.cacheDisposition();
   mCacheFetchCount = aArgs.cacheFetchCount();
   mProtocolVersion = aArgs.protocolVersion();
   mCacheExpirationTime = aArgs.cacheExpirationTime();
@@ -3400,6 +3401,16 @@ void HttpChannelChild::ExplicitSetUploadStreamLength(
   MOZ_ASSERT(!LoadWasOpened());
   HttpBaseChannel::ExplicitSetUploadStreamLength(aContentLength,
                                                  aSetContentLengthHeader);
+}
+
+NS_IMETHODIMP
+HttpChannelChild::GetCacheDisposition(
+    nsICacheInfoChannel::CacheDisposition* aDisposition) {
+  if (!aDisposition) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aDisposition = mCacheDisposition;
+  return NS_OK;
 }
 
 }  // namespace mozilla::net
