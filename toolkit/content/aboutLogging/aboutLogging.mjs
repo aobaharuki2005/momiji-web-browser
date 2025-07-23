@@ -261,9 +261,11 @@ function updateLoggingOutputType(profilerOutputType) {
       }
       // hide options related to file output for clarity
       $("#log-file-configuration").hidden = true;
+      $("#with-javascript-tracing-checkbox").disabled = false;
       break;
     case "file":
       $("#with-profiler-stacks-checkbox").disabled = true;
+      $("#with-javascript-tracing-checkbox").disabled = true;
       $("#log-file-configuration").hidden = false;
       $("#no-log-file").hidden = !!$("#current-log-file").innerText.length;
       break;
@@ -314,6 +316,7 @@ function serializeState() {
   const threads = $("#threads")?.value;
   const profilerPreset = $("#profiler-preset-dropdown")?.value;
   const profilerStacks = $("#with-profiler-stacks-checkbox")?.checked;
+  const javascriptTracing = $("#with-javascript-tracing-checkbox")?.checked;
 
   if (logModules && logModules.trim()) {
     params.set("modules", logModules.trim());
@@ -339,6 +342,10 @@ function serializeState() {
     params.set("profilerstacks", "");
   }
 
+  if (javascriptTracing) {
+    params.set("javascriptTracing", "");
+  }
+
   return `about:logging?${params.toString()}`;
 }
 
@@ -354,7 +361,8 @@ function parseURL() {
     loggingPresetOverriden = null,
     threadsOverriden = null,
     profilerPresetOverriden = null,
-    profilerStacksOverriden = null;
+    profilerStacksOverriden = null,
+    javascriptTracingOverriden = null;
   try {
     for (let [k, v] of options) {
       switch (k) {
@@ -388,6 +396,9 @@ function parseURL() {
           break;
         case "profilerstacks":
           profilerStacksOverriden = true;
+          break;
+        case "javascriptTracing":
+          javascriptTracingOverriden = true;
           break;
         default:
           throw new ParseError("about-logging-unknown-option", k, v);
@@ -445,6 +456,13 @@ function parseURL() {
     someElementsDisabled = true;
     Services.prefs.setBoolPref("logging.config.profilerstacks", true);
     gLoggingSettings.profilerStacks = true;
+  }
+
+  if (javascriptTracingOverriden) {
+    const checkbox = $("#with-javascript-tracing-checkbox");
+    checkbox.disabled = true;
+    someElementsDisabled = true;
+    Services.prefs.setBoolPref("logging.config.javascriptTracing", true);
   }
 
   if (loggingPresetOverriden) {
@@ -524,6 +542,13 @@ function init() {
     updateLogModules();
   });
 
+  $("#with-javascript-tracing-checkbox").addEventListener("change", e => {
+    Services.prefs.setBoolPref(
+      "logging.config.javascriptTracing",
+      e.target.checked
+    );
+  });
+
   let loggingOutputType = Services.prefs.getCharPref(
     "logging.config.output_type",
     "profiler"
@@ -534,6 +559,11 @@ function init() {
 
   $("#with-profiler-stacks-checkbox").checked = Services.prefs.getBoolPref(
     "logging.config.profilerstacks",
+    false
+  );
+
+  $("#with-javascript-tracing-checkbox").checked = Services.prefs.getBoolPref(
+    "logging.config.javascriptTracing",
     false
   );
 
@@ -846,6 +876,10 @@ function startLogging() {
       if (gLoggingSettings.profilerThreads.includes("cubeb")) {
         features.push("audiocallbacktracing");
       }
+    }
+    if (Services.prefs.getBoolPref("logging.config.javascriptTracing", false)) {
+      dump(" add tracing\n");
+      features.push("tracing");
     }
 
     maybeEnsureButtonInNavbar();
