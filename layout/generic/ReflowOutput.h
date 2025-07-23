@@ -197,7 +197,7 @@ class ReflowOutput {
 
   // Set inline and block size from a LogicalSize, converting to our
   // writing mode as necessary.
-  void SetSize(WritingMode aWM, LogicalSize aSize) {
+  void SetSize(WritingMode aWM, const LogicalSize& aSize) {
     mSize = aSize.ConvertTo(mWritingMode, aWM);
   }
 

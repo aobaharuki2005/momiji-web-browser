@@ -1112,7 +1112,8 @@ static bool AvailableSpaceShrunk(WritingMode aWM,
 }
 
 static LogicalSize CalculateContainingBlockSizeForAbsolutes(
-    WritingMode aWM, const ReflowInput& aReflowInput, LogicalSize aFrameSize) {
+    WritingMode aWM, const ReflowInput& aReflowInput,
+    const LogicalSize& aFrameSize) {
   // The issue here is that for a 'height' of 'auto' the reflow input
   // code won't know how to calculate the containing block height
   // because it's calculated bottom up. So we use our own computed

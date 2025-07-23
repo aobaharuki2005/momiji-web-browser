@@ -5823,7 +5823,7 @@ static LogicalMargin SubgridAccumulatedMarginBorderPadding(
 static nscoord ContentContribution(const GridItemInfo& aGridItem,
                                    const GridReflowInput& aGridRI,
                                    LogicalAxis aAxis,
-                                   LogicalSize aPercentageBasis,
+                                   const LogicalSize& aPercentageBasis,
                                    IntrinsicISizeType aConstraint,
                                    nscoord aMinSizeClamp = NS_MAXSIZE,
                                    uint32_t aFlags = 0) {
@@ -6070,7 +6070,7 @@ struct CachedIntrinsicSizes {
                                      const GridItemInfo& aGridItem,
                                      const GridReflowInput& aGridRI,
                                      LogicalAxis aAxis,
-                                     LogicalSize aPercentageBasis,
+                                     const LogicalSize& aPercentageBasis,
                                      nscoord aMinSizeClamp) {
     const WritingMode containerWM = aGridRI.mWM;
     gfxContext* const rc = &aGridRI.mRenderingContext;
