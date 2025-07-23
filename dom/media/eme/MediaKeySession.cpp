@@ -518,7 +518,7 @@ void MediaKeySession::OnClosed() {
   mIsClosed = true;
   mKeys->OnSessionClosed(this);
   mKeys = nullptr;
-  mClosed->MaybeResolveWithUndefined();
+  mClosed->MaybeResolve(MediaKeySessionClosedReason::Closed_by_application);
 }
 
 bool MediaKeySession::IsClosed() const { return mIsClosed; }
