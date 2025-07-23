@@ -70,9 +70,7 @@
             android:key="@string/pref_key_toolbar_expanded"
             app:sharedPreferenceKey="pref_key_toolbar_expanded"
             app:falseOptionTitle="@string/preference_simple_toolbar"
-            app:trueOptionTitle="@string/preference_expanded_toolbar"
-            app:falseOptionIconRes="@drawable/ic_toolbar_simple"
-            app:trueOptionIconRes="@drawable/ic_toolbar_expanded" />
+            app:trueOptionTitle="@string/preference_expanded_toolbar" />
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory
