@@ -379,7 +379,7 @@ class Assembler : public AssemblerX86Shared {
   void push(const ImmWord ptr) {
     // We often end up with ImmWords that actually fit into int32.
     // Be aware of the sign extension behavior.
-    if (ptr.value <= INT32_MAX) {
+    if (intptr_t(ptr.value) == intptr_t(int32_t(ptr.value))) {
       push(Imm32(ptr.value));
     } else {
       movq(ptr, ScratchReg);
