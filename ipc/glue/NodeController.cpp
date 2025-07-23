@@ -624,7 +624,7 @@ void NodeController::OnIntroduce(const NodeName& aFromNode,
   MOZ_ASSERT(aIntroduction.mMyPid == base::GetCurrentProcId(),
              "We're the wrong process to receive this?");
 
-  if (!aIntroduction.mHandle) {
+  if (std::holds_alternative<std::monostate>(aIntroduction.mHandle)) {
     NODECONTROLLER_WARNING("Could not be introduced to peer %s",
                            ToString(aIntroduction.mName).c_str());
     mNode->LostConnectionToNode(aIntroduction.mName);
@@ -702,7 +702,8 @@ void NodeController::OnRequestIntroduction(const NodeName& aFromNode,
     // We don't know this peer, or ran into issues creating the descriptor! Send
     // an invalid introduction to content to clean up any pending outbound
     // messages.
-    NodeChannel::Introduction intro{aName, nullptr, IPC::Channel::MODE_SERVER,
+    NodeChannel::Introduction intro{aName, IPC::Channel::ChannelHandle{},
+                                    IPC::Channel::MODE_SERVER,
                                     peerA->OtherPid(), base::kInvalidProcessId};
     peerA->Introduce(std::move(intro));
     return;

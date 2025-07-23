@@ -34,7 +34,8 @@ namespace IPC {
 // socketpairs.  See the .cc file for an overview of the implementation.
 class ChannelPosix final : public Channel, public MessageLoopForIO::Watcher {
  public:
-  ChannelPosix(ChannelHandle pipe, Mode mode, base::ProcessId other_pid);
+  ChannelPosix(mozilla::UniqueFileHandle pipe, Mode mode,
+               base::ProcessId other_pid);
 
   bool Connect(Listener* listener) MOZ_EXCLUDES(SendMutex()) override;
   void Close() MOZ_EXCLUDES(SendMutex()) override;

@@ -3315,6 +3315,14 @@
   mirror: once
 #endif
 
+#if defined(XP_DARWIN)
+# Whether or not to use the mach-based IPC backend on macOS/iOS
+- name: dom.ipc.backend.mach
+  type: bool
+  value: @IS_IOS@
+  mirror: once
+#endif
+
 #ifdef MOZ_WIDGET_GTK
 #
 # Avoid the use of GTK in content processes if possible, by running

@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <queue>
+#include <variant>
 #include "base/basictypes.h"
 #include "base/process.h"
 #include "mozilla/EventTargetAndLockCapability.h"
@@ -36,7 +37,13 @@ class Channel {
 
   // For channels which are created after initialization, handles to the pipe
   // endpoints may be passed around directly using IPC messages.
-  using ChannelHandle = mozilla::UniqueFileHandle;
+  using ChannelHandle =
+      std::variant<std::monostate, mozilla::UniqueFileHandle
+#if defined(XP_DARWIN)
+                   ,
+                   mozilla::UniqueMachSendRight, mozilla::UniqueMachReceiveRight
+#endif
+                   >;
 
   // Implemented by consumers of a Channel to receive messages.
   //
