@@ -9,20 +9,24 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 toolbar {
-  background-color: -moz-headerbar;
-  color: -moz-headerbartext;
   min-width: 1px;
   min-height: 20px;
-  padding: 2px 0;
 
-  &:where(:-moz-window-inactive) {
-    background-color: -moz-headerbarinactive;
-    color: -moz-headerbarinactivetext;
-  }
+  /* TODO(emilio): Consider making this consistent across platforms. */
+  @media (-moz-platform: linux) {
+    background-color: -moz-headerbar;
+    color: -moz-headerbartext;
+    padding: 2px 0;
 
-  &[type="menubar"] {
-    background-color: transparent;
-    padding: 1px 0;
+    &:where(:-moz-window-inactive) {
+      background-color: -moz-headerbarinactive;
+      color: -moz-headerbarinactivetext;
+    }
+
+    &[type="menubar"] {
+      background-color: transparent;
+      padding: 1px 0;
+    }
   }
 }
 
