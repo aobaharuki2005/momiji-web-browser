@@ -931,44 +931,44 @@ bool js::AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 5. Let state be generator.[[AsyncGeneratorState]].
   // Step 6. If state is completed, then
-  // Step 6.a. Let iteratorResult be CreateIteratorResultObject(undefined,
-  //           true).
-  // Step 6.b. Perform ! Call(promiseCapability.[[Resolve]], undefined, «
-  //           iteratorResult »).
-  // Step 7. Let completion be NormalCompletion(value).
-  // Step 8. Perform AsyncGeneratorEnqueue(generator, completion,
-  //         promiseCapability).
-  // Step 9. If state is either suspended-start or suspended-yield, then
-  // Step 9.a. Perform AsyncGeneratorResume(generator, completion).
-  // Step 10. Else,
-  // Step 10.a. Assert: state is either executing or draining-queue.
-  // FIXME
-
   if (generator->isCompleted() && generator->isQueueEmpty()) {
+    MOZ_ASSERT(generator->isQueueEmpty());
+
+    // Step 6.a. Let iteratorResult be CreateIteratorResultObject(undefined,
+    //           true).
     JSObject* resultObj =
         CreateIterResultObject(cx, UndefinedHandleValue, true);
     if (!resultObj) {
       return false;
     }
 
+    // Step 6.b. Perform ! Call(promiseCapability.[[Resolve]], undefined, «
+    //           iteratorResult »).
     RootedValue resultValue(cx, ObjectValue(*resultObj));
     if (!ResolvePromiseInternal(cx, resultPromise, resultValue)) {
       return false;
     }
   } else {
+    // Step 7. Let completion be NormalCompletion(value).
+    // Step 8. Perform AsyncGeneratorEnqueue(generator, completion,
+    //         promiseCapability).
     if (!AsyncGeneratorEnqueue(cx, generator, CompletionKind::Normal,
                                completionValue, resultPromise)) {
       return false;
     }
 
+    // Step 9. If state is either suspended-start or suspended-yield, then
     if (generator->isSuspendedStart() || generator->isSuspendedYield()) {
       MOZ_ASSERT(generator->isQueueLengthOne());
 
+      // Step 9.a. Perform AsyncGeneratorResume(generator, completion).
       if (!AsyncGeneratorResume(cx, generator, CompletionKind::Normal,
                                 completionValue)) {
         return false;
       }
     } else {
+      // Step 10. Else,
+      // Step 10.a. Assert: state is either executing or draining-queue.
       MOZ_ASSERT(generator->isExecuting() ||
                  generator->isAwaitingYieldReturn() ||
                  generator->isAwaitingReturn() || generator->isCompleted());
@@ -1031,31 +1031,40 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 7. Let state be generator.[[AsyncGeneratorState]].
   // Step 8. If state is either suspended-start or completed, then
-  // Step 8.a. Set generator.[[AsyncGeneratorState]] to draining-queue.
-  // Step 8.b. Perform AsyncGeneratorAwaitReturn(generator).
-  // Step 9. Else if state is suspended-yield, then
-  // Step 9.a. Perform AsyncGeneratorResume(generator, completion).
-  // Step 10. Else,
-  // Step 10.a. Assert: state is either executing or draining-queue.
-  // FIXME
-
   if (generator->isSuspendedStart() ||
       (generator->isCompleted() && wasQueueEmpty)) {
     MOZ_ASSERT(generator->isQueueLengthOne());
 
+    // Step 8.a. Set generator.[[AsyncGeneratorState]] to draining-queue.
     generator->setAwaitingReturn();
 
+    // Step 8.b. Perform AsyncGeneratorAwaitReturn(generator).
     if (!AsyncGeneratorAwaitReturn(cx, generator, completionValue)) {
       return false;
     }
   } else if (generator->isSuspendedYield()) {
+    // Step 9. Else if state is suspended-yield, then
     MOZ_ASSERT(generator->isQueueLengthOne());
 
+    // Step 9.a. Perform AsyncGeneratorResume(generator, completion).
+    //
+    // AsyncGeneratorYield ( value )
+    // https://tc39.es/ecma262/#sec-asyncgeneratoryield
+    //
+    // Step 12.d. Resume callerContext passing undefined. If genContext is ever
+    //            resumed again, let resumptionValue be the Completion Record
+    //            with which it is resumed.
+    // Step 12.e. Assert: If control reaches here, then genContext is the
+    //            running execution context again.
+    // Step 12.f. Return ?
+    //            AsyncGeneratorUnwrapYieldResumption(resumptionValue).
     if (!AsyncGeneratorUnwrapYieldResumption(
             cx, generator, CompletionKind::Return, completionValue)) {
       return false;
     }
   } else {
+    // Step 10. Else,
+    // Step 10.a. Assert: state is either executing or draining-queue.
     MOZ_ASSERT(generator->isExecuting() || generator->isAwaitingYieldReturn() ||
                generator->isAwaitingReturn() ||
                (generator->isCompleted() && !wasQueueEmpty));
@@ -1105,43 +1114,42 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 5. Let state be generator.[[AsyncGeneratorState]].
   // Step 6. If state is suspended-start, then
-  // Step 6.a. Set generator.[[AsyncGeneratorState]] to completed.
-  // Step 6.b. Set state to completed.
-  // Step 7. If state is completed, then
-  // Step 7.a. Perform ! Call(promiseCapability.[[Reject]], undefined, «
-  //           exception »).
-  // Step 8. Let completion be ThrowCompletion(exception).
-  // Step 9. Perform AsyncGeneratorEnqueue(generator, completion,
-  //         promiseCapability).
-  // Step 10. If state is suspended-yield, then
-  // Step 10.a. Perform AsyncGeneratorResume(generator, completion).
-  // Step 11. Else,
-  // Step 11.a. Assert: state is either executing or draining-queue.
-  // FIXME
-
   if (generator->isSuspendedStart()) {
+    // Step 6.a. Set generator.[[AsyncGeneratorState]] to completed.
+    // Step 6.b. Set state to completed.
     generator->setCompleted();
   }
 
+  // Step 7. If state is completed, then
   if (generator->isCompleted() && generator->isQueueEmpty()) {
     MOZ_ASSERT(generator->isQueueEmpty());
 
+    // Step 7.a. Perform ! Call(promiseCapability.[[Reject]], undefined, «
+    //           exception »).
     if (!RejectPromiseInternal(cx, resultPromise, completionValue)) {
       return false;
     }
   } else {
+    // Step 8. Let completion be ThrowCompletion(exception).
+    // Step 9. Perform AsyncGeneratorEnqueue(generator, completion,
+    //         promiseCapability).
     if (!AsyncGeneratorEnqueue(cx, generator, CompletionKind::Throw,
                                completionValue, resultPromise)) {
       return false;
     }
+
+    // Step 10. If state is suspended-yield, then
     if (generator->isSuspendedYield()) {
       MOZ_ASSERT(generator->isQueueLengthOne());
 
+      // Step 10.a. Perform AsyncGeneratorResume(generator, completion).
       if (!AsyncGeneratorResume(cx, generator, CompletionKind::Throw,
                                 completionValue)) {
         return false;
       }
     } else {
+      // Step 11. Else,
+      // Step 11.a. Assert: state is either executing or draining-queue.
       MOZ_ASSERT(generator->isExecuting() ||
                  generator->isAwaitingYieldReturn() ||
                  generator->isAwaitingReturn() || generator->isCompleted());
