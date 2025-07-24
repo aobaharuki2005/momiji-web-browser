@@ -201,20 +201,27 @@ RefPtr<EncodePromise> WMFMediaDataEncoder::ProcessEncode(
                aSample->mDuration.ToString().get());
 
   RefPtr<IMFSample> nv12 = ConvertToNV12InputSample(std::move(aSample));
-
-  MFTEncoder::InputSample inputSample{nv12, aSample->mKeyframe};
-
-  if (!nv12 || FAILED(mEncoder->PushInput(inputSample))) {
-    WMF_ENC_LOGE("failed to process input sample");
+  if (!nv12) {
+    WMF_ENC_LOGE("failed to convert sample into NV12 format");
     return EncodePromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                    RESULT_DETAIL("Failed to process input.")),
+                    RESULT_DETAIL("Failed to convert sample into NV12 format")),
         __func__);
   }
 
-  nsTArray<MFTEncoder::OutputSample> outputs = mEncoder->TakeOutput();
-
-  return ProcessOutputSamples(std::move(outputs));
+  MFTEncoder::InputSample inputSample{nv12, aSample->mKeyframe};
+  return mEncoder->Encode(inputSample)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr<WMFMediaDataEncoder>(this)](
+              MFTEncoder::EncodedData&& aOutput) {
+            return self->ProcessOutputSamples(std::move(aOutput));
+          },
+          [self =
+               RefPtr<WMFMediaDataEncoder>(this)](const MediaResult& aError) {
+            WMF_ENC_SLOGE("Encode failed: %s", aError.Description().get());
+            return EncodePromise::CreateAndReject(aError, __func__);
+          });
 }
 
 already_AddRefed<IMFSample> WMFMediaDataEncoder::ConvertToNV12InputSample(

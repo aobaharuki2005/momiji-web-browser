@@ -743,6 +743,23 @@ MFTEncoder::SetBitrate(UINT32 aBitsPerSec) {
   return mConfig->SetValue(&CODECAPI_AVEncCommonMeanBitRate, &var);
 }
 
+RefPtr<MFTEncoder::EncodePromise> MFTEncoder::Encode(
+    const InputSample& aInput) {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+  MOZ_ASSERT(mEncoder);
+
+  HRESULT hr = PushInput(aInput);
+  if (FAILED(hr)) {
+    return EncodePromise::CreateAndReject(
+        MediaResult(
+            NS_ERROR_DOM_MEDIA_FATAL_ERR,
+            RESULT_DETAIL("failed to push input: %s", ErrorMessage(hr).get())),
+        __func__);
+  }
+
+  return EncodePromise::CreateAndResolve(TakeOutput(), __func__);
+}
+
 static HRESULT CreateSample(RefPtr<IMFSample>* aOutSample, DWORD aSize,
                             DWORD aAlignment) {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());

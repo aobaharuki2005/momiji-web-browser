@@ -22,6 +22,9 @@
   MOZ_LOG(                                        \
       mozilla::sPEMLog, mozilla::LogLevel::Error, \
       ("WMFMediaDataEncoder(0x%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define WMF_ENC_SLOGE(arg, ...)                       \
+  MOZ_LOG(mozilla::sPEMLog, mozilla::LogLevel::Error, \
+          ("WMFMediaDataEncoder: %s" arg, __func__, ##__VA_ARGS__))
 
 namespace mozilla {
 

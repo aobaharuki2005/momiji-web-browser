@@ -15,6 +15,7 @@
 #include "EncoderConfig.h"
 #include "WMF.h"
 #include "mozilla/DefineEnum.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ResultVariant.h"
 #include "nsDeque.h"
@@ -25,6 +26,8 @@ namespace mozilla {
 
 class MFTEncoder final {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFTEncoder)
+
   struct InputSample {
     RefPtr<IMFSample> mSample{};
     bool mKeyFrameRequested = false;
@@ -34,7 +37,10 @@ class MFTEncoder final {
     RefPtr<IMFSample> mSample{};
     MPEGHeader mHeader;
   };
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFTEncoder)
+
+  using EncodedData = nsTArray<OutputSample>;
+  using EncodePromise =
+      MozPromise<EncodedData, MediaResult, /* IsExclusive = */ true>;
 
   enum class HWPreference {
     HardwareOnly,
@@ -52,10 +58,10 @@ class MFTEncoder final {
   HRESULT SetModes(const EncoderConfig& aConfig);
   HRESULT SetBitrate(UINT32 aBitsPerSec);
 
-  HRESULT CreateInputSample(RefPtr<IMFSample>* aSample, size_t aSize);
-  HRESULT PushInput(const InputSample& aInput);
+  RefPtr<EncodePromise> Encode(const InputSample& aInput);
 
-  nsTArray<OutputSample> TakeOutput();
+  HRESULT CreateInputSample(RefPtr<IMFSample>* aSample, size_t aSize);
+
   HRESULT Drain(nsTArray<OutputSample>& aOutput);
 
   Result<MPEGHeader, HRESULT> GetMPEGSequenceHeader();
@@ -154,6 +160,9 @@ class MFTEncoder final {
   HRESULT GetStreamIDs();
   GUID MatchInputSubtype(IMFMediaType* aInputType);
   HRESULT SendMFTMessage(MFT_MESSAGE_TYPE aMsg, ULONG_PTR aData);
+
+  HRESULT PushInput(const InputSample& aInput);
+  nsTArray<OutputSample> TakeOutput();
 
   HRESULT ProcessEvents();
   HRESULT ProcessEventsInternal();
