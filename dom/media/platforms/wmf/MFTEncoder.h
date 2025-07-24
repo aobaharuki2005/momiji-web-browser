@@ -144,6 +144,8 @@ class MFTEncoder final {
   // Set the output type to the first available type found for the output
   // stream.
   HRESULT UpdateOutputType();
+  HRESULT ProcessOutput(RefPtr<IMFSample>& aSample, DWORD& aOutputStatus,
+                        DWORD& aBufferStatus);
 
   // Return true when successfully enabled, false for MFT that doesn't support
   // async processing model, and error otherwise.

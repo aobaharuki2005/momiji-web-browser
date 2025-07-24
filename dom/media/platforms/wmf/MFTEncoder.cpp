@@ -902,33 +902,16 @@ HRESULT MFTEncoder::ProcessOutput() {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
 
-  MFT_OUTPUT_DATA_BUFFER output = {.dwStreamID = mOutputStreamID,
-                                   .pSample = nullptr,
-                                   .dwStatus = 0,
-                                   .pEvents = nullptr};
   RefPtr<IMFSample> sample;
-  if (!mOutputStreamProvidesSample) {
-    MFT_RETURN_IF_FAILED(CreateSample(&sample, mOutputStreamInfo.cbSize,
-                                      mOutputStreamInfo.cbAlignment > 1
-                                          ? mOutputStreamInfo.cbAlignment - 1
-                                          : 0));
-    output.pSample = sample;
-  }
-
   DWORD status = 0;
-  HRESULT hr = mEncoder->ProcessOutput(0, 1, &output, &status);
-  if (output.pEvents) {
-    MFT_ENC_LOGW("Discarding events from ProcessOutput");
-    output.pEvents->Release();
-    output.pEvents = nullptr;
-  }
-
+  DWORD bufStatus = 0;
+  HRESULT hr = ProcessOutput(sample, status, bufStatus);
   if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
     MFT_ENC_LOGW("output stream change");
-    if (output.dwStatus & MFT_OUTPUT_DATA_BUFFER_FORMAT_CHANGE) {
+    if (bufStatus & MFT_OUTPUT_DATA_BUFFER_FORMAT_CHANGE) {
       MFT_RETURN_IF_FAILED(UpdateOutputType());
     }
-    return MF_E_TRANSFORM_STREAM_CHANGE;
+    return hr;
   }
 
   // Step 8 in
@@ -946,14 +929,9 @@ HRESULT MFTEncoder::ProcessOutput() {
     return hr;
   }
 
-  mOutputs.AppendElement(OutputSample{.mSample = output.pSample});
+  mOutputs.AppendElement(OutputSample{.mSample = sample.forget()});
   if (!mOutputHeader.IsEmpty()) {
     mOutputs.LastElement().mHeader = std::move(mOutputHeader);
-  }
-  if (mOutputStreamProvidesSample) {
-    // Release MFT provided sample.
-    output.pSample->Release();
-    output.pSample = nullptr;
   }
 
   return S_OK;
@@ -1012,6 +990,46 @@ HRESULT MFTEncoder::UpdateOutputType() {
   MFT_ENC_LOGW("stream format has been renegotiated for output stream %lu",
                mOutputStreamID);
   return S_OK;
+}
+
+HRESULT MFTEncoder::ProcessOutput(RefPtr<IMFSample>& aSample,
+                                  DWORD& aOutputStatus, DWORD& aBufferStatus) {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+  MOZ_ASSERT(mEncoder);
+
+  MFT_OUTPUT_DATA_BUFFER output = {.dwStreamID = mOutputStreamID,
+                                   .pSample = nullptr,
+                                   .dwStatus = 0,
+                                   .pEvents = nullptr};
+  RefPtr<IMFSample> sample;
+  if (!mOutputStreamProvidesSample) {
+    MFT_RETURN_IF_FAILED(CreateSample(&sample, mOutputStreamInfo.cbSize,
+                                      mOutputStreamInfo.cbAlignment > 1
+                                          ? mOutputStreamInfo.cbAlignment - 1
+                                          : 0));
+    output.pSample = sample;
+  }
+
+  HRESULT hr = mEncoder->ProcessOutput(0, 1, &output, &aOutputStatus);
+  aBufferStatus = output.dwStatus;
+  if (output.pEvents) {
+    MFT_ENC_LOGW("Discarding events from ProcessOutput");
+    output.pEvents->Release();
+    output.pEvents = nullptr;
+  }
+
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  aSample = output.pSample;
+  if (mOutputStreamProvidesSample) {
+    // Release MFT provided sample.
+    output.pSample->Release();
+    output.pSample = nullptr;
+  }
+
+  return hr;
 }
 
 Result<nsTArray<UINT8>, HRESULT> MFTEncoder::GetMPEGSequenceHeader() {
