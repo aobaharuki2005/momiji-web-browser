@@ -920,15 +920,7 @@ HRESULT MFTEncoder::ProcessOutput() {
   if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
     MFT_ENC_LOGW("output stream change");
     if (output.dwStatus & MFT_OUTPUT_DATA_BUFFER_FORMAT_CHANGE) {
-      // Follow the instructions in Microsoft doc:
-      // https://docs.microsoft.com/en-us/windows/win32/medfound/handling-stream-changes#output-type
-      IMFMediaType* outputType = nullptr;
-      MFT_RETURN_IF_FAILED(
-          mEncoder->GetOutputAvailableType(mOutputStreamID, 0, &outputType));
-      MFT_RETURN_IF_FAILED(
-          mEncoder->SetOutputType(mOutputStreamID, outputType, 0));
-      MFT_ENC_LOGW("stream format has been re-negotiated for output stream %lu",
-                   mOutputStreamID);
+      MFT_RETURN_IF_FAILED(UpdateOutputType());
     }
     return MF_E_TRANSFORM_STREAM_CHANGE;
   }
@@ -1000,6 +992,20 @@ HRESULT MFTEncoder::Drain(nsTArray<OutputSample>& aOutput) {
       SetDrainState(DrainState::DRAINABLE);
       return S_OK;
   }
+}
+
+HRESULT MFTEncoder::UpdateOutputType() {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+  MOZ_ASSERT(mEncoder);
+  // Per Microsoft's documentation:
+  // https://docs.microsoft.com/en-us/windows/win32/medfound/handling-stream-changes#output-type
+  IMFMediaType* outputType = nullptr;
+  MFT_RETURN_IF_FAILED(
+      mEncoder->GetOutputAvailableType(mOutputStreamID, 0, &outputType));
+  MFT_RETURN_IF_FAILED(mEncoder->SetOutputType(mOutputStreamID, outputType, 0));
+  MFT_ENC_LOGW("stream format has been renegotiated for output stream %lu",
+               mOutputStreamID);
+  return S_OK;
 }
 
 Result<nsTArray<UINT8>, HRESULT> MFTEncoder::GetMPEGSequenceHeader() {

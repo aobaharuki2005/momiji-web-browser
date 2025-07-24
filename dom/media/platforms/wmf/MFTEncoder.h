@@ -141,6 +141,10 @@ class MFTEncoder final {
   static nsTArray<Info> Enumerate();
   static Maybe<Info> GetInfo(const GUID& aSubtype);
 
+  // Set the output type to the first available type found for the output
+  // stream.
+  HRESULT UpdateOutputType();
+
   // Return true when successfully enabled, false for MFT that doesn't support
   // async processing model, and error otherwise.
   using AsyncMFTResult = Result<bool, HRESULT>;
