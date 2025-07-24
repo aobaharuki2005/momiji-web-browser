@@ -35,6 +35,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -213,7 +215,11 @@ private fun ProtectionPanelBanner(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .clearAndSetSemantics {
+                contentDescription = "$title. $description"
+            }
+            .fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         shape = BANNER_ROUNDED_CORNER_SHAPE,
     ) {
@@ -267,9 +273,30 @@ private fun WebsitePermissionsMenuGroup(
 
         MenuGroup {
             websitePermissions.forEachIndexed { index, websitePermission ->
+                val stateDescription: String = when (websitePermission) {
+                    is WebsitePermission.Autoplay -> {
+                        AutoplayValue.entries.find { it == websitePermission.autoplayValue }?.title?.let {
+                            stringResource(
+                                it,
+                            )
+                        } ?: ""
+                    }
+
+                    is WebsitePermission.Toggleable -> {
+                         if (websitePermission.isBlockedByAndroid) {
+                            stringResource(id = R.string.phone_feature_blocked_by_android)
+                        } else if (websitePermission.isEnabled) {
+                            stringResource(id = R.string.preference_option_phone_feature_allowed)
+                        } else {
+                            stringResource(id = R.string.preference_option_phone_feature_blocked)
+                        }
+                    }
+                }
+
                 MenuItem(
                     label = stringResource(id = websitePermission.deviceFeature.getLabelId()),
                     beforeIconPainter = painterResource(id = websitePermission.deviceFeature.getIconId()),
+                    stateDescription = stateDescription,
                     afterContent = when (websitePermission) {
                         is WebsitePermission.Autoplay -> {
                             { AutoplayDropdownMenu(websitePermission, onAutoplayValueClick) }
@@ -279,6 +306,7 @@ private fun WebsitePermissionsMenuGroup(
                             {
                                 WebsitePermissionToggle(
                                     websitePermission,
+                                    stateDescription,
                                     onToggleablePermissionClick,
                                 )
                             }
@@ -293,16 +321,9 @@ private fun WebsitePermissionsMenuGroup(
 @Composable
 private fun WebsitePermissionToggle(
     websitePermission: WebsitePermission.Toggleable,
+    toggleLabel: String,
     onToggleablePermissionClick: (WebsitePermission.Toggleable) -> Unit,
 ) {
-    val toggleLabel = if (websitePermission.isBlockedByAndroid) {
-        stringResource(id = R.string.phone_feature_blocked_by_android)
-    } else if (websitePermission.isEnabled) {
-        stringResource(id = R.string.preference_option_phone_feature_allowed)
-    } else {
-        stringResource(id = R.string.preference_option_phone_feature_blocked)
-    }
-
     Column(
         modifier = Modifier
             .clickable { onToggleablePermissionClick(websitePermission) }
