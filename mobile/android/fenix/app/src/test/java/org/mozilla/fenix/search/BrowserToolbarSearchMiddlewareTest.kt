@@ -72,6 +72,7 @@ import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.helpers.lifecycle.TestLifecycleOwner
 import org.mozilla.fenix.home.toolbar.HomeToolbarEnvironment
 import org.mozilla.fenix.search.EditPageEndActionsInteractions.ClearSearchClicked
+import org.mozilla.fenix.search.EditPageEndActionsInteractions.QrScannerClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSelectorClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSelectorItemClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSettingsItemClicked
@@ -136,7 +137,7 @@ class BrowserToolbarSearchMiddlewareTest {
 
         assertEquals(
             expectedClearButton,
-            store.state.editState.editActionsEnd.last() as ActionButton,
+            store.state.editState.editActionsEnd.last() as ActionButtonRes,
         )
     }
 
@@ -147,7 +148,7 @@ class BrowserToolbarSearchMiddlewareTest {
         store.dispatch(SearchQueryUpdated("test"))
         store.dispatch(ToggleEditMode(true))
 
-        val clearButton = store.state.editState.editActionsEnd.last() as ActionButton
+        val clearButton = store.state.editState.editActionsEnd.last() as ActionButtonRes
 
         assertEquals(
             expectedClearButton,

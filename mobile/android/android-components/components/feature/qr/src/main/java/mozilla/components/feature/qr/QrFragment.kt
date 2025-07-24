@@ -239,7 +239,24 @@ class QrFragment : Fragment() {
         }
     }
 
+    @Suppress("DEPRECATION")
+    override fun onDestroyView() {
+        super.onDestroyView()
+
+        // Release the keyboard
+        requireActivity().window.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED or
+            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE,
+        )
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        // Don't let the keyboard push the UI around
+        requireActivity().window.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING or
+            WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN, // <- keep IME closed
+        )
+
         return inflater.inflate(R.layout.fragment_layout, container, false)
     }
 
@@ -255,6 +272,9 @@ class QrFragment : Fragment() {
     override fun onResume() {
         super.onResume()
 
+        val root = requireView()
+        root.isFocusableInTouchMode = true
+        root.requestFocus()
         // It's possible that the Fragment is resumed to a scanning state
         // while in the meantime the camera permission was removed. Avoid any issues.
         if (requireContext().isPermissionGranted(permission.CAMERA)) {

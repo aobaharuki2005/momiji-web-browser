@@ -14,6 +14,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.DrawableRes
 import androidx.annotation.VisibleForTesting
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -86,6 +87,8 @@ import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.Microsurv
 import org.mozilla.fenix.components.appstate.AppAction.ReviewPromptAction.CheckIfEligibleForReviewPrompt
 import org.mozilla.fenix.components.appstate.AppAction.ReviewPromptAction.ReviewPromptShown
 import org.mozilla.fenix.components.appstate.AppState
+import org.mozilla.fenix.components.appstate.qrScanner.QrScannerBinding
+import org.mozilla.fenix.components.appstate.qrScanner.QrScannerDelegate
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.components.toolbar.BottomToolbarContainerView
 import org.mozilla.fenix.compose.snackbar.Snackbar
@@ -175,6 +178,7 @@ class HomeFragment : Fragment() {
     internal var _binding: FragmentHomeBinding? = null
     internal val binding get() = _binding!!
     private val snackbarBinding = ViewBoundFeatureWrapper<SnackbarBinding>()
+    private val qrScannerBinding = ViewBoundFeatureWrapper<QrScannerBinding>()
 
     private val homeViewModel: HomeScreenViewModel by activityViewModels()
 
@@ -435,6 +439,20 @@ class HomeFragment : Fragment() {
                 tabsUseCases = requireContext().components.useCases.tabsUseCases,
                 sendTabUseCases = SendTabUseCases(requireComponents.backgroundServices.accountManager),
                 customTabSessionId = null,
+            ),
+            owner = this,
+            view = binding.root,
+        )
+
+        qrScannerBinding.set(
+            feature = QrScannerBinding(
+                appStore = requireContext().components.appStore,
+                qrScannerDelegate = QrScannerDelegate(
+                    activity = requireActivity() as AppCompatActivity,
+                    browserStore = requireContext().components.core.store,
+                    appStore = requireContext().components.appStore,
+                    settings = requireContext().settings(),
+                ),
             ),
             owner = this,
             view = binding.root,

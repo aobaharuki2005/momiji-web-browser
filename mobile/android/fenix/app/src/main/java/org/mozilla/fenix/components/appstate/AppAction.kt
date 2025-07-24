@@ -360,6 +360,36 @@ sealed class AppAction : Action {
     }
 
     /**
+     * [AppAction]s related to Qr Scanner.
+     */
+    sealed class QrScannerAction : AppAction() {
+        /**
+         * [QrScannerAction] dispatched when the QR Scanner is requested.
+         */
+        data object QrScannerRequested : QrScannerAction()
+
+        /**
+         * [QrScannerAction] dispatched when the QR Scanner Request is consumed.
+         */
+        data object QrScannerRequestConsumed : QrScannerAction()
+
+        /**
+         * [QrScannerAction] dispatched when the QR Scanner is dismissed.
+         */
+        data object QrScannerDismissed : QrScannerAction()
+
+        /**
+         * [QrScannerAction] dispatched when the QR scanner loads a QR code.
+         */
+        data class QrScannerInputAvailable(val data: String?) : QrScannerAction()
+
+        /**
+         * [QrScannerAction] dispatched when the loaded QR code is consumed.
+         */
+        data object QrScannerInputConsumed : QrScannerAction()
+    }
+
+    /**
      * [AppAction]s related to shortcuts.
      */
     sealed class ShortcutAction : AppAction() {

@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.AwesomeBarAction.EngagementFinished
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.search.SearchEngine.Type.APPLICATION
+import mozilla.components.browser.state.search.SearchEngine.Type.CUSTOM
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
@@ -59,6 +60,7 @@ import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode.Private
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEngineSelected
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
@@ -122,8 +124,9 @@ class BrowserToolbarSearchMiddleware(
     internal var environment: HomeToolbarEnvironment? = null
     private var syncCurrentSearchEngineJob: Job? = null
     private var syncAvailableSearchEnginesJob: Job? = null
+    private var observeQRScannerInputJob: Job? = null
 
-    @Suppress("LongMethod", "CyclomaticComplexMethod")
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     override fun invoke(
         context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         next: (BrowserToolbarAction) -> Unit,
@@ -159,6 +162,11 @@ class BrowserToolbarSearchMiddleware(
                 } else {
                     syncCurrentSearchEngineJob?.cancel()
                     syncAvailableSearchEnginesJob?.cancel()
+
+                    if (observeQRScannerInputJob?.isActive == true) {
+                        appStore.dispatch(AppAction.QrScannerAction.QrScannerDismissed)
+                    }
+                    observeQRScannerInputJob?.cancel()
                 }
             }
 
@@ -248,7 +256,8 @@ class BrowserToolbarSearchMiddleware(
             }
 
             is QrScannerClicked -> {
-                // implement Qr Scan here
+                observeQrScannerInput(context.store)
+                appStore.dispatch(AppAction.QrScannerAction.QrScannerRequested)
             }
 
             else -> {
@@ -410,21 +419,32 @@ class BrowserToolbarSearchMiddleware(
 
     private fun updateSearchEndPageActions(
         store: Store<BrowserToolbarState, BrowserToolbarAction>,
+        selectedSearchEngine: SearchEngine? = reconcileSelectedEngine(),
     ) = store.dispatch(
         SearchActionsEndUpdated(
-            buildSearchEndPageActions(store.state.editState.query),
+            buildSearchEndPageActions(
+                store.state.editState.query,
+                selectedSearchEngine,
+            ),
         ),
     )
 
-    private fun buildSearchEndPageActions(queryText: String): List<Action> = buildList {
-        add(
-            ActionButtonRes(
-                drawableResId = R.drawable.mozac_ic_qr_code_24,
-                contentDescription = R.string.mozac_feature_qr_scanner,
-                state = ActionButton.State.DEFAULT,
-                onClick = QrScannerClicked,
-            ),
-        )
+    private fun buildSearchEndPageActions(
+        queryText: String,
+        selectedSearchEngine: SearchEngine?,
+    ): List<Action> = buildList {
+        val isValidSearchEngine = selectedSearchEngine?.isGeneral == true ||
+                selectedSearchEngine?.type == CUSTOM
+        if (isValidSearchEngine) {
+            add(
+                ActionButtonRes(
+                    drawableResId = R.drawable.mozac_ic_qr_code_24,
+                    contentDescription = R.string.mozac_feature_qr_scanner,
+                    state = ActionButton.State.DEFAULT,
+                    onClick = QrScannerClicked,
+                ),
+            )
+        }
         if (queryText.isNotEmpty()) {
             add(
                 ActionButtonRes(
@@ -434,6 +454,20 @@ class BrowserToolbarSearchMiddleware(
                     onClick = ClearSearchClicked,
                 ),
             )
+        }
+    }
+
+    private fun observeQrScannerInput(store: Store<BrowserToolbarState, BrowserToolbarAction>) {
+        observeQRScannerInputJob = null
+        observeQRScannerInputJob = appStore.observeWhileActive {
+            distinctUntilChangedBy { it.qrScannerState.lastScanData }
+                .collect {
+                    if (it.qrScannerState.lastScanData?.isNotEmpty() == true) {
+                        appStore.dispatch(AppAction.QrScannerAction.QrScannerInputConsumed)
+                        store.dispatch(SearchQueryUpdated(it.qrScannerState.lastScanData))
+                        observeQRScannerInputJob?.cancel()
+                    }
+                }
         }
     }
 
