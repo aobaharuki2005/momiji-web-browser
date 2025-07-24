@@ -10,6 +10,8 @@
 #include <fcntl.h>
 #include <linux/ioctl.h>
 #include <linux/ipc.h>
+#include <linux/memfd.h>
+#include <linux/mman.h>
 #include <linux/net.h>
 #include <linux/sched.h>
 #include <string.h>
@@ -113,6 +115,16 @@ static_assert(F_GET_SEALS == (F_LINUX_SPECIFIC_BASE + 10));
 #else
 static_assert(MADV_GUARD_INSTALL == 102);
 static_assert(MADV_GUARD_REMOVE == 103);
+#endif
+
+// Added in 4.14
+#ifndef MFD_HUGETLB
+#  define MFD_HUGETLB 4U
+#  define MFD_HUGE_MASK MAP_HUGE_MASK
+#  define MFD_HUGE_SHIFT MAP_HUGE_SHIFT
+#else
+static_assert(MFD_HUGE_MASK == MAP_HUGE_MASK);
+static_assert(MFD_HUGE_SHIFT == MAP_HUGE_SHIFT);
 #endif
 
 // To avoid visual confusion between "ifdef ANDROID" and "ifndef ANDROID":
@@ -1121,13 +1133,29 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         return Allow();
 
         // Memory mapping
-      CASES_FOR_mmap:
+      CASES_FOR_mmap: {
+        Arg<int> flags(3);
+        // Explicit huge-page mapping has a history of bugs, and
+        // generally isn't used outside of server applications.
+        static constexpr int kBadFlags =
+            MAP_HUGETLB | (MAP_HUGE_MASK << MAP_HUGE_SHIFT);
+        // ENOSYS seems to be what the kernel would return if
+        // CONFIG_HUGETLBFS=n.  (This uses Error rather than
+        // InvalidSyscall because the latter would crash on Nightly,
+        // and I don't think those reports would be actionable.)
+        return If((flags & kBadFlags) != 0, Error(ENOSYS)).Else(Allow());
+      }
       case __NR_munmap:
         return Allow();
 
         // Shared memory
-      case __NR_memfd_create:
-        return Allow();
+      case __NR_memfd_create: {
+        Arg<unsigned> flags(1);
+        // See above about mmap MAP_HUGETLB.
+        static constexpr int kBadFlags =
+            MFD_HUGETLB | (MFD_HUGE_MASK << MFD_HUGE_SHIFT);
+        return If((flags & kBadFlags) != 0, Error(ENOSYS)).Else(Allow());
+      }
 
         // ipc::Shmem; also, glibc when creating threads:
       case __NR_mprotect:
