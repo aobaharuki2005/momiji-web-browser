@@ -6,7 +6,10 @@
  * Manages updates for a IP Protection panelView in a given browser window.
  */
 export class IPProtectionPanel {
+  static HEADER_TAGNAME = "ipprotection-header";
   static CONTENT_TAGNAME = "ipprotection-content";
+  static HEADER_ROOT_ELEMENT = "#PanelUI-ipprotection-header";
+  static CONTENT_ROOT_ELEMENT = "#PanelUI-ipprotection-content";
   static CUSTOM_ELEMENTS_SCRIPT =
     "chrome://browser/content/ipprotection/ipprotection-customelements.js";
 
@@ -51,6 +54,7 @@ export class IPProtectionPanel {
    */
   state = {};
   panel = null;
+  header = null;
 
   /**
    * Check the state of the enclosing panel to see if
@@ -153,6 +157,10 @@ export class IPProtectionPanel {
    *   The panelView element from the CustomizableUI widget callback.
    */
   showing(panelView) {
+    if (!this.header) {
+      this.#createHeader(panelView);
+    }
+
     if (this.panel) {
       this.updateState();
     } else {
@@ -174,17 +182,38 @@ export class IPProtectionPanel {
    */
   #createPanel(panelView) {
     let { ownerDocument } = panelView;
+    let contentRootEl = panelView.querySelector(
+      IPProtectionPanel.CONTENT_ROOT_ELEMENT
+    );
 
     let contentEl = ownerDocument.createElement(
       IPProtectionPanel.CONTENT_TAGNAME
     );
     this.panel = contentEl;
 
-    contentEl.dataset.capturesFocus = "true";
-
     this.#addPanelListeners(ownerDocument);
 
-    panelView.appendChild(contentEl);
+    contentRootEl.appendChild(contentEl);
+  }
+
+  /**
+   * Creates the header for the panel component in the panelView.
+   *
+   * @param {XULBrowserElement} panelView
+   *  The panelView element that the panel header is in.
+   */
+  #createHeader(panelView) {
+    let headerRootEl = panelView.querySelector(
+      IPProtectionPanel.HEADER_ROOT_ELEMENT
+    );
+
+    let headerEl = panelView.ownerDocument.createElement(
+      IPProtectionPanel.HEADER_TAGNAME
+    );
+    headerEl.titleId = IPProtectionPanel.TITLE_L10N_ID;
+    this.header = headerEl;
+
+    headerRootEl.appendChild(headerEl);
   }
 
   /**
@@ -202,6 +231,10 @@ export class IPProtectionPanel {
    * Remove added elements and listeners.
    */
   destroy() {
+    if (this.header) {
+      this.header.remove();
+      this.header = null;
+    }
     if (this.panel) {
       this.panel.remove();
       this.#removePanelListeners(this.panel.ownerDocument);
