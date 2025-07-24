@@ -826,8 +826,8 @@ void WebGPUParent::QueueSubmit(RawId aQueueId, RawId aDeviceId,
 
   ErrorBuffer error;
   auto index = ffi::wgpu_server_queue_submit(
-      mContext.get(), aDeviceId, aQueueId, aCommandBuffers.Elements(),
-      aCommandBuffers.Length(), error.ToFFI());
+      mContext.get(), aDeviceId, aQueueId,
+      {aCommandBuffers.Elements(), aCommandBuffers.Length()}, error.ToFFI());
   // Check if index is valid. 0 means error.
   if (index != 0) {
     for (const auto& textureId : aTextureIds) {
@@ -1244,7 +1244,7 @@ ipc::IPCResult WebGPUParent::GetFrontBufferSnapshot(
   {
     ErrorBuffer error;
     ffi::wgpu_server_queue_submit(mContext.get(), data->mDeviceId,
-                                  data->mQueueId, &aCommandEncoderId, 1,
+                                  data->mQueueId, {&aCommandEncoderId, 1},
                                   error.ToFFI());
     ffi::wgpu_server_encoder_drop(mContext.get(), aCommandEncoderId);
     if (ForwardError(error)) {
@@ -1437,7 +1437,7 @@ void WebGPUParent::SwapChainPresent(
   {
     ErrorBuffer error;
     ffi::wgpu_server_queue_submit(mContext.get(), data->mDeviceId,
-                                  data->mQueueId, &aCommandEncoderId, 1,
+                                  data->mQueueId, {&aCommandEncoderId, 1},
                                   error.ToFFI());
     ffi::wgpu_server_encoder_drop(mContext.get(), aCommandEncoderId);
     if (ForwardError(error)) {
