@@ -61,6 +61,7 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.ktx.android.view.setNavigationBarColorCompat
 import mozilla.components.support.utils.ext.isLandscape
+import mozilla.components.support.utils.ext.top
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
@@ -84,6 +85,7 @@ import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
 import org.mozilla.fenix.components.menu.store.TranslationInfo
 import org.mozilla.fenix.components.menu.store.WebExtensionMenuItem
+import org.mozilla.fenix.ext.getWindowInsets
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
@@ -144,13 +146,15 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
 
                 isPrivate = browsingModeManager.mode.isPrivate
 
-                val navigationBarColor = if (browsingModeManager.mode.isPrivate) {
-                    ContextCompat.getColor(context, R.color.fx_mobile_private_layer_color_3)
-                } else {
-                    ContextCompat.getColor(context, R.color.fx_mobile_layer_color_3)
-                }
+                if (!Config.channel.isNightlyOrDebug) {
+                    val navigationBarColor = if (browsingModeManager.mode.isPrivate) {
+                        ContextCompat.getColor(context, R.color.fx_mobile_private_layer_color_3)
+                    } else {
+                        ContextCompat.getColor(context, R.color.fx_mobile_layer_color_3)
+                    }
 
-                window?.setNavigationBarColorCompat(navigationBarColor)
+                    window?.setNavigationBarColorCompat(navigationBarColor)
+                }
 
                 if (browsingModeManager.mode.isPrivate && args.accesspoint == MenuAccessPoint.Home) {
                     window?.setBackgroundDrawable(
@@ -161,8 +165,8 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                 }
 
                 val bottomSheet = findViewById<View?>(R.id.design_bottom_sheet)
-                bottomSheet?.setBackgroundResource(android.R.color.transparent)
                 if (Config.channel.isNightlyOrDebug) {
+                    bottomSheet?.setBackgroundResource(R.drawable.bottom_sheet_with_top_rounded_corners)
                     bottomSheet?.let { sheet ->
                         sheet.translationY = sheet.height * MenuAnimationConfig.START_OFFSET_RATIO
                         sheet.animate()
@@ -171,6 +175,8 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                             .setDuration(MenuAnimationConfig.DURATION)
                             .start()
                     }
+                } else {
+                    bottomSheet?.setBackgroundResource(android.R.color.transparent)
                 }
 
                 bottomSheetBehavior = bottomSheet?.let {
@@ -338,12 +344,6 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
 
                 var isMoreMenuExpanded by remember { mutableStateOf(false) }
 
-                val cornerShape = if (Config.channel.isNightlyOrDebug) {
-                    RoundedCornerShape(28.dp)
-                } else {
-                    RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
-                }
-
                 MenuDialogBottomSheet(
                     modifier = Modifier
                         .verticalScroll(rememberScrollState())
@@ -353,7 +353,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                     handlebarContentDescription = handlebarContentDescription,
                     isExtensionsExpanded = isExtensionsExpanded,
                     isMoreMenuExpanded = isMoreMenuExpanded,
-                    cornerShape = cornerShape,
+                    cornerShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
                     handleColor = FirefoxTheme.colors.borderInverted.copy(0.4f),
                     handleCornerRadius = CornerRadius(100f, 100f),
                     menuCfrState = if (settings.shouldShowMenuCFR) {
@@ -894,10 +894,15 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
     }
 
     private fun calculateMenuSheetHeight(): Int {
-        return if (requireContext().isLandscape()) {
+        val bottomSheet = dialog?.findViewById<View?>(R.id.design_bottom_sheet)
+        val topBarHeight = bottomSheet?.getWindowInsets()?.top() ?: 0
+
+        val orientationMaxHeight = if (requireContext().isLandscape()) {
             resources.displayMetrics.heightPixels
         } else {
             resources.displayMetrics.heightPixels - EXPANDED_OFFSET.dpToPx(resources.displayMetrics)
         }
+
+        return orientationMaxHeight - topBarHeight
     }
 }
