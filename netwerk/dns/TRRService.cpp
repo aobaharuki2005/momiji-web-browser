@@ -1376,9 +1376,9 @@ NS_IMETHODIMP TRRService::OnProxyConfigChanged() {
   return NS_OK;
 }
 
-void TRRService::InitTRRConnectionInfo() {
+void TRRService::InitTRRConnectionInfo(bool aForceReinit) {
   if (XRE_IsParentProcess()) {
-    TRRServiceBase::InitTRRConnectionInfo();
+    TRRServiceBase::InitTRRConnectionInfo(aForceReinit);
     return;
   }
 
@@ -1388,7 +1388,7 @@ void TRRService::InitTRRConnectionInfo() {
   TRRServiceChild* child = TRRServiceChild::GetSingleton();
   if (child && child->CanSend()) {
     LOG(("TRRService::SendInitTRRConnectionInfo"));
-    Unused << child->SendInitTRRConnectionInfo();
+    Unused << child->SendInitTRRConnectionInfo(aForceReinit);
   }
 }
 
