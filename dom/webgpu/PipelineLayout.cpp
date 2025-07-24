@@ -33,8 +33,6 @@ void PipelineLayout::Cleanup() {
   }
 
   ffi::wgpu_client_drop_pipeline_layout(bridge->GetClient(), mId);
-
-  wgpu_client_free_pipeline_layout_id(bridge->GetClient(), mId);
 }
 
 }  // namespace mozilla::webgpu

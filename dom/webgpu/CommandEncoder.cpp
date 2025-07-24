@@ -94,8 +94,6 @@ void CommandEncoder::Cleanup() {
   }
 
   ffi::wgpu_client_drop_command_encoder(mBridge->GetClient(), mId);
-
-  wgpu_client_free_command_encoder_id(mBridge->GetClient(), mId);
 }
 
 RefPtr<WebGPUChild> CommandEncoder::GetBridge() { return mBridge; }
