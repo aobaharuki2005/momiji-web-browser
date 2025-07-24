@@ -1340,8 +1340,6 @@ abstract class BaseBrowserFragment :
                             ),
                         )
                     }
-
-                    TabStripMetrics.newTabTapped.record()
                 },
                 onLastTabClose = { isPrivate ->
                     requireComponents.appStore.dispatch(
@@ -1351,12 +1349,9 @@ abstract class BaseBrowserFragment :
                         BrowserFragmentDirections.actionGlobalHome(),
                     )
                 },
-                onSelectedTabClick = {
-                    TabStripMetrics.selectTab.record()
-                },
+                onSelectedTabClick = {},
                 onCloseTabClick = { isPrivate ->
                     showUndoSnackbar(activity.tabClosedUndoMessage(isPrivate))
-                    TabStripMetrics.closeTab.record()
                 },
                 onTabCounterClick = { onTabCounterClicked(activity.browsingModeManager.mode) },
             )

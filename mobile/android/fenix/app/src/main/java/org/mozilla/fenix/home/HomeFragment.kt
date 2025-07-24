@@ -1035,17 +1035,13 @@ class HomeFragment : Fragment() {
                     } else {
                         sessionControlInteractor.onNavigateSearch()
                     }
-
-                    TabStripMetrics.newTabTapped.record()
                 },
                 onSelectedTabClick = {
                     (requireActivity() as HomeActivity).openToBrowser(BrowserDirection.FromHome)
-                    TabStripMetrics.selectTab.record()
                 },
                 onLastTabClose = {},
                 onCloseTabClick = { isPrivate ->
                     showUndoSnackbar(requireContext().tabClosedUndoMessage(isPrivate))
-                    TabStripMetrics.closeTab.record()
                 },
                 onTabCounterClick = { openTabsTray() },
             )

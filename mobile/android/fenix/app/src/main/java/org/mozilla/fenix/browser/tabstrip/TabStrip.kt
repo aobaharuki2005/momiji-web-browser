@@ -75,6 +75,7 @@ import org.mozilla.fenix.tabstray.browser.compose.createListReorderState
 import org.mozilla.fenix.tabstray.browser.compose.detectListPressAndDrag
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.GleanMetrics.TabStrip as TabStripMetrics
 
 private val minTabStripItemWidth = 130.dp
 private val maxTabStripItemWidth = 280.dp
@@ -133,7 +134,10 @@ fun TabStrip(
 
     TabStripContent(
         state = state,
-        onAddTabClick = onAddTabClick,
+        onAddTabClick = {
+            onAddTabClick()
+            TabStripMetrics.newTabTapped.record()
+        },
         onCloseTabClick = { tabId, isPrivate ->
             closeTab(
                 numberOfTabs = state.tabs.size,
@@ -147,6 +151,7 @@ fun TabStrip(
         onSelectedTabClick = {
             tabsUseCases.selectTab(it)
             onSelectedTabClick()
+            TabStripMetrics.selectTab.record()
         },
         onMove = { tabId, targetId, placeAfter ->
             if (tabId != targetId) {
@@ -456,6 +461,7 @@ private fun closeTab(
     }
     tabsUseCases.removeTab(tabId)
     onCloseTabClick(isPrivate)
+    TabStripMetrics.closeTab.record()
 }
 
 private class TabUIStateParameterProvider : PreviewParameterProvider<TabStripState> {
