@@ -8,8 +8,8 @@ import android.content.ComponentName
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
+import androidx.fragment.compose.content
 import androidx.navigation.fragment.findNavController
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
@@ -35,22 +35,20 @@ class AppIconSelectionFragment : Fragment(), UserInteractionHandler {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ) = ComposeView(requireContext()).apply {
-        setContent {
-            FirefoxTheme {
-                AppIconSelection(
-                    currentAppIcon = appIconRepository.selectedAppIcon,
-                    groupedIconOptions = appIconRepository.groupedAppIcons,
-                    onAppIconSelected = { selectedAppIcon ->
-                        val currentAliasSuffix = appIconRepository.selectedAppIcon.aliasSuffix
-                        appIconRepository.selectedAppIcon = selectedAppIcon
-                        updateAppIcon(
-                            currentAliasSuffix = currentAliasSuffix,
-                            updateAliasSuffix = selectedAppIcon.aliasSuffix,
-                        )
-                    },
-                )
-            }
+    ) = content {
+        FirefoxTheme {
+            AppIconSelection(
+                currentAppIcon = appIconRepository.selectedAppIcon,
+                groupedIconOptions = appIconRepository.groupedAppIcons,
+                onAppIconSelected = { selectedAppIcon ->
+                    val currentAliasSuffix = appIconRepository.selectedAppIcon.aliasSuffix
+                    appIconRepository.selectedAppIcon = selectedAppIcon
+                    updateAppIcon(
+                        currentAliasSuffix = currentAliasSuffix,
+                        updateAliasSuffix = selectedAppIcon.aliasSuffix,
+                    )
+                },
+            )
         }
     }
 
