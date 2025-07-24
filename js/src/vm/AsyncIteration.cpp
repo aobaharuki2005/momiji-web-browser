@@ -386,12 +386,142 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   // (done in AsyncGeneratorResume on the next resume)
 
   if (!generator->isQueueEmpty()) {
-    if (!AsyncGeneratorDrainQueue(cx, generator)) {
-      return false;
+    while (!generator->isQueueEmpty()) {
+      Rooted<AsyncGeneratorRequest*> next(
+          cx, AsyncGeneratorObject::peekRequest(generator));
+      if (!next) {
+        return false;
+      }
+
+      CompletionKind completionKind = next->completionKind();
+
+      if (completionKind != CompletionKind::Normal) {
+        if (generator->isSuspendedStart()) {
+          generator->setCompleted();
+        }
+      }
+      if (!generator->isCompleted()) {
+        MOZ_ASSERT(generator->isSuspendedStart() ||
+                   generator->isSuspendedYield());
+
+        RootedValue argument(cx, next->completionValue());
+
+        if (completionKind == CompletionKind::Return) {
+          generator->setAwaitingYieldReturn();
+
+          if (!InternalAsyncGeneratorAwait(
+                  cx, generator, argument,
+                  PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled,
+                  PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected)) {
+            return false;
+          }
+          break;
+        }
+
+        if (!AsyncGeneratorResume(cx, generator, completionKind, argument)) {
+          return false;
+        }
+        break;
+      }
+
+      if (completionKind == CompletionKind::Return) {
+        RootedValue value(cx, next->completionValue());
+
+        generator->setAwaitingReturn();
+
+        if (!AsyncGeneratorAwaitReturn(cx, generator, value)) {
+          return false;
+        }
+        break;
+      }
+
+      if (completionKind == CompletionKind::Throw) {
+        RootedValue value(cx, next->completionValue());
+
+        if (!AsyncGeneratorCompleteStepThrow(cx, generator, value)) {
+          return false;
+        }
+      } else {
+        if (!AsyncGeneratorCompleteStepNormal(cx, generator,
+                                              UndefinedHandleValue, true)) {
+          return false;
+        }
+      }
+
+      MOZ_ASSERT(!generator->isExecuting());
+      MOZ_ASSERT(!generator->isAwaitingYieldReturn());
+      if (generator->isAwaitingReturn()) {
+        break;
+      }
     }
   } else {
-    if (!AsyncGeneratorDrainQueue(cx, generator)) {
-      return false;
+    while (!generator->isQueueEmpty()) {
+      Rooted<AsyncGeneratorRequest*> next(
+          cx, AsyncGeneratorObject::peekRequest(generator));
+      if (!next) {
+        return false;
+      }
+
+      CompletionKind completionKind = next->completionKind();
+
+      if (completionKind != CompletionKind::Normal) {
+        if (generator->isSuspendedStart()) {
+          generator->setCompleted();
+        }
+      }
+      if (!generator->isCompleted()) {
+        MOZ_ASSERT(generator->isSuspendedStart() ||
+                   generator->isSuspendedYield());
+
+        RootedValue argument(cx, next->completionValue());
+
+        if (completionKind == CompletionKind::Return) {
+          generator->setAwaitingYieldReturn();
+
+          if (!InternalAsyncGeneratorAwait(
+                  cx, generator, argument,
+                  PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled,
+                  PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected)) {
+            return false;
+          }
+          break;
+        }
+
+        if (!AsyncGeneratorResume(cx, generator, completionKind, argument)) {
+          return false;
+        }
+        break;
+      }
+
+      if (completionKind == CompletionKind::Return) {
+        RootedValue value(cx, next->completionValue());
+
+        generator->setAwaitingReturn();
+
+        if (!AsyncGeneratorAwaitReturn(cx, generator, value)) {
+          return false;
+        }
+        break;
+      }
+
+      if (completionKind == CompletionKind::Throw) {
+        RootedValue value(cx, next->completionValue());
+
+        if (!AsyncGeneratorCompleteStepThrow(cx, generator, value)) {
+          return false;
+        }
+      } else {
+        if (!AsyncGeneratorCompleteStepNormal(cx, generator,
+                                              UndefinedHandleValue, true)) {
+          return false;
+        }
+      }
+
+      MOZ_ASSERT(!generator->isExecuting());
+      MOZ_ASSERT(!generator->isAwaitingYieldReturn());
+      if (generator->isAwaitingReturn()) {
+        break;
+      }
     }
   }
 
@@ -921,13 +1051,145 @@ bool js::AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp) {
   }
   if (generator->isCompleted() && wasQueueEmpty) {
     MOZ_ASSERT(generator->isQueueLengthOne());
-    if (!AsyncGeneratorDrainQueue(cx, generator)) {
-      return false;
+
+    while (!generator->isQueueEmpty()) {
+      Rooted<AsyncGeneratorRequest*> next(
+          cx, AsyncGeneratorObject::peekRequest(generator));
+      if (!next) {
+        return false;
+      }
+
+      CompletionKind completionKind = next->completionKind();
+
+      if (completionKind != CompletionKind::Normal) {
+        if (generator->isSuspendedStart()) {
+          generator->setCompleted();
+        }
+      }
+      if (!generator->isCompleted()) {
+        MOZ_ASSERT(generator->isSuspendedStart() ||
+                   generator->isSuspendedYield());
+
+        RootedValue argument(cx, next->completionValue());
+
+        if (completionKind == CompletionKind::Return) {
+          generator->setAwaitingYieldReturn();
+
+          if (!InternalAsyncGeneratorAwait(
+                  cx, generator, argument,
+                  PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled,
+                  PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected)) {
+            return false;
+          }
+          break;
+        }
+
+        if (!AsyncGeneratorResume(cx, generator, completionKind, argument)) {
+          return false;
+        }
+        break;
+      }
+
+      if (completionKind == CompletionKind::Return) {
+        RootedValue value(cx, next->completionValue());
+
+        generator->setAwaitingReturn();
+
+        if (!AsyncGeneratorAwaitReturn(cx, generator, value)) {
+          return false;
+        }
+        break;
+      }
+
+      if (completionKind == CompletionKind::Throw) {
+        RootedValue value(cx, next->completionValue());
+
+        if (!AsyncGeneratorCompleteStepThrow(cx, generator, value)) {
+          return false;
+        }
+      } else {
+        if (!AsyncGeneratorCompleteStepNormal(cx, generator,
+                                              UndefinedHandleValue, true)) {
+          return false;
+        }
+      }
+
+      MOZ_ASSERT(!generator->isExecuting());
+      MOZ_ASSERT(!generator->isAwaitingYieldReturn());
+      if (generator->isAwaitingReturn()) {
+        break;
+      }
     }
   } else if (generator->isSuspendedStart() || generator->isSuspendedYield()) {
     MOZ_ASSERT(generator->isQueueLengthOne());
-    if (!AsyncGeneratorDrainQueue(cx, generator)) {
-      return false;
+
+    while (!generator->isQueueEmpty()) {
+      Rooted<AsyncGeneratorRequest*> next(
+          cx, AsyncGeneratorObject::peekRequest(generator));
+      if (!next) {
+        return false;
+      }
+
+      CompletionKind completionKind = next->completionKind();
+
+      if (completionKind != CompletionKind::Normal) {
+        if (generator->isSuspendedStart()) {
+          generator->setCompleted();
+        }
+      }
+      if (!generator->isCompleted()) {
+        MOZ_ASSERT(generator->isSuspendedStart() ||
+                   generator->isSuspendedYield());
+
+        RootedValue argument(cx, next->completionValue());
+
+        if (completionKind == CompletionKind::Return) {
+          generator->setAwaitingYieldReturn();
+
+          if (!InternalAsyncGeneratorAwait(
+                  cx, generator, argument,
+                  PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled,
+                  PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected)) {
+            return false;
+          }
+          break;
+        }
+
+        if (!AsyncGeneratorResume(cx, generator, completionKind, argument)) {
+          return false;
+        }
+        break;
+      }
+
+      if (completionKind == CompletionKind::Return) {
+        RootedValue value(cx, next->completionValue());
+
+        generator->setAwaitingReturn();
+
+        if (!AsyncGeneratorAwaitReturn(cx, generator, value)) {
+          return false;
+        }
+        break;
+      }
+
+      if (completionKind == CompletionKind::Throw) {
+        RootedValue value(cx, next->completionValue());
+
+        if (!AsyncGeneratorCompleteStepThrow(cx, generator, value)) {
+          return false;
+        }
+      } else {
+        if (!AsyncGeneratorCompleteStepNormal(cx, generator,
+                                              UndefinedHandleValue, true)) {
+          return false;
+        }
+      }
+
+      MOZ_ASSERT(!generator->isExecuting());
+      MOZ_ASSERT(!generator->isAwaitingYieldReturn());
+      if (generator->isAwaitingReturn()) {
+        break;
+      }
     }
   } else {
     MOZ_ASSERT(generator->isExecuting() || generator->isAwaitingYieldReturn() ||
@@ -1002,13 +1264,145 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
   if (generator->isSuspendedStart() ||
       (generator->isCompleted() && wasQueueEmpty)) {
     MOZ_ASSERT(generator->isQueueLengthOne());
-    if (!AsyncGeneratorDrainQueue(cx, generator)) {
-      return false;
+
+    while (!generator->isQueueEmpty()) {
+      Rooted<AsyncGeneratorRequest*> next(
+          cx, AsyncGeneratorObject::peekRequest(generator));
+      if (!next) {
+        return false;
+      }
+
+      CompletionKind completionKind = next->completionKind();
+
+      if (completionKind != CompletionKind::Normal) {
+        if (generator->isSuspendedStart()) {
+          generator->setCompleted();
+        }
+      }
+      if (!generator->isCompleted()) {
+        MOZ_ASSERT(generator->isSuspendedStart() ||
+                   generator->isSuspendedYield());
+
+        RootedValue argument(cx, next->completionValue());
+
+        if (completionKind == CompletionKind::Return) {
+          generator->setAwaitingYieldReturn();
+
+          if (!InternalAsyncGeneratorAwait(
+                  cx, generator, argument,
+                  PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled,
+                  PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected)) {
+            return false;
+          }
+          break;
+        }
+
+        if (!AsyncGeneratorResume(cx, generator, completionKind, argument)) {
+          return false;
+        }
+        break;
+      }
+
+      if (completionKind == CompletionKind::Return) {
+        RootedValue value(cx, next->completionValue());
+
+        generator->setAwaitingReturn();
+
+        if (!AsyncGeneratorAwaitReturn(cx, generator, value)) {
+          return false;
+        }
+        break;
+      }
+
+      if (completionKind == CompletionKind::Throw) {
+        RootedValue value(cx, next->completionValue());
+
+        if (!AsyncGeneratorCompleteStepThrow(cx, generator, value)) {
+          return false;
+        }
+      } else {
+        if (!AsyncGeneratorCompleteStepNormal(cx, generator,
+                                              UndefinedHandleValue, true)) {
+          return false;
+        }
+      }
+
+      MOZ_ASSERT(!generator->isExecuting());
+      MOZ_ASSERT(!generator->isAwaitingYieldReturn());
+      if (generator->isAwaitingReturn()) {
+        break;
+      }
     }
   } else if (generator->isSuspendedYield()) {
     MOZ_ASSERT(generator->isQueueLengthOne());
-    if (!AsyncGeneratorDrainQueue(cx, generator)) {
-      return false;
+
+    while (!generator->isQueueEmpty()) {
+      Rooted<AsyncGeneratorRequest*> next(
+          cx, AsyncGeneratorObject::peekRequest(generator));
+      if (!next) {
+        return false;
+      }
+
+      CompletionKind completionKind = next->completionKind();
+
+      if (completionKind != CompletionKind::Normal) {
+        if (generator->isSuspendedStart()) {
+          generator->setCompleted();
+        }
+      }
+      if (!generator->isCompleted()) {
+        MOZ_ASSERT(generator->isSuspendedStart() ||
+                   generator->isSuspendedYield());
+
+        RootedValue argument(cx, next->completionValue());
+
+        if (completionKind == CompletionKind::Return) {
+          generator->setAwaitingYieldReturn();
+
+          if (!InternalAsyncGeneratorAwait(
+                  cx, generator, argument,
+                  PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled,
+                  PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected)) {
+            return false;
+          }
+          break;
+        }
+
+        if (!AsyncGeneratorResume(cx, generator, completionKind, argument)) {
+          return false;
+        }
+        break;
+      }
+
+      if (completionKind == CompletionKind::Return) {
+        RootedValue value(cx, next->completionValue());
+
+        generator->setAwaitingReturn();
+
+        if (!AsyncGeneratorAwaitReturn(cx, generator, value)) {
+          return false;
+        }
+        break;
+      }
+
+      if (completionKind == CompletionKind::Throw) {
+        RootedValue value(cx, next->completionValue());
+
+        if (!AsyncGeneratorCompleteStepThrow(cx, generator, value)) {
+          return false;
+        }
+      } else {
+        if (!AsyncGeneratorCompleteStepNormal(cx, generator,
+                                              UndefinedHandleValue, true)) {
+          return false;
+        }
+      }
+
+      MOZ_ASSERT(!generator->isExecuting());
+      MOZ_ASSERT(!generator->isAwaitingYieldReturn());
+      if (generator->isAwaitingReturn()) {
+        break;
+      }
     }
   } else {
     MOZ_ASSERT(generator->isExecuting() || generator->isAwaitingYieldReturn() ||
@@ -1080,16 +1474,149 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
                              completionValue, resultPromise)) {
     return false;
   }
+
   if (generator->isSuspendedStart() ||
       (generator->isCompleted() && wasQueueEmpty)) {
     MOZ_ASSERT(generator->isQueueLengthOne());
-    if (!AsyncGeneratorDrainQueue(cx, generator)) {
-      return false;
+
+    while (!generator->isQueueEmpty()) {
+      Rooted<AsyncGeneratorRequest*> next(
+          cx, AsyncGeneratorObject::peekRequest(generator));
+      if (!next) {
+        return false;
+      }
+
+      CompletionKind completionKind = next->completionKind();
+
+      if (completionKind != CompletionKind::Normal) {
+        if (generator->isSuspendedStart()) {
+          generator->setCompleted();
+        }
+      }
+      if (!generator->isCompleted()) {
+        MOZ_ASSERT(generator->isSuspendedStart() ||
+                   generator->isSuspendedYield());
+
+        RootedValue argument(cx, next->completionValue());
+
+        if (completionKind == CompletionKind::Return) {
+          generator->setAwaitingYieldReturn();
+
+          if (!InternalAsyncGeneratorAwait(
+                  cx, generator, argument,
+                  PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled,
+                  PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected)) {
+            return false;
+          }
+          break;
+        }
+
+        if (!AsyncGeneratorResume(cx, generator, completionKind, argument)) {
+          return false;
+        }
+        break;
+      }
+
+      if (completionKind == CompletionKind::Return) {
+        RootedValue value(cx, next->completionValue());
+
+        generator->setAwaitingReturn();
+
+        if (!AsyncGeneratorAwaitReturn(cx, generator, value)) {
+          return false;
+        }
+        break;
+      }
+
+      if (completionKind == CompletionKind::Throw) {
+        RootedValue value(cx, next->completionValue());
+
+        if (!AsyncGeneratorCompleteStepThrow(cx, generator, value)) {
+          return false;
+        }
+      } else {
+        if (!AsyncGeneratorCompleteStepNormal(cx, generator,
+                                              UndefinedHandleValue, true)) {
+          return false;
+        }
+      }
+
+      MOZ_ASSERT(!generator->isExecuting());
+      MOZ_ASSERT(!generator->isAwaitingYieldReturn());
+      if (generator->isAwaitingReturn()) {
+        break;
+      }
     }
   } else if (generator->isSuspendedYield()) {
     MOZ_ASSERT(generator->isQueueLengthOne());
-    if (!AsyncGeneratorDrainQueue(cx, generator)) {
-      return false;
+
+    while (!generator->isQueueEmpty()) {
+      Rooted<AsyncGeneratorRequest*> next(
+          cx, AsyncGeneratorObject::peekRequest(generator));
+      if (!next) {
+        return false;
+      }
+
+      CompletionKind completionKind = next->completionKind();
+
+      if (completionKind != CompletionKind::Normal) {
+        if (generator->isSuspendedStart()) {
+          generator->setCompleted();
+        }
+      }
+      if (!generator->isCompleted()) {
+        MOZ_ASSERT(generator->isSuspendedStart() ||
+                   generator->isSuspendedYield());
+
+        RootedValue argument(cx, next->completionValue());
+
+        if (completionKind == CompletionKind::Return) {
+          generator->setAwaitingYieldReturn();
+
+          if (!InternalAsyncGeneratorAwait(
+                  cx, generator, argument,
+                  PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled,
+                  PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected)) {
+            return false;
+          }
+          break;
+        }
+
+        if (!AsyncGeneratorResume(cx, generator, completionKind, argument)) {
+          return false;
+        }
+        break;
+      }
+
+      if (completionKind == CompletionKind::Return) {
+        RootedValue value(cx, next->completionValue());
+
+        generator->setAwaitingReturn();
+
+        if (!AsyncGeneratorAwaitReturn(cx, generator, value)) {
+          return false;
+        }
+        break;
+      }
+
+      if (completionKind == CompletionKind::Throw) {
+        RootedValue value(cx, next->completionValue());
+
+        if (!AsyncGeneratorCompleteStepThrow(cx, generator, value)) {
+          return false;
+        }
+      } else {
+        if (!AsyncGeneratorCompleteStepNormal(cx, generator,
+                                              UndefinedHandleValue, true)) {
+          return false;
+        }
+      }
+
+      MOZ_ASSERT(!generator->isExecuting());
+      MOZ_ASSERT(!generator->isAwaitingYieldReturn());
+      if (generator->isAwaitingReturn()) {
+        break;
+      }
     }
   } else {
     MOZ_ASSERT(generator->isExecuting() || generator->isAwaitingYieldReturn() ||
