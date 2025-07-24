@@ -122,6 +122,8 @@ static const char* ErrorStr(HRESULT hr) {
       return "TRANSFORM_ASYNC_LOCKED";
     case MF_E_TRANSFORM_NEED_MORE_INPUT:
       return "TRANSFORM_NEED_MORE_INPUT";
+    case MF_E_TRANSFORM_STREAM_CHANGE:
+      return "TRANSFORM_STREAM_CHANGE";
     case MF_E_TRANSFORM_TYPE_NOT_SET:
       return "TRANSFORM_TYPE_NO_SET";
     case MF_E_UNSUPPORTED_D3D_TYPE:
@@ -747,6 +749,14 @@ RefPtr<MFTEncoder::EncodePromise> MFTEncoder::Encode(InputSample&& aInput) {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
 
+  if (mEventSource.IsSync()) {
+    auto r = EncodeSync(std::move(aInput));
+    if (r.isErr()) {
+      return EncodePromise::CreateAndReject(r.unwrapErr(), __func__);
+    }
+    return EncodePromise::CreateAndResolve(r.unwrap(), __func__);
+  }
+
   HRESULT hr = PushInput(std::move(aInput));
   if (FAILED(hr)) {
     return EncodePromise::CreateAndReject(
@@ -762,6 +772,14 @@ RefPtr<MFTEncoder::EncodePromise> MFTEncoder::Encode(InputSample&& aInput) {
 RefPtr<MFTEncoder::EncodePromise> MFTEncoder::Drain() {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
+
+  if (mEventSource.IsSync()) {
+    auto r = DrainSync();
+    if (r.isErr()) {
+      return EncodePromise::CreateAndReject(r.unwrapErr(), __func__);
+    }
+    return EncodePromise::CreateAndResolve(r.unwrap(), __func__);
+  }
 
   nsTArray<OutputSample> outputs;
   HRESULT hr = Drain(outputs);
@@ -800,6 +818,106 @@ MFTEncoder::CreateInputSample(RefPtr<IMFSample>* aSample, size_t aSize) {
   return CreateSample(
       aSample, aSize,
       mInputStreamInfo.cbAlignment > 0 ? mInputStreamInfo.cbAlignment - 1 : 0);
+}
+
+Result<MFTEncoder::EncodedData, MediaResult> MFTEncoder::EncodeSync(
+    InputSample&& aInput) {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+  MOZ_ASSERT(mEncoder);
+
+  // Follow steps in
+  // https://learn.microsoft.com/en-us/windows/win32/medfound/basic-mft-processing-model#process-data
+  HRESULT hr = mEncoder->ProcessInput(mInputStreamID, aInput.mSample, 0);
+  if (FAILED(hr)) {
+    return Err(MediaResult(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR,
+        RESULT_DETAIL("ProcessInput error: %s", ErrorMessage(hr).get())));
+  }
+
+  if (aInput.mKeyFrameRequested) {
+    VARIANT v = {.vt = VT_UI4, .ulVal = 1};
+    mConfig->SetValue(&CODECAPI_AVEncVideoForceKeyFrame, &v);
+  }
+
+  DWORD flags = 0;
+  hr = mEncoder->GetOutputStatus(&flags);
+  if (FAILED(hr) && hr != E_NOTIMPL) {
+    return Err(MediaResult(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR,
+        RESULT_DETAIL("GetOutputStatus error: %s", ErrorMessage(hr).get())));
+  }
+
+  if (hr == S_OK && !(flags & MFT_OUTPUT_STATUS_SAMPLE_READY)) {
+    return EncodedData{};
+  }
+
+  MOZ_ASSERT(hr == E_NOTIMPL ||
+             (hr == S_OK && (flags & MFT_OUTPUT_STATUS_SAMPLE_READY)));
+  return PullOutputs().mapErr([](HRESULT e) {
+    return MediaResult(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR,
+        RESULT_DETAIL("PullOutputs error: %s", ErrorMessage(e).get()));
+  });
+}
+
+Result<MFTEncoder::EncodedData, MediaResult> MFTEncoder::DrainSync() {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+  MOZ_ASSERT(mEncoder);
+
+  // Follow step 7 in
+  // https://docs.microsoft.com/en-us/windows/win32/medfound/basic-mft-processing-model#process-data
+  HRESULT hr = SendMFTMessage(MFT_MESSAGE_COMMAND_DRAIN, 0);
+  if (FAILED(hr)) {
+    return Err(MediaResult(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR,
+        RESULT_DETAIL("SendMFTMessage MFT_MESSAGE_COMMAND_DRAIN error: %s",
+                      ErrorMessage(hr).get())));
+  }
+
+  return PullOutputs().mapErr([](HRESULT e) {
+    return MediaResult(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR,
+        RESULT_DETAIL("PullOutputs error: %s", ErrorMessage(e).get()));
+  });
+}
+
+Result<MFTEncoder::EncodedData, HRESULT> MFTEncoder::PullOutputs() {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+  MOZ_ASSERT(mEncoder);
+
+  EncodedData outputs;
+  MPEGHeader header;
+  while (true) {
+    auto r = GetOutputOrNewHeader();
+    if (r.isErr()) {
+      HRESULT e = r.unwrapErr();
+      if (e == MF_E_TRANSFORM_NEED_MORE_INPUT) {
+        MFT_ENC_LOGD("Need more inputs");
+        // Step 4 or 8 in
+        // https://docs.microsoft.com/en-us/windows/win32/medfound/basic-mft-processing-model#process-data
+        break;
+      }
+      MFT_ENC_LOGE("GetOutputOrNewHeader failed: %s", ErrorMessage(e).get());
+      return Err(e);
+    }
+
+    OutputResult result = r.unwrap();
+    if (result.IsHeader()) {
+      header = result.TakeHeader();
+      MFT_ENC_LOGD(
+          "Obtained new MPEG header, attempting to retrieve output again");
+      continue;
+    }
+
+    MOZ_ASSERT(result.IsSample());
+    outputs.AppendElement(OutputSample{.mSample = result.TakeSample()});
+    if (!header.IsEmpty()) {
+      outputs.LastElement().mHeader = std::move(header);
+    }
+  }
+
+  MFT_ENC_LOGV("%zu outputs pulled", outputs.Length());
+  return outputs;
 }
 
 HRESULT
@@ -1010,6 +1128,38 @@ HRESULT MFTEncoder::Drain(nsTArray<OutputSample>& aOutput) {
   }
 }
 
+Result<MFTEncoder::OutputResult, HRESULT> MFTEncoder::GetOutputOrNewHeader() {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+  MOZ_ASSERT(mEncoder);
+
+  RefPtr<IMFSample> sample;
+  DWORD status = 0;
+  DWORD bufStatus = 0;
+
+  HRESULT hr = ProcessOutput(sample, status, bufStatus);
+  MFT_ENC_LOGV(
+      "output processed: %s, status: 0x%lx, output buffer status: 0x%lx",
+      ErrorMessage(hr).get(), status, bufStatus);
+
+  if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
+    if (bufStatus & MFT_OUTPUT_DATA_BUFFER_FORMAT_CHANGE) {
+      MFT_ENC_LOGW("output buffer format changed, updating output type");
+      MFT_RETURN_ERROR_IF_FAILED(UpdateOutputType());
+      return OutputResult(MOZ_TRY(GetMPEGSequenceHeader()));
+    }
+    // TODO: We should query for updated stream identifiers here. For now,
+    // handle this as an error.
+    return Err(hr);
+  }
+
+  if (FAILED(hr)) {
+    return Err(hr);
+  }
+
+  MOZ_ASSERT(sample);
+  return OutputResult(sample.forget());
+}
+
 HRESULT MFTEncoder::UpdateOutputType() {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
@@ -1074,13 +1224,16 @@ Result<nsTArray<UINT8>, HRESULT> MFTEncoder::GetMPEGSequenceHeader() {
   UINT32 length = 0;
   HRESULT hr = outputType->GetBlobSize(MF_MT_MPEG_SEQUENCE_HEADER, &length);
   if (hr == MF_E_ATTRIBUTENOTFOUND) {
+    MFT_ENC_LOGW("GetBlobSize MF_MT_MPEG_SEQUENCE_HEADER: not found");
     return nsTArray<UINT8>();
-  } else if (FAILED(hr)) {
+  }
+  if (FAILED(hr)) {
     MFT_ENC_LOGE("GetBlobSize MF_MT_MPEG_SEQUENCE_HEADER error: %s",
                  ErrorMessage(hr).get());
     return Err(hr);
-  } else if (length == 0) {
-    MFT_ENC_LOGD("GetBlobSize MF_MT_MPEG_SEQUENCE_HEADER: no header");
+  }
+  if (length == 0) {
+    MFT_ENC_LOGW("GetBlobSize MF_MT_MPEG_SEQUENCE_HEADER: no header");
     return nsTArray<UINT8>();
   }
   MFT_ENC_LOGD("GetBlobSize MF_MT_MPEG_SEQUENCE_HEADER: %u", length);

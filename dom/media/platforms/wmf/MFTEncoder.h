@@ -146,6 +146,32 @@ class MFTEncoder final {
   static nsTArray<Info> Enumerate();
   static Maybe<Info> GetInfo(const GUID& aSubtype);
 
+  Result<EncodedData, MediaResult> EncodeSync(InputSample&& aInput);
+  Result<EncodedData, MediaResult> DrainSync();
+  Result<EncodedData, HRESULT> PullOutputs();
+
+  class OutputResult {
+   public:
+    explicit OutputResult(already_AddRefed<IMFSample> aSample)
+        : mSample(aSample), mHeader() {}
+    explicit OutputResult(MPEGHeader&& aHeader)
+        : mSample(nullptr), mHeader(std::move(aHeader)) {}
+    bool IsSample() const { return mSample != nullptr; }
+    bool IsHeader() const { return !IsSample(); }
+    already_AddRefed<IMFSample> TakeSample() {
+      MOZ_ASSERT(IsSample());
+      return mSample.forget();
+    }
+    MPEGHeader TakeHeader() {
+      MOZ_ASSERT(IsHeader());
+      return std::move(mHeader);
+    }
+
+   private:
+    RefPtr<IMFSample> mSample;
+    MPEGHeader mHeader;
+  };
+  Result<OutputResult, HRESULT> GetOutputOrNewHeader();
   // Set the output type to the first available type found for the output
   // stream.
   HRESULT UpdateOutputType();
