@@ -5,6 +5,7 @@
 package org.mozilla.fenix.iconpicker
 
 import androidx.annotation.StringRes
+import androidx.annotation.VisibleForTesting
 import org.mozilla.fenix.R
 
 /**
@@ -67,7 +68,9 @@ data class SettingsAppIcon(
             activityAlias = ActivityAlias.AppGradientGoldenHour,
             titleId = R.string.alternative_app_icon_option_gradient_golden_hour,
         )
-        private val appGradientSunset = SettingsAppIcon(
+
+        @VisibleForTesting
+        internal val appGradientSunset = SettingsAppIcon(
             activityAlias = ActivityAlias.AppGradientSunset,
             titleId = R.string.alternative_app_icon_option_gradient_sunset,
         )
@@ -149,6 +152,39 @@ data class SettingsAppIcon(
                 appCute,
                 appMomo,
             ),
+        )
+
+        /**
+         * Returns the [SettingsAppIcon] associated with the provided [AliasSuffix].
+         *
+         * @param aliasSuffix The [AliasSuffix] used to find the corresponding [SettingsAppIcon].
+         */
+        fun fromAliasSuffix(aliasSuffix: AliasSuffix): SettingsAppIcon =
+            allIcons.find { it.activityAlias.aliasSuffix == aliasSuffix } ?: appDefault
+
+        private val allIcons = listOf(
+            appDefault,
+            appSolidLight,
+            appSolidDark,
+            appSolidRed,
+            appSolidGreen,
+            appSolidBlue,
+            appSolidPurple,
+            appSolidPurpleDark,
+            appGradientSunrise,
+            appGradientGoldenHour,
+            appGradientSunset,
+            appGradientBlueHour,
+            appGradientTwilight,
+            appGradientMidnight,
+            appGradientNorthernLights,
+            appRetro2004,
+            appRetro2017,
+            appPixelated,
+            appMinimal,
+            appPride,
+            appCute,
+            appMomo,
         )
     }
 }

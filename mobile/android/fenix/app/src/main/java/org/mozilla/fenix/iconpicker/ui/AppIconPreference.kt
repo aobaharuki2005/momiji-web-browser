@@ -27,7 +27,10 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.iconpicker.DefaultSettingsAppIconRepository
 import org.mozilla.fenix.iconpicker.SettingsAppIcon
+import org.mozilla.fenix.iconpicker.SettingsAppIconRepository
 import org.mozilla.fenix.settings.CustomizationFragmentDirections
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -42,6 +45,10 @@ class AppIconPreference @JvmOverloads constructor(
     attrs: AttributeSet? = null,
 ) : Preference(context, attrs) {
 
+    private val appIconRepository: SettingsAppIconRepository by lazy {
+        DefaultSettingsAppIconRepository(context.settings())
+    }
+
     init {
         layoutResource = R.layout.app_icon_preference
     }
@@ -52,7 +59,7 @@ class AppIconPreference @JvmOverloads constructor(
         (holder.findViewById(R.id.compose_view) as ComposeView).setContent {
             FirefoxTheme {
                 SelectAppIcon(
-                    appIcon = SettingsAppIcon.appDefault,
+                    appIcon = appIconRepository.selectedAppIcon,
                     onClick = {
                         val navController = holder.itemView.findNavController()
                         navController.navigate(

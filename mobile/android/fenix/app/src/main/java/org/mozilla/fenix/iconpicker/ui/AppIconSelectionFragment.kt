@@ -12,15 +12,20 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
-import org.mozilla.fenix.iconpicker.ActivityAlias
-import org.mozilla.fenix.iconpicker.SettingsAppIcon
+import org.mozilla.fenix.iconpicker.DefaultSettingsAppIconRepository
+import org.mozilla.fenix.iconpicker.SettingsAppIconRepository
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * Fragment that displays a list of alternative app icons.
  */
 class AppIconSelectionFragment : Fragment(), UserInteractionHandler {
+
+    private val appIconRepository: SettingsAppIconRepository by lazy {
+        DefaultSettingsAppIconRepository(requireContext().settings())
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -30,9 +35,13 @@ class AppIconSelectionFragment : Fragment(), UserInteractionHandler {
         setContent {
             FirefoxTheme {
                 AppIconSelection(
-                    currentAppIcon = ActivityAlias.AppDefault,
-                    groupedIconOptions = SettingsAppIcon.groupedAppIcons,
-                    onClick = {},
+                    currentAppIcon = appIconRepository.selectedAppIcon.activityAlias,
+                    groupedIconOptions = appIconRepository.groupedAppIcons,
+                    onClick = { selectedAppIcon ->
+                        // a warning dialog about app restart will be added here
+                        // in https://bugzilla.mozilla.org/show_bug.cgi?id=1976776
+                        appIconRepository.selectedAppIcon = selectedAppIcon
+                    },
                 )
             }
         }

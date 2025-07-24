@@ -164,6 +164,8 @@
 
     <!-- App icon settings-->
     <string name="pref_key_app_icon">pref_key_app_icon</string>
+    <string name="pref_key_selected_app_icon">pref_key_selected_app_icon</string>
+
     <!-- Menu -->
     <string name="pref_key_menu_cfr" translatable="false">pref_key_menu_cfr</string>
 

@@ -182,6 +182,9 @@ enum class AliasSuffix(val suffix: String) {
     AppPride("AppPride"),
     AppCute("AppCute"),
     AppMomo("AppMomo"),
+
+    // This one is for testing purposes only; not intended to be used.
+    Unknown("Unknown"),
     ;
 
     /**
