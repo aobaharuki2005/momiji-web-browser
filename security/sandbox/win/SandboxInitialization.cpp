@@ -114,7 +114,9 @@ static bool ShouldDisableHandleVerifier() {
   // Chromium only has the verifier enabled for 32-bit and our close monitoring
   // hooks cause debug assertions for 64-bit anyway.
   // For x86 keep the verifier enabled by default only for Nightly or debug.
-  return false;
+  // The handle verifier uses thread local storage, which at least one gtest
+  // manipulates causing it to crash, so we have to disable.
+  return !!getenv("MOZ_RUN_GTEST");
 #else
   return !getenv("MOZ_ENABLE_HANDLE_VERIFIER");
 #endif
