@@ -47,6 +47,7 @@ class MFCDMSession final {
   MediaEventSource<MFCDMKeyExpiration>& ExpirationEvent() {
     return mExpirationEvent;
   }
+  MediaEventSource<nsString>& ClosedEvent() { return mClosedEvent; }
 
   const Maybe<nsString>& SessionID() const { return mSessionId; }
 
@@ -76,6 +77,7 @@ class MFCDMSession final {
   MediaEventProducer<MFCDMKeyMessage> mKeyMessageEvent;
   MediaEventProducer<MFCDMKeyStatusChange> mKeyChangeEvent;
   MediaEventProducer<MFCDMKeyExpiration> mExpirationEvent;
+  MediaEventProducer<nsString> mClosedEvent;
   MediaEventListener mKeyMessageListener;
   MediaEventListener mKeyChangeListener;
 

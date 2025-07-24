@@ -168,6 +168,7 @@ HRESULT MFCDMSession::Close() {
   AssertOnManagerThread();
   LOG("Close");
   RETURN_IF_FAILED(mSession->Close());
+  mClosedEvent.Notify(*mSessionId);
   return S_OK;
 }
 

@@ -462,6 +462,16 @@ mozilla::ipc::IPCResult MFCDMChild::RecvOnSessionKeyExpiration(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult MFCDMChild::RecvOnSessionClosed(
+    const nsString& aSessionId) {
+  LOG("RecvOnSessionClosed, sessionId=%s",
+      NS_ConvertUTF16toUTF8(aSessionId).get());
+  MOZ_ASSERT(mManagerThread);
+  MOZ_ASSERT(mProxyCallback);
+  mProxyCallback->OnSessionClosed(aSessionId);
+  return IPC_OK();
+}
+
 #undef SLOG
 #undef LOG
 

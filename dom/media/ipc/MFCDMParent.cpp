@@ -407,6 +407,7 @@ MFCDMParent::MFCDMParent(const nsAString& aKeySystem,
       mKeyMessageEvents(aManagerThread),
       mKeyChangeEvents(aManagerThread),
       mExpirationEvents(aManagerThread),
+      mClosedEvents(aManagerThread),
       mCDMAccessLock("MFCDMParent", mManagerThread) {
   MOZ_ASSERT(IsPlayReadyKeySystemAndSupported(aKeySystem) ||
              IsWidevineExperimentKeySystemAndSupported(aKeySystem) ||
@@ -433,6 +434,8 @@ MFCDMParent::MFCDMParent(const nsAString& aKeySystem,
       mManagerThread, this, &MFCDMParent::SendOnSessionKeyStatusesChanged);
   mExpirationListener = mExpirationEvents.Connect(
       mManagerThread, this, &MFCDMParent::SendOnSessionKeyExpiration);
+  mClosedListener = mClosedEvents.Connect(mManagerThread, this,
+                                          &MFCDMParent::SendOnSessionClosed);
 
   RETURN_VOID_IF_FAILED(GetOrCreateFactory(mKeySystem, mFactory));
 }
@@ -463,9 +466,11 @@ void MFCDMParent::Destroy() {
   mKeyMessageEvents.DisconnectAll();
   mKeyChangeEvents.DisconnectAll();
   mExpirationEvents.DisconnectAll();
+  mClosedEvents.DisconnectAll();
   mKeyMessageListener.DisconnectIfExists();
   mKeyChangeListener.DisconnectIfExists();
   mExpirationListener.DisconnectIfExists();
+  mClosedListener.DisconnectIfExists();
   if (mPMPHostWrapper) {
     mPMPHostWrapper->Shutdown();
     mPMPHostWrapper = nullptr;
@@ -1404,6 +1409,7 @@ void MFCDMParent::ConnectSessionEvents(MFCDMSession* aSession) {
   mKeyMessageEvents.Forward(aSession->KeyMessageEvent());
   mKeyChangeEvents.Forward(aSession->KeyChangeEvent());
   mExpirationEvents.Forward(aSession->ExpirationEvent());
+  mClosedEvents.Forward(aSession->ClosedEvent());
 }
 
 MFCDMSession* MFCDMParent::GetSession(const nsString& aSessionId) {

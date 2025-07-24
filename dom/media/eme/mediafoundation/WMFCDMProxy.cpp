@@ -359,6 +359,19 @@ void WMFCDMProxy::OnExpirationChange(const nsAString& aSessionId,
   }
 }
 
+void WMFCDMProxy::OnSessionClosed(const nsAString& aSessionId) {
+  MOZ_ASSERT(NS_IsMainThread());
+  RETURN_IF_SHUTDOWN();
+  if (mKeys.IsNull()) {
+    return;
+  }
+  if (RefPtr<dom::MediaKeySession> session = mKeys->GetSession(aSessionId)) {
+    LOG("Notify closed for session Id=%s",
+        NS_ConvertUTF16toUTF8(aSessionId).get());
+    session->OnClosed();
+  }
+}
+
 void WMFCDMProxy::SetServerCertificate(PromiseId aPromiseId,
                                        nsTArray<uint8_t>& aCert) {
   MOZ_ASSERT(NS_IsMainThread());

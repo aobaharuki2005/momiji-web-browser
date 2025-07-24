@@ -124,6 +124,7 @@ child:
   async OnSessionKeyMessage(MFCDMKeyMessage message);
   async OnSessionKeyStatusesChanged(MFCDMKeyStatusChange keystatuses);
   async OnSessionKeyExpiration(MFCDMKeyExpiration expiration);
+  async OnSessionClosed(nsString sessionId);
 };
 
 } // namespace mozilla

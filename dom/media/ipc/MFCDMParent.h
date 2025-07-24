@@ -154,10 +154,12 @@ class MFCDMParent final : public PMFCDMParent {
   MediaEventForwarder<MFCDMKeyMessage> mKeyMessageEvents;
   MediaEventForwarder<MFCDMKeyStatusChange> mKeyChangeEvents;
   MediaEventForwarder<MFCDMKeyExpiration> mExpirationEvents;
+  MediaEventForwarder<nsString> mClosedEvents;
 
   MediaEventListener mKeyMessageListener;
   MediaEventListener mKeyChangeListener;
   MediaEventListener mExpirationListener;
+  MediaEventListener mClosedListener;
 
   // The mCDM and mCDMProxy members are exclusively modified on the manager
   // thread, while being read-only on other threads. To ensure thread-safe

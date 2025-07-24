@@ -73,6 +73,15 @@ void WMFCDMProxyCallback::OnSessionKeyExpiration(
       }));
 }
 
+void WMFCDMProxyCallback::OnSessionClosed(const nsString& aSessionId) {
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction("WMFCDMProxyCallback::OnSessionClosed",
+                             [self = RefPtr{this}, this, aSessionId]() {
+                               RETURN_IF_NULL(mProxy);
+                               mProxy->OnSessionClosed(aSessionId);
+                             }));
+}
+
 void WMFCDMProxyCallback::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   mProxy = nullptr;
