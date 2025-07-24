@@ -15,12 +15,12 @@
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/TextTrack.h"
 #include "mozilla/dom/TextTrackCue.h"
+#include "mozilla/nsVideoFrame.h"
 #include "nsComponentManagerUtils.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIFrame.h"
 #include "nsIWebVTTParserWrapper.h"
 #include "nsVariant.h"
-#include "nsVideoFrame.h"
 
 mozilla::LazyLogModule gTextTrackLog("WebVTT");
 
@@ -828,3 +828,6 @@ void TextTrackManager::MaybeRunTimeMarchesOn() {
 }
 
 }  // namespace mozilla::dom
+
+#undef WEBVTT_LOG
+#undef WEBVTT_LOGV
