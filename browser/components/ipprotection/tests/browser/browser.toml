@@ -7,8 +7,6 @@ prefs = [
   "browser.ipProtection.enabled=true",
 ]
 
-["browser_guardian_client.js"]
-
 ["browser_ipprotection_content.js"]
 
 ["browser_ipprotection_content_signedout.js"]
