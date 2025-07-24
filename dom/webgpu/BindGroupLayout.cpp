@@ -14,8 +14,8 @@ namespace mozilla::webgpu {
 GPU_IMPL_CYCLE_COLLECTION(BindGroupLayout, mParent)
 GPU_IMPL_JS_WRAP(BindGroupLayout)
 
-BindGroupLayout::BindGroupLayout(Device* const aParent, RawId aId)
-    : ChildOf(aParent), mId(aId) {
+BindGroupLayout::BindGroupLayout(Device* const aParent, RawId aId, bool aOwning)
+    : ChildOf(aParent), mId(aId), mOwning(aOwning) {
   MOZ_RELEASE_ASSERT(aId);
 }
 
@@ -32,7 +32,11 @@ void BindGroupLayout::Cleanup() {
     return;
   }
 
-  ffi::wgpu_client_drop_bind_group_layout(bridge->GetClient(), mId);
+  if (mOwning) {
+    ffi::wgpu_client_drop_bind_group_layout(bridge->GetClient(), mId);
+
+    wgpu_client_free_bind_group_layout_id(bridge->GetClient(), mId);
+  }
 }
 
 }  // namespace mozilla::webgpu

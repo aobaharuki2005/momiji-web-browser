@@ -39,20 +39,6 @@ Queue::Queue(Device* const aParent, WebGPUChild* aBridge, RawId aId)
 
 Queue::~Queue() { Cleanup(); }
 
-void Queue::Cleanup() {
-  if (!mValid) {
-    return;
-  }
-  mValid = false;
-
-  auto bridge = mParent->GetBridge();
-  if (!bridge) {
-    return;
-  }
-
-  ffi::wgpu_client_drop_queue(bridge->GetClient(), mId);
-}
-
 void Queue::Submit(
     const dom::Sequence<OwningNonNull<CommandBuffer>>& aCommandBuffers) {
   nsTArray<RawId> list(aCommandBuffers.Length());
@@ -74,8 +60,7 @@ already_AddRefed<dom::Promise> Queue::OnSubmittedWorkDone(ErrorResult& aRv) {
 
   ffi::wgpu_client_on_submitted_work_done(mBridge->GetClient(), mId);
 
-  auto pending_promise =
-      WebGPUChild::PendingOnSubmittedWorkDonePromise{RefPtr(promise), mId};
+  auto pending_promise = RefPtr(promise);
   mBridge->mPendingOnSubmittedWorkDonePromises.push_back(
       std::move(pending_promise));
 

@@ -32,7 +32,6 @@
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkletImpl.h"
 #include "mozilla/dom/WorkletGlobalScope.h"
-#include "mozilla/webgpu/PipelineError.h"
 
 #include "jsfriendapi.h"
 #include "js/Exception.h"  // JS::ExceptionStack
@@ -708,12 +707,6 @@ void Promise::MaybeResolveWithUndefined() {
 }
 
 void Promise::MaybeReject(const RefPtr<MediaStreamError>& aArg) {
-  NS_ASSERT_OWNINGTHREAD(Promise);
-
-  MaybeSomething(aArg, &Promise::MaybeReject);
-}
-
-void Promise::MaybeReject(const RefPtr<webgpu::PipelineError>& aArg) {
   NS_ASSERT_OWNINGTHREAD(Promise);
 
   MaybeSomething(aArg, &Promise::MaybeReject);

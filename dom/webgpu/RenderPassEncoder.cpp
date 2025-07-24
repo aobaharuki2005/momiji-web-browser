@@ -201,7 +201,8 @@ ffi::WGPURecordedRenderPass* BeginRenderPass(
     colorDescs.AppendElement(cd);
   }
 
-  desc.color_attachments = {colorDescs.Elements(), colorDescs.Length()};
+  desc.color_attachments = colorDescs.Elements();
+  desc.color_attachments_length = colorDescs.Length();
 
   if (aDesc.mOcclusionQuerySet.WasPassed()) {
     desc.occlusion_query_set = aDesc.mOcclusionQuerySet.Value().mId;
@@ -260,7 +261,7 @@ void RenderPassEncoder::SetBindGroup(uint32_t aSlot,
     bindGroup = aBindGroup->mId;
   }
   ffi::wgpu_recorded_render_pass_set_bind_group(
-      mPass.get(), aSlot, bindGroup, {aDynamicOffsets, aDynamicOffsetsLength});
+      mPass.get(), aSlot, bindGroup, aDynamicOffsets, aDynamicOffsetsLength);
 }
 
 void RenderPassEncoder::SetBindGroup(
@@ -431,7 +432,7 @@ void RenderPassEncoder::ExecuteBundles(
     renderBundles.AppendElement(bundle->mId);
   }
   ffi::wgpu_recorded_render_pass_execute_bundles(
-      mPass.get(), {renderBundles.Elements(), renderBundles.Length()});
+      mPass.get(), renderBundles.Elements(), renderBundles.Length());
 }
 
 void RenderPassEncoder::PushDebugGroup(const nsAString& aString) {

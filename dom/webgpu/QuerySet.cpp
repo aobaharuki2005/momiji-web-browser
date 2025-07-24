@@ -24,6 +24,8 @@ void QuerySet::Cleanup() {
   }
 
   ffi::wgpu_client_drop_query_set(bridge->GetClient(), mId);
+
+  wgpu_client_free_query_set_id(bridge->GetClient(), mId);
 }
 
 GPU_IMPL_CYCLE_COLLECTION(QuerySet, mParent)

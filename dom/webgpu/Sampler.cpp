@@ -33,6 +33,8 @@ void Sampler::Cleanup() {
   }
 
   ffi::wgpu_client_drop_sampler(bridge->GetClient(), mId);
+
+  wgpu_client_free_sampler_id(bridge->GetClient(), mId);
 }
 
 }  // namespace mozilla::webgpu

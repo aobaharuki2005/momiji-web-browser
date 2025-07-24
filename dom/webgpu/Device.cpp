@@ -61,8 +61,7 @@ RefPtr<WebGPUChild> Device::GetBridge() { return mBridge; }
 Device::Device(Adapter* const aParent, RawId aDeviceId, RawId aQueueId,
                RefPtr<SupportedFeatures> aFeatures,
                RefPtr<SupportedLimits> aLimits,
-               RefPtr<webgpu::AdapterInfo> aAdapterInfo,
-               RefPtr<dom::Promise> aLostPromise)
+               RefPtr<webgpu::AdapterInfo> aAdapterInfo)
     : DOMEventTargetHelper(aParent->GetParentObject()),
       mId(aDeviceId),
       mFeatures(std::move(aFeatures)),
@@ -71,7 +70,6 @@ Device::Device(Adapter* const aParent, RawId aDeviceId, RawId aQueueId,
       mSupportSharedTextureInSwapChain(
           aParent->SupportSharedTextureInSwapChain()),
       mBridge(aParent->mBridge),
-      mLostPromise(std::move(aLostPromise)),
       mQueue(new class Queue(this, aParent->mBridge, aQueueId)) {
   mBridge->RegisterDevice(this);
 }
@@ -105,18 +103,37 @@ void Device::SetLabel(const nsAString& aLabel) { mLabel = aLabel; }
 
 dom::Promise* Device::GetLost(ErrorResult& aRv) {
   aRv = NS_OK;
+  if (!mLostPromise) {
+    mLostPromise = dom::Promise::Create(GetParentObject(), aRv);
+    if (mLostPromise && !mBridge->CanSend()) {
+      auto info = MakeRefPtr<DeviceLostInfo>(GetParentObject(),
+                                             dom::GPUDeviceLostReason::Unknown,
+                                             u"WebGPUChild destroyed"_ns);
+      mLostPromise->MaybeResolve(info);
+    }
+  }
   return mLostPromise;
 }
 
 void Device::ResolveLost(dom::GPUDeviceLostReason aReason,
                          const nsAString& aMessage) {
-  if (mLostPromise->State() != dom::Promise::PromiseState::Pending) {
-    // The lost promise was already resolved or rejected.
+  IgnoredErrorResult rv;
+  dom::Promise* lostPromise = GetLost(rv);
+  if (!lostPromise) {
+    // Promise doesn't exist? Maybe out of memory.
+    return;
+  }
+  if (!lostPromise->PromiseObj()) {
+    // The underlying JS object is gone.
+    return;
+  }
+  if (lostPromise->State() != dom::Promise::PromiseState::Pending) {
+    // lostPromise was already resolved or rejected.
     return;
   }
   RefPtr<DeviceLostInfo> info =
       MakeRefPtr<DeviceLostInfo>(GetParentObject(), aReason, aMessage);
-  mLostPromise->MaybeResolve(info);
+  lostPromise->MaybeResolve(info);
 }
 
 already_AddRefed<Buffer> Device::CreateBuffer(
@@ -389,12 +406,13 @@ already_AddRefed<BindGroupLayout> Device::CreateBindGroupLayout(
 
   webgpu::StringHelper label(aDesc.mLabel);
   desc.label = label.Get();
-  desc.entries = {entries.Elements(), entries.Length()};
+  desc.entries = entries.Elements();
+  desc.entries_length = entries.Length();
 
   RawId id = ffi::wgpu_client_create_bind_group_layout(mBridge->GetClient(),
                                                        mId, &desc);
 
-  RefPtr<BindGroupLayout> object = new BindGroupLayout(this, id);
+  RefPtr<BindGroupLayout> object = new BindGroupLayout(this, id, true);
   object->SetLabel(aDesc.mLabel);
   return object.forget();
 }
@@ -412,8 +430,8 @@ already_AddRefed<PipelineLayout> Device::CreatePipelineLayout(
 
   webgpu::StringHelper label(aDesc.mLabel);
   desc.label = label.Get();
-  desc.bind_group_layouts = {bindGroupLayouts.Elements(),
-                             bindGroupLayouts.Length()};
+  desc.bind_group_layouts = bindGroupLayouts.Elements();
+  desc.bind_group_layouts_length = bindGroupLayouts.Length();
 
   RawId id =
       ffi::wgpu_client_create_pipeline_layout(mBridge->GetClient(), mId, &desc);
@@ -481,7 +499,8 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
   webgpu::StringHelper label(aDesc.mLabel);
   desc.label = label.Get();
   desc.layout = aDesc.mLayout->mId;
-  desc.entries = {entries.Elements(), entries.Length()};
+  desc.entries = entries.Elements();
+  desc.entries_length = entries.Length();
 
   RawId id =
       ffi::wgpu_client_create_bind_group(mBridge->GetClient(), mId, &desc);
@@ -492,7 +511,7 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
   return object.forget();
 }
 
-void reportCompilationMessagesToConsole(
+MOZ_CAN_RUN_SCRIPT void reportCompilationMessagesToConsole(
     const RefPtr<ShaderModule>& aShaderModule,
     const nsTArray<WebGPUCompilationMessage>& aMessages) {
   auto* global = aShaderModule->GetParentObject();
@@ -619,14 +638,16 @@ already_AddRefed<ShaderModule> Device::CreateShaderModule(
     return nullptr;
   }
 
-  webgpu::StringHelper label(aDesc.mLabel);
-
-  RawId moduleId = ffi::wgpu_client_create_shader_module(
-      mBridge->GetClient(), mId, label.Get(), &aDesc.mCode);
+  RawId moduleId = ffi::wgpu_client_make_shader_module_id(mBridge->GetClient());
 
   RefPtr<ShaderModule> shaderModule = new ShaderModule(this, moduleId, promise);
 
   shaderModule->SetLabel(aDesc.mLabel);
+
+  webgpu::StringHelper label(aDesc.mLabel);
+
+  ffi::wgpu_client_create_shader_module(mBridge->GetClient(), mId, moduleId,
+                                        label.Get(), &aDesc.mCode);
 
   auto pending_promise = WebGPUChild::PendingCreateShaderModulePromise{
       RefPtr(promise), RefPtr(this), RefPtr(shaderModule)};
@@ -674,7 +695,8 @@ RawId CreateComputePipelineImpl(PipelineCreationContext* const aContext,
       constantEntry.value = entry.mValue;
       constants.AppendElement(constantEntry);
     }
-    desc.stage.constants = {constants.Elements(), constants.Length()};
+    desc.stage.constants = constants.Elements();
+    desc.stage.constants_length = constants.Length();
   }
 
   RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};
@@ -740,8 +762,8 @@ RawId CreateRenderPipelineImpl(PipelineCreationContext* const aContext,
         constantEntry.value = entry.mValue;
         vsConstants.AppendElement(constantEntry);
       }
-      vertexState.stage.constants = {vsConstants.Elements(),
-                                     vsConstants.Length()};
+      vertexState.stage.constants = vsConstants.Elements();
+      vertexState.stage.constants_length = vsConstants.Length();
     }
 
     for (const auto& vertex_desc : stage.mBuffers) {
@@ -751,7 +773,7 @@ RawId CreateRenderPipelineImpl(PipelineCreationContext* const aContext,
         vb_desc.array_stride = vd.mArrayStride;
         vb_desc.step_mode = ffi::WGPUVertexStepMode(vd.mStepMode);
         // Note: we are setting the length but not the pointer
-        vb_desc.attributes = {nullptr, vd.mAttributes.Length()};
+        vb_desc.attributes_length = vd.mAttributes.Length();
         for (const auto& vat : vd.mAttributes) {
           ffi::WGPUVertexAttribute ad = {};
           ad.offset = vat.mOffset;
@@ -765,11 +787,12 @@ RawId CreateRenderPipelineImpl(PipelineCreationContext* const aContext,
     // Now patch up all the pointers to attribute lists.
     size_t numAttributes = 0;
     for (auto& vb_desc : vertexBuffers) {
-      vb_desc.attributes.data = vertexAttributes.Elements() + numAttributes;
-      numAttributes += vb_desc.attributes.length;
+      vb_desc.attributes = vertexAttributes.Elements() + numAttributes;
+      numAttributes += vb_desc.attributes_length;
     }
 
-    vertexState.buffers = {vertexBuffers.Elements(), vertexBuffers.Length()};
+    vertexState.buffers = vertexBuffers.Elements();
+    vertexState.buffers_length = vertexBuffers.Length();
     desc.vertex = &vertexState;
   }
 
@@ -794,8 +817,8 @@ RawId CreateRenderPipelineImpl(PipelineCreationContext* const aContext,
         constantEntry.value = entry.mValue;
         fsConstants.AppendElement(constantEntry);
       }
-      fragmentState.stage.constants = {fsConstants.Elements(),
-                                       fsConstants.Length()};
+      fragmentState.stage.constants = fsConstants.Elements();
+      fragmentState.stage.constants_length = fsConstants.Length();
     }
 
     // Note: we pre-collect the blend states into a different array
@@ -819,7 +842,8 @@ RawId CreateRenderPipelineImpl(PipelineCreationContext* const aContext,
       }
     }
 
-    fragmentState.targets = {colorStates.Elements(), colorStates.Length()};
+    fragmentState.targets = colorStates.Elements();
+    fragmentState.targets_length = colorStates.Length();
     desc.fragment = &fragmentState;
   }
 
@@ -956,9 +980,8 @@ already_AddRefed<Texture> Device::InitSwapChain(
 
   ffi::wgpu_client_create_swap_chain(
       mBridge->GetClient(), mId, mQueue->mId, rgbDesc.size().Width(),
-      rgbDesc.size().Height(), (int8_t)rgbDesc.format(),
-      {aBufferIds.Elements(), aBufferIds.Length()}, aOwnerId.mId,
-      aUseSharedTextureInSwapChain);
+      rgbDesc.size().Height(), (int8_t)rgbDesc.format(), aBufferIds.Elements(),
+      aBufferIds.Length(), aOwnerId.mId, aUseSharedTextureInSwapChain);
 
   // TODO: `mColorSpace`: <https://bugzilla.mozilla.org/show_bug.cgi?id=1846608>
   // TODO: `mAlphaMode`: <https://bugzilla.mozilla.org/show_bug.cgi?id=1846605>
@@ -984,11 +1007,16 @@ void Device::Destroy() {
 
   ffi::wgpu_client_destroy_device(mBridge->GetClient(), mId);
 
-  if (mLostPromise->State() != dom::Promise::PromiseState::Pending) {
-    return;
-  }
-  RefPtr<dom::Promise> pending_promise = mLostPromise;
-  mBridge->mPendingDeviceLostPromises.insert({mId, std::move(pending_promise)});
+  // Resolve our lost promise in the same way as if we had a successful
+  // round-trip through the bridge. We do this to avoid timing problems
+  // with the device being cycle collected before the receiving the
+  // device lost message. Such a pattern leads to the lost promise never
+  // resolving, and we need to avoid that. There's little risk in doing
+  // this shortcut, because the WebGPU contract is that device destroy
+  // always leads to device loss. This is guaranteeing the same result
+  // as if we went through the bridge (device lost promise resolves,
+  // then the device is cycle collected).
+  ResolveLost(dom::GPUDeviceLostReason::Destroyed, u""_ns);
 }
 
 void Device::PushErrorScope(const dom::GPUErrorFilter& aFilter) {
