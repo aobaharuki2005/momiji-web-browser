@@ -1694,9 +1694,12 @@ void GraphLoadingStateRecordObject::finalize(JS::GCContext* gcx,
 void GraphLoadingStateRecordObject::trace(JSTracer* trc, JSObject* obj) {
   GraphLoadingStateRecordObject* self =
       &obj->as<GraphLoadingStateRecordObject>();
-  GraphLoadingStateRecord* state = static_cast<GraphLoadingStateRecord*>(
-      self->getReservedSlot(StateSlot).toPrivate());
-  state->trace(trc);
+  Value stateValue = self->getReservedSlot(StateSlot);
+  if (!stateValue.isUndefined()) {
+    GraphLoadingStateRecord* state = static_cast<GraphLoadingStateRecord*>(
+        stateValue.toPrivate());
+    state->trace(trc);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
