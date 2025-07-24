@@ -1050,8 +1050,6 @@ static nsresult CreateShortcutImpl(nsIFile* aBinary,
 
 static Result<ShortcutLocations, nsresult> GetShortcutPaths(
     const nsAString& aShortcutFolder, const nsAString& aShortcutRelativePath) {
-  using Err = Result<ShortcutLocations, nsresult>;
-
   KNOWNFOLDERID folderId;
   if (aShortcutFolder.Equals(L"Programs")) {
     folderId = FOLDERID_Programs;
@@ -1834,10 +1832,10 @@ static nsresult PinShortcutToTaskbarImpl(bool aCheckOnly,
  *        Path for existing shortcuts (e.g., start menu)
  */
 NS_IMETHODIMP
-nsWindowsShellService::PinShortcutToTaskbar(const nsAString& aAppUserModelId,
-                                            const nsAString& aShortcutPath,
-                                            JSContext* aCx,
-                                            dom::Promise** aPromise) {
+nsWindowsShellService::PinShortcutToTaskbar(
+    const nsAString& aAppUserModelId, const nsAString& aShortcutFolder,
+    const nsAString& aShortcutRelativePath, JSContext* aCx,
+    dom::Promise** aPromise) {
   NS_ENSURE_ARG_POINTER(aCx);
   NS_ENSURE_ARG_POINTER(aPromise);
 
@@ -1858,20 +1856,23 @@ nsWindowsShellService::PinShortcutToTaskbar(const nsAString& aAppUserModelId,
     return rv.StealNSResult();
   }
 
+  ShortcutLocations location =
+      MOZ_TRY(GetShortcutPaths(aShortcutFolder, aShortcutRelativePath));
+
   auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<dom::Promise>>(
       "pinShortcutToTaskbar promise", promise);
 
   NS_DispatchBackgroundTask(
       NS_NewRunnableFunction(
           "pinShortcutToTaskbar",
-          [aumid = nsString{aAppUserModelId},
-           shortcutPath = nsString(aShortcutPath),
+          [aumid = nsString{aAppUserModelId}, location = std::move(location),
            promiseHolder = std::move(promiseHolder)] {
             nsresult rv = NS_ERROR_FAILURE;
             HRESULT hr = CoInitialize(nullptr);
 
             if (SUCCEEDED(hr)) {
-              rv = PinShortcutToTaskbarImpl(false, aumid, shortcutPath);
+              rv = PinShortcutToTaskbarImpl(
+                  false, aumid, location.shortcutFile->NativePath());
               CoUninitialize();
             }
 
@@ -1895,10 +1896,15 @@ nsWindowsShellService::PinShortcutToTaskbar(const nsAString& aAppUserModelId,
 
 NS_IMETHODIMP
 nsWindowsShellService::UnpinShortcutFromTaskbar(
-    const nsAString& aShortcutPath) {
+    const nsAString& aShortcutFolder, const nsAString& aShortcutRelativePath) {
   const bool pinType = false;  // false means unpin
   const bool runInTestMode = false;
-  return ManageShortcutTaskbarPins(runInTestMode, pinType, aShortcutPath);
+
+  ShortcutLocations location =
+      MOZ_TRY(GetShortcutPaths(aShortcutFolder, aShortcutRelativePath));
+
+  return ManageShortcutTaskbarPins(runInTestMode, pinType,
+                                   location.shortcutFile->NativePath());
 }
 
 // Ensure that the supplied name doesn't have invalid characters.
