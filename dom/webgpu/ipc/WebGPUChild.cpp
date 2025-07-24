@@ -424,18 +424,19 @@ void WebGPUChild::ClearActorState() {
   // can perform further calls that add more promises to data structures, so
   // all code sections below should not use iterators!
 
-  // Resolve the promise with null since the WebGPUChild has been destroyed.
-  {
-    while (!mPendingRequestAdapterPromises.empty()) {
+  // Make sure we resolve/reject all pending promises; even the ones that get
+  // enqueued immediately by JS code that gets to run as a result of a promise
+  // we just resolved/rejected.
+  while (true) {
+    // Resolve the promise with null since the WebGPUChild has been destroyed.
+    if (!mPendingRequestAdapterPromises.empty()) {
       auto pending_promise = std::move(mPendingRequestAdapterPromises.front());
       mPendingRequestAdapterPromises.pop_front();
 
       pending_promise.promise->MaybeResolve(JS::NullHandleValue);
     }
-  }
-  // Pretend this worked but return a lost device, per spec.
-  {
-    while (!mPendingRequestDevicePromises.empty()) {
+    // Pretend this worked but return a lost device, per spec.
+    else if (!mPendingRequestDevicePromises.empty()) {
       auto pending_promise = std::move(mPendingRequestDevicePromises.front());
       mPendingRequestDevicePromises.pop_front();
 
@@ -449,11 +450,9 @@ void WebGPUChild::ClearActorState() {
                           u"WebGPUChild destroyed"_ns);
       pending_promise.promise->MaybeResolve(device);
     }
-  }
-  // Resolve all promises that were pending due to `device.destroy()` being
-  // called.
-  {
-    while (!mPendingDeviceLostPromises.empty()) {
+    // Resolve all promises that were pending due to `device.destroy()` being
+    // called.
+    else if (!mPendingDeviceLostPromises.empty()) {
       auto pending_promise_entry = mPendingDeviceLostPromises.begin();
       auto pending_promise = std::move(pending_promise_entry->second);
       mPendingDeviceLostPromises.erase(pending_promise_entry->first);
@@ -463,10 +462,8 @@ void WebGPUChild::ClearActorState() {
           dom::GPUDeviceLostReason::Destroyed, u"Device destroyed"_ns);
       pending_promise->MaybeResolve(info);
     }
-  }
-  // Empty device map and resolve all lost promises with an "unknown" reason.
-  {
-    while (!mDeviceMap.empty()) {
+    // Empty device map and resolve all lost promises with an "unknown" reason.
+    else if (!mDeviceMap.empty()) {
       auto device_map_entry = mDeviceMap.begin();
       auto device = std::move(device_map_entry->second);
       mDeviceMap.erase(device_map_entry->first);
@@ -474,19 +471,15 @@ void WebGPUChild::ClearActorState() {
       device->ResolveLost(dom::GPUDeviceLostReason::Unknown,
                           u"WebGPUChild destroyed"_ns);
     }
-  }
-  // Pretend this worked and there is no error, per spec.
-  {
-    while (!mPendingPopErrorScopePromises.empty()) {
+    // Pretend this worked and there is no error, per spec.
+    else if (!mPendingPopErrorScopePromises.empty()) {
       auto pending_promise = std::move(mPendingPopErrorScopePromises.front());
       mPendingPopErrorScopePromises.pop_front();
 
       pending_promise.promise->MaybeResolve(JS::NullHandleValue);
     }
-  }
-  // Pretend this worked, per spec; see "Listen for timeline event".
-  {
-    while (!mPendingCreatePipelinePromises.empty()) {
+    // Pretend this worked, per spec; see "Listen for timeline event".
+    else if (!mPendingCreatePipelinePromises.empty()) {
       auto pending_promise = std::move(mPendingCreatePipelinePromises.front());
       mPendingCreatePipelinePromises.pop_front();
 
@@ -506,10 +499,8 @@ void WebGPUChild::ClearActorState() {
         pending_promise.promise->MaybeResolve(object);
       }
     }
-  }
-  // Pretend this worked, per spec; see "Listen for timeline event".
-  {
-    while (!mPendingCreateShaderModulePromises.empty()) {
+    // Pretend this worked, per spec; see "Listen for timeline event".
+    else if (!mPendingCreateShaderModulePromises.empty()) {
       auto pending_promise =
           std::move(mPendingCreateShaderModulePromises.front());
       mPendingCreateShaderModulePromises.pop_front();
@@ -520,10 +511,8 @@ void WebGPUChild::ClearActorState() {
       infoObject->SetMessages(messages);
       pending_promise.promise->MaybeResolve(infoObject);
     }
-  }
-  // Reject the promise as if unmap() has been called, per spec.
-  {
-    while (!mPendingBufferMapPromises.empty()) {
+    // Reject the promise as if unmap() has been called, per spec.
+    else if (!mPendingBufferMapPromises.empty()) {
       auto pending_promises = mPendingBufferMapPromises.begin();
       auto pending_promise = std::move(pending_promises->second.front());
       pending_promises->second.pop_front();
@@ -539,15 +528,15 @@ void WebGPUChild::ClearActorState() {
       pending_promise.buffer->RejectMapRequestWithAbortError(
           pending_promise.promise);
     }
-  }
-  // Pretend this worked, per spec; see "Listen for timeline event".
-  {
-    while (!mPendingOnSubmittedWorkDonePromises.empty()) {
+    // Pretend this worked, per spec; see "Listen for timeline event".
+    else if (!mPendingOnSubmittedWorkDonePromises.empty()) {
       auto pending_promise =
           std::move(mPendingOnSubmittedWorkDonePromises.front());
       mPendingOnSubmittedWorkDonePromises.pop_front();
 
       pending_promise->MaybeResolveWithUndefined();
+    } else {
+      break;
     }
   }
 }
