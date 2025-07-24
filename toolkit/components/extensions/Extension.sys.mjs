@@ -1282,13 +1282,13 @@ export class ExtensionData {
    * @param {object} manifest A normalized manifest (which, in this case, means
    * that `browser_specific_settings` was folded into `applications`).
    *
-   * @returns {{required:Array<string>, optional: Array<string>}} an object
-   * containing the `required` and `optional` data collection permissions
-   * listed in the manifest.
+   * @returns {{required:Array<string>, optional: Array<string>, hasPreviousConsent: boolean}} an
+   * object containing the `required` and `optional` data collection
+   * permissions listed in the manifest.
    */
   getDataCollectionPermissions(manifest = this.manifest) {
     if (this.type !== "extension") {
-      return { required: [], optional: [] };
+      return { required: [], optional: [], hasPreviousConsent: false };
     }
 
     const data_collection_permissions =
@@ -1297,6 +1297,9 @@ export class ExtensionData {
     return {
       required: Array.from(new Set(data_collection_permissions?.required)),
       optional: Array.from(new Set(data_collection_permissions?.optional)),
+      hasPreviousConsent: Boolean(
+        data_collection_permissions?.has_previous_consent
+      ),
     };
   }
 
