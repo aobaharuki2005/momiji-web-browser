@@ -4,7 +4,7 @@
 
 use crate::{
     cow_label, wgpu_string, AdapterInformation, ByteBuf, CommandEncoderAction, DeviceAction,
-    ImplicitLayout, QueueWriteAction, RawString, TexelCopyBufferLayout, TextureAction,
+    FfiSlice, ImplicitLayout, QueueWriteAction, RawString, TexelCopyBufferLayout, TextureAction,
 };
 
 use crate::{BufferMapResult, Message, QueueWriteDataSource, ServerMessage, SwapChainId};
@@ -624,41 +624,40 @@ pub extern "C" fn wgpu_client_drop_render_pipeline(
     client.queue_message(&Message::DropRenderPipeline(id, implicit_layout));
 }
 
-#[no_mangle]
-pub extern "C" fn wgpu_client_receive_server_message(
-    client: &Client,
-    byte_buf: &ByteBuf,
-    resolve_request_adapter_promise: extern "C" fn(
+extern "C" {
+    fn wgpu_child_resolve_request_adapter_promise(
         child: WebGPUChildPtr,
-        adapter_info: *const AdapterInformation<nsString>,
-    ),
-    resolve_request_device_promise: extern "C" fn(child: WebGPUChildPtr, error: Option<&nsCString>),
-    resolve_pop_error_scope_promise: extern "C" fn(
+        adapter_info: Option<&AdapterInformation<nsString>>,
+    );
+    fn wgpu_child_resolve_request_device_promise(child: WebGPUChildPtr, error: Option<&nsCString>);
+    fn wgpu_child_resolve_pop_error_scope_promise(
         child: WebGPUChildPtr,
         ty: u8,
         message: &nsCString,
-    ),
-    resolve_create_pipeline_promise: extern "C" fn(
+    );
+    fn wgpu_child_resolve_create_pipeline_promise(
         child: WebGPUChildPtr,
         is_render_pipeline: bool,
         is_validation_error: bool,
         error: Option<&nsCString>,
-    ),
-    resolve_create_shader_module_promise: extern "C" fn(
+    );
+    fn wgpu_child_resolve_create_shader_module_promise(
         child: WebGPUChildPtr,
-        messages_ptr: *const FfiShaderModuleCompilationMessage,
-        messages_len: usize,
-    ),
-    resolve_buffer_map_promise: extern "C" fn(
+        messages: FfiSlice<FfiShaderModuleCompilationMessage>,
+    );
+    fn wgpu_child_resolve_buffer_map_promise(
         child: WebGPUChildPtr,
         buffer_id: id::BufferId,
         is_writable: bool,
         offset: u64,
         size: u64,
         error: Option<&nsCString>,
-    ),
-    resolve_on_submitted_work_done_promise: extern "C" fn(child: WebGPUChildPtr),
-) {
+    );
+    fn wgpu_child_resolve_on_submitted_work_done_promise(child: WebGPUChildPtr);
+}
+
+#[no_mangle]
+pub extern "C" fn wgpu_client_receive_server_message(client: &Client, byte_buf: &ByteBuf) {
     let message: ServerMessage = bincode::deserialize(unsafe { byte_buf.as_slice() }).unwrap();
     match message {
         ServerMessage::RequestAdapterResponse(adapter_id, adapter_information) => {
@@ -694,26 +693,36 @@ pub extern "C" fn wgpu_client_receive_server_message(
                     vendor,
                     support_use_shared_texture_in_swap_chain,
                 };
-                resolve_request_adapter_promise(client.owner, &adapter_info);
+                unsafe {
+                    wgpu_child_resolve_request_adapter_promise(client.owner, Some(&adapter_info));
+                }
             } else {
-                resolve_request_adapter_promise(client.owner, core::ptr::null());
+                unsafe {
+                    wgpu_child_resolve_request_adapter_promise(client.owner, None);
+                }
                 client.identities.lock().adapters.free(adapter_id)
             }
         }
         ServerMessage::RequestDeviceResponse(device_id, queue_id, error) => {
             if let Some(error) = error {
                 let error = nsCString::from(error);
-                resolve_request_device_promise(client.owner, Some(&error));
+                unsafe {
+                    wgpu_child_resolve_request_device_promise(client.owner, Some(&error));
+                }
                 let identities = client.identities.lock();
                 identities.devices.free(device_id);
                 identities.queues.free(queue_id);
             } else {
-                resolve_request_device_promise(client.owner, None);
+                unsafe {
+                    wgpu_child_resolve_request_device_promise(client.owner, None);
+                }
             }
         }
         ServerMessage::PopErrorScopeResponse(ty, message) => {
             let message = nsCString::from(message.as_ref());
-            resolve_pop_error_scope_promise(client.owner, ty, &message);
+            unsafe {
+                wgpu_child_resolve_pop_error_scope_promise(client.owner, ty, &message);
+            }
         }
         ServerMessage::CreateRenderPipelineResponse {
             pipeline_id,
@@ -723,12 +732,14 @@ pub extern "C" fn wgpu_client_receive_server_message(
             let is_render_pipeline = true;
             if let Some(error) = error {
                 let ns_error = nsCString::from(error.error);
-                resolve_create_pipeline_promise(
-                    client.owner,
-                    is_render_pipeline,
-                    error.is_validation_error,
-                    Some(&ns_error),
-                );
+                unsafe {
+                    wgpu_child_resolve_create_pipeline_promise(
+                        client.owner,
+                        is_render_pipeline,
+                        error.is_validation_error,
+                        Some(&ns_error),
+                    );
+                }
 
                 let identities = client.identities.lock();
                 identities.render_pipelines.free(pipeline_id);
@@ -739,7 +750,14 @@ pub extern "C" fn wgpu_client_receive_server_message(
                     }
                 }
             } else {
-                resolve_create_pipeline_promise(client.owner, is_render_pipeline, false, None);
+                unsafe {
+                    wgpu_child_resolve_create_pipeline_promise(
+                        client.owner,
+                        is_render_pipeline,
+                        false,
+                        None,
+                    );
+                }
             }
         }
         ServerMessage::CreateComputePipelineResponse {
@@ -750,12 +768,14 @@ pub extern "C" fn wgpu_client_receive_server_message(
             let is_render_pipeline = false;
             if let Some(error) = error {
                 let ns_error = nsCString::from(error.error);
-                resolve_create_pipeline_promise(
-                    client.owner,
-                    is_render_pipeline,
-                    error.is_validation_error,
-                    Some(&ns_error),
-                );
+                unsafe {
+                    wgpu_child_resolve_create_pipeline_promise(
+                        client.owner,
+                        is_render_pipeline,
+                        error.is_validation_error,
+                        Some(&ns_error),
+                    );
+                }
 
                 let identities = client.identities.lock();
                 identities.compute_pipelines.free(pipeline_id);
@@ -766,7 +786,14 @@ pub extern "C" fn wgpu_client_receive_server_message(
                     }
                 }
             } else {
-                resolve_create_pipeline_promise(client.owner, is_render_pipeline, false, None);
+                unsafe {
+                    wgpu_child_resolve_create_pipeline_promise(
+                        client.owner,
+                        is_render_pipeline,
+                        false,
+                        None,
+                    );
+                }
             }
         }
         ServerMessage::CreateShaderModuleResponse(compilation_messages) => {
@@ -780,11 +807,13 @@ pub extern "C" fn wgpu_client_receive_server_message(
                     message: nsString::from(&m.message),
                 })
                 .collect();
-            resolve_create_shader_module_promise(
-                client.owner,
-                ffi_compilation_messages.as_ptr(),
-                ffi_compilation_messages.len(),
-            )
+
+            unsafe {
+                wgpu_child_resolve_create_shader_module_promise(
+                    client.owner,
+                    FfiSlice::from_slice(&ffi_compilation_messages),
+                )
+            }
         }
         ServerMessage::BufferMapResponse(buffer_id, buffer_map_result) => {
             match buffer_map_result {
@@ -792,8 +821,8 @@ pub extern "C" fn wgpu_client_receive_server_message(
                     is_writable,
                     offset,
                     size,
-                } => {
-                    resolve_buffer_map_promise(
+                } => unsafe {
+                    wgpu_child_resolve_buffer_map_promise(
                         client.owner,
                         buffer_id,
                         is_writable,
@@ -801,23 +830,25 @@ pub extern "C" fn wgpu_client_receive_server_message(
                         size,
                         None,
                     );
-                }
+                },
                 BufferMapResult::Error(error) => {
                     let ns_error = nsCString::from(error.as_ref());
-                    resolve_buffer_map_promise(
-                        client.owner,
-                        buffer_id,
-                        false,
-                        0,
-                        0,
-                        Some(&ns_error),
-                    );
+                    unsafe {
+                        wgpu_child_resolve_buffer_map_promise(
+                            client.owner,
+                            buffer_id,
+                            false,
+                            0,
+                            0,
+                            Some(&ns_error),
+                        );
+                    }
                 }
             };
         }
-        ServerMessage::QueueOnSubmittedWorkDoneResponse => {
-            resolve_on_submitted_work_done_promise(client.owner);
-        }
+        ServerMessage::QueueOnSubmittedWorkDoneResponse => unsafe {
+            wgpu_child_resolve_on_submitted_work_done_promise(client.owner);
+        },
     }
 }
 
@@ -1008,7 +1039,7 @@ pub extern "C" fn wgpu_client_create_buffer(
 pub extern "C" fn wgpu_client_create_texture(
     client: &Client,
     device_id: id::DeviceId,
-    desc: &wgt::TextureDescriptor<Option<&nsACString>, crate::FfiSlice<TextureFormat>>,
+    desc: &wgt::TextureDescriptor<Option<&nsACString>, FfiSlice<TextureFormat>>,
     swap_chain_id: Option<&SwapChainId>,
 ) -> id::TextureId {
     let label = wgpu_string(desc.label);
