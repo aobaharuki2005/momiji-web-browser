@@ -8,4 +8,6 @@
   <string name="mozac_close_tab">Închide fila</string>
   <!-- Menu option to duplicate the current tab -->
   <string name="mozac_ui_tabcounter_duplicate_tab">Duplică fila</string>
+  <!-- Content description of the tab counter toolbar button -->
+  <string name="mozac_tab_counter_content_description">Butonul barei de instrumente pentru contorul de file.</string>
 </resources>

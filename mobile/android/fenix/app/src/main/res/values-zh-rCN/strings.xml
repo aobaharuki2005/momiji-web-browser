@@ -879,6 +879,8 @@
   <string name="preferences_home_2">主页</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">应用图标</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">标签页栏显示方式</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">手势</string>
   <!-- Preference for settings related to visual options -->
@@ -1311,6 +1313,8 @@
   <string name="preference_simple_toolbar">简洁</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">丰富</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">显示标签页栏时，地址栏需位于顶部。</string>
   <!--
     App icon Preferences
 
@@ -1329,6 +1333,12 @@
   <string name="preference_auto_battery_theme">依系统省电模式设置</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">跟随设备主题</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">显示标签页栏</string>
   <!--
     Gestures Preferences
 
@@ -2782,6 +2792,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">保存和填充地址</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">包括电话号码和邮箱地址</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">跨设备同步地址</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">同步地址</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">添加卡片</string>
   <!-- Title of the "Edit card" screen -->

@@ -2792,6 +2792,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">Címek mentése és kitöltése</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Telefonszámok és e-mail-címek belevétele</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">Címek szinkronizálása az eszközök közt</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">Címek szinkronizálása</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Kártya hozzáadása</string>
   <!-- Title of the "Edit card" screen -->
