@@ -1696,8 +1696,8 @@ void GraphLoadingStateRecordObject::trace(JSTracer* trc, JSObject* obj) {
       &obj->as<GraphLoadingStateRecordObject>();
   Value stateValue = self->getReservedSlot(StateSlot);
   if (!stateValue.isUndefined()) {
-    GraphLoadingStateRecord* state = static_cast<GraphLoadingStateRecord*>(
-        stateValue.toPrivate());
+    GraphLoadingStateRecord* state =
+        static_cast<GraphLoadingStateRecord*>(stateValue.toPrivate());
     state->trace(trc);
   }
 }
