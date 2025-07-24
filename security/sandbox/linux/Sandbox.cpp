@@ -815,7 +815,7 @@ void SetSocketProcessSandbox(SocketProcessSandboxParams&& aParams) {
 
   // FIXME(bug 1513773): merge this with the ones for content and RDD?
   static SandboxBrokerClient* sBroker;
-  MOZ_ASSERT(!sBroker); // This should only ever be called once.
+  MOZ_ASSERT(!sBroker);  // This should only ever be called once.
   if (aParams.mBroker) {
     sBroker = new SandboxBrokerClient(aParams.mBroker.release());
   }
