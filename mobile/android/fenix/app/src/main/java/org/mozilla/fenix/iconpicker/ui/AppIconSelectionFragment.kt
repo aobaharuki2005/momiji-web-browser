@@ -37,10 +37,10 @@ class AppIconSelectionFragment : Fragment(), UserInteractionHandler {
                 AppIconSelection(
                     currentAppIcon = appIconRepository.selectedAppIcon.activityAlias,
                     groupedIconOptions = appIconRepository.groupedAppIcons,
-                    onClick = { selectedAppIcon ->
-                        // a warning dialog about app restart will be added here
-                        // in https://bugzilla.mozilla.org/show_bug.cgi?id=1976776
+                    onAppIconSelected = { selectedAppIcon ->
                         appIconRepository.selectedAppIcon = selectedAppIcon
+                        // the utility class that will change the active activity alias
+                        // will be added in https://bugzilla.mozilla.org/show_bug.cgi?id=1955884
                     },
                 )
             }

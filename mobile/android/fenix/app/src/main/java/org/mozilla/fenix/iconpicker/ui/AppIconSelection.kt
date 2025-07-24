@@ -19,8 +19,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +38,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
+import mozilla.components.compose.base.button.TextButton
+import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.button.RadioButton
 import org.mozilla.fenix.iconpicker.ActivityAlias
 import org.mozilla.fenix.iconpicker.IconBackground
@@ -53,14 +60,17 @@ private val GroupSpacerHeight = 8.dp
  *
  * @param currentAppIcon The currently selected app icon alias.
  * @param groupedIconOptions Icons are displayed in sections under their respective titles.
- * @param onClick A callback invoked when an icon option is selected.
+ * @param onAppIconSelected A callback invoked when the user has confirmed an alternative icon to be
+ * applied (they get informed about the required restart providing an opportunity to back out).
  */
 @Composable
 fun AppIconSelection(
     currentAppIcon: ActivityAlias,
     groupedIconOptions: Map<SettingsGroupTitle, List<SettingsAppIcon>>,
-    onClick: (SettingsAppIcon) -> Unit,
+    onAppIconSelected: (SettingsAppIcon) -> Unit,
 ) {
+    var selectedAppIcon by remember { mutableStateOf<SettingsAppIcon?>(null) }
+
     Column(
         modifier = Modifier.background(color = FirefoxTheme.colors.layer1),
     ) {
@@ -71,7 +81,7 @@ fun AppIconSelection(
                 AppIconOption(
                     appIcon = icon,
                     selected = icon.activityAlias == currentAppIcon,
-                    onClick = onClick,
+                    onClick = { selectedAppIcon = icon },
                 )
             }
 
@@ -79,6 +89,17 @@ fun AppIconSelection(
 
             Divider(color = FirefoxTheme.colors.borderPrimary)
         }
+    }
+
+    selectedAppIcon?.let {
+        RestartWarningDialog(
+            onConfirm = {
+                onAppIconSelected(it)
+            },
+            onDismiss = {
+                selectedAppIcon = null
+            },
+        )
     }
 }
 
@@ -100,13 +121,13 @@ private fun AppIconGroupHeader(title: SettingsGroupTitle) {
 private fun AppIconOption(
     appIcon: SettingsAppIcon,
     selected: Boolean,
-    onClick: (SettingsAppIcon) -> Unit,
+    onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(ListItemHeight)
-            .clickable { onClick(appIcon) },
+            .clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RadioButton(
@@ -182,6 +203,44 @@ fun AppIcon(
     }
 }
 
+@Composable
+private fun RestartWarningDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        title = {
+            Text(
+                text = stringResource(R.string.restart_warning_dialog_title),
+                color = FirefoxTheme.colors.textPrimary,
+                style = FirefoxTheme.typography.headline7,
+            )
+                },
+        text = {
+            Text(
+                text = stringResource(R.string.restart_warning_dialog_body),
+                color = FirefoxTheme.colors.textPrimary,
+                style = FirefoxTheme.typography.body2,
+            )
+        },
+        onDismissRequest = { onDismiss() },
+        confirmButton = {
+            TextButton(
+                text = stringResource(id = R.string.restart_warning_dialog_button_positive),
+                upperCaseText = false,
+                onClick = { onConfirm() },
+            )
+        },
+        dismissButton = {
+            TextButton(
+                text = stringResource(id = R.string.restart_warning_dialog_button_negative),
+                upperCaseText = false,
+                onClick = { onDismiss() },
+            )
+        },
+    )
+}
+
 @FlexibleWindowLightDarkPreview
 @Composable
 private fun AppIconSelectionPreview() {
@@ -189,7 +248,7 @@ private fun AppIconSelectionPreview() {
         AppIconSelection(
             currentAppIcon = ActivityAlias.AppDefault,
             groupedIconOptions = SettingsAppIcon.groupedAppIcons,
-            onClick = {},
+            onAppIconSelected = {},
         )
     }
 }
@@ -204,5 +263,16 @@ private fun AppIconOptionPreview() {
 
     FirefoxTheme {
         AppIconOption(sampleItem, false) {}
+    }
+}
+
+@FlexibleWindowLightDarkPreview
+@Composable
+private fun RestartWarningDialogPreview() {
+    FirefoxTheme {
+        RestartWarningDialog(
+            onConfirm = {},
+            onDismiss = {},
+        )
     }
 }
