@@ -11731,7 +11731,6 @@ function FollowSectionButtonHighlight({
       className: "follow-section-button-highlight-content"
     }, /*#__PURE__*/external_React_default().createElement("img", {
       src: "chrome://browser/content/asrouter/assets/smiling-fox-icon.svg",
-      "data-l10n-id": "newtab-download-mobile-highlight-image",
       width: "24",
       height: "24",
       alt: ""

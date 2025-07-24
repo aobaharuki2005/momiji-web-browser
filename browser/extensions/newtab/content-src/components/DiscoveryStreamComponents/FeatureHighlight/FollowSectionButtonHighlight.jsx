@@ -31,7 +31,6 @@ export function FollowSectionButtonHighlight({
           <div className="follow-section-button-highlight-content">
             <img
               src="chrome://browser/content/asrouter/assets/smiling-fox-icon.svg"
-              data-l10n-id="newtab-download-mobile-highlight-image"
               width="24"
               height="24"
               alt=""
