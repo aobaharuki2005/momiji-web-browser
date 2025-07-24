@@ -917,6 +917,12 @@ HRESULT MFTEncoder::ProcessOutput() {
 
   DWORD status = 0;
   HRESULT hr = mEncoder->ProcessOutput(0, 1, &output, &status);
+  if (output.pEvents) {
+    MFT_ENC_LOGW("Discarding events from ProcessOutput");
+    output.pEvents->Release();
+    output.pEvents = nullptr;
+  }
+
   if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
     MFT_ENC_LOGW("output stream change");
     if (output.dwStatus & MFT_OUTPUT_DATA_BUFFER_FORMAT_CHANGE) {
