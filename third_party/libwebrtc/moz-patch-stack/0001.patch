@@ -1,344 +1,97 @@
-From: Tom Van Goethem <tov@chromium.org>
-Date: Mon, 28 Apr 2025 22:14:11 +0000
-Subject: (cherry-pick-branch-heads/7151) [M137] Restrict certain addresses to
- be used when SDP munging is enabled
+From: Tom Van Goethem <tov@google.com>
+Date: Mon, 12 May 2025 03:34:59 -0700
+Subject: (cherry-pick-branch-heads/7151) [M137] Add metrics for restricted
+ candidates
 
-Gated behind the default-empty list of restricted addresses tracked by
-the field trial WebRTC-NoSdpMangleUfragRestrictedAddresses.
+This adds two UMA metrics for the type of SDP munging that occurred and
+the port of the candidate that was restricted. The metrics descriptions
+are being added here: crrev.com/c/6521706.
 
-(cherry picked from commit 84e40071f96f198867d4dfba827d23d9a15eb5a0)
+(cherry picked from commit d5b3b1ed4594821451d2ebb1d61cc1e6dab83b56)
 
-Bug: chromium:415261325, b/409713509
-Fixed: chromium:415267017
-Change-Id: Iabb5c8b5307c66215635336bee55f7bfbd040f3b
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/388340
-Auto-Submit: Tom Van Goethem <tov@google.com>
+Bug: b/409713509
+Fixed: b/417142969
+Change-Id: I3232cb0cee6848074ab103f4d4edb2e080e09568
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/390340
 Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
+Reviewed-by: Johannes Kron <kron@webrtc.org>
+Commit-Queue: Tom Van Goethem <tov@google.com>
+Cr-Original-Commit-Position: refs/heads/main@{#44559}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/390920
 Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#44477}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/389980
 Commit-Queue: Harald Alvestrand <hta@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/7151@{#1}
+Cr-Commit-Position: refs/branch-heads/7151@{#2}
 Cr-Branched-From: dc428bd75f2ca847b165b2556970c9bcd5037c5b-refs/heads/main@{#44472}
 ---
- experiments/field_trials.py     |  3 ++
- pc/DEPS                         |  2 +-
- pc/sdp_munging_detector.cc      | 34 ++++++++++++++
- pc/sdp_munging_detector.h       |  4 ++
- pc/sdp_offer_answer.cc          | 58 ++++++++++++++++++++----
- pc/sdp_offer_answer.h           |  4 ++
- pc/sdp_offer_answer_unittest.cc | 78 ++++++++++++++++++++++++++++++++-
- 7 files changed, 172 insertions(+), 11 deletions(-)
+ pc/sdp_offer_answer.cc          | 12 ++++++++++++
+ pc/sdp_offer_answer_unittest.cc | 16 ++++++++++++++++
+ 2 files changed, 28 insertions(+)
 
-diff --git a/experiments/field_trials.py b/experiments/field_trials.py
-index 1c9f8c029e..b23b72457b 100755
---- a/experiments/field_trials.py
-+++ b/experiments/field_trials.py
-@@ -119,6 +119,9 @@ ACTIVE_FIELD_TRIALS: FrozenSet[FieldTrial] = frozenset([
-     FieldTrial('WebRTC-NoSdpMangleUfrag',
-                375571816,
-                date(2025, 10, 11)),
-+    FieldTrial('WebRTC-NoSdpMangleUfragRestrictedAddresses',
-+               409713509,
-+               date(2025, 10, 11)),
-     FieldTrial('WebRTC-Pacer-FastRetransmissions',
-                40235589,
-                date(2024, 4, 1)),
-diff --git a/pc/DEPS b/pc/DEPS
-index dd44ac1f77..53ef6e45ee 100644
---- a/pc/DEPS
-+++ b/pc/DEPS
-@@ -14,7 +14,7 @@ include_rules = [
-   "+net/dcsctp",
-   "+p2p",
-   "+system_wrappers",
--  "+absl/strings/str_cat.h",
-+  "+absl/strings",
- ]
- 
- specific_include_rules = {
-diff --git a/pc/sdp_munging_detector.cc b/pc/sdp_munging_detector.cc
-index baef265387..2497a3066d 100644
---- a/pc/sdp_munging_detector.cc
-+++ b/pc/sdp_munging_detector.cc
-@@ -10,6 +10,7 @@
- 
- #include "pc/sdp_munging_detector.h"
- 
-+#include <algorithm>
- #include <cstddef>
- #include <string>
- 
-@@ -501,4 +502,37 @@ SdpMungingType DetermineSdpMungingType(
-   return SdpMungingType::kUnknownModification;
- }
- 
-+// Similar to DetermineSdpMungingType, but only checks whether the ICE ufrag or
-+// pwd of the SDP has been modified between createOffer and setLocalDescription.
-+bool HasUfragSdpMunging(const SessionDescriptionInterface* sdesc,
-+                        const SessionDescriptionInterface* last_created_desc) {
-+  if (!sdesc || !sdesc->description()) {
-+    RTC_LOG(LS_WARNING) << "SDP munging: Failed to parse session description.";
-+    return false;
-+  }
-+
-+  if (!last_created_desc || !last_created_desc->description()) {
-+    RTC_LOG(LS_WARNING) << "SDP munging: SetLocalDescription called without "
-+                           "CreateOffer or CreateAnswer.";
-+    return false;
-+  }
-+  TransportInfos last_created_transport_infos =
-+      last_created_desc->description()->transport_infos();
-+  TransportInfos transport_infos_to_set =
-+      sdesc->description()->transport_infos();
-+  for (size_t i = 0; i < std::min(last_created_transport_infos.size(),
-+                                  transport_infos_to_set.size());
-+       i++) {
-+    if (last_created_transport_infos[i].description.ice_ufrag !=
-+        transport_infos_to_set[i].description.ice_ufrag) {
-+      return true;
-+    }
-+    if (last_created_transport_infos[i].description.ice_pwd !=
-+        transport_infos_to_set[i].description.ice_pwd) {
-+      return true;
-+    }
-+  }
-+  return false;
-+}
-+
- }  // namespace webrtc
-diff --git a/pc/sdp_munging_detector.h b/pc/sdp_munging_detector.h
-index 9b630a30dc..ec8af1a634 100644
---- a/pc/sdp_munging_detector.h
-+++ b/pc/sdp_munging_detector.h
-@@ -20,6 +20,10 @@ SdpMungingType DetermineSdpMungingType(
-     const SessionDescriptionInterface* sdesc,
-     const SessionDescriptionInterface* last_created_desc);
- 
-+// Determines if the ICE ufrag or pwd of the SDP were modified.
-+bool HasUfragSdpMunging(const SessionDescriptionInterface* sdesc,
-+                        const SessionDescriptionInterface* last_created_desc);
-+
- }  // namespace webrtc
- 
- #endif  // PC_SDP_MUNGING_DETECTOR_H_
 diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
-index fc7808d4d0..31808c506d 100644
+index 31808c506d..2423fa8c33 100644
 --- a/pc/sdp_offer_answer.cc
 +++ b/pc/sdp_offer_answer.cc
-@@ -28,6 +28,7 @@
- #include "absl/memory/memory.h"
- #include "absl/strings/match.h"
- #include "absl/strings/str_cat.h"
-+#include "absl/strings/str_split.h"
- #include "absl/strings/string_view.h"
- #include "api/array_view.h"
- #include "api/candidate.h"
-@@ -903,6 +904,21 @@ bool ContentHasHeaderExtension(const ContentInfo& content_info,
-   return false;
- }
- 
-+// Matches the given host with the wildcard host. A wildcard `*` matches the
-+// current character and anything that comes after it. For instance, 127.0.*
-+// matches any string that starts with `127.0.`. For IPv6 addresses, the
-+// wildcard host should also start with `[` and end with `]` or a wildcard.
-+bool WildcardHostPrefixMatch(absl::string_view host,
-+                             absl::string_view wildcard_host) {
-+  for (size_t i = 0; i < std::min(host.size(), wildcard_host.size()); ++i) {
-+    if (host[i] == wildcard_host[i]) {
-+      continue;
-+    }
-+    return wildcard_host[i] == '*';
-+  }
-+  return host.size() == wildcard_host.size();
-+}
-+
- }  // namespace
- 
- void UpdateRtpHeaderExtensionPreferencesFromSdpMunging(
-@@ -2448,19 +2464,22 @@ void SdpOfferAnswerHandler::DoSetLocalDescription(
-     return;
-   }
- 
-+  SessionDescriptionInterface* last_created_desc =
-+      desc->GetType() == SdpType::kOffer ? last_created_offer_.get()
-+                                         : last_created_answer_.get();
-+
-   // Determine if SDP munging was done. This is not yet acted upon.
-   bool had_local_description = !!local_description();
-   SdpMungingType sdp_munging_type =
--      DetermineSdpMungingType(desc.get(), desc->GetType() == SdpType::kOffer
--                                              ? last_created_offer_.get()
--                                              : last_created_answer_.get());
-+      DetermineSdpMungingType(desc.get(), last_created_desc);
- 
-   if (!disable_sdp_munging_checks_ &&
--      pc_->trials().IsEnabled("WebRTC-NoSdpMangleUfrag")) {
--    if (sdp_munging_type == kIceUfrag || sdp_munging_type == kIcePwd) {
-+      HasUfragSdpMunging(desc.get(), last_created_desc)) {
-+    has_sdp_munged_ufrag_ = true;
-+    if (pc_->trials().IsEnabled("WebRTC-NoSdpMangleUfrag")) {
-       RTC_LOG(LS_ERROR) << "Rejecting SDP because of ufrag modification";
-       observer->OnSetLocalDescriptionComplete(
--          RTCError(RTCErrorType::INVALID_PARAMETER,
-+          RTCError(RTCErrorType::INVALID_MODIFICATION,
-                    "SDP is modified in a non-acceptable way"));
-       last_sdp_munging_type_ = sdp_munging_type;
-       ReportInitialSdpMunging(had_local_description, desc->GetType());
-@@ -2471,9 +2490,6 @@ void SdpOfferAnswerHandler::DoSetLocalDescription(
-   // Workaround for isses.webrtc.org/412904801 - detect if packetization:raw
-   // was added in SDP munging, and if so, push it back into the codec vendor.
-   std::vector<std::pair<Codec, Codec>> codecs_mangled_to_raw;
--  auto last_created_desc = desc->GetType() == SdpType::kOffer
--                               ? last_created_offer_.get()
--                               : last_created_answer_.get();
-   // Ignore if other mungings have been applied.
-   if (last_created_desc &&
-       last_created_desc->description()->contents().size() ==
-@@ -5300,6 +5316,30 @@ bool SdpOfferAnswerHandler::ReadyToUseRemoteCandidate(
-     return false;
-   }
- 
-+  if (has_sdp_munged_ufrag_) {
-+    // The format is
-+    // restricted_addresses:<host-with-wildcard>:<port>|<other-host>:<other-port>
-+    // The host can contain wildcards that match anything that comes after it.
-+    // The port should either be a wildcard or a specific port.
-+    const std::string restricted_addresses =
-+        pc_->trials().Lookup("WebRTC-NoSdpMangleUfragRestrictedAddresses");
-+    const std::string port = candidate->candidate().address().PortAsString();
-+    const std::string host = candidate->candidate().address().HostAsURIString();
-+    const std::vector<absl::string_view> restricted_address_list =
-+        absl::StrSplit(restricted_addresses, '|');
-+    for (const absl::string_view restricted_address : restricted_address_list) {
-+      const std::pair<absl::string_view, absl::string_view> address =
-+          absl::StrSplit(restricted_address, ':');
-+      if ((address.second == port || address.second == "*") &&
-+          WildcardHostPrefixMatch(host, address.first)) {
-+        RTC_LOG(LS_ERROR) << "ReadyToUseRemoteCandidate: Candidate not valid "
-+                             "because of SDP munging.";
-+        *valid = false;
-+        return false;
-+      }
-+    }
-+  }
-+
-   return true;
- }
- 
-diff --git a/pc/sdp_offer_answer.h b/pc/sdp_offer_answer.h
-index 6bf16f681d..e5604bf37d 100644
---- a/pc/sdp_offer_answer.h
-+++ b/pc/sdp_offer_answer.h
-@@ -690,6 +690,10 @@ class SdpOfferAnswerHandler : public SdpStateProvider {
-   // to disable.
-   bool disable_sdp_munging_checks_ = false;
-   CodecLookupHelper* codec_lookup_helper_ = nullptr;
-+
-+  // Whether the username fragment or the password of the SDP was munged.
-+  bool has_sdp_munged_ufrag_ = false;
-+
-   WeakPtrFactory<SdpOfferAnswerHandler> weak_ptr_factory_
-       RTC_GUARDED_BY(signaling_thread());
- };
+@@ -5335,6 +5335,18 @@ bool SdpOfferAnswerHandler::ReadyToUseRemoteCandidate(
+         RTC_LOG(LS_ERROR) << "ReadyToUseRemoteCandidate: Candidate not valid "
+                              "because of SDP munging.";
+         *valid = false;
++        // There might be other types of SDP munging, but here we're only
++        // interested in IceUfrag and IcePwd.
++        SdpMungingType sdp_munging_type =
++            last_sdp_munging_type_ == SdpMungingType::kIcePwd
++                ? SdpMungingType::kIcePwd
++                : SdpMungingType::kIceUfrag;
++        RTC_HISTOGRAM_ENUMERATION_SPARSE(
++            "WebRTC.PeerConnection.RestrictedCandidates.SdpMungingType",
++            sdp_munging_type, SdpMungingType::kMaxValue);
++        RTC_HISTOGRAM_ENUMERATION_SPARSE(
++            "WebRTC.PeerConnection.RestrictedCandidates.Port",
++            candidate->candidate().address().port(), 65536);
+         return false;
+       }
+     }
 diff --git a/pc/sdp_offer_answer_unittest.cc b/pc/sdp_offer_answer_unittest.cc
-index a48df74fec..16c3c22de3 100644
+index 16c3c22de3..6eeda1b195 100644
 --- a/pc/sdp_offer_answer_unittest.cc
 +++ b/pc/sdp_offer_answer_unittest.cc
-@@ -52,11 +52,11 @@
- #include "media/base/stream_params.h"
- #include "p2p/base/transport_description.h"
- #include "pc/peer_connection_wrapper.h"
--#include "pc/session_description.h"
- #include "pc/test/fake_audio_capture_module.h"
- #include "pc/test/fake_rtc_certificate_generator.h"
- #include "pc/test/integration_test_helpers.h"
- #include "pc/test/mock_peer_connection_observers.h"
-+#include "rtc_base/strings/string_format.h"
- #include "rtc_base/thread.h"
- #include "system_wrappers/include/metrics.h"
- #include "test/gmock.h"
-@@ -1951,6 +1951,82 @@ TEST_F(SdpOfferAnswerMungingTest, IcePwd) {
-       ElementsAre(Pair(SdpMungingType::kIcePwd, 1)));
- }
+@@ -18,8 +18,11 @@
+ #include <vector>
  
-+TEST_F(SdpOfferAnswerMungingTest, IceUfragRestrictedAddresses) {
-+  RTCConfiguration config;
-+  config.certificates.push_back(
-+      FakeRTCCertificateGenerator::GenerateCertificate());
-+  auto caller = CreatePeerConnection(
-+      config,
-+      FieldTrials::CreateNoGlobal("WebRTC-NoSdpMangleUfragRestrictedAddresses/"
-+                                  "127.0.0.1:12345|127.0.0.*:23456|*:34567/"));
-+  auto callee = CreatePeerConnection();
-+  caller->AddAudioTrack("audio_track", {});
-+  auto offer = caller->CreateOffer();
-+  auto& transport_infos = offer->description()->transport_infos();
-+  ASSERT_EQ(transport_infos.size(), 1u);
-+  transport_infos[0].description.ice_ufrag = "amungediceufrag";
-+
-+  EXPECT_TRUE(caller->SetLocalDescription(offer->Clone()));
-+  EXPECT_TRUE(callee->SetRemoteDescription(std::move(offer)));
-+
-+  auto answer = callee->CreateAnswer();
-+  EXPECT_TRUE(callee->SetLocalDescription(answer->Clone()));
-+  EXPECT_TRUE(caller->SetRemoteDescription(std::move(answer)));
-+
-+  static constexpr const char tmpl[] =
-+      "candidate:a0+B/1 1 udp 2130706432 %s typ host";
-+
-+  // Addresses to test. First field is the address in string format,
-+  // second field is the expected outcome (success or failure).
-+  const std::vector<std::pair<const char*, bool>> address_tests = {
-+      {"127.0.0.1:12345", false}, {"127.0.0.2:23456", false},
-+      {"8.8.8.8:34567", false},   {"127.0.0.2:12345", true},
-+      {"127.0.1.1:23456", true},  {"8.8.8.8:3456", true},
-+  };
-+
-+  for (const auto& address_test : address_tests) {
-+    std::optional<RTCError> result;
-+    const std::string candidate = StringFormat(
-+        tmpl, absl::StrReplaceAll(address_test.first, {{":", " "}}).c_str());
-+    caller->pc()->AddIceCandidate(
-+        std::unique_ptr<IceCandidateInterface>(
-+            CreateIceCandidate("", 0, candidate, nullptr)),
-+        [&result](RTCError error) { result = error; });
-+
-+    ASSERT_THAT(
-+        WaitUntil([&] { return result.has_value(); }, ::testing::IsTrue()),
-+        IsRtcOk());
-+    if (address_test.second == true) {
-+      EXPECT_TRUE(result.value().ok());
-+    } else {
-+      EXPECT_FALSE(result.value().ok());
-+      EXPECT_EQ(result.value().type(), RTCErrorType::UNSUPPORTED_OPERATION);
-+    }
-+  }
-+}
-+
-+TEST_F(SdpOfferAnswerMungingTest, IceUfragSdpRejectedAndRestrictedAddresses) {
-+  RTCConfiguration config;
-+  config.certificates.push_back(
-+      FakeRTCCertificateGenerator::GenerateCertificate());
-+  auto caller = CreatePeerConnection(
-+      config,
-+      FieldTrials::CreateNoGlobal("WebRTC-NoSdpMangleUfragRestrictedAddresses/"
-+                                  "127.0.0.1:12345|127.0.0.*:23456|*:34567/"
-+                                  "WebRTC-NoSdpMangleUfrag/Enabled/"));
-+  auto callee = CreatePeerConnection();
-+  caller->AddAudioTrack("audio_track", {});
-+  auto offer = caller->CreateOffer();
-+  auto& transport_infos = offer->description()->transport_infos();
-+  ASSERT_EQ(transport_infos.size(), 1u);
-+  transport_infos[0].description.ice_ufrag = "amungediceufrag";
-+
-+  EXPECT_FALSE(caller->SetLocalDescription(offer->Clone()));
-+  EXPECT_THAT(
-+      metrics::Samples("WebRTC.PeerConnection.SdpMunging.Offer.Initial"),
-+      ElementsAre(Pair(SdpMungingType::kIceUfrag, 1)));
-+}
-+
- TEST_F(SdpOfferAnswerMungingTest, IceMode) {
-   auto pc = CreatePeerConnection();
-   pc->AddAudioTrack("audio_track", {});
+ #include "absl/strings/match.h"
++#include "absl/strings/numbers.h"
+ #include "absl/strings/str_cat.h"
+ #include "absl/strings/str_replace.h"
++#include "absl/strings/str_split.h"
++#include "absl/strings/string_view.h"
+ #include "api/audio_codecs/audio_format.h"
+ #include "api/audio_codecs/builtin_audio_decoder_factory.h"
+ #include "api/audio_codecs/builtin_audio_encoder_factory.h"
+@@ -1984,6 +1987,7 @@ TEST_F(SdpOfferAnswerMungingTest, IceUfragRestrictedAddresses) {
+       {"127.0.1.1:23456", true},  {"8.8.8.8:3456", true},
+   };
+ 
++  int num_blocked = 0;
+   for (const auto& address_test : address_tests) {
+     std::optional<RTCError> result;
+     const std::string candidate = StringFormat(
+@@ -1999,8 +2003,20 @@ TEST_F(SdpOfferAnswerMungingTest, IceUfragRestrictedAddresses) {
+     if (address_test.second == true) {
+       EXPECT_TRUE(result.value().ok());
+     } else {
++      std::pair<absl::string_view, absl::string_view> host =
++          absl::StrSplit(address_test.first, ":");
++      int port;
++      ASSERT_TRUE(absl::SimpleAtoi(host.second, &port));
+       EXPECT_FALSE(result.value().ok());
+       EXPECT_EQ(result.value().type(), RTCErrorType::UNSUPPORTED_OPERATION);
++      num_blocked++;
++      EXPECT_THAT(
++          metrics::Samples(
++              "WebRTC.PeerConnection.RestrictedCandidates.SdpMungingType"),
++          ElementsAre(Pair(SdpMungingType::kIceUfrag, num_blocked)));
++      EXPECT_THAT(
++          metrics::Samples("WebRTC.PeerConnection.RestrictedCandidates.Port"),
++          Contains(Pair(port, 1)));
+     }
+   }
+ }
