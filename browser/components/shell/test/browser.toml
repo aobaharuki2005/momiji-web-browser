@@ -87,10 +87,6 @@ skip-if = [
   "tsan", # Bug 1429950, Bug 1583315, Bug 1696109, Bug 1701449
 ]
 
-["browser_pinning.js"]
-run-if = ["os == 'win'"]
-tags = "os_integration"
-
 ["browser_processAUMID.js"]
 run-if = ["os == 'win'"]
 
