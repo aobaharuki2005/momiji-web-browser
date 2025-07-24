@@ -29,24 +29,22 @@ DEFINE_CODECAPI_GUID(AVEncAdaptiveMode, "4419b185-da1f-4f53-bc76-097d0c1efb1e",
 #  define MF_E_NO_EVENTS_AVAILABLE _HRESULT_TYPEDEF_(0xC00D3E80L)
 #endif
 
-#define MFT_ENC_LOGD(arg, ...)                        \
-  MOZ_LOG(mozilla::sPEMLog, mozilla::LogLevel::Debug, \
-          ("MFTEncoder(0x%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#define MFT_ENC_LOGE(arg, ...)                        \
-  MOZ_LOG(mozilla::sPEMLog, mozilla::LogLevel::Error, \
-          ("MFTEncoder(0x%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#define MFT_ENC_LOGW(arg, ...)                          \
-  MOZ_LOG(mozilla::sPEMLog, mozilla::LogLevel::Warning, \
-          ("MFTEncoder(0x%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#define MFT_ENC_LOGV(arg, ...)                          \
-  MOZ_LOG(mozilla::sPEMLog, mozilla::LogLevel::Verbose, \
-          ("MFTEncoder(0x%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#define MFT_ENC_SLOGD(arg, ...)                       \
-  MOZ_LOG(mozilla::sPEMLog, mozilla::LogLevel::Debug, \
-          ("MFTEncoder::%s: " arg, __func__, ##__VA_ARGS__))
-#define MFT_ENC_SLOGE(arg, ...)                       \
-  MOZ_LOG(mozilla::sPEMLog, mozilla::LogLevel::Error, \
-          ("MFTEncoder::%s: " arg, __func__, ##__VA_ARGS__))
+#define MFT_LOG_INTERNAL(level, msg, ...) \
+  MOZ_LOG(mozilla::sPEMLog, LogLevel::level, (msg, ##__VA_ARGS__))
+
+#define MFT_ENC_LOG(level, msg, ...)                                    \
+  MFT_LOG_INTERNAL(level, "MFTEncoder(0x%p)::%s: " msg, this, __func__, \
+                   ##__VA_ARGS__)
+#define MFT_ENC_SLOG(level, msg, ...) \
+  MFT_LOG_INTERNAL(level, "MFTEncoder::%s: " msg, __func__, ##__VA_ARGS__)
+
+#define MFT_ENC_LOGD(msg, ...) MFT_ENC_LOG(Debug, msg, ##__VA_ARGS__)
+#define MFT_ENC_LOGE(msg, ...) MFT_ENC_LOG(Error, msg, ##__VA_ARGS__)
+#define MFT_ENC_LOGW(msg, ...) MFT_ENC_LOG(Warning, msg, ##__VA_ARGS__)
+#define MFT_ENC_LOGV(msg, ...) MFT_ENC_LOG(Verbose, msg, ##__VA_ARGS__)
+
+#define MFT_ENC_SLOGD(msg, ...) MFT_ENC_SLOG(Debug, msg, ##__VA_ARGS__)
+#define MFT_ENC_SLOGE(msg, ...) MFT_ENC_SLOG(Error, msg, ##__VA_ARGS__)
 
 #undef MFT_RETURN_IF_FAILED_IMPL
 #define MFT_RETURN_IF_FAILED_IMPL(x, log_macro)                            \
@@ -1227,3 +1225,6 @@ Result<nsTArray<UINT8>, HRESULT> MFTEncoder::GetMPEGSequenceHeader() {
 #undef MFT_RETURN_IF_FAILED_IMPL
 #undef MFT_RETURN_VALUE_IF_FAILED_IMPL
 #undef MFT_RETURN_ERROR_IF_FAILED_IMPL
+#undef MFT_ENC_LOG
+#undef MFT_ENC_SLOG
+#undef MFT_LOG_INTERNAL
