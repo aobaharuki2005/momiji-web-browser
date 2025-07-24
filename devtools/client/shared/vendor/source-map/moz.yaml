@@ -36,12 +36,7 @@ vendoring:
     - action: move-file
       from: '{vendor_dir}/lib/read-wasm-browser.js'
       to: '{vendor_dir}/lib/read-wasm.js'
-    - action: move-file
-      from: '{vendor_dir}/lib/url-browser.js'
-      to: '{vendor_dir}/lib/url.js'
 
   patches:
-    # Force using the local vendored whatwg-url module
-    - relative_url.patch
     # Tweak read-wasm in order to support running in both Jest/Node and Firefox
     - read_wasm.patch
