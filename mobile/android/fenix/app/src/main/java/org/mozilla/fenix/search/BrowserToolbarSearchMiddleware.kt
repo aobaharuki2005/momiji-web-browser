@@ -45,6 +45,7 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarState
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
 import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.State
@@ -465,6 +466,14 @@ class BrowserToolbarSearchMiddleware(
                     if (it.qrScannerState.lastScanData?.isNotEmpty() == true) {
                         appStore.dispatch(AppAction.QrScannerAction.QrScannerInputConsumed)
                         store.dispatch(SearchQueryUpdated(it.qrScannerState.lastScanData))
+                        store.dispatch(SearchQueryUpdated(it.qrScannerState.lastScanData, false))
+                        components.useCases.fenixBrowserUseCases.loadUrlOrSearch(
+                            searchTermOrURL = it.qrScannerState.lastScanData,
+                            newTab = appStore.state.searchState.sourceTabId == null,
+                            flags = EngineSession.LoadUrlFlags.external(),
+                            private = false,
+                        )
+                        environment?.navController?.navigate(R.id.browserFragment)
                         observeQRScannerInputJob?.cancel()
                     }
                 }
