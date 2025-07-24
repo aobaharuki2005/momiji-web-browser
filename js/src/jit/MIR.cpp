@@ -7882,8 +7882,7 @@ MDefinition* MNormalizeSliceTerm::foldsTo(TempAllocator& alloc) {
 
     // Minimum of |value| and |length|.
     if (valueConst > 0) {
-      bool isMax = false;
-      return MMinMax::New(alloc, value, length, MIRType::Int32, isMax);
+      return MMinMax::NewMin(alloc, value, length, MIRType::Int32);
     }
 
     // Maximum of |value + length| and zero.
@@ -7895,8 +7894,7 @@ MDefinition* MNormalizeSliceTerm::foldsTo(TempAllocator& alloc) {
       auto* zero = MConstant::New(alloc, Int32Value(0));
       block()->insertBefore(this, zero);
 
-      bool isMax = true;
-      return MMinMax::New(alloc, add, zero, MIRType::Int32, isMax);
+      return MMinMax::NewMax(alloc, add, zero, MIRType::Int32);
     }
 
     // Directly return the value when it's zero.

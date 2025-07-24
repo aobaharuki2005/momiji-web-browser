@@ -4585,6 +4585,16 @@ class MMinMax : public MBinaryInstruction, public ArithPolicy::Data {
   INSTRUCTION_HEADER(MinMax)
   TRIVIAL_NEW_WRAPPERS
 
+  template <typename... Args>
+  static MMinMax* NewMin(Args&&... args) {
+    return New(std::forward<Args>(args)..., /* isMax= */ false);
+  }
+
+  template <typename... Args>
+  static MMinMax* NewMax(Args&&... args) {
+    return New(std::forward<Args>(args)..., /* isMax= */ true);
+  }
+
   static MMinMax* NewWasm(TempAllocator& alloc, MDefinition* left,
                           MDefinition* right, MIRType type, bool isMax) {
     return New(alloc, left, right, type, isMax);

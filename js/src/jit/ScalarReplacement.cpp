@@ -2515,8 +2515,7 @@ void ArgumentsReplacer::visitArgumentsSlice(MArgumentsSlice* ins) {
   auto* end = MNormalizeSliceTerm::New(alloc(), ins->end(), numArgs);
   ins->block()->insertBefore(ins, end);
 
-  bool isMax = false;
-  auto* beginMin = MMinMax::New(alloc(), begin, end, MIRType::Int32, isMax);
+  auto* beginMin = MMinMax::NewMin(alloc(), begin, end, MIRType::Int32);
   ins->block()->insertBefore(ins, beginMin);
 
   // Safe to truncate because both operands are positive and end >= beginMin.
@@ -2950,8 +2949,7 @@ MDefinition* RestReplacer::restLength(MInstruction* ins) {
     auto* zero = MConstant::New(alloc(), Int32Value(0));
     ins->block()->insertBefore(ins, zero);
 
-    bool isMax = true;
-    auto* minmax = MMinMax::New(alloc(), length, zero, MIRType::Int32, isMax);
+    auto* minmax = MMinMax::NewMax(alloc(), length, zero, MIRType::Int32);
     ins->block()->insertBefore(ins, minmax);
 
     return minmax;
