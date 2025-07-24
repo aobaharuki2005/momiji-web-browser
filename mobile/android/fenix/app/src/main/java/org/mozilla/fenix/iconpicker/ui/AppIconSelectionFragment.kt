@@ -45,7 +45,7 @@ class AppIconSelectionFragment : Fragment(), UserInteractionHandler {
                     appIconRepository.selectedAppIcon = selectedAppIcon
                     updateAppIcon(
                         currentAliasSuffix = currentAliasSuffix,
-                        updateAliasSuffix = selectedAppIcon.aliasSuffix,
+                        newAliasSuffix = selectedAppIcon.aliasSuffix,
                     )
                 },
             )
@@ -54,7 +54,7 @@ class AppIconSelectionFragment : Fragment(), UserInteractionHandler {
 
     private fun updateAppIcon(
         currentAliasSuffix: String,
-        updateAliasSuffix: String,
+        newAliasSuffix: String,
     ) {
         with(requireContext()) {
             changeAppLauncherIcon(
@@ -62,7 +62,7 @@ class AppIconSelectionFragment : Fragment(), UserInteractionHandler {
                 shortcutManager = ShortcutManagerWrapperDefault(this),
                 shortcutInfo = ShortcutInfoWrapperDefault(this),
                 appAlias = ComponentName(this, "$packageName.$currentAliasSuffix"),
-                newAppAlias = ComponentName(this, "$packageName.$updateAliasSuffix"),
+                newAppAlias = ComponentName(this, "$packageName.$newAliasSuffix"),
             )
         }
     }
