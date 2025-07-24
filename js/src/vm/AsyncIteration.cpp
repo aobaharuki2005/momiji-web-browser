@@ -1051,12 +1051,8 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
   } else if (generator->isSuspendedYield()) {
     MOZ_ASSERT(generator->isQueueLengthOne());
 
-    generator->setAwaitingYieldReturn();
-
-    if (!InternalAsyncGeneratorAwait(
-            cx, generator, completionValue,
-            PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled,
-            PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected)) {
+    if (!AsyncGeneratorUnwrapYieldResumption(
+            cx, generator, CompletionKind::Return, completionValue)) {
       return false;
     }
   } else {
