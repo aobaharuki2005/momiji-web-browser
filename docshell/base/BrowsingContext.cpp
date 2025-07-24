@@ -3086,9 +3086,6 @@ void BrowsingContext::DidSet(FieldIndex<IDX_ForcedColorsOverride>,
 void BrowsingContext::DidSet(FieldIndex<IDX_LanguageOverride>,
                              nsString&& aOldValue) {
   MOZ_ASSERT(IsTop());
-  if (GetLanguageOverride() == aOldValue) {
-    return;
-  }
 
   PreOrderWalk([&](BrowsingContext* aBrowsingContext) {
     RefPtr<WindowContext> windowContext =
