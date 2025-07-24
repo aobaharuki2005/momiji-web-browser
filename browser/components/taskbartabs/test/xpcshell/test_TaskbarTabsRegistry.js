@@ -203,24 +203,3 @@ add_task(async function test_load_and_save_consistency() {
     "The in-memory mock file output should match the original file on disk."
   );
 });
-
-add_task(async function test_guards_against_commandline_strings() {
-  const validUrl = Services.io.newURI("https://www.test.com/start");
-  const invalidUrl = "https://www.test.com/start";
-
-  const validUserContextId = 0;
-  const invalidUserContextId = "0";
-
-  const registry = new TaskbarTabsRegistry();
-
-  Assert.throws(
-    () => registry.findTaskbarTab(invalidUrl, validUserContextId),
-    /Invalid argument, `aUrl` should be instance of `nsIURI`/,
-    "Should reject URLs provided as a string."
-  );
-  Assert.throws(
-    () => registry.findTaskbarTab(validUrl, invalidUserContextId),
-    /Invalid argument, `aUserContextId` should be type of `number`/,
-    "Should reject userContextId provided as a string."
-  );
-});

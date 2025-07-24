@@ -3,11 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 let lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ShellService: "resource:///modules/ShellService.sys.mjs",
   TaskbarTabsUtils: "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs",
+});
+
+XPCOMUtils.defineLazyServiceGetters(lazy, {
+  Favicons: ["@mozilla.org/browser/favicon-service;1", "nsIFaviconService"],
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
@@ -81,7 +87,26 @@ async function createTaskbarIconFromFavicon(aTaskbarTab) {
   lazy.logConsole.info("Creating Taskbar Tabs shortcut icon.");
 
   let url = Services.io.newURI(aTaskbarTab.startUrl);
-  let imgContainer = await lazy.TaskbarTabsUtils.getFavicon(url);
+  let favicon = await lazy.Favicons.getFaviconForPage(url);
+
+  let imgContainer;
+  if (favicon) {
+    lazy.logConsole.debug(`Using favicon at URI ${favicon.dataURI.spec}.`);
+    try {
+      imgContainer = await getImageFromUri(favicon.dataURI);
+    } catch (e) {
+      lazy.logConsole.error(
+        `${e.message}, falling through to default favicon.`
+      );
+    }
+  }
+
+  if (!imgContainer) {
+    lazy.logConsole.debug(
+      `Unable to retrieve icon for ${aTaskbarTab.startUrl}, using default favicon at ${lazy.Favicons.defaultFavicon.spec}.`
+    );
+    imgContainer = await getImageFromUri(lazy.Favicons.defaultFavicon);
+  }
 
   let iconFile = getIconFile(aTaskbarTab);
 
@@ -92,6 +117,59 @@ async function createTaskbarIconFromFavicon(aTaskbarTab) {
   await lazy.ShellService.createWindowsIcon(iconFile, imgContainer);
 
   return iconFile;
+}
+
+/**
+ * Retrieves an image given a URI.
+ *
+ * @param {nsIURI} aUri - The URI to retrieve an image from.
+ * @returns {Promise<imgIContainer>} Resolves to an image container.
+ */
+async function getImageFromUri(aUri) {
+  // Creating the Taskbar Tabs icon should not result in a network request, so
+  // limit channels to `chrome` and in-memory `data` URIs.
+  if (!(aUri.scheme === "data" || aUri.scheme === "chrome")) {
+    throw new Error(
+      `Scheme "${aUri.scheme}" is not supported for creating a Taskbar Tab icon`
+    );
+  }
+
+  const channel = Services.io.newChannelFromURI(
+    aUri,
+    null,
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    null,
+    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+    Ci.nsIContentPolicy.TYPE_IMAGE
+  );
+
+  const imgTools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
+
+  let decodePromise = Promise.withResolvers();
+  let observer = imgTools.createScriptedObserver({
+    sizeAvailable() {
+      decodePromise.resolve();
+    },
+  });
+
+  let imgPromise = Promise.withResolvers();
+  imgTools.decodeImageFromChannelAsync(
+    aUri,
+    channel,
+    (img, status) => {
+      if (!Components.isSuccessCode(status)) {
+        imgPromise.reject(
+          new Error(`Error retrieving image from URI ${aUri.spec}`)
+        );
+      } else {
+        imgPromise.resolve(img);
+      }
+    },
+    observer
+  );
+
+  let [img] = await Promise.all([imgPromise.promise, decodePromise.promise]);
+  return img;
 }
 
 /**

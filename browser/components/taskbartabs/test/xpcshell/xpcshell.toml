@@ -9,6 +9,3 @@ support-files = [
 
 ["test_taskbarTabs_pin.js"]
 support-files = ["../../../places/tests/browser/favicon-normal16.png"]
-
-["test_taskbarTabs_utils.js"]
-support-files = ["../../../places/tests/browser/favicon-normal16.png"]
