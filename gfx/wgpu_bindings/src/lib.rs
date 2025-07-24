@@ -359,7 +359,11 @@ pub enum BufferMapResult<'a> {
 enum ServerMessage<'a> {
     RequestAdapterResponse(id::AdapterId, Option<AdapterInformation<Cow<'a, str>>>),
     RequestDeviceResponse(id::DeviceId, id::QueueId, Option<String>),
-    PopErrorScopeResponse(u8 /* PopErrorScopeResultType */, Cow<'a, str>),
+    PopErrorScopeResponse(
+        id::DeviceId,
+        u8, /* PopErrorScopeResultType */
+        Cow<'a, str>,
+    ),
     CreateRenderPipelineResponse {
         pipeline_id: id::RenderPipelineId,
         implicit_ids: Option<ImplicitLayout<'a>>,
@@ -370,9 +374,9 @@ enum ServerMessage<'a> {
         implicit_ids: Option<ImplicitLayout<'a>>,
         error: Option<PipelineError>,
     },
-    CreateShaderModuleResponse(Vec<ShaderModuleCompilationMessage>),
+    CreateShaderModuleResponse(id::ShaderModuleId, Vec<ShaderModuleCompilationMessage>),
     BufferMapResponse(id::BufferId, BufferMapResult<'a>),
-    QueueOnSubmittedWorkDoneResponse,
+    QueueOnSubmittedWorkDoneResponse(id::QueueId),
 }
 
 #[repr(C)]
