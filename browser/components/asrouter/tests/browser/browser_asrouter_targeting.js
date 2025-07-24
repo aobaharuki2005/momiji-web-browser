@@ -21,10 +21,54 @@ ChromeUtils.defineESModuleGetters(this, {
   QueryCache: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   ShellService: "resource:///modules/ShellService.sys.mjs",
+  Spotlight: "resource:///modules/asrouter/Spotlight.sys.mjs",
   TargetingContext: "resource://messaging-system/targeting/Targeting.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   TelemetrySession: "resource://gre/modules/TelemetrySession.sys.mjs",
 });
+
+const { DefaultBrowserCheck } = ChromeUtils.importESModule(
+  "moz-src:///browser/components/DefaultBrowserCheck.sys.mjs"
+);
+
+const testFeatureCallout = {
+  id: "TEST_MESSAGE",
+  template: "feature_callout",
+  content: {
+    id: "TEST_MESSAGE",
+    template: "multistage",
+    backdrop: "transparent",
+    transitions: false,
+    screens: [
+      {
+        id: "TEST_MESSAGE_1",
+        anchors: [
+          { selector: "#PanelUI-menu-button", arrow_position: "top-end" },
+        ],
+        content: {
+          position: "callout",
+          title: {
+            raw: "Test title",
+          },
+          subtitle: {
+            raw: "Test subtitle",
+          },
+          primary_button: {
+            label: {
+              raw: "Done",
+            },
+            action: {
+              navigate: true,
+            },
+          },
+        },
+      },
+    ],
+  },
+  priority: 1,
+  targeting: "true",
+  trigger: { id: "defaultBrowserCheck" },
+};
 
 function sendFormAutofillMessage(name, data) {
   let actor =
@@ -2019,6 +2063,79 @@ add_task(async function check_activeNotifications_newtabMessages() {
 
   // clean up
   Services.obs.removeObserver(testObserver, "newtab-message-query");
+});
+
+add_task(async function activeNotifications_default_prompt_shown() {
+  let sb = sinon.createSandbox();
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+
+  sb.stub(DefaultBrowserCheck, "willCheckDefaultBrowser").returns(true);
+  const promptSpy = sb.spy(DefaultBrowserCheck, "prompt");
+
+  await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
+
+  Assert.equal(promptSpy.callCount, 1, "default prompt should be called");
+
+  is(
+    await ASRouterTargeting.Environment.activeNotifications,
+    true,
+    "activeNotifications should be true if the set to default prompt is being shown"
+  );
+  await BrowserTestUtils.closeWindow(win);
+  sb.restore();
+});
+
+add_task(async function activeNotifications_feature_callout_shown() {
+  let sb = sinon.createSandbox();
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+
+  let callout = await FeatureCalloutBroker.showFeatureCallout(
+    win.gBrowser.selectedBrowser,
+    testFeatureCallout
+  );
+  ok(callout, "Callout shown");
+
+  is(
+    await ASRouterTargeting.Environment.activeNotifications,
+    true,
+    "activeNotifications should be true if a feature callout is being shown"
+  );
+  await BrowserTestUtils.closeWindow(win);
+  sb.restore();
+});
+
+add_task(async function activeNotifications_spotlight_shown() {
+  let sb = sinon.createSandbox();
+  const IMPORT_SCREEN = {
+    id: "AW_IMPORT",
+    content: {
+      primary_button: {
+        label: "import",
+        action: {
+          navigate: true,
+          type: "SHOW_MIGRATION_WIZARD",
+        },
+      },
+    },
+  };
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+
+  Spotlight.showSpotlightDialog(win.gBrowser.selectedBrowser, {
+    content: { modal: "tab", screens: [IMPORT_SCREEN] },
+  });
+
+  await TestUtils.waitForCondition(
+    () => win.document.readyState === "complete",
+    "Waiting for spotlight dialog to finish loading"
+  );
+
+  is(
+    await ASRouterTargeting.Environment.activeNotifications,
+    true,
+    "activeNotifications should be true if a spotlight is being shown"
+  );
+  await BrowserTestUtils.closeWindow(win);
+  sb.restore();
 });
 
 add_task(async function check_unhandledCampaignAction() {
