@@ -91,6 +91,7 @@ def get_valid_source_versions(current_version, locale):
     valid_versions = []
     for major in range(earliest_version, earliest_version + 3):
         minor_versions = [0]
+        valid_versions.append(f"{major}.0")
         for minor in range(1, 11):
             if fx_version_exists(f"{major}.{minor}", locale):
                 minor_versions.append(minor)
