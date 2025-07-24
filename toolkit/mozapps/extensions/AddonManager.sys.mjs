@@ -1256,11 +1256,21 @@ var AddonManagerInternal = {
     let newPerms = info.addon.userPermissions;
     let difference = lazy.Extension.comparePermissions(oldPerms, newPerms);
 
+    // When an update for an existing add-on includes data collection
+    // permissions, which the add-ons didn't have so far, and the manifest
+    // contains a flag to indicate that there was a previous consent, then we
+    // allow the update to just proceed, unless there are other new required
+    // permissions.
+    const updateIsMigratingToDataCollectionPerms =
+      !info.existingAddon.hasDataCollectionPermissions &&
+      info.install.addonHasPreviousConsent;
+
     // If there are no new permissions, just go ahead with the update
     if (
       !difference.origins.length &&
       !difference.permissions.length &&
-      !difference.data_collection.length
+      (updateIsMigratingToDataCollectionPerms ||
+        !difference.data_collection.length)
     ) {
       return Promise.resolve();
     }
