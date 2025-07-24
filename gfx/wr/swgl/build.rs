@@ -47,8 +47,8 @@ fn process_imports(
     if !included.insert(shader.into()) {
         return;
     }
-    println!("cargo:rerun-if-changed={}/{}.glsl", shader_dir, shader);
-    let source = std::fs::read_to_string(format!("{}/{}.glsl", shader_dir, shader)).unwrap();
+    println!("cargo:rerun-if-changed={shader_dir}/{shader}.glsl");
+    let source = std::fs::read_to_string(format!("{shader_dir}/{shader}.glsl")).unwrap();
     for line in source.lines() {
         if let Some(imports) = line.strip_prefix("#include ") {
             let imports = imports.split(',');
@@ -80,7 +80,7 @@ fn translate_shader(
         shader_key.split_at(shader_key.find(' ').unwrap_or(shader_key.len()));
     if !features.is_empty() {
         for feature in features.trim().split(',') {
-            let _ = writeln!(imported, "#define WR_FEATURE_{}", feature);
+            let _ = writeln!(imported, "#define WR_FEATURE_{feature}");
         }
     }
 
@@ -89,7 +89,7 @@ fn translate_shader(
     let shader = shader_file(shader_key);
 
     let out_dir = std::env::var("OUT_DIR").unwrap();
-    let imp_name = format!("{}/{}.c", out_dir, shader);
+    let imp_name = format!("{out_dir}/{shader}.c");
     std::fs::write(&imp_name, imported).unwrap();
 
     // We need to ensure that the C preprocessor does not pull compiler flags from the host or
@@ -126,14 +126,14 @@ fn translate_shader(
         .clone()
         .define("WR_FRAGMENT_SHADER", Some("1"))
         .expand();
-    let vs_name = format!("{}/{}.vert", out_dir, shader);
-    let fs_name = format!("{}/{}.frag", out_dir, shader);
+    let vs_name = format!("{out_dir}/{shader}.vert");
+    let fs_name = format!("{out_dir}/{shader}.frag");
     std::fs::write(&vs_name, vs).unwrap();
     std::fs::write(&fs_name, fs).unwrap();
 
     let args = vec!["glsl_to_cxx".to_string(), vs_name, fs_name];
     let result = glsl_to_cxx::translate(&mut args.into_iter());
-    std::fs::write(format!("{}/{}.h", out_dir, shader), result).unwrap();
+    std::fs::write(format!("{out_dir}/{shader}.h"), result).unwrap();
 }
 
 fn main() {
@@ -149,7 +149,7 @@ fn main() {
             if f.is_empty() {
                 name.to_owned()
             } else {
-                format!("{} {}", name, f)
+                format!("{name} {f}")
             }
         }));
     }
