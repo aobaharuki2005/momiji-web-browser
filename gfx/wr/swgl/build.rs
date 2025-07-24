@@ -95,22 +95,15 @@ fn translate_shader(
     // We need to ensure that the C preprocessor does not pull compiler flags from the host or
     // target environment. Set all `CFLAGS` or `CXXFLAGS` env. vars. to empty to work around this.
     let _ = suppressed_env_vars.get_or_insert_with(|| {
-        let mut env_vars = Vec::new();
-        for (key, value) in std::env::vars_os() {
-            if let Some(key_utf8) = key.to_str() {
-                if ["CFLAGS", "CXXFLAGS"]
-                    .iter()
-                    .any(|opt_name| key_utf8.contains(opt_name))
-                {
-                    std::env::set_var(&key, "");
-                    env_vars.push(EnvVarGuard {
-                        key,
-                        old_value: Some(value),
-                    });
+        cflags_env_vars()
+            .map(|(key, value)| {
+                std::env::set_var(&key, "");
+                EnvVarGuard {
+                    key,
+                    old_value: Some(value),
                 }
-            }
-        }
-        env_vars
+            })
+            .collect::<Vec<_>>()
     });
 
     let mut build = cc::Build::new();
@@ -251,4 +244,14 @@ impl Drop for EnvVarGuard {
             std::env::remove_var(key);
         }
     }
+}
+
+fn cflags_env_vars() -> impl Iterator<Item = (std::ffi::OsString, std::ffi::OsString)> {
+    std::env::vars_os().filter(|(key, _value)| {
+        key.to_str().is_some_and(|key_utf8| {
+            ["CFLAGS", "CXXFLAGS"]
+                .iter()
+                .any(|opt_name| key_utf8.contains(opt_name))
+        })
+    })
 }
