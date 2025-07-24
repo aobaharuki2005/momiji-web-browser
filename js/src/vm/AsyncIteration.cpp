@@ -398,8 +398,6 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 
     CompletionKind completionKind = toYield->completionKind();
 
-    generator->setSuspendedYield();
-
     // Step 11.c. Let resumptionValue be Completion(toYield.[[Completion]]).
     RootedValue completionValue(cx, toYield->completionValue());
 
