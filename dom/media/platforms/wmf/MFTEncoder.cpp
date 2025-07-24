@@ -560,9 +560,7 @@ MFTEncoder::SetMediaTypes(IMFMediaType* aInputType, IMFMediaType* aOutputType) {
     RefPtr<IMFMediaEventGenerator> source;
     MFT_RETURN_IF_FAILED(mEncoder->QueryInterface(IID_PPV_ARGS(
         static_cast<IMFMediaEventGenerator**>(getter_AddRefs(source)))));
-    mEventSource.SetAsyncEventGenerator(source.forget());
-  } else {
-    mEventSource.InitSyncMFTEventQueue();
+    mAsyncEventGenerator = source.forget();
   }
 
   mNumNeedInput = 0;
@@ -745,52 +743,29 @@ MFTEncoder::SetBitrate(UINT32 aBitsPerSec) {
   return mConfig->SetValue(&CODECAPI_AVEncCommonMeanBitRate, &var);
 }
 
+template <typename T, typename E, bool IsExclusive = true>
+static auto ResultToPromise(Result<T, E>&& aResult) {
+  if (aResult.isErr()) {
+    return MozPromise<T, E, IsExclusive>::CreateAndReject(aResult.unwrapErr(),
+                                                          __func__);
+  }
+  return MozPromise<T, E, IsExclusive>::CreateAndResolve(aResult.unwrap(),
+                                                         __func__);
+};
+
 RefPtr<MFTEncoder::EncodePromise> MFTEncoder::Encode(InputSample&& aInput) {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
 
-  if (mEventSource.IsSync()) {
-    auto r = EncodeSync(std::move(aInput));
-    if (r.isErr()) {
-      return EncodePromise::CreateAndReject(r.unwrapErr(), __func__);
-    }
-    return EncodePromise::CreateAndResolve(r.unwrap(), __func__);
-  }
-
-  HRESULT hr = PushInput(std::move(aInput));
-  if (FAILED(hr)) {
-    return EncodePromise::CreateAndReject(
-        MediaResult(
-            NS_ERROR_DOM_MEDIA_FATAL_ERR,
-            RESULT_DETAIL("failed to push input: %s", ErrorMessage(hr).get())),
-        __func__);
-  }
-
-  return EncodePromise::CreateAndResolve(TakeOutput(), __func__);
+  return ResultToPromise(IsAsync() ? EncodeAsync(std::move(aInput))
+                                   : EncodeSync(std::move(aInput)));
 }
 
 RefPtr<MFTEncoder::EncodePromise> MFTEncoder::Drain() {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
 
-  if (mEventSource.IsSync()) {
-    auto r = DrainSync();
-    if (r.isErr()) {
-      return EncodePromise::CreateAndReject(r.unwrapErr(), __func__);
-    }
-    return EncodePromise::CreateAndResolve(r.unwrap(), __func__);
-  }
-
-  nsTArray<OutputSample> outputs;
-  HRESULT hr = Drain(outputs);
-  if (FAILED(hr)) {
-    return EncodePromise::CreateAndReject(
-        MediaResult(
-            NS_ERROR_DOM_MEDIA_FATAL_ERR,
-            RESULT_DETAIL("failed to drain: %s", ErrorMessage(hr).get())),
-        __func__);
-  }
-  return EncodePromise::CreateAndResolve(std::move(outputs), __func__);
+  return ResultToPromise(IsAsync() ? DrainAsync() : DrainSync());
 }
 
 static HRESULT CreateSample(RefPtr<IMFSample>* aOutSample, DWORD aSize,
@@ -827,16 +802,11 @@ Result<MFTEncoder::EncodedData, MediaResult> MFTEncoder::EncodeSync(
 
   // Follow steps in
   // https://learn.microsoft.com/en-us/windows/win32/medfound/basic-mft-processing-model#process-data
-  HRESULT hr = mEncoder->ProcessInput(mInputStreamID, aInput.mSample, 0);
+  HRESULT hr = ProcessInput(std::move(aInput));
   if (FAILED(hr)) {
     return Err(MediaResult(
         NS_ERROR_DOM_MEDIA_FATAL_ERR,
         RESULT_DETAIL("ProcessInput error: %s", ErrorMessage(hr).get())));
-  }
-
-  if (aInput.mKeyFrameRequested) {
-    VARIANT v = {.vt = VT_UI4, .ulVal = 1};
-    mConfig->SetValue(&CODECAPI_AVEncVideoForceKeyFrame, &v);
   }
 
   DWORD flags = 0;
@@ -920,212 +890,179 @@ Result<MFTEncoder::EncodedData, HRESULT> MFTEncoder::PullOutputs() {
   return outputs;
 }
 
-HRESULT
-MFTEncoder::PushInput(InputSample&& aInput) {
+Result<MFTEncoder::EncodedData, MediaResult> MFTEncoder::EncodeAsync(
+    InputSample&& aInput) {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
 
   mPendingInputs.push_back(std::move(aInput));
-  if (mEventSource.IsSync() && mNumNeedInput == 0) {
-    // To step 2 in
-    // https://docs.microsoft.com/en-us/windows/win32/medfound/basic-mft-processing-model#process-data
-    mNumNeedInput++;
-  }
+  auto r = MOZ_TRY(ProcessInput().mapErr([](HRESULT hr) {
+    return MediaResult(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR,
+        RESULT_DETAIL("ProcessInput error: %s", ErrorMessage(hr).get()));
+  }));
+  MFT_ENC_LOGV("input processed: %s", MFTEncoder::EnumValueToString(r));
 
-  MFT_RETURN_IF_FAILED(ProcessInput());
+  // If the underlying system signaled that more input is needed, continue
+  // processing inputs until either no more input is required or there are no
+  // pending inputs left.
+  MOZ_TRY(ProcessPendingEvents().mapErr([](HRESULT hr) {
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       RESULT_DETAIL("ProcessPendingEvents error: %s",
+                                     ErrorMessage(hr).get()));
+  }));
+  MOZ_ASSERT(mNumNeedInput == 0 || mPendingInputs.empty());
 
-  return ProcessEvents();
+  EncodedData outputs = std::move(mOutputs);
+  return outputs;
 }
 
-HRESULT MFTEncoder::ProcessInput() {
+Result<MFTEncoder::EncodedData, MediaResult> MFTEncoder::DrainAsync() {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
 
+  // Ensure all pending inputs are processed before initiating the drain. If any
+  // pending inputs remain, the input-needed count must be zero; otherwise, they
+  // would have been processed in Encode().
+  MOZ_ASSERT_IF(!mPendingInputs.empty(), mNumNeedInput == 0);
+  while (!mPendingInputs.empty()) {
+    MFT_ENC_LOGV("Pending inputs: %zu, inputs needed: %zu",
+                 mPendingInputs.size(), mNumNeedInput);
+    // Prompt the MFT to process pending inputs or collect any pending outputs,
+    // which may allow more inputs to be accepted.
+    MOZ_TRY(ProcessPendingEvents().mapErr([](HRESULT hr) {
+      return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                         RESULT_DETAIL("ProcessPendingEvents error: %s",
+                                       ErrorMessage(hr).get()));
+    }));
+  }
+
+  HRESULT hr = SendMFTMessage(MFT_MESSAGE_COMMAND_DRAIN, 0);
+  if (FAILED(hr)) {
+    return Err(MediaResult(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR,
+        RESULT_DETAIL("SendMFTMessage MFT_MESSAGE_COMMAND_DRAIN error: %s",
+                      ErrorMessage(hr).get())));
+  }
+
+  ProcessedResults results;
+  do {
+    results = MOZ_TRY(ProcessPendingEvents().mapErr([](HRESULT hr) {
+      return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                         RESULT_DETAIL("ProcessPendingEvents error: %s",
+                                       ErrorMessage(hr).get()));
+    }));
+  } while (!results.contains(ProcessedResult::DrainComplete));
+
+  EncodedData outputs = std::move(mOutputs);
+  return outputs;
+}
+
+Result<MFTEncoder::ProcessedResults, HRESULT>
+MFTEncoder::ProcessPendingEvents() {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+  MOZ_ASSERT(mEncoder);
+  MOZ_ASSERT(mAsyncEventGenerator);
+
+  ProcessedResults results;
+  while (true) {
+    auto got = GetPendingEvent();
+    if (got.isErr()) {
+      HRESULT hr = got.unwrapErr();
+      if (hr == MF_E_NO_EVENTS_AVAILABLE) {
+        MFT_ENC_LOGV("No more pending events");
+        break;
+      }
+      MFT_ENC_LOGE("GetPendingEvent error: %s", ErrorMessage(hr).get());
+      return Err(hr);
+    }
+
+    MediaEventType event = got.unwrap();
+    MFT_ENC_LOGV("Processing pending event: %s", MediaEventTypeStr(event));
+    ProcessedResult result = MOZ_TRY(ProcessEvent(event));
+    MFT_ENC_LOGV("event processed: %s", MFTEncoder::EnumValueToString(result));
+    results += result;
+  }
+
+  return results;
+}
+
+Result<MFTEncoder::ProcessedResult, HRESULT> MFTEncoder::ProcessEvent(
+    MediaEventType aType) {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+  MOZ_ASSERT(mEncoder);
+
+  switch (aType) {
+    case METransformNeedInput:
+      ++mNumNeedInput;
+      return ProcessInput();
+    case METransformHaveOutput:
+      return ProcessOutput();
+    case METransformDrainComplete:
+      return ProcessedResult::DrainComplete;
+    default:
+      MFT_ENC_LOGE("Unsupported event type: %s", MediaEventTypeStr(aType));
+      break;
+  }
+  return Err(E_UNEXPECTED);
+}
+
+Result<MFTEncoder::ProcessedResult, HRESULT> MFTEncoder::ProcessInput() {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+  MOZ_ASSERT(mEncoder);
+
+  MFT_ENC_LOGV("Inputs needed: %zu, pending inputs: %zu", mNumNeedInput,
+               mPendingInputs.size());
   if (mNumNeedInput == 0 || mPendingInputs.empty()) {
-    return S_OK;
+    return ProcessedResult::AllAvailableInputsProcessed;
   }
 
   auto input = mPendingInputs.front();
   mPendingInputs.pop_front();
-
-  HRESULT hr = mEncoder->ProcessInput(mInputStreamID, input.mSample, 0);
-
-  if (input.mKeyFrameRequested) {
-    VARIANT v = {.vt = VT_UI4, .ulVal = 1};
-    mConfig->SetValue(&CODECAPI_AVEncVideoForceKeyFrame, &v);
-  }
-  if (FAILED(hr)) {
-    MFT_ENC_LOGE("ProcessInput failed: %s", ErrorMessage(hr).get());
-    return hr;
-  }
+  MFT_RETURN_ERROR_IF_FAILED(ProcessInput(std::move(input)));
   --mNumNeedInput;
 
-  if (!mEventSource.IsSync()) {
-    return S_OK;
-  }
-  // For sync MFT: Step 3 in
-  // https://docs.microsoft.com/en-us/windows/win32/medfound/basic-mft-processing-model#process-data
-  DWORD flags = 0;
-  hr = mEncoder->GetOutputStatus(&flags);
-  MediaEventType evType = MEUnknown;
-  switch (hr) {
-    case S_OK:
-      evType = flags == MFT_OUTPUT_STATUS_SAMPLE_READY
-                   ? METransformHaveOutput  // To step 4: ProcessOutput().
-                   : METransformNeedInput;  // To step 2: ProcessInput().
-      break;
-    case E_NOTIMPL:
-      evType = METransformHaveOutput;  // To step 4: ProcessOutput().
-      break;
-    default:
-      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("undefined output status");
-      return hr;
-  }
-  return mEventSource.QueueSyncMFTEvent(evType);
+  return ProcessedResult::InputProcessed;
 }
 
-HRESULT MFTEncoder::ProcessEventsInternal() {
+Result<MFTEncoder::ProcessedResult, HRESULT> MFTEncoder::ProcessOutput() {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
 
-  HRESULT hr = E_FAIL;
-  while (true) {
-    Event event = mEventSource.GetEvent();
-    if (event.isErr()) {
-      hr = event.unwrapErr();
-      break;
-    }
-
-    MediaEventType evType = event.unwrap();
-    MFT_ENC_LOGV("processing event: %s", MediaEventTypeStr(evType));
-    switch (evType) {
-      case METransformNeedInput:
-        ++mNumNeedInput;
-        MFT_RETURN_IF_FAILED(ProcessInput());
-        break;
-      case METransformHaveOutput:
-        MFT_RETURN_IF_FAILED(ProcessOutput());
-        break;
-      case METransformDrainComplete:
-        SetDrainState(DrainState::DRAINED);
-        break;
-      default:
-        MFT_ENC_LOGE("unsupported event: %s", MediaEventTypeStr(evType));
-    }
+  OutputResult result = MOZ_TRY(GetOutputOrNewHeader());
+  if (result.IsHeader()) {
+    mOutputHeader = result.TakeHeader();
+    MFT_ENC_LOGD("Got new MPEG header, size: %zu", mOutputHeader.Length());
+    return ProcessedResult::OutputYielded;
   }
 
-  switch (hr) {
-    case MF_E_NO_EVENTS_AVAILABLE:
-      return S_OK;
-    case MF_E_MULTIPLE_SUBSCRIBERS:
-    default:
-      MFT_ENC_LOGE("failed to get event: %s", ErrorMessage(hr).get());
-      return hr;
-  }
-}
-
-HRESULT MFTEncoder::ProcessEvents() {
-  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
-  MOZ_ASSERT(mEncoder);
-
-  HRESULT hr = ProcessEventsInternal();
-  if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
-    auto r = GetMPEGSequenceHeader();
-    if (r.isErr()) {
-      MFT_ENC_LOGE("GetMPEGSequenceHeader failed: %s",
-                   ErrorMessage(r.unwrapErr()).get());
-      return r.unwrapErr();
-    }
-    mOutputHeader = r.unwrap();
-    MFT_ENC_LOGD("MPEG sequence header length: %zu. Try getting output again",
-                 mOutputHeader.Length());
-    // Try to get output again after output format negotiation.
-    if (mEventSource.IsSync()) {
-      mEventSource.QueueSyncMFTEvent(METransformHaveOutput);
-    }
-    return ProcessEventsInternal();
-  }
-  return hr;
-}
-
-HRESULT MFTEncoder::ProcessOutput() {
-  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
-  MOZ_ASSERT(mEncoder);
-
-  RefPtr<IMFSample> sample;
-  DWORD status = 0;
-  DWORD bufStatus = 0;
-  HRESULT hr = ProcessOutput(sample, status, bufStatus);
-  if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
-    MFT_ENC_LOGW("output stream change");
-    if (bufStatus & MFT_OUTPUT_DATA_BUFFER_FORMAT_CHANGE) {
-      MFT_RETURN_IF_FAILED(UpdateOutputType());
-    }
-    return hr;
-  }
-
-  // Step 8 in
-  // https://docs.microsoft.com/en-us/windows/win32/medfound/basic-mft-processing-model#process-data
-  if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
-    MOZ_ASSERT(mEventSource.IsSync());
-    MOZ_ASSERT(mDrainState == DrainState::DRAINING);
-
-    mEventSource.QueueSyncMFTEvent(METransformDrainComplete);
-    return S_OK;
-  }
-
-  if (FAILED(hr)) {
-    MFT_ENC_LOGE("ProcessOutput failed: %s", ErrorMessage(hr).get());
-    return hr;
-  }
-
-  mOutputs.AppendElement(OutputSample{.mSample = sample.forget()});
+  MOZ_ASSERT(result.IsSample());
+  mOutputs.AppendElement(OutputSample{.mSample = result.TakeSample()});
   if (!mOutputHeader.IsEmpty()) {
     mOutputs.LastElement().mHeader = std::move(mOutputHeader);
   }
-
-  return S_OK;
+  return ProcessedResult::OutputYielded;
 }
 
-nsTArray<MFTEncoder::OutputSample> MFTEncoder::TakeOutput() {
-  return std::move(mOutputs);
-}
-
-HRESULT MFTEncoder::Drain(nsTArray<OutputSample>& aOutput) {
+Result<MediaEventType, HRESULT> MFTEncoder::GetPendingEvent() {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
-  MOZ_ASSERT(aOutput.Length() == 0);
+  MOZ_ASSERT(mAsyncEventGenerator);
 
-  switch (mDrainState) {
-    case DrainState::DRAINABLE:
-      // Exhaust pending inputs.
-      while (!mPendingInputs.empty()) {
-        if (mEventSource.IsSync()) {
-          // Step 5 in
-          // https://docs.microsoft.com/en-us/windows/win32/medfound/basic-mft-processing-model#process-data
-          mEventSource.QueueSyncMFTEvent(METransformNeedInput);
-        }
-        MFT_RETURN_IF_FAILED(ProcessEvents());
-      }
-      SendMFTMessage(MFT_MESSAGE_COMMAND_DRAIN, 0);
-      SetDrainState(DrainState::DRAINING);
-      [[fallthrough]];  // To collect and return outputs.
-    case DrainState::DRAINING:
-      // Collect remaining outputs.
-      while (mDrainState != DrainState::DRAINED) {
-        if (mEventSource.IsSync()) {
-          // Step 8 in
-          // https://docs.microsoft.com/en-us/windows/win32/medfound/basic-mft-processing-model#process-data
-          mEventSource.QueueSyncMFTEvent(METransformHaveOutput);
-        }
-        MFT_RETURN_IF_FAILED(ProcessEvents());
-      }
-      [[fallthrough]];  // To return outputs.
-    case DrainState::DRAINED:
-      aOutput.SwapElements(mOutputs);
-      SetDrainState(DrainState::DRAINABLE);
-      return S_OK;
+  RefPtr<IMFMediaEvent> event;
+  HRESULT hr = mAsyncEventGenerator->GetEvent(MF_EVENT_FLAG_NO_WAIT,
+                                              getter_AddRefs(event));
+  if (FAILED(hr)) {
+    if (hr == MF_E_NO_EVENTS_AVAILABLE) {
+      MFT_ENC_LOGV("GetEvent: %s", ErrorMessage(hr).get());
+    } else {
+      MFT_ENC_LOGE("GetEvent: %s", ErrorMessage(hr).get());
+    }
+    return Err(hr);
   }
+  MediaEventType type = MEUnknown;
+  MFT_RETURN_ERROR_IF_FAILED(event->GetType(&type));
+  return type;
 }
 
 Result<MFTEncoder::OutputResult, HRESULT> MFTEncoder::GetOutputOrNewHeader() {
@@ -1214,6 +1151,19 @@ HRESULT MFTEncoder::ProcessOutput(RefPtr<IMFSample>& aSample,
   return hr;
 }
 
+HRESULT MFTEncoder::ProcessInput(InputSample&& aInput) {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+  MOZ_ASSERT(mEncoder);
+
+  MFT_RETURN_IF_FAILED(
+      mEncoder->ProcessInput(mInputStreamID, aInput.mSample, 0));
+  if (aInput.mKeyFrameRequested) {
+    VARIANT v = {.vt = VT_UI4, .ulVal = 1};
+    mConfig->SetValue(&CODECAPI_AVEncVideoForceKeyFrame, &v);
+  }
+  return S_OK;
+}
+
 Result<nsTArray<UINT8>, HRESULT> MFTEncoder::GetMPEGSequenceHeader() {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
@@ -1246,61 +1196,6 @@ Result<nsTArray<UINT8>, HRESULT> MFTEncoder::GetMPEGSequenceHeader() {
 
   return header;
 }
-
-void MFTEncoder::SetDrainState(DrainState aState) {
-  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
-  MOZ_ASSERT(mEncoder);
-
-  MFT_ENC_LOGD("SetDrainState: %s -> %s", EnumValueToString(mDrainState),
-               EnumValueToString(aState));
-  mDrainState = aState;
-}
-
-MFTEncoder::Event MFTEncoder::EventSource::GetEvent() {
-  if (IsSync()) {
-    return GetSyncMFTEvent();
-  }
-
-  RefPtr<IMFMediaEvent> event;
-  HRESULT hr = mImpl.as<RefPtr<IMFMediaEventGenerator>>()->GetEvent(
-      MF_EVENT_FLAG_NO_WAIT, getter_AddRefs(event));
-  MediaEventType type = MEUnknown;
-  if (SUCCEEDED(hr)) {
-    hr = event->GetType(&type);
-  }
-  return SUCCEEDED(hr) ? Event{type} : Event{hr};
-}
-
-HRESULT MFTEncoder::EventSource::QueueSyncMFTEvent(MediaEventType aEventType) {
-  MOZ_ASSERT(IsSync());
-  MOZ_ASSERT(IsOnCurrentThread());
-
-  auto q = mImpl.as<UniquePtr<EventQueue>>().get();
-  q->push(aEventType);
-  return S_OK;
-}
-
-MFTEncoder::Event MFTEncoder::EventSource::GetSyncMFTEvent() {
-  MOZ_ASSERT(IsOnCurrentThread());
-
-  auto q = mImpl.as<UniquePtr<EventQueue>>().get();
-  if (q->empty()) {
-    return Event{MF_E_NO_EVENTS_AVAILABLE};
-  }
-
-  MediaEventType type = q->front();
-  q->pop();
-  return Event{type};
-}
-
-#ifdef DEBUG
-bool MFTEncoder::EventSource::IsOnCurrentThread() {
-  if (!mThread) {
-    mThread = GetCurrentSerialEventTarget();
-  }
-  return mThread->IsOnCurrentThread();
-}
-#endif
 
 }  // namespace mozilla
 
