@@ -20,7 +20,7 @@ interface AppIconRepository {
     /**
      * Icons available for the user to choose from.
      */
-    val groupedAppIcons: Map<GroupTitle, List<AppIcon>>
+    val groupedAppIcons: Map<IconGroupTitle, List<AppIcon>>
 }
 
 /**
@@ -37,9 +37,9 @@ class DefaultAppIconRepository(
             settings.selectedAppIcon = value.aliasSuffix
         }
 
-    override val groupedAppIcons: Map<GroupTitle, List<AppIcon>>
+    override val groupedAppIcons: Map<IconGroupTitle, List<AppIcon>>
         get() = mapOf(
-            GroupTitle(R.string.alternative_app_icon_group_solid_colors) to listOf(
+            IconGroupTitle(R.string.alternative_app_icon_group_solid_colors) to listOf(
                 AppIcon.AppDefault,
                 AppIcon.AppSolidLight,
                 AppIcon.AppSolidDark,
@@ -49,7 +49,7 @@ class DefaultAppIconRepository(
                 AppIcon.AppSolidPurple,
                 AppIcon.AppSolidPurpleDark,
             ),
-            GroupTitle(R.string.alternative_app_icon_group_gradients) to listOf(
+            IconGroupTitle(R.string.alternative_app_icon_group_gradients) to listOf(
                 AppIcon.AppGradientSunrise,
                 AppIcon.AppGradientGoldenHour,
                 AppIcon.AppGradientSunset,
@@ -58,7 +58,7 @@ class DefaultAppIconRepository(
                 AppIcon.AppGradientMidnight,
                 AppIcon.AppGradientNorthernLights,
             ),
-            GroupTitle(R.string.alternative_app_icon_group_other) to listOf(
+            IconGroupTitle(R.string.alternative_app_icon_group_other) to listOf(
                 AppIcon.AppRetro2004,
                 AppIcon.AppRetro2017,
                 AppIcon.AppPixelated,

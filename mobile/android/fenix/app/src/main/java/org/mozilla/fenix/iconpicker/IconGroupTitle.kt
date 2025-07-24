@@ -7,8 +7,8 @@ package org.mozilla.fenix.iconpicker
 import androidx.annotation.StringRes
 
 /**
- * Type that represents a group title in the icon picker UI.
+ * Type that represents an icon group title in the icon picker UI.
  *
  * @property titleId A string resource describing the group title.
  */
-data class GroupTitle(@param:StringRes val titleId: Int)
+data class IconGroupTitle(@param:StringRes val titleId: Int)

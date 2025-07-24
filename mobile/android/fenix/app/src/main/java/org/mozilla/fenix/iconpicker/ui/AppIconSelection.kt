@@ -45,8 +45,8 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.button.RadioButton
 import org.mozilla.fenix.iconpicker.AppIcon
 import org.mozilla.fenix.iconpicker.DefaultAppIconRepository
-import org.mozilla.fenix.iconpicker.GroupTitle
 import org.mozilla.fenix.iconpicker.IconBackground
+import org.mozilla.fenix.iconpicker.IconGroupTitle
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.Settings
 
@@ -69,7 +69,7 @@ private val GroupSpacerHeight = 8.dp
 @Composable
 fun AppIconSelection(
     currentAppIcon: AppIcon,
-    groupedIconOptions: Map<GroupTitle, List<AppIcon>>,
+    groupedIconOptions: Map<IconGroupTitle, List<AppIcon>>,
     onAppIconSelected: (AppIcon) -> Unit,
 ) {
     var selectedAppIcon by remember { mutableStateOf<AppIcon?>(null) }
@@ -120,7 +120,7 @@ fun AppIconSelection(
 }
 
 @Composable
-private fun AppIconGroupHeader(title: GroupTitle) {
+private fun AppIconGroupHeader(title: IconGroupTitle) {
     Text(
         text = stringResource(id = title.titleId),
         modifier = Modifier
