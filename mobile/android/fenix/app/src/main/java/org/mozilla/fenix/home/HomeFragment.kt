@@ -491,10 +491,6 @@ class HomeFragment : Fragment() {
                         this@HomeFragment.removeCollectionWithUndo(tabCollection)
                     }
 
-                    override fun showUndoSnackbarForTopSite(topSite: TopSite) {
-                        this@HomeFragment.showUndoSnackbarForTopSite(topSite)
-                    }
-
                     override fun showTabTray() {
                         this@HomeFragment.openTabsTray()
                     }
@@ -812,23 +808,6 @@ class HomeFragment : Fragment() {
 
     private fun shouldShowMicrosurveyPrompt(context: Context) =
         context.components.settings.shouldShowMicrosurveyPrompt
-
-    @VisibleForTesting
-    internal fun showUndoSnackbarForTopSite(topSite: TopSite) {
-        lifecycleScope.allowUndo(
-            view = binding.dynamicSnackbarContainer,
-            message = getString(R.string.snackbar_top_site_removed),
-            undoActionTitle = getString(R.string.snackbar_deleted_undo),
-            onCancel = {
-                requireComponents.useCases.topSitesUseCase.addPinnedSites(
-                    topSite.title.toString(),
-                    topSite.url,
-                )
-            },
-            operation = { },
-            elevation = TOAST_ELEVATION,
-        )
-    }
 
     private fun disableAppBarDragging() {
         if (binding.homeAppBar.layoutParams != null) {

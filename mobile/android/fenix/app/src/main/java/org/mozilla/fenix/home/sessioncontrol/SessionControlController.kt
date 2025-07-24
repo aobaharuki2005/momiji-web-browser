@@ -226,11 +226,6 @@ interface SessionControlControllerCallback {
     fun removeCollectionWithUndo(tabCollection: TabCollection)
 
     /**
-     * Callback to show undo snack bar for top site.
-     */
-    fun showUndoSnackbarForTopSite(topSite: TopSite)
-
-    /**
      * Callback to show tab tray.
      */
     fun showTabTray()
@@ -455,8 +450,6 @@ class DefaultSessionControlController(
                 removeTopSites(topSite)
             }
         }
-
-        callback?.showUndoSnackbarForTopSite(topSite)
     }
 
     override fun handleRenameCollectionTapped(collection: TabCollection) {

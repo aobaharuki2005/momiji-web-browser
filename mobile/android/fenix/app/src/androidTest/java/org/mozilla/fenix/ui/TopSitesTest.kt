@@ -18,7 +18,6 @@ import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
-import org.mozilla.fenix.helpers.TestHelper.waitUntilSnackbarGone
 import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
 import org.mozilla.fenix.ui.robots.browserScreen
@@ -235,8 +234,6 @@ class TopSitesTest : TestSetup() {
             verifyExistingTopSitesTabs(activityIntentTestRule, defaultWebPage.title)
         }.openContextMenuOnTopSitesWithTitle(activityIntentTestRule, defaultWebPage.title) {
         }.removeTopSite(activityIntentTestRule) {
-            verifySnackBarText(getStringResource(R.string.snackbar_top_site_removed))
-            waitUntilSnackbarGone()
         }.openThreeDotMenu {
         }.openHistory {
             verifyEmptyHistoryView()

@@ -1101,28 +1101,6 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
-    fun `WHEN top site is removed THEN the undo snackbar is called`() {
-        val mozillaTopSite = TopSite.Default(
-            id = 1L,
-            title = "Mozilla",
-            url = "https://mozilla.org",
-            null,
-        )
-        var undoSnackbarCalled = false
-        var undoSnackbarShownFor = "TopSiteName"
-
-        createController(
-            showUndoSnackbarForTopSite = { topSite ->
-                undoSnackbarCalled = true
-                undoSnackbarShownFor = topSite.title.toString()
-            },
-        ).handleRemoveTopSiteClicked(mozillaTopSite)
-
-        assertEquals(true, undoSnackbarCalled)
-        assertEquals("Mozilla", undoSnackbarShownFor)
-    }
-
-    @Test
     fun `WHEN the frecent top site is updated THEN add the frecent top site as a pinned top site`() {
         val topSite = TopSite.Frecent(
             id = 1L,
@@ -1569,7 +1547,6 @@ class DefaultSessionControlControllerTest {
         registerCollectionStorageObserver: () -> Unit = { },
         showTabTray: () -> Unit = { },
         removeCollectionWithUndo: (tabCollection: TabCollection) -> Unit = { },
-        showUndoSnackbarForTopSite: (topSite: TopSite) -> Unit = { },
     ): DefaultSessionControlController {
         return DefaultSessionControlController(
             activityRef = WeakReference(activity),
@@ -1607,10 +1584,6 @@ class DefaultSessionControlControllerTest {
 
                 override fun removeCollectionWithUndo(tabCollection: TabCollection) {
                     removeCollectionWithUndo(tabCollection)
-                }
-
-                override fun showUndoSnackbarForTopSite(topSite: TopSite) {
-                    showUndoSnackbarForTopSite(topSite)
                 }
 
                 override fun showTabTray() {
