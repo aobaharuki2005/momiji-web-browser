@@ -924,10 +924,6 @@ bool js::AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp) {
     if (!AsyncGeneratorDrainQueue(cx, generator)) {
       return false;
     }
-  } else if (generator->isCompleted()) {
-    if (!AsyncGeneratorDrainQueue(cx, generator)) {
-      return false;
-    }
   } else if (generator->isSuspendedStart() || generator->isSuspendedYield()) {
     MOZ_ASSERT(generator->isQueueLengthOne());
     if (!AsyncGeneratorDrainQueue(cx, generator)) {
@@ -935,7 +931,8 @@ bool js::AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp) {
     }
   } else {
     MOZ_ASSERT(generator->isExecuting() || generator->isAwaitingYieldReturn() ||
-               generator->isAwaitingReturn());
+               generator->isAwaitingReturn() ||
+               (generator->isCompleted() && !wasQueueEmpty));
   }
 
   // Step 6.c. Return promiseCapability.[[Promise]].
@@ -1008,10 +1005,6 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
     if (!AsyncGeneratorDrainQueue(cx, generator)) {
       return false;
     }
-  } else if (generator->isCompleted()) {
-    if (!AsyncGeneratorDrainQueue(cx, generator)) {
-      return false;
-    }
   } else if (generator->isSuspendedYield()) {
     MOZ_ASSERT(generator->isQueueLengthOne());
     if (!AsyncGeneratorDrainQueue(cx, generator)) {
@@ -1019,7 +1012,8 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
     }
   } else {
     MOZ_ASSERT(generator->isExecuting() || generator->isAwaitingYieldReturn() ||
-               generator->isAwaitingReturn());
+               generator->isAwaitingReturn() ||
+               (generator->isCompleted() && !wasQueueEmpty));
   }
 
   // Step 11. Return promiseCapability.[[Promise]].
@@ -1092,10 +1086,6 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
     if (!AsyncGeneratorDrainQueue(cx, generator)) {
       return false;
     }
-  } else if (generator->isCompleted()) {
-    if (!AsyncGeneratorDrainQueue(cx, generator)) {
-      return false;
-    }
   } else if (generator->isSuspendedYield()) {
     MOZ_ASSERT(generator->isQueueLengthOne());
     if (!AsyncGeneratorDrainQueue(cx, generator)) {
@@ -1103,7 +1093,8 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
     }
   } else {
     MOZ_ASSERT(generator->isExecuting() || generator->isAwaitingYieldReturn() ||
-               generator->isAwaitingReturn());
+               generator->isAwaitingReturn() ||
+               (generator->isCompleted() && !wasQueueEmpty));
   }
 
   // Step 7.b. Return promiseCapability.[[Promise]].
