@@ -154,6 +154,11 @@
   border-radius: calc(var(--urlbarView-row-gutter) + var(--toolbarbutton-border-radius));
   background-clip: padding-box;
 
+  /* Must hide the overflowing rows while the view is updating */
+  &[hidden] {
+    display: none !important;
+  }
+
   &[row-selectable]:not([selected]):hover {
     background-color: var(--urlbarView-hover-background);
   }
