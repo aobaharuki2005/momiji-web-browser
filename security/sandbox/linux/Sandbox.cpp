@@ -648,7 +648,7 @@ static void SetCurrentProcessSandbox(
     // currently the case for all callers.  (An intentionally leaked
     // heap allocation would also work.)
     return sandbox::bpf_dsl::Trap(
-        [](const sandbox::arch_seccomp_data&, void* aux) -> intptr_t {
+        [](const arch_seccomp_data&, void* aux) -> intptr_t {
           auto error = reinterpret_cast<const char*>(aux);
           SANDBOX_LOG("Panic: %s", error);
           MOZ_CRASH("Sandbox Panic");

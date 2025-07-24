@@ -52,7 +52,6 @@
 #endif
 
 using namespace sandbox::bpf_dsl;
-#define CASES SANDBOX_BPF_DSL_CASES
 
 // Fill in defines in case of old headers.
 // (Warning: these are wrong on PA-RISC.)
@@ -173,7 +172,7 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
 
   SandboxPolicyCommon() = default;
 
-  typedef const sandbox::arch_seccomp_data& ArgsRef;
+  typedef const arch_seccomp_data& ArgsRef;
 
   static intptr_t BlockedSyscallTrap(ArgsRef aArgs, void* aux) {
     MOZ_ASSERT(!aux);
@@ -796,18 +795,18 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
     Arg<int> op(0);
     Arg<int> arg2(1);
     return Switch(op)
-        .CASES((PR_SET_VMA),  // Tagging of anonymous memory mappings
-               If(arg2 == PR_SET_VMA_ANON_NAME, Allow()).Else(InvalidSyscall()))
-        .CASES((PR_GET_SECCOMP,   // BroadcastSetThreadSandbox, etc.
+        .Case(PR_SET_VMA,  // Tagging of anonymous memory mappings
+              If(arg2 == PR_SET_VMA_ANON_NAME, Allow()).Else(InvalidSyscall()))
+        .Cases({PR_GET_SECCOMP,   // BroadcastSetThreadSandbox, etc.
                 PR_SET_NAME,      // Thread creation
                 PR_SET_DUMPABLE,  // Crash reporting
-                PR_SET_PTRACER),  // Debug-mode crash handling
+                PR_SET_PTRACER},  // Debug-mode crash handling
                Allow())
-        .CASES((PR_CAPBSET_READ),  // libcap.so.2 loaded by libpulse.so.0
-                                   // queries for capabilities
-               Error(EINVAL))
+        .Case(PR_CAPBSET_READ,  // libcap.so.2 loaded by libpulse.so.0
+                                // queries for capabilities
+              Error(EINVAL))
 #if defined(MOZ_PROFILE_GENERATE)
-        .CASES((PR_GET_PDEATHSIG), Allow())
+        .Case(PR_GET_PDEATHSIG, Allow())
 #endif  // defined(MOZ_PROFILE_GENERATE)
         .Default(InvalidSyscall());
   }
@@ -1803,7 +1802,7 @@ UniquePtr<sandbox::bpf_dsl::Policy> GetContentSandboxPolicy(
 //
 // Be especially careful about what this policy allows.
 class GMPSandboxPolicy : public SandboxPolicyCommon {
-  static intptr_t OpenTrap(const sandbox::arch_seccomp_data& aArgs, void* aux) {
+  static intptr_t OpenTrap(const arch_seccomp_data& aArgs, void* aux) {
     const auto files = static_cast<const SandboxOpenedFiles*>(aux);
     const char* path;
     int flags;
@@ -1839,7 +1838,7 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
   }
 
 #if defined(__NR_stat64) || defined(__NR_stat)
-  static intptr_t StatTrap(const sandbox::arch_seccomp_data& aArgs, void* aux) {
+  static intptr_t StatTrap(const arch_seccomp_data& aArgs, void* aux) {
     const auto* const files = static_cast<const SandboxOpenedFiles*>(aux);
     const auto* path = reinterpret_cast<const char*>(aArgs.args[0]);
     int fd = files->GetDesc(path);
@@ -1856,8 +1855,7 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
   }
 #endif
 
-  static intptr_t UnameTrap(const sandbox::arch_seccomp_data& aArgs,
-                            void* aux) {
+  static intptr_t UnameTrap(const arch_seccomp_data& aArgs, void* aux) {
     const auto buf = reinterpret_cast<struct utsname*>(aArgs.args[0]);
     PodZero(buf);
     // The real uname() increases fingerprinting risk for no benefit.
@@ -1867,8 +1865,7 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
     return 0;
   }
 
-  static intptr_t FcntlTrap(const sandbox::arch_seccomp_data& aArgs,
-                            void* aux) {
+  static intptr_t FcntlTrap(const arch_seccomp_data& aArgs, void* aux) {
     const auto cmd = static_cast<int>(aArgs.args[1]);
     switch (cmd) {
         // This process can't exec, so the actual close-on-exec flag
@@ -2173,8 +2170,7 @@ class SocketProcessSandboxPolicy final : public SandboxPolicyCommon {
     mMayCreateShmem = true;
   }
 
-  static intptr_t FcntlTrap(const sandbox::arch_seccomp_data& aArgs,
-                            void* aux) {
+  static intptr_t FcntlTrap(const arch_seccomp_data& aArgs, void* aux) {
     const auto cmd = static_cast<int>(aArgs.args[1]);
     switch (cmd) {
         // This process can't exec, so the actual close-on-exec flag
@@ -2237,14 +2233,14 @@ class SocketProcessSandboxPolicy final : public SandboxPolicyCommon {
     Arg<int> op(0);
     Arg<int> arg2(1);
     return Switch(op)
-        .CASES((PR_SET_VMA),  // Tagging of anonymous memory mappings
-               If(arg2 == PR_SET_VMA_ANON_NAME, Allow()).Else(InvalidSyscall()))
-        .CASES((PR_SET_NAME,      // Thread creation
+        .Case(PR_SET_VMA,  // Tagging of anonymous memory mappings
+              If(arg2 == PR_SET_VMA_ANON_NAME, Allow()).Else(InvalidSyscall()))
+        .Cases({PR_SET_NAME,      // Thread creation
                 PR_SET_DUMPABLE,  // Crash reporting
-                PR_SET_PTRACER),  // Debug-mode crash handling
+                PR_SET_PTRACER},  // Debug-mode crash handling
                Allow())
 #if defined(MOZ_PROFILE_GENERATE)
-        .CASES((PR_GET_PDEATHSIG), Allow())
+        .Case(PR_GET_PDEATHSIG, Allow())
 #endif  // defined(MOZ_PROFILE_GENERATE)
         .Default(InvalidSyscall());
   }
@@ -2335,19 +2331,19 @@ class UtilitySandboxPolicy : public SandboxPolicyCommon {
     Arg<int> op(0);
     Arg<int> arg2(1);
     return Switch(op)
-        .CASES((PR_SET_VMA),  // Tagging of anonymous memory mappings
-               If(arg2 == PR_SET_VMA_ANON_NAME, Allow()).Else(InvalidSyscall()))
-        .CASES((PR_SET_NAME,        // Thread creation
+        .Case(PR_SET_VMA,  // Tagging of anonymous memory mappings
+              If(arg2 == PR_SET_VMA_ANON_NAME, Allow()).Else(InvalidSyscall()))
+        .Cases({PR_SET_NAME,        // Thread creation
                 PR_SET_DUMPABLE,    // Crash reporting
                 PR_SET_PTRACER,     // Debug-mode crash handling
-                PR_GET_PDEATHSIG),  // PGO profiling, cf
+                PR_GET_PDEATHSIG},  // PGO profiling, cf
                                     // https://reviews.llvm.org/D29954
                Allow())
-        .CASES((PR_CAPBSET_READ),  // libcap.so.2 loaded by libpulse.so.0
-                                   // queries for capabilities
-               Error(EINVAL))
+        .Case(PR_CAPBSET_READ,  // libcap.so.2 loaded by libpulse.so.0
+                                // queries for capabilities
+              Error(EINVAL))
 #if defined(MOZ_PROFILE_GENERATE)
-        .CASES((PR_GET_PDEATHSIG), Allow())
+        .Case(PR_GET_PDEATHSIG, Allow())
 #endif  // defined(MOZ_PROFILE_GENERATE)
         .Default(InvalidSyscall());
   }
