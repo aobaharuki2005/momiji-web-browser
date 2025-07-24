@@ -337,6 +337,34 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 
 // ES2026 draft rev bdfd596ffad5aeb2957aed4e1db36be3665c69ec
 //
+// AsyncGeneratorUnwrapYieldResumption ( resumptionValue )
+// https://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption
+//
+// Steps 1-2.
+[[nodiscard]] static bool AsyncGeneratorUnwrapYieldResumption(
+    JSContext* cx, Handle<AsyncGeneratorObject*> generator,
+    CompletionKind completionKind, JS::Handle<JS::Value> value) {
+  // Step 1. If resumptionValue is not a return completion, return ?
+  //         resumptionValue.
+  if (completionKind != CompletionKind::Return) {
+    return AsyncGeneratorResume(cx, generator, completionKind, value);
+  }
+
+  // Step 2. Let awaited be Completion(Await(resumptionValue.[[Value]])).
+  //
+  // NOTE: Given that Await needs to be performed asynchronously,
+  //       we use an implementation-defined state "AwaitingYieldReturn"
+  //       to wait for the result.
+  generator->setAwaitingYieldReturn();
+
+  return InternalAsyncGeneratorAwait(
+      cx, generator, value,
+      PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled,
+      PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected);
+}
+
+// ES2026 draft rev bdfd596ffad5aeb2957aed4e1db36be3665c69ec
+//
 // AsyncGeneratorYield ( value )
 // https://tc39.es/ecma262/#sec-asyncgeneratoryield
 //
@@ -394,24 +422,10 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 
     generator->setSuspendedYield();
 
-    RootedValue argument(cx, next->completionValue());
+    RootedValue completionValue(cx, next->completionValue());
 
-    if (completionKind == CompletionKind::Return) {
-      generator->setAwaitingYieldReturn();
-
-      if (!InternalAsyncGeneratorAwait(
-              cx, generator, argument,
-              PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled,
-              PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected)) {
-        return false;
-      }
-    } else {
-      if (!AsyncGeneratorResume(cx, generator, completionKind, argument)) {
-        return false;
-      }
-    }
-
-    return true;
+    return AsyncGeneratorUnwrapYieldResumption(cx, generator, completionKind,
+                                               completionValue);
   }
 
   generator->setSuspendedYield();
