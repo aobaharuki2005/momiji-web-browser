@@ -39,6 +39,20 @@ Queue::Queue(Device* const aParent, WebGPUChild* aBridge, RawId aId)
 
 Queue::~Queue() { Cleanup(); }
 
+void Queue::Cleanup() {
+  if (!mValid) {
+    return;
+  }
+  mValid = false;
+
+  auto bridge = mParent->GetBridge();
+  if (!bridge) {
+    return;
+  }
+
+  ffi::wgpu_client_drop_queue(bridge->GetClient(), mId);
+}
+
 void Queue::Submit(
     const dom::Sequence<OwningNonNull<CommandBuffer>>& aCommandBuffers) {
   nsTArray<RawId> list(aCommandBuffers.Length());
