@@ -9,7 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -71,23 +72,36 @@ fun AppIconSelection(
 ) {
     var selectedAppIcon by remember { mutableStateOf<SettingsAppIcon?>(null) }
 
-    Column(
+    LazyColumn(
         modifier = Modifier.background(color = FirefoxTheme.colors.layer1),
     ) {
         groupedIconOptions.forEach { (header, icons) ->
-            AppIconGroupHeader(header)
+            item(contentType = { header::class }) {
+                AppIconGroupHeader(header)
+            }
 
-            icons.forEach { icon ->
+            items(
+                items = icons,
+                contentType = { item -> item::class },
+            ) { icon ->
+                val iconSelected = icon.activityAlias == currentAppIcon
+
                 AppIconOption(
                     appIcon = icon,
-                    selected = icon.activityAlias == currentAppIcon,
-                    onClick = { selectedAppIcon = icon },
+                    selected = iconSelected,
+                    onClick = {
+                        if (!iconSelected) {
+                            selectedAppIcon = icon
+                        }
+                    },
                 )
             }
 
-            Spacer(modifier = Modifier.height(GroupSpacerHeight))
+            item {
+                Spacer(modifier = Modifier.height(GroupSpacerHeight))
 
-            Divider(color = FirefoxTheme.colors.borderPrimary)
+                Divider(color = FirefoxTheme.colors.borderPrimary)
+            }
         }
     }
 
@@ -133,7 +147,7 @@ private fun AppIconOption(
         RadioButton(
             selected = selected,
             onClick = {
-                // No-op, the whole item is clickable
+                onClick()
             },
         )
 
