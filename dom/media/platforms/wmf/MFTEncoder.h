@@ -14,6 +14,7 @@
 
 #include "EncoderConfig.h"
 #include "WMF.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/DefineEnum.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/MozPromise.h"
@@ -24,6 +25,8 @@
 #include "nsTArray.h"
 
 namespace mozilla {
+
+class MFTEventSource;
 
 class MFTEncoder final {
  public:
@@ -92,6 +95,8 @@ class MFTEncoder final {
   };
 
  private:
+  friend class MFTEventSource;
+
   ~MFTEncoder() { Destroy(); };
 
   static nsTArray<Info>& Infos();
@@ -103,7 +108,7 @@ class MFTEncoder final {
   Result<EncodedData, MediaResult> DrainSync();
   Result<EncodedData, HRESULT> PullOutputs();
 
-  // APIs for asynchronous processing model.
+  // APIs for asynchronous processing model for regular usage.
   Result<EncodedData, MediaResult> EncodeAsync(InputSample&& aInput);
   Result<EncodedData, MediaResult> DrainAsync();
 
@@ -112,11 +117,23 @@ class MFTEncoder final {
                         OutputYielded, DrainComplete));
   using ProcessedResults = EnumSet<ProcessedResult>;
   Result<ProcessedResults, HRESULT> ProcessPendingEvents();
+  Result<MediaEventType, HRESULT> GetPendingEvent();
+
+  // For realtime usage in asynchronous processing model only.
+  RefPtr<EncodePromise> EncodeWithAsyncCallback(InputSample&& aInput);
+  RefPtr<EncodePromise> DrainWithAsyncCallback();
+  RefPtr<EncodePromise> PrepareForDrain();
+  RefPtr<EncodePromise> StartDraining();
+  void EventHandler(MediaEventType aEventType, HRESULT aStatus);
+  void MaybeResolveOrRejectEncodePromise();
+  void ResolveOrRejectDrainPromise();
+  void ResolveOrRejectPreDrainPromise();
+
+  // APIs for asynchronous processing model regardless of usages.
   Result<ProcessedResult, HRESULT> ProcessEvent(MediaEventType aType);
   Result<ProcessedResult, HRESULT> ProcessInput();
   Result<ProcessedResult, HRESULT> ProcessOutput();
   Result<ProcessedResult, HRESULT> ProcessDrainComplete();
-  Result<MediaEventType, HRESULT> GetPendingEvent();
 
   // Utilities for both processing models.
   class OutputResult {
@@ -148,7 +165,7 @@ class MFTEncoder final {
                         DWORD& aBufferStatus);
   HRESULT ProcessInput(InputSample&& aInput);
 
-  bool IsAsync() const { return mAsyncEventGenerator; }
+  bool IsAsync() const { return mAsyncEventSource; }
 
   // Return true when successfully enabled, false for MFT that doesn't support
   // async processing model, and error otherwise.
@@ -157,6 +174,11 @@ class MFTEncoder final {
   HRESULT GetStreamIDs();
   GUID MatchInputSubtype(IMFMediaType* aInputType);
   HRESULT SendMFTMessage(MFT_MESSAGE_TYPE aMsg, ULONG_PTR aData);
+
+  MOZ_DEFINE_ENUM_CLASS_WITH_TOSTRING_AT_CLASS_SCOPE(
+      State,
+      (Uninited, Initializing, Inited, Encoding, PreDraining, Draining, Error));
+  void SetState(State aState);
 
   const HWPreference mHWPreference;
   RefPtr<IMFTransform> mEncoder;
@@ -173,6 +195,9 @@ class MFTEncoder final {
   MFT_OUTPUT_STREAM_INFO mOutputStreamInfo;
   bool mOutputStreamProvidesSample;
 
+  State mState = State::Uninited;
+  bool mIsRealtime = false;
+
   // The following members are used only for asynchronous processing model
   size_t mNumNeedInput;
   std::deque<InputSample> mPendingInputs;
@@ -182,7 +207,86 @@ class MFTEncoder final {
   // packet after format renegotiation.
   MPEGHeader mOutputHeader;
 
-  RefPtr<IMFMediaEventGenerator> mAsyncEventGenerator;
+  RefPtr<MFTEventSource> mAsyncEventSource;
+
+  // The following members are used only for realtime asynchronous processing
+  // model.
+  MediaResult mPendingError;
+  MozPromiseHolder<EncodePromise> mEncodePromise;
+  MozPromiseHolder<EncodePromise> mDrainPromise;
+  MozPromiseHolder<EncodePromise> mPreDrainPromise;
+  // Use to resolve the encode promise if mAsyncEventSource doesn't response in
+  // time.
+  nsCOMPtr<nsITimer> mTimer;
+};
+
+class MFTEventSource final : public IMFAsyncCallback {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFTEventSource)
+
+  // A basic IMFMediaEventGenerator wrapper that does not support retrieving
+  // events from asynchronous callbacks when constructed this way. Events should
+  // instead be obtained by calling GetEvent().
+  explicit MFTEventSource(
+      already_AddRefed<IMFMediaEventGenerator> aEventGenerator)
+      : MFTEventSource(GetCurrentSerialEventTarget(), nullptr,
+                       std::move(aEventGenerator)) {}
+  // This constructor creates an MFTEventSource that forwards events from
+  // asynchronous callbacks directly to the MFTEncoder's event handler. In this
+  // usage, GetEvent() should not be called, as events are handled
+  // automatically.
+  MFTEventSource(MFTEncoder* aEncoder,
+                 already_AddRefed<IMFMediaEventGenerator> aEventGenerator)
+      : MFTEventSource(GetCurrentSerialEventTarget(), aEncoder,
+                       std::move(aEventGenerator)) {}
+
+  bool CanForwardEvents() const { return mEncoder; }
+  Result<MediaEventType, HRESULT> GetEvent(DWORD aFlags);
+
+  HRESULT BeginEventListening();
+
+  // IMFAsyncCallback implementations:
+  STDMETHODIMP GetParameters(DWORD* aFlags, DWORD* aQueue) override;
+  // Invoke() can be called on any thread by the OS, but it will forward the
+  // event to the MFTEncoder's working thread.
+  STDMETHODIMP Invoke(IMFAsyncResult* aAsyncResult) override;
+  STDMETHODIMP QueryInterface(REFIID aIID, void** aPPV) override;
+  // AddRef() and Release() are implemented by
+  // NS_INLINE_DECL_THREADSAFE_REFCOUNTING.
+
+  using Id = size_t;
+  const Id mId;
+
+ private:
+  MFTEventSource(nsISerialEventTarget* aEncoderThread, MFTEncoder* aEncoder,
+                 already_AddRefed<IMFMediaEventGenerator> aEventGenerator);
+  ~MFTEventSource();
+
+  static Id GenerateId() {
+    static Id sNextId = 0;
+    return sNextId++;
+  }
+
+  // The following members are used to forwards events from any OS thread to the
+  // MFTEncoder's working thread.
+  const nsCOMPtr<nsISerialEventTarget> mEncoderThread;
+  const RefPtr<MFTEncoder> mEncoder;
+  // When acting as a simple wrapper for IMFMediaEventGenerator, mEventGenerator
+  // is always accessed from a single thread, making locking effectively
+  // cost-free. In scenarios where MFTEventSource forwards events to MFTEncoder,
+  // mEventGenerator will be accessed from multiple threads: event requests are
+  // made on the MFTEncoder's working thread (via BeginEventListening()), while
+  // event delivery occurs on the OS thread (via Invoke()). Since these
+  // operations do not happen concurrently, the overhead of DataMutex locking is
+  // negligible. DataMutex is used here to clarify that event requests and
+  // deliveries are performed on separate threads. Furthermore, because
+  // MFTEncoder might release MFTEventSource while waiting for an event—and the
+  // Windows Media Foundation documentation does not specify whether releasing
+  // IMFMediaEventGenerator cancels pending event waits—we release
+  // mEventGenerator in the MFTEventSource destructor to ensure all pending
+  // events are properly handled, rather than resetting it when MFTEncoder
+  // releases MFTEventSource.
+  DataMutex<RefPtr<IMFMediaEventGenerator>> mEventGenerator;
 };
 
 }  // namespace mozilla
