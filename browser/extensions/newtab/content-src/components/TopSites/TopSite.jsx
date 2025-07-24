@@ -292,6 +292,10 @@ export class TopSiteLink extends React.PureComponent {
     const addButtonTitlel10n = {
       "data-l10n-id": "newtab-topsites-add-shortcut-title",
     };
+    const addPinnedTitlel10n = {
+      "data-l10n-id": "topsite-label-pinned",
+      "data-l10n-args": JSON.stringify({ title }),
+    };
 
     let draggableProps = {};
     if (isDraggable) {
@@ -380,8 +384,11 @@ export class TopSiteLink extends React.PureComponent {
             draggable={true}
             data-is-sponsored-link={!!link.sponsored_tile_id}
             onFocus={this.props.onFocus}
+            aria-label={link.isPinned ? undefined : title}
             {...(isAddButton && { ...addButtonTitlel10n })}
             {...(!isAddButton && { title })}
+            {...(link.isPinned && { ...addPinnedTitlel10n })}
+            data-l10n-args={JSON.stringify({ title })}
           >
             {shortcutsRefresh && link.isPinned && (
               <div className="icon icon-pin-small" />

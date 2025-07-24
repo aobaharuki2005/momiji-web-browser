@@ -9490,6 +9490,12 @@ class TopSiteLink extends (external_React_default()).PureComponent {
     const addButtonTitlel10n = {
       "data-l10n-id": "newtab-topsites-add-shortcut-title"
     };
+    const addPinnedTitlel10n = {
+      "data-l10n-id": "topsite-label-pinned",
+      "data-l10n-args": JSON.stringify({
+        title
+      })
+    };
     let draggableProps = {};
     if (isDraggable) {
       draggableProps = {
@@ -9564,11 +9570,18 @@ class TopSiteLink extends (external_React_default()).PureComponent {
       onClick: onClick,
       draggable: true,
       "data-is-sponsored-link": !!link.sponsored_tile_id,
-      onFocus: this.props.onFocus
+      onFocus: this.props.onFocus,
+      "aria-label": link.isPinned ? undefined : title
     }, isAddButton && {
       ...addButtonTitlel10n
     }, !isAddButton && {
       title
+    }, link.isPinned && {
+      ...addPinnedTitlel10n
+    }, {
+      "data-l10n-args": JSON.stringify({
+        title
+      })
     }), shortcutsRefresh && link.isPinned && /*#__PURE__*/external_React_default().createElement("div", {
       className: "icon icon-pin-small"
     }), /*#__PURE__*/external_React_default().createElement("div", {
