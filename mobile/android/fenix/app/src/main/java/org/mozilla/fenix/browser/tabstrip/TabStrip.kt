@@ -108,7 +108,7 @@ fun TabStrip(
     onAddTabClick: () -> Unit,
     onCloseTabClick: (isPrivate: Boolean) -> Unit,
     onLastTabClose: (isPrivate: Boolean) -> Unit,
-    onSelectedTabClick: () -> Unit,
+    onSelectedTabClick: (url: String) -> Unit,
     onTabCounterClick: () -> Unit,
 ) {
     val isPossiblyPrivateMode by appStore.observeAsState(false) { it.mode.isPrivate }
@@ -148,9 +148,9 @@ fun TabStrip(
                 onCloseTabClick = onCloseTabClick,
             )
         },
-        onSelectedTabClick = {
-            tabsUseCases.selectTab(it)
-            onSelectedTabClick()
+        onSelectedTabClick = { tabId, url ->
+            tabsUseCases.selectTab(tabId)
+            onSelectedTabClick(url)
             TabStripMetrics.selectTab.record()
         },
         onMove = { tabId, targetId, placeAfter ->
@@ -167,7 +167,7 @@ private fun TabStripContent(
     state: TabStripState,
     onAddTabClick: () -> Unit,
     onCloseTabClick: (id: String, isPrivate: Boolean) -> Unit,
-    onSelectedTabClick: (id: String) -> Unit,
+    onSelectedTabClick: (tabId: String, url: String) -> Unit,
     onMove: (tabId: String, targetId: String, placeAfter: Boolean) -> Unit,
     onTabCounterClick: () -> Unit,
 ) {
@@ -221,7 +221,7 @@ private fun TabsList(
     state: TabStripState,
     modifier: Modifier = Modifier,
     onCloseTabClick: (id: String, isPrivate: Boolean) -> Unit,
-    onSelectedTabClick: (id: String) -> Unit,
+    onSelectedTabClick: (tabId: String, url: String) -> Unit,
     onMove: (tabId: String, targetId: String, placeAfter: Boolean) -> Unit,
 ) {
     BoxWithConstraints(modifier = modifier) {
@@ -317,7 +317,7 @@ private fun TabItem(
     state: TabStripItem,
     modifier: Modifier = Modifier,
     onCloseTabClick: (id: String, isPrivate: Boolean) -> Unit,
-    onSelectedTabClick: (id: String) -> Unit,
+    onSelectedTabClick: (id: String, url: String) -> Unit,
 ) {
     val backgroundColor = if (state.isSelected) {
         FirefoxTheme.colors.tabActive
@@ -338,7 +338,7 @@ private fun TabItem(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .clickable { onSelectedTabClick(state.id) }
+                .clickable { onSelectedTabClick(state.id, state.url) }
                 .semantics {
                     role = Role.Tab
                     selected = state.isSelected
@@ -557,7 +557,7 @@ private fun TabStripContentPreview(tabs: List<TabStripItem>) {
             ),
             onAddTabClick = {},
             onCloseTabClick = { _, _ -> },
-            onSelectedTabClick = {},
+            onSelectedTabClick = { _, _ -> },
             onMove = { _, _, _ -> },
             onTabCounterClick = {},
         )
