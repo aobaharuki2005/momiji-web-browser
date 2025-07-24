@@ -368,8 +368,6 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 
   // Step 12. Else,
   // Step 12.a. Set generator.[[AsyncGeneratorState]] to suspended-yield.
-  generator->setSuspendedYield();
-
   // Step 12.b. Remove genContext from the execution context stack and
   //            restore the execution context that is at the top of the
   //            execution context stack as the running execution context.
@@ -394,7 +392,7 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 
     CompletionKind completionKind = next->completionKind();
 
-    MOZ_ASSERT(generator->isSuspendedYield());
+    generator->setSuspendedYield();
 
     RootedValue argument(cx, next->completionValue());
 
@@ -412,7 +410,11 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
         return false;
       }
     }
+
+    return true;
   }
+
+  generator->setSuspendedYield();
 
   return true;
 }
