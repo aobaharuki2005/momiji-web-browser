@@ -121,6 +121,9 @@ tags = "addons psm blocklist"
 
 ["test_client_auth_remember_service_read.js"]
 
+["test_client_auth_speculative_connection.js"]
+run-sequentially = "hardcoded ports"
+
 ["test_constructX509FromBase64.js"]
 
 ["test_content_signing.js"]
