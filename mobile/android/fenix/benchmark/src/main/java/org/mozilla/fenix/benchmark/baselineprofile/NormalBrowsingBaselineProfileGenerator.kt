@@ -64,7 +64,7 @@ class NormalBrowsingBaselineProfileGenerator {
                 device.dismissWallpaperOnboarding()
             }
 
-            device.loadSite(packageName = packageName, url = "mozilla.org")
+            device.loadSite(packageName = packageName, url = "example.com")
         }
     }
 }

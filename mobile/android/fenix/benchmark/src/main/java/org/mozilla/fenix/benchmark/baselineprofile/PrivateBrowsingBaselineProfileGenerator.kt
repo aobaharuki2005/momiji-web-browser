@@ -69,10 +69,10 @@ class PrivateBrowsingBaselineProfileGenerator {
 
             device.openTabsTray(packageName = packageName)
             device.openNewPrivateTabOnTabsTray()
-            device.loadSite(packageName = packageName, url = "google.com")
+            device.loadSite(packageName = packageName, url = "example.com")
 
             device.openTabsTray(packageName = packageName)
-            device.closeTab(siteName = "Google", siteUrl = "https://www.google.com")
+            device.closeTab(siteName = "Example Domain", siteUrl = "http://example.com")
         }
     }
 }

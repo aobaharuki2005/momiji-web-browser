@@ -59,17 +59,17 @@ class SwitchTabsBaselineProfileGenerator {
             packageName = TARGET_PACKAGE,
         ) {
             val intent = Intent(Intent.ACTION_VIEW)
-            intent.data = Uri.parse("https://www.mozilla.org/")
+            intent.data = Uri.parse("http://example.com")
             intent.setPackage(packageName)
 
             startActivityAndWait(intent = intent)
 
             device.openTabsTray(packageName = packageName)
             device.openNewTabOnTabsTray()
-            device.loadSite(packageName = TARGET_PACKAGE, url = "google.com")
+            device.loadSite(packageName = TARGET_PACKAGE, url = "https://www.mozilla.org/credits/")
 
             device.openTabsTray(packageName = packageName)
-            device.switchTabs(siteName = "Google", newTabUrl = "https://www.google.com")
+            device.switchTabs(siteName = "Example Domain", newTabUrl = "http://example.com")
 
             device.openTabsTray(packageName = packageName)
             device.closeAllTabs()

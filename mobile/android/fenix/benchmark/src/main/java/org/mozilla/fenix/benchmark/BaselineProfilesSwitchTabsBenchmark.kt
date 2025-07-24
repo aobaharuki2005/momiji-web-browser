@@ -7,6 +7,7 @@ package org.mozilla.fenix.benchmark
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.SystemClock
 import androidx.annotation.RequiresApi
 import androidx.benchmark.macro.BaselineProfileMode
 import androidx.benchmark.macro.CompilationMode
@@ -78,21 +79,23 @@ class BaselineProfilesSwitchTabsBenchmark {
             },
         ) {
             val intent = Intent(Intent.ACTION_VIEW)
-            intent.data = Uri.parse("https://www.mozilla.org/")
+            intent.data = Uri.parse("http://example.com")
+
             intent.setPackage(packageName)
 
             startActivityAndWait(intent = intent)
 
             device.openTabsTray(packageName = packageName)
             device.openNewTabOnTabsTray()
-            device.loadSite(packageName = TARGET_PACKAGE, url = "google.com")
+            device.loadSite(packageName = TARGET_PACKAGE, url = "https://www.mozilla.org/credits/")
 
             device.openTabsTray(packageName = packageName)
-            device.switchTabs(siteName = "Google", newTabUrl = "https://www.google.com")
+            device.switchTabs(siteName = "Example Domain", newTabUrl = "http://example.com")
 
             device.openTabsTray(packageName = packageName)
             device.closeAllTabs()
 
+            SystemClock.sleep(1000)
             killProcess()
         }
 }

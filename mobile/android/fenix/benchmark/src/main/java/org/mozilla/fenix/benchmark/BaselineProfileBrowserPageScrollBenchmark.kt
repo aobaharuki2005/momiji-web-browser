@@ -74,7 +74,7 @@ class BaselineProfilesBrowserPageScrollBenchmark {
             },
         ) {
             val intent = Intent(Intent.ACTION_VIEW)
-            intent.data = Uri.parse("https://www.mozilla.org/")
+            intent.data = Uri.parse("https://www.mozilla.org/credits/")
             intent.setPackage(packageName)
 
             startActivityAndWait(intent = intent)
