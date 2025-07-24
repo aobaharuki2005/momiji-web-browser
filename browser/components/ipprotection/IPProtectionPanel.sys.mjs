@@ -180,6 +180,8 @@ export class IPProtectionPanel {
     );
     this.panel = contentEl;
 
+    contentEl.dataset.capturesFocus = "true";
+
     this.#addPanelListeners(ownerDocument);
 
     panelView.appendChild(contentEl);
