@@ -1054,6 +1054,14 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
 
     // Step 9.a. Perform AsyncGeneratorResume(generator, completion).
     //
+    // https://tc39.es/ecma262/#sec-asyncgeneratorresume
+    // AsyncGeneratorResume ( generator, completion )
+    //
+    // Step 7. Resume the suspended evaluation of genContext using completion as
+    //         the result of the operation that suspended it. Let result be the
+    //         Completion Record returned by the resumed computation.
+    // Step 10. Return unused.
+    //
     // AsyncGeneratorYield ( value )
     // https://tc39.es/ecma262/#sec-asyncgeneratoryield
     //
@@ -1064,9 +1072,33 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
     //            running execution context again.
     // Step 12.f. Return ?
     //            AsyncGeneratorUnwrapYieldResumption(resumptionValue).
+    //
     if (!AsyncGeneratorUnwrapYieldResumption(
             cx, generator, CompletionKind::Return, completionValue)) {
-      return false;
+      // The failure path here is for the Await inside
+      // AsyncGeneratorUnwrapYieldResumption, where a corrupted Promise is
+      // passed and called there.
+      //
+      // Per spec, the operation should be performed after resuming the
+      // generator, but given that we're performing the Await before
+      // resuming the generator, we need to handle the special throw completion
+      // here.
+
+      // For uncatchable exception, there's nothing we can do.
+      if (!cx->isExceptionPending()) {
+        return false;
+      }
+
+      // Resume the generator with throw completion, so that it behaves in the
+      // same way as the Await throws.
+      RootedValue exception(cx);
+      if (!GetAndClearException(cx, &exception)) {
+        return false;
+      }
+      if (!AsyncGeneratorResume(cx, generator, CompletionKind::Throw,
+                                exception)) {
+        return false;
+      }
     }
   } else {
     // Step 10. Else,
