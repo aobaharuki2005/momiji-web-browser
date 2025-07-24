@@ -36,10 +36,7 @@ talos-bcv:
                     windows11-64.*(-qr)?/opt: [trunk]
                     macosx.*(-qr)?/opt: [trunk]
                     default: []
-            default:
-                by-test-platform:
-                    windows.*-32.*: []
-                    default: [trunk]
+            default: [trunk]
     max-run-time: 1800
     mozharness:
         extra-options:
