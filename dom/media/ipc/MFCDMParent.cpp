@@ -1106,6 +1106,7 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
 mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
     const MFCDMCapabilitiesRequest& aRequest,
     GetCapabilitiesResolver&& aResolver) {
+  AssertOnManagerThread();
   MFCDM_REJECT_IF(!mFactory, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
   MFCDMCapabilitiesIPDL capabilities;
   CapabilitesFlagSet flags;
@@ -1125,6 +1126,7 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
 
 mozilla::ipc::IPCResult MFCDMParent::RecvInit(
     const MFCDMInitParamsIPDL& aParams, InitResolver&& aResolver) {
+  AssertOnManagerThread();
   static auto RequirementToStr = [](KeySystemConfig::Requirement aRequirement) {
     switch (aRequirement) {
       case KeySystemConfig::Requirement::Required:
@@ -1187,6 +1189,7 @@ mozilla::ipc::IPCResult MFCDMParent::RecvInit(
 mozilla::ipc::IPCResult MFCDMParent::RecvCreateSessionAndGenerateRequest(
     const MFCDMCreateSessionParamsIPDL& aParams,
     CreateSessionAndGenerateRequestResolver&& aResolver) {
+  AssertOnManagerThread();
   MOZ_ASSERT(mIsInited, "Must finish initialization first");
 
   static auto SessionTypeToStr = [](KeySystemConfig::SessionType aSessionType) {
@@ -1250,6 +1253,7 @@ mozilla::ipc::IPCResult MFCDMParent::RecvCreateSessionAndGenerateRequest(
 mozilla::ipc::IPCResult MFCDMParent::RecvLoadSession(
     const KeySystemConfig::SessionType& aSessionType,
     const nsString& aSessionId, LoadSessionResolver&& aResolver) {
+  AssertOnManagerThread();
   MOZ_ASSERT(mIsInited, "Must finish initialization first");
 
   nsresult rv = NS_OK;
@@ -1275,6 +1279,7 @@ mozilla::ipc::IPCResult MFCDMParent::RecvLoadSession(
 mozilla::ipc::IPCResult MFCDMParent::RecvUpdateSession(
     const nsString& aSessionId, const CopyableTArray<uint8_t>& aResponse,
     UpdateSessionResolver&& aResolver) {
+  AssertOnManagerThread();
   MOZ_ASSERT(mIsInited, "Must finish initialization first");
   nsresult rv = NS_OK;
   auto* session = GetSession(aSessionId);
@@ -1297,6 +1302,7 @@ mozilla::ipc::IPCResult MFCDMParent::RecvUpdateSession(
 
 mozilla::ipc::IPCResult MFCDMParent::RecvCloseSession(
     const nsString& aSessionId, UpdateSessionResolver&& aResolver) {
+  AssertOnManagerThread();
   MOZ_ASSERT(mIsInited, "Must finish initialization first");
   nsresult rv = NS_OK;
   auto* session = GetSession(aSessionId);
@@ -1319,6 +1325,7 @@ mozilla::ipc::IPCResult MFCDMParent::RecvCloseSession(
 
 mozilla::ipc::IPCResult MFCDMParent::RecvRemoveSession(
     const nsString& aSessionId, UpdateSessionResolver&& aResolver) {
+  AssertOnManagerThread();
   MOZ_ASSERT(mIsInited, "Must finish initialization first");
   nsresult rv = NS_OK;
   auto* session = GetSession(aSessionId);
@@ -1342,6 +1349,7 @@ mozilla::ipc::IPCResult MFCDMParent::RecvRemoveSession(
 mozilla::ipc::IPCResult MFCDMParent::RecvSetServerCertificate(
     const CopyableTArray<uint8_t>& aCertificate,
     UpdateSessionResolver&& aResolver) {
+  AssertOnManagerThread();
   MOZ_ASSERT(mIsInited, "Must finish initialization first");
   nsresult rv = NS_OK;
   MFCDM_PARENT_LOG("Set server certificate");
@@ -1359,6 +1367,7 @@ mozilla::ipc::IPCResult MFCDMParent::RecvSetServerCertificate(
 mozilla::ipc::IPCResult MFCDMParent::RecvGetStatusForPolicy(
     const dom::HDCPVersion& aMinHdcpVersion,
     GetStatusForPolicyResolver&& aResolver) {
+  AssertOnManagerThread();
   auto rv = IsHDCPVersionSupported(mFactory, mKeySystem, aMinHdcpVersion);
   if (IsBeingProfiledOrLogEnabled()) {
     nsPrintfCString msg("HDCP version=%u, support=%s",
