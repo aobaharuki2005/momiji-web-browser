@@ -241,8 +241,7 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 [[nodiscard]] static bool AsyncGeneratorReturned(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value) {
   // Step 4.g. Set acGenerator.[[AsyncGeneratorState]] to draining-queue.
-  // FIXME
-  generator->setCompleted();
+  generator->setDrainingQueue();
 
   // Step 4.i. If result is a return completion, set result to
   //           NormalCompletion(result.[[Value]]).
@@ -254,8 +253,8 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   }
 
   MOZ_ASSERT(!generator->isExecuting());
-  MOZ_ASSERT(!generator->isAwaitingYieldReturn());
-  if (generator->isAwaitingReturn()) {
+  MOZ_ASSERT(!generator->isExecuting_AwaitingYieldReturn());
+  if (generator->isDrainingQueue_AwaitingReturn()) {
     return true;
   }
 
@@ -273,8 +272,7 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 [[nodiscard]] static bool AsyncGeneratorThrown(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator) {
   // Step 4.g. Set acGenerator.[[AsyncGeneratorState]] to draining-queue.
-  // FIXME
-  generator->setCompleted();
+  generator->setDrainingQueue();
 
   // Not much we can do about uncatchable exceptions, so just bail.
   if (!cx->isExceptionPending()) {
@@ -291,8 +289,8 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   }
 
   MOZ_ASSERT(!generator->isExecuting());
-  MOZ_ASSERT(!generator->isAwaitingYieldReturn());
-  if (generator->isAwaitingReturn()) {
+  MOZ_ASSERT(!generator->isExecuting_AwaitingYieldReturn());
+  if (generator->isDrainingQueue_AwaitingReturn()) {
     return true;
   }
 
@@ -309,7 +307,7 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 // Steps 4-5.
 [[nodiscard]] static bool AsyncGeneratorYieldReturnAwaitedFulfilled(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value) {
-  MOZ_ASSERT(generator->isAwaitingYieldReturn(),
+  MOZ_ASSERT(generator->isExecuting_AwaitingYieldReturn(),
              "YieldReturn-Await fulfilled when not in "
              "'AwaitingYieldReturn' state");
 
@@ -328,7 +326,7 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator,
     HandleValue reason) {
   MOZ_ASSERT(
-      generator->isAwaitingYieldReturn(),
+      generator->isExecuting_AwaitingYieldReturn(),
       "YieldReturn-Await rejected when not in 'AwaitingYieldReturn' state");
 
   // Step 3. If awaited is a throw completion, return ? awaited.
@@ -355,7 +353,7 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   // NOTE: Given that Await needs to be performed asynchronously,
   //       we use an implementation-defined state "AwaitingYieldReturn"
   //       to wait for the result.
-  generator->setAwaitingYieldReturn();
+  generator->setExecuting_AwaitingYieldReturn();
 
   return InternalAsyncGeneratorAwait(
       cx, generator, value,
@@ -378,10 +376,10 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
     return false;
   }
 
-  MOZ_ASSERT(!generator->isAwaitingYieldReturn());
+  MOZ_ASSERT(!generator->isExecuting_AwaitingYieldReturn());
   // NOTE: This transition doesn't basically happen, but could happen if
   //       Debugger API is used, or the job queue is forcibly drained.
-  if (generator->isAwaitingReturn()) {
+  if (generator->isDrainingQueue_AwaitingReturn()) {
     return true;
   }
 
@@ -578,11 +576,12 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 [[nodiscard]] static bool AsyncGeneratorAwaitReturnFulfilled(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value) {
   // Step 11.a. Assert: generator.[[AsyncGeneratorState]] is draining-queue.
-  // FIXME
-  MOZ_ASSERT(generator->isAwaitingReturn());
-
-  // FIXME
-  generator->setCompleted();
+  //
+  // NOTE: We use the implementation-defined state DrainingQueue_AwaitingReturn
+  //       for the Await during draining-queue, and it's set back to the
+  //       original draining-queue when the await operation finishes.
+  MOZ_ASSERT(generator->isDrainingQueue_AwaitingReturn());
+  generator->setDrainingQueue();
 
   // Step 11.b. Let result be NormalCompletion(value).
   // Step 11.c. Perform AsyncGeneratorCompleteStep(generator, result, true).
@@ -591,8 +590,8 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   }
 
   MOZ_ASSERT(!generator->isExecuting());
-  MOZ_ASSERT(!generator->isAwaitingYieldReturn());
-  if (generator->isAwaitingReturn()) {
+  MOZ_ASSERT(!generator->isExecuting_AwaitingYieldReturn());
+  if (generator->isDrainingQueue_AwaitingReturn()) {
     return true;
   }
 
@@ -610,11 +609,10 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 [[nodiscard]] static bool AsyncGeneratorAwaitReturnRejected(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value) {
   // Step 13.a. Assert: generator.[[AsyncGeneratorState]] is draining-queue.
-  // FIXME
-  MOZ_ASSERT(generator->isAwaitingReturn());
-
-  // FIXME
-  generator->setCompleted();
+  //
+  // See the comment for AsyncGeneratorAwaitReturnFulfilled.
+  MOZ_ASSERT(generator->isDrainingQueue_AwaitingReturn());
+  generator->setDrainingQueue();
 
   // Step 13.b. Let result be ThrowCompletion(reason).
   // Step 13.c. Perform AsyncGeneratorCompleteStep(generator, result, true).
@@ -623,8 +621,8 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   }
 
   MOZ_ASSERT(!generator->isExecuting());
-  MOZ_ASSERT(!generator->isAwaitingYieldReturn());
-  if (generator->isAwaitingReturn()) {
+  MOZ_ASSERT(!generator->isExecuting_AwaitingYieldReturn());
+  if (generator->isDrainingQueue_AwaitingReturn()) {
     return true;
   }
 
@@ -640,7 +638,8 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 [[nodiscard]] static bool AsyncGeneratorAwaitReturn(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue next) {
   // Step 1. Assert: generator.[[AsyncGeneratorState]] is draining-queue.
-  // FIXME
+  MOZ_ASSERT(generator->isDrainingQueue());
+  generator->setDrainingQueue_AwaitingReturn();
 
   // Step 2. Let queue be generator.[[AsyncGeneratorQueue]].
   // Step 3. Assert: queue is not empty.
@@ -655,12 +654,6 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 
   // Step 7. Let promiseCompletion be Completion(PromiseResolve(%Promise%,
   //         completion.[[Value]])).
-  // Step 8. If promiseCompletion is an abrupt completion, then
-  // Step 8.a. Perform AsyncGeneratorCompleteStep(generator,
-  //           promiseCompletion, true).
-  // Step 8.b. Perform AsyncGeneratorDrainQueue(generator).
-  // Step 8.c. Return unused.
-  // FIXME
 
   // Step 9. Assert: promiseCompletion is a normal completion.
   // Step 10. Let promise be promiseCompletion.[[Value]].
@@ -676,9 +669,20 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   //          « »).
   // Step 15. Perform PerformPromiseThen(promise, onFulfilled, onRejected).
   // Step 16. Return unused.
-  return InternalAsyncGeneratorAwait(
-      cx, generator, next, PromiseHandler::AsyncGeneratorAwaitReturnFulfilled,
-      PromiseHandler::AsyncGeneratorAwaitReturnRejected);
+  if (!InternalAsyncGeneratorAwait(
+          cx, generator, next,
+          PromiseHandler::AsyncGeneratorAwaitReturnFulfilled,
+          PromiseHandler::AsyncGeneratorAwaitReturnRejected)) {
+    // Step 8. If promiseCompletion is an abrupt completion, then
+    // Step 8.a. Perform AsyncGeneratorCompleteStep(generator,
+    //           promiseCompletion, true).
+    // Step 8.b. Perform AsyncGeneratorDrainQueue(generator).
+    // Step 8.c. Return unused.
+    // FIXME
+    return false;
+  }
+
+  return true;
 }
 
 // ES2026 draft rev bdfd596ffad5aeb2957aed4e1db36be3665c69ec
@@ -688,9 +692,9 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 [[nodiscard]] static bool AsyncGeneratorDrainQueue(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator) {
   // Step 1. Assert: generator.[[AsyncGeneratorState]] is draining-queue.
-  // FIXME
-
-  MOZ_ASSERT(!generator->isSuspendedStart() && !generator->isSuspendedYield());
+  //
+  // NOTE: DrainingQueue_AwaitingReturn shouldn't reach here.
+  MOZ_ASSERT(generator->isDrainingQueue());
 
   // Step 2. Let queue be generator.[[AsyncGeneratorQueue]].
   // Step 3. Repeat, while queue is not empty,
@@ -708,9 +712,6 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
     // Step 3.c. If completion is a return completion, then
     if (completionKind == CompletionKind::Return) {
       RootedValue value(cx, next->completionValue());
-
-      // FIXME
-      generator->setAwaitingReturn();
 
       // Step 3.c.i. Perform AsyncGeneratorAwaitReturn(generator).
       // Step 3.c.ii. Return unused.
@@ -738,16 +739,16 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
     }
 
     MOZ_ASSERT(!generator->isExecuting());
-    MOZ_ASSERT(!generator->isAwaitingYieldReturn());
-    if (generator->isAwaitingReturn()) {
-      // FIXME
+    MOZ_ASSERT(!generator->isExecuting_AwaitingYieldReturn());
+    if (generator->isDrainingQueue_AwaitingReturn()) {
       return true;
     }
   }
 
   // Step 4. Set generator.[[AsyncGeneratorState]] to completed.
+  generator->setCompleted();
+
   // Step 5. Return unused.
-  // FIXME
   return true;
 }
 
@@ -908,7 +909,7 @@ bool js::AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 5. Let state be generator.[[AsyncGeneratorState]].
   // Step 6. If state is completed, then
-  if (generator->isCompleted() && generator->isQueueEmpty()) {
+  if (generator->isCompleted()) {
     MOZ_ASSERT(generator->isQueueEmpty());
 
     // Step 6.a. Let iteratorResult be CreateIteratorResultObject(undefined,
@@ -947,8 +948,9 @@ bool js::AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp) {
       // Step 10. Else,
       // Step 10.a. Assert: state is either executing or draining-queue.
       MOZ_ASSERT(generator->isExecuting() ||
-                 generator->isAwaitingYieldReturn() ||
-                 generator->isAwaitingReturn() || generator->isCompleted());
+                 generator->isExecuting_AwaitingYieldReturn() ||
+                 generator->isDrainingQueue() ||
+                 generator->isDrainingQueue_AwaitingReturn());
     }
   }
 
@@ -996,8 +998,6 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  bool wasQueueEmpty = generator->isQueueEmpty();
-
   // Step 5. Let completion be ReturnCompletion(value).
   // Step 6. Perform AsyncGeneratorEnqueue(generator, completion,
   //         promiseCapability).
@@ -1008,12 +1008,11 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 7. Let state be generator.[[AsyncGeneratorState]].
   // Step 8. If state is either suspended-start or completed, then
-  if (generator->isSuspendedStart() ||
-      (generator->isCompleted() && wasQueueEmpty)) {
+  if (generator->isSuspendedStart() || generator->isCompleted()) {
     MOZ_ASSERT(generator->isQueueLengthOne());
 
     // Step 8.a. Set generator.[[AsyncGeneratorState]] to draining-queue.
-    generator->setAwaitingReturn();
+    generator->setDrainingQueue();
 
     // Step 8.b. Perform AsyncGeneratorAwaitReturn(generator).
     if (!AsyncGeneratorAwaitReturn(cx, generator, completionValue)) {
@@ -1042,9 +1041,10 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
   } else {
     // Step 10. Else,
     // Step 10.a. Assert: state is either executing or draining-queue.
-    MOZ_ASSERT(generator->isExecuting() || generator->isAwaitingYieldReturn() ||
-               generator->isAwaitingReturn() ||
-               (generator->isCompleted() && !wasQueueEmpty));
+    MOZ_ASSERT(generator->isExecuting() ||
+               generator->isExecuting_AwaitingYieldReturn() ||
+               generator->isDrainingQueue() ||
+               generator->isDrainingQueue_AwaitingReturn());
   }
 
   // Step 11. Return promiseCapability.[[Promise]].
@@ -1098,7 +1098,7 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 7. If state is completed, then
-  if (generator->isCompleted() && generator->isQueueEmpty()) {
+  if (generator->isCompleted()) {
     MOZ_ASSERT(generator->isQueueEmpty());
 
     // Step 7.a. Perform ! Call(promiseCapability.[[Reject]], undefined, «
@@ -1128,8 +1128,9 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
       // Step 11. Else,
       // Step 11.a. Assert: state is either executing or draining-queue.
       MOZ_ASSERT(generator->isExecuting() ||
-                 generator->isAwaitingYieldReturn() ||
-                 generator->isAwaitingReturn() || generator->isCompleted());
+                 generator->isExecuting_AwaitingYieldReturn() ||
+                 generator->isDrainingQueue() ||
+                 generator->isDrainingQueue_AwaitingReturn());
     }
   }
 

@@ -389,25 +389,20 @@ class AsyncGeneratorObject : public AbstractGeneratorObject {
     // Part of "executing" in the spec.
     // Awaiting on the value passed by AsyncGenerator#return which is called
     // while executing.
-    State_AwaitingYieldReturn,
+    State_Executing_AwaitingYieldReturn,
 
     // "draining-queue" in the spec.
-    // FIXME
-    // ???
+    // It's performing AsyncGeneratorDrainQueue.
+    State_DrainingQueue,
 
     // Part of "draining-queue" in the spec.
     // Awaiting on the value passed by AsyncGenerator#return which is called
     // after completed.
-    State_AwaitingReturn,
-
-    // Mix of "completed" and "draining-queue" in the spec.
-    // The generator is either completed or draining the queue.
-    // FIXME
-    State_Completed
+    State_DrainingQueue_AwaitingReturn,
 
     // "completed" in the spec.
     // The generator is completed.
-    // FIXME
+    State_Completed
   };
 
   State state() const {
@@ -458,17 +453,25 @@ class AsyncGeneratorObject : public AbstractGeneratorObject {
   bool isSuspendedStart() const { return state() == State_SuspendedStart; }
   bool isSuspendedYield() const { return state() == State_SuspendedYield; }
   bool isExecuting() const { return state() == State_Executing; }
-  bool isAwaitingYieldReturn() const {
-    return state() == State_AwaitingYieldReturn;
+  bool isExecuting_AwaitingYieldReturn() const {
+    return state() == State_Executing_AwaitingYieldReturn;
   }
-  bool isAwaitingReturn() const { return state() == State_AwaitingReturn; }
+  bool isDrainingQueue() const { return state() == State_DrainingQueue; }
+  bool isDrainingQueue_AwaitingReturn() const {
+    return state() == State_DrainingQueue_AwaitingReturn;
+  }
   bool isCompleted() const { return state() == State_Completed; }
 
   void setSuspendedStart() { setState(State_SuspendedStart); }
   void setSuspendedYield() { setState(State_SuspendedYield); }
   void setExecuting() { setState(State_Executing); }
-  void setAwaitingYieldReturn() { setState(State_AwaitingYieldReturn); }
-  void setAwaitingReturn() { setState(State_AwaitingReturn); }
+  void setExecuting_AwaitingYieldReturn() {
+    setState(State_Executing_AwaitingYieldReturn);
+  }
+  void setDrainingQueue() { setState(State_DrainingQueue); }
+  void setDrainingQueue_AwaitingReturn() {
+    setState(State_DrainingQueue_AwaitingReturn);
+  }
   void setCompleted() { setState(State_Completed); }
 
   [[nodiscard]] static bool enqueueRequest(
