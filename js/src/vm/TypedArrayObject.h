@@ -119,9 +119,16 @@ class TypedArrayObject : public ArrayBufferViewObject {
   static bool getElements(JSContext* cx, Handle<TypedArrayObject*> tarray,
                           size_t length, Value* vp);
 
-  static bool GetTemplateObjectForNative(JSContext* cx, Native native,
-                                         const JS::HandleValueArray args,
-                                         MutableHandleObject res);
+  static bool GetTemplateObjectForLength(JSContext* cx, Scalar::Type type,
+                                         int32_t length,
+                                         MutableHandle<TypedArrayObject*> res);
+
+  static TypedArrayObject* GetTemplateObjectForBuffer(
+      JSContext* cx, Scalar::Type type,
+      Handle<ArrayBufferObjectMaybeShared*> buffer);
+
+  static TypedArrayObject* GetTemplateObjectForArrayLike(
+      JSContext* cx, Scalar::Type type, Handle<JSObject*> arrayLike);
 
   // Maximum allowed byte length for any typed array.
   static constexpr size_t ByteLengthLimit = ArrayBufferObject::ByteLengthLimit;
@@ -251,6 +258,8 @@ bool IsTypedArrayConstructor(const JSObject* obj);
 bool IsTypedArrayConstructor(HandleValue v, Scalar::Type type);
 
 JSNative TypedArrayConstructorNative(Scalar::Type type);
+
+Scalar::Type TypedArrayConstructorType(const JSFunction* fun);
 
 // In WebIDL terminology, a BufferSource is either an ArrayBuffer or a typed
 // array view. In either case, extract the dataPointer/byteLength.

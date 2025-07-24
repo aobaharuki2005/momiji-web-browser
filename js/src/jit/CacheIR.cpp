@@ -11473,17 +11473,34 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayConstructor() {
   }
 #endif
 
-  RootedObject templateObj(cx_);
-  if (!TypedArrayObject::GetTemplateObjectForNative(cx_, target_->native(),
-                                                    args_, &templateObj)) {
-    cx_->recoverFromOutOfMemory();
-    return AttachDecision::NoAction;
-  }
+  Scalar::Type type = TypedArrayConstructorType(target_);
 
-  if (!templateObj) {
+  Rooted<TypedArrayObject*> templateObj(cx_);
+  if (args_[0].isInt32()) {
+    if (!TypedArrayObject::GetTemplateObjectForLength(
+            cx_, type, args_[0].toInt32(), &templateObj)) {
+      cx_->recoverFromOutOfMemory();
+      return AttachDecision::NoAction;
+    }
+
     // This can happen for large length values.
-    MOZ_ASSERT(args_[0].isInt32());
-    return AttachDecision::NoAction;
+    if (!templateObj) {
+      return AttachDecision::NoAction;
+    }
+  } else {
+    Rooted<JSObject*> obj(cx_, &args_[0].toObject());
+    if (obj->is<ArrayBufferObjectMaybeShared>()) {
+      auto buffer = obj.as<ArrayBufferObjectMaybeShared>();
+      templateObj =
+          TypedArrayObject::GetTemplateObjectForBuffer(cx_, type, buffer);
+    } else {
+      templateObj =
+          TypedArrayObject::GetTemplateObjectForArrayLike(cx_, type, obj);
+    }
+    if (!templateObj) {
+      cx_->recoverFromOutOfMemory();
+      return AttachDecision::NoAction;
+    }
   }
 
   // Initialize the input operand.

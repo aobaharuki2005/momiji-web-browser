@@ -1583,73 +1583,97 @@ static bool TypedArrayConstructor(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 template <typename T>
-static bool GetTemplateObjectForNative(JSContext* cx,
-                                       const JS::HandleValueArray args,
-                                       MutableHandleObject res) {
-  if (args.length() == 0) {
+static bool GetTemplateObjectForLength(JSContext* cx, int32_t length,
+                                       MutableHandle<TypedArrayObject*> res) {
+  size_t len = size_t(std::max(length, 0));
+
+  size_t nbytes;
+  if (!js::CalculateAllocSize<T>(len, &nbytes) ||
+      nbytes > TypedArrayObject::ByteLengthLimit) {
     return true;
   }
 
-  HandleValue arg = args[0];
-  if (arg.isInt32()) {
-    uint32_t len = 0;
-    if (arg.toInt32() >= 0) {
-      len = arg.toInt32();
-    }
+  res.set(FixedLengthTypedArrayObjectTemplate<T>::makeTemplateObject(cx, len));
+  return !!res;
+}
 
-    size_t nbytes;
-    if (!js::CalculateAllocSize<T>(len, &nbytes) ||
-        nbytes > TypedArrayObject::ByteLengthLimit) {
-      return true;
-    }
-
-    res.set(
-        FixedLengthTypedArrayObjectTemplate<T>::makeTemplateObject(cx, len));
-    return !!res;
+template <typename T>
+static TypedArrayObject* GetTemplateObjectForBuffer(
+    JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> buffer) {
+  if (buffer->isResizable()) {
+    return ResizableTypedArrayObjectTemplate<T>::makeTemplateObject(cx);
   }
 
-  if (!arg.isObject()) {
-    return true;
-  }
-  auto* obj = &arg.toObject();
-
-  // We don't support wrappers, because of the complicated interaction between
-  // wrapped ArrayBuffers and TypedArrays, see |fromBufferWrapped()|.
-  if (IsWrapper(obj)) {
-    return true;
-  }
-
-  if (obj->is<ArrayBufferObjectMaybeShared>()) {
-    if (obj->as<ArrayBufferObjectMaybeShared>().isResizable()) {
-      res.set(ResizableTypedArrayObjectTemplate<T>::makeTemplateObject(cx));
-      return !!res;
-    }
-
-    if (obj->as<ArrayBufferObjectMaybeShared>().isImmutable()) {
-      res.set(ImmutableTypedArrayObjectTemplate<T>::makeTemplateObject(cx));
-      return !!res;
-    }
+  if (buffer->isImmutable()) {
+    return ImmutableTypedArrayObjectTemplate<T>::makeTemplateObject(cx);
   }
 
   // We don't use the template's length in the object case, so we can create
   // the template typed array with an initial length of zero.
   uint32_t len = 0;
 
-  res.set(FixedLengthTypedArrayObjectTemplate<T>::makeTemplateObject(cx, len));
-  return !!res;
+  return FixedLengthTypedArrayObjectTemplate<T>::makeTemplateObject(cx, len);
 }
 
-/* static */ bool TypedArrayObject::GetTemplateObjectForNative(
-    JSContext* cx, Native native, const JS::HandleValueArray args,
-    MutableHandleObject res) {
+template <typename T>
+static TypedArrayObject* GetTemplateObjectForArrayLike(
+    JSContext* cx, Handle<JSObject*> arrayLike) {
+  MOZ_ASSERT(!arrayLike->is<ArrayBufferObjectMaybeShared>(),
+             "Use GetTemplateObjectForBuffer for array buffer objects");
+  MOZ_ASSERT(!IsWrapper(arrayLike), "Wrappers not supported");
+
+  // We don't use the template's length in the object case, so we can create
+  // the template typed array with an initial length of zero.
+  uint32_t len = 0;
+
+  return FixedLengthTypedArrayObjectTemplate<T>::makeTemplateObject(cx, len);
+}
+
+/* static */ bool TypedArrayObject::GetTemplateObjectForLength(
+    JSContext* cx, Scalar::Type type, int32_t length,
+    MutableHandle<TypedArrayObject*> res) {
   MOZ_ASSERT(!res);
-#define CHECK_TYPED_ARRAY_CONSTRUCTOR(_, T, N)                     \
-  if (native == &TypedArrayObjectTemplate<T>::class_constructor) { \
-    return ::GetTemplateObjectForNative<T>(cx, args, res);         \
+
+  switch (type) {
+#define CREATE_TYPED_ARRAY_TEMPLATE(_, T, N) \
+  case Scalar::N:                            \
+    return ::GetTemplateObjectForLength<T>(cx, length, res);
+    JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPED_ARRAY_TEMPLATE)
+#undef CREATE_TYPED_ARRAY_TEMPLATE
+    default:
+      MOZ_CRASH("Unsupported TypedArray type");
   }
-  JS_FOR_EACH_TYPED_ARRAY(CHECK_TYPED_ARRAY_CONSTRUCTOR)
-#undef CHECK_TYPED_ARRAY_CONSTRUCTOR
-  return true;
+}
+
+/* static */ TypedArrayObject* TypedArrayObject::GetTemplateObjectForBuffer(
+    JSContext* cx, Scalar::Type type,
+    Handle<ArrayBufferObjectMaybeShared*> buffer) {
+  switch (type) {
+#define CREATE_TYPED_ARRAY_TEMPLATE(_, T, N) \
+  case Scalar::N:                            \
+    return ::GetTemplateObjectForBuffer<T>(cx, buffer);
+    JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPED_ARRAY_TEMPLATE)
+#undef CREATE_TYPED_ARRAY_TEMPLATE
+    default:
+      MOZ_CRASH("Unsupported TypedArray type");
+  }
+}
+
+/* static */ TypedArrayObject* TypedArrayObject::GetTemplateObjectForArrayLike(
+    JSContext* cx, Scalar::Type type, Handle<JSObject*> arrayLike) {
+  // We don't support wrappers, because of the complicated interaction between
+  // wrapped ArrayBuffers and TypedArrays, see |fromBufferWrapped()|.
+  MOZ_ASSERT(!IsWrapper(arrayLike));
+
+  switch (type) {
+#define CREATE_TYPED_ARRAY_TEMPLATE(_, T, N) \
+  case Scalar::N:                            \
+    return ::GetTemplateObjectForArrayLike<T>(cx, arrayLike);
+    JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPED_ARRAY_TEMPLATE)
+#undef CREATE_TYPED_ARRAY_TEMPLATE
+    default:
+      MOZ_CRASH("Unsupported TypedArray type");
+  }
 }
 
 static bool LengthGetterImpl(JSContext* cx, const CallArgs& args) {
@@ -5575,6 +5599,21 @@ JSNative js::TypedArrayConstructorNative(Scalar::Type type) {
 #undef TYPED_ARRAY_CONSTRUCTOR_NATIVE
 
   MOZ_CRASH("unexpected typed array type");
+}
+
+Scalar::Type js::TypedArrayConstructorType(const JSFunction* fun) {
+  if (!fun->isNativeFun()) {
+    return Scalar::MaxTypedArrayViewType;
+  }
+
+#define CHECK_TYPED_ARRAY_CONSTRUCTOR(_, T, N)                           \
+  if (fun->native() == TypedArrayObjectTemplate<T>::class_constructor) { \
+    return Scalar::N;                                                    \
+  }
+  JS_FOR_EACH_TYPED_ARRAY(CHECK_TYPED_ARRAY_CONSTRUCTOR)
+#undef CHECK_TYPED_ARRAY_CONSTRUCTOR
+
+  return Scalar::MaxTypedArrayViewType;
 }
 
 bool js::IsBufferSource(JSContext* cx, JSObject* object, bool allowShared,
