@@ -796,6 +796,9 @@ class MOZ_RAII InlinableNativeIRGenerator {
   AttachDecision tryAttachObjectConstructor();
   AttachDecision tryAttachArrayConstructor();
   AttachDecision tryAttachTypedArrayConstructor();
+  AttachDecision tryAttachTypedArrayConstructorFromLength();
+  AttachDecision tryAttachTypedArrayConstructorFromArrayBuffer();
+  AttachDecision tryAttachTypedArrayConstructorFromArray();
   AttachDecision tryAttachMapSetConstructor(InlinableNative native);
   AttachDecision tryAttachNumber();
   AttachDecision tryAttachNumberParseInt();
