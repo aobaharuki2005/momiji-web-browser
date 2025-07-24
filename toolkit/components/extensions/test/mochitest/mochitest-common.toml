@@ -307,11 +307,6 @@ skip-if = [
 skip-if = ["os == 'android'"] # Bug 1513544 (GeckoView is missing the windows API and ability to open private tabs)
 
 ["test_ext_listener_proxies.html"]
-skip-if = [
-  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && debug && http2", # Bug 1781605
-  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && debug && http3", # Bug 1781605
-]
-
 
 ["test_ext_new_tab_processType.html"]
 skip-if = [
