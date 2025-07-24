@@ -492,7 +492,7 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
   return object.forget();
 }
 
-MOZ_CAN_RUN_SCRIPT void reportCompilationMessagesToConsole(
+void reportCompilationMessagesToConsole(
     const RefPtr<ShaderModule>& aShaderModule,
     const nsTArray<WebGPUCompilationMessage>& aMessages) {
   auto* global = aShaderModule->GetParentObject();
