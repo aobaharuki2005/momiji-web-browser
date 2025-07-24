@@ -18,8 +18,8 @@ import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.iconpicker.AppIconRepository
 import org.mozilla.fenix.iconpicker.DefaultAppIconRepository
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.utils.ShortcutInfoWrapperDefault
 import org.mozilla.fenix.utils.ShortcutManagerWrapperDefault
+import org.mozilla.fenix.utils.ShortcutsUpdaterDefault
 import org.mozilla.fenix.utils.changeAppLauncherIcon
 
 /**
@@ -60,7 +60,7 @@ class AppIconSelectionFragment : Fragment(), UserInteractionHandler {
             changeAppLauncherIcon(
                 packageManager = packageManager,
                 shortcutManager = ShortcutManagerWrapperDefault(this),
-                shortcutInfo = ShortcutInfoWrapperDefault(this),
+                shortcutInfo = ShortcutsUpdaterDefault(this),
                 appAlias = ComponentName(this, "$packageName.$currentAliasSuffix"),
                 newAppAlias = ComponentName(this, "$packageName.$newAliasSuffix"),
             )
