@@ -715,10 +715,10 @@ index b1f026372a..3eefc07cd9 100644
  class VideoMediaReceiveChannelInterface;
  class VoiceMediaSendChannelInterface;
 diff --git a/media/base/media_channel_impl.cc b/media/base/media_channel_impl.cc
-index 40da627b4b..3684d9d6d6 100644
+index b88007703c..a33efe7f8d 100644
 --- a/media/base/media_channel_impl.cc
 +++ b/media/base/media_channel_impl.cc
-@@ -38,15 +38,6 @@
+@@ -35,15 +35,6 @@
  
  namespace webrtc {
  
@@ -1211,7 +1211,7 @@ index b18114f107..3ca6994c81 100644
      deps += [
        "..:logging",
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index a17bbcdb13..325019d08e 100644
+index 292a4c6662..6eb7869dfe 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -232,6 +232,7 @@ rtc_library("audio_test_common") {
@@ -1253,7 +1253,7 @@ index a17bbcdb13..325019d08e 100644
      sources += [ "testsupport/jpeg_frame_writer.cc" ]
    } else {
      sources += [ "testsupport/jpeg_frame_writer_ios.cc" ]
-@@ -1308,6 +1316,7 @@ if (!build_with_chromium) {
+@@ -1312,6 +1320,7 @@ if (!build_with_chromium) {
    }
  }
  
@@ -1261,7 +1261,7 @@ index a17bbcdb13..325019d08e 100644
  if (!build_with_chromium && is_android) {
    rtc_android_library("native_test_java") {
      testonly = true
-@@ -1350,6 +1359,7 @@ if (!build_with_chromium && is_android) {
+@@ -1354,6 +1363,7 @@ if (!build_with_chromium && is_android) {
      sources = [ "android/org/webrtc/native_test/NativeTestWebrtc.java" ]
    }
  }
@@ -1270,7 +1270,7 @@ index a17bbcdb13..325019d08e 100644
  rtc_library("call_config_utils") {
    testonly = true
 diff --git a/video/BUILD.gn b/video/BUILD.gn
-index 3e7af5a1e9..7f70e4eefd 100644
+index 68bc3cfca4..3a56c2c2b1 100644
 --- a/video/BUILD.gn
 +++ b/video/BUILD.gn
 @@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {

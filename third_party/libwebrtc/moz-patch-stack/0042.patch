@@ -91,10 +91,10 @@ index cfbf843032..c4320657b7 100644
  
  }  // namespace voe
 diff --git a/audio/channel_receive.h b/audio/channel_receive.h
-index ee72187b7d..961e865dd5 100644
+index 6179c4f8f0..d2316adb12 100644
 --- a/audio/channel_receive.h
 +++ b/audio/channel_receive.h
-@@ -38,6 +38,7 @@
+@@ -39,6 +39,7 @@
  #include "call/rtp_packet_sink_interface.h"
  #include "call/syncable.h"
  #include "modules/audio_coding/include/audio_coding_module_typedefs.h"

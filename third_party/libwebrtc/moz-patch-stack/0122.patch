@@ -271,7 +271,7 @@ index 8351ae424b..5e8259826f 100644
  
  rtc_source_set("scalability_mode") {
 diff --git a/audio/BUILD.gn b/audio/BUILD.gn
-index 702a8d839d..6fd0767fb8 100644
+index 0492dd24e5..be9eac131d 100644
 --- a/audio/BUILD.gn
 +++ b/audio/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -786,7 +786,7 @@ index 786c469689..62e1694729 100644
  import("../webrtc.gni")
  
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index 649f762fb8..138d2060ee 100644
+index 7253ed2d41..d4aa4ac13e 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -6,10 +6,10 @@
