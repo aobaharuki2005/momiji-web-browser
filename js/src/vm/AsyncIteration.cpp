@@ -690,6 +690,8 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   // Step 1. Assert: generator.[[AsyncGeneratorState]] is draining-queue.
   // FIXME
 
+  MOZ_ASSERT(!generator->isSuspendedStart() && !generator->isSuspendedYield());
+
   // Step 2. Let queue be generator.[[AsyncGeneratorQueue]].
   // Step 3. Repeat, while queue is not empty,
   while (!generator->isQueueEmpty()) {
@@ -702,31 +704,6 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 
     // Step 3.b. Let completion be Completion(next.[[Completion]]).
     CompletionKind completionKind = next->completionKind();
-
-    // FIXME
-    if (completionKind != CompletionKind::Normal) {
-      if (generator->isSuspendedStart()) {
-        generator->setCompleted();
-      }
-    }
-    // FIXME
-    if (!generator->isCompleted()) {
-      MOZ_ASSERT(generator->isSuspendedStart() ||
-                 generator->isSuspendedYield());
-
-      RootedValue argument(cx, next->completionValue());
-
-      if (completionKind == CompletionKind::Return) {
-        generator->setAwaitingYieldReturn();
-
-        return InternalAsyncGeneratorAwait(
-            cx, generator, argument,
-            PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled,
-            PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected);
-      }
-
-      return AsyncGeneratorResume(cx, generator, completionKind, argument);
-    }
 
     // Step 3.c. If completion is a return completion, then
     if (completionKind == CompletionKind::Return) {
