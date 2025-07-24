@@ -12,12 +12,28 @@
 #include "download_firefox.h"
 #include "data_sink.h"
 
+static const size_t python_path_len = 32768;
+static wchar_t python_path[python_path_len];
+
+static wchar_t* getPythonPath() {
+  DWORD res = GetEnvironmentVariableW(L"PYTHON", python_path, python_path_len);
+  if (res == 0) {
+    std::wcout << L"Can't find python" << std::endl;
+    return nullptr;
+  }
+  return python_path;
+}
+
 static HANDLE startWebServer() {
   SHELLEXECUTEINFOW execInfo{};
   execInfo.cbSize = sizeof(SHELLEXECUTEINFOW);
   execInfo.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC;
   execInfo.lpVerb = L"open";
-  execInfo.lpFile = L"python";
+  execInfo.lpFile = getPythonPath();
+  if (!execInfo.lpFile) {
+    // Can't find Python
+    return nullptr;
+  }
   execInfo.lpParameters =
       L"-m http.server --protocol HTTP/1.1 --bind 127.0.0.1 9191";
   execInfo.nShow = SW_HIDE;
