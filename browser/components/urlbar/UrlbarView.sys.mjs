@@ -481,7 +481,10 @@ export class UrlbarView {
           icon: "chrome://branding/content/icon32.png",
         }
       ),
-      { rowLabel: this.#rowLabel(row) }
+      {
+        rowLabel: this.#rowLabel(row),
+        richSuggestionIconSize: 32,
+      }
     );
     this.#updateRow(row, tip);
     this.#updateIndices();
@@ -1632,6 +1635,11 @@ export class UrlbarView {
   }
 
   #addRowButtons(item, result) {
+    let container = this.#createElement("div");
+    container.className = "urlbarView-row-buttons";
+    item._elements.set("buttons", container);
+    item.appendChild(container);
+
     for (let i = 0; i < result.payload.buttons?.length; i++) {
       let button = result.payload.buttons[i];
       // We hold the name to each button data in payload to enable to get the
@@ -1695,7 +1703,7 @@ export class UrlbarView {
     item._buttons.set(name, button);
 
     if (!menu) {
-      item.appendChild(button);
+      item._elements.get("buttons").appendChild(button);
       return;
     }
 
@@ -1721,7 +1729,7 @@ export class UrlbarView {
     dropmarker.appendChild(icon);
     container.appendChild(dropmarker);
 
-    item.appendChild(container);
+    item._elements.get("buttons").appendChild(container);
   }
 
   #createSecondaryAction(action, global = false) {
@@ -2230,7 +2238,10 @@ export class UrlbarView {
   }
 
   #updateRowForRichSuggestion(item, result) {
-    this.#setRowSelectable(item, true);
+    this.#setRowSelectable(
+      item,
+      result.type != lazy.UrlbarUtils.RESULT_TYPE.TIP
+    );
 
     let favicon = item._elements.get("favicon");
     if (result.richSuggestionIconSize) {

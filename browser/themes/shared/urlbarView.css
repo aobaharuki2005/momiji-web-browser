@@ -387,6 +387,13 @@
 
 /* Buttons */
 
+.urlbarView-row-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  flex-wrap: wrap;
+}
+
 .urlbarView-button {
   display: inline-block;
   min-width: var(--urlbarView-result-button-size);
@@ -432,14 +439,14 @@
   background-image: url("chrome://global/skin/icons/more.svg");
   background-color: var(--button-background-color);
 
-  .urlbarView-results:not([disable-resultmenu-autohide]) > .urlbarView-row:not(:hover, [selected]) > .urlbarView-row-inner + &:not([open]):empty {
+  .urlbarView-results:not([disable-resultmenu-autohide]) > .urlbarView-row:not(:hover, [selected]) > .urlbarView-row-buttons > &:not([open]):first-child:empty {
     display: none;
   }
 
   /* Labeled result menu button */
 
   &:not(:empty) {
-    .urlbarView-results:not([wrap]) > .urlbarView-row > & {
+    .urlbarView-results:not([wrap]) > .urlbarView-row > .urlbarView-row-buttons > & {
       display: inline-flex;
       align-items: center;
       border-radius: var(--urlbarView-result-button-size);
@@ -452,7 +459,7 @@
       }
     }
 
-    .urlbarView-results[wrap] > .urlbarView-row > & {
+    .urlbarView-results[wrap] > .urlbarView-row > .urlbarView-row-buttons > & {
       /* Hide the label in narrow windows. */
       font-size: 0;
     }
@@ -511,81 +518,6 @@
   border-inline-start: none;
   -moz-context-properties: fill;
   fill: currentColor;
-}
-
-/* Tip rows */
-
-.urlbarView-row[type="tip"] {
-  padding-block: 18px;
-  border-block: 0;
-  border-radius: 0;
-
-  &:not(:last-child) {
-    border-bottom: 1px solid var(--urlbarView-separator-color);
-    margin-bottom: 4px;
-  }
-
-  &:not(:first-child) {
-    border-top: 1px solid var(--urlbarView-separator-color);
-    margin-top: 4px;
-  }
-
-  /* For tips with row labels, move the entire row down by an additional
-     var(--urlbarView-labeled-tip-margin-top-extra) so there's more space
-     between the tip's top border and the label. They're too close otherwise.
-     The row label must also be adjusted; see the row label rules. */
-  &[label] {
-    margin-top: calc(var(--urlbarView-labeled-row-margin-top) + var(--urlbarView-labeled-tip-margin-top-extra));
-  }
-
-  > .urlbarView-row-inner {
-    min-height: 32px;
-    align-items: center;
-
-    /* Add space between the tip title (and the rest of row-inner) and its
-       button. */
-    margin-inline-end: 1.8em;
-
-    > .urlbarView-no-wrap > .urlbarView-title-separator,
-    > .urlbarView-url {
-      display: none;
-    }
-
-    > .urlbarView-no-wrap > .urlbarView-title {
-      white-space: normal;
-    }
-  }
-
-  .urlbarView-results[wrap] > & {
-    display: block;
-    text-align: end;
-
-    > .urlbarView-row-inner {
-      display: block;
-      text-align: start;
-    }
-
-    > .urlbarView-button {
-      margin-top: 1em;
-      margin-bottom: var(--urlbarView-item-block-padding);
-    }
-  }
-
-  &:not([tip-type="dismissalAcknowledgment"]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
-    width: 24px;
-    height: 24px;
-    margin-inline-end: 12px;
-    flex-basis: 24px;
-    flex-grow: 0;
-  }
-
-  &[tip-type="dismissalAcknowledgment"] {
-    padding-block: 6px;
-
-    &:last-child {
-      padding-block-end: max(0px, 6px - var(--urlbarView-results-padding));
-    }
-  }
 }
 
 /* Row label (a.k.a. group label) */
@@ -1009,6 +941,86 @@
 /* prettier-ignore */
 .urlbarView-row[rich-suggestion]:not([selected]) > .urlbarView-row-inner > .urlbarView-row-body > :is(.urlbarView-row-body-description, .urlbarView-row-body-bottom) {
   color: var(--urlbarView-secondary-text-color);
+}
+
+/* Tip rows. Tip result inherits rich suggestion. */
+
+.urlbarView-row[type="tip"] {
+  padding-block: 18px;
+  border-block: 0;
+  border-radius: 0;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--urlbarView-separator-color);
+    margin-bottom: 4px;
+  }
+
+  &:not(:first-child) {
+    border-top: 1px solid var(--urlbarView-separator-color);
+    margin-top: 4px;
+  }
+
+  /* For tips with row labels, move the entire row down by an additional
+     var(--urlbarView-labeled-tip-margin-top-extra) so there's more space
+     between the tip's top border and the label. They're too close otherwise.
+     The row label must also be adjusted; see the row label rules. */
+  &[label] {
+    margin-top: calc(var(--urlbarView-labeled-row-margin-top) + var(--urlbarView-labeled-tip-margin-top-extra));
+  }
+
+  > .urlbarView-row-inner {
+    min-height: 32px;
+    align-items: center;
+
+    /* Add space between the tip title (and the rest of row-inner) and its
+       button. */
+    margin-inline-end: 1.8em;
+
+    > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap {
+      flex-shrink: unset;
+
+      > .urlbarView-title {
+        white-space: normal;
+      }
+
+      > :not(.urlbarView-title) {
+        display: none;
+      }
+    }
+
+    > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-url {
+      display: none;
+    }
+  }
+
+  .urlbarView-results[wrap] > & {
+    display: block;
+    text-align: end;
+
+    > .urlbarView-row-inner {
+      display: flex;
+      text-align: start;
+    }
+
+    > .urlbarView-row-buttons {
+      > .urlbarView-button,
+      > .urlbarView-splitbutton {
+        margin-block: 1em var(--urlbarView-item-block-padding);
+        margin-inline: 4px 0;
+      }
+      > :last-child {
+        margin-inline-end: 4px;
+      }
+    }
+
+    &[tip-type="dismissalAcknowledgment"] {
+      padding-block: 6px;
+
+      &:last-child {
+        padding-block-end: max(0px, 6px - var(--urlbarView-results-padding));
+      }
+    }
+  }
 }
 
 /* Sponsored Firefox Suggest rows */
