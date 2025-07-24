@@ -1813,8 +1813,12 @@ bool SandboxBroker::SetSecurityLevelForGMPlugin(
   // win32k is currently not disabled for clearkey due to WMF decoding or
   // widevine due to intermittent test failures, where the GMP process fails
   // very early. See bug 1449348.
+  // The sandbox doesn't provide Output Protection Manager API brokering
+  // anymore, so we can't use this for the Fake plugin that is used to partially
+  // test it. This brokering was only used in the tests anyway.
   if (StaticPrefs::security_sandbox_gmp_win32k_disable() &&
-      aGMPSandboxKind != Widevine && aGMPSandboxKind != Clearkey) {
+      aGMPSandboxKind != Widevine && aGMPSandboxKind != Clearkey &&
+      aGMPSandboxKind != Fake) {
     result = AddWin32kLockdownConfig(config);
     SANDBOX_ENSURE_SUCCESS(result, "Failed to add the win32k lockdown policy");
   }

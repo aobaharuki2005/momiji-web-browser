@@ -1591,6 +1591,8 @@ Result<Ok, LaunchError> WindowsProcessLauncher::DoSetup() {
           gmpSandboxKind = GMPSandboxKind::Widevine;
         } else if (Contains(mChildArgs, "gmp-clearkey")) {
           gmpSandboxKind = GMPSandboxKind::Clearkey;
+        } else if (Contains(mChildArgs, "gmp-fake")) {
+          gmpSandboxKind = GMPSandboxKind::Fake;
         }
 
         if (NS_WARN_IF(!mResults.mSandboxBroker->SetSecurityLevelForGMPlugin(

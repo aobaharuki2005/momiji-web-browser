@@ -26,7 +26,7 @@ class TargetPolicy;
 
 namespace mozilla {
 
-enum GMPSandboxKind { Default, Widevine, Clearkey };
+enum GMPSandboxKind { Default, Widevine, Clearkey, Fake };
 
 class SandboxBroker {
  public:
