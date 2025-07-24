@@ -673,13 +673,43 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
           cx, generator, next,
           PromiseHandler::AsyncGeneratorAwaitReturnFulfilled,
           PromiseHandler::AsyncGeneratorAwaitReturnRejected)) {
+    // This branch can be taken with one of the following:
+    //   * (a) abrupt completion in PromiseResolve at step 7, such as
+    //         getting `compeltion.[[Value]].constructor` property throws
+    //   * (b) OOM in PromiseResolve
+    //   * (c) OOM in PerformPromiseThen
+    //
+    // (c) happens after step 8, but OOM is an implementation details and
+    // we can treat the OOM as if it happened during PromiseResolve,
+    // and thus performing the step 8 here is okay.
+    //
     // Step 8. If promiseCompletion is an abrupt completion, then
+
+    // Not much we can do about uncatchable exceptions, so just bail.
+    if (!cx->isExceptionPending()) {
+      return false;
+    }
+
+    RootedValue value(cx);
+    if (!GetAndClearException(cx, &value)) {
+      return false;
+    }
+
     // Step 8.a. Perform AsyncGeneratorCompleteStep(generator,
     //           promiseCompletion, true).
+    if (!AsyncGeneratorCompleteStepThrow(cx, generator, value)) {
+      return false;
+    }
+
+    MOZ_ASSERT(!generator->isExecuting());
+    MOZ_ASSERT(!generator->isExecuting_AwaitingYieldReturn());
+    if (generator->isDrainingQueue_AwaitingReturn()) {
+      return true;
+    }
+
     // Step 8.b. Perform AsyncGeneratorDrainQueue(generator).
     // Step 8.c. Return unused.
-    // FIXME
-    return false;
+    return AsyncGeneratorDrainQueue(cx, generator);
   }
 
   return true;
