@@ -7,7 +7,7 @@ package org.mozilla.fenix.iconpicker
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 
-class AliasSuffixTest {
+class AppIconTest {
 
     @Test
     fun `GIVEN a valid alias suffix WHEN fromString is invoked THEN matching enum is returned`() {

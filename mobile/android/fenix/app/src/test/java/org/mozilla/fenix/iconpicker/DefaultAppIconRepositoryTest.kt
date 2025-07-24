@@ -15,7 +15,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
 
 @RunWith(AndroidJUnit4::class)
-class DefaultSettingsAppIconRepositoryTest {
+class DefaultAppIconRepositoryTest {
     private lateinit var settings: Settings
 
     @Before
