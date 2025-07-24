@@ -651,12 +651,7 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 
   // Step 2. Let queue be generator.[[AsyncGeneratorQueue]].
   // Step 3. Repeat, while queue is not empty,
-  if (generator->isQueueEmpty()) {
-    // FIXME
-    return true;
-  }
-
-  while (true) {
+  while (!generator->isQueueEmpty()) {
     // Step 3.a. Let next be the first element of queue.
     Rooted<AsyncGeneratorRequest*> next(
         cx, AsyncGeneratorObject::peekRequest(generator));
@@ -730,16 +725,12 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
       // FIXME
       return true;
     }
-
-    if (generator->isQueueEmpty()) {
-      // FIXME
-      return true;
-    }
   }
 
   // Step 4. Set generator.[[AsyncGeneratorState]] to completed.
   // Step 5. Return unused.
   // FIXME
+  return true;
 }
 
 // ES2026 draft rev bdfd596ffad5aeb2957aed4e1db36be3665c69ec
