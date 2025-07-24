@@ -13,6 +13,7 @@ import android.text.SpannableString
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.qr.QrFeature
@@ -53,6 +54,7 @@ class QrScannerDelegate(
             },
             onNeedToRequestPermissions = { permissions ->
                 // get permissions
+                ActivityCompat.requestPermissions(activity, permissions, REQUEST_CODE_CAMERA_PERMISSIONS)
             },
         )
     }
@@ -69,7 +71,15 @@ class QrScannerDelegate(
             activity.isPermissionGranted(Manifest.permission.CAMERA) -> qrFeature.scan()
 
             else -> {
-                buildPermissionDialog().show()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    ActivityCompat.requestPermissions(
+                        activity,
+                        arrayOf(Manifest.permission.CAMERA),
+                        REQUEST_CODE_CAMERA_PERMISSIONS,
+                    )
+                } else {
+                    buildPermissionDialog().show()
+                }
             }
         }
     }
@@ -107,5 +117,12 @@ class QrScannerDelegate(
             }
             create().withCenterAlignedButtons()
         }
+    }
+
+    /**
+     * Holds constant values.
+     */
+    companion object {
+        private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
     }
 }

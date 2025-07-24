@@ -369,7 +369,7 @@ sealed class AppAction : Action {
         data object QrScannerRequested : QrScannerAction()
 
         /**
-         * [QrScannerAction] dispatched when the QR Scanner Request is consumed.
+         * [QrScannerAction] dispatched when the QR Scanner request is consumed.
          */
         data object QrScannerRequestConsumed : QrScannerAction()
 

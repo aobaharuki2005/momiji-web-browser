@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_MAIN
 import android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
@@ -643,6 +644,26 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             safeIntent,
             binding.rootContainer,
         )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        when (requestCode) {
+            REQUEST_CODE_CAMERA_PERMISSIONS -> {
+                if (grantResults.isNotEmpty() &&
+                    grantResults[0] == PackageManager.PERMISSION_DENIED
+                    ) {
+                    // if denied, do not relaunch QR Scanner
+                    components.appStore.dispatch(AppAction.QrScannerAction.QrScannerRequestConsumed)
+                } else {
+                    components.appStore.dispatch(AppAction.QrScannerAction.QrScannerRequested)
+                }
+            }
+            else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        }
     }
 
     @CallSuper
@@ -1430,5 +1451,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         // PWA must have been used within last 30 days to be considered "recently used" for the
         // telemetry purposes.
         private const val PWA_RECENTLY_USED_THRESHOLD = DateUtils.DAY_IN_MILLIS * 30L
+
+        private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
     }
 }
