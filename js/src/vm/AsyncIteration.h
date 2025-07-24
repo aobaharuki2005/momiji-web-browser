@@ -488,6 +488,15 @@ class AsyncGeneratorObject : public AbstractGeneratorObject {
     return queue()->getDenseInitializedLength() == 0;
   }
 
+#ifdef DEBUG
+  bool isQueueLengthOne() const {
+    if (isSingleQueue()) {
+      return !isSingleQueueEmpty();
+    }
+    return queue()->getDenseInitializedLength() == 1;
+  }
+#endif
+
   // This function does either of the following:
   //   * return a cached request object with the slots updated
   //   * create a new request object with the slots set

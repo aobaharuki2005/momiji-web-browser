@@ -385,7 +385,17 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   //            AsyncGeneratorUnwrapYieldResumption(resumptionValue).
   // (done in AsyncGeneratorResume on the next resume)
 
-  return AsyncGeneratorDrainQueue(cx, generator);
+  if (!generator->isQueueEmpty()) {
+    if (!AsyncGeneratorDrainQueue(cx, generator)) {
+      return false;
+    }
+  } else {
+    if (!AsyncGeneratorDrainQueue(cx, generator)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 // ES2026 draft rev bdfd596ffad5aeb2957aed4e1db36be3665c69ec
@@ -903,15 +913,29 @@ bool js::AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp) {
   // Step 10.a. Assert: state is either executing or draining-queue.
   // FIXME
 
+  bool wasQueueEmpty = generator->isQueueEmpty();
+
   if (!AsyncGeneratorEnqueue(cx, generator, CompletionKind::Normal,
                              completionValue, resultPromise)) {
     return false;
   }
-  if (!generator->isExecuting() && !generator->isAwaitingYieldReturn() &&
-      !generator->isAwaitingReturn()) {
+  if (generator->isCompleted() && wasQueueEmpty) {
+    MOZ_ASSERT(generator->isQueueLengthOne());
     if (!AsyncGeneratorDrainQueue(cx, generator)) {
       return false;
     }
+  } else if (generator->isCompleted()) {
+    if (!AsyncGeneratorDrainQueue(cx, generator)) {
+      return false;
+    }
+  } else if (generator->isSuspendedStart() || generator->isSuspendedYield()) {
+    MOZ_ASSERT(generator->isQueueLengthOne());
+    if (!AsyncGeneratorDrainQueue(cx, generator)) {
+      return false;
+    }
+  } else {
+    MOZ_ASSERT(generator->isExecuting() || generator->isAwaitingYieldReturn() ||
+               generator->isAwaitingReturn());
   }
 
   // Step 6.c. Return promiseCapability.[[Promise]].
@@ -958,6 +982,8 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  bool wasQueueEmpty = generator->isQueueEmpty();
+
   // Step 5. Let completion be ReturnCompletion(value).
   // Step 6. Perform AsyncGeneratorEnqueue(generator, completion,
   //         promiseCapability).
@@ -976,11 +1002,24 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
   // Step 10.a. Assert: state is either executing or draining-queue.
   // FIXME
 
-  if (!generator->isExecuting() && !generator->isAwaitingYieldReturn() &&
-      !generator->isAwaitingReturn()) {
+  if (generator->isSuspendedStart() ||
+      (generator->isCompleted() && wasQueueEmpty)) {
+    MOZ_ASSERT(generator->isQueueLengthOne());
     if (!AsyncGeneratorDrainQueue(cx, generator)) {
       return false;
     }
+  } else if (generator->isCompleted()) {
+    if (!AsyncGeneratorDrainQueue(cx, generator)) {
+      return false;
+    }
+  } else if (generator->isSuspendedYield()) {
+    MOZ_ASSERT(generator->isQueueLengthOne());
+    if (!AsyncGeneratorDrainQueue(cx, generator)) {
+      return false;
+    }
+  } else {
+    MOZ_ASSERT(generator->isExecuting() || generator->isAwaitingYieldReturn() ||
+               generator->isAwaitingReturn());
   }
 
   // Step 11. Return promiseCapability.[[Promise]].
@@ -1041,15 +1080,30 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
   // Step 11.a. Assert: state is either executing or draining-queue.
   // FIXME
 
+  bool wasQueueEmpty = generator->isQueueEmpty();
+
   if (!AsyncGeneratorEnqueue(cx, generator, CompletionKind::Throw,
                              completionValue, resultPromise)) {
     return false;
   }
-  if (!generator->isExecuting() && !generator->isAwaitingYieldReturn() &&
-      !generator->isAwaitingReturn()) {
+  if (generator->isSuspendedStart() ||
+      (generator->isCompleted() && wasQueueEmpty)) {
+    MOZ_ASSERT(generator->isQueueLengthOne());
     if (!AsyncGeneratorDrainQueue(cx, generator)) {
       return false;
     }
+  } else if (generator->isCompleted()) {
+    if (!AsyncGeneratorDrainQueue(cx, generator)) {
+      return false;
+    }
+  } else if (generator->isSuspendedYield()) {
+    MOZ_ASSERT(generator->isQueueLengthOne());
+    if (!AsyncGeneratorDrainQueue(cx, generator)) {
+      return false;
+    }
+  } else {
+    MOZ_ASSERT(generator->isExecuting() || generator->isAwaitingYieldReturn() ||
+               generator->isAwaitingReturn());
   }
 
   // Step 7.b. Return promiseCapability.[[Promise]].
