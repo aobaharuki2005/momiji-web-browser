@@ -30,7 +30,7 @@ use neqo_common::{
     event::Provider as _, qdebug, qerror, qlog::Qlog, qwarn, Datagram, DatagramBatch, Decoder,
     Encoder, Header, Role, Tos,
 };
-use neqo_crypto::{init, PRErrorCode};
+use neqo_crypto::{agent::CertificateCompressor, init, PRErrorCode};
 use neqo_http3::{
     features::extended_connect::SessionCloseReason, Error as Http3Error, Http3Client,
     Http3ClientEvent, Http3Parameters, Http3State, Priority, WebTransportEvent,
@@ -55,6 +55,8 @@ use winapi::{
     shared::ws2def::{AF_INET, AF_INET6},
 };
 use xpcom::{interfaces::nsISocketProvider, AtomicRefcnt, RefCounted, RefPtr};
+use zlib_rs::inflate::{uncompress_slice, InflateConfig};
+use zlib_rs::ReturnCode;
 
 std::thread_local! {
     static RECV_BUF: RefCell<neqo_udp::RecvBuf> = RefCell::new(neqo_udp::RecvBuf::new());
@@ -165,6 +167,30 @@ fn netaddr_to_socket_addr(arg: *const NetAddr) -> Result<SocketAddr, nsresult> {
     }
 
     Err(NS_ERROR_UNEXPECTED)
+}
+
+fn enable_zlib_decoder(c: &mut Connection) -> neqo_transport::Res<()> {
+    struct ZlibCertDecoder {}
+
+    impl CertificateCompressor for ZlibCertDecoder {
+        // RFC 8879
+        const ID: u16 = 0x1;
+        const NAME: &std::ffi::CStr = c"zlib";
+
+        fn decode(input: &[u8], output: &mut [u8]) -> neqo_crypto::Res<()> {
+            let (output_slice, error) = uncompress_slice(output, &input, InflateConfig::default());
+            if error != ReturnCode::Ok {
+                return Err(neqo_crypto::Error::CertificateDecoding);
+            }
+            if output_slice.len() != output.len() {
+                return Err(neqo_crypto::Error::CertificateDecoding);
+            }
+
+            Ok(())
+        }
+    }
+
+    c.set_certificate_compression::<ZlibCertDecoder>()
 }
 
 type SendFunc = extern "C" fn(
@@ -346,6 +372,12 @@ impl NeqoHttp3Conn {
         // If additional_shares == 0, send x25519.
         conn.send_additional_key_shares(additional_shares)
             .map_err(|_| NS_ERROR_UNEXPECTED)?;
+
+        if static_prefs::pref!("security.tls.enable_certificate_compression_zlib")
+            && static_prefs::pref!("network.http.http3.enable_certificate_compression_zlib")
+        {
+            enable_zlib_decoder(&mut conn).map_err(|_| NS_ERROR_UNEXPECTED)?;
+        }
 
         let mut conn = Http3Client::new_with_conn(conn, http3_settings);
 
