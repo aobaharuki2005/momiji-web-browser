@@ -99,6 +99,7 @@
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/glean/DomMediaMetrics.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
+#include "mozilla/nsVideoFrame.h"
 #include "nsAttrValueInlines.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
@@ -135,7 +136,6 @@
 #include "nsThreadUtils.h"
 #include "nsURIHashKey.h"
 #include "nsURLHelper.h"
-#include "nsVideoFrame.h"
 #ifdef XP_WIN
 #  include "objbase.h"
 #endif

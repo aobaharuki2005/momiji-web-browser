@@ -41,6 +41,7 @@ DIRS += [
     "ipc",
     "mediacapabilities",
     "mediacontrol",
+    "mediaelement",
     "mediasink",
     "mediasource",
     "mediasession",
