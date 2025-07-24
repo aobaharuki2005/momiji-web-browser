@@ -22,6 +22,7 @@ private val logger = Logger("ChangeAppLauncherIcon")
  *
  * @param context The application [Context].
  * @param shortcutManager [ShortcutManagerWrapper] to safely access some features in [ShortcutInfoCompat].
+ * @param shortcutInfo A wrapper for [ShortcutInfoCompat].
  * @param appAlias The 'default' app alias defined in AndroidManifest.xml.
  * @param alternativeAppAlias The 'alternative' app alias defined in AndroidManifest.xml.
  * @param resetToDefault True to reset the icon to default, otherwise false to use the alternative icon.
@@ -29,6 +30,7 @@ private val logger = Logger("ChangeAppLauncherIcon")
 fun changeAppLauncherIcon(
     context: Context,
     shortcutManager: ShortcutManagerWrapper = ShortcutManagerWrapperDefault(context),
+    shortcutInfo: ShortcutInfoWrapper = ShortcutInfoWrapperDefault(context),
     appAlias: ComponentName,
     alternativeAppAlias: ComponentName,
     resetToDefault: Boolean,
@@ -37,12 +39,12 @@ fun changeAppLauncherIcon(
         userHasAlternativeAppIconSet(context.packageManager, appAlias, alternativeAppAlias)
 
     if (resetToDefault && userHasAlternativeAppIconSet) {
-        resetAppIconsToDefault(context, shortcutManager, appAlias, alternativeAppAlias)
+        resetAppIconsToDefault(context, shortcutManager, shortcutInfo, appAlias, alternativeAppAlias)
         return
     }
 
     if (!resetToDefault && !userHasAlternativeAppIconSet) {
-        setAppIconsToAlternative(context, shortcutManager, appAlias, alternativeAppAlias)
+        changeAppLauncherIcon(context.packageManager, shortcutManager, shortcutInfo, appAlias, alternativeAppAlias)
     }
 }
 
@@ -61,35 +63,45 @@ private fun userHasAlternativeAppIconSet(
         alternativeAppAliasState == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
 }
 
-private fun setAppIconsToAlternative(
-    context: Context,
+/**
+ * Updates the app launcher icon with the provided alternative alias.
+ *
+ * @param packageManager responsible for enabled/disabled state of the aliases.
+ * @param shortcutManager A wrapper for [ShortcutInfoCompat].
+ * @param shortcutInfo A wrapper for [ShortcutInfoCompat].
+ * @param appAlias The currently used app alias.
+ * @param newAppAlias The app alias we are updating to.
+ */
+fun changeAppLauncherIcon(
+    packageManager: PackageManager,
     shortcutManager: ShortcutManagerWrapper,
+    shortcutInfo: ShortcutInfoWrapper,
     appAlias: ComponentName,
-    alternativeAppAlias: ComponentName,
+    newAppAlias: ComponentName,
 ) {
-    val packageManager = context.packageManager
-    alternativeAppAlias.setEnabledStateTo(packageManager, true)
+    newAppAlias.setEnabledStateTo(packageManager, true)
 
-    if (updateShortcutsComponentName(context, shortcutManager, alternativeAppAlias)) {
+    if (updateShortcutsComponentName(shortcutManager, shortcutInfo, newAppAlias)) {
         logger.info("Successfully attempted to update the app icon to the alternative.")
         appAlias.setEnabledStateTo(packageManager, false)
     } else {
         logger.warn("Failed to attempt to update the app icon.")
         // If we can't successfully update the user shortcuts, then re-disable the app alias component.
-        alternativeAppAlias.setEnabledStateTo(packageManager, false)
+        newAppAlias.setEnabledStateTo(packageManager, false)
     }
 }
 
 private fun resetAppIconsToDefault(
     context: Context,
     shortcutManager: ShortcutManagerWrapper,
+    shortcutInfo: ShortcutInfoWrapper,
     appAlias: ComponentName,
     alternativeAppAlias: ComponentName,
 ) {
     val packageManager = context.packageManager
     appAlias.setEnabledStateToDefault(packageManager)
 
-    if (updateShortcutsComponentName(context, shortcutManager, appAlias)) {
+    if (updateShortcutsComponentName(shortcutManager, shortcutInfo, appAlias)) {
         logger.info("Successfully attempted to reset the app icon to default.")
         alternativeAppAlias.setEnabledStateToDefault(packageManager)
     } else {
@@ -127,8 +139,8 @@ private fun ComponentName.setEnabledStateTo(packageManager: PackageManager, enab
  * @return whether updating the shortcuts to the app alias was successful.
  */
 private fun updateShortcutsComponentName(
-    context: Context,
     shortcutManager: ShortcutManagerWrapper,
+    shortcutInfo: ShortcutInfoWrapper,
     targetAlias: ComponentName,
 ): Boolean {
     val currentPinnedShortcuts = try {
@@ -138,8 +150,7 @@ private fun updateShortcutsComponentName(
         return false
     }
 
-    val updatedPinnedShortcuts =
-        updatedShortcuts(context, currentPinnedShortcuts, targetAlias)
+    val updatedPinnedShortcuts = shortcutInfo.buildUpdatedShortcuts(currentPinnedShortcuts, targetAlias)
 
     return try {
         shortcutManager.updateShortcuts(updatedPinnedShortcuts)
@@ -147,29 +158,6 @@ private fun updateShortcutsComponentName(
     } catch (e: IllegalArgumentException) {
         logger.warn("Failed to update the given Firefox shortcuts: $updatedPinnedShortcuts", e)
         false
-    }
-}
-
-private fun updatedShortcuts(
-    context: Context,
-    shortcuts: List<ShortcutInfoCompat>,
-    alternativeAppAlias: ComponentName,
-) = shortcuts.map { updateShortcutComponentName(context, it, alternativeAppAlias) }
-
-private fun updateShortcutComponentName(
-    context: Context,
-    originalShortcut: ShortcutInfoCompat,
-    alternativeAppAlias: ComponentName,
-): ShortcutInfoCompat {
-    with(originalShortcut) {
-        val builder = ShortcutInfoCompat.Builder(context, id)
-            .setShortLabel(shortLabel)
-            .setIntent(intent)
-            .setActivity(alternativeAppAlias) // this links the shortcut to the new component name.
-
-        longLabel?.let { builder.setLongLabel(it) }
-
-        return builder.build()
     }
 }
 
@@ -201,5 +189,48 @@ class ShortcutManagerWrapperDefault(private val context: Context) : ShortcutMana
 
     override fun updateShortcuts(updatedShortcuts: List<ShortcutInfoCompat>) {
         ShortcutManagerCompat.updateShortcuts(context, updatedShortcuts)
+    }
+}
+
+/**
+ * A wrapper for [ShortcutInfoCompat].
+ */
+interface ShortcutInfoWrapper {
+    /**
+     * @return a list of shortcuts for Firefox updated with the provided alternative alias.
+     */
+    fun buildUpdatedShortcuts(
+        shortcuts: List<ShortcutInfoCompat>,
+        alternativeAppAlias: ComponentName,
+    ): List<ShortcutInfoCompat>
+}
+
+/**
+ * A default implementation of [ShortcutInfoWrapper].
+ */
+class ShortcutInfoWrapperDefault(
+    private val context: Context,
+) : ShortcutInfoWrapper {
+    override fun buildUpdatedShortcuts(
+        shortcuts: List<ShortcutInfoCompat>,
+        alternativeAppAlias: ComponentName,
+    ): List<ShortcutInfoCompat> {
+        return shortcuts.map { updateShortcutComponentName(it, alternativeAppAlias) }
+    }
+
+    private fun updateShortcutComponentName(
+        originalShortcut: ShortcutInfoCompat,
+        alternativeAppAlias: ComponentName,
+    ): ShortcutInfoCompat {
+        with(originalShortcut) {
+            val builder = ShortcutInfoCompat.Builder(context, id)
+                .setShortLabel(shortLabel)
+                .setIntent(intent)
+                .setActivity(alternativeAppAlias) // this links the shortcut to the new component name.
+
+            longLabel?.let { builder.setLongLabel(it) }
+
+            return builder.build()
+        }
     }
 }

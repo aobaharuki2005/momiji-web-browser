@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.iconpicker.ui
 
+import android.content.ComponentName
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -17,6 +18,9 @@ import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.iconpicker.DefaultSettingsAppIconRepository
 import org.mozilla.fenix.iconpicker.SettingsAppIconRepository
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.utils.ShortcutInfoWrapperDefault
+import org.mozilla.fenix.utils.ShortcutManagerWrapperDefault
+import org.mozilla.fenix.utils.changeAppLauncherIcon
 
 /**
  * Fragment that displays a list of alternative app icons.
@@ -38,12 +42,30 @@ class AppIconSelectionFragment : Fragment(), UserInteractionHandler {
                     currentAppIcon = appIconRepository.selectedAppIcon.activityAlias,
                     groupedIconOptions = appIconRepository.groupedAppIcons,
                     onAppIconSelected = { selectedAppIcon ->
+                        val currentAliasSuffix = appIconRepository.selectedAppIcon.activityAlias.aliasSuffix.suffix
                         appIconRepository.selectedAppIcon = selectedAppIcon
-                        // the utility class that will change the active activity alias
-                        // will be added in https://bugzilla.mozilla.org/show_bug.cgi?id=1955884
+                        updateAppIcon(
+                            currentAliasSuffix = currentAliasSuffix,
+                            updateAliasSuffix = selectedAppIcon.activityAlias.aliasSuffix.suffix,
+                        )
                     },
                 )
             }
+        }
+    }
+
+    private fun updateAppIcon(
+        currentAliasSuffix: String,
+        updateAliasSuffix: String,
+    ) {
+        with(requireContext()) {
+            changeAppLauncherIcon(
+                packageManager = packageManager,
+                shortcutManager = ShortcutManagerWrapperDefault(this),
+                shortcutInfo = ShortcutInfoWrapperDefault(this),
+                appAlias = ComponentName(this, "$packageName.$currentAliasSuffix"),
+                newAppAlias = ComponentName(this, "$packageName.$updateAliasSuffix"),
+            )
         }
     }
 

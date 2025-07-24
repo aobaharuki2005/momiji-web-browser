@@ -5,19 +5,19 @@
 package org.mozilla.fenix.utils
 
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.core.content.pm.ShortcutInfoCompat
 import mozilla.components.support.test.any
-import mozilla.components.support.test.capture
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentCaptor
 import org.mockito.Mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
@@ -31,10 +31,12 @@ class ChangeAppLauncherIconTest {
 
     @Mock
     private lateinit var shortcutWrapper: ShortcutManagerWrapper
+    private lateinit var shortcutInfoWrapper: ShortcutInfoWrapper
 
     @Before
     fun setup() {
         openMocks(this)
+        shortcutInfoWrapper = ShortcutInfoWrapperDefault(testContext)
     }
 
     @Test
@@ -56,6 +58,7 @@ class ChangeAppLauncherIconTest {
         changeAppLauncherIcon(
             testContext,
             shortcutWrapper,
+            shortcutInfoWrapper,
             appAlias,
             alternativeAppAlias,
             true,
@@ -73,6 +76,7 @@ class ChangeAppLauncherIconTest {
 
     @Test
     fun `WHEN reset to default and user has alternative icon set THEN changeAppLauncherIcon resets states to default config`() {
+        val testShortcutManagerWrapper = TestShortcutManagerWrapper(testContext)
         val packageManager = testContext.packageManager
         val appAlias = ComponentName("test", "App")
         packageManager.setComponentEnabledSetting(
@@ -88,11 +92,15 @@ class ChangeAppLauncherIconTest {
         )
 
         val shortcut = createShortcut(alternativeAppAlias)
-        `when`(shortcutWrapper.getPinnedShortcuts()).thenReturn(listOf(shortcut))
+        testShortcutManagerWrapper.testPinnedShortcuts = listOf(shortcut)
+
+        assertFalse(testShortcutManagerWrapper.getPinnedShortcutsEvoked)
+        assertTrue(testShortcutManagerWrapper.updateShortcutsCapture.isEmpty())
 
         changeAppLauncherIcon(
             testContext,
-            shortcutWrapper,
+            testShortcutManagerWrapper,
+            shortcutInfoWrapper,
             appAlias,
             alternativeAppAlias,
             true,
@@ -101,23 +109,15 @@ class ChangeAppLauncherIconTest {
         val appAliasState = packageManager.getComponentEnabledSetting(appAlias)
         assertTrue(appAliasState == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT)
 
-        val alternativeAppAliasState =
-            packageManager.getComponentEnabledSetting(alternativeAppAlias)
+        val alternativeAppAliasState = packageManager.getComponentEnabledSetting(alternativeAppAlias)
         assertTrue(alternativeAppAliasState == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT)
 
-        verify(shortcutWrapper).getPinnedShortcuts()
+        assertTrue(testShortcutManagerWrapper.getPinnedShortcutsEvoked)
 
-        // Capture the argument passed to updateShortcuts.
-        // The explicit cast is required in Kotlin because of the generic type.
-        @Suppress("UNCHECKED_CAST")
-        val shortcutsCaptor =
-            ArgumentCaptor.forClass(List::class.java) as ArgumentCaptor<List<ShortcutInfoCompat>>
-        verify(shortcutWrapper).updateShortcuts(capture(shortcutsCaptor))
-
-        val actualShortcut = shortcutsCaptor.value.first()
-        assertEquals(shortcut.shortLabel, actualShortcut.shortLabel)
-        assertEquals(shortcut.intent, actualShortcut.intent)
-        assertEquals(appAlias, actualShortcut.activity)
+        val updatedShortcut = testShortcutManagerWrapper.updateShortcutsCapture.first()
+        assertEquals(shortcut.shortLabel, updatedShortcut.shortLabel)
+        assertEquals(shortcut.intent, updatedShortcut.intent)
+        assertEquals(appAlias, updatedShortcut.activity)
     }
 
     @Test
@@ -141,6 +141,7 @@ class ChangeAppLauncherIconTest {
         changeAppLauncherIcon(
             testContext,
             shortcutWrapper,
+            shortcutInfoWrapper,
             appAlias,
             alternativeAppAlias,
             true,
@@ -178,6 +179,7 @@ class ChangeAppLauncherIconTest {
         changeAppLauncherIcon(
             testContext,
             shortcutWrapper,
+            shortcutInfoWrapper,
             appAlias,
             alternativeAppAlias,
             true,
@@ -196,6 +198,7 @@ class ChangeAppLauncherIconTest {
 
     @Test
     fun `WHEN use alternative icon and user has default icon set THEN changeAppLauncherIcon updates states to alternative config`() {
+        val testShortcutManagerWrapper = TestShortcutManagerWrapper(testContext)
         val packageManager = testContext.packageManager
         val appAlias = ComponentName("test", "App")
         packageManager.setComponentEnabledSetting(
@@ -211,11 +214,15 @@ class ChangeAppLauncherIconTest {
         )
 
         val shortcut = createShortcut(appAlias)
-        `when`(shortcutWrapper.getPinnedShortcuts()).thenReturn(listOf(shortcut))
+        testShortcutManagerWrapper.testPinnedShortcuts = listOf(shortcut)
+
+        assertFalse(testShortcutManagerWrapper.getPinnedShortcutsEvoked)
+        assertTrue(testShortcutManagerWrapper.updateShortcutsCapture.isEmpty())
 
         changeAppLauncherIcon(
             testContext,
-            shortcutWrapper,
+            testShortcutManagerWrapper,
+            shortcutInfoWrapper,
             appAlias,
             alternativeAppAlias,
             false,
@@ -228,19 +235,12 @@ class ChangeAppLauncherIconTest {
             packageManager.getComponentEnabledSetting(alternativeAppAlias)
         assertTrue(alternativeAppAliasState == PackageManager.COMPONENT_ENABLED_STATE_ENABLED)
 
-        verify(shortcutWrapper).getPinnedShortcuts()
+        assertTrue(testShortcutManagerWrapper.getPinnedShortcutsEvoked)
 
-        // Capture the argument passed to updateShortcuts.
-        // The explicit cast is required in Kotlin because of the generic type.
-        @Suppress("UNCHECKED_CAST")
-        val shortcutsCaptor =
-            ArgumentCaptor.forClass(List::class.java) as ArgumentCaptor<List<ShortcutInfoCompat>>
-        verify(shortcutWrapper).updateShortcuts(capture(shortcutsCaptor))
-
-        val actualShortcut = shortcutsCaptor.value.first()
-        assertEquals(shortcut.shortLabel, actualShortcut.shortLabel)
-        assertEquals(shortcut.intent, actualShortcut.intent)
-        assertEquals(alternativeAppAlias, actualShortcut.activity)
+        val updatedShortcut = testShortcutManagerWrapper.updateShortcutsCapture.first()
+        assertEquals(shortcut.shortLabel, updatedShortcut.shortLabel)
+        assertEquals(shortcut.intent, updatedShortcut.intent)
+        assertEquals(alternativeAppAlias, updatedShortcut.activity)
     }
 
     @Test
@@ -264,6 +264,7 @@ class ChangeAppLauncherIconTest {
         changeAppLauncherIcon(
             testContext,
             shortcutWrapper,
+            shortcutInfoWrapper,
             appAlias,
             alternativeAppAlias,
             false,
@@ -300,6 +301,7 @@ class ChangeAppLauncherIconTest {
         changeAppLauncherIcon(
             testContext,
             shortcutWrapper,
+            shortcutInfoWrapper,
             appAlias,
             alternativeAppAlias,
             false,
@@ -337,6 +339,7 @@ class ChangeAppLauncherIconTest {
         changeAppLauncherIcon(
             testContext,
             shortcutWrapper,
+            shortcutInfoWrapper,
             appAlias,
             alternativeAppAlias,
             false,
@@ -357,6 +360,23 @@ class ChangeAppLauncherIconTest {
 private fun createShortcut(componentName: ComponentName) =
     ShortcutInfoCompat.Builder(testContext, "1")
         .setShortLabel("1")
-        .setIntent(Intent())
+        .setIntent(Intent().apply { action = "TEST_ACTION" })
         .setActivity(componentName)
         .build()
+
+private class TestShortcutManagerWrapper(context: Context) : ShortcutManagerWrapper {
+    val defaultImplementation = ShortcutManagerWrapperDefault(context)
+    var testPinnedShortcuts: List<ShortcutInfoCompat> = emptyList()
+    var updateShortcutsCapture: List<ShortcutInfoCompat> = emptyList()
+    var getPinnedShortcutsEvoked = false
+
+    override fun getPinnedShortcuts(): List<ShortcutInfoCompat> {
+        getPinnedShortcutsEvoked = true
+        return testPinnedShortcuts
+    }
+
+    override fun updateShortcuts(updatedShortcuts: List<ShortcutInfoCompat>) {
+        defaultImplementation.updateShortcuts(updatedShortcuts)
+        this.updateShortcutsCapture = updatedShortcuts
+    }
+}
