@@ -10,6 +10,7 @@
 #include <wayland-egl.h>
 #include "nsGtkUtils.h"
 #include "mozilla/StaticPrefs_widget.h"
+#include "mozilla/ToString.h"
 #include <dlfcn.h>
 #include <fcntl.h>
 #include "ScreenHelperGTK.h"
