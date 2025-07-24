@@ -759,6 +759,22 @@ RefPtr<MFTEncoder::EncodePromise> MFTEncoder::Encode(InputSample&& aInput) {
   return EncodePromise::CreateAndResolve(TakeOutput(), __func__);
 }
 
+RefPtr<MFTEncoder::EncodePromise> MFTEncoder::Drain() {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+  MOZ_ASSERT(mEncoder);
+
+  nsTArray<OutputSample> outputs;
+  HRESULT hr = Drain(outputs);
+  if (FAILED(hr)) {
+    return EncodePromise::CreateAndReject(
+        MediaResult(
+            NS_ERROR_DOM_MEDIA_FATAL_ERR,
+            RESULT_DETAIL("failed to drain: %s", ErrorMessage(hr).get())),
+        __func__);
+  }
+  return EncodePromise::CreateAndResolve(std::move(outputs), __func__);
+}
+
 static HRESULT CreateSample(RefPtr<IMFSample>* aOutSample, DWORD aSize,
                             DWORD aAlignment) {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());

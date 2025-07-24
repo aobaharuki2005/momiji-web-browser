@@ -59,10 +59,9 @@ class MFTEncoder final {
   HRESULT SetBitrate(UINT32 aBitsPerSec);
 
   RefPtr<EncodePromise> Encode(InputSample&& aInput);
+  RefPtr<EncodePromise> Drain();
 
   HRESULT CreateInputSample(RefPtr<IMFSample>* aSample, size_t aSize);
-
-  HRESULT Drain(nsTArray<OutputSample>& aOutput);
 
   Result<MPEGHeader, HRESULT> GetMPEGSequenceHeader();
 
@@ -163,6 +162,7 @@ class MFTEncoder final {
 
   HRESULT PushInput(InputSample&& aInput);
   nsTArray<OutputSample> TakeOutput();
+  HRESULT Drain(nsTArray<OutputSample>& aOutput);
 
   HRESULT ProcessEvents();
   HRESULT ProcessEventsInternal();

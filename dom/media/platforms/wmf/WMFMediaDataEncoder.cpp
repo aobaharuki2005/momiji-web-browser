@@ -49,14 +49,8 @@ RefPtr<EncodePromise> WMFMediaDataEncoder::Encode(const MediaData* aSample) {
 }
 RefPtr<EncodePromise> WMFMediaDataEncoder::Drain() {
   WMF_ENC_LOGD("Drain");
-  return InvokeAsync(
-      mTaskQueue, __func__, [self = RefPtr<WMFMediaDataEncoder>(this)]() {
-        nsTArray<MFTEncoder::OutputSample> outputs;
-        return SUCCEEDED(self->mEncoder->Drain(outputs))
-                   ? self->ProcessOutputSamples(std::move(outputs))
-                   : EncodePromise::CreateAndReject(
-                         NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
-      });
+  return InvokeAsync(mTaskQueue, this, __func__,
+                     &WMFMediaDataEncoder::ProcessDrain);
 }
 RefPtr<ShutdownPromise> WMFMediaDataEncoder::Shutdown() {
   WMF_ENC_LOGD("Shutdown");
@@ -223,6 +217,24 @@ RefPtr<EncodePromise> WMFMediaDataEncoder::ProcessEncode(
             WMF_ENC_SLOGE("Encode failed: %s", aError.Description().get());
             return EncodePromise::CreateAndReject(aError, __func__);
           });
+}
+
+RefPtr<EncodePromise> WMFMediaDataEncoder::ProcessDrain() {
+  AssertOnTaskQueue();
+  MOZ_ASSERT(mEncoder);
+
+  WMF_ENC_LOGD("ProcessDrain");
+
+  return mEncoder->Drain()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [self = RefPtr<WMFMediaDataEncoder>(this)](
+          MFTEncoder::EncodedData&& aOutput) {
+        return self->ProcessOutputSamples(std::move(aOutput));
+      },
+      [self = RefPtr<WMFMediaDataEncoder>(this)](const MediaResult& aError) {
+        WMF_ENC_SLOGE("Drain failed: %s", aError.Description().get());
+        return EncodePromise::CreateAndReject(aError, __func__);
+      });
 }
 
 already_AddRefed<IMFSample> WMFMediaDataEncoder::ConvertToNV12InputSample(
