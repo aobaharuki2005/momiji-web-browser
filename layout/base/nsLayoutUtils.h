@@ -1495,7 +1495,6 @@ class nsLayoutUtils {
   enum {
     IGNORE_PADDING = 0x01,
     BAIL_IF_REFLOW_NEEDED = 0x02,  // returns NS_INTRINSIC_ISIZE_UNKNOWN if so
-    MIN_INTRINSIC_ISIZE = 0x04,  // use min-width/height instead of width/height
   };
   static nscoord IntrinsicForAxis(
       mozilla::PhysicalAxis aAxis, gfxContext* aRenderingContext,

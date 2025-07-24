@@ -4633,20 +4633,13 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
   auto styleMinISize = horizontalAxis
                            ? stylePos->GetMinWidth(anchorResolutionParams)
                            : stylePos->GetMinHeight(anchorResolutionParams);
-  auto styleISize = [&]() {
-    if (aFlags & MIN_INTRINSIC_ISIZE) {
-      return AnchorResolvedSizeHelper::Overridden(*styleMinISize);
-    }
-    const Maybe<StyleSize>& styleISizeOverride =
-        isInlineAxis ? aSizeOverrides.mStyleISize : aSizeOverrides.mStyleBSize;
-    return styleISizeOverride
-               ? AnchorResolvedSizeHelper::Overridden(*styleISizeOverride)
-               : (horizontalAxis ? stylePos->GetWidth(anchorResolutionParams)
-                                 : stylePos->GetHeight(anchorResolutionParams));
-  }();
-  MOZ_ASSERT(!(aFlags & MIN_INTRINSIC_ISIZE) || styleISize->IsAuto() ||
-                 nsIFrame::ToExtremumLength(*styleISize),
-             "should only use MIN_INTRINSIC_ISIZE for intrinsic values");
+  const Maybe<StyleSize>& styleISizeOverride =
+      isInlineAxis ? aSizeOverrides.mStyleISize : aSizeOverrides.mStyleBSize;
+  auto styleISize =
+      styleISizeOverride
+          ? AnchorResolvedSizeHelper::Overridden(*styleISizeOverride)
+          : (horizontalAxis ? stylePos->GetWidth(anchorResolutionParams)
+                            : stylePos->GetHeight(anchorResolutionParams));
   auto styleMaxISize = horizontalAxis
                            ? stylePos->GetMaxWidth(anchorResolutionParams)
                            : stylePos->GetMaxHeight(anchorResolutionParams);
@@ -4882,10 +4875,6 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
           contentEdgeToBoxSizing.emplace(GetContentEdgeToBoxSizing(boxSizing));
         }
 
-        // NOTE: This is only the minContentSize if we've been passed
-        // MIN_INTRINSIC_ISIZE (which is fine, because this should only be used
-        // inside a check for that flag).
-        nscoord minContentSize = result;
         if (Maybe<nscoord> bSize = GetBSize(styleBSize)) {
           *bSize = std::max(0, *bSize - bSizeTakenByBoxSizing);
           // We are computing the size of |aFrame|, so we use the inline & block
@@ -4904,7 +4893,6 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
               isInlineAxis ? LogicalAxis::Inline : LogicalAxis::Block, childWM,
               *maxBSize, *contentEdgeToBoxSizing);
           result = std::min(result, maxISize);
-          minContentSize = std::min(minContentSize, maxISize);
         }
 
         if (Maybe<nscoord> minBSize = GetBSize(styleMinBSize)) {
@@ -4913,19 +4901,6 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
               isInlineAxis ? LogicalAxis::Inline : LogicalAxis::Block, childWM,
               *minBSize, *contentEdgeToBoxSizing);
           result = std::max(result, minISize);
-          minContentSize = std::max(minContentSize, minISize);
-        }
-
-        if (MOZ_UNLIKELY(aFlags & nsLayoutUtils::MIN_INTRINSIC_ISIZE) &&
-            // FIXME: Bug 1715681. Should we use HasReplacedSizing instead
-            // because IsReplaced is set on some other frames which are
-            // non-replaced elements, e.g. <select>?
-            aFrame->IsReplaced()) {
-          // This is the 'min-width/height:auto' "transferred size" piece of:
-          // https://drafts.csswg.org/css-flexbox-1/#min-size-auto
-          // https://drafts.csswg.org/css-grid/#min-size-auto
-          // Per spec, we handle it only for replaced elements.
-          result = std::min(result, minContentSize);
         }
       }
     }
