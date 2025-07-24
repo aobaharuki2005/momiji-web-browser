@@ -4,8 +4,9 @@
 
 package org.mozilla.fenix.benchmark
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
-import android.os.SystemClock
 import androidx.annotation.RequiresApi
 import androidx.benchmark.macro.BaselineProfileMode
 import androidx.benchmark.macro.CompilationMode
@@ -13,25 +14,18 @@ import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.StartupTimingMetric
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.benchmark.utils.TARGET_PACKAGE
-import org.mozilla.fenix.benchmark.utils.clearPackageData
-import org.mozilla.fenix.benchmark.utils.completeBrowserJourney
-import org.mozilla.fenix.benchmark.utils.completeOnboarding
-import org.mozilla.fenix.benchmark.utils.dismissWallpaperOnboarding
-import org.mozilla.fenix.benchmark.utils.isFirstIteration
-import org.mozilla.fenix.benchmark.utils.isOnboardingCompleted
-import org.mozilla.fenix.benchmark.utils.isWallpaperOnboardingShown
+import org.mozilla.fenix.benchmark.utils.flingToBeginning
+import org.mozilla.fenix.benchmark.utils.flingToEnd
 import org.mozilla.fenix.benchmark.utils.measureRepeatedDefault
 
 /**
- * This test class benchmarks the speed of completing a browser journey that does some web browsing.
- * Run this benchmark to verify how effective a Baseline Profile is. It does this by comparing
- * [CompilationMode.None], which represents the app with no Baseline Profiles optimizations, and
- * [CompilationMode.Partial], which uses Baseline Profiles.
+ * This test class benchmarks the speed of scrolling on web content. Run this benchmark to verify how effective
+ * a Baseline Profile is. It does this by comparing [CompilationMode.None], which represents the
+ * app with no Baseline Profiles optimizations, and [CompilationMode.Partial], which uses Baseline Profiles.
  *
  * Before running make sure `autosignReleaseWithDebugKey=true` is present in local.properties.
  *
@@ -56,25 +50,20 @@ import org.mozilla.fenix.benchmark.utils.measureRepeatedDefault
 @RunWith(AndroidJUnit4::class)
 @RequiresApi(Build.VERSION_CODES.N)
 @BaselineProfileMacrobenchmark
-@Ignore("Re-enable once Baseline Profiles are ready for Browser Journey - Bug 1971318")
-class BaselineProfilesBrowserJourneyBenchmark {
-
+class BaselineProfilesBrowserPageScrollBenchmark {
     @get:Rule
     val benchmarkRule = MacrobenchmarkRule()
 
     @Test
-    fun browserJourneyNone() =
-        browserJourneyBenchmark(compilationMode = CompilationMode.None())
+    fun browserPageScrollNone() = browserPageScrollBenchmark(CompilationMode.None())
 
     @Test
-    fun browserJourney() =
-        browserJourneyBenchmark(
-            compilationMode = CompilationMode.Partial(
-                baselineProfileMode = BaselineProfileMode.Require
-            )
+    fun browserPageScroll() =
+        browserPageScrollBenchmark(
+            CompilationMode.Partial(baselineProfileMode = BaselineProfileMode.Require),
         )
 
-    private fun browserJourneyBenchmark(compilationMode: CompilationMode) =
+    private fun browserPageScrollBenchmark(compilationMode: CompilationMode) =
         benchmarkRule.measureRepeatedDefault(
             packageName = TARGET_PACKAGE,
             metrics = listOf(StartupTimingMetric()),
@@ -82,29 +71,24 @@ class BaselineProfilesBrowserJourneyBenchmark {
             compilationMode = compilationMode,
             setupBlock = {
                 pressHome()
-                killProcess()
-
-                startActivityAndWait()
-                if (isFirstIteration(benchmarking = true) && !device.isOnboardingCompleted()) {
-                    killProcess()
-                    device.clearPackageData(packageName = packageName)
-                    startActivityAndWait()
-                    device.completeOnboarding()
-                }
-
-                if (device.isWallpaperOnboardingShown()) {
-                    device.dismissWallpaperOnboarding()
-                }
-
-                pressHome()
-                killProcess()
             },
         ) {
-            startActivityAndWait()
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.data = Uri.parse("https://www.mozilla.org/")
+            intent.setPackage(packageName)
 
-            device.completeBrowserJourney(packageName = packageName)
+            startActivityAndWait(intent = intent)
 
-            SystemClock.sleep(3000)
+            device.flingToEnd(
+                scrollableId = "$packageName:id/engineView",
+                maxSwipes = 1,
+            )
+
+            device.flingToBeginning(
+                scrollableId = "$packageName:id/engineView",
+                maxSwipes = 1,
+            )
+
             killProcess()
         }
 }
