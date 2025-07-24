@@ -104,6 +104,12 @@ export class ExtensionStorageSync {
     return await this.callRustStoreFn("get", extension, spec);
   }
 
+  async getKeys(extension) {
+    // TODO(bug 1978718): Consider implementing this in the Rust store
+    const data = await this.get(extension, null);
+    return Object.keys(data || {});
+  }
+
   async getBytesInUse(extension, keys) {
     return await this.callRustStoreFn("getBytesInUse", extension, keys);
   }
