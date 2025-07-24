@@ -1225,18 +1225,21 @@
         }
 
         let shouldPin =
-          (withinPinnedBounds && !numPinned) ||
-          ((this.pinnedTabsContainer.contains(event.target) ||
+          isTab(draggedTab) &&
+          !draggedTab.pinned &&
+          ((withinPinnedBounds && !numPinned) ||
+            this.pinnedTabsContainer.contains(event.target) ||
             ["pinned-tabs-container", "pinned-drop-indicator"].includes(
               event.target.id
-            )) &&
-            !draggedTab.pinned);
+            ));
         let shouldUnpin =
+          isTab(draggedTab) &&
+          draggedTab.pinned &&
           this.arrowScrollbox.contains(event.target) &&
           !["pinned-tabs-container", "pinned-drop-indicator"].includes(
             event.target.id
-          ) &&
-          draggedTab.pinned;
+          );
+
         let shouldTranslate =
           !gReduceMotion &&
           !shouldCreateGroupOnDrop &&
@@ -2693,10 +2696,11 @@
         ? Math.min(Math.max(translate, lastBound), firstBound)
         : Math.min(Math.max(translate, firstBound), lastBound);
       if (
-        (!this.#rtlMode &&
+        isTab(draggedTab) &&
+        ((!this.#rtlMode &&
           firstMovingTabScreen + translate <= pinnedTabsEndEdge) ||
-        (this.#rtlMode &&
-          lastMovingTabScreen + translate >= pinnedTabsStartEdge)
+          (this.#rtlMode &&
+            lastMovingTabScreen + translate >= pinnedTabsStartEdge))
       ) {
         this.#onDragIntoPinnedContainer();
       } else {
