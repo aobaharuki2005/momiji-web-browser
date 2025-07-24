@@ -438,6 +438,8 @@ tags = "vertical-tabs"
 ["browser_switch_by_scrolling.js"]
 tags = "vertical-tabs"
 
+["browser_switchtab_when_minimized.js"]
+
 ["browser_tabCloseProbes.js"]
 tags = "vertical-tabs"
 skip-if = [

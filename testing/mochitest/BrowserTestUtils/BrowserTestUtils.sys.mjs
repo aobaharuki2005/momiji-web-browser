@@ -358,11 +358,17 @@ export var BrowserTestUtils = {
     let startTime = Cu.now();
     let { innerWindowId } = tabbrowser.ownerGlobal.windowGlobalChild;
 
+    // Some tests depend on the delay and TabSwitched only fires if the browser is visible.
+    // Bug 1977993 tracks always dispatching TabSwitched.
+    let switchEvent =
+      Services.prefs.getBoolPref("test.wait300msAfterTabSwitch", false) ||
+      tabbrowser.ownerDocument.hidden
+        ? "TabSwitchDone"
+        : "TabSwitched";
+
     let promise = new Promise(resolve => {
       tabbrowser.addEventListener(
-        Services.prefs.getBoolPref("test.wait300msAfterTabSwitch", false)
-          ? "TabSwitchDone"
-          : "TabSwitched",
+        switchEvent,
         function () {
           TestUtils.executeSoon(() => {
             ChromeUtils.addProfilerMarker(
