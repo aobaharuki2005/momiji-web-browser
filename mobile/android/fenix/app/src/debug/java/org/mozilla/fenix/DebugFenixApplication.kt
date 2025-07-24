@@ -35,9 +35,4 @@ class DebugFenixApplication : FenixApplication() {
             LeakCanary.config = LeakCanary.config.copy(dumpHeap = isEnabled)
         }
     }
-
-    // This should be removed when the UI tests have been adjusted to accommodate
-    // Homepage as a New Tab feature.
-    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1928587
-    override fun isRunningInTestEnvironment(): Boolean = true
 }

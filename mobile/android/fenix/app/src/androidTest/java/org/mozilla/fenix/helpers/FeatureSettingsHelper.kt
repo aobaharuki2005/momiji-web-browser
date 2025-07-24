@@ -23,11 +23,6 @@ interface FeatureSettingsHelper {
     var isWallpaperOnboardingEnabled: Boolean
 
     /**
-     * Whether the homepage as a new tab feature is enabled or not.
-     */
-    var isHomepageAsNewTabEnabled: Boolean
-
-    /**
      * Whether the homepage header should be shown or not.
      */
     var isHomepageHeaderEnabled: Boolean

@@ -51,7 +51,6 @@ class HomeActivityTestRule(
         initialTouchMode: Boolean = false,
         launchActivity: Boolean = true,
         skipOnboarding: Boolean = false,
-        isHomepageAsNewTabEnabled: Boolean = false,
         isHomepageHeaderEnabled: Boolean = true,
         isPocketEnabled: Boolean = settings.showPocketRecommendationsFeature,
         isRecentTabsFeatureEnabled: Boolean = settings.showRecentTabsFeature,
@@ -70,7 +69,6 @@ class HomeActivityTestRule(
         isUseNewCrashReporterDialog: Boolean = false,
         isTabSwipeCFREnabled: Boolean = false,
     ) : this(initialTouchMode, launchActivity, skipOnboarding) {
-        this.isHomepageAsNewTabEnabled = isHomepageAsNewTabEnabled
         this.isHomepageHeaderEnabled = isHomepageHeaderEnabled
         this.isPocketEnabled = isPocketEnabled
         this.isRecentTabsFeatureEnabled = isRecentTabsFeatureEnabled
@@ -139,7 +137,6 @@ class HomeActivityTestRule(
             initialTouchMode = initialTouchMode,
             launchActivity = launchActivity,
             skipOnboarding = skipOnboarding,
-            isHomepageAsNewTabEnabled = false,
             isHomepageHeaderEnabled = true,
             isPWAsPromptEnabled = false,
             isWallpaperOnboardingEnabled = false,
@@ -176,7 +173,6 @@ class HomeActivityIntentTestRule internal constructor(
         initialTouchMode: Boolean = false,
         launchActivity: Boolean = true,
         skipOnboarding: Boolean = false,
-        isHomepageAsNewTabEnabled: Boolean = false,
         isHomepageHeaderEnabled: Boolean = true,
         isPocketEnabled: Boolean = settings.showPocketRecommendationsFeature,
         isRecentTabsFeatureEnabled: Boolean = settings.showRecentTabsFeature,
@@ -195,7 +191,6 @@ class HomeActivityIntentTestRule internal constructor(
         onboardingFeatureEnabled: Boolean = true,
         isTabSwipeCFREnabled: Boolean = false,
     ) : this(initialTouchMode, launchActivity, skipOnboarding) {
-        this.isHomepageAsNewTabEnabled = isHomepageAsNewTabEnabled
         this.isHomepageHeaderEnabled = isHomepageHeaderEnabled
         this.isPocketEnabled = isPocketEnabled
         this.isRecentTabsFeatureEnabled = isRecentTabsFeatureEnabled
@@ -268,7 +263,6 @@ class HomeActivityIntentTestRule internal constructor(
      * settings and override any changes made in the meantime.
      */
     fun updateCachedSettings() {
-        isHomepageAsNewTabEnabled = settings.enableHomepageAsNewTab
         isHomepageHeaderEnabled = settings.showHomepageHeader
         isPocketEnabled = settings.showPocketRecommendationsFeature
         isRecentTabsFeatureEnabled = settings.showRecentTabsFeature

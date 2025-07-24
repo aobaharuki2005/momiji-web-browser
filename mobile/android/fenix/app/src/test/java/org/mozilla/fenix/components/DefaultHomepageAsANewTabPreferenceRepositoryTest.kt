@@ -20,13 +20,13 @@ class DefaultHomepageAsANewTabPreferenceRepositoryTest {
         val settings = Settings(testContext)
         val repository = DefaultHomepageAsANewTabPreferenceRepository(settings)
 
-        assertTrue(settings.enableHomepageAsNewTab)
-        assertTrue(repository.getHomepageAsANewTabEnabled())
-
-        settings.enableHomepageAsNewTab = false
+        assertFalse(settings.enableHomepageAsNewTab)
         assertFalse(repository.getHomepageAsANewTabEnabled())
 
         settings.enableHomepageAsNewTab = true
         assertTrue(repository.getHomepageAsANewTabEnabled())
+
+        settings.enableHomepageAsNewTab = false
+        assertFalse(repository.getHomepageAsANewTabEnabled())
     }
 }
