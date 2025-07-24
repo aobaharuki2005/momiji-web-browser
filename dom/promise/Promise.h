@@ -35,6 +35,10 @@ namespace JS {
 class Value;
 }
 
+namespace mozilla::webgpu {
+class PipelineError;
+}
+
 namespace mozilla::dom {
 
 class AnyCallback;
@@ -120,6 +124,7 @@ class Promise : public SupportsWeakPtr, public JSHolderBase {
   }
 
   void MaybeReject(const RefPtr<MediaStreamError>& aArg);
+  void MaybeReject(const RefPtr<webgpu::PipelineError>& aArg);
 
   void MaybeRejectWithUndefined();
 
