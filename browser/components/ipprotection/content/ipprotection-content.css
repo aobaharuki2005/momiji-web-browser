@@ -8,9 +8,17 @@
   --status-card-connected-background-color: var(--color-violet-90);
 }
 
+hr {
+  border-style: solid none none none;
+  border-color: var(--panel-separator-color);
+  margin: var(--panel-separator-margin);
+}
+
 #ipprotection-content-wrapper {
   display: flex;
   flex-direction: column;
+  padding-inline: var(--panel-subview-body-padding-inline);
+  padding-block: var(--panel-subview-body-padding-block);
 }
 
 #status-card {
