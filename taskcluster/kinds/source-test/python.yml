@@ -471,13 +471,9 @@ nimbus:
         using: run-task
         cwd: '{checkout}'
         command: >
-            export DUMP_TARGETING_CONTEXT_PATH=$(mktemp) &&
-            env LD_LIBRARY_PATH=${MOZ_FETCHES_DIR}/firefox \
-                ${MOZ_FETCHES_DIR}/bin/xpcshell \
-                    -g ${MOZ_FETCHES_DIR}/firefox \
-                    -a ${MOZ_FETCHES_DIR}/firefox/browser \
-                    toolkit/components/nimbus/test/python/dump-targeting-context.js &&
-            export GECKO_BINARY_PATH=${MOZ_FETCHES_DIR}/firefox/firefox &&
+            export DUMP_TARGETING_CONTEXT_PATH="$(mktemp)" &&
+            export GECKO_BINARY_PATH="${MOZ_FETCHES_DIR}/firefox/firefox" &&
+            ./mach xpcshell -a "${GECKO_BINARY_PATH}" -- toolkit/components/nimbus/test/python/dump-targeting-context.js &&
             ./mach python-test --subsuite nimbus
     when:
         files-changed:
@@ -512,12 +508,9 @@ fxms-schemas:
         using: run-task
         cwd: '{checkout}'
         command: >
+            export GECKO_BINARY_PATH=${MOZ_FETCHES_DIR}/firefox/firefox &&
             cd browser/components/asrouter/content-src/schemas &&
-            env LD_LIBRARY_PATH=${MOZ_FETCHES_DIR}/firefox \
-                ${MOZ_FETCHES_DIR}/bin/xpcshell \
-                    -g ${MOZ_FETCHES_DIR}/firefox \
-                    -a ${MOZ_FETCHES_DIR}/firefox/browser \
-                    extract-test-corpus.js
+            ../../../../../mach xpcshell -a "${GECKO_BINARY_PATH}" -- extract-test-corpus.js &&
             ../../../../../mach python -- make-schemas.py --check
     when:
         files-changed:
