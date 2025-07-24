@@ -1160,14 +1160,12 @@
   <string name="search_add_custom_engine_error_empty_search_string">एक खोज स्ट्रिंग दर्ज करें</string>
   <!-- Text shown when a user leaves out the required template string -->
   <string name="search_add_custom_engine_error_missing_template">जाँचें कि खोज स्ट्रिंग उदाहरण संरूप से मेल खाती है</string>
-  <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">\"%s\" से संपर्क में त्रुटि</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s बनाया गया</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s सहेजा गया</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_delete_search_engine_success_message">%s हटाया गया</string>
+  <string name="search_delete_search_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s हटाया गया</string>
   <!-- Heading for the instructions to allow a permission -->
   <string name="phone_feature_blocked_intro">इसे अनुमति देने के लिए:</string>
   <!-- First step for the allowing a permission -->
@@ -1263,8 +1261,6 @@
   <string name="privacy_content_close_button_content_description">बंद करें</string>
   <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
   <string name="pocket_stories_placeholder_text" moz:removedIn="141" tools:ignore="UnusedResources">और जानें</string>
-  <!-- Clickable text for opening an external link for more information about Pocket. -->
-  <string name="pocket_stories_feature_learn_more" moz:removedIn="140" tools:ignore="UnusedResources">अधिक जानें</string>
   <!-- Translations feature -->
 
   <!-- TextField Design System Component -->

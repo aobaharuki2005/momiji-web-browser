@@ -782,14 +782,12 @@
   <string name="search_add_custom_engine_error_empty_search_string">શોધ શબ્દમાળા દાખલ કરો</string>
   <!-- Text shown when a user leaves out the required template string -->
   <string name="search_add_custom_engine_error_missing_template">તે તપાસણી કરો કે શોધ શબ્દમાળા ઉદાહરણ ફોર્મેટ સાથે મેળ ખાય છે</string>
-  <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">“%s” થી કનેક્ટ કરવામાં ભૂલ</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s બનાવ્યું</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s સાચવ્યું</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_delete_search_engine_success_message">%s કાઢી નાખ્યું</string>
+  <string name="search_delete_search_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s કાઢી નાખ્યું</string>
   <!-- Heading for the instructions to allow a permission -->
   <string name="phone_feature_blocked_intro">તેને મંજૂરી આપવા માટે:</string>
   <!--

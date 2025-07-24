@@ -954,14 +954,12 @@
   <string name="search_add_custom_engine_error_empty_search_string">ஒரு தேடல் தொடரை உள்ளிடுக</string>
   <!-- Text shown when a user leaves out the required template string -->
   <string name="search_add_custom_engine_error_missing_template">தேடல் தொடர் எ.கா வடிவத்தை ஒத்துள்ளதா எனப் பாருங்கள்</string>
-  <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">“%s” உடன் இணைப்பதில் பிழை</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s உருவாக்கப்பட்டது</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s சேமிக்கப்பட்டது</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_delete_search_engine_success_message">%s நீக்கப்பட்டது</string>
+  <string name="search_delete_search_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s நீக்கப்பட்டது</string>
   <!-- Heading for the instructions to allow a permission -->
   <string name="phone_feature_blocked_intro">அனுமதிக்க:</string>
   <!-- First step for the allowing a permission -->

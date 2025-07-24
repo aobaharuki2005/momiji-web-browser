@@ -230,8 +230,6 @@
   <string name="onboarding_preferences_dialog_positive_button">పూర్తయింది</string>
   <!-- Terms of service onboarding title card label. 'Firefox' intentionally hardcoded here -->
   <string name="onboarding_welcome_to_firefox" tools:ignore="BrandUsage">Firefoxకి స్వాగతం</string>
-  <!-- Terms of service onboarding page continue button label. -->
-  <string name="onboarding_term_of_service_agree_and_continue_button_label" moz:removedIn="140" tools:ignore="UnusedResources">అంగీకరించి కొనసాగించండి</string>
   <!-- Onboarding label for 'Save and continue' button, used by Nimbus experiments. -->
   <string name="onboarding_save_and_continue_button">భద్రపరచి కొనసాగించు</string>
   <!-- Onboarding toolbar selection card label for 'top' option, used by Nimbus experiments. -->
@@ -1352,14 +1350,12 @@
   <string name="search_add_custom_engine_error_empty_search_string">శోధన పదాన్ని ఇవ్వండి</string>
   <!-- Text shown when a user leaves out the required template string -->
   <string name="search_add_custom_engine_error_missing_template">శోధన పదం ఉదహరించిన ఆకృతిలో ఉండేలా సరిచూడండి</string>
-  <!-- Text shown when we aren't able to validate the custom search query. %s is the url of the custom search engine. -->
-  <string name="search_add_custom_engine_error_cannot_reach" moz:removedIn="140" tools:ignore="UnusedResources">“%s”కి అనుసంధానించడంలో తప్పిదం</string>
   <!-- Text shown when a user creates a new search engine. %s is the url of the custom search engine. -->
   <string name="search_add_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s సృష్టించబడింది</string>
   <!-- Text shown when a user successfully edits a custom search engine. %s is the url of the custom search engine. -->
   <string name="search_edit_custom_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s భద్రమయ్యింది</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_delete_search_engine_success_message">%s తొలగించబడింది</string>
+  <string name="search_delete_search_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%s తొలగించబడింది</string>
   <!-- Heading for the instructions to allow a permission -->
   <string name="phone_feature_blocked_intro">దీనిని అనుమతించడానికి:</string>
   <!-- First step for the allowing a permission -->
@@ -1449,18 +1445,10 @@
   <string name="radio_preference_info_content_description">మరిన్ని వివరాలకు నొక్కండి</string>
   <!-- Content description for privacy content close button -->
   <string name="privacy_content_close_button_content_description">మూసివేయి</string>
-  <!--
-    Pocket recommended stories
-
-    Header text for a section on the home screen.
-  -->
-  <string name="pocket_stories_header_1" tools:ignore="UnusedResources" moz:removedIn="140">ఆలోచింపజేసే కథనాలు</string>
   <!-- Header text for a section on the home screen. -->
   <string name="pocket_stories_categories_header" moz:removedIn="141" tools:ignore="UnusedResources">అంశంవారీగా కథనాలు</string>
   <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
   <string name="pocket_stories_placeholder_text" moz:removedIn="141" tools:ignore="UnusedResources">ఇంకా కనుగొనండి</string>
-  <!-- Clickable text for opening an external link for more information about Pocket. -->
-  <string name="pocket_stories_feature_learn_more" moz:removedIn="140" tools:ignore="UnusedResources">ఇంకా తెలుసుకోండి</string>
   <!-- Snackbar button text to navigate to telemetry settings. -->
   <string name="experiments_snackbar_button">అమరికలకు వెళ్ళు</string>
   <!-- Title for dialog displayed when trying to access links present in a text. -->
