@@ -15,8 +15,8 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
-import org.mozilla.fenix.iconpicker.DefaultSettingsAppIconRepository
-import org.mozilla.fenix.iconpicker.SettingsAppIconRepository
+import org.mozilla.fenix.iconpicker.AppIconRepository
+import org.mozilla.fenix.iconpicker.DefaultAppIconRepository
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.ShortcutInfoWrapperDefault
 import org.mozilla.fenix.utils.ShortcutManagerWrapperDefault
@@ -27,8 +27,8 @@ import org.mozilla.fenix.utils.changeAppLauncherIcon
  */
 class AppIconSelectionFragment : Fragment(), UserInteractionHandler {
 
-    private val appIconRepository: SettingsAppIconRepository by lazy {
-        DefaultSettingsAppIconRepository(requireContext().settings())
+    private val appIconRepository: AppIconRepository by lazy {
+        DefaultAppIconRepository(requireContext().settings())
     }
 
     override fun onCreateView(
@@ -39,14 +39,14 @@ class AppIconSelectionFragment : Fragment(), UserInteractionHandler {
         setContent {
             FirefoxTheme {
                 AppIconSelection(
-                    currentAppIcon = appIconRepository.selectedAppIcon.activityAlias,
+                    currentAppIcon = appIconRepository.selectedAppIcon,
                     groupedIconOptions = appIconRepository.groupedAppIcons,
                     onAppIconSelected = { selectedAppIcon ->
-                        val currentAliasSuffix = appIconRepository.selectedAppIcon.activityAlias.aliasSuffix.suffix
+                        val currentAliasSuffix = appIconRepository.selectedAppIcon.aliasSuffix
                         appIconRepository.selectedAppIcon = selectedAppIcon
                         updateAppIcon(
                             currentAliasSuffix = currentAliasSuffix,
-                            updateAliasSuffix = selectedAppIcon.activityAlias.aliasSuffix.suffix,
+                            updateAliasSuffix = selectedAppIcon.aliasSuffix,
                         )
                     },
                 )

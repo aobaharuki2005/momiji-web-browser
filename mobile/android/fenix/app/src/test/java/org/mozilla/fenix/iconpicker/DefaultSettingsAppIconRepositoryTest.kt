@@ -26,35 +26,26 @@ class DefaultSettingsAppIconRepositoryTest {
 
     @Test
     fun `WHEN the selected app icon value changes in the repository THEN the shared preference updates as well`() {
-        val repository = DefaultSettingsAppIconRepository(testContext.settings())
-        val defaultIcon = SettingsAppIcon.appDefault
-        val newAppIcon = SettingsAppIcon.appGradientSunset
+        val repository = DefaultAppIconRepository(testContext.settings())
+        val defaultIcon = AppIcon.AppDefault
+        val newAppIcon = AppIcon.AppCute
 
-        assertEquals(defaultIcon.activityAlias.aliasSuffix.suffix, settings.selectedAppIcon)
+        assertEquals(defaultIcon.aliasSuffix, settings.selectedAppIcon)
         repository.selectedAppIcon = newAppIcon
 
-        assertEquals(newAppIcon.activityAlias.aliasSuffix.suffix, settings.selectedAppIcon)
+        assertEquals(newAppIcon.aliasSuffix, settings.selectedAppIcon)
     }
 
     @Test
     fun `WHEN a new value has been assigned THEN the repository returns the new value`() {
-        val repository = DefaultSettingsAppIconRepository(testContext.settings())
-        val defaultIcon = SettingsAppIcon.appDefault
-        val newAppIcon = SettingsAppIcon.appGradientSunset
+        val repository = DefaultAppIconRepository(testContext.settings())
+        val defaultIcon = AppIcon.AppDefault
+        val newAppIcon = AppIcon.AppCute
 
         assertEquals(defaultIcon, repository.selectedAppIcon)
 
-        repository.selectedAppIcon = SettingsAppIcon.appGradientSunset
+        repository.selectedAppIcon = newAppIcon
 
         assertEquals(newAppIcon, repository.selectedAppIcon)
-    }
-
-    @Test
-    fun `WHEN grouped icon list is requested THEN repository returns the settings app icon collection`() {
-        val repository = DefaultSettingsAppIconRepository(testContext.settings())
-
-        val result = repository.groupedAppIcons
-
-        assertEquals(SettingsAppIcon.groupedAppIcons, result)
     }
 }

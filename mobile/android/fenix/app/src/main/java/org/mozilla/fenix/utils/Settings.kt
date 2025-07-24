@@ -49,7 +49,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.home.pocket.ContentRecommendationsFeatureHelper
 import org.mozilla.fenix.home.topsites.TopSitesConfigConstants.TOP_SITES_MAX_COUNT
-import org.mozilla.fenix.iconpicker.AliasSuffix
+import org.mozilla.fenix.iconpicker.AppIcon
 import org.mozilla.fenix.nimbus.CookieBannersSection
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.nimbus.HomeScreenSection
@@ -2619,7 +2619,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var selectedAppIcon by stringPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_selected_app_icon),
-        default = AliasSuffix.AppDefault.suffix,
+        default = AppIcon.AppDefault.aliasSuffix,
     )
 
     /**

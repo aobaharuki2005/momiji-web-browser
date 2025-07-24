@@ -13,26 +13,26 @@ class AliasSuffixTest {
     fun `GIVEN a valid alias suffix WHEN fromString is invoked THEN matching enum is returned`() {
         val input = "AppGradientSunset"
 
-        val result = AliasSuffix.fromString(input)
+        val result = AppIcon.fromString(input)
 
-        assertEquals(AliasSuffix.AppGradientSunset, result)
+        assertEquals(AppIcon.AppGradientSunset, result)
     }
 
     @Test
     fun `GIVEN an unknown alias suffix WHEN fromString is called THEN AppDefault is returned`() {
         val input = "NonExistentAlias"
 
-        val result = AliasSuffix.fromString(input)
+        val result = AppIcon.fromString(input)
 
-        assertEquals(AliasSuffix.AppDefault, result)
+        assertEquals(AppIcon.AppDefault, result)
     }
 
     @Test
     fun `GIVEN all enum values WHEN fromString is called for each THEN the same enum is returned`() {
-        for (value in AliasSuffix.entries) {
+        for (value in AppIcon.entries) {
             assertEquals(
                 value,
-                AliasSuffix.fromString(value.suffix),
+                AppIcon.fromString(value.aliasSuffix),
             )
         }
     }

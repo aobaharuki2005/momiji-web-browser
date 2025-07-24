@@ -28,9 +28,9 @@ import androidx.preference.PreferenceViewHolder
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.iconpicker.DefaultSettingsAppIconRepository
-import org.mozilla.fenix.iconpicker.SettingsAppIcon
-import org.mozilla.fenix.iconpicker.SettingsAppIconRepository
+import org.mozilla.fenix.iconpicker.AppIcon
+import org.mozilla.fenix.iconpicker.AppIconRepository
+import org.mozilla.fenix.iconpicker.DefaultAppIconRepository
 import org.mozilla.fenix.settings.CustomizationFragmentDirections
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -45,8 +45,8 @@ class AppIconPreference @JvmOverloads constructor(
     attrs: AttributeSet? = null,
 ) : Preference(context, attrs) {
 
-    private val appIconRepository: SettingsAppIconRepository by lazy {
-        DefaultSettingsAppIconRepository(context.settings())
+    private val appIconRepository: AppIconRepository by lazy {
+        DefaultAppIconRepository(context.settings())
     }
 
     init {
@@ -74,8 +74,8 @@ class AppIconPreference @JvmOverloads constructor(
 
 @Composable
 private fun SelectAppIcon(
-    appIcon: SettingsAppIcon,
-    onClick: (SettingsAppIcon) -> Unit,
+    appIcon: AppIcon,
+    onClick: (AppIcon) -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -114,6 +114,6 @@ private fun SelectAppIcon(
 @Composable
 private fun AppIconOptionPreview() {
     FirefoxTheme {
-        SelectAppIcon(SettingsAppIcon.appDefault) {}
+        SelectAppIcon(AppIcon.AppDefault) {}
     }
 }

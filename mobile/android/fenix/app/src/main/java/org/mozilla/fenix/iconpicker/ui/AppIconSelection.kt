@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -42,11 +43,12 @@ import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.TextButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.button.RadioButton
-import org.mozilla.fenix.iconpicker.ActivityAlias
+import org.mozilla.fenix.iconpicker.AppIcon
+import org.mozilla.fenix.iconpicker.DefaultAppIconRepository
+import org.mozilla.fenix.iconpicker.GroupTitle
 import org.mozilla.fenix.iconpicker.IconBackground
-import org.mozilla.fenix.iconpicker.SettingsAppIcon
-import org.mozilla.fenix.iconpicker.SettingsGroupTitle
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.utils.Settings
 
 private val ListItemHeight = 56.dp
 private val AppIconSize = 40.dp
@@ -66,11 +68,11 @@ private val GroupSpacerHeight = 8.dp
  */
 @Composable
 fun AppIconSelection(
-    currentAppIcon: ActivityAlias,
-    groupedIconOptions: Map<SettingsGroupTitle, List<SettingsAppIcon>>,
-    onAppIconSelected: (SettingsAppIcon) -> Unit,
+    currentAppIcon: AppIcon,
+    groupedIconOptions: Map<GroupTitle, List<AppIcon>>,
+    onAppIconSelected: (AppIcon) -> Unit,
 ) {
-    var selectedAppIcon by remember { mutableStateOf<SettingsAppIcon?>(null) }
+    var selectedAppIcon by remember { mutableStateOf<AppIcon?>(null) }
 
     LazyColumn(
         modifier = Modifier.background(color = FirefoxTheme.colors.layer1),
@@ -84,7 +86,7 @@ fun AppIconSelection(
                 items = icons,
                 contentType = { item -> item::class },
             ) { icon ->
-                val iconSelected = icon.activityAlias == currentAppIcon
+                val iconSelected = icon == currentAppIcon
 
                 AppIconOption(
                     appIcon = icon,
@@ -118,7 +120,7 @@ fun AppIconSelection(
 }
 
 @Composable
-private fun AppIconGroupHeader(title: SettingsGroupTitle) {
+private fun AppIconGroupHeader(title: GroupTitle) {
     Text(
         text = stringResource(id = title.titleId),
         modifier = Modifier
@@ -133,7 +135,7 @@ private fun AppIconGroupHeader(title: SettingsGroupTitle) {
 
 @Composable
 private fun AppIconOption(
-    appIcon: SettingsAppIcon,
+    appIcon: AppIcon,
     selected: Boolean,
     onClick: () -> Unit,
 ) {
@@ -169,7 +171,7 @@ private fun AppIconOption(
  */
 @Composable
 fun AppIcon(
-    appIcon: SettingsAppIcon,
+    appIcon: AppIcon,
     iconSize: Dp = AppIconSize,
     borderWidth: Dp = AppIconBorderWidth,
     cornerRadius: Dp = AppIconCornerRadius,
@@ -191,7 +193,7 @@ fun AppIcon(
             .padding(backgroundPadding)
             .clip(roundedShape),
     ) {
-        when (val background = appIcon.activityAlias.iconBackground) {
+        when (val background = appIcon.iconBackground) {
             is IconBackground.Color -> {
                 Box(
                     modifier = Modifier
@@ -210,7 +212,7 @@ fun AppIcon(
         }
 
         Image(
-            painter = painterResource(id = appIcon.activityAlias.iconForegroundId),
+            painter = painterResource(id = appIcon.iconForegroundId),
             contentDescription = null,
             modifier = Modifier.size(iconSize),
         )
@@ -260,8 +262,8 @@ private fun RestartWarningDialog(
 private fun AppIconSelectionPreview() {
     FirefoxTheme {
         AppIconSelection(
-            currentAppIcon = ActivityAlias.AppDefault,
-            groupedIconOptions = SettingsAppIcon.groupedAppIcons,
+            currentAppIcon = AppIcon.AppDefault,
+            groupedIconOptions = DefaultAppIconRepository(Settings(LocalContext.current)).groupedAppIcons,
             onAppIconSelected = {},
         )
     }
@@ -270,13 +272,8 @@ private fun AppIconSelectionPreview() {
 @FlexibleWindowLightDarkPreview
 @Composable
 private fun AppIconOptionPreview() {
-    val sampleItem = SettingsAppIcon.groupedAppIcons
-        .values
-        .flatten()
-        .firstOrNull()!!
-
     FirefoxTheme {
-        AppIconOption(sampleItem, false) {}
+        AppIconOption(AppIcon.AppDefault, false) {}
     }
 }
 

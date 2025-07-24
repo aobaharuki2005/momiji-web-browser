@@ -6,124 +6,173 @@ package org.mozilla.fenix.iconpicker
 
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import org.mozilla.fenix.R
 
 /**
- * Enum that represents <activity-alias> entries declared in the AndroidManifest.
- * These entries are used to allow users to choose an alternative launcher icon.
+ * Enum that represents app launcher icons available for the user to set as an alternative launcher
+ * icon. It is based off <activity-alias> entries declared in the AndroidManifest, with addition
+ * of title and subtitle for representing the icon name in the UI.
  *
- * @property aliasSuffix A reference to the [AliasSuffix] enum, which maps to the suffix portion
- * of the `android:name` attribute in the manifest.
+ * The aliasSuffix is the ending part of the <activity-alias>.
+ * They are used to construct full component names for switching the launcher icon at runtime.
+ *
+ * Example:
+ * - "AppSolidLight" → android:name="${applicationId}.AppSolidLight"
+ *
+ * @property aliasSuffix A suffix portion of the `android:name` attribute in the manifest.
  * @property iconForegroundId The foreground drawable resource used in icon previews.
  * @property iconBackground The background layer used in icon previews, which can be a solid color or drawable.
+ * @property titleId A string resource describing the icon in the icon picker screen.
+ * @property subtitleId An optional string resource used as a secondary label.
  */
-enum class ActivityAlias(
-    val aliasSuffix: AliasSuffix,
+enum class AppIcon(
+    val aliasSuffix: String,
     val iconForegroundId: Int,
     val iconBackground: IconBackground = IconBackground.Color(colorResId = R.color.photonWhite),
+    @param:StringRes val titleId: Int,
+    @param:StringRes val subtitleId: Int? = null,
 ) {
     AppDefault(
-        aliasSuffix = AliasSuffix.AppDefault,
+        aliasSuffix = "App",
         iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Color(colorResId = R.color.ic_launcher_background),
+        titleId = R.string.alternative_app_icon_option_default,
     ),
     AppSolidLight(
-        aliasSuffix = AliasSuffix.AppSolidLight,
+        aliasSuffix = "AppSolidLight",
         iconForegroundId = R.drawable.ic_launcher_foreground,
+        titleId = R.string.alternative_app_icon_option_light,
     ),
     AppSolidDark(
-        aliasSuffix = AliasSuffix.AppSolidDark,
+        aliasSuffix = "AppSolidDark",
         iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Color(colorResId = R.color.photonBlack),
+        titleId = R.string.alternative_app_icon_option_dark,
     ),
     AppSolidRed(
-        aliasSuffix = AliasSuffix.AppSolidRed,
+        aliasSuffix = "AppSolidRed",
         iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_solid_red_background),
+        titleId = R.string.alternative_app_icon_option_red,
     ),
     AppSolidGreen(
-        aliasSuffix = AliasSuffix.AppSolidGreen,
+        aliasSuffix = "AppSolidGreen",
         iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_solid_green_background),
+        titleId = R.string.alternative_app_icon_option_green,
     ),
     AppSolidBlue(
-        aliasSuffix = AliasSuffix.AppSolidBlue,
+        aliasSuffix = "AppSolidBlue",
         iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_solid_blue_background),
+        titleId = R.string.alternative_app_icon_option_blue,
     ),
     AppSolidPurple(
-        aliasSuffix = AliasSuffix.AppSolidPurple,
+        aliasSuffix = "AppSolidPurple",
         iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_solid_purple_background),
+        titleId = R.string.alternative_app_icon_option_purple,
     ),
     AppSolidPurpleDark(
-        aliasSuffix = AliasSuffix.AppSolidPurpleDark,
+        aliasSuffix = "AppSolidPurpleDark",
         iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_solid_purple_dark_background),
+        titleId = R.string.alternative_app_icon_option_purple_dark,
     ),
     AppGradientSunrise(
-        aliasSuffix = AliasSuffix.AppGradientSunrise,
+        aliasSuffix = "AppGradientSunrise",
         iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_gradient_sunrise_background),
+        titleId = R.string.alternative_app_icon_option_gradient_sunrise,
     ),
     AppGradientGoldenHour(
-        aliasSuffix = AliasSuffix.AppGradientGoldenHour,
+        aliasSuffix = "AppGradientGoldenHour",
         iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_gradient_golden_hour_background),
+        titleId = R.string.alternative_app_icon_option_gradient_golden_hour,
     ),
     AppGradientSunset(
-        aliasSuffix = AliasSuffix.AppGradientSunset,
+        aliasSuffix = "AppGradientSunset",
         iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_gradient_sunset_background),
+        titleId = R.string.alternative_app_icon_option_gradient_sunset,
     ),
     AppGradientBlueHour(
-        aliasSuffix = AliasSuffix.AppGradientBlueHour,
+        aliasSuffix = "AppGradientBlueHour",
         iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_gradient_blue_hour_background),
+        titleId = R.string.alternative_app_icon_option_gradient_blue_hour,
     ),
     AppGradientTwilight(
-        aliasSuffix = AliasSuffix.AppGradientTwilight,
+        aliasSuffix = "AppGradientTwilight",
         iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_gradient_twilight_background),
+        titleId = R.string.alternative_app_icon_option_gradient_twilight,
     ),
     AppGradientMidnight(
-        aliasSuffix = AliasSuffix.AppGradientMidnight,
+        aliasSuffix = "AppGradientMidnight",
         iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_gradient_midnight_background),
+        titleId = R.string.alternative_app_icon_option_gradient_midnight,
     ),
     AppGradientNorthernLights(
-        aliasSuffix = AliasSuffix.AppGradientNorthernLights,
+        aliasSuffix = "AppGradientNorthernLights",
         iconForegroundId = R.drawable.ic_launcher_foreground,
         iconBackground = IconBackground.Drawable(R.drawable.ic_launcher_gradient_northern_lights_background),
+        titleId = R.string.alternative_app_icon_option_gradient_northern_lights,
     ),
     AppRetro2004(
-        aliasSuffix = AliasSuffix.AppRetro2004,
+        aliasSuffix = "AppRetro2004",
         iconForegroundId = R.drawable.ic_launcher_foreground_retro_2004,
+        titleId = R.string.alternative_app_icon_option_retro_2004,
     ),
     AppRetro2017(
-        aliasSuffix = AliasSuffix.AppRetro2017,
+        aliasSuffix = "AppRetro2017",
         iconForegroundId = R.drawable.ic_launcher_foreground_retro_2017,
+        titleId = R.string.alternative_app_icon_option_retro_2017,
     ),
     AppPixelated(
-        aliasSuffix = AliasSuffix.AppPixelated,
+        aliasSuffix = "AppPixelated",
         iconForegroundId = R.drawable.ic_launcher_foreground_pixelated,
+        titleId = R.string.alternative_app_icon_option_pixelated,
     ),
     AppMinimal(
-        aliasSuffix = AliasSuffix.AppMinimal,
+        aliasSuffix = "AppMinimal",
         iconForegroundId = R.drawable.ic_launcher_foreground_minimal,
+        titleId = R.string.alternative_app_icon_option_minimal,
     ),
     AppPride(
-        aliasSuffix = AliasSuffix.AppPride,
+        aliasSuffix = "AppPride",
         iconForegroundId = R.drawable.ic_launcher_foreground_pride,
+        titleId = R.string.alternative_app_icon_option_pride,
     ),
     AppCute(
-        aliasSuffix = AliasSuffix.AppCute,
+        aliasSuffix = "AppCute",
         iconForegroundId = R.drawable.ic_launcher_foreground_cute,
+        titleId = R.string.alternative_app_icon_option_cute,
     ),
     AppMomo(
-        aliasSuffix = AliasSuffix.AppMomo,
+        aliasSuffix = "AppMomo",
         iconForegroundId = R.drawable.ic_launcher_foreground_momo,
+        titleId = R.string.alternative_app_icon_option_momo,
+        subtitleId = R.string.alternative_app_icon_option_momo_subtitle,
     ),
+    ;
+
+    /**
+     * [AppIcon] helper object
+     */
+    companion object {
+        /**
+         * Returns the [AppIcon] associated with the given string.
+         *
+         * @param aliasSuffix The suffix from android:name in the manifest (e.g. "AppSolidLight").
+         * Full definition example from the manifest: android:name="${applicationId}.AppSolidLight"
+         */
+        fun fromString(aliasSuffix: String): AppIcon =
+            entries.find { it.aliasSuffix == aliasSuffix } ?: AppDefault
+    }
 }
 
 /**
@@ -146,57 +195,4 @@ sealed class IconBackground {
      * @property drawableResId The drawable resource ID to use.
      */
     data class Drawable(@param:DrawableRes val drawableResId: Int) : IconBackground()
-}
-
-/**
- * Enum that maps directly to the `android:name` attribute of each `<activity-alias>` entry
- * in the AndroidManifest. Only the alias name suffix (after the application ID) is stored.
- *
- * These values are used to construct full component names for switching the launcher icon at runtime.
- *
- * Example:
- * - "AppSolidLight" → android:name="${applicationId}.AppSolidLight"
- *
- * @property suffix The alias name suffix as declared in the manifest.
- */
-enum class AliasSuffix(val suffix: String) {
-    AppDefault("App"),
-    AppSolidLight("AppSolidLight"),
-    AppSolidDark("AppSolidDark"),
-    AppSolidRed("AppSolidRed"),
-    AppSolidGreen("AppSolidGreen"),
-    AppSolidBlue("AppSolidBlue"),
-    AppSolidPurple("AppSolidPurple"),
-    AppSolidPurpleDark("AppSolidPurpleDark"),
-    AppGradientSunrise("AppGradientSunrise"),
-    AppGradientGoldenHour("AppGradientGoldenHour"),
-    AppGradientSunset("AppGradientSunset"),
-    AppGradientBlueHour("AppGradientBlueHour"),
-    AppGradientTwilight("AppGradientTwilight"),
-    AppGradientMidnight("AppGradientMidnight"),
-    AppGradientNorthernLights("AppGradientNorthernLights"),
-    AppRetro2004("AppRetro2004"),
-    AppRetro2017("AppRetro2017"),
-    AppPixelated("AppPixelated"),
-    AppMinimal("AppMinimal"),
-    AppPride("AppPride"),
-    AppCute("AppCute"),
-    AppMomo("AppMomo"),
-
-    // This one is for testing purposes only; not intended to be used.
-    Unknown("Unknown"),
-    ;
-
-    /**
-     * [AliasSuffix] helper object
-     */
-    companion object {
-        /**
-         * Returns the [AliasSuffix] associated with the given string.
-         *
-         * @param aliasSuffix The suffix from android:name in the manifest (e.g. "AppSolidLight").
-         */
-        fun fromString(aliasSuffix: String): AliasSuffix =
-            entries.find { it.suffix == aliasSuffix } ?: AppDefault
-    }
 }
