@@ -338,7 +338,7 @@ class JSObject
   // can apply mallocSizeOf to bits and pieces of the object, whereas objects
   // in the nursery may have those bits and pieces allocated in the nursery
   // along with them, and are not each their own malloc blocks.
-  size_t sizeOfIncludingThisInNursery() const;
+  size_t sizeOfIncludingThisInNursery(mozilla::MallocSizeOf mallocSizeOf) const;
 
 #ifdef DEBUG
   static void debugCheckNewObject(js::Shape* shape, js::gc::AllocKind allocKind,
