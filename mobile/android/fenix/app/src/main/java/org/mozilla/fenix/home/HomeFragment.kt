@@ -1020,9 +1020,13 @@ class HomeFragment : Fragment() {
 
     @Composable
     private fun TabStrip() {
+        // Tabs will not be shown as selected on the homepage when Homepage as a New Tab is not
+        // enabled.
+        val isSelectDisabled = !requireContext().settings().enableHomepageAsNewTab
+
         FirefoxTheme {
             TabStrip(
-                onHome = true,
+                isSelectDisabled = isSelectDisabled,
                 onAddTabClick = {
                     if (requireContext().settings().enableHomepageAsNewTab) {
                         requireComponents.useCases.fenixBrowserUseCases.addNewHomepageTab(

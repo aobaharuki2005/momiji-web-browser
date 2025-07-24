@@ -88,7 +88,7 @@ private val tabStripHorizontalPadding = 16.dp
 /**
  * Top level composable for the tabs strip.
  *
- * @param onHome Whether or not the tabs strip is in the home screen.
+ * @param isSelectDisabled Whether or not the tabs can be shown as selected.
  * @param browserStore The [BrowserStore] instance used to observe tabs state.
  * @param appStore The [AppStore] instance used to observe browsing mode.
  * @param tabsUseCases The [TabsUseCases] instance to perform tab actions.
@@ -100,7 +100,7 @@ private val tabStripHorizontalPadding = 16.dp
  */
 @Composable
 fun TabStrip(
-    onHome: Boolean = false,
+    isSelectDisabled: Boolean = false,
     browserStore: BrowserStore = components.core.store,
     appStore: AppStore = components.appStore,
     tabsUseCases: TabsUseCases = components.useCases.tabsUseCases,
@@ -113,7 +113,7 @@ fun TabStrip(
     val isPossiblyPrivateMode by appStore.observeAsState(false) { it.mode.isPrivate }
     val state by browserStore.observeAsState(TabStripState.initial) {
         it.toTabStripState(
-            isSelectDisabled = onHome,
+            isSelectDisabled = isSelectDisabled,
             isPossiblyPrivateMode = isPossiblyPrivateMode,
             addTab = onAddTabClick,
             closeTab = { isPrivate, numberOfTabs ->
