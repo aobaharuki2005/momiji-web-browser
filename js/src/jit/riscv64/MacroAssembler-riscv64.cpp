@@ -1126,6 +1126,25 @@ void MacroAssemblerRiscv64::computeScaledAddress(const BaseIndex& address,
   }
 }
 
+void MacroAssemblerRiscv64::computeScaledAddress32(const BaseIndex& address,
+                                                   Register dest) {
+  Register base = address.base;
+  Register index = address.index;
+  int32_t shift = Imm32::ShiftOf(address.scale).value;
+  UseScratchRegisterScope temps(this);
+  if (shift && base == zero) {
+    MOZ_ASSERT(shift <= 4);
+    slliw(dest, index, shift);
+  } else if (shift) {
+    Register tmp = dest == base ? temps.Acquire() : dest;
+    MOZ_ASSERT(shift <= 4);
+    slliw(tmp, index, shift);
+    addw(dest, base, tmp);
+  } else {
+    addw(dest, base, index);
+  }
+}
+
 void MacroAssemblerRiscv64Compat::wasmLoadI64Impl(
     const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
     Register ptrScratch, Register64 output, Register tmp) {

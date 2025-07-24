@@ -2068,7 +2068,7 @@ void CodeGenerator::visitEffectiveAddress3(LEffectiveAddress3* ins) {
   Register output = ToRegister(ins->output());
 
   BaseIndex address(base, index, mir->scale(), mir->displacement());
-  masm.computeEffectiveAddress(address, output);
+  masm.computeEffectiveAddress32(address, output);
 }
 
 void CodeGenerator::visitEffectiveAddress2(LEffectiveAddress2* ins) {
@@ -2077,7 +2077,7 @@ void CodeGenerator::visitEffectiveAddress2(LEffectiveAddress2* ins) {
   Register output = ToRegister(ins->output());
 
   BaseIndex address(zero, index, mir->scale(), mir->displacement());
-  masm.computeEffectiveAddress(address, output);
+  masm.computeEffectiveAddress32(address, output);
 }
 
 void CodeGenerator::visitNegI(LNegI* ins) {

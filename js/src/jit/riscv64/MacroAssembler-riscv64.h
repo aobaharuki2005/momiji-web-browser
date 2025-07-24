@@ -365,6 +365,7 @@ class MacroAssemblerRiscv64 : public Assembler {
   void ma_cmp_set(Register dst, Register lhs, Imm32 imm, Condition c);
 
   void computeScaledAddress(const BaseIndex& address, Register dest);
+  void computeScaledAddress32(const BaseIndex& address, Register dest);
 
   void BranchShort(Label* L);
 
@@ -584,6 +585,17 @@ class MacroAssemblerRiscv64Compat : public MacroAssemblerRiscv64 {
     computeScaledAddress(address, dest);
     if (address.offset) {
       ma_add64(dest, dest, Imm32(address.offset));
+    }
+  }
+
+  void computeEffectiveAddress32(const Address& address, Register dest) {
+    ma_add32(dest, address.base, Imm32(address.offset));
+  }
+
+  void computeEffectiveAddress32(const BaseIndex& address, Register dest) {
+    computeScaledAddress32(address, dest);
+    if (address.offset) {
+      ma_add32(dest, dest, Imm32(address.offset));
     }
   }
 
