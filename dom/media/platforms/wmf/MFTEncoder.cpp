@@ -999,7 +999,7 @@ Result<MFTEncoder::ProcessedResult, HRESULT> MFTEncoder::ProcessEvent(
     case METransformHaveOutput:
       return ProcessOutput();
     case METransformDrainComplete:
-      return ProcessedResult::DrainComplete;
+      return ProcessDrainComplete();
     default:
       MFT_ENC_LOGE("Unsupported event type: %s", MediaEventTypeStr(aType));
       break;
@@ -1042,6 +1042,19 @@ Result<MFTEncoder::ProcessedResult, HRESULT> MFTEncoder::ProcessOutput() {
     mOutputs.LastElement().mHeader = std::move(mOutputHeader);
   }
   return ProcessedResult::OutputYielded;
+}
+
+Result<MFTEncoder::ProcessedResult, HRESULT>
+MFTEncoder::ProcessDrainComplete() {
+  // After draining is complete, the MFT will not emit another
+  // METransformNeedInput event until it receives an
+  // MFT_MESSAGE_NOTIFY_START_OF_STREAM message.
+  MFT_RETURN_ERROR_IF_FAILED(
+      SendMFTMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM, 0));
+  MFT_ENC_LOGV("Drain complete, resetting inputs needed(%zu) to 0",
+               mNumNeedInput);
+  mNumNeedInput = 0;
+  return ProcessedResult::DrainComplete;
 }
 
 Result<MediaEventType, HRESULT> MFTEncoder::GetPendingEvent() {

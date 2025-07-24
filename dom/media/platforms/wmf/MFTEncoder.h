@@ -115,6 +115,7 @@ class MFTEncoder final {
   Result<ProcessedResult, HRESULT> ProcessEvent(MediaEventType aType);
   Result<ProcessedResult, HRESULT> ProcessInput();
   Result<ProcessedResult, HRESULT> ProcessOutput();
+  Result<ProcessedResult, HRESULT> ProcessDrainComplete();
   Result<MediaEventType, HRESULT> GetPendingEvent();
 
   // Utilities for both processing models.

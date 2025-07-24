@@ -245,6 +245,29 @@ void WaitForShutdown(const RefPtr<MediaDataEncoder>& aEncoder) {
                      [&result]() { return result; });
 }
 
+static MediaDataEncoder::EncodedData Drain(
+    const RefPtr<MediaDataEncoder>& aEncoder) {
+  size_t pending = 0;
+  MediaDataEncoder::EncodedData output;
+  bool succeeded;
+  do {
+    media::Await(
+        GetMediaThreadPool(MediaThreadType::SUPERVISOR), aEncoder->Drain(),
+        [&pending, &output, &succeeded](MediaDataEncoder::EncodedData encoded) {
+          pending = encoded.Length();
+          output.AppendElements(std::move(encoded));
+          succeeded = true;
+        },
+        [&succeeded](const MediaResult& r) { succeeded = false; });
+    EXPECT_TRUE(succeeded);
+    if (!succeeded) {
+      return output;
+    }
+  } while (pending > 0);
+
+  return output;
+}
+
 static MediaDataEncoder::EncodedData Encode(
     const RefPtr<MediaDataEncoder>& aEncoder, const size_t aNumFrames,
     MediaDataEncoderTest::FrameSource& aSource) {
@@ -266,22 +289,7 @@ static MediaDataEncoder::EncodedData Encode(
     }
   }
 
-  size_t pending = 0;
-  do {
-    media::Await(
-        GetMediaThreadPool(MediaThreadType::SUPERVISOR), aEncoder->Drain(),
-        [&pending, &output, &succeeded](MediaDataEncoder::EncodedData encoded) {
-          pending = encoded.Length();
-          output.AppendElements(std::move(encoded));
-          succeeded = true;
-        },
-        [&succeeded](const MediaResult& r) { succeeded = false; });
-    EXPECT_TRUE(succeeded);
-    if (!succeeded) {
-      return output;
-    }
-  } while (pending > 0);
-
+  output.AppendElements(Drain(aEncoder));
   return output;
 }
 
@@ -447,6 +455,115 @@ TEST_F(MediaDataEncoderTest, H264Encodes4KAVCCRealtime) {
   SKIP_IF_ANDROID_SW();  // Android SW can't encode 4K.
   H264EncodesTest(Usage::Realtime, AsVariant(kH264SpecificAVCC), mData4K);
 }
+
+#if !defined(ANDROID)
+static void H264EncodeAfterDrainTest(
+    Usage aUsage, const EncoderConfig::CodecSpecific& aSpecific,
+    MediaDataEncoderTest::FrameSource& aFrameSource) {
+  ASSERT_TRUE(aSpecific.is<H264Specific>());
+  ASSERT_TRUE(aSpecific.as<H264Specific>().mFormat ==
+                  H264BitStreamFormat::ANNEXB ||
+              aSpecific.as<H264Specific>().mFormat == H264BitStreamFormat::AVC);
+
+  RUN_IF_SUPPORTED(CodecType::H264, [&]() {
+    RefPtr<MediaDataEncoder> e = CreateH264Encoder(
+        aUsage, EncoderConfig::SampleFormat(dom::ImageBitmapFormat::YUV420P),
+        aFrameSource.GetSize(), ScalabilityMode::None, aSpecific);
+
+    EnsureInit(e);
+
+    MediaDataEncoder::EncodedData output = Encode(e, NUM_FRAMES, aFrameSource);
+    EXPECT_EQ(output.Length(), NUM_FRAMES);
+
+    output = Encode(e, NUM_FRAMES, aFrameSource);
+    EXPECT_EQ(output.Length(), NUM_FRAMES);
+
+    WaitForShutdown(e);
+  });
+}
+
+TEST_F(MediaDataEncoderTest, H264EncodeAfterDrainAnnexBRecord) {
+  H264EncodeAfterDrainTest(Usage::Record, AsVariant(kH264SpecificAnnexB),
+                           mData);
+}
+
+TEST_F(MediaDataEncoderTest, H264EncodeAfterDrainAnnexBRealtime) {
+  H264EncodeAfterDrainTest(Usage::Realtime, AsVariant(kH264SpecificAnnexB),
+                           mData);
+}
+
+TEST_F(MediaDataEncoderTest, H264EncodeAfterDrainAVCCRecord) {
+  H264EncodeAfterDrainTest(Usage::Record, AsVariant(kH264SpecificAVCC), mData);
+}
+
+TEST_F(MediaDataEncoderTest, H264EncodeAfterDrainAVCCRealtime) {
+  H264EncodeAfterDrainTest(Usage::Realtime, AsVariant(kH264SpecificAVCC),
+                           mData);
+}
+
+static void H264InterleavedEncodeAndDrainTest(
+    Usage aUsage, const EncoderConfig::CodecSpecific& aSpecific,
+    MediaDataEncoderTest::FrameSource& aFrameSource) {
+  ASSERT_TRUE(aSpecific.is<H264Specific>());
+  ASSERT_TRUE(aSpecific.as<H264Specific>().mFormat ==
+                  H264BitStreamFormat::ANNEXB ||
+              aSpecific.as<H264Specific>().mFormat == H264BitStreamFormat::AVC);
+
+  RUN_IF_SUPPORTED(CodecType::H264, [&]() {
+    RefPtr<MediaDataEncoder> e = CreateH264Encoder(
+        aUsage, EncoderConfig::SampleFormat(dom::ImageBitmapFormat::YUV420P),
+        aFrameSource.GetSize(), ScalabilityMode::None, aSpecific);
+
+    EnsureInit(e);
+
+    MediaDataEncoder::EncodedData output;
+    bool succeeded = false;
+    for (size_t i = 0; i < NUM_FRAMES; i++) {
+      RefPtr<MediaData> frame = aFrameSource.GetFrame(i);
+      media::Await(
+          GetMediaThreadPool(MediaThreadType::SUPERVISOR), e->Encode(frame),
+          [&output, &succeeded](MediaDataEncoder::EncodedData encoded) {
+            output.AppendElements(std::move(encoded));
+            succeeded = true;
+          },
+          [&succeeded](const MediaResult& r) { succeeded = false; });
+      EXPECT_TRUE(succeeded);
+      if (!succeeded) {
+        break;
+      }
+
+      if (i % 5 == 0) {
+        output.AppendElements(Drain(e));
+      }
+    }
+
+    output.AppendElements(Drain(e));
+    EXPECT_EQ(output.Length(), NUM_FRAMES);
+
+    WaitForShutdown(e);
+  });
+}
+
+TEST_F(MediaDataEncoderTest, H264InterleavedEncodeAndDrainAnnexBRecord) {
+  H264InterleavedEncodeAndDrainTest(Usage::Record,
+                                    AsVariant(kH264SpecificAnnexB), mData);
+}
+
+TEST_F(MediaDataEncoderTest, H264InterleavedEncodeAndDrainAnnexBRealtime) {
+  H264InterleavedEncodeAndDrainTest(Usage::Realtime,
+                                    AsVariant(kH264SpecificAnnexB), mData);
+}
+
+TEST_F(MediaDataEncoderTest, H264InterleavedEncodeAndDrainAVCCRecord) {
+  H264InterleavedEncodeAndDrainTest(Usage::Record, AsVariant(kH264SpecificAVCC),
+                                    mData);
+}
+
+TEST_F(MediaDataEncoderTest, H264InterleavedEncodeAndDrainAVCCRealtime) {
+  H264InterleavedEncodeAndDrainTest(Usage::Realtime,
+                                    AsVariant(kH264SpecificAVCC), mData);
+}
+#endif
 
 TEST_F(MediaDataEncoderTest, H264Duration) {
   RUN_IF_SUPPORTED(CodecType::H264, [this]() {
