@@ -414,9 +414,8 @@ struct ParamTraits<mozilla::H264BitStreamFormat>
 template <>
 struct ParamTraits<mozilla::HardwarePreference>
     : public ContiguousEnumSerializerInclusive<
-          mozilla::HardwarePreference,
-          mozilla::HardwarePreference::RequireHardware,
-          mozilla::HardwarePreference::None> {};
+          mozilla::HardwarePreference, mozilla::HardwarePreference::None,
+          mozilla::HardwarePreference::RequireSoftware> {};
 
 template <>
 struct ParamTraits<mozilla::Usage>
