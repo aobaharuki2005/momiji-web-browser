@@ -387,15 +387,32 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 
   // Step 10. Let queue be generator.[[AsyncGeneratorQueue]].
   // Step 11. If queue is not empty, then
-  // Step 11.a. NOTE: Execution continues without suspending the generator.
-  // Step 11.b. Let toYield be the first element of queue.
-  // Step 11.c. Let resumptionValue be Completion(toYield.[[Completion]]).
-  // Step 11.d. Return ?
-  //            AsyncGeneratorUnwrapYieldResumption(resumptionValue).
-  // FIXME
+  if (!generator->isQueueEmpty()) {
+    // Step 11.a. NOTE: Execution continues without suspending the generator.
+    // Step 11.b. Let toYield be the first element of queue.
+    Rooted<AsyncGeneratorRequest*> toYield(
+        cx, AsyncGeneratorObject::peekRequest(generator));
+    if (!toYield) {
+      return false;
+    }
+
+    CompletionKind completionKind = toYield->completionKind();
+
+    generator->setSuspendedYield();
+
+    // Step 11.c. Let resumptionValue be Completion(toYield.[[Completion]]).
+    RootedValue completionValue(cx, toYield->completionValue());
+
+    // Step 11.d. Return ?
+    //            AsyncGeneratorUnwrapYieldResumption(resumptionValue).
+    return AsyncGeneratorUnwrapYieldResumption(cx, generator, completionKind,
+                                               completionValue);
+  }
 
   // Step 12. Else,
   // Step 12.a. Set generator.[[AsyncGeneratorState]] to suspended-yield.
+  generator->setSuspendedYield();
+
   // Step 12.b. Remove genContext from the execution context stack and
   //            restore the execution context that is at the top of the
   //            execution context stack as the running execution context.
@@ -410,25 +427,6 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   // Step 12.f. Return ?
   //            AsyncGeneratorUnwrapYieldResumption(resumptionValue).
   // (done in AsyncGeneratorResume on the next resume)
-
-  if (!generator->isQueueEmpty()) {
-    Rooted<AsyncGeneratorRequest*> next(
-        cx, AsyncGeneratorObject::peekRequest(generator));
-    if (!next) {
-      return false;
-    }
-
-    CompletionKind completionKind = next->completionKind();
-
-    generator->setSuspendedYield();
-
-    RootedValue completionValue(cx, next->completionValue());
-
-    return AsyncGeneratorUnwrapYieldResumption(cx, generator, completionKind,
-                                               completionValue);
-  }
-
-  generator->setSuspendedYield();
 
   return true;
 }
