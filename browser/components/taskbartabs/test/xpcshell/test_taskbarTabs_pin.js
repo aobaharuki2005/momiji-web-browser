@@ -20,6 +20,7 @@ const proxyNativeShellService = {
   ...ShellService.shellService,
   createWindowsIcon: sinon.stub().resolves(),
   createShortcut: sinon.stub().resolves("dummy_path"),
+  deleteShortcut: sinon.stub().resolves("dummy_path"),
   pinShortcutToTaskbar: sinon.stub().resolves(),
   getTaskbarTabShortcutPath: sinon
     .stub()
