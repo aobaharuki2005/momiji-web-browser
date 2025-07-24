@@ -54,14 +54,6 @@ option(
 )
 set_config("MOZ_STUB_INSTALLER", True, when="MOZ_STUB_INSTALLER")
 
-option(
-    env="DESKTOP_LAUNCHER_APP",
-    help="Produce and enable installation of a desktop launcher app",
-    when=depends(target.os)(lambda os: os == "WINNT"),
-)
-set_config("DESKTOP_LAUNCHER_APP", True, when="DESKTOP_LAUNCHER_APP")
-set_define("DESKTOP_LAUNCHER_APP", True, when="DESKTOP_LAUNCHER_APP")
-
 project_flag(
     env="MOZ_PROFILE_MIGRATOR",
     help="Enable profile migrator",
