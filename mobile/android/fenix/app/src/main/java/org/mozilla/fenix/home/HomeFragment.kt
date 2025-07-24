@@ -1024,7 +1024,14 @@ class HomeFragment : Fragment() {
             TabStrip(
                 onHome = true,
                 onAddTabClick = {
-                    sessionControlInteractor.onNavigateSearch()
+                    if (requireContext().settings().enableHomepageAsNewTab) {
+                        requireComponents.useCases.fenixBrowserUseCases.addNewHomepageTab(
+                            private = (requireActivity() as HomeActivity).browsingModeManager.mode.isPrivate,
+                        )
+                    } else {
+                        sessionControlInteractor.onNavigateSearch()
+                    }
+
                     TabStripMetrics.newTabTapped.record()
                 },
                 onSelectedTabClick = {

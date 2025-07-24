@@ -1329,11 +1329,18 @@ abstract class BaseBrowserFragment :
         FirefoxTheme {
             TabStrip(
                 onAddTabClick = {
-                    findNavController().navigate(
-                        NavGraphDirections.actionGlobalHome(
-                            focusOnAddressBar = true,
-                        ),
-                    )
+                    if (activity.settings().enableHomepageAsNewTab) {
+                        requireComponents.useCases.fenixBrowserUseCases.addNewHomepageTab(
+                            private = activity.browsingModeManager.mode.isPrivate,
+                        )
+                    } else {
+                        findNavController().navigate(
+                            NavGraphDirections.actionGlobalHome(
+                                focusOnAddressBar = true,
+                            ),
+                        )
+                    }
+
                     TabStripMetrics.newTabTapped.record()
                 },
                 onLastTabClose = { isPrivate ->
