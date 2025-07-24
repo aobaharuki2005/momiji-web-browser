@@ -17968,9 +17968,22 @@ bool Document::HasScrollLinkedEffect() const {
 
 void Document::SetSHEntryHasUserInteraction(bool aHasInteraction) {
   if (RefPtr<WindowContext> topWc = GetTopLevelWindowContext()) {
-    // Setting has user interction on a discarded browsing context has
+    // Setting has user interaction on a discarded browsing context has
     // no effect.
     Unused << topWc->SetSHEntryHasUserInteraction(aHasInteraction);
+  }
+
+  // For when SHIP is not enabled, we need to get the current entry
+  // directly from the docshell.
+  nsIDocShell* docShell = GetDocShell();
+  if (docShell) {
+    nsCOMPtr<nsISHEntry> currentEntry;
+    bool oshe;
+    nsresult rv =
+        docShell->GetCurrentSHEntry(getter_AddRefs(currentEntry), &oshe);
+    if (!NS_WARN_IF(NS_FAILED(rv)) && currentEntry) {
+      currentEntry->SetHasUserInteraction(aHasInteraction);
+    }
   }
 }
 
@@ -17998,16 +18011,6 @@ void Document::SetUserHasInteracted() {
   // Thus, whenever we create a new SH entry for this document,
   // this flag is reset.
   if (!GetSHEntryHasUserInteraction()) {
-    nsIDocShell* docShell = GetDocShell();
-    if (docShell) {
-      nsCOMPtr<nsISHEntry> currentEntry;
-      bool oshe;
-      nsresult rv =
-          docShell->GetCurrentSHEntry(getter_AddRefs(currentEntry), &oshe);
-      if (!NS_WARN_IF(NS_FAILED(rv)) && currentEntry) {
-        currentEntry->SetHasUserInteraction(true);
-      }
-    }
     SetSHEntryHasUserInteraction(true);
   }
 
@@ -18080,8 +18083,8 @@ void Document::NotifyUserGestureActivation(
     wc->NotifyUserGestureActivation(aModifiers);
   });
 
-  // If there has been a user activation, mark the current session history
-  // entry as having been interacted with.
+  // If there has been a user activation, mark the current session history entry
+  // as having been interacted with.
   SetSHEntryHasUserInteraction(true);
 }
 
