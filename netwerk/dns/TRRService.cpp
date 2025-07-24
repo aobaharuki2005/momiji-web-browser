@@ -615,8 +615,11 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     if (!strcmp(aTopic, NS_NETWORK_LINK_TOPIC)) {
-      if (NS_ConvertUTF16toUTF8(aData).EqualsLiteral(
-              NS_NETWORK_LINK_DATA_DOWN)) {
+      nsAutoCString converted = NS_ConvertUTF16toUTF8(aData);
+      if (converted.EqualsLiteral(NS_NETWORK_LINK_DATA_DOWN)) {
+        MutexAutoLock lock(mLock);
+        mConfirmation.RecordEvent("network-down", lock);
+      } else if (converted.EqualsLiteral(NS_NETWORK_LINK_DATA_CHANGED)) {
         MutexAutoLock lock(mLock);
         mConfirmation.RecordEvent("network-change", lock);
       }
@@ -627,7 +630,7 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
         CheckURIPrefs();
       }
 
-      if (NS_ConvertUTF16toUTF8(aData).EqualsLiteral(NS_NETWORK_LINK_DATA_UP)) {
+      if (converted.EqualsLiteral(NS_NETWORK_LINK_DATA_UP)) {
         mConfirmation.HandleEvent(ConfirmationEvent::NetworkUp);
       }
     }
