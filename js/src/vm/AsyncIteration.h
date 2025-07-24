@@ -373,11 +373,11 @@ class AsyncGeneratorObject : public AbstractGeneratorObject {
 
  public:
   enum State {
-    // "suspendedStart" in the spec.
+    // "suspended-start" in the spec.
     // Suspended after invocation.
     State_SuspendedStart,
 
-    // "suspendedYield" in the spec
+    // "suspended-yield" in the spec
     // Suspended with `yield` expression.
     State_SuspendedYield,
 
@@ -391,14 +391,23 @@ class AsyncGeneratorObject : public AbstractGeneratorObject {
     // while executing.
     State_AwaitingYieldReturn,
 
-    // "awaiting-return" in the spec.
+    // "draining-queue" in the spec.
+    // FIXME
+    // ???
+
+    // Part of "draining-queue" in the spec.
     // Awaiting on the value passed by AsyncGenerator#return which is called
     // after completed.
     State_AwaitingReturn,
 
+    // Mix of "completed" and "draining-queue" in the spec.
+    // The generator is either completed or draining the queue.
+    // FIXME
+    State_Completed
+
     // "completed" in the spec.
     // The generator is completed.
-    State_Completed
+    // FIXME
   };
 
   State state() const {
