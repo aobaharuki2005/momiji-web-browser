@@ -1,27 +1,63 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 10 Jun 2025 17:41:00 -0500
-Subject: Bug 1971201 - (fix-8fc919730c) revert .gn change for allowlist until
- we can update our gn executable in .mozbuild
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Mon, 14 Apr 2025 16:37:00 +0000
+Subject: Bug 1954903 - Update libwebrtc GN configs r=webrtc-reviewers,mjf
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f71a90014b54ba17e14333579b23644eba89d075
+Update GN config files for the special handling in gn_processor.py for
+gbm, drm and PipeWire libraries.
+
+Also remove libwebrtc/third_party/[gbm,drm,pipewire] libs for which we
+now have a special handling in gn_processor.py.
+
+Differential Revision: https://phabricator.services.mozilla.com/D242101
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/506d4efaf2dc29472623beff64cc2bd0d5555afd
 ---
- .gn | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ modules/desktop_capture/BUILD.gn | 4 ++++
+ modules/portal/BUILD.gn          | 4 +---
+ modules/video_capture/BUILD.gn   | 2 +-
+ 3 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/.gn b/.gn
-index fa6a5e85d8..4c9b95c31b 100644
---- a/.gn
-+++ b/.gn
-@@ -32,10 +32,10 @@ no_check_targets = [
-   "//third_party/googletest:gtest",
- ]
+diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
+index 4e63bd2371..3492abcd87 100644
+--- a/modules/desktop_capture/BUILD.gn
++++ b/modules/desktop_capture/BUILD.gn
+@@ -555,6 +555,10 @@ rtc_library("desktop_capture") {
+       "../../rtc_base:sanitizer",
+       "../portal",
+     ]
++
++    if (build_with_mozilla) {
++      defines += [ "WEBRTC_USE_PIPEWIRE" ]
++    }
+   }
  
--# These are the list of GN files that run exec_script. This allowlist exists
-+# These are the list of GN files that run exec_script. This whitelist exists
- # to force additional review for new uses of exec_script, which is strongly
- # discouraged except for gypi_to_gn calls.
--exec_script_allowlist = build_dotfile_settings.exec_script_allowlist +
-+exec_script_whitelist = build_dotfile_settings.exec_script_whitelist +
-                         [ "//libwebrtc/build_overrides/build.gni" ]
- 
- # Normally, we'd use 'if (!build_with_mozilla)', but that flag isn't
+   if (rtc_enable_win_wgc) {
+diff --git a/modules/portal/BUILD.gn b/modules/portal/BUILD.gn
+index 72972d18e1..70b4739ad0 100644
+--- a/modules/portal/BUILD.gn
++++ b/modules/portal/BUILD.gn
+@@ -139,11 +139,9 @@ if (!build_with_mozilla) {
+       deps -= [ ":pipewire_stubs" ]
+       defines -= [ "WEBRTC_DLOPEN_PIPEWIRE" ]
+       public_deps = [
+-        "../../third_party/pipewire",
+-        "../../third_party/drm",
+-        "../../third_party/gbm",
+         "../../third_party/libepoxy"
+       ]
++      defines += [ "WEBRTC_USE_PIPEWIRE" ]
+     }
+   }
+ }
+diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
+index b7acd84839..8a54710d0a 100644
+--- a/modules/video_capture/BUILD.gn
++++ b/modules/video_capture/BUILD.gn
+@@ -111,7 +111,7 @@ if (!build_with_chromium || is_linux || is_chromeos) {
+         ]
+         if (build_with_mozilla) {
+           configs -= [ "../portal:pipewire_base" ]
+-          public_deps = [ "../../third_party/pipewire" ]
++          defines = [ "WEBRTC_USE_PIPEWIRE" ]
+         }
+       }
+     }

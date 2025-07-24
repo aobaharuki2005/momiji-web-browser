@@ -1,23 +1,25 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 13 Jan 2025 08:14:00 -0600
-Subject: Bug 1942428 - (fix-69cc695699) uncomment an arg that upstream thinks
- is unused
+Date: Tue, 19 Nov 2024 16:05:00 -0600
+Subject: Bug 1928110 - (fix-b9c4c242d4) handle upstream last_arrival_timestamp
+ to last_arrival_ntp_timestamp
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/73f9e0e64eb65e9f2579b0f3eb34b88e2b5e5d74
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6918cf2d9126fa3e3676386349f6e383c298d8ab
 ---
- modules/rtp_rtcp/source/rtcp_sender.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ modules/rtp_rtcp/source/rtcp_receiver.cc | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
-index 307502002b..891b9b02a3 100644
---- a/modules/rtp_rtcp/source/rtcp_sender.cc
-+++ b/modules/rtp_rtcp/source/rtcp_sender.cc
-@@ -220,7 +220,7 @@ bool RTCPSender::Sending() const {
-   return sending_;
+diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
+index c17b3bf74c..01b47c6d27 100644
+--- a/modules/rtp_rtcp/source/rtcp_receiver.cc
++++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
+@@ -394,8 +394,8 @@ void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
+   MutexLock lock(&rtcp_receiver_lock_);
+   *packet_count = remote_sender_.packets_sent;
+   *octet_count = remote_sender_.bytes_sent;
+-  *ntp_timestamp_ms = remote_sender_.last_arrival_timestamp.ToMs();
+-  *remote_ntp_timestamp_ms = remote_sender_.last_remote_timestamp.ToMs();
++  *ntp_timestamp_ms = remote_sender_.last_arrival_ntp_timestamp.ToMs();
++  *remote_ntp_timestamp_ms = remote_sender_.last_remote_ntp_timestamp.ToMs();
  }
  
--void RTCPSender::SetSendingStatus(const FeedbackState& /* feedback_state */,
-+void RTCPSender::SetSendingStatus(const FeedbackState& feedback_state,
-                                   bool sending) {
-   bool sendRTCPBye = false;
-   {
+ std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {

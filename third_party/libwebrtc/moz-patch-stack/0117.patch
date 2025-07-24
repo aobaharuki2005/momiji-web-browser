@@ -1,24 +1,21 @@
-From: Randell Jesup <rjesup@mozilla.com>
-Date: Tue, 1 Oct 2024 21:28:00 +0000
-Subject: Bug 1922048: fix comma instead of semicolon in libwebrtc AEC code
- r=mjf,webrtc-reviewers
+From: Michael Froman <mfroman@mozilla.com>
+Date: Wed, 18 Sep 2024 11:14:00 -0500
+Subject: Bug 1918268 - (fix-ec5a968070) readd an include that upstream removed
 
-Differential Revision: https://phabricator.services.mozilla.com/D224242
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fd7a2f8d10cf9d6e862b8f8bb8e675f0d9ddb4bf
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8c080511a17a87c65771747faa74f859b7fe70bb
 ---
- modules/audio_processing/aec3/echo_canceller3.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ api/transport/network_control.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/modules/audio_processing/aec3/echo_canceller3.cc b/modules/audio_processing/aec3/echo_canceller3.cc
-index b6752efe73..068a0fd7f4 100644
---- a/modules/audio_processing/aec3/echo_canceller3.cc
-+++ b/modules/audio_processing/aec3/echo_canceller3.cc
-@@ -811,7 +811,7 @@ EchoCanceller3::EchoCanceller3(
-     linear_output_framer_.reset(
-         new BlockFramer(/*num_bands=*/1, num_capture_channels_));
-     linear_output_block_ =
--        std::make_unique<Block>(/*num_bands=*/1, num_capture_channels_),
-+        std::make_unique<Block>(/*num_bands=*/1, num_capture_channels_);
-     linear_output_sub_frame_view_ = std::vector<std::vector<ArrayView<float>>>(
-         1, std::vector<ArrayView<float>>(num_capture_channels_));
-   }
+diff --git a/api/transport/network_control.h b/api/transport/network_control.h
+index 90cdebe9bb..0f712da8bb 100644
+--- a/api/transport/network_control.h
++++ b/api/transport/network_control.h
+@@ -17,6 +17,7 @@
+ #include "absl/base/attributes.h"
+ #include "api/environment/environment.h"
+ #include "api/field_trials_view.h"
++#include "api/rtc_event_log/rtc_event_log.h"
+ #include "api/transport/network_types.h"
+ #include "api/units/data_rate.h"
+ #include "api/units/time_delta.h"
