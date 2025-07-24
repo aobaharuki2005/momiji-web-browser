@@ -7,6 +7,7 @@ package org.mozilla.fenix.utils
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import mozilla.components.support.base.log.logger.Logger
@@ -71,6 +72,7 @@ private fun userHasAlternativeAppIconSet(
  * @param shortcutInfo A wrapper for [ShortcutInfoCompat].
  * @param appAlias The currently used app alias.
  * @param newAppAlias The app alias we are updating to.
+ * @param updateShortcuts A function that attempts to update the pinned shortcuts to use the [newAppAlias].
  */
 fun changeAppLauncherIcon(
     packageManager: PackageManager,
@@ -78,10 +80,14 @@ fun changeAppLauncherIcon(
     shortcutInfo: ShortcutInfoWrapper,
     appAlias: ComponentName,
     newAppAlias: ComponentName,
+    updateShortcuts: (ShortcutManagerWrapper, ShortcutInfoWrapper, ComponentName) -> Boolean =
+        { managerWrapper, shortcutWrapper, alias ->
+            updateShortcutsComponentName(managerWrapper, shortcutWrapper, alias)
+        },
 ) {
     newAppAlias.setEnabledStateTo(packageManager, true)
 
-    if (updateShortcutsComponentName(shortcutManager, shortcutInfo, newAppAlias)) {
+    if (updateShortcuts(shortcutManager, shortcutInfo, newAppAlias)) {
         logger.info("Successfully attempted to update the app icon to the alternative.")
         appAlias.setEnabledStateTo(packageManager, false)
     } else {
@@ -138,7 +144,8 @@ private fun ComponentName.setEnabledStateTo(packageManager: PackageManager, enab
  *
  * @return whether updating the shortcuts to the app alias was successful.
  */
-private fun updateShortcutsComponentName(
+@VisibleForTesting
+internal fun updateShortcutsComponentName(
     shortcutManager: ShortcutManagerWrapper,
     shortcutInfo: ShortcutInfoWrapper,
     targetAlias: ComponentName,
