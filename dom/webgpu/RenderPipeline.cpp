@@ -59,7 +59,7 @@ already_AddRefed<BindGroupLayout> RenderPipeline::GetBindGroupLayout(
   const RawId bglId = ffi::wgpu_client_render_pipeline_get_bind_group_layout(
       bridge->GetClient(), mParent->GetId(), mId, aIndex);
 
-  RefPtr<BindGroupLayout> object = new BindGroupLayout(mParent, bglId, false);
+  RefPtr<BindGroupLayout> object = new BindGroupLayout(mParent, bglId);
   return object.forget();
 }
 
