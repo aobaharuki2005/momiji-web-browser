@@ -69,6 +69,7 @@ import org.mozilla.fenix.components.search.TABS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.ext.toolbarHintRes
 import org.mozilla.fenix.home.toolbar.HomeToolbarEnvironment
 import org.mozilla.fenix.search.EditPageEndActionsInteractions.ClearSearchClicked
+import org.mozilla.fenix.search.EditPageEndActionsInteractions.QrScannerClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSelectorClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSelectorItemClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSettingsItemClicked
@@ -99,6 +100,7 @@ internal sealed class SearchSelectorEvents : BrowserToolbarEvent {
 @VisibleForTesting
 internal sealed class EditPageEndActionsInteractions : BrowserToolbarEvent {
     data object ClearSearchClicked : EditPageEndActionsInteractions()
+    data object QrScannerClicked : EditPageEndActionsInteractions()
 }
 
 /**
@@ -243,6 +245,10 @@ class BrowserToolbarSearchMiddleware(
 
             is SearchQueryUpdated -> {
                 updateSearchEndPageActions(context.store)
+            }
+
+            is QrScannerClicked -> {
+                // implement Qr Scan here
             }
 
             else -> {
@@ -411,6 +417,14 @@ class BrowserToolbarSearchMiddleware(
     )
 
     private fun buildSearchEndPageActions(queryText: String): List<Action> = buildList {
+        add(
+            ActionButtonRes(
+                drawableResId = R.drawable.mozac_ic_qr_code_24,
+                contentDescription = R.string.mozac_feature_qr_scanner,
+                state = ActionButton.State.DEFAULT,
+                onClick = QrScannerClicked,
+            ),
+        )
         if (queryText.isNotEmpty()) {
             add(
                 ActionButtonRes(
