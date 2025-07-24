@@ -227,6 +227,8 @@ export const SpecialMessageActions = {
       "termsofuse.acceptedDate",
       "termsofuse.currentVersion",
       "termsofuse.minimumVersion",
+      "privacy.trackingprotection.allow_list.baseline.enabled",
+      "privacy.trackingprotection.allow_list.convenience.enabled",
     ];
 
     if (
