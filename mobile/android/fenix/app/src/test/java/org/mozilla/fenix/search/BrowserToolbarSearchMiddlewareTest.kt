@@ -26,11 +26,14 @@ import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.compose.browser.toolbar.concept.Action.ActionButton
+import mozilla.components.compose.browser.toolbar.concept.Action.ActionButtonRes
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchAborted
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.CommitUrl
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ToggleEditMode
+import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
 import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
@@ -68,6 +71,7 @@ import org.mozilla.fenix.components.search.TABS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.helpers.lifecycle.TestLifecycleOwner
 import org.mozilla.fenix.home.toolbar.HomeToolbarEnvironment
+import org.mozilla.fenix.search.EditPageEndActionsInteractions.ClearSearchClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSelectorClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSelectorItemClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSettingsItemClicked
@@ -121,6 +125,37 @@ class BrowserToolbarSearchMiddlewareTest {
             expectedSearchSelector(),
             store.state.editState.editActionsStart[0] as SearchSelectorAction,
         )
+    }
+
+    @Test
+    fun `WHEN the toolbar enters in edit mode with non-blank query THEN a clear button is shown`() {
+        val (_, store) = buildMiddlewareAndAddToStore()
+
+        store.dispatch(SearchQueryUpdated("test"))
+        store.dispatch(ToggleEditMode(true))
+
+        assertEquals(
+            expectedClearButton,
+            store.state.editState.editActionsEnd.last() as ActionButton,
+        )
+    }
+
+    @Test
+    fun `WHEN the toolbar enters in edit mode with non-blank query AND the clear button is clicked THEN text is cleared`() {
+        val (_, store) = buildMiddlewareAndAddToStore()
+
+        store.dispatch(SearchQueryUpdated("test"))
+        store.dispatch(ToggleEditMode(true))
+
+        val clearButton = store.state.editState.editActionsEnd.last() as ActionButton
+
+        assertEquals(
+            expectedClearButton,
+            clearButton,
+        )
+
+        store.dispatch(clearButton.onClick as BrowserToolbarEvent)
+        assertEquals(store.state.editState.query, "")
     }
 
     @Test
@@ -649,6 +684,13 @@ class BrowserToolbarSearchMiddlewareTest {
         defaultOrSelectedSearchEngine,
         searchEngineShortcuts,
         testContext.resources,
+    )
+
+    private val expectedClearButton = ActionButtonRes(
+        drawableResId = R.drawable.mozac_ic_cross_circle_fill_24,
+        contentDescription = R.string.mozac_clear_button_description,
+        state = ActionButton.State.DEFAULT,
+        onClick = ClearSearchClicked,
     )
 
     private fun buildMiddlewareAndAddToStore(

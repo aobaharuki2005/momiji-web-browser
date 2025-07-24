@@ -22,10 +22,14 @@ import mozilla.components.browser.state.search.SearchEngine.Type.APPLICATION
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
+import mozilla.components.compose.browser.toolbar.concept.Action
+import mozilla.components.compose.browser.toolbar.concept.Action.ActionButton
+import mozilla.components.compose.browser.toolbar.concept.Action.ActionButtonRes
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.AutocompleteProvidersUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.HintUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchAborted
+import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchActionsEndUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchActionsStartUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.UrlSuggestionAutocompleted
@@ -64,6 +68,7 @@ import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.TABS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.ext.toolbarHintRes
 import org.mozilla.fenix.home.toolbar.HomeToolbarEnvironment
+import org.mozilla.fenix.search.EditPageEndActionsInteractions.ClearSearchClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSelectorClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSelectorItemClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSettingsItemClicked
@@ -89,6 +94,11 @@ internal sealed class SearchSelectorEvents : BrowserToolbarEvent {
     data class SearchSelectorItemClicked(
         val searchEngine: SearchEngine,
     ) : SearchSelectorEvents()
+}
+
+@VisibleForTesting
+internal sealed class EditPageEndActionsInteractions : BrowserToolbarEvent {
+    data object ClearSearchClicked : EditPageEndActionsInteractions()
 }
 
 /**
@@ -143,6 +153,7 @@ class BrowserToolbarSearchMiddleware(
                     )
                     syncCurrentSearchEngine(context.store)
                     syncAvailableEngines(context.store)
+                    updateSearchEndPageActions(context.store)
                 } else {
                     syncCurrentSearchEngineJob?.cancel()
                     syncAvailableSearchEnginesJob?.cancel()
@@ -224,6 +235,14 @@ class BrowserToolbarSearchMiddleware(
                 }
 
                 appStore.dispatch(SearchEnded)
+            }
+
+            is ClearSearchClicked -> {
+                context.store.dispatch(SearchQueryUpdated(""))
+            }
+
+            is SearchQueryUpdated -> {
+                updateSearchEndPageActions(context.store)
             }
 
             else -> {
@@ -382,6 +401,27 @@ class BrowserToolbarSearchMiddleware(
     private fun reconcileSelectedEngine(): SearchEngine? =
         appStore.state.searchState.selectedSearchEngine?.searchEngine
             ?: browserStore.state.search.selectedOrDefaultSearchEngine
+
+    private fun updateSearchEndPageActions(
+        store: Store<BrowserToolbarState, BrowserToolbarAction>,
+    ) = store.dispatch(
+        SearchActionsEndUpdated(
+            buildSearchEndPageActions(store.state.editState.query),
+        ),
+    )
+
+    private fun buildSearchEndPageActions(queryText: String): List<Action> = buildList {
+        if (queryText.isNotEmpty()) {
+            add(
+                ActionButtonRes(
+                    drawableResId = R.drawable.mozac_ic_cross_circle_fill_24,
+                    contentDescription = R.string.mozac_clear_button_description,
+                    state = ActionButton.State.DEFAULT,
+                    onClick = ClearSearchClicked,
+                ),
+            )
+        }
+    }
 
     private inline fun <S : State, A : MVIAction> Store<S, A>.observeWhileActive(
         crossinline observe: suspend (Flow<S>.() -> Unit),

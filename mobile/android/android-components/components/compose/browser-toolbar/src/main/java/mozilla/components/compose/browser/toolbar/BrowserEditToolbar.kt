@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -26,8 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -149,13 +146,6 @@ fun BrowserEditToolbar(
                                 actions = editActionsEnd,
                                 onInteraction = onInteraction,
                             )
-
-                            if (query.isNotEmpty()) {
-                                ClearButton(
-                                    tint = AcornTheme.colors.iconPrimary,
-                                    onButtonClicked = { onUrlEdit("") },
-                                )
-                            }
                         }
                     },
                 )
@@ -181,13 +171,6 @@ fun BrowserEditToolbar(
                     actions = editActionsEnd,
                     onInteraction = onInteraction,
                 )
-
-                if (query.isNotEmpty()) {
-                    ClearButton(
-                        tint = AcornTheme.colors.iconPrimary,
-                        onButtonClicked = { onUrlEdit("") },
-                    )
-                }
             }
         }
 
@@ -198,29 +181,6 @@ fun BrowserEditToolbar(
                     Bottom -> Alignment.TopCenter
                 },
             ),
-        )
-    }
-}
-
-/**
- * Sub-component of the [BrowserEditToolbar] responsible for displaying a clear icon button.
- *
- * @param tint Color tint of the clear button.
- * @param onButtonClicked Will be called when the user clicks on the button.
- */
-@Composable
-private fun ClearButton(
-    tint: Color,
-    onButtonClicked: () -> Unit = {},
-) {
-    IconButton(
-        modifier = Modifier.requiredSize(40.dp),
-        onClick = { onButtonClicked() },
-    ) {
-        Icon(
-            painter = painterResource(iconsR.drawable.mozac_ic_cross_circle_fill_24),
-            contentDescription = stringResource(R.string.mozac_clear_button_description),
-            tint = tint,
         )
     }
 }
