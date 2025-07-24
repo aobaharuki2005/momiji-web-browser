@@ -57,6 +57,7 @@ dependencies {
     testImplementation libs.androidx.test.junit
     testImplementation libs.testing.coroutines
     testImplementation libs.testing.robolectric
+    testImplementation testFixtures(project(':components:concept-toolbar'))
 }
 
 apply from: '../../../android-lint.gradle'
