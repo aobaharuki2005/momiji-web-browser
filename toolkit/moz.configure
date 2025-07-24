@@ -54,6 +54,7 @@ option(
 )
 set_config("MOZ_STUB_INSTALLER", True, when="MOZ_STUB_INSTALLER")
 
+
 project_flag(
     env="MOZ_PROFILE_MIGRATOR",
     help="Enable profile migrator",
