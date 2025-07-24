@@ -1028,6 +1028,7 @@ class HomeFragment : Fragment() {
         FirefoxTheme {
             TabStrip(
                 isSelectDisabled = isSelectDisabled,
+                showActionButtons = context?.settings()?.shouldUseExpandedToolbar != true,
                 onAddTabClick = {
                     if (requireContext().settings().enableHomepageAsNewTab) {
                         requireComponents.useCases.fenixBrowserUseCases.addNewHomepageTab(

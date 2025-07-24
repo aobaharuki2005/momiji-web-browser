@@ -1328,6 +1328,7 @@ abstract class BaseBrowserFragment :
     ): @Composable () -> Unit = {
         FirefoxTheme {
             TabStrip(
+                showActionButtons = context?.settings()?.shouldUseExpandedToolbar != true,
                 onAddTabClick = {
                     if (activity.settings().enableHomepageAsNewTab) {
                         requireComponents.useCases.fenixBrowserUseCases.addNewHomepageTab(

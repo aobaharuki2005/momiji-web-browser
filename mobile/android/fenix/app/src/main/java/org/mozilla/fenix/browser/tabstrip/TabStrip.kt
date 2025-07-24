@@ -90,6 +90,7 @@ private val tabStripHorizontalPadding = 16.dp
  * Top level composable for the tabs strip.
  *
  * @param isSelectDisabled Whether or not the tabs can be shown as selected.
+ * @param showActionButtons Show the action buttons in the tabs strip when true.
  * @param browserStore The [BrowserStore] instance used to observe tabs state.
  * @param appStore The [AppStore] instance used to observe browsing mode.
  * @param tabsUseCases The [TabsUseCases] instance to perform tab actions.
@@ -102,6 +103,7 @@ private val tabStripHorizontalPadding = 16.dp
 @Composable
 fun TabStrip(
     isSelectDisabled: Boolean = false,
+    showActionButtons: Boolean = true,
     browserStore: BrowserStore = components.core.store,
     appStore: AppStore = components.appStore,
     tabsUseCases: TabsUseCases = components.useCases.tabsUseCases,
@@ -134,6 +136,7 @@ fun TabStrip(
 
     TabStripContent(
         state = state,
+        showActionButtons = showActionButtons,
         onAddTabClick = {
             onAddTabClick()
             TabStripMetrics.newTabTapped.record()
@@ -165,6 +168,7 @@ fun TabStrip(
 @Composable
 private fun TabStripContent(
     state: TabStripState,
+    showActionButtons: Boolean = true,
     onAddTabClick: () -> Unit,
     onCloseTabClick: (id: String, isPrivate: Boolean) -> Unit,
     onSelectedTabClick: (tabId: String, url: String) -> Unit,
@@ -193,22 +197,26 @@ private fun TabStripContent(
                 onMove = onMove,
             )
 
-            IconButton(onClick = onAddTabClick) {
-                Icon(
-                    painter = painterResource(R.drawable.mozac_ic_plus_24),
-                    tint = FirefoxTheme.colors.iconPrimary,
-                    contentDescription = stringResource(R.string.add_tab),
-                )
+            if (showActionButtons) {
+                IconButton(onClick = onAddTabClick) {
+                    Icon(
+                        painter = painterResource(R.drawable.mozac_ic_plus_24),
+                        tint = FirefoxTheme.colors.iconPrimary,
+                        contentDescription = stringResource(R.string.add_tab),
+                    )
+                }
             }
         }
 
-        TabStripTabCounterButton(
-            tabCount = state.tabs.size,
-            size = dimensionResource(R.dimen.tab_strip_height),
-            menuItems = state.menuItems,
-            privacyBadgeVisible = state.isPrivateMode,
-            onClick = onTabCounterClick,
-        )
+        if (showActionButtons) {
+            TabStripTabCounterButton(
+                tabCount = state.tabs.size,
+                size = dimensionResource(R.dimen.tab_strip_height),
+                menuItems = state.menuItems,
+                privacyBadgeVisible = state.isPrivateMode,
+                onClick = onTabCounterClick,
+            )
+        }
     }
 }
 

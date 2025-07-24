@@ -190,7 +190,6 @@ class CustomizationFragment : PreferenceFragmentCompat() {
         val settings = requireContext().settings()
         (requirePreference(R.string.pref_key_customization_category_toolbar_layout) as PreferenceCategory).apply {
             isVisible = Config.channel.isDebug && settings.shouldUseComposableToolbar && settings.toolbarRedesignEnabled
-            isEnabled = !settings.isTabStripEnabled
         }
         updateToolbarLayoutIcons()
     }
