@@ -209,8 +209,9 @@ RefPtr<EncodePromise> WMFMediaDataEncoder::ProcessEncode(
         __func__);
   }
 
-  MFTEncoder::InputSample inputSample{nv12, aSample->mKeyframe};
-  return mEncoder->Encode(inputSample)
+  MFTEncoder::InputSample inputSample{.mSample = nv12.forget(),
+                                      .mKeyFrameRequested = aSample->mKeyframe};
+  return mEncoder->Encode(std::move(inputSample))
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr<WMFMediaDataEncoder>(this)](

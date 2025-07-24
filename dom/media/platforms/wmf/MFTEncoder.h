@@ -58,7 +58,7 @@ class MFTEncoder final {
   HRESULT SetModes(const EncoderConfig& aConfig);
   HRESULT SetBitrate(UINT32 aBitsPerSec);
 
-  RefPtr<EncodePromise> Encode(const InputSample& aInput);
+  RefPtr<EncodePromise> Encode(InputSample&& aInput);
 
   HRESULT CreateInputSample(RefPtr<IMFSample>* aSample, size_t aSize);
 
@@ -161,7 +161,7 @@ class MFTEncoder final {
   GUID MatchInputSubtype(IMFMediaType* aInputType);
   HRESULT SendMFTMessage(MFT_MESSAGE_TYPE aMsg, ULONG_PTR aData);
 
-  HRESULT PushInput(const InputSample& aInput);
+  HRESULT PushInput(InputSample&& aInput);
   nsTArray<OutputSample> TakeOutput();
 
   HRESULT ProcessEvents();

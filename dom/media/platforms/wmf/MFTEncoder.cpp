@@ -743,12 +743,11 @@ MFTEncoder::SetBitrate(UINT32 aBitsPerSec) {
   return mConfig->SetValue(&CODECAPI_AVEncCommonMeanBitRate, &var);
 }
 
-RefPtr<MFTEncoder::EncodePromise> MFTEncoder::Encode(
-    const InputSample& aInput) {
+RefPtr<MFTEncoder::EncodePromise> MFTEncoder::Encode(InputSample&& aInput) {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
 
-  HRESULT hr = PushInput(aInput);
+  HRESULT hr = PushInput(std::move(aInput));
   if (FAILED(hr)) {
     return EncodePromise::CreateAndReject(
         MediaResult(
@@ -788,11 +787,11 @@ MFTEncoder::CreateInputSample(RefPtr<IMFSample>* aSample, size_t aSize) {
 }
 
 HRESULT
-MFTEncoder::PushInput(const InputSample& aInput) {
+MFTEncoder::PushInput(InputSample&& aInput) {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
 
-  mPendingInputs.push_back(aInput);
+  mPendingInputs.push_back(std::move(aInput));
   if (mEventSource.IsSync() && mNumNeedInput == 0) {
     // To step 2 in
     // https://docs.microsoft.com/en-us/windows/win32/medfound/basic-mft-processing-model#process-data
