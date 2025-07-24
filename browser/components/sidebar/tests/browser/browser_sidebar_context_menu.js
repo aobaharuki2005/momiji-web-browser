@@ -188,6 +188,25 @@ add_task(async function test_extension_context_menu() {
   );
   contextMenu.hidePopup();
 
+  await openAndWaitForContextMenu(
+    contextMenu,
+    sidebar.extensionButtons[0],
+    () => {
+      // Click "Remove from Sidebar"
+      const unpinButtonEl = document.getElementById(
+        "sidebar-context-menu-unpin-extension"
+      );
+      unpinButtonEl.click();
+    }
+  );
+
+  await sidebar.updateComplete;
+  is(
+    sidebar.extensionButtons.length,
+    0,
+    "Extension is removed from the sidebar."
+  );
+
   sinon.restore();
   await extension.unload();
   ok(
