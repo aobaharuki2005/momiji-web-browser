@@ -940,7 +940,15 @@
     <fragment
         android:id="@+id/customizationFragment"
         android:name="org.mozilla.fenix.settings.CustomizationFragment"
-        android:label="@string/preferences_customize" />
+        android:label="@string/preferences_customize">
+        <action
+            android:id="@+id/action_customizationFragment_appIconSelectionFragment"
+            app:destination="@+id/appIconSelectionFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
     <fragment
         android:id="@+id/privateBrowsingFragment"
         android:name="org.mozilla.fenix.settings.PrivateBrowsingFragment"
@@ -1266,6 +1274,10 @@
             android:name="navigationOrigin"
             app:argType="org.mozilla.fenix.biometricauthentication.NavigationOrigin" />
     </fragment>
+
+    <fragment
+        android:id="@+id/appIconSelectionFragment"
+        android:name="org.mozilla.fenix.iconpicker.ui.AppIconSelectionFragment" />
 
     <navigation
         android:id="@+id/site_permissions_exceptions_graph"

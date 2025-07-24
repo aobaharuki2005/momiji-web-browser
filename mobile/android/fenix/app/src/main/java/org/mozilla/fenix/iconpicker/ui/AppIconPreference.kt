@@ -22,11 +22,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import org.mozilla.fenix.R
 import org.mozilla.fenix.iconpicker.SettingsAppIcon
+import org.mozilla.fenix.settings.CustomizationFragmentDirections
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private val PreferencePadding = 16.dp
@@ -51,7 +53,12 @@ class AppIconPreference @JvmOverloads constructor(
             FirefoxTheme {
                 SelectAppIcon(
                     appIcon = SettingsAppIcon.appDefault,
-                    onClick = {},
+                    onClick = {
+                        val navController = holder.itemView.findNavController()
+                        navController.navigate(
+                            CustomizationFragmentDirections.actionCustomizationFragmentAppIconSelectionFragment(),
+                        )
+                    },
                 )
             }
         }
