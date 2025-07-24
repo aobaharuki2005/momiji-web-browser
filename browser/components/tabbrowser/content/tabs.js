@@ -1180,6 +1180,7 @@
           let tabSize = this.verticalMode ? tabHeight : tabWidth;
           let firstTab = tabs[0];
           let lastTab = tabs.at(-1);
+          let pinnedTabsStartEdge = this.pinnedDropIndicator[screenAxis];
           let pinnedTabsEndEdge =
             window.windowUtils.getBoundsWithoutFlushing(
               this.pinnedDropIndicator
@@ -1206,8 +1207,9 @@
             newTranslateX = RTL_UI
               ? Math.min(Math.max(oldTranslateX, lastBound), firstBound)
               : Math.min(Math.max(oldTranslateX, firstBound), lastBound);
-            withinPinnedBounds =
-              firstMovingTabScreen + oldTranslateX <= pinnedTabsEndEdge;
+            withinPinnedBounds = RTL_UI
+              ? lastMovingTabScreen + oldTranslateX >= pinnedTabsStartEdge
+              : firstMovingTabScreen + oldTranslateX <= pinnedTabsEndEdge;
           }
         }
 
@@ -2688,26 +2690,30 @@
       // Constrain the range over which the moving tabs can move between the pinned container and last tab
       let firstBound = pinnedTabsStartEdge - firstMovingTabScreen;
       // Use periphery when the lastBound would otherwise be the dragged tab.
-      let lastBound =
-        !numPinned && lastTab == draggedTab
-          ? periphery[screenAxis] -
-            lastMovingTabScreen +
-            bounds(draggedTab)[size]
-          : endEdge(lastTab) - lastMovingTabScreen;
+      let lastBound;
+      if (!numPinned && lastTab == draggedTab) {
+        lastBound =
+          periphery[screenAxis] -
+          lastMovingTabScreen +
+          // Use periphery width only in horizontal rtl mode since we are moving the other direction.
+          // (tab width results in a bounds that falls short, whilst periphery width is accurate)
+          (this.#rtlMode ? bounds(periphery).width : bounds(draggedTab)[size]);
+      } else {
+        lastBound = endEdge(lastTab) - lastMovingTabScreen;
+      }
+
       translate = this.#rtlMode
         ? Math.min(Math.max(translate, lastBound), firstBound)
         : Math.min(Math.max(translate, firstBound), lastBound);
-      if (
-        isTab(draggedTab) &&
-        ((!this.#rtlMode &&
-          firstMovingTabScreen + translate <= pinnedTabsEndEdge) ||
-          (this.#rtlMode &&
-            lastMovingTabScreen + translate >= pinnedTabsStartEdge))
-      ) {
-        this.#onDragIntoPinnedContainer();
-      } else {
-        this.pinnedDropIndicator.removeAttribute("interactive");
-      }
+
+      this.#checkWithinPinnedContainerBounds(
+        firstMovingTabScreen,
+        lastMovingTabScreen,
+        pinnedTabsStartEdge,
+        pinnedTabsEndEdge,
+        translate,
+        draggedTab
+      );
 
       for (let item of movingTabs) {
         if (isTabGroupLabel(item)) {
@@ -3113,17 +3119,50 @@
       }
     }
 
-    #onDragIntoPinnedContainer() {
-      if (!gBrowser.pinnedTabCount) {
-        let tabbrowserTabsRect =
-          window.windowUtils.getBoundsWithoutFlushing(this);
-        if (!this.verticalMode) {
-          // The tabbrowser container expands with the expansion of the
-          // drop indicator - prevent that by setting maxWidth first.
-          this.style.maxWidth = tabbrowserTabsRect.width + "px";
+    #checkWithinPinnedContainerBounds(
+      firstMovingTabScreen,
+      lastMovingTabScreen,
+      pinnedTabsStartEdge,
+      pinnedTabsEndEdge,
+      translate,
+      draggedTab
+    ) {
+      // Display the pinned drop indicator based on the position of the moving tabs
+      // If the indicator is not yet shown, display once we are within a pinned tab width/height
+      // distance
+      let firstMovingTabPosition = firstMovingTabScreen + translate;
+      let lastMovingTabPosition = lastMovingTabScreen + translate;
+      // Approximation of pinned tabs width and height in horizontal or grid mode (40) is sufficient
+      // distance to display the pinned drop indicator slightly before dragging over it. Exact
+      // value is not necessary.
+      let pinnedTabSize = 40;
+      let inPinnedRange = this.#rtlMode
+        ? lastMovingTabPosition >= pinnedTabsStartEdge
+        : firstMovingTabPosition <= pinnedTabsEndEdge;
+      let inVisibleRange = this.#rtlMode
+        ? lastMovingTabPosition >= pinnedTabsStartEdge - pinnedTabSize
+        : firstMovingTabPosition <= pinnedTabsEndEdge + pinnedTabSize;
+      if (
+        isTab(draggedTab) &&
+        ((inVisibleRange &&
+          !this.pinnedDropIndicator.hasAttribute("visible")) ||
+          (inPinnedRange &&
+            !this.pinnedDropIndicator.hasAttribute("interactive")))
+      ) {
+        // On drag into pinned container
+        if (!gBrowser.pinnedTabCount) {
+          let tabbrowserTabsRect =
+            window.windowUtils.getBoundsWithoutFlushing(this);
+          if (!this.verticalMode) {
+            // The tabbrowser container expands with the expansion of the
+            // drop indicator - prevent that by setting maxWidth first.
+            this.style.maxWidth = tabbrowserTabsRect.width + "px";
+          }
+          this.pinnedDropIndicator.setAttribute("visible", "");
+          this.pinnedDropIndicator.setAttribute("interactive", "");
         }
-        this.pinnedDropIndicator.setAttribute("visible", "");
-        this.pinnedDropIndicator.setAttribute("interactive", "");
+      } else if (!inPinnedRange) {
+        this.pinnedDropIndicator.removeAttribute("interactive");
       }
     }
 

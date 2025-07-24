@@ -957,8 +957,6 @@
 
   &[visible] {
     display: flex;
-    align-items: center;
-    justify-content: center;
     border-radius: var(--border-radius-small);
     background: color-mix(in srgb, currentColor 12%, transparent);
 
@@ -1018,8 +1016,10 @@
   &[visible] {
     margin-inline: var(--space-small);
     align-self: center;
-    width: var(--size-item-large);
-    height: var(--size-item-large);
+    align-items: flex-start;
+    width: calc(2 * var(--size-item-large));
+    height: var(--tab-min-height);
+    padding-inline-start: var(--space-small);
 
     > #pinned-drop-indicator-text {
       display: none;
