@@ -1166,11 +1166,6 @@
           "value": "{button.min.height.@base}"
         }
       }
-    },
-    "space": {
-      "block": {
-        "value": "{space.xsmall}"
-      }
     }
   },
   "link": {

@@ -892,16 +892,6 @@ export const storybookTables = {
     { value: "24px", name: "--icon-size-large" },
     { value: "var(--size-item-large)", name: "--icon-size-xlarge" },
   ],
-  space: [
-    { value: "var(--space-xsmall)", name: "--input-space-block" },
-    { value: "calc(0.5 * var(--space-xsmall))", name: "--space-xxsmall" },
-    { value: "0.267rem", name: "--space-xsmall" },
-    { value: "calc(2 * var(--space-xsmall))", name: "--space-small" },
-    { value: "calc(3 * var(--space-xsmall))", name: "--space-medium" },
-    { value: "calc(4 * var(--space-xsmall))", name: "--space-large" },
-    { value: "calc(6 * var(--space-xsmall))", name: "--space-xlarge" },
-    { value: "calc(8 * var(--space-xsmall))", name: "--space-xxlarge" },
-  ],
   link: [
     {
       value: {
@@ -940,6 +930,15 @@ export const storybookTables = {
       name: "--link-color-visited",
     },
     { value: "1px", name: "--link-focus-outline-offset" },
+  ],
+  space: [
+    { value: "calc(0.5 * var(--space-xsmall))", name: "--space-xxsmall" },
+    { value: "0.267rem", name: "--space-xsmall" },
+    { value: "calc(2 * var(--space-xsmall))", name: "--space-small" },
+    { value: "calc(3 * var(--space-xsmall))", name: "--space-medium" },
+    { value: "calc(4 * var(--space-xsmall))", name: "--space-large" },
+    { value: "calc(6 * var(--space-xsmall))", name: "--space-xlarge" },
+    { value: "calc(8 * var(--space-xsmall))", name: "--space-xxlarge" },
   ],
   "box-shadow": [
     {
@@ -1544,7 +1543,6 @@ export const variableLookupTable = {
   "icon-size-large": "24px",
   "icon-size-xlarge": "var(--size-item-large)",
   "input-text-min-height": "var(--button-min-height)",
-  "input-space-block": "var(--space-xsmall)",
   "link-color": {
     forcedColors: "LinkText",
     brand: { default: "var(--color-accent-primary)" },

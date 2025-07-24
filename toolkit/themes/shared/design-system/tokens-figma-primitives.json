@@ -24,7 +24,6 @@
   "icon/size/large": 24,
   "icon/size/xlarge": "{Primitives$size/item/large}",
   "input/text/min/height": "{Primitives$button/min/height}",
-  "input/space/block": "{Primitives$space/xsmall}",
   "link/focus/outline/offset": 1,
   "page/main/content/width": 664,
   "size/item/small": 16,
