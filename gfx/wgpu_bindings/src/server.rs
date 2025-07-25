@@ -100,15 +100,15 @@ fn restrict_limits(limits: wgt::Limits) -> wgt::Limits {
     }
 }
 
+/// Opaque pointer to `mozilla::webgpu::WebGPUParent`.
+#[derive(Debug, Clone, Copy)]
+#[repr(transparent)]
+pub struct WebGPUParentPtr(*mut core::ffi::c_void);
+
 // hide wgc's global in private
 pub struct Global {
+    owner: WebGPUParentPtr,
     global: wgc::global::Global,
-
-    /// A pointer to the `mozilla::webgpu::WebGPUParent` that created us.
-    ///
-    /// This is used only on platforms that support presentation
-    /// without CPU readback.
-    webgpu_parent: *mut c_void,
 }
 
 impl std::ops::Deref for Global {
@@ -119,7 +119,7 @@ impl std::ops::Deref for Global {
 }
 
 #[no_mangle]
-pub extern "C" fn wgpu_server_new(owner: *mut c_void) -> *mut Global {
+pub extern "C" fn wgpu_server_new(owner: WebGPUParentPtr) -> *mut Global {
     log::info!("Initializing WGPU server");
     let backends_pref = static_prefs::pref!("dom.webgpu.wgpu-backend").to_string();
     let backends = if backends_pref.is_empty() {
@@ -170,10 +170,7 @@ pub extern "C" fn wgpu_server_new(owner: *mut c_void) -> *mut Global {
             },
         },
     );
-    let global = Global {
-        global,
-        webgpu_parent: owner,
-    };
+    let global = Global { owner, global };
     Box::into_raw(Box::new(global))
 }
 
@@ -1158,16 +1155,16 @@ extern "C" {
     #[allow(dead_code)]
     fn gfx_critical_note(msg: *const c_char);
     fn wgpu_server_use_shared_texture_for_swap_chain(
-        param: *mut c_void,
+        parent: WebGPUParentPtr,
         swap_chain_id: SwapChainId,
     ) -> bool;
     fn wgpu_server_disable_shared_texture_for_swap_chain(
-        param: *mut c_void,
+        parent: WebGPUParentPtr,
         swap_chain_id: SwapChainId,
     );
     #[allow(dead_code)]
     fn wgpu_server_ensure_shared_texture_for_swap_chain(
-        param: *mut c_void,
+        parent: WebGPUParentPtr,
         swap_chain_id: SwapChainId,
         device_id: id::DeviceId,
         texture_id: id::TextureId,
@@ -1177,7 +1174,7 @@ extern "C" {
         usage: wgt::TextureUsages,
     ) -> bool;
     fn wgpu_server_ensure_shared_texture_for_readback(
-        param: *mut c_void,
+        parent: WebGPUParentPtr,
         swap_chain_id: SwapChainId,
         device_id: id::DeviceId,
         texture_id: id::TextureId,
@@ -1188,24 +1185,24 @@ extern "C" {
     );
     #[cfg(target_os = "windows")]
     fn wgpu_server_get_shared_texture_handle(
-        param: *mut c_void,
+        parent: WebGPUParentPtr,
         id: id::TextureId,
     ) -> *mut core::ffi::c_void;
     #[cfg(target_os = "linux")]
     #[allow(improper_ctypes)] // VkImageHandle is behind a pointer but this still triggers
     fn wgpu_server_get_vk_image_handle(
-        param: *mut c_void,
+        parent: WebGPUParentPtr,
         texture_id: id::TextureId,
     ) -> *const VkImageHandle;
     #[cfg(target_os = "linux")]
-    fn wgpu_server_get_dma_buf_fd(param: *mut c_void, id: id::TextureId) -> i32;
+    fn wgpu_server_get_dma_buf_fd(parent: WebGPUParentPtr, id: id::TextureId) -> i32;
     #[cfg(target_os = "macos")]
-    fn wgpu_server_get_external_io_surface_id(param: *mut c_void, id: id::TextureId) -> u32;
-    fn wgpu_server_remove_shared_texture(param: *mut c_void, id: id::TextureId);
-    fn wgpu_server_dealloc_buffer_shmem(param: *mut c_void, id: id::BufferId);
-    fn wgpu_server_pre_device_drop(param: *mut c_void, id: id::DeviceId);
+    fn wgpu_server_get_external_io_surface_id(parent: WebGPUParentPtr, id: id::TextureId) -> u32;
+    fn wgpu_server_remove_shared_texture(parent: WebGPUParentPtr, id: id::TextureId);
+    fn wgpu_server_dealloc_buffer_shmem(parent: WebGPUParentPtr, id: id::BufferId);
+    fn wgpu_server_pre_device_drop(parent: WebGPUParentPtr, id: id::DeviceId);
     fn wgpu_server_set_buffer_map_data(
-        param: *mut c_void,
+        parent: WebGPUParentPtr,
         device_id: id::DeviceId,
         buffer_id: id::BufferId,
         has_map_flags: bool,
@@ -1213,21 +1210,25 @@ extern "C" {
         mapped_size: u64,
         shmem_index: usize,
     );
-    fn wgpu_server_device_push_error_scope(param: *mut c_void, device_id: id::DeviceId, filter: u8);
+    fn wgpu_server_device_push_error_scope(
+        parent: WebGPUParentPtr,
+        device_id: id::DeviceId,
+        filter: u8,
+    );
     fn wgpu_server_device_pop_error_scope(
-        param: *mut c_void,
+        parent: WebGPUParentPtr,
         device_id: id::DeviceId,
         out_type: *mut u8,
         out_message: *mut nsCString,
     );
     fn wgpu_parent_buffer_unmap(
-        param: *mut c_void,
+        parent: WebGPUParentPtr,
         device_id: id::DeviceId,
         buffer_id: id::BufferId,
         flush: bool,
     );
     fn wgpu_parent_queue_submit(
-        param: *mut c_void,
+        parent: WebGPUParentPtr,
         device_id: id::DeviceId,
         queue_id: id::QueueId,
         command_buffer_ids: *const id::CommandBufferId,
@@ -1236,7 +1237,7 @@ extern "C" {
         texture_ids_length: usize,
     );
     fn wgpu_parent_create_swap_chain(
-        param: *mut c_void,
+        parent: WebGPUParentPtr,
         device_id: id::DeviceId,
         queue_id: id::QueueId,
         width: i32,
@@ -1248,23 +1249,23 @@ extern "C" {
         use_shared_texture_in_swap_chain: bool,
     );
     fn wgpu_parent_swap_chain_present(
-        param: *mut c_void,
+        parent: WebGPUParentPtr,
         texture_id: id::TextureId,
         command_encoder_id: id::CommandEncoderId,
         remote_texture_id: crate::RemoteTextureId,
         remote_texture_owner_id: crate::RemoteTextureOwnerId,
     );
     fn wgpu_parent_swap_chain_drop(
-        param: *mut c_void,
+        parent: WebGPUParentPtr,
         remote_texture_owner_id: crate::RemoteTextureOwnerId,
         txn_type: crate::RemoteTextureTxnType,
         txn_id: crate::RemoteTextureTxnId,
     );
     #[cfg(target_os = "windows")]
     fn wgpu_parent_get_compositor_device_luid(out_luid: *mut crate::FfiLUID);
-    fn wgpu_parent_post_request_device(param: *mut c_void, device_id: id::DeviceId);
+    fn wgpu_parent_post_request_device(parent: WebGPUParentPtr, device_id: id::DeviceId);
     fn wgpu_parent_build_buffer_map_closure(
-        param: *mut c_void,
+        parent: WebGPUParentPtr,
         device_id: id::DeviceId,
         buffer_id: id::BufferId,
         mode: wgc::device::HostMap,
@@ -1272,15 +1273,15 @@ extern "C" {
         size: u64,
     ) -> BufferMapClosure;
     fn wgpu_parent_build_submitted_work_done_closure(
-        param: *mut c_void,
+        parent: WebGPUParentPtr,
     ) -> SubmittedWorkDoneClosure;
     fn wgpu_parent_handle_error(
-        param: *mut c_void,
+        parent: WebGPUParentPtr,
         device_id: id::DeviceId,
         ty: ErrorBufferType,
         message: &nsCString,
     );
-    fn wgpu_parent_send_server_message(param: *mut c_void, message: &mut ByteBuf);
+    fn wgpu_parent_send_server_message(parent: WebGPUParentPtr, message: &mut ByteBuf);
 }
 
 #[cfg(target_os = "linux")]
@@ -1394,7 +1395,7 @@ impl Global {
 
         let ret = unsafe {
             wgpu_server_ensure_shared_texture_for_swap_chain(
-                self.webgpu_parent,
+                self.owner,
                 swap_chain_id.unwrap(),
                 device_id,
                 texture_id,
@@ -1412,8 +1413,7 @@ impl Global {
             return false;
         }
 
-        let handle =
-            unsafe { wgpu_server_get_shared_texture_handle(self.webgpu_parent, texture_id) };
+        let handle = unsafe { wgpu_server_get_shared_texture_handle(self.owner, texture_id) };
         if handle.is_null() {
             let msg = c"Failed to get shared texture handle";
             unsafe {
@@ -1466,7 +1466,7 @@ impl Global {
     ) -> bool {
         unsafe {
             let ret = wgpu_server_ensure_shared_texture_for_swap_chain(
-                self.webgpu_parent,
+                self.owner,
                 swap_chain_id.unwrap(),
                 device_id,
                 texture_id,
@@ -1481,7 +1481,7 @@ impl Global {
                 return false;
             }
 
-            let handle = wgpu_server_get_vk_image_handle(self.webgpu_parent, texture_id);
+            let handle = wgpu_server_get_vk_image_handle(self.owner, texture_id);
             if handle.is_null() {
                 let msg = c"Failed to get VkImageHandle";
                 gfx_critical_note(msg.as_ptr());
@@ -1490,7 +1490,7 @@ impl Global {
 
             let vk_image_wrapper = &*handle;
 
-            let fd = wgpu_server_get_dma_buf_fd(self.webgpu_parent, texture_id);
+            let fd = wgpu_server_get_dma_buf_fd(self.owner, texture_id);
             if fd < 0 {
                 let msg = c"Failed to get DMABuf fd";
                 gfx_critical_note(msg.as_ptr());
@@ -1649,7 +1649,7 @@ impl Global {
 
         let ret = unsafe {
             wgpu_server_ensure_shared_texture_for_swap_chain(
-                self.webgpu_parent,
+                self.owner,
                 swap_chain_id.unwrap(),
                 device_id,
                 texture_id,
@@ -1668,7 +1668,7 @@ impl Global {
         }
 
         let io_surface_id =
-            unsafe { wgpu_server_get_external_io_surface_id(self.webgpu_parent, texture_id) };
+            unsafe { wgpu_server_get_external_io_surface_id(self.owner, texture_id) };
         if io_surface_id == 0 {
             let msg = c"Failed to get io surface id";
             unsafe {
@@ -1791,7 +1791,7 @@ impl Global {
                 if needs_shmem {
                     unsafe {
                         wgpu_server_set_buffer_map_data(
-                            self.webgpu_parent,
+                            self.owner,
                             device_id,
                             buffer_id,
                             has_map_flags,
@@ -1842,7 +1842,7 @@ impl Global {
                 }
 
                 let use_shared_texture = if let Some(id) = swap_chain_id {
-                    unsafe { wgpu_server_use_shared_texture_for_swap_chain(self.webgpu_parent, id) }
+                    unsafe { wgpu_server_use_shared_texture_for_swap_chain(self.owner, id) }
                 } else {
                     false
                 };
@@ -1924,7 +1924,7 @@ impl Global {
 
                     unsafe {
                         wgpu_server_disable_shared_texture_for_swap_chain(
-                            self.webgpu_parent,
+                            self.owner,
                             swap_chain_id.unwrap(),
                         )
                     };
@@ -1933,7 +1933,7 @@ impl Global {
                 if let Some(swap_chain_id) = swap_chain_id {
                     unsafe {
                         wgpu_server_ensure_shared_texture_for_readback(
-                            self.webgpu_parent,
+                            self.owner,
                             swap_chain_id,
                             device_id,
                             id,
@@ -2127,20 +2127,13 @@ impl Global {
                 );
             }
             DeviceAction::PushErrorScope(filter) => {
-                unsafe {
-                    wgpu_server_device_push_error_scope(self.webgpu_parent, device_id, filter)
-                };
+                unsafe { wgpu_server_device_push_error_scope(self.owner, device_id, filter) };
             }
             DeviceAction::PopErrorScope => {
                 let mut ty = 0;
                 let mut message = nsCString::new();
                 unsafe {
-                    wgpu_server_device_pop_error_scope(
-                        self.webgpu_parent,
-                        device_id,
-                        &mut ty,
-                        &mut message,
-                    )
+                    wgpu_server_device_pop_error_scope(self.owner, device_id, &mut ty, &mut message)
                 };
                 let message = message.to_utf8();
 
@@ -2491,7 +2484,7 @@ unsafe fn process_message(
             let error = adapter_request_device(global, adapter_id, desc, device_id, queue_id);
 
             if error.is_none() {
-                wgpu_parent_post_request_device(global.webgpu_parent, device_id);
+                wgpu_parent_post_request_device(global.owner, device_id);
             }
 
             *response_byte_buf = make_byte_buf(&ServerMessage::RequestDeviceResponse(
@@ -2575,7 +2568,7 @@ unsafe fn process_message(
             };
 
             let closure = wgpu_parent_build_buffer_map_closure(
-                global.webgpu_parent,
+                global.owner,
                 device_id,
                 buffer_id,
                 mode,
@@ -2598,11 +2591,11 @@ unsafe fn process_message(
             }
         }
         Message::BufferUnmap(device_id, buffer_id, flush) => {
-            wgpu_parent_buffer_unmap(global.webgpu_parent, device_id, buffer_id, flush);
+            wgpu_parent_buffer_unmap(global.owner, device_id, buffer_id, flush);
         }
         Message::QueueSubmit(device_id, queue_id, command_buffer_ids, texture_ids) => {
             wgpu_parent_queue_submit(
-                global.webgpu_parent,
+                global.owner,
                 device_id,
                 queue_id,
                 command_buffer_ids.as_ptr(),
@@ -2612,7 +2605,7 @@ unsafe fn process_message(
             )
         }
         Message::QueueOnSubmittedWorkDone(queue_id) => {
-            let closure = wgpu_parent_build_submitted_work_done_closure(global.webgpu_parent);
+            let closure = wgpu_parent_build_submitted_work_done_closure(global.owner);
             let closure = Box::new(move || {
                 let _ = &closure;
                 (closure.callback)(closure.user_data)
@@ -2631,7 +2624,7 @@ unsafe fn process_message(
             use_shared_texture_in_swap_chain,
         } => {
             wgpu_parent_create_swap_chain(
-                global.webgpu_parent,
+                global.owner,
                 device_id,
                 queue_id,
                 width,
@@ -2650,7 +2643,7 @@ unsafe fn process_message(
             remote_texture_owner_id,
         } => {
             wgpu_parent_swap_chain_present(
-                global.webgpu_parent,
+                global.owner,
                 texture_id,
                 command_encoder_id,
                 remote_texture_id,
@@ -2662,32 +2655,27 @@ unsafe fn process_message(
             txn_type,
             txn_id,
         } => {
-            wgpu_parent_swap_chain_drop(
-                global.webgpu_parent,
-                remote_texture_owner_id,
-                txn_type,
-                txn_id,
-            );
+            wgpu_parent_swap_chain_drop(global.owner, remote_texture_owner_id, txn_type, txn_id);
         }
 
         Message::DestroyBuffer(id) => {
-            wgpu_server_dealloc_buffer_shmem(global.webgpu_parent, id);
+            wgpu_server_dealloc_buffer_shmem(global.owner, id);
             global.buffer_destroy(id)
         }
         Message::DestroyTexture(id) => {
-            wgpu_server_remove_shared_texture(global.webgpu_parent, id);
+            wgpu_server_remove_shared_texture(global.owner, id);
             global.texture_destroy(id)
         }
         Message::DestroyDevice(id) => global.device_destroy(id),
 
         Message::DropAdapter(id) => global.adapter_drop(id),
         Message::DropDevice(id) => {
-            wgpu_server_pre_device_drop(global.webgpu_parent, id);
+            wgpu_server_pre_device_drop(global.owner, id);
             global.device_drop(id)
         }
         Message::DropQueue(id) => global.queue_drop(id),
         Message::DropBuffer(id) => {
-            wgpu_server_dealloc_buffer_shmem(global.webgpu_parent, id);
+            wgpu_server_dealloc_buffer_shmem(global.owner, id);
             global.buffer_drop(id)
         }
         Message::DropCommandBuffer(id) => global.command_buffer_drop(id),
@@ -2715,7 +2703,7 @@ unsafe fn process_message(
             }
         }
         Message::DropTexture(id) => {
-            wgpu_server_remove_shared_texture(global.webgpu_parent, id);
+            wgpu_server_remove_shared_texture(global.owner, id);
             global.texture_drop(id);
         }
         Message::DropTextureView(id) => global.texture_view_drop(id).unwrap(),
@@ -2726,10 +2714,10 @@ unsafe fn process_message(
     }
 
     if let Some((device_id, ty, message)) = error_buf.get_inner_data() {
-        wgpu_parent_handle_error(global.webgpu_parent, device_id, ty, message);
+        wgpu_parent_handle_error(global.owner, device_id, ty, message);
     }
     if !response_byte_buf.is_empty() {
-        wgpu_parent_send_server_message(global.webgpu_parent, response_byte_buf);
+        wgpu_parent_send_server_message(global.owner, response_byte_buf);
     }
 }
 

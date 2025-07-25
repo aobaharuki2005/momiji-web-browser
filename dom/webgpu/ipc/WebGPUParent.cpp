@@ -42,43 +42,45 @@ static mozilla::LazyLogModule sLogger("WebGPU");
 namespace ffi {
 
 extern bool wgpu_server_use_shared_texture_for_swap_chain(
-    void* aParam, WGPUSwapChainId aSwapChainId) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+    WGPUWebGPUParentPtr aParent, WGPUSwapChainId aSwapChainId) {
+  auto* parent = static_cast<WebGPUParent*>(aParent);
 
   return parent->UseSharedTextureForSwapChain(aSwapChainId);
 }
 
 extern void wgpu_server_disable_shared_texture_for_swap_chain(
-    void* aParam, WGPUSwapChainId aSwapChainId) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+    WGPUWebGPUParentPtr aParent, WGPUSwapChainId aSwapChainId) {
+  auto* parent = static_cast<WebGPUParent*>(aParent);
 
   parent->DisableSharedTextureForSwapChain(aSwapChainId);
 }
 
 extern bool wgpu_server_ensure_shared_texture_for_swap_chain(
-    void* aParam, WGPUSwapChainId aSwapChainId, WGPUDeviceId aDeviceId,
-    WGPUTextureId aTextureId, uint32_t aWidth, uint32_t aHeight,
-    struct WGPUTextureFormat aFormat, WGPUTextureUsages aUsage) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+    WGPUWebGPUParentPtr aParent, WGPUSwapChainId aSwapChainId,
+    WGPUDeviceId aDeviceId, WGPUTextureId aTextureId, uint32_t aWidth,
+    uint32_t aHeight, struct WGPUTextureFormat aFormat,
+    WGPUTextureUsages aUsage) {
+  auto* parent = static_cast<WebGPUParent*>(aParent);
 
   return parent->EnsureSharedTextureForSwapChain(
       aSwapChainId, aDeviceId, aTextureId, aWidth, aHeight, aFormat, aUsage);
 }
 
 extern void wgpu_server_ensure_shared_texture_for_readback(
-    void* aParam, WGPUSwapChainId aSwapChainId, WGPUDeviceId aDeviceId,
-    WGPUTextureId aTextureId, uint32_t aWidth, uint32_t aHeight,
-    struct WGPUTextureFormat aFormat, WGPUTextureUsages aUsage) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+    WGPUWebGPUParentPtr aParent, WGPUSwapChainId aSwapChainId,
+    WGPUDeviceId aDeviceId, WGPUTextureId aTextureId, uint32_t aWidth,
+    uint32_t aHeight, struct WGPUTextureFormat aFormat,
+    WGPUTextureUsages aUsage) {
+  auto* parent = static_cast<WebGPUParent*>(aParent);
 
   parent->EnsureSharedTextureForReadBackPresent(
       aSwapChainId, aDeviceId, aTextureId, aWidth, aHeight, aFormat, aUsage);
 }
 
 #ifdef XP_WIN
-extern void* wgpu_server_get_shared_texture_handle(void* aParam,
+extern void* wgpu_server_get_shared_texture_handle(WGPUWebGPUParentPtr aParent,
                                                    WGPUTextureId aId) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+  auto* parent = static_cast<WebGPUParent*>(aParent);
 
   auto texture = parent->GetSharedTexture(aId);
   if (!texture) {
@@ -103,8 +105,9 @@ extern void* wgpu_server_get_shared_texture_handle(void* aParam,
 #endif
 
 #if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
-extern int32_t wgpu_server_get_dma_buf_fd(void* aParam, WGPUTextureId aId) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+extern int32_t wgpu_server_get_dma_buf_fd(WGPUWebGPUParentPtr aParent,
+                                          WGPUTextureId aId) {
+  auto* parent = static_cast<WebGPUParent*>(aParent);
 
   auto texture = parent->GetSharedTexture(aId);
   if (!texture) {
@@ -125,8 +128,8 @@ extern int32_t wgpu_server_get_dma_buf_fd(void* aParam, WGPUTextureId aId) {
 
 #if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
 extern const WGPUVkImageHandle* wgpu_server_get_vk_image_handle(
-    void* aParam, WGPUTextureId aId) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+    WGPUWebGPUParentPtr aParent, WGPUTextureId aId) {
+  auto* parent = static_cast<WebGPUParent*>(aParent);
 
   auto texture = parent->GetSharedTexture(aId);
   if (!texture) {
@@ -143,9 +146,9 @@ extern const WGPUVkImageHandle* wgpu_server_get_vk_image_handle(
 #endif
 
 #if defined(XP_MACOSX)
-extern uint32_t wgpu_server_get_external_io_surface_id(void* aParam,
-                                                       WGPUTextureId aId) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+extern uint32_t wgpu_server_get_external_io_surface_id(
+    WGPUWebGPUParentPtr aParent, WGPUTextureId aId) {
+  auto* parent = static_cast<WebGPUParent*>(aParent);
 
   auto texture = parent->GetSharedTexture(aId);
   if (!texture) {
@@ -162,26 +165,29 @@ extern uint32_t wgpu_server_get_external_io_surface_id(void* aParam,
 }
 #endif
 
-extern void wgpu_server_remove_shared_texture(void* aParam, WGPUTextureId aId) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+extern void wgpu_server_remove_shared_texture(WGPUWebGPUParentPtr aParent,
+                                              WGPUTextureId aId) {
+  auto* parent = static_cast<WebGPUParent*>(aParent);
   parent->RemoveSharedTexture(aId);
 }
 
-extern void wgpu_server_dealloc_buffer_shmem(void* aParam, WGPUBufferId aId) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+extern void wgpu_server_dealloc_buffer_shmem(WGPUWebGPUParentPtr aParent,
+                                             WGPUBufferId aId) {
+  auto* parent = static_cast<WebGPUParent*>(aParent);
   parent->DeallocBufferShmem(aId);
 }
 
-extern void wgpu_server_pre_device_drop(void* aParam, WGPUDeviceId aId) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+extern void wgpu_server_pre_device_drop(WGPUWebGPUParentPtr aParent,
+                                        WGPUDeviceId aId) {
+  auto* parent = static_cast<WebGPUParent*>(aParent);
   parent->PreDeviceDrop(aId);
 }
 
 extern void wgpu_server_set_buffer_map_data(
-    void* aParam, WGPUDeviceId aDeviceId, WGPUBufferId aBufferId,
+    WGPUWebGPUParentPtr aParent, WGPUDeviceId aDeviceId, WGPUBufferId aBufferId,
     bool aHasMapFlags, uint64_t aMappedOffset, uint64_t aMappedSize,
     uintptr_t aShmemIndex) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+  auto* parent = static_cast<WebGPUParent*>(aParent);
 
   auto mapping = std::move(parent->mTempMappings.ElementAt(aShmemIndex));
   MOZ_ASSERT(mapping.isSome());
@@ -193,46 +199,48 @@ extern void wgpu_server_set_buffer_map_data(
   parent->mSharedMemoryMap.insert({aBufferId, std::move(data)});
 }
 
-extern void wgpu_server_device_push_error_scope(void* aParam,
+extern void wgpu_server_device_push_error_scope(WGPUWebGPUParentPtr aParent,
                                                 WGPUDeviceId aDeviceId,
                                                 uint8_t aFilter) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+  auto* parent = static_cast<WebGPUParent*>(aParent);
   parent->DevicePushErrorScope(aDeviceId, (dom::GPUErrorFilter)aFilter);
 }
 
-extern void wgpu_server_device_pop_error_scope(void* aParam,
+extern void wgpu_server_device_pop_error_scope(WGPUWebGPUParentPtr aParent,
                                                WGPUDeviceId aDeviceId,
                                                uint8_t* aOutType,
                                                nsCString* aOutMessage) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+  auto* parent = static_cast<WebGPUParent*>(aParent);
   auto result = parent->DevicePopErrorScope(aDeviceId);
   *aOutType = (uint8_t)result.resultType;
   *aOutMessage = std::move(result.message);
 }
 
-extern void wgpu_parent_buffer_unmap(void* aParam, WGPUDeviceId aDeviceId,
+extern void wgpu_parent_buffer_unmap(WGPUWebGPUParentPtr aParent,
+                                     WGPUDeviceId aDeviceId,
                                      WGPUBufferId aBufferId, bool aFlush) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+  auto* parent = static_cast<WebGPUParent*>(aParent);
   parent->BufferUnmap(aDeviceId, aBufferId, aFlush);
 }
 
 extern void wgpu_parent_queue_submit(
-    void* aParam, WGPUDeviceId aDeviceId, WGPUQueueId aQueueId,
+    WGPUWebGPUParentPtr aParent, WGPUDeviceId aDeviceId, WGPUQueueId aQueueId,
     const WGPUCommandBufferId* aCommandBufferIds,
     uintptr_t aCommandBufferIdsLength, const WGPUTextureId* aTextureIds,
     uintptr_t aTextureIdsLength) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+  auto* parent = static_cast<WebGPUParent*>(aParent);
   auto command_buffers = Span(aCommandBufferIds, aCommandBufferIdsLength);
   auto textures = Span(aTextureIds, aTextureIdsLength);
   parent->QueueSubmit(aDeviceId, aQueueId, command_buffers, textures);
 }
 
 extern void wgpu_parent_create_swap_chain(
-    void* aParam, WGPUDeviceId aDeviceId, WGPUQueueId aQueueId, int32_t aWidth,
-    int32_t aHeight, WGPUSurfaceFormat aFormat, const WGPUBufferId* aBufferIds,
-    uintptr_t aBufferIdsLength, WGPURemoteTextureOwnerId aRemoteTextureOwnerId,
+    WGPUWebGPUParentPtr aParent, WGPUDeviceId aDeviceId, WGPUQueueId aQueueId,
+    int32_t aWidth, int32_t aHeight, WGPUSurfaceFormat aFormat,
+    const WGPUBufferId* aBufferIds, uintptr_t aBufferIdsLength,
+    WGPURemoteTextureOwnerId aRemoteTextureOwnerId,
     bool aUseSharedTextureInSwapChain) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+  auto* parent = static_cast<WebGPUParent*>(aParent);
   auto buffer_ids_span = Span(aBufferIds, aBufferIdsLength);
   auto buffer_ids = nsTArray<RawId>(aBufferIdsLength);
   for (const RawId id : buffer_ids_span) {
@@ -247,11 +255,11 @@ extern void wgpu_parent_create_swap_chain(
 }
 
 extern void wgpu_parent_swap_chain_present(
-    void* aParam, WGPUTextureId aTextureId,
+    WGPUWebGPUParentPtr aParent, WGPUTextureId aTextureId,
     WGPUCommandEncoderId aCommandEncoderId,
     WGPURemoteTextureId aRemoteTextureId,
     WGPURemoteTextureOwnerId aRemoteTextureOwnerId) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+  auto* parent = static_cast<WebGPUParent*>(aParent);
   auto remote_texture = layers::RemoteTextureId{aRemoteTextureId};
   auto owner = layers::RemoteTextureOwnerId{aRemoteTextureOwnerId};
   parent->SwapChainPresent(aTextureId, aCommandEncoderId, remote_texture,
@@ -259,9 +267,9 @@ extern void wgpu_parent_swap_chain_present(
 }
 
 extern void wgpu_parent_swap_chain_drop(
-    void* aParam, WGPURemoteTextureOwnerId aRemoteTextureOwnerId,
+    WGPUWebGPUParentPtr aParent, WGPURemoteTextureOwnerId aRemoteTextureOwnerId,
     WGPURemoteTextureTxnType aTxnType, WGPURemoteTextureTxnId aTxnId) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+  auto* parent = static_cast<WebGPUParent*>(aParent);
   auto owner = layers::RemoteTextureOwnerId{aRemoteTextureOwnerId};
   parent->SwapChainDrop(owner, aTxnType, aTxnId);
 }
@@ -278,16 +286,16 @@ extern void wgpu_parent_get_compositor_device_luid(
 }
 #endif
 
-extern void wgpu_parent_post_request_device(void* aParam,
+extern void wgpu_parent_post_request_device(WGPUWebGPUParentPtr aParent,
                                             WGPUDeviceId aDeviceId) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+  auto* parent = static_cast<WebGPUParent*>(aParent);
   parent->PostAdapterRequestDevice(aDeviceId);
 }
 
 extern ffi::WGPUBufferMapClosure wgpu_parent_build_buffer_map_closure(
-    void* aParam, RawId aDeviceId, RawId aBufferId, ffi::WGPUHostMap aMode,
-    uint64_t aOffset, uint64_t aSize) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+    WGPUWebGPUParentPtr aParent, RawId aDeviceId, RawId aBufferId,
+    ffi::WGPUHostMap aMode, uint64_t aOffset, uint64_t aSize) {
+  auto* parent = static_cast<WebGPUParent*>(aParent);
 
   std::unique_ptr<WebGPUParent::MapRequest> request(
       new WebGPUParent::MapRequest{parent, aDeviceId, aBufferId, aMode, aOffset,
@@ -301,8 +309,8 @@ extern ffi::WGPUBufferMapClosure wgpu_parent_build_buffer_map_closure(
 }
 
 extern ffi::WGPUSubmittedWorkDoneClosure
-wgpu_parent_build_submitted_work_done_closure(void* aParam) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+wgpu_parent_build_submitted_work_done_closure(WGPUWebGPUParentPtr aParent) {
+  auto* parent = static_cast<WebGPUParent*>(aParent);
 
   std::unique_ptr<WebGPUParent::OnSubmittedWorkDoneRequest> request(
       new WebGPUParent::OnSubmittedWorkDoneRequest{parent});
@@ -314,10 +322,11 @@ wgpu_parent_build_submitted_work_done_closure(void* aParam) {
   return closure;
 }
 
-extern void wgpu_parent_handle_error(void* aParam, WGPUDeviceId aDeviceId,
+extern void wgpu_parent_handle_error(WGPUWebGPUParentPtr aParent,
+                                     WGPUDeviceId aDeviceId,
                                      WGPUErrorBufferType aTy,
                                      const nsCString* aMessage) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+  auto* parent = static_cast<WebGPUParent*>(aParent);
 
   dom::GPUErrorFilter ty;
   switch (aTy) {
@@ -337,9 +346,9 @@ extern void wgpu_parent_handle_error(void* aParam, WGPUDeviceId aDeviceId,
   parent->ReportError(aDeviceId, ty, *aMessage);
 }
 
-extern void wgpu_parent_send_server_message(void* aParam,
+extern void wgpu_parent_send_server_message(WGPUWebGPUParentPtr aParent,
                                             struct WGPUByteBuf* aMessage) {
-  auto* parent = static_cast<WebGPUParent*>(aParam);
+  auto* parent = static_cast<WebGPUParent*>(aParent);
   auto* message = FromFFI(aMessage);
   if (!parent->SendServerMessage(std::move(*message))) {
     NS_ERROR("SendServerMessage failed");
