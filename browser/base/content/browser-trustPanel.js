@@ -113,9 +113,6 @@ class TrustPanel {
       wrapper.replaceWith(wrapper.content);
 
       document
-        .getElementById("trustpanel-toggle")
-        .addEventListener("toggle", () => this.#toggleTrackingProtection());
-      document
         .getElementById("trustpanel-popup-connection")
         .addEventListener("click", event =>
           this.#openSiteInformationSubview(event)
@@ -452,11 +449,11 @@ class TrustPanel {
     this.#hidePopup();
   }
 
-  #toggleTrackingProtection(enable) {
-    if (enable) {
-      ContentBlockingAllowList.remove(window.gBrowser.selectedBrowser);
-    } else {
+  #toggleTrackingProtection() {
+    if (this.#trackingProtectionEnabled) {
       ContentBlockingAllowList.add(window.gBrowser.selectedBrowser);
+    } else {
+      ContentBlockingAllowList.remove(window.gBrowser.selectedBrowser);
     }
 
     PanelMultiView.hidePopup(this.#popup);
