@@ -19,6 +19,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
+  EveryWindow: "resource:///modules/EveryWindow.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PrefUtils: "resource://normandy/lib/PrefUtils.sys.mjs",
   SidebarState: "moz-src:///browser/components/sidebar/SidebarState.sys.mjs",
@@ -125,6 +126,22 @@ export const SidebarManager = {
     this.handleVerticalTabsPrefChange(
       lazy.verticalTabsEnabled,
       shouldResetVisibility
+    );
+
+    // Ensure that the drag-to-pin promo card is not displayed to users already
+    // having pinned tabs.
+    lazy.EveryWindow.registerCallback(
+      "sidebar-manager-drag-to-pin-promo",
+      win => {
+        if (win.gBrowser.pinnedTabCount > 0) {
+          this.dismissDragToPinPromo();
+        } else {
+          win.addEventListener("TabPinned", this.dismissDragToPinPromo, true);
+        }
+      },
+      win => {
+        win.removeEventListener("TabPinned", this.dismissDragToPinPromo, true);
+      }
     );
   },
 
@@ -333,6 +350,18 @@ export const SidebarManager = {
       return;
     }
     Services.prefs.setStringPref(BACKUP_STATE_PREF, JSON.stringify(state));
+  },
+
+  /**
+   * Sets the preference value which indicates that the promotional card for
+   * drag-to-pin tabs should no longer be displayed.
+   */
+  dismissDragToPinPromo() {
+    Services.prefs.setBoolPref(
+      "sidebar.verticalTabs.dragToPinPromo.dismissed",
+      true
+    );
+    lazy.EveryWindow.unregisterCallback("sidebar-manager-drag-to-pin-promo");
   },
 };
 
