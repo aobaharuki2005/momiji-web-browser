@@ -9478,8 +9478,7 @@ class TopSiteLink extends (external_React_default()).PureComponent {
       link,
       onClick,
       title,
-      isAddButton,
-      shortcutsRefresh
+      isAddButton
     } = this.props;
     const topSiteOuterClassName = `top-site-outer${className ? ` ${className}` : ""}${link.isDragged ? " dragged" : ""}${link.searchTopSite ? " search-shortcut" : ""}`;
     const [letterFallback] = title;
@@ -9588,7 +9587,7 @@ class TopSiteLink extends (external_React_default()).PureComponent {
       "data-l10n-args": JSON.stringify({
         title
       })
-    }), shortcutsRefresh && link.isPinned && /*#__PURE__*/external_React_default().createElement("div", {
+    }), link.isPinned && /*#__PURE__*/external_React_default().createElement("div", {
       className: "icon icon-pin-small"
     }), /*#__PURE__*/external_React_default().createElement("div", {
       className: "tile",
@@ -9606,18 +9605,14 @@ class TopSiteLink extends (external_React_default()).PureComponent {
       className: "top-site-icon default-icon",
       "data-fallback": smallFaviconStyle ? "" : letterFallback,
       style: smallFaviconStyle
-    })), !shortcutsRefresh && link.searchTopSite && /*#__PURE__*/external_React_default().createElement("div", {
-      className: "top-site-icon search-topsite"
-    })), /*#__PURE__*/external_React_default().createElement("div", {
+    }))), /*#__PURE__*/external_React_default().createElement("div", {
       className: `title${link.isPinned ? " has-icon pinned" : ""}${link.type === SPOC_TYPE || link.show_sponsored_label ? " sponsored" : ""}`
     }, /*#__PURE__*/external_React_default().createElement("span", TopSite_extends({
       className: "title-label",
       dir: "auto"
     }, isAddButton && {
       ...addButtonLabell10n
-    }), !shortcutsRefresh && link.isPinned && /*#__PURE__*/external_React_default().createElement("div", {
-      className: "icon icon-pin-small"
-    }), shortcutsRefresh && link.searchTopSite && /*#__PURE__*/external_React_default().createElement("div", {
+    }), link.searchTopSite && /*#__PURE__*/external_React_default().createElement("div", {
       className: "top-site-icon search-topsite"
     }), title || /*#__PURE__*/external_React_default().createElement("br", null)), /*#__PURE__*/external_React_default().createElement("span", {
       className: "sponsored-label",
@@ -10069,8 +10064,6 @@ class _TopSiteList extends (external_React_default()).PureComponent {
     const {
       props
     } = this;
-    const prefs = props.Prefs.values;
-    const shortcutsRefresh = prefs["newtabShortcuts.refresh"];
     const topSites = this.state.topSitesPreview || this._getTopSites();
     const topSitesUI = [];
     const commonProps = {
@@ -10122,7 +10115,6 @@ class _TopSiteList extends (external_React_default()).PureComponent {
           onActivate: this.onActivate
         }, slotProps, commonProps, {
           colors: props.colors,
-          shortcutsRefresh: shortcutsRefresh,
           setRef: i === this.state.focusedIndex ? el => {
             this.focusedRef = el;
           } : () => {},
@@ -15796,7 +15788,6 @@ class BaseContent extends (external_React_default()).PureComponent {
       customizeMenuVisible
     } = App;
     const prefs = props.Prefs.values;
-    const shortcutsRefresh = prefs["newtabShortcuts.refresh"];
     const activeWallpaper = prefs[`newtabWallpapers.wallpaper`];
     const wallpapersEnabled = prefs["newtabWallpapers.enabled"];
     const weatherEnabled = prefs.showWeather;
@@ -15860,8 +15851,6 @@ class BaseContent extends (external_React_default()).PureComponent {
     prefs.showSearch ? "has-search" : "no-search",
     // layoutsVariantAEnabled ? "layout-variant-a" : "", // Layout experiment variant A
     // layoutsVariantBEnabled ? "layout-variant-b" : "", // Layout experiment variant B
-    shortcutsRefresh ? "shortcuts-refresh" : "",
-    // Shortcuts refresh experiment
     pocketEnabled ? "has-recommended-stories" : "no-recommended-stories", sectionsEnabled ? "has-sections-grid" : ""].filter(v => v).join(" ");
     const outerClassName = ["outer-wrapper", isDiscoveryStream && pocketEnabled && "ds-outer-wrapper-search-alignment", isDiscoveryStream && "ds-outer-wrapper-breakpoint-override", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search", prefs["feeds.topsites"] && !pocketEnabled && !prefs.showSearch && "only-topsites", noSectionsEnabled && "no-sections", prefs["logowordmark.alwaysVisible"] && "visible-logo", hasThumbsUpDownLayout && hasThumbsUpDown && "thumbs-ui-compact"].filter(v => v).join(" ");
     if (wallpapersEnabled) {

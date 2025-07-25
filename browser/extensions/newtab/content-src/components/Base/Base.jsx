@@ -552,8 +552,6 @@ export class BaseContent extends React.PureComponent {
     const { initialized, customizeMenuVisible } = App;
     const prefs = props.Prefs.values;
 
-    const shortcutsRefresh = prefs["newtabShortcuts.refresh"];
-
     const activeWallpaper = prefs[`newtabWallpapers.wallpaper`];
     const wallpapersEnabled = prefs["newtabWallpapers.enabled"];
     const weatherEnabled = prefs.showWeather;
@@ -652,7 +650,6 @@ export class BaseContent extends React.PureComponent {
       prefs.showSearch ? "has-search" : "no-search",
       // layoutsVariantAEnabled ? "layout-variant-a" : "", // Layout experiment variant A
       // layoutsVariantBEnabled ? "layout-variant-b" : "", // Layout experiment variant B
-      shortcutsRefresh ? "shortcuts-refresh" : "", // Shortcuts refresh experiment
       pocketEnabled ? "has-recommended-stories" : "no-recommended-stories",
       sectionsEnabled ? "has-sections-grid" : "",
     ]

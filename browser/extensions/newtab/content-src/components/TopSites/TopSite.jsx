@@ -269,7 +269,6 @@ export class TopSiteLink extends React.PureComponent {
       onClick,
       title,
       isAddButton,
-      shortcutsRefresh,
     } = this.props;
 
     const topSiteOuterClassName = `top-site-outer${
@@ -390,9 +389,7 @@ export class TopSiteLink extends React.PureComponent {
             {...(link.isPinned && { ...addPinnedTitlel10n })}
             data-l10n-args={JSON.stringify({ title })}
           >
-            {shortcutsRefresh && link.isPinned && (
-              <div className="icon icon-pin-small" />
-            )}
+            {link.isPinned && <div className="icon icon-pin-small" />}
             <div className="tile" aria-hidden={true}>
               <div
                 className={
@@ -412,9 +409,6 @@ export class TopSiteLink extends React.PureComponent {
                   />
                 )}
               </div>
-              {!shortcutsRefresh && link.searchTopSite && (
-                <div className="top-site-icon search-topsite" />
-              )}
             </div>
             <div
               className={`title${link.isPinned ? " has-icon pinned" : ""}${
@@ -428,10 +422,7 @@ export class TopSiteLink extends React.PureComponent {
                 dir="auto"
                 {...(isAddButton && { ...addButtonLabell10n })}
               >
-                {!shortcutsRefresh && link.isPinned && (
-                  <div className="icon icon-pin-small" />
-                )}
-                {shortcutsRefresh && link.searchTopSite && (
+                {link.searchTopSite && (
                   <div className="top-site-icon search-topsite" />
                 )}
                 {title || <br />}
@@ -955,8 +946,6 @@ export class _TopSiteList extends React.PureComponent {
 
   render() {
     const { props } = this;
-    const prefs = props.Prefs.values;
-    const shortcutsRefresh = prefs["newtabShortcuts.refresh"];
     const topSites = this.state.topSitesPreview || this._getTopSites();
     const topSitesUI = [];
     const commonProps = {
@@ -1026,7 +1015,6 @@ export class _TopSiteList extends React.PureComponent {
             {...slotProps}
             {...commonProps}
             colors={props.colors}
-            shortcutsRefresh={shortcutsRefresh}
             setRef={
               i === this.state.focusedIndex
                 ? el => {
