@@ -29,6 +29,11 @@ input {
 }
 
 :root {
+  --newtab-card-height: 282px;
+  --newtab-card-width-medium: 300px;
+}
+
+:root {
   color-scheme: light;
   --newtab-background-color: #F9F9FB;
   --newtab-background-color-secondary: var(--color-white);
@@ -4465,20 +4470,136 @@ main section {
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 .lists {
   grid-column: span 1;
-  width: 300px;
+  width: var(--newtab-card-width-medium);
   background: var(--newtab-background-card);
   border-radius: var(--border-radius-large);
-  padding: var(--space-large);
-  max-height: 282px;
+  padding-block: var(--space-large);
+  max-height: var(--newtab-card-height);
+}
+.lists .select-wrapper {
+  padding-inline: var(--space-large);
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+}
+.lists .select-wrapper moz-button {
+  visibility: hidden;
+}
+.lists:hover .select-wrapper moz-button, .lists:focus-within .select-wrapper moz-button, .lists .select-wrapper panel-list[open] .select-wrapper moz-button {
+  visibility: visible;
+}
+.lists .add-task-container {
+  margin-block: var(--space-small);
+  padding-inline: var(--space-large);
+  position: relative;
+}
+.lists .add-task-container .icon.icon-add {
+  position: absolute;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  inset-inline-start: var(--space-xlarge);
+}
+.lists .add-task-container .add-task-input {
+  background: var(--button-background-color);
+  padding-block: var(--space-small);
+  padding-inline: var(--space-xxlarge) var(--space-large);
+  outline: none;
+  border: none;
+  border-radius: var(--border-radius-small);
+  width: 100%;
+}
+.lists .add-task-container .add-task-input:focus {
+  outline: var(--focus-outline);
+}
+.lists .add-task-container .add-task-input:focus::placeholder {
+  color: var(--newtab-text-primary-color);
 }
 .lists fieldset {
-  padding: var(--space-xsmall);
+  padding: 0 var(--space-medium);
+  margin: 0 var(--space-xsmall);
+  border: none;
+  overflow-y: scroll;
+  max-height: 165px;
 }
 .lists .task-item {
+  align-items: center;
+  background: transparent;
+  border-radius: var(--border-radius-small);
+  padding: var(--space-xsmall);
   display: flex;
+  justify-content: space-between;
+  margin-block-end: var(--space-small);
 }
-.lists .task-item input:checked ~ span {
-  text-decoration: line-through;
+.lists .task-item .checkbox-wrapper {
+  display: flex;
+  align-items: center;
+}
+.lists .task-item .checkbox-wrapper span {
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  white-space: normal;
+  max-width: 180px;
+}
+.lists .task-item input[type=checkbox] {
+  height: var(--space-large);
+  width: var(--space-large);
+  accent-color: var(--button-background-color-primary);
+}
+.lists .task-item .task-label {
+  position: relative;
+  padding-inline-start: var(--space-small);
+}
+.lists .task-item input:checked ~ .task-label {
+  color: var(--text-color-deemphasized);
+}
+.lists .task-item input:checked ~ .task-label::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: var(--space-small);
+  inset-block-start: 50%;
+  width: 100%;
+  height: var(--space-xxsmall);
+  background-color: var(--newtab-text-primary-color);
+  transform: translateY(-50%);
+}
+.lists .task-item input:checked ~ .task-label.animate-strike::after {
+  width: 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .lists .task-item input:checked ~ .task-label.animate-strike::after {
+    animation: strike 0.25s ease-out forwards;
+    width: 0%;
+  }
+}
+@keyframes strike {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+.lists .task-item moz-button {
+  align-self: flex-start;
+  visibility: hidden;
+}
+.lists .task-item moz-button:has(+ panel-list[open]) {
+  visibility: visible;
+}
+.lists .task-item:hover, .lists .task-item:focus-visible, .lists .task-item:focus-within {
+  background: var(--button-background-color);
+}
+.lists .task-item:hover moz-button, .lists .task-item:focus-visible moz-button, .lists .task-item:focus-within moz-button {
+  visibility: visible;
+}
+.lists .task-item panel-list[open] ~ moz-button {
+  visibility: visible;
+}
+.lists .empty-list-text {
+  padding-inline: var(--space-large);
+  color: var(--text-color-deemphasized);
 }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public

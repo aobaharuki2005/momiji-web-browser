@@ -12264,14 +12264,27 @@ function Lists({
       setNewTask("");
     }
   }
-  function updateTask(e, selectedTask) {
+  function updateTask(updatedTask) {
     const selectedTasks = lists[selected].tasks;
-    const updatedTask = {
-      ...selectedTask,
-      completed: e.target.checked
-    };
     // find selected task and update completed property
     const updatedTasks = selectedTasks.map(task => task.id === updatedTask.id ? updatedTask : task);
+    const updatedLists = {
+      ...lists,
+      [selected]: {
+        ...lists[selected],
+        tasks: updatedTasks
+      }
+    };
+    dispatch(actionCreators.AlsoToMain({
+      type: actionTypes.WIDGETS_LISTS_UPDATE,
+      data: updatedLists
+    }));
+  }
+  function deleteTask(task) {
+    const selectedTasks = lists[selected].tasks;
+    const updatedTasks = selectedTasks.filter(({
+      id
+    }) => id !== task.id);
     const updatedLists = {
       ...lists,
       [selected]: {
@@ -12307,32 +12320,85 @@ function Lists({
   }
   return lists ? /*#__PURE__*/external_React_default().createElement("article", {
     className: "lists"
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "select-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("moz-select", {
     value: selected
   }, Object.entries(lists).map(([key, list]) => /*#__PURE__*/external_React_default().createElement("moz-option", {
     key: key,
     value: key,
     label: list.label
-  }))), /*#__PURE__*/external_React_default().createElement("div", {
+  }))), /*#__PURE__*/external_React_default().createElement("moz-button", {
+    className: "lists-panel-button",
+    iconSrc: "chrome://global/skin/icons/more.svg",
+    menuId: "lists-panel",
+    type: "ghost"
+  }), /*#__PURE__*/external_React_default().createElement("panel-list", {
+    id: "lists-panel"
+  }, /*#__PURE__*/external_React_default().createElement("panel-item", null, "Edit name"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Create a new list"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Hide To Do list"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Learn more"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Copy to clipboard"))), /*#__PURE__*/external_React_default().createElement("div", {
     className: "add-task-container"
-  }, /*#__PURE__*/external_React_default().createElement("input", {
+  }, /*#__PURE__*/external_React_default().createElement("span", {
+    className: "icon icon-add"
+  }), /*#__PURE__*/external_React_default().createElement("input", {
     ref: inputRef,
     onChange: e => setNewTask(e.target.value),
     value: newTask,
-    placeholder: "Enter task",
-    onKeyDown: handleKeyDown
-  })), lists[selected]?.tasks.length >= 1 ? /*#__PURE__*/external_React_default().createElement("moz-reorderable-list", {
+    placeholder: "Add a task",
+    className: "add-task-input",
+    onKeyDown: handleKeyDown,
+    type: "text",
+    maxLength: 100
+  })), /*#__PURE__*/external_React_default().createElement("div", {
+    className: "task-list-wrapper"
+  }, lists[selected]?.tasks.length >= 1 ? /*#__PURE__*/external_React_default().createElement("moz-reorderable-list", {
     itemSelector: "fieldset .task-item"
-  }, /*#__PURE__*/external_React_default().createElement("fieldset", null, lists[selected].tasks.map((task, idx) => {
-    return /*#__PURE__*/external_React_default().createElement("label", {
-      key: idx,
-      className: "task-item"
-    }, /*#__PURE__*/external_React_default().createElement("input", {
-      type: "checkbox",
-      onChange: e => updateTask(e, task),
-      checked: task.completed
-    }), /*#__PURE__*/external_React_default().createElement("span", null, task.value));
-  }))) : /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("p", null, "The list is empty. For now \uD83E\uDD8A"))) : null;
+  }, /*#__PURE__*/external_React_default().createElement("fieldset", null, lists[selected].tasks.map(task => /*#__PURE__*/external_React_default().createElement(ListItem, {
+    task: task,
+    key: task.id,
+    updateTask: updateTask,
+    deleteTask: deleteTask
+  })))) : /*#__PURE__*/external_React_default().createElement("p", {
+    className: "empty-list-text"
+  }, "The list is empty. For now \uD83E\uDD8A"))) : null;
+}
+function ListItem({
+  task,
+  updateTask,
+  deleteTask
+}) {
+  const [shouldAnimate, setShouldAnimate] = (0,external_React_namespaceObject.useState)(false);
+  function handleCheckboxChange(e) {
+    const {
+      checked
+    } = e.target;
+    const updatedTask = {
+      ...task,
+      completed: e.target.checked
+    };
+    updateTask(updatedTask);
+    setShouldAnimate(checked);
+  }
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    className: "task-item"
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "checkbox-wrapper"
+  }, /*#__PURE__*/external_React_default().createElement("input", {
+    type: "checkbox",
+    onChange: handleCheckboxChange,
+    checked: task.completed
+  }), /*#__PURE__*/external_React_default().createElement("span", {
+    className: `task-label ${task.completed && shouldAnimate ? "animate-strike" : ""}`,
+    title: task.value
+  }, task.value)), /*#__PURE__*/external_React_default().createElement("moz-button", {
+    iconSrc: "chrome://global/skin/icons/more.svg",
+    menuId: `panel-task-${task.id}`,
+    type: "ghost"
+  }), /*#__PURE__*/external_React_default().createElement("panel-list", {
+    id: `panel-task-${task.id}`
+  }, /*#__PURE__*/external_React_default().createElement("panel-item", null, "Move up"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Move down"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Edit"), /*#__PURE__*/external_React_default().createElement("panel-item", {
+    className: "delete-item",
+    onClick: () => deleteTask(task)
+  }, "Delete item")));
 }
 
 ;// CONCATENATED MODULE: ./content-src/components/Widgets/FocusTimer/FocusTimer.jsx

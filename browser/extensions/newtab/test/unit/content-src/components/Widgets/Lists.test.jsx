@@ -96,4 +96,21 @@ describe("<Lists>", () => {
 
     assert.ok(dispatch.notCalled);
   });
+
+  it("should remove task when deleteTask is run from task item panel menu", () => {
+    // confirm that there is a task availible to delete
+    const initialTasks = mockState.ListsWidget.lists["test-list"].tasks;
+    assert.equal(initialTasks.length, 1);
+
+    const deleteButton = wrapper.find("panel-item.delete-item").at(0);
+    deleteButton.props().onClick();
+
+    assert.ok(dispatch.calledOnce);
+    const [action] = dispatch.getCall(0).args;
+    assert.equal(action.type, at.WIDGETS_LISTS_UPDATE);
+
+    // Check that the task list is now empty
+    const updatedTasks = action.data["test-list"].tasks;
+    assert.equal(updatedTasks.length, 0, "Expected task to be removed");
+  });
 });
