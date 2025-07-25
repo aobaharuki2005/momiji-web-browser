@@ -39,12 +39,16 @@
         <description id="webRTC-all-windows-shared" hidden="true" data-l10n-id="popup-all-windows-shared"></description>
       </popupnotificationcontent>
 
-      <popupnotificationcontent id="webRTC-preview" orient="vertical" hidden="true">
-        <html:video id="webRTC-previewVideo" tabindex="-1"/>
+      <popupnotificationcontent id="webRTC-preview-section" orient="vertical">
+        <html:webrtc-preview id="webRTC-preview" />
         <vbox id="webRTC-previewWarningBox">
           <description id="webRTC-previewWarning"/>
           <hbox>
-            <label id="webRTC-previewWarning-learnMore" is="text-link" class="popup-notification-learnmore-link"/>
+            <html:a id="webRTC-previewWarning-learnMore"
+                    is="moz-support-link"
+                    support-page="screenshare-safety"
+                    class="popup-notification-learnmore-link"
+          ></html:a>
           </hbox>
         </vbox>
       </popupnotificationcontent>
