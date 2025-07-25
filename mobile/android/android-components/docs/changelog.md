@@ -22,6 +22,8 @@ permalink: /changelog/
   * Remove API level check for `ImeInsetsSynchronizer`. [Bug 1977270](https://bugzilla.mozilla.org/show_bug.cgi?id=1977270)
 * **All components**
   * ⚠️ Introduced `@ExperimentalAndroidComponentsApi` to indicate an API requires special care. Opt in via `@OptIn(ExperimentalAndroidComponentsApi::class)`.
+* **service-firefox-accounts**
+  * Renamed `withConstellation` to `withConstellationIfExists` to signify the block execution is dependant on the account being authenticated first. [Bug 1794207](https://bugzilla.mozilla.org/show_bug.cgi?id=1794207)
 
 # 141.0
 =======
