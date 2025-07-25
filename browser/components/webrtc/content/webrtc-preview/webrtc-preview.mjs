@@ -133,7 +133,9 @@ export class WebRTCPreview extends MozLitElement {
     // Stop any existing playback.
     this.#stream?.getTracks().forEach(t => t.stop());
     this.#stream = null;
-    this.videoEl.srcObject = null;
+    if (this.videoEl) {
+      this.videoEl.srcObject = null;
+    }
 
     this._previewActive = false;
   }

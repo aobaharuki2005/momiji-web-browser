@@ -963,7 +963,7 @@ function prompt(aActor, aBrowser, aRequest) {
           .removeAttribute("value");
         doc.getElementById("webRTC-all-windows-shared").hidden = true;
 
-        const webrtcPreview = doc.getElementById("webRTC-preview");
+        const webrtcPreview = getOrCreateWebRTCPreviewEl(doc);
         webrtcPreview.showPreviewControlButtons = false;
 
         menupopup._commandEventListener = event => {
@@ -1081,7 +1081,7 @@ function prompt(aActor, aBrowser, aRequest) {
         );
 
         // Set up initial camera preview.
-        let webrtcPreview = doc.getElementById("webRTC-preview");
+        let webrtcPreview = getOrCreateWebRTCPreviewEl(doc);
         webrtcPreview.showPreviewControlButtons = true;
         // Apply the initial selection.
         webrtcPreview.deviceId =
@@ -1572,4 +1572,20 @@ function maybeClearAlwaysAsk(principal, permissionName, browser) {
       browser
     );
   }
+}
+
+/**
+ * Helper for lazily creating the webrtc-preview element.
+ * @param {Document} chromeDoc - The chrome document to create the webrtc-preview element in.
+ * @returns {HTMLElement} The webrtc-preview element which has been inserted into the DOM.
+ */
+function getOrCreateWebRTCPreviewEl(chromeDoc) {
+  let previewSection = chromeDoc.getElementById("webRTC-preview-section");
+  let previewEl = previewSection.querySelector("#webRTC-preview");
+  if (!previewEl) {
+    previewEl = chromeDoc.createElement("webrtc-preview");
+    previewEl.id = "webRTC-preview";
+    previewSection.insertBefore(previewEl, previewSection.firstChild);
+  }
+  return previewEl;
 }
