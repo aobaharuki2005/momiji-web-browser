@@ -153,6 +153,7 @@ pub struct RemoteTextureTxnId(u64);
 #[derive(serde::Serialize, serde::Deserialize)]
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+#[cfg(target_os = "windows")]
 pub struct FfiLUID {
     low_part: core::ffi::c_ulong,
     high_part: core::ffi::c_long,

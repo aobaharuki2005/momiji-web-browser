@@ -75,6 +75,7 @@ extern void wgpu_server_ensure_shared_texture_for_readback(
       aSwapChainId, aDeviceId, aTextureId, aWidth, aHeight, aFormat, aUsage);
 }
 
+#ifdef XP_WIN
 extern void* wgpu_server_get_shared_texture_handle(void* aParam,
                                                    WGPUTextureId aId) {
   auto* parent = static_cast<WebGPUParent*>(aParam);
@@ -85,25 +86,23 @@ extern void* wgpu_server_get_shared_texture_handle(void* aParam,
     return nullptr;
   }
 
-  void* sharedHandle = nullptr;
-#ifdef XP_WIN
   auto* textureD3D11 = texture->AsSharedTextureD3D11();
   if (!textureD3D11) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     return nullptr;
   }
-  sharedHandle = textureD3D11->GetSharedTextureHandle();
+  void* sharedHandle = textureD3D11->GetSharedTextureHandle();
   if (!sharedHandle) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     gfxCriticalNoteOnce << "Failed to get shared handle";
     return nullptr;
   }
-#else
-  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-#endif
+
   return sharedHandle;
 }
+#endif
 
+#if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
 extern int32_t wgpu_server_get_dma_buf_fd(void* aParam, WGPUTextureId aId) {
   auto* parent = static_cast<WebGPUParent*>(aParam);
 
@@ -113,7 +112,6 @@ extern int32_t wgpu_server_get_dma_buf_fd(void* aParam, WGPUTextureId aId) {
     return -1;
   }
 
-#if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
   auto* textureDMABuf = texture->AsSharedTextureDMABuf();
   if (!textureDMABuf) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
@@ -122,13 +120,10 @@ extern int32_t wgpu_server_get_dma_buf_fd(void* aParam, WGPUTextureId aId) {
   auto fd = textureDMABuf->CloneDmaBufFd();
   // fd should be closed by the caller.
   return fd.release();
-#else
-  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-  return -1;
-#endif
 }
+#endif
 
-#if !defined(XP_MACOSX)
+#if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
 extern const WGPUVkImageHandle* wgpu_server_get_vk_image_handle(
     void* aParam, WGPUTextureId aId) {
   auto* parent = static_cast<WebGPUParent*>(aParam);
@@ -139,18 +134,15 @@ extern const WGPUVkImageHandle* wgpu_server_get_vk_image_handle(
     return nullptr;
   }
 
-#  if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
   auto* textureDMABuf = texture->AsSharedTextureDMABuf();
   if (!textureDMABuf) {
     return nullptr;
   }
   return textureDMABuf->GetHandle();
-#  else
-  return nullptr;
-#  endif
 }
 #endif
 
+#if defined(XP_MACOSX)
 extern uint32_t wgpu_server_get_external_io_surface_id(void* aParam,
                                                        WGPUTextureId aId) {
   auto* parent = static_cast<WebGPUParent*>(aParam);
@@ -161,18 +153,14 @@ extern uint32_t wgpu_server_get_external_io_surface_id(void* aParam,
     return 0;
   }
 
-#if defined(XP_MACOSX)
   auto* textureIOSurface = texture->AsSharedTextureMacIOSurface();
   if (!textureIOSurface) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     return 0;
   }
   return textureIOSurface->GetIOSurfaceId();
-#else
-  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-  return 0;
-#endif
 }
+#endif
 
 extern void wgpu_server_remove_shared_texture(void* aParam, WGPUTextureId aId) {
   auto* parent = static_cast<WebGPUParent*>(aParam);
@@ -278,6 +266,7 @@ extern void wgpu_parent_swap_chain_drop(
   parent->SwapChainDrop(owner, aTxnType, aTxnId);
 }
 
+#ifdef XP_WIN
 extern void wgpu_parent_get_compositor_device_luid(
     struct WGPUFfiLUID* aOutLuid) {
   auto luid = WebGPUParent::GetCompositorDeviceLuid();
@@ -287,6 +276,7 @@ extern void wgpu_parent_get_compositor_device_luid(
     aOutLuid = nullptr;
   }
 }
+#endif
 
 extern void wgpu_parent_post_request_device(void* aParam,
                                             WGPUDeviceId aDeviceId) {
@@ -1751,9 +1741,9 @@ std::shared_ptr<SharedTexture> WebGPUParent::GetSharedTexture(
   return it->second;
 }
 
+#if defined(XP_WIN)
 /* static */
 Maybe<ffi::WGPUFfiLUID> WebGPUParent::GetCompositorDeviceLuid() {
-#if defined(XP_WIN)
   const RefPtr<ID3D11Device> d3d11Device =
       gfx::DeviceManagerDx::Get()->GetCompositorDevice();
   if (!d3d11Device) {
@@ -1775,10 +1765,8 @@ Maybe<ffi::WGPUFfiLUID> WebGPUParent::GetCompositorDeviceLuid() {
 
   return Some(
       ffi::WGPUFfiLUID{desc.AdapterLuid.LowPart, desc.AdapterLuid.HighPart});
-#else
-  return Nothing();
-#endif
 }
+#endif
 
 #if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
 VkImageHandle::~VkImageHandle() {

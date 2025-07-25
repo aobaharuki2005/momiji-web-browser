@@ -131,7 +131,10 @@ class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
   void RemoveSharedTexture(RawId aTextureId);
   void DeallocBufferShmem(RawId aBufferId);
   void PreDeviceDrop(RawId aDeviceId);
+
+#if defined(XP_WIN)
   static Maybe<ffi::WGPUFfiLUID> GetCompositorDeviceLuid();
+#endif
 
   struct MapRequest {
     WeakPtr<WebGPUParent> mParent;
