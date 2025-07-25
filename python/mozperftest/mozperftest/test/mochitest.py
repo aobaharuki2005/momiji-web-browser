@@ -136,7 +136,7 @@ class Mochitest(Layer):
         gecko_profile_entries = os.getenv("MOZ_PROFILER_STARTUP_ENTRIES", "65536000")
         gecko_profile_interval = os.getenv("MOZ_PROFILER_STARTUP_INTERVAL", None)
 
-        if self.get_arg("gecko-profile") or os.getenv("MOZ_PROFILER_STARTUP") == "1":
+        if self.get_arg("gecko-profile"):
             gecko_profile_args.append("--profiler")
             gecko_profile_args.extend(
                 [
