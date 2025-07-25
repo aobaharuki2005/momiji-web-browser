@@ -6,6 +6,8 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import { html, classMap } from "chrome://global/content/vendor/lit.all.mjs";
 
 // eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/ipprotection/ipprotection-header.mjs";
+// eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/ipprotection/ipprotection-signedout.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://global/content/elements/moz-toggle.mjs";
@@ -14,6 +16,7 @@ const DEFAULT_TIME_CONNECTED = "00:00:00";
 
 export default class IPProtectionContentElement extends MozLitElement {
   static queries = {
+    headerEl: "ipprotection-header",
     statusCardEl: "#status-card",
     connectionTitleEl: "#connection-title",
     connectionToggleEl: "#connection-toggle",
@@ -176,6 +179,8 @@ export default class IPProtectionContentElement extends MozLitElement {
         rel="stylesheet"
         href="chrome://browser/content/ipprotection/ipprotection-content.css"
       />
+      <ipprotection-header titleId="ipprotection-title"></ipprotection-header>
+      <hr />
       <div id="ipprotection-content-wrapper">${this.mainContentTemplate()}</div>
     `;
   }
