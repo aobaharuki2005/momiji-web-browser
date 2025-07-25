@@ -107,7 +107,6 @@ import org.mozilla.fenix.perf.StorageStatsMetrics
 import org.mozilla.fenix.perf.runBlockingIncrement
 import org.mozilla.fenix.push.PushFxaIntegration
 import org.mozilla.fenix.push.WebPushEngineIntegration
-import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.isLargeScreenSize
@@ -312,11 +311,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     }
 
     private fun initVisualCompletenessQueueAndQueueTasks() {
-        val queue = components.performance.visualCompletenessQueue.queue
-
-        fun initQueue() {
-            registerActivityLifecycleCallbacks(PerformanceActivityLifecycleCallbacks(queue))
-        }
+        val queue = components.performance.visualCompletenessQueue
 
         @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
         fun queueInitStorageAndServices() {
@@ -446,8 +441,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                 downloadWallpapers()
             }
         }
-
-        initQueue()
 
         // We init these items in the visual completeness queue to avoid them initing in the critical
         // startup path, before the UI finishes drawing (i.e. visual completeness).

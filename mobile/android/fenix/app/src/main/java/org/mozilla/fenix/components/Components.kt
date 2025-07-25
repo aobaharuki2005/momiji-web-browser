@@ -101,7 +101,9 @@ class Components(private val context: Context) {
         )
     }
     val services by lazyMonitored { Services(context, core.store, backgroundServices.accountManager) }
-    val core by lazyMonitored { Core(context, analytics.crashReporter, strictMode) }
+    val core by lazyMonitored {
+        Core(context, analytics.crashReporter, strictMode, performance.visualCompletenessQueue)
+    }
 
     val useCases by lazyMonitored {
         UseCases(
@@ -192,7 +194,7 @@ class Components(private val context: Context) {
         AddonManager(core.store, core.engine, addonsProvider, addonUpdater)
     }
 
-    val analytics by lazyMonitored { Analytics(context, nimbus, performance.visualCompletenessQueue.queue) }
+    val analytics by lazyMonitored { Analytics(context, nimbus, performance.visualCompletenessQueue) }
     val nimbus by lazyMonitored { NimbusComponents(context) }
     val publicSuffixList by lazyMonitored { PublicSuffixList(context) }
     val clipboardHandler by lazyMonitored { ClipboardHandler(context) }
@@ -281,6 +283,7 @@ class Components(private val context: Context) {
                 SetupChecklistPreferencesMiddleware(DefaultSetupChecklistRepository(context)),
                 SetupChecklistTelemetryMiddleware(),
                 ReviewPromptMiddleware(settings),
+                AppVisualCompletenessMiddleware(performance.visualCompletenessQueue),
             ),
         ).also {
             it.dispatch(AppAction.SetupChecklistAction.Init)

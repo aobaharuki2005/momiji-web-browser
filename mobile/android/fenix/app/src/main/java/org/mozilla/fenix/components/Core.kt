@@ -105,6 +105,7 @@ import mozilla.components.support.base.worker.Frequency
 import mozilla.components.support.ktx.android.content.appVersionName
 import mozilla.components.support.ktx.android.content.res.readJSONObject
 import mozilla.components.support.locale.LocaleManager
+import mozilla.components.support.utils.RunWhenReadyQueue
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
@@ -147,6 +148,7 @@ class Core(
     private val context: Context,
     private val crashReporter: CrashReporting,
     strictMode: StrictModeManager,
+    visualCompletenessQueue: RunWhenReadyQueue,
 ) {
     /**
      * The browser engine component initialized based on the build
@@ -355,6 +357,7 @@ class Core(
                 AboutHomeMiddleware(
                     homepageTitle = context.getString(R.string.tab_tray_homepage_tab),
                 ),
+                BrowserVisualCompletenessMiddleware(visualCompletenessQueue),
             )
 
         BrowserStore(
