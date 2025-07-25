@@ -653,10 +653,11 @@ GUID MFTEncoder::MatchInputSubtype(IMFMediaType* aInputType) {
   MOZ_ASSERT(desired != GUID_NULL);
 
   DWORD i = 0;
-  IMFMediaType* inputType = nullptr;
+  RefPtr<IMFMediaType> inputType;
   GUID preferred = GUID_NULL;
   while (true) {
-    HRESULT hr = mEncoder->GetInputAvailableType(mInputStreamID, i, &inputType);
+    HRESULT hr = mEncoder->GetInputAvailableType(mInputStreamID, i,
+                                                 getter_AddRefs(inputType));
     if (hr == MF_E_NO_MORE_TYPES) {
       break;
     }
