@@ -74,6 +74,9 @@
       "chrome://browser/content/genai/content/model-optin.mjs": [
         "browser/components/genai/content/model-optin.mjs"
       ],
+      "chrome://browser/content/ipprotection/ipprotection-signedout.mjs": [
+        "browser/components/ipprotection/content/ipprotection-signedout.mjs"
+      ],
       "chrome://browser/content/migration/migration-wizard-constants.mjs": [
         "browser/components/migration/content/migration-wizard-constants.mjs"
       ],
@@ -82,6 +85,9 @@
       ],
       "chrome://browser/content/nsContextMenu.sys.mjs": [
         "browser/base/content/nsContextMenu.sys.mjs"
+      ],
+      "chrome://browser/content/preferences/widgets/dialog-button.mjs": [
+        "browser/components/preferences/widgets/dialog-button/dialog-button.mjs"
       ],
       "chrome://browser/content/preferences/widgets/setting-control.mjs": [
         "browser/components/preferences/widgets/setting-control/setting-control.mjs"
@@ -118,6 +124,9 @@
       ],
       "chrome://browser/content/tabbrowser/tab-hover-preview.mjs": [
         "browser/components/tabbrowser/content/tab-hover-preview.mjs"
+      ],
+      "chrome://browser/content/tabbrowser/tabgroup-hover-preview.mjs": [
+        "browser/components/tabbrowser/content/tabgroup-hover-preview.mjs"
       ],
       "chrome://browser/content/translations/TranslationsPanelShared.sys.mjs": [
         "browser/components/translations/content/TranslationsPanelShared.sys.mjs"
@@ -170,6 +179,12 @@
       "chrome://global/content/elements/browser-custom-element.mjs": [
         "toolkit/content/widgets/browser-custom-element.mjs"
       ],
+      "chrome://global/content/elements/moz-badge.mjs": [
+        "toolkit/content/widgets/moz-badge/moz-badge.mjs"
+      ],
+      "chrome://global/content/elements/moz-box-group.mjs": [
+        "toolkit/content/widgets/moz-box-group/moz-box-group.mjs"
+      ],
       "chrome://global/content/elements/moz-button-group.mjs": [
         "toolkit/content/widgets/moz-button-group/moz-button-group.mjs"
       ],
@@ -196,6 +211,9 @@
       ],
       "chrome://global/content/elements/moz-support-link.mjs": [
         "toolkit/content/widgets/moz-support-link/moz-support-link.mjs"
+      ],
+      "chrome://global/content/elements/moz-toggle.mjs": [
+        "toolkit/content/widgets/moz-toggle/moz-toggle.mjs"
       ],
       "chrome://global/content/elements/moz-visual-picker.mjs": [
         "toolkit/content/widgets/moz-visual-picker/moz-visual-picker.mjs"
@@ -340,6 +358,9 @@
       ],
       "chrome://mochitests/content/browser/toolkit/components/translations/tests/browser/translations-test.mjs": [
         "toolkit/components/translations/tests/browser/translations-test.mjs"
+      ],
+      "chrome://mochitests/content/browser/tools/profiler/tests/browser/value_summary_reader.mjs": [
+        "tools/profiler/tests/browser/value_summary_reader.mjs"
       ],
       "chrome://mochitests/content/chrome/dom/network/tests/tcpsocket_test.sys.mjs": [
         "dom/network/tests/tcpsocket_test.sys.mjs"
@@ -1519,9 +1540,6 @@
       ],
       "resource://autofill/FormAutofillSync.sys.mjs": [
         "toolkit/components/formautofill/FormAutofillSync.sys.mjs"
-      ],
-      "resource://autofill/MLAutofill.sys.mjs": [
-        "toolkit/components/formautofill/MLAutofill.sys.mjs"
       ],
       "resource://autofill/ProfileAutoCompleteResult.sys.mjs": [
         "toolkit/components/formautofill/ProfileAutoCompleteResult.sys.mjs"
@@ -5945,9 +5963,6 @@
       "resource://gre/modules/MediaUtils.sys.mjs": [
         "mobile/shared/modules/geckoview/MediaUtils.sys.mjs"
       ],
-      "moz-src:///dom/notification/MemoryNotificationDB.sys.mjs": [
-        "dom/notification/MemoryNotificationDB.sys.mjs"
-      ],
       "resource://gre/modules/MessageManagerProxy.sys.mjs": [
         "toolkit/components/extensions/MessageManagerProxy.sys.mjs"
       ],
@@ -5968,9 +5983,6 @@
       ],
       "resource://gre/modules/NewTabUtils.sys.mjs": [
         "toolkit/modules/NewTabUtils.sys.mjs"
-      ],
-      "moz-src:///dom/notification/NotificationDB.sys.mjs": [
-        "dom/notification/NotificationDB.sys.mjs"
       ],
       "resource://gre/modules/OSCrypto_win.sys.mjs": [
         "toolkit/components/passwordmgr/OSCrypto_win.sys.mjs"
@@ -6685,6 +6697,12 @@
       ],
       "resource://newtab/lib/WeatherFeed.sys.mjs": [
         "browser/extensions/newtab/lib/WeatherFeed.sys.mjs"
+      ],
+      "resource://newtab/lib/Widgets/ListsFeed.sys.mjs": [
+        "browser/extensions/newtab/lib/Widgets/ListsFeed.sys.mjs"
+      ],
+      "resource://newtab/lib/Widgets/TimerFeed.sys.mjs": [
+        "browser/extensions/newtab/lib/Widgets/TimerFeed.sys.mjs"
       ],
       "resource://nimbus/ExperimentAPI.sys.mjs": [
         "toolkit/components/nimbus/ExperimentAPI.sys.mjs"

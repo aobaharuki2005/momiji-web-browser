@@ -1022,6 +1022,7 @@ interface GPUBindGroupLayoutDescriptor extends GPUObjectDescriptorBase {
 interface GPUBindGroupLayoutEntry {
     binding: GPUIndex32;
     buffer?: GPUBufferBindingLayout;
+    externalTexture?: GPUExternalTextureBindingLayout;
     sampler?: GPUSamplerBindingLayout;
     storageTexture?: GPUStorageTextureBindingLayout;
     texture?: GPUTextureBindingLayout;
@@ -1133,6 +1134,9 @@ interface GPUExtent3DDict {
     width: GPUIntegerCoordinate;
 }
 
+interface GPUExternalTextureBindingLayout {
+}
+
 interface GPUFragmentState extends GPUProgrammableStage {
     targets: GPUColorTargetState[];
 }
@@ -1204,9 +1208,9 @@ interface GPURenderPassColorAttachment {
     clearValue?: GPUColor;
     depthSlice?: GPUIntegerCoordinate;
     loadOp: GPULoadOp;
-    resolveTarget?: GPUTextureView;
+    resolveTarget?: GPUTexture | GPUTextureView;
     storeOp: GPUStoreOp;
-    view: GPUTextureView;
+    view: GPUTexture | GPUTextureView;
 }
 
 interface GPURenderPassDepthStencilAttachment {
@@ -1218,7 +1222,7 @@ interface GPURenderPassDepthStencilAttachment {
     stencilLoadOp?: GPULoadOp;
     stencilReadOnly?: boolean;
     stencilStoreOp?: GPUStoreOp;
-    view: GPUTextureView;
+    view: GPUTexture | GPUTextureView;
 }
 
 interface GPURenderPassDescriptor extends GPUObjectDescriptorBase {
@@ -1754,10 +1758,10 @@ interface LibcConstants {
 interface LoadURIOptions {
     baseURI?: URI | null;
     cancelContentJSEpoch?: number;
-    csp?: ContentSecurityPolicy | null;
     hasValidUserGestureActivation?: boolean;
     headers?: InputStream | null;
     loadFlags?: number;
+    policyContainer?: PolicyContainer | null;
     postData?: InputStream | null;
     referrerInfo?: ReferrerInfo | null;
     remoteTypeOverride?: string | null;
@@ -5400,6 +5404,7 @@ interface BrowsingContext extends LoadContextMixin {
     isAppTab: boolean;
     readonly isDiscarded: boolean;
     readonly isInBFCache: boolean;
+    languageOverride: string;
     mediumOverride: string;
     readonly name: string;
     readonly opener: BrowsingContext | null;
@@ -5860,6 +5865,7 @@ interface CSSStyleRule extends CSSGroupingRule {
     readonly selectorCount: number;
     selectorText: string;
     readonly style: CSSStyleDeclaration;
+    readonly styleMap: StylePropertyMap;
     getSelectorWarnings(): SelectorWarning[];
     selectorMatchesElement(selectorIndex: number, element: Element, pseudo?: string, includeVisitedStyle?: boolean): boolean;
     selectorSpecificityAt(index: number, desugared?: boolean): number;
@@ -5889,6 +5895,18 @@ declare var CSSStyleSheet: {
     prototype: CSSStyleSheet;
     new(options?: CSSStyleSheetInit): CSSStyleSheet;
     isInstance: IsInstance<CSSStyleSheet>;
+};
+
+interface CSSStyleValue {
+    toString(): string;
+}
+
+declare var CSSStyleValue: {
+    prototype: CSSStyleValue;
+    new(): CSSStyleValue;
+    isInstance: IsInstance<CSSStyleValue>;
+    parse(property: string, cssText: string): CSSStyleValue;
+    parseAll(property: string, cssText: string): CSSStyleValue[];
 };
 
 interface CSSSupportsRule extends CSSConditionRule {
@@ -7140,13 +7158,13 @@ interface DataTransfer {
     effectAllowed: string;
     readonly files: FileList | null;
     readonly items: DataTransferItemList;
-    readonly mozCSP: ContentSecurityPolicy | null;
     mozCursor: string;
     readonly mozItemCount: number;
     mozShowFailAnimation: boolean;
     readonly mozSourceNode: Node | null;
     readonly mozTriggeringPrincipalURISpec: string;
     readonly mozUserCancelled: boolean;
+    readonly policyContainer: PolicyContainer | null;
     readonly sourceTopWindowContext: WindowContext | null;
     readonly types: string[];
     addElement(element: Element): void;
@@ -7348,7 +7366,6 @@ interface Document extends Node, DocumentOrShadowRoot, FontFaceSource, GeometryU
     readonly contentType: string;
     cookie: string;
     readonly cookieJarSettings: nsICookieJarSettings;
-    readonly csp: ContentSecurityPolicy | null;
     readonly cspJSON: string;
     readonly currentScript: Element | null;
     readonly defaultView: WindowProxy | null;
@@ -7406,6 +7423,7 @@ interface Document extends Node, DocumentOrShadowRoot, FontFaceSource, GeometryU
     pausedByDevTools: boolean;
     readonly permDelegateHandler: nsIPermissionDelegateHandler;
     readonly plugins: HTMLCollection;
+    readonly policyContainer: PolicyContainer | null;
     readonly preferredStyleSheetSet: string | null;
     readonly readyState: string;
     readonly referrer: string;
@@ -7846,6 +7864,7 @@ interface Element extends Node, ARIAMixin, Animatable, ChildNode, GeometryUtils,
     attachShadow(shadowRootInitDict: ShadowRootInit): ShadowRoot;
     checkVisibility(options?: CheckVisibilityOptions): boolean;
     closest(selector: string): Element | null;
+    computedStyleMap(): StylePropertyMapReadOnly;
     getAsFlexContainer(): Flex | null;
     getAttribute(name: string): string | null;
     getAttributeNS(namespace: string | null, localName: string): string | null;
@@ -7920,6 +7939,7 @@ declare var Element: {
 };
 
 interface ElementCSSInlineStyle {
+    readonly attributeStyleMap: StylePropertyMap;
     readonly style: CSSStyleDeclaration;
 }
 
@@ -7943,6 +7963,14 @@ declare var ElementInternals: {
     new(): ElementInternals;
     isInstance: IsInstance<ElementInternals>;
 };
+
+interface ElementOffsetAttributes {
+    readonly offsetHeight: number;
+    readonly offsetLeft: number;
+    readonly offsetParent: Element | null;
+    readonly offsetTop: number;
+    readonly offsetWidth: number;
+}
 
 interface EncodedAudioChunk {
     readonly byteLength: number;
@@ -8185,6 +8213,7 @@ interface File extends Blob {
     readonly mozFullPath: string;
     readonly name: string;
     readonly webkitRelativePath: string;
+    setMozRelativePath(name: string): void;
 }
 
 declare var File: {
@@ -8571,7 +8600,7 @@ declare var FormDataEvent: {
 };
 
 interface FragmentDirective {
-    createTextDirective(range: Range): Promise<string>;
+    createTextDirectiveForSelection(): Promise<string>;
     getTextDirectiveRanges(): Range[];
     removeAllTextDirectives(): void;
 }
@@ -8867,7 +8896,7 @@ declare var GPUDevice: {
 /** Available only in secure contexts. */
 interface GPUDeviceLostInfo {
     readonly message: string;
-    readonly reason: any;
+    readonly reason: GPUDeviceLostReason;
 }
 
 declare var GPUDeviceLostInfo: {
@@ -9171,7 +9200,6 @@ interface Gamepad {
     readonly axes: number[];
     readonly buttons: GamepadButton[];
     readonly connected: boolean;
-    readonly displayId: number;
     readonly hand: GamepadHand;
     readonly hapticActuators: GamepadHapticActuator[];
     readonly id: string;
@@ -9678,6 +9706,7 @@ interface GlobalEventHandlersEventMap {
     "change": Event;
     "click": Event;
     "close": Event;
+    "command": Event;
     "contentvisibilityautostatechange": Event;
     "contextlost": Event;
     "contextmenu": Event;
@@ -9780,6 +9809,7 @@ interface GlobalEventHandlers {
     onchange: ((this: GlobalEventHandlers, ev: Event) => any) | null;
     onclick: ((this: GlobalEventHandlers, ev: Event) => any) | null;
     onclose: ((this: GlobalEventHandlers, ev: Event) => any) | null;
+    oncommand: ((this: GlobalEventHandlers, ev: Event) => any) | null;
     oncontentvisibilityautostatechange: ((this: GlobalEventHandlers, ev: Event) => any) | null;
     oncontextlost: ((this: GlobalEventHandlers, ev: Event) => any) | null;
     oncontextmenu: ((this: GlobalEventHandlers, ev: Event) => any) | null;
@@ -10290,7 +10320,7 @@ declare var HTMLDocument: {
 interface HTMLElementEventMap extends ElementEventMap, GlobalEventHandlersEventMap, OnErrorEventHandlerForNodesEventMap, TouchEventHandlersEventMap {
 }
 
-interface HTMLElement extends Element, ElementCSSInlineStyle, GlobalEventHandlers, HTMLOrForeignElement, OnErrorEventHandlerForNodes, TouchEventHandlers {
+interface HTMLElement extends Element, ElementCSSInlineStyle, ElementOffsetAttributes, GlobalEventHandlers, HTMLOrForeignElement, OnErrorEventHandlerForNodes, TouchEventHandlers {
     accessKey: string;
     readonly accessKeyLabel: string;
     autocapitalize: string;
@@ -10308,11 +10338,6 @@ interface HTMLElement extends Element, ElementCSSInlineStyle, GlobalEventHandler
     readonly isFormAssociatedCustomElement: boolean;
     lang: string;
     nonce: string;
-    readonly offsetHeight: number;
-    readonly offsetLeft: number;
-    readonly offsetParent: Element | null;
-    readonly offsetTop: number;
-    readonly offsetWidth: number;
     outerText: string;
     popover: string | null;
     spellcheck: boolean;
@@ -12050,6 +12075,8 @@ declare var IIRFilterNode: {
 
 /** Available only in secure contexts. */
 interface IdentityCredential extends Credential {
+    readonly configURL: string;
+    readonly isAutoSelected: boolean;
     readonly token: string | null;
 }
 
@@ -13616,7 +13643,7 @@ interface MediaKeySessionEventMap {
 }
 
 interface MediaKeySession extends EventTarget {
-    readonly closed: Promise<void>;
+    readonly closed: Promise<MediaKeySessionClosedReason>;
     readonly error: MediaKeyError | null;
     readonly expiration: number;
     readonly keyStatuses: MediaKeyStatusMap;
@@ -14120,6 +14147,7 @@ interface MouseEvent extends UIEvent {
     readonly screenX: number;
     readonly screenY: number;
     readonly shiftKey: boolean;
+    readonly triggerEvent: Event | null;
     readonly x: number;
     readonly y: number;
     clickEventPrevented(): boolean;
@@ -15095,6 +15123,7 @@ interface ParentNode {
     append(...nodes: (Node | string)[]): void;
     getElementsByAttribute(name: string, value: string | null): HTMLCollection;
     getElementsByAttributeNS(namespaceURI: string | null, name: string, value: string | null): HTMLCollection;
+    moveBefore(node: Node, child: Node | null): void;
     prepend(...nodes: (Node | string)[]): void;
     querySelector<K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null;
     querySelector<K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null;
@@ -17796,8 +17825,6 @@ declare var SVGGradientElement: {
 };
 
 interface SVGGraphicsElement extends SVGElement, SVGTests {
-    readonly farthestViewportElement: SVGElement | null;
-    readonly nearestViewportElement: SVGElement | null;
     readonly transform: SVGAnimatedTransformList;
     getBBox(aOptions?: SVGBoundingBoxOptions): SVGRect;
     getCTM(): SVGMatrix | null;
@@ -19453,6 +19480,33 @@ declare var StructuredCloneTester: {
     prototype: StructuredCloneTester;
     new(serializable: boolean, deserializable: boolean): StructuredCloneTester;
     isInstance: IsInstance<StructuredCloneTester>;
+};
+
+interface StylePropertyMap extends StylePropertyMapReadOnly {
+    append(property: string, ...values: (CSSStyleValue | string)[]): void;
+    clear(): void;
+    delete(property: string): void;
+    set(property: string, ...values: (CSSStyleValue | string)[]): void;
+}
+
+declare var StylePropertyMap: {
+    prototype: StylePropertyMap;
+    new(): StylePropertyMap;
+    isInstance: IsInstance<StylePropertyMap>;
+};
+
+interface StylePropertyMapReadOnly {
+    readonly size: number;
+    get(property: string): undefined | CSSStyleValue;
+    getAll(property: string): CSSStyleValue[];
+    has(property: string): boolean;
+    forEach(callbackfn: (value: CSSStyleValue[], key: string, parent: StylePropertyMapReadOnly) => void, thisArg?: any): void;
+}
+
+declare var StylePropertyMapReadOnly: {
+    prototype: StylePropertyMapReadOnly;
+    new(): StylePropertyMapReadOnly;
+    isInstance: IsInstance<StylePropertyMapReadOnly>;
 };
 
 interface StyleSheet {
@@ -24455,7 +24509,7 @@ declare var XULCommandEvent: {
 interface XULElementEventMap extends ElementEventMap, GlobalEventHandlersEventMap, OnErrorEventHandlerForNodesEventMap, TouchEventHandlersEventMap {
 }
 
-interface XULElement extends Element, ElementCSSInlineStyle, GlobalEventHandlers, HTMLOrForeignElement, OnErrorEventHandlerForNodes, TouchEventHandlers {
+interface XULElement extends Element, ElementCSSInlineStyle, ElementOffsetAttributes, GlobalEventHandlers, HTMLOrForeignElement, OnErrorEventHandlerForNodes, TouchEventHandlers {
     collapsed: boolean;
     contextMenu: string;
     readonly controllers: XULControllers;
@@ -25561,6 +25615,7 @@ declare var oncanplaythrough: ((this: Window, ev: Event) => any) | null;
 declare var onchange: ((this: Window, ev: Event) => any) | null;
 declare var onclick: ((this: Window, ev: Event) => any) | null;
 declare var onclose: ((this: Window, ev: Event) => any) | null;
+declare var oncommand: ((this: Window, ev: Event) => any) | null;
 declare var oncontentvisibilityautostatechange: ((this: Window, ev: Event) => any) | null;
 declare var oncontextlost: ((this: Window, ev: Event) => any) | null;
 declare var oncontextmenu: ((this: Window, ev: Event) => any) | null;
@@ -25734,7 +25789,7 @@ type GLsizei = number;
 type GLsizeiptr = number;
 type GLuint = number;
 type GLuint64 = number;
-type GPUBindingResource = GPUSampler | GPUTextureView | GPUBufferBinding;
+type GPUBindingResource = GPUSampler | GPUTexture | GPUTextureView | GPUBuffer | GPUBufferBinding;
 type GPUBufferDynamicOffset = number;
 type GPUBufferUsageFlags = number;
 type GPUColor = number[] | GPUColorDict;
@@ -25797,6 +25852,7 @@ type OnBeforeUnloadEventHandler = OnBeforeUnloadEventHandlerNonNull | null;
 type OnErrorEventHandler = OnErrorEventHandlerNonNull | null;
 type OutputStream = nsIOutputStream;
 type PerformanceEntryList = PerformanceEntry[];
+type PolicyContainer = nsIPolicyContainer;
 type Principal = nsIPrincipal;
 type PublicKeyCredentialClientCapabilities = Record<string, boolean>;
 type RTCRtpTransform = RTCRtpScriptTransform;
@@ -25905,6 +25961,7 @@ type GPUCanvasAlphaMode = "opaque" | "premultiplied";
 type GPUCompareFunction = "always" | "equal" | "greater" | "greater-equal" | "less" | "less-equal" | "never" | "not-equal";
 type GPUCompilationMessageType = "error" | "info" | "warning";
 type GPUCullMode = "back" | "front" | "none";
+type GPUDeviceLostReason = "destroyed" | "unknown";
 type GPUErrorFilter = "internal" | "out-of-memory" | "validation";
 type GPUFeatureName = "bgra8unorm-storage" | "clip-distances" | "core-features-and-limits" | "depth-clip-control" | "depth32float-stencil8" | "dual-source-blending" | "float32-blendable" | "float32-filterable" | "indirect-first-instance" | "rg11b10ufloat-renderable" | "shader-f16" | "subgroups" | "texture-compression-astc" | "texture-compression-astc-sliced-3d" | "texture-compression-bc" | "texture-compression-bc-sliced-3d" | "texture-compression-etc2" | "timestamp-query";
 type GPUFilterMode = "linear" | "nearest";
@@ -25964,6 +26021,7 @@ type MediaDecodingType = "file" | "media-source";
 type MediaDeviceKind = "audioinput" | "audiooutput" | "videoinput";
 type MediaEncodingType = "record" | "transmission";
 type MediaKeyMessageType = "individualization-request" | "license-release" | "license-renewal" | "license-request";
+type MediaKeySessionClosedReason = "closed-by-application" | "hardware-context-reset" | "internal-error" | "release-acknowledged" | "resource-evicted";
 type MediaKeySessionType = "persistent-license" | "temporary";
 type MediaKeyStatus = "expired" | "internal-error" | "output-downscaled" | "output-restricted" | "released" | "status-pending" | "usable";
 type MediaKeysRequirement = "not-allowed" | "optional" | "required";
@@ -26457,6 +26515,13 @@ interface SpeechRecognitionResult {
 
 interface SpeechRecognitionResultList {
     [Symbol.iterator](): IterableIterator<SpeechRecognitionResult>;
+}
+
+interface StylePropertyMapReadOnly {
+    [Symbol.iterator](): IterableIterator<[string, Iterable<CSSStyleValue>]>;
+    entries(): IterableIterator<[string, Iterable<CSSStyleValue>]>;
+    keys(): IterableIterator<string>;
+    values(): IterableIterator<Iterable<CSSStyleValue>>;
 }
 
 interface StyleSheetList {

@@ -1079,6 +1079,31 @@ export namespace schema {
                         };
                     };
                 };
+                ScreenShare: {
+                    type: string;
+                    properties: {
+                        Allow: {
+                            type: string;
+                            strict: boolean;
+                            items: {
+                                type: string;
+                            };
+                        };
+                        Block: {
+                            type: string;
+                            strict: boolean;
+                            items: {
+                                type: string;
+                            };
+                        };
+                        BlockNewRequests: {
+                            type: string;
+                        };
+                        Locked: {
+                            type: string;
+                        };
+                    };
+                };
             };
         };
         PictureInPicture: {
