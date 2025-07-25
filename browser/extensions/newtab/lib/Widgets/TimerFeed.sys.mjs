@@ -14,6 +14,8 @@ import {
 
 const PREF_TIMER_ENABLED = "widgets.timer.enabled";
 const PREF_SYSTEM_TIMER_ENABLED = "widgets.system.timer.enabled";
+const PREF_TIMER_SHOW_NOTIFICATIONS =
+  "widgets.focusTimer.showSystemNotifications";
 const CACHE_KEY = "timer_widget";
 
 /**
@@ -24,6 +26,31 @@ export class TimerFeed {
   constructor() {
     this.initialized = false;
     this.cache = this.PersistentCache(CACHE_KEY, true);
+  }
+
+  async showSystemNotification(title, body) {
+    const prefs = this.store.getState()?.Prefs.values;
+    if (!prefs[PREF_TIMER_SHOW_NOTIFICATIONS]) {
+      return;
+    }
+
+    try {
+      const alertsService = Cc["@mozilla.org/alerts-service;1"].getService(
+        Ci.nsIAlertsService
+      );
+
+      // TODO: Add more readable args as defined in toolkit/components/alerts/nsIAlertsService.idl
+      alertsService.showAlertNotification(
+        "chrome://branding/content/icon64.png",
+        title,
+        body,
+        false,
+        "",
+        null
+      );
+    } catch (err) {
+      console.error("Failed to show system notification", err);
+    }
   }
 
   get enabled() {
@@ -72,11 +99,23 @@ export class TimerFeed {
           }
         }
         break;
+      case at.WIDGETS_TIMER_END:
+        {
+          const prevState = this.store.getState().TimerWidget;
+          await this.cache.set("timer", { ...prevState, ...action.data });
+          this.update({ ...prevState, ...action.data });
+          // TODO: Replace with l10n messages
+          // TODO: May need logic to show different msg based on focus/break timer
+          this.showSystemNotification(
+            "Timer Finished",
+            "Time's up! Take a break."
+          );
+        }
+        break;
       case at.WIDGETS_TIMER_SET_DURATION:
       case at.WIDGETS_TIMER_PLAY:
       case at.WIDGETS_TIMER_PAUSE:
       case at.WIDGETS_TIMER_RESET:
-      case at.WIDGETS_TIMER_END:
         {
           const prevState = this.store.getState().TimerWidget;
           await this.cache.set("timer", { ...prevState, ...action.data });

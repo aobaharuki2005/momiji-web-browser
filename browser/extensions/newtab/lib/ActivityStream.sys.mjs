@@ -888,6 +888,13 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "widgets.focusTimer.showSystemNotifications",
+    {
+      title: "Enables the focus timer widget to show system notifications",
+      value: false,
+    },
+  ],
+  [
     "improvesearch.noDefaultSearchTile",
     {
       title: "Remove tiles that are the same as the default search",
