@@ -799,6 +799,7 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public static GeckoResult<Void> setGeckoPref(@NonNull String, @NonNull String, int);
     method @AnyThread @NonNull public static GeckoResult<Void> setGeckoPref(@NonNull String, @NonNull Integer, int);
     method @AnyThread @NonNull public static GeckoResult<Void> setGeckoPref(@NonNull String, @NonNull Boolean, int);
+    method @AnyThread @NonNull public static GeckoResult<Map<String,Boolean>> setGeckoPrefs(@NonNull List<GeckoPreferenceController.SetGeckoPreference<?>>);
     field public static final int PREF_BRANCH_DEFAULT = 1;
     field public static final int PREF_BRANCH_USER = 0;
     field public static final int PREF_TYPE_BOOL = 128;
@@ -832,6 +833,16 @@ package org.mozilla.geckoview {
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoPreferenceController.PrefType {
+  }
+
+  public static class GeckoPreferenceController.SetGeckoPreference<T> {
+    method @AnyThread @NonNull public static GeckoPreferenceController.SetGeckoPreference<Boolean> setBoolPref(@NonNull String, @NonNull Boolean, int);
+    method @AnyThread @NonNull public static GeckoPreferenceController.SetGeckoPreference<Integer> setIntPref(@NonNull String, @NonNull Integer, int);
+    method @AnyThread @NonNull public static GeckoPreferenceController.SetGeckoPreference<String> setStringPref(@NonNull String, @NonNull String, int);
+    field public final int branch;
+    field @NonNull public final String pref;
+    field public final int type;
+    field @NonNull public final T value;
   }
 
   @AnyThread public class GeckoResult<T> {
