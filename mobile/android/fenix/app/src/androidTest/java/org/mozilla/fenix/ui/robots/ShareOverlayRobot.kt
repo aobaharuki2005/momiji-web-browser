@@ -146,6 +146,19 @@ class ShareOverlayRobot {
         Log.i(TAG, "verifyShareLinkIntent: Verified that the share intent for link: $url was launched")
     }
 
+    fun clickSharingApp(appName: String) {
+        val sharingApp = itemWithText(appName)
+        Log.i(TAG, "clickSharingApp: Trying to verify that sharing app: $appName exists")
+        if (sharingApp.exists()) {
+            Log.i(TAG, "clickSharingApp: Sharing app: $appName exists")
+            Log.i(TAG, "clickSharingApp: Trying to click sharing app: $appName and wait for a new window")
+            sharingApp.clickAndWaitForNewWindow()
+            Log.i(TAG, "clickSharingApp: Clicked sharing app: $appName and waited for a new window")
+        } else {
+            Log.i(TAG, "clickSharingApp: Sharing app: $appName not found.")
+        }
+    }
+
     class Transition {
         fun clickSaveAsPDF(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition {
             Log.i(TAG, "clickSaveAsPDF: Trying to click the \"SAVE AS PDF\" share overlay button")
