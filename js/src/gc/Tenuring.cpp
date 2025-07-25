@@ -402,10 +402,6 @@ static void TraceWholeCell(TenuringTracer& mover, JSString* str) {
   str->traceChildren(&mover);
 }
 
-static inline void TraceWholeCell(TenuringTracer& mover, BaseScript* script) {
-  script->traceChildren(&mover);
-}
-
 static inline void TraceWholeCell(TenuringTracer& mover,
                                   jit::JitCode* jitcode) {
   jitcode->traceChildren(&mover);
@@ -447,9 +443,6 @@ bool ArenaCellSet::trace(TenuringTracer& mover) {
       break;
     case JS::TraceKind::String:
       return mover.traceBufferedCells<JSString>(arena, this);
-      break;
-    case JS::TraceKind::Script:
-      return mover.traceBufferedCells<BaseScript>(arena, this);
       break;
     case JS::TraceKind::JitCode:
       return mover.traceBufferedCells<jit::JitCode>(arena, this);

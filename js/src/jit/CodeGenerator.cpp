@@ -16918,15 +16918,6 @@ bool CodeGenerator::link(JSContext* cx) {
   if (graph.numConstants()) {
     const Value* vp = graph.constantPool();
     ionScript->copyConstants(vp);
-    for (size_t i = 0; i < graph.numConstants(); i++) {
-      const Value& v = vp[i];
-      if (v.isGCThing()) {
-        if (gc::StoreBuffer* sb = v.toGCThing()->storeBuffer()) {
-          sb->putWholeCell(script);
-          break;
-        }
-      }
-    }
   }
 
   // Attach any generated script counts to the script.
