@@ -2908,6 +2908,23 @@
       }
     ]
   },
+  "1902385": {
+    "label": "bithumb.com",
+    "bugs": {
+      "1902385": {
+        "issue": "unsupported-warning",
+        "matches": ["*://www.bithumb.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "content_scripts": {
+          "css": ["bug1902385-www.bithumb.com-hide-unsupported.css"]
+        }
+      }
+    ]
+  },
   "1902388": {
     "label": "clinic.platomedical.com",
     "bugs": {
