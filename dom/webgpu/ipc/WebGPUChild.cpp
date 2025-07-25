@@ -215,7 +215,7 @@ void wgpu_child_resolve_create_pipeline_promise(WGPUWebGPUChildPtr aChild,
   }
 }
 
-MOZ_CAN_RUN_SCRIPT void wgpu_child_resolve_create_shader_module_promise(
+void wgpu_child_resolve_create_shader_module_promise(
     WGPUWebGPUChildPtr aChild, RawId aShaderModuleId,
     struct WGPUFfiSlice_FfiShaderModuleCompilationMessage aMessages) {
   auto* c = static_cast<WebGPUChild*>(aChild);
