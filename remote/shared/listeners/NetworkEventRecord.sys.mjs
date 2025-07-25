@@ -220,6 +220,9 @@ export class NetworkEventRecord {
    *     Additional meta data about the response.
    */
   addResponseContent(responseContent, responseInfo) {
+    if (this.#response) {
+      this.#response.setResponseContent(responseContent);
+    }
     if (
       // Ignore already completed requests.
       this.#request.alreadyCompleted ||
