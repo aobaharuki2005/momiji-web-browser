@@ -475,7 +475,7 @@ void WebGPUChild::ClearAllPendingPromises() {
       pending_promise.promise->MaybeResolve(JS::NullHandleValue);
     }
   }
-  // Pretend this worked, per spec.
+  // Pretend this worked, per spec; see "Listen for timeline event".
   {
     while (!mPendingCreatePipelinePromises.empty()) {
       auto pending_promise = std::move(mPendingCreatePipelinePromises.front());
@@ -498,8 +498,7 @@ void WebGPUChild::ClearAllPendingPromises() {
       }
     }
   }
-  // Pretend this worked, the spec is not explicit about this behavior but it's
-  // in line with the others.
+  // Pretend this worked, per spec; see "Listen for timeline event".
   {
     while (!mPendingCreateShaderModulePromises.empty()) {
       auto pending_promise =
@@ -532,8 +531,7 @@ void WebGPUChild::ClearAllPendingPromises() {
           pending_promise.promise);
     }
   }
-  // Pretend we finished the work, the spec is not explicit about this behavior
-  // but it's in line with the others.
+  // Pretend this worked, per spec; see "Listen for timeline event".
   {
     while (!mPendingOnSubmittedWorkDonePromises.empty()) {
       auto pending_promise =
