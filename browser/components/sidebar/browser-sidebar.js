@@ -182,6 +182,7 @@ var SidebarController = {
         revampL10nId: "sidebar-menu-genai-chat-label",
         iconUrl: "chrome://global/skin/icons/highlights.svg",
         gleanClickEvent: Glean.sidebar.chatbotIconClick,
+        toolContextMenuId: "aichat",
       }
     );
 
@@ -1788,6 +1789,7 @@ var SidebarController = {
           get attention() {
             return sidebar.attention ?? false;
           },
+          contextMenu: sidebar.toolContextMenuId,
         };
       });
   },
