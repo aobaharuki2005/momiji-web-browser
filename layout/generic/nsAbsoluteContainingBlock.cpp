@@ -20,6 +20,7 @@
 #include "nsContainerFrame.h"
 #include "nsGkAtoms.h"
 #include "nsGridContainerFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsPlaceholderFrame.h"
 #include "nsPresContext.h"
 
@@ -167,13 +168,20 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
   nsOverflowContinuationTracker tracker(aDelegatingFrame, true);
   for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame;
        kidFrame = kidFrame->GetNextSibling()) {
-    AnchorPosReferencedAnchors referencedAnchors;
+    AnchorPosReferencedAnchors* referencedAnchors = nullptr;
+    if (kidFrame->HasAnchorPosReference()) {
+      referencedAnchors = kidFrame->SetOrUpdateDeletableProperty(
+          nsIFrame::AnchorPosReferences());
+    } else {
+      kidFrame->RemoveProperty(nsIFrame::AnchorPosReferences());
+    }
+
     bool kidNeedsReflow =
         reflowAll || kidFrame->IsSubtreeDirty() ||
         FrameDependsOnContainer(kidFrame,
                                 !!(aFlags & AbsPosReflowFlags::CBWidthChanged),
                                 !!(aFlags & AbsPosReflowFlags::CBHeightChanged),
-                                &referencedAnchors);
+                                referencedAnchors);
 
     if (kidFrame->IsSubtreeDirty()) {
       MaybeMarkAncestorsAsHavingDescendantDependentOnItsStaticPos(
@@ -217,7 +225,7 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
       nsReflowStatus kidStatus;
       ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowInput, cb,
                           aFlags, kidFrame, kidStatus, aOverflowAreas,
-                          &referencedAnchors);
+                          referencedAnchors);
       MOZ_ASSERT(!kidStatus.IsInlineBreakBefore(),
                  "ShouldAvoidBreakInside should prevent this from happening");
       nsIFrame* nextFrame = kidFrame->GetNextInFlow();

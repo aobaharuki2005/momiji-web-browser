@@ -1418,6 +1418,8 @@ class nsIFrame : public nsQueryFrame {
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(UsedMarginProperty, nsMargin)
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(UsedPaddingProperty, nsMargin)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(AnchorPosReferences,
+                                      AnchorPosReferencedAnchors);
 
   // This tracks the start and end page value for a frame.
   //
@@ -4519,25 +4521,21 @@ class nsIFrame : public nsQueryFrame {
    * value. Returns the pointer to the property, guaranteed non-null, value that
    * then can be used to update the property value further.
    *
-   * Note: Should consider implementing a move variant if it causes perf issues.
    * Note: As the name suggests, this will behave properly only for properties
    * declared with NS_DECLARE_FRAME_PROPERTY_DELETABLE!
    */
-  template <
-      typename T,
-      std::enable_if_t<std::is_pointer<FrameProperties::PropertyType<T>>::value,
-                       bool> = true>
+  template <typename T, typename... Params>
   FrameProperties::PropertyType<T> SetOrUpdateDeletableProperty(
       FrameProperties::Descriptor<T> aProperty,
-      const std::remove_pointer_t<FrameProperties::PropertyType<T>>& aValue) {
+      Params&&... aParams) {
     bool found;
     using DataType = std::remove_pointer_t<FrameProperties::PropertyType<T>>;
     DataType* storedValue = GetProperty(aProperty, &found);
     if (!found) {
-      storedValue = new DataType{aValue};
+      storedValue = new DataType{aParams...};
       AddProperty(aProperty, storedValue);
     } else {
-      *storedValue = aValue;
+      *storedValue = DataType{aParams...};
     }
     return storedValue;
   }
