@@ -80,6 +80,9 @@ class MOZ_STACK_CLASS WarpScriptOracle {
   bool maybeReplaceNurseryPointer(const CacheIRStubInfo* stubInfo,
                                   uint8_t* stubDataCopy, JSObject* obj,
                                   size_t offset);
+  bool maybeReplaceNurseryPointer(const CacheIRStubInfo* stubInfo,
+                                  uint8_t* stubDataCopy, Value v,
+                                  size_t offset);
 
  public:
   WarpScriptOracle(JSContext* cx, WarpOracle* oracle, HandleScript script,
@@ -176,6 +179,9 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
   }
 
   if (!snapshot->nurseryObjects().appendAll(nurseryObjects_)) {
+    return abort(outerScript_, AbortReason::Alloc);
+  }
+  if (!snapshot->nurseryValues().appendAll(nurseryValues_)) {
     return abort(outerScript_, AbortReason::Alloc);
   }
 
@@ -1436,7 +1442,6 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
           v = stubInfo->getStubField<StubField::Type::WeakValue>(stub, offset)
                   .get();
         }
-        MOZ_ASSERT_IF(v.isGCThing(), !IsInsideNursery(v.toGCThing()));
         if (v.isString()) {
           Value newVal;
           JSAtom* atom = AtomizeString(cx_, v.toString());
@@ -1446,6 +1451,10 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
           newVal.setString(atom);
           stubInfo->replaceStubRawValueBits(stubDataCopy, offset, v.asRawBits(),
                                             newVal.asRawBits());
+        } else {
+          if (!maybeReplaceNurseryPointer(stubInfo, stubDataCopy, v, offset)) {
+            return false;
+          }
         }
         break;
       }
@@ -1483,6 +1492,28 @@ bool WarpScriptOracle::maybeReplaceNurseryPointer(
   return true;
 }
 
+bool WarpScriptOracle::maybeReplaceNurseryPointer(
+    const CacheIRStubInfo* stubInfo, uint8_t* stubDataCopy, Value v,
+    size_t offset) {
+  // ValueOrNurseryValueIndex uses MagicValueUint32 to encode nursery indexes.
+  // Assert this doesn't conflict with |v|.
+  MOZ_ASSERT(ValueOrNurseryValueIndex::fromValue(v).isValue());
+
+  if (!v.isGCThing() || !IsInsideNursery(v.toGCThing())) {
+    return true;
+  }
+
+  uint32_t nurseryIndex;
+  if (!oracle_->registerNurseryValue(v, &nurseryIndex)) {
+    return false;
+  }
+
+  auto newValue = ValueOrNurseryValueIndex::fromNurseryIndex(nurseryIndex);
+  stubInfo->replaceStubRawValueBits(stubDataCopy, offset, v.asRawBits(),
+                                    newValue.asRawBits());
+  return true;
+}
+
 bool WarpOracle::registerNurseryObject(JSObject* obj, uint32_t* nurseryIndex) {
   MOZ_ASSERT(IsInsideNursery(obj));
 
@@ -1497,4 +1528,21 @@ bool WarpOracle::registerNurseryObject(JSObject* obj, uint32_t* nurseryIndex) {
   }
   *nurseryIndex = nurseryObjects_.length() - 1;
   return nurseryObjectsMap_.add(p, obj, *nurseryIndex);
+}
+
+bool WarpOracle::registerNurseryValue(Value v, uint32_t* nurseryIndex) {
+  gc::Cell* cell = v.toGCThing();
+  MOZ_ASSERT(IsInsideNursery(cell));
+
+  auto p = nurseryValuesMap_.lookupForAdd(cell);
+  if (p) {
+    *nurseryIndex = p->value();
+    return true;
+  }
+
+  if (!nurseryValues_.append(v)) {
+    return false;
+  }
+  *nurseryIndex = nurseryValues_.length() - 1;
+  return nurseryValuesMap_.add(p, cell, *nurseryIndex);
 }

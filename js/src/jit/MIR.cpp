@@ -6715,7 +6715,7 @@ AliasSet MHomeObjectSuperBase::getAliasSet() const {
 
 MDefinition* MGuardValue::foldsTo(TempAllocator& alloc) {
   if (MConstant* cst = value()->maybeConstantValue()) {
-    if (cst->toJSValue() == expected()) {
+    if (expected().isValue() && cst->toJSValue() == expected().toValue()) {
       return value();
     }
   }
@@ -7428,7 +7428,8 @@ bool MGuardHasGetterSetter::congruentTo(const MDefinition* ins) const {
   if (ins->toGuardHasGetterSetter()->propId() != propId()) {
     return false;
   }
-  if (ins->toGuardHasGetterSetter()->getterSetter() != getterSetter()) {
+  if (ins->toGuardHasGetterSetter()->getterSetterValue() !=
+      getterSetterValue()) {
     return false;
   }
   return congruentIfOperandsEqual(ins);

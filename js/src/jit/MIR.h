@@ -7908,21 +7908,23 @@ class MGuardNullProto : public MUnaryInstruction,
 
 // Guard on a specific Value.
 class MGuardValue : public MUnaryInstruction, public BoxInputsPolicy::Data {
-  Value expected_;
+  ValueOrNurseryValueIndex expected_;
 
-  MGuardValue(MDefinition* val, const Value& expected)
+  MGuardValue(MDefinition* val, ValueOrNurseryValueIndex expected)
       : MUnaryInstruction(classOpcode, val), expected_(expected) {
     setGuard();
     setMovable();
     setResultType(MIRType::Value);
   }
+  MGuardValue(MDefinition* val, Value expected)
+      : MGuardValue(val, ValueOrNurseryValueIndex::fromValue(expected)) {}
 
  public:
   INSTRUCTION_HEADER(GuardValue)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, value))
 
-  Value expected() const { return expected_; }
+  ValueOrNurseryValueIndex expected() const { return expected_; }
 
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isGuardValue()) {

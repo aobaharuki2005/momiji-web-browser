@@ -3302,7 +3302,7 @@
     object: Object
   arguments:
     propId: jsid
-    getterSetter: GetterSetter*
+    getterSetterValue: ValueOrNurseryValueIndex
   result_type: Object
   guard: true
   movable: true

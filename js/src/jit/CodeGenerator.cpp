@@ -995,6 +995,7 @@ CodeGenerator::CodeGenerator(MIRGenerator* gen, LIRGraph* graph,
     : CodeGeneratorSpecific(gen, graph, masm, wasmCodeMeta),
       ionScriptLabels_(gen->alloc()),
       nurseryObjectLabels_(gen->alloc()),
+      nurseryValueLabels_(gen->alloc()),
       scriptCounts_(nullptr) {}
 
 CodeGenerator::~CodeGenerator() { js_delete(scriptCounts_); }
@@ -5303,17 +5304,35 @@ void CodeGenerator::visitIntPtrToInt64(LIntPtrToInt64* lir) {
 #endif
 }
 
+Address CodeGenerator::getNurseryValueAddress(ValueOrNurseryValueIndex val,
+                                              Register reg) {
+  // Move the address of the Value stored in the IonScript into |reg|.
+  uint32_t nurseryIndex = val.toNurseryValueIndex();
+  CodeOffset label = masm.movWithPatch(ImmWord(uintptr_t(-1)), reg);
+  masm.propagateOOM(nurseryValueLabels_.emplaceBack(label, nurseryIndex));
+  return Address(reg, 0);
+}
+
 void CodeGenerator::visitGuardValue(LGuardValue* lir) {
   ValueOperand input = ToValue(lir->input());
-  Register nanTemp = ToTempRegisterOrInvalid(lir->temp0());
-  Value expected = lir->mir()->expected();
-  Label bail;
+  Register temp = ToTempRegisterOrInvalid(lir->temp0());
+  ValueOrNurseryValueIndex expected = lir->mir()->expected();
 
-  if (expected.isNaN()) {
-    masm.branchTestNaNValue(Assembler::NotEqual, input, nanTemp, &bail);
+  Label bail;
+  if (expected.isValue()) {
+    Value expectedVal = expected.toValue();
+    if (expectedVal.isNaN()) {
+      MOZ_ASSERT(temp != InvalidReg);
+      masm.branchTestNaNValue(Assembler::NotEqual, input, temp, &bail);
+    } else {
+      MOZ_ASSERT(temp == InvalidReg);
+      masm.branchTestValue(Assembler::NotEqual, input, expectedVal, &bail);
+    }
   } else {
-    MOZ_ASSERT(nanTemp == InvalidReg);
-    masm.branchTestValue(Assembler::NotEqual, input, expected, &bail);
+    // Compare to the Value stored in IonScript's nursery values list.
+    MOZ_ASSERT(temp != InvalidReg);
+    Address valueAddr = getNurseryValueAddress(expected, temp);
+    masm.branchTestValue(Assembler::NotEqual, valueAddr, input, &bail);
   }
 
   bailoutFrom(&bail, lir->snapshot());
@@ -16715,6 +16734,16 @@ bool CodeGenerator::link(JSContext* cx) {
     return false;
   }
 
+  // Add all used nursery-values to the Value constant pool that's copied to the
+  // IonScript.
+  for (NurseryValueLabel& label : nurseryValueLabels_) {
+    Value v = snapshot_->nurseryValues()[label.nurseryIndex];
+    MOZ_ASSERT(v.isGCThing());
+    if (!graph.addConstantToPool(v, &label.constantPoolIndex)) {
+      return false;
+    }
+  }
+
   JitZone* jitZone = cx->zone()->jitZone();
 
   IonCompilationId compilationId =
@@ -16851,6 +16880,11 @@ bool CodeGenerator::link(JSContext* cx) {
 
   for (NurseryObjectLabel label : nurseryObjectLabels_) {
     void* entry = ionScript->addressOfNurseryObject(label.nurseryIndex);
+    Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, label.offset),
+                                       ImmPtr(entry), ImmPtr((void*)-1));
+  }
+  for (NurseryValueLabel label : nurseryValueLabels_) {
+    void* entry = &ionScript->getConstant(label.constantPoolIndex);
     Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, label.offset),
                                        ImmPtr(entry), ImmPtr((void*)-1));
   }
@@ -21183,7 +21217,16 @@ void CodeGenerator::visitGuardHasGetterSetter(LGuardHasGetterSetter* lir) {
   Register temp2 = ToRegister(lir->temp2());
 
   masm.movePropertyKey(lir->mir()->propId(), temp1);
-  masm.movePtr(ImmGCPtr(lir->mir()->getterSetter()), temp2);
+
+  auto getterSetterVal = lir->mir()->getterSetterValue();
+  if (getterSetterVal.isValue()) {
+    auto* gs = getterSetterVal.toValue().toGCThing()->as<GetterSetter>();
+    masm.movePtr(ImmGCPtr(gs), temp2);
+  } else {
+    // Load the GetterSetter* from the Value stored in the IonScript.
+    Address valueAddr = getNurseryValueAddress(getterSetterVal, temp2);
+    masm.unboxNonDouble(valueAddr, temp2, JSVAL_TYPE_PRIVATE_GCTHING);
+  }
 
   using Fn = bool (*)(JSContext* cx, JSObject* obj, jsid id,
                       GetterSetter* getterSetter);

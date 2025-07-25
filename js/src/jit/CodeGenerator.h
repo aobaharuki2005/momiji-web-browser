@@ -376,6 +376,20 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   };
   Vector<NurseryObjectLabel, 0, JitAllocPolicy> nurseryObjectLabels_;
 
+  // Like NurseryObjectLabel but for Values. The Values in the IonScript will be
+  // stored in the constants-list so this also stores the constantPoolIndex for
+  // that list.
+  struct NurseryValueLabel {
+    CodeOffset offset;
+    uint32_t nurseryIndex;
+    uint32_t constantPoolIndex = UINT32_MAX;
+    NurseryValueLabel(CodeOffset offset, uint32_t nurseryIndex)
+        : offset(offset), nurseryIndex(nurseryIndex) {}
+  };
+  Vector<NurseryValueLabel, 0, JitAllocPolicy> nurseryValueLabels_;
+
+  Address getNurseryValueAddress(ValueOrNurseryValueIndex val, Register reg);
+
   void branchIfInvalidated(Register temp, Label* invalidated);
 
 #ifdef DEBUG

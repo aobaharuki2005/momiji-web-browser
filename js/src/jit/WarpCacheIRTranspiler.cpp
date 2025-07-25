@@ -190,12 +190,12 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   uint64_t uint64StubField(uint32_t offset) {
     return static_cast<uint64_t>(stubInfo_->getStubRawInt64(stubData_, offset));
   }
-  Value valueStubField(uint32_t offset) {
+  ValueOrNurseryValueIndex valueStubField(uint32_t offset) {
     uint64_t raw =
         static_cast<uint64_t>(stubInfo_->getStubRawInt64(stubData_, offset));
     Value val = Value::fromRawBits(raw);
     MOZ_ASSERT_IF(val.isGCThing(), val.toGCThing()->isTenured());
-    return val;
+    return ValueOrNurseryValueIndex::fromValueOrNurseryIndex(val);
   }
   double doubleStubField(uint32_t offset) {
     uint64_t raw =
@@ -565,9 +565,10 @@ bool WarpCacheIRTranspiler::emitGuardHasGetterSetter(
     ObjOperandId objId, uint32_t idOffset, uint32_t getterSetterOffset) {
   MDefinition* obj = getOperand(objId);
   jsid id = idStubField(idOffset);
-  auto* gs = valueStubField(getterSetterOffset).toGCThing()->as<GetterSetter>();
+  ValueOrNurseryValueIndex val = valueStubField(getterSetterOffset);
+  MOZ_ASSERT_IF(val.isValue(), val.toValue().toGCThing()->is<GetterSetter>());
 
-  auto* ins = MGuardHasGetterSetter::New(alloc(), obj, id, gs);
+  auto* ins = MGuardHasGetterSetter::New(alloc(), obj, id, val);
   add(ins);
 
   setOperand(objId, ins);
@@ -1012,7 +1013,7 @@ bool WarpCacheIRTranspiler::emitGuardFixedSlotValue(ObjOperandId objId,
   MDefinition* obj = getOperand(objId);
 
   size_t offset = int32StubField(offsetOffset);
-  Value val = valueStubField(valOffset);
+  ValueOrNurseryValueIndex val = valueStubField(valOffset);
 
   uint32_t slotIndex = NativeObject::getFixedSlotIndexFromOffset(offset);
 
@@ -1030,7 +1031,7 @@ bool WarpCacheIRTranspiler::emitGuardDynamicSlotValue(ObjOperandId objId,
   MDefinition* obj = getOperand(objId);
 
   size_t offset = int32StubField(offsetOffset);
-  Value val = valueStubField(valOffset);
+  ValueOrNurseryValueIndex val = valueStubField(valOffset);
 
   size_t slotIndex = NativeObject::getDynamicSlotIndexFromOffset(offset);
 
@@ -1104,7 +1105,7 @@ bool WarpCacheIRTranspiler::emitGuardSpecificInt32(Int32OperandId numId,
 bool WarpCacheIRTranspiler::emitGuardSpecificValue(ValOperandId valId,
                                                    uint32_t expectedOffset) {
   MDefinition* val = getOperand(valId);
-  Value expected = valueStubField(expectedOffset);
+  ValueOrNurseryValueIndex expected = valueStubField(expectedOffset);
 
   auto* ins = MGuardValue::New(alloc(), val, expected);
   add(ins);
