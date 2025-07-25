@@ -118,7 +118,7 @@ index e628c3abba..32a64550bd 100644
    # TODO(https://bugs.webrtc.org/14437):  Remove this section if general
    # Chromium fix resolves the problem.
 diff --git a/BUILD.gn b/BUILD.gn
-index ca8d8faa61..c1e86466a0 100644
+index bb56514e98..3aedd1f601 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -33,7 +33,7 @@ if (is_android) {
@@ -153,7 +153,7 @@ index ca8d8faa61..c1e86466a0 100644
  
  if (!rtc_build_ssl) {
    config("external_ssl_library") {
-@@ -566,6 +572,34 @@ if (!build_with_chromium) {
+@@ -567,6 +573,34 @@ if (!build_with_chromium) {
        "sdk",
        "video",
      ]
@@ -188,7 +188,7 @@ index ca8d8faa61..c1e86466a0 100644
  
      if (rtc_include_builtin_audio_codecs) {
        deps += [
-@@ -578,6 +612,16 @@ if (!build_with_chromium) {
+@@ -579,6 +613,16 @@ if (!build_with_chromium) {
        deps += [
          "api/video:video_frame",
          "api/video:video_rtp_headers",
@@ -561,7 +561,7 @@ index 0000000000..f6ff7f218f
 +  #endif
 +#endif
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 8042a7ce34..41723f86f8 100644
+index 3386c58c22..53a81ca67c 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -77,7 +77,7 @@ rtc_library("rtc_media_base") {
@@ -748,7 +748,7 @@ index 6a13b89c4e..a3fc75e091 100644
  }
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index 2800fcd562..60ca28af22 100644
+index d527ef6b24..f8a653c291 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -30,6 +30,7 @@ rtc_source_set("audio_device_default") {
@@ -791,7 +791,7 @@ index 2800fcd562..60ca28af22 100644
    visibility = [ "*" ]
    deps = [
      ":audio_device_buffer",
-@@ -296,9 +301,9 @@ rtc_library("audio_device_impl") {
+@@ -298,9 +303,9 @@ rtc_library("audio_device_impl") {
    sources = [ "include/fake_audio_device.h" ]
  
    if (build_with_mozilla) {
@@ -804,7 +804,7 @@ index 2800fcd562..60ca28af22 100644
      ]
    }
  
-@@ -403,6 +408,7 @@ rtc_library("audio_device_impl") {
+@@ -405,6 +410,7 @@ rtc_library("audio_device_impl") {
      sources += [ "dummy/file_audio_device_factory.h" ]
    }
  }
@@ -812,7 +812,7 @@ index 2800fcd562..60ca28af22 100644
  
  if (is_mac) {
    rtc_source_set("audio_device_impl_frameworks") {
-@@ -420,6 +426,7 @@ if (is_mac) {
+@@ -422,6 +428,7 @@ if (is_mac) {
    }
  }
  
@@ -820,7 +820,7 @@ index 2800fcd562..60ca28af22 100644
  rtc_source_set("mock_audio_device") {
    visibility = [ "*" ]
    testonly = true
-@@ -437,8 +444,10 @@ rtc_source_set("mock_audio_device") {
+@@ -439,8 +446,10 @@ rtc_source_set("mock_audio_device") {
      "../../test:test_support",
    ]
  }
@@ -1270,7 +1270,7 @@ index 292a4c6662..6eb7869dfe 100644
  rtc_library("call_config_utils") {
    testonly = true
 diff --git a/video/BUILD.gn b/video/BUILD.gn
-index 7bf330143f..e663a7a5f3 100644
+index 548442e193..3080b36b9f 100644
 --- a/video/BUILD.gn
 +++ b/video/BUILD.gn
 @@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {

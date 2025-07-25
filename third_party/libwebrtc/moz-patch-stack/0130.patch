@@ -16,7 +16,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4527c41ef71d7683c
  4 files changed, 44 insertions(+), 32 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index ce8fc4db57..b5a65f0591 100644
+index f7e2c217bf..1fdaa5b373 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -525,6 +525,9 @@ if (!rtc_build_ssl) {
@@ -29,7 +29,7 @@ index ce8fc4db57..b5a65f0591 100644
    }
  }
  
-@@ -619,6 +622,7 @@ if (!build_with_chromium) {
+@@ -620,6 +623,7 @@ if (!build_with_chromium) {
          "api/environment:environment_factory",
          "api/video:video_frame",
          "api/video:video_rtp_headers",
@@ -38,7 +38,7 @@ index ce8fc4db57..b5a65f0591 100644
        ]
        # Added when we removed deps in other places to avoid building
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 6387ca64c6..13900012f5 100644
+index 8acb889aed..5ffe827398 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -12,12 +12,10 @@ import("../webrtc.gni")

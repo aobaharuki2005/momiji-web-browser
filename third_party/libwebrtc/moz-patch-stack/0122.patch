@@ -79,7 +79,7 @@ index 940244f9af..fa6a5e85d8 100644
  # The python interpreter to use by default. On Windows, this will look
  # for vpython3.exe and vpython3.bat.
 diff --git a/BUILD.gn b/BUILD.gn
-index 6508557150..6da9ceab1e 100644
+index 5c48c9f144..0224dbb3cd 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -21,15 +21,15 @@
@@ -111,7 +111,7 @@ index 6508557150..6da9ceab1e 100644
      defines = []
  
      deps = [
-@@ -846,7 +846,7 @@ rtc_static_library("dcsctp") {
+@@ -847,7 +847,7 @@ rtc_static_library("dcsctp") {
    visibility = [ "//:default" ]
    sources = []
    complete_static_lib = true
@@ -470,7 +470,7 @@ index ea483b29a1..d670a1a6d3 100644
  
  group("logging") {
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 585cbed768..6387ca64c6 100644
+index 929b1227a9..8acb889aed 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -6,7 +6,7 @@
@@ -483,7 +483,7 @@ index 585cbed768..6387ca64c6 100644
  import("../webrtc.gni")
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index 60ca28af22..ba9b4160a9 100644
+index f8a653c291..c1202dff65 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -9,8 +9,8 @@
