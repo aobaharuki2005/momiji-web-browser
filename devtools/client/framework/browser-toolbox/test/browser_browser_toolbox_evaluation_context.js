@@ -19,8 +19,6 @@ requestLongerTimeout(4);
 add_task(async function () {
   // Forces the Browser Toolbox to open on the console by default
   await pushPref("devtools.browsertoolbox.panel", "webconsole");
-  // Force EFT to have targets for all WindowGlobals
-  await pushPref("devtools.every-frame-target.enabled", true);
   // Enable Multiprocess Browser Toolbox
   await pushPref("devtools.browsertoolbox.scope", "everything");
 

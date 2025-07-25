@@ -32,7 +32,6 @@ add_task(async () => {
     t.url.startsWith("https://example.net")
   );
 
-  // The iframe only has a dedicated target when Fission or EFT is enabled
   const orgIframeHighlighterTestFront = orgIframeTarget
     ? await orgIframeTarget.getFront("highlighterTest")
     : null;

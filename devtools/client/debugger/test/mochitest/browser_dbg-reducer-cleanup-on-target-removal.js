@@ -16,10 +16,6 @@ const TEST_URI = `https://example.com/document-builder.sjs?html=
 <iframe src="${encodeURI(IFRAME_TEST_URL)}"></iframe><body>`;
 
 add_task(async function () {
-  if (!isEveryFrameTargetEnabled()) {
-    ok(true, "This test is disabled without EFT");
-    return;
-  }
   await pushPref("devtools.debugger.map-scopes-enabled", true);
   const dbg = await initDebuggerWithAbsoluteURL(TEST_URI);
 
