@@ -51,5 +51,3 @@ support-files = [
   "data/readableFr.html",
   "data/readableEn.html"
 ]
-
-["browser_page_assist_sidebar.js"]
