@@ -9,8 +9,6 @@
 #include "mozilla/dom/TreeOrderedArrayInlines.h"
 #include "mozilla/Assertions.h"
 #include "nsIFrame.h"
-#include "nsIRadioVisitor.h"
-#include "nsRadioVisitor.h"
 
 namespace mozilla::dom {
 
@@ -66,29 +64,6 @@ void RadioGroupContainer::Traverse(RadioGroupContainer* tmp,
 size_t RadioGroupContainer::SizeOfIncludingThis(
     MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + mRadioGroups.SizeOfExcludingThis(aMallocSizeOf);
-}
-
-nsresult RadioGroupContainer::WalkRadioGroup(const nsAString& aName,
-                                             nsIRadioVisitor* aVisitor) {
-  nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
-
-  for (HTMLInputElement* button : radioGroup->mRadioButtons.AsList()) {
-    if (!aVisitor->Visit(button)) {
-      return NS_OK;
-    }
-  }
-
-  return NS_OK;
-}
-
-void RadioGroupContainer::WalkRadioGroup(const nsAString& aName,
-                                         const VisitCallback& aCallback) {
-  nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
-  for (HTMLInputElement* button : radioGroup->mRadioButtons.AsList()) {
-    if (!aCallback(button)) {
-      return;
-    }
-  }
 }
 
 void RadioGroupContainer::SetCurrentRadioButton(const nsAString& aName,
@@ -222,6 +197,11 @@ nsRadioGroupStruct* RadioGroupContainer::GetRadioGroup(
 nsRadioGroupStruct* RadioGroupContainer::GetOrCreateRadioGroup(
     const nsAString& aName) {
   return mRadioGroups.GetOrInsertNew(aName);
+}
+
+const nsTArray<RefPtr<HTMLInputElement>>&
+RadioGroupContainer::GetButtonsInGroup(nsRadioGroupStruct* aGroup) const {
+  return aGroup->mRadioButtons.AsList();
 }
 
 }  // namespace mozilla::dom

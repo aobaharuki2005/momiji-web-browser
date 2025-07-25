@@ -30,7 +30,6 @@ EXPORTS += [
     "nsIConstraintValidation.h",
     "nsIFormControl.h",
     "nsIHTMLCollection.h",
-    "nsIRadioVisitor.h",
 ]
 
 EXPORTS.mozilla += [
@@ -195,7 +194,6 @@ UNIFIED_SOURCES += [
     "nsHTMLContentSink.cpp",
     "nsHTMLDocument.cpp",
     "nsIConstraintValidation.cpp",
-    "nsRadioVisitor.cpp",
     "RadioNodeList.cpp",
     "TextControlState.cpp",
     "ValidityState.cpp",

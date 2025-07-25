@@ -69,7 +69,6 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLButtonElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
-#include "nsIRadioVisitor.h"
 #include "RadioNodeList.h"
 
 #include "nsLayoutUtils.h"

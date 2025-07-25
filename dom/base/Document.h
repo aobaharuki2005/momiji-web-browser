@@ -169,7 +169,6 @@ class nsILayoutHistoryState;
 class nsIObjectLoadingContent;
 class nsIPermissionDelegateHandler;
 class nsIPolicyContainer;
-class nsIRadioVisitor;
 class nsIRequest;
 class nsIRunnable;
 class nsIScriptGlobalObject;

@@ -90,8 +90,6 @@
 
 // input type=radio
 #include "mozilla/dom/RadioGroupContainer.h"
-#include "nsIRadioVisitor.h"
-#include "nsRadioVisitor.h"
 
 // input type=file
 #include "mozilla/dom/FileSystemEntry.h"
@@ -2861,15 +2859,14 @@ void HTMLInputElement::SetLastValueChangeWasInteractive(bool aWasInteractive) {
 }
 
 void HTMLInputElement::SetCheckedChanged(bool aCheckedChanged) {
-  DoSetCheckedChanged(aCheckedChanged, true);
-}
-
-void HTMLInputElement::DoSetCheckedChanged(bool aCheckedChanged, bool aNotify) {
   if (mType == FormControlType::InputRadio) {
     if (mCheckedChanged != aCheckedChanged) {
-      nsCOMPtr<nsIRadioVisitor> visitor =
-          new nsRadioSetCheckedChangedVisitor(aCheckedChanged);
-      VisitGroup(visitor);
+      VisitGroup(
+          [aCheckedChanged](HTMLInputElement* aRadio) {
+            aRadio->SetCheckedChangedInternal(aCheckedChanged);
+            return true;
+          },
+          false);
     }
   } else {
     SetCheckedChangedInternal(aCheckedChanged);
@@ -2895,7 +2892,7 @@ void HTMLInputElement::DoSetChecked(bool aChecked, bool aNotify,
   // value or not, we say the value was changed so that defaultValue don't
   // affect it no more.
   if (aSetValueChanged) {
-    DoSetCheckedChanged(true, aNotify);
+    SetCheckedChanged(true);
   }
 
   // Don't do anything if we're not changing whether it's checked (it would
@@ -2932,10 +2929,8 @@ void HTMLInputElement::RadioSetChecked(bool aNotify, bool aUpdateOtherElement) {
   if (aUpdateOtherElement) {
     // It’s possible for multiple radio input to have their checkedness set to
     // true, so we need to deselect all of them.
-    VisitGroup([self = RefPtr{this}](HTMLInputElement* aRadio) {
-      if (aRadio != self) {
-        aRadio->SetCheckedInternal(false, true);
-      }
+    VisitGroup([](HTMLInputElement* aRadio) {
+      aRadio->SetCheckedInternal(false, true);
       return true;
     });
   }
@@ -3059,8 +3054,7 @@ void HTMLInputElement::SetCheckedInternal(bool aChecked, bool aNotify) {
   // Notify all radios in the group that value has changed, this is to let
   // radios to have the chance to update its states, e.g., :indeterminate.
   if (mType == FormControlType::InputRadio) {
-    nsCOMPtr<nsIRadioVisitor> visitor = new nsRadioUpdateStateVisitor(this);
-    VisitGroup(visitor);
+    UpdateRadioGroupState();
   }
 }
 
@@ -6417,9 +6411,10 @@ void HTMLInputElement::AddToRadioGroup() {
   //
   bool checkedChanged = mCheckedChanged;
 
-  nsCOMPtr<nsIRadioVisitor> visitor =
-      new nsRadioGetCheckedChangedVisitor(&checkedChanged, this);
-  VisitGroup(visitor);
+  VisitGroup([&checkedChanged](HTMLInputElement* aRadio) {
+    checkedChanged = aRadio->GetCheckedChanged();
+    return false;
+  });
 
   SetCheckedChangedInternal(checkedChanged);
 
@@ -6442,8 +6437,7 @@ void HTMLInputElement::RemoveFromRadioGroup() {
   // longer a selected radio button
   if (mChecked) {
     container->SetCurrentRadioButton(name, nullptr);
-    nsCOMPtr<nsIRadioVisitor> visitor = new nsRadioUpdateStateVisitor(this);
-    VisitGroup(visitor);
+    UpdateRadioGroupState();
   } else {
     AddStates(ElementState::INDETERMINATE);
   }
@@ -6533,23 +6527,12 @@ bool HTMLInputElement::IsHTMLFocusable(IsFocusableFlags aFlags,
   return false;
 }
 
-nsresult HTMLInputElement::VisitGroup(nsIRadioVisitor* aVisitor) {
+template <typename VisitCallback>
+void HTMLInputElement::VisitGroup(VisitCallback&& aCallback, bool aSkipThis) {
   if (auto* container = GetCurrentRadioGroupContainer()) {
     nsAutoString name;
     GetAttr(nsGkAtoms::name, name);
-    return container->WalkRadioGroup(name, aVisitor);
-  }
-
-  aVisitor->Visit(this);
-  return NS_OK;
-}
-
-void HTMLInputElement::VisitGroup(
-    const RadioGroupContainer::VisitCallback& aCallback) {
-  if (auto* container = GetCurrentRadioGroupContainer()) {
-    nsAutoString name;
-    GetAttr(nsGkAtoms::name, name);
-    container->WalkRadioGroup(name, aCallback);
+    container->WalkRadioGroup(name, aCallback, aSkipThis ? this : nullptr);
     return;
   }
 
@@ -6862,9 +6845,12 @@ void HTMLInputElement::UpdateValueMissingValidityStateForRadio(
 
     // nsRadioSetValueMissingState will call ElementStateChanged while visiting.
     nsAutoScriptBlocker scriptBlocker;
-    nsCOMPtr<nsIRadioVisitor> visitor =
-        new nsRadioSetValueMissingState(this, valueMissing);
-    VisitGroup(visitor);
+    VisitGroup([valueMissing](HTMLInputElement* aRadio) {
+      aRadio->SetValidityState(
+          nsIConstraintValidation::VALIDITY_STATE_VALUE_MISSING, valueMissing);
+      aRadio->UpdateValidityElementStates(true);
+      return true;
+    });
   }
 }
 
@@ -7516,6 +7502,14 @@ void HTMLInputElement::MaybeFireInputPasswordRemoved() {
   AsyncEventDispatcher::RunDOMEventWhenSafe(
       *this, u"DOMInputPasswordRemoved"_ns, CanBubble::eNo,
       ChromeOnlyDispatch::eYes);
+}
+
+void HTMLInputElement::UpdateRadioGroupState() {
+  VisitGroup([](HTMLInputElement* aRadio) {
+    aRadio->UpdateIndeterminateState(true);
+    aRadio->UpdateValidityElementStates(true);
+    return true;
+  });
 }
 
 }  // namespace mozilla::dom

@@ -35,7 +35,6 @@
 #include "nsContentUtils.h"
 
 class nsIEditor;
-class nsIRadioVisitor;
 
 namespace mozilla {
 
@@ -295,6 +294,7 @@ class HTMLInputElement final : public TextControlElement,
   void AddToRadioGroup();
   void RemoveFromRadioGroup();
   void DisconnectRadioGroupContainer();
+  void UpdateRadioGroupState();
 
   /**
    * Helper function returning the currently selected button in the radio group.
@@ -992,15 +992,10 @@ class HTMLInputElement final : public TextControlElement,
 
   /**
    * Visit the group of radio buttons this radio belongs to
-   * @param aVisitor the visitor to visit with
-   */
-  nsresult VisitGroup(nsIRadioVisitor* aVisitor);
-
-  /**
-   * Visit the group of radio buttons this radio belongs to
    * @param aCallback the callback function to visit the node
    */
-  void VisitGroup(const RadioGroupContainer::VisitCallback& aCallback);
+  template <typename VisitCallback>
+  void VisitGroup(VisitCallback&& aCallback, bool aSkipThis = true);
 
   /**
    * Do all the work that |SetChecked| does (radio button handling, etc.), but
@@ -1008,13 +1003,6 @@ class HTMLInputElement final : public TextControlElement,
    */
   void DoSetChecked(bool aValue, bool aNotify, bool aSetValueChanged,
                     bool aUpdateOtherElement = true);
-
-  /**
-   * Do all the work that |SetCheckedChanged| does (radio button handling,
-   * etc.), but take an |aNotify| parameter that lets it avoid flushing content
-   * when it can.
-   */
-  void DoSetCheckedChanged(bool aCheckedChanged, bool aNotify);
 
   /**
    * Actually set checked and notify the frame of the change.
