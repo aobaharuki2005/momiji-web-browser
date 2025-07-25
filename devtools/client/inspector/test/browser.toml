@@ -265,6 +265,8 @@ run-if = ["os != 'mac'"] # Full keyboard navigation on OSX only works if Full Ke
 
 ["browser_inspector_iframe-picker-bfcache-navigation.js"]
 
+["browser_inspector_picker-no-page-events.js"]
+
 ["browser_inspector_iframe-picker.js"]
 
 ["browser_inspector_infobar_01.js"]
