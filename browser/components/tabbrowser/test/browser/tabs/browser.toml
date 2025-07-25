@@ -11,7 +11,6 @@ support-files = [
 prefs = [
   "browser.sessionstore.closedTabsFromAllWindows=true",
   "browser.sessionstore.closedTabsFromClosedWindows=true",
-  "sidebar.verticalTabs.dragToPinPromo.dismissed=true",
 ]
 
 ["browser_1936752_lock_tab_sizing.js"]
