@@ -1410,7 +1410,7 @@ trustpanel-fingerprinter-not-blocking-tab-header = { $count ->
   [one] { -brand-product-name } allowed { $count } fingerprinter
   *[other] { -brand-product-name } allowed { $count } fingerprinters
 }
-trustpanel-fingerprinter-list-header = These site are trying to fingerprint you:
+trustpanel-fingerprinter-list-header = These sites are trying to fingerprint you:
 
 trustpanel-cryptominer-blocking-tab-header = { $count ->
   [one] { -brand-product-name } blocked { $count } cryptominer
