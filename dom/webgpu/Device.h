@@ -80,7 +80,7 @@ class SupportedLimits;
 class Texture;
 class WebGPUChild;
 
-class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
+class Device final : public DOMEventTargetHelper {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Device, DOMEventTargetHelper)
@@ -98,7 +98,8 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
   explicit Device(Adapter* const aParent, RawId aDeviceId, RawId aQueueId,
                   RefPtr<SupportedFeatures> aFeatures,
                   RefPtr<SupportedLimits> aLimits,
-                  RefPtr<AdapterInfo> aAdapterInfo);
+                  RefPtr<AdapterInfo> aAdapterInfo,
+                  RefPtr<dom::Promise> aLostPromise);
 
   RefPtr<WebGPUChild> GetBridge();
   already_AddRefed<Texture> InitSwapChain(

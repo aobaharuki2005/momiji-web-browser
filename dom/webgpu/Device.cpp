@@ -61,7 +61,8 @@ RefPtr<WebGPUChild> Device::GetBridge() { return mBridge; }
 Device::Device(Adapter* const aParent, RawId aDeviceId, RawId aQueueId,
                RefPtr<SupportedFeatures> aFeatures,
                RefPtr<SupportedLimits> aLimits,
-               RefPtr<webgpu::AdapterInfo> aAdapterInfo)
+               RefPtr<webgpu::AdapterInfo> aAdapterInfo,
+               RefPtr<dom::Promise> aLostPromise)
     : DOMEventTargetHelper(aParent->GetParentObject()),
       mId(aDeviceId),
       mFeatures(std::move(aFeatures)),
@@ -70,6 +71,7 @@ Device::Device(Adapter* const aParent, RawId aDeviceId, RawId aQueueId,
       mSupportSharedTextureInSwapChain(
           aParent->SupportSharedTextureInSwapChain()),
       mBridge(aParent->mBridge),
+      mLostPromise(std::move(aLostPromise)),
       mQueue(new class Queue(this, aParent->mBridge, aQueueId)) {
   mBridge->RegisterDevice(this);
 }
@@ -103,37 +105,18 @@ void Device::SetLabel(const nsAString& aLabel) { mLabel = aLabel; }
 
 dom::Promise* Device::GetLost(ErrorResult& aRv) {
   aRv = NS_OK;
-  if (!mLostPromise) {
-    mLostPromise = dom::Promise::Create(GetParentObject(), aRv);
-    if (mLostPromise && !mBridge->CanSend()) {
-      auto info = MakeRefPtr<DeviceLostInfo>(GetParentObject(),
-                                             dom::GPUDeviceLostReason::Unknown,
-                                             u"WebGPUChild destroyed"_ns);
-      mLostPromise->MaybeResolve(info);
-    }
-  }
   return mLostPromise;
 }
 
 void Device::ResolveLost(dom::GPUDeviceLostReason aReason,
                          const nsAString& aMessage) {
-  IgnoredErrorResult rv;
-  dom::Promise* lostPromise = GetLost(rv);
-  if (!lostPromise) {
-    // Promise doesn't exist? Maybe out of memory.
-    return;
-  }
-  if (!lostPromise->PromiseObj()) {
-    // The underlying JS object is gone.
-    return;
-  }
-  if (lostPromise->State() != dom::Promise::PromiseState::Pending) {
-    // lostPromise was already resolved or rejected.
+  if (mLostPromise->State() != dom::Promise::PromiseState::Pending) {
+    // The lost promise was already resolved or rejected.
     return;
   }
   RefPtr<DeviceLostInfo> info =
       MakeRefPtr<DeviceLostInfo>(GetParentObject(), aReason, aMessage);
-  lostPromise->MaybeResolve(info);
+  mLostPromise->MaybeResolve(info);
 }
 
 already_AddRefed<Buffer> Device::CreateBuffer(
@@ -1007,16 +990,11 @@ void Device::Destroy() {
 
   ffi::wgpu_client_destroy_device(mBridge->GetClient(), mId);
 
-  // Resolve our lost promise in the same way as if we had a successful
-  // round-trip through the bridge. We do this to avoid timing problems
-  // with the device being cycle collected before the receiving the
-  // device lost message. Such a pattern leads to the lost promise never
-  // resolving, and we need to avoid that. There's little risk in doing
-  // this shortcut, because the WebGPU contract is that device destroy
-  // always leads to device loss. This is guaranteeing the same result
-  // as if we went through the bridge (device lost promise resolves,
-  // then the device is cycle collected).
-  ResolveLost(dom::GPUDeviceLostReason::Destroyed, u""_ns);
+  if (mLostPromise->State() != dom::Promise::PromiseState::Pending) {
+    return;
+  }
+  RefPtr<dom::Promise> pending_promise = mLostPromise;
+  mBridge->mPendingDeviceLostPromises.insert({mId, std::move(pending_promise)});
 }
 
 void Device::PushErrorScope(const dom::GPUErrorFilter& aFilter) {

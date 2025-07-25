@@ -508,6 +508,11 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
+  RefPtr<dom::Promise> lost_promise =
+      dom::Promise::Create(GetParentObject(), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
 
   ffi::WGPULimits deviceLimits = *mLimits->mFfi;
   for (const auto limit : MakeInclusiveEnumeratedRange(Limit::_LAST)) {
@@ -659,8 +664,8 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
                                     ids.queue, &ffiDesc);
 
     auto pending_promise = WebGPUChild::PendingRequestDevicePromise{
-        RefPtr(promise), ids.device, ids.queue, aDesc.mLabel,
-        RefPtr(this),    features,   limits,    mInfo};
+        RefPtr(promise), ids.device, ids.queue, aDesc.mLabel, RefPtr(this),
+        features,        limits,     mInfo,     lost_promise};
     mBridge->mPendingRequestDevicePromises.push_back(
         std::move(pending_promise));
 

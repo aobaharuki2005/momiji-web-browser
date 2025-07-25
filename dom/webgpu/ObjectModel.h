@@ -118,7 +118,6 @@ class ObjectBase : public nsWrapperCache {
     tmp->Cleanup();                                                 \
     NS_IMPL_CYCLE_COLLECTION_UNLINK(__VA_ARGS__)                    \
     NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER               \
-    NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR                        \
   NS_IMPL_CYCLE_COLLECTION_UNLINK_END                               \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(T, P)           \
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(__VA_ARGS__)                  \
