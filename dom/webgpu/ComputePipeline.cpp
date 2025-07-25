@@ -60,7 +60,7 @@ already_AddRefed<BindGroupLayout> ComputePipeline::GetBindGroupLayout(
   const RawId bglId = ffi::wgpu_client_compute_pipeline_get_bind_group_layout(
       client, mParent->GetId(), mId, aIndex);
 
-  RefPtr<BindGroupLayout> object = new BindGroupLayout(mParent, bglId, false);
+  RefPtr<BindGroupLayout> object = new BindGroupLayout(mParent, bglId);
   return object.forget();
 }
 

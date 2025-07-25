@@ -395,7 +395,7 @@ already_AddRefed<BindGroupLayout> Device::CreateBindGroupLayout(
   RawId id = ffi::wgpu_client_create_bind_group_layout(mBridge->GetClient(),
                                                        mId, &desc);
 
-  RefPtr<BindGroupLayout> object = new BindGroupLayout(this, id, true);
+  RefPtr<BindGroupLayout> object = new BindGroupLayout(this, id);
   object->SetLabel(aDesc.mLabel);
   return object.forget();
 }
