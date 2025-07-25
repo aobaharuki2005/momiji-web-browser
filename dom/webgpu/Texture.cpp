@@ -59,8 +59,6 @@ void Texture::Cleanup() {
   }
 
   ffi::wgpu_client_drop_texture(bridge->GetClient(), mId);
-
-  wgpu_client_free_texture_id(bridge->GetClient(), mId);
 }
 
 Texture::~Texture() { Cleanup(); }

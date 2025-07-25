@@ -619,16 +619,14 @@ already_AddRefed<ShaderModule> Device::CreateShaderModule(
     return nullptr;
   }
 
-  RawId moduleId = ffi::wgpu_client_make_shader_module_id(mBridge->GetClient());
+  webgpu::StringHelper label(aDesc.mLabel);
+
+  RawId moduleId = ffi::wgpu_client_create_shader_module(
+      mBridge->GetClient(), mId, label.Get(), &aDesc.mCode);
 
   RefPtr<ShaderModule> shaderModule = new ShaderModule(this, moduleId, promise);
 
   shaderModule->SetLabel(aDesc.mLabel);
-
-  webgpu::StringHelper label(aDesc.mLabel);
-
-  ffi::wgpu_client_create_shader_module(mBridge->GetClient(), mId, moduleId,
-                                        label.Get(), &aDesc.mCode);
 
   auto pending_promise = WebGPUChild::PendingCreateShaderModulePromise{
       RefPtr(promise), RefPtr(this), RefPtr(shaderModule)};

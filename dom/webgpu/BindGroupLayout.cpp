@@ -33,7 +33,6 @@ void BindGroupLayout::Cleanup() {
   }
 
   ffi::wgpu_client_drop_bind_group_layout(bridge->GetClient(), mId);
-  wgpu_client_free_bind_group_layout_id(bridge->GetClient(), mId);
 }
 
 }  // namespace mozilla::webgpu

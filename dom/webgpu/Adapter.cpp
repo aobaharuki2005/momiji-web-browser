@@ -653,15 +653,12 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
 
     RefPtr<SupportedLimits> limits = new SupportedLimits(this, deviceLimits);
 
-    ffi::WGPUDeviceQueueId ids =
-        ffi::wgpu_client_make_device_queue_id(mBridge->GetClient());
-
     ffi::WGPUFfiDeviceDescriptor ffiDesc = {};
     ffiDesc.required_features = featureBits;
     ffiDesc.required_limits = deviceLimits;
 
-    ffi::wgpu_client_request_device(mBridge->GetClient(), mId, ids.device,
-                                    ids.queue, &ffiDesc);
+    ffi::WGPUDeviceQueueId ids =
+        ffi::wgpu_client_request_device(mBridge->GetClient(), mId, &ffiDesc);
 
     auto pending_promise = WebGPUChild::PendingRequestDevicePromise{
         RefPtr(promise), ids.device, ids.queue, aDesc.mLabel, RefPtr(this),
