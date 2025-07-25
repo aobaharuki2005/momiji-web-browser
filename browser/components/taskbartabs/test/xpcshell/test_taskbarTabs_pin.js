@@ -16,7 +16,7 @@ ChromeUtils.defineESModuleGetters(this, {
 // We want to mock the native XPCOM interfaces of the initialized
 // `ShellService.shellService`, but those interfaces are frozen. Instead we
 // proxy `ShellService.shellService` and mock it.
-const proxyNativeShellService = {
+const mockNativeShellService = {
   ...ShellService.shellService,
   createWindowsIcon: sinon.stub().resolves(),
   createShortcut: sinon.stub().resolves("dummy_path"),
@@ -28,56 +28,54 @@ const proxyNativeShellService = {
   unpinShortcutFromTaskbar: sinon.stub(),
 };
 
-sinon.stub(ShellService, "shellService").value(proxyNativeShellService);
+sinon.stub(ShellService, "shellService").value(mockNativeShellService);
 
 registerCleanupFunction(() => {
   sinon.restore();
 });
+
+// Favicons are written to the profile directory, ensure it exists.
+do_get_profile();
+
+const faviconService = Cc[
+  "@mozilla.org/browser/favicon-service;1"
+].createInstance(Ci.nsIFaviconService);
 
 const kFaviconUri = Services.io.newFileURI(do_get_file("favicon-normal16.png"));
 let faviconThrows = false;
 
 let mockFaviconService = {
   QueryInterface: ChromeUtils.generateQI(["nsIFaviconService"]),
-  getFaviconForPage: async () => {},
-  defaultFavicon: {},
+  getFaviconForPage: sinon.stub().callsFake(async () => {
+    if (faviconThrows) {
+      return null;
+    }
+    return { dataURI: kFaviconUri };
+  }),
+  get defaultFavicon() {
+    return faviconService.defaultFavicon;
+  },
 };
-
-let faviconService = Cc[
-  "@mozilla.org/browser/favicon-service;1"
-].createInstance(Ci.nsIFaviconService);
-
-sinon.stub(mockFaviconService, "getFaviconForPage").callsFake(async () => {
-  if (faviconThrows) {
-    return null;
-  }
-  return { dataURI: kFaviconUri };
-});
-sinon
-  .stub(mockFaviconService, "defaultFavicon")
-  .value(faviconService.defaultFavicon);
-
-// Favicons are written to the profile directory, ensure it exists.
-do_get_profile();
+let defaultIconSpy = sinon.spy(mockFaviconService, "defaultFavicon", ["get"]);
 
 function shellPinCalled() {
   ok(
-    proxyNativeShellService.createWindowsIcon.called,
+    mockNativeShellService.createWindowsIcon.called,
     `Icon creation should have been called.`
   );
   ok(
-    proxyNativeShellService.createShortcut.called,
+    mockNativeShellService.createShortcut.called,
     `Shortcut creation should have been called.`
   );
   ok(
-    proxyNativeShellService.pinShortcutToTaskbar.called,
+    mockNativeShellService.pinShortcutToTaskbar.called,
     `Pin to taskbar should have been called.`
   );
 }
 
 function shellUnpinCalled() {
   ok(
-    proxyNativeShellService.unpinShortcutFromTaskbar.called,
+    mockNativeShellService.unpinShortcutFromTaskbar.called,
     `Unpin from taskbar should have been called.`
   );
 }
@@ -103,7 +101,7 @@ add_task(async function test_pin_existing_favicon() {
     "The favicon for the page should have attempted to be retrieved."
   );
   ok(
-    !mockFaviconService.defaultFavicon.calledOnce,
+    defaultIconSpy.get.notCalled,
     "The default icon should not be used when a favicon exists for the page."
   );
 
@@ -120,8 +118,8 @@ add_task(async function test_pin_missing_favicon() {
     "The favicon for the page should have attempted to be retrieved."
   );
   ok(
-    !mockFaviconService.defaultFavicon.calledOnce,
-    "The default icon should be used when a favicon exists for the page."
+    defaultIconSpy.get.called,
+    "The default icon should be used when a favicon does not exist for the page."
   );
 });
 
@@ -129,7 +127,7 @@ add_task(async function test_pin_location() {
   sinon.resetHistory();
 
   await TaskbarTabsPin.pinTaskbarTab(taskbarTab);
-  const spy = proxyNativeShellService.createShortcut;
+  const spy = mockNativeShellService.createShortcut;
   ok(spy.calledOnce, "A shortcut was created");
   Assert.equal(
     spy.firstCall.args[6],
@@ -149,7 +147,7 @@ add_task(async function test_pin_location_dos_name() {
   sinon.resetHistory();
 
   await TaskbarTabsPin.pinTaskbarTab(invalidTaskbarTab);
-  const spy = proxyNativeShellService.createShortcut;
+  const spy = mockNativeShellService.createShortcut;
   ok(spy.calledOnce, "A shortcut was created");
   Assert.equal(
     spy.firstCall.args[6],
