@@ -265,6 +265,8 @@ class MozillaSocorroService(
         formDataWriter.sendAnnotation(Annotation.useragent_locale, Locale.getDefault().toLanguageTag())
         formDataWriter.sendAnnotation(Annotation.DistributionID, distributionId)
 
+        var additionalDumps: FormDataWriter.AdditionalMinidumps? = null
+
         extrasFilePath?.let {
             val regex = "$FILE_REGEX$EXTRAS_FILE_EXT".toRegex()
             if (regex.matchEntire(it.substringAfterLast("/")) != null) {
@@ -273,6 +275,7 @@ class MozillaSocorroService(
                 for (key in extrasMap.keys) {
                     formDataWriter.sendPart(key, extrasMap[key])
                 }
+                additionalDumps = formDataWriter.AdditionalMinidumps(extrasMap)
                 extrasFile.delete()
             }
         }
@@ -292,9 +295,8 @@ class MozillaSocorroService(
         miniDumpFilePath?.let {
             val regex = "$FILE_REGEX$MINI_DUMP_FILE_EXT".toRegex()
             if (regex.matchEntire(it.substringAfterLast("/")) != null) {
-                val minidumpFile = File(it)
-                formDataWriter.sendFile("upload_file_minidump", minidumpFile)
-                minidumpFile.delete()
+                formDataWriter.sendAndDeleteFileAtPath("upload_file_minidump", it)
+                additionalDumps?.send(it)
             }
         }
 
@@ -356,6 +358,19 @@ class MozillaSocorroService(
     ) {
         private val nameSet: MutableSet<String> = mutableSetOf()
 
+        internal inner class AdditionalMinidumps(
+            extrasMap: HashMap<String, String>,
+        ) {
+            private val names = extrasMap[Annotation.additional_minidumps.toString()]?.split(',') ?: listOf()
+
+            fun send(baseMinidumpPath: String) {
+                for (suffix in names) {
+                    val path = "${baseMinidumpPath.removeSuffix(".$MINI_DUMP_FILE_EXT")}-$suffix.$MINI_DUMP_FILE_EXT"
+                    sendAndDeleteFileAtPath("upload_file_minidump_$suffix", path)
+                }
+            }
+        }
+
         fun sendAnnotation(
             annotation: Annotation,
             data: String?,
@@ -386,6 +401,12 @@ class MozillaSocorroService(
             }
         }
 
+        fun sendAndDeleteFileAtPath(name: String, path: String) {
+            val file = File(path)
+            sendFile(name, file)
+            file.delete()
+        }
+
         fun sendFile(
             name: String,
             file: File,
@@ -394,6 +415,11 @@ class MozillaSocorroService(
                 return
             } else {
                 nameSet.add(name)
+            }
+
+            if (!file.exists()) {
+                logger.error("failed to send file for $name as ${file.path} doesn't exist")
+                return
             }
 
             try {
