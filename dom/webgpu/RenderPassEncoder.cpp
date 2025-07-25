@@ -201,8 +201,7 @@ ffi::WGPURecordedRenderPass* BeginRenderPass(
     colorDescs.AppendElement(cd);
   }
 
-  desc.color_attachments = colorDescs.Elements();
-  desc.color_attachments_length = colorDescs.Length();
+  desc.color_attachments = {colorDescs.Elements(), colorDescs.Length()};
 
   if (aDesc.mOcclusionQuerySet.WasPassed()) {
     desc.occlusion_query_set = aDesc.mOcclusionQuerySet.Value().mId;

@@ -389,8 +389,7 @@ already_AddRefed<BindGroupLayout> Device::CreateBindGroupLayout(
 
   webgpu::StringHelper label(aDesc.mLabel);
   desc.label = label.Get();
-  desc.entries = entries.Elements();
-  desc.entries_length = entries.Length();
+  desc.entries = {entries.Elements(), entries.Length()};
 
   RawId id = ffi::wgpu_client_create_bind_group_layout(mBridge->GetClient(),
                                                        mId, &desc);
@@ -413,8 +412,8 @@ already_AddRefed<PipelineLayout> Device::CreatePipelineLayout(
 
   webgpu::StringHelper label(aDesc.mLabel);
   desc.label = label.Get();
-  desc.bind_group_layouts = bindGroupLayouts.Elements();
-  desc.bind_group_layouts_length = bindGroupLayouts.Length();
+  desc.bind_group_layouts = {bindGroupLayouts.Elements(),
+                             bindGroupLayouts.Length()};
 
   RawId id =
       ffi::wgpu_client_create_pipeline_layout(mBridge->GetClient(), mId, &desc);
@@ -482,8 +481,7 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
   webgpu::StringHelper label(aDesc.mLabel);
   desc.label = label.Get();
   desc.layout = aDesc.mLayout->mId;
-  desc.entries = entries.Elements();
-  desc.entries_length = entries.Length();
+  desc.entries = {entries.Elements(), entries.Length()};
 
   RawId id =
       ffi::wgpu_client_create_bind_group(mBridge->GetClient(), mId, &desc);
@@ -678,8 +676,7 @@ RawId CreateComputePipelineImpl(PipelineCreationContext* const aContext,
       constantEntry.value = entry.mValue;
       constants.AppendElement(constantEntry);
     }
-    desc.stage.constants = constants.Elements();
-    desc.stage.constants_length = constants.Length();
+    desc.stage.constants = {constants.Elements(), constants.Length()};
   }
 
   RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};
@@ -745,8 +742,8 @@ RawId CreateRenderPipelineImpl(PipelineCreationContext* const aContext,
         constantEntry.value = entry.mValue;
         vsConstants.AppendElement(constantEntry);
       }
-      vertexState.stage.constants = vsConstants.Elements();
-      vertexState.stage.constants_length = vsConstants.Length();
+      vertexState.stage.constants = {vsConstants.Elements(),
+                                     vsConstants.Length()};
     }
 
     for (const auto& vertex_desc : stage.mBuffers) {
@@ -756,7 +753,7 @@ RawId CreateRenderPipelineImpl(PipelineCreationContext* const aContext,
         vb_desc.array_stride = vd.mArrayStride;
         vb_desc.step_mode = ffi::WGPUVertexStepMode(vd.mStepMode);
         // Note: we are setting the length but not the pointer
-        vb_desc.attributes_length = vd.mAttributes.Length();
+        vb_desc.attributes = {nullptr, vd.mAttributes.Length()};
         for (const auto& vat : vd.mAttributes) {
           ffi::WGPUVertexAttribute ad = {};
           ad.offset = vat.mOffset;
@@ -770,12 +767,11 @@ RawId CreateRenderPipelineImpl(PipelineCreationContext* const aContext,
     // Now patch up all the pointers to attribute lists.
     size_t numAttributes = 0;
     for (auto& vb_desc : vertexBuffers) {
-      vb_desc.attributes = vertexAttributes.Elements() + numAttributes;
-      numAttributes += vb_desc.attributes_length;
+      vb_desc.attributes.data = vertexAttributes.Elements() + numAttributes;
+      numAttributes += vb_desc.attributes.length;
     }
 
-    vertexState.buffers = vertexBuffers.Elements();
-    vertexState.buffers_length = vertexBuffers.Length();
+    vertexState.buffers = {vertexBuffers.Elements(), vertexBuffers.Length()};
     desc.vertex = &vertexState;
   }
 
@@ -800,8 +796,8 @@ RawId CreateRenderPipelineImpl(PipelineCreationContext* const aContext,
         constantEntry.value = entry.mValue;
         fsConstants.AppendElement(constantEntry);
       }
-      fragmentState.stage.constants = fsConstants.Elements();
-      fragmentState.stage.constants_length = fsConstants.Length();
+      fragmentState.stage.constants = {fsConstants.Elements(),
+                                       fsConstants.Length()};
     }
 
     // Note: we pre-collect the blend states into a different array
@@ -825,8 +821,7 @@ RawId CreateRenderPipelineImpl(PipelineCreationContext* const aContext,
       }
     }
 
-    fragmentState.targets = colorStates.Elements();
-    fragmentState.targets_length = colorStates.Length();
+    fragmentState.targets = {colorStates.Elements(), colorStates.Length()};
     desc.fragment = &fragmentState;
   }
 

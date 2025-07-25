@@ -28,16 +28,6 @@ use self::render_pass::{FfiRenderPassColorAttachment, RenderPassDepthStencilAtta
 
 pub mod render_pass;
 
-// we can't call `from_raw_parts` unconditionally because the caller
-// may not even have a valid pointer (e.g. NULL) if the `length` is zero.
-fn make_slice<'a, T>(pointer: *const T, length: usize) -> &'a [T] {
-    if length == 0 {
-        &[]
-    } else {
-        unsafe { std::slice::from_raw_parts(pointer, length) }
-    }
-}
-
 #[repr(C)]
 pub struct ConstantEntry {
     key: RawString,
@@ -45,16 +35,15 @@ pub struct ConstantEntry {
 }
 
 #[repr(C)]
-pub struct ProgrammableStageDescriptor {
+pub struct ProgrammableStageDescriptor<'a> {
     module: id::ShaderModuleId,
     entry_point: RawString,
-    constants: *const ConstantEntry,
-    constants_length: usize,
+    constants: FfiSlice<'a, ConstantEntry>,
 }
 
-impl ProgrammableStageDescriptor {
+impl ProgrammableStageDescriptor<'_> {
     fn to_wgpu(&self) -> wgc::pipeline::ProgrammableStageDescriptor {
-        let constants = make_slice(self.constants, self.constants_length)
+        let constants = unsafe { self.constants.as_slice() }
             .iter()
             .map(|ce| {
                 (
@@ -79,32 +68,30 @@ impl ProgrammableStageDescriptor {
 pub struct ComputePipelineDescriptor<'a> {
     label: Option<&'a nsACString>,
     layout: Option<id::PipelineLayoutId>,
-    stage: ProgrammableStageDescriptor,
+    stage: ProgrammableStageDescriptor<'a>,
 }
 
 #[repr(C)]
-pub struct VertexBufferLayout {
+pub struct VertexBufferLayout<'a> {
     array_stride: wgt::BufferAddress,
     step_mode: wgt::VertexStepMode,
-    attributes: *const wgt::VertexAttribute,
-    attributes_length: usize,
+    attributes: FfiSlice<'a, wgt::VertexAttribute>,
 }
 
 #[repr(C)]
-pub struct VertexState {
-    stage: ProgrammableStageDescriptor,
-    buffers: *const VertexBufferLayout,
-    buffers_length: usize,
+pub struct VertexState<'a> {
+    stage: ProgrammableStageDescriptor<'a>,
+    buffers: FfiSlice<'a, VertexBufferLayout<'a>>,
 }
 
-impl VertexState {
+impl VertexState<'_> {
     fn to_wgpu(&self) -> wgc::pipeline::VertexState {
-        let buffer_layouts = make_slice(self.buffers, self.buffers_length)
+        let buffer_layouts = unsafe { self.buffers.as_slice() }
             .iter()
             .map(|vb| wgc::pipeline::VertexBufferLayout {
                 array_stride: vb.array_stride,
                 step_mode: vb.step_mode,
-                attributes: Cow::Borrowed(make_slice(vb.attributes, vb.attributes_length)),
+                attributes: Cow::Borrowed(unsafe { vb.attributes.as_slice() }),
             })
             .collect();
         wgc::pipeline::VertexState {
@@ -123,14 +110,13 @@ pub struct ColorTargetState<'a> {
 
 #[repr(C)]
 pub struct FragmentState<'a> {
-    stage: ProgrammableStageDescriptor,
-    targets: *const ColorTargetState<'a>,
-    targets_length: usize,
+    stage: ProgrammableStageDescriptor<'a>,
+    targets: FfiSlice<'a, ColorTargetState<'a>>,
 }
 
 impl FragmentState<'_> {
     fn to_wgpu(&self) -> wgc::pipeline::FragmentState {
-        let color_targets = make_slice(self.targets, self.targets_length)
+        let color_targets = unsafe { self.targets.as_slice() }
             .iter()
             .map(|ct| {
                 Some(wgt::ColorTargetState {
@@ -175,7 +161,7 @@ impl PrimitiveState<'_> {
 pub struct RenderPipelineDescriptor<'a> {
     label: Option<&'a nsACString>,
     layout: Option<id::PipelineLayoutId>,
-    vertex: &'a VertexState,
+    vertex: &'a VertexState<'a>,
     primitive: PrimitiveState<'a>,
     fragment: Option<&'a FragmentState<'a>>,
     depth_stencil: Option<&'a wgt::DepthStencilState>,
@@ -222,8 +208,7 @@ pub struct BindGroupLayoutEntry<'a> {
 #[repr(C)]
 pub struct BindGroupLayoutDescriptor<'a> {
     label: Option<&'a nsACString>,
-    entries: *const BindGroupLayoutEntry<'a>,
-    entries_length: usize,
+    entries: FfiSlice<'a, BindGroupLayoutEntry<'a>>,
 }
 
 #[repr(C)]
@@ -241,15 +226,13 @@ pub struct BindGroupEntry {
 pub struct BindGroupDescriptor<'a> {
     label: Option<&'a nsACString>,
     layout: id::BindGroupLayoutId,
-    entries: *const BindGroupEntry,
-    entries_length: usize,
+    entries: FfiSlice<'a, BindGroupEntry>,
 }
 
 #[repr(C)]
 pub struct PipelineLayoutDescriptor<'a> {
     label: Option<&'a nsACString>,
-    bind_group_layouts: *const id::BindGroupLayoutId,
-    bind_group_layouts_length: usize,
+    bind_group_layouts: FfiSlice<'a, id::BindGroupLayoutId>,
 }
 
 #[repr(C)]
@@ -280,8 +263,7 @@ pub struct TextureViewDescriptor<'a> {
 #[repr(C)]
 pub struct RenderBundleEncoderDescriptor<'a> {
     label: Option<&'a nsACString>,
-    color_formats: *const wgt::TextureFormat,
-    color_formats_length: usize,
+    color_formats: FfiSlice<'a, wgt::TextureFormat>,
     depth_stencil_format: Option<&'a wgt::TextureFormat>,
     depth_read_only: bool,
     stencil_read_only: bool,
@@ -1162,7 +1144,7 @@ pub extern "C" fn wgpu_device_create_render_bundle_encoder(
 ) -> *mut wgc::command::RenderBundleEncoder {
     let label = wgpu_string(desc.label);
 
-    let color_formats: Vec<_> = make_slice(desc.color_formats, desc.color_formats_length)
+    let color_formats: Vec<_> = unsafe { desc.color_formats.as_slice() }
         .iter()
         .map(|format| Some(format.clone()))
         .collect();
@@ -1352,8 +1334,7 @@ pub unsafe extern "C" fn wgpu_compute_pass_destroy(pass: *mut crate::command::Re
 #[repr(C)]
 pub struct RenderPassDescriptor<'a> {
     pub label: Option<&'a nsACString>,
-    pub color_attachments: *const FfiRenderPassColorAttachment,
-    pub color_attachments_length: usize,
+    pub color_attachments: FfiSlice<'a, FfiRenderPassColorAttachment>,
     pub depth_stencil_attachment: Option<&'a RenderPassDepthStencilAttachment>,
     pub timestamp_writes: Option<&'a PassTimestampWrites<'a>>,
     pub occlusion_query_set: Option<wgc::id::QuerySetId>,
@@ -1366,7 +1347,6 @@ pub unsafe extern "C" fn wgpu_command_encoder_begin_render_pass(
     let &RenderPassDescriptor {
         label,
         color_attachments,
-        color_attachments_length,
         depth_stencil_attachment,
         timestamp_writes,
         occlusion_query_set,
@@ -1389,7 +1369,8 @@ pub unsafe extern "C" fn wgpu_command_encoder_begin_render_pass(
         }
     });
 
-    let color_attachments: Vec<_> = make_slice(color_attachments, color_attachments_length)
+    let color_attachments: Vec<_> = color_attachments
+        .as_slice()
         .iter()
         .map(|format| Some(format.clone().to_wgpu()))
         .collect();
@@ -1431,72 +1412,78 @@ pub unsafe extern "C" fn wgpu_client_create_bind_group_layout(
 
     let id = client.identities.lock().bind_group_layouts.process();
 
-    let mut entries = Vec::with_capacity(desc.entries_length);
-    for entry in make_slice(desc.entries, desc.entries_length) {
-        entries.push(wgt::BindGroupLayoutEntry {
-            binding: entry.binding,
-            visibility: entry.visibility,
-            count: None,
-            ty: match entry.ty {
-                RawBindingType::UniformBuffer => wgt::BindingType::Buffer {
-                    ty: wgt::BufferBindingType::Uniform,
-                    has_dynamic_offset: entry.has_dynamic_offset,
-                    min_binding_size: entry.min_binding_size,
-                },
-                RawBindingType::StorageBuffer => wgt::BindingType::Buffer {
-                    ty: wgt::BufferBindingType::Storage { read_only: false },
-                    has_dynamic_offset: entry.has_dynamic_offset,
-                    min_binding_size: entry.min_binding_size,
-                },
-                RawBindingType::ReadonlyStorageBuffer => wgt::BindingType::Buffer {
-                    ty: wgt::BufferBindingType::Storage { read_only: true },
-                    has_dynamic_offset: entry.has_dynamic_offset,
-                    min_binding_size: entry.min_binding_size,
-                },
-                RawBindingType::Sampler => wgt::BindingType::Sampler(if entry.sampler_compare {
-                    wgt::SamplerBindingType::Comparison
-                } else if entry.sampler_filter {
-                    wgt::SamplerBindingType::Filtering
-                } else {
-                    wgt::SamplerBindingType::NonFiltering
-                }),
-                RawBindingType::SampledTexture => wgt::BindingType::Texture {
-                    //TODO: the spec has a bug here
-                    view_dimension: *entry
-                        .view_dimension
-                        .unwrap_or(&wgt::TextureViewDimension::D2),
-                    sample_type: match entry.texture_sample_type {
-                        None | Some(RawTextureSampleType::Float) => {
-                            wgt::TextureSampleType::Float { filterable: true }
-                        }
-                        Some(RawTextureSampleType::UnfilterableFloat) => {
-                            wgt::TextureSampleType::Float { filterable: false }
-                        }
-                        Some(RawTextureSampleType::Uint) => wgt::TextureSampleType::Uint,
-                        Some(RawTextureSampleType::Sint) => wgt::TextureSampleType::Sint,
-                        Some(RawTextureSampleType::Depth) => wgt::TextureSampleType::Depth,
+    let entries = desc
+        .entries
+        .as_slice()
+        .iter()
+        .map(|entry| {
+            wgt::BindGroupLayoutEntry {
+                binding: entry.binding,
+                visibility: entry.visibility,
+                count: None,
+                ty: match entry.ty {
+                    RawBindingType::UniformBuffer => wgt::BindingType::Buffer {
+                        ty: wgt::BufferBindingType::Uniform,
+                        has_dynamic_offset: entry.has_dynamic_offset,
+                        min_binding_size: entry.min_binding_size,
                     },
-                    multisampled: entry.multisampled,
+                    RawBindingType::StorageBuffer => wgt::BindingType::Buffer {
+                        ty: wgt::BufferBindingType::Storage { read_only: false },
+                        has_dynamic_offset: entry.has_dynamic_offset,
+                        min_binding_size: entry.min_binding_size,
+                    },
+                    RawBindingType::ReadonlyStorageBuffer => wgt::BindingType::Buffer {
+                        ty: wgt::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: entry.has_dynamic_offset,
+                        min_binding_size: entry.min_binding_size,
+                    },
+                    RawBindingType::Sampler => {
+                        wgt::BindingType::Sampler(if entry.sampler_compare {
+                            wgt::SamplerBindingType::Comparison
+                        } else if entry.sampler_filter {
+                            wgt::SamplerBindingType::Filtering
+                        } else {
+                            wgt::SamplerBindingType::NonFiltering
+                        })
+                    }
+                    RawBindingType::SampledTexture => wgt::BindingType::Texture {
+                        //TODO: the spec has a bug here
+                        view_dimension: *entry
+                            .view_dimension
+                            .unwrap_or(&wgt::TextureViewDimension::D2),
+                        sample_type: match entry.texture_sample_type {
+                            None | Some(RawTextureSampleType::Float) => {
+                                wgt::TextureSampleType::Float { filterable: true }
+                            }
+                            Some(RawTextureSampleType::UnfilterableFloat) => {
+                                wgt::TextureSampleType::Float { filterable: false }
+                            }
+                            Some(RawTextureSampleType::Uint) => wgt::TextureSampleType::Uint,
+                            Some(RawTextureSampleType::Sint) => wgt::TextureSampleType::Sint,
+                            Some(RawTextureSampleType::Depth) => wgt::TextureSampleType::Depth,
+                        },
+                        multisampled: entry.multisampled,
+                    },
+                    RawBindingType::ReadonlyStorageTexture => wgt::BindingType::StorageTexture {
+                        access: wgt::StorageTextureAccess::ReadOnly,
+                        view_dimension: *entry.view_dimension.unwrap(),
+                        format: *entry.storage_texture_format.unwrap(),
+                    },
+                    RawBindingType::WriteonlyStorageTexture => wgt::BindingType::StorageTexture {
+                        access: wgt::StorageTextureAccess::WriteOnly,
+                        view_dimension: *entry.view_dimension.unwrap(),
+                        format: *entry.storage_texture_format.unwrap(),
+                    },
+                    RawBindingType::ReadWriteStorageTexture => wgt::BindingType::StorageTexture {
+                        access: wgt::StorageTextureAccess::ReadWrite,
+                        view_dimension: *entry.view_dimension.unwrap(),
+                        format: *entry.storage_texture_format.unwrap(),
+                    },
+                    RawBindingType::ExternalTexture => wgt::BindingType::ExternalTexture,
                 },
-                RawBindingType::ReadonlyStorageTexture => wgt::BindingType::StorageTexture {
-                    access: wgt::StorageTextureAccess::ReadOnly,
-                    view_dimension: *entry.view_dimension.unwrap(),
-                    format: *entry.storage_texture_format.unwrap(),
-                },
-                RawBindingType::WriteonlyStorageTexture => wgt::BindingType::StorageTexture {
-                    access: wgt::StorageTextureAccess::WriteOnly,
-                    view_dimension: *entry.view_dimension.unwrap(),
-                    format: *entry.storage_texture_format.unwrap(),
-                },
-                RawBindingType::ReadWriteStorageTexture => wgt::BindingType::StorageTexture {
-                    access: wgt::StorageTextureAccess::ReadWrite,
-                    view_dimension: *entry.view_dimension.unwrap(),
-                    format: *entry.storage_texture_format.unwrap(),
-                },
-                RawBindingType::ExternalTexture => wgt::BindingType::ExternalTexture,
-            },
-        });
-    }
+            }
+        })
+        .collect();
     let wgpu_desc = wgc::binding_model::BindGroupLayoutDescriptor {
         label,
         entries: Cow::Owned(entries),
@@ -1560,10 +1547,7 @@ pub unsafe extern "C" fn wgpu_client_create_pipeline_layout(
 
     let wgpu_desc = wgc::binding_model::PipelineLayoutDescriptor {
         label,
-        bind_group_layouts: Cow::Borrowed(make_slice(
-            desc.bind_group_layouts,
-            desc.bind_group_layouts_length,
-        )),
+        bind_group_layouts: Cow::Borrowed(desc.bind_group_layouts.as_slice()),
         push_constant_ranges: Cow::Borrowed(&[]),
     };
 
@@ -1588,9 +1572,11 @@ pub unsafe extern "C" fn wgpu_client_create_bind_group(
 
     let id = client.identities.lock().bind_groups.process();
 
-    let mut entries = Vec::with_capacity(desc.entries_length);
-    for entry in make_slice(desc.entries, desc.entries_length) {
-        entries.push(wgc::binding_model::BindGroupEntry {
+    let entries = desc
+        .entries
+        .as_slice()
+        .iter()
+        .map(|entry| wgc::binding_model::BindGroupEntry {
             binding: entry.binding,
             resource: if let Some(id) = entry.buffer {
                 wgc::binding_model::BindingResource::Buffer(wgc::binding_model::BufferBinding {
@@ -1605,8 +1591,8 @@ pub unsafe extern "C" fn wgpu_client_create_bind_group(
             } else {
                 panic!("Unexpected binding entry {:?}", entry);
             },
-        });
-    }
+        })
+        .collect();
     let wgpu_desc = wgc::binding_model::BindGroupDescriptor {
         label,
         layout: desc.layout,
