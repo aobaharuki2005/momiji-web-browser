@@ -66,7 +66,7 @@ class Queue final : public ObjectBase, public ChildOf<Device> {
 
  private:
   virtual ~Queue();
-  void Cleanup() {}
+  void Cleanup();
 
   RefPtr<WebGPUChild> mBridge;
 
