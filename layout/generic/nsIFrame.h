@@ -5926,8 +5926,8 @@ inline nsIFrame* nsFrameList::BackwardFrameTraversal::Prev(nsIFrame* aFrame) {
 }
 
 inline AnchorPosResolutionParams AnchorPosResolutionParams::From(
-    const nsIFrame* aFrame) {
-  return {aFrame, aFrame->StyleDisplay()->mPosition};
+    const nsIFrame* aFrame, AnchorPosReferencedAnchors* aReferencedAnchors) {
+  return {aFrame, aFrame->StyleDisplay()->mPosition, aReferencedAnchors};
 }
 
 #endif /* nsIFrame_h___ */

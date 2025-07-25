@@ -379,6 +379,22 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
 using AnchorResolvedMargin =
     mozilla::UniqueOrNonOwningPtr<const mozilla::StyleMargin>;
 
+// Resolved anchor positioning data.
+struct AnchorPosResolutionData {
+  // Size of the referenced anchor.
+  nsSize mSize;
+  // Origin of the referenced anchor, w.r.t. containing block at the time of
+  // resolution. Includes scroll offsets, for now.
+  // Nothing if the anchor did not resolve, or if the anchor was only referred
+  // to by its size.
+  mozilla::Maybe<nsPoint> mOrigin;
+};
+
+// Mapping from a referenced anchor to its resolution (If a valid anchor is
+// found).
+using AnchorPosReferencedAnchors =
+    nsTHashMap<RefPtr<const nsAtom>, mozilla::Maybe<AnchorPosResolutionData>>;
+
 // Base set of parameters required to resolve a reference to an anchor.
 struct AnchorPosResolutionParams {
   // Frame of the anchor positioned element.
@@ -386,10 +402,15 @@ struct AnchorPosResolutionParams {
   const nsIFrame* mFrame;
   // Position property of the element in question.
   mozilla::StylePositionProperty mPosition;
+  // Storage for referenced anchors. To be populated on abspos reflow, whenever
+  // the frame makes any anchor reference.
+  AnchorPosReferencedAnchors* const mReferencedAnchors = nullptr;
 
   // Helper functions for creating anchor resolution parameters.
   // Defined in corresponding header files.
-  static inline AnchorPosResolutionParams From(const nsIFrame* aFrame);
+  static inline AnchorPosResolutionParams From(
+      const nsIFrame* aFrame,
+      AnchorPosReferencedAnchors* aReferencedAnchors = nullptr);
   static inline AnchorPosResolutionParams From(const mozilla::ReflowInput* aRI);
   static inline AnchorPosResolutionParams From(
       const nsComputedDOMStyle* aComputedDOMStyle);

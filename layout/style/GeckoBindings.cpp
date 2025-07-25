@@ -1887,7 +1887,8 @@ struct AnchorPosInfo {
 };
 
 static nsIFrame* GetAnchorOf(const nsIFrame* aPositioned,
-                             const nsAtom* aAnchorName) {
+                             const nsAtom* aAnchorName,
+                             AnchorPosReferencedAnchors* aReferencedAnchors) {
   const auto* presShell = aPositioned->PresShell();
   MOZ_ASSERT(presShell, "No PresShell for frame?");
 
@@ -1901,17 +1902,21 @@ static nsIFrame* GetAnchorOf(const nsIFrame* aPositioned,
     }
     anchorName = stylePos->mPositionAnchor.AsIdent().AsAtom();
   }
+  if (aReferencedAnchors) {
+    aReferencedAnchors->InsertOrUpdate(anchorName, Nothing{});
+  }
   return presShell->GetAnchorPosAnchor(anchorName, aPositioned);
 }
 
-static Maybe<AnchorPosInfo> GetAnchorPosRect(const nsIFrame* aPositioned,
-                                             const nsAtom* aAnchorName,
-                                             bool aCBRectIsvalid) {
+static Maybe<AnchorPosInfo> GetAnchorPosRect(
+    const nsIFrame* aPositioned, const nsAtom* aAnchorName, bool aCBRectIsvalid,
+    AnchorPosReferencedAnchors* aReferencedAnchors) {
   if (!aPositioned) {
     return Nothing{};
   }
 
-  const auto* anchor = GetAnchorOf(aPositioned, aAnchorName);
+  const auto* anchor =
+      GetAnchorOf(aPositioned, aAnchorName, aReferencedAnchors);
   if (!anchor) {
     return Nothing{};
   }
@@ -1972,7 +1977,8 @@ bool Gecko_GetAnchorPosOffset(
     return false;
   }
   const auto info = GetAnchorPosRect(aParams->mBaseParams.mFrame, aAnchorName,
-                                     !aParams->mCBSize);
+                                     !aParams->mCBSize,
+                                     aParams->mBaseParams.mReferencedAnchors);
   if (info.isNothing()) {
     return false;
   }
@@ -2050,7 +2056,8 @@ bool Gecko_GetAnchorPosSize(const AnchorPosResolutionParams* aParams,
     return false;
   }
   const auto* positioned = aParams->mFrame;
-  const auto* anchor = GetAnchorOf(positioned, aAnchorName);
+  const auto* anchor =
+      GetAnchorOf(positioned, aAnchorName, aParams->mReferencedAnchors);
   if (!anchor) {
     return false;
   }
