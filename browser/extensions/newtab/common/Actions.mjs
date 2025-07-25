@@ -235,6 +235,7 @@ for (const type of [
   "WIDGETS_TIMER_PAUSE",
   "WIDGETS_TIMER_PLAY",
   "WIDGETS_TIMER_RESET",
+  "WIDGETS_TIMER_SET",
   "WIDGETS_TIMER_SET_DURATION",
 ]) {
   actionTypes[type] = type;

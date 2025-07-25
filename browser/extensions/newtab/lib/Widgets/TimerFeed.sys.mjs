@@ -80,6 +80,7 @@ export class TimerFeed {
         {
           const prevState = this.store.getState().TimerWidget;
           await this.cache.set("timer", { ...prevState, ...action.data });
+          this.update({ ...prevState, ...action.data });
         }
         break;
     }
