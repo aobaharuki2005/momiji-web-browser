@@ -1886,26 +1886,25 @@ struct AnchorPosInfo {
   const nsIFrame* mContainingBlock;
 };
 
+static const nsAtom* GetUsedAnchorName(const nsIFrame* aPositioned,
+                                       const nsAtom* aAnchorName) {
+  if (aAnchorName && !aAnchorName->IsEmpty()) {
+    return aAnchorName;
+  }
+  const auto* stylePos = aPositioned->StylePosition();
+  if (!stylePos->mPositionAnchor.IsIdent()) {
+    // No valid anchor specified, bail.
+    // TODO(dshin): Implicit anchor should be looked at here.
+    return nullptr;
+  }
+  return stylePos->mPositionAnchor.AsIdent().AsAtom();
+}
+
 static nsIFrame* GetAnchorOf(const nsIFrame* aPositioned,
-                             const nsAtom* aAnchorName,
-                             AnchorPosReferencedAnchors* aReferencedAnchors) {
+                             const nsAtom* aAnchorName) {
   const auto* presShell = aPositioned->PresShell();
   MOZ_ASSERT(presShell, "No PresShell for frame?");
-
-  const auto* anchorName = aAnchorName;
-  if (!anchorName || anchorName->IsEmpty()) {
-    const auto* stylePos = aPositioned->StylePosition();
-    if (!stylePos->mPositionAnchor.IsIdent()) {
-      // No valid anchor specified, bail.
-      // TODO(dshin): Implicit anchor should be looked at here.
-      return nullptr;
-    }
-    anchorName = stylePos->mPositionAnchor.AsIdent().AsAtom();
-  }
-  if (aReferencedAnchors) {
-    aReferencedAnchors->InsertOrUpdate(anchorName, Nothing{});
-  }
-  return presShell->GetAnchorPosAnchor(anchorName, aPositioned);
+  return presShell->GetAnchorPosAnchor(aAnchorName, aPositioned);
 }
 
 static Maybe<AnchorPosInfo> GetAnchorPosRect(
@@ -1915,16 +1914,39 @@ static Maybe<AnchorPosInfo> GetAnchorPosRect(
     return Nothing{};
   }
 
-  const auto* anchor =
-      GetAnchorOf(aPositioned, aAnchorName, aReferencedAnchors);
-  if (!anchor) {
+  const auto* anchorName = GetUsedAnchorName(aPositioned, aAnchorName);
+  if (!anchorName) {
     return Nothing{};
   }
 
   MOZ_ASSERT(aPositioned->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW),
              "Calling GetAnchorPoseRect on non-abspos frame?");
-  // We're assuming that the caller already check for abspos.
   const auto* containingBlock = aPositioned->GetParent();
+
+  Maybe<AnchorPosResolutionData>* entry = nullptr;
+  if (aReferencedAnchors) {
+    const auto result = aReferencedAnchors->Lookup(anchorName, true);
+    if (result.mAlreadyResolved) {
+      MOZ_ASSERT(result.mEntry, "Entry exists but null?");
+      return result.mEntry->map([&](const AnchorPosResolutionData& aData) {
+        MOZ_ASSERT(aData.mOrigin, "Missing anchor offset resolution.");
+        return AnchorPosInfo {
+          nsRect{aData.mOrigin.ref(), aData.mSize},
+          containingBlock
+        };
+      });
+    }
+    entry = result.mEntry;
+  }
+
+  const auto* anchor = GetAnchorOf(aPositioned, anchorName);
+  if (!anchor) {
+    // If we have a cached entry, just check that it resolved to nothing last
+    // time as well.
+    MOZ_ASSERT_IF(entry, entry->isNothing());
+    return Nothing{};
+  }
+
   auto rect = [&]() -> Maybe<nsRect> {
     if (aCBRectIsvalid) {
       const nsRect result = anchor->GetRectRelativeToSelf();
@@ -1961,8 +1983,18 @@ static Maybe<AnchorPosInfo> GetAnchorPosRect(
     // "shrinks" by shifting the position.
     const auto border = containingBlock->GetUsedBorder();
     const nsPoint borderTopLeft{border.left, border.top};
+    const auto rect = aRect - borderTopLeft;
+    if (entry) {
+      // If a partially resolved entry exists, make sure that it matches what we
+      // have now.
+      MOZ_ASSERT_IF(*entry, entry->ref().mSize == rect.Size());
+      *entry = Some(AnchorPosResolutionData{
+          rect.Size(),
+          Some(rect.TopLeft()),
+      });
+    }
     return AnchorPosInfo{
-        .mRect = aRect - borderTopLeft,
+        .mRect = rect,
         .mContainingBlock = containingBlock,
     };
   });
@@ -1971,8 +2003,8 @@ static Maybe<AnchorPosInfo> GetAnchorPosRect(
 bool Gecko_GetAnchorPosOffset(
     const AnchorPosOffsetResolutionParams* aParams, const nsAtom* aAnchorName,
     StylePhysicalSide aPropSide,
-    mozilla::StyleAnchorSideKeyword aAnchorSideKeyword, float aPercentage,
-    mozilla::Length* aOut) {
+    StyleAnchorSideKeyword aAnchorSideKeyword, float aPercentage,
+    Length* aOut) {
   if (!aParams || !aParams->mBaseParams.mFrame) {
     return false;
   }
@@ -2049,45 +2081,79 @@ bool Gecko_GetAnchorPosOffset(
 
 bool Gecko_GetAnchorPosSize(const AnchorPosResolutionParams* aParams,
                             const nsAtom* aAnchorName,
-                            mozilla::StylePhysicalAxis aPropAxis,
-                            mozilla::StyleAnchorSizeKeyword aAnchorSizeKeyword,
-                            mozilla::Length* aOut) {
+                            StylePhysicalAxis aPropAxis,
+                            StyleAnchorSizeKeyword aAnchorSizeKeyword,
+                            Length* aOut) {
   if (!aParams || !aParams->mFrame) {
     return false;
   }
   const auto* positioned = aParams->mFrame;
-  const auto* anchor =
-      GetAnchorOf(positioned, aAnchorName, aParams->mReferencedAnchors);
-  if (!anchor) {
+
+  const auto* anchorName = GetUsedAnchorName(positioned, aAnchorName);
+  if (!anchorName) {
+    return false;
+  }
+  const auto size = [&]() -> Maybe<nsSize> {
+    Maybe<AnchorPosResolutionData>* entry = nullptr;
+    if (aParams->mReferencedAnchors) {
+      const auto result =
+          aParams->mReferencedAnchors->Lookup(anchorName, false);
+      if (result.mAlreadyResolved) {
+        MOZ_ASSERT(result.mEntry, "Entry exists but null?");
+        return result.mEntry->map([](const AnchorPosResolutionData& aData) {
+          return aData.mSize;
+        });
+      }
+      entry = result.mEntry;
+    }
+    const auto* anchor = GetAnchorOf(positioned, anchorName);
+    if (!anchor) {
+      return Nothing{};
+    }
+    const auto size = anchor->GetSize();
+    if (entry) {
+      *entry = Some(AnchorPosResolutionData{size, Nothing{}});
+    }
+    return Some(size);
+  }();
+  if (!size) {
     return false;
   }
   const auto* containingBlock = positioned->GetParent();
   const auto l = [&]() {
     switch (aAnchorSizeKeyword) {
-      case mozilla::StyleAnchorSizeKeyword::None:
+      case StyleAnchorSizeKeyword::None:
         switch (aPropAxis) {
-          case mozilla::StylePhysicalAxis::Horizontal:
-            return anchor->GetSize().Width();
-          case mozilla::StylePhysicalAxis::Vertical:
-            return anchor->GetSize().Height();
+          case StylePhysicalAxis::Horizontal:
+            return size->Width();
+          case StylePhysicalAxis::Vertical:
+            return size->Height();
         }
         MOZ_ASSERT_UNREACHABLE("Unexpected physical axis.");
-        return anchor->GetSize().Width();
-      case mozilla::StyleAnchorSizeKeyword::Width:
-        return anchor->GetSize().Width();
-      case mozilla::StyleAnchorSizeKeyword::Height:
-        return anchor->GetSize().Height();
-      case mozilla::StyleAnchorSizeKeyword::Inline:
-        return anchor->ISize(containingBlock->GetWritingMode());
-      case mozilla::StyleAnchorSizeKeyword::Block:
-        return anchor->BSize(containingBlock->GetWritingMode());
-      case mozilla::StyleAnchorSizeKeyword::SelfInline:
-        return anchor->ISize(positioned->GetWritingMode());
-      case mozilla::StyleAnchorSizeKeyword::SelfBlock:
-        return anchor->BSize(positioned->GetWritingMode());
+        return size->Width();
+      case StyleAnchorSizeKeyword::Width:
+        return size->Width();
+      case StyleAnchorSizeKeyword::Height:
+        return size->Height();
+      case StyleAnchorSizeKeyword::Inline: {
+        const auto wm = containingBlock->GetWritingMode();
+        return LogicalSize{wm, *size}.ISize(wm);
+      }
+      case StyleAnchorSizeKeyword::Block: {
+        const auto wm = containingBlock->GetWritingMode();
+        return LogicalSize{wm, *size}.BSize(wm);
+      }
+      case StyleAnchorSizeKeyword::SelfInline: {
+        const auto wm = positioned->GetWritingMode();
+        return LogicalSize{wm, *size}.ISize(wm);
+      }
+      case StyleAnchorSizeKeyword::SelfBlock: {
+        const auto wm = positioned->GetWritingMode();
+        return LogicalSize{wm, *size}.BSize(wm);
+      }
     }
     MOZ_ASSERT_UNREACHABLE("Unhandled anchor size keyword.");
-    return anchor->GetSize().Width();
+    return size->Width();
   }();
   *aOut = Length::FromPixels(CSSPixel::FromAppUnits(l));
   return true;
