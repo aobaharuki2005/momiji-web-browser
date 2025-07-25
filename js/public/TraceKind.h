@@ -46,22 +46,21 @@ enum class TraceKind {
   Object = 0x00,
   BigInt = 0x01,
   String = 0x02,
-  Symbol = 0x03,
+  GetterSetter = 0x03,
+  Symbol = 0x04,
 
   // Shape details are exposed through JS_TraceShapeCycleCollectorChildren.
-  Shape = 0x04,
-
-  BaseShape = 0x05,
+  Shape = 0x05,
 
   // The kind associated with a nullptr.
   Null = 0x06,
 
   // The following kinds do not have an exposed C++ idiom.
+  BaseShape,
   JitCode,
   Script,
   Scope,
   RegExpShared,
-  GetterSetter,
   PropMap
 };
 
