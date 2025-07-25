@@ -37,17 +37,13 @@ export class CommandLineHandler {
       return;
     }
 
-    let context = { id };
-
     // Handle the commands before entering an async context so that they're not
     // handled by other nsICommandLine handlers.
-    let urlParam = aCmdLine.handleFlagWithParam("new-window", false);
-    context.url = Services.io.newURI(urlParam);
-
-    let containerParam = aCmdLine.handleFlagWithParam("container", false);
-    if (containerParam !== null) {
-      context.userContextId = Number(containerParam);
-    }
+    let context = {
+      id,
+      url: aCmdLine.handleFlagWithParam("new-window", false),
+      userContextId: aCmdLine.handleFlagWithParam("container", false),
+    };
 
     lazy.logConsole.info(
       `Handling command line invoation for Taskbar Tab ${id}`
@@ -83,7 +79,7 @@ async function launchTaskbarTab(aContext) {
       `Taskbar Tab for ID ${aContext.id} doesn't exist, reconstructing it.`
     );
 
-    if (!Object.hasOwn(aContext, "userContextId")) {
+    if (!aContext.userContextId) {
       lazy.logConsole.error(
         "Expected -container flag, but found none. Using the default container."
       );

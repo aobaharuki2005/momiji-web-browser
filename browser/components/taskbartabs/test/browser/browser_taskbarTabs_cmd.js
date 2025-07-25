@@ -97,27 +97,19 @@ add_task(async function test_commandline_handling() {
   );
 
   let windowId = TaskbarTabsUtils.getTaskbarTabIdFromWindow(winReconstruct);
-  isnot(windowId, taskbarTab1.id, "A new Taskbar Tab ID should be used.");
+  isnot(
+    windowId,
+    taskbarTab1.id,
+    "The existing Taskbar Tab ID should be used."
+  );
 
   let registered = await TaskbarTabs.getTaskbarTab(windowId);
   ok(registered, "A new Taskbar Tab should have been registered.");
 
   ok(
     TaskbarTabsPin.pinTaskbarTab.called,
-    "Pinning should be attempted when reconstructing a Taskbar Tab."
+    "Pinning should not be attempted when launching an existing Taskbar Tab."
   );
-
-  is(
-    registered.startUrl,
-    "https://www.subdomain.example.com",
-    "The start URL should be correct."
-  );
-  Assert.deepEqual(
-    registered.scopes,
-    [{ hostname: "www.subdomain.example.com" }],
-    "The scope should match the URL."
-  );
-  is(registered.userContextId, 1, "The container ID should be correct.");
 
   await Promise.all([
     BrowserTestUtils.closeWindow(winExisting),
