@@ -14,6 +14,7 @@ const { DeferredTask } = ChromeUtils.importESModule(
 
 const toolsNameMap = {
   viewGenaiChatSidebar: "aichat",
+  viewGenaiPageAssistSidebar: "aipageassist",
   viewTabsSidebar: "syncedtabs",
   viewHistorySidebar: "history",
   viewBookmarksSidebar: "bookmarks",
@@ -182,6 +183,20 @@ var SidebarController = {
         revampL10nId: "sidebar-menu-genai-chat-label",
         iconUrl: "chrome://global/skin/icons/highlights.svg",
         gleanClickEvent: Glean.sidebar.chatbotIconClick,
+      }
+    );
+
+    this.registerPrefSidebar(
+      "browser.ml.pageAssist.enabled",
+      "viewGenaiPageAssistSidebar",
+      {
+        name: "aipageassist",
+        elementId: "sidebar-switcher-genai-page-assist",
+        url: "chrome://browser/content/genai/pageAssist.html",
+        menuId: "menu_genaiPageAssistSidebar",
+        menuL10nId: "menu-view-genai-page-assist",
+        revampL10nId: "sidebar-menu-genai-page-assist-label",
+        iconUrl: "chrome://browser/skin/reader-mode.svg",
       }
     );
 
