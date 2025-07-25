@@ -17,7 +17,6 @@ import android.os.Bundle
 import android.os.StrictMode
 import android.text.format.DateUtils
 import android.util.AttributeSet
-import android.util.Log
 import android.view.ActionMode
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -675,10 +674,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             if (browsingModeManager.mode.isPrivate) {
                 it.announcePrivateModeForAccessibility()
             }
-        }
-
-        binding.root.viewTreeObserver.addOnGlobalLayoutListener {
-            Log.i("tighe", "layout listener")
         }
 
         lifecycleScope.launch(IO) {
