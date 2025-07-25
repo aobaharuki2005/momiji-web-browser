@@ -1383,16 +1383,6 @@ popupnotificationcontent {
   }
 }
 
-/* TODO: move this to toolkit */
-panel toolbarseparator {
-  appearance: none;
-  min-height: 0;
-  border-top: 1px solid var(--panel-separator-color);
-  border-bottom: none;
-  margin: var(--panel-separator-margin);
-  padding: 0;
-}
-
 /* Picture-in-Picture panel */
 
 #PictureInPicturePanel {

@@ -17,9 +17,9 @@
 
   --arrowpanel-header-info-icon-padding: 4px;
   --arrowpanel-header-info-icon-full-width: calc(16px + (2 * var(--arrowpanel-header-info-icon-padding)));
-  --panel-separator-margin-vertical: 4px;
-  --panel-separator-margin-horizontal: 8px;
-  --panel-separator-margin: var(--panel-separator-margin-vertical) var(--panel-separator-margin-horizontal);
+  --panel-separator-padding-vertical: 4px;
+  --panel-separator-padding-horizontal: 8px;
+  --panel-separator-padding: var(--panel-separator-padding-vertical) var(--panel-separator-padding-horizontal);
   --panel-subview-body-padding-block: 8px;
   --panel-subview-body-padding-inline: 0;
   --panel-subview-body-padding: var(--panel-subview-body-padding-block) var(--panel-subview-body-padding-inline);
@@ -33,7 +33,7 @@
   &[uidensity="compact"] {
     --arrowpanel-menuitem-margin-inline: 4px;
     --arrowpanel-menuitem-padding-block: 4px;
-    --panel-separator-margin-horizontal: 4px;
+    --panel-separator-padding-horizontal: 4px;
     --panel-subview-body-padding-block: 4px;
     :is(panel, menupopup):not([touchmode]) {
       --arrowpanel-header-back-icon-padding: 4px;
@@ -55,7 +55,12 @@ menupopup {
   /* The min-height is calculated with the separator's horizontal margin rather
    * than the vertical, to let the back icon have even spacing all around
    * while being aligned with the separator. */
-  --arrowpanel-header-min-height: calc(var(--arrowpanel-header-back-icon-full-width) + (var(--panel-separator-margin-horizontal) * 2));
+  --arrowpanel-header-min-height: calc(var(--arrowpanel-header-back-icon-full-width) + (var(--panel-separator-padding-horizontal) * 2));
+}
+
+panel toolbarseparator {
+  color: var(--panel-separator-color);
+  padding: var(--panel-separator-padding);
 }
 
 #PanelUI-menu-button {
@@ -368,7 +373,7 @@ panelview {
   }
 
   menuseparator {
-    padding: var(--panel-separator-margin);
+    padding: var(--panel-separator-padding);
   }
 }
 
@@ -1420,7 +1425,7 @@ panelview .toolbarbutton-1,
     display: none;
   }
 
-  toolbarseparator.proton-zap {
+  toolbarseparator.proton-zap::before {
     border-image: var(--panel-separator-zap-gradient, none) 1;
   }
 }
@@ -1816,7 +1821,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
   min-height: var(--arrowpanel-header-min-height);
 
   + toolbarseparator {
-    margin-top: 0 !important;
+    padding-top: 0 !important;
   }
 
   > h1 {
@@ -1967,7 +1972,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
     }
 
     toolbarseparator {
-      border-color: #0003;
+      color: #0003;
     }
   }
 
@@ -1995,7 +2000,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
 
 #PanelUI-profiler-content {
   position: relative;
-  padding: calc(15px - var(--panel-separator-margin-vertical)) 15px 15px;
+  padding: calc(15px - var(--panel-separator-padding-vertical)) 15px 15px;
 }
 
 .PanelUI-profiler-description-title {

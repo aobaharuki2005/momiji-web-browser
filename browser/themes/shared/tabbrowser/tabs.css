@@ -1322,7 +1322,7 @@ tab-group {
 .tab-group-editor-panel {
   --panel-width: 22em;
   --panel-padding: var(--space-large);
-  --panel-separator-margin: var(--panel-separator-margin-vertical) 0;
+  --panel-separator-padding: var(--space-medium) 0;
   font: menu;
 
   .panel-header {
@@ -1330,10 +1330,6 @@ tab-group {
     > h1 {
       margin-top: 0;
     }
-  }
-
-  toolbarseparator {
-    margin-block: var(--space-medium);
   }
 
   .panel-body {
