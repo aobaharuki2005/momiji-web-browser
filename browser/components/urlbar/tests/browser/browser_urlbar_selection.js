@@ -15,7 +15,7 @@ function click(target) {
 function openContextMenu(target) {
   let popupShownPromise = BrowserTestUtils.waitForEvent(
     target.ownerGlobal,
-    "popupshown"
+    "contextmenu"
   );
 
   EventUtils.synthesizeMouseAtCenter(
@@ -171,13 +171,8 @@ add_task(async function rightClickSelectsAll() {
     contextMenuItem.getAttribute("cmd")
   );
   Assert.ok(enabled, "The context menu select all item should be enabled.");
-  let menuHiddenPromise = BrowserTestUtils.waitForPopupEvent(
-    contextMenu,
-    "hidden"
-  );
-  contextMenu.activateItem(contextMenuItem);
-  await menuHiddenPromise;
 
+  await click(contextMenuItem);
   Assert.equal(
     gURLBar.selectionStart,
     0,
