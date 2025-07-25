@@ -1,18 +1,13 @@
 {
   "include": ["**/*.sys.mjs", "types/*.ts"],
   "exclude": [
-    "MerinoClient.sys.mjs",
     "UrlbarController.sys.mjs",
     "UrlbarEventBufferer.sys.mjs",
     "UrlbarInput.sys.mjs",
-    "UrlbarPrefs.sys.mjs",
     "UrlbarProviderGlobalActions.sys.mjs",
-    "UrlbarProviderOpenTabs.sys.mjs",
     "UrlbarProviderPlaces.sys.mjs",
     "UrlbarProvidersManager.sys.mjs",
     "UrlbarSearchOneOffs.sys.mjs",
-    "UrlbarSearchUtils.sys.mjs",
-    "UrlbarTokenizer.sys.mjs",
     "UrlbarValueFormatter.sys.mjs",
     "UrlbarView.sys.mjs",
     "private/MLSuggest.sys.mjs",

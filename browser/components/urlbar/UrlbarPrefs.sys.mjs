@@ -8,9 +8,9 @@
  * preferences, but only for variables with fallback prefs.
  */
 
-const lazy = {};
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-ChromeUtils.defineESModuleGetters(lazy, {
+const lazy = XPCOMUtils.declareLazy({
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
@@ -18,15 +18,20 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 const PREF_URLBAR_BRANCH = "browser.urlbar.";
 
-// Prefs are defined as [pref name, default value] or [pref name, [default
-// value, type]].  In the former case, the getter method name is inferred from
-// the typeof the default value.
-//
+/**
+ * @typedef {boolean|number|string|[number, string]} PreferenceDefaultAndType
+ * Prefs are defined as [pref name, default value] or [pref name, [default
+ * value, type]]. In the former case, the getter method name is inferred from
+ * the typeof the default value.
+ *
+ * @typedef {[string, PreferenceDefaultAndType]} PreferenceDefinition
+ */
+
 // NOTE: Don't name prefs (relative to the `browser.urlbar` branch) the same as
 // Nimbus urlbar features. Doing so would cause a name collision because pref
 // names and Nimbus feature names are both kept as keys in UrlbarPref's map. For
 // a list of Nimbus features, see toolkit/components/nimbus/FeatureManifest.yaml.
-const PREF_URLBAR_DEFAULTS = new Map([
+const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
   // Whether we announce to screen readers when tab-to-search results are
   // inserted.
   ["accessibility.tabToSearch.announceResults", true],
@@ -606,6 +611,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["yelp.showLessFrequentlyCount", 0],
 ]);
 
+// This is defined separately to PREF_URLBAR_DEFAULTS, to avoid re-indenting
+// the array so that we can preserve blame.
+const PREF_URLBAR_DEFAULTS_MAP = new Map(PREF_URLBAR_DEFAULTS);
+
 const PREF_OTHER_DEFAULTS = new Map([
   ["browser.fixup.dns_first_for_single_words", false],
   ["browser.ml.enable", false],
@@ -650,16 +659,16 @@ const PREF_TYPES = new Map([
  * groups determine the composition of results in the muxer, i.e., how they're
  * grouped and sorted.  Each group is an object that looks like this:
  *
- * {
- *   {UrlbarUtils.RESULT_GROUP} [group]
+ * @typedef {object} ResultGroup
+ * @property {Values<typeof lazy.UrlbarUtils.RESULT_GROUP>} [group]
  *     This is defined only on groups without children, and it determines the
  *     result group that the group will contain.
- *   {number} [maxResultCount]
+ * @property {number} [maxResultCount]
  *     An optional maximum number of results the group can contain.  If it's
  *     not defined and the parent group does not define `flexChildren: true`,
  *     then the max is the parent's max.  If the parent group defines
  *     `flexChildren: true`, then `maxResultCount` is ignored.
- *   {boolean} [flexChildren]
+ * @property {boolean} [flexChildren]
  *     If true, then child groups are "flexed", similar to flex in HTML.  Each
  *     child group should define the `flex` property (or, if they don't, `flex`
  *     is assumed to be zero).  `flex` is a number that defines the ratio of a
@@ -670,22 +679,23 @@ const PREF_TYPES = new Map([
  *     that cannot be completely filled, then the muxer will attempt to overfill
  *     the children that were completely filled, while still respecting their
  *     relative `flex` values.
- *   {number} [flex]
+ * @property {number} [flex]
  *     The flex value of the group.  This should be defined only on groups
  *     where the parent defines `flexChildren: true`.  See `flexChildren` for a
  *     discussion of flex.
- *   {array} [children]
+ * @property {ResultGroup[]} [children]
  *     An array of child group objects.
- *   {string} [orderBy]
+ * @property {string} [orderBy]
  *     Results should be ordered descending by this payload property.
- * }
  *
- * @param {boolean} showSearchSuggestionsFirst
+ * @param {object} options
+ * @param {boolean} options.showSearchSuggestionsFirst
  *   If true, the suggestions group will come before the general group.
- * @returns {object}
- *   The root group.
  */
 function makeResultGroups({ showSearchSuggestionsFirst }) {
+  /**
+   * @type {ResultGroup}
+   */
   let rootGroup = {
     children: [
       // heuristic
@@ -893,8 +903,6 @@ class Preferences {
    *
    * @param {object} options
    *   See makeResultGroups.
-   * @returns {object}
-   *   The root group.
    */
   makeResultGroups(options) {
     return makeResultGroups(options);
@@ -966,7 +974,7 @@ class Preferences {
    */
   observe(subject, topic, data) {
     let pref = data.replace(PREF_URLBAR_BRANCH, "");
-    if (!PREF_URLBAR_DEFAULTS.has(pref) && !PREF_OTHER_DEFAULTS.has(pref)) {
+    if (!PREF_URLBAR_DEFAULTS_MAP.has(pref) && !PREF_OTHER_DEFAULTS.has(pref)) {
       return;
     }
     this.#notifyObservers("onPrefChanged", pref);
@@ -1125,7 +1133,7 @@ class Preferences {
    */
   _getPrefDescriptor(pref) {
     let branch = Services.prefs.getBranch(PREF_URLBAR_BRANCH);
-    let defaultValue = PREF_URLBAR_DEFAULTS.get(pref);
+    let defaultValue = PREF_URLBAR_DEFAULTS_MAP.get(pref);
     if (defaultValue === undefined) {
       branch = Services.prefs;
       defaultValue = PREF_OTHER_DEFAULTS.get(pref);

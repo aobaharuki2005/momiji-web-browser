@@ -43,11 +43,11 @@ export class MerinoClient {
   }
 
   /**
-   * @param {string} name
+   * @param {string} [name]
    *   An optional name for the client. It will be included in log messages.
-   * @param {object} options
+   * @param {object} [options]
    *   Options object
-   * @param {boolean} options.allowOhttp
+   * @param {boolean} [options.allowOhttp]
    *   Whether the client is allowed to make its requests using OHTTP. When true
    *   and the following prefs are defined, all requests made by the client will
    *   use OHTTP:
@@ -55,7 +55,7 @@ export class MerinoClient {
    *   browser.urlbar.merino.ohttpConfigURL (Nimbus: merinoOhttpConfigURL)
    *   browser.urlbar.merino.ohttpRelayURL (Nimbus: merinoOhttpRelayURL)
    *
-   * @param {string} options.cachePeriodMs
+   * @param {number} [options.cachePeriodMs]
    *   Enables caching when nonzero. The client will cache the response
    *   suggestions from its most recent successful request for the specified
    *   period. The client will serve the cached suggestions for all fetches for
@@ -257,7 +257,10 @@ export class MerinoClient {
       });
     }
     url.searchParams.set(SEARCH_PARAMS.SESSION_ID, this.#sessionID);
-    url.searchParams.set(SEARCH_PARAMS.SEQUENCE_NUMBER, this.#sequenceNumber);
+    url.searchParams.set(
+      SEARCH_PARAMS.SEQUENCE_NUMBER,
+      this.#sequenceNumber.toString()
+    );
     this.#sequenceNumber++;
 
     let recordResponse = category => {
@@ -288,6 +291,7 @@ export class MerinoClient {
     }
 
     // Do the fetch.
+    /** @type {?Response} */
     let response;
     let controller = (this.#fetchController = new AbortController());
     await Promise.race([
@@ -345,9 +349,10 @@ export class MerinoClient {
     }
 
     // Get the response body as an object.
+    /** @type {{suggestions: object[], request_id: string }} */
     let body;
     try {
-      body = await response.json();
+      body = /** @type {any} */ (await response.json());
     } catch (error) {
       this.#lazy.logger.error("Error getting response as JSON", error);
     }
@@ -437,13 +442,13 @@ export class MerinoClient {
    * Sends the Merino request. Uses OHTTP if `allowOhttp` is true and the Merino
    * OHTTP prefs are defined.
    *
-   * @param {string} url
+   * @param {URL} url
    *   The request URL.
    * @param {object} options
    *   Options object.
    * @param {AbortSignal} options.signal
    *   An `AbortController.signal` for the fetch.
-   * @returns {Response|null}
+   * @returns {Promise<?Response>}
    *   The fetch `Response` or null if a response can't be fetched.
    */
   async #fetch(url, { signal }) {

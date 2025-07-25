@@ -15,11 +15,17 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
+const lazy = XPCOMUtils.declareLazy({
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
+  separatePrivateDefaultUIEnabled: {
+    pref: "browser.search.separatePrivateDefault.ui.enabled",
+    default: false,
+  },
+  separatePrivateDefault: {
+    pref: "browser.search.separatePrivateDefault",
+    default: false,
+  },
 });
 
 const SEARCH_ENGINE_TOPIC = "browser-search-engine-modified";
@@ -34,18 +40,6 @@ class SearchUtils {
       "nsIObserver",
       "nsISupportsWeakReference",
     ]);
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "separatePrivateDefaultUIEnabled",
-      "browser.search.separatePrivateDefault.ui.enabled",
-      false
-    );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "separatePrivateDefault",
-      "browser.search.separatePrivateDefault",
-      false
-    );
   }
 
   /**
@@ -227,11 +221,27 @@ class SearchUtils {
       return null;
     }
 
-    return this.separatePrivateDefaultUIEnabled &&
-      this.separatePrivateDefault &&
+    return lazy.separatePrivateDefaultUIEnabled &&
+      lazy.separatePrivateDefault &&
       isPrivate
       ? Services.search.defaultPrivateEngine
       : Services.search.defaultEngine;
+  }
+
+  /**
+   * Returns true if the UI is enabled for allowing a separate default search
+   * engine in private windows.
+   */
+  get separatePrivateDefaultUIEnabled() {
+    return lazy.separatePrivateDefaultUIEnabled;
+  }
+
+  /**
+   * Returns true if there is potentially a different engine set for searches
+   * in private windows.
+   */
+  get separatePrivateDefault() {
+    return lazy.separatePrivateDefault;
   }
 
   /**
