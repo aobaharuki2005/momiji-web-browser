@@ -416,7 +416,7 @@ nsresult FT2FontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
     }
   }
 
-#ifdef MOZ_WIDGET_ANDROID
+#if defined(MOZ_WIDGET_ANDROID) && !defined(NIGHTLY_BUILD)
   // Hack for the SamsungDevanagari font, bug 1012365:
   // pretend the font supports U+0972.
   if (!charmap->test(0x0972) && charmap->test(0x0905) &&
