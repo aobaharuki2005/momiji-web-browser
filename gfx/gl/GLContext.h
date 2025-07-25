@@ -296,6 +296,7 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
   }
 
   bool HasPBOState() const { return (!IsGLES() || Version() >= 300); }
+  bool HasTexParamMipmapLevel() const { return HasPBOState(); }
 
   /**
    * If this context is double-buffered, returns TRUE.

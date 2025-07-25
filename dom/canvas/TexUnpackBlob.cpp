@@ -876,14 +876,26 @@ bool TexUnpackSurface::BlitSd(const layers::SurfaceDescriptor& sd,
   {
     // The texture may be mipmap incomplete which will prevent the framebuffer
     // from being complete while drawing to it. To avoid this scenario, override
-    // the texture max level temporarily to ignore incomplete mipmaps while
-    // blitting to it.
+    // the texture base and max level temporarily to ignore incomplete mipmaps
+    // while blitting to it. Depending on GL implementation (desktop vs ES), the
+    // min filter may contribute to mipmap completeness.
+    GLint minFilter = 0;
+    GLint levelBase = 0;
     GLint levelMax = 0;
-    Maybe<gl::ScopedBindTexture> scopedTex;
-    if (level > 0) {
-      scopedTex.emplace(gl, tex->mGLName, target);
+    gl::ScopedBindTexture scopedTex(gl, tex->mGLName, target);
+    gl->fGetTexParameteriv(target, LOCAL_GL_TEXTURE_MIN_FILTER, &minFilter);
+    if (IsTexMipmapFilter(minFilter)) {
+      gl->fTexParameteri(target, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
+    }
+    if (gl->HasTexParamMipmapLevel()) {
+      gl->fGetTexParameteriv(target, LOCAL_GL_TEXTURE_BASE_LEVEL, &levelBase);
       gl->fGetTexParameteriv(target, LOCAL_GL_TEXTURE_MAX_LEVEL, &levelMax);
-      gl->fTexParameteri(target, LOCAL_GL_TEXTURE_MAX_LEVEL, level);
+      if (levelBase != level) {
+        gl->fTexParameteri(target, LOCAL_GL_TEXTURE_BASE_LEVEL, level);
+      }
+      if (levelMax != level) {
+        gl->fTexParameteri(target, LOCAL_GL_TEXTURE_MAX_LEVEL, level);
+      }
     }
 
     gl::ScopedFramebuffer scopedFB(gl);
@@ -934,8 +946,16 @@ bool TexUnpackSurface::BlitSd(const layers::SurfaceDescriptor& sd,
           "[0.2, 0.0, 0.2, 1.0]. Please file a bug!");
     }
 
-    if (level > 0) {
-      gl->fTexParameteri(target, LOCAL_GL_TEXTURE_MAX_LEVEL, levelMax);
+    if (IsTexMipmapFilter(minFilter)) {
+      gl->fTexParameteri(target, LOCAL_GL_TEXTURE_MIN_FILTER, minFilter);
+    }
+    if (gl->HasTexParamMipmapLevel()) {
+      if (levelBase != level) {
+        gl->fTexParameteri(target, LOCAL_GL_TEXTURE_BASE_LEVEL, levelBase);
+      }
+      if (levelMax != level) {
+        gl->fTexParameteri(target, LOCAL_GL_TEXTURE_MAX_LEVEL, levelMax);
+      }
     }
   }
 
