@@ -7,9 +7,9 @@ Performance Testing
   :hidden:
   :glob:
 
+  awsy
   DAMP
   IndexedDB
-  awsy
   mach-try-perf
   mozperftest
   perf-sheriffing
@@ -26,9 +26,9 @@ but `mozperftest </testing/perfdocs/mozperftest.html>`_ aims to provide this in 
 
 For more detailed information about each test suite and project, see their documentation:
 
+  * :doc:`awsy`
   * :doc:`DAMP`
   * :doc:`IndexedDB`
-  * :doc:`awsy`
   * :doc:`mach-try-perf`
   * :doc:`mozperftest`
   * :doc:`perf-sheriffing`
