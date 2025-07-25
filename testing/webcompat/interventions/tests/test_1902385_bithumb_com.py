@@ -20,5 +20,5 @@ async def test_enabled(client):
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client):
-    await client.navigate(URL)
+    await client.navigate(URL, wait="none")
     assert client.await_text(FAILURE_TEXT, is_displayed=True)
