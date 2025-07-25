@@ -7,11 +7,14 @@ package org.mozilla.fenix.home
 import android.annotation.SuppressLint
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
@@ -80,6 +83,7 @@ import org.mozilla.fenix.browser.tabstrip.TabStrip
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.HomepageThumbnailIntegration
 import org.mozilla.fenix.components.TabCollectionStorage
+import org.mozilla.fenix.components.VoiceSearchFeature
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.ContentRecommendationsAction
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction
@@ -252,6 +256,15 @@ class HomeFragment : Fragment() {
     private val searchSelectorMenuBinding = ViewBoundFeatureWrapper<SearchSelectorMenuBinding>()
     private val homeScreenPopupManager = ViewBoundFeatureWrapper<HomeScreenPopupManager>()
     private val thumbnailsFeature = ViewBoundFeatureWrapper<HomepageThumbnailIntegration>()
+
+    private val voiceSearchFeature by lazy(LazyThreadSafetyMode.NONE) {
+        ViewBoundFeatureWrapper<VoiceSearchFeature>()
+    }
+
+    private val voiceSearchLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            voiceSearchFeature.get()?.handleVoiceSearchResult(result.resultCode, result.data)
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // DO NOT ADD ANYTHING ABOVE THIS getProfilerTime CALL!
@@ -594,6 +607,16 @@ class HomeFragment : Fragment() {
                     toolbarStore = toolbarStore,
                     settings = activity.settings(),
                     hideWhenKeyboardShown = true,
+                )
+
+                voiceSearchFeature.set(
+                    feature = VoiceSearchFeature(
+                        context = activity,
+                        appStore = activity.components.appStore,
+                        voiceSearchLauncher = voiceSearchLauncher,
+                    ),
+                    owner = viewLifecycleOwner,
+                    view = binding.root,
                 )
 
                 HomeToolbarComposable(

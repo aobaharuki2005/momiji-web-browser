@@ -23,6 +23,7 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.messaging.state.MessagingReducer
 import org.mozilla.fenix.reviewprompt.ReviewPromptReducer
+import org.mozilla.fenix.search.VoiceSearchReducer
 import org.mozilla.fenix.share.ShareActionReducer
 
 /**
@@ -196,6 +197,10 @@ internal object AppStoreReducer {
 
         is AppAction.UserAccountAuthenticated -> state.copy(
             snackbarState = SnackbarState.UserAccountAuthenticated,
+        )
+
+        is VoiceSearchAction -> state.copy(
+            voiceSearchState = VoiceSearchReducer.reduce(state.voiceSearchState, action),
         )
 
         is AppAction.ShareAction -> ShareActionReducer.reduce(state, action)

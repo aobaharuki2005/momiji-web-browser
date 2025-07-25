@@ -71,6 +71,7 @@ import org.mozilla.fenix.wallpapers.WallpaperState
  * @property isPrivateScreenLocked Whether the private browsing mode is currently locked behind
  * authentication.
  * @property reviewPrompt Whether we should show a review prompt and whether we ran the eligibility check at all
+ * @property voiceSearchState The [VoiceSearchState] representing the current state of voice search functionality.
  */
 data class AppState(
     val isForeground: Boolean = true,
@@ -105,4 +106,5 @@ data class AppState(
     val qrScannerState: QrScannerState = QrScannerState.DEFAULT,
     val isPrivateScreenLocked: Boolean = false,
     val reviewPrompt: ReviewPromptState = Unknown,
+    val voiceSearchState: VoiceSearchState = VoiceSearchState(),
 ) : State

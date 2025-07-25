@@ -4,8 +4,10 @@
 
 package org.mozilla.fenix.search
 
+import android.content.Intent
 import android.content.res.Resources
 import android.os.Build
+import android.speech.RecognizerIntent
 import androidx.annotation.VisibleForTesting
 import androidx.core.graphics.drawable.toDrawable
 import androidx.lifecycle.Lifecycle.State.RESUMED
@@ -14,7 +16,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.AwesomeBarAction.EngagementFinished
 import mozilla.components.browser.state.search.SearchEngine
@@ -65,6 +69,8 @@ import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEngineSelected
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
+import org.mozilla.fenix.components.appstate.VoiceSearchAction.VoiceInputRequestCleared
+import org.mozilla.fenix.components.appstate.VoiceSearchAction.VoiceInputRequested
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
@@ -73,6 +79,7 @@ import org.mozilla.fenix.ext.toolbarHintRes
 import org.mozilla.fenix.home.toolbar.HomeToolbarEnvironment
 import org.mozilla.fenix.search.EditPageEndActionsInteractions.ClearSearchClicked
 import org.mozilla.fenix.search.EditPageEndActionsInteractions.QrScannerClicked
+import org.mozilla.fenix.search.EditPageEndActionsInteractions.VoiceSearchButtonClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSelectorClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSelectorItemClicked
 import org.mozilla.fenix.search.SearchSelectorEvents.SearchSettingsItemClicked
@@ -88,6 +95,7 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.B
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton.Text.StringResText as MenuItemStringResText
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton.Text.StringText as MenuItemStringText
 import mozilla.components.lib.state.Action as MVIAction
+import mozilla.components.ui.icons.R as iconsR
 
 @VisibleForTesting
 internal sealed class SearchSelectorEvents : BrowserToolbarEvent {
@@ -104,6 +112,8 @@ internal sealed class SearchSelectorEvents : BrowserToolbarEvent {
 internal sealed class EditPageEndActionsInteractions : BrowserToolbarEvent {
     data object ClearSearchClicked : EditPageEndActionsInteractions()
     data object QrScannerClicked : EditPageEndActionsInteractions()
+
+    data object VoiceSearchButtonClicked : SearchSelectorEvents()
 }
 
 /**
@@ -126,6 +136,7 @@ class BrowserToolbarSearchMiddleware(
     private var syncCurrentSearchEngineJob: Job? = null
     private var syncAvailableSearchEnginesJob: Job? = null
     private var observeQRScannerInputJob: Job? = null
+    private var observeVoiceInputJob: Job? = null
 
     @Suppress("CyclomaticComplexMethod", "LongMethod")
     override fun invoke(
@@ -157,6 +168,7 @@ class BrowserToolbarSearchMiddleware(
                         context = context,
                         searchEngine = reconcileSelectedEngine(),
                     )
+                    observeVoiceInputResults(context)
                     syncCurrentSearchEngine(context)
                     syncAvailableEngines(context)
                     updateSearchEndPageActions(context)
@@ -168,6 +180,7 @@ class BrowserToolbarSearchMiddleware(
                         appStore.dispatch(AppAction.QrScannerAction.QrScannerDismissed)
                     }
                     observeQRScannerInputJob?.cancel()
+                    observeVoiceInputJob?.cancel()
                 }
             }
 
@@ -261,6 +274,10 @@ class BrowserToolbarSearchMiddleware(
                 appStore.dispatch(AppAction.QrScannerAction.QrScannerRequested)
             }
 
+            is VoiceSearchButtonClicked -> {
+                appStore.dispatch(VoiceInputRequested)
+            }
+
             else -> {
                 // no-op.
             }
@@ -269,7 +286,7 @@ class BrowserToolbarSearchMiddleware(
 
     private fun openSearchOrUrl(text: String, navController: NavController) {
         val searchEngine = reconcileSelectedEngine()
-        val isDefaultEngine = searchEngine?.id == browserStore.state.search.regionDefaultSearchEngineId
+        val isDefaultEngine = searchEngine?.id == browserStore.state.search.selectedOrDefaultSearchEngine?.id
         val newTab = if (settings.enableHomepageAsNewTab) {
             false
         } else {
@@ -436,6 +453,16 @@ class BrowserToolbarSearchMiddleware(
     ): List<Action> = buildList {
         val isValidSearchEngine = selectedSearchEngine?.isGeneral == true ||
                 selectedSearchEngine?.type == CUSTOM
+
+        if (isSpeechRecognitionAvailable()) {
+            add(
+                ActionButtonRes(
+                    drawableResId = iconsR.drawable.mozac_ic_microphone_24,
+                    contentDescription = R.string.voice_search_content_description,
+                    onClick = VoiceSearchButtonClicked,
+                ),
+            )
+        }
         if (isValidSearchEngine) {
             add(
                 ActionButtonRes(
@@ -479,6 +506,33 @@ class BrowserToolbarSearchMiddleware(
                 }
         }
     }
+
+    private fun observeVoiceInputResults(
+        context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
+    ) {
+        observeVoiceInputJob?.cancel()
+        observeVoiceInputJob = appStore.observeWhileActive {
+            map { it.voiceSearchState.voiceInputResult }
+                .distinctUntilChanged()
+                .collect { voiceInputResult ->
+                    if (!voiceInputResult.isNullOrEmpty()) {
+                        context.dispatch(
+                            SearchQueryUpdated(
+                                query = voiceInputResult,
+                                showAsPreselected = true,
+                            ),
+                        )
+                        appStore.dispatch(VoiceInputRequestCleared)
+                    }
+                }
+        }
+    }
+
+    @VisibleForTesting
+    internal fun isSpeechRecognitionAvailable() = environment?.context?.let {
+        Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .resolveActivity(it.packageManager) != null
+    } ?: false
 
     private inline fun <S : State, A : MVIAction> Store<S, A>.observeWhileActive(
         crossinline observe: suspend (Flow<S>.() -> Unit),
