@@ -171,12 +171,6 @@ class TopSitesTest : TestSetup() {
         }.openContextMenuOnTopSitesWithTitle(activityIntentTestRule, webPage.title) {
             verifyTopSiteContextMenuItems(activityIntentTestRule)
         }.removeTopSite(activityIntentTestRule) {
-            clickSnackbarButton(activityIntentTestRule, "UNDO")
-            verifyExistingTopSitesList(activityIntentTestRule)
-            verifyExistingTopSitesTabs(activityIntentTestRule, webPage.title)
-        }.openContextMenuOnTopSitesWithTitle(activityIntentTestRule, webPage.title) {
-            verifyTopSiteContextMenuItems(activityIntentTestRule)
-        }.removeTopSite(activityIntentTestRule) {
             verifyNotExistingTopSiteItem(activityIntentTestRule, webPage.title)
         }
     }
