@@ -250,6 +250,56 @@ operation could be missed if it hasn't completed by the end of the profiling ses
 In this case, consider recording two distinct markers, using
 ``MarkerTiming::IntervalStart()`` and ``MarkerTiming::IntervalEnd()``.
 
+Flow markers
+^^^^^^^^^^^^
+
+Markers can be part of a `flow`. Those are ids that allow associating
+different markers together. A `flow` is a 64-bits integer that's formatted as
+either a ``Flow`` or a ``TerminatingFlow``. ``TerminatingFlows`` mark the end of
+a flow and allow a flow id to be reused for a new flow. This is especially
+useful when using Flow ids derived from pointer values.
+
+Flow markers are useful, for example, to annotate asynchronous operations, or
+associate different parts of a long operation. In addition, it is possible to
+determine the flow that was responsible for creating another flow, allowing
+tracing through the causes and consequences of a series of (often asynchronous)
+events.
+
+..  code-block:: cpp
+
+    nsHttpChannel::OnStartRequest(nsIRequest* request) {
+      // A marker that spans the duration of this method
+      AUTO_PROFILER_FLOW_MARKER("nsHttpChannel::OnStartRequest", NETWORK, Flow::FromPointer(this));
+      // ...
+    }
+
+    nsHttpChannel::ConnectOnTailUnblock() {
+      // Will be in the same flow as this method execution, that also lasts the
+      // duration of the block
+      AUTO_PROFILER_FLOW_MARKER("nsHttpChannel::ConnectOnTailUnblock", NETWORK, Flow::FromPointer(this));
+      // ...
+    }
+
+    nsHttpChannel::~nsHttpChannel() {
+      // Terminate the flow -- this is a marker without a duration
+      PROFILER_MARKER("~nsHttpChannel", NETWORK, {}, TerminatingFlowMarker, Flow::FromPointer(this));
+      // ...
+    }
+
+If there’s not an obvious pointer that matches the lifetime of the flow, there are alternatives:
+
+- `Flow::ProcessScoped(uint64_t aFlowId) <https://searchfox.org/mozilla-central/rev/86878e73a24fe32ea09dbae5b55362efaf7485c8/mozglue/baseprofiler/public/Flow.h#43>`__ -- the id should be unique in the process
+- `Flow::Global(uint64_t aFlowId) <https://searchfox.org/mozilla-central/rev/86878e73a24fe32ea09dbae5b55362efaf7485c8/mozglue/baseprofiler/public/Flow.h#58>`__ -- the id should be unique across all processes
+
+``Runnable``, IPC, and ``Task`` have already been annotated with flow markers.
+This allow linking flows together, even across process boundaries.
+
+Those flow markers can be visualized in the profiler UI, but support hasn't been
+merged yet. In the meantime, loading the Firefox profile in
+https://deploy-preview-5190--perf-html.netlify.app/ will allow you to see the
+flow markers in a panel at the bottom. The frontend work is ongoing in
+https://github.com/firefox-devtools/profiler/pull/5190.
+
 Text Markers
 ^^^^^^^^^^^^
 
