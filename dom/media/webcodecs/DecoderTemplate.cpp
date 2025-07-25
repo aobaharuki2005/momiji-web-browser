@@ -563,6 +563,10 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
                  return;
                }
 
+               LOG("%s %p, DecoderAgent #%d configured successfully. %u decode "
+                   "requests are pending",
+                   DecoderType::Name.get(), self.get(), id,
+                   self->mDecodeQueueSize);
                self->mMessageQueueBlocked = false;
                self->ProcessControlMessageQueue();
              })
