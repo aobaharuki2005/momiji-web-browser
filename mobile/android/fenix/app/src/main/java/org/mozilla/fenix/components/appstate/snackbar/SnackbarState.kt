@@ -113,6 +113,11 @@ sealed class SnackbarState {
     data object CopyLinkToClipboard : SnackbarState()
 
     /**
+     * Display a snackbar when a crash report is sent
+     */
+    data object ReportSent : SnackbarState()
+
+    /**
      * Display a snackbar when an URL has been copied to the clipboard.
      */
     data object URLCopiedToClipboard : SnackbarState()

@@ -1100,6 +1100,9 @@
     <!-- Preference switch title for automatically submitting crash reports -->
     <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Automatically send crash reports</string>
 
+    <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+    <string name="crash_reporting_snack_bar_message">Report sent</string>
+
     <!-- Preference switch description for automatically submitting crash reports -->
     <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">This helps us diagnose and fix issues with the browser. Reports may include personal or sensitive data.</string>
     <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1595,7 +1598,9 @@
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">Restore tab</string>
     <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox").  -->
-    <string name="unsubmitted_crash_dialog_title">%s had to restart</string>
+    <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s had to restart</string>
+    <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox").  -->
+    <string name="unsubmitted_crash_dialog_title_2">%s crashed. Send a report?</string>
     <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
     <string name="unsubmitted_crash_requested_by_devs_dialog_title">You have an unsent crash report related to crashes being investigated. Sending it will help us improve %1$s. Closing this notification will ignore this report.</string>
     <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1604,10 +1609,20 @@
     <string name="unsubmitted_crash_dialog_checkbox_label">Automatically send crash reports</string>
     <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
     <string name="unsubmitted_crash_dialog_negative_button">Close</string>
+    <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+    <string name="unsubmitted_crash_dialog_negative_button_2">CLOSE</string>
+
     <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
     <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Never show again</string>
     <!-- Unsubmitted crash dialog positive button to submit crash report -->
+    <string name="unsubmitted_crash_dialog_positive_button_2">SEND</string>
+    <!-- Unsubmitted crash dialog positive button to submit crash report -->
     <string name="unsubmitted_crash_dialog_positive_button">Send crash report</string>
+
+    <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+    <string name="unsubmitted_crash_dialog_body">Crash reports help us to diagnose and fix issues with the browser. Reports may include personal or sensitive data. %s</string>
+
+    <string name="unsubmitted_crash_dialog_learn_more">Learn more</string>
     <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
     <string name="unsubmitted_crash_requested_by_devs_learn_more">Learn More</string>
 

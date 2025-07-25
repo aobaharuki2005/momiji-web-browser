@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components.appstate
 
 import androidx.annotation.VisibleForTesting
+import mozilla.components.lib.crash.store.CrashAction
 import mozilla.components.lib.crash.store.crashReducer
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.privatebrowsinglock.PrivateBrowsingLockReducer
@@ -207,10 +208,17 @@ internal object AppStoreReducer {
         is AppAction.FindInPageAction -> FindInPageStateReducer.reduce(state, action)
         is AppAction.ReaderViewAction -> ReaderViewStateReducer.reduce(state, action)
         is AppAction.ShortcutAction -> ShortcutStateReducer.reduce(state, action)
-        is AppAction.CrashActionWrapper -> state.copy(
-            crashState = crashReducer(state.crashState, action.inner),
-        )
-
+        is AppAction.CrashActionWrapper -> {
+            val newSnackbarState = if (action.inner is CrashAction.ReportTapped) {
+                SnackbarState.ReportSent
+            } else {
+                state.snackbarState
+            }
+            state.copy(
+                crashState = crashReducer(state.crashState, action.inner),
+                snackbarState = newSnackbarState,
+            )
+        }
         is AppAction.SnackbarAction -> SnackbarStateReducer.reduce(state, action)
         is AppAction.UpdateWasNativeDefaultBrowserPromptShown -> {
             state.copy(wasNativeDefaultBrowserPromptShown = action.wasShown)

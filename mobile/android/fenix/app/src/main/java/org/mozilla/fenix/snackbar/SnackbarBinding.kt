@@ -84,6 +84,15 @@ class SnackbarBinding(
                         showBookmarkAddedSnackbarFor(state)
                     }
 
+                    is SnackbarState.ReportSent -> {
+                        snackbarDelegate.show(
+                            text = R.string.crash_reporting_snack_bar_message,
+                            duration = Snackbar.LENGTH_SHORT,
+                        )
+
+                        appStore.dispatch(SnackbarAction.SnackbarShown)
+                    }
+
                     is SnackbarState.BookmarkDeleted -> {
                         snackbarDelegate.show(
                             text = context.getString(R.string.bookmark_deletion_snackbar_message, state.title),
