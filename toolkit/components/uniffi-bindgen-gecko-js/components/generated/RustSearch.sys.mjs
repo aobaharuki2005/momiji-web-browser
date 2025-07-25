@@ -389,6 +389,96 @@ export class FfiConverterOptionalSequenceTypeSearchUrlParam extends FfiConverter
         return 1 + FfiConverterSequenceTypeSearchUrlParam.computeSize(value)
     }
 }
+// Export the FFIConverter object to make external types work.
+export class FfiConverterMapStringString extends FfiConverterArrayBuffer {
+    static read(dataStream) {
+        const len = dataStream.readInt32();
+        const map = new Map();
+        for (let i = 0; i < len; i++) {
+            const key = FfiConverterString.read(dataStream);
+            const value = FfiConverterString.read(dataStream);
+            map.set(key, value);
+        }
+
+        return map;
+    }
+
+     static write(dataStream, map) {
+        dataStream.writeInt32(map.size);
+        for (const [key, value] of map) {
+            FfiConverterString.write(dataStream, key);
+            FfiConverterString.write(dataStream, value);
+        }
+    }
+
+    static computeSize(map) {
+        // The size of the length
+        let size = 4;
+        for (const [key, value] of map) {
+            size += FfiConverterString.computeSize(key);
+            size += FfiConverterString.computeSize(value);
+        }
+        return size;
+    }
+
+    static checkType(map) {
+        for (const [key, value] of map) {
+            try {
+                FfiConverterString.checkType(key);
+            } catch (e) {
+                if (e instanceof UniFFITypeError) {
+                    e.addItemDescriptionPart("(key)");
+                }
+                throw e;
+            }
+
+            try {
+                FfiConverterString.checkType(value);
+            } catch (e) {
+                if (e instanceof UniFFITypeError) {
+                    e.addItemDescriptionPart(`[${key}]`);
+                }
+                throw e;
+            }
+        }
+    }
+}
+// Export the FFIConverter object to make external types work.
+export class FfiConverterOptionalMapStringString extends FfiConverterArrayBuffer {
+    static checkType(value) {
+        if (value !== undefined && value !== null) {
+            FfiConverterMapStringString.checkType(value)
+        }
+    }
+
+    static read(dataStream) {
+        const code = dataStream.readUint8(0);
+        switch (code) {
+            case 0:
+                return null
+            case 1:
+                return FfiConverterMapStringString.read(dataStream)
+            default:
+                throw new UniFFIError(`Unexpected code: ${code}`);
+        }
+    }
+
+    static write(dataStream, value) {
+        if (value === null || value === undefined) {
+            dataStream.writeUint8(0);
+            return;
+        }
+        dataStream.writeUint8(1);
+        FfiConverterMapStringString.write(dataStream, value)
+    }
+
+    static computeSize(value) {
+        if (value === null || value === undefined) {
+            return 1;
+        }
+        return 1 + FfiConverterMapStringString.computeSize(value)
+    }
+}
 /**
  * Defines an individual search engine URL. This is defined separately to
  * `types::SearchEngineUrl` as various fields may be optional in the supplied
@@ -401,13 +491,13 @@ export class JsonEngineUrl {
             method, 
             params, 
             searchTermParamName, 
-            displayName
+            displayNameMap
         } = {
             base: undefined, 
             method: undefined, 
             params: undefined, 
             searchTermParamName: undefined, 
-            displayName: undefined
+            displayNameMap: undefined
         }
     ) {
         try {
@@ -443,10 +533,10 @@ export class JsonEngineUrl {
             throw e;
         }
         try {
-            FfiConverterOptionalString.checkType(displayName)
+            FfiConverterOptionalMapStringString.checkType(displayNameMap)
         } catch (e) {
             if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("displayName");
+                e.addItemDescriptionPart("displayNameMap");
             }
             throw e;
         }
@@ -472,10 +562,13 @@ export class JsonEngineUrl {
          */
         this.searchTermParamName = searchTermParamName;
         /**
-         * The display name of the URL, if any. This is useful if the URL
-         * corresponds to a brand name distinct from the engine's brand name.
+         * A map from locale codes to display names of the URL. This is useful if
+         * the URL corresponds to a brand name distinct from the engine's brand
+         * name. Since brand names can be localized, this is a map rather than a
+         * URL. The client will fall back to the special locale code "default" when
+         * its locale is not present in the map.
          */
-        this.displayName = displayName;
+        this.displayNameMap = displayNameMap;
     }
 
     equals(other) {
@@ -484,7 +577,7 @@ export class JsonEngineUrl {
             && this.method == other.method
             && this.params == other.params
             && this.searchTermParamName == other.searchTermParamName
-            && this.displayName == other.displayName
+            && this.displayNameMap == other.displayNameMap
         )
     }
 }
@@ -497,7 +590,7 @@ export class FfiConverterTypeJSONEngineUrl extends FfiConverterArrayBuffer {
             method: FfiConverterOptionalTypeJSONEngineMethod.read(dataStream),
             params: FfiConverterOptionalSequenceTypeSearchUrlParam.read(dataStream),
             searchTermParamName: FfiConverterOptionalString.read(dataStream),
-            displayName: FfiConverterOptionalString.read(dataStream),
+            displayNameMap: FfiConverterOptionalMapStringString.read(dataStream),
         });
     }
     static write(dataStream, value) {
@@ -505,7 +598,7 @@ export class FfiConverterTypeJSONEngineUrl extends FfiConverterArrayBuffer {
         FfiConverterOptionalTypeJSONEngineMethod.write(dataStream, value.method);
         FfiConverterOptionalSequenceTypeSearchUrlParam.write(dataStream, value.params);
         FfiConverterOptionalString.write(dataStream, value.searchTermParamName);
-        FfiConverterOptionalString.write(dataStream, value.displayName);
+        FfiConverterOptionalMapStringString.write(dataStream, value.displayNameMap);
     }
 
     static computeSize(value) {
@@ -514,7 +607,7 @@ export class FfiConverterTypeJSONEngineUrl extends FfiConverterArrayBuffer {
         totalSize += FfiConverterOptionalTypeJSONEngineMethod.computeSize(value.method);
         totalSize += FfiConverterOptionalSequenceTypeSearchUrlParam.computeSize(value.params);
         totalSize += FfiConverterOptionalString.computeSize(value.searchTermParamName);
-        totalSize += FfiConverterOptionalString.computeSize(value.displayName);
+        totalSize += FfiConverterOptionalMapStringString.computeSize(value.displayNameMap);
         return totalSize
     }
 
@@ -556,10 +649,10 @@ export class FfiConverterTypeJSONEngineUrl extends FfiConverterArrayBuffer {
             throw e;
         }
         try {
-            FfiConverterOptionalString.checkType(value.displayName);
+            FfiConverterOptionalMapStringString.checkType(value.displayNameMap);
         } catch (e) {
             if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".displayName");
+                e.addItemDescriptionPart(".displayNameMap");
             }
             throw e;
         }
@@ -880,7 +973,7 @@ export class SearchEngineUrl {
             method, 
             params, 
             searchTermParamName, 
-            displayName
+            displayName= null
         } = {
             base: undefined, 
             method: undefined, 
