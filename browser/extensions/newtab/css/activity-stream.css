@@ -4484,6 +4484,68 @@ main section {
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+.progress-circle-wrapper {
+  /* Colours for the main timer */
+  --timer-red: var(--color-red-50);
+  --timer-orange: var(--color-orange-30);
+  --timer-yellow: var(--color-yellow-20);
+  /* Colours for the break timer */
+  --timer-blue: var(--color-blue-20);
+  --timer-violet: var(--color-violet-20);
+  --timer-violet-light: var(--color-violet-0);
+  /* Complete timer */
+  --timer-green: var(--color-green-20);
+  height: 162px;
+  margin: var(--space-medium);
+  position: relative;
+  width: 162px;
+  /* main timer colours */
+  /* break timer colours */
+  /* timer turns green when complete */
+}
+.progress-circle-wrapper .progress-circle-background,
+.progress-circle-wrapper .progress-circle,
+.progress-circle-wrapper .progress-circle-complete {
+  --thickness: var(--space-small);
+  border-radius: 50%;
+  inset: 0;
+  mask: radial-gradient(farthest-side, transparent calc(100% - var(--thickness)), black calc(100% - var(--thickness)));
+  position: absolute;
+}
+.progress-circle-wrapper .progress-circle-background {
+  background-color: var(--border-color);
+}
+.progress-circle-wrapper .progress-circle,
+.progress-circle-wrapper .progress-circle-complete {
+  background: conic-gradient(rgba(232, 57, 92, 0) 0deg, #e8395c 30deg, var(--timer-red) 60deg, var(--timer-orange) 180deg, var(--timer-yellow) 360deg);
+}
+.progress-circle-wrapper .progress-circle-break {
+  background: conic-gradient(rgba(159, 201, 255, 0) 0deg, #9fc9ff 30deg, var(--timer-blue) 60deg, var(--timer-violet) 180deg, var(--timer-violet-light) 360deg);
+}
+.progress-circle-wrapper .progress-circle-complete {
+  background: var(--timer-green);
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+  z-index: 2;
+}
+.progress-circle-wrapper .progress-circle-complete.visible {
+  opacity: 1;
+}
+.progress-circle-wrapper .progress-circle-label {
+  align-items: center;
+  color: var(--text-color);
+  display: flex;
+  font-size: calc(2 * var(--font-size-xlarge));
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  height: 100%;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  justify-content: center;
+  position: absolute;
+  width: 100%;
+}
+
 .ds-onboarding-container,
 .ds-card-grid .ds-card {
   background: var(--newtab-background-color-secondary);

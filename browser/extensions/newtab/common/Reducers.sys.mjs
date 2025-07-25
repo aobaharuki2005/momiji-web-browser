@@ -189,7 +189,7 @@ export const INITIAL_STATE = {
         tasks: [],
       },
     },
-    // Keeping this separate from `lists` so that it isnt rendered
+    // Keeping this separate from `lists` so that it isn't rendered
     // in the same way
     completed: {
       label: "Completed",
@@ -197,8 +197,10 @@ export const INITIAL_STATE = {
     },
   },
   TimerWidget: {
-    // Timer duration set by user
+    // Timer duration set by user; will be updated if user pauses the timer
     duration: 0,
+    // Initial duration - also set by the user; does not update until timer ends or user resets timer
+    initialDuration: 0,
     // the Date.now() value when a user starts/resumes a timer
     startTime: null,
     // Boolean indicating if timer is currently running
@@ -1109,6 +1111,7 @@ function TimerWidget(prevState = INITIAL_STATE.TimerWidget, action) {
     case at.WIDGETS_TIMER_SET_DURATION:
       return {
         duration: action.data,
+        initialDuration: action.data,
         startTime: null,
         isRunning: false,
       };
@@ -1133,6 +1136,7 @@ function TimerWidget(prevState = INITIAL_STATE.TimerWidget, action) {
     case at.WIDGETS_TIMER_RESET:
       return {
         duration: 0,
+        initialDuration: 0,
         startTime: null,
         isRunning: false,
       };
@@ -1140,6 +1144,7 @@ function TimerWidget(prevState = INITIAL_STATE.TimerWidget, action) {
       return {
         ...prevState,
         duration: 0,
+        initialDuration: 0,
         startTime: null,
         isRunning: false,
       };

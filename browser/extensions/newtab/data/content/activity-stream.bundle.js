@@ -7842,7 +7842,7 @@ const INITIAL_STATE = {
         tasks: [],
       },
     },
-    // Keeping this separate from `lists` so that it isnt rendered
+    // Keeping this separate from `lists` so that it isn't rendered
     // in the same way
     completed: {
       label: "Completed",
@@ -7850,8 +7850,10 @@ const INITIAL_STATE = {
     },
   },
   TimerWidget: {
-    // Timer duration set by user
+    // Timer duration set by user; will be updated if user pauses the timer
     duration: 0,
+    // Initial duration - also set by the user; does not update until timer ends or user resets timer
+    initialDuration: 0,
     // the Date.now() value when a user starts/resumes a timer
     startTime: null,
     // Boolean indicating if timer is currently running
@@ -8762,6 +8764,7 @@ function TimerWidget(prevState = INITIAL_STATE.TimerWidget, action) {
     case actionTypes.WIDGETS_TIMER_SET_DURATION:
       return {
         duration: action.data,
+        initialDuration: action.data,
         startTime: null,
         isRunning: false,
       };
@@ -8786,6 +8789,7 @@ function TimerWidget(prevState = INITIAL_STATE.TimerWidget, action) {
     case actionTypes.WIDGETS_TIMER_RESET:
       return {
         duration: 0,
+        initialDuration: 0,
         startTime: null,
         isRunning: false,
       };
@@ -8793,6 +8797,7 @@ function TimerWidget(prevState = INITIAL_STATE.TimerWidget, action) {
       return {
         ...prevState,
         duration: 0,
+        initialDuration: 0,
         startTime: null,
         isRunning: false,
       };
@@ -12338,23 +12343,90 @@ function Lists({
 
 
 
+
+/**
+ * Calculates the remaining time (in seconds) by subtracting elapsed time from the original duration
+ *
+ * @param duration
+ * @param start
+ * @returns int
+ */
+const calculateTimeRemaining = (duration, start) => {
+  const currentTime = Math.floor(Date.now() / 1000);
+
+  // Subtract the elapsed time from initial duration to get time remaining in the timer
+  return Math.max(duration - (currentTime - start), 0);
+};
+
+/**
+ * Converts a number of seconds into a zero-padded MM:SS time string
+ *
+ * @param seconds
+ * @returns string
+ */
+const formatTime = seconds => {
+  const minutes = Math.floor(seconds / 60).toString().padStart(2, "0");
+  const secs = (seconds % 60).toString().padStart(2, "0");
+  return `${minutes}:${secs}`;
+};
+
+/**
+ * Converts a polar coordinate (angle on circle) into a percentage-based [x,y] position for clip-path
+ *
+ * @param cx
+ * @param cy
+ * @param radius
+ * @param angle
+ * @returns string
+ */
+const polarToPercent = (cx, cy, radius, angle) => {
+  const rad = (angle - 90) * Math.PI / 180;
+  const x = cx + radius * Math.cos(rad);
+  const y = cy + radius * Math.sin(rad);
+  return `${x}% ${y}%`;
+};
+
+/**
+ * Generates a clip-path polygon string that represents a pie slice from 0 degrees
+ * to the current progress angle
+ *
+ * @returns string
+ * @param progress
+ */
+const getClipPath = progress => {
+  const cx = 50;
+  const cy = 50;
+  const radius = 50;
+  // Show some progress right at the start - 6 degrees is just enough to paint a dot once the timer is ticking
+  const angle = progress > 0 ? Math.max(progress * 360, 6) : 0;
+  const points = [`50% 50%`];
+  for (let a = 0; a <= angle; a += 2) {
+    points.push(polarToPercent(cx, cy, radius, a));
+  }
+  return `polygon(${points.join(", ")})`;
+};
 function FocusTimer({
   dispatch
 }) {
   const inputRef = (0,external_React_namespaceObject.useRef)(null);
+  const arcRef = (0,external_React_namespaceObject.useRef)(null);
   const timerData = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.TimerWidget);
   const {
     duration,
+    initialDuration,
     startTime,
     isRunning
   } = timerData;
   const [timeLeft, setTimeLeft] = (0,external_React_namespaceObject.useState)(0);
-  const calculateTimeRemaining = (dur, start) => {
-    const currentTime = Math.floor(Date.now() / 1000);
-
-    // Subtract the elapsed time from initial duration to get time remaining in the timer
-    return Math.max(dur - (currentTime - start), 0);
-  };
+  // calculated value for the progress circle; 1 = 100%
+  const [progress, setProgress] = (0,external_React_namespaceObject.useState)(0);
+  const resetProgressCircle = (0,external_React_namespaceObject.useCallback)(() => {
+    if (arcRef?.current) {
+      arcRef.current.style.clipPath = "polygon(50% 50%)";
+      arcRef.current.style.webkitClipPath = "polygon(50% 50%)";
+    }
+    setProgress(0);
+  }, [arcRef]);
   (0,external_React_namespaceObject.useEffect)(() => {
     let interval;
     if (isRunning && duration > 0) {
@@ -12362,13 +12434,22 @@ function FocusTimer({
         const remaining = calculateTimeRemaining(duration, startTime);
         if (remaining <= 0) {
           clearInterval(interval);
+
+          // circle is complete, this will trigger animation to a completed green circle
+          setProgress(1);
+
+          // Reset all styles to default after a delay to allow for the animation above
+          setTimeout(() => {
+            resetProgressCircle();
+          }, 1500);
           dispatch(actionCreators.AlsoToMain({
             type: actionTypes.WIDGETS_TIMER_END
           }));
         }
 
-        // using setTimeNow to trigger a re-render of the component to show live countdown each second
+        // using setTimeLeft to trigger a re-render of the component to show live countdown each second
         setTimeLeft(remaining);
+        setProgress((initialDuration - remaining) / initialDuration);
       }, 1000);
     }
 
@@ -12376,7 +12457,14 @@ function FocusTimer({
     const newTime = isRunning ? calculateTimeRemaining(duration, startTime) : duration;
     setTimeLeft(newTime);
     return () => clearInterval(interval);
-  }, [isRunning, startTime, duration, dispatch, timeLeft]);
+  }, [isRunning, startTime, duration, initialDuration, dispatch, timeLeft, resetProgressCircle]);
+
+  // Update the clip-path of the gradient circle to match the current progress value
+  (0,external_React_namespaceObject.useEffect)(() => {
+    if (arcRef?.current) {
+      arcRef.current.style.clipPath = getClipPath(progress);
+    }
+  }, [progress]);
 
   // set timer function
   const setTimerMinutes = e => {
@@ -12414,11 +12502,9 @@ function FocusTimer({
     dispatch(actionCreators.AlsoToMain({
       type: actionTypes.WIDGETS_TIMER_RESET
     }));
-  };
-  const formatTime = seconds => {
-    const minutes = Math.floor(seconds / 60).toString().padStart(2, "0");
-    const secs = (seconds % 60).toString().padStart(2, "0");
-    return `${minutes}:${secs}`;
+
+    // Reset progress value and gradient arc on the progress circle
+    resetProgressCircle();
   };
   return timerData ? /*#__PURE__*/external_React_default().createElement("article", {
     className: "focus-timer-wrapper"
@@ -12438,7 +12524,20 @@ function FocusTimer({
     onClick: toggleTimer
   }, isRunning ? "Pause" : "Play"), /*#__PURE__*/external_React_default().createElement("button", {
     onClick: resetTimer
-  }, "Reset")), "Time left: ", formatTime(timeLeft)) : null;
+  }, "Reset")), /*#__PURE__*/external_React_default().createElement("div", {
+    role: "progress",
+    className: "progress-circle-wrapper"
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "progress-circle-background"
+  }), /*#__PURE__*/external_React_default().createElement("div", {
+    className: "progress-circle",
+    ref: arcRef
+  }), /*#__PURE__*/external_React_default().createElement("div", {
+    className: `progress-circle-complete ${progress === 1 ? "visible" : ""}`
+  }), /*#__PURE__*/external_React_default().createElement("div", {
+    role: "timer",
+    className: "progress-circle-label"
+  }, /*#__PURE__*/external_React_default().createElement("p", null, formatTime(timeLeft))))) : null;
 }
 
 ;// CONCATENATED MODULE: ./content-src/components/Widgets/Widgets.jsx
