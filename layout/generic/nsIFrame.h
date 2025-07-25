@@ -4526,8 +4526,7 @@ class nsIFrame : public nsQueryFrame {
    */
   template <typename T, typename... Params>
   FrameProperties::PropertyType<T> SetOrUpdateDeletableProperty(
-      FrameProperties::Descriptor<T> aProperty,
-      Params&&... aParams) {
+      FrameProperties::Descriptor<T> aProperty, Params&&... aParams) {
     bool found;
     using DataType = std::remove_pointer_t<FrameProperties::PropertyType<T>>;
     DataType* storedValue = GetProperty(aProperty, &found);

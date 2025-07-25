@@ -1930,10 +1930,8 @@ static Maybe<AnchorPosInfo> GetAnchorPosRect(
       MOZ_ASSERT(result.mEntry, "Entry exists but null?");
       return result.mEntry->map([&](const AnchorPosResolutionData& aData) {
         MOZ_ASSERT(aData.mOrigin, "Missing anchor offset resolution.");
-        return AnchorPosInfo {
-          nsRect{aData.mOrigin.ref(), aData.mSize},
-          containingBlock
-        };
+        return AnchorPosInfo{nsRect{aData.mOrigin.ref(), aData.mSize},
+                             containingBlock};
       });
     }
     entry = result.mEntry;
@@ -2000,11 +1998,11 @@ static Maybe<AnchorPosInfo> GetAnchorPosRect(
   });
 }
 
-bool Gecko_GetAnchorPosOffset(
-    const AnchorPosOffsetResolutionParams* aParams, const nsAtom* aAnchorName,
-    StylePhysicalSide aPropSide,
-    StyleAnchorSideKeyword aAnchorSideKeyword, float aPercentage,
-    Length* aOut) {
+bool Gecko_GetAnchorPosOffset(const AnchorPosOffsetResolutionParams* aParams,
+                              const nsAtom* aAnchorName,
+                              StylePhysicalSide aPropSide,
+                              StyleAnchorSideKeyword aAnchorSideKeyword,
+                              float aPercentage, Length* aOut) {
   if (!aParams || !aParams->mBaseParams.mFrame) {
     return false;
   }
@@ -2100,9 +2098,8 @@ bool Gecko_GetAnchorPosSize(const AnchorPosResolutionParams* aParams,
           aParams->mReferencedAnchors->Lookup(anchorName, false);
       if (result.mAlreadyResolved) {
         MOZ_ASSERT(result.mEntry, "Entry exists but null?");
-        return result.mEntry->map([](const AnchorPosResolutionData& aData) {
-          return aData.mSize;
-        });
+        return result.mEntry->map(
+            [](const AnchorPosResolutionData& aData) { return aData.mSize; });
       }
       entry = result.mEntry;
     }
