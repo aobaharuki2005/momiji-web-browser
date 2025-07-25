@@ -1976,20 +1976,23 @@ void CodeGenerator::visitUDivOrMod(LUDivOrMod* ins) {
   masm.bind(&done);
 }
 
-void CodeGenerator::visitEffectiveAddress(LEffectiveAddress* ins) {
-  const MEffectiveAddress* mir = ins->mir();
+void CodeGenerator::visitEffectiveAddress3(LEffectiveAddress3* ins) {
+  const MEffectiveAddress3* mir = ins->mir();
   Register base = ToRegister(ins->base());
   Register index = ToRegister(ins->index());
   Register output = ToRegister(ins->output());
-  int32_t shift = Imm32::ShiftOf(mir->scale()).value;
 
-  if (shift) {
-    MOZ_ASSERT(shift <= 4);
-    masm.as_alsl_w(output, index, base, shift - 1);
-  } else {
-    masm.as_add_w(output, base, index);
-  }
-  masm.ma_add_w(output, output, Imm32(mir->displacement()));
+  BaseIndex address(base, index, mir->scale(), mir->displacement());
+  masm.computeEffectiveAddress32(address, output);
+}
+
+void CodeGenerator::visitEffectiveAddress2(LEffectiveAddress2* ins) {
+  const MEffectiveAddress2* mir = ins->mir();
+  Register index = ToRegister(ins->index());
+  Register output = ToRegister(ins->output());
+
+  BaseIndex address(zero, index, mir->scale(), mir->displacement());
+  masm.computeEffectiveAddress32(address, output);
 }
 
 void CodeGenerator::visitNegI(LNegI* ins) {

@@ -761,6 +761,25 @@ FaultingCodeOffset MacroAssemblerMIPS64::ma_store(
   return fco;
 }
 
+void MacroAssemblerMIPS64Compat::computeScaledAddress32(
+    const BaseIndex& address, Register dest) {
+  Register base = address.base;
+  Register index = address.index;
+  int32_t shift = Imm32::ShiftOf(address.scale).value;
+  ScratchRegisterScope scratch(asMasm());
+  if (shift && base == zero) {
+    MOZ_ASSERT(shift <= 4);
+    ma_sll(dest, index, Imm32(shift));
+  } else if (shift) {
+    Register tmp = dest == base ? scratch : dest;
+    MOZ_ASSERT(shift <= 4);
+    ma_sll(tmp, index, Imm32(shift));
+    as_addu(dest, base, tmp);
+  } else {
+    as_addu(dest, base, index);
+  }
+}
+
 void MacroAssemblerMIPS64Compat::computeScaledAddress(const BaseIndex& address,
                                                       Register dest) {
   int32_t shift = Imm32::ShiftOf(address.scale).value;

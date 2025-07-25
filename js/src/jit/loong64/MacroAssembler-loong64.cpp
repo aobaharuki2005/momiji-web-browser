@@ -945,6 +945,20 @@ void MacroAssemblerLOONG64Compat::computeScaledAddress(const BaseIndex& address,
   }
 }
 
+void MacroAssemblerLOONG64Compat::computeScaledAddress32(
+    const BaseIndex& address, Register dest) {
+  Register base = address.base;
+  Register index = address.index;
+  int32_t shift = Imm32::ShiftOf(address.scale).value;
+
+  if (shift) {
+    MOZ_ASSERT(shift <= 4);
+    as_alsl_w(dest, index, base, shift - 1);
+  } else {
+    as_add_w(dest, base, index);
+  }
+}
+
 void MacroAssemblerLOONG64::ma_pop(Register r) {
   MOZ_ASSERT(r != StackPointer);
   as_ld_d(r, StackPointer, 0);

@@ -251,12 +251,24 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
   void movq(Register rs, Register rd);
 
   void computeScaledAddress(const BaseIndex& address, Register dest);
+  void computeScaledAddress32(const BaseIndex& address, Register dest);
 
   void computeEffectiveAddress(const Address& address, Register dest) {
     ma_daddu(dest, address.base, Imm32(address.offset));
   }
 
   void computeEffectiveAddress(const BaseIndex& address, Register dest);
+
+  void computeEffectiveAddress32(const Address& address, Register dest) {
+    ma_addu(dest, address.base, Imm32(address.offset));
+  }
+
+  void computeEffectiveAddress32(const BaseIndex& address, Register dest) {
+    computeScaledAddress32(address, dest);
+    if (address.offset) {
+      ma_addu(dest, dest, Imm32(address.offset));
+    }
+  }
 
   void j(Label* dest) { ma_b(dest); }
 

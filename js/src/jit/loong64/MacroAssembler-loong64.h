@@ -439,6 +439,7 @@ class MacroAssemblerLOONG64Compat : public MacroAssemblerLOONG64 {
   void movq(Register rj, Register rd);
 
   void computeScaledAddress(const BaseIndex& address, Register dest);
+  void computeScaledAddress32(const BaseIndex& address, Register dest);
 
   void computeEffectiveAddress(const Address& address, Register dest) {
     ma_add_d(dest, address.base, Imm32(address.offset));
@@ -448,6 +449,17 @@ class MacroAssemblerLOONG64Compat : public MacroAssemblerLOONG64 {
     computeScaledAddress(address, dest);
     if (address.offset) {
       ma_add_d(dest, dest, Imm32(address.offset));
+    }
+  }
+
+  void computeEffectiveAddress32(const Address& address, Register dest) {
+    ma_add_w(dest, address.base, Imm32(address.offset));
+  }
+
+  void computeEffectiveAddress32(const BaseIndex& address, Register dest) {
+    computeScaledAddress32(address, dest);
+    if (address.offset) {
+      ma_add_w(dest, dest, Imm32(address.offset));
     }
   }
 
