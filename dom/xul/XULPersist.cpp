@@ -89,7 +89,7 @@ void XULPersist::Persist(Element* aElement, nsAtom* aAttribute) {
   if (!mDocument) {
     return;
   }
-  // For non-chrome documents, persistance is simply broken
+  // For non-chrome documents, persistence is simply broken
   if (!mDocument->NodePrincipal()->IsSystemPrincipal()) {
     return;
   }
