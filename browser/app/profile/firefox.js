@@ -1007,11 +1007,7 @@ pref("browser.tabs.groups.hoverPreview.enabled", true);
 pref("browser.tabs.groups.hoverPreview.enabled", false);
 #endif
 
-#ifdef NIGHTLY_BUILD
 pref("browser.tabs.groups.smart.enabled", true);
-#else
-pref("browser.tabs.groups.smart.enabled", false);
-#endif
 
 // KMEANS_WITH_ANCHOR or NEAREST_NEIGHBOR or LOGISTIC_REGRESSION
 pref("browser.tabs.groups.smart.suggestOtherTabsMethod", "NEAREST_NEIGHBOR");

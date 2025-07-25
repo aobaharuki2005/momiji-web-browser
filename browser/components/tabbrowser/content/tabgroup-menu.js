@@ -479,6 +479,7 @@
 
     get smartTabGroupsEnabled() {
       return (
+        Services.locale.appLocaleAsBCP47.startsWith("en") &&
         this.smartTabGroupsUserEnabled &&
         this.smartTabGroupsFeatureConfigEnabled &&
         !PrivateBrowsingUtils.isWindowPrivate(this.ownerGlobal)
