@@ -1268,6 +1268,21 @@ export var Policies = {
           param.Locked
         );
       }
+      if ("BaselineExceptions" in param) {
+        PoliciesUtils.setDefaultPref(
+          "privacy.trackingprotection.allow_list.baseline.enabled",
+          param.BaselineExceptions,
+          param.Locked
+        );
+      }
+
+      if ("ConvenienceExceptions" in param) {
+        PoliciesUtils.setDefaultPref(
+          "privacy.trackingprotection.allow_list.convenience.enabled",
+          param.ConvenienceExceptions,
+          param.Locked
+        );
+      }
     },
   },
 
