@@ -1175,7 +1175,7 @@ void js::GCMarker::markAndTraverseEdge(S* source, const T& target) {
 
 template <uint32_t opts>
 MOZ_NEVER_INLINE bool js::GCMarker::markAndTraversePrivateGCThing(
-    JSObject* source, TenuredCell* target) {
+    JSObject* source, Cell* target) {
   JS::TraceKind kind = target->getTraceKind();
   ApplyGCThingTyped(target, kind, [this, source](auto t) {
     this->markAndTraverseEdge<opts>(source, t);
@@ -1618,8 +1618,7 @@ scan_value_range:
       markAndTraverseEdge<opts>(obj, v.toBigInt());
     } else {
       MOZ_ASSERT(v.isPrivateGCThing());
-      if (!markAndTraversePrivateGCThing<opts>(obj,
-                                               &v.toGCThing()->asTenured())) {
+      if (!markAndTraversePrivateGCThing<opts>(obj, v.toGCThing())) {
         return true;
       }
     }

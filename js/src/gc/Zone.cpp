@@ -165,6 +165,7 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       allocNurseryObjects_(true),
       allocNurseryStrings_(true),
       allocNurseryBigInts_(true),
+      allocNurseryGetterSetters_(true),
       pretenuring(this),
       crossZoneStringWrappers_(this),
       shapeZone_(this),

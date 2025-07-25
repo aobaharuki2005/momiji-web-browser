@@ -827,30 +827,27 @@ constexpr inline bool GCTypeIsTenured() {
 }
 
 template <class PtrT>
-class alignas(gc::CellAlignBytes) TenuredCellWithGCPointer
-    : public TenuredCell {
+class alignas(gc::CellAlignBytes) CellWithGCPointer : public Cell {
   static void staticAsserts() {
     // These static asserts are not in class scope because the PtrT may not be
     // defined when this class template is instantiated.
     static_assert(
         !std::is_pointer_v<PtrT>,
         "PtrT should be the type of the referent, not of the pointer");
-    static_assert(
-        std::is_base_of_v<Cell, PtrT>,
-        "Only use TenuredCellWithGCPointer for pointers to GC things");
-    static_assert(
-        !GCTypeIsTenured<PtrT>,
-        "Don't use TenuredCellWithGCPointer for always-tenured GC things");
+    static_assert(std::is_base_of_v<Cell, PtrT>,
+                  "Only use CellWithGCPointer for pointers to GC things");
+    static_assert(!GCTypeIsTenured<PtrT>,
+                  "Don't use CellWithGCPointer for always-tenured GC things");
   }
 
  protected:
-  TenuredCellWithGCPointer() = default;
-  explicit TenuredCellWithGCPointer(PtrT* initial) { initHeaderPtr(initial); }
+  CellWithGCPointer() = default;
+  explicit CellWithGCPointer(PtrT* initial) { initHeaderPtr(initial); }
 
   void initHeaderPtr(PtrT* initial) {
     uintptr_t data = uintptr_t(initial);
     this->header_.set(data);
-    if (initial && IsInsideNursery(initial)) {
+    if (initial && isTenured() && IsInsideNursery(initial)) {
       CellHeaderPostWriteBarrier(headerPtrAddress(), nullptr, initial);
     }
   }
@@ -873,7 +870,7 @@ class alignas(gc::CellAlignBytes) TenuredCellWithGCPointer
   }
 
   static constexpr size_t offsetOfHeaderPtr() {
-    return offsetof(TenuredCellWithGCPointer, header_);
+    return offsetof(CellWithGCPointer, header_);
   }
 };
 

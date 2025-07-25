@@ -422,11 +422,13 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::MainThreadOrIonCompileData<bool> allocNurseryObjects_;
   js::MainThreadOrIonCompileData<bool> allocNurseryStrings_;
   js::MainThreadOrIonCompileData<bool> allocNurseryBigInts_;
+  js::MainThreadOrIonCompileData<bool> allocNurseryGetterSetters_;
 
   // Minimum Heap value which results in tenured allocation.
   js::MainThreadData<js::gc::Heap> minObjectHeapToTenure_;
   js::MainThreadData<js::gc::Heap> minStringHeapToTenure_;
   js::MainThreadData<js::gc::Heap> minBigintHeapToTenure_;
+  js::MainThreadData<js::gc::Heap> minGetterSetterHeapToTenure_;
 
  public:
   // Script side-tables. These used to be held by Realm, but are now placed
@@ -735,7 +737,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   void fixupScriptMapsAfterMovingGC(JSTracer* trc);
 
   void setNurseryAllocFlags(bool allocObjects, bool allocStrings,
-                            bool allocBigInts);
+                            bool allocBigInts, bool allocGetterSetters);
 
   bool allocKindInNursery(JS::TraceKind kind) const {
     switch (kind) {
@@ -745,6 +747,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
         return allocNurseryStrings_;
       case JS::TraceKind::BigInt:
         return allocNurseryBigInts_;
+      case JS::TraceKind::GetterSetter:
+        return allocNurseryGetterSetters_;
       default:
         MOZ_CRASH("Unsupported kind for nursery allocation");
     }
@@ -757,6 +761,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   bool allocNurseryBigInts() const { return allocNurseryBigInts_; }
 
+  bool allocNurseryGetterSetters() const { return allocNurseryGetterSetters_; }
+
   js::gc::Heap minHeapToTenure(JS::TraceKind kind) const {
     switch (kind) {
       case JS::TraceKind::Object:
@@ -765,6 +771,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
         return minStringHeapToTenure_;
       case JS::TraceKind::BigInt:
         return minBigintHeapToTenure_;
+      case JS::TraceKind::GetterSetter:
+        return minGetterSetterHeapToTenure_;
       default:
         MOZ_CRASH("Unsupported kind for nursery allocation");
     }

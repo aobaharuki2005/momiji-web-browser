@@ -533,35 +533,44 @@ void js::Nursery::updateAllZoneAllocFlags() {
 
 void js::Nursery::getAllocFlagsForZone(JS::Zone* zone, bool* allocObjectsOut,
                                        bool* allocStringsOut,
-                                       bool* allocBigIntsOut) {
+                                       bool* allocBigIntsOut,
+                                       bool* allocGetterSettersOut) {
   *allocObjectsOut = isEnabled();
   *allocStringsOut =
       isEnabled() && canAllocateStrings() && !zone->nurseryStringsDisabled;
   *allocBigIntsOut =
       isEnabled() && canAllocateBigInts() && !zone->nurseryBigIntsDisabled;
+  *allocGetterSettersOut = isEnabled();
 }
 
 void js::Nursery::setAllocFlagsForZone(JS::Zone* zone) {
   bool allocObjects;
   bool allocStrings;
   bool allocBigInts;
+  bool allocGetterSetters;
 
-  getAllocFlagsForZone(zone, &allocObjects, &allocStrings, &allocBigInts);
-  zone->setNurseryAllocFlags(allocObjects, allocStrings, allocBigInts);
+  getAllocFlagsForZone(zone, &allocObjects, &allocStrings, &allocBigInts,
+                       &allocGetterSetters);
+  zone->setNurseryAllocFlags(allocObjects, allocStrings, allocBigInts,
+                             allocGetterSetters);
 }
 
 void js::Nursery::updateAllocFlagsForZone(JS::Zone* zone) {
   bool allocObjects;
   bool allocStrings;
   bool allocBigInts;
+  bool allocGetterSetters;
 
-  getAllocFlagsForZone(zone, &allocObjects, &allocStrings, &allocBigInts);
+  getAllocFlagsForZone(zone, &allocObjects, &allocStrings, &allocBigInts,
+                       &allocGetterSetters);
 
   if (allocObjects != zone->allocNurseryObjects() ||
       allocStrings != zone->allocNurseryStrings() ||
-      allocBigInts != zone->allocNurseryBigInts()) {
+      allocBigInts != zone->allocNurseryBigInts() ||
+      allocGetterSetters != zone->allocNurseryGetterSetters()) {
     CancelOffThreadIonCompile(zone);
-    zone->setNurseryAllocFlags(allocObjects, allocStrings, allocBigInts);
+    zone->setNurseryAllocFlags(allocObjects, allocStrings, allocBigInts,
+                               allocGetterSetters);
     discardCodeAndSetJitFlagsForZone(zone);
   }
 }
