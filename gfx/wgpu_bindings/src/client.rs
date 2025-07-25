@@ -588,18 +588,12 @@ pub extern "C" fn wgpu_client_drop_compute_pipeline(
     client: &Client,
     id: id::ComputePipelineId,
     implicit_pipeline_layout_id: Option<id::PipelineLayoutId>,
-    implicit_bind_group_layout_ids_ptr: *const id::BindGroupLayoutId,
-    implicit_bind_group_layout_ids_len: usize,
+    implicit_bind_group_layout_ids: FfiSlice<'_, id::BindGroupLayoutId>,
 ) {
     let implicit_layout =
         implicit_pipeline_layout_id.map(|implicit_pipeline_layout_id| ImplicitLayout {
             pipeline: implicit_pipeline_layout_id,
-            bind_groups: Cow::Borrowed(unsafe {
-                std::slice::from_raw_parts(
-                    implicit_bind_group_layout_ids_ptr,
-                    implicit_bind_group_layout_ids_len,
-                )
-            }),
+            bind_groups: Cow::Borrowed(unsafe { implicit_bind_group_layout_ids.as_slice() }),
         });
     client.queue_message(&Message::DropComputePipeline(id, implicit_layout));
 }
@@ -608,18 +602,12 @@ pub extern "C" fn wgpu_client_drop_render_pipeline(
     client: &Client,
     id: id::RenderPipelineId,
     implicit_pipeline_layout_id: Option<id::PipelineLayoutId>,
-    implicit_bind_group_layout_ids_ptr: *const id::BindGroupLayoutId,
-    implicit_bind_group_layout_ids_len: usize,
+    implicit_bind_group_layout_ids: FfiSlice<'_, id::BindGroupLayoutId>,
 ) {
     let implicit_layout =
         implicit_pipeline_layout_id.map(|implicit_pipeline_layout_id| ImplicitLayout {
             pipeline: implicit_pipeline_layout_id,
-            bind_groups: Cow::Borrowed(unsafe {
-                std::slice::from_raw_parts(
-                    implicit_bind_group_layout_ids_ptr,
-                    implicit_bind_group_layout_ids_len,
-                )
-            }),
+            bind_groups: Cow::Borrowed(unsafe { implicit_bind_group_layout_ids.as_slice() }),
         });
     client.queue_message(&Message::DropRenderPipeline(id, implicit_layout));
 }
@@ -902,19 +890,17 @@ pub extern "C" fn wgpu_client_create_swap_chain(
     width: i32,
     height: i32,
     format: crate::SurfaceFormat,
-    buffer_ids: *const id::BufferId,
-    buffer_ids_length: usize,
+    buffers: FfiSlice<'_, id::BufferId>,
     remote_texture_owner_id: crate::RemoteTextureOwnerId,
     use_shared_texture_in_swap_chain: bool,
 ) {
-    let buffer_ids = unsafe { core::slice::from_raw_parts(buffer_ids, buffer_ids_length) };
     let message = Message::CreateSwapChain {
         device_id,
         queue_id,
         width,
         height,
         format,
-        buffer_ids: Cow::Borrowed(buffer_ids),
+        buffer_ids: Cow::Borrowed(unsafe { buffers.as_slice() }),
         remote_texture_owner_id,
         use_shared_texture_in_swap_chain,
     };
@@ -958,19 +944,14 @@ pub extern "C" fn wgpu_client_queue_submit(
     client: &Client,
     device_id: id::DeviceId,
     queue_id: id::QueueId,
-    command_buffers: *const id::CommandBufferId,
-    command_buffers_length: usize,
-    textures: *const id::TextureId,
-    textures_length: usize,
+    command_buffers: FfiSlice<'_, id::CommandBufferId>,
+    swap_chain_textures: FfiSlice<'_, id::TextureId>,
 ) {
-    let command_buffers =
-        unsafe { core::slice::from_raw_parts(command_buffers, command_buffers_length) };
-    let textures = unsafe { core::slice::from_raw_parts(textures, textures_length) };
     let message = Message::QueueSubmit(
         device_id,
         queue_id,
-        Cow::Borrowed(command_buffers),
-        Cow::Borrowed(textures),
+        Cow::Borrowed(unsafe { command_buffers.as_slice() }),
+        Cow::Borrowed(unsafe { swap_chain_textures.as_slice() }),
     );
     client.queue_message(&message);
 }

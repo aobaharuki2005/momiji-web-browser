@@ -963,8 +963,9 @@ already_AddRefed<Texture> Device::InitSwapChain(
 
   ffi::wgpu_client_create_swap_chain(
       mBridge->GetClient(), mId, mQueue->mId, rgbDesc.size().Width(),
-      rgbDesc.size().Height(), (int8_t)rgbDesc.format(), aBufferIds.Elements(),
-      aBufferIds.Length(), aOwnerId.mId, aUseSharedTextureInSwapChain);
+      rgbDesc.size().Height(), (int8_t)rgbDesc.format(),
+      {aBufferIds.Elements(), aBufferIds.Length()}, aOwnerId.mId,
+      aUseSharedTextureInSwapChain);
 
   // TODO: `mColorSpace`: <https://bugzilla.mozilla.org/show_bug.cgi?id=1846608>
   // TODO: `mAlphaMode`: <https://bugzilla.mozilla.org/show_bug.cgi?id=1846605>

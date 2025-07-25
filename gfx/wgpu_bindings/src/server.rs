@@ -24,7 +24,6 @@ use std::mem;
 use std::os::fd::{FromRawFd, IntoRawFd, OwnedFd, RawFd};
 use std::os::raw::c_char;
 use std::ptr;
-use std::slice;
 use std::sync::atomic::{AtomicU32, Ordering};
 
 #[allow(unused_imports)]
@@ -2777,21 +2776,15 @@ pub unsafe extern "C" fn wgpu_server_encoder_copy_texture_to_buffer(
     }
 }
 
-/// # Safety
-///
-/// This function is unsafe as there is no guarantee that the given pointer is
-/// valid for `command_buffer_id_length` elements.
 #[no_mangle]
 pub unsafe extern "C" fn wgpu_server_queue_submit(
     global: &Global,
     device_id: id::DeviceId,
     self_id: id::QueueId,
-    command_buffer_ids: *const id::CommandBufferId,
-    command_buffer_id_length: usize,
+    command_buffers: FfiSlice<'_, id::CommandBufferId>,
     mut error_buf: ErrorBuffer,
 ) -> u64 {
-    let command_buffers = slice::from_raw_parts(command_buffer_ids, command_buffer_id_length);
-    let result = global.queue_submit(self_id, command_buffers);
+    let result = global.queue_submit(self_id, command_buffers.as_slice());
 
     match result {
         Err((_index, err)) => {

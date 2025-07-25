@@ -544,9 +544,10 @@ void WebGPUChild::ClearActorState() {
 void WebGPUChild::QueueSubmit(RawId aSelfId, RawId aDeviceId,
                               nsTArray<RawId>& aCommandBuffers) {
   ffi::wgpu_client_queue_submit(
-      GetClient(), aDeviceId, aSelfId, aCommandBuffers.Elements(),
-      aCommandBuffers.Length(), mSwapChainTexturesWaitingForSubmit.Elements(),
-      mSwapChainTexturesWaitingForSubmit.Length());
+      GetClient(), aDeviceId, aSelfId,
+      {aCommandBuffers.Elements(), aCommandBuffers.Length()},
+      {mSwapChainTexturesWaitingForSubmit.Elements(),
+       mSwapChainTexturesWaitingForSubmit.Length()});
   mSwapChainTexturesWaitingForSubmit.Clear();
 
   PROFILER_MARKER_UNTYPED("WebGPU: QueueSubmit", GRAPHICS_WebGPU);

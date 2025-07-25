@@ -68,7 +68,7 @@ class RenderPassEncoder final : public ObjectBase,
  private:
   void SetBindGroup(uint32_t aSlot, BindGroup* const aBindGroup,
                     const uint32_t* aDynamicOffsets,
-                    uint64_t aDynamicOffsetsLength);
+                    size_t aDynamicOffsetsLength);
 
  public:
   void Invalidate() { mValid = false; }

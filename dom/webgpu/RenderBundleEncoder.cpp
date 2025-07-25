@@ -80,7 +80,7 @@ void RenderBundleEncoder::Cleanup() {
 void RenderBundleEncoder::SetBindGroup(uint32_t aSlot,
                                        BindGroup* const aBindGroup,
                                        const uint32_t* aDynamicOffsets,
-                                       uint64_t aDynamicOffsetsLength) {
+                                       size_t aDynamicOffsetsLength) {
   RawId bindGroup = 0;
   if (aBindGroup) {
     mUsedBindGroups.AppendElement(aBindGroup);

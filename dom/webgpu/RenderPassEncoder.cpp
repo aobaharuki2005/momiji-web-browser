@@ -253,7 +253,7 @@ void RenderPassEncoder::Cleanup() {
 void RenderPassEncoder::SetBindGroup(uint32_t aSlot,
                                      BindGroup* const aBindGroup,
                                      const uint32_t* aDynamicOffsets,
-                                     uint64_t aDynamicOffsetsLength) {
+                                     size_t aDynamicOffsetsLength) {
   RawId bindGroup = 0;
   if (aBindGroup) {
     mUsedBindGroups.AppendElement(aBindGroup);
@@ -261,7 +261,7 @@ void RenderPassEncoder::SetBindGroup(uint32_t aSlot,
     bindGroup = aBindGroup->mId;
   }
   ffi::wgpu_recorded_render_pass_set_bind_group(
-      mPass.get(), aSlot, bindGroup, aDynamicOffsets, aDynamicOffsetsLength);
+      mPass.get(), aSlot, bindGroup, {aDynamicOffsets, aDynamicOffsetsLength});
 }
 
 void RenderPassEncoder::SetBindGroup(
@@ -432,7 +432,7 @@ void RenderPassEncoder::ExecuteBundles(
     renderBundles.AppendElement(bundle->mId);
   }
   ffi::wgpu_recorded_render_pass_execute_bundles(
-      mPass.get(), renderBundles.Elements(), renderBundles.Length());
+      mPass.get(), {renderBundles.Elements(), renderBundles.Length()});
 }
 
 void RenderPassEncoder::PushDebugGroup(const nsAString& aString) {

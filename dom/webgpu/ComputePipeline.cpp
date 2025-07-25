@@ -37,10 +37,10 @@ void ComputePipeline::Cleanup() {
     return;
   }
 
-  ffi::wgpu_client_drop_compute_pipeline(bridge->GetClient(), mId,
-                                         mImplicitPipelineLayoutId,
-                                         mImplicitBindGroupLayoutIds.Elements(),
-                                         mImplicitBindGroupLayoutIds.Length());
+  ffi::wgpu_client_drop_compute_pipeline(
+      bridge->GetClient(), mId, mImplicitPipelineLayoutId,
+      {mImplicitBindGroupLayoutIds.Elements(),
+       mImplicitBindGroupLayoutIds.Length()});
 
   if (mImplicitPipelineLayoutId) {
     wgpu_client_free_pipeline_layout_id(bridge->GetClient(),

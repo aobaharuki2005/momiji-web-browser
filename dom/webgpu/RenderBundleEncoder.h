@@ -50,7 +50,7 @@ class RenderBundleEncoder final : public ObjectBase, public ChildOf<Device> {
  private:
   void SetBindGroup(uint32_t aSlot, BindGroup* const aBindGroup,
                     const uint32_t* aDynamicOffsets,
-                    uint64_t aDynamicOffsetsLength);
+                    size_t aDynamicOffsetsLength);
 
  public:
   void SetBindGroup(uint32_t aSlot, BindGroup* const aBindGroup,

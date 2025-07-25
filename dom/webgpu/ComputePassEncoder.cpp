@@ -60,7 +60,7 @@ void ComputePassEncoder::Cleanup() {
 void ComputePassEncoder::SetBindGroup(uint32_t aSlot,
                                       BindGroup* const aBindGroup,
                                       const uint32_t* aDynamicOffsets,
-                                      uint64_t aDynamicOffsetsLength) {
+                                      size_t aDynamicOffsetsLength) {
   RawId bindGroup = 0;
   if (aBindGroup) {
     mUsedBindGroups.AppendElement(aBindGroup);
@@ -68,7 +68,7 @@ void ComputePassEncoder::SetBindGroup(uint32_t aSlot,
     bindGroup = aBindGroup->mId;
   }
   ffi::wgpu_recorded_compute_pass_set_bind_group(
-      mPass.get(), aSlot, bindGroup, aDynamicOffsets, aDynamicOffsetsLength);
+      mPass.get(), aSlot, bindGroup, {aDynamicOffsets, aDynamicOffsetsLength});
 }
 
 void ComputePassEncoder::SetBindGroup(

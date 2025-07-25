@@ -39,8 +39,8 @@ void RenderPipeline::Cleanup() {
 
   ffi::wgpu_client_drop_render_pipeline(bridge->GetClient(), mId,
                                         mImplicitPipelineLayoutId,
-                                        mImplicitBindGroupLayoutIds.Elements(),
-                                        mImplicitBindGroupLayoutIds.Length());
+                                        {mImplicitBindGroupLayoutIds.Elements(),
+                                         mImplicitBindGroupLayoutIds.Length()});
 
   if (mImplicitPipelineLayoutId) {
     wgpu_client_free_pipeline_layout_id(bridge->GetClient(),
