@@ -532,6 +532,8 @@ class BrowserToolbarMiddleware(
             }
 
             is ShareClicked -> runWithinEnvironment {
+                AddressToolbar.shareTapped.record((NoExtras()))
+
                 val selectedTab = browserStore.state.selectedTab ?: return
                 if (selectedTab.content.url.isContentUrl()) {
                     browserStore.dispatch(

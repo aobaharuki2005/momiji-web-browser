@@ -59,6 +59,7 @@ import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.UnifiedSearch
+import org.mozilla.fenix.GleanMetrics.VoiceSearch
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
@@ -66,6 +67,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode.Private
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppAction.QrScannerAction.QrScannerRequested
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEngineSelected
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
@@ -262,6 +264,7 @@ class BrowserToolbarSearchMiddleware(
             }
 
             is ClearSearchClicked -> {
+                Events.browserToolbarInputCleared.record(NoExtras())
                 context.dispatch(SearchQueryUpdated(""))
             }
 
@@ -270,11 +273,13 @@ class BrowserToolbarSearchMiddleware(
             }
 
             is QrScannerClicked -> {
+                Events.browserToolbarQrScanTapped.record(NoExtras())
                 observeQrScannerInput(context)
-                appStore.dispatch(AppAction.QrScannerAction.QrScannerRequested)
+                appStore.dispatch(QrScannerRequested)
             }
 
             is VoiceSearchButtonClicked -> {
+                VoiceSearch.tapped.record(NoExtras())
                 appStore.dispatch(VoiceInputRequested)
             }
 
