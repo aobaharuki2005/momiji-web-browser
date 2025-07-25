@@ -128,12 +128,6 @@ class AwesomeBarComposable(
             }
         }
 
-        BackHandler {
-            searchStore.dispatch(SearchFragmentAction.SearchSuggestionsVisibilityUpdated(false))
-            appStore.dispatch(AppAction.SearchAction.SearchEnded)
-            browserStore.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true))
-        }
-
         if (isSearchActive && shouldShowClipboardBar) {
             val url = components.clipboardHandler.extractURL()
 
