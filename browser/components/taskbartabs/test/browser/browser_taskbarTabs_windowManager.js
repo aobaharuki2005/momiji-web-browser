@@ -4,6 +4,8 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  MockRegistrar: "resource://testing-common/MockRegistrar.sys.mjs",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
   TaskbarTabs: "resource:///modules/taskbartabs/TaskbarTabs.sys.mjs",
   TaskbarTabsUtils: "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs",
 });
@@ -23,12 +25,6 @@ const url2 = Services.io.newURI("https://subdomain.example.com");
 const userContextId2 = 1;
 const taskbarTab2 = registry.findOrCreateTaskbarTab(url2, userContextId2);
 const id2 = taskbarTab2.id;
-
-add_setup(async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [["network.dns.localDomains", [url1.host, url2.host]]],
-  });
-});
 
 add_task(async function test_count_for_id() {
   const wm = new TaskbarTabsWindowManager();
@@ -230,4 +226,33 @@ add_task(async function testTaskbarTabCount() {
   await promise;
 
   TaskbarTabs.removeTaskbarTab(taskbarTab1.id);
+});
+
+add_task(async function testWindowIconSet() {
+  const wm = new TaskbarTabsWindowManager();
+
+  let mockWindowsUIUtils = {
+    QueryInterface: ChromeUtils.generateQI(["nsIWindowsUIUtils"]),
+    setWindowIcon: sinon.spy(),
+  };
+  wm.testOnlyMockUIUtils(mockWindowsUIUtils);
+  SimpleTest.registerCurrentTaskCleanupFunction(() => {
+    wm.testOnlyMockUIUtils(null);
+  });
+
+  let windowPromise = BrowserTestUtils.waitForNewWindow();
+  await wm.openWindow(taskbarTab1);
+  let win = await windowPromise;
+
+  ok(
+    mockWindowsUIUtils.setWindowIcon.calledOnce,
+    "The Window icon should have been set."
+  );
+
+  // `sinon.spy` will hold a reference to the window by virtue of holding it's
+  // arguments, causing tests to fail from a "leaked" window. Release it before
+  // closing the window.
+  sinon.resetHistory();
+
+  await BrowserTestUtils.closeWindow(win);
 });
