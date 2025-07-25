@@ -150,6 +150,7 @@ class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
 
   struct OnSubmittedWorkDoneRequest {
     WeakPtr<WebGPUParent> mParent;
+    ffi::WGPUDeviceId mQueueId;
   };
 
   static void OnSubmittedWorkDoneCallback(

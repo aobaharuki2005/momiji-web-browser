@@ -89,12 +89,14 @@ RawId WebGPUChild::RenderBundleEncoderFinishError(RawId aDeviceId,
 
 namespace ffi {
 void wgpu_child_resolve_request_adapter_promise(
-    WGPUWebGPUChildPtr aChild,
+    WGPUWebGPUChildPtr aChild, RawId aAdapterId,
     const struct WGPUAdapterInformation* aAdapterInfo) {
   auto* c = static_cast<WebGPUChild*>(aChild);
   auto& pending_promises = c->mPendingRequestAdapterPromises;
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
+
+  MOZ_RELEASE_ASSERT(pending_promise.adapter_id == aAdapterId);
 
   if (aAdapterInfo == nullptr) {
     pending_promise.promise->MaybeResolve(JS::NullHandleValue);
@@ -106,11 +108,15 @@ void wgpu_child_resolve_request_adapter_promise(
 }
 
 void wgpu_child_resolve_request_device_promise(WGPUWebGPUChildPtr aChild,
+                                               RawId aDeviceId, RawId aQueueId,
                                                const nsCString* aError) {
   auto* c = static_cast<WebGPUChild*>(aChild);
   auto& pending_promises = c->mPendingRequestDevicePromises;
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
+
+  MOZ_RELEASE_ASSERT(pending_promise.device_id == aDeviceId);
+  MOZ_RELEASE_ASSERT(pending_promise.queue_id == aQueueId);
 
   if (aError == nullptr) {
     RefPtr<Device> device =
@@ -126,12 +132,14 @@ void wgpu_child_resolve_request_device_promise(WGPUWebGPUChildPtr aChild,
 }
 
 void wgpu_child_resolve_pop_error_scope_promise(WGPUWebGPUChildPtr aChild,
-                                                uint8_t aTy,
+                                                RawId aDeviceId, uint8_t aTy,
                                                 const nsCString* aMessage) {
   auto* c = static_cast<WebGPUChild*>(aChild);
   auto& pending_promises = c->mPendingPopErrorScopePromises;
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
+
+  MOZ_RELEASE_ASSERT(pending_promise.device->GetId() == aDeviceId);
 
   RefPtr<Error> error;
 
@@ -167,6 +175,7 @@ void wgpu_child_resolve_pop_error_scope_promise(WGPUWebGPUChildPtr aChild,
 }
 
 void wgpu_child_resolve_create_pipeline_promise(WGPUWebGPUChildPtr aChild,
+                                                RawId aPipelineId,
                                                 bool aIsRenderPipeline,
                                                 bool aIsValidationError,
                                                 const nsCString* aError) {
@@ -175,7 +184,8 @@ void wgpu_child_resolve_create_pipeline_promise(WGPUWebGPUChildPtr aChild,
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
 
-  MOZ_ASSERT(pending_promise.is_render_pipeline == aIsRenderPipeline);
+  MOZ_RELEASE_ASSERT(pending_promise.pipeline_id == aPipelineId);
+  MOZ_RELEASE_ASSERT(pending_promise.is_render_pipeline == aIsRenderPipeline);
 
   if (aError == nullptr) {
     if (pending_promise.is_render_pipeline) {
@@ -206,12 +216,14 @@ void wgpu_child_resolve_create_pipeline_promise(WGPUWebGPUChildPtr aChild,
 }
 
 MOZ_CAN_RUN_SCRIPT void wgpu_child_resolve_create_shader_module_promise(
-    WGPUWebGPUChildPtr aChild,
+    WGPUWebGPUChildPtr aChild, RawId aShaderModuleId,
     struct WGPUFfiSlice_FfiShaderModuleCompilationMessage aMessages) {
   auto* c = static_cast<WebGPUChild*>(aChild);
   auto& pending_promises = c->mPendingCreateShaderModulePromises;
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
+
+  MOZ_RELEASE_ASSERT(pending_promise.shader_module->mId == aShaderModuleId);
 
   auto ffi_messages = Span(aMessages.data, aMessages.length);
 
@@ -273,13 +285,15 @@ void wgpu_child_resolve_buffer_map_promise(WGPUWebGPUChildPtr aChild,
 }
 
 void wgpu_child_resolve_on_submitted_work_done_promise(
-    WGPUWebGPUChildPtr aChild) {
+    WGPUWebGPUChildPtr aChild, WGPUQueueId aQueueId) {
   auto* c = static_cast<WebGPUChild*>(aChild);
   auto& pending_promises = c->mPendingOnSubmittedWorkDonePromises;
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
 
-  pending_promise->MaybeResolveWithUndefined();
+  MOZ_RELEASE_ASSERT(pending_promise.queue_id == aQueueId);
+
+  pending_promise.promise->MaybeResolveWithUndefined();
 };
 }  // namespace ffi
 
@@ -534,7 +548,7 @@ void WebGPUChild::ClearActorState() {
           std::move(mPendingOnSubmittedWorkDonePromises.front());
       mPendingOnSubmittedWorkDonePromises.pop_front();
 
-      pending_promise->MaybeResolveWithUndefined();
+      pending_promise.promise->MaybeResolveWithUndefined();
     } else {
       break;
     }

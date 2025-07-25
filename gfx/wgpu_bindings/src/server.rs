@@ -1273,6 +1273,7 @@ extern "C" {
     ) -> BufferMapClosure;
     fn wgpu_parent_build_submitted_work_done_closure(
         parent: WebGPUParentPtr,
+        queue_id: id::QueueId,
     ) -> SubmittedWorkDoneClosure;
     fn wgpu_parent_handle_error(
         parent: WebGPUParentPtr,
@@ -2023,6 +2024,7 @@ impl Global {
                 };
 
                 *response_byte_buf = make_byte_buf(&ServerMessage::CreateShaderModuleResponse(
+                    id,
                     compilation_messages,
                 ));
             }
@@ -2136,8 +2138,9 @@ impl Global {
                 };
                 let message = message.to_utf8();
 
-                *response_byte_buf =
-                    make_byte_buf(&ServerMessage::PopErrorScopeResponse(ty, message));
+                *response_byte_buf = make_byte_buf(&ServerMessage::PopErrorScopeResponse(
+                    device_id, ty, message,
+                ));
             }
         }
     }
@@ -2316,8 +2319,8 @@ pub unsafe extern "C" fn wgpu_server_pack_buffer_map_error(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wgpu_server_pack_work_done(bb: &mut ByteBuf) {
-    *bb = make_byte_buf(&ServerMessage::QueueOnSubmittedWorkDoneResponse);
+pub unsafe extern "C" fn wgpu_server_pack_work_done(bb: &mut ByteBuf, queue_id: id::QueueId) {
+    *bb = make_byte_buf(&ServerMessage::QueueOnSubmittedWorkDoneResponse(queue_id));
 }
 
 #[no_mangle]
@@ -2604,7 +2607,7 @@ unsafe fn process_message(
             )
         }
         Message::QueueOnSubmittedWorkDone(queue_id) => {
-            let closure = wgpu_parent_build_submitted_work_done_closure(global.owner);
+            let closure = wgpu_parent_build_submitted_work_done_closure(global.owner, queue_id);
             let closure = Box::new(move || {
                 let _ = &closure;
                 (closure.callback)(closure.user_data)

@@ -309,11 +309,12 @@ extern ffi::WGPUBufferMapClosure wgpu_parent_build_buffer_map_closure(
 }
 
 extern ffi::WGPUSubmittedWorkDoneClosure
-wgpu_parent_build_submitted_work_done_closure(WGPUWebGPUParentPtr aParent) {
+wgpu_parent_build_submitted_work_done_closure(WGPUWebGPUParentPtr aParent,
+                                              WGPUQueueId aQueueId) {
   auto* parent = static_cast<WebGPUParent*>(aParent);
 
   std::unique_ptr<WebGPUParent::OnSubmittedWorkDoneRequest> request(
-      new WebGPUParent::OnSubmittedWorkDoneRequest{parent});
+      new WebGPUParent::OnSubmittedWorkDoneRequest{parent, aQueueId});
 
   ffi::WGPUSubmittedWorkDoneClosure closure = {
       &WebGPUParent::OnSubmittedWorkDoneCallback,
@@ -860,7 +861,7 @@ void WebGPUParent::OnSubmittedWorkDoneCallback(uint8_t* userdata) {
   }
 
   ipc::ByteBuf bb;
-  ffi::wgpu_server_pack_work_done(ToFFI(&bb));
+  ffi::wgpu_server_pack_work_done(ToFFI(&bb), req->mQueueId);
   if (!req->mParent->SendServerMessage(std::move(bb))) {
     NS_ERROR("SendServerMessage failed");
   }

@@ -215,11 +215,11 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
     power_preference = ffi::WGPUPowerPreference_LowPower;
   }
 
-  ffi::wgpu_client_request_adapter(bridge->GetClient(), power_preference,
-                                   aOptions.mForceFallbackAdapter);
+  RawId adapter_id = ffi::wgpu_client_request_adapter(
+      bridge->GetClient(), power_preference, aOptions.mForceFallbackAdapter);
 
-  auto pending_promise =
-      WebGPUChild::PendingRequestAdapterPromise{RefPtr(promise), RefPtr(this)};
+  auto pending_promise = WebGPUChild::PendingRequestAdapterPromise{
+      RefPtr(promise), RefPtr(this), adapter_id};
   bridge->mPendingRequestAdapterPromises.push_back(std::move(pending_promise));
 
   return promise.forget();
