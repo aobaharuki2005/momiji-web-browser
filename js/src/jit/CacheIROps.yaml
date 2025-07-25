@@ -635,7 +635,8 @@
   args:
     obj: ObjId
     id: IdField
-    getterSetter: WeakGetterSetterField
+    # The expected GetterSetter* stored as PrivateGCThingValue.
+    getterSetter: WeakValueField
 
 - name: GuardInt32IsNonNegative
   shared: true

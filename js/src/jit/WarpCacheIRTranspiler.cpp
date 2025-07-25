@@ -565,7 +565,7 @@ bool WarpCacheIRTranspiler::emitGuardHasGetterSetter(
     ObjOperandId objId, uint32_t idOffset, uint32_t getterSetterOffset) {
   MDefinition* obj = getOperand(objId);
   jsid id = idStubField(idOffset);
-  GetterSetter* gs = getterSetterStubField(getterSetterOffset);
+  auto* gs = valueStubField(getterSetterOffset).toGCThing()->as<GetterSetter>();
 
   auto* ins = MGuardHasGetterSetter::New(alloc(), obj, id, gs);
   add(ins);

@@ -351,13 +351,6 @@ void WarpCacheIR::traceData(JSTracer* trc) {
           TraceWarpStubPtr<Shape>(trc, word, "warp-cacheir-shape");
           break;
         }
-        case StubField::Type::WeakGetterSetter: {
-          // WeakGetterSetter pointers are traced strongly in this context.
-          uintptr_t word = stubInfo_->getStubRawWord(stubData_, offset);
-          TraceWarpStubPtr<GetterSetter>(trc, word,
-                                         "warp-cacheir-getter-setter");
-          break;
-        }
         case StubField::Type::JSObject:
         case StubField::Type::WeakObject: {
           // WeakObject pointers are traced strongly in this context.
@@ -396,7 +389,9 @@ void WarpCacheIR::traceData(JSTracer* trc) {
                               "warp-cacheir-jsid");
           break;
         }
-        case StubField::Type::Value: {
+        case StubField::Type::Value:
+        case StubField::Type::WeakValue: {
+          // WeakValues are traced strongly in this context.
           uint64_t data = stubInfo_->getStubRawInt64(stubData_, offset);
           Value val = Value::fromRawBits(data);
           TraceOffthreadGCPtr(trc, OffthreadGCPtr<Value>(val),

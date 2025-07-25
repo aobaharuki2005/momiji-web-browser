@@ -241,7 +241,6 @@ class StubField {
     RawPointer,
     Shape,
     WeakShape,
-    WeakGetterSetter,
     JSObject,
     WeakObject,
     Symbol,
@@ -256,6 +255,7 @@ class StubField {
     RawInt64,
     First64BitType = RawInt64,
     Value,
+    WeakValue,
     Double,
 
     Limit
@@ -316,8 +316,6 @@ inline const char* StubFieldTypeName(StubField::Type ty) {
       return "Shape";
     case StubField::Type::WeakShape:
       return "WeakShape";
-    case StubField::Type::WeakGetterSetter:
-      return "WeakGetterSetter";
     case StubField::Type::JSObject:
       return "JSObject";
     case StubField::Type::WeakObject:
@@ -338,6 +336,8 @@ inline const char* StubFieldTypeName(StubField::Type ty) {
       return "RawInt64";
     case StubField::Type::Value:
       return "Value";
+    case StubField::Type::WeakValue:
+      return "WeakValue";
     case StubField::Type::Double:
       return "Double";
     case StubField::Type::Limit:

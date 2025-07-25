@@ -210,10 +210,6 @@ Shape* CacheIRCloner::getWeakShapeField(uint32_t stubOffset) {
   // No barrier is required to clone a weak pointer.
   return reinterpret_cast<Shape*>(readStubWord(stubOffset));
 }
-GetterSetter* CacheIRCloner::getWeakGetterSetterField(uint32_t stubOffset) {
-  // No barrier is required to clone a weak pointer.
-  return reinterpret_cast<GetterSetter*>(readStubWord(stubOffset));
-}
 JSObject* CacheIRCloner::getObjectField(uint32_t stubOffset) {
   return reinterpret_cast<JSObject*>(readStubWord(stubOffset));
 }
@@ -253,7 +249,11 @@ gc::AllocSite* CacheIRCloner::getAllocSiteField(uint32_t stubOffset) {
 jsid CacheIRCloner::getIdField(uint32_t stubOffset) {
   return jsid::fromRawBits(readStubWord(stubOffset));
 }
-const Value CacheIRCloner::getValueField(uint32_t stubOffset) {
+Value CacheIRCloner::getValueField(uint32_t stubOffset) {
+  return Value::fromRawBits(uint64_t(readStubInt64(stubOffset)));
+}
+Value CacheIRCloner::getWeakValueField(uint32_t stubOffset) {
+  // No barrier is required to clone a weak pointer.
   return Value::fromRawBits(uint64_t(readStubInt64(stubOffset)));
 }
 double CacheIRCloner::getDoubleField(uint32_t stubOffset) {
@@ -1069,8 +1069,10 @@ void GetPropIRGenerator::emitCallGetterResultGuards(NativeObject* obj,
       emitGuardGetterSetterSlot(holder, prop, objId, AccessorKind::Getter);
     }
   } else {
-    GetterSetter* gs = holder->getGetterSetter(prop);
-    writer.guardHasGetterSetter(objId, id, gs);
+    Value val = holder->getSlot(prop.slot());
+    MOZ_ASSERT(val.isPrivateGCThing());
+    MOZ_ASSERT(val.toGCThing()->is<GetterSetter>());
+    writer.guardHasGetterSetter(objId, id, val);
   }
 }
 
@@ -4923,8 +4925,10 @@ AttachDecision SetPropIRGenerator::tryAttachSetter(HandleObject obj,
       emitGuardGetterSetterSlot(holder, *prop, objId, AccessorKind::Setter);
     }
   } else {
-    GetterSetter* gs = holder->getGetterSetter(*prop);
-    writer.guardHasGetterSetter(objId, id, gs);
+    Value val = holder->getSlot(prop->slot());
+    MOZ_ASSERT(val.isPrivateGCThing());
+    MOZ_ASSERT(val.toGCThing()->is<GetterSetter>());
+    writer.guardHasGetterSetter(objId, id, val);
   }
 
   if (CanAttachDOMGetterSetter(cx_, JSJitInfo::Setter, nobj, holder, *prop,

@@ -1371,13 +1371,6 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
         stubInfo->getStubField<StubField::Type::WeakShape>(stub, offset).get();
         break;
       }
-      case StubField::Type::WeakGetterSetter: {
-        static_assert(std::is_convertible_v<GetterSetter*, gc::TenuredCell*>,
-                      "Code assumes GetterSetters are tenured");
-        stubInfo->getStubField<StubField::Type::WeakGetterSetter>(stub, offset)
-            .get();
-        break;
-      }
       case StubField::Type::Symbol:
         static_assert(std::is_convertible_v<JS::Symbol*, gc::TenuredCell*>,
                       "Code assumes symbols are tenured");
@@ -1432,9 +1425,17 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
 #endif
         break;
       }
-      case StubField::Type::Value: {
-        Value v =
-            stubInfo->getStubField<StubField::Type::Value>(stub, offset).get();
+      case StubField::Type::Value:
+      case StubField::Type::WeakValue: {
+        Value v;
+        if (fieldType == StubField::Type::Value) {
+          v = stubInfo->getStubField<StubField::Type::Value>(stub, offset)
+                  .get();
+        } else {
+          MOZ_ASSERT(fieldType == StubField::Type::WeakValue);
+          v = stubInfo->getStubField<StubField::Type::WeakValue>(stub, offset)
+                  .get();
+        }
         MOZ_ASSERT_IF(v.isGCThing(), !IsInsideNursery(v.toGCThing()));
         if (v.isString()) {
           Value newVal;

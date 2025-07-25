@@ -1081,13 +1081,13 @@ typename MapStubFieldToType<type>::WrappedType& CacheIRStubInfo::getStubField(
                                                      uint32_t offset) const;
 INSTANTIATE_GET_STUB_FIELD(StubField::Type::Shape)
 INSTANTIATE_GET_STUB_FIELD(StubField::Type::WeakShape)
-INSTANTIATE_GET_STUB_FIELD(StubField::Type::WeakGetterSetter)
 INSTANTIATE_GET_STUB_FIELD(StubField::Type::JSObject)
 INSTANTIATE_GET_STUB_FIELD(StubField::Type::WeakObject)
 INSTANTIATE_GET_STUB_FIELD(StubField::Type::Symbol)
 INSTANTIATE_GET_STUB_FIELD(StubField::Type::String)
 INSTANTIATE_GET_STUB_FIELD(StubField::Type::WeakBaseScript)
 INSTANTIATE_GET_STUB_FIELD(StubField::Type::Value)
+INSTANTIATE_GET_STUB_FIELD(StubField::Type::WeakValue)
 INSTANTIATE_GET_STUB_FIELD(StubField::Type::Id)
 #undef INSTANTIATE_GET_STUB_FIELD
 
@@ -1110,6 +1110,13 @@ static void InitWrappedPtr(void* ptr, V val) {
   new (wrapped) WrappedType(mozilla::BitwiseCast<RawType>(val));
 }
 
+template <StubField::Type type>
+static void InitWrappedValuePtr(void* ptr, uint64_t val) {
+  using WrappedType = typename MapStubFieldToType<type>::WrappedType;
+  auto* wrapped = static_cast<WrappedType*>(ptr);
+  new (wrapped) WrappedType(Value::fromRawBits(val));
+}
+
 static void InitWordStubField(StubField::Type type, void* dest,
                               uintptr_t value) {
   MOZ_ASSERT(StubField::sizeIsWord(type));
@@ -1128,10 +1135,6 @@ static void InitWordStubField(StubField::Type type, void* dest,
     case StubField::Type::WeakShape:
       // No read barrier required to copy weak pointer.
       InitWrappedPtr<StubField::Type::WeakShape>(dest, value);
-      break;
-    case StubField::Type::WeakGetterSetter:
-      // No read barrier required to copy weak pointer.
-      InitWrappedPtr<StubField::Type::WeakGetterSetter>(dest, value);
       break;
     case StubField::Type::JSObject:
       InitWrappedPtr<StubField::Type::JSObject>(dest, value);
@@ -1159,6 +1162,7 @@ static void InitWordStubField(StubField::Type type, void* dest,
     case StubField::Type::RawInt64:
     case StubField::Type::Double:
     case StubField::Type::Value:
+    case StubField::Type::WeakValue:
     case StubField::Type::Limit:
       MOZ_CRASH("Invalid type");
   }
@@ -1175,14 +1179,17 @@ static void InitInt64StubField(StubField::Type type, void* dest,
       *static_cast<uint64_t*>(dest) = value;
       break;
     case StubField::Type::Value:
-      AsGCPtr<Value>(dest)->init(Value::fromRawBits(value));
+      InitWrappedValuePtr<StubField::Type::Value>(dest, value);
+      break;
+    case StubField::Type::WeakValue:
+      // No read barrier required to copy weak pointer.
+      InitWrappedValuePtr<StubField::Type::WeakValue>(dest, value);
       break;
     case StubField::Type::RawInt32:
     case StubField::Type::RawPointer:
     case StubField::Type::AllocSite:
     case StubField::Type::Shape:
     case StubField::Type::WeakShape:
-    case StubField::Type::WeakGetterSetter:
     case StubField::Type::JSObject:
     case StubField::Type::WeakObject:
     case StubField::Type::Symbol:
@@ -1301,14 +1308,6 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
           }
         }
         break;
-      case Type::WeakGetterSetter:
-        if (ShouldTraceWeakEdgeInStub<T>(trc)) {
-          TraceNullableEdge(
-              trc,
-              &stubInfo->getStubField<T, Type::WeakGetterSetter>(stub, offset),
-              "cacheir-weak-getter-setter");
-        }
-        break;
       case Type::JSObject: {
         TraceEdge(trc, &stubInfo->getStubField<T, Type::JSObject>(stub, offset),
                   "cacheir-object");
@@ -1348,6 +1347,13 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
       case Type::Value:
         TraceEdge(trc, &stubInfo->getStubField<T, Type::Value>(stub, offset),
                   "cacheir-value");
+        break;
+      case Type::WeakValue:
+        if (ShouldTraceWeakEdgeInStub<T>(trc)) {
+          TraceEdge(trc,
+                    &stubInfo->getStubField<T, Type::WeakValue>(stub, offset),
+                    "cacheir-weak-value");
+        }
         break;
       case Type::AllocSite: {
         gc::AllocSite* site =
@@ -1410,11 +1416,10 @@ bool jit::TraceWeakCacheIRStub(JSTracer* trc, T* stub,
         }
         break;
       }
-      case Type::WeakGetterSetter: {
-        WeakHeapPtr<GetterSetter*>& getterSetterField =
-            stubInfo->getStubField<T, Type::WeakGetterSetter>(stub, offset);
-        auto r = TraceWeakEdge(trc, &getterSetterField,
-                               "cacheir-weak-getter-setter");
+      case Type::WeakValue: {
+        WeakHeapPtr<Value>& valueField =
+            stubInfo->getStubField<T, Type::WeakValue>(stub, offset);
+        auto r = TraceWeakEdge(trc, &valueField, "cacheir-weak-value");
         if (r.isDead()) {
           isDead = true;
         }
@@ -9005,9 +9010,6 @@ void CacheIRCompiler::emitLoadStubFieldConstant(StubFieldOffset val,
     case StubField::Type::Shape:
       masm.movePtr(ImmGCPtr(shapeStubField(val.getOffset())), dest);
       break;
-    case StubField::Type::WeakGetterSetter:
-      masm.movePtr(ImmGCPtr(weakGetterSetterStubField(val.getOffset())), dest);
-      break;
     case StubField::Type::String:
       masm.movePtr(ImmGCPtr(stringStubField(val.getOffset())), dest);
       break;
@@ -9046,7 +9048,6 @@ void CacheIRCompiler::emitLoadStubField(StubFieldOffset val, Register dest) {
     switch (val.getStubFieldType()) {
       case StubField::Type::RawPointer:
       case StubField::Type::Shape:
-      case StubField::Type::WeakGetterSetter:
       case StubField::Type::JSObject:
       case StubField::Type::Symbol:
       case StubField::Type::String:
@@ -9065,11 +9066,16 @@ void CacheIRCompiler::emitLoadStubField(StubFieldOffset val, Register dest) {
 
 void CacheIRCompiler::emitLoadValueStubField(StubFieldOffset val,
                                              ValueOperand dest) {
-  MOZ_ASSERT(val.getStubFieldType() == StubField::Type::Value);
+  MOZ_ASSERT(val.getStubFieldType() == StubField::Type::Value ||
+             val.getStubFieldType() == StubField::Type::WeakValue);
 
   if (stubFieldPolicy_ == StubFieldPolicy::Constant) {
     MOZ_ASSERT(mode_ == Mode::Ion);
-    masm.moveValue(valueStubField(val.getOffset()), dest);
+    if (val.getStubFieldType() == StubField::Type::Value) {
+      masm.moveValue(valueStubField(val.getOffset()), dest);
+    } else {
+      masm.moveValue(weakValueStubField(val.getOffset()), dest);
+    }
   } else {
     Address addr(ICStubReg, stubDataOffset_ + val.getOffset());
     masm.loadValue(addr, dest);
@@ -9316,12 +9322,11 @@ bool CacheIRCompiler::emitGuardHasGetterSetter(ObjOperandId objId,
   Register obj = allocator.useRegister(masm, objId);
 
   StubFieldOffset id(idOffset, StubField::Type::Id);
-  StubFieldOffset getterSetter(getterSetterOffset,
-                               StubField::Type::WeakGetterSetter);
+  StubFieldOffset getterSetter(getterSetterOffset, StubField::Type::WeakValue);
 
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegister scratch2(allocator, masm);
-  AutoScratchRegister scratch3(allocator, masm);
+  AutoScratchValueRegister scratch3(allocator, masm);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -9331,7 +9336,13 @@ bool CacheIRCompiler::emitGuardHasGetterSetter(ObjOperandId objId,
   LiveRegisterSet volatileRegs = liveVolatileRegs();
   volatileRegs.takeUnchecked(scratch1);
   volatileRegs.takeUnchecked(scratch2);
+  volatileRegs.takeUnchecked(scratch3);
   masm.PushRegsInMask(volatileRegs);
+
+  // The GetterSetter* is stored as a PrivateGCThingValue.
+  emitLoadValueStubField(getterSetter, scratch3);
+  masm.unboxNonDouble(scratch3.get(), scratch3.get().scratchReg(),
+                      JSVAL_TYPE_PRIVATE_GCTHING);
 
   using Fn = bool (*)(JSContext* cx, JSObject* obj, jsid id,
                       GetterSetter* getterSetter);
@@ -9341,8 +9352,7 @@ bool CacheIRCompiler::emitGuardHasGetterSetter(ObjOperandId objId,
   masm.passABIArg(obj);
   emitLoadStubField(id, scratch2);
   masm.passABIArg(scratch2);
-  emitLoadStubField(getterSetter, scratch3);
-  masm.passABIArg(scratch3);
+  masm.passABIArg(scratch3.get().scratchReg());
   masm.callWithABI<Fn, ObjectHasGetterSetterPure>();
   masm.storeCallPointerResult(scratch1);
   masm.PopRegsInMask(volatileRegs);
