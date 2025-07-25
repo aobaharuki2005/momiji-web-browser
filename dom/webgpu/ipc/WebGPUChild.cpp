@@ -87,31 +87,32 @@ RawId WebGPUChild::RenderBundleEncoderFinishError(RawId aDeviceId,
   return id;
 }
 
-void resolve_request_adapter_promise(
-    ffi::WGPUWebGPUChildPtr child,
-    const struct ffi::WGPUAdapterInformation* adapter_info) {
-  auto* c = static_cast<WebGPUChild*>(child);
+namespace ffi {
+void wgpu_child_resolve_request_adapter_promise(
+    WGPUWebGPUChildPtr aChild,
+    const struct WGPUAdapterInformation* aAdapterInfo) {
+  auto* c = static_cast<WebGPUChild*>(aChild);
   auto& pending_promises = c->mPendingRequestAdapterPromises;
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
 
-  if (adapter_info == nullptr) {
+  if (aAdapterInfo == nullptr) {
     pending_promise.promise->MaybeResolve(JS::NullHandleValue);
   } else {
-    auto info = std::make_shared<ffi::WGPUAdapterInformation>(*adapter_info);
+    auto info = std::make_shared<WGPUAdapterInformation>(*aAdapterInfo);
     RefPtr<Adapter> adapter = new Adapter(pending_promise.instance, c, info);
     pending_promise.promise->MaybeResolve(adapter);
   }
 }
 
-void resolve_request_device_promise(ffi::WGPUWebGPUChildPtr child,
-                                    const nsCString* error) {
-  auto* c = static_cast<WebGPUChild*>(child);
+void wgpu_child_resolve_request_device_promise(WGPUWebGPUChildPtr aChild,
+                                               const nsCString* aError) {
+  auto* c = static_cast<WebGPUChild*>(aChild);
   auto& pending_promises = c->mPendingRequestDevicePromises;
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
 
-  if (error == nullptr) {
+  if (aError == nullptr) {
     RefPtr<Device> device =
         new Device(pending_promise.adapter, pending_promise.device_id,
                    pending_promise.queue_id, pending_promise.features,
@@ -120,20 +121,21 @@ void resolve_request_device_promise(ffi::WGPUWebGPUChildPtr child,
     device->SetLabel(pending_promise.label);
     pending_promise.promise->MaybeResolve(device);
   } else {
-    pending_promise.promise->MaybeRejectWithOperationError(*error);
+    pending_promise.promise->MaybeRejectWithOperationError(*aError);
   }
 }
 
-void resolve_pop_error_scope_promise(ffi::WGPUWebGPUChildPtr child, uint8_t ty,
-                                     const nsCString* message) {
-  auto* c = static_cast<WebGPUChild*>(child);
+void wgpu_child_resolve_pop_error_scope_promise(WGPUWebGPUChildPtr aChild,
+                                                uint8_t aTy,
+                                                const nsCString* aMessage) {
+  auto* c = static_cast<WebGPUChild*>(aChild);
   auto& pending_promises = c->mPendingPopErrorScopePromises;
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
 
   RefPtr<Error> error;
 
-  switch ((PopErrorScopeResultType)ty) {
+  switch ((PopErrorScopeResultType)aTy) {
     case PopErrorScopeResultType::NoError:
       pending_promise.promise->MaybeResolve(JS::NullHandleValue);
       return;
@@ -143,39 +145,39 @@ void resolve_pop_error_scope_promise(ffi::WGPUWebGPUChildPtr child, uint8_t ty,
       return;
 
     case PopErrorScopeResultType::ThrowOperationError:
-      pending_promise.promise->MaybeRejectWithOperationError(*message);
+      pending_promise.promise->MaybeRejectWithOperationError(*aMessage);
       return;
 
     case PopErrorScopeResultType::OutOfMemory:
       error = new OutOfMemoryError(pending_promise.device->GetParentObject(),
-                                   *message);
+                                   *aMessage);
       break;
 
     case PopErrorScopeResultType::ValidationError:
       error = new ValidationError(pending_promise.device->GetParentObject(),
-                                  *message);
+                                  *aMessage);
       break;
 
     case PopErrorScopeResultType::InternalError:
       error = new InternalError(pending_promise.device->GetParentObject(),
-                                *message);
+                                *aMessage);
       break;
   }
   pending_promise.promise->MaybeResolve(std::move(error));
 }
 
-void resolve_create_pipeline_promise(ffi::WGPUWebGPUChildPtr child,
-                                     bool is_render_pipeline,
-                                     bool is_validation_error,
-                                     const nsCString* error) {
-  auto* c = static_cast<WebGPUChild*>(child);
+void wgpu_child_resolve_create_pipeline_promise(WGPUWebGPUChildPtr aChild,
+                                                bool aIsRenderPipeline,
+                                                bool aIsValidationError,
+                                                const nsCString* aError) {
+  auto* c = static_cast<WebGPUChild*>(aChild);
   auto& pending_promises = c->mPendingCreatePipelinePromises;
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
 
-  MOZ_ASSERT(pending_promise.is_render_pipeline == is_render_pipeline);
+  MOZ_ASSERT(pending_promise.is_render_pipeline == aIsRenderPipeline);
 
-  if (error == nullptr) {
+  if (aError == nullptr) {
     if (pending_promise.is_render_pipeline) {
       RefPtr<RenderPipeline> object = new RenderPipeline(
           pending_promise.device, pending_promise.pipeline_id,
@@ -193,28 +195,27 @@ void resolve_create_pipeline_promise(ffi::WGPUWebGPUChildPtr child,
     }
   } else {
     dom::GPUPipelineErrorReason reason;
-    if (is_validation_error) {
+    if (aIsValidationError) {
       reason = dom::GPUPipelineErrorReason::Validation;
     } else {
       reason = dom::GPUPipelineErrorReason::Internal;
     }
-    RefPtr<PipelineError> e = new PipelineError(*error, reason);
+    RefPtr<PipelineError> e = new PipelineError(*aError, reason);
     pending_promise.promise->MaybeReject(e);
   }
 }
 
-MOZ_CAN_RUN_SCRIPT void resolve_create_shader_module_promise(
-    ffi::WGPUWebGPUChildPtr child,
-    const struct ffi::WGPUFfiShaderModuleCompilationMessage* messages_ptr,
-    uintptr_t messages_len) {
-  auto* c = static_cast<WebGPUChild*>(child);
+MOZ_CAN_RUN_SCRIPT void wgpu_child_resolve_create_shader_module_promise(
+    WGPUWebGPUChildPtr aChild,
+    struct WGPUFfiSlice_FfiShaderModuleCompilationMessage aMessages) {
+  auto* c = static_cast<WebGPUChild*>(aChild);
   auto& pending_promises = c->mPendingCreateShaderModulePromises;
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
 
-  auto ffi_messages = Span(messages_ptr, messages_len);
+  auto ffi_messages = Span(aMessages.data, aMessages.length);
 
-  auto messages = nsTArray<WebGPUCompilationMessage>(messages_len);
+  auto messages = nsTArray<WebGPUCompilationMessage>(aMessages.length);
   for (const auto& message : ffi_messages) {
     WebGPUCompilationMessage msg;
     msg.lineNum = message.line_number;
@@ -237,21 +238,22 @@ MOZ_CAN_RUN_SCRIPT void resolve_create_shader_module_promise(
   pending_promise.promise->MaybeResolve(infoObject);
 };
 
-void resolve_buffer_map_promise(ffi::WGPUWebGPUChildPtr child,
-                                ffi::WGPUBufferId buffer_id, bool is_writable,
-                                uint64_t offset, uint64_t size,
-                                const nsCString* error) {
-  auto* c = static_cast<WebGPUChild*>(child);
+void wgpu_child_resolve_buffer_map_promise(WGPUWebGPUChildPtr aChild,
+                                           WGPUBufferId aBufferId,
+                                           bool aIsWritable, uint64_t aOffset,
+                                           uint64_t aSize,
+                                           const nsCString* aError) {
+  auto* c = static_cast<WebGPUChild*>(aChild);
   auto& pending_promises = c->mPendingBufferMapPromises;
 
   WebGPUChild::PendingBufferMapPromise pending_promise;
-  if (auto search = pending_promises.find(buffer_id);
+  if (auto search = pending_promises.find(aBufferId);
       search != pending_promises.end()) {
     pending_promise = std::move(search->second.front());
     search->second.pop_front();
 
     if (search->second.empty()) {
-      pending_promises.erase(buffer_id);
+      pending_promises.erase(aBufferId);
     }
   } else {
     NS_ERROR("Missing pending promise for buffer map");
@@ -262,29 +264,27 @@ void resolve_buffer_map_promise(ffi::WGPUWebGPUChildPtr child,
     return;
   }
 
-  if (error == nullptr) {
-    pending_promise.buffer->ResolveMapRequest(pending_promise.promise, offset,
-                                              size, is_writable);
+  if (aError == nullptr) {
+    pending_promise.buffer->ResolveMapRequest(pending_promise.promise, aOffset,
+                                              aSize, aIsWritable);
   } else {
-    pending_promise.buffer->RejectMapRequest(pending_promise.promise, *error);
+    pending_promise.buffer->RejectMapRequest(pending_promise.promise, *aError);
   }
 }
 
-void resolve_on_submitted_work_done_promise(ffi::WGPUWebGPUChildPtr child) {
-  auto* c = static_cast<WebGPUChild*>(child);
+void wgpu_child_resolve_on_submitted_work_done_promise(
+    WGPUWebGPUChildPtr aChild) {
+  auto* c = static_cast<WebGPUChild*>(aChild);
   auto& pending_promises = c->mPendingOnSubmittedWorkDonePromises;
   auto pending_promise = std::move(pending_promises.front());
   pending_promises.pop_front();
 
   pending_promise->MaybeResolveWithUndefined();
 };
+}  // namespace ffi
 
 ipc::IPCResult WebGPUChild::RecvServerMessage(const ipc::ByteBuf& aByteBuf) {
-  ffi::wgpu_client_receive_server_message(
-      GetClient(), ToFFI(&aByteBuf), resolve_request_adapter_promise,
-      resolve_request_device_promise, resolve_pop_error_scope_promise,
-      resolve_create_pipeline_promise, resolve_create_shader_module_promise,
-      resolve_buffer_map_promise, resolve_on_submitted_work_done_promise);
+  ffi::wgpu_client_receive_server_message(GetClient(), ToFFI(&aByteBuf));
   return IPC_OK();
 }
 

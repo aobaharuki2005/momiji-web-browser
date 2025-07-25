@@ -43,6 +43,14 @@ pub struct FfiSlice<'a, T> {
 }
 
 impl<'a, T> FfiSlice<'a, T> {
+    pub fn from_slice(slice: &'a [T]) -> FfiSlice<'a, T> {
+        Self {
+            data: slice.as_ptr(),
+            length: slice.len(),
+            _marker: PhantomData,
+        }
+    }
+
     pub unsafe fn as_slice(&self) -> &'a [T] {
         if self.data.is_null() {
             // It is invalid to construct a rust slice with a null pointer.
