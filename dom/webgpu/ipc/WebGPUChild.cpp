@@ -24,6 +24,7 @@
 #include "mozilla/webgpu/WebGPUTypes.h"
 #include "mozilla/webgpu/RenderPipeline.h"
 #include "mozilla/webgpu/ComputePipeline.h"
+#include "mozilla/webgpu/PipelineError.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "Adapter.h"
 #include "DeviceLostInfo.h"
@@ -190,16 +191,14 @@ void resolve_create_pipeline_promise(ffi::WGPUWebGPUChildPtr child,
       pending_promise.promise->MaybeResolve(object);
     }
   } else {
-    // TODO: not sure how to reject with a PipelineError, we need to register it
-    // with DOMEXCEPTION?
-    // dom::GPUPipelineErrorReason reason;
-    // if (is_validation_error) {
-    //   reason = dom::GPUPipelineErrorReason::Validation;
-    // } else {
-    //   reason = dom::GPUPipelineErrorReason::Internal;
-    // }
-    // RefPtr<PipelineError> e = new PipelineError(*error, reason);
-    pending_promise.promise->MaybeRejectWithOperationError(*error);
+    dom::GPUPipelineErrorReason reason;
+    if (is_validation_error) {
+      reason = dom::GPUPipelineErrorReason::Validation;
+    } else {
+      reason = dom::GPUPipelineErrorReason::Internal;
+    }
+    RefPtr<PipelineError> e = new PipelineError(*error, reason);
+    pending_promise.promise->MaybeReject(e);
   }
 }
 
