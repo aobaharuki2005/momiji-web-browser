@@ -93,6 +93,50 @@ class AutoWebCodecsMarker {
   bool mEnded = false;
 };
 
+class AsyncDurationTracker {
+ public:
+  AsyncDurationTracker() : mOwningThread(GetCurrentSerialEventTarget()) {}
+  ~AsyncDurationTracker() { Clear(); }
+
+  void Start(int64_t aTimestamp, AutoWebCodecsMarker&& aMarker) {
+    MOZ_ASSERT(mOwningThread->IsOnCurrentThread());
+    mEntries.push_back(
+        Entry{.mTimestamp = aTimestamp, .mMarker = std::move(aMarker)});
+  }
+
+  size_t End(int64_t aTimestamp) {
+    MOZ_ASSERT(mOwningThread->IsOnCurrentThread());
+    size_t popped = 0;
+    while (!mEntries.empty()) {
+      auto& entry = mEntries.front();
+      entry.mMarker.End();
+      popped += 1;
+      mEntries.pop_front();
+      if (entry.mTimestamp == aTimestamp) {
+        break;
+      }
+    }
+    return popped;
+  }
+
+  void Clear() {
+    MOZ_ASSERT(mOwningThread->IsOnCurrentThread());
+    while (!mEntries.empty()) {
+      mEntries.front().mMarker.End();
+      mEntries.pop_front();
+    }
+  }
+
+ private:
+  struct Entry {
+    int64_t mTimestamp;
+    AutoWebCodecsMarker mMarker;
+  };
+
+  std::deque<Entry> mEntries;
+  const nsCOMPtr<nsISerialEventTarget> mOwningThread;
+};
+
 namespace gfx {
 enum class ColorRange : uint8_t;
 enum class ColorSpace2 : uint8_t;
