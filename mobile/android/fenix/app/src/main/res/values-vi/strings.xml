@@ -318,6 +318,8 @@
   <string name="browser_menu_sign_back_in_to_sync">Đăng nhập lại để đồng bộ hóa</string>
   <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
   <string name="browser_menu_syncing_paused_caption">Đã tạm dừng đồng bộ hóa</string>
+  <!-- Browser menu caption label for an authenticated user -->
+  <string name="browser_menu_signed_in_caption">Quản lý những gì bạn sao lưu và đồng bộ hóa</string>
   <!-- Browser menu label that creates a private tab -->
   <string name="browser_menu_new_private_tab">Thẻ riêng tư mới</string>
   <!-- Browser menu label that navigates to the Password screen -->
@@ -415,6 +417,8 @@
   <string name="browser_menu_default_banner_title">Đặt %1$s làm trình duyệt mặc định của bạn</string>
   <!-- Label text within the set as default banner -->
   <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">Chỉ mất vài giây. Có thể thay đổi bất cứ lúc nào.</string>
+  <!-- Label text within the set as default banner -->
+  <string name="browser_menu_default_banner_subtitle_2">Nhanh chóng, riêng tư, dành riêng cho bạn.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Bỏ qua</string>
   <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
@@ -2388,7 +2392,7 @@
   <!-- Option for enhanced tracking protection for the custom protection settings for tracking content -->
   <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Chỉ trong thẻ riêng tư</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
-  <string name="preference_enhanced_tracking_protection_custom_cryptominers">Tiền điện tử</string>
+  <string name="preference_enhanced_tracking_protection_custom_cryptominers">Trình đào tiền điện tử</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
   <string name="preference_enhanced_tracking_protection_custom_known_fingerprinters">Dấu vết đã biết</string>
   <!-- Button label for navigating to the Enhanced Tracking Protection details -->
@@ -2410,7 +2414,7 @@
   <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_cookies_description_2">Trình chống cookie chung cô lập các cookie với trang web mà bạn đang truy cập, do đó, các trình theo dõi như quảng cáo không thể sử dụng chúng để theo dõi bạn trên các trang web.</string>
   <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
-  <string name="etp_cryptominers_title">Tiền điện tử</string>
+  <string name="etp_cryptominers_title">Trình đào tiền điện tử</string>
   <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_cryptominers_description">Ngăn chặn các tập lệnh độc hại truy cập vào thiết bị của bạn để khai thác tiền điện tử.</string>
   <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
