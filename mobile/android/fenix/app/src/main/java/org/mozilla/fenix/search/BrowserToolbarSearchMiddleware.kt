@@ -141,25 +141,25 @@ class BrowserToolbarSearchMiddleware(
             is EnvironmentRehydrated -> {
                 environment = action.environment as? HomeToolbarEnvironment
 
-                if (context.store.state.isEditMode()) {
-                    syncCurrentSearchEngine(context.store)
+                if (context.state.isEditMode()) {
+                    syncCurrentSearchEngine(context)
                 }
             }
 
             is EnvironmentCleared -> {
                 environment = null
-                context.store.dispatch(AutocompleteProvidersUpdated(emptyList()))
+                context.dispatch(AutocompleteProvidersUpdated(emptyList()))
             }
 
             is ToggleEditMode -> {
                 if (action.editMode) {
                     refreshConfigurationAfterSearchEngineChange(
-                        store = context.store,
+                        context = context,
                         searchEngine = reconcileSelectedEngine(),
                     )
-                    syncCurrentSearchEngine(context.store)
-                    syncAvailableEngines(context.store)
-                    updateSearchEndPageActions(context.store)
+                    syncCurrentSearchEngine(context)
+                    syncAvailableEngines(context)
+                    updateSearchEndPageActions(context)
                 } else {
                     syncCurrentSearchEngineJob?.cancel()
                     syncAvailableSearchEnginesJob?.cancel()
@@ -187,7 +187,7 @@ class BrowserToolbarSearchMiddleware(
             }
 
             is SearchSettingsItemClicked -> {
-                context.store.dispatch(SearchQueryUpdated(""))
+                context.dispatch(SearchQueryUpdated(""))
                 appStore.dispatch(SearchEnded)
                 browserStore.dispatch(EngagementFinished(abandoned = true))
                 environment?.navController?.navigate(
@@ -198,7 +198,7 @@ class BrowserToolbarSearchMiddleware(
             is SearchSelectorItemClicked -> {
                 appStore.dispatch(SearchEngineSelected(action.searchEngine, true))
                 appStore.dispatch(SearchStarted())
-                refreshConfigurationAfterSearchEngineChange(context.store, action.searchEngine)
+                refreshConfigurationAfterSearchEngineChange(context, action.searchEngine)
             }
 
             is UrlSuggestionAutocompleted -> {
@@ -249,15 +249,15 @@ class BrowserToolbarSearchMiddleware(
             }
 
             is ClearSearchClicked -> {
-                context.store.dispatch(SearchQueryUpdated(""))
+                context.dispatch(SearchQueryUpdated(""))
             }
 
             is SearchQueryUpdated -> {
-                updateSearchEndPageActions(context.store)
+                updateSearchEndPageActions(context)
             }
 
             is QrScannerClicked -> {
-                observeQrScannerInput(context.store)
+                observeQrScannerInput(context)
                 appStore.dispatch(AppAction.QrScannerAction.QrScannerRequested)
             }
 
@@ -308,28 +308,28 @@ class BrowserToolbarSearchMiddleware(
     }
 
     private fun refreshConfigurationAfterSearchEngineChange(
-        store: Store<BrowserToolbarState, BrowserToolbarAction>,
+        context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         searchEngine: SearchEngine?,
     ) {
-        updateSearchSelectorMenu(store, searchEngine, browserStore.state.search.searchEngineShortcuts)
-        updateAutocompleteProviders(store, searchEngine)
-        updateToolbarHint(store, searchEngine)
+        updateSearchSelectorMenu(context, searchEngine, browserStore.state.search.searchEngineShortcuts)
+        updateAutocompleteProviders(context, searchEngine)
+        updateToolbarHint(context, searchEngine)
     }
 
     private fun updateToolbarHint(
-        store: Store<BrowserToolbarState, BrowserToolbarAction>,
+        context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         engine: SearchEngine?,
     ) {
         val defaultEngine = browserStore.state.search.selectedOrDefaultSearchEngine
         val hintRes = engine.toolbarHintRes(defaultEngine)
-        store.dispatch(HintUpdated(hintRes))
+        context.dispatch(HintUpdated(hintRes))
     }
 
     /**
      * Synchronously update the toolbar with a new search selector.
      */
     private fun updateSearchSelectorMenu(
-        store: Store<BrowserToolbarState, BrowserToolbarAction>,
+        context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         selectedSearchEngine: SearchEngine?,
         searchEngineShortcuts: List<SearchEngine>,
     ) {
@@ -338,7 +338,7 @@ class BrowserToolbarSearchMiddleware(
         val searchSelector = buildSearchSelector(
             selectedSearchEngine, searchEngineShortcuts, environment.context.resources,
         )
-        store.dispatch(
+        context.dispatch(
             SearchActionsStartUpdated(
                 when (searchSelector == null) {
                     true -> emptyList()
@@ -349,14 +349,14 @@ class BrowserToolbarSearchMiddleware(
     }
 
     private fun updateAutocompleteProviders(
-        store: Store<BrowserToolbarState, BrowserToolbarAction>,
+        context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         selectedSearchEngine: SearchEngine?,
     ) {
         if (settings.shouldAutocompleteInAwesomebar) {
             val autocompleteProviders = buildAutocompleteProvidersList(selectedSearchEngine)
-            store.dispatch(AutocompleteProvidersUpdated(autocompleteProviders))
+            context.dispatch(AutocompleteProvidersUpdated(autocompleteProviders))
         } else {
-            store.dispatch(AutocompleteProvidersUpdated(emptyList()))
+            context.dispatch(AutocompleteProvidersUpdated(emptyList()))
         }
     }
 
@@ -389,25 +389,25 @@ class BrowserToolbarSearchMiddleware(
         else -> emptyList()
     }
 
-    private fun syncCurrentSearchEngine(store: Store<BrowserToolbarState, BrowserToolbarAction>) {
+    private fun syncCurrentSearchEngine(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
         syncCurrentSearchEngineJob?.cancel()
         syncCurrentSearchEngineJob = appStore.observeWhileActive {
             distinctUntilChangedBy { it.searchState.selectedSearchEngine?.searchEngine }
                 .collect {
                     it.searchState.selectedSearchEngine?.let {
-                        refreshConfigurationAfterSearchEngineChange(store, it.searchEngine)
+                        refreshConfigurationAfterSearchEngineChange(context, it.searchEngine)
                     }
                 }
         }
     }
 
-    private fun syncAvailableEngines(store: Store<BrowserToolbarState, BrowserToolbarAction>) {
+    private fun syncAvailableEngines(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
         syncAvailableSearchEnginesJob?.cancel()
         syncAvailableSearchEnginesJob = browserStore.observeWhileActive {
             distinctUntilChangedBy { it.search.searchEngineShortcuts }
                 .collect {
                     refreshConfigurationAfterSearchEngineChange(
-                        store = store,
+                        context = context,
                         searchEngine = reconcileSelectedEngine(),
                     )
                 }
@@ -419,12 +419,12 @@ class BrowserToolbarSearchMiddleware(
             ?: browserStore.state.search.selectedOrDefaultSearchEngine
 
     private fun updateSearchEndPageActions(
-        store: Store<BrowserToolbarState, BrowserToolbarAction>,
+        context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         selectedSearchEngine: SearchEngine? = reconcileSelectedEngine(),
-    ) = store.dispatch(
+    ) = context.dispatch(
         SearchActionsEndUpdated(
             buildSearchEndPageActions(
-                store.state.editState.query,
+                context.state.editState.query,
                 selectedSearchEngine,
             ),
         ),
@@ -458,15 +458,15 @@ class BrowserToolbarSearchMiddleware(
         }
     }
 
-    private fun observeQrScannerInput(store: Store<BrowserToolbarState, BrowserToolbarAction>) {
+    private fun observeQrScannerInput(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
         observeQRScannerInputJob = null
         observeQRScannerInputJob = appStore.observeWhileActive {
             distinctUntilChangedBy { it.qrScannerState.lastScanData }
                 .collect {
                     if (it.qrScannerState.lastScanData?.isNotEmpty() == true) {
                         appStore.dispatch(AppAction.QrScannerAction.QrScannerInputConsumed)
-                        store.dispatch(SearchQueryUpdated(it.qrScannerState.lastScanData))
-                        store.dispatch(SearchQueryUpdated(it.qrScannerState.lastScanData, false))
+                        context.dispatch(SearchQueryUpdated(it.qrScannerState.lastScanData))
+                        context.dispatch(SearchQueryUpdated(it.qrScannerState.lastScanData, false))
                         components.useCases.fenixBrowserUseCases.loadUrlOrSearch(
                             searchTermOrURL = it.qrScannerState.lastScanData,
                             newTab = appStore.state.searchState.sourceTabId == null,

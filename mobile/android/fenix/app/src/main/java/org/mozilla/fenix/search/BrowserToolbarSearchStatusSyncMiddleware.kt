@@ -49,9 +49,10 @@ class BrowserToolbarSearchStatusSyncMiddleware(
 
         if (action is EnvironmentRehydrated) {
             environment = action.environment as? HomeToolbarEnvironment
-            syncSearchActive(context.store)
+            syncSearchActive(context)
         }
         if (action is EnvironmentCleared) {
+            syncSearchActiveJob?.cancel()
             environment = null
         }
 
@@ -63,12 +64,11 @@ class BrowserToolbarSearchStatusSyncMiddleware(
         }
     }
 
-    private fun syncSearchActive(store: Store<BrowserToolbarState, BrowserToolbarAction>) {
-        syncSearchActiveJob?.cancel()
+    private fun syncSearchActive(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
         syncSearchActiveJob = appStore.observeWhileActive {
             distinctUntilChangedBy { it.searchState.isSearchActive }
                 .collect {
-                    store.dispatch(ToggleEditMode(it.searchState.isSearchActive))
+                    context.dispatch(ToggleEditMode(it.searchState.isSearchActive))
                 }
         }
     }

@@ -128,7 +128,7 @@ class BrowserToolbarMiddleware(
             is Init -> {
                 next(action)
 
-                updatePageOrigin(context.store)
+                updatePageOrigin(context)
             }
 
             is EnvironmentRehydrated -> {
@@ -136,13 +136,13 @@ class BrowserToolbarMiddleware(
 
                 environment = action.environment as? HomeToolbarEnvironment
 
-                if (context.store.state.mode == Mode.DISPLAY) {
-                    observeSearchStateUpdates(context.store)
+                if (context.state.mode == Mode.DISPLAY) {
+                    observeSearchStateUpdates(context)
                 }
-                updateEndBrowserActions(context.store)
-                updateNavigationActions(context.store)
-                updateToolbarActionsBasedOnOrientation(context.store)
-                updateTabsCount(context.store)
+                updateEndBrowserActions(context)
+                updateNavigationActions(context)
+                updateToolbarActionsBasedOnOrientation(context)
+                updateTabsCount(context)
             }
 
             is EnvironmentCleared -> {
@@ -156,7 +156,7 @@ class BrowserToolbarMiddleware(
 
                 when (action.editMode) {
                     true -> stopSearchStateUpdates()
-                    false -> observeSearchStateUpdates(context.store)
+                    false -> observeSearchStateUpdates(context)
                 }
             }
 
@@ -250,13 +250,13 @@ class BrowserToolbarMiddleware(
         }
     }
 
-    private fun observeSearchStateUpdates(store: Store<BrowserToolbarState, BrowserToolbarAction>) {
+    private fun observeSearchStateUpdates(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
         syncCurrentSearchEngineJob?.cancel()
         syncCurrentSearchEngineJob = appStore.observeWhileActive {
             distinctUntilChangedBy { it.searchState.selectedSearchEngine?.searchEngine }
                 .collect {
                     it.searchState.selectedSearchEngine?.let {
-                        updateStartPageActions(store, it.searchEngine)
+                        updateStartPageActions(context, it.searchEngine)
                     }
                 }
         }
@@ -266,7 +266,7 @@ class BrowserToolbarMiddleware(
             distinctUntilChangedBy { it.search.searchEngineShortcuts }
                 .collect {
                     updateStartPageActions(
-                        store = store,
+                        context = context,
                         selectedSearchEngine = appStore.state.searchState.selectedSearchEngine?.searchEngine
                             ?: it.search.selectedOrDefaultSearchEngine,
                     )
@@ -280,16 +280,16 @@ class BrowserToolbarMiddleware(
     }
 
     private fun updateStartPageActions(
-        store: Store<BrowserToolbarState, BrowserToolbarAction>,
+        context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         selectedSearchEngine: SearchEngine?,
-    ) = store.dispatch(
+    ) = context.dispatch(
         PageActionsStartUpdated(
             buildStartPageActions(selectedSearchEngine),
         ),
     )
 
-    private fun updatePageOrigin(store: Store<BrowserToolbarState, BrowserToolbarAction>) =
-        store.dispatch(
+    private fun updatePageOrigin(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) =
+        context.dispatch(
             PageOriginUpdated(
                 PageOrigin(
                     hint = R.string.search_hint,
@@ -301,8 +301,8 @@ class BrowserToolbarMiddleware(
             ),
         )
 
-    private fun updateEndBrowserActions(store: Store<BrowserToolbarState, BrowserToolbarAction>) {
-        store.dispatch(
+    private fun updateEndBrowserActions(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
+        context.dispatch(
             BrowserActionsEndUpdated(
                 buildEndBrowserActions(),
             ),
@@ -338,8 +338,8 @@ class BrowserToolbarMiddleware(
         }
     }
 
-    private fun updateNavigationActions(store: Store<BrowserToolbarState, BrowserToolbarAction>) {
-        store.dispatch(
+    private fun updateNavigationActions(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
+        context.dispatch(
             NavigationActionsUpdated(
                 buildNavigationActions(),
             ),
@@ -390,22 +390,24 @@ class BrowserToolbarMiddleware(
         }
     }
 
-    private fun updateToolbarActionsBasedOnOrientation(store: Store<BrowserToolbarState, BrowserToolbarAction>) {
+    private fun updateToolbarActionsBasedOnOrientation(
+        context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
+    ) {
         appStore.observeWhileActive {
             distinctUntilChangedBy { it.orientation }
                 .collect {
-                    updateEndBrowserActions(store)
-                    updateNavigationActions(store)
+                    updateEndBrowserActions(context)
+                    updateNavigationActions(context)
                 }
         }
     }
 
-    private fun updateTabsCount(store: Store<BrowserToolbarState, BrowserToolbarAction>) {
+    private fun updateTabsCount(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
         browserStore.observeWhileActive {
             distinctUntilChangedBy { it.tabs.size }
                 .collect {
-                    updateEndBrowserActions(store)
-                    updateNavigationActions(store)
+                    updateEndBrowserActions(context)
+                    updateNavigationActions(context)
                 }
         }
     }

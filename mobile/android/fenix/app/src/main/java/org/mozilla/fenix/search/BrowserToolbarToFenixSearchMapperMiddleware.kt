@@ -48,10 +48,10 @@ class BrowserToolbarToFenixSearchMapperMiddleware(
         if (action is EnvironmentRehydrated) {
             environment = action.environment
 
-            syncSearchStatus(context.store)
+            syncSearchStatus(context)
 
             if (toolbarStore.state.isEditMode()) {
-                syncUserQuery(context.store)
+                syncUserQuery(context)
             }
         } else if (action is EnvironmentCleared) {
             environment = null
@@ -60,13 +60,13 @@ class BrowserToolbarToFenixSearchMapperMiddleware(
         next(action)
     }
 
-    private fun syncSearchStatus(store: Store<SearchFragmentState, SearchFragmentAction>) {
+    private fun syncSearchStatus(context: MiddlewareContext<SearchFragmentState, SearchFragmentAction>) {
         syncSearchStartedJob?.cancel()
         syncSearchStartedJob = toolbarStore.observeWhileActive {
             distinctUntilChangedBy { it.mode }
                 .collect {
                     if (it.mode == Mode.EDIT) {
-                        store.dispatch(
+                        context.dispatch(
                             SearchStarted(
                                 selectedSearchEngine = null,
                                 isUserSelected = true,
@@ -74,7 +74,7 @@ class BrowserToolbarToFenixSearchMapperMiddleware(
                             ),
                         )
 
-                        syncUserQuery(store)
+                        syncUserQuery(context)
                     } else {
                         stopSyncingUserQuery()
                     }
@@ -82,13 +82,13 @@ class BrowserToolbarToFenixSearchMapperMiddleware(
         }
     }
 
-    private fun syncUserQuery(store: Store<SearchFragmentState, SearchFragmentAction>) {
+    private fun syncUserQuery(context: MiddlewareContext<SearchFragmentState, SearchFragmentAction>) {
         syncSearchQueryJob?.cancel()
         syncSearchQueryJob = toolbarStore.observeWhileActive {
             map { it.editState.query }
                 .distinctUntilChanged()
                 .collect { query ->
-                    store.dispatch(SearchFragmentAction.UpdateQuery(query))
+                    context.dispatch(SearchFragmentAction.UpdateQuery(query))
                 }
         }
     }
