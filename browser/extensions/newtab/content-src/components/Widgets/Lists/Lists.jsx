@@ -12,6 +12,10 @@ function Lists({ dispatch }) {
   const [newTask, setNewTask] = useState("");
   const inputRef = useRef(null);
 
+  function isValidUrl(string) {
+    return URL.canParse(string);
+  }
+
   function saveTask() {
     const trimmedTask = newTask.trimEnd();
     // only add new task if it has a length, to avoid creating empty tasks
@@ -21,6 +25,7 @@ function Lists({ dispatch }) {
         completed: false,
         created: Date.now(),
         id: crypto.randomUUID(),
+        isUrl: isValidUrl(trimmedTask),
       };
       const updatedLists = {
         ...lists,
@@ -170,12 +175,24 @@ function ListItem({ task, updateTask, deleteTask }) {
           onChange={handleCheckboxChange}
           checked={task.completed}
         />
-        <span
-          className={`task-label ${task.completed && shouldAnimate ? "animate-strike" : ""}`}
-          title={task.value}
-        >
-          {task.value}
-        </span>
+        {task.isUrl ? (
+          <a
+            href={task.value}
+            rel="noopener noreferrer"
+            target="_blank"
+            className={`task-label ${task.completed && shouldAnimate ? "animate-strike" : ""}`}
+            title={task.value}
+          >
+            {task.value}
+          </a>
+        ) : (
+          <span
+            className={`task-label ${task.completed && shouldAnimate ? "animate-strike" : ""}`}
+            title={task.value}
+          >
+            {task.value}
+          </span>
+        )}
       </div>
       <moz-button
         iconSrc="chrome://global/skin/icons/more.svg"
@@ -183,6 +200,13 @@ function ListItem({ task, updateTask, deleteTask }) {
         type="ghost"
       />
       <panel-list id={`panel-task-${task.id}`}>
+        {task.isUrl && (
+          <panel-item
+            onClick={() => window.open(task.value, "_blank", "noopener")}
+          >
+            Open link
+          </panel-item>
+        )}
         <panel-item>Move up</panel-item>
         <panel-item>Move down</panel-item>
         <panel-item>Edit</panel-item>

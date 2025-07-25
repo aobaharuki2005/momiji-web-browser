@@ -12240,6 +12240,9 @@ function Lists({
   } = listsData;
   const [newTask, setNewTask] = (0,external_React_namespaceObject.useState)("");
   const inputRef = (0,external_React_namespaceObject.useRef)(null);
+  function isValidUrl(string) {
+    return URL.canParse(string);
+  }
   function saveTask() {
     const trimmedTask = newTask.trimEnd();
     // only add new task if it has a length, to avoid creating empty tasks
@@ -12248,7 +12251,8 @@ function Lists({
         value: trimmedTask,
         completed: false,
         created: Date.now(),
-        id: crypto.randomUUID()
+        id: crypto.randomUUID(),
+        isUrl: isValidUrl(trimmedTask)
       };
       const updatedLists = {
         ...lists,
@@ -12386,7 +12390,13 @@ function ListItem({
     type: "checkbox",
     onChange: handleCheckboxChange,
     checked: task.completed
-  }), /*#__PURE__*/external_React_default().createElement("span", {
+  }), task.isUrl ? /*#__PURE__*/external_React_default().createElement("a", {
+    href: task.value,
+    rel: "noopener noreferrer",
+    target: "_blank",
+    className: `task-label ${task.completed && shouldAnimate ? "animate-strike" : ""}`,
+    title: task.value
+  }, task.value) : /*#__PURE__*/external_React_default().createElement("span", {
     className: `task-label ${task.completed && shouldAnimate ? "animate-strike" : ""}`,
     title: task.value
   }, task.value)), /*#__PURE__*/external_React_default().createElement("moz-button", {
@@ -12395,7 +12405,9 @@ function ListItem({
     type: "ghost"
   }), /*#__PURE__*/external_React_default().createElement("panel-list", {
     id: `panel-task-${task.id}`
-  }, /*#__PURE__*/external_React_default().createElement("panel-item", null, "Move up"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Move down"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Edit"), /*#__PURE__*/external_React_default().createElement("panel-item", {
+  }, task.isUrl && /*#__PURE__*/external_React_default().createElement("panel-item", {
+    onClick: () => window.open(task.value, "_blank", "noopener")
+  }, "Open link"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Move up"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Move down"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Edit"), /*#__PURE__*/external_React_default().createElement("panel-item", {
     className: "delete-item",
     onClick: () => deleteTask(task)
   }, "Delete item")));
