@@ -365,25 +365,23 @@ class BrowserToolbarMiddleware(
     }
 
     private fun buildTabCounterMenu(): CombinedEventAndMenu? {
-        val environment = environment ?: return null
-
         return CombinedEventAndMenu(TabCounterLongClicked) {
-            when (environment.browsingModeManager.mode) {
-                Normal -> listOf(
-                    BrowserToolbarMenuButton(
-                        icon = DrawableResIcon(iconsR.drawable.mozac_ic_private_mode_24),
-                        text = StringResText(R.string.mozac_browser_menu_new_private_tab),
-                        contentDescription = StringResContentDescription(R.string.mozac_browser_menu_new_private_tab),
-                        onClick = AddNewPrivateTab,
-                    ),
-                )
-
+            when (environment?.browsingModeManager?.mode) {
                 Private -> listOf(
                     BrowserToolbarMenuButton(
                         icon = DrawableResIcon(iconsR.drawable.mozac_ic_plus_24),
                         text = StringResText(R.string.mozac_browser_menu_new_tab),
                         contentDescription = StringResContentDescription(R.string.mozac_browser_menu_new_tab),
                         onClick = AddNewTab,
+                    ),
+                )
+
+                else -> listOf(
+                    BrowserToolbarMenuButton(
+                        icon = DrawableResIcon(iconsR.drawable.mozac_ic_private_mode_24),
+                        text = StringResText(R.string.mozac_browser_menu_new_private_tab),
+                        contentDescription = StringResContentDescription(R.string.mozac_browser_menu_new_private_tab),
+                        onClick = AddNewPrivateTab,
                     ),
                 )
             }
