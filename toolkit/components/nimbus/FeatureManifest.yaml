@@ -3689,24 +3689,6 @@ mixedContentUpgrading:
       setPref:
         branch: default
         pref: security.mixed_content.upgrade_display_content
-    image:
-      description: True if the mixed content upgrading is enabled for images
-      type: boolean
-      setPref:
-        branch: default
-        pref: security.mixed_content.upgrade_display_content.image
-    audio:
-      description: True if the mixed content upgrading is enabled for audio
-      type: boolean
-      setPref:
-        branch: default
-        pref: security.mixed_content.upgrade_display_content.audio
-    video:
-      description: True if the mixed content upgrading is enabled for videos
-      type: boolean
-      setPref:
-        branch: default
-        pref: security.mixed_content.upgrade_display_content.video
 
 gc:
   description: Prefs that control gc heuristics.
