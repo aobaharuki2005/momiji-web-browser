@@ -2420,7 +2420,7 @@
 - name: NurseryObject
   arguments:
     # Index in the Vector of objects stored in the WarpSnapshot.
-    nurseryIndex: uint32_t
+    nurseryObjectIndex: uint32_t
   result_type: Object
   movable: true
   congruent_to: custom

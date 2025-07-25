@@ -994,7 +994,7 @@ CodeGenerator::CodeGenerator(MIRGenerator* gen, LIRGraph* graph,
                              const wasm::CodeMetadata* wasmCodeMeta)
     : CodeGeneratorSpecific(gen, graph, masm, wasmCodeMeta),
       ionScriptLabels_(gen->alloc()),
-      ionNurseryObjectLabels_(gen->alloc()),
+      nurseryObjectLabels_(gen->alloc()),
       scriptCounts_(nullptr) {}
 
 CodeGenerator::~CodeGenerator() { js_delete(scriptCounts_); }
@@ -4130,11 +4130,11 @@ void CodeGenerator::visitValue(LValue* value) {
 
 void CodeGenerator::visitNurseryObject(LNurseryObject* lir) {
   Register output = ToRegister(lir->output());
-  uint32_t nurseryIndex = lir->mir()->nurseryIndex();
+  uint32_t nurseryIndex = lir->mir()->nurseryObjectIndex();
 
   // Load a pointer to the entry in IonScript's nursery objects list.
   CodeOffset label = masm.movWithPatch(ImmWord(uintptr_t(-1)), output);
-  masm.propagateOOM(ionNurseryObjectLabels_.emplaceBack(label, nurseryIndex));
+  masm.propagateOOM(nurseryObjectLabels_.emplaceBack(label, nurseryIndex));
 
   // Load the JSObject*.
   masm.loadPtr(Address(output, 0), output);
@@ -16849,7 +16849,7 @@ bool CodeGenerator::link(JSContext* cx) {
                                        ImmPtr(ionScript), ImmPtr((void*)-1));
   }
 
-  for (NurseryObjectLabel label : ionNurseryObjectLabels_) {
+  for (NurseryObjectLabel label : nurseryObjectLabels_) {
     void* entry = ionScript->addressOfNurseryObject(label.nurseryIndex);
     Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, label.offset),
                                        ImmPtr(entry), ImmPtr((void*)-1));

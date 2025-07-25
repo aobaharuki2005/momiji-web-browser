@@ -374,7 +374,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
     NurseryObjectLabel(CodeOffset offset, uint32_t nurseryIndex)
         : offset(offset), nurseryIndex(nurseryIndex) {}
   };
-  Vector<NurseryObjectLabel, 0, JitAllocPolicy> ionNurseryObjectLabels_;
+  Vector<NurseryObjectLabel, 0, JitAllocPolicy> nurseryObjectLabels_;
 
   void branchIfInvalidated(Register temp, Label* invalidated);
 

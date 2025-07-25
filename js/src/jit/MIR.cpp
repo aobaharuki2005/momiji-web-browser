@@ -6768,8 +6768,8 @@ MDefinition* MGuardObjectIdentity::foldsTo(TempAllocator& alloc) {
 
   if (!bailOnEquality() && object()->isNurseryObject() &&
       expected()->isNurseryObject()) {
-    uint32_t objIndex = object()->toNurseryObject()->nurseryIndex();
-    uint32_t otherIndex = expected()->toNurseryObject()->nurseryIndex();
+    uint32_t objIndex = object()->toNurseryObject()->nurseryObjectIndex();
+    uint32_t otherIndex = expected()->toNurseryObject()->nurseryObjectIndex();
     if (objIndex == otherIndex) {
       return object();
     }
@@ -6788,8 +6788,8 @@ MDefinition* MGuardSpecificFunction::foldsTo(TempAllocator& alloc) {
   }
 
   if (function()->isNurseryObject() && expected()->isNurseryObject()) {
-    uint32_t funIndex = function()->toNurseryObject()->nurseryIndex();
-    uint32_t otherIndex = expected()->toNurseryObject()->nurseryIndex();
+    uint32_t funIndex = function()->toNurseryObject()->nurseryObjectIndex();
+    uint32_t otherIndex = expected()->toNurseryObject()->nurseryObjectIndex();
     if (funIndex == otherIndex) {
       return function();
     }
@@ -7045,7 +7045,7 @@ bool MNurseryObject::congruentTo(const MDefinition* ins) const {
   if (!ins->isNurseryObject()) {
     return false;
   }
-  return nurseryIndex() == ins->toNurseryObject()->nurseryIndex();
+  return nurseryObjectIndex() == ins->toNurseryObject()->nurseryObjectIndex();
 }
 
 AliasSet MGuardFunctionIsNonBuiltinCtor::getAliasSet() const {
