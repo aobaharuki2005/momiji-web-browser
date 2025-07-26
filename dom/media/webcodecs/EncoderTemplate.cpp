@@ -163,9 +163,6 @@ void EncoderTemplate<EncoderType>::EncodeAudioData(InputType& aInput,
     return;
   }
 
-  mAsyncDurationTracker.Start(
-      aInput.Timestamp(),
-      AutoWebCodecsMarker(EncoderType::Name.get(), ".encode-duration-a"));
   mEncodeQueueSize += 1;
   // Dummy options here as a shortcut
   mControlMessageQueue.push(MakeRefPtr<EncodeMessage>(
@@ -195,9 +192,6 @@ void EncoderTemplate<EncoderType>::EncodeVideoFrame(
     return;
   }
 
-  mAsyncDurationTracker.Start(
-      aInput.Timestamp(),
-      AutoWebCodecsMarker(EncoderType::Name.get(), ".encode-duration-v"));
   mEncodeQueueSize += 1;
   mControlMessageQueue.push(MakeRefPtr<EncodeMessage>(
       mLatestConfigureId, EncoderType::CreateInputInternal(aInput, aOptions),
@@ -380,7 +374,6 @@ void EncoderTemplate<VideoEncoderTraits>::OutputEncodedVideoData(
 
     LOG("EncoderTemplate:: output callback (ts: % " PRId64 ")%s",
         encodedData->Timestamp(), metadataInfo.get());
-    mAsyncDurationTracker.End(encodedData->Timestamp());
     cb->Call((EncodedVideoChunk&)(*encodedData), metadata);
   }
 }
@@ -437,7 +430,6 @@ void EncoderTemplate<AudioEncoderTraits>::OutputEncodedAudioData(
             ? encodedData->GetDuration().Value()
             : 0,
         data->Size(), mPacketsOutput++);
-    mAsyncDurationTracker.End(encodedData->Timestamp());
     cb->Call((EncodedAudioChunk&)(*encodedData), metadata);
   }
 }
@@ -836,11 +828,6 @@ void EncoderTemplate<EncoderType>::Configure(
                  return;
                }
 
-               LOG("%s %p, EncoderAgent #%zu configured successfully. %u "
-                   "encode requests are pending",
-                   EncoderType::Name.get(), self.get(), id,
-                   self->mEncodeQueueSize);
-
                self->StopBlockingMessageQueue();
                self->ProcessControlMessageQueue();
              })
@@ -854,7 +841,7 @@ MessageProcessedResult EncoderTemplate<EncoderType>::ProcessEncodeMessage(
   MOZ_ASSERT(mState == CodecState::Configured);
   MOZ_ASSERT(aMessage->AsEncodeMessage());
 
-  AUTO_ENCODER_MARKER(marker, ".encode-process");
+  AUTO_ENCODER_MARKER(marker, ".encode");
 
   if (mProcessingMessage) {
     return MessageProcessedResult::NotProcessed;

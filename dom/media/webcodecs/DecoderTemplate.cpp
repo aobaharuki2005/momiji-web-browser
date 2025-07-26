@@ -208,9 +208,6 @@ void DecoderTemplate<DecoderType>::Decode(InputType& aInput, ErrorResult& aRv) {
     mKeyChunkRequired = false;
   }
 
-  mAsyncDurationTracker.Start(
-      aInput.Timestamp(),
-      AutoWebCodecsMarker(DecoderType::Name.get(), ".decode-duration"));
   mDecodeQueueSize += 1;
   mControlMessageQueue.emplace(UniquePtr<ControlMessage>(
       new DecodeMessage(++mDecodeCounter, mLatestConfigureId,
@@ -358,7 +355,6 @@ void DecoderTemplate<DecoderType>::OutputDecodedData(
   for (RefPtr<OutputType>& frame : frames) {
     LOG("Outputing decoded data: ts: %" PRId64, frame->Timestamp());
     RefPtr<OutputType> f = frame;
-    mAsyncDurationTracker.End(f->Timestamp());
     cb->Call((OutputType&)(*f));
   }
 }
@@ -563,10 +559,6 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
                  return;
                }
 
-               LOG("%s %p, DecoderAgent #%d configured successfully. %u decode "
-                   "requests are pending",
-                   DecoderType::Name.get(), self.get(), id,
-                   self->mDecodeQueueSize);
                self->mMessageQueueBlocked = false;
                self->ProcessControlMessageQueue();
              })
@@ -582,7 +574,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
   MOZ_ASSERT(mState == CodecState::Configured);
   MOZ_ASSERT(aMessage->AsDecodeMessage());
 
-  AUTO_DECODER_MARKER(marker, ".decode-process");
+  AUTO_DECODER_MARKER(marker, ".decode");
 
   if (mProcessingMessage) {
     LOGV("%s %p is processing %s. Defer %s", DecoderType::Name.get(), this,

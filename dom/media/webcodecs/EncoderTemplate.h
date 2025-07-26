@@ -289,8 +289,6 @@ class EncoderTemplate : public DOMEventTargetHelper {
   // thread?
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
   uint64_t mPacketsOutput = 0;
-
-  AsyncDurationTracker mAsyncDurationTracker;
 };
 
 }  // namespace mozilla::dom
