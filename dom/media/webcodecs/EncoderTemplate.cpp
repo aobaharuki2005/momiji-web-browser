@@ -836,6 +836,11 @@ void EncoderTemplate<EncoderType>::Configure(
                  return;
                }
 
+               LOG("%s %p, EncoderAgent #%zu configured successfully. %u "
+                   "encode requests are pending",
+                   EncoderType::Name.get(), self.get(), id,
+                   self->mEncodeQueueSize);
+
                self->StopBlockingMessageQueue();
                self->ProcessControlMessageQueue();
              })
