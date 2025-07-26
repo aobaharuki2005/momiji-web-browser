@@ -1228,6 +1228,91 @@ class DesktopNotificationPermissionPrompt extends PermissionPromptForRequest {
 
 /**
  * Creates a PermissionPrompt for a nsIContentPermissionRequest for
+ * the Local Network Access.
+ *
+ * @param request (nsIContentPermissionRequest)
+ *        The request for a permission from content.
+ */
+class LocalNetworkPermissionPrompt extends PermissionPromptForRequest {
+  constructor(request) {
+    super();
+    this.request = request;
+  }
+
+  get type() {
+    return "local-network";
+  }
+
+  get permissionKey() {
+    return "local-network";
+  }
+
+  get popupOptions() {
+    // add a URL to learn more about local network permissions
+    // See Bug 1978017
+    let options = {
+      displayURI: false,
+      name: this.getPrincipalName(),
+    };
+
+    // Don't offer "always remember" action in PB mode
+    options.checkbox = {
+      show: !lazy.PrivateBrowsingUtils.isWindowPrivate(
+        this.browser.ownerGlobal
+      ),
+    };
+
+    if (this.request.isRequestDelegatedToUnsafeThirdParty) {
+      // Second name should be the third party origin
+      options.secondName = this.getPrincipalName(this.request.principal);
+      options.checkbox = { show: false };
+    }
+
+    if (options.checkbox.show) {
+      options.checkbox.label = lazy.gBrowserBundle.GetStringFromName(
+        "localNetwork.remember"
+      );
+    }
+
+    return options;
+  }
+
+  get notificationID() {
+    return "local-network";
+  }
+
+  get anchorID() {
+    return "local-network-notification-icon";
+  }
+
+  get message() {
+    return lazy.gBrowserBundle.formatStringFromName(
+      "localNetwork.allowWithSite",
+      ["<>"]
+    );
+  }
+
+  get promptActions() {
+    return [
+      {
+        label: lazy.gBrowserBundle.GetStringFromName("localNetwork.allowLabel"),
+        accessKey: lazy.gBrowserBundle.GetStringFromName(
+          "localNetwork.allow.accesskey"
+        ),
+        action: lazy.SitePermissions.ALLOW,
+      },
+      {
+        label: lazy.gBrowserBundle.GetStringFromName("localNetwork.blockLabel"),
+        accessKey: lazy.gBrowserBundle.GetStringFromName(
+          "localNetwork.block.accesskey"
+        ),
+        action: lazy.SitePermissions.BLOCK,
+      },
+    ];
+  }
+}
+/**
+ * Creates a PermissionPrompt for a nsIContentPermissionRequest for
  * the persistent-storage API.
  *
  * @param request (nsIContentPermissionRequest)
@@ -1551,4 +1636,5 @@ export const PermissionUI = {
   MIDIPermissionPrompt,
   StorageAccessPermissionPrompt,
   LocalHostPermissionPrompt,
+  LocalNetworkPermissionPrompt,
 };

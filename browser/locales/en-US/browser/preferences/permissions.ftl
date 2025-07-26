@@ -189,6 +189,18 @@ permissions-site-localhost-disable-label =
     .label = Block new requests to access to apps and services on this device
 permissions-site-localhost-disable-desc = This will stop any website not listed above from requesting access to apps and services on this device. Doing this may break some website features.
 
+## Site Permissions - Local network
+
+permissions-site-local-network-window =
+    .title = Settings - Local Network Devices
+    .style = { permissions-window2.style }
+permissions-site-local-network-desc = These websites have requested access to apps and services on devices connected to your Wi-Fi or local network. You can choose to allow or block sites from doing this.
+
+permissions-site-local-network-disable-label =
+    .label = Block new requests to access apps and services on devices connected to your Wi-Fi or local network.
+
+permissions-site-local-network-disable-desc = This will stop any website not listed above from requesting access to apps and services on devices connected to your Wi-Fi or local network devices. Doing this may break some website features.
+
 ## Site Permissions - Microphone
 
 permissions-site-microphone-window2 =

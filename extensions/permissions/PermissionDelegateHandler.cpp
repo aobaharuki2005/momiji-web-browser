@@ -46,6 +46,8 @@ static const DelegateInfo sPermissionsMap[] = {
     {"screen", u"display-capture", DelegatePolicy::eDelegateUseFeaturePolicy},
     {"xr", u"xr-spatial-tracking", DelegatePolicy::eDelegateUseFeaturePolicy},
     {"localhost", u"localhost", DelegatePolicy::eDelegateUseFeaturePolicy},
+    {"local-network", u"local-network",
+     DelegatePolicy::eDelegateUseFeaturePolicy},
 
     {"screen-wake-lock", u"screen-wake-lock",
      DelegatePolicy::eDelegateUseFeaturePolicy}};

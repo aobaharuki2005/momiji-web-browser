@@ -1211,6 +1211,10 @@ let gPermissions = {
       exactHostMatch: true,
     },
 
+    "local-network": {
+      exactHostMatch: true,
+    },
+
     microphone: {
       exactHostMatch: true,
     },

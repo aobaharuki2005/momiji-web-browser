@@ -1429,6 +1429,11 @@ permissions-localhost-settings =
     .label = Settings…
     .accesskey = t
 
+permissions-local-network = Local Network Devices
+permissions-local-network-settings =
+    .label = Settings…
+    .accesskey = t
+
 permissions-xr = Virtual Reality
 permissions-xr-settings =
     .label = Settings…

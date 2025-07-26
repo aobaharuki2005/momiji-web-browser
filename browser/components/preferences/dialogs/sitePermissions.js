@@ -56,6 +56,12 @@ const sitePermissionsL10n = {
     disableLabel: "permissions-site-localhost-disable-label",
     disableDescription: "permissions-site-localhost-disable-desc",
   },
+  "local-network": {
+    window: "permissions-site-local-network-window",
+    description: "permissions-site-local-network-desc",
+    disableLabel: "permissions-site-local-network-disable-label",
+    disableDescription: "permissions-site-local-network-disable-desc",
+  },
 };
 
 const sitePermissionsConfig = {

@@ -1110,6 +1110,11 @@ var gPrivacyPane = {
       gPrivacyPane.showLocalHostExceptions
     );
     setEventListener(
+      "localNetworkSettingsButton",
+      "command",
+      gPrivacyPane.showLocalNetworkExceptions
+    );
+    setEventListener(
       "xrSettingsButton",
       "command",
       gPrivacyPane.showXRExceptions
@@ -2713,6 +2718,22 @@ var gPrivacyPane = {
    */
   showLocalHostExceptions() {
     let params = { permissionType: "localhost" };
+
+    gSubDialog.open(
+      "chrome://browser/content/preferences/dialogs/sitePermissions.xhtml",
+      { features: "resizable=yes" },
+      params
+    );
+  },
+
+  // LOCAL-NETWORK
+
+  /**
+   * Displays the local network exceptions dialog where specific site local network
+   * preferences can be set.
+   */
+  showLocalNetworkExceptions() {
+    let params = { permissionType: "local-network" };
 
     gSubDialog.open(
       "chrome://browser/content/preferences/dialogs/sitePermissions.xhtml",

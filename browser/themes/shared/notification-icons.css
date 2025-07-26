@@ -101,6 +101,14 @@
   }
 }
 
+.local-network-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/local-network.svg);
+
+  &.blocked-permission-icon {
+    list-style-image: url(chrome://browser/skin/notification-icons/local-network-blocked.svg);
+  }
+}
+
 .open-protocol-handler-icon {
   list-style-image: url(chrome://global/skin/icons/open-in-new.svg);
 

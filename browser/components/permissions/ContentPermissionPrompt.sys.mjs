@@ -63,6 +63,9 @@ const ContentPermissionIntegration = {
       case "localhost": {
         return new lazy.PermissionUI.LocalHostPermissionPrompt(request);
       }
+      case "local-network": {
+        return new lazy.PermissionUI.LocalNetworkPermissionPrompt(request);
+      }
     }
     return undefined;
   },
