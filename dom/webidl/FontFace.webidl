@@ -48,7 +48,7 @@ interface FontFace {
   [SetterThrows] attribute UTF8String ascentOverride;
   [SetterThrows] attribute UTF8String descentOverride;
   [SetterThrows] attribute UTF8String lineGapOverride;
-  [SetterThrows, Pref="layout.css.size-adjust.enabled"] attribute UTF8String sizeAdjust;
+  [SetterThrows] attribute UTF8String sizeAdjust;
 
   readonly attribute FontFaceLoadStatus status;
 
