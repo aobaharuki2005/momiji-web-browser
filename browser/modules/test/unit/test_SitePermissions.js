@@ -26,6 +26,7 @@ add_task(async function testPermissionsListing() {
     "geo",
     "install",
     "localhost",
+    "local-network",
     "microphone",
     "popup",
     "screen",
@@ -97,6 +98,13 @@ add_task(async function testGetAllByPrincipal() {
 
   SitePermissions.setForPrincipal(
     principal,
+    "local-network",
+    SitePermissions.ALLOW,
+    SitePermissions.SCOPE_SESSION
+  );
+
+  SitePermissions.setForPrincipal(
+    principal,
     "desktop-notification",
     SitePermissions.BLOCK
   );
@@ -114,6 +122,11 @@ add_task(async function testGetAllByPrincipal() {
     },
     {
       id: "localhost",
+      state: SitePermissions.ALLOW,
+      scope: SitePermissions.SCOPE_SESSION,
+    },
+    {
+      id: "local-network",
       state: SitePermissions.ALLOW,
       scope: SitePermissions.SCOPE_SESSION,
     },
@@ -137,6 +150,11 @@ add_task(async function testGetAllByPrincipal() {
       scope: SitePermissions.SCOPE_SESSION,
     },
     {
+      id: "local-network",
+      state: SitePermissions.ALLOW,
+      scope: SitePermissions.SCOPE_SESSION,
+    },
+    {
       id: "desktop-notification",
       state: SitePermissions.BLOCK,
       scope: SitePermissions.SCOPE_PERSISTENT,
@@ -146,6 +164,7 @@ add_task(async function testGetAllByPrincipal() {
   SitePermissions.removeFromPrincipal(principal, "camera");
   SitePermissions.removeFromPrincipal(principal, "desktop-notification");
   SitePermissions.removeFromPrincipal(principal, "localhost");
+  SitePermissions.removeFromPrincipal(principal, "local-network");
 
   Assert.deepEqual(SitePermissions.getAllByPrincipal(principal), []);
 
@@ -217,6 +236,7 @@ add_task(async function testExactHostMatch() {
     "focus-tab-by-prompt",
     "camera",
     "localhost",
+    "local-network",
     "microphone",
     "screen",
     "geo",
@@ -224,7 +244,6 @@ add_task(async function testExactHostMatch() {
     "persistent-storage",
     "open-protocol-handler",
   ];
-
   if (RESIST_FINGERPRINTING_ENABLED) {
     // Canvas permission should be hidden unless privacy.resistFingerprinting
     // is true.
@@ -331,6 +350,14 @@ add_task(async function testDefaultPrefs() {
     state: SitePermissions.UNKNOWN,
     scope: SitePermissions.SCOPE_PERSISTENT,
   });
+
+  Assert.deepEqual(
+    SitePermissions.getForPrincipal(principal, "local-network"),
+    {
+      state: SitePermissions.UNKNOWN,
+      scope: SitePermissions.SCOPE_PERSISTENT,
+    }
+  );
 
   // Check that the default return value changed after changing the pref.
   Services.prefs.setIntPref(

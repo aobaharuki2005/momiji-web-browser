@@ -44,6 +44,13 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
 
   SitePermissions.setForPrincipal(
     principal,
+    "local-network",
+    SitePermissions.ALLOW,
+    SitePermissions.SCOPE_SESSION
+  );
+
+  SitePermissions.setForPrincipal(
+    principal,
     "shortcuts",
     SitePermissions.ALLOW
   );
@@ -99,6 +106,14 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
     scope: SitePermissions.SCOPE_SESSION,
   });
 
+  let localNetwork = permissions.find(({ id }) => id === "local-network");
+  Assert.deepEqual(localNetwork, {
+    id: "local-network",
+    label: "Access local network devices",
+    state: SitePermissions.ALLOW,
+    scope: SitePermissions.SCOPE_SESSION,
+  });
+
   let shortcuts = permissions.find(({ id }) => id === "shortcuts");
   Assert.deepEqual(shortcuts, {
     id: "shortcuts",
@@ -119,6 +134,7 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
   SitePermissions.removeFromPrincipal(principal, "popup");
   SitePermissions.removeFromPrincipal(principal, "geo");
   SitePermissions.removeFromPrincipal(principal, "localhost");
+  SitePermissions.removeFromPrincipal(principal, "local-network");
   SitePermissions.removeFromPrincipal(principal, "shortcuts");
 
   SitePermissions.removeFromPrincipal(principal, "xr");
