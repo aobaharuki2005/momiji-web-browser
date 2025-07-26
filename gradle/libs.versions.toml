@@ -81,6 +81,7 @@ serialization = "1.9.0"
 detekt = "1.23.8"
 ktlint = "1.7.1"
 spotless = "7.2.1"
+google-java-format = "1.27.0"
 
 # Mozilla versions
 apilint = "0.5.4"
@@ -273,6 +274,7 @@ adjust = { group = "com.adjust.sdk", name = "adjust-android", version.ref = "adj
 apilint = { group = "org.mozilla.apilint", name = "apilint", version.ref = "apilint" }
 commons-exec = { group = "org.apache.commons", name = "commons-exec", version.ref = "commons-exec" }
 spotless = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
+google-java-format = { group = "com.google.googlejavaformat", name = "google-java-format", version.ref = "google-java-format" }
 tomlj = { group = "org.tomlj", name = "tomlj", version.ref = "tomlj" }
 androidx-ui-text-android = { group = "androidx.compose.ui", name = "ui-text-android", version.ref = "ui-text-android" }
 
