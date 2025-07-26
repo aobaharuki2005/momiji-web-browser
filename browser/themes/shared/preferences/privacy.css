@@ -41,6 +41,10 @@
   list-style-image: url(chrome://browser/skin/notification-icons/camera.svg);
 }
 
+.localhost-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/local-host.svg);
+}
+
 .microphone-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/microphone.svg);
 }

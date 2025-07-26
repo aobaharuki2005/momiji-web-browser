@@ -60,6 +60,9 @@ const ContentPermissionIntegration = {
       case "storage-access": {
         return new lazy.PermissionUI.StorageAccessPermissionPrompt(request);
       }
+      case "localhost": {
+        return new lazy.PermissionUI.LocalHostPermissionPrompt(request);
+      }
     }
     return undefined;
   },

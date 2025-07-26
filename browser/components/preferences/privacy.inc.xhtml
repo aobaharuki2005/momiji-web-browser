@@ -769,6 +769,27 @@
       </hbox>
     </hbox>
 
+     <hbox id="localHostSettingsRow" align="center" role="group" aria-labelledby="localHostPermissionsLabel">
+      <hbox flex="1">
+        <image class="localhost-icon permission-icon" />
+        <label id="localHostPermissionsLabel" data-l10n-id="permissions-localhost"/>
+      </hbox>
+      <hbox pack="end">
+        <button id="localHostSettingsButton"
+                is="highlightable-button"
+                class="accessory-button"
+                data-l10n-id="permissions-localhost-settings"
+                search-l10n-ids="
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-site-localhost-window.title,
+                  permissions-site-localhost-desc,
+                  permissions-site-localhost-disable-label,
+                  permissions-site-localhost-disable-desc,
+                " />
+      </hbox>
+    </hbox>
+
     <hbox id="microphoneSettingsRow" align="center" role="group" aria-labelledby="microphonePermissionsLabel">
       <hbox flex="1">
         <image class="microphone-icon permission-icon" />

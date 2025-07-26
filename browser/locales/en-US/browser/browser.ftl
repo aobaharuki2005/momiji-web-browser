@@ -100,6 +100,8 @@ urlbar-default-notification-anchor =
     .tooltiptext = Open message panel
 urlbar-geolocation-notification-anchor =
     .tooltiptext = Open location request panel
+urlbar-localhost-notification-anchor =
+    .tooltiptext = Manage local device access for this site
 urlbar-xr-notification-anchor =
     .tooltiptext = Open virtual reality permission panel
 urlbar-storage-access-anchor =
@@ -194,6 +196,8 @@ urlbar-search-mode-actions = Actions
 
 urlbar-geolocation-blocked =
     .tooltiptext = You have blocked location information for this website.
+urlbar-localhost-blocked =
+    .tooltiptext = You have blocked local device connections for this website.
 urlbar-xr-blocked =
     .tooltiptext = You have blocked virtual reality device access for this website.
 urlbar-web-notifications-blocked =

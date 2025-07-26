@@ -1424,6 +1424,11 @@ permissions-location-settings =
     .label = Settings…
     .accesskey = t
 
+permissions-localhost = Device apps and services
+permissions-localhost-settings =
+    .label = Settings…
+    .accesskey = t
+
 permissions-xr = Virtual Reality
 permissions-xr-settings =
     .label = Settings…
