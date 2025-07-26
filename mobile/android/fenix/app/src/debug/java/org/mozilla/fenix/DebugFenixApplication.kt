@@ -11,7 +11,14 @@ import leakcanary.LeakCanary
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.getPreferenceKey
 
-class DebugFenixApplication : FenixApplication() {
+/**
+ * An extensible [Application] class for `debug` build variants of Fenix.
+ *
+ * This class extends [FenixApplication] to add initialization logic and configurations
+ * that are specific to debugging. Its primary responsibility is to set up debug-only tools
+ * that should not be included in release builds.
+ */
+open class DebugFenixApplication : FenixApplication() {
 
     override fun setupLeakCanary() {
         if (!AppWatcher.isInstalled) {
