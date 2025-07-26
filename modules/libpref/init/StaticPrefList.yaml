@@ -14214,10 +14214,10 @@
   value: true
   mirror: always
 
-# This preference controls blocking requests for Local Network Access (LNA) failures.
+# This preference controls if we need to fail transactions for Local Network Access (LNA) failures.
 - name: network.lna.blocking
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # When this pref is true, loads triggered by scripts classified as trackers

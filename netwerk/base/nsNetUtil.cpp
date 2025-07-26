@@ -4178,7 +4178,28 @@ nsresult AddExtraHeaders(nsIHttpChannel* aHttpChannel,
   return NS_OK;
 }
 
-bool IsLocalNetworkAccess(
+bool IsLocalHostAccess(
+    const nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
+    const nsILoadInfo::IPAddressSpace aTargetIPAddressSpace) {
+  // Determine if the request is moving to a more private address space
+  // i.e. Public -> LocalHost
+  // Private -> LocalHost
+
+  return ((aTargetIPAddressSpace == nsILoadInfo::IPAddressSpace::Local) &&
+          (aParentIPAddressSpace == nsILoadInfo::IPAddressSpace::Public ||
+           aParentIPAddressSpace == nsILoadInfo::IPAddressSpace::Private));
+}
+
+bool IsPrivateNetworkAccess(
+    const nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
+    const nsILoadInfo::IPAddressSpace aTargetIPAddressSpace) {
+  // Determine if the request is moving from public to private address space
+
+  return ((aTargetIPAddressSpace == nsILoadInfo::IPAddressSpace::Private) &&
+          (aParentIPAddressSpace == nsILoadInfo::IPAddressSpace::Public));
+}
+
+bool IsLocalOrPrivateNetworkAccess(
     const nsILoadInfo::IPAddressSpace aParentIPAddressSpace,
     const nsILoadInfo::IPAddressSpace aTargetIPAddressSpace) {
   // Determine if the request is moving to a more private address space
@@ -4189,26 +4210,8 @@ bool IsLocalNetworkAccess(
   // for private network access
   // XXX (sunil) add link to LNA spec once it is published
 
-  if (aTargetIPAddressSpace == nsILoadInfo::IPAddressSpace::Public ||
-      aTargetIPAddressSpace == nsILoadInfo::IPAddressSpace::Unknown) {
-    return false;
-  }
-  // Check if this is an access to a local resource from Public or Private
-  // network
-  if ((aTargetIPAddressSpace == nsILoadInfo::IPAddressSpace::Local) &&
-      (aParentIPAddressSpace == nsILoadInfo::IPAddressSpace::Public ||
-       aParentIPAddressSpace == nsILoadInfo::IPAddressSpace::Private)) {
-    return true;
-  }
-
-  // Check if this is an access to a Private Network resource from a Public
-  // network
-  if ((aTargetIPAddressSpace == nsILoadInfo::IPAddressSpace::Private) &&
-      (aParentIPAddressSpace == nsILoadInfo::IPAddressSpace::Public)) {
-    return true;
-  }
-
-  return false;
+  return IsPrivateNetworkAccess(aParentIPAddressSpace, aTargetIPAddressSpace) ||
+         IsLocalHostAccess(aParentIPAddressSpace, aTargetIPAddressSpace);
 }
 }  // namespace net
 }  // namespace mozilla

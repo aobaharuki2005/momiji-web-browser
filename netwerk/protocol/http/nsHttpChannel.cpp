@@ -133,6 +133,7 @@
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/dom/SecFetch.h"
 #include "mozilla/net/TRRService.h"
+#include "LNAPermissionRequest.h"
 #include "nsUnknownDecoder.h"
 #ifdef XP_WIN
 #  include "HttpWinUtils.h"
@@ -1783,6 +1784,65 @@ nsresult nsHttpChannel::SetupChannelForTransaction() {
   return NS_OK;
 }
 
+// Updates mLNAPermission members based on existing permission and tracking
+// flags in load info
+LNAPermission nsHttpChannel::UpdateLocalNetworkAccessPermissions(
+    const nsACString& aPermissionType) {
+  // We should arrive at this point after LNA has been detected at the
+  // transaction layer and has errored
+
+  MOZ_ASSERT(aPermissionType == LOCAL_HOST_PERMISSION_KEY ||
+             aPermissionType == LOCAL_NETWORK_PERMISSION_KEY);
+  LNAPermission userPerms = aPermissionType == LOCAL_HOST_PERMISSION_KEY
+                                ? mLNAPermission.mLocalHostPermission
+                                : mLNAPermission.mLocalNetworkPermission;
+
+  if (NS_WARN_IF(userPerms != LNAPermission::Pending)) {
+    // Unexpected condition, we should not hit this case
+    MOZ_ASSERT(false,
+               "UpdateLocalNetworkAccessPermissions called with non-pending "
+               "permission");
+    return userPerms;
+  }
+
+  // Step 1. Check for  Existing Allow or Deny permission
+  if (nsContentUtils::IsExactSitePermAllow(mLoadInfo->GetLoadingPrincipal(),
+                                           aPermissionType)) {
+    userPerms = LNAPermission::Granted;
+    return userPerms;
+  }
+
+  if (nsContentUtils::IsExactSitePermDeny(mLoadInfo->GetLoadingPrincipal(),
+                                          aPermissionType)) {
+    userPerms = LNAPermission::Denied;
+    return userPerms;
+  }
+
+  // Step 2.If this is from third Party Tracker, just block
+  uint32_t flags = 0;
+  using CF = nsIClassifiedChannel::ClassificationFlags;
+  if (StaticPrefs::network_lna_block_trackers() &&
+      NS_SUCCEEDED(
+          mLoadInfo->GetTriggeringThirdPartyClassificationFlags(&flags)) &&
+      (flags & (CF::CLASSIFIED_ANY_BASIC_TRACKING |
+                CF::CLASSIFIED_ANY_SOCIAL_TRACKING)) != 0) {
+    userPerms = LNAPermission::Denied;
+    return userPerms;
+  }
+
+  // Step 3
+  // could not determine the permission, lets prompt user
+  // for permission if lna blocking is enabled
+  if (StaticPrefs::network_lna_blocking()) {
+    return userPerms;
+  }
+
+  // we dont have reasons to block the request so we allow this LNA request
+  // Ideally we should not hit this case once the feature is fully shipped
+  userPerms = LNAPermission::Granted;
+  return userPerms;
+}
+
 nsresult nsHttpChannel::InitTransaction() {
   nsresult rv;
   // create wrapper for this channel's notification callbacks
@@ -1850,30 +1910,6 @@ nsresult nsHttpChannel::InitTransaction() {
   }
   mTransaction->SetIsForWebTransport(!!mWebTransportSessionEventListener);
 
-  struct LNAPerms perms{};
-  // If this is a third party tracker, it shoudn't make ANY LNA requests
-  // So we pretend that the permission for these has already been denied
-  // in order to avoid prompting.
-  uint32_t flags = 0;
-  using CF = nsIClassifiedChannel::ClassificationFlags;
-  if (StaticPrefs::network_lna_block_trackers() &&
-      NS_SUCCEEDED(
-          mLoadInfo->GetTriggeringThirdPartyClassificationFlags(&flags)) &&
-      (flags & (CF::CLASSIFIED_ANY_BASIC_TRACKING |
-                CF::CLASSIFIED_ANY_SOCIAL_TRACKING)) != 0) {
-    perms.mLocalHostPermission = LNAPermission::Denied;
-    perms.mLocalNetworkPermission = LNAPermission::Denied;
-
-    if (nsContentUtils::IsExactSitePermAllow(mLoadInfo->GetLoadingPrincipal(),
-                                             "localhost"_ns)) {
-      perms.mLocalHostPermission = LNAPermission::Granted;
-    }
-    if (nsContentUtils::IsExactSitePermAllow(mLoadInfo->GetLoadingPrincipal(),
-                                             "local-network"_ns)) {
-      perms.mLocalNetworkPermission = LNAPermission::Granted;
-    }
-  }
-
   RefPtr<mozilla::dom::BrowsingContext> bc;
   mLoadInfo->GetBrowsingContext(getter_AddRefs(bc));
 
@@ -1890,7 +1926,7 @@ nsresult nsHttpChannel::InitTransaction() {
       LoadUploadStreamHasHeaders(), GetCurrentSerialEventTarget(), callbacks,
       this, mBrowserId, category, mRequestContext, mClassOfService,
       mInitialRwin, LoadResponseTimeoutEnabled(), mChannelId,
-      std::move(observer), parentAddressSpace, perms);
+      std::move(observer), parentAddressSpace, mLNAPermission);
   if (NS_FAILED(rv)) {
     mTransaction = nullptr;
     return rv;
@@ -7974,6 +8010,47 @@ nsHttpChannel::GetEssentialDomainCategory(nsCString& domain) {
   return EssentialDomainCategory::Other;
 }
 
+nsresult nsHttpChannel::ProcessLNAActions() {
+  // Suspend to block any notification to the channel.
+  // This will get resumed in
+  // nsHttpChannel::OnPermissionPromptResult
+  Suspend();
+  auto permissionKey = mTransaction->GetTargetIPAddressSpace() ==
+                               nsILoadInfo::IPAddressSpace::Local
+                           ? LOCAL_HOST_PERMISSION_KEY
+                           : LOCAL_NETWORK_PERMISSION_KEY;
+  LNAPermission permissionUpdateResult =
+      UpdateLocalNetworkAccessPermissions(permissionKey);
+
+  if (LNAPermission::Granted == permissionUpdateResult) {
+    // permission granted
+    return OnPermissionPromptResult(true, permissionKey);
+  }
+
+  if (LNAPermission::Denied == permissionUpdateResult) {
+    // permission denied
+    return OnPermissionPromptResult(false, permissionKey);
+  }
+
+  // If we get here, we don't have any permission to access the local
+  // host/network. We need to prompt the user for action
+  auto permissionPromptCallback = [self = RefPtr{this}](
+                                      bool aPermissionGranted,
+                                      const nsACString& aType) -> void {
+    self->OnPermissionPromptResult(aPermissionGranted, aType);
+  };
+
+  RefPtr<LNAPermissionRequest> request = new LNAPermissionRequest(
+      std::move(permissionPromptCallback), mLoadInfo, permissionKey);
+
+  // This invokes callback nsHttpChannel::OnPermissionPromptResult
+  // synchronously if the permission is already granted or denied
+  // if permission is not available we prompt the user and in that case
+  // nsHttpChannel::OnPermissionPromptResult is invoked asynchronously once
+  // the user responds to the prompt
+  return request->RequestPermission();
+}
+
 NS_IMETHODIMP
 nsHttpChannel::OnStartRequest(nsIRequest* request) {
   nsresult rv;
@@ -8002,6 +8079,10 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
                                          : "unknown",
                                      mURI->GetSpecOrDefault().get())
                          .get());
+  }
+
+  if (mStatus == NS_ERROR_LOCAL_NETWORK_ACCESS_DENIED) {
+    return ProcessLNAActions();
   }
 
   LOG(("nsHttpChannel::OnStartRequest [this=%p request=%p status=%" PRIx32
@@ -8187,8 +8268,8 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
   }
 
   // If this is a system principal request to an essential domain and we
-  // currently have connectivity, then check if there's a fallback domain we can
-  // use to retry. If so we redirect to the fallback domain.
+  // currently have connectivity, then check if there's a fallback domain we
+  // can use to retry. If so we redirect to the fallback domain.
   if (NS_FAILED(mStatus) && !mCanceled &&
       mLoadInfo->TriggeringPrincipal()->IsSystemPrincipal()) {
     if (StaticPrefs::network_essential_domains_fallback() &&
@@ -8236,6 +8317,68 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
 
   // No process change is needed, so continue on to ContinueOnStartRequest1.
   return ContinueOnStartRequest1(rv);
+}
+
+nsresult nsHttpChannel::OnPermissionPromptResult(bool aGranted,
+                                                 const nsACString& aType) {
+  if (aGranted) {
+    LOG(
+        ("nsHttpChannel::OnPermissionPromptResult [this=%p] "
+         "LNAPermissionRequest "
+         "granted",
+         this));
+    // we need to cache this data as permission manager is updated async and
+    // might not be reflected immediately
+    if (aType == LOCAL_HOST_PERMISSION_KEY) {
+      mLNAPermission.mLocalHostPermission = LNAPermission::Granted;
+    }
+
+    if (aType == LOCAL_NETWORK_PERMISSION_KEY) {
+      mLNAPermission.mLocalNetworkPermission = LNAPermission::Granted;
+    }
+    // reset the transaction
+    mTransaction = nullptr;
+
+    // resets streams and listener. Ensures we dont get any more callbacks to
+    // nsHttpChannel from the pumps
+    RefPtr<nsInputStreamPump> pump = do_QueryObject(mTransactionPump);
+    if (pump) {
+      pump->Reset();
+    }
+    mTransactionPump = nullptr;
+
+    // reset the status as we are going to replay the transaction
+    mStatus = nsresult::NS_OK;
+
+    // allow notifications for the channel
+    Resume();
+    // replay the transaction with permisions granted
+    return CallOrWaitForResume(
+        [](auto* self) -> nsresult { return self->DoConnect(nullptr); });
+  }
+
+  // permission denied
+  // resume the transaction pump, we should get the OnStopRequest Notification
+  LOG(
+      ("nsHttpChannel::OnPermissionPromptResult [this=%p] "
+       "LNAPermissionRequest "
+       "denied",
+       this));
+
+  Resume();
+
+  if (aType == LOCAL_HOST_PERMISSION_KEY) {
+    mLNAPermission.mLocalHostPermission = LNAPermission::Denied;
+  }
+
+  if (aType == LOCAL_NETWORK_PERMISSION_KEY) {
+    mLNAPermission.mLocalNetworkPermission = LNAPermission::Denied;
+  }
+
+  return CallOrWaitForResume([](auto* self) {
+    return self->ContinueOnStartRequest1(
+        nsresult::NS_ERROR_LOCAL_NETWORK_ACCESS_DENIED);
+  });
 }
 
 nsresult nsHttpChannel::ContinueOnStartRequest1(nsresult result) {
@@ -8645,8 +8788,8 @@ static void RecordLNATelemetry(bool aLoadSuccess, nsIURI* aURI,
     parentAddressSpace = bc->GetCurrentIPAddressSpace();
   }
 
-  if (!mozilla::net::IsLocalNetworkAccess(parentAddressSpace,
-                                          aLoadInfo->GetIpAddressSpace())) {
+  if (!mozilla::net::IsLocalOrPrivateNetworkAccess(
+          parentAddressSpace, aLoadInfo->GetIpAddressSpace())) {
     return;
   }
 
