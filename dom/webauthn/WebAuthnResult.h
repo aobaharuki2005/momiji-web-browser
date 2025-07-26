@@ -80,6 +80,10 @@ class WebAuthnRegisterResult final : public nsIWebAuthnRegisterResult {
     }
     mAuthenticatorAttachment =
         Some(aResponse->AuthenticatorAttachment()->ToString());
+    if (aResponse->CredProps()) {
+      mCredPropsRk = Some(java::sdk::Boolean::Ref::From(aResponse->CredProps())
+                              ->BooleanValue());
+    }
   }
 #endif
 

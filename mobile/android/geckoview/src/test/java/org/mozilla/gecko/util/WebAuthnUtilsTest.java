@@ -119,7 +119,8 @@ public class WebAuthnUtilsTest {
             + "\"rawId\": \"AAECAwQFBgcICQoLDA0ODw\" ,"
             + "\"type\": \"public-key\" ,"
             + "\"authenticatorAttachment\": \"platform\", "
-            + "\"response\": {\"attestationObject\": \"AQIDBAUGBwgJCgsMDQ4PEA\", \"transports\": [ \"internal\" ]}"
+            + "\"response\": {\"attestationObject\": \"AQIDBAUGBwgJCgsMDQ4PEA\", \"transports\": [ \"internal\" ]},"
+            + "\"clientExtensionResults\": {\"credProps\": {\"rk\": true } }"
             + "}";
     final WebAuthnUtils.MakeCredentialResponse response =
         WebAuthnUtils.getMakeCredentialResponse(responseJSON);
@@ -135,6 +136,7 @@ public class WebAuthnUtilsTest {
         "attestationObject should be matched",
         Arrays.equals(response.attestationObject, attestationObject));
     assertEquals("No clientDataJson in response", response.clientDataJson, null);
+    assertTrue("handle credProps", response.credProps);
   }
 
   @Test(expected = JSONException.class)

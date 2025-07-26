@@ -158,15 +158,11 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
         // Unfortunately, GMS's FIDO2 API has no option for Passkey. If using
         // residentKey, credential will be synced with Passkey via Google
         // account or credential provider service. So this is experimental.
-        Maybe<bool> credPropsResponse;
         if (requestedCredProps &&
             StaticPrefs::
                 security_webauthn_webauthn_enable_android_fido2_residentkey()) {
           GECKOBUNDLE_PUT(authSelBundle, "residentKey",
                           jni::StringParam(residentKey));
-          bool residentKeyRequired = residentKey.EqualsLiteral(
-              MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_REQUIRED);
-          credPropsResponse = Some(residentKeyRequired);
         }
 
         nsString userVerification;
@@ -208,11 +204,7 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
                    true>::FromGeckoResult(geckoResult)
             ->Then(
                 GetCurrentSerialEventTarget(), __func__,
-                [aPromise, credPropsResponse = std::move(credPropsResponse)](
-                    RefPtr<WebAuthnRegisterResult>&& aValue) {
-                  if (credPropsResponse.isSome()) {
-                    Unused << aValue->SetCredPropsRk(credPropsResponse.ref());
-                  }
+                [aPromise](RefPtr<WebAuthnRegisterResult>&& aValue) {
                   aPromise->Resolve(aValue);
                 },
                 [aPromise](AndroidWebAuthnError&& aValue) {
