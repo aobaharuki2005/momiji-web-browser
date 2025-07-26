@@ -9,7 +9,6 @@ UNIFIED_SOURCES += [
     "TestBind.cpp",
     "TestBufferedInputStream.cpp",
     "TestCacheControlParser.cpp",
-    "TestCacheIndex.cpp",
     "TestCapsule.cpp",
     "TestCommon.cpp",
     "TestCookie.cpp",
@@ -60,7 +59,6 @@ USE_LIBS += [
 
 LOCAL_INCLUDES += [
     "/netwerk/base",
-    "/netwerk/cache2",
     "/netwerk/cookie",
     "/netwerk/protocol/http",
     "/toolkit/components/jsoncpp/include",
