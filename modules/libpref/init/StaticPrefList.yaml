@@ -9901,6 +9901,13 @@
   mirror: always
   rust: true
 
+# Is support for the size-adjust @font-face descriptor enabled?
+- name: layout.css.size-adjust.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+  rust: true
+
 # Is support for the tech() function in the @font-face src descriptor enabled?
 - name: layout.css.font-tech.enabled
   type: RelaxedAtomicBool

@@ -24,7 +24,7 @@ dictionary FontFaceDescriptors {
   UTF8String ascentOverride = "normal";
   UTF8String descentOverride = "normal";
   UTF8String lineGapOverride = "normal";
-  UTF8String sizeAdjust = "100%";
+  [Pref="layout.css.size-adjust.enabled"] UTF8String sizeAdjust = "100%";
 };
 
 enum FontFaceLoadStatus { "unloaded", "loading", "loaded", "error" };
