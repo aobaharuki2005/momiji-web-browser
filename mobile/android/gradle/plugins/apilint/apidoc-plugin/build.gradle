@@ -1,0 +1,113 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import org.mozilla.apilint.Config
+
+buildDir = "${topobjdir}/apidoc-plugin"
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.diffplug.spotless:spotless-plugin-gradle:5.16.0'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+
+dependencies {
+    implementation files("${System.properties['java.home']}/../lib/tools.jar")
+}
+
+def javadocExecutable
+switch (JavaVersion.current()) {
+    case JavaVersion.VERSION_1_7:
+    case JavaVersion.VERSION_1_8:
+       javadocExecutable = "${System.properties['java.home']}/../bin/javadoc"
+       break
+
+    case JavaVersion.VERSION_1_9:
+    case JavaVersion.VERSION_1_10:
+    case JavaVersion.VERSION_11:
+    case JavaVersion.VERSION_12:
+    case JavaVersion.VERSION_13:
+    case JavaVersion.VERSION_14:
+    case JavaVersion.VERSION_15:
+    case JavaVersion.VERSION_16:
+    case JavaVersion.VERSION_17:
+    case JavaVersion.VERSION_HIGHER:
+        javadocExecutable = "${System.properties['java.home']}/bin/javadoc"
+        break
+
+    default:
+        throw new GradleException("Java version '" + JavaVersion.current() + "' not supported")
+}
+
+task testApiDoclet(type: Exec) {
+    workingDir '.'
+    commandLine 'python3', file('src/test/resources/apidoc_test.py'),
+        '--javadoc', javadocExecutable,
+        '--doclet-jar', "${buildDir}/libs/apidoc-plugin-${Config.API_DOC_VERSION}.jar",
+        '--java-root', file('src/test/fake_root'),
+        '--out-dir', "${buildDir}/tmp",
+        '--expected', file('src/test/resources/expected-doclet-output.txt'),
+        '--expected-map', file('src/test/resources/expected-map-output.txt')
+}
+
+testApiDoclet.dependsOn jar
+
+test.dependsOn testApiDoclet
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = 'sources'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    from javadoc.destinationDir
+    archiveClassifier = 'javadoc'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = Config.GROUP
+            artifactId = 'apidoc-plugin'
+            version = Config.API_DOC_VERSION
+
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+        }
+    }
+    repositories {
+        maven {
+            url = "${project.buildDir}/maven"
+        }
+    }
+}
+
+task generateMavenArchive(type: Zip) {
+   dependsOn tasks.findByName("publishMavenPublicationToMavenRepository")
+   from(layout.buildDirectory.dir("maven/org/mozilla/apilint/apidoc-plugin")) {
+       include "${Config.API_DOC_VERSION}/**"
+   }
+   archiveFileName = "maven.zip"
+   destinationDirectory = project.buildDir
+}
+
+version = Config.API_DOC_VERSION
+group = Config.GROUP
+
+apply plugin: "com.diffplug.spotless"
+
+spotless {
+    java {
+        googleJavaFormat('1.11.0')
+    }
+}
+
+test.dependsOn tasks.findByName("spotlessCheck")
