@@ -5,11 +5,11 @@
 package org.mozilla.apilint
 
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.javadoc.Javadoc
-import org.mozilla.apilint.Config
 
 class ApiCompatLintTask extends Javadoc {
     @OutputFile
@@ -27,21 +27,14 @@ class ApiCompatLintTask extends Javadoc {
     @InputFiles
     List<File> sourcePath
 
-    private final static String CONFIG_NAME = 'apidoc-plugin'
+    @InputFile
+    File docletPath
 
     @TaskAction
     @Override
     protected void generate() {
-        def config = project.configurations.findByName(CONFIG_NAME)
-
-        if (config == null) {
-            config = project.configurations.create(CONFIG_NAME)
-            project.dependencies.add(CONFIG_NAME,
-                    "${Config.GROUP}:apidoc-plugin:${Config.API_DOC_VERSION}")
-        }
-
         options.doclet = "org.mozilla.doclet.ApiDoclet"
-        options.docletpath = config.files.asType(List)
+        options.docletpath = List.of(docletPath)
 
         // Gradle sends -notimestamp automatically which is not compatible to
         // doclets, so we have to work around it here,

@@ -2,21 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import org.mozilla.apilint.Config
-
-buildDir = "${topobjdir}/apidoc-plugin"
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.diffplug.spotless:spotless-plugin-gradle:5.16.0'
-    }
+plugins {
+    id 'java'
+    alias(libs.plugins.spotless)
 }
-
-apply plugin: 'java'
-apply plugin: 'maven-publish'
 
 dependencies {
     implementation files("${System.properties['java.home']}/../lib/tools.jar")
@@ -50,7 +39,7 @@ task testApiDoclet(type: Exec) {
     workingDir '.'
     commandLine 'python3', file('src/test/resources/apidoc_test.py'),
         '--javadoc', javadocExecutable,
-        '--doclet-jar', "${buildDir}/libs/apidoc-plugin-${Config.API_DOC_VERSION}.jar",
+        '--doclet-jar', jar.outputs.files.singleFile.absolutePath,
         '--java-root', file('src/test/fake_root'),
         '--out-dir', "${buildDir}/tmp",
         '--expected', file('src/test/resources/expected-doclet-output.txt'),
@@ -71,43 +60,20 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     archiveClassifier = 'javadoc'
 }
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = Config.GROUP
-            artifactId = 'apidoc-plugin'
-            version = Config.API_DOC_VERSION
-
-            from components.java
-            artifact sourcesJar
-            artifact javadocJar
-        }
-    }
-    repositories {
-        maven {
-            url = "${project.buildDir}/maven"
-        }
-    }
-}
-
-task generateMavenArchive(type: Zip) {
-   dependsOn tasks.findByName("publishMavenPublicationToMavenRepository")
-   from(layout.buildDirectory.dir("maven/org/mozilla/apilint/apidoc-plugin")) {
-       include "${Config.API_DOC_VERSION}/**"
-   }
-   archiveFileName = "maven.zip"
-   destinationDirectory = project.buildDir
-}
-
-version = Config.API_DOC_VERSION
-group = Config.GROUP
-
-apply plugin: "com.diffplug.spotless"
+group = 'org.mozilla.apilint'
 
 spotless {
     java {
-        googleJavaFormat('1.11.0')
+        googleJavaFormat(libs.versions.google.java.format.get())
     }
 }
 
 test.dependsOn tasks.findByName("spotlessCheck")
+
+configurations {
+    docletJar
+}
+
+artifacts {
+    docletJar jar
+}

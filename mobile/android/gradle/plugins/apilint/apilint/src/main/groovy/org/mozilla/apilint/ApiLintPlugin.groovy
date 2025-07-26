@@ -11,6 +11,23 @@ import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Exec
 
 class ApiLintPlugin implements Plugin<Project> {
+    private File copyResourceToTemp(String resource, String prefix, String suffix) {
+        File tempFile = null;
+
+        try {
+            InputStream script = getClass().getClassLoader().getResourceAsStream(resource);
+            tempFile = File.createTempFile(prefix, suffix);
+            Files.copy(script, Paths.get(tempFile.getAbsolutePath()), StandardCopyOption.REPLACE_EXISTING);
+
+            return tempFile;
+        } catch (IOException ex) {
+            if (tempFile != null) {
+                tempFile.delete();
+            }
+            throw new RuntimeException(ex);
+        }
+    }
+
     void apply(Project project) {
         def extension = project.extensions.create('apiLint', ApiLintPluginExtension)
 
@@ -18,6 +35,25 @@ class ApiLintPlugin implements Plugin<Project> {
 
         if (!android) {
             throw new GradleException('You need the Android Library plugin to run ApiLint.')
+        }
+
+        def copyDocletJarResource = project.task("copyDocletJarResource") {
+            def resourceName = 'apidoc-plugin.jar'
+            def destinationFile = "${project.buildDir}/docletJar/${resourceName}"
+
+            outputs.file(destinationFile)
+
+            doLast {
+                def resourceStream = getClass().getClassLoader().getResourceAsStream(resourceName)
+                if (resourceStream != null) {
+                    outputs.files.singleFile.withOutputStream { out ->
+                        out << resourceStream
+                    }
+                    resourceStream.close()
+                } else {
+                    throw new IOException("Java resource not found: $resourceName")
+                }
+            }
         }
 
         // TODO: support applications
@@ -49,7 +85,10 @@ class ApiLintPlugin implements Plugin<Project> {
                 packageFilter = extension.packageFilter
                 skipClassesRegex = extension.skipClassesRegex
                 destinationDir = new File(destinationDir, variant.baseName)
+
+                docletPath = copyDocletJarResource.outputs.files.singleFile
             }
+            apiGenerate.dependsOn copyDocletJarResource
             apiGenerate.dependsOn variant.javaCompileProvider.get()
             apiGenerate.dependsOn variant.aidlCompileProvider.get()
             apiGenerate.dependsOn variant.generateBuildConfigProvider.get()
@@ -139,37 +178,20 @@ class ApiLintPlugin implements Plugin<Project> {
 
             project.tasks.check.dependsOn apiLint
 
-            def apiDiff = project.task("apiDiff${name}", type: Exec) {
+            def apiDiff = project.task("apiDiff${name}", type: PythonExec) {
                 description = "Prints the diff between the existing API and the local API."
+                group = 'Verification'
                 workingDir '.'
-                commandLine 'diff'
-                args '-U5'
-                args currentApiFile
-                args '--label', 'Existing API'
-                args apiFile
-                args '--label', 'Local API'
+                scriptPath 'diff.py'
+                args '--existing', currentApiFile
+                args '--local', apiFile
+                args '--command', extension.helpCommand.call(name)
 
                 // diff exit value is != 0 if the files are different
                 ignoreExitValue true
             }
 
-            def apiLintHelp = project.task("apiLintHelp${name}") {
-                description = "Prints help for when an API change is detected."
-                onlyIf {
-                    apiCompatLint.state.failure != null
-                }
-                doLast {
-                    println ""
-                    println "The API has been modified. If the changes look correct, please run"
-                    println ""
-                    println "\$ ./gradlew apiUpdateFile${name}"
-                    println ""
-                    println "to update the API file."
-                }
-            }
-
-            apiLintHelp.dependsOn apiDiff
-            apiCompatLint.finalizedBy apiLintHelp
+            apiCompatLint.finalizedBy apiDiff
 
             def apiUpdate = project.task("apiUpdateFile${name}", type: Copy) {
                 description = "Updates the API file from the local one for variant ${name}"

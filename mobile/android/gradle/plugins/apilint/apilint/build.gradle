@@ -9,21 +9,17 @@ plugins {
     id 'maven-publish'
 }
 
-import org.mozilla.apilint.Config
-
-buildDir = "${topobjdir}/apilint"
-
 sourceSets {
     main {
         java {
             srcDirs 'src'
             srcDirs '../buildSrc'
         }
+        resources {
+            output.dir("$buildDir/docletJar", builtBy: 'copyDocletJar')
+        }
     }
 }
-
-group = Config.GROUP
-version = 'master-SNAPSHOT'
 
 gradlePlugin {
     website = 'https://github.com/mozilla-mobile/gradle-apilint'
@@ -31,7 +27,7 @@ gradlePlugin {
 
     plugins {
         apilintPlugin {
-            id = Config.GROUP
+            id = 'org.mozilla.apilint'
             displayName = 'API Lint plugin'
             description = 'Tracks the API of an Android library and helps maintain backward compatibility.'
             tags.set(['api', 'lint', 'mozilla', 'compatibility'])
@@ -75,4 +71,21 @@ apply plugin: 'java'
 dependencies {
     implementation gradleApi()
     implementation localGroovy()
+}
+
+// Arrange for the doclet jar to be included in Java resources, to be consumed
+// at runtime.
+configurations {
+    docletJar
+}
+
+dependencies {
+    docletJar project(path: ':apidoc-plugin', configuration: 'docletJar')
+}
+
+// It's probably possible to avoid this `Copy` task, but this approach is
+// standard.
+tasks.register('copyDocletJar', Sync) {
+    from configurations.docletJar
+    into "$buildDir/docletJar"
 }

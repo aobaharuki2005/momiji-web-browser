@@ -84,7 +84,6 @@ spotless = "7.2.1"
 google-java-format = "1.27.0"
 
 # Mozilla versions
-apilint = "0.5.4"
 mozilla-glean = "64.5.2"
 
 # Testing versions
@@ -271,7 +270,6 @@ ktlint = { group = "com.pinterest.ktlint", name = "ktlint-cli", version.ref = "k
 # Third party library versions
 adjust = { group = "com.adjust.sdk", name = "adjust-android", version.ref = "adjust" }
 
-apilint = { group = "org.mozilla.apilint", name = "apilint", version.ref = "apilint" }
 commons-exec = { group = "org.apache.commons", name = "commons-exec", version.ref = "commons-exec" }
 spotless = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
 google-java-format = { group = "com.google.googlejavaformat", name = "google-java-format", version.ref = "google-java-format" }
@@ -286,3 +284,4 @@ kotlin-dsl = { id = "org.gradle.kotlin.kotlin-dsl", version.ref = "kotlin-dsl" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp-plugin" }
 python-envs-plugin = {id = "com.jetbrains.python.envs", version.ref = "python-envs-plugin"}
 protobuf-plugin = {id = "com.google.protobuf", version.ref = "protobuf-plugin"}
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

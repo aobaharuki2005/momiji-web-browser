@@ -16,7 +16,6 @@ buildscript {
     }
 
     dependencies {
-        classpath libs.apilint
         classpath libs.tools.androidgradle
         classpath libs.commons.exec
         classpath libs.spotless

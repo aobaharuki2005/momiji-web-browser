@@ -30,13 +30,27 @@ sp.check_call([args.javadoc,
     "-output", output
 ])
 
-result = sp.call(["diff", '-U5',
-    '--label', 'Expected', args.expected,
-    '--label', 'Actual', output])
+result = sp.call(
+    [
+        "python3",
+        "../apilint/src/main/resources/diff.py",
+        "--existing",
+        args.expected,
+        "--local",
+        output,
+    ]
+)
 
-result_map = sp.call(["diff", '-U5',
-    '--label', 'Expected', args.expected_map,
-    '--label', 'Actual', output + ".map"])
+result_map = sp.call(
+    [
+        "python3",
+        "../apilint/src/main/resources/diff.py",
+        "--existing",
+        args.expected_map,
+        "--local",
+        output + ".map",
+    ]
+)
 
 # result == 0 from `diff` means that the files are identical
 if result != 0 or result_map != 0:

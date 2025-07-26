@@ -14,4 +14,10 @@ class ApiLintPluginExtension {
     List<String> allowedPackages
     String deprecationAnnotation
     Integer libraryVersion
+
+    // When API differences exist, print this command.  Takes a single
+    // `variantName` argument.  Running this command manually should invoke the
+    // `apiUpdateFile...` command to update the API file so that the API
+    // differences are incorporated into the expected API.
+    Closure<String> helpCommand = { variantName -> "\$ ./gradlew apiUpdateFile${variantName}" }
 }

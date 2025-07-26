@@ -37,9 +37,16 @@ for t in tests:
         after_api = test_base + ".txt"
 
     if check_compat:
-        sp.call(["diff", "-U5",
-                 before_api, "--label", "before.txt",
-                 after_api, "--label", "after.txt"])
+        sp.call(
+            [
+                "python3",
+                "src/main/resources/diff.py",
+                "--existing",
+                before_api,
+                "--local",
+                after_api,
+            ]
+        )
 
     json_file = "{}/{}-result.json".format(args.build_dir, t["test"])
     test = ["python3", "src/main/resources/apilint.py",
@@ -112,11 +119,11 @@ for t in tests:
         assert json_result['failures'][0]['rule'] == t['rule']
         assert json_result['failures'][0]['error'] == True
 
-    if t['expected'] == 'API_WARNING':
-        assert len(json_result['failures']) > 0
-        assert json_result['failure'] == False
-        assert json_result['failures'][0]['rule'] == t['rule']
-        assert json_result['failures'][0]['error'] == False
+    if t["expected"] == "API_WARNING":
+        assert len(json_result["failures"]) > 0
+        assert not json_result["failure"]
+        assert json_result["failures"][0]["rule"] == t["rule"]
+        assert not json_result["failures"][0]["error"]
 
     if t['expected'] == 'SUCCESS':
         assert len(json_result['api_changes']) == 0
