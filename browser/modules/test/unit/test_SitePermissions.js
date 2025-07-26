@@ -25,6 +25,7 @@ add_task(async function testPermissionsListing() {
     "focus-tab-by-prompt",
     "geo",
     "install",
+    "localhost",
     "microphone",
     "popup",
     "screen",
@@ -86,6 +87,14 @@ add_task(async function testGetAllByPrincipal() {
     SitePermissions.ALLOW,
     SitePermissions.SCOPE_SESSION
   );
+
+  SitePermissions.setForPrincipal(
+    principal,
+    "localhost",
+    SitePermissions.ALLOW,
+    SitePermissions.SCOPE_SESSION
+  );
+
   SitePermissions.setForPrincipal(
     principal,
     "desktop-notification",
@@ -104,6 +113,11 @@ add_task(async function testGetAllByPrincipal() {
       scope: SitePermissions.SCOPE_SESSION,
     },
     {
+      id: "localhost",
+      state: SitePermissions.ALLOW,
+      scope: SitePermissions.SCOPE_SESSION,
+    },
+    {
       id: "desktop-notification",
       state: SitePermissions.BLOCK,
       scope: SitePermissions.SCOPE_PERSISTENT,
@@ -118,6 +132,11 @@ add_task(async function testGetAllByPrincipal() {
       scope: SitePermissions.SCOPE_PERSISTENT,
     },
     {
+      id: "localhost",
+      state: SitePermissions.ALLOW,
+      scope: SitePermissions.SCOPE_SESSION,
+    },
+    {
       id: "desktop-notification",
       state: SitePermissions.BLOCK,
       scope: SitePermissions.SCOPE_PERSISTENT,
@@ -126,6 +145,8 @@ add_task(async function testGetAllByPrincipal() {
 
   SitePermissions.removeFromPrincipal(principal, "camera");
   SitePermissions.removeFromPrincipal(principal, "desktop-notification");
+  SitePermissions.removeFromPrincipal(principal, "localhost");
+
   Assert.deepEqual(SitePermissions.getAllByPrincipal(principal), []);
 
   Assert.equal(Services.prefs.getIntPref("permissions.default.shortcuts"), 0);
@@ -195,6 +216,7 @@ add_task(async function testExactHostMatch() {
     "desktop-notification",
     "focus-tab-by-prompt",
     "camera",
+    "localhost",
     "microphone",
     "screen",
     "geo",
@@ -202,6 +224,7 @@ add_task(async function testExactHostMatch() {
     "persistent-storage",
     "open-protocol-handler",
   ];
+
   if (RESIST_FINGERPRINTING_ENABLED) {
     // Canvas permission should be hidden unless privacy.resistFingerprinting
     // is true.
@@ -300,6 +323,11 @@ add_task(async function testDefaultPrefs() {
 
   // Check that other permissions still return UNKNOWN.
   Assert.deepEqual(SitePermissions.getForPrincipal(principal, "microphone"), {
+    state: SitePermissions.UNKNOWN,
+    scope: SitePermissions.SCOPE_PERSISTENT,
+  });
+
+  Assert.deepEqual(SitePermissions.getForPrincipal(principal, "localhost"), {
     state: SitePermissions.UNKNOWN,
     scope: SitePermissions.SCOPE_PERSISTENT,
   });

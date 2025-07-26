@@ -23,6 +23,11 @@ add_task(async function test_geo_permission_prompt_local_file() {
   await testPrompt(PermissionUI.GeolocationPermissionPrompt, true);
 });
 
+// Tests that local-network permission prompt works as expected
+add_task(async function test_localhost_permission_prompt() {
+  await testPrompt(PermissionUI.LocalHostPermissionPrompt);
+});
+
 // Tests that XRPermissionPrompt works as expected
 add_task(async function test_xr_permission_prompt() {
   await testPrompt(PermissionUI.XRPermissionPrompt);
