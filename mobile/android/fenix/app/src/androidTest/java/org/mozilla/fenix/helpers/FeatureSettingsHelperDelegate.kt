@@ -28,7 +28,6 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
      * These will be restored when the tests end.
      */
     private val initialFeatureFlags = FeatureFlags(
-        isHomepageAsNewTabEnabled = settings.enableHomepageAsNewTab,
         isHomepageHeaderEnabled = settings.showHomepageHeader,
         isPocketEnabled = settings.showPocketRecommendationsFeature,
         isRecentTabsFeatureEnabled = settings.showRecentTabsFeature,
@@ -54,7 +53,6 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
      */
     private var updatedFeatureFlags = initialFeatureFlags.copy()
 
-    override var isHomepageAsNewTabEnabled: Boolean by updatedFeatureFlags::isHomepageAsNewTabEnabled
     override var isHomepageHeaderEnabled: Boolean by updatedFeatureFlags::isHomepageHeaderEnabled
     override var isPocketEnabled: Boolean by updatedFeatureFlags::isPocketEnabled
     override var isWallpaperOnboardingEnabled: Boolean by updatedFeatureFlags::isWallpaperOnboardingEnabled
@@ -87,7 +85,6 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
     override var isDeleteSitePermissionsEnabled: Boolean by updatedFeatureFlags::isDeleteSitePermissionsEnabled
 
     private fun applyFeatureFlags(featureFlags: FeatureFlags) {
-        settings.enableHomepageAsNewTab = featureFlags.isHomepageAsNewTabEnabled
         settings.showHomepageHeader = featureFlags.isHomepageHeaderEnabled
         settings.showPocketRecommendationsFeature = featureFlags.isPocketEnabled
         settings.showRecentTabsFeature = featureFlags.isRecentTabsFeatureEnabled
@@ -110,7 +107,6 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
 }
 
 private data class FeatureFlags(
-    var isHomepageAsNewTabEnabled: Boolean,
     var isHomepageHeaderEnabled: Boolean,
     var isPocketEnabled: Boolean,
     var isRecentTabsFeatureEnabled: Boolean,
