@@ -271,7 +271,6 @@ avoid-blacklist-and-whitelist:
         - toolkit/mozapps/extensions/test/xpcshell/test_permissions.js
         - toolkit/mozapps/extensions/test/xpcshell/test_permissions_prefs.js
         - toolkit/mozapps/extensions/test/xpinstall/browser_bug645699.js
-        - toolkit/mozapps/extensions/test/xpinstall/browser_doorhanger_installs.js
         - toolkit/mozapps/extensions/test/xpinstall/browser_localfile3.js
         - toolkit/mozapps/extensions/test/xpinstall/browser_localfile4.js
         - toolkit/mozapps/extensions/test/xpinstall/browser_localfile4_postDownload.js
