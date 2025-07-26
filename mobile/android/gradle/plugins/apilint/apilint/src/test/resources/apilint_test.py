@@ -11,11 +11,11 @@ import sys
 TEST_DIR = "src/test/resources/apilint_test/"
 
 ERROR_CODES = {
-    'SUCCESS': 0,
-    'API_CHANGE': 10,
-    'API_WARNING': 0,
-    'API_ERROR': 77,
-    'INCOMPATIBLE': 131,
+    "SUCCESS": 0,
+    "API_CHANGE": 10,
+    "API_WARNING": 0,
+    "API_ERROR": 77,
+    "INCOMPATIBLE": 131,
 }
 
 parser = argparse.ArgumentParser(description="Tests for apilint.py.")
@@ -49,12 +49,16 @@ for t in tests:
         )
 
     json_file = "{}/{}-result.json".format(args.build_dir, t["test"])
-    test = ["python3", "src/main/resources/apilint.py",
-            "--result-json", json_file,
-            after_api]
+    test = [
+        "python3",
+        "src/main/resources/apilint.py",
+        "--result-json",
+        json_file,
+        after_api,
+    ]
 
     if check_compat:
-         test += [before_api]
+        test += [before_api]
 
     test += ["--filter-errors", t["filter"] if "filter" in t else "NONE"]
 
@@ -86,38 +90,38 @@ for t in tests:
 
     expected_error_code = ERROR_CODES[t["expected"]]
     if error_code != expected_error_code:
-         print("The following test is expected to fail with {} "
-               "but the error code is {} ".format(expected_error_code,
-                                                  error_code))
-         print(" ".join(test))
-         sys.exit(1)
+        print(
+            f"The following test is expected to fail with {expected_error_code} "
+            f"but the error code is {error_code} "
+        )
+        print(" ".join(test))
+        sys.exit(1)
 
-    if t['expected'] != 'API_ERROR' and t['expected'] != 'API_WARNING':
-        assert len(json_result['failures']) == 0
+    if t["expected"] != "API_ERROR" and t["expected"] != "API_WARNING":
+        assert len(json_result["failures"]) == 0
 
-    if t['expected'] == 'INCOMPATIBLE':
-        assert len(json_result['compat_failures']) == 1
+    if t["expected"] == "INCOMPATIBLE":
+        assert len(json_result["compat_failures"]) == 1
     else:
-        assert len(json_result['compat_failures']) == 0
+        assert len(json_result["compat_failures"]) == 0
 
-    if t['expected'] == 'API_CHANGE':
+    if t["expected"] == "API_CHANGE":
         assert (
-          len(json_result['api_changes']) > 0
-              or len(json_result['api_removed']) > 0
+            len(json_result["api_changes"]) > 0 or len(json_result["api_removed"]) > 0
         )
 
-    if 'file' in t:
-        assert json_result['failures'][0]['file'] == t['file']
-    if 'line' in t:
-        assert json_result['failures'][0]['line'] == t['line']
-    if 'column' in t:
-        assert json_result['failures'][0]['column'] == t['column']
+    if "file" in t:
+        assert json_result["failures"][0]["file"] == t["file"]
+    if "line" in t:
+        assert json_result["failures"][0]["line"] == t["line"]
+    if "column" in t:
+        assert json_result["failures"][0]["column"] == t["column"]
 
-    if t['expected'] == 'API_ERROR':
-        assert len(json_result['failures']) > 0
-        assert json_result['failure'] == True
-        assert json_result['failures'][0]['rule'] == t['rule']
-        assert json_result['failures'][0]['error'] == True
+    if t["expected"] == "API_ERROR":
+        assert len(json_result["failures"]) > 0
+        assert json_result["failure"]
+        assert json_result["failures"][0]["rule"] == t["rule"]
+        assert json_result["failures"][0]["error"]
 
     if t["expected"] == "API_WARNING":
         assert len(json_result["failures"]) > 0
@@ -125,6 +129,6 @@ for t in tests:
         assert json_result["failures"][0]["rule"] == t["rule"]
         assert not json_result["failures"][0]["error"]
 
-    if t['expected'] == 'SUCCESS':
-        assert len(json_result['api_changes']) == 0
-        assert json_result['failure'] == False
+    if t["expected"] == "SUCCESS":
+        assert len(json_result["api_changes"]) == 0
+        assert not json_result["failure"]

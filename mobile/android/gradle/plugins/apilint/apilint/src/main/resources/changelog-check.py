@@ -10,10 +10,12 @@ import json
 import re
 import sys
 
-API_VERSION_REGEX = re.compile(r'^\[api-version\]: ([a-f0-9]{40})$')
+API_VERSION_REGEX = re.compile(r"^\[api-version\]: ([a-f0-9]{40})$")
+
 
 class MissingApiVersionError(Exception):
     pass
+
 
 def findApiVersion(changelog):
     lineNumber = 0
@@ -25,6 +27,7 @@ def findApiVersion(changelog):
 
     raise MissingApiVersionError
 
+
 def readResultsJson(jsonFile):
     results = {}
     if args.result_json is None:
@@ -34,19 +37,34 @@ def readResultsJson(jsonFile):
     if len(jsonString) > 0:
         results = json.loads(jsonString)
 
-    if 'failures' not in results:
-        results['failures'] = []
+    if "failures" not in results:
+        results["failures"] = []
     return results
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Checks that the changelog file has been updated.")
-    parser.add_argument("--api-file", type=argparse.FileType('r', encoding='UTF-8'), help="Updated API file.")
-    parser.add_argument("--changelog-file", type=argparse.FileType('r', encoding='UTF-8'), help="Changelog file of the API.")
-    parser.add_argument("--result-json", type=argparse.FileType('r+', encoding='UTF-8'), help="Dump results in this file.")
+    parser = argparse.ArgumentParser(
+        description="Checks that the changelog file has been updated."
+    )
+    parser.add_argument(
+        "--api-file",
+        type=argparse.FileType("r", encoding="UTF-8"),
+        help="Updated API file.",
+    )
+    parser.add_argument(
+        "--changelog-file",
+        type=argparse.FileType("r", encoding="UTF-8"),
+        help="Changelog file of the API.",
+    )
+    parser.add_argument(
+        "--result-json",
+        type=argparse.FileType("r+", encoding="UTF-8"),
+        help="Dump results in this file.",
+    )
     args = parser.parse_args()
 
     sha1 = hashlib.sha1()
-    sha1.update(args.api_file.read().encode('UTF-8'))
+    sha1.update(args.api_file.read().encode("UTF-8"))
 
     currentApiVersion = sha1.hexdigest()
     results = readResultsJson(args.result_json)
@@ -55,14 +73,16 @@ if __name__ == "__main__":
         if args.result_json is None:
             return
         if info is not None:
-            results['failures'].append({
-                "column": info["column"],
-                "file": args.changelog_file.name,
-                "line": info["line"],
-                "msg": info["message"],
-                "rule": info["rule"],
-                "error": True
-            })
+            results["failures"].append(
+                {
+                    "column": info["column"],
+                    "file": args.changelog_file.name,
+                    "line": info["line"],
+                    "msg": info["message"],
+                    "rule": info["rule"],
+                    "error": True,
+                }
+            )
         args.result_json.seek(0)
         args.result_json.truncate(0)
         json.dump(results, args.result_json)
@@ -70,15 +90,19 @@ if __name__ == "__main__":
     try:
         (lineNumber, expectedApiVersion) = findApiVersion(args.changelog_file)
     except MissingApiVersionError:
-        dumpJsonError({
-            "column": 0,
-            "line": 1,
-            "message": "The api changelog file does not have a version pin. "
-                       "Please update the file and add the following line: "
-                       "[api-version]: {}".format(currentApiVersion),
-            "rule": "missing_api_version"
-        })
-        print("ERROR: The api changelog file does not have a version pin. Please update")
+        dumpJsonError(
+            {
+                "column": 0,
+                "line": 1,
+                "message": "The api changelog file does not have a version pin. "
+                "Please update the file and add the following line: "
+                f"[api-version]: {currentApiVersion}",
+                "rule": "missing_api_version",
+            }
+        )
+        print(
+            "ERROR: The api changelog file does not have a version pin. Please update"
+        )
         print("the file at")
         print("")
         print(args.changelog_file.name)
@@ -86,19 +110,21 @@ if __name__ == "__main__":
         print("And add the following line:")
         print("")
         print(">>>>")
-        print("[api-version]: {}".format(currentApiVersion))
+        print(f"[api-version]: {currentApiVersion}")
         print("<<<<")
         sys.exit(11)
 
     if currentApiVersion != expectedApiVersion:
-        dumpJsonError({
-            "column": 14,
-            "line": lineNumber,
-            "message": "The api changelog file is out of date. Please update the "
-                       "file and modify the [api-version] line as follows: "
-                       "[api-version]: {}".format(currentApiVersion),
-            "rule": "wrong_api_version"
-        })
+        dumpJsonError(
+            {
+                "column": 14,
+                "line": lineNumber,
+                "message": "The api changelog file is out of date. Please update the "
+                "file and modify the [api-version] line as follows: "
+                f"[api-version]: {currentApiVersion}",
+                "rule": "wrong_api_version",
+            }
+        )
         print("ERROR: The api changelog file is out of date. Please update the file at")
         print("")
         print(args.changelog_file.name)
@@ -106,7 +132,7 @@ if __name__ == "__main__":
         print("and then modify the [api-version] line as following:")
         print("")
         print(">>>>")
-        print("[api-version]: {}".format(currentApiVersion))
+        print(f"[api-version]: {currentApiVersion}")
         print("<<<<")
         sys.exit(10)
 
