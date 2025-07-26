@@ -1338,7 +1338,6 @@ MediaConduitErrorCode WebrtcVideoConduit::Init() {
 RefPtr<GenericPromise> WebrtcVideoConduit::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mReceivingSize.DisconnectAll();
   mSendPluginCreated.DisconnectIfExists();
   mSendPluginReleased.DisconnectIfExists();
   mRecvPluginCreated.DisconnectIfExists();
