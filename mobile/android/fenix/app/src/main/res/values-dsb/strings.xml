@@ -1085,6 +1085,14 @@
   <string name="alternative_app_icon_group_gradients">Barwowe pśeběgi</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other">Druge</string>
+  <!-- Title to show in alert when user selects an alternative app icon -->
+  <string name="restart_warning_dialog_title">Symbol nałoženja změniś?</string>
+  <!-- Message to warn users that applying an alternative app icon requires an app restart -->
+  <string name="restart_warning_dialog_body">Gaž symbol změnjaśo, musy se nałoženje znowego startowaś.</string>
+  <!-- Dialog button text for confirming the app restart to apply the selected icon -->
+  <string name="restart_warning_dialog_button_positive">Něnto znowego startowaś</string>
+  <!-- Dialog button text for cancelling app icon change -->
+  <string name="restart_warning_dialog_button_negative">Pśetergnuś</string>
   <!--
     Add-ons general availability nimbus message
 

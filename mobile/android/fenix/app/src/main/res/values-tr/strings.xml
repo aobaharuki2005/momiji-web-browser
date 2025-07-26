@@ -1085,6 +1085,14 @@
   <string name="alternative_app_icon_group_gradients">Renk geçişleri</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other">Diğer</string>
+  <!-- Title to show in alert when user selects an alternative app icon -->
+  <string name="restart_warning_dialog_title">Uygulama simgesi değiştirilsin mi?</string>
+  <!-- Message to warn users that applying an alternative app icon requires an app restart -->
+  <string name="restart_warning_dialog_body">Simgeyi değiştirmek için uygulamanın yeniden başlatılması gerekir.</string>
+  <!-- Dialog button text for confirming the app restart to apply the selected icon -->
+  <string name="restart_warning_dialog_button_positive">Şimdi yeniden başlat</string>
+  <!-- Dialog button text for cancelling app icon change -->
+  <string name="restart_warning_dialog_button_negative">Vazgeç</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1202,7 +1210,7 @@
   <!-- Preference switch for daily usage ping data collection -->
   <string name="preferences_daily_usage_ping_title">Günlük kullanım ping’i</string>
   <string name="preferences_daily_usage_ping_description">Bu sayede Mozilla aktif kullanıcı sayısını tahmin edebilir.</string>
-  <string name="preferences_daily_usage_ping_learn_more">Günlük kullanım ping’i hakkında daha fazla bilgi al</string>
+  <string name="preferences_daily_usage_ping_learn_more">Günlük kullanım ping’i hakkında daha fazla bilgi alın</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Çökme raporlarını otomatik olarak gönder</string>
   <!-- Preference switch description for automatically submitting crash reports -->

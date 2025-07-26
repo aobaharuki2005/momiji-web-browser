@@ -10,6 +10,11 @@
   -->
   <string name="mozac_feature_addons_permissions_one_extra_site_description" tools:ignore="PluralsCandidate,UnusedResources" moz:removedIn="142">ເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານໃນອີກ 1 ເວັບໄຊທ</string>
   <!--
+    When an add-on requires access to more than 4 sites, for example the add-on requires access for 5 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
+    then we will show another collapsed entry saying "Access your data on another site".
+  -->
+  <string name="mozac_feature_addons_permissions_one_extra_site_description_2">ເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານຢູ່ໃນເວັບໄຊທ໌ອື່ນ</string>
+  <!--
     When an add-on requires access to more than 4 sites, for example the add-on requires access for 6 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
     then we will show another collapsed entry saying "Access your data on 2 other sites". This entry it's for the plural case, when the add-on is accessing more than one extra site.
     %1$d will be replaced by an integer indicating the number of additional hosts for which this web extension is requesting permission.
@@ -90,6 +95,8 @@
   <string name="mozac_feature_addons_permissions_show_all_sites">ສະແດງທຸກເວັບໄຊ</string>
   <!-- Description for text button that hides the majority of the list of domain permissions -->
   <string name="mozac_feature_addons_permissions_show_fewer_sites">ສະແດງເວັບໄຊໜ້ອຍລົງ</string>
+  <!-- Short description for the locationInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_locationInfo_short_description">ຕຳແຫນ່ງທີ່ຕັ້ງ</string>
   <!-- The version on of add-on. -->
   <string name="mozac_feature_addons_version">ເວີຊັນ</string>
   <!-- The author of an add-on. -->

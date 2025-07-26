@@ -1085,6 +1085,14 @@
   <string name="alternative_app_icon_group_gradients">그라데이션</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other">기타</string>
+  <!-- Title to show in alert when user selects an alternative app icon -->
+  <string name="restart_warning_dialog_title">앱 아이콘을 변경하시겠습니까?</string>
+  <!-- Message to warn users that applying an alternative app icon requires an app restart -->
+  <string name="restart_warning_dialog_body">아이콘을 변경하려면 앱을 다시 시작해야 합니다.</string>
+  <!-- Dialog button text for confirming the app restart to apply the selected icon -->
+  <string name="restart_warning_dialog_button_positive">지금 다시 시작</string>
+  <!-- Dialog button text for cancelling app icon change -->
+  <string name="restart_warning_dialog_button_negative">취소</string>
   <!--
     Add-ons general availability nimbus message
 
