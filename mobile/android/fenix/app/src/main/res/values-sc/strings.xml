@@ -34,6 +34,8 @@
   <string name="no_private_tabs_description">Is ischedas privadas tuas ant a èssere ammustradas inoghe.</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d seletzionada</string>
+  <!-- Tab tray multi select title in app bar when no tabs are selected -->
+  <string name="tab_tray_multi_select_title_empty">Seletziona is ischedas</string>
   <!-- Label of button in create collection dialog for creating a new collection -->
   <string name="tab_tray_add_new_collection">Agiunghe una colletzione noa</string>
   <!-- Label of editable text in create collection dialog for naming a new collection -->
@@ -64,6 +66,8 @@
   -->
   <string name="private_browsing_placeholder_description_2" moz:removedIn="141" tools:ignore="UnusedResources">%1$s lìmpiat sa cronologia de chirca e de navigatzione tuas dae is ischedas privadas cando ddas serras o essis de s’aplicatzione. Non ti faghet abarrare in anònimu pro is sitos web e su frunidore de servìtzios de internet tuo, però t’agiudat a cunservare in privadu su chi ses faghende in lìnia dae àtera gente chi imperat custu dispositivu.</string>
   <string name="private_browsing_common_myths">Mitos fitianos subra de sa navigatzione privada</string>
+  <!-- Text to be announced by the accessibility service to inform the user that the private browsing mode is currently active. -->
+  <string name="private_browsing_a11y_session_announcement">Sessione de navigatzione privada</string>
   <!--
     True Private Browsing Mode
 
@@ -198,6 +202,16 @@
   <string name="browser_menu_extensions_banner_onboarding_header" moz:removedIn="141" tools:ignore="UnusedResources">Personaliza %s</string>
   <!-- Browser menu banner header text for extensions onboarding when all installed extensions have been disabled. -->
   <string name="browser_menu_disabled_extensions_banner_onboarding_header">Tenes estensiones installadas, ma no ativadas</string>
+  <!--
+    Browser menu banner body text for extensions onboarding.
+    %s is the name of the app (for example "Firefox").
+  -->
+  <string name="browser_menu_extensions_banner_onboarding_body" moz:removedIn="141" tools:ignore="UnusedResources">Is estensiones megiorant sa navigatzione: podent modificare s’aspetu e su rendimentu de %s o fàghere crèschere sa riservadesa e sa seguresa.</string>
+  <!--
+    Browser menu banner body text for extensions onboarding when all installed extensions have been disabled.
+    %s is the label of the button that opens the extension manager (for example "Manage extensions").
+  -->
+  <string name="browser_menu_disabled_extensions_banner_onboarding_body" moz:removedIn="141" tools:ignore="UnusedResources">Pro impreare is estensiones, ativa·ddas in is cunfiguratziones o seletzionende “%s” a suta.</string>
   <!-- Browser menu banner link text for learning more about extensions -->
   <string name="browser_menu_extensions_banner_learn_more" moz:removedIn="141" tools:ignore="UnusedResources">Àteras informatziones</string>
   <!-- Browser menu button that opens the extensions manager -->
@@ -304,6 +318,8 @@
   <string name="browser_menu_sign_back_in_to_sync">Torra·ti a identificare pro sincronizare</string>
   <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
   <string name="browser_menu_syncing_paused_caption">Sincronizatzione in pàusa</string>
+  <!-- Browser menu caption label for an authenticated user -->
+  <string name="browser_menu_signed_in_caption">Gesti su chi boles sarvare e sincronizare</string>
   <!-- Browser menu label that creates a private tab -->
   <string name="browser_menu_new_private_tab">Ischeda privada noa</string>
   <!-- Browser menu label that navigates to the Password screen -->
@@ -323,6 +339,10 @@
   <string name="browser_menu_back_button_content_description" moz:removedIn="141" tools:ignore="UnusedResources">Torra a su menù printzipale</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar main menu. -->
   <string name="browser_main_menu_handlebar_content_description" moz:removedIn="142" tools:ignore="UnusedResources">Serra su pannellu de su menù printzipale</string>
+  <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
+  <string name="browser_close_main_menu_handlebar_content_description">Serra su menù</string>
+  <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
+  <string name="browser_main_menu_content_description_navigation_header">Navigatzione</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">Agiudu</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
@@ -395,8 +415,16 @@
     %1$s is the name of the app (for example "Firefox").
   -->
   <string name="browser_menu_default_banner_title">Cunfigura %1$s comente predefinidu</string>
+  <!-- Label text within the set as default banner -->
+  <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">Bastat unu segundu. Modifica·ddu cando boles.</string>
+  <!-- Label text within the set as default banner -->
+  <string name="browser_menu_default_banner_subtitle_2">Lestru, privadu e fatu pro tene.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Iscarta</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
+  <string name="browser_menu_default_banner_dismiss_promotion">Refuda sa proposta</string>
+  <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
+  <string name="browser_menu_recommended_extensions_content_description">Àteras informatziones</string>
   <!--
     Menu "contextual feature recommendation" (CFR)
 
@@ -471,6 +499,12 @@
     %s is the search engine name (for example: DuckDuckGo).
   -->
   <string name="search_engine_icon_content_description_1">Motores de chirca: %s</string>
+  <!--
+    Content description (not visible, for screen readers etc.) of the search engine selector from the search toolbar.
+    %s is the search engine name (for example: DuckDuckGo).
+    The colon character (in "%s:") is intended to have the screen reader make a small pause between the search engine name and the description of the button.
+  -->
+  <string name="search_engine_selector_content_description">%s: seletore de su motore de chirca</string>
   <!--
     Home onboarding
 
@@ -696,6 +730,8 @@
   <string name="preferences_add_private_browsing_shortcut">Agiunghe unu curtzadòrgiu de navigatzione privada</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
   <string name="preferences_https_only_title">Modalidade «isceti HTTPS»</string>
+  <!-- Preference title for using the screen lock to hide tabs in private browsing -->
+  <string name="preferences_pbm_lock_screen_title">Imprea su blocu de ischermu pro cuare ischedas in sa navigatzione privada</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Blocu de is avisos de testimòngios</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
@@ -750,10 +786,16 @@
   <string name="preferences_category_account">Contu</string>
   <!-- Preference for changing where the AddressBar is positioned -->
   <string name="preferences_toolbar_2">Positzione de sa barra de indiritzos</string>
+  <!-- Preference for changing toolbar layout -->
+  <string name="preferences_toolbar_layout">Dispositzione de sa barra de ainas</string>
   <!-- Preference for changing default theme to dark or light mode -->
   <string name="preferences_theme">Tema</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">Pàgina printzipale</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">Icona de s’aplicatzione</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Visualizatzione de sa barra de is ischedas</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Gestos</string>
   <!-- Preference for settings related to visual options -->
@@ -780,12 +822,18 @@
   <string name="preferences_show_voice_search">Ammustra chirca de boghe</string>
   <!-- Preference title for switch preference to show search suggestions also in private mode -->
   <string name="preferences_show_search_suggestions_in_private">Ammustra in sessiones privadas</string>
+  <!-- Preference title for switch preference to show trending search suggestions -->
+  <string name="preferences_show_trending_search_suggestions">Ammustra is cussìgios populares</string>
+  <!-- Preference title for switch preference to show recent search suggestions -->
+  <string name="preferences_show_recent_search_suggestions">Ammustra chircas reghentes</string>
   <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
   <string name="preferences_show_clipboard_suggestions">Ammustra cussìgios de punta de billete</string>
   <!-- Preference title for switch preference to suggest browsing history when searching -->
   <string name="preferences_search_browsing_history">Chirca in sa cronologia de navigatzione</string>
   <!-- Preference title for switch preference to suggest bookmarks when searching -->
   <string name="preferences_search_bookmarks">Chirca in is sinnalibros</string>
+  <!-- Preference title for switch preference to show shortcuts when searching -->
+  <string name="preferences_show_shortcuts">Ammustra incurtzaduras</string>
   <!-- Preference title for switch preference to suggest synced tabs when searching -->
   <string name="preferences_search_synced_tabs">Chirca ischedas sincronizadas</string>
   <!-- Preference for account settings -->
@@ -806,6 +854,16 @@
   <string name="preferences_show_nonsponsored_suggestions">Cussìgios dae %1$s</string>
   <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
   <string name="preferences_show_nonsponsored_suggestions_summary">Otene cussìgios de sa rete acapiados a sa chirca tua</string>
+  <!-- Preference for link sharing -->
+  <string name="preferences_link_sharing">Cumpartzidura de ligòngios</string>
+  <!-- Title for the link sharing toggle. %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="link_sharing_toggle_title">Include su ligòngiu de iscarrigamentu de %1$s in is cumpartziduras de WhatsApp</string>
+  <!-- Body for the link sharing toggle.  %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="link_sharing_toggle_body">Invita a is amistades tuas a proare una navigatzione prus lestra e segura cun %1$s onni borta chi cumpartzis unu ligòngiu in WhatsApp.</string>
+  <!-- Snackbar message shown when user shares a link -->
+  <string name="link_shared_snackbar_message">Ligòngiu cumpartzidu</string>
+  <!-- Snackbar action label shown when user shares a link -->
+  <string name="link_shared_snackbar_action">Gesti sa cunfiguratzione</string>
   <!-- Preference for open links in third party apps -->
   <string name="preferences_open_links_in_apps">Aberi is ligòngios in is aplicatziones</string>
   <!-- Preference for open links in third party apps always open in apps option -->
@@ -816,6 +874,12 @@
   <string name="preferences_open_links_in_apps_never">Mai</string>
   <!-- Preference for open download with an external download manager app -->
   <string name="preferences_external_download_manager" tools:ignore="UnusedResources" moz:removedIn="141">Gestore de iscarrigamentos esternu</string>
+  <!-- Preference title for choosing an app to handle downloads -->
+  <string name="preferences_choose_app_for_downloads">Gesti is iscarrigamentos cun un’àtera aplicatzione</string>
+  <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
+  <string name="preferences_downloads_settings_clean_up_files_title">Cantzella dae %s e dae su dispositivu</string>
+  <!-- Preference for downloads -->
+  <string name="preferences_downloads">Iscarrigamentos</string>
   <!-- Preference for enabling gecko engine logs -->
   <string name="preferences_enable_gecko_logs">Ativa is registros de Gecko</string>
   <!-- Message to indicate users that we are quitting the application to apply the changes -->
@@ -840,8 +904,16 @@
   <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources" moz:removedIn="141">Optzionale</string>
   <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
   <string name="addons_permissions_allow_for_all_sites">Permite pro totu is sitos</string>
+  <!-- The subtitle for the allow for all sites preference toggle -->
+  <string name="addons_permissions_allow_for_all_sites_subtitle">Si custa estensione est fidada, ddi podes donare permissos pro totu is sitos.</string>
   <!-- The text shown when an extension does not require permissions -->
   <string name="addons_does_not_require_permissions">Custa estensione non rechedet permissos.</string>
+  <!-- The description of data collection permissions listed in the addon's permissions screen.  %1$s is a formatted list of permissions. -->
+  <string name="addons_permissions_required_data_collection_description" moz:removedIn="141" tools:ignore="UnusedResources">S’iscuadra de isvilupu narat chi custa estensione regollet: %1$s.</string>
+  <!-- The description of data collection permissions listed in the addon's permissions screen.  %1$s is a formatted list of permissions. -->
+  <string name="addons_permissions_required_data_collection_description_2">S’iscuadra de isvilupu narat chi custa estensione regollet: %1$s</string>
+  <!-- The description of the "none" data collection permission, when the extension doesn't collect anything according to the developer. -->
+  <string name="addons_permissions_none_required_data_collection_description">S’iscuadra de isvilupu narat chi custa estensione non rechedet sa regorta de datos.</string>
   <!--
     Add-on Preferences
 
@@ -871,6 +943,8 @@
     a section where users see a list of tabs that they have visited in the past few days
   -->
   <string name="customize_toggle_recently_visited">Bisitadas de reghente</string>
+  <!-- Title for the customize home screen section with Pocket. -->
+  <string name="customize_toggle_pocket_3">Istòrias</string>
   <!-- Title for the customize home screen section with sponsored Pocket stories. -->
   <string name="customize_toggle_pocket_sponsored">Istòrias patrotzinadas</string>
   <!-- Title for the opening wallpaper settings screen -->
@@ -909,6 +983,18 @@
   <string name="wallpapers_onboarding_dialog_body_text">Sèbera un’isfundu de ischermu chi ti rapresentat.</string>
   <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
   <string name="wallpapers_onboarding_dialog_explore_more_button_text">Iscoberi àteros isfundos de ischermu</string>
+  <!-- Title for the "Minimal" themed alternative app icon variant in the icon picker screen. The app icon presents a simplified, flat and monochrome version of the Firefox logo. -->
+  <string name="alternative_app_icon_option_minimal">Minimalista</string>
+  <!-- Title for the "Pride" themed alternative app icon variant in the icon picker screen. The app icon incorporates a rainbow color scheme in support of the LGBTQ+ community. -->
+  <string name="alternative_app_icon_option_pride">Orgòlliu</string>
+  <!-- Title for the "Cute" themed alternative app icon variant in the icon picker screen. The app icon features a playful design with an adorable aesthetic. -->
+  <string name="alternative_app_icon_option_cute">Bella</string>
+  <!-- Title for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
+  <string name="alternative_app_icon_option_momo">Momo</string>
+  <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
+  <string name="alternative_app_icon_option_momo_subtitle">Creada dae @heyheymomodraws</string>
+  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_other">Àteras</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1009,6 +1095,16 @@
   <string name="exceptions_empty_message_description">Is estensiones ti permitint de disativare s\'amparu contra a sa sighidura in tzertos sitos.</string>
   <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
   <string name="exceptions_empty_message_learn_more_link">Àteras informatziones</string>
+  <!-- Preference switch for usage and technical learn more link -->
+  <string name="preference_usage_data_learn_more" tools:ignore="UnusedResources" moz:removedIn="141">Àteras informatziones</string>
+  <!-- Preference switch for daily usage ping data collection -->
+  <string name="preferences_daily_usage_ping_title">Ping de impreu diàriu</string>
+  <string name="preferences_daily_usage_ping_description">Custu agiudat a Mozilla a valutare is utentes ativos.</string>
+  <string name="preferences_daily_usage_ping_learn_more">Àteras informatziones a subra de su ping de impreu diàriu</string>
+  <string name="usage_data_category">Datos de impreu</string>
+  <string name="studies_data_category">Istùdios</string>
+  <string name="technical_data_category">Datos tècnicos</string>
+  <string name="crash_reporting_description">Is informes de faddinas nos agiudant a agatare e arrangiare is faddinas de su navigadore. Is informes podent incluire datos personale o sensìbiles.</string>
   <!-- Learn more link for crash reporting preference -->
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more" tools:ignore="UnusedResources" moz:removedIn="142">Àteras informatziones in pitzus de is informes de faddinas</string>
   <!-- Title for studies preferences -->
@@ -1039,6 +1135,16 @@
   <string name="preference_top_toolbar">Superiore</string>
   <!-- Preference for using bottom toolbar -->
   <string name="preference_bottom_toolbar">Inferiore</string>
+  <!-- Preference for using simple toolbar -->
+  <string name="preference_simple_toolbar">Sèmplitze</string>
+  <!-- Preference for using expanded toolbar -->
+  <string name="preference_expanded_toolbar">Ismanniada</string>
+  <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">Seletziona s’icona de s’aplicatzione</string>
   <!--
     Theme Preferences
 
@@ -1049,6 +1155,12 @@
   <string name="preference_dark_theme">Iscuru</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Sighi su nòmine de su dispositivu</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Ammustra sa barra de ischedas</string>
   <!--
     Gestures Preferences
 
@@ -1191,8 +1303,35 @@
   <string name="studies_remove">Boga</string>
   <!-- Title of the active section on the studies list -->
   <string name="studies_active">Ativos</string>
+  <!-- Description for studies -->
+  <string name="studies_description_3">Proa funtziones e ideas in antis chi siant publicadas pro totus.</string>
+  <!-- Title of the Studies data preference -->
+  <string name="studies_title">Installa e faghe istùdios</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Àteras informatziones</string>
+  <!--
+    Sessions
+
+    Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs
+  -->
+  <string name="tabs_header_normal_tabs_counter_title">Ischedas normales abertas: %1$s. Toca pro cuncambiare ischedas.</string>
+  <!--
+    Title for the list of tabs in the current private session used by a11y services
+    The %1$s will be replaced by the number of opened private tabs
+  -->
+  <string name="tabs_header_private_tabs_counter_title">Ischedas privadas abertas: %1$s. Toca pro cuncambiare ischedas.</string>
+  <!--
+    Title for the list of tabs in the synced tabs used by a11y services
+    The %1$s will be replaced by the number of opened synced tabs
+  -->
+  <string name="tabs_header_synced_tabs_counter_title">Ischedas sincronizadas abertas: %1$s. Toca pro cuncambiare ischedas.</string>
+  <!-- Text for the tabs header private tabs -->
+  <string name="tabs_header_private_tabs_title">Privadas</string>
+  <!-- Text for the tabs header normal tabs -->
+  <string name="tabs_header_normal_tabs_title">Ischedas</string>
+  <!-- Text for the tabs header synced tabs -->
+  <string name="tabs_header_synced_tabs_title">Sincronizadas</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Agiunghe un’ischeda</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1221,6 +1360,8 @@
   <string name="tab_tray_multiselect_share_content_description">Cumpartzi is ischedas seletzionadas</string>
   <!-- Content description for tabs tray multiselect menu -->
   <string name="tab_tray_multiselect_menu_content_description">Menù de ischedas seletzionadas</string>
+  <!-- Title text displayed for a homepage tab in the tabs tray. -->
+  <string name="tab_tray_homepage_tab">Pàgina printzipale</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Boga is ischedas dae sa colletzione</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -1389,11 +1530,21 @@
   -->
   <string name="download_item_in_progress_description_pending">%1$s / %2$s • abetende</string>
   <!--
+    Description of an in progress download item, displayed in the downloads list when the total download size is unknown. This results in the estimated download time remaining to be unknown also.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_in_progress_description_unknown_total_size">%1$s • durada disconnota</string>
+  <!--
     Description of a paused download item, displayed in the downloads list.
     %1$s is the current file size that has been downloaded.
     %2$s is the total size of the downloaded file.
   -->
   <string name="download_item_paused_description">%1$s / %2$s • in pàusa</string>
+  <!--
+    Description of a paused download item, displayed in the downloads list when the total download size is unknown.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_paused_description_unknown_total_size">%1$s • in pàusa</string>
   <!-- Text to indicate that an in progress download is paused. -->
   <string name="download_item_status_paused" moz:removedIn="141" tools:ignore="UnusedResources">in pàusa</string>
   <!-- Text to indicate that the download speed of an in progress download is being calculated. -->
@@ -1428,12 +1579,18 @@
     The title of the Web Compat Reporter feature. This is displayed in the top app bar.
   -->
   <string name="webcompat_reporter_screen_title">Sinnala unu situ chi non funtzionat</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">Àteras informatziones</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
   <string name="webcompat_reporter_url_error_invalid">Inserta un’URL vàlidu</string>
+  <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_label_whats_broken_2">Ite est chi non funtzionat?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Sèbera una resone</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">Sèbera una resone</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Sèbera una resone</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -1444,6 +1601,24 @@
   <string name="webcompat_reporter_cancel">Annulla</string>
   <!-- The button text for the send button to submit the provided form data. -->
   <string name="webcompat_reporter_send">Imbia</string>
+  <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
+  <string name="webcompat_reporter_success_snackbar_text">Informe imbiadu</string>
+  <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
+  <string name="webcompat_reporter_dismiss_success_snackbar_text">Serra</string>
+  <!--
+    These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
+
+    Broken site reason text for site doesn’t load
+  -->
+  <string name="webcompat_reporter_reason_load">Su situ non si càrrigat</string>
+  <!-- Broken site reason text for site is slow -->
+  <string name="webcompat_reporter_reason_slow2">Su situ est lentu</string>
+  <!-- Broken site reason text for video isn’t playing or loading -->
+  <string name="webcompat_reporter_reason_media2">Non faghet a riproduire o carrigare su vìdeu</string>
+  <!-- Broken site reason text for missing content -->
+  <string name="webcompat_reporter_reason_content2">Ammancant cuntenutos</string>
+  <!-- Broken site reason text for can’t sign in or register -->
+  <string name="webcompat_reporter_reason_account2">Impossìbile atzèdere o si registrare</string>
   <!-- Broken site reason text for something else -->
   <string name="webcompat_reporter_reason_other">Àteru</string>
   <!--
@@ -1466,6 +1641,8 @@
   <string name="unsubmitted_crash_dialog_negative_button">Serra</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Imbia un’informe de faddinas</string>
+  <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
+  <string name="unsubmitted_crash_requested_by_devs_learn_more">Àteras informatziones</string>
   <!--
     Bookmarks
 
@@ -1664,6 +1841,10 @@
   <string name="studies_on">Ativu</string>
   <!-- Summary of studies data on quit preference if it is set to off -->
   <string name="studies_off">Disativadu</string>
+  <!-- Toggle if desktop site is turned on -->
+  <string name="browser_feature_desktop_site_on">Ativu</string>
+  <!-- Toggle if desktop site is turned off -->
+  <string name="browser_feature_desktop_site_off">Disativadu</string>
   <!-- Category header of a preference that allows a user to alter settings related to web permissions. -->
   <string name="preferences_category_permissions">Permissos</string>
   <!-- Category header of a preference that allows a user to alter settings related to web content. -->
@@ -1779,6 +1960,10 @@
   <string name="sync_add_new_device_learn_button">Àteras informatziones subra de s’imbiu de ischedas…</string>
   <!-- Text for the button to connect another device -->
   <string name="sync_add_new_device_connect_button">Connete un’àteru dispositivu…</string>
+  <!-- A message template for the shared link with a footer. %1$s is the shared link, %2$s is the app name (e.g. Firefox) and %3$s is a download link for the app. -->
+  <string name="sent_from_firefox_template" tools:ignore="UnusedResources">%1$s\n\nImbiadu dae %2$s 🦊 Proa su navigadore mòbile: %3$s</string>
+  <!-- A short message template for the shared link with a footer. %1$s is the shared link, %2$s is the app name (e.g. Firefox) and %3$s is a download link for the app. -->
+  <string name="sent_from_firefox_template_short" tools:ignore="UnusedResources">%1$s\n\nImbiadu dae %2$s 🦊 %3$s</string>
   <!--
     Notifications
 
@@ -2974,6 +3159,8 @@
   <string name="pbm_authentication_leave_private_tabs">Essi de is ischedas privadas</string>
   <!-- Label for the primary action button to unlock private tabs -->
   <string name="pbm_authentication_unlock">Isbloca</string>
+  <!-- Title text for the contextual feature recommendation (CFR) suggesting the user enable a screen lock to protect private tabs -->
+  <string name="private_tab_cfr_title">Boles impreare su blocu de ischermu pro cuare is ischedas privadas?</string>
   <!-- Negative button text for the contextual feature recommendation (CFR) dismissing the screen lock suggestion -->
   <string name="private_tab_cfr_negative">No, gràtzias</string>
   <!-- Positive button text for the contextual feature recommendation (CFR) enabling screen lock for private tabs -->

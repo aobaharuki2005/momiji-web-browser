@@ -10,22 +10,42 @@
   -->
   <string name="mozac_feature_addons_permissions_one_extra_site_description" tools:ignore="PluralsCandidate,UnusedResources" moz:removedIn="142">ᱟᱢᱟᱜ ᱰᱟᱴᱟ 1 ᱚᱞᱜᱟ ᱥᱟᱭᱤᱴ ᱨᱮ ᱟᱹᱛᱩᱨ ᱢᱮ</string>
   <!--
+    When an add-on requires access to more than 4 sites, for example the add-on requires access for 5 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
+    then we will show another collapsed entry saying "Access your data on another site".
+  -->
+  <string name="mozac_feature_addons_permissions_one_extra_site_description_2">ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱮᱴᱟᱜ ᱥᱟᱭᱤᱴ ᱨᱮ ᱮᱠᱥᱮᱥ ᱢᱮ</string>
+  <!--
     When an add-on requires access to more than 4 sites, for example the add-on requires access for 6 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
     then we will show another collapsed entry saying "Access your data on 2 other sites". This entry it's for the plural case, when the add-on is accessing more than one extra site.
     %1$d will be replaced by an integer indicating the number of additional hosts for which this web extension is requesting permission.
   -->
   <string name="mozac_feature_addons_permissions_extra_sites_description" tools:ignore="PluralsCandidate,UnusedResources" moz:removedIn="142">ᱟᱢᱟᱜ ᱰᱟᱴᱟ %1$d ᱚᱞᱜᱟ ᱥᱟᱭᱤᱴ ᱠᱚᱨᱮ ᱟᱹᱛᱩᱨ ᱢᱮ</string>
   <!--
+    When an add-on requires access to more than 4 sites, for example the add-on requires access for 6 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
+    then we will show another collapsed entry saying "Access your data on other sites".
+  -->
+  <string name="mozac_feature_addons_permissions_extra_sites_description_2">ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱮᱴᱟᱜ ᱥᱟᱭᱤᱴ ᱨᱮ ᱮᱠᱥᱮᱥ ᱢᱮ</string>
+  <!--
     When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
     then we will show another collapsed entry saying "Access your data on 1 other domain". This entry it's for the singular case, when the add-on is only accessing one extra domain.
   -->
   <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate,UnusedResources" moz:removedIn="142">ᱟᱢᱟᱜ ᱰᱟᱴᱟ 1 ᱚᱞᱜᱟ ᱰᱚᱢᱮᱱ ᱨᱮ ᱟᱹᱛᱩᱨ ᱢᱮ</string>
+  <!--
+    When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+    then we will show another collapsed entry saying "Access your data on another domain.
+  -->
+  <string name="mozac_feature_addons_permissions_one_extra_domain_description_2">ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱮᱴᱟᱜ ᱰᱚᱢᱮᱱ ᱨᱮ ᱮᱠᱥᱮᱥ ᱢᱮ</string>
   <!--
     When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
     then we will show another collapsed entry saying "Access your data on 2 other domains". This entry it's for the plural case, when the add-on is accessing more than one extra domain.
     %1$d will be replaced by an integer indicating the number of additional domains for which this web extension is requesting permission.
   -->
   <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate,UnusedResources" moz:removedIn="142">ᱟᱢᱟᱜ ᱰᱟᱴᱟ %1$d ᱚᱞᱜᱟ ᱰᱚᱢᱮᱱ ᱠᱚᱨᱮ ᱟᱹᱛᱩᱨ ᱢᱮ</string>
+  <!--
+    When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+    then we will show another collapsed entry saying "Access your data on other domains".
+  -->
+  <string name="mozac_feature_addons_permissions_extra_domains_description_plural_2">ᱮᱴᱟᱜ ᱰᱚᱢᱮᱱ ᱠᱚ ᱨᱮ ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱟᱫᱮᱨ ᱢᱮ</string>
   <!-- When an add-on requires access to domains, this entry is used to describe the total number of domains. Underneath it will be the list of all the domains. %1$d is the number of all the domains that will be shown to the user as required. -->
   <string name="mozac_feature_addons_permissions_all_domain_count_description" tools:ignore="PluralsCandidate">%1$d ᱰᱚᱢᱮᱱ ᱨᱮ ᱥᱟᱭᱤᱴ ᱠᱚ ᱞᱟᱹᱜᱤᱫ ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱟᱫᱮᱨ ᱢᱮ</string>
   <!-- Content description for a permission item, for an installed add-on details page. %1$s will be replaced with the permission text name, %2$d will be replaced with the permission position in the list and %3$d will be replaced with the total number of permissions in the list.Taking as an example "Read and modify privacy settings" the whole text will read Read and modify privacy settings, 2 of 6. -->
@@ -84,14 +104,74 @@
   <string name="mozac_feature_addons_permissions_user_scripts_description">ᱵᱤᱱ ᱯᱩᱥᱴᱟᱹᱣ ᱟᱠᱟᱱ ᱛᱮᱥᱟᱨ ᱯᱟᱨᱴᱤ ᱥᱠᱨᱤᱯᱴ ᱠᱚ ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱮᱠᱥᱮᱥ ᱞᱟᱹᱜᱤᱫ ᱟᱫᱮᱨ ᱮᱢᱚᱜ ᱢᱮ</string>
   <!-- Description for the "devtools" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_devtools_description">ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱠᱷᱩᱞᱟᱹ ᱴᱮᱵᱽ ᱠᱚᱨᱮ ᱟᱹᱛᱩᱨ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱵᱟᱲᱦᱟᱣᱟᱜ ᱴᱩᱞ ᱚᱥᱟᱨ ᱢᱮ</string>
+  <!-- Description for the "privacy" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_privacy_description_for_update">ᱱᱤᱥᱚᱱ ᱥᱟᱡᱟᱣ ᱠᱚ ᱯᱟᱲᱦᱟᱣ ᱢᱮ ᱟᱨ ᱵᱚᱫᱚᱞ ᱢᱮ ᱾</string>
+  <!-- Description for the "<all_urls>" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_all_urls_description_for_update">ᱥᱟᱱᱟᱢ ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱠᱚ ᱞᱟᱹᱜᱤᱫ ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱟᱫᱮᱨ ᱢᱮ ᱾</string>
+  <!-- Description for the "tabs" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_tabs_description_for_update">ᱵᱽᱨᱟᱣᱩᱡᱚᱨ ᱴᱮᱵᱽ ᱟᱹᱛᱩᱨ ᱢᱮ ᱾</string>
+  <!-- Description for the "webNavigation" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_web_navigation_description_for_update">ᱱᱮᱵᱷᱤᱜᱮᱥᱚᱱ ᱚᱠᱛᱚ ᱨᱮ ᱵᱽᱨᱟᱣᱩᱡᱟᱨ ᱠᱟᱹᱢᱤᱦᱚᱨᱟ ᱟᱫᱮᱨ ᱢᱮ᱾</string>
+  <!-- Description for the "bookmarks" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_bookmarks_description_for_update">ᱵᱩᱠᱢᱟᱨᱠ ᱯᱟᱲᱦᱟᱣ ᱢᱮ ᱟᱨ ᱥᱚᱫᱚᱨ ᱢᱮ ᱾</string>
+  <!-- Description for the "browserSettings" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_browser_settings_description_for_update">ᱵᱽᱨᱟᱣᱩᱡᱟᱨ ᱥᱮᱴᱤᱝ ᱯᱟᱲᱦᱟᱣ ᱟᱨ ᱥᱚᱫᱚᱨ ᱢᱮ ᱾</string>
+  <!-- Description for the "browsingData" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_browsing_data_description_for_update">ᱱᱤᱛᱚᱜᱟ ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱦᱤᱛᱟᱹᱞ, ᱠᱩᱠᱤ ᱠᱚ, ᱟᱨ ᱥᱚᱸᱵᱚᱸᱫᱷ ᱰᱟᱴᱟ ᱯᱷᱟᱨᱪᱟᱭ ᱢᱮ ᱾</string>
+  <!-- Description for the "clipboardRead" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_clipboard_read_description_for_update">ᱨᱮᱴᱚᱵᱼᱵᱚᱰ ᱠᱷᱚᱱ ᱰᱟᱴᱟ ᱧᱟᱢ ᱢᱮ ᱾</string>
+  <!-- Description for the "clipboardWrite" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_clipboard_write_description_for_update">ᱨᱮᱴᱚᱵᱼᱵᱚᱰ ᱨᱮ ᱰᱟᱴᱟ ᱟᱫᱮᱨ ᱢᱮ ᱾</string>
+  <!-- Description for the "declarativeNetRequest" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_declarative_net_request_description_for_update">ᱡᱟᱦᱟᱸ ᱥᱟᱦᱴᱟ ᱨᱮᱜᱮ ᱡᱤᱱᱤᱥ ᱠᱚ ᱵᱟᱹᱰ ᱢᱮ ᱾</string>
+  <!-- Description for the "declarativeNetRequestFeedback" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description_for_update">ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱦᱤᱛᱟᱹᱞ ᱯᱟᱲᱦᱟᱣ ᱢᱮ ᱾</string>
+  <!-- Description for the "downloads" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_downloads_description_for_update">ᱨᱮᱫ ᱰᱟᱣᱱᱞᱚᱰ ᱢᱮ ᱟᱨ ᱯᱟᱲᱦᱟᱣ ᱢᱮ ᱟᱨ ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱰᱟᱣᱱᱞᱚᱰ ᱦᱤᱛᱟᱹᱞ ᱵᱚᱫᱚᱞ ᱢᱮ ᱾</string>
+  <!-- Description for the "downloads.open" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_downloads_open_description_for_update">ᱨᱮᱫ ᱠᱚ ᱡᱷᱤᱡ ᱢᱮ ᱡᱟᱦᱟᱸ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱰᱟᱩᱱᱞᱳᱰ ᱦᱚᱭ ᱠᱟᱱᱟ ᱾</string>
+  <!-- Description for the "find" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_find_description_for_update">ᱥᱟᱱᱟᱢ ᱡᱷᱤᱡᱽ ᱴᱮᱵᱽ ᱠᱚᱣᱟᱜ ᱚᱱᱚᱞ ᱯᱟᱲᱦᱟᱣ ᱢᱮ ᱾</string>
   <!-- The text shown when an extension requests the userScripts permission, near the usual description of the userScripts permission -->
   <string name="mozac_feature_addons_permissions_user_scripts_extra_warning">ᱵᱤᱱ ᱯᱩᱥᱴᱟᱹᱣ ᱟᱠᱟᱱ ᱥᱠᱨᱤᱯᱴ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱟᱨ ᱜᱩᱱᱛᱷᱤ ᱨᱮᱭᱟᱜ ᱡᱷᱩᱠᱤ ᱛᱮᱭᱟᱨ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱾ ᱟᱢ ᱯᱟᱹᱛᱭᱟᱹᱣᱟᱱ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱥᱮ ᱥᱚᱨᱥ ᱠᱷᱚᱱ ᱥᱩᱢᱩᱝ ᱥᱠᱨᱤᱯᱴ ᱪᱟᱹᱞᱩᱭ ᱢᱮ ᱾</string>
   <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
   <string name="mozac_feature_addons_permissions_required_data_collection_description" moz:removedIn="141" tools:ignore="UnusedResources">ᱰᱮᱵᱷᱞᱚᱯᱚᱨ ᱢᱮᱱ ᱠᱮᱫᱟᱭ ᱱᱚᱣᱟ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱫᱚ ᱡᱟᱣᱨᱟᱭᱟᱭ: %1$s ᱾</string>
+  <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
+  <string name="mozac_feature_addons_permissions_required_data_collection_description_2">ᱰᱮᱵᱷᱞᱚᱯᱚᱨ ᱢᱮᱱ ᱠᱮᱫᱟᱭ ᱱᱚᱣᱟ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱡᱟᱣᱨᱟ ᱮᱫᱟᱭ: %1$s</string>
+  <!-- The sentence used when the developer of an extension has explicitly stated that they do not collect any data collection. -->
+  <string name="mozac_feature_addons_permissions_none_required_data_collection_description">ᱰᱮᱵᱷᱞᱚᱯᱚᱨ ᱢᱮᱱ ᱠᱮᱫᱟᱭ ᱱᱚᱣᱟ ᱵᱟᱹᱲᱛᱤ ᱞᱟᱹᱜᱤᱫ ᱰᱟᱴᱟ ᱡᱟᱣᱨᱟ ᱨᱮᱭᱟᱜ ᱞᱟᱹᱠᱛᱤ ᱵᱟᱹᱱᱩᱜᱼᱟ ᱾</string>
+  <!-- The sentence used when the extension requests new data collection permissions. %1$s is a formatted list of permissions. -->
+  <string name="mozac_feature_addons_permissions_data_collection_optional_description">ᱰᱮᱵᱷᱞᱚᱯᱚᱨ ᱢᱮᱱ ᱠᱮᱫᱟᱭ ᱵᱟᱹᱲᱛᱤ ᱡᱟᱣᱨᱟ ᱥᱟᱱᱟᱭᱮ ᱠᱟᱱᱟ: %1$s</string>
   <!-- Description for text button that expands the list of domain permissions -->
   <string name="mozac_feature_addons_permissions_show_all_sites">ᱡᱷᱚᱛᱚ ᱥᱟᱭᱤᱴ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
   <!-- Description for text button that hides the majority of the list of domain permissions -->
   <string name="mozac_feature_addons_permissions_show_fewer_sites">ᱠᱚᱢ ᱥᱟᱭᱤᱴ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
+  <!-- Short description for the authenticationInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_authenticationInfo_short_description">ᱯᱨᱚᱢᱟᱱᱴᱤᱠᱮᱥᱚᱱ ᱵᱤᱵᱨᱚᱬ</string>
+  <!-- Short description for the bookmarksInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_bookmarksInfo_short_description">ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
+  <!-- Short description for the browsingActivity data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_browsingActivity_short_description">ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱠᱟᱹᱢᱤᱦᱚᱨᱟ</string>
+  <!-- Short description for the financialAndPaymentInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_financialAndPaymentInfo_short_description">ᱠᱟᱹᱣᱰᱤ ᱟᱨ ᱯᱮᱢᱮᱱᱴ ᱵᱤᱵᱨᱚᱬ</string>
+  <!-- Short description for the healthInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_healthInfo_short_description">ᱦᱚᱲᱢᱚ ᱥᱟᱶᱟᱨ ᱵᱤᱵᱨᱚᱬ</string>
+  <!-- Short description for the locationInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_locationInfo_short_description">ᱴᱷᱟᱶ</string>
+  <!-- Short description for the personalCommunications data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_personalCommunications_short_description">ᱯᱚᱨᱥᱚᱱᱟᱞ ᱡᱚᱜᱟᱡᱩᱜᱽ</string>
+  <!-- Short description for the personallyIdentifyingInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_personallyIdentifyingInfo_short_description">ᱯᱚᱨᱥᱚᱱᱟᱞ ᱩᱨᱩᱢ ᱵᱮᱣᱨᱟ</string>
+  <!-- Short description for the searchTerms data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_searchTerms_short_description">ᱥᱮᱸᱫᱽᱨᱟ ᱟᱹᱲᱟᱹ</string>
+  <!-- Short description for the technicalAndInteraction data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_technicalAndInteraction_short_description">ᱴᱮᱠᱱᱤᱠᱟᱞ ᱟᱨ ᱤᱱᱴᱟᱨᱮᱠᱥᱚᱱ ᱰᱟᱴᱟ</string>
+  <!-- Short description for the websiteActivity data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_websiteActivity_short_description">ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱠᱟᱹᱢᱤᱦᱚᱨᱟ</string>
+  <!-- Short description for the websiteContent data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_websiteContent_short_description">ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱡᱤᱱᱤᱥ</string>
+  <!-- Long description for the authenticationInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_authenticationInfo_long_description">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱰᱮᱵᱷᱞᱚᱯᱟᱨ ᱥᱟᱶ ᱚᱛᱷᱮᱱᱴᱤᱠᱮᱥᱚᱱ ᱵᱮᱣᱨᱟ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
   <!-- The version on of add-on. -->
   <string name="mozac_feature_addons_version">ᱟᱨᱩᱯᱷᱮᱨᱟᱣ</string>
   <!-- The author of an add-on. -->
