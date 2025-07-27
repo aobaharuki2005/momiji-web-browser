@@ -293,8 +293,8 @@ with only_when(zucchini_is_available):
     set_define("MOZ_BSPATCH", True, when="--enable-bspatch")
 
     option(
-        "--enable-zucchini",
-        help="Enable zucchini support",
+        "--disable-zucchini",
+        help="Disable zucchini support",
     )
 
     set_config("MOZ_ZUCCHINI", True, when="--enable-zucchini")
