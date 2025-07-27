@@ -20,7 +20,9 @@
 #include "base/strings/strcat.h"
 #include "base/strings/string_piece.h"
 #include "base/strings/string_util.h"
+#if !defined(MOZ_ZUCCHINI)
 #include "base/strings/sys_string_conversions.h"
+#endif  // !defined(MOZ_ZUCCHINI)
 #include "base/strings/utf_string_conversions.h"
 #include "base/trace_event/base_tracing.h"
 
@@ -193,11 +195,7 @@ FilePath::~FilePath() = default;
 
 FilePath& FilePath::operator=(const FilePath& that) = default;
 
-#if !defined(MOZ_ZUCCHINI)
 FilePath& FilePath::operator=(FilePath&& that) noexcept = default;
-#else
-FilePath& FilePath::operator=(FilePath&& that) = default;
-#endif  // !defined(MOZ_ZUCCHINI)
 
 bool FilePath::operator==(const FilePath& that) const {
 #if defined(FILE_PATH_USES_DRIVE_LETTERS)

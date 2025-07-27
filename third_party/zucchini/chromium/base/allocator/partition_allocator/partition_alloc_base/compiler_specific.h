@@ -24,8 +24,7 @@
 // Annotate a function indicating it should not be inlined.
 // Use like:
 //   NOINLINE void DoStuff() { ... }
-#if defined(__clang__) && PA_HAS_ATTRIBUTE(noinline) && \
-    (!defined(MOZ_ZUCCHINI) || __clang_major__ >= 15)
+#if defined(__clang__) && PA_HAS_ATTRIBUTE(noinline)
 #define PA_NOINLINE [[clang::noinline]]
 #elif defined(COMPILER_GCC) && PA_HAS_ATTRIBUTE(noinline)
 #define PA_NOINLINE __attribute__((noinline))
@@ -35,8 +34,7 @@
 #define PA_NOINLINE
 #endif
 
-#if defined(__clang__) && defined(NDEBUG) && PA_HAS_ATTRIBUTE(always_inline) && \
-    (!defined(MOZ_ZUCCHINI) || __clang_major__ >= 15)
+#if defined(__clang__) && defined(NDEBUG) && PA_HAS_ATTRIBUTE(always_inline)
 #define PA_ALWAYS_INLINE [[clang::always_inline]] inline
 #elif defined(COMPILER_GCC) && defined(NDEBUG) && \
     PA_HAS_ATTRIBUTE(always_inline)
@@ -226,7 +224,7 @@ inline constexpr bool AnalyzerAssumeTrue(bool arg) {
 #define PA_CONSTINIT
 #endif
 
-#if defined(__clang__) && (!defined(MOZ_ZUCCHINI) || __clang_major__ >= 13)
+#if defined(__clang__)
 #define PA_GSL_POINTER [[gsl::Pointer]]
 #else
 #define PA_GSL_POINTER

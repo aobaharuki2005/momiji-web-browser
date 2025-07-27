@@ -22,13 +22,11 @@ namespace base {
 
 namespace {
 
-#if !defined(MOZ_ZUCCHINI)
 const char kWeekdayName[7][4] = {"Sun", "Mon", "Tue", "Wed",
                                  "Thu", "Fri", "Sat"};
 
 const char kMonthName[12][4] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
                                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-#endif  // !defined(MOZ_ZUCCHINI)
 
 TimeTicks g_shared_time_ticks_at_unix_epoch;
 
@@ -106,7 +104,6 @@ Time Time::NowFromSystemTime() {
       std::memory_order_relaxed)();
 }
 
-#if !defined(MOZ_ZUCCHINI)
 Time Time::Midnight(bool is_local) const {
   Exploded exploded;
   Explode(is_local, &exploded);
@@ -136,7 +133,6 @@ Time Time::Midnight(bool is_local) const {
 #endif
   return out_time;
 }
-#endif  // !defined(MOZ_ZUCCHINI)
 
 // static
 bool Time::FromStringInternal(const char* time_string,
@@ -196,7 +192,6 @@ int64_t Time::ToRoundedDownMillisecondsSinceUnixEpoch() const {
   return millis - kEpochOffsetMillis - (submillis < 0);
 }
 
-#if !defined(MOZ_ZUCCHINI)
 std::ostream& operator<<(std::ostream& os, Time time) {
   Time::Exploded exploded;
   time.UTCExplode(&exploded);
@@ -210,7 +205,6 @@ std::ostream& operator<<(std::ostream& os, Time time) {
                             exploded.second,
                             exploded.millisecond);
 }
-#endif  // !defined(MOZ_ZUCCHINI)
 
 // TimeTicks ------------------------------------------------------------------
 
@@ -319,7 +313,6 @@ bool Time::Exploded::HasValidValues() const {
   // clang-format on
 }
 
-#if !defined(MOZ_ZUCCHINI)
 std::string TimeFormatHTTP(base::Time time) {
   base::Time::Exploded exploded;
   time.UTCExplode(&exploded);
@@ -328,6 +321,5 @@ std::string TimeFormatHTTP(base::Time time) {
       exploded.day_of_month, kMonthName[exploded.month - 1], exploded.year,
       exploded.hour, exploded.minute, exploded.second);
 }
-#endif  // !defined(MOZ_ZUCCHINI)
 
 }  // namespace base

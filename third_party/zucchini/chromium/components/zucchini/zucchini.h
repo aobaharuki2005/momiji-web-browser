@@ -11,10 +11,6 @@
 #include "components/zucchini/patch_reader.h"
 #include "components/zucchini/patch_writer.h"
 
-#if defined(MOZ_ZUCCHINI)
-#  include "mozilla/moz_zucchini.h"
-#endif  // defined(MOZ_ZUCCHINI)
-
 // Core Zucchini library, consisting of:
 // - Global constants.
 // - Patch gen and apply functions, where "old" and "new" data are represented
@@ -23,7 +19,6 @@
 
 namespace zucchini {
 
-#if !defined(MOZ_ZUCCHINI)
 namespace status {
 
 // Zucchini status code, which can also be used as process exit code. Therefore
@@ -43,7 +38,6 @@ enum Code {
 };
 
 }  // namespace status
-#endif  // !defined(MOZ_ZUCCHINI)
 
 // Generates ensemble patch from |old_image| to |new_image| using the default
 // element detection and matching heuristics, writes the results to
