@@ -35,9 +35,13 @@
 #  include "crctable.h"
 #endif  // defined(MOZ_BSPATCH)
 
-#if !defined(MOZ_BSPATCH)
+#if defined(MOZ_ZUCCHINI)
+#  include "mozilla/moz_zucchini.h"
+#endif  // defined(MOZ_ZUCCHINI)
+
+#if !defined(MOZ_BSPATCH) && !defined(MOZ_ZUCCHINI)
 #  error Updater enabled, but all supported patch formats are turned off.
-#endif  // !defined(MOZ_BSPATCH)
+#endif  // !defined(MOZ_BSPATCH) && !defined(MOZ_ZUCCHINI)
 
 #include "progressui.h"
 #include "archivereader.h"
@@ -1670,6 +1674,105 @@ int BSPatchFileDecoder::Apply(const uint8_t* aCheckedSrcBuf,
 }
 #endif  // defined(MOZ_BSPATCH)
 
+#if defined(MOZ_ZUCCHINI)
+void LogZucchiniMessage(const char* aMessage) { LOG(("%s", aMessage)); }
+
+// Best-effort conversion from Zucchini status codes to updater status codes
+int FromZucchiniStatus(zucchini::status::Code code) {
+  int result = OK;
+  switch (code) {
+    case zucchini::status::kStatusSuccess:
+      break;
+    case zucchini::status::kStatusFileReadError:
+    case zucchini::status::kStatusPatchReadError:
+      result = READ_ERROR;
+      break;
+    case zucchini::status::kStatusFileWriteError:
+      result = WRITE_ERROR;
+      break;
+    case zucchini::status::kStatusPatchWriteError:
+      result = WRITE_ERROR_PATCH_FILE;
+      break;
+    case zucchini::status::kStatusInvalidOldImage:
+    case zucchini::status::kStatusInvalidNewImage:
+      result = CRC_ERROR;
+      break;
+    case zucchini::status::kStatusInvalidParam:
+    case zucchini::status::kStatusDiskFull:
+    case zucchini::status::kStatusIoError:
+    case zucchini::status::kStatusFatal:
+    default:
+      result = UNEXPECTED_BSPATCH_ERROR;
+      break;
+  }
+  if (result != OK) {
+    LOG(
+        ("FromZucchiniStatus: encountered zucchini error %d, converting to "
+         "updater error %d",
+         code, result));
+  }
+  return result;
+}
+
+class ZucchiniPatchFileDecoder : public PatchFileDecoder {
+ public:
+  ~ZucchiniPatchFileDecoder() override = default;
+
+  unsigned int ComputeCrc32(const uint8_t* aBuf, size_t aBufSize) override;
+
+  off_t SourceSize() override;
+
+  off_t DestinationSize() override;
+
+  unsigned int SourceCrc32() override;
+
+  int Apply(const uint8_t* aCheckedSrcBuf, size_t aCheckedSrcBufSize,
+            FILE* aDstFile) override;
+
+ protected:  // Comply with PatchFileDecoder::TryLoadAs requirements
+  ZucchiniPatchFileDecoder() = default;
+  int Load(FILE* aPatchFile) override;
+  friend class PatchFileDecoder;
+
+ private:
+  zucchini::mozilla::MappedPatch mMappedPatch;
+  uint32_t mSourceSize{};
+  uint32_t mDestinationSize{};
+  uint32_t mSourceCrc32{};
+};
+
+unsigned int ZucchiniPatchFileDecoder::ComputeCrc32(const uint8_t* aBuf,
+                                                    size_t aBufSize) {
+  return zucchini::mozilla::ComputeCrc32(aBuf, aBufSize);
+}
+
+int ZucchiniPatchFileDecoder::Load(FILE* aPatchFile) {
+  return FromZucchiniStatus(mMappedPatch.Load(
+      aPatchFile, &mSourceSize, &mDestinationSize, &mSourceCrc32));
+}
+
+off_t ZucchiniPatchFileDecoder::SourceSize() {
+  return static_cast<off_t>(mSourceSize);
+}
+
+off_t ZucchiniPatchFileDecoder::DestinationSize() {
+  return static_cast<off_t>(mDestinationSize);
+}
+
+unsigned int ZucchiniPatchFileDecoder::SourceCrc32() {
+  return static_cast<int>(mSourceCrc32);
+}
+
+int ZucchiniPatchFileDecoder::Apply(const uint8_t* aCheckedSrcBuf,
+                                    size_t aCheckedSrcBufSize, FILE* aDstFile) {
+  // SAFETY: The caller has already checked that the crc32 and size of
+  // aCheckedSrcBuf match with the contents of the patch file as a requirement
+  // of PatchFileDecoder::Apply.
+  return FromZucchiniStatus(
+      mMappedPatch.ApplyUnsafe(aCheckedSrcBuf, aCheckedSrcBufSize, aDstFile));
+}
+#endif  // defined(MOZ_ZUCCHINI)
+
 class PatchFile : public Action {
  public:
   PatchFile() : mPatchFile(nullptr), mPatchIndex(-1), mBufSize(0) {}
@@ -1851,10 +1954,22 @@ int PatchFile::Execute() {
 
   int rv = UNEXPECTED_BSPATCH_ERROR;
 
+  // zucchini patch files start with "Zucc" bytes, while bspatch patch files
+  // start with "MBDIFF10" bytes. Since these bytes are checked, there is no
+  // risk of a loader accepting a patch in the wrong format and we can safely
+  // iterate over the formats.
+
 #if defined(MOZ_BSPATCH)
   mPatchFileDecoder =
       PatchFileDecoder::TryLoadAs<BSPatchFileDecoder>(mPatchStream, &rv);
 #endif  // defined(MOZ_BSPATCH)
+
+#if defined(MOZ_ZUCCHINI)
+  if (!mPatchFileDecoder) {
+    mPatchFileDecoder = PatchFileDecoder::TryLoadAs<ZucchiniPatchFileDecoder>(
+        mPatchStream, &rv);
+  }
+#endif  // defined(MOZ_ZUCCHINI)
 
   if (!mPatchFileDecoder) {
     return rv;
@@ -5087,6 +5202,10 @@ int DoUpdate() {
     return READ_ERROR;
   }
   NS_tchar* rb = buf;
+
+#if defined(MOZ_ZUCCHINI)
+  zucchini::mozilla::SetLogFunction(LogZucchiniMessage);
+#endif  // defined(MOZ_ZUCCHINI)
 
   ActionList list;
   NS_tchar* line;

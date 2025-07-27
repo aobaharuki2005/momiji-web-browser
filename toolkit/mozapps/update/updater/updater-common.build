@@ -77,6 +77,11 @@ if CONFIG["MOZ_BSPATCH"]:
         "bspatch",
     ]
 
+if CONFIG["MOZ_ZUCCHINI"]:
+    USE_LIBS += [
+        "zucchini",
+    ]
+
 if link_with_nss:
     USE_LIBS += [
         "nspr",
