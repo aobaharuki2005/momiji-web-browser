@@ -20,27 +20,28 @@
 #include <time.h>
 #include <unistd.h>
 
-#if !defined(MOZ_ZUCCHINI)
 #include "base/base_export.h"
+#if !defined(MOZ_ZUCCHINI)
 #include "base/base_switches.h"
 #endif  // !defined(MOZ_ZUCCHINI)
 #include "base/bits.h"
 #if !defined(MOZ_ZUCCHINI)
 #include "base/command_line.h"
+#endif  // !defined(MOZ_ZUCCHINI)
 #include "base/containers/adapters.h"
 #include "base/containers/contains.h"
 #include "base/containers/stack.h"
+#if !defined(MOZ_ZUCCHINI)
 #include "base/environment.h"
+#endif  // !defined(MOZ_ZUCCHINI)
 #include "base/files/file_enumerator.h"
 #include "base/files/file_path.h"
 #include "base/files/scoped_file.h"
-#endif  // !defined(MOZ_ZUCCHINI)
 #include "base/logging.h"
 #if !defined(MOZ_ZUCCHINI)
 #include "base/memory/singleton.h"
 #endif  // !defined(MOZ_ZUCCHINI)
 #include "base/notreached.h"
-#if !defined(MOZ_ZUCCHINI)
 #include "base/numerics/safe_conversions.h"
 #include "base/path_service.h"
 #include "base/posix/eintr_wrapper.h"
@@ -51,12 +52,9 @@
 #include "base/strings/sys_string_conversions.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/system/sys_info.h"
-#endif  // !defined(MOZ_ZUCCHINI)
 #include "base/threading/scoped_blocking_call.h"
-#if !defined(MOZ_ZUCCHINI)
 #include "base/time/time.h"
 #include "build/branding_buildflags.h"
-#endif  // !defined(MOZ_ZUCCHINI)
 #include "build/build_config.h"
 
 #if BUILDFLAG(IS_APPLE)
@@ -125,11 +123,13 @@ bool VerifySpecificPathControlledByUser(const FilePath& path,
   return true;
 }
 #endif
+#endif  // !defined(MOZ_ZUCCHINI)
 
 base::FilePath GetTempTemplate() {
   return FormatTemporaryFileName("XXXXXX");
 }
 
+#if !defined(MOZ_ZUCCHINI)
 bool AdvanceEnumeratorWithStat(FileEnumerator* traversal,
                                FilePath* out_next_path,
                                stat_wrapper_t* out_next_stat) {
@@ -307,10 +307,6 @@ bool DoDeleteFile(const FilePath& path, bool recursive) {
   if (!recursive)
     return (rmdir(path_str) == 0) || (errno == ENOENT);
 
-#if defined(MOZ_ZUCCHINI)
-  NOTREACHED();
-  return false;
-#else
   bool success = true;
   stack<std::string> directories;
   directories.push(path.value());
@@ -331,7 +327,6 @@ bool DoDeleteFile(const FilePath& path, bool recursive) {
     success &= (rmdir(dir.value().c_str()) == 0) || (errno == ENOENT);
   }
   return success;
-#endif  // defined(MOZ_ZUCCHINI)
 }
 
 #if !BUILDFLAG(IS_APPLE)
@@ -349,7 +344,6 @@ std::string AppendModeCharacter(StringPiece mode, char mode_char) {
 
 }  // namespace
 
-#if !defined(MOZ_ZUCCHINI)
 FilePath MakeAbsoluteFilePath(const FilePath& input) {
   ScopedBlockingCall scoped_blocking_call(FROM_HERE, BlockingType::MAY_BLOCK);
   char full_path[PATH_MAX];
@@ -396,17 +390,16 @@ absl::optional<FilePath> MakeAbsoluteFilePathNoResolveSymbolicLinks(
 
   return collapsed_path;
 }
-#endif  // !defined(MOZ_ZUCCHINI)
 
 bool DeleteFile(const FilePath& path) {
   return DoDeleteFile(path, /*recursive=*/false);
 }
 
-#if !defined(MOZ_ZUCCHINI)
 bool DeletePathRecursively(const FilePath& path) {
   return DoDeleteFile(path, /*recursive=*/true);
 }
 
+#if !defined(MOZ_ZUCCHINI)
 bool ReplaceFile(const FilePath& from_path,
                  const FilePath& to_path,
                  File::Error* error) {
@@ -474,6 +467,7 @@ bool SetNonBlocking(int fd) {
     return false;
   return true;
 }
+#endif  // !defined(MOZ_ZUCCHINI)
 
 bool SetCloseOnExec(int fd) {
   const int flags = fcntl(fd, F_GETFD);
@@ -628,6 +622,7 @@ bool SetPosixFilePermissions(const FilePath& path,
   return true;
 }
 
+#if !defined(MOZ_ZUCCHINI)
 bool ExecutableExistsInPath(Environment* env,
                             const FilePath::StringType& executable) {
   std::string path;
@@ -646,6 +641,7 @@ bool ExecutableExistsInPath(Environment* env,
   }
   return false;
 }
+#endif  // !defined(MOZ_ZUCCHINI)
 
 #endif  // !BUILDFLAG(IS_FUCHSIA)
 
@@ -694,6 +690,7 @@ FilePath GetHomeDir() {
 }
 #endif  // !BUILDFLAG(IS_APPLE)
 
+#if !defined(MOZ_ZUCCHINI)
 File CreateAndOpenTemporaryFileInDir(const FilePath& dir, FilePath* temp_file) {
   // For call to close() inside ScopedFD.
   ScopedBlockingCall scoped_blocking_call(FROM_HERE, BlockingType::MAY_BLOCK);
@@ -707,6 +704,7 @@ bool CreateTemporaryFileInDir(const FilePath& dir, FilePath* temp_file) {
   ScopedFD fd = CreateAndOpenFdForTemporaryFileInDir(dir, temp_file);
   return fd.is_valid();
 }
+#endif  // !defined(MOZ_ZUCCHINI)
 
 FilePath FormatTemporaryFileName(FilePath::StringPieceType identifier) {
 #if BUILDFLAG(IS_APPLE)
@@ -719,6 +717,7 @@ FilePath FormatTemporaryFileName(FilePath::StringPieceType identifier) {
   return FilePath(StrCat({".", prefix, ".", identifier}));
 }
 
+#if !defined(MOZ_ZUCCHINI)
 ScopedFILE CreateAndOpenTemporaryStreamInDir(const FilePath& dir,
                                              FilePath* path) {
   ScopedFD scoped_fd = CreateAndOpenFdForTemporaryFileInDir(dir, path);
@@ -731,6 +730,7 @@ ScopedFILE CreateAndOpenTemporaryStreamInDir(const FilePath& dir,
     close(fd);
   return ScopedFILE(file);
 }
+#endif  // !defined(MOZ_ZUCCHINI)
 
 static bool CreateTemporaryDirInDirImpl(const FilePath& base_dir,
                                         const FilePath& name_tmpl,
@@ -807,6 +807,7 @@ bool CreateDirectoryAndGetError(const FilePath& full_path,
   return true;
 }
 
+#if !defined(MOZ_ZUCCHINI)
 // ReadFileToStringNonBlockingNonBlocking will read a file to a string. This
 // method should only be used on files which are known to be non-blocking such
 // as procfs or sysfs nodes. Additionally, the file is opened as O_NONBLOCK so
@@ -1092,6 +1093,7 @@ bool AppendToFile(const FilePath& filename, span<const uint8_t> data) {
 bool AppendToFile(const FilePath& filename, StringPiece data) {
   return AppendToFile(filename, as_bytes(make_span(data)));
 }
+#endif  // !defined(MOZ_ZUCCHINI)
 
 bool GetCurrentDirectory(FilePath* dir) {
   // getcwd can return ENOENT, which implies it checks against the disk.
@@ -1105,6 +1107,7 @@ bool GetCurrentDirectory(FilePath* dir) {
   return true;
 }
 
+#if !defined(MOZ_ZUCCHINI)
 bool SetCurrentDirectory(const FilePath& path) {
   ScopedBlockingCall scoped_blocking_call(FROM_HERE, BlockingType::MAY_BLOCK);
   return chdir(path.value().c_str()) == 0;

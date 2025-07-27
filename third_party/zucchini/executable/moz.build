@@ -10,6 +10,7 @@ DisableStlWrapping()
 
 LOCAL_INCLUDES += [
     "/third_party/abseil-cpp/",
+    "/third_party/googletest/googletest/include",
     "/third_party/zucchini/chromium-shim/",
     "/third_party/zucchini/chromium/",
 ]
@@ -22,16 +23,8 @@ if not CONFIG["MOZ_DEBUG"]:
 
 SOURCES += [
     "/third_party/zucchini/chromium/base/command_line.cc",
-    "/third_party/zucchini/chromium/base/third_party/nspr/prtime.cc",
-    "/third_party/zucchini/chromium/base/time/time.cc",
-    "/third_party/zucchini/chromium/components/zucchini/binary_data_histogram.cc",
-    "/third_party/zucchini/chromium/components/zucchini/ensemble_matcher.cc",
-    "/third_party/zucchini/chromium/components/zucchini/heuristic_ensemble_matcher.cc",
-    "/third_party/zucchini/chromium/components/zucchini/imposed_ensemble_matcher.cc",
     "/third_party/zucchini/chromium/components/zucchini/main_utils.cc",
     "/third_party/zucchini/chromium/components/zucchini/zucchini_commands.cc",
-    "/third_party/zucchini/chromium/components/zucchini/zucchini_gen.cc",
-    "/third_party/zucchini/chromium/components/zucchini/zucchini_integration.cc",
     "/third_party/zucchini/chromium/components/zucchini/zucchini_main.cc",
     "/third_party/zucchini/chromium/components/zucchini/zucchini_tools.cc",
 ]
@@ -39,38 +32,10 @@ SOURCES += [
 if CONFIG["TARGET_OS"] == "WINNT":
     USE_STATIC_MSVCRT = True
 
-    SOURCES += [
-        "/third_party/zucchini/chromium/base/cpu.cc",
-        "/third_party/zucchini/chromium/base/synchronization/lock_impl_win.cc",
-        "/third_party/zucchini/chromium/base/time/time_win.cc",
-    ]
-
-    OS_LIBS += [
-        "mincore",
-        "shell32",
-        "winmm",
-    ]
-
 if CONFIG["TARGET_KERNEL"] == "Linux":
     SOURCES += [
         "/third_party/zucchini/chromium/base/process/process_handle_posix.cc",
         "/third_party/zucchini/chromium/base/strings/string_split.cc",
-        "/third_party/zucchini/chromium/base/synchronization/lock_impl_posix.cc",
-        "/third_party/zucchini/chromium/base/time/time_now_posix.cc",
-    ]
-
-if CONFIG["TARGET_OS"] == "OSX":
-    SOURCES += [
-        "/third_party/zucchini/chromium/base/mac/mach_logging.cc",
-        "/third_party/zucchini/chromium/base/time/time_mac.mm",
-    ]
-
-    CMMFLAGS += [
-        "-fobjc-arc",
-    ]
-
-    OS_LIBS += [
-        "-framework Foundation",
     ]
 
 USE_LIBS += [
