@@ -510,6 +510,16 @@ subprojects { project ->
                 ])
             }
         }
+
+        // Work around https://github.com/diffplug/spotless/issues/1958 by
+        // explicitly depending on Spotless plugin dependencies.
+        project.configurations {
+            googleJavaFormat
+        }
+
+        project.dependencies {
+            googleJavaFormat libs.google.java.format
+        }
     }
 
     afterEvaluate {

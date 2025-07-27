@@ -276,6 +276,13 @@ google-java-format = { group = "com.google.googlejavaformat", name = "google-jav
 tomlj = { group = "org.tomlj", name = "tomlj", version.ref = "tomlj" }
 androidx-ui-text-android = { group = "androidx.compose.ui", name = "ui-text-android", version.ref = "ui-text-android" }
 
+ksp-symbol-processing-aa = { group = "com.google.devtools.ksp", name = "symbol-processing-aa", version.ref = "ksp-plugin" }
+ksp-symbol-processing-aa-embeddable = { group = "com.google.devtools.ksp", name = "symbol-processing-aa-embeddable", version.ref = "ksp-plugin" }
+ksp-symbol-processing-api = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "ksp-plugin" }
+ksp-symbol-processing-common-deps = { group = "com.google.devtools.ksp", name = "symbol-processing-common-deps", version.ref = "ksp-plugin" }
+
+detekt-cli = { group = "io.gitlab.arturbosch.detekt", name = "detekt-cli", version.ref = "detekt" }
+
 [plugins]
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

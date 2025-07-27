@@ -193,7 +193,7 @@ dependencies {
     }
 
     detekt project(":mozilla-detekt-rules")
-    detekt "io.gitlab.arturbosch.detekt:detekt-cli:${libs.versions.detekt.get()}"
+    detekt libs.detekt.cli
 }
 
 tasks.register('ktlint', JavaExec) {
