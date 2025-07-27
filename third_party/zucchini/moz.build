@@ -14,7 +14,9 @@ LOCAL_INCLUDES += [
     "/third_party/zucchini/chromium/",
 ]
 
+DEFINES["_FILE_OFFSET_BITS"] = 64
 DEFINES["UNICODE"] = True
+DEFINES["ENABLED_VLOG_LEVEL"] = 1
 
 if not CONFIG["MOZ_DEBUG"]:
     DEFINES["NDEBUG"] = True
@@ -90,6 +92,23 @@ if CONFIG["TARGET_OS"] == "WINNT":
 
     OS_LIBS += [
         "user32",
+    ]
+
+if CONFIG["TARGET_KERNEL"] == "Linux" or CONFIG["TARGET_OS"] == "OSX":
+    SOURCES += [
+        "/third_party/zucchini/chromium/base/files/file_posix.cc",
+        "/third_party/zucchini/chromium/base/files/file_util.cc",
+        "/third_party/zucchini/chromium/base/files/file_util_posix.cc",
+        "/third_party/zucchini/chromium/base/files/memory_mapped_file_posix.cc",
+        "/third_party/zucchini/chromium/base/files/scoped_file.cc",
+        "/third_party/zucchini/chromium/base/posix/safe_strerror.cc",
+        "/third_party/zucchini/chromium/base/strings/sys_string_conversions_posix.cc",
+        "/third_party/zucchini/chromium/base/system/sys_info_posix.cc",
+    ]
+
+if CONFIG["TARGET_KERNEL"] == "Linux":
+    SOURCES += [
+        "/third_party/zucchini/chromium/base/files/scoped_file_linux.cc",
     ]
 
 DIRS += [

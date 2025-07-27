@@ -59,6 +59,7 @@ vendoring:
     - base/auto_reset.h
     - base/base_export.h
     - base/bit_cast.h
+    - base/bits.h
     - base/check.cc
     - base/check.h
     - base/check_op.cc
@@ -94,16 +95,22 @@ vendoring:
     - base/files/file.h
     - base/files/file_path.cc
     - base/files/file_path.h
+    - base/files/file_posix.cc
     - base/files/file_tracing.cc
     - base/files/file_tracing.h
+    - base/files/file_util.cc
     - base/files/file_util.h
+    - base/files/file_util_posix.cc
     - base/files/file_util_win.cc
     - base/files/file_win.cc
     - base/files/memory_mapped_file.cc
     - base/files/memory_mapped_file.h
+    - base/files/memory_mapped_file_posix.cc
     - base/files/memory_mapped_file_win.cc
     - base/files/platform_file.h
+    - base/files/scoped_file.cc
     - base/files/scoped_file.h
+    - base/files/scoped_file_linux.cc
     - base/format_macros.h
     - base/functional/bind.h
     - base/functional/bind_internal.h
@@ -124,6 +131,12 @@ vendoring:
     # base/logging.cc
     - base/logging.h
     # base/logging_buildflags.h
+    - base/mac/foundation_util.h
+    - base/mac/mach_logging.cc
+    - base/mac/mach_logging.h
+    - base/mac/scoped_cftyperef.h
+    - base/mac/scoped_mach_port.h
+    - base/mac/scoped_typeref.h
     - base/memory/raw_ptr.h
     - base/memory/raw_ptr_asan_bound_arg_tracker.h
     - base/memory/raw_ptr_asan_service.h
@@ -133,6 +146,7 @@ vendoring:
     - base/memory/ref_counted.cc
     - base/memory/ref_counted.h
     - base/memory/safe_ref_traits.h
+    - base/memory/scoped_policy.h
     - base/memory/scoped_refptr.h
     - base/memory/weak_ptr.h
     - base/no_destructor.h
@@ -148,7 +162,11 @@ vendoring:
     - base/numerics/safe_math_arm_impl.h
     - base/numerics/safe_math_clang_gcc_impl.h
     - base/numerics/safe_math_shared_impl.h
+    - base/posix/eintr_wrapper.h
+    - base/posix/safe_strerror.cc
+    - base/posix/safe_strerror.h
     - base/process/process_handle.h
+    - base/process/process_handle_posix.cc
     - base/ranges/algorithm.h
     - base/ranges/functional.h
     - base/ranges/ranges.h
@@ -169,7 +187,9 @@ vendoring:
     - base/strings/string_number_conversions_win.h
     - base/strings/string_piece.h
     - base/strings/string_piece_forward.h
+    - base/strings/string_split.cc
     - base/strings/string_split.h
+    - base/strings/string_split_internal.h
     - base/strings/string_split_win.h
     - base/strings/string_tokenizer.h
     - base/strings/string_util.cc
@@ -177,10 +197,13 @@ vendoring:
     - base/strings/string_util_constants.cc
     - base/strings/string_util_impl_helpers.h
     - base/strings/string_util_internal.h
+    - base/strings/string_util_posix.h
     - base/strings/string_util_win.cc
     - base/strings/string_util_win.h
     - base/strings/stringprintf.cc
     - base/strings/stringprintf.h
+    - base/strings/sys_string_conversions.h
+    - base/strings/sys_string_conversions_posix.cc
     - base/strings/to_string.h
     - base/strings/utf_ostream_operators.cc
     - base/strings/utf_ostream_operators.h
@@ -190,8 +213,12 @@ vendoring:
     - base/synchronization/atomic_flag.h
     - base/synchronization/lock.h
     - base/synchronization/lock_impl.h
+    - base/synchronization/lock_impl_posix.cc
     - base/synchronization/lock_impl_win.cc
+    # base/synchronization/synchronization_buildflags.h
     - base/system/sys_info.h
+    - base/system/sys_info_internal.h
+    - base/system/sys_info_posix.cc
     - base/system/sys_info_win.cc
     - base/template_util.h
     - base/third_party/icu/icu_utf.h
@@ -205,8 +232,11 @@ vendoring:
     - base/threading/thread_checker_impl.h
     - base/threading/thread_collision_warner.h
     # base/threading/scoped_blocking_call.h
+    # base/time/buildflags/buildflags.h
     - base/time/time.cc
     - base/time/time.h
+    - base/time/time_mac.mm
+    - base/time/time_now_posix.cc
     - base/time/time_override.h
     - base/time/time_win.cc
     - base/trace_event/base_tracing.h
@@ -230,8 +260,10 @@ vendoring:
     - base/win/windows_types.h
     - base/win/windows_version.cc
     - base/win/windows_version.h
+    # build/blink_buildflags.h
     - build/build_config.h
     - build/buildflag.h
+    # build/chromecast_buildflags.h
     # build/chromeos_buildflags.h
     - components/zucchini/abs32_utils.cc
     - components/zucchini/abs32_utils.h

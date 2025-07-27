@@ -15,13 +15,13 @@ LOCAL_INCLUDES += [
 ]
 
 DEFINES["UNICODE"] = True
+DEFINES["ENABLED_VLOG_LEVEL"] = 1
 
 if not CONFIG["MOZ_DEBUG"]:
     DEFINES["NDEBUG"] = True
 
 SOURCES += [
     "/third_party/zucchini/chromium/base/command_line.cc",
-    "/third_party/zucchini/chromium/base/cpu.cc",
     "/third_party/zucchini/chromium/base/third_party/nspr/prtime.cc",
     "/third_party/zucchini/chromium/base/time/time.cc",
     "/third_party/zucchini/chromium/components/zucchini/binary_data_histogram.cc",
@@ -40,6 +40,7 @@ if CONFIG["TARGET_OS"] == "WINNT":
     USE_STATIC_MSVCRT = True
 
     SOURCES += [
+        "/third_party/zucchini/chromium/base/cpu.cc",
         "/third_party/zucchini/chromium/base/synchronization/lock_impl_win.cc",
         "/third_party/zucchini/chromium/base/time/time_win.cc",
     ]
@@ -48,6 +49,28 @@ if CONFIG["TARGET_OS"] == "WINNT":
         "mincore",
         "shell32",
         "winmm",
+    ]
+
+if CONFIG["TARGET_KERNEL"] == "Linux":
+    SOURCES += [
+        "/third_party/zucchini/chromium/base/process/process_handle_posix.cc",
+        "/third_party/zucchini/chromium/base/strings/string_split.cc",
+        "/third_party/zucchini/chromium/base/synchronization/lock_impl_posix.cc",
+        "/third_party/zucchini/chromium/base/time/time_now_posix.cc",
+    ]
+
+if CONFIG["TARGET_OS"] == "OSX":
+    SOURCES += [
+        "/third_party/zucchini/chromium/base/mac/mach_logging.cc",
+        "/third_party/zucchini/chromium/base/time/time_mac.mm",
+    ]
+
+    CMMFLAGS += [
+        "-fobjc-arc",
+    ]
+
+    OS_LIBS += [
+        "-framework Foundation",
     ]
 
 USE_LIBS += [

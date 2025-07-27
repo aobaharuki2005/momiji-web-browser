@@ -9,6 +9,7 @@
 #include "base/logging.h"
 
 #include "base/immediate_crash.h"
+#include "base/posix/safe_strerror.h"
 #include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
@@ -160,6 +161,21 @@ Win32ErrorLogMessage::~Win32ErrorLogMessage() {
 
   stream() << ": " << SystemErrorCodeToString(err_);
 }
-#endif
+
+#elif BUILDFLAG(IS_POSIX)
+ErrnoLogMessage::ErrnoLogMessage(const char* file,
+                                 int line,
+                                 LogSeverity severity,
+                                 SystemErrorCode err)
+    : LogMessage(file, line, severity), err_(err) {}
+
+ErrnoLogMessage::~ErrnoLogMessage() {
+  // Don't let actions from this method affect the system error after returning.
+  base::ScopedClearLastError scoped_clear_last_error;
+
+  stream() << ": " << SystemErrorCodeToString(err_);
+}
+
+#endif  // BUILDFLAG(IS_WIN)
 
 }  // namespace logging
