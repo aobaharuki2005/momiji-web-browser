@@ -290,6 +290,18 @@ class ProviderQuickSuggest extends UrlbarProvider {
   }
 
   /**
+   * This is called only for dynamic result types.
+   *
+   * @param {UrlbarResult} result The result whose view will be updated.
+   * @returns {object} An object of view template.
+   */
+  getViewTemplate(result) {
+    return lazy.QuickSuggest.getFeatureByResult(result)?.getViewTemplate?.(
+      result
+    );
+  }
+
+  /**
    * This is called only for dynamic result types, when the urlbar view updates
    * the view of one of the results of the provider.  It should return an object
    * describing the view update.

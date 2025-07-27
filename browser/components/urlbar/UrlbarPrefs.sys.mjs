@@ -500,6 +500,9 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
   // Whether results will include search suggestions.
   ["suggest.searches", false],
 
+  // Whether results will include stocks suggestions.
+  ["suggest.stocks", true],
+
   // Whether results will include top sites and the view will open on focus.
   ["suggest.topsites", true],
 

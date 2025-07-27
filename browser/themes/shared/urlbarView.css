@@ -1219,6 +1219,59 @@
   }
 }
 
+/* Stocks suggestions */
+
+.urlbarView-dynamic-stocks-item {
+  display: flex;
+  align-items: center;
+  padding-inline-end: var(--space-large);
+
+  --stocks-todays-change-perc-plus-color: light-dark(var(--color-green-60), var(--color-green-20));
+  --stocks-todays-change-perc-minus-color: light-dark(var(--color-red-70), var(--color-red-40));
+
+  &:hover,
+  &[selected] {
+    --stocks-todays-change-perc-plus-color: light-dark(var(--color-green-20), var(--color-green-60));
+    --stocks-todays-change-perc-minus-color: light-dark(var(--color-red-40), var(--color-red-70));
+  }
+
+  > .urlbarView-stocks-image {
+    /* The image size for realtime suggestion is larger than others by design */
+    width: 52px;
+    height: 52px;
+    margin-block: var(--space-small);
+    margin-inline-end: var(--space-small);
+  }
+
+  > .urlbarView-stocks-description {
+    display: flex;
+    flex-direction: column;
+    text-align: start;
+    grid-row-gap: var(--space-xxsmall);
+
+    > .urlbarView-stocks-name {
+      font-weight: var(--font-weight-bold);
+    }
+
+    > .urlbarView-stocks-todays-change-perc {
+      font-weight: var(--font-weight-bold);
+      font-size: var(--urlbarView-small-font-size);
+    }
+
+    > .urlbarView-stocks-todays-change-perc-plus {
+      color: var(--stocks-todays-change-perc-plus-color);
+    }
+
+    > .urlbarView-stocks-todays-change-perc-minus {
+      color: var(--stocks-todays-change-perc-minus-color);
+    }
+
+    > .urlbarView-stocks-last-price {
+      font-size: var(--urlbarView-small-font-size);
+    }
+  }
+}
+
 /* Search one-offs */
 
 #urlbar .search-one-offs:not([hidden]) {
