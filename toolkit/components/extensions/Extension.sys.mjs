@@ -93,15 +93,6 @@ const lazy = XPCOMUtils.declareLazy({
 
   dnrEnabled: { pref: "extensions.dnr.enabled", default: true },
 
-  // All functionality is gated by the "userScripts" permission, and forgetting
-  // about its existence is enough to hide all userScripts functionality.
-  // MV3 userScripts API in development (bug 1875475), off by default.
-  // Not to be confused with MV2 and extensions.webextensions.userScripts.enabled!
-  userScriptsMV3Enabled: {
-    pref: "extensions.userScripts.mv3.enabled",
-    default: false,
-  },
-
   // This pref modifies behavior for MV2.  MV3 is enabled regardless.
   eventPagesEnabled: { pref: "extensions.eventPages.enabled", default: true },
 
@@ -344,8 +335,6 @@ function classifyPermission(perm, restrictSchemes, isPrivileged) {
   } else if (!isPrivileged && PRIVILEGED_PERMS.has(match[1])) {
     return { invalid: perm, privileged: true };
   } else if (perm.startsWith("declarativeNetRequest") && !lazy.dnrEnabled) {
-    return { invalid: perm };
-  } else if (perm === "userScripts" && !lazy.userScriptsMV3Enabled) {
     return { invalid: perm };
   }
   return { permission: perm };
@@ -2085,12 +2074,6 @@ export class ExtensionData {
       }
 
       const shouldIgnorePermission = (perm, verbose = true) => {
-        if (perm === "userScripts" && !lazy.userScriptsMV3Enabled) {
-          if (verbose) {
-            this.manifestWarning(`Unavailable extension permission: ${perm}`);
-          }
-          return true;
-        }
         if (isMV2 && PERMS_NOT_IN_MV2.has(perm)) {
           if (verbose) {
             this.manifestWarning(
