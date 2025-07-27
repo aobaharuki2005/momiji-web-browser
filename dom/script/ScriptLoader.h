@@ -460,12 +460,6 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    */
   static JS::loader::LoadedScript* GetActiveScript(JSContext* aCx);
 
-  /*
-   * Helper method for checking if a script element is an event handler.
-   * This assumes that it has both a `for` attribute and an `event` attribute.
-   */
-  static bool IsScriptEventHandler(const nsAutoString&, const nsAutoString&);
-
   Document* GetDocument() const { return mDocument; }
 
   nsIURI* GetBaseURI() const override;
