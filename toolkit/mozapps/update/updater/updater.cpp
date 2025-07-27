@@ -29,7 +29,16 @@
  *  -----------
  *  method   = "remove" | "rmdir"
  */
-#include "bspatch.h"
+
+#if defined(MOZ_BSPATCH)
+#  include "bspatch.h"
+#  include "crctable.h"
+#endif  // defined(MOZ_BSPATCH)
+
+#if !defined(MOZ_BSPATCH)
+#  error Updater enabled, but all supported patch formats are turned off.
+#endif  // !defined(MOZ_BSPATCH)
+
 #include "progressui.h"
 #include "archivereader.h"
 #include "readstrings.h"
@@ -52,6 +61,7 @@
 
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 #ifdef XP_WIN
 #  include "mozilla/Maybe.h"
 #  include "mozilla/WinHeaderOnlyUtils.h"
@@ -116,8 +126,6 @@ struct UpdateServerThreadArgs {
 #  include "nss.h"
 #  include "prerror.h"
 #endif
-
-#include "crctable.h"
 
 #ifdef XP_WIN
 #  ifdef MOZ_MAINTENANCE_SERVICE
@@ -199,22 +207,6 @@ static UpdaterInvocation getUpdaterInvocationFromArg(const NS_tchar* argument) {
     return UpdaterInvocation::Second;
   }
   return UpdaterInvocation::Unknown;
-}
-
-//-----------------------------------------------------------------------------
-
-// This BZ2_crc32Table variable lives in libbz2. We just took the
-// data structure from bz2 and created crctables.h
-
-static unsigned int crc32(const unsigned char* buf, unsigned int len) {
-  unsigned int crc = 0xffffffffL;
-
-  const unsigned char* end = buf + len;
-  for (; buf != end; ++buf)
-    crc = (crc << 8) ^ BZ2_crc32Table[(crc >> 24) ^ *buf];
-
-  crc = ~crc;
-  return crc;
 }
 
 //-----------------------------------------------------------------------------
@@ -1576,9 +1568,111 @@ void AddFile::Finish(int status) {
   }
 }
 
+class PatchFileDecoder {
+ public:
+  // This method is the only valid way to create a PatchFileDecoder object,
+  // which ensures that any such object has successfully called the Load()
+  // method. Child classes must hide their constructors and declare the parent
+  // class as a friend.
+  template <typename ChildClass>
+  static mozilla::UniquePtr<PatchFileDecoder> TryLoadAs(FILE* aPatchFile,
+                                                        int* aReturnValue) {
+    // We cannot use MakeUnique because child classes hide their constructors.
+    mozilla::UniquePtr<ChildClass> ptr{new ChildClass()};
+    fseek(aPatchFile, 0, SEEK_SET);
+    int rv = ptr->Load(aPatchFile);
+    if (rv != OK) {
+      ptr.reset();
+    }
+    if (aReturnValue) {
+      *aReturnValue = rv;
+    }
+    return ptr;
+  }
+
+  virtual ~PatchFileDecoder() {}
+
+  virtual unsigned int ComputeCrc32(const uint8_t* aBuf, size_t aBufSize) = 0;
+
+  virtual off_t SourceSize() = 0;
+  virtual off_t DestinationSize() = 0;
+  virtual unsigned int SourceCrc32() = 0;
+
+  // Applies the loaded patch to aCheckedSrcBuf, and writes the result to
+  // aDstFile. aDstFile is never deleted, cleanup is up to the caller.
+  // Assumes that the crc32 and size of aCheckedSrcBuf have been
+  // checked by the caller.
+  virtual int Apply(const uint8_t* aCheckedSrcBuf, size_t aCheckedSrcBufSize,
+                    FILE* aDstFile) = 0;
+
+ protected:
+  virtual int Load(FILE* aPatchFile) = 0;
+};
+
+#if defined(MOZ_BSPATCH)
+class BSPatchFileDecoder : public PatchFileDecoder {
+ public:
+  ~BSPatchFileDecoder() override {}
+
+  unsigned int ComputeCrc32(const uint8_t* aBuf, size_t aBufSize) override;
+
+  off_t SourceSize() override;
+
+  off_t DestinationSize() override;
+
+  unsigned int SourceCrc32() override;
+
+  int Apply(const uint8_t* aSrcBuf, size_t aSrcBufSize,
+            FILE* aDstFile) override;
+
+ protected:  // Comply with PatchFileDecoder::TryLoadAs requirements
+  BSPatchFileDecoder() = default;
+  int Load(FILE* aPatchFile) override;
+  friend class PatchFileDecoder;
+
+ private:
+  FILE* mPatchFile{};
+  MBSPatchHeader mHeader{};
+};
+
+// This BZ2_crc32Table variable lives in libbz2. We just took the
+// data structure from bz2 and created crctables.h
+unsigned int BSPatchFileDecoder::ComputeCrc32(const uint8_t* aBuf,
+                                              size_t aBufSize) {
+  unsigned int crc = 0xffffffffL;
+
+  const uint8_t* end = aBuf + aBufSize;
+  for (; aBuf != end; ++aBuf)
+    crc = (crc << 8) ^ BZ2_crc32Table[(crc >> 24) ^ *aBuf];
+
+  crc = ~crc;
+  return crc;
+}
+
+int BSPatchFileDecoder::Load(FILE* aPatchFile) {
+  mPatchFile = aPatchFile;
+  return MBS_ReadHeader(aPatchFile, &mHeader);
+}
+
+off_t BSPatchFileDecoder::SourceSize() {
+  return static_cast<off_t>(mHeader.slen);
+}
+
+off_t BSPatchFileDecoder::DestinationSize() {
+  return static_cast<off_t>(mHeader.dlen);
+}
+
+unsigned int BSPatchFileDecoder::SourceCrc32() { return mHeader.scrc32; }
+
+int BSPatchFileDecoder::Apply(const uint8_t* aCheckedSrcBuf,
+                              size_t aCheckedSrcBufSize, FILE* aDstFile) {
+  return MBS_ApplyPatch(&mHeader, mPatchFile, aCheckedSrcBuf, aDstFile);
+}
+#endif  // defined(MOZ_BSPATCH)
+
 class PatchFile : public Action {
  public:
-  PatchFile() : mPatchFile(nullptr), mPatchIndex(-1), buf(nullptr) {}
+  PatchFile() : mPatchFile(nullptr), mPatchIndex(-1), mBufSize(0) {}
 
   ~PatchFile() override;
 
@@ -1596,9 +1690,10 @@ class PatchFile : public Action {
   mozilla::UniquePtr<NS_tchar[]> mFile;
   mozilla::UniquePtr<NS_tchar[]> mFileRelPath;
   int mPatchIndex;
-  MBSPatchHeader header;
-  unsigned char* buf;
-  NS_tchar spath[MAXPATHLEN];
+  mozilla::UniquePtr<PatchFileDecoder> mPatchFileDecoder;
+  mozilla::UniquePtr<uint8_t[]> mBuf;
+  size_t mBufSize;
+  NS_tchar mPatchPath[MAXPATHLEN];
   AutoFile mPatchStream;
 };
 
@@ -1616,10 +1711,6 @@ PatchFile::~PatchFile() {
 #endif
   // Patch files are written to the <working_dir>/updating directory which is
   // removed after the update has finished so don't delete patch files here.
-
-  if (buf) {
-    free(buf);
-  }
 }
 
 int PatchFile::LoadSourceFile(FILE* ofile) {
@@ -1632,21 +1723,24 @@ int PatchFile::LoadSourceFile(FILE* ofile) {
     return READ_ERROR;
   }
 
-  if (uint32_t(os.st_size) != header.slen) {
+  off_t expectedSize = mPatchFileDecoder->SourceSize();
+  if (os.st_size != expectedSize) {
     LOG(
-        ("LoadSourceFile: destination file size %d does not match expected "
-         "size %d",
-         uint32_t(os.st_size), header.slen));
+        ("LoadSourceFile: destination file size %jd does not match expected "
+         "size %jd",
+         static_cast<intmax_t>(os.st_size),
+         static_cast<intmax_t>(expectedSize)));
     return LOADSOURCE_ERROR_WRONG_SIZE;
   }
 
-  buf = (unsigned char*)malloc(header.slen);
-  if (!buf) {
+  mBufSize = os.st_size;
+  mBuf = mozilla::MakeUniqueFallible<uint8_t[]>(mBufSize);
+  if (!mBuf) {
     return UPDATER_MEM_ERROR;
   }
 
-  size_t r = header.slen;
-  unsigned char* rb = buf;
+  size_t r = mBufSize;
+  uint8_t* rb = mBuf.get();
   while (r) {
     const size_t count = mmin(SSIZE_MAX, r);
     size_t c = fread(rb, 1, count, ofile);
@@ -1662,13 +1756,14 @@ int PatchFile::LoadSourceFile(FILE* ofile) {
 
   // Verify that the contents of the source file correspond to what we expect.
 
-  unsigned int crc = crc32(buf, header.slen);
+  unsigned int crc = mPatchFileDecoder->ComputeCrc32(mBuf.get(), mBufSize);
+  unsigned int expectedCrc = mPatchFileDecoder->SourceCrc32();
 
-  if (crc != header.scrc32) {
+  if (crc != expectedCrc) {
     LOG(
-        ("LoadSourceFile: destination file crc %d does not match expected "
-         "crc %d",
-         crc, header.scrc32));
+        ("LoadSourceFile: destination file crc %u does not match expected "
+         "crc %u",
+         crc, expectedCrc));
     return CRC_ERROR;
   }
 
@@ -1712,18 +1807,18 @@ int PatchFile::Prepare() {
   // extract the patch to a temporary file
   mPatchIndex = sPatchIndex++;
 
-  NS_tsnprintf(spath, sizeof(spath) / sizeof(spath[0]),
+  NS_tsnprintf(mPatchPath, sizeof(mPatchPath) / sizeof(mPatchPath[0]),
                NS_T("%s/updating/%d.patch"), gWorkingDirPath, mPatchIndex);
 
   // The removal of pre-existing patch files here is in case a previous update
   // crashed and left these files behind.
-  if (NS_tremove(spath) && errno != ENOENT) {
-    LOG(("failure removing pre-existing patch file: " LOG_S ", err: %d", spath,
-         errno));
+  if (NS_tremove(mPatchPath) && errno != ENOENT) {
+    LOG(("failure removing pre-existing patch file: " LOG_S ", err: %d",
+         mPatchPath, errno));
     return WRITE_ERROR;
   }
 
-  mPatchStream = NS_tfopen(spath, NS_T("wb+"));
+  mPatchStream = NS_tfopen(mPatchPath, NS_T("wb+"));
   if (!mPatchStream) {
     return WRITE_ERROR;
   }
@@ -1754,10 +1849,14 @@ int PatchFile::Prepare() {
 int PatchFile::Execute() {
   LOG(("EXECUTE PATCH " LOG_S, mFileRelPath.get()));
 
-  fseek(mPatchStream, 0, SEEK_SET);
+  int rv = UNEXPECTED_BSPATCH_ERROR;
 
-  int rv = MBS_ReadHeader(mPatchStream, &header);
-  if (rv) {
+#if defined(MOZ_BSPATCH)
+  mPatchFileDecoder =
+      PatchFileDecoder::TryLoadAs<BSPatchFileDecoder>(mPatchStream, &rv);
+#endif  // defined(MOZ_BSPATCH)
+
+  if (!mPatchFileDecoder) {
     return rv;
   }
 
@@ -1805,11 +1904,14 @@ int PatchFile::Execute() {
     }
   }
 
+  off_t dlen = mPatchFileDecoder->DestinationSize();
+
 #if defined(HAVE_POSIX_FALLOCATE)
   AutoFile ofile(ensure_open(mFile.get(), NS_T("wb+"), ss.st_mode));
-  posix_fallocate(fileno((FILE*)ofile), 0, header.dlen);
+  posix_fallocate(fileno((FILE*)ofile), 0, dlen);
 #elif defined(XP_WIN)
   bool shouldTruncate = true;
+
   // Creating the file, setting the size, and then closing the file handle
   // lessens fragmentation more than any other method tested. Other methods that
   // have been tested are:
@@ -1821,7 +1923,7 @@ int PatchFile::Execute() {
                              CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 
   if (hfile != INVALID_HANDLE_VALUE) {
-    if (SetFilePointer(hfile, header.dlen, nullptr, FILE_BEGIN) !=
+    if (SetFilePointer(hfile, dlen, nullptr, FILE_BEGIN) !=
             INVALID_SET_FILE_POINTER &&
         SetEndOfFile(hfile) != 0) {
       shouldTruncate = false;
@@ -1834,7 +1936,7 @@ int PatchFile::Execute() {
 #elif defined(XP_MACOSX)
   AutoFile ofile(ensure_open(mFile.get(), NS_T("wb+"), ss.st_mode));
   // Modified code from FileUtils.cpp
-  fstore_t store = {F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, header.dlen};
+  fstore_t store = {F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, dlen};
   // Try to get a continous chunk of disk space
   rv = fcntl(fileno((FILE*)ofile), F_PREALLOCATE, &store);
   if (rv == -1) {
@@ -1844,7 +1946,7 @@ int PatchFile::Execute() {
   }
 
   if (rv != -1) {
-    ftruncate(fileno((FILE*)ofile), header.dlen);
+    ftruncate(fileno((FILE*)ofile), dlen);
   }
 #else
   AutoFile ofile(ensure_open(mFile.get(), NS_T("wb+"), ss.st_mode));
@@ -1862,7 +1964,9 @@ int PatchFile::Execute() {
   }
 #endif
 
-  rv = MBS_ApplyPatch(&header, mPatchStream, buf, ofile);
+  // SAFETY: We have manually checked that the size and crc32 of mBuf match with
+  // the patch in PatchFile::LoadSourceFile.
+  rv = mPatchFileDecoder->Apply(mBuf.get(), mBufSize, ofile);
 
   // Go ahead and do a bit of cleanup now to minimize runtime overhead.
   // Make sure mPatchStream gets unlocked on Windows; the system will do that,
@@ -1875,9 +1979,9 @@ int PatchFile::Execute() {
   mPatchStream = nullptr;
   // Patch files are written to the <working_dir>/updating directory which is
   // removed after the update has finished so don't delete patch files here.
-  spath[0] = NS_T('\0');
-  free(buf);
-  buf = nullptr;
+  mPatchPath[0] = NS_T('\0');
+  mBuf.reset();
+  mBufSize = 0;
 
   return rv;
 }

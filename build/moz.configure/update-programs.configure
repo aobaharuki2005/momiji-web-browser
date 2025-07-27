@@ -265,6 +265,18 @@ option(
 
 set_config("MOZ_NOTIFICATION_SERVER", True, when="--enable-notification-server")
 
+# bspatch support
+# ===============
+
+option(
+    "--disable-bspatch",
+    when="--enable-updater",
+    help="Disable bspatch support",
+)
+
+set_config("MOZ_BSPATCH", True, when="--enable-bspatch")
+set_define("MOZ_BSPATCH", True, when="--enable-bspatch")
+
 # Zucchini support (in progress, Windows-only)
 # ============================================
 
