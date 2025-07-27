@@ -89,6 +89,9 @@ export class DynamicSuggestions extends SuggestProvider {
     if (result.isHiddenExposure) {
       return this.#makeExposureResult(suggestion, payload);
     }
+    if (payload.type == "realtime_opt_in") {
+      return this.#makeRealtimeOptInResult(suggestion, payload);
+    }
 
     let isSponsored = !!payload.isSponsored;
     if (
@@ -118,6 +121,11 @@ export class DynamicSuggestions extends SuggestProvider {
   }
 
   onEngagement(_queryContext, controller, details, _searchString) {
+    if (details.result.payload?.type == "realtime_opt_in") {
+      this.#onRealtimeOptInEngagement(controller, details);
+      return;
+    }
+
     switch (details.selType) {
       case "manage":
         // "manage" is handled by UrlbarInput, no need to do anything here.
@@ -156,5 +164,129 @@ export class DynamicSuggestions extends SuggestProvider {
         exposureTelemetry: lazy.UrlbarUtils.EXPOSURE_TELEMETRY.HIDDEN,
       }
     );
+  }
+
+  #makeRealtimeOptInResult(suggestion, payload) {
+    let realtimeType = suggestion.data.result.realtimeType;
+
+    if (!this.#shouldRealtimeOptInDisplay(realtimeType)) {
+      return null;
+    }
+
+    let notNowTypes = lazy.UrlbarPrefs.get(
+      "quicksuggest.realtimeOptIn.notNowTypes"
+    );
+    let splitButtonMain = notNowTypes.has(realtimeType)
+      ? {
+          command: "dismiss",
+          l10n: { id: "firefox-suggest-realtime-opt-in-dismiss" },
+        }
+      : {
+          command: "not_now",
+          l10n: { id: "firefox-suggest-realtime-opt-in-not-now" },
+        };
+
+    return Object.assign(
+      new lazy.UrlbarResult(
+        lazy.UrlbarUtils.RESULT_TYPE.TIP,
+        lazy.UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        {
+          ...payload,
+          buttons: [
+            {
+              command: "allow",
+              l10n: { id: "firefox-suggest-realtime-opt-in-allow" },
+            },
+            {
+              ...splitButtonMain,
+              menu: [
+                {
+                  name: "dismiss_all",
+                  l10n: {
+                    id: "firefox-suggest-realtime-opt-in-dismiss-all",
+                  },
+                },
+              ],
+            },
+          ],
+        }
+      ),
+      { realtimeType }
+    );
+  }
+
+  #shouldRealtimeOptInDisplay(realtimeType) {
+    if (
+      !lazy.UrlbarPrefs.get("suggest.realtimeOptIn") ||
+      lazy.UrlbarPrefs.get("quicksuggest.dataCollection.enabled")
+    ) {
+      return false;
+    }
+
+    let dismissTypes = lazy.UrlbarPrefs.get(
+      "quicksuggest.realtimeOptIn.dismissTypes"
+    );
+    if (dismissTypes.has(realtimeType)) {
+      return false;
+    }
+
+    let notNowTimeSeconds = lazy.UrlbarPrefs.get(
+      "quicksuggest.realtimeOptIn.notNowTimeSeconds"
+    );
+    if (!notNowTimeSeconds) {
+      return true;
+    }
+
+    let notNowReshowAfterPeriodDays = lazy.UrlbarPrefs.get(
+      "quicksuggest.realtimeOptIn.notNowReshowAfterPeriodDays"
+    );
+
+    let timeSecs = notNowReshowAfterPeriodDays * 24 * 60 * 60;
+    return Date.now() / 1000 - notNowTimeSeconds > timeSecs;
+  }
+
+  #onRealtimeOptInEngagement(controller, details) {
+    switch (details.selType) {
+      case "allow":
+        lazy.UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
+        break;
+      case "not_now":
+        lazy.UrlbarPrefs.set(
+          "quicksuggest.realtimeOptIn.notNowTimeSeconds",
+          Date.now() / 1000
+        );
+        let notNowTypes = lazy.UrlbarPrefs.get(
+          "quicksuggest.realtimeOptIn.notNowTypes"
+        );
+        notNowTypes.add(details.result.realtimeType);
+        lazy.UrlbarPrefs.set(
+          "quicksuggest.realtimeOptIn.notNowTypes",
+          [...notNowTypes].join(",")
+        );
+        controller.removeResult(details.result);
+        break;
+      case "dismiss":
+        let dismissTypes = lazy.UrlbarPrefs.get(
+          "quicksuggest.realtimeOptIn.dismissTypes"
+        );
+        dismissTypes.add(details.result.realtimeType);
+        lazy.UrlbarPrefs.set(
+          "quicksuggest.realtimeOptIn.dismissTypes",
+          [...dismissTypes].join(",")
+        );
+        details.result.acknowledgeDismissalL10n = {
+          id: "firefox-suggest-dismissal-acknowledgment-one",
+        };
+        controller.removeResult(details.result);
+        break;
+      case "dismiss_all": {
+        lazy.UrlbarPrefs.set("suggest.realtimeOptIn", false);
+        details.result.acknowledgeDismissalL10n = {
+          id: "firefox-suggest-dismissal-acknowledgment-all",
+        };
+        controller.removeResult(details.result);
+        break;
+      }
+    }
   }
 }

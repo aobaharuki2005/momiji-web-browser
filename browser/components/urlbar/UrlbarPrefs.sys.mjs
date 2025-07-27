@@ -329,6 +329,19 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
   // Whether Suggest will use the ML backend in addition to Rust.
   ["quicksuggest.mlEnabled", false],
 
+  // The last time (as seconds) the user selected 'Not Now' on Realtime
+  // suggestion opt-in result.
+  ["quicksuggest.realtimeOptIn.notNowTimeSeconds", 0],
+
+  // Period until reshow Realtime suggestion opt-in after selecting "Not Now".
+  ["quicksuggest.realtimeOptIn.notNowReshowAfterPeriodDays", 7],
+
+  // The type of Realtime suggestion that the user selected 'Not Now' as CSV.
+  ["quicksuggest.realtimeOptIn.notNowTypes", ""],
+
+  // The type of Realtime suggestion that the user selected 'Dismiss' as CSV.
+  ["quicksuggest.realtimeOptIn.dismissTypes", ""],
+
   // Whether Firefox Suggest will use the new Rust backend instead of the
   // original JS backend.
   ["quicksuggest.rustEnabled", true],
@@ -472,6 +485,9 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
 
   // Whether results will include sponsored quick suggest suggestions.
   ["suggest.quicksuggest.sponsored", false],
+
+  // Whether results will include Realtime suggestion opt-in result.
+  ["suggest.realtimeOptIn", true],
 
   // If `browser.urlbar.recentsearches.featureGate` is true, this controls whether
   // recentsearches are turned on.
@@ -1114,6 +1130,8 @@ class Preferences {
       case "exposureResults":
       case "keywordExposureResults":
       case "quicksuggest.dynamicSuggestionTypes":
+      case "quicksuggest.realtimeOptIn.dismissTypes":
+      case "quicksuggest.realtimeOptIn.notNowTypes":
         return new Set(
           this._readPref(pref)
             .split(",")

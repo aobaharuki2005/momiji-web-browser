@@ -2251,6 +2251,7 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
           "intervention_update_refresh",
           "intervention_update_restart",
           "intervention_update_web",
+          "realtime_opt_in",
           "searchTip_onboard",
           "searchTip_redirect",
           "test", // for tests only

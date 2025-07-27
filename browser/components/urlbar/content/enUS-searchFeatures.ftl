@@ -284,3 +284,20 @@ urlbar-search-mode-bookmarks-en = Bookmarks
 urlbar-search-mode-tabs-en = Tabs
 urlbar-search-mode-history-en = History
 urlbar-search-mode-actions-en = Actions
+
+## These strings are used for Realtime suggestions in the urlbar.
+
+# This string is shown as title when stocks suggestion are disabled.
+firefox-suggest-stocks-opt-in-title = Get stock market data, right in your search bar
+
+# This string is shown as description when stocks suggestion are disabled.
+firefox-suggest-stocks-opt-in-description = Get updates on stocks prices, game scores, local reviews and more from our partners by sharing search query data with { -vendor-short-name }. <a data-l10n-name="learn-more-link">Learn more</a>
+
+# This string is shown as button to activate online when realtime suggestion are disabled.
+firefox-suggest-realtime-opt-in-allow = Turn on updates
+
+# This string is shown in split button to dismiss activation the Realtime suggestion.
+firefox-suggest-realtime-opt-in-not-now = Not now
+firefox-suggest-realtime-opt-in-dismiss = Dismiss
+firefox-suggest-realtime-opt-in-dismiss-all =
+    .label = Stop showing me messages like this
