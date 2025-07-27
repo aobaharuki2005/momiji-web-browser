@@ -1081,6 +1081,12 @@
   <string name="alternative_app_icon_group_gradients">Διαβαθμίσεις</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other">Άλλο</string>
+  <!-- Title to show in alert when user selects an alternative app icon -->
+  <string name="restart_warning_dialog_title">Αλλαγή εικονιδίου εφαρμογής;</string>
+  <!-- Dialog button text for confirming the app restart to apply the selected icon -->
+  <string name="restart_warning_dialog_button_positive">Επανεκκίνηση τώρα</string>
+  <!-- Dialog button text for cancelling app icon change -->
+  <string name="restart_warning_dialog_button_negative">Ακύρωση</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -2721,6 +2727,8 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">Αποθήκευση και συμπλήρωση διευθύνσεων</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Περιλαμβάνει αριθμούς τηλεφώνου και διευθύνσεις email</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">Συγχρονισμός διευθύνσεων</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Προσθήκη κάρτας</string>
   <!-- Title of the "Edit card" screen -->

@@ -406,7 +406,7 @@
   -->
   <string name="browser_menu_default_banner_title">Postavi %1$s kao standardni preglednik</string>
   <!-- Label text within the set as default banner -->
-  <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">Potrebno je samo par sekundi. Promijeni bilo kada.</string>
+  <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">Traje samo par sekundi. Promijeni bilo kada.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Odbaci</string>
   <!--

@@ -258,7 +258,7 @@
   <!-- Browser menu toggle that adds a PWA of the site on the device home screen. -->
   <string name="browser_menu_add_app_to_homescreen_2" moz:removedIn="141" tools:ignore="UnusedResources">Addente app al pagina initial…</string>
   <!-- Text for notifying users that Xiaomi devices require additional permissions to add to home screen -->
-  <string name="browser_menu_add_to_homescreen_xiaomi">Le apparatos Xiaomi pote besoniar permissos extra pro adder vias breve al pagina initial. Verifica tu parametros.</string>
+  <string name="browser_menu_add_to_homescreen_xiaomi">Le apparatos Xiaomi pote exiger permissiones extra pro adder accessos directe al pagina initial. Verifica tu parametros.</string>
   <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
   <string name="resync_button_content_description">Re-synchronisar</string>
   <!-- Browser menu button that opens the find in page menu -->
@@ -939,7 +939,7 @@
   <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
   <string name="addons_permissions_allow_for_all_sites">Permitter a tote le sitos</string>
   <!-- The subtitle for the allow for all sites preference toggle -->
-  <string name="addons_permissions_allow_for_all_sites_subtitle">Si tu considera iste extension digne de fide, tu pote dar a illo permisso sur cata sito web.</string>
+  <string name="addons_permissions_allow_for_all_sites_subtitle">Si tu confide in iste extension, tu pote autorisar lo sur tote le sitos web.</string>
   <!-- The text shown when an extension does not require permissions -->
   <string name="addons_does_not_require_permissions">Iste extension non require alcun permission.</string>
   <!-- The description of data collection permissions listed in the addon's permissions screen.  %1$s is a formatted list of permissions. -->
@@ -949,9 +949,9 @@
   <!-- The description of the "none" data collection permission, when the extension doesn't collect anything according to the developer. -->
   <string name="addons_permissions_none_required_data_collection_description">Le disveloppator dice que iste extension non require collection de datos.</string>
   <!-- The title of the required permissions section from addon's permissions screen. -->
-  <string name="addons_permissions_heading_required_permissions">Permissos necessari:</string>
+  <string name="addons_permissions_heading_required_permissions">Permissiones necessari:</string>
   <!-- The title of the optional permissions section from addon's permissions screen. -->
-  <string name="addons_permissions_heading_optional_permissions">Permissos optional:</string>
+  <string name="addons_permissions_heading_optional_permissions">Permissiones optional:</string>
   <!-- The title of the required data collection permissions section from addon's permissions screen. -->
   <string name="addons_permissions_heading_required_data_collection">Collection de datos necessari:</string>
   <!-- The title of the optional data collection permissions section from addon's permissions screen. -->
@@ -1997,7 +1997,7 @@
   <!-- Toggle if desktop site is turned off -->
   <string name="browser_feature_desktop_site_off">Inactive</string>
   <!-- Category header of a preference that allows a user to alter settings related to web permissions. -->
-  <string name="preferences_category_permissions">Permissos</string>
+  <string name="preferences_category_permissions">Permissiones</string>
   <!-- Category header of a preference that allows a user to alter settings related to web content. -->
   <string name="preferences_category_content">Contento</string>
   <!-- Preference for altering the default browsing mode. When enabled, the desktop site will always be requested. -->
@@ -3395,7 +3395,7 @@
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings_2">Parametros de confidentialitate</string>
   <!-- Title text for the protection panel permissions section. -->
-  <string name="protection_panel_permissions_title">Permissos</string>
+  <string name="protection_panel_permissions_title">Permissiones</string>
   <!--
     Text for displaying the total number of trackers blocked in the trackers blocked panel.
     %d is a placeholder for the number of trackers blocked.
