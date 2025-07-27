@@ -3137,7 +3137,6 @@ pref("extensions.originControls.grantByDefault", true);
 pref("extensions.webextensions.protocol.remote", true);
 
 // Enable userScripts API by default.
-pref("extensions.webextensions.userScripts.enabled", true);
 pref("extensions.userScripts.mv3.enabled", true);
 
 // Whether or not the installed extensions should be migrated to the storage.local IndexedDB backend.
