@@ -927,6 +927,8 @@ void gfxPlatform::Init() {
     Preferences::RegisterCallbackAndCall(
         VideoDecodingFailedChangedCallback,
         "media.hardware-video-decoding.failed");
+    Preferences::RegisterCallbackAndCall(HWDRMFailedChangedCallback,
+                                         "media.eme.hwdrm.failed");
   }
 
 #if defined(XP_WIN)
@@ -2417,6 +2419,14 @@ void gfxPlatform::VideoDecodingFailedChangedCallback(const char* aPref, void*) {
   }
 }
 
+/* static */
+void gfxPlatform::HWDRMFailedChangedCallback(const char* aPref, void*) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  if (gPlatform) {
+    gPlatform->InitPlatformHardwarDRMConfig();
+  }
+}
+
 void gfxPlatform::UpdateForceSubpixelAAWherePossible() {
   bool forceSubpixelAAWherePossible =
       StaticPrefs::gfx_webrender_quality_force_subpixel_aa_where_possible();
@@ -3053,30 +3063,9 @@ void gfxPlatform::InitHardwareVideoConfig() {
   }
 
   InitPlatformHardwareVideoConfig();
+  InitPlatformHardwarDRMConfig();
 
   nsCString message;
-
-#ifdef MOZ_WMF_CDM
-  FeatureState& featureHWDRM = gfxConfig::GetFeature(Feature::WMF_HW_DRM);
-  featureHWDRM.Reset();
-  featureHWDRM.EnableByDefault();
-  if (StaticPrefs::media_wmf_media_engine_enabled() != 1 &&
-      StaticPrefs::media_wmf_media_engine_enabled() != 2) {
-    featureHWDRM.UserDisable(
-        "Force disabled by 'media.wmf.media-engine.enabled'",
-        "FEATURE_FAILURE_USER_FORCE_DISABLED"_ns);
-  } else if (StaticPrefs::media_wmf_media_engine_bypass_gfx_blocklist()) {
-    featureHWDRM.UserForceEnable(
-        "Force enabled by "
-        "'media.wmf.media-engine.bypass-gfx-blocklist'");
-  }
-  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_WMF_HW_DRM, &message,
-                           failureId)) {
-    featureHWDRM.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
-  }
-  gfxVars::SetUseWMFHWDWM(featureHWDRM.IsEnabled());
-#endif
-
   gfxVars::SetCanUseHardwareVideoDecoding(featureDec.IsEnabled());
   gfxVars::SetCanUseHardwareVideoEncoding(featureEnc.IsEnabled());
 

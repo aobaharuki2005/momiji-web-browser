@@ -239,7 +239,7 @@ class ThreeDotMenuMainRobotCompose(private val composeTestRule: ComposeTestRule)
 
     fun verifyMakeFirefoxYourDefaultBrowserPromotionBanner() {
         composeTestRule.onNodeWithText(getStringResource(R.string.browser_menu_default_banner_title, appName)).assertIsDisplayed()
-        composeTestRule.onNodeWithText(getStringResource(R.string.browser_menu_default_banner_subtitle)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(getStringResource(R.string.browser_menu_default_banner_subtitle_2)).assertIsDisplayed()
         composeTestRule.onNodeWithContentDescription(getStringResource(R.string.browser_menu_default_banner_dismiss_promotion)).assertIsDisplayed()
     }
 

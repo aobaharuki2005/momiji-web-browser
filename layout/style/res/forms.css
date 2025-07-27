@@ -228,7 +228,7 @@ select {
   overflow: clip;
   /* No text-decoration reaching inside, by default */
   display: inline-block;
-  page-break-inside: avoid;
+  break-inside: avoid;
   overflow-clip-box: padding-box !important; /* bug 992447 */
   padding-block: 1px;
 
@@ -501,6 +501,7 @@ input:is([type="color"], [type="reset"], [type="button"], [type="submit"]) {
   box-sizing: border-box;
   user-select: none;
   overflow-clip-box: padding-box;
+  break-inside: avoid;
 }
 
 /* Text-related properties for buttons: these ones are not shared with

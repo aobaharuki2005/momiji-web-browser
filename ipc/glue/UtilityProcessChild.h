@@ -90,6 +90,10 @@ class UtilityProcessChild final : public PUtilityProcessChild {
       Endpoint<PSandboxTestingChild>&& aEndpoint);
 #endif
 
+  RefPtr<UtilityMediaServiceParent> GetMediaService() const {
+    return mUtilityMediaServiceInstance;
+  }
+
  protected:
   friend class UtilityProcessImpl;
   ~UtilityProcessChild();

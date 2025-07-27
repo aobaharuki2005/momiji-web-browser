@@ -97,16 +97,6 @@
     Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature.
   -->
   <string name="erase_action_cfr_message" moz:removedIn="141" tools:ignore="UnusedResources">تازہ نجی سیشن شروع کرن لئی اتھے چھوہو۔ آپݨے تاریخ، کوکیاں — ہر چیز ہٹا دیو۔</string>
-  <!--
-    Toolbar "contextual feature recommendation" (CFR)
-
-    Text for the title displayed in the contextual feature recommendation popup promoting the navigation bar.
-  -->
-  <string name="navbar_cfr_title" moz:removedIn="140" tools:ignore="UnusedResources">نویں نیویگیشن نال ودھ تیزی نال براؤز کرو</string>
-  <!-- Text for the message displayed in the contextual feature recommendation popup promoting the navigation bar. -->
-  <string name="navbar_cfr_message_2" moz:removedIn="140" tools:ignore="UnusedResources">ویب‌سائیٹ تے وادھو براؤز کرن لئی تھاں بݨاوݨ واسطے سکرول کرن دے دوران ایس پٹی نوں پاسے کر دتا جاندا اے۔</string>
-  <!-- Text for the message displayed for the popup promoting the long press of navigation in the navigation bar. -->
-  <string name="navbar_navigation_buttons_cfr_message" moz:removedIn="140" tools:ignore="UnusedResources">ایس ٹیب دے واسطے وچلے صفحیاں چ جاݨ لئی تیر دے نشاناں نوں چھوہ کے رکھو۔</string>
   <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
   <string name="camera_permissions_needed_message">کیمرے لئی پہنچ چاہیدی اے۔ فون دیاں سیٹنگاں تے جاؤ، اجازتاں نوں چھوہو تے اجازت دیݨ دی چوݨ نوں چھوہو۔</string>
   <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -728,10 +718,6 @@
     a section where users see a list of tabs that they have visited in the past few days
   -->
   <string name="customize_toggle_recently_visited">حال دے کھولھیاں گئیاں</string>
-  <!-- Title for the customize home screen section with Pocket. -->
-  <string name="customize_toggle_pocket_2" tools:ignore="UnusedResources" moz:removedIn="140">سوچݨ لئی مجبور کرن والے لیکھ</string>
-  <!-- Summary for the customize home screen section with Pocket. %s is "Pocket". -->
-  <string name="customize_toggle_pocket_summary" tools:ignore="UnusedResources" moz:removedIn="140">%s ولوں تیار کیتے لیکھ</string>
   <!-- Title for the customize home screen section with sponsored Pocket stories. -->
   <string name="customize_toggle_pocket_sponsored">حمایت کیتیاں کہاݨیاں</string>
   <!-- Title for the opening wallpaper settings screen -->
@@ -926,8 +912,6 @@
   <string name="preference_gestures_dynamic_toolbar">ٹول‌بار لکاوݨ لئی سکرول کرو</string>
   <!-- Preference for showing the opened tabs by swiping up on the toolbar -->
   <string name="preference_gestures_swipe_toolbar_show_tabs">ٹیباں کھولھݨ لئی ٹول‌بار تے ول سرکاؤ</string>
-  <!-- Preference for using the dynamic toolbars -->
-  <string name="preference_gestures_dynamic_toolbar_2" moz:removedIn="140" tools:ignore="UnusedResources">سرناواں پٹی تے ٹول‌بار نوں لکاوݨ لیج سکرول کرو</string>
   <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
   <string name="preference_gestures_swipe_toolbar_switch_tabs_2">ٹیباں چ بدلݨ لئی سرناواں پٹی نوں پاسے ول سرکاؤ</string>
   <!--
@@ -1715,7 +1699,7 @@
   <!-- Text for the menu button to delete a search engine -->
   <string name="search_engine_delete">مٹاؤ</string>
   <!-- Text shown when a user successfully deletes a custom search engine. %s is the url of the custom search engine. -->
-  <string name="search_delete_search_engine_success_message">%1$s مٹا گیا</string>
+  <string name="search_delete_search_engine_success_message" tools:ignore="UnusedResources" moz:removedIn="142">%1$s مٹا گیا</string>
   <!-- Login overflow menu delete button -->
   <string name="login_menu_delete_button">مٹاؤ</string>
   <!-- Login overflow menu edit button -->
@@ -1734,8 +1718,6 @@
   <string name="remove_home_collection_placeholder_content_description">ہٹاؤ</string>
   <!-- Content description for privacy content close button -->
   <string name="privacy_content_close_button_content_description">بند کرو</string>
-  <!-- Clickable text for opening an external link for more information about Pocket. -->
-  <string name="pocket_stories_feature_learn_more" moz:removedIn="140" tools:ignore="UnusedResources">ہور جاݨو</string>
   <!-- Snackbar button text to navigate to telemetry settings. -->
   <string name="experiments_snackbar_button">سیٹنگاں نوں جاؤ</string>
   <!-- Translations feature -->

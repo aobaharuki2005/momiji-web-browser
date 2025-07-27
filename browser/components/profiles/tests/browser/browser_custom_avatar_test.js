@@ -821,3 +821,183 @@ add_task(async function test_edit_profile_custom_avatar_keyboard_crop() {
 
   MockFilePicker.cleanup();
 });
+
+add_task(async function test_edit_profile_custom_avatar_keyboard_crop() {
+  if (!AppConstants.MOZ_SELECTABLE_PROFILES) {
+    // `mochitest-browser` suite `add_task` does not yet support
+    // `properties.skip_if`.
+    ok(true, "Skipping because !AppConstants.MOZ_SELECTABLE_PROFILES");
+    return;
+  }
+  const profile = await setup();
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.profiles.updated-avatar-selector", true]],
+  });
+
+  const avatarWidth = 100;
+  const avatarHeight = 100;
+
+  const mockAvatarFile = await createAvatarFile(avatarWidth, avatarHeight);
+
+  const MockFilePicker = SpecialPowers.MockFilePicker;
+  MockFilePicker.init(window.browsingContext);
+  MockFilePicker.setFiles([mockAvatarFile]);
+  MockFilePicker.returnValue = MockFilePicker.returnOK;
+
+  let curProfile = await SelectableProfileService.getProfile(profile.id);
+  await curProfile.setAvatar("star");
+  Assert.ok(
+    !curProfile.hasCustomAvatar,
+    "Current profile does not have a custom avatar"
+  );
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:editprofile",
+    },
+    async browser => {
+      await SpecialPowers.spawn(browser, [], async () => {
+        let editProfileCard =
+          content.document.querySelector("edit-profile-card").wrappedJSObject;
+
+        await ContentTaskUtils.waitForCondition(
+          () => editProfileCard.initialized,
+          "Waiting for edit-profile-card to be initialized"
+        );
+
+        await editProfileCard.updateComplete;
+
+        const avatarSelector = editProfileCard.avatarSelector;
+
+        EventUtils.synthesizeMouseAtCenter(
+          editProfileCard.avatarSelectorLink,
+          {},
+          content
+        );
+
+        Assert.ok(
+          ContentTaskUtils.isVisible(avatarSelector),
+          "Should be showing the profile avatar selector"
+        );
+
+        EventUtils.synthesizeKey("Escape", {}, content);
+
+        await ContentTaskUtils.waitForCondition(
+          () => ContentTaskUtils.isHidden(avatarSelector),
+          "Waiting for avatar selector to be hidden"
+        );
+        Assert.ok(
+          ContentTaskUtils.isHidden(avatarSelector),
+          "Should be hiding the profile avatar selector"
+        );
+
+        EventUtils.synthesizeMouseAtCenter(
+          editProfileCard.avatarSelectorLink,
+          {},
+          content
+        );
+
+        await ContentTaskUtils.waitForCondition(
+          () => ContentTaskUtils.isVisible(avatarSelector),
+          "Waiting for avatar selector to be showing"
+        );
+        Assert.ok(
+          ContentTaskUtils.isVisible(avatarSelector),
+          "Should be showing the profile avatar selector"
+        );
+
+        EventUtils.synthesizeMouseAtCenter(
+          avatarSelector.customTabButton,
+          {},
+          content
+        );
+        await avatarSelector.updateComplete;
+
+        await ContentTaskUtils.waitForCondition(
+          () => ContentTaskUtils.isVisible(avatarSelector.input),
+          "Waiting for avatar selector input to be visible"
+        );
+
+        EventUtils.synthesizeKey("Escape", {}, content);
+
+        await ContentTaskUtils.waitForCondition(
+          () => ContentTaskUtils.isHidden(avatarSelector),
+          "Waiting for avatar selector to be hidden"
+        );
+        Assert.ok(
+          ContentTaskUtils.isHidden(avatarSelector),
+          "Should be hiding the profile avatar selector"
+        );
+
+        EventUtils.synthesizeMouseAtCenter(
+          editProfileCard.avatarSelectorLink,
+          {},
+          content
+        );
+
+        await ContentTaskUtils.waitForCondition(
+          () => ContentTaskUtils.isVisible(avatarSelector),
+          "Waiting for avatar selector to be showing"
+        );
+        Assert.ok(
+          ContentTaskUtils.isVisible(avatarSelector),
+          "Should be showing the profile avatar selector"
+        );
+
+        EventUtils.synthesizeMouseAtCenter(
+          avatarSelector.customTabButton,
+          {},
+          content
+        );
+        await avatarSelector.updateComplete;
+
+        await ContentTaskUtils.waitForCondition(
+          () => ContentTaskUtils.isVisible(avatarSelector.input),
+          "Waiting for avatar selector input to be visible"
+        );
+
+        const inputReceived = new Promise(resolve =>
+          avatarSelector.input.addEventListener(
+            "input",
+            event => {
+              resolve(event.target.files[0].name);
+            },
+            { once: true }
+          )
+        );
+
+        EventUtils.synthesizeMouseAtCenter(avatarSelector.input, {}, content);
+
+        await inputReceived;
+
+        await ContentTaskUtils.waitForCondition(
+          () => ContentTaskUtils.isVisible(avatarSelector.saveButton),
+          "Waiting for avatar selector save button to be visible"
+        );
+
+        await ContentTaskUtils.waitForCondition(
+          () => avatarSelector.customAvatarImage?.complete,
+          "Waiting for avatar selector image to load"
+        );
+
+        await avatarSelector.updateComplete;
+
+        EventUtils.synthesizeKey("Escape", {}, content);
+
+        await ContentTaskUtils.waitForCondition(
+          () => ContentTaskUtils.isVisible(avatarSelector.input),
+          "Waiting for avatar selector input to be visible"
+        );
+
+        Assert.ok(
+          ContentTaskUtils.isVisible(avatarSelector.input),
+          "Should still be showing the profile avatar selector after escape"
+        );
+      });
+    }
+  );
+
+  MockFilePicker.cleanup();
+});

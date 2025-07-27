@@ -1030,8 +1030,6 @@ class MOZ_STACK_CLASS WSRunScanner final {
       return mBlockInlineCheck;
     }
 
-    const Element* GetAncestorLimiter() const { return mAncestorLimiter; }
-
     nsIContent* GetStartReasonContent() const {
       return mStart.GetReasonContent();
     }
@@ -1452,7 +1450,6 @@ class MOZ_STACK_CLASS WSRunScanner final {
 
    private:
     EditorDOMPoint mScanStartPoint;
-    RefPtr<const Element> mAncestorLimiter;
     BoundaryData mStart;
     BoundaryData mEnd;
     NoBreakingSpaceData mNBSPData;

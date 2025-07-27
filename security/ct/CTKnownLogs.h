@@ -14,7 +14,7 @@
 
 #include <stddef.h>
 
-static const PRTime kCTExpirationTime = INT64_C(1759145105000000);
+static const PRTime kCTExpirationTime = INT64_C(1759404547000000);
 
 namespace mozilla::ct {
 
@@ -177,8 +177,7 @@ const CTLogInfo kCTLogList[] = {
      "\x0d\x96\x58\x44\x9d\x3b\x8a\x80\xc5\xc8\xbe\xe1\x89\x46\x6b\x48\x4c\xd6"
      "\x09",
      91},
-    {"DigiCert 'Wyvern2025h2' Log", CTLogState::Admissible,
-     CTLogFormat::RFC6962,
+    {"DigiCert 'Wyvern2025h2' Log", CTLogState::Admissible, CTLogFormat::RFC6962,
      1724900983000,  // 2024-08-29T03:09:43Z
      2,              // operated by DigiCert
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -218,8 +217,7 @@ const CTLogInfo kCTLogList[] = {
      "\x45\x31\x17\xd3\x8d\xf2\xe7\xce\x18\x11\x58\x98\x2c\x60\x6f\x58\x20\x36"
      "\x6e",
      91},
-    {"DigiCert 'Sphinx2025h2' Log", CTLogState::Admissible,
-     CTLogFormat::RFC6962,
+    {"DigiCert 'Sphinx2025h2' Log", CTLogState::Admissible, CTLogFormat::RFC6962,
      1724900983000,  // 2024-08-29T03:09:43Z
      2,              // operated by DigiCert
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
@@ -509,8 +507,7 @@ const CTLogInfo kCTLogList[] = {
      "\x9d\x7d\x05\x53\xc7\x9e\x94\xea\x9b\x57\x46\xbf\x4f\xa4\x7e\xfb\xdf\xfa"
      "\x85",
      91},
-    {"Bogus placeholder log to unbreak misbehaving CT libraries",
-     CTLogState::Retired, CTLogFormat::RFC6962,
+    {"Bogus placeholder log to unbreak misbehaving CT libraries", CTLogState::Retired, CTLogFormat::RFC6962,
      1750489200000,  // 2025-06-21T07:00:00Z
      6,              // operated by Geomys
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"

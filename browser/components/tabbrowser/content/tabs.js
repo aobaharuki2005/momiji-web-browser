@@ -2190,16 +2190,18 @@
         t.style.maxWidth = tabRect.width + "px";
       }
 
-      let rect = window.windowUtils.getBoundsWithoutFlushing(
-        isTabGroupLabel(tab) ? tab.parentElement : tab
-      );
+      // Use .tab-group-label-container or .tabbrowser-tab for size/position
+      // calculations.
+      let tabStripItemElement = isTabGroupLabel(tab) ? tab.parentElement : tab;
+      let rect =
+        window.windowUtils.getBoundsWithoutFlushing(tabStripItemElement);
       let { movingTabs } = tab._dragData;
       // Vertical tabs live under the #sidebar-main element which gets animated and has a
       // transform style property, making it the containing block for all its descendants.
       // Position:absolute elements need to account for this when updating position using
       // other measurements whose origin is the viewport or documentElement's 0,0
       let movingTabsOffsetX = window.windowUtils.getBoundsWithoutFlushing(
-        tab.offsetParent
+        tabStripItemElement.offsetParent
       ).x;
 
       let movingTabsIndex = movingTabs.findIndex(t => t._tPos == tab._tPos);

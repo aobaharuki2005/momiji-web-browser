@@ -22,6 +22,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
+import android.view.Window
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.inputmethod.InputMethodManager
@@ -181,9 +182,9 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         val args by navArgs<SearchDialogFragmentArgs>()
 
         if (context?.settings()?.isTabStripEnabled == true) {
-            setStyle(STYLE_NO_TITLE, R.style.SearchDialogStyleTabStrip)
+            setStyle(STYLE_NORMAL, R.style.SearchDialogStyleTabStrip)
         } else {
-            setStyle(STYLE_NO_TITLE, R.style.SearchDialogStyle)
+            setStyle(STYLE_NORMAL, R.style.SearchDialogStyle)
         }
 
         startForResult = registerForActivityResult { result ->
@@ -228,7 +229,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                     this@SearchDialogFragment.onBackPressed()
                 }
             }
-
+            requestWindowFeature(Window.FEATURE_NO_TITLE)
             window?.setupPersistentInsets()
         }
     }

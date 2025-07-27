@@ -122,9 +122,7 @@ WSRunScanner::TextFragmentData::TextFragmentData(
     Scan aScanMode, const EditorDOMPointType& aPoint,
     BlockInlineCheck aBlockInlineCheck,
     const Element* aAncestorLimiter /* = nullptr */)
-    : mAncestorLimiter(aAncestorLimiter),
-      mBlockInlineCheck(aBlockInlineCheck),
-      mScanMode(aScanMode) {
+    : mBlockInlineCheck(aBlockInlineCheck), mScanMode(aScanMode) {
   if (NS_WARN_IF(!aPoint.IsInContentNodeAndValidInComposedDoc()) ||
       NS_WARN_IF(!aPoint.GetContainerOrContainerParentElement())) {
     // We don't need to support composing in uncomposed tree.

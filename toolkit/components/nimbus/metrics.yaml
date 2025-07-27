@@ -30,6 +30,7 @@ nimbus_targeting_environment:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1963160
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1963183
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1971552
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1967328
     data_reviews: &targeting_context_data_reviews
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1928107
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1937207
@@ -38,6 +39,7 @@ nimbus_targeting_environment:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1963160
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1963183
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1971552
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1967328
     notification_emails: &targeting_context_notification_emails
       - beth@mozilla.com
       - project-nimbus@mozilla.com
@@ -76,6 +78,7 @@ nimbus_targeting_environment:
       - "browser.newtabpage.activity-stream.showSearch"
       - "browser.newtabpage.activity-stream.showSponsoredTopSites"
       - "browser.newtabpage.enabled"
+      - "browser.startup.page"
       - "browser.toolbars.bookmarks.visibility"
       - "browser.urlbar.quicksuggest.dataCollection.enabled"
       - "browser.urlbar.showSearchSuggestionsFirst"
@@ -182,6 +185,8 @@ nimbus_targeting_environment:
           type: boolean
         browser__newtabpage__enabled:
           type: boolean
+        browser__startup__page:
+          type: number
         browser__toolbars__bookmarks__visibility:
           type: string
         browser__urlbar__quicksuggest__dataCollection__enabled:

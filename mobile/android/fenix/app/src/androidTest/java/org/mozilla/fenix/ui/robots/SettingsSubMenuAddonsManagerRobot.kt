@@ -146,6 +146,10 @@ class SettingsSubMenuAddonsManagerRobot {
     }
 
     fun verifyAddonInstallCompletedPrompt(addonName: String, activityTestRule: HomeActivityIntentTestRule) {
+        // Assigns a more descriptive name to the addon if it is "Bitwarden", otherwise keeps the original name
+        // The name of this extenssion is being displayed differently across the app
+        var addonName = if (addonName == "Bitwarden") "Bitwarden Password Manager" else addonName
+
         for (i in 1..RETRY_COUNT) {
             Log.i(TAG, "verifyAddonInstallCompletedPrompt: Started try #$i")
             try {
@@ -187,6 +191,10 @@ class SettingsSubMenuAddonsManagerRobot {
     }
 
     fun verifyAddonIsInstalled(addonName: String) {
+        // Assigns a more descriptive name to the addon if it is "Bitwarden", otherwise keeps the original name
+        // The name of this extenssion is being displayed differently across the app
+        var addonName = if (addonName == "Bitwarden") "Bitwarden Password Manager" else addonName
+
         scrollToAddon(addonName)
         Log.i(TAG, "verifyAddonIsInstalled: Trying to verify that the $addonName add-on was installed")
         onView(
@@ -438,6 +446,10 @@ class SettingsSubMenuAddonsManagerRobot {
             addonName: String,
             interact: SettingsSubMenuAddonsManagerAddonDetailedMenuRobot.() -> Unit,
         ): SettingsSubMenuAddonsManagerAddonDetailedMenuRobot.Transition {
+            // Assigns a more descriptive name to the addon if it is "Bitwarden", otherwise keeps the original name
+            // The name of this extenssion is being displayed differently across the app
+            var addonName = if (addonName == "Bitwarden") "Bitwarden Password Manager" else addonName
+
             scrollToAddon(addonName)
             Log.i(TAG, "openDetailedMenuForAddon: Trying to verify that the $addonName add-on is visible")
             addonItem(addonName).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
