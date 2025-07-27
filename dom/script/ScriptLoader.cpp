@@ -408,6 +408,12 @@ static bool IsScriptEventHandler(ScriptKind kind, nsIContent* aScriptElement) {
     return false;
   }
 
+  return ScriptLoader::IsScriptEventHandler(forAttr, eventAttr);
+}
+
+/* static */
+bool ScriptLoader::IsScriptEventHandler(const nsAutoString& forAttr,
+                                        const nsAutoString& eventAttr) {
   const nsAString& for_str =
       nsContentUtils::TrimWhitespace<nsCRT::IsAsciiSpace>(forAttr);
   if (!for_str.LowerCaseEqualsLiteral("window")) {
@@ -1236,7 +1242,7 @@ bool ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement) {
   }
 
   // Step 13. Check that the script is not an eventhandler
-  if (IsScriptEventHandler(scriptKind, scriptContent)) {
+  if (::IsScriptEventHandler(scriptKind, scriptContent)) {
     return false;
   }
 
