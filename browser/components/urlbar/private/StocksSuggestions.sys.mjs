@@ -19,8 +19,8 @@ export class StocksSuggestions extends SuggestProvider {
     return ["suggest.stocks", "suggest.quicksuggest.sponsored"];
   }
 
-  get primaryUserControlledPreference() {
-    return "suggest.stocks";
+  get primaryUserControlledPreferences() {
+    return ["suggest.stocks"];
   }
 
   get merinoProvider() {

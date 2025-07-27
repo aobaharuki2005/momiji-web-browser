@@ -38,8 +38,8 @@ export class AddonSuggestions extends SuggestProvider {
     ];
   }
 
-  get primaryUserControlledPreference() {
-    return "suggest.addons";
+  get primaryUserControlledPreferences() {
+    return ["suggest.addons"];
   }
 
   get merinoProvider() {

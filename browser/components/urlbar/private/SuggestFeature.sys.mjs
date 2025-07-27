@@ -43,8 +43,8 @@ export class SuggestFeature {
   }
 
   /**
-   * @returns {string | null}
-   *   If there is a feature-specific pref that is controlled by the user and
+   * @returns {Array}
+   *   If there are feature-specific prefs that are controlled by the user and
    *   toggles the feature on and off, the subclass should override this getter
    *   and return its name. It should also be included in `enablingPreferences`.
    *   The name should be recognized by `UrlbarPrefs`, i.e., it should be
@@ -62,8 +62,8 @@ export class SuggestFeature {
    *   `suggest.quicksuggest.sponsored` or `suggest.quicksuggest.nonsponsored`.
    *   If the feature has no such pref, this getter should return null.
    */
-  get primaryUserControlledPreference() {
-    return null;
+  get primaryUserControlledPreferences() {
+    return [];
   }
 
   /**

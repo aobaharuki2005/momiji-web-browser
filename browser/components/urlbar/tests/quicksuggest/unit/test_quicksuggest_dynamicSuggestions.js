@@ -352,6 +352,28 @@ add_task(async function dismissal() {
   );
 });
 
+// Tests whether the prefs DynamicSuggestion handles clears.
+add_task(async function clearDismissedSuggestions() {
+  let feature = QuickSuggest.getFeature("DynamicSuggestions");
+  let sandbox = sinon.createSandbox();
+  sinon
+    .stub(feature, "primaryUserControlledPreferences")
+    .get(() => ["suggest.realtimeOptIn", "autoFill", "closeOtherPanelsOnOpen"]);
+
+  UrlbarPrefs.set("suggest.realtimeOptIn", false);
+  UrlbarPrefs.set("autoFill", false);
+  UrlbarPrefs.set("closeOtherPanelsOnOpen", false);
+
+  Assert.ok(await QuickSuggest.canClearDismissedSuggestions());
+  await QuickSuggest.clearDismissedSuggestions();
+
+  Assert.ok(UrlbarPrefs.get("suggest.realtimeOptIn"));
+  Assert.ok(UrlbarPrefs.get("autoFill"));
+  Assert.ok(UrlbarPrefs.get("closeOtherPanelsOnOpen"));
+
+  sandbox.restore();
+});
+
 // Tests some suggestions with bad data that desktop ignores.
 add_task(async function badSuggestions() {
   await QuickSuggestTestUtils.setRemoteSettingsRecords([

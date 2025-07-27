@@ -29,6 +29,10 @@ export class DynamicSuggestions extends SuggestProvider {
     return !!this.dynamicSuggestionTypes.size;
   }
 
+  get primaryUserControlledPreferences() {
+    return ["suggest.realtimeOptIn"];
+  }
+
   get rustSuggestionType() {
     return "Dynamic";
   }
