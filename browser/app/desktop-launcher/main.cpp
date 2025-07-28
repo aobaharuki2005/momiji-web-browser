@@ -46,8 +46,8 @@ int wmain() {
   // If the installer successfully downloaded, try to launch it
   if (download_completed) {
     HINSTANCE hinst =
-        ShellExecuteW(nullptr, nullptr, tempfileName.value().c_str(), nullptr,
-                      nullptr, SW_SHOWNORMAL);
+        ShellExecuteW(nullptr, nullptr, tempfileName.value().c_str(),
+                      L"/Prompt", nullptr, SW_SHOWNORMAL);
     if ((INT_PTR)hinst > 32) {
       // ShellExecuteW returns a value > 32 on success.
       std::wcout << L"Firefox installer launched" << std::endl;
