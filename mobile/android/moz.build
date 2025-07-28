@@ -94,6 +94,10 @@ TEST_HARNESS_FILES.testing.mochitest.tests.junit += [
     "geckoview/src/androidTest/assets/www/iframe_http_only.html",
     "geckoview/src/androidTest/assets/www/simple_redirect.sjs",
     "geckoview/src/androidTest/assets/www/update_manifest.json",
+    "geckoview/src/androidTest/assets/www/worker/open_window.html",
+    "geckoview/src/androidTest/assets/www/worker/open_window.js",
+    "geckoview/src/androidTest/assets/www/worker/open_window_target.html",
+    "geckoview/src/androidTest/assets/www/worker/service-worker.js",
 ]
 
 SPHINX_TREES["/mobile/android"] = "docs"

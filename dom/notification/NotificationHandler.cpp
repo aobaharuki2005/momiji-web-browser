@@ -158,7 +158,9 @@ NS_IMETHODIMP NotificationHandler::RespondOnClick(
         return nullptr;
       }));
 
-  result.forget(aResult);
+  if (aResult) {
+    result.forget(aResult);
+  }
 
   return NS_OK;
 }

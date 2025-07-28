@@ -2540,6 +2540,10 @@ public class GeckoSessionTestRule implements TestRule {
         });
   }
 
+  public void teardownAlertsService(final @NonNull GeckoSession session) {
+    webExtensionApiCall(session, "TeardownAlertsService", null);
+  }
+
   private Object waitForMessage(final WebExtension.Port port, final String id) {
     mPendingResponses.add(port, id);
     UiThreadUtils.waitForCondition(() -> mPendingMessages.containsKey(id), mTimeoutMillis);
