@@ -505,6 +505,7 @@ gPlayTests.push(
 
 if (
   AppConstants.isPlatformAndVersionAtLeast("win", "11") ||
+  AppConstants.isPlatformAndVersionAtLeast("maxosox", "10.15") ||
   // Android 9
   AppConstants.isPlatformAndVersionAtLeast("android", "28")
 ) {
