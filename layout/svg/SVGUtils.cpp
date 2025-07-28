@@ -381,10 +381,13 @@ void SVGUtils::NotifyChildrenOfSVGChange(nsIFrame* aFrame, uint32_t aFlags) {
 // ************************************************************
 
 float SVGUtils::ComputeOpacity(const nsIFrame* aFrame, bool aHandleOpacity) {
+  if (!aHandleOpacity) {
+    return 1.0f;
+  }
+
   const auto* styleEffects = aFrame->StyleEffects();
 
-  if (!styleEffects->IsOpaque() &&
-      (SVGUtils::CanOptimizeOpacity(aFrame) || !aHandleOpacity)) {
+  if (!styleEffects->IsOpaque() && SVGUtils::CanOptimizeOpacity(aFrame)) {
     return 1.0f;
   }
 
