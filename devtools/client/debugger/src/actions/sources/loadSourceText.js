@@ -6,7 +6,6 @@ import { PROMISE } from "../utils/middleware/promise";
 import {
   getSourceTextContent,
   getSettledSourceTextContent,
-  getGeneratedSource,
   getSourcesEpoch,
   getBreakpointsForSource,
   getSourceActorsForSource,
@@ -47,7 +46,7 @@ async function loadOriginalSource(
   { getState, sourceMapLoader, prettyPrintWorker }
 ) {
   if (source.isPrettyPrinted) {
-    const generatedSource = getGeneratedSource(getState(), source);
+    const { generatedSource } = source;
     if (!generatedSource) {
       throw new Error("Unable to find minified original.");
     }
