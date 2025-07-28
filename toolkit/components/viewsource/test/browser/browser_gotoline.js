@@ -19,10 +19,12 @@ add_setup(async function () {
 
 add_task(async function () {
   // First test with text with the text/html mimetype.
+  info("Testing text/html");
   let tab = await openDocument("data:text/html," + encodeURIComponent(CONTENT));
   await checkViewSource(tab);
   gBrowser.removeTab(tab);
 
+  info("Testing text/plain");
   tab = await openDocument("data:text/plain," + encodeURIComponent(CONTENT));
   await checkViewSource(tab);
   gBrowser.removeTab(tab);
