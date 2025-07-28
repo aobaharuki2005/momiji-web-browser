@@ -2419,6 +2419,14 @@
   args:
     obj: ObjId
 
+- name: LoadArrayBufferViewLength
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    obj: ObjId
+    result: IntPtrId
+
 - name: LinearizeForCharAccess
   shared: true
   transpile: true

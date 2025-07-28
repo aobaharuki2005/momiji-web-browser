@@ -4351,6 +4351,16 @@ bool CacheIRCompiler::emitLoadArrayBufferViewLengthDoubleResult(
   return true;
 }
 
+bool CacheIRCompiler::emitLoadArrayBufferViewLength(ObjOperandId objId,
+                                                    IntPtrOperandId resultId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register obj = allocator.useRegister(masm, objId);
+  Register result = allocator.defineRegister(masm, resultId);
+
+  masm.loadArrayBufferViewLengthIntPtr(obj, result);
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadBoundFunctionNumArgs(ObjOperandId objId,
                                                    Int32OperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
