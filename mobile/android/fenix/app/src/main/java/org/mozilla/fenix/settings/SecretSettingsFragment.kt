@@ -178,6 +178,16 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
+        requirePreference<SwitchPreference>(R.string.pref_key_use_new_crash_reporter).apply {
+            isVisible = true
+            isChecked = context.settings().useNewCrashReporterDialog
+            onPreferenceChangeListener =
+                Preference.OnPreferenceChangeListener { _, newValue ->
+                    context.settings().useNewCrashReporterDialog = newValue as Boolean
+                    true
+                }
+        }
+
         // for performance reasons, this is only available in Nightly or Debug builds
         requirePreference<EditTextPreference>(R.string.pref_key_custom_glean_server_url).apply {
             isVisible = Config.channel.isNightlyOrDebug && BuildConfig.GLEAN_CUSTOM_URL.isNullOrEmpty()

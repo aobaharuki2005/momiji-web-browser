@@ -91,6 +91,8 @@
     <string name="preferences_crash_pull_never_show_again" translatable="false">Never show Crash Pull</string>
     <!-- Label for enabling the Debug Drawer -->
     <string name="preferences_debug_settings_debug_drawer" translatable="false">Enable Debug Drawer</string>
+    <!-- Label for enabling the Crash Dialog Preview -->
+    <string name="preferences_debug_crash_dialog_preview" translatable="false">Enable New Crash Dialog</string>
     <!-- Label for enabling the microsurvey feature -->
     <string name="preferences_debug_settings_microsurvey_feature" translatable="false">Enable Microsurvey Feature</string>
     <!-- Label for enabling Unified Trust Panel -->
