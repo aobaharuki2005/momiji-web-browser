@@ -29,6 +29,21 @@ struct DownloadContext {
   ErrCode asyncStatus;
 };
 
+std::optional<std::wstring> get_architecture() {
+  SYSTEM_INFO sysinfo;
+  GetSystemInfo(&sysinfo);
+  switch (sysinfo.wProcessorArchitecture) {
+    case PROCESSOR_ARCHITECTURE_AMD64:
+      return L"win64";
+    case PROCESSOR_ARCHITECTURE_INTEL:
+      return L"win";
+    case PROCESSOR_ARCHITECTURE_ARM64:
+      return L"win64-aarch64";
+    default:
+      return std::nullopt;
+  }
+}
+
 /**
  * Generate the path and query parameters needed for the request
  * to download the Firefox stub installer. The object name
@@ -42,9 +57,38 @@ std::optional<std::wstring> get_object_name() {
   if (ct == 0) {
     return std::nullopt;
   }
-  std::wstring objectName(L"/?product=firefox-stub&os=win&lang=");
-  objectName += locale_name;
-  return objectName;
+  std::wstring lang = locale_name;
+  std::optional<std::wstring> arch = get_architecture();
+  if (!arch.has_value()) {
+    return std::nullopt;
+  }
+
+#if defined(MOZ_BRANDING_IS_OFFICIAL)
+  // Common case: download stub installer for release. Note that ESR releases
+  // will (eventually) also go this route, and the stub installer is responsible
+  // for installing the supported release for the new machine.
+  std::wstring product = L"firefox-stub";
+#elif defined(MOZ_BRANDING_IS_NIGHTLY)
+  // Nightly build: download the latest Firefox Nightly installer
+  std::wstring product = L"firefox-nightly-latest-ssl";
+#elif defined(MOZ_BRANDING_IS_BETA)
+  // Beta edition build: download the latest Firefox Beta installer
+  std::wstring product = L"firefox-beta-latest-ssl";
+#elif defined(MOZ_BRANDING_IS_DEVEDITION)
+  // Dev edition build: download the latest Firefox Devevloper Edition installer
+  std::wstring product = L"firefox-devedition-latest-ssl";
+#elif defined(MOZ_BRANDING_IS_UNOFFICIAL)
+  // For unofficial/local builds, download the nightly version. The advantage of
+  // this, over the release version, is that it uses the full installer, which
+  // gives the user the chance to cancel installation.
+  std::wstring product = L"firefox-nightly-latest-ssl";
+#else
+  // Unexpected case. Fail the build here so we can figure out the missing case.
+  static_assert(false);
+#endif
+
+  return L"https://download.mozilla.org/?os=" + arch.value() + L"&lang=" +
+         lang + L"&product=" + product;
 }
 
 /**
@@ -64,10 +108,11 @@ static void exitCallback(DownloadContext* context, ErrCode exitStatus) {
  * Async event handler for the WinHttp request, satisfying type
  * WINHTTP_STATUS_CALLBACK
  */
-static void AsyncHttpStatusCallback(HINTERNET hInternet, DWORD_PTR dwContext,
-                                    DWORD dwInternetStatus,
-                                    void* lpvStatusInformation,
-                                    DWORD dwStatusInformationLength) {
+static void CALLBACK AsyncHttpStatusCallback(HINTERNET hInternet,
+                                             DWORD_PTR dwContext,
+                                             DWORD dwInternetStatus,
+                                             void* lpvStatusInformation,
+                                             DWORD dwStatusInformationLength) {
   DownloadContext* context = (DownloadContext*)dwContext;
   DWORD dwCount = 0;
   DWORD dwResponseStatus;
@@ -197,8 +242,9 @@ ErrCode download_file(DataSink* dataSink, std::wstring server_name,
   if (!context.hrequest) {
     return ErrCode::ERR_OPEN_REQ;
   }
+  WINHTTP_STATUS_CALLBACK statusCallback = AsyncHttpStatusCallback;
   // Register the async callback to be used in handling the request
-  if (WinHttpSetStatusCallback(context.hrequest, AsyncHttpStatusCallback,
+  if (WinHttpSetStatusCallback(context.hrequest, statusCallback,
                                WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS,
                                NULL) == WINHTTP_INVALID_STATUS_CALLBACK) {
     return ErrCode::ERR_SET_CALLBACK;
