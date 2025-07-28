@@ -1370,6 +1370,8 @@ void PeerConnectionImpl::NotifyDataChannel(
       aProtocol, aNegotiated, mWindow, getter_AddRefs(domchannel));
   NS_ENSURE_SUCCESS_VOID(rv);
 
+  domchannel->SetReadyState(RTCDataChannelState::Open);
+
   JSErrorResult jrv;
   mPCObserver->NotifyDataChannel(*domchannel, jrv);
 }
@@ -4177,9 +4179,7 @@ void PeerConnectionImpl::UpdateRTCDtlsTransports() {
             return;
           }
 
-          // Why on earth does the spec use a floating point for this?
-          double maxMessageSize =
-              static_cast<double>(mDataConnection->GetMaxMessageSize());
+          double maxMessageSize = mDataConnection->GetMaxMessageSize();
           Nullable<uint16_t> maxChannels;
 
           if (!oldSctp) {

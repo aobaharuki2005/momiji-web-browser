@@ -571,9 +571,6 @@ void DataChannelConnectionUsrsctp::OnTransportReady() {
       return;
     }
   }
-  // Note: currently this doesn't actually notify the application
-  Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
-      DataChannelOnMessageAvailable::EventType::OnConnection, this)));
 }
 
 void DataChannelConnectionUsrsctp::OnSctpPacketReceived(
@@ -900,7 +897,7 @@ void DataChannelConnectionUsrsctp::HandleDCEPMessageChunk(const void* buffer,
   }
 
   if (!ReassembleMessageChunk(*mRecvBuffer, buffer, length, ppid, stream)) {
-    Stop();
+    CloseAll_s();
     return;
   }
 
@@ -961,8 +958,6 @@ void DataChannelConnectionUsrsctp::HandleAssociationChangeEvent(
             mNegotiatedIdLimit,
             std::max(sac->sac_outbound_streams, sac->sac_inbound_streams));
 
-        Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
-            DataChannelOnMessageAvailable::EventType::OnConnection, this)));
         DC_DEBUG(("DTLS connect() succeeded!  Entering connected mode"));
 
         // Open any streams pending...
@@ -976,16 +971,15 @@ void DataChannelConnectionUsrsctp::HandleAssociationChangeEvent(
       break;
     case SCTP_COMM_LOST:
       DC_DEBUG(("Association change: SCTP_COMM_LOST"));
-      // This association is toast, so also close all the channels -- from
-      // mainthread!
-      Stop();
+      // This association is toast, so also close all the channels
+      CloseAll_s();
       break;
     case SCTP_RESTART:
       DC_DEBUG(("Association change: SCTP_RESTART"));
       break;
     case SCTP_SHUTDOWN_COMP:
       DC_DEBUG(("Association change: SCTP_SHUTDOWN_COMP"));
-      Stop();
+      CloseAll_s();
       break;
     case SCTP_CANT_STR_ASSOC:
       DC_DEBUG(("Association change: SCTP_CANT_STR_ASSOC"));

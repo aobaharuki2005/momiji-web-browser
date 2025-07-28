@@ -295,7 +295,7 @@ void DataChannelConnectionDcSctp::OnAborted(ErrorKind aError,
   MOZ_ASSERT(mSTS->IsOnCurrentThread());
   DC_ERROR(("%s: %p %d %s", __func__, this, static_cast<int>(aError),
             std::string(aMessage).c_str()));
-  Stop();
+  CloseAll_s();
 }
 
 void DataChannelConnectionDcSctp::OnConnected() {
@@ -306,8 +306,7 @@ void DataChannelConnectionDcSctp::OnConnected() {
   if (state == DataChannelConnectionState::Connecting) {
     SetState(DataChannelConnectionState::Open);
 
-    Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
-        DataChannelOnMessageAvailable::EventType::OnConnection, this)));
+    OnConnected();
     DC_DEBUG(("%s: %p DTLS connect() succeeded!  Entering connected mode",
               __func__, this));
 
@@ -328,7 +327,7 @@ void DataChannelConnectionDcSctp::OnConnected() {
 void DataChannelConnectionDcSctp::OnClosed() {
   MOZ_ASSERT(mSTS->IsOnCurrentThread());
   DC_DEBUG(("%s: %p", __func__, this));
-  Stop();
+  CloseAll_s();
 }
 
 void DataChannelConnectionDcSctp::OnConnectionRestarted() {
