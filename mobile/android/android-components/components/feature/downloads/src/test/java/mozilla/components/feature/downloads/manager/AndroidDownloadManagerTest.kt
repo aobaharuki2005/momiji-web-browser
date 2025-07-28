@@ -127,7 +127,7 @@ class AndroidDownloadManagerTest {
     }
 
     @Test
-    fun `WHEN download is completed THEN onDownloadStopped must be called`() {
+    fun `sendBroadcast with valid downloadID must call onDownloadStopped after download`() {
         var downloadCompleted = false
         var downloadStatus: DownloadState.Status? = null
         val downloadWithFileName = download.copy(fileName = "5MB.zip")
