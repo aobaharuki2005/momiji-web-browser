@@ -82,7 +82,7 @@ add_task(async function () {
   );
   let state = dbg.store.getState();
 
-  ok(!!Object.keys(state.ast.mutableInScopeLines).length, "Some scopes exists");
+  Assert.greater(state.ast.mutableInScopeLines.size, 0, "Some scopes exists");
   Assert.greater(
     state.sourceActors.mutableSourceActors.size,
     0,
