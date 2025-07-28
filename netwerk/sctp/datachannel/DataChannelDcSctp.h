@@ -41,7 +41,7 @@ class DataChannelConnectionDcSctp : public DataChannelConnection,
   // Note that it's NOT ALLOWED to call into this library from within this
   // callback.
   SendPacketStatus SendPacketWithStatus(
-      rtc::ArrayView<const uint8_t> aData) override;
+      webrtc::ArrayView<const uint8_t> aData) override;
 
   // Called when the library wants to create a Timeout. The callback must return
   // an object that implements that interface.
@@ -111,21 +111,21 @@ class DataChannelConnectionDcSctp : public DataChannelConnection,
   // Indicates that a stream reset request has failed.
   //
   // It is allowed to call into this library from within this callback.
-  void OnStreamsResetFailed(rtc::ArrayView<const StreamID> aOutgoingStreams,
+  void OnStreamsResetFailed(webrtc::ArrayView<const StreamID> aOutgoingStreams,
                             absl::string_view aReason) override;
 
   // Indicates that a stream reset request has been performed.
   //
   // It is allowed to call into this library from within this callback.
   void OnStreamsResetPerformed(
-      rtc::ArrayView<const StreamID> aOutgoingStreams) override;
+      webrtc::ArrayView<const StreamID> aOutgoingStreams) override;
 
   // When a peer has reset some of its outgoing streams, this will be called. An
   // empty list indicates that all streams have been reset.
   //
   // It is allowed to call into this library from within this callback.
   void OnIncomingStreamsReset(
-      rtc::ArrayView<const StreamID> aIncomingStreams) override;
+      webrtc::ArrayView<const StreamID> aIncomingStreams) override;
 
   // Will be called when the amount of data buffered to be sent falls to or
   // below the threshold set when calling `SetBufferedAmountLowThreshold`.

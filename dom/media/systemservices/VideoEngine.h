@@ -76,15 +76,15 @@ class VideoEngine {
   class CaptureEntry {
    public:
     CaptureEntry(int32_t aCapnum,
-                 rtc::scoped_refptr<webrtc::VideoCaptureModule> aCapture,
+                 webrtc::scoped_refptr<webrtc::VideoCaptureModule> aCapture,
                  webrtc::DesktopCaptureImpl* aDesktopImpl);
     int32_t Capnum() const;
-    rtc::scoped_refptr<webrtc::VideoCaptureModule> VideoCapture();
+    webrtc::scoped_refptr<webrtc::VideoCaptureModule> VideoCapture();
     mozilla::MediaEventSource<void>* CaptureEndedEvent();
 
    private:
     int32_t mCapnum;
-    rtc::scoped_refptr<webrtc::VideoCaptureModule> mVideoCaptureModule;
+    webrtc::scoped_refptr<webrtc::VideoCaptureModule> mVideoCaptureModule;
     webrtc::DesktopCaptureImpl* mDesktopImpl = nullptr;
     friend class VideoEngine;
   };

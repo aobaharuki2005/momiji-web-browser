@@ -111,7 +111,7 @@ class DummyAudioProcessing : public AudioProcessing {
     return kNoError;
   }
   bool GetLinearAecOutput(
-      rtc::ArrayView<std::array<float, 160>>) const override {
+      webrtc::ArrayView<std::array<float, 160>>) const override {
     MOZ_CRASH("Unexpected call");
     return false;
   }
@@ -489,11 +489,12 @@ void PeerConnectionCtx::AddPeerConnection(const std::string& aKey,
              "PeerConnection with this key should not already exist");
   if (mPeerConnections.empty()) {
     AudioState::Config audioStateConfig;
-    audioStateConfig.audio_mixer = new rtc::RefCountedObject<DummyAudioMixer>();
+    audioStateConfig.audio_mixer =
+        new webrtc::RefCountedObject<DummyAudioMixer>();
     audioStateConfig.audio_processing =
-        new rtc::RefCountedObject<DummyAudioProcessing>();
+        new webrtc::RefCountedObject<DummyAudioProcessing>();
     audioStateConfig.audio_device_module =
-        new rtc::RefCountedObject<FakeAudioDeviceModule>();
+        new webrtc::RefCountedObject<FakeAudioDeviceModule>();
 
     constexpr bool supportTailDispatch = true;
     // This task queue is passed into libwebrtc by means of

@@ -567,7 +567,7 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
   dst_height = std::max(2, dst_height);
 
   std::function<void()> callback_unused = []() {};
-  rtc::scoped_refptr<webrtc::I420BufferInterface> buffer =
+  webrtc::scoped_refptr<webrtc::I420BufferInterface> buffer =
       webrtc::WrapI420Buffer(
           aProps.width(), aProps.height(), aBuffer, aProps.yStride(),
           aBuffer + aProps.yAllocatedSize(), aProps.uStride(),
@@ -580,7 +580,7 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
                                             *mFrameDeliveringTrackingId,
                                             dst_width, dst_height);
     // Destination resolution is smaller than source buffer. We'll rescale.
-    rtc::scoped_refptr<webrtc::I420Buffer> scaledBuffer =
+    webrtc::scoped_refptr<webrtc::I420Buffer> scaledBuffer =
         mRescalingBufferPool.CreateI420Buffer(dst_width, dst_height);
     if (!scaledBuffer) {
       MOZ_ASSERT_UNREACHABLE(

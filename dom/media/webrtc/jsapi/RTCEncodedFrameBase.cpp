@@ -48,7 +48,7 @@ void RTCEncodedFrameBase::SetData(const ArrayBuffer& aData) {
   if (mFrame) {
     aData.ProcessData([&](const Span<uint8_t>& aData, JS::AutoCheckCannotGC&&) {
       mFrame->SetData(
-          rtc::ArrayView<const uint8_t>(aData.Elements(), aData.Length()));
+          webrtc::ArrayView<const uint8_t>(aData.Elements(), aData.Length()));
     });
   }
 }

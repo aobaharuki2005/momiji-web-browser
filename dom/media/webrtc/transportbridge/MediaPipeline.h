@@ -248,7 +248,7 @@ class MediaPipeline : public sigslot::has_slots<> {
 
   MediaEventProducerExc<webrtc::RtpPacketReceived, webrtc::RTPHeader>
       mRtpReceiveEvent;
-  MediaEventProducerExc<rtc::CopyOnWriteBuffer> mRtcpReceiveEvent;
+  MediaEventProducerExc<webrtc::CopyOnWriteBuffer> mRtcpReceiveEvent;
 
   MediaEventListener mRtpSendEventListener;
   MediaEventListener mSenderRtcpSendEventListener;
