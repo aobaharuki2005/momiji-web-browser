@@ -246,6 +246,7 @@ class NativeLayerWayland : public NativeLayer {
       const widget::WaylandSurfaceLock& aProofOfLock);
   virtual bool CommitFrontBufferToScreenLocked(
       const widget::WaylandSurfaceLock& aProofOfLock) = 0;
+  virtual bool IsFrontBufferChanged() = 0;
 
  protected:
   ~NativeLayerWayland();
@@ -267,6 +268,8 @@ class NativeLayerWayland : public NativeLayer {
   RefPtr<NativeLayerRootWayland> mRootLayer;
 
   RefPtr<widget::WaylandSurface> mSurface;
+
+  RefPtr<widget::WaylandBuffer> mFrontBuffer;
 
   const bool mIsOpaque = false;
 
@@ -317,6 +320,7 @@ class NativeLayerWaylandRender final : public NativeLayerWayland {
                                          bool aNeedsDepth) override;
   void NotifySurfaceReady() override;
   void AttachExternalImage(wr::RenderTextureHost* aExternalImage) override;
+  bool IsFrontBufferChanged() override;
 
   NativeLayerWaylandRender(NativeLayerRootWayland* aRootLayer,
                            const gfx::IntSize& aSize, bool aIsOpaque,
@@ -334,7 +338,6 @@ class NativeLayerWaylandRender final : public NativeLayerWayland {
 
   const RefPtr<SurfacePoolHandleWayland> mSurfacePoolHandle;
   RefPtr<widget::WaylandBuffer> mInProgressBuffer;
-  RefPtr<widget::WaylandBuffer> mFrontBuffer;
   gfx::IntRegion mDirtyRegion;
 };
 
@@ -352,6 +355,7 @@ class NativeLayerWaylandExternal final : public NativeLayerWayland {
                                          bool aNeedsDepth) override;
   void NotifySurfaceReady() override {};
   void AttachExternalImage(wr::RenderTextureHost* aExternalImage) override;
+  bool IsFrontBufferChanged() override;
 
   NativeLayerWaylandExternal(NativeLayerRootWayland* aRootLayer,
                              bool aIsOpaque);
@@ -366,7 +370,6 @@ class NativeLayerWaylandExternal final : public NativeLayerWayland {
       const widget::WaylandSurfaceLock& aProofOfLock) override;
 
   RefPtr<wr::RenderDMABUFTextureHost> mTextureHost;
-  RefPtr<widget::WaylandBuffer> mFrontBuffer;
 };
 
 }  // namespace mozilla::layers

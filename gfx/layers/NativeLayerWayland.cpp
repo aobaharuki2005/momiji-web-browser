@@ -776,9 +776,38 @@ void NativeLayerWayland::UpdateLayerPlacementLocked(
 void NativeLayerWayland::RenderLayer(int aScale) {
   WaylandSurfaceLock lock(mSurface);
 
+  LOG("NativeLayerWayland::RenderLayer() quit");
+
   SetScalelocked(lock, aScale);
   UpdateLayerPlacementLocked(lock);
+
+  mState.mRendered = false;
+
+  // Don't operate over hidden layers
+  if (!mState.mIsVisible) {
+    LOG("NativeLayerWayland::RenderLayer() quit, not visible");
+    return;
+  }
+
+  // Return if front buffer didn't changed (or changed area is empty)
+  // and there isn't any visibility change.
+  if (!IsFrontBufferChanged() && !mState.mMutatedVisibility) {
+    LOG("NativeLayerWayland::RenderLayer() quit "
+        "IsFrontBufferChanged [%d] "
+        "mState.mMutatedVisibility [%d]",
+        IsFrontBufferChanged(), mState.mMutatedVisibility);
+    return;
+  }
+
+  if (!mFrontBuffer) {
+    LOG("NativeLayerWayland::RenderLayer() - missing front buffer!");
+    return;
+  }
+
   mState.mRendered = CommitFrontBufferToScreenLocked(lock);
+
+  mState.mMutatedFrontBuffer = false;
+  mState.mMutatedVisibility = false;
 
   if (mState.mIsVisible) {
     MOZ_DIAGNOSTIC_ASSERT(mSurface->HasBufferAttached());
@@ -921,6 +950,10 @@ void NativeLayerWaylandRender::AttachExternalImage(
       "NativeLayerWaylandRender::AttachExternalImage() not implemented.");
 }
 
+bool NativeLayerWaylandRender::IsFrontBufferChanged() {
+  return mState.mMutatedFrontBuffer && !mDirtyRegion.IsEmpty();
+}
+
 RefPtr<DrawTarget> NativeLayerWaylandRender::NextSurfaceAsDrawTarget(
     const IntRect& aDisplayRect, const IntRegion& aUpdateRegion,
     BackendType aBackendType) {
@@ -1050,28 +1083,6 @@ void NativeLayerWaylandRender::HandlePartialUpdateLocked(
 bool NativeLayerWaylandRender::CommitFrontBufferToScreenLocked(
     const WaylandSurfaceLock& aProofOfLock) {
   // Don't operate over hidden layers
-  if (!mState.mIsVisible) {
-    return false;
-  }
-
-  // Return if front buffer didn't changed (or changed area is empty)
-  // and there isn't any visibility change.
-  if ((!mState.mMutatedFrontBuffer || mDirtyRegion.IsEmpty()) &&
-      !mState.mMutatedVisibility) {
-    LOG("NativeLayerWaylandRender::CommitFrontBufferToScreenLocked() quit "
-        "mMutatedFrontBuffer [%d] mDirtyRegion.IsEmpty() [%d] "
-        "mState.mMutatedVisibility [%d]",
-        mState.mMutatedFrontBuffer, mDirtyRegion.IsEmpty(),
-        mState.mMutatedVisibility);
-    return false;
-  }
-
-  if (!mFrontBuffer) {
-    LOG("NativeLayerWaylandRender::CommitFrontBufferToScreenLocked() - missing "
-        "front buffer!");
-    return false;
-  }
-
   LOG("NativeLayerWaylandRender::CommitFrontBufferToScreenLocked()");
 
   if (mState.mMutatedVisibility) {
@@ -1087,8 +1098,6 @@ bool NativeLayerWaylandRender::CommitFrontBufferToScreenLocked(
   }
 
   mSurface->AttachLocked(aProofOfLock, mFrontBuffer);
-  mState.mMutatedFrontBuffer = false;
-  mState.mMutatedVisibility = false;
   return true;
 }
 
@@ -1157,7 +1166,7 @@ void NativeLayerWaylandExternal::AttachExternalImage(
 
   mState.mMutatedFrontBuffer =
       (!mTextureHost || mTextureHost->GetSurface() != texture->GetSurface());
-  id(mState.mMutatedFrontBuffer) {
+  if (mState.mMutatedFrontBuffer) {
     mTextureHost = texture;
 
     auto surface = mTextureHost->GetSurface();
@@ -1204,23 +1213,15 @@ Maybe<GLuint> NativeLayerWaylandExternal::NextSurfaceAsFramebuffer(
   return Nothing();
 }
 
+bool NativeLayerWaylandExternal::IsFrontBufferChanged() {
+  return mState.mMutatedFrontBuffer;
+}
+
 bool NativeLayerWaylandExternal::CommitFrontBufferToScreenLocked(
     const WaylandSurfaceLock& aProofOfLock) {
-  if (!mState.mMutatedFrontBuffer || !mState.mIsVisible) {
-    return false;
-  }
-
-  if (!mFrontBuffer) {
-    LOG("NativeLayerWaylandExternal::CommitFrontBufferToScreenLocked() - "
-        "missing "
-        "front buffer!");
-    return false;
-  }
-
   LOG("NativeLayerWaylandExternal::CommitFrontBufferToScreenLocked()");
   mSurface->InvalidateLocked(aProofOfLock);
   mSurface->AttachLocked(aProofOfLock, mFrontBuffer);
-  mState.mMutatedFrontBuffer = false;
   return true;
 }
 
