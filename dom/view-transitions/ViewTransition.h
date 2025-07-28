@@ -101,8 +101,12 @@ class ViewTransition final : public nsISupports, public nsWrapperCache {
   // root. We find the pseudo element of this tree from this node.
   Element* GetViewTransitionTreeRoot() const;
 
-  Maybe<nsSize> GetOldSize(nsAtom* aName) const;
-  Maybe<nsSize> GetNewSize(nsAtom* aName) const;
+  Maybe<nsSize> GetOldInkOverflowBoxSize(nsAtom* aName) const;
+  Maybe<nsSize> GetNewInkOverflowBoxSize(nsAtom* aName) const;
+  Maybe<nsSize> GetOldBorderBoxSize(nsAtom* aName) const;
+  Maybe<nsSize> GetNewBorderBoxSize(nsAtom* aName) const;
+  Maybe<nsPoint> GetOldInkOverflowOffset(nsAtom* aName) const;
+  Maybe<nsPoint> GetNewInkOverflowOffset(nsAtom* aName) const;
   // Use this to generate the old state image key for use in a stacking context.
   // Do not use the returned image key in an image display item, use
   // ReadOldImageKey instead.
