@@ -11,7 +11,7 @@ export function addTarget(targetFront) {
 }
 
 export function removeTarget(targetFront) {
-  return ({ getState, dispatch }) => {
+  return async ({ getState, dispatch }) => {
     const threadActorID = targetFront.targetForm.threadActor;
 
     // Just before emitting the REMOVE_THREAD action,
@@ -35,7 +35,7 @@ export function removeTarget(targetFront) {
     });
     // A distinct action is used to notify about all the sources and source actors objects
     // to be removed. This action is shared by some other codepath. Like removing the pretty printed source.
-    dispatch(removeSources(sources, actors));
+    await dispatch(removeSources(sources, actors));
   };
 }
 
