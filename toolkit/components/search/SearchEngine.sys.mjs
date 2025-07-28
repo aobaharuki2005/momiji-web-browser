@@ -181,6 +181,8 @@ export class EngineURL {
   rels = [];
   /** @type {string} */
   template;
+  /** @type {string} */
+  displayName;
 
   /**
    * The name of the parameter used for the search term.
@@ -201,12 +203,15 @@ export class EngineURL {
    *   The URL to which search queries should be sent. For GET requests,
    *   must contain the string "{searchTerms}", to indicate where the user
    *   entered search terms should be inserted.
+   * @param {string} [displayName]
+   *   The display name of the URL, if any. This is useful if the URL
+   *   corresponds to a brand name distinct from the engine's brand name.
    *
    * @see https://web.archive.org/web/20060203040832/http://opensearch.a9.com/spec/1.1/querysyntax/#urltag
    *
    * @throws NS_ERROR_NOT_IMPLEMENTED if aType is unsupported.
    */
-  constructor(mimeType, requestMethod, template) {
+  constructor(mimeType, requestMethod, template, displayName) {
     if (!mimeType || !requestMethod || !template) {
       throw Components.Exception(
         "missing mimeType, method or template for EngineURL!",
@@ -257,6 +262,8 @@ export class EngineURL {
         this.#searchTermParam = name;
       }
     }
+
+    this.displayName = displayName;
   }
 
   /**
@@ -1356,6 +1363,17 @@ export class SearchEngine {
   // from nsISearchEngine
   supportsResponseType(type) {
     return this._getURLOfType(type) != null;
+  }
+
+  // from nsISearchEngine
+  displayNameForURL(type) {
+    if (type) {
+      let url = this._getURLOfType(type);
+      if (url?.displayName) {
+        return url.displayName;
+      }
+    }
+    return this.name;
   }
 
   // from nsISearchEngine

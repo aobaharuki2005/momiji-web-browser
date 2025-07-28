@@ -843,6 +843,9 @@ pref("browser.search.widget.removeAfterDaysUnused", 120);
 // capped at 100.
 pref("browser.search.totalSearches", 0);
 
+// Feature gate for visual search.
+pref("browser.search.visualSearch.featureGate", false);
+
 // Spin the cursor while the page is loading
 pref("browser.spin_cursor_while_busy", false);
 

@@ -37,6 +37,13 @@ let CONFIG = [
           base: "https://example.com/3",
           searchTermParamName: "trending",
         },
+        visualSearch: {
+          base: "https://example.com/4",
+          searchTermParamName: "visual",
+          displayNameMap: {
+            default: "Visual Search",
+          },
+        },
       },
     },
   },
@@ -166,6 +173,27 @@ add_task(async function test_engine_with_all_params_set() {
     !trendingSubmission.postData,
     "Should not have postData for a GET url"
   );
+
+  let visualSearchSubmission = engine.getSubmission(
+    "https://example.com/test.jpg",
+    SearchUtils.URL_TYPE.VISUAL_SEARCH
+  );
+  Assert.equal(
+    visualSearchSubmission.uri.spec,
+    "https://example.com/4?visual=" +
+      encodeURIComponent("https://example.com/test.jpg"),
+    "Should have the correct visual search URL with search term parameter."
+  );
+  Assert.ok(
+    !visualSearchSubmission.postData,
+    "Should not have postData for a GET url"
+  );
+
+  Assert.equal(
+    engine.displayNameForURL(SearchUtils.URL_TYPE.VISUAL_SEARCH),
+    "Visual Search",
+    "The display name of the visual search URL should be correct"
+  );
 });
 
 add_task(async function test_engine_with_some_params_set() {
@@ -255,4 +283,64 @@ add_task(async function test_engine_remote_override() {
     "https://example.org/somewhere",
     "Should have the click URL specified by the override"
   );
+});
+
+add_task(async function test_display_names() {
+  let engine = Services.search.getEngineById("testEngine");
+
+  Assert.equal(
+    engine.displayNameForURL(),
+    "testEngine name",
+    "displayNameForURL without an arg should return the engine name"
+  );
+
+  let supportedTypesWithoutNames = [
+    SearchUtils.URL_TYPE.SEARCH,
+    SearchUtils.URL_TYPE.SUGGEST_JSON,
+  ];
+  for (let type of supportedTypesWithoutNames) {
+    Assert.ok(type, "Sanity check: The type exists");
+    Assert.ok(
+      engine.supportsResponseType(type),
+      "Sanity check: The engine should support response type: " + type
+    );
+    Assert.equal(
+      engine.displayNameForURL(type),
+      "testEngine name",
+      "displayNameForURL with a type that doesn't have a name should return the engine name"
+    );
+  }
+
+  let supportedTypesWithNames = {
+    [SearchUtils.URL_TYPE.VISUAL_SEARCH]: "Visual Search",
+  };
+  for (let [type, expectedName] of Object.entries(supportedTypesWithNames)) {
+    Assert.ok(type, "Sanity check: The type exists");
+    Assert.ok(
+      engine.supportsResponseType(type),
+      "Sanity check: The engine should support response type: " + type
+    );
+    Assert.equal(
+      engine.displayNameForURL(type),
+      expectedName,
+      "displayNameForURL with a type that has a name should return the name"
+    );
+  }
+
+  let unsupportedTypes = [
+    SearchUtils.URL_TYPE.OPENSEARCH,
+    SearchUtils.URL_TYPE.SEARCH_FORM,
+  ];
+  for (let type of unsupportedTypes) {
+    Assert.ok(type, "Sanity check: The type exists");
+    Assert.ok(
+      !engine.supportsResponseType(type),
+      "Sanity check: The engine should not support response type: " + type
+    );
+    Assert.equal(
+      engine.displayNameForURL(type),
+      "testEngine name",
+      "displayNameForURL with an unsupported type should return the engine name"
+    );
+  }
 });

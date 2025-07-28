@@ -247,6 +247,9 @@
       <menuitem id="context-viewimagedesc"
                 data-l10n-id="main-context-menu-image-desc"
                 />
+      <menuitem id="context-visual-search"
+                hidden="true"
+                />
       <menuseparator id="context-sep-setbackground"/>
       <menuitem id="context-setDesktopBackground"
                 data-l10n-id="main-context-menu-image-set-image-as-background"

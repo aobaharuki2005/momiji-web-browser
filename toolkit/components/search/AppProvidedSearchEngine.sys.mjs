@@ -400,6 +400,7 @@ export class AppProvidedSearchEngine extends SearchEngine {
     ["suggestions", lazy.SearchUtils.URL_TYPE.SUGGEST_JSON],
     ["trending", lazy.SearchUtils.URL_TYPE.TRENDING_JSON],
     ["searchForm", lazy.SearchUtils.URL_TYPE.SEARCH_FORM],
+    ["visualSearch", lazy.SearchUtils.URL_TYPE.VISUAL_SEARCH],
   ]);
   static iconHandler = new IconHandler();
 
@@ -676,7 +677,8 @@ export class AppProvidedSearchEngine extends SearchEngine {
     let engineURL = new EngineURL(
       urlType,
       urlData.method || "GET",
-      urlData.base
+      urlData.base,
+      urlData.displayName
     );
 
     if (urlData.params) {

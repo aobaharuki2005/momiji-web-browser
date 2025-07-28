@@ -22,6 +22,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUIUtils: "moz-src:///browser/components/places/PlacesUIUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
+  SearchUIUtils: "moz-src:///browser/components/search/SearchUIUtils.sys.mjs",
+  SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
   TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
   WebsiteFilter: "resource:///modules/policies/WebsiteFilter.sys.mjs",
@@ -791,6 +793,8 @@ export class nsContextMenu {
       "context-viewimagedesc",
       this.onImage && this.imageDescURL !== ""
     );
+
+    this.showAndFormatVisualSearchContextItem();
 
     // Set as Desktop background depends on whether an image was clicked on,
     // and only works if we have a shell service.
@@ -2736,55 +2740,44 @@ export class nsContextMenu {
 
   // Formats the 'Search <engine> for "<selection or link text>"' context menu.
   showAndFormatSearchContextItem() {
+    let selectedText = this.isTextSelected
+      ? this.selectedText
+      : this.linkTextStr;
+
     let { document } = this.window;
     let menuItem = document.getElementById("context-searchselect");
     let menuItemPrivate = document.getElementById(
       "context-searchselect-private"
     );
-    if (!Services.search.hasSuccessfullyInitialized) {
-      menuItem.hidden = true;
-      menuItemPrivate.hidden = true;
-      return;
-    }
-    const docIsPrivate = lazy.PrivateBrowsingUtils.isBrowserPrivate(
-      this.browser
-    );
-    const privatePref = "browser.search.separatePrivateDefault.ui.enabled";
-    let showSearchSelect =
-      !this.inAboutDevtoolsToolbox &&
-      (this.isTextSelected || this.onLink) &&
-      !this.onImage;
-    // Don't show the private search item when we're already in a private
-    // browsing window.
-    let showPrivateSearchSelect =
-      showSearchSelect &&
-      !docIsPrivate &&
-      Services.prefs.getBoolPref(privatePref);
 
-    menuItem.hidden = !showSearchSelect;
-    menuItemPrivate.hidden = !showPrivateSearchSelect;
+    let opts = {
+      isContextRelevant: (this.isTextSelected || this.onLink) && !this.onImage,
+      searchTerms: selectedText,
+      searchUrlType: lazy.SearchUtils.URL_TYPE.SEARCH,
+    };
+    this.#updateSearchMenuitem({
+      ...opts,
+      menuitem: menuItem,
+    });
+    this.#updateSearchMenuitem({
+      ...opts,
+      menuitem: menuItemPrivate,
+      isPrivateSearchMenuitem: true,
+    });
+
     let frameSeparator = document.getElementById("frame-sep");
 
-    // Add a divider between "Search X for Y" and "This Frame", and between "Search X for Y" and "Check Spelling",
-    // but no divider in other cases.
+    // Add a divider between "Search X for Y" and "This Frame", and between
+    // "Search X for Y" and "Check Spelling", but no divider in other cases.
     frameSeparator.toggleAttribute(
       "ensureHidden",
-      !showSearchSelect && this.inFrame
+      menuItem.hidden && this.inFrame
     );
+
     // If we're not showing the menu items, we can skip formatting the labels.
-    if (!showSearchSelect) {
+    if (menuItem.hidden && menuItemPrivate.hidden) {
       return;
     }
-
-    let selectedText = this.isTextSelected
-      ? this.selectedText
-      : this.linkTextStr;
-
-    // Store searchTerms in context menu item so we know what to search onclick
-    menuItem.searchTerms = menuItemPrivate.searchTerms = selectedText;
-    menuItem.principal = menuItemPrivate.principal = this.principal;
-    menuItem.policyContainer = menuItemPrivate.policyContainer =
-      this.policyContainer;
 
     // Copied to alert.js' prefillAlertInfo().
     // If the JS character after our truncation point is a trail surrogate,
@@ -2802,17 +2795,22 @@ export class nsContextMenu {
     // format "Search <engine> for <selection>" string to show in menu
     let engineName = Services.search.defaultEngine.name;
     let privateEngineName = Services.search.defaultPrivateEngine.name;
-    menuItem.usePrivate = docIsPrivate;
-    let menuLabel = gNavigatorBundle.getFormattedString("contextMenuSearch", [
-      docIsPrivate ? privateEngineName : engineName,
-      selectedText,
-    ]);
-    menuItem.label = menuLabel;
-    menuItem.accessKey = gNavigatorBundle.getString(
-      "contextMenuSearch.accesskey"
-    );
+    if (!menuItem.hidden) {
+      const docIsPrivate = lazy.PrivateBrowsingUtils.isBrowserPrivate(
+        this.browser
+      );
 
-    if (showPrivateSearchSelect) {
+      let menuLabel = gNavigatorBundle.getFormattedString("contextMenuSearch", [
+        docIsPrivate ? privateEngineName : engineName,
+        selectedText,
+      ]);
+      menuItem.label = menuLabel;
+      menuItem.accessKey = gNavigatorBundle.getString(
+        "contextMenuSearch.accesskey"
+      );
+    }
+
+    if (!menuItemPrivate.hidden) {
       let otherEngine = engineName != privateEngineName;
       let accessKey = "contextMenuPrivateSearch.accesskey";
       if (otherEngine) {
@@ -2828,6 +2826,107 @@ export class nsContextMenu {
       }
       menuItemPrivate.accessKey = gNavigatorBundle.getString(accessKey);
     }
+  }
+
+  #updateSearchMenuitem({
+    menuitem,
+    isContextRelevant,
+    searchTerms,
+    searchUrlType,
+    isPrivateSearchMenuitem = false,
+  }) {
+    if (!menuitem) {
+      return;
+    }
+    if (!Services.search.hasSuccessfullyInitialized) {
+      menuitem.hidden = true;
+      return;
+    }
+
+    let isBrowserPrivate = lazy.PrivateBrowsingUtils.isBrowserPrivate(
+      this.browser
+    );
+    let engine =
+      isBrowserPrivate || isPrivateSearchMenuitem
+        ? Services.search.defaultPrivateEngine
+        : Services.search.defaultEngine;
+
+    menuitem.hidden =
+      !isContextRelevant ||
+      this.inAboutDevtoolsToolbox ||
+      !engine?.supportsResponseType(searchUrlType) ||
+      // Don't show the private search item when we're already in a private
+      // browsing window.
+      (isPrivateSearchMenuitem &&
+        (isBrowserPrivate ||
+          !Services.prefs.getBoolPref(
+            "browser.search.separatePrivateDefault.ui.enabled"
+          )));
+
+    if (!menuitem.hidden) {
+      menuitem.engine = engine;
+      menuitem.searchTerms = searchTerms;
+      menuitem.principal = this.principal;
+      menuitem.policyContainer = this.policyContainer;
+      menuitem.usePrivate = isPrivateSearchMenuitem || isBrowserPrivate;
+    }
+  }
+
+  /**
+   * Shows or hides as appropriate the visual search context menu item:
+   * "Search Image with {engine}".
+   */
+  showAndFormatVisualSearchContextItem() {
+    let menuitem = this.window.document.getElementById("context-visual-search");
+    this.#updateSearchMenuitem({
+      menuitem,
+      isContextRelevant:
+        this.onImage &&
+        this.imageInfo?.currentSrc &&
+        Services.prefs.getBoolPref("browser.search.visualSearch.featureGate"),
+      searchTerms: this.imageInfo?.currentSrc,
+      searchUrlType: lazy.SearchUtils.URL_TYPE.VISUAL_SEARCH,
+    });
+
+    if (!menuitem.hidden) {
+      this.window.document.l10n.setAttributes(
+        menuitem,
+        "main-context-menu-visual-search",
+        {
+          engine: menuitem.engine.displayNameForURL(
+            lazy.SearchUtils.URL_TYPE.VISUAL_SEARCH
+          ),
+        }
+      );
+    }
+  }
+
+  /**
+   * Loads a search engine SERP based on the data that this class previously
+   * attached to `event.target`, which is expected to be a context menu item.
+   *
+   * @param {object} options
+   *   Options objects.
+   * @param {Event} options.event
+   *   The event on a context menu item that triggered the search.
+   * @param {SearchUtils.URL_TYPE} options.searchUrlType
+   *   A `SearchUtils.URL_TYPE` value indicating the type of search that should
+   *   be performed. A falsey value is equivalent to
+   *   `SearchUtils.URL_TYPE.SEARCH` and will perform a usual web search.
+   */
+  loadSearch({ event, searchUrlType = null }) {
+    let { engine, searchTerms, usePrivate, principal, policyContainer } =
+      event.target;
+    lazy.SearchUIUtils.loadSearchFromContext({
+      event,
+      engine,
+      policyContainer,
+      searchUrlType,
+      usePrivate,
+      window: this.window,
+      searchText: searchTerms,
+      triggeringPrincipal: principal,
+    });
   }
 
   createContainerMenu(aEvent) {

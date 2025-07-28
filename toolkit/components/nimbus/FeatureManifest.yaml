@@ -138,6 +138,13 @@ search:
         Recorded in SERP telemetry, this is the slug of the experiment someone
         is requesting enrollment and branch information for. (Note that the
         featureId needs to be set to "search".)
+    visualSearchEnabled:
+      type: boolean
+      setPref:
+        branch: default
+        pref: browser.search.visualSearch.featureGate
+      description: >-
+        Feature gate for visual search.
 
 searchConfiguration:
   description: >-

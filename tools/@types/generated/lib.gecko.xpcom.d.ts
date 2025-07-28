@@ -6271,6 +6271,7 @@ interface nsIInputStreamChannel extends nsISupports {
 
 interface nsIInputStreamPump extends nsIRequest {
   init(aStream: nsIInputStream, aSegmentSize: u32, aSegmentCount: u32, aCloseWhenDone: boolean, aMainThreadTarget?: nsISerialEventTarget): void;
+  reset(): void;
   asyncRead(aListener: nsIStreamListener): void;
 }
 
@@ -11589,6 +11590,7 @@ interface nsISearchEngine extends nsISupports {
   readonly searchUrlQueryParamName: string;
   readonly searchUrlPublicSuffix: string;
   supportsResponseType(responseType: string): boolean;
+  displayNameForURL(responseType?: string): string;
   getIconURL(preferredWidth?: u16): Promise<any>;
   speculativeConnect(options: any): void;
   alias: string;
@@ -12479,7 +12481,10 @@ interface nsIUrlClassifierUtils extends nsISupports {
   getProtocolVersion(provider: string): string;
   convertThreatTypeToListNames(threatType: u32): string;
   convertListNameToThreatType(listName: string): u32;
+  convertServerListNameToLocalListNameV5(serverListName: string): string;
+  convertLocalListNameToServerListNameV5(localListName: string): string;
   makeUpdateRequestV4(aListNames: string[], aStatesBase64: string[]): string;
+  makeUpdateRequestV5(aListNames: string[], aStatesBase64: string[]): string;
   makeFindFullHashRequestV4(aListNames: string[], aListStatesBase64: string[], aPrefixes: string[]): string;
   makeThreatHitReport(aChannel: nsIChannel, aListName: string, aHashBase64: string): string;
   parseFindFullHashResponseV4(aResponse: string, aCallback: nsIUrlClassifierParseFindFullHashCallback): void;
