@@ -55,14 +55,6 @@ div[name="page-loading"] > .buttons > button {
   margin-block-start: 16px;
 }
 
-.deemphasized-text {
-  font-size: 0.84em;
-
-  &:not(a) {
-    color: var(--text-color-deemphasized);
-  }
-}
-
 fieldset {
   border: 0;
 }
