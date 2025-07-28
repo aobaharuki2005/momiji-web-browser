@@ -318,6 +318,8 @@
   <string name="browser_menu_sign_back_in_to_sync">Trasi pi sincrunizzari</string>
   <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
   <string name="browser_menu_syncing_paused_caption">Sincrunizzazzioni ’n pausa</string>
+  <!-- Browser menu caption label for an authenticated user -->
+  <string name="browser_menu_signed_in_caption">Manija soccu sarbi e sincrunizzi</string>
   <!-- Browser menu label that creates a private tab -->
   <string name="browser_menu_new_private_tab">Scheda privata nova</string>
   <!-- Browser menu label that navigates to the Password screen -->
@@ -415,6 +417,8 @@
   <string name="browser_menu_default_banner_title">Mposta %1$s pi app pridifinuta</string>
   <!-- Label text within the set as default banner -->
   <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">Cci voli quarchi sicunnu, e u po\' canciari quann\'è-è.</string>
+  <!-- Label text within the set as default banner -->
+  <string name="browser_menu_default_banner_subtitle_2">Lestu, privatu, fattu pi tia.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Leva</string>
   <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
@@ -826,6 +830,8 @@
   <string name="preferences_home_2">Pàggina mastra</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">Cona di l’app</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Mustra dâ barra dî schedi</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Muvimenti</string>
   <!-- Preference for settings related to visual options -->
@@ -1079,6 +1085,14 @@
   <string name="alternative_app_icon_group_gradients">Sfumaturi</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other">Autru</string>
+  <!-- Title to show in alert when user selects an alternative app icon -->
+  <string name="restart_warning_dialog_title">Vo’ canciari a cona di l\'app?</string>
+  <!-- Message to warn users that applying an alternative app icon requires an app restart -->
+  <string name="restart_warning_dialog_body">U canciu dâ cona abbisogna chi riabbìi l\'applicazzioni.</string>
+  <!-- Dialog button text for confirming the app restart to apply the selected icon -->
+  <string name="restart_warning_dialog_button_positive">Riabbìa ora</string>
+  <!-- Dialog button text for cancelling app icon change -->
+  <string name="restart_warning_dialog_button_negative">Sfai</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1254,6 +1268,8 @@
   <string name="preference_simple_toolbar">Sìmprici</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Allargata</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">A barra dî nnirizzi àv’a stari supra quannu veni mustrata a barra dî schedi.</string>
   <!--
     App icon Preferences
 
@@ -1272,6 +1288,12 @@
   <string name="preference_auto_battery_theme">Mpustatu dû sparagnu enirgèticu</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Sicuta u tema dû dispusitivu</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Mustra a barra dî schedi</string>
   <!--
     Gestures Preferences
 
@@ -1694,6 +1716,8 @@
   <string name="webcompat_reporter_screen_title">Signalija situ ruttu</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Ajùtani a fari %1$s megghiu pi tutti. Mozilla usa i nfurmazzioni chi manni p’abbirsari i prubblemi chî siti.</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description_2">U to papellu n’ajuta a capiri e abbirsari i prubblemi di %1$s pi fallu megghiu pi tutti. Cchiù nfurmazzioni</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Cchiù nfurmazzioni</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1758,6 +1782,10 @@
   <string name="tab_crash_restore">Ricùpira scheda</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title">%s appi a pàrtiri arrè</string>
+  <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_title">Cc’è na signalijazzioni di scasciu chi ancora nun fu mannata, chi ni putissi sèrbiri p’un prubblema chi stamu abbirsannu. Si a manni n’ajiuti a fari %1$s megghiu. Si chiuji st’abbisu sta signalijazzioni nun veni cchiù cunzidirata.</string>
+  <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crashes_requested_by_devs_dialog_title">Cci sunnu signalijazzioni di scasci (%1$d) chi ancora nun foru mannati, chi ni putìssiru sèrbiri p’un prubblema chi stamu abbirsannu. Si i manni n’ajiuti a fari %2$s megghiu. Si chiuji st’abbisu sti signalijazzioni nun vennu cchiù cunzidirati.</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Manna ’n autumàticu i signalijazzioni di scasciu</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -2335,6 +2363,10 @@
   <string name="preference_enhanced_tracking_protection_strict">Stritta</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">Prutizzioni supiriuri e pristazzioni megghiu, ma certi siti putìssiru nun funziunari bonu.</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">Pirmèttici a %1$s di fari eccizzioni di manera autumàtica p’allascàriti dî prubblemi dî siti chi sfarsìjanu.</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">Fai eccizzioni di manera autumàtica macari p’arrisòrbiri prubblemi nichi e pirmèttiri funziunalità superchiu.</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Soccu veni bluccatu dâ prutizzioni dû trazzamentu stritta</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -2703,6 +2735,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">Sarba e jinchi i nnirizzi</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Macari nùmmari di tilèfunu e nnirizzi di posta elittrònica</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">Sincrunizza i nnirizzi ntra i dispusitivi</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">Sincrunizza i nnirizzi</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Junci na carta</string>
   <!-- Title of the "Edit card" screen -->
@@ -3357,6 +3393,8 @@
   <string name="protection_panel_etp_toggle_enabled_description_2">Si cc’è quarchi cosa ca nun funziona nna stu situ, prova a sdisabbilitari i prutizzioni.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
   <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">I prutizzioni sunnu sdisabbilitati. Ti suggiremu d’abbilitalli arrè.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
+  <string name="protection_panel_etp_toggle_disabled_description_2">Ti cunzigghiamu d’attivari a prutizzioni dû trazzamentu.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3577,6 +3615,12 @@
   <string name="debug_drawer_override_region">Suprascrivi a riggiuni casa e chiḍḍa attuali</string>
   <!-- The title of the button for overriding home region permanently. -->
   <string name="debug_drawer_override_home_region_permanently">Sustituisci pirmanenti a riggiuni casa</string>
+  <!--
+    Add-ons debug tools
+
+    The description of the Add-ons Tools in the Debug Drawer
+  -->
+  <string name="debug_drawer_addons_tools_title">Stigghi dî juncitini</string>
   <!-- The title of the button used to check for add-on updates. -->
   <string name="addons_debug_tools_check_for_updates_button">Cuntrolla attualizzi</string>
   <!--

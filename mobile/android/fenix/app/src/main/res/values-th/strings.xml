@@ -318,6 +318,8 @@
   <string name="browser_menu_sign_back_in_to_sync">ลงชื่อเข้าอีกครั้งเพื่อซิงค์</string>
   <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
   <string name="browser_menu_syncing_paused_caption">การซิงค์หยุดชั่วคราว</string>
+  <!-- Browser menu caption label for an authenticated user -->
+  <string name="browser_menu_signed_in_caption">เลือกสิ่งที่จะสำรองและซิงค์</string>
   <!-- Browser menu label that creates a private tab -->
   <string name="browser_menu_new_private_tab">แท็บส่วนตัวใหม่</string>
   <!-- Browser menu label that navigates to the Password screen -->
@@ -415,8 +417,12 @@
   <string name="browser_menu_default_banner_title">เลือก %1$s เป็นค่าเริ่มต้น</string>
   <!-- Label text within the set as default banner -->
   <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">ง่ายและรวดเร็ว แก้ไขได้ทุกเมื่อ</string>
+  <!-- Label text within the set as default banner -->
+  <string name="browser_menu_default_banner_subtitle_2">รวดเร็ว เป็นส่วนตัว และตอบโจทย์คุณ</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">ยกเลิก</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
+  <string name="browser_menu_default_banner_dismiss_promotion">ปิดโปรโมชัน</string>
   <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
   <string name="browser_menu_recommended_extensions_content_description">ข้อมูลเพิ่มเติม</string>
   <!--
@@ -822,6 +828,8 @@
   <string name="preferences_theme">ชุดตกแต่ง</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">หน้าแรก</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">ไอคอนแอป</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">ท่าทาง</string>
   <!-- Preference for settings related to visual options -->
@@ -1075,6 +1083,12 @@
   <string name="alternative_app_icon_group_gradients">ไล่ระดับสี</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other">อื่น ๆ</string>
+  <!-- Title to show in alert when user selects an alternative app icon -->
+  <string name="restart_warning_dialog_title">เปลี่ยนไอคอนแอปหรือไม่?</string>
+  <!-- Dialog button text for confirming the app restart to apply the selected icon -->
+  <string name="restart_warning_dialog_button_positive">เริ่มการทำงานใหม่ตอนนี้</string>
+  <!-- Dialog button text for cancelling app icon change -->
+  <string name="restart_warning_dialog_button_negative">ยกเลิก</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1250,6 +1264,8 @@
   <string name="preference_simple_toolbar">ธรรมดา</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">ขยาย</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">แถบที่อยู่ต้องอยู่ด้านบนเมื่อแสดงแถบแท็บ</string>
   <!--
     Theme Preferences
 
@@ -1262,6 +1278,12 @@
   <string name="preference_auto_battery_theme">กำหนดโดยตัวประหยัดแบตเตอรี่</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">ตามชุดตกแต่งอุปกรณ์</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">แสดงแถบแท็บ</string>
   <!--
     Gestures Preferences
 
@@ -2686,6 +2708,10 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">บันทึกและเติมที่อยู่อัตโนมัติ</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">รวมหมายเลขโทรศัพท์และที่อยู่อีเมล</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">ซิงค์ข้อมูลที่อยู่ในทุกอุปกรณ์</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">ซิงค์ข้อมูลที่อยู่</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">เพิ่มบัตร</string>
   <!-- Title of the "Edit card" screen -->
@@ -3340,6 +3366,8 @@
   <string name="protection_panel_etp_toggle_enabled_description_2">หากมีบางอย่างดูเสียหายในไซต์นี้ ให้ลองปิดการป้องกัน</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
   <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">การป้องกันปิดอยู่ เราขอแนะนำให้เปิดกลับมาใหม่อีกครั้ง</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
+  <string name="protection_panel_etp_toggle_disabled_description_2">แนะนำให้เปิดใช้งานการป้องกันการติดตาม</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3560,6 +3588,12 @@
   <string name="debug_drawer_override_region">เขียนทับภูมิภาคบ้านและปัจจุบัน</string>
   <!-- The title of the button for overriding home region permanently. -->
   <string name="debug_drawer_override_home_region_permanently">เขียนทับภูมิภาคบ้านถาวร</string>
+  <!--
+    Add-ons debug tools
+
+    The description of the Add-ons Tools in the Debug Drawer
+  -->
+  <string name="debug_drawer_addons_tools_title">เครื่องมือส่วนเสริม</string>
   <!-- The title of the button used to check for add-on updates. -->
   <string name="addons_debug_tools_check_for_updates_button">ตรวจสอบการอัปเดต</string>
   <!--
