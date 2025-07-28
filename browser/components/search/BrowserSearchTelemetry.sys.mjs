@@ -12,34 +12,36 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
 });
 
-// A map of known search origins.
-// The keys of this map are used in the calling code to recordSearch, and in
-// the SEARCH_COUNTS histogram.
-// The values of this map are used in the names of scalars for the following
-// scalar groups:
-// browser.engagement.navigation.*
-// browser.search.content.*
-// browser.search.withads.*
-// browser.search.adclicks.*
-const KNOWN_SEARCH_SOURCES = new Map([
-  ["abouthome", "about_home"],
-  ["contextmenu", "contextmenu"],
-  ["newtab", "about_newtab"],
-  ["searchbar", "searchbar"],
-  ["system", "system"],
-  ["urlbar", "urlbar"],
-  ["urlbar-handoff", "urlbar_handoff"],
-  ["urlbar-persisted", "urlbar_persisted"],
-  ["urlbar-searchmode", "urlbar_searchmode"],
-  ["webextension", "webextension"],
-]);
-
 /**
  * This class handles saving search telemetry related to the url bar,
  * search bar and other areas as per the sources above.
  */
 class BrowserSearchTelemetryHandler {
-  KNOWN_SEARCH_SOURCES = KNOWN_SEARCH_SOURCES;
+  /**
+   * A map of known search origins. The values of this map should be used for all
+   * current telemetry, except for sap.deprecatedCounts.
+   *
+   * The keys of this map are used in the calling code to recordSearch, and in
+   * the sap.deprecatedCounts labelled counter (and the mirrored SEARCH_COUNTS
+   * histogram).
+   *
+   * When legacy telemetry stops being reported, we should remove this map, and
+   * update the callers to use the values directly. We might still want to keep
+   * a list of valid sources, to help ensure that telemetry reporting is updated
+   * correctly if new sources are added.
+   */
+  KNOWN_SEARCH_SOURCES = new Map([
+    ["abouthome", "about_home"],
+    ["contextmenu", "contextmenu"],
+    ["newtab", "about_newtab"],
+    ["searchbar", "searchbar"],
+    ["system", "system"],
+    ["urlbar", "urlbar"],
+    ["urlbar-handoff", "urlbar_handoff"],
+    ["urlbar-persisted", "urlbar_persisted"],
+    ["urlbar-searchmode", "urlbar_searchmode"],
+    ["webextension", "webextension"],
+  ]);
 
   /**
    * Determines if we should record a search for this browser instance.
@@ -146,7 +148,7 @@ class BrowserSearchTelemetryHandler {
       if (!this.shouldRecordSearchCount(browser)) {
         return;
       }
-      if (!KNOWN_SEARCH_SOURCES.has(source)) {
+      if (!this.KNOWN_SEARCH_SOURCES.has(source)) {
         console.error("Unknown source for search: ", source);
         return;
       }
@@ -154,6 +156,8 @@ class BrowserSearchTelemetryHandler {
       const countIdPrefix = `${engine.telemetryId}.`;
       const countIdSource = countIdPrefix + source;
 
+      // NOTE: When removing the sap.deprecatedCounts telemetry, see the note
+      // above KNOWN_SEARCH_SOURCES.
       if (
         details.alias &&
         engine.isAppProvided &&
@@ -178,7 +182,7 @@ class BrowserSearchTelemetryHandler {
       let reportPartnerCode = !isOverridden && engine.partnerCode !== "";
 
       Glean.sap.counts.record({
-        source,
+        source: this.KNOWN_SEARCH_SOURCES.get(source),
         provider_id: engine.isAppProvided ? engine.id : "other",
         provider_name: engine.name,
         // If no code is reported, we must returned undefined, Glean will then
@@ -207,7 +211,7 @@ class BrowserSearchTelemetryHandler {
       if (["urlbar-handoff", "abouthome", "newtab"].includes(source)) {
         Glean.newtabSearch.issued.record({
           newtab_visit_id: details.newtabSessionId,
-          search_access_point: KNOWN_SEARCH_SOURCES.get(source),
+          search_access_point: this.KNOWN_SEARCH_SOURCES.get(source),
           telemetry_id: engine.telemetryId,
         });
         lazy.SearchSERPTelemetry.recordBrowserNewtabSession(
@@ -268,7 +272,7 @@ class BrowserSearchTelemetryHandler {
   }
 
   _recordSearch(browser, engine, source, action = null) {
-    let scalarSource = KNOWN_SEARCH_SOURCES.get(source);
+    let scalarSource = this.KNOWN_SEARCH_SOURCES.get(source);
     lazy.SearchSERPTelemetry.recordBrowserSource(browser, scalarSource);
 
     let label = action ? "search_" + action : "search";

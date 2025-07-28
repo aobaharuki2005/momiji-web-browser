@@ -153,8 +153,14 @@ sap:
         description: >
           The search access point from which the user initiated the search.
           Possible values are:
+          `about_home`, `contextmenu`, `about_newtab`, `searchbar`, `system`, `urlbar`,
+          `urlbar_handoff`, `urlbar_persisted`, `urlbar_searchmode`, `webextension`
+
+          Prior to Firefox 142, the possible source values were:
           `abouthome`, `contextmenu`, `newtab`, `searchbar`, `system`, `urlbar`,
           `urlbar-handoff`, `urlbar-persisted`, `urlbar-searchmode`, `webextension`
+
+          These were changed to be consistent with other search telemetry reporting.
         type: string
       provider_id:
         description: >

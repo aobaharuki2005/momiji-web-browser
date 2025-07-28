@@ -5,6 +5,8 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserSearchTelemetry:
+    "moz-src:///browser/components/search/BrowserSearchTelemetry.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
@@ -71,7 +73,7 @@ export const SearchUITestUtils = new (class {
       let expected = {
         provider_id: engineId ?? "other",
         provider_name: engineName,
-        source,
+        source: lazy.BrowserSearchTelemetry.KNOWN_SEARCH_SOURCES.get(source),
         overridden_by_third_party: overriddenByThirdParty.toString(),
       };
 
