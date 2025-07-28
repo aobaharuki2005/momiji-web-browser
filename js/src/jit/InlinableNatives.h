@@ -198,6 +198,8 @@
   _(ObjectKeys)                                    \
   _(ObjectToString)                                \
                                                    \
+  _(TypedArraySubarray)                            \
+                                                   \
   _(TestBailout)                                   \
   _(TestAssertFloat32)                             \
   _(TestAssertRecoveredOnBailout)                  \

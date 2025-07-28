@@ -3980,6 +3980,32 @@ static bool TypedArray_subarray(JSContext* cx, unsigned argc, Value* vp) {
                                                                        args);
 }
 
+TypedArrayObject* js::TypedArraySubarray(JSContext* cx,
+                                         Handle<TypedArrayObject*> obj,
+                                         intptr_t start, intptr_t end) {
+  MOZ_ASSERT(!obj->hasDetachedBuffer());
+  MOZ_ASSERT(!obj->is<ResizableTypedArrayObject>());
+  MOZ_ASSERT(HasBuiltinTypedArraySpecies(obj, cx));
+
+  if (!TypedArrayObject::ensureHasBuffer(cx, obj)) {
+    return nullptr;
+  }
+  Rooted<ArrayBufferObjectMaybeShared*> buffer(cx, obj->bufferEither());
+
+  size_t srcLength = obj->length().valueOr(0);
+
+  size_t startIndex = ToIntegerIndex(start, srcLength);
+  size_t endIndex = ToIntegerIndex(end, srcLength);
+
+  size_t newLength = endIndex >= startIndex ? endIndex - startIndex : 0;
+
+  size_t srcByteOffset = obj->byteOffset().valueOr(0);
+  size_t elementSize = TypedArrayElemSize(obj->type());
+  size_t beginByteOffset = srcByteOffset + (startIndex * elementSize);
+
+  return TypedArrayCreateSameType(cx, obj, buffer, beginByteOffset, newLength);
+}
+
 // Byte vector with large enough inline storage to allow constructing small
 // typed arrays without extra heap allocations.
 using ByteVector =
@@ -5082,7 +5108,7 @@ static bool uint8array_toHex(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /* static */ const JSFunctionSpec TypedArrayObject::protoFunctions[] = {
-    JS_FN("subarray", TypedArray_subarray, 2, 0),
+    JS_INLINABLE_FN("subarray", TypedArray_subarray, 2, 0, TypedArraySubarray),
     JS_FN("set", TypedArray_set, 1, 0),
     JS_FN("copyWithin", TypedArray_copyWithin, 2, 0),
     JS_SELF_HOSTED_FN("every", "TypedArrayEvery", 1, 0),

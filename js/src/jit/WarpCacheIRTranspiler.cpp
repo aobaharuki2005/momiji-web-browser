@@ -2413,6 +2413,19 @@ bool WarpCacheIRTranspiler::emitLoadTypedArrayElementResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitTypedArraySubarrayResult(
+    ObjOperandId objId, IntPtrOperandId startId, IntPtrOperandId endId) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* start = getOperand(startId);
+  MDefinition* end = getOperand(endId);
+
+  auto* ins = MTypedArraySubarray::New(alloc(), obj, start, end);
+  addEffectful(ins);
+
+  pushResult(ins);
+  return resumeAfter(ins);
+}
+
 bool WarpCacheIRTranspiler::emitLinearizeForCharAccess(
     StringOperandId strId, Int32OperandId indexId, StringOperandId resultId) {
   MDefinition* str = getOperand(strId);

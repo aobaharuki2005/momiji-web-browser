@@ -4473,6 +4473,14 @@ void LIRGenerator::visitGuardHasAttachedArrayBuffer(
   redefine(ins, ins->object());
 }
 
+void LIRGenerator::visitTypedArraySubarray(MTypedArraySubarray* ins) {
+  auto* lir = new (alloc()) LTypedArraySubarray(
+      useRegisterAtStart(ins->object()), useRegisterAtStart(ins->start()),
+      useRegisterAtStart(ins->end()));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitGuardNumberToIntPtrIndex(
     MGuardNumberToIntPtrIndex* ins) {
   MDefinition* input = ins->input();

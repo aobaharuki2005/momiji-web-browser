@@ -45,6 +45,7 @@
 #include "vm/GeneratorObject.h"
 #include "vm/GetterSetter.h"
 #include "vm/Interpreter.h"
+#include "vm/TypedArrayObject.h"
 #include "vm/TypeofEqOperand.h"  // TypeofEqOperand
 #include "vm/Uint8Clamped.h"
 
@@ -5948,6 +5949,28 @@ bool CacheIRCompiler::emitIsTypedArrayConstructorResult(ObjOperandId objId) {
 
   masm.setIsDefinitelyTypedArrayConstructor(obj, scratch);
   masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
+  return true;
+}
+
+bool CacheIRCompiler::emitTypedArraySubarrayResult(ObjOperandId objId,
+                                                   IntPtrOperandId startId,
+                                                   IntPtrOperandId endId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register obj = allocator.useRegister(masm, objId);
+  Register start = allocator.useRegister(masm, startId);
+  Register end = allocator.useRegister(masm, endId);
+
+  callvm.prepare();
+  masm.Push(end);
+  masm.Push(start);
+  masm.Push(obj);
+
+  using Fn = TypedArrayObject* (*)(JSContext*, Handle<TypedArrayObject*>,
+                                   intptr_t, intptr_t);
+  callvm.call<Fn, js::TypedArraySubarray>();
   return true;
 }
 

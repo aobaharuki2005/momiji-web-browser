@@ -1858,6 +1858,16 @@
   congruent_to: if_operands_equal
   alias_set: custom
 
+# Inlined TypedArray.prototype.subarray
+- name: TypedArraySubarray
+  operands:
+    object: Object
+    start: IntPtr
+    end: IntPtr
+  result_type: Object
+  possibly_calls: true
+  generate_lir: true
+
 - name: GuardNumberToIntPtrIndex
   gen_boilerplate: false
 

@@ -1340,6 +1340,15 @@
   args:
     obj: ObjId
 
+- name: TypedArraySubarrayResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    obj: ObjId
+    start: IntPtrId
+    end: IntPtrId
+
 - name: NewArrayIteratorResult
   shared: true
   transpile: true

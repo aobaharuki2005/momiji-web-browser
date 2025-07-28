@@ -783,6 +783,7 @@ class MOZ_RAII InlinableNativeIRGenerator {
   AttachDecision tryAttachMathPow();
   AttachDecision tryAttachMathMinMax(bool isMax);
   AttachDecision tryAttachSpreadMathMinMax(bool isMax);
+  AttachDecision tryAttachTypedArraySubarray();
   AttachDecision tryAttachIsTypedArray(bool isPossiblyWrapped);
   AttachDecision tryAttachIsTypedArrayConstructor();
   AttachDecision tryAttachTypedArrayLength(bool isPossiblyWrapped);

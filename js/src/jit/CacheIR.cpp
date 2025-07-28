@@ -11051,6 +11051,111 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachTypedArraySubarray() {
+  // Only handle argc <= 2.
+  if (args_.length() > 2) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!isFirstStub()) {
+    // Attach only once to prevent slowdowns for polymorphic calls.
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure |this| is a TypedArrayObject.
+  if (!thisval_.isObject() || !thisval_.toObject().is<TypedArrayObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Both arguments must be valid indices.
+  int64_t unusedIndex;
+  if (args_.length() > 0 && !ValueIsInt64Index(args_[0], &unusedIndex)) {
+    return AttachDecision::NoAction;
+  }
+  if (args_.length() > 1 && !ValueIsInt64Index(args_[1], &unusedIndex)) {
+    return AttachDecision::NoAction;
+  }
+
+  auto* tarr = &thisval_.toObject().as<TypedArrayObject>();
+
+  // Detached buffer throws.
+  if (tarr->hasDetachedBuffer()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Resizable typed arrays not yet supported.
+  if (tarr->is<ResizableTypedArrayObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // TypedArray species fuse must still be intact.
+  if (!cx_->realm()->realmFuses.optimizeTypedArraySpeciesFuse.intact()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure |tarr|'s prototype is the actual concrete TypedArray.prototype.
+  auto protoKey = StandardProtoKeyOrNull(tarr);
+  auto* proto = cx_->global()->maybeGetPrototype(protoKey);
+  if (!proto || tarr->staticPrototype() != proto) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure no own "constructor" property.
+  if (tarr->containsPure(cx_->names().constructor)) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId = initializeInputOperand();
+
+  // Guard callee is the `subarray` native function.
+  ObjOperandId calleeId = emitNativeCalleeGuard(argcId);
+
+  // Guard this is an object.
+  ValOperandId thisValId = loadThis(calleeId);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+
+  // Shape guard to check class and prototype, and to ensure no own
+  // "constructor" property is present.
+  writer.guardShape(objId, tarr->shape());
+
+  // Guard the array buffer is not detached. (Immutable typed arrays can't get
+  // detached.)
+  if (!tarr->is<ImmutableTypedArrayObject>()) {
+    writer.guardHasAttachedArrayBuffer(objId);
+  }
+
+  // Guard the fuse is intact.
+  writer.guardFuse(RealmFuses::FuseIndex::OptimizeTypedArraySpeciesFuse);
+
+  // Convert |start| to IntPtr.
+  IntPtrOperandId intPtrStartId;
+  if (args_.length() > 0) {
+    ValOperandId startId = loadArgument(calleeId, ArgumentKind::Arg0);
+    intPtrStartId =
+        guardToIntPtrIndex(args_[0], startId, /* supportOOB = */ false);
+  } else {
+    // Absent first argument defaults to zero.
+    intPtrStartId = writer.loadInt32AsIntPtrConstant(0);
+  }
+
+  // Convert |end| to IntPtr.
+  IntPtrOperandId intPtrEndId;
+  if (args_.length() > 1) {
+    ValOperandId endId = loadArgument(calleeId, ArgumentKind::Arg1);
+    intPtrEndId = guardToIntPtrIndex(args_[1], endId, /* supportOOB = */ false);
+  } else {
+    // Absent second argument defaults to the typed array length.
+    intPtrEndId = writer.loadArrayBufferViewLength(objId);
+  }
+
+  writer.typedArraySubarrayResult(objId, intPtrStartId, intPtrEndId);
+  writer.returnFromIC();
+
+  trackAttached("TypedArraySubarray");
+  return AttachDecision::Attach;
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachIsTypedArray(
     bool isPossiblyWrapped) {
   // Self-hosted code calls this with a single object argument.
@@ -12590,9 +12695,13 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
     case InlinableNative::IntrinsicGuardToSharedArrayBuffer:
       return tryAttachGuardToSharedArrayBuffer();
 
-    // TypedArray intrinsics.
+    // TypedArray natives.
     case InlinableNative::TypedArrayConstructor:
       return AttachDecision::NoAction;  // Not callable.
+    case InlinableNative::TypedArraySubarray:
+      return tryAttachTypedArraySubarray();
+
+    // TypedArray intrinsics.
     case InlinableNative::IntrinsicIsTypedArray:
       return tryAttachIsTypedArray(/* isPossiblyWrapped = */ false);
     case InlinableNative::IntrinsicIsPossiblyWrappedTypedArray:
