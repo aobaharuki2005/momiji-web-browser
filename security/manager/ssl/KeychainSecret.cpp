@@ -78,11 +78,6 @@ nsresult KeychainSecret::StoreSecret(const nsACString& aSecret,
   if (osrv != errSecSuccess) {
     MOZ_LOG(gKeychainSecretLog, LogLevel::Debug,
             ("SecItemAdd failed: %d", osrv));
-    nsPrintfCString osrvString("%d", osrv);
-    mozilla::glean::oskeystore::ReturnCodesExtra extra = {};
-    extra.function = Some("StoreSecret_SecItemAdd"_ns);
-    extra.result = Some(osrvString);
-    glean::oskeystore::return_codes.Record(Some(extra));
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -107,15 +102,10 @@ nsresult KeychainSecret::DeleteSecret(const nsACString& aLabel) {
       nullptr, (const void**)&keys, (const void**)&values, std::size(keys),
       &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
   // https://developer.apple.com/documentation/security/1395547-secitemdelete
-  OSStatus osrv = SecItemDelete(deleteDictionary.get());
-  if (osrv != errSecSuccess && osrv != errSecItemNotFound) {
+  OSStatus rv = SecItemDelete(deleteDictionary.get());
+  if (rv != errSecSuccess && rv != errSecItemNotFound) {
     MOZ_LOG(gKeychainSecretLog, LogLevel::Debug,
-            ("SecItemDelete failed: %d", osrv));
-    mozilla::glean::oskeystore::ReturnCodesExtra extra = {};
-    extra.function = Some("DeleteSecret_SecItemDelete"_ns);
-    nsPrintfCString osrvString("%d", osrv);
-    extra.result = Some(osrvString);
-    glean::oskeystore::return_codes.Record(Some(extra));
+            ("SecItemDelete failed: %d", rv));
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -149,20 +139,15 @@ nsresult KeychainSecret::RetrieveSecret(const nsACString& aLabel,
       &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
   CFTypeRef item;
   // https://developer.apple.com/documentation/security/1398306-secitemcopymatching
-  OSStatus osrv = SecItemCopyMatching(searchDictionary.get(), &item);
-  if (osrv == errSecItemNotFound) {
+  OSStatus rv = SecItemCopyMatching(searchDictionary.get(), &item);
+  if (rv == errSecItemNotFound) {
     MOZ_LOG(gKeychainSecretLog, LogLevel::Debug,
             ("Key not found in key store"));
     return NS_ERROR_NOT_AVAILABLE;
   }
-  if (osrv != errSecSuccess) {
+  if (rv != errSecSuccess) {
     MOZ_LOG(gKeychainSecretLog, LogLevel::Debug,
-            ("SecItemCopyMatching failed: %d", osrv));
-    mozilla::glean::oskeystore::ReturnCodesExtra extra = {};
-    extra.function = Some("RetrieveSecret_SecItemCopyMatching"_ns);
-    nsPrintfCString osrvString("%d", osrv);
-    extra.result = Some(osrvString);
-    glean::oskeystore::return_codes.Record(Some(extra));
+            ("SecItemCopyMatching failed: %d", rv));
     return NS_ERROR_FAILURE;
   }
   ScopedCFType<CFDictionaryRef> dictionary(
