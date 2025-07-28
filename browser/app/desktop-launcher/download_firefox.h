@@ -29,11 +29,16 @@ enum class ErrCode {
   ERR_SERVER,
   ERR_CONTENT,
   ERR_ENVIRON,
+  ERR_FILE_NOT_FOUND,   // Response from server was HTTP 404, file not found
+  ERR_CLIENT_REQUEST,   // Response from server was in the 4XX range of error
+                        // codes, but not 404
+  ERR_REQUEST_INVALID,  // Request was invalid for the server
   UNKNOWN
 };
 
-ErrCode download_file(DataSink* dataSink, std::wstring server,
-                      std::wstring object_name, std::wstring contentType);
+ErrCode download_file(DataSink* dataSink, std::wstring server, int server_port,
+                      bool is_https, std::wstring object_name,
+                      std::wstring contentType);
 ErrCode download_firefox(DataSink* dataSink);
 std::optional<std::wstring> get_object_name();
 

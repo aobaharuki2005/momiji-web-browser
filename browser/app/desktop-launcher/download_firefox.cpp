@@ -91,7 +91,13 @@ static void AsyncHttpStatusCallback(HINTERNET hInternet, DWORD_PTR dwContext,
         return;
       }
       if (dwResponseStatus != 200) {
-        exitCallback(context, ErrCode::ERR_SERVER);
+        if (dwResponseStatus == 404) {
+          exitCallback(context, ErrCode::ERR_FILE_NOT_FOUND);
+        } else if (dwResponseStatus >= 400 && dwResponseStatus < 500) {
+          exitCallback(context, ErrCode::ERR_CLIENT_REQUEST);
+        } else {
+          exitCallback(context, ErrCode::ERR_SERVER);
+        }
         return;
       }
       dwCount = sizeof contentTypeBuf;
@@ -133,6 +139,10 @@ static void AsyncHttpStatusCallback(HINTERNET hInternet, DWORD_PTR dwContext,
         exitCallback(context, ErrCode::ERR_QUERY_DATA);
       }
       break;
+
+    case WINHTTP_CALLBACK_STATUS_REQUEST_ERROR:
+      exitCallback(context, ErrCode::ERR_REQUEST_INVALID);
+      break;
   }
 }
 
@@ -149,7 +159,8 @@ static void AsyncHttpStatusCallback(HINTERNET hInternet, DWORD_PTR dwContext,
  * attempt
  */
 ErrCode download_file(DataSink* dataSink, std::wstring server_name,
-                      std::wstring object_name, std::wstring contentType) {
+                      int server_port, bool is_https, std::wstring object_name,
+                      std::wstring contentType) {
   DownloadContext context{};
   context.asyncStatus = ErrCode::UNKNOWN;
   context.dataSink = dataSink;
@@ -165,15 +176,16 @@ ErrCode download_file(DataSink* dataSink, std::wstring server_name,
   // Note: The WINHTTP_FLAG_SECURE_DEFAULTS flag instructs WinHttp to use secure
   // settings, such as disabling fallback to old versions of TLS, but it has the
   // side-effect of also forcing the session to be in async mode.
-  context.hsession = WinHttpOpen(
-      user_agent, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME,
-      WINHTTP_NO_PROXY_BYPASS, WINHTTP_FLAG_SECURE_DEFAULTS);
+  context.hsession =
+      WinHttpOpen(user_agent, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
+                  WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS,
+                  is_https ? WINHTTP_FLAG_SECURE_DEFAULTS : WINHTTP_FLAG_ASYNC);
   if (context.hsession == nullptr) {
     return ErrCode::ERR_OPEN;
   }
   // Create a (disconnected) connection by specifying the server and port
-  context.hconnection = WinHttpConnect(context.hsession, server_name.c_str(),
-                                       INTERNET_DEFAULT_HTTPS_PORT, 0);
+  context.hconnection =
+      WinHttpConnect(context.hsession, server_name.c_str(), server_port, 0);
   if (!context.hconnection) {
     return ErrCode::ERR_CONNECT;
   }
@@ -181,7 +193,7 @@ ErrCode download_file(DataSink* dataSink, std::wstring server_name,
   // (path/params) for the URL, as well as some other properties.
   context.hrequest = WinHttpOpenRequest(
       context.hconnection, L"GET", object_name.c_str(), nullptr,
-      WINHTTP_NO_REFERER, accept_types, WINHTTP_FLAG_SECURE);
+      WINHTTP_NO_REFERER, accept_types, is_https ? WINHTTP_FLAG_SECURE : 0);
   if (!context.hrequest) {
     return ErrCode::ERR_OPEN_REQ;
   }
@@ -211,6 +223,8 @@ ErrCode download_file(DataSink* dataSink, std::wstring server_name,
 
 static const wchar_t* server_name = L"download.mozilla.org";
 static const wchar_t* installer_content_type = L"application/x-msdos-program";
+static const int standard_server_port = INTERNET_DEFAULT_HTTPS_PORT;
+static const bool standard_is_https = true;
 
 /**
  * Attempt to download the Firefox stub installer, sinking its data to the
@@ -228,6 +242,6 @@ ErrCode download_firefox(DataSink* dataSink) {
     return ErrCode::ERR_ENVIRON;
   }
 
-  return download_file(dataSink, server_name, object_name,
-                       installer_content_type);
+  return download_file(dataSink, server_name, standard_server_port,
+                       standard_is_https, object_name, installer_content_type);
 }

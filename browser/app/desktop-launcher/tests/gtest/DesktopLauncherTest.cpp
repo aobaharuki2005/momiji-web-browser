@@ -5,24 +5,16 @@
 #include <windows.h>
 #include <string>
 #include <optional>
+#include <shellapi.h>
+
 #include "find_firefox.h"
 #include "tempfile_name.h"
 #include "download_firefox.h"
 #include "data_sink.h"
-
-class StringDataSink : public DataSink {
- public:
-  std::string data;
-
-  bool accept(char* buf, int count) {
-    std::string str(buf, count);
-    data += str;
-    return true;
-  }
-};
-
 class DesktopLauncherTest : public ::testing::Test {
  protected:
+  HANDLE serverProcessHandle = nullptr;
+
   void SetUp() override {}
 
   void TearDown() override {}
@@ -32,7 +24,8 @@ TEST_F(DesktopLauncherTest, FirefoxPathTest) {
   std::optional<std::wstring> path = lookupFirefoxPath();
   if (path.has_value()) {
     // If there is a Firefox path found, it should contain firefox.exe
-    ASSERT_TRUE(path.value().find(std::wstring(L"firefox.exe")) >= 0);
+    ASSERT_TRUE(path.value().find(std::wstring(L"firefox.exe")) !=
+                std::string::npos);
   }
 }
 
@@ -46,5 +39,6 @@ TEST_F(DesktopLauncherTest, TempFileNameTest) {
 TEST_F(DesktopLauncherTest, TestGetObjectName) {
   std::optional<std::wstring> objectName = get_object_name();
   ASSERT_TRUE(objectName.has_value());
-  ASSERT_EQ(objectName.value().find(L"/?product=firefox-stub&os=win&lang="), 0);
+  ASSERT_EQ(
+      (int)objectName.value().find(L"/?product=firefox-stub&os=win&lang="), 0);
 }
