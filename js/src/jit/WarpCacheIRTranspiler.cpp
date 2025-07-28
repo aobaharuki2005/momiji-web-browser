@@ -471,6 +471,7 @@ bool WarpCacheIRTranspiler::emitGuardFuse(RealmFuses::FuseIndex fuseIndex) {
   switch (fuseIndex) {
     case RealmFuses::FuseIndex::OptimizeGetIteratorFuse:
     case RealmFuses::FuseIndex::OptimizeArraySpeciesFuse:
+    case RealmFuses::FuseIndex::OptimizeTypedArraySpeciesFuse:
     case RealmFuses::FuseIndex::OptimizeRegExpPrototypeFuse:
     case RealmFuses::FuseIndex::OptimizeStringPrototypeSymbolsFuse:
       // This is a no-op because WarpOracle has added a compilation dependency.

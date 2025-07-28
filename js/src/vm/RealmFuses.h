@@ -201,7 +201,7 @@ struct OptimizeSharedArrayBufferSpeciesFuse final : public RealmFuse {
 //   - Float16Array
 //   - Float32Array
 //   - Float64Array
-struct OptimizeTypedArraySpeciesFuse final : public RealmFuse {
+struct OptimizeTypedArraySpeciesFuse final : public InvalidatingRealmFuse {
   virtual const char* name() override {
     return "OptimizeTypedArraySpeciesFuse";
   }

@@ -24,6 +24,7 @@ struct CompilationDependency : public TempObject {
   enum class Type {
     GetIterator,
     ArraySpecies,
+    TypedArraySpecies,
     RegExpPrototype,
     StringPrototypeSymbols,
     EmulatesUndefined,
