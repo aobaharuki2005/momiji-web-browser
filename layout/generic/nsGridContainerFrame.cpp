@@ -7379,8 +7379,7 @@ float nsGridContainerFrame::Tracks::FindFrUnitSize(
 
     // 12.7.1.2: If flexFactorSum is less than 1, set it to 1 instead.
     hypotheticalFrSize = leftOverSpace / std::max(flexFactorSum, 1.0f);
-    for (uint32_t i = 0, len = flexTracks.Length(); i < len; ++i) {
-      uint32_t track = flexTracks[i];
+    for (uint32_t& track : flexTracks) {
       if (track == kAutoLine) {
         continue;  // Track marked as inflexible in a prev. iter of this loop.
       }
@@ -7388,7 +7387,7 @@ float nsGridContainerFrame::Tracks::FindFrUnitSize(
       const nscoord base = mSizes[track].mBase;
       if (flexFactor * hypotheticalFrSize < base) {
         // 12.7.1.4: Treat this track as inflexible.
-        flexTracks[i] = kAutoLine;
+        track = kAutoLine;
         flexFactorSum -= flexFactor;
         leftOverSpace -= base;
         --numFlexTracks;
