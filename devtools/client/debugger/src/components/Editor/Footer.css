@@ -69,7 +69,7 @@
 
 .source-footer .commands button.prettyPrint.pretty span {
   fill: var(--theme-icon-checked-color);
-  stroke-width: 4;
+  stroke: var(--theme-icon-checked-color);
 }
 
 .devtools-button.debugger-source-map-button {
