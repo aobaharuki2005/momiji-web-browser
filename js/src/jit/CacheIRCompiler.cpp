@@ -9466,6 +9466,16 @@ bool CacheIRCompiler::emitLoadInt32Constant(uint32_t valOffset,
   return true;
 }
 
+bool CacheIRCompiler::emitLoadInt32AsIntPtrConstant(uint32_t valOffset,
+                                                    IntPtrOperandId resultId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register reg = allocator.defineRegister(masm, resultId);
+  StubFieldOffset val(valOffset, StubField::Type::RawInt32);
+  emitLoadStubField(val, reg);
+  masm.move32SignExtendToPtr(reg, reg);
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadBooleanConstant(bool val,
                                               BooleanOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
