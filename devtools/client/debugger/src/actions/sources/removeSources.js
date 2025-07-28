@@ -4,7 +4,11 @@
 
 import { getEditor } from "../../utils/editor/index";
 
-export function removeSources(sources, actors) {
+export function removeSources(
+  sources,
+  actors,
+  { resetSelectedLocation = true } = {}
+) {
   return async ({ parserWorker, dispatch, sourceMapLoader }) => {
     // Remove the sources from the reducers first, and most importantly before any async work
     // as we may otherwise remove the source at an unexpected time.
@@ -12,6 +16,7 @@ export function removeSources(sources, actors) {
       type: "REMOVE_SOURCES",
       sources,
       actors,
+      resetSelectedLocation,
     });
 
     const sourceIds = sources.map(source => source.id);

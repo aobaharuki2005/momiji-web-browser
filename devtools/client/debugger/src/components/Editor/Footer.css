@@ -67,6 +67,11 @@
   opacity: 0.6;
 }
 
+.source-footer .commands button.prettyPrint.pretty span {
+  fill: var(--theme-icon-checked-color);
+  stroke-width: 4;
+}
+
 .devtools-button.debugger-source-map-button {
   display: inline-flex;
   align-items: center;

@@ -412,14 +412,10 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
   assertBreakpointHeading(dbg, "query.js?x=1", 0);
 
   // pretty print the source and check the tab text
-  clickElement(dbg, "prettyPrintButton");
-  await waitForSource(dbg, "query.js?x=1:formatted");
-  await waitForSelectedSource(dbg, "query.js?x=1:formatted");
-  assertSourceIcon(dbg, "query.js?x=1", "prettyPrint");
+  await togglePrettyPrint(dbg);
 
   const prettyTab = findElement(dbg, "activeTab");
   is(prettyTab.innerText, "query.js?x=1", "Tab label is query.js?x=1");
-  ok(prettyTab.querySelector(".img.prettyPrint"));
   assertBreakpointHeading(dbg, "query.js?x=1", 0);
   assertTextContentOnLine(dbg, 1, `function query() {`);
   // Note the replacements of " by ' here:

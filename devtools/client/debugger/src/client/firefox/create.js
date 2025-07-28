@@ -247,7 +247,11 @@ function createSourceObject({
   isHTML = false,
   generatedSource = null,
 }) {
-  const displayURL = getDisplayURL(url, extensionName);
+  // Ensure removing the internal :formatted suffix for the display URL object.
+  const displayURL = getDisplayURL(
+    isPrettyPrinted ? url.replace(/:formatted$/, "") : url,
+    extensionName
+  );
   return {
     // The ID, computed by:
     // * `makeSourceId` for generated,

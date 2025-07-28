@@ -361,7 +361,10 @@ function removeSourcesAndActors(state, action) {
 
     mutableBreakpointPositions.delete(sourceId);
 
-    if (newState.selectedLocation?.source == removedSource) {
+    if (
+      action.resetSelectedLocation &&
+      newState.selectedLocation?.source == removedSource
+    ) {
       newState.selectedLocation = null;
       newState.selectedOriginalLocation = UNDEFINED_LOCATION;
     }
@@ -386,7 +389,10 @@ function removeSourcesAndActors(state, action) {
       mutableSourceActors.delete(sourceId);
     }
 
-    if (newState.selectedLocation?.sourceActor == removedActor) {
+    if (
+      action.resetSelectedLocation &&
+      newState.selectedLocation?.sourceActor == removedActor
+    ) {
       newState.selectedLocation = null;
       newState.selectedOriginalLocation = UNDEFINED_LOCATION;
     }
