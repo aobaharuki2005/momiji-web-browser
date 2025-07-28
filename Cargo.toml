@@ -244,6 +244,7 @@ objc = { git = "https://github.com/glandium/rust-objc", rev = "4de89f5aa9851ceca
 
 # application-services overrides to make updating them all simpler.
 context_id = { git = "https://github.com/mozilla/application-services", rev = "365edb4392e621ede6c3daf9c8d80505d3a9c4aa" }
+error-support = { git = "https://github.com/mozilla/application-services", rev = "365edb4392e621ede6c3daf9c8d80505d3a9c4aa" }
 filter_adult = { git = "https://github.com/mozilla/application-services", rev = "365edb4392e621ede6c3daf9c8d80505d3a9c4aa" }
 interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "365edb4392e621ede6c3daf9c8d80505d3a9c4aa" }
 relevancy = { git = "https://github.com/mozilla/application-services", rev = "365edb4392e621ede6c3daf9c8d80505d3a9c4aa" }
