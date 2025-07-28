@@ -56,7 +56,7 @@ nsImageRenderer::nsImageRenderer(nsIFrame* aForFrame, const StyleImage* aImage,
                                  uint32_t aFlags)
     : mForFrame(aForFrame),
       mImage(&aImage->FinalImage()),
-      mImageResolution(aImage->GetResolution(*aForFrame->Style())),
+      mImageResolution(aImage->GetResolution(aForFrame->Style())),
       mType(mImage->tag),
       mImageContainer(nullptr),
       mGradientData(nullptr),

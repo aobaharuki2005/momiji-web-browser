@@ -879,8 +879,11 @@ IntrinsicSize nsImageFrame::ComputeIntrinsicSize(
          GetContent()->AsElement()->HasNonEmptyAttr(nsGkAtoms::src))) {
       ScaleIntrinsicSizeForDensity(mImage, *GetContent(), intrinsicSize);
     } else {
+      // We don't include zoom here because FinishIntrinsicSize already does it
+      // for us.
       ScaleIntrinsicSizeForDensity(
-          intrinsicSize, GetImageFromStyle()->GetResolution(*Style()));
+          intrinsicSize,
+          GetImageFromStyle()->GetResolution(/* aStyleForZoom = */ nullptr));
     }
     return FinishIntrinsicSize(containAxes, intrinsicSize);
   }
