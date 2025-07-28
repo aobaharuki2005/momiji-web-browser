@@ -17,7 +17,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 /** Executes a Python script embedded in the resources. */
-public class PythonExec extends Exec {
+abstract public class PythonExec extends Exec {
     /** Path to the script to execute */
     String mScriptPath;
 

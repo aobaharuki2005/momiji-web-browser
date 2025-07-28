@@ -11,7 +11,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.javadoc.Javadoc
 
-class ApiCompatLintTask extends Javadoc {
+abstract class ApiCompatLintTask extends Javadoc {
     @OutputFile
     File outputFile
 
