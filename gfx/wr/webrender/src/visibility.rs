@@ -380,12 +380,6 @@ pub fn update_prim_visibility(
         }
     }
 
-    if let Some(snapshot) = &pic.snapshot {
-        let prim_surface_index = frame_state.surface_stack.last().unwrap().1;
-        let surface = &mut frame_state.surfaces[prim_surface_index.0];
-        surface.clipped_local_rect = surface.clipped_local_rect.intersection_unchecked(&snapshot.area.round_out().cast_unit());
-    }
-
     if pop_surface {
         frame_state.pop_surface();
     }
