@@ -1,0 +1,9 @@
+DEFINES["UNICODE"] = True
+DEFINES["_UNICODE"] = True
+
+LOCAL_INCLUDES += ["/browser/app/desktop-launcher"]
+
+UNIFIED_SOURCES += [
+    "DesktopLauncherTest.cpp",
+]
+FINAL_LIBRARY = "xul-gtest"
