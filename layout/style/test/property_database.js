@@ -9842,14 +9842,6 @@ var gCSSProperties = {
     other_values: ["non-scaling-stroke"],
     invalid_values: ["none non-scaling-stroke"],
   },
-  "-moz-window-dragging": {
-    domProp: "MozWindowDragging",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["default"],
-    other_values: ["drag", "no-drag"],
-    invalid_values: ["none"],
-  },
   "accent-color": {
     domProp: "accentColor",
     inherited: true,
