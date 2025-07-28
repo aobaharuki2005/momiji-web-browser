@@ -2961,6 +2961,7 @@ package org.mozilla.geckoview {
     field @NonNull public final WebNotificationAction[] actions;
     field @Nullable public final String imageUrl;
     field @Nullable public final String lang;
+    field @NonNull public final String origin;
     field public final boolean privateBrowsing;
     field public final boolean requireInteraction;
     field public final boolean silent;

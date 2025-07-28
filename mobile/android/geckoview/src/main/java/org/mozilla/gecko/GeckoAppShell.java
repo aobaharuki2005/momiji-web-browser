@@ -793,15 +793,16 @@ public class GeckoAppShell {
   }
 
   @WrapForJNI(dispatchTo = "gecko")
-  private static native void notifyAlertListener(String name, String topic, String action);
+  private static native void notifyAlertListener(
+      String name, String topic, String action, String origin);
 
   /**
    * Called by the NotificationListener to notify Gecko that a previously shown notification has
    * been closed.
    */
-  public static void onNotificationClose(final String name) {
+  public static void onNotificationClose(@NotNull final String name, @NotNull final String origin) {
     if (GeckoThread.isRunning()) {
-      notifyAlertListener(name, "alertfinished", null);
+      notifyAlertListener(name, "alertfinished", null, origin);
     }
   }
 
@@ -809,9 +810,10 @@ public class GeckoAppShell {
    * Called by the NotificationListener to notify Gecko that a previously shown notification has
    * been clicked on.
    */
-  public static void onNotificationClick(final String name, @Nullable final String action) {
+  public static void onNotificationClick(
+      @NotNull final String name, @Nullable final String action, @NotNull final String origin) {
     if (GeckoThread.isRunning()) {
-      notifyAlertListener(name, "alertclickcallback", action);
+      notifyAlertListener(name, "alertclickcallback", action, origin);
     } else {
       GeckoThread.queueNativeCallUntil(
           GeckoThread.State.PROFILE_READY,
@@ -820,7 +822,8 @@ public class GeckoAppShell {
           name,
           "alertclickcallback",
           String.class,
-          action);
+          action,
+          origin);
     }
   }
 

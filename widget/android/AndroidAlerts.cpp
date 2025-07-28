@@ -4,11 +4,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AndroidAlerts.h"
+#include "mozilla/dom/notification/NotificationHandler.h"
 #include "mozilla/java/GeckoRuntimeWrappers.h"
 #include "mozilla/java/WebNotificationWrappers.h"
 #include "mozilla/java/WebNotificationActionWrappers.h"
+#include "nsContentUtils.h"
 #include "nsIPrincipal.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIURI.h"
+
+using namespace mozilla::dom::notification;
 
 namespace mozilla {
 namespace widget {
@@ -121,6 +126,10 @@ AndroidAlerts::ShowAlert(nsIAlertNotification* aAlert,
     ++index;
   }
 
+  nsAutoCString origin;
+  rv = aAlert->GetOrigin(origin);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
   if (!sNotificationMap) {
     sNotificationMap = new NotificationMap();
   } else if (Maybe<AndroidNotificationTuple> tuple =
@@ -132,7 +141,7 @@ AndroidAlerts::ShowAlert(nsIAlertNotification* aAlert,
 
   java::WebNotification::LocalRef notification = notification->New(
       title, name, cookie, text, imageUrl, dir, lang, requireInteraction, spec,
-      silent, privateBrowsing, jni::IntArray::From(vibrate), actions);
+      silent, privateBrowsing, jni::IntArray::From(vibrate), actions, origin);
   AndroidNotificationTuple tuple{
       .mObserver = aAlertListener,
       .mAlert = aAlert,
@@ -190,7 +199,8 @@ NS_IMETHODIMP AndroidAlerts::Teardown() {
 NS_IMETHODIMP AndroidAlerts::PbmTeardown() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 void AndroidAlerts::NotifyListener(const nsAString& aName, const char* aTopic,
-                                   Maybe<nsString> aAction) {
+                                   Maybe<nsString> aAction,
+                                   const nsACString& aOrigin) {
   if (!sNotificationMap) {
     return;
   }
