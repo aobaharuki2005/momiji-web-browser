@@ -143,8 +143,7 @@ class CodeGeneratorShared : public LElementVisitor {
   inline Address ToAddress(const LInt64Allocation& a) const;
 
   static inline Address ToAddress(Register elements, const LAllocation* index,
-                                  Scalar::Type type,
-                                  int32_t offsetAdjustment = 0);
+                                  Scalar::Type type);
 
   uint32_t frameSize() const { return frameDepth_; }
 
