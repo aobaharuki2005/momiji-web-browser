@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AppleATDecoder.h"
+#include <CoreAudioTypes/CoreAudioBaseTypes.h>
 #include "Adts.h"
 #include "AppleUtils.h"
 #include "MP4Decoder.h"
@@ -24,6 +25,9 @@
 #define FourCC2Str(n) \
   ((char[5]){(char)(n >> 24), (char)(n >> 16), (char)(n >> 8), (char)(n), 0})
 
+const int AUDIO_OBJECT_TYPE_USAC = 42;
+const UInt32 kDynamicRangeControlProperty = 0x64726370;  // "drcp"
+
 namespace mozilla {
 
 AppleATDecoder::AppleATDecoder(const AudioInfo& aConfig)
@@ -36,22 +40,33 @@ AppleATDecoder::AppleATDecoder(const AudioInfo& aConfig)
       mErrored(false) {
   MOZ_COUNT_CTOR(AppleATDecoder);
   LOG("Creating Apple AudioToolbox decoder");
-  LOG("Audio Decoder configuration: %s %d Hz %d channels %d bits per channel",
+  LOG("Audio Decoder configuration: %s %d Hz %d channels %d bits per channel "
+      "profile=%d extended_profile=%d",
       mConfig.mMimeType.get(), mConfig.mRate, mConfig.mChannels,
-      mConfig.mBitDepth);
+      mConfig.mBitDepth, mConfig.mProfile, mConfig.mExtendedProfile);
 
   if (mConfig.mMimeType.EqualsLiteral("audio/mpeg")) {
     mFormatID = kAudioFormatMPEGLayer3;
   } else if (mConfig.mMimeType.EqualsLiteral("audio/mp4a-latm")) {
-    mFormatID = kAudioFormatMPEG4AAC;
     if (aConfig.mCodecSpecificConfig.is<AacCodecSpecificData>()) {
       const AacCodecSpecificData& aacCodecSpecificData =
           aConfig.mCodecSpecificConfig.as<AacCodecSpecificData>();
+
+      // Check if this is xHE-AAC (USAC) based on profile
+      if (mConfig.mProfile == 42) {
+        mFormatID = kAudioFormatMPEGD_USAC;
+        LOG("AppleATDecoder detected xHE-AAC/USAC format");
+      } else {
+        mFormatID = kAudioFormatMPEG4AAC;
+      }
+
       mEncoderDelay = aacCodecSpecificData.mEncoderDelayFrames;
       mTotalMediaFrames = aacCodecSpecificData.mMediaFrameCount;
       LOG("AppleATDecoder (aac), found encoder delay (%" PRIu32
           ") and total frame count (%" PRIu64 ") in codec-specific side data",
           mEncoderDelay, mTotalMediaFrames);
+    } else {
+      mFormatID = kAudioFormatMPEG4AAC;
     }
   } else {
     mFormatID = 0;
@@ -140,6 +155,8 @@ nsCString AppleATDecoder::GetCodecName() const {
       return "mp3"_ns;
     case kAudioFormatMPEG4AAC:
       return "aac"_ns;
+    case kAudioFormatMPEGD_USAC:
+      return "xhe-aac"_ns;
     default:
       return "unknown"_ns;
   }
@@ -355,8 +372,18 @@ MediaResult AppleATDecoder::GetInputAudioDescription(
   aDesc.mChannelsPerFrame = mConfig.mChannels;
   aDesc.mSampleRate = mConfig.mRate;
   UInt32 inputFormatSize = sizeof(aDesc);
-  OSStatus rv = AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0,
-                                       nullptr, &inputFormatSize, &aDesc);
+  OSStatus rv;
+
+  if (mFormatID == kAudioFormatMPEGD_USAC && aExtraData.Length() > 0) {
+    // For xHE-AAC/USAC, we need to use the magic cookie to get the format info
+    rv = AudioFormatGetProperty(kAudioFormatProperty_FormatInfo,
+                                aExtraData.Length(), aExtraData.Elements(),
+                                &inputFormatSize, &aDesc);
+  } else {
+    rv = AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, nullptr,
+                                &inputFormatSize, &aDesc);
+  }
+
   if (NS_WARN_IF(rv)) {
     return MediaResult(
         NS_ERROR_FAILURE,
@@ -535,6 +562,12 @@ MediaResult AppleATDecoder::SetupDecoder(MediaRawData* aSample) {
     mConfig.mProfile = mConfig.mExtendedProfile =
         parser.FirstFrame().Header().mObjectType;
     mIsADTS = true;
+
+    if (mFormatID == kAudioFormatMPEG4AAC &&
+        mConfig.mExtendedProfile == AUDIO_OBJECT_TYPE_USAC) {
+      LOG("Detected xHE-AAC profile 42, switching to kAudioFormatMPEGD_USAC");
+      mFormatID = kAudioFormatMPEGD_USAC;
+    }
   }
 
   if (mFormatID == kAudioFormatMPEG4AAC && mConfig.mExtendedProfile == 2 &&
@@ -599,7 +632,8 @@ MediaResult AppleATDecoder::SetupDecoder(MediaRawData* aSample) {
         RESULT_DETAIL("Error constructing AudioConverter:%d", int32_t(status)));
   }
 
-  if (magicCookie.Length() && mFormatID == kAudioFormatMPEG4AAC) {
+  if (magicCookie.Length() && (mFormatID == kAudioFormatMPEG4AAC ||
+                               mFormatID == kAudioFormatMPEGD_USAC)) {
     status = AudioConverterSetProperty(
         mConverter, kAudioConverterDecompressionMagicCookie,
         magicCookie.Length(), magicCookie.Elements());
@@ -615,6 +649,31 @@ MediaResult AppleATDecoder::SetupDecoder(MediaRawData* aSample) {
 
   if (NS_FAILED(SetupChannelLayout())) {
     NS_WARNING("Couldn't retrieve channel layout, will use default layout");
+  }
+
+  if (mFormatID == kAudioFormatMPEG4AAC &&
+      mConfig.mExtendedProfile == AUDIO_OBJECT_TYPE_USAC) {
+    const Float32 kDefaultLoudness = -16.0;
+    status = AudioConverterSetProperty(
+        mConverter, kAudioCodecPropertyProgramTargetLevel,
+        sizeof(kDefaultLoudness), &kDefaultLoudness);
+    if (status != noErr) {
+      LOG("AudioConverterSetProperty() failed to set loudness: %d",
+          int(status));
+      // Non-fatal error, continue
+    }
+
+    // Dynamic range control setting isn't in the SDK yet
+    // Values: none=0, night=1, noisy=2, limited=3
+    const UInt32 kDefaultEffectType = 3;
+    status = AudioConverterSetProperty(mConverter, kDynamicRangeControlProperty,
+                                       sizeof(kDefaultEffectType),
+                                       &kDefaultEffectType);
+    if (status != noErr) {
+      LOG("AudioConverterSetProperty() failed to set DRC effect type: %d",
+          int(status));
+      // Non-fatal error, continue
+    }
   }
 
   return NS_OK;
