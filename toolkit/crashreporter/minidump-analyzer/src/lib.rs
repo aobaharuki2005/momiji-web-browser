@@ -55,20 +55,34 @@ impl<'a> MinidumpAnalyzer<'a> {
         self
     }
 
+    /// Return the effective extras file to read.
+    pub fn get_extras_file(&self) -> Cow<'a, Path> {
+        self.extras
+            .map(Cow::Borrowed)
+            .unwrap_or_else(|| Cow::Owned(extra_path_from_minidump(&self.minidump)))
+    }
+
     /// Analyze the thread(s) and put stacks in the associated .extra file.
     pub fn analyze(self) -> anyhow::Result<()> {
-        let extra_file = self
-            .extras
-            .map(Cow::Borrowed)
-            .unwrap_or_else(|| Cow::Owned(extra_path_from_minidump(&self.minidump)));
+        let extra_file = self.get_extras_file();
         let extra_file = extra_file.as_ref();
 
         log::info!("minidump file path: {}", self.minidump.display());
         log::info!("extra file path: {}", extra_file.display());
 
-        let minidump = Minidump::read_path(&self.minidump).context("while reading minidump")?;
-
         let mut extra_json = parse_extra_file(extra_file)?;
+
+        self.analyze_json(&mut extra_json)?;
+
+        std::fs::write(extra_file, extra_json.to_string())
+            .context("while writing modified extra file")?;
+
+        Ok(())
+    }
+
+    /// Analyze the thread(s) and alter the given extra JSON data.
+    pub fn analyze_json(self, extra_json: &mut JsonValue) -> anyhow::Result<()> {
+        let minidump = Minidump::read_path(&self.minidump).context("while reading minidump")?;
 
         let proc = processor::Processor::new(&minidump)?;
 
@@ -133,9 +147,6 @@ impl<'a> MinidumpAnalyzer<'a> {
                 .unwrap()
                 .into();
         }
-
-        std::fs::write(extra_file, extra_json.to_string())
-            .context("while writing modified extra file")?;
 
         Ok(())
     }
