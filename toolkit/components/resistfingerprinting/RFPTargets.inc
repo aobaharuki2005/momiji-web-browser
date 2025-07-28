@@ -102,6 +102,8 @@ ITEM_VALUE(ScreenAvailToResolution,     68)
 ITEM_VALUE(UseHardcodedFontSubstitutes, 69)
 ITEM_VALUE(DiskStorageLimit,            70)
 ITEM_VALUE(WebCodecs,                   71)
+ITEM_VALUE(MaxTouchPoints,              72)
+ITEM_VALUE(MaxTouchPointsCollapse,      73)
 
 
 // !!! Don't forget to update kDefaultFingerprintingProtections in nsRFPService.cpp

@@ -420,6 +420,8 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
   static bool ExposeWebCodecsAPIImageDecoder(JSContext* aCx, JSObject* aObj);
   static bool IsWebCodecsRFPTargetEnabled(JSContext* aCx);
 
+  static uint32_t CollapseMaxTouchPoints(uint32_t aMaxTouchPoints);
+
  private:
   nsresult Init();
 

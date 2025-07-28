@@ -2742,3 +2742,13 @@ bool nsRFPService::IsWebCodecsRFPTargetEnabled(JSContext* aCx) {
   return nsContentUtils::ShouldResistFingerprinting_dangerous(
       principal, "Principal is the best context we have", RFPTarget::WebCodecs);
 }
+
+uint32_t nsRFPService::CollapseMaxTouchPoints(uint32_t aMaxTouchPoints) {
+  if (aMaxTouchPoints <= 1) {
+    return aMaxTouchPoints;
+  }
+  // Android reports 5 as the max value, if a device supports multi-touch at all
+  // collapse them all to 5. A minority of devices (mostly desktop devices)
+  // will report uncommon values like 2, 3, 8, etc
+  return 5;
+}
