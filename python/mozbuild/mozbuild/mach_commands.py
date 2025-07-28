@@ -1082,6 +1082,9 @@ def gtest(
 
     gtest_env["MOZ_RUN_GTEST"] = "True"
 
+    # For parity with CI mozharness test runner, provide Python path in an environment variable
+    gtest_env["PYTHON"] = sys.executable
+
     if shuffle:
         gtest_env["GTEST_SHUFFLE"] = "True"
 
