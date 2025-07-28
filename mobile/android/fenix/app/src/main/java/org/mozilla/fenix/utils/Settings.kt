@@ -47,6 +47,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.debugsettings.addresses.SharedPrefsAddressesDebugLocalesRepository
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.pixelSizeFor
 import org.mozilla.fenix.home.pocket.ContentRecommendationsFeatureHelper
 import org.mozilla.fenix.home.topsites.TopSitesConfigConstants.TOP_SITES_MAX_COUNT
 import org.mozilla.fenix.iconpicker.AppIcon
@@ -2277,7 +2278,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         val isToolbarAtBottom = toolbarPosition == ToolbarPosition.BOTTOM
 
         val microsurveyHeight = if (isMicrosurveyEnabled) {
-            appContext.resources.getDimensionPixelSize(R.dimen.browser_microsurvey_height)
+            appContext.pixelSizeFor(R.dimen.browser_microsurvey_height)
         } else {
             0
         }
@@ -2289,7 +2290,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         }
 
         val navBarHeight = if (shouldUseExpandedToolbar) {
-            appContext.resources.getDimensionPixelSize(R.dimen.browser_navbar_height)
+            appContext.pixelSizeFor(R.dimen.browser_navbar_height)
         } else {
             0
         }
@@ -2307,7 +2308,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         val toolbarHeight = browserToolbarHeight
 
         return if (isToolbarAtTop && includeTabStrip) {
-            toolbarHeight + appContext.resources.getDimensionPixelSize(R.dimen.tab_strip_height)
+            toolbarHeight + appContext.pixelSizeFor(R.dimen.tab_strip_height)
         } else if (isToolbarAtTop) {
             toolbarHeight
         } else {
@@ -2319,7 +2320,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      * Returns the height of the browser toolbar height.
      */
     val browserToolbarHeight: Int
-        get() = appContext.resources.getDimensionPixelSize(
+        get() = appContext.pixelSizeFor(
             when (shouldUseComposableToolbar) {
                 true -> R.dimen.composable_browser_toolbar_height
                 false -> R.dimen.browser_toolbar_height
@@ -2336,13 +2337,13 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         val isMicrosurveyEnabled = shouldShowMicrosurveyPrompt
 
         val microsurveyHeight = if (isMicrosurveyEnabled) {
-            appContext.resources.getDimensionPixelSize(R.dimen.browser_microsurvey_height)
+            appContext.pixelSizeFor(R.dimen.browser_microsurvey_height)
         } else {
             0
         }
 
         val navBarHeight = if (shouldUseExpandedToolbar) {
-            appContext.resources.getDimensionPixelSize(R.dimen.browser_navbar_height)
+            appContext.pixelSizeFor(R.dimen.browser_navbar_height)
         } else {
             0
         }

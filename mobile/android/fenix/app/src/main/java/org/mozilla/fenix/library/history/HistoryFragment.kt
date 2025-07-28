@@ -109,6 +109,7 @@ import org.mozilla.fenix.databinding.FragmentHistoryBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.pixelSizeFor
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.setTextColor
@@ -513,7 +514,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
         (activity as? AppCompatActivity)?.supportActionBar?.hide()
         binding.historyLayout.updateLayoutParams {
             (this as? ViewGroup.MarginLayoutParams)?.topMargin =
-                requireContext().resources.getDimensionPixelSize(R.dimen.composable_browser_toolbar_height)
+                pixelSizeFor(R.dimen.composable_browser_toolbar_height)
         }
         searchLayout?.isVisible = true
     }

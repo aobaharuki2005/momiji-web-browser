@@ -87,6 +87,7 @@ import org.mozilla.fenix.components.menu.store.TranslationInfo
 import org.mozilla.fenix.components.menu.store.WebExtensionMenuItem
 import org.mozilla.fenix.ext.getWindowInsets
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
+import org.mozilla.fenix.ext.pixelSizeFor
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
@@ -879,9 +880,8 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
     private fun calculateMenuSheetWidth(): Int {
         val isLandscape = requireContext().isLandscape()
         val screenWidthPx = requireContext().resources.configuration.screenWidthDp.dpToPx(resources.displayMetrics)
-        val totalHorizontalPadding = 2 * requireContext().resources.getDimensionPixelSize(R.dimen.browser_menu_padding)
-        val minScreenWidth = requireContext().resources.getDimensionPixelSize(R.dimen.browser_menu_max_width) +
-            totalHorizontalPadding
+        val totalHorizontalPadding = 2 * pixelSizeFor(R.dimen.browser_menu_padding)
+        val minScreenWidth = pixelSizeFor(R.dimen.browser_menu_max_width) + totalHorizontalPadding
 
         // We only want to restrict the width of the menu if the device is in landscape mode AND the
         // device's screen width is smaller than the menu's max width and total horizontal padding combined.
@@ -889,7 +889,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
         return if (isLandscape && screenWidthPx < minScreenWidth) {
             screenWidthPx - totalHorizontalPadding
         } else {
-            requireContext().resources.getDimensionPixelSize(R.dimen.browser_menu_max_width)
+            pixelSizeFor(R.dimen.browser_menu_max_width)
         }
     }
 

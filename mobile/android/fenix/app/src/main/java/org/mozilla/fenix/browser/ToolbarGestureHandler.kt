@@ -33,6 +33,7 @@ import org.mozilla.fenix.ext.getRectWithScreenLocation
 import org.mozilla.fenix.ext.getWindowInsets
 import org.mozilla.fenix.ext.isKeyboardVisible
 import org.mozilla.fenix.ext.maxActiveTime
+import org.mozilla.fenix.ext.pixelSizeFor
 import org.mozilla.fenix.ext.settings
 import kotlin.math.abs
 import kotlin.math.max
@@ -66,7 +67,7 @@ class ToolbarGestureHandler(
         get() = activity.resources.displayMetrics.widthPixels
 
     private val previewOffset =
-        activity.resources.getDimensionPixelSize(R.dimen.browser_fragment_gesture_preview_offset)
+        activity.pixelSizeFor(R.dimen.browser_fragment_gesture_preview_offset)
 
     private val touchSlop = ViewConfiguration.get(activity).scaledTouchSlop
     private val minimumFlingVelocity = ViewConfiguration.get(activity).scaledMinimumFlingVelocity

@@ -28,6 +28,7 @@ import org.mozilla.fenix.databinding.FragmentHomeToolbarViewLayoutBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapAreaVertically
 import org.mozilla.fenix.ext.isLargeWindow
+import org.mozilla.fenix.ext.pixelSizeFor
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeMenuView
@@ -69,7 +70,7 @@ internal class HomeToolbarView(
         initLayoutParameters()
 
         toolbarBinding.toolbarText.compoundDrawablePadding =
-            context.resources.getDimensionPixelSize(R.dimen.search_bar_search_engine_icon_padding)
+            context.pixelSizeFor(R.dimen.search_bar_search_engine_icon_padding)
 
         toolbarBinding.toolbarWrapper.setOnClickListener {
             interactor.onNavigateSearch()
@@ -224,9 +225,9 @@ internal class HomeToolbarView(
 
                 homeBinding.homeAppBar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                     topMargin =
-                        context.resources.getDimensionPixelSize(R.dimen.home_fragment_top_toolbar_header_margin) +
+                        context.pixelSizeFor(R.dimen.home_fragment_top_toolbar_header_margin) +
                         if (isTabletAndTabStripEnabled) {
-                            context.resources.getDimensionPixelSize(R.dimen.tab_strip_height)
+                            context.pixelSizeFor(R.dimen.tab_strip_height)
                         } else {
                             0
                         }

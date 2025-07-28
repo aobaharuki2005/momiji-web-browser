@@ -43,6 +43,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.SwipeToDismissState2
 import org.mozilla.fenix.compose.tabstray.TabGridItem
 import org.mozilla.fenix.compose.tabstray.TabListItem
+import org.mozilla.fenix.ext.pixelSizeFor
 import org.mozilla.fenix.tabstray.browser.compose.DragItemContainer
 import org.mozilla.fenix.tabstray.browser.compose.createGridReorderState
 import org.mozilla.fenix.tabstray.browser.compose.createListReorderState
@@ -155,8 +156,8 @@ private fun TabGrid(
     val state = rememberLazyGridState(initialFirstVisibleItemIndex = selectedTabIndex)
     val tabListBottomPadding = dimensionResource(id = R.dimen.tab_tray_list_bottom_padding)
     val tabThumbnailSize = max(
-        LocalContext.current.resources.getDimensionPixelSize(R.dimen.tab_tray_grid_item_thumbnail_height),
-        LocalContext.current.resources.getDimensionPixelSize(R.dimen.tab_tray_grid_item_thumbnail_width),
+        LocalContext.current.pixelSizeFor(R.dimen.tab_tray_grid_item_thumbnail_height),
+        LocalContext.current.pixelSizeFor(R.dimen.tab_tray_grid_item_thumbnail_width),
     )
     val isInMultiSelectMode = selectionMode is TabsTrayState.Mode.Select
 
@@ -267,8 +268,8 @@ private fun TabList(
     val state = rememberLazyListState(initialFirstVisibleItemIndex = selectedTabIndex)
     val tabListBottomPadding = dimensionResource(id = R.dimen.tab_tray_list_bottom_padding)
     val tabThumbnailSize = max(
-        LocalContext.current.resources.getDimensionPixelSize(R.dimen.tab_tray_list_item_thumbnail_height),
-        LocalContext.current.resources.getDimensionPixelSize(R.dimen.tab_tray_list_item_thumbnail_width),
+        LocalContext.current.pixelSizeFor(R.dimen.tab_tray_list_item_thumbnail_height),
+        LocalContext.current.pixelSizeFor(R.dimen.tab_tray_list_item_thumbnail_width),
     )
     val isInMultiSelectMode = selectionMode is TabsTrayState.Mode.Select
     val reorderState = createListReorderState(

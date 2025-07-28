@@ -38,6 +38,8 @@ import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.toolbar.ToolbarPosition.BOTTOM
 import org.mozilla.fenix.components.toolbar.ToolbarPosition.TOP
 import org.mozilla.fenix.databinding.FragmentHomeBinding
+import org.mozilla.fenix.ext.pixelSizeFor
+import org.mozilla.fenix.home.toolbar.HomeToolbarComposable.Companion.DirectToSearchConfig
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.Settings
 
@@ -164,7 +166,7 @@ internal class HomeToolbarComposable(
     private fun updateHomeAppBarIntegration() {
         if (!settings.shouldUseBottomToolbar) {
             homeBinding.homeAppBar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                topMargin = context.resources.getDimensionPixelSize(R.dimen.home_fragment_top_toolbar_header_margin) +
+                topMargin = context.pixelSizeFor(R.dimen.home_fragment_top_toolbar_header_margin) +
                     when (settings.isTabStripEnabled) {
                         true -> context.resources.getDimensionPixelSize(R.dimen.tab_strip_height)
                         false -> 0

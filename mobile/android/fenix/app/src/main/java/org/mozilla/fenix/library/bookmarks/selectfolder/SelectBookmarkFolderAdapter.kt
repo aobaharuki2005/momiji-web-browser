@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.pixelSizeFor
 import org.mozilla.fenix.library.LibrarySiteItemView
 import org.mozilla.fenix.library.bookmarks.BookmarkNodeWithDepth
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
@@ -72,7 +73,7 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
             view.setOnClickListener {
                 onSelect(folder.node)
             }
-            val pxToIndent = view.resources.getDimensionPixelSize(R.dimen.bookmark_select_folder_indent)
+            val pxToIndent = view.pixelSizeFor(R.dimen.bookmark_select_folder_indent)
             val padding = pxToIndent * minOf(MAX_DEPTH, folder.depth)
             view.updatePaddingRelative(start = padding)
         }
