@@ -53,8 +53,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.filterState
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.sort
-import org.mozilla.fenix.home.PocketMiddleware
-import org.mozilla.fenix.home.SettingsBackedPocketSettings
+import org.mozilla.fenix.home.PocketUpdatesMiddleware
 import org.mozilla.fenix.home.blocklist.BlocklistHandler
 import org.mozilla.fenix.home.blocklist.BlocklistMiddleware
 import org.mozilla.fenix.home.middleware.HomeTelemetryMiddleware
@@ -264,11 +263,9 @@ class Components(private val context: Context) {
             ).run { filterState(blocklistHandler) },
             middlewares = listOf(
                 BlocklistMiddleware(blocklistHandler),
-                PocketMiddleware(
+                PocketUpdatesMiddleware(
                     lazyMonitored { core.pocketStoriesService },
                     context.pocketStoriesSelectedCategoriesDataStore,
-                    SettingsBackedPocketSettings(settings),
-                    performance.visualCompletenessQueue.queue,
                 ),
                 MessagingMiddleware(
                     controller = nimbus.messaging,

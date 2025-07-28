@@ -140,7 +140,6 @@ internal object AppStoreReducer {
             val wallpaperState = state.wallpaperState.copy(availableWallpapers = wallpapers)
             state.copy(wallpaperState = wallpaperState)
         }
-        is AppAction.AppLifecycleAction.StartAction -> { state } // noop
         is AppAction.AppLifecycleAction.ResumeAction -> {
             state.copy(isForeground = true)
         }
