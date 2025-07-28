@@ -3719,10 +3719,11 @@ class Document : public nsINode,
   // effect once per document, and so is called during document destruction.
   void ReportDocumentUseCounters();
 
-  // Report the names of the HTMLDocument properties thad had been shadowed
-  // using id/name and were then accessed ("DOM clobbering"). This data is
-  // collected by nsHTMLDocument::NamedGetter and limited to 10 unique entries.
-  void ReportShadowedHTMLDocumentProperties();
+  // Report the names of the HTMLDocument/HTMLFormElement properties that had
+  // been shadowed using ID/name, and which were subsequently accessed
+  // ("DOM clobbering"). This data is collected by the corresponding NamedGetter
+  // methods and limited to 10 unique entries.
+  void ReportShadowedProperties();
 
   // Reports largest contentful paint via telemetry. We want the most up to
   // date value for LCP and so this is called during document destruction.
@@ -3756,6 +3757,8 @@ class Document : public nsINode,
   // referencing document's ReportUseCounters() like external resource documents
   // can.
   void PropagateImageUseCounters(Document* aReferencingDocument);
+
+  void CollectShadowedHTMLFormElementProperty(const nsAString& aName);
 
   // Called to track whether this document has had any interaction.
   // This is used to track whether we should permit "beforeunload".
@@ -5607,6 +5610,10 @@ class Document : public nsINode,
   // Used by the shadowed_html_document_property_access telemetry probe to
   // collected shadowed HTMLDocument properties. (Limited to 10 entries)
   nsTArray<nsString> mShadowedHTMLDocumentProperties;
+
+  // Used by the shadowed_html_form_element_property_access telemetry probe to
+  // collected shadowed HTMLFormElement properties. (Limited to 10 entries)
+  nsTArray<nsString> mShadowedHTMLFormElementProperties;
 
   // Bitfield to be collected in the pageload event, recording relevant features
   // used in the document

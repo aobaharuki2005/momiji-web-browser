@@ -12132,7 +12132,7 @@ void Document::Destroy() {
   RemoveCustomContentContainer();
 
   ReportDocumentUseCounters();
-  ReportShadowedHTMLDocumentProperties();
+  ReportShadowedProperties();
   ReportLCP();
   SetDevToolsWatchingDOMMutations(false);
 
@@ -17090,6 +17090,13 @@ void Document::PropagateImageUseCounters(Document* aReferencingDocument) {
   aReferencingDocument->mChildDocumentUseCounters |= mChildDocumentUseCounters;
 }
 
+void Document::CollectShadowedHTMLFormElementProperty(const nsAString& aName) {
+  if (mShadowedHTMLFormElementProperties.Length() <= 10 &&
+      !mShadowedHTMLFormElementProperties.Contains(aName)) {
+    mShadowedHTMLFormElementProperties.AppendElement(aName);
+  }
+}
+
 bool Document::HasScriptsBlockedBySandbox() const {
   return mSandboxFlags & SANDBOXED_SCRIPTS;
 }
@@ -17225,7 +17232,7 @@ void Document::ReportDocumentUseCounters() {
   }
 }
 
-void Document::ReportShadowedHTMLDocumentProperties() {
+void Document::ReportShadowedProperties() {
   if (!ShouldIncludeInTelemetry()) {
     return;
   }
@@ -17234,6 +17241,13 @@ void Document::ReportShadowedHTMLDocumentProperties() {
     glean::security::ShadowedHtmlDocumentPropertyAccessExtra extra = {};
     extra.name = Some(NS_ConvertUTF16toUTF8(property));
     glean::security::shadowed_html_document_property_access.Record(Some(extra));
+  }
+
+  for (const nsString& property : mShadowedHTMLFormElementProperties) {
+    glean::security::ShadowedHtmlFormElementPropertyAccessExtra extra = {};
+    extra.name = Some(NS_ConvertUTF16toUTF8(property));
+    glean::security::shadowed_html_form_element_property_access.Record(
+        Some(extra));
   }
 }
 
