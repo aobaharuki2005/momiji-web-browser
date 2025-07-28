@@ -106,17 +106,17 @@ hr {
   height: var(--icon-size-small);
 }
 
-.vpn-bottom-content {
+#upgrade-vpn-content {
   display: flex;
   flex-direction: column;
   padding: var(--space-small) var(--space-large);
 }
 
-.vpn-subtitle {
+#upgrade-vpn-title {
   margin: 0;
 }
 
-.vpn-button {
+#upgrade-vpn-button {
   align-self: end;
 }
 
@@ -124,6 +124,10 @@ hr {
   display: flex;
   flex-direction: column;
   padding: var(--space-medium) var(--space-large) var(--space-small);
+}
+
+#sign-in-vpn {
+  align-self: end;
 }
 
 @media (prefers-color-scheme: dark) {

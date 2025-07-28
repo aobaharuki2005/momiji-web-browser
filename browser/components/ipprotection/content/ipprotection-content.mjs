@@ -4,7 +4,6 @@
 
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import { html, classMap } from "chrome://global/content/vendor/lit.all.mjs";
-import { LINKS } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
 
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/ipprotection/ipprotection-header.mjs";
@@ -22,7 +21,6 @@ export default class IPProtectionContentElement extends MozLitElement {
     connectionTitleEl: "#connection-title",
     connectionToggleEl: "#connection-toggle",
     upgradeEl: "#upgrade-vpn-content",
-    activeSubscriptionEl: "#active-subscription-vpn-content",
     supportLinkEl: "#vpn-support-link",
   };
 
@@ -67,17 +65,8 @@ export default class IPProtectionContentElement extends MozLitElement {
     }
   }
 
-  handleUpgrade(event) {
-    const win = event.target.ownerGlobal;
-    win.openWebLinkIn(LINKS.PRODUCT_URL, "tab");
-    // Close the panel
-    this.dispatchEvent(
-      new CustomEvent("IPProtection:Close", { bubbles: true })
-    );
-  }
-
-  handleDownload() {
-    // TODO: Handle click of Download button - Bug 1978602
+  handleUpgrade() {
+    // TODO: Handle click of Upgrade button - Bug 1975317
   }
 
   statusCardTemplate() {
@@ -152,14 +141,15 @@ export default class IPProtectionContentElement extends MozLitElement {
     </div>`;
   }
 
-  beforeUpgradeTemplate() {
+  mainContentTemplate() {
+    // TODO: Update support-page with new SUMO link for Mozilla VPN - Bug 1975474
+    if (!this.state.isSignedIn) {
+      return html` <ipprotection-signedout></ipprotection-signedout> `;
+    }
     return html`
-      <div id="upgrade-vpn-content" class="vpn-bottom-content">
-        <h2
-          id="upgrade-vpn-title"
-          data-l10n-id="upgrade-vpn-title"
-          class="vpn-subtitle"
-        ></h2>
+      ${this.statusCardTemplate()}
+      <div id="upgrade-vpn-content">
+        <h2 id="upgrade-vpn-title" data-l10n-id="upgrade-vpn-title"></h2>
         <p
           id="upgrade-vpn-paragraph"
           data-l10n-id="upgrade-vpn-paragraph"
@@ -174,49 +164,11 @@ export default class IPProtectionContentElement extends MozLitElement {
         </p>
         <moz-button
           id="upgrade-vpn-button"
-          class="vpn-button"
           @click=${this.handleUpgrade}
           type="secondary"
           data-l10n-id="upgrade-vpn-button"
         ></moz-button>
       </div>
-    `;
-  }
-
-  afterUpgradeTemplate() {
-    return html`<div
-      id="active-subscription-vpn-content"
-      class="vpn-bottom-content"
-    >
-      <h2
-        id="active-subscription-vpn-title"
-        class="vpn-subtitle"
-        data-l10n-id="active-subscription-vpn-title"
-      ></h2>
-      <p
-        id="active-subscription-vpn-message"
-        data-l10n-id="active-subscription-vpn-message"
-      ></p>
-      <moz-button
-        id="download-vpn-button"
-        class="vpn-button"
-        @click=${this.handleDownload}
-        data-l10n-id="get-vpn-button"
-        type="primary"
-      ></moz-button>
-    </div>`;
-  }
-
-  mainContentTemplate() {
-    // TODO: Update support-page with new SUMO link for Mozilla VPN - Bug 1975474
-    if (!this.state.isSignedIn) {
-      return html` <ipprotection-signedout></ipprotection-signedout> `;
-    }
-    return html`
-      ${this.statusCardTemplate()}
-      ${this.state.hasUpgraded
-        ? this.afterUpgradeTemplate()
-        : this.beforeUpgradeTemplate()}
     `;
   }
 
