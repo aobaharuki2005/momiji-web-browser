@@ -67,11 +67,15 @@ if CONFIG["OS_ARCH"] == "WINNT":
         ]
 
 USE_LIBS += [
-    "bspatch",
     "mar",
     "updatecommon",
     "xz-embedded",
 ]
+
+if CONFIG["MOZ_BSPATCH"]:
+    USE_LIBS += [
+        "bspatch",
+    ]
 
 if link_with_nss:
     USE_LIBS += [
