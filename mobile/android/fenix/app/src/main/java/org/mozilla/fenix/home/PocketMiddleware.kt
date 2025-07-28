@@ -8,6 +8,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.datastore.core.DataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.Action
@@ -20,6 +21,7 @@ import mozilla.components.service.pocket.PocketStory.ContentRecommendation
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.PocketStory.SponsoredContent
+import mozilla.components.support.utils.RunWhenReadyQueue
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.ContentRecommendationsAction
@@ -28,6 +30,29 @@ import org.mozilla.fenix.datastore.SelectedPocketStoriesCategories
 import org.mozilla.fenix.datastore.SelectedPocketStoriesCategories.SelectedPocketStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
+import org.mozilla.fenix.utils.Settings
+
+/**
+ * Interface describing Pocket related settings.
+ */
+interface PocketSettings {
+    val showPocketRecommendationsFeature: Boolean
+    var hasPocketSponsoredStoriesProfileMigrated: Boolean
+    val showPocketSponsoredStories: Boolean
+}
+
+/**
+ * [PocketSettings] implementation that uses [Settings] for storage.
+ *
+ * @param settings [Settings] used for fetching and storing pocket related settings.
+ */
+class SettingsBackedPocketSettings(private val settings: Settings) : PocketSettings {
+    override val showPocketRecommendationsFeature get() = settings.showPocketRecommendationsFeature
+    override var hasPocketSponsoredStoriesProfileMigrated
+        get() = settings.hasPocketSponsoredStoriesProfileMigrated
+        set(value) { settings.hasPocketSponsoredStoriesProfileMigrated = value }
+    override val showPocketSponsoredStories get() = settings.showPocketSponsoredStories
+}
 
 /**
  * [AppStore] middleware reacting in response to Pocket related [Action]s.
@@ -35,11 +60,16 @@ import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
  * @param pocketStoriesService [PocketStoriesService] used for updating details about the Pocket recommended stories.
  * @param selectedPocketCategoriesDataStore [DataStore] used for reading or persisting details about the
  * currently selected Pocket recommended stories categories.
+ * @param settings [PocketSettings] Stored settings for initializing Pocket.
+ * @param visualCompletenessQueue [RunWhenReadyQueue] Used to delay initializing pocket until we've reached
+ * visual completeness.
  * @param coroutineScope [CoroutineScope] used for long running operations like disk IO.
  */
-class PocketUpdatesMiddleware(
+class PocketMiddleware(
     private val pocketStoriesService: Lazy<PocketStoriesService>,
     private val selectedPocketCategoriesDataStore: DataStore<SelectedPocketStoriesCategories>,
+    private val settings: PocketSettings,
+    private val visualCompletenessQueue: RunWhenReadyQueue,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : Middleware<AppState, AppAction> {
     override fun invoke(
@@ -49,6 +79,23 @@ class PocketUpdatesMiddleware(
     ) {
         // Pre process actions
         when (action) {
+            is AppAction.AppLifecycleAction.StartAction -> {
+                visualCompletenessQueue.runIfReadyOrQueue {
+                    coroutineScope.launch(IO) {
+                        if (settings.showPocketRecommendationsFeature) {
+                            pocketStoriesService.value.startPeriodicContentRecommendationsRefresh()
+                        }
+
+                        if (!settings.hasPocketSponsoredStoriesProfileMigrated) {
+                            migratePocketSponsoredStoriesProfile(pocketStoriesService.value)
+                        }
+
+                        if (settings.showPocketSponsoredStories) {
+                            pocketStoriesService.value.startPeriodicSponsoredContentsRefresh()
+                        }
+                    }
+                }
+            }
             is ContentRecommendationsAction.PocketStoriesCategoriesChange -> {
                 // Intercept the original action which would only update categories and
                 // dispatch a new action which also updates which categories are selected by the user
@@ -89,6 +136,15 @@ class PocketUpdatesMiddleware(
                 // no-op
             }
         }
+    }
+
+    /**
+     * Deletes the user's existing sponsored stories profile as part of the migration to the
+     * MARS API.
+     */
+    private fun migratePocketSponsoredStoriesProfile(pocketStoriesService: PocketStoriesService) {
+        pocketStoriesService.deleteProfile()
+        settings.hasPocketSponsoredStoriesProfileMigrated = true
     }
 }
 
