@@ -5005,10 +5005,6 @@ void nsCSSFrameConstructor::AddFrameConstructionItems(
   if (!ShouldCreateItemsForChild(aState, aContent, parentFrame)) {
     return;
   }
-  if (MOZ_UNLIKELY(aParentStyle.StyleContent()->mContent.IsNone()) &&
-      StaticPrefs::layout_css_element_content_none_enabled()) {
-    return;
-  }
 
   RefPtr<ComputedStyle> computedStyle = ResolveComputedStyle(aContent);
   auto flags = aFlags + ItemFlag::AllowPageBreak;
@@ -9388,14 +9384,6 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
     nsContainerFrame* aParentFrame, bool aParentIsWrapperAnonBox,
     nsFrameList& aFrameList) {
 #ifdef DEBUG
-  if (aParentFrame->StyleContent()->mContent.IsNone() &&
-      StaticPrefs::layout_css_element_content_none_enabled()) {
-    for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
-      MOZ_ASSERT(iter.item().mContent->IsInNativeAnonymousSubtree() ||
-                 iter.item().mComputedStyle->IsPseudoOrAnonBox());
-    }
-  }
-
   // The assertion condition should match the logic in
   // MaybePushFloatContainingBlock().
   MOZ_ASSERT(!(ShouldSuppressFloatingOfDescendants(aParentFrame) ||
