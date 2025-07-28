@@ -2827,13 +2827,12 @@ struct nsGridContainerFrame::Tracks {
    * Distribute aAvailableSpace to the planned base size for aGrowableTracks
    * up to their limits, then distribute the remaining space beyond the limits.
    */
-  void DistributeToTrackSizes(TrackSizingStep aStep, TrackSizingPhase aPhase,
-                              nscoord aAvailableSpace, TrackPlan& aTrackPlan,
-                              ItemPlan& aItemPlan,
-                              nsTArray<uint32_t>& aGrowableTracks,
-                              SizingConstraint aConstraint,
-                              const TrackSizingFunctions& aFunctions,
-                              const FitContentClamper& aFitContentClamper) {
+  void DistributeToTrackSizes(
+      TrackSizingStep aStep, TrackSizingPhase aPhase, nscoord aAvailableSpace,
+      TrackPlan& aTrackPlan, ItemPlan& aItemPlan,
+      const nsTArray<uint32_t>& aGrowableTracks, SizingConstraint aConstraint,
+      const TrackSizingFunctions& aFunctions,
+      const FitContentClamper& aFitContentClamper) const {
     aItemPlan.Initialize(aPhase, aGrowableTracks, *this);
     nscoord space = aAvailableSpace;
     if (aStep == TrackSizingStep::Flex) {
@@ -2926,7 +2925,7 @@ struct nsGridContainerFrame::Tracks {
    * is used to avoid intermediary rounding errors.)
    */
   float FindUsedFlexFraction(GridReflowInput& aGridRI,
-                             nsTArray<GridItemInfo>& aGridItems,
+                             const nsTArray<GridItemInfo>& aGridItems,
                              const nsTArray<uint32_t>& aFlexTracks,
                              const TrackSizingFunctions& aFunctions,
                              nscoord aAvailableSize) const;
@@ -2936,7 +2935,7 @@ struct nsGridContainerFrame::Tracks {
    * https://drafts.csswg.org/css-grid-2/#algo-flex-tracks
    */
   void StretchFlexibleTracks(GridReflowInput& aGridRI,
-                             nsTArray<GridItemInfo>& aGridItems,
+                             const nsTArray<GridItemInfo>& aGridItems,
                              const TrackSizingFunctions& aFunctions,
                              nscoord aAvailableSize);
 
@@ -7403,7 +7402,7 @@ float nsGridContainerFrame::Tracks::FindFrUnitSize(
 }
 
 float nsGridContainerFrame::Tracks::FindUsedFlexFraction(
-    GridReflowInput& aGridRI, nsTArray<GridItemInfo>& aGridItems,
+    GridReflowInput& aGridRI, const nsTArray<GridItemInfo>& aGridItems,
     const nsTArray<uint32_t>& aFlexTracks,
     const TrackSizingFunctions& aFunctions, nscoord aAvailableSize) const {
   if (aAvailableSize != NS_UNCONSTRAINEDSIZE) {
@@ -7457,7 +7456,7 @@ float nsGridContainerFrame::Tracks::FindUsedFlexFraction(
 }
 
 void nsGridContainerFrame::Tracks::StretchFlexibleTracks(
-    GridReflowInput& aGridRI, nsTArray<GridItemInfo>& aGridItems,
+    GridReflowInput& aGridRI, const nsTArray<GridItemInfo>& aGridItems,
     const TrackSizingFunctions& aFunctions, nscoord aAvailableSize) {
   if (aAvailableSize <= 0) {
     return;
