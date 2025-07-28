@@ -324,7 +324,8 @@ export function getPrefPostfix(pageContext) {
       return ".remote";
     default: {
       const { UnhandledCaseError } = ChromeUtils.importESModule(
-        "resource://devtools/shared/performance-new/errors.sys.mjs"
+        "resource://devtools/shared/performance-new/errors.sys.mjs",
+        { global: "contextual" }
       );
       throw new UnhandledCaseError(pageContext, "Page Context");
     }
