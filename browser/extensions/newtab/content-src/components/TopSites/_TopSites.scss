@@ -84,15 +84,6 @@ $calculated-max-width-twice-widest: $break-point-widest + 2 * $card-width;
     }
   }
 
-  .discovery-stream.ds-layout.ds-layout-topsites {
-    display: flex;
-    justify-content: center;
-
-    .top-sites-list {
-      padding-block-start: 0;
-    }
-  }
-
   // Two columns
   @media (max-width: $break-point-medium) {
     > :nth-child(2n+1) {
@@ -163,6 +154,15 @@ $calculated-max-width-twice-widest: $break-point-widest + 2 * $card-width;
     .hide-for-narrow {
       display: inline-block;
     }
+  }
+}
+
+.discovery-stream.ds-layout.ds-layout-topsites {
+  display: flex;
+  justify-content: center;
+
+  .top-sites-list {
+    padding-block-start: 0;
   }
 }
 

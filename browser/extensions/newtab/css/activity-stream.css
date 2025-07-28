@@ -775,13 +775,6 @@ main section {
     background-color: var(--background-color-box);
   }
 }
-.top-sites-list .discovery-stream.ds-layout.ds-layout-topsites {
-  display: flex;
-  justify-content: center;
-}
-.top-sites-list .discovery-stream.ds-layout.ds-layout-topsites .top-sites-list {
-  padding-block-start: 0;
-}
 @media (max-width: 610px) {
   .top-sites-list > :nth-child(2n+1) .context-menu {
     margin-inline-end: auto;
@@ -861,6 +854,14 @@ main section {
   .top-sites-list .hide-for-narrow {
     display: inline-block;
   }
+}
+
+.discovery-stream.ds-layout.ds-layout-topsites {
+  display: flex;
+  justify-content: center;
+}
+.discovery-stream.ds-layout.ds-layout-topsites .top-sites-list {
+  padding-block-start: 0;
 }
 
 .top-site-outer {
