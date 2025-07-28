@@ -9,5 +9,6 @@
 #include <string>
 
 std::optional<std::wstring> lookupFirefoxPath();
+const wchar_t* getFirefoxRegistryBranding();
 
 #endif

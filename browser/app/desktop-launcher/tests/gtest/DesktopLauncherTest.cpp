@@ -49,7 +49,7 @@ class DesktopLauncherTest : public ::testing::Test {
   HANDLE serverProcessHandle = nullptr;
   std::optional<std::wstring> savedFirefoxVersion = std::nullopt;
   std::optional<std::wstring> savedFirefoxPath = std::nullopt;
-  std::wstring base_key = L"SOFTWARE\\Mozilla\\Mozilla Developer Preview";
+  std::wstring base_key = getFirefoxRegistryBranding();
   std::wstring test_version = L"test.0.0.0.0";
   std::wstring test_path = L"This is a test";
   std::wstring test_base = base_key + L"\\" + test_version;

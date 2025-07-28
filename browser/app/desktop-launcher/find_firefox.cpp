@@ -29,6 +29,13 @@ static_assert(false);
 #endif
 
 /**
+ * The base registry key that Firefox uses to store its settings is different
+ * depending on the branding for the build. This function exposes the correct
+ * registry key to use for the current build's branding.
+ */
+const wchar_t* getFirefoxRegistryBranding() { return firefox_node; }
+
+/**
  * Look up Firefox path in a particular HKEY
  */
 static std::optional<std::wstring> lookupFirefoxPathInHKEY(HKEY hkey) {
@@ -39,18 +46,21 @@ static std::optional<std::wstring> lookupFirefoxPathInHKEY(HKEY hkey) {
   DWORD value_size = sizeof(buffer);
 
   // First we need to get the current version of Firefox
-  LSTATUS status = RegGetValueW(hkey, firefox_node, current_version.c_str(),
-                                RRF_RT_REG_SZ, nullptr, buffer, &value_size);
+  LSTATUS status =
+      RegGetValueW(hkey, getFirefoxRegistryBranding(), current_version.c_str(),
+                   RRF_RT_REG_SZ, nullptr, buffer, &value_size);
   if (status != ERROR_SUCCESS || value_size < 2) {
     std::wcout << L"Failed to get firefox current version at node "
-               << firefox_node << L"status: " << status << std::endl;
+               << getFirefoxRegistryBranding() << L"status: " << status
+               << std::endl;
     return std::nullopt;
   }
   DWORD value_len = value_size / sizeof(wchar_t) - 1;
   // Then we need to see where that version is installed
   std::wstring current_version_string = std::wstring(buffer, value_len);
   std::wstring current_version_node =
-      std::wstring(firefox_node) + L"\\" + current_version_string + L"\\Main";
+      std::wstring(getFirefoxRegistryBranding()) + L"\\" +
+      current_version_string + L"\\Main";
   std::wstring path_to_exe = L"PathToExe";
   value_size = sizeof(buffer);
   status = RegGetValueW(hkey, current_version_node.c_str(), path_to_exe.c_str(),
