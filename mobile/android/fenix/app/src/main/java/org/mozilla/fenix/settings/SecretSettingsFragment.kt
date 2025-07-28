@@ -23,7 +23,6 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.debugsettings.data.DefaultDebugSettingsRepository
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -233,13 +232,7 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
 
         requirePreference<SwitchPreference>(R.string.pref_key_persistent_debug_menu).apply {
             isVisible = true
-            // We look up the actual value of the pref, not the `showSecretDebugMenuThisSession` setting because
-            // the setting value might be set to `true` by the `SecretDebugMenuTrigger` logic for the duration of
-            // the session.
-            isChecked = context.settings().preferences.getBoolean(
-                context.getPreferenceKey(R.string.pref_key_persistent_debug_menu),
-                false,
-            )
+            isChecked = context.settings().isDebugMenuPersistentlyRevealed
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 

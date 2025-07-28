@@ -570,10 +570,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     // this setting for the duration of the session only, i.e. `SecretDebugMenuTrigger` should never
     // be able to (indirectly) change the value of the shared pref.
     var showSecretDebugMenuThisSession: Boolean = false
-        get() = field || preferences.getBoolean(
-            appContext.getPreferenceKey(R.string.pref_key_persistent_debug_menu),
-            false,
-        )
+        get() = field || isDebugMenuPersistentlyRevealed
+
+    /**
+     * Preference for determining whether the debug menu setting is revealed persistently
+     */
+    val isDebugMenuPersistentlyRevealed: Boolean by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_persistent_debug_menu),
+        Config.channel.isDebug,
+    )
 
     val shouldShowSecurityPinWarningSync: Boolean
         get() = loginsSecureWarningSyncCount.underMaxCount()
