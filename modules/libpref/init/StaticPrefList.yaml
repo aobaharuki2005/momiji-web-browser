@@ -2592,6 +2592,12 @@
   value: true
   mirror: always
 
+# Enable relaxed Custom Element names
+- name: dom.custom_elements.relaxed_names.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Disable custom highlight API; implementation pending.
 - name: dom.customHighlightAPI.enabled
   type: RelaxedAtomicBool

@@ -4294,8 +4294,49 @@ bool nsContentUtils::IsNameWithDash(nsAtom* aName) {
   uint32_t len = aName->GetLength();
   bool hasDash = false;
 
+  // A string name is a valid custom element name if all of the following are
+  // true:
+
+  // name's 0th code point is an ASCII lower alpha;
   if (!len || name[0] < 'a' || name[0] > 'z') {
     return false;
+  }
+
+  if (StaticPrefs::dom_custom_elements_relaxed_names_enabled()) {
+    uint32_t i = 1;
+    while (i < len) {
+      // name does not contain any ASCII upper alphas
+      if (name[i] >= 'A' && name[i] <= 'Z') {
+        return false;
+      }
+
+      // name is a valid element local name;
+      //
+      //   // https://dom.spec.whatwg.org/#valid-element-local-name
+      //   Step 2.1.
+      //   If name contains ASCII whitespace, U+0000 NULL, U+002F (/), or U+003E
+      //   (>), then return false.
+      //
+      //   ASCII whitespace is U+0009 TAB, U+000A LF, U+000C FF, U+000D CR, or
+      //   U+0020 SPACE.
+      if (name[i] == 0x0000 ||  // null
+          name[i] == 0x0009 ||  // tab
+          name[i] == 0x000A ||  // newline
+          name[i] == 0x000C ||  // form feed
+          name[i] == 0x000D ||  // carriage return
+          name[i] == 0x0020 ||  // space
+          name[i] == 0x002F ||  // /
+          name[i] == 0x003E) {  // >
+        return false;
+      }
+
+      if (name[i] == '-') {
+        hasDash = true;
+      }
+
+      i++;
+    }
+    return hasDash;
   }
 
   uint32_t i = 1;
