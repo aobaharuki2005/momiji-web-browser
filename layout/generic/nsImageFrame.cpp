@@ -885,7 +885,7 @@ IntrinsicSize nsImageFrame::ComputeIntrinsicSize(
     return FinishIntrinsicSize(containAxes, intrinsicSize);
   }
 
-  if (auto size = GetViewTransitionBorderBoxSize()) {
+  if (auto size = GetViewTransitionSnapshotSize()) {
     IntrinsicSize intrinsicSize;
     intrinsicSize.width.emplace(size->width);
     intrinsicSize.height.emplace(size->height);
@@ -962,7 +962,7 @@ nsAtom* nsImageFrame::GetViewTransitionName() const {
       ->GetAtomValue();
 }
 
-Maybe<nsSize> nsImageFrame::GetViewTransitionBorderBoxSize() const {
+Maybe<nsSize> nsImageFrame::GetViewTransitionSnapshotSize() const {
   auto* name = GetViewTransitionName();
   if (!name) {
     return {};
@@ -972,8 +972,8 @@ Maybe<nsSize> nsImageFrame::GetViewTransitionBorderBoxSize() const {
     return {};
   }
   return Style()->GetPseudoType() == PseudoStyleType::viewTransitionOld
-             ? vt->GetOldBorderBoxSize(name)
-             : vt->GetNewBorderBoxSize(name);
+             ? vt->GetOldSize(name)
+             : vt->GetNewSize(name);
 }
 
 wr::ImageKey nsImageFrame::GetViewTransitionImageKey(
@@ -1006,7 +1006,7 @@ AspectRatio nsImageFrame::ComputeIntrinsicRatioForImage(
     }
   }
 
-  if (auto size = GetViewTransitionBorderBoxSize()) {
+  if (auto size = GetViewTransitionSnapshotSize()) {
     return AspectRatio::FromSize(*size);
   }
 
@@ -2356,62 +2356,6 @@ nsRect nsDisplayImage::GetDestRect() const {
   return imageFrame->GetDestRect(frameContentBox);
 }
 
-nsRect nsDisplayImage::GetDestRectViewTransition() const {
-  nsRect destRect = GetDestRect();
-  auto* image = static_cast<nsImageFrame*>(mFrame);
-
-  auto* name = image->GetViewTransitionName();
-  auto* vt = image->PresContext()->Document()->GetActiveViewTransition();
-
-  if (!name || !vt) {
-    return destRect;
-  }
-
-  // In view transitions, the snapshot images natural dimension is the captured
-  // elements principal border box. In order to render the captured overflow to
-  // its appropiate position and scale, we must internally map and scale the
-  // destRect with respect to the captured element's inkOverflowRect.
-  nsPoint inkOverflowOffset;
-  nsSize inkOverflowBoxSize, borderBoxSize;
-
-  if (image->Style()->GetPseudoType() == PseudoStyleType::viewTransitionOld) {
-    inkOverflowOffset = vt->GetOldInkOverflowOffset(name).value();
-    inkOverflowBoxSize = vt->GetOldInkOverflowBoxSize(name).value();
-    borderBoxSize = vt->GetOldBorderBoxSize(name).value();
-  } else {
-    inkOverflowOffset = vt->GetNewInkOverflowOffset(name).value();
-    inkOverflowBoxSize = vt->GetNewInkOverflowBoxSize(name).value();
-    borderBoxSize = vt->GetNewBorderBoxSize(name).value();
-  }
-
-  if (borderBoxSize.IsEmpty()) {
-    return destRect;
-  }
-
-  // Scale the ink overflow offset to maintain its position relative to
-  // the destination border box, as if the offset scaled with the element.
-  auto xRatio =
-      static_cast<float>(inkOverflowOffset.X()) / borderBoxSize.Width();
-  auto yRatio =
-      static_cast<float>(inkOverflowOffset.Y()) / borderBoxSize.Height();
-  auto scaledX = std::round(xRatio * destRect.Width());
-  auto scaledY = std::round(yRatio * destRect.Height());
-
-  inkOverflowOffset = nsPoint(scaledX, scaledY);
-
-  // Scale destRect’s size to match the captured element’s relative ink overflow
-  // size.
-  auto widthRatio =
-      static_cast<float>(inkOverflowBoxSize.Width()) / borderBoxSize.Width();
-  auto heightRatio =
-      static_cast<float>(inkOverflowBoxSize.Height()) / borderBoxSize.Height();
-  auto scaledWidth = std::round(widthRatio * destRect.Width());
-  auto scaledHeight = std::round(heightRatio * destRect.Height());
-
-  return nsRect(destRect.TopLeft() + inkOverflowOffset,
-                nsSize(scaledWidth, scaledHeight));
-}
-
 nsRegion nsDisplayImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                          bool* aSnap) const {
   *aSnap = false;
@@ -2435,7 +2379,7 @@ void nsDisplayImage::MaybeCreateWebRenderCommandsForViewTransition(
   }
   VT_LOG_DEBUG("GetViewTransitionImageKey(%s) = %s", frame->ListTag().get(),
                ToString(key).c_str());
-  nsRect destAppUnits = GetDestRectViewTransition();
+  const nsRect destAppUnits = GetDestRect();
   const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
   const auto destRect =
       wr::ToLayoutRect(LayoutDeviceRect::FromAppUnits(destAppUnits, factor));
