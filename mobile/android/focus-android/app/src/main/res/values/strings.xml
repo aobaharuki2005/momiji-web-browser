@@ -152,6 +152,9 @@
 <p>%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.<br/>
 <a href="%2$s">Learn more</a></p>]]></string>
 
+    <!-- A link to SUMO at the bottom of About Focus screen. -->
+    <string name="about_screen_learn_more">Learn more</string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Privacy &amp; Security</string>
 

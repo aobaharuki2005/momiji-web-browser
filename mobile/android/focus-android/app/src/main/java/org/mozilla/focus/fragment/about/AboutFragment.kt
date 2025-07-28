@@ -49,7 +49,6 @@ class AboutFragment : BaseComposeFragment() {
     private lateinit var aboutHeader: String
     private lateinit var content: String
     private lateinit var aboutContent: String
-    private lateinit var learnMore: String
 
     private val openLearnMore = {
         val tabId = requireContext().components.tabsUseCases.addTab(
@@ -71,9 +70,6 @@ class AboutFragment : BaseComposeFragment() {
             requireContext().getString(R.string.about_content, appName, "")
 
         aboutHeader = getAboutHeader()
-        learnMore = aboutContent
-            .substringAfter("<a href=>")
-            .substringBefore("</a></p>")
 
         content =
             aboutContent
@@ -97,7 +93,6 @@ class AboutFragment : BaseComposeFragment() {
         AboutPageContent(
             aboutVersion = aboutHeader,
             content = content,
-            learnMore = learnMore,
             secretSettingsUnlocker = secretSettingsUnlocker,
             openLearnMore = openLearnMore,
         )
@@ -129,7 +124,6 @@ class AboutFragment : BaseComposeFragment() {
     private fun AboutPageContent(
         aboutVersion: String,
         content: String,
-        learnMore: String,
         secretSettingsUnlocker: SecretSettingsUnlocker,
         openLearnMore: () -> Job,
     ) {
@@ -145,7 +139,7 @@ class AboutFragment : BaseComposeFragment() {
                 LogoIcon(secretSettingsUnlocker)
                 VersionInfo(aboutVersion)
                 AboutContent(content)
-                LearnMoreLink(learnMore, openLearnMore)
+                LearnMoreLink(openLearnMore)
             }
         }
     }
