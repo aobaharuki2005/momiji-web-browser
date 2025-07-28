@@ -345,9 +345,7 @@ function getDisplayedPopupItems(
   } = browser;
   const listItemElems = itemsBox.querySelectorAll(selector);
 
-  return [...listItemElems].filter(
-    item => item.getAttribute("collapsed") != "true"
-  );
+  return [...listItemElems].filter(item => !item.hasAttribute("collapsed"));
 }
 
 async function sleep(ms = 500) {

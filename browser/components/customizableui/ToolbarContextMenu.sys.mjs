@@ -217,7 +217,7 @@ export var ToolbarContextMenu = {
               : "collapsed";
           menuItem.setAttribute(
             "checked",
-            toolbar.getAttribute(hidingAttribute) != "true"
+            !toolbar.hasAttribute(hidingAttribute)
           );
           menuItem.setAttribute("accesskey", toolbar.getAttribute("accesskey"));
           if (popup.id != "toolbar-context-menu") {
