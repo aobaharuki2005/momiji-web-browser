@@ -1132,13 +1132,15 @@ newtab.handoff_preference:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1864496
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1892148
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1940643
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1978995
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1864496
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1892148
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1940643
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1978995
     data_sensitivity:
       - interaction
-    expires: 144
+    expires: 151
     notification_emails:
       - fx-search-telemetry@mozilla.com
 
