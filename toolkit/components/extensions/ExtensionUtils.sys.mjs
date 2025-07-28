@@ -50,13 +50,6 @@ export class ExtensionError extends DOMException {
   }
 }
 
-function filterStack(error) {
-  return String(error.stack).replace(
-    /(^.*(Task\.jsm|Promise-backend\.js).*\n)+/gm,
-    "<Promise Chain>\n"
-  );
-}
-
 /**
  * An Error subclass used to recognize the errors that should
  * to be forwarded to the worker thread and being accessible
@@ -329,7 +322,6 @@ export var ExtensionUtils = {
   getInnerWindowID,
   getMessageManager,
   getUniqueId,
-  filterStack,
   makeDataURI,
   parseMatchPatterns,
   promiseDocumentIdle,
