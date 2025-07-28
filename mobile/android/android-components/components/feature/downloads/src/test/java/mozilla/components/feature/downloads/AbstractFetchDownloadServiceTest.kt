@@ -36,6 +36,7 @@ import mozilla.components.browser.state.state.content.DownloadState.Status.COMPL
 import mozilla.components.browser.state.state.content.DownloadState.Status.DOWNLOADING
 import mozilla.components.browser.state.state.content.DownloadState.Status.FAILED
 import mozilla.components.browser.state.state.content.DownloadState.Status.INITIATED
+import mozilla.components.browser.state.state.content.DownloadState.Status.PAUSED
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
@@ -1662,6 +1663,87 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs.values.forEach {
             assertTrue(it.job!!.isCancelled)
             assertFalse(it.job!!.isCompleted)
+        }
+    }
+
+    @Test
+    fun `WHEN clearAllDownloadsNotificationsAndJobs is called THEN all non-completed downloads are cancelled`() = runTest(testsDispatcher) {
+        val inProgressDownload = DownloadState(
+            id = "1",
+            url = "https://example.com/file.txt",
+            fileName = "file.txt",
+            status = DOWNLOADING,
+        )
+        val inProgressDownloadState = DownloadJobState(
+            state = inProgressDownload,
+            foregroundServiceId = Random.nextInt(),
+            status = DOWNLOADING,
+            job = CoroutineScope(IO).launch {
+                @Suppress("ControlFlowWithEmptyBody")
+                while (true) { }
+            },
+        )
+
+        val pausedDownload = DownloadState(
+            id = "1",
+            url = "https://example.com/file.txt",
+            fileName = "file.txt",
+            status = PAUSED,
+        )
+        val pausedDownloadState = DownloadJobState(
+            state = inProgressDownload,
+            foregroundServiceId = Random.nextInt(),
+            status = PAUSED,
+            job = CoroutineScope(IO).launch {
+                @Suppress("ControlFlowWithEmptyBody")
+                while (true) { }
+            },
+        )
+        val initiatedDownload = DownloadState(
+            id = "1",
+            url = "https://example.com/file.txt",
+            fileName = "file.txt",
+            status = INITIATED,
+        )
+        val initiatedDownloadState = DownloadJobState(
+            state = inProgressDownload,
+            foregroundServiceId = Random.nextInt(),
+            status = INITIATED,
+            job = CoroutineScope(IO).launch {
+                @Suppress("ControlFlowWithEmptyBody")
+                while (true) { }
+            },
+        )
+        val failedDownload = DownloadState(
+            id = "1",
+            url = "https://example.com/file.txt",
+            fileName = "file.txt",
+            status = FAILED,
+        )
+        val failedDownloadState = DownloadJobState(
+            state = inProgressDownload,
+            foregroundServiceId = Random.nextInt(),
+            status = FAILED,
+            job = CoroutineScope(IO).launch {
+                @Suppress("ControlFlowWithEmptyBody")
+                while (true) { }
+            },
+        )
+
+        service.downloadJobs[inProgressDownload.id] = inProgressDownloadState
+        service.downloadJobs[pausedDownload.id] = pausedDownloadState
+        service.downloadJobs[initiatedDownload.id] = initiatedDownloadState
+        service.downloadJobs[failedDownload.id] = failedDownloadState
+
+        service.clearAllDownloadsNotificationsAndJobs()
+
+        // Assert that jobs were cancelled rather than completed.
+        service.downloadJobs.values.forEach {
+            assertTrue(it.job!!.isCancelled)
+            assertFalse(it.job!!.isCompleted)
+            assertTrue(it.state.status == CANCELLED)
+            assertTrue(it.status == CANCELLED)
+            verify(service).updateDownloadState(it.state.copy(status = CANCELLED))
         }
     }
 
