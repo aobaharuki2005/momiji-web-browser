@@ -329,10 +329,48 @@ export class MegalistAlpha extends MozLitElement {
     }
   }
 
+  #handleNoLoginsFocusInOrOut(isFocusIn) {
+    const group = this.shadowRoot.querySelector(".no-logins-card-buttons");
+    const btns = group.querySelectorAll("moz-button");
+
+    btns.forEach(btn => {
+      btn.setAttribute("tabindex", isFocusIn ? "-1" : "0");
+    });
+  }
+
+  #handleNoLoginsKeydown(e) {
+    if (e.key !== "ArrowUp" && e.key !== "ArrowDown") {
+      return;
+    }
+
+    const browserBtn = this.shadowRoot.querySelector(
+      ".empty-state-import-from-browser"
+    );
+    const fileBtn = this.shadowRoot.querySelector(
+      ".empty-state-import-from-file"
+    );
+    const addBtn = this.shadowRoot.querySelector(".empty-state-add-password");
+    const focusables = [browserBtn, fileBtn, addBtn];
+    const currentIndex = focusables.findIndex(el =>
+      el.shadowRoot?.contains(e.composedTarget)
+    );
+
+    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+      e.preventDefault();
+
+      const direction = e.key === "ArrowUp" ? -1 : 1;
+      const newIndex = currentIndex + direction;
+
+      if (newIndex >= 0 && newIndex < focusables.length) {
+        focusables[newIndex]?.focus();
+      }
+    }
+  }
+
   // TODO: This should be passed to virtualized list with an explicit height.
   renderListItem({ origin: displayOrigin, username, password }, index) {
     return html` <password-card
-      @keypress=${e => {
+      @keydown=${e => {
         if (e.shiftKey && e.key === "Tab") {
           e.preventDefault();
           this.shadowRoot.querySelector(".passwords-list").focus();
@@ -378,7 +416,7 @@ export class MegalistAlpha extends MozLitElement {
             role="listbox"
             tabindex="0"
             data-l10n-id="contextual-manager-passwords-list-label"
-            @keypress=${e => {
+            @keydown=${e => {
               if (e.key === "ArrowDown") {
                 e.preventDefault();
                 this.shadowRoot
@@ -508,7 +546,12 @@ export class MegalistAlpha extends MozLitElement {
           <p
             data-l10n-id="contextual-manager-passwords-no-passwords-get-started-message"
           ></p>
-          <div class="no-logins-card-buttons">
+          <div
+            class="no-logins-card-buttons"
+            @focusin=${() => this.#handleNoLoginsFocusInOrOut(true)}
+            @focusout=${() => this.#handleNoLoginsFocusInOrOut(false)}
+            @keydown=${this.#handleNoLoginsKeydown}
+          >
             <moz-button
               class="empty-state-import-from-browser"
               data-l10n-id="contextual-manager-passwords-command-import-from-browser"
