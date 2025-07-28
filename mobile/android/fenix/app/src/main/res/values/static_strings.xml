@@ -213,4 +213,16 @@
     <string name="glean_debug_tools_send_ping_button_text">Send Ping</string>
     <!-- The send pings toast message. The first parameter is the type of ping -->
     <string name="glean_debug_tools_send_ping_toast_message">Sent %1$s ping</string>
+
+
+    <!-- The title of the debug drawer tab to help debug the crash reporter-->
+    <string name="crash_debug_tools_title">Crash Debug Tools</string>
+    <!-- Button text to trigger a app parent process crash -->
+    <string name="crash_debug_generic_crash_trigger">Trigger Crash Report</string>
+    <!-- Button text to reset crash deferral period (the deferral period is set after clicking close on the dialog to 5 days in the settings) from it's future value to 0 -->
+    <string name="crash_debug_deferral_button">Reset deferral settings</string>
+    <!-- Subtitle warning text for crash button -->
+    <string name="crash_debug_crash_app_warning">This will crash the app to start crash reporting flow. Please also ensure that the crash report option is set to "Ask before sending" in the data collections settings if you want the dialog to pop up.</string>
+    <!-- Timer text for deferral period %s is the timer string -->
+    <string name="crash_debug_deferral_timer">Current deferral period: %s</string>
 </resources>
