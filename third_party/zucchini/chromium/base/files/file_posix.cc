@@ -57,6 +57,7 @@ int CallFtruncate(PlatformFile file, int64_t length) {
 #endif
 }
 
+#if !defined(MOZ_ZUCCHINI)
 int CallFutimes(PlatformFile file, const struct timeval times[2]) {
 #ifdef __USE_XOPEN2K8
   // futimens should be available, but futimes might not be
@@ -73,6 +74,7 @@ int CallFutimes(PlatformFile file, const struct timeval times[2]) {
   return futimes(file, times);
 #endif
 }
+#endif  // !defined(MOZ_ZUCCHINI)
 
 #if !BUILDFLAG(IS_FUCHSIA)
 short FcntlFlockType(absl::optional<File::LockMode> mode) {
@@ -389,6 +391,7 @@ bool File::SetLength(int64_t length) {
   return !CallFtruncate(file_.get(), length);
 }
 
+#if !defined(MOZ_ZUCCHINI)
 bool File::SetTimes(Time last_access_time, Time last_modified_time) {
   ScopedBlockingCall scoped_blocking_call(FROM_HERE, BlockingType::MAY_BLOCK);
   DCHECK(IsValid());
@@ -401,6 +404,7 @@ bool File::SetTimes(Time last_access_time, Time last_modified_time) {
 
   return !CallFutimes(file_.get(), times);
 }
+#endif  // !defined(MOZ_ZUCCHINI)
 
 bool File::GetInfo(Info* info) {
   DCHECK(IsValid());

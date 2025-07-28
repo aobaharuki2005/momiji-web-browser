@@ -28,7 +28,9 @@
 #include "base/files/file_path.h"
 #include "base/functional/function_ref.h"
 #include "base/notreached.h"
+#endif  // !defined(MOZ_ZUCCHINI)
 #include "base/posix/eintr_wrapper.h"
+#if !defined(MOZ_ZUCCHINI)
 #include "base/strings/string_piece.h"
 #include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
@@ -393,11 +395,13 @@ ScopedFILE CreateAndOpenTemporaryStream(FilePath* path) {
 
   return CreateAndOpenTemporaryStreamInDir(directory, path);
 }
+#endif  // !defined(MOZ_ZUCCHINI)
 
 bool CreateDirectory(const FilePath& full_path) {
   return CreateDirectoryAndGetError(full_path, nullptr);
 }
 
+#if !defined(MOZ_ZUCCHINI)
 bool GetFileSize(const FilePath& file_path, int64_t* file_size) {
   File::Info info;
   if (!GetFileInfo(file_path, &info))
