@@ -32,6 +32,7 @@ export default class IPProtectionSignedOutContentElement extends MozLitElement {
         </p>
         <moz-button
           id="sign-in-vpn"
+          class="vpn-button"
           data-l10n-id="sign-in-vpn"
           type="primary"
         ></moz-button>
