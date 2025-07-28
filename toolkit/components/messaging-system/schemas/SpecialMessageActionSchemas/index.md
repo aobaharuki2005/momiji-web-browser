@@ -403,9 +403,9 @@ Sets the visibility of the bookmarks toolbar.
 ```
 
 
-### `DATAREPORTING_NOTIFY_DATA_POLICY_INTERACTED`
+### `SET_TERMS_OF_USE_INTERACTED`
 
-Notify Firefox that the notification policy was interacted with.
+Notify Firefox that the Terms of Use policy was interacted with.
 
 - args: (none)
 

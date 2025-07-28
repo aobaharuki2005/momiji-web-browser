@@ -680,7 +680,7 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": ["DATAREPORTING_NOTIFY_DATA_POLICY_INTERACTED"]
+              "enum": ["SET_TERMS_OF_USE_INTERACTED"]
             }
           },
           "required": ["type"],
