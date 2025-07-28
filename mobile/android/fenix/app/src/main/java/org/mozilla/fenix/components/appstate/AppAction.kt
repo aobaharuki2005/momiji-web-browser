@@ -287,6 +287,10 @@ sealed class AppAction : Action {
      * [AppAction] implementations related to the application lifecycle.
      */
     sealed class AppLifecycleAction : AppAction() {
+        /**
+         * The application has started.
+         */
+        object StartAction : AppLifecycleAction()
 
         /**
          * The application has received an ON_RESUME event.
