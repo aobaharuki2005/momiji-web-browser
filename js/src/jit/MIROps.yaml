@@ -3339,6 +3339,17 @@
   folds_to: custom
   alias_set: none
 
+- name: GuardIntPtrIsNonNegative
+  operands:
+    index: IntPtr
+  result_type: IntPtr
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  folds_to: custom
+  alias_set: none
+  generate_lir: true
+
 - name: GuardInt32Range
   operands:
     input: Int32

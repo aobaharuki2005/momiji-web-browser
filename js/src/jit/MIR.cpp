@@ -7472,6 +7472,16 @@ MDefinition* MGuardInt32IsNonNegative::foldsTo(TempAllocator& alloc) {
   return input;
 }
 
+MDefinition* MGuardIntPtrIsNonNegative::foldsTo(TempAllocator& alloc) {
+  MOZ_ASSERT(index()->type() == MIRType::IntPtr);
+
+  MDefinition* input = index();
+  if (!input->isConstant() || input->toConstant()->toIntPtr() < 0) {
+    return this;
+  }
+  return input;
+}
+
 MDefinition* MGuardInt32Range::foldsTo(TempAllocator& alloc) {
   MOZ_ASSERT(input()->type() == MIRType::Int32);
   MOZ_ASSERT(minimum() <= maximum());

@@ -1436,6 +1436,16 @@ bool WarpCacheIRTranspiler::emitGuardInt32IsNonNegative(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardIntPtrIsNonNegative(
+    IntPtrOperandId indexId) {
+  MDefinition* index = getOperand(indexId);
+
+  auto* ins = MGuardIntPtrIsNonNegative::New(alloc(), index);
+  add(ins);
+  setOperand(indexId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardIndexIsNotDenseElement(
     ObjOperandId objId, Int32OperandId indexId) {
   MDefinition* obj = getOperand(objId);

@@ -21267,6 +21267,13 @@ void CodeGenerator::visitGuardInt32IsNonNegative(
   bailoutCmp32(Assembler::LessThan, index, Imm32(0), lir->snapshot());
 }
 
+void CodeGenerator::visitGuardIntPtrIsNonNegative(
+    LGuardIntPtrIsNonNegative* lir) {
+  Register index = ToRegister(lir->index());
+
+  bailoutCmpPtr(Assembler::LessThan, index, ImmWord(0), lir->snapshot());
+}
+
 void CodeGenerator::visitGuardInt32Range(LGuardInt32Range* lir) {
   Register input = ToRegister(lir->input());
 

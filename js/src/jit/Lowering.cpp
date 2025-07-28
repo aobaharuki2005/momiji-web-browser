@@ -7565,6 +7565,17 @@ void LIRGenerator::visitGuardInt32IsNonNegative(MGuardInt32IsNonNegative* ins) {
   redefine(ins, index);
 }
 
+void LIRGenerator::visitGuardIntPtrIsNonNegative(
+    MGuardIntPtrIsNonNegative* ins) {
+  MDefinition* index = ins->index();
+  MOZ_ASSERT(index->type() == MIRType::IntPtr);
+
+  auto* guard = new (alloc()) LGuardIntPtrIsNonNegative(useRegister(index));
+  assignSnapshot(guard, ins->bailoutKind());
+  add(guard, ins);
+  redefine(ins, index);
+}
+
 void LIRGenerator::visitGuardInt32Range(MGuardInt32Range* ins) {
   MDefinition* input = ins->input();
   MOZ_ASSERT(input->type() == MIRType::Int32);

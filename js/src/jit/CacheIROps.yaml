@@ -645,6 +645,13 @@
   args:
     index: Int32Id
 
+- name: GuardIntPtrIsNonNegative
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    index: IntPtrId
+
 - name: GuardIndexIsValidUpdateOrAdd
   shared: true
   transpile: true

@@ -5047,6 +5047,19 @@ bool CacheIRCompiler::emitGuardInt32IsNonNegative(Int32OperandId indexId) {
   return true;
 }
 
+bool CacheIRCompiler::emitGuardIntPtrIsNonNegative(IntPtrOperandId indexId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register index = allocator.useRegister(masm, indexId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.branchPtr(Assembler::LessThan, index, ImmWord(0), failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitGuardIndexIsNotDenseElement(ObjOperandId objId,
                                                       Int32OperandId indexId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
