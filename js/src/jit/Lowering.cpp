@@ -4473,6 +4473,26 @@ void LIRGenerator::visitGuardHasAttachedArrayBuffer(
   redefine(ins, ins->object());
 }
 
+void LIRGenerator::visitGuardTypedArraySetOffset(
+    MGuardTypedArraySetOffset* ins) {
+  auto* lir = new (alloc()) LGuardTypedArraySetOffset(
+      useRegister(ins->offset()), useRegister(ins->targetLength()),
+      useRegister(ins->sourceLength()), temp());
+  assignSnapshot(lir, ins->bailoutKind());
+  add(lir, ins);
+  redefine(ins, ins->offset());
+}
+
+void LIRGenerator::visitTypedArraySet(MTypedArraySet* ins) {
+  auto* lir = new (alloc()) LTypedArraySet(useRegisterAtStart(ins->target()),
+                                           useRegisterAtStart(ins->source()),
+                                           useRegisterAtStart(ins->offset()));
+  add(lir, ins);
+  if (!ins->canUseBitwiseCopy()) {
+    assignSafepoint(lir, ins);
+  }
+}
+
 void LIRGenerator::visitTypedArraySubarray(MTypedArraySubarray* ins) {
   auto* lir = new (alloc()) LTypedArraySubarray(
       useRegisterAtStart(ins->object()), useRegisterAtStart(ins->start()),

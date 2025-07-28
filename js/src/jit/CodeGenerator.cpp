@@ -11080,6 +11080,51 @@ void CodeGenerator::visitGuardHasAttachedArrayBuffer(
   bailoutFrom(&bail, lir->snapshot());
 }
 
+void CodeGenerator::visitGuardTypedArraySetOffset(
+    LGuardTypedArraySetOffset* lir) {
+  Register offset = ToRegister(lir->offset());
+  Register targetLength = ToRegister(lir->targetLength());
+  Register sourceLength = ToRegister(lir->sourceLength());
+  Register temp = ToRegister(lir->temp0());
+
+  Label bail;
+
+  // Ensure `offset <= target.length`.
+  masm.movePtr(targetLength, temp);
+  masm.branchSubPtr(Assembler::Signed, offset, temp, &bail);
+
+  // Ensure `source.length <= (target.length - offset)`.
+  masm.branchPtr(Assembler::GreaterThan, sourceLength, temp, &bail);
+
+  bailoutFrom(&bail, lir->snapshot());
+}
+
+void CodeGenerator::visitTypedArraySet(LTypedArraySet* lir) {
+  Register target = ToRegister(lir->target());
+  Register source = ToRegister(lir->source());
+  Register offset = ToRegister(lir->offset());
+
+  // Bit-wise copying is infallible because it doesn't need to allocate any
+  // temporary memory, even if the underlying buffers are the same.
+  if (lir->mir()->canUseBitwiseCopy()) {
+    masm.setupAlignedABICall();
+    masm.passABIArg(target);
+    masm.passABIArg(source);
+    masm.passABIArg(offset);
+
+    using Fn = void (*)(TypedArrayObject*, TypedArrayObject*, intptr_t);
+    masm.callWithABI<Fn, js::TypedArraySetInfallible>();
+  } else {
+    pushArg(offset);
+    pushArg(source);
+    pushArg(target);
+
+    using Fn =
+        bool (*)(JSContext*, TypedArrayObject*, TypedArrayObject*, intptr_t);
+    callVM<Fn, js::TypedArraySet>(lir);
+  }
+}
+
 void CodeGenerator::visitTypedArraySubarray(LTypedArraySubarray* lir) {
   pushArg(ToRegister(lir->end()));
   pushArg(ToRegister(lir->start()));

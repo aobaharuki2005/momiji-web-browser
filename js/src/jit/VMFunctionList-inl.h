@@ -364,6 +364,7 @@ namespace jit {
   _(ThrowWithStackOperation, js::ThrowWithStackOperation)                      \
   _(ToBigInt, js::ToBigInt)                                                    \
   _(ToStringSlow, js::ToStringSlow<js::CanGC>)                                 \
+  _(TypedArraySet, js::TypedArraySet)                                          \
   _(TypedArraySubarray, js::TypedArraySubarray)                                \
   _(ValueToIterator, js::ValueToIterator)                                      \
   _(VarEnvironmentObjectCreateWithoutEnclosing,                                \

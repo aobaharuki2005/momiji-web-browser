@@ -1347,6 +1347,16 @@
   args:
     obj: ObjId
 
+- name: TypedArraySetResult
+  shared: true
+  transpile: true
+  cost_estimate: 4
+  args:
+    target: ObjId
+    source: ObjId
+    offset: IntPtrId
+    canUseBitwiseCopy: BoolImm
+
 - name: TypedArraySubarrayResult
   shared: true
   transpile: true

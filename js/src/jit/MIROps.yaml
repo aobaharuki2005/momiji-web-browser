@@ -1858,6 +1858,31 @@
   congruent_to: if_operands_equal
   alias_set: custom
 
+# Inlined TypedArray.prototype.set
+- name: TypedArraySet
+  operands:
+    target: Object
+    source: Object
+    offset: IntPtr
+  arguments:
+    canUseBitwiseCopy: bool
+  alias_set: custom
+  possibly_calls: true
+  generate_lir: true
+
+- name: GuardTypedArraySetOffset
+  operands:
+    offset: IntPtr
+    targetLength: IntPtr
+    sourceLength: IntPtr
+  result_type: IntPtr
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+  generate_lir: true
+  lir_temps: 1
+
 # Inlined TypedArray.prototype.subarray
 - name: TypedArraySubarray
   operands:

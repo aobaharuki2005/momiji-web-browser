@@ -198,6 +198,7 @@
   _(ObjectKeys)                                    \
   _(ObjectToString)                                \
                                                    \
+  _(TypedArraySet)                                 \
   _(TypedArraySubarray)                            \
                                                    \
   _(TestBailout)                                   \

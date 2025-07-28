@@ -2423,6 +2423,32 @@ bool WarpCacheIRTranspiler::emitLoadTypedArrayElementResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitTypedArraySetResult(ObjOperandId targetId,
+                                                    ObjOperandId sourceId,
+                                                    IntPtrOperandId offsetId,
+                                                    bool canUseBitwiseCopy) {
+  MDefinition* target = getOperand(targetId);
+  MDefinition* source = getOperand(sourceId);
+  MDefinition* offset = getOperand(offsetId);
+
+  auto* targetLength = MArrayBufferViewLength::New(alloc(), target);
+  add(targetLength);
+
+  auto* sourceLength = MArrayBufferViewLength::New(alloc(), source);
+  add(sourceLength);
+
+  auto* guardedOffset = MGuardTypedArraySetOffset::New(
+      alloc(), offset, targetLength, sourceLength);
+  add(guardedOffset);
+
+  auto* ins = MTypedArraySet::New(alloc(), target, source, guardedOffset,
+                                  canUseBitwiseCopy);
+  addEffectful(ins);
+
+  pushResult(constant(UndefinedValue()));
+  return resumeAfter(ins);
+}
+
 bool WarpCacheIRTranspiler::emitTypedArraySubarrayResult(
     ObjOperandId objId, IntPtrOperandId startId, IntPtrOperandId endId) {
   MDefinition* obj = getOperand(objId);

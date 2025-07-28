@@ -2003,6 +2003,42 @@ static bool TypedArray_set(JSContext* cx, unsigned argc, Value* vp) {
   return CallNonGenericMethod<IsTypedArrayObject, TypedArray_set>(cx, args);
 }
 
+static bool TypedArraySet(TypedArrayObject* target, TypedArrayObject* source,
+                          intptr_t offset) {
+  MOZ_ASSERT(offset >= 0);
+
+  size_t targetLength = target->length().valueOr(0);
+  size_t sourceLength = source->length().valueOr(0);
+
+  switch (target->type()) {
+#define SET_FROM_TYPED_ARRAY(_, T, N)                                       \
+  case Scalar::N:                                                           \
+    return SetFromTypedArray<T>(target, targetLength, source, sourceLength, \
+                                size_t(offset));
+    JS_FOR_EACH_TYPED_ARRAY(SET_FROM_TYPED_ARRAY)
+#undef SET_FROM_TYPED_ARRAY
+    default:
+      break;
+  }
+  MOZ_CRASH("Unsupported TypedArray type");
+}
+
+bool js::TypedArraySet(JSContext* cx, TypedArrayObject* target,
+                       TypedArrayObject* source, intptr_t offset) {
+  if (!::TypedArraySet(target, source, offset)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  return true;
+}
+
+void js::TypedArraySetInfallible(TypedArrayObject* target,
+                                 TypedArrayObject* source, intptr_t offset) {
+  AutoUnsafeCallWithABI unsafe;
+
+  MOZ_ALWAYS_TRUE(::TypedArraySet(target, source, offset));
+}
+
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 22.2.3.5 %TypedArray%.prototype.copyWithin ( target, start [ , end ] )
 static bool TypedArray_copyWithin(JSContext* cx, const CallArgs& args) {
@@ -5109,7 +5145,7 @@ static bool uint8array_toHex(JSContext* cx, unsigned argc, Value* vp) {
 
 /* static */ const JSFunctionSpec TypedArrayObject::protoFunctions[] = {
     JS_INLINABLE_FN("subarray", TypedArray_subarray, 2, 0, TypedArraySubarray),
-    JS_FN("set", TypedArray_set, 1, 0),
+    JS_INLINABLE_FN("set", TypedArray_set, 1, 0, TypedArraySet),
     JS_FN("copyWithin", TypedArray_copyWithin, 2, 0),
     JS_SELF_HOSTED_FN("every", "TypedArrayEvery", 1, 0),
     JS_FN("fill", TypedArray_fill, 1, 0),

@@ -5965,6 +5965,79 @@ bool CacheIRCompiler::emitIsTypedArrayConstructorResult(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitTypedArraySetResult(ObjOperandId targetId,
+                                              ObjOperandId sourceId,
+                                              IntPtrOperandId offsetId,
+                                              bool canUseBitwiseCopy) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Maybe<AutoOutputRegister> output;
+  Maybe<AutoCallVM> callvm;
+  if (canUseBitwiseCopy) {
+    output.emplace(*this);
+  } else {
+    callvm.emplace(masm, this, allocator);
+  }
+  Register target = allocator.useRegister(masm, targetId);
+  Register source = allocator.useRegister(masm, sourceId);
+  Register offset = allocator.useRegister(masm, offsetId);
+
+  const auto& eitherOutput = output ? *output : callvm->output();
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, eitherOutput);
+  AutoScratchRegisterMaybeOutputType scratch2(allocator, masm, eitherOutput);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // AutoCallVM's AutoSaveLiveRegisters aren't accounted for in FailurePath, so
+  // we can't use both at the same time. This isn't an issue here, because Ion
+  // doesn't support CallICs. If that ever changes, this code must be updated.
+  MOZ_ASSERT(isBaseline(), "Can't use FailurePath with AutoCallVM in Ion ICs");
+
+  // Ensure `offset <= target.length`.
+  masm.loadArrayBufferViewLengthIntPtr(target, scratch1);
+  masm.branchSubPtr(Assembler::Signed, offset, scratch1.get(),
+                    failure->label());
+
+  // Ensure `source.length <= (target.length - offset)`.
+  masm.loadArrayBufferViewLengthIntPtr(source, scratch2);
+  masm.branchPtr(Assembler::GreaterThan, scratch2, scratch1, failure->label());
+
+  // Bit-wise copying is infallible because it doesn't need to allocate any
+  // temporary memory, even if the underlying buffers are the same.
+  if (canUseBitwiseCopy) {
+    LiveRegisterSet save = liveVolatileRegs();
+    save.takeUnchecked(scratch1);
+    save.takeUnchecked(scratch2);
+    masm.PushRegsInMask(save);
+
+    using Fn = void (*)(TypedArrayObject*, TypedArrayObject*, intptr_t);
+    masm.setupUnalignedABICall(scratch1);
+
+    masm.passABIArg(target);
+    masm.passABIArg(source);
+    masm.passABIArg(offset);
+    masm.callWithABI<Fn, js::TypedArraySetInfallible>();
+
+    masm.PopRegsInMask(save);
+  } else {
+    callvm->prepare();
+
+    masm.Push(offset);
+    masm.Push(source);
+    masm.Push(target);
+
+    using Fn =
+        bool (*)(JSContext* cx, TypedArrayObject*, TypedArrayObject*, intptr_t);
+    callvm->callNoResult<Fn, js::TypedArraySet>();
+  }
+
+  masm.moveValue(UndefinedValue(), eitherOutput.valueReg());
+  return true;
+}
+
 bool CacheIRCompiler::emitTypedArraySubarrayResult(ObjOperandId objId,
                                                    IntPtrOperandId startId,
                                                    IntPtrOperandId endId) {

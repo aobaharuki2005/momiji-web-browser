@@ -6649,6 +6649,18 @@ AliasSet MGuardResizableArrayBufferViewInBoundsOrDetached::getAliasSet() const {
                         AliasSet::ObjectFields | AliasSet::FixedSlot);
 }
 
+AliasSet MTypedArraySet::getAliasSet() const {
+  // Loads typed array length and elements.
+  constexpr auto load =
+      AliasSet::Load(AliasSet::ArrayBufferViewLengthOrOffset |
+                     AliasSet::ObjectFields | AliasSet::UnboxedElement);
+
+  // Stores into typed array elements.
+  constexpr auto store = AliasSet::Store(AliasSet::UnboxedElement);
+
+  return load | store;
+}
+
 AliasSet MArrayPush::getAliasSet() const {
   return AliasSet::Store(AliasSet::ObjectFields | AliasSet::Element);
 }

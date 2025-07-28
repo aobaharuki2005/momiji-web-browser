@@ -11051,6 +11051,122 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachTypedArraySet() {
+  // Expected arguments: source (typed array), optional offset (int32).
+  if (args_.length() < 1 || args_.length() > 2) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!isFirstStub()) {
+    // Attach only once to prevent slowdowns for polymorphic calls.
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure |this| is a TypedArrayObject.
+  if (!thisval_.isObject() || !thisval_.toObject().is<TypedArrayObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure first argument is a TypedArrayObject.
+  if (!args_[0].isObject() || !args_[0].toObject().is<TypedArrayObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure optional second argument is a non-negative index.
+  uint64_t targetOffset = 0;
+  if (args_.length() > 1) {
+    int64_t offsetIndex;
+    if (!ValueIsInt64Index(args_[1], &offsetIndex) || offsetIndex < 0) {
+      return AttachDecision::NoAction;
+    }
+    targetOffset = uint64_t(offsetIndex);
+  }
+
+  auto* tarr = &thisval_.toObject().as<TypedArrayObject>();
+  auto* source = &args_[0].toObject().as<TypedArrayObject>();
+
+  // Detached buffers throw.
+  if (tarr->hasDetachedBuffer() || source->hasDetachedBuffer()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Target must not be an immutable typed array.
+  if (tarr->is<ImmutableTypedArrayObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Typed array contents must be compatible.
+  if (Scalar::isBigIntType(tarr->type()) !=
+      Scalar::isBigIntType(source->type())) {
+    return AttachDecision::NoAction;
+  }
+
+  // `set()` throws if `sourceLength + targetOffset > targetLength`.
+  size_t targetLength = tarr->length().valueOr(0);
+  size_t sourceLength = source->length().valueOr(0);
+  if (targetOffset > targetLength ||
+      sourceLength > targetLength - targetOffset) {
+    return AttachDecision::NoAction;
+  }
+
+  // Resizable typed arrays not yet supported.
+  if (tarr->is<ResizableTypedArrayObject>() ||
+      source->is<ResizableTypedArrayObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Infallible operation if bit-wise copying is possible.
+  bool canUseBitwiseCopy = CanUseBitwiseCopy(tarr->type(), source->type());
+
+  // Initialize the input operand.
+  Int32OperandId argcId = initializeInputOperand();
+
+  // Guard callee is the `set` native function.
+  ObjOperandId calleeId = emitNativeCalleeGuard(argcId);
+
+  // Guard this is an object.
+  ValOperandId thisValId = loadThis(calleeId);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+
+  // Shape guard to check class.
+  writer.guardShapeForClass(objId, tarr->shape());
+
+  // Guard the array buffer is not detached.
+  writer.guardHasAttachedArrayBuffer(objId);
+
+  // Guard first argument is an object.
+  ValOperandId sourceId = loadArgument(calleeId, ArgumentKind::Arg0);
+  ObjOperandId sourceObjId = writer.guardToObject(sourceId);
+
+  // Shape guard to check class of first argument.
+  writer.guardShapeForClass(sourceObjId, source->shape());
+
+  // Guard the source is not detached. (Immutable typed arrays can't get
+  // detached.)
+  if (!source->is<ImmutableTypedArrayObject>()) {
+    writer.guardHasAttachedArrayBuffer(sourceObjId);
+  }
+
+  // Convert offset to IntPtr.
+  IntPtrOperandId intPtrOffsetId;
+  if (args_.length() > 1) {
+    ValOperandId offsetId = loadArgument(calleeId, ArgumentKind::Arg1);
+    intPtrOffsetId =
+        guardToIntPtrIndex(args_[1], offsetId, /* supportOOB = */ false);
+    writer.guardIntPtrIsNonNegative(intPtrOffsetId);
+  } else {
+    // Absent first argument defaults to zero.
+    intPtrOffsetId = writer.loadInt32AsIntPtrConstant(0);
+  }
+
+  writer.typedArraySetResult(objId, sourceObjId, intPtrOffsetId,
+                             canUseBitwiseCopy);
+  writer.returnFromIC();
+
+  trackAttached("TypedArraySet");
+  return AttachDecision::Attach;
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachTypedArraySubarray() {
   // Only handle argc <= 2.
   if (args_.length() > 2) {
@@ -12698,6 +12814,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
     // TypedArray natives.
     case InlinableNative::TypedArrayConstructor:
       return AttachDecision::NoAction;  // Not callable.
+    case InlinableNative::TypedArraySet:
+      return tryAttachTypedArraySet();
     case InlinableNative::TypedArraySubarray:
       return tryAttachTypedArraySubarray();
 
