@@ -66,7 +66,9 @@ add_task(async function test_menubar_off() {
 
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
   let menubar = newWin.document.getElementById("toolbar-menubar");
-  is(menubar.hasAttribute("inactive"), true, "Menu bar should have inactive");
+  if (!Services.appinfo.nativeMenubar) {
+    is(menubar.hasAttribute("inactive"), true, "Menu bar should have inactive");
+  }
   is(
     menubar.hasAttribute("toolbarname"),
     false,
