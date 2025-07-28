@@ -344,7 +344,7 @@ body {
  * (That is, if the menu bar doesn't autohide, and we're not in a fullscreen or
  * popup window.) */
 :root:not([chromehidden~="menubar"], [inFullscreen])
-  #toolbar-menubar:not([autohide])
+  #toolbar-menubar:not([autohide], [collapsed])
   ~ :is(#TabsToolbar, #nav-bar)
   > :is(.titlebar-buttonbox-container, .titlebar-spacer) {
   display: none;
