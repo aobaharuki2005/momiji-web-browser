@@ -6,7 +6,6 @@
 
 #include <windows.h>
 
-#if !defined(MOZ_ZUCCHINI)
 #include <io.h>
 #include <psapi.h>
 #include <shellapi.h>
@@ -22,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#if !defined(MOZ_ZUCCHINI)
 #include "base/check.h"
 #include "base/clang_profiling_buildflags.h"
 #include "base/debug/alias.h"
@@ -967,6 +967,7 @@ FILE* FileToFILE(File file, const char* mode) {
     _close(fd);
   return stream;
 }
+#endif  // !defined(MOZ_ZUCCHINI)
 
 File FILEToFile(FILE* file_stream) {
   if (!file_stream)
@@ -991,6 +992,7 @@ File FILEToFile(FILE* file_stream) {
   return File(ScopedPlatformFile(other_handle));
 }
 
+#if !defined(MOZ_ZUCCHINI)
 int ReadFile(const FilePath& filename, char* data, int max_size) {
   ScopedBlockingCall scoped_blocking_call(FROM_HERE, BlockingType::MAY_BLOCK);
   win::ScopedHandle file(CreateFile(filename.value().c_str(), GENERIC_READ,

@@ -1,23 +1,22 @@
-Only define DeleteFile from file_util_win.cc
+Only define DeleteFile and FILEToFile from file_util_win.cc
 
 We do not need the other functions defined in this file.
 ---
- base/files/file_util_win.cc | 21 +++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ base/files/file_util_win.cc | 23 +++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
 diff --git a/base/files/file_util_win.cc b/base/files/file_util_win.cc
-index d7b5fb20aeb3..6a7792a000e0 100644
+index d7b5fb20aeb3..fbcd25a755c2 100644
 --- a/base/files/file_util_win.cc
 +++ b/base/files/file_util_win.cc
-@@ -6,6 +6,7 @@
- 
- #include <windows.h>
+@@ -21,13 +21,16 @@
+ #include <utility>
+ #include <vector>
  
 +#if !defined(MOZ_ZUCCHINI)
- #include <io.h>
- #include <psapi.h>
- #include <shellapi.h>
-@@ -27,7 +28,9 @@
+ #include "base/check.h"
+ #include "base/clang_profiling_buildflags.h"
+ #include "base/debug/alias.h"
  #include "base/feature_list.h"
  #include "base/features.h"
  #include "base/files/file_enumerator.h"
@@ -139,7 +138,23 @@ index d7b5fb20aeb3..6a7792a000e0 100644
  bool DeletePathRecursively(const FilePath& path) {
    return DeleteFileOrSetLastError(path, /*recursive=*/true);
  }
-@@ -1257,4 +1276,6 @@ bool CopyAndDeleteDirectory(const FilePath& from_path,
+@@ -948,6 +967,7 @@ FILE* FileToFILE(File file, const char* mode) {
+     _close(fd);
+   return stream;
+ }
++#endif  // !defined(MOZ_ZUCCHINI)
+ 
+ File FILEToFile(FILE* file_stream) {
+   if (!file_stream)
+@@ -972,6 +992,7 @@ File FILEToFile(FILE* file_stream) {
+   return File(ScopedPlatformFile(other_handle));
+ }
+ 
++#if !defined(MOZ_ZUCCHINI)
+ int ReadFile(const FilePath& filename, char* data, int max_size) {
+   ScopedBlockingCall scoped_blocking_call(FROM_HERE, BlockingType::MAY_BLOCK);
+   win::ScopedHandle file(CreateFile(filename.value().c_str(), GENERIC_READ,
+@@ -1257,4 +1278,6 @@ bool CopyAndDeleteDirectory(const FilePath& from_path,
  }
  
  }  // namespace internal
