@@ -1819,12 +1819,11 @@ void CodeGenerator::visitAtomicLoad64(LAtomicLoad64* lir) {
 
   masm.memoryBarrierBefore(sync);
   if (lir->index()->isConstant()) {
-    Address source =
-        ToAddress(elements, lir->index(), storageType, mir->offsetAdjustment());
+    Address source = ToAddress(elements, lir->index(), storageType);
     masm.load64(source, out);
   } else {
     BaseIndex source(elements, ToRegister(lir->index()),
-                     ScaleFromScalarType(storageType), mir->offsetAdjustment());
+                     ScaleFromScalarType(storageType));
     masm.load64(source, out);
   }
   masm.memoryBarrierAfter(sync);

@@ -1475,12 +1475,11 @@ void CodeGenerator::visitAtomicLoad64(LAtomicLoad64* lir) {
   Scalar::Type storageType = mir->storageType();
 
   if (lir->index()->isConstant()) {
-    Address source =
-        ToAddress(elements, lir->index(), storageType, mir->offsetAdjustment());
+    Address source = ToAddress(elements, lir->index(), storageType);
     masm.atomicLoad64(Synchronization::Load(), source, out);
   } else {
     BaseIndex source(elements, ToRegister(lir->index()),
-                     ScaleFromScalarType(storageType), mir->offsetAdjustment());
+                     ScaleFromScalarType(storageType));
     masm.atomicLoad64(Synchronization::Load(), source, out);
   }
 }

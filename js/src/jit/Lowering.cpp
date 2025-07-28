@@ -4935,8 +4935,8 @@ void LIRGenerator::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins) {
   }
 
   const LUse elements = useRegister(ins->elements());
-  const LAllocation index = useRegisterOrIndexConstant(
-      ins->index(), ins->storageType(), ins->offsetAdjustment());
+  const LAllocation index =
+      useRegisterOrIndexConstant(ins->index(), ins->storageType());
 
   if (Scalar::isBigIntType(ins->storageType())) {
     MOZ_ASSERT(ins->type() == MIRType::Int64);

@@ -18399,13 +18399,12 @@ void CodeGenerator::visitLoadUnboxedScalar(LLoadUnboxedScalar* lir) {
 
   Label fail;
   if (lir->index()->isConstant()) {
-    Address source =
-        ToAddress(elements, lir->index(), storageType, mir->offsetAdjustment());
+    Address source = ToAddress(elements, lir->index(), storageType);
     masm.loadFromTypedArray(storageType, source, out, temp0, temp1, &fail,
                             volatileRegs);
   } else {
     BaseIndex source(elements, ToRegister(lir->index()),
-                     ScaleFromScalarType(storageType), mir->offsetAdjustment());
+                     ScaleFromScalarType(storageType));
     masm.loadFromTypedArray(storageType, source, out, temp0, temp1, &fail,
                             volatileRegs);
   }
@@ -18424,12 +18423,11 @@ void CodeGenerator::visitLoadUnboxedInt64(LLoadUnboxedInt64* lir) {
   Scalar::Type storageType = mir->storageType();
 
   if (lir->index()->isConstant()) {
-    Address source =
-        ToAddress(elements, lir->index(), storageType, mir->offsetAdjustment());
+    Address source = ToAddress(elements, lir->index(), storageType);
     masm.load64(source, out);
   } else {
     BaseIndex source(elements, ToRegister(lir->index()),
-                     ScaleFromScalarType(storageType), mir->offsetAdjustment());
+                     ScaleFromScalarType(storageType));
     masm.load64(source, out);
   }
 }

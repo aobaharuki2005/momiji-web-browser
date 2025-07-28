@@ -7178,7 +7178,6 @@ class MArrayPopShift : public MUnaryInstruction,
 // Load an unboxed scalar value from an array buffer view or other object.
 class MLoadUnboxedScalar : public MBinaryInstruction,
                            public NoTypePolicy::Data {
-  int32_t offsetAdjustment_ = 0;
   Scalar::Type storageType_;
   MemoryBarrierRequirement requiresBarrier_;
 
@@ -7211,10 +7210,6 @@ class MLoadUnboxedScalar : public MBinaryInstruction,
     return storageType_ == Scalar::Uint32 && type() == MIRType::Int32;
   }
   auto requiresMemoryBarrier() const { return requiresBarrier_; }
-  int32_t offsetAdjustment() const { return offsetAdjustment_; }
-  void setOffsetAdjustment(int32_t offsetAdjustment) {
-    offsetAdjustment_ = offsetAdjustment;
-  }
   AliasSet getAliasSet() const override {
     // When a barrier is needed make the instruction effectful by
     // giving it a "store" effect.
@@ -7233,9 +7228,6 @@ class MLoadUnboxedScalar : public MBinaryInstruction,
     }
     const MLoadUnboxedScalar* other = ins->toLoadUnboxedScalar();
     if (storageType_ != other->storageType_) {
-      return false;
-    }
-    if (offsetAdjustment() != other->offsetAdjustment()) {
       return false;
     }
     return congruentIfOperandsEqual(other);
