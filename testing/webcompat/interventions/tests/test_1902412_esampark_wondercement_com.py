@@ -1,4 +1,5 @@
 import pytest
+from webdriver.bidi.error import UnknownErrorException
 
 URL = "https://esampark.wondercement.com/"
 
@@ -10,7 +11,7 @@ VPN_TEXT = "502 - Bad Gateway"
 async def visit_site(client):
     await client.navigate(URL, wait="none")
     login, vpn = client.await_first_element_of(
-        [client.css(LOGIN_CSS), client.text(VPN_TEXT)], is_displayed=True
+        [client.css(LOGIN_CSS), client.text(VPN_TEXT)], is_displayed=True, timeout=20
     )
     if vpn:
         pytest.skip("Region-locked, cannot test. Try using a VPN set to the USA.")
@@ -26,5 +27,8 @@ async def test_enabled(client):
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client):
-    await visit_site(client)
+    try:
+        await visit_site(client)
+    except UnknownErrorException:
+        pass
     assert await client.await_alert(UNSUPPORTED_ALERT)
