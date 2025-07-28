@@ -42,8 +42,8 @@ add_task(async function () {
   const decodedTabURI = decodeURI(tab.linkedBrowser.currentURI.spec);
 
   await ToolboxTask.spawn(
-    [tabProcessID, isFissionEnabled(), decodedTabURI],
-    async (processID, _isFissionEnabled, tabURI) => {
+    [tabProcessID, decodedTabURI],
+    async (processID, tabURI) => {
       /* global gToolbox */
       const { hud } = await gToolbox.getPanel("webconsole");
 
@@ -64,9 +64,7 @@ add_task(async function () {
 
       const labelTexts = getContextLabels(gToolbox);
 
-      const expectedTitle = _isFissionEnabled
-        ? `(pid ${processID}) https://example.com`
-        : `(pid ${processID}) web`;
+      const expectedTitle = `(pid ${processID}) https://example.com`;
       ok(
         labelTexts.includes(expectedTitle),
         `${processID} content process visible in the execution context (${labelTexts})`

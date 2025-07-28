@@ -47,38 +47,24 @@ add_task(async () => {
     await topLevelFrameHighlighterTestFront.getTabbingOrderHighlighterData(
       topLevelAccessibilityFrontActorID
     );
-  if (isFissionEnabled()) {
-    // ⚠️ We don't get the highlighter for the <html> node of the iframe when Fission is enabled.
-    // This should be fix as part of Bug 1740509.
-    is(
-      JSON.stringify(tabbingOrderHighlighterData),
-      JSON.stringify([`button#top-btn-1 : 1`, `button#top-btn-2 : 4`]),
-      "Tabbing order is visible for the top level target after clicking the checkbox"
+  // ⚠️ We don't get the highlighter for the <html> node of the iframe when Fission is enabled.
+  // This should be fix as part of Bug 1740509.
+  is(
+    JSON.stringify(tabbingOrderHighlighterData),
+    JSON.stringify([`button#top-btn-1 : 1`, `button#top-btn-2 : 4`]),
+    "Tabbing order is visible for the top level target after clicking the checkbox"
+  );
+
+  let iframeTabingOrderHighlighterData =
+    await iframeHighlighterTestFront.getTabbingOrderHighlighterData(
+      iframeAccessibilityFrontActorID
     );
 
-    const iframeTabingOrderHighlighterData =
-      await iframeHighlighterTestFront.getTabbingOrderHighlighterData(
-        iframeAccessibilityFrontActorID
-      );
-
-    is(
-      JSON.stringify(iframeTabingOrderHighlighterData),
-      JSON.stringify([`button#iframe-btn-1 : 2`, `button#iframe-btn-2 : 3`]),
-      "Tabbing order is visible for the top level target after clicking the checkbox"
-    );
-  } else {
-    is(
-      JSON.stringify(tabbingOrderHighlighterData),
-      JSON.stringify([
-        `button#top-btn-1 : 1`,
-        `html : 2`,
-        `button#iframe-btn-1 : 3`,
-        `button#iframe-btn-2 : 4`,
-        `button#top-btn-2 : 5`,
-      ]),
-      "Tabbing order is visible for the top level target after clicking the checkbox"
-    );
-  }
+  is(
+    JSON.stringify(iframeTabingOrderHighlighterData),
+    JSON.stringify([`button#iframe-btn-1 : 2`, `button#iframe-btn-2 : 3`]),
+    "Tabbing order is visible for the top level target after clicking the checkbox"
+  );
 
   info("Select the iframe in the iframe picker");
   // Get the iframe picker items
@@ -126,7 +112,7 @@ add_task(async () => {
     "There's no highlighter displayed on the top level target when focused on specific iframe"
   );
 
-  let iframeTabingOrderHighlighterData =
+  iframeTabingOrderHighlighterData =
     await iframeHighlighterTestFront.getTabbingOrderHighlighterData(
       iframeAccessibilityFrontActorID
     );
