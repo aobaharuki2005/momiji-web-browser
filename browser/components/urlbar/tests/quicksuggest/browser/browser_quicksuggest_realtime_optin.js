@@ -50,9 +50,32 @@ const OFFLINE_REMOTE_SETTINGS = [
   },
 ];
 
+const TEST_MERINO_SINGLE = [
+  {
+    provider: "polygon",
+    is_sponsored: false,
+    score: 0,
+    custom_details: {
+      polygon: {
+        values: [
+          {
+            image_url: "https://example.com/aapl.svg",
+            query: "AAPL stock",
+            name: "Apple Inc",
+            ticker: "AAPL",
+            todays_change_perc: "-0.54",
+            last_price: "$181.98 USD",
+          },
+        ],
+      },
+    },
+  },
+];
+
 add_setup(async function () {
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
     remoteSettingsRecords: OFFLINE_REMOTE_SETTINGS,
+    merinoSuggestions: TEST_MERINO_SINGLE,
   });
   await UrlbarTestUtils.initNimbusFeature({
     quickSuggestDynamicSuggestionTypes: "realtime_opt_in",
@@ -71,13 +94,22 @@ add_task(async function allow() {
   Assert.equal(result.realtimeType, "stocks");
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TIP);
 
+  info(
+    "Click allow button that changes dataCollection pref and starts new query with same keyword"
+  );
   let allowButton = element.row.querySelector(".urlbarView-button-0");
   EventUtils.synthesizeMouseAtCenter(allowButton, {});
-  await TestUtils.waitForCondition(
-    () => UrlbarPrefs.get("quicksuggest.dataCollection.enabled"),
-    "Wait until quicksuggest.dataCollection.enabled pref changes"
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  let { result: merinoResult } = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    1
   );
+  Assert.ok(UrlbarPrefs.get("quicksuggest.dataCollection.enabled"));
+  Assert.equal(merinoResult.payload.source, "merino");
+  Assert.equal(merinoResult.payload.provider, "polygon");
+  Assert.equal(merinoResult.payload.dynamicType, "stocks");
   info("Allow button works");
+
   await UrlbarTestUtils.promisePopupClose(window);
 
   UrlbarPrefs.clear("quicksuggest.dataCollection.enabled");

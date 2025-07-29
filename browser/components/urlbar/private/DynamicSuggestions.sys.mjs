@@ -253,6 +253,7 @@ export class DynamicSuggestions extends SuggestProvider {
     switch (details.selType) {
       case "allow":
         lazy.UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
+        controller.input.startQuery({ allowAutofill: false });
         break;
       case "not_now":
         lazy.UrlbarPrefs.set(
