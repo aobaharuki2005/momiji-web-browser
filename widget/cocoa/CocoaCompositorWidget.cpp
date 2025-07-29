@@ -7,6 +7,7 @@
 #include "CocoaCompositorWidget.h"
 
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/layers/NativeLayerRootRemoteMacChild.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsIWidget.h"
 
@@ -28,6 +29,7 @@ void CocoaCompositorWidget::Init(CompositorWidgetInitData&& aInitData) {
   CocoaCompositorWidgetInitData cocoaInitData(
       std::move((aInitData).get_CocoaCompositorWidgetInitData()));
   mClientSize = cocoaInitData.clientSize();
+  mChildEndpoint = std::move(cocoaInitData.childEndpoint());
 }
 
 RefPtr<mozilla::layers::NativeLayerRoot>
@@ -63,7 +65,12 @@ void CocoaCompositorWidget::NotifyClientSizeChanged(
 void CocoaCompositorWidget::CreateNativeLayerRoot() {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(XRE_IsGPUProcess());
-  // TODO
+  // Create a NativeLayerRootRemoteMacChild and bind it to the endpoint
+  // that was passed to us in Init().
+  auto root = MakeRefPtr<layers::NativeLayerRootRemoteMacChild>();
+  auto remoteChild = root->GetRemoteChild();
+  MOZ_ALWAYS_TRUE(mChildEndpoint.Bind(remoteChild));
+  mNativeLayerRoot = std::move(root);
 }
 
 }  // namespace widget

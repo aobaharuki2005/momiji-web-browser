@@ -12,6 +12,7 @@
 #include "nsIDOMWindowUtils.h"
 #include "nsILocalFileMac.h"
 #include "CocoaCompositorWidget.h"
+#include "CompositorWidgetChild.h"
 #include "GLContextCGL.h"
 #include "MacThemeGeometryType.h"
 #include "NativeMenuSupport.h"
@@ -19,6 +20,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/SwipeTracker.h"
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/NativeLayerCA.h"
@@ -873,6 +875,73 @@ void nsCocoaWindow::HandleMainThreadCATransaction() {
   MaybeScheduleUnsuspendAsyncCATransactions();
 }
 
+void nsCocoaWindow::CreateCompositor(int aWidth, int aHeight) {
+  // Eventually, we're going to call nsBaseWidget::CreateCompositor to do the
+  // real work. Before we do that, we need to prepare some internal state if
+  // we have a GPU process, and we think that we will be creating a remote
+  // compositor that will run in that process.
+
+  // Because there are some early exit failure cases, we use a MakeScopeExit
+  // to do the actual call to nsBaseWidget::CreateCompositor, which has to
+  // come last.
+  auto finishCompositorCreation =
+      MakeScopeExit([&] { nsBaseWidget::CreateCompositor(aWidth, aHeight); });
+
+  // Create NativeLayerRemoteMac endpoints, if there's a GPU process.
+
+  // Bug 1978432: We want this to run on something other than the main process.
+  auto* pm = mozilla::gfx::GPUProcessManager::Get();
+  mozilla::ipc::EndpointProcInfo gpuProcessInfo =
+      (pm ? pm->GPUEndpointProcInfo()
+          : mozilla::ipc::EndpointProcInfo::Invalid());
+
+  mozilla::ipc::EndpointProcInfo childProcessInfo =
+      gpuProcessInfo != mozilla::ipc::EndpointProcInfo::Invalid()
+          ? gpuProcessInfo
+          : mozilla::ipc::EndpointProcInfo::Current();
+
+  mozilla::ipc::Endpoint<PNativeLayerRemoteParent> parentEndpoint;
+  auto rv = PNativeLayerRemote::CreateEndpoints(
+      mozilla::ipc::EndpointProcInfo::Current(), childProcessInfo,
+      &parentEndpoint, &mChildEndpoint);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  // Create our mNativeLayerRootRemoteMacParent, and bind it to the parent side
+  // of the endpoint.
+  mNativeLayerRootRemoteMacParent =
+      new NativeLayerRootRemoteMacParent(mNativeLayerRoot);
+  MOZ_ALWAYS_TRUE(parentEndpoint.Bind(mNativeLayerRootRemoteMacParent));
+  // If this Bind fails, there's not much we can do, except signal somehow that
+  // we want to retry with an in-process compositor.
+
+  // If everything has gone well, the mChildPipe will be used in
+  // GetCompositorWidgetInitData, to send the endpoint to the compositor widget.
+  // Later, the render thread will bind a NativeLayerRemoteMacChild to the child
+  // side of the endpoint. Once that is done, the compositor widget child actor
+  // can send messages to our parent actor, and we can update the real
+  // mNativeLayerRoot with the GPU surfaces.
+
+  // There's nothing left to do but fall out of scope and finish the compositor
+  // creation.
+}
+
+void nsCocoaWindow::DestroyCompositor() {
+  if (mNativeLayerRootRemoteMacParent) {
+    mNativeLayerRootRemoteMacParent->Close();
+  }
+
+  if (mCompositorWidgetDelegate) {
+    auto* compositorWidgetChild =
+        static_cast<CompositorWidgetChild*>(mCompositorWidgetDelegate);
+    compositorWidgetChild->Shutdown();
+    mCompositorWidgetDelegate = nullptr;
+  }
+
+  nsBaseWidget::DestroyCompositor();
+}
+
 void nsCocoaWindow::SetCompositorWidgetDelegate(
     mozilla::widget::CompositorWidgetDelegate* aDelegate) {
   if (aDelegate) {
@@ -888,8 +957,8 @@ void nsCocoaWindow::SetCompositorWidgetDelegate(
 void nsCocoaWindow::GetCompositorWidgetInitData(
     mozilla::widget::CompositorWidgetInitData* aInitData) {
   auto deviceIntRect = GetBounds();
-  *aInitData =
-      mozilla::widget::CocoaCompositorWidgetInitData(deviceIntRect.Size());
+  *aInitData = mozilla::widget::CocoaCompositorWidgetInitData(
+      deviceIntRect.Size(), std::move(mChildEndpoint));
 }
 
 mozilla::layers::CompositorBridgeChild*

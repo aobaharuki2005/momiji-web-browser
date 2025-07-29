@@ -1248,7 +1248,7 @@ RefPtr<CompositorSession> GPUProcessManager::CreateRemoteSession(
 
   widget::CompositorWidgetChild* widget =
       new widget::CompositorWidgetChild(dispatcher, observer, initData);
-  if (!child->SendPCompositorWidgetConstructor(widget, initData)) {
+  if (!child->SendPCompositorWidgetConstructor(widget, std::move(initData))) {
     return nullptr;
   }
   if (!widget->Initialize()) {
