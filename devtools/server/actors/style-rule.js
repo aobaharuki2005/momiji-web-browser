@@ -514,13 +514,13 @@ class StyleRuleActor extends Actor {
         // TODO: convert from Object to Boolean. See Bug 1574471
         decl.isUsed = isPropertyUsed(el, style, this.rawRule, decl.name);
         // Check property name. All valid CSS properties support "initial" as a value.
-        decl.isNameValid = InspectorUtils.supports(
-          `${decl.name}:initial`,
-          supportsOptions
-        );
+        decl.isNameValid =
+          // InspectorUtils.supports can be costly, don't call it when the declaration
+          // is a CSS variable, it should always be valid
+          decl.isCustomProperty ||
+          InspectorUtils.supports(`${decl.name}:initial`, supportsOptions);
 
-        if (SharedCssLogic.isCssVariable(decl.name)) {
-          decl.isCustomProperty = true;
+        if (decl.isCustomProperty) {
           decl.computedValue = style.getPropertyValue(decl.name);
 
           // If the variable is a registered property, we check if the variable is
