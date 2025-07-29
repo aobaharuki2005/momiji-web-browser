@@ -919,6 +919,14 @@ features:
         value:
           enabled: true
 
+  suppress-sponsored-top-sites:
+    description: Suppress sponsored top sites for new users for 14 days.
+    variables:
+      enabled:
+        description: If true, new users won’t see sponsored tiles for 14 days.
+        type: Boolean
+        default: false
+
 types:
   objects:
     GleanServerKnobsConfiguration:
