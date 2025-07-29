@@ -392,12 +392,6 @@ elif toolkit == "android":
         "android/PlatformWidgetTypes.ipdlh",
         "headless/HeadlessWidgetTypes.ipdlh",
     ]
-elif toolkit == "cocoa":
-    IPDL_SOURCES = [
-        "cocoa/PCompositorWidget.ipdl",
-        "cocoa/PlatformWidgetTypes.ipdlh",
-        "headless/HeadlessWidgetTypes.ipdlh",
-    ]
 else:
     IPDL_SOURCES = [
         "generic/PCompositorWidget.ipdl",

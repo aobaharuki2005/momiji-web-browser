@@ -81,6 +81,8 @@ class gfxPlatformMac : public gfxPlatform {
 
   BackendPrefsData GetBackendPrefs() const override;
 
+  void InitPlatformGPUProcessPrefs() override;
+
  private:
   nsTArray<uint8_t> GetPlatformCMSOutputProfileData() override;
 

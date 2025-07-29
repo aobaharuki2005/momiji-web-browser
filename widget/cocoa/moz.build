@@ -22,19 +22,8 @@ EXPORTS += [
     "nsCocoaUtils.h",
 ]
 
-EXPORTS.mozilla.widget += [
-    "CocoaCompositorWidget.h",
-    "CompositorWidgetChild.h",
-    "CompositorWidgetParent.h",
-    "InProcessCocoaCompositorWidget.h",
-]
-
 UNIFIED_SOURCES += [
-    "CocoaCompositorWidget.cpp",
-    "CompositorWidgetChild.cpp",
-    "CompositorWidgetParent.cpp",
     "GfxInfo.mm",
-    "InProcessCocoaCompositorWidget.mm",
     "MOZIconHelper.mm",
     "MOZMenuOpeningCoordinator.mm",
     "NativeKeyBindings.mm",

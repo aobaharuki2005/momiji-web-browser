@@ -332,31 +332,6 @@ already_AddRefed<MacIOSurface> MacIOSurface::LookupSurface(
   return ioSurface.forget();
 }
 
-/* static */
-mozilla::gfx::SurfaceFormat MacIOSurface::SurfaceFormatForPixelFormat(
-    OSType aPixelFormat, bool aHasAlpha) {
-  switch (aPixelFormat) {
-    case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
-    case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
-      return mozilla::gfx::SurfaceFormat::NV12;
-    case kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange:
-    case kCVPixelFormatType_420YpCbCr10BiPlanarFullRange:
-      return mozilla::gfx::SurfaceFormat::P010;
-    case kCVPixelFormatType_422YpCbCr8_yuvs:
-    case kCVPixelFormatType_422YpCbCr8FullRange:
-      return mozilla::gfx::SurfaceFormat::YUY2;
-    case kCVPixelFormatType_422YpCbCr10BiPlanarVideoRange:
-    case kCVPixelFormatType_422YpCbCr10BiPlanarFullRange:
-      return mozilla::gfx::SurfaceFormat::NV16;
-    case kCVPixelFormatType_32BGRA:
-      return aHasAlpha ? mozilla::gfx::SurfaceFormat::B8G8R8A8
-                       : mozilla::gfx::SurfaceFormat::B8G8R8X8;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown format");
-      return mozilla::gfx::SurfaceFormat::B8G8R8A8;
-  }
-}
-
 IOSurfaceID MacIOSurface::GetIOSurfaceID() const {
   return ::IOSurfaceGetID(mIOSurfaceRef.get());
 }
@@ -499,7 +474,25 @@ already_AddRefed<mozilla::gfx::DrawTarget> MacIOSurface::GetAsDrawTargetLocked(
 }
 
 SurfaceFormat MacIOSurface::GetFormat() const {
-  return SurfaceFormatForPixelFormat(GetPixelFormat(), HasAlpha());
+  switch (GetPixelFormat()) {
+    case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
+    case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
+      return SurfaceFormat::NV12;
+    case kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange:
+    case kCVPixelFormatType_420YpCbCr10BiPlanarFullRange:
+      return SurfaceFormat::P010;
+    case kCVPixelFormatType_422YpCbCr8_yuvs:
+    case kCVPixelFormatType_422YpCbCr8FullRange:
+      return SurfaceFormat::YUY2;
+    case kCVPixelFormatType_422YpCbCr10BiPlanarVideoRange:
+    case kCVPixelFormatType_422YpCbCr10BiPlanarFullRange:
+      return SurfaceFormat::NV16;
+    case kCVPixelFormatType_32BGRA:
+      return HasAlpha() ? SurfaceFormat::B8G8R8A8 : SurfaceFormat::B8G8R8X8;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown format");
+      return SurfaceFormat::B8G8R8A8;
+  }
 }
 
 SurfaceFormat MacIOSurface::GetReadFormat() const {
