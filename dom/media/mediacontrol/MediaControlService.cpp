@@ -6,6 +6,7 @@
 
 #include "MediaController.h"
 #include "MediaControlUtils.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/intl/Localization.h"
 #include "mozilla/Logging.h"
@@ -33,13 +34,12 @@ using mozilla::intl::Localization;
 namespace mozilla::dom {
 
 StaticRefPtr<MediaControlService> gMediaControlService;
-static bool sIsXPCOMShutdown = false;
 
 /* static */
 RefPtr<MediaControlService> MediaControlService::GetService() {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
                         "MediaControlService only runs on Chrome process!");
-  if (sIsXPCOMShutdown) {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdown)) {
     return nullptr;
   }
   if (!gMediaControlService) {
@@ -145,7 +145,6 @@ MediaControlService::Observe(nsISupports* aSubject, const char* aTopic,
       obs->RemoveObserver(this, "xpcom-shutdown");
     }
     Shutdown();
-    sIsXPCOMShutdown = true;
     gMediaControlService = nullptr;
   }
   return NS_OK;
