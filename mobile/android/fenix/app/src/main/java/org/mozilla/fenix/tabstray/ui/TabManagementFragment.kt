@@ -5,21 +5,15 @@
 package org.mozilla.fenix.tabstray.ui
 
 import android.content.Intent
-import android.os.Build.VERSION.SDK_INT
-import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import androidx.activity.compose.BackHandler
 import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.UiThread
 import androidx.annotation.VisibleForTesting
 import androidx.biometric.BiometricManager
 import androidx.compose.runtime.Composable
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
@@ -379,8 +373,6 @@ class TabManagementFragment : ComposeFragment() {
         super.onViewCreated(view, savedInstanceState)
         TabsTray.opened.record(NoExtras())
 
-        setupEdgeToEdgeSupport(view)
-
         inactiveTabsBinding.set(
             feature = InactiveTabsBinding(
                 tabsTrayStore = tabsTrayStore,
@@ -448,24 +440,6 @@ class TabManagementFragment : ComposeFragment() {
     override fun onResume() {
         super.onResume()
         hideToolbar()
-    }
-
-    private fun setupEdgeToEdgeSupport(view: View) {
-        if (SDK_INT >= VERSION_CODES.TIRAMISU) {
-            ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
-                val insets = windowInsets.getInsets(
-                    WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout(),
-                )
-                view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                    leftMargin = insets.left
-                    bottomMargin = insets.bottom
-                    rightMargin = insets.right
-                    topMargin = insets.top
-                }
-
-                WindowInsetsCompat.CONSUMED
-            }
-        }
     }
 
     private fun onCancelDownloadWarningAccepted(tabId: String?, source: String?) {
