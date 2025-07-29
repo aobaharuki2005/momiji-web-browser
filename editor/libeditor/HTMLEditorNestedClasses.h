@@ -1103,7 +1103,8 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   DeleteParentBlocksWithTransactionIfEmpty(HTMLEditor& aHTMLEditor,
-                                           const EditorDOMPoint& aPoint);
+                                           const EditorDOMPoint& aPoint,
+                                           const Element& aEditingHost);
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CaretPoint, nsresult>
   FallbackToDeleteRangeWithTransaction(HTMLEditor& aHTMLEditor,

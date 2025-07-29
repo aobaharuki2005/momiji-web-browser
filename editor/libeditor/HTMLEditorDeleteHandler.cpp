@@ -4690,8 +4690,8 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::DeleteUnnecessaryNodes(
                 range.EndRef().IsStartOfContainer()));
     AutoTrackDOMRange trackRange(aHTMLEditor.RangeUpdaterRef(), &range);
 
-    nsresult rv =
-        DeleteParentBlocksWithTransactionIfEmpty(aHTMLEditor, range.StartRef());
+    nsresult rv = DeleteParentBlocksWithTransactionIfEmpty(
+        aHTMLEditor, range.StartRef(), aEditingHost);
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "HTMLEditor::DeleteParentBlocksWithTransactionIfEmpty() failed");
@@ -4791,31 +4791,32 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteNodeIfInvisibleAndEditableTextNode(
 
 nsresult
 HTMLEditor::AutoDeleteRangesHandler::DeleteParentBlocksWithTransactionIfEmpty(
-    HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint) {
+    HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint,
+    const Element& aEditingHost) {
   MOZ_ASSERT(aPoint.IsSet());
   MOZ_ASSERT(aHTMLEditor.mPlaceholderBatch);
 
+  const WSRunScanner scanner(WSRunScanner::Scan::All, aPoint,
+                             BlockInlineCheck::UseComputedDisplayOutsideStyle,
+                             &aEditingHost);
+
   // First, check there is visible contents before the point in current block.
-  RefPtr<Element> editingHost = aHTMLEditor.ComputeEditingHost();
-  const WSRunScanner wsScannerForPoint(
-      WSRunScanner::Scan::EditableNodes, aPoint,
-      BlockInlineCheck::UseComputedDisplayOutsideStyle);
-  if (!wsScannerForPoint.StartsFromCurrentBlockBoundary() &&
-      !wsScannerForPoint.StartsFromInlineEditingHostBoundary()) {
+  const WSScanResult prevVisibleThing =
+      scanner.ScanPreviousVisibleNodeOrBlockBoundaryFrom(aPoint);
+  if (!prevVisibleThing.ReachedCurrentBlockBoundary() &&
+      !prevVisibleThing.ReachedInlineEditingHostBoundary()) {
     // If there is visible node before the point, we shouldn't remove the
     // parent block.
     return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
-  if (NS_WARN_IF(!wsScannerForPoint.GetStartReasonContent()) ||
-      NS_WARN_IF(!wsScannerForPoint.GetStartReasonContent()->GetParentNode())) {
-    return NS_ERROR_FAILURE;
-  }
-  if (editingHost == wsScannerForPoint.GetStartReasonContent()) {
+  MOZ_ASSERT(prevVisibleThing.ElementPtr());
+  if (&aEditingHost == prevVisibleThing.ElementPtr() ||
+      HTMLEditUtils::IsRemovableFromParentNode(
+          *prevVisibleThing.ElementPtr())) {
     // If we reach editing host, there is no parent blocks which can be removed.
     return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
-  if (HTMLEditUtils::IsTableCellOrCaption(
-          *wsScannerForPoint.GetStartReasonContent())) {
+  if (HTMLEditUtils::IsTableCellOrCaption(*prevVisibleThing.ElementPtr())) {
     // If we reach a <td>, <th> or <caption>, we shouldn't remove it even
     // becomes empty because removing such element changes the structure of
     // the <table>.
@@ -4823,61 +4824,59 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteParentBlocksWithTransactionIfEmpty(
   }
 
   // Next, check there is visible contents after the point in current block.
-  const WSScanResult forwardScanFromPointResult =
-      wsScannerForPoint.ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(aPoint);
-  if (forwardScanFromPointResult.Failed()) {
+  const WSScanResult nextVisibleThing =
+      scanner.ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(aPoint);
+  if (nextVisibleThing.Failed()) {
     NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom() failed");
     return NS_ERROR_FAILURE;
   }
-  if (forwardScanFromPointResult.ReachedBRElement()) {
+  if (nextVisibleThing.ReachedBRElement()) {
     // XXX In my understanding, this is odd.  The end reason may not be
     //     same as the reached <br> element because the equality is
     //     guaranteed only when ReachedCurrentBlockBoundary() returns true.
     //     However, looks like that this code assumes that
     //     GetEndReasonContent() returns the (or a) <br> element.
-    NS_ASSERTION(wsScannerForPoint.GetEndReasonContent() ==
-                     forwardScanFromPointResult.BRElementPtr(),
-                 "End reason is not the reached <br> element");
     // If the <br> element is visible, we shouldn't remove the parent block.
-    if (HTMLEditUtils::IsVisibleBRElement(
-            *wsScannerForPoint.GetEndReasonContent())) {
+    if (HTMLEditUtils::IsVisibleBRElement(*nextVisibleThing.BRElementPtr())) {
       return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
     }
-    if (wsScannerForPoint.GetEndReasonContent()->GetNextSibling()) {
-      const WSScanResult scanResult =
+    if (nextVisibleThing.BRElementPtr()->GetNextSibling()) {
+      const WSScanResult nextVisibleThingAfterBR =
           WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
-              WSRunScanner::Scan::EditableNodes,
-              EditorRawDOMPoint::After(
-                  *wsScannerForPoint.GetEndReasonContent()),
+              WSRunScanner::Scan::All,
+              EditorRawDOMPoint::After(*nextVisibleThing.BRElementPtr()),
               BlockInlineCheck::UseComputedDisplayOutsideStyle);
-      if (scanResult.Failed()) {
+      if (MOZ_UNLIKELY(nextVisibleThingAfterBR.Failed())) {
         NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() failed");
         return NS_ERROR_FAILURE;
       }
-      if (!scanResult.ReachedCurrentBlockBoundary() &&
-          !scanResult.ReachedInlineEditingHostBoundary()) {
+      if (!nextVisibleThingAfterBR.ReachedCurrentBlockBoundary() &&
+          !nextVisibleThingAfterBR.ReachedInlineEditingHostBoundary()) {
         // If we couldn't reach the block's end after the invisible <br>,
         // that means that there is visible content.
         return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
       }
     }
-  } else if (!forwardScanFromPointResult.ReachedCurrentBlockBoundary() &&
-             !forwardScanFromPointResult.ReachedInlineEditingHostBoundary()) {
+  } else if (!nextVisibleThing.ReachedCurrentBlockBoundary() &&
+             !nextVisibleThing.ReachedInlineEditingHostBoundary()) {
     // If we couldn't reach the block's end, the block has visible content.
     return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
 
   // Delete the parent block.
-  EditorDOMPoint nextPoint(
-      wsScannerForPoint.GetStartReasonContent()->GetParentNode(), 0);
+  const nsCOMPtr<nsIContent> nextSibling =
+      prevVisibleThing.ElementPtr()->GetNextSibling();
+  const nsCOMPtr<nsINode> parentNode =
+      prevVisibleThing.ElementPtr()->GetParentNode();
   nsresult rv = aHTMLEditor.DeleteNodeWithTransaction(
-      MOZ_KnownLive(*wsScannerForPoint.GetStartReasonContent()));
+      // MOZ_KnownLive because of grabbed by prevVisibleThing.
+      MOZ_KnownLive(*prevVisibleThing.ElementPtr()));
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
     return rv;
   }
   // If we reach editing host, return NS_OK.
-  if (nextPoint.GetContainer() == editingHost) {
+  if (parentNode == &aEditingHost) {
     return NS_OK;
   }
 
@@ -4885,22 +4884,28 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteParentBlocksWithTransactionIfEmpty(
 
   // If we have mutation event listeners, the next point is now outside of
   // editing host or editing hos has been changed.
-  if (aHTMLEditor.MayHaveMutationEventListeners(
-          NS_EVENT_BITS_MUTATION_NODEREMOVED |
-          NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
-          NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
-    Element* newEditingHost = aHTMLEditor.ComputeEditingHost();
-    if (NS_WARN_IF(!newEditingHost) ||
-        NS_WARN_IF(newEditingHost != editingHost)) {
+  if (aHTMLEditor.MayHaveMutationEventListeners()) {
+    if (NS_WARN_IF(nextSibling &&
+                   !nextSibling->IsInclusiveDescendantOf(&aEditingHost)) ||
+        NS_WARN_IF(!parentNode->IsInclusiveDescendantOf(&aEditingHost))) {
       return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
     }
-    if (NS_WARN_IF(!EditorUtils::IsDescendantOf(*nextPoint.GetContainer(),
-                                                *newEditingHost))) {
+    Element* newEditingHost = aHTMLEditor.ComputeEditingHost();
+    if (NS_WARN_IF(!newEditingHost) ||
+        NS_WARN_IF(newEditingHost != &aEditingHost)) {
+      return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+    }
+    if (NS_WARN_IF(
+            !EditorUtils::IsDescendantOf(*parentNode, *newEditingHost))) {
       return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
     }
   }
 
-  rv = DeleteParentBlocksWithTransactionIfEmpty(aHTMLEditor, nextPoint);
+  const EditorDOMPoint nextPoint = nextSibling
+                                       ? EditorDOMPoint(nextSibling)
+                                       : EditorDOMPoint::AtEndOf(parentNode);
+  rv = DeleteParentBlocksWithTransactionIfEmpty(aHTMLEditor, nextPoint,
+                                                aEditingHost);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "AutoDeleteRangesHandler::"
                        "DeleteParentBlocksWithTransactionIfEmpty() failed");
