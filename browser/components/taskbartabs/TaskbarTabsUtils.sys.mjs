@@ -94,6 +94,50 @@ export const TaskbarTabsUtils = {
   },
 };
 
+class ChannelListener {
+  #request = null;
+  #imageListener = null;
+  #rejector = null;
+
+  constructor(rejector) {
+    this.#rejector = rejector;
+  }
+
+  setImageListener(imageListener) {
+    this.#imageListener = imageListener;
+    if (this.#request) {
+      this.#imageListener.onStartRequest(this.#request);
+    }
+  }
+
+  onStartRequest(request) {
+    this.#request = request;
+    if (this.#imageListener) {
+      this.#imageListener.onStartRequest(request);
+    }
+  }
+
+  onStopRequest(request, status) {
+    if (this.#imageListener) {
+      this.#imageListener.onStopRequest(request, status);
+    }
+
+    if (!Components.isSuccessCode(status)) {
+      this.#rejector(new Components.Exception("Image loading failed", status));
+    }
+
+    this.#imageListener = null;
+    this.#rejector = null;
+    this.#request = null;
+  }
+
+  onDataAvailable(request, inputStream, offset, count) {
+    if (this.#imageListener) {
+      this.#imageListener.onDataAvailable(request, inputStream, offset, count);
+    }
+  }
+}
+
 /**
  * Retrieves an image given a URI.
  *
@@ -118,31 +162,35 @@ async function getImageFromUri(aUri) {
     Ci.nsIContentPolicy.TYPE_IMAGE
   );
 
-  const imgTools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
+  return new Promise((resolve, reject) => {
+    let imageTools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
 
-  let decodePromise = Promise.withResolvers();
-  let observer = imgTools.createScriptedObserver({
-    sizeAvailable() {
-      decodePromise.resolve();
-    },
+    // Despite the docs it is fine to pass null here, we then just get a global loader.
+    let imageLoader = imageTools.getImgLoaderForDocument(null);
+    let observer = imageTools.createScriptedObserver({
+      decodeComplete() {
+        request.cancel(Cr.NS_BINDING_ABORTED);
+        resolve(request.image);
+      },
+    });
+
+    let channelListener = new ChannelListener(reject);
+    channel.asyncOpen(channelListener);
+
+    let streamListener = {};
+    let request = imageLoader.loadImageWithChannelXPCOM(
+      channel,
+      observer,
+      null,
+      streamListener
+    );
+    // Force image decoding to start when the container is available.
+    request.startDecoding(Ci.imgIContainer.FLAG_ASYNC_NOTIFY);
+
+    // If the request is coming from the cache then there will be no listener
+    // and the channel will have been automatically cancelled.
+    if (streamListener.value) {
+      channelListener.setImageListener(streamListener.value);
+    }
   });
-
-  let imgPromise = Promise.withResolvers();
-  imgTools.decodeImageFromChannelAsync(
-    aUri,
-    channel,
-    (img, status) => {
-      if (!Components.isSuccessCode(status)) {
-        imgPromise.reject(
-          new Error(`Error retrieving image from URI ${aUri.spec}`)
-        );
-      } else {
-        imgPromise.resolve(img);
-      }
-    },
-    observer
-  );
-
-  let [img] = await Promise.all([imgPromise.promise, decodePromise.promise]);
-  return img;
 }
