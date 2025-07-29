@@ -421,7 +421,7 @@ object DownloadUtils {
         // either .htm or .html extensions. Since [getExtensionFromMimeType]
         // we try to only rename when there is a clear indication the existing extension is wrong.
         return if (isFileMimeTypeDifferentFromProvidedMimeType && !fileHasPossibleExtension) {
-            return "${file.nameWithoutExtension}.$extensionFromMimeType"
+            return "$file.$extensionFromMimeType"
         } else {
             filename
         }

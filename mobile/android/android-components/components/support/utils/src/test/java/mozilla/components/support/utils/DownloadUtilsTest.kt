@@ -203,7 +203,7 @@ class DownloadUtilsTest {
 
         // This is difference with URLUtil.guessFileName
         assertEquals(
-            "file.jpg",
+            "file.bin.jpg",
             DownloadUtils.guessFileName(
                 contentDisposition = null,
                 destinationDirectory = folder.root.path,
@@ -258,7 +258,7 @@ class DownloadUtilsTest {
             ),
         )
         assertEquals(
-            "file.html",
+            "file.txt.html",
             DownloadUtils.guessFileName(
                 contentDisposition = null,
                 destinationDirectory = folder.root.path,
@@ -304,7 +304,7 @@ class DownloadUtilsTest {
         )
 
         assertEquals(
-            "file.jpg",
+            "file.zip.jpg",
             DownloadUtils.guessFileName(
                 contentDisposition = null,
                 destinationDirectory = folder.root.path,
@@ -368,7 +368,7 @@ class DownloadUtilsTest {
 
         // application/x-pdf with non-pdf extension
         assertEquals(
-            "file.pdf",
+            "file.bin.pdf",
             DownloadUtils.guessFileName(
                 contentDisposition = null,
                 destinationDirectory = folder.root.path,
@@ -378,12 +378,21 @@ class DownloadUtilsTest {
         )
 
         assertEquals(
-            "file.com",
+            "file.bin.com",
             DownloadUtils.guessFileName(
                 contentDisposition = null,
                 destinationDirectory = folder.root.path,
                 url = "http://example.com/file.bin",
                 mimeType = "application/x-msdos-program",
+            ),
+        )
+
+        assertEquals(
+            "file.apks.zip",
+            DownloadUtils.guessFileName(
+                contentDisposition = null,
+                url = "http://example.com/file.apks",
+                mimeType = "application/zip",
             ),
         )
     }
