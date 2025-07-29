@@ -306,17 +306,15 @@ class GCRuntime {
   void setPerformanceHint(PerformanceHint hint);
   bool isInPageLoad() const { return inPageLoadCount != 0; }
 
-  [[nodiscard]] bool triggerGC(JS::GCReason reason);
-  // Check whether to trigger a zone GC after allocating GC cells.
-  void maybeTriggerGCAfterAlloc(Zone* zone);
-  // Check whether to trigger a zone GC after malloc memory.
+  // Trigger a full GC.
+  [[nodiscard]] bool triggerFullGC(JS::GCReason reason);
+
+  // Trigger a zone GC after allocating GC cells, malloc memory or JIT code.
+  void maybeTriggerGCAfterCellAlloc(Zone* zone);
   void maybeTriggerGCAfterMalloc(Zone* zone);
-  bool maybeTriggerGCAfterMalloc(Zone* zone, const HeapSize& heap,
-                                 const HeapThreshold& threshold,
-                                 JS::GCReason reason);
-  // The return value indicates if we were able to do the GC.
-  bool triggerZoneGC(Zone* zone, JS::GCReason reason, size_t usedBytes,
-                     size_t thresholdBytes);
+  void maybeTriggerGCAfterJitCodeAlloc(Zone* zone);
+  void maybeTriggerZoneGC(Zone* zone, const HeapSize& heap,
+                          const HeapThreshold& threshold, JS::GCReason reason);
 
   void maybeGC();
 

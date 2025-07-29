@@ -111,7 +111,7 @@ bool ZoneAllocator::addSharedMemory(void* mem, size_t nbytes, MemoryUse use) {
     ptr->value().nbytes = nbytes;
   }
 
-  maybeTriggerGCOnMalloc();
+  maybeTriggerGCAfterMalloc();
 
   return true;
 }

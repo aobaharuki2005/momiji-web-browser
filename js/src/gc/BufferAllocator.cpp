@@ -3754,8 +3754,7 @@ void BufferAllocator::updateHeapSize(size_t bytes, bool checkThresholds,
   // TODO: This will eventually be attributed to gcHeapSize.
   zone->mallocHeapSize.addBytes(bytes, updateRetainedSize);
   if (checkThresholds) {
-    GCRuntime* gc = &zone->runtimeFromAnyThread()->gc;
-    gc->maybeTriggerGCAfterMalloc(zone);
+    zone->maybeTriggerGCAfterMalloc();
   }
 }
 
