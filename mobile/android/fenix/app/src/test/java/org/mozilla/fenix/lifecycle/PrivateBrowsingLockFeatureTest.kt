@@ -498,7 +498,7 @@ class PrivateBrowsingLockFeatureTest {
 
         val activity = mockk<AppCompatActivity>(relaxed = true)
         every { activity.isChangingConfigurations } returns false
-        every { activity.isFinishing} returns true
+        every { activity.isFinishing } returns true
 
         feature.onPause(activity)
         appStore.waitUntilIdle()
