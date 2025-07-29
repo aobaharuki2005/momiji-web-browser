@@ -633,7 +633,8 @@ void NativeLayerWayland::SetTransform(const Matrix4x4& aTransform) {
   }
 }
 
-void NativeLayerWayland::SetSamplingFilter(SamplingFilter aSamplingFilter) {
+void NativeLayerWayland::SetSamplingFilter(
+    gfx::SamplingFilter aSamplingFilter) {
   WaylandSurfaceLock lock(mSurface);
   if (aSamplingFilter != mSamplingFilter) {
     mSamplingFilter = aSamplingFilter;

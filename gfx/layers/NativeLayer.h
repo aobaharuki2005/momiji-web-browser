@@ -32,6 +32,7 @@ class GpuFence;
 class NativeLayer;
 class NativeLayerCA;
 class NativeLayerRemoteMac;
+class NativeLayerWayland;
 class NativeLayerRootCA;
 class NativeLayerRootWayland;
 class NativeLayerRootSnapshotter;

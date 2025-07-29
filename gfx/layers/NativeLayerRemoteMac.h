@@ -36,6 +36,7 @@ class NativeLayerRemoteMac final : public NativeLayer {
   gfx::Matrix4x4 GetTransform() override;
   gfx::IntRect GetRect() override;
   void SetSamplingFilter(gfx::SamplingFilter aSamplingFilter) override;
+  gfx::SamplingFilter SamplingFilter() override;
   RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
       const gfx::IntRect& aDisplayRect, const gfx::IntRegion& aUpdateRegion,
       gfx::BackendType aBackendType) override;
