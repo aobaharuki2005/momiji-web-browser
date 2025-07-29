@@ -11,6 +11,7 @@
 #include "nsIAppStartup.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsILocalFileMac.h"
+#include "CocoaCompositorWidget.h"
 #include "GLContextCGL.h"
 #include "MacThemeGeometryType.h"
 #include "NativeMenuSupport.h"
@@ -870,6 +871,18 @@ void nsCocoaWindow::HandleMainThreadCATransaction() {
   }
 
   MaybeScheduleUnsuspendAsyncCATransactions();
+}
+
+void nsCocoaWindow::SetCompositorWidgetDelegate(
+    mozilla::widget::CompositorWidgetDelegate* aDelegate) {
+  if (aDelegate) {
+    mCompositorWidgetDelegate = aDelegate->AsPlatformSpecificDelegate();
+    MOZ_ASSERT(mCompositorWidgetDelegate,
+               "nsCocoaWindow::SetCompositorWidgetDelegate called with a "
+               "non-PlatformCompositorWidgetDelegate");
+  } else {
+    mCompositorWidgetDelegate = nullptr;
+  }
 }
 
 void nsCocoaWindow::GetCompositorWidgetInitData(
@@ -4521,8 +4534,9 @@ nsCocoaWindow::~nsCocoaWindow() {
 
   [mClosedRetainedWindow release];
 
-  if (mContentLayer) {
-    mNativeLayerRoot->RemoveLayer(mContentLayer);  // safe if already removed
+  // Our NativeLayerRoot must be empty before it is destructed.
+  if (mNativeLayerRoot) {
+    mNativeLayerRoot->SetLayers({});
   }
 
   DestroyCompositor();
@@ -4852,6 +4866,13 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect,
 }
 
 void nsCocoaWindow::Destroy() {
+  // Make sure that no composition is in progress while disconnecting
+  // ourselves from the view. This has to be held through the call
+  // to nsBaseWidget::Destroy (which calls ::DestroyCompositor), and
+  // that is called at the very end. So grab the lock now and keep it
+  // for the entire scope.
+  MutexAutoLock lock(mCompositingLock);
+
   if (mOnDestroyCalled) {
     return;
   }
@@ -4868,12 +4889,7 @@ void nsCocoaWindow::Destroy() {
   // (Bug 891424)
   Show(false);
 
-  {
-    // Make sure that no composition is in progress while disconnecting
-    // ourselves from the view.
-    MutexAutoLock lock(mCompositingLock);
-    [mChildView widgetDestroyed];
-  }
+  [mChildView widgetDestroyed];
 
   TearDownView();  // Safe if called twice.
   if (mFullscreenTransitionAnimation) {
@@ -6958,6 +6974,11 @@ void nsCocoaWindow::CocoaWindowDidResize() {
   // It's important to update our bounds before we trigger any listeners. This
   // ensures that our bounds are correct when GetScreenBounds is called.
   UpdateBounds();
+
+  if (mCompositorWidgetDelegate) {
+    auto deviceIntRect = GetBounds();
+    mCompositorWidgetDelegate->NotifyClientSizeChanged(deviceIntRect.Size());
+  }
 
   if (HandleUpdateFullscreenOnResize()) {
     ReportSizeEvent();

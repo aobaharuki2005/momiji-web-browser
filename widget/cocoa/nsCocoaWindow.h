@@ -28,8 +28,9 @@ namespace mozilla {
 enum class NativeKeyBindingsType : uint8_t;
 class VibrancyManager;
 namespace widget {
+class PlatformCompositorWidgetDelegate;
 class TextInputHandler;
-}
+}  // namespace widget
 }  // namespace mozilla
 
 // NSWindow subclass that is the base class for all of our own window classes.
@@ -387,6 +388,9 @@ class nsCocoaWindow final : public nsBaseWidget {
 
   bool WidgetPaintsBackground() override { return true; }
 
+  void SetCompositorWidgetDelegate(
+      mozilla::widget::CompositorWidgetDelegate*) override;
+
   void GetCompositorWidgetInitData(
       mozilla::widget::CompositorWidgetInitData* aInitData) override;
   mozilla::layers::CompositorBridgeChild* GetCompositorBridgeChild() const;
@@ -651,6 +655,9 @@ class nsCocoaWindow final : public nsBaseWidget {
   RefPtr<mozilla::widget::TextInputHandler> mTextInputHandler;
   InputContext mInputContext;
   NSWindowAnimationBehavior mWindowAnimationBehavior;
+
+  mozilla::widget::PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate =
+      nullptr;
 
  private:
   // This is class state for tracking which nsCocoaWindow, if any, is in the
