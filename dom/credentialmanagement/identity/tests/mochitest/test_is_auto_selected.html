@@ -8,7 +8,9 @@
   <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
   <script>
     SimpleTest.waitForExplicitFinish();
-    setupTest("is_auto_selected").then(
+    setupTest("is_auto_selected")
+    .then(clearIdentityCredentialStorage)
+    .then(
       function () {
         info("Testing manual selection - is_auto_selected should be false");
         SpecialPowers.wrap(document).notifyUserGestureActivation();
