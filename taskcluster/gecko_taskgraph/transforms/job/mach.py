@@ -50,10 +50,11 @@ def configure_mach(config, job, taskdesc):
     if worker["os"] == "macosx":
         additional_prefix = ["LC_ALL=en_US.UTF-8", "LANG=en_US.UTF-8"]
 
-    python = run.get("python-version")
-    if python:
-        del run["python-version"]
+    if prefix_env := run.pop("prefix-env", None):
+        for name, prefix in prefix_env.items():
+            additional_prefix.append(f"{name}={prefix}${name}")
 
+    if python := run.pop("python-version", None):
         if taskdesc.get("use-python", "system") == "system":
             if worker["os"] == "macosx" and python == 3:
                 python = "/usr/local/bin/python3"
@@ -66,12 +67,6 @@ def configure_mach(config, job, taskdesc):
             pass
 
         additional_prefix.append(python)
-
-    prefix_env = run.get("prefix-env")
-    if prefix_env:
-        del run["prefix-env"]
-        for name, prefix in prefix_env.items():
-            additional_prefix.append(f"{name}={prefix}${name}")
 
     command_prefix = " ".join(additional_prefix + ["./mach "])
 
