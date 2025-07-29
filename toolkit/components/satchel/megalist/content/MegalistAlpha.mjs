@@ -412,10 +412,15 @@ export class MegalistAlpha extends MozLitElement {
             data-l10n-id="contextual-manager-passwords-list-label"
             @keydown=${e => {
               if (e.key === "ArrowDown") {
-                e.preventDefault();
-                this.shadowRoot
-                  .querySelector("password-card")
-                  .originLine.focus();
+                const active = this.shadowRoot.activeElement;
+                const passwordsList = e.currentTarget;
+
+                if (active === passwordsList) {
+                  e.preventDefault();
+                  this.shadowRoot
+                    .querySelector("password-card")
+                    .originLine.focus();
+                }
               }
             }}
           >

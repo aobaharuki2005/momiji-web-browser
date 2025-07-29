@@ -109,7 +109,7 @@ export class PasswordCard extends MozLitElement {
         return;
       }
 
-      this.#focusableElementsList[newIndex].focus();
+      this.#focusableElementsList[newIndex]?.focus();
     };
 
     const isLoginLine = element === this.passwordLine.loginLine;
@@ -334,6 +334,7 @@ export class PasswordCard extends MozLitElement {
           class="view-alert-button"
           data-l10n-id="contextual-manager-view-alert-button-2"
           data-l10n-args=${alertCountArg}
+          tabindex="-1"
           slot="actions"
           type="icon"
           iconSrc=${getIconSrc()}
