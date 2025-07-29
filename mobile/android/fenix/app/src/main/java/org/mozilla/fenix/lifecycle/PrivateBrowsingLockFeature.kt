@@ -230,7 +230,7 @@ class PrivateBrowsingLockFeature(
         if (appStore.state.isPrivateScreenLocked) return
 
         // Optionally skip if the window still has focus (e.g. while showing a system dialog).
-        if (!shouldLockFocusedWindow && activity.hasWindowFocus()) return
+        if (!shouldLockFocusedWindow && !activity.isFinishing) return
 
         // Skip locking private mode if there are no private tabs.
         if (browserStore.state.privateTabs.isEmpty()) return

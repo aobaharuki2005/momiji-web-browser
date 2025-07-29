@@ -463,7 +463,7 @@ class PrivateBrowsingLockFeatureTest {
 
         val activity = mockk<AppCompatActivity>(relaxed = true)
         every { activity.isChangingConfigurations } returns false
-        every { activity.hasWindowFocus() } returns false
+        every { activity.isFinishing } returns true
 
         feature.onPause(activity)
         appStore.waitUntilIdle()
@@ -498,7 +498,7 @@ class PrivateBrowsingLockFeatureTest {
 
         val activity = mockk<AppCompatActivity>(relaxed = true)
         every { activity.isChangingConfigurations } returns false
-        every { activity.hasWindowFocus() } returns false
+        every { activity.isFinishing} returns true
 
         feature.onPause(activity)
         appStore.waitUntilIdle()
@@ -529,7 +529,7 @@ class PrivateBrowsingLockFeatureTest {
 
         val activity = mockk<AppCompatActivity>(relaxed = true)
         every { activity.isChangingConfigurations } returns false
-        every { activity.hasWindowFocus() } returns false
+        every { activity.isFinishing } returns true
 
         feature.onPause(activity)
         appStore.waitUntilIdle()
@@ -559,7 +559,7 @@ class PrivateBrowsingLockFeatureTest {
 
         val activity = mockk<AppCompatActivity>(relaxed = true)
         every { activity.isChangingConfigurations } returns false
-        every { activity.hasWindowFocus() } returns false
+        every { activity.isFinishing } returns true
 
         feature.onPause(activity)
         appStore.waitUntilIdle()
@@ -590,7 +590,7 @@ class PrivateBrowsingLockFeatureTest {
 
         val activity = mockk<AppCompatActivity>(relaxed = true)
         every { activity.isChangingConfigurations } returns false
-        every { activity.hasWindowFocus() } returns false
+        every { activity.isFinishing } returns true
 
         feature.onPause(activity)
         appStore.waitUntilIdle()
@@ -621,7 +621,7 @@ class PrivateBrowsingLockFeatureTest {
 
         val activity = mockk<AppCompatActivity>(relaxed = true)
         every { activity.isChangingConfigurations } returns false
-        every { activity.hasWindowFocus() } returns false
+        every { activity.isFinishing } returns true
 
         feature.onPause(activity)
         appStore.waitUntilIdle()
@@ -656,7 +656,7 @@ class PrivateBrowsingLockFeatureTest {
 
         val activity = mockk<AppCompatActivity>(relaxed = true)
         every { activity.isChangingConfigurations } returns true
-        every { activity.hasWindowFocus() } returns false
+        every { activity.isFinishing } returns true
 
         feature.onPause(activity)
         appStore.waitUntilIdle()
@@ -689,7 +689,7 @@ class PrivateBrowsingLockFeatureTest {
 
         val activity = mockk<AppCompatActivity>(relaxed = true)
         every { activity.isChangingConfigurations } returns false
-        every { activity.hasWindowFocus() } returns true
+        every { activity.isFinishing } returns false
 
         feature.onPause(activity)
         appStore.waitUntilIdle()
@@ -721,7 +721,7 @@ class PrivateBrowsingLockFeatureTest {
 
         val activity = mockk<AppCompatActivity>(relaxed = true)
         every { activity.isChangingConfigurations } returns false
-        every { activity.hasWindowFocus() } returns true
+        every { activity.isFinishing } returns false
 
         // Feature skips locking
         feature.onPause(activity)
