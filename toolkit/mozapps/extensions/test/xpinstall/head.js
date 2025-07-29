@@ -11,6 +11,8 @@ const RELATIVE_DIR = "toolkit/mozapps/extensions/test/xpinstall/";
 
 const TESTROOT = "http://example.com/browser/" + RELATIVE_DIR;
 const TESTROOT2 = "http://example.org/browser/" + RELATIVE_DIR;
+const SECURE_TESTROOT = "https://example.com/browser/" + RELATIVE_DIR;
+const SECURE_TESTROOT2 = "https://example.org/browser/" + RELATIVE_DIR;
 const PROMPT_URL = "chrome://global/content/commonDialog.xhtml";
 const ADDONS_URL = "chrome://mozapps/content/extensions/aboutaddons.html";
 const PREF_LOGGING_ENABLED = "extensions.logging.enabled";

@@ -17,8 +17,6 @@ ChromeUtils.defineLazyGetter(lazy, "l10n", function () {
   );
 });
 
-const SECUREROOT =
-  "https://example.com/browser/toolkit/mozapps/extensions/test/xpinstall/";
 const PROGRESS_NOTIFICATION = "addon-progress";
 
 const CHROMEROOT = extractChromeRoot(gTestPath);
@@ -41,10 +39,6 @@ const cleanupBlocklist = async () => {
   });
   needsCleanupBlocklist = false;
 };
-
-function waitForTick() {
-  return new Promise(resolve => executeSoon(resolve));
-}
 
 function getObserverTopic(aNotificationId) {
   let topic = aNotificationId;
@@ -103,7 +97,7 @@ async function waitForProgressNotification(
 
   await observerPromise;
   await panelEventPromise;
-  await waitForTick();
+  await TestUtils.waitForTick();
 
   info("Saw a notification");
   ok(win.PopupNotifications.isPanelOpen, "Panel should be open");
@@ -302,7 +296,7 @@ async function waitForNotification(
 
   await observerPromise;
   await panelEventPromise;
-  await waitForTick();
+  await TestUtils.waitForTick();
 
   info("Saw a " + aId + " notification");
   ok(win.PopupNotifications.isPanelOpen, "Panel should be open");
@@ -381,16 +375,11 @@ async function waitForSingleNotification() {
   }
 }
 
-function setupRedirect(aSettings) {
-  var url =
-    "https://example.com/browser/toolkit/mozapps/extensions/test/xpinstall/redirect.sjs?mode=setup";
-  for (var name in aSettings) {
-    url += "&" + name + "=" + aSettings[name];
-  }
-
-  var req = new XMLHttpRequest();
-  req.open("GET", url, false);
-  req.send(null);
+async function setupRedirect(aSettings) {
+  var baseURL = `${SECURE_TESTROOT}/redirect.sjs`;
+  const params = new URLSearchParams(aSettings);
+  params.set("mode", "setup");
+  await fetch(`${baseURL}?${params}`);
 }
 
 async function installAddonWithPrivateBrowsingAccess(xpiUrl, addonId) {
@@ -444,16 +433,7 @@ add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.logging.enabled", true],
-      ["extensions.strictCompatibility", true],
-      ["extensions.install.requireSecureOrigin", false],
       ["security.dialog_enable_delay", 0],
-      // These tests currently depends on InstallTrigger.install.
-      ["extensions.InstallTrigger.enabled", true],
-      ["extensions.InstallTriggerImpl.enabled", true],
-      // Relax the user input requirements while running this test.
-      ["xpinstall.userActivation.required", false],
-      // Bug 721336 - Use sync XHR system requests
-      ["network.xhr.block_sync_system_requests", false],
     ],
   });
 
@@ -499,14 +479,10 @@ describe("Add-on installation doorhangers", function () {
       set: [["xpinstall.enabled", false]],
     });
     let notificationPromise = waitForNotification("xpinstall-disabled");
-    let triggers = encodeURIComponent(
-      JSON.stringify({
-        XPI: "amosigned.xpi",
-      })
-    );
+    let xpiURL = TESTROOT + "amosigned.xpi";
     BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      TESTROOT + "installtrigger.html?" + triggers
+      TESTROOT + "navigate.html?" + xpiURL
     );
     let panel = await notificationPromise;
 
@@ -548,14 +524,10 @@ describe("Add-on installation doorhangers", function () {
     });
 
     let notificationPromise = waitForNotification("addon-install-blocked");
-    let triggers = encodeURIComponent(
-      JSON.stringify({
-        XPI: "amosigned.xpi",
-      })
-    );
+    let xpiURL = TESTROOT + "amosigned.xpi";
     BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      TESTROOT + "installtrigger.html?" + triggers
+      TESTROOT + "navigate.html?" + xpiURL
     );
     let panel = await notificationPromise;
 
@@ -623,14 +595,10 @@ describe("Add-on installation doorhangers", function () {
     });
 
     let notificationPromise = waitForNotification("addon-install-blocked");
-    let triggers = encodeURIComponent(
-      JSON.stringify({
-        XPI: "amosigned.xpi",
-      })
-    );
+    let xpiURL = TESTROOT + "amosigned.xpi";
     BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      TESTROOT + "installtrigger.html?" + triggers
+      TESTROOT + "navigate.html?" + xpiURL
     );
     let panel = await notificationPromise;
 
@@ -680,14 +648,10 @@ describe("Add-on installation doorhangers", function () {
       set: [["extensions.postDownloadThirdPartyPrompt", true]],
     });
 
-    let triggers = encodeURIComponent(
-      JSON.stringify({
-        XPI: "recommended.xpi",
-      })
-    );
+    let xpiURL = TESTROOT + "recommended.xpi";
     BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      TESTROOT + "installtrigger.html?" + triggers
+      TESTROOT + "navigate.html?" + xpiURL
     );
 
     let installDialog = await waitForInstallDialog();
@@ -721,11 +685,7 @@ describe("Add-on installation doorhangers", function () {
       AddonManager.checkUpdateSecurity = true;
     });
 
-    let triggers = encodeURIComponent(
-      JSON.stringify({
-        XPI: "privileged.xpi",
-      })
-    );
+    let xpiURL = TESTROOT + "privileged.xpi";
 
     let installDialogPromise = waitForInstallDialog();
 
@@ -737,7 +697,7 @@ describe("Add-on installation doorhangers", function () {
       ExtensionTestUtils.failOnSchemaWarnings(false);
       let tab = await BrowserTestUtils.openNewForegroundTab(
         gBrowser,
-        TESTROOT + "installtrigger.html?" + triggers
+        TESTROOT + "navigate.html?" + xpiURL
       );
 
       let notificationPromise = acceptAppMenuNotificationWhenShown(
@@ -771,12 +731,8 @@ describe("Add-on installation doorhangers", function () {
 
   it("should permanently block installations from a site when the user chooses 'Never Allow'", async function test_permaBlockInstall() {
     let notificationPromise = waitForNotification("addon-install-blocked");
-    let triggers = encodeURIComponent(
-      JSON.stringify({
-        XPI: "amosigned.xpi",
-      })
-    );
-    let target = TESTROOT + "installtrigger.html?" + triggers;
+    let xpiURL = TESTROOT + "amosigned.xpi";
+    let target = TESTROOT + "navigate.html?" + xpiURL;
 
     BrowserTestUtils.openNewForegroundTab(gBrowser, target);
     let notification = (await notificationPromise).firstElementChild;
@@ -808,12 +764,8 @@ describe("Add-on installation doorhangers", function () {
   });
 
   it("should not show any installation prompt for a site that is permanently blocked", async function test_permaBlockedInstallNoPrompt() {
-    let triggers = encodeURIComponent(
-      JSON.stringify({
-        XPI: "amosigned.xpi",
-      })
-    );
-    let target = TESTROOT + "installtrigger.html?" + triggers;
+    let xpiURL = TESTROOT + "amosigned.xpi";
+    let target = TESTROOT + "navigate.html?" + xpiURL;
 
     PermissionTestUtils.add(target, "install", Services.perms.DENY_ACTION);
     await BrowserTestUtils.openNewForegroundTab(gBrowser, target);
@@ -843,21 +795,17 @@ describe("Add-on installation doorhangers", function () {
     let tab;
     gBrowser.selectedTab = originalTab;
     PermissionTestUtils.add(
-      "http://example.com/",
+      "https://example.com/",
       "install",
       Services.perms.ALLOW_ACTION
     );
 
     let progressPromise = waitForProgressNotification();
     let dialogPromise = waitForInstallDialog();
-    let triggers = encodeURIComponent(
-      JSON.stringify({
-        XPI: "amosigned.xpi",
-      })
-    );
+    let xpiURL = TESTROOT + "amosigned.xpi";
     BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      TESTROOT + "installtrigger.html?" + triggers
+      SECURE_TESTROOT + "navigate.html?" + xpiURL
     ).then(newTab => (tab = newTab));
     await progressPromise;
     let installDialog = await dialogPromise;
@@ -908,7 +856,7 @@ describe("Add-on installation doorhangers", function () {
 
     await addon.uninstall();
 
-    PermissionTestUtils.remove("http://example.com/", "install");
+    PermissionTestUtils.remove("https://example.com/", "install");
 
     await removeTabAndWaitForNotificationClose();
   });
@@ -920,16 +868,35 @@ describe("Add-on installation doorhangers", function () {
       Services.perms.ALLOW_ACTION
     );
 
+    let gotFirstRequest = false;
+    const server = AddonTestUtils.createHttpServer({
+      hosts: ["fail.example.com"],
+    });
+    server.registerPathHandler(
+      "/failed-xpi-download.xpi",
+      (request, response) => {
+        response.setStatusLine(request.httpVersion, 200, "OK");
+        response.setHeader("Content-Type", "application/x-xpinstall");
+        if (!gotFirstRequest) {
+          // The first request is expected to be the one intercepted by amContentHandler.sys.mjs,
+          // which will just look to the content-type to detect it as an add-on installation,
+          // then the request is cancelled and a new one retriggered as part of the actual
+          // add-on install flow.
+          gotFirstRequest = true;
+        } else {
+          // This second request is the actual download. We respond with an
+          // error to simulate a network failure.
+          response.setStatusLine(request.httpVersion, 502, "Bad Gateway");
+        }
+      }
+    );
+
     let progressPromise = waitForProgressNotification();
     let failPromise = waitForNotification("addon-install-failed");
-    let triggers = encodeURIComponent(
-      JSON.stringify({
-        XPI: "missing.xpi",
-      })
-    );
+    let xpiURL = "http://fail.example.com/failed-xpi-download.xpi";
     BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      TESTROOT + "installtrigger.html?" + triggers
+      TESTROOT + "navigate.html?" + xpiURL
     );
     await progressPromise;
     let panel = await failPromise;
@@ -954,14 +921,10 @@ describe("Add-on installation doorhangers", function () {
 
     let progressPromise = waitForProgressNotification();
     let failPromise = waitForNotification("addon-install-failed");
-    let triggers = encodeURIComponent(
-      JSON.stringify({
-        XPI: "corrupt.xpi",
-      })
-    );
+    let xpiURL = TESTROOT + "corrupt.xpi";
     BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      TESTROOT + "installtrigger.html?" + triggers
+      TESTROOT + "navigate.html?" + xpiURL
     );
     await progressPromise;
     let panel = await failPromise;
@@ -987,14 +950,10 @@ describe("Add-on installation doorhangers", function () {
 
     let progressPromise = waitForProgressNotification();
     let failPromise = waitForNotification("addon-install-failed");
-    let triggers = encodeURIComponent(
-      JSON.stringify({
-        XPI: "incompatible.xpi",
-      })
-    );
+    let xpiURL = TESTROOT + "incompatible.xpi";
     BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      TESTROOT + "installtrigger.html?" + triggers
+      TESTROOT + "navigate.html?" + xpiURL
     );
     await progressPromise;
     let panel = await failPromise;
@@ -1075,14 +1034,10 @@ describe("Add-on installation doorhangers", function () {
 
       let progressPromise = waitForProgressNotification();
       let failPromise = waitForNotification("addon-install-failed-blocklist");
-      let triggers = encodeURIComponent(
-        JSON.stringify({
-          XPI: "amosigned.xpi",
-        })
-      );
+      let xpiURL = TESTROOT + "amosigned.xpi";
       BrowserTestUtils.openNewForegroundTab(
         gBrowser,
-        TESTROOT + "installtrigger.html?" + triggers
+        TESTROOT + "navigate.html?" + xpiURL
       );
       await progressPromise;
       info("Wait for addon-install-failed notification");
@@ -1238,18 +1193,14 @@ describe("Add-on installation doorhangers", function () {
   });
 
   it("should show addon-install-failed when failing to install on a navigation that is triggered by the system principal", async function test_wrongHost() {
-    let requestedUrl = TESTROOT2 + "enabled.html";
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
     let loadedPromise = BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser,
       false,
-      requestedUrl
+      TESTROOT2
     );
-    BrowserTestUtils.startLoadingURIString(
-      gBrowser,
-      TESTROOT2 + "enabled.html"
-    );
+    BrowserTestUtils.startLoadingURIString(gBrowser, TESTROOT2);
     await loadedPromise;
 
     let progressPromise = waitForProgressNotification();
@@ -1271,14 +1222,10 @@ describe("Add-on installation doorhangers", function () {
 
   it("should re-notify the user about blocked install if they dismiss the panel then trigger it again", async function test_renotifyBlocked() {
     let notificationPromise = waitForNotification("addon-install-blocked");
-    let triggers = encodeURIComponent(
-      JSON.stringify({
-        XPI: "amosigned.xpi",
-      })
-    );
+    let xpiURL = TESTROOT + "amosigned.xpi";
     BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      TESTROOT + "installtrigger.html?" + triggers
+      TESTROOT + "navigate.html?" + xpiURL
     );
     let panel = await notificationPromise;
 
@@ -1294,7 +1241,7 @@ describe("Add-on installation doorhangers", function () {
     notificationPromise = waitForNotification("addon-install-blocked");
     BrowserTestUtils.startLoadingURIString(
       gBrowser,
-      TESTROOT + "installtrigger.html?" + triggers
+      TESTROOT + "navigate.html?" + xpiURL
     );
     await notificationPromise;
 
@@ -1314,15 +1261,42 @@ describe("Add-on installation doorhangers", function () {
       Services.perms.ALLOW_ACTION
     );
 
-    let notificationPromise = waitForNotification(PROGRESS_NOTIFICATION);
-    let triggers = encodeURIComponent(
-      JSON.stringify({
-        XPI: "slowinstall.sjs?file=amosigned.xpi",
-      })
+    let gotFirstRequest = false;
+    let hangingResponse;
+    let hangingResponseCleanup = () => {
+      hangingResponse?.finish();
+      hangingResponse = null;
+    };
+    registerCleanupFunction(hangingResponseCleanup);
+    const server = AddonTestUtils.createHttpServer({
+      hosts: ["slow.example.com"],
+    });
+    server.registerPathHandler(
+      "/slow-xpi-download.xpi",
+      (request, response) => {
+        response.setStatusLine(request.httpVersion, 200, "OK");
+        response.setHeader("Content-Type", "application/x-xpinstall");
+        if (!gotFirstRequest) {
+          // The first request is expected to be the one intercepted by amContentHandler.sys.mjs,
+          // which will just look to the content-type to detect it as an add-on installation,
+          // then the request is cancelled and a new one retriggered as part of the actual
+          // add-on install flow.
+          gotFirstRequest = true;
+        } else {
+          // This second request is meant to be the one that is part of the actual add-on
+          // install flow and we leave it pending so that the test can then reliably
+          // cancel it from the download progress notification.
+          hangingResponse = response;
+          response.processAsync();
+        }
+      }
     );
+
+    let notificationPromise = waitForNotification(PROGRESS_NOTIFICATION);
+    let xpiURL = "http://slow.example.com/slow-xpi-download.xpi";
     BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      TESTROOT + "installtrigger.html?" + triggers
+      TESTROOT + "navigate.html?" + xpiURL
     );
     let panel = await notificationPromise;
     let notification = panel.childNodes[0];
@@ -1352,7 +1326,7 @@ describe("Add-on installation doorhangers", function () {
     EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {});
     await cancelledPromise;
 
-    await waitForTick();
+    await TestUtils.waitForTick();
 
     ok(!PopupNotifications.isPanelOpen, "Notification should be closed");
 
@@ -1361,6 +1335,7 @@ describe("Add-on installation doorhangers", function () {
 
     PermissionTestUtils.remove("http://example.com/", "install");
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    hangingResponseCleanup();
   });
 
   it("should fail the installation for an https redirect to an insecure http URL without a fallback hash", async function test_failedSecurity() {
@@ -1371,57 +1346,39 @@ describe("Add-on installation doorhangers", function () {
       ],
     });
 
+    // Configures redirect.sjs to redirect to a http url through the Location
+    // header, this is expected to be triggering a download failure with an
+    // ERROR_NETWORK_FAILURE error due to the https url redirecting to an xpi
+    // to be downloaded from an insecure http url
+    // (and no hash provided to allow installing it from an insecure url).
     setupRedirect({
       Location: TESTROOT + "amosigned.xpi",
     });
 
-    let notificationPromise = waitForNotification("addon-install-blocked");
-    let triggers = encodeURIComponent(
-      JSON.stringify({
-        XPI: "redirect.sjs?mode=redirect",
-      })
-    );
-    BrowserTestUtils.openNewForegroundTab(
+    let notificationPromise = waitForNotification("addon-install-failed");
+
+    let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      SECUREROOT + "installtrigger.html?" + triggers
+      SECURE_TESTROOT
     );
-    let panel = await notificationPromise;
+    let install = await AddonManager.getInstallForURL(
+      SECURE_TESTROOT + "redirect.sjs?mode=redirect"
+    );
+    AddonManager.installAddonFromWebpage(
+      "application/x-xpinstall",
+      tab.linkedBrowser,
+      Services.scriptSecurityManager.getSystemPrincipal(),
+      install
+    );
+    await notificationPromise;
 
-    let notification = panel.childNodes[0];
-    // Click on Allow
-    EventUtils.synthesizeMouse(notification.button, 20, 10, {});
-
-    // Notification should have changed to progress notification
     ok(PopupNotifications.isPanelOpen, "Notification should still be open");
     is(
       PopupNotifications.panel.childNodes.length,
       1,
       "Should be only one notification"
     );
-    notification = panel.childNodes[0];
-    is(
-      notification.id,
-      "addon-progress-notification",
-      "Should have seen the progress notification"
-    );
-
-    // Wait for it to fail
-    await new Promise(resolve => {
-      Services.obs.addObserver(function observer() {
-        Services.obs.removeObserver(observer, "addon-install-failed");
-        resolve();
-      }, "addon-install-failed");
-    });
-
-    // Allow the browser code to add the failure notification and then wait
-    // for the progress notification to dismiss itself
-    await waitForSingleNotification();
-    is(
-      PopupNotifications.panel.childNodes.length,
-      1,
-      "Should be only one notification"
-    );
-    notification = panel.childNodes[0];
+    let notification = PopupNotifications.panel.childNodes[0];
     is(
       notification.id,
       "addon-install-failed-notification",
@@ -1542,7 +1499,7 @@ describe("Add-on installation doorhangers", function () {
     EventUtils.synthesizeKey("KEY_Enter", {}, win);
 
     await panelEventPromise;
-    await waitForTick();
+    await TestUtils.waitForTick();
 
     let panel = win.PopupNotifications.panel;
     let installDialog = panel.childNodes[0];
@@ -1600,15 +1557,11 @@ describe("Add-on installation doorhangers", function () {
       "unified-extensions-button",
       win
     );
-    let triggers = encodeURIComponent(
-      JSON.stringify({
-        // This XPI does not have any `install_origins` in its manifest.
-        XPI: "unsigned_mv3.xpi",
-      })
-    );
+    // This XPI does not have any `install_origins` in its manifest.
+    let xpiURL = TESTROOT + "unsigned_mv3.xpi";
     await BrowserTestUtils.openNewForegroundTab(
       win.gBrowser,
-      TESTROOT + "installtrigger.html?" + triggers
+      TESTROOT + "navigate.html?" + xpiURL
     );
     await notificationPromise;
 
@@ -1635,15 +1588,11 @@ describe("Add-on installation doorhangers", function () {
       "unified-extensions-button",
       win
     );
-    let triggers = encodeURIComponent(
-      JSON.stringify({
-        // This XPI does not have any `install_origins` in its manifest.
-        XPI: "unsigned_mv3.xpi",
-      })
-    );
+    // This XPI does not have any `install_origins` in its manifest.
+    let xpiURL = TESTROOT + "unsigned_mv3.xpi";
     await BrowserTestUtils.openNewForegroundTab(
       win.gBrowser,
-      TESTROOT + "installtrigger.html?" + triggers
+      TESTROOT + "navigate.html?" + xpiURL
     );
     let panel = await notificationPromise;
 

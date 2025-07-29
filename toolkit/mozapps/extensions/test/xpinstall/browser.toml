@@ -18,7 +18,6 @@ support-files = [
   "navigate.html",
   "recommended.xpi",
   "redirect.sjs",
-  "slowinstall.sjs",
   "startsoftwareupdate.html",
   "triggerredirect.html",
   "unsigned.xpi",
