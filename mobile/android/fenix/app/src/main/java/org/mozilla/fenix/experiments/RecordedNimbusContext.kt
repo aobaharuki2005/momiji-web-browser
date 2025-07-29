@@ -58,6 +58,7 @@ class RecordedNimbusContext(
     val region: String?,
     val deviceManufacturer: String = Build.MANUFACTURER,
     val deviceModel: String = Build.MODEL,
+    val userAcceptedTou: Boolean,
 ) : RecordedContext {
     /**
      * [getEventQueries] is called by the Nimbus SDK Rust code to retrieve the map of event
@@ -96,6 +97,7 @@ class RecordedNimbusContext(
                 region = region,
                 deviceManufacturer = deviceManufacturer,
                 deviceModel = deviceModel,
+                userAcceptedTou = userAcceptedTou,
             ),
         )
         Pings.nimbus.submit()
@@ -139,6 +141,7 @@ class RecordedNimbusContext(
                 "region" to region,
                 "device_manufacturer" to deviceManufacturer,
                 "device_model" to deviceModel,
+                "user_accepted_tou" to userAcceptedTou,
             ),
         )
         return obj
@@ -184,6 +187,7 @@ class RecordedNimbusContext(
                 daysSinceUpdate = calculatedAttributes.daysSinceUpdate,
                 language = calculatedAttributes.language,
                 region = calculatedAttributes.region,
+                userAcceptedTou = settings.hasAcceptedTermsOfService,
             )
         }
 
@@ -213,6 +217,7 @@ class RecordedNimbusContext(
                 daysSinceUpdate = 0,
                 language = "en",
                 region = "US",
+                userAcceptedTou = true,
             )
         }
     }

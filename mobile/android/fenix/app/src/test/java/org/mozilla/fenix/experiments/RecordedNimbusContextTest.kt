@@ -69,6 +69,7 @@ class RecordedNimbusContextTest {
                 put("region", "US")
                 put("device_manufacturer", Build.MANUFACTURER)
                 put("device_model", Build.MODEL)
+                put("user_accepted_tou", true)
             },
             contextAsJson,
         )
@@ -110,6 +111,7 @@ class RecordedNimbusContextTest {
                 put("language", "en")
                 put("locale", "")
                 put("region", "US")
+                put("userAcceptedTou", true)
             },
             recordedValue?.jsonObject,
         )
