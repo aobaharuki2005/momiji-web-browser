@@ -1045,11 +1045,11 @@ MConstant* MConstant::New(TempAllocator::Fallible alloc, const Value& v) {
 }
 
 MConstant* MConstant::NewBoolean(TempAllocator& alloc, bool b) {
-  return new (alloc) MConstant(alloc, BooleanValue(b));
+  return new (alloc) MConstant(b);
 }
 
 MConstant* MConstant::NewDouble(TempAllocator& alloc, double d) {
-  return new (alloc) MConstant(alloc, DoubleValue(d));
+  return new (alloc) MConstant(d);
 }
 
 MConstant* MConstant::NewFloat32(TempAllocator& alloc, double d) {
@@ -1058,7 +1058,7 @@ MConstant* MConstant::NewFloat32(TempAllocator& alloc, double d) {
 }
 
 MConstant* MConstant::NewInt32(TempAllocator& alloc, int32_t i) {
-  return new (alloc) MConstant(alloc, Int32Value(i));
+  return new (alloc) MConstant(i);
 }
 
 MConstant* MConstant::NewInt64(TempAllocator& alloc, int64_t i) {
@@ -1074,7 +1074,7 @@ MConstant* MConstant::NewMagic(TempAllocator& alloc, JSWhyMagic m) {
 }
 
 MConstant* MConstant::NewNull(TempAllocator& alloc) {
-  return new (alloc) MConstant(alloc, NullValue());
+  return new (alloc) MConstant(MIRType::Null);
 }
 
 MConstant* MConstant::NewObject(TempAllocator& alloc, JSObject* v) {
@@ -1090,7 +1090,7 @@ MConstant* MConstant::NewString(TempAllocator& alloc, JSString* s) {
 }
 
 MConstant* MConstant::NewUndefined(TempAllocator& alloc) {
-  return new (alloc) MConstant(alloc, UndefinedValue());
+  return new (alloc) MConstant(MIRType::Undefined);
 }
 
 static MIRType MIRTypeFromValue(const js::Value& vp) {
@@ -1162,35 +1162,13 @@ MConstant::MConstant(TempAllocator& alloc, const js::Value& vp)
   setMovable();
 }
 
-MConstant::MConstant(JSObject* obj) : MNullaryInstruction(classOpcode) {
+MConstant::MConstant(JSObject* obj) : MConstant(MIRType::Object) {
   MOZ_ASSERT(!IsInsideNursery(obj));
-  setResultType(MIRType::Object);
   payload_.obj = obj;
-  setMovable();
 }
 
-MConstant::MConstant(Shape* shape) : MNullaryInstruction(classOpcode) {
-  setResultType(MIRType::Shape);
+MConstant::MConstant(Shape* shape) : MConstant(MIRType::Shape) {
   payload_.shape = shape;
-  setMovable();
-}
-
-MConstant::MConstant(float f) : MNullaryInstruction(classOpcode) {
-  setResultType(MIRType::Float32);
-  payload_.f = f;
-  setMovable();
-}
-
-MConstant::MConstant(MIRType type, int64_t i)
-    : MNullaryInstruction(classOpcode) {
-  MOZ_ASSERT(type == MIRType::Int64 || type == MIRType::IntPtr);
-  setResultType(type);
-  if (type == MIRType::Int64) {
-    payload_.i64 = i;
-  } else {
-    payload_.iptr = i;
-  }
-  setMovable();
 }
 
 #ifdef DEBUG

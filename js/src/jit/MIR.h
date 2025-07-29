@@ -1447,11 +1447,28 @@ class MConstant : public MNullaryInstruction {
   void assertInitializedPayload() const {}
 #endif
 
+  explicit MConstant(MIRType type) : MNullaryInstruction(classOpcode) {
+    setResultType(type);
+    setMovable();
+  }
+  explicit MConstant(bool b) : MConstant(MIRType::Boolean) { payload_.b = b; }
+  explicit MConstant(double d) : MConstant(MIRType::Double) { payload_.d = d; }
+  explicit MConstant(float f) : MConstant(MIRType::Float32) { payload_.f = f; }
+  explicit MConstant(int32_t i) : MConstant(MIRType::Int32) {
+    payload_.i32 = i;
+  }
+  MConstant(MIRType type, int64_t i) : MConstant(type) {
+    MOZ_ASSERT(type == MIRType::Int64 || type == MIRType::IntPtr);
+    if (type == MIRType::Int64) {
+      payload_.i64 = i;
+    } else {
+      payload_.iptr = i;
+    }
+  }
+
   MConstant(TempAllocator& alloc, const Value& v);
   explicit MConstant(JSObject* obj);
   explicit MConstant(Shape* shape);
-  explicit MConstant(float f);
-  explicit MConstant(MIRType type, int64_t i);
 
  public:
   INSTRUCTION_HEADER(Constant)
