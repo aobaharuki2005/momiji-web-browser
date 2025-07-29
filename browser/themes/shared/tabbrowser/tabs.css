@@ -936,7 +936,7 @@
 }
 
 #pinned-tabs-container[orient="horizontal"] {
-  margin-inline-end: 12px;
+  max-width: 60vw;
 
   &:empty {
     display: none;
@@ -1420,14 +1420,9 @@ tab-group {
 
 /* Tab Overflow */
 
-#tabbrowser-arrowscrollbox {
+#tabbrowser-arrowscrollbox,
+#pinned-tabs-container {
   &[orient="horizontal"] {
-    min-width: 1px;
-
-    &::part(scrollbox) {
-      contain: inline-size;
-    }
-
     &:not([scrolledtostart])::part(overflow-start-indicator),
     &:not([scrolledtoend])::part(overflow-end-indicator) {
       width: 7px; /* The width is the sum of the inline margins */
@@ -1479,16 +1474,6 @@ tab-group {
     }
   }
 
-  &[scrolledtostart]::part(overflow-start-indicator),
-  &[scrolledtoend]::part(overflow-end-indicator) {
-    opacity: 0;
-  }
-
-  &::part(overflow-start-indicator),
-  &::part(overflow-end-indicator) {
-    transition: opacity 150ms ease;
-  }
-
   /* Scroll arrows */
 
   &::part(scrollbutton-up),
@@ -1499,7 +1484,6 @@ tab-group {
     border-radius: calc(var(--tab-border-radius) + 4px);
     fill: var(--toolbarbutton-icon-fill);
     margin: 0;
-    padding: 0 calc(var(--toolbarbutton-inner-padding) - 6px);
   }
 
   #navigator-toolbox:not(:hover) &:not([highlight])::part(scrollbutton-down) {
@@ -1520,6 +1504,24 @@ tab-group {
   &:not([scrolledtoend])::part(scrollbutton-down):hover:active {
     background-color: var(--toolbarbutton-active-background);
     color: inherit;
+  }
+
+  &[scrolledtostart]::part(overflow-start-indicator),
+  &[scrolledtoend]::part(overflow-end-indicator) {
+    opacity: 0;
+  }
+
+  &::part(overflow-start-indicator),
+  &::part(overflow-end-indicator) {
+    transition: opacity 150ms ease;
+  }
+}
+
+#tabbrowser-arrowscrollbox[orient="horizontal"] {
+  min-width: 20vw;
+
+  &::part(scrollbox) {
+    contain: inline-size;
   }
 }
 
@@ -1617,25 +1619,6 @@ tab-group {
     scrollbar-width: thin;
     scrollbar-color: var(--vertical-tabs-scrollbar-color);
     overflow-y: auto;
-  }
-
-  &:not([scrolledtostart])::part(overflow-start-indicator),
-  &:not([scrolledtoend])::part(overflow-end-indicator) {
-    background-image: linear-gradient(to top, transparent 0%, light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05)));
-    background-repeat: no-repeat;
-    pointer-events: none;
-    position: relative;
-    height: 16px;
-    z-index: 1;
-  }
-
-  &::part(overflow-start-indicator) {
-    margin-block: 0 -16px;
-  }
-
-  &::part(overflow-end-indicator) {
-    transform: scaleY(-1);
-    margin-block: -16px 0;
   }
 
   .tab-background {
