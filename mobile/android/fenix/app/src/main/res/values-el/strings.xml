@@ -318,6 +318,8 @@
   <string name="browser_menu_sign_back_in_to_sync">Συνδεθείτε ξανά για συγχρονισμό</string>
   <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
   <string name="browser_menu_syncing_paused_caption">Συγχρονισμός σε παύση</string>
+  <!-- Browser menu caption label for an authenticated user -->
+  <string name="browser_menu_signed_in_caption">Διαχειριστείτε τα αντίγραφα ασφαλείας και τον συγχρονισμό</string>
   <!-- Browser menu label that creates a private tab -->
   <string name="browser_menu_new_private_tab">Νέα ιδιωτική καρτέλα</string>
   <!-- Browser menu label that navigates to the Password screen -->
@@ -415,6 +417,8 @@
   <string name="browser_menu_default_banner_title">Ορίστε το %1$s ως προεπιλογή</string>
   <!-- Label text within the set as default banner -->
   <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">Παίρνει λίγα δευτερόλεπτα. Αλλαγή ανά πάσα στιγμή.</string>
+  <!-- Label text within the set as default banner -->
+  <string name="browser_menu_default_banner_subtitle_2">Γρήγορο, ιδιωτικό και φτιαγμένο για εσάς.</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Απόρριψη</string>
   <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
@@ -1083,6 +1087,8 @@
   <string name="alternative_app_icon_group_other">Άλλο</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Αλλαγή εικονιδίου εφαρμογής;</string>
+  <!-- Message to warn users that applying an alternative app icon requires an app restart -->
+  <string name="restart_warning_dialog_body">Η αλλαγή του εικονιδίου απαιτεί επανεκκίνηση της εφαρμογής.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive">Επανεκκίνηση τώρα</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -1262,6 +1268,8 @@
   <string name="preference_simple_toolbar">Απλή</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Ανεπτυγμένη</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">Η γραμμή διευθύνσεων πρέπει να βρίσκεται στο πάνω μέρος όταν εμφανίζεται η γραμμή καρτελών.</string>
   <!--
     App icon Preferences
 
@@ -1997,9 +2005,9 @@
   <!-- Summary of studies data on quit preference if it is set to off -->
   <string name="studies_off">Ανενεργές</string>
   <!-- Toggle if desktop site is turned on -->
-  <string name="browser_feature_desktop_site_on">Ενεργό</string>
+  <string name="browser_feature_desktop_site_on">Ενεργή</string>
   <!-- Toggle if desktop site is turned off -->
-  <string name="browser_feature_desktop_site_off">Ανενεργό</string>
+  <string name="browser_feature_desktop_site_off">Ανενεργή</string>
   <!-- Category header of a preference that allows a user to alter settings related to web permissions. -->
   <string name="preferences_category_permissions">Δικαιώματα</string>
   <!-- Category header of a preference that allows a user to alter settings related to web content. -->
@@ -2727,6 +2735,8 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">Αποθήκευση και συμπλήρωση διευθύνσεων</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Περιλαμβάνει αριθμούς τηλεφώνου και διευθύνσεις email</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">Συγχρονισμός διευθύνσεων μεταξύ συσκευών</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Συγχρονισμός διευθύνσεων</string>
   <!-- Title of the "Add card" screen -->
@@ -3363,7 +3373,7 @@
     Description text for the protection panel banner when tracking protection is disabled.
     %s is the name of the app (for example "Firefox").
   -->
-  <string name="protection_panel_banner_not_protected_description">Η %s είναι εκτός υπηρεσίας. Προτείνουμε να ενεργοποιήσετε ξανά την προστασία.</string>
+  <string name="protection_panel_banner_not_protected_description">Το %s είναι εκτός υπηρεσίας. Προτείνουμε να ενεργοποιήσετε ξανά την προστασία.</string>
   <!--
     Title text for the protection panel banner when tracking protection is enabled.
     %s is the name of the app (for example "Firefox").

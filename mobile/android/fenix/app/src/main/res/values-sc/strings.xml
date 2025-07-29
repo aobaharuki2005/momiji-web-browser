@@ -833,7 +833,7 @@
   <!-- Preference title for switch preference to suggest bookmarks when searching -->
   <string name="preferences_search_bookmarks">Chirca in is sinnalibros</string>
   <!-- Preference title for switch preference to show shortcuts when searching -->
-  <string name="preferences_show_shortcuts">Ammustra incurtzaduras</string>
+  <string name="preferences_show_shortcuts">Ammustra curtzadòrgios</string>
   <!-- Preference title for switch preference to suggest synced tabs when searching -->
   <string name="preferences_search_synced_tabs">Chirca ischedas sincronizadas</string>
   <!-- Preference for account settings -->
@@ -914,6 +914,14 @@
   <string name="addons_permissions_required_data_collection_description_2">S’iscuadra de isvilupu narat chi custa estensione regollet: %1$s</string>
   <!-- The description of the "none" data collection permission, when the extension doesn't collect anything according to the developer. -->
   <string name="addons_permissions_none_required_data_collection_description">S’iscuadra de isvilupu narat chi custa estensione non rechedet sa regorta de datos.</string>
+  <!-- The title of the required permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_required_permissions">Permissos rechestos:</string>
+  <!-- The title of the optional permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_optional_permissions">Permissos optzionales:</string>
+  <!-- The title of the required data collection permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_required_data_collection">Regorta de datos obligatòria:</string>
+  <!-- The title of the optional data collection permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_optional_data_collection">Regorta de datos optzionale:</string>
   <!--
     Add-on Preferences
 
@@ -983,6 +991,30 @@
   <string name="wallpapers_onboarding_dialog_body_text">Sèbera un’isfundu de ischermu chi ti rapresentat.</string>
   <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
   <string name="wallpapers_onboarding_dialog_explore_more_button_text">Iscoberi àteros isfundos de ischermu</string>
+  <!--
+    Icon picker
+
+    Title for the "Default" alternative app icon variant in the icon picker screen.
+  -->
+  <string name="alternative_app_icon_option_default">Predefinida</string>
+  <!-- Title for the "Light" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_light">Crara</string>
+  <!-- Title for the "Dark" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_dark">Iscura</string>
+  <!-- Title for the "Purple" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_purple">Tanadu</string>
+  <!-- Title for the "Purple Dark" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_purple_dark">Tanadu iscuru</string>
+  <!-- Title for the "Sunrise" gradient alternative app icon variant in the icon picker screen. The app icon features a soft yellow-to-blue gradient background, resembling the colors of early morning light. -->
+  <string name="alternative_app_icon_option_gradient_sunrise">Arbèschida</string>
+  <!-- Title for the "Sunset" gradient alternative app icon variant in the icon picker screen. The app icon has a rich red-to-purple gradient background, resembling the tones of a sunset sky. -->
+  <string name="alternative_app_icon_option_gradient_sunset">Iscurigadòrgiu</string>
+  <!-- Title for the "Midnight" gradient alternative app icon variant in the icon picker screen. The app icon features a dark gradient background, resembling the deep tones of the night sky. -->
+  <string name="alternative_app_icon_option_gradient_midnight">Mesunote</string>
+  <!-- Title for the "Retro 2004" themed alternative app icon variant in the icon picker screen. This app icon uses the classic Firefox logo from 2004. -->
+  <string name="alternative_app_icon_option_retro_2004">Retro 2004</string>
+  <!-- Title for the "Retro 2017" themed alternative app icon variant in the icon picker screen. This app icon uses the Firefox logo from 2017, with a more modernized design. -->
+  <string name="alternative_app_icon_option_retro_2017">Retro 2017</string>
   <!-- Title for the "Minimal" themed alternative app icon variant in the icon picker screen. The app icon presents a simplified, flat and monochrome version of the Firefox logo. -->
   <string name="alternative_app_icon_option_minimal">Minimalista</string>
   <!-- Title for the "Pride" themed alternative app icon variant in the icon picker screen. The app icon incorporates a rainbow color scheme in support of the LGBTQ+ community. -->
@@ -995,6 +1027,14 @@
   <string name="alternative_app_icon_option_momo_subtitle">Creada dae @heyheymomodraws</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other">Àteras</string>
+  <!-- Title to show in alert when user selects an alternative app icon -->
+  <string name="restart_warning_dialog_title">Boles modificare s’icona de s’aplicatzione?</string>
+  <!-- Message to warn users that applying an alternative app icon requires an app restart -->
+  <string name="restart_warning_dialog_body">Sa modìfica de s’icona rechedet su riaviu de s’aplicatzione.</string>
+  <!-- Dialog button text for confirming the app restart to apply the selected icon -->
+  <string name="restart_warning_dialog_button_positive">Torra a aviare immoe</string>
+  <!-- Dialog button text for cancelling app icon change -->
+  <string name="restart_warning_dialog_button_negative">Annulla</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1095,12 +1135,16 @@
   <string name="exceptions_empty_message_description">Is estensiones ti permitint de disativare s\'amparu contra a sa sighidura in tzertos sitos.</string>
   <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
   <string name="exceptions_empty_message_learn_more_link">Àteras informatziones</string>
+  <!-- Preference switch for usage and technical data collection -->
+  <string name="preference_usage_data_2">Imbia datos tècnicos e de interatzione</string>
   <!-- Preference switch for usage and technical learn more link -->
   <string name="preference_usage_data_learn_more" tools:ignore="UnusedResources" moz:removedIn="141">Àteras informatziones</string>
   <!-- Preference switch for daily usage ping data collection -->
   <string name="preferences_daily_usage_ping_title">Ping de impreu diàriu</string>
   <string name="preferences_daily_usage_ping_description">Custu agiudat a Mozilla a valutare is utentes ativos.</string>
   <string name="preferences_daily_usage_ping_learn_more">Àteras informatziones a subra de su ping de impreu diàriu</string>
+  <!-- Preference switch title for automatically submitting crash reports -->
+  <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Imbia informes de faddinas in automàticu</string>
   <string name="usage_data_category">Datos de impreu</string>
   <string name="studies_data_category">Istùdios</string>
   <string name="technical_data_category">Datos tècnicos</string>
@@ -2629,6 +2673,12 @@
   <string name="synced_tabs_expand_group">Ismànnia su grupu de ischedas sincronizadas</string>
   <!-- Content description for collapsing a group of synced tabs. -->
   <string name="synced_tabs_collapse_group">Mìnima su grupu de ischedas sincronizadas</string>
+  <!--
+    Top Sites
+
+    Title text displayed for the shortcuts home screen section.
+  -->
+  <string name="homepage_shortcuts_title">Curtzadòrgios</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Lìmite de curtzadòrgios barigadu</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
