@@ -602,10 +602,10 @@ nsContentPolicyType WorkerScriptLoader::GetContentPolicyType(
   }
   if (aRequest->IsModuleRequest()) {
     if (aRequest->AsModuleRequest()->IsDynamicImport()) {
-        return aRequest->AsModuleRequest()->mModuleType ==
-               JS::ModuleType::JavaScript
-               ? nsIContentPolicy::TYPE_INTERNAL_MODULE
-               : nsIContentPolicy::TYPE_JSON;
+      return aRequest->AsModuleRequest()->mModuleType ==
+                     JS::ModuleType::JavaScript
+                 ? nsIContentPolicy::TYPE_INTERNAL_MODULE
+                 : nsIContentPolicy::TYPE_JSON;
     }
 
     // Implements the destination for Step 14 in
