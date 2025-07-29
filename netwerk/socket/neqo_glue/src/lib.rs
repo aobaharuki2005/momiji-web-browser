@@ -1024,16 +1024,19 @@ fn parse_headers(headers: &nsACString) -> Result<Vec<Header>, nsresult> {
                 if elem.is_empty() {
                     continue;
                 }
-                let hdr_str: Vec<_> = elem.splitn(2, ':').collect();
-                let name = hdr_str[0].trim().to_lowercase();
+
+                let mut hdr_str = elem.splitn(2, ':');
+                let name = hdr_str
+                    .next()
+                    .expect("`elem` is not empty")
+                    .trim()
+                    .to_lowercase();
                 if is_excluded_header(&name) {
                     continue;
                 }
-                let value = if hdr_str.len() > 1 {
-                    String::from(hdr_str[1].trim())
-                } else {
-                    String::new()
-                };
+                let value = hdr_str
+                    .next()
+                    .map_or_else(String::new, |v| v.trim().to_string());
 
                 hdrs.push(Header::new(name, value));
             }
