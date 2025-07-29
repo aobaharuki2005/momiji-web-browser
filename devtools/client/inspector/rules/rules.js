@@ -1086,6 +1086,9 @@ CssRuleView.prototype = {
       return Promise.resolve(undefined);
     }
 
+    const isProfilerActive = Services.profiler?.IsActive();
+    const startTime = isProfilerActive ? Cu.now() : null;
+
     this.pageStyle = element.inspectorFront.pageStyle;
     this.pageStyle.on("stylesheet-updated", this.refreshPanel);
 
@@ -1131,6 +1134,17 @@ CssRuleView.prototype = {
           this._elementStyle.onChanged = () => {
             this._changed();
           };
+        }
+        if (isProfilerActive && this._elementStyle.rules) {
+          let declarations = 0;
+          for (const rule of this._elementStyle.rules) {
+            declarations += rule.textProps.length;
+          }
+          ChromeUtils.addProfilerMarker(
+            "DevTools:CssRuleView.selectElement",
+            startTime,
+            `${declarations} CSS declarations in ${this._elementStyle.rules.length} rules`
+          );
         }
       })
       .catch(e => {
