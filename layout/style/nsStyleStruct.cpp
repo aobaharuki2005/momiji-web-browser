@@ -1313,18 +1313,21 @@ nsChangeHint nsStylePosition::CalcDifference(
     }
   }
 
-  if (mPositionAnchor != aNewData.mPositionAnchor) {
-    // 'position-anchor' provides a default anchor for other anchor positioning
-    // properties in the event that they don't specify one explicitly.
-    // TODO(jwatt): Re-evaluate what we're doing here.
-    hint |= nsChangeHint_NeutralChange;
+  // Note(dshin): Following hints based on changes in `position-*`
+  // is conditional on being absolutely positioned, but we don't have
+  // enough information here.
+  if (mPositionVisibility != aNewData.mPositionVisibility) {
+    // position-visibility doesn't affect layout boxes.
+    hint |= nsChangeHint_RepaintFrame;
   }
 
-  if (mPositionVisibility != aNewData.mPositionVisibility ||
+  if (mPositionAnchor != aNewData.mPositionAnchor ||
       mPositionTryFallbacks != aNewData.mPositionTryFallbacks ||
       mPositionTryOrder != aNewData.mPositionTryOrder ||
       mPositionArea != aNewData.mPositionArea) {
-    hint |= nsChangeHint_NeutralChange;
+    // We need to reflow in order to update the `AnchorPosReferences`
+    // property at minimum.
+    hint |= nsChangeHint_NeedReflow;
   }
 
   if (mAspectRatio != aNewData.mAspectRatio) {
