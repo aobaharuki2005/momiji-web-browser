@@ -5132,7 +5132,7 @@ bool jit::OptimizeIteratorIndices(const MIRGenerator* mir, MIRGraph& graph) {
       MInstruction* replacement;
       if (ins->isHasOwnCache() || ins->isMegamorphicHasProp()) {
         MOZ_ASSERT(!setValue);
-        replacement = MConstant::New(graph.alloc(), BooleanValue(true));
+        replacement = MConstant::NewBoolean(graph.alloc(), true);
       } else if (ins->isMegamorphicLoadSlotByValue() ||
                  ins->isGetPropertyCache()) {
         MOZ_ASSERT(!setValue);

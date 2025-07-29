@@ -40,7 +40,7 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoop) {
   MBasicBlock* outerBackedge = func.createBlock(innerHeader);
   MBasicBlock* exit = func.createBlock(outerHeader);
 
-  MConstant* c = MConstant::New(func.alloc, BooleanValue(false));
+  MConstant* c = MConstant::NewBoolean(func.alloc, false);
   entry->add(c);
   entry->end(MTest::New(func.alloc, c, outerHeader, exit));
   osrEntry->end(MGoto::New(func.alloc, merge));
@@ -48,14 +48,14 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoop) {
   merge->end(MGoto::New(func.alloc, innerHeader));
 
   // Use Beta nodes to hide the constants and suppress folding.
-  MConstant* x = MConstant::New(func.alloc, BooleanValue(false));
+  MConstant* x = MConstant::NewBoolean(func.alloc, false);
   outerHeader->add(x);
   MBeta* xBeta =
       MBeta::New(func.alloc, x, Range::NewInt32Range(func.alloc, 0, 1));
   outerHeader->add(xBeta);
   outerHeader->end(MTest::New(func.alloc, xBeta, merge, exit));
 
-  MConstant* y = MConstant::New(func.alloc, BooleanValue(false));
+  MConstant* y = MConstant::NewBoolean(func.alloc, false);
   innerHeader->add(y);
   MBeta* yBeta =
       MBeta::New(func.alloc, y, Range::NewInt32Range(func.alloc, 0, 1));
@@ -130,7 +130,7 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoopNested) {
   MBasicBlock* outerBackedge = func.createBlock(middleHeader);
   MBasicBlock* exit = func.createBlock(outerHeader);
 
-  MConstant* c = MConstant::New(func.alloc, BooleanValue(false));
+  MConstant* c = MConstant::NewBoolean(func.alloc, false);
   entry->add(c);
   entry->end(MTest::New(func.alloc, c, outerHeader, exit));
   osrEntry->end(MGoto::New(func.alloc, merge));
@@ -138,21 +138,21 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoopNested) {
   merge->end(MGoto::New(func.alloc, innerHeader));
 
   // Use Beta nodes to hide the constants and suppress folding.
-  MConstant* x = MConstant::New(func.alloc, BooleanValue(false));
+  MConstant* x = MConstant::NewBoolean(func.alloc, false);
   outerHeader->add(x);
   MBeta* xBeta =
       MBeta::New(func.alloc, x, Range::NewInt32Range(func.alloc, 0, 1));
   outerHeader->add(xBeta);
   outerHeader->end(MTest::New(func.alloc, xBeta, middleHeader, exit));
 
-  MConstant* y = MConstant::New(func.alloc, BooleanValue(false));
+  MConstant* y = MConstant::NewBoolean(func.alloc, false);
   middleHeader->add(y);
   MBeta* yBeta =
       MBeta::New(func.alloc, y, Range::NewInt32Range(func.alloc, 0, 1));
   middleHeader->add(yBeta);
   middleHeader->end(MTest::New(func.alloc, yBeta, merge, outerBackedge));
 
-  MConstant* w = MConstant::New(func.alloc, BooleanValue(false));
+  MConstant* w = MConstant::NewBoolean(func.alloc, false);
   innerHeader->add(w);
   MBeta* wBeta =
       MBeta::New(func.alloc, w, Range::NewInt32Range(func.alloc, 0, 1));
@@ -261,7 +261,7 @@ BEGIN_TEST(testJitGVN_PinnedPhis) {
 
   outerBlock->end(MGoto::New(func.alloc, innerHeader));
 
-  MConstant* true_ = MConstant::New(func.alloc, BooleanValue(true));
+  MConstant* true_ = MConstant::NewBoolean(func.alloc, true);
   innerHeader->add(true_);
   innerHeader->end(MTest::New(func.alloc, true_, innerBackedge, exit));
 

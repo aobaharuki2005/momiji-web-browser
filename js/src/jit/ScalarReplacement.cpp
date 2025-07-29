@@ -927,7 +927,7 @@ void ObjectMemoryView::visitCompare(MCompare* ins) {
   bool folded;
   MOZ_ALWAYS_TRUE(ins->tryFold(&folded));
 
-  auto* cst = MConstant::New(alloc_, BooleanValue(folded));
+  auto* cst = MConstant::NewBoolean(alloc_, folded);
   ins->block()->insertBefore(ins, cst);
 
   // Replace the comparison with a constant.
@@ -953,7 +953,7 @@ void ObjectMemoryView::visitIsObject(MIsObject* ins) {
     return;
   }
 
-  auto* cst = MConstant::New(alloc_, BooleanValue(true));
+  auto* cst = MConstant::NewBoolean(alloc_, true);
   ins->block()->insertBefore(ins, cst);
 
   // Replace the test with a constant.
@@ -1696,7 +1696,7 @@ void ArrayMemoryView::visitCompare(MCompare* ins) {
   bool folded;
   MOZ_ALWAYS_TRUE(ins->tryFold(&folded));
 
-  auto* cst = MConstant::New(alloc_, BooleanValue(folded));
+  auto* cst = MConstant::NewBoolean(alloc_, folded);
   ins->block()->insertBefore(ins, cst);
 
   // Replace the comparison with a constant.
@@ -2893,7 +2893,7 @@ void RestReplacer::visitCompare(MCompare* ins) {
   bool folded;
   MOZ_ALWAYS_TRUE(ins->tryFold(&folded));
 
-  auto* cst = MConstant::New(alloc(), BooleanValue(folded));
+  auto* cst = MConstant::NewBoolean(alloc(), folded);
   ins->block()->insertBefore(ins, cst);
 
   // Replace the comparison with a constant.
