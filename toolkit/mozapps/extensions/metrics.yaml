@@ -484,7 +484,6 @@ addons_manager:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
     notification_emails:
-      - robwu@mozilla.com
       - addons-dev-internal@mozilla.com
     expires: never
     data_sensitivity:
@@ -518,7 +517,6 @@ addons_manager:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
     notification_emails:
-      - robwu@mozilla.com
       - addons-dev-internal@mozilla.com
     expires: never
     data_sensitivity:
@@ -867,7 +865,6 @@ xpi.database:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
     notification_emails:
-      - robwu@mozilla.com
       - addons-dev-internal@mozilla.com
     expires: never
     data_sensitivity:
@@ -884,7 +881,6 @@ xpi.database:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
     notification_emails:
-      - robwu@mozilla.com
       - addons-dev-internal@mozilla.com
     expires: never
     data_sensitivity:
@@ -902,7 +898,6 @@ xpi.database:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
     notification_emails:
-      - robwu@mozilla.com
       - addons-dev-internal@mozilla.com
     expires: never
     data_sensitivity:
@@ -920,7 +915,6 @@ xpi.database:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
     notification_emails:
-      - robwu@mozilla.com
       - addons-dev-internal@mozilla.com
     expires: never
     data_sensitivity:
@@ -937,7 +931,6 @@ xpi.database:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
     notification_emails:
-      - robwu@mozilla.com
       - addons-dev-internal@mozilla.com
     expires: never
     data_sensitivity:
@@ -955,7 +948,6 @@ xpi.database:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
     notification_emails:
-      - robwu@mozilla.com
       - addons-dev-internal@mozilla.com
     expires: never
     data_sensitivity:
@@ -974,7 +966,6 @@ xpi.database:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1972836
     notification_emails:
-      - robwu@mozilla.com
       - addons-dev-internal@mozilla.com
     expires: never
     data_sensitivity:
