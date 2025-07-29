@@ -4435,6 +4435,10 @@ main section {
 .lists:hover .select-wrapper moz-button, .lists:focus-within .select-wrapper moz-button, .lists .select-wrapper panel-list[open] .select-wrapper moz-button {
   visibility: visible;
 }
+.lists .edit-list {
+  border: 1px solid var(--border-color-deemphasized);
+  outline: none;
+}
 .lists .add-task-container {
   margin-block: var(--space-small);
   padding-inline: var(--space-large);
@@ -4543,6 +4547,15 @@ main section {
 }
 .lists .task-item panel-list[open] ~ moz-button {
   visibility: visible;
+}
+.lists .task-item .edit-task {
+  margin-inline-start: var(--space-small);
+  max-width: 180px;
+  border: none;
+  border-radius: 0;
+}
+.lists .task-item .edit-task:focus {
+  outline: var(--focus-outline);
 }
 .lists .empty-list-text {
   padding-inline: var(--space-large);

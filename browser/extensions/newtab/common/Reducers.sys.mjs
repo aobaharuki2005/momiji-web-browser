@@ -1191,7 +1191,7 @@ function ListsWidget(prevState = INITIAL_STATE.ListsWidget, action) {
   switch (action.type) {
     case at.WIDGETS_LISTS_SET:
       return { ...prevState, lists: action.data };
-    case at.WIDGETS_LISTS_CHANGE_SELECTED:
+    case at.WIDGETS_LISTS_SET_SELECTED:
       return { ...prevState, selected: action.data };
     default:
       return prevState;

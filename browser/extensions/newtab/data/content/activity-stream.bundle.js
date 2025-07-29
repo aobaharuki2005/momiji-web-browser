@@ -303,6 +303,7 @@ for (const type of [
   "WEBEXT_DISMISS",
   "WIDGETS_LISTS_CHANGE_SELECTED",
   "WIDGETS_LISTS_SET",
+  "WIDGETS_LISTS_SET_SELECTED",
   "WIDGETS_LISTS_UPDATE",
   "WIDGETS_TIMER_END",
   "WIDGETS_TIMER_PAUSE",
@@ -8845,7 +8846,7 @@ function ListsWidget(prevState = INITIAL_STATE.ListsWidget, action) {
   switch (action.type) {
     case actionTypes.WIDGETS_LISTS_SET:
       return { ...prevState, lists: action.data };
-    case actionTypes.WIDGETS_LISTS_CHANGE_SELECTED:
+    case actionTypes.WIDGETS_LISTS_SET_SELECTED:
       return { ...prevState, selected: action.data };
     default:
       return prevState;
@@ -12266,7 +12267,34 @@ function Lists({
     lists
   } = listsData;
   const [newTask, setNewTask] = (0,external_React_namespaceObject.useState)("");
+  const [isEditing, setIsEditing] = (0,external_React_namespaceObject.useState)(false);
+  // When making a new list, we need to wait to set editing to true
+  // until the redux store has been updated
+  const [pendingNewList, setPendingNewList] = (0,external_React_namespaceObject.useState)(null);
   const inputRef = (0,external_React_namespaceObject.useRef)(null);
+  const selectRef = (0,external_React_namespaceObject.useRef)(null);
+  (0,external_React_namespaceObject.useEffect)(() => {
+    const node = selectRef.current;
+    if (!node) {
+      return undefined;
+    }
+    function handleSelectChange(e) {
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WIDGETS_LISTS_CHANGE_SELECTED,
+        data: e.target.value
+      }));
+    }
+    node.addEventListener("change", handleSelectChange);
+    return () => {
+      node.removeEventListener("change", handleSelectChange);
+    };
+  }, [dispatch, isEditing]);
+  (0,external_React_namespaceObject.useEffect)(() => {
+    if (selected === pendingNewList) {
+      setIsEditing(true);
+      setPendingNewList(null);
+    }
+  }, [selected, pendingNewList]);
   function isValidUrl(string) {
     return URL.canParse(string);
   }
@@ -12328,19 +12356,6 @@ function Lists({
       data: updatedLists
     }));
   }
-
-  // useEffect to manage a click outside of the input
-  (0,external_React_namespaceObject.useEffect)(() => {
-    function handleOutsideClick(e) {
-      if (inputRef.current && !inputRef.current.contains(e.target)) {
-        saveTask();
-      }
-    }
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-    };
-  });
   function handleKeyDown(e) {
     if (e.key === "Enter" && document.activeElement === inputRef.current) {
       saveTask();
@@ -12349,29 +12364,113 @@ function Lists({
       setNewTask("");
     }
   }
+  function handleListNameSave(newLabel) {
+    const selectedList = lists[selected];
+    const trimmedLabel = newLabel.trimEnd();
+    if (trimmedLabel && trimmedLabel !== selectedList?.label) {
+      const updatedLists = {
+        ...lists,
+        [selected]: {
+          ...lists[selected],
+          label: trimmedLabel
+        }
+      };
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WIDGETS_LISTS_UPDATE,
+        data: updatedLists
+      }));
+      setIsEditing(false);
+    }
+  }
+  async function handleCreateNewList() {
+    const listUuid = crypto.randomUUID();
+    const newLists = {
+      ...lists,
+      [listUuid]: {
+        label: "New list",
+        tasks: []
+      }
+    };
+    await (0,external_ReactRedux_namespaceObject.batch)(() => {
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WIDGETS_LISTS_UPDATE,
+        data: newLists
+      }));
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WIDGETS_LISTS_CHANGE_SELECTED,
+        data: listUuid
+      }));
+    });
+    setPendingNewList(listUuid);
+  }
+  function handleDeleteList() {
+    let updatedLists = {
+      ...lists
+    };
+    if (updatedLists[selected]) {
+      delete updatedLists[selected];
+
+      // if this list was the last one created, add a new list as default
+      if (Object.keys(updatedLists)?.length === 0) {
+        updatedLists = {
+          [crypto.randomUUID()]: {
+            label: "New list",
+            tasks: []
+          }
+        };
+      }
+      const listKeys = Object.keys(updatedLists);
+      const key = listKeys[listKeys.length - 1];
+      (0,external_ReactRedux_namespaceObject.batch)(() => {
+        dispatch(actionCreators.AlsoToMain({
+          type: actionTypes.WIDGETS_LISTS_UPDATE,
+          data: updatedLists
+        }));
+        dispatch(actionCreators.AlsoToMain({
+          type: actionTypes.WIDGETS_LISTS_CHANGE_SELECTED,
+          data: key
+        }));
+      });
+    }
+  }
   return lists ? /*#__PURE__*/external_React_default().createElement("article", {
     className: "lists"
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "select-wrapper"
+  }, /*#__PURE__*/external_React_default().createElement(EditableText, {
+    value: lists[selected]?.label || "",
+    onSave: handleListNameSave,
+    isEditing: isEditing,
+    setIsEditing: setIsEditing,
+    type: "list",
+    maxLength: 30
   }, /*#__PURE__*/external_React_default().createElement("moz-select", {
+    ref: selectRef,
     value: selected
   }, Object.entries(lists).map(([key, list]) => /*#__PURE__*/external_React_default().createElement("moz-option", {
     key: key,
     value: key,
     label: list.label
-  }))), /*#__PURE__*/external_React_default().createElement("moz-button", {
+  })))), /*#__PURE__*/external_React_default().createElement("moz-button", {
     className: "lists-panel-button",
     iconSrc: "chrome://global/skin/icons/more.svg",
     menuId: "lists-panel",
     type: "ghost"
   }), /*#__PURE__*/external_React_default().createElement("panel-list", {
     id: "lists-panel"
-  }, /*#__PURE__*/external_React_default().createElement("panel-item", null, "Edit name"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Create a new list"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Hide To Do list"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Learn more"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Copy to clipboard"))), /*#__PURE__*/external_React_default().createElement("div", {
+  }, /*#__PURE__*/external_React_default().createElement("panel-item", {
+    onClick: () => setIsEditing(true)
+  }, "Edit name"), /*#__PURE__*/external_React_default().createElement("panel-item", {
+    onClick: () => handleCreateNewList()
+  }, "Create a new list"), /*#__PURE__*/external_React_default().createElement("panel-item", {
+    onClick: () => handleDeleteList()
+  }, "Delete this list"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Hide To Do list"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Learn more"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Copy to clipboard"))), /*#__PURE__*/external_React_default().createElement("div", {
     className: "add-task-container"
   }, /*#__PURE__*/external_React_default().createElement("span", {
     className: "icon icon-add"
   }), /*#__PURE__*/external_React_default().createElement("input", {
     ref: inputRef,
+    onBlur: () => saveTask(),
     onChange: e => setNewTask(e.target.value),
     value: newTask,
     placeholder: "Add a task",
@@ -12387,7 +12486,8 @@ function Lists({
     task: task,
     key: task.id,
     updateTask: updateTask,
-    deleteTask: deleteTask
+    deleteTask: deleteTask,
+    isValidUrl: isValidUrl
   })))) : /*#__PURE__*/external_React_default().createElement("p", {
     className: "empty-list-text"
   }, "The list is empty. For now \uD83E\uDD8A"))) : null;
@@ -12395,9 +12495,11 @@ function Lists({
 function ListItem({
   task,
   updateTask,
-  deleteTask
+  deleteTask,
+  isValidUrl
 }) {
   const [shouldAnimate, setShouldAnimate] = (0,external_React_namespaceObject.useState)(false);
+  const [isEditing, setIsEditing] = (0,external_React_namespaceObject.useState)(false);
   function handleCheckboxChange(e) {
     const {
       checked
@@ -12409,6 +12511,17 @@ function ListItem({
     updateTask(updatedTask);
     setShouldAnimate(checked);
   }
+  function handleSave(newValue) {
+    const trimmedTask = newValue.trimEnd();
+    if (trimmedTask && trimmedTask !== task.value) {
+      updateTask({
+        ...task,
+        value: newValue,
+        isUrl: isValidUrl(trimmedTask)
+      });
+      setIsEditing(false);
+    }
+  }
   return /*#__PURE__*/external_React_default().createElement("div", {
     className: "task-item"
   }, /*#__PURE__*/external_React_default().createElement("div", {
@@ -12417,7 +12530,13 @@ function ListItem({
     type: "checkbox",
     onChange: handleCheckboxChange,
     checked: task.completed
-  }), task.isUrl ? /*#__PURE__*/external_React_default().createElement("a", {
+  }), /*#__PURE__*/external_React_default().createElement(EditableText, {
+    isEditing: isEditing,
+    setIsEditing: setIsEditing,
+    value: task.value,
+    onSave: handleSave,
+    type: "task"
+  }, task.isUrl ? /*#__PURE__*/external_React_default().createElement("a", {
     href: task.value,
     rel: "noopener noreferrer",
     target: "_blank",
@@ -12425,8 +12544,9 @@ function ListItem({
     title: task.value
   }, task.value) : /*#__PURE__*/external_React_default().createElement("span", {
     className: `task-label ${task.completed && shouldAnimate ? "animate-strike" : ""}`,
-    title: task.value
-  }, task.value)), /*#__PURE__*/external_React_default().createElement("moz-button", {
+    title: task.value,
+    onClick: () => setIsEditing(true)
+  }, task.value))), /*#__PURE__*/external_React_default().createElement("moz-button", {
     iconSrc: "chrome://global/skin/icons/more.svg",
     menuId: `panel-task-${task.id}`,
     type: "ghost"
@@ -12434,10 +12554,55 @@ function ListItem({
     id: `panel-task-${task.id}`
   }, task.isUrl && /*#__PURE__*/external_React_default().createElement("panel-item", {
     onClick: () => window.open(task.value, "_blank", "noopener")
-  }, "Open link"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Move up"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Move down"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Edit"), /*#__PURE__*/external_React_default().createElement("panel-item", {
+  }, "Open link"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Move up"), /*#__PURE__*/external_React_default().createElement("panel-item", null, "Move down"), /*#__PURE__*/external_React_default().createElement("panel-item", {
+    className: "edit-item",
+    onClick: () => setIsEditing(true)
+  }, "Edit"), /*#__PURE__*/external_React_default().createElement("panel-item", {
     className: "delete-item",
     onClick: () => deleteTask(task)
   }, "Delete item")));
+}
+function EditableText({
+  value,
+  isEditing,
+  setIsEditing,
+  onSave,
+  children,
+  type,
+  maxLength = 100
+}) {
+  const [tempValue, setTempValue] = (0,external_React_namespaceObject.useState)(value);
+  const inputRef = (0,external_React_namespaceObject.useRef)(null);
+  (0,external_React_namespaceObject.useEffect)(() => {
+    if (isEditing) {
+      inputRef.current?.focus();
+    } else {
+      setTempValue(value);
+    }
+  }, [isEditing, value]);
+  function handleKeyDown(e) {
+    if (e.key === "Enter") {
+      onSave(tempValue.trim());
+      setIsEditing(false);
+    } else if (e.key === "Escape") {
+      setIsEditing(false);
+      setTempValue(value);
+    }
+  }
+  function handleOnBlur() {
+    onSave(tempValue.trim());
+    setIsEditing(false);
+  }
+  return isEditing ? /*#__PURE__*/external_React_default().createElement("input", {
+    className: `edit-${type}`,
+    ref: inputRef,
+    type: "text",
+    value: tempValue,
+    maxLength: maxLength,
+    onChange: event => setTempValue(event.target.value),
+    onBlur: handleOnBlur,
+    onKeyDown: handleKeyDown
+  }) : [children];
 }
 
 ;// CONCATENATED MODULE: ./content-src/components/Widgets/FocusTimer/FocusTimer.jsx

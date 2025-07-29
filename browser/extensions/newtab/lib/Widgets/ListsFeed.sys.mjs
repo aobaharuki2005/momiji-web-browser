@@ -38,10 +38,14 @@ export class ListsFeed {
 
   async syncLists(isStartup = false) {
     const cachedData = (await this.cache.get()) || {};
-    const { lists } = cachedData;
+    const { lists, selected } = cachedData;
     // only update lists if this has been set before
     if (lists) {
       this.update(lists, isStartup);
+    }
+
+    if (selected) {
+      this.updateSelected(selected, isStartup);
     }
   }
 
@@ -49,6 +53,16 @@ export class ListsFeed {
     this.store.dispatch(
       ac.BroadcastToContent({
         type: at.WIDGETS_LISTS_SET,
+        data,
+        meta: isStartup,
+      })
+    );
+  }
+
+  updateSelected(data, isStartup = false) {
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.WIDGETS_LISTS_SET_SELECTED,
         data,
         meta: isStartup,
       })
@@ -76,6 +90,10 @@ export class ListsFeed {
       case at.WIDGETS_LISTS_UPDATE:
         await this.cache.set("lists", action.data);
         this.update(action.data);
+        break;
+      case at.WIDGETS_LISTS_CHANGE_SELECTED:
+        await this.cache.set("selected", action.data);
+        this.updateSelected(action.data);
         break;
     }
   }

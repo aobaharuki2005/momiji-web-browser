@@ -27,6 +27,11 @@
     }
   }
 
+  .edit-list {
+    border: 1px solid var(--border-color-deemphasized);
+    outline: none;
+  }
+
 
   .add-task-container {
     margin-block: var(--space-small);
@@ -156,6 +161,17 @@
     panel-list[open] {
       ~ moz-button {
         visibility: visible;
+      }
+    }
+
+    .edit-task {
+      margin-inline-start: var(--space-small);
+      max-width: 180px;
+      border: none;
+      border-radius: 0;
+
+      &:focus {
+        outline: var(--focus-outline);
       }
     }
   }
