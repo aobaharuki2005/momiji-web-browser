@@ -311,6 +311,8 @@
   <string name="browser_menu_tools" moz:removedIn="141" tools:ignore="UnusedResources">Прылады</string>
   <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
   <string name="browser_close_main_menu_handlebar_content_description">Закрыць меню</string>
+  <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
+  <string name="browser_main_menu_content_description_navigation_header">Навігацыя</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
   <string name="browser_main_menu_content_description_help_button">Даведка</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
@@ -322,18 +324,26 @@
   <string name="browser_menu_save" moz:removedIn="141" tools:ignore="UnusedResources">Захаваць</string>
   <!-- Browser menu label that bookmarks the currently visited page -->
   <string name="browser_menu_bookmark_this_page" moz:removedIn="141" tools:ignore="UnusedResources">Дадаць закладку на старонку</string>
+  <!-- Browser menu label that bookmarks the currently visited page -->
+  <string name="browser_menu_bookmark_this_page_2">Зрабіць закладку</string>
   <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
   <string name="browser_menu_edit_bookmark">Рэдагаваць закладку</string>
   <!-- Browser menu label that the saves the currently visited page as a PDF -->
   <string name="browser_menu_save_as_pdf" moz:removedIn="141" tools:ignore="UnusedResources">Захаваць як PDF…</string>
+  <!-- Browser menu label that the saves the currently visited page as a PDF -->
+  <string name="browser_menu_save_as_pdf_2">Захаваць як PDF</string>
   <!-- Browser menu label for turning ON reader view of the current visited page -->
   <string name="browser_menu_turn_on_reader_view" moz:removedIn="141" tools:ignore="UnusedResources">Уключыць рэжым чытання</string>
   <!-- Browser menu label for turning OFF reader view of the current visited page -->
   <string name="browser_menu_turn_off_reader_view" moz:removedIn="141" tools:ignore="UnusedResources">Выключыць рэжым чытання</string>
   <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
   <string name="browser_menu_translate_page" moz:removedIn="141" tools:ignore="UnusedResources">Перакласці старонку…</string>
+  <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
+  <string name="browser_menu_translate_page_2">Перакласці старонку</string>
   <!-- Browser menu label for navigating to the Web Compat Reporter feature, which provides users the ability to send bug reports for broken sites. -->
   <string name="browser_menu_webcompat_reporter">Паведаміць пра пашкоджаны сайт…</string>
+  <!-- Browser menu label for navigating to the Web Compat Reporter feature, which provides users the ability to send bug reports for broken sites. -->
+  <string name="browser_menu_webcompat_reporter_2">Паведаміць пра пашкоджаны сайт</string>
   <!--
     Browser menu label that is displayed when the current page has been translated by the translation feature.
     %1$s is the name of the language that page was translated to (e.g. English).
@@ -343,6 +353,8 @@
   <string name="browser_menu_translated">Перакладзена</string>
   <!-- Browser menu label for the print feature -->
   <string name="browser_menu_print" moz:removedIn="141" tools:ignore="UnusedResources">Друкаваць…</string>
+  <!-- Browser menu label for the print feature -->
+  <string name="browser_menu_print_2">Друкаваць</string>
   <!--
     Browser menu label for the Delete browsing data on quit feature.
     %1$s is the name of the app (for example "Firefox").
@@ -350,6 +362,8 @@
   <string name="browser_menu_delete_browsing_data_on_quit">Выйсці з %1$s</string>
   <!-- Content description for the button that dismisses the set as default banner in the menu -->
   <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Адхіліць</string>
+  <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
+  <string name="browser_menu_recommended_extensions_content_description">Падрабязней</string>
   <!--
     Extensions management fragment
 
@@ -500,6 +514,8 @@
   <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="BrandUsage,UnusedResources">Дадаць віджэт Firefox</string>
   <!-- Text for the button to dismiss the screen and move on with the flow -->
   <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">Не зараз</string>
+  <!-- Title for the privacy preferences dialog shown during onboarding. Note: The word "Firefox" should NOT be translated. -->
+  <string name="onboarding_preferences_dialog_title" tools:ignore="BrandUsage">Дапамажыце нам палепшыць Firefox</string>
   <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_title">Аўтаматычна адпраўляць справаздачы аб збоях</string>
   <!-- Description for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
@@ -859,10 +875,22 @@
   <string name="alternative_app_icon_option_gradient_golden_hour">Залатая гадзіна</string>
   <!-- Title for the "Northern Lights" gradient alternative app icon variant in the icon picker screen. The app icon has a dynamic green, blue, and purple gradient background, resembling the aurora borealis. -->
   <string name="alternative_app_icon_option_gradient_northern_lights">Паўночнае ззянне</string>
+  <!-- Title for the "Retro 2004" themed alternative app icon variant in the icon picker screen. This app icon uses the classic Firefox logo from 2004. -->
+  <string name="alternative_app_icon_option_retro_2004">Рэтра 2004</string>
+  <!-- Title for the "Retro 2017" themed alternative app icon variant in the icon picker screen. This app icon uses the Firefox logo from 2017, with a more modernized design. -->
+  <string name="alternative_app_icon_option_retro_2017">Рэтра 2017</string>
   <!-- Title for the "Pixelated" themed alternative app icon variant in the icon picker screen. This app icon features a pixel-art style, resembling retro 8-bit graphics. -->
   <string name="alternative_app_icon_option_pixelated">Пікселізаваная</string>
   <!-- Title for the "Pride" themed alternative app icon variant in the icon picker screen. The app icon incorporates a rainbow color scheme in support of the LGBTQ+ community. -->
   <string name="alternative_app_icon_option_pride">Прайд</string>
+  <!-- Title for the "Solid colors" group of alternative app icon variants in the icon picker screen. This group contains icons with flat, uniform color backgrounds. -->
+  <string name="alternative_app_icon_group_solid_colors">Аднатонныя колеры</string>
+  <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
+  <string name="alternative_app_icon_group_gradients">Градыенты</string>
+  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_other">Іншыя</string>
+  <!-- Dialog button text for cancelling app icon change -->
+  <string name="restart_warning_dialog_button_negative">Скасаваць</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -993,6 +1021,10 @@
   <string name="preference_top_toolbar">Уверсе</string>
   <!-- Preference for using bottom toolbar -->
   <string name="preference_bottom_toolbar">Унізе</string>
+  <!-- Preference for using simple toolbar -->
+  <string name="preference_simple_toolbar">Просты</string>
+  <!-- Preference for using expanded toolbar -->
+  <string name="preference_expanded_toolbar">Разгорнуты</string>
   <!--
     Theme Preferences
 
@@ -1147,6 +1179,12 @@
   <string name="studies_active">Актыўнае</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Даведацца больш</string>
+  <!-- Text for the tabs header private tabs -->
+  <string name="tabs_header_private_tabs_title">Прыватныя</string>
+  <!-- Text for the tabs header normal tabs -->
+  <string name="tabs_header_normal_tabs_title">Карткі</string>
+  <!-- Text for the tabs header synced tabs -->
+  <string name="tabs_header_synced_tabs_title">Сінхранізацыя</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Дадаць картку</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1258,9 +1296,23 @@
   <string name="download_file_has_not_enough_storage_dialog_cancel_button_text">Скасаваць</string>
   <!-- Text for the button to delete a single downloaded file item -->
   <string name="download_delete_item">Выдаліць</string>
+  <!--
+    Content description for the search bar clear text button on the downloads screen
+
+    Content description for pause action button on the downloads screen
+  -->
+  <string name="download_pause_action">Прыпыніць</string>
+  <!-- Content description for resume action button on the downloads screen -->
+  <string name="download_resume_action">Працягнуць</string>
   <!-- Content description for retry download action button on the downloads screen -->
   <string name="download_retry_action">Паўтарыць</string>
   <string name="download_clear_search_description">Ачысціць</string>
+  <!-- Text for the button to share the download file -->
+  <string name="download_share_file">Падзяліцца файлам</string>
+  <!-- Alert dialog confirmation before deleting multiple download items, this is the positive action. -->
+  <string name="download_delete_multi_select_dialog_confirm">Выдаліць</string>
+  <!-- Alert dialog confirmation before deleting multiple download items, this is the negative action. -->
+  <string name="download_delete_multi_select_dialog_cancel">Скасаваць</string>
   <!-- Text for the header of in progress downloads -->
   <string name="download_header_in_progress">У працэсе</string>
   <!--
@@ -1277,6 +1329,8 @@
   <string name="download_time_period_older">Даўней</string>
   <!-- Text for the snackbar action button to view failed download details. -->
   <string name="download_failed_snackbar_action_details">Падрабязнасці</string>
+  <!-- Text for the "Select all" button, which selects all downloaded items in the downloads list. -->
+  <string name="download_select_all_items">Вылучыць усё</string>
   <!--
     Downloads Content Type Filters
 
@@ -1313,6 +1367,8 @@
   <string name="webcompat_reporter_send">Даслаць</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text">Закрыць</string>
+  <!-- Broken site reason text for site is slow -->
+  <string name="webcompat_reporter_reason_slow2">Сайт марудны</string>
   <!-- Broken site reason text for something else -->
   <string name="webcompat_reporter_reason_other">Нешта іншае</string>
   <!--
@@ -1361,6 +1417,8 @@
   <string name="bookmark_menu_copy_button">Капіраваць</string>
   <!-- Bookmark overflow menu share button -->
   <string name="bookmark_menu_share_button">Падзяліцца</string>
+  <!-- Bookmark overflow menu select all bookmarks -->
+  <string name="bookmark_menu_select_all_bookmarks">Вылучыць усё</string>
   <!-- Bookmark overflow menu open in new tab button -->
   <string name="bookmark_menu_open_in_new_tab_button">Адкрыць у новай картцы</string>
   <!-- Bookmark overflow menu open in private tab button -->
@@ -1425,6 +1483,8 @@
   <string name="bookmark_delete_folder_content_description">Выдаліць папку</string>
   <!-- Content description for bookmark search floating action button -->
   <string name="bookmark_search_button_content_description">Шукаць у закладках</string>
+  <!-- Description for the add new folder button when selecting a folder. -->
+  <string name="bookmark_select_folder_new_folder_button_title">Новая папка</string>
   <!--
     Site Permissions
 

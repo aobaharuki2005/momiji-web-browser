@@ -362,6 +362,8 @@
   <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate,UnusedResources" moz:removedIn="142">%1$d ਨੂੰ ਨਵੀਆਂ ਇਜਾਜ਼ਤਾਂ ਦੀ ਲੋੜ ਹੈ</string>
   <!-- The content of the notification displayed when an add-on needs a new permission -->
   <string name="mozac_feature_addons_updater_notification_content_singular" moz:removedIn="142" tools:ignore="UnusedResources">ਨਵੀ ਇਜਾਜ਼ਤ ਦੀ ਲੋੜ ਹੈ</string>
+  <!-- A short explanation shown in the notification displayed when an add-on has a new update that requires new permissions. -->
+  <string name="mozac_feature_addons_updater_notification_short_intro">ਆਪਣੇ ਮੌਜੂਦਾ ਵਰਜ਼ਨ ਅਤੇ ਸੈਟਿੰਗਾਂ ਨੂੰ ਰੱਖਣ ਵਾਸਤੇ ਰੱਦ ਕਰ ਦਿਓ।</string>
   <!-- The heading for the permissions section in the system notification shown when an add-on has an update that requires user confirmation. %1$s is a list of sentences. -->
   <string name="mozac_feature_addons_updater_notification_heading_permissions">ਨਵੀਆਂ ਚਾਹੀਦੀਆਂ ਇਜਾਜ਼ਤਾਂ: %1$s</string>
   <!-- Name of the "notification channel" used for displaying a notification for updating an extension. See https://developer.android.com/training/notify-user/channels -->
