@@ -3638,11 +3638,10 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
   // node because the other browsers insert following inputs into there.
   if (MayEditActionDeleteAroundCollapsedSelection(
           aHTMLEditor.GetEditAction())) {
-    const WSRunScanner scanner(
-        WSRunScanner::Scan::EditableNodes, startOfRightContent,
-        BlockInlineCheck::UseComputedDisplayOutsideStyle);
     const WSScanResult maybePreviousText =
-        scanner.ScanPreviousVisibleNodeOrBlockBoundaryFrom(startOfRightContent);
+        WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
+            WSRunScanner::Scan::All, startOfRightContent,
+            BlockInlineCheck::UseComputedDisplayOutsideStyle, &aEditingHost);
     if (maybePreviousText.IsContentEditable() &&
         maybePreviousText.InVisibleOrCollapsibleCharacters()) {
       nsresult rv = aHTMLEditor.CollapseSelectionTo(
@@ -5601,12 +5600,10 @@ Result<DeleteRangeResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     // We should put caret to end of preceding text node if there is.
     // Then, users can type text into it like the other browsers.
     auto pointToPutCaret = [&]() -> EditorDOMPoint {
-      const WSRunScanner scanner(WSRunScanner::Scan::EditableNodes,
-                                 maybeDeepStartOfRightContent,
-                                 BlockInlineCheck::UseComputedDisplayStyle);
       const WSScanResult maybePreviousText =
-          scanner.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
-              maybeDeepStartOfRightContent);
+          WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
+              WSRunScanner::Scan::All, maybeDeepStartOfRightContent,
+              BlockInlineCheck::UseComputedDisplayStyle, &aEditingHost);
       if (maybePreviousText.IsContentEditable() &&
           maybePreviousText.InVisibleOrCollapsibleCharacters()) {
         return maybePreviousText.PointAfterReachedContent<EditorDOMPoint>();
