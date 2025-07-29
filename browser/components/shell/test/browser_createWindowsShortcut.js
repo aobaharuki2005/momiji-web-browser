@@ -148,16 +148,21 @@ async function testShortcut({
     `${specialFolder}\\${relativePath}: Shortcut should exist`
   );
   ok(
-    removeFromShortcutLog(relativePath, logHeader),
+    queryShortcutLog(relativePath, logHeader),
     `${specialFolder}\\${relativePath}: Shortcut log entry was added`
   );
+  await shellService.deleteShortcut(specialFolder, relativePath);
   ok(
-    tryRemove(shortcutFile),
-    `${specialFolder}\\${relativePath}: Shortcut could be deleted`
+    !shortcutFile.exists(),
+    `${specialFolder}\\${relativePath}: Shortcut does not exist after deleting`
+  );
+  ok(
+    !queryShortcutLog(relativePath, logHeader),
+    `${specialFolder}\\${relativePath}: Shortcut log entry was removed`
   );
 }
 
-function removeFromShortcutLog(aShortcutName, aSection) {
+function queryShortcutLog(aShortcutName, aSection) {
   const parserFactory = Cc[
     "@mozilla.org/xpcom/ini-parser-factory;1"
   ].createInstance(Ci.nsIINIParserFactory);
@@ -179,8 +184,6 @@ function removeFromShortcutLog(aShortcutName, aSection) {
       try {
         let string = parser.getString(aSection, `Shortcut${i}`);
         if (string == aShortcutName) {
-          parser.deleteString(aSection, `Shortcut${i}`);
-          parser.writeFile(file);
           enumerator.close();
           return true;
         }

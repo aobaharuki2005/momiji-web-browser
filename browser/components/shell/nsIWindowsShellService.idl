@@ -56,6 +56,19 @@ interface nsIWindowsShellService : nsIShellService
     in AString aShortcutRelativePath);
 
   /*
+   * Deletes the provided shortcut path relative to the shortcut folder, and removes it
+   * from the uninstaller's log file.
+   *
+   * @param aShortcutFolder The special Windows folder to create the shortcut in.
+   *        Should be either Desktop or StartMenu.
+   * @param aShortcutRelativePath The relative path to the shortcut file from the folder.
+   *
+   * @throws NS_ERROR_INVALID_ARG if an invalid shortcut folder is passed
+   */
+  [implicit_jscontext]
+  Promise deleteShortcut(in AString aShortcutFolder, in AString aShortcutRelativePath);
+
+  /*
    * Searches the %USERPROFILE%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
    * folder and returns an array with the path of all shortcuts with a target matching the
    * current Firefox install location. The AUMID isn't required here as we are only looking

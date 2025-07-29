@@ -58,6 +58,7 @@ export const TaskbarTabsPin = {
 
     // Can't use generateShortcutInfo right now since we need an absolute
     // path. getTaskbarTabShortcutPath accounts for the subdirectory.
+    let { relativePath } = await generateShortcutInfo(aTaskbarTab);
     let shortcutFilename = generateName(aTaskbarTab);
     let shortcutPath =
       lazy.ShellService.getTaskbarTabShortcutPath(shortcutFilename);
@@ -66,11 +67,11 @@ export const TaskbarTabsPin = {
 
     let iconFile = getIconFile(aTaskbarTab);
 
-    lazy.logConsole.debug(`Deleting ${shortcutPath}`);
+    lazy.logConsole.debug(`Deleting ${relativePath}`);
     lazy.logConsole.debug(`Deleting ${iconFile.path}`);
 
     await Promise.all([
-      IOUtils.remove(shortcutPath),
+      lazy.ShellService.deleteShortcut("Programs", relativePath),
       IOUtils.remove(iconFile.path),
     ]);
   },
