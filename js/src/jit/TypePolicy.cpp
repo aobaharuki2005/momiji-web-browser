@@ -875,7 +875,7 @@ bool StoreUnboxedScalarPolicy::adjustValueInput(TempAllocator& alloc,
       break;
     case MIRType::Undefined:
       value->setImplicitlyUsedUnchecked();
-      value = MConstant::New(alloc, JS::NaNValue());
+      value = MConstant::NewDouble(alloc, JS::GenericNaN());
       ins->block()->insertBefore(ins, value->toInstruction());
       break;
     case MIRType::Object:
