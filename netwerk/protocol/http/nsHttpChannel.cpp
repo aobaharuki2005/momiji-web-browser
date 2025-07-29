@@ -1805,14 +1805,16 @@ LNAPermission nsHttpChannel::UpdateLocalNetworkAccessPermissions(
     return userPerms;
   }
 
+  MOZ_ASSERT(mLoadInfo->TriggeringPrincipal(), "need triggering principal");
+
   // Step 1. Check for  Existing Allow or Deny permission
-  if (nsContentUtils::IsExactSitePermAllow(mLoadInfo->GetLoadingPrincipal(),
+  if (nsContentUtils::IsExactSitePermAllow(mLoadInfo->TriggeringPrincipal(),
                                            aPermissionType)) {
     userPerms = LNAPermission::Granted;
     return userPerms;
   }
 
-  if (nsContentUtils::IsExactSitePermDeny(mLoadInfo->GetLoadingPrincipal(),
+  if (nsContentUtils::IsExactSitePermDeny(mLoadInfo->TriggeringPrincipal(),
                                           aPermissionType)) {
     userPerms = LNAPermission::Denied;
     return userPerms;
