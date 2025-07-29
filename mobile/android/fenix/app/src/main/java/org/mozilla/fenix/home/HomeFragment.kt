@@ -148,7 +148,6 @@ import org.mozilla.fenix.microsurvey.ui.MicrosurveyRequestPrompt
 import org.mozilla.fenix.microsurvey.ui.ext.MicrosurveyUIData
 import org.mozilla.fenix.microsurvey.ui.ext.toMicrosurveyUIData
 import org.mozilla.fenix.nimbus.FxNimbus
-import org.mozilla.fenix.onboarding.HomeScreenPopupManager
 import org.mozilla.fenix.onboarding.WidgetPinnedReceiver
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.perf.StartupTimeline
@@ -254,7 +253,6 @@ class HomeFragment : Fragment() {
     private val tabsCleanupFeature = ViewBoundFeatureWrapper<TabsCleanupFeature>()
     private val searchSelectorBinding = ViewBoundFeatureWrapper<SearchSelectorBinding>()
     private val searchSelectorMenuBinding = ViewBoundFeatureWrapper<SearchSelectorMenuBinding>()
-    private val homeScreenPopupManager = ViewBoundFeatureWrapper<HomeScreenPopupManager>()
     private val thumbnailsFeature = ViewBoundFeatureWrapper<HomepageThumbnailIntegration>()
 
     private val voiceSearchFeature by lazy(LazyThreadSafetyMode.NONE) {
@@ -698,7 +696,10 @@ class HomeFragment : Fragment() {
                 },
             ),
             onDismiss = {
-                homeScreenPopupManager.get()?.onSearchBarCFRDismissed()
+                with(requireComponents.settings) {
+                    lastCfrShownTimeInMillis = System.currentTimeMillis()
+                    shouldShowSearchBarCFR = false
+                }
             },
             text = {
                 FirefoxTheme {
@@ -881,14 +882,6 @@ class HomeFragment : Fragment() {
             },
         )
 
-        homeScreenPopupManager.set(
-            feature = HomeScreenPopupManager(
-                settings = requireContext().settings(),
-            ),
-            owner = viewLifecycleOwner,
-            view = binding.root,
-        )
-
         toolbarView.build(requireComponents.core.store.state)
         if (requireContext().settings().isTabStripEnabled) {
             initTabStrip()
@@ -941,16 +934,6 @@ class HomeFragment : Fragment() {
             owner = viewLifecycleOwner,
             view = view,
         )
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                homeScreenPopupManager.get()?.searchBarCFRVisibility?.collect { showSearchBarCfr ->
-                    if (showSearchBarCfr) {
-                        showEncourageSearchCfr()
-                    }
-                }
-            }
-        }
 
         observeReviewPromptState()
 
@@ -1189,6 +1172,7 @@ class HomeFragment : Fragment() {
         components.useCases.sessionUseCases.updateLastAccess()
 
         evaluateMessagesForMicrosurvey(components)
+        maybeShowEncourageSearchCfr()
 
         BiometricAuthenticationManager.biometricAuthenticationNeededInfo.shouldShowAuthenticationPrompt =
             true
@@ -1198,6 +1182,16 @@ class HomeFragment : Fragment() {
 
     private fun evaluateMessagesForMicrosurvey(components: Components) =
         components.appStore.dispatch(MessagingAction.Evaluate(FenixMessageSurfaceId.MICROSURVEY))
+
+    private fun maybeShowEncourageSearchCfr() {
+        with(requireComponents.settings) {
+            if (shouldShowSearchBarCFR && canShowCfr) {
+                FxNimbus.features.encourageSearchCfr.recordExposure()
+
+                showEncourageSearchCfr()
+            }
+        }
+    }
 
     override fun onPause() {
         super.onPause()
