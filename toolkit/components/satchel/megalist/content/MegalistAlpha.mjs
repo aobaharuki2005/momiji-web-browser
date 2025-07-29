@@ -355,15 +355,13 @@ export class MegalistAlpha extends MozLitElement {
       el.shadowRoot?.contains(e.composedTarget)
     );
 
-    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-      e.preventDefault();
+    e.preventDefault();
 
-      const direction = e.key === "ArrowUp" ? -1 : 1;
-      const newIndex = currentIndex + direction;
+    const direction = e.key === "ArrowUp" ? -1 : 1;
+    const newIndex = currentIndex + direction;
 
-      if (newIndex >= 0 && newIndex < focusables.length) {
-        focusables[newIndex]?.focus();
-      }
+    if (newIndex >= 0 && newIndex < focusables.length) {
+      focusables[newIndex]?.focus();
     }
   }
 
