@@ -84,6 +84,15 @@ void WMFCDMProxyCallback::OnSessionClosed(const nsString& aSessionId) {
       }));
 }
 
+void WMFCDMProxyCallback::OnRemoteProcessCrashed() {
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction("WMFCDMProxyCallback::OnRemoteProcessCrashed",
+                             [self = RefPtr{this}, this]() {
+                               RETURN_IF_NULL(mProxy);
+                               mProxy->Terminated();
+                             }));
+}
+
 void WMFCDMProxyCallback::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   mProxy = nullptr;

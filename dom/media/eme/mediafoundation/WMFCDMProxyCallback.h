@@ -28,6 +28,8 @@ class WMFCDMProxyCallback final {
 
   void OnSessionClosed(const nsString& aSessionId);
 
+  void OnRemoteProcessCrashed();
+
   void Shutdown();
 
  private:

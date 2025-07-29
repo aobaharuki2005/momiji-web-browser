@@ -317,6 +317,13 @@ void WMFCDMProxy::Shutdown() {
   mIsShutdown = true;
 }
 
+void WMFCDMProxy::Terminated() {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mKeys.IsNull()) {
+    mKeys->Terminated();
+  }
+}
+
 void WMFCDMProxy::OnSessionMessage(const nsAString& aSessionId,
                                    dom::MediaKeyMessageType aMessageType,
                                    const nsTArray<uint8_t>& aMessage) {

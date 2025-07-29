@@ -64,7 +64,7 @@ class WMFCDMProxy : public CDMProxy {
 
   void Shutdown() override;
 
-  void Terminated() override {}
+  void Terminated() override;
 
   void OnSetSessionId(uint32_t aCreateSessionToken,
                       const nsAString& aSessionId) override {}

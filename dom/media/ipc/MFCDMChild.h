@@ -78,14 +78,7 @@ class MFCDMChild final : public PMFCDMChild {
   uint64_t Id() const { return mId; }
   const nsString& KeySystem() const { return mKeySystem; }
 
-  void IPDLActorDestroyed() {
-    AssertOnManagerThread();
-    mIPDLSelfRef = nullptr;
-    if (!mShutdown) {
-      // Remote crashed!
-      mState = NS_ERROR_NOT_AVAILABLE;
-    }
-  }
+  void IPDLActorDestroyed();
 
   void EnsureRemote();
   void Shutdown();
