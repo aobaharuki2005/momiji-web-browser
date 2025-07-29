@@ -909,7 +909,11 @@ var gBrowserInit = {
           DownloadsCommon.initializeAllDataLinks();
           ChromeUtils.importESModule(
             "resource:///modules/DownloadsTaskbar.sys.mjs"
-          ).DownloadsTaskbar.registerIndicator(window);
+          )
+            .DownloadsTaskbar.registerIndicator(window)
+            .catch(ex => {
+              console.error(ex);
+            });
           if (AppConstants.platform == "macosx") {
             ChromeUtils.importESModule(
               "resource:///modules/DownloadsMacFinderProgress.sys.mjs"
