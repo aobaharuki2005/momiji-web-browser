@@ -1259,6 +1259,15 @@ mochitest-browser-newtab-trainhop-beta:
         extra-options:
             - --tag=newtab
             - --install-extension=newtab.xpi
+            # This preference is normally set via Nimbus when doing a New Tab
+            # train-hop, but when running the tests in automation like this, we
+            # install the XPI using the more traditional extension install
+            # mechanism.
+            #
+            # This is kind of a hack, but so long as this string here is not
+            # empty, we bypass the uninstall that occurs at startup, and read
+            # from the installed XPI.
+            - --setpref=browser.newtabpage.trainhopAddon.version=any
     instance-size: default
     dependencies:
         newtab-xpi-job: build-extensions-browser
@@ -1300,6 +1309,15 @@ mochitest-browser-newtab-trainhop-release:
         extra-options:
             - --tag=newtab
             - --install-extension=newtab.xpi
+            # This preference is normally set via Nimbus when doing a New Tab
+            # train-hop, but when running the tests in automation like this, we
+            # install the XPI using the more traditional extension install
+            # mechanism.
+            #
+            # This is kind of a hack, but so long as this string here is not
+            # empty, we bypass the uninstall that occurs at startup, and read
+            # from the installed XPI.
+            - --setpref=browser.newtabpage.trainhopAddon.version=any
     instance-size: default
     dependencies:
         newtab-xpi-job: build-extensions-browser
