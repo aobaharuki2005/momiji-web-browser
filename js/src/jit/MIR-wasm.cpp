@@ -751,8 +751,8 @@ MDefinition* MWasmReduceSimd128::foldsTo(TempAllocator& alloc) {
 
 MDefinition* MWasmUnsignedToDouble::foldsTo(TempAllocator& alloc) {
   if (input()->isConstant()) {
-    return MConstant::New(
-        alloc, DoubleValue(uint32_t(input()->toConstant()->toInt32())));
+    return MConstant::NewDouble(alloc,
+                                uint32_t(input()->toConstant()->toInt32()));
   }
 
   return this;

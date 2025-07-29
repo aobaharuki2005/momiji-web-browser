@@ -287,7 +287,7 @@ static MConstant* EvaluateConstantOperands(TempAllocator& alloc,
     return MConstant::NewFloat32(alloc, float(ret));
   }
   if (ins->type() == MIRType::Double) {
-    return MConstant::New(alloc, DoubleValue(ret));
+    return MConstant::NewDouble(alloc, ret);
   }
   MOZ_ASSERT(ins->type() == MIRType::Int32);
 
@@ -1045,6 +1045,10 @@ MConstant* MConstant::New(TempAllocator::Fallible alloc, const Value& v) {
   return new (alloc) MConstant(alloc.alloc, v);
 }
 
+MConstant* MConstant::NewDouble(TempAllocator& alloc, double d) {
+  return new (alloc) MConstant(alloc, DoubleValue(d));
+}
+
 MConstant* MConstant::NewFloat32(TempAllocator& alloc, double d) {
   MOZ_ASSERT(std::isnan(d) || d == double(float(d)));
   return new (alloc) MConstant(float(d));
@@ -1537,7 +1541,7 @@ MDefinition* MSign::foldsTo(TempAllocator& alloc) {
     return MConstant::New(alloc, outValue);
   }
 
-  return MConstant::New(alloc, DoubleValue(out));
+  return MConstant::NewDouble(alloc, out);
 }
 
 const char* MMathFunction::FunctionName(UnaryMathFunction function) {
@@ -1569,7 +1573,7 @@ MDefinition* MMathFunction::foldsTo(TempAllocator& alloc) {
   if (input->type() == MIRType::Float32) {
     return MConstant::NewFloat32(alloc, out);
   }
-  return MConstant::New(alloc, DoubleValue(out));
+  return MConstant::NewDouble(alloc, out);
 }
 
 MDefinition* MAtomicIsLockFree::foldsTo(TempAllocator& alloc) {
@@ -2281,8 +2285,8 @@ MDefinition* MUnbox::foldsTo(TempAllocator& alloc) {
     if (type() == MIRType::Double &&
         IsTypeRepresentableAsDouble(unboxed->type())) {
       if (unboxed->isConstant()) {
-        return MConstant::New(
-            alloc, DoubleValue(unboxed->toConstant()->numberToDouble()));
+        return MConstant::NewDouble(alloc,
+                                    unboxed->toConstant()->numberToDouble());
       }
 
       return MToDouble::New(alloc, unboxed);
@@ -3090,7 +3094,7 @@ MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
       return MConstant::NewFloat32(alloc, result);
     }
     MOZ_ASSERT(lhs->type() == MIRType::Double);
-    return MConstant::New(alloc, DoubleValue(result));
+    return MConstant::NewDouble(alloc, result);
   };
 
   // Try to fold the following patterns when |x| and |y| are constants.
@@ -3302,7 +3306,7 @@ MDefinition* MPow::foldsConstant(TempAllocator& alloc) {
     }
     return MConstant::NewInt32(alloc, cast);
   }
-  return MConstant::New(alloc, DoubleValue(result));
+  return MConstant::NewDouble(alloc, result);
 }
 
 MDefinition* MPow::foldsConstantPower(TempAllocator& alloc) {
@@ -3332,7 +3336,7 @@ MDefinition* MPow::foldsConstantPower(TempAllocator& alloc) {
     MOZ_ASSERT(type() == MIRType::Double);
     MPowHalf* half = MPowHalf::New(alloc, input());
     block()->insertBefore(this, half);
-    MConstant* one = MConstant::New(alloc, DoubleValue(1.0));
+    MConstant* one = MConstant::NewDouble(alloc, 1.0);
     block()->insertBefore(this, one);
     return MDiv::New(alloc, one, half, MIRType::Double);
   }
@@ -4562,8 +4566,7 @@ MDefinition* MToDouble::foldsTo(TempAllocator& alloc) {
 
   if (input->isConstant() &&
       input->toConstant()->isTypeRepresentableAsDouble()) {
-    return MConstant::New(alloc,
-                          DoubleValue(input->toConstant()->numberToDouble()));
+    return MConstant::NewDouble(alloc, input->toConstant()->numberToDouble());
   }
 
   return this;
@@ -7141,7 +7144,7 @@ MDefinition* MGuardStringToDouble::foldsTo(TempAllocator& alloc) {
 
   JSOffThreadAtom* str = string()->toConstant()->toString();
   double number = OffThreadAtomToNumber(str);
-  return MConstant::New(alloc, DoubleValue(number));
+  return MConstant::NewDouble(alloc, number);
 }
 
 AliasSet MGuardNoDenseElements::getAliasSet() const {

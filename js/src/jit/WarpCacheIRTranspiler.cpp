@@ -3192,7 +3192,7 @@ bool WarpCacheIRTranspiler::emitInt32IncResult(Int32OperandId inputId) {
 bool WarpCacheIRTranspiler::emitDoubleIncResult(NumberOperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
-  auto* constOne = MConstant::New(alloc(), DoubleValue(1.0));
+  auto* constOne = MConstant::NewDouble(alloc(), 1.0);
   add(constOne);
 
   auto* ins = MAdd::New(alloc(), input, constOne, MIRType::Double);
@@ -3218,7 +3218,7 @@ bool WarpCacheIRTranspiler::emitInt32DecResult(Int32OperandId inputId) {
 bool WarpCacheIRTranspiler::emitDoubleDecResult(NumberOperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
-  auto* constOne = MConstant::New(alloc(), DoubleValue(1.0));
+  auto* constOne = MConstant::NewDouble(alloc(), 1.0);
   add(constOne);
 
   auto* ins = MSub::New(alloc(), input, constOne, MIRType::Double);
@@ -3244,7 +3244,7 @@ bool WarpCacheIRTranspiler::emitInt32NegationResult(Int32OperandId inputId) {
 bool WarpCacheIRTranspiler::emitDoubleNegationResult(NumberOperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
-  auto* constNegOne = MConstant::New(alloc(), DoubleValue(-1.0));
+  auto* constNegOne = MConstant::NewDouble(alloc(), -1.0);
   add(constNegOne);
 
   auto* ins = MMul::New(alloc(), input, constNegOne, MIRType::Double);

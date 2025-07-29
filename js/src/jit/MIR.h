@@ -1457,6 +1457,7 @@ class MConstant : public MNullaryInstruction {
   INSTRUCTION_HEADER(Constant)
   static MConstant* New(TempAllocator& alloc, const Value& v);
   static MConstant* New(TempAllocator::Fallible alloc, const Value& v);
+  static MConstant* NewDouble(TempAllocator& alloc, double d);
   static MConstant* NewFloat32(TempAllocator& alloc, double d);
   static MConstant* NewInt32(TempAllocator& alloc, int32_t i);
   static MConstant* NewInt64(TempAllocator& alloc, int64_t i);
