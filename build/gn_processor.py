@@ -856,6 +856,7 @@ def main():
                 gn_configs.append(future.result())
             except Exception as e:
                 print(f"[Task] Task failed with exception: {e}")
+                sys.exit(1)
 
         print("All generation tasks have been processed.")
 
