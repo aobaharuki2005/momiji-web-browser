@@ -2773,13 +2773,14 @@ pref("screenshots.browser.component.last-saved-method", "download");
 pref("screenshots.browser.component.preventContentEvents", true);
 
 // Determines the default save location for screenshots
-// Valid values are 0, 1, 2 and 3.
+// Valid values are 0, 1, 2, 3 and 4.
 //   0 - Use the desktop as the default save location.
 //   1 - Use the system's downloads folder as the default save location.
 //   2 - Use the folder set in browser.screenshots.dir as the default save location.
 //   3 - Use system's screenshot folder as the default save location.
+//   4 - Use browser.download.folderList
 // Options 2 and 3 will fallback to the system downloads folder if their specified folder is not found.
-pref("browser.screenshots.folderList", 1);
+pref("browser.screenshots.folderList", 4);
 pref("browser.screenshots.dir", "");
 
 // DoH Rollout: whether to clear the mode value at shutdown.
