@@ -13,7 +13,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.OneShotPreDrawListener
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
@@ -213,12 +212,9 @@ class UrlInputFragment :
 
     @Suppress("LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.topSites.apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                FocusTheme {
-                    TopSitesOverlay()
-                }
+        binding.topSites.setContent {
+            FocusTheme {
+                TopSitesOverlay()
             }
         }
 

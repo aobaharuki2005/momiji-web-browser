@@ -6,9 +6,10 @@ package org.mozilla.fenix.translations.preferences.automatic
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
-import androidx.fragment.compose.content
 import androidx.navigation.fragment.navArgs
 import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.store.BrowserStore
@@ -33,26 +34,28 @@ class AutomaticTranslationOptionsPreferenceFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ) = content {
-        val languageSettings = browserStore.observeAsComposableState { state ->
-            state.translationEngine.languageSettings
-        }.value
+    ): View = ComposeView(requireContext()).apply {
+        setContent {
+            val languageSettings = browserStore.observeAsComposableState { state ->
+                state.translationEngine.languageSettings
+            }.value
 
-        val selectedLanguage = languageSettings?.get(args.selectedLanguageCode)
+            val selectedLanguage = languageSettings?.get(args.selectedLanguageCode)
 
-        FirefoxTheme {
-            selectedLanguage?.let {
-                AutomaticTranslationOptionsPreference(
-                    selectedOption = getAutomaticTranslationOptionPreference(selectedLanguage),
-                    onItemClick = {
-                        browserStore.dispatch(
-                            TranslationsAction.UpdateLanguageSettingsAction(
-                                languageCode = args.selectedLanguageCode,
-                                setting = getLanguageSetting(it),
-                            ),
-                        )
-                    },
-                )
+            FirefoxTheme {
+                selectedLanguage?.let {
+                    AutomaticTranslationOptionsPreference(
+                        selectedOption = getAutomaticTranslationOptionPreference(selectedLanguage),
+                        onItemClick = {
+                            browserStore.dispatch(
+                                TranslationsAction.UpdateLanguageSettingsAction(
+                                    languageCode = args.selectedLanguageCode,
+                                    setting = getLanguageSetting(it),
+                                ),
+                            )
+                        },
+                    )
+                }
             }
         }
     }

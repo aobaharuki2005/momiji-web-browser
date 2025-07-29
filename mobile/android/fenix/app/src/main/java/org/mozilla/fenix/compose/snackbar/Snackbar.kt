@@ -40,7 +40,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -118,9 +117,7 @@ class Snackbar private constructor(
                     "No suitable parent found from the given view. Please provide a valid view.",
                 )
             }
-            val contentView = ComposeView(context = parent.context).apply {
-                setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            }
+            val contentView = ComposeView(context = parent.context)
             val callback = SnackbarAnimationCallback(contentView)
             val durationOrAccessibleDuration =
                 if (parent.context.settings().accessibilityServicesEnabled &&

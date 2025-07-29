@@ -7,6 +7,7 @@ package org.mozilla.fenix.settings
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -14,9 +15,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
-import androidx.fragment.compose.content
 import androidx.navigation.findNavController
 import kotlinx.coroutines.launch
 import mozilla.components.lib.crash.store.CrashReportOption
@@ -42,61 +42,64 @@ class DataChoicesFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ) = content {
-        FirefoxTheme {
-            val context = LocalContext.current
-            var telemetryEnabled by remember { mutableStateOf(context.settings().isTelemetryEnabled) }
-            var usagePingEnabled by remember { mutableStateOf(context.settings().isDailyUsagePingEnabled) }
-            var measurementDataEnabled by remember {
-                mutableStateOf(context.settings().isMarketingTelemetryEnabled)
-            }
-            var selectedCrashOption by remember { mutableStateOf(CrashReportOption.Ask) }
-            val scope = rememberCoroutineScope()
-            LaunchedEffect(Unit) {
-                selectedCrashOption = crashReportCache.getReportOption()
-            }
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setContent {
+                FirefoxTheme {
+                    var telemetryEnabled by remember { mutableStateOf(context.settings().isTelemetryEnabled) }
+                    var usagePingEnabled by remember { mutableStateOf(context.settings().isDailyUsagePingEnabled) }
+                    var measurementDataEnabled by remember {
+                        mutableStateOf(context.settings().isMarketingTelemetryEnabled)
+                    }
+                    var selectedCrashOption by remember { mutableStateOf(CrashReportOption.Ask) }
+                    val scope = rememberCoroutineScope()
+                    LaunchedEffect(Unit) {
+                        selectedCrashOption = crashReportCache.getReportOption()
+                    }
 
-            DataChoicesScreen(
-                params = DataChoicesParams(
-                    telemetryEnabled = telemetryEnabled,
-                    usagePingEnabled = usagePingEnabled,
-                    studiesEnabled = context.settings().isExperimentationEnabled,
-                    measurementDataEnabled = measurementDataEnabled,
-                    selectedCrashOption = selectedCrashOption,
-                ),
-                onTelemetryToggle = { newValue ->
-                    scope.launch {
-                        updateTelemetryChoice(newValue, context)
-                    }
-                    telemetryEnabled = newValue
-                },
-                onUsagePingToggle = { newValue ->
-                    scope.launch {
-                        updateUsageChoice(newValue, context)
-                    }
-                    usagePingEnabled = newValue
-                },
-                onMarketingDataToggled = { newValue ->
-                    scope.launch {
-                        updateMarketingDataChoice(newValue, context)
-                    }
-                    measurementDataEnabled = newValue
-                },
-                onCrashOptionSelected = { newValue ->
-                    scope.launch {
-                        updateCrashChoice(newValue, context)
-                    }
-                    selectedCrashOption = newValue
-                },
-                onStudiesClick = {
-                    val action = DataChoicesFragmentDirections.actionDataChoicesFragmentToStudiesFragment()
-                    view?.findNavController()?.nav(R.id.dataChoicesFragment, action)
-                },
-                learnMoreTechnicalData = { learnMoreTechnicalData(context) },
-                learnMoreDailyUsage = { learnMoreDailyUsage(context) },
-                learnMoreCrashReport = { learnMoreCrashReport(context) },
-                learnMoreMarketingData = { learnMoreMarketingData(context) },
-            )
+                    DataChoicesScreen(
+                        params = DataChoicesParams(
+                            telemetryEnabled = telemetryEnabled,
+                            usagePingEnabled = usagePingEnabled,
+                            studiesEnabled = context.settings().isExperimentationEnabled,
+                            measurementDataEnabled = measurementDataEnabled,
+                            selectedCrashOption = selectedCrashOption,
+                        ),
+                        onTelemetryToggle = { newValue ->
+                            scope.launch {
+                                updateTelemetryChoice(newValue, context)
+                            }
+                            telemetryEnabled = newValue
+                        },
+                        onUsagePingToggle = { newValue ->
+                            scope.launch {
+                                updateUsageChoice(newValue, context)
+                            }
+                            usagePingEnabled = newValue
+                        },
+                        onMarketingDataToggled = { newValue ->
+                            scope.launch {
+                                updateMarketingDataChoice(newValue, context)
+                            }
+                            measurementDataEnabled = newValue
+                        },
+                        onCrashOptionSelected = { newValue ->
+                            scope.launch {
+                                updateCrashChoice(newValue, context)
+                            }
+                            selectedCrashOption = newValue
+                        },
+                        onStudiesClick = {
+                            val action = DataChoicesFragmentDirections.actionDataChoicesFragmentToStudiesFragment()
+                            view?.findNavController()?.nav(R.id.dataChoicesFragment, action)
+                        },
+                        learnMoreTechnicalData = { learnMoreTechnicalData(context) },
+                        learnMoreDailyUsage = { learnMoreDailyUsage(context) },
+                        learnMoreCrashReport = { learnMoreCrashReport(context) },
+                        learnMoreMarketingData = { learnMoreMarketingData(context) },
+                    )
+                }
+            }
         }
     }
 

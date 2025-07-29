@@ -6,9 +6,10 @@ package org.mozilla.fenix.nimbus
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
-import androidx.fragment.compose.content
 import androidx.navigation.fragment.findNavController
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -30,23 +31,25 @@ class NimbusExperimentsFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ) = content {
-        FirefoxTheme {
-            val experiments =
-                requireContext().components.nimbus.sdk.getAvailableExperiments()
+    ): View = ComposeView(requireContext()).apply {
+        setContent {
+            FirefoxTheme {
+                val experiments =
+                    requireContext().components.nimbus.sdk.getAvailableExperiments()
 
-            NimbusExperiments(
-                experiments = experiments,
-                onExperimentClick = { experiment ->
-                    val directions =
-                        NimbusExperimentsFragmentDirections.actionNimbusExperimentsFragmentToNimbusBranchesFragment(
-                            experimentId = experiment.slug,
-                            experimentName = experiment.userFacingName,
-                        )
+                NimbusExperiments(
+                    experiments = experiments,
+                    onExperimentClick = { experiment ->
+                        val directions =
+                            NimbusExperimentsFragmentDirections.actionNimbusExperimentsFragmentToNimbusBranchesFragment(
+                                experimentId = experiment.slug,
+                                experimentName = experiment.userFacingName,
+                            )
 
-                    findNavController().navigate(directions)
-                },
-            )
+                        findNavController().navigate(directions)
+                    },
+                )
+            }
         }
     }
 }

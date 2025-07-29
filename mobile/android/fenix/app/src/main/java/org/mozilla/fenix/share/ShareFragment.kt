@@ -10,7 +10,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatDialogFragment
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.clearFragmentResult
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
@@ -122,7 +121,6 @@ class ShareFragment : AppCompatDialogFragment() {
         }
         shareToAppsView = ShareToAppsView(binding.appsShareLayout, shareInteractor)
 
-        binding.savePdf.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         binding.savePdf.setContent {
             FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
                 SaveToPDFItem {
@@ -133,7 +131,6 @@ class ShareFragment : AppCompatDialogFragment() {
 
         FxNimbus.features.print.recordExposure()
         if (FxNimbus.features.print.value().sharePrintEnabled) {
-            binding.print.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             binding.print.setContent {
                 FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
                     PrintItem {
