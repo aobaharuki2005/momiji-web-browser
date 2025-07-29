@@ -8,7 +8,6 @@
 let test_path = "/tests/dom/credentialmanagement/identity/tests/mochitest";
 
 async function setupTest(testName, idp_origin = "https://example.net") {
-  await clearIdentityCredentialStorage();
   let idp_api = idp_origin + test_path;
   ok(
     window.location.pathname.includes(testName),
