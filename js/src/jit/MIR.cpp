@@ -1053,7 +1053,7 @@ MConstant* MConstant::NewDouble(TempAllocator& alloc, double d) {
 }
 
 MConstant* MConstant::NewFloat32(TempAllocator& alloc, double d) {
-  MOZ_ASSERT(std::isnan(d) || d == double(float(d)));
+  MOZ_ASSERT(mozilla::IsFloat32Representable(d));
   return new (alloc) MConstant(float(d));
 }
 
