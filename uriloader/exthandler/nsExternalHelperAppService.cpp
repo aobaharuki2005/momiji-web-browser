@@ -3745,14 +3745,10 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
 
 #ifdef XP_WIN
   if (nsLocalFile::CheckForReservedFileName(outFileName)) {
-    int32_t dotidx = outFileName.RFind(u".");
-    if (dotidx == -1) {
-      outFileName.Truncate();
-    } else {
-      outFileName = Substring(outFileName, dotidx);
-    }
+    outFileName.Truncate();
     CheckDefaultFileName(outFileName, aFlags);
   }
+
 #endif
 
   if (!(aFlags & VALIDATE_ALLOW_INVALID_FILENAMES)) {
