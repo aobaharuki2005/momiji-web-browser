@@ -66,6 +66,7 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
     VSYNC_PRIORITY = 2,
     MEDIUMHIGH_PRIORITY = 3,
     CONTROL_PRIORITY = 4,
+    LOW_PRIORITY = 5,
   };
 
   enum MessageCompression {

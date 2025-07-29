@@ -101,6 +101,7 @@ parent:
   async PredPredict(nullable nsIURI targetURI, nullable nsIURI sourceURI,
                     uint32_t reason, OriginAttributes originAttributes,
                     bool hasVerifier);
+  [Priority=low]
   async PredLearn(nullable nsIURI targetURI, nullable nsIURI sourceURI,
                   uint32_t reason, OriginAttributes originAttributes);
   async PredReset();
