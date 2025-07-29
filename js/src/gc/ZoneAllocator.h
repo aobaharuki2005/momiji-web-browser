@@ -36,7 +36,7 @@ bool CurrentThreadIsGCFinalizing();
 namespace gc {
 void MaybeTriggerGCAfterMalloc(ZoneAllocator* zoneAlloc);
 void MaybeTriggerGCAfterJitCodeAlloc(ZoneAllocator* zoneAlloc);
-}
+}  // namespace gc
 
 // Base class of JS::Zone that provides malloc memory allocation and accounting.
 class ZoneAllocator : public JS::shadow::Zone,
