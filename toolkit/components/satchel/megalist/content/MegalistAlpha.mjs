@@ -369,10 +369,6 @@ export class MegalistAlpha extends MozLitElement {
   renderList() {
     return this.records.length
       ? html`
-          <div class="first-row">
-            ${this.renderSearch()} ${this.renderMenu()}
-          </div>
-          <div class="second-row">${this.renderRadioButtons()}</div>
           <div
             class="passwords-list"
             role="listbox"
@@ -741,6 +737,15 @@ export class MegalistAlpha extends MozLitElement {
     `;
   }
 
+  renderToolbar() {
+    return html`
+      <div class="first-row">${this.renderSearch()} ${this.renderMenu()}</div>
+      ${this.header
+        ? html` <div class="second-row">${this.renderRadioButtons()}</div> `
+        : ""}
+    `;
+  }
+
   async #scrollPasswordCardIntoView(guid) {
     const matchingRecordIndex = this.records.findIndex(
       record => record.origin.guid === guid
@@ -774,6 +779,10 @@ export class MegalistAlpha extends MozLitElement {
   }
 
   render() {
+    const showToolbar =
+      this.viewMode === VIEW_MODES.ALERTS ||
+      (this.viewMode === VIEW_MODES.LIST && this.header?.value?.total > 0);
+
     return html`
       <link
         rel="stylesheet"
@@ -785,6 +794,7 @@ export class MegalistAlpha extends MozLitElement {
           data-l10n-attrs="heading"
           view="viewCPMSidebar"
         ></sidebar-panel-header>
+        ${when(showToolbar, () => html` ${this.renderToolbar()} `)}
         ${this.renderNotification()} ${this.renderContent()}
       </div>
     `;
