@@ -7577,8 +7577,6 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
       if (forwardScanFromEndResult.ReachedCurrentBlockBoundary() ||
           forwardScanFromEndResult.ReachedInlineEditingHostBoundary()) {
         MOZ_ASSERT(forwardScanFromEndResult.ContentIsElement());
-        MOZ_ASSERT(forwardScanFromEndResult.GetContent() ==
-                   wsScannerAtEnd.GetEndReasonContent());
         // We want to keep looking up.  But stop if we are crossing table
         // element boundaries, or if we hit the root.
         if (HTMLEditUtils::IsAnyTableElement(
