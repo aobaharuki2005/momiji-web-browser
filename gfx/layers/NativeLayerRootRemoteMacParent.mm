@@ -56,11 +56,12 @@ NativeLayerRootRemoteMacParent::RecvCommitNativeLayerCommands(
 
       case NativeLayerCommand::TCommandLayerInfo: {
         auto& layerInfo = command.get_CommandLayerInfo();
-        HandleLayerInfo(layerInfo.ID(), layerInfo.SurfaceID(),
-                        layerInfo.Position(), layerInfo.DisplayRect(),
-                        layerInfo.ClipRect(), layerInfo.RoundedClipRect(),
-                        layerInfo.Transform(), layerInfo.SamplingFilter(),
-                        layerInfo.SurfaceIsFlipped());
+        HandleLayerInfo(
+            layerInfo.ID(), layerInfo.SurfaceID(), layerInfo.IsDRM(),
+            layerInfo.IsHDR(), layerInfo.Position(), layerInfo.Size(),
+            layerInfo.DisplayRect(), layerInfo.ClipRect(),
+            layerInfo.RoundedClipRect(), layerInfo.Transform(),
+            layerInfo.SamplingFilter(), layerInfo.SurfaceIsFlipped());
         break;
       }
 
@@ -118,7 +119,8 @@ void NativeLayerRootRemoteMacParent::HandleSetLayers(
 }
 
 void NativeLayerRootRemoteMacParent::HandleLayerInfo(
-    uint64_t aID, uint32_t aSurfaceID, IntPoint aPosition, IntRect aDisplayRect,
+    uint64_t aID, uint32_t aSurfaceID, bool aIsDRM, bool aIsHDR,
+    IntPoint aPosition, IntSize aSize, IntRect aDisplayRect,
     Maybe<IntRect> aClipRect, Maybe<RoundedRect> aRoundedClipRect,
     Matrix4x4 aTransform, int8_t aSamplingFilter, bool aSurfaceIsFlipped) {
   auto entry = mKnownLayers.MaybeGet(aID);
@@ -138,7 +140,7 @@ void NativeLayerRootRemoteMacParent::HandleLayerInfo(
     // since we declare it with create rule semantics.
     CFTypeRefPtr<IOSurfaceRef> surface =
         CFTypeRefPtr<IOSurfaceRef>::WrapUnderCreateRule(surfaceRef);
-    layer->SetSurfaceToPresent(surface);
+    layer->SetSurfaceToPresent(surface, aSize, aIsDRM, aIsHDR);
   }
 
   // Set the other properties of layer.

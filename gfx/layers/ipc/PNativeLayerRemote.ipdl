@@ -51,7 +51,10 @@ struct CommandSetLayers {
 struct CommandLayerInfo {
   uint64_t ID;
   uint32_t SurfaceID;
+  bool IsDRM;
+  bool IsHDR;
   IntPoint Position;
+  IntSize Size;
   IntRect DisplayRect;
   IntRect? ClipRect;
   RoundedRect? RoundedClipRect;

@@ -58,8 +58,44 @@ NativeLayerRemoteMac::~NativeLayerRemoteMac() {
 void NativeLayerRemoteMac::AttachExternalImage(
     wr::RenderTextureHost* aExternalImage) {
   MOZ_ASSERT(XRE_IsGPUProcess());
-  // TODO: Figure out what to do here. The pointer on the GPU process will have
-  // no meaning in the parent process.
+  MOZ_ASSERT(!mSurfaceHandler);
+
+  wr::RenderMacIOSurfaceTextureHost* texture =
+      aExternalImage->AsRenderMacIOSurfaceTextureHost();
+  MOZ_ASSERT(texture);
+
+  auto externalImage = texture->GetSurface()->GetIOSurfaceRef();
+  bool changedExternalImage = (mExternalImage != externalImage);
+  mExternalImage = externalImage;
+
+  auto texSize = texture->GetSize(0);
+  bool changedSize = (mSize != texSize);
+  mSize = texSize;
+
+  auto displayRect = IntRect(IntPoint{}, mSize);
+  bool changedDisplayRect = !mDisplayRect.IsEqualInterior(displayRect);
+  mDisplayRect = displayRect;
+
+  bool isDRM = aExternalImage->IsFromDRMSource();
+  bool changedIsDRM = (mIsDRM != isDRM);
+  mIsDRM = isDRM;
+
+  bool isHDR = false;
+  MacIOSurface* macIOSurface = texture->GetSurface();
+  if (macIOSurface->GetYUVColorSpace() == gfx::YUVColorSpace::BT2020) {
+    // BT2020 colorSpace is a signifier of HDR.
+    isHDR = true;
+  }
+
+  if (macIOSurface->GetColorDepth() == gfx::ColorDepth::COLOR_10) {
+    // 10-bit color is a signifier of HDR.
+    isHDR = true;
+  }
+  bool changedIsHDR = (mIsHDR != isHDR);
+  mIsHDR = isHDR;
+
+  mDirty |= (changedExternalImage || changedSize || changedDisplayRect ||
+             changedIsDRM || changedIsHDR);
 }
 
 GpuFence* NativeLayerRemoteMac::GetGpuFence() { return nullptr; }
@@ -179,6 +215,9 @@ Maybe<SurfaceWithInvalidRegion> NativeLayerRemoteMac::FrontSurface() {
   if (mSurfaceHandler) {
     return mSurfaceHandler->FrontSurface();
   }
+  if (mExternalImage) {
+    return Some(SurfaceWithInvalidRegion{mExternalImage, GetRect()});
+  }
   return Nothing();
 }
 
@@ -212,8 +251,9 @@ void NativeLayerRemoteMac::FlushDirtyLayerInfoToCommandQueue() {
     surfaceID = IOSurfaceGetID(surfaceRef);
   }
   mCommandQueue->AppendCommand(mozilla::layers::CommandLayerInfo(
-      ID, surfaceID, GetPosition(), CurrentSurfaceDisplayRect(), ClipRect(),
-      RoundedClipRect(), GetTransform(), static_cast<int8_t>(SamplingFilter()),
+      ID, surfaceID, IsDRM(), IsHDR(), GetPosition(), GetSize(),
+      CurrentSurfaceDisplayRect(), ClipRect(), RoundedClipRect(),
+      GetTransform(), static_cast<int8_t>(SamplingFilter()),
       SurfaceIsFlipped()));
 
   mDirty = false;
