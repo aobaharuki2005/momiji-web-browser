@@ -304,13 +304,17 @@ interface nsIWindowsShellService : nsIShellService
    * necessary given how few checks there are within.
    * @param  aAppUserModelId
    *         The aumid to be contained in the .lnk file
-   * @param  aShortcutPath
-   *         A path to the .lnk file that should be pinned to the taskbar.
+   * @param  aShortcutFolder The special Windows folder to create the shortcut
+   *         in. Must be either "Programs" or "Desktop".
+   * @param  aShortcutRelativePath
+   *         The path to the .lnk file that should be pinned to the taskbar,
+   *         relative to aShortcutFolder.
    */
   [implicit_jscontext]
   Promise pinShortcutToTaskbar(
     in AString aAppUserModelId,
-    in AString aShortcutPath
+    in AString aShortcutFolder,
+    in AString aShortcutRelativePath
   );
 
   /* This function can be used to convert compatible image formats into .ico
@@ -336,8 +340,11 @@ interface nsIWindowsShellService : nsIShellService
    *
    * This function should not be called unless it is certain that it's
    * necessary given how few checks there are within.
-   * @param  aShortcutPath
-   *         A path to the .lnk file that should be pinned to the taskbar.
+   * @param  aShortcutFolder The special Windows folder that the shortcut
+   *         is in. Must be either "Programs" or "Desktop".
+   * @param  aShortcutRelativePath
+   *         The path to the .lnk file that should be unpinned, relative
+   *         to aShortcutFolder.
    * @throws NS_ERROR_FAILURE
    *         If the COM service could not be initialized
    * @throws NS_ERROR_FILE_NOT_FOUND
@@ -347,7 +354,10 @@ interface nsIWindowsShellService : nsIShellService
    * @throws NS_ERROR_FILE_ACCESS_DENIED
    *         If the taskbar pins cannot be modified
    */
-  void unpinShortcutFromTaskbar(in AString aShortcutPath);
+  void unpinShortcutFromTaskbar(
+    in AString aShortcutFolder,
+    in AString aShortcutRelativePath
+  );
 
 
   /**
