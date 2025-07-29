@@ -753,7 +753,7 @@ void MFMediaEngineParent::NotifyDisableHWDRM() {
 
   ENGINE_MARKER("MFMediaEngineParent::NotifyDisableHWDRM");
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "MFMediaEngineParent::OnSesNotifyDisableHWDRMsionMessage",
+      "MFMediaEngineParent::NotifyDisableHWDRM",
       [umsp]() { Unused << umsp->SendDisableHardwareDRM(); }));
 }
 #endif
