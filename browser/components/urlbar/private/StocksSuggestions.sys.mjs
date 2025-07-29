@@ -27,6 +27,10 @@ export class StocksSuggestions extends SuggestProvider {
     return "polygon";
   }
 
+  getSuggestionTelemetryType() {
+    return "stocks";
+  }
+
   getViewTemplate(result) {
     return {
       children: result.payload.polygon.values.map((v, i) => {
