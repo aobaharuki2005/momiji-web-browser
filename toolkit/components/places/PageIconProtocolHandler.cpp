@@ -276,7 +276,7 @@ RefPtr<FaviconPromise> PageIconProtocolHandler::GetFaviconData(
   nsCOMPtr<nsIURI> pageURI;
   nsresult rv;
   // NOTE: We don't need to strip #size= fragments because
-  // AsyncGetFaviconForPage strips them when doing the database lookup.
+  // GetFaviconDataForPage strips them when doing the database lookup.
   nsAutoCString pageQuery;
   aPageIconURI->GetPathQueryRef(pageQuery);
   rv = NS_NewURI(getter_AddRefs(pageURI), pageQuery);
@@ -284,7 +284,7 @@ RefPtr<FaviconPromise> PageIconProtocolHandler::GetFaviconData(
     return FaviconPromise::CreateAndReject(rv, __func__);
   }
 
-  return faviconService->AsyncGetFaviconForPage(pageURI, preferredSize, true);
+  return faviconService->AsyncGetFaviconForPage(pageURI, preferredSize);
 }
 
 RefPtr<RemoteStreamPromise> PageIconProtocolHandler::NewStream(

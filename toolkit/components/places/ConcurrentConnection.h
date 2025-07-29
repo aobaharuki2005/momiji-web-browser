@@ -15,7 +15,6 @@
 #include "nsIObserver.h"
 #include "nsISupportsImpl.h"
 #include "nsWeakReference.h"
-#include "mozilla/WeakPtr.h"
 
 namespace mozilla::places {
 
@@ -48,8 +47,7 @@ class ConcurrentConnection final : public nsIObserver,
                                    public nsSupportsWeakReference,
                                    public nsIAsyncShutdownBlocker,
                                    public mozIStorageCompletionCallback,
-                                   public mozIStorageStatementCallback,
-                                   public SupportsWeakPtr {
+                                   public mozIStorageStatementCallback {
   using StatementCache = mozilla::storage::StatementCache<mozIStorageStatement>;
   using AsyncStatementCache =
       mozilla::storage::StatementCache<mozIStorageAsyncStatement>;

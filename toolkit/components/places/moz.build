@@ -26,10 +26,8 @@ if CONFIG["MOZ_PLACES"]:
     ]
 
     EXPORTS.mozilla.places = [
-        "ConcurrentConnection.h",
         "Database.h",
         "FaviconHelpers.h",
-        "Helpers.h",
         "History.h",
         "INativePlacesEventCallback.h",
         "NotifyRankingChanged.h",
