@@ -2393,6 +2393,7 @@ void MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input,
                                                 Register output,
                                                 bool isSaturating,
                                                 Label* oolEntry) {
+  branchDouble(Assembler::DoubleUnordered, input, input, oolEntry);
   as_truncld(ScratchDoubleReg, input);
   moveFromDouble(ScratchDoubleReg, output);
   ma_dsrl(ScratchRegister, output, Imm32(32));
@@ -2404,6 +2405,7 @@ void MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input,
                                                  Register output,
                                                  bool isSaturating,
                                                  Label* oolEntry) {
+  branchFloat(Assembler::DoubleUnordered, input, input, oolEntry);
   as_truncls(ScratchDoubleReg, input);
   moveFromDouble(ScratchDoubleReg, output);
   ma_dsrl(ScratchRegister, output, Imm32(32));
@@ -2461,6 +2463,9 @@ void MacroAssembler::wasmTruncateDoubleToUInt64(
 
   Label done;
 
+  // Guard against NaN.
+  branchDouble(Assembler::DoubleUnordered, input, input, oolEntry);
+
   as_truncld(ScratchDoubleReg, input);
   // ma_li INT64_MAX
   ma_li(SecondScratchReg, Imm32(-1));
@@ -2515,6 +2520,9 @@ void MacroAssembler::wasmTruncateFloat32ToUInt64(
   Register output = output_.reg;
 
   Label done;
+
+  // Guard against NaN.
+  branchFloat(Assembler::DoubleUnordered, input, input, oolEntry);
 
   as_truncls(ScratchDoubleReg, input);
   // ma_li INT64_MAX
