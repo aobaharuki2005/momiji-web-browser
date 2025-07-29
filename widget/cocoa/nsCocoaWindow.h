@@ -387,6 +387,10 @@ class nsCocoaWindow final : public nsBaseWidget {
 
   bool WidgetPaintsBackground() override { return true; }
 
+  void GetCompositorWidgetInitData(
+      mozilla::widget::CompositorWidgetInitData* aInitData) override;
+  mozilla::layers::CompositorBridgeChild* GetCompositorBridgeChild() const;
+
   bool PreRender(mozilla::widget::WidgetRenderingContext* aContext) override;
   void PostRender(mozilla::widget::WidgetRenderingContext* aContext) override;
   RefPtr<mozilla::layers::NativeLayerRoot> GetNativeLayerRoot() override;
