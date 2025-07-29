@@ -1582,6 +1582,10 @@ export var UrlbarUtils = {
           }
         }
 
+        if (result.providerName === "UrlbarProviderQuickSuggest") {
+          return this._getQuickSuggestTelemetryType(result);
+        }
+
         switch (result.payload.type) {
           case lazy.UrlbarProviderSearchTips.TIP_TYPE.ONBOARD:
             return "tip_onboard";

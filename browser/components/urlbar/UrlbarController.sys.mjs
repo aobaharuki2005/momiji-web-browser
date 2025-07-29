@@ -934,9 +934,10 @@ class TelemetryEvent {
       details.isSessionOngoing = !!(
         [
           "dismiss",
-          "dismiss_all",
           "inaccurate_location",
+          "not_interested",
           "not_now",
+          "opt_in",
           "show_less_frequently",
         ].includes(details.selType) ||
         details.result?.payload.providesSearchMode

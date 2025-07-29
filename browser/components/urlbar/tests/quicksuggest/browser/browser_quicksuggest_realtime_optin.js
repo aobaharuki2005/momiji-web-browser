@@ -87,7 +87,7 @@ add_setup(async function () {
   });
 });
 
-add_task(async function allow() {
+add_task(async function opt_in() {
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
 
   let { element, result } = await openRealtimeSuggestion({ input: "stock" });
@@ -284,7 +284,7 @@ add_task(async function dismiss_with_another_type() {
   UrlbarPrefs.clear("quicksuggest.realtimeOptIn.notNowReshowAfterPeriodDays");
 });
 
-add_task(async function dismiss_all() {
+add_task(async function not_interested() {
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
   UrlbarPrefs.set("suggest.realtimeOptIn", true);
 

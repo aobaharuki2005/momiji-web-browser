@@ -198,14 +198,14 @@ export class DynamicSuggestions extends SuggestProvider {
           ...payload,
           buttons: [
             {
-              command: "allow",
+              command: "opt_in",
               l10n: { id: "firefox-suggest-realtime-opt-in-allow" },
             },
             {
               ...splitButtonMain,
               menu: [
                 {
-                  name: "dismiss_all",
+                  name: "not_interested",
                   l10n: {
                     id: "firefox-suggest-realtime-opt-in-dismiss-all",
                   },
@@ -251,7 +251,7 @@ export class DynamicSuggestions extends SuggestProvider {
 
   #onRealtimeOptInEngagement(controller, details) {
     switch (details.selType) {
-      case "allow":
+      case "opt_in":
         lazy.UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
         controller.input.startQuery({ allowAutofill: false });
         break;
@@ -284,7 +284,7 @@ export class DynamicSuggestions extends SuggestProvider {
         };
         controller.removeResult(details.result);
         break;
-      case "dismiss_all": {
+      case "not_interested": {
         lazy.UrlbarPrefs.set("suggest.realtimeOptIn", false);
         details.result.acknowledgeDismissalL10n = {
           id: "firefox-suggest-dismissal-acknowledgment-all",
