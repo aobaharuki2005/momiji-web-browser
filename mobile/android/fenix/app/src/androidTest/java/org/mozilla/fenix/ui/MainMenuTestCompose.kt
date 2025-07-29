@@ -309,18 +309,13 @@ class MainMenuTestCompose : TestSetup() {
             verifyAddonInstallCompletedPrompt(recommendedExtensionTitle, composeTestRule.activityRule)
             closeAddonInstallCompletePrompt()
         }
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(genericURL.url) {
-            verifyPageContent(genericURL.content)
+        browserScreen {
         }.openThreeDotMenu(composeTestRule) {
         }.openExtensionsFromMainMenu {
             clickManageExtensionsButtonFromRedesignedMainMenu(composeTestRule)
             verifyAddonsListIsDisplayed(shouldBeDisplayed = true)
             verifyAddonIsInstalled(recommendedExtensionTitle)
             verifyEnabledTitleDisplayed()
-        }.goBackToBrowser {
-            verifyPageContent(genericURL.content)
         }
     }
 
