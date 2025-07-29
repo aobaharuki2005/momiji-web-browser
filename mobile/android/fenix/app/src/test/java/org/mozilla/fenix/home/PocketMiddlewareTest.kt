@@ -21,6 +21,7 @@ import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
+import mozilla.components.support.utils.RunWhenReadyQueue
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -37,7 +38,7 @@ import org.mozilla.fenix.home.pocket.PocketImpression
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 
-class PocketUpdatesMiddlewareTest {
+class PocketMiddlewareTest {
     @get:Rule
     val mainCoroutineTestRule = MainCoroutineRule()
 
@@ -55,7 +56,13 @@ class PocketUpdatesMiddlewareTest {
         val story2 = story1.copy("title2", "url2")
         val story3 = story1.copy("title3", "url3")
         val pocketService: PocketStoriesService = mockk(relaxed = true)
-        val pocketMiddleware = PocketUpdatesMiddleware(lazy { pocketService }, mockk(), this)
+        val pocketMiddleware = PocketMiddleware(
+            lazy { pocketService },
+            mockk(),
+            FakePocketSettings(),
+            RunWhenReadyQueue(),
+            this,
+        )
         val appstore = AppStore(
             AppState(
                 recommendationState = ContentRecommendationsState(
@@ -143,7 +150,13 @@ class PocketUpdatesMiddlewareTest {
     fun `WHEN PocketStoriesCategoriesChange is dispatched THEN intercept and dispatch PocketStoriesCategoriesSelectionsChange`() = runTestOnMain {
         val dataStore = FakeDataStore()
         val currentCategories = listOf(mockk<PocketRecommendedStoriesCategory>())
-        val pocketMiddleware = PocketUpdatesMiddleware(mockk(), dataStore, this)
+        val pocketMiddleware = PocketMiddleware(
+            mockk(),
+            dataStore,
+            FakePocketSettings(),
+            RunWhenReadyQueue(),
+            this,
+        )
         val appStore = spyk(
             AppStore(
                 AppState(
@@ -172,7 +185,13 @@ class PocketUpdatesMiddlewareTest {
         val categ1 = PocketRecommendedStoriesCategory("categ1")
         val categ2 = PocketRecommendedStoriesCategory("categ2")
         val dataStore = FakeDataStore()
-        val pocketMiddleware = PocketUpdatesMiddleware(mockk(), dataStore, this)
+        val pocketMiddleware = PocketMiddleware(
+            mockk(),
+            dataStore,
+            FakePocketSettings(),
+            RunWhenReadyQueue(),
+            this,
+        )
         val appStore = spyk(
             AppStore(
                 AppState(
@@ -202,7 +221,13 @@ class PocketUpdatesMiddlewareTest {
         val persistedCateg1 = PocketRecommendedStoriesSelectedCategory("categ1")
         val persistedCateg2 = PocketRecommendedStoriesSelectedCategory("categ2")
         val dataStore = FakeDataStore(persistedCateg1.name, persistedCateg2.name)
-        val pocketMiddleware = PocketUpdatesMiddleware(mockk(), dataStore, this)
+        val pocketMiddleware = PocketMiddleware(
+            mockk(),
+            dataStore,
+            FakePocketSettings(),
+            RunWhenReadyQueue(),
+            this,
+        )
         val appStore = spyk(
             AppStore(
                 AppState(
@@ -288,6 +313,80 @@ class PocketUpdatesMiddlewareTest {
             assertTrue(selection.selectionTimestamp in now - 10000..now)
         }
     }
+
+    @Test
+    fun `GIVEN hasPocketSponsoredStoriesProfileMigrated is false WHEN App is Started THEN delete the old Pocket profile`() = runTestOnMain {
+        val pocketService: PocketStoriesService = mockk(relaxed = true)
+        val pocketMiddleware = PocketMiddleware(
+            lazy { pocketService },
+            mockk(),
+            FakePocketSettings(hasPocketSponsoredStoriesProfileMigrated = false),
+            RunWhenReadyQueue().also { it.ready() },
+            this,
+        )
+
+        pocketMiddleware.invoke(mockk(), {}, AppAction.AppLifecycleAction.StartAction)
+
+        verify {
+            pocketService.deleteProfile()
+        }
+    }
+
+    @Test
+    fun `GIVEN hasPocketSponsoredStoriesProfileMigrated is true WHEN App is Started THEN don't try to delete the old Pocket profile`() = runTestOnMain {
+        val pocketService: PocketStoriesService = mockk(relaxed = true)
+        val pocketMiddleware = PocketMiddleware(
+            lazy { pocketService },
+            mockk(),
+            FakePocketSettings(),
+            RunWhenReadyQueue().also { it.ready() },
+            this,
+        )
+
+        pocketMiddleware.invoke(mockk(), {}, AppAction.AppLifecycleAction.StartAction)
+
+        verify(exactly = 0) {
+            pocketService.deleteProfile()
+        }
+    }
+
+    @Test
+    fun `GIVEN pocket settings are true WHEN App is Started THEN start the Pocket workers`() = runTestOnMain {
+        val pocketService: PocketStoriesService = mockk(relaxed = true)
+        val pocketMiddleware = PocketMiddleware(
+            lazy { pocketService },
+            mockk(),
+            FakePocketSettings(),
+            RunWhenReadyQueue().also { it.ready() },
+            this,
+        )
+
+        pocketMiddleware.invoke(mockk(), {}, AppAction.AppLifecycleAction.StartAction)
+
+        verify {
+            pocketService.startPeriodicContentRecommendationsRefresh()
+            pocketService.startPeriodicSponsoredContentsRefresh()
+        }
+    }
+
+    @Test
+    fun `GIVEN pocket settings are false WHEN App is Started THEN don't start the Pocket workers`() = runTestOnMain {
+        val pocketService: PocketStoriesService = mockk(relaxed = true)
+        val pocketMiddleware = PocketMiddleware(
+            lazy { pocketService },
+            mockk(),
+            FakePocketSettings(showPocketRecommendationsFeature = false, showPocketSponsoredStories = false),
+            RunWhenReadyQueue().also { it.ready() },
+            this,
+        )
+
+        pocketMiddleware.invoke(mockk(), {}, AppAction.AppLifecycleAction.StartAction)
+
+        verify(exactly = 0) {
+            pocketService.startPeriodicContentRecommendationsRefresh()
+            pocketService.startPeriodicSponsoredContentsRefresh()
+        }
+    }
 }
 
 /**
@@ -324,3 +423,9 @@ class FakeDataStore(
         }
     }
 }
+
+data class FakePocketSettings(
+    override val showPocketRecommendationsFeature: Boolean = true,
+    override var hasPocketSponsoredStoriesProfileMigrated: Boolean = true,
+    override val showPocketSponsoredStories: Boolean = true,
+) : PocketSettings
