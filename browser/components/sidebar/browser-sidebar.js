@@ -2180,6 +2180,9 @@ var SidebarController = {
   },
 
   onMouseLeave() {
+    if (!this._state.launcherExpanded) {
+      return;
+    }
     this.mouseEnterTask.disarm();
     const contentArea = document.getElementById("tabbrowser-tabbox");
     this._box.toggleAttribute("sidebar-launcher-hovered", false);
@@ -2192,6 +2195,9 @@ var SidebarController = {
   },
 
   onMouseEnter() {
+    if (this._state.launcherExpanded) {
+      return;
+    }
     this.mouseEnterTask = new DeferredTask(
       () => {
         this.debouncedMouseEnter();
