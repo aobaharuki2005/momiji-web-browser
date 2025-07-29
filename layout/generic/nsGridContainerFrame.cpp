@@ -10581,7 +10581,7 @@ void nsGridContainerFrame::SetInitialChildList(ChildListID aListID,
 void nsGridContainerFrame::TrackSize::DumpStateBits(StateBits aState) {
   printf("min:");
   if (aState & eAutoMinSizing) {
-    printf("auto-min ");
+    printf("auto ");
   } else if (aState & eMinContentMinSizing) {
     printf("min-content ");
   } else if (aState & eMaxContentMinSizing) {
