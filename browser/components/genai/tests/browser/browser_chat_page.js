@@ -125,7 +125,7 @@ add_task(async function test_page_and_tab_menu_prompt() {
     ],
   });
 
-  await BrowserTestUtils.withNewTab("about:blank", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     await runContextMenuTest({
       menuId: CONTENT_AREA_CONTEXT_MENU,
       targetId: "context-ask-chat",
@@ -161,6 +161,27 @@ add_task(async function test_page_and_tab_menu_prompt() {
 });
 
 /**
+ *  Check Summarize Page button in page and tab menu is disabled
+ *  When browser context is invalid
+ */
+add_task(async function test_summarize_page_button_is_disabled_in_menu() {
+  await BrowserTestUtils.withNewTab("about:blank", async browser => {
+    // invalid context
+    await openContextMenu({ menuId: CONTENT_AREA_CONTEXT_MENU, browser });
+    await TestUtils.waitForCondition(() => {
+      return document.getElementById("context-ask-chat").getItemAtIndex(0)
+        .disabled;
+    }, "Summarize page button is disabled");
+
+    Assert.ok(
+      document.getElementById("context-ask-chat").getItemAtIndex(0).disabled,
+      "Summarize page button is disabled because context is invalid"
+    );
+    await hideContextMenu(CONTENT_AREA_CONTEXT_MENU);
+  });
+});
+
+/**
  * Check situations page menu should not be shown
  */
 add_task(async function test_page_menu_no_chatbot() {
@@ -168,7 +189,7 @@ add_task(async function test_page_menu_no_chatbot() {
     clear: [["browser.ml.chat.provider"]],
     set: [["browser.ml.chat.page", true]],
   });
-  await BrowserTestUtils.withNewTab("about:blank", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     await openContextMenu({ menuId: CONTENT_AREA_CONTEXT_MENU, browser });
 
     await TestUtils.waitForCondition(() => {
