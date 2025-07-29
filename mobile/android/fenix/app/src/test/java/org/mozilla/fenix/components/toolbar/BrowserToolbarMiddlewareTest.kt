@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
+import android.os.Handler
 import android.os.Looper
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
@@ -23,6 +24,7 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.BrowserAction
@@ -1514,6 +1516,43 @@ class BrowserToolbarMiddlewareTest {
 
         val shareButton = toolbarStore.state.displayState.browserActionsEnd[0]
         assertEquals(expectedShareButton, shareButton)
+    }
+
+    @Test
+    fun `WHEN cycling through portrait and landscape orientations THEN update what end page actions should be shown`() {
+        Dispatchers.setMain(Handler(Looper.getMainLooper()).asCoroutineDispatcher())
+        val appStore = AppStore()
+        every { settings.isTabStripEnabled } returns false
+        every { settings.shouldUseExpandedToolbar } returns false
+        val readerModeStatus: ReaderModeStatus = mockk(relaxed = true) {
+            every { isAvailable } returns true
+        }
+        every { browserScreenState.readerModeStatus } returns readerModeStatus
+        val pageTranslationStatus: PageTranslationStatus = mockk(relaxed = true) {
+            every { isTranslationPossible } returns true
+        }
+        every { browserScreenState.pageTranslationStatus } returns pageTranslationStatus
+        val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
+        val toolbarStore = buildStore(middleware)
+
+        assertEquals(
+            listOf(expectedReaderModeButton(false)),
+            toolbarStore.state.displayState.pageActionsEnd,
+        )
+
+        appStore.dispatch(AppAction.OrientationChange(Landscape)).joinBlocking()
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(
+            listOf(expectedReaderModeButton(false), expectedTranslateButton, expectedShareButton),
+            toolbarStore.state.displayState.pageActionsEnd,
+        )
+
+        appStore.dispatch(AppAction.OrientationChange(Portrait)).joinBlocking()
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(
+            listOf(expectedReaderModeButton(false)),
+            toolbarStore.state.displayState.pageActionsEnd,
+        )
     }
 
     @Test

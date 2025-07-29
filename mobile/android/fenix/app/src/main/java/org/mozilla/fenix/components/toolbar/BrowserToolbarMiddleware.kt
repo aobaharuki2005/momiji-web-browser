@@ -236,6 +236,7 @@ class BrowserToolbarMiddleware(
                 updateStartBrowserActions(context)
                 updateCurrentPageOrigin(context)
                 updateEndBrowserActions(context)
+                updateEndPageActions(context)
                 environment?.viewLifecycleOwner?.lifecycleScope?.launch {
                     updateNavigationActions(context)
                 }
@@ -822,6 +823,7 @@ class BrowserToolbarMiddleware(
             .collect {
                 updateStartBrowserActions(context)
                 updateEndBrowserActions(context)
+                updateEndPageActions(context)
                 updateNavigationActions(context)
             }
         }
