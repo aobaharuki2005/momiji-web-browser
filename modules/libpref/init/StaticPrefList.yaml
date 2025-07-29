@@ -8993,6 +8993,12 @@
   mirror: always
   set_spidermonkey_pref: always
 
+- name: javascript.options.wasm_exception_force_stack_trace
+  type: bool
+  value: false
+  mirror: always
+  set_spidermonkey_pref: always
+
 - name: javascript.options.wasm_disable_huge_memory
   type: bool
   value: false

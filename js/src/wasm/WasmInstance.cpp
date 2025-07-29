@@ -1927,6 +1927,15 @@ static bool ArrayCopyFromElem(JSContext* cx, Handle<WasmArrayObject*> arrayObj,
   Rooted<WasmTagObject*> tagObj(cx, &tag.toJSObject().as<WasmTagObject>());
   RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmException));
   RootedObject stack(cx, nullptr);
+
+  // We don't create the .stack property by default, unless the pref is set for
+  // debugging.
+  if (JS::Prefs::wasm_exception_force_stack_trace() &&
+      !CaptureStack(cx, &stack)) {
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
   // An OOM will result in null which will be caught on the wasm side.
   return AnyRef::fromJSObjectOrNull(
              WasmExceptionObject::create(cx, tagObj, stack, proto))
