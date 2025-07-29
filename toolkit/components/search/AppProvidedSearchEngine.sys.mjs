@@ -37,6 +37,9 @@ const lazy = XPCOMUtils.declareLazy({
     }),
 });
 
+// If a user used a search engine at least once, we'll toggle a boolean.
+const HAS_BEEN_USED = "hasBeenUsed";
+
 // After the user has been idle for 30s, we'll update icons if we need to.
 const ICON_UPDATE_ON_IDLE_DELAY = 30;
 
@@ -596,6 +599,31 @@ export class AppProvidedSearchEngine extends SearchEngine {
       this,
       lazy.SearchUtils.MODIFIED_TYPE.ICON_CHANGED
     );
+  }
+
+  /**
+   * Marks the search engine has having been used.
+   */
+  markAsUsed() {
+    this.setAttr(HAS_BEEN_USED, true, true);
+  }
+
+  /**
+   * Whether this search engine has ever been used. This returns true if
+   * `markAsUsed()` has been called at least once for this engine.
+   *
+   * @returns {boolean}
+   */
+  get hasBeenUsed() {
+    return this.getAttr(HAS_BEEN_USED) ?? false;
+  }
+
+  /**
+   * Clears the usage record for this search engine. The property hasBeenUsed
+   * will return false unless `markAsUsed()` is called again.
+   */
+  clearUsage() {
+    this.clearAttr(HAS_BEEN_USED);
   }
 
   /**
