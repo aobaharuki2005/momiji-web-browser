@@ -7551,23 +7551,14 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
   if (rangeToDelete.EndRef().GetContainer() !=
       closestBlockAncestorOrInlineEditingHost) {
     for (;;) {
-      const WSRunScanner wsScannerAtEnd(
-          WSRunScanner::Scan::EditableNodes, rangeToDelete.EndRef(),
-          BlockInlineCheck::UseComputedDisplayOutsideStyle);
       const WSScanResult forwardScanFromEndResult =
-          wsScannerAtEnd.ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(
-              rangeToDelete.EndRef());
+          WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
+              WSRunScanner::Scan::All, rangeToDelete.EndRef(),
+              BlockInlineCheck::UseComputedDisplayOutsideStyle,
+              closestBlockAncestorOrInlineEditingHost);
       if (forwardScanFromEndResult.ReachedBRElement()) {
-        // XXX In my understanding, this is odd.  The end reason may not be
-        //     same as the reached <br> element because the equality is
-        //     guaranteed only when ReachedCurrentBlockBoundary() returns true.
-        //     However, looks like that this code assumes that
-        //     GetEndReasonContent() returns the (or a) <br> element.
-        NS_ASSERTION(wsScannerAtEnd.GetEndReasonContent() ==
-                         forwardScanFromEndResult.BRElementPtr(),
-                     "End reason is not the reached <br> element");
         if (HTMLEditUtils::IsVisibleBRElement(
-                *wsScannerAtEnd.GetEndReasonContent())) {
+                *forwardScanFromEndResult.BRElementPtr())) {
           break;
         }
         if (!atFirstInvisibleBRElement.IsSet()) {
@@ -7575,7 +7566,7 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
               rangeToDelete.EndRef().To<EditorDOMPoint>();
         }
         rangeToDelete.SetEnd(
-            EditorRawDOMPoint::After(*wsScannerAtEnd.GetEndReasonContent()));
+            EditorRawDOMPoint::After(*forwardScanFromEndResult.BRElementPtr()));
         continue;
       }
 
