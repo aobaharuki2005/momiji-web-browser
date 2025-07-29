@@ -52,6 +52,7 @@ export class MegalistAlpha extends MozLitElement {
     this.viewMode = VIEW_MODES.LIST;
     this.selectedRecord = null;
     this.sidebarHiding = false;
+    this.shouldShowPrimaryPasswordAuth = false;
 
     window.addEventListener("MessageFromViewModel", ev =>
       this.#onMessageFromViewModel(ev)
@@ -74,6 +75,7 @@ export class MegalistAlpha extends MozLitElement {
       notification: { type: Object },
       displayMode: { type: String },
       viewMode: { type: String },
+      shouldShowPrimaryPasswordAuth: { type: Boolean },
     };
   }
 
@@ -284,6 +286,10 @@ export class MegalistAlpha extends MozLitElement {
       this.reauthResolver = resolve;
       commandFn();
     });
+  }
+
+  receivePrimaryPasswordAuthenticated(authenticated) {
+    this.shouldShowPrimaryPasswordAuth = !authenticated;
   }
 
   #createLoginRecords(snapshots) {
@@ -824,11 +830,57 @@ export class MegalistAlpha extends MozLitElement {
     `;
   }
 
-  render() {
+  renderReauthPrimaryPassword() {
+    return html`
+      <moz-card class="empty-state-card">
+        <div class="reauth-card-content">
+          <img
+            src="chrome://global/content/megalist/icons/cpm-fox-illustration.svg"
+            role="presentation"
+            alt=""
+          />
+          <strong
+            class="no-logins-card-heading"
+            data-l10n-id="contextual-manager-primary-password-reauth-header"
+          ></strong>
+          <a
+            is="moz-support-link"
+            data-l10n-id="contextual-manager-primary-password-learn-more-link"
+            support-page="primary-password-stored-logins"
+            @click=${e => {
+              e.preventDefault();
+              this.#sendCommand("OpenLink", {
+                value:
+                  "https://support.mozilla.org/en-US/kb/use-primary-password-protect-stored-logins",
+              });
+            }}
+          >
+          </a>
+          <div class="no-logins-card-buttons">
+            <moz-button
+              class="empty-state-import-from-browser"
+              data-l10n-id="contextual-manager-primary-password-reauth-button"
+              type="primary"
+              @click=${() => {
+                this.#messageToViewModel("ReauthPrimaryPassword");
+              }}
+            ></moz-button>
+          </div>
+        </div>
+      </moz-card>
+    `;
+  }
+
+  renderAuthenticatedView() {
     const showToolbar =
       this.viewMode === VIEW_MODES.ALERTS ||
       (this.viewMode === VIEW_MODES.LIST && this.header?.value?.total > 0);
 
+    return html`${when(showToolbar, () => html`${this.renderToolbar()}`)}
+    ${this.renderNotification()} ${this.renderContent()}`;
+  }
+
+  render() {
     return html`
       <link
         rel="stylesheet"
@@ -840,8 +892,9 @@ export class MegalistAlpha extends MozLitElement {
           data-l10n-attrs="heading"
           view="viewCPMSidebar"
         ></sidebar-panel-header>
-        ${when(showToolbar, () => html` ${this.renderToolbar()} `)}
-        ${this.renderNotification()} ${this.renderContent()}
+        ${!this.shouldShowPrimaryPasswordAuth
+          ? this.renderAuthenticatedView()
+          : this.renderReauthPrimaryPassword()}
       </div>
     `;
   }

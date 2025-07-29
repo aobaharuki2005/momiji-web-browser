@@ -82,7 +82,8 @@ login-form {
   }
 }
 
-.no-logins-card-content {
+.no-logins-card-content,
+.reauth-card-content {
   display: flex;
   flex-direction: column;
 
@@ -90,6 +91,10 @@ login-form {
     max-width: 232px;
     align-self: center;
   }
+}
+
+.reauth-card-content {
+  gap: var(--space-large);
 }
 
 .alert-card {
