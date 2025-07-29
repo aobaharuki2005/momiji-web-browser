@@ -73,7 +73,8 @@ class MFCDMChild final : public PMFCDMChild {
       const MFCDMKeyStatusChange& aKeyStatuses);
   mozilla::ipc::IPCResult RecvOnSessionKeyExpiration(
       const MFCDMKeyExpiration& aExpiration);
-  mozilla::ipc::IPCResult RecvOnSessionClosed(const nsString& aSessionId);
+  mozilla::ipc::IPCResult RecvOnSessionClosed(
+      const MFCDMSessionClosedResult& aResult);
 
   uint64_t Id() const { return mId; }
   const nsString& KeySystem() const { return mKeySystem; }

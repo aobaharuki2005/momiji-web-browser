@@ -154,7 +154,7 @@ class MFCDMParent final : public PMFCDMParent {
   MediaEventForwarder<MFCDMKeyMessage> mKeyMessageEvents;
   MediaEventForwarder<MFCDMKeyStatusChange> mKeyChangeEvents;
   MediaEventForwarder<MFCDMKeyExpiration> mExpirationEvents;
-  MediaEventForwarder<nsString> mClosedEvents;
+  MediaEventForwarder<MFCDMSessionClosedResult> mClosedEvents;
 
   MediaEventListener mKeyMessageListener;
   MediaEventListener mKeyChangeListener;

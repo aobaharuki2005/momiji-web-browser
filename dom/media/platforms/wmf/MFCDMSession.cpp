@@ -164,11 +164,16 @@ HRESULT MFCDMSession::Update(const nsTArray<uint8_t>& aMessage) {
   return S_OK;
 }
 
-HRESULT MFCDMSession::Close() {
+HRESULT MFCDMSession::Close(dom::MediaKeySessionClosedReason aReason) {
   AssertOnManagerThread();
+  if (mIsClosed) {
+    LOG("Close, session is already closed");
+    return S_OK;
+  }
   LOG("Close");
   RETURN_IF_FAILED(mSession->Close());
-  mClosedEvent.Notify(*mSessionId);
+  mIsClosed = true;
+  mClosedEvent.Notify(MFCDMSessionClosedResult{*mSessionId, aReason});
   return S_OK;
 }
 

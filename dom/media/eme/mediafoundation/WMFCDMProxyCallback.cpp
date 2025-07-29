@@ -73,14 +73,13 @@ void WMFCDMProxyCallback::OnSessionKeyExpiration(
       }));
 }
 
-void WMFCDMProxyCallback::OnSessionClosed(const nsString& aSessionId) {
+void WMFCDMProxyCallback::OnSessionClosed(
+    const MFCDMSessionClosedResult& aResult) {
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "WMFCDMProxyCallback::OnSessionClosed",
-      [self = RefPtr{this}, this, aSessionId]() {
+      [self = RefPtr{this}, this, result = aResult]() {
         RETURN_IF_NULL(mProxy);
-        mProxy->OnSessionClosed(
-            aSessionId,
-            dom::MediaKeySessionClosedReason::Closed_by_application);
+        mProxy->OnSessionClosed(result.sessionId(), result.reason());
       }));
 }
 
