@@ -4398,15 +4398,23 @@ bool GCRuntime::maybeIncreaseSliceBudgetForUrgentCollections(
 }
 
 static void ScheduleZones(GCRuntime* gc, JS::GCReason reason) {
+  bool inHighFrequencyMode = gc->schedulingState.inHighFrequencyGCMode();
+
   for (ZonesIter zone(gc, WithAtoms); !zone.done(); zone.next()) {
-    // Re-check heap threshold for alloc-triggered zones that were not
-    // previously collected. Now we have allocation rate data, the heap limit
-    // may have been increased beyond the current size.
-    if (gc->tunables.balancedHeapLimitsEnabled() && zone->isGCScheduled() &&
-        zone->smoothedCollectionRate.ref().isNothing() &&
-        reason == JS::GCReason::ALLOC_TRIGGER &&
-        zone->gcHeapSize.bytes() < zone->gcHeapThreshold.startBytes()) {
-      zone->unscheduleGC();  // May still be re-scheduled below.
+    // Re-check heap thresholds for alloc-triggered zones. In some cases heap
+    // sizes can change between triggering GC and getting to this point.
+    //
+    // Zones unscheduled here may still be rescheduled below.
+    if (zone->isGCScheduled()) {
+      if (reason == JS::GCReason::ALLOC_TRIGGER &&
+          zone->gcHeapSize.bytes() < zone->gcHeapThreshold.startBytes()) {
+        zone->unscheduleGC();
+      }
+      if (reason == JS::GCReason::TOO_MUCH_MALLOC &&
+          zone->mallocHeapSize.bytes() <
+              zone->mallocHeapThreshold.startBytes()) {
+        zone->unscheduleGC();
+      }
     }
 
     if (gc->isShutdownGC()) {
@@ -4424,7 +4432,6 @@ static void ScheduleZones(GCRuntime* gc, JS::GCReason reason) {
     }
 
     // This is a heuristic to reduce the total number of collections.
-    bool inHighFrequencyMode = gc->schedulingState.inHighFrequencyGCMode();
     if (zone->gcHeapSize.bytes() >=
             zone->gcHeapThreshold.eagerAllocTrigger(inHighFrequencyMode) ||
         zone->mallocHeapSize.bytes() >=
