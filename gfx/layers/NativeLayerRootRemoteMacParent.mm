@@ -17,6 +17,62 @@ NativeLayerRootRemoteMacParent::NativeLayerRootRemoteMacParent(
 mozilla::ipc::IPCResult
 NativeLayerRootRemoteMacParent::RecvCommitNativeLayerCommands(
     nsTArray<NativeLayerCommand>&& aCommands) {
+  for (auto& command : aCommands) {
+    switch (command.type()) {
+      case NativeLayerCommand::TCommandCreateLayer: {
+        auto& createLayer = command.get_CommandCreateLayer();
+        HandleCreateLayer(createLayer.ID(), createLayer.Size(),
+                          createLayer.Opaque());
+        break;
+      }
+
+      case NativeLayerCommand::TCommandCreateLayerForExternalTexture: {
+        auto& createLayerForExternalTexture =
+            command.get_CommandCreateLayerForExternalTexture();
+        HandleCreateLayerForExternalTexture(
+            createLayerForExternalTexture.ID(),
+            createLayerForExternalTexture.Opaque());
+        break;
+      }
+
+      case NativeLayerCommand::TCommandCreateLayerForColor: {
+        auto& createLayerForColor = command.get_CommandCreateLayerForColor();
+        HandleCreateLayerForColor(createLayerForColor.ID(),
+                                  createLayerForColor.Color());
+        break;
+      }
+
+      case NativeLayerCommand::TCommandLayerDestroyed: {
+        auto& layerDestroyed = command.get_CommandLayerDestroyed();
+        HandleLayerDestroyed(layerDestroyed.ID());
+        break;
+      }
+
+      case NativeLayerCommand::TCommandSetLayers: {
+        auto& setLayers = command.get_CommandSetLayers();
+        HandleSetLayers(setLayers.IDs());
+        break;
+      }
+
+      case NativeLayerCommand::TCommandLayerInfo: {
+        auto& layerInfo = command.get_CommandLayerInfo();
+        HandleLayerInfo(layerInfo.ID(), layerInfo.SurfaceID(),
+                        layerInfo.Position(), layerInfo.DisplayRect(),
+                        layerInfo.ClipRect(), layerInfo.RoundedClipRect(),
+                        layerInfo.Transform(), layerInfo.SamplingFilter(),
+                        layerInfo.SurfaceIsFlipped());
+        break;
+      }
+
+      default: {
+        gfxWarning() << "Unknown NativeLayerCommand.";
+        break;
+      }
+    }
+  }
+
+  mRealNativeLayerRoot->CommitToScreen();
+
   return IPC_OK();
 }
 
