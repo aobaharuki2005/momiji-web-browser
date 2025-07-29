@@ -25,8 +25,9 @@ mach_schema = Schema(
         # if true, perform a checkout of a comm-central based branch inside the
         # gecko checkout
         Required("comm-checkout"): bool,
-        # Prefix ENV variables with a string
-        Optional("prefix-env"): {str: str},
+        # Prepend the specified ENV variables to the command. This can be useful
+        # if the value of the ENV needs to be interpolated with another ENV.
+        Optional("prepend-env"): {str: str},
         # Base work directory used to set up the task.
         Optional("workdir"): str,
         # Use the specified caches.
@@ -50,9 +51,9 @@ def configure_mach(config, job, taskdesc):
     if worker["os"] == "macosx":
         additional_prefix = ["LC_ALL=en_US.UTF-8", "LANG=en_US.UTF-8"]
 
-    if prefix_env := run.pop("prefix-env", None):
-        for name, prefix in prefix_env.items():
-            additional_prefix.append(f"{name}={prefix}${name}")
+    if prepend_env := run.pop("prepend-env", None):
+        for name, value in prepend_env.items():
+            additional_prefix.append(f"{name}={value}")
 
     if python := run.pop("python-version", None):
         if taskdesc.get("use-python", "system") == "system":
