@@ -72,7 +72,7 @@ class TaskbarTab {
   /**
    * Whether the provided URL is navigable from the Taskbar Tab.
    *
-   * @param {nsIURL} aUrl - The URL to navigate to.
+   * @param {nsIURI} aUrl - The URL to navigate to.
    * @returns {boolean} `true` if the URL is navigable from the Taskbar Tab associated to the ID.
    * @throws {Error} If `aId` is not a valid Taskbar Tabs ID.
    */
@@ -177,7 +177,7 @@ export class TaskbarTabsRegistry {
   /**
    * Finds or creates a Taskbar Tab based on the provided URL and container.
    *
-   * @param {nsIURL} aUrl - The URL to match or derive the scope and start URL from.
+   * @param {nsIURI} aUrl - The URL to match or derive the scope and start URL from.
    * @param {number} aUserContextId - The container to start a Taskbar Tab in.
    * @returns {TaskbarTab} The matching or created Taskbar Tab.
    */
@@ -227,11 +227,24 @@ export class TaskbarTabsRegistry {
   /**
    * Searches for an existing Taskbar Tab matching the URL and Container.
    *
-   * @param {nsIURL} aUrl - The URL to match.
+   * @param {nsIURI} aUrl - The URL to match.
    * @param {number} aUserContextId - The container to match.
    * @returns {TaskbarTab|null} The matching Taskbar Tab, or null if none match.
    */
   findTaskbarTab(aUrl, aUserContextId) {
+    // Could be used in contexts reading from the command line, so validate
+    // input to guard against passing in strings.
+    if (!(aUrl instanceof Ci.nsIURI)) {
+      throw new TypeError(
+        "Invalid argument, `aUrl` should be instance of `nsIURI`"
+      );
+    }
+    if (typeof aUserContextId !== "number") {
+      throw new TypeError(
+        "Invalid argument, `aUserContextId` should be type of `number`"
+      );
+    }
+
     for (const tt of this.#taskbarTabs) {
       for (const scope of tt.scopes) {
         if (aUrl.host === scope.hostname) {
