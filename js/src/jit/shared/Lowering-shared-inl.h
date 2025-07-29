@@ -379,7 +379,7 @@ void LIRGeneratorShared::redefine(MDefinition* def, MDefinition* as) {
             MConstant::New(alloc(), BooleanValue(as->toConstant()->toInt32()));
       } else {
         replacement =
-            MConstant::New(alloc(), Int32Value(as->toConstant()->toBoolean()));
+            MConstant::NewInt32(alloc(), as->toConstant()->toBoolean());
       }
       def->block()->insertBefore(def->toInstruction(), replacement);
       emitAtUses(replacement->toInstruction());

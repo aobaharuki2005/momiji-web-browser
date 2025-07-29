@@ -239,10 +239,10 @@ BEGIN_TEST(testJitGVN_PinnedPhis) {
 
   MParameter* p = func.createParameter();
   entry->add(p);
-  MConstant* z0 = MConstant::New(func.alloc, Int32Value(0));
-  MConstant* z1 = MConstant::New(func.alloc, Int32Value(1));
-  MConstant* z2 = MConstant::New(func.alloc, Int32Value(2));
-  MConstant* z3 = MConstant::New(func.alloc, Int32Value(2));
+  MConstant* z0 = MConstant::NewInt32(func.alloc, 0);
+  MConstant* z1 = MConstant::NewInt32(func.alloc, 1);
+  MConstant* z2 = MConstant::NewInt32(func.alloc, 2);
+  MConstant* z3 = MConstant::NewInt32(func.alloc, 2);
   MOZ_RELEASE_ASSERT(phi0->addInputSlow(z0));
   MOZ_RELEASE_ASSERT(phi1->addInputSlow(z1));
   MOZ_RELEASE_ASSERT(phi2->addInputSlow(z2));
@@ -268,9 +268,9 @@ BEGIN_TEST(testJitGVN_PinnedPhis) {
   innerBackedge->end(MGoto::New(func.alloc, innerHeader));
 
   MInstruction* z4 = MAdd::New(func.alloc, phi0, phi1, MIRType::Int32);
-  MConstant* z5 = MConstant::New(func.alloc, Int32Value(4));
+  MConstant* z5 = MConstant::NewInt32(func.alloc, 4);
   MInstruction* z6 = MAdd::New(func.alloc, phi2, phi3, MIRType::Int32);
-  MConstant* z7 = MConstant::New(func.alloc, Int32Value(6));
+  MConstant* z7 = MConstant::NewInt32(func.alloc, 6);
   MOZ_RELEASE_ASSERT(phi0->addInputSlow(z4));
   MOZ_RELEASE_ASSERT(phi1->addInputSlow(z5));
   MOZ_RELEASE_ASSERT(phi2->addInputSlow(z6));

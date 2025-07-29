@@ -4693,7 +4693,7 @@ MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
       }
     } else if (term.scale == -1) {
       if (!def) {
-        def = MConstant::New(alloc, Int32Value(0));
+        def = MConstant::NewInt32(alloc, 0);
         block->insertAtEnd(def->toInstruction());
         def->computeRange(alloc);
       }
@@ -4703,7 +4703,7 @@ MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
       def->computeRange(alloc);
     } else {
       MOZ_ASSERT(term.scale != 0);
-      MConstant* factor = MConstant::New(alloc, Int32Value(term.scale));
+      MConstant* factor = MConstant::NewInt32(alloc, term.scale);
       block->insertAtEnd(factor);
       MMul* mul = MMul::New(alloc, term.term, factor, MIRType::Int32);
       mul->setBailoutKind(bailoutKind);
@@ -4721,7 +4721,7 @@ MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
   }
 
   if (!def) {
-    def = MConstant::New(alloc, Int32Value(0));
+    def = MConstant::NewInt32(alloc, 0);
     block->insertAtEnd(def->toInstruction());
     def->computeRange(alloc);
   }

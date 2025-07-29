@@ -1351,7 +1351,7 @@ MBasicBlock* ArrayMemoryView::startingBlock() { return startBlock_; }
 bool ArrayMemoryView::initStartingState(BlockState** pState) {
   // Uninitialized elements have an "undefined" value.
   undefinedVal_ = MConstant::New(alloc_, UndefinedValue());
-  MConstant* initLength = MConstant::New(alloc_, Int32Value(0));
+  MConstant* initLength = MConstant::NewInt32(alloc_, 0);
   arr_->block()->insertBefore(arr_, undefinedVal_);
   arr_->block()->insertBefore(arr_, initLength);
 
@@ -1560,7 +1560,7 @@ void ArrayMemoryView::visitSetInitializedLength(MSetInitializedLength* ins) {
   }
 
   int32_t initLengthValue = ins->index()->maybeConstantValue()->toInt32() + 1;
-  MConstant* initLength = MConstant::New(alloc_, Int32Value(initLengthValue));
+  MConstant* initLength = MConstant::NewInt32(alloc_, initLengthValue);
   ins->block()->insertBefore(ins, initLength);
   ins->block()->insertBefore(ins, state_);
   state_->setInitializedLength(initLength);
@@ -1604,7 +1604,7 @@ void ArrayMemoryView::visitArrayLength(MArrayLength* ins) {
 
   // Replace by the value of the length.
   if (!length_) {
-    length_ = MConstant::New(alloc_, Int32Value(state_->numElements()));
+    length_ = MConstant::NewInt32(alloc_, state_->numElements());
     arr_->block()->insertBefore(arr_, length_);
   }
   ins->replaceAllUsesWith(length_);
@@ -2120,7 +2120,7 @@ void ArgumentsReplacer::visitGetArgumentsObjectArg(
     }
   } else {
     // Load the argument from the frame.
-    auto* index = MConstant::New(alloc(), Int32Value(ins->argno()));
+    auto* index = MConstant::NewInt32(alloc(), ins->argno());
     ins->block()->insertBefore(ins, index);
 
     auto* loadArg = MGetFrameArgument::New(alloc(), index);
@@ -2147,8 +2147,7 @@ void ArgumentsReplacer::visitLoadArgumentsObjectArg(
     auto* actualArgs = args_->toCreateInlinedArgumentsObject();
 
     // Insert bounds check.
-    auto* length =
-        MConstant::New(alloc(), Int32Value(actualArgs->numActuals()));
+    auto* length = MConstant::NewInt32(alloc(), actualArgs->numActuals());
     ins->block()->insertBefore(ins, length);
 
     MInstruction* check = MBoundsCheck::New(alloc(), index, length);
@@ -2239,7 +2238,7 @@ void ArgumentsReplacer::visitInArgumentsObjectArg(MInArgumentsObjectArg* ins) {
   MInstruction* length;
   if (isInlinedArguments()) {
     uint32_t argc = args_->toCreateInlinedArgumentsObject()->numActuals();
-    length = MConstant::New(alloc(), Int32Value(argc));
+    length = MConstant::NewInt32(alloc(), argc);
   } else {
     length = MArgumentsLength::New(alloc());
   }
@@ -2264,7 +2263,7 @@ void ArgumentsReplacer::visitArgumentsObjectLength(
   MInstruction* length;
   if (isInlinedArguments()) {
     uint32_t argc = args_->toCreateInlinedArgumentsObject()->numActuals();
-    length = MConstant::New(alloc(), Int32Value(argc));
+    length = MConstant::NewInt32(alloc(), argc);
   } else {
     length = MArgumentsLength::New(alloc());
   }
@@ -2362,7 +2361,7 @@ MNewArrayObject* ArgumentsReplacer::inlineArgsArray(MInstruction* ins,
 
     MConstant* index = nullptr;
     for (uint32_t i = 0; i < count; i++) {
-      index = MConstant::New(alloc(), Int32Value(i));
+      index = MConstant::NewInt32(alloc(), i);
       ins->block()->insertBefore(ins, index);
 
       MDefinition* arg = actualArgs->getArg(begin + i);
@@ -2503,7 +2502,7 @@ void ArgumentsReplacer::visitArgumentsSlice(MArgumentsSlice* ins) {
   MInstruction* numArgs;
   if (isInlinedArguments()) {
     uint32_t argc = args_->toCreateInlinedArgumentsObject()->numActuals();
-    numArgs = MConstant::New(alloc(), Int32Value(argc));
+    numArgs = MConstant::NewInt32(alloc(), argc);
   } else {
     numArgs = MArgumentsLength::New(alloc());
   }
@@ -2915,7 +2914,7 @@ void RestReplacer::visitLoadElement(MLoadElement* ins) {
 
   // Adjust the index to skip any extra formals.
   if (uint32_t formals = rest()->numFormals()) {
-    auto* numFormals = MConstant::New(alloc(), Int32Value(formals));
+    auto* numFormals = MConstant::NewInt32(alloc(), formals);
     ins->block()->insertBefore(ins, numFormals);
 
     auto* add = MAdd::New(alloc(), index, numFormals, TruncateKind::Truncate);
@@ -2939,14 +2938,14 @@ MDefinition* RestReplacer::restLength(MInstruction* ins) {
   auto* numActuals = rest()->numActuals();
 
   if (uint32_t formals = rest()->numFormals()) {
-    auto* numFormals = MConstant::New(alloc(), Int32Value(formals));
+    auto* numFormals = MConstant::NewInt32(alloc(), formals);
     ins->block()->insertBefore(ins, numFormals);
 
     auto* length = MSub::New(alloc(), numActuals, numFormals, MIRType::Int32);
     length->setTruncateKind(TruncateKind::Truncate);
     ins->block()->insertBefore(ins, length);
 
-    auto* zero = MConstant::New(alloc(), Int32Value(0));
+    auto* zero = MConstant::NewInt32(alloc(), 0);
     ins->block()->insertBefore(ins, zero);
 
     auto* minmax = MMinMax::NewMax(alloc(), length, zero, MIRType::Int32);

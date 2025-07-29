@@ -870,7 +870,7 @@ bool StoreUnboxedScalarPolicy::adjustValueInput(TempAllocator& alloc,
       break;
     case MIRType::Null:
       value->setImplicitlyUsedUnchecked();
-      value = MConstant::New(alloc, Int32Value(0));
+      value = MConstant::NewInt32(alloc, 0);
       ins->block()->insertBefore(ins, value->toInstruction());
       break;
     case MIRType::Undefined:

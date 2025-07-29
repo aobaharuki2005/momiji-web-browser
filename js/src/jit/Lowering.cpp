@@ -4545,7 +4545,7 @@ void LIRGenerator::visitNot(MNot* ins) {
   // - object: false if it never emulates undefined, else LNotO(x)
   switch (op->type()) {
     case MIRType::Boolean: {
-      MConstant* cons = MConstant::New(alloc(), Int32Value(1));
+      MConstant* cons = MConstant::NewInt32(alloc(), 1);
       ins->block()->insertBefore(ins, cons);
       lowerForALU(new (alloc()) LBitOpI(JSOp::BitXor), ins, op, cons);
       break;

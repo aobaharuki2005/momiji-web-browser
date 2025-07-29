@@ -1743,7 +1743,7 @@ bool WarpCacheIRTranspiler::emitLoadTypeOfEqObjectResult(
   auto* typeOf = MTypeOf::New(alloc(), obj);
   add(typeOf);
 
-  auto* typeInt = MConstant::New(alloc(), Int32Value(operand.type()));
+  auto* typeInt = MConstant::NewInt32(alloc(), operand.type());
   add(typeInt);
 
   auto* ins = MCompare::New(alloc(), typeOf, typeInt, operand.compareOp(),
@@ -3179,7 +3179,7 @@ bool WarpCacheIRTranspiler::emitStoreDataViewValueResult(
 bool WarpCacheIRTranspiler::emitInt32IncResult(Int32OperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
-  auto* constOne = MConstant::New(alloc(), Int32Value(1));
+  auto* constOne = MConstant::NewInt32(alloc(), 1);
   add(constOne);
 
   auto* ins = MAdd::New(alloc(), input, constOne, MIRType::Int32);
@@ -3205,7 +3205,7 @@ bool WarpCacheIRTranspiler::emitDoubleIncResult(NumberOperandId inputId) {
 bool WarpCacheIRTranspiler::emitInt32DecResult(Int32OperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
-  auto* constOne = MConstant::New(alloc(), Int32Value(1));
+  auto* constOne = MConstant::NewInt32(alloc(), 1);
   add(constOne);
 
   auto* ins = MSub::New(alloc(), input, constOne, MIRType::Int32);
@@ -3231,7 +3231,7 @@ bool WarpCacheIRTranspiler::emitDoubleDecResult(NumberOperandId inputId) {
 bool WarpCacheIRTranspiler::emitInt32NegationResult(Int32OperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
-  auto* constNegOne = MConstant::New(alloc(), Int32Value(-1));
+  auto* constNegOne = MConstant::NewInt32(alloc(), -1);
   add(constNegOne);
 
   auto* ins = MMul::New(alloc(), input, constNegOne, MIRType::Int32);
@@ -4387,7 +4387,7 @@ bool WarpCacheIRTranspiler::emitRegExpFlagResult(ObjOperandId regexpId,
   flags->setResultType(MIRType::Int32);
   add(flags);
 
-  auto* mask = MConstant::New(alloc(), Int32Value(flagsMask));
+  auto* mask = MConstant::NewInt32(alloc(), flagsMask);
   add(mask);
 
   auto* maskedFlag = MBitAnd::New(alloc(), flags, mask, MIRType::Int32);

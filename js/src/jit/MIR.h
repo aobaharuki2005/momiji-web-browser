@@ -1458,6 +1458,7 @@ class MConstant : public MNullaryInstruction {
   static MConstant* New(TempAllocator& alloc, const Value& v);
   static MConstant* New(TempAllocator::Fallible alloc, const Value& v);
   static MConstant* NewFloat32(TempAllocator& alloc, double d);
+  static MConstant* NewInt32(TempAllocator& alloc, int32_t i);
   static MConstant* NewInt64(TempAllocator& alloc, int64_t i);
   static MConstant* NewIntPtr(TempAllocator& alloc, intptr_t i);
   static MConstant* NewObject(TempAllocator& alloc, JSObject* v);
