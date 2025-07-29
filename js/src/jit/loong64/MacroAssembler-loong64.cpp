@@ -3447,7 +3447,8 @@ static void CompareExchange(MacroAssembler& masm,
     }
 
     masm.as_ll_w(output, scratch, 0);
-    masm.ma_b(output, oldval, &end, Assembler::NotEqual, ShortJump);
+    masm.as_slli_w(scratch2, oldval, 0);
+    masm.ma_b(output, scratch2, &end, Assembler::NotEqual, ShortJump);
     masm.as_or(scratch2, newval, zero);
     masm.as_sc_w(scratch2, scratch, 0);
     masm.ma_b(scratch2, Register(scratch2), &again, Assembler::Zero, ShortJump);
@@ -3502,6 +3503,7 @@ static void CompareExchange(MacroAssembler& masm,
   masm.ma_b(output, valueTemp, &end, Assembler::NotEqual, ShortJump);
 
   masm.as_sll_w(valueTemp, newval, offsetTemp);
+  masm.as_andn(valueTemp, valueTemp, maskTemp);
   masm.as_and(scratch2, scratch2, maskTemp);
   masm.as_or(scratch2, scratch2, valueTemp);
 
