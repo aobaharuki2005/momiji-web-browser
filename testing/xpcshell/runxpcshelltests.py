@@ -897,6 +897,7 @@ class XPCShellTestThread(Thread):
         if not self.interactive and not self.debuggerInfo and not self.jsDebuggerInfo:
             testTimer = Timer(testTimeoutInterval, lambda: self.testTimeout(proc))
             testTimer.start()
+            self.env["MOZ_TEST_TIMEOUT_INTERVAL"] = str(testTimeoutInterval)
 
         proc = None
         process_output = None

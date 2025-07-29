@@ -624,6 +624,28 @@ function _execute_test() {
     PerTestCoverageUtils.beforeTestSync();
   }
 
+  let timer;
+  if (
+    Services.profiler.IsActive() &&
+    !Services.env.exists("MOZ_PROFILER_SHUTDOWN") &&
+    Services.env.exists("MOZ_UPLOAD_DIR") &&
+    Services.env.exists("MOZ_TEST_TIMEOUT_INTERVAL")
+  ) {
+    timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    timer.initWithCallback(
+      function upload_test_timeout_profile() {
+        ChromeUtils.addProfilerMarker(
+          "xpcshell-test",
+          { category: "Test", startTime },
+          _TEST_NAME
+        );
+        _do_upload_profile();
+      },
+      parseInt(Services.env.get("MOZ_TEST_TIMEOUT_INTERVAL")) * 1000 * 0.9, // Keep 10% of the time to gather the profile.
+      timer.TYPE_ONE_SHOT
+    );
+  }
+
   try {
     do_test_pending("MAIN run_test");
     // Check if run_test() is defined. If defined, run it.
@@ -767,6 +789,10 @@ function _execute_test() {
   } finally {
     // It's important to terminate the module to avoid crashes on shutdown.
     _PromiseTestUtils.uninit();
+  }
+
+  if (timer) {
+    timer.cancel();
   }
 
   // If MOZ_PROFILER_SHUTDOWN is set, the profiler got started from --profiler
