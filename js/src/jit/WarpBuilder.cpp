@@ -1137,7 +1137,7 @@ bool WarpBuilder::buildStrictConstantEqOp(BytecodeLocation loc,
     }
 
     case ConstantCompareOperand::EncodedType::Null: {
-      MConstant* constant = MConstant::New(alloc(), NullValue());
+      MConstant* constant = MConstant::NewNull(alloc());
       current->add(constant);
 
       auto* ins = MCompare::New(alloc(), value, constant, compareOp,

@@ -1548,7 +1548,7 @@ bool jit::EliminateDeadResumePointOperands(const MIRGenerator* mir,
         // interpreter could throw an exception; we avoid this problem
         // by removing dead operands before removing dead code.
         MConstant* constant =
-            MConstant::New(graph.alloc(), MagicValue(JS_OPTIMIZED_OUT));
+            MConstant::NewMagic(graph.alloc(), JS_OPTIMIZED_OUT);
         block->insertBefore(*(block->begin()), constant);
         use->replaceProducer(constant);
       }

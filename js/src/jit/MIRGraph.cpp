@@ -748,7 +748,7 @@ MConstant* MBasicBlock::optimizedOutConstant(TempAllocator& alloc) {
     return ins->toConstant();
   }
 
-  MConstant* constant = MConstant::New(alloc, MagicValue(JS_OPTIMIZED_OUT));
+  MConstant* constant = MConstant::NewMagic(alloc, JS_OPTIMIZED_OUT);
   insertBefore(ins, constant);
   return constant;
 }

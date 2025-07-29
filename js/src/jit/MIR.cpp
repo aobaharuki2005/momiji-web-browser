@@ -1070,12 +1070,24 @@ MConstant* MConstant::NewIntPtr(TempAllocator& alloc, intptr_t i) {
   return new (alloc) MConstant(MIRType::IntPtr, i);
 }
 
+MConstant* MConstant::NewMagic(TempAllocator& alloc, JSWhyMagic m) {
+  return new (alloc) MConstant(alloc, MagicValue(m));
+}
+
+MConstant* MConstant::NewNull(TempAllocator& alloc) {
+  return new (alloc) MConstant(alloc, NullValue());
+}
+
 MConstant* MConstant::NewObject(TempAllocator& alloc, JSObject* v) {
   return new (alloc) MConstant(v);
 }
 
 MConstant* MConstant::NewShape(TempAllocator& alloc, Shape* s) {
   return new (alloc) MConstant(s);
+}
+
+MConstant* MConstant::NewString(TempAllocator& alloc, JSString* s) {
+  return new (alloc) MConstant(alloc, StringValue(s));
 }
 
 MConstant* MConstant::NewUndefined(TempAllocator& alloc) {
@@ -4154,7 +4166,7 @@ MDefinition* MTypeOfName::foldsTo(TempAllocator& alloc) {
 
   JSString* name =
       TypeName(static_cast<JSType>(type), GetJitContext()->runtime->names());
-  return MConstant::New(alloc, StringValue(name));
+  return MConstant::NewString(alloc, name);
 }
 
 MUrsh* MUrsh::NewWasm(TempAllocator& alloc, MDefinition* left,

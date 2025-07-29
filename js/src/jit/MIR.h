@@ -1463,8 +1463,11 @@ class MConstant : public MNullaryInstruction {
   static MConstant* NewInt32(TempAllocator& alloc, int32_t i);
   static MConstant* NewInt64(TempAllocator& alloc, int64_t i);
   static MConstant* NewIntPtr(TempAllocator& alloc, intptr_t i);
+  static MConstant* NewMagic(TempAllocator& alloc, JSWhyMagic m);
+  static MConstant* NewNull(TempAllocator& alloc);
   static MConstant* NewObject(TempAllocator& alloc, JSObject* v);
   static MConstant* NewShape(TempAllocator& alloc, Shape* s);
+  static MConstant* NewString(TempAllocator& alloc, JSString* s);
   static MConstant* NewUndefined(TempAllocator& alloc);
 
   // Try to convert this constant to boolean, similar to js::ToBoolean.
