@@ -310,11 +310,15 @@ export class ProfileAvatarSelector extends MozLitElement {
   }
 
   customTabViewImageTemplate() {
-    return html`<div class="custom-avatar-crop-header">
+    return html`<div
+        class="custom-avatar-crop-header"
+        data-l10n-id="custom-avatar-crop-view"
+      >
         <moz-button
           id="back-button"
           @click=${this.handleCancelClick}
           @keydown=${this.handleBackKeyDown}
+          data-l10n-id="custom-avatar-crop-back-button"
           type="icon ghost"
           iconSrc="chrome://global/skin/icons/arrow-left.svg"
         ></moz-button>
@@ -323,10 +327,16 @@ export class ProfileAvatarSelector extends MozLitElement {
       </div>
       <div class="custom-avatar-crop-area">
         <div id="avatar-selection-container">
-          <div id="highlight" class="highlight" tabindex="0">
+          <div
+            id="highlight"
+            class="highlight"
+            tabindex="0"
+            data-l10n-id="custom-avatar-crop-area"
+          >
             <div id="highlight-background"></div>
             <div
               id="mover-topLeft"
+              data-l10n-id="custom-avatar-drag-handle"
               class="mover-target direction-topLeft"
               tabindex="0"
             >
@@ -335,6 +345,7 @@ export class ProfileAvatarSelector extends MozLitElement {
 
             <div
               id="mover-topRight"
+              data-l10n-id="custom-avatar-drag-handle"
               class="mover-target direction-topRight"
               tabindex="0"
             >
@@ -343,6 +354,7 @@ export class ProfileAvatarSelector extends MozLitElement {
 
             <div
               id="mover-bottomRight"
+              data-l10n-id="custom-avatar-drag-handle"
               class="mover-target direction-bottomRight"
               tabindex="0"
             >
@@ -351,6 +363,7 @@ export class ProfileAvatarSelector extends MozLitElement {
 
             <div
               id="mover-bottomLeft"
+              data-l10n-id="custom-avatar-drag-handle"
               class="mover-target direction-bottomLeft"
               tabindex="0"
             >
@@ -496,6 +509,7 @@ export class ProfileAvatarSelector extends MozLitElement {
   imageLoaded() {
     this.updateViewDimensions();
     this.setInitialAvatarSelection();
+    this.highlight.focus({ focusVisible: true });
   }
 
   setInitialAvatarSelection() {
