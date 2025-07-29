@@ -2,9 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// .focus-timer {
-
-// }
+.focus-timer-wrapper {
+  .focus-timer-types-wrapper {
+    button.active {
+      background: teal;
+    }
+  }
+}
 
 .progress-circle-wrapper {
   /* Colours for the main timer */
@@ -51,8 +55,19 @@
     );
   }
 
+  .focus-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .focus-visible {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+
   /* break timer colours */
   .progress-circle-break {
+    clip-path: polygon(50% 50%);
     background: conic-gradient(
       rgba(159, 201, 255, 0%) 0deg, // fade-in the progress bar
       rgba(159, 201, 255, 100%) 30deg, // closest to the blue below
@@ -60,6 +75,16 @@
       var(--timer-violet) 180deg,
       var(--timer-violet-light) 360deg
     );
+  }
+
+  .break-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .break-visible {
+    opacity: 1;
+    transition: opacity 0.3s ease;
   }
 
   /* timer turns green when complete */
@@ -88,5 +113,6 @@
     position: absolute;
     width: 100%;
   }
-
 }
+
+

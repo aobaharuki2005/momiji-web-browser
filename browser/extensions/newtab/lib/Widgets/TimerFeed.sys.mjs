@@ -112,6 +112,7 @@ export class TimerFeed {
           );
         }
         break;
+      case at.WIDGETS_TIMER_SET_TYPE:
       case at.WIDGETS_TIMER_SET_DURATION:
       case at.WIDGETS_TIMER_PLAY:
       case at.WIDGETS_TIMER_PAUSE:

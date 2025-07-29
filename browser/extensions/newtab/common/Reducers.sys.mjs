@@ -197,14 +197,25 @@ export const INITIAL_STATE = {
     },
   },
   TimerWidget: {
-    // Timer duration set by user; will be updated if user pauses the timer
-    duration: 0,
-    // Initial duration - also set by the user; does not update until timer ends or user resets timer
-    initialDuration: 0,
-    // the Date.now() value when a user starts/resumes a timer
-    startTime: null,
-    // Boolean indicating if timer is currently running
-    isRunning: false,
+    // The timer will have 2 types of states, focus and break.
+    // Focus will the default state
+    timerType: "focus",
+    focus: {
+      // Timer duration set by user
+      duration: 0,
+      // Initial duration - also set by the user; does not update until timer ends or user resets timer
+      initialDuration: 0,
+      // the Date.now() value when a user starts/resumes a timer
+      startTime: null,
+      // Boolean indicating if timer is currently running
+      isRunning: false,
+    },
+    break: {
+      duration: 0,
+      initialDuration: 0,
+      startTime: null,
+      isRunning: false,
+    },
   },
 };
 
@@ -1102,51 +1113,74 @@ function TrendingSearch(prevState = INITIAL_STATE.TrendingSearch, action) {
 }
 
 function TimerWidget(prevState = INITIAL_STATE.TimerWidget, action) {
+  // fallback to current timerType in state if not provided in action
+  const timerType = action.data?.timerType || prevState.timerType;
   switch (action.type) {
     case at.WIDGETS_TIMER_SET:
       return {
         ...prevState,
         ...action.data,
       };
+    case at.WIDGETS_TIMER_SET_TYPE:
+      return {
+        ...prevState,
+        timerType: action.data.timerType,
+      };
     case at.WIDGETS_TIMER_SET_DURATION:
       return {
-        duration: action.data,
-        initialDuration: action.data,
-        startTime: null,
-        isRunning: false,
+        ...prevState,
+        [timerType]: {
+          // setting a dynamic key assignment to let us dynamically update timer type's state based on what is set
+          duration: action.data.duration,
+          initialDuration: action.data.duration,
+          startTime: null,
+          isRunning: false,
+        },
       };
     case at.WIDGETS_TIMER_PLAY:
       return {
         ...prevState,
-        startTime: Math.floor(Date.now() / 1000), // reflected in seconds
-        isRunning: true,
+        [timerType]: {
+          ...prevState[timerType],
+          startTime: Math.floor(Date.now() / 1000), // reflected in seconds
+          isRunning: true,
+        },
       };
     case at.WIDGETS_TIMER_PAUSE:
-      if (prevState.isRunning) {
+      if (prevState[timerType]?.isRunning) {
         return {
           ...prevState,
-          duration: action.data.duration,
-          // setting startTime to null on pause because we need to check the exact time the user presses play,
-          // whether it's when the user starts or resumes the timer. This helps get accurate results
-          startTime: null,
-          isRunning: false,
+          [timerType]: {
+            ...prevState[timerType],
+            duration: action.data.duration,
+            // setting startTime to null on pause because we need to check the exact time the user presses play,
+            // whether it's when the user starts or resumes the timer. This helps get accurate results
+            startTime: null,
+            isRunning: false,
+          },
         };
       }
-      break;
+      return prevState;
     case at.WIDGETS_TIMER_RESET:
       return {
-        duration: 0,
-        initialDuration: 0,
-        startTime: null,
-        isRunning: false,
+        ...prevState,
+        [timerType]: {
+          duration: 0,
+          initialDuration: 0,
+          startTime: null,
+          isRunning: false,
+        },
       };
     case at.WIDGETS_TIMER_END:
       return {
         ...prevState,
-        duration: 0,
-        initialDuration: 0,
-        startTime: null,
-        isRunning: false,
+        [timerType]: {
+          ...prevState[timerType],
+          duration: 0,
+          initialDuration: 0,
+          startTime: null,
+          isRunning: false,
+        },
       };
     default:
       return prevState;

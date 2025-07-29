@@ -4552,6 +4552,10 @@ main section {
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+.focus-timer-wrapper .focus-timer-types-wrapper button.active {
+  background: teal;
+}
+
 .progress-circle-wrapper {
   /* Colours for the main timer */
   --timer-red: var(--color-red-50);
@@ -4587,8 +4591,25 @@ main section {
 .progress-circle-wrapper .progress-circle-complete {
   background: conic-gradient(rgba(232, 57, 92, 0) 0deg, #e8395c 30deg, var(--timer-red) 60deg, var(--timer-orange) 180deg, var(--timer-yellow) 360deg);
 }
+.progress-circle-wrapper .focus-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.progress-circle-wrapper .focus-visible {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
 .progress-circle-wrapper .progress-circle-break {
+  clip-path: polygon(50% 50%);
   background: conic-gradient(rgba(159, 201, 255, 0) 0deg, #9fc9ff 30deg, var(--timer-blue) 60deg, var(--timer-violet) 180deg, var(--timer-violet-light) 360deg);
+}
+.progress-circle-wrapper .break-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.progress-circle-wrapper .break-visible {
+  opacity: 1;
+  transition: opacity 0.3s ease;
 }
 .progress-circle-wrapper .progress-circle-complete {
   background: var(--timer-green);

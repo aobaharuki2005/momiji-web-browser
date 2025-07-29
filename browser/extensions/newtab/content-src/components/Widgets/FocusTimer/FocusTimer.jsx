@@ -4,7 +4,7 @@
 
 import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, batch } from "react-redux";
 
 /**
  * Calculates the remaining time (in seconds) by subtracting elapsed time from the original duration
@@ -73,15 +73,16 @@ export const getClipPath = progress => {
 };
 
 function FocusTimer({ dispatch }) {
+  const [timeLeft, setTimeLeft] = useState(0);
+  // calculated value for the progress circle; 1 = 100%
+  const [progress, setProgress] = useState(0);
+  const timerType = useSelector(state => state.TimerWidget.timerType);
   const inputRef = useRef(null);
   const arcRef = useRef(null);
 
   const timerData = useSelector(state => state.TimerWidget);
-  const { duration, initialDuration, startTime, isRunning } = timerData;
-
-  const [timeLeft, setTimeLeft] = useState(0);
-  // calculated value for the progress circle; 1 = 100%
-  const [progress, setProgress] = useState(0);
+  const { duration, initialDuration, startTime, isRunning } =
+    timerData[timerType];
 
   const resetProgressCircle = useCallback(() => {
     if (arcRef?.current) {
@@ -111,6 +112,7 @@ function FocusTimer({ dispatch }) {
           dispatch(
             ac.AlsoToMain({
               type: at.WIDGETS_TIMER_END,
+              data: { timerType },
             })
           );
         }
@@ -135,8 +137,8 @@ function FocusTimer({ dispatch }) {
     duration,
     initialDuration,
     dispatch,
-    timeLeft,
     resetProgressCircle,
+    timerType,
   ]);
 
   // Update the clip-path of the gradient circle to match the current progress value
@@ -156,7 +158,7 @@ function FocusTimer({ dispatch }) {
       dispatch(
         ac.AlsoToMain({
           type: at.WIDGETS_TIMER_SET_DURATION,
-          data: seconds,
+          data: { timerType, duration: seconds },
         })
       );
     }
@@ -168,6 +170,7 @@ function FocusTimer({ dispatch }) {
       dispatch(
         ac.AlsoToMain({
           type: at.WIDGETS_TIMER_PLAY,
+          data: { timerType },
         })
       );
     } else if (isRunning) {
@@ -178,6 +181,7 @@ function FocusTimer({ dispatch }) {
         ac.AlsoToMain({
           type: at.WIDGETS_TIMER_PAUSE,
           data: {
+            timerType,
             duration: remaining,
           },
         })
@@ -190,6 +194,7 @@ function FocusTimer({ dispatch }) {
     dispatch(
       ac.AlsoToMain({
         type: at.WIDGETS_TIMER_RESET,
+        data: { timerType },
       })
     );
 
@@ -197,9 +202,51 @@ function FocusTimer({ dispatch }) {
     resetProgressCircle();
   };
 
+  // Toggles between "focus" and "break" timer types
+  const toggleType = type => {
+    const oldTypeRemaining = calculateTimeRemaining(duration, startTime);
+
+    batch(() => {
+      // The type we are toggling away from automatically pauses
+      dispatch(
+        ac.AlsoToMain({
+          type: at.WIDGETS_TIMER_PAUSE,
+          data: {
+            timerType,
+            duration: oldTypeRemaining,
+          },
+        })
+      );
+
+      // Sets the current timer type so it persists when opening a new tab
+      dispatch(
+        ac.AlsoToMain({
+          type: at.WIDGETS_TIMER_SET_TYPE,
+          data: {
+            timerType: type,
+          },
+        })
+      );
+    });
+  };
+
   return timerData ? (
     <article className="focus-timer-wrapper">
       <p>Focus timer widget</p>
+      <div className="focus-timer-types-wrapper">
+        <button
+          className={`timer-type-focus ${timerType === "focus" ? "active" : " "}`}
+          onClick={() => toggleType("focus")}
+        >
+          Focus
+        </button>
+        <button
+          className={`timer-type-break ${timerType === "break" ? "active" : " "}`}
+          onClick={() => toggleType("break")}
+        >
+          Break
+        </button>
+      </div>
       <form onSubmit={setTimerMinutes}>
         <label htmlFor="countdown"></label>
         <input type="number" id="countdown" ref={inputRef} />
@@ -211,7 +258,17 @@ function FocusTimer({ dispatch }) {
       </div>
       <div role="progress" className="progress-circle-wrapper">
         <div className="progress-circle-background" />
-        <div className="progress-circle" ref={arcRef} />
+
+        <div
+          className={`progress-circle ${timerType === "focus" ? "focus-visible" : "focus-hidden"}`}
+          ref={timerType === "focus" ? arcRef : null}
+        />
+
+        <div
+          className={`progress-circle ${timerType === "break" ? "progress-circle-break break-visible" : "break-hidden"}`}
+          ref={timerType === "break" ? arcRef : null}
+        />
+
         <div
           className={`progress-circle-complete ${progress === 1 ? "visible" : ""}`}
         />
