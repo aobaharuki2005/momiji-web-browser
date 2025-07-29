@@ -5,11 +5,13 @@
 package org.mozilla.fenix.home
 
 import android.content.Context
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -17,6 +19,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.Core
@@ -28,6 +31,7 @@ import org.mozilla.fenix.reviewprompt.ReviewPromptState
 import org.mozilla.fenix.reviewprompt.ReviewPromptState.Eligible.Type
 import org.mozilla.fenix.utils.Settings
 
+@RunWith(AndroidJUnit4::class)
 class HomeFragmentTest {
 
     private lateinit var settings: Settings
@@ -165,5 +169,53 @@ class HomeFragmentTest {
             assertFalse(promptShown)
             assertEquals(emptyList<AppAction>(), actions)
         }
+    }
+
+    @Test
+    fun `GIVEN canShowCFR and shouldShowCFR are true WHEN maybeShowEncourageSearchCfr is called THEN the cfr is shown and exposure recorded`() {
+        var cfrShown = false
+        var exposureRecorded = false
+
+        homeFragment.maybeShowEncourageSearchCfr(
+            canShowCfr = true,
+            shouldShowCFR = true,
+            showCfr = { cfrShown = true },
+            recordExposure = { exposureRecorded = true },
+        )
+
+        assertTrue(cfrShown)
+        assertTrue(exposureRecorded)
+    }
+
+    @Test
+    fun `GIVEN canShowCFR is false WHEN maybeShowEncourageSearchCfr is called THEN the cfr is not shown and exposure is not recorded`() {
+        var cfrShown = false
+        var exposureRecorded = false
+
+        homeFragment.maybeShowEncourageSearchCfr(
+            canShowCfr = false,
+            shouldShowCFR = true,
+            showCfr = { cfrShown = true },
+            recordExposure = { exposureRecorded = true },
+        )
+
+        assertFalse(cfrShown)
+        assertFalse(exposureRecorded)
+    }
+
+    @Test
+    fun `GIVEN exposureRecorded is false WHEN maybeShowEncourageSearchCfr is called THEN the cfr is not shown and exposure is not recorded`() {
+        var cfrShown = false
+        var exposureRecorded = false
+
+        homeFragment.maybeShowEncourageSearchCfr(
+            canShowCfr = true,
+            shouldShowCFR = false,
+            showCfr = { cfrShown = true },
+            recordExposure = { exposureRecorded = true },
+        )
+
+        assertFalse(cfrShown)
+        assertFalse(exposureRecorded)
     }
 }

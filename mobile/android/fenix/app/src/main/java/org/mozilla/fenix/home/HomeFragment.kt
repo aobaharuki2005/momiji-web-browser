@@ -35,10 +35,8 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.appbar.AppBarLayout
@@ -62,7 +60,6 @@ import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.accounts.push.SendTabUseCases
 import mozilla.components.feature.tab.collections.TabCollection
-import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.feature.top.sites.TopSitesFeature
 import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
@@ -163,11 +160,11 @@ import org.mozilla.fenix.tabstray.DefaultTabManagementFeatureHelper
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.tabstray.TabsTrayAccessPoint
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.utils.showAddSearchWidgetPromptIfSupported
 import org.mozilla.fenix.wallpapers.Wallpaper
 import java.lang.ref.WeakReference
-import org.mozilla.fenix.GleanMetrics.TabStrip as TabStripMetrics
 
 @Suppress("TooManyFunctions", "LargeClass")
 class HomeFragment : Fragment() {
@@ -1172,7 +1169,13 @@ class HomeFragment : Fragment() {
         components.useCases.sessionUseCases.updateLastAccess()
 
         evaluateMessagesForMicrosurvey(components)
-        maybeShowEncourageSearchCfr()
+
+        maybeShowEncourageSearchCfr(
+            canShowCfr = components.settings.canShowCfr,
+            shouldShowCFR = components.settings.shouldShowSearchBarCFR,
+            showCfr = ::showEncourageSearchCfr,
+            recordExposure = { FxNimbus.features.encourageSearchCfr.recordExposure() },
+        )
 
         BiometricAuthenticationManager.biometricAuthenticationNeededInfo.shouldShowAuthenticationPrompt =
             true
@@ -1183,13 +1186,16 @@ class HomeFragment : Fragment() {
     private fun evaluateMessagesForMicrosurvey(components: Components) =
         components.appStore.dispatch(MessagingAction.Evaluate(FenixMessageSurfaceId.MICROSURVEY))
 
-    private fun maybeShowEncourageSearchCfr() {
-        with(requireComponents.settings) {
-            if (shouldShowSearchBarCFR && canShowCfr) {
-                FxNimbus.features.encourageSearchCfr.recordExposure()
-
-                showEncourageSearchCfr()
-            }
+    @VisibleForTesting
+    internal fun maybeShowEncourageSearchCfr(
+        canShowCfr: Boolean,
+        shouldShowCFR: Boolean,
+        showCfr: () -> Unit,
+        recordExposure: () -> Unit,
+    ) {
+        if (canShowCfr && shouldShowCFR) {
+            showCfr()
+            recordExposure()
         }
     }
 
