@@ -872,6 +872,18 @@ void nsCocoaWindow::HandleMainThreadCATransaction() {
   MaybeScheduleUnsuspendAsyncCATransactions();
 }
 
+void nsCocoaWindow::GetCompositorWidgetInitData(
+    mozilla::widget::CompositorWidgetInitData* aInitData) {
+  auto deviceIntRect = GetBounds();
+  *aInitData =
+      mozilla::widget::CocoaCompositorWidgetInitData(deviceIntRect.Size());
+}
+
+mozilla::layers::CompositorBridgeChild*
+nsCocoaWindow::GetCompositorBridgeChild() const {
+  return mCompositorBridgeChild;
+}
+
 /* static */
 bool nsCocoaWindow::DoHasPendingInputEvent() {
   return sLastInputEventCount != GetCurrentInputEventCount();
