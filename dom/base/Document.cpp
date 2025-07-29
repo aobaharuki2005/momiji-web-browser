@@ -2102,10 +2102,10 @@ void Document::RecordPageLoadEventTelemetry() {
 
   if (GetChannel()) {
     nsCOMPtr<nsICacheInfoChannel> cacheInfoChannel =
-      do_QueryInterface(GetChannel());
+        do_QueryInterface(GetChannel());
     if (cacheInfoChannel) {
       nsICacheInfoChannel::CacheDisposition disposition =
-        nsICacheInfoChannel::kCacheUnknown;
+          nsICacheInfoChannel::kCacheUnknown;
       nsresult rv = cacheInfoChannel->GetCacheDisposition(&disposition);
       if (NS_SUCCEEDED(rv)) {
         mPageloadEventData.set_cacheDisposition(disposition);

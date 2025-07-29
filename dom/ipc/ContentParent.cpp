@@ -6292,7 +6292,9 @@ mozilla::ipc::IPCResult ContentParent::RecvRecordPageLoadEvent(
     NS_SUCCEEDED(NS_DispatchToMainThreadQueue(
         NS_NewRunnableFunction(
             "PageloadBaseDomainPingIdleTask",
-            [] { mozilla::glean_pings::PageloadBaseDomain.Submit("pageload"_ns); }),
+            [] {
+              mozilla::glean_pings::PageloadBaseDomain.Submit("pageload"_ns);
+            }),
         EventQueuePriority::Idle));
   } else {
     mozilla::glean::perf::PageLoadExtra extra =
