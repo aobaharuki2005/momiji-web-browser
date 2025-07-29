@@ -392,12 +392,6 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
       const EditorRawDOMPoint& aStartPoint, const EditorRawDOMPoint& aEndPoint,
       nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents);
 
-  /**
-   * @return nullptr, if there's no invisible `<br>`.
-   */
-  HTMLBRElement* GetInvisibleBRElementAtPoint(
-      const EditorDOMPoint& aPointToInsert) const;
-
   EditorDOMPoint GetNewCaretPointAfterInsertingHTML(
       const EditorDOMPoint& aLastInsertedPoint) const;
 
@@ -499,18 +493,6 @@ HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator final {
   RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces(
       nsIContent& aNode, NodesToRemove aNodesToRemove);
 };
-
-HTMLBRElement*
-HTMLEditor::HTMLWithContextInserter::GetInvisibleBRElementAtPoint(
-    const EditorDOMPoint& aPointToInsert) const {
-  const WSRunScanner wsRunScannerAtInsertionPoint(
-      WSRunScanner::Scan::EditableNodes, aPointToInsert,
-      BlockInlineCheck::UseComputedDisplayStyle);
-  if (wsRunScannerAtInsertionPoint.EndsByInvisibleBRElement()) {
-    return wsRunScannerAtInsertionPoint.EndReasonBRElementPtr();
-  }
-  return nullptr;
-}
 
 EditorDOMPoint
 HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
