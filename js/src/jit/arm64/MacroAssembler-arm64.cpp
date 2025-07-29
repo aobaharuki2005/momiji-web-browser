@@ -1255,6 +1255,8 @@ void MacroAssembler::Push(const ImmGCPtr ptr) {
 
 void MacroAssembler::Push(FloatRegister f) {
   push(f);
+  // See MacroAssemblerCompat::push(FloatRegister) for why we use
+  // sizeof(double).
   adjustFrame(sizeof(double));
 }
 
@@ -1271,6 +1273,8 @@ void MacroAssembler::Pop(Register reg) {
 
 void MacroAssembler::Pop(FloatRegister f) {
   loadDouble(Address(getStackPointer(), 0), f);
+  // See MacroAssemblerCompat::pop(FloatRegister) for why we use
+  // sizeof(double).
   freeStack(sizeof(double));
 }
 
