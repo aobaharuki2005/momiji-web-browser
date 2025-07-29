@@ -13,7 +13,7 @@
 /* defined by the harness */
 /* globals _HEAD_FILES, _HEAD_JS_PATH, _JSDEBUGGER_PORT, _JSCOV_DIR,
     _MOZINFO_JS_PATH, _TEST_FILE, _TEST_NAME, _TEST_CWD, _TESTING_MODULES_DIR:true,
-    _PREFS_FILE */
+    _PREFS_FILE, _EXPECTED */
 
 /* defined by XPCShellImpl.cpp */
 /* globals load, sendCommand, changeTestShellDir */
@@ -778,7 +778,13 @@ function _execute_test() {
     !Services.env.exists("MOZ_PROFILER_SHUTDOWN") &&
     Services.profiler.IsActive()
   ) {
-    _do_upload_profile();
+    if (_EXPECTED != "pass") {
+      _testLogger.error(
+        "Not uploading the profile as the test is expected to fail."
+      );
+    } else {
+      _do_upload_profile();
+    }
   }
 
   // Skip the normal shutdown path for optimized builds that don't do leak checking.
