@@ -929,9 +929,16 @@ class PageStyleActor extends Actor {
       if (inherited) {
         // Don't include inherited rules if none of its properties
         // are inheritable.
-        const hasInherited = [...domRule.style].some(prop =>
-          InspectorUtils.isInheritedProperty(doc, prop)
-        );
+        let hasInherited = false;
+        // This can be on a hot path, so let's use a simple for rule instead of turning
+        // domRule.style into an Array to use some on it.
+        for (let j = 0, len = domRule.style.length; j < len; j++) {
+          if (InspectorUtils.isInheritedProperty(doc, domRule.style[j])) {
+            hasInherited = true;
+            break;
+          }
+        }
+
         if (!hasInherited) {
           continue;
         }
