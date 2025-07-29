@@ -468,6 +468,16 @@ class BrowserToolbarSearchMiddleware(
                 ),
             )
         }
+        if (isValidSearchEngine) {
+            add(
+                ActionButtonRes(
+                    drawableResId = R.drawable.mozac_ic_qr_code_24,
+                    contentDescription = R.string.mozac_feature_qr_scanner,
+                    state = ActionButton.State.DEFAULT,
+                    onClick = QrScannerClicked,
+                ),
+            )
+        }
         if (queryText.isNotEmpty()) {
             add(
                 ActionButtonRes(
@@ -475,15 +485,6 @@ class BrowserToolbarSearchMiddleware(
                     contentDescription = R.string.mozac_clear_button_description,
                     state = ActionButton.State.DEFAULT,
                     onClick = ClearSearchClicked,
-                ),
-            )
-        } else if (isValidSearchEngine) {
-            add(
-                ActionButtonRes(
-                    drawableResId = R.drawable.mozac_ic_qr_code_24,
-                    contentDescription = R.string.mozac_feature_qr_scanner,
-                    state = ActionButton.State.DEFAULT,
-                    onClick = QrScannerClicked,
                 ),
             )
         }

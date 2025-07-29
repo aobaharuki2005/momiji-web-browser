@@ -138,41 +138,8 @@ class BrowserToolbarSearchMiddlewareTest {
     fun `WHEN the toolbar enters in edit mode with non-blank query THEN a clear button is shown`() {
         val (_, store) = buildMiddlewareAndAddToStore()
 
-        store.dispatch(ToggleEditMode(true))
         store.dispatch(SearchQueryUpdated("test"))
-
-        assertEquals(
-            expectedClearButton,
-            store.state.editState.editActionsEnd.last() as ActionButtonRes,
-        )
-    }
-
-    @Test
-    fun `WHEN the toolbar enters in edit mode with blank query THEN a qr scanner button is shown`() {
-        val (_, store) = buildMiddlewareAndAddToStore()
-
         store.dispatch(ToggleEditMode(true))
-        store.dispatch(SearchQueryUpdated(""))
-
-        assertEquals(
-            expectedQrButton,
-            store.state.editState.editActionsEnd.last() as ActionButtonRes,
-        )
-    }
-
-    @Test
-    fun `WHEN the toolbar enters in edit mode with blank query AND user starts typing THEN qr button is replaced by clear button`() {
-        val (_, store) = buildMiddlewareAndAddToStore()
-
-        store.dispatch(ToggleEditMode(true))
-        store.dispatch(SearchQueryUpdated(""))
-
-        assertEquals(
-            expectedQrButton,
-            store.state.editState.editActionsEnd.last() as ActionButtonRes,
-        )
-
-        store.dispatch(SearchQueryUpdated("a"))
 
         assertEquals(
             expectedClearButton,
@@ -897,7 +864,7 @@ class BrowserToolbarSearchMiddlewareTest {
             SearchEngine("engine-g", "Engine G", mock(), type = SearchEngine.Type.BUNDLED),
         ),
         regionDefaultSearchEngineId = null,
-        userSelectedSearchEngineId = "engine-c",
+        userSelectedSearchEngineId = null,
         userSelectedSearchEngineName = null,
     )
 }
