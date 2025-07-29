@@ -25,8 +25,10 @@
 
 #ifdef __OBJC__
 @class CALayer;
+@class CARenderer;
 #else
 typedef void CALayer;
+typedef void CARenderer;
 #endif
 
 namespace mozilla {
