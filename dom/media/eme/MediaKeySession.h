@@ -90,7 +90,7 @@ class MediaKeySession final : public DOMEventTargetHelper,
 
   void DispatchKeyStatusesChange();
 
-  void OnClosed();
+  void OnClosed(MediaKeySessionClosedReason aReason);
 
   bool IsClosed() const;
 

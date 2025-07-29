@@ -552,7 +552,8 @@ void ChromiumCDMProxy::OnExpirationChange(const nsAString& aSessionId,
   }
 }
 
-void ChromiumCDMProxy::OnSessionClosed(const nsAString& aSessionId) {
+void ChromiumCDMProxy::OnSessionClosed(
+    const nsAString& aSessionId, dom::MediaKeySessionClosedReason aReason) {
   MOZ_ASSERT(NS_IsMainThread());
 
   bool keyStatusesChange = false;
@@ -568,7 +569,7 @@ void ChromiumCDMProxy::OnSessionClosed(const nsAString& aSessionId) {
   }
   RefPtr<dom::MediaKeySession> session(mKeys->GetSession(aSessionId));
   if (session) {
-    session->OnClosed();
+    session->OnClosed(aReason);
   }
 }
 

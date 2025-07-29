@@ -225,14 +225,15 @@ void MediaDrmCDMProxy::OnExpirationChange(const nsAString& aSessionId,
   }
 }
 
-void MediaDrmCDMProxy::OnSessionClosed(const nsAString& aSessionId) {
+void MediaDrmCDMProxy::OnSessionClosed(
+    const nsAString& aSessionId, dom::MediaKeySessionClosedReason aReason) {
   MOZ_ASSERT(NS_IsMainThread());
   if (mKeys.IsNull()) {
     return;
   }
   RefPtr<dom::MediaKeySession> session(mKeys->GetSession(aSessionId));
   if (session) {
-    session->OnClosed();
+    session->OnClosed(aReason);
   }
 }
 

@@ -19,6 +19,7 @@
 #include "mozilla/dom/MediaKeyStatusMap.h"
 #include "mozilla/dom/MediaKeySystemAccess.h"
 #include "mozilla/dom/MediaKeysBinding.h"
+#include "mozilla/dom/MediaKeySessionBinding.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/WindowGlobalChild.h"
@@ -173,7 +174,7 @@ void MediaKeys::Terminated() {
     keySessions.InsertOrUpdate(session->GetSessionId(), RefPtr{session});
   }
   for (const RefPtr<MediaKeySession>& session : keySessions.Values()) {
-    session->OnClosed();
+    session->OnClosed(MediaKeySessionClosedReason::Internal_error);
   }
   keySessions.Clear();
   MOZ_ASSERT(mKeySessions.Count() == 0);

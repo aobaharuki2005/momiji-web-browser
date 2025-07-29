@@ -71,7 +71,9 @@ void MediaDrmCDMCallbackProxy::SessionClosed(const nsCString& aSessionId) {
   if (keyStatusesChange) {
     mProxy->OnKeyStatusesChange(NS_ConvertUTF8toUTF16(aSessionId));
   }
-  mProxy->OnSessionClosed(NS_ConvertUTF8toUTF16(aSessionId));
+  mProxy->OnSessionClosed(
+      NS_ConvertUTF8toUTF16(aSessionId),
+      dom::MediaKeySessionClosedReason::Closed_by_application);
 }
 
 void MediaDrmCDMCallbackProxy::SessionError(const nsCString& aSessionId,

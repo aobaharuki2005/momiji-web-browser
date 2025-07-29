@@ -13,6 +13,7 @@
 
 #include "mozilla/dom/MediaKeyMessageEvent.h"
 #include "mozilla/dom/MediaKeys.h"
+#include "mozilla/dom/MediaKeySessionBinding.h"
 
 #include "nsIThread.h"
 
@@ -203,7 +204,8 @@ class CDMProxy {
                                   UnixTime aExpiryTime) = 0;
 
   // Main thread only.
-  virtual void OnSessionClosed(const nsAString& aSessionId) = 0;
+  virtual void OnSessionClosed(const nsAString& aSessionId,
+                               dom::MediaKeySessionClosedReason aReason) = 0;
 
   // Main thread only.
   virtual void OnSessionError(const nsAString& aSessionId, nsresult aException,

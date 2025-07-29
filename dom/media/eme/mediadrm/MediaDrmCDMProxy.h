@@ -75,7 +75,8 @@ class MediaDrmCDMProxy final : public CDMProxy {
   void OnExpirationChange(const nsAString& aSessionId,
                           UnixTime aExpiryTime) override;
 
-  void OnSessionClosed(const nsAString& aSessionId) override;
+  void OnSessionClosed(const nsAString& aSessionId,
+                       dom::MediaKeySessionClosedReason aReason) override;
 
   void OnSessionError(const nsAString& aSessionId, nsresult aException,
                       uint32_t aSystemCode, const nsAString& aMsg) override;
