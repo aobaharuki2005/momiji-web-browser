@@ -223,7 +223,7 @@ class CustomizationFragment : PreferenceFragmentCompat() {
 
     private fun setupAppIconCategory() {
         requirePreference<PreferenceCategory>(R.string.pref_key_customization_category_app_icon).apply {
-           isVisible = FeatureFlags.alternativeAppIconFeatureEnabled
+           isVisible = context.settings().appIconSelection
         }
     }
 

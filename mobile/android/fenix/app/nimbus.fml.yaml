@@ -875,6 +875,18 @@ features:
         type: Boolean
         default: true
 
+  app-icon-selection:
+    description: Allows the user to set an alternative app launcher icon.
+    variables:
+      enabled:
+        description: Whether or not the feature is available for the user.
+        type: Boolean
+        default: false
+    defaults:
+      - channel: developer
+        value:
+          enabled: true
+
   toolbar-redesign-option:
     description: Control the visibility of toolbar redesign option in settings.
     variables:

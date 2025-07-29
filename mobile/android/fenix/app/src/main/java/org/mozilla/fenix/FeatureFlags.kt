@@ -60,9 +60,4 @@ object FeatureFlags {
      * Enables the custom review pre-prompt.
      */
     const val CUSTOM_REVIEW_PROMPT_ENABLED = true
-
-    /**
-     * Enables the feature that allows the user to set an alternative app icon.
-     */
-    val alternativeAppIconFeatureEnabled = Config.channel.isDebug
 }

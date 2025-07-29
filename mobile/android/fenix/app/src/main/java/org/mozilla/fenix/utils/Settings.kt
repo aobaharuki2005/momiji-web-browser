@@ -448,6 +448,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false,
     )
 
+    val appIconSelection by lazyFeatureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_app_icon_selection_enabled),
+        featureFlag = true,
+        default = { FxNimbus.features.appIconSelection.value().enabled },
+    )
+
     var privateBrowsingLockedFeatureEnabled by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_private_browsing_locked_enabled),
         featureFlag = true,
