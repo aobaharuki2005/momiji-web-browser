@@ -11,6 +11,8 @@
 #import <Cocoa/Cocoa.h>
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/layers/NativeLayerRootRemoteMacChild.h"
+#include "mozilla/layers/NativeLayerRootRemoteMacParent.h"
 #include "nsBaseWidget.h"
 #include "nsCocoaUtils.h"
 #include "nsTouchBar.h"
@@ -388,6 +390,8 @@ class nsCocoaWindow final : public nsBaseWidget {
 
   bool WidgetPaintsBackground() override { return true; }
 
+  void CreateCompositor(int aWidth, int aHeight) override;
+  void DestroyCompositor() override;
   void SetCompositorWidgetDelegate(
       mozilla::widget::CompositorWidgetDelegate*) override;
 
@@ -553,6 +557,10 @@ class nsCocoaWindow final : public nsBaseWidget {
   mutable CGFloat mBackingScaleFactor;
 
   RefPtr<mozilla::layers::NativeLayerRootCA> mNativeLayerRoot;
+  RefPtr<mozilla::layers::NativeLayerRootRemoteMacParent>
+      mNativeLayerRootRemoteMacParent;
+  mozilla::ipc::Endpoint<mozilla::layers::PNativeLayerRemoteChild>
+      mChildEndpoint;
 
   // In BasicLayers mode, this is the CoreAnimation layer that contains the
   // rendering from Gecko. It is a sublayer of mNativeLayerRoot's underlying

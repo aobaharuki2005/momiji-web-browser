@@ -7,6 +7,8 @@
 #define mozilla_widget_CocoaCompositorWidget_h
 
 #include "CompositorWidget.h"
+#include "mozilla/ipc/Endpoint.h"
+#include "mozilla/layers/NativeLayerRemoteChild.h"
 
 namespace mozilla {
 namespace widget {
@@ -48,6 +50,7 @@ class CocoaCompositorWidget : public CompositorWidget {
 
  protected:
   LayoutDeviceIntSize mClientSize;
+  ipc::Endpoint<mozilla::layers::PNativeLayerRemoteChild> mChildEndpoint;
 
  private:
   void CreateNativeLayerRoot();
