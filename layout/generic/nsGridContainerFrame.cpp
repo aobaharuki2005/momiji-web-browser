@@ -435,38 +435,36 @@ enum class GridLineSide {
 
 struct nsGridContainerFrame::TrackSize {
   enum StateBits : uint16_t {
-    // clang-format off
-    eAutoMinSizing =              0x1,
-    eMinContentMinSizing =        0x2,
-    eMaxContentMinSizing =        0x4,
+    eAutoMinSizing = 1 << 0,
+    eMinContentMinSizing = 1 << 1,
+    eMaxContentMinSizing = 1 << 2,
     eMinOrMaxContentMinSizing = eMinContentMinSizing | eMaxContentMinSizing,
     eIntrinsicMinSizing = eMinOrMaxContentMinSizing | eAutoMinSizing,
-    eModified =                   0x8,
-    eAutoMaxSizing =             0x10,
-    eMinContentMaxSizing =       0x20,
-    eMaxContentMaxSizing =       0x40,
+    eModified = 1 << 3,
+    eAutoMaxSizing = 1 << 4,
+    eMinContentMaxSizing = 1 << 5,
+    eMaxContentMaxSizing = 1 << 6,
     eAutoOrMaxContentMaxSizing = eAutoMaxSizing | eMaxContentMaxSizing,
     eIntrinsicMaxSizing = eAutoOrMaxContentMaxSizing | eMinContentMaxSizing,
-    eFlexMaxSizing =             0x80,
-    eFrozen =                   0x100,
-    eSkipGrowUnlimited1 =       0x200,
-    eSkipGrowUnlimited2 =       0x400,
+    eFlexMaxSizing = 1 << 7,
+    eFrozen = 1 << 8,
+    eSkipGrowUnlimited1 = 1 << 9,
+    eSkipGrowUnlimited2 = 1 << 10,
     eSkipGrowUnlimited = eSkipGrowUnlimited1 | eSkipGrowUnlimited2,
-    eBreakBefore =              0x800,
-    eApplyFitContentClamping = 0x1000,
-    eInfinitelyGrowable =      0x2000,
+    eBreakBefore = 1 << 11,
+    eApplyFitContentClamping = 1 << 12,
+    eInfinitelyGrowable = 1 << 13,
 
     // These are only used in the masonry axis.  They share the same value
     // as *MinSizing above, but that's OK because we don't use those in
     // the masonry axis.
     //
     // This track corresponds to an item margin-box size that is stretching.
-    eItemStretchSize =            0x1,
+    eItemStretchSize = 1 << 0,
     // This bit says that we should clamp that size to mLimit.
-    eClampToLimit =               0x2,
+    eClampToLimit = 1 << 1,
     // This bit says that the corresponding item has `auto` margin(s).
-    eItemHasAutoMargin =          0x4,
-    // clang-format on
+    eItemHasAutoMargin = 1 << 2,
   };
 
   StateBits Initialize(nscoord aPercentageBasis, const StyleTrackSize&);
