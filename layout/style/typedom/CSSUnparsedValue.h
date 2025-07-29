@@ -11,7 +11,7 @@
 
 #include "js/TypeDecls.h"
 #include "mozilla/dom/CSSStyleValue.h"
-#include "nsStringFwd.h"
+#include "mozilla/dom/CSSUnparsedValueBindingFwd.h"
 
 template <class T>
 struct already_AddRefed;
@@ -39,14 +39,18 @@ class CSSUnparsedValue final : public CSSStyleValue {
   // start of CSSUnparsedValue Web IDL declarations
 
   static already_AddRefed<CSSUnparsedValue> Constructor(
-      const GlobalObject& aGlobal, const Sequence<nsCString>& aMembers);
+      const GlobalObject& aGlobal,
+      const Sequence<OwningUTF8StringOrCSSVariableReferenceValue>& aMembers);
 
   uint32_t Length() const;
 
-  void IndexedGetter(uint32_t aIndex, bool& aFound, nsCString& aRetVal);
+  void IndexedGetter(uint32_t aIndex, bool& aFound,
+                     OwningUTF8StringOrCSSVariableReferenceValue& aRetVal);
 
-  void IndexedSetter(uint32_t aIndex, const nsACString& aVal,
-                     nsCString& aRetVal, ErrorResult& aRv);
+  void IndexedSetter(uint32_t aIndex,
+                     const UTF8StringOrCSSVariableReferenceValue& aVal,
+                     OwningUTF8StringOrCSSVariableReferenceValue& aRetVal,
+                     ErrorResult& aRv);
 
   // end of CSSUnparsedValue Web IDL declarations
 

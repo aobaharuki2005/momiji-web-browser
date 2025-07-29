@@ -19,5 +19,4 @@ interface CSSUnparsedValue : CSSStyleValue {
 };
 
 // https://drafts.css-houdini.org/css-typed-om-1/#typedefdef-cssunparsedsegment
-// TODO: Change to (UTF8String or CSSVariableReferenceValue)
-typedef UTF8String CSSUnparsedSegment;
+typedef (UTF8String or CSSVariableReferenceValue) CSSUnparsedSegment;

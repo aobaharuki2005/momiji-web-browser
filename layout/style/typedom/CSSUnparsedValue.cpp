@@ -26,17 +26,20 @@ JSObject* CSSUnparsedValue::WrapObject(JSContext* aCx,
 
 // static
 already_AddRefed<CSSUnparsedValue> CSSUnparsedValue::Constructor(
-    const GlobalObject& aGlobal, const Sequence<nsCString>& aMembers) {
+    const GlobalObject& aGlobal,
+    const Sequence<OwningUTF8StringOrCSSVariableReferenceValue>& aMembers) {
   return MakeAndAddRef<CSSUnparsedValue>(aGlobal.GetAsSupports());
 }
 
 uint32_t CSSUnparsedValue::Length() const { return 0; }
 
-void CSSUnparsedValue::IndexedGetter(uint32_t aIndex, bool& aFound,
-                                     nsCString& aRetVal) {}
+void CSSUnparsedValue::IndexedGetter(
+    uint32_t aIndex, bool& aFound,
+    OwningUTF8StringOrCSSVariableReferenceValue& aRetVal) {}
 
-void CSSUnparsedValue::IndexedSetter(uint32_t aIndex, const nsACString& aVal,
-                                     nsCString& aRetVal, ErrorResult& aRv) {
+void CSSUnparsedValue::IndexedSetter(
+    uint32_t aIndex, const UTF8StringOrCSSVariableReferenceValue& aVal,
+    OwningUTF8StringOrCSSVariableReferenceValue& aRetVal, ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 

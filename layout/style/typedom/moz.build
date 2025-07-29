@@ -10,6 +10,7 @@ with Files("**"):
 EXPORTS.mozilla.dom += [
     "CSSStyleValue.h",
     "CSSUnparsedValue.h",
+    "CSSVariableReferenceValue.h",
     "StylePropertyMap.h",
     "StylePropertyMapReadOnly.h",
 ]
@@ -17,6 +18,7 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     "CSSStyleValue.cpp",
     "CSSUnparsedValue.cpp",
+    "CSSVariableReferenceValue.cpp",
     "StylePropertyMap.cpp",
     "StylePropertyMapReadOnly.cpp",
 ]
