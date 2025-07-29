@@ -34,7 +34,8 @@ class NativeLayerRootRemoteMacParent final : public NativeLayerRemoteParent {
   void HandleCreateLayerForColor(uint64_t aID, DeviceColor aColor);
   void HandleLayerDestroyed(uint64_t aID);
   void HandleSetLayers(const nsTArray<uint64_t>& aIDs);
-  void HandleLayerInfo(uint64_t aID, uint32_t aSurfaceID, IntPoint aPosition,
+  void HandleLayerInfo(uint64_t aID, uint32_t aSurfaceID, bool aIsDRM,
+                       bool aIsHDR, IntPoint aPosition, IntSize aSize,
                        IntRect aDisplayRect, Maybe<IntRect> aClipRect,
                        Maybe<RoundedRect> aRoundedClipRect,
                        Matrix4x4 aTransform, int8_t aSamplingFilter,

@@ -48,6 +48,8 @@ class NativeLayerRemoteMac final : public NativeLayer {
   void DiscardBackbuffers() override;
 
   bool IsOpaque() override;
+  bool IsDRM() { return mIsDRM; }
+  bool IsHDR() { return mIsHDR; }
   void SetClipRect(const Maybe<gfx::IntRect>& aClipRect) override;
   Maybe<gfx::IntRect> ClipRect() override;
   void SetRoundedClipRect(
@@ -75,6 +77,9 @@ class NativeLayerRemoteMac final : public NativeLayer {
   Maybe<NativeLayerMacSurfaceHandler> mSurfaceHandler;
   RefPtr<NativeLayerCommandQueue> mCommandQueue;
 
+  CFTypeRefPtr<IOSurfaceRef> mExternalImage;
+  bool mIsDRM = false;
+  bool mIsHDR = false;
   gfx::IntPoint mPosition;
   gfx::Matrix4x4 mTransform;
   gfx::IntRect mDisplayRect;
