@@ -256,6 +256,13 @@ already_AddRefed<NativeLayer> NativeLayerRootCA::CreateLayerForColor(
   return layer.forget();
 }
 
+already_AddRefed<NativeLayerCA>
+NativeLayerRootCA::CreateLayerForSurfacePresentation(const IntSize& aSize,
+                                                     bool aIsOpaque) {
+  RefPtr<NativeLayerCA> layer = new NativeLayerCA(aSize, aIsOpaque);
+  return layer.forget();
+}
+
 void NativeLayerRootCA::AppendLayer(NativeLayer* aLayer) {
   MutexAutoLock lock(mMutex);
 
@@ -874,6 +881,9 @@ NativeLayerCA::NativeLayerCA(gfx::DeviceColor aColor)
   mColor.AssignUnderCreateRule(CGColorCreateForDeviceColor(aColor));
 }
 
+NativeLayerCA::NativeLayerCA(const IntSize& aSize, bool aIsOpaque)
+    : mMutex("NativeLayerCA"), mSize(aSize), mIsOpaque(aIsOpaque) {}
+
 NativeLayerCA::~NativeLayerCA() {
 #ifdef NIGHTLY_BUILD
   if (mHasEverAttachExternalImage &&
@@ -1238,7 +1248,11 @@ void NativeLayerCA::DumpLayer(std::ostream& aOutputStream) {
   aOutputStream << "\" ";
 
   CFTypeRefPtr<IOSurfaceRef> surface;
-  if (mSurfaceHandler) {
+  if (mSurfaceToPresent) {
+    surface = mSurfaceToPresent;
+    aOutputStream << "alt=\"presented surface 0x" << std::hex
+                  << int(IOSurfaceGetID(surface.get())) << "\" ";
+  } else if (mSurfaceHandler) {
     if (auto frontSurface = mSurfaceHandler->FrontSurface()) {
       surface = frontSurface->mSurface;
       aOutputStream << "alt=\"regular surface 0x" << std::hex
@@ -1287,6 +1301,27 @@ gfx::IntRect NativeLayerCA::CurrentSurfaceDisplayRect() {
     return mSurfaceHandler->DisplayRect();
   }
   return mDisplayRect;
+}
+
+void NativeLayerCA::SetDisplayRect(const gfx::IntRect& aDisplayRect) {
+  MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(!mSurfaceHandler, "Setting display rect will have no effect.");
+  mDisplayRect = aDisplayRect;
+}
+
+void NativeLayerCA::SetSurfaceToPresent(
+    CFTypeRefPtr<IOSurfaceRef> aSurfaceRef) {
+  MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(!mSurfaceHandler,
+             "Shouldn't call this for layers that manage their own surfaces.");
+  MOZ_ASSERT(!mTextureHost,
+             "Shouldn't call this for layers that get external surfaces.");
+
+  bool changedSurface = (mSurfaceToPresent != aSurfaceRef);
+  mSurfaceToPresent = aSurfaceRef;
+
+  ForAllRepresentations(
+      [&](Representation& r) { r.mMutatedFrontSurface |= changedSurface; });
 }
 
 NativeLayerCA::Representation::Representation()
@@ -1426,7 +1461,9 @@ bool NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation,
   IntRect displayRect = mDisplayRect;
   bool surfaceIsFlipped = mSurfaceIsFlipped;
 
-  if (mSurfaceHandler) {
+  if (mSurfaceToPresent) {
+    surface = mSurfaceToPresent;
+  } else if (mSurfaceHandler) {
     if (auto frontSurface = mSurfaceHandler->FrontSurface()) {
       surface = frontSurface->mSurface;
     }
