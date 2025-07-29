@@ -1457,15 +1457,11 @@ class MConstant : public MNullaryInstruction {
   INSTRUCTION_HEADER(Constant)
   static MConstant* New(TempAllocator& alloc, const Value& v);
   static MConstant* New(TempAllocator::Fallible alloc, const Value& v);
-  static MConstant* New(TempAllocator& alloc, const Value& v, MIRType type);
   static MConstant* NewFloat32(TempAllocator& alloc, double d);
   static MConstant* NewInt64(TempAllocator& alloc, int64_t i);
   static MConstant* NewIntPtr(TempAllocator& alloc, intptr_t i);
   static MConstant* NewObject(TempAllocator& alloc, JSObject* v);
   static MConstant* NewShape(TempAllocator& alloc, Shape* s);
-  static MConstant* Copy(TempAllocator& alloc, MConstant* src) {
-    return new (alloc) MConstant(*src);
-  }
 
   // Try to convert this constant to boolean, similar to js::ToBoolean.
   // Returns false if the type is MIRType::Magic* or MIRType::Object.

@@ -1058,15 +1058,6 @@ MConstant* MConstant::NewIntPtr(TempAllocator& alloc, intptr_t i) {
   return new (alloc) MConstant(MIRType::IntPtr, i);
 }
 
-MConstant* MConstant::New(TempAllocator& alloc, const Value& v, MIRType type) {
-  if (type == MIRType::Float32) {
-    return NewFloat32(alloc, v.toNumber());
-  }
-  MConstant* res = New(alloc, v);
-  MOZ_ASSERT(res->type() == type);
-  return res;
-}
-
 MConstant* MConstant::NewObject(TempAllocator& alloc, JSObject* v) {
   return new (alloc) MConstant(v);
 }

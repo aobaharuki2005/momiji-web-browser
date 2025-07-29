@@ -750,8 +750,7 @@ class FunctionCompiler {
     if (inDeadCode()) {
       return nullptr;
     }
-    MConstant* constant =
-        MConstant::New(alloc(), Int32Value(i), MIRType::Int32);
+    MConstant* constant = MConstant::New(alloc(), Int32Value(i));
     curBlock_->add(constant);
     return constant;
   }

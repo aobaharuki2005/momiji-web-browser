@@ -741,7 +741,7 @@ MDefinition* MWasmReduceSimd128::foldsTo(TempAllocator& alloc) {
 #  endif
         return this;
     }
-    return MConstant::New(alloc, Int32Value(i32Result), MIRType::Int32);
+    return MConstant::New(alloc, Int32Value(i32Result));
   }
 #  ifdef DEBUG
   logging.release();
@@ -946,13 +946,13 @@ static MDefinition* FoldTrivialWasmTests(TempAllocator& alloc,
                                          wasm::RefType destType) {
   // Upcasts are trivially valid.
   if (wasm::RefType::isSubTypeOf(sourceType, destType)) {
-    return MConstant::New(alloc, Int32Value(1), MIRType::Int32);
+    return MConstant::New(alloc, Int32Value(1));
   }
 
   // If two types are completely disjoint, then all casts between them are
   // impossible.
   if (!wasm::RefType::castPossible(destType, sourceType)) {
-    return MConstant::New(alloc, Int32Value(0), MIRType::Int32);
+    return MConstant::New(alloc, Int32Value(0));
   }
 
   return nullptr;
