@@ -166,7 +166,7 @@ bool WarpBuilder::startNewOsrPreHeaderBlock(BytecodeLocation loopHead) {
     } else {
       // Use an undefined value if the script does not need its environment
       // chain, to match the main entry point.
-      envv = MConstant::New(alloc(), UndefinedValue());
+      envv = MConstant::NewUndefined(alloc());
     }
     osrBlock->add(envv);
     osrBlock->initSlot(slot, envv);
@@ -178,7 +178,7 @@ bool WarpBuilder::startNewOsrPreHeaderBlock(BytecodeLocation loopHead) {
     if (!script_->noScriptRval()) {
       returnValue = MOsrReturnValue::New(alloc(), entry);
     } else {
-      returnValue = MConstant::New(alloc(), UndefinedValue());
+      returnValue = MConstant::NewUndefined(alloc());
     }
     osrBlock->add(returnValue);
     osrBlock->initSlot(info().returnValueSlot(), returnValue);
@@ -1148,7 +1148,7 @@ bool WarpBuilder::buildStrictConstantEqOp(BytecodeLocation loc,
     }
 
     case ConstantCompareOperand::EncodedType::Undefined: {
-      MConstant* constant = MConstant::New(alloc(), UndefinedValue());
+      MConstant* constant = MConstant::NewUndefined(alloc());
       current->add(constant);
 
       auto* ins = MCompare::New(alloc(), value, constant, compareOp,

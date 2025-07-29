@@ -65,7 +65,7 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoop) {
   innerBackedge->end(MGoto::New(func.alloc, innerHeader));
   outerBackedge->end(MGoto::New(func.alloc, outerHeader));
 
-  MConstant* u = MConstant::New(func.alloc, UndefinedValue());
+  MConstant* u = MConstant::NewUndefined(func.alloc);
   exit->add(u);
   exit->end(MReturn::New(func.alloc, u));
 
@@ -164,7 +164,7 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoopNested) {
   middleBackedge->end(MGoto::New(func.alloc, middleHeader));
   outerBackedge->end(MGoto::New(func.alloc, outerHeader));
 
-  MConstant* u = MConstant::New(func.alloc, UndefinedValue());
+  MConstant* u = MConstant::NewUndefined(func.alloc);
   exit->add(u);
   exit->end(MReturn::New(func.alloc, u));
 

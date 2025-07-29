@@ -492,7 +492,7 @@ MBasicBlock* ObjectMemoryView::startingBlock() { return startBlock_; }
 
 bool ObjectMemoryView::initStartingState(BlockState** outState) {
   // Uninitialized slots have an "undefined" value.
-  undefinedVal_ = MConstant::New(alloc_, UndefinedValue());
+  undefinedVal_ = MConstant::NewUndefined(alloc_);
   startBlock_->insertBefore(obj_, undefinedVal_);
 
   // Create a new block state and insert at it at the location of the new
@@ -1350,7 +1350,7 @@ MBasicBlock* ArrayMemoryView::startingBlock() { return startBlock_; }
 
 bool ArrayMemoryView::initStartingState(BlockState** pState) {
   // Uninitialized elements have an "undefined" value.
-  undefinedVal_ = MConstant::New(alloc_, UndefinedValue());
+  undefinedVal_ = MConstant::NewUndefined(alloc_);
   MConstant* initLength = MConstant::NewInt32(alloc_, 0);
   arr_->block()->insertBefore(arr_, undefinedVal_);
   arr_->block()->insertBefore(arr_, initLength);
@@ -2114,7 +2114,7 @@ void ArgumentsReplacer::visitGetArgumentsObjectArg(
     } else {
       // Omitted arguments are not mapped to the arguments object, and
       // will always be undefined.
-      auto* undef = MConstant::New(alloc(), UndefinedValue());
+      auto* undef = MConstant::NewUndefined(alloc());
       ins->block()->insertBefore(ins, undef);
       getArg = undef;
     }
@@ -2293,7 +2293,7 @@ void ArgumentsReplacer::visitApplyArgsObj(MApplyArgsObj* ins) {
     }
 
     auto addUndefined = [this, &ins]() -> MConstant* {
-      MConstant* undef = MConstant::New(alloc(), UndefinedValue());
+      MConstant* undef = MConstant::NewUndefined(alloc());
       ins->block()->insertBefore(ins, undef);
       return undef;
     };
@@ -3115,7 +3115,7 @@ MBasicBlock* WasmStructMemoryView::startingBlock() { return startBlock_; }
 bool WasmStructMemoryView::initStartingState(BlockState** pState) {
   // We need this undefined value to initialize phi inputs if we create some
   // later.
-  undefinedVal_ = MConstant::New(alloc_, UndefinedValue());
+  undefinedVal_ = MConstant::NewUndefined(alloc_);
 
   // Create a new block state and insert at it at the location of the new
   // struct.

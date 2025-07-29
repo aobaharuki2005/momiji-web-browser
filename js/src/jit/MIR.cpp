@@ -1078,6 +1078,10 @@ MConstant* MConstant::NewShape(TempAllocator& alloc, Shape* s) {
   return new (alloc) MConstant(s);
 }
 
+MConstant* MConstant::NewUndefined(TempAllocator& alloc) {
+  return new (alloc) MConstant(alloc, UndefinedValue());
+}
+
 static MIRType MIRTypeFromValue(const js::Value& vp) {
   if (vp.isDouble()) {
     return MIRType::Double;
@@ -7711,7 +7715,7 @@ MDefinition* MGetInlinedArgumentHole::foldsTo(TempAllocator& alloc) {
       arg = MBox::New(alloc, arg);
     }
   } else {
-    auto* undefined = MConstant::New(alloc, UndefinedValue());
+    auto* undefined = MConstant::NewUndefined(alloc);
     block()->insertBefore(this, undefined);
 
     arg = MBox::New(alloc, undefined);
