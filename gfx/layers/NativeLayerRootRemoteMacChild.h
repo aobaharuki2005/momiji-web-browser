@@ -7,6 +7,7 @@
 #define mozilla_layers_NativeLayerRootRemoteMacChild_h
 
 #include "mozilla/layers/NativeLayer.h"
+#include "mozilla/layers/NativeLayerCommandQueue.h"
 #include "mozilla/layers/NativeLayerRemoteChild.h"
 
 namespace mozilla {
@@ -44,6 +45,10 @@ class NativeLayerRootRemoteMacChild final : public NativeLayerRoot {
   virtual ~NativeLayerRootRemoteMacChild();
 
   RefPtr<NativeLayerRemoteChild> mRemoteChild;
+  RefPtr<NativeLayerCommandQueue> mCommandQueue;
+  nsTArray<RefPtr<NativeLayer>> mNativeLayers;
+
+  bool mNativeLayersChanged = false;
 };
 
 }  // namespace layers

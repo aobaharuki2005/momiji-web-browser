@@ -97,6 +97,10 @@ void NativeLayerRemoteMac::SetSamplingFilter(
   }
 }
 
+gfx::SamplingFilter NativeLayerRemoteMac::SamplingFilter() {
+  return mSamplingFilter;
+}
+
 Matrix4x4 NativeLayerRemoteMac::GetTransform() { return mTransform; }
 
 IntRect NativeLayerRemoteMac::GetRect() {
