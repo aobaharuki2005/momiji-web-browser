@@ -223,7 +223,7 @@ interface SessionControlControllerCallback {
     /**
      * Callback to remove collection with undo snack bar.
      */
-    fun removeCollectionWithUndo(tabCollection: TabCollection)
+    fun removeCollection(tabCollection: TabCollection)
 
     /**
      * Callback to show tab tray.
@@ -326,7 +326,7 @@ class DefaultSessionControlController(
             }
 
         if (updatedCollection?.tabs?.size == 1) {
-            callback?.removeCollectionWithUndo(collection)
+            callback?.removeCollection(collection)
         } else {
             viewLifecycleScope.launch {
                 tabCollectionStorage.removeTabFromCollection(collection, tab)
@@ -343,7 +343,7 @@ class DefaultSessionControlController(
     }
 
     override fun handleDeleteCollectionTapped(collection: TabCollection) {
-        callback?.removeCollectionWithUndo(collection)
+        callback?.removeCollection(collection)
         Collections.removed.record(NoExtras())
     }
 

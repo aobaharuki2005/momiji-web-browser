@@ -500,8 +500,8 @@ class HomeFragment : Fragment() {
                         this@HomeFragment.registerCollectionStorageObserver()
                     }
 
-                    override fun removeCollectionWithUndo(tabCollection: TabCollection) {
-                        this@HomeFragment.removeCollectionWithUndo(tabCollection)
+                    override fun removeCollection(tabCollection: TabCollection) {
+                        this@HomeFragment.removeCollection(tabCollection)
                     }
 
                     override fun showTabTray() {
@@ -1166,20 +1166,7 @@ class HomeFragment : Fragment() {
     }
 
     @VisibleForTesting
-    internal fun removeCollectionWithUndo(tabCollection: TabCollection) {
-        val snackbarMessage = getString(R.string.snackbar_collection_deleted)
-
-        lifecycleScope.allowUndo(
-            binding.dynamicSnackbarContainer,
-            snackbarMessage,
-            getString(R.string.snackbar_deleted_undo),
-            {
-                requireComponents.core.tabCollectionStorage.createCollection(tabCollection)
-            },
-            operation = { },
-            elevation = TOAST_ELEVATION,
-        )
-
+    internal fun removeCollection(tabCollection: TabCollection) {
         lifecycleScope.launch(IO) {
             requireComponents.core.tabCollectionStorage.removeCollection(tabCollection)
         }

@@ -1582,7 +1582,7 @@ class DefaultSessionControlControllerTest {
                     registerCollectionStorageObserver()
                 }
 
-                override fun removeCollectionWithUndo(tabCollection: TabCollection) {
+                override fun removeCollection(tabCollection: TabCollection) {
                     removeCollectionWithUndo(tabCollection)
                 }
 
