@@ -458,8 +458,8 @@ absl::optional<std::wstring> GetPathFromHandle(HANDLE handle) {
   OBJECT_NAME_INFORMATION* name =
       reinterpret_cast<OBJECT_NAME_INFORMATION*>(buffer->data());
   return std::wstring(
-      name->ObjectName.Buffer,
-      name->ObjectName.Length / sizeof(name->ObjectName.Buffer[0]));
+      name->Name.Buffer,
+      name->Name.Length / sizeof(name->Name.Buffer[0]));
 }
 
 absl::optional<std::wstring> GetTypeNameFromHandle(HANDLE handle) {
@@ -470,8 +470,8 @@ absl::optional<std::wstring> GetTypeNameFromHandle(HANDLE handle) {
     return absl::nullopt;
   OBJECT_TYPE_INFORMATION* name =
       reinterpret_cast<OBJECT_TYPE_INFORMATION*>(buffer->data());
-  return std::wstring(name->Name.Buffer,
-                      name->Name.Length / sizeof(name->Name.Buffer[0]));
+  return std::wstring(name->TypeName.Buffer,
+                      name->TypeName.Length / sizeof(name->TypeName.Buffer[0]));
 }
 
 bool CopyToChildMemory(HANDLE child,

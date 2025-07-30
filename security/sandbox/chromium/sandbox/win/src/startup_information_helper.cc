@@ -4,7 +4,7 @@
 
 #include "sandbox/win/src/startup_information_helper.h"
 
-#include <Windows.h>
+#include <windows.h>
 
 #include <vector>
 

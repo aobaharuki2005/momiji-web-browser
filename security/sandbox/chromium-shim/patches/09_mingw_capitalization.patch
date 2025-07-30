@@ -28,3 +28,44 @@ diff --git a/base/win/pe_image.h b/base/win/pe_image.h
  // Its main purpose is to provide an easy way to work with imports and exports
  // from a file, mapped in memory as image. A PEImage object is constructed from
  // a loaded PE file by passing the HMODULE to the constructor. Loading a PE file
+diff --git a/sandbox/win/src/startup_information_helper.cc b/sandbox/win/src/startup_information_helper.cc
+--- a/sandbox/win/src/startup_information_helper.cc
++++ b/sandbox/win/src/startup_information_helper.cc
+@@ -1,15 +1,15 @@
+ // Copyright 2020 The Chromium Authors
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+ #include "sandbox/win/src/startup_information_helper.h"
+ 
+-#include <Windows.h>
++#include <windows.h>
+ 
+ #include <vector>
+ 
+ #include "base/check.h"
+ #include "base/memory/scoped_refptr.h"
+ #include "base/ranges/algorithm.h"
+ #include "base/win/startup_information.h"
+ #include "base/win/windows_version.h"
+diff --git a/sandbox/win/src/startup_information_helper.h b/sandbox/win/src/startup_information_helper.h
+--- a/sandbox/win/src/startup_information_helper.h
++++ b/sandbox/win/src/startup_information_helper.h
+@@ -1,16 +1,16 @@
+ // Copyright 2020 The Chromium Authors
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+ #ifndef SANDBOX_WIN_SRC_STARTUP_INFORMATION_HELPER_H_
+ #define SANDBOX_WIN_SRC_STARTUP_INFORMATION_HELPER_H_
+ 
+-#include <Windows.h>
++#include <windows.h>
+ 
+ #include <vector>
+ 
+ #include "base/memory/scoped_refptr.h"
+ #include "base/win/startup_information.h"
+ #include "sandbox/win/src/app_container_base.h"
+ #include "sandbox/win/src/process_mitigations.h"
+ #include "sandbox/win/src/security_capabilities.h"

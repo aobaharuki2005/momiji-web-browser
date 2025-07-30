@@ -401,14 +401,14 @@ NTSTATUS AllocAndGetFullPath(
 
       // Space for path + '\' + name + '\0'.
       size_t name_length =
-          handle_name->ObjectName.Length + (wcslen(path) + 2) * sizeof(wchar_t);
+          handle_name->Name.Length + (wcslen(path) + 2) * sizeof(wchar_t);
       full_path->reset(new (NT_ALLOC) wchar_t[name_length / sizeof(wchar_t)]);
       if (!*full_path) break;
       wchar_t* off = full_path->get();
-      ret = CopyData(off, handle_name->ObjectName.Buffer,
-                     handle_name->ObjectName.Length);
+      ret = CopyData(off, handle_name->Name.Buffer,
+                     handle_name->Name.Length);
       if (!NT_SUCCESS(ret)) break;
-      off += handle_name->ObjectName.Length / sizeof(wchar_t);
+      off += handle_name->Name.Length / sizeof(wchar_t);
       *off = L'\\';
       off += 1;
       ret = CopyData(off, path, wcslen(path) * sizeof(wchar_t));
@@ -810,10 +810,10 @@ bool NtGetPathFromHandle(HANDLE handle,
 
   if (STATUS_SUCCESS != status)
     return false;
-  size_t num_path_wchars = (name->ObjectName.Length / sizeof(wchar_t)) + 1;
+  size_t num_path_wchars = (name->Name.Length / sizeof(wchar_t)) + 1;
   path->reset(new (NT_ALLOC) wchar_t[num_path_wchars]);
   status =
-      CopyData(path->get(), name->ObjectName.Buffer, name->ObjectName.Length);
+      CopyData(path->get(), name->Name.Buffer, name->Name.Length);
   path->get()[num_path_wchars - 1] = L'\0';
   if (STATUS_SUCCESS != status)
     return false;

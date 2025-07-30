@@ -5,7 +5,7 @@
 #ifndef SANDBOX_WIN_SRC_STARTUP_INFORMATION_HELPER_H_
 #define SANDBOX_WIN_SRC_STARTUP_INFORMATION_HELPER_H_
 
-#include <Windows.h>
+#include <windows.h>
 
 #include <vector>
 
