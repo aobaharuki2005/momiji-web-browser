@@ -2215,6 +2215,8 @@ static const JSClass* ClassFor(JSContext* cx, GuardClassKind kind) {
     case GuardClassKind::Map:
     case GuardClassKind::BoundFunction:
     case GuardClassKind::Date:
+    case GuardClassKind::WeakMap:
+    case GuardClassKind::WeakSet:
       return ClassFor(kind);
     case GuardClassKind::WindowProxy:
       return cx->runtime()->maybeWindowProxyClass();

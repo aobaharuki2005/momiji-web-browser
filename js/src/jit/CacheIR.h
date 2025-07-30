@@ -580,6 +580,8 @@ enum class GuardClassKind : uint8_t {
   Set,
   Map,
   Date,
+  WeakMap,
+  WeakSet,
 };
 
 const JSClass* ClassFor(GuardClassKind kind);
@@ -628,6 +630,10 @@ inline const char* GuardClassKindEnumName(GuardClassKind kind) {
       return "Map";
     case GuardClassKind::Date:
       return "Date";
+    case GuardClassKind::WeakMap:
+      return "WeakMap";
+    case GuardClassKind::WeakSet:
+      return "WeakSet";
   }
   MOZ_CRASH("Unknown GuardClassKind");
 }

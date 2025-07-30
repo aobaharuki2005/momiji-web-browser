@@ -19,6 +19,8 @@
 #include "builtin/MapObject.h"
 #include "builtin/ModuleObject.h"
 #include "builtin/Object.h"
+#include "builtin/WeakMapObject.h"
+#include "builtin/WeakSetObject.h"
 #include "jit/BaselineIC.h"
 #include "jit/CacheIRCloner.h"
 #include "jit/CacheIRCompiler.h"
@@ -2136,6 +2138,10 @@ const JSClass* js::jit::ClassFor(GuardClassKind kind) {
       return &MapObject::class_;
     case GuardClassKind::Date:
       return &DateObject::class_;
+    case GuardClassKind::WeakMap:
+      return &WeakMapObject::class_;
+    case GuardClassKind::WeakSet:
+      return &WeakSetObject::class_;
   }
   MOZ_CRASH("unexpected kind");
 }
@@ -2160,6 +2166,8 @@ void IRGenerator::emitOptimisticClassGuard(ObjOperandId objId, JSObject* obj,
     case GuardClassKind::Set:
     case GuardClassKind::Map:
     case GuardClassKind::Date:
+    case GuardClassKind::WeakMap:
+    case GuardClassKind::WeakSet:
       MOZ_ASSERT(obj->hasClass(ClassFor(kind)));
       break;
 
