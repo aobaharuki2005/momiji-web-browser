@@ -15,6 +15,7 @@ support-files = [
   "installchrome.html",
   "installtrigger.html",
   "installtrigger_frame.html",
+  "mozaddonmanager.html",
   "navigate.html",
   "recommended.xpi",
   "redirect.sjs",
@@ -72,7 +73,6 @@ https_first_disabled = true # Bug 1737265
 skip-if = ["true"] # disabled due to a leak. See bug 682410.
 
 ["browser_containers.js"]
-https_first_disabled = true # Bug 1737265
 
 ["browser_cookies.js"]
 
@@ -141,7 +141,6 @@ run-if = ["debug"]  # This is a test for leaks, see comment in the test.
 ["browser_offline.js"]
 
 ["browser_privatebrowsing.js"]
-https_first_disabled = true # Bug 1737265
 
 ["browser_relative.js"]
 https_first_disabled = true # Bug 1737265
