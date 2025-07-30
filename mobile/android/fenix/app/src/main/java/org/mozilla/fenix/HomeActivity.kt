@@ -137,6 +137,8 @@ import org.mozilla.fenix.home.intent.ReEngagementIntentProcessor
 import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
 import org.mozilla.fenix.library.bookmarks.DesktopFolders
+import org.mozilla.fenix.lifecycle.DefaultPrivateBrowsingLockStorage
+import org.mozilla.fenix.lifecycle.PrivateBrowsingLockFeature
 import org.mozilla.fenix.messaging.FenixMessageSurfaceId
 import org.mozilla.fenix.messaging.MessageNotificationWorker
 import org.mozilla.fenix.nimbus.FxNimbus
@@ -254,6 +256,17 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
     private val serviceWorkerSupport by lazy {
         ServiceWorkerSupportFeature(this)
+    }
+
+    private val privateBrowsingLockFeature by lazy {
+        PrivateBrowsingLockFeature(
+            appStore = components.appStore,
+            browserStore = components.core.store,
+            storage = DefaultPrivateBrowsingLockStorage(
+                preferences = settings().preferences,
+                privateBrowsingLockPrefKey = getString(R.string.pref_key_private_browsing_locked),
+            ),
+        )
     }
 
     private var inflater: LayoutInflater? = null
@@ -513,8 +526,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                 settings = settings(),
                 topSitesProvider = components.core.marsTopSitesProvider,
             ),
-            components.privateBrowsingLockFeature,
             downloadSnackbar,
+            privateBrowsingLockFeature,
         )
 
         if (!isCustomTabIntent(intent)) {

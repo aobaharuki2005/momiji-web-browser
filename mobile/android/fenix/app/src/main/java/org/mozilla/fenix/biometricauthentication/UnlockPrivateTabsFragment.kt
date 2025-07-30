@@ -162,7 +162,7 @@ class UnlockPrivateTabsFragment : Fragment(), UserInteractionHandler {
     private fun onAuthSuccess() {
         PrivateBrowsingLocked.authSuccess.record()
 
-        requireComponents.privateBrowsingLockFeature.onSuccessfulAuthentication()
+        requireComponents.useCases.privateBrowsingLockUseCases.authenticatedUseCase()
 
         findNavController().popBackStack()
 

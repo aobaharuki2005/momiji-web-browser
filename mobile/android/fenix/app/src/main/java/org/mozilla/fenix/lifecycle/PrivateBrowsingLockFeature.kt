@@ -114,19 +114,6 @@ class PrivateBrowsingLockFeature(
         observeFeatureStateUpdates()
     }
 
-    /**
-     * Handles a successful authentication event by unlocking the private browsing mode.
-     *
-     * This should be called by biometric or password authentication mechanisms (e.g., fingerprint,
-     * face unlock, or PIN entry) once the user has successfully authenticated. It updates the app state
-     * to reflect that private browsing tabs are now accessible.
-     */
-    fun onSuccessfulAuthentication() {
-        appStore.dispatch(
-            PrivateBrowsingLockAction.UpdatePrivateBrowsingLock(isLocked = false),
-        )
-    }
-
     private fun observeFeatureStateUpdates() {
         storage.addFeatureStateListener { isEnabled ->
             isFeatureEnabled = isEnabled
@@ -244,6 +231,34 @@ class PrivateBrowsingLockFeature(
 }
 
 /**
+ * Use cases pertaining to [PrivateBrowsingLockFeature].
+ *
+ * @param appStore the application's [AppStore].
+ */
+class PrivateBrowsingLockUseCases(appStore: AppStore) {
+
+    /**
+     * Use case to be called at the end of a successful authentication.
+     */
+    class AuthenticatedUseCase internal constructor(private val appStore: AppStore) {
+        /**
+         * Handles a successful authentication event by unlocking the private browsing mode.
+         *
+         * This should be called by biometric or password authentication mechanisms (e.g., fingerprint,
+         * face unlock, or PIN entry) once the user has successfully authenticated. It updates the app state
+         * to reflect that private browsing tabs are now accessible.
+         */
+        operator fun invoke() {
+            appStore.dispatch(
+                PrivateBrowsingLockAction.UpdatePrivateBrowsingLock(isLocked = false),
+            )
+        }
+    }
+
+    val authenticatedUseCase by lazy { AuthenticatedUseCase(appStore) }
+}
+
+/**
  * Observes the app state and triggers a callback when the user enters a locked private browsing session.
  *
  * The observer is active in the [Lifecycle.State.RESUMED] state to ensure the UI state is sync with the app state (the
@@ -327,7 +342,7 @@ private fun handleVerificationSuccess(
     onVerified: (() -> Unit)? = null,
 ) {
     PrivateBrowsingLocked.authSuccess.record()
-    context.components.privateBrowsingLockFeature.onSuccessfulAuthentication()
+    context.components.useCases.privateBrowsingLockUseCases.authenticatedUseCase()
 
     onVerified?.invoke()
 }
