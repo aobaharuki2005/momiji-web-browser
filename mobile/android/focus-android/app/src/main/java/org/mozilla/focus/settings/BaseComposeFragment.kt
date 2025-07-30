@@ -22,6 +22,7 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -75,6 +76,7 @@ abstract class BaseComposeFragment : Fragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             composeView = this
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             isTransitionGroup = true
             setBackgroundColor(
                 ContextCompat.getColor(
