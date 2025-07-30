@@ -308,8 +308,8 @@
         } else {
           // container-relative
           const offsetParentRect = this.offsetParent.getBoundingClientRect();
-          this.style.left = `${leftOffset - offsetParentRect.left + winScrollX}px`;
-          this.style.top = `${topOffset - offsetParentRect.top + winScrollY}px`;
+          this.style.left = `${leftOffset - offsetParentRect.left}px`;
+          this.style.top = `${topOffset - offsetParentRect.top}px`;
         }
       }
 
