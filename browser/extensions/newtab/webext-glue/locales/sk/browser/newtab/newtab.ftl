@@ -56,6 +56,9 @@ newtab-topsites-add-shortcut-header = Nová skratka
 newtab-topsites-edit-topsites-header = Upraviť top stránku
 newtab-topsites-edit-shortcut-header = Upraviť skratku
 newtab-topsites-add-shortcut-label = Pridať skratku
+newtab-topsites-add-shortcut-title =
+    .title = Pridať skratku
+    .aria-label = Pridať skratku
 newtab-topsites-title-label = Názov
 newtab-topsites-title-input =
     .placeholder = Zadajte názov
@@ -535,6 +538,12 @@ newtab-custom-wallpaper-title = Vlastné tapety sú tu
 # 'Make firefox yours" means to customize or personalize
 newtab-custom-wallpaper-subtitle = Nahrajte svoju vlastnú tapetu alebo si vyberte vlastnú farbu a prispôsobte si svoj { -brand-product-name }.
 newtab-custom-wallpaper-cta = Vyskúšajte to
+
+## Strings for new user activation custom wallpaper highlight
+
+newtab-new-user-custom-wallpaper-title = Vyberte si tapetu a prispôsobte si { -brand-product-name }
+newtab-new-user-custom-wallpaper-subtitle = Vďaka vlastným tapetám a farbám sa budete cítiť ako doma na každej novej karte.
+newtab-new-user-custom-wallpaper-cta = Vyskúšajte si to hneď teraz
 
 ## Strings for download mobile highlight
 

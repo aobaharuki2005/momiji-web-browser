@@ -56,6 +56,9 @@ newtab-topsites-add-shortcut-header = Lối tắt mới
 newtab-topsites-edit-topsites-header = Sửa trang web hàng đầu
 newtab-topsites-edit-shortcut-header = Chỉnh sửa lối tắt
 newtab-topsites-add-shortcut-label = Thêm lối tắt
+newtab-topsites-add-shortcut-title =
+    .title = Thêm lối tắt
+    .aria-label = Thêm lối tắt
 newtab-topsites-title-label = Tiêu đề
 newtab-topsites-title-input =
     .placeholder = Nhập tiêu đề
@@ -537,6 +540,12 @@ newtab-custom-wallpaper-title = Hình nền tùy chỉnh ở đây
 # 'Make firefox yours" means to customize or personalize
 newtab-custom-wallpaper-subtitle = Tải lên hình nền của bạn hoặc chọn một màu tùy chỉnh để biến { -brand-product-name } thành của riêng bạn.
 newtab-custom-wallpaper-cta = Thử ngay
+
+## Strings for new user activation custom wallpaper highlight
+
+newtab-new-user-custom-wallpaper-title = Chọn một hình nền để tạo { -brand-product-name } thành của riêng bạn
+newtab-new-user-custom-wallpaper-subtitle = Khiến mọi thẻ mới trở nên thân thiện với hình nền và màu sắc tùy chỉnh.
+newtab-new-user-custom-wallpaper-cta = Thử ngay bây giờ
 
 ## Strings for download mobile highlight
 

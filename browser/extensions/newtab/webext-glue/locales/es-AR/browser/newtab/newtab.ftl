@@ -56,6 +56,9 @@ newtab-topsites-add-shortcut-header = Nuevo atajo
 newtab-topsites-edit-topsites-header = Editar sitio más visitado
 newtab-topsites-edit-shortcut-header = Editar acceso directo
 newtab-topsites-add-shortcut-label = Agregar atajo
+newtab-topsites-add-shortcut-title =
+    .title = Agregar atajo
+    .aria-label = Agregar atajo
 newtab-topsites-title-label = Título
 newtab-topsites-title-input =
     .placeholder = Ingresar un título
@@ -537,6 +540,11 @@ newtab-custom-wallpaper-title = Acá están los fondos de pantalla
 # 'Make firefox yours" means to customize or personalize
 newtab-custom-wallpaper-subtitle = Suba su propio fondo de pantalla o elija un color personalizado para que { -brand-product-name } sea suyo.
 newtab-custom-wallpaper-cta = Pruébelo
+
+## Strings for new user activation custom wallpaper highlight
+
+newtab-new-user-custom-wallpaper-subtitle = Haga que cada nueva pestaña se sienta como en casa con fondos de pantalla y colores personalizados.
+newtab-new-user-custom-wallpaper-cta = Probar ahora
 
 ## Strings for download mobile highlight
 

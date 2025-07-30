@@ -56,6 +56,9 @@ newtab-topsites-add-shortcut-header = Nije fluchkeppeling
 newtab-topsites-edit-topsites-header = Topwebsite tafoegje
 newtab-topsites-edit-shortcut-header = Fluchkeppeling bewurkje
 newtab-topsites-add-shortcut-label = Fluchkeppeling tafoegje
+newtab-topsites-add-shortcut-title =
+    .title = Fluchkeppeling tafoegje
+    .aria-label = Fluchkeppeling tafoegje
 newtab-topsites-title-label = Titel
 newtab-topsites-title-input =
     .placeholder = Titel ynfiere
@@ -538,6 +541,12 @@ newtab-custom-wallpaper-title = Hjir fine jo oanpaste eftergrûnen
 # 'Make firefox yours" means to customize or personalize
 newtab-custom-wallpaper-subtitle = Laad jo eigen eftergrûn op of kies in oanpaste kleur om { -brand-product-name } fan josels te meitsjen.
 newtab-custom-wallpaper-cta = Probearje
+
+## Strings for new user activation custom wallpaper highlight
+
+newtab-new-user-custom-wallpaper-title = Kies in eftergrûn om { -brand-product-name } fan jo te meitsjen
+newtab-new-user-custom-wallpaper-subtitle = Lit elk nij ljepblêd as thús fiele mei oanpaste eftergrûnen en kleuren.
+newtab-new-user-custom-wallpaper-cta = No probearje
 
 ## Strings for download mobile highlight
 

@@ -56,6 +56,9 @@ newtab-topsites-add-shortcut-header = Yeni kısayol
 newtab-topsites-edit-topsites-header = Sık kullanılan siteyi düzenle
 newtab-topsites-edit-shortcut-header = Kısayolu düzenle
 newtab-topsites-add-shortcut-label = Kısayol ekle
+newtab-topsites-add-shortcut-title =
+    .title = Kısayol ekle
+    .aria-label = Kısayol ekle
 newtab-topsites-title-label = Başlık
 newtab-topsites-title-input =
     .placeholder = Başlık yazın
@@ -534,6 +537,12 @@ newtab-custom-wallpaper-title = Artık kendi duvar kâğıtlarınızı kullanabi
 # 'Make firefox yours" means to customize or personalize
 newtab-custom-wallpaper-subtitle = { -brand-product-name } tarayıcınızı kişiselleştirmek için kendi duvar kâğıdınızı yükleyin veya istediğiniz rengi seçin.
 newtab-custom-wallpaper-cta = Deneyin
+
+## Strings for new user activation custom wallpaper highlight
+
+newtab-new-user-custom-wallpaper-title = { -brand-product-name } tarayıcınızı kişiselleştirmek için bir duvar kâğıdı seçin
+newtab-new-user-custom-wallpaper-subtitle = Özel duvar kağıtları ve renklerle her yeni sekmede evinizdeymiş gibi hissedin.
+newtab-new-user-custom-wallpaper-cta = Hemen deneyin
 
 ## Strings for download mobile highlight
 
