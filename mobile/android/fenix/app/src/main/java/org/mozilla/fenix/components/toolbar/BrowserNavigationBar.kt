@@ -22,6 +22,7 @@ import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Bottom
 import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Top
 import mozilla.components.feature.toolbar.ToolbarBehaviorController
 import mozilla.components.lib.state.ext.observeAsState
+import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.utils.KeyboardState
 import org.mozilla.fenix.compose.utils.keyboardAsState
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -70,6 +71,8 @@ class BrowserNavigationBar(
 
             DefaultNavigationBarContent()
         }.apply {
+            id = R.id.navigation_bar
+
             container.addView(
                 this,
                 LayoutParams(

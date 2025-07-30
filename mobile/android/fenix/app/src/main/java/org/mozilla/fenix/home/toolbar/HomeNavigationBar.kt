@@ -19,11 +19,9 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Bottom
 import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Top
 import mozilla.components.lib.state.ext.observeAsState
-import org.mozilla.fenix.components.AppStore
-import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.utils.KeyboardState
 import org.mozilla.fenix.compose.utils.keyboardAsState
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.Settings
 
@@ -73,6 +71,8 @@ class HomeNavigationBar(
     }
 
     override val layout = ComposeView(context).apply {
+        id = R.id.navigation_bar
+
         setContent {
             DefaultNavigationBarContent()
         }
