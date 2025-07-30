@@ -1063,6 +1063,10 @@ export var BackgroundUpdate = {
       defaultProfileTargetingSnapshot,
       { nowSeconds }
     );
+    // A convenience: it's possible to determine this from existing data, but it
+    // requires non-trivial date/time calculations.  This is simpler and should
+    // be more robust.
+    Glean.backgroundUpdate.daysSinceLastBrowsed.set(daysSinceLastBrowsed);
 
     let throttleFeature = lazy.NimbusFeatures.backgroundUpdateCheckPolicy;
     if (throttleFeature.getVariable("throttleEnabled")) {
@@ -1108,6 +1112,13 @@ export var BackgroundUpdate = {
       }
     } else {
       lazy.log.warn(`${SLUG}: throttle feature not enabled`);
+    }
+
+    // Throttled will be reported each time we submit.
+    Glean.backgroundUpdate.throttled.set(throttled);
+    // Debounced will be accumulated until we submit.
+    if (debounced) {
+      Glean.backgroundUpdate.debounced.add();
     }
 
     let taskCompletedCallback = () => {};

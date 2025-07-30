@@ -45,6 +45,12 @@ function getLastTaskRunSeconds() {
 }
 
 add_setup(async function test_setup() {
+  // FOG needs a profile directory to put its data in.
+  do_get_profile();
+
+  // We need to initialize it once, otherwise operations will be stuck in the pre-init queue.
+  Services.fog.initializeFOG();
+
   // We're in an xpcshell context, not an actual background task context, so we
   // need to set some background task-specific prefs here for testing.
   Services.prefs.setBoolPref(
@@ -76,6 +82,11 @@ async function testWithActionsToPerform(
   info(
     `nowSeconds=${nowSeconds} lastBrowsedDays=${lastBrowsedDays} lastTaskRunHours=${lastTaskRunHours} lastTaskRunUnset=${lastTaskRunUnset}`
   );
+
+  // This should really be `Services.fog.testResetFOG()`. But this works
+  // well enough and, currently, Bug 1954203 prevents us from successfully using
+  // `testResetFOG`.
+  GleanPings.backgroundUpdate.submit();
 
   let environment = {
     currentDate: 1000 * (nowSeconds - lastBrowsedDays * DAY_IN_SECONDS),
@@ -127,6 +138,24 @@ async function testWithActionsToPerform(
         "No expected actions, so last task run timestamp not changed when task is debounced"
       );
     }
+
+    Assert.equal(
+      Glean.backgroundUpdate.daysSinceLastBrowsed.testGetValue(),
+      lastBrowsedDays,
+      "`daysSinceLastBrowsed` instrumentation is correct"
+    );
+
+    Assert.equal(
+      Glean.backgroundUpdate.throttled.testGetValue(),
+      !actions.has(ACTION.UPDATE),
+      "`throttled` instrumentation is correct"
+    );
+
+    Assert.equal(
+      Glean.backgroundUpdate.debounced.testGetValue(),
+      actions.size ? null : 1,
+      "`debounced` instrumentation is correct"
+    );
   } finally {
     Services.prefs.setIntPref(
       "app.update.background.lastTaskRunSecondsAfterEpoch",
