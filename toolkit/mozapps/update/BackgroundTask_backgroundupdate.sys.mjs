@@ -184,14 +184,16 @@ export async function maybeSubmitBackgroundUpdatePing() {
   lazy.log.info(`${SLUG}: submitted "background-update" ping`);
 }
 
+function automaticRestartFound(commandLine) {
+  return -1 != commandLine.findFlag("automatic-restart", false);
+}
+
 export async function runBackgroundTask(commandLine) {
   let SLUG = "runBackgroundTask";
   lazy.log.error(`${SLUG}: backgroundupdate`);
-  let automaticRestartFound =
-    -1 != commandLine.findFlag("automatic-restart", false);
 
   // Modify Glean metrics for a successful automatic restart.
-  if (automaticRestartFound) {
+  if (automaticRestartFound(commandLine)) {
     Glean.backgroundUpdate.automaticRestartSuccess.set(true);
     lazy.log.debug(`${SLUG}: application automatic restart completed`);
   }
@@ -368,13 +370,18 @@ export async function runBackgroundTask(commandLine) {
 
   let result = EXIT_CODE.SUCCESS;
 
-  let stringStatus = lazy.AppUpdater.STATUS.debugStringFor(
-    lazy.AppUpdater.STATUS.NEVER_CHECKED
-  );
+  let attemptAutomaticRestart = false;
+
+  // In case we have old observations.  This shouldn't happen but tasks do crash
+  // or fail with exceptions, so: belt and braces.
+  Glean.backgroundUpdate.reasons.set([]);
+  Glean.backgroundUpdate.states.set([]);
+
+  let updateStatus = lazy.AppUpdater.STATUS.NEVER_CHECKED;
+  let stringStatus = lazy.AppUpdater.STATUS.debugStringFor(updateStatus);
   Glean.backgroundUpdate.states.add(stringStatus);
   Glean.backgroundUpdate.finalState.set(stringStatus);
 
-  let updateStatus = lazy.AppUpdater.STATUS.NEVER_CHECKED;
   try {
     // Return AppUpdater status from _attemptBackgroundUpdate() to
     // check if the status is STATUS.READY_FOR_RESTART.
@@ -382,6 +389,20 @@ export async function runBackgroundTask(commandLine) {
 
     lazy.log.info(`${SLUG}: attempted background update`);
     Glean.backgroundUpdate.exitCodeSuccess.set(true);
+
+    // Report an attempted automatic restart.  If a restart loop is occurring
+    // then `automaticRestartFound` will be true, and we don't want to restart a
+    // second time.
+    attemptAutomaticRestart =
+      lazy.NimbusFeatures.backgroundUpdateAutomaticRestart.getVariable(
+        "enabled"
+      ) &&
+      updateStatus === lazy.AppUpdater.STATUS.READY_FOR_RESTART &&
+      !automaticRestartFound(commandLine);
+
+    if (attemptAutomaticRestart) {
+      Glean.backgroundUpdate.automaticRestartAttempted.set(true);
+    }
 
     try {
       // Now that we've pumped the update loop, we can start Nimbus and the Firefox Messaging System
@@ -420,22 +441,15 @@ export async function runBackgroundTask(commandLine) {
     await maybeSubmitBackgroundUpdatePing();
   }
 
-  // TODO: ensure the update service has persisted its state before we exit.  Bug 1700846.
-  // TODO: ensure that Glean's upload mechanism is aware of Gecko shutdown.  Bug 1703572.
-  await lazy.ExtensionUtils.promiseTimeout(500);
+  // Avoid shutdown races.  We used to have known races (Bug 1703572, Bug
+  // 1700846), so better safe than sorry.
+  await lazy.ExtensionUtils.promiseTimeout(1000);
 
   // If we're in a staged background update, we need to restart Firefox to complete the update.
   lazy.log.debug(
     `${SLUG}: Checking if staged background update is ready for restart`
   );
-  // If a restart loop is occurring then automaticRestartFound will be true.
-  if (
-    lazy.NimbusFeatures.backgroundUpdateAutomaticRestart.getVariable(
-      "enabled"
-    ) &&
-    updateStatus === lazy.AppUpdater.STATUS.READY_FOR_RESTART &&
-    !automaticRestartFound
-  ) {
+  if (attemptAutomaticRestart) {
     lazy.log.debug(
       `${SLUG}: Starting Firefox restart after staged background update`
     );
@@ -448,8 +462,6 @@ export async function runBackgroundTask(commandLine) {
         .attemptAutomaticApplicationRestartWithLaunchArgs([
           "-automatic-restart",
         ]);
-      // Report an attempted automatic restart.
-      Glean.backgroundUpdate.automaticRestartAttempted.set(true);
       lazy.log.debug(`${SLUG}: automatic application restart queued`);
     } catch (e) {
       lazy.log.error(
