@@ -33,12 +33,6 @@ rtc_library("call_interfaces") {
     "syncable.cc",
     "syncable.h",
   ]
-  if (build_with_mozilla) {
-    sources += [
-      "call_basic_stats.cc",
-      "call_basic_stats.h",
-    ]
-  }
 
   deps = [
     ":audio_sender_interface",

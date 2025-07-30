@@ -1,12 +1,8 @@
-/*
- *  Copyright (c) 2013 The WebRTC project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may
- *  be found in the AUTHORS file in the root of the source tree.
- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "modules/desktop_capture/linux/x11/x_error_trap.h"
 
@@ -15,7 +11,6 @@
 #include <limits>
 
 #include "rtc_base/checks.h"
-
 
 namespace webrtc {
 
@@ -27,16 +22,14 @@ Bool XErrorTrap::XServerErrorHandler(Display* display, xReply* rep,
       // Overflow-safe last_request_read <= last_ignored_request_ for skipping
       // async replies from requests before XErrorTrap was created.
       self->last_ignored_request_ - display->last_request_read <
-      std::numeric_limits<unsigned long>::max() >> 1)
+          std::numeric_limits<unsigned long>::max() >> 1)
     return False;
   self->last_xserver_error_code_ = rep->error.errorCode;
   return True;
 }
 
 XErrorTrap::XErrorTrap(Display* display)
-    : display_(display),
-      last_xserver_error_code_(0),
-      enabled_(true) {
+    : display_(display), last_xserver_error_code_(0), enabled_(true) {
   // Use async_handlers instead of XSetErrorHandler().  async_handlers can
   // remain in place and then be safely removed at the right time even if a
   // handler change happens concurrently on another thread.  async_handlers
@@ -63,8 +56,7 @@ int XErrorTrap::GetLastErrorAndDisable() {
 }
 
 XErrorTrap::~XErrorTrap() {
-  if (enabled_)
-    GetLastErrorAndDisable();
+  if (enabled_) GetLastErrorAndDisable();
 }
 
 }  // namespace webrtc
