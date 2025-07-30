@@ -133,6 +133,7 @@ class LoginLine extends MozLitElement {
             <div class="copy-container">
               <img
                 data-l10n-id="contextual-manager-copy-icon"
+                aria-labelledby="contextual-manager-copy-icon"
                 class="copy-icon"
                 src="chrome://global/skin/icons/edit-copy.svg"
               />
@@ -195,13 +196,17 @@ class ConcealedLoginLine extends MozLitElement {
     if (!isAuthorized) {
       return;
     }
-    this.revealBtn.setAttribute("data-l10n-id", this.#revealBtnLabel);
+
+    const l10nAriaId = this.#revealBtnLabel;
+    this.revealBtn.setAttribute("data-l10n-id", l10nAriaId);
+    this.revealBtn.setAttribute("aria-labelledby", l10nAriaId);
   }
 
   render() {
     const dataL10nId = this.alert
       ? "contextual-manager-password-login-line-with-alert"
       : "contextual-manager-password-login-line";
+    const l10nAriaId = this.#revealBtnLabel;
     return html` <link
         rel="stylesheet"
         href="chrome://global/content/megalist/components/login-line/login-line.css"
@@ -225,7 +230,8 @@ class ConcealedLoginLine extends MozLitElement {
           class="reveal-button"
           type="icon ghost"
           tabindex="-1"
-          data-l10n-id=${this.#revealBtnLabel}
+          data-l10n-id=${l10nAriaId}
+          aria-labelledby=${l10nAriaId}
           iconSrc=${this.#revealIconSrc()}
           @keypress=${async e => {
             if (e.code === "Enter") {

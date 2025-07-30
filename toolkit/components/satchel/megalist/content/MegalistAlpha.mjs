@@ -446,12 +446,12 @@ export class MegalistAlpha extends MozLitElement {
         notification: origin.breachedNotification,
       },
       {
-        displayAlert: !username.value.length,
-        notification: username.noUsernameNotification,
-      },
-      {
         displayAlert: password.vulnerable,
         notification: password.vulnerableNotification,
+      },
+      {
+        displayAlert: !username.value.length,
+        notification: username.noUsernameNotification,
       },
     ];
 
@@ -535,7 +535,11 @@ export class MegalistAlpha extends MozLitElement {
   renderNoLoginsCard() {
     return html`
       <moz-card class="empty-state-card">
-        <div class="no-logins-card-content">
+        <div
+          role="region"
+          class="no-logins-card-content"
+          aria-labelledby="no-logins-card-heading"
+        >
           <img
             src="chrome://global/content/megalist/icons/cpm-fox-illustration.svg"
             role="presentation"
@@ -543,7 +547,7 @@ export class MegalistAlpha extends MozLitElement {
           />
           <strong
             class="no-logins-card-heading"
-            data-l10n-id="contextual-manager-passwords-no-passwords-header"
+            data-l10n-id="contextual-manager-passwords-no-passwords-header-2"
           ></strong>
           <p
             data-l10n-id="contextual-manager-passwords-no-passwords-message"
@@ -593,7 +597,7 @@ export class MegalistAlpha extends MozLitElement {
       <div
         id="no-results-message"
         class="empty-search-results"
-        data-l10n-id="contextual-manager-passwords-no-passwords-found-message"
+        data-l10n-id="contextual-manager-passwords-no-passwords-found-message-2"
       ></div>
     </moz-card>`;
   }
@@ -765,7 +769,7 @@ export class MegalistAlpha extends MozLitElement {
         <hr />
         <panel-item
           action="open-preferences"
-          data-l10n-id="contextual-manager-passwords-command-settings"
+          data-l10n-id="contextual-manager-passwords-command-options"
           @click=${() => {
             const command = this.header.commands.find(
               command => command.id === "Settings"
@@ -886,7 +890,7 @@ export class MegalistAlpha extends MozLitElement {
         rel="stylesheet"
         href="chrome://global/content/megalist/megalist.css"
       />
-      <div class="container">
+      <div class="container" aria-labelledby="sidebar-menu-cpm-header">
         <sidebar-panel-header
           data-l10n-id="sidebar-menu-cpm-header"
           data-l10n-attrs="heading"
