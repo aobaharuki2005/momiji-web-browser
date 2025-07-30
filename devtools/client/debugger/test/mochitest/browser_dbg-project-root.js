@@ -60,6 +60,14 @@ const PAGE2_CONTENT = `<!DOCTYPE html>
         //# sourceURL=webpack:///src/webpack-script.js
       </script>
       <script type="text/javascript">
+        console.log("webpack with domain script");
+        //# sourceURL=webpack://with-domain/webpack-with-domain-script.js
+      </script>
+      <script type="text/javascript">
+        console.log("webpack short URL script");
+        //# sourceURL=webpack:webpack-short-url-script.js
+      </script>
+      <script type="text/javascript">
         console.log("turbopack script");
         //# sourceURL=turbopack:///src/turbopack-script.js
       </script>
@@ -77,6 +85,8 @@ const PAGE2_CONTENT = `<!DOCTYPE html>
 const ALL_PAGE2_SCRIPTS = [
   "script.js",
   "webpack-script.js",
+  "webpack-with-domain-script.js",
+  "webpack-short-url-script.js",
   "turbopack-script.js",
   "angular-script.js",
   "resource-script.js",
@@ -209,7 +219,11 @@ add_task(async function testProjectRoot() {
     {
       label: "Webpack",
       tooltip: `webpack:// on Main Thread`,
-      sources: ["webpack-script.js"],
+      sources: [
+        "webpack-script.js",
+        "webpack-with-domain-script.js",
+        "webpack-short-url-script.js",
+      ],
     },
     {
       label: "src",

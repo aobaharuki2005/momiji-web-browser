@@ -64,6 +64,7 @@ const def = {
  *        - `path` and `pathname` have some special behavior.
  *          See `parse` implementation.
  */
+// eslint-disable-next-line complexity
 export function getDisplayURL(url, extensionName = null) {
   if (!url) {
     return def;
@@ -109,9 +110,9 @@ export function getDisplayURL(url, extensionName = null) {
     case "webpack:":
       return {
         ...def,
-        path: pathname,
+        path: host + pathname,
         search,
-        filename,
+        filename: filename ? filename : host,
         fileExtension: getFileExtension(pathname),
         group: `Webpack`,
         origin: `${protocol}//`,
