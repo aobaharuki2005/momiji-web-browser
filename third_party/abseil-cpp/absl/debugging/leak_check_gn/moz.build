@@ -106,8 +106,6 @@ if CONFIG["TARGET_CPU"] == "loongarch64":
 
 if CONFIG["TARGET_CPU"] == "mips32":
 
-    DEFINES["MIPS32_LE"] = True
-    DEFINES["MIPS_FPU_LE"] = True
     DEFINES["_GNU_SOURCE"] = True
 
 if CONFIG["TARGET_CPU"] == "mips64":
@@ -149,6 +147,10 @@ if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "arm":
     DEFINES["_GNU_SOURCE"] = True
 
 if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
 
     DEFINES["_GNU_SOURCE"] = True
 
