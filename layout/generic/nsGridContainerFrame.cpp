@@ -3291,12 +3291,9 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput {
   void InvalidateTrackSizesForAxis(LogicalAxis aAxis);
 
   /**
-   * Return the percentage basis for a grid item in its writing-mode.
-   * If aAxis is LogicalAxis::Inline then we return NS_UNCONSTRAINEDSIZE in
-   * both axes since we know all track sizes are indefinite at this point
-   * (we calculate column sizes before row sizes).  Otherwise, assert that
-   * column sizes are known and calculate the size for aGridItem.mArea.mCols
-   * and use NS_UNCONSTRAINEDSIZE in the other axis.
+   * Return the percentage basis for a grid item in its writing-mode based on
+   * track sizes and the grid area occupied by the grid item.
+   *
    * @param aAxis the axis we're currently calculating track sizes for
    */
   LogicalSize PercentageBasisFor(LogicalAxis aAxis,
@@ -5901,7 +5898,7 @@ static nscoord ContentContribution(const GridItemInfo& aGridItem,
       // The next two variables are MinSizeClamp values in the child's axes.
       nscoord iMinSizeClamp = NS_MAXSIZE;
       nscoord bMinSizeClamp = NS_MAXSIZE;
-      LogicalSize cbSize(childWM, 0, NS_UNCONSTRAINEDSIZE);
+      LogicalSize cbSize = aPercentageBasis;
       // Below, we try to resolve the child's grid-area size in its inline-axis
       // to use as the CB/Available size in the MeasuringReflow that follows.
       if (child->GetParent() != aGridRI.mFrame) {
@@ -6579,8 +6576,6 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
       // XXXmats if |child| is a descendant of a subgrid then the metrics
       // below needs to account for the accumulated MPB somehow...
 
-      // XXX available size issue
-      LogicalSize avail(childWM, INFINITE_ISIZE_COORD, NS_UNCONSTRAINEDSIZE);
       auto* rc = &aGridRI.mRenderingContext;
       // XXX figure out if we can avoid/merge this reflow with the main reflow.
       // XXX (after bug 1174569 is sorted out)
@@ -6590,8 +6585,14 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
       // XXX What if the true baseline after line-breaking differs from this
       // XXX hypothetical baseline based on an infinite inline size?
       // XXX Maybe we should just call ::ContentContribution here instead?
-      // XXX For now we just pass an unconstrined-bsize CB:
-      LogicalSize cbSize(childWM, 0, NS_UNCONSTRAINEDSIZE);
+      const LogicalSize cbSize = aGridRI.PercentageBasisFor(mAxis, gridItem);
+      LogicalSize avail(childWM, INFINITE_ISIZE_COORD, NS_UNCONSTRAINEDSIZE);
+      const LogicalAxis inlineAxisInChildWM =
+          isOrthogonal ? LogicalAxis::Block : LogicalAxis::Inline;
+      const nscoord colSize = cbSize.Size(inlineAxisInChildWM, childWM);
+      if (colSize != NS_UNCONSTRAINEDSIZE) {
+        avail.Size(inlineAxisInChildWM, childWM) = colSize;
+      }
       ::MeasuringReflow(child, aGridRI.mReflowInput, rc, avail, cbSize);
 
       nsGridContainerFrame* grid = do_QueryFrame(child);
