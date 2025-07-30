@@ -228,7 +228,6 @@ import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
 import java.lang.ref.WeakReference
 import kotlin.coroutines.cancellation.CancellationException
-import org.mozilla.fenix.GleanMetrics.TabStrip as TabStripMetrics
 
 /**
  * Base fragment extended by [BrowserFragment].
@@ -440,7 +439,9 @@ abstract class BaseBrowserFragment :
             onPrivateModeLocked = {
                 if (customTabSessionId == null || requireContext().settings().openLinksInAPrivateTab) {
                     findNavController().navigate(
-                        NavGraphDirections.actionGlobalUnlockPrivateTabsFragment(NavigationOrigin.TAB),
+                        NavGraphDirections.actionGlobalUnlockPrivateTabsFragment(
+                            if (customTabSessionId != null) NavigationOrigin.CUSTOM_TAB else NavigationOrigin.TAB,
+                        ),
                     )
                 }
             },

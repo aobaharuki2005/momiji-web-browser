@@ -151,6 +151,9 @@ class UnlockPrivateTabsFragment : Fragment(), UserInteractionHandler {
                     )
                 }
             }
+            // If private mode is locked and the user opens a private custom tab,
+            // close the activity when they leave without authenticating to return to the host app.
+            NavigationOrigin.CUSTOM_TAB -> (activity as HomeActivity).finish()
         }
     }
 
@@ -192,4 +195,5 @@ enum class NavigationOrigin {
     TABS_TRAY,
     HOME_PAGE,
     TAB,
+    CUSTOM_TAB,
 }
