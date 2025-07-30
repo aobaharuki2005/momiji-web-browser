@@ -1552,8 +1552,25 @@
   <string name="history_older">Mai vechi</string>
   <!-- Text shown when no history exists -->
   <string name="history_empty_message">Fără istoric</string>
+  <!--
+    Downloads
+
+    Text for the snackbar to confirm that a multiple download items have been removed. %1$s is the number of removed download items.
+    %1$d is the number of items deleted.
+  -->
+  <string name="download_delete_multiple_items_snackbar_2">Elemente șterse: %1$d</string>
   <!-- Title for the dialog that prompts the user to choose an app for downloading a file. -->
   <string name="download_app_dialog_title">Descarcă fișierul cu:</string>
+  <!-- Text for the snackbar to confirm that a single download item has been removed. %1$s is the name of the download item. -->
+  <string name="download_delete_single_item_snackbar_2">„%1$s” a fost șters</string>
+  <!-- Text for the snackbar to confirm that downloads are in progress. -->
+  <string name="download_in_progress_snackbar">Se descarcă…</string>
+  <!-- Text for the snackbar action button to view in progress download details. -->
+  <string name="download_in_progress_snackbar_action_details">Detalii</string>
+  <!-- Text for the snackbar to confirm that a download has completed. -->
+  <string name="download_completed_snackbar">Descărcare finalizată</string>
+  <!-- Text for the snackbar action button to open a completed download. -->
+  <string name="download_completed_snackbar_action_open">Deschide</string>
   <!-- Text for the snackbar action button to undo deleting a download. -->
   <string name="download_undo_delete_snackbar_action">Anulează</string>
   <!-- Text shown when no download exists -->
@@ -1565,8 +1582,29 @@
     %1$d is the number of downloads selected
   -->
   <string name="download_multi_select_title">%1$d selectate</string>
+  <!-- Title for the dialog that is shown when there is not enough storage space to download a file. -->
+  <string name="download_file_has_not_enough_storage_dialog_title">Nu este suficient spațiu</string>
+  <!--
+    Message for the dialog that is shown when there is not enough storage space to download a file.
+    %s is the name of the file to download.
+  -->
+  <string name="download_file_has_not_enough_storage_dialog_message"><![CDATA[Acest dispozitiv nu are suficient spațiu pentru a descărca <b>%s</b>.]]></string>
+  <!--
+    Text for the confirm button in the dialog that is shown when there is not enough storage space to download a file.
+    This button will navigate the user to the device's storage management settings.
+  -->
+  <string name="download_file_has_not_enough_storage_dialog_confirm_button_text">Gestionează fișierele</string>
+  <!--
+    Text for the cancel button in the dialog that is shown when there is not enough storage space to download a file.
+    This button will dismiss the dialog.
+  -->
+  <string name="download_file_has_not_enough_storage_dialog_cancel_button_text">Anulează</string>
   <!-- Text for the button to delete a single downloaded file item -->
   <string name="download_delete_item">Șterge</string>
+  <!-- Content description for the toolbar "Navigate back" button -->
+  <string name="download_navigate_back_description">Navighează înapoi</string>
+  <!-- Content description for the toolbar back button while searching the downloads -->
+  <string name="download_close_search_description">Înapoi și închide căutarea</string>
   <!--
     Content description for the search bar clear text button on the downloads screen
 
@@ -1590,6 +1628,18 @@
   <string name="download_delete_multi_select_dialog_cancel">Anulează</string>
   <!-- Text for the header of in progress downloads -->
   <string name="download_header_in_progress">În desfășurare</string>
+  <!--
+    Time period headers for downloads
+
+    Text for the header that groups the downloads for today
+  -->
+  <string name="download_time_period_today">Astăzi</string>
+  <!-- Text for the header that groups the downloads for yesterday -->
+  <string name="download_time_period_yesterday">Ieri</string>
+  <!-- Text for the header that groups the downloads the past 7 days -->
+  <string name="download_time_period_last_7_days">Ultimele 7 zile</string>
+  <!-- Text for the header that groups the downloads the past 30 days -->
+  <string name="download_time_period_last_30_days">Ultimele 30 de zile</string>
   <!-- Text for the header that groups the downloads older than other groups -->
   <string name="download_time_period_older">Mai vechi</string>
   <!-- Description of an in progress download item, displayed in the downloads list when the download has just started. -->
@@ -1615,11 +1665,21 @@
   -->
   <string name="download_item_in_progress_description_pending">%1$s / %2$s • în așteptare</string>
   <!--
+    Description of an in progress download item, displayed in the downloads list when the total download size is unknown. This results in the estimated download time remaining to be unknown also.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_in_progress_description_unknown_total_size">%1$s • oră necunoscută</string>
+  <!--
     Description of a paused download item, displayed in the downloads list.
     %1$s is the current file size that has been downloaded.
     %2$s is the total size of the downloaded file.
   -->
   <string name="download_item_paused_description">%1$s / %2$s • întrerupt</string>
+  <!--
+    Description of a paused download item, displayed in the downloads list when the total download size is unknown.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_paused_description_unknown_total_size">%1$s • întrerupt</string>
   <!-- Text to indicate that an in progress download is paused. -->
   <string name="download_item_status_paused" moz:removedIn="141" tools:ignore="UnusedResources">întrerupt</string>
   <!-- Text to indicate that the download speed of an in progress download is being calculated. -->
@@ -1656,12 +1716,22 @@
   <string name="webcompat_reporter_screen_title">Raportează site nefuncțional</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Ajută la îmbunătățirea site-ului %1$s pentru toată lumea. Angajații Mozilla folosesc informațiile pe care le trimiți pentru a remedia problemele site-ului web.</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description_2">Raportul tău ne ajută să înțelegem și să remediem problemele din %1$s pentru a-l îmbunătăți pentru toată lumea. Află mai multe</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">Află mai multe</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
   <string name="webcompat_reporter_url_error_invalid">Te rugăm să introduci un URL valid</string>
+  <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_label_whats_broken_2">Ce nu merge?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Alege un motiv</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">Alege un motiv</string>
+  <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_error">Te rugăm să alegi un motiv</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">Descrie problema (opțional)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
@@ -1674,6 +1744,30 @@
   <string name="webcompat_reporter_success_snackbar_text">Raportul tău a fost trimis</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text">Închide</string>
+  <!-- Placeholder text for the description field to prompt the user on what they should type. -->
+  <string name="webcompat_reporter_problem_description_placeholder_text">Ce s-a întâmplat? Ce ar fi trebuit să se întâmple?</string>
+  <!--
+    These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
+
+    Broken site reason text for site doesn’t load
+  -->
+  <string name="webcompat_reporter_reason_load">Site-ul nu se încarcă</string>
+  <!-- Broken site reason text for can’t pay, check out or shop -->
+  <string name="webcompat_reporter_reason_checkout">Nu pot să plătesc, să finalizez achiziția sau să cumpăr</string>
+  <!-- Broken site reason text for site is slow -->
+  <string name="webcompat_reporter_reason_slow2">Site-ul este lent</string>
+  <!-- Broken site reason text for video isn’t playing or loading -->
+  <string name="webcompat_reporter_reason_media2">Videoclipul nu se redă sau nu se încarcă</string>
+  <!-- Broken site reason text for missing content -->
+  <string name="webcompat_reporter_reason_content2">Conținut lipsă</string>
+  <!-- Broken site reason text for can’t sign in or register -->
+  <string name="webcompat_reporter_reason_account2">Imposibil de intrat în cont sau de creat un cont nou</string>
+  <!-- Broken site reason text for site asked to turn off ad blocker -->
+  <string name="webcompat_reporter_reason_turn_off_adblocker">Site-ul a cerut dezactivarea blocării reclamelor</string>
+  <!-- Broken site reason text for browser isn’t supported or blocked -->
+  <string name="webcompat_reporter_reason_notsupported">Browserul nu este acceptat sau blocat</string>
+  <!-- Broken site reason text for something else -->
+  <string name="webcompat_reporter_reason_other">Altceva</string>
   <!--
     Crashes
 
@@ -1686,10 +1780,22 @@
   <string name="tab_crash_close">Închide fila</string>
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Restaurează fila</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title">%s a trebuit să repornească</string>
+  <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_title">Ai un raport de blocare netrimis, legat de erorile investigate. Trimiterea acestuia ne va ajuta să îmbunătățim %1$s. Închiderea acestei notificări va ignora acest raport.</string>
+  <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crashes_requested_by_devs_dialog_title">Ai rapoarte de blocare netrimise (%1$d) legate de erori investigate. Trimiterea lor ne va ajuta să îmbunătățim %2$s. Închiderea acestei notificări va ignora aceste rapoarte.</string>
+  <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
+  <string name="unsubmitted_crash_dialog_checkbox_label">Trimite automat rapoarte de blocare</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Închide</string>
+  <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Nu mai afișa vreodată</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Trimite raportul de defecțiuni</string>
+  <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
+  <string name="unsubmitted_crash_requested_by_devs_learn_more">Află mai multe</string>
   <!--
     Bookmarks
 
@@ -1716,6 +1822,8 @@
   <string name="bookmark_menu_copy_button">Copiază</string>
   <!-- Bookmark overflow menu share button -->
   <string name="bookmark_menu_share_button">Partajează</string>
+  <!-- Bookmark overflow menu select all bookmarks -->
+  <string name="bookmark_menu_select_all_bookmarks">Selectează tot</string>
   <!-- Bookmark overflow menu open in new tab button -->
   <string name="bookmark_menu_open_in_new_tab_button">Deschide într-o filă nouă</string>
   <!-- Bookmark overflow menu open in private tab button -->
@@ -1728,6 +1836,16 @@
   <string name="bookmark_menu_delete_button">Șterge</string>
   <!-- Bookmark overflow menu save button -->
   <string name="bookmark_menu_save_button">Salvează</string>
+  <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
+  <string name="bookmark_sort_menu_custom">Sortează după ordine personalizată</string>
+  <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
+  <string name="bookmark_sort_menu_newest">Sortează după cele mai noi</string>
+  <!-- Label for button to sort bookmarks by oldest in the bookmark sorting overflow menu. -->
+  <string name="bookmark_sort_menu_oldest">Sortează după cele mai vechi</string>
+  <!-- Label for button to sort bookmarks in alphabetical order in the bookmark sorting overflow menu. -->
+  <string name="bookmark_sort_menu_a_to_z">Sortează de la A la Z</string>
+  <!-- Label for button to sort bookmarks in reverse alphabetical order in the bookmark sorting overflow menu. -->
+  <string name="bookmark_sort_menu_z_to_a">Sortează de la Z la A</string>
   <!--
     Bookmark multi select title in app bar
     %1$d is the number of bookmarks selected
@@ -1784,6 +1902,22 @@
   <string name="bookmark_delete_bookmark_content_description">Șterge marcajul</string>
   <!-- Content description for the bookmark screen delete bookmark folder navigation bar button -->
   <string name="bookmark_delete_folder_content_description">Șterge dosarul</string>
+  <!-- Content description for bookmark search floating action button -->
+  <string name="bookmark_search_button_content_description">Caută în marcaje</string>
+  <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
+  <string name="bookmark_item_menu_button_content_description">Meniu de articole pentru %s</string>
+  <!-- Title for the bookmark list empty state -->
+  <string name="bookmark_empty_list_title">Niciun marcaj încă</string>
+  <!-- Description for the bookmark list empty state when you're not signed into sync. -->
+  <string name="bookmark_empty_list_guest_description">Salvează site-uri pe măsură ce navighezi. Conectează-te pentru a prelua marcaje de pe alte dispozitive sincronizate.</string>
+  <!-- Text for the button to navigate to sync authentication -->
+  <string name="bookmark_empty_list_guest_cta">Intră în cont pentru sincronizare</string>
+  <!-- Description for the bookmark list empty state when you're signed into sync. -->
+  <string name="bookmark_empty_list_authenticated_description">Salvează site-uri pe măsură ce navighezi. De asemenea, vom prelua marcaje de pe alte dispozitive sincronizate.</string>
+  <!-- Description for the bookmark list empty state when you're in an empty folder. -->
+  <string name="bookmark_empty_list_folder_description">Adaugă marcaje pe măsură ce navighezi, pentru a putea găsi site-urile tale preferate mai târziu.</string>
+  <!-- Description for the add new folder button when selecting a folder. -->
+  <string name="bookmark_select_folder_new_folder_button_title">Dosar nou</string>
   <!--
     Site Permissions
 
@@ -1874,6 +2008,12 @@
   <string name="browser_feature_desktop_site_on">Activat</string>
   <!-- Toggle if desktop site is turned off -->
   <string name="browser_feature_desktop_site_off">Dezactivat</string>
+  <!-- Category header of a preference that allows a user to alter settings related to web permissions. -->
+  <string name="preferences_category_permissions">Permisiuni</string>
+  <!-- Category header of a preference that allows a user to alter settings related to web content. -->
+  <string name="preferences_category_content">Conținut</string>
+  <!-- Preference for altering the default browsing mode. When enabled, the desktop site will always be requested. -->
+  <string name="preference_feature_desktop_mode_default">Solicită întotdeauna site-ul pentru desktop</string>
   <!--
     Collections
 
@@ -1941,6 +2081,12 @@
   <string name="share_save_to_pdf">Salvează ca PDF</string>
   <!-- Text for error message when generating a PDF file Text. -->
   <string name="unable_to_save_to_pdf_error">Nu se poate genera PDF</string>
+  <!-- Text for standard error snackbar dismiss button. -->
+  <string name="standard_snackbar_error_dismiss">Înlătură</string>
+  <!-- Text for error message when printing a page and it fails. -->
+  <string name="unable_to_print_page_error">Nu se poate imprima această pagină</string>
+  <!-- Text for the print feature in the share and browser menu -->
+  <string name="menu_print">Tipărește</string>
   <!-- Sub-header in the dialog to share a link to another sync device -->
   <string name="share_device_subheader">Trimite pe dispozitiv</string>
   <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1977,12 +2123,19 @@
   <string name="sync_add_new_device_learn_button">Află mai multe despre transmiterea filelor…</string>
   <!-- Text for the button to connect another device -->
   <string name="sync_add_new_device_connect_button">Conectează alt dispozitiv…</string>
+  <!-- A message template for the shared link with a footer. %1$s is the shared link, %2$s is the app name (e.g. Firefox) and %3$s is a download link for the app. -->
+  <string name="sent_from_firefox_template" tools:ignore="UnusedResources">%1$s\n\nTrimis de la %2$s 🦊 Încearcă browserul mobil: %3$s</string>
+  <!-- A short message template for the shared link with a footer. %1$s is the shared link, %2$s is the app name (e.g. Firefox) and %3$s is a download link for the app. -->
+  <string name="sent_from_firefox_template_short" tools:ignore="UnusedResources">%1$s\n\nTrimis de la %2$s 🦊 %3$s</string>
   <!--
     Notifications
 
     Text shown in the notification that pops up to remind the user that a private browsing session is active.
   -->
   <string name="notification_pbm_delete_text_2">Închide filele private</string>
+  <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
+  <string name="notification_erase_title_android_14">Închizi filele private?</string>
+  <string name="notification_erase_text_android_14">Atinge sau glisează această notificare pentru a închide filele private.</string>
   <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
   <string name="notification_marketing_channel_name">Marketing</string>
   <!--
@@ -2013,6 +2166,15 @@
   <string name="notification_re_engagement_B_title">Începe prima căutare</string>
   <!-- Text B shown in the notification that pops up to re-engage the user -->
   <string name="notification_re_engagement_B_text">Găsește ceva în apropiere. Sau descoperă ceva distractiv.</string>
+  <!--
+    Survey
+
+    Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments
+  -->
+  <string name="nimbus_survey_message_text" tools:ignore="BrandUsage">Te rugăm să ajuți la îmbunătățirea Firefox completând un scurt sondaj.</string>
+  <!-- Preference for taking the short survey. -->
+  <string name="preferences_take_survey">Completează sondajul</string>
   <!-- Preference for not taking the short survey. -->
   <string name="preferences_not_take_survey">Nu, mulțumesc</string>
   <!--
@@ -2027,10 +2189,18 @@
   <string name="snackbar_tab_closed">Filă închisă</string>
   <!-- Text shown in snackbar when user closes all tabs -->
   <string name="snackbar_tabs_closed">File închise</string>
+  <!-- Text shown in snackbar when user closes multiple inactive tabs. %1$s will be replaced with the number of tabs closed. -->
+  <string name="snackbar_num_tabs_closed">Taburi închise: %1$s</string>
+  <!-- Text shown in snackbar when user bookmarks a list of tabs. %s is the name of the folder the bookmark was saved into. -->
+  <string name="snackbar_message_bookmarks_saved_in">Semne de carte salvate în „%s”!</string>
+  <!-- Text shown in snackbar when user adds a site to shortcuts -->
+  <string name="snackbar_added_to_shortcuts">Adăugat la scurtături!</string>
   <!-- Text shown in snackbar when user closes a private tab -->
   <string name="snackbar_private_tab_closed">Filă privată închisă</string>
   <!-- Text shown in snackbar when user closes all private tabs -->
   <string name="snackbar_private_tabs_closed" moz:removedIn="141" tools:ignore="UnusedResources">File private închise</string>
+  <!-- Text shown in snackbar when user erases their private browsing data -->
+  <string name="snackbar_private_data_deleted">Datele private de navigare au fost șterse</string>
   <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
   <string name="snackbar_deleted_undo">ANULEAZĂ</string>
   <!-- Text shown in snackbar when user removes a top site -->
@@ -2060,6 +2230,8 @@
   <string name="preference_accessibility_text_size_summary">Mărește sau micșorează textul pe site-urile web</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">Dimensiunea fontului</string>
+  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
+  <string name="a11y_preference_accessibility_font_size_percentage">%d %%.</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">Dimensionare automată pentru fonturi</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -2191,6 +2363,10 @@
   <string name="preference_enhanced_tracking_protection_strict">Strictă</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">O protecție mai puternică împotriva urmării și o performanță mai rapidă, dar se poate ca unele site-uri să nu funcționeze bine.</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">Permite ca %1$s să aplice automat excepțiile necesare pentru a evita întreruperi majore ale site-ului web.</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">Aplică automat excepții necesare doar pentru remedierea de probleme minore și pentru a face disponibile funcționalități utile.</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">Ce blochează protecția strictă împotriva urmăririi</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -2277,6 +2453,12 @@
   <string name="etp_redirect_trackers_title">Redirecționarea elementelor de urmărire</string>
   <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_redirect_trackers_description">Șterge cookie-urile setate de redirecționări către site-uri web de urmărire cunoscute.</string>
+  <!-- Preference for fingerprinting protection for the custom protection settings -->
+  <string name="etp_suspected_fingerprinters_title">Amprente digitale suspectate</string>
+  <!-- Description of fingerprinters that can be blocked by fingerprinting protection -->
+  <string name="etp_suspected_fingerprinters_description">Activează protecția prin amprente digitale pentru a opri suspecții de amprentare.</string>
+  <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+  <string name="etp_known_fingerprinters_title">Amprente digitale cunoscute</string>
   <!--
     Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
     as we use it on the UI to indicate which trackers have been partially unblocked.
@@ -2284,6 +2466,97 @@
   <string name="preference_etp_smartblock_description">Unele instrumente de urmărire marcate mai jos au fost parțial deblocate pe această pagină, deoarece ai interacționat cu ele *.</string>
   <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
   <string name="preference_etp_smartblock_learn_more">Află mai multe</string>
+  <!--
+    Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings.
+  -->
+  <string name="preference_etp_exceptions_icon_description">Pictogramă de preferință pentru excepții de protecție îmbunătățită împotriva urmăririi</string>
+  <!--
+    DNS over HTTPS (DoH)
+
+    Preference title for DNS over HTTPS settings
+  -->
+  <string name="preference_doh_title">DNS prin HTTPS</string>
+  <!-- Description of the preference to enable "DNS over HTTPS". %1$s is replaced by a link using `preference_doh_learn_more` at text ("Learn More"). -->
+  <string name="preference_doh_summary">Sistemul de nume de domeniu (DNS) prin HTTPS trimite solicitarea ta pentru un nume de domeniu printr-o conexiune criptată, oferind un DNS securizat și îngreunând vizibilitatea site-ului web pe care urmează să îl accesezi de către alții. %1$s</string>
+  <!-- Used as text for the link in `preference_doh_title`, points to documentation about "DNS over HTTPS" -->
+  <string name="preference_doh_learn_more">Află mai multe</string>
+  <!-- Content description for the "Exceptions" button -->
+  <string name="preference_doh_exceptions_description">Excepții</string>
+  <!-- Content description for the "Info" button -->
+  <string name="preference_doh_info_description">Informații</string>
+  <!-- Content description for the "Add Site" button -->
+  <string name="preference_doh_add_site_description">Adaugă un site</string>
+  <!-- Title displayed for "Default Protection" option under "DNS over HTTPS" -->
+  <string name="preference_doh_default_protection">Protecție implicită</string>
+  <!-- Summary displayed for "Default Protection" option under "DNS over HTTPS". %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_doh_default_protection_summary">%1$s decide când să utilizeze un DNS securizat ca să-ți protejezi confidențialitatea.</string>
+  <!-- Bullet point 1 for "Default Protection" information page under "DNS over HTTPS" -->
+  <string name="preference_doh_default_protection_info_1">Folosește furnizorul pe care îl alegi</string>
+  <!-- Bullet point 2 for "Default Protection" information page under "DNS over HTTPS" -->
+  <string name="preference_doh_default_protection_info_2">Folosește rezolvitorul DNS implicit dacă există o problemă cu furnizorul de DNS securizat</string>
+  <!-- Bullet point 3 for "Default Protection" information page under "DNS over HTTPS". %1$s is replaced by a link using `preference_doh_learn_more` at text ("Learn More"). -->
+  <string name="preference_doh_default_protection_info_3">Folosește un furnizor local, dacă este posibil. %1$s</string>
+  <!-- Bullet point 4 for "Default Protection" information page under "DNS over HTTPS" -->
+  <string name="preference_doh_default_protection_info_4">Dezactivează când sunt active VPN-ul, controlul parental sau politicile companiei</string>
+  <!-- Bullet point 5 for "Default Protection" information page under "DNS over HTTPS". %1$s is the name of the application (e.g. Fenix). %2$s is replaced by a link using `preference_doh_learn_more` at text ("Learn More"). -->
+  <string name="preference_doh_default_protection_info_5">Dezactivează când o rețea îi spune lui %1$s că nu ar trebui să utilizeze DNS securizat. %2$s</string>
+  <!-- Title displayed for "Increased Protection" option under "DNS over HTTPS" -->
+  <string name="preference_doh_increased_protection">Protecție sporită</string>
+  <!-- Summary displayed for "Increased Protection" option under "DNS over HTTPS" -->
+  <string name="preference_doh_increased_protection_summary">Tu controlezi când să utilizezi DNS securizat și îți alegi furnizorul.</string>
+  <!-- Bullet point 1 for "Increased Protection" information page under "DNS over HTTPS" -->
+  <string name="preference_doh_increased_protection_info_1">Folosește furnizorul pe care îl alegi</string>
+  <!-- Bullet point 2 for "Increased Protection" information page under "DNS over HTTPS" -->
+  <string name="preference_doh_increased_protection_info_2">Folosește rezolverul DNS implicit doar dacă există o problemă cu DNS-ul securizat</string>
+  <!-- Title displayed for "Max Protection" option under "DNS over HTTPS" -->
+  <string name="preference_doh_max_protection">Protecție max</string>
+  <!-- Summary displayed for "Max Protection" option under "DNS over HTTPS". %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_doh_max_protection_summary">%1$s va folosi întotdeauna un DNS securizat. Vei vedea un avertisment privind riscul de securitate înainte de a utiliza DNS-ul sistemului tău.</string>
+  <!-- Bullet point 1 for "Max Protection" information page under "DNS over HTTPS" -->
+  <string name="preference_doh_max_protection_info_1">Folosește doar furnizorul pe care îl alegi</string>
+  <!-- Bullet point 2 for "Max Protection" information page under "DNS over HTTPS" -->
+  <string name="preference_doh_max_protection_info_2">Avertizează întotdeauna dacă DNS-ul securizat nu este disponibil</string>
+  <!-- Bullet point 3 for "Max Protection" information page under "DNS over HTTPS" -->
+  <string name="preference_doh_max_protection_info_3">Dacă DNS-ul securizat nu este disponibil, site-urile nu se vor încărca sau nu vor funcționa corect</string>
+  <!-- Title displayed for "Off" option under "DNS over HTTPS" -->
+  <string name="preference_doh_off">Dezactivat</string>
+  <!-- Summary displayed for "Off" option under "DNS over HTTPS" -->
+  <string name="preference_doh_off_summary">Folosește rezolvitorul DNS implicit</string>
+  <!-- Text displayed above provider dropdown under "DNS over HTTPS" -->
+  <string name="preference_doh_choose_provider">Alege furnizorul</string>
+  <!-- Text displayed for "Default provider" under "DNS over HTTPS" providers -->
+  <string name="preference_doh_provider_default">(implicit)</string>
+  <!-- Text displayed for "Custom" under "DNS over HTTPS" providers -->
+  <string name="preference_doh_provider_custom">Personalizat</string>
+  <!-- Text displayed for "Custom provider" dialog under "DNS over HTTPS" -->
+  <string name="preference_doh_provider_custom_dialog_title">Furnizor personalizat</string>
+  <!-- Text displayed above provider textfield under "DNS over HTTPS" -->
+  <string name="preference_doh_provider_custom_dialog_textfield">Furnizor</string>
+  <!-- Error text displayed for provider textfield under "DNS over HTTPS" if the URL does not start with "https://" or its scheme is not "https" -->
+  <string name="preference_doh_provider_custom_dialog_error_https">URL-ul trebuie să înceapă cu „https://”</string>
+  <!-- Error text displayed for provider textfield under "DNS over HTTPS" if the URL is invalid -->
+  <string name="preference_doh_provider_custom_dialog_error_invalid">URL nevalid</string>
+  <!-- Cancel button text for provider textfield under "DNS over HTTPS" -->
+  <string name="preference_doh_provider_custom_dialog_cancel">Anulează</string>
+  <!-- Add button text for provider textfield under "DNS over HTTPS" -->
+  <string name="preference_doh_provider_custom_dialog_add">Adaugă</string>
+  <!-- Preference to access list of login exceptions that we don't use DNS over HTTPS -->
+  <string name="preference_doh_exceptions">Excepții</string>
+  <!-- Description of "exceptions" for "DNS over HTTPS". %1$s is the name of the app (for example "Firefox"). -->
+  <string name="preference_doh_exceptions_summary">%1$s nu va folosi DNS securizat pe aceste site-uri și subdomeniile lor.</string>
+  <!-- Text displayed that links to adding website domain for "DNS over HTTPS" exceptions. -->
+  <string name="preference_doh_exceptions_add">Adaugă un site</string>
+  <!-- Text displayed above the input field when adding exceptions for "DNS over HTTPS". -->
+  <string name="preference_doh_exceptions_add_site">Site</string>
+  <!-- Placeholder URL displayed in the input field when adding exceptions for "DNS over HTTPS". -->
+  <string name="preference_doh_exceptions_add_placeholder">exemplu.com</string>
+  <!-- Error displayed in the input field when adding invalid URLs for "DNS over HTTPS". -->
+  <string name="preference_doh_exceptions_add_error">Trebuie să fie un domeniu valid</string>
+  <!-- Text displayed on the button within the input field for adding exceptions to "DNS over HTTPS" -->
+  <string name="preference_doh_exceptions_add_save">Salvează</string>
+  <!-- Text displayed for removing all exceptions in "DNS over HTTPS" -->
+  <string name="preference_doh_exceptions_remove_all_exceptions">Elimină toate excepțiile</string>
   <!-- About page link text to open support link -->
   <string name="about_support">Asistență</string>
   <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -2292,6 +2565,8 @@
   <string name="about_privacy_notice">Notificare privind confidențialitatea</string>
   <!-- About page link text to open know your rights link -->
   <string name="about_know_your_rights">Cunoaște-ți drepturile</string>
+  <!-- About page link text to open terms of use link -->
+  <string name="about_terms_of_use" tools:ignore="UnusedResources">Termeni de utilizare</string>
   <!-- About page link text to open licensing information link -->
   <string name="about_licensing_information">Informații despre licențiere</string>
   <!-- About page link text to open a screen with libraries that are used -->
@@ -2350,14 +2625,22 @@
   <string name="preferences_passwords_sync_logins_across_devices_2">Sincronizează parolele pe toate dispozitivele</string>
   <!-- Preference to access list of saved passwords -->
   <string name="preferences_passwords_saved_logins_2">Parole salvate</string>
+  <!-- Description of empty list of saved passwords. %s is the name of the app (for example "Firefox"). -->
+  <string name="preferences_passwords_saved_logins_description_empty_text_2">Parolele pe care le salvezi sau le sincronizezi cu %s vor fi listate aici. Toate parolele pe care le salvezi sunt criptate.</string>
   <!-- Clickable text for opening an external link for more information about Sync. -->
   <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Află mai multe despre sincronizare</string>
   <!-- Preference to access list of login exceptions that we never save logins for -->
   <string name="preferences_passwords_exceptions">Excepții</string>
+  <!-- Empty description of list of login exceptions that we never save passwords for. %s is the name of the app (for example "Firefox"). -->
+  <string name="preferences_passwords_exceptions_description_empty_2">%s nu va salva parolele pentru site-urile listate aici.</string>
+  <!-- Description of list of login exceptions that we never save passwords for. %s is the name of the app (for example "Firefox"). -->
+  <string name="preferences_passwords_exceptions_description_2">%s nu va salva parolele pentru aceste site-uri.</string>
   <!-- Text on button to remove all saved login exceptions -->
   <string name="preferences_passwords_exceptions_remove_all">Șterge toate excepțiile</string>
   <!-- Hint for search box in passwords list -->
   <string name="preferences_passwords_saved_logins_search_2">Caută parole</string>
+  <!-- Content description for the logins navigation bar back button -->
+  <string name="logins_navigate_back_button_content_description">Înapoi</string>
   <!-- The header for the site that a login is for -->
   <string name="preferences_passwords_saved_logins_site">Site</string>
   <!-- The header for the username for a login -->
@@ -2378,6 +2661,22 @@
   <string name="saved_login_clear_username">Șterge numele de utilizator</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">Șterge numele gazdei</string>
+  <!-- Content description, used by tools like screenreaders, for the 3 dots button that shows commands related to the currently displayed login (edit, delete). -->
+  <string name="login_detail_menu_button_content_description">Meniul detaliilor de conectare</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the login detail view. -->
+  <string name="login_details_navigate_back_button_content_description">Navighează înapoi</string>
+  <!-- Edit text for the login detail menu edit button -->
+  <string name="login_detail_menu_edit_button">Editează</string>
+  <!-- Delete text for the login detail menu delete button -->
+  <string name="login_detail_menu_delete_button">Șterge</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the add login view. -->
+  <string name="add_login_navigate_back_button_content_description">Navighează înapoi</string>
+  <!-- Content description, used by tools like screenreaders, to press on the save new login button. -->
+  <string name="add_login_save_new_login_button_content_description">Salvează noile date de autentificare</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the edit login view. -->
+  <string name="edit_login_navigate_back_button_content_description">Navighează înapoi</string>
+  <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
+  <string name="edit_login_button_content_description">Editează autentificarea</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Deschide site-ul în browser</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -2418,26 +2717,146 @@
   <string name="preferences_credit_cards_2">Metode de plată</string>
   <!-- Preference for saving and autofilling credit cards -->
   <string name="preferences_credit_cards_save_and_autofill_cards_2">Salvează și completează metodele de plată</string>
+  <!-- Preference summary for saving and autofilling payment method data. %s is the name of the app (for example "Firefox"). -->
+  <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s criptează toate metodele de plată pe care le salvezi</string>
   <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
   <string name="preferences_credit_cards_sync_cards_across_devices">Sincronizează cardurile între dispozitive</string>
   <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_credit_cards_sync_cards">Sincronizează cardurile</string>
   <!-- Preference option for adding a card -->
   <string name="preferences_credit_cards_add_credit_card_2">Adaugă card</string>
+  <!-- Preference option for managing saved cards -->
+  <string name="preferences_credit_cards_manage_saved_cards_2">Gestionează cardurile</string>
+  <!-- Preference option for adding an address -->
+  <string name="preferences_addresses_add_address">Adaugă adresă</string>
+  <!-- Preference option for managing saved addresses -->
+  <string name="preferences_addresses_manage_addresses">Gestionează adresele</string>
+  <!-- Preference for saving and filling addresses -->
+  <string name="preferences_addresses_save_and_autofill_addresses_2">Salvează și completează adresele</string>
+  <!-- Preference summary for saving and filling address data -->
+  <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Include numere de telefon și e-mailuri</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">Sincronizează adresele pe toate dispozitivele</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
+  <string name="preferences_addresses_sync_addresses">Sincronizează adresele</string>
+  <!-- Title of the "Add card" screen -->
+  <string name="credit_cards_add_card">Adaugă un card</string>
+  <!-- Title of the "Edit card" screen -->
+  <string name="credit_cards_edit_card">Editează card</string>
+  <!-- The header for the card number of a credit card -->
+  <string name="credit_cards_card_number">Numărul cardului</string>
+  <!-- The header for the expiration date of a credit card -->
+  <string name="credit_cards_expiration_date">Data de expirare</string>
+  <!-- The label for the expiration date month of a credit card to be used by a11y services -->
+  <string name="credit_cards_expiration_date_month">Data de expirare luna</string>
+  <!-- The label for the expiration date year of a credit card to be used by a11y services -->
+  <string name="credit_cards_expiration_date_year">Data de expirare anul</string>
+  <!-- The header for the name on the credit card -->
+  <string name="credit_cards_name_on_card">Numele de pe card</string>
+  <!-- The text for the "Delete card" menu item for deleting a credit card -->
+  <string name="credit_cards_menu_delete_card">Șterge card</string>
+  <!-- The text for the "Delete card" button for deleting a credit card -->
+  <string name="credit_cards_delete_card_button">Șterge card</string>
+  <!-- The text for the confirmation message of "Delete card" dialog -->
+  <string name="credit_cards_delete_dialog_confirmation_2">Ștergi cardul?</string>
+  <!-- The text for the positive button on "Delete card" dialog -->
+  <string name="credit_cards_delete_dialog_button">Șterge</string>
+  <!-- The title for the "Save" menu item for saving a credit card -->
+  <string name="credit_cards_menu_save">Salvează</string>
+  <!-- The text for the "Save" button for saving a credit card -->
+  <string name="credit_cards_save_button">Salvează</string>
   <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
   <string name="credit_cards_cancel_button">Anulează</string>
+  <!-- Title of the "Saved cards" screen -->
+  <string name="credit_cards_saved_cards">Carduri salvate</string>
+  <!-- Error message for card number validation -->
+  <string name="credit_cards_number_validation_error_message_2">Introdu un număr valid de card</string>
+  <!-- Error message for card name on card validation -->
+  <string name="credit_cards_name_on_card_validation_error_message_2">Adaugă un nume</string>
+  <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+  <string name="credit_cards_biometric_prompt_message">Deblochează pentru a vedea cardurile salvate</string>
+  <!-- Title of warning dialog if users have no device authentication set up -->
+  <string name="credit_cards_warning_dialog_title_2">Securizează metodele de plată salvate</string>
+  <!-- Message of warning dialog if users have no device authentication set up -->
+  <string name="credit_cards_warning_dialog_message_3">Configurează un model de blocare a dispozitivului, un cod PIN sau o parolă pentru a proteja metodele de plată salvate împotriva accesării dacă altcineva deține dispozitivul.</string>
+  <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+  <string name="credit_cards_warning_dialog_set_up_now">Configurează acum</string>
+  <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+  <string name="credit_cards_warning_dialog_later">Mai târziu</string>
+  <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+  <string name="credit_cards_biometric_prompt_message_pin">Deblochează dispozitivul</string>
+  <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+  <string name="credit_cards_biometric_prompt_unlock_message_2">Deblochează pentru a utiliza metodele de plată salvate</string>
+  <!-- Title of the "Add address" screen -->
+  <string name="addresses_add_address">Adaugă adresă</string>
+  <!-- Title of the "Edit address" screen -->
+  <string name="addresses_edit_address">Editează adresa</string>
+  <!-- Title of the "Manage addresses" screen -->
+  <string name="addresses_manage_addresses">Gestionează adresele</string>
+  <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+  <string name="addresses_name">Nume</string>
+  <!-- The header for the street address of an address -->
+  <string name="addresses_street_address">Adresa străzii</string>
+  <!-- The header for the city of an address -->
+  <string name="addresses_city">Oraș</string>
+  <!-- The header for the subregion of an address when "state" should be used -->
+  <string name="addresses_state">Stat</string>
+  <!-- The header for the subregion of an address when "province" should be used -->
+  <string name="addresses_province">Provincie</string>
+  <!-- The header for the zip code of an address -->
+  <string name="addresses_zip">Cod poștal</string>
+  <!-- The header for the country or region of an address -->
+  <string name="addresses_country">Țară sau regiune</string>
+  <!-- The header for the phone number of an address -->
+  <string name="addresses_phone">Telefon</string>
+  <!-- The header for the email of an address -->
+  <string name="addresses_email">E-mail</string>
+  <!-- The text for the "Save" button for saving an address -->
+  <string name="addresses_save_button">Salvează</string>
+  <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+  <string name="addresses_cancel_button">Anulează</string>
+  <!-- The text for the "Delete address" button for deleting an address -->
+  <string name="addressess_delete_address_button">Șterge adresa</string>
+  <!-- The title for the "Delete address" confirmation dialog -->
+  <string name="addressess_confirm_dialog_message_2">Ștergi această adresă?</string>
+  <!-- The text for the positive button on "Delete address" dialog -->
+  <string name="addressess_confirm_dialog_ok_button">Șterge</string>
+  <!-- The text for the negative button on "Delete address" dialog -->
+  <string name="addressess_confirm_dialog_cancel_button">Anulează</string>
+  <!-- The text for the "Save address" menu item for saving an address -->
+  <string name="address_menu_save_address">Salvează adresa</string>
+  <!-- The text for the "Delete address" menu item for deleting an address -->
+  <string name="address_menu_delete_address">Șterge adresa</string>
   <!-- Title of the Add search engine screen -->
   <string name="search_engine_add_custom_search_engine_title">Adaugă un motor de căutare</string>
+  <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
+  <string name="search_engine_add_custom_search_engine_button_content_description">Adaugă un nou motor de căutare</string>
   <!-- Title of the Edit search engine screen -->
   <string name="search_engine_edit_custom_search_engine_title">Editează motorul de căutare</string>
   <!-- Text for the menu button to edit a search engine -->
   <string name="search_engine_edit">Editează</string>
   <!-- Text for the menu button to delete a search engine -->
   <string name="search_engine_delete">Șterge</string>
+  <!-- Label for the TextField in which user enters custom search engine name -->
+  <string name="search_add_custom_engine_name_label">Nume</string>
+  <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
+  <string name="search_add_custom_engine_name_hint_2">Numele motorului de căutare</string>
+  <!-- Label for the TextField in which user enters custom search engine URL -->
+  <string name="search_add_custom_engine_url_label">Adresa URL a șirului de căutare</string>
+  <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+  <string name="search_add_custom_engine_search_string_hint_2">URL de folosit pentru căutare</string>
   <!-- Description text for the Search String TextField. The %s is part of the string -->
   <string name="search_add_custom_engine_search_string_example" formatted="false">Înlocuiește interogarea cu „%s”. Exemplu: \nhttps://www.google.com/search?q=%s</string>
   <!-- Accessibility description for the form in which details about the custom search engine are entered -->
   <string name="search_add_custom_engine_form_description">Detalii despre motorul de căutare personalizat</string>
+  <!-- Label for the TextField in which user enters custom search engine suggestion URL -->
+  <string name="search_add_custom_engine_suggest_url_label">API pentru sugestii de căutare (opțional)</string>
+  <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
+  <string name="search_add_custom_engine_suggest_string_hint">Adresa URL API pentru sugestii de căutare</string>
+  <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+  <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Înlocuiește interogarea cu „%s”. Exemplu:\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+  <!-- The text for the "Save" button for saving a custom search engine -->
+  <string name="search_custom_engine_save_button">Salvează</string>
   <!-- Text shown when a user leaves the name field empty -->
   <string name="search_add_custom_engine_error_empty_name">Introdu denumirea motorului de căutare</string>
   <!-- Text shown when a user leaves the search string field empty -->
@@ -2458,6 +2877,16 @@
   <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Atinge <b>Permisiuni</b>]]></string>
   <!-- Third step for the allowing a permission (%1$s is the permission name, for example "Camera"). -->
   <string name="phone_feature_blocked_step_feature"><![CDATA[3. Comută <b>%1$s</b> pe ON]]></string>
+  <!-- Label that indicates a site is using a secure connection -->
+  <string name="quick_settings_sheet_secure_connection_2">Conexiunea este securizată</string>
+  <!-- Label that indicates a site is using a insecure connection -->
+  <string name="quick_settings_sheet_insecure_connection_2">Conexiunea nu este securizată</string>
+  <!-- Label that indicates a site is displaying a local document -->
+  <string name="quick_settings_sheet_local_page">Această pagină este stocată pe dispozitivul tău.</string>
+  <!-- Label to clear site data -->
+  <string name="clear_site_data">Șterge cookie-urile și datele site-urilor</string>
+  <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site. %s is the domain of the site. -->
+  <string name="confirm_clear_site_data"><![CDATA[Sigur vrei să ștergi toate cookie-urile și datele pentru site-ul <b>%s</b>?]]></string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites -->
   <string name="confirm_clear_permissions_on_all_sites">Sigur vrei să ștergi toate permisiunile pe toate site-urile?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site -->
@@ -2468,6 +2897,10 @@
   <string name="no_site_exceptions">Fără excepții de site</string>
   <!-- Bookmark deletion confirmation -->
   <string name="bookmark_deletion_confirmation">Sigur vrei să ștergi acest marcaj?</string>
+  <!-- Browser menu button that adds a shortcut to the home fragment -->
+  <string name="browser_menu_add_to_shortcuts">Adaugă la comenzi rapide</string>
+  <!-- Browser menu button that removes a shortcut from the home fragment -->
+  <string name="browser_menu_remove_from_shortcuts">Elimină din comenzile rapide</string>
   <!--
     text shown before the issuer name to indicate who its verified by, %1$s is the name of
     the certificate authority that verified the ticket
@@ -2477,14 +2910,46 @@
   <string name="login_menu_delete_button">Șterge</string>
   <!-- Login overflow menu edit button -->
   <string name="login_menu_edit_button">Editează</string>
+  <!-- Message in delete confirmation dialog for password -->
+  <string name="login_deletion_confirmation_2">Sigur dorești să ștergi această parolă?</string>
   <!-- Positive action of a dialog asking to delete -->
   <string name="dialog_delete_positive">Șterge</string>
+  <!-- Negative action of a dialog asking to delete login -->
+  <string name="dialog_delete_negative">Anulează</string>
+  <!-- The saved password options menu description. -->
+  <string name="login_options_menu_2">Opțiuni pentru parolă</string>
+  <!-- The editable text field for a website address. -->
+  <string name="saved_login_hostname_description_3">Câmpul de text editabil pentru adresa site-ului web.</string>
+  <!-- The editable text field for a username. -->
+  <string name="saved_login_username_description_3">Câmpul de text editabil pentru numele de utilizator.\u0020</string>
+  <!-- The editable text field for a login's password. -->
+  <string name="saved_login_password_description_2">Câmpul de text editabil pentru parolă.</string>
+  <!-- The button description to save changes to an edited password. -->
+  <string name="save_changes_to_login_2">Salvează modificările.</string>
+  <!-- The page title for editing a saved password. -->
+  <string name="edit_2">Editează parola</string>
+  <!-- The page title for adding new password. -->
+  <string name="add_login_2">Adaugă parola</string>
+  <!-- Error text displayed underneath the password field when it is in an error case. -->
+  <string name="saved_login_password_required_2">Introdu o parolă</string>
+  <!-- The error message in add login view when username field is blank. -->
+  <string name="saved_login_username_required_2">Introdu un nume de utilizator</string>
+  <!-- The error message in add login view when hostname field is blank. -->
+  <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Este necesar un nume de gazdă</string>
+  <!-- The error message in add login view when hostname field is blank. -->
+  <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Introdu o adresă web</string>
   <!-- Voice search button content description -->
   <string name="voice_search_content_description">Căutare vocală</string>
   <!-- Voice search prompt description displayed after the user presses the voice search button -->
   <string name="voice_search_explainer">Vorbește acum</string>
   <!-- The error message in edit login view when a duplicate username exists. -->
   <string name="saved_login_duplicate">Există un set de date de autentificare cu acest nume de utilizator</string>
+  <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+  <string name="add_login_hostname_hint_text">https://www.example.com</string>
+  <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+  <string name="add_login_hostname_invalid_text_3">Adresa web trebuie să conțină „https://” sau „http://”</string>
+  <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+  <string name="add_login_hostname_invalid_text_2">Este necesar un nume de gazdă valid</string>
   <!--
     Synced Tabs
 
@@ -2503,27 +2968,497 @@
   <string name="synced_tabs_sign_in_button">Intră în contul Sync</string>
   <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
   <string name="synced_tabs_no_open_tabs">Nicio filă deschisă</string>
+  <!-- Content description for expanding a group of synced tabs. -->
+  <string name="synced_tabs_expand_group">Extinde grupul de file sincronizate</string>
+  <!-- Content description for collapsing a group of synced tabs. -->
+  <string name="synced_tabs_collapse_group">Restrânge grupul de file sincronizate</string>
+  <!--
+    Top Sites
+
+    Title text displayed for the shortcuts home screen section.
+  -->
+  <string name="homepage_shortcuts_title">Comenzi rapide</string>
+  <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+  <string name="shortcut_max_limit_title">Limita de comenzi rapide a fost atinsă</string>
+  <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+  <string name="shortcut_max_limit_content">Pentru a adăuga o comandă rapidă nouă, elimină una. Atinge și menține apăsat site-ul și selectează Eliminare.</string>
   <!-- Confirmation dialog button text when top sites limit is reached. -->
   <string name="top_sites_max_limit_confirmation_button">OK, am înțeles</string>
   <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
   <string name="top_sites_toggle_top_recent_sites_4">Comenzi rapide</string>
   <!-- Title text displayed in the rename top site dialog. -->
   <string name="top_sites_rename_dialog_title">Nume</string>
+  <!-- Hint for renaming title of a shortcut -->
+  <string name="shortcut_name_hint">Denumire comandă rapidă</string>
+  <!-- Hint for editing URL of a shortcut. -->
+  <string name="shortcut_url_hint">URL-ul comenzii rapide</string>
   <!-- Dialog button text for canceling the rename top site prompt. -->
   <string name="top_sites_rename_dialog_cancel">Anulează</string>
+  <!-- Text for the menu button to open the homepage settings. -->
+  <string name="top_sites_menu_settings">Setări</string>
+  <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
+  <string name="top_sites_menu_sponsor_privacy">Sponsorii noștri și confidențialitatea ta</string>
+  <!-- Label text displayed for a sponsored top site. -->
+  <string name="top_sites_sponsored_label">Sponsorizat</string>
+  <!-- Text for the menu item to edit a top site. -->
+  <string name="top_sites_edit_top_site">Editează</string>
+  <!-- Text for the dialog title to edit a top site. -->
+  <string name="top_sites_edit_dialog_title">Editează comanda rapidă</string>
+  <!-- Button caption to confirm the edit of the top site. -->
+  <string name="top_sites_edit_dialog_save">Salvează</string>
+  <!-- Error message when the user entered an invalid URL -->
+  <string name="top_sites_edit_dialog_url_error">Introdu un URL valid</string>
+  <!-- Label for the URL edit field in the edit top site dialog. -->
+  <string name="top_sites_edit_dialog_url_title">URL-ul</string>
   <!--
     Inactive tabs in the tabs tray
 
     Title text displayed in the tabs tray when a tab has been unused for 14 days.
   -->
   <string name="inactive_tabs_title">File inactive</string>
+  <!-- Content description for closing all inactive tabs -->
+  <string name="inactive_tabs_delete_all">Închide toate filele inactive</string>
+  <!-- Content description for expanding the inactive tabs section. -->
+  <string name="inactive_tabs_expand_content_description">Extinde filele inactive</string>
+  <!-- Content description for collapsing the inactive tabs section. -->
+  <string name="inactive_tabs_collapse_content_description">Restrânge filele inactive</string>
+  <!--
+    Inactive tabs auto-close message in the tabs tray
+
+    The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs.
+  -->
+  <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">Închidere automată după o lună?</string>
+  <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+  <string name="inactive_tabs_auto_close_message_description" tools:ignore="BrandUsage,UnusedResources">Firefox poate închide filele pe care nu le-ai vizualizat în ultima lună.</string>
+  <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
+  <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">PORNEȘTE ÎNCHIDERE AUTOMATĂ</string>
+  <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+  <string name="inactive_tabs_auto_close_message_snackbar">Închidere automată activată</string>
+  <!--
+    Awesome bar suggestion's headers
+
+    Search suggestions title for Firefox Suggest.
+  -->
+  <string name="firefox_suggest_header" tools:ignore="BrandUsage">Sugestii Firefox</string>
+  <!--
+    Search suggestions title for trending search suggestions.
+    %s is a placeholder for the name of the search engine providing the trending search suggestions.
+  -->
+  <string name="trending_searches_header_2">În tendințe pe %s</string>
+  <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+  <string name="google_search_engine_suggestion_header">Căutare Google</string>
+  <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. %s is default search engine name. -->
+  <string name="other_default_search_engine_suggestion_header">Căutare %s</string>
+  <!-- Title for recent search suggestions. -->
+  <string name="recent_searches_header">Căutări recente</string>
+  <!--
+    Default browser experiment
+
+    Default browser card title
+  -->
+  <string name="default_browser_experiment_card_title">Schimbă browserul implicit</string>
+  <!-- Default browser card text -->
+  <string name="default_browser_experiment_card_text" tools:ignore="BrandUsage">Setează linkurile de pe site-uri web, din mesaje de pe e-mail și din mesaje ca să se deschidă automat cu Firefox.</string>
   <!-- Content description for close button in collection placeholder. -->
   <string name="remove_home_collection_placeholder_content_description">Elimină</string>
+  <!-- Content description radio buttons with a link to more information -->
+  <string name="radio_preference_info_content_description">Clic aici pentru mai multe detalii</string>
+  <!-- Content description for the action bar "up" button -->
+  <string name="action_bar_up_description">Navighează sus</string>
+  <!-- Content description for privacy content close button -->
+  <string name="privacy_content_close_button_content_description">Închide</string>
+  <!--
+    Pocket recommended stories
+
+    Header text for a section on the home screen.
+  -->
+  <string name="pocket_stories_header_2">Povești</string>
+  <!-- Header text for a section on the home screen. -->
+  <string name="pocket_stories_categories_header" moz:removedIn="141" tools:ignore="UnusedResources">Povești după subiect</string>
+  <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+  <string name="pocket_stories_placeholder_text" moz:removedIn="141" tools:ignore="UnusedResources">Descoperă mai multe</string>
+  <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+  <string name="pocket_stories_sponsor_indication">Sponsorizată</string>
+  <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off. -->
+  <string name="experiments_snackbar">Activează telemetria pentru a trimite date.</string>
+  <!-- Snackbar button text to navigate to telemetry settings. -->
+  <string name="experiments_snackbar_button">Mergi la setări</string>
+  <!--
+    Review quality check feature
+
+    Paragraph explaining the grading system we use to classify the reliability of a product's reviews.
+  -->
+  <string name="review_quality_check_info_review_grade_header" moz:removedIn="136" tools:ignore="UnusedResources"><![CDATA[Atribuim recenziilor fiecărui produs o <b>notă</b> de la A la F.]]></string>
+  <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
+  <string name="review_quality_check_explanation_body_adjusted_grading" moz:removedIn="136" tools:ignore="UnusedResources"><![CDATA[<b>Evaluarea ajustată</b> se bazează doar pe recenziile pe care le considerăm de încredere.]]></string>
+  <!-- Paragraph explaining product review highlights. %s is the name of the retailer (e.g. Amazon). -->
+  <string name="review_quality_check_explanation_body_highlights" moz:removedIn="136" tools:ignore="UnusedResources"><![CDATA[<b>Recenziile principale</b> provin din %s recenzii din ultimele 80 de zile, pe care le considerăm de încredere.]]></string>
+  <!--
+    Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback.
+
+    Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse".
+  -->
+  <string name="a11y_action_label_collapse">restrânge</string>
+  <!-- Current state for elements that can be collapsed if interacting with them. Talkback will dictate this after a state change. -->
+  <string name="a11y_state_label_collapsed">restrânse</string>
+  <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
+  <string name="a11y_action_label_expand">extinde</string>
+  <!-- Current state for elements that can be expanded if interacting with them. Talkback will dictate this after a state change. -->
+  <string name="a11y_state_label_expanded">extins(e)</string>
+  <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
+  <string name="a11y_action_label_wallpaper_collection_learn_more">deschide linkul pentru a afla mai multe despre această colecție</string>
+  <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
+  <string name="a11y_action_label_read_article" moz:removedIn="141" tools:ignore="UnusedResources">citește articolul</string>
+  <!-- Content description for headings announced by accessibility service. %s is the text of the heading. Talkback will announce the text and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
+  <string name="a11y_heading">%s, Titlu</string>
+  <!-- Title for dialog displayed when trying to access links present in a text. -->
+  <string name="a11y_links_title">Linkuri</string>
+  <!-- Additional content description for text bodies that contain urls. -->
+  <string name="a11y_links_available">Linkuri disponibile</string>
   <!-- Translations feature -->
 
+  <!--
+    Translation request dialog
+
+    Title for the translation dialog that allows a user to translate the webpage.
+  -->
+  <string name="translations_bottom_sheet_title">Traduci această pagină?</string>
+  <!--
+    Title for the translation dialog after a translation was completed successfully.
+    %1$s is the name of the language that the page was translated from, for example, "French".
+    %2$s is the name of the language that the page was translated to, for example, "English".
+  -->
+  <string name="translations_bottom_sheet_title_translation_completed">Pagină tradusă de la %1$s la %2$s</string>
   <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
   <string name="translation_option_bottom_sheet_always_translate">Oferă întotdeauna traducerea</string>
   <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
   <string name="translation_option_bottom_sheet_switch_description">Suprascrie oferirea traducerii</string>
+  <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
+  <string name="translation_option_bottom_sheet_close_content_description">Închide foaia traduceri</string>
+  <!-- The title of the warning card informs the user that an error has occurred at page settings. -->
+  <string name="translation_option_bottom_sheet_error_warning_text">Unele setări sunt temporar indisponibile.</string>
+  <!--
+    Translation settings dialog
+
+    Title of the translation settings dialog that allows a user to set their preferred translation settings.
+  -->
+  <string name="translation_settings_toolbar_title">Traduceri</string>
+  <!-- Toggle switch label that indicates that the browser should signal or indicate when a translation is possible for any page. -->
+  <string name="translation_settings_offer_to_translate">Oferă-te să traduci atunci când este posibil</string>
+  <!-- Toggle switch label that indicates that downloading files required for translating is permitted when using data saver mode in Android. -->
+  <string name="translation_settings_always_download">Descarcă întotdeauna limbile în modul de economisire a datelor</string>
+  <!-- Section header text that begins the section of a list of different options the user may select to adjust their translation preferences. -->
+  <string name="translation_settings_translation_preference">Preferințe pentru traducere</string>
+  <!-- Button text for the button that will take the user to the automatic translations settings dialog. On the automatic translations settings dialog, the user can set if translations should occur automatically for a given language. -->
+  <string name="translation_settings_automatic_translation">Traducere automată</string>
+  <!-- Button text for the button that will take the user to the never translate these sites dialog. On the never translate these sites dialog, the user can set if translations should never occur on certain websites. -->
+  <string name="translation_settings_automatic_never_translate_sites">Nu tradu niciodată aceste site-uri</string>
+  <!-- Button text for the button that will take the user to the download languages dialog. On the download languages dialog, the user can manage which languages they would like to download for translations. -->
+  <string name="translation_settings_download_language">Descarcă limbi</string>
+  <!--
+    Automatic translation preference screen
+
+    Title of the automatic translation preference screen that will appear on the toolbar.
+  -->
+  <string name="automatic_translation_toolbar_title_preference">Traducere automată</string>
+  <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
+  <string name="automatic_translation_header_preference">Selectează o limbă pentru a gestiona preferințele „tradu întotdeauna” și „nu tradu niciodată”.</string>
+  <!-- The title of the warning card informs the user that the system could not load languages for translation settings. -->
+  <string name="automatic_translation_error_warning_text">Nu s-au putut încărca limbile. Revino mai târziu.</string>
+  <!--
+    Automatic translation options preference screen
+
+    Preference option for offering to translate. Radio button title text.
+  -->
+  <string name="automatic_translation_option_offer_to_translate_title_preference">Ofertă de traducere (implicit)</string>
+  <!-- Preference option for offering to translate. Radio button summary text. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s se va oferi să traducă site-uri în această limbă.</string>
+  <!-- Preference option for always translate. Radio button title text. -->
+  <string name="automatic_translation_option_always_translate_title_preference">Tradu întotdeauna</string>
+  <!-- Preference option for always translate. Radio button summary text. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="automatic_translation_option_always_translate_summary_preference">%1$s va traduce automat această limbă când pagina se încarcă.</string>
+  <!-- Preference option for never translate. Radio button title text. -->
+  <string name="automatic_translation_option_never_translate_title_preference">Nu tradu niciodată</string>
+  <!-- Preference option for never translate. Radio button summary text. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="automatic_translation_option_never_translate_summary_preference">%1$s nu va oferi niciodată traducerea site-urilor în această limbă.</string>
+  <!--
+    Never translate site preference screen
+
+    Title of the never translate site preference screen that will appear on the toolbar.
+  -->
+  <string name="never_translate_site_toolbar_title_preference">Nu tradu niciodată aceste site-uri</string>
+  <!-- Screen header presenting the never translate site preference feature. It will appear under the toolbar. -->
+  <string name="never_translate_site_header_preference">Pentru a adăuga un site nou: Accesează-l și selectează „Nu tradu niciodată acest site” din meniul de traducere.</string>
+  <!--
+    Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
+    %1$s is web site url (for example:"wikipedia.com")
+  -->
+  <string name="never_translate_site_item_list_content_description_preference">Elimină %1$s</string>
+  <!-- The title of the warning card informs the user that an error has occurred at the never translate sites list. -->
+  <string name="never_translate_site_error_warning_text">Nu s-au putut încărca site-urile. Revino mai târziu.</string>
+  <!--
+    The Delete site dialogue title will appear when the user clicks on a list item.
+    %1$s is web site url (for example:"wikipedia.com")
+  -->
+  <string name="never_translate_site_dialog_title_preference">Ștergi %1$s?</string>
+  <!-- The Delete site dialogue positive button will appear when the user clicks on a list item. The site will be deleted. -->
+  <string name="never_translate_site_dialog_confirm_delete_preference">Șterge</string>
+  <!-- The Delete site dialogue negative button will appear when the user clicks on a list item. The dialog will be dismissed. -->
+  <string name="never_translate_site_dialog_cancel_preference">Anulează</string>
+  <!--
+    Download languages preference screen
+
+    Title of the toolbar for the translation feature screen where users may download different languages for translation.
+  -->
+  <string name="download_languages_translations_toolbar_title_preference">Descarcă limbile</string>
+  <!-- Screen header presenting the download language preference feature. It will appear under the toolbar. %1$s is a link using download_languages_header_learn_more_preference as text ("Learn more"). Talkback will append this to say "Double tap to open link to learn more". -->
+  <string name="download_languages_header_preference">Descarcă limbile complete pentru traduceri mai rapide și pentru a traduce offline. %1$s</string>
+  <!-- Clickable text from the screen header that links to a website. -->
+  <string name="download_languages_header_learn_more_preference">Află mai multe</string>
+  <!-- The subhead of the download language preference screen will appear above the pivot language. -->
+  <string name="download_languages_available_languages_preference">Limbi disponibile</string>
+  <!-- Text that will appear beside a core or pivot language package name to show that the language is necessary for the translation feature to function. -->
+  <string name="download_languages_default_system_language_require_preference">necesară</string>
+  <!--
+    A text for download language preference item.
+    %1$s is the language name, for example, "Spanish".
+    %2$s is the language file size, for example, "(3.91 KB)" or, if the language package name is a pivot language, the string defined in download_languages_default_system_language_require_preference ("required").
+  -->
+  <string name="download_languages_language_item_preference">%1$s (%2$s)</string>
+  <!-- The subhead of the download language preference screen will appear above the items that were not downloaded. -->
+  <string name="download_language_header_preference">Descarcă limbile</string>
+  <!-- All languages list item. When the user presses this item, they can download all languages. -->
+  <string name="download_language_all_languages_item_preference">Toate limbile</string>
+  <!-- All languages list item. When the user presses this item, they can delete all languages that were downloaded. -->
+  <string name="download_language_all_languages_item_preference_to_delete">Șterge toate limbile</string>
+  <!-- Content description (not visible, for screen readers etc.): For a language list item that was downloaded, the user can now delete it. -->
+  <string name="download_languages_item_content_description_downloaded_state">Șterge</string>
+  <!-- Content description (not visible, for screen readers etc.): For a language list item, deleting is in progress. -->
+  <string name="download_languages_item_content_description_delete_in_progress_state">În desfășurare</string>
+  <!--
+    Content description (not visible, for screen readers etc.): For a language list item, downloading is in progress.
+    %1$s is the language name, for example, "Spanish".
+    %2$s is the language file size, for example, "(3.91 KB)".
+  -->
+  <string name="download_languages_item_content_description_download_in_progress_state">Oprește descărcarea %1$s (%2$s)</string>
+  <!-- Content description (not visible, for screen readers etc.): For a language list item that was not downloaded. -->
+  <string name="download_languages_item_content_description_not_downloaded_state">Descarcă</string>
+  <!-- The title of the warning card informs the user that an error has occurred when fetching the list of languages. -->
+  <string name="download_languages_fetch_error_warning_text">Nu s-au putut încărca limbile. Revino mai târziu.</string>
+  <!--
+    The title of the warning card informs the user that an error has occurred at downloading a language.
+    %1$s is the language name, for example, "Spanish".
+  -->
+  <string name="download_languages_error_warning_text"><![CDATA[Nu s-a putut descărca <b>%1$s</b>. Încearcă din nou.]]></string>
+  <!--
+    The title of the warning card informs the user that an error has occurred at deleting a language.
+    %1$s is the language name, for example, "Spanish".
+  -->
+  <string name="download_languages_delete_error_warning_text"><![CDATA[Nu s-a putut șterge <b>%1$s</b>. Încearcă din nou.]]></string>
+  <!--
+    Title for the dialog used by the translations feature to confirm deleting a language.
+    The dialog will be presented when the user requests deletion of a language.
+    %1$s is the name of the language, for example, "Spanish" and %2$s is the size in kilobytes or megabytes of the language file.
+  -->
+  <string name="delete_language_file_dialog_title">Ștergi %1$s (%2$s)?</string>
+  <!-- Additional information for the dialog used by the translations feature to confirm deleting a language. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="delete_language_file_dialog_message">Dacă ștergi această limbă, %1$s va descărca limbi parțiale în memoria cache pe măsură ce traduci.</string>
+  <!--
+    Title for the dialog used by the translations feature to confirm deleting all languages file.
+    The dialog will be presented when the user requests deletion of all languages file.
+    %1$s is the size in kilobytes or megabytes of the language file.
+  -->
+  <string name="delete_language_all_languages_file_dialog_title">Ștergi toate limbile (%1$s)?</string>
+  <!-- Additional information for the dialog used by the translations feature to confirm deleting all languages file. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="delete_language_all_languages_file_dialog_message">Dacă ștergi toate limbile, %1$s va descărca limbi parțiale în memoria cache pe măsură ce traduci.</string>
+  <!-- Button text on the dialog used by the translations feature to confirm deleting a language. -->
+  <string name="delete_language_file_dialog_positive_button_text">Șterge</string>
+  <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
+  <string name="delete_language_file_dialog_negative_button_text">Anulează</string>
+  <!--
+    Title for the data saving mode warning dialog used by the translations feature.
+    This dialog will be presented when the user attempts to download a language or perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    %1$s is the size in kilobytes or megabytes of the language file.
+  -->
+  <string name="download_language_file_dialog_title">Descarci în modul de economisire a datelor (%1$s)?</string>
+  <!-- Title text for the protection panel permissions section. -->
+  <string name="protection_panel_permissions_title">Permisiuni</string>
+  <!-- Button text on the clear site data dialog to allow users to confirm they wish to clear the site data. -->
+  <string name="clear_site_data_dialog_positive_button_text">Șterge</string>
+  <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
+  <string name="clear_site_data_dialog_negative_button_text">Anulează</string>
+  <!-- Snackbar title shown when the site data has been cleared. -->
+  <string name="clear_site_data_snackbar">Cookie-urile și datele site-ului au fost eliminate</string>
+  <!-- Text for the connection security panel when the site is secure. -->
+  <string name="connection_security_panel_secure">Conexiune securizată</string>
+  <!-- Text for the connection security panel when the site is not secure. -->
+  <string name="connection_security_panel_not_secure">Conexiune nesigură</string>
+  <!--
+    Text for the connection security panel to indicate who the certificate was verified by.
+    %s is a placeholder for the name of the certificate authority that issued the certificate.
+  -->
+  <string name="connection_security_panel_verified_by">Verificat de %s</string>
+  <!-- Option for likert scale -->
+  <string name="likert_scale_option_5" tools:ignore="UnusedResources">Foarte nemulțumit(ă)</string>
+  <!-- Option for likert scale -->
+  <string name="likert_scale_option_6" tools:ignore="UnusedResources">Nu îl folosesc</string>
+  <!-- Option for likert scale. Note: The word "Firefox" should NOT be translated. -->
+  <string name="likert_scale_option_7" tools:ignore="BrandUsage,UnusedResources">Nu folosesc căutarea pe Firefox</string>
+  <!-- Option for likert scale -->
+  <string name="likert_scale_option_8" tools:ignore="UnusedResources">Nu folosesc sincronizarea</string>
+  <!-- Text shown in prompt for printing microsurvey. "sec" It's an abbreviation for "second". Note: The word "Firefox" should NOT be translated. -->
+  <string name="microsurvey_prompt_printing_title" tools:ignore="BrandUsage,UnusedResources">Ajută la îmbunătățirea imprimării în Firefox. Durează doar o secundă.</string>
+  <!-- Text shown in prompt for search microsurvey. Note: The word "Firefox" should NOT be translated. -->
+  <string name="microsurvey_prompt_search_title" tools:ignore="BrandUsage,UnusedResources">Ajută la îmbunătățirea căutării în Firefox. Durează doar un minut.</string>
+  <!-- Text shown in prompt for sync microsurvey. Note: The word "Firefox" should NOT be translated. -->
+  <string name="microsurvey_prompt_sync_title" tools:ignore="BrandUsage,UnusedResources">Ajută la îmbunătățirea sincronizării în Firefox. Durează doar un minut</string>
+  <!-- Text shown in the survey title for printing microsurvey. Note: The word "Firefox" should NOT be translated. -->
+  <string name="microsurvey_survey_printing_title" tools:ignore="BrandUsage,UnusedResources">Cât de mulțumit/ă ești de imprimarea în Firefox?</string>
+  <!-- Text shown in the survey title for homepage microsurvey. Note: The word "Firefox" should NOT be translated. -->
+  <string name="microsurvey_homepage_title" tools:ignore="BrandUsage,UnusedResources">Cât de mulțumit/ă ești de pagina principală Firefox?</string>
+  <!-- Text shown in the survey title for search experience microsurvey. Note: The word "Firefox" should NOT be translated. -->
+  <string name="microsurvey_search_title" tools:ignore="BrandUsage,UnusedResources">Cât de mulțumit/ă ești de experiența de căutare în Firefox?</string>
+  <!-- Text shown in the survey title for sync experience microsurvey. Note: The word "Firefox" should NOT be translated. -->
+  <string name="microsurvey_sync_title" tools:ignore="BrandUsage,UnusedResources">Cât de mulțumit/ă ești de experiența de sincronizare în Firefox?</string>
+  <!--
+    Accessibility
+
+    Content description for the survey application icon. Note: The word "Firefox" should NOT be translated.
+  -->
+  <string name="microsurvey_app_icon_content_description" tools:ignore="BrandUsage">Logo Firefox</string>
+  <!-- Content description for the survey feature icon. -->
+  <string name="microsurvey_feature_icon_content_description">Pictogramă funcție sondaj</string>
+  <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
+  <string name="microsurvey_close_handle_content_description">Închide sondajul</string>
+  <!-- Content description for "X" button that is closing microsurvey. -->
+  <string name="microsurvey_close_button_content_description">Închide</string>
+  <!--
+    Debug drawer logins
+
+    The title of the Logins feature in the Debug Drawer.
+  -->
+  <string name="debug_drawer_logins_title">Autentificări</string>
+  <!-- The title of the logins section in the Logins feature. %s is the site domain. -->
+  <string name="debug_drawer_logins_current_domain_label">Domeniu curent: %s</string>
+  <!-- The label for a button to add a new fake login for the current domain in the Logins feature. -->
+  <string name="debug_drawer_logins_add_login_button">Adaugă o autentificare falsă pentru acest domeniu</string>
+  <!-- Content description for delete button. %s is the username of the login. -->
+  <string name="debug_drawer_logins_delete_login_button_content_description">Șterge datele de autentificare cu numele de utilizator %s</string>
+  <!--
+    Debug drawer addresses
+
+    The title of the Addresses feature in the Debug Drawer.
+  -->
+  <string name="debug_drawer_addresses_title">Adrese</string>
+  <!-- The title of the section header for the list of debug locales that can be enabled and disabled. -->
+  <string name="debug_drawer_addresses_debug_locales_header">Depanează setările regionale pentru a activa</string>
+  <!-- The title of the header for the section for managing addresses. -->
+  <string name="debug_drawer_addresses_management_header">Gestionează adresele</string>
+  <!-- The title of the button in the debug drawer for adding a new address. -->
+  <string name="debug_drawer_add_new_address">Adaugă o adresă nouă pentru locația selectată</string>
+  <!-- The title of the button for deleting in the debug drawer all addresses. -->
+  <string name="debug_drawer_delete_all_addresses">Șterge toate adresele</string>
+  <!--
+    Debug drawer "contextual feature recommendation" (CFR) tools
+
+    The title of the CFR Tools feature in the Debug Drawer
+  -->
+  <string name="debug_drawer_cfr_tools_title">Instrumente CFR</string>
+  <!-- The title of the reset CFR section in CFR Tools -->
+  <string name="debug_drawer_cfr_tools_reset_cfr_title">Resetare CFR-uri</string>
+  <!--
+    Glean debug tools
+
+    The title of the glean debugging feature
+  -->
+  <string name="glean_debug_tools_title">Instrumente de depanare Glean</string>
+  <!--
+    Add-ons debug tools
+
+    The description of the Add-ons Tools in the Debug Drawer
+  -->
+  <string name="debug_drawer_addons_tools_title">Instrumente suplimente</string>
+  <!-- The title of the button used to check for add-on updates. -->
+  <string name="addons_debug_tools_check_for_updates_button">Caută actualizări</string>
+  <!--
+    Messages explaining how to exit fullscreen mode
+
+    Message shown to explain how to exit fullscreen mode when gesture navigation is enabled.
+
+    Localisation note: this text should be as short as possible, max 68 chars
+  -->
+  <string name="exit_fullscreen_with_gesture_short">Trage de sus și folosește gestul înapoi pentru a ieși</string>
+  <!--
+    Message shown to explain how to exit fullscreen mode when using back button navigation.
+
+    Localisation note: this text should be as short as possible, max 68 chars
+  -->
+  <string name="exit_fullscreen_with_back_button_short">Trage de sus și apasă înapoi pentru a ieși</string>
+  <!--
+    Beta Label Component !
+
+    Text shown as a label or tag to indicate a feature or area is still undergoing active development. Note that here "Beta" should not be translated, as it is used as an icon styled element.
+  -->
+  <string name="beta_feature">BETA</string>
+  <!--
+    Root certificate expiration warnings
+
+    These strings for homepage cards and push notifications to be pushed to users running outdated versions of Firefox. We want to encourage these users to update to the latest version so their extensions and other features don't stop working when Firefox's old root certificate expires on 2025-03-14. For more information, see this SUMO article: https://support.mozilla.org/kb/root-certificate-expiration !
+
+    Homepage card button to open Google Play Store. "Update" is a verb.
+  -->
+  <string name="certificate_warning_homepage_card_update_now_button" tools:ignore="UnusedResources">Actualizează acum</string>
+  <!-- Homepage card title about old Firefox version. "Update" is a verb. Note: The word "Firefox" should NOT be translated. -->
+  <string name="certificate_warning_homepage_card_hca1_title" tools:ignore="BrandUsage,UnusedResources">Actualizează browserul Firefox</string>
+  <!-- Homepage card message about old Firefox version -->
+  <string name="certificate_warning_homepage_card_hca1_message" tools:ignore="UnusedResources">Un certificat rădăcină va expira, ceea ce va duce la încetarea funcționării unor funcții pe 14 martie.</string>
+  <!-- Homepage card title about old Firefox version. "Update" is a verb. -->
+  <string name="certificate_warning_homepage_card_hcr1_title" tools:ignore="UnusedResources">Actualizează înainte de 14 martie</string>
+  <!-- Homepage card message about old Firefox version. Note: The word "Firefox" should NOT be translated. -->
+  <string name="certificate_warning_homepage_card_hcr1_message" tools:ignore="BrandUsage,UnusedResources">Un certificat rădăcină va expira, ceea ce va duce la încetarea funcționării corecte a versiunii tale de Firefox.</string>
+  <!-- Homepage card title about old Firefox version -->
+  <string name="certificate_warning_homepage_card_hcw2_title" tools:ignore="UnusedResources">Mai puțin de 7 zile până la actualizare</string>
+  <!-- Homepage card message about old Firefox version. Note: The word "Firefox" should NOT be translated. -->
+  <string name="certificate_warning_homepage_card_hcw2_message" tools:ignore="BrandUsage,UnusedResources">Pe 14 martie, extensiile și alte funcții Firefox vor înceta să funcționeze deoarece un certificat rădăcină expiră.</string>
+  <!-- Homepage card title about old Firefox version. Note: The word "Firefox" should NOT be translated. -->
+  <string name="certificate_warning_homepage_card_hcw3_title" tools:ignore="BrandUsage,UnusedResources">Ultima șansă să-ți păstrezi Firefox-ul</string>
+  <!-- Homepage card message about old Firefox version. Note: The word "Firefox" should NOT be translated. -->
+  <string name="certificate_warning_homepage_card_hcw3_message" tools:ignore="BrandUsage,UnusedResources">Versiunea ta de Firefox nu va mai funcționa corect pe 14 martie, deoarece un certificat rădăcină expiră.</string>
+  <!-- Push notification title about old Firefox version. "Update" is a noun. -->
+  <string name="certificate_warning_push_notification_update_recommended_title" tools:ignore="UnusedResources">Actualizare recomandată</string>
+  <!-- Push notification message about old Firefox version -->
+  <string name="certificate_warning_push_notification_pnr1_message" tools:ignore="UnusedResources">Suplimentele și unele funcții vor înceta să funcționeze pe 14 martie.</string>
+  <!-- Push notification title about old Firefox version. Note: The word "Firefox" should NOT be translated. -->
+  <string name="certificate_warning_push_notification_pnw2_title" tools:ignore="BrandUsage,UnusedResources">Folosești o versiune mai veche de Firefox</string>
+  <!-- Push notification message about old Firefox version. "Update" is a verb. -->
+  <string name="certificate_warning_push_notification_pnw2_message" tools:ignore="UnusedResources">Actualizează înainte de 14 martie pentru a continua să folosești suplimente și alte funcții.</string>
   <!-- TextField Design System Component -->
+
+  <!-- Accessibility description for the task icon -->
+  <string name="a11y_task_icon_description">Pictogramă sarcină</string>
+  <!-- Authentication prompt title to enable the private tabs mode -->
+  <string name="pbm_authentication_enable_lock">Activează blocarea ecranului filelor private</string>
+  <!-- Authentication prompt title to disable the private tabs mode -->
+  <string name="pbm_authentication_disable_lock">Dezactivează blocarea ecranului filelor private</string>
+  <!-- Label for a preference shown when the device supports screen lock (e.g., PIN, pattern, or password) but the user has not set one up. -->
+  <string name="pbm_authentication_lock_device_feature_disabled">Configurează blocarea ecranului pentru a ascunde filele</string>
+  <!--
+    Review prompt
+
+    Title for a prompt asking the user about their experience using the app. %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="review_prompt_pre_prompt_header">Ce părere ai despre %1$s?</string>
+  <!-- Label for a button negatively rating the user's experience with the app -->
+  <string name="review_prompt_negative_button">Am probleme</string>
+  <!-- Label for a button positively rating the user's experience with the app -->
+  <string name="review_prompt_positive_button">E minunat!</string>
+  <!-- Title for a prompt asking the user to rate the app on Google Play Store. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="review_prompt_rate_header">Mulțumesc că apreciezi %1$s. Ai timp să dai mai departe vestea bună cu o evaluare?</string>
+  <!-- Label for a button proceeding to rate the app on Google Play Store. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="review_prompt_rate_button">Evaluează %1$s în Magazin Play</string>
+  <!-- Title for a prompt asking the user send us feedback. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="review_prompt_feedback_header">Ne pare rău că întâmpini probleme. Spune-ne cum ne putem îmbunătăți %1$s.</string>
+  <!-- Label for a button opening a feedback forum -->
+  <string name="review_prompt_feedback_button">Dă-ne feedback</string>
 </resources>
