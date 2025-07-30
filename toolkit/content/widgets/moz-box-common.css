@@ -11,7 +11,7 @@
     --box-border-radius: var(--border-radius-medium);
     --box-border-radius-inner: calc(var(--box-border-radius) - var(--border-width));
     --box-padding: var(--space-large);
-    --box-icon-size: var(--icon-size-default);
+    --box-icon-size: var(--icon-size);
 
     border: var(--box-border);
     border-block-end: var(--box-border-width-end) solid var(--box-border-color);

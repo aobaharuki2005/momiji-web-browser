@@ -250,7 +250,7 @@
     --icon-color-information: light-dark(var(--color-blue-60), var(--color-blue-20));
     --icon-color-success: light-dark(var(--color-green-60), var(--color-green-20));
     --icon-color-warning: light-dark(var(--color-yellow-60), var(--color-yellow-20));
-    --icon-size-default: var(--icon-size-small);
+    --icon-size: var(--icon-size-small);
     --icon-size-xsmall: 12px;
     --icon-size-small: var(--size-item-small);
     --icon-size-medium: 20px;

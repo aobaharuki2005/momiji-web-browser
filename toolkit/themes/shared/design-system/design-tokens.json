@@ -1139,7 +1139,7 @@
       }
     },
     "size": {
-      "default": {
+      "@base": {
         "value": "{icon.size.small}"
       },
       "xsmall": {

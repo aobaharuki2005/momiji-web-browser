@@ -2513,8 +2513,8 @@ main section {
   content: "";
   -moz-context-properties: fill;
   fill: var(--icon-color);
-  width: calc(var(--icon-size-default) * 1.25);
-  height: calc(var(--icon-size-default) * 1.25);
+  width: calc(var(--icon-size) * 1.25);
+  height: calc(var(--icon-size) * 1.25);
   display: block;
   position: absolute;
   inset-block-start: 50%;
@@ -2614,8 +2614,8 @@ main section {
   content: "";
   -moz-context-properties: fill;
   fill: var(--icon-color);
-  width: calc(var(--icon-size-default) * 1.25);
-  height: calc(var(--icon-size-default) * 1.25);
+  width: calc(var(--icon-size) * 1.25);
+  height: calc(var(--icon-size) * 1.25);
   display: block;
   position: absolute;
   inset-block-start: 50%;
@@ -8033,7 +8033,7 @@ main section {
   display: block;
   border: 0;
   background-color: transparent;
-  background-size: var(--icon-size-default);
+  background-size: var(--icon-size);
   background-position: center;
   padding: var(--space-small);
   fill: var(--icon-color);
