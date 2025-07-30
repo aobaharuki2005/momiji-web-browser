@@ -726,12 +726,16 @@
   <string name="preferences_open_links_in_a_private_tab">Aberi ligòngios in un’ischeda privada noa</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
   <string name="preferences_allow_screenshots_in_private_mode">Permite is caturas de ischermu in sa navigatzione privada</string>
+  <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Si est ativu, is ischedas privadas ant a èssere visìbiles fintzas cun prus aplicatziones abertas</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Agiunghe unu curtzadòrgiu de navigatzione privada</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
   <string name="preferences_https_only_title">Modalidade «isceti HTTPS»</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Imprea su blocu de ischermu pro cuare ischedas in sa navigatzione privada</string>
+  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
+  <string name="preferences_pbm_lock_screen_summary_2">Podes bìdere is ischedas a pustis de isblocare su dispositivu cun s’imprenta, cun sa cara o cun su PIN.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Blocu de is avisos de testimòngios</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
@@ -878,6 +882,8 @@
   <string name="preferences_choose_app_for_downloads">Gesti is iscarrigamentos cun un’àtera aplicatzione</string>
   <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
   <string name="preferences_downloads_settings_clean_up_files_title">Cantzella dae %s e dae su dispositivu</string>
+  <!-- Summary for the setting to automatically clean up downloaded files -->
+  <string name="preferences_downloads_settings_clean_up_files_summary">A cantzellare is archìvios dae su gestore de iscarrigamentos ddos at a cantzellare puru dae su dispositivu tuo</string>
   <!-- Preference for downloads -->
   <string name="preferences_downloads">Iscarrigamentos</string>
   <!-- Preference for enabling gecko engine logs -->
@@ -2115,6 +2121,8 @@
   <string name="preferences_delete_browsing_data_button">Cantzella is datos de navigatzione</string>
   <!-- Title for the Delete browsing data on quit preference -->
   <string name="preferences_delete_browsing_data_on_quit">Cantzella is datos de navigatzione e essi</string>
+  <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+  <string name="preference_summary_delete_browsing_data_on_quit_2">Cantzellat is datos de navigatzione in automàticu cando seletzionas “Essi” dae su menù printzipale</string>
   <!-- Action item in menu for the Delete browsing data on quit feature -->
   <string name="delete_browsing_data_on_quit_action">Essi</string>
   <!-- Title text of a delete browsing data dialog. -->

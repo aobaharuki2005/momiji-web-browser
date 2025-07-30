@@ -353,6 +353,92 @@
   <string name="browser_save_menu_handlebar_content_description">Închide foaia de meniu salvare</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar tools menu. -->
   <string name="browser_tools_menu_handlebar_content_description">Închideți foaia de meniu cu instrumente</string>
+  <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar custom tab menu. -->
+  <string name="browser_custom_tab_menu_handlebar_content_description">Închide foaia de meniu cu filă personalizată</string>
+  <!-- Browser menu description that describes the various tools related menu items inside of the tools sub-menu when the "Report broken site" feature is available -->
+  <string name="browser_menu_tools_description_with_translate_with_report_site_2" moz:removedIn="141" tools:ignore="UnusedResources">Vizualizare cititor, Traducere, Raportare site defect, Imprimare, Distribuire, Deschidere aplicație</string>
+  <!-- Browser menu description that describes the various tools related menu items inside of the tools sub-menu -->
+  <string name="browser_menu_tools_description_with_translate_without_report_site" moz:removedIn="141" tools:ignore="UnusedResources">Vizualizare cititor, Traducere, Imprimare, Distribuire, Deschidere aplicație</string>
+  <!-- Browser menu description that describes the various tools related menu items inside of the tools sub-menu when the "Report broken site" feature is available -->
+  <string name="browser_menu_tools_description_with_report_site_2" moz:removedIn="141" tools:ignore="UnusedResources">Vizualizare cititor, Raportare site defect, Imprimare, Distribuire, Deschidere aplicație</string>
+  <!-- Browser menu description that describes the various tools related menu items inside of the tools sub-menu -->
+  <string name="browser_menu_tools_description_without_report_site" moz:removedIn="141" tools:ignore="UnusedResources">Vizualizare cititor, Imprimare, Distribuire, Deschidere aplicație</string>
+  <!--
+    Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
+    bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen
+  -->
+  <string name="browser_menu_save" moz:removedIn="141" tools:ignore="UnusedResources">Salvează</string>
+  <!-- Browser menu description that describes the various save related menu items inside of the save sub-menu -->
+  <string name="browser_menu_save_description" moz:removedIn="141" tools:ignore="UnusedResources">Adaugă marcaj, Comandă rapidă, Acasă, Colecție, PDF</string>
+  <!-- Browser menu label that bookmarks the currently visited page -->
+  <string name="browser_menu_bookmark_this_page" moz:removedIn="141" tools:ignore="UnusedResources">Marchează pagina</string>
+  <!-- Browser menu label that bookmarks the currently visited page -->
+  <string name="browser_menu_bookmark_this_page_2">Adaugă la marcaje pagina</string>
+  <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
+  <string name="browser_menu_edit_bookmark">Editează marcajul</string>
+  <!-- Browser menu label that the saves the currently visited page as a PDF -->
+  <string name="browser_menu_save_as_pdf" moz:removedIn="141" tools:ignore="UnusedResources">Salvează ca PDF…</string>
+  <!-- Browser menu label that the saves the currently visited page as a PDF -->
+  <string name="browser_menu_save_as_pdf_2">Salvează ca PDF</string>
+  <!-- Browser menu label for turning ON reader view of the current visited page -->
+  <string name="browser_menu_turn_on_reader_view" moz:removedIn="141" tools:ignore="UnusedResources">Activează Vizualizarea cititorului</string>
+  <!-- Browser menu label for turning OFF reader view of the current visited page -->
+  <string name="browser_menu_turn_off_reader_view" moz:removedIn="141" tools:ignore="UnusedResources">Dezactivează vizualizarea Cititor</string>
+  <!-- Browser menu button that reopens a private tab as a regular tab -->
+  <string name="browser_menu_open_in_normal_tab" moz:removedIn="141" tools:ignore="UnusedResources">Mută la fila neprivată</string>
+  <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
+  <string name="browser_menu_translate_page" moz:removedIn="141" tools:ignore="UnusedResources">Tradu pagina…</string>
+  <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
+  <string name="browser_menu_translate_page_2">Tradu pagina</string>
+  <!-- Browser menu label for navigating to the Web Compat Reporter feature, which provides users the ability to send bug reports for broken sites. -->
+  <string name="browser_menu_webcompat_reporter">Raportează site defect…</string>
+  <!-- Browser menu label for navigating to the Web Compat Reporter feature, which provides users the ability to send bug reports for broken sites. -->
+  <string name="browser_menu_webcompat_reporter_2">Raportează site nefuncțional</string>
+  <!--
+    Browser menu label that is displayed when the current page has been translated by the translation feature.
+    %1$s is the name of the language that page was translated to (e.g. English).
+  -->
+  <string name="browser_menu_translated_to" moz:removedIn="141" tools:ignore="UnusedResources">Tradus în %1$s</string>
+  <!-- Browser menu label that is displayed when the current page has been translated by the translation feature. -->
+  <string name="browser_menu_translated">Traduse</string>
+  <!-- Browser menu label for the print feature -->
+  <string name="browser_menu_print" moz:removedIn="141" tools:ignore="UnusedResources">Tipărește…</string>
+  <!-- Browser menu label for the print feature -->
+  <string name="browser_menu_print_2">Imprimare</string>
+  <!--
+    Browser menu label for the Delete browsing data on quit feature.
+    %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="browser_menu_delete_browsing_data_on_quit">Ieși din %1$s</string>
+  <!--
+    Content description for a banner within the menu which prompt the user to make this app their default browser.
+    %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="browser_menu_default_banner_title">Setează %1$s ca implicit</string>
+  <!-- Label text within the set as default banner -->
+  <string name="browser_menu_default_banner_subtitle" moz:removedIn="143" tools:ignore="UnusedResources">Durează câteva secunde. Schimbă oricând.</string>
+  <!-- Label text within the set as default banner -->
+  <string name="browser_menu_default_banner_subtitle_2">Rapid, privat și făcut pentru tine.</string>
+  <!-- Content description for the button that dismisses the set as default banner in the menu -->
+  <string name="browser_menu_default_banner_dismiss" moz:removedIn="142" tools:ignore="UnusedResources">Înlătură</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
+  <string name="browser_menu_default_banner_dismiss_promotion">Închide promoția</string>
+  <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
+  <string name="browser_menu_recommended_extensions_content_description">Mai multe informații</string>
+  <!--
+    Menu "contextual feature recommendation" (CFR)
+
+    Text for the title in the contextual feature recommendation popup promoting the menu feature.
+  -->
+  <string name="menu_cfr_title">Nou: meniu simplificat</string>
+  <!-- Text for the message in the contextual feature recommendation popup promoting the menu feature. -->
+  <string name="menu_cfr_body">Găsește mai rapid ceea ce ai nevoie, de la navigare privată la salvarea acțiunilor.</string>
+  <!--
+    Extensions management fragment
+
+    Text displayed when there are no extensions to be shown
+  -->
+  <string name="extensions_management_no_extensions">Fără extensii aici</string>
   <!--
     Browser Toolbar
 
@@ -364,6 +450,14 @@
     history and go back to the home screen.
   -->
   <string name="browser_toolbar_erase" moz:removedIn="141" tools:ignore="UnusedResources">Șterge istoricul de navigare</string>
+  <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+  <string name="browser_toolbar_translate">Tradu pagina</string>
+  <!--
+    Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+    %1$s is the name of the language that is displayed in the original page. (For example: English)
+    %2$s is the name of the language which the page was translated to. (For example: French)
+  -->
+  <string name="browser_toolbar_translated_successfully">Pagină tradusă de la %1$s la %2$s.</string>
   <!--
     Locale Settings Fragment
 
@@ -374,6 +468,12 @@
   <string name="default_locale_text">Folosește limba dispozitivului</string>
   <!-- Placeholder text shown in the search bar before a user enters text -->
   <string name="locale_search_hint">Caută limbi</string>
+  <!--
+    Search Fragment
+
+    Button in the search view that lets a user search by scanning a QR code
+  -->
+  <string name="search_scan_button_2">Scanează codul QR</string>
   <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
   <string name="search_shortcuts_engine_settings">Setări pentru motorul de căutare</string>
   <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -394,6 +494,17 @@
   <string name="search_settings_menu_item">Setări de căutare</string>
   <!-- Header text for the search selector menu -->
   <string name="search_header_menu_item_2">De data aceasta, caută în:</string>
+  <!--
+    Content description (not visible, for screen readers etc.): Search engine icon.
+    %s is the search engine name (for example: DuckDuckGo).
+  -->
+  <string name="search_engine_icon_content_description_1">Motor de căutare: %s</string>
+  <!--
+    Content description (not visible, for screen readers etc.) of the search engine selector from the search toolbar.
+    %s is the search engine name (for example: DuckDuckGo).
+    The colon character (in "%s:") is intended to have the screen reader make a small pause between the search engine name and the description of the button.
+  -->
+  <string name="search_engine_selector_content_description">%s: selector motor de căutare</string>
   <!--
     Home onboarding
 
@@ -416,8 +527,19 @@
   <string name="sync_cfr_message" moz:removedIn="142" tools:ignore="UnusedResources">Filele tale se sincronizează! Reia de unde ai rămas pe celălalt dispozitiv.</string>
   <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
   <string name="onboarding_home_content_description_close_button">Închide</string>
+  <!--
+    Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments.
+
+    Description for learning more about our privacy notice.
+  -->
+  <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">Notificare privind confidențialitatea Firefox</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_2">Ne place să te protejăm</string>
+  <!--
+    Title for set firefox as default browser screen used by Nimbus experiments.
+    Note: The word "Firefox" should NOT be translated
+  -->
+  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources">Află de ce milioane de oameni iubesc Firefox</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Navigare sigură cu mai multe opțiuni</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
@@ -601,6 +723,8 @@
   <string name="preferences_search_engines_suggestions">Sugestii de la motoarele de căutare</string>
   <!-- Preference Category for settings related to Search address bar -->
   <string name="preferences_settings_address_bar">Preferințele privind bara de adrese</string>
+  <!-- Preference Category for settings to Firefox Suggest -->
+  <string name="preference_search_address_bar_fx_suggest" tools:ignore="BrandUsage">Bara de adrese - Firefox Suggest</string>
   <!-- Preference link to Learn more about Firefox Suggest -->
   <string name="preference_search_learn_about_fx_suggest" tools:ignore="BrandUsage">Află mai multe despre Firefox Suggest</string>
   <!-- Preference link to rating Fenix on the Play Store -->
@@ -616,6 +740,8 @@
   <string name="preferences_category_advanced">Avansate</string>
   <!-- Preference category for privacy and security settings -->
   <string name="preferences_category_privacy_security">Confidențialitate și securitate</string>
+  <!-- Preference for advanced site settings -->
+  <string name="preferences_site_settings">Setările site-ului</string>
   <!-- Preference for private browsing options -->
   <string name="preferences_private_browsing_options">Navigare privată</string>
   <!-- Preference for opening links in a private tab -->
@@ -628,6 +754,14 @@
   <string name="preferences_add_private_browsing_shortcut">Adaugă o comandă rapidă pentru navigare privată</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
   <string name="preferences_https_only_title">Mod numai HTTPS</string>
+  <!-- Preference title for using the screen lock to hide tabs in private browsing -->
+  <string name="preferences_pbm_lock_screen_title">Folosește blocarea ecranului pentru a ascunde filele în navigarea privată</string>
+  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
+  <string name="preferences_pbm_lock_screen_summary_2">Vizualizează filele cu amprenta, codul PIN sau deblocarea facială.</string>
+  <!-- Label for cookie banner section in quick settings panel. -->
+  <string name="cookie_banner_blocker">Funcție de blocare a bannerelor de cookie-uri</string>
+  <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
+  <string name="preferences_cookie_banner_reduction_private_mode">Funcția de blocare a bannerelor pentru cookie-uri în navigarea privată</string>
   <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
   <string name="reduce_cookie_banner_off_for_site">Dezactivat pentru acest site</string>
   <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -644,8 +778,20 @@
   <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Solicitare de asistență trimisă</string>
   <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
   <string name="reduce_cookie_banner_unsupported_site">Site-ul nu este asistat momentan</string>
+  <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. %1$s is a shortened URL of the current site. -->
+  <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">Activezi blocarea bannerelor pentru cookie-uri pentru %1$s?</string>
+  <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. %1$s is a shortened URL of the current site. -->
+  <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">Dezactivezi blocarea bannerelor pentru cookie-uri pentru %1$s?</string>
   <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. %1$s is the name of the app (for example "Firefox"). -->
   <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s nu poate respinge automat solicitările de cookie-uri de pe acest site. Poți trimite o solicitare pentru a sprijini acest site în viitor.</string>
+  <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Dezactivează și %1$s va șterge cookie-urile și va reîncărca acest site. Această acțiune îți poate deconecta sau goli coșurile de cumpărături.</string>
+  <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">Activează și %1$s va încerca să refuze automat toate bannerele cookie de pe acest site.</string>
+  <!-- Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="cookie_banner_cfr_title">%1$s tocmai a refuzat cookie-urile pentru tine</string>
+  <!-- Message for the cookie banner re-engagement CFR -->
+  <string name="cookie_banner_cfr_message">Mai puține distrageri, mai puține cookie-uri care te urmăresc pe acest site.</string>
   <!-- Description of the preference to enable "HTTPS-Only" mode. -->
   <string name="preferences_https_only_summary">Încearcă automat să se conecteze la site-uri folosind protocolul de criptare HTTPS pentru o securitate sporită.</string>
   <!-- Summary of https only preference if https only is set to off -->
@@ -668,14 +814,24 @@
   <string name="errorpage_httpsonly_message_summary">Cu toate acestea, este, de asemenea, posibil ca un atacator să fie implicat. Dacă continui pe site, nu trebuie să introduci informații sensibile. Dacă continui, modul HTTPS-Only va fi dezactivat temporar pentru site.</string>
   <!-- Preference for accessibility -->
   <string name="preferences_accessibility">Accesibilitate</string>
+  <!-- Preference to override the Mozilla account server -->
+  <string name="preferences_override_account_server">Server de cont Mozilla personalizat</string>
   <!-- Preference to override the Sync token server -->
   <string name="preferences_override_sync_tokenserver">Server personalizat de sincronizare</string>
   <!-- Preference category for account information -->
   <string name="preferences_category_account">Cont</string>
+  <!-- Preference for changing where the AddressBar is positioned -->
+  <string name="preferences_toolbar_2">Locația barei de adrese</string>
+  <!-- Preference for changing toolbar layout -->
+  <string name="preferences_toolbar_layout">Aspectul barei de instrumente</string>
   <!-- Preference for changing default theme to dark or light mode -->
   <string name="preferences_theme">Temă</string>
   <!-- Preference for customizing the home screen -->
   <string name="preferences_home_2">Pagină de start</string>
+  <!-- Preference for customizing the app icon -->
+  <string name="preferences_app_icon">Iconița aplicației</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Afișarea barei de file</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Gesturi</string>
   <!-- Preference for settings related to visual options -->
@@ -688,6 +844,8 @@
   <string name="preferences_account_sync_error">Reconectează-te pentru a continua sincronizarea</string>
   <!-- Preference for language -->
   <string name="preferences_language">Limbă</string>
+  <!-- Preference for translations -->
+  <string name="preferences_translations">Traduceri</string>
   <!-- Preference for data choices -->
   <string name="preferences_data_choices" tools:ignore="UnusedResources" moz:removedIn="141">Selecții de date</string>
   <!-- Preference for data collection -->
@@ -700,12 +858,18 @@
   <string name="preferences_show_voice_search">Afișează căutarea vocală</string>
   <!-- Preference title for switch preference to show search suggestions also in private mode -->
   <string name="preferences_show_search_suggestions_in_private">Afișează în sesiuni private</string>
+  <!-- Preference title for switch preference to show trending search suggestions -->
+  <string name="preferences_show_trending_search_suggestions">Afișează sugestiile în tendințe</string>
+  <!-- Preference title for switch preference to show recent search suggestions -->
+  <string name="preferences_show_recent_search_suggestions">Afișează căutările recente</string>
   <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
   <string name="preferences_show_clipboard_suggestions">Afișează sugestii din clipboard</string>
   <!-- Preference title for switch preference to suggest browsing history when searching -->
   <string name="preferences_search_browsing_history">Caută în istoricul de navigare</string>
   <!-- Preference title for switch preference to suggest bookmarks when searching -->
   <string name="preferences_search_bookmarks">Caută în marcaje</string>
+  <!-- Preference title for switch preference to show shortcuts when searching -->
+  <string name="preferences_show_shortcuts">Afișează comenzile rapide</string>
   <!-- Preference title for switch preference to suggest synced tabs when searching -->
   <string name="preferences_search_synced_tabs">Caută în filele sincronizate</string>
   <!-- Preference for account settings -->
@@ -715,10 +879,27 @@
   <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
   <string name="preferences_show_sponsored_suggestions">Sugestii de la sponsori</string>
   <!--
+    Summary for preference to show sponsored Firefox Suggest search suggestions.
+    %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="preferences_show_sponsored_suggestions_summary">Susține %1$s cu sugestii sponsorizate ocazionale</string>
+  <!--
     Preference title for switch preference to show Firefox Suggest search suggestions for web content.
     %1$s is the name of the app (for example "Firefox").
   -->
   <string name="preferences_show_nonsponsored_suggestions">Sugestii de la %1$s</string>
+  <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+  <string name="preferences_show_nonsponsored_suggestions_summary">Primește sugestii de pe web legate de căutarea ta</string>
+  <!-- Preference for link sharing -->
+  <string name="preferences_link_sharing">Distribuirea linkurilor</string>
+  <!-- Title for the link sharing toggle. %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="link_sharing_toggle_title">Include linkul de descărcare %1$s în distribuirile de pe WhatsApp</string>
+  <!-- Body for the link sharing toggle.  %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="link_sharing_toggle_body">Invită-ți prietenii să încerce o navigare mai rapidă și mai sigură cu %1$s de fiecare dată când distribui un link pe WhatsApp.</string>
+  <!-- Snackbar message shown when user shares a link -->
+  <string name="link_shared_snackbar_message">Link distribuit</string>
+  <!-- Snackbar action label shown when user shares a link -->
+  <string name="link_shared_snackbar_action">Gestionează setările</string>
   <!-- Preference for open links in third party apps -->
   <string name="preferences_open_links_in_apps">Deschide linkuri în aplicații</string>
   <!-- Preference for open links in third party apps always open in apps option -->
@@ -729,18 +910,62 @@
   <string name="preferences_open_links_in_apps_never">Niciodată</string>
   <!-- Preference for open download with an external download manager app -->
   <string name="preferences_external_download_manager" tools:ignore="UnusedResources" moz:removedIn="141">Manager extern pentru descărcări</string>
+  <!-- Preference title for choosing an app to handle downloads -->
+  <string name="preferences_choose_app_for_downloads">Gestionează descărcările cu o altă aplicație</string>
+  <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
+  <string name="preferences_downloads_settings_clean_up_files_title">Șterge de pe %s și de pe dispozitiv</string>
+  <!-- Summary for the setting to automatically clean up downloaded files -->
+  <string name="preferences_downloads_settings_clean_up_files_summary">Eliminarea fișierelor din managerul de descărcări le elimină și de pe dispozitiv.</string>
+  <!-- Preference for downloads -->
+  <string name="preferences_downloads">Descărcări</string>
   <!-- Preference for enabling gecko engine logs -->
   <string name="preferences_enable_gecko_logs">Activează jurnalele Gecko</string>
   <!-- Message to indicate users that we are quitting the application to apply the changes -->
   <string name="quit_application">Se închide aplicația pentru a aplica modificări…</string>
+  <!-- Preference for extensions -->
+  <string name="preferences_extensions">Extensii</string>
+  <!-- Preference for installing a local extension -->
+  <string name="preferences_install_local_extension">Instalează extensia din fișier</string>
   <!-- Preference for notifications -->
   <string name="preferences_notifications">Notificări</string>
   <!-- Summary for notification preference indicating notifications are allowed -->
   <string name="notifications_allowed_summary">Acceptate</string>
   <!-- Summary for notification preference indicating notifications are not allowed -->
   <string name="notifications_not_allowed_summary">Neacceptate</string>
+  <!--
+    Add-on Permissions
+
+    The title of the required permissions section from addon's permissions screen
+  -->
+  <string name="addons_permissions_heading_required" tools:ignore="UnusedResources" moz:removedIn="141">Necesar</string>
+  <!-- The title of the optional permissions section from addon's permissions screen -->
+  <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources" moz:removedIn="141">Opțional</string>
+  <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
+  <string name="addons_permissions_allow_for_all_sites">Permite pentru toate site-urile</string>
+  <!-- The subtitle for the allow for all sites preference toggle -->
+  <string name="addons_permissions_allow_for_all_sites_subtitle">Dacă ai încredere în această extensie, îi poți acorda permisiunea pe fiecare site web.</string>
+  <!-- The text shown when an extension does not require permissions -->
+  <string name="addons_does_not_require_permissions">Această extensie nu necesită nicio permisiune.</string>
+  <!-- The description of data collection permissions listed in the addon's permissions screen.  %1$s is a formatted list of permissions. -->
+  <string name="addons_permissions_required_data_collection_description" moz:removedIn="141" tools:ignore="UnusedResources">Dezvoltatorul spune că această extensie colectează: %1$s.</string>
+  <!-- The description of data collection permissions listed in the addon's permissions screen.  %1$s is a formatted list of permissions. -->
+  <string name="addons_permissions_required_data_collection_description_2">Dezvoltatorul spune că această extensie colectează: %1$s</string>
+  <!-- The description of the "none" data collection permission, when the extension doesn't collect anything according to the developer. -->
+  <string name="addons_permissions_none_required_data_collection_description">Dezvoltatorul spune că această extensie nu necesită colectarea de date.</string>
+  <!-- The title of the required permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_required_permissions">Permisiuni necesare:</string>
+  <!-- The title of the optional permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_optional_permissions">Permisiuni opționale:</string>
+  <!-- The title of the required data collection permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_required_data_collection">Colectarea datelor necesare:</string>
   <!-- The title of the optional data collection permissions section from addon's permissions screen. -->
   <string name="addons_permissions_heading_optional_data_collection">Colectare opțională de date:</string>
+  <!--
+    Add-on Preferences
+
+    Preference to customize the configured AMO (addons.mozilla.org) collection
+  -->
+  <string name="preferences_customize_extension_collection">Colecție de extensii personalizate</string>
   <!-- Button caption to confirm the add-on collection configuration -->
   <string name="customize_addon_collection_ok">OK</string>
   <!-- Button caption to abort the add-on collection configuration -->
@@ -749,17 +974,23 @@
   <string name="customize_addon_collection_hint">Numele colecției</string>
   <!-- Hint displayed on input field for custom collection user ID -->
   <string name="customize_addon_collection_user_hint">Proprietarul colecției (ID utilizator)</string>
+  <!-- Toast shown after confirming the custom extension collection configuration -->
+  <string name="toast_customize_extension_collection_done">Colecția de extensii modificată. Se închide aplicația pentru a aplica modificările…</string>
   <!--
     Customize Home
 
     Header text for jumping back into the recent tab in customize the home screen
   -->
   <string name="customize_toggle_jump_back_in">Revino la această filă</string>
+  <!-- Title for the customize home screen section with bookmarks. -->
+  <string name="customize_toggle_bookmarks">Marcaje</string>
   <!--
     Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days
   -->
   <string name="customize_toggle_recently_visited">Vizitate recent</string>
+  <!-- Title for the customize home screen section with Pocket. -->
+  <string name="customize_toggle_pocket_3">Povești</string>
   <!-- Title for the customize home screen section with sponsored Pocket stories. -->
   <string name="customize_toggle_pocket_sponsored">Povești sponsorizate</string>
   <!-- Title for the opening wallpaper settings screen -->
@@ -788,6 +1019,10 @@
   <string name="wallpaper_classic_title">Clasic %s</string>
   <!-- Text for artist series wallpapers title. "Artist series" represents a collection of artist collaborated wallpapers. -->
   <string name="wallpaper_artist_series_title">Seria artistului</string>
+  <!-- Description text for the artist series wallpapers with learn more link. %s is a learn more link using wallpaper_learn_more as text. "Independent voices" is the name of the wallpaper collection -->
+  <string name="wallpaper_artist_series_description_with_learn_more">Colecția Voci Independente. %s</string>
+  <!-- Description text for the artist series wallpapers. "Independent voices" is the name of the wallpaper collection -->
+  <string name="wallpaper_artist_series_description">Colecția Voci Independente.</string>
   <!-- Wallpaper onboarding dialog header text. -->
   <string name="wallpapers_onboarding_dialog_title_text">Încearcă o pată de culoare</string>
   <!-- Wallpaper onboarding dialog body text. -->
@@ -966,6 +1201,8 @@
   <string name="exceptions_empty_message_learn_more_link">Află mai multe</string>
   <!-- Preference switch for usage and technical data collection -->
   <string name="preference_usage_data_2">Trimite date tehnice și de interacțiune</string>
+  <!-- Preference switch for usage and technical learn more link in new compose -->
+  <string name="preference_usage_data_learn_more_2">Află mai multe despre datele tehnice</string>
   <!-- Preference switch for usage and technical learn more link -->
   <string name="preference_usage_data_learn_more" tools:ignore="UnusedResources" moz:removedIn="141">Află mai multe</string>
   <!-- Preference description for marketing data collection. Note: The words "Firefox" should NOT be translated -->
@@ -978,6 +1215,16 @@
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Trimite automat rapoarte de închidere neașteptată</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Acest lucru ne ajută să diagnosticăm și să remediem problemele browserului. Rapoartele pot include date personale sau sensibile.</string>
+  <!-- Text for sumo link to learn more about crash reports in data collection screen -->
+  <string name="preferences_crashes_learn_more">Aflați mai multe despre rapoartele de blocare</string>
+  <!-- Title Headers for data collection settings screen -->
+  <string name="crash_reports_data_category">Rapoarte de blocare</string>
+  <string name="usage_data_category">Date de utilizare</string>
+  <string name="studies_data_category">Studii</string>
+  <string name="technical_data_category">Date tehnice</string>
+  <string name="crash_reporting_description">Rapoartele de eroare ne permit să diagnosticăm și să remediem problemele browserului. Rapoartele pot include date personale sau sensibile.</string>
+  <!-- Section title for campaign measurement in data collections screen -->
+  <string name="preferences_marketing_data_title">Măsurarea campaniei</string>
   <!-- Preference switch for campaign measurement data (marketing data) collection -->
   <string name="preferences_marketing_data_2">Date de măsurare a campaniei</string>
   <!--
@@ -1017,6 +1264,18 @@
   <string name="preference_top_toolbar">Sus</string>
   <!-- Preference for using bottom toolbar -->
   <string name="preference_bottom_toolbar">Jos</string>
+  <!-- Preference for using simple toolbar -->
+  <string name="preference_simple_toolbar">Simplă</string>
+  <!-- Preference for using expanded toolbar -->
+  <string name="preference_expanded_toolbar">Extins</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">Bara de adrese trebuie să fie în partea de sus când este afișată bara de file.</string>
+  <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">Selectează pictograma aplicației</string>
   <!--
     Theme Preferences
 
@@ -1030,6 +1289,12 @@
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">Folosește tema dispozitivului</string>
   <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">Afișează bara de file</string>
+  <!--
     Gestures Preferences
 
     Preferences for using pull to refresh in a webpage
@@ -1039,6 +1304,8 @@
   <string name="preference_gestures_dynamic_toolbar">Derulează pentru a ascunde bara de instrumente</string>
   <!-- Preference for showing the opened tabs by swiping up on the toolbar -->
   <string name="preference_gestures_swipe_toolbar_show_tabs">Glisează bara de instrumente în sus pentru a deschide filele</string>
+  <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+  <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Glisează bara de adrese în lateral pentru a schimba între filele</string>
   <!--
     Library
 
@@ -1169,6 +1436,10 @@
   <string name="studies_remove">Elimină</string>
   <!-- Title of the active section on the studies list -->
   <string name="studies_active">Activ</string>
+  <!-- Description for studies -->
+  <string name="studies_description_3">Încearcă funcționalitățile și ideile înainte de a le lansa public.</string>
+  <!-- Title of the Studies data preference -->
+  <string name="studies_title">Instalează și execută studii</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Află mai multe</string>
   <!--
@@ -1178,6 +1449,16 @@
     The %1$s will be replaced by the number of opened normal tabs
   -->
   <string name="tabs_header_normal_tabs_counter_title">File normale deschise: %1$s. Atinge pentru a schimba între file.</string>
+  <!--
+    Title for the list of tabs in the current private session used by a11y services
+    The %1$s will be replaced by the number of opened private tabs
+  -->
+  <string name="tabs_header_private_tabs_counter_title">File private deschise: %1$s. Atinge pentru a schimba filele.</string>
+  <!--
+    Title for the list of tabs in the synced tabs used by a11y services
+    The %1$s will be replaced by the number of opened synced tabs
+  -->
+  <string name="tabs_header_synced_tabs_counter_title">File sincronizate deschise: %1$s. Atinge pentru a schimba filele.</string>
   <!-- Text for the tabs header private tabs -->
   <string name="tabs_header_private_tabs_title">Privat</string>
   <!-- Text for the tabs header normal tabs -->
@@ -1212,6 +1493,8 @@
   <string name="tab_tray_multiselect_share_content_description">Distribuie filele selectate</string>
   <!-- Content description for tabs tray multiselect menu -->
   <string name="tab_tray_multiselect_menu_content_description">Meniul filelor selectate</string>
+  <!-- Title text displayed for a homepage tab in the tabs tray. -->
+  <string name="tab_tray_homepage_tab">Pagină de start</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Elimină fila din colecție</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -1365,6 +1648,32 @@
   <string name="download_content_type_filter_document">Documente</string>
   <!-- Text for the filter button to show all other file types in the downloads list -->
   <string name="download_content_type_filter_other_1">Altele</string>
+  <!--
+    WebCompat Reporter
+
+    The title of the Web Compat Reporter feature. This is displayed in the top app bar.
+  -->
+  <string name="webcompat_reporter_screen_title">Raportează site nefuncțional</string>
+  <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Ajută la îmbunătățirea site-ului %1$s pentru toată lumea. Angajații Mozilla folosesc informațiile pe care le trimiți pentru a remedia problemele site-ului web.</string>
+  <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
+  <string name="webcompat_reporter_label_url">URL</string>
+  <!-- The error message of the URL text field when an invalid URL has been entered. -->
+  <string name="webcompat_reporter_url_error_invalid">Te rugăm să introduci un URL valid</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">Alege un motiv</string>
+  <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
+  <string name="webcompat_reporter_label_description">Descrie problema (opțional)</string>
+  <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
+  <string name="webcompat_reporter_send_more_info">Trimite mai multe informații</string>
+  <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
+  <string name="webcompat_reporter_cancel">Anulează</string>
+  <!-- The button text for the send button to submit the provided form data. -->
+  <string name="webcompat_reporter_send">Trimite</string>
+  <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
+  <string name="webcompat_reporter_success_snackbar_text">Raportul tău a fost trimis</string>
+  <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
+  <string name="webcompat_reporter_dismiss_success_snackbar_text">Închide</string>
   <!--
     Crashes
 
@@ -1940,6 +2249,8 @@
   <string name="etp_cryptominers_title">Criptomineri</string>
   <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_cryptominers_description">Împiedică accesul scripturilor rău-intenționate pe dispozitivul tău ca să mineze monede digitale.</string>
+  <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+  <string name="etp_known_fingerprinters_description">Oprește colectarea datelor unice de identificare despre dispozitivul tău, care pot fi utilizate în scopuri de urmărire.</string>
   <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_tracking_content_title">Conținut de urmărire</string>
   <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
