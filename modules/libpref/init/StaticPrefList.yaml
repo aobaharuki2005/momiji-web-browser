@@ -9982,7 +9982,7 @@
 #    https://drafts.csswg.org/css-grid-2/#algo-grid-sizing
 - name: layout.css.grid-multi-pass-track-sizing.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Is support for :heading and :heading() pseudo classes enabled?
