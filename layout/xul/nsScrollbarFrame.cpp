@@ -462,7 +462,6 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
   UpdateChildrenAttributeValue(nsGkAtoms::maxpos, false);
   UpdateChildrenAttributeValue(nsGkAtoms::disabled, false);
   UpdateChildrenAttributeValue(nsGkAtoms::pageincrement, false);
-  UpdateChildrenAttributeValue(nsGkAtoms::increment, false);
 
   return NS_OK;
 }
@@ -525,8 +524,7 @@ void nsScrollbarFrame::UpdateChildrenAttributeValue(nsAtom* aAttribute,
     if (mDownBottomButton) {
       mDownBottomButton->SetAttr(kNameSpaceID_None, aAttribute, value, aNotify);
     }
-  } else if (aAttribute == nsGkAtoms::pageincrement ||
-             aAttribute == nsGkAtoms::increment) {
+  } else if (aAttribute == nsGkAtoms::pageincrement) {
     if (mSlider) {
       mSlider->SetAttr(kNameSpaceID_None, aAttribute, value, aNotify);
     }

@@ -110,7 +110,6 @@ class nsSliderFrame final : public nsContainerFrame {
   static int32_t GetCurrentPosition(nsIContent* content);
   static int32_t GetMinPosition(nsIContent* content);
   static int32_t GetMaxPosition(nsIContent* content);
-  static int32_t GetIncrement(nsIContent* content);
   static int32_t GetPageIncrement(nsIContent* content);
   static int32_t GetIntegerAttribute(nsIContent* content, nsAtom* atom,
                                      int32_t defaultValue);
