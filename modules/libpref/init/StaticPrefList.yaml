@@ -8800,7 +8800,7 @@
 # Support for Atomics.waitAsync in JavaScript.
 - name: javascript.options.atomics_wait_async
   type: bool
-  value: true
+  value: false
   mirror: always
   set_spidermonkey_pref: startup
 
