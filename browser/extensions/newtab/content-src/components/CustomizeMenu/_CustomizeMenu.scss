@@ -200,10 +200,25 @@
     font-size: inherit;
   }
 
+  .widgets-section h2 {
+    font-size: inherit;
+    margin-block-start: 0;
+    font-weight: var(--font-weight-bold);
+  }
+
+  .settings-widgets,
   .settings-toggles {
     display: flex;
     flex-direction: column;
     gap: var(--space-xlarge);
+  }
+
+  .settings-widgets {
+    gap: var(--space-large);
+
+    .divider {
+      margin-block-start: var(--space-large);
+    }
   }
 
   [slot='nested'] {

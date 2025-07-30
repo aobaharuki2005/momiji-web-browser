@@ -2160,10 +2160,22 @@ main section {
 .home-section .wallpapers-section h2 {
   font-size: inherit;
 }
+.home-section .widgets-section h2 {
+  font-size: inherit;
+  margin-block-start: 0;
+  font-weight: var(--font-weight-bold);
+}
+.home-section .settings-widgets,
 .home-section .settings-toggles {
   display: flex;
   flex-direction: column;
   gap: var(--space-xlarge);
+}
+.home-section .settings-widgets {
+  gap: var(--space-large);
+}
+.home-section .settings-widgets .divider {
+  margin-block-start: var(--space-large);
 }
 .home-section [slot=nested] {
   margin-block-start: 0;

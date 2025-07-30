@@ -86,6 +86,7 @@ export class _CustomizeMenu extends React.PureComponent {
               openPreferences={this.props.openPreferences}
               setPref={this.props.setPref}
               enabledSections={this.props.enabledSections}
+              enabledWidgets={this.props.enabledWidgets}
               wallpapersEnabled={this.props.wallpapersEnabled}
               activeWallpaper={this.props.activeWallpaper}
               pocketRegion={this.props.pocketRegion}
@@ -96,6 +97,9 @@ export class _CustomizeMenu extends React.PureComponent {
               mayHaveRecentSaves={this.props.DiscoveryStream.recentSavesEnabled}
               mayHaveWeather={this.props.mayHaveWeather}
               mayHaveTrendingSearch={this.props.mayHaveTrendingSearch}
+              mayHaveWidgets={this.props.mayHaveWidgets}
+              mayHaveTimerWidget={this.props.mayHaveTimerWidget}
+              mayHaveListsWidget={this.props.mayHaveListsWidget}
               dispatch={this.props.dispatch}
               exitEventFired={this.state.exitEventFired}
             />

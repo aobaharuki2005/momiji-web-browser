@@ -14139,11 +14139,15 @@ class ContentSection extends (external_React_default()).PureComponent {
   render() {
     const {
       enabledSections,
+      enabledWidgets,
       pocketRegion,
       mayHaveInferredPersonalization,
       mayHaveRecentSaves,
       mayHaveWeather,
       mayHaveTrendingSearch,
+      mayHaveWidgets,
+      mayHaveTimerWidget,
+      mayHaveListsWidget,
       openPreferences,
       wallpapersEnabled,
       activeWallpaper,
@@ -14160,6 +14164,10 @@ class ContentSection extends (external_React_default()).PureComponent {
       showRecentSavesEnabled,
       topSitesRowsCount
     } = enabledSections;
+    const {
+      timerEnabled,
+      listsEnabled
+    } = enabledWidgets;
     return /*#__PURE__*/external_React_default().createElement("div", {
       className: "home-section"
     }, wallpapersEnabled && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("div", {
@@ -14168,11 +14176,15 @@ class ContentSection extends (external_React_default()).PureComponent {
       setPref: setPref,
       activeWallpaper: activeWallpaper,
       exitEventFired: exitEventFired
-    })), /*#__PURE__*/external_React_default().createElement("span", {
+    })), !mayHaveWidgets && /*#__PURE__*/external_React_default().createElement("span", {
       className: "divider",
       role: "separator"
-    })), /*#__PURE__*/external_React_default().createElement("div", {
-      className: "settings-toggles"
+    })), mayHaveWidgets && /*#__PURE__*/external_React_default().createElement("div", {
+      className: "widgets-section"
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      className: "category-header"
+    }, /*#__PURE__*/external_React_default().createElement("h2", null, "Widgets")), /*#__PURE__*/external_React_default().createElement("div", {
+      className: "settings-widgets"
     }, mayHaveWeather && /*#__PURE__*/external_React_default().createElement("div", {
       id: "weather-section",
       className: "section"
@@ -14182,8 +14194,53 @@ class ContentSection extends (external_React_default()).PureComponent {
       onToggle: this.onPreferenceSelect,
       "data-preference": "showWeather",
       "data-eventSource": "WEATHER",
-      "data-l10n-id": "newtab-custom-weather-toggle"
+      label: "Weather"
+    })), mayHaveListsWidget && /*#__PURE__*/external_React_default().createElement("div", {
+      id: "lists-widget-section",
+      className: "section"
+    }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
+      id: "lists-toggle",
+      pressed: listsEnabled || null,
+      onToggle: this.onPreferenceSelect,
+      "data-preference": "widgets.lists.enabled",
+      "data-eventSource": "WIDGET_LISTS",
+      label: "Lists"
+    })), mayHaveTimerWidget && /*#__PURE__*/external_React_default().createElement("div", {
+      id: "timer-widget-section",
+      className: "section"
+    }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
+      id: "timer-toggle",
+      pressed: timerEnabled || null,
+      onToggle: this.onPreferenceSelect,
+      "data-preference": "widgets.focusTimer.enabled",
+      "data-eventSource": "WIDGET_TIMER",
+      label: "Timer"
     })), mayHaveTrendingSearch && /*#__PURE__*/external_React_default().createElement("div", {
+      id: "trending-search-section",
+      className: "section"
+    }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
+      id: "trending-search-toggle",
+      pressed: trendingSearchEnabled || null,
+      onToggle: this.onPreferenceSelect,
+      "data-preference": "trendingSearch.enabled",
+      "data-eventSource": "TRENDING_SEARCH",
+      label: "Trending Searches"
+    })), /*#__PURE__*/external_React_default().createElement("span", {
+      className: "divider",
+      role: "separator"
+    }))), /*#__PURE__*/external_React_default().createElement("div", {
+      className: "settings-toggles"
+    }, !mayHaveWidgets && mayHaveWeather && /*#__PURE__*/external_React_default().createElement("div", {
+      id: "weather-section",
+      className: "section"
+    }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
+      id: "weather-toggle",
+      pressed: weatherEnabled || null,
+      onToggle: this.onPreferenceSelect,
+      "data-preference": "showWeather",
+      "data-eventSource": "WEATHER",
+      "data-l10n-id": "newtab-custom-weather-toggle"
+    })), !mayHaveWidgets && mayHaveTrendingSearch && /*#__PURE__*/external_React_default().createElement("div", {
       id: "trending-search-section",
       className: "section"
     }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
@@ -14375,6 +14432,7 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
       openPreferences: this.props.openPreferences,
       setPref: this.props.setPref,
       enabledSections: this.props.enabledSections,
+      enabledWidgets: this.props.enabledWidgets,
       wallpapersEnabled: this.props.wallpapersEnabled,
       activeWallpaper: this.props.activeWallpaper,
       pocketRegion: this.props.pocketRegion,
@@ -14383,6 +14441,9 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
       mayHaveRecentSaves: this.props.DiscoveryStream.recentSavesEnabled,
       mayHaveWeather: this.props.mayHaveWeather,
       mayHaveTrendingSearch: this.props.mayHaveTrendingSearch,
+      mayHaveWidgets: this.props.mayHaveWidgets,
+      mayHaveTimerWidget: this.props.mayHaveTimerWidget,
+      mayHaveListsWidget: this.props.mayHaveListsWidget,
       dispatch: this.props.dispatch,
       exitEventFired: this.state.exitEventFired
     }))));
@@ -16106,6 +16167,17 @@ class BaseContent extends (external_React_default()).PureComponent {
     } = prefs;
     const supportUrl = prefs["support.url"];
 
+    // Widgets experiment pref check
+    const mayHaveWidgets = prefs["widgets.system.enabled"];
+    const mayHaveListsWidget = prefs["widgets.system.lists.enabled"];
+    const mayHaveTimerWidget = prefs["widgets.system.focusTimer.enabled"];
+    const enabledWidgets = {
+      listsEnabled: prefs["widgets.lists.enabled"],
+      timerEnabled: prefs["widgets.focusTimer.enabled"],
+      trendingSearchEnabled: prefs["trendingSearch.enabled"],
+      weatherEnabled: prefs.showWeather
+    };
+
     // Trending Searches experiment pref check
     const mayHaveTrendingSearch = prefs["system.trendingSearch.enabled"] && prefs["trendingSearch.defaultSearchEngine"].toLowerCase() === "google";
 
@@ -16159,6 +16231,7 @@ class BaseContent extends (external_React_default()).PureComponent {
       openPreferences: this.openPreferences,
       setPref: this.setPref,
       enabledSections: enabledSections,
+      enabledWidgets: enabledWidgets,
       wallpapersEnabled: wallpapersEnabled,
       activeWallpaper: activeWallpaper,
       pocketRegion: pocketRegion,
@@ -16168,6 +16241,9 @@ class BaseContent extends (external_React_default()).PureComponent {
       mayHaveInferredPersonalization: mayHaveInferredPersonalization,
       mayHaveWeather: mayHaveWeather,
       mayHaveTrendingSearch: mayHaveTrendingSearch,
+      mayHaveWidgets: mayHaveWidgets,
+      mayHaveTimerWidget: mayHaveTimerWidget,
+      mayHaveListsWidget: mayHaveListsWidget,
       spocMessageVariant: spocMessageVariant,
       showing: customizeMenuVisible
     }), this.shouldShowOMCHighlight("CustomWallpaperHighlight") && /*#__PURE__*/external_React_default().createElement(MessageWrapper, {

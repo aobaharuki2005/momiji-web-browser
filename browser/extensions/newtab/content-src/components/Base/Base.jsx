@@ -600,6 +600,18 @@ export class BaseContent extends React.PureComponent {
     const { mayHaveSponsoredTopSites } = prefs;
     const supportUrl = prefs["support.url"];
 
+    // Widgets experiment pref check
+    const mayHaveWidgets = prefs["widgets.system.enabled"];
+    const mayHaveListsWidget = prefs["widgets.system.lists.enabled"];
+    const mayHaveTimerWidget = prefs["widgets.system.focusTimer.enabled"];
+
+    const enabledWidgets = {
+      listsEnabled: prefs["widgets.lists.enabled"],
+      timerEnabled: prefs["widgets.focusTimer.enabled"],
+      trendingSearchEnabled: prefs["trendingSearch.enabled"],
+      weatherEnabled: prefs.showWeather,
+    };
+
     // Trending Searches experiment pref check
     const mayHaveTrendingSearch =
       prefs["system.trendingSearch.enabled"] &&
@@ -704,6 +716,7 @@ export class BaseContent extends React.PureComponent {
             openPreferences={this.openPreferences}
             setPref={this.setPref}
             enabledSections={enabledSections}
+            enabledWidgets={enabledWidgets}
             wallpapersEnabled={wallpapersEnabled}
             activeWallpaper={activeWallpaper}
             pocketRegion={pocketRegion}
@@ -713,6 +726,9 @@ export class BaseContent extends React.PureComponent {
             mayHaveInferredPersonalization={mayHaveInferredPersonalization}
             mayHaveWeather={mayHaveWeather}
             mayHaveTrendingSearch={mayHaveTrendingSearch}
+            mayHaveWidgets={mayHaveWidgets}
+            mayHaveTimerWidget={mayHaveTimerWidget}
+            mayHaveListsWidget={mayHaveListsWidget}
             spocMessageVariant={spocMessageVariant}
             showing={customizeMenuVisible}
           />
