@@ -7145,88 +7145,93 @@ HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction(
   // adjusted values default to original values
   EditorRawDOMRange newRange(startPoint, endPoint);
 
-  // Is there any intervening visible white-space?  If so we can't push
-  // selection past that, it would visibly change meaning of users selection.
-  const WSRunScanner wsScannerAtEnd(
-      WSRunScanner::Scan::EditableNodes, endPoint,
-      // We should refer only the default style of HTML because we need to wrap
-      // any elements with a specific HTML element.  So we should not refer
-      // actual style.  For example, we want to reformat parent HTML block
-      // element even if selected in a blocked phrase element or
-      // non-HTMLelement.
-      BlockInlineCheck::UseHTMLDefaultStyle);
-  const WSScanResult scanResultAtEnd =
-      wsScannerAtEnd.ScanPreviousVisibleNodeOrBlockBoundaryFrom(endPoint);
-  if (scanResultAtEnd.Failed()) {
-    NS_WARNING(
-        "WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom() failed");
-    return Err(NS_ERROR_FAILURE);
-  }
-  if (scanResultAtEnd.ReachedSomethingNonTextContent()) {
-    // eThisBlock and eOtherBlock conveniently distinguish cases
-    // of going "down" into a block and "up" out of a block.
-    if (wsScannerAtEnd.StartsFromOtherBlockElement()) {
-      // endpoint is just after the close of a block.
-      if (nsIContent* child = HTMLEditUtils::GetLastLeafContent(
-              *wsScannerAtEnd.StartReasonOtherBlockElementPtr(),
-              {LeafNodeType::LeafNodeOrChildBlock},
-              BlockInlineCheck::UseHTMLDefaultStyle)) {
-        newRange.SetEnd(EditorRawDOMPoint::After(*child));
+  {
+    // Is there any intervening visible white-space?  If so we can't push
+    // selection past that, it would visibly change meaning of users selection.
+    const WSScanResult prevVisibleThingOfEndPoint =
+        WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
+            WSRunScanner::Scan::All, endPoint,
+            // We should refer only the default style of HTML because we need to
+            // wrap any elements with a specific HTML element.  So we should not
+            // refer actual style.  For example, we want to reformat parent HTML
+            // block element even if selected in a blocked phrase element or
+            // non-HTMLelement.
+            BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost);
+    if (MOZ_UNLIKELY(prevVisibleThingOfEndPoint.Failed())) {
+      NS_WARNING(
+          "WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary() failed");
+      return Err(NS_ERROR_FAILURE);
+    }
+    if (prevVisibleThingOfEndPoint.ReachedSomethingNonTextContent()) {
+      // eThisBlock and eOtherBlock conveniently distinguish cases
+      // of going "down" into a block and "up" out of a block.
+      if (prevVisibleThingOfEndPoint.ReachedOtherBlockElement()) {
+        // endpoint is just after the close of a block.
+        if (nsIContent* child = HTMLEditUtils::GetLastLeafContent(
+                *prevVisibleThingOfEndPoint.ElementPtr(),
+                {LeafNodeType::LeafNodeOrChildBlock},
+                BlockInlineCheck::UseHTMLDefaultStyle)) {
+          newRange.SetEnd(EditorRawDOMPoint::After(*child));
+        }
+        // else block is empty - we can leave selection alone here, i think.
+      } else if (prevVisibleThingOfEndPoint.ReachedCurrentBlockBoundary() ||
+                 prevVisibleThingOfEndPoint
+                     .ReachedInlineEditingHostBoundary()) {
+        // endpoint is just after start of this block
+        if (nsIContent* child = HTMLEditUtils::GetPreviousContent(
+                endPoint, {WalkTreeOption::IgnoreNonEditableNode},
+                BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost)) {
+          newRange.SetEnd(EditorRawDOMPoint::After(*child));
+        }
+        // else block is empty - we can leave selection alone here, i think.
+      } else if (prevVisibleThingOfEndPoint.ReachedBRElement()) {
+        // endpoint is just after break.  lets adjust it to before it.
+        newRange.SetEnd(prevVisibleThingOfEndPoint
+                            .PointAtReachedContent<EditorRawDOMPoint>());
       }
-      // else block is empty - we can leave selection alone here, i think.
-    } else if (wsScannerAtEnd.StartsFromCurrentBlockBoundary() ||
-               wsScannerAtEnd.StartsFromInlineEditingHostBoundary()) {
-      // endpoint is just after start of this block
-      if (nsIContent* child = HTMLEditUtils::GetPreviousContent(
-              endPoint, {WalkTreeOption::IgnoreNonEditableNode},
-              BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost)) {
-        newRange.SetEnd(EditorRawDOMPoint::After(*child));
-      }
-      // else block is empty - we can leave selection alone here, i think.
-    } else if (wsScannerAtEnd.StartsFromBRElement()) {
-      // endpoint is just after break.  lets adjust it to before it.
-      newRange.SetEnd(
-          EditorRawDOMPoint(wsScannerAtEnd.StartReasonBRElementPtr()));
     }
   }
-
-  // Is there any intervening visible white-space?  If so we can't push
-  // selection past that, it would visibly change meaning of users selection.
-  const WSRunScanner wsScannerAtStart(WSRunScanner::Scan::EditableNodes,
-                                      startPoint,
-                                      BlockInlineCheck::UseHTMLDefaultStyle);
-  const WSScanResult scanResultAtStart =
-      wsScannerAtStart.ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(
-          startPoint);
-  if (scanResultAtStart.Failed()) {
-    NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom() failed");
-    return Err(NS_ERROR_FAILURE);
-  }
-  if (scanResultAtStart.ReachedSomethingNonTextContent()) {
-    // eThisBlock and eOtherBlock conveniently distinguish cases
-    // of going "down" into a block and "up" out of a block.
-    if (wsScannerAtStart.EndsByOtherBlockElement()) {
-      // startpoint is just before the start of a block.
-      if (nsIContent* child = HTMLEditUtils::GetFirstLeafContent(
-              *wsScannerAtStart.EndReasonOtherBlockElementPtr(),
-              {LeafNodeType::LeafNodeOrChildBlock},
-              BlockInlineCheck::UseHTMLDefaultStyle)) {
-        newRange.SetStart(EditorRawDOMPoint(child));
+  {
+    // Is there any intervening visible white-space?  If so we can't push
+    // selection past that, it would visibly change meaning of users selection.
+    const WSScanResult nextVisibleThingOfStartPoint =
+        WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
+            WSRunScanner::Scan::All, startPoint,
+            BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost);
+    if (MOZ_UNLIKELY(nextVisibleThingOfStartPoint.Failed())) {
+      NS_WARNING(
+          "WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary() failed");
+      return Err(NS_ERROR_FAILURE);
+    }
+    if (nextVisibleThingOfStartPoint.ReachedSomethingNonTextContent()) {
+      // eThisBlock and eOtherBlock conveniently distinguish cases
+      // of going "down" into a block and "up" out of a block.
+      if (nextVisibleThingOfStartPoint.ReachedOtherBlockElement()) {
+        // startpoint is just before the start of a block.
+        if (nsIContent* child = HTMLEditUtils::GetFirstLeafContent(
+                *nextVisibleThingOfStartPoint.ElementPtr(),
+                {LeafNodeType::LeafNodeOrChildBlock},
+                BlockInlineCheck::UseHTMLDefaultStyle)) {
+          newRange.SetStart(EditorRawDOMPoint(child));
+        }
+        // else block is empty - we can leave selection alone here, i think.
+      } else if (nextVisibleThingOfStartPoint.ReachedCurrentBlockBoundary() ||
+                 nextVisibleThingOfStartPoint
+                     .ReachedInlineEditingHostBoundary()) {
+        // startpoint is just before end of this block
+        if (nsIContent* child = HTMLEditUtils::GetNextContent(
+                startPoint, {WalkTreeOption::IgnoreNonEditableNode},
+                BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost)) {
+          newRange.SetStart(EditorRawDOMPoint(child));
+        }
+        // else block is empty - we can leave selection alone here, i think.
+      } else if (nextVisibleThingOfStartPoint.ReachedBRElement()) {
+        // startpoint is just before a break.  lets adjust it to after it.
+        // XXX If it's an invisible <br>, does this work? Will the following
+        // checks solve that?
+        newRange.SetStart(nextVisibleThingOfStartPoint
+                              .PointAfterReachedContent<EditorRawDOMPoint>());
       }
-      // else block is empty - we can leave selection alone here, i think.
-    } else if (wsScannerAtStart.EndsByCurrentBlockBoundary() ||
-               wsScannerAtStart.EndsByInlineEditingHostBoundary()) {
-      // startpoint is just before end of this block
-      if (nsIContent* child = HTMLEditUtils::GetNextContent(
-              startPoint, {WalkTreeOption::IgnoreNonEditableNode},
-              BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost)) {
-        newRange.SetStart(EditorRawDOMPoint(child));
-      }
-      // else block is empty - we can leave selection alone here, i think.
-    } else if (wsScannerAtStart.EndsByBRElement()) {
-      // startpoint is just before a break.  lets adjust it to after it.
-      newRange.SetStart(
-          EditorRawDOMPoint::After(*wsScannerAtStart.EndReasonBRElementPtr()));
     }
   }
 
