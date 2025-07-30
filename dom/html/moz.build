@@ -203,6 +203,7 @@ UNIFIED_SOURCES += [
 include("/ipc/chromium/chromium-config.mozbuild")
 
 LOCAL_INCLUDES += [
+    "!/dist/include/libwebrtc_overrides",
     "/caps",
     "/docshell/base",
     "/dom/base",
