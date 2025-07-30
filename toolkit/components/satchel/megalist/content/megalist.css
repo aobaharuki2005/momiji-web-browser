@@ -21,30 +21,16 @@ password-card,
   flex-direction: column;
 }
 
-moz-card {
-  background-color: var(--sidebar-box-background);
-  box-shadow: none;
-  color: var(--sidebar-box-color);
-  border: var(--sidebar-box-border);
-  border-radius: var(--border-radius-medium);
-  border-width: var(--sidebar-box-border-width);
-  border-color: var(--sidebar-box-border-color);
-}
-
 login-form {
   margin-block-start: var(--space-small);
 }
 
 .search-container {
-  width: 100%;
   min-height: var(--input-text-min-height);
-  padding-inline: var(--space-small);
-  border: var(--border-width) solid var(--border-color-interactive);
-  border-radius: var(--border-radius-small);
-  box-sizing: border-box;
-  background-color: Field;
-  color: FieldText;
+  padding-inline-start: var(--space-small);
   cursor: text;
+  border-radius: var(--border-radius-medium);
+  background-color: var(--table-row-background-color-alternate);
   display: flex;
 
   &:focus-within {
@@ -57,7 +43,7 @@ login-form {
   background-position: center;
   background-repeat: no-repeat;
   -moz-context-properties: fill;
-  fill: var(--icon-color);
+  fill: currentColor;
   width: var(--icon-size-default);
   flex-shrink: 0;
 }

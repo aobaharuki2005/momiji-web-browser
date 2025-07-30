@@ -8,9 +8,9 @@
   --inner-border-radius: calc(var(--outer-border-radius) - 2px);
   --alert-color: var(--icon-color-warning);
   --input-field-color: var(--link-color);
-  --input-field-color-hover: var(--button-text-color-ghost-hover);
-  --input-field-color-active: var(--button-text-color-ghost-active);
-  --copy-transition: opacity 250ms linear;
+  --input-field-color-hover: var(--button-text-color-hover);
+  --copy-tansition: opacity 250ms linear;
+  background-color: var(--background-color-box);
   color: inherit;
   padding: 3px;
 }
@@ -43,23 +43,23 @@
 :host(login-line:hover),
 :host(login-line:focus-visible) {
   > .line-container {
-    background-color: var(--button-background-color-ghost-hover);
+    background-color: var(--button-background-color-hover);
   }
 
   .input-field,
   .line-container {
     color: var(--input-field-color-hover);
   }
-}
 
-:host(login-line:active) {
-  > .line-container {
-    background-color: var(--button-background-color-ghost-active);
+  .copy-container {
+    > .copy-icon {
+      fill: var(--input-field-color-hover);
+    }
   }
 
-  .input-field,
-  .line-container {
-    color: var(--input-field-color-active);
+  .fav-icon,
+  .copy-icon {
+    fill: var(--input-field-color-hover);
   }
 }
 
@@ -80,6 +80,7 @@
     justify-content: end;
     align-items: center;
     height: var(--line-container-height);
+    background-color: var(--background-color-box);
     padding: 3px;
     --button-text-color-ghost: var(--icon-color);
 
@@ -101,7 +102,7 @@
 :host([linetype="username"]),
 :host([linetype="password"]) {
   > .line-container.copied {
-    background-color: none;
+    background-color: var(--background-color-box);
 
     .input-label::after {
       position: static;
@@ -135,7 +136,7 @@
       fill: var(--icon-color);
 
       @media not (prefers-reduced-motion) {
-        transition: var(--copy-transition);
+        transition: var(--copy-tansition);
       }
     }
 
@@ -145,12 +146,12 @@
       height: var(--icon-size-default);
       width: var(--icon-size-default);
       -moz-context-properties: fill;
-      fill: var(--attention-dot-color);
+      fill: var(--icon-color-success);
       opacity: 0;
       visibility: hidden;
 
       @media not (prefers-reduced-motion) {
-        transition: var(--copy-transition);
+        transition: var(--copy-tansition);
       }
     }
   }
@@ -184,7 +185,7 @@
     opacity: 0;
 
     @media not (prefers-reduced-motion) {
-      transition: var(--copy-transition);
+      transition: var(--copy-tansition);
     }
   }
 }

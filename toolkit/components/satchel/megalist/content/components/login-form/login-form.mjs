@@ -235,7 +235,7 @@ export class LoginForm extends MozLitElement {
     const heading =
       this.type !== "edit"
         ? "contextual-manager-passwords-create-label"
-        : "contextual-manager-passwords-update-label";
+        : "contextual-manager-passwords-edit-label";
 
     return html`<link
         rel="stylesheet"
