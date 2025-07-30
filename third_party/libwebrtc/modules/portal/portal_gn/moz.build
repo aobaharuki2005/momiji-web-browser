@@ -53,6 +53,7 @@ FINAL_LIBRARY = "xul"
 
 
 LOCAL_INCLUDES += [
+    "!/dist/include/libwebrtc_overrides",
     "!/ipc/ipdl/_ipdlheaders",
     "!/third_party/libwebrtc/gen",
     "/ipc/chromium/src",
