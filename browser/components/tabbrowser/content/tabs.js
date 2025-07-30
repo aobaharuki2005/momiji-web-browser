@@ -2065,8 +2065,9 @@
 
     _handleTabSelect(aInstant) {
       let selectedTab = this.selectedItem;
-      if (this.overflowing) {
-        this.arrowScrollbox.ensureElementIsVisible(selectedTab, aInstant);
+      let arrowScrollbox = selectedTab.parentElement;
+      if (arrowScrollbox.overflowing) {
+        arrowScrollbox.ensureElementIsVisible(selectedTab, aInstant);
       }
 
       selectedTab._notselectedsinceload = false;
