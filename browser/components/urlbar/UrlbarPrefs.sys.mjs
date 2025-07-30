@@ -470,6 +470,9 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
   // Whether results will include the user's history.
   ["suggest.history", true],
 
+  // Whether results will include Market suggestions.
+  ["suggest.market", true],
+
   // If `browser.urlbar.mdn.featureGate` is true, this controls whether
   // mdn suggestions are turned on.
   ["suggest.mdn", true],
@@ -499,9 +502,6 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
 
   // Whether results will include search suggestions.
   ["suggest.searches", false],
-
-  // Whether results will include stocks suggestions.
-  ["suggest.stocks", true],
 
   // Whether results will include top sites and the view will open on focus.
   ["suggest.topsites", true],

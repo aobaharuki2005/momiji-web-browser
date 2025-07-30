@@ -12,15 +12,15 @@ const OFFLINE_REMOTE_SETTINGS = [
           result: {
             isBestMatch: true,
             suggestedIndex: 0,
-            realtimeType: "stocks",
+            realtimeType: "market",
             payload: {
               type: "realtime_opt_in",
               icon: "chrome://global/skin/icons/defaultFavicon.svg",
               titleL10n: {
-                id: "firefox-suggest-stocks-opt-in-title",
+                id: "firefox-suggest-market-opt-in-title",
               },
               descriptionL10n: {
-                id: "firefox-suggest-stocks-opt-in-description",
+                id: "firefox-suggest-market-opt-in-description",
               },
             },
           },
@@ -37,10 +37,10 @@ const OFFLINE_REMOTE_SETTINGS = [
               type: "realtime_opt_in",
               icon: "chrome://global/skin/icons/defaultFavicon.svg",
               titleL10n: {
-                id: "firefox-suggest-stocks-opt-in-title",
+                id: "firefox-suggest-market-opt-in-title",
               },
               descriptionL10n: {
-                id: "firefox-suggest-stocks-opt-in-description",
+                id: "firefox-suggest-market-opt-in-description",
               },
             },
           },
@@ -91,7 +91,7 @@ add_task(async function opt_in() {
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
 
   let { element, result } = await openRealtimeSuggestion({ input: "stock" });
-  Assert.equal(result.realtimeType, "stocks");
+  Assert.equal(result.realtimeType, "market");
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TIP);
 
   info(
@@ -107,7 +107,7 @@ add_task(async function opt_in() {
   Assert.ok(UrlbarPrefs.get("quicksuggest.dataCollection.enabled"));
   Assert.equal(merinoResult.payload.source, "merino");
   Assert.equal(merinoResult.payload.provider, "polygon");
-  Assert.equal(merinoResult.payload.dynamicType, "stocks");
+  Assert.equal(merinoResult.payload.dynamicType, "market");
   info("Allow button works");
 
   await UrlbarTestUtils.promisePopupClose(window);
@@ -135,7 +135,7 @@ add_task(async function dismiss() {
   EventUtils.synthesizeMouseAtCenter(dismissButton, {});
   await TestUtils.waitForCondition(
     () =>
-      UrlbarPrefs.get("quicksuggest.realtimeOptIn.notNowTypes").has("stocks"),
+      UrlbarPrefs.get("quicksuggest.realtimeOptIn.notNowTypes").has("market"),
     "Wait until quicksuggest.realtimeOptIn.notNowTypes pref changes"
   );
   Assert.notEqual(
@@ -184,7 +184,7 @@ add_task(async function dismiss() {
   EventUtils.synthesizeMouseAtCenter(dismissButton, {});
   await TestUtils.waitForCondition(
     () =>
-      UrlbarPrefs.get("quicksuggest.realtimeOptIn.dismissTypes").has("stocks"),
+      UrlbarPrefs.get("quicksuggest.realtimeOptIn.dismissTypes").has("market"),
     "Wait until quicksuggest.realtimeOptIn.dismissTypes pref changes"
   );
   Assert.equal(
@@ -194,7 +194,7 @@ add_task(async function dismiss() {
   );
   Assert.ok(
     UrlbarPrefs.get("quicksuggest.realtimeOptIn.notNowTypes").size == 1 &&
-      UrlbarPrefs.get("quicksuggest.realtimeOptIn.notNowTypes").has("stocks"),
+      UrlbarPrefs.get("quicksuggest.realtimeOptIn.notNowTypes").has("market"),
     "notNowTypes does not change"
   );
   info("Dismiss button works");
@@ -224,17 +224,17 @@ add_task(async function dismiss_with_another_type() {
   await assertOptInVisibility({ input: "stock", expectedVisibility: true });
   await assertOptInVisibility({ input: "sports", expectedVisibility: true });
 
-  info("Simulate user clicks 'Not now' for stocks suggestion");
-  UrlbarPrefs.set("quicksuggest.realtimeOptIn.notNowTypes", "stocks");
-  let { element: stockElement } = await openRealtimeSuggestion({
+  info("Simulate user clicks 'Not now' for Market suggestion");
+  UrlbarPrefs.set("quicksuggest.realtimeOptIn.notNowTypes", "market");
+  let { element: marketElement } = await openRealtimeSuggestion({
     input: "stock",
   });
-  let stocksDismissButton = stockElement.row.querySelector(
+  let marketDismissButton = marketElement.row.querySelector(
     ".urlbarView-button-1"
   );
-  Assert.equal(stocksDismissButton.dataset.command, "dismiss");
+  Assert.equal(marketDismissButton.dataset.command, "dismiss");
   Assert.equal(
-    stocksDismissButton.dataset.l10nId,
+    marketDismissButton.dataset.l10nId,
     "firefox-suggest-realtime-opt-in-dismiss"
   );
   await UrlbarTestUtils.promisePopupClose(window);
@@ -251,8 +251,8 @@ add_task(async function dismiss_with_another_type() {
   );
   await UrlbarTestUtils.promisePopupClose(window);
 
-  info("Simulate user clicks 'Dismiss' for stocks suggestion");
-  UrlbarPrefs.set("quicksuggest.realtimeOptIn.dismissTypes", "stocks");
+  info("Simulate user clicks 'Dismiss' for Market suggestion");
+  UrlbarPrefs.set("quicksuggest.realtimeOptIn.dismissTypes", "market");
   await assertOptInVisibility({ input: "stock", expectedVisibility: false });
   await assertOptInVisibility({ input: "sports", expectedVisibility: true });
 

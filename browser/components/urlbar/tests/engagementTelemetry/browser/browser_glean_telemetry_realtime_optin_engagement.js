@@ -18,15 +18,15 @@ add_setup(async function () {
               result: {
                 isBestMatch: true,
                 suggestedIndex: 0,
-                realtimeType: "stocks",
+                realtimeType: "market",
                 payload: {
                   type: "realtime_opt_in",
                   icon: "chrome://global/skin/icons/defaultFavicon.svg",
                   titleL10n: {
-                    id: "firefox-suggest-stocks-opt-in-title",
+                    id: "firefox-suggest-market-opt-in-title",
                   },
                   descriptionL10n: {
-                    id: "firefox-suggest-stocks-opt-in-description",
+                    id: "firefox-suggest-market-opt-in-description",
                   },
                 },
               },

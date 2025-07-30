@@ -75,7 +75,7 @@ add_task(async function ui_single() {
   const cleanup = await QuickSuggestTestUtils.ensureQuickSuggestInit({
     merinoSuggestions: TEST_MERINO_SINGLE,
     prefs: [
-      ["suggest.stocks", true],
+      ["suggest.market", true],
       ["suggest.quicksuggest.sponsored", true],
     ],
   });
@@ -85,7 +85,8 @@ add_task(async function ui_single() {
     value: "only match the Merino suggestion",
   });
   let { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-  let items = element.row.querySelectorAll(".urlbarView-dynamic-stocks-item");
+
+  let items = element.row.querySelectorAll(".urlbarView-dynamic-market-item");
   Assert.equal(items.length, 1);
 
   let target = TEST_MERINO_SINGLE[0].custom_details.polygon.values[0];
@@ -104,7 +105,7 @@ add_task(async function ui_multi() {
   const cleanup = await QuickSuggestTestUtils.ensureQuickSuggestInit({
     merinoSuggestions: TEST_MERINO_MULTI,
     prefs: [
-      ["suggest.stocks", true],
+      ["suggest.market", true],
       ["suggest.quicksuggest.sponsored", true],
     ],
   });
@@ -115,7 +116,7 @@ add_task(async function ui_multi() {
   });
   let { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
 
-  let items = element.row.querySelectorAll(".urlbarView-dynamic-stocks-item");
+  let items = element.row.querySelectorAll(".urlbarView-dynamic-market-item");
   Assert.equal(items.length, 3);
 
   for (let i = 0; i < items.length; i++) {
@@ -137,7 +138,7 @@ add_task(async function activate() {
   const cleanup = await QuickSuggestTestUtils.ensureQuickSuggestInit({
     merinoSuggestions: TEST_MERINO_MULTI,
     prefs: [
-      ["suggest.stocks", true],
+      ["suggest.market", true],
       ["suggest.quicksuggest.sponsored", true],
     ],
   });
@@ -149,7 +150,7 @@ add_task(async function activate() {
       value: "only match the Merino suggestion",
     });
     let { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-    let items = element.row.querySelectorAll(".urlbarView-dynamic-stocks-item");
+    let items = element.row.querySelectorAll(".urlbarView-dynamic-market-item");
 
     info("Activate the button");
     let target = TEST_MERINO_MULTI[0].custom_details.polygon.values[i];
@@ -174,14 +175,14 @@ add_task(async function activate() {
 });
 
 function assertUI(item, expected) {
-  let image = item.querySelector(".urlbarView-stocks-image");
+  let image = item.querySelector(".urlbarView-market-image");
   Assert.equal(image.getAttribute("src"), expected.image, "Image is correct");
 
-  let name = item.querySelector(".urlbarView-stocks-name");
+  let name = item.querySelector(".urlbarView-market-name");
   Assert.equal(name.textContent, expected.name, "Name is correct");
 
   let todaysChangePerc = item.querySelector(
-    ".urlbarView-stocks-todays-change-perc"
+    ".urlbarView-market-todays-change-perc"
   );
   Assert.equal(
     todaysChangePerc.textContent,
@@ -192,45 +193,45 @@ function assertUI(item, expected) {
   if (expectedTodaysChangePercNumber < 0) {
     Assert.ok(
       todaysChangePerc.classList.contains(
-        "urlbarView-stocks-todays-change-perc-minus"
+        "urlbarView-market-todays-change-perc-minus"
       ),
       "Class that indicates minus is contained"
     );
     Assert.ok(
       !todaysChangePerc.classList.contains(
-        "urlbarView-stocks-todays-change-perc-plus"
+        "urlbarView-market-todays-change-perc-plus"
       ),
       "Class that indicates plus is not contained"
     );
   } else if (expectedTodaysChangePercNumber > 0) {
     Assert.ok(
       !todaysChangePerc.classList.contains(
-        "urlbarView-stocks-todays-change-perc-minus"
+        "urlbarView-market-todays-change-perc-minus"
       ),
       "Class that indicates minus is not contained"
     );
     Assert.ok(
       todaysChangePerc.classList.contains(
-        "urlbarView-stocks-todays-change-perc-plus"
+        "urlbarView-market-todays-change-perc-plus"
       ),
       "Class that indicates plus is contained"
     );
   } else {
     Assert.ok(
       !todaysChangePerc.classList.contains(
-        "urlbarView-stocks-todays-change-perc-minus"
+        "urlbarView-market-todays-change-perc-minus"
       ),
       "Class that indicates minus is not contained"
     );
     Assert.ok(
       !todaysChangePerc.classList.contains(
-        "urlbarView-stocks-todays-change-perc-plus"
+        "urlbarView-market-todays-change-perc-plus"
       ),
       "Class that indicates plus is not contained"
     );
   }
 
-  let lastPrice = item.querySelector(".urlbarView-stocks-last-price");
+  let lastPrice = item.querySelector(".urlbarView-market-last-price");
   Assert.equal(
     lastPrice.textContent,
     expected.lastPrice,

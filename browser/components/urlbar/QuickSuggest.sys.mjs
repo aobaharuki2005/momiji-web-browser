@@ -153,9 +153,9 @@ const FEATURES = {
   DynamicSuggestions:
     "resource:///modules/urlbar/private/DynamicSuggestions.sys.mjs",
   ImpressionCaps: "resource:///modules/urlbar/private/ImpressionCaps.sys.mjs",
+  MarketSuggestions:
+    "resource:///modules/urlbar/private/MarketSuggestions.sys.mjs",
   MDNSuggestions: "resource:///modules/urlbar/private/MDNSuggestions.sys.mjs",
-  StocksSuggestions:
-    "resource:///modules/urlbar/private/StocksSuggestions.sys.mjs",
   SuggestBackendMerino:
     "resource:///modules/urlbar/private/SuggestBackendMerino.sys.mjs",
   SuggestBackendMl:

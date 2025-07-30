@@ -21,6 +21,8 @@ firefox-appdir = "browser"
 ["test_quicksuggest_impressionCaps.js"]
 skip-if = ["true"] # Bug 1880214
 
+["test_quicksuggest_market.js"]
+
 ["test_quicksuggest_mdn.js"]
 
 ["test_quicksuggest_merino.js"]
@@ -40,8 +42,6 @@ skip-if = ["true"] # Bug 1880214
 ["test_quicksuggest_remoteSettingsFilter.js"]
 
 ["test_quicksuggest_scoreMap.js"]
-
-["test_quicksuggest_stocks.js"]
 
 ["test_quicksuggest_topPicks.js"]
 

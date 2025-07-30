@@ -40,9 +40,9 @@ tags = "search-telemetry"
 ["browser_quicksuggest_ping_merinoAndNullValues.js"]
 tags = "search-telemetry"
 
-["browser_quicksuggest_realtime_optin.js"]
+["browser_quicksuggest_realtime_market.js"]
 
-["browser_quicksuggest_realtime_stocks.js"]
+["browser_quicksuggest_realtime_optin.js"]
 
 ["browser_quicksuggest_yelp.js"]
 

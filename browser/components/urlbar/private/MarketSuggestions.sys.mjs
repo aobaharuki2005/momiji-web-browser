@@ -12,15 +12,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 /**
- * A feature that supports Stocks suggestions.
+ * A feature that supports Market suggestions like stocks, indexes, and funds.
  */
-export class StocksSuggestions extends SuggestProvider {
+export class MarketSuggestions extends SuggestProvider {
   get enablingPreferences() {
-    return ["suggest.stocks", "suggest.quicksuggest.sponsored"];
+    return ["suggest.market", "suggest.quicksuggest.sponsored"];
   }
 
   get primaryUserControlledPreferences() {
-    return ["suggest.stocks"];
+    return ["suggest.market"];
   }
 
   get merinoProvider() {
@@ -28,23 +28,23 @@ export class StocksSuggestions extends SuggestProvider {
   }
 
   getSuggestionTelemetryType() {
-    return "stocks";
+    return "market";
   }
 
   getViewTemplate(result) {
     return {
       children: result.payload.polygon.values.map((v, i) => {
         let todaysChangePercClassList = [
-          "urlbarView-stocks-todays-change-perc",
+          "urlbarView-market-todays-change-perc",
         ];
         let todaysChangePerc = Number(v.todays_change_perc);
         if (todaysChangePerc < 0) {
           todaysChangePercClassList.push(
-            "urlbarView-stocks-todays-change-perc-minus"
+            "urlbarView-market-todays-change-perc-minus"
           );
         } else if (todaysChangePerc > 0) {
           todaysChangePercClassList.push(
-            "urlbarView-stocks-todays-change-perc-plus"
+            "urlbarView-market-todays-change-perc-plus"
           );
         }
 
@@ -60,16 +60,16 @@ export class StocksSuggestions extends SuggestProvider {
             {
               name: `image_${i}`,
               tag: "img",
-              classList: ["urlbarView-stocks-image"],
+              classList: ["urlbarView-market-image"],
             },
             {
               tag: "span",
-              classList: ["urlbarView-stocks-description"],
+              classList: ["urlbarView-market-description"],
               children: [
                 {
                   name: `name_${i}`,
                   tag: "span",
-                  classList: ["urlbarView-stocks-name"],
+                  classList: ["urlbarView-market-name"],
                 },
                 {
                   name: `todays_change_perc_${i}`,
@@ -79,7 +79,7 @@ export class StocksSuggestions extends SuggestProvider {
                 {
                   name: `last_price_${i}`,
                   tag: "span",
-                  classList: ["urlbarView-stocks-last-price"],
+                  classList: ["urlbarView-market-last-price"],
                 },
               ],
             },
@@ -121,7 +121,7 @@ export class StocksSuggestions extends SuggestProvider {
       lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
       {
         ...suggestion.custom_details,
-        dynamicType: "stocks",
+        dynamicType: "market",
       }
     );
   }

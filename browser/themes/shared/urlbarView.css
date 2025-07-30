@@ -1219,23 +1219,23 @@
   }
 }
 
-/* Stocks suggestions */
+/* Market suggestions */
 
-.urlbarView-dynamic-stocks-item {
+.urlbarView-dynamic-market-item {
   display: flex;
   align-items: center;
   padding-inline-end: var(--space-large);
 
-  --stocks-todays-change-perc-plus-color: light-dark(var(--color-green-60), var(--color-green-20));
-  --stocks-todays-change-perc-minus-color: light-dark(var(--color-red-70), var(--color-red-40));
+  --market-todays-change-perc-plus-color: light-dark(var(--color-green-60), var(--color-green-20));
+  --market-todays-change-perc-minus-color: light-dark(var(--color-red-70), var(--color-red-40));
 
   &:hover,
   &[selected] {
-    --stocks-todays-change-perc-plus-color: light-dark(var(--color-green-20), var(--color-green-60));
-    --stocks-todays-change-perc-minus-color: light-dark(var(--color-red-40), var(--color-red-70));
+    --market-todays-change-perc-plus-color: light-dark(var(--color-green-20), var(--color-green-60));
+    --market-todays-change-perc-minus-color: light-dark(var(--color-red-40), var(--color-red-70));
   }
 
-  > .urlbarView-stocks-image {
+  > .urlbarView-market-image {
     /* The image size for realtime suggestion is larger than others by design */
     width: 52px;
     height: 52px;
@@ -1243,30 +1243,30 @@
     margin-inline-end: var(--space-small);
   }
 
-  > .urlbarView-stocks-description {
+  > .urlbarView-market-description {
     display: flex;
     flex-direction: column;
     text-align: start;
     grid-row-gap: var(--space-xxsmall);
 
-    > .urlbarView-stocks-name {
+    > .urlbarView-market-name {
       font-weight: var(--font-weight-bold);
     }
 
-    > .urlbarView-stocks-todays-change-perc {
+    > .urlbarView-market-todays-change-perc {
       font-weight: var(--font-weight-bold);
       font-size: var(--urlbarView-small-font-size);
     }
 
-    > .urlbarView-stocks-todays-change-perc-plus {
-      color: var(--stocks-todays-change-perc-plus-color);
+    > .urlbarView-market-todays-change-perc-plus {
+      color: var(--market-todays-change-perc-plus-color);
     }
 
-    > .urlbarView-stocks-todays-change-perc-minus {
-      color: var(--stocks-todays-change-perc-minus-color);
+    > .urlbarView-market-todays-change-perc-minus {
+      color: var(--market-todays-change-perc-minus-color);
     }
 
-    > .urlbarView-stocks-last-price {
+    > .urlbarView-market-last-price {
       font-size: var(--urlbarView-small-font-size);
     }
   }

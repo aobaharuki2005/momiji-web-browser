@@ -27,7 +27,7 @@ add_setup(async function () {
       },
     ],
     prefs: [
-      ["suggest.stocks", true],
+      ["suggest.market", true],
       ["suggest.quicksuggest.sponsored", true],
     ],
   });
@@ -37,7 +37,7 @@ add_task(async function click() {
   await doTest(async () => {
     await openPopup("stock");
     let { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-    let target = element.row.querySelector(".urlbarView-dynamic-stocks-item");
+    let target = element.row.querySelector(".urlbarView-dynamic-market-item");
     let onLocationChange = BrowserTestUtils.waitForLocationChange(gBrowser);
     EventUtils.synthesizeMouseAtCenter(target, {});
     await onLocationChange;
@@ -45,10 +45,10 @@ add_task(async function click() {
     assertEngagementTelemetry([
       {
         engagement_type: "click",
-        selected_result: "merino_stocks",
+        selected_result: "merino_market",
         selected_position: 2,
         provider: "UrlbarProviderQuickSuggest",
-        results: "search_engine,merino_stocks",
+        results: "search_engine,merino_market",
       },
     ]);
     await PlacesUtils.history.clear();
@@ -66,10 +66,10 @@ add_task(async function enter() {
     assertEngagementTelemetry([
       {
         engagement_type: "enter",
-        selected_result: "merino_stocks",
+        selected_result: "merino_market",
         selected_position: 2,
         provider: "UrlbarProviderQuickSuggest",
-        results: "search_engine,merino_stocks",
+        results: "search_engine,merino_market",
       },
     ]);
     await PlacesUtils.history.clear();
