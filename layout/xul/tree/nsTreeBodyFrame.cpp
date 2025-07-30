@@ -3694,20 +3694,14 @@ void nsTreeBodyFrame::ScrollByLine(nsScrollbarFrame* aScrollbar,
 
 void nsTreeBodyFrame::ScrollByUnit(
     nsScrollbarFrame* aScrollbar, ScrollMode aMode, int32_t aDirection,
-    ScrollUnit aUnit, ScrollSnapFlags aSnapFlags /* = Disabled */) {
-  MOZ_ASSERT_UNREACHABLE("Can't get here, we pass false to MoveToNewPosition");
+    ScrollUnit aUnit, ScrollSnapFlags aSnapFlags) {
+  MOZ_ASSERT_UNREACHABLE("Can't get here, we don't call MoveToNewPosition");
 }
 
 void nsTreeBodyFrame::RepeatButtonScroll(nsScrollbarFrame* aScrollbar) {
   MOZ_ASSERT(!aScrollbar->IsHorizontal());
   ScrollParts parts = GetScrollParts();
-  int32_t increment = aScrollbar->GetIncrement();
-  int32_t direction = 0;
-  if (increment < 0) {
-    direction = -1;
-  } else if (increment > 0) {
-    direction = 1;
-  }
+  int32_t direction = aScrollbar->GetButtonScrollDirection();
   AutoWeakFrame weakFrame(this);
   ScrollToRowInternal(parts, mTopRowIndex + direction);
 

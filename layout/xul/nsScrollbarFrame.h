@@ -84,28 +84,14 @@ class nsScrollbarFrame final : public nsContainerFrame,
   void SetScrollbarMediatorContent(nsIContent* aMediator);
   nsIScrollbarMediator* GetScrollbarMediator();
   void WillBecomeActive();
-  /**
-   * The following three methods set the value of mIncrement when a
-   * scrollbar button is pressed.
-   */
-  void SetIncrementToLine(int32_t aDirection);
-  void SetIncrementToPage(int32_t aDirection);
-  void SetIncrementToWhole(int32_t aDirection);
 
-  /**
-   * If aImplementsScrollByUnit is Yes then this uses mSmoothScroll,
-   * mScrollUnit, and mDirection and calls ScrollByUnit on the
-   * nsIScrollbarMediator. The return value is 0. This is better because it is
-   * more modern and the scroll frame can perform the scroll via apz for
-   * example. The old way below is still supported for xul trees. If
-   * aImplementsScrollByUnit is No this adds mIncrement to the current
-   * position and updates the curpos attribute obeying mSmoothScroll.
-   * @returns The new position after clamping, in CSS Pixels
-   * @note This method might destroy the frame, pres shell, and other objects.
-   */
-  enum class ImplementsScrollByUnit { Yes, No };
-  int32_t MoveToNewPosition(ImplementsScrollByUnit aImplementsScrollByUnit);
-  int32_t GetIncrement() const { return mIncrement; }
+  void MoveToNewPosition();
+  int32_t GetButtonScrollDirection() const { return mButtonScrollDirection; }
+  void SetButtonScrollDirectionAndUnit(int32_t aDirection,
+                                       mozilla::ScrollUnit aUnit) {
+    mButtonScrollDirection = aDirection;
+    mButtonScrollUnit = aUnit;
+  }
 
   // nsIAnonymousContentCreator
   nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
@@ -123,14 +109,10 @@ class nsScrollbarFrame final : public nsContainerFrame,
  protected:
   void InvalidateForHoverChange(bool aIsNowHovered);
 
-  // Direction and multiple to scroll
-  int32_t mDirection = 0;
-  // Amount to scroll, in CSSPixels
-  // Ignored in favour of mScrollUnit/mDirection for regular scroll frames.
-  // Trees use this though.
-  int32_t mIncrement = 0;
-  mozilla::ScrollUnit mScrollUnit = mozilla::ScrollUnit::DEVICE_PIXELS;
-  bool mSmoothScroll = false;
+  // Direction and unit that our button scrolled us to.
+  // TODO(emilio): Find a better place to store this?
+  int32_t mButtonScrollDirection = 0;
+  mozilla::ScrollUnit mButtonScrollUnit = mozilla::ScrollUnit::DEVICE_PIXELS;
   // On macOS, overlay scrollbar hover state should be sticky (remain hovered
   // while we've been hovered at least once).
   bool mHasBeenHovered = false;

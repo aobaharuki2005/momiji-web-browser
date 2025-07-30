@@ -320,111 +320,16 @@ nscoord nsScrollbarFrame::ScrollbarTrackSize() const {
       pc->AppUnitsPerDevPixel());
 }
 
-void nsScrollbarFrame::SetIncrementToLine(int32_t aDirection) {
-  mSmoothScroll = true;
-  mDirection = aDirection;
-  mScrollUnit = ScrollUnit::LINES;
-
-  // get the scrollbar's content node
-  nsIContent* content = GetContent();
-  mIncrement = aDirection * nsSliderFrame::GetIncrement(content);
-}
-
-void nsScrollbarFrame::SetIncrementToPage(int32_t aDirection) {
-  mSmoothScroll = true;
-  mDirection = aDirection;
-  mScrollUnit = ScrollUnit::PAGES;
-
-  // get the scrollbar's content node
-  nsIContent* content = GetContent();
-  mIncrement = aDirection * nsSliderFrame::GetPageIncrement(content);
-}
-
-void nsScrollbarFrame::SetIncrementToWhole(int32_t aDirection) {
-  // Don't repeat or use smooth scrolling if scrolling to beginning or end
-  // of a page.
-  mSmoothScroll = false;
-  mDirection = aDirection;
-  mScrollUnit = ScrollUnit::WHOLE;
-
-  // get the scrollbar's content node
-  nsIContent* content = GetContent();
-  if (aDirection == -1) {
-    mIncrement = -nsSliderFrame::GetCurrentPosition(content);
-  } else {
-    mIncrement = nsSliderFrame::GetMaxPosition(content) -
-                 nsSliderFrame::GetCurrentPosition(content);
+void nsScrollbarFrame::MoveToNewPosition() {
+  nsIScrollbarMediator* m = GetScrollbarMediator();
+  if (!m) {
+    return;
   }
-}
-
-int32_t nsScrollbarFrame::MoveToNewPosition(
-    ImplementsScrollByUnit aImplementsScrollByUnit) {
-  if (aImplementsScrollByUnit == ImplementsScrollByUnit::Yes &&
-      StaticPrefs::apz_scrollbarbuttonrepeat_enabled()) {
-    nsIScrollbarMediator* m = GetScrollbarMediator();
-    MOZ_ASSERT(m);
-    // aImplementsScrollByUnit being Yes indicates the caller doesn't care
-    // about the return value.
-    // Note that this `MoveToNewPosition` is used for scrolling triggered by
-    // repeating scrollbar button press, so we'd use an intended-direction
-    // scroll snap flag.
-    m->ScrollByUnit(
-        this, mSmoothScroll ? ScrollMode::Smooth : ScrollMode::Instant,
-        mDirection, mScrollUnit, ScrollSnapFlags::IntendedDirection);
-    return 0;
-  }
-
-  // get the scrollbar's content node
-  RefPtr<Element> content = GetContent()->AsElement();
-
-  // get the current pos
-  int32_t curpos = nsSliderFrame::GetCurrentPosition(content);
-
-  // get the max pos
-  int32_t maxpos = nsSliderFrame::GetMaxPosition(content);
-
-  // increment the given amount
-  if (mIncrement) {
-    curpos += mIncrement;
-  }
-
-  // make sure the current position is between the current and max positions
-  if (curpos < 0) {
-    curpos = 0;
-  } else if (curpos > maxpos) {
-    curpos = maxpos;
-  }
-
-  // set the current position of the slider.
-  nsAutoString curposStr;
-  curposStr.AppendInt(curpos);
-
-  AutoWeakFrame weakFrame(this);
-  if (mSmoothScroll) {
-    content->SetAttr(kNameSpaceID_None, nsGkAtoms::smooth, u"true"_ns, false);
-  }
-  content->SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, curposStr, false);
-  // notify the nsScrollbarFrame of the change
-  AttributeChanged(kNameSpaceID_None, nsGkAtoms::curpos,
-                   dom::MutationEvent_Binding::MODIFICATION);
-  if (!weakFrame.IsAlive()) {
-    return curpos;
-  }
-  // notify all nsSliderFrames of the change
-  for (const auto& childList : ChildLists()) {
-    for (nsIFrame* f : childList.mList) {
-      nsSliderFrame* sliderFrame = do_QueryFrame(f);
-      if (sliderFrame) {
-        sliderFrame->AttributeChanged(kNameSpaceID_None, nsGkAtoms::curpos,
-                                      dom::MutationEvent_Binding::MODIFICATION);
-        if (!weakFrame.IsAlive()) {
-          return curpos;
-        }
-      }
-    }
-  }
-  content->UnsetAttr(kNameSpaceID_None, nsGkAtoms::smooth, false);
-  return curpos;
+  // Note that this `MoveToNewPosition` is used for scrolling triggered by
+  // repeating scrollbar button press, so we'd use an intended-direction
+  // scroll snap flag.
+  m->ScrollByUnit(this, ScrollMode::Smooth, mButtonScrollDirection,
+                  mButtonScrollUnit, ScrollSnapFlags::IntendedDirection);
 }
 
 static already_AddRefed<Element> MakeScrollbarButton(

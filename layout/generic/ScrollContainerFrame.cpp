@@ -1827,7 +1827,7 @@ void ScrollContainerFrame::ScrollByLine(nsScrollbarFrame* aScrollbar,
 }
 
 void ScrollContainerFrame::RepeatButtonScroll(nsScrollbarFrame* aScrollbar) {
-  aScrollbar->MoveToNewPosition(nsScrollbarFrame::ImplementsScrollByUnit::Yes);
+  aScrollbar->MoveToNewPosition();
 }
 
 void ScrollContainerFrame::ThumbMoved(nsScrollbarFrame* aScrollbar,

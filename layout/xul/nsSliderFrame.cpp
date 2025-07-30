@@ -204,9 +204,10 @@ nsresult nsSliderFrame::AttributeChanged(int32_t aNameSpaceID,
       }
 
       // set the new position and notify observers
-      nsIScrollbarMediator* mediator = scrollbarBox->GetScrollbarMediator();
-      scrollbarBox->SetIncrementToWhole(direction);
-      if (mediator) {
+      if (nsIScrollbarMediator* mediator =
+              scrollbarBox->GetScrollbarMediator()) {
+        scrollbarBox->SetButtonScrollDirectionAndUnit(direction,
+                                                      ScrollUnit::WHOLE);
         mediator->ScrollByWhole(scrollbarBox, direction,
                                 ScrollSnapFlags::IntendedEndPosition);
       }
@@ -832,30 +833,6 @@ nsScrollbarFrame* nsSliderFrame::Scrollbar() {
   MOZ_DIAGNOSTIC_ASSERT(
       static_cast<nsScrollbarFrame*>(do_QueryFrame(GetParent())));
   return static_cast<nsScrollbarFrame*>(GetParent());
-}
-
-void nsSliderFrame::PageUpDown(nscoord change) {
-  // on a page up or down get our page increment. We get this by getting the
-  // scrollbar we are in and asking it for the current position and the page
-  // increment. If we are not in a scrollbar we will get the values from our own
-  // node.
-  nsIFrame* scrollbarBox = Scrollbar();
-  nsCOMPtr<nsIContent> scrollbar = scrollbarBox->GetContent();
-
-  nscoord pageIncrement = GetPageIncrement(scrollbar);
-  int32_t curpos = GetCurrentPosition(scrollbar);
-  int32_t minpos = GetMinPosition(scrollbar);
-  int32_t maxpos = GetMaxPosition(scrollbar);
-
-  // get the new position and make sure it is in bounds
-  int32_t newpos = curpos + change * pageIncrement;
-  if (newpos < minpos || maxpos < minpos) {
-    newpos = minpos;
-  } else if (newpos > maxpos) {
-    newpos = maxpos;
-  }
-
-  SetCurrentPositionInternal(scrollbar, newpos, true);
 }
 
 // called when the current position changed and we need to update the thumb's
@@ -1557,12 +1534,10 @@ void nsSliderFrame::PageScroll(bool aClickAndHold) {
     return;
   }
 
-  sb->SetIncrementToPage(changeDirection);
   if (nsIScrollbarMediator* m = sb->GetScrollbarMediator()) {
+    sb->SetButtonScrollDirectionAndUnit(changeDirection, ScrollUnit::PAGES);
     m->ScrollByPage(sb, changeDirection, scrollSnapFlags);
-    return;
   }
-  PageUpDown(changeDirection);
 }
 
 void nsSliderFrame::SetupDrag(WidgetGUIEvent* aEvent, nsIFrame* aThumbFrame,

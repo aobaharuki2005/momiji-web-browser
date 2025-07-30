@@ -141,8 +141,6 @@ skip-if = [
 
 ["test_bug792324.xhtml"]
 
-["test_bug1048178.xhtml"]
-
 ["test_button.xhtml"]
 
 ["test_closemenu_attribute.xhtml"]
