@@ -577,7 +577,7 @@ ml-perf-smart-tab-cluster:
         symbol: perftest(ml-perf-stg-cluster)
         tier: 2
     worker:
-        max-run-time: 14400
+        max-run-time: 900
     attributes:
         batch: false
         cron: false

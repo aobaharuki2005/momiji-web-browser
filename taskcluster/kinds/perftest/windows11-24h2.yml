@@ -522,7 +522,7 @@ ml-perf-smart-tab-cluster:
             - mozilla-smart-tab-emb
     description: Run ML Smart Tab Clustering
     worker:
-        max-run-time: 14400
+        max-run-time: 900
     treeherder:
         symbol: perftest(ml-perf-stg-cluster)
         tier: 2

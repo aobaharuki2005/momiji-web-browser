@@ -33,7 +33,7 @@ const perfMetadata = {
   },
 };
 
-requestLongerTimeout(120);
+requestLongerTimeout(45);
 const CUSTOM_EMBEDDER_OPTIONS = {
   taskName: "feature-extraction",
   featureId: "simple-text-embedder",
