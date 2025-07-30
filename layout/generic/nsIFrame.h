@@ -2271,7 +2271,6 @@ class nsIFrame : public nsQueryFrame {
    * Search for selectable content at point and attempt to select
    * based on the start and end selection behaviours.
    *
-   * @param aPresContext Presentation context
    * @param aPoint Point at which selection will occur. Coordinates
    * should be relative to this frame.
    * @param aBeginAmountType, aEndAmountType Selection behavior, see
@@ -2280,8 +2279,7 @@ class nsIFrame : public nsQueryFrame {
    * @return success or failure at finding suitable content to select.
    */
   MOZ_CAN_RUN_SCRIPT nsresult
-  SelectByTypeAtPoint(nsPresContext* aPresContext, const nsPoint& aPoint,
-                      nsSelectionAmount aBeginAmountType,
+  SelectByTypeAtPoint(const nsPoint& aPoint, nsSelectionAmount aBeginAmountType,
                       nsSelectionAmount aEndAmountType, uint32_t aSelectFlags);
 
   MOZ_CAN_RUN_SCRIPT nsresult PeekBackwardAndForwardForSelection(
@@ -2367,10 +2365,9 @@ class nsIFrame : public nsQueryFrame {
                                     int32_t* aContentOffset,
                                     mozilla::TableSelectionMode* aTarget);
 
-  /**
-   * @return see nsISelectionController.idl's `getDisplaySelection`.
-   */
-  int16_t DetermineDisplaySelection();
+  // Whether this frame should move the selection as a response to mouse moves /
+  // presses / drags.
+  bool ShouldHandleSelectionMovementEvents();
 
  public:
   virtual nsIContent* GetContentForEvent(const mozilla::WidgetEvent*) const;

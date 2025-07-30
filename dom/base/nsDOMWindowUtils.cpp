@@ -3839,9 +3839,8 @@ nsDOMWindowUtils::SelectAtPoint(float aX, float aY, uint32_t aSelectBehavior,
   nsPoint relPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(
       widget, pt, RelativeTo{targetFrame});
 
-  const RefPtr<nsPresContext> pinnedPresContext{GetPresContext()};
-  nsresult rv = targetFrame->SelectByTypeAtPoint(
-      pinnedPresContext, relPoint, amount, amount, nsIFrame::SELECT_ACCUMULATE);
+  nsresult rv = targetFrame->SelectByTypeAtPoint(relPoint, amount, amount,
+                                                 nsIFrame::SELECT_ACCUMULATE);
   *_retval = !NS_FAILED(rv);
   return NS_OK;
 }

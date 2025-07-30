@@ -2357,23 +2357,26 @@ static nsIFrame* GetActiveSelectionFrame(nsPresContext* aPresContext,
   return aFrame;
 }
 
-int16_t nsIFrame::DetermineDisplaySelection() {
-  int16_t selType = nsISelectionController::SELECTION_OFF;
-
+bool nsIFrame::ShouldHandleSelectionMovementEvents() {
   nsCOMPtr<nsISelectionController> selCon;
-  nsresult result =
-      GetSelectionController(PresContext(), getter_AddRefs(selCon));
-  if (NS_SUCCEEDED(result) && selCon) {
-    result = selCon->GetDisplaySelection(&selType);
-    if (NS_SUCCEEDED(result) &&
-        (selType != nsISelectionController::SELECTION_OFF)) {
-      // Check whether style allows selection.
-      if (!IsSelectable(nullptr)) {
-        selType = nsISelectionController::SELECTION_OFF;
-      }
-    }
+  GetSelectionController(PresContext(), getter_AddRefs(selCon));
+  if (!selCon) {
+    return false;
   }
-  return selType;
+  int16_t selType = nsISelectionController::SELECTION_OFF;
+  selCon->GetDisplaySelection(&selType);
+  if (selType == nsISelectionController::SELECTION_OFF) {
+    return false;
+  }
+  if (!IsSelectable(nullptr)) {
+    // Check whether style allows selection.
+    return false;
+  }
+  if (IsScrollbarFrame() || IsHTMLCanvasFrame()) {
+    // Scrollbars and canvas don't move selection with the mouse.
+    return false;
+  }
+  return true;
 }
 
 static Element* FindElementAncestorForMozSelection(nsIContent* aContent) {
@@ -4857,11 +4860,9 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
   const bool isPrimaryButtonDown =
       aMouseEvent->mButton == MouseButton::ePrimary;
 
-  // check whether style allows selection
-  // if not, don't tell selection the mouse event even occurred.
-  StyleUserSelect selectStyle;
-  // check for select: none
-  if (!IsSelectable(&selectStyle)) {
+  // Check whether this frame should handle selection events. If not, don't
+  // tell selection the mouse event even occurred.
+  if (!ShouldHandleSelectionMovementEvents()) {
     return NS_OK;
   }
 
@@ -4886,10 +4887,7 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
 
   // XXX This is screwy; it really should use the selection frame, not the
   // event frame
-  const nsFrameSelection* frameselection =
-      selectStyle == StyleUserSelect::Text ? GetConstFrameSelection()
-                                           : presShell->ConstFrameSelection();
-
+  const nsFrameSelection* frameselection = GetConstFrameSelection();
   if (!frameselection || frameselection->GetDisplaySelection() ==
                              nsISelectionController::SELECTION_OFF) {
     return NS_OK;  // nothing to do we cannot affect selection from here
@@ -5148,15 +5146,12 @@ bool nsIFrame::MovingCaretToEventPointAllowedIfSecondaryButtonEvent(
          contentAsTextControl;
 }
 
-nsresult nsIFrame::SelectByTypeAtPoint(nsPresContext* aPresContext,
-                                       const nsPoint& aPoint,
+nsresult nsIFrame::SelectByTypeAtPoint(const nsPoint& aPoint,
                                        nsSelectionAmount aBeginAmountType,
                                        nsSelectionAmount aEndAmountType,
                                        uint32_t aSelectFlags) {
-  NS_ENSURE_ARG_POINTER(aPresContext);
-
   // No point in selecting if selection is turned off
-  if (DetermineDisplaySelection() == nsISelectionController::SELECTION_OFF) {
+  if (!ShouldHandleSelectionMovementEvents()) {
     return NS_OK;
   }
 
@@ -5189,7 +5184,7 @@ nsIFrame::HandleMultiplePress(nsPresContext* aPresContext,
   NS_ENSURE_ARG_POINTER(aEventStatus);
 
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus ||
-      DetermineDisplaySelection() == nsISelectionController::SELECTION_OFF) {
+      !ShouldHandleSelectionMovementEvents()) {
     return NS_OK;
   }
 
@@ -5221,7 +5216,7 @@ nsIFrame::HandleMultiplePress(nsPresContext* aPresContext,
 
   nsPoint relPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(
       mouseEvent, RelativeTo{this});
-  return SelectByTypeAtPoint(aPresContext, relPoint, beginAmount, endAmount,
+  return SelectByTypeAtPoint(relPoint, beginAmount, endAmount,
                              (aControlHeld ? SELECT_ACCUMULATE : 0));
 }
 
@@ -5336,15 +5331,11 @@ NS_IMETHODIMP nsIFrame::HandleDrag(nsPresContext* aPresContext,
 
   nsIFrame* scrollbar =
       nsLayoutUtils::GetClosestFrameOfType(this, LayoutFrameType::Scrollbar);
-  if (!scrollbar) {
+  if (!scrollbar && !ShouldHandleSelectionMovementEvents()) {
     // XXX Do we really need to exclude non-selectable content here?
     // GetContentOffsetsFromPoint can handle it just fine, although some
     // other stuff might not like it.
-    // NOTE: DetermineDisplaySelection() returns SELECTION_OFF for
-    // non-selectable frames.
-    if (DetermineDisplaySelection() == nsISelectionController::SELECTION_OFF) {
-      return NS_OK;
-    }
+    return NS_OK;
   }
 
   frameselection->StopAutoScrollTimer();
@@ -5470,8 +5461,7 @@ NS_IMETHODIMP nsIFrame::HandleRelease(nsPresContext* aPresContext,
 
   nsCOMPtr<nsIContent> captureContent = PresShell::GetCapturingContent();
 
-  bool selectionOff =
-      (DetermineDisplaySelection() == nsISelectionController::SELECTION_OFF);
+  const bool selectionOff = !ShouldHandleSelectionMovementEvents();
 
   RefPtr<nsFrameSelection> frameselection;
   ContentOffsets offsets;
@@ -5505,8 +5495,8 @@ NS_IMETHODIMP nsIFrame::HandleRelease(nsPresContext* aPresContext,
   // trickle down here. Make sure that document's frame selection is notified.
   // Note, this may cause the current nsFrame object to be deleted, bug 336592.
   RefPtr<nsFrameSelection> frameSelection;
-  if (activeFrame != this && activeFrame->DetermineDisplaySelection() !=
-                                 nsISelectionController::SELECTION_OFF) {
+  if (activeFrame != this &&
+      activeFrame->ShouldHandleSelectionMovementEvents()) {
     frameSelection = activeFrame->GetFrameSelection();
   }
 
