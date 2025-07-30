@@ -11082,6 +11082,90 @@ bool CacheIRCompiler::emitMapSizeResult(ObjOperandId mapId) {
   return true;
 }
 
+bool CacheIRCompiler::emitWeakMapGetObjectResult(ObjOperandId weakMapId,
+                                                 ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register weakMap = allocator.useRegister(masm, weakMapId);
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  // The result Value will be stored on the stack.
+  masm.reserveStack(sizeof(Value));
+  masm.moveStackPtrTo(scratch1.get());
+
+  LiveRegisterSet volatileRegs = liveVolatileRegs();
+  volatileRegs.takeUnchecked(scratch1);
+  volatileRegs.takeUnchecked(scratch2);
+  masm.PushRegsInMask(volatileRegs);
+
+  using Fn = void (*)(WeakMapObject*, JSObject*, Value*);
+  masm.setupUnalignedABICall(scratch2);
+  masm.passABIArg(weakMap);
+  masm.passABIArg(obj);
+  masm.passABIArg(scratch1);
+  masm.callWithABI<Fn, js::WeakMapObject::getObject>();
+
+  masm.PopRegsInMask(volatileRegs);
+
+  masm.Pop(output.valueReg());
+  return true;
+}
+
+bool CacheIRCompiler::emitWeakMapHasObjectResult(ObjOperandId weakMapId,
+                                                 ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register weakMap = allocator.useRegister(masm, weakMapId);
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  LiveRegisterSet volatileRegs = liveVolatileRegs();
+  volatileRegs.takeUnchecked(scratch);
+  masm.PushRegsInMask(volatileRegs);
+
+  using Fn = bool (*)(WeakMapObject*, JSObject*);
+  masm.setupUnalignedABICall(scratch);
+  masm.passABIArg(weakMap);
+  masm.passABIArg(obj);
+  masm.callWithABI<Fn, js::WeakMapObject::hasObject>();
+  masm.storeCallBoolResult(scratch);
+
+  masm.PopRegsInMask(volatileRegs);
+
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
+  return true;
+}
+
+bool CacheIRCompiler::emitWeakSetHasObjectResult(ObjOperandId weakSetId,
+                                                 ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register weakSet = allocator.useRegister(masm, weakSetId);
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  LiveRegisterSet volatileRegs = liveVolatileRegs();
+  volatileRegs.takeUnchecked(scratch);
+  masm.PushRegsInMask(volatileRegs);
+
+  using Fn = bool (*)(WeakSetObject*, JSObject*);
+  masm.setupUnalignedABICall(scratch);
+  masm.passABIArg(weakSet);
+  masm.passABIArg(obj);
+  masm.callWithABI<Fn, js::WeakSetObject::hasObject>();
+  masm.storeCallBoolResult(scratch);
+
+  masm.PopRegsInMask(volatileRegs);
+
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
+  return true;
+}
+
 bool CacheIRCompiler::emitDateFillLocalTimeSlots(ObjOperandId dateId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 

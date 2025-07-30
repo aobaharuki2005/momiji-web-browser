@@ -10854,6 +10854,108 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMapSet() {
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachWeakMapGet() {
+  // Ensure |this| is a WeakMapObject.
+  if (!thisval_.isObject() || !thisval_.toObject().is<WeakMapObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Need a single object argument.
+  if (args_.length() != 1 || !args_[0].isObject()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId = initializeInputOperand();
+
+  // Guard callee is the 'get' native function.
+  ObjOperandId calleeId = emitNativeCalleeGuard(argcId);
+
+  // Guard |this| is a WeakMapObject.
+  ValOperandId thisValId = loadThis(calleeId);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+  emitOptimisticClassGuard(objId, &thisval_.toObject(),
+                           GuardClassKind::WeakMap);
+
+  // Guard the argument is an object.
+  ValOperandId argId = loadArgument(calleeId, ArgumentKind::Arg0);
+  ObjOperandId objArgId = writer.guardToObject(argId);
+
+  writer.weakMapGetObjectResult(objId, objArgId);
+  writer.returnFromIC();
+
+  trackAttached("WeakMapGet");
+  return AttachDecision::Attach;
+}
+
+AttachDecision InlinableNativeIRGenerator::tryAttachWeakMapHas() {
+  // Ensure |this| is a WeakMapObject.
+  if (!thisval_.isObject() || !thisval_.toObject().is<WeakMapObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Need a single object argument.
+  if (args_.length() != 1 || !args_[0].isObject()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId = initializeInputOperand();
+
+  // Guard callee is the 'has' native function.
+  ObjOperandId calleeId = emitNativeCalleeGuard(argcId);
+
+  // Guard |this| is a WeakMapObject.
+  ValOperandId thisValId = loadThis(calleeId);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+  emitOptimisticClassGuard(objId, &thisval_.toObject(),
+                           GuardClassKind::WeakMap);
+
+  // Guard the argument is an object.
+  ValOperandId argId = loadArgument(calleeId, ArgumentKind::Arg0);
+  ObjOperandId objArgId = writer.guardToObject(argId);
+
+  writer.weakMapHasObjectResult(objId, objArgId);
+  writer.returnFromIC();
+
+  trackAttached("WeakMapHas");
+  return AttachDecision::Attach;
+}
+
+AttachDecision InlinableNativeIRGenerator::tryAttachWeakSetHas() {
+  // Ensure |this| is a WeakSetObject.
+  if (!thisval_.isObject() || !thisval_.toObject().is<WeakSetObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Need a single object argument.
+  if (args_.length() != 1 || !args_[0].isObject()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId = initializeInputOperand();
+
+  // Guard callee is the 'has' native function.
+  ObjOperandId calleeId = emitNativeCalleeGuard(argcId);
+
+  // Guard |this| is a WeakSetObject.
+  ValOperandId thisValId = loadThis(calleeId);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+  emitOptimisticClassGuard(objId, &thisval_.toObject(),
+                           GuardClassKind::WeakSet);
+
+  // Guard the argument is an object.
+  ValOperandId argId = loadArgument(calleeId, ArgumentKind::Arg0);
+  ObjOperandId objArgId = writer.guardToObject(argId);
+
+  writer.weakSetHasObjectResult(objId, objArgId);
+  writer.returnFromIC();
+
+  trackAttached("WeakSetHas");
+  return AttachDecision::Attach;
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachDateGetTime() {
   // Ensure |this| is a DateObject.
   if (!thisval_.isObject() || !thisval_.toObject().is<DateObject>()) {
@@ -12920,6 +13022,14 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
       return tryAttachDateGet(DateComponent::Minutes);
     case InlinableNative::DateGetSeconds:
       return tryAttachDateGet(DateComponent::Seconds);
+
+    // WeakMap/WeakSet natives.
+    case InlinableNative::WeakMapGet:
+      return tryAttachWeakMapGet();
+    case InlinableNative::WeakMapHas:
+      return tryAttachWeakMapHas();
+    case InlinableNative::WeakSetHas:
+      return tryAttachWeakSetHas();
 
     // Testing functions.
     case InlinableNative::TestBailout:

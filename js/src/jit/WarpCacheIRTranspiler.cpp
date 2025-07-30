@@ -5654,6 +5654,42 @@ bool WarpCacheIRTranspiler::emitMapSizeResult(ObjOperandId mapId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitWeakMapGetObjectResult(ObjOperandId weakMapId,
+                                                       ObjOperandId objId) {
+  MDefinition* weakMap = getOperand(weakMapId);
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MWeakMapGetObject::New(alloc(), weakMap, obj);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitWeakMapHasObjectResult(ObjOperandId weakMapId,
+                                                       ObjOperandId objId) {
+  MDefinition* weakMap = getOperand(weakMapId);
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MWeakMapHasObject::New(alloc(), weakMap, obj);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitWeakSetHasObjectResult(ObjOperandId weakSetId,
+                                                       ObjOperandId objId) {
+  MDefinition* weakSet = getOperand(weakSetId);
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MWeakSetHasObject::New(alloc(), weakSet, obj);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitDateFillLocalTimeSlots(ObjOperandId dateId) {
   MDefinition* date = getOperand(dateId);
 

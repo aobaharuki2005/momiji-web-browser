@@ -390,7 +390,7 @@ class AliasSet {
     // the ExpandoAndGeneration.
     DOMProxyExpando = 1 << 15,
 
-    // Hash table of a Map or Set object.
+    // Hash table of a Map/Set/WeakMap/WeakSet object.
     MapOrSetHashTable = 1 << 16,
 
     // Internal state of the random number generator

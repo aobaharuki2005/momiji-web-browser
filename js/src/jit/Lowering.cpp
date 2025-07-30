@@ -7926,6 +7926,25 @@ void LIRGenerator::visitMapObjectSize(MMapObjectSize* ins) {
   define(lir, ins);
 }
 
+void LIRGenerator::visitWeakMapGetObject(MWeakMapGetObject* ins) {
+  auto* lir = new (alloc()) LWeakMapGetObject(
+      useFixedAtStart(ins->weakMap(), CallTempReg0),
+      useFixedAtStart(ins->object(), CallTempReg1), tempFixed(CallTempReg2));
+  defineReturn(lir, ins);
+}
+
+void LIRGenerator::visitWeakMapHasObject(MWeakMapHasObject* ins) {
+  auto* lir = new (alloc()) LWeakMapHasObject(
+      useRegisterAtStart(ins->weakMap()), useRegisterAtStart(ins->object()));
+  defineReturn(lir, ins);
+}
+
+void LIRGenerator::visitWeakSetHasObject(MWeakSetHasObject* ins) {
+  auto* lir = new (alloc()) LWeakSetHasObject(
+      useRegisterAtStart(ins->weakSet()), useRegisterAtStart(ins->object()));
+  defineReturn(lir, ins);
+}
+
 void LIRGenerator::visitDateFillLocalTimeSlots(MDateFillLocalTimeSlots* ins) {
   auto* lir =
       new (alloc()) LDateFillLocalTimeSlots(useRegister(ins->date()), temp());

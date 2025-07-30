@@ -3647,6 +3647,30 @@
   args:
     map: ObjId
 
+- name: WeakMapGetObjectResult
+  shared: true
+  transpile: true
+  cost_estimate: 3
+  args:
+    weakMap: ObjId
+    obj: ObjId
+
+- name: WeakMapHasObjectResult
+  shared: true
+  transpile: true
+  cost_estimate: 3
+  args:
+    weakMap: ObjId
+    obj: ObjId
+
+- name: WeakSetHasObjectResult
+  shared: true
+  transpile: true
+  cost_estimate: 3
+  args:
+    weakSet: ObjId
+    obj: ObjId
+
 - name: DateFillLocalTimeSlots
   shared: true
   transpile: true

@@ -205,6 +205,10 @@
   _(TestAssertFloat32)                             \
   _(TestAssertRecoveredOnBailout)                  \
                                                    \
+  _(WeakMapGet)                                    \
+  _(WeakMapHas)                                    \
+  _(WeakSetHas)                                    \
+                                                   \
   _(IntrinsicUnsafeSetReservedSlot)                \
   _(IntrinsicUnsafeGetReservedSlot)                \
   _(IntrinsicUnsafeGetObjectFromReservedSlot)      \

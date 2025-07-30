@@ -3784,6 +3784,39 @@
   alias_set: custom
   generate_lir: true
 
+# Note: for now these WeakMap/WeakSet instructions are non-movable and don't
+# override congruentTo, but it'd probably be fine to change this in the future.
+- name: WeakMapGetObject
+  operands:
+    weakMap: Object
+    object: Object
+  result_type: Value
+  alias_set: custom
+  movable: false
+  possibly_calls: true
+  generate_lir: true
+  lir_temps: 1
+
+- name: WeakMapHasObject
+  operands:
+    weakMap: Object
+    object: Object
+  result_type: Boolean
+  alias_set: custom
+  movable: false
+  possibly_calls: true
+  generate_lir: true
+
+- name: WeakSetHasObject
+  operands:
+    weakSet: Object
+    object: Object
+  result_type: Boolean
+  alias_set: custom
+  movable: false
+  possibly_calls: true
+  generate_lir: true
+
 - name: DateFillLocalTimeSlots
   operands:
     date: Object

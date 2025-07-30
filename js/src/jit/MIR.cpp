@@ -7567,6 +7567,18 @@ AliasSet MMapObjectSize::getAliasSet() const {
   return AliasSet::Load(AliasSet::MapOrSetHashTable);
 }
 
+AliasSet MWeakMapGetObject::getAliasSet() const {
+  return AliasSet::Load(AliasSet::MapOrSetHashTable);
+}
+
+AliasSet MWeakMapHasObject::getAliasSet() const {
+  return AliasSet::Load(AliasSet::MapOrSetHashTable);
+}
+
+AliasSet MWeakSetHasObject::getAliasSet() const {
+  return AliasSet::Load(AliasSet::MapOrSetHashTable);
+}
+
 AliasSet MDateFillLocalTimeSlots::getAliasSet() const {
   // Reads and stores fixed slots. Additional reads from DateTimeInfo don't need
   // to be tracked, because they don't interact with other alias set states.
