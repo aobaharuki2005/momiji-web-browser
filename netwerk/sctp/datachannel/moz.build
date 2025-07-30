@@ -23,6 +23,7 @@ include("/ipc/chromium/chromium-config.mozbuild")
 FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
+    "!/dist/include/libwebrtc_overrides",
     "/dom/media/webrtc",
     "/dom/media/webrtc/transport",
     "/media/webrtc",
