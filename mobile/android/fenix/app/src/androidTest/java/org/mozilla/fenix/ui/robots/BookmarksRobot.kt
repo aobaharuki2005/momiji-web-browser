@@ -270,9 +270,9 @@ class BookmarksRobot(private val composeTestRule: ComposeTestRule) {
         }
 
         fun goBackToHomeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-            Log.i(TAG, "goBackToBrowserScreen: Trying to click go back button")
+            Log.i(TAG, "goBackToHomeScreen: Trying to click go back button")
             composeTestRule.onNodeWithContentDescription(getStringResource(R.string.bookmark_navigate_back_button_content_description)).performClick()
-            Log.i(TAG, "goBackToBrowserScreen: Clicked go back button")
+            Log.i(TAG, "goBackToHomeScreen: Clicked go back button")
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()

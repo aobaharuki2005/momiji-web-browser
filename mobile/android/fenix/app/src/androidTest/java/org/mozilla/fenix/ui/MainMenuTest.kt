@@ -82,7 +82,7 @@ class MainMenuTest : TestSetup() {
         }.openThreeDotMenu {
         }.openDownloadsManager {
             verifyEmptyDownloadsList(composeTestRule)
-        }.goBack(composeTestRule) {
+        }.goBackToHomeScreen(composeTestRule) {
         }.openThreeDotMenu {
         }.openPasswords {
             verifySecurityPromptForLogins()
@@ -92,7 +92,7 @@ class MainMenuTest : TestSetup() {
         }.openThreeDotMenu {
         }.openAddonsManagerMenu {
             verifyAddonsListIsDisplayed(true)
-        }.goBack {
+        }.goBackToHomeScreen {
         }.openThreeDotMenu {
         }.openSyncSignIn {
             verifyTurnOnSyncMenu()

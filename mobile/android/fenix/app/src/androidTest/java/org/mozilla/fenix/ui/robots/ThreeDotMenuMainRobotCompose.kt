@@ -11,6 +11,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -24,6 +25,7 @@ import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.appName
@@ -285,6 +287,18 @@ class ThreeDotMenuMainRobotCompose(private val composeTestRule: ComposeTestRule)
 
             BookmarksRobot(composeTestRule).interact()
             return BookmarksRobot.Transition(composeTestRule)
+        }
+
+        fun clickSignInMainMenuButton(
+            composeTestRule: ComposeTestRule,
+            interact: SyncSignInRobot.() -> Unit,
+        ): SyncSignInRobot.Transition {
+            Log.i(TAG, "clickSignInMainMenuButton: Trying to click \"Sign in\" main menu button")
+            composeTestRule.onNodeWithContentDescription("Sign in Sync passwords, bookmarks, and more").performClick()
+            Log.i(TAG, "clickSignInMainMenuButton: Clicked \"Sign in\" main menu button")
+
+            SyncSignInRobot().interact()
+            return SyncSignInRobot.Transition()
         }
 
         fun openHistory(

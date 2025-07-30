@@ -137,7 +137,7 @@ class SettingsSubMenuAddonsManagerRobot {
             } catch (e: NoMatchingViewException) {
                 Log.i(TAG, "clickInstallAddon: NoMatchingViewException caught, executing fallback methods")
                 addonsMenu {
-                }.goBack {
+                }.goBackToHomeScreen {
                 }.openThreeDotMenu {
                 }.openAddonsManagerMenu {
                 }
@@ -424,10 +424,10 @@ class SettingsSubMenuAddonsManagerRobot {
         Log.i(TAG, "verifyInstalledExtension: Verified that extension: $extensionTitle is displayed")
     }
     class Transition {
-        fun goBack(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-            Log.i(TAG, "goBack: Trying to click navigate up toolbar button")
+        fun goBackToHomeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            Log.i(TAG, "goBackToHomeScreen: Trying to click navigate up toolbar button")
             onView(allOf(withContentDescription("Navigate up"))).click()
-            Log.i(TAG, "goBack: Clicked the navigate up toolbar button")
+            Log.i(TAG, "goBackToHomeScreen: Clicked the navigate up toolbar button")
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()

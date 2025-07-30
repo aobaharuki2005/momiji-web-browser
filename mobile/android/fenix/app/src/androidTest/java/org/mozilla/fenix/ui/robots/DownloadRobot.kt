@@ -279,10 +279,10 @@ class DownloadRobot {
             return BrowserRobot.Transition()
         }
 
-        fun goBack(composeTestRule: ComposeTestRule, interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-            Log.i(TAG, "goBack: Trying to click the navigate up toolbar button")
+        fun goBackToHomeScreen(composeTestRule: ComposeTestRule, interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            Log.i(TAG, "goBackToHomeScreen: Trying to click the navigate up toolbar button")
             composeTestRule.onNodeWithContentDescription(getStringResource(R.string.download_navigate_back_description)).performClick()
-            Log.i(TAG, "goBack: Clicked the navigate up toolbar button")
+            Log.i(TAG, "goBackToHomeScreen: Clicked the navigate up toolbar button")
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()

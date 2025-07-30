@@ -270,7 +270,10 @@ class MainMenuTestCompose : TestSetup() {
             installRecommendedAddon(recommendedExtensionTitle, composeTestRule)
             verifyAddonPermissionPrompt(recommendedExtensionTitle)
             acceptPermissionToInstallAddon()
-            verifyAddonInstallCompletedPrompt(recommendedExtensionTitle, composeTestRule.activityRule)
+            verifyAddonInstallCompletedPrompt(
+                recommendedExtensionTitle,
+                composeTestRule.activityRule,
+            )
             closeAddonInstallCompletePrompt()
         }
 
@@ -281,7 +284,7 @@ class MainMenuTestCompose : TestSetup() {
             clickManageExtensionsButtonFromRedesignedMainMenu(composeTestRule)
         }.openDetailedMenuForAddon(recommendedExtensionTitle) {
         }.removeAddon(composeTestRule.activityRule) {
-        }.goBack {
+        }.goBackToHomeScreen {
         }
         browserScreen {
         }.openThreeDotMenu(composeTestRule) {
@@ -306,7 +309,10 @@ class MainMenuTestCompose : TestSetup() {
             installRecommendedAddon(recommendedExtensionTitle, composeTestRule)
             verifyAddonPermissionPrompt(recommendedExtensionTitle)
             acceptPermissionToInstallAddon()
-            verifyAddonInstallCompletedPrompt(recommendedExtensionTitle, composeTestRule.activityRule)
+            verifyAddonInstallCompletedPrompt(
+                recommendedExtensionTitle,
+                composeTestRule.activityRule,
+            )
             closeAddonInstallCompletePrompt()
         }
         browserScreen {
@@ -564,7 +570,10 @@ class MainMenuTestCompose : TestSetup() {
             recommendedExtensionTitle = getRecommendedExtensionTitle(composeTestRule)
             installRecommendedAddon(recommendedExtensionTitle, composeTestRule)
             acceptPermissionToInstallAddon()
-            verifyAddonInstallCompletedPrompt(recommendedExtensionTitle, composeTestRule.activityRule)
+            verifyAddonInstallCompletedPrompt(
+                recommendedExtensionTitle,
+                composeTestRule.activityRule,
+            )
             closeAddonInstallCompletePrompt()
         }
         browserScreen {
@@ -743,7 +752,11 @@ class MainMenuTestCompose : TestSetup() {
         }.clickOutsideTheMainMenu {
         }
         customTabScreen {
-            verifyRedesignedCustomTabsMainMenuItemsExist(customMenuItem, false, waitingTimeVeryShort)
+            verifyRedesignedCustomTabsMainMenuItemsExist(
+                customMenuItem,
+                false,
+                waitingTimeVeryShort,
+            )
         }
     }
 
@@ -761,7 +774,10 @@ class MainMenuTestCompose : TestSetup() {
             recommendedExtensionTitle = getRecommendedExtensionTitle(composeTestRule)
             installRecommendedAddon(recommendedExtensionTitle, composeTestRule)
             acceptPermissionToInstallAddon()
-            verifyAddonInstallCompletedPrompt(recommendedExtensionTitle, composeTestRule.activityRule)
+            verifyAddonInstallCompletedPrompt(
+                recommendedExtensionTitle,
+                composeTestRule.activityRule,
+            )
             closeAddonInstallCompletePrompt()
         }
         browserScreen {
@@ -803,7 +819,10 @@ class MainMenuTestCompose : TestSetup() {
         }.openThreeDotMenu(composeTestRule) {
             openMoreMenu()
         }.clickReportBrokenSiteButton {
-            verifyWebCompatReporterViewItems(composeTestRule, websiteURL = defaultWebPage.url.toString())
+            verifyWebCompatReporterViewItems(
+                composeTestRule,
+                websiteURL = defaultWebPage.url.toString(),
+            )
         }
     }
 
@@ -862,7 +881,10 @@ class MainMenuTestCompose : TestSetup() {
             verifyWebCompatReporterViewItems(composeTestRule, defaultWebPage.url.toString())
             clickChooseReasonField(composeTestRule)
             clickSiteDoesNotLoadReason(composeTestRule)
-            describeBrokenSiteProblem(composeTestRule, problemDescription = "Prolonged page loading time")
+            describeBrokenSiteProblem(
+                composeTestRule,
+                problemDescription = "Prolonged page loading time",
+            )
             clickBrokenSiteFormSendButton(composeTestRule)
         }
         browserScreen {
@@ -871,7 +893,11 @@ class MainMenuTestCompose : TestSetup() {
             openToolsMenu()
         }.openReportBrokenSite {
             verifyWhatIsBrokenField(composeTestRule)
-            verifyBrokenSiteProblem(composeTestRule, problemDescription = "Prolonged page loading time", isDisplayed = false)
+            verifyBrokenSiteProblem(
+                composeTestRule,
+                problemDescription = "Prolonged page loading time",
+                isDisplayed = false,
+            )
         }
     }
 
@@ -888,12 +914,19 @@ class MainMenuTestCompose : TestSetup() {
             verifyWebCompatReporterViewItems(composeTestRule, defaultWebPage.url.toString())
             clickChooseReasonField(composeTestRule)
             clickSiteDoesNotLoadReason(composeTestRule)
-            describeBrokenSiteProblem(composeTestRule, problemDescription = "Prolonged page loading time")
+            describeBrokenSiteProblem(
+                composeTestRule,
+                problemDescription = "Prolonged page loading time",
+            )
         }.closeWebCompatReporter {
         }.openThreeDotMenu(composeTestRule) {
             openMoreMenu()
         }.openReportBrokenSite {
-            verifyBrokenSiteProblem(composeTestRule, problemDescription = "Prolonged page loading time", isDisplayed = true)
+            verifyBrokenSiteProblem(
+                composeTestRule,
+                problemDescription = "Prolonged page loading time",
+                isDisplayed = true,
+            )
         }
     }
 
@@ -911,7 +944,10 @@ class MainMenuTestCompose : TestSetup() {
             verifyWebCompatReporterViewItems(composeTestRule, firstWebPage.url.toString())
             clickChooseReasonField(composeTestRule)
             clickSiteDoesNotLoadReason(composeTestRule)
-            describeBrokenSiteProblem(composeTestRule, problemDescription = "Prolonged page loading time")
+            describeBrokenSiteProblem(
+                composeTestRule,
+                problemDescription = "Prolonged page loading time",
+            )
         }.closeWebCompatReporter {
         }.openTabDrawer(composeTestRule) {
         }.openNewTab {
@@ -920,7 +956,11 @@ class MainMenuTestCompose : TestSetup() {
             openMoreMenu()
         }.openReportBrokenSite {
             verifyWhatIsBrokenField(composeTestRule)
-            verifyBrokenSiteProblem(composeTestRule, problemDescription = "Prolonged page loading time", isDisplayed = false)
+            verifyBrokenSiteProblem(
+                composeTestRule,
+                problemDescription = "Prolonged page loading time",
+                isDisplayed = false,
+            )
         }
     }
 
@@ -937,7 +977,10 @@ class MainMenuTestCompose : TestSetup() {
             verifyWebCompatReporterViewItems(composeTestRule, defaultWebPage.url.toString())
             clickChooseReasonField(composeTestRule)
             clickSiteDoesNotLoadReason(composeTestRule)
-            describeBrokenSiteProblem(composeTestRule, problemDescription = "Prolonged page loading time")
+            describeBrokenSiteProblem(
+                composeTestRule,
+                problemDescription = "Prolonged page loading time",
+            )
         }
         closeApp(composeTestRule.activityRule)
         restartApp(composeTestRule.activityRule)
@@ -947,7 +990,11 @@ class MainMenuTestCompose : TestSetup() {
             openMoreMenu()
         }.openReportBrokenSite {
             verifyWhatIsBrokenField(composeTestRule)
-            verifyBrokenSiteProblem(composeTestRule, problemDescription = "Prolonged page loading time", isDisplayed = false)
+            verifyBrokenSiteProblem(
+                composeTestRule,
+                problemDescription = "Prolonged page loading time",
+                isDisplayed = false,
+            )
         }
     }
 
@@ -971,6 +1018,103 @@ class MainMenuTestCompose : TestSetup() {
             openMoreMenu()
         }.openReportBrokenSite {
             verifyUrl("webcompat.com/issues/new")
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080172
+    @SmokeTest
+    @Test
+    fun verifyTheExtensionsMenuOptionTest() {
+        homeScreen {
+        }.openThreeDotMenu(composeTestRule) {
+        }.openExtensionsFromMainMenu {
+            verifyAddonsListIsDisplayed(true)
+        }.goBackToHomeScreen {
+            verifyHomeComponent(composeTestRule)
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080173
+    @Test
+    fun verifyTheHistoryMenuOptionTest() {
+        homeScreen {
+        }.openThreeDotMenu(composeTestRule) {
+        }.openHistory {
+            verifyEmptyHistoryView()
+        }.goBackToHomeScreen {
+            verifyHomeComponent(composeTestRule)
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080174
+    @Test
+    fun verifyTheBookmarksMenuOptionTest() {
+        homeScreen {
+        }.openThreeDotMenu(composeTestRule) {
+        }.openBookmarks(composeTestRule) {
+            verifyEmptyBookmarksMenuView()
+        }.goBackToHomeScreen {
+            verifyHomeComponent(composeTestRule)
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080175
+    @Test
+    fun verifyTheDownloadsMenuOptionTest() {
+        homeScreen {
+        }.openThreeDotMenu(composeTestRule) {
+        }.openDownloads {
+            verifyEmptyDownloadsList(composeTestRule)
+        }.goBackToHomeScreen(composeTestRule) {
+            verifyHomeComponent(composeTestRule)
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080176
+    @Test
+    fun verifyThePasswordsMenuOptionTest() {
+        homeScreen {
+        }.openThreeDotMenu(composeTestRule) {
+        }.openPasswords {
+            verifySecurityPromptForLogins()
+            tapSetupLater()
+            verifyEmptySavedLoginsListView()
+        }.goBackToHomeScreen {
+            verifyHomeComponent(composeTestRule)
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080177
+    @Test
+    fun verifyTheSignInMenuOptionTest() {
+        homeScreen {
+        }.openThreeDotMenu(composeTestRule) {
+        }.clickSignInMainMenuButton(composeTestRule) {
+            verifyTurnOnSyncMenu()
+        }.goBackToHomeScreen {
+            verifyHomeComponent(composeTestRule)
+        }
+    }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080182
+    @Test
+    fun verifyTheQuitMenuOptionTest() {
+        homeScreen {
+        }.openThreeDotMenu(composeTestRule) {
+        }.openSettings {
+        }.openSettingsSubMenuDeleteBrowsingDataOnQuit {
+            verifyDeleteBrowsingOnQuitEnabled(false)
+            clickDeleteBrowsingOnQuitButtonSwitch()
+            verifyDeleteBrowsingOnQuitEnabled(true)
+        }.goBack {
+            verifySettingsOptionSummary("Delete browsing data on quit", "On")
+        }.goBack {
+        }.openThreeDotMenu(composeTestRule) {
+            clickQuitFirefoxButton()
+            restartApp(composeTestRule.activityRule)
+        }
+        homeScreen {
+            verifyHomeComponent(composeTestRule)
         }
     }
 }
