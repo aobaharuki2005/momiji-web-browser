@@ -285,7 +285,10 @@ class Components(private val context: Context) {
                 HomeTelemetryMiddleware(),
                 SetupChecklistPreferencesMiddleware(DefaultSetupChecklistRepository(context)),
                 SetupChecklistTelemetryMiddleware(),
-                ReviewPromptMiddleware(settings),
+                ReviewPromptMiddleware(
+                    settings = settings,
+                    createJexlHelper = nimbus::createJexlHelper,
+                ),
                 AppVisualCompletenessMiddleware(performance.visualCompletenessQueue),
             ),
         ).also {
