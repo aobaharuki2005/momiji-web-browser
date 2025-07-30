@@ -337,6 +337,7 @@ import org.mozilla.gecko.util.WebAuthnUtils;
             algs,
             excludeList,
             authenticatorSelection,
+            extensions,
             clientDataHashBytes)
         .accept(
             response -> result.complete(response),

@@ -77,11 +77,18 @@ public class WebAuthnCredentialManager {
       final int[] algs,
       final WebAuthnUtils.WebAuthnPublicCredential[] excludeList,
       final GeckoBundle authenticatorSelection,
+      final GeckoBundle extensions,
       final byte[] clientDataHash) {
     try {
       final JSONObject requestJSON =
           WebAuthnUtils.getJSONObjectForMakeCredential(
-              credentialBundle, userId, challenge, algs, excludeList, authenticatorSelection);
+              credentialBundle,
+              userId,
+              challenge,
+              algs,
+              excludeList,
+              authenticatorSelection,
+              extensions);
       final Bundle bundle = getRequestBundle(requestJSON.toString(), clientDataHash);
       if (bundle == null) {
         return null;
@@ -135,6 +142,7 @@ public class WebAuthnCredentialManager {
       final int[] algs,
       final WebAuthnUtils.WebAuthnPublicCredential[] excludeList,
       final GeckoBundle authenticatorSelection,
+      final GeckoBundle extensions,
       final byte[] clientDataHash) {
 
     // We use Credential Manager first. If it doesn't work, we use GMS FIDO2.
@@ -160,6 +168,7 @@ public class WebAuthnCredentialManager {
             algs,
             excludeList,
             authenticatorSelection,
+            extensions,
             clientDataHash);
     if (requestBundle == null) {
       return GeckoResult.fromException(new WebAuthnUtils.Exception("UNKNOWN_ERR"));

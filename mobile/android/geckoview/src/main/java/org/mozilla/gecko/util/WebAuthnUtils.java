@@ -331,7 +331,8 @@ public class WebAuthnUtils {
       final byte[] challenge,
       final int[] algs,
       final WebAuthnPublicCredential[] excludeList,
-      final GeckoBundle authenticatorSelection)
+      final GeckoBundle authenticatorSelection,
+      final GeckoBundle extensions)
       throws JSONException {
     final JSONObject json = credentialBundle.toJSONObject();
     // origin is unnecessary for requestJSON.
@@ -375,9 +376,8 @@ public class WebAuthnUtils {
         authenticatorSelection.getString("residentKey", "").equals("required"));
     json.put("authenticatorSelection", authenticatorSelectionJSON);
 
-    final JSONObject extensions = new JSONObject();
-    extensions.put("credProps", true);
-    json.put("extensions", extensions);
+    final JSONObject extensionsJSON = extensions.toJSONObject();
+    json.put("extensions", extensionsJSON);
 
     if (DEBUG) {
       Log.d(LOGTAG, "getJSONObjectForMakeCredential: JSON=\"" + json.toString() + "\"");

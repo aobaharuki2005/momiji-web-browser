@@ -192,6 +192,9 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
         GECKOBUNDLE_FINISH(authSelBundle);
 
         GECKOBUNDLE_START(extensionsBundle);
+        GECKOBUNDLE_PUT(extensionsBundle, "credProps",
+                        requestedCredProps ? java::sdk::Boolean::TRUE()
+                                           : java::sdk::Boolean::FALSE());
         GECKOBUNDLE_FINISH(extensionsBundle);
 
         auto result = java::WebAuthnTokenManager::WebAuthnMakeCredential(
