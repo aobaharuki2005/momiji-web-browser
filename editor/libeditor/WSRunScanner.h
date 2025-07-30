@@ -231,6 +231,16 @@ class MOZ_STACK_CLASS WSScanResult final {
   }
 
   /**
+   * Return the next position of found visible content node.  So, this should
+   * not be used if it reached a visible character middle of a `Text`.
+   */
+  template <typename EditorDOMPointType>
+  EditorDOMPointType PointAfterReachedContentNode() const {
+    MOZ_ASSERT(mContent);
+    return EditorDOMPointType::After(*mContent);
+  }
+
+  /**
    * The scanner reached <img> or something which is inline and is not a
    * container.
    */
