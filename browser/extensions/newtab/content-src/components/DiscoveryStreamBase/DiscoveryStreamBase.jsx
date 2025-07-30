@@ -230,8 +230,18 @@ export class _DiscoveryStreamBase extends React.PureComponent {
         return <HorizontalRule />;
       case "PrivacyLink":
         return <PrivacyLink properties={component.properties} />;
-      case "Widgets":
-        return <Widgets />;
+      case "Widgets": {
+        // Nimbus experiment override
+        const nimbusWidgetsEnabled =
+          this.props.Prefs.values.widgetsConfig?.enabled;
+
+        const widgetsEnabled =
+          this.props.Prefs.values["widgets.system.enabled"];
+        if (widgetsEnabled || nimbusWidgetsEnabled) {
+          return <Widgets />;
+        }
+        return null;
+      }
       default:
         return <div>{component.type}</div>;
     }

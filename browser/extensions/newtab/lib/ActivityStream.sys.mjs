@@ -860,6 +860,13 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "widgets.system.enabled",
+    {
+      title: "Enables visibility of all widgets and controls to enable them",
+      value: false,
+    },
+  ],
+  [
     "widgets.lists.enabled",
     {
       title: "Enables the to-do lists widget",

@@ -13118,7 +13118,15 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
           properties: component.properties
         });
       case "Widgets":
-        return /*#__PURE__*/external_React_default().createElement(Widgets, null);
+        {
+          // Nimbus experiment override
+          const nimbusWidgetsEnabled = this.props.Prefs.values.widgetsConfig?.enabled;
+          const widgetsEnabled = this.props.Prefs.values["widgets.system.enabled"];
+          if (widgetsEnabled || nimbusWidgetsEnabled) {
+            return /*#__PURE__*/external_React_default().createElement(Widgets, null);
+          }
+          return null;
+        }
       default:
         return /*#__PURE__*/external_React_default().createElement("div", null, component.type);
     }

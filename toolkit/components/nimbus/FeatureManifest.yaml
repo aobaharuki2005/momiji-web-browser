@@ -1585,6 +1585,10 @@ newtabWidgets:
   owner: mcrawford@mozilla.com
   hasExposure: false
   variables:
+    enabled:
+      type: boolean
+      description: >-
+        Enable all widgets
     listsEnabled:
       type: boolean
       description: >-
