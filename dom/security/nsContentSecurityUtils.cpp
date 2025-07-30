@@ -749,12 +749,7 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
   MOZ_CRASH_UNSAFE_PRINTF("%s", crashString.get());
 #endif
 
-#if defined(MOZ_WIDGET_ANDROID) && !defined(NIGHTLY_BUILD)
-  // TODO(bug 1895823)
-  return true;
-#else
   return false;
-#endif
 }
 
 /* static */
