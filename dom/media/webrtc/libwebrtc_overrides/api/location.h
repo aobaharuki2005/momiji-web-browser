@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#ifndef DOM_MEDIA_WEBRTC_LIBWEBRTCGLUE_WEBRTCLOCATION_H_
-#define DOM_MEDIA_WEBRTC_LIBWEBRTCGLUE_WEBRTCLOCATION_H_
+#ifndef DOM_MEDIA_WEBRTC_LIBWEBRTCOVERRIDES_API_WEBRTCLOCATION_H_
+#define DOM_MEDIA_WEBRTC_LIBWEBRTCOVERRIDES_API_WEBRTCLOCATION_H_
 
 // See bug 1973646 for moving this file to use std::source_location.
 
@@ -55,9 +55,13 @@ class WebrtcLocation {
 
 }  // namespace mozilla
 
+namespace webrtc {
+using Location = mozilla::WebrtcLocation;
+}  // namespace webrtc
+
 #undef MOZ_BUILTIN_FUNCTION
 #undef MOZ_BUILTIN_FILE
 #undef MOZ_BUILTIN_LINE
 #undef MOZ_HAS_BUILTIN
 
-#endif
+#endif  // DOM_MEDIA_WEBRTC_LIBWEBRTCOVERRIDES_API_WEBRTCLOCATION_H_
