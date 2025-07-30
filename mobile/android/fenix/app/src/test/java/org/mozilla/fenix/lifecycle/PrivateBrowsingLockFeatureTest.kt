@@ -82,10 +82,9 @@ class PrivateBrowsingLockFeatureTest {
                 selectedTabId = "mozilla",
             ),
         )
-        val feature = createFeature(browserStore = browserStore, appStore = appStore, storage = createStorage(isFeatureEnabled = isFeatureEnabled))
-        appStore.waitUntilIdle()
+        val useCase = PrivateBrowsingLockUseCases.AuthenticatedUseCase(appStore)
 
-        feature.onSuccessfulAuthentication()
+        useCase.invoke()
         appStore.waitUntilIdle()
 
         assertFalse(appStore.state.isPrivateScreenLocked)
@@ -648,10 +647,11 @@ class PrivateBrowsingLockFeatureTest {
                 selectedTabId = "mozilla",
             ),
         )
+        val useCase = PrivateBrowsingLockUseCases.AuthenticatedUseCase(appStore)
         val feature = createFeature(browserStore = browserStore, appStore = appStore, storage = createStorage(isFeatureEnabled = isFeatureEnabled))
         appStore.waitUntilIdle()
 
-        feature.onSuccessfulAuthentication()
+        useCase.invoke()
         appStore.waitUntilIdle()
 
         val activity = mockk<AppCompatActivity>(relaxed = true)
@@ -681,10 +681,11 @@ class PrivateBrowsingLockFeatureTest {
                 selectedTabId = "mozilla",
             ),
         )
+        val useCase = PrivateBrowsingLockUseCases.AuthenticatedUseCase(appStore)
         val feature = createFeature(browserStore = browserStore, appStore = appStore, storage = createStorage(isFeatureEnabled = isFeatureEnabled))
         appStore.waitUntilIdle()
 
-        feature.onSuccessfulAuthentication()
+        useCase.invoke()
         appStore.waitUntilIdle()
 
         val activity = mockk<AppCompatActivity>(relaxed = true)
@@ -713,10 +714,11 @@ class PrivateBrowsingLockFeatureTest {
                 selectedTabId = "mozilla",
             ),
         )
+        val useCase = PrivateBrowsingLockUseCases.AuthenticatedUseCase(appStore)
         val feature = createFeature(browserStore = browserStore, appStore = appStore, storage = createStorage(isFeatureEnabled = isFeatureEnabled))
         appStore.waitUntilIdle()
 
-        feature.onSuccessfulAuthentication()
+        useCase.invoke()
         appStore.waitUntilIdle()
 
         val activity = mockk<AppCompatActivity>(relaxed = true)
