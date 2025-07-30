@@ -177,6 +177,28 @@ fn main() {
     let mut build = cc::Build::new();
     build.cpp(true);
 
+    let _suppressed_cflags_env_vars = cflags_env_vars()
+        .filter_map(|(key, value)| {
+            // NOTE: Cancels out [the `moz-check` plugin added in
+            // `build/moz.configure/clang_plugin.configure`'s `clang_plugin_flags`
+            // assignment][crossref].
+            //
+            // [crossref]: https://searchfox.org/mozilla-central/rev/f008b9aa2adf2dca6bdd49855b314cb3195f6f27/build/moz.configure/clang_plugin.configure#77-80
+            const MOZ_CHECK_PLUGIN_LOAD_ARGS: &str = "-Xclang -add-plugin -Xclang moz-check";
+
+            let replaced = value
+                .to_str()
+                .filter(|v| v.contains(MOZ_CHECK_PLUGIN_LOAD_ARGS))?
+                .replace(MOZ_CHECK_PLUGIN_LOAD_ARGS, "");
+
+            std::env::set_var(&key, replaced);
+            Some(EnvVarGuard {
+                key,
+                old_value: Some(value),
+            })
+        })
+        .collect::<Vec<_>>();
+
     if let Ok(tool) = build.try_get_compiler() {
         if tool.is_like_msvc() {
             build
