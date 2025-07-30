@@ -2217,13 +2217,16 @@
       let allTabs = this.ariaFocusableItems;
       let isGrid = this.#isContainerVerticalPinnedGrid(tab);
 
-      if (isGrid) {
+      if (isPinned && this.verticalMode) {
         this.pinnedTabsContainer.setAttribute("dragActive", "");
       }
 
       // Ensure tab containers retain size while tabs are dragged out of the layout
       let pinnedRect = window.windowUtils.getBoundsWithoutFlushing(
         this.pinnedTabsContainer.scrollbox
+      );
+      let pinnedContainerRect = window.windowUtils.getBoundsWithoutFlushing(
+        this.pinnedTabsContainer
       );
       let unpinnedRect = window.windowUtils.getBoundsWithoutFlushing(
         this.arrowScrollbox.scrollbox
@@ -2232,6 +2235,9 @@
       if (this.pinnedTabsContainer.firstChild) {
         this.pinnedTabsContainer.scrollbox.style.height =
           pinnedRect.height + "px";
+        // Use "minHeight" so as not to interfere with user preferences for height.
+        this.pinnedTabsContainer.style.minHeight =
+          pinnedContainerRect.height + "px";
         this.pinnedTabsContainer.scrollbox.style.width =
           pinnedRect.width + "px";
       }
@@ -3291,6 +3297,7 @@
       );
       pinnedPeriphery && pinnedTabsContainer.removeChild(pinnedPeriphery);
       pinnedTabsContainer.removeAttribute("dragActive");
+      pinnedTabsContainer.style.minHeight = "";
       draggedTabDocument.defaultView.SidebarController.updatePinnedTabsHeightOnResize();
       pinnedTabsContainer.scrollbox.style.height = "";
       pinnedTabsContainer.scrollbox.style.width = "";
