@@ -28,6 +28,9 @@ const MODIFIED_PREFS = Object.freeze([
   kPrefCustomizationHorizontalTabstrip,
   kPrefCustomizationNavBarWhenVerticalTabs,
   "sidebar.new-sidebar.has-used",
+  "browser.engagement.home-button.has-removed",
+  "browser.engagement.home-button.has-removed",
+  "browser.engagement.sidebar-button.has-used",
 ]);
 
 function clearModifiedPrefs() {
@@ -93,6 +96,9 @@ const extData = {
           break;
         case "set-title":
           await browser.sidebarAction.setTitle({ title: data });
+          break;
+        case "reload-extension":
+          browser.runtime.reload();
           break;
       }
       browser.test.sendMessage("done");
