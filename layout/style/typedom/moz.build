@@ -8,6 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
 EXPORTS.mozilla.dom += [
+    "CSSKeywordValue.h",
     "CSSStyleValue.h",
     "CSSUnparsedValue.h",
     "CSSVariableReferenceValue.h",
@@ -16,6 +17,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    "CSSKeywordValue.cpp",
     "CSSStyleValue.cpp",
     "CSSUnparsedValue.cpp",
     "CSSVariableReferenceValue.cpp",

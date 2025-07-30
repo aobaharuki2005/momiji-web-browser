@@ -504,6 +504,7 @@ WEBIDL_FILES = [
     "CSSImportRule.webidl",
     "CSSKeyframeRule.webidl",
     "CSSKeyframesRule.webidl",
+    "CSSKeywordValue.webidl",
     "CSSLayerBlockRule.webidl",
     "CSSLayerStatementRule.webidl",
     "CSSMarginRule.webidl",
