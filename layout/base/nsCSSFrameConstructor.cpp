@@ -1079,6 +1079,14 @@ void nsFrameConstructorState::ConstructBackdropFrameFor(nsIContent* aContent,
   }
 
   ComputedStyle* parentStyle = nsLayoutUtils::GetStyleFrame(aFrame)->Style();
+  if (parentStyle->GetPseudoType() != PseudoStyleType::NotPseudo) {
+    // ::backdrop only applies to actual elements in the top layer, for now at
+    // least. Prevent creating it for internal pseudos like
+    // ::-moz-snapshot-containing-block.
+    // https://drafts.csswg.org/css-position-4/#backdrop
+    return;
+  }
+
   RefPtr<ComputedStyle> style =
       mPresShell->StyleSet()->ResolvePseudoElementStyle(
           *aContent->AsElement(), PseudoStyleType::backdrop, nullptr,
