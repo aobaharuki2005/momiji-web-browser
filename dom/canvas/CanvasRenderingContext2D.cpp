@@ -1309,10 +1309,9 @@ CanvasRenderingContext2D::ParseColorSlow(const nsACString& aString) {
 
   PresShell* presShell = GetPresShell();
   ServoStyleSet* set = presShell ? presShell->StyleSet() : nullptr;
-  const StylePerDocumentStyleData* data = set ? set->RawData() : nullptr;
   bool wasCurrentColor = false;
   nscolor color;
-  if (ServoCSSParser::ComputeColor(data, NS_RGB(0, 0, 0), aString, &color,
+  if (ServoCSSParser::ComputeColor(set, NS_RGB(0, 0, 0), aString, &color,
                                    &wasCurrentColor, loader)) {
     result.mWasCurrentColor = wasCurrentColor;
     result.mColor.emplace(color);

@@ -22,20 +22,14 @@ bool ServoCSSParser::IsValidCSSColor(const nsACString& aValue) {
 }
 
 /* static */
-bool ServoCSSParser::ComputeColor(const StylePerDocumentStyleData* aStyleData,
+bool ServoCSSParser::ComputeColor(ServoStyleSet* aStyleSet,
                                   nscolor aCurrentColor,
                                   const nsACString& aValue,
                                   nscolor* aResultColor, bool* aWasCurrentColor,
                                   css::Loader* aLoader) {
-  return Servo_ComputeColor(aStyleData, aCurrentColor, &aValue, aResultColor,
+  return Servo_ComputeColor(aStyleSet ? aStyleSet->RawData() : nullptr,
+                            aCurrentColor, &aValue, aResultColor,
                             aWasCurrentColor, aLoader);
-}
-
-/* static */
-StyleAbsoluteColor ServoCSSParser::ComputeColorWellControlColor(
-    const StylePerDocumentStyleData* aStyleData, const nsACString& aValue,
-    StyleColorSpace aToColorSpace) {
-  return Servo_ComputeColorWellControlColor(aStyleData, &aValue, aToColorSpace);
 }
 
 /* static */

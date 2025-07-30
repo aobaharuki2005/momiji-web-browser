@@ -8371,17 +8371,15 @@ pub unsafe extern "C" fn Servo_IsValidCSSColor(value: &nsACString) -> bool {
     specified::Color::is_valid(&context, &mut input)
 }
 
-struct ComputeColorResult {
-    result_color: AbsoluteColor,
-    was_current_color: bool,
-}
-
-unsafe fn compute_color(
+#[no_mangle]
+pub unsafe extern "C" fn Servo_ComputeColor(
     raw_data: Option<&PerDocumentStyleData>,
-    current_color: &AbsoluteColor,
+    current_color: structs::nscolor,
     value: &nsACString,
+    result_color: &mut structs::nscolor,
+    was_current_color: *mut bool,
     loader: *mut Loader,
-) -> Option<ComputeColorResult> {
+) -> bool {
     let mut input = ParserInput::new(value.as_str_unchecked());
     let mut input = Parser::new(&mut input);
     let reporter = loader.as_mut().and_then(|loader| {
@@ -8409,49 +8407,19 @@ unsafe fn compute_color(
         None => None,
     };
 
-    let computed = specified::Color::parse_and_compute(&context, &mut input, device)?;
-
-    let result_color = computed.resolve_to_absolute(current_color);
-    let was_current_color = computed.is_currentcolor();
-
-    Some(ComputeColorResult {
-        result_color,
-        was_current_color,
-    })
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn Servo_ComputeColor(
-    raw_data: Option<&PerDocumentStyleData>,
-    current_color: structs::nscolor,
-    value: &nsACString,
-    result_color: &mut structs::nscolor,
-    was_current_color: *mut bool,
-    loader: *mut Loader,
-) -> bool {
-    let current_color = style::gecko::values::convert_nscolor_to_absolute_color(current_color);
-    let Some(result) = compute_color(raw_data, &current_color, value, loader) else {
-        return false;
+    let computed = match specified::Color::parse_and_compute(&context, &mut input, device) {
+        Some(c) => c,
+        None => return false,
     };
 
-    *result_color = style::gecko::values::convert_absolute_color_to_nscolor(&result.result_color);
+    let current_color = style::gecko::values::convert_nscolor_to_absolute_color(current_color);
     if !was_current_color.is_null() {
-        *was_current_color = result.was_current_color
+        *was_current_color = computed.is_currentcolor();
     }
-    true
-}
 
-// This implements https://html.spec.whatwg.org/#update-a-color-well-control-color,
-// except the actual serialization steps in step 6 of "serialize a color well control color".
-#[no_mangle]
-pub unsafe extern "C" fn Servo_ComputeColorWellControlColor(
-    raw_data: Option<&PerDocumentStyleData>,
-    value: &nsACString,
-    to_color_space: ColorSpace,
-) -> style::color::AbsoluteColor {
-    compute_color(raw_data, &AbsoluteColor::BLACK, value, ptr::null_mut())
-        .map_or(AbsoluteColor::BLACK, |res| res.result_color)
-        .to_color_space(to_color_space)
+    let rgba = computed.resolve_to_absolute(&current_color);
+    *result_color = style::gecko::values::convert_absolute_color_to_nscolor(&rgba);
+    true
 }
 
 #[no_mangle]

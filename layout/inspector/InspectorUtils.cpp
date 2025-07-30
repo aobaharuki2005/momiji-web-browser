@@ -749,7 +749,7 @@ void InspectorUtils::RgbToColorName(GlobalObject&, uint8_t aR, uint8_t aG,
 void InspectorUtils::ColorToRGBA(GlobalObject& aGlobal,
                                  const nsACString& aColorString,
                                  Nullable<InspectorRGBATuple>& aResult) {
-  const auto* styleData = [&]() -> const StylePerDocumentStyleData* {
+  auto* styleSet = [&]() -> ServoStyleSet* {
     nsCOMPtr<nsIGlobalObject> global =
         do_QueryInterface(aGlobal.GetAsSupports());
     if (!global) {
@@ -767,11 +767,11 @@ void InspectorUtils::ColorToRGBA(GlobalObject& aGlobal,
     if (!ps) {
       return nullptr;
     }
-    return ps->StyleSet()->RawData();
+    return ps->StyleSet();
   }();
 
   nscolor color = NS_RGB(0, 0, 0);
-  if (!ServoCSSParser::ComputeColor(styleData, NS_RGB(0, 0, 0), aColorString,
+  if (!ServoCSSParser::ComputeColor(styleSet, NS_RGB(0, 0, 0), aColorString,
                                     &color)) {
     aResult.SetNull();
     return;
