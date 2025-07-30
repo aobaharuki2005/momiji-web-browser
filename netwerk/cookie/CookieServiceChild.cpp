@@ -199,7 +199,13 @@ void CookieServiceChild::RemoveSingleCookie(const CookieStruct& aCookie,
                                             const OriginAttributes& aAttrs,
                                             const Maybe<nsID>& aOperationID) {
   nsCString baseDomain;
-  CookieCommons::GetBaseDomainFromHost(mTLDService, aCookie.host(), baseDomain);
+  if (NS_FAILED(CookieCommons::GetBaseDomainFromHost(
+          mTLDService, aCookie.host(), baseDomain))) {
+    MOZ_ASSERT(false,
+               "CookieServiceChild::RemoveSingleCookie - GetBaseDomainFromHost "
+               "shouldn't fail");
+    return;
+  }
   CookieKey key(baseDomain, aAttrs);
   CookiesList* cookiesList = nullptr;
   mCookiesMap.Get(key, &cookiesList);
@@ -306,8 +312,13 @@ CookieServiceChild::CookieNotificationAction
 CookieServiceChild::RecordDocumentCookie(Cookie* aCookie,
                                          const OriginAttributes& aAttrs) {
   nsAutoCString baseDomain;
-  CookieCommons::GetBaseDomainFromHost(mTLDService, aCookie->Host(),
-                                       baseDomain);
+  if (NS_FAILED(CookieCommons::GetBaseDomainFromHost(
+          mTLDService, aCookie->Host(), baseDomain))) {
+    MOZ_ASSERT(false,
+               "CookieServiceChild::RecordDocumentCookie - "
+               "GetBaseDomainFromHost shouldn't fail");
+    return CookieNotificationAction::NoActionNeeded;
+  }
 
   if (CookieCommons::IsFirstPartyPartitionedCookieWithoutCHIPS(
           aCookie, baseDomain, aAttrs)) {
@@ -402,8 +413,13 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI* aHostURI,
 
   bool requireHostMatch;
   nsCString baseDomain;
-  CookieCommons::GetBaseDomain(mTLDService, aHostURI, baseDomain,
-                               requireHostMatch);
+  if (NS_FAILED(CookieCommons::GetBaseDomain(mTLDService, aHostURI, baseDomain,
+                                             requireHostMatch))) {
+    MOZ_ASSERT(false,
+               "CookieServiceChild::SetCookieStringFromHttp - GetBaseDomain "
+               "shouldn't fail");
+    return NS_OK;
+  }
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
       CookieCommons::GetCookieJarSettings(aChannel);
@@ -672,8 +688,13 @@ void CookieServiceChild::NotifyObservers(Cookie* aCookie,
   }
 
   nsAutoCString baseDomain;
-  CookieCommons::GetBaseDomainFromHost(mTLDService, aCookie->Host(),
-                                       baseDomain);
+  if (NS_FAILED(CookieCommons::GetBaseDomainFromHost(
+          mTLDService, aCookie->Host(), baseDomain))) {
+    MOZ_ASSERT(false,
+               "CookieServiceChild::NotifyObservers - GetBaseDomainFromHost "
+               "shouldn't fail");
+    return;
+  }
 
   nsCOMPtr<nsICookieNotification> notification =
       new CookieNotification(notificationAction, aCookie, baseDomain, false,
