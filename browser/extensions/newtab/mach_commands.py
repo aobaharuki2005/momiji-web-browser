@@ -43,7 +43,7 @@ WEBEXT_LOCALES_PATH = Path("browser", "extensions", "newtab", "webext-glue", "lo
 
 LOCAL_EN_US_PATH = Path("browser", "locales", "en-US", "browser", "newtab", FLUENT_FILE)
 COMPARE_TOOL_PATH = Path(
-    "third_party", "python", "moz.l10n", "moz", "l10n", "bin", "compare.py"
+    "third_party", "python", "moz_l10n", "moz", "l10n", "bin", "compare.py"
 )
 REPORT_PATH = Path(WEBEXT_LOCALES_PATH, "locales-report.json")
 REPORT_LEFT_JUSTIFY_CHARS = 15
