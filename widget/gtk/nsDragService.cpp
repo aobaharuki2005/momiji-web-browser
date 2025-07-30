@@ -600,10 +600,9 @@ nsDragSession::nsDragSession() {
 nsDragSession::~nsDragSession() {
   LOGDRAGSERVICE("nsDragSession::~nsDragSession");
   if (mTaskSource) g_source_remove(mTaskSource);
-  if (mTempFileTimerID) {
-    g_source_remove(mTempFileTimerID);
-    RemoveTempFiles();
-  }
+  MozClearHandleID(mTempFileTimerID, g_source_remove);
+  RemoveTempFiles();
+  MozClearPointer(mHiddenWidget, gtk_widget_destroy);
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(nsDragSession, nsBaseDragSession, nsIObserver)
@@ -1007,6 +1006,15 @@ nsresult nsDragSession::EndDragSessionImpl(bool aDoneDrag,
   mTargetWindow = nullptr;
   mPendingWindow = nullptr;
   mCachedDragContext = 0;
+
+  nsCOMPtr<nsIObserverService> obsServ =
+      mozilla::services::GetObserverService();
+  obsServ->RemoveObserver(this, "quit-application");
+
+  if (mHiddenWidget) {
+    gtk_widget_destroy(mHiddenWidget);
+    mHiddenWidget = nullptr;
+  }
 
   return nsBaseDragSession::EndDragSessionImpl(aDoneDrag, aKeyModifiers);
 }
@@ -1960,10 +1968,7 @@ nsresult nsDragSession::CreateTempFile(nsITransferable* aItem,
   nsCOMPtr<nsIFile> tempFile;
   tmpDir->Clone(getter_AddRefs(tempFile));
   mTemporaryFiles.AppendObject(tempFile);
-  if (mTempFileTimerID) {
-    g_source_remove(mTempFileTimerID);
-    mTempFileTimerID = 0;
-  }
+  MozClearHandleID(mTempFileTimerID, g_source_remove);
 
   // extend file:///tmp/dnd_file/<filename> URL
   tmpDir->Append(wideFileName);
