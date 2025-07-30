@@ -173,6 +173,20 @@ class IPProtectionWidget {
   }
 
   /**
+   * Get the IPProtectionPanel for q given window.
+   *
+   * @param {Window} window - which window to get the panel for.
+   * @returns {IPProtectionPanel}
+   */
+  getPanel(window) {
+    if (!this.#created || !window?.PanelUI) {
+      return null;
+    }
+
+    return this.#panels.get(window);
+  }
+
+  /**
    * Remove all panels content, but maintains state for if the widget is
    * re-enabled in the same window.
    *

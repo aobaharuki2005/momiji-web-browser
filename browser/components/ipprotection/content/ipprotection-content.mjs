@@ -17,6 +17,7 @@ const DEFAULT_TIME_CONNECTED = "00:00:00";
 export default class IPProtectionContentElement extends MozLitElement {
   static queries = {
     headerEl: "ipprotection-header",
+    signedOutEl: "ipprotection-signedout",
     statusCardEl: "#status-card",
     connectionTitleEl: "#connection-title",
     connectionToggleEl: "#connection-toggle",
@@ -32,15 +33,21 @@ export default class IPProtectionContentElement extends MozLitElement {
     super();
 
     this.state = {};
+
+    this.keyListener = this.#keyListener.bind(this);
   }
 
   connectedCallback() {
     super.connectedCallback();
     this.dispatchEvent(new CustomEvent("IPProtection:Init", { bubbles: true }));
+
+    this.addEventListener("keydown", this.keyListener, { capture: true });
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
+
+    this.removeEventListener("keydown", this.keyListener, { capture: true });
   }
 
   handleClickSupportLink(event) {
@@ -67,6 +74,38 @@ export default class IPProtectionContentElement extends MozLitElement {
 
   handleUpgrade() {
     // TODO: Handle click of Upgrade button - Bug 1975317
+  }
+
+  focus() {
+    if (!this.state.isSignedIn) {
+      this.signedOutEl?.focus();
+    } else {
+      this.connectionToggleEl?.focus();
+    }
+  }
+
+  #keyListener(event) {
+    let keyCode = event.code;
+    switch (keyCode) {
+      case "ArrowUp":
+      // Intentional fall-through
+      case "ArrowDown": {
+        event.stopPropagation();
+        event.preventDefault();
+
+        let direction =
+          keyCode == "ArrowDown"
+            ? Services.focus.MOVEFOCUS_FORWARD
+            : Services.focus.MOVEFOCUS_BACKWARD;
+        Services.focus.moveFocus(
+          window,
+          null,
+          direction,
+          Services.focus.FLAG_BYKEY
+        );
+        break;
+      }
+    }
   }
 
   statusCardTemplate() {

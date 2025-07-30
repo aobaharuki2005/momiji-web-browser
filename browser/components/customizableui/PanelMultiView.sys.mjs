@@ -1595,7 +1595,8 @@ export var PanelView = class extends AssociatedToNode {
         localName == "a" ||
         localName == "moz-toggle" ||
         node.classList.contains("text-link") ||
-        (!arrowKey && isNavigableWithTabOnly)
+        (!arrowKey && isNavigableWithTabOnly) ||
+        node.dataset?.capturesFocus === "true"
       ) {
         // Set the tabindex attribute to make sure the node is focusable.
         // Don't do this for browser and iframe elements because this breaks
@@ -1603,7 +1604,8 @@ export var PanelView = class extends AssociatedToNode {
         if (
           localName != "browser" &&
           localName != "iframe" &&
-          !node.hasAttribute("tabindex")
+          !node.hasAttribute("tabindex") &&
+          node.dataset?.capturesFocus !== "true"
         ) {
           node.setAttribute("tabindex", "-1");
         }
@@ -1779,9 +1781,14 @@ export var PanelView = class extends AssociatedToNode {
       focus = null;
     }
 
-    // Some panels contain embedded documents. We can't manage
-    // keyboard navigation within those.
-    if (focus && (focus.tagName == "browser" || focus.tagName == "iframe")) {
+    // Some panels contain embedded documents or need to capture focus events.
+    // We can't manage keyboard navigation within those.
+    if (
+      focus &&
+      (focus.tagName == "browser" ||
+        focus.tagName == "iframe" ||
+        focus.dataset?.capturesFocus === "true")
+    ) {
       return;
     }
 

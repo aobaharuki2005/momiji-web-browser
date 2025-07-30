@@ -6,6 +6,11 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
 
 export default class IPProtectionSignedOutContentElement extends MozLitElement {
+  static shadowRootOptions = {
+    ...MozLitElement.shadowRootOptions,
+    delegatesFocus: true,
+  };
+
   constructor() {
     super();
   }
