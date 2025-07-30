@@ -1023,8 +1023,8 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 #monitor-partial-breaches-link:focus-visible,
 .monitor-block > a:focus-visible,
 #monitor-breaches-link:focus-visible {
-  outline: var(--in-content-focus-outline);
-  outline-offset: var(--in-content-focus-outline-offset);
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
 }
 
 .monitor-card.loading::after,

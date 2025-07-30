@@ -59,7 +59,7 @@
 
 .card-container-header:focus-visible,
 .view-all-link:focus-visible {
-  outline: 2px solid var(--in-content-focus-outline-color);
+  outline: var(--focus-outline);
 }
 
 .chevron-icon {

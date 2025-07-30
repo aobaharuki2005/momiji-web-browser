@@ -85,7 +85,7 @@
 }
 
 ol {
-  outline-offset: var(--in-content-focus-outline-inset);
+  outline-offset: var(--focus-outline-inset);
   margin-block: 0;
   padding-inline-start: 0;
   overflow: hidden auto;

@@ -3277,7 +3277,7 @@ main section {
   border: 1px solid var(--newtab-border-color);
 }
 .location-input-wrapper input:focus-visible {
-  outline: 2px solid var(--focus-outline-color);
+  outline: var(--focus-outline);
 }
 
 .has-weather.has-search .weatherCityRow,

@@ -49,11 +49,6 @@
   --in-content-danger-button-background: var(--button-background-color-destructive);
   --in-content-danger-button-background-hover: var(--button-background-color-destructive-hover);
   --in-content-danger-button-background-active: var(--button-background-color-destructive-active);
-  --in-content-focus-outline-color: var(--focus-outline-color);
-  --in-content-focus-outline-width: var(--focus-outline-width);
-  --in-content-focus-outline-offset: var(--focus-outline-offset);
-  --in-content-focus-outline-inset: var(--focus-outline-inset);
-  --in-content-focus-outline: var(--focus-outline);
 
   --in-content-table-background: light-dark(#f8f8fa, rgb(35, 34, 43));
   --in-content-table-border-color: var(--in-content-box-border-color);
@@ -142,8 +137,6 @@
     --in-content-danger-button-background: var(--in-content-primary-button-background);
     --in-content-danger-button-background-hover: var(--in-content-primary-button-background-hover);
     --in-content-danger-button-background-active: var(--in-content-primary-button-background-active);
-
-    --in-content-focus-outline-color: -moz-DialogText;
 
     --in-content-table-border-color: ThreeDDarkShadow;
     --in-content-table-background: -moz-Dialog;
@@ -293,10 +286,10 @@ html|input:where([type="color"]):focus-visible,
 xul|menulist:focus-visible,
 xul|tab:focus-visible > .tab-middle > .tab-text {
   box-shadow: none;
-  /* Don't set `var(--in-content-focus-outline)` here to allow more complicated UIs
+  /* Don't set `var(--focus-outline)` here to allow more complicated UIs
      to use a different color when needed */
-  outline: var(--in-content-focus-outline-width) solid var(--in-content-focus-outline-color);
-  outline-offset: var(--in-content-focus-outline-offset);
+  outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset);
 }
 
 html|select:not([size], [multiple]) {
@@ -418,7 +411,6 @@ xul|button.primary:not([disabled="true"]):hover:active {
   --in-content-primary-button-background: var(--in-content-danger-button-background);
   --in-content-primary-button-background-hover: var(--in-content-danger-button-background-hover);
   --in-content-primary-button-background-active: var(--in-content-danger-button-background-active);
-  --in-content-focus-outline-color: var(--in-content-danger-button-background);
 }
 
 @media not (forced-colors) {
@@ -537,7 +529,7 @@ html|textarea:focus,
 xul|tree:focus-visible,
 xul|richlistbox:focus-visible {
   border-color: transparent;
-  outline: var(--in-content-focus-outline);
+  outline: var(--focus-outline);
   outline-offset: -1px; /* Prevents antialising around the corners */
 }
 
@@ -749,8 +741,8 @@ html|*#categories > html|*.category:dir(rtl) {
 
 #categories[keyboard-navigation="true"]:focus-visible > .category[current],
 #categories > .category:focus-visible {
-  outline: var(--in-content-focus-outline);
-  outline-offset: var(--in-content-focus-outline-inset);
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-inset);
 }
 
 html|*#categories[last-input-type="mouse"] > html|button.category:focus-visible {
@@ -886,12 +878,12 @@ xul|treechildren::-moz-tree-row(selected) {
     --in-content-button-text-color: var(--in-content-item-selected-text);
     --in-content-button-text-color-hover: var(--in-content-item-selected-text);
     --in-content-button-text-color-active: var(--in-content-button-text-color-hover);
-    --in-content-focus-outline-color: var(--in-content-item-selected-text);
+    --focus-outline-color: var(--in-content-item-selected-text);
   }
 }
 
 xul|richlistitem[selected] xul|menulist:focus-visible {
-  outline-offset: var(--in-content-focus-outline-inset);
+  outline-offset: var(--focus-outline-inset);
 }
 
 /* Use a 2px border so that selected row highlight is still visible behind
@@ -1148,8 +1140,8 @@ xul|*.sidebar-footer-link {
 }
 
 .sidebar-footer-link:focus-visible {
-  outline: var(--in-content-focus-outline);
-  outline-offset: var(--in-content-focus-outline-inset);
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-inset);
 }
 
 .sidebar-footer-icon {

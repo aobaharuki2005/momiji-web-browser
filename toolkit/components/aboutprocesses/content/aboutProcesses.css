@@ -164,7 +164,7 @@ td:not(:hover) > .profiler-icon:not(.profiler-active, :focus-visible) {
   outline: none;
 }
 .twisty:-moz-focusring::before {
-  outline: var(--in-content-focus-outline);
+  outline: var(--focus-outline);
 }
 .indent {
   padding-inline: 48px 0;
