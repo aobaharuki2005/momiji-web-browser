@@ -2018,11 +2018,8 @@ pref("browser.newtabpage.activity-stream.discoverystream.onboardingExperience.en
 // List of locales that get thumbs up/down on recommended stories by default.
 pref("browser.newtabpage.activity-stream.discoverystream.thumbsUpDown.locale-thumbs-config", "en-US, en-GB, en-CA");
 
-#ifdef NIGHTLY_BUILD
-  pref("browser.newtabpage.activity-stream.telemetry.privatePing.enabled", true);
-#else
-  pref("browser.newtabpage.activity-stream.telemetry.privatePing.enabled", false);
-#endif
+pref("browser.newtabpage.activity-stream.telemetry.privatePing.enabled", false);
+
 // Redacts content interaction ids from original New Tab ping once data processing migrated to the Newtab_content private ping
 pref("browser.newtabpage.activity-stream.telemetry.privatePing.redactNewtabPing.enabled", false);
 pref("browser.newtabpage.activity-stream.telemetry.privatePing.maxSubmissionDelayMs", 5000);

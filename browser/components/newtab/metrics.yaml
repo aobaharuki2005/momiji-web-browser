@@ -695,6 +695,10 @@ newtab:
         description: >
           If click belongs in a section, if that section is followed
         type: boolean
+      content_redacted:
+        description: >
+          Are content details sent separately in the newtab_content ping
+        type: boolean
     send_in_pings:
       - newtab
 
@@ -725,6 +729,10 @@ newtab:
         description: >
           Where the source of the event originated ("button", "context menu", etc.)
         type: string
+      content_redacted:
+        description: >
+          Are content details sent separately in the newtab_content ping
+        type: boolean
     send_in_pings:
       - newtab
 
@@ -752,6 +760,10 @@ newtab:
           position of section on newtab
         type: string
       event_source: *event_source
+      content_redacted:
+        description: >
+          Are content details sent separately in the newtab_content ping
+        type: boolean
     send_in_pings:
       - newtab
 
@@ -779,6 +791,10 @@ newtab:
           position of section on newtab
         type: string
       event_source: *event_source
+      content_redacted:
+        description: >
+          Are content details sent separately in the newtab_content ping
+        type: boolean
     send_in_pings:
       - newtab
 
@@ -806,6 +822,10 @@ newtab:
           position of section on newtab
         type: string
       event_source: *event_source
+      content_redacted:
+        description: >
+          Are content details sent separately in the newtab_content ping
+        type: boolean
     send_in_pings:
       - newtab
 
@@ -1431,6 +1451,10 @@ topsites:
       newtab_visit_id: *newtab_visit_id
       is_sponsored: *is_sponsored
       position: *topsite_position
+      content_redacted:
+        description: >
+          Are content details sent separately in the newtab_content ping
+        type: boolean
     send_in_pings:
       - newtab
 
@@ -1696,6 +1720,10 @@ pocket:
           If click belongs in a section, the numeric position of the section
         type: string
       is_section_followed: *is_section_followed
+      content_redacted:
+        description: >
+          Are content details sent separately in the newtab_content ping
+        type: boolean
     send_in_pings:
       - newtab
 
@@ -1763,6 +1791,10 @@ pocket:
         type: string
       is_section_followed: *is_section_followed
       event_source: *event_source
+      content_redacted:
+        description: >
+          Are content details sent separately in the newtab_content ping
+        type: boolean
     send_in_pings:
       - newtab
 
@@ -2015,6 +2047,10 @@ pocket:
           If event belongs in a section, the numeric position of the section
         type: string
       is_section_followed: *is_section_followed
+      content_redacted:
+        description: >
+          Are content details sent separately in the newtab_content ping
+        type: boolean
     send_in_pings:
       - newtab
 
@@ -2081,6 +2117,28 @@ newtab_content:
             type: string
         model_id:
           type: string
+
+  ping_version:
+    type: quantity
+    description: >
+      Marks major revisions of data collection methods or format for this ping. Because we are not recording Firefox version,
+      this field has been added to assist the data pipeline. To avoid user possible fingerprinting, this should be updated only when
+      necessary.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1980022
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1980022
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - nbarrett@mozilla.com
+      - rrando@mozilla.com
+    expires: never
+    send_in_pings:
+      - newtab-content
+    lifetime: application
+    unit: version number
+
 
 
   coarse_os:
@@ -2356,6 +2414,7 @@ newtab_content:
     extra_keys:
       recommendation_id: *recommendation_id
       tile_id: *pocket_tile_id
+      format: *format
       thumbs_up:
         description: >
           If the user clicked thumbs up.
