@@ -136,18 +136,11 @@ public class WebAuthnCredentialManager {
       final WebAuthnUtils.WebAuthnPublicCredential[] excludeList,
       final GeckoBundle authenticatorSelection,
       final byte[] clientDataHash) {
-    final Boolean requireResidentKey =
-        authenticatorSelection.getBoolean("requireResidentKey", false);
 
-    final Boolean residentKeyDiscouraged =
-        authenticatorSelection
-            .getString("residentKey", requireResidentKey ? "required" : "discouraged")
-            .equals("discouraged");
-
-    // We only use Credential Manager for Passkeys. If residentKey is discouraged, use GMS FIDO2.
-    if (residentKeyDiscouraged) {
-      return GeckoResult.fromException(new WebAuthnUtils.Exception("NOT_SUPPORTED_ERR"));
-    }
+    // We use Credential Manager first. If it doesn't work, we use GMS FIDO2.
+    // Credential manager may support non-discoverable keys,
+    // Else, following the specifications, `residentKey=discouraged` allows discoverable keys too
+    // but prefer non-discoverable keys
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
       return GeckoResult.fromException(new WebAuthnUtils.Exception("NOT_SUPPORTED_ERR"));
     }

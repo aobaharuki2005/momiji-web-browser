@@ -362,7 +362,17 @@ public class WebAuthnUtils {
     json.put("excludeCredentials", excludeCredentials);
 
     final JSONObject authenticatorSelectionJSON = authenticatorSelection.toJSONObject();
-    authenticatorSelectionJSON.put("requireResidentKey", true);
+    /*
+    dom/webauthn/WebAuthnHandler.cpp: WebAuthnHandler::MakeCredential set `residentKey`
+    to "required" if there is no `residentKey` and `requireResidentKey` is true, and
+    `requireResidentKey` should be true if `residentKey` is "required". So we can retrieve
+    `requireResidentKey`'s value from `residentKey`.
+    `requireResidentKey` is only used if `residentKey` isn't set, so it shouldn't be used by any
+    authenticator that follows the specs.
+     */
+    authenticatorSelectionJSON.put(
+        "requireResidentKey",
+        authenticatorSelection.getString("residentKey", "").equals("required"));
     json.put("authenticatorSelection", authenticatorSelectionJSON);
 
     final JSONObject extensions = new JSONObject();
