@@ -658,16 +658,9 @@ var TelemetryReportingPolicyImpl = {
    *  major version (see Bug 1971184).
    */
   updateTOUPrefsForLegacyUsers() {
-    const migrationCheckComplete = Services.prefs.getBoolPref(
-      TOU_PREF_MIGRATION_CHECK,
-      false
-    );
-    // We only need to run the pref migration check once and do not need to run
-    // it if users already accepted the default TOU version or higher.
     if (
-      migrationCheckComplete ||
       this.termsOfUseAcceptedVersion >=
-        TelemetryReportingPolicy.DEFAULT_TERMS_OF_USE_POLICY_VERSION
+      TelemetryReportingPolicy.DEFAULT_TERMS_OF_USE_POLICY_VERSION
     ) {
       return;
     }
