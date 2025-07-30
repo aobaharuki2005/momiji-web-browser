@@ -1531,7 +1531,7 @@ class BrowserToolbarMiddlewareTest {
         appStore.dispatch(AppAction.OrientationChange(Landscape)).joinBlocking()
         shadowOf(Looper.getMainLooper()).idle()
         assertEquals(
-            listOf(expectedReaderModeButton(false), expectedTranslateButton, expectedShareButton),
+            listOf(expectedReaderModeButton(false), expectedTranslateButton, expectedShareButton()),
             toolbarStore.state.displayState.pageActionsEnd,
         )
 
