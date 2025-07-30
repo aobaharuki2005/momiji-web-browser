@@ -34,9 +34,11 @@ bool CurrentThreadIsGCFinalizing();
 #endif
 
 namespace gc {
-void MaybeTriggerGCAfterMalloc(ZoneAllocator* zoneAlloc);
-void MaybeTriggerGCAfterJitCodeAlloc(ZoneAllocator* zoneAlloc);
-}  // namespace gc
+void MaybeMallocTriggerZoneGC(JSRuntime* rt, ZoneAllocator* zoneAlloc,
+                              const HeapSize& heap,
+                              const HeapThreshold& threshold,
+                              JS::GCReason reason);
+}
 
 // Base class of JS::Zone that provides malloc memory allocation and accounting.
 class ZoneAllocator : public JS::shadow::Zone,
@@ -74,7 +76,7 @@ class ZoneAllocator : public JS::shadow::Zone,
     mallocTracker.trackGCMemory(cell, nbytes, use);
 #endif
 
-    maybeTriggerGCAfterMalloc();
+    maybeTriggerGCOnMalloc();
   }
 
   void removeCellMemory(js::gc::Cell* cell, size_t nbytes, js::MemoryUse use,
@@ -120,7 +122,7 @@ class ZoneAllocator : public JS::shadow::Zone,
     mallocTracker.incNonGCMemory(mem, nbytes, use);
 #endif
 
-    maybeTriggerGCAfterMalloc();
+    maybeTriggerGCOnMalloc();
   }
   void decNonGCMemory(void* mem, size_t nbytes, MemoryUse use,
                       bool updateRetainedSize) {
@@ -140,30 +142,30 @@ class ZoneAllocator : public JS::shadow::Zone,
   void incJitMemory(size_t nbytes) {
     MOZ_ASSERT(nbytes);
     jitHeapSize.addBytes(nbytes);
-    maybeTriggerGCAfterJitCodeAlloc();
+    maybeTriggerZoneGC(jitHeapSize, jitHeapThreshold,
+                       JS::GCReason::TOO_MUCH_JIT_CODE);
   }
   void decJitMemory(size_t nbytes) {
     MOZ_ASSERT(nbytes);
     jitHeapSize.removeBytes(nbytes, true);
   }
 
-  // Check malloc/JIT thresholds and trigger a GC if necessary.
-  //
-  // Unlike for GC cells, after a zone has started collecting incremental slices
-  // are not triggered for malloc and JIT allocations.
-  void maybeTriggerGCAfterMalloc() {
-    if (MOZ_UNLIKELY(mallocHeapSize.bytes() >=
-                     mallocHeapThreshold.startBytes())) {
-      gc::MaybeTriggerGCAfterMalloc(this);
-    }
-  }
-  void maybeTriggerGCAfterJitCodeAlloc() {
-    if (MOZ_UNLIKELY(jitHeapSize.bytes() >= jitHeapThreshold.startBytes())) {
-      gc::MaybeTriggerGCAfterJitCodeAlloc(this);
-    }
+  // Check malloc allocation threshold and trigger a zone GC if necessary.
+  void maybeTriggerGCOnMalloc() {
+    maybeTriggerZoneGC(mallocHeapSize, mallocHeapThreshold,
+                       JS::GCReason::TOO_MUCH_MALLOC);
   }
 
  private:
+  void maybeTriggerZoneGC(const js::gc::HeapSize& heap,
+                          const js::gc::HeapThreshold& threshold,
+                          JS::GCReason reason) {
+    if (heap.bytes() >= threshold.startBytes()) {
+      gc::MaybeMallocTriggerZoneGC(runtimeFromAnyThread(), this, heap,
+                                   threshold, reason);
+    }
+  }
+
   void updateCollectionRate(mozilla::TimeDuration mainThreadGCTime,
                             size_t initialBytesForAllZones);
 

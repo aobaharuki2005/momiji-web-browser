@@ -1723,7 +1723,7 @@ static ArrayBufferObjectMaybeShared* CreateSpecificWasmBuffer(
   } else if (wasmReservedBytes > WasmReservedBytesStartTriggering) {
     wasmReservedBytesSinceLast += uint64_t(buffer->mappedSize());
     if (wasmReservedBytesSinceLast > WasmReservedBytesPerTrigger) {
-      (void)cx->runtime()->gc.triggerFullGC(JS::GCReason::TOO_MUCH_WASM_MEMORY);
+      (void)cx->runtime()->gc.triggerGC(JS::GCReason::TOO_MUCH_WASM_MEMORY);
       wasmReservedBytesSinceLast = 0;
     }
   } else {
