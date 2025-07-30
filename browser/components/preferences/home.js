@@ -190,8 +190,8 @@ var gHomePane = {
           option.classList.add("addon-with-favicon");
           option.value = addon.id;
           option.label = addon.name;
+          option.setAttribute("image", addon.iconURL);
           menupopup.append(option);
-          option.querySelector("image").src = addon.iconURL;
         }
         let setting = extensionOptions.find(o => o.id == addon.id);
         if (

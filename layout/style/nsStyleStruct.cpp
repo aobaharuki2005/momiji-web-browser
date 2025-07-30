@@ -684,14 +684,6 @@ nsChangeHint nsStyleList::CalcDifference(const nsStyleList& aNewData,
   return hint;
 }
 
-already_AddRefed<nsIURI> nsStyleList::GetListStyleImageURI() const {
-  if (!mListStyleImage.IsUrl()) {
-    return nullptr;
-  }
-
-  return do_AddRef(mListStyleImage.AsUrl().GetURI());
-}
-
 // --------------------
 // nsStyleXUL
 //

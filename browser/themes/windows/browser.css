@@ -215,14 +215,6 @@
   }
 }
 
-/* Bookmarks roots menu-items */
-
-#bookmarksToolbarFolderMenu,
-#BMB_bookmarksToolbar,
-#panelMenu_bookmarksToolbar {
-  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.svg");
-}
-
 /* Address bar */
 
 #urlbar,

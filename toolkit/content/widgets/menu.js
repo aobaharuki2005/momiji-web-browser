@@ -193,8 +193,7 @@
         // find-in-page in preferences, it really sucks. We can't use
         // text=label everywhere because we rely on the accesskey...
         ".menu-highlightable-text": "text=label,crop,accesskey",
-        ".menu-icon":
-          "src=image,validate,triggeringprincipal=iconloadingprincipal",
+        ".menu-icon": "srcset=image",
         ".menu-accel": "value=acceltext",
       };
     }
@@ -202,7 +201,7 @@
     static get fragment() {
       let frag = document.importNode(
         MozXULElement.parseXULToFragment(`
-      <image class="menu-icon" aria-hidden="true"/>
+      <html:img loading="lazy" class="menu-icon" aria-hidden="true"/>
       <label class="menu-text" crop="end" aria-hidden="true"/>
       <label class="menu-highlightable-text" crop="end" aria-hidden="true"/>
       <label class="menu-accel" aria-hidden="true"/>
@@ -299,8 +298,7 @@
     static get inheritedAttributes() {
       return {
         ".menu-text": "value=label,accesskey,crop",
-        ".menu-icon":
-          "src=image,triggeringprincipal=iconloadingprincipal,validate",
+        ".menu-icon": "srcset=image",
         ".menu-accel": "value=acceltext",
       };
     }
@@ -326,7 +324,7 @@
     get fragment() {
       let frag = document.importNode(
         MozXULElement.parseXULToFragment(`
-      <image class="menu-icon"/>
+      <html:img loading="lazy" class="menu-icon" aria-hidden="true"/>
       <label class="menu-text" flex="1" crop="end" aria-hidden="true"/>
       <label class="menu-accel" aria-hidden="true"/>
     `),

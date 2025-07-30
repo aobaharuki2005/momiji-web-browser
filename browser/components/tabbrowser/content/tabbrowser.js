@@ -9356,9 +9356,10 @@ var TabContextMenu = {
       document.l10n.setAttributes(item, "tab-context-unnamed-group");
     }
 
-    let iconClass = isSaved ? "tab-group-icon-closed" : "tab-group-icon";
-    item.classList.add("menuitem-iconic");
-    item.classList.add(iconClass);
+    item.classList.add("menuitem-iconic", "tab-group-icon");
+    if (isSaved) {
+      item.classList.add("tab-group-icon-closed");
+    }
 
     item.style.setProperty(
       "--tab-group-color",

@@ -610,8 +610,11 @@ export class TabsPanel extends TabsListBase {
       "all-tabs-group-button",
       "subviewbutton",
       "subviewbutton-iconic",
-      group.collapsed ? "tab-group-icon-collapsed" : "tab-group-icon"
+      "tab-group-icon"
     );
+    if (group.collapsed) {
+      button.classList.add("tab-group-icon-collapsed");
+    }
     button.setAttribute("flex", "1");
     button.setAttribute("crop", "end");
 
