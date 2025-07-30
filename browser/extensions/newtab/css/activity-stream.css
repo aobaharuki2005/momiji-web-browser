@@ -4565,8 +4565,56 @@ main section {
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-.focus-timer-wrapper .focus-timer-types-wrapper button.active {
-  background: teal;
+.focus-timer {
+  grid-column: span 1;
+  width: var(--newtab-card-width-medium);
+  background: var(--newtab-background-card);
+  border-radius: var(--border-radius-large);
+  padding-block: var(--space-large);
+  max-height: var(--newtab-card-height);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.focus-timer-tabs {
+  margin-block-end: var(--space-medium);
+}
+
+.focus-timer-tabs > moz-button:first-child {
+  margin-inline-end: var(--space-small);
+}
+
+.focus-timer-controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.focus-timer-controls > moz-button:last-child {
+  margin-inline-start: var(--space-xsmall);
+}
+
+.focus-timer-controls > moz-button::part(button) {
+  border-radius: 50%;
+  padding: calc(var(--space-large) + 0.5 * var(--space-xxsmall));
+}
+
+.focus-timer-input {
+  color: var(--text-color);
+  font-size: calc(2 * var(--font-size-xlarge));
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  width: 125px;
+  padding: 0;
+  margin-inline-end: var(--space-small);
+  border: none;
+  opacity: 1;
+  transition: opacity 0.8s ease, width 0.8s ease;
+}
+.focus-timer-input.hidden {
+  opacity: 0;
+  width: 0;
 }
 
 .progress-circle-wrapper {
@@ -4580,10 +4628,12 @@ main section {
   --timer-violet-light: var(--color-violet-0);
   /* Complete timer */
   --timer-green: var(--color-green-20);
-  height: 162px;
-  margin: var(--space-medium);
+  height: 0;
+  opacity: 0;
   position: relative;
   width: 162px;
+  overflow: hidden;
+  transition: height 0.8s ease, opacity 0.8s ease;
   /* main timer colours */
   /* break timer colours */
   /* timer turns green when complete */
@@ -4646,6 +4696,11 @@ main section {
   justify-content: center;
   position: absolute;
   width: 100%;
+}
+
+.progress-circle-wrapper.visible {
+  opacity: 1;
+  height: 162px;
 }
 
 .ds-onboarding-container,

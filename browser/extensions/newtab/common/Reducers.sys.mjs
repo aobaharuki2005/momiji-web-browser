@@ -201,18 +201,18 @@ export const INITIAL_STATE = {
     // Focus will the default state
     timerType: "focus",
     focus: {
-      // Timer duration set by user
-      duration: 0,
+      // Timer duration set by user; 25 mins by default
+      duration: 25 * 60,
       // Initial duration - also set by the user; does not update until timer ends or user resets timer
-      initialDuration: 0,
+      initialDuration: 25 * 60,
       // the Date.now() value when a user starts/resumes a timer
       startTime: null,
       // Boolean indicating if timer is currently running
       isRunning: false,
     },
     break: {
-      duration: 0,
-      initialDuration: 0,
+      duration: 5 * 60,
+      initialDuration: 5 * 60,
       startTime: null,
       isRunning: false,
     },

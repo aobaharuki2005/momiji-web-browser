@@ -7856,18 +7856,18 @@ const INITIAL_STATE = {
     // Focus will the default state
     timerType: "focus",
     focus: {
-      // Timer duration set by user
-      duration: 0,
+      // Timer duration set by user; 25 mins by default
+      duration: 25 * 60,
       // Initial duration - also set by the user; does not update until timer ends or user resets timer
-      initialDuration: 0,
+      initialDuration: 25 * 60,
       // the Date.now() value when a user starts/resumes a timer
       startTime: null,
       // Boolean indicating if timer is currently running
       isRunning: false,
     },
     break: {
-      duration: 0,
-      initialDuration: 0,
+      duration: 5 * 60,
+      initialDuration: 5 * 60,
       startTime: null,
       isRunning: false,
     },
@@ -12675,12 +12675,13 @@ const getClipPath = progress => {
   }
   return `polygon(${points.join(", ")})`;
 };
-function FocusTimer({
+const FocusTimer = ({
   dispatch
-}) {
+}) => {
   const [timeLeft, setTimeLeft] = (0,external_React_namespaceObject.useState)(0);
   // calculated value for the progress circle; 1 = 100%
   const [progress, setProgress] = (0,external_React_namespaceObject.useState)(0);
+  const [progressVisible, setProgressVisible] = (0,external_React_namespaceObject.useState)(false);
   const timerType = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.TimerWidget.timerType);
   const inputRef = (0,external_React_namespaceObject.useRef)(null);
   const arcRef = (0,external_React_namespaceObject.useRef)(null);
@@ -12705,20 +12706,35 @@ function FocusTimer({
         const remaining = calculateTimeRemaining(duration, startTime);
         if (remaining <= 0) {
           clearInterval(interval);
-
-          // circle is complete, this will trigger animation to a completed green circle
-          setProgress(1);
-
-          // Reset all styles to default after a delay to allow for the animation above
-          setTimeout(() => {
-            resetProgressCircle();
-          }, 1500);
           dispatch(actionCreators.AlsoToMain({
             type: actionTypes.WIDGETS_TIMER_END,
             data: {
               timerType
             }
           }));
+
+          // animate the progress circle to turn solid green
+          setProgress(1);
+
+          // More transitions after a delay to allow the animation above to complete
+          setTimeout(() => {
+            // progress circle goes back to default grey
+            resetProgressCircle();
+
+            // There's more to see!
+            setTimeout(() => {
+              // progress circle rolls up to show timer in the default state
+              setProgressVisible(false);
+
+              // switch over to the other timer type
+              dispatch(actionCreators.AlsoToMain({
+                type: actionTypes.WIDGETS_TIMER_SET_TYPE,
+                data: {
+                  timerType: timerType === "focus" ? "break" : "focus"
+                }
+              }));
+            }, 1500);
+          }, 1500);
         }
 
         // using setTimeLeft to trigger a re-render of the component to show live countdown each second
@@ -12742,23 +12758,25 @@ function FocusTimer({
 
   // set timer function
   const setTimerMinutes = e => {
-    e.preventDefault();
-    const minutes = parseInt(inputRef.current.value, 10);
-    const seconds = minutes * 60;
-    if (minutes > 0) {
-      dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.WIDGETS_TIMER_SET_DURATION,
-        data: {
-          timerType,
-          duration: seconds
-        }
-      }));
+    if (e.key === "Enter") {
+      const minutes = parseInt(inputRef.current.value, 10);
+      const seconds = minutes * 60;
+      if (minutes > 0) {
+        dispatch(actionCreators.AlsoToMain({
+          type: actionTypes.WIDGETS_TIMER_SET_DURATION,
+          data: {
+            timerType,
+            duration: seconds
+          }
+        }));
+      }
     }
   };
 
   // Pause timer function
   const toggleTimer = () => {
     if (!isRunning && duration > 0) {
+      setProgressVisible(true);
       dispatch(actionCreators.AlsoToMain({
         type: actionTypes.WIDGETS_TIMER_PLAY,
         data: {
@@ -12789,6 +12807,11 @@ function FocusTimer({
 
     // Reset progress value and gradient arc on the progress circle
     resetProgressCircle();
+
+    // Transition the timer back to the default state if it was expanded
+    if (progressVisible) {
+      setProgressVisible(false);
+    }
   };
 
   // Toggles between "focus" and "break" timer types
@@ -12814,34 +12837,20 @@ function FocusTimer({
     });
   };
   return timerData ? /*#__PURE__*/external_React_default().createElement("article", {
-    className: "focus-timer-wrapper"
-  }, /*#__PURE__*/external_React_default().createElement("p", null, "Focus timer widget"), /*#__PURE__*/external_React_default().createElement("div", {
-    className: "focus-timer-types-wrapper"
-  }, /*#__PURE__*/external_React_default().createElement("button", {
-    className: `timer-type-focus ${timerType === "focus" ? "active" : " "}`,
+    className: "focus-timer"
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "focus-timer-tabs"
+  }, /*#__PURE__*/external_React_default().createElement("moz-button", {
+    type: timerType === "focus" ? "primary" : "ghost",
+    label: "Focus",
     onClick: () => toggleType("focus")
-  }, "Focus"), /*#__PURE__*/external_React_default().createElement("button", {
-    className: `timer-type-break ${timerType === "break" ? "active" : " "}`,
+  }), /*#__PURE__*/external_React_default().createElement("moz-button", {
+    type: timerType === "break" ? "primary" : "ghost",
+    label: "Break",
     onClick: () => toggleType("break")
-  }, "Break")), /*#__PURE__*/external_React_default().createElement("form", {
-    onSubmit: setTimerMinutes
-  }, /*#__PURE__*/external_React_default().createElement("label", {
-    htmlFor: "countdown"
-  }), /*#__PURE__*/external_React_default().createElement("input", {
-    type: "number",
-    id: "countdown",
-    ref: inputRef
-  }), /*#__PURE__*/external_React_default().createElement("button", {
-    type: "submit"
-  }, "Set minutes")), /*#__PURE__*/external_React_default().createElement("div", {
-    className: "timer-buttons"
-  }, /*#__PURE__*/external_React_default().createElement("button", {
-    onClick: toggleTimer
-  }, isRunning ? "Pause" : "Play"), /*#__PURE__*/external_React_default().createElement("button", {
-    onClick: resetTimer
-  }, "Reset")), /*#__PURE__*/external_React_default().createElement("div", {
+  })), /*#__PURE__*/external_React_default().createElement("div", {
     role: "progress",
-    className: "progress-circle-wrapper"
+    className: `progress-circle-wrapper${progressVisible ? " visible" : ""}`
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "progress-circle-background"
   }), /*#__PURE__*/external_React_default().createElement("div", {
@@ -12851,13 +12860,29 @@ function FocusTimer({
     className: `progress-circle ${timerType === "break" ? "progress-circle-break break-visible" : "break-hidden"}`,
     ref: timerType === "break" ? arcRef : null
   }), /*#__PURE__*/external_React_default().createElement("div", {
-    className: `progress-circle-complete ${progress === 1 ? "visible" : ""}`
+    className: `progress-circle-complete${progress === 1 ? " visible" : ""}`
   }), /*#__PURE__*/external_React_default().createElement("div", {
     role: "timer",
     className: "progress-circle-label"
-  }, /*#__PURE__*/external_React_default().createElement("p", null, formatTime(timeLeft))))) : null;
-}
-
+  }, /*#__PURE__*/external_React_default().createElement("p", null, formatTime(timeLeft)))), /*#__PURE__*/external_React_default().createElement("div", {
+    className: "focus-timer-controls"
+  }, /*#__PURE__*/external_React_default().createElement("input", {
+    className: `focus-timer-input${progressVisible ? " hidden" : ""}`,
+    value: "01:00",
+    onKeyDown: setTimerMinutes,
+    ref: inputRef
+  }), /*#__PURE__*/external_React_default().createElement("moz-button", {
+    type: "primary",
+    iconsrc: `chrome://global/skin/media/${isRunning ? "pause" : "play"}-fill.svg`,
+    title: isRunning ? "Pause" : "Play",
+    onClick: toggleTimer
+  }), /*#__PURE__*/external_React_default().createElement("moz-button", {
+    type: "icon ghost",
+    iconsrc: "chrome://newtab/content/data/content/assets/arrow-clockwise-16.svg",
+    title: "Reset",
+    onClick: resetTimer
+  }))) : null;
+};
 ;// CONCATENATED MODULE: ./content-src/components/Widgets/Widgets.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,

@@ -72,10 +72,12 @@ export const getClipPath = progress => {
   return `polygon(${points.join(", ")})`;
 };
 
-function FocusTimer({ dispatch }) {
+export const FocusTimer = ({ dispatch }) => {
   const [timeLeft, setTimeLeft] = useState(0);
   // calculated value for the progress circle; 1 = 100%
   const [progress, setProgress] = useState(0);
+  const [progressVisible, setProgressVisible] = useState(false);
+
   const timerType = useSelector(state => state.TimerWidget.timerType);
   const inputRef = useRef(null);
   const arcRef = useRef(null);
@@ -101,20 +103,37 @@ function FocusTimer({ dispatch }) {
         if (remaining <= 0) {
           clearInterval(interval);
 
-          // circle is complete, this will trigger animation to a completed green circle
-          setProgress(1);
-
-          // Reset all styles to default after a delay to allow for the animation above
-          setTimeout(() => {
-            resetProgressCircle();
-          }, 1500);
-
           dispatch(
             ac.AlsoToMain({
               type: at.WIDGETS_TIMER_END,
               data: { timerType },
             })
           );
+
+          // animate the progress circle to turn solid green
+          setProgress(1);
+
+          // More transitions after a delay to allow the animation above to complete
+          setTimeout(() => {
+            // progress circle goes back to default grey
+            resetProgressCircle();
+
+            // There's more to see!
+            setTimeout(() => {
+              // progress circle rolls up to show timer in the default state
+              setProgressVisible(false);
+
+              // switch over to the other timer type
+              dispatch(
+                ac.AlsoToMain({
+                  type: at.WIDGETS_TIMER_SET_TYPE,
+                  data: {
+                    timerType: timerType === "focus" ? "break" : "focus",
+                  },
+                })
+              );
+            }, 1500);
+          }, 1500);
         }
 
         // using setTimeLeft to trigger a re-render of the component to show live countdown each second
@@ -150,23 +169,26 @@ function FocusTimer({ dispatch }) {
 
   // set timer function
   const setTimerMinutes = e => {
-    e.preventDefault();
-    const minutes = parseInt(inputRef.current.value, 10);
-    const seconds = minutes * 60;
+    if (e.key === "Enter") {
+      const minutes = parseInt(inputRef.current.value, 10);
+      const seconds = minutes * 60;
 
-    if (minutes > 0) {
-      dispatch(
-        ac.AlsoToMain({
-          type: at.WIDGETS_TIMER_SET_DURATION,
-          data: { timerType, duration: seconds },
-        })
-      );
+      if (minutes > 0) {
+        dispatch(
+          ac.AlsoToMain({
+            type: at.WIDGETS_TIMER_SET_DURATION,
+            data: { timerType, duration: seconds },
+          })
+        );
+      }
     }
   };
 
   // Pause timer function
   const toggleTimer = () => {
     if (!isRunning && duration > 0) {
+      setProgressVisible(true);
+
       dispatch(
         ac.AlsoToMain({
           type: at.WIDGETS_TIMER_PLAY,
@@ -200,6 +222,11 @@ function FocusTimer({ dispatch }) {
 
     // Reset progress value and gradient arc on the progress circle
     resetProgressCircle();
+
+    // Transition the timer back to the default state if it was expanded
+    if (progressVisible) {
+      setProgressVisible(false);
+    }
   };
 
   // Toggles between "focus" and "break" timer types
@@ -231,32 +258,24 @@ function FocusTimer({ dispatch }) {
   };
 
   return timerData ? (
-    <article className="focus-timer-wrapper">
-      <p>Focus timer widget</p>
-      <div className="focus-timer-types-wrapper">
-        <button
-          className={`timer-type-focus ${timerType === "focus" ? "active" : " "}`}
+    <article className="focus-timer">
+      <div className="focus-timer-tabs">
+        <moz-button
+          type={timerType === "focus" ? "primary" : "ghost"}
+          label="Focus"
           onClick={() => toggleType("focus")}
-        >
-          Focus
-        </button>
-        <button
-          className={`timer-type-break ${timerType === "break" ? "active" : " "}`}
+        />
+        <moz-button
+          type={timerType === "break" ? "primary" : "ghost"}
+          label="Break"
           onClick={() => toggleType("break")}
-        >
-          Break
-        </button>
+        />
       </div>
-      <form onSubmit={setTimerMinutes}>
-        <label htmlFor="countdown"></label>
-        <input type="number" id="countdown" ref={inputRef} />
-        <button type="submit">Set minutes</button>
-      </form>
-      <div className="timer-buttons">
-        <button onClick={toggleTimer}>{isRunning ? "Pause" : "Play"}</button>
-        <button onClick={resetTimer}>Reset</button>
-      </div>
-      <div role="progress" className="progress-circle-wrapper">
+
+      <div
+        role="progress"
+        className={`progress-circle-wrapper${progressVisible ? " visible" : ""}`}
+      >
         <div className="progress-circle-background" />
 
         <div
@@ -270,14 +289,33 @@ function FocusTimer({ dispatch }) {
         />
 
         <div
-          className={`progress-circle-complete ${progress === 1 ? "visible" : ""}`}
+          className={`progress-circle-complete${progress === 1 ? " visible" : ""}`}
         />
         <div role="timer" className="progress-circle-label">
           <p>{formatTime(timeLeft)}</p>
         </div>
       </div>
+
+      <div className="focus-timer-controls">
+        <input
+          className={`focus-timer-input${progressVisible ? " hidden" : ""}`}
+          value="01:00"
+          onKeyDown={setTimerMinutes}
+          ref={inputRef}
+        />
+        <moz-button
+          type="primary"
+          iconsrc={`chrome://global/skin/media/${isRunning ? "pause" : "play"}-fill.svg`}
+          title={isRunning ? "Pause" : "Play"}
+          onClick={toggleTimer}
+        />
+        <moz-button
+          type="icon ghost"
+          iconsrc="chrome://newtab/content/data/content/assets/arrow-clockwise-16.svg"
+          title="Reset"
+          onClick={resetTimer}
+        />
+      </div>
     </article>
   ) : null;
-}
-
-export { FocusTimer };
+};

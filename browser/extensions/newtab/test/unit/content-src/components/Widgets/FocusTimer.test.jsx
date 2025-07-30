@@ -30,6 +30,6 @@ describe("<FocusTimer>", () => {
 
   it("should render", () => {
     assert.ok(wrapper.exists());
-    assert.ok(wrapper.find(".focus-timer-wrapper").exists());
+    assert.ok(wrapper.find(".focus-timer").exists());
   });
 });

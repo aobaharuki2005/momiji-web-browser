@@ -2,11 +2,57 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.focus-timer-wrapper {
-  .focus-timer-types-wrapper {
-    button.active {
-      background: teal;
-    }
+.focus-timer {
+  grid-column: span 1;
+  width: var(--newtab-card-width-medium);
+  background: var(--newtab-background-card);
+  border-radius: var(--border-radius-large);
+  padding-block: var(--space-large);
+  max-height: var(--newtab-card-height);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+}
+
+.focus-timer-tabs {
+  margin-block-end: var(--space-medium);
+}
+
+.focus-timer-tabs > moz-button:first-child {
+  margin-inline-end: var(--space-small);
+}
+
+.focus-timer-controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.focus-timer-controls > moz-button:last-child {
+  margin-inline-start: var(--space-xsmall);
+}
+
+.focus-timer-controls > moz-button::part(button) {
+  border-radius: 50%; // stylelint-disable-line declaration-property-value-disallowed-list
+  padding: calc(var(--space-large) + 0.5 * var(--space-xxsmall)); // 17px
+}
+
+.focus-timer-input {
+  color: var(--text-color);
+  font-size: calc(2 * var(--font-size-xlarge));
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  width: 125px;
+  padding: 0;
+  margin-inline-end: var(--space-small);
+  border: none;
+  opacity: 1;
+  transition: opacity 0.8s ease, width 0.8s ease;
+
+  &.hidden {
+    opacity: 0;
+    width: 0;
   }
 }
 
@@ -24,10 +70,12 @@
   /* Complete timer */
   --timer-green: var(--color-green-20);
 
-  height: 162px;
-  margin: var(--space-medium);
+  height: 0;
+  opacity: 0;
   position: relative;
   width: 162px;
+  overflow: hidden;
+  transition: height 0.8s ease, opacity 0.8s ease;
 
   .progress-circle-background,
   .progress-circle,
@@ -93,10 +141,10 @@
     opacity: 0;
     transition: opacity 1.5s ease-in-out;
     z-index: 2;
-  }
 
-  .progress-circle-complete.visible {
-    opacity: 1;
+    &.visible {
+      opacity: 1;
+    }
   }
 
   .progress-circle-label {
@@ -115,4 +163,7 @@
   }
 }
 
-
+.progress-circle-wrapper.visible {
+  opacity: 1;
+  height: 162px;
+}
