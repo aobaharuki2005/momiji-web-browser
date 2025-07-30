@@ -3840,7 +3840,71 @@ void CodeGenerator::visitPhi(LPhi* lir) {
   MOZ_CRASH("Unexpected LPhi in CodeGenerator");
 }
 
-void CodeGenerator::visitGoto(LGoto* lir) { jumpToBlock(lir->target()); }
+void CodeGenerator::visitGoto(LGoto* lir) {
+  // It would be valid to do simply `jumpToBlock(lir->target()); return;`.
+  // That shorts out chains of completely empty (apart from the final Goto)
+  // blocks.  However, we try to do a bit better by shorting out chains of
+  // blocks which are either completely empty or contain only MoveGroups, by
+  // emitting the MoveGroups at this point.  Hence this is a very limited form
+  // of tail duplication, in which the duplicated tail(s) consist entirely of
+  // MoveGroups.
+  //
+  // Ideally this logic should be in CodeGeneratorShared::jumpToBlock as it
+  // would cover more use cases.  That unfortunately creates a circular
+  // dependency between the classes CodeGeneratorShared, CodeGenerator{Arch}
+  // and CodeGenerator, which is not easy to resolve; specifically,
+  // CodeGeneratorShared would need to call CodeGenerator::visitMoveGroup, but
+  // CodeGenerator is (indirectly) a child class of CodeGeneratorShared.
+  //
+  // See CodeGeneratorShared::jumpToBlock(MBasicBlock*) as reference.
+  uint32_t numMoveGroupsCloned = 0;
+  MBasicBlock* target = lir->target();
+  while (true) {
+    LBlock* targetLBlock = target->lir();
+    LBlock* nextLBlock = targetLBlock->isMoveGroupsThenGoto();
+    if (!nextLBlock) {
+      break;
+    }
+    // This block is merely zero-or-more MoveGroups followed by a Goto.  Emit
+    // the MoveGroups and keep following the chain.
+    auto iter = targetLBlock->begin();
+    while (true) {
+      LInstruction* ins = *iter;
+      if (!ins->isMoveGroup()) {
+        break;
+      }
+      visitMoveGroup(ins->toMoveGroup());
+      iter++;
+      numMoveGroupsCloned++;
+    }
+    // Ensured by LBlock::isMoveGroupsThenGoto
+    MOZ_ASSERT((*iter)->isGoto());
+    MOZ_ASSERT((*iter)->toGoto()->getSuccessor(0)->lir() == nextLBlock);
+    iter++;
+    MOZ_RELEASE_ASSERT(iter == targetLBlock->end());
+    target = nextLBlock->mir();
+    if (numMoveGroupsCloned >= 1) {
+      // Be very conservative about cloning.  Higher numbers give more
+      // aggressive chasing but seem to sometimes cause a slight cycle count
+      // regression.  In practice, cloning one happens occasionally, cloning of
+      // two groups happens very rarely, and cloning of more than 2 groups has
+      // only been seen in artificially constructed test cases.
+      break;
+    }
+  }
+
+  // If the above loop exited due to hitting the MoveGroup clone limit, we
+  // still need to skip past any "trivial" blocks, to avoid asserting in
+  // `target->lir()->label()` below.
+  target = skipTrivialBlocks(target);
+
+  // No jump necessary if we can fall through to the next block.
+  if (isNextBlock(target->lir())) {
+    return;
+  }
+
+  masm.jump(target->lir()->label());
+}
 
 void CodeGenerator::visitTableSwitch(LTableSwitch* ins) {
   MTableSwitch* mir = ins->mir();
