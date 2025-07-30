@@ -265,7 +265,13 @@ def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
 
 
 def process_gn_config(
-    gn_config, topsrcdir, srcdir, non_unified_sources, sandbox_vars, mozilla_flags
+    gn_config,
+    topsrcdir,
+    srcdir,
+    non_unified_sources,
+    sandbox_vars,
+    mozilla_flags,
+    mozilla_add_override_dir,
 ):
     # Translates a json gn config into attributes that can be used to write out
     # moz.build files for this configuration.
@@ -419,6 +425,9 @@ def process_gn_config(
 
         # Add some features to all contexts. Put here in case LOCAL_INCLUDES
         # order matters.
+        if mozilla_add_override_dir != "":
+            context_attrs["LOCAL_INCLUDES"] += [mozilla_add_override_dir]
+
         context_attrs["LOCAL_INCLUDES"] += [
             "!/ipc/ipdl/_ipdlheaders",
             "/ipc/chromium/src",
@@ -706,6 +715,7 @@ def generate_gn_config(
     moz_build_flag,
     non_unified_sources,
     mozilla_flags,
+    mozilla_add_override_dir,
 ):
     def str_for_arg(v):
         if v in (True, False):
@@ -781,6 +791,7 @@ def generate_gn_config(
                 non_unified_sources,
                 gn_config["sandbox_vars"],
                 mozilla_flags,
+                mozilla_add_override_dir,
             )
             return gn_config
 
@@ -846,6 +857,7 @@ def main():
                 config["moz_build_flag"],
                 config["non_unified_sources"],
                 config["mozilla_flags"],
+                config["mozilla_add_override_dir"],
             ): vars
             for vars in vars_set
         }
