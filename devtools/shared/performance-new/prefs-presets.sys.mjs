@@ -196,7 +196,7 @@ export const presets = {
       },
       devtools: {
         label: "perftools-presets-ml-label",
-        description: "perftools-presets-ml-description",
+        description: "perftools-presets-ml-description2",
       },
     },
   },
