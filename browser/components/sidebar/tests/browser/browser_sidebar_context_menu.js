@@ -326,6 +326,10 @@ add_task(async function test_tool_context_menu() {
       document.getElementById("sidebar-context-menu-customize-sidebar").hidden,
       "Customize sidebar button is hidden"
     );
+    Assert.ok(
+      contextMenu.querySelector("menuseparator").hidden,
+      "menuseparator is hidden"
+    );
 
     const toolMenuItems = [
       ...contextMenu.querySelectorAll("[customized-tool='true']"),
@@ -355,6 +359,11 @@ add_task(async function test_tool_context_menu() {
         !document.getElementById("sidebar-context-menu-customize-sidebar")
           .hidden,
         "Enable vertical tab button is visible"
+      );
+
+      Assert.ok(
+        !contextMenu.querySelector("menuseparator").hidden,
+        "menuseparator is visible"
       );
 
       const toolMenuItems = [

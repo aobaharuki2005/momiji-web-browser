@@ -117,6 +117,7 @@ export default class SidebarMain extends MozLitElement {
     this._customizeSidebarMenuItem = document.getElementById(
       "sidebar-context-menu-customize-sidebar"
     );
+    this._menuseparator = this._contextMenu.querySelector("menuseparator");
 
     this._sidebarBox.addEventListener("sidebar-show", this);
     this._sidebarBox.addEventListener("sidebar-hide", this);
@@ -339,11 +340,13 @@ export default class SidebarMain extends MozLitElement {
 
     const menuBuilders = {
       aichat: async () => {
-        await lazy.GenAI.buildAskChatMenu(this._contextMenu, {
-          browser: window.gBrowser.selectedBrowser,
-          selectionInfo: null,
-          source: "tool",
-        });
+        if (Services.prefs.getBoolPref("browser.ml.chat.page")) {
+          await lazy.GenAI.buildAskChatMenu(this._contextMenu, {
+            browser: window.gBrowser.selectedBrowser,
+            selectionInfo: null,
+            source: "tool",
+          });
+        }
       },
     };
 
@@ -378,9 +381,12 @@ export default class SidebarMain extends MozLitElement {
     this._manageExtensionMenuItem.hidden = true;
     this._removeExtensionMenuItem.hidden = true;
     this._reportExtensionMenuItem.hidden = true;
+    // Prevent the menu separator visible in Window and Linux
+    this._menuseparator.hidden = true;
   }
 
   updateSidebarContextMenuItems() {
+    this._menuseparator.hidden = true;
     this._manageExtensionMenuItem.hidden = true;
     this._removeExtensionMenuItem.hidden = true;
     this._reportExtensionMenuItem.hidden = true;
@@ -395,6 +401,7 @@ export default class SidebarMain extends MozLitElement {
     this._customizeSidebarMenuItem.hidden = true;
     this._enableVerticalTabsMenuItem.hidden = true;
     this._hideSidebarMenuItem.hidden = true;
+    this._menuseparator.hidden = false;
     this._unpinExtensionMenuItem.hidden = false;
     this._manageExtensionMenuItem.hidden = false;
     this._removeExtensionMenuItem.hidden = false;
