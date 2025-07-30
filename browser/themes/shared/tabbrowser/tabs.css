@@ -720,7 +720,7 @@
 .tab-audio-button {
   display: none;
   margin-inline-end: var(--tab-icon-end-margin);
-  --icon-size: 12px;
+  --icon-size-default: 12px;
   --button-size-icon-small: 24px;
   --button-min-height-small: 24px;
   --button-border-radius: var(--border-radius-small);
@@ -905,10 +905,10 @@
 
   #tabbrowser-tabs[orient="vertical"] & {
     background-position-y: 6px;
-    background-position-x: calc(var(--tab-inline-padding) + var(--icon-size) + 1px);
+    background-position-x: calc(var(--tab-inline-padding) + var(--icon-size-default) + 1px);
 
     &:-moz-locale-dir(rtl) {
-      background-position-x: right calc(var(--tab-inline-padding) + var(--icon-size) + 1px);
+      background-position-x: right calc(var(--tab-inline-padding) + var(--icon-size-default) + 1px);
     }
 
     :root:not([sidebar-expand-on-hover]) &[pinned] {
@@ -1632,7 +1632,7 @@ tab-group {
   }
 
   :root:not([sidebar-expand-on-hover]) & {
-    --tab-inline-padding: calc((var(--tab-collapsed-background-width) + 2 * var(--tab-pinned-margin-inline-expanded) - var(--icon-size)) / 2);
+    --tab-inline-padding: calc((var(--tab-collapsed-background-width) + 2 * var(--tab-pinned-margin-inline-expanded) - var(--icon-size-default)) / 2);
     /* stylelint-disable-next-line media-query-no-invalid */
     @media not -moz-pref("sidebar.visibility", "expand-on-hover") {
       /* We need these rules to apply at all times when the sidebar.visibility
@@ -1715,7 +1715,7 @@ tab-group {
 
 #tabbrowser-tabs[orient="vertical"] {
   --tab-min-width: unset;
-  --tab-inline-padding: calc((var(--tab-collapsed-width) - var(--icon-size)) / 2);
+  --tab-inline-padding: calc((var(--tab-collapsed-width) - var(--icon-size-default)) / 2);
 
   min-height: 0;
   display: flex;

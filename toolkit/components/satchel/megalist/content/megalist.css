@@ -44,7 +44,7 @@ login-form {
   background-repeat: no-repeat;
   -moz-context-properties: fill;
   fill: currentColor;
-  width: var(--icon-size);
+  width: var(--icon-size-default);
   flex-shrink: 0;
 }
 

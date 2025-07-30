@@ -101,7 +101,9 @@
 
         ok(item.iconEl, "Item displays an icon.");
         let iconStyles = window.getComputedStyle(item.iconEl);
-        let defaultIconSize = iconStyles.getPropertyValue("--icon-size");
+        let defaultIconSize = iconStyles.getPropertyValue(
+          "--icon-size-default"
+        );
         is(
           iconStyles.height,
           defaultIconSize,

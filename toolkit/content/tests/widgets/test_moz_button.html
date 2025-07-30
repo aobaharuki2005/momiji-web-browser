@@ -239,7 +239,7 @@
           ok(!img, "button does not use an img element to display an icon");
           assertButtonPropertiesMatch(button, {
             fill,
-            backgroundSize: "--icon-size",
+            backgroundSize: "--icon-size-default",
           });
         }
 
@@ -253,8 +253,8 @@
           );
           assertButtonPropertiesMatch(img, {
             fill,
-            width: "--icon-size",
-            height: "--icon-size",
+            width: "--icon-size-default",
+            height: "--icon-size-default",
           });
         }
 

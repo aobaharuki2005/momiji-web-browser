@@ -744,7 +744,7 @@ menupopup::part(drop-indicator) {
         font-size: var(--font-size-large);
         font-weight: var(--font-weight);
         justify-content: flex-start;
-        padding-inline: calc((var(--button-size-icon) - var(--icon-size)) / 2 - var(--border-width));
+        padding-inline: calc((var(--button-size-icon) - var(--icon-size-default)) / 2 - var(--border-width));
       }
 
       &::part(moz-button-label) {

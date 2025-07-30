@@ -124,8 +124,8 @@ button[selected]:focus-visible {
 }
 
 .page-nav-icon {
-  height: var(--icon-size);
-  width: var(--icon-size);
+  height: var(--icon-size-default);
+  width: var(--icon-size-default);
   -moz-context-properties: fill;
   fill: currentColor;
 }

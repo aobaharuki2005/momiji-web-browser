@@ -789,8 +789,8 @@
 
 #trustpanel-popup-icon {
   -moz-context-properties: fill, fill-opacity;
-  width: var(--icon-size);
-  height: var(--icon-size);
+  width: var(--icon-size-default);
+  height: var(--icon-size-default);
   align-self: center;
 
   &:not([src]),
@@ -872,8 +872,8 @@
 #trustpanel-connection-icon,
 #trustpanel-siteinfo-icon {
   -moz-context-properties: fill, fill-opacity;
-  width: var(--icon-size);
-  height: var(--icon-size);
+  width: var(--icon-size-default);
+  height: var(--icon-size-default);
   list-style-image: url(chrome://global/skin/icons/security-broken.svg);
 
   #trustpanel-popup[connection^="secure"] & {
