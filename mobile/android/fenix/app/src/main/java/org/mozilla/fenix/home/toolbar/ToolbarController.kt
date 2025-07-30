@@ -14,6 +14,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.NimbusComponents
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.nav
@@ -82,17 +83,20 @@ class DefaultToolbarController(
     }
 
     override fun handleNavigateSearch() {
-        val directions =
-            NavGraphDirections.actionGlobalSearchDialog(
-                sessionId = null,
+        if (settings.shouldUseComposableToolbar) {
+            appStore.dispatch(SearchStarted())
+        } else {
+            val directions =
+                NavGraphDirections.actionGlobalSearchDialog(
+                    sessionId = null,
+                )
+
+            navController.nav(
+                navController.currentDestination?.id,
+                directions,
+                BrowserAnimator.getToolbarNavOptions(toolbarPosition = settings.toolbarPosition),
             )
-
-        navController.nav(
-            navController.currentDestination?.id,
-            directions,
-            BrowserAnimator.getToolbarNavOptions(toolbarPosition = settings.toolbarPosition),
-        )
-
+        }
         Events.searchBarTapped.record(Events.SearchBarTappedExtra("HOME"))
     }
 }
