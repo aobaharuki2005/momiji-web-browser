@@ -64,6 +64,12 @@ bool CSSNumericValue::Equals(
   return false;
 }
 
+already_AddRefed<CSSUnitValue> CSSNumericValue::To(const nsACString& aUnit,
+                                                   ErrorResult& aRv) {
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
+}
+
 void CSSNumericValue::Type(CSSNumericType& aRetVal) {}
 
 // static

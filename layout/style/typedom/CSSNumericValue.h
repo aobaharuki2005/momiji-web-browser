@@ -10,6 +10,7 @@
 #include "js/TypeDecls.h"
 #include "mozilla/dom/CSSNumericValueBindingFwd.h"
 #include "mozilla/dom/CSSStyleValue.h"
+#include "mozilla/dom/CSSUnitValueBindingFwd.h"
 #include "nsStringFwd.h"
 
 template <class T>
@@ -56,6 +57,8 @@ class CSSNumericValue : public CSSStyleValue {
       const Sequence<OwningDoubleOrCSSNumericValue>& aValues, ErrorResult& aRv);
 
   bool Equals(const Sequence<OwningDoubleOrCSSNumericValue>& aValue);
+
+  already_AddRefed<CSSUnitValue> To(const nsACString& aUnit, ErrorResult& aRv);
 
   void Type(CSSNumericType& aRetVal);
 

@@ -46,7 +46,7 @@ interface CSSNumericValue : CSSStyleValue {
 
   boolean equals(CSSNumberish... value);
 
-  //[NewObject, Throws] CSSUnitValue to(UTF8String unit);
+  [NewObject, Throws] CSSUnitValue to(UTF8String unit);
   //[NewObject, Throws] CSSMathSum toSum(UTF8String... units);
   CSSNumericType type();
 
