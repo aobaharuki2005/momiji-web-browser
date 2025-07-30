@@ -106,9 +106,13 @@ class PrivateBrowsingLockFeature(
     init {
         isFeatureEnabled = storage.isFeatureEnabled
 
+        // Use our app state during feature init which can happen after Activity recreation.
+        val isLocked =
+            browserStore.state.privateTabs.isNotEmpty() && appStore.state.isPrivateScreenLocked
+
         updateFeatureState(
             isFeatureEnabled = isFeatureEnabled,
-            isLocked = browserStore.state.privateTabs.isNotEmpty(),
+            isLocked = isLocked,
         )
 
         observeFeatureStateUpdates()

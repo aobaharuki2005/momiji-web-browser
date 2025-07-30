@@ -46,7 +46,7 @@ class PrivateBrowsingLockFeatureTest {
         val isFeatureEnabled = true
         val mode = BrowsingMode.Normal
 
-        val appStore = AppStore(initialState = AppState(mode = mode))
+        val appStore = AppStore(initialState = AppState(mode = mode, isPrivateScreenLocked = true))
         val browserStore = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -153,7 +153,7 @@ class PrivateBrowsingLockFeatureTest {
         val isFeatureEnabled = true
         val mode = BrowsingMode.Private
 
-        val appStore = AppStore(initialState = AppState(mode = mode))
+        val appStore = AppStore(initialState = AppState(mode = mode, isPrivateScreenLocked = true))
         val browserStore = BrowserStore(
         BrowserState(
             tabs = listOf(
@@ -174,7 +174,7 @@ class PrivateBrowsingLockFeatureTest {
         val isFeatureEnabled = true
         val mode = BrowsingMode.Normal
 
-        val appStore = AppStore(initialState = AppState(mode = mode))
+        val appStore = AppStore(initialState = AppState(mode = mode, isPrivateScreenLocked = true))
         val browserStore = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -785,7 +785,7 @@ class PrivateBrowsingLockFeatureTest {
         val isFeatureEnabled = true
         val mode = BrowsingMode.Private
 
-        val appStore = AppStore(initialState = AppState(mode = mode))
+        val appStore = AppStore(initialState = AppState(mode = mode, isPrivateScreenLocked = true))
         val browserStore = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -895,7 +895,7 @@ class PrivateBrowsingLockFeatureTest {
         val isFeatureEnabled = true
         val mode = BrowsingMode.Private
 
-        val appStore = AppStore(initialState = AppState(mode = mode))
+        val appStore = AppStore(initialState = AppState(mode = mode, isPrivateScreenLocked = true))
         val browserStore = BrowserStore(
             BrowserState(
                 tabs = listOf(
