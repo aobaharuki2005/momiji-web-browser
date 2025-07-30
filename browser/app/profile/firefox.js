@@ -439,7 +439,7 @@ pref("browser.urlbar.suggest.calculator",           true);
 pref("browser.urlbar.suggest.recentsearches",       true);
 pref("browser.urlbar.suggest.quickactions",         true);
 
-pref("browser.urlbar.deduplication.enabled", false);
+pref("browser.urlbar.deduplication.enabled", true);
 pref("browser.urlbar.deduplication.thresholdDays", 0);
 
 pref("browser.urlbar.scotchBonnet.enableOverride", true);

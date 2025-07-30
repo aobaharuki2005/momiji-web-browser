@@ -500,7 +500,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Whether history results with the same title and URL excluding the ref
   // will be deduplicated.
-  ["deduplication.enabled", false],
+  ["deduplication.enabled", true],
 
   // How old history results have to be to be deduplicated.
   ["deduplication.thresholdDays", 0],
