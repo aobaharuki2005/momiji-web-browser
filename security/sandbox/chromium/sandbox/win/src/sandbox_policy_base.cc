@@ -437,6 +437,10 @@ bool ConfigBase::GetAllowEveryoneForUserRestricted() {
   return allow_everyone_for_user_restricted_;
 }
 
+void ConfigBase::SetForceKnownDllLoadingFallback() {
+  force_known_dll_loading_fallback_ = true;
+}
+
 ResultCode ConfigBase::SetJobLevel(JobLevel job_level, uint32_t ui_exceptions) {
   job_level_ = job_level;
   ui_exceptions_ = ui_exceptions;
@@ -777,7 +781,9 @@ ResultCode PolicyBase::SetupAllInterceptions(TargetProcess& target) {
   for (const std::wstring& dll : config()->blocklisted_dlls())
     manager.AddToUnloadModules(dll.c_str());
 
-  if (!SetupBasicInterceptions(&manager, config()->is_csrss_connected()))
+  if (!SetupBasicInterceptions(&manager,
+                               config()->force_known_dll_loading_fallback_,
+                               config()->is_csrss_connected()))
     return SBOX_ERROR_SETUP_BASIC_INTERCEPTIONS;
 
   ResultCode rc = manager.InitializeInterceptions();

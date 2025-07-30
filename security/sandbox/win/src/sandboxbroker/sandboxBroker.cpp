@@ -1160,6 +1160,10 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     AddCachedWindowsDirRule(config, sandbox::FileSemantics::kAllowReadonly,
                             FOLDERID_System, u"\\*"_ns);
 
+    // USER_RESTRCITED will also block access to the KnownDlls list, so we force
+    // that path to fall-back to the normal loading path.
+    config->SetForceKnownDllLoadingFallback();
+
     // Read access for MF Media Source Activate and subkeys/values.
     result = config->AllowRegistryRead(
         L"HKEY_LOCAL_MACHINE\\Software\\Classes\\CLSID"

@@ -56,6 +56,16 @@ TargetNtImpersonateAnonymousToken64(HANDLE thread) {
   return TargetNtImpersonateAnonymousToken(orig_fn, thread);
 }
 
+NTSTATUS WINAPI TargetNtOpenSection64(PHANDLE section_handle,
+                                      ACCESS_MASK desired_access,
+                                      POBJECT_ATTRIBUTES object_attributes) {
+  NtOpenSectionFunction orig_fn = reinterpret_cast<NtOpenSectionFunction>(
+      g_originals[OPEN_SECTION_TOKEN_ID]);
+
+  return TargetNtOpenSection(orig_fn, section_handle, desired_access,
+                             object_attributes);
+}
+
 NTSTATUS WINAPI
 TargetNtSetInformationThread64(HANDLE thread,
                                THREADINFOCLASS thread_info_class,
