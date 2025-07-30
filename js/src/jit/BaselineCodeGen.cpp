@@ -957,10 +957,13 @@ bool BaselineInterpreterCodeGen::emitIsDebuggeeCheck() {
   return handler.addDebugInstrumentationOffset(toggleOffset);
 }
 
+template <typename Handler>
 static void MaybeIncrementCodeCoverageCounter(MacroAssembler& masm,
-                                              JSScript* script,
-                                              jsbytecode* pc) {
-  if (!script->hasScriptCounts()) {
+                                              JSScript* script, jsbytecode* pc,
+                                              const Handler& handler) {
+  // Realm-independent Jitcode doesn't support code coverage until bug 1980266
+  // is fixed
+  if (!script->hasScriptCounts() || handler.realmIndependentJitcode()) {
     return;
   }
   PCCounts* counts = script->maybeGetPCCounts(pc);
@@ -981,7 +984,7 @@ bool BaselineCompilerCodeGen::emitHandleCodeCoverageAtPrologue() {
   JSScript* script = handler.script();
   jsbytecode* main = script->main();
   if (!BytecodeIsJumpTarget(JSOp(*main))) {
-    MaybeIncrementCodeCoverageCounter(masm, script, main);
+    MaybeIncrementCodeCoverageCounter(masm, script, main, handler);
   }
   return true;
 }
@@ -6649,7 +6652,8 @@ bool BaselineCodeGen<Handler>::emit_IsConstructing() {
 template <>
 bool BaselineCompilerCodeGen::emit_JumpTarget() {
   if (!handler.compilingOffThread()) {
-    MaybeIncrementCodeCoverageCounter(masm, handler.script(), handler.pc());
+    MaybeIncrementCodeCoverageCounter(masm, handler.script(), handler.pc(),
+                                      handler);
   }
   return true;
 }
