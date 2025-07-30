@@ -35,7 +35,7 @@ add_setup(async function init() {
     merinoSuggestions: TEST_MERINO_SINGLE,
     prefs: [
       ["suggest.market", true],
-      ["suggest.quicksuggest.sponsored", true],
+      ["suggest.quicksuggest.nonsponsored", true],
     ],
   });
 });

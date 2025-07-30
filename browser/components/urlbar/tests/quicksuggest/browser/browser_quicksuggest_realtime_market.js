@@ -76,7 +76,7 @@ add_task(async function ui_single() {
     merinoSuggestions: TEST_MERINO_SINGLE,
     prefs: [
       ["suggest.market", true],
-      ["suggest.quicksuggest.sponsored", true],
+      ["suggest.quicksuggest.nonsponsored", true],
     ],
   });
 
@@ -106,7 +106,7 @@ add_task(async function ui_multi() {
     merinoSuggestions: TEST_MERINO_MULTI,
     prefs: [
       ["suggest.market", true],
-      ["suggest.quicksuggest.sponsored", true],
+      ["suggest.quicksuggest.nonsponsored", true],
     ],
   });
 
@@ -139,7 +139,7 @@ add_task(async function activate() {
     merinoSuggestions: TEST_MERINO_MULTI,
     prefs: [
       ["suggest.market", true],
-      ["suggest.quicksuggest.sponsored", true],
+      ["suggest.quicksuggest.nonsponsored", true],
     ],
   });
 

@@ -18,7 +18,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  */
 export class MarketSuggestions extends SuggestProvider {
   get enablingPreferences() {
-    return ["suggest.market", "suggest.quicksuggest.sponsored"];
+    return ["suggest.market", "suggest.quicksuggest.nonsponsored"];
   }
 
   get primaryUserControlledPreferences() {
