@@ -166,7 +166,7 @@ class nsSliderFrame final : public nsContainerFrame {
 
   void PageUpDown(nscoord change);
   void SetCurrentThumbPosition(nsIContent* aScrollbar, nscoord aNewPos,
-                               bool aIsSmooth, bool aMaySnap);
+                               bool aIsSmooth);
   void SetCurrentPosition(nsIContent* aScrollbar, int32_t aNewPos,
                           bool aIsSmooth);
   void SetCurrentPositionInternal(nsIContent* aScrollbar, int32_t pos,
