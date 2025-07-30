@@ -35,7 +35,6 @@ bool SetupNtdllImports(TargetProcess& child) {
 #undef INIT_GLOBAL_RTL
 
 bool SetupBasicInterceptions(InterceptionManager* manager,
-                             bool force_known_dll_loading_fallback,
                              bool is_csrss_connected) {
   // Interceptions provided by process_thread_policy, without actual policy.
   if (!INTERCEPT_NT(manager, NtOpenThread, OPEN_THREAD_ID, 20) ||
@@ -48,8 +47,6 @@ bool SetupBasicInterceptions(InterceptionManager* manager,
                     20) ||
       !INTERCEPT_NT(manager, NtImpersonateAnonymousToken,
                     IMPERSONATE_ANONYMOUS_TOKEN_ID, 8) ||
-      (force_known_dll_loading_fallback &&
-       !INTERCEPT_NT(manager, NtOpenSection, OPEN_SECTION_TOKEN_ID, 16)) ||
       !INTERCEPT_NT(manager, NtOpenThreadToken, OPEN_THREAD_TOKEN_ID, 20))
     return false;
 
