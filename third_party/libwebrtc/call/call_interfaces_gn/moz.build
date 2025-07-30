@@ -25,6 +25,7 @@ FINAL_LIBRARY = "xul"
 
 
 LOCAL_INCLUDES += [
+    "!/dist/include/libwebrtc_overrides",
     "!/ipc/ipdl/_ipdlheaders",
     "!/third_party/libwebrtc/gen",
     "/ipc/chromium/src",
@@ -37,7 +38,6 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/call/audio_receive_stream.cc",
     "/third_party/libwebrtc/call/audio_send_stream.cc",
     "/third_party/libwebrtc/call/audio_state.cc",
-    "/third_party/libwebrtc/call/call_basic_stats.cc",
     "/third_party/libwebrtc/call/call_config.cc",
     "/third_party/libwebrtc/call/flexfec_receive_stream.cc",
     "/third_party/libwebrtc/call/syncable.cc"
