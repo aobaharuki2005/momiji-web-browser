@@ -3044,22 +3044,28 @@ struct nsGridContainerFrame::Tracks {
     return aRange.ToLength(mSizes);
   }
 
-  // Returns the first baseline for the given track, if available.
-  Maybe<nscoord> GetFirstBaseline(uint32_t aTrack) const {
+  // Returns the offset for the given track and baseline sharing group, or the
+  // opposite group in the same track if unavailable.
+  // Returns `Nothing()` if neither is set.
+  Maybe<nscoord> GetBaseline(uint32_t aTrack,
+                             BaselineSharingGroup aBaselineSharingGroup) const {
     if (aTrack >= mBaselines.Length()) {
       return {};
     }
 
-    return mBaselines[aTrack][BaselineSharingGroup::First];
-  }
-
-  // Returns the last baseline for the given track, if available.
-  Maybe<nscoord> GetLastBaseline(uint32_t aTrack) const {
-    if (aTrack >= mBaselines.Length()) {
-      return {};
+    const auto& trackBaselines = mBaselines[aTrack];
+    if (auto b = trackBaselines[aBaselineSharingGroup]) {
+      return b;
+    }
+    if (auto b = trackBaselines[GetOppositeBaselineSharingGroup(
+            aBaselineSharingGroup)]) {
+      // First and last baseline offsets are from the start or end edges
+      // respectively and requesting the opposite baseline requires adjusting
+      // the offset to the opposite side.
+      return Some(mSizes[aTrack].mBase - *b);
     }
 
-    return mBaselines[aTrack][BaselineSharingGroup::Last];
+    return {};
   }
 
 #ifdef DEBUG
@@ -10432,7 +10438,7 @@ void nsGridContainerFrame::CalculateBaselines(
     nscoord aCBBorderPaddingEnd, nscoord aCBSize) {
   const auto axis = aTracks.mAxis;
 
-  auto firstBaseline = aTracks.GetFirstBaseline(0);
+  auto firstBaseline = aTracks.GetBaseline(0, BaselineSharingGroup::First);
   if (!(aBaselineSet & BaselineSet::eFirst)) {
     mBaseline[axis][BaselineSharingGroup::First] =
         ::SynthesizeBaselineFromBorderBox(BaselineSharingGroup::First, aWM,
@@ -10459,7 +10465,8 @@ void nsGridContainerFrame::CalculateBaselines(
         aCBBorderPaddingStart + gapBeforeStartTrack + *firstBaseline;
   }
 
-  auto lastBaseline = aTracks.GetLastBaseline(aTracks.mBaselines.Length() - 1);
+  auto lastBaseline = aTracks.GetBaseline(aTracks.mBaselines.Length() - 1,
+                                          BaselineSharingGroup::Last);
   if (!(aBaselineSet & BaselineSet::eLast)) {
     mBaseline[axis][BaselineSharingGroup::Last] =
         ::SynthesizeBaselineFromBorderBox(BaselineSharingGroup::Last, aWM, axis,
