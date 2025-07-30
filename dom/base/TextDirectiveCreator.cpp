@@ -118,8 +118,11 @@ TextDirectiveCreator::ExtendRangeToWordBoundaries(AbstractRange* aRange) {
   }
   if (std::all_of(rangeContent.View().cbegin(), rangeContent.View().cend(),
                   IsPunctuationForWordSelect)) {
-    RefPtr range =
-        StaticRange::Create(aRange->StartRef(), aRange->EndRef(), rv);
+    RangeBoundary startPoint = TextDirectiveUtil::FindNextNonWhitespacePosition<
+        TextScanDirection::Right>(aRange->StartRef());
+    RangeBoundary endPoint = TextDirectiveUtil::FindNextNonWhitespacePosition<
+        TextScanDirection::Left>(aRange->EndRef());
+    RefPtr range = StaticRange::Create(startPoint, endPoint, rv);
     if (MOZ_UNLIKELY(rv.Failed())) {
       return Err(std::move(rv));
     }

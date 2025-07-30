@@ -58,6 +58,18 @@
   <div id="rangeBasedWithPrefixAtBlockBoundariesEnd">End of Range</div>
   <!-- Test case for Bug 1976480. -->
   <div id="quotationMark">"Quotation mark"</div>
+  LongSpacerWord
+  <!-- Test case for Bug 1979474 -->
+  <table>
+    <tr id="trWithEmptyTdInside">
+      <td id="tdFollowedByEmptyTd">}</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>foo</td>
+    </tr>
+  </table>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const empty = document.createTextNode("");
@@ -407,6 +419,16 @@
           content: "Quotation mark",
           textDirective: "text=Quotation%20mark"
         },
+        {
+          name: "Test for Bug 1979474: Text directive with empty table cell",
+          startContainer: tdFollowedByEmptyTd.firstChild,
+          startOffset: 0,
+          endContainer: tdFollowedByEmptyTd.nextSibling,
+          endOffset: 0,
+          content: "}",
+          textDirective: "text=%7D",
+          dontCompareRangeBoundaries: true,
+        },
       ]) {
         const range = document.createRange();
         range.setStart(testCase.startContainer, testCase.startOffset);
@@ -439,10 +461,15 @@
           ranges[0].toString(), range.toString(),
           `${testCase.name}: Ranges have the same content`
         );
-        ok(
-          rangeBoundariesAreEqual(range, ranges[0]),
-          `${testCase.name}: Ranges have the same boundary points`
-        );
+        if(!testCase.dontCompareRangeBoundaries) {
+          // For some test cases it's necessary that the range boundaries in the test case
+          // and the range boundaries of the created match are _not_ the same,
+          // e.g. if the test requires that the range contains empty nodes.
+          ok(
+            rangeBoundariesAreEqual(range, ranges[0]),
+            `${testCase.name}: Ranges have the same boundary points`
+          );
+        }
 
         // finally, remove all text directives to clean up for the next test.
         SpecialPowers.wrap(document).fragmentDirective.removeAllTextDirectives();
