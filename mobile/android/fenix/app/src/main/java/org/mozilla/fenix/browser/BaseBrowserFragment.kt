@@ -1594,9 +1594,12 @@ abstract class BaseBrowserFragment :
         val isToolbarAtBottom = context.isToolbarAtBottom()
         val browserToolbar = (browserToolbarView as? BrowserToolbarView)?.toolbar
             ?: (browserToolbarView as BrowserToolbarComposable).layout
+        val navigationBar = browserNavigationBar?.layout
         // The toolbar view has already been added directly to the container.
         if (isToolbarAtBottom) {
             binding.browserLayout.removeView(browserToolbar)
+        } else if (navigationBar != null) {
+            binding.browserLayout.removeView(navigationBar)
         }
 
         _bottomToolbarContainerView = BottomToolbarContainerView(
@@ -1642,6 +1645,8 @@ abstract class BaseBrowserFragment :
 
                         if (isToolbarAtBottom) {
                             AndroidView(factory = { _ -> browserToolbar })
+                        } else if (navigationBar != null) {
+                            AndroidView(factory = { _ -> navigationBar })
                         }
                     }
                 }
