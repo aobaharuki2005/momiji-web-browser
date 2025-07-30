@@ -238,7 +238,15 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
     // See if the containing block has a fixed size we should respect:
     const nsIFrame* cb = mFrame->GetContainingBlock();
     bool isFixed = false;
-    nscoord cbLimit = GetISizeConstraint(cb, &isFixed);
+    nscoord cbLimit = aContainingBlockSize
+                          ? aContainingBlockSize->ISize(mWritingMode)
+                          : NS_UNCONSTRAINEDSIZE;
+    if (cbLimit != NS_UNCONSTRAINEDSIZE) {
+      isFixed = true;
+    } else {
+      cbLimit = GetISizeConstraint(cb, &isFixed);
+    }
+
     if (isFixed) {
       SetAvailableISize(cbLimit);
     } else {
