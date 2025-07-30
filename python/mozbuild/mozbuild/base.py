@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import errno
+import functools
 import io
 import json
 import logging
@@ -957,26 +958,45 @@ class MachCommandConditions:
     mach commands with providers deriving from MachCommandBase.
     """
 
+    def requires_configure(func):
+        """Decorator to run `mach configure` if config.status is missing."""
+
+        @functools.wraps(func)
+        def wrapper(cls, *args, **kwargs):
+            config_file = Path(cls.topobjdir) / "config.status"
+            if not config_file.is_file():
+                cls.log(
+                    logging.INFO,
+                    "MachCommandConditions",
+                    {"path": cls.topsrcdir},
+                    f"Cannot evaluate condition with '{config_file}' missing, running |mach configure| to generate it.",
+                )
+                cls.run_process(
+                    [sys.executable, "mach", "configure"],
+                    pass_thru=True,
+                    cwd=cls.topsrcdir,
+                )
+            return func(cls, *args, **kwargs)
+
+        return wrapper
+
     @staticmethod
+    @requires_configure
     def is_firefox(cls):
         """Must have a Firefox build."""
-        if hasattr(cls, "substs"):
-            return cls.substs.get("MOZ_BUILD_APP") == "browser"
-        return False
+        return cls.substs.get("MOZ_BUILD_APP") == "browser"
 
     @staticmethod
+    @requires_configure
     def is_jsshell(cls):
         """Must have a jsshell build."""
-        if hasattr(cls, "substs"):
-            return cls.substs.get("MOZ_BUILD_APP") == "js"
-        return False
+        return cls.substs.get("MOZ_BUILD_APP") == "js"
 
     @staticmethod
+    @requires_configure
     def is_thunderbird(cls):
         """Must have a Thunderbird build."""
-        if hasattr(cls, "substs"):
-            return cls.substs.get("MOZ_BUILD_APP") == "comm/mail"
-        return False
+        return cls.substs.get("MOZ_BUILD_APP") == "comm/mail"
 
     @staticmethod
     def is_firefox_or_thunderbird(cls):
@@ -986,25 +1006,22 @@ class MachCommandConditions:
         ) or MachCommandConditions.is_thunderbird(cls)
 
     @staticmethod
+    @requires_configure
     def is_android(cls):
         """Must have an Android build."""
-        if hasattr(cls, "substs"):
-            return cls.substs.get("MOZ_WIDGET_TOOLKIT") == "android"
-        return False
+        return cls.substs.get("MOZ_WIDGET_TOOLKIT") == "android"
 
     @staticmethod
+    @requires_configure
     def is_not_android(cls):
         """Must not have an Android build."""
-        if hasattr(cls, "substs"):
-            return cls.substs.get("MOZ_WIDGET_TOOLKIT") != "android"
-        return False
+        return cls.substs.get("MOZ_WIDGET_TOOLKIT") != "android"
 
     @staticmethod
+    @requires_configure
     def is_android_cpu(cls):
         """Targeting Android CPU."""
-        if hasattr(cls, "substs"):
-            return "ANDROID_CPU_ARCH" in cls.substs
-        return False
+        return "ANDROID_CPU_ARCH" in cls.substs
 
     @staticmethod
     def is_firefox_or_android(cls):
@@ -1052,18 +1069,16 @@ class MachCommandConditions:
             return False
 
     @staticmethod
+    @requires_configure
     def is_artifact_build(cls):
         """Must be an artifact build."""
-        if hasattr(cls, "substs"):
-            return getattr(cls, "substs", {}).get("MOZ_ARTIFACT_BUILDS")
-        return False
+        return getattr(cls, "substs", {}).get("MOZ_ARTIFACT_BUILDS")
 
     @staticmethod
+    @requires_configure
     def is_non_artifact_build(cls):
         """Must not be an artifact build."""
-        if hasattr(cls, "substs"):
-            return not MachCommandConditions.is_artifact_build(cls)
-        return False
+        return not MachCommandConditions.is_artifact_build(cls)
 
     @staticmethod
     def is_buildapp_in(cls, apps):
