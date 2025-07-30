@@ -316,5 +316,16 @@
 }
 
 #ipprotection-button {
-  list-style-image: url("chrome://browser/content/logos/vpn.svg");
+  list-style-image: url("chrome://browser/content/logos/ipprotection-off.svg");
+  -moz-context-properties: fill, stroke, fill-opacity;
+
+  &.ipprotection-on {
+    list-style-image: url("chrome://browser/content/logos/ipprotection-on.svg");
+    stroke: var(--icon-color-success);
+  }
+
+  &.ipprotection-error {
+    list-style-image: url("chrome://browser/content/logos/ipprotection-error.svg");
+    stroke: var(--icon-color-critical);
+  }
 }

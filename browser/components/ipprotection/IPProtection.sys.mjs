@@ -91,6 +91,28 @@ class IPProtectionWidget {
   }
 
   /**
+   * Updates the toolbar icon to reflect the VPN connection status
+   *
+   * @param {XULElement} toolbaritem - toolbaritem to update
+   * @param {object} status - VPN connection status
+   */
+  updateIconStatus(toolbaritem, status = { isActive: false, isError: false }) {
+    let isActive = status.isActive;
+    let isError = status.isError;
+
+    if (isError) {
+      toolbaritem.classList.remove("ipprotection-on");
+      toolbaritem.classList.add("ipprotection-error");
+    } else if (isActive) {
+      toolbaritem.classList.remove("ipprotection-error");
+      toolbaritem.classList.add("ipprotection-on");
+    } else {
+      toolbaritem.classList.remove("ipprotection-error");
+      toolbaritem.classList.remove("ipprotection-on");
+    }
+  }
+
+  /**
    * Creates the CustomizableUI widget.
    */
   #createWidget() {

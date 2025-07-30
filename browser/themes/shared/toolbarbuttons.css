@@ -651,3 +651,9 @@ toolbar[keyNav]:not([collapsed], [customizing]) toolbartabstop,
 #vertical-tabs-newtab-button {
   -moz-user-focus: normal;
 }
+
+/* IP Protection */
+#ipprotection-button.toolbarbutton-1 > .toolbarbutton-icon {
+  width: calc(2 * var(--toolbarbutton-inner-padding) + 35px);
+  padding-block: 0;
+}
