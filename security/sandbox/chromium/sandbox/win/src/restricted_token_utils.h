@@ -40,8 +40,7 @@ absl::optional<base::win::AccessToken> CreateRestrictedToken(
     TokenType token_type,
     bool lockdown_default_dacl,
     const absl::optional<base::win::Sid>& unique_restricted_sid,
-    bool use_restricting_sids,
-    bool allow_everyone_for_user_restricted);
+    bool use_restricting_sids);
 
 // Hardens the integrity level policy on a token. Specifically it sets the
 // policy to block read and execute so that a lower privileged process cannot

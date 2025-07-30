@@ -92,12 +92,6 @@ class [[clang::lto_visibility_public]] TargetConfig {
   // Returns whether we are using restricting SIDs.
   virtual bool GetUseRestrictingSIDs() = 0;
 
-  // When called the Everyone SID won't be set to deny only for USER_RESTRICED.
-  virtual void SetAllowEveryoneForUserRestricted() = 0;
-
-  // Returns whether the Everyone SID won't be deny only for USER_RESTRICED.
-  virtual bool GetAllowEveryoneForUserRestricted() = 0;
-
   // Force KnownDll loading to fall-back to the normal loading path. This can be
   // used when access to the KnownDlls list will be blocked.
   virtual void SetForceKnownDllLoadingFallback() = 0;
