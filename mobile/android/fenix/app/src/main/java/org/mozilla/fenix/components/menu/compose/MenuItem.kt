@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.collectionItemInfo
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -126,10 +127,15 @@ internal fun MenuItem(
                 onClick = onClick,
             )
             .clearAndSetSemantics {
-                onClick?.let { role = Role.Button }
+                if (onClick != null || state == MenuItemState.DISABLED) {
+                    role = Role.Button
+                }
                 this.contentDescription = contentDescription
                 if (collectionItemInfo != null) {
                     this.collectionItemInfo = collectionItemInfo
+                }
+                if (!enabled) {
+                    disabled()
                 }
             }
             .wrapContentSize()
