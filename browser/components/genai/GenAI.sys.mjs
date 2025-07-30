@@ -14,6 +14,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   EveryWindow: "resource:///modules/EveryWindow.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PrefUtils: "resource://normandy/lib/PrefUtils.sys.mjs",
+  SidebarManager:
+    "moz-src:///browser/components/sidebar/SidebarManager.sys.mjs",
 });
 ChromeUtils.defineLazyGetter(
   lazy,
@@ -670,7 +672,7 @@ export const GenAI = {
     const {
       browser,
       selectionInfo,
-      showItem,
+      showItem = this.showItem,
       source,
       contextTabs = null,
     } = contextMenu;
@@ -682,32 +684,43 @@ export const GenAI = {
       lazy.chatPage &&
       lazy.chatMenu &&
       (!lazy.sidebarRevamp || lazy.sidebarTools.includes("aichat"));
-    // Return early if:
-    // Neither original chatbot feature requiring provider nor new page feature
-    // or In a tab/tool context menu the page feature is disabled
-    // or the context is invalid (e.g. the tab is not fully loaded for page summary)
-    // or selected multi-tabs
-    if (
-      (!this.canShowChatEntrypoint && !isPageFeatureAllowed) ||
-      (source !== "page" && !isPageFeatureAllowed) ||
-      (!selectionInfo && !browser.browsingContext) ||
-      (source === "tab" && contextTabs?.length > 1)
-    ) {
+
+    if (!selectionInfo && !browser.browsingContext) {
       return;
     }
+    let canShow = false;
+    switch (source) {
+      case "page":
+        canShow = this.canShowChatEntrypoint || isPageFeatureAllowed;
+        break;
+      case "tab":
+        canShow = isPageFeatureAllowed && contextTabs?.length === 1;
+        break;
+      case "tool":
+        canShow = lazy.chatPage;
+        break;
+    }
+    if (!canShow) {
+      return;
+    }
+
     const provider = this.chatProviders.get(lazy.chatProvider)?.name;
     const doc = menu.ownerDocument;
-    if (provider) {
-      doc.l10n.setAttributes(menu, "genai-menu-ask-provider-2", { provider });
-    } else {
-      doc.l10n.setAttributes(
-        menu,
-        lazy.chatProvider
-          ? "genai-menu-ask-generic-2"
-          : "genai-menu-no-provider-2"
-      );
+
+    // Only "page" and "tab" contexts need a <menu> submenu
+    if (source !== "tool") {
+      if (provider) {
+        doc.l10n.setAttributes(menu, "genai-menu-ask-provider-2", { provider });
+      } else {
+        doc.l10n.setAttributes(
+          menu,
+          lazy.chatProvider
+            ? "genai-menu-ask-generic-2"
+            : "genai-menu-no-provider-2"
+        );
+      }
+      menu.menupopup?.remove();
     }
-    menu.menupopup?.remove();
 
     // Determine if we have selection or should use page content
     const context = {
@@ -718,14 +731,20 @@ export const GenAI = {
       // Get page content for prompts when no selection
       await this.addPageContext(browser, context);
     }
+    const addItem = () =>
+      source === "tool"
+        ? menu.appendChild(doc.createXULElement("menuitem"))
+        : menu.appendItem("");
     await this.addAskChatItems(
       browser,
       context,
       promptObj => {
-        const item = menu.appendItem(promptObj.label);
+        const item = addItem();
+        item.setAttribute("label", promptObj.label);
         if (promptObj.badge && lazy.chatPageMenuBadge) {
           item.setAttribute("badge", promptObj.badge);
         }
+
         return item;
       },
       source,
@@ -740,7 +759,7 @@ export const GenAI = {
     // For page which currently only shows 1 prompt, make it less empty with an
     // Open or Choose options depending on provider
     if (context.contentType == "page") {
-      const openItem = menu.appendItem("");
+      const openItem = addItem();
       if (provider) {
         doc.l10n.setAttributes(openItem, "genai-menu-open-provider", {
           provider,
@@ -763,8 +782,9 @@ export const GenAI = {
     }
 
     // Add remove provider option
-    menu.menupopup.appendChild(doc.createXULElement("menuseparator"));
-    const removeItem = menu.appendItem("");
+    const popup = source === "tool" ? menu : menu.menupopup;
+    popup.appendChild(doc.createXULElement("menuseparator"));
+    const removeItem = addItem();
     doc.l10n.setAttributes(
       removeItem,
       provider ? "genai-menu-remove-provider" : "genai-menu-remove-generic",
@@ -776,6 +796,9 @@ export const GenAI = {
       });
       if (lazy.chatProvider) {
         Services.prefs.clearUserPref("browser.ml.chat.provider");
+      } else if (source === "tool") {
+        // When there's no provider set this menu should remove chatbot as a tool
+        lazy.SidebarManager.updateToolsPref("aichat", true);
       } else {
         Services.prefs.setBoolPref("browser.ml.chat.menu", false);
       }
