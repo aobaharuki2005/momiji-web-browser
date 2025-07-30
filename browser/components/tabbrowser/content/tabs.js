@@ -77,6 +77,9 @@
       this.pinnedDropIndicator = document.getElementById(
         "pinned-drop-indicator"
       );
+      this.dragToPinPromoCard = document.getElementById(
+        "drag-to-pin-promo-card"
+      );
       // Override arrowscrollbox.js method, since our scrollbox's children are
       // inherited from the scrollbox binding parent (this).
       this.arrowScrollbox._getScrollableElements = () => {
@@ -1226,21 +1229,20 @@
           }
         }
 
+        const dragToPinTargets = [
+          this.pinnedTabsContainer,
+          this.pinnedDropIndicator,
+          this.dragToPinPromoCard,
+        ];
         let shouldPin =
           isTab(draggedTab) &&
           !draggedTab.pinned &&
           ((withinPinnedBounds && !numPinned) ||
-            this.pinnedTabsContainer.contains(event.target) ||
-            ["pinned-tabs-container", "pinned-drop-indicator"].includes(
-              event.target.id
-            ));
+            dragToPinTargets.some(el => el.contains(event.target)));
         let shouldUnpin =
           isTab(draggedTab) &&
           draggedTab.pinned &&
-          this.arrowScrollbox.contains(event.target) &&
-          !["pinned-tabs-container", "pinned-drop-indicator"].includes(
-            event.target.id
-          );
+          this.arrowScrollbox.contains(event.target);
 
         let shouldTranslate =
           !gReduceMotion &&
@@ -2264,10 +2266,17 @@
       ).x;
 
       let movingTabsIndex = movingTabs.findIndex(t => t._tPos == tab._tPos);
+      // When the promo card is visible, we need to account for its height
+      // before calculating position. Otherwise, it will appear to "jump" to
+      // the top upon starting the drag.
+      const startingPosition = this.dragToPinPromoCard.shouldRender
+        ? window.windowUtils.getBoundsWithoutFlushing(this.dragToPinPromoCard)
+            .height
+        : 0;
       // Update moving tabs absolute position based on original dragged tab position
       // Moving tabs with a lower index are moved before the dragged tab and moving
       // tabs with a higher index are moved after the dragged tab.
-      let position = 0;
+      let position = startingPosition;
       // Position moving tabs after dragged tab
       for (let movingTab of movingTabs.slice(movingTabsIndex)) {
         if (isTabGroupLabel(tab)) {
@@ -2308,7 +2317,7 @@
       }
       // Reset position so we can next handle moving tabs before the dragged tab
       if (this.verticalMode) {
-        position = 0 - rect.height;
+        position = startingPosition - rect.height;
       } else if (this.#rtlMode) {
         position = 0 + rect.width;
       } else {
@@ -3151,7 +3160,7 @@
             !this.pinnedDropIndicator.hasAttribute("interactive")))
       ) {
         // On drag into pinned container
-        if (!gBrowser.pinnedTabCount) {
+        if (!gBrowser.pinnedTabCount && !this.dragToPinPromoCard.shouldRender) {
           let tabbrowserTabsRect =
             window.windowUtils.getBoundsWithoutFlushing(this);
           if (!this.verticalMode) {
