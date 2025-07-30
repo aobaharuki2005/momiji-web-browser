@@ -905,9 +905,6 @@ void nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement,
   sele->SetCreatorParser(GetParser());
 
   if (!aMayDocumentWriteOrBlock) {
-    MOZ_ASSERT(sele->GetScriptDeferred() || sele->GetScriptAsync() ||
-               sele->GetScriptIsModule() || sele->GetScriptIsImportMap() ||
-               aScriptElement->AsElement()->HasAttr(nsGkAtoms::nomodule));
     DebugOnly<bool> block = sele->AttemptToExecute();
     MOZ_ASSERT(!block,
                "Defer, async, module, importmap, or nomodule tried to block.");

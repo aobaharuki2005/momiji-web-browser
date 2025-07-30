@@ -460,6 +460,14 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    */
   static JS::loader::LoadedScript* GetActiveScript(JSContext* aCx);
 
+  /*
+   * Determine whether a classic script matches the event handler criteria.
+   * This assumes that it has both a `for` attribute and an `event` attribute
+   * and takes their values.
+   * https://html.spec.whatwg.org/multipage/#prepare-a-script
+   */
+  static bool IsScriptEventHandler(const nsAString&, const nsAString&);
+
   Document* GetDocument() const { return mDocument; }
 
   nsIURI* GetBaseURI() const override;
@@ -549,6 +557,12 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    */
   static bool IsAboutPageLoadingChromeURI(ScriptLoadRequest* aRequest,
                                           Document* aDocument);
+
+  /**
+   * Helper method for checking if the script element is an event handler.
+   * https://html.spec.whatwg.org/multipage/#prepare-a-script
+   */
+  static bool IsScriptEventHandler(ScriptKind kind, nsIContent* aScriptElement);
 
   /**
    * Start a load for aRequest's URI.
