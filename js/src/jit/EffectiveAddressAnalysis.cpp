@@ -40,7 +40,36 @@ using namespace jit;
 // targets.
 
 // =====================================================================
+
+// On non-x86/x64 targets, incorporating any non-zero constant (displacement)
+// in an EffectiveAddress2 node is not free, because the constant may have to
+// be synthesised into a register in the back end.  Worse, on all such targets,
+// arbitrary 32-bit constants will take two instructions to synthesise, which
+// can lead to a net performance loss.
 //
+// `OffsetIsSmallEnough` is used in the logic below to restrict constants to
+// single-instruction forms.  It is necessarily target-dependent.  Note this is
+// merely a heuristic -- the resulting code should be *correct* on all targets
+// regardless of the value returned.
+
+static bool OffsetIsSmallEnough(int32_t imm) {
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  // For x86_32 and x86_64 we have the luxury of being able to roll in any
+  // 32-bit `imm` value for free.
+  return true;
+#elif defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_ARM)
+  // On arm64, this can be synthesised in one insn as `movz #imm` or
+  // `movn #imm`.  arm32 is similar.
+  return imm >= -0xFFFF && imm <= 0xFFFF;
+#elif defined(JS_CODEGEN_RISCV64) || defined(JS_CODEGEN_LOONG64) || \
+    defined(JS_CODEGEN_MIPS64)
+  return imm >= -0xFFF && imm <= 0xFFF;
+#elif defined(JS_CODEGEN_WASM32) || defined(JS_CODEGEN_NONE)
+  return true;
+#else
+#  error "This needs to be filled in for your platform"
+#endif
+}
 
 // If `def` is of the form `x << {1,2,3}`, return `x` and the shift value.
 // Otherwise return the pair `(nullptr, 0)`.
@@ -118,6 +147,11 @@ static void TryMatchShiftAdd(TempAllocator& alloc, MAdd* root) {
     if (baseValue == 0) {
       // We'd only be rolling one operation -- the shift -- into the result, so
       // don't bother.
+      return;
+    }
+    if (!OffsetIsSmallEnough(baseValue)) {
+      // `baseValue` would take more than one insn to get into a register,
+      // which makes the change less likely to be a win.  See bug 1979829.
       return;
     }
     replacement = MEffectiveAddress2::New(alloc, index, scale, baseValue);
