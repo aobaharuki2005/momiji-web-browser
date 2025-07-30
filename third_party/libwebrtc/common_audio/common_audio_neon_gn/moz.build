@@ -79,7 +79,6 @@ if CONFIG["OS_TARGET"] == "Darwin":
 
 if CONFIG["OS_TARGET"] == "Linux":
 
-    DEFINES["CR_SYSROOT_KEY"] = "20250129T203412Z-1"
     DEFINES["USE_AURA"] = "1"
     DEFINES["USE_GLIB"] = "1"
     DEFINES["USE_OZONE"] = "1"
