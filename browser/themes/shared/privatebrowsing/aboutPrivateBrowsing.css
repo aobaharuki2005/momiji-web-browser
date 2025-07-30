@@ -84,7 +84,7 @@ p {
 
 .search-inner-wrapper {
   display: flex;
-  height: 48px;
+  height: var(--size-item-xlarge);
   padding: 0 22px;
   min-width: 70vw;
 }

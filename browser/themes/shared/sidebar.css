@@ -160,8 +160,8 @@
 
 #sidebar-switcher-arrow {
   list-style-image: url(chrome://global/skin/icons/arrow-down-12.svg);
-  width: 12px;
-  height: 12px;
+  width: var(--icon-size-xsmall);
+  height: var(--icon-size-xsmall);
 }
 
 #sidebar-switcher-target {

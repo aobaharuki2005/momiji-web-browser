@@ -330,9 +330,9 @@ $calculated-max-width-twice-widest: $break-point-widest + 2 * $card-width;
     .search-topsite {
       margin-inline-end: var(--space-xxsmall);
       fill: currentColor;
-      background-size: 12px;
-      height: 12px;
-      width: 12px;
+      background-size: var(--icon-size-xsmall);
+      height: var(--icon-size-xsmall);
+      width: var(--icon-size-xsmall);
       background-position: center;
       background-repeat: no-repeat;
       background-color: transparent;

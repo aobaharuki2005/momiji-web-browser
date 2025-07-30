@@ -720,7 +720,7 @@
 .tab-audio-button {
   display: none;
   margin-inline-end: var(--tab-icon-end-margin);
-  --icon-size-default: 12px;
+  --icon-size-default: var(--icon-size-xsmall);
   --button-size-icon-small: 24px;
   --button-min-height-small: 24px;
   --button-border-radius: var(--border-radius-small);
@@ -1852,8 +1852,8 @@ tab-group {
 /* Tab drag and drop */
 
 .tab-drop-indicator {
-  width: 12px;
-  margin-inline-start: -12px;
+  width: var(--icon-size-xsmall);
+  margin-inline-start: calc(var(--icon-size-xsmall) * -1);
   background: url(chrome://browser/skin/tabbrowser/tab-drag-indicator.svg) no-repeat center;
   position: relative;
   z-index: 2;
@@ -1942,8 +1942,8 @@ toolbar:not(#TabsToolbar) #firefox-view-button {
     /* "!important" is necessary to override the rule in toolbarbutton.css */
     margin: -7px 0 0 !important;
     margin-inline-end: -4px !important;
-    min-width: 12px;
-    min-height: 12px;
+    min-width: var(--icon-size-xsmall);
+    min-height: var(--icon-size-xsmall);
   }
 }
 
@@ -1968,7 +1968,7 @@ toolbar:not(#TabsToolbar) #firefox-view-button {
   display: block;
   position: absolute;
   transform: rotate(-90deg);
-  width: 12px;
+  width: var(--icon-size-xsmall);
   height: 29px;
   inset-inline-start: 8px;
   top: 0;
