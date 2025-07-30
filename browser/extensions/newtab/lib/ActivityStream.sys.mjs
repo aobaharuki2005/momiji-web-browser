@@ -604,13 +604,6 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "discoverystream.promoCard.enabled",
-    {
-      title: "Boolean flag to turn the promo card on and off",
-      value: false,
-    },
-  ],
-  [
     "discoverystream.sections.enabled",
     {
       title: "Boolean flag to enable section layout UI in recommended stories",
