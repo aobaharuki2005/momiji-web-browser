@@ -302,3 +302,12 @@ firefox-suggest-realtime-opt-in-not-now = Not now
 firefox-suggest-realtime-opt-in-dismiss = Dismiss
 firefox-suggest-realtime-opt-in-dismiss-all =
     .label = Don’t show these suggestions
+
+# A message that replaces a result when the user dismisses Market suggestions.
+# Market refers to stocks, indexes, and funds.
+urlbar-dismissal-acknowledgment-market = Thanks for your feedback. You won’t see market suggestions anymore.
+
+# This string is shown in the result menu. Market refers to stocks, indexes, and
+# funds.
+urlbar-result-menu-dont-show-market =
+  .label = Don’t show market suggestions

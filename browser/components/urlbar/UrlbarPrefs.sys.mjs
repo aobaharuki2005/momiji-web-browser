@@ -178,6 +178,15 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
   // than `NONE`.
   ["keywordExposureResults", ""],
 
+  // The minimum prefix length of a market keyword the user must type to
+  // trigger the suggestion. 0 means the min length should be taken from Nimbus
+  // or remote settings.
+  ["market.minKeywordLength", 0],
+
+  // The number of times the user has clicked the "Show less frequently" command
+  // for Market suggestions.
+  ["market.showLessFrequentlyCount", 0],
+
   // As a user privacy measure, don't fetch results from remote services for
   // searches that start by pasting a string longer than this. The pref name
   // indicates search suggestions, but this is used for all remote results.
@@ -650,6 +659,8 @@ const PREF_OTHER_DEFAULTS = new Map([
 const NIMBUS_DEFAULTS = {
   addonsShowLessFrequentlyCap: 0,
   fakespotMinKeywordLength: null,
+  marketMinKeywordLength: null,
+  marketShowLessFrequentlyCap: null,
   quickSuggestScoreMap: null,
   weatherKeywordsMinimumLength: null,
   weatherShowLessFrequentlyCap: null,

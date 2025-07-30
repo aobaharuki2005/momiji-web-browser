@@ -754,6 +754,11 @@ pref("browser.urlbar.suggest.wikipedia", true);
 // Enable creating and editing user defined search engines.
 pref("browser.urlbar.update2.engineAliasRefresh", true);
 
+// The minimum prefix length of a market keyword the user must type to trigger
+// the suggestion. 0 means the min length should be taken from Nimbus or remote
+// settings.
+pref("browser.urlbar.market.minKeywordLength", 0);
+
 pref("browser.altClickSave", false);
 
 // Enable logging downloads operations to the Console.

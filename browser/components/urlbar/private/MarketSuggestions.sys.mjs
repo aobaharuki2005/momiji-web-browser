@@ -7,6 +7,8 @@ import { SuggestProvider } from "resource:///modules/urlbar/private/SuggestFeatu
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
@@ -29,6 +31,44 @@ export class MarketSuggestions extends SuggestProvider {
 
   getSuggestionTelemetryType() {
     return "market";
+  }
+
+  getResultCommands() {
+    let commands = [
+      {
+        name: "not_interested",
+        l10n: {
+          id: "urlbar-result-menu-dont-show-market",
+        },
+      },
+    ];
+
+    if (this.canShowLessFrequently) {
+      commands.push({
+        name: "show_less_frequently",
+        l10n: {
+          id: "urlbar-result-menu-show-less-frequently",
+        },
+      });
+    }
+
+    commands.push(
+      { name: "separator" },
+      {
+        name: "manage",
+        l10n: {
+          id: "urlbar-result-menu-manage-firefox-suggest",
+        },
+      },
+      {
+        name: "help",
+        l10n: {
+          id: "urlbar-result-menu-learn-more-about-firefox-suggest",
+        },
+      }
+    );
+
+    return commands;
   }
 
   getViewTemplate(result) {
@@ -111,8 +151,15 @@ export class MarketSuggestions extends SuggestProvider {
     );
   }
 
-  async makeResult(queryContext, suggestion) {
+  async makeResult(queryContext, suggestion, searchString) {
     if (!this.isEnabled) {
+      return null;
+    }
+
+    if (
+      this.showLessFrequentlyCount &&
+      searchString.length < this.#minKeywordLength
+    ) {
       return null;
     }
 
@@ -126,12 +173,76 @@ export class MarketSuggestions extends SuggestProvider {
     );
   }
 
-  onEngagement(_queryContext, controller, details, _searchString) {
+  onEngagement(_queryContext, controller, details, searchString) {
+    let { result } = details;
+    switch (details.selType) {
+      case "help":
+      case "manage": {
+        // "help" and "manage" are handled by UrlbarInput, no need to do
+        // anything here.
+        return;
+      }
+      case "not_interested": {
+        lazy.UrlbarPrefs.set("suggest.market", false);
+        result.acknowledgeDismissalL10n = {
+          id: "urlbar-dismissal-acknowledgment-market",
+        };
+        controller.removeResult(result);
+        return;
+      }
+      case "show_less_frequently": {
+        controller.view.acknowledgeFeedback(result);
+        this.incrementShowLessFrequentlyCount();
+        if (!this.canShowLessFrequently) {
+          controller.view.invalidateResultMenuCommands();
+        }
+        lazy.UrlbarPrefs.set(
+          "market.minKeywordLength",
+          searchString.length + 1
+        );
+        return;
+      }
+    }
+
     let query = details.element.getAttribute("query");
     let [url] = lazy.UrlbarUtils.getSearchQueryUrl(
       Services.search.defaultEngine,
       query
     );
     controller.browserWindow.openTrustedLinkIn(url, "current");
+  }
+
+  incrementShowLessFrequentlyCount() {
+    if (this.canShowLessFrequently) {
+      lazy.UrlbarPrefs.set(
+        "market.showLessFrequentlyCount",
+        this.showLessFrequentlyCount + 1
+      );
+    }
+  }
+
+  get showLessFrequentlyCount() {
+    const count = lazy.UrlbarPrefs.get("market.showLessFrequentlyCount") || 0;
+    return Math.max(count, 0);
+  }
+
+  get canShowLessFrequently() {
+    const cap =
+      lazy.UrlbarPrefs.get("marketShowLessFrequentlyCap") ||
+      lazy.QuickSuggest.config.showLessFrequentlyCap ||
+      0;
+    return !cap || this.showLessFrequentlyCount < cap;
+  }
+
+  get #minKeywordLength() {
+    let hasUserValue = Services.prefs.prefHasUserValue(
+      "browser.urlbar.market.minKeywordLength"
+    );
+    let nimbusValue = lazy.UrlbarPrefs.get("marketMinKeywordLength");
+    let minLength =
+      hasUserValue || nimbusValue === null
+        ? lazy.UrlbarPrefs.get("market.minKeywordLength")
+        : nimbusValue;
+    return Math.max(minLength, 0);
   }
 }
