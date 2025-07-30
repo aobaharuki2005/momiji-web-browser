@@ -70,6 +70,7 @@ import mozilla.components.service.pocket.PocketStoriesService
 import mozilla.components.support.base.feature.ActivityResultHandler
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.UserInteractionOnBackPressedCallback
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import mozilla.components.support.ktx.android.content.call
 import mozilla.components.support.ktx.android.content.email
@@ -107,6 +108,7 @@ import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.databinding.ActivityHomeBinding
 import org.mozilla.fenix.debugsettings.data.DefaultDebugSettingsRepository
 import org.mozilla.fenix.debugsettings.ui.FenixOverlay
+import org.mozilla.fenix.downloads.DownloadSnackbar
 import org.mozilla.fenix.experiments.ResearchSurfaceDialogFragment
 import org.mozilla.fenix.ext.alreadyOnDestination
 import org.mozilla.fenix.ext.breadcrumb
@@ -221,6 +223,13 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         AboutHomeBinding(
             browserStore = components.core.store,
             navController = navHost.navController,
+        )
+    }
+
+    private val downloadSnackbar by lazy {
+        DownloadSnackbar(
+            store = components.core.store,
+            appStore = components.appStore,
         )
     }
 
@@ -505,6 +514,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                 topSitesProvider = components.core.marsTopSitesProvider,
             ),
             components.privateBrowsingLockFeature,
+            downloadSnackbar,
         )
 
         if (!isCustomTabIntent(intent)) {

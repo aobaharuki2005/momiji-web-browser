@@ -674,9 +674,9 @@ sealed class AppAction : Action {
         /**
          * Dispatched when a download is in progress.
          *
-         * @property sessionId The ID of the session associated with the download.
+         * @property downloadId The unique identifier for the ongoing download.
          */
-        data class DownloadInProgress(val sessionId: String?) : DownloadAction()
+        data class DownloadInProgress(val downloadId: String) : DownloadAction()
 
         /**
          * Dispatched when a download has failed.

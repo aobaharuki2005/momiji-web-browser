@@ -105,10 +105,10 @@ abstract class AddonPopupBaseFragment : Fragment(), EngineSession.Observer, User
                     ),
                     positiveButtonRadius = pixelSizeFor(R.dimen.tab_corner_radius).toFloat(),
                 ),
-                onDownloadStartedListener = {
+                onDownloadStartedListener = { downloadId ->
                     requireComponents.appStore.dispatch(
                         AppAction.DownloadAction.DownloadInProgress(
-                            session?.id,
+                             downloadId,
                         ),
                     )
                 },

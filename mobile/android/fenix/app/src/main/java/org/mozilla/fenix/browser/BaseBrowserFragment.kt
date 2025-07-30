@@ -720,10 +720,10 @@ abstract class BaseBrowserFragment :
                 ),
                 positiveButtonRadius = pixelSizeFor(R.dimen.tab_corner_radius).toFloat(),
             ),
-            onDownloadStartedListener = {
+            onDownloadStartedListener = { downloadId ->
                 context.components.appStore.dispatch(
                     AppAction.DownloadAction.DownloadInProgress(
-                        getCurrentTab()?.id,
+                        downloadId,
                     ),
                 )
             },

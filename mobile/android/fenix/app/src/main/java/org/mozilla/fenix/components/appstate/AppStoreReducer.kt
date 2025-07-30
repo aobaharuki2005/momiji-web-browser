@@ -237,7 +237,7 @@ internal object AppStoreReducer {
         )
 
         is AppAction.DownloadAction.DownloadInProgress -> state.copy(
-            snackbarState = SnackbarState.DownloadInProgress(action.sessionId),
+            snackbarState = SnackbarState.DownloadInProgress(action.downloadId),
         )
 
         is AppAction.DownloadAction.DownloadFailed -> state.copy(

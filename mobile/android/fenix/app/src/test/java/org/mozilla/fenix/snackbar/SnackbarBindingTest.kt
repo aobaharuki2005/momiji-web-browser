@@ -641,7 +641,7 @@ class SnackbarBindingTest {
         )
         binding.start()
 
-        appStore.dispatch(AppAction.DownloadAction.DownloadInProgress(sessionId = "id"))
+        appStore.dispatch(AppAction.DownloadAction.DownloadInProgress(downloadId = "id"))
         waitForStoreToSettle()
 
         verify(snackbarDelegate).show(
