@@ -9298,6 +9298,16 @@ main section {
   background-color: var(--button-background-color);
 }
 
+.promo-card-wrapper {
+  background: var(--newtab-background-card);
+  box-shadow: var(--box-shadow-card);
+  border-radius: var(--border-radius-large);
+  height: 250px;
+}
+.promo-card-wrapper:hover {
+  box-shadow: var(--box-shadow-card-hover);
+}
+
 .section-context-menu {
   position: relative;
 }
