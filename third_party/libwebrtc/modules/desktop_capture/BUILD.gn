@@ -393,11 +393,6 @@ rtc_library("desktop_capture") {
     ]
     if (build_with_mozilla) {
       libs -= [ "Xtst" ]
-      # Mozilla provides custom impl of x_error_trap.*
-      sources -= [
-        "linux/x11/x_error_trap.cc",
-        "linux/x11/x_error_trap.h",
-      ]
     }
   }
 

@@ -52,15 +52,17 @@ class MozbuildWriter:
             return raw.replace("\n", "\n" + self.indent)
         if isinstance(v, bool):
             return repr(v)
-        return f'"{v}"'
+        return '"%s"' % v
 
     def finalize(self):
         if self._library_name:
             self.write("\n")
             if self._shared_library:
-                self.write_ln(f"SharedLibrary({self.mb_serialize(self._library_name)})")
+                self.write_ln(
+                    "SharedLibrary(%s)" % self.mb_serialize(self._library_name)
+                )
             else:
-                self.write_ln(f"Library({self.mb_serialize(self._library_name)})")
+                self.write_ln("Library(%s)" % self.mb_serialize(self._library_name))
 
     def write(self, content):
         self._fh.write(content)
@@ -101,7 +103,7 @@ class MozbuildWriter:
                 self._shared_library = True
             else:
                 self.write("\n")
-                self.write_ln(f"{key} = {self.mb_serialize(value)}")
+                self.write_ln("%s = %s" % (key, self.mb_serialize(value)))
                 self.write("\n")
 
     def write_mozbuild_dict(self, key, value):
@@ -118,11 +120,11 @@ class MozbuildWriter:
                 self.write_ln("GeneratedFile(")
                 self.indent += " " * self._indent_increment
                 for o in value["outputs"]:
-                    self.write_ln(f"{self.mb_serialize(o)},")
+                    self.write_ln("%s," % (self.mb_serialize(o)))
                 for k, v in sorted(value.items()):
                     if k == "outputs":
                         continue
-                    self.write_ln(f"{k}={self.mb_serialize(v)},")
+                    self.write_ln("%s=%s," % (k, self.mb_serialize(v)))
                 self.indent = self.indent[self._indent_increment :]
                 self.write_ln(")")
                 return
@@ -136,15 +138,13 @@ class MozbuildWriter:
                         wrote_ln = True
 
                 if not wrote_ln:
-                    self.write_ln(
-                        f"{key}[{self.mb_serialize(k)}] = {self.mb_serialize(v)}"
-                    )
+                    self.write_ln("%s[%s] = %s" % subst_vals)
 
     def write_condition(self, values):
         def mk_condition(k, v):
             if not v:
-                return f'not CONFIG["{k}"]'
-            return f'CONFIG["{k}"] == {self.mb_serialize(v)}'
+                return 'not CONFIG["%s"]' % k
+            return 'CONFIG["%s"] == %s' % (k, self.mb_serialize(v))
 
         self.write("\n")
         self.write("if ")
@@ -250,7 +250,6 @@ def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
                     for d in spec[spec_attr]
                     if "CR_XCODE_VERSION" not in d
                     and "CR_SYSROOT_HASH" not in d
-                    and "CR_SYSROOT_KEY" not in d
                     and "_FORTIFY_SOURCE" not in d
                 ]
             if spec_attr == "include_dirs":
@@ -266,13 +265,7 @@ def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
 
 
 def process_gn_config(
-    gn_config,
-    topsrcdir,
-    srcdir,
-    non_unified_sources,
-    sandbox_vars,
-    mozilla_flags,
-    mozilla_add_override_dir,
+    gn_config, topsrcdir, srcdir, non_unified_sources, sandbox_vars, mozilla_flags
 ):
     # Translates a json gn config into attributes that can be used to write out
     # moz.build files for this configuration.
@@ -300,7 +293,7 @@ def process_gn_config(
         if path.startswith("//"):
             path = path[2:]
         if not path.startswith("/"):
-            path = f"/{project_relsrcdir}/{path}"
+            path = "/%s/%s" % (project_relsrcdir, path)
         return path
 
     # Process all targets from the given gn project and its dependencies.
@@ -318,9 +311,9 @@ def process_gn_config(
         else:
             raise Exception(
                 "The following GN target type is not currently "
-                f'consumed by moz.build: "{spec["type"]}". It may need to be '
+                'consumed by moz.build: "%s". It may need to be '
                 "added, or you may need to re-run the "
-                "`GnConfigGen` step."
+                "`GnConfigGen` step." % spec["type"]
             )
 
         if spec["type"] == "shared_library":
@@ -343,18 +336,19 @@ def process_gn_config(
         extensions = set()
         use_defines_in_asflags = False
 
-        for f in [item.lstrip("//") for item in spec.get("sources", [])]:
+        for f in spec.get("sources", []):
+            f = f.lstrip("//")
             ext = mozpath.splitext(f)[-1]
             extensions.add(ext)
-            src = f"{project_relsrcdir}/{f}"
-            if ext in {".h", ".inc"}:
+            src = "%s/%s" % (project_relsrcdir, f)
+            if ext == ".h" or ext == ".inc":
                 continue
             elif ext == ".def":
                 context_attrs["SYMBOLS_FILE"] = src
             elif ext != ".S" and src not in non_unified_sources:
-                unified_sources.append(f"/{src}")
+                unified_sources.append("/%s" % src)
             else:
-                sources.append(f"/{src}")
+                sources.append("/%s" % src)
             # The Mozilla build system doesn't use DEFINES for building
             # ASFILES.
             if ext == ".s":
@@ -384,8 +378,8 @@ def process_gn_config(
                     # tree or we simply didn't vendor. Print a warning in this case.
                     if not resolved.endswith("gn-output/gen"):
                         print(
-                            f"Included path: '{resolved}' does not exist, dropping include from GN "
-                            "configuration.",
+                            "Included path: '%s' does not exist, dropping include from GN "
+                            "configuration." % resolved,
                             file=sys.stderr,
                         )
                     continue
@@ -425,9 +419,6 @@ def process_gn_config(
 
         # Add some features to all contexts. Put here in case LOCAL_INCLUDES
         # order matters.
-        if mozilla_add_override_dir != "":
-            context_attrs["LOCAL_INCLUDES"] += [mozilla_add_override_dir]
-
         context_attrs["LOCAL_INCLUDES"] += [
             "!/ipc/ipdl/_ipdlheaders",
             "/ipc/chromium/src",
@@ -692,7 +683,7 @@ def write_mozbuild_files(
                 if common_dirs:
                     if cond:
                         mb.write_condition(dict(cond))
-                    mb.write_mozbuild_list("DIRS", [f"/{d}" for d in common_dirs])
+                    mb.write_mozbuild_list("DIRS", ["/%s" % d for d in common_dirs])
                     if cond:
                         mb.terminate_condition()
 
@@ -715,12 +706,11 @@ def generate_gn_config(
     moz_build_flag,
     non_unified_sources,
     mozilla_flags,
-    mozilla_add_override_dir,
 ):
     def str_for_arg(v):
         if v in (True, False):
             return str(v).lower()
-        return f'"{v}"'
+        return '"%s"' % v
 
     build_root_dir = topsrcdir / build_root_dir
     srcdir = build_root_dir / target_dir
@@ -750,7 +740,9 @@ def generate_gn_config(
             }
         )
 
-    gn_args = f'--args={" ".join([f"{k}={str_for_arg(v)}" for k, v in input_variables.items()])}'
+    gn_args = "--args=%s" % " ".join(
+        ["%s=%s" % (k, str_for_arg(v)) for k, v in input_variables.items()]
+    )
     with tempfile.TemporaryDirectory() as tempdir:
         # On Mac, `tempdir` starts with /var which is a symlink to /private/var.
         # We resolve the symlinks in `tempdir` here so later usage with
@@ -766,7 +758,7 @@ def generate_gn_config(
             "--root=./",  # must find the google build directory in this directory
             f"--dotfile={target_dir}/.gn",
         ]
-        print(f'Running "{" ".join(gen_args)}"', file=sys.stderr)
+        print('Running "%s"' % " ".join(gen_args), file=sys.stderr)
         subprocess.check_call(gen_args, cwd=build_root_dir, stderr=subprocess.STDOUT)
 
         gn_config_file = resolved_tempdir / "project.json"
@@ -789,7 +781,6 @@ def generate_gn_config(
                 non_unified_sources,
                 gn_config["sandbox_vars"],
                 mozilla_flags,
-                mozilla_add_override_dir,
             )
             return gn_config
 
@@ -855,7 +846,6 @@ def main():
                 config["moz_build_flag"],
                 config["non_unified_sources"],
                 config["mozilla_flags"],
-                config["mozilla_add_override_dir"],
             ): vars
             for vars in vars_set
         }

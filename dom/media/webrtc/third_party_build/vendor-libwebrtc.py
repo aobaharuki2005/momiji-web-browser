@@ -39,8 +39,6 @@ def get_excluded_files():
         "presubmit_test.py",
         "presubmit_test_mocks.py",
         "pylintrc",
-        "api/location.h",
-        "rtc_base/trace_event.h",
     ]
 
 
