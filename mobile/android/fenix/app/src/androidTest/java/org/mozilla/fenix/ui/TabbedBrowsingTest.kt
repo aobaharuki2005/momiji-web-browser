@@ -161,26 +161,6 @@ class TabbedBrowsingTest : TestSetup() {
         }
     }
 
-    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/903606
-    @SmokeTest
-    @Test
-    fun tabMediaControlButtonTest() {
-        val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(audioTestPage.url) {
-            mDevice.waitForIdle()
-            clickPageObject(MatcherHelper.itemWithText("Play"))
-            assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
-        }.openTabDrawer(composeTestRule) {
-            verifyTabMediaControlButtonState("Pause")
-            clickTabMediaControlButton("Pause")
-            verifyTabMediaControlButtonState("Play")
-        }.openTab(audioTestPage.title) {
-            assertPlaybackState(browserStore, MediaSession.PlaybackState.PAUSED)
-        }
-    }
-
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/903592
     @SmokeTest
     @Test

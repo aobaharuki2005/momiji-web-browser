@@ -398,34 +398,6 @@ class TabDrawerRobot(private val composeTestRule: ComposeTestRule) {
     }
 
     /**
-     * Verifies a tab's media button matches [action] when there is only one tab with media.
-     */
-    @OptIn(ExperimentalTestApi::class)
-    fun verifyTabMediaControlButtonState(action: String) {
-        Log.i(TAG, "verifyTabMediaControlButtonStateTab: Waiting for $waitingTime ms until the media tab control button: $action exists")
-        composeTestRule.waitUntilAtLeastOneExists(hasContentDescription(action), waitingTime)
-        Log.i(TAG, "verifyTabMediaControlButtonStateTab: Waited for $waitingTime ms until the media tab control button: $action exists")
-        Log.i(TAG, "verifyTabMediaControlButtonStateTab: Trying to verify that the tab media control button: $action exists")
-        composeTestRule.tabMediaControlButton(action)
-            .assertExists()
-        Log.i(TAG, "verifyTabMediaControlButtonStateTab: Verified tab media control button: $action exists")
-    }
-
-    /**
-     * Clicks a tab's media button when there is only one tab with media.
-     */
-    @OptIn(ExperimentalTestApi::class)
-    fun clickTabMediaControlButton(action: String) {
-        Log.i(TAG, "clickTabMediaControlButton: Waiting for $waitingTime ms until the media tab control button: $action exists")
-        composeTestRule.waitUntilAtLeastOneExists(hasContentDescription(action), waitingTime)
-        Log.i(TAG, "clickTabMediaControlButton: Waited for $waitingTime ms until the media tab control button: $action exists")
-        Log.i(TAG, "clickTabMediaControlButton: Trying to click the tab media control button: $action")
-        composeTestRule.tabMediaControlButton(action)
-            .performClick()
-        Log.i(TAG, "clickTabMediaControlButton: Clicked the tab media control button: $action")
-    }
-
-    /**
      * Closes a tab with a given [title].
      */
     fun closeTabWithTitle(title: String) {

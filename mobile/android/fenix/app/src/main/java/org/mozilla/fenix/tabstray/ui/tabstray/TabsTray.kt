@@ -57,7 +57,6 @@ import org.mozilla.fenix.tabstray.ui.syncedtabs.OnTabCloseClick as OnSyncedTabCl
  * @param shouldShowInactiveTabsAutoCloseDialog Whether the inactive tabs auto close dialog should be displayed.
  * @param onTabPageClick Invoked when the user clicks on the Normal, Private, or Synced tabs page button.
  * @param onTabClose Invoked when the user clicks to close a tab.
- * @param onTabMediaClick Invoked when the user interacts with a tab's media controls.
  * @param onTabClick Invoked when the user clicks on a tab.
  * @param onTabLongClick Invoked when the user long clicks a tab.
  * @param onInactiveTabsHeaderClick Invoked when the user clicks on the inactive tabs section header.
@@ -112,7 +111,6 @@ fun TabsTray(
     shouldShowInactiveTabsAutoCloseDialog: (Int) -> Boolean,
     onTabPageClick: (Page) -> Unit,
     onTabClose: (TabSessionState) -> Unit,
-    onTabMediaClick: (TabSessionState) -> Unit,
     onTabClick: (TabSessionState) -> Unit,
     onTabLongClick: (TabSessionState) -> Unit,
     onInactiveTabsHeaderClick: (Boolean) -> Unit,
@@ -229,7 +227,6 @@ fun TabsTray(
                         inactiveTabsExpanded = tabsTrayState.inactiveTabsExpanded,
                         displayTabsInGrid = displayTabsInGrid,
                         onTabClose = onTabClose,
-                        onTabMediaClick = onTabMediaClick,
                         onTabClick = onTabClick,
                         onTabLongClick = onTabLongClick,
                         shouldShowInactiveTabsAutoCloseDialog = shouldShowInactiveTabsAutoCloseDialog,
@@ -258,7 +255,6 @@ fun TabsTray(
                         selectionMode = tabsTrayState.mode,
                         displayTabsInGrid = displayTabsInGrid,
                         onTabClose = onTabClose,
-                        onTabMediaClick = onTabMediaClick,
                         onTabClick = onTabClick,
                         onTabLongClick = onTabLongClick,
                         onMove = onMove,
@@ -396,7 +392,6 @@ private fun TabsTrayPreviewRoot(
                     tabsTrayStore.dispatch(TabsTrayAction.UpdatePrivateTabs(newTabs))
                 }
             },
-            onTabMediaClick = {},
             onTabClick = { tab ->
                 when (tabsTrayStore.state.mode) {
                     TabsTrayState.Mode.Normal -> {

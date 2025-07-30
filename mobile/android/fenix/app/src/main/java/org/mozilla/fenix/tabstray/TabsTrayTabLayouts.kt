@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.SwipeToDismissState2
 import org.mozilla.fenix.compose.tabstray.TabGridItem
@@ -49,7 +50,6 @@ import org.mozilla.fenix.tabstray.browser.compose.createGridReorderState
 import org.mozilla.fenix.tabstray.browser.compose.createListReorderState
 import org.mozilla.fenix.tabstray.browser.compose.detectGridPressAndDragGestures
 import org.mozilla.fenix.tabstray.browser.compose.detectListPressAndDrag
-import org.mozilla.fenix.tabstray.ext.MIN_COLUMN_WIDTH_DP
 import org.mozilla.fenix.tabstray.ext.numberOfGridColumns
 import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.math.max
@@ -369,7 +369,7 @@ private fun TabListPreview() {
     }
 }
 
-@PreviewLightDark
+@FlexibleWindowLightDarkPreview
 @Composable
 private fun TabGridPreview() {
     val tabs = remember { generateFakeTabsList().toMutableStateList() }
@@ -378,35 +378,6 @@ private fun TabGridPreview() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(FirefoxTheme.colors.layer1),
-        ) {
-            TabLayout(
-                tabs = tabs,
-                selectedTabId = tabs[0].id,
-                selectionMode = TabsTrayState.Mode.Normal,
-                displayTabsInGrid = true,
-                onTabClose = tabs::remove,
-                onTabMediaClick = {},
-                onTabClick = {},
-                onTabLongClick = {},
-                onTabDragStart = {},
-                onMove = { _, _, _ -> },
-            )
-        }
-    }
-}
-
-@PreviewLightDark
-@Composable
-private fun TabGridSmallPreview() {
-    val tabs = remember { generateFakeTabsList().toMutableStateList() }
-    val width = MIN_COLUMN_WIDTH_DP.dp + 50.dp
-
-    FirefoxTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(width)
                 .background(FirefoxTheme.colors.layer1),
         ) {
             TabLayout(

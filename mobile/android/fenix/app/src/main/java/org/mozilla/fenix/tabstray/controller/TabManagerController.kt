@@ -151,11 +151,6 @@ interface TabManagerController : SyncedTabsController, InactiveTabsController, T
     fun handleForceSelectedTabsAsInactiveClicked(numDays: Long = DEFAULT_ACTIVE_DAYS + 1)
 
     /**
-     * Handles when a tab item is click either to play/pause.
-     */
-    fun handleMediaClicked(tab: SessionState)
-
-    /**
      * Adds the provided tab to the current selection of tabs.
      *
      * @param tab [TabSessionState] that was long clicked.
@@ -531,23 +526,6 @@ class DefaultTabManagerController(
     @VisibleForTesting
     internal fun dismissTabManagerAndNavigateHome(sessionId: String) {
         navigateToHomeAndDeleteSession(sessionId)
-    }
-
-    override fun handleMediaClicked(tab: SessionState) {
-        when (tab.mediaSessionState?.playbackState) {
-            PlaybackState.PLAYING -> {
-                GleanTab.mediaPause.record(NoExtras())
-                tab.mediaSessionState?.controller?.pause()
-            }
-
-            PlaybackState.PAUSED -> {
-                GleanTab.mediaPlay.record(NoExtras())
-                tab.mediaSessionState?.controller?.play()
-            }
-            else -> throw AssertionError(
-                "Play/Pause button clicked without play/pause state.",
-            )
-        }
     }
 
     override fun handleSyncedTabClicked(tab: Tab) {

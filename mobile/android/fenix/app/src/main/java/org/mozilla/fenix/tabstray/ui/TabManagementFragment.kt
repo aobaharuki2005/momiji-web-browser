@@ -231,7 +231,6 @@ class TabManagementFragment : ComposeFragment() {
                 onTabClose = { tab ->
                     tabManagerInteractor.onTabClosed(tab, TAB_MANAGER_FEATURE_NAME)
                 },
-                onTabMediaClick = tabManagerInteractor::onMediaClicked,
                 onTabClick = { tab ->
                     run outer@{
                         if (!requireContext().settings().hasShownTabSwipeCFR &&

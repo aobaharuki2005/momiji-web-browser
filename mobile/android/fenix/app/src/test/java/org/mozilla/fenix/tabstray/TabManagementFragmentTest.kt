@@ -296,7 +296,6 @@ private fun buildTestInteractor(
     override fun onShareSelectedTabs() {}
     override fun onTabsMove(tabId: String, targetId: String?, placeAfter: Boolean) {}
     override fun onRecentlyClosedClicked() {}
-    override fun onMediaClicked(tab: TabSessionState) {}
     override fun onTabLongClicked(tab: TabSessionState): Boolean { return false }
     override fun onBackPressed(): Boolean { return false }
     override fun onSyncedTabClicked(tab: Tab) {}

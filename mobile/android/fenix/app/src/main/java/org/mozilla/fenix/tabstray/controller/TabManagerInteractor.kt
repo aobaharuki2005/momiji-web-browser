@@ -80,13 +80,6 @@ interface TabManagerInteractor :
     fun onRecentlyClosedClicked()
 
     /**
-     * Invoked when the a tab's media controls are clicked.
-     *
-     * @param tab [TabSessionState] to close.
-     */
-    fun onMediaClicked(tab: TabSessionState)
-
-    /**
      * Invoked when a tab is long clicked.
      *
      * @param tab [TabSessionState] that was clicked.
@@ -178,10 +171,6 @@ class DefaultTabManagerInteractor(
 
     override fun onRecentlyClosedClicked() {
         controller.handleNavigateToRecentlyClosed()
-    }
-
-    override fun onMediaClicked(tab: TabSessionState) {
-        controller.handleMediaClicked(tab)
     }
 
     override fun onTabLongClicked(tab: TabSessionState): Boolean {
