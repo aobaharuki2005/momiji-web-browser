@@ -41,6 +41,7 @@ import mozilla.components.compose.browser.toolbar.store.BrowserDisplayToolbarAct
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.Init
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
+import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent.Source
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.CombinedEventAndMenu
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton.ContentDescription.StringResContentDescription
@@ -132,18 +133,16 @@ import mozilla.components.ui.icons.R as iconsR
 
 @VisibleForTesting
 internal sealed class DisplayActions : BrowserToolbarEvent {
-    data object MenuClicked : DisplayActions()
+    data class MenuClicked(override val source: Source) : DisplayActions()
     data object NavigateBackClicked : DisplayActions()
     data object NavigateBackLongClicked : DisplayActions()
     data object NavigateForwardClicked : DisplayActions()
     data object NavigateForwardLongClicked : DisplayActions()
-    data class RefreshClicked(
-        val bypassCache: Boolean,
-    ) : DisplayActions()
+    data class RefreshClicked(val bypassCache: Boolean) : DisplayActions()
     data object StopRefreshClicked : DisplayActions()
-    data object AddBookmarkClicked : DisplayActions()
-    data object EditBookmarkClicked : DisplayActions()
-    data object ShareClicked : DisplayActions()
+    data class AddBookmarkClicked(override val source: Source) : DisplayActions()
+    data class EditBookmarkClicked(override val source: Source) : DisplayActions()
+    data class ShareClicked(override val source: Source) : DisplayActions()
 }
 
 @VisibleForTesting
@@ -153,10 +152,10 @@ internal sealed class StartPageActions : BrowserToolbarEvent {
 
 @VisibleForTesting
 internal sealed class TabCounterInteractions : BrowserToolbarEvent {
-    data object TabCounterClicked : TabCounterInteractions()
-    data object TabCounterLongClicked : TabCounterInteractions()
-    data object AddNewTab : TabCounterInteractions()
-    data object AddNewPrivateTab : TabCounterInteractions()
+    data class TabCounterClicked(override val source: Source) : TabCounterInteractions()
+    data class TabCounterLongClicked(override val source: Source) : TabCounterInteractions()
+    data class AddNewTab(override val source: Source) : TabCounterInteractions()
+    data class AddNewPrivateTab(override val source: Source) : TabCounterInteractions()
     data object CloseCurrentTab : TabCounterInteractions()
 }
 
@@ -213,7 +212,7 @@ class BrowserToolbarMiddleware(
     @VisibleForTesting
     internal var environment: BrowserToolbarEnvironment? = null
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     override fun invoke(
         context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         next: (BrowserToolbarAction) -> Unit,
@@ -271,10 +270,11 @@ class BrowserToolbarMiddleware(
                         accesspoint = MenuAccessPoint.Browser,
                     ),
                 )
+
+                next(action)
             }
 
             is TabCounterClicked -> {
-                Events.browserToolbarAction.record(Events.BrowserToolbarActionExtra("tabs_tray"))
                 runWithinEnvironment {
                     thumbnailsFeature?.requestScreenshot()
 
@@ -300,15 +300,16 @@ class BrowserToolbarMiddleware(
                         )
                     }
                 }
-            }
-            is TabCounterLongClicked -> {
-                Events.browserToolbarAction.record(Events.BrowserToolbarActionExtra("tabs_tray_long_press"))
+
+                next(action)
             }
             is AddNewTab -> {
                 openNewTab(Normal)
+                next(action)
             }
             is AddNewPrivateTab -> {
                 openNewTab(Private)
+                next(action)
             }
             is CloseCurrentTab -> {
                 browserStore.state.selectedTab?.let { selectedTab ->
@@ -421,24 +422,24 @@ class BrowserToolbarMiddleware(
                 }
             }
             is NavigateBackClicked -> {
-                Events.browserToolbarAction.record(Events.BrowserToolbarActionExtra("back"))
                 browserStore.state.selectedTab?.let {
                     browserStore.dispatch(EngineAction.GoBackAction(it.id))
                 }
+                next(action)
             }
             is NavigateBackLongClicked -> {
-                Events.browserToolbarAction.record(Events.BrowserToolbarActionExtra("back_long_press"))
                 showTabHistory()
+                next(action)
             }
             is NavigateForwardClicked -> {
-                Events.browserToolbarAction.record(Events.BrowserToolbarActionExtra("forward"))
                 browserStore.state.selectedTab?.let {
                     browserStore.dispatch(EngineAction.GoForwardAction(it.id))
                 }
+                next(action)
             }
             is NavigateForwardLongClicked -> {
-                Events.browserToolbarAction.record(Events.BrowserToolbarActionExtra("forward_long_press"))
                 showTabHistory()
+                next(action)
             }
 
             is ReaderModeClicked -> runWithinEnvironment {
@@ -480,10 +481,12 @@ class BrowserToolbarMiddleware(
                 } else {
                     sessionUseCases.reload(tabId)
                 }
+                next(action)
             }
             is StopRefreshClicked -> {
                 val tabId = browserStore.state.selectedTabId
                 sessionUseCases.stopLoading(tabId)
+                next(action)
             }
 
             is AddBookmarkClicked -> {
@@ -507,6 +510,8 @@ class BrowserToolbarMiddleware(
                         )
                     }
                 }
+
+                next(action)
             }
 
             is EditBookmarkClicked -> runWithinEnvironment {
@@ -530,6 +535,8 @@ class BrowserToolbarMiddleware(
                         )
                     }
                 }
+
+                next(action)
             }
 
             is ShareClicked -> runWithinEnvironment {
@@ -558,6 +565,8 @@ class BrowserToolbarMiddleware(
                         ),
                     )
                 }
+
+                next(action)
             }
 
             else -> next(action)
@@ -749,7 +758,7 @@ class BrowserToolbarMiddleware(
         ).filter { config ->
             config.isVisible()
         }.map { config ->
-            buildAction(config.action)
+            buildAction(config.action, Source.NavigationBar)
         }
     }
 
@@ -766,20 +775,21 @@ class BrowserToolbarMiddleware(
         )
     }
 
-    private fun buildTabCounterMenu() = CombinedEventAndMenu(TabCounterLongClicked) {
+    private fun buildTabCounterMenu(source: Source) =
+        CombinedEventAndMenu(TabCounterLongClicked(source)) {
         listOf(
             BrowserToolbarMenuButton(
                 icon = DrawableResIcon(iconsR.drawable.mozac_ic_plus_24),
                 text = StringResText(R.string.mozac_browser_menu_new_tab),
                 contentDescription = StringResContentDescription(R.string.mozac_browser_menu_new_tab),
-                onClick = AddNewTab,
+                onClick = AddNewTab(source),
             ),
 
             BrowserToolbarMenuButton(
                 icon = DrawableResIcon(iconsR.drawable.mozac_ic_private_mode_24),
                 text = StringResText(R.string.mozac_browser_menu_new_private_tab),
                 contentDescription = StringResContentDescription(R.string.mozac_browser_menu_new_private_tab),
-                onClick = AddNewPrivateTab,
+                onClick = AddNewPrivateTab(source),
             ),
 
             BrowserToolbarMenuDivider,
@@ -990,6 +1000,7 @@ class BrowserToolbarMiddleware(
     @VisibleForTesting
     internal fun buildAction(
         toolbarAction: ToolbarAction,
+        source: Source = Source.AddressBar,
     ): Action = when (toolbarAction) {
         ToolbarAction.NewTab -> ActionButtonRes(
             drawableResId = R.drawable.mozac_ic_plus_24,
@@ -999,9 +1010,9 @@ class BrowserToolbarMiddleware(
                 R.string.home_screen_shortcut_open_new_tab_2
             },
             onClick = if (environment?.browsingModeManager?.mode == Private) {
-                AddNewPrivateTab
+                AddNewPrivateTab(source)
             } else {
-                AddNewTab
+                AddNewTab(source)
             },
         )
 
@@ -1049,7 +1060,7 @@ class BrowserToolbarMiddleware(
         ToolbarAction.Menu -> ActionButtonRes(
             drawableResId = R.drawable.mozac_ic_ellipsis_vertical_24,
             contentDescription = R.string.content_description_menu,
-            onClick = MenuClicked,
+            onClick = MenuClicked(source),
         )
 
         ToolbarAction.ReaderMode -> ActionButtonRes(
@@ -1099,8 +1110,8 @@ class BrowserToolbarMiddleware(
                 count = tabsCount,
                 contentDescription = tabCounterDescription,
                 showPrivacyMask = isInPrivateMode,
-                onClick = TabCounterClicked,
-                onLongClick = buildTabCounterMenu(),
+                onClick = TabCounterClicked(source),
+                onLongClick = buildTabCounterMenu(source),
             )
         }
 
@@ -1130,7 +1141,7 @@ class BrowserToolbarMiddleware(
             ActionButtonRes(
                 drawableResId = R.drawable.mozac_ic_bookmark_24,
                 contentDescription = R.string.browser_menu_bookmark_this_page_2,
-                onClick = AddBookmarkClicked,
+                onClick = AddBookmarkClicked(source),
             )
         }
 
@@ -1138,14 +1149,14 @@ class BrowserToolbarMiddleware(
             ActionButtonRes(
                 drawableResId = R.drawable.mozac_ic_bookmark_fill_24,
                 contentDescription = R.string.browser_menu_edit_bookmark,
-                onClick = EditBookmarkClicked,
+                onClick = EditBookmarkClicked(source),
             )
         }
 
         ToolbarAction.Share -> ActionButtonRes(
             drawableResId = R.drawable.mozac_ic_share_android_24,
             contentDescription = R.string.browser_menu_share,
-            onClick = ShareClicked,
+            onClick = ShareClicked(source),
         )
     }
 }

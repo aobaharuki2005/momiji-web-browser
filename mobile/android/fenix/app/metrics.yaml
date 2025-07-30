@@ -150,6 +150,31 @@ events:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
+  browser_navbar_action:
+    type: event
+    description: |
+      A browser navbar item was tapped.
+      The name of the item that the user tapped is stored in extras with the
+      key `item`.
+    extra_keys:
+      item:
+        description: |
+          A string containing the name of the item the user tapped. These items
+          include:
+          back, back_long_press, custom_back, custom_back_long_press, forward,
+          forward_long_press, custom_forward, custom_forward_long_press, add_new_tab,
+          add_new_private_tab, tabs_tray, tabs_tray_long_press, menu_press, refresh,
+          stop_refresh, add_bookmark, edit_bookmark, share.
+        type: string
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1971855
+    data_reviews:
+      - phabricator.services.mozilla.com/D258399
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
   browser_menu_action:
     type: event
     description: |

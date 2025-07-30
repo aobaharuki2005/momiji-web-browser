@@ -28,6 +28,7 @@ import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
 import org.mozilla.fenix.components.toolbar.BrowserToolbarMiddleware
+import org.mozilla.fenix.components.toolbar.BrowserToolbarTelemetryMiddleware
 import org.mozilla.fenix.components.toolbar.CustomTabBrowserToolbarMiddleware
 import org.mozilla.fenix.components.toolbar.CustomTabToolbarEnvironment
 import org.mozilla.fenix.ext.components
@@ -82,9 +83,9 @@ object BrowserToolbarStoreBuilder {
                     ),
                 ),
             ),
-            middleware = listOf(
-                when (customTabSession) {
-                    null -> BrowserToolbarMiddleware(
+            middleware = when (customTabSession) {
+                null -> listOf(
+                    BrowserToolbarMiddleware(
                         appStore = appStore,
                         browserScreenStore = browserScreenStore,
                         browserStore = browserStore,
@@ -97,9 +98,12 @@ object BrowserToolbarStoreBuilder {
                         publicSuffixList = components.publicSuffixList,
                         settings = settings,
                         bookmarksStorage = activity.components.core.bookmarksStorage,
-                    )
+                    ),
+                    BrowserToolbarTelemetryMiddleware(),
+                )
 
-                    else -> CustomTabBrowserToolbarMiddleware(
+                else -> listOf(
+                    CustomTabBrowserToolbarMiddleware(
                         requireNotNull(customTabSession).id,
                         browserStore = browserStore,
                         permissionsStorage = components.core.geckoSitePermissionsStorage,
@@ -108,9 +112,9 @@ object BrowserToolbarStoreBuilder {
                         trackingProtectionUseCases = components.useCases.trackingProtectionUseCases,
                         publicSuffixList = components.publicSuffixList,
                         settings = settings,
-                    )
-                },
-            ),
+                    ),
+                )
+            },
         )
     }.also {
         it.dispatch(

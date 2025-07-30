@@ -33,6 +33,7 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.Init
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ToggleEditMode
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
+import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent.Source
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.CombinedEventAndMenu
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton.ContentDescription.StringResContentDescription
@@ -49,7 +50,6 @@ import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.ext.flow
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.ClipboardHandler
-import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
@@ -81,16 +81,16 @@ import mozilla.components.ui.icons.R as iconsR
 
 @VisibleForTesting
 internal sealed class DisplayActions : BrowserToolbarEvent {
-    data object MenuClicked : DisplayActions()
+    data class MenuClicked(override val source: Source) : DisplayActions()
     data object FakeClicked : DisplayActions()
 }
 
 @VisibleForTesting
 internal sealed class TabCounterInteractions : BrowserToolbarEvent {
-    data object TabCounterClicked : TabCounterInteractions()
-    data object TabCounterLongClicked : TabCounterInteractions()
-    data object AddNewTab : TabCounterInteractions()
-    data object AddNewPrivateTab : TabCounterInteractions()
+    data class TabCounterClicked(override val source: Source) : TabCounterInteractions()
+    data class TabCounterLongClicked(override val source: Source) : TabCounterInteractions()
+    data class AddNewTab(override val source: Source) : TabCounterInteractions()
+    data class AddNewPrivateTab(override val source: Source) : TabCounterInteractions()
 }
 
 internal sealed class PageOriginInteractions : BrowserToolbarEvent {
@@ -118,7 +118,7 @@ class BrowserToolbarMiddleware(
     private var syncCurrentSearchEngineJob: Job? = null
     private var observeBrowserSearchStateJob: Job? = null
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     override fun invoke(
         context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         next: (BrowserToolbarAction) -> Unit,
@@ -169,11 +169,10 @@ class BrowserToolbarMiddleware(
                         ),
                     )
                 }
+                next(action)
             }
 
             is TabCounterClicked -> {
-                Events.browserToolbarAction.record(Events.BrowserToolbarActionExtra("tabs_tray"))
-
                 runWithinEnvironment {
                     if (tabManagementFeatureHelper.enhancementsEnabled) {
                         navController.nav(
@@ -197,15 +196,15 @@ class BrowserToolbarMiddleware(
                         )
                     }
                 }
-            }
-            is TabCounterLongClicked -> {
-                Events.browserToolbarAction.record(Events.BrowserToolbarActionExtra("tabs_tray_long_press"))
+                next(action)
             }
             is AddNewTab -> {
                 openNewTab(Normal)
+                next(action)
             }
             is AddNewPrivateTab -> {
                 openNewTab(Private)
+                next(action)
             }
 
             is OriginClicked -> {
@@ -334,7 +333,7 @@ class BrowserToolbarMiddleware(
         ).filter { config ->
             config.isVisible()
         }.map { config ->
-            buildHomeAction(config.action)
+            buildHomeAction(config.action, Source.AddressBar)
         }
     }
 
@@ -360,19 +359,19 @@ class BrowserToolbarMiddleware(
         ).filter { config ->
             config.isVisible()
         }.map { config ->
-            buildHomeAction(config.action)
+            buildHomeAction(config.action, Source.NavigationBar)
         }
     }
 
-    private fun buildTabCounterMenu(): CombinedEventAndMenu? {
-        return CombinedEventAndMenu(TabCounterLongClicked) {
+    private fun buildTabCounterMenu(source: Source): CombinedEventAndMenu? {
+        return CombinedEventAndMenu(TabCounterLongClicked(source)) {
             when (environment?.browsingModeManager?.mode) {
                 Private -> listOf(
                     BrowserToolbarMenuButton(
                         icon = DrawableResIcon(iconsR.drawable.mozac_ic_plus_24),
                         text = StringResText(R.string.mozac_browser_menu_new_tab),
                         contentDescription = StringResContentDescription(R.string.mozac_browser_menu_new_tab),
-                        onClick = AddNewTab,
+                        onClick = AddNewTab(source),
                     ),
                 )
 
@@ -381,7 +380,7 @@ class BrowserToolbarMiddleware(
                         icon = DrawableResIcon(iconsR.drawable.mozac_ic_private_mode_24),
                         text = StringResText(R.string.mozac_browser_menu_new_private_tab),
                         contentDescription = StringResContentDescription(R.string.mozac_browser_menu_new_private_tab),
-                        onClick = AddNewPrivateTab,
+                        onClick = AddNewPrivateTab(source),
                     ),
                 )
             }
@@ -439,6 +438,7 @@ class BrowserToolbarMiddleware(
     @VisibleForTesting
     internal fun buildHomeAction(
         action: HomeToolbarAction,
+        source: Source = Source.AddressBar,
     ): Action = when (action) {
         HomeToolbarAction.TabCounter -> {
             val environment = requireNotNull(environment)
@@ -461,15 +461,15 @@ class BrowserToolbarMiddleware(
                 count = tabsCount,
                 contentDescription = tabCounterDescription,
                 showPrivacyMask = isInPrivateMode,
-                onClick = TabCounterClicked,
-                onLongClick = buildTabCounterMenu(),
+                onClick = TabCounterClicked(source),
+                onLongClick = buildTabCounterMenu(source),
             )
         }
 
         HomeToolbarAction.Menu -> ActionButtonRes(
             drawableResId = R.drawable.mozac_ic_ellipsis_vertical_24,
             contentDescription = R.string.content_description_menu,
-            onClick = MenuClicked,
+            onClick = MenuClicked(source),
         )
 
         HomeToolbarAction.FakeBookmark -> ActionButtonRes(
@@ -494,9 +494,9 @@ class BrowserToolbarMiddleware(
                 R.string.home_screen_shortcut_open_new_tab_2
             },
             onClick = if (environment?.browsingModeManager?.mode == Private) {
-                AddNewPrivateTab
+                AddNewPrivateTab(source)
             } else {
-                AddNewTab
+                AddNewTab(source)
             },
         )
     }

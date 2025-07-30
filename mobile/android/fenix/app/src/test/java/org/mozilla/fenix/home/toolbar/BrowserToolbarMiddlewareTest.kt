@@ -41,6 +41,7 @@ import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.P
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.PageOriginContextualMenuInteractions.PasteFromClipboardClicked
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
+import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent.Source
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarMenu
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.CombinedEventAndMenu
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.BrowserToolbarMenuButton
@@ -64,7 +65,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
@@ -87,7 +87,6 @@ import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.helpers.FenixGleanTestRule
 import org.mozilla.fenix.home.toolbar.BrowserToolbarMiddleware.HomeToolbarAction
 import org.mozilla.fenix.home.toolbar.DisplayActions.FakeClicked
 import org.mozilla.fenix.home.toolbar.DisplayActions.MenuClicked
@@ -107,9 +106,6 @@ import mozilla.components.ui.icons.R as iconsR
 class BrowserToolbarMiddlewareTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-
-    @get:Rule
-    val gleanRule = FenixGleanTestRule(testContext)
 
     private val appState: AppState = mockk(relaxed = true) {
         every { orientation } returns Portrait
@@ -153,7 +149,7 @@ class BrowserToolbarMiddlewareTest {
         val tabCounterButton = toolbarBrowserActions[0] as TabCounterAction
         val menuButton = toolbarBrowserActions[1] as ActionButtonRes
         assertEqualsToolbarButton(expectedToolbarButton(), tabCounterButton)
-        assertEquals(expectedMenuButton, menuButton)
+        assertEquals(expectedMenuButton(), menuButton)
     }
 
     @Test
@@ -183,9 +179,9 @@ class BrowserToolbarMiddlewareTest {
         val menuButton = navigationActions[4] as ActionButtonRes
         assertEquals(expectedBookmarkButton, bookmarkButton)
         assertEquals(expectedShareButton, shareButton)
-        assertEquals(expectedNewTabButton, newTabButton)
-        assertEqualsToolbarButton(expectedToolbarButton(), tabCounterButton)
-        assertEquals(expectedMenuButton, menuButton)
+        assertEquals(expectedNewTabButton(Source.NavigationBar), newTabButton)
+        assertEqualsToolbarButton(expectedToolbarButton(source = Source.NavigationBar), tabCounterButton)
+        assertEquals(expectedMenuButton(Source.NavigationBar), menuButton)
     }
 
     @Test
@@ -296,7 +292,7 @@ class BrowserToolbarMiddlewareTest {
         val tabCounterButton = toolbarBrowserActions[0] as TabCounterAction
         val menuButton = toolbarBrowserActions[1] as ActionButtonRes
         assertEqualsToolbarButton(expectedToolbarButton(), tabCounterButton)
-        assertEquals(expectedMenuButton, menuButton)
+        assertEquals(expectedMenuButton(), menuButton)
     }
 
     @Test
@@ -316,7 +312,7 @@ class BrowserToolbarMiddlewareTest {
         val tabCounterButton = toolbarBrowserActions[0] as TabCounterAction
         val menuButton = toolbarBrowserActions[1] as ActionButtonRes
         assertEqualsToolbarButton(expectedToolbarButton(), tabCounterButton)
-        assertEquals(expectedMenuButton, menuButton)
+        assertEquals(expectedMenuButton(), menuButton)
 
         appStore.dispatch(AppAction.OrientationChange(Portrait)).joinBlocking()
         testScheduler.advanceUntilIdle()
@@ -428,7 +424,6 @@ class BrowserToolbarMiddlewareTest {
                 NavGraphDirections.actionGlobalTabsTrayFragment(page = Page.NormalTabs),
             )
         }
-        assertEquals("tabs_tray", Events.browserToolbarAction.testGetValue()?.last()?.extra?.get("item"))
     }
 
     @Test
@@ -451,18 +446,6 @@ class BrowserToolbarMiddlewareTest {
                 NavGraphDirections.actionGlobalTabsTrayFragment(page = Page.PrivateTabs),
             )
         }
-        assertEquals("tabs_tray", Events.browserToolbarAction.testGetValue()?.last()?.extra?.get("item"))
-    }
-
-    @Test
-    fun `WHEN long clicking the tab counter button THEN record telemetry`() {
-        val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
-        val toolbarStore = buildStore(middleware)
-        val tabCounterButton = toolbarStore.state.displayState.browserActionsEnd[0] as TabCounterAction
-
-        toolbarStore.dispatch((tabCounterButton.onLongClick as CombinedEventAndMenu).event)
-
-        assertEquals("tabs_tray_long_press", Events.browserToolbarAction.testGetValue()?.last()?.extra?.get("item"))
     }
 
     @Test
@@ -715,7 +698,7 @@ class BrowserToolbarMiddlewareTest {
             middleware.environment?.browsingModeManager?.mode == Private,
             action.showPrivacyMask,
         )
-        assertEquals(TabCounterClicked, action.onClick)
+        assertEquals(TabCounterClicked(Source.AddressBar), action.onClick)
         assertNotNull(action.onLongClick)
     }
 
@@ -731,7 +714,7 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(R.drawable.mozac_ic_ellipsis_vertical_24, action.drawableResId)
         assertEquals(R.string.content_description_menu, action.contentDescription)
         assertEquals(ActionButton.State.DEFAULT, action.state)
-        assertEquals(MenuClicked, action.onClick)
+        assertEquals(MenuClicked(source = Source.AddressBar), action.onClick)
         assertNull(action.onLongClick)
     }
 
@@ -793,6 +776,7 @@ class BrowserToolbarMiddlewareTest {
     private fun expectedToolbarButton(
         tabCount: Int = 0,
         isPrivate: Boolean = false,
+        source: Source = Source.AddressBar,
     ) = TabCounterAction(
         count = tabCount,
         contentDescription = if (isPrivate) {
@@ -807,15 +791,15 @@ class BrowserToolbarMiddlewareTest {
             )
         },
         showPrivacyMask = isPrivate,
-        onClick = TabCounterClicked,
-        onLongClick = CombinedEventAndMenu(TabCounterLongClicked) {
+        onClick = TabCounterClicked(source),
+        onLongClick = CombinedEventAndMenu(TabCounterLongClicked(source)) {
             when (isPrivate) {
                 true -> listOf(
                     BrowserToolbarMenuButton(
                         icon = DrawableResIcon(iconsR.drawable.mozac_ic_plus_24),
                         text = StringResText(R.string.mozac_browser_menu_new_tab),
                         contentDescription = StringResContentDescription(R.string.mozac_browser_menu_new_tab),
-                        onClick = AddNewTab,
+                        onClick = AddNewTab(source),
                     ),
                 )
 
@@ -824,17 +808,17 @@ class BrowserToolbarMiddlewareTest {
                         icon = DrawableResIcon(iconsR.drawable.mozac_ic_private_mode_24),
                         text = StringResText(R.string.mozac_browser_menu_new_private_tab),
                         contentDescription = StringResContentDescription(R.string.mozac_browser_menu_new_private_tab),
-                        onClick = AddNewPrivateTab,
+                        onClick = AddNewPrivateTab(source),
                     ),
                 )
             }
         },
     )
 
-    private val expectedMenuButton = ActionButtonRes(
+    private fun expectedMenuButton(source: Source = Source.AddressBar) = ActionButtonRes(
         drawableResId = R.drawable.mozac_ic_ellipsis_vertical_24,
         contentDescription = R.string.content_description_menu,
-        onClick = MenuClicked,
+        onClick = MenuClicked(source),
     )
 
     private val expectedBookmarkButton = ActionButtonRes(
@@ -851,10 +835,10 @@ class BrowserToolbarMiddlewareTest {
         onClick = FakeClicked,
     )
 
-    private val expectedNewTabButton = ActionButtonRes(
+    private fun expectedNewTabButton(source: Source = Source.AddressBar) = ActionButtonRes(
         drawableResId = R.drawable.mozac_ic_plus_24,
         contentDescription = R.string.home_screen_shortcut_open_new_tab_2,
-        onClick = AddNewTab,
+        onClick = AddNewTab(source),
     )
 
     private class FakeLifecycleOwner(initialState: Lifecycle.State) : LifecycleOwner {
