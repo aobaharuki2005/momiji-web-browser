@@ -11,6 +11,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   IPProtectionPanel:
     "resource:///modules/ipprotection/IPProtectionPanel.sys.mjs",
+  IPProtectionService:
+    "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
   requestIdleCallback: "resource://gre/modules/Timer.sys.mjs",
   cancelIdleCallback: "resource://gre/modules/Timer.sys.mjs",
 });
@@ -58,6 +60,8 @@ class IPProtectionWidget {
     if (!this.#created) {
       this.#createWidget();
     }
+
+    lazy.IPProtectionService.init();
   }
 
   /**
@@ -65,7 +69,8 @@ class IPProtectionWidget {
    */
   uninit() {
     this.#destroyWidget();
-    this.#panels = new WeakMap();
+    this.#uninitPanels();
+    lazy.IPProtectionService.uninit();
     this.#destroyed = true;
   }
 
@@ -159,6 +164,17 @@ class IPProtectionWidget {
   }
 
   /**
+   * Uninit all panels and clear the WeakMap.
+   */
+  #uninitPanels() {
+    let panels = ChromeUtils.nondeterministicGetWeakMapKeys(this.#panels);
+    for (let panel of panels) {
+      this.#panels.get(panel).uninit();
+    }
+    this.#panels = new WeakMap();
+  }
+
+  /**
    * Sets whether the feature pref is enabled and not destroyed.
    *
    * If enabled, creates the widget if it hasn't been created yet.
@@ -168,8 +184,10 @@ class IPProtectionWidget {
     this.#enabled = this.isEnabled && !this.#destroyed;
     if (this.#enabled && !this.#created) {
       this.#createWidget();
+      lazy.IPProtectionService.init();
     } else if (!this.#enabled && this.#created) {
       this.#destroyWidget();
+      lazy.IPProtectionService.uninit();
     }
   }
 

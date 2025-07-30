@@ -1,7 +1,10 @@
 [DEFAULT]
+head = "head.js"
 firefox-appdir = "browser"
 prefs = [
   "browser.ipProtection.enabled=true",
 ]
 
 ["test_IPProtectionPanel.js"]
+
+["test_IPProtectionService.js"]
