@@ -157,9 +157,16 @@ void LIRGenerator::visitNewIterator(MNewIterator* ins) {
 }
 
 void LIRGenerator::visitNewTypedArray(MNewTypedArray* ins) {
-  LNewTypedArray* lir = new (alloc()) LNewTypedArray(temp(), temp());
-  define(lir, ins);
-  assignSafepoint(lir, ins);
+  size_t nbytes = ins->templateObject()->byteLength();
+  if (nbytes <= FixedLengthTypedArrayObject::INLINE_BUFFER_LIMIT) {
+    auto* lir = new (alloc()) LNewTypedArrayInline(temp());
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+  } else {
+    auto* lir = new (alloc()) LNewTypedArray(temp(), temp());
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+  }
 }
 
 void LIRGenerator::visitNewTypedArrayDynamicLength(

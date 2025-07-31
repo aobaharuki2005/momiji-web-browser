@@ -208,6 +208,11 @@
   num_temps: 2
   mir_op: true
 
+- name: NewTypedArrayInline
+  result_type: WordSized
+  num_temps: 1
+  mir_op: NewTypedArray
+
 - name: BindFunction
   result_type: WordSized
   operands:

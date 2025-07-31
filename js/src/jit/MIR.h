@@ -2000,8 +2000,9 @@ class MNewTypedArray : public MUnaryInstruction, public NoTypePolicy::Data {
   INSTRUCTION_HEADER(NewTypedArray)
   TRIVIAL_NEW_WRAPPERS
 
-  TypedArrayObject* templateObject() const {
-    return &getOperand(0)->toConstant()->toObject().as<TypedArrayObject>();
+  auto* templateObject() const {
+    auto* cst = getOperand(0)->toConstant();
+    return &cst->toObject().as<FixedLengthTypedArrayObject>();
   }
 
   gc::Heap initialHeap() const { return initialHeap_; }

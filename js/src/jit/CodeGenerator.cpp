@@ -8391,18 +8391,40 @@ void CodeGenerator::visitNewIterator(LNewIterator* lir) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitNewTypedArrayInline(LNewTypedArrayInline* lir) {
+  Register objReg = ToRegister(lir->output());
+  Register tempReg = ToRegister(lir->temp0());
+
+  auto* templateObject = lir->mir()->templateObject();
+  gc::Heap initialHeap = lir->mir()->initialHeap();
+
+  size_t n = templateObject->length();
+  MOZ_ASSERT(n <= INT32_MAX,
+             "Template objects are only created for int32 lengths");
+
+  using Fn = TypedArrayObject* (*)(JSContext*, HandleObject, int32_t);
+  auto* ool = oolCallVM<Fn, NewTypedArrayWithTemplateAndLength>(
+      lir, ArgList(ImmGCPtr(templateObject), Imm32(n)),
+      StoreRegisterTo(objReg));
+
+  TemplateObject templateObj(templateObject);
+  masm.createGCObject(objReg, tempReg, templateObj, initialHeap, ool->entry());
+
+  masm.initTypedArraySlotsInline(objReg, tempReg, templateObject);
+
+  masm.bind(ool->rejoin());
+}
+
 void CodeGenerator::visitNewTypedArray(LNewTypedArray* lir) {
   Register objReg = ToRegister(lir->output());
   Register tempReg = ToRegister(lir->temp0());
   Register lengthReg = ToRegister(lir->temp1());
   LiveRegisterSet liveRegs = liveVolatileRegs(lir);
 
-  JSObject* templateObject = lir->mir()->templateObject();
+  auto* templateObject = lir->mir()->templateObject();
   gc::Heap initialHeap = lir->mir()->initialHeap();
 
-  auto* ttemplate = &templateObject->as<FixedLengthTypedArrayObject>();
-
-  size_t n = ttemplate->length();
+  size_t n = templateObject->length();
   MOZ_ASSERT(n <= INT32_MAX,
              "Template objects are only created for int32 lengths");
 
@@ -8414,8 +8436,10 @@ void CodeGenerator::visitNewTypedArray(LNewTypedArray* lir) {
   TemplateObject templateObj(templateObject);
   masm.createGCObject(objReg, tempReg, templateObj, initialHeap, ool->entry());
 
-  masm.initTypedArraySlots(objReg, tempReg, lengthReg, liveRegs, ool->entry(),
-                           ttemplate, MacroAssembler::TypedArrayLength::Fixed);
+  masm.move32(Imm32(n), lengthReg);
+
+  masm.initTypedArraySlots(objReg, lengthReg, tempReg, liveRegs, ool->entry(),
+                           templateObject);
 
   masm.bind(ool->rejoin());
 }
@@ -8443,9 +8467,8 @@ void CodeGenerator::visitNewTypedArrayDynamicLength(
   TemplateObject templateObj(templateObject);
   masm.createGCObject(objReg, tempReg, templateObj, initialHeap, ool->entry());
 
-  masm.initTypedArraySlots(objReg, tempReg, lengthReg, liveRegs, ool->entry(),
-                           ttemplate,
-                           MacroAssembler::TypedArrayLength::Dynamic);
+  masm.initTypedArraySlots(objReg, lengthReg, tempReg, liveRegs, ool->entry(),
+                           ttemplate);
 
   masm.bind(ool->rejoin());
 }
