@@ -70,6 +70,7 @@ class RecordedNimbusContextTest {
                 put("device_manufacturer", Build.MANUFACTURER)
                 put("device_model", Build.MODEL)
                 put("user_accepted_tou", true)
+                put("no_shortcuts_stories_mkt", true)
             },
             contextAsJson,
         )
@@ -112,6 +113,7 @@ class RecordedNimbusContextTest {
                 put("locale", "")
                 put("region", "US")
                 put("userAcceptedTou", true)
+                put("noShortcutsStoriesMkt", true)
             },
             recordedValue?.jsonObject,
         )

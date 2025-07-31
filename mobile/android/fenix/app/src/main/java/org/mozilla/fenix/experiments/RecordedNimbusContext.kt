@@ -17,6 +17,7 @@ import org.mozilla.experiments.nimbus.internal.getCalculatedAttributes
 import org.mozilla.fenix.GleanMetrics.NimbusSystem
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.utils.Settings
 import java.io.File
 
 /**
@@ -59,6 +60,7 @@ class RecordedNimbusContext(
     val deviceManufacturer: String = Build.MANUFACTURER,
     val deviceModel: String = Build.MODEL,
     val userAcceptedTou: Boolean,
+    val noShortcutsStoriesMkt: Boolean,
 ) : RecordedContext {
     /**
      * [getEventQueries] is called by the Nimbus SDK Rust code to retrieve the map of event
@@ -98,6 +100,7 @@ class RecordedNimbusContext(
                 deviceManufacturer = deviceManufacturer,
                 deviceModel = deviceModel,
                 userAcceptedTou = userAcceptedTou,
+                noShortcutsStoriesMkt = noShortcutsStoriesMkt,
             ),
         )
         Pings.nimbus.submit()
@@ -142,6 +145,7 @@ class RecordedNimbusContext(
                 "device_manufacturer" to deviceManufacturer,
                 "device_model" to deviceModel,
                 "user_accepted_tou" to userAcceptedTou,
+                "no_shortcuts_stories_mkt" to noShortcutsStoriesMkt,
             ),
         )
         return obj
@@ -188,8 +192,21 @@ class RecordedNimbusContext(
                 language = calculatedAttributes.language,
                 region = calculatedAttributes.region,
                 userAcceptedTou = settings.hasAcceptedTermsOfService,
+                noShortcutsStoriesMkt = settings.noShortcutsStoriesMkt,
             )
         }
+
+        private val Settings.noShortcutsStoriesMkt: Boolean
+            get() = hasMarketing && hasSponsoredHomepageShortcuts && hasStoriesOnHomepage
+
+        private val Settings.hasMarketing: Boolean
+            get() = isMarketingTelemetryEnabled || shouldShowMarketingOnboarding
+
+        private val Settings.hasSponsoredHomepageShortcuts: Boolean
+            get() = showTopSitesFeature || showContileFeature
+
+        private val Settings.hasStoriesOnHomepage: Boolean
+            get() = showPocketRecommendationsFeature || showPocketSponsoredStories
 
         /**
          * Creates a RecordedNimbusContext instance for test purposes
@@ -218,6 +235,7 @@ class RecordedNimbusContext(
                 language = "en",
                 region = "US",
                 userAcceptedTou = true,
+                noShortcutsStoriesMkt = true,
             )
         }
     }
