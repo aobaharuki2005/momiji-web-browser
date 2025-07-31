@@ -256,7 +256,12 @@ export class _DiscoveryStreamBase extends React.PureComponent {
 
   render() {
     const { locale, mayHaveSponsoredStories } = this.props;
-    // Select layout render data by adding spocs and position to recommendations
+    // Bug 1980459 - Note that selectLayoutRender acts as a selector that transforms layout data based on current
+    // preferences and experiment flags. It runs after Redux state is populated but before render.
+    // Components removed in selectLayoutRender (e.g., Widgets or TopSites) will not appear in the
+    // layoutRender result, and therefore will not be rendered here regardless of logic below.
+
+    // Select layout renders data by adding spocs and position to recommendations
     const { layoutRender } = selectLayoutRender({
       state: this.props.DiscoveryStream,
       prefs: this.props.Prefs.values,
