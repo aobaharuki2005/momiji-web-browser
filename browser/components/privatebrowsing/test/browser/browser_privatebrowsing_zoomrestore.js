@@ -28,7 +28,7 @@ add_task(async function test() {
     let browser = aWindow.gBrowser.selectedBrowser;
     BrowserTestUtils.startLoadingURIString(browser, "about:blank");
     await Promise.all([
-      BrowserTestUtils.browserLoaded(browser, { wantLoad: "about:blank" }),
+      BrowserTestUtils.browserLoaded(browser),
       promiseLocationChange(),
     ]);
     doTest(aIsZoomedWindow, aWindow);

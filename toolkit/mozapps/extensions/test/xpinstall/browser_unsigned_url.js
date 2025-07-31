@@ -20,9 +20,7 @@ function runTest() {
   Harness.setup();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, {
-    wantLoad: "about:blank",
-  }).then(() => {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
     BrowserTestUtils.startLoadingURIString(gBrowser, TESTROOT + "unsigned.xpi");
   });
 }

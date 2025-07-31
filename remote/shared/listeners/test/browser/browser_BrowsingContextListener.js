@@ -13,9 +13,7 @@ add_task(async function test_attachedOnNewTab() {
   listener.startListening();
 
   const tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, {
-    wantLoad: "about:blank",
-  });
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   const { browsingContext, why } = await attached;
 
@@ -45,9 +43,7 @@ add_task(async function test_attachedValidEmbedderElement() {
   listener.startListening();
 
   const tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, {
-    wantLoad: "about:blank",
-  });
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   ok(
     hasEmbedderElement,
@@ -64,9 +60,7 @@ add_task(async function test_discardedOnCloseTab() {
 
   const tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   const browsingContext = tab.linkedBrowser.browsingContext;
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, {
-    wantLoad: "about:blank",
-  });
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   listener.startListening();
   gBrowser.removeTab(tab);
@@ -89,9 +83,7 @@ add_task(async function test_replaceTopLevelOnNavigation() {
 
   const tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   const browsingContext = tab.linkedBrowser.browsingContext;
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, {
-    wantLoad: "about:blank",
-  });
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   listener.startListening();
 

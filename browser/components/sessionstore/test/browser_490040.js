@@ -89,9 +89,7 @@ add_task(async function test_bug_490040() {
 
     await setWindowState(win, state.windowState, true);
     if (state.windowState.windows[0].tabs.length) {
-      await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser, {
-        wantLoad: () => true,
-      });
+      await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     }
 
     await BrowserTestUtils.closeWindow(win);

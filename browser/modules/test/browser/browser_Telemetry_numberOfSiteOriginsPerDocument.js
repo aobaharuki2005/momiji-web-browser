@@ -74,9 +74,7 @@ add_task(async function test_numberOfSiteOriginsMultipleNavigations() {
 
   // Navigate to an interstitial page.
   BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, "about:blank");
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, {
-    wantLoad: "about:blank",
-  });
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   // Navigate to another test page.
   BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, testPage);

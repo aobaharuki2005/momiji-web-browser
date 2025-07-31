@@ -32,7 +32,7 @@ function waitForPageShow(browser) {
 add_task(async function () {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
-  await BrowserTestUtils.browserLoaded(browser, { wantLoad: "about:blank" });
+  await BrowserTestUtils.browserLoaded(browser);
   let listener = new LocationChangeListener(browser);
 
   is(browser.isSyntheticDocument, false, "Should not be synthetic");

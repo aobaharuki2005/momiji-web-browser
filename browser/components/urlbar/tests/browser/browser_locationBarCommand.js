@@ -8,7 +8,7 @@
  */
 
 const TEST_VALUE = "http://example.com";
-const START_VALUE = "http://example.org/";
+const START_VALUE = "example.org";
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
@@ -356,9 +356,7 @@ async function promiseOpenNewTab(url = "about:blank") {
     userContextId: gUserContextIdSerial++,
   });
   let tabSwitchPromise = BrowserTestUtils.switchTab(gBrowser, tab);
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, {
-    wantLoad: url,
-  });
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   await tabSwitchPromise;
   return tab;
 }

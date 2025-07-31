@@ -70,9 +70,7 @@ add_task(async function () {
       "sessionstore-single-window-restored",
       subject => subject == win
     );
-    await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser, {
-      wantLoad: url,
-    });
+    await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await TabStateFlusher.flush(win.gBrowser.selectedBrowser);
 
     is(win.gURLBar.value, "", "URL bar should be empty");

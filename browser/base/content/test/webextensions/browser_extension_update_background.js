@@ -59,9 +59,7 @@ add_setup(async function () {
       gBrowser.selectedBrowser,
       "about:blank"
     );
-    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, {
-      wantLoad: "about:blank",
-    });
+    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   });
 });
 

@@ -953,9 +953,7 @@ add_task(
 
     await Promise.allSettled([
       BrowserTestUtils.browserLoaded(savedTab.linkedBrowser),
-      BrowserTestUtils.browserLoaded(contextTab.linkedBrowser, {
-        wantLoad: "about:blank",
-      }),
+      BrowserTestUtils.browserLoaded(contextTab.linkedBrowser),
     ]);
 
     await lazy.TabGroupTestUtils.saveAndCloseTabGroup(savedGroup);
@@ -1006,9 +1004,7 @@ add_task(
     await Promise.allSettled([
       BrowserTestUtils.browserLoaded(openTab.linkedBrowser),
       BrowserTestUtils.browserLoaded(savedTab.linkedBrowser),
-      BrowserTestUtils.browserLoaded(contextTab.linkedBrowser, {
-        wantLoad: "about:blank",
-      }),
+      BrowserTestUtils.browserLoaded(contextTab.linkedBrowser),
     ]);
 
     await lazy.TabGroupTestUtils.saveAndCloseTabGroup(savedGroup);
@@ -1146,17 +1142,14 @@ add_task(
       "There is one tab in the group"
     );
 
-    const urls = [
-      "https://example.com/",
-      "https://example.com/",
-      "about:blank",
-      "about:blank",
+    let tabsToAdd = [
+      BrowserTestUtils.addTab(gBrowser, "https://example.com"),
+      BrowserTestUtils.addTab(gBrowser, "https://example.com"),
+      BrowserTestUtils.addTab(gBrowser, "about:blank"),
+      BrowserTestUtils.addTab(gBrowser, "about:blank"),
     ];
-    const tabsToAdd = urls.map(url => BrowserTestUtils.addTab(gBrowser, url));
     await Promise.allSettled(
-      tabsToAdd.map((tab, i) =>
-        BrowserTestUtils.browserLoaded(tab.linkedBrowser, { wantLoad: urls[i] })
-      )
+      tabsToAdd.map(tab => BrowserTestUtils.browserLoaded(tab.linkedBrowser))
     );
 
     gBrowser.selectedTabs = tabsToAdd;

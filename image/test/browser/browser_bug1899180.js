@@ -24,9 +24,7 @@ add_task(async function test() {
     "about:blank"
   ));
 
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, {
-    wantLoad: "about:blank",
-  });
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   const pageUrl = httpURL("helper1899180.html");
 

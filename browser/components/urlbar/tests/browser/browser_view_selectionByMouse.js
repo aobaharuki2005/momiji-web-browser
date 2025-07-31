@@ -483,9 +483,11 @@ add_task(async function buttons() {
         if (expected.url) {
           loadPromise = expected.newTab
             ? BrowserTestUtils.waitForNewTab(gBrowser, expected.url)
-            : BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, {
-                wantLoad: expected.url,
-              });
+            : BrowserTestUtils.browserLoaded(
+                gBrowser.selectedBrowser,
+                null,
+                expected.url
+              );
         }
 
         // Mouseup and check the selection.

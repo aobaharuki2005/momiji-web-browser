@@ -147,7 +147,7 @@ export var BrowserTestUtils = {
    *
    * @param {tabbrowser} gBrowser
    *        The tabbrowser to open the tab new in.
-   * @param {string|function} opening (or url)
+   * @param {string} opening (or url)
    *        May be either a string URL to load in the tab, or a function that
    *        will be called to open a foreground tab. Defaults to "about:blank".
    * @param {boolean} waitForLoad
@@ -225,12 +225,7 @@ export var BrowserTestUtils = {
       ];
 
       if (aWaitForLoad) {
-        // accept any load, including about:blank
-        promises.push(
-          BrowserTestUtils.browserLoaded(tab.linkedBrowser, {
-            wantLoad: () => true,
-          })
-        );
+        promises.push(BrowserTestUtils.browserLoaded(tab.linkedBrowser));
       }
       if (aWaitForStateStop) {
         promises.push(BrowserTestUtils.browserStopped(tab.linkedBrowser));
@@ -397,16 +392,13 @@ export var BrowserTestUtils = {
   },
 
   /**
-   * Waits for an ongoing page load in a browser window to complete. By default
-   * about:blank loads are ignored.
+   * Waits for an ongoing page load in a browser window to complete.
    *
    * This can be used in conjunction with any synchronous method for starting a
    * load, like the "addTab" method on "tabbrowser", and must be called before
-   * yielding control to the event loop.
-   *
-   * Note that calling this after multiple successive load operations can be racy,
-   * so ``wantLoad`` should be specified in these cases. The same holds if we're
-   * interested in about:blank to load.
+   * yielding control to the event loop. Note that calling this after multiple
+   * successive load operations can be racy, so ``wantLoad`` should be specified
+   * in these cases.
    *
    * This function works by listening for custom load events on ``browser``. These
    * are sent by a BrowserTestUtils window actor in response to "load" and
@@ -414,14 +406,13 @@ export var BrowserTestUtils = {
    *
    * @param {xul:browser} browser
    *        A xul:browser.
-   * @param {object} options
-   * @param {Boolean} [options.includeSubFrames = false]
+   * @param {Boolean} [includeSubFrames = false]
    *        A boolean indicating if loads from subframes should be included.
-   * @param {string|function} [options.wantLoad]
+   * @param {string|function} [wantLoad = null]
    *        If a function, takes a URL and returns true if that's the load we're
    *        interested in. If a string, gives the URL of the load we're interested
-   *        in. If not present, the first non-about:blank load resolves the promise.
-   * @param {boolean} [options.maybeErrorPage = false]
+   *        in. If not present, the first load resolves the promise.
+   * @param {boolean} [maybeErrorPage = false]
    *        If true, this uses DOMContentLoaded event instead of load event.
    *        Also wantLoad will be called with visible URL, instead of
    *        'about:neterror?...' for error page.
@@ -429,20 +420,12 @@ export var BrowserTestUtils = {
    * @return {Promise}
    * @resolves When a load event is triggered for the browser.
    */
-  browserLoaded(browser, ...args) {
-    const options =
-      args.length && typeof args[0] === "object"
-        ? args[0]
-        : {
-            includeSubFrames: args[0] ?? false,
-            wantLoad: args[1] ?? null,
-            maybeErrorPage: args[2] ?? false,
-          };
-    const {
-      includeSubFrames = false,
-      wantLoad = null,
-      maybeErrorPage = false,
-    } = options;
+  browserLoaded(
+    browser,
+    includeSubFrames = false,
+    wantLoad = null,
+    maybeErrorPage = false
+  ) {
     let startTime = Cu.now();
     let { innerWindowId } = browser.ownerGlobal.windowGlobalChild;
 
@@ -470,7 +453,7 @@ export var BrowserTestUtils = {
 
     function isWanted(url) {
       if (!wantLoad) {
-        return !url.startsWith("about:blank");
+        return true;
       } else if (typeof wantLoad == "function") {
         return wantLoad(url);
       }
@@ -778,11 +761,12 @@ export var BrowserTestUtils = {
           if (waitForLoad) {
             // If waiting for load, resolve with promise for that, which when load
             // completes resolves to the new tab.
-            result = BrowserTestUtils.browserLoaded(newBrowser, {
-              includeSubFrames: false,
-              wantLoad: urlMatches,
-              maybeErrorPage,
-            }).then(() => newTab);
+            result = BrowserTestUtils.browserLoaded(
+              newBrowser,
+              false,
+              urlMatches,
+              maybeErrorPage
+            ).then(() => newTab);
           } else {
             // If not waiting for load, just resolve with the new tab.
             result = newTab;
@@ -910,11 +894,12 @@ export var BrowserTestUtils = {
           );
 
           if (url || waitForAnyURLLoaded) {
-            let loadPromise = this.browserLoaded(win.gBrowser.selectedBrowser, {
-              includeSubFrames: false,
-              wantLoad: waitForAnyURLLoaded ? null : url,
-              maybeErrorPage,
-            });
+            let loadPromise = this.browserLoaded(
+              win.gBrowser.selectedBrowser,
+              false,
+              waitForAnyURLLoaded ? null : url,
+              maybeErrorPage
+            );
             promises.push(loadPromise);
           }
 
@@ -1938,9 +1923,10 @@ export var BrowserTestUtils = {
    * @resolves When the tab finishes reloading.
    */
   reloadTab(tab, options = {}) {
-    const finished = BrowserTestUtils.browserLoaded(tab.linkedBrowser, {
-      includeSubFrames: !!options.includeSubFrames,
-    });
+    const finished = BrowserTestUtils.browserLoaded(
+      tab.linkedBrowser,
+      !!options.includeSubFrames
+    );
     if (options.bypassCache) {
       tab.linkedBrowser.reloadWithFlags(
         Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE

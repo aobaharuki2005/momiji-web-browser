@@ -3,7 +3,7 @@
 async function createTabWithRandomValue(url) {
   let tab = BrowserTestUtils.addTab(gBrowser, url);
   let browser = tab.linkedBrowser;
-  await BrowserTestUtils.browserLoaded(browser, { wantLoad: url });
+  await promiseBrowserLoaded(browser);
 
   // Set a random value.
   let r = `rand-${Math.random()}`;

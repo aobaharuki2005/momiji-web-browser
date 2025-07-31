@@ -564,10 +564,7 @@ async function addTab(url, options = {}) {
   }
 
   if (waitForLoad) {
-    // accept any URL as url arg might not be serialized or redirects might happen
-    await BrowserTestUtils.browserLoaded(tab.linkedBrowser, {
-      wantLoad: () => true,
-    });
+    await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
     // Waiting for presShell helps with test timeouts in webrender platforms.
     await waitForPresShell(tab.linkedBrowser);
     info("Tab added and finished loading");

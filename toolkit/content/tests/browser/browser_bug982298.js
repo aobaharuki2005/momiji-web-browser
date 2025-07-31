@@ -40,9 +40,7 @@ add_task(async function () {
         textarea.scrollTop = textarea.scrollHeight;
       });
       BrowserTestUtils.startLoadingURIString(browser, "about:blank");
-      await BrowserTestUtils.browserLoaded(browser, {
-        wantLoad: "about:blank",
-      });
+      await BrowserTestUtils.browserLoaded(browser);
 
       Assert.equal(
         browser.currentURI.spec,

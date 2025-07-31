@@ -27,9 +27,7 @@ add_task(async function test() {
     await BrowserTestUtils.withNewTab(
       { gBrowser },
       async function (newBrowser) {
-        let loadedPromise = BrowserTestUtils.browserLoaded(newBrowser, {
-          wantLoad: "about:blank",
-        });
+        let loadedPromise = BrowserTestUtils.browserLoaded(newBrowser);
         BrowserTestUtils.startLoadingURIString(newBrowser, uri);
 
         var prin = newBrowser.contentPrincipal;

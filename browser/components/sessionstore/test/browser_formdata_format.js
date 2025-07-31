@@ -128,9 +128,7 @@ async function testTabRestoreData(aFormData, aExpectedValue) {
     formdata: aFormData,
   };
 
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, {
-    wantLoad: "about:blank",
-  });
+  await promiseBrowserLoaded(tab.linkedBrowser);
   await promiseTabState(tab, tabState);
 
   await TabStateFlusher.flush(tab.linkedBrowser);

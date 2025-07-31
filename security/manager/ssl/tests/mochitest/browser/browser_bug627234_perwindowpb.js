@@ -31,22 +31,22 @@ function test() {
   }
 
   function doTest(aIsPrivateMode, aWindow, aCallback) {
-    BrowserTestUtils.browserLoaded(aWindow.gBrowser.selectedBrowser, {
-      wantLoad: testURI,
-    }).then(() => {
-      uri = aWindow.Services.io.newURI("https://localhost/img.png");
-      gSSService.processHeader(
-        uri,
-        "max-age=1000",
-        originAttributes(aIsPrivateMode)
-      );
-      ok(
-        gSSService.isSecureURI(uri, originAttributes(aIsPrivateMode)),
-        "checking sts host"
-      );
+    BrowserTestUtils.browserLoaded(aWindow.gBrowser.selectedBrowser).then(
+      () => {
+        uri = aWindow.Services.io.newURI("https://localhost/img.png");
+        gSSService.processHeader(
+          uri,
+          "max-age=1000",
+          originAttributes(aIsPrivateMode)
+        );
+        ok(
+          gSSService.isSecureURI(uri, originAttributes(aIsPrivateMode)),
+          "checking sts host"
+        );
 
-      aCallback();
-    });
+        aCallback();
+      }
+    );
 
     BrowserTestUtils.startLoadingURIString(
       aWindow.gBrowser.selectedBrowser,

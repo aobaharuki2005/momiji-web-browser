@@ -59,9 +59,7 @@ add_task(async function test() {
     "about:blank"
   ));
 
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, {
-    wantLoad: "about:blank",
-  });
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   let faviconPromise = waitForLinkAvailable(tab.linkedBrowser, win);
 

@@ -19,9 +19,7 @@ function test() {
   });
 
   let tab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(tab.linkedBrowser, {
-    wantLoad: "about:blank",
-  }).then(() => {
+  promiseBrowserLoaded(tab.linkedBrowser).then(() => {
     let tabState = { entries: [] };
     let max_entries = Services.prefs.getIntPref(
       "browser.sessionhistory.max_entries"
