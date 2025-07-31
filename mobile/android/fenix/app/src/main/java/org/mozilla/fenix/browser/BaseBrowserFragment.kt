@@ -1385,6 +1385,7 @@ abstract class BaseBrowserFragment :
         toolbarStore = toolbarStore,
         navController = findNavController(),
         lifecycleOwner = this,
+        showScrimWhenNoSuggestions = true,
     ).also {
         awesomeBarComposable = it
     }

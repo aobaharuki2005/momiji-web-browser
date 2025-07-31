@@ -4,11 +4,11 @@
 
 package org.mozilla.fenix.search.awesomebar
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.isImeVisible
@@ -23,11 +23,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
+import androidx.core.graphics.toColorInt
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
-import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.browser.awesomebar.AwesomeBar
@@ -42,7 +42,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.BrowserStoreToFenixSearchMapperMiddleware
@@ -56,6 +56,8 @@ import org.mozilla.fenix.search.createInitialSearchFragmentState
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.FirefoxTheme
 
+private const val MATERIAL_DESIGN_SCRIM = "#52000000"
+
 /**
  * Wrapper over a [Composable] to show search suggestions, responsible for its setup.
  *
@@ -67,6 +69,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param toolbarStore [BrowserToolbarStore] for accessing the current toolbar state.
  * @param navController [NavController] for navigating to other destinations in the application.
  * @param lifecycleOwner [Fragment] for controlling the lifetime of long running operations.
+ * @param showScrimWhenNoSuggestions Whether to show a scrim when no suggestions are available.
  * @param searchAccessPoint Where search was started from.
  */
 @Suppress("LongParameterList")
@@ -79,6 +82,7 @@ class AwesomeBarComposable(
     private val toolbarStore: BrowserToolbarStore,
     private val navController: NavController,
     private val lifecycleOwner: Fragment,
+    private val showScrimWhenNoSuggestions: Boolean = false,
     private val searchAccessPoint: MetricsUtils.Source = MetricsUtils.Source.NONE,
 ) {
     private val searchStore = initializeSearchStore()
@@ -221,6 +225,21 @@ class AwesomeBarComposable(
                     profiler = components.core.engine.profiler,
                 )
             }
+        } else if (isSearchActive && showScrimWhenNoSuggestions) {
+            Spacer(
+                modifier = modifier
+                    .background(Color(MATERIAL_DESIGN_SCRIM.toColorInt()))
+                    .fillMaxSize()
+                    .pointerInput(WindowInsets.isImeVisible) {
+                        detectTapGestures(
+                            onPress = {
+                                focusManager.clearFocus()
+                                keyboardController?.hide()
+                                appStore.dispatch(SearchEnded)
+                            },
+                        )
+                    },
+            )
         }
     }
 
