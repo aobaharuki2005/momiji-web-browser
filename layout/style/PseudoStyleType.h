@@ -125,6 +125,10 @@ class PseudoStyle final {
     return aType == Type::viewTransition ||
            IsNamedViewTransitionPseudoElement(aType);
   }
+
+  static bool IsElementBackedPseudo(Type aType) {
+    return aType == Type::detailsContent;
+  }
 };
 
 /*
