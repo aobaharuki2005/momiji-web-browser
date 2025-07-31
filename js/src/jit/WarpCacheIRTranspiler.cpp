@@ -2425,6 +2425,24 @@ bool WarpCacheIRTranspiler::emitLoadTypedArrayElementResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitTypedArrayFillResult(ObjOperandId objId,
+                                                     uint32_t fillValueId,
+                                                     IntPtrOperandId startId,
+                                                     IntPtrOperandId endId,
+                                                     Scalar::Type elementType) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* fillValue = getOperand(ValOperandId(fillValueId));
+  MDefinition* start = getOperand(startId);
+  MDefinition* end = getOperand(endId);
+
+  auto* ins =
+      MTypedArrayFill::New(alloc(), obj, fillValue, start, end, elementType);
+  addEffectful(ins);
+
+  pushResult(obj);
+  return resumeAfter(ins);
+}
+
 bool WarpCacheIRTranspiler::emitTypedArraySetResult(ObjOperandId targetId,
                                                     ObjOperandId sourceId,
                                                     IntPtrOperandId offsetId,

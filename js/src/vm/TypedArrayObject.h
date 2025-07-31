@@ -340,8 +340,14 @@ bool DefineTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
 void TypedArrayFillInt32(TypedArrayObject* obj, int32_t fillValue,
                          intptr_t start, intptr_t end);
 
+void TypedArrayFillInt64(TypedArrayObject* obj, int64_t fillValue,
+                         intptr_t start, intptr_t end);
+
 void TypedArrayFillDouble(TypedArrayObject* obj, double fillValue,
                           intptr_t start, intptr_t end);
+
+void TypedArrayFillFloat32(TypedArrayObject* obj, float fillValue,
+                           intptr_t start, intptr_t end);
 
 void TypedArrayFillBigInt(TypedArrayObject* obj, BigInt* fillValue,
                           intptr_t start, intptr_t end);

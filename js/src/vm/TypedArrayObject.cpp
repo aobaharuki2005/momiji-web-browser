@@ -3202,6 +3202,18 @@ void js::TypedArrayFillDouble(TypedArrayObject* obj, double fillValue,
   TypedArrayFillFromJit(obj, fillValue, start, end);
 }
 
+void js::TypedArrayFillFloat32(TypedArrayObject* obj, float fillValue,
+                               intptr_t start, intptr_t end) {
+  AutoUnsafeCallWithABI unsafe;
+  TypedArrayFillFromJit(obj, fillValue, start, end);
+}
+
+void js::TypedArrayFillInt64(TypedArrayObject* obj, int64_t fillValue,
+                             intptr_t start, intptr_t end) {
+  AutoUnsafeCallWithABI unsafe;
+  TypedArrayFillFromJit(obj, fillValue, start, end);
+}
+
 void js::TypedArrayFillBigInt(TypedArrayObject* obj, BigInt* fillValue,
                               intptr_t start, intptr_t end) {
   AutoUnsafeCallWithABI unsafe;

@@ -978,6 +978,17 @@ bool StoreTypedArrayHolePolicy::adjustInputs(TempAllocator& alloc,
       alloc, ins, store->arrayType(), store->value(), 3);
 }
 
+bool TypedArrayFillPolicy::adjustInputs(TempAllocator& alloc,
+                                        MInstruction* ins) const {
+  auto* fill = ins->toTypedArrayFill();
+  MOZ_ASSERT(fill->object()->type() == MIRType::Object);
+  MOZ_ASSERT(fill->start()->type() == MIRType::IntPtr);
+  MOZ_ASSERT(fill->end()->type() == MIRType::IntPtr);
+
+  return StoreUnboxedScalarPolicy::adjustValueInput(
+      alloc, ins, fill->elementType(), fill->value(), 1);
+}
+
 bool ClampPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   MDefinition* in = ins->toClampToUint8()->input();
 
@@ -1015,7 +1026,8 @@ bool ClampPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   _(ToInt32Policy)               \
   _(ToBigIntPolicy)              \
   _(ToStringPolicy)              \
-  _(ToInt64Policy)
+  _(ToInt64Policy)               \
+  _(TypedArrayFillPolicy)
 
 #define TEMPLATE_TYPE_POLICY_LIST(_)                                          \
   _(BigIntPolicy<0>)                                                          \

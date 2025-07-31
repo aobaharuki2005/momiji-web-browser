@@ -2832,6 +2832,12 @@ TruncateKind MStoreTypedArrayElementHole::operandTruncateKind(
                                           : TruncateKind::NoTruncate;
 }
 
+TruncateKind MTypedArrayFill::operandTruncateKind(size_t index) const {
+  // An integer store truncates the stored value.
+  return (index == 1 && isIntegerWrite()) ? TruncateKind::Truncate
+                                          : TruncateKind::NoTruncate;
+}
+
 TruncateKind MDiv::operandTruncateKind(size_t index) const {
   return std::min(truncateKind(), TruncateKind::TruncateAfterBailouts);
 }

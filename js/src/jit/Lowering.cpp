@@ -4490,6 +4490,21 @@ void LIRGenerator::visitGuardTypedArraySetOffset(
   redefine(ins, ins->offset());
 }
 
+void LIRGenerator::visitTypedArrayFill(MTypedArrayFill* ins) {
+  if (ins->isBigIntWrite()) {
+    auto* lir = new (alloc()) LTypedArrayFill64(
+        useRegisterAtStart(ins->object()),
+        useInt64RegisterAtStart(ins->value()), useRegisterAtStart(ins->start()),
+        useRegisterAtStart(ins->end()));
+    add(lir, ins);
+  } else {
+    auto* lir = new (alloc()) LTypedArrayFill(
+        useRegisterAtStart(ins->object()), useRegisterAtStart(ins->value()),
+        useRegisterAtStart(ins->start()), useRegisterAtStart(ins->end()));
+    add(lir, ins);
+  }
+}
+
 void LIRGenerator::visitTypedArraySet(MTypedArraySet* ins) {
   auto* lir = new (alloc()) LTypedArraySet(useRegisterAtStart(ins->target()),
                                            useRegisterAtStart(ins->source()),

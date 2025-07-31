@@ -197,7 +197,9 @@ namespace jit {
   _(js::StringToNumberPure)                                                    \
   _(js::TypedArrayFillBigInt)                                                  \
   _(js::TypedArrayFillDouble)                                                  \
+  _(js::TypedArrayFillFloat32)                                                 \
   _(js::TypedArrayFillInt32)                                                   \
+  _(js::TypedArrayFillInt64)                                                   \
   _(js::TypedArraySetInfallible)                                               \
   _(js::TypedArraySortFromJit)                                                 \
   _(js::TypeOfObject)                                                          \

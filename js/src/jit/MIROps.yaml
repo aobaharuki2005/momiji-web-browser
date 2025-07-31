@@ -1858,6 +1858,10 @@
   congruent_to: if_operands_equal
   alias_set: custom
 
+# Inline TypedArray.prototype.fill
+- name: TypedArrayFill
+  gen_boilerplate: false
+
 # Inlined TypedArray.prototype.set
 - name: TypedArraySet
   operands:

@@ -2265,6 +2265,24 @@
   num_temps: 1
   mir_op: StoreTypedArrayElementHole
 
+- name: TypedArrayFill
+  operands:
+    object: WordSized
+    value: WordSized
+    start: WordSized
+    end: WordSized
+  call_instruction: true
+  mir_op: true
+
+- name: TypedArrayFill64
+  operands:
+    object: WordSized
+    value: Int64
+    start: WordSized
+    end: WordSized
+  call_instruction: true
+  mir_op: TypedArrayFill
+
 - name: AtomicIsLockFree
   result_type: WordSized
   operands:
