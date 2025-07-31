@@ -947,11 +947,16 @@
 }
 
 #pinned-drop-indicator {
-  display: flex;
+  display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   color: var(--color-accent-primary);
+
+  @media not (prefers-reduced-motion) {
+    transition-duration: 0.25s;
+    transition-timing-function: ease-in-out;
+  }
 
   &[visible] {
     display: flex;
@@ -973,18 +978,17 @@
 }
 
 #tabbrowser-tabs[orient="vertical"] > #pinned-drop-indicator {
-  /* We need to explicitly set height to 0 to ensure the animation runs*/
-  height: 0;
-
-  @media not (prefers-reduced-motion) {
-    transition: height 0.25s ease-in-out;
-  }
+  transition-property: height;
 
   &[visible] {
     height: 70px;
     width: calc(100% - 2 * var(--tab-inner-inline-margin));
     gap: var(--space-small);
-    margin: var(--space-small) var(--tab-inner-inline-margin);
+    margin: var(--space-small) var(--tab-inner-inline-margin) 0;
+
+    @starting-style {
+      height: 0;
+    }
 
     > #pinned-drop-indicator-text {
       display: inline;
@@ -1004,12 +1008,7 @@
 }
 
 #tabbrowser-tabs[orient="horizontal"] > #pinned-drop-indicator {
-  /* We need to explicitly set width to 0 to ensure the animation runs*/
-  width: 0;
-
-  @media not (prefers-reduced-motion) {
-    transition: width 0.25s ease-in-out;
-  }
+  transition-property: width;
 
   &[visible] {
     margin-inline: var(--space-small);
@@ -1018,6 +1017,10 @@
     width: calc(2 * var(--size-item-large));
     height: var(--tab-min-height);
     padding-inline-start: var(--space-small);
+
+    @starting-style {
+      width: 0;
+    }
 
     > #pinned-drop-indicator-text {
       display: none;
