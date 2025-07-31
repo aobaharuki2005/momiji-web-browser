@@ -1347,6 +1347,17 @@
   args:
     obj: ObjId
 
+- name: TypedArrayFillResult
+  shared: true
+  transpile: false
+  cost_estimate: 4
+  args:
+    obj: ObjId
+    fillValue: RawId
+    start: IntPtrId
+    end: IntPtrId
+    elementType: ScalarTypeImm
+
 - name: TypedArraySetResult
   shared: true
   transpile: true

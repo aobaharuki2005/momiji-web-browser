@@ -11161,6 +11161,102 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayFill() {
+  // Expected arguments: value, optional start, optional end.
+  if (args_.length() < 1 || args_.length() > 3) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!isFirstStub()) {
+    // Attach only once to prevent slowdowns for polymorphic calls.
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure |this| is a TypedArrayObject.
+  if (!thisval_.isObject() || !thisval_.toObject().is<TypedArrayObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Both arguments must be valid indices.
+  int64_t unusedIndex;
+  if (args_.length() > 1 && !ValueIsInt64Index(args_[1], &unusedIndex)) {
+    return AttachDecision::NoAction;
+  }
+  if (args_.length() > 2 && !ValueIsInt64Index(args_[2], &unusedIndex)) {
+    return AttachDecision::NoAction;
+  }
+
+  auto* tarr = &thisval_.toObject().as<TypedArrayObject>();
+  auto elementType = tarr->type();
+
+  // Detached buffers throw.
+  if (tarr->hasDetachedBuffer()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Must not be an immutable typed array.
+  if (tarr->is<ImmutableTypedArrayObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Resizable typed arrays not yet supported.
+  if (tarr->is<ResizableTypedArrayObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Don't attach if the input type doesn't match the guard added below.
+  if (!ValueCanConvertToNumeric(elementType, args_[0])) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId = initializeInputOperand();
+
+  // Guard callee is the `fill` native function.
+  ObjOperandId calleeId = emitNativeCalleeGuard(argcId);
+
+  // Guard this is an object.
+  ValOperandId thisValId = loadThis(calleeId);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+
+  // Shape guard to check class.
+  writer.guardShapeForClass(objId, tarr->shape());
+
+  // Guard the array buffer is not detached.
+  writer.guardHasAttachedArrayBuffer(objId);
+
+  ValOperandId fillValId = loadArgument(calleeId, ArgumentKind::Arg0);
+  OperandId fillNumericId = emitNumericGuard(fillValId, args_[0], elementType);
+
+  // Convert |start| to IntPtr.
+  IntPtrOperandId intPtrStartId;
+  if (args_.length() > 1) {
+    ValOperandId startId = loadArgument(calleeId, ArgumentKind::Arg1);
+    intPtrStartId =
+        guardToIntPtrIndex(args_[1], startId, /* supportOOB = */ false);
+  } else {
+    // Absent first argument defaults to zero.
+    intPtrStartId = writer.loadInt32AsIntPtrConstant(0);
+  }
+
+  // Convert |end| to IntPtr.
+  IntPtrOperandId intPtrEndId;
+  if (args_.length() > 2) {
+    ValOperandId endId = loadArgument(calleeId, ArgumentKind::Arg2);
+    intPtrEndId = guardToIntPtrIndex(args_[2], endId, /* supportOOB = */ false);
+  } else {
+    // Absent second argument defaults to the typed array length.
+    intPtrEndId = writer.loadArrayBufferViewLength(objId);
+  }
+
+  writer.typedArrayFillResult(objId, fillNumericId, intPtrStartId, intPtrEndId,
+                              elementType);
+  writer.returnFromIC();
+
+  trackAttached("TypedArrayFill");
+  return AttachDecision::Attach;
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachTypedArraySet() {
   // Expected arguments: source (typed array), optional offset (int32).
   if (args_.length() < 1 || args_.length() > 2) {
@@ -12929,6 +13025,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
     // TypedArray natives.
     case InlinableNative::TypedArrayConstructor:
       return AttachDecision::NoAction;  // Not callable.
+    case InlinableNative::TypedArrayFill:
+      return tryAttachTypedArrayFill();
     case InlinableNative::TypedArraySet:
       return tryAttachTypedArraySet();
     case InlinableNative::TypedArraySubarray:

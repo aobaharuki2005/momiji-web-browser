@@ -13,7 +13,9 @@ function testDetached() {
     } catch (e) {
       assertEq(e.name, "TypeError");
       assertEq(i, 100);
+      continue;
     }
+    assertEq(i < 100, true);
   }
 }
 testDetached();

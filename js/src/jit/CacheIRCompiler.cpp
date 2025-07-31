@@ -5967,6 +5967,72 @@ bool CacheIRCompiler::emitIsTypedArrayConstructorResult(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitTypedArrayFillResult(ObjOperandId objId,
+                                               uint32_t fillValueId,
+                                               IntPtrOperandId startId,
+                                               IntPtrOperandId endId,
+                                               Scalar::Type elementType) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+#ifdef JS_CODEGEN_X86
+  // Use a scratch register to avoid running out of registers.
+  Register obj = output.valueReg().typeReg();
+  allocator.copyToScratchRegister(masm, objId, obj);
+#else
+  Register obj = allocator.useRegister(masm, objId);
+#endif
+  Register start = allocator.useRegister(masm, startId);
+  Register end = allocator.useRegister(masm, endId);
+
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  MOZ_ASSERT(scratch.get() != obj, "output.scratchReg must not be typeReg");
+
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+
+  Maybe<Register> fillValue;
+  if (Scalar::isBigIntType(elementType)) {
+    fillValue.emplace(
+        allocator.useRegister(masm, BigIntOperandId(fillValueId)));
+  } else if (Scalar::isFloatingType(elementType)) {
+    allocator.ensureDoubleRegister(masm, NumberOperandId(fillValueId),
+                                   floatScratch0);
+  } else {
+    fillValue.emplace(allocator.useRegister(masm, Int32OperandId(fillValueId)));
+  }
+
+  LiveRegisterSet save = liveVolatileRegs();
+  save.takeUnchecked(scratch);
+  masm.PushRegsInMask(save);
+
+  masm.setupUnalignedABICall(scratch);
+
+  masm.passABIArg(obj);
+  if (Scalar::isFloatingType(elementType)) {
+    masm.passABIArg(floatScratch0, ABIType::Float64);
+  } else {
+    masm.passABIArg(*fillValue);
+  }
+  masm.passABIArg(start);
+  masm.passABIArg(end);
+
+  if (Scalar::isBigIntType(elementType)) {
+    using Fn = void (*)(TypedArrayObject*, BigInt*, intptr_t, intptr_t);
+    masm.callWithABI<Fn, js::TypedArrayFillBigInt>();
+  } else if (Scalar::isFloatingType(elementType)) {
+    using Fn = void (*)(TypedArrayObject*, double, intptr_t, intptr_t);
+    masm.callWithABI<Fn, js::TypedArrayFillDouble>();
+  } else {
+    using Fn = void (*)(TypedArrayObject*, int32_t, intptr_t, intptr_t);
+    masm.callWithABI<Fn, js::TypedArrayFillInt32>();
+  }
+
+  masm.PopRegsInMask(save);
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, obj, output.valueReg());
+  return true;
+}
+
 bool CacheIRCompiler::emitTypedArraySetResult(ObjOperandId targetId,
                                               ObjOperandId sourceId,
                                               IntPtrOperandId offsetId,

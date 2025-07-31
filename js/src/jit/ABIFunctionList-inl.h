@@ -195,6 +195,9 @@ namespace jit {
   _(js::RoundFloat16)                                                          \
   _(js::SetIteratorObject::next)                                               \
   _(js::StringToNumberPure)                                                    \
+  _(js::TypedArrayFillBigInt)                                                  \
+  _(js::TypedArrayFillDouble)                                                  \
+  _(js::TypedArrayFillInt32)                                                   \
   _(js::TypedArraySetInfallible)                                               \
   _(js::TypedArraySortFromJit)                                                 \
   _(js::TypeOfObject)                                                          \

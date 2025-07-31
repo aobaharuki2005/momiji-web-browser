@@ -198,6 +198,7 @@
   _(ObjectKeys)                                    \
   _(ObjectToString)                                \
                                                    \
+  _(TypedArrayFill)                                \
   _(TypedArraySet)                                 \
   _(TypedArraySubarray)                            \
                                                    \

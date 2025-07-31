@@ -2944,8 +2944,8 @@ static bool TypedArray_includes(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 template <typename Ops, typename NativeType>
-static void TypedArrayFill(TypedArrayObject* tarray, NativeType value,
-                           size_t startIndex, size_t endIndex) {
+static void TypedArrayFillLoop(TypedArrayObject* tarray, NativeType value,
+                               size_t startIndex, size_t endIndex) {
   MOZ_RELEASE_ASSERT(startIndex <= endIndex);
   MOZ_RELEASE_ASSERT(endIndex <= tarray->length().valueOr(0));
 
@@ -3000,10 +3000,8 @@ static NativeType ConvertToNativeType(const Value& value) {
 }
 
 template <typename NativeType>
-static void TypedArrayFill(TypedArrayObject* tarray, const Value& value,
+static void TypedArrayFill(TypedArrayObject* tarray, NativeType val,
                            size_t startIndex, size_t endIndex) {
-  NativeType val = ConvertToNativeType<NativeType>(value);
-
   using UnsignedT =
       typename mozilla::UnsignedStdintTypeForSize<sizeof(NativeType)>::Type;
   UnsignedT bits = mozilla::BitwiseCast<UnsignedT>(val);
@@ -3019,16 +3017,23 @@ static void TypedArrayFill(TypedArrayObject* tarray, const Value& value,
       TypedArrayFillAtomicMemset<NativeType>(tarray, uint8_t(bits), startIndex,
                                              endIndex);
     } else {
-      TypedArrayFill<SharedOps>(tarray, val, startIndex, endIndex);
+      TypedArrayFillLoop<SharedOps>(tarray, val, startIndex, endIndex);
     }
   } else {
     if (bits == pattern) {
       TypedArrayFillStdMemset<NativeType>(tarray, uint8_t(bits), startIndex,
                                           endIndex);
     } else {
-      TypedArrayFill<UnsharedOps>(tarray, val, startIndex, endIndex);
+      TypedArrayFillLoop<UnsharedOps>(tarray, val, startIndex, endIndex);
     }
   }
+}
+
+template <typename NativeType>
+static void TypedArrayFill(TypedArrayObject* tarray, const Value& value,
+                           size_t startIndex, size_t endIndex) {
+  NativeType val = ConvertToNativeType<NativeType>(value);
+  TypedArrayFill(tarray, val, startIndex, endIndex);
 }
 
 /**
@@ -3123,6 +3128,84 @@ static bool TypedArray_fill(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "[TypedArray].prototype", "fill");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsTypedArrayObject, TypedArray_fill>(cx, args);
+}
+
+// Test if `ConvertNumber<To, From>` can be instantiated.
+//
+// For example `ConvertNumber<int64_t, double>` can't be instantiated. This is
+// checked through static assertions in `ConvertNumber`.
+//
+// As a further optimization also avoid generating unreachable code, like for
+// example `ConvertNumber<double, float>`.
+template <typename To, typename From>
+static constexpr bool IsValidForConvertNumber() {
+  if constexpr (!std::numeric_limits<From>::is_integer) {
+    return !std::numeric_limits<To>::is_integer && sizeof(From) >= sizeof(To);
+  } else if constexpr (sizeof(From) == sizeof(int64_t)) {
+    return std::numeric_limits<To>::is_integer && sizeof(From) == sizeof(To);
+  } else {
+    return std::numeric_limits<To>::is_integer && sizeof(From) >= sizeof(To);
+  }
+}
+
+template <typename T>
+static void TypedArrayFillFromJit(TypedArrayObject* obj, T fillValue,
+                                  intptr_t start, intptr_t end) {
+  if constexpr (!std::numeric_limits<T>::is_integer) {
+    MOZ_ASSERT(Scalar::isFloatingType(obj->type()));
+  } else if constexpr (std::is_same_v<T, int64_t>) {
+    MOZ_ASSERT(Scalar::isBigIntType(obj->type()));
+  } else {
+    static_assert(std::is_same_v<T, int32_t>);
+    MOZ_ASSERT(!Scalar::isFloatingType(obj->type()));
+    MOZ_ASSERT(!Scalar::isBigIntType(obj->type()));
+  }
+  MOZ_ASSERT(!obj->hasDetachedBuffer());
+  MOZ_ASSERT(!obj->is<ImmutableTypedArrayObject>());
+  MOZ_ASSERT(!obj->is<ResizableTypedArrayObject>());
+
+  size_t length = obj->length().valueOr(0);
+  size_t startIndex = ToIntegerIndex(start, length);
+  size_t endIndex = ToIntegerIndex(end, length);
+
+  // Return early if the fill range is empty.
+  if (startIndex >= endIndex) {
+    return;
+  }
+
+  switch (obj->type()) {
+#define TYPED_ARRAY_FILL(_, NativeType, Name)                               \
+  case Scalar::Name:                                                        \
+    if constexpr (IsValidForConvertNumber<NativeType, T>()) {               \
+      TypedArrayFill<NativeType>(obj, ConvertNumber<NativeType>(fillValue), \
+                                 startIndex, endIndex);                     \
+      return;                                                               \
+    }                                                                       \
+    break;
+    JS_FOR_EACH_TYPED_ARRAY(TYPED_ARRAY_FILL)
+#undef TYPED_ARRAY_FILL
+    default:
+      MOZ_CRASH("Unsupported TypedArray type");
+  }
+  MOZ_CRASH("Unexpected invalid number conversion");
+}
+
+void js::TypedArrayFillInt32(TypedArrayObject* obj, int32_t fillValue,
+                             intptr_t start, intptr_t end) {
+  AutoUnsafeCallWithABI unsafe;
+  TypedArrayFillFromJit(obj, fillValue, start, end);
+}
+
+void js::TypedArrayFillDouble(TypedArrayObject* obj, double fillValue,
+                              intptr_t start, intptr_t end) {
+  AutoUnsafeCallWithABI unsafe;
+  TypedArrayFillFromJit(obj, fillValue, start, end);
+}
+
+void js::TypedArrayFillBigInt(TypedArrayObject* obj, BigInt* fillValue,
+                              intptr_t start, intptr_t end) {
+  AutoUnsafeCallWithABI unsafe;
+  TypedArrayFillFromJit(obj, BigInt::toInt64(fillValue), start, end);
 }
 
 template <typename Ops, typename NativeType>
@@ -5148,7 +5231,7 @@ static bool uint8array_toHex(JSContext* cx, unsigned argc, Value* vp) {
     JS_INLINABLE_FN("set", TypedArray_set, 1, 0, TypedArraySet),
     JS_FN("copyWithin", TypedArray_copyWithin, 2, 0),
     JS_SELF_HOSTED_FN("every", "TypedArrayEvery", 1, 0),
-    JS_FN("fill", TypedArray_fill, 1, 0),
+    JS_INLINABLE_FN("fill", TypedArray_fill, 1, 0, TypedArrayFill),
     JS_SELF_HOSTED_FN("filter", "TypedArrayFilter", 1, 0),
     JS_SELF_HOSTED_FN("find", "TypedArrayFind", 1, 0),
     JS_SELF_HOSTED_FN("findIndex", "TypedArrayFindIndex", 1, 0),

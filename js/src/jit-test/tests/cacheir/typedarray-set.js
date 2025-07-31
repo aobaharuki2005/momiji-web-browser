@@ -1,4 +1,4 @@
-// Ensure inlined subarray() checks for detached target buffers.
+// Ensure inlined set() checks for detached target buffers.
 function testDetachedTarget() {
   var target = new Int8Array(10);
   var source = new Int8Array(10);
@@ -12,12 +12,14 @@ function testDetachedTarget() {
     } catch (e) {
       assertEq(e.name, "TypeError");
       assertEq(i, 100);
+      continue;
     }
+    assertEq(i < 100, true);
   }
 }
 testDetachedTarget();
 
-// Ensure inlined subarray() checks for detached source buffers.
+// Ensure inlined set() checks for detached source buffers.
 function testDetachedSource() {
   var target = new Int8Array(10);
   var source = new Int8Array(10);
@@ -31,7 +33,9 @@ function testDetachedSource() {
     } catch (e) {
       assertEq(e.name, "TypeError");
       assertEq(i, 100);
+      continue;
     }
+    assertEq(i < 100, true);
   }
 }
 testDetachedSource();
@@ -60,7 +64,9 @@ function testOffsetNegative() {
     } catch (e) {
       assertEq(e.name, "RangeError");
       assertEq(i, 100);
+      continue;
     }
+    assertEq(i < 100, true);
   }
 }
 testOffsetNegative();
