@@ -37,8 +37,11 @@ import mozilla.components.browser.state.action.ShareResourceAction
 import mozilla.components.browser.state.action.TabListAction.AddTabAction
 import mozilla.components.browser.state.action.TabListAction.RemoveTabAction
 import mozilla.components.browser.state.ext.getUrl
+import mozilla.components.browser.state.search.RegionState
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.content.DownloadState
@@ -55,6 +58,7 @@ import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.C
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.PageOriginContextualMenuInteractions.CopyToClipboardClicked
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.PageOriginContextualMenuInteractions.LoadFromClipboardClicked
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.PageOriginContextualMenuInteractions.PasteFromClipboardClicked
+import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent.Source
@@ -83,6 +87,7 @@ import mozilla.components.lib.state.Middleware
 import mozilla.components.support.ktx.util.URLStringUtils
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
@@ -130,6 +135,9 @@ import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.OrientationMode.Landscape
 import org.mozilla.fenix.components.appstate.OrientationMode.Portrait
 import org.mozilla.fenix.components.menu.MenuAccessPoint
+import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
+import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
+import org.mozilla.fenix.components.search.TABS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.toolbar.BrowserToolbarMiddleware.ToolbarAction
 import org.mozilla.fenix.components.toolbar.DisplayActions.AddBookmarkClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.EditBookmarkClicked
@@ -173,6 +181,7 @@ class BrowserToolbarMiddlewareTest {
     private val appState: AppState = mockk(relaxed = true) {
         every { orientation } returns Portrait
     }
+    private val searchEngine: SearchEngine = fakeSearchState().customSearchEngines.first()
     private val appStore: AppStore = mockk(relaxed = true) {
         every { state } returns appState
     }
@@ -763,8 +772,9 @@ class BrowserToolbarMiddlewareTest {
     fun `WHEN choosing to paste from clipboard THEN start a new search with the current clipboard text`() {
         val navController: NavController = mockk(relaxed = true)
         val browsingModeManager = SimpleBrowsingModeManager(Normal)
+        val queryText = "test"
         val clipboard = ClipboardHandler(testContext).also {
-            it.text = "test"
+            it.text = queryText
         }
         val currentTab = createTab("firefox.com")
         val browserStore = BrowserStore(
@@ -790,17 +800,8 @@ class BrowserToolbarMiddlewareTest {
                 toolbarStore.dispatch(PasteFromClipboardClicked)
 
                 verify {
-                    navController.nav(
-                        R.id.browserFragment,
-                        BrowserFragmentDirections.actionGlobalSearchDialog(
-                            sessionId = currentTab.id,
-                            pastedText = "test",
-                        ),
-                        NavOptions.Builder()
-                            .setEnterAnim(R.anim.fade_in)
-                            .setExitAnim(R.anim.fade_out)
-                            .build(),
-                    )
+                    toolbarStore.dispatch(BrowserEditToolbarAction.SearchQueryUpdated(queryText))
+                    appStore.dispatch(SearchStarted(currentTab.id))
                 }
             }
         }
@@ -814,6 +815,13 @@ class BrowserToolbarMiddlewareTest {
         val clipboard = ClipboardHandler(testContext).also {
             it.text = clipboardUrl
         }
+        val currentTab = createTab("wikipedia.org", private = true)
+        val browserStore = BrowserStore(
+            BrowserState(
+                tabs = listOf(currentTab, createTab("firefox.com", private = true)),
+                selectedTabId = currentTab.id,
+            ),
+        )
         val browserUseCases: FenixBrowserUseCases = mockk(relaxed = true)
         val useCases: UseCases = mockk {
             every { fenixBrowserUseCases } returns browserUseCases
@@ -832,13 +840,15 @@ class BrowserToolbarMiddlewareTest {
         mockkStatic(Context::settings) {
             mockkStatic(NavController::nav) {
                 every { testContext.settings().toolbarPosition } returns ToolbarPosition.TOP
+                every { appStore.state.searchState.selectedSearchEngine?.searchEngine } returns searchEngine
 
-                toolbarStore.dispatch(LoadFromClipboardClicked)
+                toolbarStore.dispatch(LoadFromClipboardClicked).joinBlocking()
 
                 verify {
                     browserUseCases.loadUrlOrSearch(
                         searchTermOrURL = clipboardUrl,
                         newTab = false,
+                        searchEngine = searchEngine,
                         private = false,
                     )
                 }
@@ -2593,4 +2603,32 @@ class BrowserToolbarMiddlewareTest {
             currentState = initialState
         }
     }
+
+    private fun fakeSearchState() = SearchState(
+        region = RegionState("US", "US"),
+        regionSearchEngines = listOf(
+            SearchEngine("engine-a", "Engine A", mock(), type = SearchEngine.Type.BUNDLED),
+            SearchEngine("engine-b", "Engine B", mock(), type = SearchEngine.Type.BUNDLED),
+        ),
+        customSearchEngines = listOf(
+            SearchEngine("engine-c", "Engine C", mock(), type = SearchEngine.Type.CUSTOM),
+        ),
+        applicationSearchEngines = listOf(
+            SearchEngine(TABS_SEARCH_ENGINE_ID, "Tabs", mock(), type = SearchEngine.Type.APPLICATION),
+            SearchEngine(BOOKMARKS_SEARCH_ENGINE_ID, "Bookmarks", mock(), type = SearchEngine.Type.APPLICATION),
+            SearchEngine(HISTORY_SEARCH_ENGINE_ID, "History", mock(), type = SearchEngine.Type.APPLICATION),
+        ),
+        additionalSearchEngines = listOf(
+            SearchEngine("engine-e", "Engine E", mock(), type = SearchEngine.Type.BUNDLED_ADDITIONAL),
+        ),
+        additionalAvailableSearchEngines = listOf(
+            SearchEngine("engine-f", "Engine F", mock(), type = SearchEngine.Type.BUNDLED_ADDITIONAL),
+        ),
+        hiddenSearchEngines = listOf(
+            SearchEngine("engine-g", "Engine G", mock(), type = SearchEngine.Type.BUNDLED),
+        ),
+        regionDefaultSearchEngineId = null,
+        userSelectedSearchEngineId = null,
+        userSelectedSearchEngineName = null,
+    )
 }

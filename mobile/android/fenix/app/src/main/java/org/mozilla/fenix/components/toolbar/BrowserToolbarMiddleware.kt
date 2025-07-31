@@ -16,8 +16,10 @@ import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.ShareResourceAction
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.content.ShareResourceState
@@ -91,6 +93,7 @@ import org.mozilla.fenix.browser.store.BrowserScreenStore
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.NimbusComponents
 import org.mozilla.fenix.components.UseCases
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.BookmarkAction
 import org.mozilla.fenix.components.appstate.AppAction.CurrentTabClosed
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
@@ -214,7 +217,7 @@ class BrowserToolbarMiddleware(
     @VisibleForTesting
     internal var environment: BrowserToolbarEnvironment? = null
 
-    @Suppress("LongMethod", "CyclomaticComplexMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod", "NestedBlockDepth", "ReturnCount")
     override fun invoke(
         context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         next: (BrowserToolbarAction) -> Unit,
@@ -394,21 +397,28 @@ class BrowserToolbarMiddleware(
                 }
             }
             is PasteFromClipboardClicked -> runWithinEnvironment {
-                navController.nav(
-                    R.id.browserFragment,
-                    BrowserFragmentDirections.actionGlobalSearchDialog(
-                        sessionId = browserStore.state.selectedTabId,
-                        pastedText = clipboard.text,
-                    ),
-                    getToolbarNavOptions(this.context),
-                )
+                context.dispatch(SearchQueryUpdated(clipboard.text.orEmpty()))
+                appStore.dispatch(SearchStarted(browserStore.state.selectedTabId))
             }
             is LoadFromClipboardClicked -> {
                 clipboard.extractURL()?.let {
-                    val searchEngine = browserStore.state.search.selectedOrDefaultSearchEngine
+                    val searchEngine = reconcileSelectedEngine()
+                    val selectedTabId = browserStore.state.selectedTabId ?: return
                     if (it.isUrl() || searchEngine == null) {
+                        browserStore.dispatch(
+                            ContentAction.UpdateSearchTermsAction(
+                                selectedTabId,
+                                "",
+                            ),
+                        )
                         Events.enteredUrl.record(Events.EnteredUrlExtra(autocomplete = false))
                     } else {
+                        browserStore.dispatch(
+                            ContentAction.UpdateSearchTermsAction(
+                                selectedTabId,
+                                it,
+                            ),
+                        )
                         val searchAccessPoint = MetricsUtils.Source.ACTION
                         MetricsUtils.recordSearchMetrics(
                             engine = searchEngine,
@@ -421,6 +431,7 @@ class BrowserToolbarMiddleware(
                     useCases.fenixBrowserUseCases.loadUrlOrSearch(
                         searchTermOrURL = it,
                         newTab = false,
+                        searchEngine = searchEngine,
                         private = environment?.browsingModeManager?.mode == Private,
                     )
                 } ?: run {
@@ -871,11 +882,14 @@ class BrowserToolbarMiddleware(
         val url = browserStore.state.selectedTab?.content?.url?.let {
             it.applyRegistrableDomainSpan(publicSuffixList)
         }
+        val searchTerms = browserStore.state.selectedTab?.content?.searchTerms ?: ""
 
         val displayUrl = url?.let { originalUrl ->
             if (originalUrl.toString() == ABOUT_HOME_URL) {
                 // Default to showing the toolbar hint when the URL is ABOUT_HOME.
                 ""
+            } else if (searchTerms.isNotBlank()) {
+                searchTerms
             } else {
                 URLStringUtils.toDisplayUrl(originalUrl)
             }
@@ -1001,6 +1015,10 @@ class BrowserToolbarMiddleware(
         val action: ToolbarAction,
         val isVisible: () -> Boolean = { true },
     )
+
+    private fun reconcileSelectedEngine(): SearchEngine? =
+        appStore.state.searchState.selectedSearchEngine?.searchEngine
+            ?: browserStore.state.search.selectedOrDefaultSearchEngine
 
     @Suppress("LongMethod")
     @VisibleForTesting
