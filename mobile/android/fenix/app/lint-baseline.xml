@@ -3426,17 +3426,6 @@
     <issue
         id="NoObjectMocking"
         message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
-        errorLine1="        mockkObject(LocaleManager)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/settings/advanced/BaseLocaleViewHolderTest.kt"
-            line="31"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoObjectMocking"
-        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
         errorLine1="        mockkObject(FeatureFlags)"
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
