@@ -95,7 +95,7 @@
   }
 }
 
-#urlbar-background,
+.urlbar-background,
 #searchbar {
   background-color: var(--toolbar-field-background-color);
   background-clip: border-box;
@@ -177,7 +177,7 @@
   }
 }
 
-#urlbar[focused]:not([suppress-focus-border]) > #urlbar-background,
+[focused]:not([suppress-focus-border]) > .urlbar-background,
 #searchbar:focus-within {
   outline: var(--focus-outline);
   outline-offset: var(--focus-outline-inset);
@@ -190,14 +190,23 @@
   border-color: transparent;
 }
 
-#urlbar[focused] > #urlbar-background,
+[focused] > .urlbar-background,
 #searchbar:focus-within {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.23);
 }
 
-#urlbar[open] > #urlbar-background {
+[open] > .urlbar-background {
   border-color: var(--arrowpanel-border-color);
   box-shadow: 0 2px 14px rgba(0, 0, 0, 0.13);
+
+  @media (-moz-platform: macos) and (prefers-contrast) {
+    /* The "increase contrast" preference on macOS draws a 1px black line around
+       panels, including the separate search bar. Since the Urlbar is not
+       implemented as a panel, it does not get this outline. This outline rule
+       resembles the system outline, bringing the Urlbar in line with panels and
+       other Mac apps. */
+    outline: 1px solid var(--focus-outline-color);
+  }
 }
 
 #urlbar:is([focused], [open]),
@@ -205,7 +214,7 @@
   color: var(--toolbar-field-focus-color);
 }
 
-#urlbar:is([focused], [open]) > #urlbar-background,
+:is([focused], [open]) > .urlbar-background,
 #searchbar:focus-within {
   background-color: var(--toolbar-field-focus-background-color);
 }
@@ -250,7 +259,7 @@
   position: relative;
 }
 
-#urlbar-background {
+.urlbar-background {
   display: block;
   position: absolute;
   inset: 0;
@@ -307,15 +316,15 @@
   }
 }
 
-#urlbar[breakout][breakout-extend] > #urlbar-background {
+[breakout][breakout-extend] > .urlbar-background {
   animation-name: urlbar-grow;
   animation-duration: 0s;
   animation-timing-function: var(--animation-easing-function);
-}
 
-@media (prefers-reduced-motion: no-preference) {
-  #urlbar[breakout][breakout-extend][breakout-extend-animate] > #urlbar-background {
-    animation-duration: 150ms;
+  @media (prefers-reduced-motion: no-preference) {
+    [breakout-extend-animate] > & {
+      animation-duration: 150ms;
+    }
   }
 }
 
@@ -644,7 +653,7 @@
     height: 16px;
   }
 
-  #urlbar-background {
+  .urlbar-background {
     background-image: repeating-linear-gradient(-45deg, rgba(255, 60, 60, 0.25) 0 25px, rgba(175, 0, 0, 0.25) 25px 50px);
 
     background-attachment: fixed;
