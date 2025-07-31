@@ -413,7 +413,7 @@ void EventDispatcher::DispatchToGecko(jni::String::Param aEvent,
 
 bool EventDispatcher::HasEmbedderListener(const nsAString& aEvent) {
   AssertIsOnMainThread();
-  java::EventDispatcher::LocalRef dispatcher(mDispatcher);
+  java::EventDispatcher::LocalRef dispatcher = GetDispatcher();
   if (!dispatcher) {
     return false;
   }
@@ -427,7 +427,7 @@ nsresult EventDispatcher::DispatchToEmbedder(
   AssertIsOnMainThread();
   JNIEnv* env = jni::GetGeckoThreadEnv();
 
-  java::EventDispatcher::LocalRef dispatcher(env, mDispatcher);
+  java::EventDispatcher::LocalRef dispatcher = GetDispatcher();
   if (!dispatcher) {
     return NS_OK;
   }
@@ -452,7 +452,7 @@ void EventDispatcher::Attach(java::EventDispatcher::Param aDispatcher) {
   AssertIsOnMainThread();
   MOZ_ASSERT(aDispatcher);
 
-  java::EventDispatcher::LocalRef dispatcher(mDispatcher);
+  java::EventDispatcher::LocalRef dispatcher = GetDispatcher();
 
   if (dispatcher) {
     if (dispatcher == aDispatcher) {
@@ -468,16 +468,10 @@ void EventDispatcher::Attach(java::EventDispatcher::Param aDispatcher) {
   dispatcher->SetAttachedToGecko(java::EventDispatcher::ATTACHED);
 }
 
-void EventDispatcher::Shutdown() {
-  AssertIsOnMainThread();
-  mDispatcher = nullptr;
-}
-
 void EventDispatcher::Detach() {
   AssertIsOnMainThread();
-  MOZ_ASSERT(mDispatcher);
 
-  java::EventDispatcher::GlobalRef dispatcher(mDispatcher);
+  java::EventDispatcher::GlobalRef dispatcher = GetDispatcher();
 
   // SetAttachedToGecko will call disposeNative for us later on the Gecko
   // thread to make sure all pending dispatchToGecko calls have completed.
@@ -485,6 +479,7 @@ void EventDispatcher::Detach() {
     dispatcher->SetAttachedToGecko(java::EventDispatcher::DETACHED);
   }
 
+  mDispatcher = nullptr;
   Shutdown();
 }
 
