@@ -15,6 +15,8 @@
 #urlbar:not([actiontype="switchtab"]) > .urlbar-input-container > #urlbar-label-box > #urlbar-label-switchtab,
 #urlbar:not([actiontype="extension"]) > .urlbar-input-container > #urlbar-label-box > #urlbar-label-extension,
 #urlbar[searchmode][breakout-extend] > .urlbar-input-container > #urlbar-label-box,
+#urlbar:not([searchmode]) > .urlbar-input-container > #urlbar-label-box > #urlbar-label-search-mode,
+#urlbar[breakout-extend] > .urlbar-input-container > #urlbar-label-box > #urlbar-label-search-mode,
 .urlbar-input-container[pageproxystate="invalid"] > #page-action-buttons > .urlbar-page-action,
 #identity-box.chromeUI ~ #page-action-buttons > .urlbar-page-action:not(#star-button-box),
 #urlbar[usertyping] > .urlbar-input-container > #page-action-buttons > #urlbar-zoom-button,

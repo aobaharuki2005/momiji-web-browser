@@ -278,6 +278,8 @@ function assertFallbackAnchorNode(anchorNode) {
     Assert.ok(true, "The anchor is identity-icon");
   } else if (anchorNode.id == "remote-control-icon") {
     Assert.ok(true, "The anchor is remote-control-icon");
+  } else if (anchorNode.classList.contains("urlbar-search-button")) {
+    Assert.ok(true, "The anchor is urlbar-search-button");
   } else {
     Assert.ok(false, "The anchor is unexpected element");
   }

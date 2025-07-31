@@ -451,6 +451,7 @@ var BrowserPageActions = {
       ),
       document.getElementById(this.mainButtonNode.id),
       document.getElementById("identity-icon"),
+      gURLBar.querySelector(".urlbar-search-button"),
     ];
     for (let node of potentialAnchorNodes) {
       if (node && !node.hidden) {
