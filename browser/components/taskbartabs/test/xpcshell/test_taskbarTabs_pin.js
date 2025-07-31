@@ -91,10 +91,13 @@ const userContextId = 0;
 const registry = new TaskbarTabsRegistry();
 const taskbarTab = registry.findOrCreateTaskbarTab(url, userContextId);
 
+const patchedSpy = sinon.stub();
+registry.on(TaskbarTabsRegistry.events.patched, patchedSpy);
+
 add_task(async function test_pin_existing_favicon() {
   sinon.resetHistory();
   faviconThrows = false;
-  await TaskbarTabsPin.pinTaskbarTab(taskbarTab);
+  await TaskbarTabsPin.pinTaskbarTab(taskbarTab, registry);
 
   ok(
     mockFaviconService.getFaviconForPage.calledOnce,
@@ -111,7 +114,7 @@ add_task(async function test_pin_existing_favicon() {
 add_task(async function test_pin_missing_favicon() {
   sinon.resetHistory();
   faviconThrows = true;
-  await TaskbarTabsPin.pinTaskbarTab(taskbarTab);
+  await TaskbarTabsPin.pinTaskbarTab(taskbarTab, registry);
 
   ok(
     mockFaviconService.getFaviconForPage.calledOnce,
@@ -126,7 +129,7 @@ add_task(async function test_pin_missing_favicon() {
 add_task(async function test_pin_location() {
   sinon.resetHistory();
 
-  await TaskbarTabsPin.pinTaskbarTab(taskbarTab);
+  await TaskbarTabsPin.pinTaskbarTab(taskbarTab, registry);
   const spy = mockNativeShellService.createShortcut;
   ok(spy.calledOnce, "A shortcut was created");
   Assert.equal(
@@ -139,6 +142,13 @@ add_task(async function test_pin_location() {
     "Test.lnk",
     "The shortcut should be in a subdirectory and have a default name"
   );
+
+  Assert.equal(
+    taskbarTab.shortcutRelativePath,
+    spy.firstCall.args[7],
+    "Correct relative path was saved to the taskbar tab"
+  );
+  Assert.equal(patchedSpy.callCount, 1, "A single patched event was emitted");
 });
 
 add_task(async function test_pin_location_dos_name() {
@@ -146,7 +156,7 @@ add_task(async function test_pin_location_dos_name() {
   const invalidTaskbarTab = registry.findOrCreateTaskbarTab(parsedURI, 0);
   sinon.resetHistory();
 
-  await TaskbarTabsPin.pinTaskbarTab(invalidTaskbarTab);
+  await TaskbarTabsPin.pinTaskbarTab(invalidTaskbarTab, registry);
   const spy = mockNativeShellService.createShortcut;
   ok(spy.calledOnce, "A shortcut was created");
   Assert.equal(
@@ -162,12 +172,25 @@ add_task(async function test_pin_location_dos_name() {
     "The shortcut should be in a subdirectory and have a default name"
   );
 
+  Assert.equal(
+    invalidTaskbarTab.shortcutRelativePath,
+    spy.firstCall.args[7],
+    "Correct relative path was saved to the taskbar tab"
+  );
+  Assert.equal(patchedSpy.callCount, 1, "A single patched event was emitted");
+
   registry.removeTaskbarTab(invalidTaskbarTab);
 });
 
 add_task(async function test_unpin() {
   sinon.resetHistory();
-  await TaskbarTabsPin.unpinTaskbarTab(taskbarTab);
+  await TaskbarTabsPin.unpinTaskbarTab(taskbarTab, registry);
 
   shellUnpinCalled();
+  Assert.equal(
+    taskbarTab.shortcutRelativePath,
+    null,
+    "Shortcut relative path was removed from the taskbar tab"
+  );
+  Assert.equal(patchedSpy.callCount, 1, "A single patched event was emitted");
 });
