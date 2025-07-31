@@ -414,6 +414,17 @@ nsresult FT2FontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
         charmap->ClearRange(sr->rangeStart, sr->rangeEnd);
       }
     }
+
+    // Bug 1980258: the Cutive Mono font, widely present on Android, has
+    // spurious blank glyphs for several codepoints. Mask them out, to avoid
+    // the risk of font fallback using it (resulting in blank characters).
+    if (FamilyName().EqualsLiteral("Cutive Mono")) {
+      charmap->ClearRange(0x0080, 0x009f);  // C1 controls: not all present,
+                                            // but let's just mask the block.
+      charmap->clear(0x2074);               // superscript four
+      charmap->clear(0xfb00);               // ff ligature
+      charmap->ClearRange(0xfb03, 0xfb04);  // ffi, ffl
+    }
   }
 
 #if defined(MOZ_WIDGET_ANDROID) && !defined(NIGHTLY_BUILD)
