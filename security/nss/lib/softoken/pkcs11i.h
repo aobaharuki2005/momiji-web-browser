@@ -292,7 +292,6 @@ struct SFTKSessionContextStr {
     SFTKVerify verify;
     unsigned int maxLen;
     SFTKObject *key;
-    SECItem *signature;
 };
 
 /*
@@ -505,11 +504,6 @@ struct SFTKItemTemplateStr {
 #define sftk_isToken(id) (((id)&SFTK_TOKEN_MASK) == SFTK_TOKEN_MAGIC)
 #define sftk_isFIPS(id) \
     (((id) == FIPS_SLOT_ID) || ((id) >= SFTK_MIN_FIPS_USER_SLOT_ID))
-
-/* validation flags. These are token specific, but also
- * visible to the application via the validation object
- * each validation should cover a unique bit. */
-#define SFTK_VALIDATION_FIPS_FLAG 0x00000001L
 
 /* the session hash multiplier (see bug 201081) */
 #define SHMULTIPLIER 1791398085

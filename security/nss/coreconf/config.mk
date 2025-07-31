@@ -238,10 +238,6 @@ ifdef NSS_DISABLE_ARM32_NEON
 DEFINES += -DNSS_DISABLE_ARM32_NEON
 endif
 
-ifdef NSS_DISABLE_KYBER
-DEFINES += -DNSS_DISABLE_KYBER
-endif
-
 # Avoid building with PowerPC's Altivec acceleration
 ifeq ($(NSS_DISABLE_ALTIVEC),1)
 DEFINES += -DNSS_DISABLE_ALTIVEC

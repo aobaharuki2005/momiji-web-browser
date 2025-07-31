@@ -94,10 +94,6 @@ typedef enum _constType {
     ConstResult,
     ConstTrust,
     ConstAvailableSizes,
-    ConstCertCategory,
-    ConstSecurityDomain,
-    ConstOTPFormat,
-    ConstOTPParam,
     ConstCurrentSize
 } ConstType;
 

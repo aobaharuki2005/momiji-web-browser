@@ -1258,7 +1258,7 @@ pk11_mergeTrust(PK11SlotInfo *targetSlot, PK11SlotInfo *sourceSlot,
             targetTemplate.type = (targetClass == CKO_TRUST)
                                       ? nssTrustAttrs[i]
                                       : pkcsTrustAttrs[i];
-            sourceTemplate.type = (sourceClass == CKO_TRUST)
+            targetTemplate.type = (sourceClass == CKO_TRUST)
                                       ? nssTrustAttrs[i]
                                       : pkcsTrustAttrs[i];
 
