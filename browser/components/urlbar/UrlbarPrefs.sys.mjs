@@ -236,7 +236,7 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
   ["quickactions.enabled", true],
 
   // The number of times we should show the actions onboarding label.
-  ["quickactions.timesToShowOnboardingLabel", 0],
+  ["quickactions.timesToShowOnboardingLabel", 3],
 
   // The number of times we have shown the actions onboarding label.
   ["quickactions.timesShownOnboardingLabel", 0],
