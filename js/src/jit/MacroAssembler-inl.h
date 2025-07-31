@@ -136,6 +136,15 @@ void MacroAssembler::passABIArg(Register reg) {
   passABIArg(MoveOperand(reg), ABIType::General);
 }
 
+void MacroAssembler::passABIArg(Register64 reg) {
+#ifdef JS_PUNBOX64
+  passABIArg(reg.reg);
+#else
+  passABIArg(reg.low);
+  passABIArg(reg.high);
+#endif
+}
+
 void MacroAssembler::passABIArg(FloatRegister reg, ABIType type) {
   passABIArg(MoveOperand(reg), type);
 }

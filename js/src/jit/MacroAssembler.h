@@ -790,6 +790,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // operations should be emitted while setting arguments.
   void passABIArg(const MoveOperand& from, ABIType type);
   inline void passABIArg(Register reg);
+  inline void passABIArg(Register64 reg);
   inline void passABIArg(FloatRegister reg, ABIType type);
 
   inline void callWithABI(
