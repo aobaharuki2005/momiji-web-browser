@@ -197,8 +197,6 @@ add_task(async function test_load_and_save_consistency() {
   const originalData = await IOUtils.readJSON(loadFile.path);
   const outputData = await IOUtils.readJSON(file.path);
 
-  // Even though the Taskbar Tabs are kept in a map, entries remember their
-  // insertion orders.
   Assert.deepEqual(
     outputData,
     originalData,
@@ -224,56 +222,5 @@ add_task(async function test_guards_against_commandline_strings() {
     () => registry.findTaskbarTab(validUrl, invalidUserContextId),
     /Invalid argument, `aUserContextId` should be type of `number`/,
     "Should reject userContextId provided as a string."
-  );
-});
-
-add_task(async function test_patch_becomes_visible() {
-  const registry = new TaskbarTabsRegistry();
-  const tt = registry.findOrCreateTaskbarTab(
-    Services.io.newURI("https://www.test.com/start"),
-    0
-  );
-
-  let called = 0;
-  registry.on(TaskbarTabsRegistry.events.patched, () => {
-    called += 1;
-  });
-
-  Assert.equal(
-    tt.shortcutRelativePath,
-    null,
-    "Should not start with a relative path"
-  );
-  registry.patchTaskbarTab(tt, {
-    shortcutRelativePath: "some\\path\\string.lnk",
-  });
-  Assert.equal(
-    tt.shortcutRelativePath,
-    "some\\path\\string.lnk",
-    "Should update to the new value"
-  );
-  Assert.equal(called, 1, "Should emit the callback function once");
-});
-
-add_task(async function test_shortcutRelativePath_is_saved() {
-  const registry = new TaskbarTabsRegistry();
-  const tt = registry.findOrCreateTaskbarTab(
-    Services.io.newURI("https://www.test.com/start"),
-    0
-  );
-
-  registry.patchTaskbarTab(tt, {
-    shortcutRelativePath: "some\\path\\string.lnk",
-  });
-
-  const file = testFile();
-  const storage = new TaskbarTabsRegistryStorage(registry, file);
-  await storage.save();
-
-  const data = await IOUtils.readJSON(file.path);
-  Assert.equal(
-    data.taskbarTabs[0].shortcutRelativePath,
-    "some\\path\\string.lnk",
-    "Shortcut relative path should be saved"
   );
 });

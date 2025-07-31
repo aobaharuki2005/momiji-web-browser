@@ -27,13 +27,13 @@ export const TaskbarTabsPin = {
    * @param {TaskbarTab} aTaskbarTab - A Taskbar Tab to pin to the taskbar.
    * @returns {Promise} Resolves once finished.
    */
-  async pinTaskbarTab(aTaskbarTab, aRegistry) {
+  async pinTaskbarTab(aTaskbarTab) {
     lazy.logConsole.info("Pinning Taskbar Tab to the taskbar.");
 
     try {
       let iconPath = await createTaskbarIconFromFavicon(aTaskbarTab);
 
-      let shortcut = await createShortcut(aTaskbarTab, iconPath, aRegistry);
+      let shortcut = await createShortcut(aTaskbarTab, iconPath);
 
       await lazy.ShellService.pinShortcutToTaskbar(
         aTaskbarTab.id,
@@ -53,7 +53,7 @@ export const TaskbarTabsPin = {
    * @param {TaskbarTab} aTaskbarTab - The Taskbar Tab to unpin from the taskbar.
    * @returns {Promise} Resolves once finished.
    */
-  async unpinTaskbarTab(aTaskbarTab, aRegistry) {
+  async unpinTaskbarTab(aTaskbarTab) {
     try {
       lazy.logConsole.info("Unpinning Taskbar Tab from the taskbar.");
 
@@ -66,12 +66,7 @@ export const TaskbarTabsPin = {
       lazy.logConsole.debug(`Deleting ${iconFile.path}`);
 
       await Promise.all([
-        lazy.ShellService.deleteShortcut("Programs", relativePath).then(() => {
-          // Only update if that didn't throw an error.
-          aRegistry.patchTaskbarTab(aTaskbarTab, {
-            shortcutRelativePath: null,
-          });
-        }),
+        lazy.ShellService.deleteShortcut("Programs", relativePath),
         IOUtils.remove(iconFile.path),
       ]);
 
@@ -114,7 +109,7 @@ async function createTaskbarIconFromFavicon(aTaskbarTab) {
  * @param {nsIFile} aFileIcon - The icon file to use for the shortcut.
  * @returns {Promise<string>} The path to the created shortcut.
  */
-async function createShortcut(aTaskbarTab, aFileIcon, aRegistry) {
+async function createShortcut(aTaskbarTab, aFileIcon) {
   lazy.logConsole.info("Creating Taskbar Tabs shortcut.");
 
   let { relativePath, description } = await generateShortcutInfo(aTaskbarTab);
@@ -125,7 +120,7 @@ async function createShortcut(aTaskbarTab, aFileIcon, aRegistry) {
   let targetfile = Services.dirsvc.get("XREExeF", Ci.nsIFile);
   let profileFolder = Services.dirsvc.get("ProfD", Ci.nsIFile);
 
-  const absolutePath = await lazy.ShellService.createShortcut(
+  return await lazy.ShellService.createShortcut(
     targetfile,
     [
       "-taskbar-tab",
@@ -144,13 +139,6 @@ async function createShortcut(aTaskbarTab, aFileIcon, aRegistry) {
     "Programs",
     relativePath
   );
-
-  // Only update if that didn't throw an error.
-  aRegistry.patchTaskbarTab(aTaskbarTab, {
-    shortcutRelativePath: relativePath,
-  });
-
-  return absolutePath;
 }
 
 /**
