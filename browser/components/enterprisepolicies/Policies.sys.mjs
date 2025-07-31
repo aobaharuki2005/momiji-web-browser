@@ -1202,7 +1202,8 @@ export var Policies = {
         // startup anyway.
         ContentBlockingPrefs.setPrefsToCategory(
           param.Category,
-          true // locked
+          true, // locked
+          false // preserveAllowListSettings
         );
         ContentBlockingPrefs.matchCBCategory();
       }
