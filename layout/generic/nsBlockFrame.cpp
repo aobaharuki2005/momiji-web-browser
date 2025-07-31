@@ -8341,7 +8341,6 @@ void nsBlockFrame::SetInitialChildList(ChildListID aListID,
     auto pseudo = Style()->GetPseudoType();
     bool haveFirstLetterStyle =
         (pseudo == PseudoStyleType::NotPseudo ||
-         PseudoStyle::IsElementBackedPseudo(pseudo) ||
          (pseudo == PseudoStyleType::cellContent &&
           !GetParent()->Style()->IsPseudoOrAnonBox()) ||
          pseudo == PseudoStyleType::fieldsetContent ||
