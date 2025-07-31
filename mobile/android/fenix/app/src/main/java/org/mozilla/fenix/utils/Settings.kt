@@ -2599,6 +2599,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Indicates if the user has completed the setup step for installing the search widget.
+     */
+    var hasCompletedSetupStepInstallSearchWidget by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_setup_step_install_search_widget),
+        default = false,
+    )
+
+    /**
      * Indicates if this is the default browser.
      */
     var isDefaultBrowser by booleanPreference(
