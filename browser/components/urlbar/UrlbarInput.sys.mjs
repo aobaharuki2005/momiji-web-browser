@@ -204,7 +204,6 @@ export class UrlbarInput {
     this._searchModeIndicatorClose = this._searchModeIndicator.querySelector(
       "#urlbar-search-mode-indicator-close"
     );
-    this._searchModeLabel = this.querySelector("#urlbar-label-search-mode");
 
     ChromeUtils.defineLazyGetter(this, "valueFormatter", () => {
       return new lazy.UrlbarValueFormatter(this);
@@ -3841,9 +3840,7 @@ export class UrlbarInput {
     }
 
     this._searchModeIndicatorTitle.textContent = "";
-    this._searchModeLabel.textContent = "";
     this._searchModeIndicatorTitle.removeAttribute("data-l10n-id");
-    this._searchModeLabel.removeAttribute("data-l10n-id");
 
     if (!engineName && !source) {
       try {
@@ -3859,7 +3856,6 @@ export class UrlbarInput {
     if (engineName) {
       // Set text content for the search mode indicator.
       this._searchModeIndicatorTitle.textContent = engineName;
-      this._searchModeLabel.textContent = engineName;
       this.document.l10n.setAttributes(
         this.inputField,
         isGeneralPurposeEngine
@@ -3878,7 +3874,6 @@ export class UrlbarInput {
       let sourceName = lazy.UrlbarUtils.getResultSourceName(source);
       let l10nID = `urlbar-search-mode-${sourceName}`;
       this.document.l10n.setAttributes(this._searchModeIndicatorTitle, l10nID);
-      this.document.l10n.setAttributes(this._searchModeLabel, l10nID);
       this.document.l10n.setAttributes(this.inputField, messageIDs[sourceName]);
     }
 
