@@ -22,8 +22,6 @@ support-files = [
 
 ["test_bug477754.xhtml"]
 
-["test_bug703150.xhtml"]
-
 ["test_bug987230.xhtml"]
 
 ["test_bug1197913.xhtml"]
