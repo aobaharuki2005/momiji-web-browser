@@ -117,6 +117,7 @@ import org.mozilla.fenix.browser.desktopmode.DesktopModeMiddleware
 import org.mozilla.fenix.components.search.ApplicationSearchMiddleware
 import org.mozilla.fenix.components.search.SearchMigration
 import org.mozilla.fenix.downloads.DownloadService
+import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isLargeWindow
 import org.mozilla.fenix.ext.settings
@@ -309,7 +310,7 @@ class Core(
         }
 
         val middlewareList =
-            listOf(
+            listOfNotNull(
                 LastAccessMiddleware(),
                 RecentlyClosedMiddleware(recentlyClosedTabsStorage, RECENTLY_CLOSED_MAX),
                 DownloadMiddleware(
@@ -350,10 +351,22 @@ class Core(
                 // we start this process. For details, see:
                 // https://bugzilla.mozilla.org/show_bug.cgi?id=1958042
                 TranslationsMiddleware(engine, MainScope(), false),
-                StartupMiddleware(
-                    applicationContext = context,
-                    repository = DefaultHomepageAsANewTabPreferenceRepository(context.settings()),
-                ),
+                // Check to see if this is a benchmark or UI test environment and avoid adding
+                // [StartupMiddleware]. [FenixApplication] will initialize the [BrowserStore]
+                // before the [HomeActivity] is created and the UI test has a chance to modify
+                // the various feature flags and settings in the application.
+                //
+                // This should be removed when the UI tests have been adjusted to accommodate
+                // Homepage as a New Tab feature.
+                // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1928587
+                if (context.application.isRunningInTestEnvironment() || BuildConfig.BUILD_TYPE == "benchmark") {
+                    null
+                } else {
+                    StartupMiddleware(
+                        applicationContext = context,
+                        repository = DefaultHomepageAsANewTabPreferenceRepository(context.settings()),
+                    )
+                },
                 AboutHomeMiddleware(
                     homepageTitle = context.getString(R.string.tab_tray_homepage_tab),
                 ),
