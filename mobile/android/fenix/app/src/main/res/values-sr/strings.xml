@@ -1807,7 +1807,7 @@
   <!-- Preference for Global Privacy Control for the custom privacy settings for Global Privacy Control. '&amp;' is replaced with the ampersand symbol: & -->
   <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">Пренеси веб страницама да не деле и не продају податке</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
-  <string name="preference_enhanced_tracking_protection_custom_tracking_content">Садржаји који прате</string>
+  <string name="preference_enhanced_tracking_protection_custom_tracking_content">Садржај са елементима за праћење</string>
   <!-- Option for enhanced tracking protection for the custom protection settings for tracking content -->
   <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">У свим језичцима</string>
   <!-- Option for enhanced tracking protection for the custom protection settings for tracking content -->
