@@ -51,10 +51,6 @@ https_first_disabled = true # Bug 1737265
 ["browser_badargs2.js"]
 https_first_disabled = true # Bug 1737265
 
-["browser_badhash.js"]
-
-["browser_badhashtype.js"]
-
 ["browser_block_fullscreen_prompt.js"]
 https_first_disabled = true # Bug 1737265
 
@@ -89,12 +85,6 @@ skip-if = ["os == 'linux' && os_version == '24.04' && processor == 'x86_64' && d
 ["browser_empty.js"]
 
 ["browser_enabled.js"]
-
-["browser_hash.js"]
-https_first_disabled = true # Bug 1737265
-
-["browser_hash2.js"]
-https_first_disabled = true # Bug 1737265
 
 ["browser_httphash.js"]
 
