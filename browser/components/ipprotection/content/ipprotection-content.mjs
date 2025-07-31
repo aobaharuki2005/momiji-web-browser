@@ -4,6 +4,7 @@
 
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import { html, classMap } from "chrome://global/content/vendor/lit.all.mjs";
+import { LINKS } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
 
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/ipprotection/ipprotection-header.mjs";
@@ -73,8 +74,13 @@ export default class IPProtectionContentElement extends MozLitElement {
     }
   }
 
-  handleUpgrade() {
-    // TODO: Handle click of Upgrade button - Bug 1975317
+  handleUpgrade(event) {
+    const win = event.target.ownerGlobal;
+    win.openWebLinkIn(LINKS.PRODUCT_URL, "tab");
+    // Close the panel
+    this.dispatchEvent(
+      new CustomEvent("IPProtection:Close", { bubbles: true })
+    );
   }
 
   handleDownload() {

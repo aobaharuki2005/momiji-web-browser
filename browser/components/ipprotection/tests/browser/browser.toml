@@ -19,3 +19,5 @@ prefs = [
 
 ["browser_ipprotection_toolbar.js"]
 skip-if = ["devedition"]
+
+["browser_ipprotection_upgrade.js"]
