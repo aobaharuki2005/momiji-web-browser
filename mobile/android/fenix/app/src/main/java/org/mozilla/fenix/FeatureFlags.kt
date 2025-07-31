@@ -41,7 +41,7 @@ object FeatureFlags {
     /**
      * Enables the Unified Trust Panel.
      */
-    const val UNIFIED_TRUST_PANEL = false
+    val UNIFIED_TRUST_PANEL = Config.channel.isNightlyOrDebug
 
     /**
      * Disables the Onboarding feature for debug builds by default. Set this to `true` if you need
