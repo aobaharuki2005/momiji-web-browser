@@ -53,7 +53,7 @@ add_task(async function test_upgrade_button() {
 
   let newTabPromise = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    LINKS.PRODUCT_URL
+    LINKS.PRODUCT_URL + "#pricing"
   );
   let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
   upgradeButton.click();
