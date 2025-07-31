@@ -1143,7 +1143,7 @@
         "value": "{icon.size.small}"
       },
       "xsmall": {
-        "value": "{size.item.xsmall}"
+        "value": "12px"
       },
       "small": {
         "value": "{size.item.small}"
@@ -1152,7 +1152,7 @@
         "value": "20px"
       },
       "large": {
-        "value": "{size.item.medium}"
+        "value": "24px"
       },
       "xlarge": {
         "value": "{size.item.large}"
@@ -1250,9 +1250,6 @@
   },
   "size": {
     "item": {
-      "xsmall": {
-        "value": "12px"
-      },
       "small": {
         "value": "16px"
       },
@@ -1261,9 +1258,6 @@
       },
       "large": {
         "value": "32px"
-      },
-      "xlarge": {
-        "value": "48px"
       }
     }
   },

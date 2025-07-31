@@ -1009,9 +1009,9 @@ main section {
 .top-site-outer .title .search-topsite {
   margin-inline-end: var(--space-xxsmall);
   fill: currentColor;
-  background-size: var(--icon-size-xsmall);
-  height: var(--icon-size-xsmall);
-  width: var(--icon-size-xsmall);
+  background-size: 12px;
+  height: 12px;
+  width: 12px;
   background-position: center;
   background-repeat: no-repeat;
   background-color: transparent;
@@ -1516,7 +1516,7 @@ main section {
   }
 }
 .search-wrapper .search-inner-wrapper.no-handoff input {
-  padding-inline-end: calc(var(--size-item-xlarge) + var(--space-medium));
+  padding-inline-end: calc(48px + var(--space-medium));
 }
 .search-wrapper .search-inner-wrapper:has(.trending-searches-pill-wrapper) {
   display: flex;
@@ -1564,7 +1564,7 @@ main section {
   height: 100%;
   inset-inline-end: 0;
   position: absolute;
-  width: var(--size-item-xlarge);
+  width: 48px;
 }
 .search-wrapper .search-button:focus, .search-wrapper .search-button:hover {
   background-color: var(--newtab-element-hover-color);
@@ -4186,7 +4186,7 @@ main section {
   height: 16px;
   margin-inline-start: var(--space-xsmall);
   vertical-align: top;
-  width: var(--icon-size-xsmall);
+  width: 12px;
 }
 .more-recommendations:dir(rtl)::after {
   background-image: url("chrome://global/skin/icons/arrow-left-12.svg");
