@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export const LINKS = Object.freeze({
-  /* Upgrade button URL, leads to Mozilla VPN product page */
+  // Used for the download button after a user has purchased an upgrade
+  DOWNLOAD_URL: "https://www.mozilla.org/en-US/products/vpn/download/",
+  // Used for the upgrade button in the main panel view
   PRODUCT_URL:
     "https://www.mozilla.org/products/vpn/?utm_medium=firefox-desktop&utm_source=freevpnpilot&utm_content=vpnpanel#pricing",
   SIGNIN_URL:

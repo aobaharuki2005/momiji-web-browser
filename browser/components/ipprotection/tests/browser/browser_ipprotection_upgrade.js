@@ -65,6 +65,55 @@ add_task(async function test_upgrade_button() {
     newTab,
     "New tab is now open in a new foreground tab"
   );
+
+  // To be safe, reset the entire state
+  await resetStateToObj(content, originalState);
+
+  BrowserTestUtils.removeTab(newTab);
+});
+
+/**
+ * Test functionality of the download button added post-upgrade
+ */
+add_task(async function test_download_button() {
+  let button = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
+  let panelView = PanelMultiView.getViewNode(
+    document,
+    lazy.IPProtectionWidget.PANEL_ID
+  );
+
+  let panelShownPromise = waitForPanelEvent(document, "popupshown");
+  // Open the panel
+  button.click();
+  await panelShownPromise;
+
+  let content = panelView.querySelector(lazy.IPProtectionPanel.CONTENT_TAGNAME);
+
+  let originalState = structuredClone(content.state);
+  content.state.isSignedIn = true;
+  content.state.hasUpgraded = true;
+  content.requestUpdate();
+  await content.updateComplete;
+
+  let downloadButton = content.downloadButtonEl;
+
+  Assert.ok(downloadButton, "Download vpn button should be present");
+
+  let newTabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    LINKS.DOWNLOAD_URL
+  );
+  let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
+  downloadButton.click();
+  let newTab = await newTabPromise;
+  await panelHiddenPromise;
+
+  Assert.equal(
+    gBrowser.selectedTab,
+    newTab,
+    "New tab is now open in a new foreground tab"
+  );
+
   // To be safe, reset the entire state
   await resetStateToObj(content, originalState);
 
