@@ -186,7 +186,7 @@ export interface LazyModules {
   "moz-src:///toolkit/components/reader/ReaderMode.sys.mjs": typeof import("moz-src:///toolkit/components/reader/ReaderMode.sys.mjs"),
   "moz-src:///toolkit/components/reader/ReaderWorker.sys.mjs": typeof import("moz-src:///toolkit/components/reader/ReaderWorker.sys.mjs"),
   "moz-src:///toolkit/components/search/AddonSearchEngine.sys.mjs": typeof import("moz-src:///toolkit/components/search/AddonSearchEngine.sys.mjs"),
-  "moz-src:///toolkit/components/search/AppProvidedSearchEngine.sys.mjs": typeof import("moz-src:///toolkit/components/search/AppProvidedSearchEngine.sys.mjs"),
+  "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs": typeof import("moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs"),
   "moz-src:///toolkit/components/search/OpenSearchEngine.sys.mjs": typeof import("moz-src:///toolkit/components/search/OpenSearchEngine.sys.mjs"),
   "moz-src:///toolkit/components/search/OpenSearchLoader.sys.mjs": typeof import("moz-src:///toolkit/components/search/OpenSearchLoader.sys.mjs"),
   "moz-src:///toolkit/components/search/PolicySearchEngine.sys.mjs": typeof import("moz-src:///toolkit/components/search/PolicySearchEngine.sys.mjs"),

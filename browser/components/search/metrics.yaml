@@ -54,7 +54,7 @@ newtab.search:
       telemetry_id: &telemetry_id
         description: >
           The search engine's `telemetryId`, like `google-b-d`.
-          This is set to be a telemetry-specific id for app-provided engines,
+          This is set to be a telemetry-specific id for config engines,
           and is `other-<name>` for others (where `<name>` is the engine's
           WebExtension name).
         type: string

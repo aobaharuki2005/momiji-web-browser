@@ -44,7 +44,7 @@ const HAS_BEEN_USED = "hasBeenUsed";
 const ICON_UPDATE_ON_IDLE_DELAY = 30;
 
 /**
- * Handles loading application provided search engine icons from remote settings.
+ * Handles loading config search engine icons from remote settings.
  */
 class IconHandler {
   /**
@@ -383,7 +383,7 @@ class QueryPreferenceParameter extends QueryParameter {
    */
   toJSON() {
     lazy.logConsole.warn(
-      "QueryPreferenceParameter should only exist for app provided engines which are never saved as JSON"
+      "QueryPreferenceParameter should only exist for config engines which are never saved as JSON"
     );
     return {
       condition: "pref",
@@ -394,10 +394,10 @@ class QueryPreferenceParameter extends QueryParameter {
 }
 
 /**
- * AppProvidedSearchEngine represents a search engine defined by the
- * search configuration.
+ * ConfigSearchEngine represents a search engine defined by the search-config-v2.
+ * This class is intended as an abstract class.
  */
-export class AppProvidedSearchEngine extends SearchEngine {
+export class ConfigSearchEngine extends SearchEngine {
   static URL_TYPE_MAP = new Map([
     ["search", lazy.SearchUtils.URL_TYPE.SEARCH],
     ["suggestions", lazy.SearchUtils.URL_TYPE.SUGGEST_JSON],
@@ -427,7 +427,7 @@ export class AppProvidedSearchEngine extends SearchEngine {
    * actually changed the engine, so that we don't record default engine
    * changed telemetry unnecessarily.
    *
-   * @type {Map|null}
+   * @type {?Map}
    */
   #prevEngineInfo = null;
 
@@ -436,12 +436,17 @@ export class AppProvidedSearchEngine extends SearchEngine {
   /**
    * @param {object} options
    *   The options for this search engine.
-   * @param {object} options.config
+   * @param {SearchEngineDefinition} options.config
    *   The engine config from Remote Settings.
    * @param {object} [options.settings]
    *   The saved settings for the user.
    */
   constructor({ config, settings }) {
+    if (new.target === ConfigSearchEngine) {
+      throw new Error("Cannot instanciate abstract class ConfigSearchEngine");
+    }
+    // The load path for both all types of ConfigSearchEngine is prefixed
+    // with [app] for historical reasons.
     super({
       loadPath: "[app]" + config.identifier,
       id: config.identifier,
@@ -470,14 +475,12 @@ export class AppProvidedSearchEngine extends SearchEngine {
   }
 
   /**
-   * Update this engine based on new config, used during
-   * config upgrades.
-
+   * Update this engine based on new config, used during config upgrades.
+   *
    * @param {object} options
    *   The options object.
-   *
-   * @param {object} options.configuration
-   *   The search engine configuration for application provided engines.
+   * @param {SearchEngineDefinition} options.configuration
+   *    The updated engine definition for this engine from the search config.
    */
   update({ configuration }) {
     this._urls = [];
@@ -505,28 +508,25 @@ export class AppProvidedSearchEngine extends SearchEngine {
   }
 
   /**
-   * Whether or not this engine is provided by the application, e.g. it is
-   * in the list of configured search engines. Overrides the definition in
-   * `SearchEngine`.
-   *
-   * @returns {boolean}
-   */
-  get isAppProvided() {
-    return true;
-  }
-
-  /**
    * Whether or not this engine is an in-memory only search engine.
-   * These engines are typically application provided or policy engines,
+   * These engines are typically config or policy engines,
    * where they are loaded every time on SearchService initialization
-   * using the policy JSON or the extension manifest. Minimal details of the
+   * using the search config or the policy JSON. Minimal details of the
    * in-memory engines are saved to disk, but they are never loaded
    * from the user's saved settings file.
    *
    * @returns {boolean}
-   *   Only returns true for application provided engines.
    */
   get inMemory() {
+    return true;
+  }
+
+  /**
+   * @returns {boolean}
+   *   Whether this engine is a config search engine, i.e. it comes from
+   *   the search-config-v2.
+   */
+  get isConfigEngine() {
     return true;
   }
 
@@ -550,6 +550,14 @@ export class AppProvidedSearchEngine extends SearchEngine {
   }
 
   /**
+   * @returns {?string}
+   *   The built-in identifier of config engines.
+   */
+  get identifier() {
+    return this._telemetryId;
+  }
+
+  /**
    * Returns the icon URL for the search engine closest to the preferred width.
    *
    * @param {number} preferredWidth
@@ -562,7 +570,7 @@ export class AppProvidedSearchEngine extends SearchEngine {
     preferredWidth ||= 16;
 
     let availableRecords =
-      await AppProvidedSearchEngine.iconHandler.getAvailableRecords(this.id);
+      await ConfigSearchEngine.iconHandler.getAvailableRecords(this.id);
     if (!availableRecords.length) {
       console.warn("No icon found for", this.id);
       return null;
@@ -576,7 +584,7 @@ export class AppProvidedSearchEngine extends SearchEngine {
     }
 
     let record = availableRecords.find(r => r.imageSize == width);
-    let promise = AppProvidedSearchEngine.iconHandler.createIconURL(record);
+    let promise = ConfigSearchEngine.iconHandler.createIconURL(record);
     this.#blobURLPromises.set(width, promise);
     return promise;
   }
@@ -633,12 +641,12 @@ export class AppProvidedSearchEngine extends SearchEngine {
    *   An object suitable for serialization as JSON.
    */
   toJSON() {
-    // For applicaiton provided engines we don't want to store all their data in
+    // For config engines we don't want to store all their data in
     // the settings file so just store the relevant metadata.
     return {
       id: this.id,
       _name: this.name,
-      _isAppProvided: true,
+      _isConfigEngine: true,
       _metaData: this._metaData,
     };
   }
@@ -647,7 +655,7 @@ export class AppProvidedSearchEngine extends SearchEngine {
    * Initializes the engine.
    *
    * @param {SearchEngineDefinition} engineConfig
-   *   The search engine configuration for application provided engines.
+   *   The engine definition from the search config for this engine.
    */
   #init(engineConfig) {
     this._orderHint = engineConfig.orderHint;
@@ -695,7 +703,7 @@ export class AppProvidedSearchEngine extends SearchEngine {
    *   The partner code associated with the search engine.
    */
   #setUrl(type, urlData, partnerCode) {
-    let urlType = AppProvidedSearchEngine.URL_TYPE_MAP.get(type);
+    let urlType = ConfigSearchEngine.URL_TYPE_MAP.get(type);
 
     if (!urlType) {
       console.warn("unexpected engine url type.", type);
@@ -766,7 +774,7 @@ export class AppProvidedSearchEngine extends SearchEngine {
    * Determines whether the specified engine properties differ between their
    * current and initial values.
    *
-   * @param {AppProvidedSearchEngine} currentEngine
+   * @param {ConfigSearchEngine} currentEngine
    *   The current engine.
    * @param {Map} initialValues
    *   The initial values stored for the currentEngine.
@@ -813,21 +821,37 @@ export class AppProvidedSearchEngine extends SearchEngine {
 }
 
 /**
- * This class defines Search Engines that are built in to to the
- * application but whose installation was triggered by the user
- * and not the region configuration.
+ * This class represents ConfigSearchEngines that were pre-configured by the
+ * application based on the user's environment, rather than user-installed.
  */
-export class UserInstalledAppEngine extends AppProvidedSearchEngine {
+export class AppProvidedConfigEngine extends ConfigSearchEngine {
+  /**
+   * Whether or not this engine is provided by the application, e.g. it is
+   * in the list of configured search engines. Overrides the definition in
+   * `SearchEngine`.
+   *
+   * @returns {boolean}
+   */
+  get isAppProvided() {
+    return true;
+  }
+}
+
+/**
+ * This class represents ConfigSearchEngines that were manually installed
+ * by the user, e.g. using the contextual search feature.
+ */
+export class UserInstalledConfigEngine extends ConfigSearchEngine {
   /**
    * @param {object} options
-   *   Options object passed to the constructor.
-   * @param {object} options.config
-   *   The configuration object for this engine defined in the Search Configuration.
-   * @param {object} options.settings
-   *   The settings object that the engine details will be stored in.
+   *   The options for this search engine.
+   * @param {SearchEngineDefinition} options.config
+   *   The engine config from Remote Settings.
+   * @param {object} [options.settings]
+   *   The saved settings for the user.
    */
-  constructor({ config, settings }) {
-    super({ config, settings });
+  constructor(options) {
+    super(options);
     this.setAttr("user-installed", true);
   }
 }

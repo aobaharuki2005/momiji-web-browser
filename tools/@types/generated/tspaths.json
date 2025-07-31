@@ -74,8 +74,8 @@
       "chrome://browser/content/genai/content/model-optin.mjs": [
         "browser/components/genai/content/model-optin.mjs"
       ],
-      "chrome://browser/content/ipprotection/ipprotection-signedout.mjs": [
-        "browser/components/ipprotection/content/ipprotection-signedout.mjs"
+      "chrome://browser/content/ipprotection/ipprotection-panel.mjs": [
+        "browser/components/ipprotection/content/ipprotection-panel.mjs"
       ],
       "chrome://browser/content/migration/migration-wizard-constants.mjs": [
         "browser/components/migration/content/migration-wizard-constants.mjs"

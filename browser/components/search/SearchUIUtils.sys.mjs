@@ -252,7 +252,7 @@ export var SearchUIUtils = {
   updatePlaceholderNamePreference(engine, isPrivate) {
     const prefName =
       "browser.urlbar.placeholderName" + (isPrivate ? ".private" : "");
-    if (engine.isAppProvided) {
+    if (engine.isConfigEngine) {
       Services.prefs.setStringPref(prefName, engine.name);
     } else {
       Services.prefs.clearUserPref(prefName);

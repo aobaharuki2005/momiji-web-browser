@@ -231,6 +231,8 @@ support-files = [
   "icons/remoteIcon.ico",
 ]
 
+["test_settings_migrate_13.js"]
+
 ["test_settings_migrate_id_format.js"]
 
 ["test_settings_migration_hideOneOffs.js"]
@@ -264,7 +266,7 @@ support-files = [
 
 ["test_userEngine.js"]
 
-["test_userInstalledAppEngine.js"]
+["test_userInstalledConfigEngine.js"]
 
 ["test_validate_engines.js"]
 

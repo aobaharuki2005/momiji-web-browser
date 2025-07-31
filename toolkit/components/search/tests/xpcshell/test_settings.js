@@ -487,7 +487,7 @@ add_task(async function test_settings_write() {
       delete engine.description;
     }
     if ("_urls" in engine) {
-      // Only app-provided engines support purpose, others do not,
+      // Only app-provided engines supported purpose, others never did,
       // so filter them out of the expected template.
       for (let urls of engine._urls) {
         urls.params = urls.params.filter(p => !p.purpose);

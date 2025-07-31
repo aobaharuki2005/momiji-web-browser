@@ -459,8 +459,9 @@ export class SearchModeSwitcher {
     this.#popup.hidePopup();
 
     if (engine) {
+      // TODO do we really need to distinguish here?
       Glean.urlbarUnifiedsearchbutton.picked[
-        engine.isAppProvided ? "builtin_search" : "addon_search"
+        engine.isConfigEngine ? "builtin_search" : "addon_search"
       ].add(1);
     } else if (restrict) {
       Glean.urlbarUnifiedsearchbutton.picked.local_search.add(1);

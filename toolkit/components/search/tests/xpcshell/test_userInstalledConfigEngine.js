@@ -2,7 +2,7 @@
  *    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * Tests that configuration provided engines installed by the user
+ * Tests that configuration search engines installed by the user
  * are installed and persisted correctly.
  */
 

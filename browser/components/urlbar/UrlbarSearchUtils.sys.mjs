@@ -259,9 +259,9 @@ class SearchUtils {
     if (searchMode.engineName) {
       let engine = Services.search.getEngineByName(searchMode.engineName);
       let resultDomain = engine.searchUrlDomain;
-      // For built-in engines, sanitize the data in a few special cases to make
+      // For config engines, sanitize the data in a few special cases to make
       // analysis easier.
-      if (!engine.isAppProvided) {
+      if (!engine.isConfigEngine) {
         scalarKey = "other";
       } else if (resultDomain.includes("amazon.")) {
         // Group all the localized Amazon sites together.

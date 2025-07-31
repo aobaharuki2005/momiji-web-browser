@@ -11603,6 +11603,7 @@ interface nsISearchEngine extends nsISupports {
   readonly identifier: string;
   readonly loadPath: string;
   readonly isAppProvided: boolean;
+  readonly isConfigEngine: boolean;
   readonly inMemory: boolean;
   readonly overriddenById: string;
   readonly isGeneralPurposeEngine: boolean;

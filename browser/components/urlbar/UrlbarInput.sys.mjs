@@ -4112,8 +4112,8 @@ export class UrlbarInput {
     }
 
     const engine = Services.search.getEngineByName(engineName);
-    if (!engine.isAppProvided) {
-      // Set the engine name to an empty string for non-default engines, which'll
+    if (!engine.isConfigEngine) {
+      // Set the engine name to an empty string for non-config-engines, which'll
       // make sure we display the default placeholder string.
       engineName = "";
     }

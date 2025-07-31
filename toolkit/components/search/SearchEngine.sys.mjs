@@ -442,7 +442,7 @@ export class EngineURL {
     this.rels = json.rels;
 
     for (let param of json.params) {
-      // mozparam and purpose were only supported for app-provided engines.
+      // mozparam and purpose were only supported for config engines.
       // Always ignore them for engines loaded from JSON.
       if (!param.mozparam && !param.purpose) {
         this.addParam(param.name, param.value);
@@ -1099,8 +1099,7 @@ export class SearchEngine {
    *
    * - telemetryId: The telemetry id from the configuration, or derived from
    *                the WebExtension name.
-   * - other-<name>: The engine name prefixed by `other-` for non-app-provided
-   *                 engines.
+   * - other-<name>: The engine name prefixed by `other-` for non-config-engines.
    *
    * @returns {string}
    */
@@ -1113,14 +1112,13 @@ export class SearchEngine {
   }
 
   /**
-   * Return the built-in identifier of app-provided engines.
+   * Return the built-in identifier of config engines.
    *
-   * @returns {string|null}
+   * @returns {?string}
    *   Returns a valid if this is a built-in engine, null otherwise.
    */
   get identifier() {
-    // No identifier if If the engine isn't app-provided
-    return this.isAppProvided ? this._telemetryId : null;
+    return null;
   }
 
   get hidden() {
@@ -1141,14 +1139,24 @@ export class SearchEngine {
   }
 
   /**
-   * Whether or not this engine is provided by the application, e.g. it is
-   * in the list of configured search engines.
+   * This method should be overridden by app provided config engines.
    *
    * @returns {boolean}
-   *   This returns false for most engines, but may be overridden by particular
-   *   engine types, such as add-on engines which are used by the application.
+   *   Whether this engine is an app provided config engine, i.e. it comes
+   *   from the search-config-v2 and active in the user's environment.
    */
   get isAppProvided() {
+    return false;
+  }
+
+  /**
+   * This method should be overridden by config search engines.
+   *
+   * @returns {boolean}
+   *   Whether this engine is a config search engine, i.e. it comes from
+   *   the search-config-v2.
+   */
+  get isConfigEngine() {
     return false;
   }
 

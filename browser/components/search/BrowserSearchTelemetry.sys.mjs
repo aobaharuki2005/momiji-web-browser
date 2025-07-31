@@ -160,10 +160,10 @@ class BrowserSearchTelemetryHandler {
       // above KNOWN_SEARCH_SOURCES.
       if (
         details.alias &&
-        engine.isAppProvided &&
+        engine.isConfigEngine &&
         engine.aliases.includes(details.alias)
       ) {
-        // This is a keyword search using an AppProvided engine.
+        // This is a keyword search using a config engine.
         // Record the source as "alias", not "urlbar".
         Glean.sap.deprecatedCounts[countIdPrefix + "alias"].add();
       } else {
@@ -183,7 +183,7 @@ class BrowserSearchTelemetryHandler {
 
       Glean.sap.counts.record({
         source: this.KNOWN_SEARCH_SOURCES.get(source),
-        provider_id: engine.isAppProvided ? engine.id : "other",
+        provider_id: engine.isConfigEngine ? engine.id : "other",
         provider_name: engine.name,
         // If no code is reported, we must returned undefined, Glean will then
         // not report the field.
@@ -238,7 +238,7 @@ class BrowserSearchTelemetryHandler {
   recordSearchForm(engine, source) {
     Glean.sap.searchFormCounts.record({
       source,
-      provider_id: engine.isAppProvided ? engine.id : "other",
+      provider_id: engine.isConfigEngine ? engine.id : "other",
     });
   }
 
