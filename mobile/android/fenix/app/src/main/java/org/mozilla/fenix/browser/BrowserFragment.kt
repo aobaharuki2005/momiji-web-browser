@@ -5,10 +5,14 @@
 package org.mozilla.fenix.browser
 
 import android.content.Context
+import android.content.Intent
 import android.os.StrictMode
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.VisibleForTesting
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
@@ -37,6 +41,9 @@ import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.store.BrowserScreenAction.ReaderModeStatusUpdated
 import org.mozilla.fenix.components.TabCollectionStorage
+import org.mozilla.fenix.components.VoiceSearchFeature
+import org.mozilla.fenix.components.appstate.qrScanner.QrScannerBinding
+import org.mozilla.fenix.components.appstate.qrScanner.QrScannerDelegate
 import org.mozilla.fenix.components.toolbar.BrowserToolbarComposable
 import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.components.toolbar.FenixBrowserToolbarView
@@ -55,6 +62,7 @@ import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.getCookieBannerUIMode
 import org.mozilla.fenix.shortcut.PwaOnboardingObserver
 import org.mozilla.fenix.theme.ThemeManager
+import kotlin.lazy
 
 /**
  * Fragment used for browsing the web within the main app.
@@ -64,6 +72,17 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
     private val openInAppOnboardingObserver = ViewBoundFeatureWrapper<OpenInAppOnboardingObserver>()
     private val translationsBinding = ViewBoundFeatureWrapper<TranslationsBinding>()
+
+    private val qrScannerBinding by lazy(LazyThreadSafetyMode.NONE) {
+        ViewBoundFeatureWrapper<QrScannerBinding>()
+    }
+    private val voiceSearchFeature by lazy(LazyThreadSafetyMode.NONE) {
+        ViewBoundFeatureWrapper<VoiceSearchFeature>()
+    }
+    private val voiceSearchLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            voiceSearchFeature.get()?.handleVoiceSearchResult(result.resultCode, result.data)
+        }
 
     private var readerModeAvailable = false
     private var translationsAvailable = false
@@ -154,6 +173,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private fun initBrowserToolbarComposableUpdates(rootView: View) {
         initReaderModeUpdates(rootView.context, rootView)
         initTranslationsUpdates(rootView.context, rootView)
+        initQrScanningSupport(rootView.context)
+        initVoiceSearchSupport(rootView.context)
     }
 
     private fun initSharePageAction(context: Context) {
@@ -270,6 +291,34 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             ),
             owner = this,
             view = view,
+        )
+    }
+
+    private fun initQrScanningSupport(context: Context) {
+        qrScannerBinding.set(
+            feature = QrScannerBinding(
+                appStore = context.components.appStore,
+                qrScannerDelegate = QrScannerDelegate(
+                    activity = requireActivity() as AppCompatActivity,
+                    browserStore = context.components.core.store,
+                    appStore = context.components.appStore,
+                    settings = context.settings(),
+                ),
+            ),
+            owner = viewLifecycleOwner,
+            view = binding.root,
+        )
+    }
+
+    private fun initVoiceSearchSupport(context: Context) {
+        voiceSearchFeature.set(
+            feature = VoiceSearchFeature(
+                context = context,
+                appStore = context.components.appStore,
+                voiceSearchLauncher = voiceSearchLauncher,
+            ),
+            owner = viewLifecycleOwner,
+            view = binding.root,
         )
     }
 
