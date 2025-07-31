@@ -372,11 +372,15 @@ export const storybookTables = {
   "border-color": [
     {
       value: {
-        comment: "TODO Bug 1821203 - Gray tones need to be consolidated",
-        light: "var(--color-gray-50)",
-        dark: "#3A3944",
+        brand: {
+          light: "var(--color-gray-50)",
+          dark: "var(--color-gray-70)",
+          default: "light-dark(var(--color-gray-50), var(--color-gray-70))",
+        },
         prefersContrast: "CanvasText",
-        default: "light-dark(var(--color-gray-50), #3A3944)",
+        platform: {
+          default: "color-mix(in srgb, currentColor 50%, transparent)",
+        },
       },
       name: "--border-color",
     },
@@ -1050,11 +1054,13 @@ export const variableLookupTable = {
     default: "light-dark(var(--color-yellow-0), var(--color-yellow-90))",
   },
   "border-color": {
-    comment: "TODO Bug 1821203 - Gray tones need to be consolidated",
-    light: "var(--color-gray-50)",
-    dark: "#3A3944",
+    brand: {
+      light: "var(--color-gray-50)",
+      dark: "var(--color-gray-70)",
+      default: "light-dark(var(--color-gray-50), var(--color-gray-70))",
+    },
     prefersContrast: "CanvasText",
-    default: "light-dark(var(--color-gray-50), #3A3944)",
+    platform: { default: "color-mix(in srgb, currentColor 50%, transparent)" },
   },
   "border-color-transparent": {
     default: "transparent",
