@@ -58,6 +58,20 @@ gcc-9.5.0:
         strip-components: 1
         add-prefix: gcc-source/
 
+gcc-10.5.0:
+    description: GCC 10.5.0 source code
+    fetch:
+        type: static-url
+        url: https://ftp.gnu.org/gnu/gcc/gcc-10.5.0/gcc-10.5.0.tar.xz
+        sha256: 25109543fdf46f397c347b5d8b7a2c7e5694a5a51cce4b9c6e1ea8a71ca307c1
+        size: 77846412
+        gpg-signature:
+            sig-url: "{url}.sig"
+            key-path: build/unix/build-gcc/7F74F97C103468EE5D750B583AB00996FC26A641.key
+        artifact-name: gcc-source.tar.zst
+        strip-components: 1
+        add-prefix: gcc-source/
+
 gcc-11.4.0:
     description: GCC 11.4.0 source code
     fetch:
