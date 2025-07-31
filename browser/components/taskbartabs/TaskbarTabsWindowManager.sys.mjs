@@ -125,6 +125,10 @@ export class TaskbarTabsWindowManager {
     this.#trackWindow(aTaskbarTab.id, win);
 
     lazy.WinTaskbar.setGroupIdForWindow(win, aTaskbarTab.id);
+
+    this.#attachWindowFocusTelemetry(win);
+    Glean.webApp.activate.record({});
+
     win.focus();
 
     win.gBrowser.tabs.forEach(tab => {
@@ -175,6 +179,32 @@ export class TaskbarTabsWindowManager {
     }
   }
 
+  #attachWindowFocusTelemetry(aWindow) {
+    let timerId = null;
+
+    function focused() {
+      if (timerId == null) {
+        timerId = Glean.webApp.usageTime.start();
+      }
+    }
+
+    function blur() {
+      if (timerId != null) {
+        Glean.webApp.usageTime.stopAndAccumulate(timerId);
+      }
+
+      timerId = null;
+    }
+
+    aWindow.addEventListener("focus", focused);
+    aWindow.addEventListener("blur", blur);
+    aWindow.addEventListener("unload", blur);
+
+    // The window might already have been focused, and at any rate it'll get
+    // focused. Forcefully trigger focused now to account for that.
+    focused();
+  }
+
   /**
    * Reverts a web app to a tab in a regular Firefox window. We will try to use
    * the window the taskbar tab originated from, if that's not avaliable, we
@@ -196,6 +226,8 @@ export class TaskbarTabsWindowManager {
     let windowList = lazy.BrowserWindowTracker.getOrderedWindows({
       private: false,
     });
+
+    Glean.webApp.eject.record({});
 
     // A Taskbar Tab should only contain one tab, but iterate over the browser's
     // tabs just in case one snuck in.

@@ -30,18 +30,20 @@ export const TaskbarTabsPin = {
   async pinTaskbarTab(aTaskbarTab) {
     lazy.logConsole.info("Pinning Taskbar Tab to the taskbar.");
 
-    let iconPath = await createTaskbarIconFromFavicon(aTaskbarTab);
-
-    let shortcut = await createShortcut(aTaskbarTab, iconPath);
-
     try {
+      let iconPath = await createTaskbarIconFromFavicon(aTaskbarTab);
+
+      let shortcut = await createShortcut(aTaskbarTab, iconPath);
+
       await lazy.ShellService.pinShortcutToTaskbar(
         aTaskbarTab.id,
         "Programs",
         shortcut
       );
+      Glean.webApp.pin.record({ result: "Success" });
     } catch (e) {
       lazy.logConsole.error(`An error occurred while pinning: ${e.message}`);
+      Glean.webApp.pin.record({ result: e.name ?? "Unknown exception" });
     }
   },
 
@@ -52,20 +54,27 @@ export const TaskbarTabsPin = {
    * @returns {Promise} Resolves once finished.
    */
   async unpinTaskbarTab(aTaskbarTab) {
-    lazy.logConsole.info("Unpinning Taskbar Tab from the taskbar.");
+    try {
+      lazy.logConsole.info("Unpinning Taskbar Tab from the taskbar.");
 
-    let { relativePath } = await generateShortcutInfo(aTaskbarTab);
-    lazy.ShellService.unpinShortcutFromTaskbar("Programs", relativePath);
+      let { relativePath } = await generateShortcutInfo(aTaskbarTab);
+      lazy.ShellService.unpinShortcutFromTaskbar("Programs", relativePath);
 
-    let iconFile = getIconFile(aTaskbarTab);
+      let iconFile = getIconFile(aTaskbarTab);
 
-    lazy.logConsole.debug(`Deleting ${relativePath}`);
-    lazy.logConsole.debug(`Deleting ${iconFile.path}`);
+      lazy.logConsole.debug(`Deleting ${relativePath}`);
+      lazy.logConsole.debug(`Deleting ${iconFile.path}`);
 
-    await Promise.all([
-      lazy.ShellService.deleteShortcut("Programs", relativePath),
-      IOUtils.remove(iconFile.path),
-    ]);
+      await Promise.all([
+        lazy.ShellService.deleteShortcut("Programs", relativePath),
+        IOUtils.remove(iconFile.path),
+      ]);
+
+      Glean.webApp.unpin.record({ result: "Success" });
+    } catch (e) {
+      lazy.logConsole.error(`An error occurred while unpinning: ${e.message}`);
+      Glean.webApp.unpin.record({ result: e.name ?? "Unknown exception" });
+    }
   },
 };
 

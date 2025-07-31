@@ -198,6 +198,7 @@ export class TaskbarTabsRegistry {
 
     lazy.logConsole.info(`Created Taskbar Tab with ID ${id}`);
 
+    Glean.webApp.install.record({});
     this.#emitter.emit(kTaskbarTabsRegistryEvents.created, taskbarTab);
 
     return taskbarTab;
@@ -218,6 +219,7 @@ export class TaskbarTabsRegistry {
       lazy.logConsole.info(`Removing Taskbar Tab Id ${tts[i].id}`);
       let removed = tts.splice(i, 1);
 
+      Glean.webApp.uninstall.record({});
       this.#emitter.emit(kTaskbarTabsRegistryEvents.removed, removed[0]);
     } else {
       lazy.logConsole.error(`Taskbar Tab ID ${aId} not found.`);
