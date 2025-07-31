@@ -219,9 +219,11 @@ nsClipboard::GetDataFromPasteboard(const nsACString& aFlavor,
     bool isRTF = [pboardType
         isEqualToString:[UTIHelper stringFromPboardType:NSPasteboardTypeRTF]];
     if (isRTF) {
-      stringData = [pString dataUsingEncoding:NSASCIIStringEncoding];
+      stringData = [pString dataUsingEncoding:NSASCIIStringEncoding
+                         allowLossyConversion:YES];
     } else {
-      stringData = [pString dataUsingEncoding:NSUnicodeStringEncoding];
+      stringData = [pString dataUsingEncoding:NSUnicodeStringEncoding
+                         allowLossyConversion:YES];
     }
     unsigned int dataLength = [stringData length];
     void* clipboardDataPtr = malloc(dataLength);
