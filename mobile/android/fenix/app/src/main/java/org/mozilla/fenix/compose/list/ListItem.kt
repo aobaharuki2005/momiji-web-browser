@@ -71,10 +71,10 @@ private const val TOAST_LENGTH = Toast.LENGTH_SHORT
  *
  * @param label The label in the list item.
  * @param iconPainter [Painter] used to display an [Icon] at the beginning of the list item.
- * @param iconTint Tint color to be applied on the [Icon].
  * @param enabled Controls the enabled state of the list item. When `false`, the list item will not
  * be clickable.
  * @param modifier [Modifier] to be applied to the layout.
+ * @param iconTint Tint color to be applied on the [Icon].
  * @param onClick Called when the user clicks on the item.
  * @param afterListItemAction Optional Composable for adding UI to the end of the list item.
  */
@@ -82,9 +82,9 @@ private const val TOAST_LENGTH = Toast.LENGTH_SHORT
 fun ImageListItem(
     label: String,
     iconPainter: Painter,
-    iconTint: Color? = null,
     enabled: Boolean,
     modifier: Modifier = Modifier,
+    iconTint: Color? = null,
     onClick: (() -> Unit)? = null,
     afterListItemAction: @Composable RowScope.() -> Unit = {},
 ) {
