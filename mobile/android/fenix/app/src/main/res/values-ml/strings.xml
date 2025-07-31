@@ -1686,7 +1686,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">ടാബ് പുനസ്ഥാപിക്കുക</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s-നു വീണ്ടും തുടങ്ങണ്ടി വന്നു</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s-നു വീണ്ടും തുടങ്ങണ്ടി വന്നു</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">തകർച്ച വിവരങ്ങൾ തന്നെതാന്നെ അയയ്ക്കുക</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -2083,7 +2083,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">ശേഖരം ഇല്ലാതാക്കി</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">ശേഖരം ഇല്ലാതാക്കി</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">ശേഖരത്തിന്റെ പേരുമാറ്റി</string>
   <!-- Text shown in snackbar when user closes a tab -->

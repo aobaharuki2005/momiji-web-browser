@@ -1154,7 +1154,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Ganare\' sa ganachra chrē\'t</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Ganare\' sa ganachra chrē\'t</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Nadunâ si yūgui sa ganachra chrē\'t</string>
   <!-- Text shown in snackbar when user closes a tab -->

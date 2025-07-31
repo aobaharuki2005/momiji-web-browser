@@ -653,7 +653,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">திரட்டு அழிக்கப்பட்டது</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">திரட்டு அழிக்கப்பட்டது</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">திரட்டு மறுபெயரிடப்பட்டது</string>
   <!-- Text shown in snackbar when user closes a tab -->

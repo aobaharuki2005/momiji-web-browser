@@ -631,7 +631,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Keď sa podelíte o to, ako ste objavili Firefox a že ho používate, pomôžete nám predstaviť náš prehliadač viacerým ľuďom.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Zdieľať minimálne údaje s partnermi pre marketingové technológie Mozilly. Tieto údaje sa nikdy nepredávajú ani sa nepoužívajú na zobrazovanie reklám.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Zdieľať minimálne údaje s partnermi pre marketingové technológie Mozilly. Tieto údaje sa nikdy nepredávajú ani sa nepoužívajú na zobrazovanie reklám.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Ako používame údaje</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1781,7 +1781,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Obnoviť kartu</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s sa musel reštartovať</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s sa musel reštartovať</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Máte neodoslanú správu o zlyhaní súvisiacu s vyšetrovanými zlyhaniami. Jej odoslanie nám pomôže vylepšiť %1$s. Zatvorením tohto upozornenia sa táto správa ignoruje.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -2182,7 +2182,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Kolekcia bola odstránená</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Kolekcia bola odstránená</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Kolekcia bola premenovaná</string>
   <!-- Text shown in snackbar when user closes a tab -->

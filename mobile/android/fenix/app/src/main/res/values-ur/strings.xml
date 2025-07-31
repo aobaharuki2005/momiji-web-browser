@@ -823,7 +823,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">مجموعہ حذف ہوگیا</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">مجموعہ حذف ہوگیا</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">مجموعہ نام تبدیل کردیا گیا</string>
   <!-- Text shown in snackbar when user closes a tab -->

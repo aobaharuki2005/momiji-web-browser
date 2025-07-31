@@ -596,7 +596,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Quand partejatz cossí avètz descobèrt Firefox e que l’utilizatz, nos ajudatz a far conéisser nòstre navegador a mai de personas.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Partejatz un minimum de donadas amb los partenaris marketing de Mozilla. Aquestas donadas son pas jamai vendudas o utilizadas per vos mostrar de publicitats.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Partejatz un minimum de donadas amb los partenaris marketing de Mozilla. Aquestas donadas son pas jamai vendudas o utilizadas per vos mostrar de publicitats.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Cossí utilizam las donadas</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1602,7 +1602,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Restablir l’onglet</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s a degut reaviar</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s a degut reaviar</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Enviar automaticament los rapòrts de plantatge</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -1989,7 +1989,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Colleccion suprimida</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Colleccion suprimida</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Colleccion renomenada</string>
   <!-- Text shown in snackbar when user closes a tab -->

@@ -631,7 +631,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Khi bạn chia sẻ cách bạn phát hiện ra Firefox và sử dụng nó, bạn sẽ giúp chúng tôi giới thiệu trình duyệt này với nhiều người hơn.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Chia sẻ dữ liệu tối thiểu với các đối tác công nghệ tiếp thị của Mozilla. Dữ liệu này không bao giờ được bán hoặc sử dụng để hiển thị quảng cáo cho bạn.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Chia sẻ dữ liệu tối thiểu với các đối tác công nghệ tiếp thị của Mozilla. Dữ liệu này không bao giờ được bán hoặc sử dụng để hiển thị quảng cáo cho bạn.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Cách chúng tôi sử dụng dữ liệu</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1781,7 +1781,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Khôi phục thẻ</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s cần được khởi động lại</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s cần được khởi động lại</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Bạn có báo cáo sự cố chưa gửi liên quan đến sự cố đang được điều tra. Gửi báo cáo sẽ giúp chúng tôi cải thiện %1$s. Đóng thông báo này sẽ bỏ qua báo cáo này.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -2182,7 +2182,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Đã xóa bộ sưu tập</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Đã xóa bộ sưu tập</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Đã đổi tên bộ sưu tập</string>
   <!-- Text shown in snackbar when user closes a tab -->

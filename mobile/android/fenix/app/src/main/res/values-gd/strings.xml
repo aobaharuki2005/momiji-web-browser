@@ -615,7 +615,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Ma dh’innseas tu do chàch mar a fhuair thusa lorg air Firefox is gu bheil thu ga chleachdadh, bidh e nas fhasa daoine eile a thàladh dhan bhrabhsair.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Co-rinn glè bheag de dhàta le com-pàirtichean teicneolas margaideachd Mozilla. Cha tèid an dàta seo a reic idir is cha chleachdar e airson sanasachd a shealltainn dhut.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Co-rinn glè bheag de dhàta le com-pàirtichean teicneolas margaideachd Mozilla. Cha tèid an dàta seo a reic idir is cha chleachdar e airson sanasachd a shealltainn dhut.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Mar a chleachdas sinn an dàta seo</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1438,7 +1438,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Aisig an taba</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">B’ fheudar dha %s ath-thòiseachadh</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">B’ fheudar dha %s ath-thòiseachadh</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Cuir aithisgean tuislidh gu fèin-obrachail</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -1811,7 +1811,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Chaidh an cruinneachadh a sguabadh às</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Chaidh an cruinneachadh a sguabadh às</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Chaidh ainm ùr a thoirt air a’ chruinneachadh</string>
   <!-- Text shown in snackbar when user closes a tab -->
