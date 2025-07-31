@@ -54,11 +54,6 @@ async function test() {
   // Flush everything just to be safe
   await promiseOnlyApzControllerFlushed();
 
-  // Give WebRender a chance to sample any remaining async scroll offset
-  // that affects the scrollbar position.
-  utils.advanceTimeAndRefresh(16);
-  utils.restoreNormalRefresh();
-
   var result = hitTest({x: mouseX, y: mouseY});
 
   // Check that the scroll thumb is under the cursor.
