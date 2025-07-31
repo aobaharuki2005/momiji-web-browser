@@ -183,11 +183,11 @@ export class DynamicSuggestions extends SuggestProvider {
     let splitButtonMain = notNowTypes.has(realtimeType)
       ? {
           command: "dismiss",
-          l10n: { id: "firefox-suggest-realtime-opt-in-dismiss" },
+          l10n: { id: "urlbar-result-realtime-opt-in-dismiss" },
         }
       : {
           command: "not_now",
-          l10n: { id: "firefox-suggest-realtime-opt-in-not-now" },
+          l10n: { id: "urlbar-result-realtime-opt-in-not-now" },
         };
 
     return Object.assign(
@@ -199,7 +199,7 @@ export class DynamicSuggestions extends SuggestProvider {
           buttons: [
             {
               command: "opt_in",
-              l10n: { id: "firefox-suggest-realtime-opt-in-allow" },
+              l10n: { id: "urlbar-result-realtime-opt-in-allow" },
             },
             {
               ...splitButtonMain,
@@ -207,7 +207,7 @@ export class DynamicSuggestions extends SuggestProvider {
                 {
                   name: "not_interested",
                   l10n: {
-                    id: "firefox-suggest-realtime-opt-in-dismiss-all",
+                    id: "urlbar-result-realtime-opt-in-dismiss-all",
                   },
                 },
               ],
@@ -280,14 +280,14 @@ export class DynamicSuggestions extends SuggestProvider {
           [...dismissTypes].join(",")
         );
         details.result.acknowledgeDismissalL10n = {
-          id: "firefox-suggest-dismissal-acknowledgment-one",
+          id: "urlbar-result-dismissal-acknowledgment-market",
         };
         controller.removeResult(details.result);
         break;
       case "not_interested": {
         lazy.UrlbarPrefs.set("suggest.realtimeOptIn", false);
         details.result.acknowledgeDismissalL10n = {
-          id: "firefox-suggest-dismissal-acknowledgment-all",
+          id: "urlbar-result-dismissal-acknowledgment-all",
         };
         controller.removeResult(details.result);
         break;

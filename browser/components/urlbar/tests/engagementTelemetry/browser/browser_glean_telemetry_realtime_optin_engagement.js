@@ -23,10 +23,10 @@ add_setup(async function () {
                   type: "realtime_opt_in",
                   icon: "chrome://global/skin/icons/defaultFavicon.svg",
                   titleL10n: {
-                    id: "firefox-suggest-market-opt-in-title",
+                    id: "urlbar-result-market-opt-in-title",
                   },
                   descriptionL10n: {
-                    id: "firefox-suggest-market-opt-in-description",
+                    id: "urlbar-result-market-opt-in-description",
                   },
                 },
               },

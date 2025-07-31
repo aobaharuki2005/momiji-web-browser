@@ -17,10 +17,10 @@ const OFFLINE_REMOTE_SETTINGS = [
               type: "realtime_opt_in",
               icon: "chrome://global/skin/icons/defaultFavicon.svg",
               titleL10n: {
-                id: "firefox-suggest-market-opt-in-title",
+                id: "urlbar-result-market-opt-in-title",
               },
               descriptionL10n: {
-                id: "firefox-suggest-market-opt-in-description",
+                id: "urlbar-result-market-opt-in-description",
               },
             },
           },
@@ -37,10 +37,10 @@ const OFFLINE_REMOTE_SETTINGS = [
               type: "realtime_opt_in",
               icon: "chrome://global/skin/icons/defaultFavicon.svg",
               titleL10n: {
-                id: "firefox-suggest-market-opt-in-title",
+                id: "urlbar-result-market-opt-in-title",
               },
               descriptionL10n: {
-                id: "firefox-suggest-market-opt-in-description",
+                id: "urlbar-result-market-opt-in-description",
               },
             },
           },
@@ -128,7 +128,7 @@ add_task(async function dismiss() {
   Assert.equal(dismissButton.dataset.command, "not_now");
   Assert.equal(
     dismissButton.dataset.l10nId,
-    "firefox-suggest-realtime-opt-in-not-now"
+    "urlbar-result-realtime-opt-in-not-now"
   );
 
   info("Check 'Not now' button behavior");
@@ -177,7 +177,7 @@ add_task(async function dismiss() {
   Assert.equal(dismissButton.dataset.command, "dismiss");
   Assert.equal(
     dismissButton.dataset.l10nId,
-    "firefox-suggest-realtime-opt-in-dismiss"
+    "urlbar-result-realtime-opt-in-dismiss"
   );
 
   info("Check 'Dismiss' button behavior");
@@ -235,7 +235,7 @@ add_task(async function dismiss_with_another_type() {
   Assert.equal(marketDismissButton.dataset.command, "dismiss");
   Assert.equal(
     marketDismissButton.dataset.l10nId,
-    "firefox-suggest-realtime-opt-in-dismiss"
+    "urlbar-result-realtime-opt-in-dismiss"
   );
   await UrlbarTestUtils.promisePopupClose(window);
   let { element: sportsElement } = await openRealtimeSuggestion({
@@ -247,7 +247,7 @@ add_task(async function dismiss_with_another_type() {
   Assert.equal(sportsDismissButton.dataset.command, "not_now");
   Assert.equal(
     sportsDismissButton.dataset.l10nId,
-    "firefox-suggest-realtime-opt-in-not-now"
+    "urlbar-result-realtime-opt-in-not-now"
   );
   await UrlbarTestUtils.promisePopupClose(window);
 

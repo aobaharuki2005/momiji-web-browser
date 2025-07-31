@@ -187,7 +187,7 @@ export class AddonSuggestions extends SuggestProvider {
       case RESULT_MENU_COMMAND.NOT_INTERESTED:
         lazy.UrlbarPrefs.set("suggest.addons", false);
         result.acknowledgeDismissalL10n = {
-          id: "firefox-suggest-dismissal-acknowledgment-all",
+          id: "urlbar-result-dismissal-acknowledgment-all",
         };
         controller.removeResult(result);
         break;

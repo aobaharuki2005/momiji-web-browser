@@ -409,7 +409,7 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
           break;
         case DISMISS_ALL_COMMAND:
           details.result.acknowledgeDismissalL10n = {
-            id: "firefox-suggest-dismissal-acknowledgment-all",
+            id: "urlbar-result-dismissal-acknowledgment-all",
           };
           controller.removeResult(details.result);
           break;

@@ -48,10 +48,6 @@ urlbar-group-local =
 # A message that replaces a result when the user dismisses a single suggestion.
 firefox-suggest-dismissal-acknowledgment-one = Thanks for your feedback. You won’t see this suggestion again.
 
-# A message that replaces a result when the user dismisses all suggestions of a
-# particular type.
-firefox-suggest-dismissal-acknowledgment-all = Thanks for your feedback. You won’t see these suggestions anymore.
-
 # A message that replaces a result when the user dismisses a single MDN
 # suggestion.
 firefox-suggest-dismissal-acknowledgment-one-mdn = Thanks for your feedback. You won’t see this { -mdn-brand-short-name } suggestion again.
@@ -284,30 +280,3 @@ urlbar-search-mode-bookmarks-en = Bookmarks
 urlbar-search-mode-tabs-en = Tabs
 urlbar-search-mode-history-en = History
 urlbar-search-mode-actions-en = Actions
-
-## These strings are used for Realtime suggestions in the urlbar.
-
-# This string is shown as title when Market suggestion are disabled. Market
-# refers to stocks, indexes, and funds.
-firefox-suggest-market-opt-in-title = Get stock market data right in your search bar
-
-# This string is shown as description when Market suggestion are disabled.
-firefox-suggest-market-opt-in-description = Show market updates and more from our partners when you share search query data with { -vendor-short-name }. <a data-l10n-name="learn-more-link">Learn more</a>
-
-# This string is shown as button to activate online when realtime suggestion are disabled.
-firefox-suggest-realtime-opt-in-allow = Show suggestions
-
-# This string is shown in split button to dismiss activation the Realtime suggestion.
-firefox-suggest-realtime-opt-in-not-now = Not now
-firefox-suggest-realtime-opt-in-dismiss = Dismiss
-firefox-suggest-realtime-opt-in-dismiss-all =
-    .label = Don’t show these suggestions
-
-# A message that replaces a result when the user dismisses Market suggestions.
-# Market refers to stocks, indexes, and funds.
-urlbar-dismissal-acknowledgment-market = Thanks for your feedback. You won’t see market suggestions anymore.
-
-# This string is shown in the result menu. Market refers to stocks, indexes, and
-# funds.
-urlbar-result-menu-dont-show-market =
-  .label = Don’t show market suggestions
