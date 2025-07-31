@@ -115,6 +115,7 @@ add_task(async function testOverlayDisabled() {
     "The paused overlay wasn't shown when the related feature preference is false"
   );
 
+  info("Re-enable the overlay while paused");
   onThreadConfigurationApplied = dbg.toolbox.once("new-configuration-applied");
   await toggleDebuggerSettingsMenuItem(dbg, {
     className: overlayMenuItemClassName,
@@ -127,13 +128,36 @@ add_task(async function testOverlayDisabled() {
     "overlay pref is enabled again after toggling the setting menu item"
   );
 
-  info("Click debugger UI step-in button");
-  const stepButton = await waitFor(() => findElement(dbg, "stepIn"));
-  stepButton.click();
-
-  await waitFor(() => highlighterTestFront.isPausedDebuggerOverlayVisible());
+  info("Wait for the overlay to be displayed");
+  await waitFor(
+    async () => await highlighterTestFront.isPausedDebuggerOverlayVisible()
+  );
   ok(
     true,
-    "Stepping after having toggled the feature preference back to true allow the overlay to be shown again"
+    "The overlay gets shown when the setting is toggled to true and the page is paused"
   );
+
+  info("Disable the overlay while paused");
+  onThreadConfigurationApplied = dbg.toolbox.once("new-configuration-applied");
+  await toggleDebuggerSettingsMenuItem(dbg, {
+    className: overlayMenuItemClassName,
+    isChecked: true,
+  });
+  await onThreadConfigurationApplied;
+  is(
+    Services.prefs.getBoolPref("devtools.debugger.features.overlay"),
+    false,
+    "overlay pref is disabled again after toggling the setting menu item"
+  );
+
+  info("Wait for the overlay to be hidden");
+  await waitFor(
+    async () => !(await highlighterTestFront.isPausedDebuggerOverlayVisible())
+  );
+  ok(
+    true,
+    "The overlay gets hidden when the setting is toggled to false and the page is paused"
+  );
+
+  await waitForResumed;
 });
