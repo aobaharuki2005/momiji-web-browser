@@ -25,6 +25,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
 });
 
 export var SearchUIUtils = {
@@ -495,10 +496,14 @@ export var SearchUIUtils = {
     });
 
     if (searchInfo) {
+      let source =
+        searchUrlType == lazy.SearchUtils.URL_TYPE.VISUAL_SEARCH
+          ? "contextmenu_visual"
+          : "contextmenu";
       lazy.BrowserSearchTelemetry.recordSearch(
         window.gBrowser.selectedBrowser,
         searchInfo.engine,
-        "contextmenu"
+        source
       );
     }
   },

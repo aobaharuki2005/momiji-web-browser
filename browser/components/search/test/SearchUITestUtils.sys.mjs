@@ -51,6 +51,9 @@ export const SearchUITestUtils = new (class {
    * @param {?string} expected.partnerCode
    *   The expected partner code. Only applicable to simulated application
    *   provided engines.
+   * @param {?boolean} expected.expectLegacyTelemetry
+   *   Whether the `SEARCH_COUNTS` legacy histogram is expected to be updated.
+   *   Pass false if the SAP telemetry is expected to be recorded only by Glean.
    * @param {string} expected.source
    *   The source of the search (e.g. urlbar, contextmenu etc.).
    * @param {number} expected.count
@@ -61,6 +64,7 @@ export const SearchUITestUtils = new (class {
     engineName = "",
     overriddenByThirdParty = false,
     partnerCode = null,
+    expectLegacyTelemetry = true,
     source,
     count,
   }) {
@@ -97,17 +101,24 @@ export const SearchUITestUtils = new (class {
       ? `${engineId}-addon.${source}`
       : `${engineId ? "" : "other-"}${engineName}.${source}`;
 
+    let expectedSum;
+    let expectedSnapshotKeys = [];
+    if (expectLegacyTelemetry) {
+      expectedSum = count;
+      expectedSnapshotKeys = [histogramKey];
+    }
+
     lazy.TelemetryTestUtils.assertKeyedHistogramSum(
       histogram,
       histogramKey,
-      count
+      expectedSum
     );
     // Also ensure no other keys were set.
     let snapshot = histogram.snapshot();
     this.#testScope.Assert.deepEqual(
       Object.keys(snapshot),
-      [histogramKey],
-      "Should have only the expected key in the SEARCH_COUNTS histogram"
+      expectedSnapshotKeys,
+      "Should have only the expected keys in the SEARCH_COUNTS histogram"
     );
   }
 })();

@@ -258,3 +258,6 @@ support-files = [
 ["browser_search_telemetry_visibility_helper_horizontal.js"]
 
 ["browser_search_telemetry_visibility_helper_vertical.js"]
+
+["browser_search_telemetry_visualSearch.js"]
+support-files = ["../browser_contentContextMenu.xhtml"]

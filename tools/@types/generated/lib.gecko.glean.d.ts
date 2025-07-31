@@ -542,6 +542,7 @@ interface GleanImpl {
     httpsOnlyModeEnabledPbm: GleanQuantity;
     fissionPrincipals: GleanEventWithExtras<{ principalType?: string, scheme?: string, value?: string }>;
     shadowedHtmlDocumentPropertyAccess: GleanEventWithExtras<{ name?: string }>;
+    shadowedHtmlFormElementPropertyAccess: GleanEventWithExtras<{ name?: string }>;
     cspViolationInternalPage: GleanEventWithExtras<{ blockeduridetails?: string, blockeduritype?: string, columnnumber?: string, directive?: string, linenumber?: string, sample?: string, selfdetails?: string, selftype?: string, sourcedetails?: string, sourcetype?: string }>;
     evalUsageParentProcess: GleanEventWithExtras<{ fileinfo?: string, value?: string }>;
     evalUsageSystemContext: GleanEventWithExtras<{ fileinfo?: string, value?: string }>;
@@ -962,6 +963,7 @@ interface GleanImpl {
     aboutHome: Record<string, GleanCounter>;
     aboutNewtab: Record<string, GleanCounter>;
     contextmenu: Record<string, GleanCounter>;
+    contextmenuVisual: Record<string, GleanCounter>;
     searchbar: Record<string, GleanCounter>;
     urlbar: Record<string, GleanCounter>;
     urlbarHandoff: Record<string, GleanCounter>;
@@ -974,6 +976,7 @@ interface GleanImpl {
     aboutHome: Record<string, GleanCounter>;
     aboutNewtab: Record<string, GleanCounter>;
     contextmenu: Record<string, GleanCounter>;
+    contextmenuVisual: Record<string, GleanCounter>;
     reload: Record<string, GleanCounter>;
     searchbar: Record<string, GleanCounter>;
     system: Record<string, GleanCounter>;
@@ -990,6 +993,7 @@ interface GleanImpl {
     aboutHome: Record<string, GleanCounter>;
     aboutNewtab: Record<string, GleanCounter>;
     contextmenu: Record<string, GleanCounter>;
+    contextmenuVisual: Record<string, GleanCounter>;
     reload: Record<string, GleanCounter>;
     searchbar: Record<string, GleanCounter>;
     system: Record<string, GleanCounter>;
@@ -1006,6 +1010,7 @@ interface GleanImpl {
     aboutHome: Record<string, GleanCounter>;
     aboutNewtab: Record<string, GleanCounter>;
     contextmenu: Record<string, GleanCounter>;
+    contextmenuVisual: Record<string, GleanCounter>;
     reload: Record<string, GleanCounter>;
     searchbar: Record<string, GleanCounter>;
     system: Record<string, GleanCounter>;
@@ -5508,6 +5513,7 @@ interface GleanImpl {
     channelStatus: Record<string, GleanCounter>;
     collectorErrors: Record<string, GleanCounter>;
     failure: GleanCounter;
+    failureEvent: GleanEventWithExtras<{ id?: string, reason?: string }>;
     pending: GleanCounter;
     success: GleanCounter;
   }
