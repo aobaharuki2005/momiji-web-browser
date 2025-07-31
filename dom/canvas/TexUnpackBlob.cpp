@@ -848,13 +848,59 @@ bool TexUnpackSurface::AllowBlitSd(WebGLContext* const webgl,
   return true;
 }
 
-bool TexUnpackSurface::BlitSd(const layers::SurfaceDescriptor& sd,
-                              bool isSubImage, bool needsRespec,
-                              WebGLTexture* tex, GLint level,
-                              const webgl::DriverUnpackInfo* dui, GLint xOffset,
-                              GLint yOffset, GLint zOffset,
-                              const webgl::PackingInfo& pi,
-                              GLenum* const out_error) const {
+// The texture may be mipmap incomplete which will prevent the framebuffer
+// from being complete while drawing to it. To avoid this scenario, override
+// the texture base and max level temporarily to ignore incomplete mipmaps
+// while blitting to it. Depending on GL implementation (desktop vs ES), the
+// min filter may contribute to mipmap completeness.
+struct AutoRestoreMipmapState {
+  AutoRestoreMipmapState(gl::GLContext* gl, GLenum target, GLint level)
+      : mGL(gl), mTarget(target), mLevel(level) {
+    mGL->fGetTexParameteriv(mTarget, LOCAL_GL_TEXTURE_MIN_FILTER, &mMinFilter);
+    if (IsTexMipmapFilter(mMinFilter)) {
+      mGL->fTexParameteri(mTarget, LOCAL_GL_TEXTURE_MIN_FILTER,
+                          LOCAL_GL_NEAREST);
+    }
+    if (mGL->HasTexParamMipmapLevel()) {
+      mGL->fGetTexParameteriv(mTarget, LOCAL_GL_TEXTURE_BASE_LEVEL,
+                              &mLevelBase);
+      mGL->fGetTexParameteriv(mTarget, LOCAL_GL_TEXTURE_MAX_LEVEL, &mLevelMax);
+      if (mLevelBase != mLevel) {
+        mGL->fTexParameteri(mTarget, LOCAL_GL_TEXTURE_BASE_LEVEL, mLevel);
+      }
+      if (mLevelMax != mLevel) {
+        mGL->fTexParameteri(mTarget, LOCAL_GL_TEXTURE_MAX_LEVEL, mLevel);
+      }
+    }
+  }
+
+  ~AutoRestoreMipmapState() {
+    if (IsTexMipmapFilter(mMinFilter)) {
+      mGL->fTexParameteri(mTarget, LOCAL_GL_TEXTURE_MIN_FILTER, mMinFilter);
+    }
+    if (mGL->HasTexParamMipmapLevel()) {
+      if (mLevelBase != mLevel) {
+        mGL->fTexParameteri(mTarget, LOCAL_GL_TEXTURE_BASE_LEVEL, mLevelBase);
+      }
+      if (mLevelMax != mLevel) {
+        mGL->fTexParameteri(mTarget, LOCAL_GL_TEXTURE_MAX_LEVEL, mLevelMax);
+      }
+    }
+  }
+
+  gl::GLContext* mGL = nullptr;
+  GLenum mTarget = 0;
+  GLint mLevel = 0;
+  GLint mMinFilter = 0;
+  GLint mLevelBase = 0;
+  GLint mLevelMax = 0;
+};
+
+bool TexUnpackSurface::BlitSd(
+    const layers::SurfaceDescriptor& sd, bool isSubImage, bool needsRespec,
+    WebGLTexture* tex, GLint level, const webgl::DriverUnpackInfo* dui,
+    GLint xOffset, GLint yOffset, GLint zOffset, const webgl::PackingInfo& pi,
+    GLenum* const out_error, bool allowFallback) const {
   MOZ_ASSERT_IF(needsRespec, !isSubImage);
 
   const auto& webgl = tex->mContext;
@@ -874,29 +920,8 @@ bool TexUnpackSurface::BlitSd(const layers::SurfaceDescriptor& sd,
   }
 
   {
-    // The texture may be mipmap incomplete which will prevent the framebuffer
-    // from being complete while drawing to it. To avoid this scenario, override
-    // the texture base and max level temporarily to ignore incomplete mipmaps
-    // while blitting to it. Depending on GL implementation (desktop vs ES), the
-    // min filter may contribute to mipmap completeness.
-    GLint minFilter = 0;
-    GLint levelBase = 0;
-    GLint levelMax = 0;
     gl::ScopedBindTexture scopedTex(gl, tex->mGLName, target);
-    gl->fGetTexParameteriv(target, LOCAL_GL_TEXTURE_MIN_FILTER, &minFilter);
-    if (IsTexMipmapFilter(minFilter)) {
-      gl->fTexParameteri(target, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
-    }
-    if (gl->HasTexParamMipmapLevel()) {
-      gl->fGetTexParameteriv(target, LOCAL_GL_TEXTURE_BASE_LEVEL, &levelBase);
-      gl->fGetTexParameteriv(target, LOCAL_GL_TEXTURE_MAX_LEVEL, &levelMax);
-      if (levelBase != level) {
-        gl->fTexParameteri(target, LOCAL_GL_TEXTURE_BASE_LEVEL, level);
-      }
-      if (levelMax != level) {
-        gl->fTexParameteri(target, LOCAL_GL_TEXTURE_MAX_LEVEL, level);
-      }
-    }
+    AutoRestoreMipmapState restoreMipmapState(gl, target, level);
 
     gl::ScopedFramebuffer scopedFB(gl);
     gl::ScopedBindFramebuffer bindFB(gl, scopedFB.FB());
@@ -909,11 +934,21 @@ bool TexUnpackSurface::BlitSd(const layers::SurfaceDescriptor& sd,
                                 tex->mGLName, level);
 
       const auto err = errorScope.GetError();
-      MOZ_ALWAYS_TRUE(!err);
+      if (err) {
+        if (allowFallback) {
+          return false;
+        }
+        MOZ_DIAGNOSTIC_CRASH("BlitSd failed attaching texture to framebuffer");
+      }
     }
 
     const GLenum status = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
-    MOZ_ALWAYS_TRUE(status == LOCAL_GL_FRAMEBUFFER_COMPLETE);
+    if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
+      if (allowFallback) {
+        return false;
+      }
+      MOZ_DIAGNOSTIC_CRASH("BlitSd framebuffer is not complete");
+    }
 
     const auto dstOrigin =
         (unpacking.flipY ? gl::OriginPos::TopLeft : gl::OriginPos::BottomLeft);
@@ -936,6 +971,9 @@ bool TexUnpackSurface::BlitSd(const layers::SurfaceDescriptor& sd,
             convertAlpha)) {
       gfxCriticalNote << "BlitSdToFramebuffer failed for type "
                       << int(sd.type());
+      if (allowFallback) {
+        return false;
+      }
       // Maybe the resource isn't valid anymore?
       gl->fClearColor(0.2, 0.0, 0.2, 1.0);
       gl->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
@@ -944,18 +982,6 @@ bool TexUnpackSurface::BlitSd(const layers::SurfaceDescriptor& sd,
       webgl->GenerateWarning(
           "Fast Tex(Sub)Image upload failed without recourse, clearing to "
           "[0.2, 0.0, 0.2, 1.0]. Please file a bug!");
-    }
-
-    if (IsTexMipmapFilter(minFilter)) {
-      gl->fTexParameteri(target, LOCAL_GL_TEXTURE_MIN_FILTER, minFilter);
-    }
-    if (gl->HasTexParamMipmapLevel()) {
-      if (levelBase != level) {
-        gl->fTexParameteri(target, LOCAL_GL_TEXTURE_BASE_LEVEL, levelBase);
-      }
-      if (levelMax != level) {
-        gl->fTexParameteri(target, LOCAL_GL_TEXTURE_MAX_LEVEL, levelMax);
-      }
     }
   }
 
@@ -1043,7 +1069,7 @@ bool TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec,
                   allowBlit ? &exportSd : nullptr)) {
         if (exportSd && !SDIsRGBBuffer(*exportSd) &&
             BlitSd(*exportSd, isSubImage, needsRespec, tex, level, dui, xOffset,
-                   yOffset, zOffset, dstPI, out_error)) {
+                   yOffset, zOffset, dstPI, out_error, true)) {
           return true;
         }
         surf = data->GetDataSurface();

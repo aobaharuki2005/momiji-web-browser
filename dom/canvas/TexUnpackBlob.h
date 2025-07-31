@@ -132,7 +132,7 @@ class TexUnpackSurface final : public TexUnpackBlob {
               bool needsRespec, WebGLTexture* tex, GLint level,
               const webgl::DriverUnpackInfo* dui, GLint xOffset, GLint yOffset,
               GLint zOffset, const webgl::PackingInfo& dstPI,
-              GLenum* const out_error) const;
+              GLenum* const out_error, bool allowFallback = false) const;
 };
 
 }  // namespace webgl
