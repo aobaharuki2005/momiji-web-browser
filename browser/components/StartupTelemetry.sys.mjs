@@ -103,7 +103,6 @@ export let StartupTelemetry = {
   bestEffortIdleStartup() {
     let tasks = [
       () => this.primaryPasswordEnabled(),
-      () => this.trustObjectCount(),
       () => lazy.OsEnvironment.reportAllowedAppSources(),
     ];
     if (AppConstants.platform == "win" && this._willUseExpensiveTelemetry) {
@@ -454,14 +453,6 @@ export let StartupTelemetry = {
     );
     let token = tokenDB.getInternalKeyToken();
     Glean.primaryPassword.enabled.set(token.hasPassword);
-  },
-
-  trustObjectCount() {
-    let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-      Ci.nsIX509CertDB
-    );
-    // countTrustObjects also logs the number of trust objects for telemetry purposes
-    certdb.countTrustObjects();
   },
 
   pipEnabled() {
