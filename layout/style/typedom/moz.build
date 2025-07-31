@@ -9,6 +9,7 @@ with Files("**"):
 
 EXPORTS.mozilla.dom += [
     "CSSKeywordValue.h",
+    "CSSMathInvert.h",
     "CSSMathNegate.h",
     "CSSMathProduct.h",
     "CSSMathSum.h",
@@ -24,6 +25,7 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     "CSSKeywordValue.cpp",
+    "CSSMathInvert.cpp",
     "CSSMathNegate.cpp",
     "CSSMathProduct.cpp",
     "CSSMathSum.cpp",
