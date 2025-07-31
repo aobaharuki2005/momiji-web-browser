@@ -285,7 +285,7 @@
   # Throws if length is negative.
   alias_set: custom
   generate_lir: true
-  lir_temps: 1
+  lir_temps: 2
 
 # Create a new TypedArray from an Array (or Array-like object) or a TypedArray.
 - name: NewTypedArrayFromArray

@@ -5601,8 +5601,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void initGCThing(Register obj, Register temp,
                    const TemplateObject& templateObj, bool initContents = true);
 
-  void initTypedArraySlots(Register obj, Register length, Register temp,
-                           LiveRegisterSet liveRegs, Label* fail,
+  void initTypedArraySlots(Register obj, Register length, Register temp1,
+                           Register temp2, LiveRegisterSet liveRegs,
+                           Label* fail,
                            const FixedLengthTypedArrayObject* templateObj);
 
   void initTypedArraySlotsInline(

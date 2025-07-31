@@ -8417,8 +8417,9 @@ void CodeGenerator::visitNewTypedArrayInline(LNewTypedArrayInline* lir) {
 
 void CodeGenerator::visitNewTypedArray(LNewTypedArray* lir) {
   Register objReg = ToRegister(lir->output());
-  Register tempReg = ToRegister(lir->temp0());
-  Register lengthReg = ToRegister(lir->temp1());
+  Register temp1Reg = ToRegister(lir->temp0());
+  Register temp2Reg = ToRegister(lir->temp1());
+  Register lengthReg = ToRegister(lir->temp2());
   LiveRegisterSet liveRegs = liveVolatileRegs(lir);
 
   auto* templateObject = lir->mir()->templateObject();
@@ -8434,12 +8435,12 @@ void CodeGenerator::visitNewTypedArray(LNewTypedArray* lir) {
       StoreRegisterTo(objReg));
 
   TemplateObject templateObj(templateObject);
-  masm.createGCObject(objReg, tempReg, templateObj, initialHeap, ool->entry());
+  masm.createGCObject(objReg, temp1Reg, templateObj, initialHeap, ool->entry());
 
   masm.move32(Imm32(n), lengthReg);
 
-  masm.initTypedArraySlots(objReg, lengthReg, tempReg, liveRegs, ool->entry(),
-                           templateObject);
+  masm.initTypedArraySlots(objReg, lengthReg, temp1Reg, temp2Reg, liveRegs,
+                           ool->entry(), templateObject);
 
   masm.bind(ool->rejoin());
 }
@@ -8448,7 +8449,8 @@ void CodeGenerator::visitNewTypedArrayDynamicLength(
     LNewTypedArrayDynamicLength* lir) {
   Register lengthReg = ToRegister(lir->length());
   Register objReg = ToRegister(lir->output());
-  Register tempReg = ToRegister(lir->temp0());
+  Register temp1Reg = ToRegister(lir->temp0());
+  Register temp2Reg = ToRegister(lir->temp1());
   LiveRegisterSet liveRegs = liveVolatileRegs(lir);
 
   JSObject* templateObject = lir->mir()->templateObject();
@@ -8465,10 +8467,10 @@ void CodeGenerator::visitNewTypedArrayDynamicLength(
   MOZ_ASSERT_IF(lengthReg.volatile_(), liveRegs.has(lengthReg));
 
   TemplateObject templateObj(templateObject);
-  masm.createGCObject(objReg, tempReg, templateObj, initialHeap, ool->entry());
+  masm.createGCObject(objReg, temp1Reg, templateObj, initialHeap, ool->entry());
 
-  masm.initTypedArraySlots(objReg, lengthReg, tempReg, liveRegs, ool->entry(),
-                           ttemplate);
+  masm.initTypedArraySlots(objReg, lengthReg, temp1Reg, temp2Reg, liveRegs,
+                           ool->entry(), ttemplate);
 
   masm.bind(ool->rejoin());
 }

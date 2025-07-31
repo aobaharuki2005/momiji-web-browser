@@ -163,7 +163,7 @@ void LIRGenerator::visitNewTypedArray(MNewTypedArray* ins) {
     define(lir, ins);
     assignSafepoint(lir, ins);
   } else {
-    auto* lir = new (alloc()) LNewTypedArray(temp(), temp());
+    auto* lir = new (alloc()) LNewTypedArray(temp(), temp(), temp());
     define(lir, ins);
     assignSafepoint(lir, ins);
   }
@@ -174,8 +174,8 @@ void LIRGenerator::visitNewTypedArrayDynamicLength(
   MDefinition* length = ins->length();
   MOZ_ASSERT(length->type() == MIRType::Int32);
 
-  LNewTypedArrayDynamicLength* lir =
-      new (alloc()) LNewTypedArrayDynamicLength(useRegister(length), temp());
+  auto* lir = new (alloc())
+      LNewTypedArrayDynamicLength(useRegister(length), temp(), temp());
   define(lir, ins);
   assignSafepoint(lir, ins);
 }

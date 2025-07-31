@@ -863,8 +863,9 @@ static std::pair<uint32_t, uint32_t> FindStartOfUninitializedAndUndefinedSlots(
 }
 
 void MacroAssembler::initTypedArraySlots(
-    Register obj, Register length, Register temp, LiveRegisterSet liveRegs,
-    Label* fail, const FixedLengthTypedArrayObject* templateObj) {
+    Register obj, Register length, Register temp1, Register temp2,
+    LiveRegisterSet liveRegs, Label* fail,
+    const FixedLengthTypedArrayObject* templateObj) {
   MOZ_ASSERT(!templateObj->hasBuffer());
 
   constexpr size_t dataSlotOffset = ArrayBufferViewObject::dataOffset();
@@ -880,6 +881,12 @@ void MacroAssembler::initTypedArraySlots(
           JSObject::MAX_BYTE_SIZE - dataOffset,
       "typed array inline buffer is limited by the maximum object byte size");
 
+  MOZ_ASSERT(templateObj->tenuredSizeOfThis() >= dataOffset);
+
+  // Capacity for inline elements.
+  size_t inlineCapacity = templateObj->tenuredSizeOfThis() - dataOffset;
+  movePtr(ImmWord(inlineCapacity), temp2);
+
   // Ensure volatile |obj| is saved across the call.
   if (obj.volatile_()) {
     liveRegs.addUnchecked(obj);
@@ -887,12 +894,14 @@ void MacroAssembler::initTypedArraySlots(
 
   // Allocate a buffer on the heap to store the data elements.
   PushRegsInMask(liveRegs);
-  using Fn = void (*)(JSContext* cx, TypedArrayObject* obj, int32_t count);
-  setupUnalignedABICall(temp);
-  loadJSContext(temp);
-  passABIArg(temp);
+  using Fn =
+      void (*)(JSContext*, FixedLengthTypedArrayObject*, int32_t, size_t);
+  setupUnalignedABICall(temp1);
+  loadJSContext(temp1);
+  passABIArg(temp1);
   passABIArg(obj);
   passABIArg(length);
+  passABIArg(temp2);
   callWithABI<Fn, AllocateAndInitTypedArrayBuffer>();
   PopRegsInMask(liveRegs);
 
