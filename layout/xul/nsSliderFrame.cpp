@@ -601,12 +601,7 @@ void nsSliderFrame::Reflow(nsPresContext* aPresContext,
                ? float(availableLength - thumbLength) / float(maxPos - minPos)
                : 1;
 
-  // in reverse mode, curpos is reversed such that lower values are to the
-  // right or bottom and increase leftwards or upwards. In this case, use the
-  // offset from the end instead of the beginning.
-  bool reverse = mContent->AsElement()->AttrValueIs(
-      kNameSpaceID_None, nsGkAtoms::dir, nsGkAtoms::reverse, eCaseMatters);
-  nscoord pos = reverse ? (maxPos - curPos) : (curPos - minPos);
+  nscoord pos = curPos - minPos;
 
   // set the thumb's coord to be the current pos * the ratio.
   nsPoint thumbPos;
@@ -858,9 +853,7 @@ void nsSliderFrame::CurrentPositionChanged() {
     return;
   }
 
-  bool reverse = mContent->AsElement()->AttrValueIs(
-      kNameSpaceID_None, nsGkAtoms::dir, nsGkAtoms::reverse, eCaseMatters);
-  nscoord pos = reverse ? (maxPos - curPos) : (curPos - minPos);
+  nscoord pos = curPos - minPos;
   const bool horizontal = Scrollbar()->IsHorizontal();
 
   // figure out the new rect
@@ -940,14 +933,7 @@ void nsSliderFrame::SetCurrentPosition(nsIContent* aScrollbar, int32_t aNewPos,
   int32_t minpos = GetMinPosition(aScrollbar);
   int32_t maxpos = GetMaxPosition(aScrollbar);
 
-  // in reverse direction sliders, flip the value so that it goes from
-  // right to left, or bottom to top.
-  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
-                                         nsGkAtoms::reverse, eCaseMatters)) {
-    aNewPos = maxpos - aNewPos;
-  } else {
-    aNewPos += minpos;
-  }
+  aNewPos += minpos;
 
   // get the new position and make sure it is in bounds
   if (aNewPos < minpos || maxpos < minpos) {
@@ -1435,10 +1421,6 @@ void nsSliderFrame::Notify() {
 
 void nsSliderFrame::PageScroll(bool aClickAndHold) {
   int32_t changeDirection = mRepeatDirection;
-  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
-                                         nsGkAtoms::reverse, eCaseMatters)) {
-    changeDirection = -changeDirection;
-  }
   nsScrollbarFrame* sb = Scrollbar();
 
   ScrollContainerFrame* sf = GetScrollContainerFrame();
