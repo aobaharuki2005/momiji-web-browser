@@ -305,14 +305,17 @@ void AccessibleCaretManager::UpdateCaretsForSelectionMode(
   AC_LOG("%s: selection: %p", __FUNCTION__, GetSelection());
 
   int32_t startOffset = 0;
-  nsIFrame* startFrame =
-      GetFrameForFirstRangeStartOrLastRangeEnd(eDirNext, &startOffset);
+  nsIContent* startContent = nullptr;
+  nsIFrame* startFrame = GetFrameForFirstRangeStartOrLastRangeEnd(
+      eDirNext, &startOffset, &startContent);
 
   int32_t endOffset = 0;
-  nsIFrame* endFrame =
-      GetFrameForFirstRangeStartOrLastRangeEnd(eDirPrevious, &endOffset);
+  nsIContent* endContent = nullptr;
+  nsIFrame* endFrame = GetFrameForFirstRangeStartOrLastRangeEnd(
+      eDirPrevious, &endOffset, &endContent);
 
-  if (!CompareTreePosition(startFrame, endFrame)) {
+  if (!startFrame || !endFrame ||
+      !CompareTreePosition(startContent, endContent)) {
     // XXX: Do we really have to hide carets if this condition isn't satisfied?
     HideCaretsAndDispatchCaretStateChangedEvent();
     return;
@@ -1215,10 +1218,12 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
   return true;
 }
 
-bool AccessibleCaretManager::CompareTreePosition(nsIFrame* aStartFrame,
-                                                 nsIFrame* aEndFrame) const {
-  return (aStartFrame && aEndFrame &&
-          nsLayoutUtils::CompareTreePosition(aStartFrame, aEndFrame) <= 0);
+bool AccessibleCaretManager::CompareTreePosition(
+    const nsIContent* aStartContent, const nsIContent* aEndContent) const {
+  // nsContentUtils::CompareTreePosition expects non-null content pointers.
+  return aStartContent && aEndContent &&
+         nsContentUtils::CompareTreePosition<TreeKind::DOM>(
+             aStartContent, aEndContent, nullptr) <= 0;
 }
 
 nsresult AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint) {
