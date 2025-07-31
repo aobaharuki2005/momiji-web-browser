@@ -51,6 +51,11 @@ interface FeatureSettingsHelper {
     var isDeleteSitePermissionsEnabled: Boolean
 
     /**
+     * Whether the Unified Trust Panel is enabled or not.
+     */
+    var isUnifiedTrustPanelEnabled: Boolean
+
+    /**
      * The current "Enhanced Tracking Protection" policy.
      * @see ETPPolicy
      */

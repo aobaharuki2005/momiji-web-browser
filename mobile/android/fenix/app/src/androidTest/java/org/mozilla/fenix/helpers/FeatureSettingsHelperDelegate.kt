@@ -36,6 +36,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         isWallpaperOnboardingEnabled = settings.showWallpaperOnboarding,
         isDeleteSitePermissionsEnabled = settings.deleteSitePermissions,
         isOpenInAppBannerEnabled = settings.shouldShowOpenInAppBanner,
+        isUnifiedTrustPanelEnabled = settings.enableUnifiedTrustPanel,
         etpPolicy = getETPPolicy(settings),
         isLocationPermissionEnabled = getFeaturePermission(PhoneFeature.LOCATION, settings),
         isMenuRedesignEnabled = settings.enableMenuRedesign,
@@ -60,6 +61,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
     override var isRecentlyVisitedFeatureEnabled: Boolean by updatedFeatureFlags::isRecentlyVisitedFeatureEnabled
     override var isPWAsPromptEnabled: Boolean by updatedFeatureFlags::isPWAsPromptEnabled
     override var isOpenInAppBannerEnabled: Boolean by updatedFeatureFlags::isOpenInAppBannerEnabled
+    override var isUnifiedTrustPanelEnabled: Boolean by updatedFeatureFlags::isUnifiedTrustPanelEnabled
     override var etpPolicy: ETPPolicy by updatedFeatureFlags::etpPolicy
     override var isLocationPermissionEnabled: SitePermissionsRules.Action by updatedFeatureFlags::isLocationPermissionEnabled
     override var isMenuRedesignEnabled: Boolean by updatedFeatureFlags::isMenuRedesignEnabled
@@ -98,6 +100,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         settings.useNewBookmarks = featureFlags.isNewBookmarksEnabled
         settings.microsurveyFeatureEnabled = featureFlags.isMicrosurveyEnabled
         settings.shouldUseBottomToolbar = featureFlags.shouldUseBottomToolbar
+        settings.enableUnifiedTrustPanel = featureFlags.isUnifiedTrustPanelEnabled
         setETPPolicy(featureFlags.etpPolicy)
         setPermissions(PhoneFeature.LOCATION, featureFlags.isLocationPermissionEnabled)
         settings.onboardingFeatureEnabled = featureFlags.onboardingFeatureEnabled
@@ -115,6 +118,7 @@ private data class FeatureFlags(
     var isWallpaperOnboardingEnabled: Boolean,
     var isDeleteSitePermissionsEnabled: Boolean,
     var isOpenInAppBannerEnabled: Boolean,
+    var isUnifiedTrustPanelEnabled: Boolean,
     var etpPolicy: ETPPolicy,
     var isLocationPermissionEnabled: SitePermissionsRules.Action,
     var isMenuRedesignEnabled: Boolean,
