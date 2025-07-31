@@ -67,7 +67,6 @@ object SupportUtils {
         USAGE_PING_SETTINGS("usage-ping-settings-mobile"),
         MARKETING_DATA("mobile-marketing-data"),
         REQUESTED_CRASH_MINIDUMP("unsent-crash-reports-in-firefox-android"),
-        TERMS_OF_USE("firefox-terms-of-use-faq"),
     }
 
     enum class MozillaPage(internal val path: String) {
@@ -83,19 +82,13 @@ object SupportUtils {
         context: Context,
         topic: SumoTopic,
         locale: Locale = Locale.getDefault(),
-        useMobilePage: Boolean = true,
     ): String {
         val escapedTopic = getEncodedTopicUTF8(topic.topicStr)
         // Remove the whitespace so a search is not triggered:
         val appVersion = context.appVersionName.replace(" ", "")
         val osTarget = "Android"
         val langTag = getLanguageTag(locale)
-        val platform = if (useMobilePage) {
-            "mobile"
-        } else {
-            "firefox"
-        }
-        return "https://support.mozilla.org/1/$platform/$appVersion/$osTarget/$langTag/$escapedTopic"
+        return "https://support.mozilla.org/1/mobile/$appVersion/$osTarget/$langTag/$escapedTopic"
     }
 
     /**
