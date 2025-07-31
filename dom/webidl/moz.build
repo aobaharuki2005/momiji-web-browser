@@ -509,6 +509,7 @@ WEBIDL_FILES = [
     "CSSLayerStatementRule.webidl",
     "CSSMarginRule.webidl",
     "CSSMathInvert.webidl",
+    "CSSMathMax.webidl",
     "CSSMathMin.webidl",
     "CSSMathNegate.webidl",
     "CSSMathProduct.webidl",
