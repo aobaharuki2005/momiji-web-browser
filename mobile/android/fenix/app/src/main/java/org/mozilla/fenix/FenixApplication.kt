@@ -896,6 +896,13 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                 },
             )
 
+            toolbarModeSetting.set(
+                when {
+                    settings.shouldUseExpandedToolbar -> "expanded"
+                    else -> "simple"
+                },
+            )
+
             enhancedTrackingProtection.set(
                 when {
                     !settings.shouldUseTrackingProtection -> ""
