@@ -1887,17 +1887,14 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     return false;
   }
 
+  mOtherBlockElement = &aOtherBlockElement;
   // First find the adjacent node in the block
+  mLeafContentInOtherBlock =
+      ComputeLeafContentInOtherBlockElement(aDirectionAndAmount);
   if (aDirectionAndAmount == nsIEditor::ePrevious) {
-    mLeafContentInOtherBlock = HTMLEditUtils::GetLastLeafContent(
-        aOtherBlockElement, {LeafNodeType::OnlyEditableLeafNode},
-        BlockInlineCheck::Unused, &aOtherBlockElement);
     mLeftContent = mLeafContentInOtherBlock;
     mRightContent = aCaretPoint.GetContainerAs<nsIContent>();
   } else {
-    mLeafContentInOtherBlock = HTMLEditUtils::GetFirstLeafContent(
-        aOtherBlockElement, {LeafNodeType::OnlyEditableLeafNode},
-        BlockInlineCheck::Unused, &aOtherBlockElement);
     mLeftContent = aCaretPoint.GetContainerAs<nsIContent>();
     mRightContent = mLeafContentInOtherBlock;
   }
@@ -1920,6 +1917,18 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   }
 
   return mLeftContent && mRightContent;
+}
+nsIContent* HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
+    ComputeLeafContentInOtherBlockElement(
+        nsIEditor::EDirection aDirectionAndAmount) const {
+  MOZ_ASSERT(mOtherBlockElement);
+  return aDirectionAndAmount == nsIEditor::ePrevious
+             ? HTMLEditUtils::GetLastLeafContent(
+                   *mOtherBlockElement, {LeafNodeType::OnlyEditableLeafNode},
+                   BlockInlineCheck::Unused, mOtherBlockElement)
+             : HTMLEditUtils::GetFirstLeafContent(
+                   *mOtherBlockElement, {LeafNodeType::OnlyEditableLeafNode},
+                   BlockInlineCheck::Unused, mOtherBlockElement);
 }
 
 nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
@@ -2393,6 +2402,15 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
                  "returning handled, but returned ignored");
   }
 #endif  // #ifdef DEBUG
+  // Even if AutoInclusiveAncestorBlockElementsJoiner claims "ignored",
+  // invisible white-spaces may have been normalized.  So,
+  // mLeafContentInOtherBlock could've been removed from the DOM.  Therefore, we
+  // need to update mLeafContentInOtherBlock.
+  if (mLeafContentInOtherBlock &&
+      !mLeafContentInOtherBlock->IsInComposedDoc()) {
+    mLeafContentInOtherBlock =
+        ComputeLeafContentInOtherBlockElement(aDirectionAndAmount);
+  }
   // If we're deleting selection (not replacing with new content) and
   // AutoInclusiveAncestorBlockElementsJoiner computed new caret position,
   // we should use it.  Otherwise, we should keep the our traditional behavior.
@@ -2430,7 +2448,7 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
   // If AutoInclusiveAncestorBlockElementsJoiner didn't handle it and it's not
   // canceled, user may want to modify the start leaf node or the last leaf
   // node of the block.
-  if (unwrappedMoveFirstLineResult.Ignored() &&
+  if (unwrappedMoveFirstLineResult.Ignored() && mLeafContentInOtherBlock &&
       mLeafContentInOtherBlock != aCaretPoint.GetContainer()) {
     // If it's ignored, it didn't modify the DOM tree.  In this case, user
     // must want to delete nearest leaf node in the other block element.
