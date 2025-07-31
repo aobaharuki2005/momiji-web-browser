@@ -464,7 +464,6 @@ ChromeUtils.defineLazyGetter(this, "PopupNotifications", () => {
       let fallback = [
         document.getElementById("searchmode-switcher-icon"),
         document.getElementById("identity-icon"),
-        gURLBar.querySelector(".urlbar-search-button"),
         document.getElementById("remote-control-icon"),
       ];
       return fallback.find(element => element?.checkVisibility()) ?? null;

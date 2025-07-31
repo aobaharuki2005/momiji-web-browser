@@ -940,23 +940,18 @@ export var UrlbarTestUtils = {
       this.Assert.ok(false, "Unexpected searchMode");
     }
 
-    for (let element of [
-      window.gURLBar._searchModeIndicatorTitle,
-      window.gURLBar._searchModeLabel,
-    ]) {
-      if (expectedTextContent) {
-        this.Assert.equal(
-          element.textContent,
-          expectedTextContent,
-          "Expected textContent"
-        );
-      }
-      this.Assert.deepEqual(
-        window.document.l10n.getAttributes(element),
-        expectedL10n,
-        "Expected l10n"
+    if (expectedTextContent) {
+      this.Assert.equal(
+        window.gURLBar._searchModeIndicatorTitle.textContent,
+        expectedTextContent,
+        "Expected textContent"
       );
     }
+    this.Assert.deepEqual(
+      window.document.l10n.getAttributes(window.gURLBar._searchModeIndicatorTitle),
+      expectedL10n,
+      "Expected l10n"
+    );
 
     // Check the input's placeholder.
     let expectedPlaceholderL10n;
