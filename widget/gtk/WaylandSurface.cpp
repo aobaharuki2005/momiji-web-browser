@@ -1085,6 +1085,7 @@ void WaylandSurface::RemoveTransactionLocked(
   MOZ_DIAGNOSTIC_ASSERT(aTransaction->IsDeleted());
   [[maybe_unused]] bool removed =
       mBufferTransactions.RemoveElement(aTransaction);
+  MOZ_DIAGNOSTIC_ASSERT(!mBufferTransactions.Contains(aTransaction));
 }
 
 BufferTransaction* WaylandSurface::GetNextTransactionLocked(
