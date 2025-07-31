@@ -487,7 +487,6 @@
     <ID>UndocumentedPublicClass:StartupPathProvider.kt$StartupPathProvider$StartupPathLifecycleObserver : DefaultLifecycleObserver</ID>
     <ID>UndocumentedPublicClass:StartupTypeTelemetry.kt$StartupTypeTelemetry$StartupTypeLifecycleObserver : DefaultLifecycleObserver</ID>
     <ID>UndocumentedPublicClass:StoreProvider.kt$StoreProvider$Companion</ID>
-    <ID>UndocumentedPublicClass:StrictModeManager.kt$StrictModeManager$DisableStrictModeFragmentLifecycleCallbacks : FragmentLifecycleCallbacks</ID>
     <ID>UndocumentedPublicClass:StudiesInteractor.kt$DefaultStudiesInteractor : StudiesInteractor</ID>
     <ID>UndocumentedPublicClass:StudiesInteractor.kt$StudiesInteractor</ID>
     <ID>UndocumentedPublicClass:StudiesView.kt$StudiesView : StudiesAdapterDelegate</ID>
