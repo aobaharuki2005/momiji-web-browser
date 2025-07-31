@@ -3426,7 +3426,9 @@
     <!-- The title of the explore extensions task for the setup checklist -->
     <string name="setup_checklist_task_explore_extensions">Explore extensions</string>
     <!-- The title of the search widget task for the setup checklist -->
-    <string name="setup_checklist_task_search_widget">Install search widget</string>
+    <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Install search widget</string>
+    <!-- The title of the search widget task for the setup checklist -->
+    <string name="setup_checklist_task_search_widget_2">Explore search widget</string>
 
     <!-- ===== Setup checklist feature: Group titles ===== -->
     <!-- The title of the 'essentials' group in the setup checklist. %1$s is the name of the app (for example "Firefox"). -->
