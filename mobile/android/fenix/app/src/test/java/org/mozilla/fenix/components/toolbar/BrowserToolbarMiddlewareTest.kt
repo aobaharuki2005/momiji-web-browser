@@ -123,6 +123,7 @@ import org.mozilla.fenix.components.NimbusComponents
 import org.mozilla.fenix.components.UseCases
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.CurrentTabClosed
+import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
 import org.mozilla.fenix.components.appstate.AppAction.SnackbarAction.SnackbarDismissed
 import org.mozilla.fenix.components.appstate.AppAction.URLCopiedToClipboard
 import org.mozilla.fenix.components.appstate.AppState
@@ -620,6 +621,31 @@ class BrowserToolbarMiddlewareTest {
                 ),
             )
         }
+    }
+
+    @Test
+    fun `GIVEN the current tab has search terms WHEN the page origin is clicked THEN start search in the browser screen`() {
+        val navController: NavController = mockk(relaxed = true)
+        val browsingModeManager = SimpleBrowsingModeManager(Normal)
+        val currentTab = createTab("test.com", searchTerms = "test")
+        val browserStore = BrowserStore(
+            BrowserState(
+                tabs = listOf(currentTab),
+                selectedTabId = currentTab.id,
+            ),
+        )
+        val middleware = buildMiddleware(browserStore = browserStore)
+        val toolbarStore = buildStore(
+            middleware = middleware,
+            navController = navController,
+            browsingModeManager = browsingModeManager,
+        )
+
+        toolbarStore.dispatch(toolbarStore.state.displayState.pageOrigin.onClick as BrowserToolbarAction)
+
+        verify(exactly = 0) { navController.navigate(any<NavDirections>()) }
+        verify { appStore.dispatch(SearchStarted(currentTab.id)) }
+        assertEquals(currentTab.content.searchTerms, toolbarStore.state.editState.query)
     }
 
     @Test

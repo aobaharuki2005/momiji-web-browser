@@ -26,6 +26,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.biometric.BiometricManager
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.getSystemService
@@ -67,6 +68,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.thumbnails.BrowserThumbnails
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.base.Divider
+import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.prompt.ShareData
@@ -216,6 +218,7 @@ import org.mozilla.fenix.microsurvey.ui.MicrosurveyRequestPrompt
 import org.mozilla.fenix.microsurvey.ui.ext.MicrosurveyUIData
 import org.mozilla.fenix.microsurvey.ui.ext.toMicrosurveyUIData
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
+import org.mozilla.fenix.search.awesomebar.AwesomeBarComposable
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.biometric.BiometricPromptFeature
 import org.mozilla.fenix.snackbar.FenixSnackbarDelegate
@@ -263,6 +266,7 @@ abstract class BaseBrowserFragment :
     @VisibleForTesting
     @Suppress("VariableNaming")
     internal var _browserToolbarView: FenixBrowserToolbarView? = null
+    private var awesomeBarComposable: AwesomeBarComposable? = null
 
     @VisibleForTesting
     internal val browserToolbarView: FenixBrowserToolbarView
@@ -1311,6 +1315,9 @@ abstract class BaseBrowserFragment :
             settings = activity.settings(),
             customTabSession = customTabSessionId?.let { store.state.findCustomTab(it) },
             tabStripContent = buildTabStrip(activity),
+            searchSuggestionsContent = { modifier ->
+                (awesomeBarComposable ?: buildAwesomeBar(activity, toolbarStore, modifier)).SearchSuggestions()
+            },
             navigationBarContent = browserNavigationBar?.asComposable(),
         )
     }
@@ -1363,6 +1370,23 @@ abstract class BaseBrowserFragment :
                 onTabCounterClick = { onTabCounterClicked(activity.browsingModeManager.mode) },
             )
         }
+    }
+
+    private fun buildAwesomeBar(
+        activity: HomeActivity,
+        toolbarStore: BrowserToolbarStore,
+        modifier: Modifier,
+    ) = AwesomeBarComposable(
+        activity = activity,
+        modifier = modifier,
+        components = requireComponents,
+        appStore = requireComponents.appStore,
+        browserStore = requireComponents.core.store,
+        toolbarStore = toolbarStore,
+        navController = findNavController(),
+        lifecycleOwner = this,
+    ).also {
+        awesomeBarComposable = it
     }
 
     private fun buildBrowserScreenStore() = BrowserScreenStoreBuilder.build(
@@ -2293,6 +2317,7 @@ abstract class BaseBrowserFragment :
 
         _bottomToolbarContainerView = null
         _browserToolbarView = null
+        awesomeBarComposable = null
         browserNavigationBar = null
         _browserToolbarInteractor = null
         _binding = null

@@ -32,6 +32,8 @@ import org.mozilla.fenix.components.toolbar.BrowserToolbarTelemetryMiddleware
 import org.mozilla.fenix.components.toolbar.CustomTabBrowserToolbarMiddleware
 import org.mozilla.fenix.components.toolbar.CustomTabToolbarEnvironment
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.search.BrowserToolbarSearchMiddleware
+import org.mozilla.fenix.search.BrowserToolbarSearchStatusSyncMiddleware
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -56,7 +58,7 @@ object BrowserToolbarStoreBuilder {
      * @param settings [Settings] object to get the toolbar position and other settings.
      * @param customTabSession [CustomTabSessionState] if the toolbar is shown in a custom tab.
      */
-    @Suppress("LongParameterList")
+    @Suppress("LongParameterList", "LongMethod")
     fun build(
         activity: AppCompatActivity,
         lifecycleOwner: Fragment,
@@ -98,6 +100,13 @@ object BrowserToolbarStoreBuilder {
                         publicSuffixList = components.publicSuffixList,
                         settings = settings,
                         bookmarksStorage = activity.components.core.bookmarksStorage,
+                    ),
+                    BrowserToolbarSearchStatusSyncMiddleware(appStore),
+                    BrowserToolbarSearchMiddleware(
+                        appStore = appStore,
+                        browserStore = browserStore,
+                        components = components,
+                        settings = settings,
                     ),
                     BrowserToolbarTelemetryMiddleware(),
                 )

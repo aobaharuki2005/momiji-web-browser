@@ -51,6 +51,8 @@ import org.mozilla.fenix.utils.Settings
  * @param settings [Settings] object to get the toolbar position and other settings.
  * @param customTabSession [CustomTabSessionState] if the toolbar is shown in a custom tab.
  * @param tabStripContent Composable content for the tab strip.
+ * @param searchSuggestionsContent [Composable] as the search suggestions content to be displayed
+ * together with this toolbar.
  * @param navigationBarContent Composable content for the navigation bar.
  */
 @Suppress("LongParameterList")
@@ -64,6 +66,7 @@ class BrowserToolbarComposable(
     private val settings: Settings,
     private val customTabSession: CustomTabSessionState? = null,
     private val tabStripContent: @Composable () -> Unit,
+    private val searchSuggestionsContent: @Composable (Modifier) -> Unit,
     private val navigationBarContent: (@Composable () -> Unit)?,
 ) : FenixBrowserToolbarView(
     context = activity,
@@ -84,6 +87,7 @@ class BrowserToolbarComposable(
         val isSearching = toolbarStore.observeAsComposableState { it.isEditMode() }.value
         val shouldShowTabStrip: Boolean = remember { shouldShowTabStrip() }
         val customColors = browserScreenStore.observeAsComposableState { it.customTabColors }
+        val shouldUseBottomToolbar = remember(settings) { settings.shouldUseBottomToolbar }
 
         DisposableEffect(activity) {
             val toolbarController = ToolbarBehaviorController(
@@ -126,6 +130,7 @@ class BrowserToolbarComposable(
                     ) {
                         tabStripContent()
                         BrowserToolbar(toolbarStore)
+                        searchSuggestionsContent(Modifier.weight(1f))
                     }
 
                     false -> Column(
@@ -133,9 +138,13 @@ class BrowserToolbarComposable(
                             .fillMaxWidth()
                             .wrapContentHeight(),
                     ) {
-                        BrowserToolbar(toolbarStore)
-                        if (settings.toolbarPosition == BOTTOM) {
+                        if (shouldUseBottomToolbar) {
+                            searchSuggestionsContent(Modifier.weight(1f))
+                            BrowserToolbar(toolbarStore)
                             navigationBarContent?.invoke()
+                        } else {
+                            BrowserToolbar(toolbarStore)
+                            searchSuggestionsContent(Modifier.weight(1f))
                         }
                     }
                 }
