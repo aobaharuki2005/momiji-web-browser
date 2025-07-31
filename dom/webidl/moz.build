@@ -508,6 +508,7 @@ WEBIDL_FILES = [
     "CSSLayerBlockRule.webidl",
     "CSSLayerStatementRule.webidl",
     "CSSMarginRule.webidl",
+    "CSSMathNegate.webidl",
     "CSSMathProduct.webidl",
     "CSSMathSum.webidl",
     "CSSMathValue.webidl",
