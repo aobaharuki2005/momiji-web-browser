@@ -2549,12 +2549,11 @@ void AllocateAndInitTypedArrayBuffer(JSContext* cx,
                  PrivateValue(size_t(0)),
              "BUFFER_SLOT initialized to PrivateValue(0) in JIT code");
 
-  // Negative numbers or zero will bail out to the slow path, which in turn will
-  // raise an invalid argument exception or create a correct object with zero
-  // elements.
+  // Negative numbers will bail out to the slow path, which in turn will raise
+  // an invalid argument exception.
   constexpr size_t byteLengthLimit = TypedArrayObject::ByteLengthLimit;
   size_t bytesPerElement = obj->bytesPerElement();
-  if (count <= 0 || size_t(count) > byteLengthLimit / bytesPerElement) {
+  if (count < 0 || size_t(count) > byteLengthLimit / bytesPerElement) {
     obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, PrivateValue(size_t(0)));
     return;
   }
@@ -2572,7 +2571,21 @@ void AllocateAndInitTypedArrayBuffer(JSContext* cx,
         obj->fixedData(FixedLengthTypedArrayObject::FIXED_DATA_START);
     std::memset(data, 0, nbytes);
 
+#ifdef DEBUG
+    if (count == 0) {
+      data[0] = TypedArrayObject::ZeroLengthArrayData;
+    }
+#endif
+
     obj->initFixedSlot(TypedArrayObject::DATA_SLOT, PrivateValue(data));
+    return;
+  }
+
+  // Zero-length typed arrays have to be tagged with |ZeroLengthArrayData|, but
+  // there's not enough space when exceeding the inline buffer limit. Fall back
+  // to the slow path.
+  if (count == 0) {
+    MOZ_ASSERT(inlineCapacity == 0);
     return;
   }
 

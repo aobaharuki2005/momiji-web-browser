@@ -932,6 +932,8 @@ void MacroAssembler::initTypedArraySlotsInline(
   MOZ_ASSERT(nbytes <= FixedLengthTypedArrayObject::INLINE_BUFFER_LIMIT);
 
   MOZ_ASSERT(dataOffset + nbytes <= templateObj->tenuredSizeOfThis());
+  MOZ_ASSERT(templateObj->tenuredSizeOfThis() > dataOffset,
+             "enough inline capacity to tag with ZeroLengthArrayData");
 
   // Store data elements inside the remaining JSObject slots.
   computeEffectiveAddress(Address(obj, dataOffset), temp);
@@ -949,7 +951,13 @@ void MacroAssembler::initTypedArraySlotsInline(
   for (size_t i = 0; i < numZeroPointers; i++) {
     storePtr(ImmWord(0), Address(obj, dataOffset + i * sizeof(char*)));
   }
-  MOZ_ASSERT(nbytes > 0, "Zero-length TypedArrays need ZeroLengthArrayData");
+
+  #ifdef DEBUG
+  if (nbytes == 0) {
+    store8(Imm32(ArrayBufferViewObject::ZeroLengthArrayData),
+           Address(obj, dataOffset));
+  }
+#endif
 }
 
 void MacroAssembler::initGCSlots(Register obj, Register temp,
