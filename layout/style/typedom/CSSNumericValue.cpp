@@ -70,6 +70,12 @@ already_AddRefed<CSSUnitValue> CSSNumericValue::To(const nsACString& aUnit,
   return nullptr;
 }
 
+already_AddRefed<CSSMathSum> CSSNumericValue::ToSum(
+    const Sequence<nsCString>& aUnits, ErrorResult& aRv) {
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
+}
+
 void CSSNumericValue::Type(CSSNumericType& aRetVal) {}
 
 // static
