@@ -66,6 +66,9 @@ describe("ASRouter", () => {
       .withArgs("messageBlockList")
       .returns(Promise.resolve(messageBlockList));
     getStub
+      .withArgs("multiProfileMessageBlocklist")
+      .returns(Promise.resolve(multiProfileMessageBlocklist));
+    getStub
       .withArgs("providerBlockList")
       .returns(Promise.resolve(providerBlockList));
     getStub
@@ -82,9 +85,11 @@ describe("ASRouter", () => {
       storage: {
         get: getStub,
         set: sandbox.stub().returns(Promise.resolve()),
+        setSharedMessageImpressions: sandbox.stub(),
         getSharedMessageImpressions: sandbox
           .stub()
           .resolves(multiProfileMessageImpressions),
+        setSharedMessageBlocked: sandbox.stub(),
         getSharedMessageBlocklist: sandbox
           .stub()
           .resolves(multiProfileMessageBlocklist),
@@ -3042,9 +3047,6 @@ describe("ASRouter", () => {
     });
 
     describe("multiprofile #addImpression", () => {
-      beforeEach(() => {
-        Router._storage.setSharedMessageImpressions = sandbox.stub();
-      });
       describe("addImpression when multiprofile is enabled", () => {
         beforeEach(() => {
           sandbox
@@ -3156,6 +3158,79 @@ describe("ASRouter", () => {
 
         const result = await Router.hasValidProfileScope(message1);
         assert.isFalse(result);
+      });
+    });
+
+    describe("multiprofile #blockMessageById", () => {
+      beforeEach(() => {
+        sandbox
+          .stub(ASRouterTargeting.Environment, "canCreateSelectableProfiles")
+          .value(true);
+      });
+
+      it("should add the id to the shared messageBlockList if the profile scope is single", async () => {
+        await Router.setState({
+          messages: [
+            { id: "foo", provider: "cfr", profileScope: "single", groups: [] },
+          ],
+        });
+
+        await Router.blockMessageById("foo");
+        assert.isTrue(Router.state.messageBlockList.includes("foo"));
+        assert.isTrue(
+          Router.state.multiProfileMessageBlocklist.includes("foo")
+        );
+        assert.calledOnce(Router._storage.setSharedMessageBlocked);
+      });
+
+      it("should not add the id to the shared messageBlockList if there is no profile scope", async () => {
+        await Router.setState({
+          messages: [{ id: "bar", provider: "cfr", groups: [] }],
+        });
+
+        await Router.blockMessageById("bar");
+        assert.isTrue(Router.state.messageBlockList.includes("bar"));
+        assert.isFalse(
+          Router.state.multiProfileMessageBlocklist.includes("bar")
+        );
+        assert.notCalled(Router._storage.setSharedMessageBlocked);
+      });
+    });
+
+    describe("multiprofile #unblockMessageById", () => {
+      beforeEach(() => {
+        sandbox
+          .stub(ASRouterTargeting.Environment, "canCreateSelectableProfiles")
+          .value(true);
+      });
+
+      it("should remove the id from the messageBlockList", async () => {
+        await Router.setState({
+          messages: [
+            { id: "foo", provider: "cfr", profileScope: "single", groups: [] },
+          ],
+        });
+        await Router.blockMessageById("foo");
+        assert.isTrue(Router.state.messageBlockList.includes("foo"));
+        assert.isTrue(
+          Router.state.multiProfileMessageBlocklist.includes("foo")
+        );
+        assert.calledWithExactly(
+          Router._storage.setSharedMessageBlocked,
+          "foo"
+        );
+
+        await Router.unblockMessageById("foo");
+        assert.isFalse(Router.state.messageBlockList.includes("foo"));
+        assert.isFalse(
+          Router.state.multiProfileMessageBlocklist.includes("foo")
+        );
+        // multiprofile uses the same function for block and unblock
+        assert.calledWithExactly(
+          Router._storage.setSharedMessageBlocked,
+          "foo",
+          false
+        );
       });
     });
 

@@ -692,6 +692,7 @@ export class _ASRouter {
     this._state = {
       providers: [],
       messageBlockList: [],
+      multiProfileMessageBlocklist: [],
       messageImpressions: {},
       screenImpressions: {},
       messages: [],
@@ -1387,6 +1388,7 @@ export class _ASRouter {
     const { state } = this;
     return (
       !state.messageBlockList.includes(message.id) &&
+      !state.multiProfileMessageBlocklist.includes(message.id) &&
       (!message.campaign ||
         !state.messageBlockList.includes(message.campaign)) &&
       this.hasGroupsEnabled(message.groups) &&
@@ -1927,6 +1929,12 @@ export class _ASRouter {
     return this.setState(state => {
       const messageBlockList = [...state.messageBlockList];
       const messageImpressions = { ...state.messageImpressions };
+      const multiProfileMessageBlocklist = [
+        ...state.multiProfileMessageBlocklist,
+      ];
+      const multiProfileMessageImpressions = {
+        ...state.multiProfileMessageImpressions,
+      };
 
       idsToBlock.forEach(id => {
         const message = state.messages.find(m => m.id === id);
@@ -1934,14 +1942,33 @@ export class _ASRouter {
         if (!messageBlockList.includes(idToBlock)) {
           messageBlockList.push(idToBlock);
         }
-
         // When a message is blocked, its impressions should be cleared as well
         delete messageImpressions[id];
+        // If selectable profiles are enabled && the message has a
+        // profile scope set, block it in all profiles
+        if (
+          lazy.ASRouterTargeting.Environment.canCreateSelectableProfiles &&
+          message.profileScope === PROFILE_MESSAGE_SCOPE.SINGLE
+        ) {
+          // Update sharedDb by adding the messageId to the MessageBlocklist
+          // and deleting the messageId impressions from MessageImpressions
+          this._storage.setSharedMessageBlocked(idToBlock);
+          if (!multiProfileMessageBlocklist.includes(idToBlock)) {
+            multiProfileMessageBlocklist.push(idToBlock);
+          }
+          // Clear profile Impression of blocked messageId
+          delete multiProfileMessageImpressions[idToBlock];
+        }
       });
 
       this._storage.set("messageBlockList", messageBlockList);
       this._storage.set("messageImpressions", messageImpressions);
-      return { messageBlockList, messageImpressions };
+      return {
+        messageBlockList,
+        messageImpressions,
+        multiProfileMessageBlocklist,
+        multiProfileMessageImpressions,
+      };
     });
   }
 
@@ -1950,6 +1977,9 @@ export class _ASRouter {
 
     return this.setState(state => {
       const messageBlockList = [...state.messageBlockList];
+      const multiProfileMessageBlocklist = [
+        ...state.multiProfileMessageBlocklist,
+      ];
       idsToUnblock
         .map(id => state.messages.find(m => m.id === id))
         // Remove all `id`s from the message block list
@@ -1957,10 +1987,20 @@ export class _ASRouter {
           const idToUnblock =
             message && message.campaign ? message.campaign : message.id;
           messageBlockList.splice(messageBlockList.indexOf(idToUnblock), 1);
+          if (
+            lazy.ASRouterTargeting.Environment.canCreateSelectableProfiles &&
+            message.profileScope === PROFILE_MESSAGE_SCOPE.SINGLE
+          ) {
+            this._storage.setSharedMessageBlocked(idToUnblock, false);
+            multiProfileMessageBlocklist.splice(
+              multiProfileMessageBlocklist.indexOf(idToUnblock),
+              1
+            );
+          }
         });
 
       this._storage.set("messageBlockList", messageBlockList);
-      return { messageBlockList };
+      return { messageBlockList, multiProfileMessageBlocklist };
     });
   }
 
@@ -1980,6 +2020,10 @@ export class _ASRouter {
     const newMessageImpressions = {};
     for (let { id } of this.state.messages) {
       newMessageImpressions[id] = [];
+      // Update shared storage if needed
+      if (lazy.ASRouterTargeting.Environment.canCreateSelectableProfiles) {
+        this._storage.setSharedMessageImpressions(id, []);
+      }
     }
     // Update storage
     this._storage.set("messageImpressions", newMessageImpressions);
