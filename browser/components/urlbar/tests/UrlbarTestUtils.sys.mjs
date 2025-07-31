@@ -948,7 +948,9 @@ export var UrlbarTestUtils = {
       );
     }
     this.Assert.deepEqual(
-      window.document.l10n.getAttributes(window.gURLBar._searchModeIndicatorTitle),
+      window.document.l10n.getAttributes(
+        window.gURLBar._searchModeIndicatorTitle
+      ),
       expectedL10n,
       "Expected l10n"
     );
