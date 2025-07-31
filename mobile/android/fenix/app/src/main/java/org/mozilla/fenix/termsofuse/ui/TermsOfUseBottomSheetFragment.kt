@@ -14,6 +14,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.lazyStore
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.termsofuse.store.DefaultTermsOfUsePromptRepository
 import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptPreferencesMiddleware
 import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptStore
@@ -55,6 +56,28 @@ class TermsOfUseBottomSheetFragment : BottomSheetDialogFragment() {
                 TermsOfUseBottomSheet(
                     store = termsOfUsePromptStore,
                     onDismiss = { dismiss() },
+                    onTermsOfUseClicked = {
+                        SupportUtils.launchSandboxCustomTab(
+                            context,
+                            SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.TERMS_OF_SERVICE),
+                        )
+                    },
+                    onPrivacyNoticeClicked = {
+                        SupportUtils.launchSandboxCustomTab(
+                            context,
+                            SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
+                        )
+                    },
+                    onLearnMoreClicked = {
+                        SupportUtils.launchSandboxCustomTab(
+                            context,
+                            SupportUtils.getSumoURLForTopic(
+                                context,
+                                SupportUtils.SumoTopic.TERMS_OF_USE,
+                                useMobilePage = false,
+                            ),
+                        )
+                    },
                 )
             }
         }
