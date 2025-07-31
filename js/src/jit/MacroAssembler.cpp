@@ -952,7 +952,7 @@ void MacroAssembler::initTypedArraySlotsInline(
     storePtr(ImmWord(0), Address(obj, dataOffset + i * sizeof(char*)));
   }
 
-  #ifdef DEBUG
+#ifdef DEBUG
   if (nbytes == 0) {
     store8(Imm32(ArrayBufferViewObject::ZeroLengthArrayData),
            Address(obj, dataOffset));
