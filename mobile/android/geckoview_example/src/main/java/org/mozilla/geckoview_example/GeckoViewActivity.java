@@ -148,10 +148,7 @@ class WebExtensionManager
   @Nullable
   @Override
   public GeckoResult<WebExtension.PermissionPromptResponse> onInstallPromptRequest(
-      @NonNull WebExtension extension,
-      @NonNull String[] permissions,
-      @NonNull String[] origins,
-      @NonNull final String[] dataCollectionPermissions) {
+      @NonNull WebExtension extension, @NonNull String[] permissions, @NonNull String[] origins) {
     return GeckoResult.fromValue(
         new org.mozilla.geckoview.WebExtension.PermissionPromptResponse(
             true, // isPermissionsGranted
