@@ -52,8 +52,17 @@ class EventDispatcher final
 
   virtual ~EventDispatcher() = default;
 
-  void Shutdown() MOZ_REQUIRES(sMainThreadCapability);
+  // NOTE: Can be called from any thread.
+  void Shutdown() { mIsShutdown = true; };
 
+  // Gets a LocalRef to the dispatcher. Returns `nullptr` if `mIsShutdown` has
+  // been set (e.g. by the Java code).
+  java::EventDispatcher::LocalRef GetDispatcher()
+      MOZ_REQUIRES(sMainThreadCapability) {
+    return mIsShutdown ? nullptr : mDispatcher;
+  }
+
+  std::atomic<bool> mIsShutdown{false};
   java::EventDispatcher::WeakRef mDispatcher
       MOZ_GUARDED_BY(sMainThreadCapability);
 };

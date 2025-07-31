@@ -124,7 +124,7 @@ public final class EventDispatcher extends JNIObject {
   @Override // JNIObject
   protected native void disposeNative();
 
-  @WrapForJNI(stubName = "Shutdown", dispatchTo = "gecko")
+  @WrapForJNI(stubName = "Shutdown")
   protected native void shutdownNative();
 
   @WrapForJNI private static final int DETACHED = 0;
