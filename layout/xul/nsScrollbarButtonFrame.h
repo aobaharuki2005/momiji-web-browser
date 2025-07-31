@@ -30,8 +30,7 @@ class nsScrollbarButtonFrame final : public mozilla::SimpleXULLeafFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsScrollbarButtonFrame)
 
-  nsScrollbarButtonFrame(ComputedStyle* aStyle,
-                                  nsPresContext* aPresContext)
+  nsScrollbarButtonFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : mozilla::SimpleXULLeafFrame(aStyle, aPresContext, kClassID) {}
 
   // Overrides

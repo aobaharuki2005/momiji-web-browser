@@ -3692,9 +3692,10 @@ void nsTreeBodyFrame::ScrollByLine(nsScrollbarFrame* aScrollbar,
   ScrollByLines(aDirection);
 }
 
-void nsTreeBodyFrame::ScrollByUnit(
-    nsScrollbarFrame* aScrollbar, ScrollMode aMode, int32_t aDirection,
-    ScrollUnit aUnit, ScrollSnapFlags aSnapFlags) {
+void nsTreeBodyFrame::ScrollByUnit(nsScrollbarFrame* aScrollbar,
+                                   ScrollMode aMode, int32_t aDirection,
+                                   ScrollUnit aUnit,
+                                   ScrollSnapFlags aSnapFlags) {
   MOZ_ASSERT_UNREACHABLE("Can't get here, we don't call MoveToNewPosition");
 }
 
