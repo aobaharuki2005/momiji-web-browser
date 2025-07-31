@@ -446,11 +446,11 @@ class BrowserToolbarMiddleware(
                 when (action.isActive) {
                     true -> {
                         ReaderMode.closed.record(NoExtras())
-                        readerModeController.hideReaderView()
+                        readerModeController?.hideReaderView()
                     }
                     false -> {
                         ReaderMode.opened.record(NoExtras())
-                        readerModeController.showReaderView()
+                        readerModeController?.showReaderView()
                     }
                 }
             }

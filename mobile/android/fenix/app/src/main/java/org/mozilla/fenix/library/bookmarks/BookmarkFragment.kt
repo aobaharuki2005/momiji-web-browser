@@ -66,6 +66,7 @@ import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
+import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
 import org.mozilla.fenix.compose.snackbar.Snackbar
 import org.mozilla.fenix.compose.snackbar.SnackbarState
 import org.mozilla.fenix.databinding.FragmentBookmarkBinding
@@ -77,7 +78,6 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.setTextColor
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.home.toolbar.HomeToolbarEnvironment
 import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.library.bookmarks.ui.BookmarksListSortOrder
 import org.mozilla.fenix.library.bookmarks.ui.BookmarksMiddleware
@@ -333,7 +333,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         }.also {
             it.dispatch(
                 EnvironmentRehydrated(
-                    HomeToolbarEnvironment(
+                    BrowserToolbarEnvironment(
                         context = requireContext(),
                         viewLifecycleOwner = viewLifecycleOwner,
                         navController = findNavController(),

@@ -83,6 +83,7 @@ import org.mozilla.fenix.components.appstate.OrientationMode.Portrait
 import org.mozilla.fenix.components.appstate.search.SearchState
 import org.mozilla.fenix.components.appstate.search.SelectedSearchEngine
 import org.mozilla.fenix.components.menu.MenuAccessPoint
+import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.nav
@@ -729,7 +730,7 @@ class BrowserToolbarMiddlewareTest {
     ).also {
         it.dispatch(
             EnvironmentRehydrated(
-                HomeToolbarEnvironment(
+                BrowserToolbarEnvironment(
                     context = context,
                     viewLifecycleOwner = lifecycleOwner,
                     navController = navController,

@@ -72,9 +72,9 @@ import org.mozilla.fenix.components.appstate.search.SelectedSearchEngine
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.TABS_SEARCH_ENGINE_ID
+import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.helpers.lifecycle.TestLifecycleOwner
-import org.mozilla.fenix.home.toolbar.HomeToolbarEnvironment
 import org.mozilla.fenix.search.EditPageEndActionsInteractions.ClearSearchClicked
 import org.mozilla.fenix.search.EditPageEndActionsInteractions.QrScannerClicked
 import org.mozilla.fenix.search.EditPageEndActionsInteractions.VoiceSearchButtonClicked
@@ -852,7 +852,7 @@ class BrowserToolbarSearchMiddlewareTest {
         ).also {
             it.dispatch(
                 EnvironmentRehydrated(
-                    HomeToolbarEnvironment(
+                    BrowserToolbarEnvironment(
                         testContext, lifecycleOwner, navController, browsingModeManager,
                     ),
                 ),

@@ -83,7 +83,6 @@ import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.hideKeyboard
-import mozilla.components.support.ktx.kotlin.toShortUrl
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
@@ -97,6 +96,7 @@ import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.history.DefaultPagedHistoryProvider
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
+import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
 import org.mozilla.fenix.databinding.FragmentHistoryBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -105,7 +105,6 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.setTextColor
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.home.toolbar.HomeToolbarEnvironment
 import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.library.history.HistoryFragmentAction.SearchClicked
 import org.mozilla.fenix.library.history.HistoryFragmentAction.SearchDismissed
@@ -701,7 +700,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
     }.also {
         it.dispatch(
             EnvironmentRehydrated(
-                HomeToolbarEnvironment(
+                BrowserToolbarEnvironment(
                     context = requireContext(),
                     viewLifecycleOwner = viewLifecycleOwner,
                     navController = findNavController(),

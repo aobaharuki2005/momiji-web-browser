@@ -61,6 +61,7 @@ import org.mozilla.fenix.components.UseCases
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
 import org.mozilla.fenix.components.appstate.OrientationMode
 import org.mozilla.fenix.components.menu.MenuAccessPoint
+import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragmentDirections
@@ -114,7 +115,7 @@ class BrowserToolbarMiddleware(
     private val tabManagementFeatureHelper: TabManagementFeatureHelper = DefaultTabManagementFeatureHelper,
 ) : Middleware<BrowserToolbarState, BrowserToolbarAction> {
     @VisibleForTesting
-    internal var environment: HomeToolbarEnvironment? = null
+    internal var environment: BrowserToolbarEnvironment? = null
     private var syncCurrentSearchEngineJob: Job? = null
     private var observeBrowserSearchStateJob: Job? = null
 
@@ -134,7 +135,7 @@ class BrowserToolbarMiddleware(
             is EnvironmentRehydrated -> {
                 next(action)
 
-                environment = action.environment as? HomeToolbarEnvironment
+                environment = action.environment as? BrowserToolbarEnvironment
 
                 if (context.state.mode == Mode.DISPLAY) {
                     observeSearchStateUpdates(context)
@@ -419,7 +420,9 @@ class BrowserToolbarMiddleware(
         }
     }
 
-    private inline fun runWithinEnvironment(block: HomeToolbarEnvironment.() -> Unit) = environment?.let { block(it) }
+    private inline fun runWithinEnvironment(
+        block: BrowserToolbarEnvironment.() -> Unit,
+    ) = environment?.let { block(it) }
 
     @VisibleForTesting
     internal enum class HomeToolbarAction {

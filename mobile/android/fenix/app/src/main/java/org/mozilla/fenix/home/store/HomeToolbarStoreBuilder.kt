@@ -17,10 +17,10 @@ import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.toolbar.BrowserToolbarMiddleware
 import org.mozilla.fenix.home.toolbar.BrowserToolbarTelemetryMiddleware
-import org.mozilla.fenix.home.toolbar.HomeToolbarEnvironment
 import org.mozilla.fenix.search.BrowserToolbarSearchMiddleware
 import org.mozilla.fenix.search.BrowserToolbarSearchStatusSyncMiddleware
 
@@ -68,7 +68,7 @@ object HomeToolbarStoreBuilder {
     }.also {
         it.dispatch(
             EnvironmentRehydrated(
-                HomeToolbarEnvironment(
+                BrowserToolbarEnvironment(
                     context = context,
                     viewLifecycleOwner = lifecycleOwner.viewLifecycleOwner,
                     navController = navController,
