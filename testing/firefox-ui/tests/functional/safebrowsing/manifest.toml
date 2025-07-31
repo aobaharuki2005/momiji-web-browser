@@ -12,3 +12,9 @@ skip-if = [
 ["test_notification.py"]
 
 ["test_warning_pages.py"]
+skip-if = [
+  "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && tsan", # Bug 1979540
+  "os == 'linux' && os_version == '24.04' && processor == 'x86_64'", # Bug 1979540
+  "os == 'mac' && os_version == '14.70' && processor == 'x86_64'", # Bug 1979540
+  "os == 'win' && os_version == '11.26100'", # Bug 1979540
+]
