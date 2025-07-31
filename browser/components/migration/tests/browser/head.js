@@ -75,7 +75,9 @@ async function withMigrationWizardDialog(taskFn) {
       BrowserTestUtils.removeTab(gBrowser.getTabForBrowser(prefsBrowser));
     } else {
       BrowserTestUtils.startLoadingURIString(prefsBrowser, "about:blank");
-      await BrowserTestUtils.browserLoaded(prefsBrowser);
+      await BrowserTestUtils.browserLoaded(prefsBrowser, {
+        wantLoad: "about:blank",
+      });
     }
   }
 }

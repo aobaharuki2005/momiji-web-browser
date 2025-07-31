@@ -58,7 +58,7 @@ add_task(async function panelAppearsOnTabGroupHover() {
   group.collapsed = true;
 
   // Tabs from the control group should not appear in the list
-  const controlTab = await addTabTo(gBrowser, "https://example.com");
+  const controlTab = await addTabTo(gBrowser, "https://example.com/");
   const controlGroup = gBrowser.addTabGroup([controlTab]);
   controlGroup.collapsed = true;
 
