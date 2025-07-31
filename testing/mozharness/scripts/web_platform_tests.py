@@ -316,8 +316,11 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
 
         webtransport_requirements = os.path.join(
             dirs["abs_test_install_dir"],
-            "config",
-            "wpt_ci_requirements.txt",
+            "web-platform",
+            "tests",
+            "tools",
+            "webtransport",
+            "requirements.txt",
         )
 
         self.register_virtualenv_module(requirements=[webtransport_requirements])
