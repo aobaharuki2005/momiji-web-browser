@@ -206,7 +206,7 @@ fun MainMenu(
         },
         scrollState = scrollState,
     ) {
-        if (isReaderViewActive) {
+        if (isReaderViewActive && accessPoint != MenuAccessPoint.Home) {
             MenuGroup {
                 MenuItem(
                     label = stringResource(id = R.string.browser_menu_customize_reader_view_2),
