@@ -73,7 +73,6 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () =>
 );
 
 const DEFAULT_FORM_HISTORY_NAME = "searchbar-history";
-const SEARCH_BUTTON_CLASS = "urlbar-search-button";
 
 const UNLIMITED_MAX_RESULTS = 99;
 
@@ -4251,8 +4250,7 @@ export class UrlbarInput {
   _on_click(event) {
     if (
       event.target == this.inputField ||
-      event.target == this._inputContainer ||
-      event.target.classList.contains(SEARCH_BUTTON_CLASS)
+      event.target == this._inputContainer
     ) {
       this._maybeSelectAll();
       this.#maybeUntrimUrl();
@@ -4366,8 +4364,7 @@ export class UrlbarInput {
 
         if (
           event.target != this.inputField &&
-          event.target != this._inputContainer &&
-          !event.target.classList.contains(SEARCH_BUTTON_CLASS)
+          event.target != this._inputContainer
         ) {
           break;
         }
@@ -4393,18 +4390,13 @@ export class UrlbarInput {
           this.inputField.setSelectionRange(0, 0);
         }
 
-        if (event.target.classList.contains(SEARCH_BUTTON_CLASS)) {
-          this._preventClickSelectsAll = true;
-          this.search(lazy.UrlbarTokenizer.RESTRICT.SEARCH);
-        } else {
-          // Do not suppress the focus border if we are already focused. If we
-          // did, we'd hide the focus border briefly then show it again if the
-          // user has Top Sites disabled, creating a flashing effect.
-          this.view.autoOpen({
-            event,
-            suppressFocusBorder: !hasFocus,
-          });
-        }
+        // Do not suppress the focus border if we are already focused. If we
+        // did, we'd hide the focus border briefly then show it again if the
+        // user has Top Sites disabled, creating a flashing effect.
+        this.view.autoOpen({
+          event,
+          suppressFocusBorder: !hasFocus,
+        });
         break;
       }
       case this.window:
