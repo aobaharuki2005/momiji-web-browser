@@ -12,6 +12,9 @@ const { CFRMessageProvider } = ChromeUtils.importESModule(
 const { ASRouter } = ChromeUtils.importESModule(
   "resource:///modules/asrouter/ASRouter.sys.mjs"
 );
+const { SpecialMessageActions } = ChromeUtils.importESModule(
+  "resource://messaging-system/lib/SpecialMessageActions.sys.mjs"
+);
 
 add_task(async function show_and_send_telemetry() {
   let message = (await CFRMessageProvider.getMessages()).find(
@@ -331,9 +334,6 @@ add_task(async function test_specialMessageAction_onLinkClick() {
   const browser = win.gBrowser.selectedBrowser;
   const box = win.gNotificationBox;
 
-  const { SpecialMessageActions } = ChromeUtils.importESModule(
-    "resource://messaging-system/lib/SpecialMessageActions.sys.mjs"
-  );
   let handleStub = sinon.stub(SpecialMessageActions, "handleAction");
 
   const parts = [
@@ -564,6 +564,7 @@ add_task(async function test_buildMessageFragment_withInlineAnchors() {
   sinon
     .stub(RemoteL10n, "formatLocalizableText")
     .resolves('<a data-l10n-name="foo">Click Here</a>');
+  let handleStub = sinon.stub(SpecialMessageActions, "handleAction");
 
   const linkUrl = "https://example.com/";
   const message = {
@@ -571,7 +572,7 @@ add_task(async function test_buildMessageFragment_withInlineAnchors() {
     content: {
       type: "global",
       priority: win.gNotificationBox.PRIORITY_INFO_LOW,
-      text: { string_id: "test-id" },
+      text: { string_id: "test-id", args: { where: "tabshifted" } },
       linkUrls: { foo: linkUrl },
       buttons: [{ label: "Close", action: { type: "CANCEL" } }],
     },
@@ -601,6 +602,15 @@ add_task(async function test_buildMessageFragment_withInlineAnchors() {
     rendered.textContent,
     "Click Here",
     "Rendered anchor text matches"
+  );
+
+  rendered.click();
+  Assert.equal(handleStub.callCount, 1, "handleAction called once");
+  let [actionArg] = handleStub.firstCall.args;
+  Assert.equal(
+    actionArg.data.where,
+    message.content.text.args.where,
+    "handleAction receives correct where value"
   );
 
   // Cleanup

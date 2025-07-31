@@ -116,7 +116,10 @@ class InfoBarNotification {
           a.addEventListener("click", e => {
             e.preventDefault();
             lazy.SpecialMessageActions.handleAction(
-              { type: "OPEN_URL", data: { args: a.href, where: "tab" } },
+              {
+                type: "OPEN_URL",
+                data: { args: a.href, where: args?.where || "tab" },
+              },
               browser
             );
           });
