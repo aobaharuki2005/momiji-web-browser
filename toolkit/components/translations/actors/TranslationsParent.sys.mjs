@@ -44,8 +44,11 @@ const USE_LEXICAL_SHORTLIST_PREF = "browser.translations.useLexicalShortlist";
  * @property {any} BrowserHandler
  * @property {typeof import("resource://services-settings/remote-settings.sys.mjs").RemoteSettings} RemoteSettings
  * @property {typeof import("chrome://global/content/translations/TranslationsTelemetry.sys.mjs").TranslationsTelemetry} TranslationsTelemetry
- * @property {typeof import("chrome://global/content/translations/TranslationsUtils.mjs").TranslationsUtils} TranslationsUtils
  * @property {typeof import("chrome://global/content/ml/EngineProcess.sys.mjs").EngineProcess} EngineProcess
+ */
+
+/**
+ * @import {DetectionResult} from "../translations.d.ts"
  */
 
 /** @type {Lazy} */
@@ -116,10 +119,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
     );
   }
 );
-
-/**
- * @import {DetectionResult} "../LanguageDetector.sys.mjs"
- */
 
 /**
  * Retrieves the most recent target languages that have been requested for translation by the user.
@@ -781,31 +780,26 @@ export class TranslationsParent extends JSWindowActorParent {
     // Frequently pages' lang attributes are mislabeled. If there is a mismatch between
     // the identified and declared language, the translation icon will be shown, but the
     // popup will not be shown.
-    if (
-      detectedLanguages.htmlLangAttribute &&
-      !detectedLanguages.identifiedLangTag
-    ) {
+    if (detectedLanguages.htmlLangAttribute && !detectedLanguages.identified) {
       // Compare language langTagsMatch
-      const identifyResult = await this.queryIdentifyLanguage();
-      detectedLanguages.identifiedLangTag = identifyResult.language;
-      detectedLanguages.identifiedLangConfident = identifyResult.confident;
+      detectedLanguages.identified = await this.queryIdentifyLanguage();
 
       if (
         !lazy.TranslationsUtils.langTagsMatch(
-          detectedLanguages.identifiedLangTag,
+          detectedLanguages.identified.language,
           detectedLanguages.docLangTag
         )
       ) {
-        detectedLanguages.identifiedLangTag = Intl.getCanonicalLocales(
-          detectedLanguages.identifiedLangTag
+        detectedLanguages.identified.language = Intl.getCanonicalLocales(
+          detectedLanguages.identified.language
         )[0];
         if (
           !lazy.TranslationsUtils.langTagsMatch(
-            detectedLanguages.identifiedLangTag,
+            detectedLanguages.identified.language,
             detectedLanguages.docLangTag
           )
         ) {
-          if (!identifyResult.confident) {
+          if (!detectedLanguages.identified.confident) {
             lazy.console.log(
               "The identified language was not confident, and the language tags don't match so don't offer a translation.",
               this.languageState.detectedLanguages
@@ -822,7 +816,7 @@ export class TranslationsParent extends JSWindowActorParent {
           // consumers that are using it.
           detectedLanguages = {
             ...detectedLanguages,
-            docLangTag: detectedLanguages.identifiedLangTag,
+            docLangTag: detectedLanguages.identified.language,
           };
           this.languageState.detectedLanguages = detectedLanguages;
 
@@ -850,6 +844,22 @@ export class TranslationsParent extends JSWindowActorParent {
           }
         }
       }
+      if (detectedLanguages.identified) {
+        // Since we've performed a language identification, and the html lang
+        // attribute matches, we should mark the identification as confident.
+        detectedLanguages.identified.confident = true;
+      }
+    }
+
+    if (
+      detectedLanguages.identified &&
+      !detectedLanguages.identified.confident
+    ) {
+      lazy.console.log(
+        "maybeOfferTranslations - The identified language was not confident.",
+        documentURI?.spec
+      );
+      return;
     }
 
     // Do the host check after the language identify check so that the translations popup
@@ -3493,12 +3503,13 @@ export class TranslationsParent extends JSWindowActorParent {
       // Do a final check that the identified language matches the reported language
       // tag to ensure that the page isn't reporting the incorrect languages. This
       // check is deferred to now for performance considerations.
-      const detectionResult = await this.queryIdentifyLanguage();
-      langTags.docLangTag = detectionResult.language;
-      langTags.identifiedLangTag = detectionResult.language;
-      langTags.identifiedLangConfident = detectionResult.confident;
+      langTags.identified = await this.queryIdentifyLanguage();
+      langTags.docLangTag = langTags.identified.language;
 
-      if (langTags.identifiedLangTag === langTags.htmlLangAttribute) {
+      if (
+        langTags.identified &&
+        langTags.identified.language === langTags.htmlLangAttribute
+      ) {
         return true;
       }
 
@@ -3724,17 +3735,12 @@ export class TranslationsParent extends JSWindowActorParent {
     }
 
     if (!langTags.docLangTag) {
-      // If the document's markup had no specified langTag, attempt to identify the page's language.
-      const identifyResult = await this.queryIdentifyLanguage();
-      if (identifyResult.confident) {
-        // Only set this as document language if we are confident.
-        langTags.docLangTag = identifyResult.language;
-      }
-      langTags.identifiedLangTag = identifyResult.language;
-      langTags.identifiedLangConfident = identifyResult.confident;
-
+      // If the document's markup had no specified langTag, attempt to identify the
+      // page's language.
+      langTags.identified = await this.queryIdentifyLanguage();
+      langTags.docLangTag = langTags.identified.language;
       maybeNormalizeDocLangTag();
-      langTags.identifiedLangTag = langTags.docLangTag;
+      langTags.identified.language = langTags.docLangTag;
 
       if (this.#isDestroyed) {
         return null;
