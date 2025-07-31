@@ -2615,6 +2615,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Indicates if the sponsored tiles are suppressed.
+     */
+    var suppressSponsoredTopSitesEnabled by lazyFeatureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_suppress_sponsored_tiles),
+        featureFlag = true,
+        default = { FxNimbus.features.suppressSponsoredTopSites.value().enabled },
+    )
+
+    /**
      * Indicates whether or not to show the checklist feature.
      */
     var showSetupChecklist by lazyFeatureFlagPreference(
