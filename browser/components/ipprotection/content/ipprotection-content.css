@@ -120,6 +120,10 @@ hr {
   align-self: end;
 }
 
+#signed-out-vpn-title {
+  margin-bottom: 0;
+}
+
 #signed-out-vpn-content {
   display: flex;
   flex-direction: column;
