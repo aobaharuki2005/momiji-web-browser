@@ -97,21 +97,6 @@ https_first_disabled = true # Bug 1737265
 https_first_disabled = true # Bug 1737265
 
 ["browser_httphash.js"]
-https_first_disabled = true # Bug 1737265
-
-["browser_httphash2.js"]
-
-["browser_httphash3.js"]
-https_first_disabled = true # Bug 1737265
-
-["browser_httphash4.js"]
-https_first_disabled = true # Bug 1737265
-
-["browser_httphash5.js"]
-https_first_disabled = true # Bug 1737265
-
-["browser_httphash6.js"]
-skip-if = ["true"] # Bug 1449788
 
 ["browser_installchrome.js"]
 https_first_disabled = true # Bug 1737265
