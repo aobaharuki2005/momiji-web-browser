@@ -35,6 +35,20 @@ const TOPIC_MAYBE_UPDATE_USER_LANG_TAG =
 const TOPIC_APP_LOCALES_CHANGED = "intl:app-locales-changed";
 const USE_LEXICAL_SHORTLIST_PREF = "browser.translations.useLexicalShortlist";
 
+/**
+ * @typedef {object} Lazy
+ * @property {typeof setTimeout} setTimeout
+ * @property {typeof clearTimeout} clearTimeout
+ * @property {typeof console} console
+ * @property {boolean} automaticallyPopupPref
+ * @property {any} BrowserHandler
+ * @property {typeof import("resource://services-settings/remote-settings.sys.mjs").RemoteSettings} RemoteSettings
+ * @property {typeof import("chrome://global/content/translations/TranslationsTelemetry.sys.mjs").TranslationsTelemetry} TranslationsTelemetry
+ * @property {typeof import("chrome://global/content/translations/TranslationsUtils.mjs").TranslationsUtils} TranslationsUtils
+ * @property {typeof import("chrome://global/content/ml/EngineProcess.sys.mjs").EngineProcess} EngineProcess
+ */
+
+/** @type {Lazy} */
 const lazy = {};
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -686,7 +700,7 @@ export class TranslationsParent extends JSWindowActorParent {
    * @param {LangTags} detectedLanguages
    */
   async maybeOfferTranslations(detectedLanguages) {
-    if (!this.browsingContext.currentWindowGlobal) {
+    if (!this.browsingContext?.currentWindowGlobal) {
       return;
     }
     if (!lazy.automaticallyPopupPref) {
@@ -709,7 +723,7 @@ export class TranslationsParent extends JSWindowActorParent {
       // behavior.
       lazy.console.log(
         "maybeOfferTranslations - Do not offer translations in automation.",
-        documentURI.spec
+        documentURI?.spec
       );
       return;
     }
@@ -738,14 +752,14 @@ export class TranslationsParent extends JSWindowActorParent {
     ) {
       lazy.console.log(
         `maybeOfferTranslations - Should never translate language. "${detectedLanguages.docLangTag}"`,
-        documentURI.spec
+        documentURI?.spec
       );
       return;
     }
     if (this.shouldNeverTranslateSite()) {
       lazy.console.log(
         "maybeOfferTranslations - Should never translate site.",
-        documentURI.spec
+        documentURI?.spec
       );
       return;
     }
@@ -758,7 +772,7 @@ export class TranslationsParent extends JSWindowActorParent {
     ) {
       lazy.console.error(
         "maybeOfferTranslations - The document and user lang tag are the same, not offering a translation.",
-        documentURI.spec
+        documentURI?.spec
       );
       return;
     }
@@ -815,7 +829,7 @@ export class TranslationsParent extends JSWindowActorParent {
           if (originalDocLangTag) {
             lazy.console.log(
               "maybeOfferTranslations - The document language tag was changed, but there was an original language, so don't offer.",
-              documentURI.spec,
+              documentURI?.spec,
               detectedLanguages
             );
             return;
@@ -829,7 +843,7 @@ export class TranslationsParent extends JSWindowActorParent {
           ) {
             lazy.console.log(
               "maybeOfferTranslations - There was no original language tag, but the detected language is not supported.",
-              documentURI.spec,
+              documentURI?.spec,
               detectedLanguages
             );
             return;
@@ -842,17 +856,19 @@ export class TranslationsParent extends JSWindowActorParent {
     // will update the language correctly.
     let host;
     try {
-      host = documentURI.host;
+      host = documentURI?.host;
     } catch {
       // nsIURI.host can throw if the URI scheme doesn't have a host. In this case
       // do not offer a translation.
+    }
+    if (!host) {
       return;
     }
     if (TranslationsParent.#hostsOffered.has(host)) {
       // This host was already offered a translation.
       lazy.console.log(
         "maybeOfferTranslations - Host already offered a translation, so skip.",
-        documentURI.spec
+        documentURI?.spec
       );
       return;
     }
@@ -862,21 +878,22 @@ export class TranslationsParent extends JSWindowActorParent {
     let isCurrentPage = false;
     if (AppConstants.platform !== "android") {
       isCurrentPage =
-        documentURI.spec ===
-        this.browsingContext.topChromeWindow.gBrowser.selectedBrowser
+        documentURI?.spec ===
+        this.browsingContext.topChromeWindow?.gBrowser.selectedBrowser
           .documentURI.spec;
     } else {
       // In Android, the active window is the active tab.
-      isCurrentPage = documentURI.spec === browser.documentURI.spec;
+      isCurrentPage = documentURI?.spec === browser.documentURI?.spec;
     }
     if (isCurrentPage) {
       lazy.console.log(
         "maybeOfferTranslations - Offering a translation",
-        documentURI.spec,
+        documentURI?.spec,
         detectedLanguages
       );
 
       /* eslint-disable-next-line no-shadow */
+      // @ts-ignore
       const { CustomEvent } = browser.ownerGlobal;
       browser.dispatchEvent(
         new CustomEvent("TranslationsParent:OfferTranslation", {
@@ -3500,7 +3517,7 @@ export class TranslationsParent extends JSWindowActorParent {
    * Finds a compatible source language tag for translation synchronously.
    * Searches the provided language pairs for a match based on the given language tag.
    *
-   * @param {string} langTag - A BCP-47 language tag to match against source languages.
+   * @param {string | null} langTag - A BCP-47 language tag to match against source languages.
    * @param {Array<{ sourceLanguage: string, targetLanguage: string }>} languagePairs - An array of language pair objects,
    *   where each object contains `sourceLanguage` and `targetLanguage` properties.
    * @returns {string | null} - The compatible source language tag, or `null` if no match is found.
@@ -3602,7 +3619,7 @@ export class TranslationsParent extends JSWindowActorParent {
    * If no special cases apply, the provided language tag is returned as-is.
    *
    * @param {string} langTag - A BCP-47 language tag to evaluate and possibly refine.
-   * @returns {Promise<string>} - The refined language tag, or null if processing was interrupted.
+   * @returns {string} - The refined language tag, or null if processing was interrupted.
    */
   maybeRefineMacroLanguageTag(langTag) {
     if (langTag === "no") {
@@ -3652,11 +3669,12 @@ export class TranslationsParent extends JSWindowActorParent {
       return null;
     }
 
+    /** @type {LangTags} */
     const langTags = {
       docLangTag: null,
       userLangTag: null,
       isDocLangTagSupported: false,
-      htmlLangAttribute,
+      htmlLangAttribute: htmlLangAttribute ?? null,
       identifiedLangTag: null,
     };
 
@@ -3845,7 +3863,7 @@ export class TranslationsParent extends JSWindowActorParent {
    * Returns true if the current site is denied permissions to translate,
    * otherwise returns false.
    *
-   * @returns {Promise<boolean>}
+   * @returns {boolean}
    */
   shouldNeverTranslateSite() {
     const perms = Services.perms;

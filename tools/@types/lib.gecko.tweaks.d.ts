@@ -122,6 +122,7 @@ interface WindowGlobalParent extends WindowContext {
 // Hand-crafted artisanal types.
 interface XULBrowserElement extends XULFrameElement, FrameLoader {
   currentURI: nsIURI;
+  documentURI: nsIURI | null;
   docShellIsActive: boolean;
   isRemoteBrowser: boolean;
   remoteType: string;
