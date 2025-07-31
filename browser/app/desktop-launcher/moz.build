@@ -19,7 +19,8 @@ else:
 
 SPHINX_TREES["/browser/desktop-launcher"] = "docs"
 
-if CONFIG["OS_ARCH"] == "WINNT":
+# Only build on Windows. Don't build with MinGW, since it doesn't support WinHTTP
+if CONFIG["OS_ARCH"] == "WINNT" and CONFIG["CC_TYPE"] == "clang-cl":
     UNIFIED_SOURCES += [
         "download_firefox.cpp",
         "file_sink.cpp",
