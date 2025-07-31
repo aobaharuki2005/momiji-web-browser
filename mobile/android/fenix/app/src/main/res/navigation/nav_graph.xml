@@ -49,6 +49,10 @@
         app:destination="@id/microsurveyDialogFragment" />
 
     <action
+        android:id="@+id/action_global_terms_of_use_dialog"
+        app:destination="@+id/termsOfUseDialogFragment" />
+
+    <action
         android:id="@+id/action_global_search_dialog"
         app:destination="@id/searchDialogFragment"
         app:popUpTo="@id/searchDialogFragment"
@@ -317,6 +321,10 @@
             app:argType="string"
             app:nullable="false" />
     </dialog>
+
+    <dialog
+        android:id="@+id/termsOfUseDialogFragment"
+        android:name="org.mozilla.fenix.termsofuse.ui.TermsOfUseBottomSheetFragment" />
 
     <dialog
         android:id="@+id/searchDialogFragment"
