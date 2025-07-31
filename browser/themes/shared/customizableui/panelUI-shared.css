@@ -829,8 +829,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
 /* Firefox Account Toolbar Panel */
 
 #fxa-avatar-image {
-  width: var(--icon-size-default);
-  height: var(--icon-size-default);
+  width: var(--icon-size);
+  height: var(--icon-size);
 }
 
 :root {
@@ -892,9 +892,9 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
     .avatar-container::after {
       content: "";
       position: absolute;
-      top: calc(var(--icon-size-default) - 6px);
+      top: calc(var(--icon-size) - 6px);
       /* Avatar icon size minus its circle width minus half of the little circle icon size */
-      left: calc(var(--icon-size-default) - 1px - 6px / 2);
+      left: calc(var(--icon-size) - 1px - 6px / 2);
       height: 6px;
       width: 6px;
       background-image: url(chrome://browser/skin/fxa/circle.svg);

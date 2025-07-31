@@ -129,8 +129,8 @@
     > .copy-icon {
       grid-column: 1;
       grid-row: 1;
-      height: var(--icon-size-default);
-      width: var(--icon-size-default);
+      height: var(--icon-size);
+      width: var(--icon-size);
       -moz-context-properties: fill;
       fill: var(--icon-color);
 
@@ -142,8 +142,8 @@
     > .check-icon {
       grid-column: 1;
       grid-row: 1;
-      height: var(--icon-size-default);
-      width: var(--icon-size-default);
+      height: var(--icon-size);
+      width: var(--icon-size);
       -moz-context-properties: fill;
       fill: var(--attention-dot-color);
       opacity: 0;
@@ -214,8 +214,8 @@
 
 .fav-icon {
   margin: 0;
-  height: var(--icon-size-default);
-  width: var(--icon-size-default);
+  height: var(--icon-size);
+  width: var(--icon-size);
   -moz-context-properties: fill;
   fill: var(--icon-color);
 }

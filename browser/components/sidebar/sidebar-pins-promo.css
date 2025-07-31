@@ -75,7 +75,7 @@
 }
 
 .close-button {
-  --icon-size-default: var(--icon-size-xsmall);
+  --icon-size: var(--icon-size-xsmall);
   position: absolute;
   inset-block-start: var(--space-medium);
   inset-inline-end: var(--space-medium);
