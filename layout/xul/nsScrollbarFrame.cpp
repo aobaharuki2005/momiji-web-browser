@@ -210,26 +210,31 @@ void nsScrollbarFrame::Reflow(nsPresContext* aPresContext,
 nsresult nsScrollbarFrame::AttributeChanged(int32_t aNameSpaceID,
                                             nsAtom* aAttribute,
                                             int32_t aModType) {
-  nsresult rv =
-      nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
-
-  // Update value in our children
-  UpdateChildrenAttributeValue(aAttribute, true);
+  MOZ_TRY(
+      nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType));
 
   // if the current position changes, notify any ScrollContainerFrame
   // parent we may have
-  if (aAttribute != nsGkAtoms::curpos) {
-    return rv;
+  if (aAttribute == nsGkAtoms::curpos) {
+    if (ScrollContainerFrame* scrollContainerFrame =
+            do_QueryFrame(GetParent())) {
+      nsCOMPtr<nsIContent> content(mContent);
+      scrollContainerFrame->CurPosAttributeChanged(content);
+    }
+    if (nsSliderFrame* slider = do_QueryFrame(mSlider->GetPrimaryFrame())) {
+      slider->CurrentPositionChanged();
+    }
+  } else if (aAttribute == nsGkAtoms::minpos ||
+             aAttribute == nsGkAtoms::maxpos ||
+             aAttribute == nsGkAtoms::pageincrement ||
+             aAttribute == nsGkAtoms::increment) {
+    // These affect the slider.
+    if (nsSliderFrame* slider = do_QueryFrame(mSlider->GetPrimaryFrame())) {
+      PresShell()->FrameNeedsReflow(slider, IntrinsicDirty::None,
+                                    NS_FRAME_IS_DIRTY);
+    }
   }
-
-  ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(GetParent());
-  if (!scrollContainerFrame) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIContent> content(mContent);
-  scrollContainerFrame->CurPosAttributeChanged(content);
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -458,77 +463,7 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
     }
   }
 
-  UpdateChildrenAttributeValue(nsGkAtoms::curpos, false);
-  UpdateChildrenAttributeValue(nsGkAtoms::maxpos, false);
-  UpdateChildrenAttributeValue(nsGkAtoms::disabled, false);
-  UpdateChildrenAttributeValue(nsGkAtoms::pageincrement, false);
-
   return NS_OK;
-}
-
-void nsScrollbarFrame::UpdateChildrenAttributeValue(nsAtom* aAttribute,
-                                                    bool aNotify) {
-  Element* el = GetContent()->AsElement();
-
-  nsAutoString value;
-  el->GetAttr(aAttribute, value);
-
-  if (!el->HasAttr(aAttribute)) {
-    if (mUpTopButton) {
-      mUpTopButton->UnsetAttr(kNameSpaceID_None, aAttribute, aNotify);
-    }
-    if (mDownTopButton) {
-      mDownTopButton->UnsetAttr(kNameSpaceID_None, aAttribute, aNotify);
-    }
-    if (mSlider) {
-      mSlider->UnsetAttr(kNameSpaceID_None, aAttribute, aNotify);
-    }
-    if (mUpBottomButton) {
-      mUpBottomButton->UnsetAttr(kNameSpaceID_None, aAttribute, aNotify);
-    }
-    if (mDownBottomButton) {
-      mDownBottomButton->UnsetAttr(kNameSpaceID_None, aAttribute, aNotify);
-    }
-    return;
-  }
-
-  if (aAttribute == nsGkAtoms::curpos || aAttribute == nsGkAtoms::maxpos) {
-    if (mUpTopButton) {
-      mUpTopButton->SetAttr(kNameSpaceID_None, aAttribute, value, aNotify);
-    }
-    if (mDownTopButton) {
-      mDownTopButton->SetAttr(kNameSpaceID_None, aAttribute, value, aNotify);
-    }
-    if (mSlider) {
-      mSlider->SetAttr(kNameSpaceID_None, aAttribute, value, aNotify);
-    }
-    if (mUpBottomButton) {
-      mUpBottomButton->SetAttr(kNameSpaceID_None, aAttribute, value, aNotify);
-    }
-    if (mDownBottomButton) {
-      mDownBottomButton->SetAttr(kNameSpaceID_None, aAttribute, value, aNotify);
-    }
-  } else if (aAttribute == nsGkAtoms::disabled) {
-    if (mUpTopButton) {
-      mUpTopButton->SetAttr(kNameSpaceID_None, aAttribute, value, aNotify);
-    }
-    if (mDownTopButton) {
-      mDownTopButton->SetAttr(kNameSpaceID_None, aAttribute, value, aNotify);
-    }
-    if (mSlider) {
-      mSlider->SetAttr(kNameSpaceID_None, aAttribute, value, aNotify);
-    }
-    if (mUpBottomButton) {
-      mUpBottomButton->SetAttr(kNameSpaceID_None, aAttribute, value, aNotify);
-    }
-    if (mDownBottomButton) {
-      mDownBottomButton->SetAttr(kNameSpaceID_None, aAttribute, value, aNotify);
-    }
-  } else if (aAttribute == nsGkAtoms::pageincrement) {
-    if (mSlider) {
-      mSlider->SetAttr(kNameSpaceID_None, aAttribute, value, aNotify);
-    }
-  }
 }
 
 void nsScrollbarFrame::AppendAnonymousContentTo(
