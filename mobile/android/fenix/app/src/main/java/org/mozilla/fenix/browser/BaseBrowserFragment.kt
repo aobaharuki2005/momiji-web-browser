@@ -182,6 +182,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.components.toolbar.interactor.DefaultBrowserToolbarInteractor
 import org.mozilla.fenix.compose.core.Action
+import org.mozilla.fenix.compose.snackbar.DefaultSnackbarFactory
 import org.mozilla.fenix.compose.snackbar.Snackbar
 import org.mozilla.fenix.compose.snackbar.SnackbarState
 import org.mozilla.fenix.crashes.CrashContentIntegration
@@ -642,9 +643,10 @@ abstract class BaseBrowserFragment :
 
         standardSnackbarErrorBinding.set(
             feature = StandardSnackbarErrorBinding(
-                requireActivity(),
-                binding.dynamicSnackbarContainer,
-                requireActivity().components.appStore,
+                snackbarParent = binding.dynamicSnackbarContainer,
+                appStore = requireActivity().components.appStore,
+                snackbarFactory = DefaultSnackbarFactory(),
+                dismissLabel = getString(R.string.standard_snackbar_error_dismiss),
             ),
             owner = viewLifecycleOwner,
             view = binding.root,

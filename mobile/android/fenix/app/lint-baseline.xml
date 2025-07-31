@@ -3720,15 +3720,4 @@
             column="9"/>
     </issue>
 
-    <issue
-        id="NoObjectMocking"
-        message="Usage of MockK&apos;s &apos;mockkObject&apos; for object/singleton mocking is discouraged. Consider providing dependencies explicitly."
-        errorLine1="        mockkObject(Snackbar)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/test/java/org/mozilla/fenix/browser/StandardSnackbarErrorBindingTest.kt"
-            line="43"
-            column="9"/>
-    </issue>
-
 </issues>
