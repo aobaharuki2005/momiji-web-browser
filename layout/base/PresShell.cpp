@@ -12091,7 +12091,18 @@ void PresShell::AddAnchorPosAnchor(const nsAtom* aName, nsIFrame* aFrame) {
   // If the same element is already in the array,
   // someone forgot to call RemoveAnchorPosAnchor.
   if (BinarySearchIf(entry, 0, entry.Length(), cmp, &matchOrInsertionIdx)) {
-    MOZ_ASSERT_UNREACHABLE("Anchor added already");
+    if (entry.ElementAt(matchOrInsertionIdx) == aFrame) {
+      // nsLayoutUtils::CompareTreePosition() returns 0 when the frames are
+      // in different documents or child lists. This indicates that
+      // the tree is being restructured and we can defer anchor insertion
+      // to a MergeAnchorPosAnchors call after the restructuring is complete.
+      MOZ_ASSERT_UNREACHABLE("Attempt to insert a frame twice was made");
+      return;
+    }
+    MOZ_ASSERT(!entry.Contains(aFrame));
+
+    MOZ_ASSERT_UNREACHABLE("Frames were in different documents or child lists");
+
     return;
   }
 
