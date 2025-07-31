@@ -15,6 +15,7 @@
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/Directory.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/FileSystemUtils.h"
@@ -33,6 +34,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ServoCSSParser.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_signon.h"
 #include "mozilla/TextUtils.h"
@@ -724,6 +726,41 @@ static bool IsPickerBlocked(Document* aDoc) {
   return true;
 }
 
+/**
+ * Parse a CSS color string and convert it to the target colorspace if it
+ * succeeds.
+ * https://html.spec.whatwg.org/#update-a-color-well-control-color
+ *
+ * @param aValue the string to be parsed
+ * @return the parsed result as a HTML compatible form
+ */
+static Maybe<StyleAbsoluteColor> MaybeComputeColor(Document* aDocument,
+                                                   const nsAString& aValue) {
+  // A few steps are ignored given we don't support alpha and colorspace. See
+  // bug 1919718.
+  return ServoCSSParser::ComputeColorWellControlColor(
+      aDocument->EnsureStyleSet().RawData(), NS_ConvertUTF16toUTF8(aValue),
+      StyleColorSpace::Srgb);
+}
+
+/**
+ * https://html.spec.whatwg.org/#serialize-a-color-well-control-color
+ * https://drafts.csswg.org/css-color/#color-serialization-html-compatible-serialization-is-requested
+ *
+ * @param aColor The parsed color
+ * @param aResult The result in the form of #ffffff.
+ */
+static void SerializeColorForHTMLCompatibility(const StyleAbsoluteColor& aColor,
+                                               nsAString& aResult) {
+  // Raw StyleAbsoluteColor can have floats outside of 0-1 range e.g. when
+  // display-p3 color is converted to srgb, and ToColor guarantees to fit the
+  // values within the range.
+  nscolor color = aColor.ToColor();
+  aResult.Truncate();
+  aResult.AppendPrintf("#%02x%02x%02x", NS_GET_R(color), NS_GET_G(color),
+                       NS_GET_B(color));
+}
+
 nsTArray<nsString> HTMLInputElement::GetColorsFromList() {
   RefPtr<HTMLDataListElement> dataList = GetList();
   if (!dataList) {
@@ -740,10 +777,15 @@ nsTArray<nsString> HTMLInputElement::GetColorsFromList() {
       continue;
     }
 
-    nsString value;
+    nsAutoString value;
     option->GetValue(value);
-    if (IsValidSimpleColor(value)) {
-      ToLowerCase(value);
+    // https://html.spec.whatwg.org/#update-a-color-well-control-color
+    // https://html.spec.whatwg.org/#serialize-a-color-well-control-color
+    if (Maybe<StyleAbsoluteColor> result =
+            MaybeComputeColor(OwnerDoc(), value)) {
+      // Serialization step 6: If htmlCompatible is true, then do so with
+      // HTML-compatible serialization requested.
+      SerializeColorForHTMLCompatibility(*result, value);
       colors.AppendElement(value);
     }
   }
@@ -4981,13 +5023,15 @@ void HTMLInputElement::SanitizeValue(nsAString& aValue,
       }
     } break;
     case FormControlType::InputColor: {
-      if (IsValidSimpleColor(aValue)) {
-        ToLowerCase(aValue);
-      } else {
-        // Set default (black) color, if aValue wasn't parsed correctly.
-        aValue.AssignLiteral("#000000");
-      }
-    } break;
+      // https://html.spec.whatwg.org/#update-a-color-well-control-color
+      // https://html.spec.whatwg.org/#serialize-a-color-well-control-color
+      StyleAbsoluteColor color = MaybeComputeColor(OwnerDoc(), aValue)
+                                     .valueOr(StyleAbsoluteColor::BLACK);
+      // Serialization step 6: If htmlCompatible is true, then do so with
+      // HTML-compatible serialization requested.
+      SerializeColorForHTMLCompatibility(color, aValue);
+      break;
+    }
     default:
       break;
   }
@@ -5007,20 +5051,6 @@ Maybe<nscolor> HTMLInputElement::ParseSimpleColor(const nsAString& aColor) {
   }
 
   return Some(color);
-}
-
-bool HTMLInputElement::IsValidSimpleColor(const nsAString& aValue) const {
-  if (aValue.Length() != 7 || aValue.First() != '#') {
-    return false;
-  }
-
-  for (int i = 1; i < 7; ++i) {
-    if (!IsAsciiDigit(aValue[i]) && !(aValue[i] >= 'a' && aValue[i] <= 'f') &&
-        !(aValue[i] >= 'A' && aValue[i] <= 'F')) {
-      return false;
-    }
-  }
-  return true;
 }
 
 bool HTMLInputElement::IsLeapYear(uint32_t aYear) const {

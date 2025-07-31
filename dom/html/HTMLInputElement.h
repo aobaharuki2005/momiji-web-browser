@@ -1128,14 +1128,6 @@ class HTMLInputElement final : public TextControlElement,
   RadioGroupContainer* FindTreeRadioGroupContainer() const;
 
   /**
-   * Parse a color string of the form #XXXXXX where X should be hexa characters
-   * @param the string to be parsed.
-   * @return whether the string is a valid simple color.
-   * Note : this function does not consider the empty string as valid.
-   */
-  bool IsValidSimpleColor(const nsAString& aValue) const;
-
-  /**
    * Parse a week string of the form yyyy-Www
    * @param the string to be parsed.
    * @return whether the string is a valid week.
