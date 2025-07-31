@@ -4,9 +4,6 @@
 
 "use strict";
 
-const { LINKS } = ChromeUtils.importESModule(
-  "chrome://browser/content/ipprotection/ipprotection-constants.mjs"
-);
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -17,12 +14,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 async function setAndUpdateIsSignedIn(content, isSignedIn) {
   content.state.isSignedIn = isSignedIn;
-  content.requestUpdate();
-  await content.updateComplete;
-}
-
-async function setAndUpdateHasUpgraded(content, hasUpgraded) {
-  content.state.hasUpgraded = hasUpgraded;
   content.requestUpdate();
   await content.updateComplete;
 }
@@ -50,8 +41,6 @@ add_task(async function test_main_content() {
 
   let content = panelView.querySelector(lazy.IPProtectionPanel.CONTENT_TAGNAME);
 
-  let originalState = structuredClone(content.state);
-
   await setAndUpdateIsSignedIn(content, true);
 
   Assert.ok(
@@ -59,13 +48,6 @@ add_task(async function test_main_content() {
     "ipprotection content component should be present"
   );
   Assert.ok(content.statusCardEl, "Status card should be present");
-
-  // Test content before user upgrade
-  await setAndUpdateHasUpgraded(content, false);
-  Assert.ok(
-    !content.activeSubscriptionEl,
-    "Active subscription element should not be present"
-  );
   Assert.ok(content.upgradeEl, "Upgrade vpn element should be present");
   Assert.ok(
     content.upgradeEl.querySelector("#upgrade-vpn-title"),
@@ -79,32 +61,6 @@ add_task(async function test_main_content() {
     content.upgradeEl.querySelector("#upgrade-vpn-button"),
     "Upgrade vpn button should be present"
   );
-
-  // Test content after user upgrade
-  await setAndUpdateHasUpgraded(content, true);
-  Assert.ok(!content.upgradeEl, "Upgrade vpn element should not be present");
-  Assert.ok(
-    content.activeSubscriptionEl,
-    "Active subscription element should be present"
-  );
-  Assert.ok(
-    content.activeSubscriptionEl.querySelector(
-      "#active-subscription-vpn-title"
-    ),
-    "Active subcription vpn title should be present"
-  );
-  Assert.ok(
-    content.activeSubscriptionEl.querySelector(
-      "#active-subscription-vpn-message"
-    ),
-    "Active subscription vpn paragraph should be present"
-  );
-  Assert.ok(
-    content.activeSubscriptionEl.querySelector("#download-vpn-button"),
-    "Download vpn button should be present"
-  );
-
-  await resetStateToObj(content, originalState);
 
   // Close the panel
   let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
@@ -247,51 +203,4 @@ add_task(async function test_ipprotection_events_on_toggle() {
   let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
   EventUtils.synthesizeKey("KEY_Escape");
   await panelHiddenPromise;
-});
-
-add_task(async function test_support_link() {
-  let button = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
-  let panelView = PanelMultiView.getViewNode(
-    document,
-    lazy.IPProtectionWidget.PANEL_ID
-  );
-
-  let panelShownPromise = waitForPanelEvent(document, "popupshown");
-  let panelInitPromise = BrowserTestUtils.waitForEvent(
-    document,
-    "IPProtection:Init"
-  );
-  // Open the panel
-  button.click();
-  await Promise.all([panelShownPromise, panelInitPromise]);
-
-  let content = panelView.querySelector(lazy.IPProtectionPanel.CONTENT_TAGNAME);
-  let originalState = structuredClone(content.state);
-  content.state.hasUpgraded = false;
-  content.state.isSignedIn = true;
-  content.requestUpdate();
-  await content.updateComplete;
-
-  let supportLink = content.upgradeEl.querySelector("#vpn-support-link");
-  Assert.ok(supportLink, "Support link should be present");
-
-  let newTabPromise = BrowserTestUtils.waitForNewTab(
-    gBrowser,
-    LINKS.PRODUCT_URL
-  );
-  let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
-  supportLink.click();
-  let newTab = await newTabPromise;
-  await panelHiddenPromise;
-
-  Assert.equal(
-    gBrowser.selectedTab,
-    newTab,
-    "New tab is now open in a new foreground tab"
-  );
-
-  // To be safe, reset the entire state
-  await resetStateToObj(content, originalState);
-
-  BrowserTestUtils.removeTab(newTab);
 });
