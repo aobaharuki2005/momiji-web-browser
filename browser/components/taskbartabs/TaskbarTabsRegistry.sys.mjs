@@ -45,12 +45,17 @@ class TaskbarTab {
   #userContextId;
   // URL opened when a Taskbar Tab is opened from the Taskbar.
   #startUrl;
+  // The path to the shortcut associated with this Taskbar Tab, *relative
+  // to the `Start Menu\Programs` folder.*
+  #shortcutRelativePath;
 
-  constructor({ id, scopes, startUrl, userContextId }) {
+  constructor({ id, scopes, startUrl, userContextId, shortcutRelativePath }) {
     this.#id = id;
     this.#scopes = scopes;
     this.#userContextId = userContextId;
     this.#startUrl = startUrl;
+
+    this.#shortcutRelativePath = shortcutRelativePath ?? null;
   }
 
   get id() {
@@ -67,6 +72,10 @@ class TaskbarTab {
 
   get startUrl() {
     return this.#startUrl;
+  }
+
+  get shortcutRelativePath() {
+    return this.#shortcutRelativePath;
   }
 
   /**
@@ -96,17 +105,33 @@ class TaskbarTab {
   }
 
   toJSON() {
+    const maybe = (self, name) => (self[name] ? { [name]: self[name] } : {});
     return {
       id: this.id,
       scopes: this.scopes,
       userContextId: this.userContextId,
       startUrl: this.startUrl,
+      ...maybe(this, "shortcutRelativePath"),
     };
+  }
+
+  /**
+   * Applies mutable fields from aPatch to this object.
+   *
+   * Always use TaskbarTabsRegistry.patchTaskbarTab instead. Aside
+   * from calling into this, it notifies other objects (especially
+   * the saver) about the change.
+   */
+  _applyPatch(aPatch) {
+    if ("shortcutRelativePath" in aPatch) {
+      this.#shortcutRelativePath = aPatch.shortcutRelativePath;
+    }
   }
 }
 
 export const kTaskbarTabsRegistryEvents = Object.freeze({
   created: "created",
+  patched: "patched",
   removed: "removed",
 });
 
@@ -118,6 +143,10 @@ export class TaskbarTabsRegistry {
   #taskbarTabs = [];
   // Signals when Taskbar Tabs have been created or removed.
   #emitter = new lazy.EventEmitter();
+
+  static get events() {
+    return kTaskbarTabsRegistryEvents;
+  }
 
   /**
    * Initializes a Taskbar Tabs Registry, optionally loading from a file.
@@ -287,6 +316,23 @@ export class TaskbarTabsRegistry {
     }
 
     return tt;
+  }
+
+  /**
+   * Updates properties within the provided Taskbar Tab.
+   *
+   * All fields from aPatch will be assigned to aTaskbarTab, except
+   * for the ID.
+   *
+   * @param {TaskbarTab} aTaskbarTab - The taskbar tab to update.
+   * @param {object} aPatch - An object with properties to change.
+   * @throws {Error} If any taskbar tab in aTaskbarTabs is unknown.
+   */
+  patchTaskbarTab(aTaskbarTab, aPatch) {
+    // This is done from the registry to make it more clear that an event
+    // will fire, and thus that I/O might be possible.
+    aTaskbarTab._applyPatch(aPatch);
+    this.#emitter.emit(kTaskbarTabsRegistryEvents.patched, aTaskbarTab);
   }
 
   /**
