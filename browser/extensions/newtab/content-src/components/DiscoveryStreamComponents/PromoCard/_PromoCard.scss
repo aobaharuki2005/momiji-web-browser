@@ -1,0 +1,10 @@
+.promo-card-wrapper {
+  background: var(--newtab-background-card);
+  box-shadow: var(--box-shadow-card);
+  border-radius: var(--border-radius-large);
+  height: var(--billboard-height);
+
+  &:hover {
+    box-shadow: var(--box-shadow-card-hover);
+  }
+}

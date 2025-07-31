@@ -237,8 +237,8 @@ module.exports = function (config) {
               },
             "content-src/components/DiscoveryStreamComponents/CardSections/CardSections.jsx":
               {
-                statements: 83.82,
-                lines: 83.33,
+                statements: 83.11,
+                lines: 82.52,
                 functions: 79.31,
                 branches: 52.8,
               },
@@ -261,6 +261,16 @@ module.exports = function (config) {
                 statements: 84,
                 lines: 84,
                 functions: 83,
+              },
+            /**
+             * PromoCard currently has no functionality and is a placeholder component
+             */
+            "content-src/components/DiscoveryStreamComponents/PromoCard/PromoCard.jsx":
+              {
+                statements: 0,
+                lines: 0,
+                functions: 0,
+                branches: 0,
               },
             "content-src/components/DiscoveryStreamComponents/DSThumbsUpDownButtons/DSThumbsUpDownButtons.jsx":
               {
