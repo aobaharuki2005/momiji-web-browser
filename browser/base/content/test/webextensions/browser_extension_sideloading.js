@@ -148,7 +148,9 @@ add_task(async function test_sideloading() {
       gBrowser.selectedBrowser,
       "about:blank"
     );
-    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, {
+      wantLoad: "about:blank",
+    });
   });
 
   let changePromise = new Promise(resolve => {

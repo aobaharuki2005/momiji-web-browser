@@ -161,7 +161,9 @@ async function testNavigationToAboutBlankDocument() {
   info("Navigate to about:blank page");
   const onSwitchedTarget = targetCommand.once("switched-target");
   const browser = tab.linkedBrowser;
-  const onLoaded = BrowserTestUtils.browserLoaded(browser);
+  const onLoaded = BrowserTestUtils.browserLoaded(browser, {
+    wantLoad: secondLocation,
+  });
   BrowserTestUtils.startLoadingURIString(browser, secondLocation);
   await onLoaded;
 
@@ -571,13 +573,14 @@ async function testNestedIframes() {
     "<title>second</title><h3>second level iframe</h3>"
   )}&delay=500`;
 
-  const testUrl = `data:text/html;charset=utf-8,
+  // addTab will wait for this specific url so need to use URL to serialize correctly
+  const testUrl = new URL(`data:text/html;charset=utf-8,
     <h1>Top-level</h1>
     <iframe id=first-level
       src='data:text/html;charset=utf-8,${encodeURIComponent(
         `<title>first</title><h2>first level iframe</h2><iframe id=second-level src="${nestedIframeUrl}"></iframe>`
       )}'
-    ></iframe>`;
+    ></iframe>`).href;
 
   // Create a TargetCommand for a given test tab
   const tab = await addTab(testUrl);

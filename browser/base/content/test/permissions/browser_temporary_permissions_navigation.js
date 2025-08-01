@@ -173,7 +173,9 @@ add_task(async function testTempPermissionOnReloadAllTabs() {
 
     let reloaded = Promise.all(
       visibleTabs.map(tab =>
-        BrowserTestUtils.browserLoaded(gBrowser.getBrowserForTab(tab))
+        BrowserTestUtils.browserLoaded(gBrowser.getBrowserForTab(tab), {
+          wantLoad: () => true,
+        })
       )
     );
     info("Triggering reload action");

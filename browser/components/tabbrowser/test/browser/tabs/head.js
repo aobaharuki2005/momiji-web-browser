@@ -70,7 +70,7 @@ async function addTabTo(
   params.skipAnimation = true;
   const tab = BrowserTestUtils.addTab(targetBrowser, url, params);
   const browser = targetBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.browserLoaded(browser, { wantLoad: url });
   return tab;
 }
 

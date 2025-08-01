@@ -395,7 +395,9 @@ async function installAddonWithPrivateBrowsingAccess(xpiUrl, addonId) {
   let dialogPromise = waitForInstallDialog();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, {
+    wantLoad: "about:blank",
+  });
   gURLBar.value = xpiUrl;
   gURLBar.focus();
   EventUtils.synthesizeKey("KEY_Enter");
@@ -1124,7 +1126,9 @@ describe("Add-on installation doorhangers", function () {
       }, "addon-install-failed");
     });
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
-    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, {
+      wantLoad: "about:blank",
+    });
     BrowserTestUtils.startLoadingURIString(gBrowser, path);
     await failPromise;
 
@@ -1151,7 +1155,9 @@ describe("Add-on installation doorhangers", function () {
     let dialogPromise = waitForInstallDialog();
 
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
-    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, {
+      wantLoad: "about:blank",
+    });
     gURLBar.value = TESTROOT + "amosigned.xpi";
     gURLBar.focus();
     EventUtils.synthesizeKey("KEY_Enter");
@@ -1404,7 +1410,9 @@ describe("Add-on installation doorhangers", function () {
     let dialogPromise = waitForInstallDialog();
 
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
-    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, {
+      wantLoad: "about:blank",
+    });
     gURLBar.value = TESTROOT + "amosigned.xpi";
     gURLBar.focus();
     EventUtils.synthesizeKey("KEY_Enter");
@@ -1493,7 +1501,9 @@ describe("Add-on installation doorhangers", function () {
       win.gBrowser,
       "about:blank"
     );
-    await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser, {
+      wantLoad: "about:blank",
+    });
     win.gURLBar.value = TESTROOT + "amosigned.xpi";
     win.gURLBar.focus();
     EventUtils.synthesizeKey("KEY_Enter", {}, win);
