@@ -162,10 +162,28 @@ add_task(async function test_toggle_vertical_tabs() {
   gBrowser.selectedTab.focus();
 
   info("Open a new tab using the context menu.");
-  await openAndWaitForContextMenu(contextMenu, gBrowser.selectedTab, () => {
-    document.getElementById("context_openANewTab").click();
-  });
+  const promiseTabOpen = BrowserTestUtils.waitForEvent(
+    window.gBrowser.tabContainer,
+    "TabOpen"
+  );
+  let hidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+  await openAndWaitForContextMenu(
+    contextMenu,
+    gBrowser.selectedTab,
+    async () => {
+      info("Tab context menu opened");
+      let newTabOption = document.getElementById("context_openANewTab");
+      if (!newTabOption) {
+        info("New tab context menu option not found");
+      }
+      newTabOption?.click();
+    }
+  );
+
+  await promiseTabOpen;
+  info("New tab opened");
   contextMenu.hidePopup();
+  await hidden;
 
   let keyedScalars = TelemetryTestUtils.getProcessScalars("parent", true);
   TelemetryTestUtils.assertKeyedScalar(
@@ -190,11 +208,26 @@ add_task(async function test_toggle_vertical_tabs() {
 
   info("Pin a tab using the context menu.");
   await SidebarController.waitUntilStable();
-  await openAndWaitForContextMenu(contextMenu, gBrowser.selectedTab, () => {
-    document.getElementById("context_pinTab").click();
-  });
-  contextMenu.hidePopup();
+  const promiseTabPinned = BrowserTestUtils.waitForEvent(
+    window,
+    "TabPinned",
+    true
+  );
+  let hidden2 = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+  await openAndWaitForContextMenu(
+    contextMenu,
+    gBrowser.selectedTab,
+    async () => {
+      info("Tab context menu opened");
+      let pinTabOption = document.getElementById("context_pinTab");
+      if (!pinTabOption) {
+        info("Pin tab context menu option not found");
+      }
+      pinTabOption?.click();
+    }
+  );
 
+  await promiseTabPinned;
   // Wait for pinned tab to render
   let pinnedTabsContainer = document.getElementById("pinned-tabs-container");
   await BrowserTestUtils.waitForMutationCondition(
@@ -202,6 +235,9 @@ add_task(async function test_toggle_vertical_tabs() {
     { childList: true },
     () => pinnedTabsContainer.childElementCount === 1
   );
+  info("Tab pinned via the context menu");
+  contextMenu.hidePopup();
+  await hidden2;
 
   scalars = await getTelemetryScalars([
     "browser.engagement.max_concurrent_vertical_tab_pinned_count",
@@ -236,6 +272,8 @@ add_task(async function test_toggle_vertical_tabs() {
   });
 
   // Synthesize a double click 100px below the last tab
+  let target = document.getElementById("tabbrowser-arrowscrollbox");
+  let dblClickPromise = BrowserTestUtils.waitForEvent(target, "dblclick");
   EventUtils.synthesizeMouseAtPoint(
     containerRect.left + containerRect.width / 2,
     tabRect.bottom + 100,
@@ -246,6 +284,7 @@ add_task(async function test_toggle_vertical_tabs() {
     tabRect.bottom + 100,
     { clickCount: 2 }
   );
+  await dblClickPromise;
 
   is(gBrowser.tabs.length, 3, "Tabstrip now has three tabs");
 
