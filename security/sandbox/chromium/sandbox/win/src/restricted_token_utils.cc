@@ -35,8 +35,7 @@ absl::optional<base::win::AccessToken> CreateRestrictedToken(
     TokenType token_type,
     bool lockdown_default_dacl,
     const absl::optional<base::win::Sid>& unique_restricted_sid,
-    bool use_restricting_sids,
-    bool allow_everyone_for_user_restricted) {
+    bool use_restricting_sids) {
   RestrictedToken restricted_token;
   if (lockdown_default_dacl) {
     restricted_token.SetLockdownDefaultDacl();
@@ -136,9 +135,6 @@ absl::optional<base::win::AccessToken> CreateRestrictedToken(
     case USER_RESTRICTED:
       if (use_restricting_sids) {
         restricted_token.AddRestrictingSid(base::win::WellKnownSid::kRestricted);
-        if (allow_everyone_for_user_restricted) {
-          AddSidException(sid_exceptions, base::win::WellKnownSid::kWorld);
-        }
         if (unique_restricted_sid) {
           restricted_token.AddRestrictingSid(*unique_restricted_sid);
         }

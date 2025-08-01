@@ -60,8 +60,6 @@ class ConfigBase final : public TargetConfig {
   TokenLevel GetLockdownTokenLevel() const override;
   void SetDoNotUseRestrictingSIDs() final;
   bool GetUseRestrictingSIDs() final;
-  void SetAllowEveryoneForUserRestricted() final;
-  bool GetAllowEveryoneForUserRestricted() final;
   void SetForceKnownDllLoadingFallback() final;
   ResultCode SetJobLevel(JobLevel job_level, uint32_t ui_exceptions) override;
   JobLevel GetJobLevel() const override;
@@ -142,7 +140,6 @@ class ConfigBase final : public TargetConfig {
   TokenLevel lockdown_level_;
   TokenLevel initial_level_;
   bool use_restricting_sids_ = true;
-  bool allow_everyone_for_user_restricted_ = false;
   bool force_known_dll_loading_fallback_ = false;
   JobLevel job_level_;
   IntegrityLevel integrity_level_;
