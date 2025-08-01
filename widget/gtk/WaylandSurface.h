@@ -268,6 +268,10 @@ class WaylandSurface final {
   void AssertCurrentThreadOwnsMutex();
 
   void ForceCommit() { mSurfaceNeedsCommit = true; }
+  void SetCommitStateLocked(const WaylandSurfaceLock& aProofOfLock,
+                            bool aCommitAllowed) {
+    mCommitAllowed = aCommitAllowed;
+  }
 
  private:
   ~WaylandSurface();
@@ -342,6 +346,7 @@ class WaylandSurface final {
   // wl_surface setup/states
   wl_surface* mSurface = nullptr;
   mozilla::Atomic<bool, mozilla::Relaxed> mSurfaceNeedsCommit{false};
+  bool mCommitAllowed = true;
 
   // When subsurface is desynced, we need to commit to parent surface
   // to see the change in subsurface (this one).

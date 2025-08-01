@@ -341,6 +341,9 @@ void NativeLayerRootWayland::SetLayers(
   mSublayers = std::move(newLayers);
   mRootMutatedStackingOrder = true;
 
+  mRootAllLayersRendered = false;
+  mRootSurface->SetCommitStateLocked(lock, false);
+
   // We need to process a part of map event on main thread as we use Gdk
   // code there. Ask for the processing now.
   RequestUpdateOnMainThreadLocked(lock);
@@ -422,11 +425,12 @@ void NativeLayerRootWayland::LogStatsLocked(
     }
   }
   LOGVERBOSE(
-      "Rendering stats: layers [%d] mapped [%d] attached [%d] visible [%d] "
+      "Rendering stats: all rendered [%d] layers [%d] mapped [%d] attached "
+      "[%d] visible [%d] "
       "rendered [%d] last [%d] opaque [%d] opaque set [%d] fullscreen [%d]",
-      layersNum, layersMapped, layersBufferAttached, layersVisible,
-      layersRendered, layersRenderedLastCycle, layersMappedOpaque,
-      layersMappedOpaqueSet, mIsFullscreen);
+      mRootAllLayersRendered, layersNum, layersMapped, layersBufferAttached,
+      layersVisible, layersRendered, layersRenderedLastCycle,
+      layersMappedOpaque, layersMappedOpaqueSet, mIsFullscreen);
 }
 #endif
 
@@ -471,10 +475,14 @@ bool NativeLayerRootWayland::CommitToScreen() {
     scale = 1.0;
   }
 
+  mRootAllLayersRendered = true;
   for (RefPtr<NativeLayerWayland>& layer : mSublayers) {
     layer->RenderLayer(scale);
     if (layer->State()->mMutatedStackingOrder) {
       mRootMutatedStackingOrder = true;
+    }
+    if (!layer->State()->mIsRendered) {
+      mRootAllLayersRendered = false;
     }
   }
 
@@ -490,6 +498,10 @@ bool NativeLayerRootWayland::CommitToScreen() {
       layer->State()->mMutatedStackingOrder = false;
     }
     mRootMutatedStackingOrder = false;
+  }
+
+  if (mRootAllLayersRendered) {
+    mRootSurface->SetCommitStateLocked(lock, true);
   }
 
 #ifdef MOZ_LOGGING

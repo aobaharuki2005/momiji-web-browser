@@ -165,6 +165,8 @@ class NativeLayerRootWayland final : public NativeLayerRoot {
   // State flags used for optimizations
   // Layers have been added/removed
   bool mRootMutatedStackingOrder = false;
+  // All layers has been rendered
+  bool mRootAllLayersRendered = false;
   bool mMainThreadUpdateQueued = false;
   bool mIsFullscreen = false;
 };
