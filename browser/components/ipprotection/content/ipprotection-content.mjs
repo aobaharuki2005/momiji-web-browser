@@ -25,6 +25,7 @@ export default class IPProtectionContentElement extends MozLitElement {
     upgradeEl: "#upgrade-vpn-content",
     activeSubscriptionEl: "#active-subscription-vpn-content",
     supportLinkEl: "#vpn-support-link",
+    downloadButtonEl: "#download-vpn-button",
   };
 
   static properties = {
@@ -83,8 +84,13 @@ export default class IPProtectionContentElement extends MozLitElement {
     );
   }
 
-  handleDownload() {
-    // TODO: Handle click of Download button - Bug 1978602
+  handleDownload(event) {
+    const win = event.target.ownerGlobal;
+    win.openWebLinkIn(LINKS.DOWNLOAD_URL, "tab");
+    // Close the panel
+    this.dispatchEvent(
+      new CustomEvent("IPProtection:Close", { bubbles: true })
+    );
   }
 
   focus() {
