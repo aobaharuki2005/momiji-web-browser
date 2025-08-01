@@ -1712,9 +1712,10 @@ nsresult nsHttpConnection::OnSocketWritable() {
           }
 
           LOG(("  writing transaction request stream\n"));
-          rv = mTransaction->ReadSegmentsAgain(this,
-                                               nsIOService::gDefaultSegmentSize,
-                                               &transactionBytes, &again);
+          RefPtr<nsAHttpTransaction> transaction = mTransaction;
+          rv = transaction->ReadSegmentsAgain(this,
+                                              nsIOService::gDefaultSegmentSize,
+                                              &transactionBytes, &again);
           if (mTlsHandshaker->EarlyDataUsed()) {
             mContentBytesWritten0RTT += transactionBytes;
             if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
@@ -1885,7 +1886,8 @@ nsresult nsHttpConnection::OnSocketReadable() {
       rv = NS_ERROR_FAILURE;
       LOG(("  No Transaction In OnSocketWritable\n"));
     } else {
-      rv = mTransaction->WriteSegmentsAgain(
+      RefPtr<nsAHttpTransaction> transaction = mTransaction;
+      rv = transaction->WriteSegmentsAgain(
           this, nsIOService::gDefaultSegmentSize, &n, &again);
     }
     LOG(("nsHttpConnection::OnSocketReadable %p trans->ws rv=%" PRIx32
