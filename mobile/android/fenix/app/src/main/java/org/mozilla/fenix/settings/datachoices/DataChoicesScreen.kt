@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.settings
+package org.mozilla.fenix.settings.datachoices
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,8 +20,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -29,12 +29,11 @@ import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.Divider
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.lib.crash.store.CrashReportOption
+import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.LinkText
 import org.mozilla.fenix.compose.LinkTextState
@@ -42,52 +41,52 @@ import org.mozilla.fenix.compose.list.RadioButtonListItem
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * Holds the state and callbacks for the Data Choices settings screen.
- *
- * This class encapsulates both the current user preferences and the action handlers
- * required to handle interactions or changes to preferences.
- *
- * @property telemetryEnabled Whether telemetry data collection is currently enabled.
- * @property usagePingEnabled Whether the daily usage ping is currently enabled.
- * @property studiesEnabled Whether participation in studies is currently enabled.
- * @property measurementDataEnabled Whether participation in marketing data is currently enabled.
- * @property selectedCrashOption The currently selected crash reporting option.
- */
-data class DataChoicesParams(
-    val telemetryEnabled: Boolean,
-    val usagePingEnabled: Boolean,
-    val studiesEnabled: Boolean,
-    val measurementDataEnabled: Boolean,
-    val selectedCrashOption: CrashReportOption,
-)
-
-/**
  * Composable function that renders the Data Choices settings screen.
  *
  * This screen allows the user to view and modify their preferences related to telemetry,
  * crash reporting, usage data, and participation in studies.
  *
- * @param params The [DataChoicesParams] containing current preference values and
- * callbacks to handle user interaction.
- * @param onTelemetryToggle Callback when the telemetry toggle is changed.
- * @param onUsagePingToggle Callback when the usage ping toggle is changed.
- * @param onMarketingDataToggled Callback when the marketing data toggle is changed.
- * @param onCrashOptionSelected Callback when the crash reporting option is selected.
- * @param onStudiesClick Callback when the studies section is clicked.
- * @param learnMoreTechnicalData Callback to handle "Learn More" about telemetry.
- * @param learnMoreDailyUsage Callback to handle "Learn More" about daily usage ping.
- * @param learnMoreCrashReport Callback to handle "Learn More" about crash reporting.
- * @param learnMoreMarketingData Callback to handle "Learn More" about marketing data.
+ * @param store The [DataChoicesStore] used to manage and access the [DataChoicesState]
  **/
-@Suppress("LongParameterList")
 @Composable
 internal fun DataChoicesScreen(
-    params: DataChoicesParams,
-    onTelemetryToggle: (Boolean) -> Unit,
-    onUsagePingToggle: (Boolean) -> Unit,
-    onMarketingDataToggled: (Boolean) -> Unit,
-    onCrashOptionSelected: (CrashReportOption) -> Unit,
+    store: DataChoicesStore,
+) {
+    val state by store.observeAsComposableState { it }
+    val onTelemetryToggle: () -> Unit = { store.dispatch(ChoiceAction.TelemetryClicked) }
+    val onUsagePingToggle: () -> Unit = { store.dispatch(ChoiceAction.UsagePingClicked) }
+    val onMarketingDataToggled: () -> Unit = { store.dispatch(ChoiceAction.MeasurementDataClicked) }
+    val onCrashOptionSelected: (CrashReportOption) -> Unit = { newValue ->
+        store.dispatch(ChoiceAction.ReportOptionClicked(newValue))
+    }
+    val onStudiesClick: () -> Unit = { store.dispatch(ChoiceAction.StudiesClicked) }
+    val learnMoreTechnicalData: () -> Unit = { store.dispatch(LearnMore.TelemetryLearnMoreClicked) }
+    val learnMoreDailyUsage: () -> Unit = { store.dispatch(LearnMore.UsagePingLearnMoreClicked) }
+    val learnMoreCrashReport: () -> Unit = { store.dispatch(LearnMore.CrashLearnMoreClicked) }
+    val learnMoreMarketingData: () -> Unit = { store.dispatch(LearnMore.MeasurementDataLearnMoreClicked) }
+    DataChoicesUi(
+        state = state,
+        onStudiesClick = onStudiesClick,
+        onTelemetryToggle = onTelemetryToggle,
+        onUsagePingToggle = onUsagePingToggle,
+        onMarketingDataToggled = onMarketingDataToggled,
+        onCrashOptionSelected = onCrashOptionSelected,
+        learnMoreTechnicalData = learnMoreTechnicalData,
+        learnMoreDailyUsage = learnMoreDailyUsage,
+        learnMoreCrashReport = learnMoreCrashReport,
+        learnMoreMarketingData = learnMoreMarketingData,
+    )
+}
+
+@Suppress("LongParameterList")
+@Composable
+internal fun DataChoicesUi(
+    state: DataChoicesState,
     onStudiesClick: () -> Unit,
+    onTelemetryToggle: () -> Unit,
+    onUsagePingToggle: () -> Unit,
+    onMarketingDataToggled: () -> Unit,
+    onCrashOptionSelected: (CrashReportOption) -> Unit,
     learnMoreTechnicalData: () -> Unit,
     learnMoreDailyUsage: () -> Unit,
     learnMoreCrashReport: () -> Unit,
@@ -107,7 +106,7 @@ internal fun DataChoicesScreen(
             preferenceTitle = stringResource(R.string.preference_usage_data_2),
             preferenceSummary = stringResource(R.string.preferences_usage_data_description_1),
             learnMoreText = stringResource(R.string.preference_usage_data_learn_more_2),
-            isToggled = params.telemetryEnabled,
+            isToggled = state.telemetryEnabled,
             onToggleChanged = onTelemetryToggle,
             onLearnMoreClicked = learnMoreTechnicalData,
         )
@@ -115,8 +114,8 @@ internal fun DataChoicesScreen(
         Divider()
 
         StudiesSection(
-            studiesEnabled = params.studiesEnabled,
-            sectionEnabled = params.telemetryEnabled,
+            studiesEnabled = state.studiesEnabled,
+            sectionEnabled = state.telemetryEnabled,
             onClick = onStudiesClick,
         )
 
@@ -128,7 +127,7 @@ internal fun DataChoicesScreen(
             preferenceTitle = stringResource(R.string.preferences_daily_usage_ping_title),
             preferenceSummary = stringResource(R.string.preferences_daily_usage_ping_description),
             learnMoreText = stringResource(R.string.preferences_daily_usage_ping_learn_more),
-            isToggled = params.usagePingEnabled,
+            isToggled = state.usagePingEnabled,
             onToggleChanged = onUsagePingToggle,
             onLearnMoreClicked = learnMoreDailyUsage,
         )
@@ -138,7 +137,7 @@ internal fun DataChoicesScreen(
         // Crash reports section
         CrashReportsSection(
             learnMoreText = stringResource(R.string.preferences_crashes_learn_more),
-            selectedOption = params.selectedCrashOption,
+            selectedOption = state.selectedCrashOption,
             onOptionSelected = onCrashOptionSelected,
             onLearnMoreClicked = learnMoreCrashReport,
         )
@@ -151,7 +150,7 @@ internal fun DataChoicesScreen(
             preferenceTitle = stringResource(R.string.preferences_marketing_data_2),
             preferenceSummary = stringResource(R.string.preferences_marketing_data_description_4),
             learnMoreText = stringResource(R.string.preferences_marketing_data_learn_more),
-            isToggled = params.measurementDataEnabled,
+            isToggled = state.measurementDataEnabled,
             onToggleChanged = onMarketingDataToggled,
             onLearnMoreClicked = learnMoreMarketingData,
         )
@@ -166,7 +165,6 @@ internal fun DataChoicesScreen(
  * @param onOptionSelected Callback invoked when the user selects a different crash report option.
  * @param onLearnMoreClicked Callback invoked when the "Learn More" link is clicked.
  * */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun CrashReportsSection(
     learnMoreText: String,
@@ -246,7 +244,6 @@ private fun SectionBodyText(text: String, modifier: Modifier = Modifier) {
  * @param onToggleChanged Callback invoked when the toggle state changes.
  * @param onLearnMoreClicked Callback invoked when the "Learn More" link is clicked.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun TogglePreferenceSection(
     categoryTitle: String,
@@ -254,7 +251,7 @@ private fun TogglePreferenceSection(
     preferenceSummary: String,
     learnMoreText: String,
     isToggled: Boolean,
-    onToggleChanged: (Boolean) -> Unit,
+    onToggleChanged: () -> Unit,
     onLearnMoreClicked: () -> Unit,
 ) {
     Column(
@@ -272,7 +269,7 @@ private fun TogglePreferenceSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(
-                    onClick = { onToggleChanged(!isToggled) },
+                    onClick = { onToggleChanged() },
                 )
                 .padding(horizontal = 16.dp),
         ) {
@@ -291,7 +288,7 @@ private fun TogglePreferenceSection(
 
             Switch(
                 checked = isToggled,
-                onCheckedChange = {},
+                onCheckedChange = { onToggleChanged() },
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = FirefoxTheme.colors.formOn,
                     checkedTrackColor = FirefoxTheme.colors.formSurface,
@@ -396,49 +393,14 @@ private fun LearnMoreLink(onLearnMoreClicked: () -> Unit, learnMoreText: String)
     }
 }
 
-/**
- * Provides preview data for the [DataChoicesScreen] Composable.
- *
- * This class implements [PreviewParameterProvider] and supplies multiple
- * [DataChoicesParams] configurations to preview different UI states.
- */
-class DataChoicesPreviewProvider : PreviewParameterProvider<DataChoicesParams> {
-    override val values = sequenceOf(
-        DataChoicesParams(
-            telemetryEnabled = false,
-            usagePingEnabled = true,
-            studiesEnabled = false,
-            selectedCrashOption = CrashReportOption.Ask,
-            measurementDataEnabled = true,
-        ),
-        DataChoicesParams(
-            telemetryEnabled = true,
-            usagePingEnabled = false,
-            studiesEnabled = true,
-            selectedCrashOption = CrashReportOption.Auto,
-            measurementDataEnabled = false,
-        ),
-    )
-}
-
 @FlexibleWindowLightDarkPreview
 @Composable
-private fun DataChoicesPreview(
-    @PreviewParameter(DataChoicesPreviewProvider::class)
-    params: DataChoicesParams,
-) {
+private fun DataChoicesPreview() {
     FirefoxTheme {
         DataChoicesScreen(
-            params,
-            onTelemetryToggle = { },
-            onUsagePingToggle = { },
-            onCrashOptionSelected = { },
-            onStudiesClick = { },
-            learnMoreTechnicalData = { },
-            learnMoreDailyUsage = { },
-            learnMoreCrashReport = { },
-            onMarketingDataToggled = { },
-            learnMoreMarketingData = { },
+            store = DataChoicesStore(
+                initialState = DataChoicesState(),
+            ),
         )
     }
 }
