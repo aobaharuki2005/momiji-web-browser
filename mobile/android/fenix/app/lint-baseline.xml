@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="6" by="lint 8.11.1" type="baseline" client="gradle" dependencies="false" name="AGP (8.11.1)" variant="all" version="8.11.1">
+<issues format="6" by="lint 8.12.0" type="baseline" client="gradle" dependencies="false" name="AGP (8.12.0)" variant="all" version="8.12.0">
 
     <issue
         id="NoStaticMocking"
@@ -268,33 +268,11 @@
     <issue
         id="NoStaticMocking"
         message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        mockkStatic(Context::settings) {"
-        errorLine2="        ^">
-        <location
-            file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="465"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            mockkStatic(NavController::nav) {"
-        errorLine2="            ^">
-        <location
-            file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="466"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
         errorLine1="        mockkStatic(NavController::nav) {"
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="484"
+            line="494"
             column="9"/>
     </issue>
 
@@ -305,40 +283,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="500"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        mockkStatic(Context::settings) {"
-        errorLine2="        ^">
-        <location
-            file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="500"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            mockkStatic(NavController::nav) {"
-        errorLine2="            ^">
-        <location
-            file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="501"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        mockkStatic(NavController::nav) {"
-        errorLine2="        ^">
-        <location
-            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="527"
+            line="510"
             column="9"/>
     </issue>
 
@@ -349,52 +294,19 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="556"
+            line="537"
             column="9"/>
     </issue>
 
     <issue
         id="NoStaticMocking"
         message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        mockkStatic(Context::settings) {"
+        errorLine1="        mockkStatic(NavController::nav) {"
         errorLine2="        ^">
         <location
-            file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="567"
+            file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
+            line="566"
             column="9"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            mockkStatic(NavController::nav) {"
-        errorLine2="            ^">
-        <location
-            file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="568"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="        mockkStatic(Context::settings) {"
-        errorLine2="        ^">
-        <location
-            file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="609"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NoStaticMocking"
-        message="Usage of MockK&apos;s &apos;mockkStatic&apos; for static mocking is discouraged. Refactor to use dependency injection."
-        errorLine1="            mockkStatic(NavController::nav) {"
-        errorLine2="            ^">
-        <location
-            file="src/test/java/org/mozilla/fenix/home/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="610"
-            column="13"/>
     </issue>
 
     <issue
@@ -404,7 +316,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="760"
+            line="796"
             column="9"/>
     </issue>
 
@@ -415,7 +327,7 @@
         errorLine2="            ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="761"
+            line="797"
             column="13"/>
     </issue>
 
@@ -426,7 +338,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="806"
+            line="840"
             column="9"/>
     </issue>
 
@@ -437,7 +349,7 @@
         errorLine2="            ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="807"
+            line="841"
             column="13"/>
     </issue>
 
@@ -448,7 +360,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1256"
+            line="1292"
             column="9"/>
     </issue>
 
@@ -459,7 +371,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1358"
+            line="1394"
             column="9"/>
     </issue>
 
@@ -470,7 +382,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1481"
+            line="1517"
             column="9"/>
     </issue>
 
@@ -481,7 +393,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1549"
+            line="1585"
             column="9"/>
     </issue>
 
@@ -492,7 +404,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1581"
+            line="1617"
             column="9"/>
     </issue>
 
@@ -503,7 +415,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1606"
+            line="1642"
             column="9"/>
     </issue>
 
@@ -514,7 +426,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1637"
+            line="1673"
             column="9"/>
     </issue>
 
@@ -525,7 +437,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1669"
+            line="1705"
             column="9"/>
     </issue>
 
@@ -536,7 +448,7 @@
         errorLine2="        ^">
         <location
             file="src/test/java/org/mozilla/fenix/components/toolbar/BrowserToolbarMiddlewareTest.kt"
-            line="1780"
+            line="1816"
             column="9"/>
     </issue>
 
@@ -2131,7 +2043,7 @@
         errorLine2="        ~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
-            line="541"
+            line="590"
             column="9"/>
     </issue>
 
@@ -2253,6 +2165,17 @@
         <location
             file="src/main/AndroidManifest.xml"
             line="723"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="ExportedReceiver"
+        message="Exported receiver does not require permission"
+        errorLine1="        &lt;receiver"
+        errorLine2="         ~~~~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="774"
             column="10"/>
     </issue>
 
