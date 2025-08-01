@@ -1054,7 +1054,8 @@ class nsTextFrame : public nsIFrame {
   ContentOffsets GetCharacterOffsetAtFramePointInternal(
       const nsPoint& aPoint, bool aForInsertionPoint);
 
-  static float GetTextCombineScaleFactor(nsTextFrame* aFrame);
+  float GetTextCombineScale() const;
+  std::pair<nscoord, float> GetTextCombineOffsetAndScale() const;
 
   void ClearFrameOffsetCache();
 

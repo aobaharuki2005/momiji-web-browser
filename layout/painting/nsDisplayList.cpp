@@ -7780,8 +7780,15 @@ void nsDisplayText::RenderToContext(gfxContext* aCtx,
 
   nsPoint framePt = ToReferenceFrame();
   if (f->Style()->IsTextCombined()) {
-    float scaleFactor = nsTextFrame::GetTextCombineScaleFactor(f);
-    if (scaleFactor != 1.0f) {
+    auto [offset, scale] = f->GetTextCombineOffsetAndScale();
+    gfxTextRun* textRun = f->GetTextRun(nsTextFrame::eInflated);
+    bool rtl = textRun && textRun->IsRightToLeft();
+    if (rtl) {
+      framePt.x -= offset;
+    } else {
+      framePt.x += offset;
+    }
+    if (scale != 1.0f) {
       if (auto* textDrawer = aCtx->GetTextDrawer()) {
         // WebRender doesn't support scaling text like this yet
         textDrawer->FoundUnsupportedFeature();
@@ -7792,13 +7799,12 @@ void nsDisplayText::RenderToContext(gfxContext* aCtx,
       // necessary. This is done here because we want selection be
       // compressed at the same time as text.
       gfxPoint pt = nsLayoutUtils::PointToGfxPoint(framePt, A2D);
-      gfxTextRun* textRun = f->GetTextRun(nsTextFrame::eInflated);
-      if (textRun && textRun->IsRightToLeft()) {
+      if (rtl) {
         pt.x += gfxFloat(f->GetSize().width) / A2D;
       }
       gfxMatrix mat = aCtx->CurrentMatrixDouble()
                           .PreTranslate(pt)
-                          .PreScale(scaleFactor, 1.0)
+                          .PreScale(scale, 1.0)
                           .PreTranslate(-pt);
       aCtx->SetMatrixDouble(mat);
     }

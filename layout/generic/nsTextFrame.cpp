@@ -4752,11 +4752,27 @@ nsresult nsTextFrame::CharacterDataChanged(
   return NS_OK;
 }
 
-NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(TextCombineScaleFactorProperty, float)
+struct TextCombineData {
+  // Measured advance of the text before any text-combine scaling is applied.
+  nscoord mNaturalWidth = 0;
+  // Inline offset to place this text within the 1-em block of the upright-
+  // combined cell.
+  nscoord mOffset = 0;
+  // Inline scaling factor to apply (always <= 1.0, as the text may be
+  // compressed but is never expanded to fit the 1-em cell).
+  float mScale = 1.0f;
+};
 
-float nsTextFrame::GetTextCombineScaleFactor(nsTextFrame* aFrame) {
-  float factor = aFrame->GetProperty(TextCombineScaleFactorProperty());
-  return factor ? factor : 1.0f;
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(TextCombineDataProperty, TextCombineData)
+
+float nsTextFrame::GetTextCombineScale() const {
+  const auto* data = GetProperty(TextCombineDataProperty());
+  return data ? data->mScale : 1.0f;
+}
+
+std::pair<nscoord, float> nsTextFrame::GetTextCombineOffsetAndScale() const {
+  const auto* data = GetProperty(TextCombineDataProperty());
+  return data ? std::pair(data->mOffset, data->mScale) : std::pair(0, 1.0f);
 }
 
 void nsTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
@@ -6352,9 +6368,13 @@ bool nsTextFrame::PaintTextWithSelectionColors(
                         nscoord(aParams.framePt.y + offs), GetSize().width,
                         nscoord(advance));
       } else {
+        // For text-combine-upright, we may have collapsed the frame height,
+        // so we instead use 1em to ensure the selection is visible.
+        nscoord height = Style()->IsTextCombined()
+                             ? aParams.provider->GetFontMetrics()->EmHeight()
+                             : GetSize().height;
         bgRect = nsRect(nscoord(aParams.framePt.x + offs),
-                        nscoord(aParams.framePt.y), nscoord(advance),
-                        GetSize().height);
+                        nscoord(aParams.framePt.y), nscoord(advance), height);
       }
 
       LayoutDeviceRect selectionRect =
@@ -7158,7 +7178,7 @@ void nsTextFrame::DrawTextRunAndDecorations(
   // we need to revert the scaling here.
   gfxContextMatrixAutoSaveRestore scaledRestorer;
   if (Style()->IsTextCombined()) {
-    float scaleFactor = GetTextCombineScaleFactor(this);
+    float scaleFactor = GetTextCombineScale();
     if (scaleFactor != 1.0f) {
       scaledRestorer.SetContext(aParams.context);
       gfxMatrix unscaled = aParams.context->CurrentMatrixDouble();
@@ -7414,7 +7434,7 @@ nsIFrame::ContentOffsets nsTextFrame::GetCharacterOffsetAtFramePointInternal(
           ? (mTextRun->IsInlineReversed() ? mRect.height - aPoint.y : aPoint.y)
           : (mTextRun->IsInlineReversed() ? mRect.width - aPoint.x : aPoint.x);
   if (Style()->IsTextCombined()) {
-    width /= GetTextCombineScaleFactor(this);
+    width /= GetTextCombineScale();
   }
   gfxFloat fitWidth;
   Range skippedRange = ComputeTransformedRange(provider);
@@ -7722,7 +7742,7 @@ nsPoint nsTextFrame::GetPointFromIterator(const gfxSkipCharsIterator& aIter,
   } else {
     point.y = 0;
     if (Style()->IsTextCombined()) {
-      iSize *= GetTextCombineScaleFactor(this);
+      iSize *= GetTextCombineScale();
     }
     if (mTextRun->IsInlineReversed()) {
       point.x = mRect.width - iSize;
@@ -7851,7 +7871,7 @@ nsresult nsTextFrame::GetCharacterRectsInRange(int32_t aInOffset,
       if (Style()->IsTextCombined()) {
         // The scale factor applies to the inline advance of the glyphs, so it
         // affects both the rect width and the origin point for the next glyph.
-        iSize *= GetTextCombineScaleFactor(this);
+        iSize *= GetTextCombineScale();
       }
       rect.width = iSize;
       rect.height = mRect.height;
@@ -8883,12 +8903,15 @@ void nsTextFrame::AddInlineMinISizeForFlow(gfxContext* aRenderingContext,
   uint32_t start = FindStartAfterSkippingWhitespace(&provider, aData, textStyle,
                                                     &iter, flowEndInTextRun);
 
-  // text-combine-upright frame is constantly 1em on inline-axis.
+  // text-combine-upright frame is constantly 1em on inline-axis; but if it has
+  // a following sibling with the same style, it contributes nothing.
   if (Style()->IsTextCombined()) {
     if (start < flowEndInTextRun && textRun->CanBreakLineBefore(start)) {
       aData->OptionallyBreak();
     }
-    aData->mCurrentLine += provider.GetFontMetrics()->EmHeight();
+    if (!GetNextSibling() || GetNextSibling()->Style() != Style()) {
+      aData->mCurrentLine += provider.GetFontMetrics()->EmHeight();
+    }
     aData->mTrailingWhitespace = 0;
     return;
   }
@@ -9154,9 +9177,12 @@ void nsTextFrame::AddInlinePrefISizeForFlow(gfxContext* aRenderingContext,
   PropertyProvider provider(textRun, textStyle, frag, this, iter, INT32_MAX,
                             nullptr, 0, aTextRunType, aData->mLineIsEmpty);
 
-  // text-combine-upright frame is constantly 1em on inline-axis.
+  // text-combine-upright frame is constantly 1em on inline-axis, or zero if
+  // there is a following sibling with the same style.
   if (Style()->IsTextCombined()) {
-    aData->mCurrentLine += provider.GetFontMetrics()->EmHeight();
+    if (!GetNextSibling() || GetNextSibling()->Style() != Style()) {
+      aData->mCurrentLine += provider.GetFontMetrics()->EmHeight();
+    }
     aData->mTrailingWhitespace = 0;
     aData->mLineIsEmpty = false;
     return;
@@ -10159,30 +10185,88 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     nscoord width = finalSize.ISize(wm);
     nscoord em = fm->EmHeight();
     // Compress the characters in horizontal axis if necessary.
-    if (width <= em) {
-      RemoveProperty(TextCombineScaleFactorProperty());
-    } else {
-      SetProperty(TextCombineScaleFactorProperty(),
-                  static_cast<float>(em) / static_cast<float>(width));
-      finalSize.ISize(wm) = em;
+    auto* data = GetProperty(TextCombineDataProperty());
+    if (!data) {
+      data = new TextCombineData;
+      SetProperty(TextCombineDataProperty(), data);
     }
-    // Make the characters be in an 1em square.
+    data->mNaturalWidth = width;
+    finalSize.ISize(wm) = em;
+    // If we're going to have to adjust the block-size to make it 1em, make an
+    // appropriate adjustment to the font baseline (determined by the ascent
+    // returned in aMetrics)
     if (finalSize.BSize(wm) != em) {
       fontBaseline =
           aMetrics.BlockStartAscent() + (em - finalSize.BSize(wm)) / 2;
       aMetrics.SetBlockStartAscent(fontBaseline);
+    }
+    // If we have a next-in-flow with the same style, remove our block-size
+    // so that they end up beside each other; only the last in the series
+    // gets to keep its block-axis size.
+    if (GetNextSibling() && GetNextSibling()->Style() == Style()) {
+      finalSize.BSize(wm) = 0;
+    } else {
+      // Make the characters be in an 1em square.
       finalSize.BSize(wm) = em;
+    }
+    // If there are earlier sibling frames with the same style, and we have
+    // reached the end of the run of same-style siblings, recompute the scale
+    // as necessary to make them all fit. (This is a bit inefficient, but is
+    // such a rare case that we don't much care.)
+    nsIFrame* f = GetPrevSibling();
+    if (f && f->Style() == Style() &&
+        (!GetNextSibling() || GetNextSibling()->Style() != Style())) {
+      // Collect the total "natural" width of the text.
+      while (f->Style() == Style()) {
+        if (auto* fData = f->GetProperty(TextCombineDataProperty())) {
+          width += fData->mNaturalWidth;
+        }
+        if (!f->GetPrevSibling()) {
+          break;
+        }
+        f = f->GetPrevSibling();
+      }
+    } else {
+      // Not at the end of a run of frames; we're just going to handle `this`.
+      f = this;
+    }
+    // Figure out scaling to apply to this frame (or to the run of same-style
+    // sibling frames), and the starting offset within the em square.
+    float scale;
+    nscoord offset;
+    if (width > em) {
+      scale = static_cast<float>(em) / width;
+      offset = 0;
+    } else {
+      scale = 1.0f;
+      offset = (em - width) / 2;
+    }
+    while (true) {
+      if (auto* fData = f->GetProperty(TextCombineDataProperty())) {
+        fData->mScale = scale;
+        fData->mOffset = offset;
+        offset += fData->mNaturalWidth * scale;
+      }
+      if (f == this) {
+        break;
+      }
+      f = f->GetNextSibling();
     }
   }
   aMetrics.SetSize(wm, finalSize);
 
   NS_ASSERTION(aMetrics.BlockStartAscent() >= 0, "Negative ascent???");
-  NS_ASSERTION(
+  // The effective "descent" here will be negative in the case of a frame that
+  // is participating in text-combine-upright, but is not the last frame within
+  // the combined upright cell, because we zero out its block-size (see above).
+  // So this creates an exception to the non-negative assertion here.
+  DebugOnly<nscoord> descent =
       (Style()->IsTextCombined() ? aMetrics.ISize(aMetrics.GetWritingMode())
                                  : aMetrics.BSize(aMetrics.GetWritingMode())) -
-              aMetrics.BlockStartAscent() >=
-          0,
-      "Negative descent???");
+      aMetrics.BlockStartAscent();
+  NS_ASSERTION(descent >= 0 || (Style()->IsTextCombined() && GetNextSibling() &&
+                                GetNextSibling()->Style() == Style()),
+               "Unexpected negative descent???");
 
   mAscent = fontBaseline;
 
