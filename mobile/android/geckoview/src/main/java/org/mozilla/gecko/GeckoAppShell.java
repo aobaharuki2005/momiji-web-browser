@@ -796,6 +796,13 @@ public class GeckoAppShell {
   private static native void notifyAlertListener(
       String name, String topic, String action, String origin);
 
+  /** Called by the NotificationListener to notify Gecko that a notification has shown. */
+  public static void onNotificationShow(final String name, final String cookie, @NotNull final String origin) {
+    if (GeckoThread.isRunning()) {
+      notifyAlertListener(name, "alertshow", cookie, origin);
+    }
+  }
+
   /**
    * Called by the NotificationListener to notify Gecko that a previously shown notification has
    * been closed.
