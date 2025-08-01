@@ -37,7 +37,7 @@ div[name="page-loading"] > .buttons > button {
 }
 
 .loading-block {
-  background-color: var(--in-content-button-background);
+  background-color: var(--button-background-color);
   border-radius: 4px;
   opacity: 0.4;
   margin-block-start: 16px;
@@ -316,7 +316,7 @@ summary {
 .error-icon {
   content: url("chrome://global/skin/icons/error.svg");
   -moz-context-properties: fill;
-  fill: var(--in-content-danger-button-background);
+  fill: var(--icon-color-critical);
   margin-block: 0;
   margin-inline: 0 8px;
   width: 16px;

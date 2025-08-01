@@ -764,7 +764,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::MozSidebartext:
     case ColorID::Fieldtext:
     case ColorID::Infotext:
-    case ColorID::Buttontext:  // --in-content-button-text-color (via
+    case ColorID::Buttontext:  // --button-text-color (via
                                // --in-content-page-color)
     case ColorID::MozComboboxtext:
     case ColorID::MozButtonhovertext:
@@ -802,20 +802,20 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
       color = NS_RGB(0xb1, 0xb1, 0xb1);
       break;
     case ColorID::MozCellhighlight:
-    case ColorID::Selecteditem:  // --in-content-primary-button-background /
+    case ColorID::Selecteditem:  // --button-background-color-primary /
                                  // --in-content-item-selected
       color = NS_RGB(0, 221, 255);
       break;
     case ColorID::MozSidebar:
     case ColorID::Field:
-    case ColorID::Buttonface:  // --in-content-button-background
+    case ColorID::Buttonface:  // --button-background-color
     case ColorID::Buttonshadow:
     case ColorID::Buttonhighlight:
     case ColorID::MozColheader:
     case ColorID::Threedface:
     case ColorID::MozCombobox:
     case ColorID::MozCellhighlighttext:
-    case ColorID::Selecteditemtext:  // --in-content-primary-button-text-color /
+    case ColorID::Selecteditemtext:  // --button-text-color-primary /
                                      // --in-content-item-selected-text
       color = NS_RGB(43, 42, 51);
       break;
@@ -826,11 +826,11 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::MozButtondisabledface:
       color = NS_ComposeColors(kWindowBackground, NS_RGBA(43, 42, 51, 102));
       break;
-    case ColorID::MozButtonhoverface:  // --in-content-button-background-hover
+    case ColorID::MozButtonhoverface:  // --button-background-color-hover
     case ColorID::MozColheaderhover:
       color = NS_RGB(82, 82, 94);
       break;
-    case ColorID::MozButtonactiveface:  // --in-content-button-background-active
+    case ColorID::MozButtonactiveface:  // --button-background-color-active
     case ColorID::MozColheaderactive:
       color = NS_RGB(91, 91, 102);
       break;

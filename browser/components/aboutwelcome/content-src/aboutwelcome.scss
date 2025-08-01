@@ -247,8 +247,8 @@ html {
   }
 
   @mixin secondary-cta-styles {
-    background-color: var(--in-content-button-background);
-    border: 1px solid var(--in-content-button-border-color);
+    background-color: var(--button-background-color);
+    border: var(--button-border);
     line-height: 12px;
     font-size: 0.72em;
     font-weight: 600;
@@ -258,12 +258,12 @@ html {
 
     &:hover,
     &[open] {
-      background-color: var(--in-content-button-background-hover);
-      color: var(--in-content-button-text-color-hover);
+      background-color: var(--button-background-color-hover);
+      color: var(--button-text-color-hover);
 
       &:active {
-        background-color: var(--in-content-button-background-active);
-        color: var(--in-content-button-text-color-active);
+        background-color: var(--button-background-color-active);
+        color: var(--button-text-color-active);
       }
     }
   }
@@ -297,24 +297,24 @@ html {
 
     &.light-text {
       --in-content-page-color: rgb(251, 251, 254);
-      --in-content-primary-button-text-color: rgb(43, 42, 51);
-      --in-content-primary-button-text-color-hover: rgb(43, 42, 51);
-      --in-content-primary-button-background: rgb(0, 221, 255);
-      --in-content-primary-button-background-hover: rgb(128, 235, 255);
-      --in-content-primary-button-background-active: rgb(170, 242, 255);
-      --in-content-button-text-color: var(--in-content-page-color);
+      --button-text-color-primary: rgb(43, 42, 51);
+      --button-text-color-primary-hover: rgb(43, 42, 51);
+      --button-background-color-primary: rgb(0, 221, 255);
+      --button-background-color-primary-hover: rgb(128, 235, 255);
+      --button-background-color-primary-active: rgb(170, 242, 255);
+      --button-text-color: var(--in-content-page-color);
     }
 
     &.dark-text {
       --in-content-page-color: rgb(21,  20,  26);
-      --in-content-primary-button-text-color: rgb(251, 251, 254);
-      --in-content-primary-button-text-color-hover: rgb(251, 251, 254);
-      --in-content-primary-button-background: #0061E0;
-      --in-content-primary-button-background-hover: #0250BB;
-      --in-content-primary-button-background-active: #053E94;
-      --in-content-primary-button-border-color: transparent;
-      --in-content-primary-button-border-hover: transparent;
-      --in-content-button-text-color: var(--in-content-page-color);
+      --button-text-color-primary: rgb(251, 251, 254);
+      --button-text-color-primary-hover: rgb(251, 251, 254);
+      --button-background-color-primary: #0061E0;
+      --button-background-color-primary-hover: #0250BB;
+      --button-background-color-primary-active: #053E94;
+      --button-border-color-primary: transparent;
+      --button-border-color-primary-hover: transparent;
+      --button-text-color: var(--in-content-page-color);
     }
 
     &:dir(rtl) {
@@ -382,7 +382,7 @@ html {
             .secondary {
               @include secondary-cta-styles;
 
-              color: var(--in-content-button-text-color);
+              color: var(--button-text-color);
             }
           }
         }
@@ -445,7 +445,7 @@ html {
 
             &.secondary {
               &:hover {
-                background-color: var(--in-content-button-background-hover);
+                background-color: var(--button-background-color-hover);
               }
             }
           }
@@ -458,7 +458,7 @@ html {
             .secondary {
               @include secondary-cta-styles;
 
-              color: var(--in-content-button-text-color);
+              color: var(--button-text-color);
             }
           }
         }
@@ -507,7 +507,7 @@ html {
         .loader {
           width: 1em;
           height: 1em;
-          border: 3px solid var(--in-content-primary-button-text-color);
+          border: 3px solid var(--button-text-color-primary);
           border-bottom-color: transparent;
           border-radius: 50%;
           box-sizing: border-box;
@@ -736,7 +736,7 @@ html {
                 &.secondary {
                   &:hover,
                   &[open] {
-                    background-color: var(--in-content-button-background-hover);
+                    background-color: var(--button-background-color-hover);
                   }
                 }
               }
@@ -762,7 +762,7 @@ html {
             .loader {
               width: 1em;
               height: 1em;
-              border: 3px solid var(--in-content-primary-button-text-color);
+              border: 3px solid var(--button-text-color-primary);
               border-bottom-color: transparent;
               border-radius: 50%;
               box-sizing: border-box;
@@ -1166,16 +1166,16 @@ html {
                     padding-inline: 16px;
                     font-size: 12px;
                     padding-block: 0;
-                    background-color: var(--in-content-button-background);
-                    color: var(--in-content-button-text-color);
+                    background-color: var(--button-background-color);
+                    color: var(--button-text-color);
                     min-width: 0;
 
                     &:hover {
-                      background-color: var(--in-content-button-background-hover);
+                      background-color: var(--button-background-color-hover);
                     }
 
                     &:active {
-                      background-color: var(--in-content-button-background-active);
+                      background-color: var(--button-background-color-active);
                     }
                   }
                 }
@@ -1225,7 +1225,7 @@ html {
           .loader {
             width: 1em;
             height: 1em;
-            border: 3px solid var(--in-content-primary-button-text-color);
+            border: 3px solid var(--button-text-color-primary);
             border-bottom-color: transparent;
             border-radius: 50%;
             box-sizing: border-box;
@@ -1796,7 +1796,7 @@ html {
     &:active,
     &:focus-within {
       border-radius: 8px;
-      outline: 2px solid var(--in-content-primary-button-background);
+      outline: 2px solid var(--button-background-color-primary);
     }
 
     // single select and theme specific styles
@@ -1818,12 +1818,12 @@ html {
         }
 
         &:has(.input:focus) {
-          outline: 2px solid var(--in-content-primary-button-background);
+          outline: 2px solid var(--button-background-color-primary);
           outline-offset: 5px;
         }
 
         &:has(.selected) {
-          border: 3px solid var(--in-content-primary-button-background);
+          border: 3px solid var(--button-background-color-primary);
           border-radius: var(--border-radius-large);
         }
 
@@ -1874,7 +1874,7 @@ html {
         transition: var(--transition);
 
         &:has(.input:focus) {
-          outline: 2px solid var(--in-content-primary-button-background);
+          outline: 2px solid var(--button-background-color-primary);
           outline-offset: 2px;
         }
       }
@@ -2439,13 +2439,13 @@ html {
       background: var(--grey-subtitle-1);
       border-radius: 5px;
       // using border will show up in Windows High Contrast Mode to improve accessibility.
-      border: 3px solid var(--in-content-button-text-color);
+      border: 3px solid var(--button-text-color);
       opacity: 0.35;
       box-sizing: inherit;
 
       &.current {
         opacity: 1;
-        border-color: var(--in-content-primary-button-background);
+        border-color: var(--button-background-color-primary);
 
         // This is the only step shown, so visually hide it to maintain spacing.
         &:last-of-type:first-of-type {
@@ -2458,7 +2458,7 @@ html {
       height: 6px;
       padding-block: 0;
       margin-block: 42px 0;
-      background-color: color-mix(in srgb, var(--in-content-button-text-color) 25%, transparent);
+      background-color: color-mix(in srgb, var(--button-text-color) 25%, transparent);
       justify-content: start;
       opacity: 1;
       transition: none;
@@ -2467,7 +2467,7 @@ html {
         width: 100%;
         height: 100%;
         margin-inline: -1px;
-        background-color: var(--in-content-primary-button-background);
+        background-color: var(--button-background-color-primary);
         border: 0;
         border-radius: 0;
         opacity: 1;
@@ -2517,8 +2517,8 @@ html {
   }
 
   .secondary {
-    background-color: var(--in-content-button-background);
-    color: var(--in-content-button-text-color);
+    background-color: var(--button-background-color);
+    color: var(--button-text-color);
   }
 
   .split-button-container,
