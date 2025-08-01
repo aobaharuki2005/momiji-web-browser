@@ -15,6 +15,16 @@ export default class IPProtectionSignedOutContentElement extends MozLitElement {
     super();
   }
 
+  handleSignIn() {
+    this.dispatchEvent(
+      new CustomEvent("IPProtection:SignIn", { bubbles: true, composed: true })
+    );
+    // Close the panel
+    this.dispatchEvent(
+      new CustomEvent("IPProtection:Close", { bubbles: true, composed: true })
+    );
+  }
+
   render() {
     return html`
       <link
@@ -27,6 +37,7 @@ export default class IPProtectionSignedOutContentElement extends MozLitElement {
           src="chrome://browser/content/ipprotection/assets/ipprotection.svg"
           alt=""
         />
+        <h2 id="signed-out-vpn-title" data-l10n-id="signed-out-vpn-title"></h2>
         <p id="signed-out-vpn-message" data-l10n-id="signed-out-vpn-message">
           <a
             data-l10n-name="learn-more-vpn-signed-out"
@@ -40,6 +51,7 @@ export default class IPProtectionSignedOutContentElement extends MozLitElement {
           class="vpn-button"
           data-l10n-id="sign-in-vpn"
           type="primary"
+          @click=${this.handleSignIn}
         ></moz-button>
       </div>
     `;

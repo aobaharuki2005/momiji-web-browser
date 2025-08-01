@@ -44,8 +44,9 @@ upgrade-vpn-title = Get peace of mind with full-device protection
 upgrade-vpn-paragraph = Protect yourself beyond the browser with <a data-l10n-name="learn-more-vpn">{ -mozilla-vpn-brand-name }</a>. Customize your VPN location, set site-specific locations, and enjoy enhanced security whether you’re at home or on public Wi-Fi.
 upgrade-vpn-button = Upgrade
 
-signed-out-vpn-message = Protect your browsing with a VPN, now <a data-l10n-name="learn-more-vpn-signed-out">built right into { -brand-product-name }</a>. Hide your location and encrypt your traffic. Sign in to turn it on.
-sign-in-vpn = Sign in
+signed-out-vpn-title = Sign in to boost your browser’s privacy with free { -firefox-vpn-brand-name }
+signed-out-vpn-message = You’ve been selected for early access to our new, <a data-l10n-name="learn-more-vpn-signed-out">built-in VPN</a>. Enhance your browser’s protection by hiding your location and encrypting your traffic.
+sign-in-vpn = Next
 
 active-subscription-vpn-title = Finish setting up { -mozilla-vpn-brand-name }
 active-subscription-vpn-message = Download it and install the extension to unlock your upgrade.

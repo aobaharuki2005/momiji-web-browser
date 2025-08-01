@@ -39,10 +39,7 @@ add_task(async function test_signed_out_content() {
     "ipprotection content component should be present"
   );
 
-  let signedOutElement = content.shadowRoot.querySelector(
-    "ipprotection-signedout"
-  );
-  let signedOutContent = signedOutElement.shadowRoot;
+  let signedOutContent = content.signedOutEl.shadowRoot;
   let signedOutImg = signedOutContent.querySelector("#signed-out-vpn-img");
   let signedOutTitle = signedOutContent.querySelector(
     "#signed-out-vpn-message"
@@ -58,4 +55,47 @@ add_task(async function test_signed_out_content() {
   let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
   EventUtils.synthesizeKey("KEY_Escape");
   await panelHiddenPromise;
+});
+
+/**
+ * Tests sign-in button functionality
+ */
+add_task(async function test_signin_button() {
+  let button = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
+
+  let panelView = PanelMultiView.getViewNode(
+    document,
+    lazy.IPProtectionWidget.PANEL_ID
+  );
+
+  let panelShownPromise = waitForPanelEvent(document, "popupshown");
+  // Open the panel
+  button.click();
+  await panelShownPromise;
+
+  let content = panelView.querySelector(lazy.IPProtectionPanel.CONTENT_TAGNAME);
+
+  content.state.isSignedIn = false;
+  content.requestUpdate();
+  await content.updateComplete;
+
+  Assert.ok(
+    BrowserTestUtils.isVisible(content.signedOutEl),
+    "Signed out element should be visible"
+  );
+
+  let signInButton =
+    content.signedOutEl.shadowRoot.querySelector("#sign-in-vpn");
+  Assert.ok(
+    BrowserTestUtils.isVisible(signInButton),
+    "Signed out button should be visible"
+  );
+
+  let signInPromise = BrowserTestUtils.waitForEvent(
+    document,
+    "IPProtection:SignIn"
+  );
+  let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
+  signInButton.click();
+  await Promise.all([signInPromise, panelHiddenPromise]);
 });
