@@ -217,6 +217,11 @@ pub(crate) mod profiler_utils {
                     // label we got while retrieveing the metric, is valid,
                     // use them directly.
                     Some(label) => {
+                        // If the label comes from a dual_labeled_counter,
+                        // it is prefixed and delimited with a record separator
+                        // which we should adapt for display.
+                        let label = label.strip_prefix('\x1E').unwrap_or(&label);
+                        let label = label.replace('\x1E', ", ");
                         json_writer.unique_string_property("id", &metadata.name);
                         json_writer.unique_string_property("label", &label);
                     }
