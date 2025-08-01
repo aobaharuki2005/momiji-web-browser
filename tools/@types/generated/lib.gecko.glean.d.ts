@@ -1034,6 +1034,10 @@ interface GleanImpl {
     searchFormCounts: GleanEventWithExtras<{ provider_id?: string, source?: string }>;
   }
 
+  sapImpressionCounts: {
+    contextmenuVisual: Record<string, GleanCounter>;
+  }
+
   searchWith: {
     contextId: GleanUuid;
     reportingUrl: GleanUrl;

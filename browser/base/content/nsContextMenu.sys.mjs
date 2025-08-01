@@ -7,6 +7,8 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserSearchTelemetry:
+    "moz-src:///browser/components/search/BrowserSearchTelemetry.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   ContextualIdentityService:
@@ -2897,6 +2899,12 @@ export class nsContextMenu {
             lazy.SearchUtils.URL_TYPE.VISUAL_SEARCH
           ),
         }
+      );
+
+      lazy.BrowserSearchTelemetry.recordSapImpression(
+        this.browser,
+        menuitem.engine,
+        "contextmenu_visual"
       );
     }
   }

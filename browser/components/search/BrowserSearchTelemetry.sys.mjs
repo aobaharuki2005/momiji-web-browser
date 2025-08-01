@@ -248,6 +248,34 @@ class BrowserSearchTelemetryHandler {
   }
 
   /**
+   * Records an impression of a search access point.
+   *
+   * @param {XULBrowserElement} browser
+   *   The browser associated with the SAP.
+   * @param {nsISearchEngine|null} engine
+   *   The engine handling the search, or null if this doesn't apply to the SAP
+   *   (e.g., the engine isn't known or selected yet). The counter's label will
+   *   be `engine.id` if `engine` is a non-null, app-provided engine. Otherwise
+   *   the label will be "none".
+   * @param {string} source
+   *   The name of the SAP. See `KNOWN_SEARCH_SOURCES` for allowed values.
+   */
+  recordSapImpression(browser, engine, source) {
+    if (!this.shouldRecordSearchCount(browser)) {
+      return;
+    }
+    if (!this.KNOWN_SEARCH_SOURCES.has(source)) {
+      console.error("Unknown source for SAP impression:", source);
+      return;
+    }
+
+    let scalarSource = this.KNOWN_SEARCH_SOURCES.get(source);
+    let name = scalarSource.replace(/_([a-z])/g, (m, p) => p.toUpperCase());
+    let label = engine?.isConfigEngine ? engine.id : "none";
+    Glean.sapImpressionCounts[name][label].add(1);
+  }
+
+  /**
    * This function handles the "urlbar", "urlbar-oneoff", "searchbar" and
    * "searchbar-oneoff" sources.
    *

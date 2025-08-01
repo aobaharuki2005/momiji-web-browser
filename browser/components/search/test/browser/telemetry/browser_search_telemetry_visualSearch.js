@@ -96,11 +96,18 @@ add_setup(async function () {
   registerCleanupFunction(() => BrowserTestUtils.removeTab(tab));
 });
 
-add_task(async function test() {
+add_task(async function nonPrivateWindow() {
   Services.fog.testResetFOG();
   TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   await openMenuAndClickItem();
+
+  // sap.impression_counts labeled counter
+  Assert.equal(
+    Glean.sapImpressionCounts.contextmenuVisual[ENGINE_ID].testGetValue(),
+    1,
+    "contextmenuVisual should be recorded once for metric impressionCounts"
+  );
 
   // `sap.counts` event and legacy `SEARCH_COUNTS` histogram
   await SearchUITestUtils.assertSAPTelemetry({
@@ -123,6 +130,72 @@ add_task(async function test() {
     "contextmenuVisual should be recorded once for metric browserEngagementNavigation"
   );
 });
+
+add_task(async function privateWindow_countsEnabled() {
+  await doPrivateWindowTest(true);
+});
+
+add_task(async function privateWindow_countsDisabled() {
+  await doPrivateWindowTest(false);
+});
+
+async function doPrivateWindowTest(shouldRecordCounts) {
+  Services.fog.testResetFOG();
+  TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
+
+  await SpecialPowers.pushPrefEnv({
+    // This pref is the opposite of what it seems like it should be.
+    set: [["browser.engagement.search_counts.pbm", !shouldRecordCounts]],
+  });
+
+  let win = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+  await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_PAGE_URL);
+
+  await openMenuAndClickItem({ win });
+
+  let expectedCount = shouldRecordCounts ? 1 : null;
+
+  // sap.impression_counts labeled counter
+  Assert.equal(
+    Glean.sapImpressionCounts.contextmenuVisual[ENGINE_ID].testGetValue(),
+    expectedCount,
+    "contextmenuVisual should be recorded as expected for metric impressionCounts"
+  );
+
+  // `sap.counts` event and legacy `SEARCH_COUNTS` histogram
+  if (expectedCount) {
+    await SearchUITestUtils.assertSAPTelemetry({
+      // The partner code should be excluded.
+      partnerCode: null,
+      // `SEARCH_COUNTS` should not be updated.
+      expectLegacyTelemetry: false,
+      engineId: ENGINE_ID,
+      engineName: ENGINE_NAME,
+      source: EXPECTED_TELEMETRY_SOURCE,
+      count: expectedCount,
+    });
+  } else {
+    Assert.equal(
+      Glean.sap.counts.testGetValue(),
+      null,
+      "No sap.counts events should be recorded"
+    );
+  }
+
+  // browser.engagement.navigation labeled counter
+  Assert.equal(
+    Glean.browserEngagementNavigation.contextmenuVisual[
+      EXPECTED_TELEMETRY_ACTION
+    ].testGetValue(),
+    expectedCount,
+    "contextmenuVisual should be recorded as expected for metric browserEngagementNavigation"
+  );
+
+  await BrowserTestUtils.closeWindow(win);
+  await SpecialPowers.popPrefEnv();
+}
 
 async function openMenuAndClickItem({
   expectedEngineNameInLabel = ENGINE_NAME,

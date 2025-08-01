@@ -260,6 +260,24 @@ sap:
           SERP reports. For user installed engines, this will be the string `other`.
         type: string
 
+sap.impression_counts:
+  contextmenu_visual:
+    type: labeled_counter
+    description: >
+      Count of impressions of the visual search context menu item. The counter's
+      label is the engine's identifier if the engine is known at the time of
+      impression and it's an app-provided engine. Otherwise the label is "none".
+    data_sensitivity:
+      - interaction
+    bugs:
+      - https://bugzil.la/1979224
+    data_reviews:
+      - https://bugzil.la/1979224
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expires: never
+
 serp:
   impression:
     type: event
