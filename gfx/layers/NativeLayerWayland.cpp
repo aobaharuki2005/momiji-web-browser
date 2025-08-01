@@ -115,32 +115,33 @@ void NativeLayerRootWayland::Init() {
   }
 
   // Unmap all layers if nsWindow is unmapped
-  WaylandSurfaceLock lock(mSurface);
-  mSurface->SetUnmapCallbackLocked(lock, [this, self = RefPtr{this}]() -> void {
-    LOG("NativeLayerRootWayland Unmap callback");
-    WaylandSurfaceLock lock(mSurface);
-    for (RefPtr<NativeLayerWayland>& layer : mSublayers) {
-      if (layer->IsMapped()) {
-        layer->Unmap();
-        layer->MainThreadUnmap();
-      }
-    }
-  });
+  WaylandSurfaceLock lock(mRootSurface);
+  mRootSurface->SetUnmapCallbackLocked(
+      lock, [this, self = RefPtr{this}]() -> void {
+        LOG("NativeLayerRootWayland Unmap callback");
+        WaylandSurfaceLock lock(mRootSurface);
+        for (RefPtr<NativeLayerWayland>& layer : mSublayers) {
+          if (layer->IsMapped()) {
+            layer->Unmap();
+            layer->MainThreadUnmap();
+          }
+        }
+      });
 
-  mSurface->SetGdkCommitCallbackLocked(lock,
-                                       [this, self = RefPtr{this}]() -> void {
-                                         LOGVERBOSE("GdkCommitCallback()");
-                                         // Try to update on main thread if we
-                                         // need it
-                                         UpdateLayersOnMainThread();
-                                       });
+  mRootSurface->SetGdkCommitCallbackLocked(
+      lock, [this, self = RefPtr{this}]() -> void {
+        LOGVERBOSE("GdkCommitCallback()");
+        // Try to update on main thread if we
+        // need it
+        UpdateLayersOnMainThread();
+      });
 
   // Propagate frame callback state (enabled/disabled) to all layers
   // to save resources.
-  mSurface->SetFrameCallbackStateHandlerLocked(
+  mRootSurface->SetFrameCallbackStateHandlerLocked(
       lock, [this, self = RefPtr{this}](bool aState) -> void {
         LOGVERBOSE("FrameCallbackStateHandler()");
-        mSurface->AssertCurrentThreadOwnsMutex();
+        mRootSurface->AssertCurrentThreadOwnsMutex();
         for (RefPtr<NativeLayerWayland>& layer : mSublayers) {
           layer->SetFrameCallbackState(aState);
         }
@@ -161,8 +162,8 @@ void NativeLayerRootWayland::Init() {
 #ifdef NIGHTLY_BUILD
   if (!gfx::gfxVars::UseDMABufSurfaceExport() &&
       StaticPrefs::widget_dmabuf_feedback_enabled_AtStartup()) {
-    mSurface->EnableDMABufFormatsLocked(lock, [this, self = RefPtr{this}](
-                                                  DMABufFormats* aFormats) {
+    mRootSurface->EnableDMABufFormatsLocked(lock, [this, self = RefPtr{this}](
+                                                      DMABufFormats* aFormats) {
       if (DRMFormat* format = aFormats->GetFormat(GBM_FORMAT_ARGB8888,
                                                   /* aScanoutFormat */ true)) {
         LOG("NativeLayerRootWayland DMABuf format refresh: we have scanout "
@@ -191,29 +192,29 @@ void NativeLayerRootWayland::Shutdown() {
   UpdateLayersOnMainThread();
 
   {
-    WaylandSurfaceLock lock(mSurface);
-    if (mSurface->IsMapped()) {
-      mSurface->RemoveAttachedBufferLocked(lock);
+    WaylandSurfaceLock lock(mRootSurface);
+    if (mRootSurface->IsMapped()) {
+      mRootSurface->RemoveAttachedBufferLocked(lock);
     }
-    mSurface->ClearUnmapCallbackLocked(lock);
-    mSurface->ClearGdkCommitCallbackLocked(lock);
-    mSurface->DisableDMABufFormatsLocked(lock);
+    mRootSurface->ClearUnmapCallbackLocked(lock);
+    mRootSurface->ClearGdkCommitCallbackLocked(lock);
+    mRootSurface->DisableDMABufFormatsLocked(lock);
   }
 
-  mSurface = nullptr;
+  mRootSurface = nullptr;
   mTmpBuffer = nullptr;
   mDRMFormat = nullptr;
 }
 
 NativeLayerRootWayland::NativeLayerRootWayland(
     RefPtr<WaylandSurface> aWaylandSurface)
-    : mSurface(aWaylandSurface) {
+    : mRootSurface(aWaylandSurface) {
 #ifdef MOZ_LOGGING
-  mLoggingWidget = mSurface->GetLoggingWidget();
-  mSurface->SetLoggingWidget(this);
+  mLoggingWidget = mRootSurface->GetLoggingWidget();
+  mRootSurface->SetLoggingWidget(this);
   LOG("NativeLayerRootWayland::NativeLayerRootWayland() nsWindow [%p] mapped "
       "%d",
-      mLoggingWidget, mSurface->IsMapped());
+      mLoggingWidget, mRootSurface->IsMapped());
 #endif
   if (!WaylandSurface::IsOpaqueRegionEnabled()) {
     NS_WARNING(
@@ -224,7 +225,8 @@ NativeLayerRootWayland::NativeLayerRootWayland(
 NativeLayerRootWayland::~NativeLayerRootWayland() {
   LOG("NativeLayerRootWayland::~NativeLayerRootWayland()");
   MOZ_DIAGNOSTIC_ASSERT(
-      !mSurface, "NativeLayerRootWayland destroyed without Shutdown() call!");
+      !mRootSurface,
+      "NativeLayerRootWayland destroyed without Shutdown() call!");
 }
 
 #ifdef MOZ_LOGGING
@@ -270,7 +272,7 @@ void NativeLayerRootWayland::SetLayers(
   // Removing all layers can destroy us so hold ref
   RefPtr<NativeLayerRoot> kungfuDeathGrip = this;
 
-  WaylandSurfaceLock lock(mSurface);
+  WaylandSurfaceLock lock(mRootSurface);
 
   // Take shortcut if all layers are removed
   if (aLayers.IsEmpty()) {
@@ -321,7 +323,7 @@ void NativeLayerRootWayland::SetLayers(
   // We lock it to make sure root surface stays mapped.
   lock.RequestForceCommit();
 
-  if (mSurface->IsMapped()) {
+  if (mRootSurface->IsMapped()) {
     for (const RefPtr<NativeLayerWayland>& layer : newLayers) {
       if (layer->IsNew()) {
         LOG("  Map new child layer [%p]", layer.get());
@@ -351,12 +353,12 @@ void NativeLayerRootWayland::UpdateLayersOnMainThread() {
   AssertIsOnMainThread();
 
   // We're called after Shutdown so do nothing.
-  if (!mSurface) {
+  if (!mRootSurface) {
     return;
   }
 
   LOG("NativeLayerRootWayland::UpdateLayersOnMainThread()");
-  WaylandSurfaceLock lock(mSurface);
+  WaylandSurfaceLock lock(mRootSurface);
   for (const RefPtr<NativeLayerWayland>& layer : mMainThreadUpdateSublayers) {
     layer->UpdateOnMainThread();
   }
@@ -429,11 +431,11 @@ void NativeLayerRootWayland::LogStatsLocked(
 #endif
 
 bool NativeLayerRootWayland::CommitToScreen() {
-  WaylandSurfaceLock lock(mSurface, /* force commit */ true);
+  WaylandSurfaceLock lock(mRootSurface);
 
   mFrameInProcess = false;
 
-  if (!mSurface->IsMapped()) {
+  if (!mRootSurface->IsMapped()) {
     // TODO: Register frame callback to paint again? Are we hidden?
     LOG("NativeLayerRootWayland::CommitToScreen() root surface is not mapped");
     return false;
@@ -443,9 +445,9 @@ bool NativeLayerRootWayland::CommitToScreen() {
 
   // Attach empty tmp buffer to root layer (nsWindow).
   // We need to have any content to attach child layers to it.
-  if (!mSurface->HasBufferAttached()) {
-    mSurface->AttachLocked(lock, mTmpBuffer);
-    mSurface->ClearOpaqueRegionLocked(lock);
+  if (!mRootSurface->HasBufferAttached()) {
+    mRootSurface->AttachLocked(lock, mTmpBuffer);
+    mRootSurface->ClearOpaqueRegionLocked(lock);
   }
 
   // Try to map all missing surfaces
@@ -464,7 +466,7 @@ bool NativeLayerRootWayland::CommitToScreen() {
 
   // scale < 1 means we're missing any scale info (even from monitor).
   // Use default scale in such case.
-  int scale = (int)roundf(mSurface->GetScale());
+  int scale = (int)roundf(mRootSurface->GetScale());
   if (scale < 1) {
     scale = 1.0;
   }
@@ -504,7 +506,7 @@ void NativeLayerRootWayland::FrameCallbackHandler(uint32_t aTime) {
     // Child layer wl_subsurface already requested next frame callback
     // and we need to commit to root surface too as we're in
     // wl_subsurface synced mode.
-    WaylandSurfaceLock lock(mSurface, /* force commit */ true);
+    WaylandSurfaceLock lock(mRootSurface);
   }
 
   if (aTime <= mLastFrameCallbackTime) {
@@ -517,15 +519,15 @@ void NativeLayerRootWayland::FrameCallbackHandler(uint32_t aTime) {
   mLastFrameCallbackTime = aTime;
 
   LOGVERBOSE("NativeLayerRootWayland::FrameCallbackHandler() time %d", aTime);
-  mSurface->FrameCallbackHandler(nullptr, aTime,
-                                 /* aRoutedFromChildSurface */ true);
+  mRootSurface->FrameCallbackHandler(nullptr, aTime,
+                                     /* aRoutedFromChildSurface */ true);
 }
 
 // We don't need to lock access to GdkWindow() as we process all Gdk/Gtk
 // events on main thread only.
 GdkWindow* NativeLayerRootWayland::GetGdkWindow() const {
   AssertIsOnMainThread();
-  return mSurface->GetGdkWindow();
+  return mRootSurface->GetGdkWindow();
 }
 
 // Try to match stored wl_buffer with provided DMABufSurface or create
@@ -562,7 +564,7 @@ RefPtr<WaylandBuffer> NativeLayerRootWayland::BorrowExternalBuffer(
 NativeLayerWayland::NativeLayerWayland(NativeLayerRootWayland* aRootLayer,
                                        const IntSize& aSize, bool aIsOpaque)
     : mRootLayer(aRootLayer), mIsOpaque(aIsOpaque), mSize(aSize) {
-  mSurface = new WaylandSurface(mRootLayer->GetWaylandSurface(), mSize);
+  mSurface = new WaylandSurface(mRootLayer->GetRootWaylandSurface(), mSize);
 #ifdef MOZ_LOGGING
   mSurface->SetLoggingWidget(this);
 #endif

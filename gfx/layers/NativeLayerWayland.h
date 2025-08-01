@@ -83,7 +83,9 @@ class NativeLayerRootWayland final : public NativeLayerRoot {
   // Main thread only
   GdkWindow* GetGdkWindow() const;
 
-  RefPtr<widget::WaylandSurface> GetWaylandSurface() { return mSurface; }
+  RefPtr<widget::WaylandSurface> GetRootWaylandSurface() {
+    return mRootSurface;
+  }
 
   RefPtr<widget::DRMFormat> GetDRMFormat() { return mDRMFormat; }
 
@@ -133,7 +135,7 @@ class NativeLayerRootWayland final : public NativeLayerRoot {
   // or handle any callbacks.
   // We also use widget::WaylandSurfaceLock for locking whole layer for
   // read/write.
-  RefPtr<widget::WaylandSurface> mSurface;
+  RefPtr<widget::WaylandSurface> mRootSurface;
 
   // Copy of DRM format we use to create DMABuf surfaces
   RefPtr<widget::DRMFormat> mDRMFormat;
