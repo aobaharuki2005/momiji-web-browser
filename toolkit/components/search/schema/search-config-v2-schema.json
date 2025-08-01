@@ -145,7 +145,7 @@
     "isNewUntil": {
       "title": "Is New Until",
       "type": "string",
-      "description": "Indicates the date until which the engine variant or subvariant is considered new (format: YYYY-MM-DD).",
+      "description": "Indicates the date until which the engine variant, subvariant, or URL is considered new (format: YYYY-MM-DD).",
       "format": "date"
     },
     "partnerCode": {
@@ -198,6 +198,14 @@
           "title": "Name",
           "description": "A map from locale codes to display names of the URL. This is useful if the URL corresponds to a brand name distinct from the engine's brand name. Since brand names can be localized, this is a map rather than a URL. The client will fall back to the special locale code 'default' when its locale is not present in the map.",
           "type": "object"
+        },
+        "excludePartnerCodeFromTelemetry": {
+          "title": "Exclude partner code from telemetry",
+          "description": "Whether the engine's partner code should be excluded from telemetry when this URL is visited.",
+          "type": "boolean"
+        },
+        "isNewUntil": {
+          "$ref": "#/definitions/isNewUntil"
         },
         "method": {
           "title": "Method",
