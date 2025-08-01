@@ -114,7 +114,7 @@ export class OpenSearchEngine extends SearchEngine {
    */
   get hasUpdates() {
     // Whether or not the engine has an update URL
-    let selfURL = this._getURLOfType(
+    let selfURL = this.getURLOfType(
       lazy.SearchUtils.URL_TYPE.OPENSEARCH,
       "self"
     );
@@ -127,7 +127,7 @@ export class OpenSearchEngine extends SearchEngine {
    * @returns {?nsIURI}
    */
   get updateURI() {
-    let updateURL = this._getURLOfType(lazy.SearchUtils.URL_TYPE.OPENSEARCH);
+    let updateURL = this.getURLOfType(lazy.SearchUtils.URL_TYPE.OPENSEARCH);
     let updateURI =
       updateURL && updateURL._hasRelation("self")
         ? updateURL.getSubmission("", this.queryCharset).uri

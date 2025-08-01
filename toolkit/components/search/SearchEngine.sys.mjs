@@ -76,6 +76,23 @@ function limitURILength(str, len = 140) {
 }
 
 /**
+ * Returns whether a date string represents a date that's either today or in the
+ * future.
+ *
+ * @param {string} dateStr
+ *   An `isNewUntil`-type string with the format "YYYY-MM-DD".
+ * @returns {boolean}
+ *   Whether the date is today or in the future.
+ */
+function isDateStringTodayOrFuture(dateStr) {
+  if (!dateStr) {
+    return false;
+  }
+  let today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD" format
+  return today <= dateStr;
+}
+
+/**
  * Represents a name/value pair for a parameter
  */
 export class QueryParameter {
@@ -409,6 +426,16 @@ export class EngineURL {
   }
 
   /**
+   * Returns whether the URL is considered new, which which is determined by the
+   * `isNewUntil` value in its search config.
+   *
+   * @returns {boolean}
+   */
+  isNew() {
+    return isDateStringTodayOrFuture(this.isNewUntil);
+  }
+
+  /**
    * Returns a application/x-www-form-urlencoded representation of the params
    * using the specified search term (name=value&name=value&name=value).
    * Can be used for GET and POST.
@@ -570,7 +597,7 @@ export class SearchEngine {
    * @returns {EngineURL|null}
    *   Returns the first matching URL found, null otherwise.
    */
-  _getURLOfType(type, rel) {
+  getURLOfType(type, rel) {
     for (let url of this._urls) {
       if (url.type == type && (!rel || url._hasRelation(rel))) {
         return url;
@@ -846,7 +873,7 @@ export class SearchEngine {
   }
 
   checkSearchUrlMatchesManifest(details) {
-    let existingUrl = this._getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH);
+    let existingUrl = this.getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH);
 
     let newUrl = this._getEngineURLFromMetaData(
       lazy.SearchUtils.URL_TYPE.SEARCH,
@@ -1249,7 +1276,7 @@ export class SearchEngine {
       responseType = lazy.SearchUtils.URL_TYPE.SEARCH;
     }
 
-    var url = this._getURLOfType(responseType);
+    var url = this.getURLOfType(responseType);
 
     if (!url) {
       return null;
@@ -1274,7 +1301,7 @@ export class SearchEngine {
    * @returns {nsIURI}
    */
   get searchURLWithNoTerms() {
-    return this._getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH).getSubmission(
+    return this.getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH).getSubmission(
       "",
       this.queryCharset
     ).uri;
@@ -1296,7 +1323,7 @@ export class SearchEngine {
    *   or an empty string if the URI isn't matched to the engine.
    */
   searchTermFromResult(uri) {
-    let url = this._getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH);
+    let url = this.getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH);
     if (!url) {
       return "";
     }
@@ -1372,8 +1399,8 @@ export class SearchEngine {
 
   get searchUrlQueryParamName() {
     return (
-      this._getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH)
-        .searchTermParamName || ""
+      this.getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH).searchTermParamName ||
+      ""
     );
   }
 
@@ -1389,41 +1416,12 @@ export class SearchEngine {
 
   // from nsISearchEngine
   supportsResponseType(type) {
-    return this._getURLOfType(type) != null;
-  }
-
-  // from nsISearchEngine
-  displayNameForURL(type) {
-    if (type) {
-      let url = this._getURLOfType(type);
-      if (url?.displayName) {
-        return url.displayName;
-      }
-    }
-    return this.name;
-  }
-
-  // from nsISearchEngine
-  isNewEngineOrURL(type) {
-    let isNewUntil;
-    if (!type) {
-      isNewUntil = this.isNewUntil;
-    } else {
-      let url = this._getURLOfType(type);
-      isNewUntil = url?.isNewUntil;
-    }
-
-    if (!isNewUntil) {
-      return false;
-    }
-
-    let today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD" format
-    return today <= isNewUntil;
+    return this.getURLOfType(type) != null;
   }
 
   // from nsISearchEngine
   get searchUrlDomain() {
-    let url = this._getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH);
+    let url = this.getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH);
     if (url) {
       return url.templateHost;
     }
@@ -1437,7 +1435,7 @@ export class SearchEngine {
    *   of the search URL as a fallback if no such URL exists.
    */
   get searchForm() {
-    let url = this._getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH_FORM);
+    let url = this.getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH_FORM);
     if (url) {
       return url.getSubmission("", this.queryCharset).uri.spec;
     }
@@ -1449,7 +1447,7 @@ export class SearchEngine {
    *   URL parsing properties used by _buildParseSubmissionMap.
    */
   getURLParsingInfo() {
-    let url = this._getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH);
+    let url = this.getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH);
     if (!url || url.method != "GET") {
       return null;
     }
@@ -1567,6 +1565,16 @@ export class SearchEngine {
 
   get id() {
     return this.#id;
+  }
+
+  /**
+   * Returns whether the engine is considered new, which which is determined by
+   * the `isNewUntil` value in its search config.
+   *
+   * @returns {boolean}
+   */
+  isNew() {
+    return isDateStringTodayOrFuture(this.isNewUntil);
   }
 
   /**

@@ -2898,23 +2898,17 @@ export class nsContextMenu {
     });
 
     if (!menuitem.hidden) {
+      let visualSearchUrl = menuitem.engine.wrappedJSObject.getURLOfType(
+        lazy.SearchUtils.URL_TYPE.VISUAL_SEARCH
+      );
       this.window.document.l10n.setAttributes(
         menuitem,
         "main-context-menu-visual-search",
         {
-          engine: menuitem.engine.displayNameForURL(
-            lazy.SearchUtils.URL_TYPE.VISUAL_SEARCH
-          ),
+          engine: visualSearchUrl.displayName || menuitem.engine.name,
         }
       );
-
-      this.#setNewFeatureBadge(
-        menuitem,
-        menuitem.engine.isNewEngineOrURL(
-          lazy.SearchUtils.URL_TYPE.VISUAL_SEARCH
-        )
-      );
-
+      this.#setNewFeatureBadge(menuitem, visualSearchUrl.isNew());
       lazy.BrowserSearchTelemetry.recordSapImpression(
         this.browser,
         menuitem.engine,

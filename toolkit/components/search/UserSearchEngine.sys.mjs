@@ -194,7 +194,7 @@ export class UserSearchEngine extends SearchEngine {
    * errors.
    */
   updateFavicon() {
-    let searchUrl = this._getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH);
+    let searchUrl = this.getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH);
     let searchUrlOrigin = new URL(searchUrl.template).origin;
 
     lazy.PlacesUtils.favicons

@@ -196,14 +196,19 @@ add_task(async function test_engine_with_all_params_set() {
   );
 
   Assert.equal(
-    engine.displayNameForURL(SearchUtils.URL_TYPE.VISUAL_SEARCH),
+    engine.wrappedJSObject.getURLOfType(SearchUtils.URL_TYPE.VISUAL_SEARCH)
+      .displayName,
     "Visual Search",
     "The display name of the visual search URL should be correct"
   );
   Assert.ok(
-    engine.isNewEngineOrURL(SearchUtils.URL_TYPE.VISUAL_SEARCH),
-    "isNewEngineOrURL for the visual search URL should be correct"
+    engine.wrappedJSObject
+      .getURLOfType(SearchUtils.URL_TYPE.VISUAL_SEARCH)
+      .isNew(),
+    "isNew for the visual search URL should be correct"
   );
+
+  checkUrlOfType(engine);
 });
 
 add_task(async function test_engine_with_some_params_set() {
@@ -244,6 +249,8 @@ add_task(async function test_engine_with_some_params_set() {
     "https://example.com/3",
     "Should have the correct trending URL without search term parameter."
   );
+
+  checkUrlOfType(engine);
 });
 
 add_task(async function test_engine_remote_override() {
@@ -293,16 +300,12 @@ add_task(async function test_engine_remote_override() {
     "https://example.org/somewhere",
     "Should have the click URL specified by the override"
   );
+
+  checkUrlOfType(engine);
 });
 
-add_task(async function test_display_names() {
+add_task(async function test_displayName() {
   let engine = Services.search.getEngineById("testEngine");
-
-  Assert.equal(
-    engine.displayNameForURL(),
-    "testEngine name",
-    "displayNameForURL without an arg should return the engine name"
-  );
 
   let supportedTypesWithoutNames = [
     SearchUtils.URL_TYPE.SEARCH,
@@ -314,10 +317,9 @@ add_task(async function test_display_names() {
       engine.supportsResponseType(type),
       "Sanity check: The engine should support response type: " + type
     );
-    Assert.equal(
-      engine.displayNameForURL(type),
-      "testEngine name",
-      "displayNameForURL with a type that doesn't have a name should return the engine name"
+    Assert.ok(
+      !engine.wrappedJSObject.getURLOfType(type).displayName,
+      "displayName should be falsey for a type that doesn't have a name"
     );
   }
 
@@ -331,9 +333,9 @@ add_task(async function test_display_names() {
       "Sanity check: The engine should support response type: " + type
     );
     Assert.equal(
-      engine.displayNameForURL(type),
+      engine.wrappedJSObject.getURLOfType(type).displayName,
       expectedName,
-      "displayNameForURL with a type that has a name should return the name"
+      "displayName should be correct for a type that has a name"
     );
   }
 
@@ -347,55 +349,68 @@ add_task(async function test_display_names() {
       !engine.supportsResponseType(type),
       "Sanity check: The engine should not support response type: " + type
     );
-    Assert.equal(
-      engine.displayNameForURL(type),
-      "testEngine name",
-      "displayNameForURL with an unsupported type should return the engine name"
+    Assert.ok(
+      !engine.wrappedJSObject.getURLOfType(type),
+      "getURLOfType should return nothing for unsupported type: " + type
     );
   }
 });
 
-add_task(async function test_isNewEngineOrURL_urlOnly() {
+add_task(async function test_isNew_urlOnly() {
   // This engine has `isNewUntil` defined for its trending and visual search
   // URLs, but the trending date is in the past.
   let engine = Services.search.getEngineById("testEngine");
   Assert.ok(
-    !engine.isNewEngineOrURL(),
-    "isNewEngineOrURL should return false for testEngine without an arg"
+    !engine.wrappedJSObject.isNew(),
+    "isNew should return false for testEngine without an arg"
   );
 
   // `isNewUntil` isn't defined on the search URL
   Assert.ok(
-    !engine.isNewEngineOrURL(SearchUtils.URL_TYPE.SEARCH),
-    "isNewEngineOrURL should return false for SEARCH"
+    !engine.wrappedJSObject.getURLOfType(SearchUtils.URL_TYPE.SEARCH).isNew(),
+    "isNew should return false for SEARCH"
   );
 
   // In the past
   Assert.ok(
-    !engine.isNewEngineOrURL(SearchUtils.URL_TYPE.TRENDING),
-    "isNewEngineOrURL should return true for TRENDING"
+    !engine.wrappedJSObject
+      .getURLOfType(SearchUtils.URL_TYPE.TRENDING_JSON)
+      .isNew(),
+    "isNew should return false for TRENDING_JSON"
   );
 
   // In the future
   Assert.ok(
-    engine.isNewEngineOrURL(SearchUtils.URL_TYPE.VISUAL_SEARCH),
-    "isNewEngineOrURL should return true for VISUAL_SEARCH"
+    engine.wrappedJSObject
+      .getURLOfType(SearchUtils.URL_TYPE.VISUAL_SEARCH)
+      .isNew(),
+    "isNew should return true for VISUAL_SEARCH"
   );
 });
 
-add_task(async function test_isNewEngineOrURL_variant() {
+add_task(async function test_isNew_variant() {
   // This engine has `isNewUntil` defined on its variant.
   let engine = Services.search.getEngineById("override");
   Assert.ok(
-    engine.isNewEngineOrURL(),
-    "isNewEngineOrURL should return true for override engine without an arg"
+    engine.wrappedJSObject.isNew(),
+    "isNew should return true for override engine"
   );
   Assert.ok(
-    !engine.isNewEngineOrURL(SearchUtils.URL_TYPE.SEARCH),
-    "isNewEngineOrURL should return false for SEARCH"
+    !engine.wrappedJSObject.getURLOfType(SearchUtils.URL_TYPE.SEARCH).isNew(),
+    "isNew should return false for SEARCH"
   );
   Assert.ok(
-    !engine.isNewEngineOrURL(SearchUtils.URL_TYPE.VISUAL_SEARCH),
-    "isNewEngineOrURL should return false for VISUAL_SEARCH"
+    !engine.wrappedJSObject.getURLOfType(SearchUtils.URL_TYPE.VISUAL_SEARCH),
+    "getURLOfType should return nothing for unsupported type VISUAL_SEARCH"
   );
 });
+
+function checkUrlOfType(engine) {
+  for (let [key, type] of Object.entries(SearchUtils.URL_TYPE)) {
+    Assert.equal(
+      !!engine.wrappedJSObject.getURLOfType(type),
+      engine.supportsResponseType(type),
+      "getURLOfType should return a URL iff the type is supported: " + key
+    );
+  }
+}

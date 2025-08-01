@@ -382,7 +382,7 @@ export class SearchModeSwitcher {
       menuitem.classList.add("searchmode-switcher-installed");
       menuitem.setAttribute("label", engine.name);
 
-      if (engine.isNewEngineOrURL() && engine.isAppProvided) {
+      if (engine.isNew() && engine.isAppProvided) {
         menuitem.setAttribute("badge", await lazy.searchModeNewBadge);
       }
 
