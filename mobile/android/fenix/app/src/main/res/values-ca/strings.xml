@@ -613,7 +613,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Quan compartiu com vàreu descobrir el Firefox i que el feu servir, ens ajudeu a donar a conèixer el nostre navegador a més persones.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Comparteix dades mínimes amb els socis tecnològics de màrqueting de Mozilla. Aquestes dades mai no es vendran ni s’utilitzaran per mostrar-vos anuncis.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Comparteix dades mínimes amb els socis tecnològics de màrqueting de Mozilla. Aquestes dades mai no es vendran ni s’utilitzaran per mostrar-vos anuncis.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Com utilitzem les dades</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1658,7 +1658,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Restaura la pestanya</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">El %s ha hagut de reiniciar</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">El %s ha hagut de reiniciar</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Envia automàticament informes de fallada</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -2051,7 +2051,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">S’ha suprimit la col·lecció</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">S’ha suprimit la col·lecció</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">S’ha reanomenat la col·lecció</string>
   <!-- Text shown in snackbar when user closes a tab -->

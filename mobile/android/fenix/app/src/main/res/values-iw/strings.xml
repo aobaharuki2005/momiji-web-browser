@@ -629,7 +629,9 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">כשאתם משתפים כיצד גיליתם את Firefox וכי אתם משתמשים בו, אתם מסייעים לנו להציג את הדפדפן שלנו ליותר אנשים.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">שתפו נתונים מינימליים עם שותפי הטכנולוגיה השיווקית של Mozilla. נתונים אלה לעולם אינם נמכרים או משמשים להצגת פרסומות.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">שיתוף נתונים מינימליים עם שותפי הטכנולוגיה השיווקית של Mozilla. נתונים אלה לעולם אינם נמכרים או משמשים להצגת פרסומות.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">שיתוף נתונים עם שותפי הטכנולוגיה השיווקית של Mozilla. נתונים אלה לעולם אינם נמכרים או משמשים להצגת פרסומות.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">כיצד אנו משתמשים בנתונים</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1211,6 +1213,8 @@
   <string name="preferences_daily_usage_ping_learn_more">מידע נוסף על פינג שימוש יומי</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">שליחת דיווחי קריסה באופן אוטומטי</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">הדיווח נשלח</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">זה מסייע לנו לאבחן ולתקן בעיות בדפדפן. דיווחים עשויים לכלול נתונים אישיים או רגישים.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1779,7 +1783,9 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">שחזור לשונית</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">על %s היה להיות מופעל מחדש</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">על %s היה להיות מופעל מחדש</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">‏%s קרס. לשלוח דיווח?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">יש לך דיווח קריסה שלא נשלח הקשור לקריסות הנמצאות בתהליכי חקירה. שליחת הדיווח תסייע לנו לשפר את %1$s. סגירת התרעה זו תתעלם מדיווח זה.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1788,10 +1794,17 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">שליחת דיווחי קריסה באופן אוטומטי</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">סגירה</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">סגירה</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">לעולם לא להציג שוב</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">שליחה</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">שליחת דיווח קריסה</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">דיווחי קריסה מסייעים לנו לאבחן ולתקן בעיות בדפדפן. דיווחים עשויים לכלול נתונים אישיים או רגישים. %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">מידע נוסף</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">מידע נוסף</string>
   <!--
@@ -2180,7 +2193,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">האוסף נמחק</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">האוסף נמחק</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">שם האוסף שונה</string>
   <!-- Text shown in snackbar when user closes a tab -->

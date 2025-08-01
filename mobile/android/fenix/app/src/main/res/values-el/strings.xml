@@ -631,7 +631,9 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Όταν μοιράζεστε πώς ανακαλύψατε το Firefox και ότι το χρησιμοποιείτε, μας βοηθάτε να γνωρίσουμε το πρόγραμμα περιήγησής μας σε περισσότερους χρήστες.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Μοιραστείτε ελάχιστα δεδομένα με τους συνεργάτες μάρκετινγκ της Mozilla. Αυτά τα δεδομένα δεν πωλούνται ούτε χρησιμοποιούνται για την εμφάνιση διαφημίσεων.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Μοιραστείτε ελάχιστα δεδομένα με τους συνεργάτες μάρκετινγκ της Mozilla. Αυτά τα δεδομένα δεν πωλούνται ούτε χρησιμοποιούνται για την εμφάνιση διαφημίσεων.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Μοιραστείτε δεδομένα με τους συνεργάτες μάρκετινγκ της Mozilla. Αυτά τα δεδομένα δεν πωλούνται ούτε χρησιμοποιούνται για την εμφάνιση διαφημίσεων.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Πώς χρησιμοποιούμε τα δεδομένα</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1213,6 +1215,8 @@
   <string name="preferences_daily_usage_ping_learn_more">Μάθετε περισσότερα σχετικά με το ping ημερήσιας χρήσης</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Αυτόματη αποστολή αναφορών κατάρρευσης</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">Η αναφορά απεστάλη</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Αυτό μας βοηθάει να διαγνώσουμε και να επιλύσουμε προβλήματα με το πρόγραμμα περιήγησης. Οι αναφορές ενδέχεται να περιέχουν προσωπικά ή ευαίσθητα δεδομένα.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1781,7 +1785,9 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Επαναφορά καρτελών</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">Έπρεπε να γίνει επανεκκίνηση του %s</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">Έπρεπε να γίνει επανεκκίνηση του %s</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">Το %s κατέρρευσε. Αποστολή αναφοράς;</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Έχετε μια μη απεσταλμένη αναφορά κατάρρευσης που σχετίζεται με καταρρεύσεις που διερευνώνται. Η αποστολή της θα μας βοηθήσει να βελτιώσουμε το %1$s. Η αναφορά θα αγνοηθεί εάν κλείσετε αυτήν την ειδοποίηση.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1790,10 +1796,15 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Αυτόματη αποστολή αναφορών κατάρρευσης</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Κλείσιμο</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">ΚΛΕΙΣΙΜΟ</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Να μην εμφανιστεί ξανά</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">ΑΠΟΣΤΟΛΗ</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Αποστολή αναφοράς κατάρρευσης</string>
+  <string name="unsubmitted_crash_dialog_learn_more">Μάθετε περισσότερα</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Μάθετε περισσότερα</string>
   <!--
@@ -2182,7 +2193,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Η συλλογή διαγράφηκε</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Η συλλογή διαγράφηκε</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Η συλλογή μετονομάστηκε</string>
   <!-- Text shown in snackbar when user closes a tab -->

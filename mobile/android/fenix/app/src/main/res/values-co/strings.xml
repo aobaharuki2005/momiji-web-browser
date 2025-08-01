@@ -627,7 +627,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Quandu vo spartite cumu vo avete scupertu Firefox è chì vo l’impiegate, ci aiutate à fà cunnosce u nostru navigatore à un mezu paese.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Spartite unipochi dati cu i cumpagni di tecnolugia cummerciale. Sti dati ùn sò mai vindute o impiegate per mustravvi publicità.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Spartite unipochi dati cu i cumpagni di tecnolugia cummerciale. Sti dati ùn sò mai vindute o impiegate per mustravvi publicità.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Cumu no impieghemu i dati</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1759,7 +1759,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Risturà l’unghjetta</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s hè statu rilanciatu</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s hè statu rilanciatu</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Avete un raportu, micca mandatu, nant’à un accidente chì hè in corsu d’investigazione. Mandatecilu per aiutacci à amendà %1$s. Chjode sta nutificazione per tralascià stu raportu.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -2160,7 +2160,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Cullezzione squassata</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Cullezzione squassata</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Cullezzione rinuminata</string>
   <!-- Text shown in snackbar when user closes a tab -->

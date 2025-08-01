@@ -579,7 +579,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Kapag ibinabahagi mo kung paano mo natuklasan ang Firefox at ginagamit mo ito, tinutulungan mo kaming ipakilala ang ating browser sa mas maraming tao.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Magbahagi ng kaunting data sa mga marketing technology partner ng Mozilla. Ang data na ito ay hindi kailanman ibebenta o gagamitin para pakitaan ka ng mga ad.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Magbahagi ng kaunting data sa mga marketing technology partner ng Mozilla. Ang data na ito ay hindi kailanman ibebenta o gagamitin para pakitaan ka ng mga ad.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Paano namin ginagamit ang data</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1517,7 +1517,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">I-restore ang tab</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">Kinailangang mag-restart ng %s</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">Kinailangang mag-restart ng %s</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Kusang magpadala ng mga crash report</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -1904,7 +1904,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Nabura na ang collection</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Nabura na ang collection</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Nabago na ang pangalan ng collection</string>
   <!-- Text shown in snackbar when user closes a tab -->

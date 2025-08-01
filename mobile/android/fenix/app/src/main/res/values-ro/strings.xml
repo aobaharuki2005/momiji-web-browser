@@ -631,7 +631,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Când ne împărtășești cum ai descoperit Firefox și că îl folosești, ne ajuți să prezentăm browserul nostru mai multor persoane.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Împărtășești date minime cu partenerii tehnologici de marketing ai Mozilla. Aceste date nu sunt niciodată vândute sau utilizate pentru a-ți afișa reclame.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Împărtășești date minime cu partenerii tehnologici de marketing ai Mozilla. Aceste date nu sunt niciodată vândute sau utilizate pentru a-ți afișa reclame.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Cum utilizăm datele</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1781,7 +1781,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Restaurează fila</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s a trebuit să repornească</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s a trebuit să repornească</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Ai un raport de blocare netrimis, legat de erorile investigate. Trimiterea acestuia ne va ajuta să îmbunătățim %1$s. Închiderea acestei notificări va ignora acest raport.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -2182,7 +2182,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Colecție ștersă</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Colecție ștersă</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Colecție redenumită</string>
   <!-- Text shown in snackbar when user closes a tab -->
@@ -3129,10 +3129,73 @@
     %2$s is the name of the language that the page was translated to, for example, "English".
   -->
   <string name="translations_bottom_sheet_title_translation_completed">Pagină tradusă de la %1$s la %2$s</string>
+  <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="translations_bottom_sheet_title_first_time">Încearcă traduceri private în %1$s</string>
+  <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. %1$s is a link using translations_bottom_sheet_info_message_learn_more as text. -->
+  <string name="translations_bottom_sheet_info_message">Pentru confidențialitatea ta, traducerile nu părăsesc niciodată dispozitivul. În curând vor fi disponibile noi limbi și îmbunătățiri! %1$s</string>
+  <!-- Text that links to additional information about the Firefox translations feature. -->
+  <string name="translations_bottom_sheet_info_message_learn_more">Află mai multe</string>
+  <!-- Label for the dropdown to select which language to translate from on the translations dialog. Usually the translate from language selected will be the same as the page language. -->
+  <string name="translations_bottom_sheet_translate_from">Tradu din</string>
+  <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
+  <string name="translations_bottom_sheet_translate_to">Tradu în</string>
+  <!-- Label for the dropdown to select which language to translate from on the translations dialog when the page language is not supported. This selection is to allow the user to select another language, in case we automatically detected the page language incorrectly. -->
+  <string name="translations_bottom_sheet_translate_from_unsupported_language">Încearcă altă limbă-sursă</string>
+  <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
+  <string name="translations_bottom_sheet_negative_button">Nu acum</string>
+  <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+  <string name="translations_bottom_sheet_negative_button_restore">Afișează originalul</string>
+  <!-- Accessibility announcement (not visible, for screen readers etc.) for the translations dialog after restore button was pressed that indicates the original untranslated page was loaded. -->
+  <string name="translations_bottom_sheet_restore_accessibility_announcement">Pagina originală netradusă a fost încărcată</string>
+  <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
+  <string name="translations_bottom_sheet_negative_button_error">Terminat</string>
+  <!-- Button text on the translations dialog to begin a translation of the website. -->
+  <string name="translations_bottom_sheet_positive_button">Tradu</string>
+  <!-- Button text on the translations dialog when a translation error appears. -->
+  <string name="translations_bottom_sheet_positive_button_error">Încearcă din nou</string>
+  <!-- Inactive button text on the translations dialog that indicates a translation is currently in progress. This button will be accompanied by a loading icon. -->
+  <string name="translations_bottom_sheet_translating_in_progress">Se traduce</string>
+  <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
+  <string name="translations_bottom_sheet_translating_in_progress_content_description">Traducere în curs</string>
+  <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+  <string name="translations_bottom_sheet_default_dropdown_selection">Alege o limbă</string>
+  <!-- The title of the warning card informs the user that a translation could not be completed. -->
+  <string name="translation_error_could_not_translate_warning_text">A apărut o problemă la traducere. Te rugăm să încerci din nou.</string>
+  <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
+  <string name="translation_error_could_not_load_languages_warning_text">Nu s-au putut încărca limbile. Verifică conexiunea la internet și încearcă din nou.</string>
+  <!-- The title of the warning card informs the user that a language is not supported. %1$s is the name of the language that is not supported. -->
+  <string name="translation_error_language_not_supported_warning_text">Ne pare rău, dar încă nu acceptăm %1$s.</string>
+  <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+  <string name="translation_in_progress_snackbar">Se traduce…</string>
+  <!--
+    Title for the data saving mode warning dialog used in the translation request dialog.
+    This dialog will be presented when the user attempts to perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    %1$s is the size in kilobytes or megabytes of the language file.
+  -->
+  <string name="translations_download_language_file_dialog_title">Descarci limba în modul de economisire a datelor (%1$s)?</string>
+  <!--
+    Translations options dialog
+
+    Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on.
+  -->
+  <string name="translation_option_bottom_sheet_title_heading">Opțiuni de traducere</string>
   <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
   <string name="translation_option_bottom_sheet_always_translate">Oferă întotdeauna traducerea</string>
+  <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. %1$s is the language name, for example, "Spanish". -->
+  <string name="translation_option_bottom_sheet_always_translate_in_language">Traduce întotdeauna %1$s</string>
+  <!-- Toggle switch label that allows a user to set if they would like to never be offered a translation of the given language. %1$s is the language name, for example, "Spanish". -->
+  <string name="translation_option_bottom_sheet_never_translate_in_language">Nu tradu niciodată %1$s</string>
+  <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
+  <string name="translation_option_bottom_sheet_never_translate_site">Nu tradu niciodată acest site</string>
+  <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+  <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Suprascrie toate celelalte setări</string>
   <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
   <string name="translation_option_bottom_sheet_switch_description">Suprascrie oferirea traducerii</string>
+  <!-- Button text for the button that will take the user to the translation settings dialog. -->
+  <string name="translation_option_bottom_sheet_translation_settings">Setări pentru traduceri</string>
+  <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="translation_option_bottom_sheet_about_translations">Despre traducerile din %1$s</string>
   <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
   <string name="translation_option_bottom_sheet_close_content_description">Închide foaia traduceri</string>
   <!-- The title of the warning card informs the user that an error has occurred at page settings. -->
@@ -3282,8 +3345,85 @@
     %1$s is the size in kilobytes or megabytes of the language file.
   -->
   <string name="download_language_file_dialog_title">Descarci în modul de economisire a datelor (%1$s)?</string>
+  <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
+  <string name="download_language_file_dialog_message_all_languages">Descărcăm limbi parțiale în memoria cache pentru a păstra confidențialitatea traducerilor.</string>
+  <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
+  <string name="download_language_file_dialog_checkbox_text">Descarcă întotdeauna în modul de economisire a datelor</string>
+  <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
+  <string name="download_language_file_dialog_positive_button_text">Descarcă</string>
+  <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file and perform a translation. -->
+  <string name="download_language_file_dialog_positive_button_text_all_languages">Descarcă și tradu</string>
+  <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to cancel the action and not perform a download of the language file. -->
+  <string name="download_language_file_dialog_negative_button_text">Anulează</string>
+  <!--
+    Unified Trust Panel
+
+    Text for the protection panel header when the site is secure.
+  -->
+  <string name="protection_panel_header_secure" moz:removedIn="142" tools:ignore="UnusedResources">Securizat</string>
+  <!-- Text for the protection panel header when the site is not secure. -->
+  <string name="protection_panel_header_not_secure" moz:removedIn="142" tools:ignore="UnusedResources">Nesecurizat</string>
+  <!-- Title text for the protection panel banner when the site is not secure. -->
+  <string name="protection_panel_banner_not_secure_title">Ai grijă pe acest site</string>
+  <!-- Description text for the protection panel banner when the site is not secure. -->
+  <string name="protection_panel_banner_not_secure_description">Conexiunea ta nu este sigură.</string>
+  <!-- Title text for the protection panel banner when tracking protection is disabled. -->
+  <string name="protection_panel_banner_not_protected_title">Ai dezactivat protecțiile</string>
+  <!--
+    Description text for the protection panel banner when tracking protection is disabled.
+    %s is the name of the app (for example "Firefox").
+  -->
+  <string name="protection_panel_banner_not_protected_description">%s nu este în serviciu. Îți sugerăm să reactivezi protecțiile.</string>
+  <!--
+    Title text for the protection panel banner when tracking protection is enabled.
+    %s is the name of the app (for example "Firefox").
+  -->
+  <string name="protection_panel_banner_protected_title">%s te protejează</string>
+  <!-- Description text for the protection panel banner when tracking protection is enabled. -->
+  <string name="protection_panel_banner_protected_description">Ești protejat(ă). Dacă observăm ceva, te vom anunța.</string>
+  <!-- Label text for the Enhanced Tracking Protection toggle. -->
+  <string name="protection_panel_etp_toggle_label">Protecție îmbunătățită împotriva urmăririi</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned on -->
+  <string name="protection_panel_etp_toggle_on">Activat</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned off -->
+  <string name="protection_panel_etp_toggle_off">Dezactivat</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Dacă ceva pare defect pe acest site, încearcă să dezactivezi protecțiile.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description_2">Dacă ceva pare defect pe acest site, încearcă să îl dezactivezi.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
+  <string name="protection_panel_etp_toggle_disabled_description" moz:removedIn="142" tools:ignore="UnusedResources">Protecțiile sunt DEZACTIVATE. Îți sugerăm să le reactivezi.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
+  <string name="protection_panel_etp_toggle_disabled_description_2">Se recomandă activarea protecției la urmărire.</string>
+  <!--
+    Text for displaying the total number of trackers blocked in the protection panel.
+    %d is a placeholder for the number of trackers blocked.
+  -->
+  <string name="protection_panel_num_trackers_blocked">Elemente de urmărire blocate: %d</string>
+  <!-- Text for when no trackers have been blocked. -->
+  <string name="protection_panel_no_trackers_blocked">Nu s-au găsit trackere</string>
+  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
+  <string name="protection_panel_privacy_and_security_settings" moz:removedIn="142" tools:ignore="UnusedResources">Setări de confidențialitate și securitate</string>
+  <!-- Link text to navigate to privacy and security settings from the protection panel. -->
+  <string name="protection_panel_privacy_and_security_settings_2">Setări de confidențialitate</string>
   <!-- Title text for the protection panel permissions section. -->
   <string name="protection_panel_permissions_title">Permisiuni</string>
+  <!--
+    Text for displaying the total number of trackers blocked in the trackers blocked panel.
+    %d is a placeholder for the number of trackers blocked.
+  -->
+  <string name="trackers_blocked_panel_total_num_trackers_blocked">Elemente de urmărire blocate: %d</string>
+  <!--
+    Text for displaying the number of trackers blocked for a specific tracker category in the trackers blocked panel.
+    %s is a placeholder for the name of the tracker category.
+    %d is a placeholder for the number of trackers blocked.
+  -->
+  <string name="trackers_blocked_panel_categorical_num_trackers_blocked">%s: %d</string>
+  <!--
+    Description text for a dialog confirming whether the user wants to delete all data for current site.
+    %s is a placeholder for the base domain of website.
+  -->
+  <string name="clear_site_data_dialog_description"><![CDATA[Eliminarea cookie-urilor și a datelor de site pentru <b>%s</b> te poate deconecta de pe site-uri web și poate goli coșurile de cumpărături.]]></string>
   <!-- Button text on the clear site data dialog to allow users to confirm they wish to clear the site data. -->
   <string name="clear_site_data_dialog_positive_button_text">Șterge</string>
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
@@ -3299,6 +3439,86 @@
     %s is a placeholder for the name of the certificate authority that issued the certificate.
   -->
   <string name="connection_security_panel_verified_by">Verificat de %s</string>
+  <!--
+    Debug drawer
+
+    The user-facing title of the Debug Drawer feature.
+  -->
+  <string name="debug_drawer_title">Instrumente de depanare</string>
+  <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
+  <string name="debug_drawer_back_button_content_description">Navighează înapoi</string>
+  <!-- Content description (not visible, for screen readers etc.): Open debug drawer. -->
+  <string name="debug_drawer_fab_content_description">Deschideți panoul de depanare</string>
+  <!--
+    Debug drawer tabs tools
+
+    The title of the Tab Tools feature in the Debug Drawer.
+  -->
+  <string name="debug_drawer_tab_tools_title">Instrumente de file</string>
+  <!-- The title of the tab count section in Tab Tools. -->
+  <string name="debug_drawer_tab_tools_tab_count_title">Număr de file</string>
+  <!-- The active tab count category in the tab count section in Tab Tools. -->
+  <string name="debug_drawer_tab_tools_tab_count_active">Active</string>
+  <!-- The inactive tab count category in the tab count section in Tab Tools. -->
+  <string name="debug_drawer_tab_tools_tab_count_inactive">Inactive</string>
+  <!-- The private tab count category in the tab count section in Tab Tools. -->
+  <string name="debug_drawer_tab_tools_tab_count_private">Private</string>
+  <!-- The total tab count category in the tab count section in Tab Tools. -->
+  <string name="debug_drawer_tab_tools_tab_count_total">Total</string>
+  <!-- The title of the tab creation tool section in Tab Tools. -->
+  <string name="debug_drawer_tab_tools_tab_creation_tool_title">Instrument de creare a filelor</string>
+  <!-- The label of the text field in the tab creation tool. -->
+  <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">Cantitate de file de creat</string>
+  <!-- The error message of the text field in the tab creation tool when the text field is empty -->
+  <string name="debug_drawer_tab_tools_tab_quantity_empty_error">Câmpul de text este gol</string>
+  <!-- The error message of the text field in the tab creation tool when the text field has characters other than digits -->
+  <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">Introdu doar numere întregi pozitive</string>
+  <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
+  <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">Introdu un număr mai mare decât zero</string>
+  <!--
+    The error message of the text field in the tab creation tool when the text field is a
+    quantity greater than the max tabs. %1$s is the maximum number of tabs
+    that can be generated in one operation.
+  -->
+  <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">A fost depășit numărul maxim de file (%1$s) care pot fi generate într-o singură operațiune</string>
+  <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
+  <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Adaugă la filele active</string>
+  <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
+  <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Adaugă la filele inactive</string>
+  <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
+  <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Adaugă la filele private</string>
+  <!--
+    Microsurvey
+
+    Prompt view
+
+    The microsurvey prompt title. Note: The word "Firefox" should NOT be translated
+  -->
+  <string name="micro_survey_prompt_title" tools:ignore="BrandUsage,UnusedResources">Ajută-ne să îmbunătățim Firefox. Durează doar un minut.</string>
+  <!-- The continue button label -->
+  <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Continuă</string>
+  <!--
+    Survey view
+
+    The survey header
+  -->
+  <string name="micro_survey_survey_header_2">Completează sondajul</string>
+  <!-- The privacy notice link -->
+  <string name="micro_survey_privacy_notice_2">Notificare privind confidențialitatea</string>
+  <!-- The submit button label text -->
+  <string name="micro_survey_submit_button_label">Trimite</string>
+  <!-- The survey completion header -->
+  <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">Sondaj finalizat</string>
+  <!-- The survey completion confirmation text -->
+  <string name="micro_survey_feedback_confirmation">Mulțumesc pentru feedback!</string>
+  <!-- Option for likert scale -->
+  <string name="likert_scale_option_1" tools:ignore="UnusedResources">Foarte mulțumit(ă)</string>
+  <!-- Option for likert scale -->
+  <string name="likert_scale_option_2" tools:ignore="UnusedResources">Mulțumit(ă)</string>
+  <!-- Option for likert scale -->
+  <string name="likert_scale_option_3" tools:ignore="UnusedResources">Neutru(ă)</string>
+  <!-- Option for likert scale -->
+  <string name="likert_scale_option_4" tools:ignore="UnusedResources">Nemulţumit(ă)</string>
   <!-- Option for likert scale -->
   <string name="likert_scale_option_5" tools:ignore="UnusedResources">Foarte nemulțumit(ă)</string>
   <!-- Option for likert scale -->
@@ -3374,6 +3594,28 @@
   -->
   <string name="glean_debug_tools_title">Instrumente de depanare Glean</string>
   <!--
+    Debug drawer region tools
+
+    Title of the Region tools in the Debug Drawer.
+    This tool allows temporarily overriding the home region (user's default locale)
+    and the current region (device's detected location) for testing purposes.
+  -->
+  <string name="debug_drawer_region_tools_title">Instrumente regionale</string>
+  <!-- The description of the Region tools in the Debug Drawer -->
+  <string name="debug_drawer_regin_tools_description">Suprascrie temporar valorile pentru domiciliu și regiunea curentă pentru testare.</string>
+  <!-- The text label for displaying home region. -->
+  <string name="debug_drawer_home_region_label">Regiunea de domiciliu</string>
+  <!-- The text label for displaying current region. -->
+  <string name="debug_drawer_current_region_label">Regiunea actuală</string>
+  <!-- The text field label for overriding home region. -->
+  <string name="debug_drawer_override_home_region_label">Suprascrie regiunea de domiciliu</string>
+  <!-- The text field label for overriding current region. -->
+  <string name="debug_drawer_override_current_region_label">Suprascrie regiunea curentă</string>
+  <!-- The title of the button for overriding home and current region. -->
+  <string name="debug_drawer_override_region">Suprascrie domiciliul și regiunea curentă</string>
+  <!-- The title of the button for overriding home region permanently. -->
+  <string name="debug_drawer_override_home_region_permanently">Suprascrie definitiv regiunea de domiciliu</string>
+  <!--
     Add-ons debug tools
 
     The description of the Add-ons Tools in the Debug Drawer
@@ -3433,16 +3675,128 @@
   <string name="certificate_warning_push_notification_pnw2_title" tools:ignore="BrandUsage,UnusedResources">Folosești o versiune mai veche de Firefox</string>
   <!-- Push notification message about old Firefox version. "Update" is a verb. -->
   <string name="certificate_warning_push_notification_pnw2_message" tools:ignore="UnusedResources">Actualizează înainte de 14 martie pentru a continua să folosești suplimente și alte funcții.</string>
+  <!-- Push notification message about old Firefox version -->
+  <string name="certificate_warning_push_notification_pnw3_message" tools:ignore="UnusedResources">Unele funcții vor înceta să funcționeze mâine.</string>
   <!-- TextField Design System Component -->
 
+  <!--
+    Setup checklist feature
+
+    ===== Setup checklist feature: Title =====
+
+    Title for the setup checklist feature when the state is 'incomplete'. %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="setup_checklist_title_state_incomplete">Finalizează configurarea %1$s</string>
+  <!-- Title for the setup checklist feature when the state is 'completed' -->
+  <string name="setup_checklist_title_state_completed">Felicitări!</string>
+  <!--
+    ===== Setup checklist feature: Subtitles for 3 steps =====
+
+    Subtitle for a setup checklist with 3 steps initial step. %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="setup_checklist_subtitle_3_steps_initial_state">Urmează acești 3 pași pentru a configura %1$s pentru cea mai bună experiență de navigare.</string>
+  <!-- Subtitle for a setup checklist with 3 steps when the first task is completed. -->
+  <string name="setup_checklist_subtitle_3_steps_first_step">Excelent început! Ai finalizat 1 din 3 pași.</string>
+  <!-- Subtitle for a setup checklist with 3 steps when two of the tasks are completed. -->
+  <string name="setup_checklist_subtitle_3_steps_second_step">Aproape am terminat! Doi pași și mai e unul.</string>
+  <!-- Subtitle for a setup checklist with 3 steps completed state. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="setup_checklist_subtitle_3_steps_completed_state">Ai finalizat toți cei 3 pași. Bucură-te de viteza, confidențialitatea și securitatea oferite de %1$s.</string>
+  <!--
+    ===== Setup checklist feature: Subtitles for 6 steps =====
+
+    Subtitle for a setup checklist with 6 steps initial state. %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="setup_checklist_subtitle_6_steps_initial_state">Urmează toți cei 6 pași pentru a configura %1$s pentru cea mai bună experiență de navigare.</string>
+  <!-- Subtitle for a setup checklist with 6 steps when the first task is completed. -->
+  <string name="setup_checklist_subtitle_6_steps_first_step">Excelent început! Ai finalizat 1 din 6 pași.</string>
+  <!-- Subtitle for the setup checklist when the second task is completed. -->
+  <string name="setup_checklist_subtitle_6_steps_second_step">Ai finalizat 2 din 6 pași. Progres excelent!</string>
+  <!-- Subtitle for a setup checklist with 6 steps when three of the tasks are completed. -->
+  <string name="setup_checklist_subtitle_6_steps_third_step">Ai parcurs jumătatea drumului! Trei pași au fost terminați și mai sunt 3 de parcurs.</string>
+  <!-- Subtitle for a setup checklist with 6 steps when the fourth task is completed. -->
+  <string name="setup_checklist_subtitle_6_steps_fourth_step">Ai făcut 4 pași. Mai sunt doar 2!</string>
+  <!-- Subtitle for a setup checklist with 6 steps when the fifth task is completed. -->
+  <string name="setup_checklist_subtitle_6_steps_fifth_step">Aproape ai ajuns! Ești la doar un pas de linia de sosire.</string>
+  <!-- Subtitle for a setup checklist with 6 steps completed state. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="setup_checklist_subtitle_6_steps_completed_state">Ai finalizat toți cei 6 pași de configurare. Bucură-te de viteza, confidențialitatea și securitatea oferite de %1$s.</string>
+  <!--
+    ===== Setup checklist feature: Subtitles for 5 steps (Large screen devices don't support toolbar placement) =====
+
+    Subtitle for a setup checklist with 5 steps initial state. %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="setup_checklist_subtitle_5_steps_initial_state">Urmează toți cei 5 pași pentru a configura %1$s pentru cea mai bună experiență de navigare.</string>
+  <!-- Subtitle for a setup checklist with 5 steps when the first task is completed. -->
+  <string name="setup_checklist_subtitle_5_steps_first_step">Excelent început! Ai finalizat 1 din 5 pași.</string>
+  <!-- Subtitle for the setup checklist when the second task is completed. -->
+  <string name="setup_checklist_subtitle_5_steps_second_step">Ai finalizat 2 din 5 pași. Progres excelent!</string>
+  <!-- Subtitle for a setup checklist with 5 steps when three of the tasks are completed. -->
+  <string name="setup_checklist_subtitle_5_steps_third_step">Ai parcurs jumătatea drumului! Trei pași au fost terminați și mai sunt doi.</string>
+  <!-- Subtitle for a setup checklist with 5 steps when the fifth task is completed. -->
+  <string name="setup_checklist_subtitle_5_steps_fourth_step">Aproape ai ajuns! Ești la doar un pas de linia de sosire.</string>
+  <!-- Subtitle for a setup checklist with 5 steps completed state. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="setup_checklist_subtitle_5_steps_completed_state">Ai finalizat toți cei 5 pași de configurare. Bucură-te de viteza, confidențialitatea și securitatea oferite de %1$s.</string>
+  <!--
+    ===== Setup checklist feature: Task titles =====
+
+    The title of the default browser task for the setup checklist
+  -->
+  <string name="setup_checklist_task_default_browser">Setează ca browser implicit</string>
+  <!-- The title of the sign-in task for the setup checklist -->
+  <string name="setup_checklist_task_account_sync">Intră în cont</string>
+  <!-- The title of the theme selection task for the setup checklist -->
+  <string name="setup_checklist_task_theme_selection">Selectează o temă</string>
+  <!-- The title of the toolbar selection task for the setup checklist -->
+  <string name="setup_checklist_task_toolbar_selection">Alege plasarea barei de instrumente</string>
+  <!-- The title of the explore extensions task for the setup checklist -->
+  <string name="setup_checklist_task_explore_extensions">Explorează extensiile</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget">Instalează widgetul de căutare</string>
+  <!--
+    ===== Setup checklist feature: Group titles =====
+
+    The title of the 'essentials' group in the setup checklist. %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="setup_checklist_group_essentials">Esențialele %1$s</string>
+  <!-- The title of the 'customize' group in the setup checklist. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="setup_checklist_group_customize">Personalizează-ți %1$s</string>
+  <!-- The title of the 'helpful tools' group in the setup checklist -->
+  <string name="setup_checklist_group_helpful_tools">Instrumente utile</string>
+  <!--
+    ===== Setup checklist feature: Button =====
+
+    Text for the 'remove' button for the setup checklist
+  -->
+  <string name="setup_checklist_button_remove">Elimină lista de verificare</string>
+  <!--
+    ===== Setup checklist feature: Accessibility =====
+
+    Accessibility description for a check mark on a completed task
+  -->
+  <string name="a11y_completed_task_description">Sarcini finalizate</string>
   <!-- Accessibility description for the task icon -->
   <string name="a11y_task_icon_description">Pictogramă sarcină</string>
+  <!--
+    Private browsing mode authentication screen
+
+    Label for the secondary action to exit private browsing mode
+  -->
+  <string name="pbm_authentication_leave_private_tabs">Ieși din filele private</string>
+  <!-- Label for the primary action button to unlock private tabs -->
+  <string name="pbm_authentication_unlock">Deblochează</string>
+  <!-- Title text instructing the user to unlock private tabs -->
+  <string name="pbm_authentication_unlock_private_tabs">Deblochează filele private</string>
   <!-- Authentication prompt title to enable the private tabs mode -->
   <string name="pbm_authentication_enable_lock">Activează blocarea ecranului filelor private</string>
   <!-- Authentication prompt title to disable the private tabs mode -->
   <string name="pbm_authentication_disable_lock">Dezactivează blocarea ecranului filelor private</string>
   <!-- Label for a preference shown when the device supports screen lock (e.g., PIN, pattern, or password) but the user has not set one up. -->
   <string name="pbm_authentication_lock_device_feature_disabled">Configurează blocarea ecranului pentru a ascunde filele</string>
+  <!-- Title text for the contextual feature recommendation (CFR) suggesting the user enable a screen lock to protect private tabs -->
+  <string name="private_tab_cfr_title">Folosești blocarea ecranului pentru a ascunde filele private?</string>
+  <!-- Negative button text for the contextual feature recommendation (CFR) dismissing the screen lock suggestion -->
+  <string name="private_tab_cfr_negative">Nu, mersi</string>
+  <!-- Positive button text for the contextual feature recommendation (CFR) enabling screen lock for private tabs -->
+  <string name="private_tab_cfr_positive">Blochează filele</string>
   <!--
     Review prompt
 

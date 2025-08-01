@@ -631,7 +631,9 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Gaž k wěsći dajośo, kak sćo namakał Firefox a až jen wužywaśo, pomagaśo nam, naš wobglědowak wěcej luźam pśedstajiś.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Dajśo jano mało datow z partnarjami Mozilla marketingoweje technologije k wěsći. Toś te daty se nigda njepśedawaju abo njewužywaju, aby se wam wabjenje pokazało.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Dajśo jano mało datow z partnarjami Mozilla marketingoweje technologije k wěsći. Toś te daty se nigda njepśedawaju abo njewužywaju, aby se wam wabjenje pokazało.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Dajśo jano daty z partnarjami Mozilla marketingoweje technologije k wěsći. Toś te daty se nigda njepśedawaju abo njewužywaju, aby se wam wabjenje pokazało.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Kak daty wužywamy</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1213,6 +1215,8 @@
   <string name="preferences_daily_usage_ping_learn_more">Zgóńśo wěcej wó pingu za wšedne wužywanje</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Rozpšawy wowalenjow awtomatiski pósłaś</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">Rozpšawa jo se pósłała</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">To nam pomaga problemy z wobglědowakom diagnosticěrowaś a rozwězaś. Rozpšawy mógu wósobinske abo sensibelne daty wopśimowaś.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1781,7 +1785,9 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Rejtariki wótnowiś</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s jo musał se znowego startowaś</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s jo musał se znowego startowaś</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s jo spadnjone. Rozpšawu słaś?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Sćo njepósłanu rozpšawu wowalenja, kótaraž se na wowalenja póśěgujo, kótarež se pśepytuju. Gaž ju sćelośo, pomagaśo nam %1$s pólěpšyś. Gaž toś tu powěźeńku zacynjaśo, se toś ta rozpšawa ignorěrujo.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1790,10 +1796,17 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Rozpšawy wowalenjow awtomatiski pósłaś</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Zacyniś</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">ZACYNIŚ</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Wěcej se njepokazaś</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">SŁAŚ</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Rozpšawu wó wowalenju pósłaś</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">Rozpšawy wowalenjow nam pomagaju, problemy z wobglědowakom diagnosticěrowaś a rozwězaś. Rozpšawy mógu wósobinske abo sensibelne daty wopśimowaś. %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">Dalšne informacije</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Dalšne informacije</string>
   <!--
@@ -2182,7 +2195,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Zběrka jo se wulašowała</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Zběrka jo se wulašowała</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Zběrka jo se pśemjeniła</string>
   <!-- Text shown in snackbar when user closes a tab -->

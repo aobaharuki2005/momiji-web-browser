@@ -631,7 +631,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">როდესაც გვიზიარებთ, თუ როგორ აღმოაჩინეთ Firefox და როგორ იყენებთ, გვეხმარებით გავაცნოთ ბრაუზერი კიდევ უფრო მეტ ხალხს.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">გაუზიარეთ მცირე ოდენობის მონაცემები Mozilla-ს გაყიდვების საქმიანობაში მოკავშირე სამსახურებს. ეს მონაცემები არასდროს გაიყიდება და არ იქნება გამოყენებული სარეკლამოდ.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">გაუზიარეთ მცირე ოდენობის მონაცემები Mozilla-ს გაყიდვების საქმიანობაში მოკავშირე სამსახურებს. ეს მონაცემები არასდროს გაიყიდება და არ იქნება გამოყენებული სარეკლამოდ.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">როგორ ვიყენებთ მონაცემებს</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1781,7 +1781,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">ჩანართის აღდგენა</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s ახლიდან უნდა ჩაირთოს</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s ახლიდან უნდა ჩაირთოს</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">გადაუგზავნელი მოხსენება გაქვთ უეცარი გათიშვის შესახებ, რომლის კვლევაც მიმდინარეობს. მისი გამოგზავნით დაგვეხმარებით, გავაუმჯობესოთ %1$s. ამ ცნობის დახურვით მოხსენება უგულებელყოფილი დარჩება.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -2182,7 +2182,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">კრებული წაიშალა</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">კრებული წაიშალა</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">კრებულს გადაერქვა</string>
   <!-- Text shown in snackbar when user closes a tab -->

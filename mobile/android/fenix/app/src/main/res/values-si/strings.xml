@@ -1214,7 +1214,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">පටිත්ත ප්‍රත්‍යර්පණය</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s යළි ඇරඹීමට සිදු විය</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s යළි ඇරඹීමට සිදු විය</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">බිඳවැටුම් වාර්තා ස්වයංක්‍රීයව යවන්න</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -1581,7 +1581,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">එකතුව මැකිණි</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">එකතුව මැකිණි</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">එකතුව නම් කෙරිණි</string>
   <!-- Text shown in snackbar when user closes a tab -->

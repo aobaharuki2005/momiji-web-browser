@@ -636,7 +636,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">সংগ্রহ মুছে ফেলা হয়েছে</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">সংগ্রহ মুছে ফেলা হয়েছে</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">সংগ্রহের নামকরণ</string>
   <!-- Text shown in snackbar when user closes a tab -->

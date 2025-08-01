@@ -1478,7 +1478,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">بھنڈار ہٹیایا گیا</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">بھنڈار ہٹیایا گیا</string>
   <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
   <string name="snackbar_deleted_undo">موڑو</string>
   <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->

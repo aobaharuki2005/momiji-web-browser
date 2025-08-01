@@ -627,7 +627,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Firefox を見つけた経緯や使用していることを共有していただくことで、より多くの人に私たちのブラウザーを紹介できます。</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Mozilla のマーケティング技術パートナーと最小限のデータを共有します。このデータは販売されたり、広告の表示に利用されたりすることはありません。</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Mozilla のマーケティング技術パートナーと最小限のデータを共有します。このデータは販売されたり、広告の表示に利用されたりすることはありません。</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">データの使途</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1759,7 +1759,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">タブを復元</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s を再起動しました</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s を再起動しました</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">調査中のクラッシュと関連する未送信のクラッシュレポートが 1 件あります。レポートを送信すると %1$s の改善に役立てられます。この通知を閉じると、このレポートが無視されます。</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -2160,7 +2160,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">コレクションを削除しました</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">コレクションを削除しました</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">コレクションの名前を変更しました</string>
   <!-- Text shown in snackbar when user closes a tab -->

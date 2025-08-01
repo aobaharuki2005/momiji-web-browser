@@ -1708,7 +1708,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Koleksiyon hate jêbirin</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Koleksiyon hate jêbirin</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Navê koleksiyê hat guhertin</string>
   <!-- Text shown in snackbar when user closes a tab -->

@@ -584,7 +584,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Ketika Anda berbagi bagaimana Anda menemukan Firefox dan bahwa Anda menggunakannya, Anda membantu kami memperkenalkan peramban kami kepada lebih banyak orang.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Bagikan data minimal dengan mitra teknologi pemasaran Mozilla. Data ini tidak pernah dijual atau digunakan untuk menampilkan iklan kepada Anda.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Bagikan data minimal dengan mitra teknologi pemasaran Mozilla. Data ini tidak pernah dijual atau digunakan untuk menampilkan iklan kepada Anda.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Bagaimana kami menggunakan data</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1596,7 +1596,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Pulihkan tab</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s harus dimulai ulang</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s harus dimulai ulang</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Kirim laporan kerusakan secara otomatis</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -1985,7 +1985,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Koleksi dihapus</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Koleksi dihapus</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Nama koleksi berubah</string>
   <!-- Text shown in snackbar when user closes a tab -->

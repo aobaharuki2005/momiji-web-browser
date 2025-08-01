@@ -594,7 +594,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Kur na tregoni se si e zbuluat Firefox-in dhe se e përdorni, na ndihmoni ta paraqesim shfletuesin tonë te më tepër njerëz.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Ndani me partnerë teknologjish marketingu të Mozilla-s të dhëna minimale. Këto të dhëna nuk shiten kurrë, apo të përdoren për t’ju shfaqur reklama.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Ndani me partnerë teknologjish marketingu të Mozilla-s të dhëna minimale. Këto të dhëna nuk shiten kurrë, apo të përdoren për t’ju shfaqur reklama.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Si i përdorim të dhënat</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1606,7 +1606,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Riktheje skedën</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s iu desh të rinisej</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s iu desh të rinisej</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Dërgo vetvetiu njoftime vithisjesh</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -1999,7 +1999,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Koleksioni u fshi</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Koleksioni u fshi</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Koleksioni u rimeërtua</string>
   <!-- Text shown in snackbar when user closes a tab -->

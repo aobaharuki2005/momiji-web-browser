@@ -631,7 +631,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">As jo diele hoe’t jo Firefox ûntdutsen hawwe en dat jo it brûke, helpe jo ús ús browser oan mear minsken te yntrodusearjen.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Diel minimale gegevens mei Mozilla’s marketingtechnologypartners. Dizze gegevens wurde nea ferkocht of brûkt om jo advertinsjes te toanen.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Diel minimale gegevens mei Mozilla’s marketingtechnologypartners. Dizze gegevens wurde nea ferkocht of brûkt om jo advertinsjes te toanen.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Hoe’t wy gegevens brûke</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1781,7 +1781,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Ljepblêd werombringe</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s moast opnij starte wurden</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s moast opnij starte wurden</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Jo hawwe in net-ferstjoerde ûngelokrapport relatearre oan ûngelokken dy’t ûndersocht wurde. It ferstjoeren dêrfan sil ús helpe om %1$s te ferbetterjen. As jo dizze notifikaasje slute, wurdt dit rapport negearre.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -2182,7 +2182,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Kolleksje fuortmsiten</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Kolleksje fuortmsiten</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Kolleksje omneamd</string>
   <!-- Text shown in snackbar when user closes a tab -->

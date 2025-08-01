@@ -1165,7 +1165,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Malikkeun tab</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s kudu dimimitian deui</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s kudu dimimitian deui</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Kirimkeun laporan kagagalan kalawan otomatis</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -1518,7 +1518,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Mupus koléksi</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Mupus koléksi</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Koléksi dingaranan</string>
   <!-- Text shown in snackbar when user closes a tab -->

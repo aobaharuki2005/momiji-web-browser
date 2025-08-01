@@ -1216,7 +1216,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">ٹیب بحال کرو</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s دوبارہ شروع کرݨاں پیا</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s دوبارہ شروع کرݨاں پیا</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">کریش رپورٹاں خودکار بھیڄو</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -1583,7 +1583,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">مجموعہ مٹ ڳیا</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">مجموعہ مٹ ڳیا</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">مجموعے دا ناں تبدیل تھی ڳیا</string>
   <!-- Text shown in snackbar when user closes a tab -->

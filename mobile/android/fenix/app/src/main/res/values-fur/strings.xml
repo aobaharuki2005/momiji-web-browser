@@ -629,7 +629,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Cuant che tu nus contis cemût che tu âs discuviert Firefox e che tu lu dopris, tu nus judis a fâ cognossi il nestri navigadôr a plui personis.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Condivît dâts minimâi cui colaboradôrs tecnologjics pe promozion comerciâl di Mozilla. Chescj dâts no vegnin mai vendûts o doprâts par mostrâti publicitâts.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Condivît dâts minimâi cui colaboradôrs tecnologjics pe promozion comerciâl di Mozilla. Chescj dâts no vegnin mai vendûts o doprâts par mostrâti publicitâts.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Cemût che o doprìn i dâts</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1744,7 +1744,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Ripristine schede</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s al à scugnût tornâ a inviâsi</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s al à scugnût tornâ a inviâsi</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Tu âs une segnalazion di colàs che no je stade mandade e che e je simile a altris colàs che o sin daûr a studiâ. Se tu le inviis tu nus judaressis a miorâ %1$s. Se tu sieris cheste notifiche la segnalazion e vignarà ignorade.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -2145,7 +2145,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Racuelte eliminade</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Racuelte eliminade</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Cambiât non ae racuelte</string>
   <!-- Text shown in snackbar when user closes a tab -->

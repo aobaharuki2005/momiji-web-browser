@@ -631,7 +631,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Երբ կիսվում եք, թե ինչպես եք հայտնաբերել Firefox-ը և որ օգտագործում եք այն, դուք օգնում եք մեզ ներկայացնել մեր դիտարկիչն ավելի շատ մարդկանց:</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Կիսվեք նվազագույն տվյալների Mozilla-ի մարքեթինգային տեխնոլոգիաների գործընկերների հետ: Այս տվյալները երբեք չեն վաճառվում կամ չեն օգտագործվում ձեզ գովազդ ցուցադրելու համար:</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Կիսվեք նվազագույն տվյալների Mozilla-ի մարքեթինգային տեխնոլոգիաների գործընկերների հետ: Այս տվյալները երբեք չեն վաճառվում կամ չեն օգտագործվում ձեզ գովազդ ցուցադրելու համար:</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Ինչպես ենք մենք օգտագործում տվյալները</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1781,7 +1781,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Վերականգնել ներդիը</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s-ը պետք է վերամեկնարկեր</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s-ը պետք է վերամեկնարկեր</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Դուք ունեք չուղարկված վթարի մասին զեկույց, որը կապված է հետաքննվող վթարների հետ։ Այն ուղարկելը կօգնի մեզ բարելավել %1$s-ը։ Այս ծանուցումը փակելը կանտեսի տվյալ զեկույցը։</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -2182,7 +2182,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Հավաքածուն ջնջվեց</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Հավաքածուն ջնջվեց</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Հավաքածուն վերանվանվեց</string>
   <!-- Text shown in snackbar when user closes a tab -->
