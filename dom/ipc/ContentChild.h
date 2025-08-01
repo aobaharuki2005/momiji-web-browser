@@ -281,7 +281,7 @@ class ContentChild final : public PContentChild,
                                            widget::ThemeChangeKind);
 
   mozilla::ipc::IPCResult RecvPreferenceUpdate(const Pref& aPref);
-  mozilla::ipc::IPCResult RecvVarUpdate(const GfxVarUpdate& pref);
+  mozilla::ipc::IPCResult RecvVarUpdate(const nsTArray<GfxVarUpdate>& var);
 
   mozilla::ipc::IPCResult RecvUpdatePerfStatsCollectionMask(
       const uint64_t& aMask);

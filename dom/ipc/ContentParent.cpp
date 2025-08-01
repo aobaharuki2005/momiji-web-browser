@@ -1534,7 +1534,10 @@ void ContentParent::BroadcastMediaCodecsSupportedUpdate(
   // Generate + save FULL support string for display in about:support
   supportString.Truncate();
   media::MCSInfo::GetMediaCodecsSupportedString(supportString, fullSupport);
-  gfx::gfxVars::SetCodecSupportInfo(supportString);
+
+  if (nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service()) {
+    gfxInfo->SetCodecSupportInfo(supportString);
+  }
 }
 
 const nsACString& ContentParent::GetRemoteType() const { return mRemoteType; }
@@ -3134,7 +3137,7 @@ void ContentParent::SetInputPriorityEventEnabled(bool aEnabled) {
   Unused << SendResumeInputEventQueue();
 }
 
-void ContentParent::OnVarChanged(const GfxVarUpdate& aVar) {
+void ContentParent::OnVarChanged(const nsTArray<GfxVarUpdate>& aVar) {
   if (!CanSend()) {
     return;
   }

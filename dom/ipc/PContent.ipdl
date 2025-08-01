@@ -697,7 +697,7 @@ child:
     async ThemeChanged(FullLookAndFeel lookAndFeelData, ThemeChangeKind aKind);
 
     async PreferenceUpdate(Pref pref);
-    async VarUpdate(GfxVarUpdate var);
+    async VarUpdate(GfxVarUpdate[] var);
 
     async UpdatePerfStatsCollectionMask(uint64_t aMask);
     async CollectPerfStatsJSON() returns (nsCString aStats);

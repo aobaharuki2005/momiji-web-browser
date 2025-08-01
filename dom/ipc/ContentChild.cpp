@@ -2228,7 +2228,8 @@ mozilla::ipc::IPCResult ContentChild::RecvPreferenceUpdate(const Pref& aPref) {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvVarUpdate(const GfxVarUpdate& aVar) {
+mozilla::ipc::IPCResult ContentChild::RecvVarUpdate(
+    const nsTArray<GfxVarUpdate>& aVar) {
   gfx::gfxVars::ApplyUpdate(aVar);
   return IPC_OK();
 }

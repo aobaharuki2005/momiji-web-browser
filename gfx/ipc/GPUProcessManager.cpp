@@ -292,37 +292,44 @@ bool GPUProcessManager::MaybeDisableGPUProcess(const char* aMessage,
     return true;
   }
 
-  if (!aAllowRestart) {
-    gfxConfig::SetFailed(Feature::GPU_PROCESS, FeatureStatus::Failed, aMessage);
-    gfxVars::SetGPUProcessEnabled(false);
-  }
-
   bool wantRestart;
-  if (mLastError) {
-    wantRestart =
-        FallbackFromAcceleration(mLastError.value(), mLastErrorMsg.ref());
-    mLastError.reset();
-    mLastErrorMsg.reset();
-  } else {
-    wantRestart = gfxPlatform::FallbackFromAcceleration(
-        FeatureStatus::Unavailable, aMessage,
-        "FEATURE_FAILURE_GPU_PROCESS_ERROR"_ns);
+  {
+    // Collect the gfxVar updates into a single message.
+    gfxVarsCollectUpdates collect;
+
+    if (!aAllowRestart) {
+      gfxConfig::SetFailed(Feature::GPU_PROCESS, FeatureStatus::Failed,
+                           aMessage);
+      gfxVars::SetGPUProcessEnabled(false);
+    }
+
+    if (mLastError) {
+      wantRestart =
+          FallbackFromAcceleration(mLastError.value(), mLastErrorMsg.ref());
+      mLastError.reset();
+      mLastErrorMsg.reset();
+    } else {
+      wantRestart = gfxPlatform::FallbackFromAcceleration(
+          FeatureStatus::Unavailable, aMessage,
+          "FEATURE_FAILURE_GPU_PROCESS_ERROR"_ns);
+    }
+    if (aAllowRestart && wantRestart) {
+      // The fallback method can make use of the GPU process.
+      return false;
+    }
+
+    if (aAllowRestart) {
+      gfxConfig::SetFailed(Feature::GPU_PROCESS, FeatureStatus::Failed,
+                           aMessage);
+      gfxVars::SetGPUProcessEnabled(false);
+    }
+
+    MOZ_ASSERT(!gfxConfig::IsEnabled(Feature::GPU_PROCESS));
+
+    gfxCriticalNote << aMessage;
+
+    gfxPlatform::DisableGPUProcess();
   }
-  if (aAllowRestart && wantRestart) {
-    // The fallback method can make use of the GPU process.
-    return false;
-  }
-
-  if (aAllowRestart) {
-    gfxConfig::SetFailed(Feature::GPU_PROCESS, FeatureStatus::Failed, aMessage);
-    gfxVars::SetGPUProcessEnabled(false);
-  }
-
-  MOZ_ASSERT(!gfxConfig::IsEnabled(Feature::GPU_PROCESS));
-
-  gfxCriticalNote << aMessage;
-
-  gfxPlatform::DisableGPUProcess();
 
   mozilla::glean::gpu_process::feature_status.Set(
       gfxConfig::GetFeature(Feature::GPU_PROCESS)
@@ -716,10 +723,16 @@ bool GPUProcessManager::DisableWebRenderConfig(wr::WebRenderError aError,
   mLastError.reset();
   mLastErrorMsg.reset();
 
-  // Disable WebRender
-  bool wantRestart = FallbackFromAcceleration(aError, aMsg);
-  gfxVars::SetUseWebRenderDCompVideoHwOverlayWin(false);
-  gfxVars::SetUseWebRenderDCompVideoSwOverlayWin(false);
+  bool wantRestart;
+  {
+    // Collect the gfxVar updates into a single message.
+    gfxVarsCollectUpdates collect;
+
+    // Disable WebRender
+    wantRestart = FallbackFromAcceleration(aError, aMsg);
+    gfxVars::SetUseWebRenderDCompVideoHwOverlayWin(false);
+    gfxVars::SetUseWebRenderDCompVideoSwOverlayWin(false);
+  }
 
   // If we still have the GPU process, and we fallback to a new configuration
   // that prefers to have the GPU process, reset the counter. Because we
@@ -750,6 +763,7 @@ void GPUProcessManager::NotifyWebRenderError(wr::WebRenderError aError) {
   gfxCriticalNote << "Handling webrender error " << (unsigned int)aError;
 #ifdef XP_WIN
   if (aError == wr::WebRenderError::VIDEO_OVERLAY) {
+    gfxVarsCollectUpdates collect;
     gfxVars::SetUseWebRenderDCompVideoHwOverlayWin(false);
     gfxVars::SetUseWebRenderDCompVideoSwOverlayWin(false);
     return;

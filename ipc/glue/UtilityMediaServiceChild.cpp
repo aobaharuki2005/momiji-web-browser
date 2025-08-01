@@ -149,7 +149,8 @@ UtilityMediaServiceChild::RecvCompleteCreatedVideoBridge() {
   return IPC_OK();
 }
 
-void UtilityMediaServiceChild::OnVarChanged(const gfx::GfxVarUpdate& aVar) {
+void UtilityMediaServiceChild::OnVarChanged(
+    const nsTArray<gfx::GfxVarUpdate>& aVar) {
   MOZ_ASSERT(mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM);
   SendUpdateVar(aVar);
 }

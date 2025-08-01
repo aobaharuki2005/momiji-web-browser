@@ -52,9 +52,7 @@ UtilityMediaServiceParent::UtilityMediaServiceParent(
     profiler_set_process_name(nsCString("MF Media Engine CDM"));
     gfx::gfxConfig::Init();
     gfx::gfxVars::Initialize();
-    for (auto& update : aUpdates) {
-      gfx::gfxVars::ApplyUpdate(update);
-    }
+    gfx::gfxVars::ApplyUpdate(aUpdates);
     gfx::DeviceManagerDx::Init();
     return;
   }
@@ -172,7 +170,7 @@ mozilla::ipc::IPCResult UtilityMediaServiceParent::RecvInitVideoBridge(
 }
 
 IPCResult UtilityMediaServiceParent::RecvUpdateVar(
-    const GfxVarUpdate& aUpdate) {
+    const nsTArray<GfxVarUpdate>& aUpdate) {
   MOZ_ASSERT(mKind == SandboxingKind::MF_MEDIA_ENGINE_CDM);
   auto scopeExit = MakeScopeExit(
       [self = RefPtr<UtilityMediaServiceParent>{this},

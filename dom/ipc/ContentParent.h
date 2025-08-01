@@ -751,7 +751,7 @@ class ContentParent final : public PContentParent,
 
   bool ShouldContinueFromReplyTimeout() override;
 
-  void OnVarChanged(const GfxVarUpdate& aVar) override;
+  void OnVarChanged(const nsTArray<GfxVarUpdate>& aVar) override;
   void OnCompositorUnexpectedShutdown() override;
 
  private:

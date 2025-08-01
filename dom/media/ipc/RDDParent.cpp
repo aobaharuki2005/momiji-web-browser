@@ -140,9 +140,7 @@ mozilla::ipc::IPCResult RDDParent::RecvInit(
     nsTArray<GfxVarUpdate>&& vars, const Maybe<FileDescriptor>& aBrokerFd,
     const bool& aCanRecordReleaseTelemetry,
     const bool& aIsReadyForBackgroundProcessing) {
-  for (const auto& var : vars) {
-    gfxVars::ApplyUpdate(var);
-  }
+  gfxVars::ApplyUpdate(vars);
 
   auto supported = media::MCSInfo::GetSupportFromFactory();
   Unused << SendUpdateMediaCodecsSupported(supported);
@@ -173,7 +171,7 @@ mozilla::ipc::IPCResult RDDParent::RecvInit(
   return IPC_OK();
 }
 
-IPCResult RDDParent::RecvUpdateVar(const GfxVarUpdate& aUpdate) {
+IPCResult RDDParent::RecvUpdateVar(const nsTArray<GfxVarUpdate>& aUpdate) {
   gfxVars::ApplyUpdate(aUpdate);
   return IPC_OK();
 }

@@ -279,9 +279,7 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
     nsTArray<GfxVarUpdate>&& vars, const DevicePrefs& devicePrefs,
     nsTArray<LayerTreeIdMapping>&& aMappings,
     nsTArray<GfxInfoFeatureStatus>&& aFeatures, uint32_t aWrNamespace) {
-  for (const auto& var : vars) {
-    gfxVars::ApplyUpdate(var);
-  }
+  gfxVars::ApplyUpdate(vars);
 
   // Inherit device preferences.
   gfxConfig::Inherit(Feature::HW_COMPOSITING, devicePrefs.hwCompositing());
@@ -498,7 +496,8 @@ mozilla::ipc::IPCResult GPUParent::RecvInitProfiler(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult GPUParent::RecvUpdateVar(const GfxVarUpdate& aUpdate) {
+mozilla::ipc::IPCResult GPUParent::RecvUpdateVar(
+    const nsTArray<GfxVarUpdate>& aUpdate) {
 #if defined(XP_WIN)
   auto scopeExit = MakeScopeExit(
       [couldUseHWDecoder = gfx::gfxVars::CanUseHardwareVideoDecoding()] {

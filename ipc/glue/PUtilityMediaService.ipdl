@@ -32,7 +32,7 @@ parent:
   async InitVideoBridge(Endpoint<PVideoBridgeChild> endpoint,
                         ContentDeviceData contentDeviceData);
 
-  async UpdateVar(GfxVarUpdate var);
+  async UpdateVar(GfxVarUpdate[] var);
 #endif
 
 #ifdef MOZ_WMF_CDM

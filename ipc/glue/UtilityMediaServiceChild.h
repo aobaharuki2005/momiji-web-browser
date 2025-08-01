@@ -71,7 +71,7 @@ class UtilityMediaServiceChild final : public PUtilityMediaServiceChild
 #ifdef MOZ_WMF_MEDIA_ENGINE
   mozilla::ipc::IPCResult RecvCompleteCreatedVideoBridge();
 
-  void OnVarChanged(const gfx::GfxVarUpdate& aVar) override;
+  void OnVarChanged(const nsTArray<gfx::GfxVarUpdate>& aVar) override;
 
   void OnCompositorUnexpectedShutdown() override;
 

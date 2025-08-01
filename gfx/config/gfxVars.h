@@ -18,6 +18,7 @@
 namespace mozilla::gfx {
 
 class gfxVarReceiver;
+class MOZ_STACK_CLASS gfxVarsCollectUpdates;
 
 // Generator for graphics vars.
 #define GFX_VARS_LIST(_)                                           \
@@ -86,7 +87,6 @@ class gfxVarReceiver;
   _(UseDMABufWebGL, bool, true)                                    \
   _(DMABufModifiersXRGB, ArrayOfuint64_t, nsTArray<uint64_t>())    \
   _(DMABufModifiersARGB, ArrayOfuint64_t, nsTArray<uint64_t>())    \
-  _(CodecSupportInfo, nsCString, nsCString())                      \
   _(WebRenderRequiresHardwareDriver, bool, false)                  \
   _(SupportsThreadsafeGL, bool, false)                             \
   _(AllowWebGPU, bool, false)                                      \
@@ -143,7 +143,7 @@ class gfxVars final {
   static void Initialize();
   static void Shutdown();
 
-  static void ApplyUpdate(const GfxVarUpdate& aUpdate);
+  static void ApplyUpdate(const nsTArray<GfxVarUpdate>& aUpdate);
   static void AddReceiver(gfxVarReceiver* aReceiver);
   static void RemoveReceiver(gfxVarReceiver* aReceiver);
 
@@ -182,6 +182,10 @@ class gfxVars final {
   static bool IsInitialized() { return sInstance != nullptr; }
 
  private:
+  friend class gfxVarsCollectUpdates;
+  static void StartCollectingUpdates();
+  static void StopCollectingUpdates();
+
   static StaticAutoPtr<gfxVars> sInstance;
   static StaticAutoPtr<nsTArray<VarBase*>> sVarList;
 
@@ -264,6 +268,15 @@ class gfxVars final {
 };
 
 #undef GFX_VARS_LIST
+
+// Helper class that batches changes to gfxVars into a single update to minimize
+// churn for receivers. This is particularly useful for the media processes
+// which reconfigure themselves when gfxVars updates come in.
+class MOZ_STACK_CLASS gfxVarsCollectUpdates final {
+ public:
+  gfxVarsCollectUpdates() { gfxVars::StartCollectingUpdates(); }
+  ~gfxVarsCollectUpdates() { gfxVars::StopCollectingUpdates(); }
+};
 
 }  // namespace mozilla::gfx
 

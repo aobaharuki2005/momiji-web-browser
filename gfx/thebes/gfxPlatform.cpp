@@ -2975,6 +2975,9 @@ void gfxPlatform::InitHardwareVideoConfig() {
     return;
   }
 
+  // Collect the gfxVar updates into a single message.
+  gfxVarsCollectUpdates collect;
+
   FeatureState& featureDec =
       gfxConfig::GetFeature(Feature::HARDWARE_VIDEO_DECODING);
   featureDec.Reset();
