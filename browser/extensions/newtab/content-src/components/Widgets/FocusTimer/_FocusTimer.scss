@@ -12,7 +12,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-
 }
 
 .focus-timer-tabs {
@@ -21,39 +20,6 @@
 
 .focus-timer-tabs > moz-button:first-child {
   margin-inline-end: var(--space-small);
-}
-
-.focus-timer-controls {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-.focus-timer-controls > moz-button:last-child {
-  margin-inline-start: var(--space-xsmall);
-}
-
-.focus-timer-controls > moz-button::part(button) {
-  border-radius: 50%; // stylelint-disable-line declaration-property-value-disallowed-list
-  padding: calc(var(--space-large) + 0.5 * var(--space-xxsmall)); // 17px
-}
-
-.focus-timer-input {
-  color: var(--text-color);
-  font-size: calc(2 * var(--font-size-xlarge));
-  font-weight: var(--font-weight-bold);
-  font-variant-numeric: tabular-nums;
-  width: 125px;
-  padding: 0;
-  margin-inline-end: var(--space-small);
-  border: none;
-  opacity: 1;
-  transition: opacity 0.8s ease, width 0.8s ease;
-
-  &.hidden {
-    opacity: 0;
-    width: 0;
-  }
 }
 
 .progress-circle-wrapper {
@@ -76,6 +42,11 @@
   width: 162px;
   overflow: hidden;
   transition: height 0.8s ease, opacity 0.8s ease;
+
+  &.visible {
+    opacity: 1;
+    height: 162px;
+  }
 
   .progress-circle-background,
   .progress-circle,
@@ -160,10 +131,49 @@
     justify-content: center;
     position: absolute;
     width: 100%;
+    z-index: 10;
   }
 }
 
-.progress-circle-wrapper.visible {
-  opacity: 1;
-  height: 162px;
+.set-timer-controls-wrapper {
+  display: flex;
+
+  .set-timer-countdown {
+    font-size: calc(2 * var(--font-size-xlarge));
+    font-weight: var(--font-weight-bold);
+    font-variant-numeric: tabular-nums;
+    height: 100%;
+    margin-inline-end: var(--space-xlarge);
+    opacity: 1;
+    width: 125px;
+    transition: opacity 0.8s ease, width 0.8s ease;
+
+    &.hidden {
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+    }
+  }
+
+  .focus-timer-controls {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    &.timer-running {
+      margin-block-start: var(--space-medium);
+    }
+  }
+
+  .focus-timer-controls>moz-button:last-child {
+    margin-inline-start: var(--space-medium);
+  }
+
+  .focus-timer-controls>moz-button::part(button) {
+    border-radius: 50%; // stylelint-disable-line declaration-property-value-disallowed-list
+    padding: calc(var(--space-large) + 0.5 * var(--space-xxsmall)); // 17px
+  }
 }
+
+
+

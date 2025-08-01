@@ -12731,7 +12731,10 @@ const FocusTimer = ({
   const [progress, setProgress] = (0,external_React_namespaceObject.useState)(0);
   const [progressVisible, setProgressVisible] = (0,external_React_namespaceObject.useState)(false);
   const timerType = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.TimerWidget.timerType);
-  const inputRef = (0,external_React_namespaceObject.useRef)(null);
+  const activeMinutesRef = (0,external_React_namespaceObject.useRef)(null);
+  const activeSecondsRef = (0,external_React_namespaceObject.useRef)(null);
+  const idleMinutesRef = (0,external_React_namespaceObject.useRef)(null);
+  const idleSecondsRef = (0,external_React_namespaceObject.useRef)(null);
   const arcRef = (0,external_React_namespaceObject.useRef)(null);
   const timerData = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.TimerWidget);
   const {
@@ -12747,6 +12750,14 @@ const FocusTimer = ({
     }
     setProgress(0);
   }, [arcRef]);
+
+  // If the timer is running, set the progress visibility to true
+  // This helps persist progressbar visibility on refresh/opening a new tab
+  (0,external_React_namespaceObject.useEffect)(() => {
+    if (isRunning) {
+      setProgressVisible(true);
+    }
+  }, [isRunning]);
   (0,external_React_namespaceObject.useEffect)(() => {
     let interval;
     if (isRunning && duration > 0) {
@@ -12805,19 +12816,27 @@ const FocusTimer = ({
   }, [progress]);
 
   // set timer function
-  const setTimerMinutes = e => {
-    if (e.key === "Enter") {
-      const minutes = parseInt(inputRef.current.value, 10);
-      const seconds = minutes * 60;
-      if (minutes > 0) {
-        dispatch(actionCreators.AlsoToMain({
-          type: actionTypes.WIDGETS_TIMER_SET_DURATION,
-          data: {
-            timerType,
-            duration: seconds
-          }
-        }));
-      }
+  const setTimerDuration = () => {
+    const minutesEl = progressVisible ? activeMinutesRef.current : idleMinutesRef.current;
+    const secondsEl = progressVisible ? activeSecondsRef.current : idleSecondsRef.current;
+    const minutesValue = minutesEl.innerText.trim() || "0";
+    const secondsValue = secondsEl.innerText.trim() || "0";
+    let minutes = parseInt(minutesValue || "0", 10);
+    let seconds = parseInt(secondsValue || "0", 10);
+
+    // Set a limit of 99 minutes
+    minutes = Math.min(minutes, 99);
+    // Set a limit of 59 seconds
+    seconds = Math.min(seconds, 59);
+    const totalSeconds = minutes * 60 + seconds;
+    if (!Number.isNaN(totalSeconds) && totalSeconds > 0 && totalSeconds !== duration) {
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WIDGETS_TIMER_SET_DURATION,
+        data: {
+          timerType,
+          duration: totalSeconds
+        }
+      }));
     }
   };
 
@@ -12884,6 +12903,70 @@ const FocusTimer = ({
       }));
     });
   };
+  const handleKeyDown = e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      setTimerDuration(e);
+    }
+    if (e.key === "Tab") {
+      setTimerDuration(e);
+    }
+  };
+  const handleBeforeInput = e => {
+    const input = e.data;
+    const values = e.target.innerText.trim();
+
+    // only allow numerical digits 0–9 for time input
+    if (!/^\d+$/.test(input)) {
+      e.preventDefault();
+    }
+
+    // only allow 2 values each for minutes and seconds
+    if (values.length >= 2) {
+      e.preventDefault();
+    }
+    const selection = window.getSelection();
+    const selectedText = selection.toString();
+
+    // if entire value is selected, replace it with the new input
+    if (selectedText === values) {
+      e.preventDefault(); // prevent default typing
+      e.target.innerText = input;
+
+      // Places the caret at the end of the content-editable text
+      // This is a known problem with content-editable where the caret
+      const range = document.createRange();
+      range.selectNodeContents(e.target);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  };
+  const handleFocus = e => {
+    if (isRunning) {
+      // calculated to get the new baseline of the timer when it starts or resumes
+      const remaining = calculateTimeRemaining(duration, startTime);
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WIDGETS_TIMER_PAUSE,
+        data: {
+          timerType,
+          duration: remaining
+        }
+      }));
+    }
+
+    // highlight entire text when focused on the time.
+    // this makes it easier to input the new time instead of backspacing
+    const el = e.target;
+    if (document.createRange && window.getSelection) {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  };
   return timerData ? /*#__PURE__*/external_React_default().createElement("article", {
     className: "focus-timer"
   }, /*#__PURE__*/external_React_default().createElement("div", {
@@ -12909,17 +12992,35 @@ const FocusTimer = ({
     ref: timerType === "break" ? arcRef : null
   }), /*#__PURE__*/external_React_default().createElement("div", {
     className: `progress-circle-complete${progress === 1 ? " visible" : ""}`
-  }), /*#__PURE__*/external_React_default().createElement("div", {
+  }), progressVisible && /*#__PURE__*/external_React_default().createElement("div", {
     role: "timer",
     className: "progress-circle-label"
-  }, /*#__PURE__*/external_React_default().createElement("p", null, formatTime(timeLeft)))), /*#__PURE__*/external_React_default().createElement("div", {
-    className: "focus-timer-controls"
-  }, /*#__PURE__*/external_React_default().createElement("input", {
-    className: `focus-timer-input${progressVisible ? " hidden" : ""}`,
-    value: "01:00",
-    onKeyDown: setTimerMinutes,
-    ref: inputRef
-  }), /*#__PURE__*/external_React_default().createElement("moz-button", {
+  }, /*#__PURE__*/external_React_default().createElement(EditableTimerFields, {
+    minutesRef: activeMinutesRef,
+    secondsRef: activeSecondsRef,
+    onKeyDown: handleKeyDown,
+    onBeforeInput: handleBeforeInput,
+    onFocus: handleFocus,
+    timeLeft: timeLeft,
+    onBlur: () => setTimerDuration()
+  }))), /*#__PURE__*/external_React_default().createElement("div", {
+    className: "set-timer-controls-wrapper"
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    role: "timer",
+    className: `set-timer-countdown progress-circle-label${progressVisible ? " hidden" : ""}`,
+    "aria-hidden": progressVisible
+  }, /*#__PURE__*/external_React_default().createElement(EditableTimerFields, {
+    minutesRef: idleMinutesRef,
+    secondsRef: idleSecondsRef,
+    onKeyDown: handleKeyDown,
+    onBeforeInput: handleBeforeInput,
+    onFocus: handleFocus,
+    timeLeft: timeLeft,
+    tabIndex: progressVisible ? -1 : 0,
+    onBlur: () => setTimerDuration()
+  })), /*#__PURE__*/external_React_default().createElement("div", {
+    className: `focus-timer-controls ${progressVisible ? "timer-running" : " "}`
+  }, /*#__PURE__*/external_React_default().createElement("moz-button", {
     type: "primary",
     iconsrc: `chrome://global/skin/media/${isRunning ? "pause" : "play"}-fill.svg`,
     title: isRunning ? "Pause" : "Play",
@@ -12929,8 +13030,34 @@ const FocusTimer = ({
     iconsrc: "chrome://newtab/content/data/content/assets/arrow-clockwise-16.svg",
     title: "Reset",
     onClick: resetTimer
-  }))) : null;
+  })))) : null;
 };
+function EditableTimerFields({
+  minutesRef,
+  secondsRef,
+  tabIndex = 0,
+  ...props
+}) {
+  return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("span", {
+    contentEditable: "true",
+    ref: minutesRef,
+    className: "timer-set-minutes",
+    onKeyDown: props.onKeyDown,
+    onBeforeInput: props.onBeforeInput,
+    onFocus: props.onFocus,
+    onBlur: props.onBlur,
+    tabIndex: tabIndex
+  }, formatTime(props.timeLeft).split(":")[0]), ":", /*#__PURE__*/external_React_default().createElement("span", {
+    contentEditable: "true",
+    ref: secondsRef,
+    className: "timer-set-seconds",
+    onKeyDown: props.onKeyDown,
+    onBeforeInput: props.onBeforeInput,
+    onFocus: props.onFocus,
+    onBlur: props.onBlur,
+    tabIndex: tabIndex
+  }, formatTime(props.timeLeft).split(":")[1]));
+}
 ;// CONCATENATED MODULE: ./content-src/components/Widgets/Widgets.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,

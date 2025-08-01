@@ -4597,38 +4597,6 @@ main section {
   margin-inline-end: var(--space-small);
 }
 
-.focus-timer-controls {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-.focus-timer-controls > moz-button:last-child {
-  margin-inline-start: var(--space-xsmall);
-}
-
-.focus-timer-controls > moz-button::part(button) {
-  border-radius: 50%;
-  padding: calc(var(--space-large) + 0.5 * var(--space-xxsmall));
-}
-
-.focus-timer-input {
-  color: var(--text-color);
-  font-size: calc(2 * var(--font-size-xlarge));
-  font-weight: var(--font-weight-bold);
-  font-variant-numeric: tabular-nums;
-  width: 125px;
-  padding: 0;
-  margin-inline-end: var(--space-small);
-  border: none;
-  opacity: 1;
-  transition: opacity 0.8s ease, width 0.8s ease;
-}
-.focus-timer-input.hidden {
-  opacity: 0;
-  width: 0;
-}
-
 .progress-circle-wrapper {
   /* Colours for the main timer */
   --timer-red: var(--color-red-50);
@@ -4649,6 +4617,10 @@ main section {
   /* main timer colours */
   /* break timer colours */
   /* timer turns green when complete */
+}
+.progress-circle-wrapper.visible {
+  opacity: 1;
+  height: 162px;
 }
 .progress-circle-wrapper .progress-circle-background,
 .progress-circle-wrapper .progress-circle,
@@ -4708,11 +4680,41 @@ main section {
   justify-content: center;
   position: absolute;
   width: 100%;
+  z-index: 10;
 }
 
-.progress-circle-wrapper.visible {
+.set-timer-controls-wrapper {
+  display: flex;
+}
+.set-timer-controls-wrapper .set-timer-countdown {
+  font-size: calc(2 * var(--font-size-xlarge));
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  height: 100%;
+  margin-inline-end: var(--space-xlarge);
   opacity: 1;
-  height: 162px;
+  width: 125px;
+  transition: opacity 0.8s ease, width 0.8s ease;
+}
+.set-timer-controls-wrapper .set-timer-countdown.hidden {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+.set-timer-controls-wrapper .focus-timer-controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.set-timer-controls-wrapper .focus-timer-controls.timer-running {
+  margin-block-start: var(--space-medium);
+}
+.set-timer-controls-wrapper .focus-timer-controls > moz-button:last-child {
+  margin-inline-start: var(--space-medium);
+}
+.set-timer-controls-wrapper .focus-timer-controls > moz-button::part(button) {
+  border-radius: 50%;
+  padding: calc(var(--space-large) + 0.5 * var(--space-xxsmall));
 }
 
 .ds-onboarding-container,
