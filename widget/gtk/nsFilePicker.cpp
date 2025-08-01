@@ -704,7 +704,7 @@ void* nsFilePicker::GtkFileChooserNew(const gchar* title, GtkWindow* parent,
       (void* (*)(const gchar*, GtkWindow*, GtkFileChooserAction, const gchar*,
                  const gchar*))dlsym(RTLD_DEFAULT,
                                      "gtk_file_chooser_native_new");
-  if (mUseNativeFileChooser && sGtkFileChooserNativeNewPtr != nullptr) {
+  if (mUseNativeFileChooser && sGtkFileChooserNativeNewPtr) {
     return (*sGtkFileChooserNativeNewPtr)(title, parent, action, accept_label,
                                           nullptr);
   }
@@ -720,7 +720,7 @@ void* nsFilePicker::GtkFileChooserNew(const gchar* title, GtkWindow* parent,
 void nsFilePicker::GtkFileChooserShow(void* file_chooser) {
   static auto sGtkNativeDialogShowPtr =
       (void (*)(void*))dlsym(RTLD_DEFAULT, "gtk_native_dialog_show");
-  if (mUseNativeFileChooser && sGtkNativeDialogShowPtr != nullptr) {
+  if (mUseNativeFileChooser && sGtkNativeDialogShowPtr) {
     const char* portalEnvString = g_getenv("GTK_USE_PORTAL");
     bool setPortalEnv =
         (portalEnvString && *portalEnvString == '0') || !portalEnvString;
@@ -740,8 +740,9 @@ void nsFilePicker::GtkFileChooserShow(void* file_chooser) {
 void nsFilePicker::GtkFileChooserDestroy(void* file_chooser) {
   static auto sGtkNativeDialogDestroyPtr =
       (void (*)(void*))dlsym(RTLD_DEFAULT, "gtk_native_dialog_destroy");
-  if (mUseNativeFileChooser && sGtkNativeDialogDestroyPtr != nullptr) {
+  if (mUseNativeFileChooser && sGtkNativeDialogDestroyPtr) {
     (*sGtkNativeDialogDestroyPtr)(file_chooser);
+    g_object_unref(file_chooser);
   } else {
     gtk_widget_destroy(GTK_WIDGET(file_chooser));
   }
@@ -752,7 +753,7 @@ void nsFilePicker::GtkFileChooserSetModal(void* file_chooser,
                                           gboolean modal) {
   static auto sGtkNativeDialogSetModalPtr = (void (*)(void*, gboolean))dlsym(
       RTLD_DEFAULT, "gtk_native_dialog_set_modal");
-  if (mUseNativeFileChooser && sGtkNativeDialogSetModalPtr != nullptr) {
+  if (mUseNativeFileChooser && sGtkNativeDialogSetModalPtr) {
     (*sGtkNativeDialogSetModalPtr)(file_chooser, modal);
   } else {
     GtkWindow* window = GTK_WINDOW(file_chooser);
