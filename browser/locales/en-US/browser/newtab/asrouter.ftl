@@ -66,7 +66,7 @@ cfr-doorhanger-extension-total-users =
      *[other] { $total } users
   }
 
-## Firefox Accounts Message
+## Mozilla Account messages
 
 cfr-doorhanger-bookmark-fxa-header = Sync your bookmarks everywhere.
 cfr-doorhanger-bookmark-fxa-body-2 = Great find! Now don’t be left without this bookmark on your mobile devices. Get started with an account.
@@ -74,6 +74,12 @@ cfr-doorhanger-bookmark-fxa-link-text = Sync bookmarks now…
 cfr-doorhanger-bookmark-fxa-close-btn-tooltip =
   .aria-label = Close button
   .title = Close
+
+fxa-adoption-addresses-backup-title = Let’s back up your saved addresses
+fxa-adoption-addresses-backup-subtitle = Protect your saved addresses by syncing them to your devices with encryption.
+fxa-adoption-credit-cards-backup-title = Let’s back up your payment methods
+fxa-adoption-credit-cards-backup-subtitle = Protect your payment methods by syncing them to your devices with encryption.
+fxa-adoption-primary-button-label = Sign up
 
 ## What's New toolbar button and panel
 
