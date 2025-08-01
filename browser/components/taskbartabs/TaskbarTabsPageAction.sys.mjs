@@ -48,6 +48,13 @@ export const TaskbarTabsPageAction = {
     let taskbarTabsButton = aWindow.document.getElementById(kWidgetId);
     taskbarTabsButton.addEventListener("click", this, true);
 
+    if (lazy.TaskbarTabsUtils.isTaskbarTabWindow(aWindow)) {
+      taskbarTabsButton.setAttribute(
+        "data-l10n-id",
+        "taskbar-tab-urlbar-button-close"
+      );
+    }
+
     initVisibilityChanges(aWindow, taskbarTabsButton);
   },
 

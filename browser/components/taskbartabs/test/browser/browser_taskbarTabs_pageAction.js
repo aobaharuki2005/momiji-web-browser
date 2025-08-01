@@ -37,6 +37,11 @@ async function browserPageAction(win) {
     false,
     "Taskbar tab page action button should not be hidden."
   );
+  is(
+    pageAction.getAttribute("data-l10n-id"),
+    "taskbar-tab-urlbar-button-open",
+    "Taskbar tab page action should have the 'add' tooltip."
+  );
 
   let newWinPromise = BrowserTestUtils.waitForNewWindow();
 
@@ -63,6 +68,11 @@ async function taskbarTabsPageAction(win, destWin) {
     pageAction.hidden,
     false,
     "Taskbar tab page action button should not be hidden."
+  );
+  is(
+    pageAction.getAttribute("data-l10n-id"),
+    "taskbar-tab-urlbar-button-close",
+    "Taskbar tab page action should have the 'remove' tooltip."
   );
 
   let closeWinPromise = BrowserTestUtils.windowClosed(win);

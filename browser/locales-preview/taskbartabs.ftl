@@ -7,7 +7,9 @@
 ## navigates to a website.
 
 taskbar-tab-urlbar-button-open =
-  .tooltiptext = Add to taskbar
+  .tooltiptext = Add tab to taskbar
+taskbar-tab-urlbar-button-close =
+  .tooltiptext = Remove tab from taskbar
 
 # This string is used in the description of a Windows Start Menu
 # shortcut for a Taskbar Tab.
