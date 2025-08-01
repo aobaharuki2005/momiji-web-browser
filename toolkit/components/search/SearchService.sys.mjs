@@ -13,6 +13,8 @@ const lazy = XPCOMUtils.declareLazy({
   AddonSearchEngine:
     "moz-src:///toolkit/components/search/AddonSearchEngine.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+  ConfigSearchEngine:
+    "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs",
   IgnoreLists: "resource://gre/modules/IgnoreLists.sys.mjs",
   loadAndParseOpenSearchEngine:
     "moz-src:///toolkit/components/search/OpenSearchLoader.sys.mjs",
@@ -52,12 +54,15 @@ const lazy = XPCOMUtils.declareLazy({
 });
 
 /**
- * @typedef {import("AddonSearchEngine.sys.mjs").AddonSearchEngine} AddonSearchEngine
- * @typedef {import("OpenSearchEngine.sys.mjs").OpenSearchEngine} OpenSearchEngine
- * @typedef {import("SearchEngine.sys.mjs").SearchEngine} SearchEngine
- * @typedef {import("SearchEngineSelector.sys.mjs").RefinedConfig} RefinedConfig
- * @typedef {import("SearchEngineSelector.sys.mjs").SearchEngineSelector} SearchEngineSelector
- * @typedef {import("UserSearchEngine.sys.mjs").FormInfo} FormInfo
+ * @import {AddonSearchEngine} from "AddonSearchEngine.sys.mjs"
+ * @import {OpenSearchEngine} from "OpenSearchEngine.sys.mjs"
+ * @import {SearchEngine} from "SearchEngine.sys.mjs"
+ * @import {SearchEngineSelector} from "SearchEngineSelector.sys.mjs"
+ * @import {
+ *   RefinedSearchConfig,
+ *   SearchEngineDefinition,
+ * } from "../uniffi-bindgen-gecko-js/components/generated/RustSearch.sys.mjs";
+ * @import {UserSearchEngine, FormInfo} from "UserSearchEngine.sys.mjs"
  */
 
 const TOPIC_LOCALES_CHANGE = "intl:app-locales-changed";
@@ -201,9 +206,6 @@ const gEmptyParseSubmissionResult = Object.freeze(
  */
 export class SearchService {
   constructor() {
-    // this._engines is prefixed with _ rather than # because it is called from
-    // a test.
-    this._engines = new Map();
     this._settings = new lazy.SearchSettings(this);
   }
 
@@ -680,7 +682,7 @@ export class SearchService {
    *
    * @param {FormInfo} formInfo
    *   General information about the search engine.
-   * @returns {Promise<nsISearchEngine>}
+   * @returns {Promise<UserSearchEngine>}
    *   The generated search engine object.
    */
   async addUserEngine(formInfo) {
@@ -806,7 +808,7 @@ export class SearchService {
       );
     }
 
-    engineToRemove.pendingRemoval = true;
+    this.#enginesPendingRemoval.add(engineToRemove);
 
     if (engineToRemove == this.defaultEngine) {
       this.#findAndSetNewDefaultEngine(
@@ -841,7 +843,7 @@ export class SearchService {
       // avoid future conflicts with other engines.
       engineToRemove.hidden = true;
       engineToRemove.alias = null;
-      engineToRemove.pendingRemoval = false;
+      this.#enginesPendingRemoval.delete(engineToRemove);
     } else {
       // Remove the engine file from disk if we had a legacy file in the profile.
       if (engineToRemove._filePath) {
@@ -1066,9 +1068,12 @@ export class SearchService {
     }
   }
 
-  #currentEngine;
-  #currentPrivateEngine;
-  #queuedIdle;
+  /** @type {?SearchEngine} */
+  #currentEngine = null;
+  /** @type {?SearchEngine} */
+  #currentPrivateEngine = null;
+  /** @type {boolean} */
+  #queuedIdle = false;
 
   /**
    * A deferred promise that is resolved when initialization has finished.
@@ -1122,7 +1127,7 @@ export class SearchService {
    * Various search engines may be ignored if their submission urls contain a
    * string that is in the list. The list is controlled via remote settings.
    *
-   * @type {Array}
+   * @type {string[]}
    */
   #submissionURLIgnoreList = [];
 
@@ -1130,21 +1135,22 @@ export class SearchService {
    * Various search engines may be ignored if their load path is contained
    * in this list. The list is controlled via remote settings.
    *
-   * @type {Array}
+   * @type {string[]}
    */
   #loadPathIgnoreList = [];
 
   /**
    * A map of engine identifiers to `SearchEngine`.
+   * It is prefixed with _ rather than # because it is accessed in tests.
    *
-   * @type {Map<string, object>|null}
+   * @type {Map<string, SearchEngine>}
    */
-  _engines = null;
+  _engines = new Map();
 
   /**
-   * An array of engine short names sorted into display order.
+   * Cache for this.#sortedEngines.
    *
-   * @type {Array}
+   * @type {SearchEngine[]}
    */
   _cachedSortedEngines = null;
 
@@ -1238,6 +1244,18 @@ export class SearchService {
    */
   #openSearchUpdateTimerStarted = false;
 
+  /**
+   * Keeps track of engines that are about to be removed.
+   *
+   * @type {WeakSet<SearchEngine>}
+   */
+  #enginesPendingRemoval = new WeakSet();
+
+  /**
+   * An array of search engines sorted into display order.
+   *
+   * @type {SearchEngine[]}
+   */
   get #sortedEngines() {
     if (!this._cachedSortedEngines) {
       return this.#buildSortedEngineList();
@@ -1258,30 +1276,48 @@ export class SearchService {
     );
   }
 
+  /**
+   * Returns an array of addon search engines with a particular
+   * extension ID.
+   *
+   * @param {string} extensionID
+   * @returns {AddonSearchEngine[]}
+   */
   #getEnginesByExtensionID(extensionID) {
     lazy.logConsole.debug(
       "getEnginesByExtensionID: getting all engines for",
       extensionID
     );
-    var engines = this.#sortedEngines.filter(function (engine) {
-      return engine._extensionID == extensionID;
-    });
-    return engines;
+
+    /**
+     * @param {SearchEngine} engine
+     * @returns {engine is AddonSearchEngine}
+     */
+    function isAddonEngine(engine) {
+      return (
+        engine instanceof lazy.AddonSearchEngine &&
+        engine._extensionID == extensionID
+      );
+    }
+
+    return this.#sortedEngines.filter(isAddonEngine);
   }
 
   /**
-   * Returns the engine associated with the WebExtension details.
+   * Returns the engine associated with the WebExtension details,
+   * or null if no engine matched.
    *
    * @param {object} details
    *   Details of the WebExtension.
    * @param {string} details.id
    *   The WebExtension ID
-   * @returns {nsISearchEngine|null}
-   *   The found engine, or null if no engine matched.
    */
   #getEngineByWebExtensionDetails(details) {
     for (const engine of this._engines.values()) {
-      if (engine._extensionID == details.id) {
+      if (
+        engine instanceof lazy.AddonSearchEngine &&
+        engine._extensionID == details.id
+      ) {
         return engine;
       }
     }
@@ -1298,7 +1334,7 @@ export class SearchService {
    *   If true, returns the default engine for private browsing mode, otherwise
    *   the default engine for the normal mode. Note, this function does not
    *   check the "separatePrivateDefault" preference - that is up to the caller.
-   * @returns {nsISearchEngine|null}
+   * @returns {?SearchEngine}
    *   The appropriate search engine, or null if one could not be determined.
    */
   _getEngineDefault(privateMode) {
@@ -1717,7 +1753,7 @@ export class SearchService {
    *
    * @param {object} settings
    *   An object representing the search engine settings.
-   * @param {RefinedConfig} refinedConfig
+   * @param {RefinedSearchConfig} refinedConfig
    *   The refined search configuration for this user.
    */
   async #loadEngines(settings, refinedConfig) {
@@ -1871,7 +1907,7 @@ export class SearchService {
    * Loads engines as specified by the configuration. We only expect
    * configured engines here, user engines should not be listed.
    *
-   * @param {Array} engineConfigs
+   * @param {SearchEngineDefinition[]} engineConfigs
    *   An array of engines configurations based on the schema.
    * @param {object} [settings]
    *   The saved settings for the user.
@@ -2089,7 +2125,7 @@ export class SearchService {
     let oldEngineList = [...this._engines.values()];
 
     for (let engine of oldEngineList) {
-      if (!engine.isConfigEngine) {
+      if (!(engine instanceof lazy.ConfigSearchEngine)) {
         if (engine instanceof lazy.AddonSearchEngine) {
           // If this is an add-on search engine, check to see if it needs
           // an update.
@@ -2109,13 +2145,13 @@ export class SearchService {
       }
 
       if (!configuration) {
-        engine.pendingRemoval = true;
+        this.#enginesPendingRemoval.add(engine);
         continue;
       } else {
         // This is an existing engine that we should update. (However
         // notification will happen only if the configuration for this engine
         // has changed).
-        await engine.update({ configuration });
+        engine.update({ configuration });
       }
 
       availableConfigEngines.splice(index, 1);
@@ -2162,10 +2198,10 @@ export class SearchService {
     // If the user's default is one of the private engines that is being removed,
     // reset the stored setting, so that we correctly detect the change in
     // in default.
-    if (prevCurrentEngine?.pendingRemoval) {
+    if (this.#enginesPendingRemoval.has(prevCurrentEngine)) {
       this._settings.setMetaDataAttribute("defaultEngineId", "");
     }
-    if (prevPrivateEngine?.pendingRemoval) {
+    if (this.#enginesPendingRemoval.has(prevPrivateEngine)) {
       this._settings.setMetaDataAttribute("privateDefaultEngineId", "");
     }
 
@@ -2176,10 +2212,12 @@ export class SearchService {
     for (let { duplicateEngine, newAppEngine } of existingDuplicateEngines) {
       if (prevCurrentEngine && prevCurrentEngine == duplicateEngine) {
         if (
-          await lazy.defaultOverrideAllowlist.canEngineOverride(
+          (duplicateEngine instanceof lazy.AddonSearchEngine ||
+            duplicateEngine instanceof lazy.OpenSearchEngine) &&
+          (await lazy.defaultOverrideAllowlist.canEngineOverride(
             duplicateEngine,
             newAppEngine?.id
-          )
+          ))
         ) {
           lazy.logConsole.log(
             "Applying override from",
@@ -2206,10 +2244,10 @@ export class SearchService {
           skipDefaultChangedNotification = true;
         }
       }
-      duplicateEngine.pendingRemoval = true;
+      this.#enginesPendingRemoval.add(duplicateEngine);
     }
 
-    if (prevCurrentEngine && prevCurrentEngine.pendingRemoval) {
+    if (this.#enginesPendingRemoval.has(prevCurrentEngine)) {
       skipDefaultChangedNotification ||=
         await this.#maybeRestoreEngineFromOverride(prevCurrentEngine);
     }
@@ -2241,7 +2279,7 @@ export class SearchService {
         prevMetaData &&
         settings.metaData &&
         !this.#didSettingsMetaDataUpdate(prevMetaData) &&
-        prevCurrentEngine?.pendingRemoval &&
+        this.#enginesPendingRemoval.has(prevCurrentEngine) &&
         Services.prefs.getBoolPref("browser.search.removeEngineInfobar.enabled")
       ) {
         this._showRemovalOfSearchEngineNotificationBox(
@@ -2370,12 +2408,12 @@ export class SearchService {
   /**
    * Remove any engines that have been flagged for removal during reloadEngines.
    *
-   * @param {Map<string, object>|null} engines
+   * @param {Map<string, SearchEngine>} engines
    *   The list of engines to check.
    */
   async #maybeRemoveEnginesAfterReload(engines) {
     for (let engine of engines.values()) {
-      if (!engine.pendingRemoval) {
+      if (!this.#enginesPendingRemoval.has(engine)) {
         continue;
       }
 
@@ -2383,7 +2421,7 @@ export class SearchService {
       // engines etc, and we want to avoid adjusting the sort order unnecessarily.
       this.#internalRemoveEngine(engine);
 
-      if (engine.isConfigEngine) {
+      if (engine instanceof lazy.ConfigSearchEngine) {
         await engine.cleanup();
       }
 
@@ -2394,6 +2432,14 @@ export class SearchService {
     }
   }
 
+  /**
+   * Adds an engine to the store and notifies observers.
+   *
+   * @param {SearchEngine} engine
+   *   The search engine to add.
+   * @param {boolean} [skipDuplicateCheck]
+   *   True to override engines with the same name.
+   */
   #addEngineToStore(engine, skipDuplicateCheck = false) {
     if (this.#engineMatchesIgnoreLists(engine)) {
       lazy.logConsole.debug("#addEngineToStore: Ignoring engine");
@@ -2721,7 +2767,7 @@ export class SearchService {
   /**
    * Get a sorted array of the visible engines.
    *
-   * @returns {Array<SearchEngine>}
+   * @returns {SearchEngine[]}
    */
   get #sortedVisibleEngines() {
     return this.#sortedEngines.filter(engine => !engine.hidden);
@@ -2739,8 +2785,7 @@ export class SearchService {
     const matchRegExp = /extensions\/(.*?)\.xpi!/i;
     for (let engine of this._engines.values()) {
       if (
-        !engine.isAppProvided &&
-        !engine._extensionID &&
+        engine instanceof lazy.OpenSearchEngine &&
         engine._loadPath.includes("[profile]/extensions/")
       ) {
         let match = engine._loadPath.match(matchRegExp);
@@ -2897,7 +2942,7 @@ export class SearchService {
 
     for (let engine of this._engines.values()) {
       if (
-        !engine.extensionID &&
+        engine instanceof lazy.OpenSearchEngine &&
         engine._loadPath.startsWith(`jar:[profile]/extensions/${extension.id}`)
       ) {
         // This is a legacy extension engine that needs to be migrated to WebExtensions.
@@ -3001,6 +3046,12 @@ export class SearchService {
     return extensionEngines;
   }
 
+  /**
+   * Removes a search engine from _sortedEngines and _engines.
+   *
+   * @param {SearchEngine} engine
+   *   The search engine to remove.
+   */
   #internalRemoveEngine(engine) {
     // Remove the engine from _sortedEngines
     if (this._cachedSortedEngines) {
@@ -3023,8 +3074,7 @@ export class SearchService {
    * be used if there is not default set yet, or if the current default is
    * being removed.
    *
-   * This function will not consider engines that have a `pendingRemoval`
-   * property set to true.
+   * This function will not consider engines in #enginesPendingRemoval.
    *
    * The new default will be chosen from (in order):
    *
@@ -3042,7 +3092,7 @@ export class SearchService {
    *   check the "separatePrivateDefault" preference - that is up to the caller.
    * @param {nsISearchService.DefaultEngineChangeReason} changeReason
    *   The reason for the change of default engine.
-   * @returns {nsISearchEngine|null}
+   * @returns {?SearchEngine}
    *   The appropriate search engine, or null if one could not be determined.
    */
   #findAndSetNewDefaultEngine({ privateMode }, changeReason) {
@@ -3051,19 +3101,25 @@ export class SearchService {
       ? this.appPrivateDefaultEngine
       : this.appDefaultEngine;
 
-    if (!newDefault || newDefault.hidden || newDefault.pendingRemoval) {
+    if (
+      !newDefault ||
+      newDefault.hidden ||
+      this.#enginesPendingRemoval.has(newDefault)
+    ) {
       let sortedEngines = this.#sortedVisibleEngines;
       let generalSearchEngines = sortedEngines.filter(
         e => e.isGeneralPurposeEngine
       );
 
       // then to the first visible general search engine that isn't excluded...
-      let firstVisible = generalSearchEngines.find(e => !e.pendingRemoval);
+      let firstVisible = generalSearchEngines.find(
+        e => !this.#enginesPendingRemoval.has(e)
+      );
       if (firstVisible) {
         newDefault = firstVisible;
       } else if (newDefault) {
         // then to the app default if it is not the one that is excluded...
-        if (!newDefault.pendingRemoval) {
+        if (!this.#enginesPendingRemoval.has(newDefault)) {
           newDefault.hidden = false;
         } else {
           newDefault = null;
@@ -3264,7 +3320,7 @@ export class SearchService {
   /**
    * Gets summary information for an engine to report to telemetry.
    *
-   * @param {nsISearchEngine} engine
+   * @param {SearchEngine} engine
    */
   #getEngineInfo(engine) {
     if (!engine) {
@@ -3295,7 +3351,7 @@ export class SearchService {
       telemetryId: engine.telemetryId,
       loadPath: engine.loadPath,
       name: engine.name ? engine.name : "",
-      /** @type {?string} */
+      /** @type {string?} */
       submissionURL: undefined,
     };
 
@@ -3349,9 +3405,9 @@ export class SearchService {
    *
    * @param {boolean} isPrivate
    *   True if this is a event about a private engine.
-   * @param {nsISearchEngine} [previousEngine]
+   * @param {SearchEngine} [previousEngine]
    *   The previously default search engine.
-   * @param {nsISearchEngine} [newEngine]
+   * @param {SearchEngine} [newEngine]
    *   The new default search engine.
    * @param {nsISearchService.DefaultEngineChangeReason} changeReason
    *   The reason for the default search engine change, one of

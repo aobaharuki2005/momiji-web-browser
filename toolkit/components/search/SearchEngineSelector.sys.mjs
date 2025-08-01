@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * @typedef {import("../uniffi-bindgen-gecko-js/components/generated/RustSearch.sys.mjs").SearchEngineSelector} RustSearchEngineSelector
- * We use "Rust" above to avoid conflict with the class name for the JavaScript wrapper.
- * @typedef {import("../uniffi-bindgen-gecko-js/components/generated/RustSearch.sys.mjs").SearchApplicationName} SearchApplicationName
- * @typedef {import("../uniffi-bindgen-gecko-js/components/generated/RustSearch.sys.mjs").SearchUpdateChannel} SearchUpdateChannel
+ * @import {
+ *   RefinedSearchConfig,
+ *   SearchEngineDefinition
+ * } from "../uniffi-bindgen-gecko-js/components/generated/RustSearch.sys.mjs";
  */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -30,18 +30,6 @@ const lazy = XPCOMUtils.declareLazy({
       maxLogLevel: lazy.SearchUtils.loggingEnabled ? "Debug" : "Warn",
     }),
 });
-
-/**
- * @typedef {object} RefinedConfig
- * @property {object[]} engines
- *   An array of objects defining the engines that should be presented to the user.
- * @property {string} appDefaultEngineId
- *   The identifier of the engine that should be used for the application
- *   default engine.
- * @property {string} [appPrivateDefaultEngineId]
- *   If specified, the identifier of the engine that should be used for the
- *   application default engine in private browsing mode.
- */
 
 /**
  * SearchEngineSelector parses the JSON configuration for
@@ -133,7 +121,7 @@ export class SearchEngineSelector {
    * @param {string} host
    *   The host to match.
    *
-   * @returns {Promise<object>}
+   * @returns {Promise<?SearchEngineDefinition>}
    *   The configuration data for an engine.
    */
   async findContextualSearchEngineByHost(host) {
@@ -160,7 +148,7 @@ export class SearchEngineSelector {
    * @param {string} id
    *   The identifier to match.
    *
-   * @returns {Promise<object>}
+   * @returns {Promise<?SearchEngineDefinition>}
    *   The configuration data for an engine.
    */
   async findContextualSearchEngineById(id) {
@@ -314,7 +302,7 @@ export class SearchEngineSelector {
    *   The name of the application.
    * @param {string} [options.version]
    *   The version of the application.
-   * @returns {Promise<RefinedConfig>}
+   * @returns {Promise<RefinedSearchConfig>}
    *   An object which contains the refined configuration with a filtered list
    *   of search engines, and the identifiers for the application default engines.
    */
@@ -438,6 +426,9 @@ export class SearchEngineSelector {
           "fetchEngineConfiguration: " + result.engines.map(e => e.identifier)
         );
       }
+
+      // @ts-ignore since the return type is different
+      // when using the JS Search Selector.
       return result;
     }
 
@@ -489,14 +480,14 @@ export class SearchEngineSelector {
   }
 
   /**
-   * @type {RustSearchEngineSelector?}
+   * @type {InstanceType<typeof lazy.SearchEngineSelector>?}
    */
   #cachedSelector = null;
 
   /**
    * Returns the Rust based selector.
    *
-   * @returns {RustSearchEngineSelector}
+   * @returns {InstanceType<typeof lazy.SearchEngineSelector>}
    */
   get #selector() {
     if (!this.#cachedSelector) {
@@ -511,7 +502,7 @@ export class SearchEngineSelector {
    *
    * @param {string} channel
    *   The channel name to convert.
-   * @returns {SearchUpdateChannel}
+   * @returns {Values<typeof lazy.SearchUpdateChannel>}
    */
   #convertUpdateChannel(channel) {
     let uppercaseChannel = channel.toUpperCase();
@@ -529,7 +520,7 @@ export class SearchEngineSelector {
    *
    * @param {string} appName
    *   The application name to convert.
-   * @returns {SearchApplicationName}
+   * @returns {Values<typeof lazy.SearchApplicationName>}
    */
   #convertApplicationName(appName) {
     let uppercaseAppName = appName.toUpperCase().replace("-", "_");
@@ -537,7 +528,6 @@ export class SearchEngineSelector {
     if (uppercaseAppName in lazy.SearchApplicationName) {
       return lazy.SearchApplicationName[uppercaseAppName];
     }
-
     return lazy.SearchApplicationName.FIREFOX;
   }
 

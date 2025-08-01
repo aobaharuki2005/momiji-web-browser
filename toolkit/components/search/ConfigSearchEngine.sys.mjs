@@ -427,7 +427,7 @@ export class ConfigSearchEngine extends SearchEngine {
    * actually changed the engine, so that we don't record default engine
    * changed telemetry unnecessarily.
    *
-   * @type {?Map}
+   * @type {?Map<string, any>}
    */
   #prevEngineInfo = null;
 
@@ -455,12 +455,14 @@ export class ConfigSearchEngine extends SearchEngine {
     this.#init(config);
     this._loadSettings(settings);
 
-    this.#prevEngineInfo = new Map([
-      ["name", this.name],
-      ["_loadPath", this._loadPath],
-      ["submissionURL", this.getSubmission("foo").uri.spec],
-      ["aliases", this._definedAliases],
-    ]);
+    this.#prevEngineInfo = new Map(
+      /** @type {[string, any][]} */ ([
+        ["name", this.name],
+        ["_loadPath", this._loadPath],
+        ["submissionURL", this.getSubmission("foo").uri.spec],
+        ["aliases", this._definedAliases],
+      ])
+    );
   }
 
   /**

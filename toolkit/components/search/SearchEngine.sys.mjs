@@ -483,11 +483,21 @@ export class SearchEngine {
   QueryInterface = ChromeUtils.generateQI(["nsISearchEngine"]);
   // Data set by the user.
   _metaData = {};
-  // Anonymized path of where we initially loaded the engine from.
-  // This will stay null for engines installed in the profile before we moved
-  // to a JSON storage.
+
+  /**
+   * Anonymized path of where we initially loaded the engine from.
+   * This will stay null for engines installed in the profile before we moved
+   * to a JSON storage.
+   *
+   * @type {string}
+   */
   _loadPath = null;
-  // The engine's name.
+
+  /**
+   *The engine's name.
+   *
+   * @type {string}
+   */
   _name = null;
   // The name of the charset used to submit the search terms.
   _queryCharset = null;
