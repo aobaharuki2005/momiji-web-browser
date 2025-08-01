@@ -182,13 +182,6 @@ android {
         klarNightly.root = 'src/klarNightly'
     }
 
-    // https://issuetracker.google.com/issues/379732901
-    packaging {
-        resources {
-            pickFirsts += ['META-INF/versions/9/OSGI-INF/MANIFEST.MF']
-        }
-    }
-
     namespace = 'org.mozilla.focus'
 }
 
