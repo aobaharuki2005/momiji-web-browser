@@ -18,6 +18,12 @@ async function setAndUpdateIsSignedIn(content, isSignedIn) {
   await content.updateComplete;
 }
 
+async function setAndUpdateHasUpgraded(content, hasUpgraded) {
+  content.state.hasUpgraded = hasUpgraded;
+  content.requestUpdate();
+  await content.updateComplete;
+}
+
 async function resetStateToObj(content, originalState) {
   content.state = originalState;
   content.requestUpdate();
@@ -41,6 +47,8 @@ add_task(async function test_main_content() {
 
   let content = panelView.querySelector(lazy.IPProtectionPanel.CONTENT_TAGNAME);
 
+  let originalState = structuredClone(content.state);
+
   await setAndUpdateIsSignedIn(content, true);
 
   Assert.ok(
@@ -48,6 +56,13 @@ add_task(async function test_main_content() {
     "ipprotection content component should be present"
   );
   Assert.ok(content.statusCardEl, "Status card should be present");
+
+  // Test content before user upgrade
+  await setAndUpdateHasUpgraded(content, false);
+  Assert.ok(
+    !content.activeSubscriptionEl,
+    "Active subscription element should not be present"
+  );
   Assert.ok(content.upgradeEl, "Upgrade vpn element should be present");
   Assert.ok(
     content.upgradeEl.querySelector("#upgrade-vpn-title"),
@@ -61,6 +76,32 @@ add_task(async function test_main_content() {
     content.upgradeEl.querySelector("#upgrade-vpn-button"),
     "Upgrade vpn button should be present"
   );
+
+  // Test content after user upgrade
+  await setAndUpdateHasUpgraded(content, true);
+  Assert.ok(!content.upgradeEl, "Upgrade vpn element should not be present");
+  Assert.ok(
+    content.activeSubscriptionEl,
+    "Active subscription element should be present"
+  );
+  Assert.ok(
+    content.activeSubscriptionEl.querySelector(
+      "#active-subscription-vpn-title"
+    ),
+    "Active subcription vpn title should be present"
+  );
+  Assert.ok(
+    content.activeSubscriptionEl.querySelector(
+      "#active-subscription-vpn-message"
+    ),
+    "Active subscription vpn paragraph should be present"
+  );
+  Assert.ok(
+    content.activeSubscriptionEl.querySelector("#download-vpn-button"),
+    "Download vpn button should be present"
+  );
+
+  await resetStateToObj(content, originalState);
 
   // Close the panel
   let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
