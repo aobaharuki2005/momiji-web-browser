@@ -128,7 +128,10 @@ var gProfiles = {
       menuitem.setAttribute("command", "Profiles:LaunchProfile");
       menuitem.style.setProperty("--menu-profiles-theme-bg", themeBg);
       menuitem.style.setProperty("--menu-profiles-theme-fg", themeFg);
-      menuitem.style.listStyleImage = `url(${await profile.getAvatarURL(48)})`;
+      menuitem.style.setProperty(
+        "--menuitem-icon",
+        `url(${await profile.getAvatarURL(48)})`
+      );
       menuitem.classList.add("menuitem-iconic", "menuitem-iconic-profile");
 
       if (profile.id === currentProfile.id) {
