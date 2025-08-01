@@ -2448,6 +2448,7 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
 
   GLenum fClientWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout) {
     GLenum ret = 0;
+    MOZ_ASSERT(sync);
     BEFORE_GL_CALL;
     ASSERT_SYMBOL_PRESENT(fClientWaitSync);
     ret = mSymbols.fClientWaitSync(sync, flags, timeout);
