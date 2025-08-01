@@ -2190,8 +2190,7 @@ void Manager::NoteOrphanedBodyIdList(const nsTArray<nsID>& aDeletedBodyIdList) {
   deleteNowList.SetCapacity(aDeletedBodyIdList.Length());
 
   std::copy_if(aDeletedBodyIdList.cbegin(), aDeletedBodyIdList.cend(),
-               MakeBackInserter(deleteNowList),
-               [this](const auto& deletedBodyId) {
+               MakeBackInserter(deleteNowList), [&](const auto& deletedBodyId) {
                  return !SetBodyIdOrphanedIfRefed(deletedBodyId);
                });
 

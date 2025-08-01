@@ -1131,7 +1131,7 @@ void Performance::QueueEntry(PerformanceEntry* aEntry) {
   if (!mObservers.IsEmpty()) {
     const auto [begin, end] = mObservers.NonObservingRange();
     std::copy_if(begin, end, MakeBackInserter(interestedObservers),
-                 [aEntry](PerformanceObserver* observer) {
+                 [&](PerformanceObserver* observer) {
                    return observer->ObservesTypeOfEntry(aEntry);
                  });
   }
