@@ -3519,7 +3519,7 @@ Element* nsINode::GetNearestInclusiveOpenPopover() const {
 
 Element* nsINode::GetNearestInclusiveTargetPopoverForInvoker() const {
   for (auto* el : InclusiveFlatTreeAncestorsOfType<Element>()) {
-    if (auto* popover = el->GetEffectiveInvokeTargetElement()) {
+    if (auto* popover = el->GetEffectiveCommandForElement()) {
       if (popover->IsAutoPopover() && popover->IsPopoverOpen()) {
         return popover;
       }
@@ -3533,7 +3533,7 @@ Element* nsINode::GetNearestInclusiveTargetPopoverForInvoker() const {
   return nullptr;
 }
 
-nsGenericHTMLElement* nsINode::GetEffectiveInvokeTargetElement() const {
+nsGenericHTMLElement* nsINode::GetEffectiveCommandForElement() const {
   if (!StaticPrefs::dom_element_commandfor_enabled()) {
     return nullptr;
   }
