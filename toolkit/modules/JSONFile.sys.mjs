@@ -231,7 +231,8 @@ JSONFile.prototype = {
       // In the event that the file exists, but an exception is thrown because it cannot be read,
       // we store it as a .corrupt file for debugging purposes.
 
-      this._recordTelemetry("error_" + (ex.name?.toLowerCase() ?? "unknown"));
+      let errorNo = ex.winLastError || ex.unixErrno;
+      this._recordTelemetry(errorNo ? errorNo.toString() : "");
       if (!(DOMException.isInstance(ex) && ex.name == "NotFoundError")) {
         console.error(ex);
 
