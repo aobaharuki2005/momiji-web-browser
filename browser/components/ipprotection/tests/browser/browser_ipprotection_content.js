@@ -4,6 +4,9 @@
 
 "use strict";
 
+const { LINKS } = ChromeUtils.importESModule(
+  "chrome://browser/content/ipprotection/ipprotection-constants.mjs"
+);
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -244,4 +247,51 @@ add_task(async function test_ipprotection_events_on_toggle() {
   let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
   EventUtils.synthesizeKey("KEY_Escape");
   await panelHiddenPromise;
+});
+
+add_task(async function test_support_link() {
+  let button = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
+  let panelView = PanelMultiView.getViewNode(
+    document,
+    lazy.IPProtectionWidget.PANEL_ID
+  );
+
+  let panelShownPromise = waitForPanelEvent(document, "popupshown");
+  let panelInitPromise = BrowserTestUtils.waitForEvent(
+    document,
+    "IPProtection:Init"
+  );
+  // Open the panel
+  button.click();
+  await Promise.all([panelShownPromise, panelInitPromise]);
+
+  let content = panelView.querySelector(lazy.IPProtectionPanel.CONTENT_TAGNAME);
+  let originalState = structuredClone(content.state);
+  content.state.hasUpgraded = false;
+  content.state.isSignedIn = true;
+  content.requestUpdate();
+  await content.updateComplete;
+
+  let supportLink = content.upgradeEl.querySelector("#vpn-support-link");
+  Assert.ok(supportLink, "Support link should be present");
+
+  let newTabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    LINKS.PRODUCT_URL
+  );
+  let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
+  supportLink.click();
+  let newTab = await newTabPromise;
+  await panelHiddenPromise;
+
+  Assert.equal(
+    gBrowser.selectedTab,
+    newTab,
+    "New tab is now open in a new foreground tab"
+  );
+
+  // To be safe, reset the entire state
+  await resetStateToObj(content, originalState);
+
+  BrowserTestUtils.removeTab(newTab);
 });

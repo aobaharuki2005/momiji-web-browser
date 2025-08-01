@@ -54,7 +54,10 @@ export default class IPProtectionContentElement extends MozLitElement {
   }
 
   handleClickSupportLink(event) {
+    const win = event.target.ownerGlobal;
+
     if (event.target === this.supportLinkEl) {
+      win.openWebLinkIn(LINKS.PRODUCT_URL, "tab");
       this.dispatchEvent(
         new CustomEvent("IPProtection:Close", { bubbles: true })
       );
@@ -77,7 +80,7 @@ export default class IPProtectionContentElement extends MozLitElement {
 
   handleUpgrade(event) {
     const win = event.target.ownerGlobal;
-    win.openWebLinkIn(LINKS.PRODUCT_URL, "tab");
+    win.openWebLinkIn(LINKS.PRODUCT_URL + "#pricing", "tab");
     // Close the panel
     this.dispatchEvent(
       new CustomEvent("IPProtection:Close", { bubbles: true })
@@ -212,9 +215,8 @@ export default class IPProtectionContentElement extends MozLitElement {
         >
           <a
             id="vpn-support-link"
-            is="moz-support-link"
+            href=${LINKS.PRODUCT_URL}
             data-l10n-name="learn-more-vpn"
-            support-page="test"
           ></a>
         </p>
         <moz-button
