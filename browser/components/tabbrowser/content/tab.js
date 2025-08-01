@@ -82,7 +82,7 @@
     static get inheritedAttributes() {
       return {
         ".tab-background":
-          "selected=visuallyselected,fadein,multiselected,dragover-groupTarget",
+          "selected=visuallyselected,fadein,multiselected,dragover-createGroup",
         ".tab-group-line": "selected=visuallyselected,multiselected",
         ".tab-loading-burst": "pinned,bursting,notselectedsinceload",
         ".tab-content":
@@ -225,9 +225,7 @@
 
     get visible() {
       return (
-        this.isOpen &&
-        !this.hidden &&
-        (!this.group || this.group.isTabVisibleInGroup(this))
+        this.isOpen && !this.hidden && (!this.group?.collapsed || this.selected)
       );
     }
 
