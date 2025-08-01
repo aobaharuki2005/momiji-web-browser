@@ -145,14 +145,8 @@ nsresult NotificationParent::HandleAlertTopic(AlertTopic aTopic) {
   }
   if (aTopic == AlertTopic::Show) {
     if (!mResolver) {
-#ifdef ANDROID
-      // XXX: This can happen as we resolve showNotification() immediately on
-      // Android for now and a mock service may still call this.
-      return NS_OK;
-#else
       MOZ_ASSERT_UNREACHABLE("Are we getting double show events?");
       return NS_ERROR_FAILURE;
-#endif
     }
     mResolver.take().value()(CopyableErrorResult());
     return NS_OK;
@@ -277,14 +271,6 @@ nsresult NotificationParent::Show() {
   RefPtr<NotificationObserver> observer = new NotificationObserver(
       mArgs.mScope, principal, IPCNotification(mId, options), *this);
   MOZ_TRY(ShowAlertWithCleanup(alert, observer));
-
-#ifdef ANDROID
-  // XXX: the Android nsIAlertsService is broken and doesn't send alertshow
-  // properly, so we call it here manually.
-  // (This now fires onshow event regardless of the actual result, but it should
-  // be better than the previous behavior that did not do anything at all)
-  observer->Observe(nullptr, "alertshow", nullptr);
-#endif
 
   return NS_OK;
 }
