@@ -10,8 +10,11 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.text.InputType
+import android.text.SpannableString
+import android.text.SpannedString
 import android.view.KeyEvent
 import android.view.View
+import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.ExtractedTextRequest
 import android.view.inputmethod.InputConnection
@@ -251,6 +254,9 @@ class TextInputDelegateTest : BaseSessionTest() {
         // Workaround for sync shadow text
         ic.beginBatchEdit()
         ic.endBatchEdit()
+
+        processChildEvents()
+        processParentEvents()
     }
 
     @Test fun restartInput() {
@@ -1623,6 +1629,56 @@ class TextInputDelegateTest : BaseSessionTest() {
 
         finishComposingText(ic)
         assertText("commit foobaz1", ic, "foobaz1")
+    }
+
+    @WithDisplay(width = 512, height = 512)
+    // Child process updates require having a display.
+    @Test
+    fun inputConnection_setComposingTextWithEmptyStringSpan() {
+        assumeThat("input only", id, equalTo("#input"))
+
+        setupContent("")
+        val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
+
+        var promise = mainSession.evaluatePromiseJS(
+            """
+            new Promise(r =>
+                document.querySelector('$id').addEventListener('input', () => {
+                    let input = document.querySelector('$id');
+                    let selStart = input.selectionStart;
+                    if (input.value.length == 4) {
+                      input.value = "123 4";
+                      selStart += 1;
+                      input.setSelectionRange(selStart, selStart);
+                      r();
+                    }
+                }));
+            """.trimIndent(),
+        )
+
+        pressKey(ic, KeyEvent.KEYCODE_1)
+        ic.setComposingText("", 1)
+        pressKey(ic, KeyEvent.KEYCODE_2)
+        ic.setComposingText("", 1)
+        pressKey(ic, KeyEvent.KEYCODE_3)
+        ic.setComposingText("", 1)
+
+        syncShadowText(ic)
+
+        assertSelectionAt("Update selection by key event", ic, 3)
+
+        pressKeyNoWait(ic, KeyEvent.KEYCODE_4)
+
+        // ATOK will set empty text that has a composing span.
+        val text = SpannableString("")
+        BaseInputConnection.setComposingSpans(text)
+        ic.setComposingText(text, 1)
+
+        promise.value
+
+        syncShadowText(ic)
+
+        assertSelectionAt("Update selection by setSelectionRange", ic, 5)
     }
 
     @Test

@@ -646,6 +646,34 @@ import org.mozilla.gecko.util.ThreadUtils;
   }
 
   @Override
+  public boolean setComposingText(final CharSequence text, final int newCursorPosition) {
+    final Editable content = getEditable();
+    if (content != null && text.length() == 0 && newCursorPosition == 1) {
+      final int composingStart = getComposingSpanStart(content);
+      final int composingEnd = getComposingSpanEnd(content);
+      if (composingStart < 0 || composingEnd < 0) {
+        final int selStart = Selection.getSelectionStart(content);
+        final int selEnd = Selection.getSelectionEnd(content);
+        if (selStart == selEnd) {
+          // We have no composition and trying composing text is also empty.
+          // If newCursorPosition is 1 and inserted text is empty, it sets the selection to
+          // inserted position.
+          // So if current selection is collapsed, this does nothing.
+          if (DEBUG) {
+            Log.d(
+                LOGTAG,
+                "setComposingText does nothing. Becasue, although we have no composing text and IME"
+                    + " tries to set empty string.");
+          }
+          return true;
+        }
+      }
+    }
+
+    return super.setComposingText(text, newCursorPosition);
+  }
+
+  @Override
   public boolean commitText(final CharSequence text, final int newCursorPosition) {
     if (InputMethods.shouldCommitCharAsKey(mCurrentInputMethod)
         && text.length() == 1
