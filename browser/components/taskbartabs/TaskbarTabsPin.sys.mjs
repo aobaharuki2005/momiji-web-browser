@@ -125,7 +125,7 @@ async function createShortcut(aTaskbarTab, aFileIcon, aRegistry) {
   let targetfile = Services.dirsvc.get("XREExeF", Ci.nsIFile);
   let profileFolder = Services.dirsvc.get("ProfD", Ci.nsIFile);
 
-  const absolutePath = await lazy.ShellService.createShortcut(
+  await lazy.ShellService.createShortcut(
     targetfile,
     [
       "-taskbar-tab",
@@ -150,7 +150,7 @@ async function createShortcut(aTaskbarTab, aFileIcon, aRegistry) {
     shortcutRelativePath: relativePath,
   });
 
-  return absolutePath;
+  return relativePath;
 }
 
 /**
