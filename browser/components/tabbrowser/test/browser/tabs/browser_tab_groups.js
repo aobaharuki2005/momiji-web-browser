@@ -239,22 +239,82 @@ add_task(async function test_tabGroupCollapseWhileSelected() {
   await removeTabGroup(group);
 });
 
+add_task(async function test_multiselectedTabsInTabGroupDeselectedOnCollapse() {
+  let tabInGroup = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  let secondTabInGroup = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  let group = gBrowser.addTabGroup([tabInGroup, secondTabInGroup]);
+  let tabOutsideOfGroup = BrowserTestUtils.addTab(gBrowser, "about:blank");
+
+  gBrowser.selectedTab = tabOutsideOfGroup;
+
+  gBrowser.addToMultiSelectedTabs(tabInGroup);
+  gBrowser.addToMultiSelectedTabs(secondTabInGroup);
+  Assert.deepEqual(
+    gBrowser.selectedTabs,
+    [tabInGroup, secondTabInGroup, tabOutsideOfGroup],
+    "all tabs should be multiselected"
+  );
+
+  let collapseFinished = BrowserTestUtils.waitForEvent(
+    window,
+    "TabGroupCollapse"
+  );
+  group.collapsed = true;
+  await collapseFinished;
+
+  Assert.deepEqual(
+    gBrowser.selectedTabs,
+    [tabOutsideOfGroup],
+    "tabs in the collapsed tab group should no longer be multiselected"
+  );
+
+  // TODO gBrowser.removeTabs breaks if the tab is not in a visible state
+  // group.collapsed = false;
+  await removeTabGroup(group);
+  await BrowserTestUtils.removeTab(tabOutsideOfGroup);
+});
+
 add_task(async function test_groupHasActiveTab() {
   let [tab1, tab2, tab3] = createManyTabs(3);
   let group1 = gBrowser.addTabGroup([tab1]);
   let group2 = gBrowser.addTabGroup([tab2]);
 
-  function activeTabTest(tabsMode) {
+  async function activeTabTest(tabsMode) {
     info(`hasactivetab test for ${tabsMode} tabs mode`);
+    info("tab3 is ungrouped and active");
     gBrowser.selectedTab = tab3;
     Assert.ok(!group1.hasActiveTab, "group1 hasactivetab=false");
     Assert.ok(!group2.hasActiveTab, "group2 hasactivetab=false");
+    info("tab1 is in group1 and active");
     gBrowser.selectedTab = tab1;
     Assert.ok(group1.hasActiveTab, "group1 hasactivetab=true");
     Assert.ok(!group2.hasActiveTab, "group2 hasactivetab=false");
+    info("tab2 is in group2 and active");
     gBrowser.selectedTab = tab2;
     Assert.ok(!group1.hasActiveTab, "group1 hasactivetab=false");
     Assert.ok(group2.hasActiveTab, "group2 hasactivetab=true");
+    info("tab3 is still ungrouped and active");
+    gBrowser.selectedTab = tab3;
+    Assert.ok(!group1.hasActiveTab, "group1 hasactivetab=false");
+    Assert.ok(!group2.hasActiveTab, "group2 hasactivetab=false");
+    info("tab3 enters group1 as the active tab");
+    let tab3InGroup1 = BrowserTestUtils.waitForEvent(group1, "TabGrouped");
+    group1.addTabs([tab3]);
+    await tab3InGroup1;
+    Assert.ok(group1.hasActiveTab, "group1 hasactivetab=true");
+    Assert.ok(!group2.hasActiveTab, "group2 hasactivetab=false");
+    info("tab3 enters group2 as the active tab");
+    let tab3InGroup2 = BrowserTestUtils.waitForEvent(group2, "TabGrouped");
+    group2.addTabs([tab3]);
+    await tab3InGroup2;
+    Assert.ok(!group1.hasActiveTab, "group1 hasactivetab=false");
+    Assert.ok(group2.hasActiveTab, "group2 hasactivetab=true");
+    info("tab3 becomes ungrouped again as the active tab");
+    let tab3Moved = BrowserTestUtils.waitForEvent(tab3, "TabMove");
+    gBrowser.moveTabToEnd(tab3);
+    await tab3Moved;
+    Assert.ok(!group1.hasActiveTab, "group1 hasactivetab=false");
+    Assert.ok(!group2.hasActiveTab, "group2 hasactivetab=false");
   }
 
   await SpecialPowers.pushPrefEnv({
@@ -263,7 +323,7 @@ add_task(async function test_groupHasActiveTab() {
       ["sidebar.verticalTabs", true],
     ],
   });
-  activeTabTest("vertical");
+  await activeTabTest("vertical");
   await SpecialPowers.popPrefEnv();
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -271,7 +331,7 @@ add_task(async function test_groupHasActiveTab() {
       ["sidebar.verticalTabs", false],
     ],
   });
-  activeTabTest("horizontal");
+  await activeTabTest("horizontal");
   await SpecialPowers.popPrefEnv();
 
   await removeTabGroup(group1);
