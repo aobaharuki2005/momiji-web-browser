@@ -196,9 +196,9 @@ if CONFIG["CC_TYPE"] == "gcc":
 
 if CONFIG["COMPILE_ENVIRONMENT"]:
     GeneratedFile(
-        "CSSStyleProperties.webidl",
+        "CSS2Properties.webidl",
         script="GenerateCSSPropListWebIDL.py",
-        entry_point="generateCSSStyleProperties",
+        entry_point="generateCSS2Properties",
         inputs=["!/layout/style/ServoCSSPropList.py"],
     )
     GeneratedFile(

@@ -66,7 +66,7 @@ class CSSNestedDeclarations final : public css::Rule {
   // WebIDL interface
   StyleCssRuleType Type() const final;
   void GetCssText(nsACString& aCssText) const final;
-  nsDOMCSSDeclaration* Style() { return &mDecls; }
+  nsICSSDeclaration* Style() { return &mDecls; }
 
   StyleLockedNestedDeclarationsRule* Raw() const { return mRawRule.get(); }
   const StyleLockedDeclarationBlock* RawStyle() const;
