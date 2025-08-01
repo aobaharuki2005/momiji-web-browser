@@ -23,9 +23,9 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/BrowserParent.h"
-#include "mozilla/dom/CSS2PropertiesBinding.h"
 #include "mozilla/dom/CSSBinding.h"
 #include "mozilla/dom/CSSKeyframesRule.h"
+#include "mozilla/dom/CSSStylePropertiesBinding.h"
 #include "mozilla/dom/CSSStyleRule.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/CharacterData.h"
@@ -307,7 +307,7 @@ class ReadOnlyInspectorDeclaration final : public nsDOMCSSDeclaration {
   css::Rule* GetParentRule() final { return nullptr; }
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) final {
-    return CSS2Properties_Binding::Wrap(aCx, this, aGivenProto);
+    return CSSStyleProperties_Binding::Wrap(aCx, this, aGivenProto);
   }
   // These ones are a bit sad, but matches e.g. nsComputedDOMStyle.
   nsresult SetCSSDeclaration(DeclarationBlock* aDecl,
