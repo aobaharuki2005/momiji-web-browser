@@ -762,15 +762,17 @@
       // node to deliver the `dragend` event.  See bug 1345473.
       dt.addElement(tab);
 
+      this.#keepTabSizeLocked = true;
+      this._lockTabSizing();
+
       let expandGroupOnDrop;
-      if (!fromTabList && this.getDropEffectForTabDrag(event) == "move") {
+      let dropEffect = this.getDropEffectForTabDrag(event);
+      if (!fromTabList && dropEffect == "move") {
         this.#setMovingTabMode(true);
 
         if (tab.multiselected) {
           this.#moveTogetherSelectedTabs(tab);
         } else if (isTabGroupLabel(tab) && !tab.group.collapsed) {
-          this._lockTabSizing();
-          this.#keepTabSizeLocked = true;
           tab.group.collapsed = true;
           expandGroupOnDrop = true;
         }
@@ -897,10 +899,10 @@
     }
 
     on_dragover(event) {
-      var effects = this.getDropEffectForTabDrag(event);
+      var dropEffect = this.getDropEffectForTabDrag(event);
 
       var ind = this._tabDropIndicator;
-      if (effects == "" || effects == "none") {
+      if (dropEffect == "" || dropEffect == "none") {
         ind.hidden = true;
         return;
       }
@@ -932,7 +934,7 @@
 
       let draggedTab = event.dataTransfer.mozGetDataAt(TAB_DROP_TYPE, 0);
       if (
-        (effects == "move" || effects == "copy") &&
+        (dropEffect == "move" || dropEffect == "copy") &&
         document == draggedTab.ownerDocument &&
         !draggedTab._dragData.fromTabList
       ) {
@@ -944,7 +946,7 @@
         }
         this.finishMoveTogetherSelectedTabs(draggedTab);
 
-        if (effects == "move") {
+        if (dropEffect == "move") {
           this.#setMovingTabMode(true);
 
           // Pinned tabs in expanded vertical mode are on a grid format and require
@@ -960,7 +962,7 @@
 
       this.finishAnimateTabMove();
 
-      if (effects == "link") {
+      if (dropEffect == "link") {
         let target = this.#getDragTarget(event, { ignoreSides: true });
         if (target) {
           if (!this.#dragTime) {
@@ -1059,8 +1061,6 @@
         draggedTab._dragData?.expandGroupOnDrop
       ) {
         draggedTab.group.collapsed = false;
-        this.#keepTabSizeLocked = false;
-        this._unlockTabSizing();
       }
     }
 
@@ -1221,6 +1221,8 @@
           } else if (dropElement && dropBefore != undefined) {
             gBrowser.moveTabsAfter(movingTabs, dropElement, dropMetricsContext);
           }
+          this.#keepTabSizeLocked = false;
+          this._unlockTabSizing();
           this.#expandGroupOnDrop(draggedTab);
         };
 
@@ -1409,6 +1411,8 @@
 
       this.finishMoveTogetherSelectedTabs(draggedTab);
       this.finishAnimateTabMove();
+      this.#keepTabSizeLocked = false;
+      this._unlockTabSizing();
       this.#expandGroupOnDrop(draggedTab);
       this.#resetTabsAfterDrop(draggedTab.ownerDocument);
 
@@ -2008,7 +2012,8 @@
       selectedTab._notselectedsinceload = false;
     }
 
-    #keepTabSizeLocked;
+    /** @type {boolean} */
+    #keepTabSizeLocked = false;
 
     /**
      * Try to keep the active tab's close button under the mouse cursor
@@ -2175,19 +2180,12 @@
 
       const pinnedTabsOrigBounds = new Map();
 
-      for (let t of allTabs) {
-        if (isTabGroupLabel(t)) {
-          t = t.parentElement;
-        }
-        let tabRect = window.windowUtils.getBoundsWithoutFlushing(t);
-
-        // record where all the pinned tabs were before we position:absolute the moving tabs
-        if (isGrid && t.pinned) {
+      // record where all the pinned tabs were before we position:absolute the moving tabs
+      if (isGrid) {
+        for (let t of allTabs.slice(0, numPinned)) {
+          let tabRect = window.windowUtils.getBoundsWithoutFlushing(t);
           pinnedTabsOrigBounds.set(t, tabRect);
         }
-        // Prevent flex rules from resizing non dragged tabs while the dragged
-        // tabs are positioned absolutely
-        t.style.maxWidth = tabRect.width + "px";
       }
 
       // Use .tab-group-label-container or .tabbrowser-tab for size/position
@@ -3114,7 +3112,6 @@
         tab.style.width = "";
         tab.style.left = "";
         tab.style.top = "";
-        tab.style.maxWidth = "";
         tab.removeAttribute("dragtarget");
       }
       for (let label of draggedTabDocument.getElementsByClassName(
@@ -3124,7 +3121,6 @@
         label.style.height = "";
         label.style.left = "";
         label.style.top = "";
-        label.style.maxWidth = "";
         label.removeAttribute("dragtarget");
       }
       let periphery = draggedTabDocument.getElementById(
@@ -3524,6 +3520,10 @@
       return item.elementIndex + (isBeforeMiddle ? 0 : 1);
     }
 
+    /**
+     * @param {DragEvent} event
+     * @returns {typeof DataTransfer.prototype.dropEffect}
+     */
     getDropEffectForTabDrag(event) {
       var dt = event.dataTransfer;
 
