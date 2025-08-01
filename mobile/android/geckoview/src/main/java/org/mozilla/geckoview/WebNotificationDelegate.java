@@ -9,9 +9,7 @@ import androidx.annotation.NonNull;
 
 public interface WebNotificationDelegate {
   /**
-   * This is called when a new notification is created. The implementations of this should call
-   * WebNotification.show or .dismiss, depending on whether the notification is successfully opened
-   * or not.
+   * This is called when a new notification is created.
    *
    * @param notification The WebNotification received.
    */
@@ -19,8 +17,7 @@ public interface WebNotificationDelegate {
   default void onShowNotification(@NonNull final WebNotification notification) {}
 
   /**
-   * This is called when an existing notification is closed. The implementations of this should call
-   * WebNotification.dismiss.
+   * This is called when an existing notification is closed.
    *
    * @param notification The WebNotification received.
    */
