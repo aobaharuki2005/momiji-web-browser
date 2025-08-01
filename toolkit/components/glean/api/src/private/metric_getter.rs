@@ -180,7 +180,6 @@ pub trait MetricNamer {
 
 /// Helper function for defining the metric namer for metric types, with two
 /// distinct overrides for common patterns of metric types.
-#[macro_export]
 macro_rules! define_metric_namer {
     // Define a metric namer for metric types that have parent and child
     // metrics, where the child contains some metadata.
@@ -312,7 +311,6 @@ pub trait BaseMetric {
 /// Given the type of a metric, the name of a FOG metric map for said metric,
 /// an id, look up the metric from the map by id and return the metadata
 /// (if found)
-#[macro_export]
 macro_rules! metadata_from_static_map {
     ($metric_type:ident, $metric_map:ident, $metric_id:ident) => {{
         let static_map =
@@ -330,7 +328,6 @@ macro_rules! metadata_from_static_map {
 
 /// Given the name of a JOG metric map, and an id, look up the metric metadata
 /// from the map by id, and return it (if found)
-#[macro_export]
 macro_rules! metadata_from_dynamic_map {
     ($metric_map:ident, $metric_id:ident) => {{
         // Find the dynamic map (given as part of the macro), and try to read
@@ -369,7 +366,6 @@ macro_rules! metadata_from_dynamic_map {
 ///   should look like `define_metric_metadata_getter!
 ///   (AnotherMetric, LabeledAnotherMetric, ANOTHER_MAP,
 ///   LABELED_ANOTHER_MAP)
-#[macro_export]
 macro_rules! define_metric_metadata_getter {
     // Metric getter for metrics that cannot be labeled
     ($metric_type:ident, $metric_map:ident) => {
@@ -380,9 +376,9 @@ macro_rules! define_metric_metadata_getter {
             {
                 use crate::private::metric_getter::MetricNamer;
                 if id.is_dynamic() {
-                    crate::metadata_from_dynamic_map!($metric_map, id)
+                    metadata_from_dynamic_map!($metric_map, id)
                 } else {
-                    crate::metadata_from_static_map!($metric_type, $metric_map, id)
+                    metadata_from_static_map!($metric_type, $metric_map, id)
                 }
             }
 
@@ -406,9 +402,9 @@ macro_rules! define_metric_metadata_getter {
             {
                 use crate::private::metric_getter::MetricNamer;
                 if id.is_dynamic() {
-                    crate::metadata_from_dynamic_map!($metric_map, id)
+                    metadata_from_dynamic_map!($metric_map, id)
                 } else {
-                    crate::metadata_from_static_map!($metric_type, $metric_map, id)
+                    metadata_from_static_map!($metric_type, $metric_map, id)
                 }
             }
 
@@ -454,9 +450,9 @@ macro_rules! define_metric_metadata_getter {
             {
                 use crate::private::metric_getter::MetricNamer;
                 if id.is_dynamic() {
-                    crate::metadata_from_dynamic_map!($metric_map, id)
+                    metadata_from_dynamic_map!($metric_map, id)
                 } else {
-                    crate::metadata_from_static_map!($metric_type, $metric_map, id)
+                    metadata_from_static_map!($metric_type, $metric_map, id)
                 }
             }
 

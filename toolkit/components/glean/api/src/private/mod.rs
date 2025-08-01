@@ -12,6 +12,9 @@ pub use glean::{
     RecordedEvent, TimeUnit, TimerId,
 };
 
+#[macro_use]
+mod metric_getter;
+
 mod boolean;
 mod counter;
 mod custom_distribution;
@@ -27,7 +30,6 @@ mod labeled_custom_distribution;
 mod labeled_memory_distribution;
 mod labeled_timing_distribution;
 mod memory_distribution;
-mod metric_getter;
 mod numerator;
 mod object;
 mod ping;
