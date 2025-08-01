@@ -640,8 +640,6 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
     data = do_QueryInterface(supports);
     if (NS_SUCCEEDED(rv)) {
       data->GetData(mHtmlString);
-      // Do not add NULs to DND text.
-      mHtmlString.StripChar(L'\0');
     }
     rv = transferable->GetTransferData(kHTMLContext, getter_AddRefs(supports));
     data = do_QueryInterface(supports);
@@ -657,8 +655,6 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
     data = do_QueryInterface(supports);
     NS_ENSURE_SUCCESS(rv, rv);  // require plain text at a minimum
     data->GetData(mTitleString);
-    // Do not add NULs to DND text.
-    mTitleString.StripChar(L'\0');
   }
 
   // default text value is the URL

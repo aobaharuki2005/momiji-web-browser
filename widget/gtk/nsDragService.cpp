@@ -248,7 +248,10 @@ bool DragData::IsFileFlavor() const {
 }
 
 bool DragData::IsTextFlavor() const {
-  return nsDragSession::IsTextFlavor(mDataFlavor);
+  return mDataFlavor == nsDragSession::sTextMimeAtom ||
+         mDataFlavor == nsDragSession::sTextPlainUTF8TypeAtom ||
+         mDataFlavor == nsDragSession::sUTF8STRINGMimeAtom ||
+         mDataFlavor == nsDragSession::sSTRINGMimeAtom;
 }
 
 bool DragData::IsURIFlavor() const {
@@ -1571,15 +1574,8 @@ void nsDragSession::TargetDataReceived(GtkWidget* aWidget,
     LOGDRAGSERVICE("  TargetDataReceived(): URI data, MIME %s",
                    GUniquePtr<gchar>(gdk_atom_name(target)).get());
   } else {
-    const guchar* data = nullptr;
-    gint len = -1;
-    if (IsTextFlavor(target)) {
-      data = gtk_selection_data_get_text(aSelectionData);
-      len = data ? g_utf8_strlen(reinterpret_cast<const gchar*>(data), -1) : -1;
-    } else {
-      data = gtk_selection_data_get_data(aSelectionData);
-      len = gtk_selection_data_get_length(aSelectionData);
-    }
+    const guchar* data = gtk_selection_data_get_data(aSelectionData);
+    gint len = gtk_selection_data_get_length(aSelectionData);
     if (len < 0 && !data) {
       LOGDRAGSERVICE(" TargetDataReceived() failed");
       return;
@@ -2345,7 +2341,10 @@ void nsDragSession::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
     return;
   }
 
-  if (IsTextFlavor(requestedFlavor)) {
+  if (requestedFlavor == sTextMimeAtom ||
+      requestedFlavor == sTextPlainUTF8TypeAtom ||
+      requestedFlavor == sUTF8STRINGMimeAtom ||
+      requestedFlavor == sSTRINGMimeAtom) {
     if (!SourceDataGetText(item, nsDependentCString(kTextMime),
                            /* aNeedToDoConversionToPlainText */ true,
                            aSelectionData)) {
@@ -2988,14 +2987,6 @@ nsAutoCString nsDragSession::GetDebugTag() const {
   nsAutoCString tag;
   tag.AppendPrintf("[%p]", this);
   return tag;
-}
-
-/* static */
-bool nsDragSession::IsTextFlavor(GdkAtom aFlavor) {
-  return aFlavor == nsDragSession::sTextMimeAtom ||
-         aFlavor == nsDragSession::sTextPlainUTF8TypeAtom ||
-         aFlavor == nsDragSession::sUTF8STRINGMimeAtom ||
-         aFlavor == nsDragSession::sSTRINGMimeAtom;
 }
 
 #undef LOGDRAGSERVICE

@@ -40,17 +40,20 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/Tools.h"
+#include "mozilla/Logging.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_widget.h"
-#include "mozilla/widget/WidgetLogging.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
 
-#define LOGD DRAGSERVICE_LOGD
-#define LOGI DRAGSERVICE_LOGI
-#define LOGE DRAGSERVICE_LOGE
+extern mozilla::LazyLogModule sWidgetDragServiceLog;
+#define __DRAGSERVICE_LOG__(logLevel, ...) \
+  MOZ_LOG(sWidgetDragServiceLog, logLevel, __VA_ARGS__)
+#define LOGD(...) __DRAGSERVICE_LOG__(mozilla::LogLevel::Debug, (__VA_ARGS__))
+#define LOGI(...) __DRAGSERVICE_LOG__(mozilla::LogLevel::Info, (__VA_ARGS__))
+#define LOGE(...) __DRAGSERVICE_LOG__(mozilla::LogLevel::Error, (__VA_ARGS__))
 
 nsDragSession::~nsDragSession() { NS_IF_RELEASE(mDataObject); }
 

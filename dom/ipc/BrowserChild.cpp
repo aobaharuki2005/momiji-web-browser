@@ -80,7 +80,6 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
-#include "mozilla/widget/WidgetLogging.h"
 #include "nsCommandParams.h"
 #include "nsContentPermissionHelper.h"
 #include "nsContentUtils.h"
@@ -143,6 +142,16 @@ using namespace mozilla::layers;
 using namespace mozilla::layout;
 using namespace mozilla::widget;
 using mozilla::layers::GeckoContentController;
+
+extern mozilla::LazyLogModule sWidgetDragServiceLog;
+#define __DRAGSERVICE_LOG__(logLevel, ...) \
+  MOZ_LOG(sWidgetDragServiceLog, logLevel, __VA_ARGS__)
+#define DRAGSERVICE_LOGD(...) \
+  __DRAGSERVICE_LOG__(mozilla::LogLevel::Debug, (__VA_ARGS__))
+#define DRAGSERVICE_LOGI(...) \
+  __DRAGSERVICE_LOG__(mozilla::LogLevel::Info, (__VA_ARGS__))
+#define DRAGSERVICE_LOGE(...) \
+  __DRAGSERVICE_LOG__(mozilla::LogLevel::Error, (__VA_ARGS__))
 
 static const char BEFORE_FIRST_PAINT[] = "before-first-paint";
 
@@ -2126,11 +2135,10 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealDragEvent(
   nsCOMPtr<nsIDragSession> dragSession = GetDragSession();
   DRAGSERVICE_LOGD(
       "[%p] %s | aEvent.mMessage: %s | aDragAction: %u | aDropEffect: %u | "
-      "widgetRelativePt: (%d,%d) | dragSession: %p",
+      "dragSession: %p",
       this, __FUNCTION__,
       NS_ConvertUTF16toUTF8(dom::Event::GetEventName(aEvent.mMessage)).get(),
-      aDragAction, aDropEffect, static_cast<int>(localEvent.mRefPoint.x),
-      static_cast<int>(localEvent.mRefPoint.y), dragSession.get());
+      aDragAction, aDropEffect, dragSession.get());
   if (dragSession) {
     dragSession->SetDragAction(aDragAction);
     dragSession->SetTriggeringPrincipal(aPrincipal);

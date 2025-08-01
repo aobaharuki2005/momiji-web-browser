@@ -11,7 +11,6 @@
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
-#include "mozilla/widget/WidgetLogging.h"
 #include "nsContentUtils.h"
 
 using mozilla::CSSIntRegion;
@@ -25,9 +24,12 @@ using mozilla::gfx::SourceSurface;
 using mozilla::gfx::SurfaceFormat;
 using mozilla::ipc::Shmem;
 
-#define LOGD DRAGSERVICE_LOGD
-#define LOGI DRAGSERVICE_LOGI
-#define LOGE DRAGSERVICE_LOGE
+extern mozilla::LazyLogModule sWidgetDragServiceLog;
+#define __DRAGSERVICE_LOG__(logLevel, ...) \
+  MOZ_LOG(sWidgetDragServiceLog, logLevel, __VA_ARGS__)
+#define LOGD(...) __DRAGSERVICE_LOG__(mozilla::LogLevel::Debug, (__VA_ARGS__))
+#define LOGI(...) __DRAGSERVICE_LOG__(mozilla::LogLevel::Info, (__VA_ARGS__))
+#define LOGE(...) __DRAGSERVICE_LOG__(mozilla::LogLevel::Error, (__VA_ARGS__))
 
 nsDragServiceProxy::nsDragServiceProxy() {
   LOGD("[%p] %s", this, __FUNCTION__);

@@ -46,8 +46,6 @@ skip-if = [
 support-files = "file_test_clipboard_pngPreservesTransparency.js"
 scheme = "https" # ImageDecoder requires secure context
 
-["test_clipboard_read_paste_ignoreNuls.html"]
-
 ["test_contextmenu_by_mouse_on_unix.html"]
 run-if = [
   "os == 'linux'",
@@ -61,9 +59,6 @@ skip-if = [
   "headless", # headless widget doesn't dispatch contextmenu event by mouse event.
   "xorigin", # high-frequently intermittent fail
 ]
-
-["test_dnd_ignoreNuls.html"]
-skip-if = ["os == 'android'"]  # Fx on android does not currently support DND
 
 ["test_keypress_event_with_alt_on_mac.html"]
 run-if = ["os == 'mac'"]

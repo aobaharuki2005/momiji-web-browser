@@ -13,12 +13,23 @@ export class DragParentContextBase {
   // Browsing context that the related element is in
   browsingContext = null;
 
-  constructor(aSubtypeName, aBrowsingContext, aParams, aSpecialPowers) {
+  constructor(
+    aSubtypeName,
+    aBrowsingContext,
+    aParams,
+    aSpecialPowers,
+    aOk,
+    aIs,
+    aInfo
+  ) {
     Object.assign(this, aParams);
     this.params = aParams;
     this.subtypeName = aSubtypeName;
     this.browsingContext = aBrowsingContext;
     this.specialPowers = aSpecialPowers;
+    this.ok = aOk;
+    this.is = aIs;
+    this.info = aInfo;
   }
 
   getElementPositions() {

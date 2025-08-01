@@ -235,7 +235,6 @@ EXPORTS.mozilla.widget += [
     "ScreenManager.h",
     "TextRecognition.h",
     "ThemeChangeKind.h",
-    "WidgetLogging.h",
     "WidgetMessageUtils.h",
     "WindowOcclusionState.h",
 ]
