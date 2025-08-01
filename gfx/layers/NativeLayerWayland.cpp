@@ -342,7 +342,9 @@ void NativeLayerRootWayland::SetLayers(
   mRootMutatedStackingOrder = true;
 
   mRootAllLayersRendered = false;
-  mRootSurface->SetCommitStateLocked(lock, false);
+  LOGVERBOSE("NativeLayerRootWayland::SetLayers(): %s root commit",
+             mRootAllLayersRendered ? "enabled" : "disabled");
+  mRootSurface->SetCommitStateLocked(lock, mRootAllLayersRendered);
 
   // We need to process a part of map event on main thread as we use Gdk
   // code there. Ask for the processing now.
@@ -456,7 +458,13 @@ bool NativeLayerRootWayland::CommitToScreen() {
 
   // Try to map all missing surfaces
   for (RefPtr<NativeLayerWayland>& layer : mSublayers) {
-    if (!layer->IsMapped() && layer->Map(&lock)) {
+    if (!layer->IsMapped()) {
+      if (!layer->Map(&lock)) {
+        LOGVERBOSE(
+            "NativeLayerRootWayland::CommitToScreen() failed to map layer [%p]",
+            layer.get());
+        continue;
+      }
       if (layer->IsOpaque() && WaylandSurface::IsOpaqueRegionEnabled()) {
         mMainThreadUpdateSublayers.AppendElement(layer);
       }
@@ -482,14 +490,20 @@ bool NativeLayerRootWayland::CommitToScreen() {
       mRootMutatedStackingOrder = true;
     }
     if (!layer->State()->mIsRendered) {
+      LOGVERBOSE(
+          "NativeLayerRootWayland::CommitToScreen() layer [%p] is not rendered",
+          layer.get());
       mRootAllLayersRendered = false;
     }
   }
 
   if (mRootMutatedStackingOrder) {
+    LOGVERBOSE(
+        "NativeLayerRootWayland::CommitToScreen(): changed stacking order");
     NativeLayerWayland* previousWaylandSurface = nullptr;
     for (RefPtr<NativeLayerWayland>& layer : mSublayers) {
       if (layer->State()->mIsVisible) {
+        MOZ_DIAGNOSTIC_ASSERT(layer->IsMapped());
         if (previousWaylandSurface) {
           layer->PlaceAbove(previousWaylandSurface);
         }
@@ -500,9 +514,9 @@ bool NativeLayerRootWayland::CommitToScreen() {
     mRootMutatedStackingOrder = false;
   }
 
-  if (mRootAllLayersRendered) {
-    mRootSurface->SetCommitStateLocked(lock, true);
-  }
+  LOGVERBOSE("NativeLayerRootWayland::CommitToScreen(): %s root commit",
+             mRootAllLayersRendered ? "enabled" : "disabled");
+  mRootSurface->SetCommitStateLocked(lock, mRootAllLayersRendered);
 
 #ifdef MOZ_LOGGING
   LogStatsLocked(lock);
@@ -794,7 +808,7 @@ void NativeLayerWayland::UpdateLayerPlacementLocked(
 void NativeLayerWayland::RenderLayer(int aScale) {
   WaylandSurfaceLock lock(mSurface);
 
-  LOG("NativeLayerWayland::RenderLayer() quit");
+  LOG("NativeLayerWayland::RenderLayer()");
 
   SetScalelocked(lock, aScale);
   UpdateLayerPlacementLocked(lock);
@@ -812,8 +826,8 @@ void NativeLayerWayland::RenderLayer(int aScale) {
   if (!IsFrontBufferChanged() && !mState.mMutatedVisibility) {
     LOG("NativeLayerWayland::RenderLayer() quit "
         "IsFrontBufferChanged [%d] "
-        "mState.mMutatedVisibility [%d]",
-        IsFrontBufferChanged(), mState.mMutatedVisibility);
+        "mState.mMutatedVisibility [%d] rendered [%d]",
+        IsFrontBufferChanged(), mState.mMutatedVisibility, mState.mIsRendered);
     return;
   }
 
@@ -831,6 +845,8 @@ void NativeLayerWayland::RenderLayer(int aScale) {
   if (mState.mIsVisible) {
     MOZ_DIAGNOSTIC_ASSERT(mSurface->HasBufferAttached());
   }
+
+  LOG("NativeLayerWayland::RenderLayer(): rendered [%d]", mState.mIsRendered);
 }
 
 bool NativeLayerWayland::Map(WaylandSurfaceLock* aParentWaylandSurfaceLock) {
@@ -848,7 +864,7 @@ bool NativeLayerWayland::Map(WaylandSurfaceLock* aParentWaylandSurfaceLock) {
 
   if (!mSurface->MapLocked(surfaceLock, aParentWaylandSurfaceLock,
                            gfx::IntPoint(0, 0))) {
-    LOG("NativeLayerWayland::Map() failed!");
+    gfxCriticalError() << "NativeLayerWayland::Map() failed!";
     return false;
   }
   mSurface->DisableUserInputLocked(surfaceLock);
