@@ -347,6 +347,31 @@ macro_rules! metadata_from_dynamic_map {
     }};
 }
 
+/// Define a `fn get_base_metric_metadata_by_id` for a given metric type and map.
+/// If you have a BaseMetricId, we always get the metadata the same way:
+/// from the JOG maps if dynamice, from the compiled maps if static.
+///
+/// The only exception is for IPC where submetrics have the BaseMetricId of their parent.
+/// In that case, don't use this macro.
+///
+/// (Though this fn could be written without macros, it is part of the trait
+/// MetricMetadataGetterImpl which has parts that need macros.)
+macro_rules! define_get_base_metric_metadata_by_id {
+    ($metric_type:ident, $metric_map:ident) => {
+        fn get_base_metric_metadata_by_id(
+            id: crate::private::BaseMetricId,
+        ) -> crate::private::LookupResult<(crate::private::MetricMetadata, Option<String>)>
+        {
+            use crate::private::metric_getter::MetricNamer;
+            if id.is_dynamic() {
+                metadata_from_dynamic_map!($metric_map, id)
+            } else {
+                metadata_from_static_map!($metric_type, $metric_map, id)
+            }
+        }
+    }
+}
+
 /// Define how to look up the metadata for a given metric, given a metric id.
 /// There are subtle differences for /where/ this should be called, depending
 /// on the metric (and submetric) which we want to look up:
@@ -370,17 +395,8 @@ macro_rules! define_metric_metadata_getter {
     // Metric getter for metrics that cannot be labeled
     ($metric_type:ident, $metric_map:ident) => {
         impl crate::private::MetricMetadataGetterImpl for $metric_type {
-            fn get_base_metric_metadata_by_id(
-                id: crate::private::BaseMetricId,
-            ) -> crate::private::LookupResult<(crate::private::MetricMetadata, Option<String>)>
-            {
-                use crate::private::metric_getter::MetricNamer;
-                if id.is_dynamic() {
-                    metadata_from_dynamic_map!($metric_map, id)
-                } else {
-                    metadata_from_static_map!($metric_type, $metric_map, id)
-                }
-            }
+
+            define_get_base_metric_metadata_by_id!($metric_type, $metric_map);
 
             fn get_sub_metric_metadata_by_id(
                 _id: crate::private::SubMetricId,
@@ -394,19 +410,10 @@ macro_rules! define_metric_metadata_getter {
 
     // Metric getter for metrics that can be labeled, but appear as the same
     // type (e.g. "StringMetric")
-    ($metric_type:ident, $metric_map:ident, $labeled_map:ident) => {
+    ($metric_type:ident, $metric_map:ident, $_labeled_map:ident) => {
         impl crate::private::MetricMetadataGetterImpl for $metric_type {
-            fn get_base_metric_metadata_by_id(
-                id: crate::private::BaseMetricId,
-            ) -> crate::private::LookupResult<(crate::private::MetricMetadata, Option<String>)>
-            {
-                use crate::private::metric_getter::MetricNamer;
-                if id.is_dynamic() {
-                    metadata_from_dynamic_map!($metric_map, id)
-                } else {
-                    metadata_from_static_map!($metric_type, $metric_map, id)
-                }
-            }
+
+            define_get_base_metric_metadata_by_id!($metric_type, $metric_map);
 
             fn get_sub_metric_metadata_by_id(
                 id: crate::private::SubMetricId,
@@ -444,17 +451,8 @@ macro_rules! define_metric_metadata_getter {
         // Define `MetricMetadataGetter` for the base type, with awareness of the
         // other type (i.e. Counter is aware of LabeledCounter).
         impl crate::private::MetricMetadataGetterImpl for $metric_type {
-            fn get_base_metric_metadata_by_id(
-                id: crate::private::BaseMetricId,
-            ) -> crate::private::LookupResult<(crate::private::MetricMetadata, Option<String>)>
-            {
-                use crate::private::metric_getter::MetricNamer;
-                if id.is_dynamic() {
-                    metadata_from_dynamic_map!($metric_map, id)
-                } else {
-                    metadata_from_static_map!($metric_type, $metric_map, id)
-                }
-            }
+
+            define_get_base_metric_metadata_by_id!($metric_type, $metric_map);
 
             fn get_sub_metric_metadata_by_id(
                 id: crate::private::SubMetricId,
