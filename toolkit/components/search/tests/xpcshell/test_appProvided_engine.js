@@ -36,6 +36,8 @@ let CONFIG = [
         trending: {
           base: "https://example.com/3",
           searchTermParamName: "trending",
+          // In the past
+          isNewUntil: "2020-01-01",
         },
         visualSearch: {
           base: "https://example.com/4",
@@ -43,6 +45,8 @@ let CONFIG = [
           displayNameMap: {
             default: "Visual Search",
           },
+          // In the future
+          isNewUntil: "2095-01-01",
         },
       },
     },
@@ -86,6 +90,8 @@ let CONFIG = [
         environment: {
           locales: ["en-US"],
         },
+        // In the future
+        isNewUntil: "2095-01-01",
       },
     ],
   },
@@ -193,6 +199,10 @@ add_task(async function test_engine_with_all_params_set() {
     engine.displayNameForURL(SearchUtils.URL_TYPE.VISUAL_SEARCH),
     "Visual Search",
     "The display name of the visual search URL should be correct"
+  );
+  Assert.ok(
+    engine.isNewEngineOrURL(SearchUtils.URL_TYPE.VISUAL_SEARCH),
+    "isNewEngineOrURL for the visual search URL should be correct"
   );
 });
 
@@ -343,4 +353,49 @@ add_task(async function test_display_names() {
       "displayNameForURL with an unsupported type should return the engine name"
     );
   }
+});
+
+add_task(async function test_isNewEngineOrURL_urlOnly() {
+  // This engine has `isNewUntil` defined for its trending and visual search
+  // URLs, but the trending date is in the past.
+  let engine = Services.search.getEngineById("testEngine");
+  Assert.ok(
+    !engine.isNewEngineOrURL(),
+    "isNewEngineOrURL should return false for testEngine without an arg"
+  );
+
+  // `isNewUntil` isn't defined on the search URL
+  Assert.ok(
+    !engine.isNewEngineOrURL(SearchUtils.URL_TYPE.SEARCH),
+    "isNewEngineOrURL should return false for SEARCH"
+  );
+
+  // In the past
+  Assert.ok(
+    !engine.isNewEngineOrURL(SearchUtils.URL_TYPE.TRENDING),
+    "isNewEngineOrURL should return true for TRENDING"
+  );
+
+  // In the future
+  Assert.ok(
+    engine.isNewEngineOrURL(SearchUtils.URL_TYPE.VISUAL_SEARCH),
+    "isNewEngineOrURL should return true for VISUAL_SEARCH"
+  );
+});
+
+add_task(async function test_isNewEngineOrURL_variant() {
+  // This engine has `isNewUntil` defined on its variant.
+  let engine = Services.search.getEngineById("override");
+  Assert.ok(
+    engine.isNewEngineOrURL(),
+    "isNewEngineOrURL should return true for override engine without an arg"
+  );
+  Assert.ok(
+    !engine.isNewEngineOrURL(SearchUtils.URL_TYPE.SEARCH),
+    "isNewEngineOrURL should return false for SEARCH"
+  );
+  Assert.ok(
+    !engine.isNewEngineOrURL(SearchUtils.URL_TYPE.VISUAL_SEARCH),
+    "isNewEngineOrURL should return false for VISUAL_SEARCH"
+  );
 });

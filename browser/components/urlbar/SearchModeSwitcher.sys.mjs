@@ -373,7 +373,6 @@ export class SearchModeSwitcher {
       console.error("Failed to fetch engines");
     }
 
-    let today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD" format
     for (let engine of engines) {
       if (engine.hideOneOffButton) {
         continue;
@@ -383,8 +382,7 @@ export class SearchModeSwitcher {
       menuitem.classList.add("searchmode-switcher-installed");
       menuitem.setAttribute("label", engine.name);
 
-      let isNew = engine.isNewUntil && today <= engine.isNewUntil;
-      if (isNew && engine.isAppProvided) {
+      if (engine.isNewEngineOrURL() && engine.isAppProvided) {
         menuitem.setAttribute("badge", await lazy.searchModeNewBadge);
       }
 

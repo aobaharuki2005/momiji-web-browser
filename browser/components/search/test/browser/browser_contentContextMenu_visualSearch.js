@@ -6,6 +6,11 @@
 // Test for the visual search content context menu item, the one labeled
 // "Search Image with {engine}".
 
+ChromeUtils.defineESModuleGetters(this, {
+  SearchEngine: "moz-src:///toolkit/components/search/SearchEngine.sys.mjs",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
+});
+
 const CONTEXT_MENU_ID = "contentAreaContextMenu";
 const VISUAL_SEARCH_MENUITEM_ID = "context-visual-search";
 
@@ -37,7 +42,8 @@ const SEARCH_CONFIG = [
     ],
   },
 
-  // an engine with visual search that has a display name override
+  // an engine with visual search that has a display name override and
+  // `isNewUntil` date
   {
     recordType: "engine",
     identifier: "visual-search-2",
@@ -50,6 +56,7 @@ const SEARCH_CONFIG = [
           displayNameMap: {
             default: "Display Name Override Engine 2",
           },
+          isNewUntil: "2095-01-01",
         },
       },
     },
@@ -129,6 +136,7 @@ add_task(async function engineWithVisualSearch_displayNameOverride() {
     defaultEngineId: "visual-search-2",
     shouldBeShown: true,
     expectedEngineNameInLabel: "Display Name Override Engine 2",
+    shouldHaveNewBadge: true,
   });
 });
 
@@ -214,6 +222,7 @@ add_task(async function private_separatePrivateEngine_visualSearch() {
         defaultEngineId: "visual-search-1",
         expectedEngineNameInLabel: "Display Name Override Engine 2",
         expectedBaseUrl: "https://example.com/visual-search-2",
+        shouldHaveNewBadge: true,
       });
     },
   });
@@ -248,6 +257,35 @@ add_task(async function visualSearchDisabled() {
   await SpecialPowers.popPrefEnv();
 });
 
+// The "New" badge should be removed when the `isNewUntil` date passes.
+add_task(async function newBadgeRemoved() {
+  // First make sure the badge appears.
+  await setDefaultEngineAndCheckMenu({
+    defaultEngineId: "visual-search-2",
+    shouldBeShown: true,
+    expectedEngineNameInLabel: "Display Name Override Engine 2",
+    shouldHaveNewBadge: true,
+  });
+
+  // Stub `Date().toISOString()` so it returns a newer date.
+  let sandbox = sinon.createSandbox();
+  let dateStub = sandbox.stub(
+    Cu.getGlobalForObject(SearchEngine).Date.prototype,
+    "toISOString"
+  );
+  dateStub.returns("2096-02-02");
+
+  // The badge should not appear.
+  await setDefaultEngineAndCheckMenu({
+    defaultEngineId: "visual-search-2",
+    shouldBeShown: true,
+    expectedEngineNameInLabel: "Display Name Override Engine 2",
+    shouldHaveNewBadge: false,
+  });
+
+  sandbox.restore();
+});
+
 async function setDefaultEngineAndCheckMenu({
   defaultEngineId,
   shouldBeShown,
@@ -255,6 +293,7 @@ async function setDefaultEngineAndCheckMenu({
   win = window,
   selector = "#image",
   leaveOpen = false,
+  shouldHaveNewBadge = false,
 }) {
   let engine = Services.search.getEngineById(defaultEngineId);
   Assert.ok(engine, "Sanity check: Engine should exist: " + defaultEngineId);
@@ -268,6 +307,7 @@ async function setDefaultEngineAndCheckMenu({
     shouldBeShown,
     expectedEngineNameInLabel,
     selector,
+    shouldHaveNewBadge,
   });
 
   if (!leaveOpen) {
@@ -282,6 +322,7 @@ async function setDefaultEngineAndClickMenuitem({
   expectedEngineNameInLabel,
   expectedBaseUrl,
   win = window,
+  shouldHaveNewBadge = false,
 }) {
   let testTab = win.gBrowser.selectedTab;
 
@@ -289,6 +330,7 @@ async function setDefaultEngineAndClickMenuitem({
     win,
     defaultEngineId,
     expectedEngineNameInLabel,
+    shouldHaveNewBadge,
     shouldBeShown: true,
     leaveOpen: true,
   });
@@ -352,6 +394,7 @@ async function openAndCheckMenu({
   shouldBeShown,
   expectedEngineNameInLabel,
   selector,
+  shouldHaveNewBadge = false,
 }) {
   let menu = win.document.getElementById(CONTEXT_MENU_ID);
   let popupPromise = BrowserTestUtils.waitForEvent(menu, "popupshown");
@@ -380,12 +423,33 @@ async function openAndCheckMenu({
       `Search Image with ${expectedEngineNameInLabel}`,
       "The visual search menuitem should have the expected label"
     );
+    await checkNewBadge({ item, shouldHaveNewBadge });
   }
 
   return { menu, item };
 }
 
-async function closeMenu({ win }) {
+async function checkNewBadge({ item, shouldHaveNewBadge }) {
+  if (!shouldHaveNewBadge) {
+    Assert.ok(
+      !item.hasAttribute("badge"),
+      "The visual search menuitem should not have the New badge"
+    );
+    return;
+  }
+
+  await TestUtils.waitForCondition(
+    () => item.hasAttribute("badge"),
+    "Waiting for `badge` attribute to be set on item"
+  );
+  Assert.equal(
+    item.getAttribute("badge"),
+    "New",
+    "The visual search menu item `badge` attribute should be 'New'"
+  );
+}
+
+async function closeMenu({ win = window } = {}) {
   let menu = win.document.getElementById(CONTEXT_MENU_ID);
   let popupPromise = BrowserTestUtils.waitForEvent(menu, "popuphidden");
 

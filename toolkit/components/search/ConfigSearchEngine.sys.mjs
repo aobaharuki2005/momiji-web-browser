@@ -716,7 +716,8 @@ export class ConfigSearchEngine extends SearchEngine {
       urlType,
       urlData.method || "GET",
       urlData.base,
-      urlData.displayName
+      urlData.displayName,
+      urlData.isNewUntil
     );
 
     if (urlData.params) {

@@ -11551,6 +11551,7 @@ interface nsISearchEngine extends nsISupports {
   readonly searchUrlPublicSuffix: string;
   supportsResponseType(responseType: string): boolean;
   displayNameForURL(responseType?: string): string;
+  isNewEngineOrURL(responseType?: string): boolean;
   getIconURL(preferredWidth?: u16): Promise<any>;
   speculativeConnect(options: any): void;
   alias: string;

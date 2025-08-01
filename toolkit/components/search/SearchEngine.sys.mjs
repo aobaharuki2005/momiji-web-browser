@@ -183,6 +183,8 @@ export class EngineURL {
   template;
   /** @type {string} */
   displayName;
+  /** @type {string} */
+  isNewUntil;
 
   /**
    * The name of the parameter used for the search term.
@@ -206,12 +208,15 @@ export class EngineURL {
    * @param {string} [displayName]
    *   The display name of the URL, if any. This is useful if the URL
    *   corresponds to a brand name distinct from the engine's brand name.
+   * @param {string} [isNewUntil]
+   *   Indicates the date until which the URL is considered new
+   *   (format: YYYY-MM-DD).
    *
    * @see https://web.archive.org/web/20060203040832/http://opensearch.a9.com/spec/1.1/querysyntax/#urltag
    *
    * @throws NS_ERROR_NOT_IMPLEMENTED if aType is unsupported.
    */
-  constructor(mimeType, requestMethod, template, displayName) {
+  constructor(mimeType, requestMethod, template, displayName, isNewUntil) {
     if (!mimeType || !requestMethod || !template) {
       throw Components.Exception(
         "missing mimeType, method or template for EngineURL!",
@@ -263,7 +268,8 @@ export class EngineURL {
       }
     }
 
-    this.displayName = displayName;
+    this.displayName = displayName ?? "";
+    this.isNewUntil = isNewUntil ?? "";
   }
 
   /**
@@ -529,6 +535,9 @@ export class SearchEngine {
    * @type {?string}
    */
   clickUrl = null;
+
+  /** @type {string} */
+  isNewUntil;
 
   /**
    *  Creates a Search Engine.
@@ -1392,6 +1401,24 @@ export class SearchEngine {
       }
     }
     return this.name;
+  }
+
+  // from nsISearchEngine
+  isNewEngineOrURL(type) {
+    let isNewUntil;
+    if (!type) {
+      isNewUntil = this.isNewUntil;
+    } else {
+      let url = this._getURLOfType(type);
+      isNewUntil = url?.isNewUntil;
+    }
+
+    if (!isNewUntil) {
+      return false;
+    }
+
+    let today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD" format
+    return today <= isNewUntil;
   }
 
   // from nsISearchEngine

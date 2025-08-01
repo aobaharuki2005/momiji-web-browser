@@ -110,6 +110,17 @@ interface nsISearchEngine : nsISupports
   AString displayNameForURL([optional] in AString responseType);
 
   /**
+   * Returns whether the engine or one of its response types is considered new,
+   * which is determined by a value in its search config.
+   *
+   * @param responseType
+   *        The MIME type whose status should be returned.
+   * @returns If a response type is specified, returns whether it's new.
+   *          Otherwise returns whether the engine itself is new.
+   */
+  boolean isNewEngineOrURL([optional] in AString responseType);
+
+  /**
    * Returns a string with the URL to an engine's icon matching the preferred
    * width as closely as possible. Returns undefined if the engine has no icon.
    *
