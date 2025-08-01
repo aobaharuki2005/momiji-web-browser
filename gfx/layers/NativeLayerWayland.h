@@ -29,7 +29,12 @@ class NativeLayerWaylandExternal;
 class NativeLayerWaylandRender;
 
 struct LayerState {
+  // Layer is visible (has correct size/position), we should paint it
   bool mIsVisible : 1;
+  // Layer has been rendered and it's visible
+  bool mIsRendered : 1;
+
+  // Layer visibility has been changed
   bool mMutatedVisibility : 1;
   // Layer stacking order was changed (layer was added/removed/mapped/unmapped)
   bool mMutatedStackingOrder : 1;
@@ -39,17 +44,19 @@ struct LayerState {
   // to show new content.
   bool mMutatedFrontBuffer : 1;
   // Was rendered in last cycle.
-  bool mRendered : 1;
+  bool mRenderedLastCycle : 1;
 
   // For debugging purposse. Resets the layer state
   // to force full init.
   void InvalidateAll() {
     mIsVisible = false;
+    mIsRendered = false;
+
     mMutatedVisibility = true;
     mMutatedStackingOrder = true;
     mMutatedPlacement = true;
     mMutatedFrontBuffer = true;
-    mRendered = false;
+    mRenderedLastCycle = false;
   }
 };
 

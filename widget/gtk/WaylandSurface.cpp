@@ -642,6 +642,7 @@ void WaylandSurface::Commit(WaylandSurfaceLock* aProofOfLock, bool aForceCommit,
     mSurfaceNeedsCommit = false;
     wl_surface_commit(mSurface);
     if (!mSubsurfaceDesync && mParent) {
+      LOGVERBOSE("  request force commit to parent [%p]", mParent.get());
       mParent->ForceCommit();
     }
     if (aForceDisplayFlush) {

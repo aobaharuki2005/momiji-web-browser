@@ -393,6 +393,7 @@ void NativeLayerRootWayland::LogStatsLocked(
   int layersBufferAttached = 0;
   int layersVisible = 0;
   int layersRendered = 0;
+  int layersRenderedLastCycle = 0;
 
   for (RefPtr<NativeLayerWayland>& layer : mSublayers) {
     layersNum++;
@@ -411,15 +412,19 @@ void NativeLayerRootWayland::LogStatsLocked(
     if (layer->State()->mIsVisible) {
       layersVisible++;
     }
-    if (layer->State()->mRendered) {
+    if (layer->State()->mIsRendered) {
       layersRendered++;
+    }
+    if (layer->State()->mRenderedLastCycle) {
+      layersRenderedLastCycle++;
     }
   }
   LOGVERBOSE(
       "Rendering stats: layers [%d] mapped [%d] attached [%d] visible [%d] "
-      "rendered [%d] opaque [%d] opaque set [%d] fullscreen [%d]",
+      "rendered [%d] last [%d] opaque [%d] opaque set [%d] fullscreen [%d]",
       layersNum, layersMapped, layersBufferAttached, layersVisible,
-      layersRendered, layersMappedOpaque, layersMappedOpaqueSet, mIsFullscreen);
+      layersRendered, layersRenderedLastCycle, layersMappedOpaque,
+      layersMappedOpaqueSet, mIsFullscreen);
 }
 #endif
 
@@ -780,7 +785,7 @@ void NativeLayerWayland::RenderLayer(int aScale) {
   SetScalelocked(lock, aScale);
   UpdateLayerPlacementLocked(lock);
 
-  mState.mRendered = false;
+  mState.mRenderedLastCycle = false;
 
   // Don't operate over hidden layers
   if (!mState.mIsVisible) {
@@ -803,7 +808,8 @@ void NativeLayerWayland::RenderLayer(int aScale) {
     return;
   }
 
-  mState.mRendered = CommitFrontBufferToScreenLocked(lock);
+  mState.mIsRendered = mState.mRenderedLastCycle =
+      CommitFrontBufferToScreenLocked(lock);
 
   mState.mMutatedFrontBuffer = false;
   mState.mMutatedVisibility = false;
@@ -857,6 +863,7 @@ bool NativeLayerWayland::Map(WaylandSurfaceLock* aParentWaylandSurfaceLock) {
   mState.mMutatedStackingOrder = true;
   mState.mMutatedVisibility = true;
   mState.mMutatedPlacement = true;
+  mState.mIsRendered = false;
   return true;
 }
 
@@ -891,8 +898,10 @@ void NativeLayerWayland::Unmap() {
   LOG("NativeLayerWayland::Unmap()");
 
   mSurface->UnmapLocked(surfaceLock);
+
   mState.mMutatedStackingOrder = true;
   mState.mMutatedVisibility = true;
+  mState.mIsRendered = false;
   mNeedsMainThreadUpdate = MainThreadUpdate::Unmap;
 }
 
