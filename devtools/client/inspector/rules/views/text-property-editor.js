@@ -625,6 +625,7 @@ class TextPropertyEditor {
           this.rule.pseudoElement
         ),
       inStartingStyleRule: this.rule.isInStartingStyle(),
+      isValid: this.isValid(),
     };
 
     if (this.rule.darkColorScheme !== undefined) {
