@@ -31,7 +31,12 @@ ChromeUtils.defineLazyGetter(lazy, "l10n", function () {
 });
 
 /**
- * Mapping of error code -> [error-id, local-error-id]
+ * Mapping of error code -> [
+ *   error-id,
+ *   local-error-id,
+ *   (optional) error-id-when-addon-name-is-missing,
+ *   (optional) local-error-id-when-addon-name-is-missing,
+ * ]
  *
  * error-id is used for errors in DownloadedAddonInstall,
  * local-error-id for errors in LocalAddonInstall.
@@ -68,6 +73,8 @@ const ERROR_L10N_IDS = new Map([
     [
       "addon-install-error-file-access",
       "addon-local-install-error-file-access",
+      "addon-install-error-no-addon-name-file-access",
+      "addon-local-install-error-no-addon-name-file-access",
     ],
   ],
   [
@@ -1591,7 +1598,11 @@ var gXPInstallObserver = {
           } else {
             // TODO bug 1834484: simplify computation of isLocal.
             const isLocal = !host;
-            let errorId = ERROR_L10N_IDS.get(install.error)?.[isLocal ? 1 : 0];
+            const fluentIds = ERROR_L10N_IDS.get(install.error);
+            // We need to find the group of fluent IDs to use (error-id, local-error-id),
+            // depending on whether we have the add-on name or not.
+            const offset = fluentIds?.length === 4 && !install.name ? 2 : 0;
+            let errorId = fluentIds?.[offset + isLocal ? 1 : 0];
             const args = {
               addonName: install.name,
               appVersion: Services.appinfo.version,
