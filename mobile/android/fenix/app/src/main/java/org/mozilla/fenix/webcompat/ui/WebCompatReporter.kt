@@ -102,8 +102,9 @@ fun WebCompatReporter(
         ) {
             LinkText(
                 text = stringResource(
-                    id = R.string.webcompat_reporter_description_2,
+                    R.string.webcompat_reporter_description_3,
                     stringResource(R.string.app_name),
+                    stringResource(R.string.webcompat_reporter_learn_more),
                 ),
                 linkTextStates = listOf(
                     LinkTextState(
