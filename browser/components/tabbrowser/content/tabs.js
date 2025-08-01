@@ -2185,6 +2185,9 @@
         for (let t of allTabs.slice(0, numPinned)) {
           let tabRect = window.windowUtils.getBoundsWithoutFlushing(t);
           pinnedTabsOrigBounds.set(t, tabRect);
+          // Prevent flex rules from resizing non dragged tabs while the dragged
+          // tabs are positioned absolutely
+          t.style.maxWidth = tabRect.width + "px";
         }
       }
 
@@ -3112,6 +3115,7 @@
         tab.style.width = "";
         tab.style.left = "";
         tab.style.top = "";
+        tab.style.maxWidth = "";
         tab.removeAttribute("dragtarget");
       }
       for (let label of draggedTabDocument.getElementsByClassName(
