@@ -1209,10 +1209,16 @@ let gPermissions = {
 
     localhost: {
       exactHostMatch: true,
+      get disabled() {
+        return !SitePermissions.localNetworkAccessPermissionsEnabled;
+      },
     },
 
     "local-network": {
       exactHostMatch: true,
+      get disabled() {
+        return !SitePermissions.localNetworkAccessPermissionsEnabled;
+      },
     },
 
     microphone: {
@@ -1328,6 +1334,14 @@ XPCOMUtils.defineLazyPreferenceGetter(
   SitePermissions,
   "resistFingerprinting",
   "privacy.resistFingerprinting",
+  false,
+  SitePermissions.invalidatePermissionList.bind(SitePermissions)
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  SitePermissions,
+  "localNetworkAccessPermissionsEnabled",
+  "network.lna.blocking",
   false,
   SitePermissions.invalidatePermissionList.bind(SitePermissions)
 );

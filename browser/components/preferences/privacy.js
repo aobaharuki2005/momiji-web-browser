@@ -278,6 +278,9 @@ Preferences.addAll([
   { id: "network.trr.default_provider_uri", type: "string" },
   { id: "network.trr.custom_uri", type: "string" },
   { id: "doh-rollout.disable-heuristics", type: "bool" },
+
+  // Local Network Access
+  { id: "network.lna.blocking", type: "bool" },
 ]);
 
 // Study opt out
@@ -1272,6 +1275,12 @@ var gPrivacyPane = {
     this.initDoH();
 
     this.initWebAuthn();
+
+    Preferences.get("network.lna.blocking").on(
+      "change",
+      this.setUpLocalNetworkAccessPermissionUI
+    );
+    this.setUpLocalNetworkAccessPermissionUI();
 
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "privacy-pane-loaded");
@@ -3584,6 +3593,12 @@ var gPrivacyPane = {
       SelectableProfileService.off("enableChanged", listener)
     );
     this.updateProfilesPrivacyInfo();
+  },
+
+  setUpLocalNetworkAccessPermissionUI() {
+    const isLNADisabled = !Preferences.get("network.lna.blocking").value;
+    document.getElementById("localHostSettingsRow").hidden = isLNADisabled;
+    document.getElementById("localNetworkSettingsRow").hidden = isLNADisabled;
   },
 
   updateProfilesPrivacyInfo() {
