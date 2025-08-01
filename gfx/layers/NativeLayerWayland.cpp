@@ -267,6 +267,18 @@ bool NativeLayerRootWayland::IsEmptyLocked(
   return mSublayers.IsEmpty();
 }
 
+void NativeLayerRootWayland::ClearLayersLocked(
+    const widget::WaylandSurfaceLock& aProofOfLock) {
+  LOG("NativeLayerRootWayland::ClearLayersLocked() layers num [%d]",
+      (int)mRemovedSublayers.Length());
+  for (const RefPtr<NativeLayerWayland>& layer : mRemovedSublayers) {
+    LOG("  Unmap removed child layer [%p]", layer.get());
+    layer->Unmap();
+  }
+  mMainThreadUpdateSublayers.AppendElements(std::move(mRemovedSublayers));
+  RequestUpdateOnMainThreadLocked(aProofOfLock);
+}
+
 void NativeLayerRootWayland::SetLayers(
     const nsTArray<RefPtr<NativeLayer>>& aLayers) {
   // Removing all layers can destroy us so hold ref
@@ -276,13 +288,8 @@ void NativeLayerRootWayland::SetLayers(
 
   // Take shortcut if all layers are removed
   if (aLayers.IsEmpty()) {
-    LOG("NativeLayerRootWayland::SetLayers() clear layers");
-    for (const RefPtr<NativeLayerWayland>& layer : mSublayers) {
-      LOG("  Unmap removed child layer [%p]", layer.get());
-      layer->Unmap();
-    }
-    mMainThreadUpdateSublayers.AppendElements(std::move(mSublayers));
-    RequestUpdateOnMainThreadLocked(lock);
+    mRemovedSublayers.AppendElements(std::move(mSublayers));
+    ClearLayersLocked(lock);
     return;
   }
 
@@ -314,8 +321,7 @@ void NativeLayerRootWayland::SetLayers(
   for (const RefPtr<NativeLayerWayland>& layer : mSublayers) {
     if (layer->IsRemoved()) {
       LOG("  Unmap removed child layer [%p]", layer.get());
-      layer->Unmap();
-      mMainThreadUpdateSublayers.AppendElement(layer);
+      mRemovedSublayers.AppendElement(layer);
     }
   }
 
@@ -342,8 +348,6 @@ void NativeLayerRootWayland::SetLayers(
   mRootMutatedStackingOrder = true;
 
   mRootAllLayersRendered = false;
-  LOGVERBOSE("NativeLayerRootWayland::SetLayers(): %s root commit",
-             mRootAllLayersRendered ? "enabled" : "disabled");
   mRootSurface->SetCommitStateLocked(lock, mRootAllLayersRendered);
 
   // We need to process a part of map event on main thread as we use Gdk
@@ -521,6 +525,14 @@ bool NativeLayerRootWayland::CommitToScreen() {
 #ifdef MOZ_LOGGING
   LogStatsLocked(lock);
 #endif
+
+  // Commit all layers changes now so we can unmap removed layers without
+  // flickering.
+  lock.Commit();
+
+  if (mRootAllLayersRendered && !mRemovedSublayers.IsEmpty()) {
+    ClearLayersLocked(lock);
+  }
 
   return true;
 }
@@ -906,6 +918,7 @@ void NativeLayerWayland::SetFrameCallbackState(bool aState) {
 void NativeLayerWayland::MainThreadMap() {
   AssertIsOnMainThread();
   MOZ_DIAGNOSTIC_ASSERT(IsOpaque());
+  MOZ_DIAGNOSTIC_ASSERT(mNeedsMainThreadUpdate == MainThreadUpdate::Map);
 
   WaylandSurfaceLock lock(mSurface);
   if (!mSurface->IsOpaqueSurfaceHandlerSet()) {
@@ -932,13 +945,14 @@ void NativeLayerWayland::Unmap() {
   mState.mMutatedStackingOrder = true;
   mState.mMutatedVisibility = true;
   mState.mIsRendered = false;
+  mState.mIsVisible = false;
   mNeedsMainThreadUpdate = MainThreadUpdate::Unmap;
 }
 
 void NativeLayerWayland::MainThreadUnmap() {
   WaylandSurfaceLock lock(mSurface);
 
-  MOZ_DIAGNOSTIC_ASSERT(!mSurface->IsMapped());
+  MOZ_DIAGNOSTIC_ASSERT(mNeedsMainThreadUpdate == MainThreadUpdate::Unmap);
   AssertIsOnMainThread();
 
   if (mSurface->IsPendingGdkCleanup()) {

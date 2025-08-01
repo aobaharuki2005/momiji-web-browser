@@ -75,7 +75,6 @@ class NativeLayerRootWayland final : public NativeLayerRoot {
   void AppendLayer(NativeLayer* aLayer) override;
   void RemoveLayer(NativeLayer* aLayer) override;
   void SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) override;
-  void ClearLayers();
 
   void PrepareForCommit() override { mFrameInProcess = true; };
   bool CommitToScreen() override;
@@ -119,8 +118,8 @@ class NativeLayerRootWayland final : public NativeLayerRoot {
   // Map NativeLayerRootWayland and all child surfaces.
   // Returns true if we're set.
   bool MapLocked(const widget::WaylandSurfaceLock& aProofOfLock);
-
   bool IsEmptyLocked(const widget::WaylandSurfaceLock& aProofOfLock);
+  void ClearLayersLocked(const widget::WaylandSurfaceLock& aProofOfLock);
 
 #ifdef MOZ_LOGGING
   void LogStatsLocked(const widget::WaylandSurfaceLock& aProofOfLock);
@@ -152,6 +151,12 @@ class NativeLayerRootWayland final : public NativeLayerRoot {
   // Child layers which needs to be updated on main thread,
   // they have been added or removed.
   nsTArray<RefPtr<NativeLayerWayland>> mMainThreadUpdateSublayers;
+
+  // Child layers which has been removed and are
+  // waiting to be unmapped. We do that in sync with root surface to avoid
+  // flickering. When unmapped they're moved to mMainThreadUpdateSublayers
+  // for final clean up at main thread.
+  nsTArray<RefPtr<NativeLayerWayland>> mRemovedSublayers;
 
   // External buffers (DMABuf) used by the layers.
   // We want to cache and reuse wl_buffer of external images.
