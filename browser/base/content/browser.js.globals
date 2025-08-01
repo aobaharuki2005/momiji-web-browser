@@ -26,7 +26,6 @@
   "gStoragePressureObserver",
   "PopupBlockerObserver",
   "gKeywordURIFixup",
-  "_createNullPrincipalFromTabUserContextId",
   "HandleAppCommandEvent",
   "BrowserCommands",
   "kSkipCacheFlags",

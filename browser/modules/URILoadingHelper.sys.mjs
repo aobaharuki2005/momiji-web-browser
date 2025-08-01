@@ -11,6 +11,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "ReferrerInfo", () =>
@@ -307,6 +308,23 @@ function updatePrincipals(window, params) {
     params.originStoragePrincipal
   );
   params.triggeringPrincipal = useOAForPrincipal(params.triggeringPrincipal);
+}
+
+/* Creates a null principal using the userContextId
+from the current selected tab or a passed in tab argument */
+function _createNullPrincipalFromTabUserContextId(tab = null) {
+  const window = lazy.BrowserWindowTracker.getTopWindow();
+  if (!tab) {
+    tab = window.gBrowser.selectedTab;
+  }
+
+  let userContextId;
+  if (tab.hasAttribute("usercontextid")) {
+    userContextId = tab.getAttribute("usercontextid");
+  }
+  return Services.scriptSecurityManager.createNullPrincipal({
+    userContextId,
+  });
 }
 
 export const URILoadingHelper = {
@@ -814,5 +832,198 @@ export const URILoadingHelper = {
     }
 
     return guessedUserContextId;
+  },
+  /**
+   * Switch to a tab that has a given URI, and focuses its browser window.
+   * If a matching tab is in this window, it will be switched to. Otherwise, other
+   * windows will be searched.
+   *
+   * @param window
+   *        The current window
+   * @param aURI
+   *        URI to search for
+   * @param aOpenNew
+   *        True to open a new tab and switch to it, if no existing tab is found.
+   *        If no suitable window is found, a new one will be opened.
+   * @param aOpenParams
+   *        If switching to this URI results in us opening a tab, aOpenParams
+   *        will be the parameter object that gets passed to openTrustedLinkIn. Please
+   *        see the documentation for openTrustedLinkIn to see what parameters can be
+   *        passed via this object.
+   *        This object also allows:
+   *        - 'ignoreFragment' property to be set to true to exclude fragment-portion
+   *        matching when comparing URIs.
+   *          If set to "whenComparing", the fragment will be unmodified.
+   *          If set to "whenComparingAndReplace", the fragment will be replaced.
+   *        - 'ignoreQueryString' boolean property to be set to true to exclude query string
+   *        matching when comparing URIs.
+   *        - 'replaceQueryString' boolean property to be set to true to exclude query string
+   *        matching when comparing URIs and overwrite the initial query string with
+   *        the one from the new URI.
+   *        - 'adoptIntoActiveWindow' boolean property to be set to true to adopt the tab
+   *        into the current window.
+   * @param aUserContextId
+   *        If not null, will switch to the first found tab having the provided
+   *        userContextId.
+   * @return True if an existing tab was found, false otherwise
+   */
+  switchToTabHavingURI(
+    window,
+    aURI,
+    aOpenNew,
+    aOpenParams = {},
+    aUserContextId = null
+  ) {
+    // Certain URLs can be switched to irrespective of the source or destination
+    // window being in private browsing mode:
+    const kPrivateBrowsingURLs = new Set(["about:addons"]);
+
+    let ignoreFragment = aOpenParams.ignoreFragment;
+    let ignoreQueryString = aOpenParams.ignoreQueryString;
+    let replaceQueryString = aOpenParams.replaceQueryString;
+    let adoptIntoActiveWindow = aOpenParams.adoptIntoActiveWindow;
+
+    // These properties are only used by switchToTabHavingURI and should
+    // not be used as a parameter for the new load.
+    delete aOpenParams.ignoreFragment;
+    delete aOpenParams.ignoreQueryString;
+    delete aOpenParams.replaceQueryString;
+    delete aOpenParams.adoptIntoActiveWindow;
+
+    let isBrowserWindow = !!window.gBrowser;
+
+    // This will switch to the tab in aWindow having aURI, if present.
+    function switchIfURIInWindow(aWindow) {
+      // We can switch tab only if if both the source and destination windows have
+      // the same private-browsing status.
+      if (
+        !kPrivateBrowsingURLs.has(aURI.spec) &&
+        PrivateBrowsingUtils.isWindowPrivate(window) !==
+          PrivateBrowsingUtils.isWindowPrivate(aWindow)
+      ) {
+        return false;
+      }
+
+      // Remove the query string, fragment, both, or neither from a given url.
+      function cleanURL(url, removeQuery, removeFragment) {
+        let ret = url;
+        if (removeFragment) {
+          ret = ret.split("#")[0];
+          if (removeQuery) {
+            // This removes a query, if present before the fragment.
+            ret = ret.split("?")[0];
+          }
+        } else if (removeQuery) {
+          // This is needed in case there is a fragment after the query.
+          let fragment = ret.split("#")[1];
+          ret = ret
+            .split("?")[0]
+            .concat(fragment != undefined ? "#".concat(fragment) : "");
+        }
+        return ret;
+      }
+
+      // Need to handle nsSimpleURIs here too (e.g. about:...), which don't
+      // work correctly with URL objects - so treat them as strings
+      let ignoreFragmentWhenComparing =
+        typeof ignoreFragment == "string" &&
+        ignoreFragment.startsWith("whenComparing");
+      let requestedCompare = cleanURL(
+        aURI.displaySpec,
+        ignoreQueryString || replaceQueryString,
+        ignoreFragmentWhenComparing
+      );
+      let browsers = aWindow.gBrowser.browsers;
+      for (let i = 0; i < browsers.length; i++) {
+        let browser = browsers[i];
+        let browserCompare = cleanURL(
+          browser.currentURI.displaySpec,
+          ignoreQueryString || replaceQueryString,
+          ignoreFragmentWhenComparing
+        );
+        let browserUserContextId = browser.getAttribute("usercontextid") || "";
+        if (aUserContextId != null && aUserContextId != browserUserContextId) {
+          continue;
+        }
+        if (requestedCompare == browserCompare) {
+          // If adoptIntoActiveWindow is set, and this is a cross-window switch,
+          // adopt the tab into the current window, after the active tab.
+          let doAdopt =
+            adoptIntoActiveWindow && isBrowserWindow && aWindow != window;
+
+          if (doAdopt) {
+            const newTab = window.gBrowser.adoptTab(
+              aWindow.gBrowser.getTabForBrowser(browser),
+              {
+                tabIndex: window.gBrowser.tabContainer.selectedIndex + 1,
+                selectTab: true,
+              }
+            );
+            if (!newTab) {
+              doAdopt = false;
+            }
+          }
+          if (!doAdopt) {
+            aWindow.focus();
+          }
+
+          if (
+            ignoreFragment == "whenComparingAndReplace" ||
+            replaceQueryString
+          ) {
+            browser.loadURI(aURI, {
+              triggeringPrincipal:
+                aOpenParams.triggeringPrincipal ||
+                _createNullPrincipalFromTabUserContextId(),
+            });
+          }
+
+          if (!doAdopt) {
+            aWindow.gBrowser.tabContainer.selectedIndex = i;
+          }
+
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // This can be passed either nsIURI or a string.
+    if (!(aURI instanceof Ci.nsIURI)) {
+      aURI = Services.io.newURI(aURI);
+    }
+
+    // Prioritise this window.
+    if (isBrowserWindow && switchIfURIInWindow(window)) {
+      return true;
+    }
+
+    for (let browserWin of lazy.BrowserWindowTracker.orderedWindows) {
+      // Skip closed (but not yet destroyed) windows,
+      // and the current window (which was checked earlier).
+      if (browserWin.closed || browserWin == window) {
+        continue;
+      }
+      if (switchIfURIInWindow(browserWin)) {
+        return true;
+      }
+    }
+
+    // No opened tab has that url.
+    if (aOpenNew) {
+      if (
+        lazy.UrlbarPrefs.get("switchTabs.searchAllContainers") &&
+        aUserContextId != null
+      ) {
+        aOpenParams.userContextId = aUserContextId;
+      }
+      if (isBrowserWindow && window.gBrowser.selectedTab.isEmpty) {
+        this.openTrustedLinkIn(window, aURI.spec, "current", aOpenParams);
+      } else {
+        this.openTrustedLinkIn(window, aURI.spec, "tab", aOpenParams);
+      }
+    }
+
+    return false;
   },
 };
