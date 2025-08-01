@@ -6646,12 +6646,16 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
             // https://drafts.csswg.org/css-align-3/#baseline-export.
 
             if (containerWM.IsCentralBaseline()) {
-              // TODO(tlouw): This is a simplified calculation when determining
-              // the center baseline and we should use
-              // `Baseline::SynthesizeBaselineFromBorderBox`, which does the
-              // proper calculation. See:
-              // https://bugzilla.mozilla.org/show_bug.cgi?id=1964417
-              baseline.emplace(frameSize / 2);
+              // We want to use the exact same central position within the
+              // frame, regardless of which side we're measuring from. To
+              // achieve that, we round *up* if we're in the first baseline
+              // sharing group, and *down* if we're in the last baseline sharing
+              // group.
+              const bool isFirstBaselineSharingGroup =
+                  baselineSharingGroup == BaselineSharingGroup::First;
+              baseline.emplace(frameSize / 2 + (isFirstBaselineSharingGroup
+                                                    ? 0
+                                                    : frameSize % 2));
             } else {
               // The baseline offset is measured from the block-{start,end} edge
               // of the container, using the block axis of 'baselineWM' (which
