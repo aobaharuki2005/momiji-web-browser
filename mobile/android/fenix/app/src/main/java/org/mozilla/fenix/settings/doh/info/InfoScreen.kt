@@ -100,9 +100,9 @@ private fun Title(
 @Composable
 private fun BulletTextWithOptionalLink(
     text: String,
-    learnMoreUrl: String? = null,
     onLearnMoreClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
+    learnMoreUrl: String? = null,
     color: Color = FirefoxTheme.colors.textPrimary,
     style: TextStyle = FirefoxTheme.typography.subtitle1,
 ) {
