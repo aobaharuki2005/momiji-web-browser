@@ -25,6 +25,12 @@ SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtImpersonateAnonymousToken(
     NtImpersonateAnonymousTokenFunction orig_ImpersonateAnonymousToken,
     HANDLE thread);
 
+// Interception of NtOpenSection on the child process.
+// It should never be called directly
+SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtOpenSection(
+    NtOpenSectionFunction orig_NtOpenSection, PHANDLE section_handle,
+    ACCESS_MASK desired_access, POBJECT_ATTRIBUTES object_attributes);
+
 // Interception of NtSetInformationThread on the child process.
 // It should never be called directly.
 SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtSetInformationThread(

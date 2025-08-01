@@ -98,6 +98,10 @@ class [[clang::lto_visibility_public]] TargetConfig {
   // Returns whether the Everyone SID won't be deny only for USER_RESTRICED.
   virtual bool GetAllowEveryoneForUserRestricted() = 0;
 
+  // Force KnownDll loading to fall-back to the normal loading path. This can be
+  // used when access to the KnownDlls list will be blocked.
+  virtual void SetForceKnownDllLoadingFallback() = 0;
+
   // Sets the security level of the Job Object to which the target process will
   // belong. This setting is permanent and cannot be changed once the target
   // process is spawned. The job controls the global security settings which

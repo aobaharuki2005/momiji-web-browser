@@ -167,6 +167,10 @@ constexpr auto ThreadImpersonationToken = static_cast<THREADINFOCLASS>(5);
 typedef NTSTATUS(WINAPI* NtImpersonateAnonymousTokenFunction)(
     IN HANDLE ThreadHandle);
 
+typedef NTSTATUS(WINAPI* NtOpenSectionFunction)(
+    OUT PHANDLE SectionHandle, IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes);
+
 typedef NTSTATUS(WINAPI* NtSetInformationThreadFunction)(
     IN HANDLE ThreadHandle,
     IN THREADINFOCLASS ThreadInformationClass,

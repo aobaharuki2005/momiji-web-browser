@@ -40,6 +40,11 @@ SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtUnmapViewOfSection64(HANDLE process,
 SANDBOX_INTERCEPT NTSTATUS WINAPI
 TargetNtImpersonateAnonymousToken64(HANDLE thread);
 
+// Interception of NtOpenSection on the child process.
+SANDBOX_INTERCEPT NTSTATUS WINAPI
+TargetNtOpenSection64(PHANDLE section_handle, ACCESS_MASK desired_access,
+                      POBJECT_ATTRIBUTES object_attributes);
+
 // Interception of NtSetInformationThread on the child process.
 SANDBOX_INTERCEPT NTSTATUS WINAPI
 TargetNtSetInformationThread64(HANDLE thread,

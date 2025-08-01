@@ -17,6 +17,8 @@
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
 
+using namespace std::literals;
+
 namespace sandbox {
 
 // Policy data.
@@ -83,6 +85,60 @@ NTSTATUS WINAPI TargetNtImpersonateAnonymousToken(
   }
 
   return orig_ImpersonateAnonymousToken(thread);
+}
+
+// Split out so that it can use AddressSanitizer.
+NOINLINE bool IsKnownDlls(HANDLE handle) {
+  auto root_path = GetPathFromHandle(handle);
+  if (!root_path) {
+    return false;
+  }
+
+#if defined(_WIN64)
+  constexpr auto kKnownDllsDir = LR"(\KnownDlls)"sv;
+#else
+  constexpr auto kKnownDllsDir = LR"(\KnownDlls32)"sv;
+#endif
+  return root_path->length() == kKnownDllsDir.length() &&
+         _wcsnicmp(root_path->data(), kKnownDllsDir.data(),
+                   kKnownDllsDir.length()) == 0;
+}
+
+// Hooks NtOpenSection when directed by the config, so that we can detect calls
+// to open KnownDlls entries and always return not found. This will cause
+// fall-back to the normal loading path. This means that if a config blocks
+// access to the KnownDlls list, but allows read access to the actual DLLs then
+// they can continue to be loaded.
+// This is called too early to use AddressSanitizer.
+ABSL_ATTRIBUTE_NO_SANITIZE_ADDRESS
+SANDBOX_INTERCEPT NTSTATUS __stdcall TargetNtOpenSection(
+    NtOpenSectionFunction orig_NtOpenSection, PHANDLE section_handle,
+    ACCESS_MASK desired_access, POBJECT_ATTRIBUTES object_attributes) {
+
+  NTSTATUS open_status =
+      orig_NtOpenSection(section_handle, desired_access, object_attributes);
+  // We're only interested in failure that might be caused by the sandbox.
+  if (open_status != STATUS_ACCESS_DENIED) {
+    return open_status;
+  }
+
+  // Calls for KnownDlls use a RootDirectory.
+  if (!object_attributes->RootDirectory) {
+    return open_status;
+  }
+
+  // Make sure IsKnownDlls isn't called too early, so that everything it uses is
+  // loaded. We shouldn't get here before that for KnownDlls. 
+  if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled()) {
+    return open_status;
+  }
+
+  if (!IsKnownDlls(object_attributes->RootDirectory)) {
+    return open_status;
+  }
+
+  // This is for a KnownDll, just return not found to trigger fall-back loading.
+  return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 // Hooks NtSetInformationThread to block RevertToSelf from being

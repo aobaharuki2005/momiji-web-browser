@@ -13,6 +13,7 @@ class TargetProcess;
 
 // Sets up interceptions not controlled by explicit policies.
 bool SetupBasicInterceptions(InterceptionManager* manager,
+                             bool force_known_dll_loading_fallback,
                              bool is_csrss_connected);
 
 // Sets up imports from NTDLL for the given target process so the interceptions

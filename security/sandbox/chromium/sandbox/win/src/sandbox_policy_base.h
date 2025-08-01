@@ -62,6 +62,7 @@ class ConfigBase final : public TargetConfig {
   bool GetUseRestrictingSIDs() final;
   void SetAllowEveryoneForUserRestricted() final;
   bool GetAllowEveryoneForUserRestricted() final;
+  void SetForceKnownDllLoadingFallback() final;
   ResultCode SetJobLevel(JobLevel job_level, uint32_t ui_exceptions) override;
   JobLevel GetJobLevel() const override;
   void SetJobMemoryLimit(size_t memory_limit) override;
@@ -142,6 +143,7 @@ class ConfigBase final : public TargetConfig {
   TokenLevel initial_level_;
   bool use_restricting_sids_ = true;
   bool allow_everyone_for_user_restricted_ = false;
+  bool force_known_dll_loading_fallback_ = false;
   JobLevel job_level_;
   IntegrityLevel integrity_level_;
   IntegrityLevel delayed_integrity_level_;
