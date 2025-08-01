@@ -710,3 +710,47 @@ add_task(
     await resetState();
   }
 );
+
+add_task(
+  skipIfNotBrowser(),
+  async function test_tou_pref_migration_runs_on_subsequent_startup_after_initial_noop() {
+    const timestamp = GENERIC_TOU_TIMESTAMP;
+    // User accepted via legacy flow
+    setupLegacyAndRolloutPrefs({
+      acceptedVersion: 2,
+      notifiedTime: timestamp,
+      minVersion: 2,
+      currentVersion: 2,
+    });
+
+    await runMigrationFlow();
+
+    Assert.ok(
+      !Services.prefs.prefHasUserValue(TOU_ACCEPTED_DATE_PREF),
+      "Initial migration should not set TOU accepted date"
+    );
+    Assert.ok(
+      !Services.prefs.prefHasUserValue(TOU_ACCEPTED_VERSION_PREF),
+      "Initial migration should not set TOU accepted version"
+    );
+
+    const updatedTimestamp = timestamp + 1;
+    // Simulate TOU experiment acceptance after initial pref migration check
+    Services.prefs.setIntPref(
+      TelemetryUtils.Preferences.AcceptedPolicyVersion,
+      3
+    );
+    Services.prefs.setStringPref(
+      TelemetryUtils.Preferences.AcceptedPolicyDate,
+      updatedTimestamp.toString()
+    );
+
+    await runMigrationFlow();
+    await checkPrefsAndTelemetryValuesAfterSuccessfulMigration(
+      updatedTimestamp
+    );
+
+    await resetState();
+    sinon.restore();
+  }
+);
