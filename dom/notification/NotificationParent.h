@@ -20,10 +20,7 @@ enum class AlertTopic : uint8_t {
   Settings,
   Click,
   Show,
-  // Either closed or error.
-  // See ToAlertTopic about why we have both Finished and Closed.
   Finished,
-  Closed,
 };
 
 struct NotificationParentArgs {

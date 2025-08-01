@@ -119,11 +119,9 @@ class NotificationsDelegate(
                     showPermissionRationale = showPermissionRationale,
                 )
             } else {
-                // This means we cannot show standard notifications without user changing it from OS Settings
+                // this means we cannot show standard notifications without user changing it from OS Settings
                 // redirect to that, or maybe show in-app notifications? See https://bugzilla.mozilla.org/show_bug.cgi?id=1814863
                 // for crash notifications we could show the prompt instead.
-                // For now we just call onPermissionRejected here to ping the caller about the permission status.
-                onPermissionRejected.invoke()
             }
         }
     }
