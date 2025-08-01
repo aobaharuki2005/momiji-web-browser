@@ -464,19 +464,17 @@ bool NativeLayerRootWayland::CommitToScreen() {
     scale = 1.0;
   }
 
-  bool mutatedStackingOrder = mRootMutatedStackingOrder;
   for (RefPtr<NativeLayerWayland>& layer : mSublayers) {
     layer->RenderLayer(scale);
     if (layer->State()->mMutatedStackingOrder) {
-      mutatedStackingOrder = true;
+      mRootMutatedStackingOrder = true;
     }
   }
 
-  if (mutatedStackingOrder) {
+  if (mRootMutatedStackingOrder) {
     NativeLayerWayland* previousWaylandSurface = nullptr;
     for (RefPtr<NativeLayerWayland>& layer : mSublayers) {
       if (layer->State()->mIsVisible) {
-        layer->State()->mRendered = true;
         if (previousWaylandSurface) {
           layer->PlaceAbove(previousWaylandSurface);
         }
