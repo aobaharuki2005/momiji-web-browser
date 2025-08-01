@@ -137,7 +137,7 @@ class VectorBuffer {
     CHECK(!RangesOverlap(from_begin, from_end, to));
 
     memcpy(
-        to, from_begin,
+        static_cast<void*>(to), from_begin,
         CheckSub(get_uintptr(from_end), get_uintptr(from_begin)).ValueOrDie());
   }
 
