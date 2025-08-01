@@ -1315,6 +1315,14 @@
   value: 32
   mirror: always
 
+# Enable an experiment where printing on Windows will disallow other
+# applications to take focus, to avoid a bug in printing-to-file.
+# This pref is relevant whether or not content analysis is used.
+- name: browser.contentanalysis.windows_lock_foreground_window_on_print
+  type: bool
+  value: true
+  mirror: always
+
 # Should Firefox use content analysis for clipboard operations?
 # Note that this has no effect unless browser.contentanalysis.enabled
 # is true.
