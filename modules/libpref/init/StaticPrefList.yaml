@@ -18724,7 +18724,7 @@
 # For testing only
 - name: widget.dmabuf-feedback.enabled
   type: bool
-  value: true
+  value: false
   mirror: once
 #endif
 
