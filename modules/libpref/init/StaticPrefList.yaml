@@ -10687,7 +10687,7 @@
 # Is support for the ::details-content pseudo-element enabled?
 - name: layout.css.details-content.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
   rust: true
 
@@ -10828,7 +10828,7 @@
 # The modern behavior is 'false', i.e. not forcing it to be a block.
 - name: layout.details.force-block-layout
   type: bool
-  value: false
+  value: @IS_NOT_NIGHTLY_BUILD@
   mirror: always
 
 # Whether table cells can generate scroll boxes.
