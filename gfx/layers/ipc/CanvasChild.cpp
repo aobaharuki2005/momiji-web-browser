@@ -93,6 +93,10 @@ class RecorderHelpers final : public CanvasDrawEventRecorder::Helpers {
   const WeakPtr<CanvasChild> mCanvasChild;
 };
 
+// Limit the number of in-flight export surfaces
+static const uint32_t kMaxExportSurfaces = 100;
+static Atomic<uint32_t> sCurrentExportSurfaces(0);
+
 class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceCanvasRecording, final)
@@ -167,6 +171,10 @@ class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
   bool GetSurfaceDescriptor(SurfaceDescriptor& aDesc) final {
     static Atomic<uintptr_t> sNextExportID(0);
     if (!mExportID) {
+      if (++sCurrentExportSurfaces > kMaxExportSurfaces) {
+        --sCurrentExportSurfaces;
+        return false;
+      }
       mExportID = gfx::ReferencePtr(++sNextExportID);
       mRecorder->RecordEvent(RecordedAddExportSurface(mExportID, this));
     }
@@ -197,6 +205,7 @@ class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
     aRecorder->RecordEvent(RecordedRemoveSurfaceAlias(aSurfaceAlias));
     if (aExportID) {
       aRecorder->RecordEvent(RecordedRemoveExportSurface(aExportID));
+      --sCurrentExportSurfaces;
     }
     aAliasedSurface = nullptr;
     aCanvasChild = nullptr;
