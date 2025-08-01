@@ -10687,7 +10687,7 @@
 # Is support for the ::details-content pseudo-element enabled?
 - name: layout.css.details-content.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
   rust: true
 
