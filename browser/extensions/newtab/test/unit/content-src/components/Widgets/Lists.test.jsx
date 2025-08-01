@@ -14,6 +14,7 @@ const mockState = {
       "test-list": {
         label: "test",
         tasks: [{ value: "task", completed: false, isUrl: false }],
+        completed: [],
       },
     },
   },
@@ -69,7 +70,7 @@ describe("<Lists>", () => {
     const [action] = dispatch.getCall(0).args;
     assert.equal(action.type, at.WIDGETS_LISTS_UPDATE);
     assert.ok(
-      action.data["test-list"].tasks.some(
+      action.data.lists["test-list"].tasks.some(
         task => task.value === "nathan's cool task"
       )
     );
@@ -81,7 +82,8 @@ describe("<Lists>", () => {
 
     const [action] = dispatch.getCall(0).args;
     assert.equal(action.type, at.WIDGETS_LISTS_UPDATE);
-    assert.ok(action.data["test-list"].tasks[0].completed);
+    console.log(`CONSOLE: `, action.data.lists["test-list"]);
+    assert.ok(action.data.lists["test-list"].completed[0].completed);
   });
 
   it("should not dispatch an action when input is empty and Enter is pressed", () => {
@@ -110,7 +112,7 @@ describe("<Lists>", () => {
     assert.equal(action.type, at.WIDGETS_LISTS_UPDATE);
 
     // Check that the task list is now empty
-    const updatedTasks = action.data["test-list"].tasks;
+    const updatedTasks = action.data.lists["test-list"].tasks;
     assert.equal(updatedTasks.length, 0, "Expected task to be removed");
   });
 
@@ -133,7 +135,7 @@ describe("<Lists>", () => {
     const [action] = dispatch.getCall(0).args;
     assert.equal(action.type, at.WIDGETS_LISTS_UPDATE);
 
-    const newHyperlinkedTask = action.data["test-list"].tasks.find(
+    const newHyperlinkedTask = action.data.lists["test-list"].tasks.find(
       t => t.value === testUrl
     );
 
@@ -181,7 +183,7 @@ describe("<Lists>", () => {
     assert.ok(dispatch.calledOnce);
     const [action] = dispatch.getCall(0).args;
     assert.equal(action.type, at.WIDGETS_LISTS_UPDATE);
-    assert.equal(action.data["test-list"].label, "Updated List");
+    assert.equal(action.data.lists["test-list"].label, "Updated List");
   });
 
   it("should create a new list and dispatch update and select list actions", () => {

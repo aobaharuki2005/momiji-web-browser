@@ -187,13 +187,8 @@ export const INITIAL_STATE = {
       taskList: {
         label: "Task List",
         tasks: [],
+        completed: [],
       },
-    },
-    // Keeping this separate from `lists` so that it isn't rendered
-    // in the same way
-    completed: {
-      label: "Completed",
-      tasks: [],
     },
   },
   TimerWidget: {

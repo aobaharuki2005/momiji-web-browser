@@ -41,7 +41,29 @@ export class ListsFeed {
     const { lists, selected } = cachedData;
     // only update lists if this has been set before
     if (lists) {
-      this.update(lists, isStartup);
+      // Ensure all lists have a `completed` array
+      for (const listId in lists) {
+        if (lists[listId]) {
+          const list = lists[listId];
+          if (!Array.isArray(list.completed)) {
+            list.completed = [];
+          }
+          // move any completed tasks to the completed array
+          const activeTasks = [];
+          const completedTasks = [];
+          for (const task of list.tasks) {
+            if (task.completed === true) {
+              completedTasks.push(task);
+            } else {
+              activeTasks.push(task);
+            }
+          }
+
+          list.tasks = activeTasks;
+          list.completed = list.completed.concat(completedTasks);
+        }
+      }
+      this.update({ lists }, isStartup);
     }
 
     if (selected) {
@@ -53,7 +75,7 @@ export class ListsFeed {
     this.store.dispatch(
       ac.BroadcastToContent({
         type: at.WIDGETS_LISTS_SET,
-        data,
+        data: data.lists,
         meta: isStartup,
       })
     );
@@ -88,8 +110,20 @@ export class ListsFeed {
         }
         break;
       case at.WIDGETS_LISTS_UPDATE:
-        await this.cache.set("lists", action.data);
+        await this.cache.set("lists", action.data.lists);
         this.update(action.data);
+        // The current tab stores a temporary version of lists, where
+        // the completed task isn't moved to the
+        // completed section until a reload or next tab is open
+        this.store.dispatch(
+          ac.OnlyToOneContent(
+            {
+              type: at.WIDGETS_LISTS_SET,
+              data: action.data.localLists || action.data.lists,
+            },
+            action.meta.fromTarget
+          )
+        );
         break;
       case at.WIDGETS_LISTS_CHANGE_SELECTED:
         await this.cache.set("selected", action.data);

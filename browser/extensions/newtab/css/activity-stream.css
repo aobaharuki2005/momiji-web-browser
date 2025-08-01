@@ -4444,12 +4444,12 @@ main section {
 .lists .select-wrapper moz-button {
   visibility: hidden;
 }
-.lists:hover .select-wrapper moz-button, .lists:focus-within .select-wrapper moz-button, .lists .select-wrapper panel-list[open] .select-wrapper moz-button {
+.lists:hover .select-wrapper moz-button, .lists:focus-within .select-wrapper moz-button,
+.lists .select-wrapper panel-list[open] .select-wrapper moz-button {
   visibility: visible;
 }
 .lists .edit-list {
-  border: 1px solid var(--border-color-deemphasized);
-  outline: none;
+  outline: var(--focus-outline);
 }
 .lists .add-task-container {
   margin-block: var(--space-small);
@@ -4516,33 +4516,7 @@ main section {
 }
 .lists .task-item input:checked ~ .task-label {
   color: var(--text-color-deemphasized);
-}
-.lists .task-item input:checked ~ .task-label::after {
-  content: "";
-  position: absolute;
-  inset-inline-start: var(--space-small);
-  inset-block-start: 50%;
-  width: 100%;
-  height: var(--space-xxsmall);
-  background-color: var(--newtab-text-primary-color);
-  transform: translateY(-50%);
-}
-.lists .task-item input:checked ~ .task-label.animate-strike::after {
-  width: 100%;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .lists .task-item input:checked ~ .task-label.animate-strike::after {
-    animation: strike 0.25s ease-out forwards;
-    width: 0%;
-  }
-}
-@keyframes strike {
-  from {
-    width: 0%;
-  }
-  to {
-    width: 100%;
-  }
+  text-decoration: line-through;
 }
 .lists .task-item moz-button {
   align-self: flex-start;
@@ -4572,6 +4546,31 @@ main section {
 .lists .empty-list-text {
   padding-inline: var(--space-large);
   color: var(--text-color-deemphasized);
+}
+.lists .completed-task-wrapper summary {
+  list-style: none;
+}
+.lists .completed-task-wrapper summary .completed-title {
+  color: var(--text-color-deemphasized);
+  position: relative;
+}
+.lists .completed-task-wrapper summary .completed-title::after {
+  content: "";
+  -moz-context-properties: fill;
+  fill: var(--text-color-deemphasized);
+  background-image: url("chrome://global/skin/icons/arrow-right.svg");
+  height: var(--space-large);
+  width: var(--space-large);
+  position: absolute;
+  inset-inline-end: calc(-1 * var(--space-xlarge));
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+}
+.lists .completed-task-wrapper summary .completed-title:dir(rtl)::after {
+  background-image: url("chrome://global/skin/icons/arrow-left.svg");
+}
+.lists .completed-task-wrapper[open] .completed-title::after {
+  background-image: url("chrome://global/skin/icons/arrow-down.svg");
 }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public

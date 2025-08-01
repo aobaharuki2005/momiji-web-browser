@@ -84,3 +84,53 @@ add_task(async function test_isEnabled() {
   info("ListsFeed should be enabled");
   Assert.ok(feed.enabled);
 });
+
+add_task(async function test_syncLists_moves_completed_tasks_and_dispatches() {
+  const feed = new ListsFeed();
+
+  // create mock data for Persistent Cache
+  const cachedListData = {
+    lists: {
+      myList: {
+        label: "My List",
+        tasks: [
+          { id: 1, title: "Active task", completed: false },
+          { id: 2, title: "Completed task", completed: true },
+        ],
+      },
+    },
+  };
+
+  const dispatchSpy = sinon.spy();
+
+  feed.store = {
+    getState() {
+      return {
+        Prefs: {
+          values: {
+            [PREF_LISTS_ENABLED]: true,
+            [PREF_SYSTEM_LISTS_ENABLED]: true,
+          },
+        },
+      };
+    },
+    dispatch: dispatchSpy,
+  };
+
+  sinon.stub(feed.cache, "get").resolves(cachedListData);
+
+  await feed.syncLists();
+
+  // Check that the tasks have been properly split
+  const [firstCall] = dispatchSpy.getCalls();
+  const listsData = firstCall.args[0].data;
+
+  Assert.equal(listsData.myList.tasks.length, 1, "1 active task");
+  Assert.equal(listsData.myList.completed.length, 1, "1 completed task");
+
+  Assert.equal(
+    firstCall.args[0].type,
+    actionTypes.WIDGETS_LISTS_SET,
+    "dispatches lists"
+  );
+});

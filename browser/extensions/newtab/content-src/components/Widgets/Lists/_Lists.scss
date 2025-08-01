@@ -21,17 +21,17 @@
     }
   }
 
-  &:hover, &:focus-within, .select-wrapper panel-list[open] {
+  &:hover,
+  &:focus-within,
+  .select-wrapper panel-list[open] {
     .select-wrapper moz-button {
       visibility: visible;
     }
   }
 
   .edit-list {
-    border: 1px solid var(--border-color-deemphasized);
-    outline: none;
+    outline: var(--focus-outline)
   }
-
 
   .add-task-container {
     margin-block: var(--space-small);
@@ -108,38 +108,8 @@
 
     input:checked ~ .task-label {
       color: var(--text-color-deemphasized);
+      text-decoration: line-through;
     }
-
-    input:checked ~ .task-label::after {
-      content: '';
-      position: absolute;
-      inset-inline-start: var(--space-small);
-      inset-block-start: 50%;
-      width: 100%;
-      height: var(--space-xxsmall);
-      background-color: var(--newtab-text-primary-color);
-      transform: translateY(-50%);
-    }
-
-    input:checked ~ .task-label.animate-strike::after {
-      width: 100%;
-
-      @media (prefers-reduced-motion: no-preference) {
-        animation: strike 0.25s ease-out forwards;
-        width: 0%;
-      }
-    }
-
-    @keyframes strike {
-      from {
-        width: 0%;
-      }
-
-      to {
-        width: 100%;
-      }
-    }
-
 
     moz-button {
       align-self: flex-start;
@@ -150,7 +120,9 @@
       }
     }
 
-    &:hover, &:focus-visible, &:focus-within {
+    &:hover,
+    &:focus-visible,
+    &:focus-within {
       background: var(--button-background-color);
 
       moz-button {
@@ -179,5 +151,35 @@
   .empty-list-text {
     padding-inline: var(--space-large);
     color: var(--text-color-deemphasized);
+  }
+
+  .completed-task-wrapper summary {
+    list-style: none;
+
+    .completed-title {
+      color: var(--text-color-deemphasized);
+      position: relative;
+
+      &::after {
+        content: '';
+        -moz-context-properties: fill;
+        fill: var(--text-color-deemphasized);
+        background-image: url('chrome://global/skin/icons/arrow-right.svg');
+        height: var(--space-large);
+        width: var(--space-large);
+        position: absolute;
+        inset-inline-end: calc(-1 * var(--space-xlarge));
+        inset-block-start: 50%;
+        transform: translateY(-50%);
+      }
+
+      &:dir(rtl)::after {
+        background-image: url('chrome://global/skin/icons/arrow-left.svg');
+      }
+    }
+  }
+
+  .completed-task-wrapper[open] .completed-title::after {
+    background-image: url('chrome://global/skin/icons/arrow-down.svg');
   }
 }
