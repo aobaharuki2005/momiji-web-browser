@@ -160,9 +160,10 @@
           } else {
             let tabs = this.tabs;
             let tabCount = tabs.length;
+            let hasActiveTab = false;
             tabs.forEach((tab, index) => {
               if (tab.selected) {
-                this.hasActiveTab = true;
+                hasActiveTab = true;
               }
 
               // Renumber tabs so that a11y tools can tell users that a given
@@ -170,6 +171,7 @@
               tab.setAttribute("aria-posinset", index + 1);
               tab.setAttribute("aria-setsize", tabCount);
             });
+            this.hasActiveTab = hasActiveTab;
 
             // When a group containing the active tab is collapsed,
             // the overflow count displays the number of additional tabs
@@ -257,10 +259,16 @@
       this.setAttribute("id", val);
     }
 
+    /**
+     * @returns {boolean}
+     */
     get hasActiveTab() {
       return this.hasAttribute("hasactivetab");
     }
 
+    /**
+     * @param {boolean} val
+     */
     set hasActiveTab(val) {
       this.toggleAttribute("hasactivetab", val);
     }
@@ -370,8 +378,25 @@
       }
     }
 
+    /**
+     * @returns {MozTabbrowserTab[]}
+     */
     get tabs() {
       return Array.from(this.children).filter(node => node.matches("tab"));
+    }
+
+    /**
+     * @param {MozTabbrowserTab} tab
+     * @returns {boolean}
+     */
+    isTabVisibleInGroup(tab) {
+      if (this.isBeingDragged) {
+        return false;
+      }
+      if (this.collapsed && !tab.selected) {
+        return false;
+      }
+      return true;
     }
 
     /**
@@ -390,6 +415,20 @@
      */
     set wasCreatedByAdoption(value) {
       this.#wasCreatedByAdoption = value;
+    }
+
+    /**
+     * @returns {boolean}
+     */
+    get isBeingDragged() {
+      return this.hasAttribute("movingtabgroup");
+    }
+
+    /**
+     * @param {boolean} val
+     */
+    set isBeingDragged(val) {
+      this.toggleAttribute("movingtabgroup", val);
     }
 
     /**
@@ -502,6 +541,9 @@
       }
     }
 
+    /**
+     * @param {CustomEvent} event
+     */
     on_TabSelect(event) {
       const { previousTab } = event.detail;
       this.hasActiveTab = event.target.group === this;

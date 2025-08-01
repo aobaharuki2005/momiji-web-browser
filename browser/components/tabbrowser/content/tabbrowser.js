@@ -184,6 +184,7 @@
       window.addEventListener("framefocusrequested", this);
       window.addEventListener("activate", this);
       window.addEventListener("deactivate", this);
+      window.addEventListener("TabGroupCollapse", this);
       window.addEventListener("TabGroupCreateByUser", this);
       window.addEventListener("TabGrouped", this);
       window.addEventListener("TabUngrouped", this);
@@ -7244,6 +7245,11 @@
           }
           break;
         }
+        case "TabGroupCollapse":
+          aEvent.target.tabs.forEach(tab => {
+            this.removeFromMultiSelectedTabs(tab);
+          });
+          break;
         case "TabGroupCreateByUser":
           this.tabGroupMenu.openCreateModal(aEvent.target);
           break;
