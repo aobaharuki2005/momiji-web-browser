@@ -9,11 +9,11 @@
 #include "base/basictypes.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/gfx/gfxVars.h"
 
 #ifdef MOZ_WMF_MEDIA_ENGINE
 #  include "mozilla/StaticPrefs_media.h"
 #  include "mozilla/gfx/GPUProcessManager.h"
+#  include "mozilla/gfx/gfxVars.h"
 #  include "mozilla/ipc/UtilityProcessManager.h"
 #  include "mozilla/layers/PVideoBridge.h"
 #  include "mozilla/layers/VideoBridgeParent.h"
@@ -70,7 +70,13 @@ nsresult UtilityMediaServiceChild::BindToUtilityProcess(
     return NS_ERROR_FAILURE;
   }
 
-  nsTArray<gfx::GfxVarUpdate> updates = gfx::gfxVars::FetchNonDefaultVars();
+  nsTArray<gfx::GfxVarUpdate> updates;
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  // Only MFCDM process needs gfxVars
+  if (mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+    updates = gfx::gfxVars::FetchNonDefaultVars();
+  }
+#endif
   if (!aUtilityParent->SendStartUtilityMediaService(
           std::move(utilityMediaServiceParentEnd), std::move(updates))) {
     MOZ_ASSERT(false, "StartUtilityMediaService service failure");
@@ -87,7 +93,11 @@ nsresult UtilityMediaServiceChild::BindToUtilityProcess(
 
 void UtilityMediaServiceChild::ActorDestroy(ActorDestroyReason aReason) {
   MOZ_ASSERT(NS_IsMainThread());
-  gfx::gfxVars::RemoveReceiver(this);
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  if (mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+    gfx::gfxVars::RemoveReceiver(this);
+  }
+#endif
   Shutdown(mSandbox);
 }
 
@@ -98,7 +108,11 @@ void UtilityMediaServiceChild::Bind(
     MOZ_ASSERT_UNREACHABLE("Failed to bind UtilityMediaServiceChild!");
     return;
   }
-  gfx::gfxVars::AddReceiver(this);
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  if (mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+    gfx::gfxVars::AddReceiver(this);
+  }
+#endif
 }
 
 /* static */
@@ -126,11 +140,6 @@ UtilityMediaServiceChild::RecvUpdateMediaCodecsSupported(
   return IPC_OK();
 }
 
-void UtilityMediaServiceChild::OnVarChanged(
-    const nsTArray<gfx::GfxVarUpdate>& aVar) {
-  SendUpdateVar(aVar);
-}
-
 #ifdef MOZ_WMF_MEDIA_ENGINE
 mozilla::ipc::IPCResult
 UtilityMediaServiceChild::RecvCompleteCreatedVideoBridge() {
@@ -138,6 +147,12 @@ UtilityMediaServiceChild::RecvCompleteCreatedVideoBridge() {
   MOZ_ASSERT(mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM);
   mHasCreatedVideoBridge = State::Created;
   return IPC_OK();
+}
+
+void UtilityMediaServiceChild::OnVarChanged(
+    const nsTArray<gfx::GfxVarUpdate>& aVar) {
+  MOZ_ASSERT(mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM);
+  SendUpdateVar(aVar);
 }
 
 void UtilityMediaServiceChild::OnCompositorUnexpectedShutdown() {
