@@ -3532,9 +3532,9 @@ function _computeSrcElementFromSrcSelection(aSrcSelection) {
  * @param {Element} aParams.srcElement
  *                The element to start dragging.  If srcSelection is
  *                set, this is computed for element at focus node.
- * @param {Selection|nil} aParams.srcSelection
+ * @param {Selection|null} aParams.srcSelection
  *                The selection to start to drag, set null if srcElement is set.
- * @param {Element|nil} aParams.destElement
+ * @param {Element|null} aParams.destElement
  *                The element to drop on. Pass null to emulate a drop on an invalid target.
  * @param {number} aParams.srcX
  *                The initial x coordinate inside srcElement or ignored if srcSelection is set.
@@ -4161,7 +4161,7 @@ async function synthesizePlainDragAndCancel(
  *                targetElement.  Default is sourceBrowsingCxt.
  * @param {Element} aParams.srcElement
  *                The element to drag.
- * @param {Element|nil} aParams.targetElement
+ * @param {Element|null} aParams.targetElement
  *                The element to drop on.
  * @param {number} aParams.step
  *                The 2D step for mousemoves
