@@ -38,6 +38,28 @@ struct SVGViewBox {
     return SVGViewBox(x * m, y * m, width * m, height * m);
   }
 
+  bool IsFinite() const {
+    if (none) {
+      return true;
+    }
+    return std::isfinite(x) && std::isfinite(y) && std::isfinite(width) &&
+           std::isfinite(height);
+  }
+
+  bool IsEmpty() const { return !none && (width <= .0f || height <= .0f); }
+
+  bool IsValid() const { return IsFinite() && !IsEmpty(); }
+
+  friend std::ostream& operator<<(std::ostream& stream,
+                                  const SVGViewBox& aViewBox) {
+    if (aViewBox.none) {
+      return stream << "(none)";
+    }
+    return stream << "(x=" << aViewBox.x << ", y=" << aViewBox.y
+                  << ", w=" << aViewBox.width << ", h=" << aViewBox.height
+                  << ')';
+  }
+
   static nsresult FromString(const nsAString& aStr, SVGViewBox* aViewBox);
 };
 
@@ -72,8 +94,7 @@ class SVGAnimatedViewBox {
    */
   bool IsExplicitlySet() const {
     if (mAnimVal || mHasBaseVal) {
-      const SVGViewBox& rect = GetAnimValue();
-      return rect.none || (rect.width >= 0 && rect.height >= 0);
+      return GetAnimValue().IsValid();
     }
     return false;
   }

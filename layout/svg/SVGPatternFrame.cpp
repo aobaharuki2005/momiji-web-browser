@@ -630,7 +630,7 @@ gfxMatrix SVGPatternFrame::ConstructCTM(const SVGAnimatedViewBox& aViewBox,
   const SVGViewBox& viewBox =
       aViewBox.GetAnimValue() * Style()->EffectiveZoom().ToFloat();
 
-  if (viewBox.height <= 0.0f || viewBox.width <= 0.0f) {
+  if (!viewBox.IsValid()) {
     return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // singular
   }
 

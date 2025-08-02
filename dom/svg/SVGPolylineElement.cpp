@@ -44,9 +44,17 @@ already_AddRefed<Path> SVGPolylineElement::BuildPath(PathBuilder* aBuilder) {
 
   float zoom = UserSpaceMetrics::GetZoom(this);
 
-  aBuilder->MoveTo(points[0] * zoom);
+  Point zoomedPoint = Point(points[0]) * zoom;
+  if (!zoomedPoint.IsFinite()) {
+    return nullptr;
+  }
+  aBuilder->MoveTo(zoomedPoint);
   for (uint32_t i = 1; i < points.Length(); ++i) {
-    aBuilder->LineTo(points[i] * zoom);
+    zoomedPoint = Point(points[i]) * zoom;
+    if (!zoomedPoint.IsFinite()) {
+      return nullptr;
+    }
+    aBuilder->LineTo(zoomedPoint);
   }
 
   return aBuilder->Finish();

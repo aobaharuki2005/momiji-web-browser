@@ -47,17 +47,26 @@ bool SVGPolyElement::AttributeDefinesGeometry(const nsAtom* aName) {
 void SVGPolyElement::GetMarkPoints(nsTArray<SVGMark>* aMarks) {
   const SVGPointList& points = mPoints.GetAnimValue();
 
-  if (!points.Length()) return;
+  if (points.IsEmpty()) {
+    return;
+  }
 
   float zoom = UserSpaceMetrics::GetZoom(this);
 
-  float px = points[0].mX * zoom, py = points[0].mY * zoom, prevAngle = 0.0;
+  float px = points[0].mX * zoom, py = points[0].mY * zoom, prevAngle = 0.0f;
+  if (!(std::isfinite(px) && std::isfinite(py))) {
+    return;
+  }
 
   aMarks->AppendElement(SVGMark(px, py, 0, SVGMark::eStart));
 
   for (uint32_t i = 1; i < points.Length(); ++i) {
     float x = points[i].mX * zoom;
     float y = points[i].mY * zoom;
+    if (!(std::isfinite(x) && std::isfinite(y))) {
+      aMarks->Clear();
+      return;
+    }
     float angle = std::atan2(y - py, x - px);
 
     // Vertex marker.
@@ -85,7 +94,7 @@ bool SVGPolyElement::GetGeometryBounds(Rect* aBounds,
                                        const Matrix* aToNonScalingStrokeSpace) {
   const SVGPointList& points = mPoints.GetAnimValue();
 
-  if (!points.Length()) {
+  if (points.IsEmpty()) {
     // Rendering of the element is disabled
     aBounds->SetEmpty();
     return true;
@@ -101,17 +110,20 @@ bool SVGPolyElement::GetGeometryBounds(Rect* aBounds,
   if (aToBoundsSpace.IsRectilinear()) {
     // We can avoid transforming each point and just transform the result.
     // Important for large point lists.
-    Rect bounds(points[0] * zoom, Size());
+
+    Rect bounds(Point(points[0]) * zoom, Size());
     for (uint32_t i = 1; i < points.Length(); ++i) {
-      bounds.ExpandToEnclose(points[i] * zoom);
+      bounds.ExpandToEnclose(Point(points[i]) * zoom);
     }
     *aBounds = aToBoundsSpace.TransformBounds(bounds);
   } else {
-    *aBounds = Rect(aToBoundsSpace.TransformPoint(points[0] * zoom), Size());
+    *aBounds =
+        Rect(aToBoundsSpace.TransformPoint(Point(points[0]) * zoom), Size());
     for (uint32_t i = 1; i < points.Length(); ++i) {
-      aBounds->ExpandToEnclose(aToBoundsSpace.TransformPoint(points[i] * zoom));
+      aBounds->ExpandToEnclose(
+          aToBoundsSpace.TransformPoint(Point(points[i]) * zoom));
     }
   }
-  return true;
+  return aBounds->IsFinite();
 }
 }  // namespace mozilla::dom
