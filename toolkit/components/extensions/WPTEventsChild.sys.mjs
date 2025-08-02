@@ -13,12 +13,13 @@ export class WPTEventsChild extends JSWindowActorChild {
   actorCreated() {
     let win = this.contentWindow.wrappedJSObject;
     if (!Object.hasOwn(win, "browser")) {
-      let test = {
-        onMessage: {
-          addListener: arg => this.#addListener(arg),
-          removeListener: arg => this.#removeListener(arg),
-        },
-      };
+      let test = {};
+      for (let name of Object.keys(this.#events)) {
+        test[name] = {
+          addListener: arg => this.#addListener(name, arg),
+          removeListener: arg => this.#removeListener(name, arg),
+        };
+      }
       Object.defineProperty(win, "browser", {
         configurable: true,
         enumerable: true,
@@ -29,31 +30,40 @@ export class WPTEventsChild extends JSWindowActorChild {
   }
 
   receiveMessage({ name, data }) {
-    for (let callback of this.#listeners) {
+    for (let callback of this.#events[name]) {
       try {
-        callback(name, Cu.cloneInto(data, this.contentWindow));
+        callback(Cu.cloneInto(data, this.contentWindow));
       } catch (e) {
         Cu.reportError(
-          `Error in browser.test.onMessage listener: ${e.message}`,
+          `Error in browser.test.${name} listener: ${e.message}`,
           e.stack
         );
       }
     }
   }
 
-  #addListener(callback) {
-    if (!this.#listeners.size) {
-      this.sendAsyncMessage("onMessage.addListener");
+  #addListener(name, callback) {
+    if (!this.#listenerCount()) {
+      this.sendAsyncMessage("addListener");
     }
-    this.#listeners.add(callback);
+    this.#events[name].add(callback);
   }
 
-  #removeListener(callback) {
-    this.#listeners.delete(callback);
-    if (!this.#listeners.size) {
-      this.sendAsyncMessage("onMessage.removeListener");
+  #removeListener(name, callback) {
+    this.#events[name].delete(callback);
+    if (!this.#listenerCount()) {
+      this.sendAsyncMessage("removeListener");
     }
   }
 
-  #listeners = new Set();
+  #listenerCount() {
+    return Object.values(this.#events).reduce((sum, ev) => sum + ev.size, 0);
+  }
+
+  #events = {
+    onTestStarted: new Set(),
+    onTestFinished: new Set(),
+    onAssertEquality: new Set(),
+    onAssert: new Set(),
+  };
 }

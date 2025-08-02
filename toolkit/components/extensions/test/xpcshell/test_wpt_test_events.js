@@ -16,17 +16,17 @@ function loadPage(domain, query = "") {
 
 async function requestAndCollect(unsubscribe = false) {
   let done = Promise.withResolvers();
-  let messages = [];
+  let events = [];
 
-  function onMessage({ detail }) {
-    Assert.ok(true, "Received message: " + JSON.stringify(detail));
-    messages.push(detail);
+  function onEvent({ detail }) {
+    Assert.ok(true, "Received event: " + JSON.stringify(detail));
+    events.push(detail);
     if (detail.error || detail.done || detail.data.remainingTests === 0) {
-      done.resolve(messages);
-      this.content.removeEventListener("testMsg", onMessage);
+      done.resolve(events);
+      this.content.removeEventListener("testEvent", onEvent);
     }
   }
-  this.content.addEventListener("testMsg", onMessage);
+  this.content.addEventListener("testEvent", onEvent);
 
   if (!unsubscribe) {
     this.content.wrappedJSObject.subscribe();
@@ -39,7 +39,7 @@ async function requestAndCollect(unsubscribe = false) {
 async function runTestExt() {
   // Intentionally not using ExtensionWrapper here, we don't want
   // browser.test.assertX() assertions to reach the test harness,
-  // and explicitly check for expected messages in tests below.
+  // and explicitly check for expected events in tests below.
   let ext = ExtensionTestCommon.generate({
     async background() {
       await browser.test.runTests([
@@ -65,9 +65,9 @@ async function runTestExt() {
 
   let done = Promise.withResolvers();
 
-  // eslint-disable-next-line mozilla/balanced-listeners
-  ext.on("test-message", (_, msg) => {
+  ext.on("test-message", function fn(_, msg) {
     if (msg === "test-ext-done") {
+      ext.off("test-message", fn);
       done.resolve(ext);
     }
   });
@@ -76,16 +76,16 @@ async function runTestExt() {
   await ExtensionTestCommon.unloadTestExtension(ext);
 }
 
-function checkMessages(msgs, info) {
+function checkEvents(events, info) {
   Assert.deepEqual(
-    msgs,
+    events,
     [
       {
-        message: "test-started",
+        event: "onTestStarted",
         data: { testName: "unnamed_test_1" },
       },
       {
-        message: "assert-equality",
+        event: "onAssertEquality",
         data: {
           result: true,
           message: "Same value.",
@@ -94,19 +94,19 @@ function checkMessages(msgs, info) {
         },
       },
       {
-        message: "assert",
+        event: "onAssert",
         data: { result: true, message: "Truthy after await." },
       },
       {
-        message: "test-finished",
+        event: "onTestFinished",
         data: { remainingTests: 2 },
       },
       {
-        message: "test-started",
+        event: "onTestStarted",
         data: { testName: "subTest2" },
       },
       {
-        message: "assert",
+        event: "onAssert",
         data: {
           result: true,
           message:
@@ -114,19 +114,19 @@ function checkMessages(msgs, info) {
         },
       },
       {
-        message: "assert",
+        event: "onAssert",
         data: { result: false, message: "Actually false." },
       },
       {
-        message: "test-finished",
+        event: "onTestFinished",
         data: { remainingTests: 1 },
       },
       {
-        message: "test-started",
+        event: "onTestStarted",
         data: { testName: "still_runs_despite_previous_tast_failed" },
       },
       {
-        message: "assert-equality",
+        event: "onAssertEquality",
         data: {
           result: false,
           message: "No type coercion.",
@@ -135,11 +135,11 @@ function checkMessages(msgs, info) {
         },
       },
       {
-        message: "test-finished",
+        event: "onTestFinished",
         data: { remainingTests: 0 },
       },
     ],
-    `Expected messages - ${info}`
+    `Expected events - ${info}`
   );
 }
 
@@ -159,20 +159,20 @@ add_task(async function test_not_available_before_actor_init() {
   Assert.deepEqual(
     results,
     [{ error: "Missing browser namespace." }],
-    "browser.onMessage not defined before WPTMessages actor initializion."
+    "browser.test not defined before WPTEvents actor initializion."
   );
 });
 
-add_task(async function test_onMessage_queuing_scenarios() {
-  // Importing to trigger the WPTMessages actor initialization.
+add_task(async function test_events_queuing_scenarios() {
+  // Importing to trigger the WPTEvents actor initialization.
   ChromeUtils.importESModule("resource://gre/modules/ExtensionParent.sys.mjs");
 
-  info("Run test ext before onMessage listener subscribed.");
+  info("Run test ext before event listener subscribed.");
   await runTestExt();
   let page1 = await loadPage(WPT, 1);
 
   let results1 = await page1.spawn([], requestAndCollect);
-  checkMessages(results1, "Correct messages queued.");
+  checkEvents(results1, "Correct events queued.");
 
   info("Open second page with listener without closing the first one.");
   let page2 = await loadPage(WPT, 2);
@@ -180,7 +180,7 @@ add_task(async function test_onMessage_queuing_scenarios() {
   let results2 = page2.spawn([], requestAndCollect);
 
   await runTestExt();
-  checkMessages(await results2, "Newest listener received messages.");
+  checkEvents(await results2, "Newest listener received messages.");
 
   let unsub1 = await page1.spawn([true], requestAndCollect);
   Assert.deepEqual(
@@ -191,7 +191,7 @@ add_task(async function test_onMessage_queuing_scenarios() {
 
   let again2 = page2.spawn([], requestAndCollect);
   await runTestExt();
-  checkMessages(await again2, "Second listener still received messages.");
+  checkEvents(await again2, "Second listener still received messages.");
 
   info("Closing both listeners.");
   await page1.close();
@@ -202,12 +202,12 @@ add_task(async function test_onMessage_queuing_scenarios() {
 
   let page3 = await loadPage(WPT, 3);
   let results3 = await page3.spawn([], requestAndCollect);
-  checkMessages(results3, "Third listener got queued messages.");
+  checkEvents(results3, "Third listener got queued messages.");
   await page3.close();
 });
 
 add_task(async function test_not_available_on_example_com() {
-  // Importing to trigger the WPTMessages actor initialization.
+  // Importing to trigger the WPTEvents actor initialization.
   ChromeUtils.importESModule("resource://gre/modules/ExtensionParent.sys.mjs");
 
   let page = await loadPage("example.com");
@@ -217,6 +217,6 @@ add_task(async function test_not_available_on_example_com() {
   Assert.deepEqual(
     results,
     [{ error: "Missing browser namespace." }],
-    "browser.onMessage not defined on example.com."
+    "browser.test not defined on example.com."
   );
 });

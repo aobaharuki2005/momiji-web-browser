@@ -13,10 +13,10 @@ const lazy = XPCOMUtils.declareLazy({
 
 // Map events with positional params to WPT messages with named properties.
 const EVENTS = {
-  "test-task-start": "test-started testName",
-  "test-task-done": "test-finished remainingTests",
-  "test-eq": "assert-equality result message expectedValue actualValue",
-  "test-result": "assert result message",
+  "test-task-start": "onTestStarted testName",
+  "test-task-done": "onTestFinished remainingTests",
+  "test-eq": "onAssertEquality result message expectedValue actualValue",
+  "test-result": "onAssert result message",
 };
 
 // Routes extension test results to web-platform.test child actors.
@@ -47,10 +47,10 @@ export class WPTEventsParent extends JSWindowActorParent {
 
   receiveMessage({ name }) {
     switch (name) {
-      case "onMessage.addListener":
+      case "addListener":
         WPTEventsParent.#setListener(this);
         break;
-      case "onMessage.removeListener":
+      case "removeListener":
         WPTEventsParent.#removeListener(this);
         break;
     }
