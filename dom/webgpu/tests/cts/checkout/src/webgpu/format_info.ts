@@ -297,7 +297,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
         readWriteStorage: false,
         bytes: 2,
       },
-      colorRender: { blend: true, resolve: true, byteCost: 2, alignment: 2 },
+      colorRender: { blend: true, resolve: false, byteCost: 2, alignment: 2 },
       multisample: true,
       feature: 'texture-formats-tier1',
       /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
@@ -311,7 +311,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
         readWriteStorage: false,
         bytes: 2,
       },
-      colorRender: { blend: true, resolve: true, byteCost: 2, alignment: 2 },
+      colorRender: { blend: true, resolve: false, byteCost: 2, alignment: 2 },
       multisample: true,
       feature: 'texture-formats-tier1',
       /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
@@ -365,7 +365,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
         readWriteStorage: false,
         bytes: 4,
       },
-      colorRender: { blend: true, resolve: true, byteCost: 4, alignment: 2 },
+      colorRender: { blend: true, resolve: false, byteCost: 4, alignment: 2 },
       multisample: true,
       feature: 'texture-formats-tier1',
       /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
@@ -379,7 +379,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
         readWriteStorage: false,
         bytes: 4,
       },
-      colorRender: { blend: true, resolve: true, byteCost: 4, alignment: 2 },
+      colorRender: { blend: true, resolve: false, byteCost: 4, alignment: 2 },
       multisample: true,
       feature: 'texture-formats-tier1',
       /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
@@ -433,7 +433,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
         readWriteStorage: false,
         bytes: 8,
       },
-      colorRender: { blend: true, resolve: true, byteCost: 8, alignment: 4 },
+      colorRender: { blend: true, resolve: false, byteCost: 8, alignment: 4 },
       multisample: true,
       feature: 'texture-formats-tier1',
       /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
@@ -447,7 +447,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
         readWriteStorage: false,
         bytes: 8,
       },
-      colorRender: { blend: true, resolve: true, byteCost: 8, alignment: 2 },
+      colorRender: { blend: true, resolve: false, byteCost: 8, alignment: 2 },
       multisample: true,
       feature: 'texture-formats-tier1',
       /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
@@ -2534,11 +2534,9 @@ export function isTextureFormatUsableAsStorageFormatInCreateShaderModule(
   device: GPUDevice,
   format: GPUTextureFormat
 ): boolean {
-  if (format === 'bgra8unorm') {
-    return true;
-  }
-  const info = kTextureFormatInfo[format];
-  return !!(info.color?.storage || info.depth?.storage || info.stencil?.storage);
+  return kPossibleStorageTextureFormats.includes(
+    format as (typeof kPossibleStorageTextureFormats)[number]
+  );
 }
 
 function isTextureFormatUsableAsReadWriteStorageTexture(
