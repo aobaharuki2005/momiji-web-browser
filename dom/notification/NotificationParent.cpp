@@ -37,7 +37,7 @@ class NotificationObserver final : public nsIObserver {
 
   NS_IMETHODIMP Observe(nsISupports* aSubject, const char* aTopic,
                         const char16_t* aData) override {
-    AlertTopic topic = ToAlertTopic(aTopic);
+    AlertTopic topic = ToAlertTopic(aTopic, aData);
 
     // These two never fire any content event directly
     if (topic == AlertTopic::Disable) {
@@ -78,7 +78,8 @@ class NotificationObserver final : public nsIObserver {
       return NS_OK;
     }
 
-    MOZ_ASSERT(topic == AlertTopic::Click || topic == AlertTopic::Finished);
+    MOZ_ASSERT(topic == AlertTopic::Click || topic == AlertTopic::Finished ||
+               topic == AlertTopic::Closed);
 
     if (topic == AlertTopic::Click) {
       nsCOMPtr<nsIAlertAction> action = do_QueryInterface(aSubject);
@@ -97,7 +98,7 @@ class NotificationObserver final : public nsIObserver {
     nsAutoCString originSuffix;
     MOZ_TRY(mPrincipal->GetOriginSuffix(originSuffix));
 
-    MOZ_ASSERT(topic == AlertTopic::Finished);
+    MOZ_ASSERT(topic == AlertTopic::Finished || topic == AlertTopic::Closed);
     (void)NS_WARN_IF(NS_FAILED(
         AdjustPushQuota(mPrincipal, NotificationStatusChange::Closed)));
     (void)NS_WARN_IF(
@@ -110,7 +111,7 @@ class NotificationObserver final : public nsIObserver {
  private:
   virtual ~NotificationObserver() = default;
 
-  static AlertTopic ToAlertTopic(const char* aTopic) {
+  static AlertTopic ToAlertTopic(const char* aTopic, const char16_t* aData) {
     if (!strcmp("alertdisablecallback", aTopic)) {
       return AlertTopic::Disable;
     }
@@ -124,6 +125,14 @@ class NotificationObserver final : public nsIObserver {
       return AlertTopic::Show;
     }
     if (!strcmp("alertfinished", aTopic)) {
+      if (aData && nsDependentString(aData) == u"close"_ns) {
+        // Backends with asynchronous system API may hint that they are
+        // intentionally closing the notification, to disambiguate from an early
+        // alertfinished which is recognized as an error.
+        // (Not introducing alertclose for compatibility with existing browser
+        // script callers.)
+        return AlertTopic::Closed;
+      }
       return AlertTopic::Finished;
     }
     MOZ_ASSERT_UNREACHABLE("Unknown alert topic");
@@ -151,21 +160,26 @@ nsresult NotificationParent::HandleAlertTopic(AlertTopic aTopic) {
     mResolver.take().value()(CopyableErrorResult());
     return NS_OK;
   }
-  if (aTopic == AlertTopic::Finished) {
-    if (mResolver) {
+  if (mResolver) {
+    if (aTopic == AlertTopic::Closed) {
+      // Closing without ever being shown, but intentionally by the backend
+      mResolver.take().value()(CopyableErrorResult());
+    } else if (aTopic == AlertTopic::Finished) {
       // alertshow happens first before alertfinished, and it should have
       // nullified mResolver. If not it means it failed to show and is bailing
       // out.
       // NOTE(krosylight): The spec does not define what to do when a
-      // permission-granted notification fails to open, we throw TypeError here
-      // as that's the error for when permission is denied.
+      // permission-granted notification fails to open, we throw TypeError
+      // here as that's the error for when permission is denied.
       CopyableErrorResult rv;
       rv.ThrowTypeError(
           "Failed to show notification, potentially because the browser did "
           "not have the corresponding OS-level permission."_ns);
       mResolver.take().value()(rv);
     }
+  }
 
+  if (aTopic == AlertTopic::Finished || aTopic == AlertTopic::Closed) {
     // Unpersisted already and being unregistered already by nsIAlertsService
     mDangling = true;
     Close();
