@@ -1398,9 +1398,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Escafar l’istoric</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">Istoric escafat</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Istoric escafat</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">%1$s suprimit</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s suprimit</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Suprimir</string>
   <!--
@@ -3453,7 +3453,7 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Percórrer las extensions</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">Installar le widget de recèrca</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Installar le widget de recèrca</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

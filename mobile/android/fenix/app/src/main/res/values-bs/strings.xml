@@ -1518,9 +1518,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Obriši historiju</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">Historija obrisana</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Historija obrisana</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">Obrisao %1$s</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Obrisao %1$s</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Obriši</string>
   <!--
@@ -1705,7 +1705,7 @@
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Pomozite da %1$s bude bolji za sve. Zaposleni u Mozilli koriste informacije koje šaljete za rješavanje problema na web stranici.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description_2">Vaš izvještaj nam pomaže da razumijemo i ispravimo probleme u %1$s kako bismo ga učinili boljim za sve. Saznajte više</string>
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Vaš izvještaj nam pomaže da razumijemo i ispravimo probleme u %1$s kako bismo ga učinili boljim za sve. Saznajte više</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Saznajte više</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -3738,7 +3738,7 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Istražite ekstenzije</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">Instalirajte widget za pretraživanje</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Instalirajte widget za pretraživanje</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

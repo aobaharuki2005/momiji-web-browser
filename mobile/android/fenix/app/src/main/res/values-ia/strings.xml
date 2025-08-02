@@ -1534,9 +1534,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Deler le chronologia</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">Chronologia delite</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Chronologia delite</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">Delite %1$s</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Delite %1$s</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Deler</string>
   <!--
@@ -1721,7 +1721,9 @@
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Adjutar a render %1$s melior pro totes. Le empleatos de Mozilla usa le info que tu invia pro remediar problemas de sito web.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description_2">Tu reporto adjuta nos a comprender e resolver problemas in %1$s pro render lo melior pro omnes. Pro saper plus</string>
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Tu reporto adjuta nos a comprender e resolver problemas in %1$s pro render lo melior pro omnes. Pro saper plus</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">Tu reporto adjuta nos a comprender e resolver problemas in %1$s pro render lo melior pro omnes. %2$s</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Pro saper plus</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -3763,7 +3765,9 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Explorar extensiones</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">Installar le widget de recerca</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Installar le widget de recerca</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">Explorar widget de recerca</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

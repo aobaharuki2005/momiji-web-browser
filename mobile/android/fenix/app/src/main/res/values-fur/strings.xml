@@ -1493,9 +1493,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Scancele la cronologjie</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">Cronologjie eliminade</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Cronologjie eliminade</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">%1$s eliminât</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s eliminât</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Elimine</string>
   <!--
@@ -1680,7 +1680,7 @@
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Judinus a miorâ %1$s par ducj. I dipendents di Mozilla a doprin lis informazions inviadis par risolvi i problemis cui sîts web.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description_2">La tô segnalazion nus jude a capî e a comedâ i problemis in %1$s par rindilu miôr par ducj. Plui informazions</string>
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">La tô segnalazion nus jude a capî e a comedâ i problemis in %1$s par rindilu miôr par ducj. Plui informazions</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Plui informazions</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -3709,7 +3709,7 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Esplore lis estensions</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">Instale il widget di ricercje</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Instale il widget di ricercje</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

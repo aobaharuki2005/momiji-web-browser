@@ -1437,9 +1437,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">നാള്‍വഴികൾ ഇല്ലാതാക്കുക</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">നാൾവഴി മായച്ചു</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">നാൾവഴി മായച്ചു</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">%1$s നീക്കം ചെയ്തു</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s നീക്കം ചെയ്തു</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">നീക്കം ചെയ്യുക</string>
   <!--
@@ -1624,7 +1624,7 @@
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">എല്ലാവൎക്കുമായി %1$s-നെ മെച്ചപ്പെടുത്താൻ സഹായിക്കുക. മോസില്ല ഉദ്യോഗസ്ഥന്മാർ താങ്ങൾ അയയ്ക്കുന്ന വിവരങ്ങൾ വെബ്സ്ഥാനക്കുഴപ്പങ്ങളെ പരിഹരിക്കാൻ ഉപയോഗിക്കുന്നു.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description_2">%1$s-ലുള്ള കുഴപ്പങ്ങൾ നന്നാക്കാനും എല്ലാവൎക്കതു മെച്ചപ്പെടുത്താനും താങ്ങളുടെ റിപ്പോർട്ട് ഞങ്ങളെ തുണയ്ക്കുന്നു. കൂടുതലറിയുക</string>
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">%1$s-ലുള്ള കുഴപ്പങ്ങൾ നന്നാക്കാനും എല്ലാവൎക്കതു മെച്ചപ്പെടുത്താനും താങ്ങളുടെ റിപ്പോർട്ട് ഞങ്ങളെ തുണയ്ക്കുന്നു. കൂടുതലറിയുക</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">കൂടുതലറിയുക</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -3534,7 +3534,7 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">വിപുലീകരണങ്ങൾ കാണുക</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">തിരയൽ വിജ്ജറ്റു് സ്ഥാപിക്കുക</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">തിരയൽ വിജ്ജറ്റു് സ്ഥാപിക്കുക</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 
