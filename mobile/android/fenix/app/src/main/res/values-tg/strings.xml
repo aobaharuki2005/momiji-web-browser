@@ -632,6 +632,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Вақте ки шумо хабар медиҳед, ки чӣ тавр браузери «Firefox»-ро пайдо кардед ва онро истифода мебаред, шумо ба мо барои муаррифӣ кардани браузер ба шумораи зиёди одамон кумак мерасонед.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Маълумоти камтаринро ба шарикони технологияи бозоршиносии «Mozilla» мубодила кунед. Ин маълумот ҳеҷ вақт фурӯхта намешавад ё нисбат ба шумо барои нишон додани таблиғ истифода намешавад.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Маълумотро ба шарикони технологияи бозоршиносии «Mozilla» мубодила кунед. Ин маълумот ҳеҷ вақт фурӯхта намешавад ё нисбат ба шумо барои нишон додани таблиғ истифода намешавад.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Чӣ тавр мо маълумотро истифода мебарем</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1213,6 +1215,8 @@
   <string name="preferences_daily_usage_ping_learn_more">Маълумоти бештар дар бораи пинги истифодабарии ҳаррӯза</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Ба таври худкор фиристодани гузоришҳо дар бораи вайронӣ</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">Гузориш фиристода шуд</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Ин ба мо барои ташхис ва ислоҳ кардани хатоҳои браузер кумак мекунад. Гузоришҳо метавонанд маълумоти шахсӣ ва махфиро дар бар гиранд.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1782,6 +1786,8 @@
   <string name="tab_crash_restore">Барқарор кардани варақа</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">«%s» маҷбуран аз нав оғоз карда шуд</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">«%s» вайрон шуд. Гузоришеро мефиристонед?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Шумо як гузориши ирсолнашуда дар бораи вайронӣ доред, ки ба садамаҳо ё вайрониҳои тафтишшаванда мувофиқат мекунанд. Фиристодани он ба мо барои беҳтар кардани «%1$s» кумак мекунад. Агар ин огоҳнома пӯшида шавад, ин гузориш ба назар гирифта намешавад.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1790,10 +1796,17 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Ба таври худкор фиристодани гузоришҳо дар бораи вайронӣ</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Пӯшидан</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">ПӮШИДАН</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Ҳеҷ гоҳ дигар нишон дода нашавад</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">ФИРИСТОДАН</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Фиристодани гузоришҳо дар бораи вайронӣ</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">Гузоришҳо дар бораи вайронӣ ба мо барои ташхис ва ислоҳ кардани хатоҳои браузер кумам мерасонанд. Гузоришҳо метавонанд маълумоти шахсӣ ва махфиро дар бар гиранд. %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">Маълумоти бештар</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Маълумоти бештар</string>
   <!--

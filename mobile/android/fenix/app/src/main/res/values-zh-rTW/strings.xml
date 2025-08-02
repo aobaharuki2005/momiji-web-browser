@@ -632,6 +632,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">當您分享如何發現 Firefox 以及是如何使用的時候，就能幫助我們將瀏覽器介紹給更多人。</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">與 Mozilla 的行銷技術夥伴分享最小幅度的資料，此資料不會被賣掉，或用於向您顯示廣告。</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">與 Mozilla 的行銷技術夥伴分享資料，此資料不會被賣掉，或用於向您顯示廣告。</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">我們會如何使用該資料</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1213,6 +1215,8 @@
   <string name="preferences_daily_usage_ping_learn_more">了解每日使用情況回報的更多資訊</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">自動傳送錯誤報告</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">已送出報告</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">此資料可幫助我們找出瀏覽器的問題並進行修正。報告內容可能會包含私人或敏感資料。</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1782,6 +1786,8 @@
   <string name="tab_crash_restore">還原分頁</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s 必須重新啟動</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s 發生錯誤。要回報這個錯誤嗎？</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">您的裝置上有與目前正在調查中的錯誤相關的錯誤報告。傳送給我們，可幫助改進 %1$s。關閉此通知則可忽略此報告。</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1790,10 +1796,17 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">自動傳送錯誤報告</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">關閉</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">關閉</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">別再顯示</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">傳送</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">傳送錯誤報表</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">錯誤報告可幫助我們找出瀏覽器的問題並進行修正。報告內容可能會包含私人或敏感資料。%s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">更多資訊</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">更多資訊</string>
   <!--

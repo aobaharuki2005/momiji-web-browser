@@ -1804,6 +1804,8 @@
   <string name="unsubmitted_crash_dialog_positive_button_2">ΑΠΟΣΤΟΛΗ</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Αποστολή αναφοράς κατάρρευσης</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">Οι αναφορές κατάρρευσης μάς βοηθούν να διαγνώσουμε και να διορθώσουμε προβλήματα του προγράμματος περιήγησης. Οι αναφορές ενδέχεται να περιλαμβάνουν προσωπικά ή ευαίσθητα δεδομένα. %s</string>
   <string name="unsubmitted_crash_dialog_learn_more">Μάθετε περισσότερα</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Μάθετε περισσότερα</string>

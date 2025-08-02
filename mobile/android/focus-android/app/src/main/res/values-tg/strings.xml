@@ -150,6 +150,8 @@
     %2$s is the url for the learn-more link.
   -->
   <string name="about_content" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[<p>«%1$s» ба шумо идора медиҳад.</p> <p>Онро ҳамчун браузери хусусӣ истифода баред: <ul> <li>Ҷустуҷӯ кунед ва рост дар дохили барнома тамошо намоед</li> <li>Васоити пайгириро манъ кунед (ё танзимотро иваз карда, ба васоити пайгирӣ иҷозат диҳед)</li> <li>Кукиҳоро нест кунед, аз он ҷумла таърихи ҷустуҷӯ ва тамошоро пок намоед</li> </ul> </p> <p>«%1$s» аз ҷониши «Mozilla» истеҳсол карда шудааст. Мақсади мо дар мусоидат ба Интернети солим ва кушод мебошад.<br/> <a href=\"%2$s\">Маълумоти бештар</a></p>]]></string>
+  <!-- A link to SUMO at the bottom of About Focus screen. -->
+  <string name="about_screen_learn_more">Маълумоти бештар</string>
   <!-- Header for the Privacy and Security settings menu -->
   <string name="preference_privacy_and_security_header">Махфият ва амният</string>
   <!-- Preference summary for settings related to privacy and security -->

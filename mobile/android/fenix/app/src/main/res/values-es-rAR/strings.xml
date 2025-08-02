@@ -633,7 +633,7 @@
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Compartí datos mínimos con los socios de tecnología de marketing de Mozilla. Estos datos nunca se venden ni se utilizan para mostrarte anuncios.</string>
   <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_out_checkbox">Compartí datos con los socios tecnológicos de marketing de Mozilla. Estos datos nunca se venden ni se utilizan para mostrarte publicidad.</string>
+  <string name="onboarding_marketing_opt_out_checkbox">Compartí datos con los socios de tecnología de marketing de Mozilla. Estos datos nunca se venden ni se utilizan para mostrarte publicidades.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Como usamos los datos</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->

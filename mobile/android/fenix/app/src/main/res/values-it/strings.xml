@@ -632,6 +632,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Condividendo il modo in cui hai scoperto Firefox e il fatto che lo utilizzi, ci aiuti a far conoscere il nostro browser a un pubblico più ampio.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Condividi dati minimali con i partner tecnologici per il marketing di Mozilla. Questi dati non vengono mai venduti o utilizzati per mostrarti annunci pubblicitari.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Condividi dati con i partner tecnologici per il marketing di Mozilla. Questi dati non vengono mai venduti o utilizzati per mostrarti annunci pubblicitari.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Come utilizziamo i dati</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1213,6 +1215,8 @@
   <string name="preferences_daily_usage_ping_learn_more">Ulteriori informazioni sul ping di utilizzo giornaliero</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Invia automaticamente segnalazioni di arresto anomalo</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">Segnalazione inviata</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Questo ci aiuta a diagnosticare e risolvere problemi con il browser. Le segnalazioni possono includere dati personali o sensibili.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1782,6 +1786,8 @@
   <string name="tab_crash_restore">Ripristina scheda</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s è stato riavviato</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s si è bloccato. Inviare una segnalazione?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">È presente una segnalazione di arresto anomalo non inviata simile ad altri arresti anomali che stiamo già investigando. Inviandola puoi aiutarci a migliorare %1$s. Chiudendo questa notifica la segnalazione verrà ignorata.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1790,10 +1796,17 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Invia automaticamente segnalazioni di arresto anomalo</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Chiudi</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">CHIUDI</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Non mostrare di nuovo</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">INVIA</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Invia segnalazione</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">Le segnalazioni di arresto anomalo ci aiutano a diagnosticare e risolvere problemi con il browser. Le segnalazioni possono includere dati personali o sensibili. %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">Ulteriori informazioni</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Ulteriori informazioni</string>
   <!--

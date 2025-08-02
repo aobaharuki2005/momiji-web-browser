@@ -29,9 +29,9 @@
   <!-- Placeholder text shown in the search bar when using application search engines -->
   <string name="application_search_hint">Saisissez les termes à rechercher</string>
   <!-- No Open Tabs Message Description -->
-  <string name="no_open_tabs_description">Vos onglets ouverts seront affichés ici.</string>
+  <string name="no_open_tabs_description">Les onglets ouverts seront affichés ici.</string>
   <!-- No Private Tabs Message Description -->
-  <string name="no_private_tabs_description">Les onglets privés sont affichés ici.</string>
+  <string name="no_private_tabs_description">Les onglets privés seront affichés ici.</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">%1$d sélectionnés</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
@@ -632,6 +632,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Quand vous partagez comment vous avez découvert Firefox et que vous l’utilisez, vous nous aidez à faire connaître notre navigateur à plus de monde.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Partagez un minimum de données avec les partenaires en technologies marketing de Mozilla. Ces données ne sont jamais vendues ou utilisées pour vous montrer des publicités.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Partagez des données avec les partenaires en technologies marketing de Mozilla. Ces données ne sont jamais vendues ou utilisées pour vous montrer des publicités.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Notre utilisation des données</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1213,6 +1215,8 @@
   <string name="preferences_daily_usage_ping_learn_more">En savoir plus sur le ping d’utilisation quotidienne</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Envoyer automatiquement les rapports de plantage</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">Rapport envoyé</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Les rapports de plantage nous permettent de diagnostiquer et de corriger des problèmes avec le navigateur. Les rapports peuvent contenir des données personnelles ou sensibles.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1782,6 +1786,8 @@
   <string name="tab_crash_restore">Restaurer l’onglet</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s a dû redémarrer</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s a planté. Envoyer un rapport\u00a0?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Vous avez un rapport de plantage non envoyé qui fait l’objet d’investigations. Nous l’envoyer aidera à améliorer %1$s. Fermer cette notification ignore ce rapport.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1790,10 +1796,17 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Envoyer automatiquement les rapports de plantage</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Fermer</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">FERMER</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Ne plus afficher ce message</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">ENVOYER</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Envoyer le rapport de plantage</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">Les rapports de plantage nous aident à diagnostiquer et à corriger des problèmes avec le navigateur. Les rapports peuvent contenir des données personnelles ou sensibles. %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">En savoir plus</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">En savoir plus</string>
   <!--

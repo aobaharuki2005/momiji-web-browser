@@ -633,7 +633,7 @@
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Comparte datos mínimos cos socios tecnolóxicos de marketing de Mozilla. Estes datos nunca se venden nin se usan para mostrarche anuncios.</string>
   <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_out_checkbox">Comparte datos cos socios tecnolóxicos de marketing de Mozilla. Estes datos nunca se venden nin se usan para mostrarche anuncios.</string>
+  <string name="onboarding_marketing_opt_out_checkbox">Comparte datos cos socios tecnolóxicos de márketing de Mozilla. Estes datos nunca se venden nin se usan para mostrarche anuncios.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Como usamos os datos</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1787,7 +1787,7 @@
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s tivo que reiniciar</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title_2">%s fallou. Enviar un informe?</string>
+  <string name="unsubmitted_crash_dialog_title_2">%s quebrou. Enviar un informe?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Tes un informe de quebra sen enviar relacionado coas quebras que se están investigando. Envialo axudaranos a mellorar %1$s. Ao pechar esta notificación, ignorarase este informe.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1797,7 +1797,7 @@
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Pechar</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
-  <string name="unsubmitted_crash_dialog_negative_button_2">PECHA</string>
+  <string name="unsubmitted_crash_dialog_negative_button_2">PECHAR</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Non amosar de novo</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
@@ -1805,7 +1805,7 @@
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Enviar un informe de quebra</string>
   <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
-  <string name="unsubmitted_crash_dialog_body">Os informes de fallos axúdannos a diagnosticar e solucionar problemas co navegador. Os informes poden incluír datos persoais ou sensibles. %s</string>
+  <string name="unsubmitted_crash_dialog_body">Os informes de quebras axúdannos a diagnosticar e solucionar problemas co navegador. Os informes poden incluír datos persoais ou sensibles. %s</string>
   <string name="unsubmitted_crash_dialog_learn_more">Máis información</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Máis información</string>
