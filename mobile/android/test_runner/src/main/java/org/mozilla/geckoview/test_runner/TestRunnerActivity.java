@@ -37,8 +37,6 @@ import org.mozilla.geckoview.GeckoView;
 import org.mozilla.geckoview.OrientationController;
 import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebExtensionController;
-import org.mozilla.geckoview.WebNotification;
-import org.mozilla.geckoview.WebNotificationDelegate;
 import org.mozilla.geckoview.WebRequestError;
 
 public class TestRunnerActivity extends Activity {
@@ -522,14 +520,6 @@ public class TestRunnerActivity extends Activity {
           @Override
           public GeckoResult<GeckoSession> onOpenWindow(@NonNull String url) {
             return mNavigationDelegate.onNewSession(mSession, url);
-          }
-        });
-
-    sRuntime.setWebNotificationDelegate(
-        new WebNotificationDelegate() {
-          @Override
-          public void onShowNotification(@NonNull WebNotification notification) {
-            notification.show();
           }
         });
   }

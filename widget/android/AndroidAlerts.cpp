@@ -135,7 +135,7 @@ AndroidAlerts::ShowAlert(nsIAlertNotification* aAlert,
   } else if (Maybe<AndroidNotificationTuple> tuple =
                  sNotificationMap->Extract(name)) {
     if (tuple->mObserver) {
-      tuple->mObserver->Observe(nullptr, "alertfinished", u"close");
+      tuple->mObserver->Observe(nullptr, "alertfinished", nullptr);
     }
   }
 
@@ -173,7 +173,7 @@ AndroidAlerts::CloseAlert(const nsAString& aAlertName, bool aContextClosed) {
     // synchronously. (See bug 1975432 to deduplicate this logic)
     // We have to fire alertfinished here as we are closing it ourselves;
     // GeckoView will only send it when it's closed from Android side.
-    tuple->mObserver->Observe(nullptr, "alertfinished", u"close");
+    tuple->mObserver->Observe(nullptr, "alertfinished", nullptr);
   }
 
   java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
