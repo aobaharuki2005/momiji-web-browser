@@ -2462,8 +2462,8 @@ ChromeUtils.defineLazyGetter(ExtensionParent, "PlatformInfo", () => {
 
 // Register WPTMessages actor when running under WPT.
 if (ExtensionCommon.isInWPT && AppConstants.NIGHTLY_BUILD) {
-  const { WPTMessagesParent } = ChromeUtils.importESModule(
-    "resource://gre/modules/WPTMessagesParent.sys.mjs"
+  const { WPTEventsParent } = ChromeUtils.importESModule(
+    "resource://gre/modules/WPTEventsParent.sys.mjs"
   );
-  WPTMessagesParent.init(apiManager);
+  WPTEventsParent.init(apiManager);
 }

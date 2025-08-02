@@ -5,7 +5,7 @@
 Cu.crashIfNotInAutomation();
 
 // Exposes the browser.test.onMessage event on web-platform.test pages.
-export class WPTMessagesChild extends JSWindowActorChild {
+export class WPTEventsChild extends JSWindowActorChild {
   observe() {
     // Only observing "content-document-global-created" to trigger the actor.
   }

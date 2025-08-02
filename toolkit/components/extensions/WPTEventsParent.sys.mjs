@@ -20,21 +20,21 @@ const EVENTS = {
 };
 
 // Routes extension test results to web-platform.test child actors.
-export class WPTMessagesParent extends JSWindowActorParent {
+export class WPTEventsParent extends JSWindowActorParent {
   static init(apiManager) {
     this.apiManager = apiManager;
     apiManager.on("startup", this.#onStartup);
     apiManager.on("shutdown", this.#onShutdown);
 
-    ChromeUtils.registerWindowActor("WPTMessages", {
+    ChromeUtils.registerWindowActor("WPTEvents", {
       matches: lazy.actorMatches.split(","),
       allFrames: true,
       child: {
-        esModuleURI: "resource://gre/modules/WPTMessagesChild.sys.mjs",
+        esModuleURI: "resource://gre/modules/WPTEventsChild.sys.mjs",
         observers: ["content-document-global-created"],
       },
       parent: {
-        esModuleURI: "resource://gre/modules/WPTMessagesParent.sys.mjs",
+        esModuleURI: "resource://gre/modules/WPTEventsParent.sys.mjs",
       },
     });
   }
@@ -48,16 +48,16 @@ export class WPTMessagesParent extends JSWindowActorParent {
   receiveMessage({ name }) {
     switch (name) {
       case "onMessage.addListener":
-        WPTMessagesParent.#setListener(this);
+        WPTEventsParent.#setListener(this);
         break;
       case "onMessage.removeListener":
-        WPTMessagesParent.#removeListener(this);
+        WPTEventsParent.#removeListener(this);
         break;
     }
   }
 
   didDestroy() {
-    WPTMessagesParent.#removeListener(this);
+    WPTEventsParent.#removeListener(this);
   }
 
   static #setListener(actor) {
@@ -76,20 +76,20 @@ export class WPTMessagesParent extends JSWindowActorParent {
 
   static #onStartup(_, ext) {
     for (let ev of Object.keys(EVENTS)) {
-      ext.on(ev, WPTMessagesParent.#onEvent);
+      ext.on(ev, WPTEventsParent.#onEvent);
     }
   }
 
   static #onShutdown(_, ext) {
     for (let ev of Object.keys(EVENTS)) {
-      ext.off(ev, WPTMessagesParent.#onEvent);
+      ext.off(ev, WPTEventsParent.#onEvent);
     }
   }
 
   static #onEvent(event, ...args) {
     let [ev, ...keys] = EVENTS[event].split(" ");
     let data = keys.map((key, i) => [key, args[i]]);
-    WPTMessagesParent.#emit(ev, Object.fromEntries(data));
+    WPTEventsParent.#emit(ev, Object.fromEntries(data));
   }
 
   static #emit(event, data) {

@@ -10,7 +10,7 @@ server.registerDirectory("/data/", do_get_file("data"));
 
 function loadPage(domain, query = "") {
   return ExtensionTestUtils.loadContentPage(
-    `http://${domain}/data/file_browser.test.onMessage.html?${query}`
+    `http://${domain}/data/file_wpt_events.html?${query}`
   );
 }
 
