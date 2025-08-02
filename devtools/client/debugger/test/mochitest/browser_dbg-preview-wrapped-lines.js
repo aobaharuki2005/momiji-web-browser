@@ -107,11 +107,11 @@ add_task(async function () {
   });
 
   info("Assert that the line wrapped");
-  const EXPECTED_LINES_TO_WRAP_OVER = 5; // Note: This includes inline previews
+  const EXPECTED_LINES_TO_WRAP_OVER = 6; // Note: This includes inline previews
   is(
     Math.floor(lineHeightAfterWrap),
     Math.floor(lineHeightWithoutAnyWrap * EXPECTED_LINES_TO_WRAP_OVER),
-    "The content on line 6 to wrap over 5 lines (including the inline previews)"
+    "The content on line 6 to wrap over 6 lines (including the inline previews)"
   );
 
   info("Assert the previews still work with wrapping");
