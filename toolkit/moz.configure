@@ -2613,6 +2613,14 @@ def ffvpx(target):
             ]
         elif target.cpu == "aarch64":
             use_nasm = False
+    elif target.os == "Android":
+        if target.cpu == "x86_64":
+            flags = ["-D__x86_64__", "-DPIC", "-DELF", "-Pconfig_android_x86_64.asm"]
+        elif target.cpu == "x86" or target.cpu == "arm":
+            audio_only = True
+        elif target.cpu == "aarch64":
+            flags = ["-DPIC", "-DELF"]
+            use_nasm = False
     elif target.cpu == "x86_64":
         flags = ["-D__x86_64__", "-DPIC", "-DELF", "-Pconfig_unix64.asm"]
     else:
