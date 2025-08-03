@@ -2288,14 +2288,14 @@ public class GeckoSessionTestRule implements TestRule {
      */
     public void stopPostingLocation() {
       if (executor != null) {
-        executor.shutdown();
+        executor.shutdownNow();
         executor = null;
       }
     }
 
     /**
      * Posts the set location to the system location manager. If @{@link #doContinuallyPost} is
-     * true, the location will be posted every 3s by an executor, otherwise will post once.
+     * true, the location will be posted every 2s by an executor, otherwise will post once.
      */
     public void postLocation() {
       if (!isActiveTestProvider) {
@@ -2344,7 +2344,7 @@ public class GeckoSessionTestRule implements TestRule {
               }
             },
             0,
-            3,
+            2,
             TimeUnit.SECONDS);
       }
     }
