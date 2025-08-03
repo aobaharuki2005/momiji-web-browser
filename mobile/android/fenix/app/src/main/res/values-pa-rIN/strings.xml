@@ -1530,9 +1530,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">ਅਤੀਤ ਹਟਾਓ</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">ਅਤੀਤ ਹਟਾਇਆ ਗਿਆ</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">ਅਤੀਤ ਹਟਾਇਆ ਗਿਆ</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">%1$s ਨੂੰ ਹਟਾਇਆ</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s ਨੂੰ ਹਟਾਇਆ</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">ਹਟਾਓ</string>
   <!--
@@ -3740,7 +3740,7 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">ਇਕਸਟੈਨਸ਼ਨਾਂ ਦੀ ਛਾਣਬੀਣ ਕਰੋ</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">ਖੋਜ ਵਿਜੈਟ ਨੂੰ ਇੰਸਟਾਲ ਕਰੋ</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">ਖੋਜ ਵਿਜੈਟ ਨੂੰ ਇੰਸਟਾਲ ਕਰੋ</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

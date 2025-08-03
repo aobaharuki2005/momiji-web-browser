@@ -632,6 +632,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Firefox-ты өзіңіз үшін қалай ашқаныңызды және оны пайдалану жолыңызды бөліссеңіз, браузерімізді көбірек адамдарға таныстыруға көмектесесіз.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Mozilla маркетингтік технологиялар серіктестерімен ең аз деректерді бөлісіңіз. Бұл деректер ешқашан сатылмайды немесе сізге жарнама көрсету үшін пайдаланылмайды.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Mozilla маркетингтік технологиялар серіктестерімен деректерді бөлісіңіз. Бұл деректер ешқашан сатылмайды немесе сізге жарнама көрсету үшін пайдаланылмайды.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Біз деректерді қалай қолданамыз</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1213,6 +1215,8 @@
   <string name="preferences_daily_usage_ping_learn_more">Күнделікті пайдалану пингі туралы көбірек білу</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Құлау хабарламаларын автоматты түрде жіберу</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">Есептеме жіберілді</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Бұл бізге браузердегі ақауларды диагностикалауға және түзетуге мүмкіндік береді. Есептемелер жеке немесе сезімтал деректерді қамтуы мүмкін.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1530,9 +1534,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Тарихты өшіру</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">Тарих өшірілді</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Тарих өшірілді</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">%1$s өшірілді</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s өшірілді</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Өшіру</string>
   <!--
@@ -1717,7 +1721,7 @@
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">%1$s өнімін әркім үшін де жақсартуға көмектесіңіз. Mozilla қызметкерлері сіз жіберген ақпаратты веб-сайт мәселелерін шешу үшін пайдаланады.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description_2">Есептеме жіберу %1$s жүйесіндегі мәселелерді түсінуге және оны барлығы үшін жақсартуға көмектеседі. Көбірек білу</string>
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Есептеме жіберу %1$s жүйесіндегі мәселелерді түсінуге және оны барлығы үшін жақсартуға көмектеседі. Көбірек білу</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Көбірек білу</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1782,6 +1786,8 @@
   <string name="tab_crash_restore">Бетті қалпына келтіру</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s қайта іске қосылуы керек болды</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s құлап түсті. Есептеме жіберу керек пе?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Сізде тексеріліп жатқан құлауларға қатысты жіберілмеген қате туралы есептеме бар. Оны жіберу %1$s өнімін жақсартуға көмектеседі. Бұл хабарландыруды жабу бұл есептемені елемейді.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1790,10 +1796,17 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Құлау хабарламаларын автоматты түрде жіберу</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Жабу</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">ЖАБУ</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Қайта көрсетпеу</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">ЖІБЕРУ</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Құлау жөнінде хабарламаны жіберу</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">Құлау есептемелері браузердегі ақауларды диагностикалауға және түзетуге көмектеседі. Есептемелер жеке немесе сезімтал деректерді қамтуы мүмкін. %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">Көбірек білу</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Көбірек білу</string>
   <!--
@@ -3750,7 +3763,7 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Кеңейтулерді шолу</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">Іздеу виджетін орнату</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Іздеу виджетін орнату</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

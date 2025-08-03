@@ -1398,9 +1398,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Sguab an eachdraidh às</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">Chaidh an eachdraidh a sguabadh às</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Chaidh an eachdraidh a sguabadh às</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">Chaidh %1$s a sguabadh às</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Chaidh %1$s a sguabadh às</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Sguab às</string>
   <!--

@@ -150,6 +150,8 @@
     %2$s is the url for the learn-more link.
   -->
   <string name="about_content" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[<p>A %1$s az Ön kezébe adja az irányítást.</p> <p>Használja privát böngészőként: <ul> <li>Keressen és böngésszen közvetlenül az appban</li> <li>Blokkolja a követőket (vagy frissítse a beállításokat az engedélyezéshez)</li> <li>Törölje a sütiket és a böngészési előzményeket is</li> </ul> </p> <p>A %1$s a Mozilla terméke. Küldetésünk az egészséges, nyílt Internet támogatása.<br/> <a href=\"%2$s\">Tudjon meg többet</a></p>]]></string>
+  <!-- A link to SUMO at the bottom of About Focus screen. -->
+  <string name="about_screen_learn_more">További tudnivalók</string>
   <!-- Header for the Privacy and Security settings menu -->
   <string name="preference_privacy_and_security_header">Adatvédelem és biztonság</string>
   <!-- Preference summary for settings related to privacy and security -->

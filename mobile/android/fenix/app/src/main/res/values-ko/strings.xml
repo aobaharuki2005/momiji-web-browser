@@ -1534,9 +1534,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">기록 삭제</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">기록 삭제됨</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">기록 삭제됨</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">%1$s 삭제됨</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s 삭제됨</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">삭제</string>
   <!--
@@ -1721,7 +1721,7 @@
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">모두를 위해 %1$s가 더 나아지도록 도와주세요. Mozilla 직원은 보내주신 정보를 웹 사이트 문제 해결에 사용합니다.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description_2">여러분의 신고는 저희가 %1$s의 문제점을 이해하고 고쳐서 모든 사람을 위해 더 나은 서비스로 만들 수 있도록 도와줍니다. 더 알아보기</string>
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">여러분의 신고는 저희가 %1$s의 문제점을 이해하고 고쳐서 모든 사람을 위해 더 나은 서비스로 만들 수 있도록 도와줍니다. 더 알아보기</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">더 알아보기</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -3763,7 +3763,7 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">확장 기능 살펴보기</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">검색 위젯 설치</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">검색 위젯 설치</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

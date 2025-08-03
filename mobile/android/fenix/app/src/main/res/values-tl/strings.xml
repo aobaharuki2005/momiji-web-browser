@@ -1339,9 +1339,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Burahin ang kasaysayan</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">Nabura na ang Kasaysayan</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Nabura na ang Kasaysayan</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">Binura na ang %1$s</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Binura na ang %1$s</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Burahin</string>
   <!--
@@ -3410,7 +3410,7 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Tumuklas ng mga extension</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">Ikabit ang search widget</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Ikabit ang search widget</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

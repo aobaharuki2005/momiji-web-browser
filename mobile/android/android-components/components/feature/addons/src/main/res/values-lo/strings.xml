@@ -94,6 +94,10 @@
   <string name="mozac_feature_addons_permissions_user_scripts_description">ອະນຸຍາດໃຫ້ສະຄຣິບບຸກຄົນທີ່ສາມທີ່ບໍ່ໄດ້ຢືນຢັນໃນການເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານ</string>
   <!-- Description for the "devtools" WebExtensions API permission. -->
   <string name="mozac_feature_addons_permissions_devtools_description">ຂະຫຍາຍເຄື່ອງມືຂອງນັກພັດທະນາເພື່ອເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານໃນແທັບທີ່ເປີດຢູ່</string>
+  <!-- Description for the "<all_urls>" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_all_urls_description_for_update">ເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານສໍາລັບເວັບໄຊທ໌ທັງຫມົດ.</string>
+  <!-- Description for the "tabs" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_tabs_description_for_update">ເຂົ້າເຖິງແຖບຂອງຕົວທ່ອງເວັບ.</string>
   <!-- The text shown when an extension requests the userScripts permission, near the usual description of the userScripts permission -->
   <string name="mozac_feature_addons_permissions_user_scripts_extra_warning">ສະຄຣິບທີ່ບໍ່ໄດ້ຮັບການຢືນຢັນສາມາດສ້າງຄວາມສ່ຽງດ້ານຄວາມປອດໄພ ແລະ ຄວາມເປັນສ່ວນຕົວ. ແລ່ນສະຄຣິບຈາກສ່ວນຂະຫຍາຍ ຫຼື ແຫຼ່ງທີ່ທ່ານເຊື່ອຖືເທົ່ານັ້ນ.</string>
   <!-- Description for text button that expands the list of domain permissions -->
@@ -104,6 +108,8 @@
   <string name="mozac_feature_addons_permissions_data_collection_authenticationInfo_short_description">ຂໍ້ມູນການຢັ້ງຢືນໂຕຕົນ</string>
   <!-- Short description for the bookmarksInfo data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_bookmarksInfo_short_description">ບຸກມາກ</string>
+  <!-- Short description for the browsingActivity data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_browsingActivity_short_description">ກິດ​ຈະ​ກໍາ​ການ​ຊອກ​ຫາ​</string>
   <!-- Short description for the locationInfo data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_locationInfo_short_description">ຕຳແຫນ່ງທີ່ຕັ້ງ</string>
   <!-- The version on of add-on. -->

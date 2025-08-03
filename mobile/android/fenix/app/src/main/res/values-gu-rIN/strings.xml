@@ -300,7 +300,7 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">ઇતિહાસ કાઢી નાખો</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">%1$s કાઢી નાખ્યું</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s કાઢી નાખ્યું</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">કાઢો</string>
   <!--

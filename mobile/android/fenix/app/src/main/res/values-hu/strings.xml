@@ -632,6 +632,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Ha megosztja hogyan fedezte fel a Firefoxot, és hogy használja, akkor segít abban, hogy még több emberrel megismertessük a böngészőnket.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Osszon meg minimális mennyiségű adatot a Mozilla marketingtechnológiai partnereivel. Ezek az adatok sosem kerülnek eladásra, és sosem használják fel hirdetések megjelenítésére.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Adatok megosztása a Mozilla marketingtechnológiai partnereivel. Ezek az adatok sosem kerülnek eladásra, és sosem használják fel hirdetések megjelenítésére.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Hogyan használjuk az adatokat</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1213,6 +1215,8 @@
   <string name="preferences_daily_usage_ping_learn_more">További tudnivalók a napi használati pingről</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Összeomlás-jelentések automatikus elküldése</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">Jelentés elküldve</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Ez segít diagnosztizálni és megoldani a böngésző problémáit. A jelentések személyes vagy bizalmas adatokat tartalmazhatnak.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1530,9 +1534,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Előzmények törlése</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">Előzmények törölve</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Előzmények törölve</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">%1$s törölve</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s törölve</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Törlés</string>
   <!--
@@ -1717,7 +1721,7 @@
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Segítsen abban, hogy a %1$s mindenki számára jobb legyen. A Mozilla alkalmazottai a küldött információkat a webhely problémáinak javítására használják.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description_2">A jelentése segít minket a %1$s problémáinak megértésében és javításában, hogy mindenki számára jobbá tegyük. További tudnivalók</string>
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">A jelentése segít minket a %1$s problémáinak megértésében és javításában, hogy mindenki számára jobbá tegyük. További tudnivalók</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">További tudnivalók</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1782,6 +1786,8 @@
   <string name="tab_crash_restore">Lap visszaállítása</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">A %s újraindítása szükséges</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">A(z) %s összeomlott. Elküld egy jelentést?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Egy beküldetlen hibajelentése van, amely kapcsolódik a vizsgált összeomlásokhoz. Az elküldése segít nekünk a %1$s fejlesztésében. Az értesítés bezárása figyelmen kívül fogja hagyni ezt a jelentést.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1790,10 +1796,17 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Összeomlás-jelentések automatikus elküldése</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Bezárás</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">BEZÁRÁS</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Ne jelenjen meg többé</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">KÜLDÉS</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Összeomlás-jelentés küldése</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">Az összeomlás-jelentések segítenek nekünk abban, hogy diagnosztizáljuk és megoldjuk a böngészőhibákat. A jelentések személyes vagy bizalmas adatokat tartalmazhatnak. %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">További tudnivalók</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">További tudnivalók</string>
   <!--
@@ -3750,7 +3763,7 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Kiegészítők felfedezése</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">Keresőmodul telepítése</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Keresőmodul telepítése</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

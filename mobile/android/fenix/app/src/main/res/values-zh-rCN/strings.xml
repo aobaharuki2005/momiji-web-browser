@@ -1530,9 +1530,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">删除历史记录</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">历史记录已删除</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">历史记录已删除</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">已删除 %1$s</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">已删除 %1$s</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">删除</string>
   <!--
@@ -1717,7 +1717,7 @@
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">帮助改善所有用户的 %1$s 使用体验。Mozilla 员工可借助您发送的信息修复网站问题。</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description_2">您的报告可帮助我们了解并修复 %1$s 中的问题，从而为全体用户改进使用体验。详细了解</string>
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">您的报告可帮助我们了解并修复 %1$s 中的问题，从而为全体用户改进使用体验。详细了解</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">详细了解</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -3750,7 +3750,7 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">发现更多扩展</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">安装搜索微件</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">安装搜索微件</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

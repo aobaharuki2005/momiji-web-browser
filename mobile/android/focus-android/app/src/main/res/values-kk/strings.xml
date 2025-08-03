@@ -150,6 +150,8 @@
     %2$s is the url for the learn-more link.
   -->
   <string name="about_content" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[<p>%1$s басқаруды қолыңызға береді.</p> <p>Оны жекелік браузері ретінде қолданыңыз: <ul> <li>Қолданба ішінен тікелей іздеу және шолу</li> <li>Трекерлерді блоктау (немесе, оларды рұқсат ету үшін, баптауларды жаңарту)</li> <li>Cookie файлдарын және іздеу мен шолу тарихын кетіру үшін өшіру</li> </ul> </p> <p>%1$s жасаған Mozilla. Мақсатымыз - интернет денсаулығын және ашықтығын сақтау.<br/> <a href=\"%2$s\">Көбірек білу</a></p>]]></string>
+  <!-- A link to SUMO at the bottom of About Focus screen. -->
+  <string name="about_screen_learn_more">Көбірек білу</string>
   <!-- Header for the Privacy and Security settings menu -->
   <string name="preference_privacy_and_security_header">Жекелік және қауіпсіздік</string>
   <!-- Preference summary for settings related to privacy and security -->

@@ -1508,9 +1508,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">履歴を削除</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">履歴が削除されました</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">履歴が削除されました</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">%1$s を履歴から削除しました</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s を履歴から削除しました</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">削除</string>
   <!--
@@ -1695,7 +1695,7 @@
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">%1$s をすべての人にとってより良いものにするためにご協力ください。Mozilla の担当者が、送信された情報を使用してウェブサイトの問題を解決します。</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description_2">ご報告は、%1$s の問題を理解して解決し、すべての人にとって製品をより良くするために役立ちます。詳細情報</string>
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">ご報告は、%1$s の問題を理解して解決し、すべての人にとって製品をより良くするために役立ちます。詳細情報</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">詳細情報</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -3724,7 +3724,7 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">拡張機能を探す</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">検索ウィジェットをインストール</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">検索ウィジェットをインストール</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

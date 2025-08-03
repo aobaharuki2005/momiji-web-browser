@@ -632,6 +632,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Keď sa podelíte o to, ako ste objavili Firefox a že ho používate, pomôžete nám predstaviť náš prehliadač viacerým ľuďom.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Zdieľať minimálne údaje s partnermi pre marketingové technológie Mozilly. Tieto údaje sa nikdy nepredávajú ani sa nepoužívajú na zobrazovanie reklám.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Zdieľať údaje s partnermi pre marketingové technológie Mozilly. Tieto údaje sa nikdy nepredávajú ani sa nepoužívajú na zobrazovanie reklám.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Ako používame údaje</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1213,6 +1215,8 @@
   <string name="preferences_daily_usage_ping_learn_more">Ďalšie informácie o pingu denného používania</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Automaticky odosielať správy o zlyhaní</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">Hlásenie odoslané</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Toto nám umožňuje diagnostikovať a opraviť problémy s prehliadačom. Hlásenia môžu obsahovať osobné alebo citlivé údaje.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1530,9 +1534,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Vymazať históriu</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">História bola vymazaná</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">História bola vymazaná</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">Položka %1$s odstránená</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Položka %1$s odstránená</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Odstrániť</string>
   <!--
@@ -1717,7 +1721,9 @@
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Pomôžte vylepšiť %1$s pre všetkých. Zamestnanci Mozilly používajú informácie, ktoré odošlete, na riešenie problémov s webovými stránkami.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description_2">Vaše hlásenie nám pomáha pochopiť a opraviť problémy vo %1$se, aby sme ho mohli vylepšiť pre všetkých. Zistite viac</string>
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Vaše hlásenie nám pomáha pochopiť a opraviť problémy vo %1$se, aby sme ho mohli vylepšiť pre všetkých. Zistite viac</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">Vaše hlásenie nám pomáha pochopiť a opraviť problémy vo %1$se, aby sme ho mohli vylepšiť pre všetkých. %2$s</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Ďalšie informácie</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1782,6 +1788,8 @@
   <string name="tab_crash_restore">Obnoviť kartu</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s sa musel reštartovať</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s zlyhal. Odoslať hlásenie?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Máte neodoslanú správu o zlyhaní súvisiacu s vyšetrovanými zlyhaniami. Jej odoslanie nám pomôže vylepšiť %1$s. Zatvorením tohto upozornenia sa táto správa ignoruje.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1790,10 +1798,17 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Automaticky odosielať správy o zlyhaní</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Zavrieť</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">ZAVRIEŤ</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Viac nezobrazovať</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">ODOSLAŤ</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Odoslať správu o zlyhaní</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">Správy o zlyhaní nám pomáhajú diagnostikovať a opraviť problémy s prehliadačom. Hlásenia môžu obsahovať osobné alebo citlivé údaje. %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">Ďalšie informácie</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Ďalšie informácie</string>
   <!--
@@ -3750,7 +3765,9 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Pozrite si ďalšie rozšírenia</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">Nainštalujte miniaplikáciu vyhľadávania</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Nainštalujte miniaplikáciu vyhľadávania</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">Preskúmať vyhľadávací widget</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

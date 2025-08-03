@@ -1475,9 +1475,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Izbriši povijest</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">Povijest izbrisana</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Povijest izbrisana</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">Izbrisano: %1$s</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Izbrisano: %1$s</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Izbriši</string>
   <!--
@@ -3649,7 +3649,7 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Istraži proširenja</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">Instaliraj widget za pretraživanje</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Instaliraj widget za pretraživanje</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

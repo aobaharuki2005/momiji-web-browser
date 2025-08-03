@@ -871,9 +871,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Kustuta ajalugu</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">Ajalugu kustutatud</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Ajalugu kustutatud</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">Ajaloost kustutati %1$s</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Ajaloost kustutati %1$s</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Kustuta</string>
   <!--
