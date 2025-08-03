@@ -40,9 +40,7 @@ already_AddRefed<SourceSurface> GPUVideoTextureData::GetAsSourceSurface() {
   return mManager->Readback(mSD);
 }
 
-void GPUVideoTextureData::OnSetCurrent() {
-  mManager->OnSetCurrent(mSD);
-}
+void GPUVideoTextureData::OnSetCurrent() { mManager->OnSetCurrent(mSD); }
 
 void GPUVideoTextureData::Deallocate(LayersIPCChannel* aAllocator) {
   mManager->DeallocateSurfaceDescriptor(mSD);

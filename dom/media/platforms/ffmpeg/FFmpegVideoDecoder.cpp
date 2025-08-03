@@ -594,7 +594,7 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
 #ifdef MOZ_USE_HWDECODE
       mHardwareDecodingDisabled(
           ShouldDisableHWDecoding(aDisableHardwareDecoding)),
-#endif    // MOZ_USE_HWDECODE
+#endif  // MOZ_USE_HWDECODE
       mImageContainer(aImageContainer),
       mInfo(aConfig),
       mLowLatency(aLowLatency),
@@ -1203,11 +1203,11 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
 #endif
 
 #if LIBAVCODEC_VERSION_MAJOR >= 58
-#ifdef MOZ_WIDGET_ANDROID
+#  ifdef MOZ_WIDGET_ANDROID
   if (!aData) {
     mShouldResumeDrain = true;
   }
-#endif
+#  endif
   if (aData || !mHasSentDrainPacket) {
     packet->duration = aSample->mDuration.ToMicroseconds();
     int res = mLib->avcodec_send_packet(mCodecContext, packet);

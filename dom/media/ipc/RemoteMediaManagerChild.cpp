@@ -1097,13 +1097,13 @@ void RemoteMediaManagerChild::OnSetCurrent(
   if (!managerThread) {
     return;
   }
-  MOZ_ALWAYS_SUCCEEDS(managerThread->Dispatch(NS_NewRunnableFunction(
-      "RemoteMediaManagerChild::OnSetCurrent",
-      [ref = RefPtr{this}, sd = aSD]() {
-        if (ref->CanSend()) {
-          ref->SendOnSetCurrent(sd);
-        }
-      })));
+  MOZ_ALWAYS_SUCCEEDS(managerThread->Dispatch(
+      NS_NewRunnableFunction("RemoteMediaManagerChild::OnSetCurrent",
+                             [ref = RefPtr{this}, sd = aSD]() {
+                               if (ref->CanSend()) {
+                                 ref->SendOnSetCurrent(sd);
+                               }
+                             })));
 }
 
 /* static */ void RemoteMediaManagerChild::HandleRejectionError(
