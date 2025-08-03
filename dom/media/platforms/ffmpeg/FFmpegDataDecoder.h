@@ -54,6 +54,7 @@ class FFmpegDataDecoder<LIBAV_VER>
   virtual void InitCodecContext() MOZ_REQUIRES(sMutex) {}
   AVFrame* PrepareFrame();
   MediaResult InitSWDecoder(AVDictionary** aOptions);
+  MediaResult InitDecoder(AVCodec* aCodec, AVDictionary** aOptions);
   MediaResult AllocateExtraData();
   MediaResult DoDecode(MediaRawData* aSample, bool* aGotFrame,
                        DecodedData& aResults);
