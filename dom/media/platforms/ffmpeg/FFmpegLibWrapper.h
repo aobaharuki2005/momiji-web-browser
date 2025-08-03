@@ -26,6 +26,9 @@ struct AVVAAPIHWConfig;
 struct AVHWFramesConstraints;
 #endif
 struct AVBufferRef;
+#ifdef MOZ_WIDGET_ANDROID
+typedef struct MediaCodecBuffer AVMediaCodecBuffer;
+#endif
 
 namespace mozilla {
 
@@ -153,6 +156,7 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
 
   // libavutil v55 and later only
   AVFrame* (*av_frame_alloc)();
+  AVFrame* (*av_frame_clone)(const AVFrame* frame);
   void (*av_frame_free)(AVFrame** frame);
   void (*av_frame_unref)(AVFrame* frame);
   int (*av_frame_get_buffer)(AVFrame* frame, int align);
@@ -190,6 +194,10 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
                                         AVBufferRef* src_ctx, int flags);
   const char* (*avcodec_get_name)(int id);
   char* (*av_get_pix_fmt_string)(char* buf, int buf_size, int pix_fmt);
+#endif
+
+#if defined(MOZ_WIDGET_ANDROID)
+  int (*av_mediacodec_release_buffer)(AVMediaCodecBuffer*, int);
 #endif
 
   // Only ever used with ffvpx
