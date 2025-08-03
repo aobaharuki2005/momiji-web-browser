@@ -75,7 +75,7 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
   already_AddRefed<IMFSample> ConvertToNV12InputSample(
       RefPtr<const VideoData>&& aData);
 
-  RefPtr<EncodePromise> ProcessOutputSamples(
+  EncodedData ProcessOutputSamples(
       nsTArray<MFTEncoder::OutputSample>&& aSamples);
   already_AddRefed<MediaRawData> OutputSampleToMediaData(
       MFTEncoder::OutputSample& aSample);
@@ -93,6 +93,12 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
   RefPtr<MFTEncoder> mEncoder;
   // SPS/PPS NALUs when encoding in AnnexB usage, avcC otherwise.
   RefPtr<MediaByteBuffer> mConfigData;
+
+  MozPromiseHolder<EncodePromise> mEncodePromise;
+  MozPromiseRequestHolder<MFTEncoder::EncodePromise> mEncodeRequest;
+
+  MozPromiseHolder<EncodePromise> mDrainPromise;
+  MozPromiseRequestHolder<MFTEncoder::EncodePromise> mDrainRequest;
 };
 
 }  // namespace mozilla
