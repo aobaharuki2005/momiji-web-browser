@@ -230,16 +230,25 @@ FFmpegDataDecoder<LIBAV_VER>::ProcessDrain() {
   // as pending data in the pipeline being corrupt or invalid, non-EOS errors
   // like NS_ERROR_DOM_MEDIA_DECODE_ERR will be returned and must be handled
   // accordingly.
+  RefPtr<MediaDataDecoder::DecodePromise> p = mDrainPromise.Ensure(__func__);
   do {
     MediaResult r = DoDecode(empty, &gotFrame, results);
     if (NS_FAILED(r)) {
       if (r.Code() == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
         break;
       }
-      return DecodePromise::CreateAndReject(r, __func__);
+      if (r.Code() == NS_ERROR_NOT_AVAILABLE) {
+        if (results.IsEmpty()) {
+          return p;
+        }
+        break;
+      }
+      mDrainPromise.Reject(r, __func__);
+      return p;
     }
   } while (gotFrame);
-  return DecodePromise::CreateAndResolve(std::move(results), __func__);
+  mDrainPromise.Resolve(std::move(results), __func__);
+  return p;
 }
 
 RefPtr<MediaDataDecoder::FlushPromise>

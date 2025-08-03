@@ -198,6 +198,7 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
 
 #if defined(MOZ_WIDGET_ANDROID)
   int (*av_mediacodec_release_buffer)(AVMediaCodecBuffer*, int);
+  int (*moz_avcodec_mediacodec_is_eos)(AVCodecContext*);
 #endif
 
   // Only ever used with ffvpx

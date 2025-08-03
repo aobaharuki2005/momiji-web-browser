@@ -1203,6 +1203,11 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
 #endif
 
 #if LIBAVCODEC_VERSION_MAJOR >= 58
+#ifdef MOZ_WIDGET_ANDROID
+  if (!aData) {
+    mShouldResumeDrain = true;
+  }
+#endif
   if (aData || !mHasSentDrainPacket) {
     packet->duration = aSample->mDuration.ToMicroseconds();
     int res = mLib->avcodec_send_packet(mCodecContext, packet);
@@ -1214,10 +1219,15 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
       char errStr[AV_ERROR_MAX_STRING_SIZE];
       mLib->av_strerror(res, errStr, AV_ERROR_MAX_STRING_SIZE);
       FFMPEG_LOG("avcodec_send_packet error: %s", errStr);
+      nsresult rv;
+      if (res == int(AVERROR_EOF)) {
+        rv = MaybeQueueDrain(aResults) ? NS_ERROR_DOM_MEDIA_END_OF_STREAM
+                                       : NS_ERROR_NOT_AVAILABLE;
+      } else {
+        rv = NS_ERROR_DOM_MEDIA_DECODE_ERR;
+      }
       return MediaResult(
-          res == int(AVERROR_EOF) ? NS_ERROR_DOM_MEDIA_END_OF_STREAM
-                                  : NS_ERROR_DOM_MEDIA_DECODE_ERR,
-          RESULT_DETAIL("avcodec_send_packet error: %s", errStr));
+          rv, RESULT_DETAIL("avcodec_send_packet error: %s", errStr));
     }
   }
   if (!aData) {
@@ -1247,7 +1257,11 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
 
     int res = mLib->avcodec_receive_frame(mCodecContext, mFrame);
     if (res == int(AVERROR_EOF)) {
-      FFMPEG_LOG("  End of stream or output buffer shortage.");
+      if (MaybeQueueDrain(aResults)) {
+        FFMPEG_LOG("  Output buffer shortage.");
+        return NS_ERROR_NOT_AVAILABLE;
+      }
+      FFMPEG_LOG("  End of stream.");
       return NS_ERROR_DOM_MEDIA_END_OF_STREAM;
     }
     if (res == AVERROR(EAGAIN)) {
@@ -1426,6 +1440,43 @@ void FFmpegVideoDecoder<LIBAV_VER>::RecordFrame(const MediaRawData* aSample,
         aStage.SetStartTimeAndEndTime(aSample->mTime.ToMicroseconds(),
                                       aSample->GetEndTime().ToMicroseconds());
       });
+}
+
+#ifdef MOZ_WIDGET_ANDROID
+void FFmpegVideoDecoder<LIBAV_VER>::ResumeDrain() {
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+
+  if (mDrainPromise.IsEmpty()) {
+    FFMPEG_LOGV("Resume drain but promise already fulfilled");
+    return;
+  }
+
+  FFMPEG_LOGV("Resume drain");
+  mShouldResumeDrain = true;
+  ProcessDrain();
+}
+
+void FFmpegVideoDecoder<LIBAV_VER>::QueueResumeDrain() {
+  if (!mShouldResumeDrain.exchange(false)) {
+    return;
+  }
+
+  MOZ_ALWAYS_SUCCEEDS(mTaskQueue->Dispatch(NS_NewRunnableFunction(
+      __func__, [self = RefPtr{this}] { self->ResumeDrain(); })));
+}
+#endif
+
+bool FFmpegVideoDecoder<LIBAV_VER>::MaybeQueueDrain(
+    const MediaDataDecoder::DecodedData& aData) {
+#if defined(MOZ_WIDGET_ANDROID) && defined(USING_MOZFFVPX)
+  if (aData.IsEmpty() && mMediaCodecDeviceContext &&
+      !mLib->moz_avcodec_mediacodec_is_eos(mCodecContext)) {
+    FFMPEG_LOGV("Schedule drain");
+    return true;
+  }
+  mShouldResumeDrain = false;
+#endif
+  return false;
 }
 
 gfx::ColorDepth FFmpegVideoDecoder<LIBAV_VER>::GetColorDepth(
@@ -2371,43 +2422,45 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageMediaCodec(
   class CompositeListener final
       : public layers::SurfaceTextureImage::SetCurrentCallback {
    public:
-    explicit CompositeListener(FFmpegLibWrapper* aLib) : mLib(aLib) {}
+    CompositeListener() = default;
 
     ~CompositeListener() override { MaybeRelease(/* aRender */ false); }
 
-    bool Init(AVFrame* aFrame) {
+    bool Init(FFmpegVideoDecoder<LIBAV_VER>* aDecoder, AVFrame* aFrame) {
       if (NS_WARN_IF(!aFrame) || NS_WARN_IF(!aFrame->buf[0])) {
         return false;
       }
-      mFrame = mLib->av_frame_clone(aFrame);
+      mFrame = aDecoder->mLib->av_frame_clone(aFrame);
       if (NS_WARN_IF(!mFrame)) {
         return false;
       }
+      mDecoder = aDecoder;
       return true;
     }
 
     void operator()(void) override { MaybeRelease(/* aRender */ true); }
 
     void MaybeRelease(bool aRender) {
-      if (!mLib) {
+      if (!mDecoder) {
         return;
       }
       for (int i = 0; i < AV_NUM_DATA_POINTERS; ++i) {
         if (mFrame->data[i]) {
-          mLib->av_mediacodec_release_buffer(
+          mDecoder->mLib->av_mediacodec_release_buffer(
               (AVMediaCodecBuffer*)mFrame->data[i], aRender ? 1 : 0);
         }
       }
-      mLib->av_frame_free(&mFrame);
-      mLib = nullptr;
+      mDecoder->mLib->av_frame_free(&mFrame);
+      mDecoder->QueueResumeDrain();
+      mDecoder = nullptr;
     }
 
-    FFmpegLibWrapper* mLib;
+    RefPtr<FFmpegVideoDecoder<LIBAV_VER>> mDecoder;
     AVFrame* mFrame = nullptr;
   };
 
-  auto listener = MakeUnique<CompositeListener>(mLib);
-  if (!listener->Init(mFrame)) {
+  auto listener = MakeUnique<CompositeListener>();
+  if (!listener->Init(this, mFrame)) {
     FFMPEG_LOG("  CreateImageMediaCodec failed to init listener");
     return NS_ERROR_INVALID_ARG;
   }
