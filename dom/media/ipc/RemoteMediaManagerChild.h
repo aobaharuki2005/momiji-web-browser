@@ -93,6 +93,9 @@ class RemoteMediaManagerChild final
       gfx::ColorRange aColorRange) override;
   void DeallocateSurfaceDescriptor(
       const SurfaceDescriptorGPUVideo& aSD) override;
+
+  void OnSetCurrent(const SurfaceDescriptorGPUVideo& aSD) override;
+
   bool AllocShmem(size_t aSize, mozilla::ipc::Shmem* aShmem) override {
     return PRemoteMediaManagerChild::AllocShmem(aSize, aShmem);
   }

@@ -50,6 +50,10 @@ class RemoteMediaManagerParent final : public PRemoteMediaManagerParent,
   void DeallocateSurfaceDescriptor(
       const SurfaceDescriptorGPUVideo& aSD) override;
 
+  void OnSetCurrent(const SurfaceDescriptorGPUVideo& aSD) override {
+    MOZ_ASSERT_UNREACHABLE("Not usable from the parent");
+  }
+
   static bool StartupThreads();
   static void ShutdownThreads();
 
@@ -83,6 +87,8 @@ class RemoteMediaManagerParent final : public PRemoteMediaManagerParent,
   mozilla::ipc::IPCResult RecvReadback(const SurfaceDescriptorGPUVideo& aSD,
                                        SurfaceDescriptor* aResult);
   mozilla::ipc::IPCResult RecvDeallocateSurfaceDescriptorGPUVideo(
+      const SurfaceDescriptorGPUVideo& aSD);
+  mozilla::ipc::IPCResult RecvOnSetCurrent(
       const SurfaceDescriptorGPUVideo& aSD);
 
   void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;

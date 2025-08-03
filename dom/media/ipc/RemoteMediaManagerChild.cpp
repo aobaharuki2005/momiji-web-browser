@@ -1091,6 +1091,21 @@ void RemoteMediaManagerChild::DeallocateSurfaceDescriptor(
       })));
 }
 
+void RemoteMediaManagerChild::OnSetCurrent(
+    const SurfaceDescriptorGPUVideo& aSD) {
+  nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();
+  if (!managerThread) {
+    return;
+  }
+  MOZ_ALWAYS_SUCCEEDS(managerThread->Dispatch(NS_NewRunnableFunction(
+      "RemoteMediaManagerChild::OnSetCurrent",
+      [ref = RefPtr{this}, sd = aSD]() {
+        if (ref->CanSend()) {
+          ref->SendOnSetCurrent(sd);
+        }
+      })));
+}
+
 /* static */ void RemoteMediaManagerChild::HandleRejectionError(
     const RemoteMediaManagerChild* aDyingManager, RemoteMediaIn aLocation,
     const ipc::ResponseRejectReason& aReason,

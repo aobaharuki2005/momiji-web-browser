@@ -69,6 +69,8 @@ parent:
   sync Readback(SurfaceDescriptorGPUVideo sd) returns (SurfaceDescriptor aResult);
 
   async DeallocateSurfaceDescriptorGPUVideo(SurfaceDescriptorGPUVideo sd);
+
+  async OnSetCurrent(SurfaceDescriptorGPUVideo sd);
 };
 
 } // namespace mozilla

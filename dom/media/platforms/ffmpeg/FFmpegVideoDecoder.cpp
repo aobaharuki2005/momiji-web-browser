@@ -2362,33 +2362,62 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageMediaCodec(
     MediaDataDecoder::DecodedData& aResults) {
   MOZ_DIAGNOSTIC_ASSERT(mFrame);
 
-  RefPtr<layers::Image> img = new layers::SurfaceTextureImage(
-      mSurfaceHandle, {mFrame->width, mFrame->height},
+  auto img = MakeRefPtr<layers::SurfaceTextureImage>(
+      mSurfaceHandle, gfx::IntSize(mFrame->width, mFrame->height),
       false /* NOT continuous */, gl::OriginPos::BottomLeft, mInfo.HasAlpha(),
       false /* force color space stuff */,
       /* aTransformOverride */ Nothing());
 
-  class CompositeListener
+  class CompositeListener final
       : public layers::SurfaceTextureImage::SetCurrentCallback {
    public:
-    CompositeListener(FFmpegLibWrapper* aLib, AVFrame* aFrame) : mLib(aLib) {
-      mRef = aLib->av_buffer_ref(aFrame->buf[0]);
+    explicit CompositeListener(FFmpegLibWrapper* aLib) : mLib(aLib) {}
+
+    ~CompositeListener() override { MaybeRelease(/* aRender */ false); }
+
+    bool Init(AVFrame* aFrame) {
+      if (NS_WARN_IF(!aFrame) || NS_WARN_IF(!aFrame->buf[0])) {
+        return false;
+      }
+      mFrame = mLib->av_frame_clone(aFrame);
+      if (NS_WARN_IF(!mFrame)) {
+        return false;
+      }
+      return true;
     }
 
-    void operator()(void) override {
-      mLib->av_mediacodec_release_buffer((AVMediaCodecBuffer*)mRef->data, 1);
-      mLib->av_buffer_unref(&mRef);
+    void operator()(void) override { MaybeRelease(/* aRender */ true); }
+
+    void MaybeRelease(bool aRender) {
+      if (!mLib) {
+        return;
+      }
+      for (int i = 0; i < AV_NUM_DATA_POINTERS; ++i) {
+        if (mFrame->data[i]) {
+          mLib->av_mediacodec_release_buffer(
+              (AVMediaCodecBuffer*)mFrame->data[i], aRender ? 1 : 0);
+        }
+      }
+      mLib->av_frame_free(&mFrame);
+      mLib = nullptr;
     }
+
     FFmpegLibWrapper* mLib;
-    AVBufferRef* mRef;
+    AVFrame* mFrame = nullptr;
   };
-  img->AsSurfaceTextureImage()->RegisterSetCurrentCallback(
-      MakeUnique<CompositeListener>(mLib, mFrame));
+
+  auto listener = MakeUnique<CompositeListener>(mLib);
+  if (!listener->Init(mFrame)) {
+    FFMPEG_LOG("  CreateImageMediaCodec failed to init listener");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  img->RegisterSetCurrentCallback(std::move(listener));
 
   RefPtr<VideoData> v = VideoData::CreateFromImage(
       {mFrame->width, mFrame->height}, aOffset,
       TimeUnit::FromMicroseconds(aPts), TimeUnit::FromMicroseconds(aDuration),
-      img.forget(), mFrame->flags & AV_FRAME_FLAG_KEY,
+      img.forget().downcast<layers::Image>(), mFrame->flags & AV_FRAME_FLAG_KEY,
       TimeUnit::FromMicroseconds(aTimecode));
 
   aResults.AppendElement(std::move(v));

@@ -328,6 +328,19 @@ RemoteMediaManagerParent::RecvDeallocateSurfaceDescriptorGPUVideo(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+RemoteMediaManagerParent::RecvOnSetCurrent(const SurfaceDescriptorGPUVideo& aSD) {
+  MOZ_ASSERT(OnManagerThread());
+  const SurfaceDescriptorRemoteDecoder& sd = aSD;
+  RefPtr<Image> image = mImageMap[sd.handle()];
+  if (!image) {
+    return IPC_OK();
+  }
+
+  image->OnSetCurrent();
+  return IPC_OK();
+}
+
 already_AddRefed<Image> RemoteMediaManagerParent::TransferToImage(
     const SurfaceDescriptorGPUVideo& aSD, const IntSize& aSize,
     const ColorDepth& aColorDepth, YUVColorSpace aYUVColorSpace,
