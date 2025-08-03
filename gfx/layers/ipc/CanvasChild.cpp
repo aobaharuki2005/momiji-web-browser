@@ -94,8 +94,9 @@ class RecorderHelpers final : public CanvasDrawEventRecorder::Helpers {
 };
 
 // Limit the number of in-flight export surfaces
-static const uint32_t kMaxExportSurfaces = 100;
 static Atomic<uint32_t> sCurrentExportSurfaces(0);
+// Limit the memory used by in-flight export surfaces
+static Atomic<size_t> sCurrentExportSurfaceMemory(0);
 
 class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
  public:
@@ -168,11 +169,24 @@ class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
     return mRecordedSurface->ExtractSubrect(aRect);
   }
 
+  static size_t GetExportSurfaceSize(gfx::SourceSurface* aSurface) {
+    return ImageDataSerializer::ComputeRGBBufferSize(aSurface->GetSize(),
+                                                     aSurface->GetFormat());
+  }
+
   bool GetSurfaceDescriptor(SurfaceDescriptor& aDesc) final {
     static Atomic<uintptr_t> sNextExportID(0);
     if (!mExportID) {
-      if (++sCurrentExportSurfaces > kMaxExportSurfaces) {
+      if (++sCurrentExportSurfaces >
+          StaticPrefs::gfx_canvas_accelerated_max_export_surfaces()) {
         --sCurrentExportSurfaces;
+        return false;
+      }
+      size_t bytes = GetExportSurfaceSize(mRecordedSurface);
+      if ((sCurrentExportSurfaceMemory += bytes) >
+          StaticPrefs::gfx_canvas_accelerated_max_export_surface_memory()) {
+        --sCurrentExportSurfaces;
+        sCurrentExportSurfaceMemory -= bytes;
         return false;
       }
       mExportID = gfx::ReferencePtr(++sNextExportID);
@@ -206,6 +220,8 @@ class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
     if (aExportID) {
       aRecorder->RecordEvent(RecordedRemoveExportSurface(aExportID));
       --sCurrentExportSurfaces;
+      size_t bytes = GetExportSurfaceSize(aAliasedSurface);
+      sCurrentExportSurfaceMemory -= bytes;
     }
     aAliasedSurface = nullptr;
     aCanvasChild = nullptr;
