@@ -3101,8 +3101,8 @@ void gfxPlatform::InitHardwareVideoConfig() {
   CODEC_HW_FEATURE_SETUP(VP8)
   CODEC_HW_FEATURE_SETUP(VP9)
 
-  // H264/HEVC_HW_DECODE/ENCODE are used on Linux only right now.
-#ifdef MOZ_WIDGET_GTK
+  // H264/HEVC_HW_DECODE/ENCODE are used on Linux and Android.
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_ANDROID)
   CODEC_HW_FEATURE_SETUP(H264)
   CODEC_HW_FEATURE_SETUP(HEVC)
 #endif

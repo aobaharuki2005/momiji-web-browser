@@ -9,6 +9,7 @@
 
 #include <atomic>
 
+#include "AndroidSurfaceTexture.h"
 #include "ImageContainer.h"
 #include "FFmpegDataDecoder.h"
 #include "FFmpegLibWrapper.h"
@@ -27,7 +28,11 @@
 #  define AVPixelFormat PixelFormat
 #endif
 
-#if LIBAVCODEC_VERSION_MAJOR < 58
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/java/GeckoSurfaceWrappers.h"
+#endif
+
+#if LIBAVCODEC_VERSION_MAJOR < 58 || defined(MOZ_WIDGET_ANDROID)
 #  define MOZ_FFMPEG_USE_INPUT_INFO_MAP
 #endif
 
@@ -81,13 +86,19 @@ class FFmpegVideoDecoder<LIBAV_VER>
   }
   nsCString GetCodecName() const override;
   ConversionRequired NeedsConversion() const override {
-#if LIBAVCODEC_VERSION_MAJOR >= 55
+#ifdef MOZ_WIDGET_ANDROID
+    return mCodecID == AV_CODEC_ID_H264 || mCodecID == AV_CODEC_ID_HEVC
+               ? ConversionRequired::kNeedAnnexB
+               : ConversionRequired::kNeedNone;
+#else
+#  if LIBAVCODEC_VERSION_MAJOR >= 55
     if (mCodecID == AV_CODEC_ID_HEVC) {
       return ConversionRequired::kNeedHVCC;
     }
-#endif
+#  endif
     return mCodecID == AV_CODEC_ID_H264 ? ConversionRequired::kNeedAVCC
                                         : ConversionRequired::kNeedNone;
+#endif
   }
 
   static AVCodecID GetCodecId(const nsACString& aMimeType);
@@ -159,11 +170,14 @@ class FFmpegVideoDecoder<LIBAV_VER>
   void InitHWDecoderIfAllowed();
 
   enum class ContextType {
-    D3D11VA,
-    VAAPI,
-    V4L2,
+    D3D11VA,     // Windows
+    MediaCodec,  // Android
+    VAAPI,       // Linux Desktop
+    V4L2,        // Linux embedded
   };
   void InitHWCodecContext(ContextType aType);
+
+  bool ShouldDisableHWDecoding(bool aDisableHardwareDecoding) const;
 
   // True if hardware decoding is disabled explicitly.
   const bool mHardwareDecodingDisabled;
@@ -183,8 +197,18 @@ class FFmpegVideoDecoder<LIBAV_VER>
   std::atomic<uint8_t> mNumOfHWTexturesInUse{0};
 #endif
 
+#ifdef MOZ_WIDGET_ANDROID
+  MediaResult InitMediaCodecDecoder();
+  MediaResult CreateImageMediaCodec(int64_t aOffset, int64_t aPts,
+                                    int64_t aTimecode, int64_t aDuration,
+                                    MediaDataDecoder::DecodedData& aResults);
+  int32_t mTextureAlignment;
+  AVBufferRef* mMediaCodecDeviceContext = nullptr;
+  java::GeckoSurface::GlobalRef mSurface;
+  AndroidSurfaceTextureHandle mSurfaceHandle{};
+#endif
+
 #if defined(MOZ_USE_HWDECODE) && defined(MOZ_WIDGET_GTK)
-  bool ShouldEnableLinuxHWDecoding() const;
   bool UploadSWDecodeToDMABuf() const;
   bool IsLinuxHDR() const;
   MediaResult InitVAAPIDecoder();
@@ -219,7 +243,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
   class DecodeStats {
    public:
     void DecodeStart();
-    void UpdateDecodeTimes(const AVFrame* aFrame);
+    void UpdateDecodeTimes(int64_t aDuration);
     bool IsDecodingSlow() const;
 
    private:
@@ -269,19 +293,36 @@ class FFmpegVideoDecoder<LIBAV_VER>
 #ifdef MOZ_FFMPEG_USE_INPUT_INFO_MAP
   struct InputInfo {
     explicit InputInfo(const MediaRawData* aSample)
-        : mDuration(aSample->mDuration.ToMicroseconds()) {}
+        : mDuration(aSample->mDuration.ToMicroseconds())
+#  ifdef MOZ_WIDGET_ANDROID
+          ,
+          mTimecode(aSample->mTimecode.ToMicroseconds())
+#  endif
+    {
+    }
 
     int64_t mDuration;
+#  ifdef MOZ_WIDGET_ANDROID
+    int64_t mTimecode;
+#  endif
   };
 
   SimpleMap<int64_t, InputInfo, ThreadSafePolicy> mInputInfo;
 
   static int64_t GetSampleInputKey(const MediaRawData* aSample) {
+#  ifdef MOZ_WIDGET_ANDROID
+    return aSample->mTime.ToMicroseconds();
+#  else
     return aSample->mTimecode.ToMicroseconds();
+#  endif
   }
 
   static int64_t GetFrameInputKey(const AVFrame* aFrame) {
+#  ifdef MOZ_WIDGET_ANDROID
+    return aFrame->pts;
+#  else
     return aFrame->pkt_dts;
+#  endif
   }
 
   void InsertInputInfo(const MediaRawData* aSample) {

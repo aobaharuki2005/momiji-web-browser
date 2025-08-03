@@ -7,6 +7,7 @@
 #include "FFmpegVideoDecoder.h"
 
 #include "EncoderConfig.h"
+#include "FFmpegLibWrapper.h"
 #include "FFmpegLog.h"
 #include "FFmpegUtils.h"
 #include "ImageContainer.h"
@@ -15,6 +16,13 @@
 #include "VALibWrapper.h"
 #include "VideoUtils.h"
 #include "VPXDecoder.h"
+#if LIBAVCODEC_VERSION_MAJOR >= 58
+#  include "libavutil/buffer.h"
+#  include "libavutil/frame.h"
+#  include "libavutil/hwcontext.h"
+#  include "libavutil/pixfmt.h"
+#endif
+#include "mozilla/UniquePtr.h"
 #include "mozilla/layers/KnowsCompositor.h"
 #include "nsPrintfCString.h"
 #if LIBAVCODEC_VERSION_MAJOR >= 57
@@ -73,6 +81,26 @@
 #  include "D3D11TextureWrapper.h"
 #  include "DXVA2Manager.h"
 #  include "ffvpx/hwcontext_d3d11va.h"
+#endif
+
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/layers/TextureClientOGL.h"
+#  include "mozilla/java/GeckoSurfaceWrappers.h"
+#  include "mozilla/java/CodecProxyWrappers.h"
+#  include "mozilla/java/GeckoSurfaceWrappers.h"
+#  include "mozilla/java/SampleBufferWrappers.h"
+#  include "mozilla/java/SampleWrappers.h"
+#  include "mozilla/java/SurfaceAllocatorWrappers.h"
+#  include "ffvpx/mediacodec.h"
+#  include "ffvpx/hwcontext_mediacodec.h"
+#endif
+
+#if defined(MOZ_USE_HWDECODE) && defined(MOZ_WIDGET_GTK)
+// Forward declare from va.h
+typedef int VAStatus;
+#  define VA_EXPORT_SURFACE_READ_ONLY 0x0001
+#  define VA_EXPORT_SURFACE_SEPARATE_LAYERS 0x0004
+#  define VA_STATUS_SUCCESS 0x00000000
 #endif
 
 // Use some extra HW frames for potential rendering lags.
@@ -210,6 +238,27 @@ static AVPixelFormat ChooseD3D11VAPixelFormat(AVCodecContext* aCodecContext,
   }
   NS_WARNING("FFmpeg does not share any supported D3D11 pixel formats.");
 #  endif  // MOZ_ENABLE_D3D11VA
+  return AV_PIX_FMT_NONE;
+}
+#endif
+
+#ifdef MOZ_USE_HWDECODE
+static AVPixelFormat ChooseMediaCodecPixelFormat(
+    AVCodecContext* aCodecContext, const AVPixelFormat* aFormats) {
+#  ifdef MOZ_WIDGET_ANDROID
+  FFMPEGV_LOG("Choosing FFmpeg pixel format for MediaCodec video decoding %d. ",
+              *aFormats);
+  for (; *aFormats > -1; aFormats++) {
+    switch (*aFormats) {
+      case AV_PIX_FMT_MEDIACODEC:
+        FFMPEGV_LOG("Requesting pixel format MediaCodec");
+        return AV_PIX_FMT_MEDIACODEC;
+      default:
+        break;
+    }
+  }
+  NS_WARNING("FFmpeg does not share any supported MediaCodec pixel formats.");
+#  endif  // MOZ_WIDGET_ANDROID
   return AV_PIX_FMT_NONE;
 }
 #endif
@@ -473,8 +522,10 @@ void FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::Reset() {
 }
 #endif
 
-#if defined(MOZ_USE_HWDECODE) && defined(MOZ_WIDGET_GTK)
-bool FFmpegVideoDecoder<LIBAV_VER>::ShouldEnableLinuxHWDecoding() const {
+#if defined(MOZ_USE_HWDECODE)
+bool FFmpegVideoDecoder<LIBAV_VER>::ShouldDisableHWDecoding(
+    bool aDisableHardwareDecoding) const {
+#  ifdef MOZ_WIDGET_GTK
   bool supported = false;
   switch (mCodecID) {
     case AV_CODEC_ID_H264:
@@ -497,7 +548,7 @@ bool FFmpegVideoDecoder<LIBAV_VER>::ShouldEnableLinuxHWDecoding() const {
   }
   if (!supported) {
     FFMPEG_LOG("Codec %s is not accelerated", mLib->avcodec_get_name(mCodecID));
-    return false;
+    return true;
   }
 
   bool isHardwareWebRenderUsed = mImageAllocator &&
@@ -506,13 +557,19 @@ bool FFmpegVideoDecoder<LIBAV_VER>::ShouldEnableLinuxHWDecoding() const {
                                  !mImageAllocator->UsingSoftwareWebRender();
   if (!isHardwareWebRenderUsed) {
     FFMPEG_LOG("Hardware WebRender is off, VAAPI is disabled");
-    return false;
+    return true;
   }
   if (!XRE_IsRDDProcess()) {
     FFMPEG_LOG("VA-API works in RDD process only");
+    return true;
+  }
+#  elif defined(MOZ_WIDGET_ANDROID)
+  // We only support decoding these with hardware on Android.
+  if (mCodecID == AV_CODEC_ID_H264 || mCodecID == AV_CODEC_ID_HEVC) {
     return false;
   }
-  return true;
+#  endif
+  return aDisableHardwareDecoding;
 }
 #endif
 
@@ -535,12 +592,8 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
     : FFmpegDataDecoder(aLib, GetCodecId(aConfig.mMimeType)),
       mImageAllocator(aAllocator),
 #ifdef MOZ_USE_HWDECODE
-#  ifdef MOZ_WIDGET_GTK
-      mHardwareDecodingDisabled(aDisableHardwareDecoding ||
-                                !ShouldEnableLinuxHWDecoding()),
-#  else
-      mHardwareDecodingDisabled(aDisableHardwareDecoding),
-#  endif  // MOZ_WIDGET_GTK
+      mHardwareDecodingDisabled(
+          ShouldDisableHWDecoding(aDisableHardwareDecoding)),
 #endif    // MOZ_USE_HWDECODE
       mImageContainer(aImageContainer),
       mInfo(aConfig),
@@ -593,6 +646,12 @@ void FFmpegVideoDecoder<LIBAV_VER>::InitHWDecoderIfAllowed() {
     return;
   }
 #  endif  // MOZ_ENABLE_D3D11VA
+
+#  ifdef MOZ_WIDGET_ANDROID
+  if (XRE_IsRDDProcess() && NS_SUCCEEDED(InitMediaCodecDecoder())) {
+    return;
+  }
+#  endif
 }
 #endif  // MOZ_USE_HWDECODE
 
@@ -967,13 +1026,22 @@ void FFmpegVideoDecoder<LIBAV_VER>::InitHWCodecContext(ContextType aType) {
   mCodecContext->height = mInfo.mImage.height;
   mCodecContext->thread_count = 1;
 
-  if (aType == ContextType::V4L2) {
-    mCodecContext->get_format = ChooseV4L2PixelFormat;
-  } else if (aType == ContextType::VAAPI) {
-    mCodecContext->get_format = ChooseVAAPIPixelFormat;
-  } else {
-    MOZ_DIAGNOSTIC_ASSERT(aType == ContextType::D3D11VA);
-    mCodecContext->get_format = ChooseD3D11VAPixelFormat;
+  switch (aType) {
+    case ContextType::V4L2:
+      mCodecContext->get_format = ChooseV4L2PixelFormat;
+      break;
+    case ContextType::VAAPI:
+      mCodecContext->get_format = ChooseVAAPIPixelFormat;
+      break;
+    case ContextType::D3D11VA:
+      MOZ_DIAGNOSTIC_ASSERT(aType == ContextType::D3D11VA);
+      mCodecContext->get_format = ChooseD3D11VAPixelFormat;
+      break;
+    case ContextType::MediaCodec:
+      mCodecContext->get_format = ChooseMediaCodecPixelFormat;
+      break;
+    default:
+      break;
   }
 
   if (mCodecID == AV_CODEC_ID_H264) {
@@ -1009,12 +1077,12 @@ bool FFmpegVideoDecoder<LIBAV_VER>::DecodeStats::IsDecodingSlow() const {
 }
 
 void FFmpegVideoDecoder<LIBAV_VER>::DecodeStats::UpdateDecodeTimes(
-    const AVFrame* aFrame) {
+    int64_t aDuration) {
   TimeStamp now = TimeStamp::Now();
   float decodeTime = (now - mDecodeStart).ToMilliseconds();
   mDecodeStart = now;
 
-  const float frameDuration = Duration(aFrame) / 1000.0f;
+  const float frameDuration = aDuration / 1000.0f;
   if (frameDuration <= 0.0f) {
     FFMPEGV_LOG("Incorrect frame duration, skipping decode stats.");
     return;
@@ -1126,7 +1194,12 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
   });
 
 #ifdef MOZ_FFMPEG_USE_INPUT_INFO_MAP
-  InsertInputInfo(aSample);
+#  ifdef MOZ_WIDGET_ANDROID
+  if (IsHardwareAccelerated())
+#  endif
+  {
+    InsertInputInfo(aSample);
+  }
 #endif
 
 #if LIBAVCODEC_VERSION_MAJOR >= 58
@@ -1189,12 +1262,11 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
           RESULT_DETAIL("avcodec_receive_frame error: %s", errStr));
     }
 
-    mDecodeStats.UpdateDecodeTimes(mFrame);
-
     MediaResult rv;
 #  ifdef MOZ_USE_HWDECODE
     if (IsHardwareAccelerated()) {
 #    ifdef MOZ_WIDGET_GTK
+      mDecodeStats.UpdateDecodeTimes(Duration(mFrame));
       if (mDecodeStats.IsDecodingSlow() &&
           !StaticPrefs::media_ffmpeg_disable_software_fallback()) {
         PROFILER_MARKER_TEXT("FFmpegVideoDecoder::DoDecode", MEDIA_PLAYBACK, {},
@@ -1221,15 +1293,25 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
         return rv;
       }
 #    elif defined(MOZ_ENABLE_D3D11VA)
+      mDecodeStats.UpdateDecodeTimes(Duration(mFrame));
       rv = CreateImageD3D11(mFrame->pkt_pos, GetFramePts(mFrame),
                             Duration(mFrame), aResults);
+#    elif defined(MOZ_WIDGET_ANDROID)
+      InputInfo info(aSample);
+      info.mTimecode = -1;
+      TakeInputInfo(mFrame, info);
+      mDecodeStats.UpdateDecodeTimes(info.mDuration);
+      rv = CreateImageMediaCodec(mFrame->pkt_pos, GetFramePts(mFrame),
+                                 info.mTimecode, info.mDuration, aResults);
 #    else
+      mDecodeStats.UpdateDecodeTimes(Duration(mFrame));
       return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                          RESULT_DETAIL("No HW decoding implementation!"));
 #    endif
     } else
 #  endif
     {
+      mDecodeStats.UpdateDecodeTimes(Duration(mFrame));
       rv = CreateImage(mFrame->pkt_pos, GetFramePts(mFrame), Duration(mFrame),
                        aResults);
     }
@@ -1811,6 +1893,8 @@ bool FFmpegVideoDecoder<LIBAV_VER>::IsHardwareAccelerated(
   return mUsingV4L2 || !!mVAAPIDeviceContext;
 #elif defined(MOZ_ENABLE_D3D11VA)
   return !!mD3D11VADeviceContext;
+#elif defined(MOZ_WIDGET_ANDROID)
+  return !!mMediaCodecDeviceContext;
 #else
   return false;
 #endif
@@ -2173,6 +2257,144 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CanUseZeroCopyVideoFrame() const {
          mNumOfHWTexturesInUse <= EXTRA_HW_FRAMES / 2;
 }
 #endif
+
+#ifdef MOZ_WIDGET_ANDROID
+MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitMediaCodecDecoder() {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsRDDProcess());
+  FFMPEG_LOG("Initialising MediaCodec FFmpeg decoder");
+  StaticMutexAutoLock mon(sMutex);
+
+  if (!mImageAllocator /* todo check compositor */) {
+    FFMPEG_LOG("  no KnowsCompositor or it doesn't support MediaCodec");
+    return NS_ERROR_DOM_MEDIA_FATAL_ERR;
+  }
+
+  if (mInfo.mColorDepth > gfx::ColorDepth::COLOR_10) {
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       RESULT_DETAIL("not supported color depth"));
+  }
+
+  AVCodec* codec =
+      FindHardwareAVCodec(mLib, mCodecID, AV_HWDEVICE_TYPE_MEDIACODEC);
+  if (!codec) {
+    FFMPEG_LOG("  couldn't find MediaCodec decoder for %s",
+               AVCodecToString(mCodecID));
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       RESULT_DETAIL("unable to find codec"));
+  }
+  FFMPEG_LOG("  codec %s : %s", codec->name, codec->long_name);
+
+  if (!(mCodecContext = mLib->avcodec_alloc_context3(codec))) {
+    FFMPEG_LOG("  couldn't alloc_context3 for MediaCodec");
+    return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                       RESULT_DETAIL("unable to alloc codec context"));
+  }
+  mCodecContext->opaque = this;
+  InitHWCodecContext(ContextType::MediaCodec);
+
+  auto releaseResources = MakeScopeExit([&] {
+    if (mCodecContext) {
+      mLib->av_freep(&mCodecContext);
+    }
+    if (mMediaCodecDeviceContext) {
+      mLib->av_buffer_unref(&mMediaCodecDeviceContext);
+    }
+  });
+
+  FFMPEG_LOG("  creating device context");
+  mMediaCodecDeviceContext =
+      mLib->av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_MEDIACODEC);
+  if (!mMediaCodecDeviceContext) {
+    FFMPEG_LOG("  av_hwdevice_ctx_alloc failed.");
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       RESULT_DETAIL("unable to alloc hwdevice context"));
+  }
+
+  AVHWDeviceContext* hwctx = (AVHWDeviceContext*)mMediaCodecDeviceContext->data;
+  AVMediaCodecDeviceContext* mediacodecctx =
+      (AVMediaCodecDeviceContext*)hwctx->hwctx;
+
+  mSurface =
+      java::GeckoSurface::LocalRef(java::SurfaceAllocator::AcquireSurface(
+          mInfo.mImage.width, mInfo.mImage.height, false));
+  if (!mSurface) {
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       RESULT_DETAIL("unable to acquire Java surface"));
+  }
+
+  mSurfaceHandle = mSurface->GetHandle();
+
+  JNIEnv* const env = jni::GetEnvForThread();
+  ANativeWindow* native_window =
+      ANativeWindow_fromSurface(env, mSurface->GetSurface().Get());
+
+  mediacodecctx->surface = mSurface->GetSurface().Get();
+  mediacodecctx->native_window = native_window;
+  mediacodecctx->create_window = 0;  // default -- useful when encoding?
+
+  if (mLib->av_hwdevice_ctx_init(mMediaCodecDeviceContext) < 0) {
+    FFMPEG_LOG("  av_hwdevice_ctx_init failed.");
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       RESULT_DETAIL("unable to init hwdevice context"));
+  }
+
+  mCodecContext->hw_device_ctx = mLib->av_buffer_ref(mMediaCodecDeviceContext);
+
+  MediaResult ret = AllocateExtraData();
+  if (NS_FAILED(ret)) {
+    FFMPEG_LOG("  failed to allocate extradata.");
+    return ret;
+  }
+
+  if (mLib->avcodec_open2(mCodecContext, codec, nullptr) < 0) {
+    FFMPEG_LOG("  avcodec_open2 failed for MediaCodec decoder");
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       RESULT_DETAIL("avcodec_open2 failed for MediaCodec"));
+  }
+
+  FFMPEG_LOG("  MediaCodec FFmpeg init successful");
+  releaseResources.release();
+  return NS_OK;
+}
+
+MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageMediaCodec(
+    int64_t aOffset, int64_t aPts, int64_t aTimecode, int64_t aDuration,
+    MediaDataDecoder::DecodedData& aResults) {
+  MOZ_DIAGNOSTIC_ASSERT(mFrame);
+
+  RefPtr<layers::Image> img = new layers::SurfaceTextureImage(
+      mSurfaceHandle, {mFrame->width, mFrame->height},
+      false /* NOT continuous */, gl::OriginPos::BottomLeft, mInfo.HasAlpha(),
+      false /* force color space stuff */,
+      /* aTransformOverride */ Nothing());
+
+  class CompositeListener
+      : public layers::SurfaceTextureImage::SetCurrentCallback {
+   public:
+    CompositeListener(FFmpegLibWrapper* aLib, AVFrame* aFrame) : mLib(aLib) {
+      mRef = aLib->av_buffer_ref(aFrame->buf[0]);
+    }
+
+    void operator()(void) override {
+      mLib->av_mediacodec_release_buffer((AVMediaCodecBuffer*)mRef->data, 1);
+      mLib->av_buffer_unref(&mRef);
+    }
+    FFmpegLibWrapper* mLib;
+    AVBufferRef* mRef;
+  };
+  img->AsSurfaceTextureImage()->RegisterSetCurrentCallback(
+      MakeUnique<CompositeListener>(mLib, mFrame));
+
+  RefPtr<VideoData> v = VideoData::CreateFromImage(
+      {mFrame->width, mFrame->height}, aOffset,
+      TimeUnit::FromMicroseconds(aPts), TimeUnit::FromMicroseconds(aDuration),
+      img.forget(), mFrame->flags & AV_FRAME_FLAG_KEY,
+      TimeUnit::FromMicroseconds(aTimecode));
+
+  aResults.AppendElement(std::move(v));
+  return NS_OK;
+}
+#endif  // MOZ_WIDGET_ANDROID
 
 #if MOZ_USE_HWDECODE
 /* static */ AVCodec* FFmpegVideoDecoder<LIBAV_VER>::FindVideoHardwareAVCodec(
