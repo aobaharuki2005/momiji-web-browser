@@ -727,3 +727,9 @@ DECLARE_MEDIACODEC_ADEC(amrwb, "AMR-WB", AV_CODEC_ID_AMR_WB, NULL)
 #if CONFIG_MP3_MEDIACODEC_DECODER
 DECLARE_MEDIACODEC_ADEC(mp3, "MP3", AV_CODEC_ID_MP3, NULL)
 #endif
+
+int moz_avcodec_mediacodec_is_eos(AVCodecContext* avctx) {
+  // Note that MediaCodecH264DecContext is used by all codec types.
+  MediaCodecH264DecContext *s = avctx->priv_data;
+  return s->ctx->eos;
+}
