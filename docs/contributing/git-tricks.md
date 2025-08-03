@@ -65,6 +65,23 @@ $ git wip
 ... etc
 ```
 
+## `git-absorb`: Automatically fixup! commits
+
+[`git-absorb`](https://github.com/tummychow/git-absorb) automatically creates
+fixup commits for your staged changes. It analyzes your changes and determines
+which commits they should be integrated into.
+
+Install with:
+```
+$ cargo install git-absorb
+```
+
+Usage:
+```
+$ git add -p
+$ git absorb --and-rebase
+```
+
 ## Git Maintenance
 
 [Git maintenance](https://git-scm.com/docs/git-maintenance) can set up a job to
