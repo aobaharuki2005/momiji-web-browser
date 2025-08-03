@@ -1597,9 +1597,9 @@ function FillHistoryMenu(event) {
       item.setAttribute("historyindex", j - index);
 
       if (j != index) {
-        // Use list-style-image rather than the image attribute in order to
+        // Use --menuitem-icon rather than the image attribute in order to
         // allow CSS to override this.
-        item.style.listStyleImage = `url(page-icon:${uri})`;
+        item.style.setProperty("--menuitem-icon", `url(page-icon:${uri})`);
       }
 
       if (j < index) {
