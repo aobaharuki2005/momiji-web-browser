@@ -135,6 +135,7 @@ nsresult nsMenuItemIconX::OnComplete(imgIContainer* aImage) {
   }
 
   mIconLoader->Destroy();
+  mIconLoader = nullptr;
 
   return NS_OK;
 
