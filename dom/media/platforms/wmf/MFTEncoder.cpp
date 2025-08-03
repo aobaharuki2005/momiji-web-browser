@@ -505,6 +505,10 @@ MFTEncoder::Destroy() {
     return S_OK;
   }
 
+  MaybeResolveOrRejectAnyPendingPromise(MediaResult(
+      NS_ERROR_DOM_MEDIA_CANCELED, RESULT_DETAIL("Canceled by Destroy")));
+  mPendingError = NS_OK;
+
   mAsyncEventSource = nullptr;
   mEncoder = nullptr;
   mConfig = nullptr;
@@ -1162,10 +1166,10 @@ void MFTEncoder::EventHandler(MediaEventType aEventType, HRESULT aStatus) {
         MaybeResolveOrRejectEncodePromise();
         break;
       case State::Draining:
-        ResolveOrRejectDrainPromise();
+        MaybeResolveOrRejectDrainPromise();
         break;
       case State::PreDraining:
-        ResolveOrRejectPreDrainPromise();
+        MaybeResolveOrRejectPreDrainPromise();
         break;
       default:
         MFT_ENC_LOGW("Received error in state %s", EnumValueToString(mState));
@@ -1219,7 +1223,7 @@ void MFTEncoder::EventHandler(MediaEventType aEventType, HRESULT aStatus) {
         MaybeResolveOrRejectEncodePromise();
       } else if (mState == State::PreDraining) {
         if (mPendingInputs.empty()) {
-          ResolveOrRejectPreDrainPromise();
+          MaybeResolveOrRejectPreDrainPromise();
         }
       }
       break;
@@ -1230,7 +1234,7 @@ void MFTEncoder::EventHandler(MediaEventType aEventType, HRESULT aStatus) {
       break;
     case ProcessedResult::DrainComplete:
       MOZ_ASSERT(mState == State::Draining);
-      ResolveOrRejectDrainPromise();
+      MaybeResolveOrRejectDrainPromise();
       break;
     default:
       MOZ_ASSERT_UNREACHABLE(
@@ -1245,8 +1249,8 @@ void MFTEncoder::MaybeResolveOrRejectEncodePromise() {
   MOZ_ASSERT(mEncoder);
 
   if (mEncodePromise.IsEmpty()) {
-    MOZ_ASSERT(mState == State::Inited);
-    MFT_ENC_LOGV("No encode promise to resolve or reject");
+    MFT_ENC_LOGV("[%s] No encode promise to resolve or reject",
+                 EnumValueToString(mState));
     return;
   }
 
@@ -1267,6 +1271,7 @@ void MFTEncoder::MaybeResolveOrRejectEncodePromise() {
   if (NS_FAILED(mPendingError.Code())) {
     SetState(State::Error);
     mEncodePromise.Reject(mPendingError, __func__);
+    mPendingError = NS_OK;
     return;
   }
 
@@ -1274,10 +1279,16 @@ void MFTEncoder::MaybeResolveOrRejectEncodePromise() {
   SetState(State::Inited);
 }
 
-void MFTEncoder::ResolveOrRejectDrainPromise() {
+void MFTEncoder::MaybeResolveOrRejectDrainPromise() {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
-  MOZ_ASSERT(!mDrainPromise.IsEmpty());
+
+  if (mDrainPromise.IsEmpty()) {
+    MFT_ENC_LOGV("[%s] No drain promise to resolve or reject",
+                 EnumValueToString(mState));
+    return;
+  }
+
   MOZ_ASSERT(mState == State::Draining);
 
   MFT_ENC_LOGV("Resolving (%zu outputs ) or rejecting drain promise (%s)",
@@ -1289,6 +1300,7 @@ void MFTEncoder::ResolveOrRejectDrainPromise() {
   if (NS_FAILED(mPendingError.Code())) {
     SetState(State::Error);
     mDrainPromise.Reject(mPendingError, __func__);
+    mPendingError = NS_OK;
     return;
   }
 
@@ -1296,10 +1308,16 @@ void MFTEncoder::ResolveOrRejectDrainPromise() {
   SetState(State::Inited);
 }
 
-void MFTEncoder::ResolveOrRejectPreDrainPromise() {
+void MFTEncoder::MaybeResolveOrRejectPreDrainPromise() {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
-  MOZ_ASSERT(!mPreDrainPromise.IsEmpty());
+
+  if (mPreDrainPromise.IsEmpty()) {
+    MFT_ENC_LOGV("[%s] No pre-drain promise to resolve or reject",
+                 EnumValueToString(mState));
+    return;
+  }
+
   MOZ_ASSERT(mState == State::PreDraining);
 
   MFT_ENC_LOGV("Resolving pre-drain promise (%zu outputs ) or rejecting (%s)",
@@ -1311,12 +1329,31 @@ void MFTEncoder::ResolveOrRejectPreDrainPromise() {
   if (NS_FAILED(mPendingError.Code())) {
     SetState(State::Error);
     mPreDrainPromise.Reject(mPendingError, __func__);
+    mPendingError = NS_OK;
     return;
   }
 
   MOZ_ASSERT(mPendingInputs.empty());
   mPreDrainPromise.Resolve(std::move(mOutputs), __func__);
   SetState(State::Inited);
+}
+
+void MFTEncoder::MaybeResolveOrRejectAnyPendingPromise(
+    const MediaResult& aResult) {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+
+  if (NS_FAILED(aResult.Code())) {
+    MFT_ENC_LOGW(
+        "[%s] Rejecting pending promises with error: %s (previous pending "
+        "error: %s)",
+        EnumValueToString(mState), aResult.Description().get(),
+        mPendingError.Description().get());
+    mPendingError = aResult;
+  }
+
+  MaybeResolveOrRejectEncodePromise();
+  MaybeResolveOrRejectPreDrainPromise();
+  MaybeResolveOrRejectDrainPromise();
 }
 
 Result<MFTEncoder::ProcessedResults, HRESULT>
