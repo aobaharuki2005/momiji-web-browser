@@ -1164,9 +1164,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Обриши историју</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">Историја је избрисана</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Историја је избрисана</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">%1$s избрисано</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s избрисано</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Обриши</string>
   <!--
@@ -1228,7 +1228,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Обнови језичак</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s се морао поново покренути</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s се морао поново покренути</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Аутоматски шаљи извештаје о паду</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -1601,7 +1601,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Збирка обрисана</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Збирка обрисана</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Збирка преименована</string>
   <!-- Text shown in snackbar when user closes a tab -->
@@ -1807,7 +1807,7 @@
   <!-- Preference for Global Privacy Control for the custom privacy settings for Global Privacy Control. '&amp;' is replaced with the ampersand symbol: & -->
   <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">Пренеси веб страницама да не деле и не продају податке</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
-  <string name="preference_enhanced_tracking_protection_custom_tracking_content">Садржаји који прате</string>
+  <string name="preference_enhanced_tracking_protection_custom_tracking_content">Садржај са елементима за праћење</string>
   <!-- Option for enhanced tracking protection for the custom protection settings for tracking content -->
   <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">У свим језичцима</string>
   <!-- Option for enhanced tracking protection for the custom protection settings for tracking content -->

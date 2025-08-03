@@ -631,7 +631,9 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Pan fyddwch chi\'n rhannu sut wnaethoch chi ddarganfod Firefox a\'ch bod chi\'n ei ddefnyddio, rydych chi\'n ein helpu ni i gyflwyno ein porwr i fwy o bobl.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Rhannwch y data lleiaf gyda phartneriaid technoleg marchnata Mozilla. Nid yw\'r data hwn byth yn cael ei werthu na\'i ddefnyddio i ddangos hysbysebion i chi.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Rhannwch y data lleiaf gyda phartneriaid technoleg marchnata Mozilla. Nid yw\'r data hwn byth yn cael ei werthu na\'i ddefnyddio i ddangos hysbysebion i chi.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Rhannu data gyda phartneriaid technoleg marchnata Mozilla. Nid yw\'r data hwn byth yn cael ei werthu na\'i ddefnyddio i ddangos hysbysebion i chi.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Sut rydym yn defnyddio\'r data</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1086,9 +1088,9 @@
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other">Arall</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
-  <string name="restart_warning_dialog_title">Newid eicon yr app?</string>
+  <string name="restart_warning_dialog_title">Newid eicon yr ap?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
-  <string name="restart_warning_dialog_body">Mae newid yr eicon yn ei gwneud yn ofynnol i\'r app ailgychwyn.</string>
+  <string name="restart_warning_dialog_body">Mae newid yr eicon yn golygu fod rhaid i\'r ap ailgychwyn.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive">Ailgychwyn nawr</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -1213,6 +1215,8 @@
   <string name="preferences_daily_usage_ping_learn_more">Dysgwch fwy am ping defnydd dyddiol</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Yn anfon adroddiadau chwalu\'n awtomatig</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">Anfonwyd yr adroddiad</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Mae hyn yn ein helpu i wneud diagnosis a thrwsio problemau gyda\'r porwr. Gall adroddiadau gynnwys data personol neu sensitif.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1530,9 +1534,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Dileu hanes</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">Hanes wedi’i Ddileu</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Hanes wedi’i Ddileu</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">Wedi dileu %1$s</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Wedi dileu %1$s</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Dileu</string>
   <!--
@@ -1717,7 +1721,9 @@
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Helpwch i wneud %1$s yn well i bawb. Mae gweithwyr Mozilla yn defnyddio\'r wybodaeth rydych chi\'n ei hanfon i ddatrys problemau gwefannau.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description_2">Mae eich adroddiad yn ein helpu i ddeall a thrwsio materion yn %1$s i\'w wneud yn well i bawb. Darllen rhagor</string>
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Mae eich adroddiad yn ein helpu i ddeall a thrwsio materion yn %1$s i\'w wneud yn well i bawb. Darllen rhagor</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">Mae eich adroddiad yn ein helpu i ddeall a thrwsio problemau yn %1$s i\'w wneud yn well i bawb. %2$s</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Darllen rhagor</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1781,7 +1787,9 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Adfer tab</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">Roedd yn rhaid i %s ailgychwyn</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">Roedd yn rhaid i %s ailgychwyn</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">chwalodd %s. Anfon adroddiad?</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Mae gennych adroddiad chwalu heb ei anfon yn ymwneud â chwaliadau sy\'n cael eu hymchwilio. Bydd ei anfon yn ein helpu i wella %1$s. Bydd cau\'r hysbysiad hwn yn anwybyddu\'r adroddiad hwn.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1790,10 +1798,17 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Anfonwch adroddiadau damwain yn awtomatig</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Cau</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">GAU</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Peidio dangos eto</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">ANFON</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Anfonwch adroddiad chwalu</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">Mae adroddiadau damwain yn ein helpu i wneud diagnosis a thrwsio problemau gyda\'r porwr. Gall adroddiadau gynnwys data personol neu sensitif. %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">Dysgu rhagor</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Dysgu Rhagor</string>
   <!--
@@ -2182,7 +2197,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Dilëwyd y casgliad</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Dilëwyd y casgliad</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Ailenwyd y casgliad</string>
   <!-- Text shown in snackbar when user closes a tab -->
@@ -3750,7 +3765,9 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Archwilio\'r estyniadau</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">Gosod teclyn chwilio</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Gosod teclyn chwilio</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">Archwiliwch y teclyn chwilio</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

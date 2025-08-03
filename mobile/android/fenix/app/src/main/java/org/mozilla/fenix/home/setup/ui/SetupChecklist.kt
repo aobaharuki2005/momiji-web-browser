@@ -207,7 +207,7 @@ private fun createPreviewGroups() = listOf(
         tasks = listOf(
             ChecklistItem.Task(
                 type = ChecklistItem.Task.Type.INSTALL_SEARCH_WIDGET,
-                title = R.string.setup_checklist_task_search_widget,
+                title = R.string.setup_checklist_task_search_widget_2,
                 icon = R.drawable.mozac_ic_web_extension_default_icon,
                 isCompleted = false,
             ),

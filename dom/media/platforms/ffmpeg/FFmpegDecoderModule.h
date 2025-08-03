@@ -15,6 +15,7 @@
 #include "PlatformDecoderModule.h"
 #include "VideoUtils.h"
 #include "VPXDecoder.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/gfxVars.h"
 
@@ -82,33 +83,38 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
         {AV_CODEC_ID_H264, gfx::gfxVars::UseH264HwDecode()},
 #  endif
     };
-
-    for (const auto& entry : kCodecIDs) {
-      if (!entry.mHwAllowed) {
-        MOZ_LOG(sPDMLog, LogLevel::Debug,
-                ("Hw codec disabled by gfxVars for %s",
-                 AVCodecToString(entry.mId)));
-        continue;
-      }
-
-      const AVCodec* codec = nullptr;
-      for (const auto& deviceType : kDeviceTypes) {
-        codec = FFmpegVideoDecoder<V>::FindVideoHardwareAVCodec(aLib, entry.mId,
-                                                                deviceType);
-        if (codec) {
-          break;
+    {
+      // Reset the list of supported hardware codecs and reevaluate them.
+      auto hwCodecs = sSupportedHWCodecs.Lock();
+      hwCodecs->Clear();
+      for (const auto& entry : kCodecIDs) {
+        if (!entry.mHwAllowed) {
+          MOZ_LOG(sPDMLog, LogLevel::Debug,
+                  ("Hw codec disabled by gfxVars for %s",
+                   AVCodecToString(entry.mId)));
+          continue;
         }
-      }
 
-      if (!codec) {
+        const AVCodec* codec = nullptr;
+        for (const auto& deviceType : kDeviceTypes) {
+          codec = FFmpegVideoDecoder<V>::FindVideoHardwareAVCodec(
+              aLib, entry.mId, deviceType);
+          if (codec) {
+            break;
+          }
+        }
+
+        if (!codec) {
+          MOZ_LOG(
+              sPDMLog, LogLevel::Debug,
+              ("No hw codec or decoder for %s", AVCodecToString(entry.mId)));
+          continue;
+        }
+
+        hwCodecs->AppendElement(entry.mId);
         MOZ_LOG(sPDMLog, LogLevel::Debug,
-                ("No hw codec or decoder for %s", AVCodecToString(entry.mId)));
-        continue;
+                ("Support %s for hw decoding", AVCodecToString(entry.mId)));
       }
-
-      sSupportedHWCodecs.AppendElement(entry.mId);
-      MOZ_LOG(sPDMLog, LogLevel::Debug,
-              ("Support %s for hw decoding", AVCodecToString(entry.mId)));
     }
 #endif  // (XP_WIN || MOZ_WIDGET_GTK) && MOZ_USE_HWDECODE &&
         // !MOZ_FFVPX_AUDIOONLY
@@ -278,13 +284,15 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
       return false;
     }
 #endif
+    auto hwCodecs = sSupportedHWCodecs.Lock();
     AVCodecID videoCodec = FFmpegVideoDecoder<V>::GetCodecId(aMimeType);
-    return sSupportedHWCodecs.Contains(videoCodec);
+    return hwCodecs->Contains(videoCodec);
   }
 
  private:
   FFmpegLibWrapper* mLib;
-  MOZ_RUNINIT static inline nsTArray<AVCodecID> sSupportedHWCodecs;
+  MOZ_RUNINIT static inline StaticDataMutex<nsTArray<AVCodecID>>
+      sSupportedHWCodecs{"sSupportedHWCodecs"};
 };
 
 }  // namespace mozilla

@@ -631,7 +631,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">เมื่อคุณแบ่งปันว่าคุณค้นพบ Firefox ได้อย่างไร และคุณใช้งานมันอย่างไร คุณช่วยให้เราแนะนำเบราว์เซอร์ของเราให้ผู้คนรู้จักมากขึ้น</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">แบ่งปันข้อมูลจำนวนหนึ่งกับพันธมิตรด้านเทคโนโลยีการตลาดของ Mozilla ข้อมูลนี้จะไม่ถูกขายหรือถูกใช้เพื่อแสดงโฆษณาให้แก่คุณ</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">แบ่งปันข้อมูลจำนวนหนึ่งกับพันธมิตรด้านเทคโนโลยีการตลาดของ Mozilla ข้อมูลนี้จะไม่ถูกขายหรือถูกใช้เพื่อแสดงโฆษณาให้แก่คุณ</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">เราใช้ข้อมูลอย่างไร</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1513,9 +1513,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">ลบประวัติ</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">ลบประวัติแล้ว</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">ลบประวัติแล้ว</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">ลบ %1$s แล้ว</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">ลบ %1$s แล้ว</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">ลบ</string>
   <!--
@@ -1762,7 +1762,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">เรียกคืนแท็บ</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s ต้องเริ่มการทำงานใหม่อีกครั้ง</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s ต้องเริ่มการทำงานใหม่อีกครั้ง</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">ส่งรายงานความผิดพลาดโดยอัตโนมัติ</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -2159,7 +2159,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">ลบชุดสะสมแล้ว</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">ลบชุดสะสมแล้ว</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">เปลี่ยนชื่อชุดสะสมแล้ว</string>
   <!-- Text shown in snackbar when user closes a tab -->
@@ -3723,7 +3723,7 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">สำรวจส่วนขยาย</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">ติดตั้งวิดเจ็ตค้นหา</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">ติดตั้งวิดเจ็ตค้นหา</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

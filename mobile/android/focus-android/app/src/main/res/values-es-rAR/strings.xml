@@ -150,6 +150,8 @@
     %2$s is the url for the learn-more link.
   -->
   <string name="about_content" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[<p>%1$s te da el control.</p> <p>Usalo como navegador privado: <ul> <li>Buscar y navegar directamente en la aplicación</li> <li>Bloquear rastreadores (o actualizar los ajustes para permitir rastreadores)</li> <li>Borrar para eliminar cookies e historial de búsqueda y navegación</li> </ul> </p> <p>%1$s es producido por Mozilla. Nuestra misión es promover una Internet saludable y abierta.<br/> <a href=\"%2$s\">Conocer más</a></p>]]></string>
+  <!-- A link to SUMO at the bottom of About Focus screen. -->
+  <string name="about_screen_learn_more">Conocer más</string>
   <!-- Header for the Privacy and Security settings menu -->
   <string name="preference_privacy_and_security_header">Privacidad y seguridad</string>
   <!-- Preference summary for settings related to privacy and security -->

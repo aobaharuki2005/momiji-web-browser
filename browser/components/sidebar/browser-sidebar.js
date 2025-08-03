@@ -111,6 +111,7 @@ var SidebarController = {
       [
         "viewHistorySidebar",
         this.makeSidebar({
+          name: "history",
           elementId: "sidebar-switcher-history",
           url: this.sidebarRevampEnabled
             ? "chrome://browser/content/sidebar/sidebar-history.html"
@@ -132,6 +133,7 @@ var SidebarController = {
       [
         "viewTabsSidebar",
         this.makeSidebar({
+          name: "syncedtabs",
           elementId: "sidebar-switcher-tabs",
           url: this.sidebarRevampEnabled
             ? "chrome://browser/content/sidebar/sidebar-syncedtabs.html"
@@ -150,6 +152,7 @@ var SidebarController = {
       [
         "viewBookmarksSidebar",
         this.makeSidebar({
+          name: "bookmarks",
           elementId: "sidebar-switcher-bookmarks",
           url: "chrome://browser/content/places/bookmarksSidebar.xhtml",
           menuId: "menu_bookmarksSidebar",
@@ -169,6 +172,7 @@ var SidebarController = {
       "browser.ml.chat.enabled",
       "viewGenaiChatSidebar",
       {
+        name: "aichat",
         elementId: "sidebar-switcher-genai-chat",
         url: "chrome://browser/content/genai/chat.html",
         keyId: "viewGenaiChatSidebarKb",
@@ -178,6 +182,7 @@ var SidebarController = {
         revampL10nId: "sidebar-menu-genai-chat-label",
         iconUrl: "chrome://global/skin/icons/highlights.svg",
         gleanClickEvent: Glean.sidebar.chatbotIconClick,
+        toolContextMenuId: "aichat",
       }
     );
 
@@ -185,6 +190,7 @@ var SidebarController = {
       "browser.contextual-password-manager.enabled",
       "viewCPMSidebar",
       {
+        name: "passwords",
         elementId: "sidebar-switcher-megalist",
         url: "chrome://global/content/megalist/megalist.html",
         menuId: "menu_megalistSidebar",
@@ -236,8 +242,9 @@ var SidebarController = {
   },
   POSITION_START_PREF: "sidebar.position_start",
   DEFAULT_SIDEBAR_ID: "viewBookmarksSidebar",
-  TOOLS_PREF: "sidebar.main.tools",
   VISIBILITY_PREF: "sidebar.visibility",
+  TOOLS_PREF: "sidebar.main.tools",
+  INSTALLED_EXTENSIONS: "sidebar.installed.extensions",
 
   // lastOpenedId is set in show() but unlike currentID it's not cleared out on hide
   // and isn't persisted across windows
@@ -330,6 +337,14 @@ var SidebarController = {
 
   get isPinnedTabsDragging() {
     return this._pinnedTabsSplitter.getAttribute("state") === "dragging";
+  },
+
+  get sidebarTools() {
+    return this.sidebarRevampTools ? this.sidebarRevampTools.split(",") : [];
+  },
+
+  get sidebarExtensions() {
+    return this.installedExtensions ? this.installedExtensions.split(",") : [];
   },
 
   init() {
@@ -1522,14 +1537,11 @@ var SidebarController = {
   refreshTools() {
     let changed = false;
     const tools = new Set(this.sidebarRevampTools.split(","));
-    this.toolsAndExtensions.forEach((tool, commandID) => {
-      const toolID = toolsNameMap[commandID];
-      if (toolID) {
-        const expected = !tools.has(toolID);
-        if (tool.disabled != expected) {
-          tool.disabled = expected;
-          changed = true;
-        }
+    this.toolsAndExtensions.forEach(tool => {
+      const expected = !tools.has(tool.name);
+      if (tool.disabled != expected) {
+        tool.disabled = expected;
+        changed = true;
       }
     });
     if (changed) {
@@ -1543,27 +1555,21 @@ var SidebarController = {
    * @param {string} commandID
    */
   toggleTool(commandID) {
-    let toggledTool = this.toolsAndExtensions.get(commandID);
+    const toggledTool = this.toolsAndExtensions.get(commandID);
+    const toolName = toggledTool.name;
     toggledTool.disabled = !toggledTool.disabled;
+
     if (!toggledTool.disabled) {
       // If re-enabling tool, remove from the map and add it to the end
       this.toolsAndExtensions.delete(commandID);
       this.toolsAndExtensions.set(commandID, toggledTool);
     }
-    // Tools are persisted via a pref.
-    if (!Object.hasOwn(toggledTool, "extensionId")) {
-      const tools = new Set(this.sidebarRevampTools.split(","));
-      const updatedTools = tools.has(toolsNameMap[commandID])
-        ? Array.from(tools).filter(
-            tool => !!tool && tool != toolsNameMap[commandID]
-          )
-        : [
-            ...Array.from(tools).filter(tool => !!tool),
-            toolsNameMap[commandID],
-          ];
-      Services.prefs.setStringPref(this.TOOLS_PREF, updatedTools.join());
+
+    this.SidebarManager.updateToolsPref(toolName, toggledTool.disabled);
+
+    if (toggledTool.disabled) {
+      this.dismissSidebarBadge(commandID);
     }
-    this.dismissSidebarBadge(commandID);
     window.dispatchEvent(new CustomEvent("SidebarItemChanged"));
   },
 
@@ -1580,13 +1586,15 @@ var SidebarController = {
       window.dispatchEvent(new CustomEvent("SidebarItemChanged"));
     } else {
       // Add new extension
+      const name = extension.extensionId;
       this.toolsAndExtensions.set(commandID, {
         view: commandID,
         extensionId: extension.extensionId,
         icon: extension.icon,
         iconUrl: extension.iconUrl,
         tooltiptext: extension.label,
-        disabled: false,
+        disabled: !this.sidebarTools.includes(name), // name is the extensionID
+        name,
       });
       window.dispatchEvent(new CustomEvent("SidebarItemAdded"));
     }
@@ -1600,6 +1608,23 @@ var SidebarController = {
    * @param {object} props
    */
   registerExtension(commandID, props) {
+    const sidebarTools = this.sidebarTools;
+    const installedExtensions = this.sidebarExtensions;
+    const name = props.extensionId;
+
+    // An extension that is newly installed will be added to the sidebar.main.tools
+    // pref by default until a user deselects it; separately we update our list of
+    // sidebar extensions to ensure it keeps track of what's been installed.
+    if (!installedExtensions.includes(name) && !sidebarTools.includes(name)) {
+      sidebarTools.push(name);
+      installedExtensions.push(name);
+      Services.prefs.setStringPref(this.TOOLS_PREF, sidebarTools.join());
+      Services.prefs.setStringPref(
+        this.INSTALLED_EXTENSIONS,
+        installedExtensions.join()
+      );
+    }
+
     const sidebar = {
       title: props.title,
       url: "chrome://browser/content/webext-panels.xhtml",
@@ -1613,6 +1638,7 @@ var SidebarController = {
       // The following properties are specific to extensions
       extensionId: props.extensionId,
       onload: props.onload,
+      name,
     };
     this.sidebars.set(commandID, sidebar);
 
@@ -1721,16 +1747,20 @@ var SidebarController = {
     const extensions = [];
     for (const [commandID, sidebar] of this.sidebars.entries()) {
       if (Object.hasOwn(sidebar, "extensionId")) {
+        const disabled = !this.sidebarTools.includes(sidebar.name);
+
         extensions.push({
           commandID,
           view: commandID,
           extensionId: sidebar.extensionId,
           iconUrl: sidebar.iconUrl,
           tooltiptext: sidebar.label,
-          disabled: false,
+          disabled,
+          name: sidebar.name,
         });
       }
     }
+
     return extensions;
   },
 
@@ -1744,12 +1774,11 @@ var SidebarController = {
       .filter(commandID => this.sidebars.get(commandID))
       .map(commandID => {
         const sidebar = this.sidebars.get(commandID);
-        const disabled = !this.sidebarRevampTools
-          .split(",")
-          .includes(toolsNameMap[commandID]);
+        const disabled = !this.sidebarTools.includes(toolsNameMap[commandID]);
         return {
           commandID,
           view: commandID,
+          name: sidebar.name,
           iconUrl: sidebar.iconUrl,
           l10nId: sidebar.revampL10nId,
           disabled,
@@ -1760,6 +1789,7 @@ var SidebarController = {
           get attention() {
             return sidebar.attention ?? false;
           },
+          contextMenu: sidebar.toolContextMenuId,
         };
       });
   },
@@ -1784,6 +1814,7 @@ var SidebarController = {
     }
     document.getElementById(sidebar.menuId)?.remove();
     document.getElementById(sidebar.switcherMenuId)?.remove();
+
     this.sidebars.delete(commandID);
     this.toolsAndExtensions.delete(commandID);
     window.dispatchEvent(new CustomEvent("SidebarItemRemoved"));
@@ -2134,6 +2165,9 @@ var SidebarController = {
   },
 
   onMouseLeave() {
+    if (!this._state.launcherExpanded) {
+      return;
+    }
     this.mouseEnterTask.disarm();
     const contentArea = document.getElementById("tabbrowser-tabbox");
     this._box.toggleAttribute("sidebar-launcher-hovered", false);
@@ -2146,6 +2180,9 @@ var SidebarController = {
   },
 
   onMouseEnter() {
+    if (this._state.launcherExpanded) {
+      return;
+    }
     this.mouseEnterTask = new DeferredTask(
       () => {
         this.debouncedMouseEnter();
@@ -2359,6 +2396,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
       SidebarController.refreshTools();
     }
   }
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  SidebarController,
+  "installedExtensions",
+  "sidebar.installed.extensions",
+  ""
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(

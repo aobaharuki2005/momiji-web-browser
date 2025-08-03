@@ -472,8 +472,7 @@ static GtkStyleContext* GetWidgetStyleInternal(Type aType) {
       style = CreateSubStyleWithClass(Type::Scrollbar, GTK_STYLE_CLASS_TROUGH);
       break;
     case Type::ScrollbarThumb:
-      style =
-          CreateSubStyleWithClass(Type::ScrollbarThumb, GTK_STYLE_CLASS_SLIDER);
+      style = CreateSubStyleWithClass(Type::Scrollbar, GTK_STYLE_CLASS_SLIDER);
       break;
     case Type::ScrolledWindow:
       style =

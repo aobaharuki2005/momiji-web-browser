@@ -726,12 +726,16 @@
   <string name="preferences_open_links_in_a_private_tab">Aberi ligòngios in un’ischeda privada noa</string>
   <!-- Preference for allowing screenshots to be taken while in a private tab -->
   <string name="preferences_allow_screenshots_in_private_mode">Permite is caturas de ischermu in sa navigatzione privada</string>
+  <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+  <string name="preferences_screenshots_in_private_mode_disclaimer">Si est ativu, is ischedas privadas ant a èssere visìbiles fintzas cun prus aplicatziones abertas</string>
   <!-- Preference for adding private browsing shortcut -->
   <string name="preferences_add_private_browsing_shortcut">Agiunghe unu curtzadòrgiu de navigatzione privada</string>
   <!-- Preference for enabling "HTTPS-Only" mode -->
   <string name="preferences_https_only_title">Modalidade «isceti HTTPS»</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Imprea su blocu de ischermu pro cuare ischedas in sa navigatzione privada</string>
+  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
+  <string name="preferences_pbm_lock_screen_summary_2">Podes bìdere is ischedas a pustis de isblocare su dispositivu cun s’imprenta, cun sa cara o cun su PIN.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Blocu de is avisos de testimòngios</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
@@ -833,7 +837,7 @@
   <!-- Preference title for switch preference to suggest bookmarks when searching -->
   <string name="preferences_search_bookmarks">Chirca in is sinnalibros</string>
   <!-- Preference title for switch preference to show shortcuts when searching -->
-  <string name="preferences_show_shortcuts">Ammustra incurtzaduras</string>
+  <string name="preferences_show_shortcuts">Ammustra curtzadòrgios</string>
   <!-- Preference title for switch preference to suggest synced tabs when searching -->
   <string name="preferences_search_synced_tabs">Chirca ischedas sincronizadas</string>
   <!-- Preference for account settings -->
@@ -878,6 +882,8 @@
   <string name="preferences_choose_app_for_downloads">Gesti is iscarrigamentos cun un’àtera aplicatzione</string>
   <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
   <string name="preferences_downloads_settings_clean_up_files_title">Cantzella dae %s e dae su dispositivu</string>
+  <!-- Summary for the setting to automatically clean up downloaded files -->
+  <string name="preferences_downloads_settings_clean_up_files_summary">A cantzellare is archìvios dae su gestore de iscarrigamentos ddos at a cantzellare puru dae su dispositivu tuo</string>
   <!-- Preference for downloads -->
   <string name="preferences_downloads">Iscarrigamentos</string>
   <!-- Preference for enabling gecko engine logs -->
@@ -914,6 +920,14 @@
   <string name="addons_permissions_required_data_collection_description_2">S’iscuadra de isvilupu narat chi custa estensione regollet: %1$s</string>
   <!-- The description of the "none" data collection permission, when the extension doesn't collect anything according to the developer. -->
   <string name="addons_permissions_none_required_data_collection_description">S’iscuadra de isvilupu narat chi custa estensione non rechedet sa regorta de datos.</string>
+  <!-- The title of the required permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_required_permissions">Permissos rechestos:</string>
+  <!-- The title of the optional permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_optional_permissions">Permissos optzionales:</string>
+  <!-- The title of the required data collection permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_required_data_collection">Regorta de datos obligatòria:</string>
+  <!-- The title of the optional data collection permissions section from addon's permissions screen. -->
+  <string name="addons_permissions_heading_optional_data_collection">Regorta de datos optzionale:</string>
   <!--
     Add-on Preferences
 
@@ -983,6 +997,30 @@
   <string name="wallpapers_onboarding_dialog_body_text">Sèbera un’isfundu de ischermu chi ti rapresentat.</string>
   <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
   <string name="wallpapers_onboarding_dialog_explore_more_button_text">Iscoberi àteros isfundos de ischermu</string>
+  <!--
+    Icon picker
+
+    Title for the "Default" alternative app icon variant in the icon picker screen.
+  -->
+  <string name="alternative_app_icon_option_default">Predefinida</string>
+  <!-- Title for the "Light" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_light">Crara</string>
+  <!-- Title for the "Dark" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_dark">Iscura</string>
+  <!-- Title for the "Purple" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_purple">Tanadu</string>
+  <!-- Title for the "Purple Dark" alternative app icon variant in the icon picker screen. -->
+  <string name="alternative_app_icon_option_purple_dark">Tanadu iscuru</string>
+  <!-- Title for the "Sunrise" gradient alternative app icon variant in the icon picker screen. The app icon features a soft yellow-to-blue gradient background, resembling the colors of early morning light. -->
+  <string name="alternative_app_icon_option_gradient_sunrise">Arbèschida</string>
+  <!-- Title for the "Sunset" gradient alternative app icon variant in the icon picker screen. The app icon has a rich red-to-purple gradient background, resembling the tones of a sunset sky. -->
+  <string name="alternative_app_icon_option_gradient_sunset">Iscurigadòrgiu</string>
+  <!-- Title for the "Midnight" gradient alternative app icon variant in the icon picker screen. The app icon features a dark gradient background, resembling the deep tones of the night sky. -->
+  <string name="alternative_app_icon_option_gradient_midnight">Mesunote</string>
+  <!-- Title for the "Retro 2004" themed alternative app icon variant in the icon picker screen. This app icon uses the classic Firefox logo from 2004. -->
+  <string name="alternative_app_icon_option_retro_2004">Retro 2004</string>
+  <!-- Title for the "Retro 2017" themed alternative app icon variant in the icon picker screen. This app icon uses the Firefox logo from 2017, with a more modernized design. -->
+  <string name="alternative_app_icon_option_retro_2017">Retro 2017</string>
   <!-- Title for the "Minimal" themed alternative app icon variant in the icon picker screen. The app icon presents a simplified, flat and monochrome version of the Firefox logo. -->
   <string name="alternative_app_icon_option_minimal">Minimalista</string>
   <!-- Title for the "Pride" themed alternative app icon variant in the icon picker screen. The app icon incorporates a rainbow color scheme in support of the LGBTQ+ community. -->
@@ -995,6 +1033,14 @@
   <string name="alternative_app_icon_option_momo_subtitle">Creada dae @heyheymomodraws</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other">Àteras</string>
+  <!-- Title to show in alert when user selects an alternative app icon -->
+  <string name="restart_warning_dialog_title">Boles modificare s’icona de s’aplicatzione?</string>
+  <!-- Message to warn users that applying an alternative app icon requires an app restart -->
+  <string name="restart_warning_dialog_body">Sa modìfica de s’icona rechedet su riaviu de s’aplicatzione.</string>
+  <!-- Dialog button text for confirming the app restart to apply the selected icon -->
+  <string name="restart_warning_dialog_button_positive">Torra a aviare immoe</string>
+  <!-- Dialog button text for cancelling app icon change -->
+  <string name="restart_warning_dialog_button_negative">Annulla</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1095,12 +1141,16 @@
   <string name="exceptions_empty_message_description">Is estensiones ti permitint de disativare s\'amparu contra a sa sighidura in tzertos sitos.</string>
   <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
   <string name="exceptions_empty_message_learn_more_link">Àteras informatziones</string>
+  <!-- Preference switch for usage and technical data collection -->
+  <string name="preference_usage_data_2">Imbia datos tècnicos e de interatzione</string>
   <!-- Preference switch for usage and technical learn more link -->
   <string name="preference_usage_data_learn_more" tools:ignore="UnusedResources" moz:removedIn="141">Àteras informatziones</string>
   <!-- Preference switch for daily usage ping data collection -->
   <string name="preferences_daily_usage_ping_title">Ping de impreu diàriu</string>
   <string name="preferences_daily_usage_ping_description">Custu agiudat a Mozilla a valutare is utentes ativos.</string>
   <string name="preferences_daily_usage_ping_learn_more">Àteras informatziones a subra de su ping de impreu diàriu</string>
+  <!-- Preference switch title for automatically submitting crash reports -->
+  <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Imbia informes de faddinas in automàticu</string>
   <string name="usage_data_category">Datos de impreu</string>
   <string name="studies_data_category">Istùdios</string>
   <string name="technical_data_category">Datos tècnicos</string>
@@ -1397,9 +1447,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Cantzella sa cronologia</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">Cronologia cantzellada</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Cronologia cantzellada</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">%1$s cantzelladu</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s cantzelladu</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Cantzella</string>
   <!--
@@ -1634,7 +1684,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Recùpera s’ischeda</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s s’est dèpidu torrare a aviare</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s s’est dèpidu torrare a aviare</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Imbia informes de faddinas in automàticu</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -1996,7 +2046,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Colletzione cantzellada</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Colletzione cantzellada</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Colletzione torrada a nominare</string>
   <!-- Text shown in snackbar when user closes a tab -->
@@ -2071,6 +2121,8 @@
   <string name="preferences_delete_browsing_data_button">Cantzella is datos de navigatzione</string>
   <!-- Title for the Delete browsing data on quit preference -->
   <string name="preferences_delete_browsing_data_on_quit">Cantzella is datos de navigatzione e essi</string>
+  <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+  <string name="preference_summary_delete_browsing_data_on_quit_2">Cantzellat is datos de navigatzione in automàticu cando seletzionas “Essi” dae su menù printzipale</string>
   <!-- Action item in menu for the Delete browsing data on quit feature -->
   <string name="delete_browsing_data_on_quit_action">Essi</string>
   <!-- Title text of a delete browsing data dialog. -->
@@ -2629,6 +2681,12 @@
   <string name="synced_tabs_expand_group">Ismànnia su grupu de ischedas sincronizadas</string>
   <!-- Content description for collapsing a group of synced tabs. -->
   <string name="synced_tabs_collapse_group">Mìnima su grupu de ischedas sincronizadas</string>
+  <!--
+    Top Sites
+
+    Title text displayed for the shortcuts home screen section.
+  -->
+  <string name="homepage_shortcuts_title">Curtzadòrgios</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Lìmite de curtzadòrgios barigadu</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->

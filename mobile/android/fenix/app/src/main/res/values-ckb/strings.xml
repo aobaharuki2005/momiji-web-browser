@@ -462,9 +462,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">مێژووی کار بسڕەوە</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">مێژوو سڕایەوە</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">مێژوو سڕایەوە</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">%1$s سڕایەوە</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s سڕایەوە</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">سڕینەوە</string>
   <!--
@@ -729,7 +729,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">کۆکەرەوە سڕایەوە</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">کۆکەرەوە سڕایەوە</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">کۆکەرەوە ناولێنرایەوە</string>
   <!-- Text shown in snackbar when user closes a tab -->

@@ -99,11 +99,11 @@
   <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
   <string name="mozac_feature_prompts_suggest_strong_password_content_description">Sugerează o parolă puternică</string>
   <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
-  <string name="mozac_feature_prompts_suggest_strong_password_2">Utilizează o parolă puternică</string>
+  <string name="mozac_feature_prompts_suggest_strong_password_2">Folosește o parolă puternică</string>
   <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
-  <string name="mozac_feature_prompts_suggest_strong_password_message">Utilizează o parolă puternică: %1$s</string>
+  <string name="mozac_feature_prompts_suggest_strong_password_message">Folosește o parolă puternică: %1$s</string>
   <!-- Title for using the suggest strong password confirmation dialog -->
-  <string name="mozac_feature_prompts_suggest_strong_password_title">Utilizează o parolă puternică?</string>
+  <string name="mozac_feature_prompts_suggest_strong_password_title">Folosești o parolă puternică?</string>
   <!-- Content description for the suggest strong password confirmation dialog -->
   <string name="mozac_feature_prompts_suggest_strong_password_description_3">Protejează-ți contul folosind o parolă puternică, generată aleatoriu. Aceasta va fi salvată în contul tău pentru utilizare ulterioară.</string>
   <!-- Pressing this will use the suggested strong password -->

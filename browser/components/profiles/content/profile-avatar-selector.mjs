@@ -310,10 +310,15 @@ export class ProfileAvatarSelector extends MozLitElement {
   }
 
   customTabViewImageTemplate() {
-    return html`<div class="custom-avatar-crop-header">
+    return html`<div
+        class="custom-avatar-crop-header"
+        data-l10n-id="custom-avatar-crop-view"
+      >
         <moz-button
           id="back-button"
           @click=${this.handleCancelClick}
+          @keydown=${this.handleBackKeyDown}
+          data-l10n-id="custom-avatar-crop-back-button"
           type="icon ghost"
           iconSrc="chrome://global/skin/icons/arrow-left.svg"
         ></moz-button>
@@ -322,10 +327,16 @@ export class ProfileAvatarSelector extends MozLitElement {
       </div>
       <div class="custom-avatar-crop-area">
         <div id="avatar-selection-container">
-          <div id="highlight" class="highlight" tabindex="0">
+          <div
+            id="highlight"
+            class="highlight"
+            tabindex="0"
+            data-l10n-id="custom-avatar-crop-area"
+          >
             <div id="highlight-background"></div>
             <div
               id="mover-topLeft"
+              data-l10n-id="custom-avatar-drag-handle"
               class="mover-target direction-topLeft"
               tabindex="0"
             >
@@ -334,6 +345,7 @@ export class ProfileAvatarSelector extends MozLitElement {
 
             <div
               id="mover-topRight"
+              data-l10n-id="custom-avatar-drag-handle"
               class="mover-target direction-topRight"
               tabindex="0"
             >
@@ -342,6 +354,7 @@ export class ProfileAvatarSelector extends MozLitElement {
 
             <div
               id="mover-bottomRight"
+              data-l10n-id="custom-avatar-drag-handle"
               class="mover-target direction-bottomRight"
               tabindex="0"
             >
@@ -350,6 +363,7 @@ export class ProfileAvatarSelector extends MozLitElement {
 
             <div
               id="mover-bottomLeft"
+              data-l10n-id="custom-avatar-drag-handle"
               class="mover-target direction-bottomLeft"
               tabindex="0"
             >
@@ -366,12 +380,14 @@ export class ProfileAvatarSelector extends MozLitElement {
       <moz-button-group class="custom-avatar-actions"
         ><moz-button
           @click=${this.handleCancelClick}
+          @keydown=${this.handleCancelKeyDown}
           data-l10n-id="avatar-selector-cancel-button"
         ></moz-button
         ><moz-button
           type="primary"
           id="save-button"
           @click=${this.handleSaveClick}
+          @keydown=${this.handleSaveKeyDown}
           data-l10n-id="avatar-selector-save-button"
         ></moz-button
       ></moz-button-group>`;
@@ -385,6 +401,27 @@ export class ProfileAvatarSelector extends MozLitElement {
       URL.revokeObjectURL(this.blobURL);
     }
     this.file = null;
+  }
+
+  handleBackKeyDown(event) {
+    if (event.code === "Enter" || event.code === "Space") {
+      event.preventDefault();
+      this.handleCancelClick(event);
+    }
+  }
+
+  handleCancelKeyDown(event) {
+    if (event.code === "Enter" || event.code === "Space") {
+      event.preventDefault();
+      this.handleCancelClick(event);
+    }
+  }
+
+  handleSaveKeyDown(event) {
+    if (event.code === "Enter" || event.code === "Space") {
+      event.preventDefault();
+      this.handleSaveClick(event);
+    }
   }
 
   async handleSaveClick(event) {
@@ -472,6 +509,7 @@ export class ProfileAvatarSelector extends MozLitElement {
   imageLoaded() {
     this.updateViewDimensions();
     this.setInitialAvatarSelection();
+    this.highlight.focus({ focusVisible: true });
   }
 
   setInitialAvatarSelection() {

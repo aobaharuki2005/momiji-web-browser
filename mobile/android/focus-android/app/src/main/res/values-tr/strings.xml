@@ -150,6 +150,8 @@
     %2$s is the url for the learn-more link.
   -->
   <string name="about_content" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[<p>%1$s kontrolü size verir.</p> <p>Onu gizlilik odaklı bir tarayıcı olarak kullanabilirsiniz: <ul> <li>Doğrudan uygulamada arama yapabilir ve web’de gezinebilirsiniz</li> <li>Takip kodlarını engelleyebilirsiniz (veya belli takip kodlarına izin verebilirsiniz)</li> <li>Tek düğmeyle çerezleri, arama ve gezinti geçmişinizi silebilirsiniz</li> </ul> </p> <p>%1$s Mozilla tarafından geliştirilmiştir. Misyonumuz daha sağlıklı ve açık bir internet yaratmaktır.<br/> <a href=\"%2$s\">Daha fazla bilgi alın</a></p>]]></string>
+  <!-- A link to SUMO at the bottom of About Focus screen. -->
+  <string name="about_screen_learn_more">Daha fazla bilgi alın</string>
   <!-- Header for the Privacy and Security settings menu -->
   <string name="preference_privacy_and_security_header">Gizlilik ve Güvenlik</string>
   <!-- Preference summary for settings related to privacy and security -->

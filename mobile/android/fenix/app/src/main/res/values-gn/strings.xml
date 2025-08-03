@@ -627,7 +627,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Eikuaaukávo mba’éichapa eikuaára’e Firefox ha ijeporu, orepytyvõ emoherakuã hag̃ua ore kundahára hetave tapichápe.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Emoherakuã’imi mba’ekuaarã marketing Mozilla-pegua kundahára ndive. Ko’ã mba’ekuaarã noñevendemo’ãi ha ndohechaukamo’ãi ñemurã.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Emoherakuã’imi mba’ekuaarã marketing Mozilla-pegua kundahára ndive. Ko’ã mba’ekuaarã noñevendemo’ãi ha ndohechaukamo’ãi ñemurã.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Mba’éichapa jaiporu umi mba’ekuaarã</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1516,9 +1516,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Emboguete tembiasakue</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">Tembiasakue mboguepyre</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Tembiasakue mboguepyre</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">Mboguepyre %1$s</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Mboguepyre %1$s</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Mboguete</string>
   <!--
@@ -1703,7 +1703,7 @@
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Eipytyvõ %1$s iporãve hag̃ua opavavépe g̃uarã. Mozilla mba’apoharakuéra oiporu marandu emondóva oñemyatyrõ hag̃ua apañuái ñanduti rendapegua.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description_2">Ne marandu’i orepytyvõ roikumby ha romyatyrõ hag̃ua apañuái %1$s-pegua jeiko porãve rekávo.</string>
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Ne marandu’i orepytyvõ roikumby ha romyatyrõ hag̃ua apañuái %1$s-pegua jeiko porãve rekávo.</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Eikuaave</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1767,7 +1767,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Embojevy tendayke</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s oñemoñepyrũ jey</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s oñemoñepyrũ jey</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Oĩ marandu’i jejavygua oñemondo’ỹva jejavy ojehapykuehóva rehegua. Emondóramo orepytyvõta iporãve hag̃ua %1$s. Embotývo ko ñemomarandu omboykéta ko marandu’i.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -2168,7 +2168,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Ñembyatyha mboguetepyre</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Ñembyatyha mboguetepyre</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Ñembyatyha mbohérajeypyre</string>
   <!-- Text shown in snackbar when user closes a tab -->
@@ -3732,7 +3732,7 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Ejeporekave jepysokuére</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">Emohenda widget jehekaha</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Emohenda widget jehekaha</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

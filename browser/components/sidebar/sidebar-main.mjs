@@ -102,6 +102,9 @@ export default class SidebarMain extends MozLitElement {
     this._reportExtensionMenuItem = document.getElementById(
       "sidebar-context-menu-report-extension"
     );
+    this._unpinExtensionMenuItem = document.getElementById(
+      "sidebar-context-menu-unpin-extension"
+    );
     this._hideSidebarMenuItem = document.getElementById(
       "sidebar-context-menu-hide-sidebar"
     );
@@ -111,6 +114,7 @@ export default class SidebarMain extends MozLitElement {
     this._customizeSidebarMenuItem = document.getElementById(
       "sidebar-context-menu-customize-sidebar"
     );
+    this._menuseparator = this._contextMenu.querySelector("menuseparator");
 
     this._sidebarBox.addEventListener("sidebar-show", this);
     this._sidebarBox.addEventListener("sidebar-hide", this);
@@ -270,7 +274,7 @@ export default class SidebarMain extends MozLitElement {
     }
   }
 
-  onSidebarPopupShowing(event) {
+  async onSidebarPopupShowing(event) {
     // Store the context menu target which holds the id required for managing sidebar items
     let targetHost = event.explicitOriginalTarget.getRootNode().host;
     let toolbarContextMenuTarget =
@@ -302,25 +306,104 @@ export default class SidebarMain extends MozLitElement {
       this.updateExtensionContextMenuItems();
       return;
     }
+
+    if (this.contextMenuTarget?.hasAttribute("contextMenu")) {
+      this.hideExistingMenuItem();
+
+      const toolId = this.contextMenuTarget.getAttribute("contextMenu");
+      await this.buildToolContextMenuItems(event, toolId);
+
+      const items = this._contextMenu.querySelectorAll(
+        "[customized-tool='true']"
+      );
+
+      if (items?.length) {
+        // Since we are dynamically building/customizing the sidebar context menu for tools
+        // This ensures that the menu is fully updated before showing.
+        this._contextMenu.openPopupAtScreen(event.screenX, event.screenY, true);
+        return;
+      }
+    }
+
     event.preventDefault();
   }
 
-  updateSidebarContextMenuItems() {
+  async buildToolContextMenuItems(event, toolId) {
+    const menu = this._contextMenu;
+    // Clear previously added custom menuitems
+    menu
+      .querySelectorAll("[customized-tool='true']")
+      .forEach(node => node.remove());
+
+    const menuBuilders = {
+      aichat: async () => {
+        if (Services.prefs.getBoolPref("browser.ml.chat.page")) {
+          await lazy.GenAI.buildAskChatMenu(this._contextMenu, {
+            browser: window.gBrowser.selectedBrowser,
+            selectionInfo: null,
+            source: "tool",
+          });
+        }
+      },
+    };
+
+    const builder = menuBuilders[toolId];
+    if (typeof builder === "function") {
+      const originalAppendChild = menu.appendChild.bind(menu);
+
+      menu.appendChild = child => {
+        child.setAttribute("customized-tool", true);
+        return originalAppendChild(child);
+      };
+
+      await builder(menu);
+      menu.appendChild = originalAppendChild;
+    }
+
+    return menu;
+  }
+
+  hideToolMenuItems() {
+    const customMenuItems = this._contextMenu.querySelectorAll(
+      "[customized-tool='true']"
+    );
+    customMenuItems.forEach(item => (item.hidden = true));
+  }
+
+  hideExistingMenuItem() {
+    this._customizeSidebarMenuItem.hidden = true;
+    this._enableVerticalTabsMenuItem.hidden = true;
+    this._hideSidebarMenuItem.hidden = true;
+    this._unpinExtensionMenuItem.hidden = true;
     this._manageExtensionMenuItem.hidden = true;
     this._removeExtensionMenuItem.hidden = true;
     this._reportExtensionMenuItem.hidden = true;
+    // Prevent the menu separator visible in Window and Linux
+    this._menuseparator.hidden = true;
+  }
+
+  updateSidebarContextMenuItems() {
+    this._menuseparator.hidden = true;
+    this._manageExtensionMenuItem.hidden = true;
+    this._removeExtensionMenuItem.hidden = true;
+    this._reportExtensionMenuItem.hidden = true;
+    this._unpinExtensionMenuItem.hidden = false;
     this._customizeSidebarMenuItem.hidden = false;
     this._enableVerticalTabsMenuItem.hidden = false;
     this._hideSidebarMenuItem.hidden = false;
+    this.hideToolMenuItems();
   }
 
   async updateExtensionContextMenuItems() {
     this._customizeSidebarMenuItem.hidden = true;
     this._enableVerticalTabsMenuItem.hidden = true;
     this._hideSidebarMenuItem.hidden = true;
+    this._menuseparator.hidden = false;
+    this._unpinExtensionMenuItem.hidden = false;
     this._manageExtensionMenuItem.hidden = false;
     this._removeExtensionMenuItem.hidden = false;
     this._reportExtensionMenuItem.hidden = false;
+    this.hideToolMenuItems();
     const extensionId = this.contextMenuTarget.getAttribute("extensionId");
     if (!extensionId) {
       return;
@@ -359,6 +442,12 @@ export default class SidebarMain extends MozLitElement {
     await window.BrowserAddonUI.reportAddon(
       this.contextMenuTarget.getAttribute("extensionId"),
       "sidebar-context-menu"
+    );
+  }
+
+  unpinExtension() {
+    window.SidebarController.toggleTool(
+      this.contextMenuTarget.getAttribute("view")
     );
   }
 
@@ -410,6 +499,9 @@ export default class SidebarMain extends MozLitElement {
             break;
           case "sidebar-context-menu-remove-extension":
             await this.removeExtension();
+            break;
+          case "sidebar-context-menu-unpin-extension":
+            this.unpinExtension();
             break;
           case "sidebar-context-menu-hide-sidebar":
             if (
@@ -628,6 +720,7 @@ export default class SidebarMain extends MozLitElement {
           ?extension=${buttonValues.action.view?.includes("-sidebar-action")}
           extensionId=${ifDefined(buttonValues.action.extensionId)}
           ?attention=${!!action?.attention}
+          contextMenu=${action?.contextMenu || nothing}
         >
         </moz-button>
       `

@@ -104,6 +104,8 @@ const ONBOARDING_ALLOWED_PAGE_VALUES = [
 
 const PREF_SURFACE_ID = "telemetry.surfaceId";
 
+const CONTENT_PING_VERSION = 1;
+
 const ACTIVITY_STREAM_PREF_BRANCH = "browser.newtabpage.activity-stream.";
 const NEWTAB_PING_PREFS = {
   showSearch: Glean.newtabSearch.enabled,
@@ -358,6 +360,7 @@ export class TelemetryFeed {
         topic,
         ...result
       } = pingDict;
+      result.content_redacted = true;
       return result;
     }
     return pingDict; // No modification
@@ -855,6 +858,7 @@ export class TelemetryFeed {
           newtab_visit_id: session.session_id,
         });
         if (this.privatePingEnabled) {
+          // eslint-disable-next-line no-unused-vars
           this.newtabContentPing.recordEvent(
             "thumbVotingInteraction",
             gleanData
@@ -1126,7 +1130,7 @@ export class TelemetryFeed {
     privateMetrics.experimentName = experimentMetadata?.slug ?? "";
 
     privateMetrics.experimentBranch = experimentMetadata?.branch ?? "";
-
+    privateMetrics.pingVersion = CONTENT_PING_VERSION;
     this.newtabContentPing.scheduleSubmission(privateMetrics);
   }
 
@@ -1646,7 +1650,7 @@ export class TelemetryFeed {
               }),
         };
         Glean.pocket.dismiss.record({
-          ...gleanData,
+          ...this.redactNewTabPing(gleanData, gleanData.is_sponsored),
           newtab_visit_id: session.session_id,
         });
         if (this.privatePingEnabled) {

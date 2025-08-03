@@ -72,7 +72,7 @@ function runTests(ui, frameNames, tests) {
         const lastExpectedEvent = expectedEvents.substring(
           expectedEvents.lastIndexOf(" ") + 1
         );
-        await waitForEventFromFrame(expectedFrame, lastExpectedEvent, 1000);
+        await waitForEventFromFrame(expectedFrame, lastExpectedEvent, 2000);
         // wait some more to ensure there are no unexpected delayed events
         await waitForTime(500);
 
@@ -123,12 +123,12 @@ function runTests(ui, frameNames, tests) {
       }
 
       async function waitForEventFromFrame(frameName, type, timeout = 100) {
-        for (let i = 0; i < timeout / 10; i++) {
-          if (body.dataset[frameName]?.split(" ").includes(type)) {
-            return;
-          }
-          await waitForTime(10);
-        }
+        await ContentTaskUtils.waitForCondition(
+          () => body.dataset[frameName]?.split(" ").includes(type),
+          `Waiting for ${type} event from ${frameName}`,
+          10,
+          timeout / 10
+        );
       }
 
       for (const frameName of args.frameNames) {

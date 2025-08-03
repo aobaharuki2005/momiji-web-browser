@@ -145,6 +145,8 @@
     Do not translate or transliterate Focus Nightly.
   -->
   <string name="text_selection_search_action_focus_nightly" tools:ignore="BrandUsage">חיפוש ב־Focus Nightly</string>
+  <!-- A link to SUMO at the bottom of About Focus screen. -->
+  <string name="about_screen_learn_more">מידע נוסף</string>
   <!-- Header for the Privacy and Security settings menu -->
   <string name="preference_privacy_and_security_header">פרטיות ואבטחה</string>
   <!-- Preference summary for settings related to privacy and security -->

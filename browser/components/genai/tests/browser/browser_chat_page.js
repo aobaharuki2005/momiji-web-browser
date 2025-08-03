@@ -10,6 +10,7 @@ const { sinon } = ChromeUtils.importESModule(
 
 const CONTENT_AREA_CONTEXT_MENU = "contentAreaContextMenu";
 const TAB_CONTEXT_MENU = "tabContextMenu";
+const TOOL_CONTEXT_MENU = "sidebar-context-menu";
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("sidebar.new-sidebar.has-used");
@@ -32,6 +33,17 @@ async function openContextMenu({ menuId, browser }) {
       tab,
       { type: "contextmenu", button: 2 },
       win
+    );
+  } else if (menuId === TOOL_CONTEXT_MENU) {
+    const { sidebarMain } = SidebarController;
+    const aichatEl = sidebarMain.shadowRoot.querySelector(
+      'moz-button[view="viewGenaiChatSidebar"]'
+    );
+
+    EventUtils.synthesizeMouseAtCenter(
+      aichatEl,
+      { type: "contextmenu", button: 2 },
+      aichatEl.ownerGlobal
     );
   } else {
     BrowserTestUtils.synthesizeMouse(
@@ -62,14 +74,16 @@ async function runContextMenuTest({
 }) {
   await openContextMenu({ menuId, browser });
 
+  const menu = document.getElementById(targetId);
+  const menuItems = [...menu.querySelectorAll("menuitem")].filter(
+    item => !item.hidden
+  );
+
   await TestUtils.waitForCondition(() => {
-    return (
-      document.getElementById(targetId).getItemAtIndex(0)?.label ===
-      expectedLabel
-    );
+    return menuItems[0]?.label === expectedLabel;
   }, expectedDescription);
 
-  document.getElementById(targetId).getItemAtIndex(0).click();
+  menuItems[0].click();
   await hideContextMenu(menuId);
 
   if (stub) {
@@ -97,7 +111,7 @@ add_setup(async function () {
 });
 
 /**
- * Check page and tab menu have summarize prompt
+ * Check page, tab, and tool context menu have summarize prompt
  */
 add_task(async function test_page_and_tab_menu_prompt() {
   const sandbox = sinon.createSandbox();
@@ -107,6 +121,7 @@ add_task(async function test_page_and_tab_menu_prompt() {
       ["browser.ml.chat.provider", "http://localhost:8080"],
       ["browser.ml.chat.page", true],
       ["browser.ml.chat.page.menuBadge", true],
+      ["sidebar.revamp", true],
     ],
   });
 
@@ -127,6 +142,17 @@ add_task(async function test_page_and_tab_menu_prompt() {
       expectedDescription: "Page prompt added",
       stub,
       browser,
+    });
+
+    SidebarController.show();
+
+    await runContextMenuTest({
+      menuId: TOOL_CONTEXT_MENU,
+      targetId: TOOL_CONTEXT_MENU,
+      expectedLabel: "Summarize Page",
+      expectedDescription: "Page prompt added",
+      stub,
+      browser: gBrowser.selectedBrowser,
     });
   });
 

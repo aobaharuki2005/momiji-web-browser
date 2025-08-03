@@ -631,7 +631,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">سىز Firefox نى قانداق بايقىغانلىقىڭىز ۋە ئۇنى ئىشلىتىشنى ھەمبەھىرلىسىڭىز، توركۆرگۈنى تېخىمۇ كۆپ كىشىلەرگە تونۇشتۇرۇشىمىزغا ياردەم بېرەلەيسىز.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Mozilla نىڭ تېخنىكا ھەمكارلاشقۇچىلىرى بىلەن ئەڭ ئاز سانلىق مەلۇماتنى ھەمبەھىرلەيدۇ. بۇ سانلىق مەلۇماتلار ھەرگىز سېتىلمايدۇ ياكى سىزگە ئېلان كۆرسىتىش ئۈچۈن ئىشلىتىلمەيدۇ.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Mozilla نىڭ تېخنىكا ھەمكارلاشقۇچىلىرى بىلەن ئەڭ ئاز سانلىق مەلۇماتنى ھەمبەھىرلەيدۇ. بۇ سانلىق مەلۇماتلار ھەرگىز سېتىلمايدۇ ياكى سىزگە ئېلان كۆرسىتىش ئۈچۈن ئىشلىتىلمەيدۇ.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">سانلىق مەلۇماتنى قانداق ئىشلىتىمىز</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1530,9 +1530,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">تارىخنى ئۆچۈر</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">تارىخ ئۆچۈرۈلدى</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">تارىخ ئۆچۈرۈلدى</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">%1$s ئۆچۈرۈلدى</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s ئۆچۈرۈلدى</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">ئۆچۈر</string>
   <!--
@@ -1717,7 +1717,7 @@
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">ھەممە ئىشلەتكۈچىنىڭ %1$s ئىشلىتىش تەسىراتىنى ياخشىلاشقا ياردەم بېرىدۇ. Mozilla خىزمەتچىلىرى سىز يوللىغان ئۇچۇرغا ئاساسەن تور بېكەت مەسىلىسىنى ئوڭشايدۇ.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description_2">دوكلاتىڭىز بىزنىڭ %1$s دىكى مەسىلىنى چۈشىنىپ ۋە ئوڭشىشىمىزغا ياردەم قىلىپ ئۇنى ھەممەيلەن ئۈچۈن تېخىمۇ ياخشىلايدۇ. تەپسىلاتى</string>
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">دوكلاتىڭىز بىزنىڭ %1$s دىكى مەسىلىنى چۈشىنىپ ۋە ئوڭشىشىمىزغا ياردەم قىلىپ ئۇنى ھەممەيلەن ئۈچۈن تېخىمۇ ياخشىلايدۇ. تەپسىلاتى</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">تەپسىلاتى</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1781,7 +1781,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">بەتكۈچنى ئەسلىگە قايتۇر</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s قايتا قوزغىتىلىشى كېرەك</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s قايتا قوزغىتىلىشى كېرەك</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">ئۈسكۈنىڭىزدە تېخى يوللانمىغان تەكشۈرۈلۈۋاتقان يىمىرىلىش دوكلاتى بار. بىزگە يوللىسىڭىز %1$s نى ياخشىلىشىمىزغا ياردەم بېرىسىز. بۇ ئۇقتۇرۇشنى تاقىسىڭىز مەزكۇر دوكلاتقا پەرۋا قىلمايدۇ.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -2182,7 +2182,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">يىغقۇچ ئۆچۈرۈلدى</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">يىغقۇچ ئۆچۈرۈلدى</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">يىغقۇچ ئىسمى ئۆزگەرتىلدى</string>
   <!-- Text shown in snackbar when user closes a tab -->
@@ -3750,7 +3750,7 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">كېڭەيتىلمە بايقاش</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">ئىزدەش ئەپچە ئورنىتىدۇ</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">ئىزدەش ئەپچە ئورنىتىدۇ</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

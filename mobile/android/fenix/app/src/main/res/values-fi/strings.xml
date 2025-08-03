@@ -627,7 +627,7 @@
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Kun kerrot kuinka löysit Firefoxin ja miten käytät sitä, autat meitä esittelemään selaimemme entistä useammalle ihmiselle.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_opt_in_checkbox" tools:ignore="UnusedResources">Jaa mahdollisimman vähän tietoa Mozillan markkinointiteknologiakumppaneiden kanssa. Näitä tietoja ei koskaan myydä tai käytetä mainosten esittämiseen sinulle.</string>
+  <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Jaa mahdollisimman vähän tietoa Mozillan markkinointiteknologiakumppaneiden kanssa. Näitä tietoja ei koskaan myydä tai käytetä mainosten esittämiseen sinulle.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Kuinka käytämme tietoja</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1518,9 +1518,9 @@
   <!-- Text for the button to clear all history -->
   <string name="history_delete_all">Poista historia</string>
   <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
-  <string name="history_delete_multiple_items_snackbar">Historia poistettu</string>
+  <string name="history_delete_multiple_items_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">Historia poistettu</string>
   <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. %1$s is the shortened URL of the deleted history item. -->
-  <string name="history_delete_single_item_snackbar">%1$s poistettu</string>
+  <string name="history_delete_single_item_snackbar" tools:ignore="UnusedResources" moz:removedIn="143">%1$s poistettu</string>
   <!-- Context description text for the button to delete a single history item -->
   <string name="history_delete_item">Poista</string>
   <!--
@@ -1705,7 +1705,7 @@
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Auta tekemään %1$sista parempi kaikille. Mozillan työntekijät käyttävät lähettämiäsi tietoja verkkosivustojen ongelmien korjaamiseen.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="webcompat_reporter_description_2">Raporttisi auttaa meitä ymmärtämään ja korjaamaan ongelmia %1$sissa, jotta se olisi parempi kaikille. Lue lisää</string>
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Raporttisi auttaa meitä ymmärtämään ja korjaamaan ongelmia %1$sissa, jotta se olisi parempi kaikille. Lue lisää</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Lue lisää</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1769,7 +1769,7 @@
   <!-- Restore tab button text on the tab crash page -->
   <string name="tab_crash_restore">Palauta välilehti</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crash_dialog_title">%s oli käynnistettävä uudelleen</string>
+  <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s oli käynnistettävä uudelleen</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Sinulla on lähettämätön kaatumisraportti, joka liittyy tutkittaviin kaatumisiin. Sen lähettäminen auttaa meitä parantamaan %1$sia. Tämän ilmoituksen sulkeminen ohittaa kyseisen raportin.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -2170,7 +2170,7 @@
 
     Text shown in snackbar when user deletes a collection
   -->
-  <string name="snackbar_collection_deleted">Kokoelma poistettu</string>
+  <string name="snackbar_collection_deleted" tools:ignore="UnusedResources" moz:removedIn="143">Kokoelma poistettu</string>
   <!-- Text shown in snackbar when user renames a collection -->
   <string name="snackbar_collection_renamed" moz:removedIn="141" tools:ignore="UnusedResources">Kokoelma nimetty uudelleen</string>
   <!-- Text shown in snackbar when user closes a tab -->
@@ -3738,7 +3738,7 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Selaa laajennuksia</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget">Asenna hakuwidget</string>
+  <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Asenna hakuwidget</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

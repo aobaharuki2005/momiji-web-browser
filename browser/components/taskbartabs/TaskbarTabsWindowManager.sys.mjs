@@ -16,6 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
+  WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
   WinTaskbar: ["@mozilla.org/windows-taskbar;1", "nsIWinTaskbar"],
 });
 
@@ -40,11 +41,10 @@ export class TaskbarTabsWindowManager {
    * Moves an existing browser tab into a Taskbar Tab.
    *
    * @param {TaskbarTab} aTaskbarTab - The Taskbar Tab to replace the window with.
-   * @param {string} aTaskbarTab.id - ID of the Taskbar Tab.
    * @param {MozTabbrowserTab} aTab - The tab to adopt as a Taskbar Tab.
    * @returns {Promise<DOMWindow>} The newly created Taskbar Tab window.
    */
-  async replaceTabWithWindow({ id }, aTab) {
+  async replaceTabWithWindow(aTaskbarTab, aTab) {
     let originWindow = aTab.ownerGlobal;
 
     // Save the parent window of this tab, so we can revert back if needed.
@@ -54,14 +54,14 @@ export class TaskbarTabsWindowManager {
     let extraOptions = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
       Ci.nsIWritablePropertyBag2
     );
-    extraOptions.setPropertyAsAString("taskbartab", id);
+    extraOptions.setPropertyAsAString("taskbartab", aTaskbarTab.id);
 
     let args = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
     args.appendElement(aTab);
     args.appendElement(extraOptions);
 
     this.#tabOriginMap.set(tabId, windowId);
-    return await this.#openWindow(id, args);
+    return await this.#openWindow(aTaskbarTab, args);
   }
 
   /**
@@ -97,26 +97,38 @@ export class TaskbarTabsWindowManager {
     args.appendElement(null);
     args.appendElement(Services.scriptSecurityManager.getSystemPrincipal());
 
-    return await this.#openWindow(aTaskbarTab.id, args);
+    return await this.#openWindow(aTaskbarTab, args);
   }
 
   /**
    * Handles common window opening behavior for Taskbar Tabs.
    *
-   * @param {string} aId - ID of the Taskbar Tab to use as the window AUMID.
+   * @param {TaskbarTab} aTaskbarTab - The Taskbar Tab associated to the window.
    * @param {nsIMutableArray} aArgs - `args` to pass to the opening window.
    * @returns {Promise<DOMWindow>} Resolves once window has opened and tab count
    * has been incremented.
    */
-  async #openWindow(aId, aArgs) {
+  async #openWindow(aTaskbarTab, aArgs) {
+    let url = Services.io.newURI(aTaskbarTab.startUrl);
+    let imgPromise = lazy.TaskbarTabsUtils.getFavicon(url);
+
     let win = await lazy.BrowserWindowTracker.promiseOpenWindow({
       args: aArgs,
       features: kTaskbarTabsWindowFeatures,
       all: false,
     });
-    this.#trackWindow(aId, win);
 
-    lazy.WinTaskbar.setGroupIdForWindow(win, aId);
+    imgPromise.then(imgContainer =>
+      lazy.WindowsUIUtils.setWindowIcon(win, imgContainer, imgContainer)
+    );
+
+    this.#trackWindow(aTaskbarTab.id, win);
+
+    lazy.WinTaskbar.setGroupIdForWindow(win, aTaskbarTab.id);
+
+    this.#attachWindowFocusTelemetry(win);
+    Glean.webApp.activate.record({});
+
     win.focus();
 
     win.gBrowser.tabs.forEach(tab => {
@@ -167,6 +179,32 @@ export class TaskbarTabsWindowManager {
     }
   }
 
+  #attachWindowFocusTelemetry(aWindow) {
+    let timerId = null;
+
+    function focused() {
+      if (timerId == null) {
+        timerId = Glean.webApp.usageTime.start();
+      }
+    }
+
+    function blur() {
+      if (timerId != null) {
+        Glean.webApp.usageTime.stopAndAccumulate(timerId);
+      }
+
+      timerId = null;
+    }
+
+    aWindow.addEventListener("focus", focused);
+    aWindow.addEventListener("blur", blur);
+    aWindow.addEventListener("unload", blur);
+
+    // The window might already have been focused, and at any rate it'll get
+    // focused. Forcefully trigger focused now to account for that.
+    focused();
+  }
+
   /**
    * Reverts a web app to a tab in a regular Firefox window. We will try to use
    * the window the taskbar tab originated from, if that's not avaliable, we
@@ -188,6 +226,8 @@ export class TaskbarTabsWindowManager {
     let windowList = lazy.BrowserWindowTracker.getOrderedWindows({
       private: false,
     });
+
+    Glean.webApp.eject.record({});
 
     // A Taskbar Tab should only contain one tab, but iterate over the browser's
     // tabs just in case one snuck in.
@@ -253,6 +293,28 @@ export class TaskbarTabsWindowManager {
    */
   getCountForId(aId) {
     return this.#openWindows.get(aId)?.size ?? 0;
+  }
+
+  /**
+   * Utility function to mock `nsIWindowsUIUtils`.
+   *
+   * @param {nsIWindowsUIUtils} mock - A mock of nsIWindowsUIUtils.
+   */
+  testOnlyMockUIUtils(mock) {
+    if (!Cu.isInAutomation) {
+      throw new Error("Can only mock utils in automation.");
+    }
+    // eslint-disable-next-line mozilla/valid-lazy
+    Object.defineProperty(lazy, "WindowsUIUtils", {
+      get() {
+        if (mock) {
+          return mock;
+        }
+        return Cc["@mozilla.org/windows-ui-utils;1"].getService(
+          Ci.nsIWindowsUIUtils
+        );
+      },
+    });
   }
 }
 

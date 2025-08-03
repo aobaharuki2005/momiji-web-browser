@@ -150,6 +150,8 @@
     %2$s is the url for the learn-more link.
   -->
   <string name="about_content" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[<p>%1$s ad k-d-yefk afus ad teqqimeḍ d aqeṛṛu.</p> <p>Seqdec-it d iminig uslig: <ul> <li>Nadi sakin snirem akken iwata deg usnas</li> <li>Sewḥel ineḍfaren (neɣ leqqem iɣewwaren akken ad tsirgeḍ ineḍfaren)</li> <li>Sfeḍ inagan n tuqqna akked uzray n tunigin d unadi</li> </ul> </p> <p>%1$s yesnulfa-t-id Mozilla. Tuɣdaṭ-nneɣ ad nḥareb γef internet yeldin d tezmert-is.<br/> <a href=\"%2$s\">Issin ugar</a></p>]]></string>
+  <!-- A link to SUMO at the bottom of About Focus screen. -->
+  <string name="about_screen_learn_more">Issin ugar</string>
   <!-- Header for the Privacy and Security settings menu -->
   <string name="preference_privacy_and_security_header">\"Tabaḍnit &amp; Taɣellist\"</string>
   <!-- Preference summary for settings related to privacy and security -->
