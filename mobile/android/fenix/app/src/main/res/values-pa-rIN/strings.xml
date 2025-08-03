@@ -632,6 +632,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">ਜਦੋਂ ਤੁਸੀਂ Firefox ਨੂੰ ਲੱਭਣ ਅਤੇ ਇਸ ਨੂੰ ਵਰਤਣ ਬਾਰੇ ਜਾਣਕਾਰੀ ਨੂੰ ਸਾਂਝਾ ਕਰਦੇ ਹੋ ਤਾਂ ਤੁਸੀਂ ਸਾਡੇ ਬਰਾਊਜ਼ਰ ਨੂੰ ਹੋਰ ਲੋਕਾਂ ਤੱਕ ਪਹੁੰਚਾਉਣ ਲਈ ਸਾਡੀ ਮਦਦ ਕਰਦੇ ਹੋ।</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Mozilla ਦੇ ਮਾਰਕੀਟਿੰਗ ਤਕਨਾਲੋਜੀ ਹਿੱਸੇਦਾਰਾਂ ਨਾਲ ਘੱਟ ਤੋਂ ਘੱਟ ਡਾਟਾ ਸਾਂਝਾ ਕਰੋ। ਇਹ ਡਾਟਾ ਕਦੇ ਵੀ ਵੇਚਿਆ ਨਹੀਂ ਜਾਂਦਾ ਹੈ ਜਾਂ ਤੁਹਾਨੂੰ ਇਸ਼ਤਿਹਾਰ ਦਿਖਾਉਣ ਲਈ ਨਹੀਂ ਵਰਤਿਆ ਜਾਂਦਾ ਹੈ।</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Mozilla ਦੇ ਮਾਰਕੀਟਿੰਗ ਤਕਨਾਲੋਜੀ ਹਿੱਸੇਦਾਰਾਂ ਨਾਲ ਡਾਟਾ ਸਾਂਝਾ ਕਰੋ। ਇਹ ਡਾਟਾ ਕਦੇ ਵੀ ਵੇਚਿਆ ਨਹੀਂ ਜਾਂਦਾ ਹੈ ਜਾਂ ਤੁਹਾਨੂੰ ਇਸ਼ਤਿਹਾਰ ਦਿਖਾਉਣ ਲਈ ਨਹੀਂ ਵਰਤਿਆ ਜਾਂਦਾ ਹੈ।</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">ਅਸੀਂ ਤੁਹਾਡੇ ਡਾਟੇ ਨੂੰ ਕਿਵੇਂ ਵਰਤਦੇ ਹਾਂ</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1213,6 +1215,8 @@
   <string name="preferences_daily_usage_ping_learn_more">ਰੋਜ਼ਾਨਾ ਵਰਤੋਂ ਪਿੰਗ ਬਾਰੇ ਹੋਰ ਜਾਣੋ</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">ਕਰੈਸ਼ ਰਿਪੋਰਟਾਂ ਨੂੰ ਆਪਣੇ-ਆਪ ਭੇਜੋ</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">ਰਿਪੋਰਟ ਭੇਜੀ</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">ਇਹ ਸਾਨੂੰ ਬਰਾਊਜ਼ਰ ਦੀ ਜਾਂਚ ਪੜਤਾਲ ਕਰਨ ਅਤੇ ਮਸਲਿਆਂ ਨੂੰ ਠੀਕ ਕਰਨ ਮਦਦ ਕਰਦੀਆਂ ਹਨ। ਰਿਪੋਰਟਾਂ ਵਿੱਚ ਨਿੱਜੀ ਜਾਂ ਸੰਵੇਦਨਸ਼ੀਲ ਡਾਟਾ ਸ਼ਾਮਲ ਹੋ ਸਕਦਾ ਹੈ।</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1716,6 +1720,10 @@
   <string name="webcompat_reporter_screen_title">ਖ਼ਰਾਬ ਸਾਈਟ ਬਾਰੇ ਰਿਪੋਰਟ ਕਰੋ</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">%1$s ਨੂੰ ਹਰੇਕ ਲਈ ਬੇਹਤਰ ਬਣਾਉਣ ਵਾਸਤੇ ਮਦਦ ਕਰੋ। Mozilla ਦੇ ਮੁਲਾਜ਼ਮ ਤੁਹਾਡੇ ਵਲੋਂ ਭੇਜੀ ਜਾਣਕਾਰੀ ਨੂੰ ਵੈੱਬਸਾਈਟ ਸਮੱਸਿਆਵਾਂ ਨੂੰ ਠੀਕ ਕਰਨ ਲਈ ਵਰਤਦੇ ਹਨ।</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">ਤੁਹਾਡੀ ਰਿਪੋਰਟ %1$s ਵਿੱਚ ਮਸਲਿਆਂ ਨੂੰ ਸਮਝਣ ਅਤੇ ਹੋਰ ਜਾਣਿਆਂ ਲਈ ਠੀਕ ਕਰਨ ਲਈ ਸਾਡੀ ਮਦਦ ਕਰਦੀ ਹੈ। ਹੋਰ ਜਾਣੋ</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">ਤੁਹਾਡੀ ਰਿਪੋਰਟ %1$s ਵਿੱਚ ਮਸਲਿਆਂ ਨੂੰ ਸਮਝਣ ਅਤੇ ਹੋਰ ਜਾਣਿਆਂ ਲਈ ਠੀਕ ਕਰਨ ਲਈ ਸਾਡੀ ਮਦਦ ਕਰਦੀ ਹੈ। %2$s</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">ਹੋਰ ਜਾਣੋ</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1780,14 +1788,27 @@
   <string name="tab_crash_restore">ਟੈਬ ਬਹਾਲ ਕਰੋ</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s ਨੂੰ ਮੁੜ ਚਾਲੂ ਕਰਨਾ ਪਿਆ</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s ਕਰੈਸ਼ ਹੋਇਆ। ਰਿਪੋਰਟ ਭੇਜਣੀ ਹੈ?</string>
+  <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_title">ਤੁਹਾਡੇ ਕੋਲ ਜਾਂਚ ਅਧੀਨ ਕਰੈਸ਼ ਦੇ ਨਾਲ ਸੰਬੰਧਿਤ ਕਰੈਸ਼ ਰਿਪੋਰਟ ਬਿਨਾਂ ਭੇਜੇ ਪਈ ਹੈ। %1$s ਨੂੰ ਬੇਹਤਰ ਬਣਾਉਣ ਲਈ ਸਾਡੀ ਮਦਦ ਕਰਨ ਲਈ ਇਸ ਨੂੰ ਭੇਜ ਦਿਓ। ਇਸ ਰਿਪੋਰਟ ਨੂੰ ਅਣਡਿੱਠਾ ਕਰਨ ਵਾਸਤੇ ਇਸ ਨੋਟੀਫਿਕੇਸ਼ਨ ਨੂੰ ਬੰਦ ਕਰੋ।</string>
+  <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crashes_requested_by_devs_dialog_title">ਤੁਹਾਡੇ ਕੋਲ ਜਾਂਚ ਅਧੀਨ ਕਰੈਸ਼ ਦੇ ਨਾਲ ਸੰਬੰਧਿਤ ਕਰੈਸ਼ ਰਿਪੋਰਟਾਂ (%1$d) ਬਿਨਾਂ ਭੇਜੇ ਪਈਆਂ ਹਨ। %2$s ਨੂੰ ਬੇਹਤਰ ਬਣਾਉਣ ਲਈ ਸਾਡੀ ਮਦਦ ਕਰਨ ਲਈ ਇਹਨਾਂ ਨੂੰ ਭੇਜ ਦਿਓ। ਇਹਨਾਂ ਰਿਪੋਰਟਾਂ ਨੂੰ ਅਣਡਿੱਠਾ ਕਰਨ ਵਾਸਤੇ ਇਸ ਨੋਟੀਫਿਕੇਸ਼ਨ ਨੂੰ ਬੰਦ ਕਰੋ।</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">ਕਰੈਸ਼ ਰਿਪੋਰਟਾਂ ਨੂੰ ਆਪਣੇ-ਆਪ ਭੇਜੋ</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">ਬੰਦ ਕਰੋ</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">ਬੰਦ ਕਰੋ</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">ਫੇਰ ਕਦੇ ਨਾ ਵੇਖਾਓ</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">ਭੇਜੋ</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">ਕਰੈਸ਼ ਰਿਪੋਰਟ ਭੇਜੋ</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">ਕਰੈਸ਼ ਰਿਪੋਰਟਾਂ ਸਾਨੂੰ ਬਰਾਊਜ਼ਰ ਦੀ ਜਾਂਚ ਪੜਤਾਲ ਕਰਨ ਅਤੇ ਮਸਲਿਆਂ ਨੂੰ ਠੀਕ ਕਰਨ ਮਦਦ ਕਰਦੀਆਂ ਹਨ। ਰਿਪੋਰਟਾਂ ਵਿੱਚ ਨਿੱਜੀ ਜਾਂ ਸੰਵੇਦਨਸ਼ੀਲ ਡਾਟਾ ਸ਼ਾਮਲ ਹੋ ਸਕਦਾ ਹੈ। %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">ਹੋਰ ਜਾਣੋ</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">ਹੋਰ ਜਾਣੋ</string>
   <!--
@@ -2357,6 +2378,10 @@
   <string name="preference_enhanced_tracking_protection_strict">ਸਖ਼ਤ</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">ਮਜ਼ਬੂਤ ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਅਤੇ ਵੱਧ ਤੇਜ਼ ਕਾਰਗੁਜ਼ਜਾਰੀ, ਪਰ ਕੁਝ ਸਾਈਟਾਂ ਠੀਕ ਤਰ੍ਹਾਂ ਕੰਮ ਨਹੀਂ ਕਰਨਗੀਆਂ।</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">ਵੈੱਬਸਾਈਟ ਨੂੰ ਵੱਡੇ ਪੱਧਰ ਉੱਤੇ ਗੜਬੜ ਹੋਣ ਤੋਂ ਬਚਣ ਲਈ %1$s ਨੂੰ ਆਪਣੇ-ਆਪ ਚਾਹੀਦੇ ਅਪਵਾਦ ਲਾਗੂ ਕਰਨ ਵਾਸਤੇ ਮਨਜ਼ੂਰੀ ਦਿਓ।</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">ਛੋਟੇ ਮਸਲਿਆਂ ਨੂੰ ਠੀਕ ਕਰਨ ਅਤੇ ਸਹੂਲਤ ਦੇਣ ਵਾਲੇ ਫ਼ੀਚਰਾਂ ਨੂੰ ਦੇਣ ਵਾਸਤੇ ਵੀ ਛੋਟਾਂ ਨੂੰ ਆਪਣੇ-ਆਪ ਲਾਗੂ ਕਰੋ।</string>
   <!-- Accessibility text for the Strict protection information icon -->
   <string name="preference_enhanced_tracking_protection_strict_info_button">ਸਖ਼ਤ ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਰਾਹੀਂ ਕਿਸ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਈ ਜਾਂਦੀ ਹੈ</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -3741,6 +3766,8 @@
   <string name="setup_checklist_task_explore_extensions">ਇਕਸਟੈਨਸ਼ਨਾਂ ਦੀ ਛਾਣਬੀਣ ਕਰੋ</string>
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">ਖੋਜ ਵਿਜੈਟ ਨੂੰ ਇੰਸਟਾਲ ਕਰੋ</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">ਖੋਜ ਵਿਜੈਦ ਬਾਰੇ ਪੜਤਾਲ ਕਰੋ</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

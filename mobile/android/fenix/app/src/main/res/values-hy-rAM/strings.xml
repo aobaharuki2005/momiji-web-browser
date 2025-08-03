@@ -632,6 +632,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Երբ կիսվում եք, թե ինչպես եք հայտնաբերել Firefox-ը և որ օգտագործում եք այն, դուք օգնում եք մեզ ներկայացնել մեր դիտարկիչն ավելի շատ մարդկանց:</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Կիսվեք նվազագույն տվյալների Mozilla-ի մարքեթինգային տեխնոլոգիաների գործընկերների հետ: Այս տվյալները երբեք չեն վաճառվում կամ չեն օգտագործվում ձեզ գովազդ ցուցադրելու համար:</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Կիսվեք նվազագույն տվյալների Mozilla-ի մարքեթինգային տեխնոլոգիաների գործընկերների հետ: Այս տվյալները երբեք չեն վաճառվում կամ չեն օգտագործվում ձեզ գովազդ ցուցադրելու համար:</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Ինչպես ենք մենք օգտագործում տվյալները</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1213,6 +1215,8 @@
   <string name="preferences_daily_usage_ping_learn_more">Իմանալ ավելին ամենօրյա օգտագործման պինգի մասին</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">Ինքնաբար ուղարկել խափանումների մասին զեկույց</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">Զեկույցն ուղարկվեց</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">Խափանումների զեկույցները մեզ օգնում են ախտորոշել և շտկել դիտարկիչի հետ կապված խնդիրները: Զեկույցները կարող են ներառել անձնական կամ զգայուն տվյալներ:</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1718,6 +1722,8 @@
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Օգնեք %1$s-ն ավելի լավը դարձնել բոլորի համար: Mozilla-ի աշխատակիցներն օգտագործում են ձեր ուղարկած տեղեկությունները կայքի խնդիրները շտկելու համար:</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Ձեր զեկույցը մեզ օգնում է հասկանալ և շտկել %1$s-ի խնդիրները՝ այն բոլորի համար ավելի լավը դարձնելու համար։ Իմանալ ավելին</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">Ձեր զեկույցը մեզ օգնում է հասկանալ և շտկել %1$s-ի խնդիրները՝ այն բոլորի համար ավելի լավը դարձնելու համար։ %2$s</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Իմանալ ավելին</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1782,6 +1788,8 @@
   <string name="tab_crash_restore">Վերականգնել ներդիը</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s-ը պետք է վերամեկնարկեր</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s-ը խափանվեց։ Ուղարկե՞լ զեկույց։</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Դուք ունեք չուղարկված վթարի մասին զեկույց, որը կապված է հետաքննվող վթարների հետ։ Այն ուղարկելը կօգնի մեզ բարելավել %1$s-ը։ Այս ծանուցումը փակելը կանտեսի տվյալ զեկույցը։</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1790,10 +1798,17 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Ինքնաբար ուղարկել խափանումների մասին զեկույցը</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Փակել</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">ՓԱԿԵԼ</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Այլևս չցուցադրել</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">ՈՒՂԱՐԿԵԼ</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Ուղարկել վթարի զեկույց</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">Խափանումների զեկույցները մեզ թույլ են տալիս ախտորոշել և շտկել դիտարկիչի հետ կապված խնդիրները: Զեկույցները կարող են ներառել անձնական կամ զգայուն տվյալներ: %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">Իմանալ ավելին</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">Իմանալ ավելին</string>
   <!--
@@ -3751,6 +3766,8 @@
   <string name="setup_checklist_task_explore_extensions">Ուսումնասիրեք ընդլայնումները</string>
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Տեղադրել որոնման վիջեթը</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">Ուսումնասիրել որոնման վիջեթը</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

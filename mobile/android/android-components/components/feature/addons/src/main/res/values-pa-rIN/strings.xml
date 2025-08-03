@@ -366,6 +366,8 @@
   <string name="mozac_feature_addons_updater_notification_short_intro">ਆਪਣੇ ਮੌਜੂਦਾ ਵਰਜ਼ਨ ਅਤੇ ਸੈਟਿੰਗਾਂ ਨੂੰ ਰੱਖਣ ਵਾਸਤੇ ਰੱਦ ਕਰ ਦਿਓ।</string>
   <!-- The heading for the permissions section in the system notification shown when an add-on has an update that requires user confirmation. %1$s is a list of sentences. -->
   <string name="mozac_feature_addons_updater_notification_heading_permissions">ਨਵੀਆਂ ਚਾਹੀਦੀਆਂ ਇਜਾਜ਼ਤਾਂ: %1$s</string>
+  <!-- The heading for the data collection permission section in the system notification shown when an add-on has an update that requires user confirmation. %1$s is a list of permissions. -->
+  <string name="mozac_feature_addons_updater_notification_heading_data_collection_permissions">ਨਵੀਂ ਡਾਟਾ ਇੱਕਤਰ ਕਰਨ ਦੀ ਲੋੜ: ਡਿਵੈਲਪਰ ਨੇ ਦੱਸਿਆ ਹੈ ਕਿ ਇਕਸਟੈਨਸ਼ਨ %1$s ਇਕੱਤਰ ਕਰੇਗੀ।</string>
   <!-- Name of the "notification channel" used for displaying a notification for updating an extension. See https://developer.android.com/training/notify-user/channels -->
   <string name="mozac_feature_addons_updater_notification_channel_2">ਇਕਸਟੈਨਸ਼ਨ ਅੱਪਡੇਟ</string>
   <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
