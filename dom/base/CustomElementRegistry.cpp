@@ -1178,7 +1178,8 @@ void CustomElementRegistry::Define(
   }
 
   // Dispatch a "customelementdefined" event for DevTools.
-  {
+  BrowsingContext* browsingContext = mWindow->GetBrowsingContext();
+  if (browsingContext && browsingContext->WatchedByDevTools()) {
     JSString* nameJsStr =
         JS_NewUCStringCopyN(aCx, aName.BeginReading(), aName.Length());
 
