@@ -600,12 +600,12 @@ menupopup::part(drop-indicator) {
 
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(ltr),
 .unified-nav-forward[_moz-menuactive]:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/back.svg") !important;
+  --menuitem-icon: url("chrome://browser/skin/back.svg") !important;
 }
 
 .unified-nav-forward[_moz-menuactive]:-moz-locale-dir(ltr),
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/forward.svg") !important;
+  --menuitem-icon: url("chrome://browser/skin/forward.svg") !important;
 }
 
 /* Find bar */
