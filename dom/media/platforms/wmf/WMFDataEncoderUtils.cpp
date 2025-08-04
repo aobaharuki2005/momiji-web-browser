@@ -58,13 +58,16 @@ EncodeSupportSet CanCreateWMFEncoder(const EncoderConfig& aConfig) {
       return;
     }
     // Try HW encoder if allowed by graphics and not disallowed by the caller.
-    if (CanUseWMFHwEncoder(aConfig.mCodec) &&
-        aConfig.mHardwarePreference != HardwarePreference::RequireSoftware) {
-      auto hwEnc =
+    if (aConfig.mHardwarePreference != HardwarePreference::RequireSoftware) {
+      if (CanUseWMFHwEncoder(aConfig.mCodec)){
+        auto hwEnc =
           MakeRefPtr<MFTEncoder>(MFTEncoder::HWPreference::HardwareOnly);
-      if (SUCCEEDED(hwEnc->Create(CodecToSubtype(aConfig.mCodec), aConfig.mSize,
-                                  aConfig.mCodecSpecific))) {
-        supports += EncodeSupport::HardwareEncode;
+        if (SUCCEEDED(hwEnc->Create(CodecToSubtype(aConfig.mCodec), aConfig.mSize,
+                                    aConfig.mCodecSpecific))) {
+          supports += EncodeSupport::HardwareEncode;
+        }
+      } else {
+        WMF_ENC_LOG("HW encoder is disabled for %s", aConfig.CodecString());
       }
     }
     if (aConfig.mHardwarePreference != HardwarePreference::RequireHardware) {
@@ -76,6 +79,16 @@ EncodeSupportSet CanCreateWMFEncoder(const EncoderConfig& aConfig) {
         supports += EncodeSupport::SoftwareEncode;
       }
     }
+
+    WMF_ENC_LOG(
+        "%s encoder support for %s",
+        supports.contains(EncodeSupportSet(EncodeSupport::HardwareEncode,
+                                           EncodeSupport::SoftwareEncode))
+            ? "HW | SW"
+        : supports.contains(EncodeSupport::HardwareEncode) ? "HW"
+        : supports.contains(EncodeSupport::SoftwareEncode) ? "SW"
+                                                           : "No",
+        aConfig.ToString().get());
   });
   return supports;
 }
