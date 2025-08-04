@@ -71,10 +71,7 @@ class DefaultBrowsingModeManager(
     }
 
     override fun updateMode(intent: Intent?) {
-        val mode = getModeFromIntentOrLastKnown(intent)
-        if (this.mode != mode) {
-            this.mode = mode
-        }
+        mode = getModeFromIntentOrLastKnown(intent)
     }
 
     /**
