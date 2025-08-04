@@ -164,7 +164,7 @@ async function createShortcut(aTaskbarTab, aFileIcon, aRegistry) {
 async function generateShortcutInfo(aTaskbarTab) {
   const l10n = new Localization([
     "branding/brand.ftl",
-    "preview/taskbartabs.ftl",
+    "browser/taskbartabs.ftl",
   ]);
 
   let humanName = generateName(aTaskbarTab);

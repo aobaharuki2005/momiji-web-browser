@@ -19,7 +19,6 @@
   preview/genAiPageAssist.ftl                      (../locales-preview/genAiPageAssist.ftl)
   preview/linkPreview.ftl                          (../locales-preview/linkPreview.ftl)
   preview/smartTabGroups.ftl                       (../locales-preview/smartTabGroups.ftl)
-  preview/taskbartabs.ftl                          (../locales-preview/taskbartabs.ftl)
   preview/termsOfUse.ftl                           (../locales-preview/termsOfUse.ftl)
   preview/ipProtection.ftl                         (../locales-preview/ipProtection.ftl)
 
