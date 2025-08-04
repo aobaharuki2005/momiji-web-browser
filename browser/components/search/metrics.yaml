@@ -340,6 +340,12 @@ serp:
           `unknown`,
           `webextension`
         type: string
+      search_mode:
+        description: >
+          The mode which the search page is in. If it is in the normal search
+          mode, then no value is reported. Possible values are:
+          `image_search`.
+        type: string
       shopping_tab_displayed:
         description:
           Indicates if the shopping tab is displayed.
