@@ -6,8 +6,11 @@
 
 class InspectorPanel {
   constructor(iframeWindow, toolbox, commands) {
-    this._inspector = new iframeWindow.Inspector(toolbox, commands);
+    this.#inspector = new iframeWindow.Inspector(toolbox, commands);
   }
+
+  #inspector;
+
   /**
    * Initialize the inspector
    *
@@ -15,11 +18,11 @@ class InspectorPanel {
    * @returns {Inspector}
    */
   open(options = {}) {
-    return this._inspector.init(options);
+    return this.#inspector.init(options);
   }
 
   destroy() {
-    this._inspector.destroy();
+    this.#inspector.destroy();
   }
 }
 exports.InspectorPanel = InspectorPanel;
