@@ -234,7 +234,7 @@ class CssComputedView {
       );
     }
 
-    if (!this.inspector.is3PaneModeEnabled) {
+    if (!this.inspector.isThreePaneModeEnabled) {
       // When the rules view is added in 3 pane mode, refresh the Computed view whenever
       // the rules are changed.
       this.inspector.once(

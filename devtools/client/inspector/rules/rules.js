@@ -401,7 +401,7 @@ CssRuleView.prototype = {
       this.inspector.sidebar &&
       this.inspector.toolbox.currentToolId === "inspector" &&
       (this.inspector.sidebar.getCurrentTabID() == "ruleview" ||
-        this.inspector.is3PaneModeEnabled)
+        this.inspector.isThreePaneModeEnabled)
     );
   },
 
@@ -2150,7 +2150,7 @@ CssRuleView.prototype = {
 
     if (rule.domRule.actorID === ruleId) {
       // If using 2-Pane mode, then switch to the Rules tab first.
-      if (!this.inspector.is3PaneModeEnabled) {
+      if (!this.inspector.isThreePaneModeEnabled) {
         this.inspector.sidebar.select("ruleview");
       }
 
@@ -2192,7 +2192,7 @@ CssRuleView.prototype = {
         // First, search for a matching authored property.
         if (textProp.name === name) {
           // If using 2-Pane mode, then switch to the Rules tab first.
-          if (!this.inspector.is3PaneModeEnabled) {
+          if (!this.inspector.isThreePaneModeEnabled) {
             this.inspector.sidebar.select("ruleview");
           }
 
@@ -2224,7 +2224,7 @@ CssRuleView.prototype = {
           }
 
           if (computed.name === name) {
-            if (!this.inspector.is3PaneModeEnabled) {
+            if (!this.inspector.isThreePaneModeEnabled) {
               this.inspector.sidebar.select("ruleview");
             }
 
