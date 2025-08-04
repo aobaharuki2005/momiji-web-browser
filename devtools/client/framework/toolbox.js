@@ -2315,7 +2315,7 @@ Toolbox.prototype = {
     }
 
     const ui = ResponsiveUIManager.getResponsiveUIForTab(localTab);
-    await ui.setElementPickerState(state, pickerType);
+    await ui.responsiveFront.setElementPickerState(state, pickerType);
   },
 
   /**
