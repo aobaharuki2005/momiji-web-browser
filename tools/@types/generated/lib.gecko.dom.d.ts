@@ -6523,9 +6523,8 @@ declare var Comment: {
 
 interface CompositionEvent extends UIEvent {
     readonly data: string | null;
-    readonly locale: string;
     readonly ranges: TextClause[];
-    initCompositionEvent(typeArg: string, canBubbleArg?: boolean, cancelableArg?: boolean, viewArg?: Window | null, dataArg?: string | null, localeArg?: string): void;
+    initCompositionEvent(typeArg: string, canBubbleArg?: boolean, cancelableArg?: boolean, viewArg?: Window | null, dataArg?: string | null): void;
 }
 
 declare var CompositionEvent: {

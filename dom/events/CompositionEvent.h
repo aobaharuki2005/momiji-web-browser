@@ -36,16 +36,14 @@ class CompositionEvent : public UIEvent {
 
   void InitCompositionEvent(const nsAString& aType, bool aCanBubble,
                             bool aCancelable, nsGlobalWindowInner* aView,
-                            const nsAString& aData, const nsAString& aLocale);
+                            const nsAString& aData);
   void GetData(nsAString&) const;
-  void GetLocale(nsAString&) const;
   void GetRanges(TextClauseArray& aRanges);
 
  protected:
   ~CompositionEvent() = default;
 
   nsString mData;
-  nsString mLocale;
   TextClauseArray mRanges;
 };
 
