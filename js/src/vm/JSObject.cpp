@@ -3156,7 +3156,7 @@ js::gc::AllocKind JSObject::allocKindForTenure(
   MOZ_ASSERT(IsInsideNursery(this));
 
   if (is<NativeObject>()) {
-    if (canHaveFixedElements()) {
+    if (is<ArrayObject>()) {
       const NativeObject& nobj = as<NativeObject>();
       MOZ_ASSERT(nobj.numFixedSlots() == 0);
 

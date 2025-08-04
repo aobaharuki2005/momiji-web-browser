@@ -117,10 +117,6 @@ inline bool JSObject::setQualifiedVarObj(
   return setFlag(cx, obj, js::ObjectFlag::QualifiedVarObj);
 }
 
-inline bool JSObject::canHaveFixedElements() const {
-  return is<js::ArrayObject>();
-}
-
 namespace js {
 
 #ifdef DEBUG

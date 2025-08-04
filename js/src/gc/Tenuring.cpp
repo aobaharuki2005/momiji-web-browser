@@ -959,14 +959,15 @@ JSObject* js::gc::TenuringTracer::promoteObjectSlow(JSObject* src) {
 
   size_t srcSize = Arena::thingSize(dstKind);
 
-  // Arrays and Tuples do not necessarily have the same AllocKind between src
-  // and dst. We deal with this by copying elements manually, possibly
-  // re-inlining them if there is adequate room inline in dst.
+  // Arrays do not necessarily have the same AllocKind between src and dst. We
+  // deal with this by copying elements manually, possibly re-inlining them if
+  // there is adequate room inline in dst.
   //
-  // For Arrays and Tuples we're reducing promotedSize to the smaller srcSize
-  // because moveElements() accounts for all Array or Tuple elements,
-  // even if they are inlined.
-  if (src->is<FixedLengthTypedArrayObject>()) {
+  // For Arrays we're reducing promotedSize to the smaller srcSize because
+  // moveElements() accounts for all Array elements, even if they are inlined.
+  if (src->is<ArrayObject>()) {
+    srcSize = sizeof(NativeObject);
+  } else if (src->is<FixedLengthTypedArrayObject>()) {
     auto* tarray = &src->as<FixedLengthTypedArrayObject>();
     // Typed arrays with inline data do not necessarily have the same
     // AllocKind between src and dst. The nursery does not allocate an
@@ -982,8 +983,6 @@ JSObject* js::gc::TenuringTracer::promoteObjectSlow(JSObject* src) {
       size_t headerSize = Arena::thingSize(srcKind);
       srcSize = headerSize + tarray->byteLength();
     }
-  } else if (src->canHaveFixedElements()) {
-    srcSize = sizeof(NativeObject);
   }
 
   promotedSize += srcSize;
@@ -1089,8 +1088,8 @@ size_t js::gc::TenuringTracer::moveElements(NativeObject* dst,
 
   void* unshiftedHeader = src->getUnshiftedElementsHeader();
 
-  /* Unlike other objects, Arrays and Tuples can have fixed elements. */
-  if (src->canHaveFixedElements() && nslots <= GetGCKindSlots(dstKind)) {
+  /* Unlike other objects, Arrays can have fixed elements. */
+  if (src->is<ArrayObject>() && nslots <= GetGCKindSlots(dstKind)) {
     dst->as<NativeObject>().setFixedElements();
     js_memcpy(dst->getElementsHeader(), unshiftedHeader, allocSize);
     dst->elements_ += numShifted;
