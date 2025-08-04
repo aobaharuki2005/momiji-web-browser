@@ -88,6 +88,14 @@ newtab-confirm-delete-history-p2 = Tega dejanja ni mogoče razveljaviti.
 
 newtab-topsite-sponsored = Sponzorirano
 
+## Label used by screen readers for pinned top sites
+
+# Variables:
+#   $title (string) - The label or hostname of the site.
+topsite-label-pinned =
+    .aria-label = { $title } (pripeto)
+    .title = { $title }
+
 ## Context Menu - Action Tooltips.
 
 # General tooltip for context menus.
@@ -542,6 +550,11 @@ newtab-custom-wallpaper-title = Ozadja po meri so tu
 # 'Make firefox yours" means to customize or personalize
 newtab-custom-wallpaper-subtitle = Naložite lastno ozadje ali izberite poljubno barvo, ki bo { -brand-product-name(sklon: "dajalnik") } dodala vašo osebno noto.
 newtab-custom-wallpaper-cta = Preizkusite
+
+## Strings for new user activation custom wallpaper highlight
+
+newtab-new-user-custom-wallpaper-subtitle = Počutite se kot doma na vsakem novem zavihku s poljubnim ozadjem in barvami.
+newtab-new-user-custom-wallpaper-cta = Preizkusite zdaj
 
 ## Strings for download mobile highlight
 

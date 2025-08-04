@@ -88,6 +88,14 @@ newtab-confirm-delete-history-p2 = ਇਕ ਕਾਰਵਾਈ ਨੂੰ ਵਾਪ
 
 newtab-topsite-sponsored = ਸਪੌਂਸਰ ਕੀਤਾ
 
+## Label used by screen readers for pinned top sites
+
+# Variables:
+#   $title (string) - The label or hostname of the site.
+topsite-label-pinned =
+    .aria-label = { $title } (ਟੰਗਿਆ)
+    .title = { $title }
+
 ## Context Menu - Action Tooltips.
 
 # General tooltip for context menus.
@@ -540,6 +548,12 @@ newtab-custom-wallpaper-title = ਪਸੰਦੀਦਾ ਵਾਲਪੇਪਰ ਇ�
 # 'Make firefox yours" means to customize or personalize
 newtab-custom-wallpaper-subtitle = { -brand-product-name } ਨੂੰ ਆਪਣਾ ਬਣਾਉਣ ਵਾਸਤੇ ਖੁਦ ਦਾ ਵਾਲਪੇਪਰ ਅੱਪਲੋਡ ਕਰੋ ਜਾਂ ਕਸਟਮ ਰੰਗ ਚੁਣੋ।
 newtab-custom-wallpaper-cta = ਅਜ਼ਮਾਓ
+
+## Strings for new user activation custom wallpaper highlight
+
+newtab-new-user-custom-wallpaper-title = { -brand-product-name } ਨੂੰ ਆਪਣੀ ਪਸੰਦ ਦਾ ਬਣਾਉਣ ਵਾਸਤੇ ਕੋਈ ਵਾਲਪੇਪਰ ਚੁਣੋ।
+newtab-new-user-custom-wallpaper-subtitle = ਪਸੰਦੀਦਾ ਵਾਲਪੇਪਰਾਂ ਅਤੇ ਰੰਗਾਂ ਨਾਲ ਹਰ ਨਵੀਂ ਟੈਬ ਨੂੰ ਆਪਣੇ ਮੁਤਾਬਕ ਢਾਲੋ।
+newtab-new-user-custom-wallpaper-cta = ਹੁਣੇ ਅਜ਼ਮਾਓ
 
 ## Strings for download mobile highlight
 

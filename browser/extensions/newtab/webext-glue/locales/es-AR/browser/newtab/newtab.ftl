@@ -88,6 +88,14 @@ newtab-confirm-delete-history-p2 = Esta acción no puede deshacerse.
 
 newtab-topsite-sponsored = Patrocinado
 
+## Label used by screen readers for pinned top sites
+
+# Variables:
+#   $title (string) - The label or hostname of the site.
+topsite-label-pinned =
+    .aria-label = { $title } (pegado)
+    .title = { $title }
+
 ## Context Menu - Action Tooltips.
 
 # General tooltip for context menus.
@@ -543,6 +551,7 @@ newtab-custom-wallpaper-cta = Pruébelo
 
 ## Strings for new user activation custom wallpaper highlight
 
+newtab-new-user-custom-wallpaper-title = Elegí un fondo de pantalla para hacer { -brand-product-name } tuyo.
 newtab-new-user-custom-wallpaper-subtitle = Haga que cada nueva pestaña se sienta como en casa con fondos de pantalla y colores personalizados.
 newtab-new-user-custom-wallpaper-cta = Probar ahora
 

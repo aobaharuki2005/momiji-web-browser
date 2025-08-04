@@ -88,6 +88,14 @@ newtab-confirm-delete-history-p2 = Túto akciu nie je možné vrátiť späť.
 
 newtab-topsite-sponsored = Sponzorované
 
+## Label used by screen readers for pinned top sites
+
+# Variables:
+#   $title (string) - The label or hostname of the site.
+topsite-label-pinned =
+    .aria-label = { $title } (pripnutá)
+    .title = { $title }
+
 ## Context Menu - Action Tooltips.
 
 # General tooltip for context menus.

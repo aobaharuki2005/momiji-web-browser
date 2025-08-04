@@ -88,6 +88,14 @@ newtab-confirm-delete-history-p2 = Această acțiune este ireversibilă.
 
 newtab-topsite-sponsored = Sponsorizat
 
+## Label used by screen readers for pinned top sites
+
+# Variables:
+#   $title (string) - The label or hostname of the site.
+topsite-label-pinned =
+    .aria-label = { $title } (fixat)
+    .title = { $title }
+
 ## Context Menu - Action Tooltips.
 
 # General tooltip for context menus.

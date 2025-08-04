@@ -538,6 +538,9 @@ newtab-custom-wallpaper-cta = 壁紙を試す
 
 ## Strings for new user activation custom wallpaper highlight
 
+newtab-new-user-custom-wallpaper-title = 壁紙を選んであなただけの { -brand-product-name } に彩りましょう
+newtab-new-user-custom-wallpaper-subtitle = お好みの壁紙とカラーですべての新規タブを自宅のようにカスタマイズできます。
+newtab-new-user-custom-wallpaper-cta = 今すぐ試す
 
 ## Strings for download mobile highlight
 
@@ -551,6 +554,8 @@ newtab-download-mobile-highlight-image =
 
 ## Strings for shortcuts highlight
 
+newtab-shortcuts-highlight-title = 指先一つでお気に入りに追加
+newtab-shortcuts-highlight-subtitle = ショートカットを追加してお気に入りのサイトに 1 クリックでアクセスできます。
 
 ## Strings for reporting ads and content
 
