@@ -64,4 +64,6 @@ experimental-features-newtab-sections-follow-block-description = Organize the st
 # Firefox Web Apps
 experimental-features-fx-web-apps =
     .label = Add sites to your taskbar
-experimental-features-fx-web-apps-description = Open sites you frequently visit as a web app from your taskbar. Look for the “Add to taskbar” icon to the right the address bar to launch that site in a streamlined window with all of { -brand-product-name }’s protections. <a data-l10n-name="connect">Share feedback</a>
+
+# “Add tab to taskbar” is found in the tooltip text of `-taskbar-tab-urlbar-button-open`.
+experimental-features-fx-web-apps-description = Open sites you frequently visit as a web app from your taskbar. Look for the “Add tab to taskbar” icon to the right the address bar to launch that site in a streamlined window with all of { -brand-product-name }’s protections. <a data-l10n-name="connect">Share feedback</a>
