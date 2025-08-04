@@ -792,7 +792,7 @@ class EditorDOMPointBase final {
   EditorDOMPointType PreviousPoint() const {
     NS_ASSERTION(!IsStartOfContainer(),
                  "Should not be at start of the container");
-    EditorDOMPointType result = this->template To<EditorDOMPointType>();
+    auto result = this->template To<EditorDOMPointType>();
     result.RewindOffset();
     return result;
   }
@@ -1134,13 +1134,38 @@ class EditorDOMPointBase final {
     return *this;
   }
 
+  /**
+   * If EditorDOMPointType is same as SelfType, return the reference of `this`.
+   * Otherwise, returns new instance of EditorDOMPointType.
+   *
+   * So, don't do this:
+   * auto newPoint = oldPoint.RefOrTo();
+   * newPoint.AdvanceOffset();
+   * Then, oldPoint is also modified.  Change the `auto` to the type of
+   * `oldPoint` in this case.
+   *
+   * If you always want a new instance, you should use To() instead.
+   */
+  template <typename EditorDOMPointType>
+  constexpr EditorDOMPointType RefOrTo() const {
+    if constexpr (std::is_same_v<SelfType, EditorDOMPointType>) {
+      return *this;
+    } else {
+      EditorDOMPointType result;
+      result.mParent = mParent;
+      result.mChild = mChild;
+      result.mOffset = mOffset;
+      result.mIsChildInitialized = mIsChildInitialized;
+      result.mInterlinePosition = mInterlinePosition;
+      return result;
+    }
+  }
+
+  /**
+   * Even if EditorDOMPointType is same as SelfType, return a copy of `this`.
+   */
   template <typename EditorDOMPointType>
   constexpr EditorDOMPointType To() const {
-    // XXX Cannot specialize this method due to implicit instantiatation caused
-    //     by the inline CC functions below.
-    if (std::is_same<SelfType, EditorDOMPointType>::value) {
-      return reinterpret_cast<const EditorDOMPointType&>(*this);
-    }
     EditorDOMPointType result;
     result.mParent = mParent;
     result.mChild = mChild;
@@ -1436,8 +1461,8 @@ class EditorDOMRangeBase final {
   template <typename StartPointType, typename EndPointType>
   explicit EditorDOMRangeBase(const StartPointType& aStart,
                               const EndPointType& aEnd)
-      : mStart(aStart.template To<PointType>()),
-        mEnd(aEnd.template To<PointType>()) {
+      : mStart(aStart.template RefOrTo<PointType>()),
+        mEnd(aEnd.template RefOrTo<PointType>()) {
     MOZ_ASSERT_IF(mStart.IsSet(), mStart.IsSetAndValid());
     MOZ_ASSERT_IF(mEnd.IsSet(), mEnd.IsSetAndValid());
     MOZ_ASSERT_IF(mStart.IsSet() && mEnd.IsSet(),
@@ -1454,8 +1479,8 @@ class EditorDOMRangeBase final {
   }
   template <typename OtherPointType>
   explicit EditorDOMRangeBase(const EditorDOMRangeBase<OtherPointType>& aOther)
-      : mStart(aOther.StartRef().template To<PointType>()),
-        mEnd(aOther.EndRef().template To<PointType>()) {
+      : mStart(aOther.StartRef().template RefOrTo<PointType>()),
+        mEnd(aOther.EndRef().template RefOrTo<PointType>()) {
     MOZ_ASSERT_IF(mStart.IsSet(), mStart.IsSetAndValid());
     MOZ_ASSERT_IF(mEnd.IsSet(), mEnd.IsSetAndValid());
     MOZ_ASSERT(mStart.IsSet() == mEnd.IsSet());
@@ -1470,26 +1495,26 @@ class EditorDOMRangeBase final {
 
   template <typename MaybeOtherPointType>
   void SetStart(const MaybeOtherPointType& aStart) {
-    mStart = aStart.template To<PointType>();
+    mStart = aStart.template RefOrTo<PointType>();
   }
   void SetStart(PointType&& aStart) { mStart = std::move(aStart); }
   template <typename MaybeOtherPointType>
   void SetEnd(const MaybeOtherPointType& aEnd) {
-    mEnd = aEnd.template To<PointType>();
+    mEnd = aEnd.template RefOrTo<PointType>();
   }
   void SetEnd(PointType&& aEnd) { mEnd = std::move(aEnd); }
   template <typename StartPointType, typename EndPointType>
   void SetStartAndEnd(const StartPointType& aStart, const EndPointType& aEnd) {
     MOZ_ASSERT_IF(aStart.IsSet() && aEnd.IsSet(),
                   aStart.EqualsOrIsBefore(aEnd));
-    mStart = aStart.template To<PointType>();
-    mEnd = aEnd.template To<PointType>();
+    mStart = aStart.template RefOrTo<PointType>();
+    mEnd = aEnd.template RefOrTo<PointType>();
   }
   template <typename StartPointType>
   void SetStartAndEnd(const StartPointType& aStart, PointType&& aEnd) {
     MOZ_ASSERT_IF(aStart.IsSet() && aEnd.IsSet(),
                   aStart.EqualsOrIsBefore(aEnd));
-    mStart = aStart.template To<PointType>();
+    mStart = aStart.template RefOrTo<PointType>();
     mEnd = std::move(aEnd);
   }
   template <typename EndPointType>
@@ -1497,7 +1522,7 @@ class EditorDOMRangeBase final {
     MOZ_ASSERT_IF(aStart.IsSet() && aEnd.IsSet(),
                   aStart.EqualsOrIsBefore(aEnd));
     mStart = std::move(aStart);
-    mEnd = aEnd.template To<PointType>();
+    mEnd = aEnd.template RefOrTo<PointType>();
   }
   void SetStartAndEnd(PointType&& aStart, PointType&& aEnd) {
     MOZ_ASSERT_IF(aStart.IsSet() && aEnd.IsSet(),

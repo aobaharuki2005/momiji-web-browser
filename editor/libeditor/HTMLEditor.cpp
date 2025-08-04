@@ -4331,9 +4331,10 @@ Result<InsertTextResult, nsresult> HTMLEditor::ReplaceTextWithTransaction(
     auto [begin, end] = ComputeInsertedRange(pointToInsert, aStringToInsert);
     if (begin.IsSet() && end.IsSet()) {
       TopLevelEditSubActionDataRef().DidDeleteText(
-          *this, begin.To<EditorRawDOMPoint>());
+          *this, begin.RefOrTo<EditorRawDOMPoint>());
       TopLevelEditSubActionDataRef().DidInsertText(
-          *this, begin.To<EditorRawDOMPoint>(), end.To<EditorRawDOMPoint>());
+          *this, begin.RefOrTo<EditorRawDOMPoint>(),
+          end.RefOrTo<EditorRawDOMPoint>());
     }
 
     // XXX Should we update endOfInsertedText here?
