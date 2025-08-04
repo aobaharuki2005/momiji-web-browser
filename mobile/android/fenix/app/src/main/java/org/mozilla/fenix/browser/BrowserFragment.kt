@@ -110,6 +110,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     contentLayout = binding.browserLayout,
                     tabPreview = binding.tabPreview,
                     toolbarLayout = browserToolbarView.layout,
+                    navBarLayout = browserNavigationBar?.layout,
                     store = components.core.store,
                     selectTabUseCase = components.useCases.tabsUseCases.selectTab,
                     onSwipeStarted = {
