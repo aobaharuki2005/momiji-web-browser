@@ -203,21 +203,13 @@ onmessage = event => {
       self.postMessage(response, result.transfer || []);
     })
     .catch(error => {
-      if (error instanceof Error) {
-        error = {
-          message: error.message,
-          fileName: error.fileName,
-          lineNumber: error.lineNumber,
-          column: error.column,
-          stack: error.stack,
-          errorCode: error.errorCode,
-        };
-      }
-
       self.postMessage({
         msg: "failure",
         msgId,
         error,
+        // We sometimes attach an extra property to the error, which is not
+        // copied when the error passes through structuredClone.
+        errorCode: error.errorCode,
       });
     })
     .catch(error => {
