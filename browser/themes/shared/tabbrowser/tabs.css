@@ -1744,10 +1744,14 @@ tab-group {
   align-content: flex-start;
   grid-gap: var(--space-small);
 
-  &[overflow]::after {
+  &::after {
     content: "";
     border-bottom: var(--tabstrip-inner-border);
     margin-inline: var(--tab-inner-inline-margin);
+  }
+
+  &:not([overflow])::after {
+    border-color: transparent;
   }
 
   /* stylelint-disable-next-line media-query-no-invalid */
@@ -1756,7 +1760,7 @@ tab-group {
     pref is not set to "expand-on-hover" as opposed to when the "sidebar-expand-on-hover" attribute
     has not been added to root. There are certain scenarios when that attribute is temporarily
     removed from root such as when toggling the sidebar to expand with the toolbar button. */
-    &:not([expanded])[overflow]::after {
+    &:not([expanded])::after {
       border-color: transparent;
     }
   }
