@@ -940,11 +940,9 @@ export class RemoteSettingsClient extends EventEmitter {
       };
       // In Bug 1617133, we will try to break down specific errors into
       // more precise statuses by reporting the JavaScript error name
-      // ("TypeError", etc.) to Telemetry on Nightly.
-      const channel = lazy.UptakeTelemetry.Policy.getChannel();
+      // ("TypeError", etc.) to Telemetry.
       if (
         thrownError !== null &&
-        channel == "nightly" &&
         [
           lazy.UptakeTelemetry.STATUS.SYNC_ERROR,
           lazy.UptakeTelemetry.STATUS.CUSTOM_1_ERROR, // IndexedDB.
