@@ -511,7 +511,7 @@ export class CustomizeMode {
       this.#document.documentElement.toggleAttribute("customizing", true);
 
       let customizableToolbars = document.querySelectorAll(
-        "toolbar[customizable=true]:not([autohide=true], [collapsed=true])"
+        "toolbar[customizable=true]:not([autohide], [collapsed])"
       );
       for (let toolbar of customizableToolbars) {
         toolbar.toggleAttribute("customizing", true);
@@ -667,7 +667,7 @@ export class CustomizeMode {
       this._previousPanelContextMenuParent.appendChild(panelContextMenu);
 
       let customizableToolbars = document.querySelectorAll(
-        "toolbar[customizable=true]:not([autohide=true])"
+        "toolbar[customizable=true]:not([autohide])"
       );
       for (let toolbar of customizableToolbars) {
         toolbar.removeAttribute("customizing");
