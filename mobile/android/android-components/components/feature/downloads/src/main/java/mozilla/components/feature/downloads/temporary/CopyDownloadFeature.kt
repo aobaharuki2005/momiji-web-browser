@@ -22,7 +22,6 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.copyImage
-import java.util.concurrent.TimeUnit
 
 /**
  * [LifecycleAwareFeature] implementation for copying online resources.
@@ -58,11 +57,6 @@ class CopyDownloadFeature(
     httpClient = httpClient,
     ioDispatcher = ioDispatcher,
 ) {
-
-    /**
-     * At most time to allow for the file to be downloaded.
-     */
-    private val operationTimeoutMs by lazy { TimeUnit.MINUTES.toMinutes(1) }
 
     override fun start() {
         scope = store.flowScoped { flow ->

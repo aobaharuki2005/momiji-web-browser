@@ -24,11 +24,6 @@ import mozilla.components.support.ktx.android.content.shareLocalPdf
 import mozilla.components.support.ktx.android.content.shareMedia
 
 /**
- * At most time to allow for the file to be downloaded and action to be performed.
- */
-private const val OPERATION_TIMEOUT_MS: Long = 1000L
-
-/**
  * [LifecycleAwareFeature] implementation for sharing online and local resources.
  *
  * This will intercept only [ShareResourceAction] [BrowserAction]s.
@@ -88,7 +83,7 @@ class ShareResourceFeature(
         scope?.launch(coroutineExceptionHandler) {
             when (internetResource) {
                 is ShareResourceState.InternetResource -> {
-                    withTimeout(OPERATION_TIMEOUT_MS) {
+                    withTimeout(operationTimeoutMs) {
                         val download = download(internetResource)
                         shareInternetResource(
                             contentType = internetResource.contentType,
