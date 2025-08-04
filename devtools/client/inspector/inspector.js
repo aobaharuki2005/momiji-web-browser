@@ -145,9 +145,6 @@ class Inspector extends EventEmitter {
     this.telemetry = toolbox.telemetry;
     this.store = createStore(this);
 
-    this.onDetached = this.onDetached.bind(this);
-    this.onHostChanged = this.onHostChanged.bind(this);
-    this.onNewSelection = this.onNewSelection.bind(this);
     this.onResourceAvailable = this.onResourceAvailable.bind(this);
     this.onRootNodeAvailable = this.onRootNodeAvailable.bind(this);
     this.onPickerCanceled = this.onPickerCanceled.bind(this);
@@ -158,7 +155,6 @@ class Inspector extends EventEmitter {
     this.onSidebarSelect = this.onSidebarSelect.bind(this);
     this.onSidebarShown = this.onSidebarShown.bind(this);
     this.onSidebarToggle = this.onSidebarToggle.bind(this);
-    this.listenForSearchEvents = this.listenForSearchEvents.bind(this);
 
     this.prefObserver = new PrefObserver("devtools.");
     this.prefObserver.on(
@@ -229,7 +225,7 @@ class Inspector extends EventEmitter {
     // The markup view is rendered in an iframe and the splitter will move the
     // parent of the iframe in the DOM tree which would reset the state of the
     // iframe if it had already been initialized.
-    this.setupSplitter();
+    this.#setupSplitter();
 
     // Optional NodeFront/ElementIdentifier set on inspector startup, to be selected once the first root
     // node is available.
@@ -281,19 +277,19 @@ class Inspector extends EventEmitter {
     // been processed, so that the cssProperties getter works.
     // But the rest could be moved before the watch* calls.
     this.styleChangeTracker = new InspectorStyleChangeTracker(this);
-    this.setupSidebar();
+    this.#setupSidebar();
     this.breadcrumbs = new HTMLBreadcrumbs(this);
-    this.setupExtensionSidebars();
-    this.setupSearchBox();
+    this.#setupExtensionSidebars();
+    this.#setupSearchBox();
 
-    this.onNewSelection();
+    this.#onNewSelection();
 
-    this.toolbox.on("host-changed", this.onHostChanged);
+    this.toolbox.on("host-changed", this.#onHostChanged);
     this.toolbox.nodePicker.on("picker-node-hovered", this.onPickerHovered);
     this.toolbox.nodePicker.on("picker-node-canceled", this.onPickerCanceled);
     this.toolbox.nodePicker.on("picker-node-picked", this.onPickerPicked);
-    this.selection.on("new-node-front", this.onNewSelection);
-    this.selection.on("detached-front", this.onDetached);
+    this.selection.on("new-node-front", this.#onNewSelection);
+    this.selection.on("detached-front", this.#onDetached);
 
     // Log the 3 pane inspector setting on inspector open. The question we want to answer
     // is:
@@ -331,7 +327,7 @@ class Inspector extends EventEmitter {
       return;
     }
 
-    await this.initInspectorFront(targetFront);
+    await this.#initInspectorFront(targetFront);
 
     // the target might have been destroyed when reloading quickly,
     // while waiting for inspector front initialization
@@ -426,7 +422,7 @@ class Inspector extends EventEmitter {
       await this.#initMarkupView();
 
       // Setup the toolbar again, since its content may depend on the current document.
-      this.setupToolbar();
+      this.#setupToolbar();
     } catch (e) {
       this.#handleRejectionIfNotDestroyed(e);
     }
@@ -497,7 +493,7 @@ class Inspector extends EventEmitter {
     }
   }
 
-  async initInspectorFront(targetFront) {
+  async #initInspectorFront(targetFront) {
     this.inspectorFront = await targetFront.getFront("inspector");
     this.walker = this.inspectorFront.walker;
   }
@@ -720,7 +716,7 @@ class Inspector extends EventEmitter {
   /**
    * Hooks the searchbar to show result and auto completion suggestions.
    */
-  setupSearchBox() {
+  #setupSearchBox() {
     this.searchBox = this.panelDoc.getElementById("inspector-searchbox");
     this.searchClearButton = this.panelDoc.getElementById(
       "inspector-searchinput-clear"
@@ -743,11 +739,11 @@ class Inspector extends EventEmitter {
 
     this.searchResultsLabel.addEventListener("click", this.#onSearchLabelClick);
 
-    this.searchBox.addEventListener("focus", this.listenForSearchEvents, {
+    this.searchBox.addEventListener("focus", this.#listenForSearchEvents, {
       once: true,
     });
 
-    this.createSearchBoxShortcuts();
+    this.#createSearchBoxShortcuts();
   }
 
   #onSearchLabelClick = () => {
@@ -756,12 +752,12 @@ class Inspector extends EventEmitter {
     this.searchBox.focus();
   };
 
-  listenForSearchEvents() {
+  #listenForSearchEvents = () => {
     this.search.on("search-cleared", this.#clearSearchResultsLabel);
     this.search.on("search-result", this.#updateSearchResultsLabel);
-  }
+  };
 
-  createSearchBoxShortcuts() {
+  #createSearchBoxShortcuts() {
     this.searchboxShortcuts = new KeyShortcuts({
       window: this.panelDoc.defaultView,
       // The inspector search shortcuts need to be available from everywhere in the
@@ -877,7 +873,7 @@ class Inspector extends EventEmitter {
    *
    * @return {Boolean} true if the inspector should be in landscape mode.
    */
-  useLandscapeMode() {
+  #useLandscapeMode() {
     if (!this.panelDoc) {
       return true;
     }
@@ -896,7 +892,7 @@ class Inspector extends EventEmitter {
    * Build Splitter located between the main and side area of
    * the Inspector panel.
    */
-  setupSplitter() {
+  #setupSplitter() {
     const { width, height, splitSidebarWidth } = this.getSidebarSize();
 
     this.sidebarSplitBoxRef = this.React.createRef();
@@ -926,7 +922,7 @@ class Inspector extends EventEmitter {
         }),
         ref: this.sidebarSplitBoxRef,
       }),
-      vert: this.useLandscapeMode(),
+      vert: this.#useLandscapeMode(),
       onControlledPanelResized: this.onSidebarResized,
     });
 
@@ -949,7 +945,7 @@ class Inspector extends EventEmitter {
         return;
       }
 
-      this.splitBox.setState({ vert: this.useLandscapeMode() });
+      this.splitBox.setState({ vert: this.#useLandscapeMode() });
       this.emit("inspector-resize");
     },
     LAZY_RESIZE_INTERVAL_MS,
@@ -1048,8 +1044,8 @@ class Inspector extends EventEmitter {
 
   async onSidebarToggle() {
     this.isThreePaneModeEnabled = !this.isThreePaneModeEnabled;
-    await this.setupToolbar();
-    this.addRuleView({ skipQueue: true });
+    await this.#setupToolbar();
+    this.#addRuleView({ skipQueue: true });
   }
 
   /**
@@ -1057,7 +1053,7 @@ class Inspector extends EventEmitter {
    * split box, specifies the end panel control and resizes the split box width depending
    * on the width of the toolbox.
    */
-  setSidebarSplitBoxState() {
+  #setSidebarSplitBoxState() {
     const toolboxWidth = this.panelDoc.getElementById(
       "inspector-splitter-box"
     ).clientWidth;
@@ -1069,7 +1065,7 @@ class Inspector extends EventEmitter {
     // bottom-right panel in vertical mode width in 3 pane mode.
     let sidebarSplitboxWidth;
 
-    if (this.useLandscapeMode()) {
+    if (this.#useLandscapeMode()) {
       // Whether or not doubling the inspector sidebar's (right panel in horizontal mode
       // or bottom panel in vertical mode) width will be bigger than half of the
       // toolbox's width.
@@ -1116,7 +1112,7 @@ class Inspector extends EventEmitter {
    * pane mode. Rule view is selected when switching to 2 pane mode. Selected sidebar pref
    * is used otherwise.
    */
-  addRuleView({ skipQueue = false } = {}) {
+  #addRuleView({ skipQueue = false } = {}) {
     const selectedSidebar = this.getSelectedSidebar();
     const ruleViewSidebar = this.sidebarSplitBoxRef.current.startPanelContainer;
 
@@ -1126,7 +1122,7 @@ class Inspector extends EventEmitter {
       // bottom-left (in portrait/vertical mode) panel.
       ruleViewSidebar.style.display = "block";
 
-      this.setSidebarSplitBoxState();
+      this.#setSidebarSplitBoxState();
 
       // Force the rule view panel creation by calling getPanel
       this.getPanel("ruleview");
@@ -1154,7 +1150,7 @@ class Inspector extends EventEmitter {
         "inspector-splitter-box"
       );
       this.splitBox.setState({
-        width: this.useLandscapeMode()
+        width: this.#useLandscapeMode()
           ? this.sidebarSplitBoxRef.current.state.width
           : splitterBox.clientWidth,
       });
@@ -1274,7 +1270,7 @@ class Inspector extends EventEmitter {
   /**
    * Build the sidebar.
    */
-  setupSidebar() {
+  #setupSidebar() {
     const sidebar = this.panelDoc.getElementById("inspector-sidebar");
     const options = {
       showAllTabsMenu: true,
@@ -1298,7 +1294,7 @@ class Inspector extends EventEmitter {
     });
 
     // Append all side panels
-    this.addRuleView();
+    this.#addRuleView();
 
     // Inspector sidebar panels in order of appearance.
     const sidebarPanels = [];
@@ -1375,7 +1371,7 @@ class Inspector extends EventEmitter {
    * Setup any extension sidebar already registered to the toolbox when the inspector.
    * has been created for the first time.
    */
-  setupExtensionSidebars() {
+  #setupExtensionSidebars() {
     for (const [sidebarId, { title }] of this.toolbox
       .inspectorExtensionSidebars) {
       this.addExtensionSidebar(sidebarId, { title });
@@ -1477,8 +1473,8 @@ class Inspector extends EventEmitter {
     }
   }
 
-  async setupToolbar() {
-    this.teardownToolbar();
+  async #setupToolbar() {
+    this.#teardownToolbar();
 
     // Setup the add-node button.
     this.addNode = this.addNode.bind(this);
@@ -1524,7 +1520,7 @@ class Inspector extends EventEmitter {
     this.emit("inspector-toolbar-updated");
   }
 
-  teardownToolbar() {
+  #teardownToolbar() {
     if (this.addNodeButton) {
       this.addNodeButton.removeEventListener("click", this.addNode);
       this.addNodeButton = null;
@@ -1576,7 +1572,7 @@ class Inspector extends EventEmitter {
    * On any new selection made by the user, store the array of css selectors
    * of the selected node so it can be restored after reload of the same page
    */
-  updateSelectionCssSelectors() {
+  #updateSelectionCssSelectors() {
     if (!this.selection.isElementNode()) {
       return;
     }
@@ -1614,7 +1610,7 @@ class Inspector extends EventEmitter {
   /**
    * Update the state of the add button in the toolbar depending on the current selection.
    */
-  updateAddElementButton() {
+  #updateAddElementButton() {
     const btn = this.panelDoc.getElementById("inspector-element-add-button");
     if (this.canAddHTMLChild()) {
       btn.removeAttribute("disabled");
@@ -1627,7 +1623,7 @@ class Inspector extends EventEmitter {
    * Handler for the "host-changed" event from the toolbox. Resets the inspector
    * sidebar sizes when the toolbox host type changes.
    */
-  async onHostChanged() {
+  #onHostChanged = async () => {
     // Eagerly call our resize handling code to process the fact that we
     // switched hosts. If we don't do this, we'll wait for resize events + 200ms
     // to have passed, which causes the old layout to noticeably show up in the
@@ -1642,21 +1638,21 @@ class Inspector extends EventEmitter {
     // When changing hosts, the toolbox chromeEventHandler might change, for instance when
     // switching from docked to window hosts. Recreate the searchbox shortcuts.
     this.searchboxShortcuts.destroy();
-    this.createSearchBoxShortcuts();
+    this.#createSearchBoxShortcuts();
 
-    this.setSidebarSplitBoxState();
-  }
+    this.#setSidebarSplitBoxState();
+  };
 
   /**
    * When a new node is selected.
    */
-  onNewSelection(value, reason) {
+  #onNewSelection = (value, reason) => {
     if (reason === "selection-destroy") {
       return;
     }
 
-    this.updateAddElementButton();
-    this.updateSelectionCssSelectors();
+    this.#updateAddElementButton();
+    this.#updateSelectionCssSelectors();
 
     const selfUpdate = this.updating("inspector-panel");
     executeSoon(() => {
@@ -1667,7 +1663,7 @@ class Inspector extends EventEmitter {
         console.error(ex);
       }
     });
-  }
+  };
 
   /**
    * Delay the "inspector-updated" notification while a tool
@@ -1680,7 +1676,7 @@ class Inspector extends EventEmitter {
       this.#updateProgress &&
       this.#updateProgress.node != this.selection.nodeFront
     ) {
-      this.cancelUpdate();
+      this.#cancelUpdate();
     }
 
     if (!this.#updateProgress) {
@@ -1696,7 +1692,7 @@ class Inspector extends EventEmitter {
           // Cancel update if there is no `selection` anymore.
           // It can happen if the inspector panel is already destroyed.
           if (!self.selection || this.node !== self.selection.nodeFront) {
-            self.cancelUpdate();
+            self.#cancelUpdate();
             return;
           }
           if (this.outstanding.size !== 0) {
@@ -1721,7 +1717,7 @@ class Inspector extends EventEmitter {
   /**
    * Cancel notification of inspector updates.
    */
-  cancelUpdate() {
+  #cancelUpdate() {
     this.#updateProgress = null;
   }
 
@@ -1730,11 +1726,11 @@ class Inspector extends EventEmitter {
    * parent is found (may happen when deleting an iframe inside which the
    * node was selected).
    */
-  onDetached(parentNode) {
+  #onDetached = parentNode => {
     this.breadcrumbs.cutAfter(this.breadcrumbs.indexOf(parentNode));
     const nodeFront = parentNode ? parentNode : this.#defaultNode;
     this.selection.setNodeFront(nodeFront, { reason: "detached" });
-  }
+  };
 
   /**
    * Destroy the inspector.
@@ -1745,11 +1741,11 @@ class Inspector extends EventEmitter {
     }
     this.#destroyed = true;
 
-    this.cancelUpdate();
+    this.#cancelUpdate();
 
     this.panelWin.removeEventListener("resize", this.onPanelWindowResize, true);
-    this.selection.off("new-node-front", this.onNewSelection);
-    this.selection.off("detached-front", this.onDetached);
+    this.selection.off("new-node-front", this.#onNewSelection);
+    this.selection.off("detached-front", this.#onDetached);
     this.toolbox.nodePicker.off("picker-node-canceled", this.onPickerCanceled);
     this.toolbox.nodePicker.off("picker-node-hovered", this.onPickerHovered);
     this.toolbox.nodePicker.off("picker-node-picked", this.onPickerPicked);
@@ -1783,7 +1779,7 @@ class Inspector extends EventEmitter {
 
     this.#destroyMarkup();
 
-    this.teardownToolbar();
+    this.#teardownToolbar();
 
     this.prefObserver.on(
       DEFAULT_COLOR_UNIT_PREF,
@@ -1832,7 +1828,7 @@ class Inspector extends EventEmitter {
     this.panelWin.inspector = null;
     this.panelWin = null;
     this.resultsLength = null;
-    this.searchBox.removeEventListener("focus", this.listenForSearchEvents);
+    this.searchBox.removeEventListener("focus", this.#listenForSearchEvents);
     this.searchBox = null;
     this.show3PaneTooltip = null;
     this.sidebar = null;
