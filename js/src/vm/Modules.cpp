@@ -37,8 +37,8 @@
 #include "vm/Runtime.h"                 // JSRuntime
 
 #include "builtin/HandlerFunction-inl.h"  // js::ExtraValueFromHandler, js::NewHandler{,WithExtraValue}, js::TargetFromHandler
-#include "vm/JSAtomUtils-inl.h"  // AtomToId
-#include "vm/JSContext-inl.h"    // JSContext::{c,releaseC}heck
+#include "vm/JSAtomUtils-inl.h"           // AtomToId
+#include "vm/JSContext-inl.h"             // JSContext::{c,releaseC}heck
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
@@ -2750,12 +2750,7 @@ bool js::OnModuleEvaluationFailure(JSContext* cx,
 // reference to the referencing private to keep it alive until it is needed.
 class DynamicImportContextObject : public NativeObject {
  public:
-  enum {
-    ReferencingPrivateSlot = 0,
-    PromiseSlot,
-    ModuleSlot,
-    SlotCount
-  };
+  enum { ReferencingPrivateSlot = 0, PromiseSlot, ModuleSlot, SlotCount };
 
   static const JSClass class_;
   static const JSClassOps classOps_;
