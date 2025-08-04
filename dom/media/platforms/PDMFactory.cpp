@@ -813,7 +813,8 @@ void PDMFactory::SetCDMProxy(CDMProxy* aProxy) {
   MOZ_ASSERT(aProxy);
 
 #ifdef MOZ_WIDGET_ANDROID
-  if (IsWidevineKeySystem(aProxy->KeySystem())) {
+  if (IsWidevineKeySystem(aProxy->KeySystem()) &&
+      StaticPrefs::media_android_media_codec_enabled()) {
     mEMEPDM = AndroidDecoderModule::Create(aProxy);
     return;
   }
@@ -855,7 +856,9 @@ media::MediaCodecsSupported PDMFactory::Supported(bool aForceRefresh) {
           cd.codec, pdm->SupportsMimeType(nsCString(cd.mimeTypeString)));
     }
 #ifdef MOZ_WIDGET_ANDROID
-    supported += AndroidDecoderModule::GetSupportedCodecs();
+    if (StaticPrefs::media_android_media_codec_enabled()) {
+      supported += AndroidDecoderModule::GetSupportedCodecs();
+    }
 #endif
     return supported;
   };

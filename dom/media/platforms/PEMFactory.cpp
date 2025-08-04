@@ -236,7 +236,9 @@ void PEMFactory::InitContentPEMs() {
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-    mCurrentPEMs.AppendElement(new AndroidEncoderModule());
+    if (StaticPrefs::media_android_media_codec_enabled()) {
+      mCurrentPEMs.AppendElement(new AndroidEncoderModule());
+    }
 #endif
 
 #ifdef XP_WIN
@@ -295,7 +297,9 @@ void PEMFactory::InitDefaultPEMs() {
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-  mCurrentPEMs.AppendElement(new AndroidEncoderModule());
+  if (StaticPrefs::media_android_media_codec_enabled()) {
+    mCurrentPEMs.AppendElement(new AndroidEncoderModule());
+  }
 #endif
 
 #ifdef XP_WIN
