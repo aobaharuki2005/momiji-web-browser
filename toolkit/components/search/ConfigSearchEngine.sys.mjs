@@ -717,7 +717,8 @@ export class ConfigSearchEngine extends SearchEngine {
       urlData.method || "GET",
       urlData.base,
       urlData.displayName,
-      urlData.isNewUntil
+      urlData.isNewUntil,
+      urlData.excludePartnerCodeFromTelemetry
     );
 
     if (urlData.params) {

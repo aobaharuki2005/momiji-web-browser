@@ -4,7 +4,9 @@
 "use strict";
 
 // Telemetry test for the visual search content context menu item, the one
-// labeled "Search Image with {engine}".
+// labeled "Search Image with {engine}". Also checks that the search config
+// property `excludePartnerCodeFromTelemetry` is respected when recording
+// telemetry.
 
 // Expected source and action recorded by `BrowserSearchTelemetry`.
 const EXPECTED_TELEMETRY_SOURCE = "contextmenu_visual";
@@ -35,7 +37,7 @@ const SEARCH_CONFIG = [
     base: {
       name: ENGINE_NAME,
       // Make sure the engine has a partner code so we can verify it's excluded
-      // from telemetry.
+      // from telemetry due to `excludePartnerCodeFromTelemetry` below.
       partnerCode: "test-partner-code",
       urls: {
         visualSearch: {
@@ -51,6 +53,7 @@ const SEARCH_CONFIG = [
             },
           ],
           searchTermParamName: "url",
+          excludePartnerCodeFromTelemetry: true,
         },
       },
     },

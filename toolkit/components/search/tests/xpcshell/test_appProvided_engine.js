@@ -47,6 +47,7 @@ let CONFIG = [
           },
           // In the future
           isNewUntil: "2095-01-01",
+          excludePartnerCodeFromTelemetry: true,
         },
       },
     },
@@ -195,6 +196,24 @@ add_task(async function test_engine_with_all_params_set() {
     "Should not have postData for a GET url"
   );
 
+  // The `SEARCH` URL config does not define any of these properties.
+  Assert.equal(
+    engine.wrappedJSObject.getURLOfType(SearchUtils.URL_TYPE.SEARCH)
+      .displayName,
+    "",
+    "The SEARCH URL shouldn't have a display name"
+  );
+  Assert.ok(
+    !engine.wrappedJSObject.getURLOfType(SearchUtils.URL_TYPE.SEARCH).isNew(),
+    "isNew for the SEARCH URL should return false"
+  );
+  Assert.ok(
+    !engine.wrappedJSObject.getURLOfType(SearchUtils.URL_TYPE.SEARCH)
+      .excludePartnerCodeFromTelemetry,
+    "excludePartnerCodeFromTelemetry for the SEARCH URL should be false"
+  );
+
+  // The `VISUAL_SEARCH` URL config defines all of these properties.
   Assert.equal(
     engine.wrappedJSObject.getURLOfType(SearchUtils.URL_TYPE.VISUAL_SEARCH)
       .displayName,
@@ -205,7 +224,12 @@ add_task(async function test_engine_with_all_params_set() {
     engine.wrappedJSObject
       .getURLOfType(SearchUtils.URL_TYPE.VISUAL_SEARCH)
       .isNew(),
-    "isNew for the visual search URL should be correct"
+    "isNew for the visual search URL should return true"
+  );
+  Assert.ok(
+    engine.wrappedJSObject.getURLOfType(SearchUtils.URL_TYPE.VISUAL_SEARCH)
+      .excludePartnerCodeFromTelemetry,
+    "excludePartnerCodeFromTelemetry for the visual search URL should be true"
   );
 
   checkUrlOfType(engine);

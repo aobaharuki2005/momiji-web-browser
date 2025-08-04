@@ -9,6 +9,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SearchSERPTelemetry:
     "moz-src:///browser/components/search/SearchSERPTelemetry.sys.mjs",
+  SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
 });
 
@@ -138,6 +139,9 @@ class BrowserSearchTelemetryHandler {
    *        The search engine alias used in the search, if any.
    * @param {string} [details.newtabSessionId=undefined]
    *        The newtab session that prompted this search, if any.
+   * @param {string} [details.searchUrlType=undefined]
+   *        A `SearchUtils.URL_TYPE` value that indicates the type of search.
+   *        Defaults to `SearchUtils.URL_TYPE.SEARCH`, a plain old search.
    * @throws if source is not in the known sources list.
    */
   recordSearch(browser, engine, source, details = {}) {
@@ -154,8 +158,7 @@ class BrowserSearchTelemetryHandler {
         return;
       }
 
-      let isContextMenuVisual = source == "contextmenu_visual";
-      if (!isContextMenuVisual) {
+      if (source != "contextmenu_visual") {
         const countIdPrefix = `${engine.telemetryId}.`;
         const countIdSource = countIdPrefix + source;
 
@@ -179,12 +182,18 @@ class BrowserSearchTelemetryHandler {
       // a requirement to report the partner code in that case.
       let isOverridden = !!engine.overriddenById;
 
+      let searchUrlType =
+        details.searchUrlType ?? lazy.SearchUtils.URL_TYPE.SEARCH;
+
       // Strict equality is used because we want to only match against the
       // empty string and not other values. We would have `engine.partnerCode`
       // return `undefined`, but the XPCOM interfaces force us to return an
       // empty string.
       let reportPartnerCode =
-        !isOverridden && engine.partnerCode !== "" && !isContextMenuVisual;
+        !isOverridden &&
+        engine.partnerCode !== "" &&
+        !engine.wrappedJSObject.getURLOfType(searchUrlType)
+          ?.excludePartnerCodeFromTelemetry;
 
       Glean.sap.counts.record({
         source: this.KNOWN_SEARCH_SOURCES.get(source),

@@ -202,6 +202,8 @@ export class EngineURL {
   displayName;
   /** @type {string} */
   isNewUntil;
+  /** @type {boolean} */
+  excludePartnerCodeFromTelemetry;
 
   /**
    * The name of the parameter used for the search term.
@@ -228,12 +230,22 @@ export class EngineURL {
    * @param {string} [isNewUntil]
    *   Indicates the date until which the URL is considered new
    *   (format: YYYY-MM-DD).
+   * @param {boolean} [excludePartnerCodeFromTelemetry]
+   *   Whether the engine's partner code should be excluded from telemetry when
+   *   this URL is visited.
    *
    * @see https://web.archive.org/web/20060203040832/http://opensearch.a9.com/spec/1.1/querysyntax/#urltag
    *
    * @throws NS_ERROR_NOT_IMPLEMENTED if aType is unsupported.
    */
-  constructor(mimeType, requestMethod, template, displayName, isNewUntil) {
+  constructor(
+    mimeType,
+    requestMethod,
+    template,
+    displayName,
+    isNewUntil,
+    excludePartnerCodeFromTelemetry
+  ) {
     if (!mimeType || !requestMethod || !template) {
       throw Components.Exception(
         "missing mimeType, method or template for EngineURL!",
@@ -287,6 +299,7 @@ export class EngineURL {
 
     this.displayName = displayName ?? "";
     this.isNewUntil = isNewUntil ?? "";
+    this.excludePartnerCodeFromTelemetry = !!excludePartnerCodeFromTelemetry;
   }
 
   /**

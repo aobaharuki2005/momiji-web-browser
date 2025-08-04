@@ -503,7 +503,8 @@ export var SearchUIUtils = {
       lazy.BrowserSearchTelemetry.recordSearch(
         window.gBrowser.selectedBrowser,
         searchInfo.engine,
-        source
+        source,
+        { searchUrlType }
       );
     }
   },
