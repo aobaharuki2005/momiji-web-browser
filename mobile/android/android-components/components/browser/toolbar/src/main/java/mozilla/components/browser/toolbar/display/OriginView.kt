@@ -164,10 +164,8 @@ internal class OriginView @JvmOverloads constructor(
             val urlViewWidth = urlView.width
             val valueWidth = measureUrlTextWidh(valueUntilRegistrableDomainEnd.toString())
 
-            val halfFadingEdgeSize = urlView.horizontalFadingEdgeLength / 2
-
-            if (valueWidth > urlViewWidth - halfFadingEdgeSize) {
-                urlView.scrollTo((valueWidth - urlViewWidth + halfFadingEdgeSize).toInt(), 0)
+            if (valueWidth > urlViewWidth) {
+                urlView.scrollTo((valueWidth - urlViewWidth).toInt(), 0)
                 return
             }
         }
