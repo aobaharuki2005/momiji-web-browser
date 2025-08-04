@@ -892,8 +892,6 @@ bool Navigation::InnerFireNavigateEvent(
     already_AddRefed<FormData> aFormDataEntryList,
     nsIStructuredCloneContainer* aClassicHistoryAPIState,
     const nsAString& aDownloadRequestFilename) {
-  nsCOMPtr<nsIGlobalObject> globalObject = GetOwnerGlobal();
-
   // Step 1
   if (HasEntriesAndEventsDisabled()) {
     // Step 1.1 to step 1.3
@@ -974,7 +972,8 @@ bool Navigation::InnerFireNavigateEvent(
   init.mSourceElement = aSourceElement;
 
   // Step 19
-  RefPtr<AbortController> abortController = new AbortController(globalObject);
+  RefPtr<AbortController> abortController =
+      new AbortController(GetOwnerGlobal());
 
   // Step 20
   init.mSignal = abortController->Signal();
@@ -1054,9 +1053,9 @@ bool Navigation::InnerFireNavigateEvent(
     MOZ_DIAGNOSTIC_ASSERT(fromNHE);
 
     // Step 33.4
-    RefPtr<Promise> promise = Promise::CreateInfallible(globalObject);
+    RefPtr<Promise> promise = Promise::CreateInfallible(GetOwnerGlobal());
     mTransition = MakeAndAddRef<NavigationTransition>(
-        globalObject, aNavigationType, fromNHE, promise);
+        GetOwnerGlobal(), aNavigationType, fromNHE, promise);
 
     // Step 33.5
     MOZ_ALWAYS_TRUE(promise->SetAnyPromiseIsHandled());
@@ -1096,22 +1095,17 @@ bool Navigation::InnerFireNavigateEvent(
     // Step 34.2
     for (auto& handler : event->NavigationHandlerList().Clone()) {
       // Step 34.2.1
-      RefPtr promise = MOZ_KnownLive(handler)->Call();
-      if (promise) {
-        promiseList.AppendElement(promise);
-      }
+      promiseList.AppendElement(MOZ_KnownLive(handler)->Call());
     }
 
     // Step 34.3
     if (promiseList.IsEmpty()) {
-      RefPtr promise = Promise::CreateResolvedWithUndefined(
-          globalObject, IgnoredErrorResult());
-      if (promise) {
-        promiseList.AppendElement(promise);
-      }
+      promiseList.AppendElement(Promise::CreateResolvedWithUndefined(
+          GetOwnerGlobal(), IgnoredErrorResult()));
     }
 
     // Step 34.4
+    nsCOMPtr<nsIGlobalObject> globalObject = GetOwnerGlobal();
     // We capture the scope which we wish to keep alive in the lambdas passed to
     // Promise::WaitForAll. We pass it as the cycle collected argument to
     // Promise::WaitForAll, which makes it stay alive until all promises
