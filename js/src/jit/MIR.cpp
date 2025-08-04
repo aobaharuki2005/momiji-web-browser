@@ -138,6 +138,8 @@ static auto ToIntConstant(MConstant* cst) {
     return cst->toInt32();
   } else if constexpr (Type == MIRType::Int64) {
     return cst->toInt64();
+  } else if constexpr (Type == MIRType::IntPtr) {
+    return cst->toIntPtr();
   }
 }
 
@@ -149,6 +151,9 @@ static MConstant* NewIntConstant(TempAllocator& alloc, IntT i) {
   } else if constexpr (Type == MIRType::Int64) {
     static_assert(std::is_same_v<IntT, int64_t>);
     return MConstant::NewInt64(alloc, i);
+  } else if constexpr (Type == MIRType::IntPtr) {
+    static_assert(std::is_same_v<IntT, intptr_t>);
+    return MConstant::NewIntPtr(alloc, i);
   }
 }
 
@@ -176,12 +181,15 @@ static MConstant* EvaluateIntConstantOperands(TempAllocator& alloc,
 
   switch (ins->op()) {
     case MDefinition::Opcode::BitAnd:
+    case MDefinition::Opcode::BigIntPtrBitAnd:
       ret = lhs & rhs;
       break;
     case MDefinition::Opcode::BitOr:
+    case MDefinition::Opcode::BigIntPtrBitOr:
       ret = lhs | rhs;
       break;
     case MDefinition::Opcode::BitXor:
+    case MDefinition::Opcode::BigIntPtrBitXor:
       ret = lhs ^ rhs;
       break;
     case MDefinition::Opcode::Lsh:
@@ -207,7 +215,29 @@ static MConstant* EvaluateIntConstantOperands(TempAllocator& alloc,
       }
       ret = UnsigedInt(lhs) >> (UnsigedInt(rhs) & shiftMask);
       break;
-    case MDefinition::Opcode::Add: {
+    case MDefinition::Opcode::BigIntPtrLsh:
+    case MDefinition::Opcode::BigIntPtrRsh: {
+      // BigIntPtr shifts are special:
+      // 1. Excess shift amounts produce BigInt larger than IntPtr.
+      // 2. Negative shifts reverse the shift direction.
+
+      // Decline folding for excess shift amounts.
+      UnsigedInt shift = mozilla::Abs(rhs);
+      if ((shift & shiftMask) != shift) {
+        return nullptr;
+      }
+
+      bool isLsh = (ins->isBigIntPtrLsh() && rhs >= 0) ||
+                   (ins->isBigIntPtrRsh() && rhs < 0);
+      if (isLsh) {
+        ret = UnsigedInt(lhs) << shift;
+      } else {
+        ret = lhs >> shift;
+      }
+      break;
+    }
+    case MDefinition::Opcode::Add:
+    case MDefinition::Opcode::BigIntPtrAdd: {
       auto checked = mozilla::CheckedInt<IntT>(lhs) + rhs;
       if (!checked.isValid()) {
         return nullptr;
@@ -215,7 +245,8 @@ static MConstant* EvaluateIntConstantOperands(TempAllocator& alloc,
       ret = checked.value();
       break;
     }
-    case MDefinition::Opcode::Sub: {
+    case MDefinition::Opcode::Sub:
+    case MDefinition::Opcode::BigIntPtrSub: {
       auto checked = mozilla::CheckedInt<IntT>(lhs) - rhs;
       if (!checked.isValid()) {
         return nullptr;
@@ -223,7 +254,8 @@ static MConstant* EvaluateIntConstantOperands(TempAllocator& alloc,
       ret = checked.value();
       break;
     }
-    case MDefinition::Opcode::Mul: {
+    case MDefinition::Opcode::Mul:
+    case MDefinition::Opcode::BigIntPtrMul: {
       auto checked = mozilla::CheckedInt<IntT>(lhs) * rhs;
       if (!checked.isValid()) {
         return nullptr;
@@ -239,19 +271,22 @@ static MConstant* EvaluateIntConstantOperands(TempAllocator& alloc,
           return nullptr;
         }
         ret = IntT(checked.value());
-      } else {
-        auto checked = mozilla::CheckedInt<IntT>(lhs) / rhs;
-        if (!checked.isValid()) {
-          return nullptr;
-        }
-        ret = checked.value();
+        break;
+      }
+      [[fallthrough]];
+    }
+    case MDefinition::Opcode::BigIntPtrDiv: {
+      auto checked = mozilla::CheckedInt<IntT>(lhs) / rhs;
+      if (!checked.isValid()) {
+        return nullptr;
+      }
+      ret = checked.value();
 
-        // Decline folding if the numerator isn't evenly divisible by the
-        // denominator. Only applies for non-truncating int32 division.
-        if constexpr (Type == MIRType::Int32) {
-          if (ret * rhs != lhs && !ins->toDiv()->isTruncated()) {
-            return nullptr;
-          }
+      // Decline folding if the numerator isn't evenly divisible by the
+      // denominator. Only applies for non-truncating int32 division.
+      if constexpr (Type == MIRType::Int32) {
+        if (ret * rhs != lhs && !ins->toDiv()->isTruncated()) {
+          return nullptr;
         }
       }
       break;
@@ -264,19 +299,22 @@ static MConstant* EvaluateIntConstantOperands(TempAllocator& alloc,
           return nullptr;
         }
         ret = IntT(checked.value());
-      } else {
-        auto checked = mozilla::CheckedInt<IntT>(lhs) % rhs;
-        if (!checked.isValid()) {
-          return nullptr;
-        }
-        ret = checked.value();
+        break;
+      }
+      [[fallthrough]];
+    }
+    case MDefinition::Opcode::BigIntPtrMod: {
+      auto checked = mozilla::CheckedInt<IntT>(lhs) % rhs;
+      if (!checked.isValid()) {
+        return nullptr;
+      }
+      ret = checked.value();
 
-        // Decline folding if the result is negative zero. Only applies for
-        // non-truncating int32 remainder.
-        if constexpr (Type == MIRType::Int32) {
-          if (ret == 0 && lhs < 0 && !ins->toMod()->isTruncated()) {
-            return nullptr;
-          }
+      // Decline folding if the result is negative zero. Only applies for
+      // non-truncating int32 remainder.
+      if constexpr (Type == MIRType::Int32) {
+        if (ret == 0 && lhs < 0 && !ins->toMod()->isTruncated()) {
+          return nullptr;
         }
       }
       break;
@@ -296,6 +334,11 @@ static MConstant* EvaluateInt32ConstantOperands(TempAllocator& alloc,
 static MConstant* EvaluateInt64ConstantOperands(TempAllocator& alloc,
                                                 MBinaryInstruction* ins) {
   return EvaluateIntConstantOperands<MIRType::Int64>(alloc, ins);
+}
+
+static MConstant* EvaluateIntPtrConstantOperands(TempAllocator& alloc,
+                                                 MBinaryInstruction* ins) {
+  return EvaluateIntConstantOperands<MIRType::IntPtr>(alloc, ins);
 }
 
 static MConstant* EvaluateConstantOperands(TempAllocator& alloc,
@@ -3674,6 +3717,80 @@ bool MBigIntPtrBinaryArithInstruction::isMaybeNegative(MDefinition* ins) {
     return ins->toConstant()->toBigInt()->isNegative();
   }
   return true;
+}
+
+MDefinition* MBigIntPtrBinaryArithInstruction::foldsTo(TempAllocator& alloc) {
+  if (auto* folded = EvaluateIntPtrConstantOperands(alloc, this)) {
+    return folded;
+  }
+  return this;
+}
+
+MDefinition* MBigIntPtrPow::foldsTo(TempAllocator& alloc) {
+  // Follow MPow::foldsTo and fold if:
+  // 1. Both operands are constants.
+  // 2. The power operand is ≤ 4 and the operation can be expressed as a series
+  //    of multiplications.
+
+  if (!rhs()->isConstant()) {
+    return this;
+  }
+  intptr_t pow = rhs()->toConstant()->toIntPtr();
+
+  if (lhs()->isConstant()) {
+    intptr_t base = lhs()->toConstant()->toIntPtr();
+    intptr_t result;
+    if (!BigInt::powIntPtr(base, pow, &result)) {
+      return this;
+    }
+    return MConstant::NewIntPtr(alloc, result);
+  }
+
+  if (pow == 1) {
+    return lhs();
+  }
+
+  auto multiply = [this, &alloc](MDefinition* lhs, MDefinition* rhs) {
+    auto* mul = MBigIntPtrMul::New(alloc, lhs, rhs);
+    mul->setBailoutKind(bailoutKind());
+    return mul;
+  };
+
+  // (x ** 2n) == x*x.
+  if (pow == 2) {
+    return multiply(lhs(), lhs());
+  }
+
+  // (x ** 3n) == x*x*x.
+  if (pow == 3) {
+    auto* mul1 = multiply(lhs(), lhs());
+    block()->insertBefore(this, mul1);
+    return multiply(lhs(), mul1);
+  }
+
+  // (x ** 4n) == y*y, where y = x*x.
+  if (pow == 4) {
+    auto* y = multiply(lhs(), lhs());
+    block()->insertBefore(this, y);
+    return multiply(y, y);
+  }
+
+  // No optimization
+  return this;
+}
+
+MDefinition* MBigIntPtrBinaryBitwiseInstruction::foldsTo(TempAllocator& alloc) {
+  if (auto* folded = EvaluateIntPtrConstantOperands(alloc, this)) {
+    return folded;
+  }
+  return this;
+}
+
+MDefinition* MBigIntPtrBitNot::foldsTo(TempAllocator& alloc) {
+  if (!input()->isConstant()) {
+    return this;
+  }
+  return MConstant::NewIntPtr(alloc, ~input()->toConstant()->toIntPtr());
 }
 
 MDefinition* MInt32ToIntPtr::foldsTo(TempAllocator& alloc) {

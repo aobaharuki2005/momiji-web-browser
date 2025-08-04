@@ -5833,6 +5833,8 @@ class MBigIntPtrBinaryArithInstruction : public MBinaryInstruction,
   static bool isMaybeNegative(MDefinition* ins);
 
  public:
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+
   bool congruentTo(const MDefinition* ins) const override {
     return binaryCongruentTo(ins);
   }
@@ -5960,6 +5962,8 @@ class MBigIntPtrPow : public MBigIntPtrBinaryArithInstruction {
 
   bool canBeNegativeExponent() const { return canBeNegativeExponent_; }
 
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+
   [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
@@ -5980,9 +5984,12 @@ class MBigIntPtrBinaryBitwiseInstruction : public MBinaryInstruction,
   }
 
  public:
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+
   bool congruentTo(const MDefinition* ins) const override {
     return binaryCongruentTo(ins);
   }
+
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
@@ -6086,6 +6093,8 @@ class MBigIntPtrBitNot : public MUnaryInstruction, public NoTypePolicy::Data {
  public:
   INSTRUCTION_HEADER(BigIntPtrBitNot)
   TRIVIAL_NEW_WRAPPERS
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
 
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins);
