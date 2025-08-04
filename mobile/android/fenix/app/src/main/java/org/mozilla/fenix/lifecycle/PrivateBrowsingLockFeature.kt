@@ -184,24 +184,9 @@ class PrivateBrowsingLockFeature(
 
         if (!isFeatureEnabled) return
 
-        // Trigger lock when the activity is paused not due to configuration change,
-        // and the window has lost focus — indicating that the app is likely being minimized.
-        if (owner is Activity && !owner.isChangingConfigurations && !owner.hasWindowFocus()) {
-            maybeLockPrivateMode()
-        }
-    }
-
-    override fun onStop(owner: LifecycleOwner) {
-        super.onStop(owner)
-
-        if (!isFeatureEnabled) return
-
-        // Capturing an edge case here; if onPause didn’t lock due to the window still having focus,
-        // and then the app was minimized in that state (e.g. minimized while showing a system
-        // notification permission dialog), we want to lock the app onStop. The appState check
-        // prevents redundant locking.
-        if (!appStore.state.isPrivateScreenLocked && owner is Activity && !owner.isChangingConfigurations) {
-            maybeLockPrivateMode()
+        // lock when activity hits onStop and it isn’t a config-change restart
+        if (owner is Activity && !owner.isChangingConfigurations) {
+            maybeLockPrivateModeOnPause()
         }
     }
 
@@ -210,7 +195,7 @@ class PrivateBrowsingLockFeature(
         storage.startObservingSharedPrefs()
     }
 
-    private fun maybeLockPrivateMode() {
+    private fun maybeLockPrivateModeOnPause() {
         // When the app gets inactive with opened tabs, we lock the private mode.
         if (browserStore.state.privateTabs.isNotEmpty()) {
             appStore.dispatch(
