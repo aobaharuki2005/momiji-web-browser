@@ -160,12 +160,14 @@ bool ModuleLoaderBase::HostLoadImportedModule(
     payload = ObjectValue(*aPromise);
   }
 
-  // The host environment must perform FinishLoadingImportedModule(referrer,
-  // specifier, payload, result), where result is either a normal completion
-  // containing the loaded Module Record or a throw completion, either
-  // synchronously or asynchronously.
-  auto finishLoading = mozilla::MakeScopeExit([aCx, &payload]() {
-    JS::FinishLoadingImportedModuleFailed(aCx, payload, UndefinedHandleValue);
+  // Ensure we always call FinishLoadingImportedModuleFailed to report errors if
+  // we return early.
+  auto reportFailure = mozilla::MakeScopeExit([aCx, &payload]() {
+    if (JS_IsExceptionPending(aCx)) {
+      JS::FinishLoadingImportedModuleFailedWithPendingException(aCx, payload);
+    } else {
+      JS::FinishLoadingImportedModuleFailed(aCx, payload, UndefinedHandleValue);
+    }
   });
 
   JS::Rooted<JSString*> specifierString(
@@ -193,10 +195,8 @@ bool ModuleLoaderBase::HostLoadImportedModule(
     }
 
     if (aPromise && !loader->IsDynamicImportSupported()) {
-      finishLoading.release();
       JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
                                 JSMSG_DYNAMIC_IMPORT_NOT_SUPPORTED);
-      JS::FinishLoadingImportedModuleFailedWithPendingException(aCx, payload);
       return true;
     }
 
@@ -224,7 +224,7 @@ bool ModuleLoaderBase::HostLoadImportedModule(
 
       // Step 9.2. Perform FinishLoadingImportedModule(referrer, moduleRequest,
       //           payload, completion).
-      finishLoading.release();
+      reportFailure.release();
       JS::FinishLoadingImportedModuleFailed(aCx, payload, error);
 
       // Step 9.3. Return.
@@ -249,7 +249,7 @@ bool ModuleLoaderBase::HostLoadImportedModule(
         JS_ReportOutOfMemory(aCx);
         return false;
       }
-      JS::FinishLoadingImportedModuleFailed(aCx, payload, error);
+      JS_SetPendingException(cx, error);
       return true;
     }
 
@@ -260,11 +260,9 @@ bool ModuleLoaderBase::HostLoadImportedModule(
       RefPtr<ModuleLoadRequest> request = loader->CreateDynamicImport(
           aCx, uri, script, aModuleRequest, aPromise);
       if (!request) {
-        finishLoading.release();
         // Throws TypeError if CreateDynamicImport returns nullptr.
         JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
                                   JSMSG_DYNAMIC_IMPORT_NOT_SUPPORTED);
-        JS::FinishLoadingImportedModuleFailedWithPendingException(aCx, payload);
         return true;
       }
 
@@ -272,25 +270,20 @@ bool ModuleLoaderBase::HostLoadImportedModule(
       if (NS_SUCCEEDED(rv)) {
         loader->OnDynamicImportStarted(request);
       } else {
-        finishLoading.release();
-
         nsAutoCString url;
         uri->GetSpec(url);
         JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
                                   JSMSG_DYNAMIC_IMPORT_FAILED, url.get());
-
-        JS::FinishLoadingImportedModuleFailedWithPendingException(aCx, payload);
         return true;
       }
     } else {
-      finishLoading.release();
       loader->StartFetchingModuleAndDependencies(
           aCx, ModuleMapKey(uri, moduleType), aReferrer, aReferencingPrivate,
           aModuleRequest, aStatePrivate);
     }
   }
 
-  finishLoading.release();
+  reportFailure.release();
   return true;
 }
 
