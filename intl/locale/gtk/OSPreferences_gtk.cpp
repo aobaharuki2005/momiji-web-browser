@@ -10,7 +10,6 @@
 #include "OSPreferences.h"
 
 #include "nsServiceManagerUtils.h"
-#include "nsIGSettingsService.h"
 
 using namespace mozilla;
 using namespace mozilla::intl;
