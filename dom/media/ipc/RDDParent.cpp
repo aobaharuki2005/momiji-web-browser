@@ -173,6 +173,21 @@ mozilla::ipc::IPCResult RDDParent::RecvInit(
 
 IPCResult RDDParent::RecvUpdateVar(const nsTArray<GfxVarUpdate>& aUpdate) {
   gfxVars::ApplyUpdate(aUpdate);
+
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction(
+          "RDDParent::RecvUpdateVar",
+          []() {
+            NS_DispatchToMainThread(NS_NewRunnableFunction(
+                "RDDParent::UpdateMediaCodecsSupported",
+                [supported = media::MCSInfo::GetSupportFromFactory(
+                     true /* force refresh */)]() {
+                  if (auto* rdd = RDDParent::GetSingleton()) {
+                    Unused << rdd->SendUpdateMediaCodecsSupported(supported);
+                  }
+                }));
+          }),
+      nsIEventTarget::DISPATCH_NORMAL));
   return IPC_OK();
 }
 
