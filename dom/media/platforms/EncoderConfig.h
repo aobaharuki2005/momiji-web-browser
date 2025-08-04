@@ -167,7 +167,6 @@ class EncoderConfig final {
         : mPixelFormat(aPixelFormat), mColorSpace(aColorSpace) {}
     explicit SampleFormat(const dom::ImageBitmapFormat& aPixelFormat)
         : mPixelFormat(aPixelFormat) {}
-    SampleFormat() = default;
 
     bool operator==(const SampleFormat& aOther) const {
       return mPixelFormat == aOther.mPixelFormat &&
@@ -256,7 +255,7 @@ class EncoderConfig final {
   Usage mUsage{};
   // Video-only
   HardwarePreference mHardwarePreference{HardwarePreference::None};
-  SampleFormat mFormat;
+  SampleFormat mFormat{dom::ImageBitmapFormat::YUV420P};
   ScalabilityMode mScalabilityMode{};
   uint32_t mFramerate{};
   size_t mKeyframeInterval{};
