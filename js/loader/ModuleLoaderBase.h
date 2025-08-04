@@ -463,8 +463,7 @@ class ModuleLoaderBase : public nsISupports {
                                      Handle<JSObject*> aReferrer,
                                      JS::Handle<JS::Value> aReferencingPrivate,
                                      JS::Handle<JSObject*> aModuleRequest,
-                                     JS::Handle<JS::Value> aStatePrivate,
-                                     JS::Handle<JSObject*> aPromise);
+                                     JS::Handle<JS::Value> aPayload);
   static bool FinishLoadingImportedModule(JSContext* aCx,
                                           ModuleLoadRequest* aRequest);
 
@@ -514,8 +513,7 @@ class ModuleLoaderBase : public nsISupports {
       JSContext* aCx, const ModuleMapKey& aRequestedModule,
       JS::Handle<JSObject*> aReferrer,
       JS::Handle<JS::Value> aReferencingPrivate,
-      JS::Handle<JSObject*> aModuleRequest,
-      JS::Handle<JS::Value> aStatePrivate);
+      JS::Handle<JSObject*> aModuleRequest, JS::Handle<JS::Value> aPayload);
 
   void InstantiateAndEvaluateDynamicImport(ModuleLoadRequest* aRequest);
 

@@ -70,14 +70,13 @@ enum class ModuleType : uint32_t {
  *  - Each time the hook is called with the same (referrer, referencingPrivate)
  *    pair, then it must call FinishLoadingImportedModule with the same result
  *    each time.
- *  - The operation must treat _statePrivate_ and _promise_ arguments as opaque
- *    values to be passed through to FinishLoadingImportedModule.
+ *  - The operation must treat the |payload| argument as an opaque
+ *    value to be passed through to FinishLoadingImportedModule.
  */
 using ModuleLoadHook = bool (*)(JSContext* cx, Handle<JSObject*> referrer,
                                 Handle<Value> referencingPrivate,
                                 Handle<JSObject*> moduleRequest,
-                                Handle<Value> statePrivate,
-                                Handle<JSObject*> promise);
+                                Handle<Value> payload);
 
 /**
  * Get the HostLoadImportedModule hook for the runtime.
