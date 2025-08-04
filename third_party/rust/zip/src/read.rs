@@ -1250,6 +1250,8 @@ pub(crate) fn central_header_to_zip_file<R: Read + Seek>(
 
     let central_header_end = reader.stream_position()?;
 
+    /*
+    FIXME patched until https://github.com/zip-rs/zip2/issues/384 is addressed.
     if file.header_start >= central_directory.directory_start {
         return Err(InvalidArchive(
             "A local file entry can't start after the central directory",
@@ -1263,6 +1265,7 @@ pub(crate) fn central_header_to_zip_file<R: Read + Seek>(
             "File data can't start after the central directory",
         ));
     }
+    */
 
     reader.seek(SeekFrom::Start(central_header_end))?;
     Ok(file)
