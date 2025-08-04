@@ -58,24 +58,43 @@ let mockFaviconService = {
 };
 let defaultIconSpy = sinon.spy(mockFaviconService, "defaultFavicon", ["get"]);
 
-function shellPinCalled() {
+function shellPinCalled(aTaskbarTab) {
   ok(
-    mockNativeShellService.createWindowsIcon.called,
+    mockNativeShellService.createWindowsIcon.calledOnce,
     `Icon creation should have been called.`
   );
   ok(
-    mockNativeShellService.createShortcut.called,
+    mockNativeShellService.createShortcut.calledOnce,
     `Shortcut creation should have been called.`
   );
   ok(
-    mockNativeShellService.pinShortcutToTaskbar.called,
+    mockNativeShellService.pinShortcutToTaskbar.calledOnce,
     `Pin to taskbar should have been called.`
+  );
+  Assert.equal(
+    mockNativeShellService.pinShortcutToTaskbar.firstCall.args[1],
+    mockNativeShellService.createShortcut.firstCall.args[6],
+    `The created and pinned shortcuts should be in the same folder.`
+  );
+  Assert.equal(
+    mockNativeShellService.pinShortcutToTaskbar.firstCall.args[2],
+    mockNativeShellService.createShortcut.firstCall.args[7],
+    `The created and pinned shortcuts should be the same file.`
+  );
+  Assert.equal(
+    mockNativeShellService.pinShortcutToTaskbar.firstCall.args[2],
+    aTaskbarTab.shortcutRelativePath,
+    `The pinned shortcut should be the saved shortcut.`
   );
 }
 
 function shellUnpinCalled() {
   ok(
-    mockNativeShellService.unpinShortcutFromTaskbar.called,
+    mockNativeShellService.deleteShortcut.calledOnce,
+    `Unpin from taskbar should have been called.`
+  );
+  ok(
+    mockNativeShellService.unpinShortcutFromTaskbar.calledOnce,
     `Unpin from taskbar should have been called.`
   );
 }
@@ -108,7 +127,7 @@ add_task(async function test_pin_existing_favicon() {
     "The default icon should not be used when a favicon exists for the page."
   );
 
-  shellPinCalled();
+  shellPinCalled(taskbarTab);
 });
 
 add_task(async function test_pin_missing_favicon() {
@@ -124,6 +143,8 @@ add_task(async function test_pin_missing_favicon() {
     defaultIconSpy.get.called,
     "The default icon should be used when a favicon does not exist for the page."
   );
+
+  shellPinCalled(taskbarTab);
 });
 
 add_task(async function test_pin_location() {
