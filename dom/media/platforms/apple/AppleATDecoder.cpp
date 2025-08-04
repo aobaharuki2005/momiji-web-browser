@@ -79,6 +79,7 @@ AppleATDecoder::~AppleATDecoder() {
 }
 
 RefPtr<MediaDataDecoder::InitPromise> AppleATDecoder::Init() {
+  AUTO_PROFILER_LABEL("AppleATDecoder::Init", MEDIA_PLAYBACK);
   if (!mFormatID) {
     LOG("AppleATDecoder::Init failure: unknown format ID");
     return InitPromise::CreateAndReject(
@@ -92,6 +93,7 @@ RefPtr<MediaDataDecoder::InitPromise> AppleATDecoder::Init() {
 }
 
 RefPtr<MediaDataDecoder::FlushPromise> AppleATDecoder::Flush() {
+  AUTO_PROFILER_LABEL("AppleATDecoder::Flush", MEDIA_PLAYBACK);
   MOZ_ASSERT(mThread->IsOnCurrentThread());
   LOG("Flushing AudioToolbox AAC decoder");
   mQueuedSamples.Clear();
@@ -114,12 +116,14 @@ RefPtr<MediaDataDecoder::FlushPromise> AppleATDecoder::Flush() {
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> AppleATDecoder::Drain() {
+  AUTO_PROFILER_LABEL("AppleATDecoder::Drain", MEDIA_PLAYBACK);
   MOZ_ASSERT(mThread->IsOnCurrentThread());
   LOG("Draining AudioToolbox AAC decoder");
   return DecodePromise::CreateAndResolve(DecodedData(), __func__);
 }
 
 RefPtr<ShutdownPromise> AppleATDecoder::Shutdown() {
+  AUTO_PROFILER_LABEL("AppleATDecoder::Shutdown", MEDIA_PLAYBACK);
   // mThread may not be set if Init hasn't been called first.
   MOZ_ASSERT(!mThread || mThread->IsOnCurrentThread());
   ProcessShutdown();
@@ -202,6 +206,7 @@ static OSStatus _PassthroughInputDataCallback(
 
 RefPtr<MediaDataDecoder::DecodePromise> AppleATDecoder::Decode(
     MediaRawData* aSample) {
+  AUTO_PROFILER_LABEL("AppleATDecoder::Decode", MEDIA_PLAYBACK);
   MOZ_ASSERT(mThread->IsOnCurrentThread());
   LOG("mp4 input sample pts=%s duration=%s %s %llu bytes audio",
       aSample->mTime.ToString().get(), aSample->GetEndTime().ToString().get(),

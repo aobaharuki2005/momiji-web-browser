@@ -99,6 +99,7 @@ VPXDecoder::~VPXDecoder() { MOZ_COUNT_DTOR(VPXDecoder); }
 RefPtr<ShutdownPromise> VPXDecoder::Shutdown() {
   RefPtr<VPXDecoder> self = this;
   return InvokeAsync(mTaskQueue, __func__, [self]() {
+    AUTO_PROFILER_LABEL("VPXDecoder::Shutdown", MEDIA_PLAYBACK);
     vpx_codec_destroy(&self->mVPX);
     vpx_codec_destroy(&self->mVPXAlpha);
     return self->mTaskQueue->BeginShutdown();
@@ -106,6 +107,7 @@ RefPtr<ShutdownPromise> VPXDecoder::Shutdown() {
 }
 
 RefPtr<MediaDataDecoder::InitPromise> VPXDecoder::Init() {
+  AUTO_PROFILER_LABEL("VPXDecoder::Init", MEDIA_PLAYBACK);
   if (NS_FAILED(InitContext(&mVPX, mInfo, mCodec, mLowLatency))) {
     return VPXDecoder::InitPromise::CreateAndReject(
         NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
@@ -122,12 +124,14 @@ RefPtr<MediaDataDecoder::InitPromise> VPXDecoder::Init() {
 
 RefPtr<MediaDataDecoder::FlushPromise> VPXDecoder::Flush() {
   return InvokeAsync(mTaskQueue, __func__, []() {
+    AUTO_PROFILER_LABEL("VPXDecoder::Flush", MEDIA_PLAYBACK);
     return FlushPromise::CreateAndResolve(true, __func__);
   });
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> VPXDecoder::ProcessDecode(
     MediaRawData* aSample) {
+  AUTO_PROFILER_LABEL("VPXDecoder::ProcessDecode", MEDIA_PLAYBACK);
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
 
   MediaInfoFlag flag = MediaInfoFlag::None;
@@ -298,6 +302,7 @@ RefPtr<MediaDataDecoder::DecodePromise> VPXDecoder::Decode(
 
 RefPtr<MediaDataDecoder::DecodePromise> VPXDecoder::Drain() {
   return InvokeAsync(mTaskQueue, __func__, [] {
+    AUTO_PROFILER_LABEL("VPXDecoder::Flush", MEDIA_PLAYBACK);
     return DecodePromise::CreateAndResolve(DecodedData(), __func__);
   });
 }

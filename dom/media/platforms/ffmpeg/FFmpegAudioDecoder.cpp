@@ -90,6 +90,7 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(
 }
 
 RefPtr<MediaDataDecoder::InitPromise> FFmpegAudioDecoder<LIBAV_VER>::Init() {
+  AUTO_PROFILER_LABEL("FFmpegAudioDecoder::Init", MEDIA_PLAYBACK);
   AVDictionary* options = nullptr;
   if (mCodecID == AV_CODEC_ID_OPUS) {
     // Opus has a special feature for stereo coding where it represent wide

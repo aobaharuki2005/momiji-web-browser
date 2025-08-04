@@ -79,6 +79,7 @@ const GUID& WMFAudioMFTManager::GetMediaSubtypeGUID() {
 }
 
 bool WMFAudioMFTManager::Init() {
+  AUTO_PROFILER_LABEL("WMFAudioMFTManager::Init", MEDIA_PLAYBACK);
   NS_ENSURE_TRUE(StreamTypeIsAudio(mStreamType), false);
 
   RefPtr<MFTDecoder> decoder(new MFTDecoder());

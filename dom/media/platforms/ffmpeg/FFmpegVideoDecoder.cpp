@@ -648,6 +648,7 @@ void FFmpegVideoDecoder<LIBAV_VER>::InitHWDecoderIfAllowed() {
 #endif  // MOZ_USE_HWDECODE
 
 RefPtr<MediaDataDecoder::InitPromise> FFmpegVideoDecoder<LIBAV_VER>::Init() {
+  AUTO_PROFILER_LABEL("FFmpegVideoDecoder::Init", MEDIA_PLAYBACK);
   FFMPEG_LOG("FFmpegVideoDecoder, init, IsHardwareAccelerated=%d\n",
              IsHardwareAccelerated());
   // We've finished the HW decoder initialization in the ctor.

@@ -192,6 +192,7 @@ MediaResult WMFVideoMFTManager::ValidateVideoInfo() {
 }
 
 MediaResult WMFVideoMFTManager::Init() {
+  AUTO_PROFILER_LABEL("WMFVideoMFTManager::Init", MEDIA_PLAYBACK);
   MediaResult result = ValidateVideoInfo();
   if (NS_FAILED(result)) {
     return result;

@@ -171,6 +171,7 @@ RefPtr<MediaDataDecoder::DecodePromise> FFmpegDataDecoder<LIBAV_VER>::Decode(
 
 RefPtr<MediaDataDecoder::DecodePromise>
 FFmpegDataDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample) {
+  AUTO_PROFILER_LABEL("FFmpegDataDecoder::ProcessDecode", MEDIA_PLAYBACK);
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   PROCESS_DECODE_LOG(aSample);
   bool gotFrame = false;
@@ -236,6 +237,7 @@ RefPtr<MediaDataDecoder::DecodePromise> FFmpegDataDecoder<LIBAV_VER>::Drain() {
 
 RefPtr<MediaDataDecoder::DecodePromise>
 FFmpegDataDecoder<LIBAV_VER>::ProcessDrain() {
+  AUTO_PROFILER_LABEL("FFmpegDataDecoder::ProcessDrain", MEDIA_PLAYBACK);
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   FFMPEG_LOG("FFmpegDataDecoder: draining buffers");
   RefPtr<MediaRawData> empty(new MediaRawData());
@@ -272,6 +274,7 @@ FFmpegDataDecoder<LIBAV_VER>::ProcessDrain() {
 
 RefPtr<MediaDataDecoder::FlushPromise>
 FFmpegDataDecoder<LIBAV_VER>::ProcessFlush() {
+  AUTO_PROFILER_LABEL("FFmpegDataDecoder::ProcessFlush", MEDIA_PLAYBACK);
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   if (mCodecContext) {
     FFMPEG_LOG("FFmpegDataDecoder: flushing buffers");
@@ -286,6 +289,7 @@ FFmpegDataDecoder<LIBAV_VER>::ProcessFlush() {
 }
 
 void FFmpegDataDecoder<LIBAV_VER>::ProcessShutdown() {
+  AUTO_PROFILER_LABEL("FFmpegDataDecoder::ProcessShutdown", MEDIA_PLAYBACK);
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   StaticMutexAutoLock mon(sMutex);
 
