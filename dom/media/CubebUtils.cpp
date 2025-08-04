@@ -966,20 +966,19 @@ bool EstimatedLatencyDefaultDevices(double* aMean, double* aStdDev,
 
 #ifdef MOZ_WIDGET_ANDROID
 int32_t AndroidGetAudioOutputSampleRate() {
-#  if defined(MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS)
-  return 44100;  // TODO: Remote value; will be handled in following patch.
-#  else
+  if (java::GeckoAppShell::IsIsolatedProcess()) {
+    return 44100;  // TODO: Remote value; will be handled in following patch.
+  }
+
   int32_t sample_rate = java::GeckoAppShell::GetAudioOutputSampleRate();
   return sample_rate;
-#  endif
 }
 int32_t AndroidGetAudioOutputFramesPerBuffer() {
-#  if defined(MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS)
-  return 512;  // TODO: Remote value; will be handled in following patch.
-#  else
+  if (java::GeckoAppShell::IsIsolatedProcess()) {
+    return 512;  // TODO: Remote value; will be handled in following patch.
+  }
   int32_t frames = java::GeckoAppShell::GetAudioOutputFramesPerBuffer();
   return frames;
-#  endif
 }
 #endif
 

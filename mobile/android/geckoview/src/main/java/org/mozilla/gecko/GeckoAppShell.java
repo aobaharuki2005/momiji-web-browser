@@ -1580,6 +1580,11 @@ public class GeckoAppShell {
 
   @WrapForJNI(calledFrom = "any")
   public static int getAudioOutputFramesPerBuffer() {
+    if (BuildConfig.DEBUG_BUILD && isIsolatedProcess()) {
+      // AudioManager.getProperty won't return on isolated process
+      throw new UnsupportedOperationException(
+          "getAudioOutputFramesPerBuffer is not supported in isolated processes");
+    }
     final int DEFAULT = 512;
 
     final AudioManager am =
@@ -1596,6 +1601,11 @@ public class GeckoAppShell {
 
   @WrapForJNI(calledFrom = "any")
   public static int getAudioOutputSampleRate() {
+    if (BuildConfig.DEBUG_BUILD && isIsolatedProcess()) {
+      // AudioManager.getProperty won't return on isolated process
+      throw new UnsupportedOperationException(
+          "getAudioOutputSampleRate is not supported in isolated processes");
+    }
     final int DEFAULT = 44100;
 
     final AudioManager am =
@@ -1698,6 +1708,7 @@ public class GeckoAppShell {
   @WrapForJNI
   public static native boolean isInteractiveWidgetDefaultResizesVisual();
 
+  @WrapForJNI
   @SuppressLint("NewApi")
   public static boolean isIsolatedProcess() {
     // This method was added in SDK 16 but remained hidden until SDK 28, meaning we are okay to call
