@@ -22,7 +22,6 @@ extern crate log;
 extern crate pkcs11_bindings;
 #[macro_use]
 extern crate rsclientcerts;
-extern crate sha2;
 #[cfg(all(target_os = "windows", not(target_arch = "aarch64")))]
 extern crate winapi;
 #[macro_use]

@@ -8,6 +8,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::error::{Error, ErrorType};
 use crate::error_here;
+use crate::util::CryptokiCert;
 
 extern "C" {
     fn IsGeckoSearchingForClientAuthCertificates() -> bool;
@@ -32,11 +33,10 @@ pub trait Sign {
 }
 
 pub trait ClientCertsBackend {
-    type Cert: CryptokiObject;
     type Key: CryptokiObject + Sign;
 
     #[allow(clippy::type_complexity)]
-    fn find_objects(&mut self) -> Result<(Vec<Self::Cert>, Vec<Self::Key>), Error>;
+    fn find_objects(&mut self) -> Result<(Vec<CryptokiCert>, Vec<Self::Key>), Error>;
 }
 
 const SUPPORTED_ATTRIBUTES: &[CK_ATTRIBUTE_TYPE] = &[
@@ -55,7 +55,7 @@ const SUPPORTED_ATTRIBUTES: &[CK_ATTRIBUTE_TYPE] = &[
 ];
 
 enum Object<B: ClientCertsBackend> {
-    Cert(B::Cert),
+    Cert(CryptokiCert),
     Key(B::Key),
 }
 

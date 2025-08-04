@@ -9,7 +9,6 @@ extern crate byteorder;
 extern crate pkcs11_bindings;
 #[macro_use]
 extern crate rsclientcerts;
-extern crate sha2;
 
 use pkcs11_bindings::*;
 use rsclientcerts::manager::Manager;

@@ -3440,7 +3440,6 @@ dependencies = [
  "byteorder",
  "pkcs11-bindings",
  "rsclientcerts",
- "sha2",
 ]
 
 [[package]]
@@ -5012,7 +5011,6 @@ dependencies = [
  "nserror",
  "pkcs11-bindings",
  "rsclientcerts",
- "sha2",
  "winapi",
  "xpcom",
 ]
