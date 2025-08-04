@@ -1,7 +1,6 @@
 [DEFAULT]
 support-files = [
   "amosigned.xpi",
-  "authRedirect.sjs",
   "bug540558.html",
   "bug638292.html",
   "bug645699.html",
@@ -36,13 +35,6 @@ https_first_disabled = true # Bug 1737265
 https_first_disabled = true # Bug 1737265
 
 ["browser_auth.js"]
-https_first_disabled = true # Bug 1737265
-
-["browser_auth2.js"]
-
-["browser_auth3.js"]
-
-["browser_auth4.js"]
 https_first_disabled = true # Bug 1737265
 
 ["browser_badargs.js"]
