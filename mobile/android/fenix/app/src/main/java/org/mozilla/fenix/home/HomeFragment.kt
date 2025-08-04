@@ -432,6 +432,7 @@ class HomeFragment : Fragment() {
                 context = requireContext(),
                 view = binding.homepageView,
                 store = requireComponents.core.store,
+                appStore = components.appStore,
             ),
             owner = this,
             view = binding.homepageView,
