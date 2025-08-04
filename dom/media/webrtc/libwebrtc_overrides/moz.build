@@ -35,6 +35,7 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
+    CXXFLAGS += CONFIG["MOZ_X11_CFLAGS"]
     UNIFIED_SOURCES += [
         "modules/desktop_capture/linux/x11/x_error_trap.cc",
     ]
