@@ -11,6 +11,8 @@ prefs = [
   "security.allow_eval_with_system_principal=true"
 ]
 
-["browser_manyMutations.js"]
+["browser_addManyNodes.js"]
+disabled = "Disabled as we want to run this only as perftest, not regular CI"
 
-["browser_spellingErrors.js"]
+["browser_removeManySpellingErrors.js"]
+disabled = "Disabled as we want to run this only as perftest, not regular CI"
