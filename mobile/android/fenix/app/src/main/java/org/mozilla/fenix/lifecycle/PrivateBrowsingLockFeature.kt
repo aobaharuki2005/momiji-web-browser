@@ -182,22 +182,26 @@ class PrivateBrowsingLockFeature(
     override fun onPause(owner: LifecycleOwner) {
         super.onPause(owner)
 
-        if (owner is Activity) {
-            maybeLockPrivateMode(
-                activity = owner,
-                shouldLockFocusedWindow = false,
-            )
+        if (!isFeatureEnabled) return
+
+        // Trigger lock when the activity is paused not due to configuration change,
+        // and the window has lost focus — indicating that the app is likely being minimized.
+        if (owner is Activity && !owner.isChangingConfigurations && !owner.hasWindowFocus()) {
+            maybeLockPrivateMode()
         }
     }
 
     override fun onStop(owner: LifecycleOwner) {
         super.onStop(owner)
 
-        if (owner is Activity) {
-            maybeLockPrivateMode(
-                activity = owner,
-                shouldLockFocusedWindow = true,
-            )
+        if (!isFeatureEnabled) return
+
+        // Capturing an edge case here; if onPause didn’t lock due to the window still having focus,
+        // and then the app was minimized in that state (e.g. minimized while showing a system
+        // notification permission dialog), we want to lock the app onStop. The appState check
+        // prevents redundant locking.
+        if (!appStore.state.isPrivateScreenLocked && owner is Activity && !owner.isChangingConfigurations) {
+            maybeLockPrivateMode()
         }
     }
 
@@ -206,31 +210,15 @@ class PrivateBrowsingLockFeature(
         storage.startObservingSharedPrefs()
     }
 
-    @Suppress("ReturnCount")
-    private fun maybeLockPrivateMode(
-        activity: Activity,
-        shouldLockFocusedWindow: Boolean,
-    ) {
-        if (!isFeatureEnabled) return
-
-        // Skip if the activity is being recreated (e.g. browsing mode change).
-        if (activity.isChangingConfigurations) return
-
-        // Avoid redundant locking if already locked during onStop; onStop handles an edge case when
-        // the app is minimized while showing a system dialog (e.g. notification permission).
-        if (appStore.state.isPrivateScreenLocked) return
-
-        // Optionally skip if the window still has focus (e.g. while showing a system dialog).
-        if (!shouldLockFocusedWindow && !activity.isFinishing) return
-
-        // Skip locking private mode if there are no private tabs.
-        if (browserStore.state.privateTabs.isEmpty()) return
-
-        appStore.dispatch(
-            PrivateBrowsingLockAction.UpdatePrivateBrowsingLock(
-                isLocked = true,
-            ),
-        )
+    private fun maybeLockPrivateMode() {
+        // When the app gets inactive with opened tabs, we lock the private mode.
+        if (browserStore.state.privateTabs.isNotEmpty()) {
+            appStore.dispatch(
+                PrivateBrowsingLockAction.UpdatePrivateBrowsingLock(
+                    isLocked = true,
+                ),
+            )
+        }
     }
 }
 
