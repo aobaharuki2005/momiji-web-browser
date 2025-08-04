@@ -343,7 +343,7 @@ class TrustPanel {
     let blockingKey = blocking ? "blocking" : "not-blocking";
     document.l10n.setAttributes(
       document.getElementById("trustpanel-blockerDetailsView"),
-      `protections-${blockingKey}-${blocker.l10nKeys.title}`
+      blocker.l10nKeys.title[blockingKey]
     );
     document.l10n.setAttributes(
       document.getElementById("trustpanel-blocker-details-header"),

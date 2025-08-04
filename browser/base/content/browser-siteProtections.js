@@ -331,9 +331,12 @@ let Fingerprinting =
   new (class FingerprintingProtection extends ProtectionCategory {
     iconSrc = "chrome://browser/skin/fingerprint.svg";
     l10nKeys = {
-      title: "fingerprinters",
       content: "fingerprinters",
       general: "fingerprinter",
+      title: {
+        blocking: "protections-blocking-fingerprinters",
+        "not-blocking": "protections-not-blocking-fingerprinters",
+      },
     };
 
     constructor() {
@@ -427,18 +430,24 @@ let Cryptomining = new ProtectionCategory(
 Cryptomining.l10nId = "trustpanel-cryptomining";
 Cryptomining.iconSrc = "chrome://browser/skin/controlcenter/cryptominers.svg";
 Cryptomining.l10nKeys = {
-  title: "cryptominer",
   content: "cryptominers",
   general: "cryptominer",
+  title: {
+    blocking: "protections-blocking-cryptominers",
+    "not-blocking": "protections-not-blocking-cryptominers",
+  },
 };
 
 let TrackingProtection =
   new (class TrackingProtection extends ProtectionCategory {
     iconSrc = "chrome://browser/skin/canvas.svg";
     l10nKeys = {
-      title: "tracking-content",
       content: "tracking-content",
       general: "tracking-content",
+      title: {
+        blocking: "protections-blocking-tracking-content",
+        "not-blocking": "protections-not-blocking-tracking-content",
+      },
     };
 
     constructor() {
@@ -679,9 +688,12 @@ let ThirdPartyCookies =
   new (class ThirdPartyCookies extends ProtectionCategory {
     iconSrc = "chrome://browser/skin/controlcenter/3rdpartycookies.svg";
     l10nKeys = {
-      title: "cookies-trackers",
       content: "cross-site-tracking-cookies",
       general: "tracking-cookies",
+      title: {
+        blocking: "protections-blocking-cookies-third-party",
+        "not-blocking": "protections-not-blocking-cookies-third-party",
+      },
     };
 
     constructor() {
@@ -1129,9 +1141,12 @@ let SocialTracking =
   new (class SocialTrackingProtection extends ProtectionCategory {
     iconSrc = "chrome://browser/skin/thumb-down.svg";
     l10nKeys = {
-      title: "social-media-trackers",
       content: "social-media-trackers",
       general: "social-tracking",
+      title: {
+        blocking: "protections-blocking-social-media-trackers",
+        "not-blocking": "protections-not-blocking-social-media-trackers",
+      },
     };
 
     constructor() {
