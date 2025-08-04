@@ -956,7 +956,7 @@ void CustomElementRegistry::Define(
    * be the same as the built-in element name, so we don't break the assumption
    * elsewhere.
    */
-  nsAutoString localName(aName);
+  RefPtr<nsAtom> localNameAtom = nameAtom;
   if (aOptions.mExtends.WasPassed()) {
     doc->SetUseCounter(eUseCounter_custom_CustomizedBuiltin);
 
@@ -985,7 +985,7 @@ void CustomElementRegistry::Define(
       }
     }
 
-    localName.Assign(aOptions.mExtends.Value());
+    localNameAtom = NS_Atomize(aOptions.mExtends.Value());
   }
 
   /**
@@ -1134,11 +1134,6 @@ void CustomElementRegistry::Define(
    *     local name localName, constructor constructor, prototype prototype,
    *     observed attributes observedAttributes, and lifecycle callbacks
    *     lifecycleCallbacks.
-   */
-  // Associate the definition with the custom element.
-  RefPtr<nsAtom> localNameAtom(NS_Atomize(localName));
-
-  /**
    * 16. Add definition to this CustomElementRegistry.
    */
   if (!mConstructors.put(constructorUnwrapped, nameAtom)) {
