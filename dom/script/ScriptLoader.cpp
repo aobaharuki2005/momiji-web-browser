@@ -406,23 +406,37 @@ bool ScriptLoader::IsScriptEventHandler(ScriptKind kind,
 }
 
 /* static */
-bool ScriptLoader::IsScriptEventHandler(const nsAString& aForAttr,
-                                        const nsAString& aEventAttr) {
-  const nsAString& forString =
-      nsContentUtils::TrimWhitespace<nsCRT::IsAsciiSpace>(aForAttr);
-  if (!forString.LowerCaseEqualsLiteral("window")) {
+bool ScriptLoader::IsScriptEventHandler(const nsAString& forAttr,
+                                        const nsAString& eventAttr) {
+  const nsAString& for_str =
+      nsContentUtils::TrimWhitespace<nsCRT::IsAsciiSpace>(forAttr);
+  if (!for_str.LowerCaseEqualsLiteral("window")) {
     return true;
   }
 
-  const nsAString& eventString =
-      nsContentUtils::TrimWhitespace<nsCRT::IsAsciiSpace>(aEventAttr);
-  if (!eventString.LowerCaseEqualsLiteral("onload") &&
-      !eventString.LowerCaseEqualsLiteral("onload()")) {
+  // We found for="window", now check for event="onload".
+  const nsAString& event_str =
+      nsContentUtils::TrimWhitespace<nsCRT::IsAsciiSpace>(eventAttr, false);
+  if (!StringBeginsWith(event_str, u"onload"_ns,
+                        nsCaseInsensitiveStringComparator)) {
+    // It ain't "onload.*".
+
     return true;
   }
 
-  // If the `for` attribute has the value "window" and the `event` attribute is
-  // either "onload" or "onload()", then it isn't an event handler.
+  nsAutoString::const_iterator start, end;
+  event_str.BeginReading(start);
+  event_str.EndReading(end);
+
+  start.advance(6);  // advance past "onload"
+
+  if (start != end && *start != '(' && *start != ' ') {
+    // We got onload followed by something other than space or
+    // '('. Not good enough.
+
+    return true;
+  }
+
   return false;
 }
 
