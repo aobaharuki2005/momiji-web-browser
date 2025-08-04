@@ -83,26 +83,27 @@ JS_PUBLIC_API void JS::SetModuleMetadataHook(JSRuntime* rt,
   rt->moduleMetadataHook = func;
 }
 
+// https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
 JS_PUBLIC_API bool JS::FinishLoadingImportedModule(
     JSContext* cx, Handle<JSObject*> referrer, Handle<Value> referencingPrivate,
-    Handle<JSObject*> moduleRequest, Handle<Value> statePrivate,
-    Handle<JSObject*> result) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  cx->check(referencingPrivate);
-
-  return js::FinishLoadingImportedModule(cx, referrer, referencingPrivate,
-                                         moduleRequest, statePrivate, result);
-}
-
-JS_PUBLIC_API bool JS::FinishLoadingImportedModule(
-    JSContext* cx, Handle<JSObject*> referrer, Handle<Value> referencingPrivate,
-    Handle<JSObject*> moduleRequest, Handle<JSObject*> promise,
+    Handle<JSObject*> moduleRequest, Handle<Value> payload,
     Handle<JSObject*> result, bool usePromise) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->check(referencingPrivate);
+  cx->check(referrer, referencingPrivate, moduleRequest, payload, result);
 
+  // Step 2. If payload is a GraphLoadingState Record, then
+  // Step 2.a. Perform ContinueModuleLoading(payload, result).
+  JSObject* object = &payload.toObject();
+  if (object->is<GraphLoadingStateRecordObject>()) {
+    return js::FinishLoadingImportedModule(cx, referrer, referencingPrivate,
+                                           moduleRequest, payload, result);
+  }
+
+  // Step 3. Else,
+  // Step 3.a. Perform ContinueDynamicImport(payload, result).
+  MOZ_ASSERT(object->is<PromiseObject>());
+  Rooted<JSObject*> promise(cx, &object->as<PromiseObject>());
   return js::FinishLoadingImportedModule(cx, referrer, referencingPrivate,
                                          moduleRequest, promise, result,
                                          usePromise);

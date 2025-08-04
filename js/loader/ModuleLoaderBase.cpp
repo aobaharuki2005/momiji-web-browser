@@ -314,23 +314,25 @@ bool ModuleLoaderBase::FinishLoadingImportedModule(
   JS::Rooted<JSObject*> moduleReqObj(aCx, aRequest->mModuleRequestObj);
   JS::Rooted<JS::Value> statePrivate(aCx, aRequest->mStatePrivate);
 
-  if (!statePrivate.isUndefined()) {
-    LOG(("ScriptLoadRequest (%p): FinishLoadingImportedModule module (%p)",
-         aRequest, module.get()));
-    JS::FinishLoadingImportedModule(aCx, referrer, referencingPrivate,
-                                    moduleReqObj, statePrivate, module);
-    aRequest->mReferrerObj = nullptr;
-    aRequest->mReferencingPrivate.setUndefined();
-    aRequest->mModuleRequestObj = nullptr;
-    aRequest->mStatePrivate.setUndefined();
-  } else {
-    JS::Rooted<JSObject*> promise(aCx, aRequest->mDynamicPromise);
-    JS::FinishLoadingImportedModule(aCx, referrer, referencingPrivate,
-                                    moduleReqObj, promise, module,
-                                    aRequest->HasScriptLoadContext());
-    MOZ_ASSERT(!JS_IsExceptionPending(aCx));
-    aRequest->ClearDynamicImport();
+  JS::Rooted<JS::Value> payload(aCx, aRequest->mStatePrivate);
+  if (payload.isUndefined()) {
+    MOZ_ASSERT(aRequest->mDynamicPromise);
+    payload = ObjectValue(*aRequest->mDynamicPromise);
   }
+
+  LOG(("ScriptLoadRequest (%p): FinishLoadingImportedModule module (%p)",
+       aRequest, module.get()));
+  bool usePromise = aRequest->HasScriptLoadContext();
+  MOZ_ALWAYS_TRUE(JS::FinishLoadingImportedModule(
+      aCx, referrer, referencingPrivate, moduleReqObj, payload, module,
+      usePromise));
+  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+
+  aRequest->mReferrerObj = nullptr;
+  aRequest->mReferencingPrivate.setUndefined();
+  aRequest->mModuleRequestObj = nullptr;
+  aRequest->mStatePrivate.setUndefined();
+  aRequest->ClearDynamicImport();
 
   return true;
 }
