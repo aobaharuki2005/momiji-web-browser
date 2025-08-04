@@ -66,7 +66,6 @@ import java.util.StringTokenizer;
 import org.jetbrains.annotations.NotNull;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.InputDeviceUtils;
 import org.mozilla.gecko.util.ProxySelector;
@@ -755,16 +754,6 @@ public class GeckoAppShell {
     intent.addCategory(Intent.CATEGORY_HOME);
     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     applicationContext.startActivity(intent);
-  }
-
-  @WrapForJNI(calledFrom = "gecko")
-  private static boolean hasHWVP8Encoder() {
-    return HardwareCodecCapabilityUtils.hasHWVP8(true /* aIsEncoder */);
-  }
-
-  @WrapForJNI(calledFrom = "gecko")
-  private static boolean hasHWVP8Decoder() {
-    return HardwareCodecCapabilityUtils.hasHWVP8(false /* aIsEncoder */);
   }
 
   @WrapForJNI(calledFrom = "gecko")
