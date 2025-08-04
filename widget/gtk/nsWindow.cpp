@@ -24,7 +24,6 @@
 #include "gfxUtils.h"
 #include "GLContextProvider.h"
 #include "GLContext.h"
-#include "GSettings.h"
 #include "GtkCompositorWidget.h"
 #include "imgIContainer.h"
 #include "InputData.h"
@@ -84,6 +83,7 @@
 #include "nsGfxCIID.h"
 #include "nsGtkUtils.h"
 #include "nsIFile.h"
+#include "nsIGSettingsService.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsImageToPixbuf.h"
 #include "nsINode.h"
@@ -2872,7 +2872,10 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
   mLastSizeModeRequest = aMode;
 }
 
-static bool WorkspaceManagementDisabled() {
+#define kDesktopMutterSchema "org.gnome.mutter"_ns
+#define kDesktopDynamicWorkspacesKey "dynamic-workspaces"_ns
+
+static bool WorkspaceManagementDisabled(GdkScreen* screen) {
   if (Preferences::GetBool("widget.disable-workspace-management", false)) {
     return true;
   }
@@ -2883,9 +2886,19 @@ static bool WorkspaceManagementDisabled() {
   if (IsGnomeDesktopEnvironment()) {
     // Gnome uses dynamic workspaces by default so disable workspace management
     // in that case.
-    return widget::GSettings::GetBoolean("org.gnome.mutter"_ns,
-                                         "dynamic-workspaces"_ns)
-        .valueOr(false);
+    bool usesDynamicWorkspaces = true;
+    nsCOMPtr<nsIGSettingsService> gsettings =
+        do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
+    if (gsettings) {
+      nsCOMPtr<nsIGSettingsCollection> mutterSettings;
+      gsettings->GetCollectionForSchema(kDesktopMutterSchema,
+                                        getter_AddRefs(mutterSettings));
+      if (mutterSettings) {
+        mutterSettings->GetBoolean(kDesktopDynamicWorkspacesKey,
+                                   &usesDynamicWorkspaces);
+      }
+    }
+    return usesDynamicWorkspaces;
   }
 
   const auto& desktop = GetDesktopEnvironmentIdentifier();
@@ -2909,7 +2922,7 @@ void nsWindow::GetWorkspaceID(nsAString& workspaceID) {
     return;
   }
 
-  if (WorkspaceManagementDisabled()) {
+  if (WorkspaceManagementDisabled(gdk_window_get_screen(gdk_window))) {
     LOG("  WorkspaceManagementDisabled, quit.");
     return;
   }

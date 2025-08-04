@@ -51,6 +51,7 @@
 #include "mozilla/MozPromise.h"
 #include "nsThreadUtils.h"
 #include "mozilla/dom/Navigator.h"
+#include "nsIGSettingsService.h"
 #include "nsIPropertyBag2.h"
 #include "nsITimer.h"
 #include "gfxConfig.h"
@@ -67,9 +68,6 @@
 #  include "nsMacUtilsImpl.h"
 #  include <CoreFoundation/CoreFoundation.h>
 #  include "CFTypeRefPtr.h"
-#endif
-#ifdef MOZ_WIDGET_GTK
-#  include "mozilla/widget/GSettings.h"
 #endif
 
 using namespace mozilla;
@@ -633,16 +631,24 @@ void PopulateTextAntiAliasing() {
     }
   }
   levels.AppendElement(value);
-#elif defined(MOZ_WIDGET_GTK)
+#elif defined(XP_LINUX)
   nsAutoCString level;
-  mozilla::widget::GSettings::GetString("org.gnome.desktop.interface"_ns,
-                                        "font-antialiasing"_ns, level);
-  if (level == "rgba") {  // Subpixel
-    levels.AppendElement(2);
-  } else if (level == "grayscale") {  // Standard
-    levels.AppendElement(1);
-  } else if (level == "none") {
-    levels.AppendElement(0);
+  nsCOMPtr<nsIGSettingsService> gsettings =
+      do_GetService("@mozilla.org/gsettings-service;1");
+  if (gsettings) {
+    nsCOMPtr<nsIGSettingsCollection> antiAliasing;
+    gsettings->GetCollectionForSchema("org.gnome.desktop.interface"_ns,
+                                      getter_AddRefs(antiAliasing));
+    if (antiAliasing) {
+      antiAliasing->GetString("font-antialiasing"_ns, level);
+      if (level == "rgba") {  // Subpixel
+        levels.AppendElement(2);
+      } else if (level == "grayscale") {  // Standard
+        levels.AppendElement(1);
+      } else if (level == "none") {
+        levels.AppendElement(0);
+      }
+    }
   }
 #endif
 

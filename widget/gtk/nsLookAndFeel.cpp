@@ -19,7 +19,6 @@
 #include <fontconfig/fontconfig.h>
 
 #include "GRefPtr.h"
-#include "GSettings.h"
 #include "GUniquePtr.h"
 #include "gtk/gtk.h"
 #include "nsGtkUtils.h"
@@ -1200,20 +1199,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
         // Though the X11 code just hides the native menubar without
         // communicating it to the front-end...
         return false;
-      }();
-      break;
-    case IntID::HourCycle:
-      aResult = []() {
-        nsAutoCString result;
-        widget::GSettings::GetString("org.gnome.desktop.interface"_ns,
-                                     "clock-format"_ns, result);
-        if (result == "12h") {
-          return 12;
-        }
-        if (result == "24h") {
-          return 24;
-        }
-        return 0;
       }();
       break;
     default:

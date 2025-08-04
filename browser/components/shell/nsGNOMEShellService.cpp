@@ -5,7 +5,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/widget/GSettings.h"
 
 #include "nsCOMPtr.h"
 #include "nsGNOMEShellService.h"
@@ -16,6 +15,7 @@
 #include "prenv.h"
 #include "nsString.h"
 #include "nsIGIOService.h"
+#include "nsIGSettingsService.h"
 #include "nsIStringBundle.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIImageLoadingContent.h"
@@ -74,6 +74,12 @@ nsresult nsGNOMEShellService::Init() {
 
   // GSettings or GIO _must_ be available, or we do not allow
   // CreateInstance to succeed.
+
+  nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
+  nsCOMPtr<nsIGSettingsService> gsettings =
+      do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
+
+  if (!giovfs && !gsettings) return NS_ERROR_NOT_AVAILABLE;
 
 #ifdef MOZ_ENABLE_DBUS
   if (widget::IsGnomeDesktopEnvironment() &&
@@ -401,8 +407,15 @@ nsGNOMEShellService::SetDesktopBackground(dom::Element* aElement,
   // write the image to a file in the home dir
   MOZ_TRY(WriteImage(filePath, container));
 
-  widget::GSettings::Collection bgSettings(kDesktopBGSchema);
-  if (!bgSettings) {
+  nsCOMPtr<nsIGSettingsService> gsettings =
+      do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
+  if (!gsettings) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIGSettingsCollection> backgroundSettings;
+  gsettings->GetCollectionForSchema(kDesktopBGSchema,
+                                    getter_AddRefs(backgroundSettings));
+  if (!backgroundSettings) {
     return NS_ERROR_FAILURE;
   }
 
@@ -412,10 +425,11 @@ nsGNOMEShellService::SetDesktopBackground(dom::Element* aElement,
     return NS_ERROR_FAILURE;
   }
 
-  bgSettings.SetString("picture-options"_ns, options);
-  bgSettings.SetString("picture-uri"_ns, nsDependentCString(fileURI.get()));
-  bgSettings.SetString("picture-uri-dark"_ns,
-                       nsDependentCString(fileURI.get()));
+  backgroundSettings->SetString("picture-options"_ns, options);
+  backgroundSettings->SetString("picture-uri"_ns,
+                                nsDependentCString(fileURI.get()));
+  backgroundSettings->SetString("picture-uri-dark"_ns,
+                                nsDependentCString(fileURI.get()));
   return NS_OK;
 }
 
@@ -424,9 +438,19 @@ nsGNOMEShellService::SetDesktopBackground(dom::Element* aElement,
 
 NS_IMETHODIMP
 nsGNOMEShellService::GetDesktopBackgroundColor(uint32_t* aColor) {
+  nsCOMPtr<nsIGSettingsService> gsettings =
+      do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
+  nsCOMPtr<nsIGSettingsCollection> background_settings;
   nsAutoCString background;
-  widget::GSettings::GetString(kDesktopBGSchema, kDesktopColorGSKey,
-                               background);
+
+  if (gsettings) {
+    gsettings->GetCollectionForSchema(kDesktopBGSchema,
+                                      getter_AddRefs(background_settings));
+    if (background_settings) {
+      background_settings->GetString(kDesktopColorGSKey, background);
+    }
+  }
+
   if (background.IsEmpty()) {
     *aColor = 0;
     return NS_OK;
@@ -461,35 +485,17 @@ nsGNOMEShellService::SetDesktopBackgroundColor(uint32_t aColor) {
   nsAutoCString colorString;
   ColorToCString(aColor, colorString);
 
-  widget::GSettings::Collection bgSettings(kDesktopBGSchema);
-  if (bgSettings) {
-    bgSettings.SetString(kDesktopColorGSKey, colorString);
-    return NS_OK;
+  nsCOMPtr<nsIGSettingsService> gsettings =
+      do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
+  if (gsettings) {
+    nsCOMPtr<nsIGSettingsCollection> background_settings;
+    gsettings->GetCollectionForSchema(nsLiteralCString(kDesktopBGSchema),
+                                      getter_AddRefs(background_settings));
+    if (background_settings) {
+      background_settings->SetString(kDesktopColorGSKey, colorString);
+      return NS_OK;
+    }
   }
 
   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsGNOMEShellService::GetGSettingsString(const nsACString& aSchema,
-                                        const nsACString& aKey,
-                                        nsACString& aResult) {
-  widget::GSettings::GetString(PromiseFlatCString(aSchema),
-                               PromiseFlatCString(aKey), aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGNOMEShellService::SetGSettingsString(const nsACString& aSchema,
-                                        const nsACString& aKey,
-                                        const nsACString& aValue) {
-  widget::GSettings::Collection settings(PromiseFlatCString(aSchema));
-  if (!settings) {
-    return NS_ERROR_FAILURE;
-  }
-  if (!settings.SetString(PromiseFlatCString(aKey),
-                          PromiseFlatCString(aValue))) {
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
 }
