@@ -2142,14 +2142,25 @@
       });
     }
 
+    /**
+     * @param {boolean} [aInstant]
+     */
     _handleTabSelect(aInstant) {
       let selectedTab = this.selectedItem;
-      let arrowScrollbox = selectedTab.parentElement;
-      if (arrowScrollbox.overflowing) {
-        arrowScrollbox.ensureElementIsVisible(selectedTab, aInstant);
-      }
+      this.#ensureTabIsVisible(selectedTab, aInstant);
 
       selectedTab._notselectedsinceload = false;
+    }
+
+    /**
+     * @param {MozTabbrowserTab} tab
+     * @param {boolean} [shouldScrollInstantly=false]
+     */
+    #ensureTabIsVisible(tab, shouldScrollInstantly = false) {
+      let arrowScrollbox = tab.closest("arrowscrollbox");
+      if (arrowScrollbox.overflowing) {
+        arrowScrollbox.ensureElementIsVisible(tab, shouldScrollInstantly);
+      }
     }
 
     /** @type {boolean} */
@@ -3674,7 +3685,7 @@
                       selectedRect.right - tabRect.left
                     ) <= scrollRect.width)
               ) {
-                this.arrowScrollbox.ensureElementIsVisible(tabToScrollIntoView);
+                this.#ensureTabIsVisible(tabToScrollIntoView);
                 return;
               }
 
