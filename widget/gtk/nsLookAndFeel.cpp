@@ -42,6 +42,7 @@
 #include "gfxFontConstants.h"
 #include "WidgetUtils.h"
 #include "nsWindow.h"
+#include "nsIGSettingsService.h"
 
 #include "mozilla/gfx/2D.h"
 
@@ -1199,6 +1200,32 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
         // Though the X11 code just hides the native menubar without
         // communicating it to the front-end...
         return false;
+      }();
+      break;
+    case IntID::HourCycle:
+      aResult = []() {
+        nsCOMPtr<nsIGSettingsService> gsettings =
+            do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
+        if (!gsettings) {
+          return 0;
+        }
+
+        nsCOMPtr<nsIGSettingsCollection> desktop_settings;
+        gsettings->GetCollectionForSchema("org.gnome.desktop.interface"_ns,
+                                          getter_AddRefs(desktop_settings));
+        if (!desktop_settings) {
+          return 0;
+        }
+
+        nsAutoCString result;
+        desktop_settings->GetString("clock-format"_ns, result);
+        if (result == "12h") {
+          return 12;
+        }
+        if (result == "24h") {
+          return 24;
+        }
+        return 0;
       }();
       break;
     default:

@@ -10,6 +10,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIMutableArray.h"
 #include "nsISupportsPrimitives.h"
+#include "nsXULAppAPI.h"
 
 #include <glib.h>
 #include <glib-object.h>
@@ -266,6 +267,7 @@ nsGSettingsCollection::GetStringList(const nsACString& aKey,
 }
 
 nsresult nsGSettingsService::Init() {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
 #define FUNC(name, type, params) {#name, (nsGSettingsFunc*)&_##name},
   static const nsGSettingsDynamicFunction kGSettingsSymbols[] = {
       GSETTINGS_FUNCTIONS};
