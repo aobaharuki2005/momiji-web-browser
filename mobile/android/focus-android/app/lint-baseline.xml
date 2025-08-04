@@ -521,142 +521,10 @@
     <issue
         id="UsingMaterialAndMaterial3Libraries"
         message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/fragment/about/AboutFragment.kt"
-            line="18"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Icon"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/settings/BaseComposeFragment.kt"
-            line="17"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.IconButton"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/settings/BaseComposeFragment.kt"
-            line="18"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Scaffold"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/settings/BaseComposeFragment.kt"
-            line="19"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/settings/BaseComposeFragment.kt"
-            line="20"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
         errorLine1="import androidx.compose.material.TopAppBar"
         errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/focus/settings/BaseComposeFragment.kt"
-            line="21"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Button"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/biometrics/BiometricAuthenticationFragmentCompose.kt"
-            line="13"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.ButtonDefaults"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/biometrics/BiometricAuthenticationFragmentCompose.kt"
-            line="14"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/biometrics/BiometricAuthenticationFragmentCompose.kt"
-            line="15"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/browser/integration/BrowserToolbarIntegration.kt"
-            line="12"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/utils/ClickableSubstringLink.kt"
-            line="9"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Icon"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/cookiebannerreducer/CookieBannerReducerItem.kt"
-            line="16"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/cookiebannerreducer/CookieBannerReducerItem.kt"
             line="17"
             column="8"/>
     </issue>
@@ -680,17 +548,6 @@
         <location
             file="src/main/java/org/mozilla/focus/ui/menu/CustomDropdownMenu.kt"
             line="9"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/ui/menu/CustomDropdownMenu.kt"
-            line="10"
             column="8"/>
     </issue>
 
@@ -730,33 +587,11 @@
     <issue
         id="UsingMaterialAndMaterial3Libraries"
         message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/ui/dialog/FocusDialog.kt"
-            line="11"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.TextButton"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/ui/dialog/FocusDialog.kt"
-            line="12"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
         errorLine1="import androidx.compose.material.TextField"
         errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/focus/ui/dialog/FocusDialog.kt"
-            line="13"
+            line="11"
             column="8"/>
     </issue>
 
@@ -767,7 +602,7 @@
         errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/focus/ui/dialog/FocusDialog.kt"
-            line="14"
+            line="12"
             column="8"/>
     </issue>
 
@@ -829,237 +664,6 @@
     <issue
         id="UsingMaterialAndMaterial3Libraries"
         message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/input/InputToolbarIntegration.kt"
-            line="9"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/ui/preferences/LearnMoreLink.kt"
-            line="11"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.RadioButton"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/locale/screen/LocaleFragmentCompose.kt"
-            line="20"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.RadioButtonDefaults"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/locale/screen/LocaleFragmentCompose.kt"
-            line="21"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/locale/screen/LocaleFragmentCompose.kt"
-            line="22"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Button"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/fragment/onboarding/OnboardingFirstScreenCompose.kt"
-            line="15"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.ButtonDefaults"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/fragment/onboarding/OnboardingFirstScreenCompose.kt"
-            line="16"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/fragment/onboarding/OnboardingFirstScreenCompose.kt"
-            line="17"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.minimumInteractiveComponentSize"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/fragment/onboarding/OnboardingFirstScreenCompose.kt"
-            line="18"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Button"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/fragment/onboarding/OnboardingSecondScreenCompose.kt"
-            line="15"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.ButtonDefaults"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/fragment/onboarding/OnboardingSecondScreenCompose.kt"
-            line="16"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/fragment/onboarding/OnboardingSecondScreenCompose.kt"
-            line="17"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Icon"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/settings/privacy/PreferenceToolTipCompose.kt"
-            line="18"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.IconButton"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/settings/privacy/PreferenceToolTipCompose.kt"
-            line="19"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/settings/privacy/PreferenceToolTipCompose.kt"
-            line="20"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Button"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/searchwidget/PromoteSearchWidgetDialogCompose.kt"
-            line="18"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.ButtonDefaults"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/searchwidget/PromoteSearchWidgetDialogCompose.kt"
-            line="19"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Icon"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/searchwidget/PromoteSearchWidgetDialogCompose.kt"
-            line="20"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.IconButton"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/searchwidget/PromoteSearchWidgetDialogCompose.kt"
-            line="21"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/searchwidget/PromoteSearchWidgetDialogCompose.kt"
-            line="22"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/topsites/RenameTopSiteDialog.kt"
-            line="7"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
         errorLine1="import androidx.compose.material.ContentAlpha"
         errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -1071,88 +675,11 @@
     <issue
         id="UsingMaterialAndMaterial3Libraries"
         message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Button"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/settings/permissions/permissionoptions/SitePermissionOptionsFragmentCompose.kt"
-            line="19"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.ButtonDefaults"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/settings/permissions/permissionoptions/SitePermissionOptionsFragmentCompose.kt"
-            line="20"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.RadioButton"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/settings/permissions/permissionoptions/SitePermissionOptionsFragmentCompose.kt"
-            line="21"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.RadioButtonDefaults"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/settings/permissions/permissionoptions/SitePermissionOptionsFragmentCompose.kt"
-            line="22"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/settings/permissions/permissionoptions/SitePermissionOptionsFragmentCompose.kt"
-            line="23"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
         errorLine1="import androidx.compose.material.Card"
         errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/focus/topsites/TopSites.kt"
             line="21"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Surface"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/topsites/TopSites.kt"
-            line="22"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="UsingMaterialAndMaterial3Libraries"
-        message="Using a material import while also using the material3 library"
-        errorLine1="import androidx.compose.material.Text"
-        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/focus/topsites/TopSites.kt"
-            line="23"
             column="8"/>
     </issue>
 
