@@ -31,6 +31,11 @@ already_AddRefed<CSSMathProduct> CSSMathProduct::Constructor(
   return MakeAndAddRef<CSSMathProduct>(aGlobal.GetAsSupports());
 }
 
+CSSNumericArray* CSSMathProduct::GetValues(ErrorResult& aRv) const {
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
+}
+
 // end of CSSMathProduct Web IDL implementation
 
 }  // namespace mozilla::dom

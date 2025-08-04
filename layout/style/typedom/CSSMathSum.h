@@ -9,6 +9,7 @@
 
 #include "js/TypeDecls.h"
 #include "mozilla/dom/CSSMathValue.h"
+#include "mozilla/dom/CSSNumericArrayBindingFwd.h"
 #include "mozilla/dom/CSSNumericValueBindingFwd.h"
 
 template <class T>
@@ -37,6 +38,8 @@ class CSSMathSum final : public CSSMathValue {
   static already_AddRefed<CSSMathSum> Constructor(
       const GlobalObject& aGlobal,
       const Sequence<OwningDoubleOrCSSNumericValue>& aArgs, ErrorResult& aRv);
+
+  CSSNumericArray* GetValues(ErrorResult& aRv) const;
 
   // end of CSSMathSum Web IDL declarations
 

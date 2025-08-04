@@ -9,6 +9,7 @@
 
 #include "js/TypeDecls.h"
 #include "mozilla/dom/CSSMathValue.h"
+#include "mozilla/dom/CSSNumericArrayBindingFwd.h"
 #include "mozilla/dom/CSSNumericValueBindingFwd.h"
 
 template <class T>
@@ -39,6 +40,8 @@ class CSSMathMax final : public CSSMathValue {
   static already_AddRefed<CSSMathMax> Constructor(
       const GlobalObject& aGlobal,
       const Sequence<OwningDoubleOrCSSNumericValue>& aArgs, ErrorResult& aRv);
+
+  CSSNumericArray* GetValues(ErrorResult& aRv) const;
 
   // end of CSSMathMax Web IDL declarations
 

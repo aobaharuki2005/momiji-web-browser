@@ -4,14 +4,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://drafts.css-houdini.org/css-typed-om-1/#complex-numeric
+ * https://drafts.css-houdini.org/css-typed-om-1/#unparsedvalue-objects
  */
 
-// https://drafts.css-houdini.org/css-typed-om-1/#cssmathproduct
+// https://drafts.css-houdini.org/css-typed-om-1/#cssnumericarray
 // TODO: Expose to LayoutWorklet
 [Exposed=(Window, Worker, PaintWorklet), Pref="layout.css.typed-om.enabled"]
-interface CSSMathProduct : CSSMathValue {
-  [Throws] constructor(CSSNumberish... args);
-  // TODO: Remove [Throws] once the values attribute is fully implemented
-  [Throws] readonly attribute CSSNumericArray values;
+interface CSSNumericArray {
+    iterable<CSSNumericValue>;
+    readonly attribute unsigned long length;
+    getter CSSNumericValue (unsigned long index);
 };

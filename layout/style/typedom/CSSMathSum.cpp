@@ -31,6 +31,11 @@ already_AddRefed<CSSMathSum> CSSMathSum::Constructor(
   return MakeAndAddRef<CSSMathSum>(aGlobal.GetAsSupports());
 }
 
+CSSNumericArray* CSSMathSum::GetValues(ErrorResult& aRv) const {
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
+}
+
 // end of CSSMathSum Web IDL implementation
 
 }  // namespace mozilla::dom

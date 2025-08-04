@@ -12,5 +12,6 @@
 [Exposed=(Window, Worker, PaintWorklet), Pref="layout.css.typed-om.enabled"]
 interface CSSMathMax : CSSMathValue {
   [Throws] constructor(CSSNumberish... args);
-  //readonly attribute CSSNumericArray values;
+  // TODO: Remove [Throws] once the values attribute is fully implemented
+  [Throws] readonly attribute CSSNumericArray values;
 };

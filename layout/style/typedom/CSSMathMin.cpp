@@ -31,6 +31,11 @@ already_AddRefed<CSSMathMin> CSSMathMin::Constructor(
   return MakeAndAddRef<CSSMathMin>(aGlobal.GetAsSupports());
 }
 
+CSSNumericArray* CSSMathMin::GetValues(ErrorResult& aRv) const {
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
+}
+
 // end of CSSMathMin Web IDL implementation
 
 }  // namespace mozilla::dom

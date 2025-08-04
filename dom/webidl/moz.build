@@ -520,6 +520,7 @@ WEBIDL_FILES = [
     "CSSMozDocumentRule.webidl",
     "CSSNamespaceRule.webidl",
     "CSSNestedDeclarations.webidl",
+    "CSSNumericArray.webidl",
     "CSSNumericValue.webidl",
     "CSSPageRule.webidl",
     "CSSPositionTryRule.webidl",

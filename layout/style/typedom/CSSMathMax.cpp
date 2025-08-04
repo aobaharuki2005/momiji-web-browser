@@ -31,6 +31,11 @@ already_AddRefed<CSSMathMax> CSSMathMax::Constructor(
   return MakeAndAddRef<CSSMathMax>(aGlobal.GetAsSupports());
 }
 
+CSSNumericArray* CSSMathMax::GetValues(ErrorResult& aRv) const {
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
+}
+
 // end of CSSMathMax Web IDL implementation
 
 }  // namespace mozilla::dom
