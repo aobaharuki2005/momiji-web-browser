@@ -70,7 +70,7 @@ add_task(async function testPinAndUnpinMetricSuccess() {
 
   gShortcutPinResult = null;
 
-  await TaskbarTabsPin.pinTaskbarTab(taskbarTab);
+  await TaskbarTabsPin.pinTaskbarTab(taskbarTab, gRegistry);
   snapshot = Glean.webApp.pin.testGetValue();
   is(snapshot.length, 1, "A single pin event was recorded");
   Assert.strictEqual(
@@ -79,7 +79,7 @@ add_task(async function testPinAndUnpinMetricSuccess() {
     "The pin event should be successful"
   );
 
-  await TaskbarTabsPin.unpinTaskbarTab(taskbarTab);
+  await TaskbarTabsPin.unpinTaskbarTab(taskbarTab, gRegistry);
   snapshot = Glean.webApp.unpin.testGetValue();
   is(snapshot.length, 1, "A single unpin event was recorded");
   Assert.strictEqual(
@@ -99,7 +99,7 @@ add_task(async function testPinAndUnpinMetricError() {
 
   gShortcutPinResult = "This test failed!";
 
-  await TaskbarTabsPin.pinTaskbarTab(taskbarTab);
+  await TaskbarTabsPin.pinTaskbarTab(taskbarTab, gRegistry);
   snapshot = Glean.webApp.pin.testGetValue();
   is(snapshot.length, 1, "A single pin event was recorded");
   Assert.strictEqual(
@@ -108,7 +108,7 @@ add_task(async function testPinAndUnpinMetricError() {
     "The pin event shows failure"
   );
 
-  await TaskbarTabsPin.unpinTaskbarTab(taskbarTab);
+  await TaskbarTabsPin.unpinTaskbarTab(taskbarTab, gRegistry);
   snapshot = Glean.webApp.unpin.testGetValue();
   is(snapshot.length, 1, "A single unpin event was recorded");
   Assert.strictEqual(

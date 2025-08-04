@@ -632,6 +632,8 @@
   <string name="onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">سىز Firefox نى قانداق بايقىغانلىقىڭىز ۋە ئۇنى ئىشلىتىشنى ھەمبەھىرلىسىڭىز، توركۆرگۈنى تېخىمۇ كۆپ كىشىلەرگە تونۇشتۇرۇشىمىزغا ياردەم بېرەلەيسىز.</string>
   <!-- Marketing onboarding page opt-in checkbox. 'Mozilla' is intentionally hardcoded. -->
   <string name="onboarding_marketing_opt_in_checkbox" moz:removedIn="143" tools:ignore="UnusedResources">Mozilla نىڭ تېخنىكا ھەمكارلاشقۇچىلىرى بىلەن ئەڭ ئاز سانلىق مەلۇماتنى ھەمبەھىرلەيدۇ. بۇ سانلىق مەلۇماتلار ھەرگىز سېتىلمايدۇ ياكى سىزگە ئېلان كۆرسىتىش ئۈچۈن ئىشلىتىلمەيدۇ.</string>
+  <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
+  <string name="onboarding_marketing_opt_out_checkbox">Mozilla نىڭ تېخنىكا ھەمكارلاشقۇچىلىرى بىلەن سانلىق مەلۇماتنى ھەمبەھىرلەيدۇ. بۇ سانلىق مەلۇماتلار ھەرگىز سېتىلمايدۇ ياكى سىزگە ئېلان كۆرسىتىش ئۈچۈن ئىشلىتىلمەيدۇ.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">سانلىق مەلۇماتنى قانداق ئىشلىتىمىز</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -1213,6 +1215,8 @@
   <string name="preferences_daily_usage_ping_learn_more">كۈندىلىك ئىشلىتىلىش مىقدارى ھەققىدە تېخىمۇ كۆپ بىلدۈرگۈ</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">يىمىرىلىش دوكلاتىنى ئۆزلۈكىدىن يوللايدۇ</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">دوكلات يوللاندى</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">بۇ توركۆرگۈگە دىياگنوز قويۇپ ۋە مەسىلىنى ئوڭشىشىمىزغا ياردەم بېرىدۇ. دوكلات شەخسىي ياكى سەزگۈر ئۇچۇرلارنى ئۆز ئىچىگە ئېلىشى مۇمكىن.</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1718,6 +1722,8 @@
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">ھەممە ئىشلەتكۈچىنىڭ %1$s ئىشلىتىش تەسىراتىنى ياخشىلاشقا ياردەم بېرىدۇ. Mozilla خىزمەتچىلىرى سىز يوللىغان ئۇچۇرغا ئاساسەن تور بېكەت مەسىلىسىنى ئوڭشايدۇ.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">دوكلاتىڭىز بىزنىڭ %1$s دىكى مەسىلىنى چۈشىنىپ ۋە ئوڭشىشىمىزغا ياردەم قىلىپ ئۇنى ھەممەيلەن ئۈچۈن تېخىمۇ ياخشىلايدۇ. تەپسىلاتى</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">دوكلاتىڭىز %1$s دىكى مەسىلىنى چۈشىنىپ ۋە ئوڭشىشىمىزغا ياردەم قىلىپ ئۇنى ھەممەيلەن ئۈچۈن تېخىمۇ ياخشىلايدۇ. %2$s</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">تەپسىلاتى</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1782,6 +1788,8 @@
   <string name="tab_crash_restore">بەتكۈچنى ئەسلىگە قايتۇر</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s قايتا قوزغىتىلىشى كېرەك</string>
+  <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_dialog_title_2">%s يىمىرىلدى. دوكلات يوللامدۇ؟</string>
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">ئۈسكۈنىڭىزدە تېخى يوللانمىغان تەكشۈرۈلۈۋاتقان يىمىرىلىش دوكلاتى بار. بىزگە يوللىسىڭىز %1$s نى ياخشىلىشىمىزغا ياردەم بېرىسىز. بۇ ئۇقتۇرۇشنى تاقىسىڭىز مەزكۇر دوكلاتقا پەرۋا قىلمايدۇ.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
@@ -1790,10 +1798,17 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">يىمىرىلىش دوكلاتىنى ئۆزلۈكىدىن يوللايدۇ</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">تاقا</string>
+  <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
+  <string name="unsubmitted_crash_dialog_negative_button_2">ياپ</string>
   <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">ھەرگىز قايتا كۆرسەتمە</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
+  <string name="unsubmitted_crash_dialog_positive_button_2">يوللا</string>
+  <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">يىمىرىلىش دوكلاتى يوللا</string>
+  <!-- Body text for crash report dialog. %s is the link text in the annotated string (ie. "Learn More") -->
+  <string name="unsubmitted_crash_dialog_body">يىمىرىلىش دوكلاتى توركۆرگۈگە دىياگنوز قويۇپ ۋە ئۇنى ئوڭشاشقا ياردەم بېرىدۇ. دوكلات شەخسىي ياكى سەزگۈر ئۇچۇرلارنى ئۆز ئىچىگە ئېلىشى مۇمكىن. %s</string>
+  <string name="unsubmitted_crash_dialog_learn_more">تەپسىلاتى</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
   <string name="unsubmitted_crash_requested_by_devs_learn_more">تەپسىلاتى</string>
   <!--
@@ -3751,6 +3766,8 @@
   <string name="setup_checklist_task_explore_extensions">كېڭەيتىلمە بايقاش</string>
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">ئىزدەش ئەپچە ئورنىتىدۇ</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">ئىزدەش ئەپچىنى تەكشۈرىدۇ</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

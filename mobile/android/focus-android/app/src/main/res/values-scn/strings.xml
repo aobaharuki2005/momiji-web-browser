@@ -150,6 +150,8 @@
     %2$s is the url for the learn-more link.
   -->
   <string name="about_content" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[<p>%1$s ti duna u cuntrollu.</p> <p>Ùsalu comu navicaturi privatu: <ul> <li>Riscedi e nàvica direttu di l’applicazzioni</li> <li>Ferma i trazzatura (o cancia i mpustazzioni pi pirmittìrili)</li> <li>Scancella i viscotta e macari a crunuluggìa di risciduta e di navicazzioni</li> </ul> </p> <p>%1$s fu criatu di Mozilla. A nostra missioni è chiḍḍa d’ammuttari pi na riti graputa e ’n saluti.<br/> <a href=\"%2$s\">Cchiù nfurmazzioni</a></p>]]></string>
+  <!-- A link to SUMO at the bottom of About Focus screen. -->
+  <string name="about_screen_learn_more">Cchiù nfurmazzioni</string>
   <!-- Header for the Privacy and Security settings menu -->
   <string name="preference_privacy_and_security_header">Privatizza e sicurizza</string>
   <!-- Preference summary for settings related to privacy and security -->
