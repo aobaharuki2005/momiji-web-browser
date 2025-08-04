@@ -200,20 +200,25 @@ bool ModuleLoader::loadImportedModule(JSContext* cx,
                                       JS::Handle<JSObject*> moduleRequest,
                                       JS::HandleValue statePrivate,
                                       JS::Handle<JSObject*> promise) {
+  Rooted<Value> payload(cx, statePrivate);
+  if (payload.isUndefined()) {
+    MOZ_ASSERT(promise);
+    payload = ObjectValue(*promise);
+  }
+
   // TODO: Bug 1968904: Update HostLoadImportedModule
   if (promise) {
     // This is a dynamic import.
     if (!dynamicImport(cx, referencingPrivate, moduleRequest, promise)) {
       return JS::FinishLoadingImportedModuleFailedWithPendingException(cx,
-                                                                       promise);
+                                                                       payload);
     }
     return true;
   }
 
-  auto finishLoading = mozilla::MakeScopeExit([cx, statePrivate]() {
+  auto finishLoading = mozilla::MakeScopeExit([cx, &payload]() {
     if (!JS_IsExceptionPending(cx)) {
-      JS::FinishLoadingImportedModuleFailed(cx, statePrivate, nullptr,
-                                            UndefinedHandleValue);
+      JS::FinishLoadingImportedModuleFailed(cx, payload, UndefinedHandleValue);
       return;
     }
 
@@ -222,8 +227,7 @@ bool ModuleLoader::loadImportedModule(JSContext* cx,
       return;
     }
 
-    JS::FinishLoadingImportedModuleFailed(cx, statePrivate, nullptr,
-                                          exnStack.exception());
+    JS::FinishLoadingImportedModuleFailed(cx, payload, exnStack.exception());
   });
 
   Rooted<JSLinearString*> path(cx,
@@ -240,8 +244,7 @@ bool ModuleLoader::loadImportedModule(JSContext* cx,
   finishLoading.release();
 
   return JS::FinishLoadingImportedModule(cx, referrer, referencingPrivate,
-                                         moduleRequest, statePrivate, module,
-                                         false);
+                                         moduleRequest, payload, module, false);
 }
 
 bool ModuleLoader::populateImportMeta(JSContext* cx,
@@ -369,34 +372,35 @@ bool ModuleLoader::doDynamicImport(JSContext* cx,
                                    JS::HandleValue referencingPrivate,
                                    JS::HandleObject moduleRequest,
                                    JS::HandleObject promise) {
+  JS::Rooted<JS::Value> payload(cx, ObjectValue(*promise));
+
   // Exceptions during dynamic import are handled by calling
   // FinishLoadingImportedModule with a pending exception on the context.
   Rooted<JSLinearString*> path(cx,
                                resolve(cx, moduleRequest, referencingPrivate));
   if (!path) {
     return JS::FinishLoadingImportedModuleFailedWithPendingException(cx,
-                                                                     promise);
+                                                                     payload);
   }
 
   RootedObject module(cx, loadAndParse(cx, path, moduleRequest));
   if (!module) {
     return JS::FinishLoadingImportedModuleFailedWithPendingException(cx,
-                                                                     promise);
+                                                                     payload);
   }
 
   RootedValue hostDefined(cx, ObjectValue(*module));
   if (!JS::LoadRequestedModules(cx, module, hostDefined, LoadResolved,
                                 LoadRejected)) {
     return JS::FinishLoadingImportedModuleFailedWithPendingException(cx,
-                                                                     promise);
+                                                                     payload);
   }
 
   if (JS_IsExceptionPending(cx)) {
     return JS::FinishLoadingImportedModuleFailedWithPendingException(cx,
-                                                                     promise);
+                                                                     payload);
   }
 
-  RootedValue payload(cx, ObjectValue(*promise));
   return JS::FinishLoadingImportedModule(cx, nullptr, referencingPrivate,
                                          moduleRequest, payload, module, false);
 }

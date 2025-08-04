@@ -109,25 +109,36 @@ JS_PUBLIC_API bool JS::FinishLoadingImportedModule(
                                          usePromise);
 }
 
-JS_PUBLIC_API bool JS::FinishLoadingImportedModuleFailed(
-    JSContext* cx, Handle<Value> statePrivate, Handle<JSObject*> promise,
-    Handle<Value> error) {
+JS_PUBLIC_API bool JS::FinishLoadingImportedModuleFailed(JSContext* cx,
+                                                         Handle<Value> payload,
+                                                         Handle<Value> error) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  if (!statePrivate.isUndefined()) {
-    cx->check(statePrivate, error);
-    return js::FinishLoadingImportedModuleFailed(cx, statePrivate, error);
+  cx->check(payload, error);
+
+  JSObject* object = &payload.toObject();
+  MOZ_ASSERT(object->is<PromiseObject>() ||
+             object->is<GraphLoadingStateRecordObject>());
+
+  if (object->is<PromiseObject>()) {
+    Rooted<JSObject*> promise(cx, &object->as<PromiseObject>());
+    return js::FinishLoadingImportedModuleFailed(cx, promise, error);
   }
 
-  cx->check(promise);
-  return js::FinishLoadingImportedModuleFailed(cx, promise, error);
+  return js::FinishLoadingImportedModuleFailed(cx, payload, error);
 }
 
 JS_PUBLIC_API bool JS::FinishLoadingImportedModuleFailedWithPendingException(
-    JSContext* cx, Handle<JSObject*> promise) {
+    JSContext* cx, Handle<Value> payload) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->check(promise);
+  cx->check(payload);
+
+  // TODO: Currently only used with promises.
+  JSObject* object = &payload.toObject();
+  MOZ_ASSERT(object->is<PromiseObject>());
+
+  Rooted<JSObject*> promise(cx, &object->as<PromiseObject>());
   return js::FinishLoadingImportedModuleFailedWithPendingException(cx, promise);
 }
 
