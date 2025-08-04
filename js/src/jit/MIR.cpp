@@ -131,21 +131,48 @@ uint32_t js::jit::GetMBasicBlockId(const MBasicBlock* block) {
 }
 #endif
 
-static MConstant* EvaluateInt64ConstantOperands(TempAllocator& alloc,
-                                                MBinaryInstruction* ins) {
-  MDefinition* left = ins->getOperand(0);
-  MDefinition* right = ins->getOperand(1);
+template <MIRType Type>
+static auto ToIntConstant(MConstant* cst) {
+  MOZ_ASSERT(cst->type() == Type);
+  if constexpr (Type == MIRType::Int32) {
+    return cst->toInt32();
+  } else if constexpr (Type == MIRType::Int64) {
+    return cst->toInt64();
+  }
+}
+
+template <MIRType Type, typename IntT>
+static MConstant* NewIntConstant(TempAllocator& alloc, IntT i) {
+  if constexpr (Type == MIRType::Int32) {
+    static_assert(std::is_same_v<IntT, int32_t>);
+    return MConstant::NewInt32(alloc, i);
+  } else if constexpr (Type == MIRType::Int64) {
+    static_assert(std::is_same_v<IntT, int64_t>);
+    return MConstant::NewInt64(alloc, i);
+  }
+}
+
+template <MIRType Type>
+static MConstant* EvaluateIntConstantOperands(TempAllocator& alloc,
+                                              MBinaryInstruction* ins) {
+  MDefinition* left = ins->lhs();
+  MDefinition* right = ins->rhs();
 
   if (!left->isConstant() || !right->isConstant()) {
     return nullptr;
   }
 
-  MOZ_ASSERT(left->type() == MIRType::Int64);
-  MOZ_ASSERT(right->type() == MIRType::Int64);
+  using IntT = decltype(ToIntConstant<Type>(nullptr));
+  using UnsigedInt = std::make_unsigned_t<IntT>;
 
-  int64_t lhs = left->toConstant()->toInt64();
-  int64_t rhs = right->toConstant()->toInt64();
-  int64_t ret;
+  // Right-hand side operand of shift must be non-negative and be less-than the
+  // number of bits in the left-hand side operand. Otherwise the behavior is
+  // undefined.
+  static constexpr IntT shiftMask = (sizeof(IntT) * CHAR_BIT) - 1;
+
+  IntT lhs = ToIntConstant<Type>(left->toConstant());
+  IntT rhs = ToIntConstant<Type>(right->toConstant());
+  IntT ret;
 
   switch (ins->op()) {
     case MDefinition::Opcode::BitAnd:
@@ -158,14 +185,142 @@ static MConstant* EvaluateInt64ConstantOperands(TempAllocator& alloc,
       ret = lhs ^ rhs;
       break;
     case MDefinition::Opcode::Lsh:
-      ret = lhs << (rhs & 0x3F);
+      // Left-hand side operand must be non-negative, otherwise the behavior is
+      // undefined. Cast to unsigned to ensure the behavior is always defined.
+      //
+      // Note: Cast to unsigned is no longer needed when compiling to C++20.
+      ret = UnsigedInt(lhs) << (rhs & shiftMask);
       break;
     case MDefinition::Opcode::Rsh:
-      ret = lhs >> (rhs & 0x3F);
+      // The result is implementation-defined if the left-hand side operand is
+      // negative. Most implementations perform an arithmetic right-shift, which
+      // we rely on here.
+      //
+      // Note: Guaranteed to be an arithmetic right-shift in C++20.
+      ret = lhs >> (rhs & shiftMask);
       break;
     case MDefinition::Opcode::Ursh:
-      ret = uint64_t(lhs) >> (uint64_t(rhs) & 0x3F);
+      // Decline folding if the output doesn't fit into a signed result and
+      // bailouts are disabled. (Wasm has bailouts disabled.)
+      if (lhs < 0 && rhs == 0 && !ins->toUrsh()->bailoutsDisabled()) {
+        return nullptr;
+      }
+      ret = UnsigedInt(lhs) >> (UnsigedInt(rhs) & shiftMask);
       break;
+    case MDefinition::Opcode::Add: {
+      auto checked = mozilla::CheckedInt<IntT>(lhs) + rhs;
+      if (!checked.isValid()) {
+        return nullptr;
+      }
+      ret = checked.value();
+      break;
+    }
+    case MDefinition::Opcode::Sub: {
+      auto checked = mozilla::CheckedInt<IntT>(lhs) - rhs;
+      if (!checked.isValid()) {
+        return nullptr;
+      }
+      ret = checked.value();
+      break;
+    }
+    case MDefinition::Opcode::Mul: {
+      auto checked = mozilla::CheckedInt<IntT>(lhs) * rhs;
+      if (!checked.isValid()) {
+        return nullptr;
+      }
+      ret = checked.value();
+      break;
+    }
+    case MDefinition::Opcode::Div: {
+      if (ins->toDiv()->isUnsigned()) {
+        auto checked =
+            mozilla::CheckedInt<UnsigedInt>(UnsigedInt(lhs)) / UnsigedInt(rhs);
+        if (!checked.isValid()) {
+          return nullptr;
+        }
+        ret = IntT(checked.value());
+      } else {
+        auto checked = mozilla::CheckedInt<IntT>(lhs) / rhs;
+        if (!checked.isValid()) {
+          return nullptr;
+        }
+        ret = checked.value();
+
+        // Decline folding if the numerator isn't evenly divisible by the
+        // denominator. Only applies for non-truncating int32 division.
+        if constexpr (Type == MIRType::Int32) {
+          if (ret * rhs != lhs && !ins->toDiv()->isTruncated()) {
+            return nullptr;
+          }
+        }
+      }
+      break;
+    }
+    case MDefinition::Opcode::Mod: {
+      if (ins->toMod()->isUnsigned()) {
+        auto checked =
+            mozilla::CheckedInt<UnsigedInt>(UnsigedInt(lhs)) % UnsigedInt(rhs);
+        if (!checked.isValid()) {
+          return nullptr;
+        }
+        ret = IntT(checked.value());
+      } else {
+        auto checked = mozilla::CheckedInt<IntT>(lhs) % rhs;
+        if (!checked.isValid()) {
+          return nullptr;
+        }
+        ret = checked.value();
+
+        // Decline folding if the result is negative zero. Only applies for
+        // non-truncating int32 remainder.
+        if constexpr (Type == MIRType::Int32) {
+          if (ret == 0 && lhs < 0 && !ins->toMod()->isTruncated()) {
+            return nullptr;
+          }
+        }
+      }
+      break;
+    }
+    default:
+      MOZ_CRASH("NYI");
+  }
+
+  return NewIntConstant<Type>(alloc, ret);
+}
+
+static MConstant* EvaluateInt32ConstantOperands(TempAllocator& alloc,
+                                                MBinaryInstruction* ins) {
+  return EvaluateIntConstantOperands<MIRType::Int32>(alloc, ins);
+}
+
+static MConstant* EvaluateInt64ConstantOperands(TempAllocator& alloc,
+                                                MBinaryInstruction* ins) {
+  return EvaluateIntConstantOperands<MIRType::Int64>(alloc, ins);
+}
+
+static MConstant* EvaluateConstantOperands(TempAllocator& alloc,
+                                           MBinaryInstruction* ins) {
+  MOZ_ASSERT(IsTypeRepresentableAsDouble(ins->type()));
+
+  if (ins->type() == MIRType::Int32) {
+    return EvaluateInt32ConstantOperands(alloc, ins);
+  }
+
+  MDefinition* left = ins->lhs();
+  MDefinition* right = ins->rhs();
+
+  MOZ_ASSERT(IsFloatingPointType(left->type()));
+  MOZ_ASSERT(IsFloatingPointType(right->type()));
+
+  if (!left->isConstant() || !right->isConstant()) {
+    return nullptr;
+  }
+
+  double lhs = left->toConstant()->numberToDouble();
+  double rhs = right->toConstant()->numberToDouble();
+  double ret;
+
+  switch (ins->op()) {
     case MDefinition::Opcode::Add:
       ret = lhs + rhs;
       break;
@@ -176,108 +331,10 @@ static MConstant* EvaluateInt64ConstantOperands(TempAllocator& alloc,
       ret = lhs * rhs;
       break;
     case MDefinition::Opcode::Div:
-      if (rhs == 0) {
-        // Division by zero will trap at runtime.
-        return nullptr;
-      }
-      if (ins->toDiv()->isUnsigned()) {
-        ret = int64_t(uint64_t(lhs) / uint64_t(rhs));
-      } else if (lhs == INT64_MIN || rhs == -1) {
-        // Overflow will trap at runtime.
-        return nullptr;
-      } else {
-        ret = lhs / rhs;
-      }
+      ret = NumberDiv(lhs, rhs);
       break;
     case MDefinition::Opcode::Mod:
-      if (rhs == 0) {
-        // Division by zero will trap at runtime.
-        return nullptr;
-      }
-      if (!ins->toMod()->isUnsigned() && (lhs < 0 || rhs < 0)) {
-        // Handle all negative values at runtime, for simplicity.
-        return nullptr;
-      }
-      ret = int64_t(uint64_t(lhs) % uint64_t(rhs));
-      break;
-    default:
-      MOZ_CRASH("NYI");
-  }
-
-  return MConstant::NewInt64(alloc, ret);
-}
-
-static MConstant* EvaluateConstantOperands(TempAllocator& alloc,
-                                           MBinaryInstruction* ins) {
-  MDefinition* left = ins->getOperand(0);
-  MDefinition* right = ins->getOperand(1);
-
-  MOZ_ASSERT(IsTypeRepresentableAsDouble(left->type()));
-  MOZ_ASSERT(IsTypeRepresentableAsDouble(right->type()));
-
-  if (!left->isConstant() || !right->isConstant()) {
-    return nullptr;
-  }
-
-  MConstant* lhs = left->toConstant();
-  MConstant* rhs = right->toConstant();
-  double ret = JS::GenericNaN();
-
-  switch (ins->op()) {
-    case MDefinition::Opcode::BitAnd:
-      ret = double(lhs->toInt32() & rhs->toInt32());
-      break;
-    case MDefinition::Opcode::BitOr:
-      ret = double(lhs->toInt32() | rhs->toInt32());
-      break;
-    case MDefinition::Opcode::BitXor:
-      ret = double(lhs->toInt32() ^ rhs->toInt32());
-      break;
-    case MDefinition::Opcode::Lsh:
-      ret = double(uint32_t(lhs->toInt32()) << (rhs->toInt32() & 0x1F));
-      break;
-    case MDefinition::Opcode::Rsh:
-      ret = double(lhs->toInt32() >> (rhs->toInt32() & 0x1F));
-      break;
-    case MDefinition::Opcode::Ursh:
-      ret = double(uint32_t(lhs->toInt32()) >> (rhs->toInt32() & 0x1F));
-      break;
-    case MDefinition::Opcode::Add:
-      ret = lhs->numberToDouble() + rhs->numberToDouble();
-      break;
-    case MDefinition::Opcode::Sub:
-      ret = lhs->numberToDouble() - rhs->numberToDouble();
-      break;
-    case MDefinition::Opcode::Mul:
-      ret = lhs->numberToDouble() * rhs->numberToDouble();
-      break;
-    case MDefinition::Opcode::Div:
-      if (ins->toDiv()->isUnsigned()) {
-        if (rhs->isInt32(0)) {
-          if (ins->toDiv()->trapOnError()) {
-            return nullptr;
-          }
-          ret = 0.0;
-        } else {
-          ret = double(uint32_t(lhs->toInt32()) / uint32_t(rhs->toInt32()));
-        }
-      } else {
-        ret = NumberDiv(lhs->numberToDouble(), rhs->numberToDouble());
-      }
-      break;
-    case MDefinition::Opcode::Mod:
-      if (ins->toMod()->isUnsigned()) {
-        if (rhs->isInt32(0)) {
-          if (ins->toMod()->trapOnError()) {
-            return nullptr;
-          }
-          ret = 0.0;
-        } else {
-          ret = double(uint32_t(lhs->toInt32()) % uint32_t(rhs->toInt32()));
-        }
-      } else {
-        ret = NumberMod(lhs->numberToDouble(), rhs->numberToDouble());
-      }
+      ret = NumberMod(lhs, rhs);
       break;
     default:
       MOZ_CRASH("NYI");
@@ -286,18 +343,8 @@ static MConstant* EvaluateConstantOperands(TempAllocator& alloc,
   if (ins->type() == MIRType::Float32) {
     return MConstant::NewFloat32(alloc, float(ret));
   }
-  if (ins->type() == MIRType::Double) {
-    return MConstant::NewDouble(alloc, ret);
-  }
-  MOZ_ASSERT(ins->type() == MIRType::Int32);
-
-  // If the result isn't an int32 (for example, a division where the numerator
-  // isn't evenly divisible by the denominator), decline folding.
-  int32_t intRet;
-  if (!mozilla::NumberIsInt32(ret, &intRet)) {
-    return nullptr;
-  }
-  return MConstant::NewInt32(alloc, intRet);
+  MOZ_ASSERT(ins->type() == MIRType::Double);
+  return MConstant::New(alloc, DoubleValue(ret));
 }
 
 static MConstant* EvaluateConstantNaNOperand(MBinaryInstruction* ins) {
@@ -2643,7 +2690,7 @@ MDefinition* MBinaryBitwiseInstruction::foldsTo(TempAllocator& alloc) {
   // Identity operations are removed (for int32 only) in foldUnnecessaryBitop.
 
   if (type() == MIRType::Int32) {
-    if (MDefinition* folded = EvaluateConstantOperands(alloc, this)) {
+    if (MDefinition* folded = EvaluateInt32ConstantOperands(alloc, this)) {
       return folded;
     }
   } else if (type() == MIRType::Int64) {
@@ -2954,9 +3001,6 @@ MDefinition* MBinaryArithInstruction::foldsTo(TempAllocator& alloc) {
     MOZ_ASSERT(!isTruncated());
 
     if (MConstant* folded = EvaluateInt64ConstantOperands(alloc, this)) {
-      if (!folded->block()) {
-        block()->insertBefore(this, folded);
-      }
       return folded;
     }
     if (isSub() || isDiv() || isMod()) {
@@ -2975,10 +3019,10 @@ MDefinition* MBinaryArithInstruction::foldsTo(TempAllocator& alloc) {
 
   if (MConstant* folded = EvaluateConstantOperands(alloc, this)) {
     if (isTruncated()) {
-      if (!folded->block()) {
-        block()->insertBefore(this, folded);
-      }
       if (folded->type() != MIRType::Int32) {
+        if (!folded->block()) {
+          block()->insertBefore(this, folded);
+        }
         return MTruncateToInt32::New(alloc, folded);
       }
     }
