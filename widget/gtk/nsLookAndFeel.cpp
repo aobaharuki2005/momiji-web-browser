@@ -1021,8 +1021,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     } break;
     case IntID::ScrollArrowStyle: {
       aResult = eScrollArrowStyle_Single;
-      GtkSettings* settings = gtk_settings_get_default();
-      if (MOZ_LIKELY(settings)) {
+      if (MOZ_LIKELY(gtk_settings_get_default())) {
         GtkWidget* scrollbar = GtkWidgets::Get(GtkWidgets::Type::Scrollbar);
         aResult = ConvertGTKStepperStyleToMozillaScrollArrowStyle(scrollbar);
       }
@@ -1204,6 +1203,14 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       break;
     case IntID::HourCycle:
       aResult = []() {
+        if (MOZ_UNLIKELY(!gtk_settings_get_default())) {
+          // Avoid accessing gsettings early on startup on xpcshell, in order to
+          // avoid messing with tests that try to mock our session bus.
+          // FIXME(bug 1981011): Ideally we would be able to not have this
+          // special case.
+          return 0;
+        }
+
         nsAutoCString result;
         widget::GSettings::GetString("org.gnome.desktop.interface"_ns,
                                      "clock-format"_ns, result);
