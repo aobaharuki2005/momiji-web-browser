@@ -71,18 +71,6 @@ bool ContinueLoadingImportedModule(JSContext* cx, Handle<Value> statePrivate,
                                    Handle<JSObject*> result,
                                    Handle<Value> error);
 
-bool FinishLoadingImportedModule(JSContext* cx, Handle<JSObject*> referrer,
-                                 HandleValue referencingPrivate,
-                                 Handle<JSObject*> moduleRequest,
-                                 HandleValue statePrivate,
-                                 Handle<JSObject*> result);
-
-bool FinishLoadingImportedModule(JSContext* cx, Handle<JSObject*> referrer,
-                                 HandleValue referencingPrivate,
-                                 Handle<JSObject*> moduleRequest,
-                                 Handle<JSObject*> promise,
-                                 Handle<JSObject*> result, bool usePromise);
-
 bool ContinueDynamicImport(JSContext* cx, Handle<Value> referencingPrivate,
                            Handle<JSObject*> moduleRequest,
                            Handle<JSObject*> promise, Handle<JSObject*> result,
