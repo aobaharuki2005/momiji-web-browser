@@ -828,7 +828,7 @@ class BrowsingContextModule extends RootBiDiModule {
     }
 
     const contextsInfo = contexts.map(context => {
-      return this.#getBrowsingContextInfo(context, { maxDepth });
+      return getBrowsingContextInfo(context, { maxDepth });
     });
 
     return { contexts: contextsInfo };
@@ -1861,61 +1861,6 @@ class BrowsingContextModule extends RootBiDiModule {
     return context;
   }
 
-  /**
-   * Get the WebDriver BiDi browsing context information.
-   *
-   * @param {BrowsingContext} context
-   *     The browsing context to get the information from.
-   * @param {object=} options
-   * @param {boolean=} options.includeParentId
-   *     Flag that indicates if the parent ID should be included.
-   *     Defaults to true.
-   * @param {number=} options.maxDepth
-   *     Depth of the browsing context tree to traverse. If not specified
-   *     the whole tree is returned.
-   * @returns {BrowsingContextInfo}
-   *     The information about the browsing context.
-   */
-  #getBrowsingContextInfo(context, options = {}) {
-    const { includeParentId = true, maxDepth = null } = options;
-
-    let children = null;
-    if (maxDepth === null || maxDepth > 0) {
-      children = context.children.map(context =>
-        this.#getBrowsingContextInfo(context, {
-          maxDepth: maxDepth === null ? maxDepth : maxDepth - 1,
-          includeParentId: false,
-        })
-      );
-    }
-
-    const userContext = lazy.UserContextManager.getIdByBrowsingContext(context);
-    const originalOpener =
-      context.crossGroupOpener !== null
-        ? lazy.TabManager.getIdForBrowsingContext(context.crossGroupOpener)
-        : null;
-    const contextInfo = {
-      children,
-      context: lazy.TabManager.getIdForBrowsingContext(context),
-      // TODO: Bug 1904641. If a browsing context was not tracked in TabManager,
-      // because it was created and discarded before the WebDriver BiDi session was
-      // started, we get undefined as id for this browsing context.
-      // We should remove this condition, when we can provide a correct id here.
-      originalOpener: originalOpener === undefined ? null : originalOpener,
-      url: context.currentURI.spec,
-      userContext,
-      clientWindow: lazy.windowManager.getIdForBrowsingContext(context),
-    };
-
-    if (includeParentId) {
-      // Only emit the parent id for the top-most browsing context.
-      const parentId = lazy.TabManager.getIdForBrowsingContext(context.parent);
-      contextInfo.parent = parentId;
-    }
-
-    return contextInfo;
-  }
-
   #hasConfigurationForContext(userContext) {
     const internalId = lazy.UserContextManager.getInternalIdById(userContext);
     const contextDescriptor = {
@@ -1954,12 +1899,9 @@ class BrowsingContextModule extends RootBiDiModule {
         return;
       }
 
-      const browsingContextInfo = this.#getBrowsingContextInfo(
-        browsingContext,
-        {
-          maxDepth: 0,
-        }
-      );
+      const browsingContextInfo = getBrowsingContextInfo(browsingContext, {
+        maxDepth: 0,
+      });
 
       this.#emitContextEventForBrowsingContext(
         browsingContext.id,
@@ -2003,7 +1945,7 @@ class BrowsingContextModule extends RootBiDiModule {
         return;
       }
 
-      const browsingContextInfo = this.#getBrowsingContextInfo(browsingContext);
+      const browsingContextInfo = getBrowsingContextInfo(browsingContext);
 
       this.#emitContextEventForBrowsingContext(
         browsingContext.id,
@@ -2402,5 +2344,60 @@ class BrowsingContextModule extends RootBiDiModule {
     ];
   }
 }
+
+/**
+ * Get the WebDriver BiDi browsing context information.
+ *
+ * @param {BrowsingContext} context
+ *     The browsing context to get the information from.
+ * @param {object=} options
+ * @param {boolean=} options.includeParentId
+ *     Flag that indicates if the parent ID should be included.
+ *     Defaults to true.
+ * @param {number=} options.maxDepth
+ *     Depth of the browsing context tree to traverse. If not specified
+ *     the whole tree is returned.
+ * @returns {BrowsingContextInfo}
+ *     The information about the browsing context.
+ */
+export const getBrowsingContextInfo = (context, options = {}) => {
+  const { includeParentId = true, maxDepth = null } = options;
+
+  let children = null;
+  if (maxDepth === null || maxDepth > 0) {
+    children = context.children.map(context =>
+      getBrowsingContextInfo(context, {
+        maxDepth: maxDepth === null ? maxDepth : maxDepth - 1,
+        includeParentId: false,
+      })
+    );
+  }
+
+  const userContext = lazy.UserContextManager.getIdByBrowsingContext(context);
+  const originalOpener =
+    context.crossGroupOpener !== null
+      ? lazy.TabManager.getIdForBrowsingContext(context.crossGroupOpener)
+      : null;
+  const contextInfo = {
+    children,
+    context: lazy.TabManager.getIdForBrowsingContext(context),
+    // TODO: Bug 1904641. If a browsing context was not tracked in TabManager,
+    // because it was created and discarded before the WebDriver BiDi session was
+    // started, we get undefined as id for this browsing context.
+    // We should remove this condition, when we can provide a correct id here.
+    originalOpener: originalOpener === undefined ? null : originalOpener,
+    url: context.currentURI.spec,
+    userContext,
+    clientWindow: lazy.windowManager.getIdForBrowsingContext(context),
+  };
+
+  if (includeParentId) {
+    // Only emit the parent id for the top-most browsing context.
+    const parentId = lazy.TabManager.getIdForBrowsingContext(context.parent);
+    contextInfo.parent = parentId;
+  }
+
+  return contextInfo;
+};
 
 export const browsingContext = BrowsingContextModule;

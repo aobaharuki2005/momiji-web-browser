@@ -183,6 +183,7 @@ export class WindowGlobalMessageHandler extends MessageHandler {
             params: {
               category,
               sessionData: Array.from(relevantSessionData),
+              initial: true,
             },
             destination,
           })

@@ -342,6 +342,7 @@ export class SessionData {
                       sessionData: relevantSessionData,
                       category,
                       contextDescriptor,
+                      initial: false,
                     },
                     destination,
                   })
