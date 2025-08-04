@@ -59,11 +59,11 @@ EncodeSupportSet CanCreateWMFEncoder(const EncoderConfig& aConfig) {
     }
     // Try HW encoder if allowed by graphics and not disallowed by the caller.
     if (aConfig.mHardwarePreference != HardwarePreference::RequireSoftware) {
-      if (CanUseWMFHwEncoder(aConfig.mCodec)){
+      if (CanUseWMFHwEncoder(aConfig.mCodec)) {
         auto hwEnc =
-          MakeRefPtr<MFTEncoder>(MFTEncoder::HWPreference::HardwareOnly);
-        if (SUCCEEDED(hwEnc->Create(CodecToSubtype(aConfig.mCodec), aConfig.mSize,
-                                    aConfig.mCodecSpecific))) {
+            MakeRefPtr<MFTEncoder>(MFTEncoder::HWPreference::HardwareOnly);
+        if (SUCCEEDED(hwEnc->Create(CodecToSubtype(aConfig.mCodec),
+                                    aConfig.mSize, aConfig.mCodecSpecific))) {
           supports += EncodeSupport::HardwareEncode;
         }
       } else {
