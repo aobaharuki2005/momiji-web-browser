@@ -4,9 +4,13 @@
 
 "use strict";
 
+const {
+  Inspector,
+} = require("resource://devtools/client/inspector/inspector.js");
+
 class InspectorPanel {
   constructor(iframeWindow, toolbox, commands) {
-    this.#inspector = new iframeWindow.Inspector(toolbox, commands);
+    this.#inspector = new Inspector(toolbox, commands, iframeWindow);
   }
 
   #inspector;
