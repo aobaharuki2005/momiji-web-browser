@@ -118,7 +118,7 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder(AVCodec* aCodec,
   if (NS_FAILED(ret)) {
     FFMPEG_LOG("  couldn't allocate ffmpeg extra data for codec %s",
                aCodec->name);
-    mLib->av_freep(&mCodecContext);
+    ReleaseCodecContext();
     return ret;
   }
 
@@ -129,10 +129,7 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder(AVCodec* aCodec,
 #endif
 
   if (mLib->avcodec_open2(mCodecContext, aCodec, aOptions) < 0) {
-    if (mCodecContext->extradata) {
-      mLib->av_freep(&mCodecContext->extradata);
-    }
-    mLib->av_freep(&mCodecContext);
+    ReleaseCodecContext();
     FFMPEG_LOG("  Couldn't open avcodec for %s", aCodec->name);
     return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                        RESULT_DETAIL("Couldn't open avcodec"));
@@ -140,6 +137,22 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder(AVCodec* aCodec,
 
   FFMPEG_LOG("  FFmpeg decoder init successful.");
   return NS_OK;
+}
+
+void FFmpegDataDecoder<LIBAV_VER>::ReleaseCodecContext() {
+  if (!mCodecContext) {
+    return;
+  }
+#if LIBAVCODEC_VERSION_MAJOR < 57
+  mLib->avcodec_close(mCodecContext);
+  // avcodec_close only frees the extradata for encoders.
+  if (mCodecContext->extradata) {
+    mLib->av_freep(&mCodecContext->extradata);
+  }
+  mLib->av_freep(&mCodecContext);
+#else
+  mLib->avcodec_free_context(&mCodecContext);
+#endif
 }
 
 RefPtr<ShutdownPromise> FFmpegDataDecoder<LIBAV_VER>::Shutdown() {
@@ -278,15 +291,7 @@ void FFmpegDataDecoder<LIBAV_VER>::ProcessShutdown() {
 
   if (mCodecContext) {
     FFMPEG_LOG("FFmpegDataDecoder: shutdown");
-    if (mCodecContext->extradata) {
-      mLib->av_freep(&mCodecContext->extradata);
-    }
-#if LIBAVCODEC_VERSION_MAJOR < 57
-    mLib->avcodec_close(mCodecContext);
-    mLib->av_freep(&mCodecContext);
-#else
-    mLib->avcodec_free_context(&mCodecContext);
-#endif
+    ReleaseCodecContext();
 #if LIBAVCODEC_VERSION_MAJOR >= 55
     mLib->av_frame_free(&mFrame);
 #elif LIBAVCODEC_VERSION_MAJOR == 54
