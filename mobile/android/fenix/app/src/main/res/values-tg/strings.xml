@@ -1722,6 +1722,8 @@
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Кумак кунед, ки «%1$s» барои ҳамаи мо беҳтар шавад. Кормандони «Mozilla» маълумотеро, ки шумо ирсол мекунед, барои ислоҳ кардани мушкилиҳои сомона истифода мебаранд.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Гузориши шумо ба мо кумак мекунад, то ки тавонем ҳар гуна мушкилиро дар «%1$s» фаҳмем ва ислоҳ намоем, ва барномаро барои ҳамаи мо беҳтар созем. Маълумоти бештар гиред</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">Гузориши шумо ба мо кумак мекунад, то ки тавонем ҳар гуна мушкилиро дар «%1$s» фаҳмем ва ислоҳ намоем, ва барномаро барои ҳамаи мо беҳтар созем. %2$s</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Маълумоти бештар</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -3764,6 +3766,8 @@
   <string name="setup_checklist_task_explore_extensions">Васеъшавиҳоро озмоед</string>
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Насб кардани виҷети ҷустуҷӯ</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">Озмоиши виҷети ҷустуҷӯ</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 
