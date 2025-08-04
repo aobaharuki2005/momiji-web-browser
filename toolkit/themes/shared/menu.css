@@ -340,9 +340,9 @@ menuitem[highlightable] > .menu-text {
     margin-inline-end: 6px;
   }
 
-  menuitem:is(.menuitem-iconic, [image]) > &,
-  menu.menu-iconic > & {
-    &:not([srcset]) {
+  menuitem:where(.menuitem-iconic, [image]) > &,
+  menu:where(.menu-iconic) > & {
+    &:where(:not([srcset])) {
       content: var(--menuitem-icon);
     }
     display: revert;
