@@ -42,9 +42,12 @@ class ModuleLoader {
                                          Value* vp);
 
   bool loadAndExecute(JSContext* cx, HandleString path,
-                      HandleObject moduleRequestArg, MutableHandleValue);
+                      HandleObject moduleRequestArg, MutableHandleValue rval);
   bool loadAndExecute(JSContext* cx, HandleObject module,
                       MutableHandleValue rval);
+  static bool LoadResolved(JSContext* cx, HandleValue hostDefined);
+  static bool LoadRejected(JSContext* cx, HandleValue hostDefined,
+                           HandleValue error);
   bool loadImportedModule(JSContext* cx, HandleObject referrer,
                           HandleValue referencingPrivate,
                           HandleObject moduleRequest, HandleValue state,

@@ -168,20 +168,9 @@ bool ModuleLoader::loadAndExecute(JSContext* cx, HandleObject module,
                                   MutableHandleValue rval) {
   MOZ_ASSERT(module);
 
-  if (!JS::LoadRequestedModules(
-          cx, module, UndefinedHandleValue,
-          [&module](JSContext* cx, JS::Handle<JS::Value> val) {
-            if (!JS::ModuleLink(cx, module)) {
-              return false;
-            }
-
-            return true;
-          },
-          [](JSContext* cx, JS::Handle<JS::Value> val,
-             Handle<JS::Value> error) {
-            JS_SetPendingException(cx, error);
-            return true;
-          })) {
+  RootedValue hostDefined(cx, ObjectValue(*module));
+  if (!JS::LoadRequestedModules(cx, module, hostDefined, LoadResolved,
+                                LoadRejected)) {
     return false;
   }
 
@@ -190,6 +179,19 @@ bool ModuleLoader::loadAndExecute(JSContext* cx, HandleObject module,
   }
 
   return JS::ModuleEvaluate(cx, module, rval);
+}
+
+/* static */
+bool ModuleLoader::LoadResolved(JSContext* cx, HandleValue hostDefined) {
+  RootedObject module(cx, &hostDefined.toObject());
+  return JS::ModuleLink(cx, module);
+}
+
+/* static */
+bool ModuleLoader::LoadRejected(JSContext* cx, HandleValue hostDefined,
+                                HandleValue error) {
+  JS_SetPendingException(cx, error);
+  return true;
 }
 
 bool ModuleLoader::loadImportedModule(JSContext* cx,
@@ -381,16 +383,9 @@ bool ModuleLoader::doDynamicImport(JSContext* cx,
                                                                      promise);
   }
 
-  if (!JS::LoadRequestedModules(
-          cx, module, UndefinedHandleValue,
-          [&module](JSContext* cx, JS::Handle<JS::Value> val) {
-            return JS::ModuleLink(cx, module);
-          },
-          [](JSContext* cx, JS::Handle<JS::Value> val,
-             Handle<JS::Value> error) {
-            JS_SetPendingException(cx, error);
-            return true;
-          })) {
+  RootedValue hostDefined(cx, ObjectValue(*module));
+  if (!JS::LoadRequestedModules(cx, module, hostDefined, LoadResolved,
+                                LoadRejected)) {
     return JS::FinishLoadingImportedModuleFailedWithPendingException(cx,
                                                                      promise);
   }

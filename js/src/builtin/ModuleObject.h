@@ -507,8 +507,8 @@ using VisitedModuleSet =
 struct GraphLoadingStateRecord {
   explicit GraphLoadingStateRecord(JSContext* cx);
   GraphLoadingStateRecord(JSContext* cx,
-                          JS::LoadModuleResolvedCallback&& resolved,
-                          JS::LoadModuleRejectedCallback&& rejected);
+                          JS::LoadModuleResolvedCallback resolved,
+                          JS::LoadModuleRejectedCallback rejected);
 
   void trace(JSTracer* trc);
 
@@ -535,8 +535,8 @@ class GraphLoadingStateRecordObject : public NativeObject {
 
   [[nodiscard]] static GraphLoadingStateRecordObject* create(
       JSContext* cx, bool isLoading, uint32_t pendingModulesCount,
-      JS::LoadModuleResolvedCallback&& resolved,
-      JS::LoadModuleRejectedCallback&& rejected, Handle<Value> hostDefined);
+      JS::LoadModuleResolvedCallback resolved,
+      JS::LoadModuleRejectedCallback rejected, Handle<Value> hostDefined);
 
   [[nodiscard]] static GraphLoadingStateRecordObject* create(
       JSContext* cx, bool isLoading, uint32_t pendingModulesCount,
@@ -578,8 +578,8 @@ bool FinishDynamicModuleImport(JSContext* cx, HandleValue contextValue,
 
 bool LoadRequestedModules(JSContext* cx, Handle<ModuleObject*> module,
                           HandleValue hostDefined,
-                          JS::LoadModuleResolvedCallback&& resolved,
-                          JS::LoadModuleRejectedCallback&& rejected);
+                          JS::LoadModuleResolvedCallback resolved,
+                          JS::LoadModuleRejectedCallback rejected);
 
 bool LoadRequestedModules(JSContext* cx, Handle<ModuleObject*> module,
                           HandleValue hostDefined,
