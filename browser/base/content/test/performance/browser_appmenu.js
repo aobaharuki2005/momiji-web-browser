@@ -37,7 +37,7 @@ add_task(async function () {
     BrowserTestUtils.removeTab(tab);
     await BrowserTestUtils.waitForCondition(
       () =>
-        document.getElementById("searchmode-switcher-icon").style.listStyleImage
+        gURLBar.querySelector(".searchmode-switcher-icon").style.listStyleImage
     );
   }
 

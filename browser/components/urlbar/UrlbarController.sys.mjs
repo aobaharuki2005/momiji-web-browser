@@ -711,9 +711,7 @@ export class UrlbarController {
   #focusOnUnifiedSearchButton() {
     this.input.setUnifiedSearchButtonAvailability(true);
 
-    const switcher = this.input.document.getElementById(
-      "urlbar-searchmode-switcher"
-    );
+    const switcher = this.input.querySelector(".searchmode-switcher");
     // Set tabindex to be focusable.
     switcher.setAttribute("tabindex", "-1");
     // Remove blur listener to avoid closing urlbar view panel.

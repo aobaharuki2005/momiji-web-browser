@@ -272,7 +272,7 @@ var tests = [
 ];
 
 function assertFallbackAnchorNode(anchorNode) {
-  if (anchorNode.id == "searchmode-switcher-icon") {
+  if (anchorNode.classList.contains("searchmode-switcher-icon")) {
     Assert.ok(true, "The anchor is searchmode-switcher-icon");
   } else if (anchorNode.id == "identity-icon") {
     Assert.ok(true, "The anchor is identity-icon");

@@ -51,11 +51,9 @@ export class SearchModeSwitcher {
 
     lazy.UrlbarPrefs.addObserver(this);
 
-    this.#popup = input.document.getElementById("searchmode-switcher-popup");
+    this.#popup = input.querySelector(".searchmode-switcher-popup");
 
-    this.#toolbarbutton = input.document.querySelector(
-      "#urlbar-searchmode-switcher"
-    );
+    this.#toolbarbutton = input.querySelector(".searchmode-switcher");
 
     if (lazy.UrlbarPrefs.get("scotchBonnet.enableOverride")) {
       this.#enableObservers();
@@ -273,8 +271,8 @@ export class SearchModeSwitcher {
     }
 
     let iconUrl = icon ? `url(${icon})` : null;
-    this.#input.document.getElementById(
-      "searchmode-switcher-icon"
+    this.#input.querySelector(
+      ".searchmode-switcher-icon"
     ).style.listStyleImage = iconUrl;
 
     if (label) {
@@ -290,9 +288,7 @@ export class SearchModeSwitcher {
       );
     }
 
-    let labelEl = this.#input.document.getElementById(
-      "searchmode-switcher-title"
-    );
+    let labelEl = this.#input.querySelector(".searchmode-switcher-title");
 
     if (!inSearchMode) {
       labelEl.replaceChildren();
@@ -348,7 +344,7 @@ export class SearchModeSwitcher {
 
     let browser = this.#input.window.gBrowser;
     let separator = this.#popup.querySelector(
-      "#searchmode-switcher-popup-footer-separator"
+      ".searchmode-switcher-popup-footer-separator"
     );
 
     let openSearchEngines = lazy.OpenSearchManager.getEngines(
@@ -479,13 +475,11 @@ export class SearchModeSwitcher {
     this.#popup.addEventListener("popupshowing", this);
     this.#popup.addEventListener("popuphiding", this);
 
-    let closebutton = this.#input.document.querySelector(
-      "#searchmode-switcher-close"
-    );
+    let closebutton = this.#input.querySelector(".searchmode-switcher-close");
     closebutton.addEventListener("command", this);
 
-    let prefsbutton = this.#input.document.querySelector(
-      "#searchmode-switcher-popup-search-settings-button"
+    let prefsbutton = this.#input.querySelector(
+      ".searchmode-switcher-popup-search-settings-button"
     );
     prefsbutton.addEventListener("command", this);
   }
@@ -499,13 +493,11 @@ export class SearchModeSwitcher {
     this.#popup.removeEventListener("popupshowing", this);
     this.#popup.removeEventListener("popuphiding", this);
 
-    let closebutton = this.#input.document.querySelector(
-      "#searchmode-switcher-close"
-    );
+    let closebutton = this.#input.querySelector(".searchmode-switcher-close");
     closebutton.removeEventListener("command", this);
 
-    let prefsbutton = this.#input.document.querySelector(
-      "#searchmode-switcher-popup-search-settings-button"
+    let prefsbutton = this.#input.querySelector(
+      ".searchmode-switcher-popup-search-settings-button"
     );
     prefsbutton.removeEventListener("command", this);
   }

@@ -1399,12 +1399,12 @@ export var UrlbarTestUtils = {
   },
 
   searchModeSwitcherPopup(win) {
-    return win.document.getElementById("searchmode-switcher-popup");
+    return win.gURLBar.querySelector(".searchmode-switcher-popup");
   },
 
   async openSearchModeSwitcher(win) {
     let popup = this.searchModeSwitcherPopup(win);
-    let button = win.document.getElementById("urlbar-searchmode-switcher");
+    let button = win.gURLBar.querySelector(".searchmode-switcher");
     this.Assert.ok(lazy.BrowserTestUtils.isVisible(button));
     await this.EventUtils.promiseElementReadyForUserInput(button, win);
 
