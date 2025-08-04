@@ -55,9 +55,14 @@ static bool ContinueModuleLoading(JSContext* cx,
                                   Handle<GraphLoadingStateRecordObject*> state,
                                   Handle<JSObject*> moduleCompletion,
                                   Handle<Value> error);
+static bool TryStartDynamicModuleImport(JSContext* cx, HandleScript script,
+                                        HandleValue specifierArg,
+                                        HandleValue optionsArg,
+                                        HandleObject promise);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Public API
+
 JS_PUBLIC_API JS::ModuleLoadHook JS::GetModuleLoadHook(JSRuntime* rt) {
   AssertHeapIsIdle();
 
@@ -2633,53 +2638,50 @@ static bool EvaluateDynamicImportOptions(
 JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
                                        HandleValue specifierArg,
                                        HandleValue optionsArg) {
-  RootedObject promiseObject(cx, JS::NewPromiseObject(cx, nullptr));
-  if (!promiseObject) {
+  RootedObject promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!promise) {
     return nullptr;
   }
 
-  Handle<PromiseObject*> promise = promiseObject.as<PromiseObject>();
+  if (!TryStartDynamicModuleImport(cx, script, specifierArg, optionsArg,
+                                   promise)) {
+    if (!RejectPromiseWithPendingError(cx, promise.as<PromiseObject>())) {
+      return nullptr;
+    }
+  }
 
+  return promise;
+}
+
+static bool TryStartDynamicModuleImport(JSContext* cx, HandleScript script,
+                                        HandleValue specifierArg,
+                                        HandleValue optionsArg,
+                                        HandleObject promise) {
   JS::ModuleLoadHook moduleLoadHook = cx->runtime()->moduleLoadHook;
   if (!moduleLoadHook) {
     JS_ReportErrorASCII(cx, "Module load hook not set");
-    if (!RejectPromiseWithPendingError(cx, promise)) {
-      return nullptr;
-    }
-    return promise;
+    return false;
   }
 
   RootedString specifier(cx, ToString(cx, specifierArg));
   if (!specifier) {
-    if (!RejectPromiseWithPendingError(cx, promise)) {
-      return nullptr;
-    }
-    return promise;
+    return false;
   }
 
   Rooted<JSAtom*> specifierAtom(cx, AtomizeString(cx, specifier));
   if (!specifierAtom) {
-    if (!RejectPromiseWithPendingError(cx, promise)) {
-      return nullptr;
-    }
-    return promise;
+    return false;
   }
 
   Rooted<ImportAttributeVector> attributes(cx);
   if (!EvaluateDynamicImportOptions(cx, optionsArg, &attributes)) {
-    if (!RejectPromiseWithPendingError(cx, promise)) {
-      return nullptr;
-    }
-    return promise;
+    return false;
   }
 
   RootedObject moduleRequest(
       cx, ModuleRequestObject::create(cx, specifierAtom, attributes));
   if (!moduleRequest) {
-    if (!RejectPromiseWithPendingError(cx, promise)) {
-      return nullptr;
-    }
-    return promise;
+    return false;
   }
 
   RootedValue referencingPrivate(cx, script->sourceObject()->getPrivate());
@@ -2692,7 +2694,7 @@ JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
   // regardless of whether it succeeds or fails.
   std::ignore = moduleLoadHook(cx, /* referrer */ nullptr, referencingPrivate,
                                moduleRequest, payload);
-  return promise;
+  return true;
 }
 
 static bool OnRootModuleRejected(JSContext* cx, unsigned argc, Value* vp) {
