@@ -1016,9 +1016,6 @@
       "resource:///modules/QuickSuggest.sys.mjs": [
         "browser/components/urlbar/QuickSuggest.sys.mjs"
       ],
-      "resource:///modules/ReportBrokenSite.sys.mjs": [
-        "browser/components/reportbrokensite/ReportBrokenSite.sys.mjs"
-      ],
       "resource:///modules/SafariProfileMigrator.sys.mjs": [
         "browser/components/migration/SafariProfileMigrator.sys.mjs"
       ],
