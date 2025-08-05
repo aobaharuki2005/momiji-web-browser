@@ -376,7 +376,7 @@ describe("Shared database methods", () => {
       });
     });
 
-    it("should delete the record when impressions is falsy or an empty array", async () => {
+    it("should still create a record if the array is empty", async () => {
       mockConnection.executeCached.resolves();
 
       await storage.setSharedMessageImpressions("test_message", []);
@@ -385,17 +385,21 @@ describe("Shared database methods", () => {
       let executeCall = mockConnection.executeCached.getCall(0);
       assert.match(
         executeCall.args[0],
-        /DELETE FROM MessagingSystemMessageImpressions/
+        /INSERT INTO MessagingSystemMessageImpressions/
       );
-      assert.deepEqual(executeCall.args[1], { messageId: "test_message" });
+      assert.deepEqual(executeCall.args[1], {
+        messageId: "test_message",
+        impressions: JSON.stringify([]),
+      });
+    });
 
-      // Reset and test with null
-      mockConnection.executeCached.resetHistory();
-      mockConnection.executeBeforeShutdown.resetHistory();
+    it("should delete the record when impressions is falsy", async () => {
+      mockConnection.executeCached.resolves();
+
       await storage.setSharedMessageImpressions("test_message", null);
 
       assert.calledOnce(mockConnection.executeCached);
-      executeCall = mockConnection.executeCached.getCall(0);
+      let executeCall = mockConnection.executeCached.getCall(0);
       assert.match(
         executeCall.args[0],
         /DELETE FROM MessagingSystemMessageImpressions/

@@ -221,11 +221,9 @@ export class ASRouterStorage {
         );
       }
 
-      // If impressions is falsy or an empty array, delete the row
-      if (
-        !impressions ||
-        (Array.isArray(impressions) && impressions.length === 0)
-      ) {
+      // If impressions is falsy, delete the row (an empty array may indicate a custom
+      // frequency cap; we still want to track the message ID in that case.)
+      if (!impressions) {
         await conn.executeBeforeShutdown(
           "ASRouter: setSharedMessageImpressions",
           async () => {

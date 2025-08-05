@@ -26,6 +26,7 @@ const FAKE_PROVIDERS = [
   FAKE_REMOTE_SETTINGS_PROVIDER,
 ];
 const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
+const SIX_MONTHS_IN_MS = (24 * 60 * 60 * 365 * 1000) / 2;
 const FAKE_RESPONSE_HEADERS = { get() {} };
 const FAKE_BUNDLE = [FAKE_LOCAL_MESSAGES[1], FAKE_LOCAL_MESSAGES[2]];
 
@@ -563,6 +564,11 @@ describe("ASRouter", () => {
     });
 
     it("should load shared message impressions and blocklist when selectable profiles are enabled", async () => {
+      const testMessage = { id: "msg1", frequency: { lifetimeCap: 10 } };
+      setMessageProviderPref([
+        { id: "onboarding", type: "local", messages: [testMessage] },
+      ]);
+
       const testMultiProfileImpressions = { msg1: [123, 456] };
       const testMultiProfileBlocklist = ["blocked1", "blocked2"];
       const getSharedMessageImpressions = sandbox
@@ -3115,6 +3121,58 @@ describe("ASRouter", () => {
             "foo message impressions"
           );
         });
+      });
+    });
+
+    describe("multiprofile #cleanupImpressions", () => {
+      beforeEach(() => {
+        Router._storage.setSharedMessageImpressions = sandbox.stub();
+        sandbox
+          .stub(ASRouterTargeting.Environment, "canCreateSelectableProfiles")
+          .value(true);
+      });
+      it("should remove impressions from shared multiprofile impressions if the message is not in state & is older than six months", async () => {
+        await Router.setState(() => ({
+          multiProfileMessageImpressions: {
+            foo: [Date.now() - SIX_MONTHS_IN_MS - 1, Date.now()],
+          },
+          messageImpressions: {
+            foo: [Date.now() - SIX_MONTHS_IN_MS - 1, Date.now()],
+          },
+        }));
+
+        Router.cleanupImpressions();
+
+        assert.property(Router.state.multiProfileMessageImpressions, "foo");
+        assert.lengthOf(Router.state.multiProfileMessageImpressions.foo, 1);
+        assert.notProperty(Router.state.messageImpressions, "foo");
+      });
+      it("should remove impressions from shared multiprofile impressions if the frequency cap is exceeded", async () => {
+        const CURRENT_TIME = ONE_DAY_IN_MS * 2;
+        clock.tick(CURRENT_TIME);
+        const testMessages = [
+          {
+            id: "foo",
+            profileScope: "single",
+            frequency: { custom: [{ period: ONE_DAY_IN_MS, cap: 5 }] },
+          },
+        ];
+        messageImpressions = { foo: [0, 1, CURRENT_TIME - 10] };
+        // Only 0 and 1 are more than 24 hours before CURRENT_TIME
+        const result = { foo: [CURRENT_TIME - 10] };
+
+        await Router.setState(() => ({
+          messages: testMessages,
+          multiProfileMessageImpressions: messageImpressions,
+        }));
+
+        Router.cleanupImpressions();
+
+        assert.deepEqual(
+          Router.state.multiProfileMessageImpressions,
+          result,
+          "foo message shared multiprofile impressions"
+        );
       });
     });
 

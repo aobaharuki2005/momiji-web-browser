@@ -20,6 +20,70 @@ const isMSIX =
 
 const MESSAGES = () => [
   {
+    id: "FREQUENCY_CAP_CLEANUP_TEST",
+    profileScope: "single",
+    template: "feature_callout",
+    groups: [],
+    content: {
+      id: "FREQUENCY_CAP_CLEANUP_TEST",
+      padding: "16",
+      template: "multistage",
+      backdrop: "transparent",
+      transitions: false,
+      disableHistoryUpdates: true,
+      screens: [
+        {
+          id: "FREQUENCY_CAP_CLEANUP_TEST",
+          anchors: [
+            {
+              selector: "#fxa-toolbar-menu-button",
+              panel_position: {
+                anchor_attachment: "bottomcenter",
+                callout_attachment: "topright",
+              },
+            },
+          ],
+          content: {
+            position: "callout",
+            width: "400px",
+            padding: 16,
+            title: {
+              raw: "Frequency Cap Test",
+            },
+            subtitle: {
+              raw: "This callout has a very short frequency cap.",
+            },
+            additional_button: {
+              action: {
+                dismiss: true,
+              },
+              label: {
+                string_id: "dismiss-button-label",
+                fontWeight: "590",
+                fontSize: "11px",
+              },
+              style: "secondary",
+            },
+          },
+        },
+      ],
+    },
+    frequency: {
+      custom: [
+        {
+          cap: 1,
+          period: 120000,
+        },
+      ],
+    },
+    trigger: {
+      id: "defaultBrowserCheck",
+    },
+    targeting:
+      "(region in ['CA', 'US']) && previousSessionEnd && !willShowDefaultPrompt && !activeNotifications && userPrefs.cfrFeatures",
+    skip_in_tests: "it's not tested in automation",
+  },
+  {
     id: "CLOSE_TAB_GROUP_TEST_CALLOUT",
     template: "feature_callout",
     groups: ["cfr"],
