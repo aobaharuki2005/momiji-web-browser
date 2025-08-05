@@ -253,14 +253,14 @@ JS_PUBLIC_API bool JS::ModuleLink(JSContext* cx, Handle<JSObject*> moduleArg) {
 
 JS_PUBLIC_API bool JS::LoadRequestedModules(
     JSContext* cx, Handle<JSObject*> moduleArg, Handle<Value> hostDefined,
-    JS::LoadModuleResolvedCallback&& resolved,
-    JS::LoadModuleRejectedCallback&& rejected) {
+    JS::LoadModuleResolvedCallback resolved,
+    JS::LoadModuleRejectedCallback rejected) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->releaseCheck(moduleArg);
 
   return js::LoadRequestedModules(cx, moduleArg.as<ModuleObject>(), hostDefined,
-                                  std::move(resolved), std::move(rejected));
+                                  resolved, rejected);
 }
 
 JS_PUBLIC_API bool JS::LoadRequestedModules(
@@ -1606,8 +1606,8 @@ bool js::ContinueLoadingImportedModule(JSContext* cx,
 // https://tc39.es/ecma262/#sec-LoadRequestedModules
 bool js::LoadRequestedModules(JSContext* cx, Handle<ModuleObject*> module,
                               Handle<Value> hostDefined,
-                              JS::LoadModuleResolvedCallback&& resolved,
-                              JS::LoadModuleRejectedCallback&& rejected) {
+                              JS::LoadModuleResolvedCallback resolved,
+                              JS::LoadModuleRejectedCallback rejected) {
   if (module->hasSyntheticModuleFields()) {
     // Step 1. Return ! PromiseResolve(%Promise%, undefined).
     return resolved(cx, hostDefined);
@@ -1621,9 +1621,8 @@ bool js::LoadRequestedModules(JSContext* cx, Handle<ModuleObject*> module,
   //         [[PendingModulesCount]]: 1, [[Visited]]: « »,
   //         [[PromiseCapability]]: pc, [[HostDefined]]: hostDefined }.
   Rooted<GraphLoadingStateRecordObject*> state(
-      cx,
-      GraphLoadingStateRecordObject::create(cx, true, 1, std::move(resolved),
-                                            std::move(rejected), hostDefined));
+      cx, GraphLoadingStateRecordObject::create(cx, true, 1, resolved, rejected,
+                                                hostDefined));
   if (!state) {
     ReportOutOfMemory(cx);
     return false;

@@ -1520,9 +1520,9 @@ bool ModuleObject::createSyntheticEnvironment(JSContext* cx,
 ///////////////////////////////////////////////////////////////////////////
 // GraphLoadingStateRecordObject
 GraphLoadingStateRecord::GraphLoadingStateRecord(
-    JSContext*, JS::LoadModuleResolvedCallback&& resolved_,
-    JS::LoadModuleRejectedCallback&& rejected_)
-    : resolved(std::move(resolved_)), rejected(std::move(rejected_)) {}
+    JSContext*, JS::LoadModuleResolvedCallback resolved,
+    JS::LoadModuleRejectedCallback rejected)
+    : resolved(resolved), rejected(rejected) {}
 
 GraphLoadingStateRecord::GraphLoadingStateRecord(JSContext*) {}
 
@@ -1554,8 +1554,8 @@ const JSClassOps GraphLoadingStateRecordObject::classOps_ = {
 /* static */
 GraphLoadingStateRecordObject* GraphLoadingStateRecordObject::create(
     JSContext* cx, bool isLoading, uint32_t pendingModulesCount,
-    JS::LoadModuleResolvedCallback&& resolved,
-    JS::LoadModuleRejectedCallback&& rejected, Handle<Value> hostDefined) {
+    JS::LoadModuleResolvedCallback resolved,
+    JS::LoadModuleRejectedCallback rejected, Handle<Value> hostDefined) {
   Rooted<GraphLoadingStateRecordObject*> self(
       cx, NewObjectWithGivenProto<GraphLoadingStateRecordObject>(cx, nullptr));
   if (!self) {
@@ -1565,8 +1565,7 @@ GraphLoadingStateRecordObject* GraphLoadingStateRecordObject::create(
 
   {
     Rooted<UniquePtr<GraphLoadingStateRecord>> state(
-        cx, cx->make_unique<GraphLoadingStateRecord>(cx, std::move(resolved),
-                                                     std::move(rejected)));
+        cx, cx->make_unique<GraphLoadingStateRecord>(cx, resolved, rejected));
     if (!state) {
       ReportOutOfMemory(cx);
       return nullptr;

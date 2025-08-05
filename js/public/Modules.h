@@ -89,10 +89,11 @@ extern JS_PUBLIC_API ModuleLoadHook GetModuleLoadHook(JSRuntime* rt);
  */
 extern JS_PUBLIC_API void SetModuleLoadHook(JSRuntime* rt, ModuleLoadHook func);
 
-using LoadModuleResolvedCallback =
-    std::function<bool(JSContext* cx, JS::Handle<JS::Value> hostDefined)>;
-using LoadModuleRejectedCallback = std::function<bool(
-    JSContext* cx, JS::Handle<JS::Value> hostDefined, Handle<JS::Value> error)>;
+using LoadModuleResolvedCallback = bool (*)(JSContext* cx,
+                                            JS::Handle<JS::Value>);
+using LoadModuleRejectedCallback = bool (*)(JSContext* cx,
+                                            JS::Handle<JS::Value> hostDefined,
+                                            Handle<JS::Value> error);
 
 /**
  * https://tc39.es/ecma262/#sec-LoadRequestedModules
@@ -106,8 +107,7 @@ using LoadModuleRejectedCallback = std::function<bool(
  */
 extern JS_PUBLIC_API bool LoadRequestedModules(
     JSContext* cx, Handle<JSObject*> module, Handle<Value> hostDefined,
-    LoadModuleResolvedCallback&& resolved,
-    LoadModuleRejectedCallback&& rejected);
+    LoadModuleResolvedCallback resolved, LoadModuleRejectedCallback rejected);
 
 extern JS_PUBLIC_API bool LoadRequestedModules(
     JSContext* cx, Handle<JSObject*> module, Handle<Value> hostDefined,

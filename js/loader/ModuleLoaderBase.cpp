@@ -1161,42 +1161,6 @@ nsresult ModuleLoaderBase::ResolveRequestedModules(
   return NS_OK;
 }
 
-static bool OnLoadRequestedModulesResolvedImpl(ModuleLoadRequest* aRequest) {
-  LOG(("ScriptLoadRequest (%p): LoadRequestedModules resolved", aRequest));
-  if (!aRequest->IsCanceled()) {
-    aRequest->SetReady();
-    aRequest->LoadFinished();
-  }
-
-  // Decrease the reference 'AddRef'ed when converting the hostDefined.
-  aRequest->Release();
-  return true;
-}
-
-static bool OnLoadRequestedModulesRejectedImpl(ModuleLoadRequest* aRequest,
-                                               Handle<JS::Value> error) {
-  LOG(("ScriptLoadRequest (%p): LoadRequestedModules rejected", aRequest));
-  ModuleScript* moduleScript = aRequest->mModuleScript;
-  // https://html.spec.whatwg.org/#fetch-the-descendants-of-and-link-a-module-script
-  // Step 7. Upon rejection of loadingPromise, run the following
-  //         steps:
-  // Step 7.1. If state.[[ErrorToRethrow]] is not null, set moduleScript's
-  //           error to rethrow to state.[[ErrorToRethrow]] and run
-  //           onComplete given moduleScript.
-  if (moduleScript && !error.isUndefined()) {
-    moduleScript->SetErrorToRethrow(error);
-  } else {
-    // Step 7.2. Otherwise, run onComplete given null.
-    aRequest->mModuleScript = nullptr;
-  }
-
-  aRequest->ModuleErrored();
-
-  // Decrease the reference 'AddRef'ed when converting the hostDefined.
-  aRequest->Release();
-  return true;
-}
-
 void ModuleLoaderBase::StartFetchingModuleDependencies(
     ModuleLoadRequest* aRequest) {
   if (aRequest->IsCanceled()) {
@@ -1258,71 +1222,104 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
     }
 
     RootedObject resolveFuncObj(cx, JS_GetFunctionObject(onResolved));
-    js::SetFunctionNativeReserved(
-        resolveFuncObj,
-        static_cast<size_t>(OnLoadRequestedModulesSlot::HostDefinedSlot),
-        hostDefinedVal);
+    js::SetFunctionNativeReserved(resolveFuncObj, LoadReactionHostDefinedSlot,
+                                  hostDefinedVal);
 
     RootedObject rejectFuncObj(cx, JS_GetFunctionObject(onRejected));
-    js::SetFunctionNativeReserved(
-        rejectFuncObj,
-        static_cast<size_t>(OnLoadRequestedModulesSlot::HostDefinedSlot),
-        hostDefinedVal);
+    js::SetFunctionNativeReserved(rejectFuncObj, LoadReactionHostDefinedSlot,
+                                  hostDefinedVal);
 
     JS::Rooted<JSObject*> loadPromise(cx);
     result = JS::LoadRequestedModules(cx, module, hostDefinedVal, &loadPromise);
     JS::AddPromiseReactions(cx, loadPromise, resolveFuncObj, rejectFuncObj);
   } else {
-    result = JS::LoadRequestedModules(
-        cx, module, hostDefinedVal,
-        [](JSContext* cx, JS::Handle<JS::Value> requestVal) {
-          ModuleLoadRequest* request =
-              static_cast<ModuleLoadRequest*>(requestVal.toPrivate());
-          MOZ_ASSERT(request);
-          return OnLoadRequestedModulesResolvedImpl(request);
-        },
-        [](JSContext* cx, JS::Handle<JS::Value> requestVal,
-           Handle<JS::Value> error) {
-          ModuleLoadRequest* request =
-              static_cast<ModuleLoadRequest*>(requestVal.toPrivate());
-          MOZ_ASSERT(request);
-          return OnLoadRequestedModulesRejectedImpl(request, error);
-        });
+    result = JS::LoadRequestedModules(cx, module, hostDefinedVal,
+                                      OnLoadRequestedModulesResolved,
+                                      OnLoadRequestedModulesRejected);
   }
 
   if (!result) {
     LOG(("ScriptLoadRequest (%p): LoadRequestedModules failed", aRequest));
-    OnLoadRequestedModulesRejectedImpl(aRequest, UndefinedHandleValue);
+    OnLoadRequestedModulesRejected(aRequest, UndefinedHandleValue);
   }
 }
 
 // static
-bool ModuleLoaderBase::OnLoadRequestedModulesResolved(JSContext* cx,
-                                                      unsigned argc,
-                                                      Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  ModuleLoadRequest* request = static_cast<ModuleLoadRequest*>(
-      js::GetFunctionNativeReserved(
-          &args.callee(),
-          static_cast<size_t>(OnLoadRequestedModulesSlot::HostDefinedSlot))
-          .toPrivate());
-  MOZ_ASSERT(request);
-  return OnLoadRequestedModulesResolvedImpl(request);
+bool ModuleLoaderBase::OnLoadRequestedModulesResolved(JSContext* aCx,
+                                                      unsigned aArgc,
+                                                      Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+  Rooted<Value> hostDefined(aCx);
+  hostDefined = js::GetFunctionNativeReserved(&args.callee(),
+                                              LoadReactionHostDefinedSlot);
+  return OnLoadRequestedModulesResolved(aCx, hostDefined);
 }
 
 // static
-bool ModuleLoaderBase::OnLoadRequestedModulesRejected(JSContext* cx,
-                                                      unsigned argc,
-                                                      Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  Rooted<JS::Value> error(cx, args.get(OnLoadRequestedModulesRejectedErrorArg));
-  ModuleLoadRequest* request = static_cast<ModuleLoadRequest*>(
-      js::GetFunctionNativeReserved(
-          &args.callee(),
-          static_cast<size_t>(OnLoadRequestedModulesSlot::HostDefinedSlot))
-          .toPrivate());
+bool ModuleLoaderBase::OnLoadRequestedModulesResolved(
+    JSContext* aCx, Handle<Value> aHostDefined) {
+  auto* request = static_cast<ModuleLoadRequest*>(aHostDefined.toPrivate());
   MOZ_ASSERT(request);
-  return OnLoadRequestedModulesRejectedImpl(request, error);
+  return OnLoadRequestedModulesResolved(request);
+}
+
+// static
+bool ModuleLoaderBase::OnLoadRequestedModulesResolved(
+    ModuleLoadRequest* aRequest) {
+  LOG(("ScriptLoadRequest (%p): LoadRequestedModules resolved", aRequest));
+  if (!aRequest->IsCanceled()) {
+    aRequest->SetReady();
+    aRequest->LoadFinished();
+  }
+
+  // Decrease the reference 'AddRef'ed when converting the hostDefined.
+  aRequest->Release();
+  return true;
+}
+
+// static
+bool ModuleLoaderBase::OnLoadRequestedModulesRejected(JSContext* aCx,
+                                                      unsigned aArgc,
+                                                      Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+  Rooted<Value> error(aCx, args.get(OnLoadRequestedModulesRejectedErrorArg));
+  Rooted<Value> hostDefined(aCx);
+  hostDefined = js::GetFunctionNativeReserved(&args.callee(),
+                                              LoadReactionHostDefinedSlot);
+  return OnLoadRequestedModulesRejected(aCx, hostDefined, error);
+}
+
+// static
+bool ModuleLoaderBase::OnLoadRequestedModulesRejected(
+    JSContext* aCx, Handle<Value> aHostDefined, Handle<Value> aError) {
+  auto* request = static_cast<ModuleLoadRequest*>(aHostDefined.toPrivate());
+  MOZ_ASSERT(request);
+  return OnLoadRequestedModulesRejected(request, aError);
+}
+
+// static
+bool ModuleLoaderBase::OnLoadRequestedModulesRejected(
+    ModuleLoadRequest* aRequest, Handle<Value> error) {
+  LOG(("ScriptLoadRequest (%p): LoadRequestedModules rejected", aRequest));
+  ModuleScript* moduleScript = aRequest->mModuleScript;
+  // https://html.spec.whatwg.org/#fetch-the-descendants-of-and-link-a-module-script
+  // Step 7. Upon rejection of loadingPromise, run the following
+  //         steps:
+  // Step 7.1. If state.[[ErrorToRethrow]] is not null, set moduleScript's
+  //           error to rethrow to state.[[ErrorToRethrow]] and run
+  //           onComplete given moduleScript.
+  if (moduleScript && !error.isUndefined()) {
+    moduleScript->SetErrorToRethrow(error);
+  } else {
+    // Step 7.2. Otherwise, run onComplete given null.
+    aRequest->mModuleScript = nullptr;
+  }
+
+  aRequest->ModuleErrored();
+
+  // Decrease the reference 'AddRef'ed when converting the hostDefined.
+  aRequest->Release();
+  return true;
 }
 
 bool ModuleLoaderBase::GetImportMapSRI(
