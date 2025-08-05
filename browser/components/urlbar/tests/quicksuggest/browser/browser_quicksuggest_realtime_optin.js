@@ -15,7 +15,7 @@ const OFFLINE_REMOTE_SETTINGS = [
             realtimeType: "market",
             payload: {
               type: "realtime_opt_in",
-              icon: "chrome://global/skin/icons/defaultFavicon.svg",
+              icon: "chrome://browser/skin/illustrations/market-opt-in.svg",
               titleL10n: {
                 id: "urlbar-result-market-opt-in-title",
               },
@@ -35,7 +35,7 @@ const OFFLINE_REMOTE_SETTINGS = [
             realtimeType: "sports",
             payload: {
               type: "realtime_opt_in",
-              icon: "chrome://global/skin/icons/defaultFavicon.svg",
+              icon: "chrome://browser/skin/illustrations/market-opt-in.svg",
               titleL10n: {
                 id: "urlbar-result-market-opt-in-title",
               },

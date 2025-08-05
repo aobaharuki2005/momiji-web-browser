@@ -976,6 +976,12 @@
        button. */
     margin-inline-end: 1.8em;
 
+    .urlbarView-row[tip-type="realtime_opt_in"] > & > .urlbarView-favicon {
+      width: 98px;
+      height: 86px;
+      flex-basis: 98px;
+    }
+
     > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap {
       flex-shrink: unset;
 
