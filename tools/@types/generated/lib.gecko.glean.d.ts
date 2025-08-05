@@ -2025,7 +2025,6 @@ interface GleanImpl {
     cssMozTransitionProperty: GleanCounter;
     cssMozTransitionTimingFunction: GleanCounter;
     cssMozUserFocus: GleanCounter;
-    cssMozUserInput: GleanCounter;
     cssMozUserSelect: GleanCounter;
     cssMozWindowDragging: GleanCounter;
     cssMozWindowInputRegionMargin: GleanCounter;
@@ -2733,7 +2732,6 @@ interface GleanImpl {
     cssMozTransitionProperty: GleanCounter;
     cssMozTransitionTimingFunction: GleanCounter;
     cssMozUserFocus: GleanCounter;
-    cssMozUserInput: GleanCounter;
     cssMozUserSelect: GleanCounter;
     cssMozWindowDragging: GleanCounter;
     cssMozWindowInputRegionMargin: GleanCounter;
