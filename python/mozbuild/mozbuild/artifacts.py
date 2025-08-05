@@ -812,7 +812,7 @@ class WinArtifactJob(ArtifactJob):
     _package_artifact_patterns = {
         "{product}/dependentlibs.list",
         "{product}/**/*.dll",
-        "{product}/*.exe",
+        "{product}/**/*.exe",
         "{product}/*.tlb",
     }
 
