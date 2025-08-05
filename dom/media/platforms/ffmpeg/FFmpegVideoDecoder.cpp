@@ -579,8 +579,8 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
     FFmpegLibWrapper* aLib, const VideoInfo& aConfig,
     KnowsCompositor* aAllocator, ImageContainer* aImageContainer,
     bool aLowLatency, bool aDisableHardwareDecoding, bool a8BitOutput,
-    Maybe<TrackingId> aTrackingId)
-    : FFmpegDataDecoder(aLib, GetCodecId(aConfig.mMimeType)),
+    Maybe<TrackingId> aTrackingId, PRemoteCDMActor* aCDM)
+    : FFmpegDataDecoder(aLib, GetCodecId(aConfig.mMimeType), aCDM),
       mImageAllocator(aAllocator),
 #ifdef MOZ_USE_HWDECODE
       mHardwareDecodingDisabled(
@@ -1184,6 +1184,25 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
         nsPrintfCString("FFmpegVideoDecoder(%d)", LIBAVCODEC_VERSION_MAJOR),
         aId, flag);
   });
+
+#if defined(MOZ_WIDGET_ANDROID) && defined(USING_MOZFFVPX)
+  RefPtr<MediaDrmCryptoInfo> cryptoInfo;
+  if (aSample->mCrypto.IsEncrypted()) {
+    if (NS_WARN_IF(!mCDM)) {
+      return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                         RESULT_DETAIL("Missing CDM for encrypted sample"));
+    }
+
+    cryptoInfo = mCDM->CreateCryptoInfo(aSample);
+    if (NS_WARN_IF(!cryptoInfo)) {
+      return MediaResult(
+          NS_ERROR_DOM_MEDIA_DECODE_ERR,
+          RESULT_DETAIL("Failed to create CryptoInfo for encrypted sample"));
+    }
+
+    packet->moz_ndk_crypto_info = cryptoInfo->GetNdkCryptoInfo();
+  }
+#endif
 
 #ifdef MOZ_FFMPEG_USE_INPUT_INFO_MAP
 #  ifdef MOZ_WIDGET_ANDROID

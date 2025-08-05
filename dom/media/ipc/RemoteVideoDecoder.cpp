@@ -192,6 +192,7 @@ IPCResult RemoteVideoDecoderParent::RecvConstruct(
       CreateDecoderParams::WrapperSet({/* No wrapper */}),
       mMediaEngineId,
       mTrackingId,
+      mCDM,
   };
 
   mParent->EnsurePDMFactory().CreateDecoder(params)->Then(

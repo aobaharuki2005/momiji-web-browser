@@ -30,8 +30,10 @@ using TimeUnit = media::TimeUnit;
 
 FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(
     FFmpegLibWrapper* aLib, const CreateDecoderParams& aDecoderParams)
-    : FFmpegDataDecoder(aLib, GetCodecId(aDecoderParams.AudioConfig().mMimeType,
-                                         aDecoderParams.AudioConfig())),
+    : FFmpegDataDecoder(aLib,
+                        GetCodecId(aDecoderParams.AudioConfig().mMimeType,
+                                   aDecoderParams.AudioConfig()),
+                        aDecoderParams.mCDM),
       mAudioInfo(aDecoderParams.AudioConfig()) {
   MOZ_COUNT_CTOR(FFmpegAudioDecoder);
 
