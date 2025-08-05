@@ -7,17 +7,16 @@
 #ifndef MediaDrmRemoteCDMParent_h_
 #define MediaDrmRemoteCDMParent_h_
 
-#include "mozilla/Mutex.h"
-#include "mozilla/RemoteCDMParent.h"
-#include "mozilla/StaticPtr.h"
-#include "mozilla/UniquePtr.h"
+#include <map>
 
 #include "media/NdkMediaCodec.h"
 #include "media/NdkMediaCrypto.h"
 #include "media/NdkMediaDrm.h"
 #include "media/NdkMediaError.h"
-
-#include <map>
+#include "mozilla/Mutex.h"
+#include "mozilla/RemoteCDMParent.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 

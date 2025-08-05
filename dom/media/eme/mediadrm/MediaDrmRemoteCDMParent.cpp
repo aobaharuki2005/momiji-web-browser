@@ -6,11 +6,13 @@
 
 #include "MediaDrmRemoteCDMParent.h"
 
+#include <dlfcn.h>
+
+#include <limits>
+
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/RemoteMediaManagerParent.h"
-#include <dlfcn.h>
-#include <limits>
 
 namespace mozilla {
 
@@ -380,8 +382,11 @@ MediaDrmRemoteCDMParent::EnsureProvisioned() {
   media_status_t status = AMediaDrm_getProvisionRequest(
       mDrm, &provisionRequest, &provisionRequestSize, &serverUrl);
   if (NS_WARN_IF(status != AMEDIA_OK)) {
-    EME_LOG("[%p] MediaDrmRemoteCDMParent::EnsureProvisioned -- failed drm %p provisionRequest %p size %zu serverUrl %p (%s) status %d",
-            this, mDrm, provisionRequest, provisionRequestSize, serverUrl, serverUrl ? serverUrl : "", status);
+    EME_LOG(
+        "[%p] MediaDrmRemoteCDMParent::EnsureProvisioned -- failed drm %p "
+        "provisionRequest %p size %zu serverUrl %p (%s) status %d",
+        this, mDrm, provisionRequest, provisionRequestSize, serverUrl,
+        serverUrl ? serverUrl : "", status);
     mProvisionError.emplace(
         NS_ERROR_DOM_INVALID_STATE_ERR,
         RESULT_DETAIL("AMediaDrm_getProvisionRequest failed %d", status));
@@ -885,9 +890,7 @@ already_AddRefed<MediaDrmCryptoInfo> MediaDrmRemoteCDMParent::CreateCryptoInfo(
   return MakeAndAddRef<MediaDrmCryptoInfo>(cryptoInfo);
 }
 
-MediaDrmCrypto::~MediaDrmCrypto() {
-  AMediaCrypto_delete(mCrypto);
-}
+MediaDrmCrypto::~MediaDrmCrypto() { AMediaCrypto_delete(mCrypto); }
 
 MediaDrmCryptoInfo::~MediaDrmCryptoInfo() {
   AMediaCodecCryptoInfo_delete(mCryptoInfo);
