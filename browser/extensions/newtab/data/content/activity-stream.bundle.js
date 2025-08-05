@@ -8857,8 +8857,8 @@ function TimerWidget(prevState = INITIAL_STATE.TimerWidget, action) {
         ...prevState,
         [timerType]: {
           ...prevState[timerType],
-          duration: 0,
-          initialDuration: 0,
+          duration: action.data.duration,
+          initialDuration: action.data.duration,
           startTime: null,
           isRunning: false,
         },
@@ -12814,6 +12814,7 @@ const FocusTimer = ({
     startTime,
     isRunning
   } = timerData[timerType];
+  const initialTimerDuration = timerData[timerType].initialDuration;
   const resetProgressCircle = (0,external_React_namespaceObject.useCallback)(() => {
     if (arcRef?.current) {
       arcRef.current.style.clipPath = "polygon(50% 50%)";
@@ -12830,6 +12831,7 @@ const FocusTimer = ({
     }
   }, [isRunning]);
   (0,external_React_namespaceObject.useEffect)(() => {
+    // resets default values after timer ends
     let interval;
     if (isRunning && duration > 0) {
       interval = setInterval(() => {
@@ -12839,7 +12841,9 @@ const FocusTimer = ({
           dispatch(actionCreators.AlsoToMain({
             type: actionTypes.WIDGETS_TIMER_END,
             data: {
-              timerType
+              timerType,
+              duration: initialTimerDuration,
+              initialDuration: initialTimerDuration
             }
           }));
 
@@ -12877,7 +12881,7 @@ const FocusTimer = ({
     const newTime = isRunning ? calculateTimeRemaining(duration, startTime) : duration;
     setTimeLeft(newTime);
     return () => clearInterval(interval);
-  }, [isRunning, startTime, duration, initialDuration, dispatch, resetProgressCircle, timerType]);
+  }, [isRunning, startTime, duration, initialDuration, dispatch, resetProgressCircle, timerType, initialTimerDuration]);
 
   // Update the clip-path of the gradient circle to match the current progress value
   (0,external_React_namespaceObject.useEffect)(() => {

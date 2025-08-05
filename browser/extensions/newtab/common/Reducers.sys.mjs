@@ -1171,8 +1171,8 @@ function TimerWidget(prevState = INITIAL_STATE.TimerWidget, action) {
         ...prevState,
         [timerType]: {
           ...prevState[timerType],
-          duration: 0,
-          initialDuration: 0,
+          duration: action.data.duration,
+          initialDuration: action.data.duration,
           startTime: null,
           isRunning: false,
         },

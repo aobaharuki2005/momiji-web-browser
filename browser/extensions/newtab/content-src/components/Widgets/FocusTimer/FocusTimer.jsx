@@ -89,6 +89,7 @@ export const FocusTimer = ({ dispatch }) => {
   const timerData = useSelector(state => state.TimerWidget);
   const { duration, initialDuration, startTime, isRunning } =
     timerData[timerType];
+  const initialTimerDuration = timerData[timerType].initialDuration;
 
   const resetProgressCircle = useCallback(() => {
     if (arcRef?.current) {
@@ -107,6 +108,7 @@ export const FocusTimer = ({ dispatch }) => {
   }, [isRunning]);
 
   useEffect(() => {
+    // resets default values after timer ends
     let interval;
     if (isRunning && duration > 0) {
       interval = setInterval(() => {
@@ -118,7 +120,11 @@ export const FocusTimer = ({ dispatch }) => {
           dispatch(
             ac.AlsoToMain({
               type: at.WIDGETS_TIMER_END,
-              data: { timerType },
+              data: {
+                timerType,
+                duration: initialTimerDuration,
+                initialDuration: initialTimerDuration,
+              },
             })
           );
 
@@ -170,6 +176,7 @@ export const FocusTimer = ({ dispatch }) => {
     dispatch,
     resetProgressCircle,
     timerType,
+    initialTimerDuration,
   ]);
 
   // Update the clip-path of the gradient circle to match the current progress value
