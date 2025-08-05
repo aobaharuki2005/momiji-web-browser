@@ -3224,7 +3224,7 @@ nsChangeHint nsStyleUI::CalcDifference(const nsStyleUI& aNewData) const {
   }
 
   if (mInert != aNewData.mInert) {
-    // inert affects pointer-events, user-modify, user-select, user-focus.
+    // inert affects pointer-events, user-select, user-focus.
     // Do the union of all them (minus
     // nsChangeHint_NeutralChange which isn't needed if there's any other hint).
     hint |= NS_STYLE_HINT_VISUAL | kPointerEventsHint;
