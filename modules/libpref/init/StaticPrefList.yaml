@@ -15560,11 +15560,6 @@
   value: false
   mirror: once
 
-- name: places.frecency.pages.alternative.maxDaysFromToday
-  type: uint32_t
-  value: 60
-  mirror: once
-
 - name: places.frecency.pages.alternative.veryHighWeight
   type: uint32_t
   value: 200
