@@ -60,11 +60,6 @@ function handleRequest(request, response) {
     DEBUG(" ------------ GET --------------- ");
     response.setHeader("Content-Type", "application/json", false);
     switch (request.queryString) {
-      case "clear":
-        setState("beaconData", "");
-        setState("beaconMimetype", "");
-        setOurState(null);
-        break;
       case "getLastBeaconCors":
         // Allow CORS responses of the last beacon
         var originHeader = request.getHeader("origin");
