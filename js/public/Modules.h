@@ -155,12 +155,7 @@ extern JS_PUBLIC_API void SetModuleMetadataHook(JSRuntime* rt,
  */
 extern JS_PUBLIC_API bool FinishLoadingImportedModule(
     JSContext* cx, Handle<JSObject*> referrer, Handle<Value> referencingPrivate,
-    Handle<JSObject*> moduleRequest, Handle<Value> statePrivate,
-    Handle<JSObject*> result);
-
-extern JS_PUBLIC_API bool FinishLoadingImportedModule(
-    JSContext* cx, Handle<JSObject*> referrer, Handle<Value> referencingPrivate,
-    Handle<JSObject*> moduleRequest, Handle<JSObject*> promise,
+    Handle<JSObject*> moduleRequest, Handle<Value> payload,
     Handle<JSObject*> result, bool usePromise);
 
 /**
