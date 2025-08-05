@@ -1983,7 +1983,7 @@ const MESSAGES = () => {
         ],
       },
       targeting:
-        "'browser.ipProtection.enabled' | preferenceValue && !hasActiveEnterprisePolicies && isFxAEnabled && !isFxASignedIn && !activeNotifications && (messageImpressions.IP_PROTECTION_INTRODUCTION_CALLOUT_SECOND.length == 0)",
+        "'browser.ipProtection.enabled' | preferenceValue && !hasActiveEnterprisePolicies && isFxAEnabled && !isFxASignedIn && !activeNotifications && (messageImpressions.IP_PROTECTION_CALLOUT_SECOND || [])  | length == 0",
       trigger: {
         id: "ipProtectionReady",
       },
