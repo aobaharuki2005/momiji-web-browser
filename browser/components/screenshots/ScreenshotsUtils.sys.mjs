@@ -1350,40 +1350,53 @@ export const ScreenshotsCustomizableWidget = {
         );
       },
     });
-    // If Nimbus tells us the widget should be placed and visible by default, first check we
-    // didn't already handle this
-    const alreadyPlacedByNimbus = Services.prefs.getBoolPref(
-      "screenshots.browser.component.buttonOnToolbarByDefault.handled",
-      false
-    );
-    if (
-      !alreadyPlacedByNimbus &&
-      !lazy.CustomizableUI.getPlacementOfWidget(widgetId)?.area &&
-      lazy.NimbusFeatures.screenshots.getVariable("buttonOnToolbarByDefault")
-    ) {
-      // We'll place the button after the urlbar if its in the nav-bar
-      let buttonPosition = 0;
-      const AREA_NAVBAR = lazy.CustomizableUI.AREA_NAVBAR;
-      const urlbarPlacement =
-        lazy.CustomizableUI.getPlacementOfWidget("urlbar-container");
-      if (urlbarPlacement?.area == AREA_NAVBAR) {
-        buttonPosition = urlbarPlacement.position + 1;
-        const widgetIds = lazy.CustomizableUI.getWidgetIdsInArea(AREA_NAVBAR);
-        // we want to go after the spring widget when there's one directly after the urlbar
-        if (widgetIds[buttonPosition].includes("special-spring")) {
-          buttonPosition++;
-        }
-      }
-      lazy.CustomizableUI.addWidgetToArea(
-        widgetId,
-        AREA_NAVBAR,
-        buttonPosition
-      );
-      Services.prefs.setBoolPref(
+    const maybePlaceToolbarButton = () => {
+      // If Nimbus tells us the widget should be placed and visible by default, first check we
+      // didn't already handle this
+      const buttonPlacedByNimbus = Services.prefs.getBoolPref(
         "screenshots.browser.component.buttonOnToolbarByDefault.handled",
-        true
+        false
       );
-    }
+      if (
+        !buttonPlacedByNimbus &&
+        !lazy.CustomizableUI.getPlacementOfWidget(widgetId)?.area &&
+        lazy.NimbusFeatures.screenshots.getVariable("buttonOnToolbarByDefault")
+      ) {
+        // We'll place the button after the urlbar if its in the nav-bar
+        let buttonPosition = 0;
+        const AREA_NAVBAR = lazy.CustomizableUI.AREA_NAVBAR;
+        const urlbarPlacement =
+          lazy.CustomizableUI.getPlacementOfWidget("urlbar-container");
+        if (urlbarPlacement?.area == AREA_NAVBAR) {
+          buttonPosition = urlbarPlacement.position + 1;
+          const widgetIds = lazy.CustomizableUI.getWidgetIdsInArea(AREA_NAVBAR);
+          // we want to go after the spring widget when there's one directly after the urlbar
+          if (widgetIds[buttonPosition].includes("special-spring")) {
+            buttonPosition++;
+          }
+        }
+        lazy.CustomizableUI.addWidgetToArea(
+          widgetId,
+          AREA_NAVBAR,
+          buttonPosition
+        );
+        Services.prefs.setBoolPref(
+          "screenshots.browser.component.buttonOnToolbarByDefault.handled",
+          true
+        );
+      }
+    };
+    // Check now and handle future Nimbus updates
+    maybePlaceToolbarButton();
+
+    lazy.NimbusFeatures.screenshots.onUpdate(() => {
+      const enrollment =
+        lazy.NimbusFeatures.screenshots.getEnrollmentMetadata();
+      if (!enrollment) {
+        return;
+      }
+      maybePlaceToolbarButton();
+    });
   },
 
   uninit() {

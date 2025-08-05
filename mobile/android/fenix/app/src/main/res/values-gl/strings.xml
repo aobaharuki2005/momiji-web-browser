@@ -3767,7 +3767,7 @@
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Instalar o widget de busca</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget_2">Explora o widget de busca</string>
+  <string name="setup_checklist_task_search_widget_2">Explorar o widget de busca</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 
