@@ -114,8 +114,10 @@
 !define MOZ_MAINTENANCE_SERVICE
 #endif
 
-# This can be undefined to disable building/distributing the desktop launcher app
-!define DESKTOP_LAUNCHER_APP
+# Only build on platforms that have WinHTTP.h (i.e. not mingw)
+#ifdef HAVE_WINHTTP_H
+!define DESKTOP_LAUNCHER_ENABLED
+#endif
 
 #ifdef MOZ_BITS_DOWNLOAD
 !define MOZ_BITS_DOWNLOAD

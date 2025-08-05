@@ -314,6 +314,8 @@ context_is_current:
   StrCmp $IDLA_IsInstalled "1" clean_up do_install
 do_install:
   ClearErrors
+  Call DeleteDesktopShortcuts
+  SetShellVarContext current
   CopyFiles /SILENT /FILESONLY "$INSTDIR\desktop-launcher\desktop-launcher.exe" "$DESKTOP\${BrandShortName}.exe"
   ; If there was an error copying the file, don't set the reg key
   IfErrors clean_up
@@ -375,13 +377,6 @@ FunctionEnd
   ${EndIf}
   WriteRegDWORD HKLM "$R1" "IconsVisible" 1
   WriteRegDWORD HKCU "$R1" "IconsVisible" 1
-
-!ifdef DESKTOP_LAUNCHER_APP
-  Call InstallDesktopLauncherApp
-  Call DeleteDesktopShortcuts
-!else
-  Call CreateDesktopShortcuts
-!endif
 
   SetShellVarContext all  ; Set $SMPROGRAMS to All Users
   ${Unless} ${FileExists} "$SMPROGRAMS\${BrandShortName}.lnk"
@@ -1622,8 +1617,13 @@ FunctionEnd
   ${Unless} ${FileExists} "$0"
     ${LogStartMenuShortcut} "${BrandShortName}.lnk"
     ${LogQuickLaunchShortcut} "${BrandShortName}.lnk"
+!ifndef DESKTOP_LAUNCHER_ENABLED
     ${LogDesktopShortcut} "${BrandShortName}.lnk"
+!endif
   ${EndUnless}
+!ifdef DESKTOP_LAUNCHER_ENABLED
+  Call InstallDesktopLauncherApp
+!endif
 !macroend
 !define CreateShortcutsLog "!insertmacro CreateShortcutsLog"
 

@@ -643,9 +643,8 @@ Section "-Application" APP_IDX
     SetShellVarContext current
   ${EndIf}
 
-!ifdef DESKTOP_LAUNCHER_APP
+!ifdef DESKTOP_LAUNCHER_ENABLED
   Call InstallDesktopLauncherApp
-  Call DeleteDesktopShortcuts
 !else
   ${If} $AddDesktopSC == 1
     ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"

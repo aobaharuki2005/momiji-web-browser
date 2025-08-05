@@ -16,8 +16,8 @@ elif CONFIG["MOZ_BRANDING_DIRECTORY"] == "browser/branding/aurora":
 else:
     DEFINES["MOZ_BRANDING_IS_UNOFFICIAL"] = 1
 
-
-if CONFIG["OS_ARCH"] == "WINNT":
+# Only build on platforms that have WinHTTP.h (i.e. not mingw)
+if CONFIG["OS_ARCH"] == "WINNT" and CONFIG["HAVE_WINHTTP_H"]:
     UNIFIED_SOURCES += [
         "../../download_firefox.cpp",
         "../../file_sink.cpp",
