@@ -207,6 +207,28 @@ class ReviewPromptMiddlewareTest {
         )
     }
 
+    @Test
+    fun `WHEN evalJexl returns false THEN isDefaultBrowserTrigger returns false`() {
+        val fakeNimbusMessagingHelperInterfaceFalse = FakeNimbusMessagingHelperInterface(false)
+        val jexlHelper = fakeNimbusMessagingHelperInterfaceFalse.fakeJexlHelper
+
+        isDefaultBrowserTrigger(jexlHelper)
+
+        // We are not testing the internals of the evalJexl function so the expression is redundant.
+        assertFalse(jexlHelper.evalJexl(""))
+    }
+
+    @Test
+    fun `WHEN evalJexl returns true THEN isDefaultBrowserTrigger returns true`() {
+        val fakeNimbusMessagingHelperInterfaceFalse = FakeNimbusMessagingHelperInterface(true)
+        val jexlHelper = fakeNimbusMessagingHelperInterfaceFalse.fakeJexlHelper
+
+        isDefaultBrowserTrigger(jexlHelper)
+
+        // We are not testing the internals of the evalJexl function so the expression is redundant.
+        assertTrue(jexlHelper.evalJexl(""))
+    }
+
     private fun assertNoOp(action: ReviewPromptAction) {
         val withoutMiddleware = AppStore()
         withoutMiddleware.dispatch(action).joinBlocking()
@@ -224,5 +246,13 @@ class ReviewPromptMiddlewareTest {
 
     private companion object {
         const val TEST_TIME_NOW = 1598416882805L
+    }
+
+    private class FakeNimbusMessagingHelperInterface(evalJexlValue: Boolean) {
+        val fakeJexlHelper = object : NimbusMessagingHelperInterface {
+            override fun evalJexl(expression: String): Boolean = evalJexlValue
+            override fun getUuid(template: String): String? = null
+            override fun stringFormat(template: String, uuid: String?): String = ""
+        }
     }
 }

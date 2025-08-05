@@ -4,8 +4,10 @@
 
 package org.mozilla.fenix.reviewprompt
 
+import androidx.annotation.VisibleForTesting
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
+import mozilla.components.service.nimbus.evalJexlSafe
 import mozilla.components.service.nimbus.messaging.use
 import org.mozilla.experiments.nimbus.NimbusMessagingHelperInterface
 import org.mozilla.fenix.components.appstate.AppAction
@@ -15,6 +17,7 @@ import org.mozilla.fenix.components.appstate.AppAction.ReviewPromptAction.Review
 import org.mozilla.fenix.components.appstate.AppAction.ReviewPromptAction.ShowCustomReviewPrompt
 import org.mozilla.fenix.components.appstate.AppAction.ReviewPromptAction.ShowPlayStorePrompt
 import org.mozilla.fenix.components.appstate.AppState
+import org.mozilla.fenix.messaging.CustomAttributeProvider
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -50,6 +53,7 @@ class ReviewPromptMiddleware(
         fun subCriteria(settings: Settings): (NimbusMessagingHelperInterface) -> Sequence<Boolean> = {
             sequence {
                 yield(legacyReviewPromptTrigger(settings))
+                yield(isDefaultBrowserTrigger(it))
             }
         }
     }
@@ -125,8 +129,17 @@ fun hasNotBeenPromptedLastFourMonths(settings: Settings, timeNowInMillis: () -> 
  * Matches logic from ReviewPromptController.shouldShowPrompt, which has been deleted.
  * Kept for parity. To be replaced by a set of new triggers.
  */
-fun legacyReviewPromptTrigger(settings: Settings): Boolean {
+@VisibleForTesting
+internal fun legacyReviewPromptTrigger(settings: Settings): Boolean {
     val hasOpenedAtLeastFiveTimes =
         settings.numberOfAppLaunches >= NUMBER_OF_LAUNCHES_REQUIRED
     return settings.isDefaultBrowser && hasOpenedAtLeastFiveTimes
 }
+
+/**
+ * The raw string "is_default_browser" must match the json value provided in
+ * [CustomAttributeProvider.getCustomAttributes].
+ */
+@VisibleForTesting
+internal fun isDefaultBrowserTrigger(jexlHelper: NimbusMessagingHelperInterface) =
+    jexlHelper.evalJexlSafe("is_default_browser")
