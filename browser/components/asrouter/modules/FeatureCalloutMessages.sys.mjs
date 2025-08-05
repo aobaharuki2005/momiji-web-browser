@@ -1941,7 +1941,6 @@ const MESSAGES = () => {
                 action: {
                   type: "OPEN_URL",
                   data: {
-                    // Learn more about VPN URL to be updated with Bug 1975221
                     args: "https://support.mozilla.org/en-US/kb/use-ip-concealment-in-firefox",
                     where: "tabshifted",
                   },
@@ -1959,9 +1958,17 @@ const MESSAGES = () => {
                   dismiss: true,
                   type: "SHOW_FIREFOX_ACCOUNTS",
                   data: {
-                    // Sign-in params to be updated with Bug 1975221
-                    entrypoint: "",
                     where: "tabshifted",
+                    entrypoint: "desktop-fx-vpn",
+                    extraParams: {
+                      service: "sync",
+                      entrypoint_experiment: "fx-vpn-pilot",
+                      entrypoint_variation: "alpha",
+                      utm_source: "callout",
+                      utm_campaign: "fx-vpn-pilot",
+                      utm_medium: "firefox-desktop",
+                      utm_term: "fx-vpn-pilot-callout-1",
+                    },
                   },
                 },
               },
@@ -2046,7 +2053,6 @@ const MESSAGES = () => {
                 action: {
                   type: "OPEN_URL",
                   data: {
-                    // Learn more about VPN URL to be updated with Bug 1975221
                     args: "https://support.mozilla.org/en-US/kb/use-ip-concealment-in-firefox",
                     where: "tabshifted",
                   },
@@ -2064,9 +2070,17 @@ const MESSAGES = () => {
                   dismiss: true,
                   type: "SHOW_FIREFOX_ACCOUNTS",
                   data: {
-                    // Sign-in params to be updated with Bug 1975221
-                    entrypoint: "",
                     where: "tabshifted",
+                    entrypoint: "desktop-fx-vpn",
+                    extraParams: {
+                      service: "sync",
+                      entrypoint_experiment: "fx-vpn-pilot",
+                      entrypoint_variation: "alpha",
+                      utm_source: "callout",
+                      utm_campaign: "fx-vpn-pilot",
+                      utm_medium: "firefox-desktop",
+                      utm_term: "fx-vpn-pilot-callout-2",
+                    },
                   },
                 },
               },
