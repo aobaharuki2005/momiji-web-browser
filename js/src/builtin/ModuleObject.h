@@ -505,9 +505,8 @@ using VisitedModuleSet =
 // The fields of a GraphLoadingState Record, as described in:
 // https://tc39.es/ecma262/#graphloadingstate-record
 struct GraphLoadingStateRecord {
-  explicit GraphLoadingStateRecord(JSContext* cx);
-  GraphLoadingStateRecord(JSContext* cx,
-                          JS::LoadModuleResolvedCallback resolved,
+  GraphLoadingStateRecord() = default;
+  GraphLoadingStateRecord(JS::LoadModuleResolvedCallback resolved,
                           JS::LoadModuleRejectedCallback rejected);
 
   void trace(JSTracer* trc);

@@ -1519,12 +1519,11 @@ bool ModuleObject::createSyntheticEnvironment(JSContext* cx,
 
 ///////////////////////////////////////////////////////////////////////////
 // GraphLoadingStateRecordObject
+
 GraphLoadingStateRecord::GraphLoadingStateRecord(
-    JSContext*, JS::LoadModuleResolvedCallback resolved,
+    JS::LoadModuleResolvedCallback resolved,
     JS::LoadModuleRejectedCallback rejected)
     : resolved(resolved), rejected(rejected) {}
-
-GraphLoadingStateRecord::GraphLoadingStateRecord(JSContext*) {}
 
 void GraphLoadingStateRecord::trace(JSTracer* trc) { visited.trace(trc); }
 
@@ -1532,7 +1531,7 @@ void GraphLoadingStateRecord::trace(JSTracer* trc) { visited.trace(trc); }
 const JSClass GraphLoadingStateRecordObject::class_ = {
     "GraphLoadingStateRecordObject",
     JSCLASS_HAS_RESERVED_SLOTS(GraphLoadingStateRecordObject::SlotCount) |
-        JSCLASS_FOREGROUND_FINALIZE,
+        JSCLASS_BACKGROUND_FINALIZE,
     &GraphLoadingStateRecordObject::classOps_,
 };
 static_assert(GraphLoadingStateRecordObject::StateSlot == 0);
@@ -1559,22 +1558,16 @@ GraphLoadingStateRecordObject* GraphLoadingStateRecordObject::create(
   Rooted<GraphLoadingStateRecordObject*> self(
       cx, NewObjectWithGivenProto<GraphLoadingStateRecordObject>(cx, nullptr));
   if (!self) {
+    return nullptr;
+  }
+
+  auto* state = cx->new_<GraphLoadingStateRecord>(resolved, rejected);
+  if (!state) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
 
-  {
-    Rooted<UniquePtr<GraphLoadingStateRecord>> state(
-        cx, cx->make_unique<GraphLoadingStateRecord>(cx, resolved, rejected));
-    if (!state) {
-      ReportOutOfMemory(cx);
-      return nullptr;
-    }
-
-    InitReservedSlot(self, StateSlot, state.release(),
-                     MemoryUse::GraphLoadingStateRecord);
-  }
-
+  InitReservedSlot(self, StateSlot, state, MemoryUse::GraphLoadingStateRecord);
   self->initReservedSlot(IsLoadingSlot, Int32Value(isLoading));
   self->initReservedSlot(PendingModulesCountSlot,
                          Int32Value(pendingModulesCount));
@@ -1589,22 +1582,16 @@ GraphLoadingStateRecordObject* GraphLoadingStateRecordObject::create(
   Rooted<GraphLoadingStateRecordObject*> self(
       cx, NewObjectWithGivenProto<GraphLoadingStateRecordObject>(cx, nullptr));
   if (!self) {
+    return nullptr;
+  }
+
+  auto* state = cx->new_<GraphLoadingStateRecord>();
+  if (!state) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
 
-  {
-    Rooted<UniquePtr<GraphLoadingStateRecord>> state(
-        cx, cx->make_unique<GraphLoadingStateRecord>(cx));
-    if (!state) {
-      ReportOutOfMemory(cx);
-      return nullptr;
-    }
-
-    InitReservedSlot(self, StateSlot, state.release(),
-                     MemoryUse::GraphLoadingStateRecord);
-  }
-
+  InitReservedSlot(self, StateSlot, state, MemoryUse::GraphLoadingStateRecord);
   self->initReservedSlot(PromiseSlot, ObjectValue(*promise));
   self->initReservedSlot(IsLoadingSlot, Int32Value(isLoading));
   self->initReservedSlot(PendingModulesCountSlot,
@@ -1682,9 +1669,7 @@ void GraphLoadingStateRecordObject::finalize(JS::GCContext* gcx,
   auto* self = &obj->as<GraphLoadingStateRecordObject>();
   Value stateValue = self->getReservedSlot(StateSlot);
   if (!stateValue.isUndefined()) {
-    JS::AutoSuppressGCAnalysis noanal;
-    GraphLoadingStateRecord* state =
-        static_cast<GraphLoadingStateRecord*>(stateValue.toPrivate());
+    auto* state = static_cast<GraphLoadingStateRecord*>(stateValue.toPrivate());
     gcx->delete_(obj, state, MemoryUse::GraphLoadingStateRecord);
   }
 }
