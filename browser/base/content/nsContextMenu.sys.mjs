@@ -316,6 +316,7 @@ export class nsContextMenu {
     }
 
     this.hasTextFragments = context.hasTextFragments;
+    this.textDirectiveTarget = context.textDirectiveTarget;
     this.textFragmentURL = null;
   } // setContext
 
@@ -450,7 +451,7 @@ export class nsContextMenu {
         this.onEditable ||
         this.browser.currentURI.schemeIs("view-source")
       ) &&
-      this.isContentSelected;
+      this.textDirectiveTarget;
     this.showItem("context-copy-link-to-highlight", shouldShow);
     this.showItem("context-copy-clean-link-to-highlight", shouldShow);
 
