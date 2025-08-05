@@ -87,7 +87,7 @@ linux64-gcc-14:
             - mpc-1.0.3
             - mpfr-3.1.4
 
-linux64-gcc-sixgill:
+linux64-gcc-10-sixgill:
     description: "sixgill GCC plugin build"
     treeherder:
         symbol: TL(sixgill)
@@ -98,10 +98,10 @@ linux64-gcc-sixgill:
         toolchain-artifact: public/build/sixgill.tar.xz
     fetches:
         fetch:
-            - gcc-9.5.0
+            - gcc-10.5.0
             - gmp-6.1.0
             - isl-0.16.1
             - mpc-1.0.3
             - mpfr-3.1.4
         toolchain:
-            - linux64-gcc-9
+            - linux64-gcc-10
