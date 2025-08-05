@@ -209,6 +209,10 @@ add_task(async function () {
             { node: inspectee.getElementById("pseudo"), type: "attributeName" },
             { node: inspectee.getElementById("arrows"), type: "attributeName" },
             { node: inspectee.getElementById("💩"), type: "attributeName" },
+            {
+              node: inspectee.getElementById("with-hyphen"),
+              type: "attributeName",
+            },
           ],
         },
         {
@@ -310,6 +314,26 @@ add_task(async function () {
           search: "id('arrows')",
           expected: [
             { node: inspectee.querySelector("#arrows"), type: "xpath" },
+          ],
+        },
+        {
+          desc: "Search using div + id with hyphen",
+          search: "div#with-hyphen",
+          expected: [
+            {
+              node: inspectee.querySelector("div#with-hyphen"),
+              type: "selector",
+            },
+          ],
+        },
+        {
+          desc: "Search using div + class with hyphen",
+          search: "div.with-hyphen",
+          expected: [
+            {
+              node: inspectee.querySelector("div.with-hyphen"),
+              type: "selector",
+            },
           ],
         },
       ];
