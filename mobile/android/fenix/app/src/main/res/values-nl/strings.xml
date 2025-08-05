@@ -1722,6 +1722,8 @@
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">Help %1$s voor iedereen beter te maken. Mozilla-werknemers gebruiken de door u verzonden informatie om websiteproblemen op te lossen.</string>
   <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">Uw rapport helpt ons problemen in %1$s te begrijpen en op te lossen, om het voor iedereen te verbeteren. Meer info</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">Uw rapport helpt ons problemen in %1$s te begrijpen en op te lossen, om het voor iedereen te verbeteren. %2$s</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Meer info</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -3764,6 +3766,8 @@
   <string name="setup_checklist_task_explore_extensions">Extensies verkennen</string>
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget" moz:removedIn="143" tools:ignore="UnusedResources">Zoekwidget installeren</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">Zoekwidget verkennen</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 
