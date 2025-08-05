@@ -47,7 +47,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   OnboardingMessageProvider:
     "resource:///modules/asrouter/OnboardingMessageProvider.sys.mjs",
-  PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
+  PageDataService:
+    "moz-src:///browser/components/pagedata/PageDataService.sys.mjs",
   PdfJs: "resource://pdf.js/PdfJs.sys.mjs",
   PlacesBrowserStartup:
     "moz-src:///browser/components/places/PlacesBrowserStartup.sys.mjs",

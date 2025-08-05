@@ -1334,21 +1334,6 @@
       "resource:///modules/ipprotection/IPProtectionService.sys.mjs": [
         "browser/components/ipprotection/IPProtectionService.sys.mjs"
       ],
-      "resource:///modules/pagedata/OpenGraphPageData.sys.mjs": [
-        "browser/components/pagedata/OpenGraphPageData.sys.mjs"
-      ],
-      "resource:///modules/pagedata/PageDataSchema.sys.mjs": [
-        "browser/components/pagedata/PageDataSchema.sys.mjs"
-      ],
-      "resource:///modules/pagedata/PageDataService.sys.mjs": [
-        "browser/components/pagedata/PageDataService.sys.mjs"
-      ],
-      "resource:///modules/pagedata/SchemaOrgPageData.sys.mjs": [
-        "browser/components/pagedata/SchemaOrgPageData.sys.mjs"
-      ],
-      "resource:///modules/pagedata/TwitterPageData.sys.mjs": [
-        "browser/components/pagedata/TwitterPageData.sys.mjs"
-      ],
       "resource:///modules/policies/BookmarksPolicies.sys.mjs": [
         "browser/components/enterprisepolicies/helpers/BookmarksPolicies.sys.mjs"
       ],

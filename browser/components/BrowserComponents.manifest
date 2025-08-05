@@ -83,7 +83,7 @@ category browser-best-effort-idle-startup moz-src:///browser/components/StartupT
 # App shutdown consumers
 category browser-quit-application-granted resource:///modules/BrowserUsageTelemetry.sys.mjs BrowserUsageTelemetry.uninit
 category browser-quit-application-granted moz-src:///browser/components/places/Interactions.sys.mjs Interactions.uninit
-category browser-quit-application-granted resource:///modules/pagedata/PageDataService.sys.mjs PageDataService.uninit
+category browser-quit-application-granted moz-src:///browser/components/pagedata/PageDataService.sys.mjs PageDataService.uninit
 category browser-quit-application-granted resource://gre/modules/PageThumbs.sys.mjs PageThumbs.uninit
 category browser-quit-application-granted resource://gre/modules/NewTabUtils.sys.mjs NewTabUtils.uninit
 category browser-quit-application-granted resource://normandy/Normandy.sys.mjs Normandy.uninit
