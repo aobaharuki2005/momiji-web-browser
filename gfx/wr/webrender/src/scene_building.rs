@@ -3690,7 +3690,7 @@ impl<'a> SceneBuilder<'a> {
                 .unwrap();
 
             TextRun {
-                glyphs: Arc::new(glyphs),
+                glyphs,
                 font,
                 shadow: false,
                 requested_raster_space,
