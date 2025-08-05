@@ -13502,7 +13502,7 @@
 # Enables the predictive service.
 - name: network.predictor.enabled
   type: bool
-  value: true
+  value: false
   mirror: always
 
 # Disable requests to 0.0.0.0
@@ -13553,7 +13553,7 @@
 
 - name: network.predictor.enable-prefetch
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: false
   mirror: always
 
 - name: network.predictor.page-degradation.day
