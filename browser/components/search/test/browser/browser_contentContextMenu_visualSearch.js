@@ -418,9 +418,14 @@ async function openAndCheckMenu({
     "The visual search menuitem should be shown as expected"
   );
   if (shouldBeShown) {
+    let expectedLabel = `Search Image with ${expectedEngineNameInLabel}`;
+    await TestUtils.waitForCondition(
+      () => item.label == expectedLabel,
+      "Waiting for expected label to be set on item: " + expectedLabel
+    );
     Assert.equal(
       item.label,
-      `Search Image with ${expectedEngineNameInLabel}`,
+      expectedLabel,
       "The visual search menuitem should have the expected label"
     );
     await checkNewBadge({ item, shouldHaveNewBadge });
