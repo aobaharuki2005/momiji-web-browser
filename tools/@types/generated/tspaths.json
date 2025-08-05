@@ -74,8 +74,14 @@
       "chrome://browser/content/genai/content/model-optin.mjs": [
         "browser/components/genai/content/model-optin.mjs"
       ],
-      "chrome://browser/content/ipprotection/ipprotection-panel.mjs": [
-        "browser/components/ipprotection/content/ipprotection-panel.mjs"
+      "chrome://browser/content/ipprotection/ipprotection-constants.mjs": [
+        "browser/components/ipprotection/content/ipprotection-constants.mjs"
+      ],
+      "chrome://browser/content/ipprotection/ipprotection-header.mjs": [
+        "browser/components/ipprotection/content/ipprotection-header.mjs"
+      ],
+      "chrome://browser/content/ipprotection/ipprotection-signedout.mjs": [
+        "browser/components/ipprotection/content/ipprotection-signedout.mjs"
       ],
       "chrome://browser/content/migration/migration-wizard-constants.mjs": [
         "browser/components/migration/content/migration-wizard-constants.mjs"
@@ -122,6 +128,9 @@
       "chrome://browser/content/sidebar/sidebar-panel-header.mjs": [
         "browser/components/sidebar/sidebar-panel-header.mjs"
       ],
+      "chrome://browser/content/sidebar/sidebar-pins-promo.mjs": [
+        "browser/components/sidebar/sidebar-pins-promo.mjs"
+      ],
       "chrome://browser/content/tabbrowser/tab-hover-preview.mjs": [
         "browser/components/tabbrowser/content/tab-hover-preview.mjs"
       ],
@@ -130,6 +139,9 @@
       ],
       "chrome://browser/content/translations/TranslationsPanelShared.sys.mjs": [
         "browser/components/translations/content/TranslationsPanelShared.sys.mjs"
+      ],
+      "chrome://browser/content/webrtc/webrtc-preview.mjs": [
+        "browser/components/webrtc/content/webrtc-preview/webrtc-preview.mjs"
       ],
       "chrome://devtools-startup/content/DevToolsShim.sys.mjs": [
         "devtools/startup/DevToolsShim.sys.mjs"
@@ -1348,6 +1360,9 @@
       ],
       "resource:///modules/ipprotection/IPProtectionPanel.sys.mjs": [
         "browser/components/ipprotection/IPProtectionPanel.sys.mjs"
+      ],
+      "resource:///modules/ipprotection/IPProtectionService.sys.mjs": [
+        "browser/components/ipprotection/IPProtectionService.sys.mjs"
       ],
       "resource:///modules/pagedata/OpenGraphPageData.sys.mjs": [
         "browser/components/pagedata/OpenGraphPageData.sys.mjs"
@@ -2650,6 +2665,9 @@
       ],
       "resource://devtools/client/inspector/grids/utils/utils.js": [
         "devtools/client/inspector/grids/utils/utils.js"
+      ],
+      "resource://devtools/client/inspector/inspector.js": [
+        "devtools/client/inspector/inspector.js"
       ],
       "resource://devtools/client/inspector/layout/components/LayoutApp.js": [
         "devtools/client/inspector/layout/components/LayoutApp.js"
@@ -5366,6 +5384,9 @@
       "resource://gre/modules/AppMenuNotifications.sys.mjs": [
         "toolkit/modules/AppMenuNotifications.sys.mjs"
       ],
+      "resource://gre/modules/AppServicesTracing.sys.mjs": [
+        "toolkit/modules/AppServicesTracing.sys.mjs"
+      ],
       "resource://gre/modules/AppUpdater.sys.mjs": [
         "toolkit/mozapps/update/AppUpdater.sys.mjs"
       ],
@@ -6257,8 +6278,8 @@
       "resource://gre/modules/ValueExtractor.sys.mjs": [
         "dom/manifest/ValueExtractor.sys.mjs"
       ],
-      "resource://gre/modules/WPTMessagesParent.sys.mjs": [
-        "toolkit/components/extensions/WPTMessagesParent.sys.mjs"
+      "resource://gre/modules/WPTEventsParent.sys.mjs": [
+        "toolkit/components/extensions/WPTEventsParent.sys.mjs"
       ],
       "resource://gre/modules/WebAuthnFeature.sys.mjs": [
         "toolkit/components/satchel/integrations/WebAuthnFeature.sys.mjs"

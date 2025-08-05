@@ -549,6 +549,12 @@ export namespace schema {
                     type: string;
                     enum: string[];
                 };
+                BaselineExceptions: {
+                    type: string;
+                };
+                ConvenienceExceptions: {
+                    type: string;
+                };
             };
         };
         EncryptedMediaExtensions: {

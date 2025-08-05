@@ -70,6 +70,8 @@ export namespace Targets {
     let UseHardcodedFontSubstitutes: number;
     let DiskStorageLimit: number;
     let WebCodecs: number;
+    let MaxTouchPoints: number;
+    let MaxTouchPointsCollapse: number;
     let IsAlwaysEnabledForPrecompute: number;
     let AllTargets: number;
 }

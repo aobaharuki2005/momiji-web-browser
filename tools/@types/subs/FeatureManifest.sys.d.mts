@@ -135,6 +135,14 @@ export const FeatureManifest: {
                 type: string;
                 description: string;
             };
+            visualSearchEnabled: {
+                type: string;
+                setPref: {
+                    branch: string;
+                    pref: string;
+                };
+                description: string;
+            };
         };
     };
     searchConfiguration: {
@@ -249,6 +257,14 @@ export const FeatureManifest: {
                     pref: string;
                     branch: string;
                 };
+                description: string;
+            };
+            marketMinKeywordLength: {
+                type: string;
+                description: string;
+            };
+            marketShowLessFrequentlyCap: {
+                type: string;
                 description: string;
             };
             mdnFeatureGate: {
@@ -892,6 +908,21 @@ export const FeatureManifest: {
             };
         };
     };
+    newtabPromoCard: {
+        description: string;
+        owner: string;
+        hasExposure: boolean;
+        variables: {
+            enabled: {
+                type: string;
+                description: string;
+                setPref: {
+                    branch: string;
+                    pref: string;
+                };
+            };
+        };
+    };
     newtabAdsReporting: {
         description: string;
         owner: string;
@@ -1304,21 +1335,6 @@ export const FeatureManifest: {
             };
         };
     };
-    newtabShortcutsExperiment: {
-        description: string;
-        owner: string;
-        hasExposure: boolean;
-        variables: {
-            refresh: {
-                type: string;
-                setPref: {
-                    branch: string;
-                    pref: string;
-                };
-                description: string;
-            };
-        };
-    };
     newtabSmartShortcuts: {
         description: string;
         owner: string;
@@ -1590,6 +1606,10 @@ export const FeatureManifest: {
         owner: string;
         hasExposure: boolean;
         variables: {
+            enabled: {
+                type: string;
+                description: string;
+            };
             listsEnabled: {
                 type: string;
                 description: string;
@@ -2036,6 +2056,17 @@ export const FeatureManifest: {
                     branch: string;
                     pref: string;
                 };
+                description: string;
+            };
+        };
+    };
+    screenshots: {
+        description: string;
+        owner: string;
+        hasExposure: boolean;
+        variables: {
+            buttonOnToolbarByDefault: {
+                type: string;
                 description: string;
             };
         };
@@ -2541,6 +2572,29 @@ export const FeatureManifest: {
         hasExposure: boolean;
         variables: {
             enabled: {
+                type: string;
+                fallbackPref: string;
+                description: string;
+            };
+        };
+    };
+    backgroundUpdateCheckPolicy: {
+        description: string;
+        owner: string;
+        applications: string[];
+        hasExposure: boolean;
+        variables: {
+            throttleEnabled: {
+                type: string;
+                fallbackPref: string;
+                description: string;
+            };
+            throttleAfterDays: {
+                type: string;
+                fallbackPref: string;
+                description: string;
+            };
+            throttleDebouncePeriodInHours: {
                 type: string;
                 fallbackPref: string;
                 description: string;
@@ -3979,30 +4033,6 @@ export const FeatureManifest: {
         hasExposure: boolean;
         variables: {
             enabled: {
-                description: string;
-                type: string;
-                setPref: {
-                    branch: string;
-                    pref: string;
-                };
-            };
-            image: {
-                description: string;
-                type: string;
-                setPref: {
-                    branch: string;
-                    pref: string;
-                };
-            };
-            audio: {
-                description: string;
-                type: string;
-                setPref: {
-                    branch: string;
-                    pref: string;
-                };
-            };
-            video: {
                 description: string;
                 type: string;
                 setPref: {
