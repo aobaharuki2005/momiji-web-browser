@@ -731,7 +731,8 @@ internal fun MozillaAccountMenuItem(
         }
 
         AuthenticationProblem -> {
-            label = stringResource(id = R.string.browser_menu_sign_back_in_to_sync)
+            label = account?.displayName ?: account?.email
+                    ?: stringResource(id = R.string.browser_menu_sign_back_in_to_sync)
             description = stringResource(id = R.string.browser_menu_syncing_paused_caption)
         }
 
