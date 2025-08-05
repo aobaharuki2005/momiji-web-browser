@@ -887,9 +887,6 @@
       "resource:///modules/ChromeWindowsLoginCrypto.sys.mjs": [
         "browser/components/migration/ChromeWindowsLoginCrypto.sys.mjs"
       ],
-      "resource:///modules/ContentAnalysis.sys.mjs": [
-        "browser/components/contentanalysis/content/ContentAnalysis.sys.mjs"
-      ],
       "resource:///modules/ContentCrashHandlers.sys.mjs": [
         "browser/modules/ContentCrashHandlers.sys.mjs"
       ],
