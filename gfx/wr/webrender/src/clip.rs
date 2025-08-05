@@ -1163,7 +1163,7 @@ impl ClipNodeInfo {
                             }
 
                             let task_id = rg_builder.add().init(
-                                RenderTask::new_image(props.descriptor.size, req, false)
+                                RenderTask::new_image(props.descriptor.size, req)
                             );
 
                             mask_tiles.push(VisibleMaskImageTile {
@@ -1182,7 +1182,7 @@ impl ClipNodeInfo {
                     let tile_range_start = mask_tiles.len();
 
                     let task_id = rg_builder.add().init(
-                        RenderTask::new_image(props.descriptor.size, request, false)
+                        RenderTask::new_image(props.descriptor.size, request)
                     );
 
                     mask_tiles.push(VisibleMaskImageTile {

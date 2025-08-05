@@ -93,7 +93,6 @@ pub struct DeferredResolve {
     pub address: GpuCacheAddress,
     pub image_properties: ImageProperties,
     pub rendering: ImageRendering,
-    pub is_composited: bool,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]

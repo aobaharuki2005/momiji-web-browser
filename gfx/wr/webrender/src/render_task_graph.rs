@@ -626,13 +626,12 @@ impl RenderTaskGraphBuilder {
                     cache_handle,
                     resource_cache,
                 ))
-            } else if let RenderTaskKind::Image(info) = &task.kind {
+            } else if let RenderTaskKind::Image(request) = &task.kind {
                 Some(resolve_image(
-                    info.request,
+                    *request,
                     resource_cache,
                     gpu_cache,
                     deferred_resolves,
-                    info.is_composited,
                 ))
             } else {
                 // General case (non-cached non-image tasks).

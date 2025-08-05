@@ -38,15 +38,6 @@ pub enum CompositorSurfaceKind {
     Overlay,
 }
 
-impl CompositorSurfaceKind {
-    pub fn is_composited(&self) -> bool {
-        match *self {
-            CompositorSurfaceKind::Blit => false,
-            CompositorSurfaceKind::Underlay | CompositorSurfaceKind::Overlay => true,
-        }
-    }
-}
-
 /// Describes details of an operation to apply to a native surface
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -1158,7 +1149,6 @@ impl CompositeState {
                 resource_cache,
                 gpu_cache,
                 deferred_resolves,
-                true,
             );
 
             if cache_item.texture_id != TextureSource::Invalid {

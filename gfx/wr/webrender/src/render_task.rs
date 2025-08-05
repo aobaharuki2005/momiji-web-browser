@@ -160,14 +160,6 @@ pub struct CachedTask {
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct ImageRequestTask {
-    pub request: ImageRequest,
-    pub is_composited: bool,
-}
-
-#[derive(Debug)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct CacheMaskTask {
     pub actual_rect: DeviceRect,
     pub root_spatial_node_index: SpatialNodeIndex,
@@ -379,7 +371,7 @@ pub struct RenderTaskData {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum RenderTaskKind {
-    Image(ImageRequestTask),
+    Image(ImageRequest),
     Cached(CachedTask),
     Picture(PictureTask),
     CacheMask(CacheMaskTask),
@@ -1097,7 +1089,6 @@ impl RenderTask {
     pub fn new_image(
         size: DeviceIntSize,
         request: ImageRequest,
-        is_composited: bool,
     ) -> Self {
         // Note: this is a special constructor for image render tasks that does not
         // do the render task size sanity check. This is because with SWGL we purposefully
@@ -1110,10 +1101,7 @@ impl RenderTask {
         RenderTask {
             location: RenderTaskLocation::CacheRequest { size, },
             children: TaskDependencies::new(),
-            kind: RenderTaskKind::Image(ImageRequestTask {
-                request,
-                is_composited,
-            }),
+            kind: RenderTaskKind::Image(request),
             free_after: PassId::MAX,
             render_on: PassId::MIN,
             uv_rect_handle: GpuCacheHandle::new(),

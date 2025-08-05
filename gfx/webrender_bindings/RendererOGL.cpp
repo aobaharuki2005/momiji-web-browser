@@ -60,8 +60,7 @@ class RendererRecordedFrame final : public layers::RecordedFrame {
 
 wr::WrExternalImage wr_renderer_lock_external_image(void* aObj,
                                                     wr::ExternalImageId aId,
-                                                    uint8_t aChannelIndex,
-                                                    bool aIsComposited) {
+                                                    uint8_t aChannelIndex) {
   RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
   RenderTextureHost* texture = renderer->GetRenderTexture(aId);
   MOZ_ASSERT(texture);
@@ -70,15 +69,6 @@ wr::WrExternalImage wr_renderer_lock_external_image(void* aObj,
                         << AsUint64(aId);
     return InvalidToWrExternalImage();
   }
-
-#if defined(MOZ_WAYLAND)
-  // Wayland native compositor doesn't use textures for direct compositing.
-  if (aIsComposited && texture->AsRenderDMABUFTextureHost() &&
-      renderer->GetCompositor()->CompositorType() ==
-          layers::WebRenderCompositor::WAYLAND) {
-    return texture->Lock(aChannelIndex, nullptr);
-  }
-#endif
 
   if (auto* gl = renderer->gl()) {
     return texture->Lock(aChannelIndex, gl);

@@ -24,7 +24,6 @@ pub fn resolve_image(
     resource_cache: &ResourceCache,
     gpu_cache: &mut GpuCache,
     deferred_resolves: &mut FrameVec<DeferredResolve>,
-    is_composited: bool,
 ) -> CacheItem {
     match resource_cache.get_image_properties(request.key) {
         Some(image_properties) => {
@@ -67,7 +66,6 @@ pub fn resolve_image(
                         image_properties,
                         address: gpu_cache.get_address(&cache_handle),
                         rendering: request.rendering,
-                        is_composited,
                     });
 
                     cache_item

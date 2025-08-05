@@ -196,7 +196,7 @@ impl ImageData {
                 );
 
                 let mut task_id = frame_state.rg_builder.add().init(
-                    RenderTask::new_image(size, request, false)
+                    RenderTask::new_image(size, request)
                 );
 
                 if let Some(external_image) = external_image {
@@ -361,7 +361,7 @@ impl ImageData {
                         );
 
                         let task_id = frame_state.rg_builder.add().init(
-                            RenderTask::new_image(size, request, false)
+                            RenderTask::new_image(size, request)
                         );
 
                         image_instance.visible_tiles.push(VisibleImageTile {
@@ -656,7 +656,6 @@ impl YuvImageData {
     pub fn update(
         &mut self,
         common: &mut PrimTemplateCommonData,
-        is_composited: bool,
         frame_state: &mut FrameBuildingState,
     ) {
 
@@ -677,11 +676,7 @@ impl YuvImageData {
             );
 
             let task_id = frame_state.rg_builder.add().init(
-                RenderTask::new_image(
-                    size,
-                    request,
-                    is_composited,
-                )
+                RenderTask::new_image(size, request)
             );
 
             self.src_yuv[channel] = Some(task_id);
