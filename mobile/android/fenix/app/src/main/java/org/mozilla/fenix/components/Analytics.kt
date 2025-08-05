@@ -136,7 +136,9 @@ class Analytics(
                 !context.settings().useNewCrashReporterDialog,
             runtimeTagProviders = listOf(
                 ReleaseRuntimeTagProvider(),
-                NimbusExperimentsRuntimeTagProvider(nimbusComponents.sdk),
+                NimbusExperimentsRuntimeTagProvider(
+                    nimbusApi = lazyMonitored { nimbusComponents.sdk },
+                ),
             ),
         )
     }

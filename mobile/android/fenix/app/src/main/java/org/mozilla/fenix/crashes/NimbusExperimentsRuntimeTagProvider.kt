@@ -14,11 +14,11 @@ import mozilla.components.service.nimbus.NimbusApi
  * @param nimbusApi the [NimbusApi] to use to get the active experiments
  */
 class NimbusExperimentsRuntimeTagProvider(
-    private val nimbusApi: NimbusApi,
+    private val nimbusApi: Lazy<NimbusApi>,
 ) : RuntimeTagProvider {
 
     override fun invoke(): Map<String, String> {
-        val activeExperiments = nimbusApi.getActiveExperiments()
+        val activeExperiments = nimbusApi.value.getActiveExperiments()
         return activeExperiments.associate { experiment ->
             experiment.slug to experiment.branchSlug
         }

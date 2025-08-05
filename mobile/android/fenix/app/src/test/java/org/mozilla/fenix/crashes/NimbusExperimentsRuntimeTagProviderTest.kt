@@ -16,7 +16,7 @@ import org.mozilla.fenix.nimbus.TestNimbusApi
 class NimbusExperimentsRuntimeTagProviderTest {
 
     private val fakeNimbusApi = FakeNimbusApi()
-    private val runtimeTagProvider = NimbusExperimentsRuntimeTagProvider(fakeNimbusApi)
+    private val runtimeTagProvider = NimbusExperimentsRuntimeTagProvider(lazy { fakeNimbusApi })
 
     @Test
     fun `GIVEN active experiments, then the experiments are converted to runtime tags map`() {
