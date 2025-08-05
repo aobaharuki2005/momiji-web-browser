@@ -1296,7 +1296,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   if (mOverrideReferrerInfo) {
     args.overrideReferrerInfo() = ToRefPtr(std::move(mOverrideReferrerInfo));
   }
-  args.cookieHeaders().SwapElements(mCookieHeaders);
+  args.cookieChanges().SwapElements(mCookieChanges);
 
   nsHttpRequestHead* requestHead = chan->GetRequestHead();
   // !!! We need to lock headers and please don't forget to unlock them !!!
@@ -2191,11 +2191,10 @@ void HttpChannelParent::SetHttpChannelFromEarlyHintPreloader(
   mChannel = aChannel;
 }
 
-void HttpChannelParent::SetCookieHeaders(
-    const nsTArray<nsCString>& aCookieHeaders) {
+void HttpChannelParent::SetCookieChanges(nsTArray<CookieChange>&& aChanges) {
   LOG(("HttpChannelParent::SetCookie [this=%p]", this));
   MOZ_ASSERT(!mAfterOnStartRequestBegun);
-  MOZ_ASSERT(mCookieHeaders.IsEmpty());
+  MOZ_ASSERT(mCookieChanges.IsEmpty());
 
   // The loadGroup of the channel in the parent process could be null in the
   // XPCShell content process test, see test_cookiejars_wrap.js. In this case,
@@ -2207,7 +2206,7 @@ void HttpChannelParent::SetCookieHeaders(
       mChannel->IsBrowsingContextDiscarded()) {
     return;
   }
-  mCookieHeaders.AppendElements(aCookieHeaders);
+  mCookieChanges.AppendElements(aChanges);
 }
 
 }  // namespace mozilla::net

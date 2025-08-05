@@ -334,14 +334,13 @@ IPCResult CookieServiceParent::SetCookies(
     return IPC_FAIL(this, "aHost must not be null");
   }
 
-  // We set this to true while processing this cookie update, to make sure
-  // we don't send it back to the same content process.
-  mProcessingCookie = true;
+  // We set the cookie processing flag to true while processing this cookie
+  // update, to make sure we don't send it back to the same content process.
+  CookieProcessingGuard guard(this);
 
   bool ok = mCookieService->SetCookiesFromIPC(aBaseDomain, aOriginAttributes,
                                               aHost, aFromHttp, aIsThirdParty,
                                               aCookies, aBrowsingContext);
-  mProcessingCookie = false;
   return ok ? IPC_OK() : IPC_FAIL(this, "Invalid cookie received.");
 }
 

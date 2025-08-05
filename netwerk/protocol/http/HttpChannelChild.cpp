@@ -490,8 +490,16 @@ void HttpChannelChild::OnStartRequest(
                                       false);
   }
 
-  if (!aArgs.cookieHeaders().IsEmpty()) {
-    SetCookieHeaders(aArgs.cookieHeaders());
+  RefPtr<CookieServiceChild> cookieService = CookieServiceChild::GetSingleton();
+
+  for (const CookieChange& cookieChange : aArgs.cookieChanges()) {
+    if (cookieChange.added()) {
+      Unused << cookieService->RecvAddCookie(
+          cookieChange.cookie(), cookieChange.originAttributes(), Nothing());
+    } else {
+      Unused << cookieService->RecvRemoveCookie(
+          cookieChange.cookie(), cookieChange.originAttributes(), Nothing());
+    }
   }
 
   // Note: this is where we would notify "http-on-after-examine-response"
