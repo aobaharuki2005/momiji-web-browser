@@ -223,9 +223,9 @@ private fun TabGrid(
             } else {
                 FirefoxTheme.layout.space.static200
             },
-            vertical = 16.dp,
+            vertical = 24.dp,
         ),
-        verticalArrangement = Arrangement.spacedBy(space = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(space = FirefoxTheme.layout.space.static200),
         horizontalArrangement = Arrangement.spacedBy(space = FirefoxTheme.layout.space.static200),
     ) {
         header?.let {
