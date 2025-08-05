@@ -93,6 +93,12 @@ class AutoWebCodecsMarker {
   bool mEnded = false;
 };
 
+// Use this macro only when you do not need to call `AutoWebCodecsMarker::End()`
+// manually; it will automatically end the marker when the object goes out of
+// scope.
+#define AUTO_WEBCODECS_MARKER(type, desc) \
+  AutoWebCodecsMarker PROFILER_RAII(type, desc)
+
 class AsyncDurationTracker {
  public:
   AsyncDurationTracker() : mOwningThread(GetCurrentSerialEventTarget()) {}

@@ -12,6 +12,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/WindowsProcessMitigations.h"
+#include "mozilla/dom/WebCodecsUtils.h"
 #include "mozilla/mscom/COMWrappers.h"
 #include "mozilla/mscom/Utils.h"
 
@@ -104,6 +105,8 @@ DEFINE_CODECAPI_GUID(AVEncAdaptiveMode, "4419b185-da1f-4f53-bc76-097d0c1efb1e",
 #undef MFT_RETURN_ERROR_IF_FAILED_S
 #define MFT_RETURN_ERROR_IF_FAILED_S(x) \
   MFT_RETURN_ERROR_IF_FAILED_IMPL(x, MFT_ENC_SLOGE)
+
+#define AUTO_MFTENCODER_MARKER(desc) AUTO_WEBCODECS_MARKER("MFTEncoder", desc);
 
 namespace mozilla {
 extern LazyLogModule sPEMLog;
@@ -451,6 +454,8 @@ HRESULT MFTEncoder::Create(const GUID& aSubtype, const gfx::IntSize& aFrameSize,
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(!mEncoder);
 
+  AUTO_MFTENCODER_MARKER("::Create");
+
   auto cleanup = MakeScopeExit([&] {
     mEncoder = nullptr;
     mFactory.reset();
@@ -530,6 +535,8 @@ MFTEncoder::SetMediaTypes(IMFMediaType* aInputType, IMFMediaType* aOutputType) {
   MOZ_ASSERT(mFactory);
   MOZ_ASSERT(mEncoder);
   MOZ_ASSERT(mState == State::Initializing);
+
+  AUTO_MFTENCODER_MARKER("::SetMediaTypes");
 
   auto exitWithError = MakeScopeExit([&] { SetState(State::Error); });
 
@@ -698,6 +705,8 @@ HRESULT MFTEncoder::SetModes(const EncoderConfig& aConfig) {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mConfig);
   MOZ_ASSERT(mState == State::Initializing);
+
+  AUTO_MFTENCODER_MARKER("::SetModes");
 
   VARIANT var;
   var.vt = VT_UI4;
@@ -1756,3 +1765,4 @@ STDMETHODIMP MFTEventSource::QueryInterface(REFIID aIID, void** aPPV) {
 #undef MFT_ENC_LOG
 #undef MFT_ENC_SLOG
 #undef MFT_LOG_INTERNAL
+#undef AUTO_MFTENCODER_MARKER
