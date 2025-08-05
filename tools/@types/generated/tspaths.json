@@ -1019,9 +1019,6 @@
       "resource:///modules/ReportBrokenSite.sys.mjs": [
         "browser/components/reportbrokensite/ReportBrokenSite.sys.mjs"
       ],
-      "resource:///modules/ResetPBMPanel.sys.mjs": [
-        "browser/components/privatebrowsing/ResetPBMPanel.sys.mjs"
-      ],
       "resource:///modules/SafariProfileMigrator.sys.mjs": [
         "browser/components/migration/SafariProfileMigrator.sys.mjs"
       ],
