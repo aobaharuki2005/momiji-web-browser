@@ -37,8 +37,8 @@
 #include "vm/Runtime.h"                 // JSRuntime
 
 #include "builtin/HandlerFunction-inl.h"  // js::ExtraValueFromHandler, js::NewHandler{,WithExtraValue}, js::TargetFromHandler
-#include "vm/JSAtomUtils-inl.h"  // AtomToId
-#include "vm/JSContext-inl.h"    // JSContext::{c,releaseC}heck
+#include "vm/JSAtomUtils-inl.h"           // AtomToId
+#include "vm/JSContext-inl.h"             // JSContext::{c,releaseC}heck
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
