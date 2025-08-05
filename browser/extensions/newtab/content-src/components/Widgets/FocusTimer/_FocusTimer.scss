@@ -36,16 +36,16 @@
   /* Complete timer */
   --timer-green: var(--color-green-20);
 
-  height: 0;
+  min-height: 0;
   opacity: 0;
   position: relative;
   width: 162px;
   overflow: hidden;
-  transition: height 0.8s ease, opacity 0.8s ease;
+  transition: min-height 0.8s ease, opacity 0.8s ease;
 
   &.visible {
     opacity: 1;
-    height: 162px;
+    min-height: 162px;
   }
 
   .progress-circle-background,
@@ -59,7 +59,7 @@
   }
 
   .progress-circle-background {
-    background-color: var(--border-color);
+    background-color: var(--border-color-interactive);
   }
 
   /* main timer colours */
@@ -132,6 +132,13 @@
     position: absolute;
     width: 100%;
     z-index: 10;
+  }
+}
+
+.timer-set-minutes,
+.timer-set-seconds {
+  &:focus {
+    outline: var(--focus-outline);
   }
 }
 
