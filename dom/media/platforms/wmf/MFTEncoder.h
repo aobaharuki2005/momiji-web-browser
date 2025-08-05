@@ -7,11 +7,10 @@
 #ifndef DOM_MEDIA_PLATFORM_WMF_MFTENCODER_H
 #define DOM_MEDIA_PLATFORM_WMF_MFTENCODER_H
 
-#include <wrl.h>
-
 #include <deque>
 #include <functional>
 #include <queue>
+#include <wrl.h>
 
 #include "EncoderConfig.h"
 #include "WMF.h"
