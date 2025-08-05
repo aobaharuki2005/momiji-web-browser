@@ -311,11 +311,15 @@ class DownloadRobot {
             return HomeScreenRobot.Transition()
         }
 
+        @OptIn(ExperimentalTestApi::class)
         fun shareDownloadedItem(testRule: HomeActivityComposeTestRule, fileName: String, interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
             Log.i(TAG, "shareDownloadedItem: Trying to click the Share file menu item to share downloaded file: $fileName")
             testRule.onNodeWithText(testRule.activity.getString(R.string.download_share_file))
                 .performClick()
             Log.i(TAG, "shareDownloadedItem: Clicked the Share file menu item to share downloaded file: $fileName")
+            Log.i(TAG, "shareDownloadedItem: Waiting for $waitingTime until the share button does not exist")
+            testRule.waitUntilDoesNotExist(hasText(testRule.activity.getString(R.string.download_share_file)), waitingTime)
+            Log.i(TAG, "shareDownloadedItem: Waited for $waitingTime until the share button does not exist")
 
             ShareOverlayRobot().interact()
             return ShareOverlayRobot.Transition()

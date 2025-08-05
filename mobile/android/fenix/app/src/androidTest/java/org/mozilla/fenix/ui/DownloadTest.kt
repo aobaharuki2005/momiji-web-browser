@@ -419,7 +419,6 @@ class DownloadTest : TestSetup() {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2987000
-    @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1979472")
     @Test
     fun shareDownloadedFileTest() {
         downloadRobot {
@@ -433,7 +432,7 @@ class DownloadTest : TestSetup() {
             clickDownloadItemMenuIcon(activityTestRule, "web_icon.png")
         }.shareDownloadedItem(activityTestRule, "web_icon.png") {
             verifyAndroidShareLayout()
-            clickSharingApp("Gmail")
+            clickSharingApp("Gmail", GMAIL_APP)
             assertNativeAppOpens(GMAIL_APP)
         }
     }
