@@ -11,8 +11,8 @@ const OFFLINE_REMOTE_SETTINGS = [
         data: {
           result: {
             isBestMatch: true,
-            suggestedIndex: 0,
             realtimeType: "market",
+            testAttribute: "market-test",
             payload: {
               type: "realtime_opt_in",
               icon: "chrome://browser/skin/illustrations/market-opt-in.svg",
@@ -31,8 +31,8 @@ const OFFLINE_REMOTE_SETTINGS = [
         data: {
           result: {
             isBestMatch: true,
-            suggestedIndex: 0,
             realtimeType: "sports",
+            testAttribute: "sports-test",
             payload: {
               type: "realtime_opt_in",
               icon: "chrome://browser/skin/illustrations/market-opt-in.svg",
@@ -91,7 +91,9 @@ add_task(async function opt_in() {
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
 
   let { element, result } = await openRealtimeSuggestion({ input: "stock" });
+  Assert.ok(result.isBestMatch);
   Assert.equal(result.realtimeType, "market");
+  Assert.equal(result.testAttribute, "market-test");
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TIP);
 
   info(

@@ -190,6 +190,9 @@ export class DynamicSuggestions extends SuggestProvider {
           l10n: { id: "urlbar-result-realtime-opt-in-not-now" },
         };
 
+    let result = { ...suggestion.data.result };
+    delete result.payload;
+
     return Object.assign(
       new lazy.UrlbarResult(
         lazy.UrlbarUtils.RESULT_TYPE.TIP,
@@ -215,7 +218,7 @@ export class DynamicSuggestions extends SuggestProvider {
           ],
         }
       ),
-      { realtimeType }
+      { ...result }
     );
   }
 

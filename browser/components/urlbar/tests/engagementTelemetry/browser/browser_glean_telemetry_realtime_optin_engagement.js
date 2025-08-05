@@ -17,7 +17,6 @@ add_setup(async function () {
             data: {
               result: {
                 isBestMatch: true,
-                suggestedIndex: 0,
                 realtimeType: "market",
                 payload: {
                   type: "realtime_opt_in",
