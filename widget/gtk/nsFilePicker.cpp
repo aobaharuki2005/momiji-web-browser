@@ -721,16 +721,7 @@ void nsFilePicker::GtkFileChooserShow(void* file_chooser) {
   static auto sGtkNativeDialogShowPtr =
       (void (*)(void*))dlsym(RTLD_DEFAULT, "gtk_native_dialog_show");
   if (mUseNativeFileChooser && sGtkNativeDialogShowPtr) {
-    const char* portalEnvString = g_getenv("GTK_USE_PORTAL");
-    bool setPortalEnv =
-        (portalEnvString && *portalEnvString == '0') || !portalEnvString;
-    if (setPortalEnv) {
-      setenv("GTK_USE_PORTAL", "1", true);
-    }
     (*sGtkNativeDialogShowPtr)(file_chooser);
-    if (setPortalEnv) {
-      unsetenv("GTK_USE_PORTAL");
-    }
   } else {
     g_signal_connect(file_chooser, "destroy", G_CALLBACK(OnDestroy), this);
     gtk_widget_show(GTK_WIDGET(file_chooser));
