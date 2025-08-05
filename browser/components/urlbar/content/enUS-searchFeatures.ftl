@@ -280,3 +280,44 @@ urlbar-search-mode-bookmarks-en = Bookmarks
 urlbar-search-mode-tabs-en = Tabs
 urlbar-search-mode-history-en = History
 urlbar-search-mode-actions-en = Actions
+
+## These strings are used for the important-dates features and will be
+## moved when they are finalized.
+
+# Shows the number of days until an event.
+# Variables:
+#   $daysUntilStart (integer) - The number of days until the event starts.
+urlbar-result-dates-countdown =
+    { $daysUntilStart ->
+        [one] In { $daysUntilStart } day
+        *[other] In { $daysUntilStart } days
+    }
+
+# Shows the number of days until a multiple day long event starts.
+# Variables:
+#   $daysUntilStart (integer) - The number of days until the event starts.
+urlbar-result-dates-countdown-range =
+    { $daysUntilStart ->
+        [one] Starts in { $daysUntilStart } day
+        *[other] Starts in { $daysUntilStart } days
+    }
+
+# Shows the number of days until a multiple day long event ends.
+# Variables:
+#   $daysUntilEnd (integer) - The number of days until the event ends.
+urlbar-result-dates-ongoing =
+    { $daysUntilEnd ->
+        [one] Now, { $daysUntilEnd } day left
+        *[other] Now, { $daysUntilEnd } days left
+    }
+
+# Shows that an event happens today.
+urlbar-result-dates-today = Today
+
+# Shows that a multiple day long event ends today.
+urlbar-result-dates-ends-today = Now, ends today
+
+# The title of a urlbar result of an event.
+#   $date (string) - The formatted date of the event.
+#   $name (string) - The name of the event.
+urlbar-result-dates-title = <b>{ $date }</b> · { $name }
