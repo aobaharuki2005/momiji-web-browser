@@ -17,10 +17,11 @@ add_setup(async function () {
             data: {
               result: {
                 isBestMatch: true,
+                suggestedIndex: 0,
                 realtimeType: "market",
                 payload: {
                   type: "realtime_opt_in",
-                  icon: "chrome://browser/skin/illustrations/market-opt-in.svg",
+                  icon: "chrome://global/skin/icons/defaultFavicon.svg",
                   titleL10n: {
                     id: "urlbar-result-market-opt-in-title",
                   },
