@@ -32,10 +32,14 @@ ipprotection-feature-introduction-button-secondary-no-thanks = No thanks
 
 ipprotection-connection-status-on = VPN on
 ipprotection-connection-status-off = VPN off
+# When VPN is toggled on
 ipprotection-toggle-active =
   .aria-label = Turn VPN off
+  .title = Toggle set to VPN on
+# When VPN is toggled off
 ipprotection-toggle-inactive =
   .aria-label = Turn VPN on
+  .title = Toggle set to VPN off
 
 # Location refers to the VPN server geographical position.
 ipprotection-location-title = Location
