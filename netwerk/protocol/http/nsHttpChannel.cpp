@@ -2848,18 +2848,16 @@ nsresult nsHttpChannel::ProcessResponse(nsHttpConnectionInfo* aConnInfo) {
   // We use GetReferringPage because mReferrerInfo may not be set at all(this is
   // especially useful in xpcshell tests, where we don't have an actual pageload
   // to get a referrer from).
-  if (StaticPrefs::network_predictor_enabled()) {
-    nsCOMPtr<nsIURI> referrer = GetReferringPage();
-    if (!referrer && mReferrerInfo) {
-      referrer = mReferrerInfo->GetOriginalReferrer();
-    }
+  nsCOMPtr<nsIURI> referrer = GetReferringPage();
+  if (!referrer && mReferrerInfo) {
+    referrer = mReferrerInfo->GetOriginalReferrer();
+  }
 
-    if (referrer) {
-      nsCOMPtr<nsILoadContextInfo> lci = GetLoadContextInfo(this);
-      mozilla::net::Predictor::UpdateCacheability(
-          referrer, mURI, httpStatus, mRequestHead, mResponseHead.get(), lci,
-          IsThirdPartyTrackingResource());
-    }
+  if (referrer) {
+    nsCOMPtr<nsILoadContextInfo> lci = GetLoadContextInfo(this);
+    mozilla::net::Predictor::UpdateCacheability(
+        referrer, mURI, httpStatus, mRequestHead, mResponseHead.get(), lci,
+        IsThirdPartyTrackingResource());
   }
 
   // Only allow 407 (authentication required) to continue
