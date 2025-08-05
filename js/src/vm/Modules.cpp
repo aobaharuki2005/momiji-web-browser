@@ -109,37 +109,50 @@ JS_PUBLIC_API bool JS::FinishLoadingImportedModule(
                                          usePromise);
 }
 
-JS_PUBLIC_API bool JS::FinishLoadingImportedModuleFailed(JSContext* cx,
-                                                         Handle<Value> payload,
-                                                         Handle<Value> error) {
+// https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
+// Failure path where |result| is a throw completion, supplied as |error|.
+JS_PUBLIC_API bool JS::FinishLoadingImportedModuleFailed(
+    JSContext* cx, Handle<Value> payloadArg, Handle<Value> error) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->check(payload, error);
+  cx->check(payloadArg, error);
+  MOZ_ASSERT(!JS_IsExceptionPending(cx));
 
-  JSObject* object = &payload.toObject();
-  MOZ_ASSERT(object->is<PromiseObject>() ||
-             object->is<GraphLoadingStateRecordObject>());
-
-  if (object->is<PromiseObject>()) {
-    Rooted<JSObject*> promise(cx, &object->as<PromiseObject>());
-    return js::FinishLoadingImportedModuleFailed(cx, promise, error);
+  // Step 2. If payload is a GraphLoadingState Record, then
+  // Step 2.a. Perform ContinueModuleLoading(payload, result).
+  JSObject* payload = &payloadArg.toObject();
+  if (payload->is<GraphLoadingStateRecordObject>()) {
+    return js::ContinueLoadingImportedModule(cx, payloadArg, nullptr, error);
   }
 
-  return js::FinishLoadingImportedModuleFailed(cx, payload, error);
+  // Step 3. Else,
+  // Step 3.a. Perform ContinueDynamicImport(payload, result).
+  // ContinueDynamicImport:
+  // Step 1. If moduleCompletion is an abrupt completion, then
+  // Step 1. a. Perform ! Call(promiseCapability.[[Reject]], undefined,
+  //            moduleCompletion.[[Value]]).
+  Rooted<PromiseObject*> promise(cx, &payload->as<PromiseObject>());
+  return PromiseObject::reject(cx, promise, error);
 }
 
+// https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
+// Failure path where |result| is a throw completion, set as the pending
+// exception.
 JS_PUBLIC_API bool JS::FinishLoadingImportedModuleFailedWithPendingException(
     JSContext* cx, Handle<Value> payload) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(payload);
+  MOZ_ASSERT(JS_IsExceptionPending(cx));
 
-  // TODO: Currently only used with promises.
-  JSObject* object = &payload.toObject();
-  MOZ_ASSERT(object->is<PromiseObject>());
+  RootedValue error(cx);
+  if (!cx->getPendingException(&error)) {
+    MOZ_ASSERT(cx->isThrowingOutOfMemory());
+    MOZ_ALWAYS_TRUE(cx->getPendingException(&error));
+  }
+  cx->clearPendingException();
 
-  Rooted<JSObject*> promise(cx, &object->as<PromiseObject>());
-  return js::FinishLoadingImportedModuleFailedWithPendingException(cx, promise);
+  return FinishLoadingImportedModuleFailed(cx, payload, error);
 }
 
 template <typename Unit>
@@ -1577,29 +1590,6 @@ bool js::FinishLoadingImportedModule(JSContext* cx, Handle<JSObject*> referrer,
                                      bool usePromise) {
   return js::ContinueDynamicImport(cx, referencingPrivate, moduleRequest,
                                    promise, result, usePromise);
-}
-
-// https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
-// Failed version
-bool js::FinishLoadingImportedModuleFailed(JSContext* cx,
-                                           Handle<Value> statePrivate,
-                                           Handle<Value> error) {
-  return js::ContinueLoadingImportedModule(cx, statePrivate, nullptr, error);
-}
-
-bool js::FinishLoadingImportedModuleFailed(JSContext* cx,
-                                           Handle<JSObject*> promise,
-                                           Handle<Value> error) {
-  MOZ_ASSERT(promise);
-  JS_SetPendingException(cx, error);
-  return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
-}
-
-bool js::FinishLoadingImportedModuleFailedWithPendingException(
-    JSContext* cx, Handle<JSObject*> promise) {
-  MOZ_ASSERT(JS_IsExceptionPending(cx));
-  MOZ_ASSERT(promise);
-  return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
 }
 
 // The 2nd part of FinishLoadingImportedModule defined in

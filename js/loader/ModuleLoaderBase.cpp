@@ -249,7 +249,7 @@ bool ModuleLoaderBase::HostLoadImportedModule(
         JS_ReportOutOfMemory(aCx);
         return false;
       }
-      JS_SetPendingException(cx, error);
+      JS_SetPendingException(aCx, error);
       return true;
     }
 
