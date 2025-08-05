@@ -94,11 +94,11 @@ panel toolbarseparator {
       /* "!important" is necessary to override the rule in toolbarbutton.css */
       margin: -5px 0 0 !important;
       margin-inline-end: -3px !important;
-      min-width: 12px;
-      min-height: 12px;
+      min-width: var(--icon-size-xsmall);
+      min-height: var(--icon-size-xsmall);
       -moz-context-properties: fill;
       background: url(chrome://browser/skin/notification-fill-12.svg) no-repeat center;
-      background-size: 12px;
+      background-size: var(--icon-size-xsmall);
     }
   }
 
@@ -167,11 +167,11 @@ panel toolbarseparator {
 
 #fxa-toolbar-menu-button[badge-status="sync-disabled"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   box-shadow: none;
-  min-width: 12px;
-  min-height: 12px;
+  min-width: var(--icon-size-xsmall);
+  min-height: var(--icon-size-xsmall);
   -moz-context-properties: stroke, fill;
   background: url(chrome://browser/skin/notification-fill-12.svg) no-repeat center;
-  background-size: 12px;
+  background-size: var(--icon-size-xsmall);
   stroke: var(--arrowpanel-background);
   fill: var(--warning-icon-bgcolor);
   filter: drop-shadow(0 0 5px var(--warning-icon-bgcolor));
@@ -1257,8 +1257,8 @@ panelview .toolbarbutton-1,
     fill: currentColor;
     fill-opacity: 0.6;
     display: flex;
-    height: 12px;
-    width: 12px;
+    height: var(--icon-size-xsmall);
+    width: var(--icon-size-xsmall);
   }
 
   &[type="open-to-new"]:-moz-locale-dir(rtl)::after {
@@ -1658,8 +1658,8 @@ toolbarbutton[itemtype="showinactivebutton"] {
     url(chrome://browser/skin/panic-panel/header.png),
     url(chrome://browser/skin/panic-panel/header@2x.png) 2x
   );
-  max-height: 48px;
-  width: 48px;
+  max-height: var(--size-item-xlarge);
+  width: var(--size-item-xlarge);
 }
 
 #panic-button-success-header {
