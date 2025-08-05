@@ -18,6 +18,7 @@
 #include "mozilla/DataMutex.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "prenv.h"
 
 #ifdef DEBUG
 #  include "mozilla/AppShutdown.h"
@@ -44,7 +45,8 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
       return;
     }
 #  else
-    if (!XRE_IsRDDProcess() && !XRE_IsUtilityProcess()) {
+    if (!XRE_IsRDDProcess() && !XRE_IsUtilityProcess() &&
+        !(XRE_IsParentProcess() && PR_GetEnv("MOZ_RUN_GTEST"))) {
       return;
     }
 #  endif
