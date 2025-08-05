@@ -22,6 +22,7 @@ import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -104,6 +105,7 @@ import java.io.IOException
 import java.io.InputStream
 import kotlin.random.Random
 
+@ExperimentalCoroutinesApi // UnconfinedTestDispatcher
 @RunWith(AndroidJUnit4::class)
 @Config(shadows = [ShadowFileProvider::class])
 class AbstractFetchDownloadServiceTest {

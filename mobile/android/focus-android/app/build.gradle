@@ -226,10 +226,6 @@ nimbus {
     experimenterManifest = ".experimenter.yaml"
 }
 
-tasks.withType(KotlinCompile).configureEach {
-    kotlinOptions.freeCompilerArgs += "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
-}
-
 dependencies {
     implementation libs.androidx.activity
     implementation libs.androidx.appcompat

@@ -5,7 +5,6 @@
 package org.mozilla.fenix.tabstray.binding
 
 import androidx.fragment.app.Fragment
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import mozilla.components.lib.state.helpers.AbstractBinding
@@ -21,7 +20,6 @@ import org.mozilla.fenix.utils.Settings
 /**
  * Sets [TabManagementFragment] flags to secure when private tabs list is selected.
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 class SecureTabManagerBinding(
     store: TabsTrayStore,
     private val settings: Settings,
