@@ -4,7 +4,8 @@ ChromeUtils.defineESModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
   ASRouterTargeting: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
-  AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
+  AttributionCode:
+    "moz-src:///browser/components/attribution/AttributionCode.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
   CFRMessageProvider: "resource:///modules/asrouter/CFRMessageProvider.sys.mjs",

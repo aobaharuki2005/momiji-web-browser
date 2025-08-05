@@ -21,7 +21,8 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
+  AttributionCode:
+    "moz-src:///browser/components/attribution/AttributionCode.sys.mjs",
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
   WindowsVersionInfo:

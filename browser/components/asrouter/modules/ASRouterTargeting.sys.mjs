@@ -46,7 +46,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   ASRouterPreferences:
     "resource:///modules/asrouter/ASRouterPreferences.sys.mjs",
-  AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
+  AttributionCode:
+    "moz-src:///browser/components/attribution/AttributionCode.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.sys.mjs",

@@ -857,9 +857,6 @@
       "resource:///modules/ActionsProviderTabGroups.sys.mjs": [
         "browser/components/urlbar/ActionsProviderTabGroups.sys.mjs"
       ],
-      "resource:///modules/AttributionCode.sys.mjs": [
-        "browser/components/attribution/AttributionCode.sys.mjs"
-      ],
       "resource:///modules/BrowserGlue.sys.mjs": [
         "browser/components/BrowserGlue.sys.mjs"
       ],
@@ -997,9 +994,6 @@
       ],
       "resource:///modules/MSMigrationUtils.sys.mjs": [
         "browser/components/migration/MSMigrationUtils.sys.mjs"
-      ],
-      "resource:///modules/MacAttribution.sys.mjs": [
-        "browser/components/attribution/MacAttribution.sys.mjs"
       ],
       "resource:///modules/MerinoClient.sys.mjs": [
         "browser/components/urlbar/MerinoClient.sys.mjs"

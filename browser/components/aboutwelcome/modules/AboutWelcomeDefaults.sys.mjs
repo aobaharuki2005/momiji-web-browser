@@ -17,7 +17,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
-  AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
+  AttributionCode:
+    "moz-src:///browser/components/attribution/AttributionCode.sys.mjs",
   AWScreenUtils: "resource:///modules/aboutwelcome/AWScreenUtils.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
 });

@@ -34,7 +34,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ASRouterTargeting: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
   ASRouterTriggerListeners:
     "resource:///modules/asrouter/ASRouterTriggerListeners.sys.mjs",
-  AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
+  AttributionCode:
+    "moz-src:///browser/components/attribution/AttributionCode.sys.mjs",
   BookmarksBarButton: "resource:///modules/asrouter/BookmarksBarButton.sys.mjs",
   UnstoredDownloader: "resource://services-settings/Attachments.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
@@ -42,7 +43,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/asrouter/FeatureCalloutBroker.sys.mjs",
   InfoBar: "resource:///modules/asrouter/InfoBar.sys.mjs",
   KintoHttpClient: "resource://services-common/kinto-http-client.sys.mjs",
-  MacAttribution: "resource:///modules/MacAttribution.sys.mjs",
+  MacAttribution:
+    "moz-src:///browser/components/attribution/MacAttribution.sys.mjs",
   MenuMessage: "resource:///modules/asrouter/MenuMessage.sys.mjs",
   MomentsPageHub: "resource:///modules/asrouter/MomentsPageHub.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
