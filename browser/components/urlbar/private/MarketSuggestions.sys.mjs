@@ -135,7 +135,7 @@ export class MarketSuggestions extends SuggestProvider {
       ...result.payload.polygon.values.map((v, i) => ({
         [`image_${i}`]: {
           attributes: {
-            src: v.image_url,
+            src: v.image_url || "chrome://global/skin/icons/search-glass.svg",
           },
         },
         [`name_${i}`]: {
