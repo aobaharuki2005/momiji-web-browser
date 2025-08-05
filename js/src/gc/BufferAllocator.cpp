@@ -1230,12 +1230,6 @@ bool BufferAllocator::IsBufferAlloc(void* alloc) {
 }
 
 size_t BufferAllocator::getAllocSize(void* alloc) {
-  // Access to allocEndBitmap can race if the allocation is in a chunk that is
-  // currently being swept.
-  maybeMergeSweptData();
-  MOZ_ASSERT(minorState != State::Sweeping);
-  MOZ_ASSERT(majorState != State::Sweeping);
-
   if (IsLargeAlloc(alloc)) {
     LargeBuffer* buffer = lookupLargeBuffer(alloc);
     return buffer->allocBytes();
