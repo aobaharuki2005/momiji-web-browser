@@ -3763,6 +3763,11 @@ class Document : public nsINode,
 
   // Called to track whether this document has had any interaction.
   // This is used to track whether we should permit "beforeunload".
+  // Note: These APIs are deprecated (bug 1766214), and should not be used in
+  // new code. Please use HasBeenUserGestureActivated() or
+  // HasValidTransientUserGestureActivation() APIs which align with the spec
+  // (https://html.spec.whatwg.org/multipage/interaction.html#tracking-user-activation)
+  // more and also support fission nicer.
   void SetUserHasInteracted();
   bool UserHasInteracted() { return mUserHasInteracted; }
   void ResetUserInteractionTimer();
