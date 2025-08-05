@@ -717,6 +717,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
           action: {
             navigate: true,
           },
+          has_arrow_icon: true,
         },
       },
     },
