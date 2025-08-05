@@ -496,17 +496,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-jetstream2-chrome-m-jetstream2**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-jetstream2-chrome-m-jetstream2-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream2-cstm-car-m-jetstream2**
         - ❌
         - ❌
         - ❌
@@ -800,17 +790,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-jetstream2-chrome-m-jetstream2**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-jetstream2-chrome-m-jetstream2-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream2-cstm-car-m-jetstream2**
         - ❌
         - ❌
         - ❌
@@ -1117,17 +1097,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-jetstream3-chrome-m-jetstream3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-jetstream3-chrome-m-jetstream3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream3-cstm-car-m-jetstream3**
         - ❌
         - ❌
         - ❌
@@ -1434,17 +1404,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-jetstream3-chrome-m-jetstream3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-jetstream3-chrome-m-jetstream3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream3-cstm-car-m-jetstream3**
         - ❌
         - ❌
         - ❌
@@ -1972,18 +1932,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-motionmark-1-3-chrome-m-motionmark-1-3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-motionmark-1-3-chrome-m-motionmark-1-3-nofis**
         - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-cstm-car-m-motionmark-1-3**
-        - ✅
         - ❌
         - ❌
         - ❌
@@ -2308,18 +2258,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-motionmark-1-3-chrome-m-motionmark-1-3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-motionmark-1-3-chrome-m-motionmark-1-3-nofis**
         - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-cstm-car-m-motionmark-1-3**
-        - ✅
         - ❌
         - ❌
         - ❌
@@ -2655,18 +2595,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-motionmark-1-3-chrome-m-motionmark-htmlsuite-1-3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-motionmark-1-3-chrome-m-motionmark-htmlsuite-1-3-nofis**
         - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-cstm-car-m-motionmark-htmlsuite-1-3**
-        - ✅
         - ❌
         - ❌
         - ❌
@@ -2991,18 +2921,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-motionmark-1-3-chrome-m-motionmark-htmlsuite-1-3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-motionmark-1-3-chrome-m-motionmark-htmlsuite-1-3-nofis**
         - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-cstm-car-m-motionmark-htmlsuite-1-3**
-        - ✅
         - ❌
         - ❌
         - ❌
@@ -3330,18 +3250,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-speedometer-mobile-chrome-m**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-speedometer-mobile-chrome-m-nofis**
         - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-speedometer-mobile-cstm-car-m**
-        - ✅
         - ❌
         - ❌
         - ❌
@@ -3412,17 +3322,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-speedometer-mobile-chrome-m**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-speedometer-mobile-chrome-m-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-speedometer-mobile-cstm-car-m**
         - ❌
         - ❌
         - ❌
@@ -3463,17 +3363,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-speedometer-mobile-chrome-m**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-speedometer-mobile-chrome-m-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-speedometer-mobile-cstm-car-m**
         - ❌
         - ❌
         - ❌
@@ -3761,18 +3651,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-speedometer-mobile-chrome-m**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-speedometer-mobile-chrome-m-nofis**
         - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-speedometer-mobile-cstm-car-m**
-        - ✅
         - ❌
         - ❌
         - ❌
@@ -3843,17 +3723,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-speedometer-mobile-chrome-m**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-speedometer-mobile-chrome-m-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-speedometer-mobile-cstm-car-m**
         - ❌
         - ❌
         - ❌
@@ -3894,17 +3764,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-speedometer-mobile-chrome-m**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-speedometer-mobile-chrome-m-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-speedometer-mobile-cstm-car-m**
         - ❌
         - ❌
         - ❌
@@ -4207,18 +4067,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-speedometer3-mobile-chrome-m**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-speedometer3-mobile-chrome-m-nofis**
         - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-speedometer3-mobile-cstm-car-m**
-        - ✅
         - ❌
         - ❌
         - ❌
@@ -4289,17 +4139,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-speedometer3-mobile-chrome-m**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-speedometer3-mobile-chrome-m-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-speedometer3-mobile-cstm-car-m**
         - ✅
         - ❌
         - ❌
@@ -4340,17 +4180,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-speedometer3-mobile-chrome-m**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-speedometer3-mobile-chrome-m-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-speedometer3-mobile-cstm-car-m**
         - ✅
         - ❌
         - ❌
@@ -4711,18 +4541,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-speedometer3-mobile-chrome-m**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-speedometer3-mobile-chrome-m-nofis**
         - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-speedometer3-mobile-cstm-car-m**
-        - ✅
         - ❌
         - ❌
         - ❌
@@ -4793,17 +4613,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-speedometer3-mobile-chrome-m**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-speedometer3-mobile-chrome-m-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-speedometer3-mobile-cstm-car-m**
         - ✅
         - ❌
         - ❌
@@ -4844,17 +4654,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-speedometer3-mobile-chrome-m**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-speedometer3-mobile-chrome-m-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-speedometer3-mobile-cstm-car-m**
         - ✅
         - ❌
         - ❌
@@ -5824,11 +5624,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-unity-webgl-mobile-chrome-m**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-unity-webgl-mobile-chrome-m-nofis**
         - ✅
         - ❌
@@ -6100,11 +5895,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-unity-webgl-mobile-chrome-m**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-unity-webgl-mobile-chrome-m-nofis**
         - ✅
         - ❌
@@ -8205,11 +7995,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-power-mobile-chrome-m-youtube-playback-h264-720p60**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-power-mobile-chrome-m-youtube-playback-h264-720p60-nofis**
         - ❌
         - ❌
@@ -8277,11 +8062,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-power-mobile-chrome-m-youtube-playback-h264-720p60**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-power-mobile-chrome-m-youtube-playback-h264-720p60-nofis**
         - ❌
         - ❌
@@ -8318,11 +8098,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-power-mobile-chrome-m-youtube-playback-h264-720p60**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-power-mobile-chrome-m-youtube-playback-h264-720p60-nofis**
         - ❌
         - ❌
@@ -9955,11 +9730,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-power-mobile-chrome-m-youtube-playback-vp9-720p60**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-power-mobile-chrome-m-youtube-playback-vp9-720p60-nofis**
         - ❌
         - ❌
@@ -10027,11 +9797,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-power-mobile-chrome-m-youtube-playback-vp9-720p60**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-power-mobile-chrome-m-youtube-playback-vp9-720p60-nofis**
         - ❌
         - ❌
@@ -10068,11 +9833,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-power-mobile-chrome-m-youtube-playback-vp9-720p60**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-power-mobile-chrome-m-youtube-playback-vp9-720p60-nofis**
         - ❌
         - ❌
@@ -21749,11 +21509,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-video-playback-latency-mobile-chrome-m-vpl-av1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-video-playback-latency-mobile-chrome-m-vpl-av1-nofis**
         - ❌
         - ❌
@@ -22056,11 +21811,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-video-playback-latency-mobile-chrome-m-vpl-h264**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-video-playback-latency-mobile-chrome-m-vpl-h264-nofis**
         - ❌
         - ❌
@@ -22368,11 +22118,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-video-playback-latency-mobile-chrome-m-vpl-vp9**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-video-playback-latency-mobile-chrome-m-vpl-vp9-nofis**
         - ❌
         - ❌
@@ -34333,11 +34078,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-booking-sf**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-chrome-m-booking-sf-nofis**
         - ❌
         - ❌
@@ -34433,11 +34173,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-discord**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-chrome-m-discord-nofis**
         - ❌
         - ❌
@@ -34533,11 +34268,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-fashionbeans**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-chrome-m-fashionbeans-nofis**
         - ❌
         - ❌
@@ -34633,11 +34363,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-google-accounts**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-chrome-m-google-accounts-nofis**
         - ❌
         - ❌
@@ -34733,11 +34458,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-imdb-firefox**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-chrome-m-imdb-firefox-nofis**
         - ❌
         - ❌
@@ -34833,11 +34553,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-medium-article**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-chrome-m-medium-article-nofis**
         - ❌
         - ❌
@@ -34933,11 +34648,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-people-article**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-chrome-m-people-article-nofis**
         - ❌
         - ❌
@@ -35033,11 +34743,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-reddit-thread**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-chrome-m-reddit-thread-nofis**
         - ❌
         - ❌
@@ -35133,11 +34838,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-rumble-fox**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-chrome-m-rumble-fox-nofis**
         - ❌
         - ❌
@@ -35233,11 +34933,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-stackoverflow-question**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-chrome-m-stackoverflow-question-nofis**
         - ❌
         - ❌
@@ -35333,11 +35028,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-urbandictionary-define**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-chrome-m-urbandictionary-define-nofis**
         - ❌
         - ❌
@@ -35433,11 +35123,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-wikia-marvel**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-chrome-m-wikia-marvel-nofis**
         - ❌
         - ❌
@@ -35542,17 +35227,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-allrecipes**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-essential-chrome-m-allrecipes-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-cstm-car-m-allrecipes**
         - ❌
         - ❌
         - ❌
@@ -35583,11 +35258,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-essential-refbrow-allrecipes**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-allrecipes**
         - ❌
         - ❌
         - ❌
@@ -35716,17 +35386,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-amazon-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-amazon**
         - ❌
         - ❌
         - ❌
@@ -35752,11 +35412,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-amazon-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-amazon**
         - ❌
         - ❌
         - ❌
@@ -35890,17 +35545,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-amazon-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-essential-chrome-m-amazon-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-cstm-car-m-amazon-search**
         - ❌
         - ❌
         - ❌
@@ -35931,11 +35576,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-essential-refbrow-amazon-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-amazon-search**
         - ❌
         - ❌
         - ❌
@@ -36084,17 +35724,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-bild-de**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-bild-de-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-bild-de**
         - ❌
         - ❌
         - ❌
@@ -36120,11 +35750,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-bild-de-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-bild-de**
         - ❌
         - ❌
         - ❌
@@ -36258,17 +35883,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-bing**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-bing-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-bing**
         - ❌
         - ❌
         - ❌
@@ -36294,11 +35909,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-bing-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-bing**
         - ❌
         - ❌
         - ❌
@@ -36432,17 +36042,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-bing-search-restaurants**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-bing-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-bing-search-restaurants**
         - ❌
         - ❌
         - ❌
@@ -36468,11 +36068,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-bing-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-bing-search-restaurants**
         - ❌
         - ❌
         - ❌
@@ -36606,17 +36201,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-booking**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-booking-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-booking**
         - ❌
         - ❌
         - ❌
@@ -36642,11 +36227,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-booking-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-booking**
         - ❌
         - ❌
         - ❌
@@ -36780,17 +36360,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-cnn-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-cnn**
         - ❌
         - ❌
         - ❌
@@ -36816,11 +36386,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-cnn-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-cnn**
         - ❌
         - ❌
         - ❌
@@ -36954,17 +36519,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-cnn-ampstories**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-cnn-ampstories-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-cnn-ampstories**
         - ❌
         - ❌
         - ❌
@@ -36990,11 +36545,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-cnn-ampstories-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-cnn-ampstories**
         - ❌
         - ❌
         - ❌
@@ -37128,17 +36678,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-dailymail**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-dailymail-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-dailymail**
         - ❌
         - ❌
         - ❌
@@ -37164,11 +36704,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-dailymail-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-dailymail**
         - ❌
         - ❌
         - ❌
@@ -37302,17 +36837,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-ebay-kleinanzeigen**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-ebay-kleinanzeigen-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-ebay-kleinanzeigen**
         - ❌
         - ❌
         - ❌
@@ -37338,11 +36863,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-ebay-kleinanzeigen-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-ebay-kleinanzeigen**
         - ❌
         - ❌
         - ❌
@@ -37476,17 +36996,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-ebay-kleinanzeigen-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-ebay-kleinanzeigen-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-ebay-kleinanzeigen-search**
         - ❌
         - ❌
         - ❌
@@ -37512,11 +37022,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-ebay-kleinanzeigen-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-ebay-kleinanzeigen-search**
         - ❌
         - ❌
         - ❌
@@ -37650,17 +37155,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-espn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-essential-chrome-m-espn-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-cstm-car-m-espn**
         - ❌
         - ❌
         - ❌
@@ -37691,11 +37186,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-essential-refbrow-espn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-espn**
         - ❌
         - ❌
         - ❌
@@ -37825,11 +37315,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-facebook**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-chrome-m-facebook-nofis**
         - ❌
         - ❌
@@ -37929,17 +37414,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-facebook-cristiano**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-facebook-cristiano-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-facebook-cristiano**
         - ❌
         - ❌
         - ❌
@@ -37965,11 +37440,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-facebook-cristiano-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-facebook-cristiano**
         - ❌
         - ❌
         - ❌
@@ -38104,17 +37574,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-google**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-essential-chrome-m-google-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-cstm-car-m-google**
         - ❌
         - ❌
         - ❌
@@ -38145,11 +37605,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-essential-refbrow-google**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-google**
         - ❌
         - ❌
         - ❌
@@ -38278,17 +37733,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-google-maps**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-google-maps-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-google-maps**
         - ❌
         - ❌
         - ❌
@@ -38314,11 +37759,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-google-maps-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-google-maps**
         - ❌
         - ❌
         - ❌
@@ -38453,17 +37893,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-google-search-restaurants**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-google-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-google-search-restaurants**
         - ❌
         - ❌
         - ❌
@@ -38489,11 +37919,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-google-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-google-search-restaurants**
         - ❌
         - ❌
         - ❌
@@ -38627,17 +38052,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-imdb**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-imdb-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-imdb**
         - ❌
         - ❌
         - ❌
@@ -38663,11 +38078,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-imdb-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-imdb**
         - ❌
         - ❌
         - ❌
@@ -38802,17 +38212,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-instagram-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-instagram**
         - ❌
         - ❌
         - ❌
@@ -38838,11 +38238,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-instagram-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-instagram**
         - ❌
         - ❌
         - ❌
@@ -38976,17 +38371,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-microsoft-support**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-essential-chrome-m-microsoft-support-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-cstm-car-m-microsoft-support**
         - ❌
         - ❌
         - ❌
@@ -39017,11 +38402,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-essential-refbrow-microsoft-support**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-microsoft-support**
         - ❌
         - ❌
         - ❌
@@ -39150,17 +38530,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-reddit**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-reddit-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-reddit**
         - ❌
         - ❌
         - ❌
@@ -39186,11 +38556,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-reddit-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-reddit**
         - ❌
         - ❌
         - ❌
@@ -39324,17 +38689,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-sina**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-sina-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-sina**
         - ❌
         - ❌
         - ❌
@@ -39448,17 +38803,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-stackoverflow**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-stackoverflow-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-stackoverflow**
         - ❌
         - ❌
         - ❌
@@ -39484,11 +38829,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-stackoverflow-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-stackoverflow**
         - ❌
         - ❌
         - ❌
@@ -39622,17 +38962,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-wikipedia-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-wikipedia**
         - ❌
         - ❌
         - ❌
@@ -39658,11 +38988,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-wikipedia-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-wikipedia**
         - ❌
         - ❌
         - ❌
@@ -39796,17 +39121,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-youtube**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-chrome-m-youtube-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-youtube**
         - ❌
         - ❌
         - ❌
@@ -39832,11 +39147,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-youtube-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-youtube**
         - ❌
         - ❌
         - ❌
@@ -39970,17 +39280,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-youtube-watch**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-essential-chrome-m-youtube-watch-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-cstm-car-m-youtube-watch**
         - ❌
         - ❌
         - ❌
@@ -40011,11 +39311,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-essential-refbrow-youtube-watch**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-youtube-watch**
         - ❌
         - ❌
         - ❌
