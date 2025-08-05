@@ -2740,29 +2740,24 @@ bool js::OnModuleEvaluationFailure(JSContext* cx,
   return JS::AddPromiseReactions(cx, evaluationPromise, nullptr, onRejected);
 }
 
-// This is used to marshal some of the arguments to FinishDynamicModuleImport
+// This is used for |fulfilledClosure| and |rejectedClosure| in
+// https://tc39.es/ecma262/#sec-ContinueDynamicImport
+//
+// It is used to marshal some of the arguments to FinishDynamicModuleImport
 // and pass them through to the promise resolve and reject callbacks. It holds a
 // reference to the referencing private to keep it alive until it is needed.
 class DynamicImportContextObject : public NativeObject {
  public:
-  enum {
-    ReferencingPrivateSlot = 0,
-    ModuleRequestSlot,
-    PromiseSlot,
-    ModuleSlot,
-    SlotCount
-  };
+  enum { ReferencingPrivateSlot = 0, PromiseSlot, ModuleSlot, SlotCount };
 
   static const JSClass class_;
   static const JSClassOps classOps_;
 
   [[nodiscard]] static DynamicImportContextObject* create(
       JSContext* cx, Handle<Value> referencingPrivate,
-      Handle<JSObject*> moduleRequest, Handle<JSObject*> promise,
-      Handle<JSObject*> module);
+      Handle<JSObject*> promise, Handle<JSObject*> module);
 
   Value referencingPrivate() const;
-  JSObject* moduleRequest() const;
   JSObject* promise() const;
   JSObject* module() const;
 
@@ -2797,8 +2792,7 @@ const JSClassOps DynamicImportContextObject::classOps_ = {
 
 /* static */
 DynamicImportContextObject* DynamicImportContextObject::create(
-    JSContext* cx, Handle<Value> referencingPrivate,
-    Handle<JSObject*> moduleRequest, Handle<JSObject*> promise,
+    JSContext* cx, Handle<Value> referencingPrivate, Handle<JSObject*> promise,
     Handle<JSObject*> module) {
   Rooted<DynamicImportContextObject*> self(
       cx, NewObjectWithGivenProto<DynamicImportContextObject>(cx, nullptr));
@@ -2809,7 +2803,6 @@ DynamicImportContextObject* DynamicImportContextObject::create(
   cx->runtime()->addRefScriptPrivate(referencingPrivate);
 
   self->initReservedSlot(ReferencingPrivateSlot, referencingPrivate);
-  self->initReservedSlot(ModuleRequestSlot, ObjectValue(*moduleRequest));
   self->initReservedSlot(PromiseSlot, ObjectValue(*promise));
   self->initReservedSlot(ModuleSlot, ObjectValue(*module));
   return self;
@@ -2817,15 +2810,6 @@ DynamicImportContextObject* DynamicImportContextObject::create(
 
 Value DynamicImportContextObject::referencingPrivate() const {
   return getReservedSlot(ReferencingPrivateSlot);
-}
-
-JSObject* DynamicImportContextObject::moduleRequest() const {
-  Value value = getReservedSlot(ModuleRequestSlot);
-  if (value.isUndefined()) {
-    return nullptr;
-  }
-
-  return &value.toObject();
 }
 
 JSObject* DynamicImportContextObject::promise() const {
@@ -2862,8 +2846,11 @@ void DynamicImportContextObject::clearReferencingPrivate(
   }
 }
 
-// Adjustment for Top-level await;
-// See: https://github.com/tc39/proposal-dynamic-import/pull/71/files
+// This performs the steps for |fulfilledClosure| from
+// https://tc39.es/ecma262/#sec-ContinueDynamicImport step 6.d.
+//
+// With adjustment for Top-level await:
+// https://GitHub.com/tc39/proposal-dynamic-import/pull/71/files
 static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.get(0).isUndefined());
@@ -2877,10 +2864,6 @@ static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
   RootedValue referencingPrivate(cx, context->referencingPrivate());
 
   Rooted<PromiseObject*> promise(cx, TargetFromHandler<PromiseObject>(args));
-  RootedObject moduleRequest(cx, context->moduleRequest());
-  if (!moduleRequest) {
-    return RejectPromiseWithPendingError(cx, promise);
-  }
 
   Rooted<ModuleObject*> module(cx, &context->module()->as<ModuleObject>());
   if (module->status() != ModuleStatus::EvaluatingAsync &&
@@ -2890,22 +2873,33 @@ static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
     return RejectPromiseWithPendingError(cx, promise);
   }
 
+  // This is called when |evaluationPromise| is resolved, step 6.f.
   MOZ_ASSERT_IF(module->hasCyclicModuleFields(),
                 module->getCycleRoot()
                         ->topLevelCapability()
                         ->as<PromiseObject>()
                         .state() == JS::PromiseState::Fulfilled);
 
+  // Step 6.d.i. Let namespace be GetModuleNamespace(module).
   RootedObject ns(cx, GetOrCreateModuleNamespace(cx, module));
   if (!ns) {
     return RejectPromiseWithPendingError(cx, promise);
   }
 
-  args.rval().setUndefined();
+  // Step 6.d.ii. Perform ! Call(promiseCapability.[[Resolve]], undefined, [
+  // namespace ]).
   RootedValue value(cx, ObjectValue(*ns));
-  return PromiseObject::resolve(cx, promise, value);
+  if (!PromiseObject::resolve(cx, promise, value)) {
+    return false;
+  }
+
+  // Step 6.d.iii. Return NormalCompletion(undefined).
+  args.rval().setUndefined();
+  return true;
 };
 
+// This performs the steps for |rejectedClosure| from
+// https://tc39.es/ecma262/#sec-ContinueDynamicImport step 4.
 static bool OnRejectedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   HandleValue error = args.get(0);
@@ -3001,8 +2995,8 @@ bool js::ContinueDynamicImport(JSContext* cx, Handle<Value> referencingPrivate,
                                Handle<JSObject*> result, bool usePromise) {
   MOZ_ASSERT(result);
   Rooted<DynamicImportContextObject*> context(
-      cx, DynamicImportContextObject::create(cx, referencingPrivate,
-                                             moduleRequest, promise, result));
+      cx, DynamicImportContextObject::create(cx, referencingPrivate, promise,
+                                             result));
   if (!context) {
     return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
   }
