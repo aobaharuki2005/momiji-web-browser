@@ -6,14 +6,13 @@
 
 #include "nsISupports.idl"
 #include "nsrootidl.idl"
-/*#include "nsIWidget.idl"  Boy this would be nice.*/
 
 [ptr] native nsIWidget(nsIWidget);
 %{C++
 #include "Units.h"
 #include "mozilla/DimensionRequest.h"
-
-class nsIWidget;
+#include "nsCOMPtr.h"
+#include "nsIWidget.h"
 %}
 
 typedef voidPtr nativeWindow;
