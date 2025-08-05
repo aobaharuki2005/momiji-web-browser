@@ -150,23 +150,24 @@ static bool CreateBadModuleTypeError(JSContext* aCx, LoadedScript* aScript,
 bool ModuleLoaderBase::HostLoadImportedModule(
     JSContext* aCx, JS::Handle<JSObject*> aReferrer,
     JS::Handle<JS::Value> aReferencingPrivate,
-    JS::Handle<JSObject*> aModuleRequest, JS::Handle<JS::Value> aStatePrivate,
-    JS::Handle<JSObject*> aPromise) {
+    JS::Handle<JSObject*> aModuleRequest, JS::Handle<JS::Value> aPayload) {
   // https://tc39.es/ecma262/#sec-HostLoadImportedModule
 
-  JS::Rooted<JS::Value> payload(aCx, aStatePrivate);
-  if (payload.isUndefined()) {
-    MOZ_ASSERT(aPromise);
-    payload = ObjectValue(*aPromise);
+  // TODO: Bug 1968895 : Unify the fetching for static/dynamic import
+  JS::Rooted<JSObject*> object(aCx);
+  if (aPayload.isObject()) {
+    object = &aPayload.toObject();
   }
+  bool isDynamicImport = object && JS::IsPromiseObject(object);
 
   // Ensure we always call FinishLoadingImportedModuleFailed to report errors if
   // we return early.
-  auto reportFailure = mozilla::MakeScopeExit([aCx, &payload]() {
+  auto reportFailure = mozilla::MakeScopeExit([aCx, &aPayload]() {
     if (JS_IsExceptionPending(aCx)) {
-      JS::FinishLoadingImportedModuleFailedWithPendingException(aCx, payload);
+      JS::FinishLoadingImportedModuleFailedWithPendingException(aCx, aPayload);
     } else {
-      JS::FinishLoadingImportedModuleFailed(aCx, payload, UndefinedHandleValue);
+      JS::FinishLoadingImportedModuleFailed(aCx, aPayload,
+                                            UndefinedHandleValue);
     }
   });
 
@@ -194,7 +195,7 @@ bool ModuleLoaderBase::HostLoadImportedModule(
       return false;
     }
 
-    if (aPromise && !loader->IsDynamicImportSupported()) {
+    if (isDynamicImport && !loader->IsDynamicImportSupported()) {
       JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
                                 JSMSG_DYNAMIC_IMPORT_NOT_SUPPORTED);
       return true;
@@ -225,7 +226,7 @@ bool ModuleLoaderBase::HostLoadImportedModule(
       // Step 9.2. Perform FinishLoadingImportedModule(referrer, moduleRequest,
       //           payload, completion).
       reportFailure.release();
-      JS::FinishLoadingImportedModuleFailed(aCx, payload, error);
+      JS::FinishLoadingImportedModuleFailed(aCx, aPayload, error);
 
       // Step 9.3. Return.
       return true;
@@ -253,12 +254,10 @@ bool ModuleLoaderBase::HostLoadImportedModule(
       return true;
     }
 
-    // TODO: Bug 1968895 : Unify the fetching for static/dynamic import
-    if (aPromise) {
-      // This is a dynamic import.
-
+    if (isDynamicImport) {
+      JS::Rooted<JSObject*> promise(aCx, &aPayload.toObject());
       RefPtr<ModuleLoadRequest> request = loader->CreateDynamicImport(
-          aCx, uri, script, aModuleRequest, aPromise);
+          aCx, uri, script, aModuleRequest, promise);
       if (!request) {
         // Throws TypeError if CreateDynamicImport returns nullptr.
         JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
@@ -279,7 +278,7 @@ bool ModuleLoaderBase::HostLoadImportedModule(
     } else {
       loader->StartFetchingModuleAndDependencies(
           aCx, ModuleMapKey(uri, moduleType), aReferrer, aReferencingPrivate,
-          aModuleRequest, aStatePrivate);
+          aModuleRequest, aPayload);
     }
   }
 
@@ -1343,7 +1342,7 @@ bool ModuleLoaderBase::GetImportMapSRI(
 void ModuleLoaderBase::StartFetchingModuleAndDependencies(
     JSContext* aCx, const ModuleMapKey& aRequestedModule,
     JS::Handle<JSObject*> aReferrer, JS::Handle<JS::Value> aReferencingPrivate,
-    JS::Handle<JSObject*> aModuleRequest, JS::Handle<JS::Value> aStatePrivate) {
+    JS::Handle<JSObject*> aModuleRequest, JS::Handle<JS::Value> aPayload) {
   MOZ_ASSERT(aReferrer);
   JS::Rooted<JS::Value> referrerPrivate(aCx, JS::GetModulePrivate(aReferrer));
   RefPtr<LoadedScript> referrer = GetLoadedScriptOrNull(aCx, referrerPrivate);
@@ -1354,7 +1353,7 @@ void ModuleLoaderBase::StartFetchingModuleAndDependencies(
                   mLoader->GetConsoleReportCollector(), &sriMetadata);
 
   JS::Rooted<JS::Value> hostDefinedVal(aCx);
-  JS::GetLoadingModuleHostDefinedValue(aCx, aStatePrivate, &hostDefinedVal);
+  JS::GetLoadingModuleHostDefinedValue(aCx, aPayload, &hostDefinedVal);
   ModuleLoadRequest* root =
       static_cast<ModuleLoadRequest*>(hostDefinedVal.toPrivate());
   MOZ_ASSERT(root);
@@ -1369,7 +1368,7 @@ void ModuleLoaderBase::StartFetchingModuleAndDependencies(
   childRequest->mReferrerObj = aReferrer;
   childRequest->mReferencingPrivate = aReferencingPrivate;
   childRequest->mModuleRequestObj = aModuleRequest;
-  childRequest->mStatePrivate = aStatePrivate;
+  childRequest->mStatePrivate = aPayload;
 
   // To prevent mStatePrivate from GCed.
   mozilla::HoldJSObjects(childRequest.get());

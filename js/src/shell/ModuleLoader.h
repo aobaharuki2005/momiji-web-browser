@@ -29,8 +29,7 @@ class ModuleLoader {
   static bool LoadImportedModule(JSContext* cx, JS::Handle<JSObject*> referrer,
                                  HandleValue referencingPrivate,
                                  HandleObject moduleRequest,
-                                 HandleValue statePrivate,
-                                 HandleObject promise);
+                                 HandleValue payload);
 
   static bool GetImportMetaProperties(JSContext* cx, HandleValue privateValue,
                                       HandleObject metaObject);
@@ -50,8 +49,7 @@ class ModuleLoader {
                            HandleValue error);
   bool loadImportedModule(JSContext* cx, HandleObject referrer,
                           HandleValue referencingPrivate,
-                          HandleObject moduleRequest, HandleValue state,
-                          HandleObject promise);
+                          HandleObject moduleRequest, HandleValue payload);
   bool populateImportMeta(JSContext* cx, HandleValue privateValue,
                           HandleObject metaObject);
   bool importMetaResolve(JSContext* cx,
@@ -59,9 +57,9 @@ class ModuleLoader {
                          JS::Handle<JSString*> specifier,
                          JS::MutableHandle<JSString*> urlOut);
   bool dynamicImport(JSContext* cx, HandleValue referencingPrivate,
-                     HandleObject moduleRequest, HandleObject promise);
+                     HandleObject moduleRequest, HandleValue payload);
   bool doDynamicImport(JSContext* cx, HandleValue referencingPrivate,
-                       HandleObject moduleRequest, HandleObject promise);
+                       HandleObject moduleRequest, HandleValue payload);
   JSObject* loadAndParse(JSContext* cx, HandleString path,
                          HandleObject moduleRequestArg);
   bool lookupModuleInRegistry(JSContext* cx, JS::ModuleType moduleType,
