@@ -10,6 +10,9 @@
 #include "nsString.h"
 
 #ifdef MOZ_WIDGET_ANDROID
+
+#  include "mozilla/jni/Conversions.h"
+
 namespace mozilla::jni {
 
 template <>

@@ -12,10 +12,12 @@
 #include "runnable_utils.h"
 
 extern "C" {
+// clang-format off
 #include "nr_api.h"
 #include "nr_socket.h"
-#include "nr_socket_multi_tcp.h"
 #include "transport_addr.h"
+#include "nr_socket_multi_tcp.h"
+// clang-format on
 }
 
 #include "nricectx.h"

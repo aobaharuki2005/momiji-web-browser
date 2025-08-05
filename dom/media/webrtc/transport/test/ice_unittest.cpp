@@ -23,12 +23,14 @@
 #include "ssl.h"
 
 extern "C" {
-#include "async_timer.h"
-#include "async_wait.h"
-#include "r_data.h"
-#include "r_time.h"
+// clang-format off
 #include "r_types.h"
+#include "async_wait.h"
+#include "async_timer.h"
+#include "r_data.h"
 #include "util.h"
+#include "r_time.h"
+// clang-format on
 }
 
 #include "gtest_ringbuffer_dumper.h"

@@ -16,6 +16,10 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "nsThreadUtils.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/java/WebAuthnTokenManagerWrappers.h"
+#endif
+
 namespace mozilla::dom {
 
 nsresult AssembleClientData(WindowGlobalParent* aManager,

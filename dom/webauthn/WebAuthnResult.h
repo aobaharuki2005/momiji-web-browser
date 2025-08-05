@@ -11,6 +11,7 @@
 #include "nsTArray.h"
 
 #ifdef MOZ_WIDGET_ANDROID
+#  include "JavaBuiltins.h"
 #  include "mozilla/java/WebAuthnUtilsNatives.h"
 #endif
 
