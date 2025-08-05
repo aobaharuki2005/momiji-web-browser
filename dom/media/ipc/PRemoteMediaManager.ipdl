@@ -11,6 +11,7 @@
 #endif
 
 include protocol PTexture;
+include protocol PRemoteCDM;
 include protocol PRemoteDecoder;
 include protocol PRemoteEncoder;
 include LayersSurfaces;
@@ -43,6 +44,7 @@ union RemoteDecoderInfoIPDL
 [NeedsOtherPid, ParentProc=any, ChildProc=anydom]
 sync protocol PRemoteMediaManager
 {
+  manages PRemoteCDM;
   manages PRemoteDecoder;
   manages PRemoteEncoder;
 #ifdef MOZ_WMF_MEDIA_ENGINE
@@ -65,6 +67,7 @@ parent:
                        uint64_t? mediaEngineId,
                        TrackingId? trackingId);
   async PRemoteEncoder(EncoderConfig config);
+  async PRemoteCDM(nsString keySystem);
 
   sync Readback(SurfaceDescriptorGPUVideo sd) returns (SurfaceDescriptor aResult);
 

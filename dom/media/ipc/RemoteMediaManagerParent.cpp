@@ -119,6 +119,17 @@ bool RemoteMediaManagerParent::OnManagerThread() {
   return sRemoteMediaManagerParentThread->IsOnCurrentThread();
 }
 
+/* static */
+void RemoteMediaManagerParent::Dispatch(already_AddRefed<nsIRunnable> aRunnable) {
+  if (!sRemoteMediaManagerParentThread) {
+    MOZ_DIAGNOSTIC_CRASH("Dispatching after RemoteMediaManagerParent thread shutdown!");
+    return;
+  }
+
+  MOZ_ALWAYS_SUCCEEDS(
+      sRemoteMediaManagerParentThread->Dispatch(std::move(aRunnable)));
+}
+
 PDMFactory& RemoteMediaManagerParent::EnsurePDMFactory() {
   MOZ_ASSERT(OnManagerThread());
   if (!mPDMFactory) {
@@ -276,6 +287,11 @@ bool RemoteMediaManagerParent::DeallocPMFCDMParent(PMFCDMParent* actor) {
   static_cast<MFCDMParent*>(actor)->Destroy();
 #endif
   return true;
+}
+
+PRemoteCDMParent* RemoteMediaManagerParent::AllocPRemoteCDMParent(
+    const nsAString& aKeySystem) {
+  return nullptr;
 }
 
 void RemoteMediaManagerParent::Open(
