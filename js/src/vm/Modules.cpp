@@ -92,21 +92,44 @@ JS_PUBLIC_API bool JS::FinishLoadingImportedModule(
   CHECK_THREAD(cx);
   cx->check(referrer, referencingPrivate, moduleRequest, payload, result);
 
+  if (referrer) {
+    // We currently only pass module referrers, not script or realm
+    // referrers. |loadedModules| is only required to be stored on modules.
+
+    // Step 1. If result is a normal completion, then
+    // Step 1.a. If referrer.[[LoadedModules]] contains a Record whose
+    //           [[Specifier]] is specifier, then
+    LoadedModuleMap& loadedModules =
+        referrer->as<ModuleObject>().loadedModules();
+    if (auto record = loadedModules.lookup(moduleRequest)) {
+      //  Step 1.a.i. Assert: That Record's [[Module]] is result.[[Value]].
+      MOZ_ASSERT(record->value() == result);
+    } else {
+      // Step 1.b. Else, append the Record { moduleRequest.[[Specifer]],
+      //           [[Attributes]]: moduleRequest.[[Attributes]],
+      //           [[Module]]: result.[[Value]] } to referrer.[[LoadedModules]].
+      if (!loadedModules.putNew(moduleRequest, &result->as<ModuleObject>())) {
+        ReportOutOfMemory(cx);
+        return FinishLoadingImportedModuleFailedWithPendingException(cx,
+                                                                     payload);
+      }
+    }
+  }
+
   // Step 2. If payload is a GraphLoadingState Record, then
   // Step 2.a. Perform ContinueModuleLoading(payload, result).
   JSObject* object = &payload.toObject();
   if (object->is<GraphLoadingStateRecordObject>()) {
-    return js::FinishLoadingImportedModule(cx, referrer, referencingPrivate,
-                                           moduleRequest, payload, result);
+    return js::ContinueLoadingImportedModule(cx, payload, result,
+                                             UndefinedHandleValue);
   }
 
   // Step 3. Else,
   // Step 3.a. Perform ContinueDynamicImport(payload, result).
   MOZ_ASSERT(object->is<PromiseObject>());
   Rooted<JSObject*> promise(cx, &object->as<PromiseObject>());
-  return js::FinishLoadingImportedModule(cx, referrer, referencingPrivate,
-                                         moduleRequest, promise, result,
-                                         usePromise);
+  return js::ContinueDynamicImport(cx, referencingPrivate, moduleRequest,
+                                   promise, result, usePromise);
 }
 
 // https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
@@ -1547,49 +1570,6 @@ static bool ContinueModuleLoading(JSContext* cx,
   // undefined, « moduleCompletion.[[Value]] »).
   RootedValue hostDefined(cx, state->hostDefined());
   return state->rejected(cx, hostDefined, error);
-}
-
-// https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
-// Succeeded version
-bool js::FinishLoadingImportedModule(JSContext* cx, Handle<JSObject*> referrer,
-                                     Handle<Value> referencingPrivate,
-                                     Handle<JSObject*> moduleRequest,
-                                     Handle<Value> statePrivate,
-                                     Handle<JSObject*> result) {
-  // Impl note: Currently this is called when a static import is finished.
-  MOZ_ASSERT(referrer);
-  Rooted<ModuleObject*> mod(cx, &referrer->as<ModuleObject>());
-  auto& loadedModules = mod->loadedModules();
-
-  // Step 1. If result is a normal completion, then
-  // Step 1.a. If referrer.[[LoadedModules]] contains a Record whose
-  //           [[Specifier]] is specifier, then
-  if (auto record = loadedModules.lookup(moduleRequest)) {
-    //  Step 1.a.i. Assert: That Record's [[Module]] is result.[[Value]].
-    MOZ_ASSERT(record->value() == result);
-  } else {
-    // Step 1.b. Else, append the Record { moduleRequest.[[Specifer]],
-    //           [[Attributes]]: moduleRequest.[[Attributes]],
-    //           [[Module]]: result.[[Value]] } to referrer.[[LoadedModules]].
-    if (!loadedModules.putNew(moduleRequest, &result->as<ModuleObject>())) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-  }
-
-  return js::ContinueLoadingImportedModule(cx, statePrivate, result,
-                                           UndefinedHandleValue);
-}
-
-// For Dynamic import
-bool js::FinishLoadingImportedModule(JSContext* cx, Handle<JSObject*> referrer,
-                                     Handle<Value> referencingPrivate,
-                                     Handle<JSObject*> moduleRequest,
-                                     Handle<JSObject*> promise,
-                                     Handle<JSObject*> result,
-                                     bool usePromise) {
-  return js::ContinueDynamicImport(cx, referencingPrivate, moduleRequest,
-                                   promise, result, usePromise);
 }
 
 // The 2nd part of FinishLoadingImportedModule defined in

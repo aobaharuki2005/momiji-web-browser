@@ -6004,7 +6004,7 @@ static bool ModuleLoadResolved(JSContext* cx, HandleValue hostDefined) {
 static bool ModuleLoadRejected(JSContext* cx, HandleValue hostDefined,
                                HandleValue error) {
   JS_SetPendingException(cx, error);
-  return true;
+  return false;
 }
 
 static bool ModuleLink(JSContext* cx, unsigned argc, Value* vp) {
