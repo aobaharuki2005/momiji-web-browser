@@ -1132,13 +1132,23 @@ FaultingCodeOffset MacroAssemblerMIPS64::ma_ss(FloatRegister ft,
 }
 
 void MacroAssemblerMIPS64::ma_pop(FloatRegister f) {
-  as_ldc1(f, StackPointer, 0);
+  if (f.isDouble()) {
+    as_ldc1(f, StackPointer, 0);
+  } else {
+    MOZ_ASSERT(f.isSingle(), "simd128 not supported");
+    as_lwc1(f, StackPointer, 0);
+  }
   as_daddiu(StackPointer, StackPointer, sizeof(double));
 }
 
 void MacroAssemblerMIPS64::ma_push(FloatRegister f) {
   as_daddiu(StackPointer, StackPointer, -int32_t(sizeof(double)));
-  as_sdc1(f, StackPointer, 0);
+  if (f.isDouble()) {
+    as_sdc1(f, StackPointer, 0);
+  } else {
+    MOZ_ASSERT(f.isSingle(), "simd128 not supported");
+    as_swc1(f, StackPointer, 0);
+  }
 }
 
 bool MacroAssemblerMIPS64Compat::buildOOLFakeExitFrame(void* fakeReturnAddr) {
