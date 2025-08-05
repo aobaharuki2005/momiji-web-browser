@@ -7,6 +7,10 @@ import { html } from "../vendor/lit.all.mjs";
 import "./moz-fieldset.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "../moz-toggle/moz-toggle.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "../moz-button/moz-button.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "../moz-radio-group/moz-radio-group.mjs";
 
 export default {
   title: "UI Widgets/Fieldset",
@@ -15,6 +19,9 @@ export default {
     headingLevel: {
       options: ["", "1", "2", "3", "4", "5", "6"],
       control: { type: "select" },
+    },
+    disabled: {
+      control: { type: "boolean" },
     },
   },
   parameters: {
@@ -36,12 +43,14 @@ const Template = ({
   supportPage,
   hasSlottedSupportLinks,
   headingLevel,
+  disabled,
 }) => html`
   <moz-fieldset
     data-l10n-id=${l10nId}
     .label=${label}
     .description=${description}
     .headingLevel=${headingLevel}
+    .disabled=${disabled}
     support-page=${supportPage}
     style="width: 400px;"
   >
@@ -60,6 +69,12 @@ const Template = ({
       <moz-option label="Option One" value="1"></moz-option>
       <moz-option label="Option A" value="a"></moz-option>
     </moz-select>
+    <moz-radio-group label="Radio group setting">
+      <moz-radio label="Option 1" value="1"></moz-radio>
+      <moz-radio label="Option 2" value="2"></moz-radio>
+      <moz-radio label="Option 3" value="3"></moz-radio>
+    </moz-radio-group>
+    <moz-button label="Button"></moz-button>
     ${hasSlottedSupportLinks
       ? html`<a slot="support-link" href="www.example.com"> Click me! </a>`
       : ""}
@@ -73,6 +88,7 @@ Default.args = {
   supportPage: "",
   l10nId: "moz-fieldset-label",
   hasSlottedSupportLinks: false,
+  disabled: false,
 };
 
 export const WithDescription = Template.bind({});
@@ -109,4 +125,10 @@ export const WithHeadingLegend = Template.bind({});
 WithHeadingLegend.args = {
   ...WithDescription.args,
   headingLevel: "2",
+};
+
+export const Disabled = Template.bind({});
+Disabled.args = {
+  ...WithDescription.args,
+  disabled: true,
 };
