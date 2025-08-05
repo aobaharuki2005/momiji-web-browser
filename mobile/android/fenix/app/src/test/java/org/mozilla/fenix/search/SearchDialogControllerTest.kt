@@ -94,6 +94,7 @@ class SearchDialogControllerTest {
         every { store.state.searchEngineSource.searchEngine } returns searchEngine
         every { searchEngine.type } returns SearchEngine.Type.BUNDLED
         every { searchEngine.id } returns "test-search-engine-id"
+        every { searchEngine.telemetrySuffix } returns "test-telemetry-suffix"
 
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.searchDialogFragment

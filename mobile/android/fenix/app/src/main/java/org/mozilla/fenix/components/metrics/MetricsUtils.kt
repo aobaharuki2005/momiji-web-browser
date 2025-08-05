@@ -62,10 +62,19 @@ object MetricsUtils {
         searchAccessPoint: Source,
         nimbusEventStore: NimbusEventStore,
     ) {
-        val identifier = if (engine.type == SearchEngine.Type.CUSTOM) "custom" else engine.id.lowercase()
+        val telemetryId = if (engine.type == SearchEngine.Type.CUSTOM) {
+            "custom"
+        } else {
+            val baseId = engine.id.lowercase()
+            if (!engine.telemetrySuffix.isNullOrEmpty()) {
+                "$baseId-${engine.telemetrySuffix}"
+            } else {
+                baseId
+            }
+        }
         val source = searchAccessPoint.name.lowercase()
 
-        Metrics.searchCount["$identifier.$source"].add()
+        Metrics.searchCount["$telemetryId.$source"].add()
 
         val performedSearchExtra = if (isDefault) {
             "default.$source"

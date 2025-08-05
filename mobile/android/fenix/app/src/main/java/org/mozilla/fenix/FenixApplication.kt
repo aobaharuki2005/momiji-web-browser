@@ -30,6 +30,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.appservices.autofill.AutofillApiException
 import mozilla.components.browser.state.action.SystemAction
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
@@ -820,7 +821,13 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                     !searchEngine.isCustomEngine() || searchEngine.isKnownSearchDomain()
                 if (sendSearchUrl) {
                     SearchDefaultEngine.apply {
-                        code.set(searchEngine.id)
+                        code.set(
+                            if (searchEngine.telemetrySuffix.isNullOrEmpty()) {
+                                searchEngine.id
+                            } else {
+                                "${searchEngine.id}-${searchEngine.telemetrySuffix}"
+                            },
+                        )
                         name.set(searchEngine.name)
                         searchUrl.set(searchEngine.buildSearchUrl(""))
                     }
