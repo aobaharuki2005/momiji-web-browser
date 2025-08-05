@@ -339,8 +339,8 @@
 
 .urlbarView-type-icon {
   position: absolute;
-  width: var(--icon-size-xsmall);
-  height: var(--icon-size-xsmall);
+  width: 12px;
+  height: 12px;
   align-self: center;
   margin-top: var(--urlbarView-favicon-width);
   margin-inline-start: calc(var(--urlbarView-icon-margin-start) + var(--urlbarView-favicon-width) - 6px);
@@ -370,8 +370,8 @@
       justify-content: center;
       align-items: center;
       border-radius: 50%;
-      width: var(--icon-size-xsmall);
-      height: var(--icon-size-xsmall);
+      width: 12px;
+      height: 12px;
       font-size: 10px;
     }
 
