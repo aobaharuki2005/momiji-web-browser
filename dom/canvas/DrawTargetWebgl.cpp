@@ -3300,6 +3300,9 @@ bool SharedContextWebgl::BlurRectAccel(
     const DrawOptions& aOptions, Maybe<DeviceColor> aMaskColor,
     RefPtr<TextureHandle>* aHandle, RefPtr<TextureHandle>* aTargetHandle,
     RefPtr<TextureHandle>* aResultHandle, bool aFilter) {
+  if (!aResultHandle && !mCurrentTarget->MarkChanged()) {
+    return false;
+  }
   RefPtr<TextureHandle> targetHandle =
       aTargetHandle ? aTargetHandle->get() : nullptr;
   if (targetHandle && targetHandle->IsValid() &&
