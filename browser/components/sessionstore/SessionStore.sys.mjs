@@ -1145,31 +1145,13 @@ var SessionStoreInternal = {
   _closedObjectsChanged: false,
 
   // A promise resolved once initialization is complete
-  _deferredInitialized: (function () {
-    let deferred = {};
-
-    deferred.promise = new Promise((resolve, reject) => {
-      deferred.resolve = resolve;
-      deferred.reject = reject;
-    });
-
-    return deferred;
-  })(),
+  _deferredInitialized: Promise.withResolvers(),
 
   // Whether session has been initialized
   _sessionInitialized: false,
 
   // A promise resolved once all windows are restored.
-  _deferredAllWindowsRestored: (function () {
-    let deferred = {};
-
-    deferred.promise = new Promise((resolve, reject) => {
-      deferred.resolve = resolve;
-      deferred.reject = reject;
-    });
-
-    return deferred;
-  })(),
+  _deferredAllWindowsRestored: Promise.withResolvers(),
 
   get promiseAllWindowsRestored() {
     return this._deferredAllWindowsRestored.promise;
