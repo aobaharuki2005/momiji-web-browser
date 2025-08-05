@@ -837,7 +837,7 @@ int ff_mediacodec_dec_init(AVCodecContext *avctx, MediaCodecDecContext *s,
     if (ret < 0)
         goto fail;
 
-    status = ff_AMediaCodec_configure(s->codec, format, s->surface, NULL, 0);
+    status = ff_AMediaCodec_configure(s->codec, format, s->surface, avctx->moz_ndk_crypto, 0);
     if (status < 0) {
         char *desc = ff_AMediaFormat_toString(format);
         av_log(avctx, AV_LOG_ERROR,
@@ -943,7 +943,11 @@ int ff_mediacodec_dec_send(AVCodecContext *avctx, MediaCodecDecContext *s,
 
             av_log(avctx, AV_LOG_DEBUG, "Sending End Of Stream signal\n");
 
-            status = ff_AMediaCodec_queueInputBuffer(codec, index, 0, 0, pts, flags);
+            if (pkt->moz_ndk_crypto_info) {
+                status = ff_AMediaCodec_queueSecureInputBuffer(codec, index, 0, pkt->moz_ndk_crypto_info, pts, flags);
+            } else {
+                status = ff_AMediaCodec_queueInputBuffer(codec, index, 0, 0, pts, flags);
+            }
             if (status < 0) {
                 av_log(avctx, AV_LOG_ERROR, "Failed to queue input empty buffer (status = %d)\n", status);
                 return AVERROR_EXTERNAL;
@@ -960,7 +964,11 @@ int ff_mediacodec_dec_send(AVCodecContext *avctx, MediaCodecDecContext *s,
         memcpy(data, pkt->data + offset, size);
         offset += size;
 
-        status = ff_AMediaCodec_queueInputBuffer(codec, index, 0, size, pts, 0);
+        if (pkt->moz_ndk_crypto_info) {
+            status = ff_AMediaCodec_queueSecureInputBuffer(codec, index, 0, pkt->moz_ndk_crypto_info, pts, 0);
+        } else {
+            status = ff_AMediaCodec_queueInputBuffer(codec, index, 0, size, pts, 0);
+        }
         if (status < 0) {
             av_log(avctx, AV_LOG_ERROR, "Failed to queue input buffer (status = %d)\n", status);
             return AVERROR_EXTERNAL;
