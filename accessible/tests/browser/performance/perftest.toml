@@ -14,5 +14,8 @@ prefs = [
 ["browser_addManyNodes.js"]
 disabled = "Disabled as we want to run this only as perftest, not regular CI"
 
+["browser_reflowPseudoelements.js"]
+disabled = "Disabled as we want to run this only as perftest, not regular CI"
+
 ["browser_removeManySpellingErrors.js"]
 disabled = "Disabled as we want to run this only as perftest, not regular CI"

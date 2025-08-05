@@ -90,4 +90,5 @@ suites:
         description: "Performance tests for the accessibility engine"
         tests:
             "browser_addManyNodes.js": ""
+            "browser_reflowPseudoelements.js": ""
             "browser_removeManySpellingErrors.js": ""
