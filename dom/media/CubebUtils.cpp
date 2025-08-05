@@ -8,39 +8,42 @@
 
 #include "audio_thread_priority.h"
 #include "mozilla/AbstractThread.h"
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/glean/DomMediaMetrics.h"
-#include "mozilla/ipc/FileDescriptor.h"
+#include "mozilla/Components.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Components.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UnderrunHandler.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/glean/DomMediaMetrics.h"
+#include "mozilla/ipc/FileDescriptor.h"
 #if defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxSettings.h"
 #endif
+#include <stdint.h>
+
+#include <algorithm>
+
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsIStringBundle.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "prdtoa.h"
-#include <algorithm>
-#include <stdint.h>
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/java/GeckoAppShellWrappers.h"
 #endif
 #ifdef XP_WIN
 #  include "mozilla/mscom/EnsureMTA.h"
 #endif
-#include "audioipc2_server_ffi_generated.h"
-#include "audioipc2_client_ffi_generated.h"
 #include <cmath>
 #include <thread>
+
 #include "CallbackThreadRegistry.h"
+#include "audioipc2_client_ffi_generated.h"
+#include "audioipc2_server_ffi_generated.h"
 #include "mozilla/StaticPrefs_media.h"
 
 #define AUDIOIPC_STACK_SIZE_DEFAULT (64 * 4096)

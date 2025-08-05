@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "OffscreenCanvasDisplayHelper.h"
+
+#include "mozilla/SVGObserverUtils.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
@@ -16,8 +19,6 @@
 #include "mozilla/layers/PersistentBufferProvider.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/layers/TextureWrapperImage.h"
-#include "mozilla/StaticPrefs_gfx.h"
-#include "mozilla/SVGObserverUtils.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsRFPService.h"
 

@@ -6,6 +6,8 @@
 
 #include "ContentEventHandler.h"
 
+#include <algorithm>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ContentIterator.h"
@@ -20,14 +22,15 @@
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/ViewportUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/HTMLUnknownElement.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/StaticRange.h"
 #include "mozilla/dom/Text.h"
-#include "nsCaret.h"
 #include "nsCOMPtr.h"
+#include "nsCaret.h"
 #include "nsContentUtils.h"
 #include "nsCopySupport.h"
 #include "nsElementTable.h"
@@ -43,9 +46,6 @@
 #include "nsTextFragment.h"
 #include "nsTextFrame.h"
 #include "nsView.h"
-#include "mozilla/ViewportUtils.h"
-
-#include <algorithm>
 
 // Work around conflicting define in rpcndr.h
 #if defined(small)

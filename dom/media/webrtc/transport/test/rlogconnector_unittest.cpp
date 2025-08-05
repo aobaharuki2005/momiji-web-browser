@@ -9,16 +9,16 @@
 #include "rlogconnector.h"
 
 extern "C" {
-#include "registry.h"
 #include "r_log.h"
+#include "registry.h"
 }
 
 #define GTEST_HAS_RTTI 0
-#include "gtest/gtest.h"
-
 #include <deque>
 #include <string>
 #include <vector>
+
+#include "gtest/gtest.h"
 
 using mozilla::RLogConnector;
 

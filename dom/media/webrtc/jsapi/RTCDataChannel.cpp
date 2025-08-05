@@ -6,12 +6,14 @@
 
 #include "RTCDataChannel.h"
 
-#include "base/basictypes.h"
-#include "mozilla/Logging.h"
-
+#include "DataChannel.h"
+#include "DataChannelLog.h"
 #include "RTCDataChannelDeclarations.h"
+#include "base/basictypes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/Logging.h"
+#include "mozilla/dom/Blob.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"
@@ -19,18 +21,13 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/dom/Blob.h"
-
-#include "nsError.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsError.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsProxyRelease.h"
 #include "nsThreadManager.h"
-
-#include "DataChannel.h"
-#include "DataChannelLog.h"
 
 // Since we've moved the windows.h include down here, we have to explicitly
 // undef GetBinaryType, otherwise we'll get really odd conflicts

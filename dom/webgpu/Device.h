@@ -7,14 +7,14 @@
 #define GPU_DEVICE_H_
 
 #include "ObjectModel.h"
-#include "nsTHashSet.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/WeakPtr.h"
-#include "mozilla/webgpu/WebGPUTypes.h"
 #include "mozilla/webgpu/PWebGPUTypes.h"
+#include "mozilla/webgpu/WebGPUTypes.h"
 #include "mozilla/webrender/WebRenderAPI.h"
-#include "mozilla/DOMEventTargetHelper.h"
+#include "nsTHashSet.h"
 
 namespace mozilla {
 namespace dom {

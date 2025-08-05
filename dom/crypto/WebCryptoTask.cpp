@@ -4,24 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "pk11pub.h"
-#include "cryptohi.h"
-#include "secerr.h"
-#include "nsNSSComponent.h"
-#include "nsProxyRelease.h"
+#include "mozilla/dom/WebCryptoTask.h"
 
+#include "cryptohi.h"
 #include "jsapi.h"
-#include "mozilla/glean/DomCryptoMetrics.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/dom/CryptoBuffer.h"
 #include "mozilla/dom/CryptoKey.h"
 #include "mozilla/dom/KeyAlgorithmProxy.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/WebCryptoCommon.h"
-#include "mozilla/dom/WebCryptoTask.h"
-#include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/RootedDictionary.h"
+#include "mozilla/dom/WorkerRef.h"
+#include "mozilla/glean/DomCryptoMetrics.h"
+#include "nsNSSComponent.h"
+#include "nsProxyRelease.h"
+#include "pk11pub.h"
+#include "secerr.h"
 
 // Template taken from security/nss/lib/util/templates.c
 // This (or SGN_EncodeDigestInfo) would ideally be exported

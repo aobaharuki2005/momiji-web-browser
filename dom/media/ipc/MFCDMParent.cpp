@@ -7,6 +7,7 @@
 #include <mfmediaengine.h>
 #include <unknwnbase.h>
 #include <wtypes.h>
+
 #include "mozilla/Likely.h"
 #define INITGUID          // Enable DEFINE_PROPERTYKEY()
 #include <propkeydef.h>   // For DEFINE_PROPERTYKEY() definition
@@ -19,9 +20,9 @@
 #include "WMFUtils.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/EMEUtils.h"
+#include "mozilla/KeySystemConfig.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/RandomNum.h"
-#include "mozilla/KeySystemConfig.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/WindowsVersion.h"

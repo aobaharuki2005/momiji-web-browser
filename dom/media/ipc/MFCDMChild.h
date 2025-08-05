@@ -6,6 +6,7 @@
 #define DOM_MEDIA_IPC_MFCDMCHILD_H_
 
 #include <unordered_map>
+
 #include "mozilla/Atomics.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/PMFCDMChild.h"

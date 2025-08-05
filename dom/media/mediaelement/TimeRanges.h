@@ -7,11 +7,11 @@
 #ifndef mozilla_dom_TimeRanges_h_
 #define mozilla_dom_TimeRanges_h_
 
+#include "TimeUnits.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
-#include "TimeUnits.h"
 
 namespace mozilla {
 class ErrorResult;

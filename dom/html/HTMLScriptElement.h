@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_HTMLScriptElement_h
 #define mozilla_dom_HTMLScriptElement_h
 
-#include "mozilla/dom/FetchPriority.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/FetchPriority.h"
 #include "mozilla/dom/ScriptElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsStringFwd.h"

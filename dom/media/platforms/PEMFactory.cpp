@@ -25,11 +25,8 @@
 #endif
 
 #include "FFVPXRuntimeLinker.h"
-
 #include "GMPEncoderModule.h"
-
 #include "mozilla/RemoteEncoderModule.h"
-
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/gfxVars.h"

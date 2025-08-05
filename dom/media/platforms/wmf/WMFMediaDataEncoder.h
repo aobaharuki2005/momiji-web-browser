@@ -7,11 +7,12 @@
 #ifndef WMFMediaDataEncoder_h_
 #define WMFMediaDataEncoder_h_
 
+#include <comdef.h>
+
 #include "MFTEncoder.h"
 #include "PlatformEncoderModule.h"
 #include "WMFDataEncoderUtils.h"
 #include "WMFUtils.h"
-#include <comdef.h>
 #include "mozilla/WindowsProcessMitigations.h"
 
 namespace mozilla {

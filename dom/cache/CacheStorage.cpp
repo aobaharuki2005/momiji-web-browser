@@ -6,13 +6,19 @@
 
 #include "mozilla/dom/cache/CacheStorage.h"
 
+#include "js/Object.h"              // JS::GetClass
+#include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/CacheStorageBinding.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Response.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/cache/AutoUtils.h"
 #include "mozilla/dom/cache/Cache.h"
 #include "mozilla/dom/cache/CacheChild.h"
@@ -24,20 +30,14 @@
 #include "mozilla/dom/cache/TypeUtils.h"
 #include "mozilla/dom/quota/PrincipalUtils.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
-#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
-#include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/StaticPrefs_extensions.h"
 #include "nsContentUtils.h"
-#include "mozilla/dom/Document.h"
 #include "nsIGlobalObject.h"
 #include "nsMixedContentBlocker.h"
 #include "nsURLParsers.h"
-#include "js/Object.h"              // JS::GetClass
-#include "js/PropertyAndElement.h"  // JS_DefineProperty
 
 namespace mozilla::dom::cache {
 

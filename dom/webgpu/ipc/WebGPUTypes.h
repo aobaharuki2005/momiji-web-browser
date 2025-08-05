@@ -7,9 +7,10 @@
 #define WEBGPU_TYPES_H_
 
 #include <cstdint>
+
 #include "mozilla/Maybe.h"
-#include "nsString.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "nsString.h"
 
 namespace mozilla::dom {
 enum class GPUErrorFilter : uint8_t;

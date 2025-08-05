@@ -7,13 +7,13 @@
 #ifndef mozilla_dom_TextTrackManager_h
 #define mozilla_dom_TextTrackManager_h
 
-#include "mozilla/dom/TextTrack.h"
-#include "mozilla/dom/TextTrackList.h"
-#include "mozilla/dom/TextTrackCueList.h"
+#include "TimeUnits.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/dom/TextTrack.h"
+#include "mozilla/dom/TextTrackCueList.h"
+#include "mozilla/dom/TextTrackList.h"
 #include "nsContentUtils.h"
 #include "nsIDOMEventListener.h"
-#include "TimeUnits.h"
 
 class nsIWebVTTParserWrapper;
 

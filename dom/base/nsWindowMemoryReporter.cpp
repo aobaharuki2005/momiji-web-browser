@@ -5,23 +5,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsWindowMemoryReporter.h"
-#include "nsWindowSizes.h"
-#include "nsGlobalWindowInner.h"
-#include "nsGlobalWindowOuter.h"
-#include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/Document.h"
+
+#include "XPCJSMemoryReporter.h"
+#include "js/MemoryMetrics.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Try.h"
-#include "mozilla/ResultExtensions.h"
+#include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/Document.h"
+#include "nsGlobalWindowInner.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"
-#include "XPCJSMemoryReporter.h"
-#include "js/MemoryMetrics.h"
 #include "nsQueryObject.h"
 #include "nsServiceManagerUtils.h"
+#include "nsWindowSizes.h"
 #include "nsXULPrototypeCache.h"
 
 using namespace mozilla;

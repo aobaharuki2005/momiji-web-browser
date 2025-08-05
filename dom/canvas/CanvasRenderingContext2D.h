@@ -6,11 +6,12 @@
 #define CanvasRenderingContext2D_h
 
 #include <vector>
-#include "mozilla/dom/CanvasRenderingContext2DBinding.h"
-#include "mozilla/dom/HTMLCanvasElement.h"
-#include "mozilla/intl/Bidi.h"
-#include "mozilla/gfx/Rect.h"
-#include "mozilla/gfx/2D.h"
+
+#include "FilterDescription.h"
+#include "gfx2DGlue.h"
+#include "gfxFontConstants.h"
+#include "gfxTextRun.h"
+#include "gfxUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumeratedArray.h"
@@ -20,15 +21,15 @@
 #include "mozilla/SurfaceFromElementResult.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
-#include "FilterDescription.h"
-#include "gfx2DGlue.h"
-#include "gfxFontConstants.h"
-#include "gfxTextRun.h"
-#include "gfxUtils.h"
-#include "nsICanvasRenderingContextInternal.h"
+#include "mozilla/dom/CanvasRenderingContext2DBinding.h"
+#include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Rect.h"
+#include "mozilla/intl/Bidi.h"
 #include "nsColor.h"
-#include "nsRFPService.h"
+#include "nsICanvasRenderingContextInternal.h"
 #include "nsIFrame.h"
+#include "nsRFPService.h"
 
 class gfxFontGroup;
 class nsGlobalWindowInner;

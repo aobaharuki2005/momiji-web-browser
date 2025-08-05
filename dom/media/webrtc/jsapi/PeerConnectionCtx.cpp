@@ -4,10 +4,12 @@
 
 #include "PeerConnectionCtx.h"
 
+#include "PeerConnectionImpl.h"
+#include "WebrtcGlobalChild.h"
+#include "WebrtcGlobalInformation.h"
 #include "WebrtcGlobalStatsHistory.h"
 #include "api/audio/audio_mixer.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
-#include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "call/audio_state.h"
 #include "common/browser_logging/CSFLog.h"
 #include "common/browser_logging/WebRtcLog.h"
@@ -15,23 +17,21 @@
 #include "gmp-video-encode.h"  // GMP_API_VIDEO_ENCODER
 #include "libwebrtcglue/WebrtcTaskQueueWrapper.h"
 #include "modules/audio_device/include/fake_audio_device.h"
-#include "modules/audio_processing/include/audio_processing.h"
 #include "modules/audio_processing/include/aec_dump.h"
-#include "mozilla/UniquePtr.h"
+#include "modules/audio_processing/include/audio_processing.h"
+#include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/glean/DomMediaWebrtcMetrics.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
+#include "mozilla/glean/DomMediaWebrtcMetrics.h"
 #include "nsCRTGlue.h"
 #include "nsIEventTarget.h"
 #include "nsIIOService.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"  // do_GetService
-#include "PeerConnectionImpl.h"
 #include "transport/runnable_utils.h"
-#include "WebrtcGlobalChild.h"
-#include "WebrtcGlobalInformation.h"
 
 static const char* pccLogTag = "PeerConnectionCtx";
 #ifdef LOGTAG

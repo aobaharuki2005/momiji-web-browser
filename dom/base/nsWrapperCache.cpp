@@ -4,15 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsWrapperCacheInlines.h"
-
-#include "jsfriendapi.h"
 #include "js/Class.h"
 #include "js/Proxy.h"
+#include "jsfriendapi.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "nsCycleCollectionTraversalCallback.h"
 #include "nsCycleCollector.h"
+#include "nsWrapperCacheInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

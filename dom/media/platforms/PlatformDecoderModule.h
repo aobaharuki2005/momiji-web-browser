@@ -13,16 +13,16 @@
 #  include "MediaEventSource.h"
 #  include "MediaInfo.h"
 #  include "MediaResult.h"
+#  include "PerformanceRecorder.h"
 #  include "mozilla/EnumSet.h"
 #  include "mozilla/EnumTypeTraits.h"
 #  include "mozilla/MozPromise.h"
 #  include "mozilla/RefPtr.h"
 #  include "mozilla/TaskQueue.h"
+#  include "mozilla/ipc/UtilityMediaService.h"
 #  include "mozilla/layers/KnowsCompositor.h"
 #  include "mozilla/layers/LayersTypes.h"
-#  include "mozilla/ipc/UtilityMediaService.h"
 #  include "nsTArray.h"
-#  include "PerformanceRecorder.h"
 
 namespace mozilla {
 class TrackInfo;

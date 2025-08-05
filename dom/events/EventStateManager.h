@@ -7,21 +7,20 @@
 #ifndef mozilla_EventStateManager_h_
 #define mozilla_EventStateManager_h_
 
-#include "mozilla/EventForwards.h"
-
-#include "nsIObserver.h"
-#include "nsWeakReference.h"
-#include "nsCOMPtr.h"
-#include "nsCOMArray.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsIWeakReferenceUtils.h"
-#include "nsRefPtrHashtable.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/layers/APZPublicUtils.h"
-#include "mozilla/dom/Record.h"
 #include "Units.h"
 #include "WheelHandlingHelper.h"  // for WheelDeltaAdjustmentStrategy
+#include "mozilla/Attributes.h"
+#include "mozilla/EventForwards.h"
+#include "mozilla/TimeStamp.h"
+#include "mozilla/dom/Record.h"
+#include "mozilla/layers/APZPublicUtils.h"
+#include "nsCOMArray.h"
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsIObserver.h"
+#include "nsIWeakReferenceUtils.h"
+#include "nsRefPtrHashtable.h"
+#include "nsWeakReference.h"
 
 class nsFrameLoader;
 class nsIContent;

@@ -7,22 +7,22 @@
 #define nsICanvasRenderingContextInternal_h___
 
 #include "gfxRect.h"
-#include "mozilla/gfx/2D.h"
-#include "nsISupports.h"
-#include "nsIInputStream.h"
-#include "nsIDocShell.h"
-#include "nsRefreshObservers.h"
-#include "nsRFPService.h"
-#include "mozilla/dom/HTMLCanvasElement.h"
-#include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StateWatching.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/NotNull.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/dom/OffscreenCanvas.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/layers/LayersSurfaces.h"
+#include "nsIDocShell.h"
+#include "nsIInputStream.h"
+#include "nsISupports.h"
+#include "nsRFPService.h"
+#include "nsRefreshObservers.h"
 
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
   {0xb84f2fed, 0x9d4b, 0x430b, {0xbd, 0xfb, 0x85, 0x57, 0x8a, 0xc2, 0xb4, 0x4b}}

@@ -4,15 +4,15 @@
 
 #include "MediaControlService.h"
 
-#include "MediaController.h"
 #include "MediaControlUtils.h"
+#include "MediaController.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/intl/Localization.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/intl/Localization.h"
 #include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
 

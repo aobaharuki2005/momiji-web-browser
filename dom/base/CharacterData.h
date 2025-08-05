@@ -13,12 +13,11 @@
 #define mozilla_dom_CharacterData_h
 
 #include "mozilla/Attributes.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsError.h"
 #include "nsIContent.h"
 #include "nsIMutationObserver.h"
-
 #include "nsTextFragment.h"
-#include "nsError.h"
-#include "nsCycleCollectionParticipant.h"
 
 namespace mozilla::dom {
 class Element;

@@ -2,61 +2,56 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <cstdlib>
+#include "PeerConnectionImpl.h"
+
 #include <cerrno>
+#include <cstdlib>
 #include <deque>
 #include <set>
 #include <sstream>
 #include <vector>
 
-#include "common/browser_logging/CSFLog.h"
+#include "IPeerConnection.h"
+#include "MediaTrackGraph.h"
+#include "PeerConnectionCtx.h"
+#include "RTCDataChannelDeclarations.h"
+#include "RemoteTrackSource.h"
 #include "base/histogram.h"
+#include "common/browser_logging/CSFLog.h"
 #include "common/time_profiling/timecard.h"
-
 #include "jsapi.h"
-#include "nspr.h"
-#include "nss.h"
-#include "pk11pub.h"
-
-#include "nsFmtString.h"
-#include "nsNetCID.h"
-#include "nsILoadContext.h"
-#include "nsEffectiveTLDService.h"
-#include "nsServiceManagerUtils.h"
-#include "nsThreadUtils.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
-#include "nsProxyRelease.h"
-#include "prtime.h"
-
+#include "jsapi/RTCRtpReceiver.h"
+#include "jsapi/RTCRtpSender.h"
+#include "jsep/JsepSession.h"
+#include "jsep/JsepSessionImpl.h"
+#include "jsep/JsepTrack.h"
 #include "libwebrtcglue/AudioConduit.h"
 #include "libwebrtcglue/VideoConduit.h"
 #include "libwebrtcglue/WebrtcCallWrapper.h"
 #include "libwebrtcglue/WebrtcEnvironmentWrapper.h"
-#include "MediaTrackGraph.h"
-#include "transport/runnable_utils.h"
-#include "IPeerConnection.h"
-#include "PeerConnectionCtx.h"
-#include "PeerConnectionImpl.h"
-#include "RemoteTrackSource.h"
-#include "RTCDataChannelDeclarations.h"
-#include "transport/dtlsidentity.h"
-#include "sdp/SdpAttribute.h"
-
-#include "jsep/JsepTrack.h"
-#include "jsep/JsepSession.h"
-#include "jsep/JsepSessionImpl.h"
-
-#include "transportbridge/MediaPipeline.h"
-#include "transportbridge/RtpLogger.h"
-#include "jsapi/RTCRtpReceiver.h"
-#include "jsapi/RTCRtpSender.h"
-
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/glean/DomMediaWebrtcMetrics.h"
 #include "mozilla/media/MediaUtils.h"
+#include "nsEffectiveTLDService.h"
+#include "nsFmtString.h"
+#include "nsILoadContext.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsNetCID.h"
+#include "nsProxyRelease.h"
+#include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
+#include "nspr.h"
+#include "nss.h"
+#include "pk11pub.h"
+#include "prtime.h"
+#include "sdp/SdpAttribute.h"
+#include "transport/dtlsidentity.h"
+#include "transport/runnable_utils.h"
+#include "transportbridge/MediaPipeline.h"
+#include "transportbridge/RtpLogger.h"
 
 #ifdef XP_WIN
 // We need to undef the MS macro for Document::CreateEvent
@@ -65,60 +60,57 @@
 #  endif
 #endif  // XP_WIN
 
-#include "mozilla/dom/Document.h"
-#include "nsGlobalWindowInner.h"
+#include "AudioStreamTrack.h"
+#include "DOMMediaStream.h"
+#include "MediaManager.h"
+#include "MediaStreamTrack.h"
 #include "RTCDataChannel.h"
-#include "mozilla/dom/Location.h"
-#include "mozilla/dom/Promise.h"
-#include "mozilla/NullPrincipal.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/glean/DomMediaWebrtcMetrics.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/PublicSSL.h"
-#include "nsXULAppAPI.h"
-#include "nsContentUtils.h"
-#include "nsDOMJSUtils.h"
-#include "nsPrintfCString.h"
-#include "nsURLHelper.h"
-#include "nsNetUtil.h"
+#include "RTCDtlsTransport.h"
+#include "RTCSctpTransport.h"
+#include "VideoStreamTrack.h"
+#include "WebrtcGlobalInformation.h"
 #include "js/ArrayBuffer.h"    // JS::NewArrayBufferWithContents
 #include "js/GCAnnotations.h"  // JS_HAZ_ROOTED
 #include "js/RootingAPI.h"     // JS::{{,Mutable}Handle,Rooted}
+#include "jsep/JsepTransport.h"
+#include "mozilla/EventDispatcher.h"
+#include "mozilla/LoadInfo.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/PeerIdentity.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/PublicSSL.h"
+#include "mozilla/TimeStamp.h"
+#include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/Event.h"
+#include "mozilla/dom/Location.h"
+#include "mozilla/dom/PeerConnectionImplBinding.h"
+#include "mozilla/dom/PluginCrashedEvent.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/RTCCertificate.h"
-#include "mozilla/dom/RTCSctpTransportBinding.h"  // RTCSctpTransportState
+#include "mozilla/dom/RTCDataChannelBinding.h"
 #include "mozilla/dom/RTCDtlsTransportBinding.h"  // RTCDtlsTransportState
 #include "mozilla/dom/RTCIceTransportBinding.h"   // RTCIceTransportState
+#include "mozilla/dom/RTCPeerConnectionBinding.h"
 #include "mozilla/dom/RTCRtpReceiverBinding.h"
 #include "mozilla/dom/RTCRtpSenderBinding.h"
+#include "mozilla/dom/RTCSctpTransportBinding.h"  // RTCSctpTransportState
 #include "mozilla/dom/RTCStatsReportBinding.h"
-#include "mozilla/dom/RTCPeerConnectionBinding.h"
-#include "mozilla/dom/PeerConnectionImplBinding.h"
-#include "mozilla/dom/RTCDataChannelBinding.h"
-#include "mozilla/dom/PluginCrashedEvent.h"
-#include "MediaStreamTrack.h"
-#include "AudioStreamTrack.h"
-#include "VideoStreamTrack.h"
-#include "nsIScriptGlobalObject.h"
-#include "DOMMediaStream.h"
-#include "WebrtcGlobalInformation.h"
-#include "mozilla/dom/Event.h"
-#include "mozilla/EventDispatcher.h"
+#include "mozilla/glean/DomMediaWebrtcMetrics.h"
 #include "mozilla/net/DataChannelProtocol.h"
-#include "MediaManager.h"
-
-#include "transport/nr_socket_proxy_config.h"
-#include "RTCSctpTransport.h"
-#include "RTCDtlsTransport.h"
-#include "jsep/JsepTransport.h"
-
+#include "mozilla/net/WebrtcProxyConfig.h"
+#include "nsContentUtils.h"
+#include "nsDOMJSUtils.h"
+#include "nsGlobalWindowInner.h"
 #include "nsILoadInfo.h"
 #include "nsIPrincipal.h"
-#include "mozilla/LoadInfo.h"
 #include "nsIProxiedChannel.h"
-
-#include "mozilla/dom/BrowserChild.h"
-#include "mozilla/net/WebrtcProxyConfig.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsNetUtil.h"
+#include "nsPrintfCString.h"
+#include "nsURLHelper.h"
+#include "nsXULAppAPI.h"
+#include "transport/nr_socket_proxy_config.h"
 
 #ifdef XP_WIN
 // We need to undef the MS macro again in case the windows include file

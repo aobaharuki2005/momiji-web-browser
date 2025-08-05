@@ -6,10 +6,10 @@
 
 #include "jsapi/RTCEncodedFrameBase.h"
 
-#include "js/GCAPI.h"
-#include "nsIGlobalObject.h"
-#include "mozilla/dom/ScriptSettings.h"
 #include "js/ArrayBuffer.h"
+#include "js/GCAPI.h"
+#include "mozilla/dom/ScriptSettings.h"
+#include "nsIGlobalObject.h"
 
 namespace mozilla::dom {
 NS_IMPL_CYCLE_COLLECTION_WITH_JS_MEMBERS(RTCEncodedFrameBase, (mGlobal),

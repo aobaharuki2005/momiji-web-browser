@@ -7,13 +7,13 @@
 #ifndef DOM_SVG_SVGANIMATEDVIEWBOX_H_
 #define DOM_SVG_SVGANIMATEDVIEWBOX_H_
 
-#include "nsCycleCollectionParticipant.h"
-#include "nsError.h"
 #include "SVGAttrTearoffTable.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/SVGAnimatedRect.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsError.h"
 
 namespace mozilla {
 

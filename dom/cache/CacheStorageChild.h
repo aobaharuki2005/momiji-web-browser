@@ -8,10 +8,10 @@
 #define mozilla_dom_cache_CacheStorageChild_h
 
 #include "mozilla/dom/cache/ActorChild.h"
-#include "mozilla/dom/cache/Types.h"
-#include "mozilla/dom/cache/TypeUtils.h"
-#include "mozilla/dom/cache/PCacheStorageChild.h"
 #include "mozilla/dom/cache/CacheOpChild.h"
+#include "mozilla/dom/cache/PCacheStorageChild.h"
+#include "mozilla/dom/cache/TypeUtils.h"
+#include "mozilla/dom/cache/Types.h"
 
 class nsIGlobalObject;
 

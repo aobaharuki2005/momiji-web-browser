@@ -6,18 +6,19 @@
 
 #include "nsGenericHTMLFrameElement.h"
 
-#include "mozilla/dom/Document.h"
-#include "mozilla/dom/HTMLIFrameElement.h"
-#include "mozilla/dom/UnbindContext.h"
-#include "mozilla/dom/XULFrameElement.h"
-#include "mozilla/dom/BrowserBridgeChild.h"
-#include "mozilla/dom/WindowProxyHolder.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/ErrorResult.h"
+#include "mozilla/dom/BrowserBridgeChild.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/HTMLIFrameElement.h"
+#include "mozilla/dom/UnbindContext.h"
+#include "mozilla/dom/WindowProxyHolder.h"
+#include "mozilla/dom/XULFrameElement.h"
 #include "nsAttrValueInlines.h"
+#include "nsAttrValueOrString.h"
 #include "nsContentUtils.h"
 #include "nsIDocShell.h"
 #include "nsIFrame.h"
@@ -26,7 +27,6 @@
 #include "nsPresContext.h"
 #include "nsServiceManagerUtils.h"
 #include "nsSubDocumentFrame.h"
-#include "nsAttrValueOrString.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

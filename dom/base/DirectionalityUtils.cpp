@@ -26,9 +26,7 @@
 
 #include "mozilla/dom/DirectionalityUtils.h"
 
-#include "nsINode.h"
-#include "nsIContent.h"
-#include "nsIContentInlines.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLInputElement.h"
@@ -38,10 +36,12 @@
 #include "mozilla/dom/Text.h"
 #include "mozilla/dom/UnbindContext.h"
 #include "mozilla/intl/UnicodeProperties.h"
-#include "mozilla/Maybe.h"
-#include "nsUnicodeProperties.h"
-#include "nsTextFragment.h"
 #include "nsAttrValue.h"
+#include "nsIContent.h"
+#include "nsIContentInlines.h"
+#include "nsINode.h"
+#include "nsTextFragment.h"
+#include "nsUnicodeProperties.h"
 
 namespace mozilla {
 

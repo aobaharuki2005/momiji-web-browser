@@ -7,29 +7,26 @@
 #ifndef MEDIAENGINE_REMOTE_VIDEO_SOURCE_H_
 #define MEDIAENGINE_REMOTE_VIDEO_SOURCE_H_
 
+#include "DOMMediaStream.h"
+#include "mozilla/Mutex.h"
+#include "nsCOMPtr.h"
+#include "nsComponentManagerUtils.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsThreadUtils.h"
 #include "prcvar.h"
 #include "prthread.h"
 
-#include "mozilla/Mutex.h"
-#include "nsCOMPtr.h"
-#include "nsThreadUtils.h"
-#include "DOMMediaStream.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsComponentManagerUtils.h"
-
 // Avoid warnings about redefinition of WARN_UNUSED_RESULT
-#include "ipc/IPCMessageUtils.h"
-#include "VideoUtils.h"
-#include "MediaEngineSource.h"
-#include "VideoSegment.h"
 #include "AudioSegment.h"
+#include "MediaEngineSource.h"
 #include "MediaTrackGraph.h"
-
+#include "VideoSegment.h"
+#include "VideoUtils.h"
+#include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 
 // Camera Access via IPC
 #include "CamerasChild.h"
-
 #include "NullTransport.h"
 
 // WebRTC includes

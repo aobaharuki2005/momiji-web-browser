@@ -4,6 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "TextDirectiveUtil.h"
+
+#include "ContentIterator.h"
+#include "Document.h"
+#include "Text.h"
+#include "fragmentdirectives_ffi_generated.h"
+#include "mozilla/ContentIterator.h"
+#include "mozilla/ResultVariant.h"
+#include "mozilla/SelectionMovementUtils.h"
+#include "mozilla/intl/WordBreaker.h"
 #include "nsComputedDOMStyle.h"
 #include "nsDOMAttributeMap.h"
 #include "nsFind.h"
@@ -16,14 +25,6 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsUnicharUtils.h"
-#include "ContentIterator.h"
-#include "Document.h"
-#include "fragmentdirectives_ffi_generated.h"
-#include "Text.h"
-#include "mozilla/ContentIterator.h"
-#include "mozilla/ResultVariant.h"
-#include "mozilla/intl/WordBreaker.h"
-#include "mozilla/SelectionMovementUtils.h"
 
 namespace mozilla::dom {
 LazyLogModule gFragmentDirectiveLog("FragmentDirective");

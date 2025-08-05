@@ -8,12 +8,13 @@
 #define DOM_TEXTDIRECTIVECREATOR_H_
 
 #include <tuple>
+
 #include "RangeBoundary.h"
-#include "mozilla/dom/fragmentdirectives_ffi_generated.h"
 #include "TextDirectiveUtil.h"
-#include "nsStringFwd.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
+#include "mozilla/dom/fragmentdirectives_ffi_generated.h"
+#include "nsStringFwd.h"
 
 class nsRange;
 

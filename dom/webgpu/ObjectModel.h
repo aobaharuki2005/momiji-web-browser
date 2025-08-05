@@ -6,8 +6,8 @@
 #ifndef GPU_OBJECT_MODEL_H_
 #define GPU_OBJECT_MODEL_H_
 
-#include "nsWrapperCache.h"
 #include "nsString.h"
+#include "nsWrapperCache.h"
 
 class nsIGlobalObject;
 

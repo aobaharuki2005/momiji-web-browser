@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_MediaError_h
 #define mozilla_dom_MediaError_h
 
-#include "mozilla/dom/HTMLMediaElement.h"
-#include "nsWrapperCache.h"
-#include "nsISupports.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/HTMLMediaElement.h"
+#include "nsISupports.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla::dom {
 

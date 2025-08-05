@@ -9,48 +9,47 @@
 
 #include <type_traits>
 
-#include "jsfriendapi.h"
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
-#include "js/experimental/BindingAllocs.h"
-#include "js/experimental/JitInfo.h"  // JSJitGetterOp, JSJitInfo
-#include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy, js::ToWindowProxyIfWindow
 #include "js/MemoryFunctions.h"
 #include "js/Object.h"  // JS::GetClass, JS::GetCompartment, JS::GetReservedSlot, JS::SetReservedSlot
 #include "js/RealmOptions.h"
 #include "js/String.h"  // JS::GetLatin1LinearStringChars, JS::GetTwoByteLinearStringChars, JS::GetLinearStringLength, JS::LinearStringHasLatin1Chars, JS::StringHasLatin1Chars
 #include "js/Wrapper.h"
 #include "js/Zone.h"
-#include "mozilla/ArrayUtils.h"
+#include "js/experimental/BindingAllocs.h"
+#include "js/experimental/JitInfo.h"  // JSJitGetterOp, JSJitInfo
+#include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy, js::ToWindowProxyIfWindow
+#include "jsfriendapi.h"
 #include "mozilla/Array.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DeferredFinalize.h"
 #include "mozilla/EnumTypeTraits.h"
 #include "mozilla/EnumeratedRange.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/Likely.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/ProfilerLabels.h"
+#include "mozilla/SegmentedVector.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingCallContext.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
+#include "mozilla/dom/FakeString.h"
 #include "mozilla/dom/JSSlots.h"
 #include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/PrototypeList.h"
 #include "mozilla/dom/RemoteObjectProxy.h"
-#include "mozilla/SegmentedVector.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/Likely.h"
-#include "mozilla/MemoryReporting.h"
 #include "nsIGlobalObject.h"
-#include "nsJSUtils.h"
 #include "nsISupportsImpl.h"
+#include "nsIVariant.h"
+#include "nsJSUtils.h"
+#include "nsWrapperCacheInlines.h"
 #include "xpcObjectHelper.h"
 #include "xpcpublic.h"
-#include "nsIVariant.h"
-#include "mozilla/dom/FakeString.h"
-#include "mozilla/ProfilerLabels.h"
-
-#include "nsWrapperCacheInlines.h"
 
 class nsGlobalWindowInner;
 class nsGlobalWindowOuter;

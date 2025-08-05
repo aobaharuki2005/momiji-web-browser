@@ -6,9 +6,9 @@
 #include "TextureView.h"
 
 #include "Device.h"
+#include "ipc/WebGPUChild.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "mozilla/webgpu/CanvasContext.h"
-#include "ipc/WebGPUChild.h"
 
 namespace mozilla::webgpu {
 

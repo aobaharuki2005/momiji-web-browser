@@ -6,15 +6,15 @@
 #ifndef GPU_CommandEncoder_H_
 #define GPU_CommandEncoder_H_
 
-#include "mozilla/dom/TypedArray.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/WeakPtr.h"
-#include "mozilla/webgpu/ffi/wgpu.h"
-#include "mozilla/webgpu/WebGPUTypes.h"
-#include "nsWrapperCache.h"
 #include "CanvasContext.h"
 #include "ObjectModel.h"
 #include "QuerySet.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/WeakPtr.h"
+#include "mozilla/dom/TypedArray.h"
+#include "mozilla/webgpu/WebGPUTypes.h"
+#include "mozilla/webgpu/ffi/wgpu.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
 class ErrorResult;

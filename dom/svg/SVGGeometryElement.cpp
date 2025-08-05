@@ -7,21 +7,21 @@
 #include "SVGGeometryElement.h"
 
 #include "DOMSVGPoint.h"
-#include "gfxPlatform.h"
-#include "nsCOMPtr.h"
 #include "SVGAnimatedLength.h"
 #include "SVGCircleElement.h"
 #include "SVGEllipseElement.h"
 #include "SVGGeometryProperty.h"
 #include "SVGPathElement.h"
 #include "SVGRectElement.h"
-#include "nsStyleTransformMatrix.h"
+#include "gfxPlatform.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/SVGContentUtils.h"
 #include "mozilla/dom/DOMPointBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/RefPtr.h"
+#include "nsCOMPtr.h"
 #include "nsLayoutUtils.h"
-#include "mozilla/SVGContentUtils.h"
+#include "nsStyleTransformMatrix.h"
 
 using namespace mozilla::gfx;
 

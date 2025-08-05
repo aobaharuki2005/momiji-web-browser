@@ -7,9 +7,9 @@
 #ifndef mozilla_dom_CookieStoreParent_h
 #define mozilla_dom_CookieStoreParent_h
 
-#include "mozilla/dom/PCookieStoreParent.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/PCookieStoreParent.h"
 
 namespace mozilla::dom {
 

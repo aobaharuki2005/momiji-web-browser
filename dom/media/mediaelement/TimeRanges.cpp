@@ -5,9 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/TimeRanges.h"
-#include "mozilla/dom/TimeRangesBinding.h"
-#include "mozilla/dom/HTMLMediaElement.h"
+
 #include "TimeUnits.h"
+#include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/dom/TimeRangesBinding.h"
 #include "nsError.h"
 
 namespace mozilla::dom {

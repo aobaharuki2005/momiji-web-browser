@@ -4,12 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/HTMLFieldSetElement.h"
+
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/CustomElementRegistry.h"
-#include "mozilla/dom/HTMLFieldSetElement.h"
 #include "mozilla/dom/HTMLFieldSetElementBinding.h"
 #include "nsContentList.h"
 #include "nsQueryObject.h"

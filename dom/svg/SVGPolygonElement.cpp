@@ -5,10 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGPolygonElement.h"
-#include "mozilla/dom/SVGPolygonElementBinding.h"
-#include "mozilla/dom/SVGAnimatedLength.h"
-#include "mozilla/gfx/2D.h"
+
 #include "SVGContentUtils.h"
+#include "mozilla/dom/SVGAnimatedLength.h"
+#include "mozilla/dom/SVGPolygonElementBinding.h"
+#include "mozilla/gfx/2D.h"
 
 using namespace mozilla::gfx;
 

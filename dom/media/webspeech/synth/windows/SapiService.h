@@ -7,14 +7,14 @@
 #ifndef mozilla_dom_SapiService_h
 #define mozilla_dom_SapiService_h
 
-#include "nsISpeechService.h"
+#include <sapi.h>
+#include <windows.h>
+
+#include "mozilla/StaticPtr.h"
 #include "nsIObserver.h"
+#include "nsISpeechService.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTArray.h"
-#include "mozilla/StaticPtr.h"
-
-#include <windows.h>
-#include <sapi.h>
 
 class nsISynthVoiceRegistry;
 

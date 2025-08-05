@@ -7,11 +7,11 @@
 #ifndef mozilla_dom_CompositionEvent_h_
 #define mozilla_dom_CompositionEvent_h_
 
+#include "mozilla/EventForwards.h"
 #include "mozilla/dom/CompositionEventBinding.h"
 #include "mozilla/dom/TextClause.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/UIEvent.h"
-#include "mozilla/EventForwards.h"
 
 namespace mozilla::dom {
 

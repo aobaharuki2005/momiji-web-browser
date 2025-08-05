@@ -5,16 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FFmpegDataEncoder.h"
-#include "PlatformEncoderModule.h"
 
 #include <utility>
 
 #include "FFmpegLog.h"
+#include "FFmpegUtils.h"
+#include "PlatformEncoderModule.h"
 #include "libavutil/error.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_media.h"
-
-#include "FFmpegUtils.h"
 
 namespace mozilla {
 

@@ -8,8 +8,8 @@
 #define mozilla_dom_cache_BoundStorageKeyCache_h
 
 #include "mozilla/dom/cache/CacheTypes.h"
-#include "mozilla/dom/cache/Types.h"
 #include "mozilla/dom/cache/TypeUtils.h"
+#include "mozilla/dom/cache/Types.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
 

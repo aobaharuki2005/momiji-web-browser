@@ -6,34 +6,35 @@
 #ifndef WEBGLCONTEXT_H_
 #define WEBGLCONTEXT_H_
 
+#include <stdarg.h>
+
 #include <bitset>
 #include <memory>
-#include <stdarg.h>
 
 #include "Colorspaces.h"
 #include "GLContextTypes.h"
 #include "GLDefs.h"
 #include "GLScreenBuffer.h"
+#include "ScopedGLHelpers.h"
+#include "SurfaceTypes.h"
+#include "TexUnpackBlob.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
-#include "mozilla/Attributes.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/dom/ipc/IdType.h"
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/HTMLCanvasElement.h"
-#include "mozilla/dom/Nullable.h"
-#include "mozilla/dom/TypedArray.h"
 #include "mozilla/EnumeratedArray.h"
-#include "mozilla/gfx/2D.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/dom/Nullable.h"
+#include "mozilla/dom/TypedArray.h"
+#include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/gfx/2D.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsTArray.h"
-#include "SurfaceTypes.h"
-#include "ScopedGLHelpers.h"
-#include "TexUnpackBlob.h"
 
 // Local
 #include "CacheInvalidator.h"
@@ -44,10 +45,10 @@
 #include "WebGLTypes.h"
 
 // Generated
-#include "mozilla/dom/WebGLRenderingContextBinding.h"
-#include "mozilla/dom/WebGL2RenderingContextBinding.h"
-
 #include <list>
+
+#include "mozilla/dom/WebGL2RenderingContextBinding.h"
+#include "mozilla/dom/WebGLRenderingContextBinding.h"
 
 class nsIDocShell;
 

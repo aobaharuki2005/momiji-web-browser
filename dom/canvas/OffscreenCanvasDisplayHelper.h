@@ -7,16 +7,16 @@
 #ifndef MOZILLA_DOM_OFFSCREENCANVASDISPLAYHELPER_H_
 #define MOZILLA_DOM_OFFSCREENCANVASDISPLAYHELPER_H_
 
-#include "ImageContainer.h"
 #include "GLContextTypes.h"
-#include "mozilla/dom/CanvasRenderingContextHelper.h"
-#include "mozilla/gfx/Point.h"
-#include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/layers/LayersTypes.h"
+#include "ImageContainer.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/CanvasRenderingContextHelper.h"
+#include "mozilla/gfx/Point.h"
+#include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/layers/LayersTypes.h"
 #include "nsISupportsImpl.h"
 #include "nsThreadUtils.h"
 

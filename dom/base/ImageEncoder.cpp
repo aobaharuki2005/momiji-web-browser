@@ -5,6 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageEncoder.h"
+
+#include "YCbCrUtils.h"
+#include "gfxUtils.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/SyncRunnable.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/dom/GeneratePlaceholderCanvasData.h"
 #include "mozilla/dom/MemoryBlobImpl.h"
@@ -13,15 +19,10 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/layers/CanvasRenderer.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/SyncRunnable.h"
-#include "mozilla/Unused.h"
-#include "gfxUtils.h"
 #include "nsComponentManagerUtils.h"
-#include "nsThreadUtils.h"
 #include "nsNetUtil.h"
+#include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
-#include "YCbCrUtils.h"
 
 using namespace mozilla::gfx;
 

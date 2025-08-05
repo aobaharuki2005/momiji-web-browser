@@ -6,8 +6,9 @@
 #ifndef GPU_ComputePassEncoder_H_
 #define GPU_ComputePassEncoder_H_
 
-#include "mozilla/dom/TypedArray.h"
 #include "ObjectModel.h"
+#include "mozilla/dom/TypedArray.h"
+#include "mozilla/webgpu/CanvasContext.h"
 
 namespace mozilla {
 class ErrorResult;

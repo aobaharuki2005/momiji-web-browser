@@ -7,10 +7,9 @@
 #ifndef nsIMutationObserver_h
 #define nsIMutationObserver_h
 
-#include "nsISupports.h"
-
 #include "mozilla/Assertions.h"
 #include "mozilla/DoublyLinkedList.h"
+#include "nsISupports.h"
 
 class nsAttrValue;
 class nsAtom;

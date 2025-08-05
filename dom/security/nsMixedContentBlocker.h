@@ -22,10 +22,10 @@ enum MixedContentTypes {
   eMixedDisplay
 };
 
-#include "nsIContentPolicy.h"
+#include "imgRequest.h"
 #include "nsIChannel.h"
 #include "nsIChannelEventSink.h"
-#include "imgRequest.h"
+#include "nsIContentPolicy.h"
 
 using mozilla::OriginAttributes;
 

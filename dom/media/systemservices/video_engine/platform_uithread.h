@@ -13,10 +13,10 @@
 
 #if defined(WEBRTC_WIN)
 #  include "Assertions.h"
+#  include "ThreadSafety.h"
+#  include "api/sequence_checker.h"
 #  include "rtc_base/deprecated/recursive_critical_section.h"
 #  include "rtc_base/platform_thread.h"
-#  include "api/sequence_checker.h"
-#  include "ThreadSafety.h"
 
 namespace webrtc {
 /*

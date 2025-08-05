@@ -4,13 +4,13 @@
 
 #include "MFCDMChild.h"
 
+#include "RemoteMediaManagerChild.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/KeySystemConfig.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticString.h"
 #include "mozilla/WMFCDMProxyCallback.h"
 #include "nsString.h"
-#include "RemoteMediaManagerChild.h"
 
 namespace mozilla {
 

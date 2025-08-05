@@ -9,8 +9,8 @@
 #  include "AOMDecoder.h"
 #endif
 #include "RemoteAudioDecoder.h"
-#include "RemoteMediaManagerChild.h"
 #include "RemoteMediaDataDecoder.h"
+#include "RemoteMediaManagerChild.h"
 #include "RemoteVideoDecoder.h"
 #include "VideoUtils.h"
 #include "gfxConfig.h"

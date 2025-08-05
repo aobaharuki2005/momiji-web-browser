@@ -9,27 +9,29 @@
 #include "nsContentSecurityUtils.h"
 
 #include "mozilla/Components.h"
-#include "mozilla/dom/nsMixedContentBlocker.h"
+#include "mozilla/dom/PolicyContainer.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/PolicyContainer.h"
+#include "mozilla/dom/nsMixedContentBlocker.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIContentSecurityPolicy.h"
 #include "nsIChannel.h"
+#include "nsIContentSecurityPolicy.h"
 #include "nsIHttpChannel.h"
 #include "nsIMultiPartChannel.h"
-#include "nsIURI.h"
 #include "nsITransfer.h"
+#include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsSandboxFlags.h"
 #if defined(XP_WIN)
-#  include "mozilla/WinHeaderOnlyUtils.h"
-#  include "WinUtils.h"
 #  include <wininet.h>
+
+#  include "WinUtils.h"
+#  include "mozilla/WinHeaderOnlyUtils.h"
 #endif
 
 #include "FramingChecker.h"
+#include "LoadInfo.h"
 #include "js/Array.h"  // JS::GetArrayLength
 #include "js/ContextOptions.h"
 #include "js/PropertyAndElement.h"  // JS_GetElement
@@ -39,13 +41,12 @@
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/Document.h"
-#include "mozilla/dom/nsCSPContext.h"
-#include "mozilla/glean/DomSecurityMetrics.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_security.h"
-#include "LoadInfo.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/nsCSPContext.h"
+#include "mozilla/glean/DomSecurityMetrics.h"
 #include "nsIConsoleService.h"
 #include "nsIStringBundle.h"
 

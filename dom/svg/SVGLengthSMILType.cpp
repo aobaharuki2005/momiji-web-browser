@@ -6,10 +6,11 @@
 
 #include "SVGLengthSMILType.h"
 
-#include "mozilla/SMILValue.h"
-#include "SVGAnimatedLengthList.h"
-#include "nsDebug.h"
 #include <math.h>
+
+#include "SVGAnimatedLengthList.h"
+#include "mozilla/SMILValue.h"
+#include "nsDebug.h"
 
 namespace mozilla {
 

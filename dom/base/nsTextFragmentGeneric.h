@@ -7,11 +7,11 @@
 #ifndef nsTextFragmentGeneric_h__
 #define nsTextFragmentGeneric_h__
 
-#include "nsTextFragmentGenericFwd.h"
-
-#include "nscore.h"
-#include "nsTextFragmentImpl.h"
 #include <algorithm>
+
+#include "nsTextFragmentGenericFwd.h"
+#include "nsTextFragmentImpl.h"
+#include "nscore.h"
 
 namespace mozilla {
 

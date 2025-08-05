@@ -3,18 +3,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FFmpegLibWrapper.h"
+
 #include "FFmpegLog.h"
 #include "mozilla/PodOperations.h"
 #ifdef MOZ_FFMPEG
 #  include "mozilla/StaticPrefs_media.h"
 #endif
-#include "mozilla/Types.h"
 #include "PlatformDecoderModule.h"
+#include "mozilla/Types.h"
 #include "prlink.h"
 #ifdef MOZ_WIDGET_GTK
+#  include "VALibWrapper.h"
 #  include "mozilla/gfx/gfxVars.h"
 #  include "mozilla/widget/DMABufDevice.h"
-#  include "VALibWrapper.h"
 #endif
 
 #define AV_LOG_QUIET -8

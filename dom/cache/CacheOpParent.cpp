@@ -13,8 +13,8 @@
 #include "mozilla/dom/cache/ManagerId.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/dom/cache/SavedTypes.h"
-#include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
+#include "mozilla/ipc/InputStreamUtils.h"
 
 namespace mozilla::dom::cache {
 

@@ -10,8 +10,8 @@
 
 // nrappkit includes
 extern "C" {
-#include "nr_api.h"
 #include "async_timer.h"
+#include "nr_api.h"
 }
 
 #include "runnable_utils.h"

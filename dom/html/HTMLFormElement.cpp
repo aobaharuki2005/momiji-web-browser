@@ -46,45 +46,40 @@
 
 // form submission
 #include "HTMLFormSubmissionConstants.h"
+#include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_prompts.h"
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/FormDataEvent.h"
 #include "mozilla/dom/SubmitEvent.h"
-#include "mozilla/intl/Localization.h"
 #include "mozilla/glean/DomSecurityMetrics.h"
-#include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/StaticPrefs_prompts.h"
+#include "mozilla/intl/Localization.h"
 #include "nsCategoryManagerUtils.h"
 #include "nsIContentInlines.h"
-#include "nsISimpleEnumerator.h"
-#include "nsRange.h"
+#include "nsIDocShell.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIPromptService.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsNetUtil.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIDocShell.h"
-#include "nsIPromptService.h"
 #include "nsISecurityUITelemetry.h"
+#include "nsISimpleEnumerator.h"
+#include "nsNetUtil.h"
+#include "nsRange.h"
 
 // radio buttons
-#include "mozilla/dom/HTMLInputElement.h"
-#include "mozilla/dom/HTMLButtonElement.h"
-#include "mozilla/dom/HTMLSelectElement.h"
 #include "RadioNodeList.h"
-
-#include "nsLayoutUtils.h"
-
 #include "mozAutoDocUpdate.h"
-#include "nsIHTMLCollection.h"
-
+#include "mozilla/dom/HTMLAnchorElement.h"
+#include "mozilla/dom/HTMLButtonElement.h"
+#include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/HTMLSelectElement.h"
 #include "nsIConstraintValidation.h"
-
+#include "nsIHTMLCollection.h"
+#include "nsLayoutUtils.h"
 #include "nsSandboxFlags.h"
 
-#include "mozilla/dom/HTMLAnchorElement.h"
-
 // images
-#include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLButtonElement.h"
+#include "mozilla/dom/HTMLImageElement.h"
 
 // construction, destruction
 NS_IMPL_NS_NEW_HTML_ELEMENT(Form)

@@ -5,13 +5,12 @@
 #ifndef AUDIO_SESSION_H_
 #define AUDIO_SESSION_H_
 
+#include "MediaConduitInterface.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ReentrantMonitor.h"
 #include "mozilla/RWLock.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "mozilla/StateMirroring.h"
 #include "mozilla/TimeStamp.h"
-
-#include "MediaConduitInterface.h"
 
 /**
  * This file hosts several structures identifying different aspects of a RTP

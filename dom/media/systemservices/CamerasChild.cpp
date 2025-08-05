@@ -8,14 +8,14 @@
 
 #undef FF
 
+#include "MediaUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/ipc/BackgroundChild.h"
-#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/Logging.h"
 #include "mozilla/SyncRunnable.h"
-#include "mozilla/WeakPtr.h"
 #include "mozilla/Unused.h"
-#include "MediaUtils.h"
+#include "mozilla/WeakPtr.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "nsThreadUtils.h"
 
 #undef LOG

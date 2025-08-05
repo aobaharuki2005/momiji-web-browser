@@ -6,12 +6,12 @@
 
 #include "mozilla/dom/MediaError.h"
 
+#include "js/Warnings.h"  // JS::WarnASCII
+#include "jsapi.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/MediaErrorBinding.h"
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
-#include "jsapi.h"
-#include "js/Warnings.h"  // JS::WarnASCII
 
 namespace mozilla::dom {
 

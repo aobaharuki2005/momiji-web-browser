@@ -6,11 +6,11 @@
 #ifndef GPU_Queue_H_
 #define GPU_Queue_H_
 
-#include "nsWrapperCache.h"
 #include "ObjectModel.h"
 #include "mozilla/dom/BufferSourceBindingFwd.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
 class ErrorResult;

@@ -5,16 +5,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CaptureTask.h"
+
+#include "VideoSegment.h"
 #include "gfxUtils.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/ImageCapture.h"
 #include "mozilla/dom/ImageCaptureError.h"
 #include "mozilla/dom/ImageEncoder.h"
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "mozilla/dom/VideoStreamTrack.h"
-#include "mozilla/SchedulerGroup.h"
 #include "nsThreadUtils.h"
-#include "VideoSegment.h"
 
 namespace mozilla {
 

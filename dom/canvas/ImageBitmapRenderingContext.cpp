@@ -4,13 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageBitmapRenderingContext.h"
-#include "gfxPlatform.h"
+
+#include "ImageContainer.h"
 #include "gfx2DGlue.h"
+#include "gfxPlatform.h"
 #include "mozilla/dom/ImageBitmapRenderingContextBinding.h"
 #include "mozilla/gfx/Types.h"
 #include "nsComponentManagerUtils.h"
 #include "nsRegion.h"
-#include "ImageContainer.h"
 
 namespace mozilla::dom {
 

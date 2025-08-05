@@ -7,13 +7,13 @@
 #ifndef mozilla_dom_HTMLVideoElement_h
 #define mozilla_dom_HTMLVideoElement_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/dom/HTMLMediaElement.h"
-#include "mozilla/dom/VideoFrameProvider.h"
-#include "mozilla/StaticPrefs_media.h"
 #include "ImageTypes.h"
 #include "Units.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/StaticPrefs_media.h"
+#include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/dom/VideoFrameProvider.h"
 
 namespace mozilla {
 

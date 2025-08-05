@@ -17,10 +17,10 @@
 #include "VideoUtils.h"  // for MediaThreadType
 #include "mozilla/RDDParent.h"
 #include "mozilla/RemoteDecodeUtils.h"
-#include "mozilla/ipc/UtilityProcessChild.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/ipc/Endpoint.h"
+#include "mozilla/ipc/UtilityProcessChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/VideoBridgeChild.h"
 #include "mozilla/layers/VideoBridgeParent.h"

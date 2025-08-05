@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EncoderConfig.h"
+
 #include "ImageContainer.h"
 #include "MP4Decoder.h"
 #include "VPXDecoder.h"

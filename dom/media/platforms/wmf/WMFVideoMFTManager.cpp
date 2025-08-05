@@ -8,7 +8,9 @@
 
 #include <cguid.h>
 #include <psapi.h>
+
 #include <algorithm>
+
 #include "DXVA2Manager.h"
 #include "GMPUtils.h"  // For SplitAt. TODO: Move SplitAt to a central place.
 #include "IMFYCbCrImage.h"
@@ -27,9 +29,9 @@
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SyncRunnable.h"
-#include "mozilla/glean/DomMediaPlatformsWmfMetrics.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/glean/DomMediaPlatformsWmfMetrics.h"
 #include "mozilla/layers/FenceD3D11.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "nsPrintfCString.h"

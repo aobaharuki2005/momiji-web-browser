@@ -6,14 +6,14 @@
 #ifndef WEBGPU_CHILD_H_
 #define WEBGPU_CHILD_H_
 
-#include "mozilla/webgpu/PWebGPUChild.h"
-#include "mozilla/webgpu/Instance.h"
-#include "mozilla/webgpu/Adapter.h"
-#include "mozilla/webgpu/SupportedFeatures.h"
-#include "mozilla/webgpu/SupportedLimits.h"
-#include "mozilla/webgpu/Device.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/webgpu/Adapter.h"
+#include "mozilla/webgpu/Device.h"
+#include "mozilla/webgpu/Instance.h"
+#include "mozilla/webgpu/PWebGPUChild.h"
+#include "mozilla/webgpu/SupportedFeatures.h"
+#include "mozilla/webgpu/SupportedLimits.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 
 namespace mozilla {

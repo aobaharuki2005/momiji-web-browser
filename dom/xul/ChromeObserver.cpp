@@ -6,17 +6,16 @@
 
 #include "ChromeObserver.h"
 
-#include "nsIBaseWindow.h"
-#include "nsIWidget.h"
-#include "nsIFrame.h"
-
-#include "nsContentUtils.h"
-#include "nsView.h"
-#include "nsPresContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MutationEventBinding.h"
+#include "nsContentUtils.h"
+#include "nsIBaseWindow.h"
+#include "nsIFrame.h"
+#include "nsIWidget.h"
+#include "nsPresContext.h"
+#include "nsView.h"
 #include "nsXULElement.h"
 
 namespace mozilla::dom {

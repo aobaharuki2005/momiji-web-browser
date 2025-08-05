@@ -7,15 +7,14 @@
 #ifndef DOM_MEDIA_EME_MEDIAFOUNDATION_WMFCDMPROXY_H_
 #define DOM_MEDIA_EME_MEDIAFOUNDATION_WMFCDMPROXY_H_
 
-#include "mozilla/CDMProxy.h"
 #include "mozilla/CDMCaps.h"
+#include "mozilla/CDMProxy.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/MediaKeys.h"
-#include "mozilla/dom/MediaKeySession.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/WMFCDMImpl.h"
-
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/MediaKeySession.h"
+#include "mozilla/dom/MediaKeys.h"
 #include "nsString.h"
 
 namespace dom {

@@ -5,13 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLTrackElement.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/dom/HTMLMediaElement.h"
-#include "mozilla/dom/WebVTTListener.h"
+
 #include "mozilla/LoadInfo.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLTrackElementBinding.h"
 #include "mozilla/dom/UnbindContext.h"
+#include "mozilla/dom/WebVTTListener.h"
 #include "nsAttrValueInlines.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
@@ -19,7 +21,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsIContentPolicy.h"
-#include "mozilla/dom/Document.h"
 #include "nsILoadGroup.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"

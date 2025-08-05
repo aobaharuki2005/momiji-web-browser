@@ -7,10 +7,9 @@
 #ifndef MOZILLA_VIDEO_CAPTURE_FACTORY_H_
 #define MOZILLA_VIDEO_CAPTURE_FACTORY_H_
 
+#include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_factory.h"
 #include "modules/video_capture/video_capture_options.h"
-#include "modules/video_capture/video_capture.h"
-
 #include "mozilla/MozPromise.h"
 
 namespace mozilla::camera {

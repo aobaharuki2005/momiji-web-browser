@@ -9,10 +9,10 @@
 
 #include "mozilla/Attributes.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsWrapperCache.h"
-#include "nsString.h"
-#include "nsXULElement.h"
 #include "nsITreeView.h"
+#include "nsString.h"
+#include "nsWrapperCache.h"
+#include "nsXULElement.h"
 
 class nsTreeBodyFrame;
 class nsTreeColumn;

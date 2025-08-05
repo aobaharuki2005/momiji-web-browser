@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TextDirectiveCreator.h"
+
 #include "AbstractRange.h"
+#include "Document.h"
 #include "StaticRange.h"
 #include "TextDirectiveUtil.h"
 #include "mozilla/ErrorResult.h"
@@ -13,7 +15,6 @@
 #include "nsFind.h"
 #include "nsINode.h"
 #include "nsRange.h"
-#include "Document.h"
 
 namespace mozilla::dom {
 

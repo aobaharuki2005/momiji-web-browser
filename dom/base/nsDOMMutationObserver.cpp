@@ -7,18 +7,15 @@
 #include "nsDOMMutationObserver.h"
 
 #include "mozilla/AnimationTarget.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/OwningNonNull.h"
-
 #include "mozilla/dom/Animation.h"
-#include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/dom/DocGroup.h"
-
-#include "mozilla/BasePrincipal.h"
-
-#include "nsContentUtils.h"
+#include "mozilla/dom/KeyframeEffect.h"
 #include "nsCSSPseudoElements.h"
+#include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsNameSpaceManager.h"

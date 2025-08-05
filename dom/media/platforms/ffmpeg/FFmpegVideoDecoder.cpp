@@ -14,8 +14,8 @@
 #include "MP4Decoder.h"
 #include "MediaInfo.h"
 #include "VALibWrapper.h"
-#include "VideoUtils.h"
 #include "VPXDecoder.h"
+#include "VideoUtils.h"
 #if LIBAVCODEC_VERSION_MAJOR >= 58
 #  include "libavutil/buffer.h"
 #  include "libavutil/frame.h"
@@ -36,9 +36,9 @@
 #  include "H265.h"
 #endif
 #if defined(MOZ_USE_HWDECODE) && defined(MOZ_WIDGET_GTK)
+#  include "FFmpegVideoFramePool.h"
 #  include "mozilla/gfx/gfxVars.h"
 #  include "mozilla/layers/DMABUFSurfaceImage.h"
-#  include "FFmpegVideoFramePool.h"
 #  include "va/va.h"
 #endif
 
@@ -84,15 +84,14 @@
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#  include "mozilla/layers/TextureClientOGL.h"
-#  include "mozilla/java/GeckoSurfaceWrappers.h"
+#  include "ffvpx/hwcontext_mediacodec.h"
+#  include "ffvpx/mediacodec.h"
 #  include "mozilla/java/CodecProxyWrappers.h"
 #  include "mozilla/java/GeckoSurfaceWrappers.h"
 #  include "mozilla/java/SampleBufferWrappers.h"
 #  include "mozilla/java/SampleWrappers.h"
 #  include "mozilla/java/SurfaceAllocatorWrappers.h"
-#  include "ffvpx/mediacodec.h"
-#  include "ffvpx/hwcontext_mediacodec.h"
+#  include "mozilla/layers/TextureClientOGL.h"
 #endif
 
 #if defined(MOZ_USE_HWDECODE) && defined(MOZ_WIDGET_GTK)

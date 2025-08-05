@@ -8,13 +8,13 @@
 
 #include <unordered_map>
 
-#include "mozilla/WeakPtr.h"
-#include "mozilla/ipc/SharedMemoryHandle.h"
-#include "mozilla/webgpu/ffi/wgpu.h"
-#include "mozilla/webgpu/PWebGPUParent.h"
-#include "mozilla/webrender/WebRenderAPI.h"
 #include "WebGPUTypes.h"
 #include "base/timer.h"
+#include "mozilla/WeakPtr.h"
+#include "mozilla/ipc/SharedMemoryHandle.h"
+#include "mozilla/webgpu/PWebGPUParent.h"
+#include "mozilla/webgpu/ffi/wgpu.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 
 namespace mozilla {
 

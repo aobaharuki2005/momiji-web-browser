@@ -12,36 +12,35 @@
 #ifdef MOZ_WEBRTC
 #  include "mozilla/dom/RTCStatsReport.h"
 #endif
-#include "nsGenericHTMLElement.h"
-#include "nsGkAtoms.h"
-#include "nsSize.h"
-#include "nsError.h"
-#include "nsIHttpChannel.h"
-#include "nsNodeInfoManager.h"
-#include "plbase64.h"
-#include "prlock.h"
-#include "nsRFPService.h"
-#include "nsThreadUtils.h"
-#include "ImageContainer.h"
-#include "VideoFrameContainer.h"
-#include "VideoOutput.h"
+#include <algorithm>
+#include <limits>
 
 #include "FrameStatistics.h"
-#include "MediaError.h"
+#include "ImageContainer.h"
 #include "MediaDecoder.h"
 #include "MediaDecoderStateMachine.h"
+#include "MediaError.h"
+#include "VideoFrameContainer.h"
+#include "VideoOutput.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/WakeLock.h"
-#include "mozilla/dom/power/PowerManagerService.h"
+#include "mozilla/StaticPrefs_media.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "mozilla/dom/VideoPlaybackQuality.h"
 #include "mozilla/dom/VideoStreamTrack.h"
-#include "mozilla/StaticPrefs_media.h"
-#include "mozilla/Unused.h"
-
-#include <algorithm>
-#include <limits>
+#include "mozilla/dom/WakeLock.h"
+#include "mozilla/dom/power/PowerManagerService.h"
+#include "nsError.h"
+#include "nsGenericHTMLElement.h"
+#include "nsGkAtoms.h"
+#include "nsIHttpChannel.h"
+#include "nsNodeInfoManager.h"
+#include "nsRFPService.h"
+#include "nsSize.h"
+#include "nsThreadUtils.h"
+#include "plbase64.h"
+#include "prlock.h"
 
 extern mozilla::LazyLogModule gMediaElementLog;
 #define LOG(msg, ...)                        \

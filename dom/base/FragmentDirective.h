@@ -8,8 +8,8 @@
 #define DOM_FRAGMENTDIRECTIVE_H_
 
 #include "js/TypeDecls.h"
-#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/fragmentdirectives_ffi_generated.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsStringFwd.h"

@@ -6,12 +6,12 @@
 #ifndef GPU_CanvasContext_H_
 #define GPU_CanvasContext_H_
 
-#include "nsICanvasRenderingContextInternal.h"
-#include "nsWrapperCache.h"
 #include "ObjectModel.h"
 #include "mozilla/layers/LayersTypes.h"
-#include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
+#include "mozilla/webrender/WebRenderAPI.h"
+#include "nsICanvasRenderingContextInternal.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
 namespace dom {

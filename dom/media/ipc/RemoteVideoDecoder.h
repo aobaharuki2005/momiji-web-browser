@@ -6,8 +6,8 @@
 #ifndef include_dom_media_ipc_RemoteVideoDecoderChild_h
 #define include_dom_media_ipc_RemoteVideoDecoderChild_h
 #include "RemoteDecoderChild.h"
-#include "RemoteMediaManagerChild.h"
 #include "RemoteDecoderParent.h"
+#include "RemoteMediaManagerChild.h"
 
 namespace mozilla::layers {
 class BufferRecycleBin;

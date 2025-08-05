@@ -5,10 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CookieStore.h"
-#include "CookieStoreChild.h"
-#include "CookieStoreNotifier.h"
-#include "CookieStoreNotificationWatcherWrapper.h"
 
+#include "CookieStoreChild.h"
+#include "CookieStoreNotificationWatcherWrapper.h"
+#include "CookieStoreNotifier.h"
+#include "ThirdPartyUtil.h"
+#include "mozilla/StorageAccess.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerCommon.h"
@@ -18,13 +20,11 @@
 #include "mozilla/net/CookieCommons.h"
 #include "mozilla/net/CookiePrefixes.h"
 #include "mozilla/net/NeckoChannelParams.h"
-#include "mozilla/StorageAccess.h"
 #include "nsICookie.h"
 #include "nsIGlobalObject.h"
 #include "nsIPrincipal.h"
 #include "nsReadableUtils.h"
 #include "nsSandboxFlags.h"
-#include "ThirdPartyUtil.h"
 
 using namespace mozilla::net;
 

@@ -10,6 +10,7 @@
 #define nsContentSecurityUtils_h___
 
 #include <utility>
+
 #include "mozilla/Maybe.h"
 #include "nsStringFwd.h"
 

@@ -6,16 +6,18 @@
 
 #include "AOMDecoder.h"
 
-#include <algorithm>
-
-#include "BitWriter.h"
-#include "BitReader.h"
-#include "ImageContainer.h"
-#include "MediaResult.h"
-#include "TimeUnits.h"
 #include <aom/aom_image.h>
 #include <aom/aomdx.h>
 #include <stdint.h>
+
+#include <algorithm>
+
+#include "BitReader.h"
+#include "BitWriter.h"
+#include "ImageContainer.h"
+#include "MediaResult.h"
+#include "TimeUnits.h"
+#include "VideoUtils.h"
 #include "gfx2DGlue.h"
 #include "gfxUtils.h"
 #include "mozilla/PodOperations.h"
@@ -24,7 +26,6 @@
 #include "nsError.h"
 #include "nsThreadUtils.h"
 #include "prsystem.h"
-#include "VideoUtils.h"
 
 #undef LOG
 #define LOG(arg, ...)                                                  \

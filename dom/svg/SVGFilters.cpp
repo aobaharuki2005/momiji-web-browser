@@ -7,12 +7,9 @@
 #include "SVGFilters.h"
 
 #include <algorithm>
-#include "DOMSVGAnimatedNumberList.h"
+
 #include "DOMSVGAnimatedLength.h"
-#include "nsGkAtoms.h"
-#include "nsCOMPtr.h"
-#include "nsIFrame.h"
-#include "nsLayoutUtils.h"
+#include "DOMSVGAnimatedNumberList.h"
 #include "SVGAnimatedEnumeration.h"
 #include "SVGAnimatedNumberPair.h"
 #include "SVGAnimatedString.h"
@@ -32,6 +29,10 @@
 #include "mozilla/dom/SVGFESpotLightElement.h"
 #include "mozilla/dom/SVGFilterElement.h"
 #include "mozilla/dom/SVGLengthBinding.h"
+#include "nsCOMPtr.h"
+#include "nsGkAtoms.h"
+#include "nsIFrame.h"
+#include "nsLayoutUtils.h"
 
 #if defined(XP_WIN)
 // Prevent Windows redefining LoadImage

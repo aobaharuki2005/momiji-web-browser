@@ -6,20 +6,20 @@
 #include "MediaEngineRemoteVideoSource.h"
 
 #include "CamerasChild.h"
+#include "ImageContainer.h"
 #include "MediaManager.h"
 #include "MediaTrackConstraints.h"
-#include "mozilla/dom/MediaTrackCapabilitiesBinding.h"
-#include "mozilla/dom/MediaTrackSettingsBinding.h"
-#include "mozilla/ErrorNames.h"
-#include "mozilla/gfx/Point.h"
-#include "mozilla/RefPtr.h"
 #include "PerformanceRecorder.h"
 #include "Tracing.h"
 #include "VideoFrameUtils.h"
 #include "VideoUtils.h"
-#include "ImageContainer.h"
 #include "common_video/include/video_frame_buffer.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
+#include "mozilla/ErrorNames.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/dom/MediaTrackCapabilitiesBinding.h"
+#include "mozilla/dom/MediaTrackSettingsBinding.h"
+#include "mozilla/gfx/Point.h"
 
 namespace mozilla {
 

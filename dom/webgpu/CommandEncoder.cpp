@@ -3,20 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/UnionTypes.h"
-#include "mozilla/dom/WebGPUBinding.h"
 #include "CommandEncoder.h"
 
-#include "CommandBuffer.h"
 #include "Buffer.h"
+#include "CommandBuffer.h"
 #include "ComputePassEncoder.h"
 #include "Device.h"
 #include "RenderPassEncoder.h"
 #include "TextureView.h"
 #include "Utility.h"
+#include "ipc/WebGPUChild.h"
+#include "mozilla/dom/UnionTypes.h"
+#include "mozilla/dom/WebGPUBinding.h"
 #include "mozilla/webgpu/CanvasContext.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
-#include "ipc/WebGPUChild.h"
 
 namespace mozilla::webgpu {
 

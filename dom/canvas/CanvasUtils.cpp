@@ -3,45 +3,42 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <stdlib.h>
-#include <stdarg.h>
+#include "CanvasUtils.h"
 
-#include "nsICanvasRenderingContextInternal.h"
-#include "nsIHTMLCollection.h"
+#include <stdarg.h>
+#include <stdlib.h>
+
+#include "WebGL2Context.h"
+#include "jsapi.h"
+#include "mozIThirdPartyUtil.h"
+#include "mozilla/BasePrincipal.h"
+#include "mozilla/Services.h"
+#include "mozilla/StaticPrefs_gfx.h"
+#include "mozilla/StaticPrefs_privacy.h"
+#include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/dom/UserActivation.h"
-#include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
-#include "mozilla/gfx/gfxVars.h"
-#include "mozilla/BasePrincipal.h"
-#include "mozilla/StaticPrefs_gfx.h"
-#include "mozilla/StaticPrefs_privacy.h"
-#include "mozilla/StaticPrefs_webgl.h"
-#include "nsIPrincipal.h"
-
-#include "nsGfxCIID.h"
-
-#include "nsTArray.h"
-
-#include "CanvasUtils.h"
 #include "mozilla/gfx/Matrix.h"
-#include "WebGL2Context.h"
-
+#include "mozilla/gfx/gfxVars.h"
+#include "nsContentUtils.h"
+#include "nsGfxCIID.h"
+#include "nsICanvasRenderingContextInternal.h"
+#include "nsIHTMLCollection.h"
+#include "nsIObserverService.h"
+#include "nsIPermissionManager.h"
+#include "nsIPrincipal.h"
 #include "nsIScriptError.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "nsIPermissionManager.h"
-#include "nsIObserverService.h"
-#include "mozilla/Services.h"
-#include "mozIThirdPartyUtil.h"
-#include "nsContentUtils.h"
-#include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
-#include "jsapi.h"
+#include "nsTArray.h"
+#include "nsUnicharUtils.h"
 
 #define TOPIC_CANVAS_PERMISSIONS_PROMPT "canvas-permissions-prompt"
 #define TOPIC_CANVAS_PERMISSIONS_PROMPT_HIDE_DOORHANGER \

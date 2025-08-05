@@ -6,6 +6,14 @@
 
 #include "OffscreenCanvas.h"
 
+#include "CanvasRenderingContext2D.h"
+#include "CanvasUtils.h"
+#include "ClientWebGLContext.h"
+#include "GLContext.h"
+#include "GLScreenBuffer.h"
+#include "ImageBitmap.h"
+#include "ImageBitmapRenderingContext.h"
+#include "WebGLChild.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/BlobImpl.h"
@@ -18,17 +26,9 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/webgpu/CanvasContext.h"
-#include "CanvasRenderingContext2D.h"
-#include "CanvasUtils.h"
-#include "ClientWebGLContext.h"
-#include "GLContext.h"
-#include "GLScreenBuffer.h"
-#include "ImageBitmap.h"
-#include "ImageBitmapRenderingContext.h"
 #include "nsContentUtils.h"
 #include "nsIPermissionManager.h"
 #include "nsProxyRelease.h"
-#include "WebGLChild.h"
 
 namespace mozilla::dom {
 

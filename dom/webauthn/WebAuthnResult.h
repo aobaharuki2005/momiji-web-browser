@@ -5,12 +5,10 @@
 #ifndef mozilla_dom_WebAuthnResult_h_
 #define mozilla_dom_WebAuthnResult_h_
 
+#include "mozilla/Maybe.h"
 #include "nsIWebAuthnResult.h"
 #include "nsString.h"
 #include "nsTArray.h"
-
-#include "mozilla/Maybe.h"
-#include "nsString.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/java/WebAuthnUtilsNatives.h"
@@ -18,6 +16,7 @@
 
 #ifdef XP_WIN
 #  include <windows.h>
+
 #  include "mozilla/dom/PWebAuthnTransactionParent.h"
 #  include "winwebauthn/webauthn.h"
 #endif

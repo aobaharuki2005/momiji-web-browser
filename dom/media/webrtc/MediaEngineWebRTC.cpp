@@ -14,13 +14,13 @@
 
 // Pipewire detection support
 #if defined(WEBRTC_USE_PIPEWIRE)
-#  include "mozilla/StaticPrefs_media.h"
 #  include "modules/desktop_capture/desktop_capturer.h"
+#  include "mozilla/StaticPrefs_media.h"
 #endif
 
 #if defined(WEBRTC_MAC)
-#  include "mozilla/StaticPrefs_media.h"
 #  include "modules/desktop_capture/mac/screen_capturer_sck.h"
+#  include "mozilla/StaticPrefs_media.h"
 #endif
 
 #define FAKE_ONDEVICECHANGE_EVENT_PERIOD_IN_MS 500

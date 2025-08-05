@@ -5,7 +5,6 @@
 #include "AndroidEncoderModule.h"
 
 #include "AndroidDataEncoder.h"
-
 #include "mozilla/Logging.h"
 #include "mozilla/java/HardwareCodecCapabilityUtilsWrappers.h"
 

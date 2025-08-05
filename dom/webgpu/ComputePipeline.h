@@ -6,10 +6,10 @@
 #ifndef GPU_ComputePipeline_H_
 #define GPU_ComputePipeline_H_
 
-#include "nsWrapperCache.h"
 #include "ObjectModel.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
 #include "nsTArray.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla::webgpu {
 

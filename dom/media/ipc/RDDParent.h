@@ -6,7 +6,6 @@
 #ifndef _include_dom_media_ipc_RDDParent_h__
 #define _include_dom_media_ipc_RDDParent_h__
 #include "mozilla/PRDDParent.h"
-
 #include "mozilla/RefPtr.h"
 #include "mozilla/ipc/AsyncBlockers.h"
 

@@ -3,20 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/WebGPUBinding.h"
 #include "Buffer.h"
 
-#include "mozilla/dom/Promise.h"
-#include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/HoldDropJSObjects.h"
-#include "mozilla/ipc/Shmem.h"
+#include "Device.h"
 #include "ipc/WebGPUChild.h"
 #include "js/ArrayBuffer.h"
 #include "js/RootingAPI.h"
+#include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/WebGPUBinding.h"
+#include "mozilla/ipc/Shmem.h"
+#include "mozilla/webgpu/ffi/wgpu.h"
 #include "nsContentUtils.h"
 #include "nsWrapperCache.h"
-#include "Device.h"
-#include "mozilla/webgpu/ffi/wgpu.h"
 
 namespace mozilla::webgpu {
 

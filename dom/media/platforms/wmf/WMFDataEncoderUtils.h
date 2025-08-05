@@ -5,14 +5,15 @@
 #ifndef WMFDATAENCODERUTILS_H_
 #define WMFDATAENCODERUTILS_H_
 #include <mfapi.h>
-#include "EncoderConfig.h"
+
 #include "AnnexB.h"
+#include "EncoderConfig.h"
 #include "H264.h"
-#include "libyuv.h"
 #include "MediaCodecsSupport.h"
+#include "WMF.h"
+#include "libyuv.h"
 #include "mozilla/Logging.h"
 #include "mozilla/mscom/EnsureMTA.h"
-#include "WMF.h"
 
 #define WMF_ENC_LOGD(arg, ...)                    \
   MOZ_LOG(                                        \

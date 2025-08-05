@@ -7,11 +7,11 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
-#include "nsRect.h"
-#include "nsWrapperCache.h"
 #include "nsAtomHashKeys.h"
 #include "nsClassHashtable.h"
+#include "nsRect.h"
 #include "nsRefPtrHashtable.h"
+#include "nsWrapperCache.h"
 
 class nsIGlobalObject;
 class nsITimer;

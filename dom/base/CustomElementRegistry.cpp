@@ -6,33 +6,33 @@
 
 #include "mozilla/dom/CustomElementRegistry.h"
 
+#include "js/ForOfIterator.h"       // JS::ForOfIterator
+#include "js/PropertyAndElement.h"  // JS_GetProperty, JS_GetUCProperty
+#include "jsapi.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/UseCounter.h"
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/CustomElementRegistryBinding.h"
+#include "mozilla/dom/CustomEvent.h"
+#include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/HTMLElement.h"
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/dom/PrimitiveConversions.h"
-#include "mozilla/dom/ShadowIncludingTreeIterator.h"
-#include "mozilla/dom/XULElementBinding.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/DocGroup.h"
-#include "mozilla/dom/CustomEvent.h"
+#include "mozilla/dom/ShadowIncludingTreeIterator.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/UnionTypes.h"
-#include "mozilla/AutoRestore.h"
-#include "mozilla/HoldDropJSObjects.h"
-#include "mozilla/UseCounter.h"
+#include "mozilla/dom/XULElementBinding.h"
 #include "nsContentUtils.h"
 #include "nsHTMLTags.h"
 #include "nsInterfaceHashtable.h"
-#include "nsPIDOMWindow.h"
-#include "jsapi.h"
-#include "js/ForOfIterator.h"       // JS::ForOfIterator
-#include "js/PropertyAndElement.h"  // JS_GetProperty, JS_GetUCProperty
-#include "xpcprivate.h"
 #include "nsNameSpaceManager.h"
+#include "nsPIDOMWindow.h"
+#include "xpcprivate.h"
 
 namespace mozilla::dom {
 

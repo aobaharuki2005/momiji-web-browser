@@ -5,6 +5,11 @@
 #ifndef MOCKCUBEB_H_
 #define MOCKCUBEB_H_
 
+#include <atomic>
+#include <chrono>
+#include <thread>
+#include <utility>
+
 #include "AudioDeviceInfo.h"
 #include "AudioGenerator.h"
 #include "AudioVerifier.h"
@@ -15,11 +20,6 @@
 #include "mozilla/ResultVariant.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
 #include "nsTArray.h"
-
-#include <thread>
-#include <atomic>
-#include <chrono>
-#include <utility>
 
 namespace mozilla {
 const uint32_t MAX_OUTPUT_CHANNELS = 2;

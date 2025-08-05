@@ -8,6 +8,7 @@
 #define DOM_MEDIA_PLATFORM_WMF_MFTENCODER_H
 
 #include <wrl.h>
+
 #include <deque>
 #include <functional>
 #include <queue>

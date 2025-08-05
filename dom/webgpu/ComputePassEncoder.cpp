@@ -3,15 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/WebGPUBinding.h"
-#include "CommandEncoder.h"
 #include "ComputePassEncoder.h"
+
 #include "BindGroup.h"
-#include "ComputePipeline.h"
 #include "CommandEncoder.h"
+#include "ComputePipeline.h"
 #include "Utility.h"
-#include "mozilla/webgpu/ffi/wgpu.h"
 #include "ipc/WebGPUChild.h"
+#include "mozilla/dom/WebGPUBinding.h"
+#include "mozilla/webgpu/ffi/wgpu.h"
 
 namespace mozilla::webgpu {
 

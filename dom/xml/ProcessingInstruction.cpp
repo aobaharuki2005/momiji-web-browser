@@ -4,14 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsGkAtoms.h"
-#include "nsUnicharUtils.h"
-#include "mozilla/dom/LinkStyle.h"
 #include "mozilla/dom/ProcessingInstruction.h"
+
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/dom/LinkStyle.h"
 #include "mozilla/dom/ProcessingInstructionBinding.h"
 #include "mozilla/dom/XMLStylesheetProcessingInstruction.h"
-#include "mozilla/IntegerPrintfMacros.h"
 #include "nsContentUtils.h"
+#include "nsGkAtoms.h"
+#include "nsUnicharUtils.h"
 
 already_AddRefed<mozilla::dom::ProcessingInstruction>
 NS_NewXMLProcessingInstruction(nsNodeInfoManager* aNodeInfoManager,

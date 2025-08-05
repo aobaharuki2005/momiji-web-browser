@@ -7,8 +7,10 @@
 #ifndef mozilla_dom_cache_Types_h
 #define mozilla_dom_cache_Types_h
 
-#include <functional>
 #include <stdint.h>
+
+#include <functional>
+
 #include "mozilla/dom/quota/CommonMetadata.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "nsCOMPtr.h"

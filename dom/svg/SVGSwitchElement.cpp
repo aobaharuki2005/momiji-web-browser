@@ -6,9 +6,9 @@
 
 #include "mozilla/dom/SVGSwitchElement.h"
 
-#include "nsLayoutUtils.h"
 #include "mozilla/SVGUtils.h"
 #include "mozilla/dom/SVGSwitchElementBinding.h"
+#include "nsLayoutUtils.h"
 
 class nsIFrame;
 

@@ -8,10 +8,10 @@
 #define mozilla_dom_cache_BoundStorageKeyChild_h
 
 #include "mozilla/dom/cache/ActorChild.h"
+#include "mozilla/dom/cache/ActorUtils.h"
+#include "mozilla/dom/cache/PBoundStorageKeyChild.h"
 #include "mozilla/dom/cache/TypeUtils.h"
 #include "mozilla/dom/cache/Types.h"
-#include "mozilla/dom/cache/PBoundStorageKeyChild.h"
-#include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 
 class nsIGlobalObject;

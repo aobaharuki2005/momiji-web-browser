@@ -6,10 +6,10 @@
 #ifndef GPU_BindGroup_H_
 #define GPU_BindGroup_H_
 
-#include "nsWrapperCache.h"
 #include "CanvasContext.h"
 #include "ObjectModel.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla::webgpu {
 

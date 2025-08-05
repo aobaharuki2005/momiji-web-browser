@@ -4,22 +4,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CanvasRenderingContextHelper.h"
+
+#include "ClientWebGLContext.h"
 #include "GLContext.h"
 #include "ImageBitmapRenderingContext.h"
 #include "ImageEncoder.h"
+#include "MozFramebuffer.h"
+#include "mozilla/GfxMessageUtils.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/dom/OffscreenCanvasRenderingContext2D.h"
-#include "mozilla/GfxMessageUtils.h"
 #include "mozilla/glean/DomCanvasMetrics.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/webgpu/CanvasContext.h"
-#include "MozFramebuffer.h"
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
 #include "nsIScriptContext.h"
 #include "nsJSUtils.h"
-#include "ClientWebGLContext.h"
 
 namespace mozilla::dom {
 

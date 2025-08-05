@@ -78,9 +78,9 @@ nrappkit copyright:
    ekr@rtfm.com  Thu Dec 20 20:14:49 2001
 */
 #include "logging.h"
+#include "mediapacket.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
-#include "mediapacket.h"
 
 // mozilla/utils.h defines this as well
 #ifdef UNIMPLEMENTED
@@ -88,21 +88,21 @@ nrappkit copyright:
 #endif
 
 extern "C" {
-#include "nr_api.h"
-#include "async_wait.h"
-#include "async_timer.h"
-#include "nr_socket.h"
-#include "nr_socket_local.h"
-#include "transport_addr.h"
-#include "stun_util.h"
-#include "registry.h"
-#include "nr_socket_buffered_stun.h"
 #include "addrs.h"
+#include "async_timer.h"
+#include "async_wait.h"
+#include "nr_api.h"
+#include "nr_socket.h"
+#include "nr_socket_buffered_stun.h"
+#include "nr_socket_local.h"
+#include "registry.h"
+#include "stun_util.h"
+#include "transport_addr.h"
 }
 
-#include "stunserver.h"
-
 #include <string>
+
+#include "stunserver.h"
 
 MOZ_MTLOG_MODULE("stunserver");
 

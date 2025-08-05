@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EncoderTemplate.h"
+
 #include <type_traits>
 
 #include "EncoderTypes.h"

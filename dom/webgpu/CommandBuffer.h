@@ -6,14 +6,15 @@
 #ifndef GPU_CommandBuffer_H_
 #define GPU_CommandBuffer_H_
 
+#include "ObjectModel.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
 #include "nsWrapperCache.h"
-#include "ObjectModel.h"
 
 namespace mozilla::webgpu {
 
 class CanvasContext;
+class CommandEncoder;
 class Device;
 
 class CommandBuffer final : public ObjectBase, public ChildOf<Device> {

@@ -7,8 +7,8 @@
 #include "FFmpegEncoderModule.h"
 
 #include "EncoderConfig.h"
-#include "FFmpegLog.h"
 #include "FFmpegAudioEncoder.h"
+#include "FFmpegLog.h"
 #include "FFmpegUtils.h"
 #include "FFmpegVideoEncoder.h"
 
@@ -16,8 +16,8 @@
 #  include "mozilla/AppShutdown.h"
 #endif
 
-#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/gfx/gfxVars.h"
 
 // This must be the last header included
 #include "FFmpegLibs.h"

@@ -23,18 +23,17 @@
 #include "VideoUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/RemoteDecodeUtils.h"
-#include "mozilla/RemoteMediaManagerChild.h"
 #include "mozilla/RemoteDecoderModule.h"
+#include "mozilla/RemoteMediaManagerChild.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/ipc/UtilityMediaServiceParent.h"
 #include "nsIXULRuntime.h"  // for BrowserTabsRemoteAutostart
 #include "nsPrintfCString.h"
-
-#include "mozilla/ipc/UtilityMediaServiceParent.h"
 
 #ifdef XP_WIN
 #  include "WMFDecoderModule.h"
@@ -57,9 +56,9 @@
 #ifdef MOZ_OMX
 #  include "OmxDecoderModule.h"
 #endif
-#include "FFVPXRuntimeLinker.h"
-
 #include <functional>
+
+#include "FFVPXRuntimeLinker.h"
 
 using DecodeSupport = mozilla::media::DecodeSupport;
 using DecodeSupportSet = mozilla::media::DecodeSupportSet;

@@ -8,12 +8,13 @@
 #include <cmath>
 #include <set>
 #include <string>
-#include "sdp/SdpMediaSection.h"
-#include "sdp/SdpHelper.h"
+
+#include "mozilla/Preferences.h"
+#include "mozilla/net/DataChannelProtocol.h"
 #include "nsCRT.h"
 #include "nsString.h"
-#include "mozilla/net/DataChannelProtocol.h"
-#include "mozilla/Preferences.h"
+#include "sdp/SdpHelper.h"
+#include "sdp/SdpMediaSection.h"
 
 namespace mozilla {
 

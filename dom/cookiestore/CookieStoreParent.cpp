@@ -5,25 +5,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CookieStoreParent.h"
+
 #include "CookieStoreNotificationWatcher.h"
 #include "CookieStoreSubscriptionService.h"
-
-#include "mozilla/Maybe.h"
-#include "mozilla/ipc/BackgroundParent.h"
-#include "mozilla/net/Cookie.h"
-#include "mozilla/net/CookieParser.h"
 #include "mozilla/Components.h"
-#include "mozilla/net/CookieCommons.h"
-#include "mozilla/net/CookiePrefixes.h"
-#include "mozilla/net/CookieValidation.h"
-#include "mozilla/net/CookieServiceParent.h"
-#include "mozilla/net/NeckoParent.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Unused.h"
+#include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ipc/URIUtils.h"  // for IPDLParamTraits<nsIURI*>
+#include "mozilla/net/Cookie.h"
+#include "mozilla/net/CookieCommons.h"
+#include "mozilla/net/CookieParser.h"
+#include "mozilla/net/CookiePrefixes.h"
+#include "mozilla/net/CookieServiceParent.h"
+#include "mozilla/net/CookieValidation.h"
+#include "mozilla/net/NeckoParent.h"
 #include "nsICookieManager.h"
 #include "nsICookieService.h"
-#include "nsProxyRelease.h"
-#include "mozilla/ipc/URIUtils.h"  // for IPDLParamTraits<nsIURI*>
 #include "nsIEffectiveTLDService.h"
+#include "nsProxyRelease.h"
 
 using namespace mozilla::ipc;
 using namespace mozilla::net;

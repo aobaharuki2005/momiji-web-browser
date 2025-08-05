@@ -6,6 +6,8 @@
 
 #include "WMFMediaDataEncoder.h"
 
+#include <comdef.h>
+
 #include "ImageContainer.h"
 #include "ImageConversion.h"
 #include "MFTEncoder.h"
@@ -13,7 +15,6 @@
 #include "TimeUnits.h"
 #include "WMFDataEncoderUtils.h"
 #include "WMFUtils.h"
-#include <comdef.h>
 #include "mozilla/WindowsProcessMitigations.h"
 
 namespace mozilla {

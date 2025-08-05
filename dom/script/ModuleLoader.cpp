@@ -4,38 +4,38 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ScriptLoader.h"
 #include "ModuleLoader.h"
 
-#include "jsapi.h"
+#include "GeckoProfiler.h"
+#include "ScriptLoader.h"
 #include "js/CompileOptions.h"  // JS::CompileOptions, JS::InstantiateOptions
 #include "js/ContextOptions.h"  // JS::ContextOptionsRef
-#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileModuleScriptToStencil, JS::InstantiateModuleStencil
 #include "js/MemoryFunctions.h"
 #include "js/Modules.h"  // JS::FinishDynamicModuleImport, JS::{G,S}etModuleResolveHook, JS::Get{ModulePrivate,ModuleScript,RequestedModule{s,Specifier,SourcePos}}, JS::SetModule{DynamicImport,Metadata}Hook
 #include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "js/Realm.h"
 #include "js/SourceText.h"
+#include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileModuleScriptToStencil, JS::InstantiateModuleStencil
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/loader/LoadedScript.h"
-#include "js/loader/ScriptLoadRequest.h"
-#include "js/loader/ModuleLoaderBase.h"
 #include "js/loader/ModuleLoadRequest.h"
-#include "mozilla/dom/RequestBinding.h"
+#include "js/loader/ModuleLoaderBase.h"
+#include "js/loader/ScriptLoadRequest.h"
+#include "jsapi.h"
 #include "mozilla/Assertions.h"
-#include "nsError.h"
-#include "xpcpublic.h"
-#include "GeckoProfiler.h"
-#include "nsContentSecurityManager.h"
-#include "nsIContent.h"
-#include "nsJSUtils.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/LoadInfo.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/RequestBinding.h"
+#include "nsContentSecurityManager.h"
+#include "nsError.h"
+#include "nsIContent.h"
 #include "nsIPrincipal.h"
-#include "mozilla/LoadInfo.h"
-#include "mozilla/Maybe.h"
+#include "nsJSUtils.h"
+#include "xpcpublic.h"
 
 using JS::SourceText;
 using namespace JS::loader;

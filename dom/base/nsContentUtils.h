@@ -22,6 +22,7 @@
 #include <functional>
 #include <tuple>
 #include <utility>
+
 #include "ErrorList.h"
 #include "Units.h"
 #include "js/Id.h"
@@ -31,18 +32,18 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/BasicEvents.h"
-#include "mozilla/FunctionRef.h"
-#include "mozilla/SourceLocation.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/CallState.h"
+#include "mozilla/FunctionRef.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/SourceLocation.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CacheExpirationTime.h"
-#include "mozilla/dom/FromParser.h"
 #include "mozilla/dom/FetchPriority.h"
+#include "mozilla/dom/FromParser.h"
 #include "mozilla/fallible.h"
 #include "mozilla/gfx/Point.h"
 #include "nsCOMPtr.h"

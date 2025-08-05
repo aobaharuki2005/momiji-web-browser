@@ -10,9 +10,9 @@
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsString.h"
 #include "nsTextFragment.h"
 #include "nsTextNode.h"
-#include "nsString.h"
 
 namespace mozilla::dom {
 

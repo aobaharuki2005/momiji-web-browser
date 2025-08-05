@@ -7,19 +7,19 @@
 #include <utility>
 
 #include "AnnexB.h"
-#include "api/video_codecs/h264_profile_level_id.h"
 #include "ImageContainer.h"
-#include "media/base/media_constants.h"
 #include "MediaData.h"
+#include "PEMFactory.h"
+#include "VideoUtils.h"
+#include "api/video_codecs/h264_profile_level_id.h"
+#include "media/base/media_constants.h"
 #include "modules/video_coding/utility/vp8_header_parser.h"
 #include "modules/video_coding/utility/vp9_uncompressed_header_parser.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/media/MediaUtils.h"
-#include "mozilla/StaticPrefs_media.h"
-#include "PEMFactory.h"
-#include "VideoUtils.h"
 
 namespace mozilla {
 

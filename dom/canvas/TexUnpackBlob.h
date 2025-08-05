@@ -6,12 +6,12 @@
 #ifndef TEX_UNPACK_BLOB_H_
 #define TEX_UNPACK_BLOB_H_
 
+#include <memory>
+
 #include "GLContextTypes.h"
-#include "mozilla/RefPtr.h"
 #include "WebGLStrongTypes.h"
 #include "WebGLTypes.h"
-
-#include <memory>
+#include "mozilla/RefPtr.h"
 
 namespace mozilla {
 

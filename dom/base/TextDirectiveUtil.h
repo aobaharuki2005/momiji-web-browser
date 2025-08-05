@@ -7,14 +7,14 @@
 #ifndef DOM_TEXTDIRECTIVEUTIL_H_
 #define DOM_TEXTDIRECTIVEUTIL_H_
 
-#include "mozilla/dom/AbstractRange.h"
-#include "mozilla/dom/Text.h"
-#include "mozilla/intl/WordBreaker.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/dom/AbstractRange.h"
+#include "mozilla/dom/Text.h"
+#include "mozilla/intl/WordBreaker.h"
 #include "nsStringFwd.h"
 
 class nsIURI;

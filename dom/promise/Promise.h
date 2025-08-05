@@ -10,6 +10,7 @@
 #include <functional>
 #include <type_traits>
 #include <utility>
+
 #include "ErrorList.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"

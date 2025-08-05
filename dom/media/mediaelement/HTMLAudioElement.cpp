@@ -5,20 +5,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLAudioElement.h"
+
+#include <algorithm>
+
+#include "AudioSampleFormat.h"
+#include "AudioStream.h"
+#include "jsfriendapi.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLAudioElementBinding.h"
+#include "mozilla/dom/TimeRanges.h"
+#include "nsComponentManagerUtils.h"
+#include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
-#include "mozilla/dom/Document.h"
-#include "jsfriendapi.h"
-#include "nsContentUtils.h"
-#include "nsJSUtils.h"
-#include "AudioSampleFormat.h"
-#include <algorithm>
-#include "nsComponentManagerUtils.h"
 #include "nsIHttpChannel.h"
-#include "mozilla/dom/TimeRanges.h"
-#include "AudioStream.h"
+#include "nsJSUtils.h"
 
 nsGenericHTMLElement* NS_NewHTMLAudioElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,

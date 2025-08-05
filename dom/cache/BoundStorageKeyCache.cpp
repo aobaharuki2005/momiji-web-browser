@@ -6,11 +6,11 @@
 
 #include "BoundStorageKeyCache.h"
 
+#include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
-#include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/cache/AutoUtils.h"
 #include "mozilla/dom/cache/Cache.h"
 #include "mozilla/dom/cache/CacheChild.h"

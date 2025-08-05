@@ -14,9 +14,9 @@
 #endif
 
 #include "MFMediaEngineExtension.h"
-#include "MFMediaEngineVideoStream.h"
-#include "MFMediaEngineUtils.h"
 #include "MFMediaEngineStream.h"
+#include "MFMediaEngineUtils.h"
+#include "MFMediaEngineVideoStream.h"
 #include "MFMediaSource.h"
 #include "RemoteMediaManagerParent.h"
 #include "WMF.h"
@@ -27,9 +27,9 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WindowsVersion.h"
-#include "mozilla/ipc/UtilityProcessChild.h"
-#include "mozilla/ipc/UtilityMediaServiceParent.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/ipc/UtilityMediaServiceParent.h"
+#include "mozilla/ipc/UtilityProcessChild.h"
 
 namespace mozilla {
 

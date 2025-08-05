@@ -9,12 +9,13 @@
  */
 
 #include "nsTextNode.h"
+
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/TextBinding.h"
 #include "nsContentUtils.h"
-#include "mozilla/dom/Document.h"
-#include "nsThreadUtils.h"
 #include "nsStubMutationObserver.h"
-#include "mozilla/IntegerPrintfMacros.h"
+#include "nsThreadUtils.h"
 #ifdef MOZ_DOM_LIST
 #  include "nsRange.h"
 #endif

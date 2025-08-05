@@ -7,19 +7,19 @@
 #ifndef _MOZILLA_GFX_DRAWTARGETWEBGL_H
 #define _MOZILLA_GFX_DRAWTARGETWEBGL_H
 
+#include <memory>
+#include <vector>
+
 #include "GLTypes.h"
 #include "mozilla/Array.h"
+#include "mozilla/LinkedList.h"
+#include "mozilla/ThreadLocal.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathSkia.h"
-#include "mozilla/LinkedList.h"
-#include "mozilla/WeakPtr.h"
-#include "mozilla/ThreadLocal.h"
 #include "mozilla/ipc/SharedMemoryHandle.h"
 #include "mozilla/ipc/SharedMemoryMapping.h"
 #include "mozilla/layers/LayersTypes.h"
-
-#include <memory>
-#include <vector>
 
 namespace WGR {
 struct OutputVertex;

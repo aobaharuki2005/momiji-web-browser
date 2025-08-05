@@ -6,16 +6,16 @@
 
 #include "mozilla/dom/SVGTextContentElement.h"
 
-#include "mozilla/dom/SVGLengthBinding.h"
-#include "mozilla/dom/SVGTextContentElementBinding.h"
-#include "mozilla/dom/SVGRect.h"
-#include "nsBidiUtils.h"
 #include "DOMSVGPoint.h"
+#include "SVGTextFrame.h"
+#include "mozilla/dom/SVGLengthBinding.h"
+#include "mozilla/dom/SVGRect.h"
+#include "mozilla/dom/SVGTextContentElementBinding.h"
+#include "nsBidiUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsTextFragment.h"
 #include "nsTextFrameUtils.h"
 #include "nsTextNode.h"
-#include "SVGTextFrame.h"
 
 namespace mozilla::dom {
 

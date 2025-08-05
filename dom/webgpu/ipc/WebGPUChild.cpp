@@ -5,6 +5,14 @@
 
 #include "WebGPUChild.h"
 
+#include <utility>
+
+#include "Adapter.h"
+#include "CompilationInfo.h"
+#include "DeviceLostInfo.h"
+#include "PipelineLayout.h"
+#include "Sampler.h"
+#include "Utility.h"
 #include "js/RootingAPI.h"
 #include "js/String.h"
 #include "js/TypeDecls.h"
@@ -14,26 +22,18 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumTypeTraits.h"
 #include "mozilla/ProfilerMarkers.h"
+#include "mozilla/dom/GPUUncapturedErrorEvent.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WebGPUBinding.h"
-#include "mozilla/dom/GPUUncapturedErrorEvent.h"
-#include "mozilla/webgpu/ValidationError.h"
-#include "mozilla/webgpu/OutOfMemoryError.h"
-#include "mozilla/webgpu/InternalError.h"
-#include "mozilla/webgpu/WebGPUTypes.h"
-#include "mozilla/webgpu/RenderPipeline.h"
 #include "mozilla/webgpu/ComputePipeline.h"
+#include "mozilla/webgpu/InternalError.h"
+#include "mozilla/webgpu/OutOfMemoryError.h"
 #include "mozilla/webgpu/PipelineError.h"
+#include "mozilla/webgpu/RenderPipeline.h"
+#include "mozilla/webgpu/ValidationError.h"
+#include "mozilla/webgpu/WebGPUTypes.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
-#include "Adapter.h"
-#include "DeviceLostInfo.h"
-#include "PipelineLayout.h"
-#include "Sampler.h"
-#include "CompilationInfo.h"
-#include "Utility.h"
-
-#include <utility>
 
 namespace mozilla::webgpu {
 

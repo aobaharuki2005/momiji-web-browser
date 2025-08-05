@@ -5,11 +5,11 @@
 #ifndef __FFmpegLibWrapper_h__
 #define __FFmpegLibWrapper_h__
 
+#include "ffvpx/tx.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DefineEnum.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Types.h"
-#include "ffvpx/tx.h"
 
 struct AVCodec;
 struct AVCodecContext;

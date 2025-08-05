@@ -13,8 +13,8 @@
 
 #include <jni.h>
 
-#include "device_info_android.h"
 #include "api/video/i420_buffer.h"
+#include "device_info_android.h"
 #include "modules/video_capture/video_capture_impl.h"
 
 namespace webrtc {

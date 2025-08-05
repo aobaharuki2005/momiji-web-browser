@@ -5,8 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLPictureElement.h"
-#include "mozilla/dom/HTMLPictureElementBinding.h"
+
 #include "mozilla/dom/HTMLImageElement.h"
+#include "mozilla/dom/HTMLPictureElementBinding.h"
 #include "mozilla/dom/HTMLSourceElement.h"
 
 // Expand NS_IMPL_NS_NEW_HTML_ELEMENT(Picture) to add pref check.

@@ -5,17 +5,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLDialogElement.h"
+
 #include "mozilla/dom/BindContext.h"
-#include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/CloseWatcher.h"
 #include "mozilla/dom/CloseWatcherManager.h"
+#include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/HTMLButtonElement.h"
 #include "mozilla/dom/HTMLDialogElementBinding.h"
 #include "mozilla/dom/UnbindContext.h"
-
-#include "nsIDOMEventListener.h"
 #include "nsContentUtils.h"
 #include "nsFocusManager.h"
+#include "nsIDOMEventListener.h"
 #include "nsIFrame.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Dialog)

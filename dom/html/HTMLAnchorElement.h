@@ -8,10 +8,10 @@
 #define mozilla_dom_HTMLAnchorElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/Link.h"
 #include "mozilla/dom/HTMLDNSPrefetch.h"
-#include "nsGenericHTMLElement.h"
+#include "mozilla/dom/Link.h"
 #include "nsDOMTokenList.h"
+#include "nsGenericHTMLElement.h"
 
 namespace mozilla {
 class EventChainPostVisitor;

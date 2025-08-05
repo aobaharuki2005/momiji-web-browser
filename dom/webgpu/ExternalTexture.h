@@ -6,8 +6,8 @@
 #ifndef ExternalTexture_H_
 #define ExternalTexture_H_
 
-#include "nsIGlobalObject.h"
 #include "ObjectModel.h"
+#include "nsIGlobalObject.h"
 
 namespace mozilla::webgpu {
 

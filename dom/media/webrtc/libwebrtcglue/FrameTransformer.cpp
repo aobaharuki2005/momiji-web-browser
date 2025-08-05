@@ -5,13 +5,16 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "libwebrtcglue/FrameTransformer.h"
-#include "api/frame_transformer_interface.h"
-#include "mozilla/Mutex.h"
+
+#include <stdint.h>
+
 #include <memory>
 #include <utility>
+
+#include "api/frame_transformer_interface.h"
 #include "api/scoped_refptr.h"
-#include <stdint.h>
 #include "libwebrtcglue/FrameTransformerProxy.h"
+#include "mozilla/Mutex.h"
 
 namespace mozilla {
 

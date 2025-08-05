@@ -9,7 +9,6 @@
 
 #include "BoundStorageKeyChild.h"
 #include "ErrorList.h"
-
 #include "mozilla/MozPromise.h"
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/dom/cache/TypeUtils.h"

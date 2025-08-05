@@ -7,15 +7,15 @@
 #ifndef nsFocusManager_h___
 #define nsFocusManager_h___
 
-#include "nsCycleCollectionParticipant.h"
-#include "nsIContent.h"
-#include "mozilla/dom/Document.h"
-#include "nsIFocusManager.h"
-#include "nsIObserver.h"
-#include "nsWeakReference.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/dom/Document.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsIContent.h"
+#include "nsIFocusManager.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
 
 #define FOCUSMANAGER_CONTRACTID "@mozilla.org/focus-manager;1"
 

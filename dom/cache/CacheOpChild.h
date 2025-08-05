@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_cache_CacheOpChild_h
 #define mozilla_dom_cache_CacheOpChild_h
 
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/cache/ActorChild.h"
 #include "mozilla/dom/cache/PCacheOpChild.h"
 #include "mozilla/dom/cache/TypeUtils.h"
-#include "mozilla/RefPtr.h"
 
 class nsIGlobalObject;
 

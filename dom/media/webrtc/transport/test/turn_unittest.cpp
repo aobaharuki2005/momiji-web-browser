@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <stdlib.h>
+
 #include <iostream>
 
 #include "runnable_utils.h"
@@ -53,12 +54,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // nICEr includes
 extern "C" {
 #include "nr_api.h"
-#include "transport_addr.h"
 #include "nr_crypto.h"
 #include "nr_socket.h"
-#include "nr_socket_local.h"
 #include "nr_socket_buffered_stun.h"
+#include "nr_socket_local.h"
 #include "stun_client_ctx.h"
+#include "transport_addr.h"
 #include "turn_client_ctx.h"
 }
 

@@ -4,18 +4,16 @@
 
 #include "WebRtcLog.h"
 
-#include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
-#include "rtc_base/logging.h"
-
-#include "nscore.h"
-#include "nsStringFwd.h"
-#include "nsXULAppAPI.h"
 #include "mozilla/Preferences.h"
-
-#include "nsIFile.h"
-#include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsIFile.h"
+#include "nsStringFwd.h"
+#include "nsThreadUtils.h"
+#include "nsXULAppAPI.h"
+#include "nscore.h"
+#include "rtc_base/logging.h"
 
 #ifdef XP_WIN
 #  include "nsNativeCharsetUtils.h"

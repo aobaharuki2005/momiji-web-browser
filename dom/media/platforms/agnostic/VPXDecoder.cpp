@@ -6,13 +6,16 @@
 
 #include "VPXDecoder.h"
 
-#include <algorithm>
 #include <vpx/vpx_image.h>
+
+#include <algorithm>
 
 #include "BitReader.h"
 #include "BitWriter.h"
 #include "ImageContainer.h"
+#include "PerformanceRecorder.h"
 #include "TimeUnits.h"
+#include "VideoUtils.h"
 #include "gfx2DGlue.h"
 #include "gfxUtils.h"
 #include "mozilla/PodOperations.h"
@@ -20,9 +23,7 @@
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Unused.h"
 #include "nsError.h"
-#include "PerformanceRecorder.h"
 #include "prsystem.h"
-#include "VideoUtils.h"
 
 #undef LOG
 #define LOG(arg, ...)                                                  \

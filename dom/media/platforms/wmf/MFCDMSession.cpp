@@ -4,12 +4,13 @@
 
 #include "MFCDMSession.h"
 
-#include <limits>
 #include <vcruntime.h>
 #include <winerror.h>
 
-#include "MFMediaEngineUtils.h"
+#include <limits>
+
 #include "GMPUtils.h"  // ToHexString
+#include "MFMediaEngineUtils.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/dom/BindingUtils.h"

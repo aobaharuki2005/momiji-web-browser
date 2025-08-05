@@ -7,14 +7,14 @@
 #include "WMFCDMProxy.h"
 
 #include "MediaData.h"
-#include "mozilla/dom/MediaKeysBinding.h"
-#include "mozilla/dom/MediaKeySession.h"
-#include "mozilla/dom/MediaKeySystemAccessBinding.h"
+#include "WMFCDMImpl.h"
+#include "WMFCDMProxyCallback.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/WMFCDMProxyCallback.h"
 #include "mozilla/WindowsVersion.h"
-#include "WMFCDMImpl.h"
-#include "WMFCDMProxyCallback.h"
+#include "mozilla/dom/MediaKeySession.h"
+#include "mozilla/dom/MediaKeySystemAccessBinding.h"
+#include "mozilla/dom/MediaKeysBinding.h"
 
 namespace mozilla {
 

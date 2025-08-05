@@ -8,11 +8,12 @@
  * Implementations of DOM Core's Comment node.
  */
 
-#include "nsCOMPtr.h"
 #include "mozilla/dom/Comment.h"
+
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/dom/CommentBinding.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/IntegerPrintfMacros.h"
+#include "nsCOMPtr.h"
 #include "nsPIDOMWindow.h"
 
 using namespace mozilla;

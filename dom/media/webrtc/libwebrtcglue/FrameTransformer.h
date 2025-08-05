@@ -10,10 +10,10 @@
 #include <map>
 
 #include "api/frame_transformer_interface.h"
-#include "libwebrtcglue/FrameTransformerProxy.h"
-#include "nsISupportsImpl.h"
-#include "mozilla/Mutex.h"
 #include "jsapi/RTCRtpScriptTransformer.h"
+#include "libwebrtcglue/FrameTransformerProxy.h"
+#include "mozilla/Mutex.h"
+#include "nsISupportsImpl.h"
 
 namespace mozilla {
 

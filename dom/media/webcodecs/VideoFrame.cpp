@@ -7,6 +7,7 @@
 #include "mozilla/dom/VideoFrame.h"
 
 #include <math.h>
+
 #include <limits>
 #include <utility>
 

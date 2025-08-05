@@ -10,9 +10,9 @@
 #include <atomic>
 
 #include "AndroidSurfaceTexture.h"
-#include "ImageContainer.h"
 #include "FFmpegDataDecoder.h"
 #include "FFmpegLibWrapper.h"
+#include "ImageContainer.h"
 #include "PerformanceRecorder.h"
 #include "SimpleMap.h"
 #include "mozilla/ScopeExit.h"

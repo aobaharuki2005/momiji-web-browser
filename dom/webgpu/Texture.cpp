@@ -5,13 +5,13 @@
 
 #include "Texture.h"
 
-#include "ipc/WebGPUChild.h"
-#include "mozilla/webgpu/ffi/wgpu.h"
-#include "mozilla/webgpu/CanvasContext.h"
-#include "mozilla/dom/WebGPUBinding.h"
-#include "mozilla/webgpu/WebGPUTypes.h"
 #include "TextureView.h"
 #include "Utility.h"
+#include "ipc/WebGPUChild.h"
+#include "mozilla/dom/WebGPUBinding.h"
+#include "mozilla/webgpu/CanvasContext.h"
+#include "mozilla/webgpu/WebGPUTypes.h"
+#include "mozilla/webgpu/ffi/wgpu.h"
 
 namespace mozilla::webgpu {
 

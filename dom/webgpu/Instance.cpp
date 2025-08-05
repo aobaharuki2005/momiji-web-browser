@@ -5,27 +5,26 @@
 
 #include "Instance.h"
 
+#include <optional>
+#include <string_view>
+
 #include "Adapter.h"
+#include "ipc/WebGPUChild.h"
+#include "ipc/WebGPUTypes.h"
 #include "js/Value.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/gfx/gfxVars.h"
+#include "mozilla/webgpu/ffi/wgpu.h"
 #include "nsDebug.h"
 #include "nsIGlobalObject.h"
-#include "ipc/WebGPUChild.h"
-#include "ipc/WebGPUTypes.h"
-#include "mozilla/webgpu/ffi/wgpu.h"
-#include "mozilla/dom/Promise.h"
-#include "mozilla/gfx/CanvasManagerChild.h"
-#include "mozilla/gfx/gfxVars.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
-
-#include "mozilla/dom/WorkerPrivate.h"
-
-#include <optional>
-#include <string_view>
 
 namespace mozilla::webgpu {
 

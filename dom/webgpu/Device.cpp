@@ -3,21 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "js/ArrayBuffer.h"
-#include "js/Value.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/Logging.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/dom/Console.h"
-#include "mozilla/dom/Promise.h"
-#include "mozilla/dom/WebGPUBinding.h"
 #include "Device.h"
-#include "CommandEncoder.h"
-#include "BindGroup.h"
 
 #include "Adapter.h"
+#include "BindGroup.h"
 #include "Buffer.h"
+#include "CommandEncoder.h"
 #include "CompilationInfo.h"
 #include "ComputePipeline.h"
 #include "DeviceLostInfo.h"
@@ -33,9 +24,18 @@
 #include "SupportedLimits.h"
 #include "Texture.h"
 #include "TextureView.h"
+#include "Utility.h"
 #include "ValidationError.h"
 #include "ipc/WebGPUChild.h"
-#include "Utility.h"
+#include "js/ArrayBuffer.h"
+#include "js/Value.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/Logging.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/dom/Console.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/WebGPUBinding.h"
 #include "nsGlobalWindowInner.h"
 
 namespace mozilla::webgpu {

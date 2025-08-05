@@ -7,26 +7,27 @@
 #ifndef nsINode_h___
 #define nsINode_h___
 
+#include <iosfwd>
+
+#include "js/TypeDecls.h"  // for Handle, Value, JSObject, JSContext
 #include "mozilla/DoublyLinkedList.h"
-#include "mozilla/Likely.h"
-#include "mozilla/UniquePtr.h"
-#include "nsCOMPtr.h"              // for member, local
-#include "nsGkAtoms.h"             // for nsGkAtoms::baseURIProperty
-#include "mozilla/dom/NodeInfo.h"  // member (in nsCOMPtr)
-#include "nsIWeakReference.h"
-#include "nsIMutationObserver.h"
-#include "nsNodeInfoManager.h"  // for use in NodePrincipal()
-#include "nsPropertyTable.h"    // for typedefs
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Likely.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/dom/EventTarget.h"  // for base class
-#include "js/TypeDecls.h"             // for Handle, Value, JSObject, JSContext
-#include "mozilla/dom/DOMString.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/DOMString.h"
+#include "mozilla/dom/EventTarget.h"  // for base class
 #include "mozilla/dom/NodeBinding.h"
+#include "mozilla/dom/NodeInfo.h"  // member (in nsCOMPtr)
+#include "nsCOMPtr.h"              // for member, local
+#include "nsGkAtoms.h"             // for nsGkAtoms::baseURIProperty
+#include "nsIMutationObserver.h"
+#include "nsIWeakReference.h"
+#include "nsNodeInfoManager.h"  // for use in NodePrincipal()
+#include "nsPropertyTable.h"    // for typedefs
 #include "nsTHashtable.h"
-#include <iosfwd>
 
 // Including 'windows.h' will #define GetClassInfo to something else.
 #ifdef XP_WIN

@@ -14,42 +14,39 @@
 #include <string>
 #include <vector>
 
-#include "sigslot.h"
-
 #include "logging.h"
-#include "ssl.h"
-
 #include "mozilla/DataMutex.h"
 #include "mozilla/Preferences.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
+#include "sigslot.h"
+#include "ssl.h"
 
 extern "C" {
-#include "r_types.h"
-#include "async_wait.h"
 #include "async_timer.h"
+#include "async_wait.h"
 #include "r_data.h"
-#include "util.h"
 #include "r_time.h"
+#include "r_types.h"
+#include "util.h"
 }
 
+#include "gtest_ringbuffer_dumper.h"
 #include "ice_ctx.h"
-#include "ice_peer_ctx.h"
 #include "ice_media_stream.h"
-
+#include "ice_peer_ctx.h"
+#include "mozilla/net/DNS.h"
+#include "nr_socket_prsock.h"
 #include "nricectx.h"
 #include "nricemediastream.h"
-#include "nriceresolverfake.h"
 #include "nriceresolver.h"
+#include "nriceresolverfake.h"
 #include "nrinterfaceprioritizer.h"
-#include "gtest_ringbuffer_dumper.h"
+#include "nsISocketFilter.h"
 #include "rlogconnector.h"
 #include "runnable_utils.h"
 #include "stunserver.h"
-#include "nr_socket_prsock.h"
 #include "test_nr_socket.h"
-#include "nsISocketFilter.h"
-#include "mozilla/net/DNS.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"

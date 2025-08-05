@@ -6,12 +6,12 @@
 #ifndef GPU_INSTANCE_H_
 #define GPU_INSTANCE_H_
 
+#include "ObjectModel.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "mozilla/layers/BuildConstants.h"
 #include "nsCOMPtr.h"
-#include "ObjectModel.h"
 
 namespace mozilla {
 class ErrorResult;

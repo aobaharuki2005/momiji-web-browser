@@ -6,15 +6,16 @@
 #ifndef GPU_RenderPassEncoder_H_
 #define GPU_RenderPassEncoder_H_
 
-#include "mozilla/dom/TypedArray.h"
 #include "CanvasContext.h"
 #include "ObjectModel.h"
+#include "mozilla/dom/TypedArray.h"
 
 namespace mozilla {
 class ErrorResult;
 
 namespace dom {
 class DoubleSequenceOrGPUColorDict;
+enum class GPUIndexFormat : uint8_t;
 struct GPURenderPassDescriptor;
 template <typename T>
 class Sequence;

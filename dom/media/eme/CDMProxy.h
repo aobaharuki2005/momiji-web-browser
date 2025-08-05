@@ -10,11 +10,9 @@
 #include "mozilla/CDMCaps.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/MozPromise.h"
-
 #include "mozilla/dom/MediaKeyMessageEvent.h"
-#include "mozilla/dom/MediaKeys.h"
 #include "mozilla/dom/MediaKeySessionBinding.h"
-
+#include "mozilla/dom/MediaKeys.h"
 #include "nsIThread.h"
 
 namespace mozilla {

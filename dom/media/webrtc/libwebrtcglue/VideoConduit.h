@@ -5,16 +5,15 @@
 #ifndef VIDEO_SESSION_H_
 #define VIDEO_SESSION_H_
 
+#include "MediaConduitInterface.h"
+#include "RtpRtcpConfig.h"
+#include "RunningStat.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/StateMirroring.h"
 #include "mozilla/UniquePtr.h"
-
-#include "MediaConduitInterface.h"
-#include "RtpRtcpConfig.h"
-#include "RunningStat.h"
 
 // conflicts with #include of scoped_ptr.h
 #undef FF

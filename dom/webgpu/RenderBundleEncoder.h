@@ -6,11 +6,21 @@
 #ifndef GPU_RenderBundleEncoder_H_
 #define GPU_RenderBundleEncoder_H_
 
-#include "mozilla/dom/TypedArray.h"
 #include "CanvasContext.h"
 #include "ObjectModel.h"
+#include "mozilla/dom/TypedArray.h"
+
+namespace mozilla::dom {
+struct GPURenderBundleEncoderDescriptor;
+struct GPURenderBundleDescriptor;
+enum class GPUIndexFormat : uint8_t;
+}  // namespace mozilla::dom
 
 namespace mozilla::webgpu {
+class BindGroup;
+class Buffer;
+class RenderPipeline;
+
 namespace ffi {
 struct WGPURenderBundleEncoder;
 }  // namespace ffi

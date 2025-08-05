@@ -9,16 +9,16 @@
 
 #include "DecoderDoctorLogger.h"
 #include "mozilla/Attributes.h"
-#include "nsCycleCollectionParticipant.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "nsCOMPtr.h"
-#include "mozilla/dom/TypedArray.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/dom/Promise.h"
 #include "mozilla/DetailedPromise.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/dom/MediaKeyMessageEventBinding.h"
 #include "mozilla/dom/MediaKeySessionBinding.h"
 #include "mozilla/dom/MediaKeysBinding.h"
-#include "mozilla/dom/MediaKeyMessageEventBinding.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/TypedArray.h"
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
 
 struct JSContext;
 

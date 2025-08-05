@@ -8,6 +8,7 @@
 #define mozilla_dom_RequestCallbackManager_h
 
 #include <limits>
+
 #include "mozilla/HashTable.h"
 #include "mozilla/RefPtr.h"
 #include "nsTArray.h"

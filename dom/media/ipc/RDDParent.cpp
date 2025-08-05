@@ -17,8 +17,8 @@
 #  include <unistd.h>
 #endif
 
-#include "gfxConfig.h"
 #include "MediaCodecsSupport.h"
+#include "gfxConfig.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/FOGIPC.h"
 #include "mozilla/Preferences.h"

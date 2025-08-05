@@ -5,14 +5,15 @@
 #ifndef DOM_MEDIA_PLATFORM_WMF_MFCDMSESSION_H
 #define DOM_MEDIA_PLATFORM_WMF_MFCDMSESSION_H
 
-#include <vector>
 #include <wrl.h>
 #include <wrl/client.h>
 
+#include <vector>
+
 #include "MFCDMExtra.h"
 #include "MediaEventSource.h"
-#include "mozilla/PMFCDM.h"
 #include "mozilla/KeySystemConfig.h"
+#include "mozilla/PMFCDM.h"
 #include "mozilla/dom/MediaKeySessionBinding.h"
 #include "nsAString.h"
 

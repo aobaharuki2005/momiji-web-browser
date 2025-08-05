@@ -7,9 +7,9 @@
 #ifndef ChromiumCDMProxy_h_
 #define ChromiumCDMProxy_h_
 
+#include "ChromiumCDMParent.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/CDMProxy.h"
-#include "ChromiumCDMParent.h"
 
 namespace mozilla {
 

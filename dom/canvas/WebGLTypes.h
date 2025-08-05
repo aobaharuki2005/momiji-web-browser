@@ -17,6 +17,7 @@
 #include "GLContextTypes.h"
 #include "GLDefs.h"
 #include "ImageContainer.h"
+#include "gfxTypes.h"
 #include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EnumTypeTraits.h"
@@ -29,6 +30,7 @@
 #include "mozilla/Span.h"
 #include "mozilla/TiedFields.h"
 #include "mozilla/TypedEnumBits.h"
+#include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/BuildConstants.h"
 #include "mozilla/gfx/Logging.h"
@@ -36,11 +38,8 @@
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/layers/LayersSurfaces.h"
-#include "gfxTypes.h"
-
-#include "nsTArray.h"
 #include "nsString.h"
-#include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "nsTArray.h"
 
 // Manual reflection of WebIDL typedefs that are different from their
 // OpenGL counterparts.

@@ -6,30 +6,29 @@
 #ifndef CLIENTWEBGLCONTEXT_H_
 #define CLIENTWEBGLCONTEXT_H_
 
-#include "GLConsts.h"
-#include "js/GCAPI.h"
-#include "mozilla/dom/ImageData.h"
-#include "mozilla/Range.h"
-#include "mozilla/RefCounted.h"
-#include "mozilla/dom/TypedArray.h"
-#include "nsICanvasRenderingContextInternal.h"
-#include "nsWrapperCache.h"
-#include "mozilla/dom/BufferSourceBindingFwd.h"
-#include "mozilla/dom/WebGLRenderingContextBinding.h"
-#include "mozilla/dom/WebGL2RenderingContextBinding.h"
-#include "mozilla/layers/LayersSurfaces.h"
-#include "mozilla/StaticPrefs_webgl.h"
-#include "WebGLStrongTypes.h"
-#include "WebGLTypes.h"
-
-#include "mozilla/Logging.h"
-#include "WebGLCommandQueue.h"
-
 #include <memory>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+#include "GLConsts.h"
+#include "WebGLCommandQueue.h"
+#include "WebGLStrongTypes.h"
+#include "WebGLTypes.h"
+#include "js/GCAPI.h"
+#include "mozilla/Logging.h"
+#include "mozilla/Range.h"
+#include "mozilla/RefCounted.h"
+#include "mozilla/StaticPrefs_webgl.h"
+#include "mozilla/dom/BufferSourceBindingFwd.h"
+#include "mozilla/dom/ImageData.h"
+#include "mozilla/dom/TypedArray.h"
+#include "mozilla/dom/WebGL2RenderingContextBinding.h"
+#include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "mozilla/layers/LayersSurfaces.h"
+#include "nsICanvasRenderingContextInternal.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
 

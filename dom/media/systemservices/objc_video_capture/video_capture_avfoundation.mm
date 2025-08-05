@@ -13,9 +13,9 @@
 #import "components/capturer/RTCCameraVideoCapturer.h"
 #import "helpers/NSString+StdString.h"
 
+#include "CallbackThreadRegistry.h"
 #include "api/scoped_refptr.h"
 #include "api/video/video_rotation.h"
-#include "CallbackThreadRegistry.h"
 #include "device_info_avfoundation.h"
 #include "modules/video_capture/video_capture_defines.h"
 #include "mozilla/Assertions.h"

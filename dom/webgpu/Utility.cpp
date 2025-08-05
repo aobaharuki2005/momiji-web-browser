@@ -4,10 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Utility.h"
+
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/WebGPUBinding.h"
-#include "mozilla/webgpu/ffi/wgpu.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
+#include "mozilla/webgpu/ffi/wgpu.h"
 
 namespace mozilla::webgpu {
 

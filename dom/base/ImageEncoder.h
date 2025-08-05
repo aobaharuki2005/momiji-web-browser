@@ -8,10 +8,10 @@
 #define ImageEncoder_h
 
 #include "imgIEncoder.h"
-#include "nsError.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/HTMLCanvasElementBinding.h"
-#include "mozilla/UniquePtr.h"
+#include "nsError.h"
 #include "nsSize.h"
 
 class nsICanvasRenderingContextInternal;

@@ -12,12 +12,12 @@
 #  error "This file requires ARC support."
 #endif
 
-#include "device_info_objc.h"
-#include "rtc_video_capture_objc.h"
-#include "rtc_base/ref_counted_object.h"
 #include "api/scoped_refptr.h"
-#include "video_capture_avfoundation.h"
+#include "device_info_objc.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "rtc_base/ref_counted_object.h"
+#include "rtc_video_capture_objc.h"
+#include "video_capture_avfoundation.h"
 
 using namespace mozilla;
 using namespace webrtc;

@@ -11,15 +11,15 @@
 #include "GMPUtils.h"
 #include "MainThreadUtils.h"
 #include "VideoConduit.h"
-#include "gmp-video-frame-encoded.h"
-#include "gmp-video-frame-i420.h"
-#include "mozilla/CheckedInt.h"
-#include "nsServiceManagerUtils.h"
 #include "api/video/video_frame_type.h"
 #include "common_video/include/video_frame_buffer.h"
+#include "gmp-video-frame-encoded.h"
+#include "gmp-video-frame-i420.h"
 #include "media/base/media_constants.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/svc/create_scalability_structure.h"
+#include "mozilla/CheckedInt.h"
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 

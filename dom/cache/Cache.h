@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_cache_Cache_h
 #define mozilla_dom_cache_Cache_h
 
-#include "mozilla/dom/cache/Types.h"
 #include "mozilla/dom/cache/TypeUtils.h"
+#include "mozilla/dom/cache/Types.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
 #include "nsString.h"

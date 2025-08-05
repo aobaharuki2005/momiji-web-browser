@@ -5,12 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/VideoEncoder.h"
-#include "EncoderConfig.h"
-#include "mozilla/dom/VideoEncoderBinding.h"
-#include "mozilla/dom/VideoColorSpaceBinding.h"
-#include "mozilla/dom/VideoColorSpace.h"
-#include "mozilla/dom/VideoFrame.h"
 
+#include "EncoderConfig.h"
 #include "EncoderTraits.h"
 #include "ImageContainer.h"
 #include "VideoUtils.h"
@@ -22,7 +18,10 @@
 #include "mozilla/dom/EncodedVideoChunkBinding.h"
 #include "mozilla/dom/ImageUtils.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/VideoColorSpace.h"
 #include "mozilla/dom/VideoColorSpaceBinding.h"
+#include "mozilla/dom/VideoEncoderBinding.h"
+#include "mozilla/dom/VideoFrame.h"
 #include "mozilla/dom/VideoFrameBinding.h"
 #include "mozilla/dom/WebCodecsUtils.h"
 #include "nsIGlobalObject.h"

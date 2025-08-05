@@ -8,6 +8,10 @@
 
 #include "js/Array.h"               // JS::GetArrayLength, JS::IsArrayObject
 #include "js/PropertyAndElement.h"  // JS_GetElement
+#include "mozilla/ErrorResult.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Unused.h"
+#include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/Promise.h"
@@ -16,15 +20,11 @@
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/cache/AutoUtils.h"
 #include "mozilla/dom/cache/CacheChild.h"
 #include "mozilla/dom/cache/CacheCommon.h"
 #include "mozilla/dom/cache/CacheWorkerRef.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/Unused.h"
 #include "nsIGlobalObject.h"
 
 namespace mozilla::dom::cache {

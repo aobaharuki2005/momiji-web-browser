@@ -8,14 +8,14 @@
 #ifndef TestBindingHeader_h
 #define TestBindingHeader_h
 
+#include "js/Object.h"  // JS::GetClass
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Record.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/ErrorResult.h"
 #include "nsCOMPtr.h"
 #include "nsGenericHTMLElement.h"
 #include "nsWrapperCache.h"
-#include "js/Object.h"  // JS::GetClass
 
 // Forward declare this before we include TestCodeGenBinding.h, because that
 // header relies on including this one for it, for ParentDict. Hopefully it

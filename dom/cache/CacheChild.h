@@ -8,8 +8,8 @@
 #define mozilla_dom_cache_CacheChild_h
 
 #include "mozilla/dom/cache/ActorChild.h"
-#include "mozilla/dom/cache/PCacheChild.h"
 #include "mozilla/dom/cache/CacheOpChild.h"
+#include "mozilla/dom/cache/PCacheChild.h"
 
 class nsIAsyncInputStream;
 class nsIGlobalObject;

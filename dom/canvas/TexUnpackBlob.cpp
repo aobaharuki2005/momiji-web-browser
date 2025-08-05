@@ -7,6 +7,12 @@
 
 #include "GLBlitHelper.h"
 #include "GLContext.h"
+#include "WebGLBuffer.h"
+#include "WebGLContext.h"
+#include "WebGLFormats.h"
+#include "WebGLTexelConversions.h"
+#include "WebGLTexture.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/gfx/CanvasManagerParent.h"
@@ -15,13 +21,7 @@
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/VideoBridgeParent.h"
-#include "mozilla/RefPtr.h"
 #include "nsLayoutUtils.h"
-#include "WebGLBuffer.h"
-#include "WebGLContext.h"
-#include "WebGLFormats.h"
-#include "WebGLTexelConversions.h"
-#include "WebGLTexture.h"
 
 namespace mozilla {
 

@@ -7,12 +7,12 @@
 #define _CANVASUTILS_H_
 
 #include "CanvasRenderingContextHelper.h"
-#include "mozilla/CheckedInt.h"
-#include "mozilla/dom/ToJSValue.h"
-#include "jsapi.h"
 #include "js/Array.h"               // JS::GetArrayLength
 #include "js/PropertyAndElement.h"  // JS_GetElement
+#include "jsapi.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/dom/ToJSValue.h"
 
 class nsIPrincipal;
 

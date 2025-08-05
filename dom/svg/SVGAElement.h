@@ -8,9 +8,9 @@
 #define DOM_SVG_SVGAELEMENT_H_
 
 #include "Link.h"
-#include "nsDOMTokenList.h"
 #include "SVGAnimatedString.h"
 #include "mozilla/dom/SVGGraphicsElement.h"
+#include "nsDOMTokenList.h"
 
 nsresult NS_NewSVGAElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);

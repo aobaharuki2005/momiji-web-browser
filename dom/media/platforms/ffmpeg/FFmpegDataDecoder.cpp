@@ -5,21 +5,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <string.h>
-#include "libavutil/dict.h"
+
 #include "libavcodec/avcodec.h"
+#include "libavutil/dict.h"
 #ifdef __GNUC__
 #  include <unistd.h>
 #endif
 
 #include "FFmpegDataDecoder.h"
+#include "FFmpegLibs.h"
 #include "FFmpegLog.h"
+#include "FFmpegUtils.h"
+#include "VideoUtils.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
 #include "prsystem.h"
-#include "VideoUtils.h"
-#include "FFmpegUtils.h"
-
-#include "FFmpegLibs.h"
 
 namespace mozilla {
 

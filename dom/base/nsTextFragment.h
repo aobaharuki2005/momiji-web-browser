@@ -16,12 +16,11 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/MemoryReporting.h"
-
-#include "nsCharTraits.h"
-#include "nsString.h"
 #include "mozilla/StringBuffer.h"
-#include "nsReadableUtils.h"
+#include "nsCharTraits.h"
 #include "nsISupportsImpl.h"
+#include "nsReadableUtils.h"
+#include "nsString.h"
 
 // XXX should this normalize the code to keep a \u0000 at the end?
 

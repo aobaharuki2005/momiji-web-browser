@@ -6,13 +6,13 @@
 
 #include "DAV1DDecoder.h"
 
-#include "gfxUtils.h"
 #include "ImageContainer.h"
+#include "PerformanceRecorder.h"
+#include "VideoUtils.h"
+#include "gfxUtils.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
 #include "nsThreadUtils.h"
-#include "PerformanceRecorder.h"
-#include "VideoUtils.h"
 
 #undef LOG
 #define LOG(arg, ...)                                                  \

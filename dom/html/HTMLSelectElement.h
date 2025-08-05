@@ -7,17 +7,16 @@
 #define mozilla_dom_HTMLSelectElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/ConstraintValidation.h"
-#include "nsGenericHTMLElement.h"
-
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/HTMLOptionsCollection.h"
 #include "mozilla/EnumSet.h"
-#include "nsCheapSets.h"
-#include "nsCOMPtr.h"
-#include "nsError.h"
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/ConstraintValidation.h"
 #include "mozilla/dom/HTMLFormElement.h"
+#include "mozilla/dom/HTMLOptionsCollection.h"
+#include "nsCOMPtr.h"
+#include "nsCheapSets.h"
 #include "nsContentUtils.h"
+#include "nsError.h"
+#include "nsGenericHTMLElement.h"
 
 class nsContentList;
 class nsIDOMHTMLOptionElement;

@@ -9,13 +9,14 @@
  */
 
 #include "mozilla/dom/DocumentType.h"
-#include "nsGkAtoms.h"
+
+#include "mozilla/dom/DocumentTypeBinding.h"
 #include "nsCOMPtr.h"
 #include "nsDOMString.h"
+#include "nsGkAtoms.h"
 #include "nsNodeInfoManager.h"
-#include "xpcpublic.h"
 #include "nsWrapperCacheInlines.h"
-#include "mozilla/dom/DocumentTypeBinding.h"
+#include "xpcpublic.h"
 
 already_AddRefed<mozilla::dom::DocumentType> NS_NewDOMDocumentType(
     nsNodeInfoManager* aNodeInfoManager, nsAtom* aName,

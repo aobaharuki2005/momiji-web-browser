@@ -9,12 +9,11 @@
 
 #include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtils.h"
-
+#include "mozilla/OriginAttributes.h"
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/CommonMetadata.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/UsageInfo.h"
-#include "mozilla/OriginAttributes.h"
 
 namespace IPC {
 

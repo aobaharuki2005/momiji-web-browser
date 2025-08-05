@@ -5,10 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGPolyElement.h"
+
 #include "DOMSVGPointList.h"
+#include "SVGContentUtils.h"
 #include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/gfx/2D.h"
-#include "SVGContentUtils.h"
 
 using namespace mozilla::gfx;
 

@@ -8,15 +8,15 @@
 #define MediaDrmCDMProxy_h_
 
 #include <jni.h>
-#include "mozilla/jni/Types.h"
-#include "mozilla/CDMProxy.h"
-#include "mozilla/CDMCaps.h"
-#include "mozilla/dom/MediaKeys.h"
-#include "mozilla/dom/MediaKeySession.h"
-#include "mozilla/MediaDrmProxySupport.h"
-#include "mozilla/UniquePtr.h"
 
 #include "MediaCodec.h"
+#include "mozilla/CDMCaps.h"
+#include "mozilla/CDMProxy.h"
+#include "mozilla/MediaDrmProxySupport.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/dom/MediaKeySession.h"
+#include "mozilla/dom/MediaKeys.h"
+#include "mozilla/jni/Types.h"
 #include "nsString.h"
 
 namespace mozilla {

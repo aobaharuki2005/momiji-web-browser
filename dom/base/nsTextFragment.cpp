@@ -11,16 +11,18 @@
  */
 
 #include "nsTextFragment.h"
-#include "nsCRT.h"
-#include "nsReadableUtils.h"
-#include "nsBidiUtils.h"
-#include "nsUnicharUtils.h"
+
+#include <algorithm>
+
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SSE.h"
 #include "mozilla/ppc.h"
+#include "nsBidiUtils.h"
+#include "nsCRT.h"
+#include "nsReadableUtils.h"
 #include "nsTextFragmentImpl.h"
-#include <algorithm>
+#include "nsUnicharUtils.h"
 
 #define TEXTFRAG_WHITE_AFTER_NEWLINE 50
 #define TEXTFRAG_MAX_NEWLINES 7

@@ -10,6 +10,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <algorithm>
 #include <cstdint>
 #include <functional>
@@ -19,22 +20,24 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
+
 #include "ActorsParentCommon.h"
 #include "CrashAnnotations.h"
+#include "DBSchema.h"
 #include "DatabaseFileInfo.h"
 #include "DatabaseFileManager.h"
 #include "DatabaseFileManagerImpl.h"
-#include "DBSchema.h"
 #include "ErrorList.h"
 #include "IDBCursorType.h"
 #include "IDBObjectStore.h"
 #include "IDBTransaction.h"
+#include "IndexedDBCipherKeyManager.h"
 #include "IndexedDBCommon.h"
 #include "IndexedDatabaseInlines.h"
 #include "IndexedDatabaseManager.h"
-#include "IndexedDBCipherKeyManager.h"
 #include "KeyPath.h"
 #include "MainThreadUtils.h"
+#include "NotifyUtils.h"
 #include "ProfilerHelpers.h"
 #include "ReportInternalError.h"
 #include "SafeRefPtr.h"
@@ -126,10 +129,10 @@
 #include "mozilla/dom/quota/ClientImpl.h"
 #include "mozilla/dom/quota/ConditionalCompilation.h"
 #include "mozilla/dom/quota/Date.h"
+#include "mozilla/dom/quota/DecryptingInputStream_impl.h"
 #include "mozilla/dom/quota/DirectoryLock.h"
 #include "mozilla/dom/quota/DirectoryLockInlines.h"
 #include "mozilla/dom/quota/DirectoryMetadata.h"
-#include "mozilla/dom/quota/DecryptingInputStream_impl.h"
 #include "mozilla/dom/quota/EncryptingOutputStream_impl.h"
 #include "mozilla/dom/quota/ErrorHandling.h"
 #include "mozilla/dom/quota/FileStreams.h"
@@ -153,12 +156,10 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/storage/Variant.h"
-#include "NotifyUtils.h"
 #include "nsBaseHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
 #include "nsContentUtils.h"
-#include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsEscape.h"
@@ -194,6 +195,7 @@
 #include "nsStringFlags.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
+#include "nsTHashMap.h"
 #include "nsTHashSet.h"
 #include "nsTHashtable.h"
 #include "nsTLiteralString.h"

@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AuthrsBridge_ffi.h"
 #include "WebAuthnResult.h"
-#include "nsIWebAuthnAttObj.h"
+
+#include "AuthrsBridge_ffi.h"
 #include "nsCOMPtr.h"
+#include "nsIWebAuthnAttObj.h"
 #include "nsString.h"
 
 #ifdef MOZ_WIDGET_ANDROID

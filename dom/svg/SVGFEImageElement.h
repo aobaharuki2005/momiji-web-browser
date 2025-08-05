@@ -7,8 +7,8 @@
 #ifndef DOM_SVG_SVGFEIMAGEELEMENT_H_
 #define DOM_SVG_SVGFEIMAGEELEMENT_H_
 
-#include "mozilla/dom/SVGFilters.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
+#include "mozilla/dom/SVGFilters.h"
 
 nsresult NS_NewSVGFEImageElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);

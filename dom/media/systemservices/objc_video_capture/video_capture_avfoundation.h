@@ -9,11 +9,11 @@
 
 #import "components/capturer/RTCCameraVideoCapturer.h"
 
+#include "PerformanceRecorder.h"
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
 #include "modules/video_capture/video_capture_impl.h"
 #include "mozilla/Maybe.h"
-#include "PerformanceRecorder.h"
 
 @class VideoCaptureAdapter;
 

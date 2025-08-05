@@ -5,17 +5,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BoundStorageKey.h"
-#include "BoundStorageKeyCache.h"
 
+#include "BoundStorageKeyCache.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/cache/AutoUtils.h"
 #include "mozilla/dom/cache/Cache.h"
 #include "mozilla/dom/cache/CacheStorageChild.h"
 #include "mozilla/dom/cache/CacheWorkerRef.h"
 #include "mozilla/dom/quota/PrincipalUtils.h"
-#include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 
 namespace mozilla::dom::cache {
 using mozilla::ipc::BackgroundChild;
