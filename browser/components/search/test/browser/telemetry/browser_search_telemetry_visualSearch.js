@@ -141,14 +141,10 @@ add_setup(async function () {
   });
   let nonconfigEngine = Services.search.getEngineByName(NONCONFIG_ENGINE_NAME);
   nonconfigEngine.wrappedJSObject._urls.push(
-    new EngineURL(
-      SearchUtils.URL_TYPE.VISUAL_SEARCH,
-      "GET",
-      "https://example.com/nonconfig-engine-visual",
-      "", // displayName
-      "", // isNewUntil
-      false // excludePartnerCodeFromTelemetry (doesn't matter)
-    )
+    new EngineURL({
+      type: SearchUtils.URL_TYPE.VISUAL_SEARCH,
+      template: "https://example.com/nonconfig-engine-visual",
+    })
   );
 
   // Enable local telemetry recording for the duration of the tests.

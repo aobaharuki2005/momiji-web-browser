@@ -200,11 +200,10 @@ export class OpenSearchEngine extends SearchEngine {
     this._queryCharset = data.queryCharset ?? "UTF-8";
     if (data.searchForm) {
       try {
-        let searchFormUrl = new EngineURL(
-          lazy.SearchUtils.URL_TYPE.SEARCH_FORM,
-          "GET",
-          data.searchForm
-        );
+        let searchFormUrl = new EngineURL({
+          type: lazy.SearchUtils.URL_TYPE.SEARCH_FORM,
+          template: data.searchForm,
+        });
         this._urls.push(searchFormUrl);
       } catch (ex) {
         throw Components.Exception(
@@ -220,11 +219,10 @@ export class OpenSearchEngine extends SearchEngine {
       if (url.rels.includes("searchform")) {
         let searchFormURL;
         try {
-          searchFormURL = new EngineURL(
-            lazy.SearchUtils.URL_TYPE.SEARCH_FORM,
-            "GET",
-            url.template
-          );
+          searchFormURL = new EngineURL({
+            type: lazy.SearchUtils.URL_TYPE.SEARCH_FORM,
+            template: url.template,
+          });
         } catch (ex) {
           throw Components.Exception(
             `Failed to add ${url.template} as an Engine URL`,
@@ -237,7 +235,7 @@ export class OpenSearchEngine extends SearchEngine {
 
       let engineURL;
       try {
-        engineURL = new EngineURL(url.type, url.method, url.template);
+        engineURL = new EngineURL(url);
       } catch (ex) {
         throw Components.Exception(
           `Failed to add ${url.template} as an Engine URL`,

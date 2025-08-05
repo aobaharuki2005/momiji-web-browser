@@ -706,20 +706,16 @@ export class ConfigSearchEngine extends SearchEngine {
    */
   #setUrl(type, urlData, partnerCode) {
     let urlType = ConfigSearchEngine.URL_TYPE_MAP.get(type);
-
     if (!urlType) {
       console.warn("unexpected engine url type.", type);
       return;
     }
 
-    let engineURL = new EngineURL(
-      urlType,
-      urlData.method || "GET",
-      urlData.base,
-      urlData.displayName,
-      urlData.isNewUntil,
-      urlData.excludePartnerCodeFromTelemetry
-    );
+    let engineURL = new EngineURL({
+      ...urlData,
+      type: urlType,
+      template: urlData.base,
+    });
 
     if (urlData.params) {
       let isEnterprise = Services.policies.isEnterprise;

@@ -215,22 +215,24 @@ export class EngineURL {
   /**
    * Creates an EngineURL.
    *
-   * @param {string} mimeType
-   *   The name of the MIME type of the search results returned by this URL.
-   * @param {string} requestMethod
-   *   The HTTP request method. Must be a case insensitive value of either
-   *   "GET" or "POST".
-   * @param {string} template
+   * @param {object} options
+   *   Options object.
+   * @param {string} options.type
+   *   The MIME type of the search results returned by this URL.
+   * @param {string} options.template
    *   The URL to which search queries should be sent. For GET requests,
    *   must contain the string "{searchTerms}", to indicate where the user
    *   entered search terms should be inserted.
-   * @param {string} [displayName]
+   * @param {string} [options.method]
+   *   The HTTP request method. Must be a case insensitive value of either
+   *   "GET" or "POST".
+   * @param {string} [options.displayName]
    *   The display name of the URL, if any. This is useful if the URL
    *   corresponds to a brand name distinct from the engine's brand name.
-   * @param {string} [isNewUntil]
+   * @param {string} [options.isNewUntil]
    *   Indicates the date until which the URL is considered new
    *   (format: YYYY-MM-DD).
-   * @param {boolean} [excludePartnerCodeFromTelemetry]
+   * @param {boolean} [options.excludePartnerCodeFromTelemetry]
    *   Whether the engine's partner code should be excluded from telemetry when
    *   this URL is visited.
    *
@@ -238,33 +240,28 @@ export class EngineURL {
    *
    * @throws NS_ERROR_NOT_IMPLEMENTED if aType is unsupported.
    */
-  constructor(
-    mimeType,
-    requestMethod,
+  constructor({
+    type,
     template,
-    displayName,
-    isNewUntil,
-    excludePartnerCodeFromTelemetry
-  ) {
-    if (!mimeType || !requestMethod || !template) {
+    method = "GET",
+    displayName = "",
+    isNewUntil = "",
+    excludePartnerCodeFromTelemetry = false,
+  }) {
+    if (!type || !method || !template) {
       throw Components.Exception(
-        "missing mimeType, method or template for EngineURL!",
+        "missing type, method or template for EngineURL!",
         Cr.NS_ERROR_INVALID_ARG
       );
     }
 
-    var method = requestMethod.toUpperCase();
-    var type = mimeType.toLowerCase();
-
-    if (method != "GET" && method != "POST") {
+    this.method = method.toUpperCase();
+    if (this.method != "GET" && this.method != "POST") {
       throw Components.Exception(
         'method passed to EngineURL must be "GET" or "POST"',
         Cr.NS_ERROR_INVALID_ARG
       );
     }
-
-    this.type = type;
-    this.method = method;
 
     var templateURI = lazy.SearchUtils.makeURI(template);
     if (!templateURI) {
@@ -297,6 +294,7 @@ export class EngineURL {
       }
     }
 
+    this.type = type.toLowerCase();
     this.displayName = displayName ?? "";
     this.isNewUntil = isNewUntil ?? "";
     this.excludePartnerCodeFromTelemetry = !!excludePartnerCodeFromTelemetry;
@@ -753,7 +751,7 @@ export class SearchEngine {
    *   The newly created EngineURL.
    */
   _getEngineURLFromMetaData(type, params) {
-    let url = new EngineURL(type, params.method || "GET", params.template);
+    let url = new EngineURL({ ...params, type });
 
     if (params.postParams) {
       if (Array.isArray(params.postParams)) {
@@ -1020,11 +1018,10 @@ export class SearchEngine {
 
     for (let i = 0; i < json._urls.length; ++i) {
       let url = json._urls[i];
-      let engineURL = new EngineURL(
-        url.type || lazy.SearchUtils.URL_TYPE.SEARCH,
-        url.method || "GET",
-        url.template
-      );
+      let engineURL = new EngineURL({
+        ...url,
+        type: url.type || lazy.SearchUtils.URL_TYPE.SEARCH,
+      });
       engineURL._initWithJSON(url);
       this._urls.push(engineURL);
     }
