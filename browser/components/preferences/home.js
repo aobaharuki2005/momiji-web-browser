@@ -187,10 +187,8 @@ var gHomePane = {
         );
         if (!currentOption) {
           let option = document.createXULElement("menuitem");
-          option.classList.add("addon-with-favicon");
           option.value = addon.id;
           option.label = addon.name;
-          option.setAttribute("image", addon.iconURL);
           menupopup.append(option);
         }
         let setting = extensionOptions.find(o => o.id == addon.id);

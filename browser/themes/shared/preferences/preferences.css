@@ -503,10 +503,6 @@ richlistitem[selected] .actionsMenu:focus-visible {
   margin-inline-end: var(--space-small);
 }
 
-.addon-with-favicon .menu-icon {
-  margin-inline-start: 0;
-}
-
 a[is="moz-support-link"]:not(.sidebar-footer-link, [hidden]) {
   display: inline-block;
   white-space: initial;
