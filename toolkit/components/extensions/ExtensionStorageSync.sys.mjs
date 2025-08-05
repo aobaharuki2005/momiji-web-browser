@@ -58,6 +58,10 @@ export class ExtensionStorageSync {
           let result = await rustStore.get(extId, ...sargs);
           return JSON.parse(result);
         }
+        case "getKeys": {
+          let result = await rustStore.getKeys(extId);
+          return JSON.parse(result);
+        }
         case "getBytesInUse": {
           let result = await rustStore.getBytesInUse(extId, ...sargs);
           return JSON.parse(result);
@@ -105,9 +109,7 @@ export class ExtensionStorageSync {
   }
 
   async getKeys(extension) {
-    // TODO(bug 1978718): Consider implementing this in the Rust store
-    const data = await this.get(extension, null);
-    return Object.keys(data || {});
+    return await this.callRustStoreFn("getKeys", extension);
   }
 
   async getBytesInUse(extension, keys) {
