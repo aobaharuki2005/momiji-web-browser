@@ -55,7 +55,6 @@ import mozilla.components.compose.base.modifier.thenConditional
 import mozilla.components.support.utils.ext.isLandscape
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.SwipeToDismissState2
-import org.mozilla.fenix.ext.pixelSizeFor
 import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.browser.compose.DragItemContainer
 import org.mozilla.fenix.tabstray.browser.compose.createGridReorderState
@@ -65,7 +64,6 @@ import org.mozilla.fenix.tabstray.browser.compose.detectListPressAndDrag
 import org.mozilla.fenix.tabstray.ui.tabitems.TabGridItem
 import org.mozilla.fenix.tabstray.ui.tabitems.TabListItem
 import org.mozilla.fenix.theme.FirefoxTheme
-import kotlin.math.max
 
 // Key for the span item at the bottom of the tray, used to make the item not reorderable.
 const val SPAN_ITEM_KEY = "span"
@@ -177,10 +175,6 @@ private fun TabGrid(
 ) {
     val state = rememberLazyGridState(initialFirstVisibleItemIndex = selectedTabIndex)
     val tabListBottomPadding = dimensionResource(id = R.dimen.tab_tray_list_bottom_padding)
-    val tabThumbnailSize = max(
-        LocalContext.current.pixelSizeFor(R.dimen.tab_tray_grid_item_thumbnail_height),
-        LocalContext.current.pixelSizeFor(R.dimen.tab_tray_grid_item_thumbnail_width),
-    )
     val isInMultiSelectMode = selectionMode is TabsTrayState.Mode.Select
 
     val reorderState = createGridReorderState(
@@ -261,7 +255,6 @@ private fun TabGrid(
             ) {
                 TabGridItem(
                     tab = tab,
-                    thumbnailSize = tabThumbnailSize,
                     isSelected = tab.id == selectedTabId,
                     multiSelectionEnabled = isInMultiSelectMode,
                     multiSelectionSelected = selectionMode.selectedTabs.any { it.id == tab.id },
@@ -297,10 +290,6 @@ private fun TabList(
 ) {
     val state = rememberLazyListState(initialFirstVisibleItemIndex = selectedTabIndex)
     val tabListBottomPadding = dimensionResource(id = R.dimen.tab_tray_list_bottom_padding)
-    val tabThumbnailSize = max(
-        LocalContext.current.pixelSizeFor(R.dimen.tab_tray_list_item_thumbnail_height),
-        LocalContext.current.pixelSizeFor(R.dimen.tab_tray_list_item_thumbnail_width),
-    )
     val isInMultiSelectMode = selectionMode is TabsTrayState.Mode.Select
     val reorderState = createListReorderState(
         listState = state,
@@ -338,8 +327,8 @@ private fun TabList(
                     reorderState = reorderState,
                     shouldLongPressToDrag = shouldLongPress,
                 )
-            .padding(all = 16.dp)
-            .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 24.dp),
+                .padding(all = 16.dp)
+                .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 24.dp),
         state = state,
         contentPadding = PaddingValues(bottom = tabListBottomPadding),
         ) {
@@ -360,7 +349,6 @@ private fun TabList(
                 ) {
                     TabListItem(
                         tab = tab,
-                        thumbnailSize = tabThumbnailSize,
                         modifier = Modifier
                             .thenConditional(
                                 // Add top rounded corners to the first item

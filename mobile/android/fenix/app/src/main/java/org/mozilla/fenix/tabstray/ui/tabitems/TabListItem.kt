@@ -13,7 +13,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -57,12 +56,14 @@ import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.tabstray.ext.toDisplayTitle
 import org.mozilla.fenix.theme.FirefoxTheme
 
+private val ThumbnailWidth = 78.dp
+private val ThumbnailHeight = 68.dp
+
 /**
  * List item used to display a tab that supports clicks,
  * long clicks, multiselection, and media controls.
  *
  * @param tab The given tab to be render as view a grid item.
- * @param thumbnailSize Size of tab's thumbnail.
  * @param modifier [Modifier] to be applied to the tab list item content.
  * @param isSelected Indicates if the item should be render as selected.
  * @param multiSelectionEnabled Indicates if the item should be render with multi selection options,
@@ -79,7 +80,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
 @Composable
 fun TabListItem(
     tab: TabSessionState,
-    thumbnailSize: Int,
     modifier: Modifier = Modifier,
     isSelected: Boolean = false,
     multiSelectionEnabled: Boolean = false,
@@ -93,6 +93,7 @@ fun TabListItem(
     val decayAnimationSpec: DecayAnimationSpec<Float> = rememberSplineBasedDecay()
     val density = LocalDensity.current
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val thumbnailSize = with(density) { ThumbnailWidth.toPx() }.toInt()
 
     val swipeState = remember(multiSelectionEnabled, swipingEnabled) {
         SwipeToDismissState2(
@@ -256,7 +257,10 @@ private fun Thumbnail(
         tab = tab,
         size = size,
         modifier = Modifier
-            .size(width = 92.dp, height = 72.dp)
+            .size(
+                width = ThumbnailWidth,
+                height = ThumbnailHeight,
+            )
             .testTag(TabsTrayTestTag.TAB_ITEM_THUMBNAIL),
         shape = RoundedCornerShape(size = 4.dp),
         border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.outlineVariant),
@@ -314,7 +318,6 @@ private fun TabListItemPreview(
     FirefoxTheme {
         TabListItem(
             tab = createTab(url = "www.mozilla.com", title = "Mozilla"),
-            thumbnailSize = 108,
             isSelected = tabListItemState.isSelected,
             onCloseClick = {},
             onClick = {},
