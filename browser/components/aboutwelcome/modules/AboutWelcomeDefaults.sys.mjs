@@ -138,7 +138,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
     {
       id: "AW_EASY_SETUP_NEEDS_DEFAULT_AND_PIN",
       targeting:
-        "doesAppNeedPin && (unhandledCampaignAction != 'SET_DEFAULT_BROWSER') && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser",
+        "doesAppNeedPin && (unhandledCampaignAction != 'SET_DEFAULT_BROWSER') && (unhandledCampaignAction != 'PIN_FIREFOX_TO_TASKBAR') && (unhandledCampaignAction != 'PIN_AND_DEFAULT') && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser",
       content: {
         fullscreen: true,
         position: "split",
@@ -273,7 +273,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
     {
       id: "AW_EASY_SETUP_NEEDS_DEFAULT",
       targeting:
-        "!doesAppNeedPin && (unhandledCampaignAction != 'SET_DEFAULT_BROWSER') && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser",
+        "!doesAppNeedPin && (unhandledCampaignAction != 'SET_DEFAULT_BROWSER') && (unhandledCampaignAction != 'PIN_AND_DEFAULT') && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser",
       content: {
         fullscreen: true,
         position: "split",
@@ -385,7 +385,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
     {
       id: "AW_EASY_SETUP_NEEDS_PIN",
       targeting:
-        "doesAppNeedPin && (!'browser.shell.checkDefaultBrowser'|preferenceValue || isDefaultBrowser || (unhandledCampaignAction == 'SET_DEFAULT_BROWSER'))",
+        "(unhandledCampaignAction != 'PIN_FIREFOX_TO_TASKBAR') && (unhandledCampaignAction != 'PIN_AND_DEFAULT') && doesAppNeedPin && (!'browser.shell.checkDefaultBrowser'|preferenceValue || isDefaultBrowser || (unhandledCampaignAction == 'SET_DEFAULT_BROWSER'))",
       content: {
         fullscreen: true,
         position: "split",
@@ -508,7 +508,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
     {
       id: "AW_EASY_SETUP_ONLY_IMPORT",
       targeting:
-        "!doesAppNeedPin && (!'browser.shell.checkDefaultBrowser'|preferenceValue || isDefaultBrowser || (unhandledCampaignAction == 'SET_DEFAULT_BROWSER'))",
+        "(!doesAppNeedPin || (unhandledCampaignAction == 'PIN_FIREFOX_TO_TASKBAR') || (unhandledCampaignAction == 'PIN_AND_DEFAULT')) && (!'browser.shell.checkDefaultBrowser'|preferenceValue || isDefaultBrowser || (unhandledCampaignAction == 'SET_DEFAULT_BROWSER') || (unhandledCampaignAction == 'PIN_AND_DEFAULT'))",
       content: {
         fullscreen: true,
         position: "split",

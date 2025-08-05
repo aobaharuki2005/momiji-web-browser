@@ -264,7 +264,11 @@ function CacheUnhandledCampaignAction() {
         if (!lazy.didHandleCampaignAction) {
           const attributionData =
             lazy.AttributionCode.getCachedAttributionData();
-          const ALLOWED_CAMPAIGN_ACTIONS = ["SET_DEFAULT_BROWSER"];
+          const ALLOWED_CAMPAIGN_ACTIONS = [
+            "PIN_AND_DEFAULT",
+            "PIN_FIREFOX_TO_TASKBAR",
+            "SET_DEFAULT_BROWSER",
+          ];
           const campaign = attributionData?.campaign?.toUpperCase();
           if (campaign && ALLOWED_CAMPAIGN_ACTIONS.includes(campaign)) {
             this._value = campaign;

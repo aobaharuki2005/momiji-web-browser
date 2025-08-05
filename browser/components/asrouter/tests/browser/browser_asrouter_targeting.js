@@ -109,6 +109,20 @@ async function removeAutofillRecords() {
   }
 }
 
+add_task(async function setup_pref_env() {
+  // Let the harness know these prefs are test-managed so it won't warn about
+  // changes
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.search.region", ""],
+      ["distribution.iniFile.exists.value", false],
+      ["distribution.iniFile.exists.appversion", ""],
+      ["extensions.webextensions.uuids", "{}"],
+      ["browser.shell.mostRecentDefaultPromptSeen", 0],
+    ],
+  });
+});
+
 // ASRouterTargeting.findMatchingMessage
 add_task(async function find_matching_message() {
   const messages = [
@@ -580,7 +594,7 @@ add_task(async function checkAddonsInfo() {
   Assert.strictEqual(
     installedAddons,
     false,
-    "should correctly return hasInstalledAddons"
+    "should correctly return hasInstalledAddons before"
   );
 
   const xpi = AddonTestUtils.createTempWebExtensionFile({
@@ -680,7 +694,13 @@ add_task(async function checkAddonsInfo() {
     "should correctly provide `installDate` property from full data"
   );
 
-  ok(hasInstalledAddons, "should correctly return hasInstalledAddons");
+  ok(hasInstalledAddons, "should correctly return hasInstalledAddons after");
+
+  // Clean up the installed test addon
+  let testAddonObj = await AddonManager.getAddonByID(FAKE_ID);
+  if (testAddonObj) {
+    await testAddonObj.uninstall();
+  }
 });
 
 add_task(async function checkFrecentSites() {
@@ -1379,6 +1399,9 @@ add_task(async function test_distributionId() {
     "test",
     "Should return the correct distribution Id"
   );
+
+  // clean up default branch distribution.id
+  Services.prefs.getDefaultBranch(null).deleteBranch("distribution.id");
 });
 
 add_task(async function test_fxViewButtonAreaType_default() {
@@ -2160,7 +2183,30 @@ add_task(async function check_unhandledCampaignAction() {
       },
     },
     {
-      title: "supported and unhandled set default browser campaign action",
+      title:
+        "supported (pin and set default) and unhandled set default browser campaign action",
+      attributionData: {
+        campaign: "pin_and_default",
+      },
+      expected: "PIN_AND_DEFAULT",
+      after: () => {
+        QueryCache.queries.UnhandledCampaignAction.expire();
+      },
+    },
+    {
+      title:
+        "supported (pin to taskbar) and unhandled set default browser campaign action",
+      attributionData: {
+        campaign: "pin_firefox_to_taskbar",
+      },
+      expected: "PIN_FIREFOX_TO_TASKBAR",
+      after: () => {
+        QueryCache.queries.UnhandledCampaignAction.expire();
+      },
+    },
+    {
+      title:
+        "supported (set default) and unhandled set default browser campaign action",
       attributionData: {
         campaign: "set_default_browser",
       },
@@ -2170,7 +2216,8 @@ add_task(async function check_unhandledCampaignAction() {
       },
     },
     {
-      title: "supported and handled set default browser campaign action",
+      title:
+        "supported (set default) and handled set default browser campaign action",
       attributionData: {
         campaign: "set_default_browser",
       },

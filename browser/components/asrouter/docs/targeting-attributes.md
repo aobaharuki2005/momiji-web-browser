@@ -1097,7 +1097,7 @@ A boolean. `true` when the `toolkit.profiles.storeID` pref has a value. Indicate
 
 ### `unhandledCampaignAction`
 
-A string. A special message action to be executed on first-run. For example, `"SET_DEFAULT_BROWSER"` when the user selected to set as default via the [install marketing page](https://www.mozilla.org/firefox/new/) and set default has not yet been automatically triggered, `null` otherwise.
+A string. A special message action to be executed on first-run. For example, `"SET_DEFAULT_BROWSER"` when the user selected to set as default via the [install marketing page](https://www.mozilla.org/firefox/new/) and set default has not yet been automatically triggered, `null` otherwise. Currently supported actions include `"PIN_AND_DEFAULT"`, `"PIN_FIREFOX_TO_TASKBAR"`, and `"SET_DEFAULT_BROWSER"`.
 
 ### `isMSIX`
 
