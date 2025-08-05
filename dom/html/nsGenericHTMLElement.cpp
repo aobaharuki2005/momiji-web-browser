@@ -2059,12 +2059,6 @@ bool nsGenericHTMLFormElement::IsElementDisabledForEvents(WidgetEvent* aEvent,
     return false;
   }
 
-  // FIXME(emilio): This poking at the style of the frame is slightly bogus
-  // unless we flush before every event, which we don't really want to do.
-  if (aFrame && aFrame->StyleUI()->UserInput() == StyleUserInput::None) {
-    return true;
-  }
-
   return IsDisabled();
 }
 

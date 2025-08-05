@@ -7482,12 +7482,6 @@ void nsIFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
 }
 
 bool nsIFrame::IsContentDisabled() const {
-  // FIXME(emilio): Doing this via CSS means callers must ensure the style is up
-  // to date, and they don't!
-  if (StyleUI()->UserInput() == StyleUserInput::None) {
-    return true;
-  }
-
   auto* element = nsGenericHTMLElement::FromNodeOrNull(GetContent());
   return element && element->IsDisabled();
 }

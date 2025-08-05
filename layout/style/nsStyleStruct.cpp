@@ -3165,7 +3165,6 @@ LogicalSide nsStyleText::TextEmphasisSide(WritingMode aWM,
 nsStyleUI::nsStyleUI()
     : mInert(StyleInert::None),
       mMozTheme(StyleMozTheme::Auto),
-      mUserInput(StyleUserInput::Auto),
       mUserFocus(StyleUserFocus::Normal),
       mPointerEvents(StylePointerEvents::Auto),
       mCursor{{}, StyleCursorKind::Auto},
@@ -3179,7 +3178,6 @@ nsStyleUI::nsStyleUI()
 nsStyleUI::nsStyleUI(const nsStyleUI& aSource)
     : mInert(aSource.mInert),
       mMozTheme(aSource.mMozTheme),
-      mUserInput(aSource.mUserInput),
       mUserFocus(aSource.mUserFocus),
       mPointerEvents(aSource.mPointerEvents),
       mCursor(aSource.mCursor),
@@ -3226,13 +3224,13 @@ nsChangeHint nsStyleUI::CalcDifference(const nsStyleUI& aNewData) const {
   }
 
   if (mInert != aNewData.mInert) {
-    // inert affects pointer-events, user-modify, user-select, user-focus and
-    // -moz-user-input, do the union of all them (minus
+    // inert affects pointer-events, user-modify, user-select, user-focus.
+    // Do the union of all them (minus
     // nsChangeHint_NeutralChange which isn't needed if there's any other hint).
     hint |= NS_STYLE_HINT_VISUAL | kPointerEventsHint;
   }
 
-  if (mUserFocus != aNewData.mUserFocus || mUserInput != aNewData.mUserInput) {
+  if (mUserFocus != aNewData.mUserFocus) {
     hint |= nsChangeHint_NeutralChange;
   }
 

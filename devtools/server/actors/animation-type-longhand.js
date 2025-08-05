@@ -187,7 +187,6 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "transform-style",
       "unicode-bidi",
       "-moz-user-focus",
-      "-moz-user-input",
       "user-select",
       "vector-effect",
       "view-transition-class",

@@ -14304,19 +14304,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.transitions")) {
   });
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.moz-user-input.enabled")) {
-  Object.assign(gCSSProperties, {
-    "-moz-user-input": {
-      domProp: "MozUserInput",
-      inherited: true,
-      type: CSS_TYPE_LONGHAND,
-      initial_values: ["auto"],
-      other_values: ["none"],
-      invalid_values: [],
-    },
-  });
-}
-
 if (IsCSSPropertyPrefEnabled("layout.css.field-sizing.enabled")) {
   Object.assign(gCSSProperties, {
     "field-sizing": {

@@ -9716,13 +9716,6 @@
   mirror: always
   rust: true
 
-# Whether the `-moz-user-input` property is exposed to content.
-- name: layout.css.moz-user-input.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  rust: true
-
 # Whether the `-moz-appearance` property is exposed to content.
 - name: layout.css.moz-appearance.enabled
   type: RelaxedAtomicBool

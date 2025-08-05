@@ -2120,15 +2120,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUI {
   mozilla::StyleMozTheme mMozTheme;
 
  private:
-  mozilla::StyleUserInput mUserInput;
   mozilla::StyleUserFocus mUserFocus;
   mozilla::StylePointerEvents mPointerEvents;
   mozilla::StyleCursor mCursor;
 
  public:
   bool IsInert() const { return mInert == mozilla::StyleInert::Inert; }
-
-  mozilla::StyleUserInput UserInput() const { return mUserInput; }
 
   mozilla::StyleUserFocus UserFocus() const {
     return IsInert() ? mozilla::StyleUserFocus::None : mUserFocus;

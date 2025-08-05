@@ -6552,13 +6552,6 @@ bool EventStateManager::SetContentState(nsIContent* aContent,
     // Hover and active are hierarchical
     updateAncestors = true;
 
-    // check to see that this state is allowed by style. Check dragover too?
-    // XXX Is this even what we want?
-    if (mCurrentTarget &&
-        mCurrentTarget->StyleUI()->UserInput() == StyleUserInput::None) {
-      return false;
-    }
-
     if (aState == ElementState::ACTIVE) {
       if (aContent && !CanContentHaveActiveState(*aContent)) {
         aContent = nullptr;
