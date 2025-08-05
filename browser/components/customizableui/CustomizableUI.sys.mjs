@@ -4,7 +4,7 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-import { SearchWidgetTracker } from "resource:///modules/SearchWidgetTracker.sys.mjs";
+import { SearchWidgetTracker } from "moz-src:///browser/components/customizableui/SearchWidgetTracker.sys.mjs";
 
 const lazy = {};
 
@@ -12,9 +12,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.sys.mjs",
-  CustomizableWidgets: "resource:///modules/CustomizableWidgets.sys.mjs",
+  CustomizableWidgets:
+    "moz-src:///browser/components/customizableui/CustomizableWidgets.sys.mjs",
   HomePage: "resource:///modules/HomePage.sys.mjs",
-  PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
+  PanelMultiView:
+    "moz-src:///browser/components/customizableui/PanelMultiView.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
 });

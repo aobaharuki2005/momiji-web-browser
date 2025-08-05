@@ -7,7 +7,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.sys.mjs",
   ASRouter: "resource:///modules/asrouter/ASRouter.sys.mjs",
-  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
+  CustomizableUI:
+    "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
   PageEventManager: "resource:///modules/asrouter/PageEventManager.sys.mjs",
 });
 

@@ -29,7 +29,8 @@ ChromeUtils.defineESModuleGetters(this, {
     "moz-src:///browser/components/contentanalysis/content/ContentAnalysis.sys.mjs",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
-  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
+  CustomizableUI:
+    "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
   DevToolsSocketStatus:
     "resource://devtools/shared/security/DevToolsSocketStatus.sys.mjs",
   DownloadUtils: "resource://gre/modules/DownloadUtils.sys.mjs",
@@ -54,8 +55,10 @@ ChromeUtils.defineESModuleGetters(this, {
     "moz-src:///browser/components/search/OpenSearchManager.sys.mjs",
   PageActions: "resource:///modules/PageActions.sys.mjs",
   PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
-  PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
-  PanelView: "resource:///modules/PanelMultiView.sys.mjs",
+  PanelMultiView:
+    "moz-src:///browser/components/customizableui/PanelMultiView.sys.mjs",
+  PanelView:
+    "moz-src:///browser/components/customizableui/PanelMultiView.sys.mjs",
   PictureInPicture: "resource://gre/modules/PictureInPicture.sys.mjs",
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.sys.mjs",
   PlacesUIUtils: "moz-src:///browser/components/places/PlacesUIUtils.sys.mjs",
@@ -89,8 +92,10 @@ ChromeUtils.defineESModuleGetters(this, {
   TaskbarTabsChrome:
     "resource:///modules/taskbartabs/TaskbarTabsChrome.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
-  ToolbarContextMenu: "resource:///modules/ToolbarContextMenu.sys.mjs",
-  ToolbarDropHandler: "resource:///modules/ToolbarDropHandler.sys.mjs",
+  ToolbarContextMenu:
+    "moz-src:///browser/components/customizableui/ToolbarContextMenu.sys.mjs",
+  ToolbarDropHandler:
+    "moz-src:///browser/components/customizableui/ToolbarDropHandler.sys.mjs",
   ToolbarIconColor: "moz-src:///browser/themes/ToolbarIconColor.sys.mjs",
   TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
   UITour: "moz-src:///browser/components/uitour/UITour.sys.mjs",
@@ -349,7 +354,7 @@ ChromeUtils.defineLazyGetter(this, "gBrowserBundle", () => {
 
 ChromeUtils.defineLazyGetter(this, "gCustomizeMode", () => {
   let { CustomizeMode } = ChromeUtils.importESModule(
-    "resource:///modules/CustomizeMode.sys.mjs"
+    "moz-src:///browser/components/customizableui/CustomizeMode.sys.mjs"
   );
   return new CustomizeMode(window);
 });

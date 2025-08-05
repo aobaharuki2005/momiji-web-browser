@@ -23,8 +23,8 @@ declare namespace MockedExports {
   interface KnownModules {
     Services: typeof import("Services");
     "resource://gre/modules/AppConstants.sys.mjs": typeof import("resource://gre/modules/AppConstants.sys.mjs");
-    "resource:///modules/CustomizableUI.sys.mjs": typeof import("resource:///modules/CustomizableUI.sys.mjs");
-    "resource:///modules/CustomizableWidgets.sys.mjs": typeof import("resource:///modules/CustomizableWidgets.sys.mjs");
+    "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs": typeof import("moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs");
+    "moz-src:///browser/components/customizableui/CustomizableWidgets.sys.mjs": typeof import("moz-src:///browser/components/customizableui/CustomizableWidgets.sys.mjs");
     "resource://devtools/shared/loader/Loader.sys.mjs": typeof import("resource://devtools/shared/loader/Loader.sys.mjs");
     "resource://devtools/shared/performance-new/errors.sys.mjs": typeof import("resource://devtools/shared/performance-new/errors.sys.mjs");
     "resource://devtools/shared/performance-new/prefs-presets.sys.mjs": typeof import("resource://devtools/shared/performance-new/prefs-presets.sys.mjs");
@@ -35,7 +35,7 @@ declare namespace MockedExports {
     "resource://devtools/client/performance-new/popup/menu-button.sys.mjs": typeof import("resource://devtools/client/performance-new/popup/menu-button.sys.mjs");
     "resource://devtools/client/performance-new/shared/typescript-lazy-load.sys.mjs": typeof import("resource://devtools/client/performance-new/shared/typescript-lazy-load.sys.mjs");
     "resource://devtools/client/performance-new/popup/logic.sys.mjs": typeof import("resource://devtools/client/performance-new/popup/logic.sys.mjs");
-    "resource:///modules/PanelMultiView.sys.mjs": typeof import("resource:///modules/PanelMultiView.sys.mjs");
+    "moz-src:///browser/components/customizableui/PanelMultiView.sys.mjs": typeof import("moz-src:///browser/components/customizableui/PanelMultiView.sys.mjs");
     "resource://gre/modules/PlacesUtils.sys.mjs": typeof import("resource://gre/modules/PlacesUtils.sys.mjs");
   }
 
@@ -379,15 +379,15 @@ declare module "resource://devtools/shared/performance-new/symbolication.sys.mjs
   export = PerfSymbolication;
 }
 
-declare module "resource:///modules/CustomizableUI.sys.mjs" {
+declare module "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs" {
   export = MockedExports.CustomizableUISYSMJS;
 }
 
-declare module "resource:///modules/CustomizableWidgets.sys.mjs" {
+declare module "moz-src:///browser/components/customizableui/CustomizableWidgets.sys.mjs" {
   export = MockedExports.CustomizableWidgetsSYSMJS;
 }
 
-declare module "resource:///modules/PanelMultiView.sys.mjs" {
+declare module "moz-src:///browser/components/customizableui/PanelMultiView.sys.mjs" {
   export = MockedExports.PanelMultiViewSYSMJS;
 }
 

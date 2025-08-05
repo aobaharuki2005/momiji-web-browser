@@ -24,7 +24,8 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   BookmarksPolicies: "resource:///modules/policies/BookmarksPolicies.sys.mjs",
-  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
+  CustomizableUI:
+    "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   ProxyPolicies: "resource:///modules/policies/ProxyPolicies.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",

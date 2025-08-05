@@ -263,7 +263,7 @@ export let ProfileDataUpgrader = {
       // from default placement. This is done early enough that it doesn't
       // impact adding new managed bookmarks.
       const { CustomizableUI } = ChromeUtils.importESModule(
-        "resource:///modules/CustomizableUI.sys.mjs"
+        "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs"
       );
       CustomizableUI.removeWidgetFromArea("managed-bookmarks");
     }

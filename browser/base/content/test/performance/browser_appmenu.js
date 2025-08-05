@@ -18,7 +18,7 @@ let gCUITestUtils = new CustomizableUITestUtils(window);
 const EXPECTED_APPMENU_OPEN_REFLOWS = [
   {
     stack: [
-      "openPopup/this._openPopupPromise<@resource:///modules/PanelMultiView.sys.mjs",
+      "openPopup/this._openPopupPromise<@moz-src:///browser/components/customizableui/PanelMultiView.sys.mjs",
     ],
   },
 ];

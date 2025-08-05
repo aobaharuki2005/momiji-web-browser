@@ -890,12 +890,6 @@
       "resource:///modules/ContentCrashHandlers.sys.mjs": [
         "browser/modules/ContentCrashHandlers.sys.mjs"
       ],
-      "resource:///modules/CustomizableUI.sys.mjs": [
-        "browser/components/customizableui/CustomizableUI.sys.mjs"
-      ],
-      "resource:///modules/CustomizableWidgets.sys.mjs": [
-        "browser/components/customizableui/CustomizableWidgets.sys.mjs"
-      ],
       "resource:///modules/Dedupe.sys.mjs": [
         "browser/modules/Dedupe.sys.mjs"
       ],
@@ -922,9 +916,6 @@
       ],
       "resource:///modules/DownloadsViewableInternally.sys.mjs": [
         "browser/components/downloads/DownloadsViewableInternally.sys.mjs"
-      ],
-      "resource:///modules/DragPositionManager.sys.mjs": [
-        "browser/components/customizableui/DragPositionManager.sys.mjs"
       ],
       "resource:///modules/ESEDBReader.sys.mjs": [
         "browser/components/migration/ESEDBReader.sys.mjs"
@@ -1007,9 +998,6 @@
       "resource:///modules/PageActions.sys.mjs": [
         "browser/modules/PageActions.sys.mjs"
       ],
-      "resource:///modules/PanelMultiView.sys.mjs": [
-        "browser/components/customizableui/PanelMultiView.sys.mjs"
-      ],
       "resource:///modules/PartnerLinkAttribution.sys.mjs": [
         "browser/modules/PartnerLinkAttribution.sys.mjs"
       ],
@@ -1049,9 +1037,6 @@
       "resource:///modules/SearchModeSwitcher.sys.mjs": [
         "browser/components/urlbar/SearchModeSwitcher.sys.mjs"
       ],
-      "resource:///modules/SearchWidgetTracker.sys.mjs": [
-        "browser/components/customizableui/SearchWidgetTracker.sys.mjs"
-      ],
       "resource:///modules/SelectionChangedMenulist.sys.mjs": [
         "browser/modules/SelectionChangedMenulist.sys.mjs"
       ],
@@ -1075,12 +1060,6 @@
       ],
       "resource:///modules/ThemeVariableMap.sys.mjs": [
         "browser/themes/ThemeVariableMap.sys.mjs"
-      ],
-      "resource:///modules/ToolbarContextMenu.sys.mjs": [
-        "browser/components/customizableui/ToolbarContextMenu.sys.mjs"
-      ],
-      "resource:///modules/ToolbarDropHandler.sys.mjs": [
-        "browser/components/customizableui/ToolbarDropHandler.sys.mjs"
       ],
       "resource:///modules/TransientPrefs.sys.mjs": [
         "browser/modules/TransientPrefs.sys.mjs"
@@ -7522,9 +7501,6 @@
       ],
       "chrome://remote/content/webdriver-bidi/modules/ModuleRegistry.sys.mjs": [
         "remote/webdriver-bidi/modules/ModuleRegistry.sys.mjs"
-      ],
-      "resource:///modules/CustomizeMode.sys.mjs": [
-        "browser/components/customizableui/CustomizeMode.sys.mjs"
       ],
       "resource:///modules/ExtensionBrowsingData.sys.mjs": [
         "browser/components/extensions/ExtensionBrowsingData.sys.mjs"

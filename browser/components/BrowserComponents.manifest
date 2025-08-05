@@ -22,7 +22,7 @@ category browser-before-ui-startup resource:///modules/AccountsGlue.sys.mjs Acco
 # Browser window lifecycle consumers
 category browser-window-domcontentloaded-before-tabbrowser resource:///modules/BrowserDOMWindow.sys.mjs BrowserDOMWindow.setupInWindow
 category browser-window-domcontentloaded resource:///modules/BrowserWindowTracker.sys.mjs BrowserWindowTracker.track
-category browser-window-domcontentloaded resource:///modules/CustomizableUI.sys.mjs CustomizableUI.handleNewBrowserWindow
+category browser-window-domcontentloaded moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs CustomizableUI.handleNewBrowserWindow
 
 category browser-window-delayed-startup moz-src:///browser/components/contentanalysis/content/ContentAnalysis.sys.mjs ContentAnalysis.initialize
 category browser-window-delayed-startup resource:///modules/HomePage.sys.mjs HomePage.delayedStartup
