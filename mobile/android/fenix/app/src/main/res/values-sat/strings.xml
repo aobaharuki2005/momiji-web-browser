@@ -1014,6 +1014,18 @@
   <string name="alternative_app_icon_option_momo">Momo</string>
   <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
   <string name="alternative_app_icon_option_momo_subtitle">\u0040heyheymomodraws ᱦᱚᱛᱮᱛᱮ ᱵᱮᱱᱟᱣ ᱟᱠᱟᱱᱟ</string>
+  <!-- Title for the "Solid colors" group of alternative app icon variants in the icon picker screen. This group contains icons with flat, uniform color backgrounds. -->
+  <string name="alternative_app_icon_group_solid_colors">ᱠᱮᱴᱮᱡ ᱨᱚᱝ</string>
+  <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
+  <string name="alternative_app_icon_group_gradients">ᱜᱽᱨᱮᱰᱤᱭᱮᱱᱴᱥ</string>
+  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_other">ᱮᱴᱟᱜᱽ-ᱟᱜ</string>
+  <!-- Message to warn users that applying an alternative app icon requires an app restart -->
+  <string name="restart_warning_dialog_body">ᱟᱭᱠᱚᱱ ᱵᱚᱫᱚᱞ ᱞᱟᱹᱜᱤᱫ ᱮᱯ ᱫᱚᱦᱲᱟ ᱪᱟᱹᱞᱩ ᱞᱟᱹᱠᱛᱤᱜ ᱠᱟᱱᱟ ᱾</string>
+  <!-- Dialog button text for confirming the app restart to apply the selected icon -->
+  <string name="restart_warning_dialog_button_positive">ᱱᱤᱛ ᱫᱚᱦᱲᱟ ᱮᱦᱚᱵ ᱢᱮ</string>
+  <!-- Dialog button text for cancelling app icon change -->
+  <string name="restart_warning_dialog_button_negative">ᱵᱟᱹᱰᱨᱟᱹ</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1122,6 +1134,8 @@
   <string name="exceptions_empty_message_learn_more_link">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
   <!-- Preference switch for usage and technical data collection -->
   <string name="preference_usage_data_2">ᱴᱮᱠᱱᱤᱠᱟᱞ ᱟᱨ ᱤᱱᱴᱟᱨᱮᱠᱥᱚᱱ ᱰᱟᱴᱟ ᱵᱷᱮᱡᱟᱭ ᱢᱮ</string>
+  <!-- Preference switch for usage and technical learn more link in new compose -->
+  <string name="preference_usage_data_learn_more_2">ᱴᱮᱠᱱᱤᱠᱟᱞ ᱰᱟᱴᱟ ᱵᱟᱵᱚᱛ ᱵᱟᱹᱲᱛᱤ ᱵᱟᱲᱟᱭ ᱢᱮ</string>
   <!-- Preference switch for usage and technical learn more link -->
   <string name="preference_usage_data_learn_more" tools:ignore="UnusedResources" moz:removedIn="141">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
   <!-- Preference description for marketing data collection. Note: The words "Firefox" should NOT be translated -->
@@ -1132,8 +1146,20 @@
   <string name="preferences_daily_usage_ping_learn_more">ᱫᱤᱱᱟᱹᱢ ᱵᱮᱵᱷᱟᱨ ping ᱵᱟᱵᱚᱛ ᱵᱟᱹᱲᱛᱤ ᱵᱟᱲᱟᱭ ᱢᱮ</string>
   <!-- Preference switch title for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_title" tools:ignore="UnusedResources" moz:removedIn="142">ᱟᱡ ᱛᱮ ᱰᱤᱜᱟᱹᱣ ᱠᱷᱚᱵᱚᱨ ᱵᱷᱮᱡᱟᱭᱟ</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">ᱨᱤᱯᱚᱨᱴ ᱵᱷᱮᱡᱟ ᱦᱩᱭ ᱮᱱᱟ</string>
   <!-- Preference switch description for automatically submitting crash reports -->
   <string name="preferences_automatically_send_crashes_description" tools:ignore="UnusedResources" moz:removedIn="142">ᱱᱚᱣᱟ ᱟᱞᱮ ᱵᱽᱨᱟᱣᱩᱡᱟᱨ ᱨᱮᱱᱟᱜ ᱮᱴᱠᱮᱴᱚᱬᱮ ᱧᱮᱞ ᱟᱨ ᱥᱟᱹᱛ ᱞᱟᱹᱜᱤᱫ ᱜᱚᱲᱚ ᱮᱢᱟ ᱞᱮᱭᱟ ᱾ ᱨᱤᱯᱳᱨᱴ ᱨᱮ ᱯᱚᱨᱥᱚᱱᱟᱞ ᱵᱟᱝᱠᱷᱟᱱ ᱥᱮᱱᱥᱮᱴᱤᱵᱷ ᱰᱟᱴᱟ ᱥᱮᱞᱮᱫ ᱛᱟᱦᱮᱸ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱾</string>
+  <!-- Text for sumo link to learn more about crash reports in data collection screen -->
+  <string name="preferences_crashes_learn_more">ᱠᱨᱟᱥ ᱨᱤᱯᱚᱨᱴ ᱵᱟᱵᱚᱛ ᱵᱟᱹᱲᱛᱤ ᱵᱟᱲᱟᱭ ᱢᱮ</string>
+  <!-- Title Headers for data collection settings screen -->
+  <string name="crash_reports_data_category">ᱨᱟᱹᱯᱩᱫ ᱨᱤᱯᱚᱨᱴ ᱠᱚ</string>
+  <string name="usage_data_category">ᱵᱮᱵᱷᱟᱨ ᱰᱟᱴᱟ</string>
+  <string name="studies_data_category">ᱯᱟᱲᱦᱟᱣ ᱠᱚ</string>
+  <string name="technical_data_category">ᱴᱮᱠᱱᱤᱠᱟᱞ ᱰᱟᱴᱟ</string>
+  <string name="crash_reporting_description">ᱠᱨᱟᱥ ᱨᱤᱯᱚᱨᱴ ᱟᱞᱮ ᱵᱽᱨᱟᱣᱩᱡᱟᱨ ᱨᱮᱭᱟᱜ ᱮᱴᱠᱮᱴᱚᱬᱮ ᱠᱚ ᱵᱤᱰᱟᱹᱣ ᱟᱨ ᱥᱟᱹᱛ ᱨᱮᱭᱟᱜ ᱫᱟᱣ ᱮ ᱮᱢᱟ ᱞᱮᱭᱟ ᱾ ᱠᱷᱚᱵᱚᱨ ᱨᱮ ᱯᱚᱨᱥᱚᱱᱟᱞ ᱵᱟᱝᱠᱷᱟᱱ ᱥᱮᱱᱥᱮᱴᱤᱵᱷ ᱰᱟᱴᱟ ᱥᱮᱞᱮᱫ ᱛᱟᱦᱮᱸ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱾</string>
+  <!-- Section title for campaign measurement in data collections screen -->
+  <string name="preferences_marketing_data_title">ᱠᱮᱢᱯᱮᱭᱱ ᱡᱚᱠᱷᱟ</string>
   <!-- Preference switch for campaign measurement data (marketing data) collection -->
   <string name="preferences_marketing_data_2">ᱠᱮᱢᱯᱮᱭᱱ ᱡᱚᱠᱷᱟ ᱰᱟᱴᱟ</string>
   <!--
@@ -1173,6 +1199,18 @@
   <string name="preference_top_toolbar">ᱪᱮᱛᱟᱱ</string>
   <!-- Preference for using bottom toolbar -->
   <string name="preference_bottom_toolbar">ᱞᱟᱛᱟᱨ</string>
+  <!-- Preference for using simple toolbar -->
+  <string name="preference_simple_toolbar">ᱟᱞᱜᱟ</string>
+  <!-- Preference for using expanded toolbar -->
+  <string name="preference_expanded_toolbar">ᱯᱟᱥᱱᱟᱣ ᱟᱠᱟᱱᱟ</string>
+  <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
+  <string name="preference_toolbar_pref_disabled_explanation">ᱴᱮᱵᱽ ᱵᱟᱨ ᱩᱫᱩᱜᱚᱜ ᱡᱷᱚᱜ ᱴᱷᱤᱠᱟᱹᱱᱟ ᱵᱟᱨ ᱪᱮᱛᱟᱱ ᱨᱮ ᱛᱟᱦᱮᱱ ᱞᱟᱹᱠᱛᱤᱭᱟ ᱾</string>
+  <!--
+    App icon Preferences
+
+    Title for the preference that lets the user pick a new app icon
+  -->
+  <string name="preference_select_app_icon_title">ᱮᱯ ᱪᱤᱱᱦᱟᱹ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
   <!--
     Theme Preferences
 
@@ -1185,6 +1223,12 @@
   <string name="preference_auto_battery_theme">ᱵᱮᱴᱨᱭ ᱥᱮᱣᱟᱹᱨ ᱛᱮ ᱥᱮᱴ ᱦᱩᱭᱩᱜᱼᱟ</string>
   <!-- Preference for using following device theme -->
   <string name="preference_follow_device_theme">ᱥᱟᱫᱷᱚᱱ ᱩᱭᱦᱟᱹᱨ ᱯᱟᱸᱡᱟᱭ ᱢᱮ</string>
+  <!--
+    Tab Strip Preferences
+
+    Preferences for showing tab strip
+  -->
+  <string name="preference_tab_strip_show">ᱴᱮᱵᱽ ᱵᱟᱨ ᱩᱫᱩᱜᱽ ᱢᱮ</string>
   <!--
     Gestures Preferences
 
@@ -1334,6 +1378,13 @@
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
   <!--
+    Sessions
+
+    Title for the list of tabs in the current normal session used by a11y services
+    The %1$s will be replaced by the number of opened normal tabs
+  -->
+  <string name="tabs_header_normal_tabs_counter_title">ᱥᱟᱫᱷᱟᱨᱚᱱ ᱴᱮᱵᱽ ᱠᱚ ᱡᱷᱤᱡᱽ ᱢᱮ: %1$s᱾ ᱴᱮᱵᱽ ᱵᱚᱫᱚᱞ ᱞᱟᱹᱜᱤᱫ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱾</string>
+  <!--
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
   -->
@@ -1343,6 +1394,12 @@
     The %1$s will be replaced by the number of opened synced tabs
   -->
   <string name="tabs_header_synced_tabs_counter_title">ᱥᱤᱱᱥᱰ ᱴᱮᱵᱽ ᱠᱚ ᱡᱷᱤᱡᱽ ᱢᱮ: %1$s ᱾ ᱴᱮᱵᱽ ᱵᱚᱫᱚᱞ ᱞᱟᱹᱜᱤᱫ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱾</string>
+  <!-- Text for the tabs header private tabs -->
+  <string name="tabs_header_private_tabs_title">ᱯᱨᱟᱭᱣᱮᱴ</string>
+  <!-- Text for the tabs header normal tabs -->
+  <string name="tabs_header_normal_tabs_title">ᱴᱮᱵᱽ ᱠᱚ</string>
+  <!-- Text for the tabs header synced tabs -->
+  <string name="tabs_header_synced_tabs_title">ᱥᱭᱝᱠ</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">ᱴᱮᱵᱽ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1437,6 +1494,8 @@
     %1$d is the number of items deleted.
   -->
   <string name="download_delete_multiple_items_snackbar_2">ᱡᱤᱱᱤᱥ ᱠᱚ ᱢᱮᱴᱟᱣ ᱮᱱᱟ: %1$d</string>
+  <!-- Title for the dialog that prompts the user to choose an app for downloading a file. -->
+  <string name="download_app_dialog_title">ᱨᱮᱫ ᱥᱟᱶ ᱰᱟᱱᱣᱱᱞᱳᱰ ᱢᱮ :</string>
   <!-- Text for the snackbar to confirm that a single download item has been removed. %1$s is the name of the download item. -->
   <string name="download_delete_single_item_snackbar_2">“%1$s” ᱢᱮᱴᱟᱣᱮᱱᱟ</string>
   <!-- Text for the snackbar to confirm that downloads are in progress. -->
@@ -1481,6 +1540,16 @@
   <string name="download_navigate_back_description">ᱯᱟᱹᱪᱷᱞᱟᱹᱥᱮᱱ ᱪᱟᱞᱟᱜ ᱢᱮ</string>
   <!-- Content description for the toolbar back button while searching the downloads -->
   <string name="download_close_search_description">ᱨᱩᱣᱟᱹᱲ ᱟᱨ ᱥᱮᱸᱫᱽᱨᱟ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
+  <!--
+    Content description for the search bar clear text button on the downloads screen
+
+    Content description for pause action button on the downloads screen
+  -->
+  <string name="download_pause_action">ᱛᱤᱝᱜᱩ</string>
+  <!-- Content description for resume action button on the downloads screen -->
+  <string name="download_resume_action">ᱫᱩᱦᱲᱟᱹ ᱮᱦᱚᱵ</string>
+  <!-- Content description for retry download action button on the downloads screen -->
+  <string name="download_retry_action">ᱫᱚᱲᱟ ᱠᱩᱨᱩᱢᱩᱴᱩ</string>
   <string name="download_clear_search_description">ᱯᱷᱟᱨᱪᱟ</string>
   <!-- Text for the button to share the download URL -->
   <string name="download_share_url">URL ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
@@ -1531,11 +1600,21 @@
   -->
   <string name="download_item_in_progress_description_pending">%1$s / %2$s • ᱛᱟᱺᱜᱤ ᱨᱮ</string>
   <!--
+    Description of an in progress download item, displayed in the downloads list when the total download size is unknown. This results in the estimated download time remaining to be unknown also.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_in_progress_description_unknown_total_size">%1$s • ᱵᱟᱝ ᱵᱟᱰᱟᱭ ᱚᱠᱛᱚ</string>
+  <!--
     Description of a paused download item, displayed in the downloads list.
     %1$s is the current file size that has been downloaded.
     %2$s is the total size of the downloaded file.
   -->
   <string name="download_item_paused_description">%1$s / %2$s • ᱛᱷᱩᱢ</string>
+  <!--
+    Description of a paused download item, displayed in the downloads list when the total download size is unknown.
+    %1$s is the current file size that has been downloaded.
+  -->
+  <string name="download_item_paused_description_unknown_total_size">%1$s • ᱛᱷᱤᱨ ᱟᱠᱟᱱᱟ</string>
   <!-- Text to indicate that an in progress download is paused. -->
   <string name="download_item_status_paused" moz:removedIn="141" tools:ignore="UnusedResources">ᱛᱷᱩᱢ</string>
   <!-- Text to indicate that the download speed of an in progress download is being calculated. -->
@@ -1572,6 +1651,12 @@
   <string name="webcompat_reporter_screen_title">ᱨᱟᱹᱯᱩᱫ ᱥᱟᱭᱤᱴ ᱠᱷᱚᱵᱚᱨ ᱢᱮ</string>
   <!-- The description of the Web Compat Reporter feature. %1$s is the name of the app (for example "Firefox"). -->
   <string name="webcompat_reporter_description" moz:removedIn="142" tools:ignore="UnusedResources">ᱡᱷᱚᱛᱚ ᱦᱚᱲ ᱞᱟᱹᱜᱤᱫ %1$s ᱵᱮᱥ ᱵᱮᱱᱟᱣ ᱜᱚᱲᱚ ᱮᱢᱚᱜ ᱢᱮ ᱾ ᱢᱚᱡᱤᱞᱟ ᱠᱟᱹᱢᱤᱭᱟᱹ ᱠᱚ ᱟᱢ ᱵᱷᱮᱡᱟ ᱟᱠᱟᱫ ᱵᱟᱯᱟᱰᱟᱭ ᱠᱚ ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱮᱴᱠᱮᱴᱚᱬᱮ ᱠᱚ ᱥᱟᱹᱛ ᱞᱟᱹᱜᱤᱫ ᱠᱚ ᱵᱮᱵᱷᱟᱨᱟ ᱾</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="webcompat_reporter_description_2" moz:removedIn="143" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱨᱤᱯᱚᱨᱴ ᱟᱞᱮ ᱵᱩᱡᱷᱟᱹᱣ ᱟᱨ ᱥᱟᱹᱛ ᱞᱟᱹᱜᱤᱫ ᱜᱚᱲᱚ ᱮᱢᱟ ᱞᱮᱭᱟ %1$s ᱨᱮ ᱮᱴᱠᱮᱴᱚᱬᱮ ᱠᱚ ᱡᱷᱚᱛᱚ ᱦᱚᱲ ᱞᱟᱹᱜᱤᱫ ᱵᱮᱥ ᱦᱩᱭᱩᱜ ᱞᱟᱹᱜᱤᱫ ᱾ ᱵᱟᱹᱲᱛᱤ ᱵᱟᱲᱟᱭ ᱢᱮ</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">ᱟᱢᱟᱜ ᱨᱤᱯᱚᱨᱴ ᱟᱞᱮ ᱵᱩᱡᱷᱟᱹᱣ ᱟᱨ ᱥᱟᱹᱛ ᱞᱟᱹᱜᱤᱫ ᱜᱚᱲᱚ ᱮᱢᱟ ᱞᱮᱭᱟ %1$s ᱨᱮ ᱮᱴᱠᱮᱴᱚᱬᱮ ᱠᱚ ᱡᱷᱚᱛᱚ ᱦᱚᱲ ᱞᱟᱹᱜᱤᱫ ᱵᱮᱥ ᱦᱩᱭᱩᱜ ᱞᱟᱹᱜᱤᱫ ᱾ %2$s</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1580,6 +1665,8 @@
   <string name="webcompat_reporter_label_whats_broken_2">ᱪᱮᱫ ᱨᱟᱹᱯᱩᱫ ᱮᱱᱟ ?</string>
   <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason" moz:removedIn="142" tools:ignore="UnusedResources">ᱠᱟᱨᱚᱬ ᱵᱟᱛᱟᱣ ᱢᱮ</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">ᱢᱤᱫ ᱠᱟᱨᱚᱱ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">ᱫᱟᱭᱟ ᱠᱟᱛᱮ ᱢᱤᱫ ᱠᱟᱨᱚᱱ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -1594,6 +1681,8 @@
   <string name="webcompat_reporter_success_snackbar_text">ᱟᱢᱟᱜ ᱨᱤᱯᱚᱨᱴ ᱠᱩᱞ ᱮᱱᱟ</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text">ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
+  <!-- Placeholder text for the description field to prompt the user on what they should type. -->
+  <string name="webcompat_reporter_problem_description_placeholder_text">ᱪᱮᱫ ᱦᱩᱭ ᱟᱠᱟᱱᱟ? ᱪᱮᱫ ᱦᱩᱭ ᱞᱟᱹᱠᱛᱤ ᱛᱟᱦᱮᱸ ᱠᱟᱱᱟ?</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -1630,12 +1719,20 @@
   <string name="tab_crash_restore">ᱴᱮᱵᱽ ᱫᱩᱦᱲᱟᱹ ᱡᱚᱜᱟᱣ ᱢᱮ</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%s ᱫᱚ ᱫᱩᱦᱲᱟᱹ ᱮᱛᱵᱟᱦ ᱛᱮ ᱦᱩᱭ ᱟᱭᱟ</string>
+  <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_title">ᱟᱢ ᱴᱷᱮᱱ ᱵᱟᱝ ᱠᱩᱞ ᱟᱠᱟᱱ ᱠᱨᱮᱥ ᱨᱤᱯᱚᱨᱴ ᱢᱮᱱᱟᱜᱼᱟ ᱡᱟᱦᱟᱸ ᱫᱚ ᱠᱨᱮᱥ ᱠᱚ ᱛᱚᱞᱟᱥ ᱠᱟᱱᱟ ᱾ ᱱᱚᱣᱟ ᱵᱷᱮᱡᱟ ᱠᱷᱟᱱ ᱟᱞᱮ ᱥᱩᱫᱷᱨᱟᱹᱣ ᱞᱟᱹᱜᱤᱫ ᱜᱚᱲᱚ ᱞᱮ ᱧᱟᱢᱟ %1$s ᱾ ᱱᱚᱣᱟ ᱱᱚᱴᱤᱯᱷᱤᱠᱮᱥᱚᱱ ᱵᱚᱱᱫᱚ ᱠᱷᱟᱱ ᱱᱚᱣᱟ ᱨᱤᱯᱚᱨᱴ ᱵᱟᱝ ᱵᱩᱡᱷᱟᱹᱣᱜᱼᱟ ᱾</string>
+  <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crashes_requested_by_devs_dialog_title">ᱟᱢ ᱴᱷᱮᱱ ᱵᱟᱝ ᱠᱩᱞ ᱟᱠᱟᱱ ᱠᱨᱟᱥ ᱨᱤᱯᱚᱨᱴ (%1$d) ᱫᱚ ᱠᱨᱟᱥ ᱥᱟᱶ ᱡᱚᱲᱟᱣ ᱠᱟᱛᱮ ᱛᱚᱞᱟᱥ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ ᱾ ᱩᱱᱠᱩ ᱵᱷᱮᱡᱟ ᱠᱚ ᱠᱷᱟᱱ ᱟᱞᱮ ᱥᱩᱫᱷᱨᱟᱹᱣ ᱞᱟᱹᱜᱤᱫ ᱜᱚᱲᱚ ᱞᱮ ᱧᱟᱢᱟ %2$s ᱾ ᱱᱚᱣᱟ ᱱᱚᱴᱤᱯᱷᱤᱠᱮᱥᱚᱱ ᱵᱚᱱᱫᱚ ᱠᱷᱟᱱ ᱱᱚᱣᱟ ᱨᱤᱯᱳᱨᱴ ᱵᱟᱝ ᱵᱩᱡᱷᱟᱹᱣᱜᱼᱟ ᱾</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">ᱟᱡ ᱛᱮ ᱰᱤᱜᱟᱹᱣ ᱠᱷᱚᱵᱚᱨ ᱵᱷᱮᱡᱟᱭᱟ</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
+  <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">ᱫᱚᱦᱲᱟ ᱛᱤᱥ ᱦᱚᱸ ᱟᱞᱚᱢ ᱩᱫᱩᱜᱟ</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">ᱰᱤᱜᱟᱹᱣ ᱠᱷᱚᱵᱚᱨ ᱵᱷᱮᱡᱟᱭ ᱢᱮ</string>
+  <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
+  <string name="unsubmitted_crash_requested_by_devs_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
   <!--
     Bookmarks
 

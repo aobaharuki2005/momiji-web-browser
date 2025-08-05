@@ -132,6 +132,56 @@
   <string name="mozac_feature_addons_permissions_downloads_open_description_for_update">ᱨᱮᱫ ᱠᱚ ᱡᱷᱤᱡ ᱢᱮ ᱡᱟᱦᱟᱸ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱰᱟᱩᱱᱞᱳᱰ ᱦᱚᱭ ᱠᱟᱱᱟ ᱾</string>
   <!-- Description for the "find" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
   <string name="mozac_feature_addons_permissions_find_description_for_update">ᱥᱟᱱᱟᱢ ᱡᱷᱤᱡᱽ ᱴᱮᱵᱽ ᱠᱚᱣᱟᱜ ᱚᱱᱚᱞ ᱯᱟᱲᱦᱟᱣ ᱢᱮ ᱾</string>
+  <!-- Description for the "geolocation" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_geolocation_description_for_update">ᱟᱢᱟᱜ ᱡᱟᱭᱜᱟ ᱟᱹᱛᱩᱨ ᱢᱮ ᱾</string>
+  <!-- Description for the "history" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_history_description_for_update">ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱦᱤᱛᱟᱹᱞ ᱟᱹᱛᱩᱨ ᱢᱮ ᱾</string>
+  <!-- Description for the "management" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_management_description_for_update">ᱯᱟᱥᱱᱟᱣ ᱵᱮᱵᱷᱟᱨ ᱨᱮ ᱱᱚᱡᱚᱨ ᱫᱚᱦᱚ ᱟᱨ ᱩᱭᱦᱟᱹᱨ ᱵᱮᱵᱚᱥᱛᱷᱟ ᱾</string>
+  <!-- Description for the "nativeMessaging" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_native_messaging_description_for_update">ᱱᱟᱶᱟ ᱮᱯ ᱪᱷᱟᱰᱤ ᱠᱟᱛᱮ ᱚᱠᱜᱟ ᱮᱯ ᱠᱚᱛᱮ ᱠᱷᱚᱵᱚᱨ ᱵᱚᱫᱚᱞ ᱢᱮ ᱾</string>
+  <!-- Description for the "notifications" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_notifications_description_for_update">ᱤᱛᱞᱟᱹᱭ ᱠᱚ ᱩᱫᱩᱜ ᱟᱢᱟᱭ ᱾</string>
+  <!-- Description for the "pkcs11" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_pkcs11_description_for_update">ᱠᱨᱤᱯᱴᱚᱜᱽᱨᱟᱯᱷᱤᱠ ᱯᱨᱚᱢᱟᱱᱴᱤᱠᱮᱥᱚᱱ ᱥᱮᱵᱟ ᱮᱢᱚᱜ ᱢᱮ ᱾</string>
+  <!-- Description for the "proxy" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_proxy_description_for_update">ᱵᱽᱨᱟᱣᱩᱡᱟᱹᱨ ᱯᱨᱚᱠᱥᱤ ᱥᱟᱡᱟᱣ ᱠᱚ ᱥᱟᱢᱲᱟᱣ ᱢᱮ ᱾</string>
+  <!-- Description for the "sessions" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_sessions_description_for_update">ᱱᱤᱛᱚᱜᱽᱼᱟᱜ ᱵᱚᱸᱫᱚᱼᱟᱜ ᱴᱮᱵᱽ ᱠᱚ ᱟᱹᱛᱩᱨ ᱢᱮ ᱾</string>
+  <!-- Description for the "tabHide" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_tab_hide_description_for_update">ᱵᱽᱨᱟᱣᱩᱡᱚᱨ ᱴᱮᱵᱽ ᱠᱚ ᱩᱠᱩ ᱟᱨ ᱩᱫᱩᱜ ᱢᱮ ᱾</string>
+  <!-- Description for the "topSites" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_top_sites_description_for_update">ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱦᱤᱛᱟᱹᱞ ᱟᱹᱛᱩᱨ ᱢᱮ ᱾</string>
+  <!-- Description for the "trialML" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_trial_ml_description_for_update">ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮ AI ᱢᱚᱰᱮᱞ ᱠᱚ ᱰᱟᱣᱱᱞᱳᱰ ᱢᱮ ᱟᱨ ᱪᱟᱹᱞᱩᱭ ᱢᱮ ᱾</string>
+  <!-- Description for the "userScripts" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_user_scripts_description_for_update">ᱵᱤᱱ ᱯᱩᱥᱴᱟᱹᱣ ᱟᱠᱟᱱ ᱛᱮᱥᱟᱨ ᱯᱟᱨᱴᱤ ᱥᱠᱨᱤᱯᱴ ᱠᱚ ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱮᱠᱥᱮᱥ ᱞᱟᱹᱜᱤᱫ ᱟᱫᱮᱨ ᱮᱢᱚᱜ ᱢᱮ ᱾</string>
+  <!-- Description for the "devtools" WebExtensions API permission for the update notification. Multiple permissions may be simply appended one after the other, and separated with a space, which is why the period is important. -->
+  <string name="mozac_feature_addons_permissions_devtools_description_for_update">ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱠᱷᱩᱞᱟᱹ ᱴᱮᱵᱽ ᱠᱚᱨᱮ ᱟᱹᱛᱩᱨ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱵᱟᱲᱦᱟᱣᱟᱜ ᱴᱩᱞ ᱚᱥᱟᱨ ᱢᱮ ᱾</string>
+  <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
+  <string name="mozac_feature_addons_permissions_one_site_description_for_update">%1$s ᱞᱟᱹᱜᱤᱫ ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱟᱹᱛᱩᱨ ᱢᱮ ᱾</string>
+  <!-- Description for giving an add-on access to users's data in multiple sites in the domain %1$s. %1$s will be replaced by the DNS domain for which a web extension is requesting access (e.g., mozilla.org). -->
+  <string name="mozac_feature_addons_permissions_sites_in_domain_description_for_update">ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱟᱹᱛᱩᱨ ᱢᱮ ᱚᱱᱟ ᱥᱟᱭᱤᱴ ᱠᱚ ᱞᱟᱹᱜᱤᱫ ᱡᱟ %1$s ᱰᱚᱢᱮᱱ ᱨᱮ ᱢᱮᱱᱟᱜᱼᱟ ᱾</string>
+  <!--
+    When an add-on requires access to more than 2 domains, for example the add-on requires access for 3 domains. We will show the first 2 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description_for_update,
+    then we will show another collapsed entry saying "Access your data on another domain.".
+  -->
+  <string name="mozac_feature_addons_permissions_one_extra_domain_description_for_update">ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱮᱴᱟᱜ ᱰᱚᱢᱮᱱ ᱨᱮ ᱮᱠᱥᱮᱥ ᱢᱮ ᱾</string>
+  <!--
+    When an add-on requires access to more than 2 domains, for example the add-on requires access for 4 domains. We will show the first 2 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description_for_update,
+    then we will show another collapsed entry saying "Access your data on other domains.".
+  -->
+  <string name="mozac_feature_addons_permissions_extra_domains_description_plural_for_update">ᱮᱴᱟᱜ ᱰᱚᱢᱮᱱ ᱠᱚ ᱨᱮ ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱟᱫᱮᱨ ᱢᱮ ᱾</string>
+  <!--
+    When an add-on requires access to more than 2 sites, for example the add-on requires access for 3 sites. We will show the first 2 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description_for_update,
+    then we will show another collapsed entry saying "Access your data on another site.".
+  -->
+  <string name="mozac_feature_addons_permissions_one_extra_site_description_for_update">ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱮᱴᱟᱜ ᱥᱟᱭᱤᱴ ᱨᱮ ᱮᱠᱥᱮᱥ ᱢᱮ ᱾</string>
+  <!--
+    When an add-on requires access to more than 2 sites, for example the add-on requires access for 4 sites. We will show the first 2 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description_for_update,
+    then we will show another collapsed entry saying "Access your data on other sites.".
+  -->
+  <string name="mozac_feature_addons_permissions_extra_sites_description_for_update">ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱮᱴᱟᱜ ᱥᱟᱭᱤᱴ ᱨᱮ ᱮᱠᱥᱮᱥ ᱢᱮ ᱾</string>
   <!-- The text shown when an extension requests the userScripts permission, near the usual description of the userScripts permission -->
   <string name="mozac_feature_addons_permissions_user_scripts_extra_warning">ᱵᱤᱱ ᱯᱩᱥᱴᱟᱹᱣ ᱟᱠᱟᱱ ᱥᱠᱨᱤᱯᱴ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱟᱨ ᱜᱩᱱᱛᱷᱤ ᱨᱮᱭᱟᱜ ᱡᱷᱩᱠᱤ ᱛᱮᱭᱟᱨ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱾ ᱟᱢ ᱯᱟᱹᱛᱭᱟᱹᱣᱟᱱ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱥᱮ ᱥᱚᱨᱥ ᱠᱷᱚᱱ ᱥᱩᱢᱩᱝ ᱥᱠᱨᱤᱯᱴ ᱪᱟᱹᱞᱩᱭ ᱢᱮ ᱾</string>
   <!-- The sentence used when the extension has data collection permissions. %1$s is a formatted list of permissions. -->
@@ -172,6 +222,28 @@
   <string name="mozac_feature_addons_permissions_data_collection_websiteContent_short_description">ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱡᱤᱱᱤᱥ</string>
   <!-- Long description for the authenticationInfo data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_authenticationInfo_long_description">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱰᱮᱵᱷᱞᱚᱯᱟᱨ ᱥᱟᱶ ᱚᱛᱷᱮᱱᱴᱤᱠᱮᱥᱚᱱ ᱵᱮᱣᱨᱟ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
+  <!-- Long description for the bookmarksInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_bookmarksInfo_long_description">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱰᱮᱵᱷᱞᱚᱯᱟᱨ ᱥᱟᱶ ᱵᱩᱠᱢᱟᱨᱠ ᱵᱤᱵᱨᱚᱬ ᱦᱟᱹᱴᱤᱧ ᱢᱮ ᱾</string>
+  <!-- Long description for the browsingActivity data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_browsingActivity_long_description">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱰᱮᱵᱷᱞᱚᱯᱟᱨ ᱥᱟᱶ ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱠᱟᱹᱢᱤᱦᱚᱨᱟ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
+  <!-- Long description for the financialAndPaymentInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_financialAndPaymentInfo_long_description">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱰᱮᱵᱷᱞᱚᱯᱟᱨ ᱥᱟᱶ ᱠᱟᱹᱣᱰᱤ ᱟᱨ ᱯᱮᱭᱢᱮᱱᱴ ᱵᱮᱣᱨᱟ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
+  <!-- Long description for the healthInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_healthInfo_long_description">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱰᱮᱵᱷᱞᱚᱯᱟᱨ ᱥᱟᱶ ᱦᱚᱲᱢᱚ ᱵᱤᱵᱨᱚᱬ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
+  <!-- Long description for the locationInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_locationInfo_long_description">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱰᱮᱵᱷᱞᱚᱯᱟᱨ ᱥᱟᱶ ᱴᱷᱟᱶ ᱵᱤᱵᱨᱚᱬ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
+  <!-- Long description for the personalCommunications data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_personalCommunications_long_description">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱰᱮᱵᱷᱞᱚᱯᱟᱨ ᱥᱟᱶ ᱱᱤᱡᱮᱨ ᱡᱚᱜᱟᱡᱩᱜᱽ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
+  <!-- Long description for the personallyIdentifyingInfo data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_personallyIdentifyingInfo_long_description">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱰᱮᱵᱷᱞᱚᱯᱟᱨ ᱥᱟᱶ ᱱᱤᱡᱮᱨ ᱩᱨᱩᱢ ᱵᱟᱯᱟᱰᱟᱭ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
+  <!-- Long description for the searchTerms data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_searchTerms_long_description">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱰᱮᱵᱷᱞᱚᱯᱟᱨ ᱥᱟᱶ ᱥᱮᱸᱫᱽᱨᱟ ᱥᱟᱵᱟᱫᱽ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
+  <!-- Long description for the technicalAndInteraction data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_technicalAndInteraction_long_description">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱰᱮᱵᱷᱞᱚᱯᱟᱨ ᱥᱟᱶ ᱴᱮᱠᱱᱤᱠᱟᱞ ᱟᱨ ᱤᱱᱴᱟᱨᱮᱠᱥᱚᱱ ᱰᱟᱴᱟ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
+  <!-- Long description for the websiteActivity data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_websiteActivity_long_description">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱰᱮᱵᱷᱞᱚᱯᱟᱨ ᱥᱟᱶ ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱠᱟᱹᱢᱤᱦᱚᱨᱟ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
+  <!-- Long description for the websiteContent data collection permission -->
+  <string name="mozac_feature_addons_permissions_data_collection_websiteContent_long_description">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱰᱮᱵᱷᱞᱚᱯᱟᱨ ᱥᱟᱶ ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱡᱤᱱᱤᱥ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
   <!-- The version on of add-on. -->
   <string name="mozac_feature_addons_version">ᱟᱨᱩᱯᱷᱮᱨᱟᱣ</string>
   <!-- The author of an add-on. -->
@@ -192,6 +264,8 @@
   <string name="mozac_feature_addons_settings_on">ᱪᱚᱞᱩ</string>
   <!-- Indicates the add-on is allowed in private browsing mode. -->
   <string name="mozac_feature_addons_settings_allow_in_private_browsing" moz:removedIn="141" tools:ignore="UnusedResources">ᱱᱤᱡᱚᱨᱟᱜ ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱨᱮ ᱪᱟᱹᱞᱩ ᱪᱷᱚᱭ ᱮᱢ</string>
+  <!-- Indicates the add-on is allowed in private browsing mode. -->
+  <string name="mozac_feature_addons_settings_allow_in_private_browsing_2">ᱯᱨᱟᱭᱣᱮᱴ ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱨᱮ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱪᱟᱹᱞᱩ ᱞᱟᱹᱜᱤᱫ ᱫᱟᱣ ᱮᱢᱚᱜ ᱢᱮ</string>
   <!-- Indicates the add-on is allowed in private browsing mode. -->
   <string name="mozac_feature_addons_settings_run_in_private_browsing">ᱱᱤᱡᱚᱨᱟᱜ ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱨᱮ ᱪᱟᱹᱞᱩᱭ ᱢᱮ</string>
   <!-- This is displayed when the add-on is not allowed to run in private browsing. -->
@@ -218,12 +292,28 @@
   <string name="mozac_feature_addons_report">ᱠᱷᱚᱵᱚᱨ</string>
   <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_permissions_dialog_title" moz:removedIn="141" tools:ignore="UnusedResources">%1$s ᱥᱮᱞᱮᱫᱽ ᱟᱢ?</string>
+  <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
+  <string name="mozac_feature_addons_permissions_dialog_title_2">%1$s ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
   <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_optional_permissions_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%1$s ᱫᱚ ᱟᱨᱦᱚᱸ ᱦᱚᱠ ᱛᱟᱭ ᱫᱚᱨᱠᱟᱨ ᱾</string>
+  <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
+  <string name="mozac_feature_addons_optional_permissions_with_data_collection_dialog_title">%1$s ᱵᱟᱹᱲᱛᱤ ᱥᱮᱴᱤᱝ ᱞᱟᱹᱜᱤᱫ ᱟᱨᱫᱟᱥ ᱮᱫᱟᱭ</string>
+  <!-- This is the title of a dialog that asks the users to grant optional data collection permissions only. %1$s is the add-on name. -->
+  <string name="mozac_feature_addons_optional_permissions_with_data_collection_only_dialog_title">%1$s ᱵᱟᱹᱲᱛᱤ ᱰᱟᱴᱟ ᱡᱟᱣᱨᱟ ᱞᱟᱹᱜᱤᱫ ᱟᱨᱫᱟᱥ ᱮᱫᱟᱭ</string>
   <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
   <string name="mozac_feature_addons_permissions_dialog_subtitle" moz:removedIn="141" tools:ignore="UnusedResources">ᱱᱚᱶᱟ ᱨᱮ ᱟᱢᱟᱜ ᱚᱱᱩᱢᱚᱛᱤ ᱫᱚᱨᱠᱟᱨ ᱟ:</string>
+  <!-- Heading for the permissions section in the add-on install dialog. -->
+  <string name="mozac_feature_addons_permissions_dialog_heading_required_permissions">ᱞᱟᱹᱠᱛᱤᱭᱟᱱ ᱟᱹᱭᱫᱟᱹᱨ :</string>
+  <!-- Heading for the data collection permissions section in the add-on install dialog. -->
+  <string name="mozac_feature_addons_permissions_dialog_heading_required_data_collection">ᱞᱟᱹᱠᱛᱤᱭᱟᱱ ᱰᱟᱴᱟ ᱡᱟᱣᱨᱟ ᱺ</string>
+  <!-- Heading for the optional settings section in the add-on install dialog. -->
+  <string name="mozac_feature_addons_permissions_dialog_heading_optional_settings">ᱚᱯᱥᱚᱱᱟᱞ ᱥᱮᱴᱤᱝᱥ :</string>
   <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
   <string name="mozac_feature_addons_optional_permissions_dialog_subtitle" moz:removedIn="142" tools:ignore="UnusedResources">ᱫᱚᱠᱟᱨ ᱛᱟᱭ :</string>
+  <!-- Heading for the permissions section in the optional permissions request dialog. -->
+  <string name="mozac_feature_addons_permissions_dialog_heading_optional_permissions">ᱱᱟᱶᱟ ᱟᱹᱭᱫᱟᱹᱨ :</string>
+  <!-- Heading for the data collection permissions section in the optional permissions request dialog. -->
+  <string name="mozac_feature_addons_permissions_dialog_heading_optional_data_collection">ᱱᱟᱶᱟ ᱰᱟᱴᱟ ᱡᱟᱣᱨᱟ :</string>
   <!-- This is a button to add (install) an add-on . -->
   <string name="mozac_feature_addons_permissions_dialog_add">ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
   <!-- This is a button to allow the optional permissions requested by an add-on . -->
@@ -232,6 +322,8 @@
   <string name="mozac_feature_addons_permissions_dialog_deny">ᱢᱟᱱᱟ</string>
   <!-- Text link to learn more about permission requests on the add-on permissions dialog . -->
   <string name="mozac_feature_addons_permissions_dialog_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
+  <!-- This is the text for the "technical and interaction" checkbox shown in the add-on permissions dialog. -->
+  <string name="mozac_feature_addons_permissions_dialog_technical_and_interaction_data">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱰᱮᱵᱷᱞᱚᱯᱟᱨ ᱥᱟᱶ ᱴᱮᱠᱱᱤᱠᱟᱞ ᱟᱨ ᱤᱱᱴᱟᱨᱮᱠᱥᱚᱱ ᱰᱟᱴᱟ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
   <!-- This is a button to cancel the add-on installation . -->
   <string name="mozac_feature_addons_permissions_dialog_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
   <!-- Accessibility content description to install add-on button. %1$s is the add-on name. -->
@@ -256,14 +348,26 @@
   <string name="mozac_feature_addons_find_more_extensions_button_text">ᱟᱨᱦᱚᱸ ᱰᱷᱮᱨ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱯᱟᱱᱛᱮ ᱧᱟᱢ ᱢᱮ</string>
   <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on -->
   <string name="mozac_feature_addons_updater_notification_allow_button" moz:removedIn="142" tools:ignore="UnusedResources">ᱦᱮᱥᱟᱨᱤᱭᱟᱹ</string>
+  <!-- The label of the update button on the system notification shown to the user when an add-on has an update that requires the user to accept new permissions. -->
+  <string name="mozac_feature_addons_updater_notification_update_button">ᱦᱟᱹᱞᱤᱭᱟᱹᱠ</string>
   <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated -->
   <string name="mozac_feature_addons_updater_notification_deny_button" moz:removedIn="142" tools:ignore="UnusedResources">ᱢᱟᱱᱟ</string>
+  <!-- The label of the cancel button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated -->
+  <string name="mozac_feature_addons_updater_notification_cancel_button">ᱵᱟᱹᱰᱨᱟᱹ</string>
   <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons -->
   <string name="mozac_feature_addons_updater_notification_title" moz:removedIn="142" tools:ignore="UnusedResources">%1$s ᱞᱟᱹᱜᱤᱫ ᱱᱟᱶᱟ ᱦᱟᱹᱞᱤᱭᱟᱜ ᱢᱮᱱᱟᱜ-ᱟ</string>
+  <!-- The title of the system notification shown to the user when an add-on has a new update that requires new permissions. %1$s is the name of the add-on. -->
+  <string name="mozac_feature_addons_updater_notification_title_2">%1$s ᱨᱮ ᱢᱤᱫ ᱟᱯᱰᱮᱴ ᱢᱮᱱᱟᱜᱼᱟ</string>
   <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions -->
   <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate,UnusedResources" moz:removedIn="142">%1$d ᱱᱟᱶᱟ ᱪᱷᱟᱹᱲ ᱨᱮᱭᱟᱜ ᱫᱚᱨᱠᱟᱨ ᱢᱮᱱᱟᱜ-ᱟ</string>
   <!-- The content of the notification displayed when an add-on needs a new permission -->
   <string name="mozac_feature_addons_updater_notification_content_singular" moz:removedIn="142" tools:ignore="UnusedResources">ᱢᱤᱫ ᱴᱟᱝ ᱱᱟᱶᱟ ᱪᱷᱟᱹᱲ ᱨᱮᱭᱟᱜ ᱫᱚᱨᱠᱟᱨ ᱢᱮᱱᱟᱜ-ᱟ</string>
+  <!-- A short explanation shown in the notification displayed when an add-on has a new update that requires new permissions. -->
+  <string name="mozac_feature_addons_updater_notification_short_intro">ᱟᱢᱟᱜ ᱱᱤᱛᱚᱜ ᱵᱷᱟᱨᱥᱚᱱ ᱟᱨ ᱥᱮᱴᱤᱝ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱵᱟᱹᱛᱤᱞ ᱢᱮ ᱾</string>
+  <!-- The heading for the permissions section in the system notification shown when an add-on has an update that requires user confirmation. %1$s is a list of sentences. -->
+  <string name="mozac_feature_addons_updater_notification_heading_permissions">ᱱᱟᱶᱟ ᱞᱟᱹᱠᱛᱤᱭᱟᱱ ᱟᱹᱭᱫᱟᱹᱨ : %1$s</string>
+  <!-- The heading for the data collection permission section in the system notification shown when an add-on has an update that requires user confirmation. %1$s is a list of permissions. -->
+  <string name="mozac_feature_addons_updater_notification_heading_data_collection_permissions">ᱱᱟᱶᱟ ᱞᱟᱹᱠᱛᱤᱭᱟᱱ ᱰᱟᱴᱟ ᱡᱟᱣᱨᱟ : ᱩᱛᱱᱟᱹᱣᱤᱡ ᱢᱮᱱ ᱠᱮᱫᱟᱭ ᱵᱟᱹᱲᱛᱤ %1$s ᱡᱟᱣᱨᱟᱭᱟᱭ ᱾</string>
   <!-- Name of the "notification channel" used for displaying a notification for updating an extension. See https://developer.android.com/training/notify-user/channels -->
   <string name="mozac_feature_addons_updater_notification_channel_2">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱦᱟᱹᱞᱤᱭᱟᱹᱠ</string>
   <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
@@ -346,8 +450,14 @@
   <string name="mozac_feature_addons_updater_dialog_status">ᱫᱚᱥᱟ:</string>
   <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
   <string name="mozac_feature_addons_installed_dialog_title" moz:removedIn="142" tools:ignore="UnusedResources">%1$s %2$s ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱦᱚᱭ ᱱᱟ</string>
+  <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
+  <string name="mozac_feature_addons_installed_dialog_title_2">%1$s ᱥᱮᱞᱮᱫ ᱞᱮᱱᱟ</string>
   <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
   <string name="mozac_feature_addons_installed_dialog_description_2" moz:removedIn="142" tools:ignore="UnusedResources">%2$s ᱢᱮᱱᱩ ᱠᱷᱚᱱ %1$s ᱟᱫᱮᱨ ᱢᱮ ᱾</string>
+  <!-- Used as text for the link in the description of the post-installation dialog. -->
+  <string name="mozac_feature_addons_installed_dialog_description_link_text">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱥᱮᱴᱤᱝ</string>
+  <!-- Text shown in the dialog when add-on installation is completed. %1$s is replaced by an active link, using mozac_feature_addons_installed_dialog_description_link_text as text ("extension settings"). -->
+  <string name="mozac_feature_addons_installed_dialog_description_3">%1$s ᱨᱮ ᱡᱟᱦᱟᱸ ᱚᱠᱛᱚ ᱨᱮ ᱦᱚᱸ ᱟᱹᱭᱫᱟᱹᱨ ᱟᱨ ᱰᱟᱴᱟ ᱠᱩᱥᱤᱠᱚ ᱟᱯᱰᱮᱴ ᱢᱮ ᱾</string>
   <!-- Confirmation button text for the dialog when add-on installation is completed. -->
   <string name="mozac_feature_addons_installed_dialog_okay_button_2">ᱴᱷᱤᱠ</string>
   <!-- "Learn more" link displayed below an add-on status message. -->
