@@ -47,6 +47,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         onboardingFeatureEnabled = settings.onboardingFeatureEnabled,
         isUseNewCrashReporterDialog = settings.useNewCrashReporterDialog,
         isTabSwipeCFREnabled = settings.hasShownTabSwipeCFR,
+        isTermsOfServiceAccepted = settings.hasAcceptedTermsOfService,
     )
 
     /**
@@ -71,6 +72,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
     override var onboardingFeatureEnabled: Boolean by updatedFeatureFlags::onboardingFeatureEnabled
     override var isUseNewCrashReporterDialog: Boolean by updatedFeatureFlags::isUseNewCrashReporterDialog
     override var isTabSwipeCFREnabled: Boolean by updatedFeatureFlags::isTabSwipeCFREnabled
+    override var isTermsOfServiceAccepted: Boolean by updatedFeatureFlags::isTermsOfServiceAccepted
 
     override fun applyFlagUpdates() {
         Log.i(TAG, "applyFlagUpdates: Trying to apply the updated feature flags: $updatedFeatureFlags")
@@ -106,6 +108,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         settings.onboardingFeatureEnabled = featureFlags.onboardingFeatureEnabled
         settings.useNewCrashReporterDialog = featureFlags.isUseNewCrashReporterDialog
         settings.hasShownTabSwipeCFR = !featureFlags.isTabSwipeCFREnabled
+        settings.hasAcceptedTermsOfService = featureFlags.isTermsOfServiceAccepted
     }
 }
 
@@ -129,6 +132,7 @@ private data class FeatureFlags(
     var onboardingFeatureEnabled: Boolean,
     var isUseNewCrashReporterDialog: Boolean,
     var isTabSwipeCFREnabled: Boolean,
+    var isTermsOfServiceAccepted: Boolean,
 )
 
 internal fun getETPPolicy(settings: Settings): ETPPolicy {

@@ -69,6 +69,7 @@ class HomeActivityTestRule(
         shouldUseBottomToolbar: Boolean = settings.shouldUseBottomToolbar,
         isUseNewCrashReporterDialog: Boolean = false,
         isTabSwipeCFREnabled: Boolean = false,
+        isTermsOfServiceAccepted: Boolean = true,
     ) : this(initialTouchMode, launchActivity, skipOnboarding) {
         this.isHomepageHeaderEnabled = isHomepageHeaderEnabled
         this.isPocketEnabled = isPocketEnabled
@@ -88,6 +89,7 @@ class HomeActivityTestRule(
         this.shouldUseBottomToolbar = shouldUseBottomToolbar
         this.isUseNewCrashReporterDialog = isUseNewCrashReporterDialog
         this.isTabSwipeCFREnabled = isTabSwipeCFREnabled
+        this.isTermsOfServiceAccepted = isTermsOfServiceAccepted
     }
 
     /**
@@ -150,6 +152,7 @@ class HomeActivityTestRule(
             isPageLoadTranslationsPromptEnabled = false,
             isUseNewCrashReporterDialog = useNewCrashReporterDialog,
             isTabSwipeCFREnabled = true,
+            isTermsOfServiceAccepted = true,
         )
     }
 }
@@ -193,6 +196,7 @@ class HomeActivityIntentTestRule internal constructor(
         shouldUseBottomToolbar: Boolean = settings.shouldUseBottomToolbar,
         onboardingFeatureEnabled: Boolean = true,
         isTabSwipeCFREnabled: Boolean = false,
+        isTermsOfServiceAccepted: Boolean = true,
     ) : this(initialTouchMode, launchActivity, skipOnboarding) {
         this.isHomepageHeaderEnabled = isHomepageHeaderEnabled
         this.isPocketEnabled = isPocketEnabled
@@ -212,6 +216,7 @@ class HomeActivityIntentTestRule internal constructor(
         this.shouldUseBottomToolbar = shouldUseBottomToolbar
         this.onboardingFeatureEnabled = onboardingFeatureEnabled
         this.isTabSwipeCFREnabled = isTabSwipeCFREnabled
+        this.isTermsOfServiceAccepted = isTermsOfServiceAccepted
     }
 
     private val longTapUserPreference = getLongPressTimeout()
@@ -283,6 +288,7 @@ class HomeActivityIntentTestRule internal constructor(
         isMicrosurveyEnabled = settings.microsurveyFeatureEnabled
         shouldUseBottomToolbar = settings.shouldUseBottomToolbar
         isTabSwipeCFREnabled = !settings.hasShownTabSwipeCFR
+        isTermsOfServiceAccepted = settings.hasAcceptedTermsOfService
     }
 
     companion object {
@@ -311,6 +317,7 @@ class HomeActivityIntentTestRule internal constructor(
             shouldUseBottomToolbar = true,
             isPageLoadTranslationsPromptEnabled = false,
             isTabSwipeCFREnabled = true,
+            isTermsOfServiceAccepted = true,
         )
     }
 }

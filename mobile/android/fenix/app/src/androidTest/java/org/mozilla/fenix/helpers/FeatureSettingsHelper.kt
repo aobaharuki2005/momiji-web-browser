@@ -107,6 +107,11 @@ interface FeatureSettingsHelper {
     var isTabSwipeCFREnabled: Boolean
 
     /**
+     * Accept or not the terms of service.
+     */
+    var isTermsOfServiceAccepted: Boolean
+
+    /**
      * Enable or disable the translations prompt after a page that can be translated is loaded.
      */
     fun enableOrDisablePageLoadTranslationsPrompt(enableTranslationsPrompt: Boolean) {
