@@ -8220,9 +8220,7 @@ nsresult nsDocShell::SetupNewViewer(nsIDocumentViewer* aNewViewer,
 
   mDocumentViewer = aNewViewer;
 
-  nsCOMPtr<nsIWidget> widget;
-  NS_ENSURE_SUCCESS(GetMainWidget(getter_AddRefs(widget)), NS_ERROR_FAILURE);
-
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
   LayoutDeviceIntRect bounds(x, y, cx, cy);
 
   mDocumentViewer->SetNavigationTiming(mTiming);

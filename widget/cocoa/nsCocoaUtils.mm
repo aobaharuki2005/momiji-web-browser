@@ -266,9 +266,8 @@ nsIWidget* nsCocoaUtils::GetHiddenWindowWidget() {
     return nullptr;
   }
 
-  nsCOMPtr<nsIWidget> hiddenWindowWidget;
-  if (NS_FAILED(baseHiddenWindow->GetMainWidget(
-          getter_AddRefs(hiddenWindowWidget)))) {
+  nsCOMPtr<nsIWidget> hiddenWindowWidget = baseHiddenWindow->GetMainWidget();
+  if (!hiddenWindowWidget) {
     NS_WARNING("Couldn't get nsIWidget from hidden window (nsIBaseWindow)");
     return nullptr;
   }

@@ -54,10 +54,8 @@ nsIWidget* ChromeObserver::GetWindowWidget() {
   // only top level chrome documents can set the titlebar color
   if (mDocument && mDocument->IsRootDisplayDocument()) {
     nsCOMPtr<nsISupports> container = mDocument->GetContainer();
-    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
-    if (baseWindow) {
-      nsCOMPtr<nsIWidget> mainWidget;
-      baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
+    if (nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container)) {
+      nsCOMPtr<nsIWidget> mainWidget = baseWindow->GetMainWidget();
       return mainWidget;
     }
   }

@@ -218,8 +218,7 @@ StyleDisplayMode Gecko_MediaFeatures_GetDisplayMode(const Document* aDocument) {
 
   nsCOMPtr<nsISupports> container = rootDocument->GetContainer();
   if (nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container)) {
-    nsCOMPtr<nsIWidget> mainWidget;
-    baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
+    nsCOMPtr<nsIWidget> mainWidget = baseWindow->GetMainWidget();
     if (mainWidget && mainWidget->SizeMode() == nsSizeMode_Fullscreen) {
       return StyleDisplayMode::Fullscreen;
     }

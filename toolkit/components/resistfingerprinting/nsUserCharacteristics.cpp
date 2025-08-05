@@ -269,8 +269,7 @@ void PopulateScreenProperties() {
     return;
   }
 
-  nsCOMPtr<nsIWidget> mainWidget;
-  treeOwnerAsWin->GetMainWidget(getter_AddRefs(mainWidget));
+  nsCOMPtr<nsIWidget> mainWidget = treeOwnerAsWin->GetMainWidget();
   if (!mainWidget) {
     return;
   }

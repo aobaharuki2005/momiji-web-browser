@@ -178,6 +178,8 @@ class nsDocShell final : public nsDocLoader,
   NS_DECL_NSIAUTHPROMPTPROVIDER
   NS_DECL_NSINETWORKINTERCEPTCONTROLLER
 
+  using nsIBaseWindow::GetMainWidget;
+
   // Create a new nsDocShell object.
   static already_AddRefed<nsDocShell> Create(
       mozilla::dom::BrowsingContext* aBrowsingContext,

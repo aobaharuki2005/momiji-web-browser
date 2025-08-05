@@ -3974,7 +3974,7 @@ nsDOMWindowUtils::GetIsParentWindowMainWidgetVisible(bool* aIsVisible) {
     docShell->GetTreeOwner(getter_AddRefs(parentTreeOwner));
     nsCOMPtr<nsIBaseWindow> parentWindow(do_GetInterface(parentTreeOwner));
     if (parentWindow) {
-      parentWindow->GetMainWidget(getter_AddRefs(parentWidget));
+      parentWidget = parentWindow->GetMainWidget();
     }
   }
   if (!parentWidget) {
@@ -4239,9 +4239,7 @@ nsDOMWindowUtils::SetCustomTitlebar(bool aCustomTitlebar) {
   if (nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow)) {
     if (nsCOMPtr<nsIBaseWindow> baseWindow =
             do_QueryInterface(window->GetDocShell())) {
-      nsCOMPtr<nsIWidget> widget;
-      baseWindow->GetMainWidget(getter_AddRefs(widget));
-      if (widget) {
+      if (nsCOMPtr<nsIWidget> widget = baseWindow->GetMainWidget()) {
         widget->SetCustomTitlebar(aCustomTitlebar);
       }
     }
@@ -4255,9 +4253,7 @@ nsDOMWindowUtils::SetResizeMargin(int32_t aResizeMargin) {
   if (nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow)) {
     if (nsCOMPtr<nsIBaseWindow> baseWindow =
             do_QueryInterface(window->GetDocShell())) {
-      nsCOMPtr<nsIWidget> widget;
-      baseWindow->GetMainWidget(getter_AddRefs(widget));
-      if (widget) {
+      if (nsCOMPtr<nsIWidget> widget = baseWindow->GetMainWidget()) {
         CSSToLayoutDeviceScale scaleFactor = widget->GetDefaultScale();
         widget->SetResizeMargin(
             (CSSCoord(float(aResizeMargin)) * scaleFactor).Rounded());

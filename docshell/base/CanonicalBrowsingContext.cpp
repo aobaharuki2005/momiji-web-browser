@@ -1591,7 +1591,7 @@ void CanonicalBrowsingContext::RecomputeAppWindowVisibility() {
 
   nsCOMPtr<nsIWidget> widget;
   if (auto* docShell = GetDocShell()) {
-    nsDocShell::Cast(docShell)->GetMainWidget(getter_AddRefs(widget));
+    widget = nsDocShell::Cast(docShell)->GetMainWidget();
   }
 
   Unused << NS_WARN_IF(!widget);
