@@ -309,21 +309,11 @@ export class ContextMenuChild extends JSWindowActorChild {
       }
 
       case "ContextMenu:GetTextDirective": {
-        if (!this.textDirectiveTarget) {
-          return null;
-        }
-        const sel = this.contentWindow.getSelection();
-        const ranges =
-          this.textDirectiveTarget === "selection"
-            ? Array.from({ length: sel.rangeCount }, (_, i) =>
-                sel.getRangeAt(i)
-              )
-            : this.document.fragmentDirective.getTextDirectiveRanges();
-        return this.document.fragmentDirective
-          .createTextDirectiveForRanges(ranges)
+        return this.contentWindow.document?.fragmentDirective
+          .createTextDirectiveForSelection()
           .then(textFragment => {
             if (textFragment) {
-              let url = URL.fromURI(this.document?.documentURIObject);
+              let url = URL.parse(this.contentWindow.location);
               url.hash += `:~:${textFragment}`;
               return url.href;
             }
@@ -331,8 +321,8 @@ export class ContextMenuChild extends JSWindowActorChild {
           });
       }
       case "ContextMenu:RemoveAllTextFragments": {
-        this.document.fragmentDirective.removeAllTextDirectives();
-        this.contentWindow.history.replaceState(
+        this.contentWindow?.document?.fragmentDirective.removeAllTextDirectives();
+        this.contentWindow?.history.replaceState(
           this.contentWindow.history.state,
           "",
           this.contentWindow.location.href
@@ -919,30 +909,9 @@ export class ContextMenuChild extends JSWindowActorChild {
     context.onTextInput = false;
     context.onVideo = false;
     context.inPDFEditor = false;
-
-    const textDirectiveRanges =
-      this.document.fragmentDirective?.getTextDirectiveRanges();
-    // .hasTextFragments indicates whether the page will show highlights.
-    context.hasTextFragments = !!textDirectiveRanges?.length;
-    const { offsetNode, offset } = node.ownerDocument.caretPositionFromPoint(
-      aEvent.clientX,
-      aEvent.clientY
-    );
-    const sel = this.contentWindow.getSelection();
-    context.textDirectiveTarget = null;
-    if (
-      !sel.isCollapsed &&
-      Array.from({ length: sel.rangeCount }, (_, i) => sel.getRangeAt(i)).some(
-        r => r.isPointInRange(offsetNode, offset)
-      )
-    ) {
-      context.textDirectiveTarget = "selection";
-    } else if (
-      textDirectiveRanges.some(r => r.isPointInRange(offsetNode, offset))
-    ) {
-      context.textDirectiveTarget = "textDirective";
-    }
-    this.textDirectiveTarget = context.textDirectiveTarget;
+    context.hasTextFragments =
+      !!this.contentWindow?.document?.fragmentDirective?.getTextDirectiveRanges()
+        .length;
 
     // Remember the node and its owner document that was clicked
     // This may be modifed before sending to nsContextMenu
