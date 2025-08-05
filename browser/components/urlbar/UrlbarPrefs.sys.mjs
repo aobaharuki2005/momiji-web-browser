@@ -905,6 +905,28 @@ class Preferences {
   }
 
   /**
+   * Adds a value to a preference that handles multiple comma-separated values.
+   * Throws an error if the preference does not have a comma-separated value.
+   *
+   * @param {string} pref
+   *   The name of the preference to set.
+   * @param {*} value
+   *   The preference value.
+   */
+  add(pref, value) {
+    let maybeSet = this._getPrefValue(pref);
+
+    if (!(maybeSet instanceof Set)) {
+      throw new Error(
+        `The pref ${pref} should handle the values as Set but '${typeof maybeSet}'`
+      );
+    }
+
+    maybeSet.add(value);
+    this.set(pref, [...maybeSet].join(","));
+  }
+
+  /**
    * Clears the value for the preference with the given name.
    *
    * @param {string} pref

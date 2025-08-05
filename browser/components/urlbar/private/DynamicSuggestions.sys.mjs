@@ -260,24 +260,16 @@ export class DynamicSuggestions extends SuggestProvider {
           "quicksuggest.realtimeOptIn.notNowTimeSeconds",
           Date.now() / 1000
         );
-        let notNowTypes = lazy.UrlbarPrefs.get(
-          "quicksuggest.realtimeOptIn.notNowTypes"
-        );
-        notNowTypes.add(details.result.realtimeType);
-        lazy.UrlbarPrefs.set(
+        lazy.UrlbarPrefs.add(
           "quicksuggest.realtimeOptIn.notNowTypes",
-          [...notNowTypes].join(",")
+          details.result.realtimeType
         );
         controller.removeResult(details.result);
         break;
       case "dismiss":
-        let dismissTypes = lazy.UrlbarPrefs.get(
-          "quicksuggest.realtimeOptIn.dismissTypes"
-        );
-        dismissTypes.add(details.result.realtimeType);
-        lazy.UrlbarPrefs.set(
+        lazy.UrlbarPrefs.add(
           "quicksuggest.realtimeOptIn.dismissTypes",
-          [...dismissTypes].join(",")
+          details.result.realtimeType
         );
         details.result.acknowledgeDismissalL10n = {
           id: "urlbar-result-dismissal-acknowledgment-market",
