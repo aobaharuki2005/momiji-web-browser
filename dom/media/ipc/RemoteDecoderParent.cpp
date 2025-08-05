@@ -6,6 +6,7 @@
 #include "RemoteDecoderParent.h"
 
 #include "RemoteMediaManagerParent.h"
+#include "RemoteCDMParent.h"
 #include "mozilla/Unused.h"
 
 namespace mozilla {
@@ -14,11 +15,13 @@ RemoteDecoderParent::RemoteDecoderParent(
     RemoteMediaManagerParent* aParent,
     const CreateDecoderParams::OptionSet& aOptions,
     nsISerialEventTarget* aManagerThread, TaskQueue* aDecodeTaskQueue,
-    const Maybe<uint64_t>& aMediaEngineId, Maybe<TrackingId> aTrackingId)
+    const Maybe<uint64_t>& aMediaEngineId, Maybe<TrackingId> aTrackingId,
+    RemoteCDMParent* aCDM)
     : ShmemRecycleAllocator(this),
       mParent(aParent),
       mOptions(aOptions),
       mDecodeTaskQueue(aDecodeTaskQueue),
+      mCDM(aCDM),
       mTrackingId(aTrackingId),
       mMediaEngineId(aMediaEngineId),
       mManagerThread(aManagerThread) {

@@ -73,7 +73,7 @@ class RemoteMediaManagerParent final : public PRemoteMediaManagerParent,
       const CreateDecoderParams::OptionSet& aOptions,
       const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
       const Maybe<uint64_t>& aMediaEngineId,
-      const Maybe<TrackingId>& aTrackingId);
+      const Maybe<TrackingId>& aTrackingId, PRemoteCDMParent* aCDM);
   bool DeallocPRemoteDecoderParent(PRemoteDecoderParent* actor);
 
   already_AddRefed<PRemoteEncoderParent> AllocPRemoteEncoderParent(

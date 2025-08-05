@@ -143,7 +143,7 @@ class RemoteMediaManagerChild final
       const CreateDecoderParams::OptionSet& aOptions,
       const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
       const Maybe<uint64_t>& aMediaEngineId,
-      const Maybe<TrackingId>& aTrackingId);
+      const Maybe<TrackingId>& aTrackingId, PRemoteCDMChild* aCDM);
   bool DeallocPRemoteDecoderChild(PRemoteDecoderChild* actor);
 
   PMFMediaEngineChild* AllocPMFMediaEngineChild();
