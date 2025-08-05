@@ -956,9 +956,6 @@
       "resource:///modules/GenAI.sys.mjs": [
         "browser/components/genai/GenAI.sys.mjs"
       ],
-      "resource:///modules/HeadlessShell.sys.mjs": [
-        "browser/components/shell/HeadlessShell.sys.mjs"
-      ],
       "resource:///modules/HistoryController.sys.mjs": [
         "browser/components/firefoxview/HistoryController.sys.mjs"
       ],
@@ -1036,9 +1033,6 @@
       ],
       "resource:///modules/SharingUtils.sys.mjs": [
         "browser/modules/SharingUtils.sys.mjs"
-      ],
-      "resource:///modules/ShellService.sys.mjs": [
-        "browser/components/shell/ShellService.sys.mjs"
       ],
       "resource:///modules/SiteDataManager.sys.mjs": [
         "browser/modules/SiteDataManager.sys.mjs"

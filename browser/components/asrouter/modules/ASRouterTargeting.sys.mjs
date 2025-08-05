@@ -31,7 +31,7 @@ const { NewTabUtils } = ChromeUtils.importESModule(
 
 // eslint-disable-next-line mozilla/use-static-import
 const { ShellService } = ChromeUtils.importESModule(
-  "resource:///modules/ShellService.sys.mjs"
+  "moz-src:///browser/components/shell/ShellService.sys.mjs"
 );
 
 // eslint-disable-next-line mozilla/use-static-import

@@ -7,7 +7,7 @@ ChromeUtils.defineESModuleGetters(this, {
   FileTestUtils: "resource://testing-common/FileTestUtils.sys.mjs",
   MockRegistrar: "resource://testing-common/MockRegistrar.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
-  ShellService: "resource:///modules/ShellService.sys.mjs",
+  ShellService: "moz-src:///browser/components/shell/ShellService.sys.mjs",
   TaskbarTabsPin: "resource:///modules/taskbartabs/TaskbarTabsPin.sys.mjs",
   TaskbarTabsRegistry:
     "resource:///modules/taskbartabs/TaskbarTabsRegistry.sys.mjs",

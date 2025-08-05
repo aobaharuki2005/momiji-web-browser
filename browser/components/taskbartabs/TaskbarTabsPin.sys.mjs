@@ -6,7 +6,7 @@
 let lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  ShellService: "resource:///modules/ShellService.sys.mjs",
+  ShellService: "moz-src:///browser/components/shell/ShellService.sys.mjs",
   TaskbarTabsUtils: "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs",
 });
 
