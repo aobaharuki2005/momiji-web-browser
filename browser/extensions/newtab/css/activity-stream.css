@@ -8346,6 +8346,9 @@ main section {
   inset-block-end: calc(var(--space-medium) * -1);
   transform: rotate(45deg);
 }
+.feature-highlight .feature-highlight-modal.inset-block-start:dir(rtl)::after {
+  transform: rotate(225deg);
+}
 .feature-highlight .feature-highlight-modal.inset-block-end {
   inset-block-start: 100%;
   margin-block-start: var(--space-xlarge);
