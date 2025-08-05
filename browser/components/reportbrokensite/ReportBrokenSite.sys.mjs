@@ -455,7 +455,9 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
     // Altering the disabled attribute on the command does not propagate
     // the change to the related menuitems (see bug 805653), so we change them all.
     const cmd = document.getElementById("cmd_reportBrokenSite");
-    const allowedByPolicy = Services.policies.isAllowed("feedbackCommands");
+    const allowedByPolicy = Services.policies.isAllowed(
+      "DisableFeedbackCommands"
+    );
     cmd.toggleAttribute("hidden", !allowedByPolicy);
     const app = document.ownerGlobal.PanelMultiView.getViewNode(
       document,

@@ -210,13 +210,6 @@ function ensureReasonRequired() {
   Services.prefs.setIntPref(PREFS.REASON, 2);
 }
 
-function ensureProtectionsPanelHidden(test) {
-  const { hidden } = document.getElementById(
-    "tracking-protection-icon-container"
-  );
-  ok(hidden, `Protections panel disabled ${test}`);
-}
-
 function isMenuItemEnabled(menuItem, itemDesc) {
   ok(!menuItem.hidden, `${itemDesc} menu item is shown`);
   ok(!menuItem.disabled, `${itemDesc} menu item is enabled`);
