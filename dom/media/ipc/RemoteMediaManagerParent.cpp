@@ -34,6 +34,10 @@
 #  include "MFCDMParent.h"
 #endif
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/MediaDrmRemoteCDMParent.h"
+#endif
+
 namespace mozilla {
 
 #define LOG(msg, ...) \
@@ -291,7 +295,11 @@ bool RemoteMediaManagerParent::DeallocPMFCDMParent(PMFCDMParent* actor) {
 
 PRemoteCDMParent* RemoteMediaManagerParent::AllocPRemoteCDMParent(
     const nsAString& aKeySystem) {
+#ifdef MOZ_WIDGET_ANDROID
+  return new MediaDrmRemoteCDMParent(aKeySystem);
+#else
   return nullptr;
+#endif
 }
 
 void RemoteMediaManagerParent::Open(
