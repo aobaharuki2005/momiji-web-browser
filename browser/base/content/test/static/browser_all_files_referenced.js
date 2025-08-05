@@ -122,6 +122,10 @@ var gExceptionPaths = [
 
   // UniFFI test files.
   "moz-src:///toolkit/components/uniffi-bindgen-gecko-js/tests/generated/",
+
+  // Used for Market suggestions on the urlbar. This is specified from Remote
+  // Settings.
+  "chrome://browser/skin/illustrations/market-opt-in.svg",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running
