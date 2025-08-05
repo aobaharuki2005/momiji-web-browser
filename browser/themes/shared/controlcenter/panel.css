@@ -339,8 +339,8 @@
 }
 
 .protections-popup-trackersView-empty-image {
-  width: 48px;
-  height: 48px;
+  width: var(--size-item-xlarge);
+  height: var(--size-item-xlarge);
   -moz-context-properties: fill;
   margin-bottom: 16px;
 }

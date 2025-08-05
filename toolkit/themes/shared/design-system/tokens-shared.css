@@ -250,10 +250,10 @@
     --icon-color-success: light-dark(var(--color-green-60), var(--color-green-20));
     --icon-color-warning: light-dark(var(--color-yellow-60), var(--color-yellow-20));
     --icon-size: var(--icon-size-small);
-    --icon-size-xsmall: 12px;
+    --icon-size-xsmall: var(--size-item-xsmall);
     --icon-size-small: var(--size-item-small);
     --icon-size-medium: 20px;
-    --icon-size-large: 24px;
+    --icon-size-large: var(--size-item-medium);
     --icon-size-xlarge: var(--size-item-large);
 
     /** Input - Text **/
@@ -271,9 +271,11 @@
     --outline-color-error: light-dark(var(--color-red-70), var(--color-red-20));
 
     /** Size **/
+    --size-item-xsmall: 12px;
     --size-item-small: 16px;
     --size-item-medium: 24px;
     --size-item-large: 32px;
+    --size-item-xlarge: 48px;
 
     /** Space **/
     --space-xxsmall: calc(0.5 * var(--space-xsmall)); /* 2px */
