@@ -72,10 +72,11 @@ bool ModuleLoader::LoadImportedModule(JSContext* cx,
                                       JS::Handle<JSObject*> referrer,
                                       JS::HandleValue referencingPrivate,
                                       JS::Handle<JSObject*> moduleRequest,
-                                      JS::HandleValue payload) {
+                                      JS::HandleValue statePrivate,
+                                      JS::Handle<JSObject*> promise) {
   ShellContext* scx = GetShellContext(cx);
-  return scx->moduleLoader->loadImportedModule(cx, referrer, referencingPrivate,
-                                               moduleRequest, payload);
+  return scx->moduleLoader->loadImportedModule(
+      cx, referrer, referencingPrivate, moduleRequest, statePrivate, promise);
 }
 
 // static
@@ -167,9 +168,20 @@ bool ModuleLoader::loadAndExecute(JSContext* cx, HandleObject module,
                                   MutableHandleValue rval) {
   MOZ_ASSERT(module);
 
-  RootedValue hostDefined(cx, ObjectValue(*module));
-  if (!JS::LoadRequestedModules(cx, module, hostDefined, LoadResolved,
-                                LoadRejected)) {
+  if (!JS::LoadRequestedModules(
+          cx, module, UndefinedHandleValue,
+          [&module](JSContext* cx, JS::Handle<JS::Value> val) {
+            if (!JS::ModuleLink(cx, module)) {
+              return false;
+            }
+
+            return true;
+          },
+          [](JSContext* cx, JS::Handle<JS::Value> val,
+             Handle<JS::Value> error) {
+            JS_SetPendingException(cx, error);
+            return true;
+          })) {
     return false;
   }
 
@@ -180,37 +192,26 @@ bool ModuleLoader::loadAndExecute(JSContext* cx, HandleObject module,
   return JS::ModuleEvaluate(cx, module, rval);
 }
 
-/* static */
-bool ModuleLoader::LoadResolved(JSContext* cx, HandleValue hostDefined) {
-  RootedObject module(cx, &hostDefined.toObject());
-  return JS::ModuleLink(cx, module);
-}
-
-/* static */
-bool ModuleLoader::LoadRejected(JSContext* cx, HandleValue hostDefined,
-                                HandleValue error) {
-  JS_SetPendingException(cx, error);
-  return true;
-}
-
 bool ModuleLoader::loadImportedModule(JSContext* cx,
                                       JS::Handle<JSObject*> referrer,
                                       JS::HandleValue referencingPrivate,
                                       JS::Handle<JSObject*> moduleRequest,
-                                      JS::HandleValue payload) {
+                                      JS::HandleValue statePrivate,
+                                      JS::Handle<JSObject*> promise) {
   // TODO: Bug 1968904: Update HostLoadImportedModule
-  if (payload.isObject() && payload.toObject().is<PromiseObject>()) {
+  if (promise) {
     // This is a dynamic import.
-    if (!dynamicImport(cx, referencingPrivate, moduleRequest, payload)) {
+    if (!dynamicImport(cx, referencingPrivate, moduleRequest, promise)) {
       return JS::FinishLoadingImportedModuleFailedWithPendingException(cx,
-                                                                       payload);
+                                                                       promise);
     }
     return true;
   }
 
-  auto finishLoading = mozilla::MakeScopeExit([cx, &payload]() {
+  auto finishLoading = mozilla::MakeScopeExit([cx, statePrivate]() {
     if (!JS_IsExceptionPending(cx)) {
-      JS::FinishLoadingImportedModuleFailed(cx, payload, UndefinedHandleValue);
+      JS::FinishLoadingImportedModuleFailed(cx, statePrivate, nullptr,
+                                            UndefinedHandleValue);
       return;
     }
 
@@ -219,7 +220,8 @@ bool ModuleLoader::loadImportedModule(JSContext* cx,
       return;
     }
 
-    JS::FinishLoadingImportedModuleFailed(cx, payload, exnStack.exception());
+    JS::FinishLoadingImportedModuleFailed(cx, statePrivate, nullptr,
+                                          exnStack.exception());
   });
 
   Rooted<JSLinearString*> path(cx,
@@ -236,7 +238,7 @@ bool ModuleLoader::loadImportedModule(JSContext* cx,
   finishLoading.release();
 
   return JS::FinishLoadingImportedModule(cx, referrer, referencingPrivate,
-                                         moduleRequest, payload, module, false);
+                                         moduleRequest, statePrivate, module);
 }
 
 bool ModuleLoader::populateImportMeta(JSContext* cx,
@@ -291,20 +293,23 @@ bool ModuleLoader::importMetaResolve(JSContext* cx,
 bool ModuleLoader::dynamicImport(JSContext* cx,
                                  JS::HandleValue referencingPrivate,
                                  JS::HandleObject moduleRequest,
-                                 JS::HandleValue payload) {
+                                 JS::HandleObject promise) {
   // To make this more realistic, use a promise to delay the import and make it
   // happen asynchronously. This method packages up the arguments and creates a
   // resolved promise, which on fullfillment calls doDynamicImport with the
   // original arguments.
 
+  MOZ_ASSERT(promise);
   RootedValue moduleRequestValue(cx, ObjectValue(*moduleRequest));
+  RootedValue promiseValue(cx, ObjectValue(*promise));
   RootedObject closure(cx, JS_NewObjectWithGivenProto(cx, nullptr, nullptr));
   if (!closure ||
       !JS_DefineProperty(cx, closure, "referencingPrivate", referencingPrivate,
                          JSPROP_ENUMERATE) ||
       !JS_DefineProperty(cx, closure, "moduleRequest", moduleRequestValue,
                          JSPROP_ENUMERATE) ||
-      !JS_DefineProperty(cx, closure, "payload", payload, JSPROP_ENUMERATE)) {
+      !JS_DefineProperty(cx, closure, "promise", promiseValue,
+                         JSPROP_ENUMERATE)) {
     return false;
   }
 
@@ -337,18 +342,19 @@ bool ModuleLoader::DynamicImportDelayFulfilled(JSContext* cx, unsigned argc,
 
   RootedValue referencingPrivate(cx);
   RootedValue moduleRequestValue(cx);
-  RootedValue payload(cx);
+  RootedValue promiseValue(cx);
   if (!JS_GetProperty(cx, closure, "referencingPrivate", &referencingPrivate) ||
       !JS_GetProperty(cx, closure, "moduleRequest", &moduleRequestValue) ||
-      !JS_GetProperty(cx, closure, "payload", &payload)) {
+      !JS_GetProperty(cx, closure, "promise", &promiseValue)) {
     return false;
   }
 
   RootedObject moduleRequest(cx, &moduleRequestValue.toObject());
+  RootedObject promise(cx, &promiseValue.toObject());
 
   ShellContext* scx = GetShellContext(cx);
   return scx->moduleLoader->doDynamicImport(cx, referencingPrivate,
-                                            moduleRequest, payload);
+                                            moduleRequest, promise);
 }
 
 bool ModuleLoader::DynamicImportDelayRejected(JSContext* cx, unsigned argc,
@@ -359,36 +365,43 @@ bool ModuleLoader::DynamicImportDelayRejected(JSContext* cx, unsigned argc,
 bool ModuleLoader::doDynamicImport(JSContext* cx,
                                    JS::HandleValue referencingPrivate,
                                    JS::HandleObject moduleRequest,
-                                   JS::HandleValue payload) {
+                                   JS::HandleObject promise) {
   // Exceptions during dynamic import are handled by calling
   // FinishLoadingImportedModule with a pending exception on the context.
   Rooted<JSLinearString*> path(cx,
                                resolve(cx, moduleRequest, referencingPrivate));
   if (!path) {
     return JS::FinishLoadingImportedModuleFailedWithPendingException(cx,
-                                                                     payload);
+                                                                     promise);
   }
 
   RootedObject module(cx, loadAndParse(cx, path, moduleRequest));
   if (!module) {
     return JS::FinishLoadingImportedModuleFailedWithPendingException(cx,
-                                                                     payload);
+                                                                     promise);
   }
 
-  RootedValue hostDefined(cx, ObjectValue(*module));
-  if (!JS::LoadRequestedModules(cx, module, hostDefined, LoadResolved,
-                                LoadRejected)) {
+  if (!JS::LoadRequestedModules(
+          cx, module, UndefinedHandleValue,
+          [&module](JSContext* cx, JS::Handle<JS::Value> val) {
+            return JS::ModuleLink(cx, module);
+          },
+          [](JSContext* cx, JS::Handle<JS::Value> val,
+             Handle<JS::Value> error) {
+            JS_SetPendingException(cx, error);
+            return true;
+          })) {
     return JS::FinishLoadingImportedModuleFailedWithPendingException(cx,
-                                                                     payload);
+                                                                     promise);
   }
 
   if (JS_IsExceptionPending(cx)) {
     return JS::FinishLoadingImportedModuleFailedWithPendingException(cx,
-                                                                     payload);
+                                                                     promise);
   }
 
   return JS::FinishLoadingImportedModule(cx, nullptr, referencingPrivate,
-                                         moduleRequest, payload, module, false);
+                                         moduleRequest, promise, module, false);
 }
 
 JSLinearString* ModuleLoader::resolve(JSContext* cx,

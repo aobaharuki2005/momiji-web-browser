@@ -505,9 +505,10 @@ using VisitedModuleSet =
 // The fields of a GraphLoadingState Record, as described in:
 // https://tc39.es/ecma262/#graphloadingstate-record
 struct GraphLoadingStateRecord {
-  GraphLoadingStateRecord() = default;
-  GraphLoadingStateRecord(JS::LoadModuleResolvedCallback resolved,
-                          JS::LoadModuleRejectedCallback rejected);
+  explicit GraphLoadingStateRecord(JSContext* cx);
+  GraphLoadingStateRecord(JSContext* cx,
+                          JS::LoadModuleResolvedCallback&& resolved,
+                          JS::LoadModuleRejectedCallback&& rejected);
 
   void trace(JSTracer* trc);
 
@@ -534,8 +535,8 @@ class GraphLoadingStateRecordObject : public NativeObject {
 
   [[nodiscard]] static GraphLoadingStateRecordObject* create(
       JSContext* cx, bool isLoading, uint32_t pendingModulesCount,
-      JS::LoadModuleResolvedCallback resolved,
-      JS::LoadModuleRejectedCallback rejected, Handle<Value> hostDefined);
+      JS::LoadModuleResolvedCallback&& resolved,
+      JS::LoadModuleRejectedCallback&& rejected, Handle<Value> hostDefined);
 
   [[nodiscard]] static GraphLoadingStateRecordObject* create(
       JSContext* cx, bool isLoading, uint32_t pendingModulesCount,
@@ -568,6 +569,50 @@ JSObject* GetOrCreateModuleMetaObject(JSContext* cx, HandleObject module);
 
 JSObject* StartDynamicModuleImport(JSContext* cx, HandleScript script,
                                    HandleValue specifier, HandleValue options);
+
+bool OnModuleEvaluationFailure(JSContext* cx, HandleObject evaluationPromise,
+                               JS::ModuleErrorBehaviour errorBehaviour);
+
+bool FinishDynamicModuleImport(JSContext* cx, HandleValue contextValue,
+                               HandleObject evaluationPromise);
+
+bool LoadRequestedModules(JSContext* cx, Handle<ModuleObject*> module,
+                          HandleValue hostDefined,
+                          JS::LoadModuleResolvedCallback&& resolved,
+                          JS::LoadModuleRejectedCallback&& rejected);
+
+bool LoadRequestedModules(JSContext* cx, Handle<ModuleObject*> module,
+                          HandleValue hostDefined,
+                          MutableHandle<JSObject*> promiseOut);
+
+bool ContinueLoadingImportedModule(JSContext* cx, Handle<Value> statePrivate,
+                                   Handle<JSObject*> result,
+                                   Handle<Value> error);
+
+bool FinishLoadingImportedModule(JSContext* cx, Handle<JSObject*> referrer,
+                                 HandleValue referencingPrivate,
+                                 Handle<JSObject*> moduleRequest,
+                                 HandleValue statePrivate,
+                                 Handle<JSObject*> result);
+
+bool FinishLoadingImportedModule(JSContext* cx, Handle<JSObject*> referrer,
+                                 HandleValue referencingPrivate,
+                                 Handle<JSObject*> moduleRequest,
+                                 Handle<JSObject*> promise,
+                                 Handle<JSObject*> result, bool usePromise);
+
+bool FinishLoadingImportedModuleFailed(JSContext* cx, HandleValue statePrivate,
+                                       HandleValue error);
+
+bool FinishLoadingImportedModuleFailed(JSContext* cx, Handle<JSObject*> promise,
+                                       HandleValue error);
+bool FinishLoadingImportedModuleFailedWithPendingException(
+    JSContext* cx, Handle<JSObject*> promise);
+
+bool ContinueDynamicImport(JSContext* cx, Handle<Value> referencingPrivate,
+                           Handle<JSObject*> moduleRequest,
+                           Handle<JSObject*> promise, Handle<JSObject*> result,
+                           bool usePromise);
 
 }  // namespace js
 

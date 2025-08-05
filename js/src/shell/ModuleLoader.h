@@ -29,7 +29,8 @@ class ModuleLoader {
   static bool LoadImportedModule(JSContext* cx, JS::Handle<JSObject*> referrer,
                                  HandleValue referencingPrivate,
                                  HandleObject moduleRequest,
-                                 HandleValue payload);
+                                 HandleValue statePrivate,
+                                 HandleObject promise);
 
   static bool GetImportMetaProperties(JSContext* cx, HandleValue privateValue,
                                       HandleObject metaObject);
@@ -41,15 +42,13 @@ class ModuleLoader {
                                          Value* vp);
 
   bool loadAndExecute(JSContext* cx, HandleString path,
-                      HandleObject moduleRequestArg, MutableHandleValue rval);
+                      HandleObject moduleRequestArg, MutableHandleValue);
   bool loadAndExecute(JSContext* cx, HandleObject module,
                       MutableHandleValue rval);
-  static bool LoadResolved(JSContext* cx, HandleValue hostDefined);
-  static bool LoadRejected(JSContext* cx, HandleValue hostDefined,
-                           HandleValue error);
   bool loadImportedModule(JSContext* cx, HandleObject referrer,
                           HandleValue referencingPrivate,
-                          HandleObject moduleRequest, HandleValue payload);
+                          HandleObject moduleRequest, HandleValue state,
+                          HandleObject promise);
   bool populateImportMeta(JSContext* cx, HandleValue privateValue,
                           HandleObject metaObject);
   bool importMetaResolve(JSContext* cx,
@@ -57,9 +56,9 @@ class ModuleLoader {
                          JS::Handle<JSString*> specifier,
                          JS::MutableHandle<JSString*> urlOut);
   bool dynamicImport(JSContext* cx, HandleValue referencingPrivate,
-                     HandleObject moduleRequest, HandleValue payload);
+                     HandleObject moduleRequest, HandleObject promise);
   bool doDynamicImport(JSContext* cx, HandleValue referencingPrivate,
-                       HandleObject moduleRequest, HandleValue payload);
+                       HandleObject moduleRequest, HandleObject promise);
   JSObject* loadAndParse(JSContext* cx, HandleString path,
                          HandleObject moduleRequestArg);
   bool lookupModuleInRegistry(JSContext* cx, JS::ModuleType moduleType,

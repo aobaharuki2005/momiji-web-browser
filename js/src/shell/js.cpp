@@ -5996,17 +5996,6 @@ static bool ClearModules(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool ModuleLoadResolved(JSContext* cx, HandleValue hostDefined) {
-  RootedObject module(cx, &hostDefined.toObject());
-  return JS::ModuleLink(cx, module);
-}
-
-static bool ModuleLoadRejected(JSContext* cx, HandleValue hostDefined,
-                               HandleValue error) {
-  JS_SetPendingException(cx, error);
-  return false;
-}
-
 static bool ModuleLink(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -6029,9 +6018,20 @@ static bool ModuleLink(JSContext* cx, unsigned argc, Value* vp) {
                                object->as<ShellModuleObjectWrapper>().get());
 
   // TODO: Bug 1968904: Update ModuleLink
-  RootedValue hostDefined(cx, ObjectValue(*module));
-  if (!JS::LoadRequestedModules(cx, module, hostDefined, ModuleLoadResolved,
-                                ModuleLoadRejected)) {
+  if (!JS::LoadRequestedModules(
+          cx, module, UndefinedHandleValue,
+          [&module](JSContext* cx, JS::Handle<JS::Value> val) {
+            if (!JS::ModuleLink(cx, module)) {
+              return false;
+            }
+
+            return true;
+          },
+          [](JSContext* cx, JS::Handle<JS::Value> val,
+             Handle<JS::Value> error) {
+            JS_SetPendingException(cx, error);
+            return true;
+          })) {
     return false;
   }
 

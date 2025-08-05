@@ -70,13 +70,14 @@ enum class ModuleType : uint32_t {
  *  - Each time the hook is called with the same (referrer, referencingPrivate)
  *    pair, then it must call FinishLoadingImportedModule with the same result
  *    each time.
- *  - The operation must treat the |payload| argument as an opaque
- *    value to be passed through to FinishLoadingImportedModule.
+ *  - The operation must treat _statePrivate_ and _promise_ arguments as opaque
+ *    values to be passed through to FinishLoadingImportedModule.
  */
 using ModuleLoadHook = bool (*)(JSContext* cx, Handle<JSObject*> referrer,
                                 Handle<Value> referencingPrivate,
                                 Handle<JSObject*> moduleRequest,
-                                Handle<Value> payload);
+                                Handle<Value> statePrivate,
+                                Handle<JSObject*> promise);
 
 /**
  * Get the HostLoadImportedModule hook for the runtime.
@@ -88,11 +89,10 @@ extern JS_PUBLIC_API ModuleLoadHook GetModuleLoadHook(JSRuntime* rt);
  */
 extern JS_PUBLIC_API void SetModuleLoadHook(JSRuntime* rt, ModuleLoadHook func);
 
-using LoadModuleResolvedCallback = bool (*)(JSContext* cx,
-                                            JS::Handle<JS::Value>);
-using LoadModuleRejectedCallback = bool (*)(JSContext* cx,
-                                            JS::Handle<JS::Value> hostDefined,
-                                            Handle<JS::Value> error);
+using LoadModuleResolvedCallback =
+    std::function<bool(JSContext* cx, JS::Handle<JS::Value> hostDefined)>;
+using LoadModuleRejectedCallback = std::function<bool(
+    JSContext* cx, JS::Handle<JS::Value> hostDefined, Handle<JS::Value> error)>;
 
 /**
  * https://tc39.es/ecma262/#sec-LoadRequestedModules
@@ -106,7 +106,8 @@ using LoadModuleRejectedCallback = bool (*)(JSContext* cx,
  */
 extern JS_PUBLIC_API bool LoadRequestedModules(
     JSContext* cx, Handle<JSObject*> module, Handle<Value> hostDefined,
-    LoadModuleResolvedCallback resolved, LoadModuleRejectedCallback rejected);
+    LoadModuleResolvedCallback&& resolved,
+    LoadModuleRejectedCallback&& rejected);
 
 extern JS_PUBLIC_API bool LoadRequestedModules(
     JSContext* cx, Handle<JSObject*> module, Handle<Value> hostDefined,
@@ -154,17 +155,23 @@ extern JS_PUBLIC_API void SetModuleMetadataHook(JSRuntime* rt,
  */
 extern JS_PUBLIC_API bool FinishLoadingImportedModule(
     JSContext* cx, Handle<JSObject*> referrer, Handle<Value> referencingPrivate,
-    Handle<JSObject*> moduleRequest, Handle<Value> payload,
+    Handle<JSObject*> moduleRequest, Handle<Value> statePrivate,
+    Handle<JSObject*> result);
+
+extern JS_PUBLIC_API bool FinishLoadingImportedModule(
+    JSContext* cx, Handle<JSObject*> referrer, Handle<Value> referencingPrivate,
+    Handle<JSObject*> moduleRequest, Handle<JSObject*> promise,
     Handle<JSObject*> result, bool usePromise);
 
 /**
  * Overloaded version of FinishLoadingImportedModule for error handling.
  */
 extern JS_PUBLIC_API bool FinishLoadingImportedModuleFailed(
-    JSContext* cx, Handle<Value> payload, Handle<Value> error);
+    JSContext* cx, Handle<Value> statePrivate, Handle<JSObject*> promise,
+    Handle<Value> error);
 
 extern JS_PUBLIC_API bool FinishLoadingImportedModuleFailedWithPendingException(
-    JSContext* cx, Handle<Value> payload);
+    JSContext* cx, Handle<JSObject*> promise);
 
 /**
  * Parse the given source buffer as a module in the scope of the current global

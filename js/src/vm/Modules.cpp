@@ -36,9 +36,8 @@
 #include "vm/List.h"                    // ListObject
 #include "vm/Runtime.h"                 // JSRuntime
 
-#include "builtin/HandlerFunction-inl.h"  // js::ExtraValueFromHandler, js::NewHandler{,WithExtraValue}, js::TargetFromHandler
-#include "vm/JSAtomUtils-inl.h"           // AtomToId
-#include "vm/JSContext-inl.h"             // JSContext::{c,releaseC}heck
+#include "vm/JSAtomUtils-inl.h"  // AtomToId
+#include "vm/JSContext-inl.h"    // JSContext::{c,releaseC}heck
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
@@ -55,14 +54,9 @@ static bool ContinueModuleLoading(JSContext* cx,
                                   Handle<GraphLoadingStateRecordObject*> state,
                                   Handle<JSObject*> moduleCompletion,
                                   Handle<Value> error);
-static bool TryStartDynamicModuleImport(JSContext* cx, HandleScript script,
-                                        HandleValue specifierArg,
-                                        HandleValue optionsArg,
-                                        HandleObject promise);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Public API
-
 JS_PUBLIC_API JS::ModuleLoadHook JS::GetModuleLoadHook(JSRuntime* rt) {
   AssertHeapIsIdle();
 
@@ -88,99 +82,51 @@ JS_PUBLIC_API void JS::SetModuleMetadataHook(JSRuntime* rt,
   rt->moduleMetadataHook = func;
 }
 
-// https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
 JS_PUBLIC_API bool JS::FinishLoadingImportedModule(
     JSContext* cx, Handle<JSObject*> referrer, Handle<Value> referencingPrivate,
-    Handle<JSObject*> moduleRequest, Handle<Value> payload,
+    Handle<JSObject*> moduleRequest, Handle<Value> statePrivate,
+    Handle<JSObject*> result) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(referencingPrivate);
+
+  return js::FinishLoadingImportedModule(cx, referrer, referencingPrivate,
+                                         moduleRequest, statePrivate, result);
+}
+
+JS_PUBLIC_API bool JS::FinishLoadingImportedModule(
+    JSContext* cx, Handle<JSObject*> referrer, Handle<Value> referencingPrivate,
+    Handle<JSObject*> moduleRequest, Handle<JSObject*> promise,
     Handle<JSObject*> result, bool usePromise) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->check(referrer, referencingPrivate, moduleRequest, payload, result);
+  cx->check(referencingPrivate);
 
-  if (referrer) {
-    // We currently only pass module referrers, not script or realm
-    // referrers. |loadedModules| is only required to be stored on modules.
-
-    // Step 1. If result is a normal completion, then
-    // Step 1.a. If referrer.[[LoadedModules]] contains a Record whose
-    //           [[Specifier]] is specifier, then
-    LoadedModuleMap& loadedModules =
-        referrer->as<ModuleObject>().loadedModules();
-    if (auto record = loadedModules.lookup(moduleRequest)) {
-      //  Step 1.a.i. Assert: That Record's [[Module]] is result.[[Value]].
-      MOZ_ASSERT(record->value() == result);
-    } else {
-      // Step 1.b. Else, append the Record { moduleRequest.[[Specifer]],
-      //           [[Attributes]]: moduleRequest.[[Attributes]],
-      //           [[Module]]: result.[[Value]] } to referrer.[[LoadedModules]].
-      if (!loadedModules.putNew(moduleRequest, &result->as<ModuleObject>())) {
-        ReportOutOfMemory(cx);
-        return FinishLoadingImportedModuleFailedWithPendingException(cx,
-                                                                     payload);
-      }
-    }
-  }
-
-  // Step 2. If payload is a GraphLoadingState Record, then
-  // Step 2.a. Perform ContinueModuleLoading(payload, result).
-  JSObject* object = &payload.toObject();
-  if (object->is<GraphLoadingStateRecordObject>()) {
-    return js::ContinueLoadingImportedModule(cx, payload, result,
-                                             UndefinedHandleValue);
-  }
-
-  // Step 3. Else,
-  // Step 3.a. Perform ContinueDynamicImport(payload, result).
-  MOZ_ASSERT(object->is<PromiseObject>());
-  Rooted<JSObject*> promise(cx, &object->as<PromiseObject>());
-  return js::ContinueDynamicImport(cx, referencingPrivate, moduleRequest,
-                                   promise, result, usePromise);
+  return js::FinishLoadingImportedModule(cx, referrer, referencingPrivate,
+                                         moduleRequest, promise, result,
+                                         usePromise);
 }
 
-// https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
-// Failure path where |result| is a throw completion, supplied as |error|.
 JS_PUBLIC_API bool JS::FinishLoadingImportedModuleFailed(
-    JSContext* cx, Handle<Value> payloadArg, Handle<Value> error) {
+    JSContext* cx, Handle<Value> statePrivate, Handle<JSObject*> promise,
+    Handle<Value> error) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->check(payloadArg, error);
-  MOZ_ASSERT(!JS_IsExceptionPending(cx));
-
-  // Step 2. If payload is a GraphLoadingState Record, then
-  // Step 2.a. Perform ContinueModuleLoading(payload, result).
-  JSObject* payload = &payloadArg.toObject();
-  if (payload->is<GraphLoadingStateRecordObject>()) {
-    return js::ContinueLoadingImportedModule(cx, payloadArg, nullptr, error);
+  if (!statePrivate.isUndefined()) {
+    cx->check(statePrivate, error);
+    return js::FinishLoadingImportedModuleFailed(cx, statePrivate, error);
   }
 
-  // Step 3. Else,
-  // Step 3.a. Perform ContinueDynamicImport(payload, result).
-  // ContinueDynamicImport:
-  // Step 1. If moduleCompletion is an abrupt completion, then
-  // Step 1. a. Perform ! Call(promiseCapability.[[Reject]], undefined,
-  //            moduleCompletion.[[Value]]).
-  Rooted<PromiseObject*> promise(cx, &payload->as<PromiseObject>());
-  return PromiseObject::reject(cx, promise, error);
+  cx->check(promise);
+  return js::FinishLoadingImportedModuleFailed(cx, promise, error);
 }
 
-// https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
-// Failure path where |result| is a throw completion, set as the pending
-// exception.
 JS_PUBLIC_API bool JS::FinishLoadingImportedModuleFailedWithPendingException(
-    JSContext* cx, Handle<Value> payload) {
+    JSContext* cx, Handle<JSObject*> promise) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->check(payload);
-  MOZ_ASSERT(JS_IsExceptionPending(cx));
-
-  RootedValue error(cx);
-  if (!cx->getPendingException(&error)) {
-    MOZ_ASSERT(cx->isThrowingOutOfMemory());
-    MOZ_ALWAYS_TRUE(cx->getPendingException(&error));
-  }
-  cx->clearPendingException();
-
-  return FinishLoadingImportedModuleFailed(cx, payload, error);
+  cx->check(promise);
+  return js::FinishLoadingImportedModuleFailedWithPendingException(cx, promise);
 }
 
 template <typename Unit>
@@ -307,14 +253,14 @@ JS_PUBLIC_API bool JS::ModuleLink(JSContext* cx, Handle<JSObject*> moduleArg) {
 
 JS_PUBLIC_API bool JS::LoadRequestedModules(
     JSContext* cx, Handle<JSObject*> moduleArg, Handle<Value> hostDefined,
-    JS::LoadModuleResolvedCallback resolved,
-    JS::LoadModuleRejectedCallback rejected) {
+    JS::LoadModuleResolvedCallback&& resolved,
+    JS::LoadModuleRejectedCallback&& rejected) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->releaseCheck(moduleArg);
 
   return js::LoadRequestedModules(cx, moduleArg.as<ModuleObject>(), hostDefined,
-                                  resolved, rejected);
+                                  std::move(resolved), std::move(rejected));
 }
 
 JS_PUBLIC_API bool JS::LoadRequestedModules(
@@ -777,7 +723,7 @@ static void ThrowUnexpectedModuleStatus(JSContext* cx, ModuleStatus status) {
 static bool HostLoadImportedModule(
     JSContext* cx, Handle<ModuleObject*> referrer,
     Handle<JSObject*> moduleRequest,
-    Handle<GraphLoadingStateRecordObject*> state) {
+    Handle<GraphLoadingStateRecordObject*> payload) {
   JS::ModuleLoadHook moduleLoadHook = cx->runtime()->moduleLoadHook;
   if (!moduleLoadHook) {
     JS_ReportErrorASCII(cx, "Module load hook not set");
@@ -787,9 +733,9 @@ static bool HostLoadImportedModule(
   MOZ_ASSERT(referrer);
   MOZ_ASSERT(moduleRequest);
   Rooted<Value> referencingPrivate(cx, JS::GetModulePrivate(referrer));
-  RootedValue payload(cx, ObjectValue(*state));
+  RootedValue payloadPrivate(cx, ObjectValue(*payload));
   return moduleLoadHook(cx, referrer, referencingPrivate, moduleRequest,
-                        payload);
+                        payloadPrivate, nullptr);
 }
 
 static bool ModuleResolveExportImpl(JSContext* cx, Handle<ModuleObject*> module,
@@ -1577,6 +1523,72 @@ static bool ContinueModuleLoading(JSContext* cx,
   return state->rejected(cx, hostDefined, error);
 }
 
+// https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
+// Succeeded version
+bool js::FinishLoadingImportedModule(JSContext* cx, Handle<JSObject*> referrer,
+                                     Handle<Value> referencingPrivate,
+                                     Handle<JSObject*> moduleRequest,
+                                     Handle<Value> statePrivate,
+                                     Handle<JSObject*> result) {
+  // Impl note: Currently this is called when a static import is finished.
+  MOZ_ASSERT(referrer);
+  Rooted<ModuleObject*> mod(cx, &referrer->as<ModuleObject>());
+  auto& loadedModules = mod->loadedModules();
+
+  // Step 1. If result is a normal completion, then
+  // Step 1.a. If referrer.[[LoadedModules]] contains a Record whose
+  //           [[Specifier]] is specifier, then
+  if (auto record = loadedModules.lookup(moduleRequest)) {
+    //  Step 1.a.i. Assert: That Record's [[Module]] is result.[[Value]].
+    MOZ_ASSERT(record->value() == result);
+  } else {
+    // Step 1.b. Else, append the Record { moduleRequest.[[Specifer]],
+    //           [[Attributes]]: moduleRequest.[[Attributes]],
+    //           [[Module]]: result.[[Value]] } to referrer.[[LoadedModules]].
+    if (!loadedModules.putNew(moduleRequest, &result->as<ModuleObject>())) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+  }
+
+  return js::ContinueLoadingImportedModule(cx, statePrivate, result,
+                                           UndefinedHandleValue);
+}
+
+// For Dynamic import
+bool js::FinishLoadingImportedModule(JSContext* cx, Handle<JSObject*> referrer,
+                                     Handle<Value> referencingPrivate,
+                                     Handle<JSObject*> moduleRequest,
+                                     Handle<JSObject*> promise,
+                                     Handle<JSObject*> result,
+                                     bool usePromise) {
+  return js::ContinueDynamicImport(cx, referencingPrivate, moduleRequest,
+                                   promise, result, usePromise);
+}
+
+// https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
+// Failed version
+bool js::FinishLoadingImportedModuleFailed(JSContext* cx,
+                                           Handle<Value> statePrivate,
+                                           Handle<Value> error) {
+  return js::ContinueLoadingImportedModule(cx, statePrivate, nullptr, error);
+}
+
+bool js::FinishLoadingImportedModuleFailed(JSContext* cx,
+                                           Handle<JSObject*> promise,
+                                           Handle<Value> error) {
+  MOZ_ASSERT(promise);
+  JS_SetPendingException(cx, error);
+  return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
+}
+
+bool js::FinishLoadingImportedModuleFailedWithPendingException(
+    JSContext* cx, Handle<JSObject*> promise) {
+  MOZ_ASSERT(JS_IsExceptionPending(cx));
+  MOZ_ASSERT(promise);
+  return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
+}
+
 // The 2nd part of FinishLoadingImportedModule defined in
 // https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
 bool js::ContinueLoadingImportedModule(JSContext* cx,
@@ -1594,8 +1606,8 @@ bool js::ContinueLoadingImportedModule(JSContext* cx,
 // https://tc39.es/ecma262/#sec-LoadRequestedModules
 bool js::LoadRequestedModules(JSContext* cx, Handle<ModuleObject*> module,
                               Handle<Value> hostDefined,
-                              JS::LoadModuleResolvedCallback resolved,
-                              JS::LoadModuleRejectedCallback rejected) {
+                              JS::LoadModuleResolvedCallback&& resolved,
+                              JS::LoadModuleRejectedCallback&& rejected) {
   if (module->hasSyntheticModuleFields()) {
     // Step 1. Return ! PromiseResolve(%Promise%, undefined).
     return resolved(cx, hostDefined);
@@ -1609,8 +1621,9 @@ bool js::LoadRequestedModules(JSContext* cx, Handle<ModuleObject*> module,
   //         [[PendingModulesCount]]: 1, [[Visited]]: « »,
   //         [[PromiseCapability]]: pc, [[HostDefined]]: hostDefined }.
   Rooted<GraphLoadingStateRecordObject*> state(
-      cx, GraphLoadingStateRecordObject::create(cx, true, 1, resolved, rejected,
-                                                hostDefined));
+      cx,
+      GraphLoadingStateRecordObject::create(cx, true, 1, std::move(resolved),
+                                            std::move(rejected), hostDefined));
   if (!state) {
     ReportOutOfMemory(cx);
     return false;
@@ -2502,526 +2515,4 @@ void js::AsyncModuleExecutionRejected(JSContext* cx,
   }
 
   // Step 9. Return unused.
-}
-
-// https://tc39.es/proposal-import-attributes/#sec-evaluate-import-call
-// NOTE: The caller needs to handle the promise.
-static bool EvaluateDynamicImportOptions(
-    JSContext* cx, HandleValue optionsArg,
-    MutableHandle<ImportAttributeVector> attributesArrayArg) {
-  // Step 11. If options is not undefined, then
-  if (optionsArg.isUndefined()) {
-    return true;
-  }
-
-  // Step 11.a. If options is not an Object, then
-  if (!optionsArg.isObject()) {
-    JS_ReportErrorNumberASCII(
-        cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE, "import",
-        "object or undefined", InformalValueTypeName(optionsArg));
-    return false;
-  }
-
-  RootedObject attributesWrapperObject(cx, &optionsArg.toObject());
-  RootedValue attributesValue(cx);
-
-  // Step 11.b. Let attributesObj be Completion(Get(options, "with")).
-  RootedId withId(cx, NameToId(cx->names().with));
-  if (!GetProperty(cx, attributesWrapperObject, attributesWrapperObject, withId,
-                   &attributesValue)) {
-    return false;
-  }
-
-  // Step 11.e. If attributesObj is not undefined, then
-  if (attributesValue.isUndefined()) {
-    return true;
-  }
-
-  // Step 11.e.i. If attributesObj is not an Object, then
-  if (!attributesValue.isObject()) {
-    JS_ReportErrorNumberASCII(
-        cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE, "import",
-        "object or undefined", InformalValueTypeName(attributesValue));
-    return false;
-  }
-
-  // Step 11.e.ii. Let entries be
-  // Completion(EnumerableOwnProperties(attributesObj, key+value)).
-  RootedObject attributesObject(cx, &attributesValue.toObject());
-  RootedIdVector attributes(cx);
-  if (!GetPropertyKeys(cx, attributesObject, JSITER_OWNONLY, &attributes)) {
-    return false;
-  }
-
-  uint32_t numberOfAttributes = attributes.length();
-  if (numberOfAttributes == 0) {
-    return true;
-  }
-
-  // Step 10 (reordered). Let attributes be a new empty List.
-  if (!attributesArrayArg.reserve(numberOfAttributes)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  size_t numberOfValidAttributes = 0;
-
-  // Step 11.e.iv. For each element entry of entries, do
-  RootedId key(cx);
-  RootedValue value(cx);
-  Rooted<JSAtom*> keyAtom(cx);
-  Rooted<JSString*> valueString(cx);
-  for (size_t i = 0; i < numberOfAttributes; i++) {
-    // Step 11.e.ii.iv.1. Let key be ! Get(entry, "0").
-    key = attributes[i];
-
-    // Step 11.e.ii.iv.2. Let value be ! Get(entry, "1").
-    if (!GetProperty(cx, attributesObject, attributesObject, key, &value)) {
-      return false;
-    }
-
-    // Step 11.e.ii.iv.3. If key is a String, then
-    if (key.isString()) {
-      // Step 11.f (reordered). If AllImportAttributesSupported(attributes) is
-      // false, then
-      //
-      // Note: This should be driven by a host hook
-      // (HostGetSupportedImportAttributes), however the infrastructure of said
-      // host hook is deeply unclear, and so right now embedders will not have
-      // the ability to alter or extend the set of supported attributes.
-      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1840723.
-      bool supported = key.isAtom(cx->names().type);
-      if (!supported) {
-        UniqueChars printableKey = AtomToPrintableString(cx, key.toAtom());
-        if (!printableKey) {
-          return false;
-        }
-        JS_ReportErrorNumberASCII(
-            cx, GetErrorMessage, nullptr,
-            JSMSG_IMPORT_ATTRIBUTES_DYNAMIC_IMPORT_UNSUPPORTED_ATTRIBUTE,
-            printableKey.get());
-        return false;
-      }
-
-      // Step 10.d.v.3.a. If value is not a String, then
-      if (!value.isString()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_NOT_EXPECTED_TYPE, "import", "string",
-                                  InformalValueTypeName(value));
-        return false;
-      }
-
-      // Step 10.d.v.3.b. Append the ImportAttribute Record { [[Key]]: key,
-      // [[Value]]: value } to attributes.
-      keyAtom = key.toAtom();
-      valueString = value.toString();
-      attributesArrayArg.infallibleEmplaceBack(keyAtom, valueString);
-      ++numberOfValidAttributes;
-    }
-  }
-
-  if (numberOfValidAttributes == 0) {
-    return true;
-  }
-
-  // Step 10.g (skipped). Sort attributes according to the lexicographic order
-  // of their [[Key]] fields, treating the value of each such field as a
-  // sequence of UTF-16 code unit values.
-  //
-  // We only support "type", so we can ignore this.
-
-  return true;
-}
-
-// ShadowRealmImportValue duplicates some of this, so be sure to keep these in
-// sync.
-JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
-                                       HandleValue specifierArg,
-                                       HandleValue optionsArg) {
-  RootedObject promise(cx, JS::NewPromiseObject(cx, nullptr));
-  if (!promise) {
-    return nullptr;
-  }
-
-  if (!TryStartDynamicModuleImport(cx, script, specifierArg, optionsArg,
-                                   promise)) {
-    if (!RejectPromiseWithPendingError(cx, promise.as<PromiseObject>())) {
-      return nullptr;
-    }
-  }
-
-  return promise;
-}
-
-static bool TryStartDynamicModuleImport(JSContext* cx, HandleScript script,
-                                        HandleValue specifierArg,
-                                        HandleValue optionsArg,
-                                        HandleObject promise) {
-  JS::ModuleLoadHook moduleLoadHook = cx->runtime()->moduleLoadHook;
-  if (!moduleLoadHook) {
-    JS_ReportErrorASCII(cx, "Module load hook not set");
-    return false;
-  }
-
-  RootedString specifier(cx, ToString(cx, specifierArg));
-  if (!specifier) {
-    return false;
-  }
-
-  Rooted<JSAtom*> specifierAtom(cx, AtomizeString(cx, specifier));
-  if (!specifierAtom) {
-    return false;
-  }
-
-  Rooted<ImportAttributeVector> attributes(cx);
-  if (!EvaluateDynamicImportOptions(cx, optionsArg, &attributes)) {
-    return false;
-  }
-
-  RootedObject moduleRequest(
-      cx, ModuleRequestObject::create(cx, specifierAtom, attributes));
-  if (!moduleRequest) {
-    return false;
-  }
-
-  RootedValue referencingPrivate(cx, script->sourceObject()->getPrivate());
-  RootedValue payload(cx, ObjectValue(*promise));
-
-  // TODO:
-  // Bug 1968870 : Pass referrer to HostLoadImportedModule in dynamic import
-  //
-  // The host layer is responsible for calling FinishLoadingImportedModule,
-  // regardless of whether it succeeds or fails.
-  std::ignore = moduleLoadHook(cx, /* referrer */ nullptr, referencingPrivate,
-                               moduleRequest, payload);
-  return true;
-}
-
-static bool OnRootModuleRejected(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  HandleValue error = args.get(0);
-
-  ReportExceptionClosure reportExn(error);
-  PrepareScriptEnvironmentAndInvoke(cx, cx->global(), reportExn);
-
-  args.rval().setUndefined();
-  return true;
-};
-
-bool js::OnModuleEvaluationFailure(JSContext* cx,
-                                   HandleObject evaluationPromise,
-                                   JS::ModuleErrorBehaviour errorBehaviour) {
-  if (evaluationPromise == nullptr) {
-    return false;
-  }
-
-  // To allow module evaluation to happen synchronously throw the error
-  // immediately. This assumes that any error will already have caused the
-  // promise to be rejected, and doesn't support top-level await.
-  if (errorBehaviour == JS::ThrowModuleErrorsSync) {
-    JS::PromiseState state = JS::GetPromiseState(evaluationPromise);
-    MOZ_DIAGNOSTIC_ASSERT(state == JS::PromiseState::Rejected ||
-                          state == JS::PromiseState::Fulfilled);
-
-    JS::SetSettledPromiseIsHandled(cx, evaluationPromise);
-    if (state == JS::PromiseState::Fulfilled) {
-      return true;
-    }
-
-    RootedValue error(cx, JS::GetPromiseResult(evaluationPromise));
-    JS_SetPendingException(cx, error);
-    return false;
-  }
-
-  RootedFunction onRejected(
-      cx, NewHandler(cx, OnRootModuleRejected, evaluationPromise));
-  if (!onRejected) {
-    return false;
-  }
-
-  return JS::AddPromiseReactions(cx, evaluationPromise, nullptr, onRejected);
-}
-
-// This is used for |fulfilledClosure| and |rejectedClosure| in
-// https://tc39.es/ecma262/#sec-ContinueDynamicImport
-//
-// It is used to marshal some of the arguments to FinishDynamicModuleImport
-// and pass them through to the promise resolve and reject callbacks. It holds a
-// reference to the referencing private to keep it alive until it is needed.
-class DynamicImportContextObject : public NativeObject {
- public:
-  enum { ReferencingPrivateSlot = 0, PromiseSlot, ModuleSlot, SlotCount };
-
-  static const JSClass class_;
-  static const JSClassOps classOps_;
-
-  [[nodiscard]] static DynamicImportContextObject* create(
-      JSContext* cx, Handle<Value> referencingPrivate,
-      Handle<JSObject*> promise, Handle<JSObject*> module);
-
-  Value referencingPrivate() const;
-  JSObject* promise() const;
-  JSObject* module() const;
-
-  static void clearReferencingPrivate(JSRuntime* runtime,
-                                      DynamicImportContextObject* ic);
-
-  static void finalize(JS::GCContext* gcx, JSObject* obj);
-};
-
-/* static */
-const JSClass DynamicImportContextObject::class_ = {
-    "DynamicImportContextObject",
-    JSCLASS_HAS_RESERVED_SLOTS(DynamicImportContextObject::SlotCount) |
-        JSCLASS_SLOT0_IS_NSISUPPORTS | JSCLASS_FOREGROUND_FINALIZE,
-    &DynamicImportContextObject::classOps_,
-};
-static_assert(DynamicImportContextObject::ReferencingPrivateSlot == 0);
-
-/* static */
-const JSClassOps DynamicImportContextObject::classOps_ = {
-    nullptr,                               // addProperty
-    nullptr,                               // delProperty
-    nullptr,                               // enumerate
-    nullptr,                               // newEnumerate
-    nullptr,                               // resolve
-    nullptr,                               // mayResolve
-    DynamicImportContextObject::finalize,  // finalize
-    nullptr,                               // call
-    nullptr,                               // construct
-    nullptr,                               // trace
-};
-
-/* static */
-DynamicImportContextObject* DynamicImportContextObject::create(
-    JSContext* cx, Handle<Value> referencingPrivate, Handle<JSObject*> promise,
-    Handle<JSObject*> module) {
-  Rooted<DynamicImportContextObject*> self(
-      cx, NewObjectWithGivenProto<DynamicImportContextObject>(cx, nullptr));
-  if (!self) {
-    return nullptr;
-  }
-
-  cx->runtime()->addRefScriptPrivate(referencingPrivate);
-
-  self->initReservedSlot(ReferencingPrivateSlot, referencingPrivate);
-  self->initReservedSlot(PromiseSlot, ObjectValue(*promise));
-  self->initReservedSlot(ModuleSlot, ObjectValue(*module));
-  return self;
-}
-
-Value DynamicImportContextObject::referencingPrivate() const {
-  return getReservedSlot(ReferencingPrivateSlot);
-}
-
-JSObject* DynamicImportContextObject::promise() const {
-  Value value = getReservedSlot(PromiseSlot);
-  if (value.isUndefined()) {
-    return nullptr;
-  }
-
-  return &value.toObject();
-}
-
-JSObject* DynamicImportContextObject::module() const {
-  Value value = getReservedSlot(ModuleSlot);
-  if (value.isUndefined()) {
-    return nullptr;
-  }
-
-  return &value.toObject();
-}
-
-/* static */
-void DynamicImportContextObject::finalize(JS::GCContext* gcx, JSObject* obj) {
-  auto* context = &obj->as<DynamicImportContextObject>();
-  clearReferencingPrivate(gcx->runtime(), context);
-}
-
-/* static */
-void DynamicImportContextObject::clearReferencingPrivate(
-    JSRuntime* runtime, DynamicImportContextObject* context) {
-  Value value = context->referencingPrivate();
-  if (!value.isUndefined()) {
-    context->setReservedSlot(ReferencingPrivateSlot, UndefinedValue());
-    runtime->releaseScriptPrivate(value);
-  }
-}
-
-// This performs the steps for |fulfilledClosure| from
-// https://tc39.es/ecma262/#sec-ContinueDynamicImport step 6.d.
-//
-// With adjustment for Top-level await:
-// https://GitHub.com/tc39/proposal-dynamic-import/pull/71/files
-static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.get(0).isUndefined());
-
-  Rooted<DynamicImportContextObject*> context(
-      cx, ExtraFromHandler<DynamicImportContextObject>(args));
-  auto clearRef = mozilla::MakeScopeExit([&] {
-    DynamicImportContextObject::clearReferencingPrivate(cx->runtime(), context);
-  });
-
-  RootedValue referencingPrivate(cx, context->referencingPrivate());
-
-  Rooted<PromiseObject*> promise(cx, TargetFromHandler<PromiseObject>(args));
-
-  Rooted<ModuleObject*> module(cx, &context->module()->as<ModuleObject>());
-  if (module->status() != ModuleStatus::EvaluatingAsync &&
-      module->status() != ModuleStatus::Evaluated) {
-    JS_ReportErrorASCII(
-        cx, "Unevaluated or errored module returned by module resolve hook");
-    return RejectPromiseWithPendingError(cx, promise);
-  }
-
-  // This is called when |evaluationPromise| is resolved, step 6.f.
-  MOZ_ASSERT_IF(module->hasCyclicModuleFields(),
-                module->getCycleRoot()
-                        ->topLevelCapability()
-                        ->as<PromiseObject>()
-                        .state() == JS::PromiseState::Fulfilled);
-
-  // Step 6.d.i. Let namespace be GetModuleNamespace(module).
-  RootedObject ns(cx, GetOrCreateModuleNamespace(cx, module));
-  if (!ns) {
-    return RejectPromiseWithPendingError(cx, promise);
-  }
-
-  // Step 6.d.ii. Perform ! Call(promiseCapability.[[Resolve]], undefined, «
-  // namespace »).
-  RootedValue value(cx, ObjectValue(*ns));
-  if (!PromiseObject::resolve(cx, promise, value)) {
-    return false;
-  }
-
-  // Step 6.d.iii. Return NormalCompletion(undefined).
-  args.rval().setUndefined();
-  return true;
-};
-
-// This performs the steps for |rejectedClosure| from
-// https://tc39.es/ecma262/#sec-ContinueDynamicImport step 4.
-static bool OnRejectedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  HandleValue error = args.get(0);
-
-  Rooted<DynamicImportContextObject*> context(
-      cx, ExtraFromHandler<DynamicImportContextObject>(args));
-  auto clearRef = mozilla::MakeScopeExit([&] {
-    DynamicImportContextObject::clearReferencingPrivate(cx->runtime(), context);
-  });
-
-  RootedValue referencingPrivate(cx, context->referencingPrivate());
-  Rooted<PromiseObject*> promise(cx, TargetFromHandler<PromiseObject>(args));
-
-  args.rval().setUndefined();
-  return PromiseObject::reject(cx, promise, error);
-};
-
-bool js::FinishDynamicModuleImport(JSContext* cx, HandleValue contextValue,
-                                   HandleObject evaluationPromise) {
-  // If we do not have an evaluation promise or a module request for the module,
-  // we can assume that evaluation has failed or been interrupted -- we can
-  // reject the dynamic module.
-
-  Rooted<DynamicImportContextObject*> context(
-      cx, &contextValue.toObject().as<DynamicImportContextObject>());
-  MOZ_ASSERT(context);
-
-  Rooted<JSObject*> promise(cx, context->promise());
-  if (!evaluationPromise) {
-    return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
-  }
-
-  RootedFunction onResolved(
-      cx, NewHandlerWithExtraValue(cx, OnResolvedDynamicModule, promise,
-                                   contextValue));
-  if (!onResolved) {
-    return false;
-  }
-
-  RootedFunction onRejected(
-      cx, NewHandlerWithExtraValue(cx, OnRejectedDynamicModule, promise,
-                                   contextValue));
-  if (!onRejected) {
-    return false;
-  }
-
-  if (!JS::AddPromiseReactionsIgnoringUnhandledRejection(
-          cx, evaluationPromise, onResolved, onRejected)) {
-    return false;
-  }
-
-  return true;
-}
-
-static bool OnLoadRequestedModulesResolvedImpl(
-    JSContext* cx, Handle<DynamicImportContextObject*> context) {
-  MOZ_ASSERT(context);
-  Rooted<JSObject*> module(cx, context->module());
-  Rooted<JSObject*> promise(cx, context->promise());
-  if (!JS::ModuleLink(cx, module)) {
-    //    b. If link is an abrupt completion, then
-    //      i. Perform ! Call(promiseCapability.[[Reject]], undefined, Â«
-    //      link.[[Value]] Â»). ii. Return unused.
-    return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
-  }
-  MOZ_ASSERT(!JS_IsExceptionPending(cx));
-
-  //    c. Let evaluatePromise be module.Evaluate().
-  JS::Rooted<JS::Value> rval(cx);
-  JS::Rooted<JSObject*> evaluationPromise(cx);
-  mozilla::DebugOnly<bool> ok = JS::ModuleEvaluate(cx, module, &rval);
-  if (rval.isObject()) {
-    evaluationPromise.set(&rval.toObject());
-  }
-  MOZ_ASSERT_IF(ok, !JS_IsExceptionPending(cx));
-
-  Rooted<Value> contextValue(cx, ObjectValue(*context));
-  return FinishDynamicModuleImport(cx, contextValue, evaluationPromise);
-}
-
-// static
-bool OnLoadRequestedModulesResolved(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  Rooted<DynamicImportContextObject*> context(cx);
-  context = static_cast<DynamicImportContextObject*>(
-      &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
-  return OnLoadRequestedModulesResolvedImpl(cx, context);
-}
-
-bool js::ContinueDynamicImport(JSContext* cx, Handle<Value> referencingPrivate,
-                               Handle<JSObject*> moduleRequest,
-                               Handle<JSObject*> promise,
-                               Handle<JSObject*> result, bool usePromise) {
-  MOZ_ASSERT(result);
-  Rooted<DynamicImportContextObject*> context(
-      cx, DynamicImportContextObject::create(cx, referencingPrivate, promise,
-                                             result));
-  if (!context) {
-    return RejectPromiseWithPendingError(cx, promise.as<PromiseObject>());
-  }
-
-  // The module dependencies has been loaded in the host layer, so we only need
-  // to do _linkAndEvaluate_ part defined in the spec.
-  if (usePromise) {
-    JS::Rooted<PromiseObject*> promise(cx, CreatePromiseObjectForAsync(cx));
-    Rooted<Value> contextValue(cx, ObjectValue(*context));
-
-    Rooted<JSFunction*> onResolved(
-        cx, js::NewFunctionWithReserved(cx, OnLoadRequestedModulesResolved, 0,
-                                        0, "resolved"));
-    if (!onResolved) {
-      JS_ReportOutOfMemory(cx);
-      return RejectPromiseWithPendingError(cx, promise);
-    }
-
-    RootedObject resolveFuncObj(cx, JS_GetFunctionObject(onResolved));
-    js::SetFunctionNativeReserved(resolveFuncObj, 0, contextValue);
-    JS::AddPromiseReactions(cx, promise, resolveFuncObj, nullptr);
-    return AsyncFunctionReturned(cx, promise, UndefinedHandleValue);
-  } else {
-    return OnLoadRequestedModulesResolvedImpl(cx, context);
-  }
 }
