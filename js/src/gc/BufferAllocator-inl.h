@@ -134,13 +134,13 @@ inline void* AllocBufferInGC(JS::Zone* zone, size_t bytes, bool nurseryOwned) {
   return zone->bufferAllocator.allocInGC(bytes, nurseryOwned);
 }
 
-inline void* ReallocBuffer(JS::Zone* zone, void* alloc, size_t oldBytes,
-                           size_t newBytes, bool nurseryOwned) {
+inline void* ReallocBuffer(JS::Zone* zone, void* alloc, size_t bytes,
+                           bool nurseryOwned) {
   if (js::oom::ShouldFailWithOOM()) {
     return nullptr;
   }
 
-  return zone->bufferAllocator.realloc(alloc, oldBytes, newBytes, nurseryOwned);
+  return zone->bufferAllocator.realloc(alloc, bytes, nurseryOwned);
 }
 
 inline void FreeBuffer(JS::Zone* zone, void* alloc) {

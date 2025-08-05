@@ -124,8 +124,8 @@ size_t GetGoodPower2AllocSize(size_t requiredBytes);
 size_t GetGoodElementCount(size_t requiredCount, size_t elementSize);
 size_t GetGoodPower2ElementCount(size_t requiredCount, size_t elementSize);
 void* AllocBuffer(JS::Zone* zone, size_t bytes, bool nurseryOwned);
-void* ReallocBuffer(JS::Zone* zone, void* alloc, size_t oldBytes,
-                    size_t newBytes, bool nurseryOwned);
+void* ReallocBuffer(JS::Zone* zone, void* alloc, size_t bytes,
+                    bool nurseryOwned);
 void FreeBuffer(JS::Zone* zone, void* alloc);
 
 // Indicate whether |alloc| is a buffer allocation as opposed to a fixed size GC

@@ -927,14 +927,14 @@ void* js::Nursery::reallocateBuffer(Zone* zone, Cell* cell, void* oldBuffer,
   if (!IsInsideNursery(cell)) {
     MOZ_ASSERT(IsBufferAlloc(oldBuffer));
     MOZ_ASSERT(!IsNurseryOwned(zone, oldBuffer));
-    return ReallocBuffer(zone, oldBuffer, oldBytes, newBytes, false);
+    return ReallocBuffer(zone, oldBuffer, newBytes, false);
   }
 
   if (IsBufferAlloc(oldBuffer)) {
     MOZ_ASSERT(IsNurseryOwned(zone, oldBuffer));
     MOZ_ASSERT(toSpace.mallocedBufferBytes >= oldBytes);
 
-    void* newBuffer = ReallocBuffer(zone, oldBuffer, oldBytes, newBytes, true);
+    void* newBuffer = ReallocBuffer(zone, oldBuffer, newBytes, true);
     if (!newBuffer) {
       return nullptr;
     }
