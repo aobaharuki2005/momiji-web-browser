@@ -316,7 +316,6 @@ export class nsContextMenu {
     }
 
     this.hasTextFragments = context.hasTextFragments;
-    this.textDirectiveTarget = context.textDirectiveTarget;
     this.textFragmentURL = null;
   } // setContext
 
@@ -445,13 +444,8 @@ export class nsContextMenu {
         false
       ) &&
       lazy.STRIP_ON_SHARE_ENABLED &&
-      !(
-        this.inPDFViewer ||
-        this.inFrame ||
-        this.onEditable ||
-        this.browser.currentURI.schemeIs("view-source")
-      ) &&
-      this.textDirectiveTarget;
+      !(this.inPDFViewer || this.inFrame || this.onEditable) &&
+      this.isContentSelected;
     this.showItem("context-copy-link-to-highlight", shouldShow);
     this.showItem("context-copy-clean-link-to-highlight", shouldShow);
 
