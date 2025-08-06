@@ -6,11 +6,12 @@
 #ifndef include_dom_media_ipc_RemoteCDMParent_h
 #define include_dom_media_ipc_RemoteCDMParent_h
 
+#include "mozilla/PRemoteCDMActor.h"
 #include "mozilla/PRemoteCDMParent.h"
 
 namespace mozilla {
 
-class RemoteCDMParent : public PRemoteCDMParent {
+class RemoteCDMParent : public PRemoteCDMParent, public PRemoteCDMActor {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteCDMParent, final);
 
@@ -41,6 +42,10 @@ class RemoteCDMParent : public PRemoteCDMParent {
   virtual mozilla::ipc::IPCResult RecvSetServerCertificate(
       mozilla::Span<uint8_t const> aCertificate,
       SetServerCertificateResolver&& aResolver) = 0;
+
+  // PRemoteCDMActor
+  PRemoteCDMParent* AsPRemoteCDMParent() final { return this; }
+  RemoteMediaIn GetLocation() const final;
 
  protected:
   virtual ~RemoteCDMParent() = default;

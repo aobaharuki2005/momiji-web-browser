@@ -65,7 +65,8 @@ parent:
                        OptionSet options,
                        TextureFactoryIdentifier? identifier,
                        uint64_t? mediaEngineId,
-                       TrackingId? trackingId);
+                       TrackingId? trackingId,
+                       nullable PRemoteCDM cdm);
   async PRemoteEncoder(EncoderConfig config);
   async PRemoteCDM(nsString keySystem);
 

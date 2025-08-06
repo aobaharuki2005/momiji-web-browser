@@ -361,8 +361,9 @@ RemoteMediaManagerChild::CreateAudioDecoder(const CreateDecoderParams& aParams,
       managerThread, __func__,
       [params = CreateDecoderParamsForAsync(aParams), aLocation](bool) {
         auto child = MakeRefPtr<RemoteAudioDecoderChild>(aLocation);
-        MediaResult result = child->InitIPDL(
-            params.AudioConfig(), params.mOptions, params.mMediaEngineId);
+        MediaResult result =
+            child->InitIPDL(params.AudioConfig(), params.mOptions,
+                            params.mMediaEngineId, params.mCDM);
         if (NS_FAILED(result)) {
           return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
               result, __func__);
@@ -439,7 +440,7 @@ RemoteMediaManagerChild::CreateVideoDecoder(const CreateDecoderParams& aParams,
             params.mKnowsCompositor
                 ? Some(params.mKnowsCompositor->GetTextureFactoryIdentifier())
                 : Nothing(),
-            params.mMediaEngineId, params.mTrackingId);
+            params.mMediaEngineId, params.mTrackingId, params.mCDM);
         if (NS_FAILED(result)) {
           return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
               result, __func__);
@@ -886,8 +887,8 @@ PRemoteDecoderChild* RemoteMediaManagerChild::AllocPRemoteDecoderChild(
     const RemoteDecoderInfoIPDL& /* not used */,
     const CreateDecoderParams::OptionSet& aOptions,
     const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
-    const Maybe<uint64_t>& aMediaEngineId,
-    const Maybe<TrackingId>& aTrackingId) {
+    const Maybe<uint64_t>& aMediaEngineId, const Maybe<TrackingId>& aTrackingId,
+    PRemoteCDMChild* aCDM) {
   // RemoteDecoderModule is responsible for creating RemoteDecoderChild
   // classes.
   MOZ_ASSERT(false,

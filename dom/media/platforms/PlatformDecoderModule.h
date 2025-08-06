@@ -18,6 +18,7 @@
 #  include "mozilla/EnumTypeTraits.h"
 #  include "mozilla/MozPromise.h"
 #  include "mozilla/RefPtr.h"
+#  include "mozilla/PRemoteCDMActor.h"
 #  include "mozilla/TaskQueue.h"
 #  include "mozilla/ipc/UtilityMediaService.h"
 #  include "mozilla/layers/KnowsCompositor.h"
@@ -132,6 +133,7 @@ struct CreateDecoderParamsForAsync {
   const RefPtr<layers::ImageContainer> mImageContainer;
   const RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   const RefPtr<GMPCrashHelper> mCrashHelper;
+  const RefPtr<PRemoteCDMActor> mCDM;
   const media::UseNullDecoder mUseNullDecoder;
   const media::WrapperSet mWrappers;
   const TrackInfo::TrackType mType = TrackInfo::kUndefinedTrack;
@@ -163,6 +165,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
         mImageContainer(aParams.mImageContainer),
         mKnowsCompositor(aParams.mKnowsCompositor),
         mCrashHelper(aParams.mCrashHelper),
+        mCDM(aParams.mCDM),
         mUseNullDecoder(aParams.mUseNullDecoder),
         mWrappers(aParams.mWrappers),
         mType(aParams.mType),
@@ -240,6 +243,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
   MediaResult* mError = nullptr;
   layers::KnowsCompositor* mKnowsCompositor = nullptr;
   GMPCrashHelper* mCrashHelper = nullptr;
+  PRemoteCDMActor* mCDM = nullptr;
   media::UseNullDecoder mUseNullDecoder;
   WrapperSet mWrappers;
   TrackInfo::TrackType mType = TrackInfo::kUndefinedTrack;
@@ -258,6 +262,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
   }
   void Set(MediaResult* aError) { mError = aError; }
   void Set(GMPCrashHelper* aCrashHelper) { mCrashHelper = aCrashHelper; }
+  void Set(PRemoteCDMActor* aCDM) { mCDM = aCDM; }
   void Set(UseNullDecoder aUseNullDecoder) {
     mUseNullDecoder = aUseNullDecoder;
   }
@@ -292,6 +297,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
     mError = aParams.mError;
     mKnowsCompositor = aParams.mKnowsCompositor;
     mCrashHelper = aParams.mCrashHelper;
+    mCDM = aParams.mCDM;
     mUseNullDecoder = aParams.mUseNullDecoder;
     mWrappers = aParams.mWrappers;
     mType = aParams.mType;
@@ -322,6 +328,7 @@ struct MOZ_STACK_CLASS SupportDecoderParams final {
       : mConfig(aParams.mConfig),
         mError(aParams.mError),
         mKnowsCompositor(aParams.mKnowsCompositor),
+        mCDM(aParams.mCDM),
         mUseNullDecoder(aParams.mUseNullDecoder),
         mWrappers(aParams.mWrappers),
         mOptions(aParams.mOptions),
@@ -340,6 +347,7 @@ struct MOZ_STACK_CLASS SupportDecoderParams final {
   DecoderDoctorDiagnostics* mDiagnostics = nullptr;
   MediaResult* mError = nullptr;
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
+  PRemoteCDMActor* mCDM = nullptr;
   UseNullDecoder mUseNullDecoder;
   WrapperSet mWrappers;
   OptionSet mOptions = OptionSet(Option::Default);
@@ -351,6 +359,7 @@ struct MOZ_STACK_CLASS SupportDecoderParams final {
     mDiagnostics = aDiagnostics;
   }
   void Set(MediaResult* aError) { mError = aError; }
+  void Set(PRemoteCDMActor* aCDM) { mCDM = aCDM; }
   void Set(media::UseNullDecoder aUseNullDecoder) {
     mUseNullDecoder = aUseNullDecoder;
   }

@@ -37,8 +37,8 @@ class WMFCDMProxy : public CDMProxy {
             const nsAString& aTopLevelOrigin, const nsAString& aName) override;
 
   void CreateSession(uint32_t aCreateSessionToken,
-                     MediaKeySessionType aSessionType, PromiseId aPromiseId,
-                     const nsAString& aInitDataType,
+                     dom::MediaKeySessionType aSessionType,
+                     PromiseId aPromiseId, const nsAString& aInitDataType,
                      nsTArray<uint8_t>& aInitData) override;
 
   void LoadSession(PromiseId aPromiseId, dom::MediaKeySessionType aSessionType,

@@ -226,7 +226,7 @@ void WMFCDMProxy::RejectPromiseWithStateError(PromiseId aId,
 }
 
 void WMFCDMProxy::CreateSession(uint32_t aCreateSessionToken,
-                                MediaKeySessionType aSessionType,
+                                dom::MediaKeySessionType aSessionType,
                                 PromiseId aPromiseId,
                                 const nsAString& aInitDataType,
                                 nsTArray<uint8_t>& aInitData) {

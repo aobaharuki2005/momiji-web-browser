@@ -19,6 +19,7 @@ namespace mozilla {
 class ErrorResult;
 class MediaRawData;
 class ChromiumCDMProxy;
+class RemoteCDMChild;
 #ifdef MOZ_WMF_CDM
 class WMFCDMProxy;
 #endif
@@ -79,7 +80,6 @@ typedef int64_t UnixTime;
 class CDMProxy {
  protected:
   typedef dom::PromiseId PromiseId;
-  typedef dom::MediaKeySessionType MediaKeySessionType;
 
  public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
@@ -96,7 +96,7 @@ class CDMProxy {
   // Calls MediaKeys::OnSessionActivated() when session is created.
   // Assumes ownership of (std::move()s) aInitData's contents.
   virtual void CreateSession(uint32_t aCreateSessionToken,
-                             MediaKeySessionType aSessionType,
+                             dom::MediaKeySessionType aSessionType,
                              PromiseId aPromiseId,
                              const nsAString& aInitDataType,
                              nsTArray<uint8_t>& aInitData) = 0;
@@ -254,6 +254,8 @@ class CDMProxy {
 #ifdef MOZ_WMF_CDM
   virtual WMFCDMProxy* AsWMFCDMProxy() { return nullptr; }
 #endif
+
+  virtual RemoteCDMChild* AsRemoteCDMChild() { return nullptr; }
 
   virtual bool IsHardwareDecryptionSupported() const { return false; }
 

@@ -12,6 +12,7 @@
 #include "ImageContainer.h"
 #include "PDMFactory.h"
 #include "RemoteAudioDecoder.h"
+#include "RemoteCDMParent.h"
 #include "RemoteMediaDataEncoderParent.h"
 #include "RemoteVideoDecoder.h"
 #include "VideoUtils.h"  // for MediaThreadType
@@ -221,11 +222,13 @@ PRemoteDecoderParent* RemoteMediaManagerParent::AllocPRemoteDecoderParent(
     const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
     const CreateDecoderParams::OptionSet& aOptions,
     const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
-    const Maybe<uint64_t>& aMediaEngineId,
-    const Maybe<TrackingId>& aTrackingId) {
+    const Maybe<uint64_t>& aMediaEngineId, const Maybe<TrackingId>& aTrackingId,
+    PRemoteCDMParent* aCDM) {
   RefPtr<TaskQueue> decodeTaskQueue =
       TaskQueue::Create(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
                         "RemoteVideoDecoderParent::mDecodeTaskQueue");
+
+  auto* cdm = static_cast<RemoteCDMParent*>(aCDM);
 
   if (aRemoteDecoderInfo.type() ==
       RemoteDecoderInfoIPDL::TVideoDecoderInfoIPDL) {
@@ -234,13 +237,13 @@ PRemoteDecoderParent* RemoteMediaManagerParent::AllocPRemoteDecoderParent(
     return new RemoteVideoDecoderParent(
         this, decoderInfo.videoInfo(), decoderInfo.framerate(), aOptions,
         aIdentifier, sRemoteMediaManagerParentThread, decodeTaskQueue,
-        aMediaEngineId, aTrackingId);
+        aMediaEngineId, aTrackingId, cdm);
   }
 
   if (aRemoteDecoderInfo.type() == RemoteDecoderInfoIPDL::TAudioInfo) {
     return new RemoteAudioDecoderParent(
         this, aRemoteDecoderInfo.get_AudioInfo(), aOptions,
-        sRemoteMediaManagerParentThread, decodeTaskQueue, aMediaEngineId);
+        sRemoteMediaManagerParentThread, decodeTaskQueue, aMediaEngineId, cdm);
   }
 
   MOZ_CRASH("unrecognized type of RemoteDecoderInfoIPDL union");
