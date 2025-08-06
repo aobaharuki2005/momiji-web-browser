@@ -482,10 +482,9 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
   LOG("ChooseCapability(%s) for mTargetCapability (Reconfigure) --",
       ToString(distanceMode));
 
-  if (mCapability == newCapability && mCalculation == distanceMode) {
-    return NS_OK;
-  }
-
+  const bool capabilityChanged = mCapability != newCapability;
+  DesiredSizeInput input{};
+  double framerate = 0.0;
   {
     MutexAutoLock lock(mMutex);
     // Start() applies mCapability on the device.
@@ -493,9 +492,21 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
     mCalculation = distanceMode;
     mConstraints = Some(c);
     *mPrefs = aPrefs;
+    const int32_t& cw = mCapability.width;
+    const int32_t& ch = mCapability.height;
+    input = {
+        .mConstraints = c,
+        .mCapEngine = mCapEngine,
+        .mInputWidth = cw ? cw : mImageSize.width,
+        .mInputHeight = ch ? ch : mImageSize.height,
+        .mRotation = 0,
+    };
+    framerate = distanceMode == kFeasibility
+                    ? mConstraints->mFrameRate.Get(mCapability.maxFPS)
+                    : mCapability.maxFPS;
   }
 
-  if (mState == kStarted) {
+  if (mState == kStarted && capabilityChanged) {
     nsresult rv = Start();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       nsAutoCString name;
@@ -506,6 +517,19 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
       return NS_ERROR_UNEXPECTED;
     }
   }
+
+  mSettingsUpdatedByFrame->mValue = false;
+  gfx::IntSize dstSize = CalculateDesiredSize(input);
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__, [domSettings = mSettings, updated = mSettingsUpdatedByFrame,
+                 dstSize, framerate]() mutable {
+        if (updated->mValue) {
+          return;
+        }
+        domSettings->mWidth.Value() = dstSize.width;
+        domSettings->mHeight.Value() = dstSize.height;
+        domSettings->mFrameRate.Value() = framerate;
+      }));
 
   return NS_OK;
 }
