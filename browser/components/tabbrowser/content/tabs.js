@@ -2322,6 +2322,7 @@
       let unpinnedRect = window.windowUtils.getBoundsWithoutFlushing(
         this.arrowScrollbox.scrollbox
       );
+      let tabContainerRect = window.windowUtils.getBoundsWithoutFlushing(this);
 
       if (this.pinnedTabsContainer.firstChild) {
         this.pinnedTabsContainer.scrollbox.style.height =
@@ -2363,17 +2364,10 @@
       ).x;
 
       let movingTabsIndex = movingTabs.findIndex(t => t._tPos == tab._tPos);
-      // When the promo card is visible, we need to account for its height
-      // before calculating position. Otherwise, it will appear to "jump" to
-      // the top upon starting the drag.
-      const startingPosition = this.dragToPinPromoCard.shouldRender
-        ? window.windowUtils.getBoundsWithoutFlushing(this.dragToPinPromoCard)
-            .height
-        : 0;
       // Update moving tabs absolute position based on original dragged tab position
       // Moving tabs with a lower index are moved before the dragged tab and moving
       // tabs with a higher index are moved after the dragged tab.
-      let position = startingPosition;
+      let position = 0;
       // Position moving tabs after dragged tab
       for (let movingTab of movingTabs.slice(movingTabsIndex)) {
         movingTab = elementToMove(movingTab);
@@ -2395,10 +2389,7 @@
           position += rect.width;
         } else if (this.verticalMode) {
           movingTab.style.top =
-            rect.top -
-            (gBrowser.pinnedTabCount > 0 ? pinnedRect.top : unpinnedRect.top) +
-            position +
-            "px";
+            rect.top - tabContainerRect.top + position + "px";
           position += rect.height;
         } else if (this.#rtlMode) {
           movingTab.style.left =
@@ -2412,11 +2403,11 @@
       }
       // Reset position so we can next handle moving tabs before the dragged tab
       if (this.verticalMode) {
-        position = startingPosition - rect.height;
+        position = -rect.height;
       } else if (this.#rtlMode) {
-        position = 0 + rect.width;
+        position = rect.width;
       } else {
-        position = 0 - rect.width;
+        position = -rect.width;
       }
       // Position moving tabs before dragged tab
       for (let movingTab of movingTabs.slice(0, movingTabsIndex).reverse()) {
@@ -2424,10 +2415,7 @@
         movingTab.setAttribute("dragtarget", "");
         if (this.verticalMode) {
           movingTab.style.top =
-            rect.top -
-            (gBrowser.pinnedTabCount > 0 ? pinnedRect.top : unpinnedRect.top) +
-            position +
-            "px";
+            rect.top - tabContainerRect.top + position + "px";
           position -= rect.height;
         } else if (this.#rtlMode) {
           movingTab.style.left =
