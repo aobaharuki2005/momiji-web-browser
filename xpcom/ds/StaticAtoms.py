@@ -715,6 +715,7 @@ STATIC_ATOMS = [
     Atom("multiple", "multiple"),
     Atom("muted", "muted"),
     Atom("name", "name"),
+    Atom("native", "native"),
     Atom("_namespace", "namespace"),
     Atom("namespaceAlias", "namespace-alias"),
     Atom("namespaceUri", "namespace-uri"),

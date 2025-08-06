@@ -2909,15 +2909,8 @@ static void LoadNativeMenus(Document* aDoc, nsIWidget* aParentWindow) {
 
   // Find the menubar tag (if there is more than one, we ignore all but
   // the first).
-  nsCOMPtr<nsINodeList> menubarElements = aDoc->GetElementsByTagNameNS(
-      u"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"_ns,
-      u"menubar"_ns);
-
-  RefPtr<Element> menubar;
-  if (menubarElements) {
-    menubar = Element::FromNodeOrNull(menubarElements->Item(0));
-  }
-
+  RefPtr<Element> menubar =
+      aDoc->QuerySelector("menubar:not([nonnative])"_ns, IgnoreErrors());
   widget::NativeMenuSupport::CreateNativeMenuBar(aParentWindow, menubar);
 
   if (sWaitingForHiddenWindowToLoadNativeMenus) {

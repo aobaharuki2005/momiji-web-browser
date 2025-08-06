@@ -4103,9 +4103,6 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
                        nsCSSFrameConstructor::FindXULLabelOrDescriptionData),
       SIMPLE_TAG_CHAIN(description,
                        nsCSSFrameConstructor::FindXULLabelOrDescriptionData),
-#ifdef XP_MACOSX
-      SIMPLE_TAG_CHAIN(menubar, nsCSSFrameConstructor::FindXULMenubarData),
-#endif /* XP_MACOSX */
       SIMPLE_TAG_CREATE(iframe, NS_NewSubDocumentFrame),
       SIMPLE_TAG_CREATE(editor, NS_NewSubDocumentFrame),
       SIMPLE_TAG_CREATE(browser, NS_NewSubDocumentFrame),
@@ -4143,26 +4140,6 @@ nsCSSFrameConstructor::FindXULLabelOrDescriptionData(const Element& aElement,
       NS_NewMiddleCroppingLabelFrame);
   return &sMiddleCroppingData;
 }
-
-#ifdef XP_MACOSX
-/* static */
-const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindXULMenubarData(const Element& aElement,
-                                          ComputedStyle&) {
-  if (aElement.OwnerDoc()->IsInChromeDocShell()) {
-    BrowsingContext* bc = aElement.OwnerDoc()->GetBrowsingContext();
-    bool isRoot = bc && !bc->GetParent();
-    if (isRoot) {
-      // This is the root.  Suppress the menubar, since on Mac
-      // window menus are not attached to the window.
-      static constexpr FrameConstructionData sSuppressData = SUPPRESS_FCDATA();
-      return &sSuppressData;
-    }
-  }
-
-  return nullptr;
-}
-#endif /* XP_MACOSX */
 
 already_AddRefed<ComputedStyle>
 nsCSSFrameConstructor::BeginBuildingScrollContainerFrame(
