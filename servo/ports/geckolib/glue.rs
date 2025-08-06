@@ -132,17 +132,16 @@ use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::container_rule::ContainerSizeQuery;
 use style::stylesheets::import_rule::{ImportLayer, ImportSheet};
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframesStepValue};
+use style::stylesheets::scope_rule::{ImplicitScopeRoot, ScopeSubjectMap};
 use style::stylesheets::supports_rule::parse_condition_or_declaration;
 use style::stylesheets::{
-    AllowImportRules, ContainerRule, CounterStyleRule, CssRule, CssRuleType, CssRuleTypes,
-    CssRules, CssRulesHelpers, DocumentRule, FontFaceRule, FontFeatureValuesRule,
-    FontPaletteValuesRule, ImportRule, KeyframesRule, LayerBlockRule, LayerStatementRule,
-    MarginRule, MediaRule, NamespaceRule, NestedDeclarationsRule, Origin, OriginSet,
-    PagePseudoClassFlags, PageRule, PositionTryRule, PropertyRule, SanitizationData,
-    SanitizationKind, ScopeRule, StartingStyleRule, StyleRule, StylesheetContents,
-    StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData,
+    AllowImportRules, ContainerRule, CounterStyleRule, CssRule, CssRuleType, CssRuleTypes, CssRules, CssRulesHelpers, DocumentRule, FontFaceRule, FontFeatureValuesRule, FontPaletteValuesRule, ImportRule, KeyframesRule, LayerBlockRule, LayerStatementRule, MarginRule, MediaRule, NamespaceRule, NestedDeclarationsRule, Origin, OriginSet, PagePseudoClassFlags, PageRule, PositionTryRule, PropertyRule, SanitizationData, SanitizationKind, ScopeRule, StartingStyleRule, StyleRule, StylesheetContents, StylesheetInDocument, StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData
 };
-use style::stylist::{add_size_of_ua_cache, AuthorStylesEnabled, RuleInclusion, Stylist};
+use style::stylist::{
+    add_size_of_ua_cache, replace_parent_selector_with_implicit_scope, scope_root_candidates,
+    AuthorStylesEnabled, RuleInclusion, ScopeBoundsWithHashes, ScopeConditionId,
+    ScopeConditionReference, Stylist,
+};
 use style::thread_state;
 use style::traversal::resolve_style;
 use style::traversal::DomTraversal;
@@ -2592,7 +2591,7 @@ pub extern "C" fn Servo_StyleRule_GetSelectorText(rule: &LockedStyleRule, result
     read_locked_arc(rule, |rule| rule.selectors.to_css(result).unwrap());
 }
 
-fn desugared_selector_list(rules: &nsTArray<&LockedStyleRule>) -> SelectorList {
+fn desugared_selector_list(rules: &[&LockedStyleRule]) -> SelectorList {
     let mut selectors: Option<SelectorList> = None;
     for rule in rules.iter().rev() {
         selectors = Some(read_locked_arc(rule, |rule| match selectors {
@@ -2634,9 +2633,111 @@ pub extern "C" fn Servo_StyleRule_GetSelectorCount(rule: &LockedStyleRule) -> u3
     read_locked_arc(rule, |rule| rule.selectors.len() as u32)
 }
 
+struct DesugaredScopeData {
+    conditions: SmallVec<[ScopeConditionReference; 2]>,
+    subject_map: ScopeSubjectMap,
+}
+
+fn desugared_selector_list_with_scope(
+    quirks_mode: QuirksMode,
+    rules: &[&LockedStyleRule],
+    scope_data: &nsTArray<ScopeRuleData>,
+) -> (SelectorList, Option<DesugaredScopeData>) {
+    if scope_data.is_empty() {
+        return (desugared_selector_list(rules), None);
+    }
+
+    fn desugared_scope_rule(
+        quirks_mode: QuirksMode,
+        id: u16,
+        scope_data: &ScopeRuleData,
+        selectors: &[&LockedStyleRule],
+        subject_map: &mut ScopeSubjectMap,
+    ) -> ScopeConditionReference {
+        debug_assert!(id > 0, "ID corresponds to none?");
+        let (start, end) = unsafe {
+            let rule = scope_data
+                .scope_rule
+                .as_ref()
+                .expect("Ill-formed scope data?");
+            (
+                if selectors.is_empty() {
+                    rule.bounds.start.clone()
+                } else {
+                    let desugared = desugared_selector_list(selectors);
+                    rule.bounds
+                        .start
+                        .as_ref()
+                        .map(|s| s.replace_parent_selector(&desugared))
+                },
+                rule.bounds
+                    .end
+                    .as_ref()
+                    .map(|s| replace_parent_selector_with_implicit_scope(s)),
+            )
+        };
+        // Building the subject map is likey worth it, because we traverse up as much as possible to gather all possible candidates.
+        start
+            .as_ref()
+            .map(|s| subject_map.add_bound_start(s, quirks_mode));
+        ScopeConditionReference::new(
+            ScopeConditionId::new(id - 1),
+            // Don't bother with hashing - we don't compute ancestor hashes anyway.
+            Some(ScopeBoundsWithHashes::new_no_hash(start, end)),
+            unsafe { GeckoStyleSheet::new(scope_data.sheet).implicit_scope_root() }
+                .unwrap_or(ImplicitScopeRoot::DocumentElement),
+            false,
+        )
+    }
+
+    let innermost_scope_valid_til = scope_data[0].valid_til;
+    // Take style rules up to the innermost scope rule, and desugar it.
+    let desugared_style = desugared_selector_list(if innermost_scope_valid_til > rules.len() - 1 {
+        &rules[0..]
+    } else {
+        &rules[0..=innermost_scope_valid_til]
+    });
+
+    // Now, desugar the scope rule(s) with any intervening nested style rule(s).
+    let mut conditions = SmallVec::with_capacity(scope_data.len());
+    let mut subject_map = ScopeSubjectMap::default();
+    conditions.push(ScopeConditionReference::none());
+    let mut end_at = rules.len() - 1;
+    for data in scope_data.iter().rev() {
+        conditions.push(desugared_scope_rule(
+            quirks_mode,
+            conditions.len() as u16,
+            data,
+            &rules[data.valid_til + 1..=end_at],
+            &mut subject_map,
+        ));
+        end_at = data.valid_til;
+    }
+
+    (
+        desugared_style,
+        Some(DesugaredScopeData {
+            conditions,
+            subject_map,
+        }),
+    )
+}
+
+/// Additional scope rule data for matching a style rule.
+#[repr(C)]
+pub struct ScopeRuleData {
+    /// Scope rule applicable at this nesting level.
+    pub scope_rule: *const ScopeRule,
+    /// Stylesheet this scope rule comes from.
+    pub sheet: *const DomStyleSheet,
+    /// Index to the last style rule in an array this scope applies to.
+    pub valid_til: usize,
+}
+
 #[no_mangle]
 pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
     rules: &nsTArray<&LockedStyleRule>,
+    scope_rules: &nsTArray<ScopeRuleData>,
     element: &RawGeckoElement,
     index: u32,
     host: Option<&RawGeckoElement>,
@@ -2647,7 +2748,10 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
         matches_selector, IncludeStartingStyle, MatchingContext, MatchingMode, NeedsSelectorFlags,
         VisitedHandlingMode,
     };
-    let selectors = desugared_selector_list(rules);
+
+    let element = GeckoElement(element);
+    let quirks_mode = element.as_node().owner_doc().quirks_mode();
+    let (selectors, scopes) = desugared_selector_list_with_scope(quirks_mode, rules, scope_rules);
     let Some(selector) = selectors.slice().get(index as usize) else {
         return false;
     };
@@ -2672,9 +2776,7 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
         },
     };
 
-    let element = GeckoElement(element);
     let host = host.map(GeckoElement);
-    let quirks_mode = element.as_node().owner_doc().quirks_mode();
     let mut selector_caches = SelectorCaches::default();
     let visited_mode = if relevant_link_visited {
         VisitedHandlingMode::RelevantLinkVisited
@@ -2691,8 +2793,24 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
         NeedsSelectorFlags::No,
         MatchingForInvalidation::No,
     );
-    ctx.with_shadow_host(host, |ctx| {
-        matches_selector(selector, 0, None, &element, ctx)
+    ctx.with_shadow_host(host, |ctx| match scopes.as_ref() {
+        None => matches_selector(selector, 0, None, &element, ctx),
+        Some(s) => {
+            let id = ScopeConditionId::new((s.conditions.len() - 1) as u16);
+            let candidates = scope_root_candidates(
+                &s.conditions,
+                id,
+                &element,
+                selector.is_part(),
+                &s.subject_map,
+                ctx,
+            );
+            candidates.candidates.iter().any(|candidate| {
+                ctx.nest_for_scope(Some(candidate.root), |ctx| {
+                    matches_selector(selector, 0, None, &element, ctx)
+                })
+            })
+        },
     })
 }
 
