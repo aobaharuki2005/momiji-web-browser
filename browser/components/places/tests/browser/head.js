@@ -323,21 +323,10 @@ var openContextMenuForContentSelector = async function (browser, selector) {
     dump(`openContextMenuForContentSelector: found ${elt}\n`);
 
     /* Open context menu so chrome can access the element */
-    const domWindowUtils = content.windowUtils;
-    let rect = elt.getBoundingClientRect();
-    let left = rect.left + rect.width / 2;
-    let top = rect.top + rect.height / 2;
-    domWindowUtils.sendMouseEvent(
-      "contextmenu",
-      left,
-      top,
-      2,
-      1,
-      0,
-      false,
-      0,
-      0,
-      true
+    EventUtils.synthesizeMouseAtCenter(
+      elt,
+      { type: "contextmenu", button: 2, clickCount: 1, buttons: 0 },
+      content
     );
   });
   await contextPromise;
