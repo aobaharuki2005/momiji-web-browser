@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.library.bookmarks
+package org.mozilla.fenix.bookmarks
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -39,16 +39,6 @@ import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.library.bookmarks.ui.BookmarksListSortOrder
-import org.mozilla.fenix.library.bookmarks.ui.BookmarksMiddleware
-import org.mozilla.fenix.library.bookmarks.ui.BookmarksScreen
-import org.mozilla.fenix.library.bookmarks.ui.BookmarksState
-import org.mozilla.fenix.library.bookmarks.ui.BookmarksStore
-import org.mozilla.fenix.library.bookmarks.ui.BookmarksSyncMiddleware
-import org.mozilla.fenix.library.bookmarks.ui.BookmarksTelemetryMiddleware
-import org.mozilla.fenix.library.bookmarks.ui.BrowserToolbarSyncToBookmarksMiddleware
-import org.mozilla.fenix.library.bookmarks.ui.LifecycleHolder
-import org.mozilla.fenix.library.bookmarks.ui.PrivateBrowsingLockMiddleware
 import org.mozilla.fenix.lifecycle.registerForVerification
 import org.mozilla.fenix.lifecycle.verifyUser
 import org.mozilla.fenix.search.BrowserStoreToFenixSearchMapperMiddleware

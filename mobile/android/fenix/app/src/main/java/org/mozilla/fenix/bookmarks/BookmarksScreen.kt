@@ -5,7 +5,7 @@
 @file:Suppress("TooManyFunctions")
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package org.mozilla.fenix.library.bookmarks.ui
+package org.mozilla.fenix.bookmarks
 
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
@@ -102,6 +102,8 @@ import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.lib.state.ext.observeAsState
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
+import org.mozilla.fenix.bookmarks.BookmarksTestTag.EDIT_BOOKMARK_ITEM_TITLE_TEXT_FIELD
+import org.mozilla.fenix.bookmarks.BookmarksTestTag.EDIT_BOOKMARK_ITEM_URL_TEXT_FIELD
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.components
@@ -116,9 +118,6 @@ import org.mozilla.fenix.compose.list.SelectableIconListItem
 import org.mozilla.fenix.compose.snackbar.AcornSnackbarHostState
 import org.mozilla.fenix.compose.snackbar.SnackbarHost
 import org.mozilla.fenix.compose.snackbar.SnackbarState
-import org.mozilla.fenix.library.bookmarks.BookmarksTestTag.ADD_BOOKMARK_FOLDER_NAME_TEXT_FIELD
-import org.mozilla.fenix.library.bookmarks.BookmarksTestTag.EDIT_BOOKMARK_ITEM_TITLE_TEXT_FIELD
-import org.mozilla.fenix.library.bookmarks.BookmarksTestTag.EDIT_BOOKMARK_ITEM_URL_TEXT_FIELD
 import org.mozilla.fenix.search.SearchFragmentAction.SuggestionClicked
 import org.mozilla.fenix.search.SearchFragmentAction.SuggestionSelected
 import org.mozilla.fenix.search.SearchFragmentState
@@ -1297,7 +1296,7 @@ private fun AddFolderScreen(
                         )
                         .semantics {
                             testTagsAsResourceId = true
-                            testTag = ADD_BOOKMARK_FOLDER_NAME_TEXT_FIELD
+                            testTag = BookmarksTestTag.ADD_BOOKMARK_FOLDER_NAME_TEXT_FIELD
                         },
                     label = stringResource(R.string.bookmark_name_label_normal_case),
                 )

@@ -464,7 +464,7 @@
 
     <fragment
         android:id="@+id/bookmarkFragment"
-        android:name="org.mozilla.fenix.library.bookmarks.BookmarkFragment"
+        android:name="org.mozilla.fenix.bookmarks.BookmarkFragment"
         tools:layout="@layout/fragment_bookmark">
         <argument
             android:name="currentRoot"
@@ -479,7 +479,7 @@
 
     <fragment
         android:id="@+id/bookmarkEditFragment"
-        android:name="org.mozilla.fenix.library.bookmarks.edit.EditBookmarkFragment"
+        android:name="org.mozilla.fenix.bookmarks.EditBookmarkFragment"
         tools:layout="@layout/fragment_edit_bookmark">
         <argument
             android:name="guidToEdit"

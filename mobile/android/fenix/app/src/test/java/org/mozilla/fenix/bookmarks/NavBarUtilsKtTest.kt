@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.library.bookmarks
+package org.mozilla.fenix.bookmarks
 
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
@@ -24,23 +24,44 @@ class UtilsKtTest {
 
         val root = folder.copy(guid = "root________", title = "root")
         assertEquals("Bookmarks", friendlyRootTitle(testContext, root, withMobileRoot = true))
-        assertEquals("Desktop Bookmarks", friendlyRootTitle(testContext, root, withMobileRoot = false))
+        assertEquals(
+            "Desktop Bookmarks",
+            friendlyRootTitle(testContext, root, withMobileRoot = false),
+        )
 
         val mobileRoot = folder.copy(guid = "mobile______", title = "mobile")
         assertEquals("Bookmarks", friendlyRootTitle(testContext, mobileRoot, withMobileRoot = true))
         assertEquals("mobile", friendlyRootTitle(testContext, mobileRoot, withMobileRoot = false))
 
         val menuRoot = folder.copy(guid = "menu________", title = "menu")
-        assertEquals("Bookmarks Menu", friendlyRootTitle(testContext, menuRoot, withMobileRoot = true))
-        assertEquals("Bookmarks Menu", friendlyRootTitle(testContext, menuRoot, withMobileRoot = false))
+        assertEquals(
+            "Bookmarks Menu",
+            friendlyRootTitle(testContext, menuRoot, withMobileRoot = true),
+        )
+        assertEquals(
+            "Bookmarks Menu",
+            friendlyRootTitle(testContext, menuRoot, withMobileRoot = false),
+        )
 
         val toolbarRoot = folder.copy(guid = "toolbar_____", title = "toolbar")
-        assertEquals("Bookmarks Toolbar", friendlyRootTitle(testContext, toolbarRoot, withMobileRoot = true))
-        assertEquals("Bookmarks Toolbar", friendlyRootTitle(testContext, toolbarRoot, withMobileRoot = false))
+        assertEquals(
+            "Bookmarks Toolbar",
+            friendlyRootTitle(testContext, toolbarRoot, withMobileRoot = true),
+        )
+        assertEquals(
+            "Bookmarks Toolbar",
+            friendlyRootTitle(testContext, toolbarRoot, withMobileRoot = false),
+        )
 
         val unfiledRoot = folder.copy(guid = "unfiled_____", title = "unfiled")
-        assertEquals("Other Bookmarks", friendlyRootTitle(testContext, unfiledRoot, withMobileRoot = true))
-        assertEquals("Other Bookmarks", friendlyRootTitle(testContext, unfiledRoot, withMobileRoot = false))
+        assertEquals(
+            "Other Bookmarks",
+            friendlyRootTitle(testContext, unfiledRoot, withMobileRoot = true),
+        )
+        assertEquals(
+            "Other Bookmarks",
+            friendlyRootTitle(testContext, unfiledRoot, withMobileRoot = false),
+        )
 
         val almostRoot = folder.copy(guid = "notRoot________", title = "root")
         assertEquals("root", friendlyRootTitle(testContext, almostRoot, withMobileRoot = true))

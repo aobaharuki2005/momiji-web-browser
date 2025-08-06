@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.library.bookmarks.ui
+package org.mozilla.fenix.bookmarks
 
 import android.content.ClipboardManager
 import androidx.navigation.NavBackStackEntry
@@ -38,7 +38,6 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.library.bookmarks.friendlyRootTitle
 import org.mozilla.fenix.utils.LastSavedFolderCache
 
 @RunWith(AndroidJUnit4::class)
@@ -350,7 +349,15 @@ class BookmarksMiddlewareTest {
         val store = middleware.makeStore(
             initialState = BookmarksState.default,
         )
-        store.dispatch(FolderClicked(BookmarkItem.Folder(folderNode.title!!, folderNode.guid, position = folderNode.position!!)))
+        store.dispatch(
+            FolderClicked(
+                BookmarkItem.Folder(
+                    folderNode.title!!,
+                    folderNode.guid,
+                    position = folderNode.position!!,
+                ),
+            ),
+        )
 
         assertEquals(folderNode.title, store.state.currentFolder.title)
         assertEquals(5, store.state.bookmarkItems.size)
@@ -701,7 +708,15 @@ class BookmarksMiddlewareTest {
         val middleware = buildMiddleware()
         val store = middleware.makeStore()
 
-        store.dispatch(FolderClicked(BookmarkItem.Folder(title = firstFolderNode.title!!, guid = firstFolderNode.guid, firstFolderNode.position)))
+        store.dispatch(
+            FolderClicked(
+                BookmarkItem.Folder(
+                    title = firstFolderNode.title!!,
+                    guid = firstFolderNode.guid,
+                    firstFolderNode.position,
+                ),
+            ),
+        )
 
         assertEquals(firstFolderNode.guid, store.state.currentFolder.guid)
         store.dispatch(BackClicked)

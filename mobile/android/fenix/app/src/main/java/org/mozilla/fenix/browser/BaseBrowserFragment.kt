@@ -155,6 +155,7 @@ import org.mozilla.fenix.bindings.FindInPageBinding
 import org.mozilla.fenix.biometricauthentication.AuthenticationStatus
 import org.mozilla.fenix.biometricauthentication.BiometricAuthenticationManager
 import org.mozilla.fenix.biometricauthentication.NavigationOrigin
+import org.mozilla.fenix.bookmarks.friendlyRootTitle
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
 import org.mozilla.fenix.browser.readermode.ReaderModeController
@@ -210,7 +211,6 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.tabClosedUndoMessage
 import org.mozilla.fenix.ext.updateMicrosurveyPromptForConfigurationChange
 import org.mozilla.fenix.home.HomeScreenViewModel
-import org.mozilla.fenix.library.bookmarks.friendlyRootTitle
 import org.mozilla.fenix.lifecycle.observePrivateModeLock
 import org.mozilla.fenix.messaging.FenixMessageSurfaceId
 import org.mozilla.fenix.messaging.MessagingFeature

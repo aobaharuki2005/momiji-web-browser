@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.library.bookmarks
+package org.mozilla.fenix.bookmarks
 
 import android.content.Context
 import io.mockk.every
@@ -47,20 +47,50 @@ class DesktopFoldersTest {
 
     @Test
     fun `withRootTitle and do showMobileRoot`() {
-        assertEquals(testContext.getString(R.string.library_bookmarks), friendlyRootTitle(context, mockNodeWithTitle("root")))
-        assertEquals(testContext.getString(R.string.library_bookmarks), friendlyRootTitle(context, mockNodeWithTitle("mobile")))
-        assertEquals(testContext.getString(R.string.library_desktop_bookmarks_menu), friendlyRootTitle(context, mockNodeWithTitle("menu")))
-        assertEquals(testContext.getString(R.string.library_desktop_bookmarks_toolbar), friendlyRootTitle(context, mockNodeWithTitle("toolbar")))
-        assertEquals(testContext.getString(R.string.library_desktop_bookmarks_unfiled), friendlyRootTitle(context, mockNodeWithTitle("unfiled")))
+        assertEquals(
+            testContext.getString(R.string.library_bookmarks),
+            friendlyRootTitle(context, mockNodeWithTitle("root")),
+        )
+        assertEquals(
+            testContext.getString(R.string.library_bookmarks),
+            friendlyRootTitle(context, mockNodeWithTitle("mobile")),
+        )
+        assertEquals(
+            testContext.getString(R.string.library_desktop_bookmarks_menu),
+            friendlyRootTitle(context, mockNodeWithTitle("menu")),
+        )
+        assertEquals(
+            testContext.getString(R.string.library_desktop_bookmarks_toolbar),
+            friendlyRootTitle(context, mockNodeWithTitle("toolbar")),
+        )
+        assertEquals(
+            testContext.getString(R.string.library_desktop_bookmarks_unfiled),
+            friendlyRootTitle(context, mockNodeWithTitle("unfiled")),
+        )
     }
 
     @Test
     fun `withRootTitle and do not showMobileRoot`() {
-        assertEquals(testContext.getString(R.string.library_desktop_bookmarks_root), friendlyRootTitle(context, mockNodeWithTitle("root"), false))
-        assertEquals(mockNodeWithTitle("mobile").title, friendlyRootTitle(context, mockNodeWithTitle("mobile"), false))
-        assertEquals(testContext.getString(R.string.library_desktop_bookmarks_menu), friendlyRootTitle(context, mockNodeWithTitle("menu"), false))
-        assertEquals(testContext.getString(R.string.library_desktop_bookmarks_toolbar), friendlyRootTitle(context, mockNodeWithTitle("toolbar"), false))
-        assertEquals(testContext.getString(R.string.library_desktop_bookmarks_unfiled), friendlyRootTitle(context, mockNodeWithTitle("unfiled"), false))
+        assertEquals(
+            testContext.getString(R.string.library_desktop_bookmarks_root),
+            friendlyRootTitle(context, mockNodeWithTitle("root"), false),
+        )
+        assertEquals(
+            mockNodeWithTitle("mobile").title,
+            friendlyRootTitle(context, mockNodeWithTitle("mobile"), false),
+        )
+        assertEquals(
+            testContext.getString(R.string.library_desktop_bookmarks_menu),
+            friendlyRootTitle(context, mockNodeWithTitle("menu"), false),
+        )
+        assertEquals(
+            testContext.getString(R.string.library_desktop_bookmarks_toolbar),
+            friendlyRootTitle(context, mockNodeWithTitle("toolbar"), false),
+        )
+        assertEquals(
+            testContext.getString(R.string.library_desktop_bookmarks_unfiled),
+            friendlyRootTitle(context, mockNodeWithTitle("unfiled"), false),
+        )
     }
 
     @Test

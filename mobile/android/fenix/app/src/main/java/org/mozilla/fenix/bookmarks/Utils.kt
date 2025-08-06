@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.library.bookmarks
+package org.mozilla.fenix.bookmarks
 
 import android.content.Context
 import mozilla.appservices.places.BookmarkRoot
@@ -10,8 +10,7 @@ import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.mozilla.fenix.R
-import org.mozilla.fenix.library.bookmarks.ui.BookmarkItem
-import org.mozilla.fenix.library.bookmarks.ui.BookmarkItem.Bookmark
+import kotlin.collections.get
 
 fun rootTitles(context: Context, withMobileRoot: Boolean): Map<String, String> = if (withMobileRoot) {
     mapOf(
@@ -85,7 +84,7 @@ fun BookmarkNode.inRoots() = enumValues<BookmarkRoot>().any { it.id == guid }
  * Converts a List of [BookmarkItem.Bookmark]s to an Array of [ShareData]. Used for sharing one or
  * more bookmarks
  */
-internal fun List<Bookmark>.asShareDataArray(): Array<ShareData> {
+internal fun List<BookmarkItem.Bookmark>.asShareDataArray(): Array<ShareData> {
     return map { ShareData(title = it.title, url = it.url) }
         .toTypedArray()
 }

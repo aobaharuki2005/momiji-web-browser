@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.library.bookmarks.ui
+package org.mozilla.fenix.bookmarks
 
 import mozilla.appservices.places.BookmarkRoot
 import org.junit.Assert.assertEquals
@@ -53,7 +53,10 @@ class BookmarksReducerTest {
         val bookmark3 = generateBookmark(3)
         val items = listOf(bookmark1, bookmark2, bookmark3)
 
-        val result = bookmarksReducer(state = BookmarksState.default.copy(bookmarkItems = items), action = BookmarksListMenuAction.SelectAll)
+        val result = bookmarksReducer(
+            state = BookmarksState.default.copy(bookmarkItems = items),
+            action = BookmarksListMenuAction.SelectAll,
+        )
 
         assertEquals(result.bookmarkItems, result.selectedItems)
     }
@@ -729,7 +732,10 @@ class BookmarksReducerTest {
             position = null,
         )
 
-        val result = bookmarksReducer(state, BookmarksListMenuAction.Bookmark.DeleteClicked(bookmarkToDelete))
+        val result = bookmarksReducer(
+            state,
+            BookmarksListMenuAction.Bookmark.DeleteClicked(bookmarkToDelete),
+        )
         val expected = BookmarksSnackbarState.UndoDeletion(guidsToDelete = listOf("guid0", "guid1"))
         assertEquals(expected, result.bookmarksSnackbarState)
     }
@@ -950,10 +956,12 @@ class BookmarksReducerTest {
         result = bookmarksReducer(state, BookmarksListMenuAction.MultiSelect.DeleteClicked)
         assertTrue(result.selectedItems.isEmpty())
 
-        result = bookmarksReducer(state, BookmarksListMenuAction.MultiSelect.OpenInNormalTabsClicked)
+        result =
+            bookmarksReducer(state, BookmarksListMenuAction.MultiSelect.OpenInNormalTabsClicked)
         assertTrue(result.selectedItems.isEmpty())
 
-        result = bookmarksReducer(state, BookmarksListMenuAction.MultiSelect.OpenInPrivateTabsClicked)
+        result =
+            bookmarksReducer(state, BookmarksListMenuAction.MultiSelect.OpenInPrivateTabsClicked)
         assertTrue(result.selectedItems.isEmpty())
 
         result = bookmarksReducer(state, BookmarksListMenuAction.MultiSelect.ShareClicked)

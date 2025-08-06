@@ -2,13 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.library.bookmarks
+package org.mozilla.fenix.bookmarks
 
 import android.content.Context
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
+import kotlin.collections.get
 
 class DesktopFolders(
     private val context: Context,
