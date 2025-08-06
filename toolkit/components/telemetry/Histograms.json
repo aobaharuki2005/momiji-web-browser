@@ -12012,10 +12012,9 @@
     "kind": "categorical",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1635489],
+    "bug_numbers": [1635489, 1977614],
     "description": "The result of attempting to open a sqlite file.",
     "labels": [
-      "success",
       "failure",
       "access",
       "diskio",
@@ -12033,10 +12032,9 @@
     "kind": "categorical",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1635489],
+    "bug_numbers": [1635489, 1977614],
     "description": "The result of attempting to query a sqlite file.",
     "labels": [
-      "success",
       "failure",
       "access",
       "diskio",
