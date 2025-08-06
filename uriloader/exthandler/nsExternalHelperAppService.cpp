@@ -1294,8 +1294,8 @@ nsExternalHelperAppService::Observe(nsISupports* aSubject, const char* aTopic,
   if (!strcmp(aTopic, "profile-before-change")) {
     ExpungeTemporaryFiles();
   } else if (!strcmp(aTopic, "last-pb-context-exited")) {
-    if (Preferences::GetBool("browser.download.enableDeletePrivate", true) &&
-        Preferences::GetBool("browser.download.deletePrivate", true)) {
+    if (StaticPrefs::browser_download_enableDeletePrivate() &&
+        StaticPrefs::browser_download_deletePrivate()) {
       ExpungePrivateFiles();
     }
     ExpungeTemporaryPrivateFiles();
