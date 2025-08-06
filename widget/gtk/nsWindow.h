@@ -302,6 +302,12 @@ class nsWindow final : public nsBaseWidget {
   }
   LayoutDeviceIntRegion GetOpaqueRegion() const;
 
+  // Exports a handle to the window, see `gdk_wayland_window_export_handle`.
+  using ExportHandlePromise =
+      mozilla::MozPromise<nsCString, bool, /*IsExclusive = */ true>;
+  RefPtr<ExportHandlePromise> ExportHandle();
+  void UnexportHandle();
+
   already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawingInRegion(
       const LayoutDeviceIntRegion& aInvalidRegion) override;
   void EndRemoteDrawingInRegion(
