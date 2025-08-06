@@ -85,6 +85,7 @@ import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
 import org.mozilla.fenix.components.menu.store.TranslationInfo
 import org.mozilla.fenix.components.menu.store.WebExtensionMenuItem
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getWindowInsets
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 import org.mozilla.fenix.ext.pixelSizeFor
@@ -143,12 +144,12 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
         return super.onCreateDialog(savedInstanceState).apply {
             setOnShowListener {
                 val safeActivity = activity ?: return@setOnShowListener
-                val browsingModeManager = (safeActivity as HomeActivity).browsingModeManager
+                val appStore = safeActivity.components.appStore
 
-                isPrivate = browsingModeManager.mode.isPrivate
+                isPrivate = appStore.state.mode.isPrivate
 
                 if (!Config.channel.isNightlyOrDebug) {
-                    val navigationBarColor = if (browsingModeManager.mode.isPrivate) {
+                    val navigationBarColor = if (isPrivate) {
                         ContextCompat.getColor(context, R.color.fx_mobile_private_layer_color_3)
                     } else {
                         ContextCompat.getColor(context, R.color.fx_mobile_layer_color_3)
@@ -157,7 +158,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                     window?.setNavigationBarColorCompat(navigationBarColor)
                 }
 
-                if (browsingModeManager.mode.isPrivate && args.accesspoint == MenuAccessPoint.Home) {
+                if (isPrivate && args.accesspoint == MenuAccessPoint.Home) {
                     window?.setBackgroundDrawable(
                         Color.BLACK.toDrawable().mutate().apply {
                             alpha = PRIVATE_HOME_MENU_BACKGROUND_ALPHA
