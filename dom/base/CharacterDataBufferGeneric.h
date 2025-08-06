@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsTextFragmentGeneric_h__
-#define nsTextFragmentGeneric_h__
+#ifndef mozilla_dom_CharacterDataBufferGeneric_h
+#define mozilla_dom_CharacterDataBufferGeneric_h
 
 #include <algorithm>
 
-#include "nsTextFragmentGenericFwd.h"
-#include "nsTextFragmentImpl.h"
+#include "CharacterDataBufferGenericFwd.h"
+#include "CharacterDataBufferImpl.h"
 #include "nscore.h"
 
 namespace mozilla {

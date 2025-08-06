@@ -26,6 +26,7 @@
 #include "mozilla/Result.h"
 #include "mozilla/dom/AbstractRange.h"
 #include "mozilla/dom/AncestorIterator.h"
+#include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Selection.h"
@@ -36,7 +37,6 @@
 #include "nsGkAtoms.h"
 #include "nsHTMLTags.h"
 #include "nsTArray.h"
-#include "nsTextFragment.h"
 
 class nsAtom;
 class nsPresContext;
@@ -59,8 +59,8 @@ class HTMLEditUtils final {
   using Element = dom::Element;
   using Selection = dom::Selection;
   using Text = dom::Text;
-  using WhitespaceOption = nsTextFragment::WhitespaceOption;
-  using WhitespaceOptions = nsTextFragment::WhitespaceOptions;
+  using WhitespaceOption = dom::CharacterDataBuffer::WhitespaceOption;
+  using WhitespaceOptions = dom::CharacterDataBuffer::WhitespaceOptions;
 
  public:
   static constexpr char16_t kNewLine = '\n';
@@ -618,7 +618,7 @@ class HTMLEditUtils final {
               *aPoint.template ContainerAs<Text>())) {
         return true;
       }
-      const nsTextFragment& textFragment =
+      const dom::CharacterDataBuffer& textFragment =
           aPoint.template ContainerAs<Text>()->TextFragment();
       const uint32_t nextVisibleCharOffset = textFragment.FindNonWhitespaceChar(
           EditorUtils::IsNewLinePreformatted(
@@ -627,7 +627,7 @@ class HTMLEditUtils final {
                                   WhitespaceOption::NewLineIsSignificant}
               : WhitespaceOptions{WhitespaceOption::FormFeedIsSignificant},
           aPoint.Offset() + 1);
-      if (nextVisibleCharOffset != nsTextFragment::kNotFound) {
+      if (nextVisibleCharOffset != dom::CharacterDataBuffer::kNotFound) {
         return true;  // There is a visible character after the point.
       }
     }
@@ -2156,7 +2156,7 @@ class HTMLEditUtils final {
       if (auto* textNode = Text::FromNode(*content)) {
         if (EditorUtils::IsNewLinePreformatted(*textNode)) {
           uint32_t offset = textNode->TextFragment().FindChar(kNewLine);
-          if (offset != nsTextFragment::kNotFound) {
+          if (offset != dom::CharacterDataBuffer::kNotFound) {
             return Some(EditorLineBreakType(*textNode, offset));
           }
         }
@@ -2244,7 +2244,7 @@ class HTMLEditUtils final {
     const uint32_t prevVisibleCharOffset =
         aTextNode.TextFragment().RFindNonWhitespaceChar(whitespaceOptions,
                                                         aOffset - 1);
-    return prevVisibleCharOffset != nsTextFragment::kNotFound
+    return prevVisibleCharOffset != dom::CharacterDataBuffer::kNotFound
                ? Some(prevVisibleCharOffset)
                : Nothing();
   }
@@ -2303,7 +2303,7 @@ class HTMLEditUtils final {
     const uint32_t inclusiveNextVisibleCharOffset =
         aTextNode.TextFragment().FindNonWhitespaceChar(whitespaceOptions,
                                                        aOffset);
-    if (inclusiveNextVisibleCharOffset != nsTextFragment::kNotFound) {
+    if (inclusiveNextVisibleCharOffset != dom::CharacterDataBuffer::kNotFound) {
       return Some(inclusiveNextVisibleCharOffset);
     }
     return Nothing();
@@ -2373,7 +2373,7 @@ class HTMLEditUtils final {
     MOZ_ASSERT(aPoint.Offset() <= textNode.TextFragment().GetLength());
     const uint32_t previousLineBreakOffset =
         textNode.TextFragment().RFindChar('\n', aPoint.Offset() - 1u);
-    return previousLineBreakOffset != nsTextFragment::kNotFound
+    return previousLineBreakOffset != dom::CharacterDataBuffer::kNotFound
                ? EditorDOMPointType(&textNode, previousLineBreakOffset)
                : EditorDOMPointType();
   }
@@ -2396,7 +2396,7 @@ class HTMLEditUtils final {
     MOZ_ASSERT(aPoint.Offset() <= textNode.TextFragment().GetLength());
     const uint32_t inclusiveNextVisibleCharOffset =
         textNode.TextFragment().FindChar('\n', aPoint.Offset());
-    return inclusiveNextVisibleCharOffset != nsTextFragment::kNotFound
+    return inclusiveNextVisibleCharOffset != dom::CharacterDataBuffer::kNotFound
                ? EditorDOMPointType(&textNode, inclusiveNextVisibleCharOffset)
                : EditorDOMPointType();
   }

@@ -19,7 +19,6 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsTextFragment.h"
 #include "nsUnicharUtils.h"
 #include "txLog.h"
 #include "txXMLUtils.h"

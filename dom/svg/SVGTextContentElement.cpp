@@ -8,12 +8,12 @@
 
 #include "DOMSVGPoint.h"
 #include "SVGTextFrame.h"
+#include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGRect.h"
 #include "mozilla/dom/SVGTextContentElementBinding.h"
 #include "nsBidiUtils.h"
 #include "nsLayoutUtils.h"
-#include "nsTextFragment.h"
 #include "nsTextFrameUtils.h"
 #include "nsTextNode.h"
 
@@ -83,7 +83,7 @@ Maybe<int32_t> SVGTextContentElement::GetNonLayoutDependentNumberOfChars() {
       return Nothing();
     }
 
-    const nsTextFragment* text = &n->AsText()->TextFragment();
+    const CharacterDataBuffer* text = &n->AsText()->TextFragment();
     uint32_t length = text->GetLength();
 
     if (text->Is2b()) {

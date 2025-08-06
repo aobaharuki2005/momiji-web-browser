@@ -21,6 +21,7 @@
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/AbstractRange.h"
 #include "mozilla/dom/CharacterData.h"
+#include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Text.h"
@@ -34,7 +35,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
-#include "nsTextFragment.h"
 #include "nsUnicharUtils.h"
 #include "nsUnicodeProperties.h"
 
@@ -419,7 +419,7 @@ nsPlainTextSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
   nsresult rv = NS_OK;
 
   nsIContent* content = aText;
-  const nsTextFragment* frag;
+  const CharacterDataBuffer* frag = nullptr;
   if (!content || !(frag = content->GetText())) {
     return NS_ERROR_FAILURE;
   }

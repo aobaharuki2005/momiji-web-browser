@@ -35,6 +35,7 @@
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/PerformanceMainThread.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/intl/Bidi.h"
@@ -72,7 +73,6 @@
 #include "nsStyleStructInlines.h"
 #include "nsStyleUtil.h"
 #include "nsTArray.h"
-#include "nsTextFragment.h"
 #include "nsTextFrameUtils.h"
 #include "nsTextPaintStyle.h"
 #include "nsTextRunTransformations.h"
@@ -717,27 +717,27 @@ int32_t nsTextFrame::GetInFlowContentLength() {
 // when it combines with another character
 // So we have several versions of IsSpace for use in different contexts.
 
-static bool IsSpaceCombiningSequenceTail(const nsTextFragment* aFrag,
+static bool IsSpaceCombiningSequenceTail(const CharacterDataBuffer* aBuffer,
                                          uint32_t aPos) {
-  NS_ASSERTION(aPos <= aFrag->GetLength(), "Bad offset");
-  if (!aFrag->Is2b()) {
+  NS_ASSERTION(aPos <= aBuffer->GetLength(), "Bad offset");
+  if (!aBuffer->Is2b()) {
     return false;
   }
   return nsTextFrameUtils::IsSpaceCombiningSequenceTail(
-      aFrag->Get2b() + aPos, aFrag->GetLength() - aPos);
+      aBuffer->Get2b() + aPos, aBuffer->GetLength() - aPos);
 }
 
 // Check whether aPos is a space for CSS 'word-spacing' purposes
-static bool IsCSSWordSpacingSpace(const nsTextFragment* aFrag, uint32_t aPos,
-                                  const nsTextFrame* aFrame,
+static bool IsCSSWordSpacingSpace(const CharacterDataBuffer* aBuffer,
+                                  uint32_t aPos, const nsTextFrame* aFrame,
                                   const nsStyleText* aStyleText) {
-  NS_ASSERTION(aPos < aFrag->GetLength(), "No text for IsSpace!");
+  NS_ASSERTION(aPos < aBuffer->GetLength(), "No text for IsSpace!");
 
-  char16_t ch = aFrag->CharAt(aPos);
+  char16_t ch = aBuffer->CharAt(aPos);
   switch (ch) {
     case ' ':
     case CH_NBSP:
-      return !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
+      return !IsSpaceCombiningSequenceTail(aBuffer, aPos + 1);
     case '\r':
     case '\t':
       return !aStyleText->WhiteSpaceIsSignificant();
@@ -769,16 +769,16 @@ static bool IsTrimmableSpace(char aCh) {
   return aCh == ' ' || aCh == '\t' || aCh == '\f' || aCh == '\n' || aCh == '\r';
 }
 
-static bool IsTrimmableSpace(const nsTextFragment* aFrag, uint32_t aPos,
+static bool IsTrimmableSpace(const CharacterDataBuffer* aBuffer, uint32_t aPos,
                              const nsStyleText* aStyleText,
                              bool aAllowHangingWS = false) {
-  NS_ASSERTION(aPos < aFrag->GetLength(), "No text for IsSpace!");
+  NS_ASSERTION(aPos < aBuffer->GetLength(), "No text for IsSpace!");
 
-  switch (aFrag->CharAt(aPos)) {
+  switch (aBuffer->CharAt(aPos)) {
     case ' ':
     case kOghamSpaceMark:
       return (!aStyleText->WhiteSpaceIsSignificant() || aAllowHangingWS) &&
-             !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
+             !IsSpaceCombiningSequenceTail(aBuffer, aPos + 1);
     case '\n':
       return !aStyleText->NewlineIsSignificantStyle() &&
              aStyleText->mWhiteSpaceCollapse !=
@@ -792,20 +792,21 @@ static bool IsTrimmableSpace(const nsTextFragment* aFrag, uint32_t aPos,
   }
 }
 
-static bool IsSelectionInlineWhitespace(const nsTextFragment* aFrag,
+static bool IsSelectionInlineWhitespace(const CharacterDataBuffer* aBuffer,
                                         uint32_t aPos) {
-  NS_ASSERTION(aPos < aFrag->GetLength(),
+  NS_ASSERTION(aPos < aBuffer->GetLength(),
                "No text for IsSelectionInlineWhitespace!");
-  char16_t ch = aFrag->CharAt(aPos);
+  char16_t ch = aBuffer->CharAt(aPos);
   if (ch == ' ' || ch == CH_NBSP) {
-    return !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
+    return !IsSpaceCombiningSequenceTail(aBuffer, aPos + 1);
   }
   return ch == '\t' || ch == '\f';
 }
 
-static bool IsSelectionNewline(const nsTextFragment* aFrag, uint32_t aPos) {
-  NS_ASSERTION(aPos < aFrag->GetLength(), "No text for IsSelectionNewline!");
-  char16_t ch = aFrag->CharAt(aPos);
+static bool IsSelectionNewline(const CharacterDataBuffer* aBuffer,
+                               uint32_t aPos) {
+  NS_ASSERTION(aPos < aBuffer->GetLength(), "No text for IsSelectionNewline!");
+  char16_t ch = aBuffer->CharAt(aPos);
   return ch == '\n' || ch == '\r';
 }
 
@@ -814,7 +815,7 @@ static bool IsSelectionNewline(const nsTextFragment* aFrag, uint32_t aPos) {
 // character is at offset aStartOffset; the maximum number of characters
 // to check is aLength. aDirection is -1 or 1 depending on whether we should
 // progress backwards or forwards.
-static uint32_t GetTrimmableWhitespaceCount(const nsTextFragment* aFrag,
+static uint32_t GetTrimmableWhitespaceCount(const CharacterDataBuffer* aBuffer,
                                             int32_t aStartOffset,
                                             int32_t aLength,
                                             int32_t aDirection) {
@@ -823,9 +824,9 @@ static uint32_t GetTrimmableWhitespaceCount(const nsTextFragment* aFrag,
   }
 
   int32_t count = 0;
-  if (aFrag->Is2b()) {
-    const char16_t* str = aFrag->Get2b() + aStartOffset;
-    int32_t fragLen = aFrag->GetLength() - aStartOffset;
+  if (aBuffer->Is2b()) {
+    const char16_t* str = aBuffer->Get2b() + aStartOffset;
+    int32_t fragLen = aBuffer->GetLength() - aStartOffset;
     for (; count < aLength; ++count) {
       if (!IsTrimmableSpace(str, fragLen)) {
         break;
@@ -834,7 +835,7 @@ static uint32_t GetTrimmableWhitespaceCount(const nsTextFragment* aFrag,
       fragLen -= aDirection;
     }
   } else {
-    const char* str = aFrag->Get1b() + aStartOffset;
+    const char* str = aBuffer->Get1b() + aStartOffset;
     for (; count < aLength; ++count) {
       if (!IsTrimmableSpace(*str)) {
         break;
@@ -845,12 +846,13 @@ static uint32_t GetTrimmableWhitespaceCount(const nsTextFragment* aFrag,
   return count;
 }
 
-static bool IsAllWhitespace(const nsTextFragment* aFrag, bool aAllowNewline) {
-  if (aFrag->Is2b()) {
+static bool IsAllWhitespace(const CharacterDataBuffer* aBuffer,
+                            bool aAllowNewline) {
+  if (aBuffer->Is2b()) {
     return false;
   }
-  int32_t len = aFrag->GetLength();
-  const char* str = aFrag->Get1b();
+  int32_t len = aBuffer->GetLength();
+  const char* str = aBuffer->Get1b();
   for (int32_t i = 0; i < len; ++i) {
     char ch = str[i];
     if (ch == ' ' || ch == '\t' || ch == '\r' ||
@@ -1313,7 +1315,7 @@ BuildTextRunsScanner::FindBoundaryResult BuildTextRunsScanner::FindBoundaries(
     if (aState->mSeenSpaceForLineBreakingOnThisLine) {
       return FB_CONTINUE;
     }
-    const nsTextFragment* frag = textFrame->TextFragment();
+    const CharacterDataBuffer* frag = textFrame->TextFragment();
     uint32_t start = textFrame->GetContentOffset();
     uint32_t length = textFrame->GetContentLength();
     const void* text;
@@ -1758,7 +1760,7 @@ static bool HasTerminalNewline(const nsTextFrame* aFrame) {
   if (aFrame->GetContentLength() == 0) {
     return false;
   }
-  const nsTextFragment* frag = aFrame->TextFragment();
+  const CharacterDataBuffer* frag = aFrame->TextFragment();
   return frag->CharAt(AssertedCast<uint32_t>(aFrame->GetContentEnd()) - 1) ==
          '\n';
 }
@@ -2337,7 +2339,7 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
 
     // Figure out what content is included in this flow.
     nsIContent* content = f->GetContent();
-    const nsTextFragment* frag = f->TextFragment();
+    const CharacterDataBuffer* frag = f->TextFragment();
     int32_t contentStart = mappedFlow->mStartFrame->GetContentOffset();
     int32_t contentEnd = mappedFlow->GetContentEnd();
     int32_t contentLength = contentEnd - contentStart;
@@ -2653,7 +2655,7 @@ bool BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun* aTextRun) {
         GetCSSWhitespaceToCompressionMode(f, textStyle);
 
     // Figure out what content is included in this flow.
-    const nsTextFragment* frag = f->TextFragment();
+    const CharacterDataBuffer* frag = f->TextFragment();
     int32_t contentStart = mappedFlow->mStartFrame->GetContentOffset();
     int32_t contentEnd = mappedFlow->GetContentEnd();
     int32_t contentLength = contentEnd - contentStart;
@@ -2710,7 +2712,7 @@ static bool HasCompressedLeadingWhitespace(
 
   gfxSkipCharsIterator iter = aIterator;
   int32_t frameContentOffset = aFrame->GetContentOffset();
-  const nsTextFragment* frag = aFrame->TextFragment();
+  const CharacterDataBuffer* frag = aFrame->TextFragment();
   while (frameContentOffset < aContentEndOffset &&
          iter.IsOriginalCharSkipped()) {
     if (IsTrimmableSpace(frag, frameContentOffset, aStyleText)) {
@@ -3104,7 +3106,7 @@ gfxSkipCharsIterator nsTextFrame::EnsureTextRun(
   return gfxSkipCharsIterator(gfxPlatform::GetPlatform()->EmptySkipChars(), 0);
 }
 
-static uint32_t GetEndOfTrimmedText(const nsTextFragment* aFrag,
+static uint32_t GetEndOfTrimmedText(const CharacterDataBuffer* aBuffer,
                                     const nsStyleText* aStyleText,
                                     uint32_t aStart, uint32_t aEnd,
                                     gfxSkipCharsIterator* aIterator,
@@ -3112,7 +3114,7 @@ static uint32_t GetEndOfTrimmedText(const nsTextFragment* aFrag,
   aIterator->SetSkippedOffset(aEnd);
   while (aIterator->GetSkippedOffset() > aStart) {
     aIterator->AdvanceSkipped(-1);
-    if (!IsTrimmableSpace(aFrag, aIterator->GetOriginalOffset(), aStyleText,
+    if (!IsTrimmableSpace(aBuffer, aIterator->GetOriginalOffset(), aStyleText,
                           aAllowHangingWS)) {
       return aIterator->GetSkippedOffset() + 1;
     }
@@ -3121,7 +3123,7 @@ static uint32_t GetEndOfTrimmedText(const nsTextFragment* aFrag,
 }
 
 nsTextFrame::TrimmedOffsets nsTextFrame::GetTrimmedOffsets(
-    const nsTextFragment* aFrag, TrimmedOffsetFlags aFlags) const {
+    const CharacterDataBuffer* aBuffer, TrimmedOffsetFlags aFlags) const {
   NS_ASSERTION(mTextRun, "Need textrun here");
   if (!(aFlags & TrimmedOffsetFlags::NotPostReflow)) {
     // This should not be used during reflow. We need our TEXT_REFLOW_FLAGS
@@ -3146,8 +3148,8 @@ nsTextFrame::TrimmedOffsets nsTextFrame::GetTrimmedOffsets(
   if (!(aFlags & TrimmedOffsetFlags::NoTrimBefore) &&
       ((aFlags & TrimmedOffsetFlags::NotPostReflow) ||
        HasAnyStateBits(TEXT_START_OF_LINE))) {
-    int32_t whitespaceCount =
-        GetTrimmableWhitespaceCount(aFrag, offsets.mStart, offsets.mLength, 1);
+    int32_t whitespaceCount = GetTrimmableWhitespaceCount(
+        aBuffer, offsets.mStart, offsets.mLength, 1);
     offsets.mStart += whitespaceCount;
     offsets.mLength -= whitespaceCount;
   }
@@ -3159,15 +3161,15 @@ nsTextFrame::TrimmedOffsets nsTextFrame::GetTrimmedOffsets(
     // it's actually what we want since we want whitespace before it to
     // be trimmed.
     int32_t whitespaceCount = GetTrimmableWhitespaceCount(
-        aFrag, offsets.GetEnd() - 1, offsets.mLength, -1);
+        aBuffer, offsets.GetEnd() - 1, offsets.mLength, -1);
     offsets.mLength -= whitespaceCount;
   }
   return offsets;
 }
 
 static bool IsJustifiableCharacter(const nsStyleText* aTextStyle,
-                                   const nsTextFragment* aFrag, int32_t aPos,
-                                   bool aLangIsCJ) {
+                                   const CharacterDataBuffer* aBuffer,
+                                   int32_t aPos, bool aLangIsCJ) {
   NS_ASSERTION(aPos >= 0, "negative position?!");
 
   StyleTextJustify justifyStyle = aTextStyle->mTextJustify;
@@ -3175,17 +3177,17 @@ static bool IsJustifiableCharacter(const nsStyleText* aTextStyle,
     return false;
   }
 
-  const char16_t ch = aFrag->CharAt(AssertedCast<uint32_t>(aPos));
+  const char16_t ch = aBuffer->CharAt(AssertedCast<uint32_t>(aPos));
   if (ch == '\n' || ch == '\t' || ch == '\r') {
     return !aTextStyle->WhiteSpaceIsSignificant();
   }
   if (ch == ' ' || ch == CH_NBSP) {
     // Don't justify spaces that are combined with diacriticals
-    if (!aFrag->Is2b()) {
+    if (!aBuffer->Is2b()) {
       return true;
     }
     return !nsTextFrameUtils::IsSpaceCombiningSequenceTail(
-        aFrag->Get2b() + aPos + 1, aFrag->GetLength() - (aPos + 1));
+        aBuffer->Get2b() + aPos + 1, aBuffer->GetLength() - (aPos + 1));
   }
 
   if (justifyStyle == StyleTextJustify::InterCharacter) {
@@ -3225,7 +3227,7 @@ static bool IsJustifiableCharacter(const nsStyleText* aTextStyle,
       return true;
     }
     if (NS_IS_HIGH_SURROGATE(ch)) {
-      if (char32_t u = aFrag->ScalarValueAt(AssertedCast<uint32_t>(aPos))) {
+      if (char32_t u = aBuffer->ScalarValueAt(AssertedCast<uint32_t>(aPos))) {
         // CJK Unified Ideographs Extension B,
         // CJK Unified Ideographs Extension C,
         // CJK Unified Ideographs Extension D,
@@ -3247,7 +3249,7 @@ void nsTextFrame::ClearMetrics(ReflowOutput& aMetrics) {
   AddStateBits(TEXT_NO_RENDERED_GLYPHS);
 }
 
-static int32_t FindChar(const nsTextFragment* frag, int32_t aOffset,
+static int32_t FindChar(const CharacterDataBuffer* frag, int32_t aOffset,
                         int32_t aLength, char16_t ch) {
   int32_t i = 0;
   if (frag->Is2b()) {
@@ -3302,14 +3304,14 @@ static bool IsInBounds(const gfxSkipCharsIterator& aStart,
 
 nsTextFrame::PropertyProvider::PropertyProvider(
     gfxTextRun* aTextRun, const nsStyleText* aTextStyle,
-    const nsTextFragment* aFrag, nsTextFrame* aFrame,
+    const CharacterDataBuffer* aBuffer, nsTextFrame* aFrame,
     const gfxSkipCharsIterator& aStart, int32_t aLength,
     nsIFrame* aLineContainer, nscoord aOffsetFromBlockOriginForTabs,
     nsTextFrame::TextRunType aWhichTextRun, bool aAtStartOfLine)
     : mTextRun(aTextRun),
       mFontGroup(nullptr),
       mTextStyle(aTextStyle),
-      mFrag(aFrag),
+      mFrag(aBuffer),
       mLineContainer(aLineContainer),
       mFrame(aFrame),
       mStart(aStart),
@@ -7371,7 +7373,7 @@ int16_t nsTextFrame::GetSelectionStatus(int16_t* aSelectionFlags) {
 }
 
 bool nsTextFrame::IsEntirelyWhitespace() const {
-  const nsTextFragment& text = mContent->AsText()->TextFragment();
+  const CharacterDataBuffer& text = mContent->AsText()->TextFragment();
   for (uint32_t index = 0; index < text.GetLength(); ++index) {
     const char16_t ch = text.CharAt(index);
     if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == 0xa0) {
@@ -7455,7 +7457,7 @@ nsIFrame::ContentOffsets nsTextFrame::GetCharacterOffsetAtFramePointInternal(
     // ...but don't let selection/insertion-point split two Regional Indicator
     // chars that are ligated in the textrun to form a single flag symbol.
     uint32_t offs = extraCluster.GetOriginalOffset();
-    const nsTextFragment* frag = TextFragment();
+    const CharacterDataBuffer* frag = TextFragment();
     if (frag->IsHighSurrogateFollowedByLowSurrogateAt(offs) &&
         gfxFontUtils::IsRegionalIndicator(frag->ScalarValueAt(offs))) {
       allowSplitLigature = false;
@@ -8042,9 +8044,9 @@ class MOZ_STACK_CLASS ClusterIterator {
   gfxSkipCharsIterator mIterator;
   // Usually, mFrag is pointer to `dom::CharacterData::mText`.  However, if
   // we're in a password field, this points `mMaskedFrag`.
-  const nsTextFragment* mFrag;
+  const CharacterDataBuffer* mFrag;
   // If we're in a password field, this is initialized with mask characters.
-  nsTextFragment mMaskedFrag;
+  CharacterDataBuffer mMaskedFrag;
   nsTextFrame* mTextFrame;
   int32_t mDirection;  // +1 or -1, or 0 to indicate failure
   int32_t mCharIndex;
@@ -8072,7 +8074,7 @@ static bool IsAcceptableCaretPosition(const gfxSkipCharsIterator& aIter,
     // this far because the low surrogate is also marked as non-clusterStart
     // so we'll return FALSE above.)
     const uint32_t offs = AssertedCast<uint32_t>(aIter.GetOriginalOffset());
-    const nsTextFragment* frag = aFrame->TextFragment();
+    const CharacterDataBuffer* frag = aFrame->TextFragment();
     const char16_t ch = frag->CharAt(offs);
 
     if (gfxFontUtils::IsVarSelector(ch) ||
@@ -8475,7 +8477,7 @@ static bool IsFirstLetterSuffixPunctuation(uint32_t aChar) {
   }
 }
 
-static int32_t FindEndOfPrefixPunctuationRun(const nsTextFragment* aFrag,
+static int32_t FindEndOfPrefixPunctuationRun(const CharacterDataBuffer* aBuffer,
                                              const gfxTextRun* aTextRun,
                                              gfxSkipCharsIterator* aIter,
                                              int32_t aOffset, int32_t aStart,
@@ -8483,7 +8485,7 @@ static int32_t FindEndOfPrefixPunctuationRun(const nsTextFragment* aFrag,
   int32_t i;
   for (i = aStart; i < aEnd - aOffset; ++i) {
     if (IsFirstLetterPrefixPunctuation(
-            aFrag->ScalarValueAt(AssertedCast<uint32_t>(aOffset + i)))) {
+            aBuffer->ScalarValueAt(AssertedCast<uint32_t>(aOffset + i)))) {
       aIter->SetOriginalOffset(aOffset + i);
       FindClusterEnd(aTextRun, aEnd, aIter);
       i = aIter->GetOriginalOffset() - aOffset;
@@ -8494,7 +8496,7 @@ static int32_t FindEndOfPrefixPunctuationRun(const nsTextFragment* aFrag,
   return i;
 }
 
-static int32_t FindEndOfSuffixPunctuationRun(const nsTextFragment* aFrag,
+static int32_t FindEndOfSuffixPunctuationRun(const CharacterDataBuffer* aBuffer,
                                              const gfxTextRun* aTextRun,
                                              gfxSkipCharsIterator* aIter,
                                              int32_t aOffset, int32_t aStart,
@@ -8502,7 +8504,7 @@ static int32_t FindEndOfSuffixPunctuationRun(const nsTextFragment* aFrag,
   int32_t i;
   for (i = aStart; i < aEnd - aOffset; ++i) {
     if (IsFirstLetterSuffixPunctuation(
-            aFrag->ScalarValueAt(AssertedCast<uint32_t>(aOffset + i)))) {
+            aBuffer->ScalarValueAt(AssertedCast<uint32_t>(aOffset + i)))) {
       aIter->SetOriginalOffset(aOffset + i);
       FindClusterEnd(aTextRun, aEnd, aIter);
       i = aIter->GetOriginalOffset() - aOffset;
@@ -8526,7 +8528,7 @@ static int32_t FindEndOfSuffixPunctuationRun(const nsTextFragment* aFrag,
  * return, on exit returns length of the first-letter fragment (which may
  * include leading and trailing punctuation, for example)
  */
-static bool FindFirstLetterRange(const nsTextFragment* aFrag,
+static bool FindFirstLetterRange(const CharacterDataBuffer* aBuffer,
                                  const nsAtom* aLang,
                                  const gfxTextRun* aTextRun, int32_t aOffset,
                                  const gfxSkipCharsIterator& aIter,
@@ -8555,11 +8557,11 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
   };
 
   // Skip any trimmable leading whitespace.
-  int32_t i = GetTrimmableWhitespaceCount(aFrag, aOffset, length, 1);
+  int32_t i = GetTrimmableWhitespaceCount(aBuffer, aOffset, length, 1);
   while (true) {
     // Scan past any leading punctuation. This leaves `j` at the first
     // non-punctuation character.
-    int32_t j = FindEndOfPrefixPunctuationRun(aFrag, aTextRun, &iter, aOffset,
+    int32_t j = FindEndOfPrefixPunctuationRun(aBuffer, aTextRun, &iter, aOffset,
                                               i, endOffset);
     if (j == length) {
       return false;
@@ -8567,7 +8569,7 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
 
     // Scan past any Unicode whitespace characters after punctuation.
     while (j < length) {
-      char16_t ch = aFrag->CharAt(AssertedCast<uint32_t>(aOffset + j));
+      char16_t ch = aBuffer->CharAt(AssertedCast<uint32_t>(aOffset + j));
       // The spec says to allow "characters that belong to the `Zs` Unicode
       // general category _other than_ U+3000" here.
       if (unicode::GetGeneralCategory(ch) ==
@@ -8593,7 +8595,7 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
   // first-letter.
   // Return true so that we don't go on looking, but set aLength to 0.
   const char32_t usv =
-      aFrag->ScalarValueAt(AssertedCast<uint32_t>(aOffset + i));
+      aBuffer->ScalarValueAt(AssertedCast<uint32_t>(aOffset + i));
   if (!nsContentUtils::IsAlphanumericOrSymbol(usv)) {
     *aLength = 0;
     return true;
@@ -8692,7 +8694,7 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
   if (usesIndicHalfForms) {
     while (i + 1 < length &&
            !aTextRun->IsLigatureGroupStart(iter.GetSkippedOffset())) {
-      char32_t c = aFrag->ScalarValueAt(AssertedCast<uint32_t>(aOffset + i));
+      char32_t c = aBuffer->ScalarValueAt(AssertedCast<uint32_t>(aOffset + i));
       if (intl::UnicodeProperties::GetCombiningClass(c) ==
           HB_UNICODE_COMBINING_CLASS_VIRAMA) {
         iter.AdvanceOriginal(1);
@@ -8711,8 +8713,8 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
   // Check for Dutch "ij" digraph special case, but only if both letters have
   // the same case.
   if (script == Script::LATIN && LangTagIsDutch(aLang)) {
-    char16_t ch1 = aFrag->CharAt(AssertedCast<uint32_t>(aOffset + i));
-    char16_t ch2 = aFrag->CharAt(AssertedCast<uint32_t>(aOffset + i + 1));
+    char16_t ch1 = aBuffer->CharAt(AssertedCast<uint32_t>(aOffset + i));
+    char16_t ch2 = aBuffer->CharAt(AssertedCast<uint32_t>(aOffset + i + 1));
     if ((ch1 == 'i' && ch2 == 'j') || (ch1 == 'I' && ch2 == 'J')) {
       iter.SetOriginalOffset(aOffset + i + 1);
       FindClusterEnd(aTextRun, endOffset, &iter, allowSplitLigature);
@@ -8734,7 +8736,7 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
     // whitespace, in case we need to reset.
     const int32_t preWS = i;
     while (i < length) {
-      char16_t ch = aFrag->CharAt(AssertedCast<uint32_t>(aOffset + i));
+      char16_t ch = aBuffer->CharAt(AssertedCast<uint32_t>(aOffset + i));
       // The spec says the first-letter suffix includes "any intervening
       // typographic space -- characters belonging to the Zs Unicode general
       // category other than U+3000 IDEOGRAPHIC SPACE or a word separator",
@@ -8750,7 +8752,7 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
 
     // Consume clusters that start with punctuation.
     const int32_t prePunct = i;
-    i = FindEndOfSuffixPunctuationRun(aFrag, aTextRun, &iter, aOffset, i,
+    i = FindEndOfSuffixPunctuationRun(aBuffer, aTextRun, &iter, aOffset, i,
                                       endOffset);
 
     // If we didn't find punctuation here, then we also don't want to include
@@ -8876,7 +8878,7 @@ void nsTextFrame::AddInlineMinISizeForFlow(gfxContext* aRenderingContext,
   // Pass null for the line container. This will disable tab spacing, but that's
   // OK since we can't really handle tabs for intrinsic sizing anyway.
   const nsStyleText* textStyle = StyleText();
-  const nsTextFragment* frag = TextFragment();
+  const CharacterDataBuffer* frag = TextFragment();
 
   // If we're hyphenating, the PropertyProvider needs the actual length;
   // otherwise we can just pass INT32_MAX to mean "all the text"
@@ -9050,7 +9052,7 @@ void nsTextFrame::MaybeSplitFramesForFirstLetter() {
   gfxSkipCharsIterator iter = f->EnsureTextRun(nsTextFrame::eInflated);
   const gfxTextRun* textRun = f->GetTextRun(nsTextFrame::eInflated);
 
-  const nsTextFragment* frag = TextFragment();
+  const CharacterDataBuffer* frag = TextFragment();
   const int32_t length = GetInFlowContentLength();
   const int32_t offset = GetContentOffset();
   int32_t firstLetterLength = length;
@@ -9173,7 +9175,7 @@ void nsTextFrame::AddInlinePrefISizeForFlow(gfxContext* aRenderingContext,
   // OK since we can't really handle tabs for intrinsic sizing anyway.
 
   const nsStyleText* textStyle = StyleText();
-  const nsTextFragment* frag = TextFragment();
+  const CharacterDataBuffer* frag = TextFragment();
   PropertyProvider provider(textRun, textStyle, frag, this, iter, INT32_MAX,
                             nullptr, 0, aTextRunType, aData->mLineIsEmpty);
 
@@ -9390,7 +9392,7 @@ nsresult nsTextFrame::GetPrefWidthTightBounds(gfxContext* aContext, nscoord* aX,
   return NS_OK;
 }
 
-static bool HasSoftHyphenBefore(const nsTextFragment* aFrag,
+static bool HasSoftHyphenBefore(const CharacterDataBuffer* aBuffer,
                                 const gfxTextRun* aTextRun,
                                 int32_t aStartOffset,
                                 const gfxSkipCharsIterator& aIter) {
@@ -9407,7 +9409,7 @@ static bool HasSoftHyphenBefore(const nsTextFragment* aFrag,
     if (!iter.IsOriginalCharSkipped()) {
       break;
     }
-    if (aFrag->CharAt(AssertedCast<uint32_t>(iter.GetOriginalOffset())) ==
+    if (aBuffer->CharAt(AssertedCast<uint32_t>(iter.GetOriginalOffset())) ==
         CH_SHY) {
       return true;
     }
@@ -9786,7 +9788,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 
   uint32_t flowEndInTextRun;
   nsIFrame* lineContainer = aLineLayout.LineContainerFrame();
-  const nsTextFragment* frag = TextFragment();
+  const CharacterDataBuffer* frag = TextFragment();
 
   // DOM offsets of the text range we need to measure, after trimming
   // whitespace, restricting to first-letter, and restricting preformatted text
@@ -10445,7 +10447,7 @@ nsTextFrame::TrimOutput nsTextFrame::TrimTrailingWhiteSpace(
 
   uint32_t trimmedStart = start.GetSkippedOffset();
 
-  const nsTextFragment* frag = TextFragment();
+  const CharacterDataBuffer* frag = TextFragment();
   TrimmedOffsets trimmed = GetTrimmedOffsets(frag);
   gfxSkipCharsIterator trimmedEndIter = start;
   const nsStyleText* textStyle = StyleText();
@@ -10544,26 +10546,27 @@ OverflowAreas nsTextFrame::RecomputeOverflow(nsIFrame* aBlockFrame,
 
 static void TransformChars(nsTextFrame* aFrame, const nsStyleText* aStyle,
                            const gfxTextRun* aTextRun, uint32_t aSkippedOffset,
-                           const nsTextFragment* aFrag, int32_t aFragOffset,
-                           int32_t aFragLen, nsAString& aOut) {
+                           const CharacterDataBuffer* aBuffer,
+                           int32_t aBufferOffset, int32_t aBufferLen,
+                           nsAString& aOut) {
   nsAutoString fragString;
   char16_t* out;
   bool needsToMaskPassword = NeedsToMaskPassword(aFrame);
   if (aStyle->mTextTransform.IsNone() && !needsToMaskPassword &&
       aStyle->mWebkitTextSecurity == StyleTextSecurity::None) {
     // No text-transform, so we can copy directly to the output string.
-    aOut.SetLength(aOut.Length() + aFragLen);
-    out = aOut.EndWriting() - aFragLen;
+    aOut.SetLength(aOut.Length() + aBufferLen);
+    out = aOut.EndWriting() - aBufferLen;
   } else {
     // Use a temporary string as source for the transform.
-    fragString.SetLength(aFragLen);
+    fragString.SetLength(aBufferLen);
     out = fragString.BeginWriting();
   }
 
   // Copy the text, with \n and \t replaced by <space> if appropriate.
-  MOZ_ASSERT(aFragOffset >= 0);
-  for (uint32_t i = 0; i < static_cast<uint32_t>(aFragLen); ++i) {
-    char16_t ch = aFrag->CharAt(static_cast<uint32_t>(aFragOffset) + i);
+  MOZ_ASSERT(aBufferOffset >= 0);
+  for (uint32_t i = 0; i < static_cast<uint32_t>(aBufferLen); ++i) {
+    char16_t ch = aBuffer->CharAt(static_cast<uint32_t>(aBufferOffset) + i);
     if ((ch == '\n' && !aStyle->NewlineIsSignificant(aFrame)) ||
         (ch == '\t' && !aStyle->TabIsSignificant())) {
       ch = ' ';
@@ -10841,7 +10844,7 @@ bool nsTextFrame::IsEmpty() {
 // Translate the mapped content into a string that's printable
 void nsTextFrame::ToCString(nsCString& aBuf) const {
   // Get the frames text content
-  const nsTextFragment* frag = TextFragment();
+  const CharacterDataBuffer* frag = TextFragment();
   if (!frag) {
     return;
   }
@@ -11055,7 +11058,7 @@ mozilla::JustificationAssignment nsTextFrame::GetJustificationAssignment()
 }
 
 uint32_t nsTextFrame::CountGraphemeClusters() const {
-  const nsTextFragment* frag = TextFragment();
+  const CharacterDataBuffer* frag = TextFragment();
   MOZ_ASSERT(frag, "Text frame must have text fragment");
   nsAutoString content;
   frag->AppendTo(content, AssertedCast<uint32_t>(GetContentOffset()),

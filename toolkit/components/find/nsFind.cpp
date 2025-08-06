@@ -12,7 +12,6 @@
 #include "nsINode.h"
 #include "nsIFrame.h"
 #include "nsIFormControl.h"
-#include "nsTextFragment.h"
 #include "nsString.h"
 #include "nsAtom.h"
 #include "nsServiceManagerUtils.h"
@@ -24,6 +23,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/TextEditor.h"
+#include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/TreeIterator.h"
 #include "mozilla/dom/Element.h"
@@ -517,7 +517,7 @@ nsFind::SetMatchDiacritics(bool aMatchDiacritics) {
 // iterator to go back to a previously visited node, so we always save the
 // "match anchor" node and offset.
 //
-// Text nodes store their text in an nsTextFragment, which is effectively a
+// Text nodes store their text in an CharacterDataBuffer, which is effectively a
 // union of a one-byte string or a two-byte string. Single and double strings
 // are intermixed in the dom. We don't have string classes which can deal with
 // intermixed strings, so all the handling is done explicitly here.
@@ -558,7 +558,7 @@ char32_t nsFind::PeekNextChar(State& aState, bool aAlreadyMatching) const {
       return L'\0';
     }
 
-    const nsTextFragment& frag = text->TextFragment();
+    const CharacterDataBuffer& frag = text->TextFragment();
     uint32_t len = frag.GetLength();
     if (!len) {
       continue;
@@ -682,7 +682,7 @@ already_AddRefed<nsRange> nsFind::FindFromRangeBoundaries(
   // Direction to move pindex and ptr*
   const int incr = mFindBackward ? -1 : 1;
 
-  const nsTextFragment* frag = nullptr;
+  const CharacterDataBuffer* frag = nullptr;
   int32_t fragLen = 0;
 
   // Pointers into the current fragment:

@@ -12,6 +12,7 @@
 #include "mozilla/EditorBase.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/Logging.h"
+#include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/Element.h"
 
 #include "nsDebug.h"
@@ -20,7 +21,6 @@
 #include "nsUnicodeProperties.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIContent.h"
-#include "nsTextFragment.h"
 #include "nsRange.h"
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
@@ -697,7 +697,7 @@ static inline bool IsBRElement(nsINode* aNode) {
  */
 static Maybe<int32_t> FindOffsetOfLastDOMWordSeparatorSequence(
     nsIContent* aContent, int32_t aBeforeOffset) {
-  const nsTextFragment* textFragment = aContent->GetText();
+  const dom::CharacterDataBuffer* textFragment = aContent->GetText();
   MOZ_ASSERT(textFragment, "Where is our text?");
   int32_t end = std::min(aBeforeOffset, int32_t(textFragment->GetLength()));
 
@@ -873,7 +873,7 @@ void mozInlineSpellWordUtil::SoftText::AdjustBeginAndBuildText(
     if (IsSpellCheckingTextNode(node)) {
       nsIContent* content = static_cast<nsIContent*>(node);
       MOZ_ASSERT(content, "Where is our content?");
-      const nsTextFragment* textFragment = content->GetText();
+      const dom::CharacterDataBuffer* textFragment = content->GetText();
       MOZ_ASSERT(textFragment, "Where is our text?");
       uint32_t lastOffsetInNode = textFragment->GetLength();
 

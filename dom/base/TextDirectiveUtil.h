@@ -595,7 +595,7 @@ template <TextScanDirection direction>
       }
       textContentForLogging.AppendElement(std::move(textContent));
     }
-    const nsTextFragment* textData = text->GetText();
+    const CharacterDataBuffer* textData = text->GetText();
     MOZ_DIAGNOSTIC_ASSERT(textData);
     const uint32_t textLength = textData->GetLength();
     while (offset < textLength &&

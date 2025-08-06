@@ -2275,11 +2275,12 @@ nsresult WhiteSpaceVisibilityKeeper::
   if (whiteSpaceOffset.isNothing()) {
     return NS_OK;
   }
-  nsTextFragment::WhitespaceOptions whitespaceOptions{
-      nsTextFragment::WhitespaceOption::FormFeedIsSignificant,
-      nsTextFragment::WhitespaceOption::TreatNBSPAsCollapsible};
+  CharacterDataBuffer::WhitespaceOptions whitespaceOptions{
+      CharacterDataBuffer::WhitespaceOption::FormFeedIsSignificant,
+      CharacterDataBuffer::WhitespaceOption::TreatNBSPAsCollapsible};
   if (isNewLinePreformatted) {
-    whitespaceOptions += nsTextFragment::WhitespaceOption::NewLineIsSignificant;
+    whitespaceOptions +=
+        CharacterDataBuffer::WhitespaceOption::NewLineIsSignificant;
   }
   const uint32_t firstOffset = [&]() {
     if (!*whiteSpaceOffset) {
@@ -2287,13 +2288,13 @@ nsresult WhiteSpaceVisibilityKeeper::
     }
     const uint32_t offset = textNode.TextFragment().RFindNonWhitespaceChar(
         whitespaceOptions, *whiteSpaceOffset - 1);
-    return offset == nsTextFragment::kNotFound ? 0u : offset + 1u;
+    return offset == CharacterDataBuffer::kNotFound ? 0u : offset + 1u;
   }();
   const uint32_t endOffset = [&]() {
     const uint32_t offset = textNode.TextFragment().FindNonWhitespaceChar(
         whitespaceOptions, *whiteSpaceOffset + 1);
-    return offset == nsTextFragment::kNotFound ? textNode.TextDataLength()
-                                               : offset;
+    return offset == CharacterDataBuffer::kNotFound ? textNode.TextDataLength()
+                                                    : offset;
   }();
   MOZ_DIAGNOSTIC_ASSERT(firstOffset <= endOffset);
   nsAutoString normalizedString;

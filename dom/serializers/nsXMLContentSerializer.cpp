@@ -14,6 +14,7 @@
 
 #include "mozilla/Encoding.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/Document.h"
@@ -32,7 +33,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsParserConstants.h"
 #include "nsString.h"
-#include "nsTextFragment.h"
 #include "nsUnicharUtils.h"
 
 using namespace mozilla;
@@ -133,7 +133,7 @@ nsresult nsXMLContentSerializer::AppendTextData(nsIContent* aNode,
                                                 nsAString& aStr,
                                                 bool aTranslateEntities) {
   nsIContent* content = aNode;
-  const nsTextFragment* frag;
+  const CharacterDataBuffer* frag = nullptr;
   if (!content || !(frag = content->GetText())) {
     return NS_ERROR_FAILURE;
   }

@@ -1104,7 +1104,7 @@ void nsINode::Normalize() {
   for (uint32_t i = 0; i < nodes.Length(); ++i) {
     nsIContent* node = nodes[i];
     // Merge with previous node unless empty
-    const nsTextFragment* text = node->GetText();
+    const CharacterDataBuffer* text = node->GetText();
     if (text->GetLength()) {
       nsIContent* target = node->GetPreviousSibling();
       NS_ASSERTION(

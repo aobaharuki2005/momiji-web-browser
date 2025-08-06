@@ -18,6 +18,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_bidi.h"
+#include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
@@ -35,7 +36,6 @@
 #include "nsLayoutUtils.h"
 #include "nsMenuPopupFrame.h"
 #include "nsPresContext.h"
-#include "nsTextFragment.h"
 #include "nsTextFrame.h"
 #include "nsXULPopupManager.h"
 
@@ -76,7 +76,7 @@ nsresult nsCaret::Init(PresShell* aPresShell) {
 
 static bool DrawCJKCaret(nsIFrame* aFrame, int32_t aOffset) {
   nsIContent* content = aFrame->GetContent();
-  const nsTextFragment* frag = content->GetText();
+  const CharacterDataBuffer* frag = content->GetText();
   if (!frag) {
     return false;
   }

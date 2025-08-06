@@ -8,12 +8,12 @@
 
 #include <algorithm>
 
+#include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/Text.h"
 #include "nsBidiUtils.h"
 #include "nsCharTraits.h"
 #include "nsIContent.h"
 #include "nsStyleStruct.h"
-#include "nsTextFragment.h"
 #include "nsUnicharUtils.h"
 #include "nsUnicodeProperties.h"
 
@@ -405,7 +405,7 @@ static uint32_t DoComputeApproximateLengthWithWhitespaceCompression(
 
 uint32_t nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(
     Text* aText, const nsStyleText* aStyleText) {
-  const nsTextFragment* frag = &aText->TextFragment();
+  const CharacterDataBuffer* frag = &aText->TextFragment();
   if (frag->Is2b()) {
     return DoComputeApproximateLengthWithWhitespaceCompression(
         frag->Get2b(), frag->GetLength(), aStyleText);

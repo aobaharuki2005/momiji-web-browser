@@ -24,13 +24,13 @@
 #include "nsIFrame.h"
 #include "mozilla/dom/Document.h"
 #include "nsIContent.h"
-#include "nsTextFragment.h"
 #include "nsIEditor.h"
 
 #include "nsIDocShellTreeItem.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIObserverService.h"
 #include "nsFocusManager.h"
+#include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
@@ -736,7 +736,7 @@ void nsTypeAheadFind::RangeStartsInsideLink(nsRange* aRange,
       startContent = childContent;
     }
   } else if (startOffset > 0) {
-    const nsTextFragment* textFrag = startContent->GetText();
+    const CharacterDataBuffer* textFrag = startContent->GetText();
     if (textFrag) {
       // look for non whitespace character before start offset
       for (uint32_t index = 0; index < startOffset; index++) {

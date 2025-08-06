@@ -21,7 +21,6 @@
 #include "nsDebug.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
-#include "nsTextFragment.h"
 
 namespace mozilla {
 

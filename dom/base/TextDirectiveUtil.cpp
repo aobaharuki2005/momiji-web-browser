@@ -102,7 +102,7 @@ Result<nsString, ErrorResult> TextDirectiveUtil::RangeContentAsString(
   if (!aText || aText->Length() == 0 || aPos >= aText->Length()) {
     return false;
   }
-  const nsTextFragment& frag = aText->TextFragment();
+  const CharacterDataBuffer& frag = aText->TextFragment();
   const char NBSP_CHAR = char(0xA0);
   if (frag.Is2b()) {
     const char16_t* content = frag.Get2b();

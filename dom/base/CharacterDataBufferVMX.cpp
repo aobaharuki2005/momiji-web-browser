@@ -8,8 +8,8 @@
 
 #include <algorithm>
 
+#include "CharacterDataBufferImpl.h"
 #include "mozilla/Assertions.h"
-#include "nsTextFragmentImpl.h"
 #include "nscore.h"
 
 namespace mozilla {

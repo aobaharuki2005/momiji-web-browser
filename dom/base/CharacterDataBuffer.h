@@ -10,8 +10,8 @@
  * a char*; otherwise the text is stored as a char16_t*
  */
 
-#ifndef nsTextFragment_h___
-#define nsTextFragment_h___
+#ifndef mozilla_dom_CharacterDataBuffer_h
+#define mozilla_dom_CharacterDataBuffer_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumSet.h"
@@ -25,7 +25,7 @@
 // XXX should this normalize the code to keep a \u0000 at the end?
 
 // XXX nsTextFragmentPool?
-
+namespace mozilla::dom {
 /**
  * A fragment of text. If mIs2b is 1 then the m2b pointer is valid
  * otherwise the m1b pointer is valid. If m1b is used then each byte
@@ -35,7 +35,7 @@
  * This class does not have a virtual destructor therefore it is not
  * meant to be subclassed.
  */
-class nsTextFragment final {
+class CharacterDataBuffer final {
  private:
   constexpr static unsigned char kFormFeed = '\f';
   constexpr static unsigned char kNewLine = '\n';
@@ -51,18 +51,18 @@ class nsTextFragment final {
   /**
    * Default constructor. Initialize the fragment to be empty.
    */
-  nsTextFragment() : m1b(nullptr), mAllBits(0) {
-    MOZ_COUNT_CTOR(nsTextFragment);
+  CharacterDataBuffer() : m1b(nullptr), mAllBits(0) {
+    MOZ_COUNT_CTOR(CharacterDataBuffer);
     NS_ASSERTION(sizeof(FragmentBits) == 4, "Bad field packing!");
   }
 
-  ~nsTextFragment();
+  ~CharacterDataBuffer();
 
   /**
    * Change the contents of this fragment to be a copy of the
    * the argument fragment, or to "" if unable to allocate enough memory.
    */
-  nsTextFragment& operator=(const nsTextFragment& aOther);
+  CharacterDataBuffer& operator=(const CharacterDataBuffer& aOther);
 
   /**
    * Return true if this fragment is represented by char16_t data
@@ -86,8 +86,9 @@ class nsTextFragment final {
 
   /**
    * Get a pointer to constant char data.
-   * NOTE: nsTextFragment treat the 1b buffer as an array of unsigned chars.
-   * Therefore, Get1b() is not good one for looking for a character between 0x80
+   * NOTE: CharacterDataBuffer treat the 1b buffer as an array of unsigned
+   * chars. Therefore, Get1b() is not good one for looking for a character
+   * between 0x80
    * - 0xFF in the buffer.
    */
   const char* Get1b() const {
@@ -108,7 +109,7 @@ class nsTextFragment final {
    */
   uint32_t GetLength() const { return mState.mLength; }
 
-#define NS_MAX_TEXT_FRAGMENT_LENGTH (static_cast<uint32_t>(0x1FFFFFFF))
+#define NS_MAX_CHARACTER_DATA_BUFFER_LENGTH (static_cast<uint32_t>(0x1FFFFFFF))
 
   bool CanGrowBy(size_t n) const {
     return n < (1 << 29) && mState.mLength + n < (1 << 29);
@@ -126,10 +127,10 @@ class nsTextFragment final {
              bool aForce2b);
 
   bool SetTo(const nsString& aString, bool aUpdateBidi, bool aForce2b) {
-    if (MOZ_UNLIKELY(aString.Length() > NS_MAX_TEXT_FRAGMENT_LENGTH)) {
+    if (MOZ_UNLIKELY(aString.Length() > NS_MAX_CHARACTER_DATA_BUFFER_LENGTH)) {
       return false;
     }
-    ReleaseText();
+    ReleaseBuffer();
     if (aForce2b && !aUpdateBidi) {
       if (mozilla::StringBuffer* buffer = aString.GetStringBuffer()) {
         NS_ADDREF(m2b = buffer);
@@ -319,7 +320,7 @@ class nsTextFragment final {
     uint32_t mIs2b : 1;
     uint32_t mIsBidi : 1;
     // Note that when you change the bits of mLength, you also need to change
-    // NS_MAX_TEXT_FRAGMENT_LENGTH.
+    // NS_MAX_CHARACTER_DATA_BUFFER_LENGTH.
     uint32_t mLength : 29;
   };
 
@@ -329,7 +330,7 @@ class nsTextFragment final {
    * Check whether the text in this fragment is the same as the text in the
    * other fragment.
    */
-  [[nodiscard]] bool TextEquals(const nsTextFragment& aOther) const;
+  [[nodiscard]] bool BufferEquals(const CharacterDataBuffer& aOther) const;
 
   // FYI: FragmentBits::mLength is only 29 bits.  Therefore, UINT32_MAX won't
   // be valid offset in the data.
@@ -552,7 +553,7 @@ class nsTextFragment final {
   }
 
  private:
-  void ReleaseText();
+  void ReleaseBuffer();
 
   /**
    * Scan the contents of the fragment and turn on mState.mIsBidi if it
@@ -665,4 +666,6 @@ class nsTextFragment final {
   }
 };
 
-#endif /* nsTextFragment_h___ */
+}  // namespace mozilla::dom
+
+#endif /* mozilla_dom_CharacterDataBuffer_h */

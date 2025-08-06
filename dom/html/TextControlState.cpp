@@ -3101,7 +3101,7 @@ void TextControlState::GetPreviewText(nsAString& aValue) {
   }
 
   MOZ_ASSERT(previewDiv->GetFirstChild(), "preview div has no child");
-  const nsTextFragment* text = previewDiv->GetFirstChild()->GetText();
+  const CharacterDataBuffer* text = previewDiv->GetFirstChild()->GetText();
 
   aValue.Truncate();
   text->AppendTo(aValue);

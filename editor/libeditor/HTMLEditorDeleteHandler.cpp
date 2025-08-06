@@ -4951,7 +4951,7 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangeToDeleteRangeWithTransaction(
 
   const auto ExtendRangeToSelectCharacterForward =
       [](nsRange& aRange, const EditorRawDOMPointInText& aCaretPoint) -> void {
-    const nsTextFragment& textFragment =
+    const CharacterDataBuffer& textFragment =
         aCaretPoint.ContainerAs<Text>()->TextFragment();
     if (!textFragment.GetLength()) {
       return;
@@ -4976,7 +4976,7 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangeToDeleteRangeWithTransaction(
     if (aCaretPoint.IsStartOfContainer()) {
       return;
     }
-    const nsTextFragment& textFragment =
+    const CharacterDataBuffer& textFragment =
         aCaretPoint.ContainerAs<Text>()->TextFragment();
     if (!textFragment.GetLength()) {
       return;
@@ -6340,7 +6340,7 @@ nsresult HTMLEditor::AutoMoveOneLineHandler::
           !HTMLEditUtils::IsSimplyEditableNode(*lastTextNode)) {
         return nullptr;
       }
-      const nsTextFragment& textFragment = lastTextNode->TextFragment();
+      const CharacterDataBuffer& textFragment = lastTextNode->TextFragment();
       const char16_t lastCh =
           textFragment.GetLength()
               ? textFragment.CharAt(textFragment.GetLength() - 1u)

@@ -12,6 +12,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/dom/Animation.h"
+#include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/KeyframeEffect.h"
 #include "nsCSSPseudoElements.h"
@@ -20,7 +21,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsNameSpaceManager.h"
 #include "nsServiceManagerUtils.h"
-#include "nsTextFragment.h"
 #include "nsThreadUtils.h"
 
 using namespace mozilla;

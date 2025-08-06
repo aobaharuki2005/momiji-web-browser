@@ -52,7 +52,7 @@ ProcessingInstruction::ProcessingInstruction(
   MOZ_ASSERT(mNodeInfo->NodeType() == nsINode::PROCESSING_INSTRUCTION_NODE,
              "Bad NodeType in aNodeInfo");
 
-  SetTextInternal(0, mText.GetLength(), aData.BeginReading(), aData.Length(),
+  SetTextInternal(0, mBuffer.GetLength(), aData.BeginReading(), aData.Length(),
                   false);  // Don't notify (bug 420429).
 }
 
@@ -94,7 +94,7 @@ void ProcessingInstruction::List(FILE* out, int32_t aIndent) const {
   fprintf(out, "Processing instruction refcount=%" PRIuPTR "<", mRefCnt.get());
 
   nsAutoString tmp;
-  ToCString(tmp, 0, mText.GetLength());
+  ToCString(tmp, 0, mBuffer.GetLength());
   tmp.Insert(nsDependentAtomString(NodeInfo()->GetExtraName()).get(), 0);
   fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
 

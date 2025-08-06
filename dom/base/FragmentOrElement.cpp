@@ -31,6 +31,7 @@
 #include "mozilla/URLExtraData.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Attr.h"
+#include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/CloseWatcher.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/Document.h"
@@ -83,12 +84,10 @@
 #include "nsFrameLoader.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
-#include "nsIContentInlines.h"
 #include "nsIWidget.h"
 #include "nsLayoutUtils.h"
 #include "nsNodeInfoManager.h"
 #include "nsPIDOMWindow.h"
-#include "nsTextFragment.h"
 #include "nsView.h"
 #include "nsWindowSizes.h"
 #include "nsWrapperCacheInlines.h"
@@ -1831,7 +1830,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsIContent)
 
 //----------------------------------------------------------------------
 
-const nsTextFragment* FragmentOrElement::GetText() { return nullptr; }
+const CharacterDataBuffer* FragmentOrElement::GetText() { return nullptr; }
 
 uint32_t FragmentOrElement::TextLength() const {
   // We can remove this assertion if it turns out to be useful to be able

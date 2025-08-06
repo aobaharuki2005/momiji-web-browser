@@ -23,6 +23,7 @@
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/ViewportUtils.h"
+#include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/HTMLUnknownElement.h"
@@ -43,7 +44,6 @@
 #include "nsPresContext.h"
 #include "nsQueryObject.h"
 #include "nsRange.h"
-#include "nsTextFragment.h"
 #include "nsTextFrame.h"
 #include "nsView.h"
 
@@ -640,7 +640,7 @@ static uint32_t CountNewlinesInXPLength(const StringType& aString) {
 
 static uint32_t CountNewlinesInXPLength(const Text& aTextNode,
                                         uint32_t aXPLength) {
-  const nsTextFragment& textFragment = aTextNode.TextFragment();
+  const CharacterDataBuffer& textFragment = aTextNode.TextFragment();
   // For automated tests, we should abort on debug build.
   MOZ_ASSERT(aXPLength == UINT32_MAX || aXPLength <= textFragment.GetLength(),
              "aXPLength is out-of-bounds");
@@ -677,7 +677,7 @@ static uint32_t CountNewlinesInNativeLength(const StringType& aString,
 
 static uint32_t CountNewlinesInNativeLength(const Text& aTextNode,
                                             uint32_t aNativeLength) {
-  const nsTextFragment& textFragment = aTextNode.TextFragment();
+  const CharacterDataBuffer& textFragment = aTextNode.TextFragment();
   const uint32_t xpLength = textFragment.GetLength();
   if (!xpLength) {
     return 0;

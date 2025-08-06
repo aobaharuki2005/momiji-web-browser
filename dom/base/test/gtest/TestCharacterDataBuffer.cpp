@@ -6,18 +6,18 @@
 #include "gtest/gtest.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/OriginAttributes.h"
+#include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/Document.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
-#include "nsTextFragment.h"
 #include "nsTextNode.h"
 
 namespace mozilla::dom {
 
-using WhitespaceOption = nsTextFragment::WhitespaceOption;
-using WhitespaceOptions = nsTextFragment::WhitespaceOptions;
+using WhitespaceOption = CharacterDataBuffer::WhitespaceOption;
+using WhitespaceOptions = CharacterDataBuffer::WhitespaceOptions;
 
 static already_AddRefed<Document> CreateHTMLDoc() {
   nsCOMPtr<nsIURI> uri;
@@ -60,20 +60,20 @@ struct TestData {
   const uint32_t mExpectedOffset;
 };
 
-TEST(nsTextFragmentTest, FindChar1b)
+TEST(CharacterDataBufferTest, FindChar1b)
 {
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
-  const nsTextFragment& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& textFragment = textNode->TextFragment();
 
   for (const auto& testData : {
-           TestData(u"", u"a", 0, nsTextFragment::kNotFound),
+           TestData(u"", u"a", 0, CharacterDataBuffer::kNotFound),
            TestData(u"abc", u"a", 0, 0),
-           TestData(u"abc", u"A", 0, nsTextFragment::kNotFound),
+           TestData(u"abc", u"A", 0, CharacterDataBuffer::kNotFound),
            TestData(u"abc", u"b", 0, 1),
            TestData(u"abc", u"c", 0, 2),
-           TestData(u"abc", u"a", 1, nsTextFragment::kNotFound),
+           TestData(u"abc", u"a", 1, CharacterDataBuffer::kNotFound),
            TestData(u"abc", u"b", 1, 1),
            TestData(u"abc", u"c", 2, 2),
            TestData(u"a\u00A0b", u"\u00A0", 0, 1),
@@ -86,20 +86,20 @@ TEST(nsTextFragmentTest, FindChar1b)
   }
 }
 
-TEST(nsTextFragmentTest, FindChar2b)
+TEST(CharacterDataBufferTest, FindChar2b)
 {
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
   textNode->MarkAsMaybeModifiedFrequently();
-  const nsTextFragment& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& textFragment = textNode->TextFragment();
 
   for (const auto& testData : {
            TestData(u"abc", u"a", 0, 0),
-           TestData(u"abc", u"A", 0, nsTextFragment::kNotFound),
+           TestData(u"abc", u"A", 0, CharacterDataBuffer::kNotFound),
            TestData(u"abc", u"b", 0, 1),
            TestData(u"abc", u"c", 0, 2),
-           TestData(u"abc", u"a", 1, nsTextFragment::kNotFound),
+           TestData(u"abc", u"a", 1, CharacterDataBuffer::kNotFound),
            TestData(u"abc", u"b", 1, 1),
            TestData(u"abc", u"c", 2, 2),
            TestData(u"a\u00A0b", u"\u00A0", 0, 1),
@@ -112,17 +112,17 @@ TEST(nsTextFragmentTest, FindChar2b)
   }
 }
 
-TEST(nsTextFragmentTest, RFindChar1b)
+TEST(CharacterDataBufferTest, RFindChar1b)
 {
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
-  const nsTextFragment& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& textFragment = textNode->TextFragment();
 
   for (const auto& testData : {
-           TestData(u"", u"a", UINT32_MAX, nsTextFragment::kNotFound),
+           TestData(u"", u"a", UINT32_MAX, CharacterDataBuffer::kNotFound),
            TestData(u"abc", u"a", UINT32_MAX, 0),
-           TestData(u"abc", u"A", UINT32_MAX, nsTextFragment::kNotFound),
+           TestData(u"abc", u"A", UINT32_MAX, CharacterDataBuffer::kNotFound),
            TestData(u"abc", u"b", UINT32_MAX, 1),
            TestData(u"abc", u"c", UINT32_MAX, 2),
            TestData(u"abca", u"a", UINT32_MAX, 3),
@@ -138,17 +138,17 @@ TEST(nsTextFragmentTest, RFindChar1b)
   }
 }
 
-TEST(nsTextFragmentTest, RFindChar2b)
+TEST(CharacterDataBufferTest, RFindChar2b)
 {
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
   textNode->MarkAsMaybeModifiedFrequently();
-  const nsTextFragment& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& textFragment = textNode->TextFragment();
 
   for (const auto& testData : {
            TestData(u"abc", u"a", UINT32_MAX, 0),
-           TestData(u"abc", u"A", UINT32_MAX, nsTextFragment::kNotFound),
+           TestData(u"abc", u"A", UINT32_MAX, CharacterDataBuffer::kNotFound),
            TestData(u"abc", u"b", UINT32_MAX, 1),
            TestData(u"abc", u"c", UINT32_MAX, 2),
            TestData(u"abca", u"a", UINT32_MAX, 3),
@@ -164,19 +164,19 @@ TEST(nsTextFragmentTest, RFindChar2b)
   }
 }
 
-TEST(nsTextFragmentTest, FindFirstDifferentCharOffsetIn1b)
+TEST(CharacterDataBufferTest, FindFirstDifferentCharOffsetIn1b)
 {
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
-  const nsTextFragment& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& textFragment = textNode->TextFragment();
 
   for (const auto& testData : {
-           TestData(u"abcdef", u"abc", 0, nsTextFragment::kNotFound),
+           TestData(u"abcdef", u"abc", 0, CharacterDataBuffer::kNotFound),
            TestData(u"abcdef", u"Abc", 0, 0),
            TestData(u"abcdef", u"aBc", 0, 1),
            TestData(u"abcdef", u"abC", 0, 2),
-           TestData(u"abcdef", u"def", 3, nsTextFragment::kNotFound),
+           TestData(u"abcdef", u"def", 3, CharacterDataBuffer::kNotFound),
            TestData(u"abcdef", u"Def", 3, 3),
            TestData(u"abcdef", u"dEf", 3, 4),
            TestData(u"abcdef", u"deF", 3, 5),
@@ -189,20 +189,20 @@ TEST(nsTextFragmentTest, FindFirstDifferentCharOffsetIn1b)
   }
 }
 
-TEST(nsTextFragmentTest, FindFirstDifferentCharOffsetIn2b)
+TEST(CharacterDataBufferTest, FindFirstDifferentCharOffsetIn2b)
 {
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
   textNode->MarkAsMaybeModifiedFrequently();
-  const nsTextFragment& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& textFragment = textNode->TextFragment();
 
   for (const auto& testData : {
-           TestData(u"abcdef", u"abc", 0, nsTextFragment::kNotFound),
+           TestData(u"abcdef", u"abc", 0, CharacterDataBuffer::kNotFound),
            TestData(u"abcdef", u"Abc", 0, 0),
            TestData(u"abcdef", u"aBc", 0, 1),
            TestData(u"abcdef", u"abC", 0, 2),
-           TestData(u"abcdef", u"def", 3, nsTextFragment::kNotFound),
+           TestData(u"abcdef", u"def", 3, CharacterDataBuffer::kNotFound),
            TestData(u"abcdef", u"Def", 3, 3),
            TestData(u"abcdef", u"dEf", 3, 4),
            TestData(u"abcdef", u"deF", 3, 5),
@@ -215,19 +215,19 @@ TEST(nsTextFragmentTest, FindFirstDifferentCharOffsetIn2b)
   }
 }
 
-TEST(nsTextFragmentTest, RFindFirstDifferentCharOffsetIn1b)
+TEST(CharacterDataBufferTest, RFindFirstDifferentCharOffsetIn1b)
 {
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
-  const nsTextFragment& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& textFragment = textNode->TextFragment();
 
   for (const auto& testData : {
-           TestData(u"abcdef", u"abc", 3, nsTextFragment::kNotFound),
+           TestData(u"abcdef", u"abc", 3, CharacterDataBuffer::kNotFound),
            TestData(u"abcdef", u"Abc", 3, 0),
            TestData(u"abcdef", u"aBc", 3, 1),
            TestData(u"abcdef", u"abC", 3, 2),
-           TestData(u"abcdef", u"def", 6, nsTextFragment::kNotFound),
+           TestData(u"abcdef", u"def", 6, CharacterDataBuffer::kNotFound),
            TestData(u"abcdef", u"Def", 6, 3),
            TestData(u"abcdef", u"dEf", 6, 4),
            TestData(u"abcdef", u"deF", 6, 5),
@@ -240,20 +240,20 @@ TEST(nsTextFragmentTest, RFindFirstDifferentCharOffsetIn1b)
   }
 }
 
-TEST(nsTextFragmentTest, RFindFirstDifferentCharOffsetIn2b)
+TEST(CharacterDataBufferTest, RFindFirstDifferentCharOffsetIn2b)
 {
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
   textNode->MarkAsMaybeModifiedFrequently();
-  const nsTextFragment& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& textFragment = textNode->TextFragment();
 
   for (const auto& testData : {
-           TestData(u"abcdef", u"abc", 3, nsTextFragment::kNotFound),
+           TestData(u"abcdef", u"abc", 3, CharacterDataBuffer::kNotFound),
            TestData(u"abcdef", u"Abc", 3, 0),
            TestData(u"abcdef", u"aBc", 3, 1),
            TestData(u"abcdef", u"abC", 3, 2),
-           TestData(u"abcdef", u"def", 6, nsTextFragment::kNotFound),
+           TestData(u"abcdef", u"def", 6, CharacterDataBuffer::kNotFound),
            TestData(u"abcdef", u"Def", 6, 3),
            TestData(u"abcdef", u"dEf", 6, 4),
            TestData(u"abcdef", u"deF", 6, 5),
@@ -317,22 +317,24 @@ struct TestDataForFindNonWhitespace {
   const WhitespaceOptions mOptions;
 };
 
-TEST(nsTextFragmentTest, FindNonWhitespaceIn1b)
+TEST(CharacterDataBufferTest, FindNonWhitespaceIn1b)
 {
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
-  const nsTextFragment& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& textFragment = textNode->TextFragment();
 
   for (const auto& testData : {
-           TestDataForFindNonWhitespace(u"", 0, {}, nsTextFragment::kNotFound),
-           TestDataForFindNonWhitespace(u" ", 0, {}, nsTextFragment::kNotFound),
+           TestDataForFindNonWhitespace(u"", 0, {},
+                                        CharacterDataBuffer::kNotFound),
+           TestDataForFindNonWhitespace(u" ", 0, {},
+                                        CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(u"  ", 0, {},
-                                        nsTextFragment::kNotFound),
+                                        CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(u"\t\n\r\f", 0, {},
-                                        nsTextFragment::kNotFound),
+                                        CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(u" \t\n\r\f", 0, {},
-                                        nsTextFragment::kNotFound),
+                                        CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(u"a", 0, {}, 0),
            TestDataForFindNonWhitespace(u" a", 0, {}, 1),
            TestDataForFindNonWhitespace(u"\u00A0", 0, {}, 0),
@@ -349,10 +351,10 @@ TEST(nsTextFragmentTest, FindNonWhitespaceIn1b)
                u" \n", 0, {WhitespaceOption::NewLineIsSignificant}, 1),
            TestDataForFindNonWhitespace(
                u"\u00A0", 0, {WhitespaceOption::TreatNBSPAsCollapsible},
-               nsTextFragment::kNotFound),
+               CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(
                u" \u00A0", 0, {WhitespaceOption::TreatNBSPAsCollapsible},
-               nsTextFragment::kNotFound),
+               CharacterDataBuffer::kNotFound),
        }) {
     textNode->SetData(nsDependentString(testData.mData), IgnoreErrors());
     MOZ_ASSERT(!textFragment.Is2b());
@@ -362,22 +364,23 @@ TEST(nsTextFragmentTest, FindNonWhitespaceIn1b)
   }
 }
 
-TEST(nsTextFragmentTest, FindNonWhitespaceIn2b)
+TEST(CharacterDataBufferTest, FindNonWhitespaceIn2b)
 {
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
   textNode->MarkAsMaybeModifiedFrequently();
-  const nsTextFragment& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& textFragment = textNode->TextFragment();
 
   for (const auto& testData : {
-           TestDataForFindNonWhitespace(u" ", 0, {}, nsTextFragment::kNotFound),
+           TestDataForFindNonWhitespace(u" ", 0, {},
+                                        CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(u"  ", 0, {},
-                                        nsTextFragment::kNotFound),
+                                        CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(u"\t\n\r\f", 0, {},
-                                        nsTextFragment::kNotFound),
+                                        CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(u" \t\n\r\f", 0, {},
-                                        nsTextFragment::kNotFound),
+                                        CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(u"a", 0, {}, 0),
            TestDataForFindNonWhitespace(u" a", 0, {}, 1),
            TestDataForFindNonWhitespace(u"\u00A0", 0, {}, 0),
@@ -394,10 +397,10 @@ TEST(nsTextFragmentTest, FindNonWhitespaceIn2b)
                u" \n", 0, {WhitespaceOption::NewLineIsSignificant}, 1),
            TestDataForFindNonWhitespace(
                u"\u00A0", 0, {WhitespaceOption::TreatNBSPAsCollapsible},
-               nsTextFragment::kNotFound),
+               CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(
                u" \u00A0", 0, {WhitespaceOption::TreatNBSPAsCollapsible},
-               nsTextFragment::kNotFound),
+               CharacterDataBuffer::kNotFound),
        }) {
     textNode->SetData(nsDependentString(testData.mData), IgnoreErrors());
     MOZ_ASSERT(textFragment.Is2b());
@@ -407,24 +410,24 @@ TEST(nsTextFragmentTest, FindNonWhitespaceIn2b)
   }
 }
 
-TEST(nsTextFragmentTest, RFindNonWhitespaceIn1b)
+TEST(CharacterDataBufferTest, RFindNonWhitespaceIn1b)
 {
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
-  const nsTextFragment& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& textFragment = textNode->TextFragment();
 
   for (const auto& testData : {
            TestDataForFindNonWhitespace(u"", UINT32_MAX, {},
-                                        nsTextFragment::kNotFound),
+                                        CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(u" ", UINT32_MAX, {},
-                                        nsTextFragment::kNotFound),
+                                        CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(u"  ", UINT32_MAX, {},
-                                        nsTextFragment::kNotFound),
+                                        CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(u"\t\n\r\f", UINT32_MAX, {},
-                                        nsTextFragment::kNotFound),
+                                        CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(u"\t\n\r\f ", UINT32_MAX, {},
-                                        nsTextFragment::kNotFound),
+                                        CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(u"a", UINT32_MAX, {}, 0),
            TestDataForFindNonWhitespace(u"a ", UINT32_MAX, {}, 0),
            TestDataForFindNonWhitespace(u"ab", UINT32_MAX, {}, 1),
@@ -459,23 +462,23 @@ TEST(nsTextFragmentTest, RFindNonWhitespaceIn1b)
   }
 }
 
-TEST(nsTextFragmentTest, RFindNonWhitespaceIn2b)
+TEST(CharacterDataBufferTest, RFindNonWhitespaceIn2b)
 {
   const RefPtr<Document> doc = CreateHTMLDoc();
   const RefPtr<nsTextNode> textNode = doc->CreateTextNode(EmptyString());
   MOZ_RELEASE_ASSERT(textNode);
   textNode->MarkAsMaybeModifiedFrequently();
-  const nsTextFragment& textFragment = textNode->TextFragment();
+  const CharacterDataBuffer& textFragment = textNode->TextFragment();
 
   for (const auto& testData : {
            TestDataForFindNonWhitespace(u" ", UINT32_MAX, {},
-                                        nsTextFragment::kNotFound),
+                                        CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(u"  ", UINT32_MAX, {},
-                                        nsTextFragment::kNotFound),
+                                        CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(u"\t\n\r\f", UINT32_MAX, {},
-                                        nsTextFragment::kNotFound),
+                                        CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(u"\t\n\r\f ", UINT32_MAX, {},
-                                        nsTextFragment::kNotFound),
+                                        CharacterDataBuffer::kNotFound),
            TestDataForFindNonWhitespace(u"a", UINT32_MAX, {}, 0),
            TestDataForFindNonWhitespace(u"a ", UINT32_MAX, {}, 0),
            TestDataForFindNonWhitespace(u"ab", UINT32_MAX, {}, 1),

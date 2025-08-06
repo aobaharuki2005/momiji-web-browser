@@ -19,7 +19,6 @@
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "nsRange.h"
-#include "nsTextFragment.h"
 
 namespace mozilla {
 

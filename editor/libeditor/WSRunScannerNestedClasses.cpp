@@ -11,12 +11,12 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/AncestorIterator.h"
+#include "mozilla/dom/CharacterDataBuffer.h"
 
 #include "nsCRT.h"
 #include "nsDebug.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
-#include "nsTextFragment.h"
 
 namespace mozilla {
 
@@ -182,7 +182,7 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
       !EditorUtils::IsNewLinePreformatted(*aPoint.template ContainerAs<Text>());
   const bool isNewLineLineBreak =
       EditorUtils::IsNewLinePreformatted(*aPoint.template ContainerAs<Text>());
-  const nsTextFragment& textFragment =
+  const CharacterDataBuffer& textFragment =
       aPoint.template ContainerAs<Text>()->TextFragment();
   for (uint32_t i = std::min(aPoint.Offset(), textFragment.GetLength()); i;
        i--) {
@@ -338,7 +338,7 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
       !EditorUtils::IsNewLinePreformatted(*aPoint.template ContainerAs<Text>());
   const bool isNewLineLineBreak =
       EditorUtils::IsNewLinePreformatted(*aPoint.template ContainerAs<Text>());
-  const nsTextFragment& textFragment =
+  const CharacterDataBuffer& textFragment =
       aPoint.template ContainerAs<Text>()->TextFragment();
   for (uint32_t i = aPoint.Offset(); i < textFragment.GetLength(); i++) {
     WSType wsTypeOfNonCollapsibleChar;

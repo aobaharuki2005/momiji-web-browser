@@ -3425,7 +3425,7 @@ Result<InsertTextResult, nsresult> EditorBase::InsertTextWithTransaction(
 }
 
 static bool TextFragmentBeginsWithStringAtOffset(
-    const nsTextFragment& aTextFragment, const uint32_t aOffset,
+    const CharacterDataBuffer& aTextFragment, const uint32_t aOffset,
     const nsAString& aString) {
   const uint32_t stringLength = aString.Length();
 

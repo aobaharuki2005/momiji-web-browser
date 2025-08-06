@@ -1729,7 +1729,7 @@ HTMLEditor::NormalizeWhiteSpacesToInsertText(
   }
 
   Text* const textNode = aPointToInsert.GetContainerAs<Text>();
-  const nsTextFragment* const textFragment =
+  const CharacterDataBuffer* const textFragment =
       textNode ? &textNode->TextFragment() : nullptr;
   const bool isNewLineCollapsible = !EditorUtils::IsNewLinePreformatted(
       *aPointToInsert.ContainerAs<nsIContent>());
@@ -1858,7 +1858,7 @@ HTMLEditor::ReplaceWhiteSpacesData HTMLEditor::GetNormalizedStringAt(
   }
 
   const Text& textNode = *aPoint.ContainerAs<Text>();
-  const nsTextFragment& textFragment = textNode.TextFragment();
+  const CharacterDataBuffer& textFragment = textNode.TextFragment();
 
   // We don't want to make invisible things visible with this normalization.
   // Therefore, we need to know whether there are invisible leading and/or
@@ -2013,7 +2013,7 @@ HTMLEditor::GetFollowingNormalizedStringToSplitAt(
                                 aPointToSplit.Offset(),
                                 followingWhiteSpaceLength);
   if (!result.mNormalizedString.IsEmpty()) {
-    const nsTextFragment& textFragment =
+    const CharacterDataBuffer& textFragment =
         aPointToSplit.ContainerAs<Text>()->TextFragment();
     HTMLEditor::NormalizeAllWhiteSpaceSequences(
         result.mNormalizedString,
@@ -2091,7 +2091,7 @@ HTMLEditor::GetPrecedingNormalizedStringToSplitAt(
       aPointToSplit.Offset() - precedingWhiteSpaceLength,
       precedingWhiteSpaceLength);
   if (!result.mNormalizedString.IsEmpty()) {
-    const nsTextFragment& textFragment =
+    const CharacterDataBuffer& textFragment =
         aPointToSplit.ContainerAs<Text>()->TextFragment();
     HTMLEditor::NormalizeAllWhiteSpaceSequences(
         result.mNormalizedString,
@@ -2130,7 +2130,7 @@ HTMLEditor::GetSurroundingNormalizedStringToDelete(const Text& aTextNode,
   const auto IsCollapsibleCharOrNBSP = [&](char16_t aChar) {
     return aChar == HTMLEditUtils::kNBSP || IsCollapsibleChar(aChar);
   };
-  const nsTextFragment& textFragment = aTextNode.TextFragment();
+  const CharacterDataBuffer& textFragment = aTextNode.TextFragment();
   const char16_t precedingChar =
       aOffset ? textFragment.CharAt(aOffset - 1u) : static_cast<char16_t>(0);
   const char16_t followingChar = aOffset + aLength < textFragment.GetLength()

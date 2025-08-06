@@ -48,7 +48,6 @@
 #include "nsReadableUtils.h"
 #include "nsStubDocumentObserver.h"
 #include "nsTArray.h"
-#include "nsTextFragment.h"
 #include "nsTextNode.h"
 #include "nsUnicharUtils.h"
 #include "prtime.h"

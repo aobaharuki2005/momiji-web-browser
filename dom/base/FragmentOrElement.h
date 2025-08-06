@@ -102,7 +102,7 @@ class FragmentOrElement : public nsIContent {
                                       mozilla::ErrorResult& aError) override;
 
   // nsIContent interface methods
-  const nsTextFragment* GetText() override;
+  const CharacterDataBuffer* GetText() override;
   uint32_t TextLength() const override;
   bool TextIsOnlyWhitespace() override;
   bool ThreadSafeTextIsOnlyWhitespace() const override;

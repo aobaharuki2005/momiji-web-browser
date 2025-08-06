@@ -53,6 +53,7 @@
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/BorrowedAttrInfo.h"
+#include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Element.h"
@@ -89,7 +90,6 @@
 #include "nsPrintfCString.h"
 #include "nsPIDOMWindow.h"
 #include "nsStyledElement.h"
-#include "nsTextFragment.h"
 #include "nsUnicharUtils.h"
 
 namespace mozilla {
@@ -4724,7 +4724,7 @@ nsresult HTMLEditor::EnsureNoFollowingUnnecessaryLineBreak(
         return true;
     }
   };
-  const nsTextFragment& textFragment =
+  const CharacterDataBuffer& textFragment =
       unnecessaryLineBreak->TextRef().TextFragment();
   const uint32_t length = textFragment.GetLength();
   const DebugOnly<const char16_t> lastChar = textFragment.CharAt(length - 1);

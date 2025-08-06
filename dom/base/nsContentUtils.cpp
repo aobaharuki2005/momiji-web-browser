@@ -18,6 +18,7 @@
 #include <utility>
 
 #include "BrowserChild.h"
+#include "CharacterDataBuffer.h"
 #include "DecoderTraits.h"
 #include "ErrorList.h"
 #include "HTMLSplitOnSpacesTokenizer.h"
@@ -390,7 +391,6 @@
 #include "nsTLiteralString.h"
 #include "nsTPromiseFlatString.h"
 #include "nsTStringRepr.h"
-#include "nsTextFragment.h"
 #include "nsTextNode.h"
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
@@ -9952,7 +9952,7 @@ class StringBuilder {
       nsAtom* mAtom;
       LiteralSpan mLiteral;
       nsString mString;
-      const nsTextFragment* mTextFragment;
+      const CharacterDataBuffer* mCharacterDataBuffer;
     };
     Type mType = Type::Unknown;
   };
@@ -10011,19 +10011,19 @@ class StringBuilder {
     mLength += aLen;
   }
 
-  void Append(const nsTextFragment* aTextFragment) {
+  void Append(const CharacterDataBuffer* aCharacterDataBuffer) {
     Unit* u = AddUnit();
-    u->mTextFragment = aTextFragment;
+    u->mCharacterDataBuffer = aCharacterDataBuffer;
     u->mType = Unit::Type::TextFragment;
-    uint32_t len = aTextFragment->GetLength();
+    uint32_t len = aCharacterDataBuffer->GetLength();
     mLength += len;
   }
 
   // aLen can be !isValid(), which will get propagated into mLength.
-  void AppendWithEncode(const nsTextFragment* aTextFragment,
+  void AppendWithEncode(const CharacterDataBuffer* aCharacterDataBuffer,
                         CheckedInt<uint32_t> aLen) {
     Unit* u = AddUnit();
-    u->mTextFragment = aTextFragment;
+    u->mCharacterDataBuffer = aCharacterDataBuffer;
     u->mType = Unit::Type::TextFragmentWithEncode;
     mLength += aLen;
   }
@@ -10058,23 +10058,23 @@ class StringBuilder {
             appender.Append(u.mLiteral.AsSpan());
             break;
           case Unit::Type::TextFragment:
-            if (u.mTextFragment->Is2b()) {
-              appender.Append(
-                  Span(u.mTextFragment->Get2b(), u.mTextFragment->GetLength()));
+            if (u.mCharacterDataBuffer->Is2b()) {
+              appender.Append(Span(u.mCharacterDataBuffer->Get2b(),
+                                   u.mCharacterDataBuffer->GetLength()));
             } else {
-              appender.Append(
-                  Span(u.mTextFragment->Get1b(), u.mTextFragment->GetLength()));
+              appender.Append(Span(u.mCharacterDataBuffer->Get1b(),
+                                   u.mCharacterDataBuffer->GetLength()));
             }
             break;
           case Unit::Type::TextFragmentWithEncode:
-            if (u.mTextFragment->Is2b()) {
-              EncodeTextFragment(
-                  Span(u.mTextFragment->Get2b(), u.mTextFragment->GetLength()),
-                  appender);
+            if (u.mCharacterDataBuffer->Is2b()) {
+              EncodeTextFragment(Span(u.mCharacterDataBuffer->Get2b(),
+                                      u.mCharacterDataBuffer->GetLength()),
+                                 appender);
             } else {
-              EncodeTextFragment(
-                  Span(u.mTextFragment->Get1b(), u.mTextFragment->GetLength()),
-                  appender);
+              EncodeTextFragment(Span(u.mCharacterDataBuffer->Get1b(),
+                                      u.mCharacterDataBuffer->GetLength()),
+                                 appender);
             }
             break;
           default:
@@ -10192,7 +10192,7 @@ static_assert(sizeof(StringBuilder) <= StringBuilder::TARGET_SIZE,
 
 }  // namespace
 
-static void AppendEncodedCharacters(const nsTextFragment* aText,
+static void AppendEncodedCharacters(const CharacterDataBuffer* aText,
                                     StringBuilder& aBuilder) {
   uint32_t numEncodedChars = 0;
   uint32_t len = aText->GetLength();
@@ -10382,7 +10382,7 @@ static void StartElement(Element* aElement, StringBuilder& aBuilder) {
       if (fc &&
           (fc->NodeType() == nsINode::TEXT_NODE ||
            fc->NodeType() == nsINode::CDATA_SECTION_NODE)) {
-        const nsTextFragment* text = fc->GetText();
+        const CharacterDataBuffer* text = fc->GetText();
         if (text && text->GetLength() && text->CharAt(0) == char16_t('\n')) {
           aBuilder.Append("\n");
         }
@@ -10503,7 +10503,7 @@ static void SerializeNodeToMarkupInternal(
 
       case nsINode::TEXT_NODE:
       case nsINode::CDATA_SECTION_NODE: {
-        const nsTextFragment* text = &current->AsText()->TextFragment();
+        const CharacterDataBuffer* text = &current->AsText()->TextFragment();
         nsIContent* parent = current->GetParent();
         if (ShouldEscape(parent)) {
           AppendEncodedCharacters(text, aBuilder);
