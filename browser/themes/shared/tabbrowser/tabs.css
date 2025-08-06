@@ -955,7 +955,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--color-accent-primary);
+  color: var(--toolbarbutton-icon-fill-attention);
 
   @media not (prefers-reduced-motion) {
     transition-duration: 0.25s;
@@ -977,7 +977,7 @@
   }
 
   &[interactive] {
-    outline: 1px solid var(--focus-outline-color);
+    outline: 1px solid currentColor;
   }
 }
 
