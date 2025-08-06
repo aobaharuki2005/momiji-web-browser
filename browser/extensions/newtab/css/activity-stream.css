@@ -4416,12 +4416,27 @@ main section {
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+.discovery-stream.ds-layout.ds-layout-widgets {
+  margin-inline: 0;
+  margin-block-end: var(--space-xlarge);
+}
+
 .widgets-container:has(.lists), .widgets-container:has(.focus-timer) {
   display: grid;
-  border: 1px solid var(--border-color-card);
-  grid-template-columns: 1fr 1fr;
-  column-gap: var(--space-large);
+  grid-template-columns: repeat(auto-fit, minmax(300px, 300px));
+  gap: var(--space-large);
+  justify-content: center;
   width: 100%;
+}
+@media (min-width: 1122px) {
+  .widgets-container:has(.lists), .widgets-container:has(.focus-timer) {
+    gap: var(--space-xlarge);
+  }
+}
+@media (min-width: 1122px) {
+  .has-sections-grid .widgets-container {
+    gap: var(--space-large);
+  }
 }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -4434,6 +4449,7 @@ main section {
   border-radius: var(--border-radius-large);
   padding-block: var(--space-large);
   max-height: var(--newtab-card-height);
+  box-shadow: var(--box-shadow-card);
 }
 .lists .select-wrapper {
   padding-inline: var(--space-large);
@@ -4586,6 +4602,7 @@ main section {
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-shadow: var(--box-shadow-card);
 }
 
 .focus-timer-tabs {

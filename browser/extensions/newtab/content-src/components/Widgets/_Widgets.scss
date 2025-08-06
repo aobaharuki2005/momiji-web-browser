@@ -2,13 +2,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+.discovery-stream.ds-layout.ds-layout-widgets {
+  margin-inline: 0;
+  margin-block-end: var(--space-xlarge);
+}
+
 .widgets-container {
   &:has(.lists),
   &:has(.focus-timer) {
     display: grid;
-    border: 1px solid var(--border-color-card);
-    grid-template-columns: 1fr 1fr;
-    column-gap: var(--space-large);
+    grid-template-columns: repeat(auto-fit, minmax(300px, 300px));
+    gap: var(--space-large);
+    justify-content: center;
     width: 100%;
+
+    // Mirrors the grid-gap spacing used on
+    // .ds-outer-wrapper-breakpoint-override .ds-card-grid
+    @media(min-width: $break-point-widest) {
+      gap: var(--space-xlarge);
+    }
+  }
+
+  // Sections Layout Override
+  .has-sections-grid & {
+    @media(min-width: $break-point-widest) {
+      gap: var(--space-large);
+    }
   }
 }
