@@ -449,6 +449,11 @@
         this.style.MozUserFocus = "";
       } else if (
         this.mOverCloseButton ||
+        // Bug 1964646 - mOverCloseButton doesn't work when the tab strip is collapsed
+        // and in vertical mode, since the close button is already outside of the tab's
+        // bounding box. In this case, we need to check if the click was on the close button.
+        // We do still use mOverCloseButton just in case.
+        event.target.classList?.contains("tab-close-button") ||
         gSharedTabWarning.willShowSharedTabWarning(this)
       ) {
         event.stopPropagation();
