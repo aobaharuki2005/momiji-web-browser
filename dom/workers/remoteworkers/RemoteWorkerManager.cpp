@@ -270,7 +270,7 @@ void RemoteWorkerManager::Launch(RemoteWorkerController* aController,
 void RemoteWorkerManager::LaunchInternal(
     RemoteWorkerController* aController,
     RemoteWorkerServiceParent* aTargetActor,
-    UniqueThreadsafeContentParentKeepAlive aKeepAlive,
+    UniqueThreadsafeContentParentKeepAlive&& aKeepAlive,
     const RemoteWorkerData& aData) {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();

@@ -20,7 +20,7 @@ using namespace ipc;
 namespace dom {
 
 RemoteWorkerParent::RemoteWorkerParent(
-    UniqueThreadsafeContentParentKeepAlive aKeepAlive)
+    UniqueThreadsafeContentParentKeepAlive&& aKeepAlive)
     : mContentParentKeepAlive(std::move(aKeepAlive)) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());

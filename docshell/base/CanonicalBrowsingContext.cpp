@@ -2405,7 +2405,7 @@ CanonicalBrowsingContext::ChangeRemoteness(
                              /* aBrowserId */ BrowserId())
         ->Then(
             GetMainThreadSerialEventTarget(), __func__,
-            [change](UniqueContentParentKeepAlive)
+            [change](UniqueContentParentKeepAlive&&)
                 MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA {
                   change->ProcessLaunched();
                 },
