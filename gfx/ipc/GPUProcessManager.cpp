@@ -125,7 +125,9 @@ GPUProcessManager::Observer::Observer(GPUProcessManager* aManager)
 NS_IMETHODIMP
 GPUProcessManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
                                      const char16_t* aData) {
-  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+  if (!strcmp(aTopic, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID)) {
+    mManager->StopObserving();
+  } else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     mManager->OnXPCOMShutdown();
   } else if (!strcmp(aTopic, "nsPref:changed")) {
     mManager->OnPreferenceChange(aData);
@@ -167,6 +169,7 @@ void GPUProcessManager::OnXPCOMShutdown() {
       obsServ->RemoveObserver(mObserver, "application-foreground");
       obsServ->RemoveObserver(mObserver, "application-background");
       obsServ->RemoveObserver(mObserver, "screen-information-changed");
+      obsServ->RemoveObserver(mObserver, "xpcom-will-shutdown");
     }
     mObserver = nullptr;
   }
@@ -253,6 +256,7 @@ bool GPUProcessManager::LaunchGPUProcess() {
       obsServ->AddObserver(mObserver, "application-foreground", false);
       obsServ->AddObserver(mObserver, "application-background", false);
       obsServ->AddObserver(mObserver, "screen-information-changed", false);
+      obsServ->AddObserver(mObserver, "xpcom-will-shutdown", false);
     }
   }
 
@@ -1163,13 +1167,17 @@ void GPUProcessManager::DestroyProcess(bool aUnexpectedShutdown) {
     mVsyncBridge->Close();
     mVsyncBridge = nullptr;
   }
+  StopObserving();
+
+  CrashReporter::RecordAnnotationCString(
+      CrashReporter::Annotation::GPUProcessStatus, "Destroyed");
+}
+
+void GPUProcessManager::StopObserving() {
   if (mBatteryObserver) {
     mBatteryObserver->ShutDown();
     mBatteryObserver = nullptr;
   }
-
-  CrashReporter::RecordAnnotationCString(
-      CrashReporter::Annotation::GPUProcessStatus, "Destroyed");
 }
 
 already_AddRefed<CompositorSession> GPUProcessManager::CreateTopLevelCompositor(
