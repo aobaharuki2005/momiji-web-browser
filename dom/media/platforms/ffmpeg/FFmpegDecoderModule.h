@@ -163,7 +163,7 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
             CreateDecoderParams::Option::HardwareDecoderNotAllowed),
         aParams.mOptions.contains(
             CreateDecoderParams::Option::Output8BitPerChannel),
-        aParams.mTrackingId, aParams.mCDM);
+        aParams.mTrackingId);
 
     // Ensure that decoding is exclusively performed using HW decoding in
     // the GPU process. If FFmpeg does not support HW decoding, reset the

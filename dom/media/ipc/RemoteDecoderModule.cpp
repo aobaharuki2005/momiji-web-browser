@@ -67,20 +67,11 @@ media::DecodeSupportSet RemoteDecoderModule::Supports(
     DecoderDoctorDiagnostics* aDiagnostics) const {
   bool supports =
       RemoteMediaManagerChild::Supports(mLocation, aParams, aDiagnostics);
-#ifdef MOZ_WMF_CDM
   // This should only be supported by mf media engine cdm process.
   if (aParams.mMediaEngineId &&
       mLocation != RemoteMediaIn::UtilityProcess_MFMediaEngineCDM) {
     supports = false;
   }
-#endif
-#ifdef ANDROID
-  if ((aParams.mCDM && mLocation != RemoteMediaIn::RddProcess) ||
-      (!aParams.mCDM && aParams.mConfig.IsAudio() &&
-       mLocation != RemoteMediaIn::UtilityProcess_Generic)) {
-    supports = false;
-  }
-#endif
   MOZ_LOG(
       sPDMLog, LogLevel::Debug,
       ("Sandbox %s decoder %s requested type %s", RemoteMediaInToStr(mLocation),

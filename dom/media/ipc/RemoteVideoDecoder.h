@@ -41,7 +41,7 @@ class RemoteVideoDecoderChild : public RemoteDecoderChild {
            const CreateDecoderParams::OptionSet& aOptions,
            mozilla::Maybe<layers::TextureFactoryIdentifier> aIdentifier,
            const Maybe<uint64_t>& aMediaEngineId,
-           const Maybe<TrackingId>& aTrackingId, PRemoteCDMActor* aCDM);
+           const Maybe<TrackingId>& aTrackingId);
 
   MediaResult ProcessOutput(DecodedOutputIPDL&& aDecodedData) override;
 
@@ -56,8 +56,7 @@ class RemoteVideoDecoderParent final : public RemoteDecoderParent {
       float aFramerate, const CreateDecoderParams::OptionSet& aOptions,
       const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
       nsISerialEventTarget* aManagerThread, TaskQueue* aDecodeTaskQueue,
-      const Maybe<uint64_t>& aMediaEngineId, Maybe<TrackingId> aTrackingId,
-      RemoteCDMParent* aCDM);
+      const Maybe<uint64_t>& aMediaEngineId, Maybe<TrackingId> aTrackingId);
 
  protected:
   IPCResult RecvConstruct(ConstructResolver&& aResolver) override;

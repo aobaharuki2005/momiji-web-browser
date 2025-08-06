@@ -214,7 +214,6 @@ struct FFAMediaCodec {
 
     ssize_t (*dequeueInputBuffer)(FFAMediaCodec* codec, int64_t timeoutUs);
     int (*queueInputBuffer)(FFAMediaCodec* codec, size_t idx, off_t offset, size_t size, uint64_t time, uint32_t flags);
-    int (*queueSecureInputBuffer)(FFAMediaCodec* codec, size_t idx, off_t offset, void* cryptoInfo, uint64_t time, uint32_t flags);
 
     ssize_t (*dequeueOutputBuffer)(FFAMediaCodec* codec, FFAMediaCodecBufferInfo *info, int64_t timeoutUs);
     FFAMediaFormat* (*getOutputFormat)(FFAMediaCodec* codec);
@@ -298,11 +297,6 @@ static inline ssize_t ff_AMediaCodec_dequeueInputBuffer(FFAMediaCodec* codec, in
 static inline int ff_AMediaCodec_queueInputBuffer(FFAMediaCodec *codec, size_t idx, off_t offset, size_t size, uint64_t time, uint32_t flags)
 {
     return codec->queueInputBuffer(codec, idx, offset, size, time, flags);
-}
-
-static inline int ff_AMediaCodec_queueSecureInputBuffer(FFAMediaCodec *codec, size_t idx, off_t offset, void* cryptoInfo, uint64_t time, uint32_t flags)
-{
-    return codec->queueSecureInputBuffer(codec, idx, offset, cryptoInfo, time, flags);
 }
 
 static inline ssize_t ff_AMediaCodec_dequeueOutputBuffer(FFAMediaCodec* codec, FFAMediaCodecBufferInfo *info, int64_t timeoutUs)

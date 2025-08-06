@@ -12,7 +12,6 @@
 #include "ImageContainer.h"
 #include "PDMFactory.h"
 #include "RemoteAudioDecoder.h"
-#include "RemoteCDMParent.h"
 #include "RemoteMediaDataEncoderParent.h"
 #include "RemoteVideoDecoder.h"
 #include "VideoUtils.h"  // for MediaThreadType
@@ -33,10 +32,6 @@
 
 #ifdef MOZ_WMF_CDM
 #  include "MFCDMParent.h"
-#endif
-
-#ifdef MOZ_WIDGET_ANDROID
-#  include "mozilla/MediaDrmRemoteCDMParent.h"
 #endif
 
 namespace mozilla {
@@ -122,19 +117,6 @@ void RemoteMediaManagerParent::ShutdownVideoBridge() {
 
 bool RemoteMediaManagerParent::OnManagerThread() {
   return sRemoteMediaManagerParentThread->IsOnCurrentThread();
-}
-
-/* static */
-void RemoteMediaManagerParent::Dispatch(
-    already_AddRefed<nsIRunnable> aRunnable) {
-  if (!sRemoteMediaManagerParentThread) {
-    MOZ_DIAGNOSTIC_CRASH(
-        "Dispatching after RemoteMediaManagerParent thread shutdown!");
-    return;
-  }
-
-  MOZ_ALWAYS_SUCCEEDS(
-      sRemoteMediaManagerParentThread->Dispatch(std::move(aRunnable)));
 }
 
 PDMFactory& RemoteMediaManagerParent::EnsurePDMFactory() {
@@ -224,13 +206,11 @@ PRemoteDecoderParent* RemoteMediaManagerParent::AllocPRemoteDecoderParent(
     const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
     const CreateDecoderParams::OptionSet& aOptions,
     const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
-    const Maybe<uint64_t>& aMediaEngineId, const Maybe<TrackingId>& aTrackingId,
-    PRemoteCDMParent* aCDM) {
+    const Maybe<uint64_t>& aMediaEngineId,
+    const Maybe<TrackingId>& aTrackingId) {
   RefPtr<TaskQueue> decodeTaskQueue =
       TaskQueue::Create(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
                         "RemoteVideoDecoderParent::mDecodeTaskQueue");
-
-  auto* cdm = static_cast<RemoteCDMParent*>(aCDM);
 
   if (aRemoteDecoderInfo.type() ==
       RemoteDecoderInfoIPDL::TVideoDecoderInfoIPDL) {
@@ -239,13 +219,13 @@ PRemoteDecoderParent* RemoteMediaManagerParent::AllocPRemoteDecoderParent(
     return new RemoteVideoDecoderParent(
         this, decoderInfo.videoInfo(), decoderInfo.framerate(), aOptions,
         aIdentifier, sRemoteMediaManagerParentThread, decodeTaskQueue,
-        aMediaEngineId, aTrackingId, cdm);
+        aMediaEngineId, aTrackingId);
   }
 
   if (aRemoteDecoderInfo.type() == RemoteDecoderInfoIPDL::TAudioInfo) {
     return new RemoteAudioDecoderParent(
         this, aRemoteDecoderInfo.get_AudioInfo(), aOptions,
-        sRemoteMediaManagerParentThread, decodeTaskQueue, aMediaEngineId, cdm);
+        sRemoteMediaManagerParentThread, decodeTaskQueue, aMediaEngineId);
   }
 
   MOZ_CRASH("unrecognized type of RemoteDecoderInfoIPDL union");
@@ -296,15 +276,6 @@ bool RemoteMediaManagerParent::DeallocPMFCDMParent(PMFCDMParent* actor) {
   static_cast<MFCDMParent*>(actor)->Destroy();
 #endif
   return true;
-}
-
-PRemoteCDMParent* RemoteMediaManagerParent::AllocPRemoteCDMParent(
-    const nsAString& aKeySystem) {
-#ifdef MOZ_WIDGET_ANDROID
-  return new MediaDrmRemoteCDMParent(aKeySystem);
-#else
-  return nullptr;
-#endif
 }
 
 void RemoteMediaManagerParent::Open(

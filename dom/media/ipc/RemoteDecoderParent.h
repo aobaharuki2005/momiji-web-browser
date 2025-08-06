@@ -11,7 +11,6 @@
 
 namespace mozilla {
 
-class RemoteCDMParent;
 class RemoteMediaManagerParent;
 using mozilla::ipc::IPCResult;
 
@@ -29,7 +28,7 @@ class RemoteDecoderParent : public ShmemRecycleAllocator<RemoteDecoderParent>,
                       nsISerialEventTarget* aManagerThread,
                       TaskQueue* aDecodeTaskQueue,
                       const Maybe<uint64_t>& aMediaEngineId,
-                      Maybe<TrackingId> aTrackingId, RemoteCDMParent* aCDM);
+                      Maybe<TrackingId> aTrackingId);
 
   void Destroy();
 
@@ -57,7 +56,6 @@ class RemoteDecoderParent : public ShmemRecycleAllocator<RemoteDecoderParent>,
   const CreateDecoderParams::OptionSet mOptions;
   const RefPtr<TaskQueue> mDecodeTaskQueue;
   RefPtr<MediaDataDecoder> mDecoder;
-  const RefPtr<RemoteCDMParent> mCDM;
   const Maybe<TrackingId> mTrackingId;
 
   // Only be used on Windows when the media engine playback is enabled.

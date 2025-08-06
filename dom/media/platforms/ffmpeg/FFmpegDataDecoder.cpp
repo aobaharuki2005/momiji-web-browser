@@ -19,20 +19,14 @@
 #include "VideoUtils.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
-#include "mozilla/Unused.h"
 #include "prsystem.h"
-
-#if defined(MOZ_WIDGET_ANDROID) && defined(FFVPX_VERSION)
-#  include "mozilla/MediaDrmRemoteCDMParent.h"
-#endif
 
 namespace mozilla {
 
 StaticMutex FFmpegDataDecoder<LIBAV_VER>::sMutex;
 
 FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FFmpegLibWrapper* aLib,
-                                                AVCodecID aCodecID,
-                                                PRemoteCDMActor* aCDM)
+                                                AVCodecID aCodecID)
     : mLib(aLib),
       mCodecContext(nullptr),
       mCodecParser(nullptr),
@@ -46,18 +40,6 @@ FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FFmpegLibWrapper* aLib,
       mLastInputDts(media::TimeUnit::FromNegativeInfinity()) {
   MOZ_ASSERT(aLib);
   MOZ_COUNT_CTOR(FFmpegDataDecoder);
-
-#if defined(MOZ_WIDGET_ANDROID) && defined(FFVPX_VERSION)
-  if (aCDM) {
-    if (PRemoteCDMParent* parentCDM = aCDM->AsPRemoteCDMParent()) {
-      mCDM = static_cast<MediaDrmRemoteCDMParent*>(parentCDM);
-    }
-  }
-#elif defined(DEBUG)
-  MOZ_ASSERT(!aCDM);
-#else
-  Unused << aCDM;
-#endif
 }
 
 FFmpegDataDecoder<LIBAV_VER>::~FFmpegDataDecoder() {
@@ -108,41 +90,6 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::InitSWDecoder(
   }
 
   return InitDecoder(codec, aOptions);
-}
-
-MediaResult FFmpegDataDecoder<LIBAV_VER>::MaybeAttachCDM() {
-  MOZ_ASSERT(mCodecContext);
-
-#if defined(MOZ_WIDGET_ANDROID) && defined(FFVPX_VERSION)
-  if (!mCDM) {
-    return NS_OK;
-  }
-
-  mCrypto = mCDM->GetCrypto();
-  if (NS_WARN_IF(!mCrypto)) {
-    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                       RESULT_DETAIL("missing crypto from cdm"));
-  }
-
-  auto* ndkCrypto = mCrypto->GetNdkCrypto();
-  MOZ_ASSERT(ndkCrypto);
-
-  mCodecContext->moz_ndk_crypto = ndkCrypto;
-#endif
-
-  return NS_OK;
-}
-
-void FFmpegDataDecoder<LIBAV_VER>::MaybeDetachCDM() {
-#if defined(MOZ_WIDGET_ANDROID) && defined(FFVPX_VERSION)
-  if (mCodecContext) {
-    mCodecContext->moz_ndk_crypto = nullptr;
-  }
-
-  if (mCDM) {
-    mCDM = nullptr;
-  }
-#endif
 }
 
 MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder(AVCodec* aCodec,

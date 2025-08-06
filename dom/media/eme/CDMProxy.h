@@ -19,7 +19,6 @@ namespace mozilla {
 class ErrorResult;
 class MediaRawData;
 class ChromiumCDMProxy;
-class RemoteCDMChild;
 #ifdef MOZ_WMF_CDM
 class WMFCDMProxy;
 #endif
@@ -62,8 +61,6 @@ class CDMKeyInfo {
       mStatus.Construct(aKeyInfo.mStatus.Value());
     }
   }
-
-  CDMKeyInfo() = default;
 
   nsTArray<uint8_t> mKeyId;
   dom::Optional<dom::MediaKeyStatus> mStatus;
@@ -255,8 +252,6 @@ class CDMProxy {
 #ifdef MOZ_WMF_CDM
   virtual WMFCDMProxy* AsWMFCDMProxy() { return nullptr; }
 #endif
-
-  virtual RemoteCDMChild* AsRemoteCDMChild() { return nullptr; }
 
   virtual bool IsHardwareDecryptionSupported() const { return false; }
 

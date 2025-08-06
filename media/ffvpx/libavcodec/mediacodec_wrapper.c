@@ -1537,11 +1537,6 @@ fail:
     return ret;
 }
 
-static int mediacodec_jni_queueSecureInputBuffer(FFAMediaCodec* ctx, size_t idx, off_t offset, void* cryptoInfo, uint64_t time, uint32_t flags)
-{
-    return AVERROR_PATCHWELCOME;
-}
-
 static ssize_t mediacodec_jni_dequeueOutputBuffer(FFAMediaCodec* ctx, FFAMediaCodecBufferInfo *info, int64_t timeoutUs)
 {
     int ret = 0;
@@ -1816,7 +1811,6 @@ static const FFAMediaCodec media_codec_jni = {
 
     .dequeueInputBuffer = mediacodec_jni_dequeueInputBuffer,
     .queueInputBuffer = mediacodec_jni_queueInputBuffer,
-    .queueSecureInputBuffer = mediacodec_jni_queueSecureInputBuffer,
 
     .dequeueOutputBuffer = mediacodec_jni_dequeueOutputBuffer,
     .getOutputFormat = mediacodec_jni_getOutputFormat,
@@ -2215,7 +2209,7 @@ static int mediacodec_ndk_configure(FFAMediaCodec* ctx,
             return AVERROR_EXTERNAL;
         }
     } else {
-        status = AMediaCodec_configure(codec->impl, format->impl, native_window, (AMediaCrypto*)crypto, flags);
+        status = AMediaCodec_configure(codec->impl, format->impl, native_window, NULL, flags);
         if (status != AMEDIA_OK) {
             av_log(codec, AV_LOG_ERROR, "Decoder configure failed, %d\n", status);
             return AVERROR_EXTERNAL;
@@ -2267,14 +2261,6 @@ static int mediacodec_ndk_queueInputBuffer(FFAMediaCodec *ctx, size_t idx,
 {
     FFAMediaCodecNdk *codec = (FFAMediaCodecNdk *)ctx;
     return AMediaCodec_queueInputBuffer(codec->impl, idx, offset, size, time, flags);
-}
-
-static int mediacodec_ndk_queueSecureInputBuffer(FFAMediaCodec *ctx, size_t idx,
-                                                 off_t offset, void* cryptoInfo,
-                                                 uint64_t time, uint32_t flags)
-{
-    FFAMediaCodecNdk *codec = (FFAMediaCodecNdk *)ctx;
-    return AMediaCodec_queueSecureInputBuffer(codec->impl, idx, offset, (AMediaCodecCryptoInfo*)cryptoInfo, time, flags);
 }
 
 static ssize_t mediacodec_ndk_dequeueOutputBuffer(FFAMediaCodec* ctx, FFAMediaCodecBufferInfo *info, int64_t timeoutUs)
@@ -2521,7 +2507,6 @@ static const FFAMediaCodec media_codec_ndk = {
 
     .dequeueInputBuffer = mediacodec_ndk_dequeueInputBuffer,
     .queueInputBuffer = mediacodec_ndk_queueInputBuffer,
-    .queueSecureInputBuffer = mediacodec_ndk_queueSecureInputBuffer,
 
     .dequeueOutputBuffer = mediacodec_ndk_dequeueOutputBuffer,
     .getOutputFormat = mediacodec_ndk_getOutputFormat,

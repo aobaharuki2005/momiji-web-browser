@@ -71,7 +71,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
                      KnowsCompositor* aAllocator,
                      ImageContainer* aImageContainer, bool aLowLatency,
                      bool aDisableHardwareDecoding, bool a8BitOutput,
-                     Maybe<TrackingId> aTrackingId, PRemoteCDMActor* aCDM);
+                     Maybe<TrackingId> aTrackingId);
 
   ~FFmpegVideoDecoder();
 
