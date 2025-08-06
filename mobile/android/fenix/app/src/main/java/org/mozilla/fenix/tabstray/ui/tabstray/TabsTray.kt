@@ -39,6 +39,7 @@ import org.mozilla.fenix.tabstray.ui.fab.TabsTrayFab
 import org.mozilla.fenix.tabstray.ui.tabpage.NormalTabsPage
 import org.mozilla.fenix.tabstray.ui.tabpage.PrivateTabsPage
 import org.mozilla.fenix.tabstray.ui.tabpage.SyncedTabsPage
+import org.mozilla.fenix.tabstray.ui.theme.getTabManagerTheme
 import org.mozilla.fenix.theme.FirefoxTheme
 import mozilla.components.browser.storage.sync.Tab as SyncTab
 import org.mozilla.fenix.tabstray.ui.syncedtabs.OnTabClick as OnSyncedTabClick
@@ -372,7 +373,9 @@ private fun TabsTrayPreviewRoot(
         )
     }
 
-    FirefoxTheme {
+    val page by tabsTrayStore.observeAsState(tabsTrayStore.state.selectedPage) { it.selectedPage }
+
+    FirefoxTheme(theme = getTabManagerTheme(page = page)) {
         TabsTray(
             tabsTrayStore = tabsTrayStore,
             displayTabsInGrid = displayTabsInGrid,

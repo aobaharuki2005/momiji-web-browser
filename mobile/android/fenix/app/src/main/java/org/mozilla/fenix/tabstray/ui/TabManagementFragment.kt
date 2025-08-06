@@ -14,6 +14,7 @@ import androidx.annotation.UiThread
 import androidx.annotation.VisibleForTesting
 import androidx.biometric.BiometricManager
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
@@ -29,6 +30,7 @@ import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.feature.accounts.push.CloseTabsUseCases
 import mozilla.components.feature.downloads.ui.DownloadCancelDialogFragment
 import mozilla.components.feature.tabs.tabstray.TabsFeature
+import mozilla.components.lib.state.ext.observeAsState
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.Config
@@ -79,8 +81,8 @@ import org.mozilla.fenix.tabstray.controller.TabManagerController
 import org.mozilla.fenix.tabstray.controller.TabManagerInteractor
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsIntegration
 import org.mozilla.fenix.tabstray.ui.tabstray.TabsTray
+import org.mozilla.fenix.tabstray.ui.theme.getTabManagerTheme
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.allowUndo
@@ -198,6 +200,8 @@ class TabManagementFragment : ComposeFragment() {
     @Suppress("LongMethod")
     @Composable
     override fun UI() {
+        val page by tabsTrayStore.observeAsState(tabsTrayStore.state.selectedPage) { it.selectedPage }
+
         BackHandler {
             if (tabsTrayStore.state.mode is TabsTrayState.Mode.Select) {
                 tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
@@ -206,7 +210,7 @@ class TabManagementFragment : ComposeFragment() {
             }
         }
 
-        FirefoxTheme(theme = Theme.getTheme()) {
+        FirefoxTheme(theme = getTabManagerTheme(page = page)) {
             TabsTray(
                 tabsTrayStore = tabsTrayStore,
                 displayTabsInGrid = requireContext().settings().gridTabView,
