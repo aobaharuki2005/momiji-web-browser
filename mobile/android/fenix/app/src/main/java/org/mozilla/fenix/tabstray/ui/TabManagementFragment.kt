@@ -199,7 +199,11 @@ class TabManagementFragment : ComposeFragment() {
     @Composable
     override fun UI() {
         BackHandler {
-            onTabsTrayDismissed()
+            if (tabsTrayStore.state.mode is TabsTrayState.Mode.Select) {
+                tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
+            } else {
+                onTabsTrayDismissed()
+            }
         }
 
         FirefoxTheme(theme = Theme.getTheme()) {
