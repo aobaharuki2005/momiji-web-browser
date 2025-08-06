@@ -260,6 +260,7 @@ class DefaultTabManagerController(
                 private = isPrivate,
             )
         } else {
+            navController.popBackStack()
             navController.navigate(
                 TabManagementFragmentDirections.actionGlobalHome(focusOnAddressBar = true),
             )
@@ -291,6 +292,7 @@ class DefaultTabManagerController(
         if (navController.currentDestination?.id == R.id.browserFragment) {
             return
         } else if (!navController.popBackStack(R.id.browserFragment, false)) {
+            navController.popBackStack()
             navController.navigate(R.id.browserFragment)
         }
     }
@@ -302,6 +304,7 @@ class DefaultTabManagerController(
         if (navController.currentDestination?.id == R.id.homeFragment) {
             return
         } else if (!navController.popBackStack(R.id.homeFragment, false)) {
+            navController.popBackStack()
             navController.navigate(
                 TabManagementFragmentDirections.actionGlobalHome(),
             )

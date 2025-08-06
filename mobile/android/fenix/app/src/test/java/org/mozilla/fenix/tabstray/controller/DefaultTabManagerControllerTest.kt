@@ -148,6 +148,7 @@ class DefaultTabManagerControllerTest {
 
         verifyOrder {
             profiler.getProfilerTime()
+            navController.popBackStack()
             navController.navigate(
                 TabManagementFragmentDirections.actionGlobalHome(focusOnAddressBar = true),
             )
@@ -196,6 +197,7 @@ class DefaultTabManagerControllerTest {
 
         verifyOrder {
             profiler.getProfilerTime()
+            navController.popBackStack()
             navController.navigate(
                 TabManagementFragmentDirections.actionGlobalHome(focusOnAddressBar = true),
             )
@@ -360,6 +362,7 @@ class DefaultTabManagerControllerTest {
         createController().handleNavigateToBrowser()
 
         verify { navController.popBackStack(R.id.browserFragment, false) }
+        verify { navController.popBackStack() }
         verify { navController.navigate(R.id.browserFragment) }
     }
 
@@ -407,6 +410,7 @@ class DefaultTabManagerControllerTest {
         createController().handleNavigateToHome()
 
         verify { navController.popBackStack(R.id.homeFragment, false) }
+        verify { navController.popBackStack() }
         verify { navController.navigate(TabManagementFragmentDirections.actionGlobalHome()) }
     }
 
