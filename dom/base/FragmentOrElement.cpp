@@ -1830,7 +1830,9 @@ NS_INTERFACE_MAP_END_INHERITING(nsIContent)
 
 //----------------------------------------------------------------------
 
-const CharacterDataBuffer* FragmentOrElement::GetText() { return nullptr; }
+const CharacterDataBuffer* FragmentOrElement::GetCharacterDataBuffer() {
+  return nullptr;
+}
 
 uint32_t FragmentOrElement::TextLength() const {
   // We can remove this assertion if it turns out to be useful to be able

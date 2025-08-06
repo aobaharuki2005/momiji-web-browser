@@ -595,12 +595,13 @@ template <TextScanDirection direction>
       }
       textContentForLogging.AppendElement(std::move(textContent));
     }
-    const CharacterDataBuffer* textData = text->GetText();
-    MOZ_DIAGNOSTIC_ASSERT(textData);
-    const uint32_t textLength = textData->GetLength();
+    const CharacterDataBuffer* characterDataBuffer =
+        text->GetCharacterDataBuffer();
+    MOZ_DIAGNOSTIC_ASSERT(characterDataBuffer);
+    const uint32_t textLength = characterDataBuffer->GetLength();
     while (offset < textLength &&
            referenceStringPosition < aReferenceString.Length()) {
-      char16_t ch = textData->CharAt(offset);
+      char16_t ch = characterDataBuffer->CharAt(offset);
       char16_t refCh = aReferenceString.CharAt(referenceStringPosition);
       const bool chIsWhitespace = nsContentUtils::IsHTMLWhitespace(ch);
       const bool refChIsWhitespace = nsContentUtils::IsHTMLWhitespace(refCh);

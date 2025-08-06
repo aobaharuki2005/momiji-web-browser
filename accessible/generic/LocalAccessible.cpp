@@ -3870,8 +3870,9 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
                 // this character isn't in the rendered text. We do have
                 // a way to convert between content and rendered offsets, but
                 // doing this for every character is expensive.
-                const char16_t contentChar = mContent->GetText()->CharAt(
-                    charData.Length() / kNumbersInRect);
+                const char16_t contentChar =
+                    mContent->GetCharacterDataBuffer()->CharAt(
+                        charData.Length() / kNumbersInRect);
                 if (contentChar == u' ' || contentChar == u'\t' ||
                     contentChar == u'\n') {
                   continue;

@@ -26,7 +26,7 @@ using SVGAElementBase = SVGGraphicsElement;
 
 class SVGAElement final : public SVGAElementBase, public Link {
  protected:
-  using Element::GetText;
+  using Element::GetCharacterDataBuffer;
 
   explicit SVGAElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   friend nsresult(::NS_NewSVGAElement(

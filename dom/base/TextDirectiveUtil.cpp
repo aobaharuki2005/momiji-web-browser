@@ -249,7 +249,8 @@ RangeBoundary TextDirectiveUtil::MoveToNextBoundaryPoint(
   }
   ++pos;
   if (pos < node->Length() &&
-      node->GetText()->IsLowSurrogateFollowingHighSurrogateAt(pos)) {
+      node->GetCharacterDataBuffer()->IsLowSurrogateFollowingHighSurrogateAt(
+          pos)) {
     ++pos;
   }
   return {node, pos};

@@ -184,7 +184,7 @@ void nsMutationReceiver::CharacterDataWillChange(
     m->mTarget = aContent;
   }
   if (CharacterDataOldValue() && m->mPrevValue.IsVoid()) {
-    aContent->GetText()->AppendTo(m->mPrevValue);
+    aContent->GetCharacterDataBuffer()->AppendTo(m->mPrevValue);
   }
 }
 

@@ -736,12 +736,14 @@ void nsTypeAheadFind::RangeStartsInsideLink(nsRange* aRange,
       startContent = childContent;
     }
   } else if (startOffset > 0) {
-    const CharacterDataBuffer* textFrag = startContent->GetText();
-    if (textFrag) {
+    const CharacterDataBuffer* characterDataBuffer =
+        startContent->GetCharacterDataBuffer();
+    if (characterDataBuffer) {
       // look for non whitespace character before start offset
       for (uint32_t index = 0; index < startOffset; index++) {
         // FIXME: take content language into account when deciding whitespace.
-        if (!mozilla::dom::IsSpaceCharacter(textFrag->CharAt(index))) {
+        if (!mozilla::dom::IsSpaceCharacter(
+                characterDataBuffer->CharAt(index))) {
           *aIsStartingLink = false;  // not at start of a node
           break;
         }

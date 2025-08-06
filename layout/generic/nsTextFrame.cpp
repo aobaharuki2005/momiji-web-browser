@@ -4346,8 +4346,9 @@ void nsContinuingTextFrame::Init(nsIContent* aContent,
   nsIFrame::Init(aContent, aParent, aPrevInFlow);
 
   mContentOffset = prev->GetContentOffset() + prev->GetContentLengthHint();
-  NS_ASSERTION(mContentOffset < int32_t(aContent->GetText()->GetLength()),
-               "Creating ContinuingTextFrame, but there is no more content");
+  NS_ASSERTION(
+      mContentOffset < int32_t(aContent->GetCharacterDataBuffer()->GetLength()),
+      "Creating ContinuingTextFrame, but there is no more content");
   if (prev->Style() != Style()) {
     // We're taking part of prev's text, and its style may be different
     // so clear its textrun which may no longer be valid (and don't set ours)

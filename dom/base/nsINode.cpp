@@ -1104,8 +1104,9 @@ void nsINode::Normalize() {
   for (uint32_t i = 0; i < nodes.Length(); ++i) {
     nsIContent* node = nodes[i];
     // Merge with previous node unless empty
-    const CharacterDataBuffer* text = node->GetText();
-    if (text->GetLength()) {
+    const CharacterDataBuffer* characterDataBuffer =
+        node->GetCharacterDataBuffer();
+    if (characterDataBuffer->GetLength()) {
       nsIContent* target = node->GetPreviousSibling();
       NS_ASSERTION(
           (target && target->NodeType() == TEXT_NODE) || hasRemoveListeners,
@@ -1113,12 +1114,13 @@ void nsINode::Normalize() {
           "mutation events messed us up");
       if (!hasRemoveListeners || (target && target->NodeType() == TEXT_NODE)) {
         nsTextNode* t = static_cast<nsTextNode*>(target);
-        if (text->Is2b()) {
-          t->AppendTextForNormalize(text->Get2b(), text->GetLength(), true,
+        if (characterDataBuffer->Is2b()) {
+          t->AppendTextForNormalize(characterDataBuffer->Get2b(),
+                                    characterDataBuffer->GetLength(), true,
                                     node);
         } else {
           tmpStr.Truncate();
-          text->AppendTo(tmpStr);
+          characterDataBuffer->AppendTo(tmpStr);
           t->AppendTextForNormalize(tmpStr.get(), tmpStr.Length(), true, node);
         }
       }

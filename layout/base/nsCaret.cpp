@@ -76,14 +76,17 @@ nsresult nsCaret::Init(PresShell* aPresShell) {
 
 static bool DrawCJKCaret(nsIFrame* aFrame, int32_t aOffset) {
   nsIContent* content = aFrame->GetContent();
-  const CharacterDataBuffer* frag = content->GetText();
-  if (!frag) {
+  const CharacterDataBuffer* characterDataBuffer =
+      content->GetCharacterDataBuffer();
+  if (!characterDataBuffer) {
     return false;
   }
-  if (aOffset < 0 || static_cast<uint32_t>(aOffset) >= frag->GetLength()) {
+  if (aOffset < 0 ||
+      static_cast<uint32_t>(aOffset) >= characterDataBuffer->GetLength()) {
     return false;
   }
-  const char16_t ch = frag->CharAt(AssertedCast<uint32_t>(aOffset));
+  const char16_t ch =
+      characterDataBuffer->CharAt(AssertedCast<uint32_t>(aOffset));
   return 0x2e80 <= ch && ch <= 0xd7ff;
 }
 

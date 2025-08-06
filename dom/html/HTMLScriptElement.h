@@ -27,7 +27,7 @@ class TrustedScriptURLOrUSVString;
 class HTMLScriptElement final : public nsGenericHTMLElement,
                                 public ScriptElement {
  public:
-  using Element::GetText;
+  using Element::GetCharacterDataBuffer;
 
   HTMLScriptElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                     FromParser aFromParser);

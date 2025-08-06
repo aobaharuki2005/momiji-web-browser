@@ -56,7 +56,9 @@ DocumentType::DocumentType(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
 
 DocumentType::~DocumentType() = default;
 
-const CharacterDataBuffer* DocumentType::GetText() { return nullptr; }
+const CharacterDataBuffer* DocumentType::GetCharacterDataBuffer() {
+  return nullptr;
+}
 
 void DocumentType::GetName(nsAString& aName) const { aName = NodeName(); }
 

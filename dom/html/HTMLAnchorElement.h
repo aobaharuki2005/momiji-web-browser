@@ -22,7 +22,7 @@ class HTMLAnchorElement final : public nsGenericHTMLElement,
                                 public Link,
                                 public SupportsDNSPrefetch {
  public:
-  using Element::GetText;
+  using Element::GetCharacterDataBuffer;
 
   explicit HTMLAnchorElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)

@@ -227,7 +227,7 @@ class nsIContent : public nsINode {
    * NOTE: For elements this is *not* the concatenation of all text children,
    * it is simply null;
    */
-  virtual const mozilla::dom::CharacterDataBuffer* GetText() = 0;
+  virtual const mozilla::dom::CharacterDataBuffer* GetCharacterDataBuffer() = 0;
 
   /**
    * Get the length of the text content.

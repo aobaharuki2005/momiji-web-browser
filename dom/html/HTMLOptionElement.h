@@ -30,7 +30,7 @@ class HTMLOptionElement final : public nsGenericHTMLElement {
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLOptionElement, nsGenericHTMLElement)
 
-  using mozilla::dom::Element::GetText;
+  using mozilla::dom::Element::GetCharacterDataBuffer;
 
   bool Selected() const { return State().HasState(ElementState::CHECKED); }
   void SetSelected(bool aValue);

@@ -3101,10 +3101,11 @@ void TextControlState::GetPreviewText(nsAString& aValue) {
   }
 
   MOZ_ASSERT(previewDiv->GetFirstChild(), "preview div has no child");
-  const CharacterDataBuffer* text = previewDiv->GetFirstChild()->GetText();
+  const CharacterDataBuffer* characterDataBuffer =
+      previewDiv->GetFirstChild()->GetCharacterDataBuffer();
 
   aValue.Truncate();
-  text->AppendTo(aValue);
+  characterDataBuffer->AppendTo(aValue);
 }
 
 bool TextControlState::EditorHasComposition() {

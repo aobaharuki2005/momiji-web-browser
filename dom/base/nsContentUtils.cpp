@@ -10515,7 +10515,8 @@ static void SerializeNodeToMarkupInternal(
 
       case nsINode::COMMENT_NODE: {
         aBuilder.Append(u"<!--");
-        aBuilder.Append(static_cast<nsIContent*>(current)->GetText());
+        aBuilder.Append(
+            static_cast<nsIContent*>(current)->GetCharacterDataBuffer());
         aBuilder.Append(u"-->");
         break;
       }
@@ -10531,7 +10532,8 @@ static void SerializeNodeToMarkupInternal(
         aBuilder.Append(u"<?");
         aBuilder.Append(nsString(current->NodeName()));
         aBuilder.Append(u" ");
-        aBuilder.Append(static_cast<nsIContent*>(current)->GetText());
+        aBuilder.Append(
+            static_cast<nsIContent*>(current)->GetCharacterDataBuffer());
         aBuilder.Append(u">");
         break;
       }
