@@ -9,8 +9,12 @@
 #include "ImageContainer.h"
 #include "PEMFactory.h"
 #include "RemoteMediaManagerParent.h"
+#include "mozilla/dom/WebCodecsUtils.h"
 
 namespace mozilla {
+
+#define AUTO_MARKER(var, postfix) \
+  AutoWebCodecsMarker var("RemoteMediaDataEncoderParent", postfix);
 
 RemoteMediaDataEncoderParent::RemoteMediaDataEncoderParent(
     const EncoderConfig& aConfig)
@@ -104,8 +108,10 @@ IPCResult RemoteMediaDataEncoderParent::RecvEncode(
 
     auto data = std::move(remoteVideoArray->Array().LastElement());
     if (!data.image().IsEmpty()) {
+      AUTO_MARKER(marker, ".RecvEncode.TransferToImage");
       RefPtr<layers::Image> image =
           data.image().TransferToImage(mBufferRecycleBin);
+      marker.End();
       if (image) {
         frame = VideoData::CreateFromImage(
                     data.display(), data.base().offset(), data.base().time(),
@@ -265,5 +271,7 @@ void RemoteMediaDataEncoderParent::ActorDestroy(ActorDestroyReason aWhy) {
 
   CleanupShmemRecycleAllocator();
 }
+
+#undef AUTO_MARKER
 
 }  // namespace mozilla
