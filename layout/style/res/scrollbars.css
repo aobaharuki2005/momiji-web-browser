@@ -204,30 +204,6 @@ scrollcorner {
   cursor: default;
 }
 
-@media (-moz-scrollbar-start-backward: 0) {
-  scrollbarbutton[sbattr="scrollbar-up-top"] {
-    display: none;
-  }
-}
-
-@media (-moz-scrollbar-start-forward: 0) {
-  scrollbarbutton[sbattr="scrollbar-down-top"] {
-    display: none;
-  }
-}
-
-@media (-moz-scrollbar-end-backward: 0) {
-  scrollbarbutton[sbattr="scrollbar-up-bottom"] {
-    display: none;
-  }
-}
-
-@media (-moz-scrollbar-end-forward: 0) {
-  scrollbarbutton[sbattr="scrollbar-down-bottom"] {
-    display: none;
-  }
-}
-
 /* stylelint-disable-next-line media-query-no-invalid */
 @media -moz-pref("layout.testing.scrollbars.always-hidden") {
   scrollbar {

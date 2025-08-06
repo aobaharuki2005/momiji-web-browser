@@ -16,9 +16,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ScrollContainerFrame.h"
-#include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/MutationEventBinding.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
@@ -398,9 +396,12 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
       nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollbarbutton, nullptr,
                                    kNameSpaceID_XUL, nsINode::ELEMENT_NODE);
 
-  bool createButtons = PresContext()->Theme()->ThemeSupportsScrollbarButtons();
+  const int32_t buttons =
+      PresContext()->Theme()->ThemeSupportsScrollbarButtons()
+          ? LookAndFeel::GetInt(LookAndFeel::IntID::ScrollArrowStyle)
+          : 0;
 
-  if (createButtons) {
+  if (buttons & LookAndFeel::eScrollArrow_StartBackward) {
     AnonymousContentKey key;
     mUpTopButton =
         MakeScrollbarButton(sbbNodeInfo, vertical, /* aBottom */ false,
@@ -408,7 +409,7 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
     aElements.AppendElement(ContentInfo(mUpTopButton, key));
   }
 
-  if (createButtons) {
+  if (buttons & LookAndFeel::eScrollArrow_StartForward) {
     AnonymousContentKey key;
     mDownTopButton =
         MakeScrollbarButton(sbbNodeInfo, vertical, /* aBottom */ false,
@@ -438,7 +439,7 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
     mSlider->AppendChildTo(mThumb, false, IgnoreErrors());
   }
 
-  if (createButtons) {
+  if (buttons & LookAndFeel::eScrollArrow_EndBackward) {
     AnonymousContentKey key;
     mUpBottomButton =
         MakeScrollbarButton(sbbNodeInfo, vertical, /* aBottom */ true,
@@ -446,7 +447,7 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
     aElements.AppendElement(ContentInfo(mUpBottomButton, key));
   }
 
-  if (createButtons) {
+  if (buttons & LookAndFeel::eScrollArrow_EndForward) {
     AnonymousContentKey key;
     mDownBottomButton =
         MakeScrollbarButton(sbbNodeInfo, vertical, /* aBottom */ true,
@@ -456,8 +457,7 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
 
   // Don't cache styles if we are inside a <select> element, since we have
   // some UA style sheet rules that depend on the <select>'s attributes.
-  if (GetContent()->GetParent() &&
-      GetContent()->GetParent()->IsHTMLElement(nsGkAtoms::select)) {
+  if (el->GetParent() && el->GetParent()->IsHTMLElement(nsGkAtoms::select)) {
     for (auto& info : aElements) {
       info.mKey = AnonymousContentKey::None;
     }
