@@ -2873,6 +2873,17 @@ export class nsContextMenu {
           )));
 
     if (!menuitem.hidden) {
+      let url = engine.wrappedJSObject.getURLOfType(searchUrlType);
+      if (
+        url?.acceptedContentTypes &&
+        (!this.contentData?.contentType ||
+          !url.acceptedContentTypes.includes(this.contentData.contentType))
+      ) {
+        menuitem.hidden = true;
+      }
+    }
+
+    if (!menuitem.hidden) {
       menuitem.engine = engine;
       menuitem.searchTerms = searchTerms;
       menuitem.principal = this.principal;

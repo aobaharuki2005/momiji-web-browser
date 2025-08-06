@@ -204,6 +204,8 @@ export class EngineURL {
   isNewUntil;
   /** @type {boolean} */
   excludePartnerCodeFromTelemetry;
+  /** @type {?string[]} */
+  acceptedContentTypes;
 
   /**
    * The name of the parameter used for the search term.
@@ -235,6 +237,13 @@ export class EngineURL {
    * @param {boolean} [options.excludePartnerCodeFromTelemetry]
    *   Whether the engine's partner code should be excluded from telemetry when
    *   this URL is visited.
+   * @param {?string[]} [options.acceptedContentTypes]
+   *   If this URL performs searches only for certain MIME types, they should be
+   *   listed here. If this value is null, then it's assumed the content type is
+   *   irrelevant. This field is intended to be used for URLs like visual
+   *   search, which might support certain image types and not others. Consumers
+   *   can use it to determine whether search UI corresponding to the URL should
+   *   be shown to the user in a given context.
    *
    * @see https://web.archive.org/web/20060203040832/http://opensearch.a9.com/spec/1.1/querysyntax/#urltag
    *
@@ -247,6 +256,7 @@ export class EngineURL {
     displayName = "",
     isNewUntil = "",
     excludePartnerCodeFromTelemetry = false,
+    acceptedContentTypes = null,
   }) {
     if (!type || !method || !template) {
       throw Components.Exception(
@@ -298,6 +308,7 @@ export class EngineURL {
     this.displayName = displayName ?? "";
     this.isNewUntil = isNewUntil ?? "";
     this.excludePartnerCodeFromTelemetry = !!excludePartnerCodeFromTelemetry;
+    this.acceptedContentTypes = acceptedContentTypes;
   }
 
   /**
