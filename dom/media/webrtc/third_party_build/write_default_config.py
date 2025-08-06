@@ -4,6 +4,7 @@
 import argparse
 import os
 import sys
+from datetime import datetime
 from string import Template
 
 from run_operations import run_shell
@@ -55,6 +56,51 @@ export MOZ_LIBWEBRTC_BRANCH="mozpatches"
 """
 
 
+def get_availability_for_milestone(milestone):
+    availability_date = lookup_branch_head.get_branch_date(milestone)
+    # the try/except here will either return the datetime object if parsing
+    # succeeded, or the raw string found during lookup from google.
+    try:
+        availability_date = datetime.strptime(
+            availability_date, "%Y-%m-%dT%H:%M:%S"
+        ).date()
+    except Exception:
+        pass
+
+    return availability_date
+
+
+# make sure there are 2 chromium releases ahead of the one we're
+# attempting to start working
+def check_for_version_gap_to_chromium(args):
+    next_milestone = args.milestone + 1
+    two_milestones_ahead = next_milestone + 2
+    if lookup_branch_head.get_branch_head(two_milestones_ahead) is None:
+        availability_date = get_availability_for_milestone(two_milestones_ahead)
+        availability_message = ""
+        if availability_date is not None:
+            availability_message = f"It will be available on {availability_date}."
+        print(
+            "\n"
+            "Processing this request ignores the Mozilla tradition of\n"
+            "staying two releases behind chromium's useage of libwebrtc.\n"
+            f"You're requesting milestone {next_milestone}, but milestone {two_milestones_ahead}\n"
+            f"is not yet available. {availability_message}\n"
+            "\n"
+            "If you know this operation is safe, you can run the following\n"
+            "command:\n"
+            f"    ./mach python {args.script_path}/{script_name} \\\n"
+            f"        --script-path {args.script_path} \\\n"
+            f"        --prior-bug-number {args.prior_bug_number} \\\n"
+            f"        --bug-number {args.bug_number} \\\n"
+            f"        --milestone {args.milestone} \\\n"
+            f"        --release-target {args.release_target} \\\n"
+            f"        --output-path {args.output_path} \\\n"
+            f"        --skip-gap-check\n"
+        )
+        sys.exit(1)
+
+
 def get_prior_branch_head(milestone):
     prior_branch_head = lookup_branch_head.get_branch_head(milestone)
     if prior_branch_head is None:
@@ -66,6 +112,8 @@ def get_prior_branch_head(milestone):
 def get_new_branch_head(next_milestone):
     new_branch_head = lookup_branch_head.get_branch_head(next_milestone)
     if new_branch_head is None:
+        availability_date = get_availability_for_milestone(next_milestone)
+
         print(
             "\n"
             f"Milestone {next_milestone} is not found when attempting to lookup the\n"
@@ -73,6 +121,12 @@ def get_new_branch_head(next_milestone):
             "This may be because Chromium has not updated the info on page\n"
             "https://chromiumdash.appspot.com/branches"
         )
+        if availability_date is not None:
+            print(
+                "\n"
+                "From https://chromiumdash.appspot.com/schedule we see that\n"
+                f"milestone {next_milestone} will be availabile on: {availability_date}"
+            )
         sys.exit(1)
     return new_branch_head
 
@@ -131,7 +185,16 @@ if __name__ == "__main__":
         required=True,
         help="path name of file to write",
     )
+    parser.add_argument(
+        "--skip-gap-check",
+        action="store_true",
+        default=False,
+        help="continue even when chromium version gap is too small",
+    )
     args = parser.parse_args()
+
+    if not args.skip_gap_check:
+        check_for_version_gap_to_chromium(args)
 
     prior_branch_head = get_prior_branch_head(args.milestone)
     new_branch_head = get_new_branch_head(args.milestone + 1)
