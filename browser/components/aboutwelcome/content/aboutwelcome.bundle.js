@@ -550,7 +550,10 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       }
       data = {
         ...data,
-        extraParams: params
+        extraParams: {
+          ...params,
+          ...data?.extraParams
+        }
       };
     } else if (type === "OPEN_URL") {
       let url = new URL(data.args);
