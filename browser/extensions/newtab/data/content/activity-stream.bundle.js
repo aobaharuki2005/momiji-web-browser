@@ -14438,7 +14438,9 @@ class ContentSection extends (external_React_default()).PureComponent {
       className: "widgets-section"
     }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "category-header"
-    }, /*#__PURE__*/external_React_default().createElement("h2", null, "Widgets")), /*#__PURE__*/external_React_default().createElement("div", {
+    }, /*#__PURE__*/external_React_default().createElement("h2", {
+      "data-l10n-id": "newtab-custom-widget-section-title"
+    })), /*#__PURE__*/external_React_default().createElement("div", {
       className: "settings-widgets"
     }, mayHaveWeather && /*#__PURE__*/external_React_default().createElement("div", {
       id: "weather-section",
@@ -14449,7 +14451,7 @@ class ContentSection extends (external_React_default()).PureComponent {
       onToggle: this.onPreferenceSelect,
       "data-preference": "showWeather",
       "data-eventSource": "WEATHER",
-      label: "Weather"
+      "data-l10n-id": "newtab-custom-widget-weather-toggle"
     })), mayHaveListsWidget && /*#__PURE__*/external_React_default().createElement("div", {
       id: "lists-widget-section",
       className: "section"
@@ -14459,7 +14461,7 @@ class ContentSection extends (external_React_default()).PureComponent {
       onToggle: this.onPreferenceSelect,
       "data-preference": "widgets.lists.enabled",
       "data-eventSource": "WIDGET_LISTS",
-      label: "Lists"
+      "data-l10n-id": "newtab-custom-widget-lists-toggle"
     })), mayHaveTimerWidget && /*#__PURE__*/external_React_default().createElement("div", {
       id: "timer-widget-section",
       className: "section"
@@ -14469,7 +14471,7 @@ class ContentSection extends (external_React_default()).PureComponent {
       onToggle: this.onPreferenceSelect,
       "data-preference": "widgets.focusTimer.enabled",
       "data-eventSource": "WIDGET_TIMER",
-      label: "Timer"
+      "data-l10n-id": "newtab-custom-widget-timer-toggle"
     })), mayHaveTrendingSearch && /*#__PURE__*/external_React_default().createElement("div", {
       id: "trending-search-section",
       className: "section"
@@ -14479,7 +14481,7 @@ class ContentSection extends (external_React_default()).PureComponent {
       onToggle: this.onPreferenceSelect,
       "data-preference": "trendingSearch.enabled",
       "data-eventSource": "TRENDING_SEARCH",
-      label: "Trending Searches"
+      "data-l10n-id": "newtab-custom-widget-trending-search-toggle"
     })), /*#__PURE__*/external_React_default().createElement("span", {
       className: "divider",
       role: "separator"

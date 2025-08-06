@@ -139,7 +139,7 @@ export class ContentSection extends React.PureComponent {
         {mayHaveWidgets && (
           <div className="widgets-section">
             <div className="category-header">
-              <h2>Widgets</h2>
+              <h2 data-l10n-id="newtab-custom-widget-section-title"></h2>
             </div>
             <div className="settings-widgets">
               {/* Weather */}
@@ -151,7 +151,7 @@ export class ContentSection extends React.PureComponent {
                     onToggle={this.onPreferenceSelect}
                     data-preference="showWeather"
                     data-eventSource="WEATHER"
-                    label="Weather"
+                    data-l10n-id="newtab-custom-widget-weather-toggle"
                   />
                 </div>
               )}
@@ -165,7 +165,7 @@ export class ContentSection extends React.PureComponent {
                     onToggle={this.onPreferenceSelect}
                     data-preference="widgets.lists.enabled"
                     data-eventSource="WIDGET_LISTS"
-                    label="Lists"
+                    data-l10n-id="newtab-custom-widget-lists-toggle"
                   />
                 </div>
               )}
@@ -179,7 +179,7 @@ export class ContentSection extends React.PureComponent {
                     onToggle={this.onPreferenceSelect}
                     data-preference="widgets.focusTimer.enabled"
                     data-eventSource="WIDGET_TIMER"
-                    label="Timer"
+                    data-l10n-id="newtab-custom-widget-timer-toggle"
                   />
                 </div>
               )}
@@ -193,7 +193,7 @@ export class ContentSection extends React.PureComponent {
                     onToggle={this.onPreferenceSelect}
                     data-preference="trendingSearch.enabled"
                     data-eventSource="TRENDING_SEARCH"
-                    label="Trending Searches"
+                    data-l10n-id="newtab-custom-widget-trending-search-toggle"
                   />
                 </div>
               )}
