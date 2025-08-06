@@ -373,12 +373,12 @@ export const FocusTimer = ({ dispatch }) => {
       <div className="focus-timer-tabs">
         <moz-button
           type={timerType === "focus" ? "primary" : "ghost"}
-          label="Focus"
+          data-l10n-id="newtab-widget-timer-mode-focus"
           onClick={() => toggleType("focus")}
         />
         <moz-button
           type={timerType === "break" ? "primary" : "ghost"}
-          label="Break"
+          data-l10n-id="newtab-widget-timer-mode-break"
           onClick={() => toggleType("break")}
         />
       </div>
@@ -441,13 +441,17 @@ export const FocusTimer = ({ dispatch }) => {
           <moz-button
             type="primary"
             iconsrc={`chrome://global/skin/media/${isRunning ? "pause" : "play"}-fill.svg`}
-            title={isRunning ? "Pause" : "Play"}
+            data-l10n-id={
+              isRunning
+                ? "newtab-widget-timer-pause"
+                : "newtab-widget-timer-play"
+            }
             onClick={toggleTimer}
           />
           <moz-button
             type="icon ghost"
             iconsrc="chrome://newtab/content/data/content/assets/arrow-clockwise-16.svg"
-            title="Reset"
+            data-l10n-id="newtab-widget-timer-reset"
             onClick={resetTimer}
           />
         </div>

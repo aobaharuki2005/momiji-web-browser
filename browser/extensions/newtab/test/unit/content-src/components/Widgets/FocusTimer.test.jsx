@@ -89,7 +89,10 @@ describe("<FocusTimer>", () => {
   });
 
   it("should start timer and show progress bar when pressing play", () => {
-    wrapper.find("moz-button[title='Play']").props().onClick();
+    wrapper
+      .find("moz-button[data-l10n-id='newtab-widget-timer-play']")
+      .props()
+      .onClick();
     wrapper.update();
     assert.ok(wrapper.find(".progress-circle-wrapper.visible").exists());
     assert.equal(dispatch.getCall(0).args[0].type, at.WIDGETS_TIMER_PLAY);
@@ -115,14 +118,18 @@ describe("<FocusTimer>", () => {
       </WrapWithProvider>
     );
 
-    const pauseBtn = wrapper.find("moz-button[title='Pause']");
+    const pauseBtn = wrapper.find(
+      "moz-button[data-l10n-id='newtab-widget-timer-pause']"
+    );
     assert.ok(pauseBtn.exists(), "Pause button should be rendered");
     pauseBtn.props().onClick();
     assert.equal(dispatch.getCall(0).args[0].type, at.WIDGETS_TIMER_PAUSE);
   });
 
   it("should reset timer and hide progress bar when pressing reset", () => {
-    const resetBtn = wrapper.find("moz-button[title='Reset']");
+    const resetBtn = wrapper.find(
+      "moz-button[data-l10n-id='newtab-widget-timer-reset']"
+    );
     assert.ok(resetBtn.exists(), "Reset buttons should be rendered");
     resetBtn.props().onClick();
     assert.equal(dispatch.getCall(0).args[0].type, at.WIDGETS_TIMER_RESET);
@@ -155,7 +162,9 @@ describe("<FocusTimer>", () => {
   });
 
   it("should dispatch pause and set type and when clicking the break timer", () => {
-    const breakBtn = wrapper.find("moz-button[label='Break']");
+    const breakBtn = wrapper.find(
+      "moz-button[data-l10n-id='newtab-widget-timer-mode-break']"
+    );
     assert.ok(breakBtn.exists(), "break button should be rendered");
     breakBtn.props().onClick();
 
@@ -180,7 +189,9 @@ describe("<FocusTimer>", () => {
   });
 
   it("should dispatch set type when clicking the focus timer", () => {
-    const focusBtn = wrapper.find("moz-button[label='Focus']");
+    const focusBtn = wrapper.find(
+      "moz-button[data-l10n-id='newtab-widget-timer-mode-focus']"
+    );
     assert.ok(focusBtn.exists(), "focus button should be rendered");
     focusBtn.props().onClick();
 
