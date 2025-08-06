@@ -62,6 +62,8 @@ class CDMKeyInfo {
     }
   }
 
+  CDMKeyInfo() = default;
+
   nsTArray<uint8_t> mKeyId;
   dom::Optional<dom::MediaKeyStatus> mStatus;
 };
