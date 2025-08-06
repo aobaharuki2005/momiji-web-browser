@@ -130,7 +130,7 @@ index 1f3b06d489..2852d18561 100644
              "Generated during 'gn gen' by //BUILD.gn.",
              "",
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index d25c35df77..3aeb5efe2f 100644
+index 35e2d04082..9f5c8c1f58 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -378,7 +378,7 @@ index a0ddf777db..cf15513e18 100644
      }
    }
 diff --git a/examples/BUILD.gn b/examples/BUILD.gn
-index 69022724e4..f6131841f0 100644
+index e17d40ab0d..cbf3d8f323 100644
 --- a/examples/BUILD.gn
 +++ b/examples/BUILD.gn
 @@ -9,15 +9,15 @@
@@ -411,7 +411,7 @@ index 69022724e4..f6131841f0 100644
            "//third_party/ocmock",
          ]
        }
-@@ -737,7 +737,7 @@ if (is_linux || is_chromeos || is_win) {
+@@ -738,7 +738,7 @@ if (is_linux || is_chromeos || is_win) {
          "peerconnection/client/main_wnd.cc",
          "peerconnection/client/main_wnd.h",
        ]
@@ -434,7 +434,7 @@ index b671239bae..e545b2cde3 100644
    android_java_prebuilt("autobanh_java") {
      jar_path = "lib/autobanh.jar"
 diff --git a/examples/androidnativeapi/BUILD.gn b/examples/androidnativeapi/BUILD.gn
-index 65ab875893..0e4594ee9d 100644
+index 7211192206..b0c5178da4 100644
 --- a/examples/androidnativeapi/BUILD.gn
 +++ b/examples/androidnativeapi/BUILD.gn
 @@ -42,8 +42,8 @@ if (is_android) {
@@ -653,7 +653,7 @@ index 522db89170..4e04e4e98c 100644
  import("../../webrtc.gni")
  
 diff --git a/pc/BUILD.gn b/pc/BUILD.gn
-index d6b0acbe56..4d967b5377 100644
+index 00bba5ec57..ccd9115568 100644
 --- a/pc/BUILD.gn
 +++ b/pc/BUILD.gn
 @@ -30,8 +30,8 @@
@@ -743,7 +743,7 @@ index 0947186878..c53c12acc1 100644
      output_extension = "so"
    }
 diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
-index fc83d55a92..f6d35017bf 100644
+index bd24d9c846..85a28ac618 100644
 --- a/sdk/BUILD.gn
 +++ b/sdk/BUILD.gn
 @@ -9,12 +9,12 @@
@@ -772,7 +772,7 @@ index fc83d55a92..f6d35017bf 100644
      }
    }
  
-@@ -1252,7 +1252,7 @@ if (is_ios || is_mac) {
+@@ -1253,7 +1253,7 @@ if (is_ios || is_mac) {
            }
  
            public_deps = [
